@@ -4,11 +4,12 @@
 # This report is designed to show the breakdown by list_id of the calls and 
 # their statuses for all lists within a campaign for a set time period
 #
-# Copyright (C) 2011  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
 # 110815-2138 - First build
+# 120224-0910 - Added HTML display option with bar graphs
 #
 
 require("dbconnect.php");
@@ -35,6 +36,8 @@ if (isset($_GET["DB"]))						{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))			{$DB=$_POST["DB"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
+if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
+	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 
 $report_name="Campaign Status List Report";
 $NOW_DATE = date("Y-m-d");
@@ -188,6 +191,7 @@ $HTML_head.=" </STYLE>\n";
 
 $HTML_head.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 $HTML_head.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
+$HTML_head.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 $HTML_head.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 $HTML_head.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>$group_S\n";
@@ -249,6 +253,10 @@ $HTML_text.="</SELECT>\n";
 
 $HTML_text.="</TD><TD VALIGN=TOP>&nbsp;\n";
 $HTML_text.="</TD><TD VALIGN=TOP>\n";
+$HTML_text.="Display as:<BR>";
+$HTML_text.="<select name='report_display_type'>";
+if ($report_display_type) {$HTML_text.="<option value='$report_display_type' selected>$report_display_type</option>";}
+$HTML_text.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR><BR>";
 $HTML_text.="<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
 $HTML_text.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
@@ -263,6 +271,9 @@ $HTML_text.="<PRE>";
 $i=0;
 $group_string='|';
 $group_ct = count($group);
+$JS_text.="<script language='Javascript'>\n";
+$JS_onload="onload = function() {\n";
+
 while($i < $group_ct)
 	{
 	$stmt="select distinct status, status_name from vicidial_campaign_statuses where campaign_id='$group[$i]' UNION select distinct status, status_name from vicidial_statuses order by status, status_name";
@@ -271,7 +282,8 @@ while($i < $group_ct)
 		{
 		$status_ary[$row[0]]=" - $row[1]";
 		}
-	$HTML_text.="<B>CAMPAIGN: $group[$i]</B>\n";
+	$ASCII_text.="<B>CAMPAIGN: $group[$i]</B>\n";
+	$GRAPH.="<B>CAMPAIGN: $group[$i]</B>\n";
 	$CSV_text.="\"CAMPAIGN: $group[$i]\"\n";
 
 	$stmt="select closer_campaigns from vicidial_campaigns where campaign_id='$group[$i]'";
@@ -297,19 +309,36 @@ while($i < $group_ct)
 		{
 		$list_id=$row[0]; $list_name=$row[1];
 		$dispo_ary="";
-		$HTML_text.="<FONT SIZE=2><B>List ID #$list_id: $list_name</B>\n";
+		$ASCII_text.="<FONT SIZE=2><B>List ID #$list_id: $list_name</B>\n";
+		$GRAPH.="<FONT SIZE=2><B>List ID #$list_id: $list_name</B>\n";
 		$CSV_text.="\"List ID #$list_id: $list_name\"\n";
+
+
 		# 			$stat_stmt="select vs.status_name, count(*), sum(pause_sec), sum(wait_sec), sum(talk_sec), sum(dispo_sec), sum(dead_sec) from vicidial_agent_log val, vicidial_list vl, vicidial_statuses vs where val.event_time>='$query_date' and val.event_time<='$end_date' and val.campaign_id='$group[$i]' and val.lead_id=vl.list_id and vl.list_id='$list_id' and val.status=vs.status group by vs.status_name order by vs.status_name";
 		#$stat_stmt="select val.status, count(*), sum(pause_sec), sum(wait_sec), sum(talk_sec), sum(dispo_sec), sum(dead_sec) from vicidial_agent_log val, vicidial_list vl where val.event_time>='$query_date' and val.event_time<='$end_date' and val.campaign_id='$group[$i]' and val.lead_id=vl.lead_id and vl.list_id='$list_id' group by val.status order by val.status";
 		$stat_stmt="select vicidial_log.status, vicidial_log.uniqueid, vicidial_log.length_in_sec as duration, (vicidial_agent_log.talk_sec-vicidial_agent_log.dead_sec) as handle_time from vicidial_log LEFT OUTER JOIN vicidial_agent_log on vicidial_log.lead_id=vicidial_agent_log.lead_id and vicidial_log.uniqueid=vicidial_agent_log.uniqueid where vicidial_log.call_date>='$query_date' and vicidial_log.call_date<='$end_date' and vicidial_log.list_id='$list_id' UNION select vicidial_closer_log.status, vicidial_closer_log.uniqueid, vicidial_closer_log.length_in_sec as duration, (vicidial_agent_log.talk_sec-vicidial_agent_log.dead_sec) as handle_time from vicidial_closer_log LEFT OUTER JOIN vicidial_agent_log on vicidial_closer_log.lead_id=vicidial_agent_log.lead_id and vicidial_closer_log.uniqueid=vicidial_agent_log.uniqueid where call_date>='$query_date' and call_date<='$end_date' and list_id='$list_id' order by status";
-		# $HTML_text.=$stat_stmt."\n";
+		# $ASCII_text.=$stat_stmt."\n";
 		$stat_rslt=mysql_query($stat_stmt, $link);
 		if (mysql_num_rows($stat_rslt)>0) 
 			{
+			$GRAPH.="<a name='list_".$list_id."_graph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
+			$GRAPH.="<tr><th width='33%' class='grey_graph_cell' id='list_".$list_id."_graph1'><a href='#' onClick=\"Draw".$list_id."Graph('CALLS', '1'); return false;\">CALLS</a></th><th width='33%' class='grey_graph_cell' id='list_".$list_id."_graph2'><a href='#' onClick=\"Draw".$list_id."Graph('DURATION', '2'); return false;\">DURATION</a></th><th width='34%' class='grey_graph_cell' id='list_".$list_id."_graph3'><a href='#' onClick=\"Draw".$list_id."Graph('HANDLETIME', '3'); return false;\">HANDLE TIME</a></th></tr>";
+			$GRAPH.="<tr><td colspan='3' class='graph_span_cell'><span id='stats_".$list_id."_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
+			$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>List ID #$list_id: $list_name</caption><tr><th class='thgraph' scope='col'>DISPOSITION</th>";
+			$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>CALLS </th></tr>";
+			$DURATION_graph=$graph_header."<th class='thgraph' scope='col'>DURATION</th></tr>";
+			$HANDLETIME_graph=$graph_header."<th class='thgraph' scope='col'>HANDLE TIME</th></tr>";
+
 			$total_calls=0; $total_handle_time=0; $total_duration=0;
-			$HTML_text.="+-------------------------------------+-------+-----------+-------------+\n";
-			$HTML_text.="| DISPOSITION                         | CALLS | DURATION  | HANDLE TIME |\n";
-			$HTML_text.="+-------------------------------------+-------+-----------+-------------+\n";
+
+			$graph_stats=array();
+			$max_calls=1;
+			$max_duration=1;
+			$max_handletime=1;
+			
+			$ASCII_text.="+-------------------------------------+-------+-----------+-------------+\n";
+			$ASCII_text.="| DISPOSITION                         | CALLS | DURATION  | HANDLE TIME |\n";
+			$ASCII_text.="+-------------------------------------+-------+-----------+-------------+\n";
 			$CSV_text.="\"DISPOSITION\",\"CALLS\",\"DURATION\",\"HANDLE TIME\"\n";
 			while ($stat_row=mysql_fetch_row($stat_rslt)) 
 				{
@@ -326,33 +355,86 @@ while($i < $group_ct)
 				$total_handle_time+=$stat_row[3];
 				}
 
+			$d=0;
 			while (list($key, $val)=each($dispo_ary)) 
 				{
-				$HTML_text.="| ".sprintf("%-35s", $key.$status_ary[$key]);
-				$HTML_text.=" | ".sprintf("%5s", $val[0]);
-				$HTML_text.=" | ".sprintf("%9s", sec_convert($val[1], 'H'));
-				$HTML_text.=" | ".sprintf("%11s", sec_convert($val[2], 'H'))." |\n";
+				$ASCII_text.="| ".sprintf("%-35s", $key.$status_ary[$key]);
+				$ASCII_text.=" | ".sprintf("%5s", $val[0]);
+				$ASCII_text.=" | ".sprintf("%9s", sec_convert($val[1], 'H'));
+				$ASCII_text.=" | ".sprintf("%11s", sec_convert($val[2], 'H'))." |\n";
 				$CSV_text.="\"".$key.$status_ary[$key]."\",\"$val[0]\",\"".sec_convert($val[1], 'H')."\",\"".sec_convert($val[2], 'H')."\"\n";
+
+				if ($val[0]>$max_calls) {$max_calls=$val[0];}
+				if ($val[1]>$max_duration) {$max_duration=$val[1];}
+				if ($val[2]>$max_handletime) {$max_handletime=$val[2];}
+				$graph_stats[$d][0]=$key.$status_ary[$key];
+				$graph_stats[$d][1]=$val[0];
+				$graph_stats[$d][2]=$val[1];
+				$graph_stats[$d][3]=$val[2];
+				$d++;
 				}
-			$HTML_text.="+-------------------------------------+-------+-----------+-------------+\n";
-			$HTML_text.="|                             TOTALS:";
-			$HTML_text.=" | ".sprintf("%5s", $total_calls);
-			$HTML_text.=" | ".sprintf("%9s", sec_convert($total_duration, 'H'));
-			$HTML_text.=" | ".sprintf("%11s", sec_convert($total_handle_time, 'H'))." |\n";
-			$HTML_text.="+-------------------------------------+-------+-----------+-------------+\n";
+			$ASCII_text.="+-------------------------------------+-------+-----------+-------------+\n";
+			$ASCII_text.="|                             TOTALS:";
+			$ASCII_text.=" | ".sprintf("%5s", $total_calls);
+			$ASCII_text.=" | ".sprintf("%9s", sec_convert($total_duration, 'H'));
+			$ASCII_text.=" | ".sprintf("%11s", sec_convert($total_handle_time, 'H'))." |\n";
+			$ASCII_text.="+-------------------------------------+-------+-----------+-------------+\n";
 			$CSV_text.="\"TOTALS:\",\"$total_calls\",\"".sec_convert($total_duration, 'H')."\",\"".sec_convert($total_handle_time, 'H')."\"\n\n";
+
+			for ($d=0; $d<count($graph_stats); $d++) {
+				if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
+				$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+				$DURATION_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][2]/$max_duration)."' height='16' />".sec_convert($graph_stats[$d][2], 'H')."</td></tr>";
+				$HANDLETIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][3]/$max_handletime)."' height='16' />".sec_convert($graph_stats[$d][3], 'H')."</td></tr>";
+			}
+			$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($total_calls)."</th></tr></table>";
+			$DURATION_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".sec_convert($total_duration, 'H')."</th></tr></table>";
+			$HANDLETIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".sec_convert($total_handle_time, 'H')."</th></tr></table>";
+			$JS_onload.="\tDraw".$list_id."Graph('CALLS', '1');\n"; 
+			$JS_text.="function Draw".$list_id."Graph(graph, th_id) {\n";
+			$JS_text.="	var CALLS_graph=\"$CALLS_graph\";\n";
+			$JS_text.="	var DURATION_graph=\"$DURATION_graph\";\n";
+			$JS_text.="	var HANDLETIME_graph=\"$HANDLETIME_graph\";\n";
+			$JS_text.="\n";
+			$JS_text.="	for (var i=1; i<=3; i++) {\n";
+			$JS_text.="		var cellID=\"list_".$list_id."_graph\"+i;\n";
+			$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
+			$JS_text.="	}\n";
+			$JS_text.="	var cellID=\"list_".$list_id."_graph\"+th_id;\n";
+			$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
+			$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
+			$JS_text.="	document.getElementById('stats_".$list_id."_graph').innerHTML=graph_to_display;\n";
+			$JS_text.="}\n";
+			#$HTML_text.=$GRAPH;
 			}
 		else 
 			{
-			$HTML_text.="<B>***NO CALLS FOUND FROM $query_date TO $end_date***</B>\n";
+			$ASCII_text.="<B>***NO CALLS FOUND FROM $query_date TO $end_date***</B>\n";
 			$CSV_text.="\"***NO CALLS FOUND FROM $query_date TO $end_date***\"\n\n";
+			$GRAPH.="<B>***NO CALLS FOUND FROM $query_date TO $end_date***</B>\n";
 			}
-		$HTML_text.="</FONT>\n";
+		$ASCII_text.="</FONT>\n";
+		$GRAPH.="</FONT>\n";
+
 		}
 	$i++;
-	$HTML_text.="\n\n";
+	$ASCII_text.="\n\n";
+	$GRAPH.="\n\n";
 	$CSV_text.="\n\n";
 	}
+$JS_onload.="}\n";
+$JS_text.=$JS_onload;
+$JS_text.="</script>\n";
+
+if ($report_display_type=="HTML")
+	{
+	$HTML_text.=$JS_text.$GRAPH;
+	}
+else
+	{
+	$HTML_text.=$ASCII_text;
+	}
+
 $HTML_text.="</PRE></BODY></HTML>";
 
 if ($file_download>0) 

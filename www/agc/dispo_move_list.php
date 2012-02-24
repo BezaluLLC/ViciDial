@@ -1,7 +1,7 @@
 <?php
 # dispo_move_list.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to be used in the "Dispo URL" field of a campaign
 # or in-group. It should take in the lead_id to check for the same lead_id
@@ -30,6 +30,7 @@
 # 100915-1600 - First Build
 # 110702-2020 - Added multiple sets of options
 # 111005-1102 - Added check and update for scheduled callback entry
+# 120223-2124 - Removed logging of good login passwords if webroot writable is enabled
 #
 
 $api_script = 'deactivate';
@@ -226,6 +227,6 @@ else
 if ($log_to_file > 0)
 	{
 	$fp = fopen ("./dispo_move_list.txt", "a");
-	fwrite ($fp, "$NOW_TIME|$k|$lead_id|$new_list_id|$sale_status|$dispo|$user|$pass|$DB|$log_to_file|$MESSAGE|\n");
+	fwrite ($fp, "$NOW_TIME|$k|$lead_id|$new_list_id|$sale_status|$dispo|$user|XXXX|$DB|$log_to_file|$MESSAGE|\n");
 	fclose($fp);
 	}

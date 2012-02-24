@@ -1,7 +1,7 @@
 <?php 
 # AST_CLOSER_service_level.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -19,6 +19,7 @@
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 # 110703-1756 - Added download option
 # 111103-2300 - Added user_group restrictions for selecting in-groups
+# 120224-0910 - Added HTML display option with bar graphs
 #
 
 require("dbconnect.php");
@@ -40,6 +41,8 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
+if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
+	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
@@ -179,6 +182,7 @@ if (!preg_match("/\|$group\|/i",$groups_string))
 
 $HEADER.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
+$HEADER.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 $HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -225,6 +229,11 @@ while ($groups_to_print > $o)
 	$o++;
 	}
 $MAIN.="</SELECT>\n";
+$MAIN.="&nbsp;";
+$MAIN.="<select name='report_display_type'>";
+if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
+$MAIN.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n";
+$MAIN.=" &nbsp; ";
 $MAIN.="<SELECT SIZE=1 NAME=shift>\n";
 $MAIN.="<option selected value=\"$shift\">$shift</option>\n";
 $MAIN.="<option value=\"\">--</option>\n";
@@ -238,7 +247,8 @@ $MAIN.="<option value=\"845-1745\">845-1745</option>\n";
 $MAIN.="<option value=\"1745-100\">1745-100</option>\n";
 $MAIN.="</SELECT>\n";
 $MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
-$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&group=$group&shift=$shift&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a> | <a href=\"./admin.php?ADD=3111&group_id=$group\">MODIFY</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&group=$group&shift=$shift&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a> | <a href=\"./admin.php?ADD=3111&group_id=$group\">MODIFY</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a>";
+$MAIN.="</FONT>\n";
 $MAIN.="</FORM>\n\n";
 
 $MAIN.="<PRE><FONT SIZE=2>\n\n";
@@ -566,13 +576,40 @@ while ($j < $TOTintervals)
 
 ###################################################
 ### TOTALS SUMMARY SECTION ###
-$MAIN.="+-------------------------------------------+--------+--------+--------+--------+--------+--------+--------+--------+----------+--------+\n";
-$MAIN.="|                                           |        |        |        |        |        |  AVG   |  AVG   |        |  TOTAL   |  AVG   |\n";
-$MAIN.="| SHIFT                                     |        |        |  AVG   |        |        | HOLD(s)| HOLD(s)|        | CALLTIME |CALLTIME|\n";
-$MAIN.="| DATE-TIME RANGE                           | DROPS  | DROP % | DROP(s)| HOLD   | HOLD % |  HOLD  | TOTAL  | CALLS  | MIN:SEC  |SECONDS |\n";
-$MAIN.="+-------------------------------------------+--------+--------+--------+--------+--------+--------+--------+--------+----------+--------+\n";
+$ASCII_text.="+-------------------------------------------+--------+--------+--------+--------+--------+--------+--------+--------+----------+--------+\n";
+$ASCII_text.="|                                           |        |        |        |        |        |  AVG   |  AVG   |        |  TOTAL   |  AVG   |\n";
+$ASCII_text.="| SHIFT                                     |        |        |  AVG   |        |        | HOLD(s)| HOLD(s)|        | CALLTIME |CALLTIME|\n";
+$ASCII_text.="| DATE-TIME RANGE                           | DROPS  | DROP % | DROP(s)| HOLD   | HOLD % |  HOLD  | TOTAL  | CALLS  | MIN:SEC  |SECONDS |\n";
+$ASCII_text.="+-------------------------------------------+--------+--------+--------+--------+--------+--------+--------+--------+----------+--------+\n";
 $CSV_text.="\"SHIFT DATE-TIME RANGE\",\"DROPS\",\" DROP %\",\" AVG DROP(s)\",\" HOLD\",\" HOLD %\",\" AVG HOLD(S) HOLD\",\" AVG HOLD(S) TOTAL\",\" CALLS\",\" TOTAL CALLTIME MIN:SEC\",\" AVG CALLTIME SECONDS\"\n";
 
+
+$graph_stats=array();
+$max_drops=1;
+$max_droppct=1;
+$max_avgdrops=1;
+$max_hold=1;
+$max_holdpct=1;
+$max_avgholds=1;
+$max_avgholdstotal=1;
+$max_calls=1;
+$max_totalcalltime=1;
+$max_avgcalltime=1;
+
+$GRAPH="<BR><BR><a name='inbound_graph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
+$GRAPH.="<tr><th width='10%' class='grey_graph_cell' id='inbound_graph1'><a href='#' onClick=\"DrawGraph('DROPS', '1'); return false;\">DROPS</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph2'><a href='#' onClick=\"DrawGraph('DROPPCT', '2'); return false;\">DROP %</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph3'><a href='#' onClick=\"DrawGraph('AVGDROPS', '3'); return false;\">AVG DROP(s)</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph4'><a href='#' onClick=\"DrawGraph('HOLD', '4'); return false;\">HOLD</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph5'><a href='#' onClick=\"DrawGraph('HOLDPCT', '5'); return false;\">HOLD %</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph6'><a href='#' onClick=\"DrawGraph('AVGHOLDS', '6'); return false;\">AVG HOLD(s) HOLD</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph7'><a href='#' onClick=\"DrawGraph('AVGHOLDSTOTAL', '7'); return false;\">AVG HOLD(s) TOTAL</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph8'><a href='#' onClick=\"DrawGraph('CALLS', '8'); return false;\">CALLS</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph9'><a href='#' onClick=\"DrawGraph('TOTALCALLTIME', '9'); return false;\">TOTAL CALLTIME MIN:SEC</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph10'><a href='#' onClick=\"DrawGraph('AVGCALLTIME', '10'); return false;\">AVG CALLTIME SECONDS</a></th></tr>";
+$GRAPH.="<tr><td colspan='10' class='graph_span_cell'><span id='inbound_stats_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
+$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>INBOUND SERVICE LEVEL REPORT</caption><tr><th class='thgraph' scope='col'>STATUS</th>";
+$DROPS_graph=$graph_header."<th class='thgraph' scope='col'>DROPS </th></tr>";
+$DROPPCT_graph=$graph_header."<th class='thgraph' scope='col'>DROP % </th></tr>";
+$AVGDROPS_graph=$graph_header."<th class='thgraph' scope='col'>AVG DROP(s) </th></tr>";
+$HOLD_graph=$graph_header."<th class='thgraph' scope='col'>HOLD </th></tr>";
+$HOLDPCT_graph=$graph_header."<th class='thgraph' scope='col'>HOLD % </th></tr>";
+$AVGHOLDS_graph=$graph_header."<th class='thgraph' scope='col'>AVG HOLD(s) HOLD </th></tr>";
+$AVGHOLDSTOTAL_graph=$graph_header."<th class='thgraph' scope='col'>AVG HOLD(s) TOTAL </th></tr>";
+$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>CALLS </th></tr>";
+$TOTALCALLTIME_graph=$graph_header."<th class='thgraph' scope='col'>TOTAL CALLTIME MIN:SEC </th></tr>";
+$AVGCALLTIME_graph=$graph_header."<th class='thgraph' scope='col'>AVG CALLTIME SECONDS </th></tr>";
 $d=0;
 while ($d < $DURATIONday)
 	{
@@ -616,8 +653,31 @@ while ($d < $DURATIONday)
 	else 
 		{
 		$totCALLSavgDATE[$d] = 0;
-		$totTIME_MS='        ';
+		$totTIME_MS='    0:00';
 		}
+
+	if (trim($totDROPSdate[$d])>$max_drops) {$max_drops=trim($totDROPSdate[$d]);}
+	if (trim($totDROPSpctDATE[$d])>$max_droppct) {$max_droppct=trim($totDROPSpctDATE[$d]);}
+	if (trim($totDROPSavgDATE[$d])>$max_avgdrops) {$max_avgdrops=trim($totDROPSavgDATE[$d]);}
+	if (trim($totQUEUEdate[$d])>$max_hold) {$max_hold=trim($totQUEUEdate[$d]);}
+	if (trim($totQUEUEpctDATE[$d])>$max_holdpct) {$max_holdpct=trim($totQUEUEpctDATE[$d]);}
+	if (trim($totQUEUEavgDATE[$d])>$max_avgholds) {$max_avgholds=trim($totQUEUEavgDATE[$d]);}
+	if (trim($totQUEUEtotDATE[$d])>$max_avgholdstotal) {$max_avgholdstotal=trim($totQUEUEtotDATE[$d]);}
+	if (trim($totCALLSdate[$d])>$max_calls) {$max_calls=trim($totCALLSdate[$d]);}
+	if (trim($totCALLSsecDATE[$d])>$max_totalcalltime) {$max_totalcalltime=trim($totCALLSsecDATE[$d]);}
+	if (trim($totCALLSavgDATE[$d])>$max_avgcalltime) {$max_avgcalltime=trim($totCALLSavgDATE[$d]);}
+	$graph_stats[$d][0]=trim("$daySTART[$d] - $dayEND[$d]");
+	$graph_stats[$d][1]=trim($totDROPSdate[$d]);
+	$graph_stats[$d][2]=trim(sprintf("%6.2f", $totDROPSpctDATE[$d]));
+	$graph_stats[$d][3]=trim(sprintf("%7.2f", $totDROPSavgDATE[$d]));
+	$graph_stats[$d][4]=trim($totQUEUEdate[$d]);
+	$graph_stats[$d][5]=trim(sprintf("%6.2f", $totQUEUEpctDATE[$d]));
+	$graph_stats[$d][6]=trim(sprintf("%7.2f", $totQUEUEavgDATE[$d]));
+	$graph_stats[$d][7]=trim(sprintf("%7.2f", $totQUEUEtotDATE[$d]));
+	$graph_stats[$d][8]=trim($totCALLSdate[$d]);
+	$graph_stats[$d][9]=trim($totCALLSsecDATE[$d]);
+	$graph_stats[$d][10]=trim($totTIME_MS);
+	$graph_stats[$d][11]=trim(sprintf("%6.0f", $totCALLSavgDATE[$d]));
 
 	$totCALLSavgDATE[$d] =	sprintf("%6.0f", $totCALLSavgDATE[$d]);
 	$totDROPSavgDATE[$d] =	sprintf("%7.2f", $totDROPSavgDATE[$d]);
@@ -629,7 +689,7 @@ while ($d < $DURATIONday)
 	$totQUEUEdate[$d] =	sprintf("%6s", $totQUEUEdate[$d]);
 	$totCALLSdate[$d] =	sprintf("%6s", $totCALLSdate[$d]);
 
-	$MAIN.="| $daySTART[$d] - $dayEND[$d] | $totDROPSdate[$d] | $totDROPSpctDATE[$d]%|$totDROPSavgDATE[$d] | $totQUEUEdate[$d] | $totQUEUEpctDATE[$d]%|$totQUEUEavgDATE[$d] |$totQUEUEtotDATE[$d] | $totCALLSdate[$d] | $totTIME_MS | $totCALLSavgDATE[$d] |\n";
+	$ASCII_text.="| $daySTART[$d] - $dayEND[$d] | $totDROPSdate[$d] | $totDROPSpctDATE[$d]%|$totDROPSavgDATE[$d] | $totQUEUEdate[$d] | $totQUEUEpctDATE[$d]%|$totQUEUEavgDATE[$d] |$totQUEUEtotDATE[$d] | $totCALLSdate[$d] | $totTIME_MS | $totCALLSavgDATE[$d] |\n";
 	$CSV_text.="\"$daySTART[$d] - $dayEND[$d]\",\"$totDROPSdate[$d]\",\"$totDROPSpctDATE[$d]%\",\"$totDROPSavgDATE[$d]\",\"$totQUEUEdate[$d]\",\"$totQUEUEpctDATE[$d]%\",\"$totQUEUEavgDATE[$d]\",\"$totQUEUEtotDATE[$d]\",\"$totCALLSdate[$d]\",\"$totTIME_MS\",\"$totCALLSavgDATE[$d]\"\n";
 	$d++;
 	}
@@ -684,10 +744,61 @@ else
 	$FtotQUEUE =	sprintf("%6s", $totQUEUE);
 	$FtotCALLS =	sprintf("%6s", $totCALLS);
 
-$MAIN.="+-------------------------------------------+--------+--------+--------+--------+--------+--------+--------+--------+----------+--------+\n";
-$MAIN.="|                                    TOTALS | $FtotDROPS | $FtotDROPSpct%|$FtotDROPSavg | $FtotQUEUE | $FtotQUEUEpct%|$FtotQUEUEavg |$FtotQUEUEtot | $FtotCALLS |$totTIME_MS | $FtotCALLSavg |\n";
-$MAIN.="+-------------------------------------------+--------+--------+--------+--------+--------+--------+--------+--------+----------+--------+\n";
+$ASCII_text.="+-------------------------------------------+--------+--------+--------+--------+--------+--------+--------+--------+----------+--------+\n";
+$ASCII_text.="|                                    TOTALS | $FtotDROPS | $FtotDROPSpct%|$FtotDROPSavg | $FtotQUEUE | $FtotQUEUEpct%|$FtotQUEUEavg |$FtotQUEUEtot | $FtotCALLS |$totTIME_MS | $FtotCALLSavg |\n";
+$ASCII_text.="+-------------------------------------------+--------+--------+--------+--------+--------+--------+--------+--------+----------+--------+\n";
 $CSV_text.="\"TOTALS\",\"$FtotDROPS\",\"$FtotDROPSpct%\",\"$FtotDROPSavg\",\"$FtotQUEUE\",\"$FtotQUEUEpct%\",\"$FtotQUEUEavg\",\"$FtotQUEUEtot\",\"$FtotCALLS\",\"$totTIME_MS\",\"$FtotCALLSavg\"\n";
+
+
+	for ($d=0; $d<count($graph_stats); $d++) {
+		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
+		$DROPS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_drops)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+		$DROPPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][2]/$max_droppct)."' height='16' />".$graph_stats[$d][2]."%</td></tr>";
+		$AVGDROPS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][3]/$max_avgdrops)."' height='16' />".$graph_stats[$d][3]."</td></tr>";
+		$HOLD_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][4]/$max_hold)."' height='16' />".$graph_stats[$d][4]."</td></tr>";
+		$HOLDPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][5]/$max_holdpct)."' height='16' />".$graph_stats[$d][5]."%</td></tr>";
+		$AVGHOLDS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][6]/$max_avgholds)."' height='16' />".$graph_stats[$d][6]."</td></tr>";
+		$AVGHOLDSTOTAL_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][7]/$max_avgholdstotal)."' height='16' />".$graph_stats[$d][7]."</td></tr>";
+		$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][8]/$max_calls)."' height='16' />".$graph_stats[$d][8]."</td></tr>";
+		$TOTALCALLTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][9]/$max_totalcalltime)."' height='16' />".$graph_stats[$d][10]."</td></tr>";
+		$AVGCALLTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][11]/$max_avgcalltime)."' height='16' />".$graph_stats[$d][11]."</td></tr>";
+	}
+	$DROPS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($FtotDROPS)."</th></tr></table>";
+	$DROPPCT_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($FtotDROPSpct)."%</th></tr></table>";
+	$AVGDROPS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($FtotDROPSavg)."</th></tr></table>";
+	$HOLD_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($FtotQUEUE)."</th></tr></table>";
+	$HOLDPCT_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($FtotQUEUEpct)."%</th></tr></table>";
+	$AVGHOLDS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($FtotQUEUEavg)."</th></tr></table>";
+	$AVGHOLDSTOTAL_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($FtotQUEUEtot)."</th></tr></table>";
+	$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($FtotCALLS)."</th></tr></table>";
+	$TOTALCALLTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($totTIME_MS)."</th></tr></table>";
+	$AVGCALLTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($FtotCALLSavg)."</th></tr></table>";
+	$JS_text="<script language='Javascript'>\n";
+	$JS_onload="onload = function() {\n";
+	$JS_onload.="\tDrawGraph('DROPS', '1');\n"; 
+	$JS_text.="function DrawGraph(graph, th_id) {\n";
+	$JS_text.="	var DROPS_graph=\"$DROPS_graph\";\n";
+	$JS_text.="	var DROPPCT_graph=\"$DROPPCT_graph\";\n";
+	$JS_text.="	var AVGDROPS_graph=\"$AVGDROPS_graph\";\n";
+	$JS_text.="	var HOLD_graph=\"$HOLD_graph\";\n";
+	$JS_text.="	var HOLDPCT_graph=\"$HOLDPCT_graph\";\n";
+	$JS_text.="	var AVGHOLDS_graph=\"$AVGHOLDS_graph\";\n";
+	$JS_text.="	var AVGHOLDSTOTAL_graph=\"$AVGHOLDSTOTAL_graph\";\n";
+	$JS_text.="	var CALLS_graph=\"$CALLS_graph\";\n";
+	$JS_text.="	var TOTALCALLTIME_graph=\"$TOTALCALLTIME_graph\";\n";
+	$JS_text.="	var AVGCALLTIME_graph=\"$AVGCALLTIME_graph\";\n";
+	$JS_text.="\n";
+	$JS_text.="	for (var i=1; i<=10; i++) {\n";
+	$JS_text.="		var cellID=\"inbound_graph\"+i;\n";
+	$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
+	$JS_text.="	}\n";
+	$JS_text.="	var cellID=\"inbound_graph\"+th_id;\n";
+	$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
+	$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
+	$JS_text.="	document.getElementById('inbound_stats_graph').innerHTML=graph_to_display;\n";
+	$JS_text.="}\n";
+	# $MAIN.=$GRAPH;
+
 
 	## FORMAT OUTPUT ##
 	$i=0;
@@ -727,7 +838,14 @@ if ($hi_hold_count < 1)
 else
 	{$hold_multiplier = (20 / $hi_hold_count);}
 
-
+if ($report_display_type=="HTML")
+	{
+	$MAIN.=$GRAPH;
+	}
+else
+	{
+	$MAIN.=$ASCII_text;
+	}
 
 
 ###################################################################
@@ -805,10 +923,20 @@ while ($k <= 22)
 	}
 
 
-$MAIN.="+-------------+-----------------------+-------+-------+  +-----------------------+-------+-------+\n";
-$MAIN.="|    TIME     |  AVG HOLD TIME (sec)  | (in seconds)  |  |    CALLS HANDLED      |       |       |\n";
-$MAIN.="| 15 MIN INT  |$hold_scale| AVG   | MAX   |  |$call_scale| DROPS | TOTAL |\n";
-$MAIN.="+-------------+-----------------------+-------+-------+  +-----------------------+-------+-------+\n";
+$ASCII_text.="+-------------+-----------------------+-------+-------+  +-----------------------+-------+-------+\n";
+$ASCII_text.="|    TIME     |  AVG HOLD TIME (sec)  | (in seconds)  |  |    CALLS HANDLED      |       |       |\n";
+$ASCII_text.="| 15 MIN INT  |$hold_scale| AVG   | MAX   |  |$call_scale| DROPS | TOTAL |\n";
+$ASCII_text.="+-------------+-----------------------+-------+-------+  +-----------------------+-------+-------+\n";
+
+$max_avg_hold_time=1;
+$max_calls=1;
+$graph_stats=array();
+$GRAPH="<BR><BR><a name='holdcalldropgraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
+$GRAPH.="<tr><th width='50%' class='grey_graph_cell' id='holdcalldropgraph1'><a href='#' onClick=\"DrawHCDGraph('AVGHOLD', '1'); return false;\">AVERAGE HOLD TIME</a></th><th width=50% class='grey_graph_cell' id='holdcalldropgraph2'><a href='#' onClick=\"DrawHCDGraph('CALLSHANDLED', '2'); return false;\">CALLS HANDLED</a></th></tr>";
+$GRAPH.="<tr><td colspan='5' class='graph_span_cell'><span id='holdcalldrop_stats_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
+$AVGHOLD_graph="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>AVERAGE HOLD TIME</caption><tr><th class='thgraph' scope='col'>TIME 15-MIN INT</th><th class='thgraph' scope='col'>AVG HOLD TIME</th><th class='thgraph' scope='col'>AVG</th><th class='thgraph' scope='col'>MAX</th></tr>";
+$CALLSHANDLED_graph="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>CALLS HANDLED</caption><tr><th class='thgraph' scope='col'>TIME 15-MIN INT</th><th class='thgraph' scope='col'>DROPS <img src='./images/bar_blue.png' width='10' height='10'> / CALLS <img src='./images/bar.png' width='10' height='10'></th></tr>";
+
 
 $CSV_text.="\"TIME - 15 MIN INT\",\"AVG SECS\",\"MAX SECS\",\"\",\"DROPS\",\"TOTAL\"\n";
 
@@ -832,9 +960,14 @@ while ($i < $TOTintervals)
 			$TOT_lines++;
 			$qrtQUEUEavg[$i] =	sprintf("%5s", $qrtQUEUEavg[$i]);
 			$qrtQUEUEmax[$i] =	sprintf("%5s", $qrtQUEUEmax[$i]);
-			$MAIN.="|$HMdisplay[$i]|";
-			$k=0;   while ($k <= 22) {$MAIN.=" ";   $k++;}
-			$MAIN.="| $qrtQUEUEavg[$i] | $qrtQUEUEmax[$i] |";
+			$ASCII_text.="|$HMdisplay[$i]|";
+			$k=0;   while ($k <= 22) {$ASCII_text.=" ";   $k++;}
+			$ASCII_text.="| $qrtQUEUEavg[$i] | $qrtQUEUEmax[$i] |";
+
+			$graph_stats[$i][0]="$HMdisplay[$i]";
+			$graph_stats[$i][1]=trim($qrtQUEUEavg[$i]);
+			$graph_stats[$i][2]=trim($qrtQUEUEmax[$i]);
+			if (trim($qrtQUEUEavg[$i])>$max_avg_hold_time) {$max_avg_hold_time=trim($qrtQUEUEavg[$i]);}
 			}
 		}
 	else
@@ -847,13 +980,14 @@ while ($i < $TOTintervals)
 		$qrtQUEUEavg[$i] =	sprintf("%5s", $qrtQUEUEavg[$i]);
 		$qrtQUEUEmax[$i] =	sprintf("%5s", $qrtQUEUEmax[$i]);
 
-		$MAIN.="|$HMdisplay[$i]|<SPAN class=\"orange\">";
-		$k=0;   while ($k <= $Xavg_hold) {$MAIN.="*";   $k++;   $char_counter++;}
-		if ($char_counter >= 22) {$MAIN.="H</SPAN>";   $char_counter++;}
-		else {$MAIN.="*H</SPAN>";   $char_counter++;   $char_counter++;}
-		$k=0;   while ($k <= $Yavg_hold) {$MAIN.=" ";   $k++;   $char_counter++;}
-			while ($char_counter <= 22) {$MAIN.=" ";   $char_counter++;}
-		$MAIN.="| $qrtQUEUEavg[$i] | $qrtQUEUEmax[$i] |";
+		$ASCII_text.="|$HMdisplay[$i]|<SPAN class=\"orange\">";
+		$k=0;   while ($k <= $Xavg_hold) {$ASCII_text.="*";   $k++;   $char_counter++;}
+		if ($char_counter >= 22) {$ASCII_text.="H</SPAN>";   $char_counter++;}
+		else {$ASCII_text.="*H</SPAN>";   $char_counter++;   $char_counter++;}
+		$k=0;   while ($k <= $Yavg_hold) {$ASCII_text.=" ";   $k++;   $char_counter++;}
+			while ($char_counter <= 22) {$ASCII_text.=" ";   $char_counter++;}
+		$ASCII_text.="| $qrtQUEUEavg[$i] | $qrtQUEUEmax[$i] |";
+
 		}
 	### END HOLD TIME TOTALS GRAPH ###
 
@@ -869,9 +1003,9 @@ while ($i < $TOTintervals)
 		else
 			{
 			$qrtCALLS[$i] =	sprintf("%5s", $qrtCALLS[$i]);
-			$MAIN.="  |";
-			$k=0;   while ($k <= 22) {$MAIN.=" ";   $k++;}
-			$MAIN.="| $qrtCALLS[$i] |     0 |\n";
+			$ASCII_text.="  |";
+			$k=0;   while ($k <= 22) {$ASCII_text.=" ";   $k++;}
+			$ASCII_text.="| $qrtCALLS[$i] |     0 |\n";
 			}
 		}
 	else
@@ -885,13 +1019,13 @@ while ($i < $TOTintervals)
 			{
 			$qrtCALLS[$i] =	sprintf("%5s", $qrtCALLS[$i]);
 
-			$MAIN.="  |<SPAN class=\"green\">";
-			$k=0;   while ($k <= $Xhour_count) {$MAIN.="*";   $k++;   $char_counter++;}
-			if ($char_counter > 21) {$MAIN.="C</SPAN>";   $char_counter++;}
-			else {$MAIN.="*C</SPAN>";   $char_counter++;   $char_counter++;}
-			$k=0;   while ($k <= $Yhour_count) {$MAIN.=" ";   $k++;   $char_counter++;}
-				while ($char_counter <= 22) {$MAIN.=" ";   $char_counter++;}
-			$MAIN.="|     0 | $qrtCALLS[$i] |\n";
+			$ASCII_text.="  |<SPAN class=\"green\">";
+			$k=0;   while ($k <= $Xhour_count) {$ASCII_text.="*";   $k++;   $char_counter++;}
+			if ($char_counter > 21) {$ASCII_text.="C</SPAN>";   $char_counter++;}
+			else {$ASCII_text.="*C</SPAN>";   $char_counter++;   $char_counter++;}
+			$k=0;   while ($k <= $Yhour_count) {$ASCII_text.=" ";   $k++;   $char_counter++;}
+				while ($char_counter <= 22) {$ASCII_text.=" ";   $char_counter++;}
+			$ASCII_text.="|     0 | $qrtCALLS[$i] |\n";
 			}
 		else
 			{
@@ -904,18 +1038,26 @@ while ($i < $TOTintervals)
 			$qrtCALLS[$i] =	sprintf("%5s", $qrtCALLS[$i]);
 			$qrtDROPS[$i] =	sprintf("%5s", $qrtDROPS[$i]);
 
-			$MAIN.="  |<SPAN class=\"red\">";
-			$k=0;   while ($k <= $Xdrop_count) {$MAIN.=">";   $k++;   $char_counter++;}
-			$MAIN.="D</SPAN><SPAN class=\"green\">";   $char_counter++;
-			$k=0;   while ($k <= $XXhour_count) {$MAIN.="*";   $k++;   $char_counter++;}
-			$MAIN.="C</SPAN>";   $char_counter++;
-			$k=0;   while ($k <= $Yhour_count) {$MAIN.=" ";   $k++;   $char_counter++;}
-				while ($char_counter <= 22) {$MAIN.=" ";   $char_counter++;}
-			$MAIN.="| $qrtDROPS[$i] | $qrtCALLS[$i] |\n";
+			$ASCII_text.="  |<SPAN class=\"red\">";
+			$k=0;   while ($k <= $Xdrop_count) {$ASCII_text.=">";   $k++;   $char_counter++;}
+			$ASCII_text.="D</SPAN><SPAN class=\"green\">";   $char_counter++;
+			$k=0;   while ($k <= $XXhour_count) {$ASCII_text.="*";   $k++;   $char_counter++;}
+			$ASCII_text.="C</SPAN>";   $char_counter++;
+			$k=0;   while ($k <= $Yhour_count) {$ASCII_text.=" ";   $k++;   $char_counter++;}
+				while ($char_counter <= 22) {$ASCII_text.=" ";   $char_counter++;}
+			$ASCII_text.="| $qrtDROPS[$i] | $qrtCALLS[$i] |\n";
 			}
 		}
 	### END CALLS TOTALS GRAPH ###
 	$CSV_text.="\"$HMdisplay[$i]\",\"$qrtQUEUEavg[$i]\",\"$qrtQUEUEmax[$i]\",\"\",\"$qrtDROPS[$i]\",\"$qrtCALLS[$i]\"\n";
+
+	$graph_stats[$i][0]="$HMdisplay[$i]";
+	$graph_stats[$i][1]=trim($qrtQUEUEavg[$i]);
+	$graph_stats[$i][2]=trim($qrtQUEUEmax[$i]);
+	$graph_stats[$i][3]=trim($qrtCALLS[$i]);
+	$graph_stats[$i][4]=trim($qrtDROPS[$i]);
+	if (trim($qrtQUEUEavg[$i])>$max_avg_hold_time) {$max_avg_hold_time=trim($qrtQUEUEavg[$i]);}
+	if (trim($qrtCALLS[$i])>$max_calls) {$max_calls=trim($qrtCALLS[$i]);}
 
 	$i++;
 	}
@@ -933,11 +1075,58 @@ $totDROPS =	sprintf("%5s", $totDROPS);
 $totCALLS =	sprintf("%5s", $totCALLS);
 
 
-$MAIN.="+-------------+-----------------------+-------+-------+  +-----------------------+-------+-------+\n";
-$MAIN.="| TOTAL                               | $totQUEUEavg | $totQUEUEmax |  |                       | $totDROPS | $totCALLS |\n";
-$MAIN.="+-------------------------------------+-------+-------+  +-----------------------+-------+-------+\n";
+$ASCII_text.="+-------------+-----------------------+-------+-------+  +-----------------------+-------+-------+\n";
+$ASCII_text.="| TOTAL                               | $totQUEUEavg | $totQUEUEmax |  |                       | $totDROPS | $totCALLS |\n";
+$ASCII_text.="+-------------------------------------+-------+-------+  +-----------------------+-------+-------+\n";
 $CSV_text.="\"TOTAL\",\"$totQUEUEavg\",\"$totQUEUEmax\",\"\",\"$totDROPS\",\"$totCALLS\"\n\n";
 
+$AVGHOLD_graph="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>AVERAGE HOLD TIME</caption><tr><th class='thgraph' scope='col'>TIME 15-MIN INT</th><th class='thgraph' scope='col'>AVG HOLD TIME</th><th class='thgraph' scope='col'>AVG</th><th class='thgraph' scope='col'>MAX</th></tr>";
+$CALLSHANDLED_graph="<table cellspacing='0' cellpadding='0'><caption align='top'>CALLS HANDLED</caption><tr><th class='thgraph' scope='col'>TIME 15-MIN INT</th><th class='thgraph' scope='col'>DROPS <img src='./images/bar_blue.png' width='10' height='10'> / CALLS <img src='./images/bar.png' width='10' height='10'></th></tr>";
+
+for ($d=0; $d<count($graph_stats); $d++) {
+	if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
+	$AVGHOLD_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_avg_hold_time)."' height='16' />".$graph_stats[$d][1]."</td><td class='chart_td$class'>".$graph_stats[$d][1]."</td><td class='chart_td$class'>".$graph_stats[$d][2]."</td></tr>";
+
+	$CALLSHANDLED_graph.="  <tr><td class='chart_td' width='50'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value' width='600' valign='bottom'>";
+	if ($graph_stats[$d][3]>0) {
+		$CALLSHANDLED_graph.="<ul class='overlap_barGraph'><li class='p1' style='height: 12px; left: 0px; width: ".round(600*$graph_stats[$d][3]/$max_calls)."px'><font style='background-color: #900'>".$graph_stats[$d][3]."</font></li>";
+		if ($graph_stats[$d][4]>0) {
+			$CALLSHANDLED_graph.="<li class='p2' style='height: 12px; left: 0px; width: ".round(600*$graph_stats[$d][4]/$max_calls)."px'><font style='background-color: #009'>".$graph_stats[$d][4]."</font></li>";
+		}
+		$CALLSHANDLED_graph.="</ul>";
+	} else {
+		$CALLSHANDLED_graph.="0";
+	}
+	$CALLSHANDLED_graph.="</td></tr>";
+}
+$AVGHOLD_graph.="<tr><th class='thgraph' colspan='2' scope='col'>TOTALS:</th><th class='thgraph' scope='col'>".trim($totQUEUEavg)."&nbsp;</th><th class='thgraph' scope='col'>&nbsp;".trim($totQUEUEmax)."</th></tr></table>";
+$CALLSHANDLED_graph.="<tr><th class='thgraph' scope='col'>TOTALS:</th><th class='thgraph' scope='col'>DROPS: ".trim($totDROPS)."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CALLS: ".trim($totCALLS)."</th></tr></table>";
+$JS_text.="function DrawHCDGraph(graph, th_id) {\n";
+$JS_text.="	var AVGHOLD_graph=\"$AVGHOLD_graph\";\n";
+$JS_text.="	var CALLSHANDLED_graph=\"$CALLSHANDLED_graph\";\n";
+$JS_text.="\n";
+$JS_text.="	for (var i=1; i<=2; i++) {\n";
+$JS_text.="		var cellID=\"holdcalldropgraph\"+i;\n";
+$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
+$JS_text.="	}\n";
+$JS_text.="	var cellID=\"holdcalldropgraph\"+th_id;\n";
+$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
+$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
+$JS_text.="	document.getElementById('holdcalldrop_stats_graph').innerHTML=graph_to_display;\n";
+$JS_text.="}\n";
+$JS_onload.="\tDrawHCDGraph('AVGHOLD','1');\n"; 
+$JS_onload.="}\n";
+$JS_text.=$JS_onload;
+$JS_text.="</script>\n";
+
+if ($report_display_type=="HTML")
+	{
+	$MAIN.=$GRAPH;
+	}
+else
+	{
+	$MAIN.=$ASCII_text;
+	}
 
 
 
@@ -1098,6 +1287,7 @@ if ($file_download > 0)
 	{
 
 	echo "$HEADER";
+	echo $JS_text;
 	require("admin_header.php");
 	echo "$MAIN";
 	}

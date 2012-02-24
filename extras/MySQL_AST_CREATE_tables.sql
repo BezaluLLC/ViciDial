@@ -872,7 +872,8 @@ xferconf_d_number VARCHAR(50) default '',
 xferconf_e_number VARCHAR(50) default '',
 web_form_address TEXT,
 web_form_address_two TEXT,
-time_zone_setting ENUM('COUNTRY_AND_AREA_CODE','POSTAL_CODE','NANPA_PREFIX','OWNER_TIME_ZONE_CODE') default 'COUNTRY_AND_AREA_CODE'
+time_zone_setting ENUM('COUNTRY_AND_AREA_CODE','POSTAL_CODE','NANPA_PREFIX','OWNER_TIME_ZONE_CODE') default 'COUNTRY_AND_AREA_CODE',
+inventory_report ENUM('Y','N') default 'Y'
 );
 
 CREATE TABLE vicidial_statuses (
@@ -1641,6 +1642,7 @@ shift_length VARCHAR(5) default '16:00',
 shift_weekdays VARCHAR(7) default '0123456',
 report_option ENUM('Y','N') default 'N',
 user_group VARCHAR(20) default '---ALL---',
+report_rank SMALLINT(5) default '1',
 index (shift_id)
 );
 
@@ -2794,7 +2796,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1313',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1314',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

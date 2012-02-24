@@ -1,7 +1,7 @@
 <?php 
 # AST_IVRstats.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 81026-2026 - First build
@@ -19,6 +19,7 @@
 # 110525-1907 - Added support for outbound log analysis
 # 110703-1850 - Added download option
 # 111103-2315 - Added user_group restrictions for selecting in-groups
+# 120224-0910 - Added HTML display option with bar graphs
 #
 
 require("dbconnect.php");
@@ -44,6 +45,8 @@ if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
 if (isset($_GET["file_download"]))					{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))		{$file_download=$_POST["file_download"];}
+if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
+	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
@@ -56,6 +59,8 @@ if ($type == 'inbound')
 else
 	{$report_name = 'Outbound IVR Report';}
 $db_source = 'M';
+$JS_text="<script language='Javascript'>\n";
+$JS_onload="onload = function() {\n";
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -285,6 +290,7 @@ $end_date_T = $end_dateARRAY[1];
 
 $HEADER.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
+$HEADER.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
@@ -425,7 +431,11 @@ $MAIN.="	}\n";
 
 $MAIN.="</SCRIPT>\n";
 
-$MAIN.="&nbsp; <input type=button value=\"SUBMIT\" name=smt id=smt onClick=\"submit_form()\">\n";
+$MAIN.="<BR>Display as:&nbsp; ";
+$MAIN.="<select name='report_display_type'>";
+if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
+$MAIN.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR>";
+$MAIN.="&nbsp; &nbsp; <input type=button value=\"SUBMIT\" name=smt id=smt onClick=\"submit_form()\">\n";
 
 $MAIN.="</TD></TR></TABLE>\n";
 $MAIN.="</FORM>\n\n";
@@ -601,11 +611,30 @@ else
 	### put call flows and counts together for sorting again
 	$s=0;
 
-	$MAIN.="+--------+--------+--------+--------+------+------+\n";
-	$MAIN.="|        |        | QUEUE  | QUEUE  | IVR  | TOTAL|\n";
-	$MAIN.="| IVR    | QUEUE  | DROP   | DROP   | AVG  | AVG  |\n";
-	$MAIN.="| CALLS  | CALLS  | CALLS  | PERCENT| TIME | TIME | CALL PATH\n";
-	$MAIN.="+--------+--------+--------+--------+------+------+------------\n";
+	$ASCII_text.="+--------+--------+--------+--------+------+------+\n";
+	$ASCII_text.="|        |        | QUEUE  | QUEUE  | IVR  | TOTAL|\n";
+	$ASCII_text.="| IVR    | QUEUE  | DROP   | DROP   | AVG  | AVG  |\n";
+	$ASCII_text.="| CALLS  | CALLS  | CALLS  | PERCENT| TIME | TIME | CALL PATH\n";
+	$ASCII_text.="+--------+--------+--------+--------+------+------+------------\n";
+
+	######## GRAPHING #########
+	$graph_stats=array();
+	$max_ivr_calls=1;
+	$max_queue_calls=1;
+	$max_queue_drops=1;
+	$max_queue_drops_percent=1;
+	$max_ivr_avg=1;
+	$max_total_avg=1;
+	$GRAPH="<a name='ivrgraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
+	$GRAPH.="<tr><th width='16%' id='ivrgraph1' class='grey_graph_cell'><a href='#' onClick=\"DrawGraph('IVRCALLS', '1'); return false;\">IVR CALLS</a></th><th width='17%' id='ivrgraph2' class='grey_graph_cell'><a href='#' onClick=\"DrawGraph('QUEUECALLS', '2'); return false;\">QUEUE CALLS</a></th><th width='17%' id='ivrgraph3' class='grey_graph_cell'><a href='#' onClick=\"DrawGraph('QUEUEDROPCALLS', '3'); return false;\">QUEUE DROP CALLS</a></th><th width='16%' id='ivrgraph4' class='grey_graph_cell'><a href='#' onClick=\"DrawGraph('QUEUEDROPPERCENT', '4'); return false;\">QUEUE DROP PERCENT</a></th><th width='17%' id='ivrgraph5' class='grey_graph_cell'><a href='#' onClick=\"DrawGraph('IVRAVGTIME', '5'); return false;\">IVR AVG TIME</a></th><th width='17%' id='ivrgraph6' class='grey_graph_cell'><a href='#' onClick=\"DrawGraph('TOTALAVGTIME', '6'); return false;\">TOTAL AVG TIME</a></th></tr>";
+	$GRAPH.="<tr><td colspan='6' class='graph_span_cell'><span id='ivr_stats_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
+	$IVRCALLS_graph="<table cellspacing='0' cellpadding='0' summary='STATUS' class='horizontalgraph'><caption align='top'>IVR STATS</caption><tr><th class='thgraph' scope='col'>IVR CALLS</th><th class='thgraph' scope='col'>CALL PATH</th></tr>";
+	$QUEUECALLS_graph="<table cellspacing='0' cellpadding='0' summary='STATUS' class='horizontalgraph'><caption align='top'>IVR STATS</caption><tr><th class='thgraph' scope='col'>QUEUE CALLS</th><th class='thgraph' scope='col'>CALL PATH</th></tr>";
+	$QUEUEDROPCALLS_graph="<table cellspacing='0' cellpadding='0' summary='STATUS' class='horizontalgraph'><caption align='top'>IVR STATS</caption><tr><th class='thgraph' scope='col'>QUEUE DROP CALLS</th><th class='thgraph' scope='col'>CALL PATH</th></tr>";
+	$QUEUEDROPPERCENT_graph="<table cellspacing='0' cellpadding='0' summary='STATUS' class='horizontalgraph'><caption align='top'>IVR STATS</caption><tr><th class='thgraph' scope='col'>QUEUE DROP PERCENT</th><th class='thgraph' scope='col'>CALL PATH</th></tr>";
+	$IVRAVGTIME_graph="<table cellspacing='0' cellpadding='0' summary='STATUS' class='horizontalgraph'><caption align='top'>IVR STATS</caption><tr><th class='thgraph' scope='col'>IVR AVG TIME</th><th class='thgraph' scope='col'>CALL PATH</th></tr>";
+	$TOTALAVGTIME_graph="<table cellspacing='0' cellpadding='0' summary='STATUS' class='horizontalgraph'><caption align='top'>IVR STATS</caption><tr><th class='thgraph' scope='col'>TOTAL AVG TIME</th><th class='thgraph' scope='col'>CALL PATH</th></tr>";
+	###########################
 
 	$CSV_text.="\"\",\"IVR CALLS\",\"QUEUE CALLS\",\"QUEUE DROP CALLS\",\"QUEUE DROP PERCENT\",\"IVR AVG TIME\",\"TOTAL AVG TIME\",\"CALL PATH\"\n";
 
@@ -626,7 +655,7 @@ else
 			##### Grab all records for the IVR for the specified time period
 			$stmt="select status,length_in_sec from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and uniqueid IN($FLOWunique_calls_list[$s]);";
 			$rslt=mysql_query($stmt, $link);
-			if ($DB) {$MAIN.="$stmt\n";}
+			if ($DB) {$ASCII_text.="$stmt\n";}
 			$vcl_statuses_to_print = mysql_num_rows($rslt);
 			$w=0;
 			while ($w < $vcl_statuses_to_print)
@@ -645,6 +674,16 @@ else
 			$FLOWdropPCT[$s] = ( ($FLOWdrop[$s] / $FLOWtotal[$s]) * 100);
 			$FLOWdropPCT[$s] = round($FLOWdropPCT[$s], 2);
 			}
+
+		if ($FLOWsummary[0]>$max_ivr_calls) {$max_ivr_calls=$FLOWsummary[0];}
+		if ($FLOWtotal[$s]>$max_queue_calls) {$max_queue_calls=$FLOWtotal[$s];}
+		if ($FLOWdrop[$s]>$max_queue_drops) {$max_queue_drops=$FLOWdrop[$s];}
+		if ($FLOWdropPCT[$s]>$max_queue_drops_percent) {$max_queue_drops_percent=$FLOWdropPCT[$s];}
+		$graph_stats[$s][1]=$FLOWsummary[0];
+		$graph_stats[$s][2]=$FLOWtotal[$s];
+		$graph_stats[$s][3]=$FLOWdrop[$s];
+		$graph_stats[$s][4]=$FLOWdropPCT[$s];
+
 		$FLOWsummary[0] =	sprintf("%6s", $FLOWsummary[0]);
 		$FLOWtotal[$s] =	sprintf("%6s", $FLOWtotal[$s]);
 		$FLOWdrop[$s] =		sprintf("%6s", $FLOWdrop[$s]);
@@ -659,12 +698,19 @@ else
 		$avgFLOWtotal_time[$s] = round($avgFLOWtotal_time[$s], 0);
 		$avgFLOWtotal_time[$s] = sprintf("%4s", $avgFLOWtotal_time[$s]);
 
+		if (trim($avgFLOWivr_time[$s])>$max_ivr_avg) {$max_ivr_avg=trim($avgFLOWivr_time[$s]);}
+		if (trim($avgFLOWtotal_time[$s])>$max_total_avg) {$max_total_avg=trim($avgFLOWtotal_time[$s]);}
+		$graph_stats[$s][0]=$FLOWsummary[1];
+		$graph_stats[$s][5]=trim($avgFLOWivr_time[$s]);
+		$graph_stats[$s][6]=trim($avgFLOWtotal_time[$s]);
+
+
 		$totFLOWtotal_time = ($totFLOWtotal_time + $FLOWtotal_time[$s]);
 		$totFLOWivr_time = ($totFLOWivr_time + $FLOWivr_time[$s]);
 		$totFLOWtotal = ($totFLOWtotal + $FLOWtotal[$s]);
 		$totFLOWdrop = ($totFLOWdrop + $FLOWdrop[$s]);
 
-		$MAIN.="| $FLOWsummary[0] | $FLOWtotal[$s] | $FLOWdrop[$s] | $FLOWdropPCT[$s]%| $avgFLOWivr_time[$s] | $avgFLOWtotal_time[$s] | $FLOWsummary[1]\n";
+		$ASCII_text.="| $FLOWsummary[0] | $FLOWtotal[$s] | $FLOWdrop[$s] | $FLOWdropPCT[$s]%| $avgFLOWivr_time[$s] | $avgFLOWtotal_time[$s] | $FLOWsummary[1]\n";
 		$CSV_text.="\"\",\"$FLOWsummary[0]\",\"$FLOWtotal[$s]\",\"$FLOWdrop[$s]\",\"$FLOWdropPCT[$s]%\",\"$avgFLOWivr_time[$s]\",\"$avgFLOWtotal_time[$s]\",\"$FLOWsummary[1]\"\n";
 
 		$s++;
@@ -689,12 +735,56 @@ else
 		}
 	$totFLOWdropPCT = sprintf("%5s", $totFLOWdropPCT);
 
-	$MAIN.="+--------+--------+--------+--------+------+------+------------\n";
-	$MAIN.="| $TOTALcalls | $totFLOWtotal | $totFLOWdrop | $totFLOWdropPCT% | $TavgFLOWivr_time | $TavgFLOWtotal_time |\n";
-	$MAIN.="+--------+--------+--------+--------+------+------+\n";
+	$ASCII_text.="+--------+--------+--------+--------+------+------+------------\n";
+	$ASCII_text.="| $TOTALcalls | $totFLOWtotal | $totFLOWdrop | $totFLOWdropPCT% | $TavgFLOWivr_time | $TavgFLOWtotal_time |\n";
+	$ASCII_text.="+--------+--------+--------+--------+------+------+\n";
 
 	$CSV_text.="\"\",\"$TOTALcalls\",\"$totFLOWtotal\",\"$totFLOWdrop\",\"$totFLOWdropPCT%\",\"$TavgFLOWivr_time\",\"$TavgFLOWtotal_time\"\n";
 
+	for ($d=0; $d<count($graph_stats); $d++) {
+		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
+		$IVRCALLS_graph.="  <tr><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_ivr_calls)."' height='16' />".$graph_stats[$d][1]."</td><td class='chart_td$class'>".$graph_stats[$d][0]."</td></tr>";
+		$QUEUECALLS_graph.="  <tr><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][2]/$max_queue_calls)."' height='16' />".$graph_stats[$d][2]."</td><td class='chart_td$class'>".$graph_stats[$d][0]."</td></tr>";
+		$QUEUEDROPCALLS_graph.="  <tr><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][3]/$max_queue_drops)."' height='16' />".$graph_stats[$d][3]."</td><td class='chart_td$class'>".$graph_stats[$d][0]."</td></tr>";
+		$QUEUEDROPPERCENT_graph.="  <tr><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][4]/$max_queue_drops_percent)."' height='16' />".$graph_stats[$d][4]."%</td><td class='chart_td$class'>".$graph_stats[$d][0]."</td></tr>";
+		$IVRAVGTIME_graph.="  <tr><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][5]/$max_ivr_avg)."' height='16' />".$graph_stats[$d][5]."</td><td class='chart_td$class'>".$graph_stats[$d][0]."</td></tr>";
+		$TOTALAVGTIME_graph.="  <tr><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][6]/$max_total_avg)."' height='16' />".$graph_stats[$d][6]."</td><td class='chart_td$class'>".$graph_stats[$d][0]."</td></tr>";
+	}
+	$IVRCALLS_graph.="<tr><th class='thgraph' scope='col'>".trim($TOTALcalls)."</th><th class='thgraph' scope='col'>TOTAL</th></tr></table>";
+	$QUEUECALLS_graph.="<tr><th class='thgraph' scope='col'>".trim($totFLOWtotal)."</th><th class='thgraph' scope='col'>TOTAL</th></tr></table>";
+	$QUEUEDROPCALLS_graph.="<tr><th class='thgraph' scope='col'>".trim($totFLOWdrop)."</th><th class='thgraph' scope='col'>TOTAL</th></tr></table>";
+	$QUEUEDROPPERCENT_graph.="<tr><th class='thgraph' scope='col'>".trim($totFLOWdropPCT)."%</th><th class='thgraph' scope='col'>TOTAL</th></tr></table>";
+	$IVRAVGTIME_graph.="<tr><th class='thgraph' scope='col'>".trim($TavgFLOWivr_time)."</th><th class='thgraph' scope='col'>TOTAL</th></tr></table>";
+	$TOTALAVGTIME_graph.="<tr><th class='thgraph' scope='col'>".trim($TavgFLOWtotal_time)."</th><th class='thgraph' scope='col'>TOTAL</th></tr></table>";	
+	$JS_onload.="\tDrawGraph('IVRCALLS', '1');\n"; 
+	$JS_text.="function DrawGraph(graph, th_id) {\n";
+	$JS_text.="	var IVRCALLS_graph=\"$IVRCALLS_graph\";\n";
+	$JS_text.="	var QUEUECALLS_graph=\"$QUEUECALLS_graph\";\n";
+	$JS_text.="	var QUEUEDROPCALLS_graph=\"$QUEUEDROPCALLS_graph\";\n";
+	$JS_text.="	var QUEUEDROPPERCENT_graph=\"$QUEUEDROPPERCENT_graph\";\n";
+	$JS_text.="	var IVRAVGTIME_graph=\"$IVRAVGTIME_graph\";\n";
+	$JS_text.="	var TOTALAVGTIME_graph=\"$TOTALAVGTIME_graph\";\n";
+	$JS_text.="\n";
+	$JS_text.="	for (var i=1; i<=6; i++) {\n";
+	$JS_text.="		var cellID=\"ivrgraph\"+i;\n";
+	$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
+	$JS_text.="	}\n";
+	$JS_text.="	var cellID=\"ivrgraph\"+th_id;\n";
+	$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
+	$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
+	$JS_text.="	document.getElementById('ivr_stats_graph').innerHTML=graph_to_display;\n";
+	$JS_text.="}\n";
+	$GRAPH_text.=$GRAPH;
+	
+	if ($report_display_type=="HTML") 
+		{
+		$MAIN.=$GRAPH_text;
+		}
+	else 
+		{
+		$MAIN.=$ASCII_text;
+		}
+	
 	##############################
 	#########  TIME STATS
 
@@ -913,7 +1003,12 @@ else
 
 		exit;
 	} else {
+		$JS_onload.="}\n";
+		$JS_text.=$JS_onload;
+		$JS_text.="</script>\n";
+
 		echo $HEADER;
+		echo $JS_text;
 		require("admin_header.php");
 		echo $MAIN;
 	}

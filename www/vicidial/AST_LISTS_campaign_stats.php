@@ -1,7 +1,7 @@
 <?php 
 # AST_LISTS_campaign_stats.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This is a list inventory report, not a calling report. This report will show
 # statistics for all of the lists in the selected campaigns
@@ -9,6 +9,7 @@
 # CHANGES
 # 100916-0928 - First build
 # 110703-1815 - Added download option
+# 120224-0910 - Added HTML display option with bar graphs
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -29,12 +30,16 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
 if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
+if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
+	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
 
 $report_name = 'Lists Campaign Statuses Report';
 $db_source = 'M';
+$JS_text="<script language='Javascript'>\n";
+$JS_onload="onload = function() {\n";
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -256,6 +261,7 @@ $HEADER.="   .blue {color: white; background-color: blue}\n";
 $HEADER.="   .purple {color: white; background-color: purple}\n";
 $HEADER.="-->\n";
 $HEADER.=" </STYLE>\n";
+$HEADER.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 $HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -282,7 +288,11 @@ while ($campaigns_to_print > $o)
 	$o++;
 	}
 $MAIN.="</SELECT>\n";
-$MAIN.="</TD><TD VALIGN=TOP><BR>";
+$MAIN.="</TD><TD VALIGN=TOP>";
+$MAIN.="Display as:<BR/>";
+$MAIN.="<select name='report_display_type'>";
+if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
+$MAIN.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>&nbsp; ";
 $MAIN.="<BR><BR>\n";
 $MAIN.="<INPUT type=submit NAME=SUBMIT VALUE=SUBMIT>\n";
 $MAIN.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
@@ -330,6 +340,14 @@ else
 	$CSV_text1.="\"LIST ID SUMMARY\"\n";
 	$CSV_text1.="\"LIST\",\"LEADS\",\"ACTIVE\"\n";
 
+	$max_calls=1; $graph_stats=array();
+	$GRAPH="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
+	$GRAPH.="<caption align='top'>LIST ID SUMMARY</caption>";
+	$GRAPH.="<tr>\n";
+	$GRAPH.="<th class=\"thgraph\" scope=\"col\">LIST</th>\n";
+	$GRAPH.="<th class=\"thgraph\" scope=\"col\">LEADS</th>\n";
+	$GRAPH.="</tr>\n";
+
 	$stmt="select count(*),list_id from vicidial_list where list_id IN( SELECT list_id from vicidial_lists where active IN('Y','N') $group_SQLand) group by list_id;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
@@ -341,6 +359,9 @@ else
 		$LISTIDcalls[$i] =	$row[0];
 		$LISTIDlists[$i] =	$row[1];
 		$list_id_SQL .=		"'$row[1]',";
+		if ($row[0]>$max_calls) {$max_calls=$row[0];}
+		$graph_stats[$i][0]=$row[0];
+		$graph_stats[$i][1]=$row[1];
 		$i++;
 		}
 	if (strlen($list_id_SQL)>2)		{$list_id_SQL = substr("$list_id_SQL", 0, -1);}
@@ -357,10 +378,11 @@ else
 			{
 			$row=mysql_fetch_row($rslt);
 			$LISTIDlist_names[$i] =	$row[0];
+			$graph_stats[$i][1].=" - $row[0]";
 			if ($row[1]=='Y')
-				{$LISTIDlist_active[$i] = 'ACTIVE  ';}
+				{$LISTIDlist_active[$i] = 'ACTIVE  '; $graph_stats[$i][1].=" (ACTIVE)";}
 			else
-				{$LISTIDlist_active[$i] = 'INACTIVE';}
+				{$LISTIDlist_active[$i] = 'INACTIVE'; $graph_stats[$i][1].=" (INACTIVE)";}
 			}
 
 		$TOTALleads = ($TOTALleads + $LISTIDcalls[$i]);
@@ -381,6 +403,20 @@ else
 	$OUToutput .= "+------------------------------------------+------------+\n";
 	$CSV_text1.="\"TOTAL\",\"$TOTALleads\"\n";
 
+	for ($d=0; $d<count($graph_stats); $d++) {
+		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
+		$GRAPH.="  <tr>\n";
+		$GRAPH.="	<td class=\"chart_td$class\">".$graph_stats[$d][1]."</td>\n";
+		$GRAPH.="	<td nowrap class=\"chart_td value$class\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$graph_stats[$d][0]/$max_calls)."\" height=\"16\" />".$graph_stats[$d][0]."</td>\n";
+		$GRAPH.="  </tr>\n";
+	}
+	$GRAPH.="  <tr>\n";
+	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">TOTAL:</th>\n";
+	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">".trim($TOTALleads)."</th>\n";
+	$GRAPH.="  </tr>\n";
+	$GRAPH.="</table><PRE>\n";
+	# $OUToutput.=$GRAPH;
+
 
 	##############################
 	#########  STATUS FLAGS STATS
@@ -398,6 +434,14 @@ else
 	$UW_count=0;
 	$UW_percent=0;
 
+	$max_calls=1; $graph_stats=array();
+	$GRAPH.="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
+	$GRAPH.="<caption align='top'>STATUS FLAG SUMMARY</caption>";
+	$GRAPH.="<tr>\n";
+	$GRAPH.="<th class=\"thgraph\" scope=\"col\">STATUS FLAG</th>\n";
+	$GRAPH.="<th class=\"thgraph\" scope=\"col\">CALLS</th>\n";
+	$GRAPH.="</tr>\n";
+
 	$stmt="select count(*) from vicidial_list where status IN($human_answered_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
@@ -406,8 +450,10 @@ else
 		{
 		$row=mysql_fetch_row($rslt);
 		$HA_count = $row[0];
+		$flag_count+=$row[0];
 		if ($HA_count > 0)
 			{
+			if ($HA_count>$max_calls) {$max_calls=$HA_count;}
 			$HA_percent = ( ($HA_count / $TOTALleads) * 100);
 			}
 		}
@@ -419,8 +465,10 @@ else
 		{
 		$row=mysql_fetch_row($rslt);
 		$SALE_count = $row[0];
+		$flag_count+=$row[0];
 		if ($SALE_count > 0)
 			{
+			if ($SALE_count>$max_calls) {$max_calls=$SALE_count;}
 			$SALE_percent = ( ($SALE_count / $TOTALleads) * 100);
 			}
 		}
@@ -432,8 +480,10 @@ else
 		{
 		$row=mysql_fetch_row($rslt);
 		$DNC_count = $row[0];
+		$flag_count+=$row[0];
 		if ($DNC_count > 0)
 			{
+			if ($DNC_count>$max_calls) {$max_calls=$DNC_count;}
 			$DNC_percent = ( ($DNC_count / $TOTALleads) * 100);
 			}
 		}
@@ -445,8 +495,10 @@ else
 		{
 		$row=mysql_fetch_row($rslt);
 		$CC_count = $row[0];
+		$flag_count+=$row[0];
 		if ($CC_count > 0)
 			{
+			if ($C_count>$max_calls) {$max_calls=$CC_count;}
 			$CC_percent = ( ($CC_count / $TOTALleads) * 100);
 			}
 		}
@@ -458,8 +510,10 @@ else
 		{
 		$row=mysql_fetch_row($rslt);
 		$NI_count = $row[0];
+		$flag_count+=$row[0];
 		if ($NI_count > 0)
 			{
+			if ($NI_count>$max_calls) {$max_calls=$NI_count;}
 			$NI_percent = ( ($NI_count / $TOTALleads) * 100);
 			}
 		}
@@ -471,8 +525,10 @@ else
 		{
 		$row=mysql_fetch_row($rslt);
 		$UW_count = $row[0];
+		$flag_count+=$row[0];
 		if ($UW_count > 0)
 			{
+			if ($UW_count>$max_calls) {$max_calls=$UW_count;}
 			$UW_percent = ( ($UW_count / $TOTALleads) * 100);
 			}
 		}
@@ -512,6 +568,36 @@ else
 	$CSV_text2 .= "\"Not Interested\",\"$NI_count\",\"$NI_percent%\"\n";
 	$CSV_text2 .= "\"Unworkable\",\"$UW_count\",\"$UW_percent%\"\n";
 
+	$GRAPH.="  <tr>\n";
+	$GRAPH.="	<td class=\"chart_td first\">Human Answer</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value first\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$HA_count/$max_calls)."\" height=\"16\"/>".$HA_count." ($HA_percent%)</td>\n";
+	$GRAPH.="  </tr>\n";
+	$GRAPH.="  <tr>\n";
+	$GRAPH.="	<td class=\"chart_td\">Sale</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$SALE_count/$max_calls)."\" height=\"16\" />".$SALE_count." ($SALE_percent%)</td>\n";
+	$GRAPH.="  </tr>\n";
+	$GRAPH.="  <tr>\n";
+	$GRAPH.="	<td class=\"chart_td\">DNC</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$DNC_count/$max_calls)."\" height=\"16\" />".$DNC_count." ($DNC_percent%)</td>\n";
+	$GRAPH.="  </tr>\n";
+	$GRAPH.="  <tr>\n";
+	$GRAPH.="	<td class=\"chart_td\">Customer Contact</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$CC_count/$max_calls)."\" height=\"16\" />".$CC_count." ($CC_percent%)</td>\n";
+	$GRAPH.="  </tr>\n";
+	$GRAPH.="  <tr>\n";
+	$GRAPH.="	<td class=\"chart_td\">Not Interested</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$NI_count/$max_calls)."\" height=\"16\" />".$NI_count." ($NI_percent%)</td>\n";
+	$GRAPH.="  </tr>\n";
+	$GRAPH.="  <tr>\n";
+	$GRAPH.="	<td class=\"chart_td last\">Unworkable</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value last\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$UW_count/$max_calls)."\" height=\"16\" />".$UW_count." ($UW_percent%)</td>\n";
+	$GRAPH.="  </tr>\n";
+	$GRAPH.="  <tr>\n";
+	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">TOTAL:</th>\n";
+	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">".trim($flag_count)."</th>\n";
+	$GRAPH.="  </tr>\n";
+	$GRAPH.="</table><PRE>\n";
+	# $OUToutput.=$GRAPH;
 
 	##############################
 	#########  STATUS CATEGORY STATS
@@ -525,8 +611,16 @@ else
 	$CSV_text3.="\"CUSTOM STATUS CATEGORY STATS\"\n";
 	$CSV_text3.="\"CATEGORY\",\"CALLS\",\"DESCRIPTION\"\n";
 
+	$max_calls=1; $graph_stats=array();
+	$GRAPH.="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
+	$GRAPH.="<caption align='top'>CUSTOM STATUS CATEGORY STATS</caption>";
+	$GRAPH.="<tr>\n";
+	$GRAPH.="<th class=\"thgraph\" scope=\"col\">CATEGORY</th>\n";
+	$GRAPH.="<th class=\"thgraph\" scope=\"col\">CALLS</th>\n";
+	$GRAPH.="</tr>\n";
+
 	$TOTCATcalls=0;
-	$r=0;
+	$r=0; $i=0;
 	while ($r < $statcats_to_print)
 		{
 		if ($vsc_id[$r] != 'UNDEFINED')
@@ -535,6 +629,11 @@ else
 			$category =	sprintf("%-20s", $vsc_id[$r]); while(strlen($category)>20) {$category = substr("$category", 0, -1);}
 			$CATcount =	sprintf("%10s", $vsc_count[$r]); while(strlen($CATcount)>10) {$CATcount = substr("$CATcount", 0, -1);}
 			$CATname =	sprintf("%-30s", $vsc_name[$r]); while(strlen($CATname)>30) {$CATname = substr("$CATname", 0, -1);}
+
+			if ($vsc_count[$r]>$max_calls) {$max_calls=$vsc_count[$r];}
+			$graph_stats[$i][0]=$vsc_count[$r];
+			$graph_stats[$i][1]=$vsc_id[$r];
+			$i++;
 
 			$OUToutput .= "| $category | $CATcount | $CATname |\n";
 			$CSV_text3.="\"$category\",\"$CATcount\",\"$CATname\"\n";
@@ -549,6 +648,19 @@ else
 	$OUToutput .= "+----------------------+------------+\n";
 	$CSV_text3.="\"TOTAL\",\"$TOTCATcalls\"\n";
 
+	for ($d=0; $d<count($graph_stats); $d++) {
+		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
+		$GRAPH.="  <tr>\n";
+		$GRAPH.="	<td class=\"chart_td$class\">".$graph_stats[$d][1]."</td>\n";
+		$GRAPH.="	<td nowrap class=\"chart_td value$class\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$graph_stats[$d][0]/$max_calls)."\" height=\"16\" />".$graph_stats[$d][0]."</td>\n";
+		$GRAPH.="  </tr>\n";
+	}
+	$GRAPH.="  <tr>\n";
+	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">TOTAL:</th>\n";
+	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">".trim($TOTCATcalls)."</th>\n";
+	$GRAPH.="  </tr>\n";
+	$GRAPH.="</table><PRE>\n";
+	#$OUToutput.=$GRAPH;
 
 
 	##############################
@@ -575,6 +687,17 @@ else
 		$OUToutput .= "| $header_list_id $LISTIDlist_active[$i] |\n";
 		$OUToutput .= "|    TOTAL LEADS: $header_list_count                                   |\n";
 		$OUToutput .= "+--------------------------------------------------------------+\n";
+
+		$max_flags=1; 
+		$max_status=1;
+		$graph_stats=array();
+		$GRAPH.="<BR><BR><a name='graph".$LISTIDlists[$i]."'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
+		$GRAPH.="<tr><th width='50%' class='grey_graph_cell' id='graph".$LISTIDlists[$i]."1'><a href='#' onClick=\"Draw".$LISTIDlists[$i]."Graph('FLAGS', '1'); return false;\">STATUS FLAG BREAKDOWN</a></th><th width='50%' class='grey_graph_cell' id='graph".$LISTIDlists[$i]."2'><a href='#' onClick=\"Draw".$LISTIDlists[$i]."Graph('STATUS', '2'); return false;\">STATUS BREAKDOWN</a></th></tr>";
+		$GRAPH.="<tr><td colspan='4' class='graph_span_cell'><span id='status_".$LISTIDlists[$i]."_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
+		$graph_header="<table cellspacing='1' cellpadding='0' bgcolor='white' class='horizontalgraph'>";
+		$graph_header.="<caption align='top'>$LISTIDlists[$i] - $LISTIDlist_names[$i] ($LISTIDlist_active[$i])<br>TOTAL LEADS: $LISTIDcalls[$i]</caption>";
+		$FLAGS_graph=$graph_header."<tr><th class='thgraph' scope='col'>FLAG</th><th class='thgraph' scope='col'>COUNT / %</th></tr>";
+		$STATUS_graph=$graph_header."<tr><th class='thgraph' scope='col'>STATUS</th><th class='thgraph' scope='col'>COUNT</th></tr>";
 
 		$CSV_text4.="\"LIST ID: $LISTIDlists[$i]\",\"$LISTIDlist_names[$i]\",\"$LISTIDlist_active[$i]\"\n";
 		$CSV_text4.="\"TOTAL LEADS:\",\"$header_list_count\"\n\n";
@@ -605,6 +728,7 @@ else
 				$HA_percent = ( ($HA_count / $LISTIDcalls[$i]) * 100);
 				}
 			}
+		if ($HA_count>$max_flags) {$max_flags=$HA_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($sale_statuses);";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
@@ -618,6 +742,7 @@ else
 				$SALE_percent = ( ($SALE_count / $LISTIDcalls[$i]) * 100);
 				}
 			}
+		if ($SALE_count>$max_flags) {$max_flags=$SALE_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($dnc_statuses);";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
@@ -631,6 +756,7 @@ else
 				$DNC_percent = ( ($DNC_count / $LISTIDcalls[$i]) * 100);
 				}
 			}
+		if ($DNC_count>$max_flags) {$max_flags=$DNC_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($customer_contact_statuses);";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
@@ -644,6 +770,7 @@ else
 				$CC_percent = ( ($CC_count / $LISTIDcalls[$i]) * 100);
 				}
 			}
+		if ($CC_count>$max_flags) {$max_flags=$CC_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($not_interested_statuses);";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
@@ -657,6 +784,7 @@ else
 				$NI_percent = ( ($NI_count / $LISTIDcalls[$i]) * 100);
 				}
 			}
+		if ($NI_count>$max_flags) {$max_flags=$NI_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($unworkable_statuses);";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
@@ -670,6 +798,7 @@ else
 				$UW_percent = ( ($UW_count / $LISTIDcalls[$i]) * 100);
 				}
 			}
+		if ($UW_count>$max_flags) {$max_flags=$UW_count;}
 
 		$HA_percent =	sprintf("%6.2f", "$HA_percent"); while(strlen($HA_percent)>6) {$HA_percent = substr("$HA_percent", 0, -1);}
 		$SALE_percent =	sprintf("%6.2f", "$SALE_percent"); while(strlen($SALE_percent)>6) {$SALE_percent = substr("$SALE_percent", 0, -1);}
@@ -696,6 +825,12 @@ else
 		$OUToutput .= "     |    STATUS BREAKDOWN:                       |    COUNT   |\n";
 		$OUToutput .= "     +--------+-----------------------------------+------------+\n";
 
+		$FLAGS_graph.="  <tr><td class='chart_td first'>HUMAN ANSWER</td><td nowrap class='chart_td value first'><img src='images/bar.png' alt='' width='".round(400*$HA_count/$max_flags)."' height='16' />$HA_count ($HA_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>SALE</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(400*$SALE_count/$max_flags)."' height='16' />$SALE_count ($SALE_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>DNC</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(400*$DNC_count/$max_flags)."' height='16' />$DNC_count ($DNC_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>CUSTOMER CONTACT</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(400*$CC_count/$max_flags)."' height='16' />$CC_count ($CC_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>NOT INTERESTED</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(400*$NI_count/$max_flags)."' height='16' />$NI_count ($NI_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td last'>UNWORKABLE</td><td nowrap class='chart_td value last><img src='images/bar.png' alt='' width='".round(400*$UW_count/$max_flags)."' height='16' />$UW_count ($UW_percent%)</td></tr>";
 
 		$CSV_text4.="\"STATUS FLAGS BREAKDOWN:\",\"(and % of total leads in the list)\"\n";
 		$CSV_text4.="\"Human Answer:\",\"$HA_count\",\"$HA_percent%\"\n";
@@ -716,6 +851,9 @@ else
 			$row=mysql_fetch_row($rslt);
 			$LISTIDstatus[$r] =	$row[0];
 			$LISTIDcounts[$r] =	$row[1];
+			$graph_stats[$r][0]=$row[0];
+			$graph_stats[$r][1]=$row[1];
+			if ($row[1]>$max_status) {$max_status=$row[1];}
 				if ($DB) {$MAIN.="$r|$LISTIDstatus[$r]|$LISTIDcounts[$r]|    |$row[0]|$row[1]|<BR>\n";}
 			$r++;
 			}
@@ -729,6 +867,7 @@ else
 
 			$LISTID_status_count =	sprintf("%10s", $LISTIDcounts[$r]); while(strlen($LISTID_status_count)>10) {$LISTID_status_count = substr("$LISTID_status_count", 0, -1);}
 			$LISTIDname =	sprintf("%-42s", "$LIDstatus_format | $statname_list[$LIDstatus]"); while(strlen($LISTIDname)>42) {$LISTIDname = substr("$LISTIDname", 0, -1);}
+			$graph_stats[$r][0].=" - $statname_list[$LIDstatus]";
 
 			$OUToutput .= "     | $LISTIDname | $LISTID_status_count |\n";
 			$CSV_text4.="\"".trim($LIDstatus_format)."\",\"$statname_list[$LIDstatus]\",\"$LISTID_status_count\"\n";
@@ -742,16 +881,43 @@ else
 
 		$CSV_text4.="\"TOTAL:\",\"\",\"$TOTALleads\"\n\n\n";
 
+		for ($d=0; $d<count($graph_stats); $d++) {
+			if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
+			$STATUS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_status)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+		}
+		$STATUS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTALleads)."</th></tr></table>";
+		$JS_onload.="\tDraw".$LISTIDlists[$i]."Graph('FLAGS', '1');\n"; 
+		$JS_text.="function Draw".$LISTIDlists[$i]."Graph(graph, th_id) {\n";
+		$JS_text.="	var FLAGS_graph=\"$FLAGS_graph\";\n";
+		$JS_text.="	var STATUS_graph=\"$STATUS_graph\";\n";
+		$JS_text.="\n";
+		$JS_text.="	for (var i=1; i<=2; i++) {\n";
+		$JS_text.="		var cellID=\"graph".$LISTIDlists[$i]."\"+i;\n";
+		$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
+		$JS_text.="	}\n";
+		$JS_text.="	var cellID=\"graph".$LISTIDlists[$i]."\"+th_id;\n";
+		$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
+		$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
+		$JS_text.="	document.getElementById('status_".$LISTIDlists[$i]."_graph').innerHTML=graph_to_display;\n";
+		$JS_text.="}\n";
+		# $OUToutput.=$GRAPH;
+
 		$i++;
 		}
 
 
 
 
+	if ($report_display_type=="HTML")
+		{
+		$MAIN.=$GRAPH;
+		}
+	else
+		{
+		$MAIN.="$OUToutput";
+		}
 
 
-
-	$MAIN.="$OUToutput";
 
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $STARTtime);
@@ -785,7 +951,12 @@ else
 
 		exit;
 	} else {
+		$JS_onload.="}\n";
+		$JS_text.=$JS_onload;
+		$JS_text.="</script>\n";
+
 		echo $HEADER;
+		echo $JS_text;
 		require("admin_header.php");
 		echo $MAIN;
 	}

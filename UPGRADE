@@ -815,6 +815,13 @@ OTHER CHANGES:
 	   index the vendor_lead_code field in the vicidial_list table:
 	      CREATE INDEX vendor_lead_code on vicidial_list (vendor_lead_code);
 
+185. Added Dialer Inventory Report options for excluding lists and ranking 
+	shifts display order.
+
+186. Added User Group multi-selection option to the real-time report.
+
+187. Added HTML bar chart display options to most of the reports.
+
 
 
 

@@ -101,7 +101,6 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $reports_only_user=$row[0];
 
-$fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");

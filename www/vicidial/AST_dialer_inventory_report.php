@@ -1,7 +1,7 @@
 <?php 
 # AST_dialer_inventory_report.php
 # 
-# Copyright (C) 2011  Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
 #                     Matt Florell <vicidial@gmail.com>
 #
 # NOTES:
@@ -13,6 +13,7 @@
 # 111013-0054 - First build
 # 111106-1327 - Reformatting, other minor changes
 # 111230-1145 - Debugging additions and more minor changes
+# 120221-2237 - Added totals, list options, other small changes
 #
 
 error_reporting(0);
@@ -154,7 +155,7 @@ while($i < $group_ct)
 	$i++;
 	}
 
-$stmt="SELECT campaign_id from vicidial_campaigns  where campaign_id in (SELECT distinct campaign_id from vicidial_lists) $LOGallowed_campaignsSQL order by campaign_id;";
+$stmt="SELECT campaign_id from vicidial_campaigns  where campaign_id in (SELECT distinct campaign_id from vicidial_lists where inventory_report='Y') $LOGallowed_campaignsSQL order by campaign_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) { echo "$stmt\n";}
 $campaigns_to_print = mysql_num_rows($rslt);
@@ -191,7 +192,7 @@ else
 	$group_SQL = "and campaign_id IN($group_SQL)";
 	}
 
-$stmt="SELECT list_id, list_name from vicidial_lists $whereLOGallowed_campaignsSQL order by list_id, list_name;";
+$stmt="SELECT list_id, list_name from vicidial_lists where inventory_report='Y' $LOGallowed_campaignsSQL order by list_id, list_name;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {$HTML_header.="$stmt\n";}
 $lists_to_print = mysql_num_rows($rslt);
@@ -295,6 +296,15 @@ function GetListCount($list_id, $inventory_ptnstr)
 if ($SUBMIT) 
 	{
 
+	$total_list_start_inv=0;
+	$total_dialable_count=0;
+	$total_dialable_count_nofilter=0;
+	$total_dialable_count_oneoff=0;
+	$total_dialable_count_inactive=0;
+	$total_total_calls=0;
+	$total_average_call_count=0;
+	$total_penetration=0;
+
 	if ($snapshot_time && $report_source=="SNAPSHOT") 
 		{
 		$rpt_header="SNAPSHOT from $snapshot_time\n";
@@ -313,7 +323,7 @@ if ($SUBMIT)
 			}
 		$shift_SQL_str=substr($shift_SQL_str, 0, -1);
 
-		$shift_stmt="SELECT shift_id from vicidial_shifts where report_option='Y' order by shift_start_time asc;";
+		$shift_stmt="SELECT shift_id from vicidial_shifts where report_option='Y' order by report_rank, shift_start_time asc;";
 		if ($DBX > 0) {$HTML_header.= "|$shift_stmt|\n";}
 		$shift_rslt=mysql_query($shift_stmt, $link);
 		$c=0;
@@ -324,19 +334,30 @@ if ($SUBMIT)
 			$rpt_header_SHIFTS_lower.="          |";
 			$rpt_header_BORDER.="----------+";
 			$shift_ary[$c]=$shift_row["shift_id"];
+			$total_varname="total_".$shift_row["shift_id"];
+			$$total_varname=0;
 			if ($DB > 0) {echo "<BR>-$c-$shift_ary[$c]-$shift_row[shift_id]-\n";}
 			$c++;
 			}
 	
 		if ($report_type=="CAMPAIGNS") {$time_clause=$group_SQL;}
 		if ($report_type=="LIST") {$time_clause="and list_id='$selected_list'";}
-		$stmt="SELECT snapshot_id,snapshot_time,list_id,list_name,campaign_id,list_lastcalldate,list_start_inv,dialable_count,dialable_count_nofilter,dialable_count_oneoff,dialable_count_inactive,average_call_count,penetration,shift_data,time_setting from dialable_inventory_snapshots where snapshot_time='$snapshot_time' and time_setting='$time_setting' $time_clause order by campaign_id, list_id;";
+		$stmt="SELECT snapshot_id,snapshot_time,list_id,list_name,list_description,campaign_id,list_lastcalldate,list_start_inv,dialable_count,dialable_count_nofilter,dialable_count_oneoff,dialable_count_inactive,average_call_count,penetration,shift_data,time_setting from dialable_inventory_snapshots where snapshot_time='$snapshot_time' and time_setting='$time_setting' $time_clause order by campaign_id, list_id;";
 		if ($DBX > 0) {$HTML_header.= "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
 		while ($row=mysql_fetch_array($rslt)) 
 			{
-			$rpt_body.="| ".sprintf("%9s", $row["list_id"])." | ".sprintf("%-30s", $row["list_name"])." | ".sprintf("%8s", $row["campaign_id"])." | ".$row["list_lastcalldate"]." | ".sprintf("%9s", $row["list_start_inv"])." | ".sprintf("%8s", $row["dialable_count"])." | ".sprintf("%8s", $row["dialable_count_nofilter"])." | ".sprintf("%8s", $row["dialable_count_oneoff"])." | ".sprintf("%8s", $row["dialable_count_inactive"])." | ".sprintf("%8s", $row["average_call_count"])." | ".sprintf("%6s", $row["penetration"])."% |";
-			$CSV_body.="\"$row[list_id]\",\"$row[list_name]\",\"$row[last_calldate]\",\"$row[campaign_id]\",\"$row[list_start_inv]\",\"$row[dialable_count]\",\"$row[dialable_count_nofilter]\",\"$row[dialable_count_oneoff]\",\"$row[dialable_count_inactive]\",\"$row[average_call_count]\",\"$row[penetration] %\"";
+			$row["list_description"]=substr($row["list_description"], 0, 30);
+			if (strlen($row["list_description"])>0) {$list_info=$row["list_description"];} else {$list_info=$row["list_name"];}
+			$rpt_body.="| ".sprintf("%9s", $row["list_id"])." | ".sprintf("%-30s", $list_info)." | ".sprintf("%8s", $row["campaign_id"])." | ".$row["list_lastcalldate"]." | ".sprintf("%9s", $row["list_start_inv"])." | ".sprintf("%8s", $row["dialable_count"])." | ".sprintf("%8s", $row["dialable_count_nofilter"])." | ".sprintf("%8s", $row["dialable_count_oneoff"])." | ".sprintf("%8s", $row["dialable_count_inactive"])." | ".sprintf("%8s", $row["average_call_count"])." | ".sprintf("%6s", $row["penetration"])."% |";
+			$CSV_body.="\"$row[list_id]\",\"$list_info\",\"$row[last_calldate]\",\"$row[campaign_id]\",\"$row[list_start_inv]\",\"$row[dialable_count]\",\"$row[dialable_count_nofilter]\",\"$row[dialable_count_oneoff]\",\"$row[dialable_count_inactive]\",\"$row[average_call_count]\",\"$row[penetration] %\"";
+
+			$total_list_start_inv+=$row["list_start_inv"];
+			$total_dialable_count+=$row["dialable_count"];
+			$total_dialable_count_nofilter+=$row["dialable_count_nofilter"];
+			$total_dialable_count_oneoff+=$row["dialable_count_oneoff"];
+			$total_dialable_count_inactive+=$row["dialable_count_inactive"];
+			$total_total_calls+=($row["average_call_count"]*$row["list_start_inv"]);
 
 			$shift_data_a=explode("|", $row["shift_data"]);
 			$b=0;
@@ -351,6 +372,8 @@ if ($SUBMIT)
 						{
 						$rpt_body.=" ".sprintf("%8s", $shift_data_b[1])." |";
 						$CSV_body.=",\"$shift_data_b[1]\"";
+						$total_varname="total_".$shift_data_b[0];
+						$$total_varname+=$shift_data_b[1];
 						$line_match++;
 						}
 					if ($DB > 0) {echo "<BR>-$a-$b-$shift_ary[$b]-$shift_data_b[0]($shift_data_b[1])-$line_match-\n";}
@@ -374,7 +397,7 @@ if ($SUBMIT)
 			$gmt_row=mysql_fetch_row($gmt_rslt);
 			$local_offset=$gmt_row[0];
 			
-			if ($report_type=="CAMPAIGNS") {$time_clause="where list_id in (SELECT list_id from vicidial_lists where ".substr($group_SQL,4).")";}
+			if ($report_type=="CAMPAIGNS") {$time_clause="where list_id in (SELECT list_id from vicidial_lists where inventory_report='Y' ".substr($group_SQL,4).")";}
 			if ($report_type=="LIST") {$time_clause="where list_id='$selected_list'";}
 			$gmt_stmt="SELECT distinct gmt_offset_now, gmt_offset_now-($local_offset) from vicidial_list $time_clause ;";
 			if ($DB) {$HTML_header.=$gmt_stmt."<BR>\n";}
@@ -391,7 +414,7 @@ if ($SUBMIT)
 			}
 
 		# Get shift information
-		$shift_stmt="SELECT shift_id, shift_name, str_to_date(shift_start_time, '%H%i') as shift_start_time, addtime(str_to_date(shift_start_time, '%H%i'), shift_length) as shift_end_time, if(addtime(str_to_date(shift_start_time, '%H%i'), shift_length)>'23:59:59', '1', '0') as day_offset, shift_weekdays from vicidial_shifts where report_option='Y' order by shift_start_time asc;";
+		$shift_stmt="SELECT shift_id, shift_name, str_to_date(shift_start_time, '%H%i') as shift_start_time, addtime(str_to_date(shift_start_time, '%H%i'), shift_length) as shift_end_time, if(addtime(str_to_date(shift_start_time, '%H%i'), shift_length)>'23:59:59', '1', '0') as day_offset, shift_weekdays from vicidial_shifts where report_option='Y' order by report_rank, shift_start_time asc;";
 		if ($DB) {$HTML_header.="$shift_stmt;\n";}
 		$shift_rslt=mysql_query($shift_stmt, $link);
 		while($shift_row=mysql_fetch_array($shift_rslt)) 
@@ -448,15 +471,17 @@ if ($SUBMIT)
 				if (strlen($filter_row[0])>0) {$filter_SQL=" and $filter_row[0]";} else {$filter_SQL="";}
 				$filter_SQL = preg_replace("/\\\/",'',$filter_SQL);
 				
-				$lists_stmt="SELECT list_id, list_name, list_description, if(list_lastcalldate is null, '*** Not called *** ', list_lastcalldate) as list_lastcalldate from vicidial_lists where campaign_id='$group[$i]' $LOGallowed_campaignsSQL order by list_id asc;";
+				$lists_stmt="SELECT list_id, list_name, list_description, if(list_lastcalldate is null, '*** Not called *** ', list_lastcalldate) as list_lastcalldate from vicidial_lists where campaign_id='$group[$i]' and inventory_report='Y' $LOGallowed_campaignsSQL order by list_id asc;";
 				if ($DB) {$HTML_header.="$lists_stmt;\n";}
 				$lists_rslt=mysql_query($lists_stmt, $link);
 				while ($lists_row=mysql_fetch_array($lists_rslt)) 
 					{
 					$list_id=$lists_row["list_id"];
 					$list_name=$lists_row["list_name"];
+					$lists_row["list_description"]=substr($lists_row["list_description"], 0, 30);
 					$list_description=$lists_row["list_description"];
 					$last_calldate=$lists_row["list_lastcalldate"];
+					if (strlen($list_description)>0) {$list_info=$list_description;} else {$list_info=$list_name;}
 
 					$list_start_inv=0;
 					GetListCount($list_id, $inventory_ptnstr);
@@ -479,8 +504,15 @@ if ($SUBMIT)
 
 					if ($list_start_inv>0) {$penetration=sprintf("%.2f", (100*($list_start_inv-$Xdialable_count)/$list_start_inv));} else {$penetration="0.00";}
 
-					$rpt_body.="| ".sprintf("%9s", $list_id)." | ".sprintf("%-30s", $list_name)." | ".sprintf("%8s", $group[$i])." | ".$last_calldate." | ".sprintf("%9s", $list_start_inv)." | ".sprintf("%8s", $Xdialable_count)." | ".sprintf("%8s", $Xdialable_count_nofilter)." | ".sprintf("%8s", $oneoff_count)." | ".sprintf("%8s", $Xdialable_inactive_count)." | ".sprintf("%8s", $average_calls)." | ".sprintf("%6s", $penetration)."% |";
-					$CSV_body.="\"$list_id\",\"$list_name\",\"$last_calldate\",\"$group[$i]\",\"$list_start_inv\",\"$Xdialable_count\",\"$Xdialable_count_nofilter\",\"$oneoff_count\",\"$Xdialable_inactive_count\",\"$average_calls\",\"$penetration %\"";
+					$rpt_body.="| ".sprintf("%9s", $list_id)." | ".sprintf("%-30s", $list_info)." | ".sprintf("%8s", $group[$i])." | ".$last_calldate." | ".sprintf("%9s", $list_start_inv)." | ".sprintf("%8s", $Xdialable_count)." | ".sprintf("%8s", $Xdialable_count_nofilter)." | ".sprintf("%8s", $oneoff_count)." | ".sprintf("%8s", $Xdialable_inactive_count)." | ".sprintf("%8s", $average_calls)." | ".sprintf("%6s", $penetration)."% |";
+					$CSV_body.="\"$list_id\",\"$list_info\",\"$last_calldate\",\"$group[$i]\",\"$list_start_inv\",\"$Xdialable_count\",\"$Xdialable_count_nofilter\",\"$oneoff_count\",\"$Xdialable_inactive_count\",\"$average_calls\",\"$penetration %\"";
+
+					$total_list_start_inv+=$list_start_inv;
+					$total_dialable_count+=$Xdialable_count;
+					$total_dialable_count_nofilter+=$Xdialable_count_nofilter;
+					$total_dialable_count_oneoff+=$oneoff_count;
+					$total_dialable_count_inactive+=$Xdialable_inactive_count;
+					$total_total_calls+=$total_calls;
 
 					# $stat_stmt="SELECT call_date, dayofweek(call_date) from vicidial_log where lead_id in (SELECT lead_id from vicidial_list where list_id='$list_id' and called_count<='$called_count_limit' and status in ($inventory_statuses) $filter_SQL";
 					# SELECT lead_id, count(*) as count from vicidial_log where extract(HOUR_MINUTE FROM call_date)>='900' and extract(HOUR_MINUTE FROM call_date)<='1700' and dayofweek(call_date) in (2,3,4,5,6) and lead_id in (SELECT lead_id from vicidial_list where list_id=41073) group by lead_id order by lead_id;
@@ -548,6 +580,8 @@ if ($SUBMIT)
 							}
 						$shift_count=$Xdialable_count-$total_shift_count;
 						$rpt_body.=" ".sprintf("%8s", $shift_count)." |";
+						$total_varname="total_".$key;
+						$$total_varname+=$shift_count;
 						$CSV_body.=",\"$shift_count\"";
 						}
 					$rpt_body.="\n";
@@ -558,7 +592,7 @@ if ($SUBMIT)
 			} 
 		else if ($selected_list && $report_type=="LIST") 
 			{
-			$campaign_stmt="SELECT call_count_limit, call_count_target, dial_statuses, local_call_time, drop_lockout_time, v.campaign_id from vicidial_campaigns v, vicidial_lists vl where vl.list_id='$selected_list' and vl.campaign_id=v.campaign_id;";
+			$campaign_stmt="SELECT call_count_limit, call_count_target, dial_statuses, local_call_time, drop_lockout_time, v.campaign_id from vicidial_campaigns v, vicidial_lists vl where inventory_report='Y' and vl.list_id='$selected_list' and vl.campaign_id=v.campaign_id;";
 			if ($DB) {$HTML_header.="$campaign_stmt;\n";}
 			$campaign_rslt=mysql_query($campaign_stmt, $link);	
 			$campaign_row=mysql_fetch_row($campaign_rslt);
@@ -569,7 +603,7 @@ if ($SUBMIT)
 			$drop_lockout_time=$campaign_row[4];
 			$campaign_id=$campaign_row[5];
 
-			$stmt="SELECT distinct status from vicidial_statuses where completed='N' UNION SELECT distinct status from vicidial_campaign_statuses where completed='N' and campaign_id=(SELECT campaign_id from vicidial_lists where list_id='$selected_list' $LOGallowed_campaignsSQL);";
+			$stmt="SELECT distinct status from vicidial_statuses where completed='N' UNION SELECT distinct status from vicidial_campaign_statuses where completed='N' and campaign_id=(SELECT campaign_id from vicidial_lists where list_id='$selected_list' and inventory_report='Y' $LOGallowed_campaignsSQL);";
 			if ($DB) {$HTML_header.="$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 			$inactive_dial_statuses=" ";
@@ -598,19 +632,24 @@ if ($SUBMIT)
 			if (strlen($filter_row[0])>0) {$filter_SQL=" and $filter_row[0]";} else {$filter_SQL="";}
 			$filter_SQL = preg_replace("/\\\/",'',$filter_SQL);
 
-			$lists_stmt="SELECT list_id, list_name, list_description, if(list_lastcalldate is null, '*** Not called *** ', list_lastcalldate) as list_lastcalldate, campaign_id from vicidial_lists where list_id='$selected_list' $LOGallowed_campaignsSQL order by list_id asc;";
+			$lists_stmt="SELECT list_id, list_name, list_description, if(list_lastcalldate is null, '*** Not called *** ', list_lastcalldate) as list_lastcalldate, campaign_id from vicidial_lists where list_id='$selected_list' and inventory_report='Y' $LOGallowed_campaignsSQL order by list_id asc;";
 			if ($DB) {$HTML_header.="$lists_stmt;\n";}
 			$lists_rslt=mysql_query($lists_stmt, $link);
 			while ($lists_row=mysql_fetch_array($lists_rslt)) 
 				{
 				$list_id=$lists_row["list_id"];
 				$list_name=$lists_row["list_name"];
+				$lists_row["list_description"]=substr($lists_row["list_description"], 0, 30);
 				$list_description=$lists_row["list_description"];
 				$last_calldate=$lists_row["list_lastcalldate"];
 				$campaign_id=$lists_row["campaign_id"];
+				if (strlen($list_description)>0) {$list_info=$list_description;} else {$list_info=$list_name;}
 				$list_call_inv=0;
 				GetListCount($list_id, $inventory_ptnstr);
 				if ($list_start_inv>0) {$average_calls=sprintf("%.1f", $total_calls/$list_start_inv);} else {$average_calls="0.0";}
+
+				### For TOTAL counts, needs to be here instead of with other "total" variables further down in this particular report
+				$total_total_calls+=$total_calls;
 
 				$Xdialable_count_nofilter = dialable_leads($DB,$link,$local_call_time,"$dial_statuses",$selected_list,$drop_lockout_time,$call_count_limit,$single_status,"");
 				if (strlen($inactive_dial_statuses)>1) 
@@ -632,8 +671,14 @@ if ($SUBMIT)
 
 			if ($list_start_inv>0) {$penetration=sprintf("%.2f", (100*($list_start_inv-$Xdialable_count)/$list_start_inv));} else {$penetration="0.00";}
 
-			$rpt_body.="| ".sprintf("%9s", $list_id)." | ".sprintf("%-30s", $list_name)." | ".sprintf("%8s", $campaign_id)." | ".$last_calldate." | ".sprintf("%9s", $list_start_inv)." | ".sprintf("%8s", $Xdialable_count)." | ".sprintf("%8s", $Xdialable_count_nofilter)." | ".sprintf("%8s", $oneoff_count)." | ".sprintf("%8s", $Xdialable_inactive_count)." | ".sprintf("%8s", $average_calls)." | ".sprintf("%6s", $penetration)."% |";
-			$CSV_body.="\"$list_id\",\"$list_name\",\"$last_calldate\",\"$campaign_id\",\"$list_start_inv\",\"$Xdialable_count\",\"$Xdialable_count_nofilter\",\"$oneoff_count\",\"$Xdialable_inactive_count\",\"$average_calls\",\"$penetration %\"";
+			$rpt_body.="| ".sprintf("%9s", $list_id)." | ".sprintf("%-30s", $list_info)." | ".sprintf("%8s", $campaign_id)." | ".$last_calldate." | ".sprintf("%9s", $list_start_inv)." | ".sprintf("%8s", $Xdialable_count)." | ".sprintf("%8s", $Xdialable_count_nofilter)." | ".sprintf("%8s", $oneoff_count)." | ".sprintf("%8s", $Xdialable_inactive_count)." | ".sprintf("%8s", $average_calls)." | ".sprintf("%6s", $penetration)."% |";
+			$CSV_body.="\"$list_id\",\"$list_info\",\"$last_calldate\",\"$campaign_id\",\"$list_start_inv\",\"$Xdialable_count\",\"$Xdialable_count_nofilter\",\"$oneoff_count\",\"$Xdialable_inactive_count\",\"$average_calls\",\"$penetration %\"";
+
+			$total_list_start_inv+=$list_start_inv;
+			$total_dialable_count+=$Xdialable_count;
+			$total_dialable_count_nofilter+=$Xdialable_count_nofilter;
+			$total_dialable_count_oneoff+=$oneoff_count;
+			$total_dialable_count_inactive+=$Xdialable_inactive_count;
 
 			$shift_ary2=$shift_ary;
 			while (list($key, $val)=each($shift_ary2)) 
@@ -707,6 +752,8 @@ if ($SUBMIT)
 					}
 				$shift_count=$Xdialable_count-$total_shift_count;
 				$rpt_body.=" ".sprintf("%8s", $shift_count)." |";
+				$total_varname="total_".$key;
+				$$total_varname+=$shift_count;
 				$CSV_body.=",\"$shift_count\"";
 				}
 			$rpt_body.="\n";
@@ -725,7 +772,26 @@ if ($SUBMIT)
 	$CSV_header.="\"Date: ".date("m/d/Y")."\",\"\",\"Time: ".date("H:i a")."\"\n\n";
 	$CSV_header.="\"Call list\",\"List description\",\"Campaign\",\"Last call date\",\"Start Inv\",\"Call Inv Total\",\"Call Inv - No filter\",\"Call Inv - One-offs\",\"Call Inv - Inactive dialable statuses\",\"Dial Avg\",\"Pen. %\",".substr($CSV_header_SHIFTS,0,-1)."\n";
 
-	$rpt_footer="+-----------+--------------------------------+----------+---------------------+-----------+----------+----------+----------+----------+----------+---------+$rpt_header_BORDER\n";
+	$rpt_footer ="+-----------+--------------------------------+----------+---------------------+-----------+----------+----------+----------+----------+----------+---------+$rpt_header_BORDER\n";
+
+	#### PRINT TOTALS ####
+	if ($total_list_start_inv>0) {$total_average_call_count=sprintf("%.1f", $total_total_calls/$total_list_start_inv);} else {$average_calls="0.0";}
+	if ($total_list_start_inv>0) {$total_penetration=sprintf("%.2f", (100*($total_list_start_inv-$total_dialable_count)/$total_list_start_inv));} else {$total_penetration="0.00";}
+	$rpt_footer.="|".sprintf("%76s", "TOTALS")." | ".sprintf("%9s", $total_list_start_inv)." | ".sprintf("%8s", $total_dialable_count)." | ".sprintf("%8s", $total_dialable_count_nofilter)." | ".sprintf("%8s", $total_dialable_count_oneoff)." | ".sprintf("%8s", $total_dialable_count_inactive)." | ".sprintf("%8s", $total_average_call_count)." | ".sprintf("%6s", $total_penetration)."% |";
+	$CSV_body.="\"\",\"\",\"\",\"TOTALS\",\"$total_list_start_inv\",\"$total_dialable_count\",\"$total_dialable_count_nofilter\",\"$total_dialable_count_oneoff\",\"$total_dialable_count_inactive\",\"$total_average_call_count\",\"$total_penetration\"";
+	$b=0;
+	while ($b < count($shift_ary))
+		{
+		$total_varname="total_".$shift_ary[$b];
+		$rpt_footer.=" ".sprintf("%8s", $$total_varname)." |";
+		$CSV_body.=",\"".$$total_varname."\"";
+		$b++;
+		}
+	$CSV_body.="\n";
+	$rpt_footer.="\n";
+	######################
+
+	$rpt_footer.="+-----------+--------------------------------+----------+---------------------+-----------+----------+----------+----------+----------+----------+---------+$rpt_header_BORDER\n";
 	}
 $HTML_header.="</PRE>\n";
 ###############################

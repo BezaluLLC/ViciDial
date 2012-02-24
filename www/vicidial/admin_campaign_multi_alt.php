@@ -1,7 +1,7 @@
 <?php
 # admin_campaign_multi_alt.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen will control the campaign settings needed for alternate number 
 # dialing using multiple leads with the same account number and different phone 
@@ -12,10 +12,11 @@
 # changes:
 # 110317-1219 - First Build
 # 110406-1818 - Updated logging
+# 120223-2335 - Removed logging of good login passwords if webroot writable is enabled
 #
 
-$admin_version = '2.4-2';
-$build = '110406-1818';
+$admin_version = '2.4-3';
+$build = '120223-2335';
 
 
 require("dbconnect.php");
@@ -43,6 +44,21 @@ if (strlen($DB) < 1)
 	{$DB=0;}
 
 
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$stmt = "SELECT use_non_latin,webroot_writable FROM system_settings;";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$ss_conf_ct = mysql_num_rows($rslt);
+if ($ss_conf_ct > 0)
+	{
+	$row=mysql_fetch_row($rslt);
+	$non_latin =					$row[0];
+	$webroot_writable =				$row[1];
+	}
+##### END SETTINGS LOOKUP #####
+###########################################
+
 if ($non_latin < 1)
 	{
 	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
@@ -61,20 +77,6 @@ $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 
-#############################################
-##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
-$ss_conf_ct = mysql_num_rows($rslt);
-if ($ss_conf_ct > 0)
-	{
-	$row=mysql_fetch_row($rslt);
-	$non_latin =						$row[0];
-	}
-##### END SETTINGS LOOKUP #####
-###########################################
-
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and modify_campaigns='1';";
 if ($DB) {echo "|$stmt|\n";}
@@ -88,7 +90,7 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $camp_multi=$row[0];
 
-if ($WeBRooTWritablE > 0)
+if ($webroot_writable > 0)
 	{$fp = fopen ("./project_auth_entries.txt", "a");}
 
 $date = date("r");
@@ -116,17 +118,17 @@ else
 		$LOGmodify_campaigns =		$row[1];
 		$LOGuser_level =			$row[2];
 
-		if ($WeBRooTWritablE > 0)
+		if ($webroot_writable > 0)
 			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
+			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
 			fclose($fp);
 			}
 		}
 	else
 		{
-		if ($WeBRooTWritablE > 0)
+		if ($webroot_writable > 0)
 			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
+			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
 			fclose($fp);
 			}
 		}

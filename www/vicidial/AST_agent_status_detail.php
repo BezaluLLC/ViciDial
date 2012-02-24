@@ -1,7 +1,7 @@
 <?php 
 # AST_agent_status_detail.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -15,7 +15,8 @@
 # 100712-1324 - Added system setting slave server option
 # 100802-2347 - Added User Group Allowed Reports option validation and allowed campaigns restrictions
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
-# 111104-1249 - Added user_group restrictions for selecting in-groups
+# 111104-1248 - Added user_group restrictions for selecting in-groups
+# 120224-0910 - Added HTML display option with bar graphs
 #
 
 
@@ -44,11 +45,15 @@ if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
+if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
+	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
 
 $report_name = 'Agent Status Detail';
 $db_source = 'M';
+$JS_text="<script language='Javascript'>\n";
+$JS_onload="onload = function() {\n";
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -302,6 +307,7 @@ if ($file_download < 1)
 
 	echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 	echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
+	echo "<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 	echo "<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -312,13 +318,14 @@ if ($file_download < 1)
 	require("admin_header.php");
 
 	echo "</span>\n";
-	echo "<span style=\"position:absolute;left:3px;top:3px;z-index:19;\" id=agent_status_stats>\n";
-	echo "<PRE><FONT SIZE=2>\n";
+	$ASCII_text.="<span style=\"position:absolute;left:3px;top:3px;z-index:19;\" id=agent_status_stats>\n";
+	$ASCII_text.="\n\n\n<PRE><FONT SIZE=2>\n";
+	$GRAPH.="<PRE><FONT SIZE=2>\n";
 	}
 
 if ( (strlen($group[0]) < 1) or (strlen($user_group[0]) < 1) )
 	{
-	echo "\n";
+	echo "<PRE><FONT SIZE=2>\n\n\n";
 	echo "PLEASE SELECT A CAMPAIGN OR USER GROUP AND DATE-TIME ABOVE AND CLICK SUBMIT\n";
 	echo " NOTE: stats taken from shift specified\n";
 	}
@@ -352,10 +359,12 @@ else
 
 	if ($file_download < 1)
 		{
-		echo "Agent Status Detail Report                     $NOW_TIME\n";
-
-		echo "Time range: $query_date_BEGIN to $query_date_END\n\n";
-		echo "---------- AGENT Details -------------\n\n";
+		$ASCII_text.="<BR><BR>Agent Status Detail Report                     $NOW_TIME\n";
+		$ASCII_text.="Time range: $query_date_BEGIN to $query_date_END\n\n";
+		$ASCII_text.="---------- AGENT Details -------------\n\n";
+		$GRAPH.="<BR><BR>Agent Status Detail Report                     $NOW_TIME\n";
+		$GRAPH.="Time range: $query_date_BEGIN to $query_date_END\n\n";
+		$GRAPH.="---------- AGENT Details -------------";
 		}
 	else
 		{
@@ -379,7 +388,7 @@ else
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$rows_to_print = mysql_num_rows($rslt);
-	$i=0;
+	$i=0; $sub_status_count=0;
 	while ($i < $rows_to_print)
 		{
 		$row=mysql_fetch_row($rslt);
@@ -398,6 +407,12 @@ else
 				$statusesFILE .= "$statusesTXT,";
 				$statuses .= "$status[$i]-";
 				$statusesARY[$j] = $status[$i];
+
+				$sub_statusesARY[$sub_status_count] = $status[$i];
+				$sub_status_count++;
+				$max_varname="max_".$status[$i];
+				$$max_varname=1;
+
 				$j++;
 				}
 			if (!eregi("-$user[$i]-", $users))
@@ -413,10 +428,18 @@ else
 
 	if ($file_download < 1)
 		{
-		echo "CALLS STATS BREAKDOWN:\n";
-		echo "+-----------------+----------+--------+--------+--------+$statusesHEAD\n";
-		echo "| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>  | <a href=\"$LINKbase&stage=CI\">CIcalls</a>| <a href=\"$LINKbase&stage=DNCCI\">DNC/CI%</a>|$statusesHTML\n";
-		echo "+-----------------+----------+--------+--------+--------+$statusesHEAD\n";
+		$ASCII_text.="CALLS STATS BREAKDOWN:\n";
+		$ASCII_text.="+-----------------+----------+--------+--------+--------+$statusesHEAD\n";
+		$ASCII_text.="| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>  | <a href=\"$LINKbase&stage=CI\">CIcalls</a>| <a href=\"$LINKbase&stage=DNCCI\">DNC/CI%</a>|$statusesHTML\n";
+		$ASCII_text.="+-----------------+----------+--------+--------+--------+$statusesHEAD\n";
+
+		for ($i=0; $i<count($sub_statusesARY); $i++) {
+			$Sstatus=$sub_statusesARY[$i];
+			$SstatusTXT=$Sstatus;
+			if ($Sstatus=="") {$SstatusTXT="(blank)";}
+			$GRAPH2.="<th class='column_header grey_graph_cell'><a href='#' onClick=\"DrawGraph('$Sstatus'); return false;\">$SstatusTXT</a></th>";
+		}
+
 		}
 	else
 		{
@@ -428,6 +451,18 @@ else
 	$m=0;
 	$CIScountTOT=0;
 	$DNCcountTOT=0;
+
+	$graph_stats=array();
+	$max_calls=1;
+	$max_cicalls=1;
+	$max_dncci=1;
+	$GRAPH.="<BR><BR><a name='callgraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
+	$GRAPH2="<tr><th class='column_header grey_graph_cell' id='callgraph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">CALLS</a></th><th class='column_header grey_graph_cell' id='callgraph2'><a href='#' onClick=\"DrawGraph('CICALLS', '2'); return false;\">CI/CALLS</a></th><th class='column_header grey_graph_cell' id='callgraph3'><a href='#' onClick=\"DrawGraph('DNCCI', '3'); return false;\">DNC/CI</a></th>";
+	$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>CALL STATS BREAKDOWN</caption><tr><th class='thgraph' scope='col'>STATUS</th>";
+	$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>CALLS </th></tr>";
+	$CICALLS_graph=$graph_header."<th class='thgraph' scope='col'>CI CALLS</th></tr>";
+	$DNCCI_graph=$graph_header."<th class='thgraph' scope='col'>DNC/CI%</th></tr>";
+
 	while ($m < $k)
 		{
 		$Suser=$usersARY[$m];
@@ -444,6 +479,9 @@ else
 			{
 			$Sstatus=$statusesARY[$n];
 			$SstatusTXT='';
+			$varname=$Sstatus."_graph";
+			$$varname=$graph_header."<th class='thgraph' scope='col'>$Sstatus</th></tr>";
+			$max_varname="max_".$Sstatus;
 			### BEGIN loop through each stat line ###
 			$i=0; $status_found=0;
 			while ($i < $rows_to_print)
@@ -461,6 +499,10 @@ else
 						$DNCcount =	($DNCcount + $calls[$i]);
 						$DNCcountTOT =	($DNCcountTOT + $calls[$i]);
 						}
+
+					if ($calls[$i]>$$max_varname) {$$max_varname=$calls[$i];}
+					$graph_stats[$m][(4+$n)]=$calls[$i];					
+
 					$SstatusTXT = sprintf("%8s", $calls[$i]);
 					$SstatusesHTML .= " $SstatusTXT |";
 					$SstatusesFILE .= "$SstatusTXT,";
@@ -470,6 +512,7 @@ else
 				}
 			if ($status_found < 1)
 				{
+				$graph_stats[$m][(4+$n)]=0;
 				$SstatusesHTML .= "        0 |";
 				$SstatusesFILE .= "0,";
 				}
@@ -514,9 +557,17 @@ else
 	#	$DNCcountPCTs = sprintf("%3.2f", $DNCcountPCTs);
 		$DNCcountPCTs = sprintf("%6s", $DNCcountPCTs);
 
+		if (trim($Scalls)>$max_calls) {$max_calls=trim($Scalls);}
+		if (trim($CIScount)>$max_cicalls) {$max_cicalls=trim($CIScount);}
+		if (trim($DNCcountPCTs)>$max_dncci) {$max_dncci=trim($DNCcountPCTs);}
+		$graph_stats[$m][1]=trim("$Scalls");
+		$graph_stats[$m][2]=trim("$CIScount");
+		$graph_stats[$m][3]=trim("$DNCcountPCTs");
+
 		if ($file_download < 1)
 			{
 			$Toutput = "| $Sfull_name | <a href=\"./user_stats.php?user=$RAWuser\">$Suser</a> | $Scalls | $CIScount | $DNCcountPCTs%|$SstatusesHTML\n";
+			$graph_stats[$m][0]=trim("$user_namesARY[$m] - $usersARY[$m]");
 			}
 		else
 			{
@@ -553,7 +604,7 @@ else
 			}
 		if (!ereg("ID|TIME|LEADS|CI|DNCCI",$stage))
 			if ($file_download < 1)
-				{echo "$Toutput";}
+				{$ASCII_text.="$Toutput";}
 			else
 				{$file_output .= "$fileToutput";}
 
@@ -581,7 +632,7 @@ else
 			$i = $sort_split[1];
 			$sort_order[$m] = "$i";
 			if ($file_download < 1)
-				{echo "$TOPsorted_output[$i]";}
+				{$ASCII_text.="$TOPsorted_output[$i]";}
 			else
 				{$file_output .= "$TOPsorted_outputFILE[$i]";}
 			$m++;
@@ -600,6 +651,7 @@ else
 		$Scalls=0;
 		$Sstatus=$statusesARY[$n];
 		$SUMstatusTXT='';
+		$total_var=$Sstatus."_total";
 		### BEGIN loop through each stat line ###
 		$i=0; $status_found=0;
 		while ($i < $rows_to_print)
@@ -615,12 +667,14 @@ else
 		if ($status_found < 1)
 			{
 			$SUMstatusesHTML .= "        0 |";
+			$$total_var="0";
 			}
 		else
 			{
 			$SUMstatusTXT = sprintf("%8s", $Scalls);
 			$SUMstatusesHTML .= " $SUMstatusTXT |";
 			$SUMstatusesFILE .= "$SUMstatusTXT,";
+			$$total_var=$Scalls;
 			}
 		$n++;
 		}
@@ -628,9 +682,7 @@ else
 
 	$TOTcalls = sprintf("%7s", $TOTcalls);
 	$CIScountTOT = sprintf("%7s", $CIScountTOT);
-	$DNCcountPCT = 0;
-	if ( ($DNCcountTOT > 0) and ($CIScountTOT > 0) )
-		{$DNCcountPCT = ( ($DNCcountTOT / $CIScountTOT) * 100);}
+	$DNCcountPCT = ( ($DNCcountTOT / $CIScountTOT) * 100);
 	$DNCcountPCT = round($DNCcountPCT,2);
 	$DNCcountPCT = sprintf("%3.2f", $DNCcountPCT);
 	if ( ($DNCcountTOT < 1) or ($CIScountTOT < 1) )
@@ -646,11 +698,70 @@ else
 
 	if ($file_download < 1)
 		{
-		echo "+-----------------+----------+--------+--------+--------+$statusesHEAD\n";
-		echo "|  TOTALS        AGENTS:$TOT_AGENTS | $TOTcalls| $CIScountTOT| $DNCcountPCT%|$SUMstatusesHTML\n";
-		echo "+----------------------------+--------+--------+--------+$statusesHEAD\n";
+		$ASCII_text.="+-----------------+----------+--------+--------+--------+$statusesHEAD\n";
+		$ASCII_text.="|  TOTALS        AGENTS:$TOT_AGENTS | $TOTcalls| $CIScountTOT| $DNCcountPCT%|$SUMstatusesHTML\n";
+		$ASCII_text.="+----------------------------+--------+--------+--------+$statusesHEAD\n";
 
-		echo "\n\n</PRE>";
+		$ASCII_text.="\n\n</PRE>";
+
+		for ($e=0; $e<count($sub_statusesARY); $e++) {
+			$Sstatus=$sub_statusesARY[$e];
+			$SstatusTXT=$Sstatus;
+			if ($Sstatus=="") {$SstatusTXT="(blank)";}
+			$GRAPH2.="<th class='column_header grey_graph_cell' id='callgraph".($e+4)."'><a href='#' onClick=\"DrawGraph('$Sstatus', '".($e+4)."'); return false;\">$SstatusTXT</a></th>";
+		}
+
+		for ($d=0; $d<count($graph_stats); $d++) {
+			if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
+			$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+			$CICALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][2]/$max_cicalls)."' height='16' />".$graph_stats[$d][2]."</td></tr>";
+			$DNCCI_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][3]/$max_dncci)."' height='16' />".$graph_stats[$d][3]."%</td></tr>";
+
+			for ($e=0; $e<count($sub_statusesARY); $e++) {
+				$Sstatus=$sub_statusesARY[$e];
+				$varname=$Sstatus."_graph";
+				$max_varname="max_".$Sstatus;
+				# $max.= "<!-- $max_varname => ".$$max_varname." //-->\n";
+			
+				$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][($e+4)]/$$max_varname)."' height='16' />".$graph_stats[$d][($e+4)]."</td></tr>";
+			}
+		}
+		
+		$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTcalls)."</th></tr></table>";
+		$CICALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($CIScountTOT)."</th></tr></table>";
+		$DNCCI_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($DNCcountPCT)."%</th></tr></table>";
+		for ($e=0; $e<count($sub_statusesARY); $e++) {
+			$Sstatus=$sub_statusesARY[$e];
+			$total_var=$Sstatus."_total";
+			$graph_var=$Sstatus."_graph";
+			$$graph_var.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($$total_var)."</th></tr></table>";
+		}
+		$JS_onload.="\tDrawGraph('CALLS', '1');\n"; 
+		$JS_text.="function DrawGraph(graph, th_id) {\n";
+		$JS_text.="	var CALLS_graph=\"$CALLS_graph\";\n";
+		$JS_text.="	var CICALLS_graph=\"$CICALLS_graph\";\n";
+		$JS_text.="	var DNCCI_graph=\"$DNCCI_graph\";\n";
+
+		for ($e=0; $e<count($sub_statusesARY); $e++) {
+			$Sstatus=$sub_statusesARY[$e];
+			$graph_var=$Sstatus."_graph";
+			$JS_text.="	var ".$Sstatus."_graph=\"".$$graph_var."\";\n";
+		}
+
+		$JS_text.="	for (var i=1; i<=".(count($sub_statusesARY)+3)."; i++) {\n";
+		$JS_text.="		var cellID=\"callgraph\"+i;\n";
+		$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
+		$JS_text.="	}\n";
+		$JS_text.="	var cellID=\"callgraph\"+th_id;\n";
+		$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
+		$JS_text.="\n";
+		$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
+		$JS_text.="	document.getElementById('agent_time_detail_graph').innerHTML=graph_to_display;\n";
+		$JS_text.="}\n";
+
+		$GRAPH3="<tr><td colspan='".(3+$sub_status_count)."' class='graph_span_cell'><span id='agent_time_detail_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
+		
+		# echo $GRAPH.$GRAPH2.$GRAPH3.$max;
 		}
 	else
 		{
@@ -677,6 +788,20 @@ if ($file_download > 0)
 	echo "$file_output";
 
 	exit;
+	}
+
+$JS_onload.="}\n";
+$JS_text.=$JS_onload;
+$JS_text.="</script>\n";
+
+if ($report_display_type=="HTML")
+	{
+	echo $GRAPH.$GRAPH2.$GRAPH3;
+	echo $JS_text;
+	}
+else 
+	{
+	echo $ASCII_text;
 	}
 
 
@@ -750,6 +875,10 @@ echo "<option value=\"AM\">AM</option>\n";
 echo "<option value=\"PM\">PM</option>\n";
 echo "<option value=\"ALL\">ALL</option>\n";
 echo "</SELECT><BR><BR>\n";
+echo "Display as:<BR>";
+echo "<select name='report_display_type'>";
+if ($report_display_type) {echo "<option value='$report_display_type' selected>$report_display_type</option>";}
+echo "<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR><BR>";
 echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
 echo "</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
@@ -762,35 +891,38 @@ echo "</TD></TR></TABLE>";
 echo "</FORM>\n\n<BR>$db_source";
 
 echo "</span>\n";
-echo "<span style=\"position:absolute;left:3px;top:3px;z-index:18;\"  id=agent_status_bars>\n";
-echo "<PRE><FONT SIZE=2>\n\n\n\n\n\n\n\n\n\n";
 
-$m=0;
-while ($m < $k)
+if (!$report_display_type || $report_display_type=="TEXT")
 	{
-	$sort_split = explode("-----",$TOPsort[$m]);
-	$i = $sort_split[1];
-	$sort_order[$m] = "$i";
+	echo "<span style=\"position:absolute;left:3px;top:3px;z-index:18;\"  id=agent_status_bars>\n";
+	echo "<PRE><FONT SIZE=2>\n\n\n\n\n\n\n\n\n\n";
 
-	if ( ($TOPsortTALLY[$i] < 1) or ($TOPsortMAX < 1) )
-		{echo "                              \n";}
-	else
+	$m=0;
+	while ($m < $k)
 		{
-		echo "                              <SPAN class=\"yellow\">";
-		$TOPsortPLOT = ( ($TOPsortTALLY[$i] / $TOPsortMAX) * 110 );
-		$h=0;
-		while ($h <= $TOPsortPLOT)
+		$sort_split = explode("-----",$TOPsort[$m]);
+		$i = $sort_split[1];
+		$sort_order[$m] = "$i";
+
+		if ( ($TOPsortTALLY[$i] < 1) or ($TOPsortMAX < 1) )
+			{echo "                              \n";}
+		else
 			{
-			echo " ";
-			$h++;
+			echo "                              <SPAN class=\"yellow\">";
+			$TOPsortPLOT = ( ($TOPsortTALLY[$i] / $TOPsortMAX) * 110 );
+			$h=0;
+			while ($h <= $TOPsortPLOT)
+				{
+				echo " ";
+				$h++;
+				}
+			echo "</SPAN>\n";
 			}
-		echo "</SPAN>\n";
+		$m++;
 		}
-	$m++;
+
+	echo "</span>\n";
 	}
-
-echo "</span>\n";
-
 ?>
 
 </BODY></HTML>

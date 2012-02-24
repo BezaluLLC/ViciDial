@@ -1,7 +1,7 @@
 <?php
 # user_stats.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -33,6 +33,7 @@
 # 110718-1204 - Added skipped manual dial leads display
 # 111103-1050 - Added admin_hide_phone_data and admin_hide_lead_data options
 # 111106-1105 - Added user_group restrictions
+# 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 #
 
 
@@ -45,7 +46,7 @@ $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active,webroot_writable FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -57,6 +58,7 @@ if ($qm_conf_ct > 0)
 	$slave_db_server =				$row[2];
 	$reports_use_slave_db =			$row[3];
 	$user_territories_active =		$row[4];
+	$webroot_writable =				$row[5];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -136,8 +138,11 @@ $LOGuser_group =			$row[1];
 $LOGadmin_hide_lead_data =	$row[2];
 $LOGadmin_hide_phone_data =	$row[3];
 
-fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
-fclose($fp);
+if ($webroot_writable > 0)
+	{
+	fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
+	fclose($fp);
+	}
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {$MAIN.="|$stmt|\n";}

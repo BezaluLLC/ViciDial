@@ -1,7 +1,7 @@
 <?php
 # closer-fronter_popup.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this is the closer popup of a specific call that starts recording the call and allows you to go and fetch info on that caller in the local CRM system.
 # CHANGES
@@ -9,6 +9,7 @@
 # 60620-1020 - Added variable filtering to eliminate SQL injection attack threat
 # 61201-1114 - Added lead_id and user to recording_log entry
 # 90508-0644 - Changed to PHP long tags
+# 120223-2124 - Removed logging of good login passwords if webroot writable is enabled
 #
 
 require("dbconnect.php");
@@ -136,13 +137,13 @@ $browser = getenv("HTTP_USER_AGENT");
 		{
 		$office_no=strtoupper($user);
 		$password=strtoupper($pass);
-			$stmt="SELECT full_name from vicidial_users where user='$user' and pass='$pass'";
-			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$LOGfullname=$row[0];
-			$fullname = $row[0];
-		fwrite ($fp, "VD_CLOSER|GOOD|$date|$user|$pass|$ip|$browser|$LOGfullname|\n");
+		$stmt="SELECT full_name from vicidial_users where user='$user' and pass='$pass'";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$LOGfullname=$row[0];
+		$fullname = $row[0];
+		fwrite ($fp, "VD_CLOSER|GOOD|$date|$user|XXXX|$ip|$browser|$LOGfullname|\n");
 		fclose($fp);
 		
 		if ( (strlen($customer_zap_channel)>2) and (eregi('zap',$customer_zap_channel)) )
@@ -161,7 +162,7 @@ $browser = getenv("HTTP_USER_AGENT");
 		}
 	else
 		{
-		fwrite ($fp, "VD_CLOSER|FAIL|$date|$user|$pass|$ip|$browser|\n");
+		fwrite ($fp, "VD_CLOSER|FAIL|$date|$user|XXXX|$ip|$browser|\n");
 		fclose($fp);
 		}
 	}

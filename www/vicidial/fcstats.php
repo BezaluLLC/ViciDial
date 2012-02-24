@@ -1,7 +1,7 @@
 <?php 
 # fcstats.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -19,6 +19,7 @@
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 # 110703-1828 - Added download option
 # 111104-1213 - Added user_group restrictions for selecting in-groups
+# 120224-0910 - Added HTML display option with bar graphs
 #
 
 require("dbconnect.php");
@@ -40,6 +41,8 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
+if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
+	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
@@ -49,6 +52,8 @@ if (strlen($shift)<2) {$shift='ALL';}
 
 $report_name = 'Fronter - Closer Report';
 $db_source = 'M';
+$JS_text="<script language='Javascript'>\n";
+$JS_onload="onload = function() {\n";
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -172,6 +177,7 @@ $HTML_head.=" </STYLE>\n";
 $HTML_head.="\n";
 $HTML_head.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 $HTML_head.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
+$HTML_head.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 #if (strlen($group) > 0)
 #	{
@@ -218,6 +224,10 @@ $HTML_text.="<SELECT SIZE=1 NAME=group>\n";
 		$o++;
 	}
 $HTML_text.="</SELECT>\n";
+$HTML_text.=" &nbsp; ";
+$HTML_text.="<select name='report_display_type'>";
+if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
+$HTML_text.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n";
 $HTML_text.="<SELECT SIZE=1 NAME=shift>\n";
 $HTML_text.="<option selected value=\"$shift\">$shift</option>\n";
 $HTML_text.="<option value=\"\">--</option>\n";
@@ -227,7 +237,7 @@ $HTML_text.="<option value=\"ALL\">ALL</option>\n";
 $HTML_text.="</SELECT>\n";
 $HTML_text.="<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
 $HTML_text.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
-$HTML_text.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  <a href=\"$PHP_SELF?query_date=$query_date&group=$group&shift=$shift&file_download=1\">DOWNLOAD</a> | <a href=\"./admin.php?ADD=3111&group_id=$group\">MODIFY</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+$HTML_text.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  <a href=\"$PHP_SELF?query_date=$query_date&group=$group&shift=$shift&file_download=1\">DOWNLOAD</a> | <a href=\"./admin.php?ADD=3111&group_id=$group\">MODIFY</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a><BR/>Display as:<BR><input type='radio' name='report_display_type' value='ASCII' checked>ASCII<BR/><input type='radio' name='report_display_type' value='HTML' >HTML<BR/></FONT>\n";
 $HTML_text.="</FORM>\n\n";
 
 $HTML_text.="<PRE><FONT SIZE=2>\n\n";
@@ -321,17 +331,37 @@ $CSV_fronter_header.="\"AGENT\",\"SUCCESS\",\"XFERS\",\"SUCCESS%\",\"SALE\",\"DR
 $CSV_fronter_lines="";
 $CSV_fronter_footer="";
 
-$HTML_text.="\n";
-$HTML_text.="---------- FRONTER STATS\n";
-$HTML_text.="+--------------------------+-------+--------+--------+------+------+------+\n";
-$HTML_text.="| AGENT                    |SUCCESS| XFERS  |SUCCESS%| SALE | DROP |OTHER |\n";
-$HTML_text.="+--------------------------+-------+--------+--------+------+------+------+\n";
+$ASCII_text="\n";
+$ASCII_text.="---------- FRONTER STATS\n";
+$ASCII_text.="+--------------------------+-------+--------+--------+------+------+------+\n";
+$ASCII_text.="| AGENT                    |SUCCESS| XFERS  |SUCCESS%| SALE | DROP |OTHER |\n";
+$ASCII_text.="+--------------------------+-------+--------+--------+------+------+------+\n";
+
+######## GRAPHING #########
+$graph_stats=array();
+$max_success=1;
+$max_xfers=1;
+$max_success_pct=1;
+$max_sales=1;
+$max_drops=1;
+$max_other=1;
+$GRAPH="<a name='frontergraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
+$GRAPH.="<tr><th width='16%' class='grey_graph_cell' id='frontergraph1'><a href='#' onClick=\"DrawFronterGraph('SUCCESS', '1'); return false;\">SUCCESS</a></th><th width='17%' class='grey_graph_cell' id='frontergraph2'><a href='#' onClick=\"DrawFronterGraph('XFERS', '2'); return false;\">XFERS</a></th><th width='17%' class='grey_graph_cell' id='frontergraph3'><a href='#' onClick=\"DrawFronterGraph('SUCCESSPCT', '3'); return false;\">SUCCESS %</a></th><th width='16%' class='grey_graph_cell' id='frontergraph4'><a href='#' onClick=\"DrawFronterGraph('SALE', '4'); return false;\">SALE</a></th><th width='17%' class='grey_graph_cell' id='frontergraph5'><a href='#' onClick=\"DrawFronterGraph('DROP', '5'); return false;\">DROP</a></th><th width='17%' class='grey_graph_cell' id='frontergraph6'><a href='#' onClick=\"DrawFronterGraph('OTHER', '6'); return false;\">OTHER</a></th></tr>";
+$GRAPH.="<tr><td colspan='6' class='graph_span_cell'><span id='fronter_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
+$graph_header="<table cellspacing='0' cellpadding='0' summary='STATUS' class='horizontalgraph'><caption align='top'>FRONTER STATS</caption><tr><th class='thgraph' scope='col'>AGENT</th>";
+$SUCCESS_graph=$graph_header."<th class='thgraph' scope='col'>SUCCESS </th></tr>";
+$XFERS_graph=$graph_header."<th class='thgraph' scope='col'>XFERS</th></tr>";
+$SUCCESSPCT_graph=$graph_header."<th class='thgraph' scope='col'>SUCCESS %</th></tr>";
+$SALE_graph=$graph_header."<th class='thgraph' scope='col'>SALE</th></tr>";
+$DROP_graph=$graph_header."<th class='thgraph' scope='col'>DROP</th></tr>";
+$OTHER_graph=$graph_header."<th class='thgraph' scope='col'>OTHER</th></tr>";
+###########################
 
 #$stmt="select vicidial_xfer_log.user,full_name,count(*) from vicidial_xfer_log,vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysql_real_escape_string($group) . "' and vicidial_xfer_log.user is not null and vicidial_xfer_log.user=vicidial_users.user group by vicidial_xfer_log.user;";
 $stmt="select user,count(distinct lead_id) from vicidial_xfer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysql_real_escape_string($group) . "' and user is not null group by user;";
 if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
-if ($DB) {$HTML_text.="$stmt\n";}
+if ($DB) {$ASCII_text.="$stmt\n";}
 $users_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $users_to_print)
@@ -354,7 +384,7 @@ while ($i < $users_to_print)
 	$stmt="select full_name from vicidial_users where user='$userRAW[$i]' $LOGadmin_viewable_groupsSQL;";
 	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 	$rslt=mysql_query($stmt, $link);
-	if ($DB) {$HTML_text.="$stmt\n";}
+	if ($DB) {$ASCII_text.="$stmt\n";}
 	$names_to_print = mysql_num_rows($rslt);
 	if ($names_to_print > 0)
 		{
@@ -375,7 +405,7 @@ while ($i < $users_to_print)
 	$stmt="select vc.status,count(distinct vc.lead_id) from vicidial_xfer_log vx, vicidial_closer_log vc where vx.call_date >= '$query_date_BEGIN' and vx.call_date <= '$query_date_END' and vc.call_date >= '$query_date_BEGIN' and vc.call_date <= '$query_date_END' and  vc.campaign_id='" . mysql_real_escape_string($group) . "' and vx.campaign_id='" . mysql_real_escape_string($group) . "' and vx.user='$userRAW[$i]' and vc.lead_id=vx.lead_id and vc.xfercallid=vx.xfercallid group by vc.status;";
 	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 	$rslt=mysql_query($stmt, $link);
-	if ($DB) {$HTML_text.="$stmt\n";}
+	if ($DB) {$ASCII_text.="$stmt\n";}
 	$lead_ids_to_print = mysql_num_rows($rslt);
 	$j=0;
 	while ($j < $lead_ids_to_print)
@@ -414,6 +444,19 @@ while ($i < $users_to_print)
 	$Spct = round($Spct, 2);
 	$Spct =	sprintf("%01.2f", $Spct);
 	
+	if ($sales>$max_success) {$max_success=$sales;}
+	if ($USERcalls[$i]>$max_xfers) {$max_xfers=$USERcalls[$i];}
+	if ($Spct>$max_success_pct) {$max_success_pct=$Spct;}
+	if ($A1>$max_sales) {$max_sales=$A1;}
+	if ($DROP>$max_drops) {$max_drops=$DROP;}
+	if ($OTHER>$max_other) {$max_other=$OTHER;}
+	$graph_stats[$i][0]="$user[$i] - $full_name[$i]";
+	$graph_stats[$i][1]=$sales;
+	$graph_stats[$i][2]=$USERcalls[$i];
+	$graph_stats[$i][3]=$Spct;
+	$graph_stats[$i][4]=$A1;
+	$graph_stats[$i][5]=$DROP;
+	$graph_stats[$i][6]=$OTHER;
 
 	$A1 =	sprintf("%4s", $A1);
 	$A2 =	sprintf("%4s", $A2);
@@ -429,7 +472,7 @@ while ($i < $users_to_print)
 	$sales =	sprintf("%5s", $sales);
 	$Spct =	sprintf("%6s", $Spct);
 
-	$HTML_text.="| $user[$i] - $full_name[$i] | $sales | $USERcalls[$i] | $Spct%| $A1 | $DROP | $OTHER |\n";
+	$ASCII_text.="| $user[$i] - $full_name[$i] | $sales | $USERcalls[$i] | $Spct%| $A1 | $DROP | $OTHER |\n";
 	$CSV_fronter_lines.="\"$user[$i] - $full_name[$i]\",\"$sales\",\"$USERcalls[$i]\",\"$Spct%\",\"$A1\",\"$DROP\",\"$OTHER\"\n";
 
 	$i++;
@@ -460,7 +503,7 @@ $totOTHER =		sprintf("%5s", $totOTHER);
 
 $stmt="select avg(queue_seconds) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='" . mysql_real_escape_string($group) . "';";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {$HTML_text.="$stmt\n";}
+if ($DB) {$ASCII_text.="$stmt\n";}
 $row=mysql_fetch_row($rslt);
 
 $AVGwait = $row[0];
@@ -475,16 +518,49 @@ $AVGwait_MS = "$AVGwait_M_int:$AVGwait_S";
 $AVGwait =		sprintf("%6s", $AVGwait_MS);
 
 
-$HTML_text.="+--------------------------+-------+--------+--------+------+------+------+\n";
-$HTML_text.="| TOTAL FRONTERS: $TOTagents   | $TOTsales | $TOTcalls | $totSpct%|$totA1 |$totDROP |$totOTHER |\n";
-$HTML_text.="+--------------------------+-------+--------+--------+------+------+------+\n";
-$HTML_text.="|                          Average time in Queue for customers:    $AVGwait |\n";
-$HTML_text.="+--------------------------+-------+--------+--------+------+------+------+\n";
+$ASCII_text.="+--------------------------+-------+--------+--------+------+------+------+\n";
+$ASCII_text.="| TOTAL FRONTERS: $TOTagents   | $TOTsales | $TOTcalls | $totSpct%|$totA1 |$totDROP |$totOTHER |\n";
+$ASCII_text.="+--------------------------+-------+--------+--------+------+------+------+\n";
+$ASCII_text.="|                          Average time in Queue for customers:    $AVGwait |\n";
+$ASCII_text.="+--------------------------+-------+--------+--------+------+------+------+\n";
 
 $CSV_fronter_footer.="\"TOTAL FRONTERS: $TOTagents\",\"$TOTsales\",\"$TOTcalls\",\"$totSpct%\",\"$totA1\",\"$totDROP\",\"$totOTHER\"\n";
 $CSV_fronter_footer.="\"Average time in Queue for customers:    $AVGwait\"\n\n\n";
 
-
+	for ($d=0; $d<count($graph_stats); $d++) {
+		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
+		$SUCCESS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_success)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+		$XFERS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][2]/$max_xfers)."' height='16' />".$graph_stats[$d][2]."</td></tr>";
+		$SUCCESSPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][3]/$max_success_pct)."' height='16' />".$graph_stats[$d][3]."</td></tr>";
+		$SALE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][4]/$max_sales)."' height='16' />".$graph_stats[$d][4]."</td></tr>";
+		$DROP_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][5]/$max_drops)."' height='16' />".$graph_stats[$d][5]."</td></tr>";
+		$OTHER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][5]/$max_other)."' height='16' />".$graph_stats[$d][5]."</td></tr>";
+	}
+	$SUCCESS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTsales)."</th></tr></table>";
+	$XFERS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTcalls)."</th></tr></table>";
+	$SUCCESSPCT_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($totSpct)."%</th></tr></table>";
+	$SALE_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($totA1)."</th></tr></table>";
+	$DROP_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($totDROP)."</th></tr></table>";
+	$OTHER_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($totOTHER)."</th></tr></table>";
+	$JS_onload.="\tDrawFronterGraph('SUCCESS', '1');\n"; 
+	$JS_text.="function DrawFronterGraph(graph, th_id) {\n";
+	$JS_text.="	var SUCCESS_graph=\"$SUCCESS_graph\";\n";
+	$JS_text.="	var XFERS_graph=\"$XFERS_graph\";\n";
+	$JS_text.="	var SUCCESSPCT_graph=\"$SUCCESSPCT_graph\";\n";
+	$JS_text.="	var SALE_graph=\"$SALE_graph\";\n";
+	$JS_text.="	var DROP_graph=\"$DROP_graph\";\n";
+	$JS_text.="	var OTHER_graph=\"$OTHER_graph\";\n";
+	$JS_text.="\n";
+	$JS_text.="	for (var i=1; i<=6; i++) {\n";
+	$JS_text.="		var cellID=\"frontergraph\"+i;\n";
+	$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
+	$JS_text.="	}\n";
+	$JS_text.="	var cellID=\"frontergraph\"+th_id;\n";
+	$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
+	$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
+	$JS_text.="	document.getElementById('fronter_graph').innerHTML=graph_to_display;\n";
+	$JS_text.="}\n";
+	$GRAPH_text.=$GRAPH;
 
 ##############################
 #########  CLOSER STATS
@@ -508,20 +584,38 @@ $CSV_closer_header="";
 $CSV_closer_lines="";
 $CSV_closer_footer="";
 
-$HTML_text.="\n";
-$HTML_text.="---------- CLOSER STATS\n";
-$HTML_text.="+--------------------------+--------+------+------+------+------+-------+\n";
-$HTML_text.="| AGENT                    | CALLS  | SALE | DROP |OTHER | SALE | CONV %|\n";
-$HTML_text.="+--------------------------+--------+------+------+------+------+-------+\n";
+$ASCII_text.="\n";
+$ASCII_text.="---------- CLOSER STATS\n";
+$ASCII_text.="+--------------------------+--------+------+------+------+------+-------+\n";
+$ASCII_text.="| AGENT                    | CALLS  | SALE | DROP |OTHER | SALE | CONV %|\n";
+$ASCII_text.="+--------------------------+--------+------+------+------+------+-------+\n";
 
 $CSV_closer_header="\"CLOSER STATS\"\n";
 $CSV_closer_header.="\"AGENT\",\"CALLS\",\"SALE\",\"DROP\",\"OTHER\",\"SALE\",\"CONV %\"\n";
 
+######## GRAPHING #########
+$max_calls=1;
+$max_sales=1;
+$max_drops=1;
+$max_other=1;
+$max_sales2=1;
+$max_conv_pct=1;
+$GRAPH="<BR><BR><a name='closergraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
+$GRAPH.="<tr><th width='16%' class='grey_graph_cell' id='closergraph1'><a href='#' onClick=\"DrawCloserGraph('CALLS', '1'); return false;\">CALLS</a></th><th width='17%' class='grey_graph_cell' id='closergraph2'><a href='#' onClick=\"DrawCloserGraph('SALES', '2'); return false;\">SALES</a></th><th width='17%' class='grey_graph_cell' id='closergraph3'><a href='#' onClick=\"DrawCloserGraph('DROP', '3'); return false;\">DROP</a></th><th width='16%' class='grey_graph_cell' id='closergraph4'><a href='#' onClick=\"DrawCloserGraph('OTHER', '4'); return false;\">OTHER</a></th><th width='17%' class='grey_graph_cell' id='closergraph5'><a href='#' onClick=\"DrawCloserGraph('SALES2', '5'); return false;\">SALES</a></th><th width='17%' class='grey_graph_cell' id='closergraph6'><a href='#' onClick=\"DrawCloserGraph('CONVPCT', '6'); return false;\">CONV %</a></th></tr>";
+$GRAPH.="<tr><td colspan='6' class='graph_span_cell'><span id='closer_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
+$graph_header="<table cellspacing='0' cellpadding='0' summary='STATUS' class='horizontalgraph'><caption align='top'>CLOSER STATS</caption><tr><th class='thgraph' scope='col'>AGENT</th>";
+$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>CALLS </th></tr>";
+$SALES_graph=$graph_header."<th class='thgraph' scope='col'>SALES</th></tr>";
+$DROP_graph=$graph_header."<th class='thgraph' scope='col'>DROP</th></tr>";
+$OTHER_graph=$graph_header."<th class='thgraph' scope='col'>OTHER</th></tr>";
+$SALES2_graph=$graph_header."<th class='thgraph' scope='col'>SALES</th></tr>";
+$CONVPCT_graph=$graph_header."<th class='thgraph' scope='col'>CONV %</th></tr>";
+###########################
 
 $stmt="select user,count(*) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysql_real_escape_string($group) . "' and user is not null group by user;";
 if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
-if ($DB) {$HTML_text.="$stmt\n";}
+if ($DB) {$ASCII_text.="$stmt\n";}
 $users_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $users_to_print)
@@ -543,7 +637,7 @@ while ($i < $users_to_print)
 	$stmt="select full_name from vicidial_users where user='$userRAW[$i]' $LOGadmin_viewable_groupsSQL;";
 	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 	$rslt=mysql_query($stmt, $link);
-	if ($DB) {$HTML_text.="$stmt\n";}
+	if ($DB) {$ASCII_text.="$stmt\n";}
 	$names_to_print = mysql_num_rows($rslt);
 	if ($names_to_print > 0)
 		{
@@ -564,7 +658,7 @@ while ($i < $users_to_print)
 	$stmt="select status,count(*) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysql_real_escape_string($group) . "' and user='$userRAW[$i]' group by status;";
 	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 	$rslt=mysql_query($stmt, $link);
-	if ($DB) {$HTML_text.="$stmt\n";}
+	if ($DB) {$ASCII_text.="$stmt\n";}
 	$lead_ids_to_print = mysql_num_rows($rslt);
 	$j=0;
 	while ($j < $lead_ids_to_print)
@@ -647,6 +741,19 @@ while ($i < $users_to_print)
 	$ppc =	sprintf("%01.2f", $ppc);
 	$ppc =	sprintf("%4s", $ppc);
 
+	if ($USERcalls[$i]>$max_calls) {$max_calls=$USERcalls[$i];}
+	if ($A1>$max_sales) {$max_sales=$A1;}
+	if ($DROP>$max_drops) {$max_drops=$DROP;}
+	if ($OTHER>$max_other) {$max_other=$OTHER;}
+	if ($sales>$max_sales2) {$max_sales=$sales;}
+	if ($Cpct>$max_conv_pct) {$max_conv_pct=$Cpct;}
+	$graph_stats[$i][0]="$user[$i] - $full_name[$i]";
+	$graph_stats[$i][1]=$USERcalls[$i];
+	$graph_stats[$i][2]=$A1;
+	$graph_stats[$i][3]=$DROP;
+	$graph_stats[$i][4]=$OTHER;
+	$graph_stats[$i][5]=$sales;
+	$graph_stats[$i][6]=$Cpct;
 
 	$A1 =	sprintf("%4s", $A1);
 	$A2 =	sprintf("%4s", $A2);
@@ -661,7 +768,7 @@ while ($i < $users_to_print)
 	$OTHER =	sprintf("%4s", $OTHER);
 	$sales =	sprintf("%4s", $sales);
 
-	$HTML_text.="| $user[$i] - $full_name[$i] | $USERcalls[$i] | $A1 | $DROP | $OTHER | $sales |$Cpct%|\n";
+	$ASCII_text.="| $user[$i] - $full_name[$i] | $USERcalls[$i] | $A1 | $DROP | $OTHER | $sales |$Cpct%|\n";
 	$CSV_closer_lines.="\"$user[$i] - $full_name[$i]\",\"$USERcalls[$i]\",\"$A1\",\"$DROP\",\"$OTHER\",\"$sales\",\"$Cpct%\"\n";
 
 	$i++;
@@ -707,14 +814,59 @@ $totDROP =		sprintf("%5s", $totDROP);
 $totOTHER =		sprintf("%5s", $totOTHER);
 $TOTsales =		sprintf("%5s", $TOTsales);
 
-$HTML_text.="+--------------------------+--------+------+------+------+------+-------+\n";
-$HTML_text.="| TOTAL CLOSERS:  $TOTagents   | $TOTcalls |$totA1 |$totDROP |$totOTHER |$TOTsales |$totCpct%|\n";
-$HTML_text.="+--------------------------+--------+------+------+------+------+-------+\n";
+$ASCII_text.="+--------------------------+--------+------+------+------+------+-------+\n";
+$ASCII_text.="| TOTAL CLOSERS:  $TOTagents   | $TOTcalls |$totA1 |$totDROP |$totOTHER |$TOTsales |$totCpct%|\n";
+$ASCII_text.="+--------------------------+--------+------+------+------+------+-------+\n";
 
 $CSV_closer_footer.="\"TOTAL CLOSERS:  $TOTagents\",\"$TOTcalls\",\"$totA1\",\"$totDROP\",\"$totOTHER\",\"$TOTsales\",\"$totCpct%\"\n";
 
+	for ($d=0; $d<count($graph_stats); $d++) {
+		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
+		$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+		$SALES_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][2]/$max_sales)."' height='16' />".$graph_stats[$d][2]."</td></tr>";
+		$DROP_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][3]/$max_drops)."' height='16' />".$graph_stats[$d][3]."</td></tr>";
+		$OTHER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][4]/$max_other)."' height='16' />".$graph_stats[$d][4]."</td></tr>";
+		$SALES2_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][5]/$max_sales2)."' height='16' />".$graph_stats[$d][5]."</td></tr>";
+		$CONVPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][6]/$max_conv_pct)."' height='16' />".$graph_stats[$d][6]."%</td></tr>";
+	}
+	$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTcalls)."</th></tr></table>";
+	$SALES_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($totA1)."</th></tr></table>";
+	$DROP_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($totDROP)."</th></tr></table>";
+	$OTHER_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($totOTHER)."</th></tr></table>";
+	$SALES2_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTsales)."</th></tr></table>";
+	$CONVPCT_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($totCpct)."%</th></tr></table>";
+	$JS_onload.="\tDrawCloserGraph('CALLS', '1');\n";
+	$JS_text.="function DrawCloserGraph(graph, th_id) {\n";
+	$JS_text.="	var CALLS_graph=\"$CALLS_graph\";\n";
+	$JS_text.="	var SALES_graph=\"$SALES_graph\";\n";
+	$JS_text.="	var DROP_graph=\"$DROP_graph\";\n";
+	$JS_text.="	var OTHER_graph=\"$OTHER_graph\";\n";
+	$JS_text.="	var SALES2_graph=\"$SALES2_graph\";\n";
+	$JS_text.="	var CONVPCT_graph=\"$CONVPCT_graph\";\n";
+	$JS_text.="\n";
+	$JS_text.="	for (var i=1; i<=6; i++) {\n";
+	$JS_text.="		var cellID=\"closergraph\"+i;\n";
+	$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
+	$JS_text.="	}\n";
+	$JS_text.="	var cellID=\"closergraph\"+th_id;\n";
+	$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
+	$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
+	$JS_text.="	document.getElementById('closer_graph').innerHTML=graph_to_display;\n";
+	$JS_text.="}\n";
+	$GRAPH_text.=$GRAPH;
+
+
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $STARTtime);
+
+if ($report_display_type=="HTML") {
+	$HTML_text.=$GRAPH_text;
+	} 
+else 
+	{
+	$HTML_text.=$ASCII_text;
+	}
+
 if ($DB) {$HTML_text.="\nRun Time: $RUNtime seconds|$db_source\n";}
 
 $HTML_text.="</PRE>\n";
@@ -746,7 +898,12 @@ if ($file_download > 0)
 	}
 	else 
 	{
+	$JS_onload.="}\n";
+	$JS_text.=$JS_onload;
+	$JS_text.="</script>\n";
+
 	echo $HTML_head;
+	echo $JS_text;
 	require("admin_header.php");
 	echo $HTML_text;
 	}

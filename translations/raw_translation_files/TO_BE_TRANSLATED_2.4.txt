@@ -832,6 +832,10 @@ Maximum System Stats Reports||
 These statistics are cached totals that are stored throughout each day in real-time through back-end processes. For inbound calls, the total calls per in-group are calculated for each call that enters the process that calculates. For the whole system counts, the totals are generated from log entries as well as other in-group and campaign totals. These totals may not add up due to the settings that you have in your system as well as when the call is hung up||
 Hopper VLC Dup Check||
 Setting this to Y will result in every lead being inserted into the hopper being checked by vendor_lead_code to make sure there are no duplicate leads inserted with the same vendor_lead_code. This is most useful when Auto-Alt-Dialing with MULTI_LEAD. Default is N||
+Inventory Report||
+If the Inventory Report is enabled on your system, this option will determine whether this list is included in the report or not. Default is Y for yes||
+Report Rank||
+This option allows you to rank shifts in selected reports that support this option||
 
 
 lead_report_export.php

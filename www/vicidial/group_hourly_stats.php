@@ -10,6 +10,7 @@
 # 90310-2138 - Added admin header
 # 90508-0644 - Changed to PHP long tags
 # 120221-0159 - Added User Group restrictions
+# 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 #
 
 require("dbconnect.php");
@@ -107,13 +108,19 @@ $browser = getenv("HTTP_USER_AGENT");
 		$LOGfullname =		$row[0];
 		$LOGuser_group =	$row[1];
 
-		fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
-		fclose($fp);
+		if ($webroot_writable > 0)
+			{
+			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
+			fclose($fp);
+			}
 		}
 	else
 		{
-		fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
-		fclose($fp);
+		if ($webroot_writable > 0)
+			{
+			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
+			fclose($fp);
+			}
 		exit;
 		}
 

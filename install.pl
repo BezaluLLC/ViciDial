@@ -2,7 +2,7 @@
 
 # install.pl version 2.4
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 
 # CHANGES
@@ -25,6 +25,7 @@
 # 101217-0520 - Added PREPROCESS directory
 # 110619-2153 - Added languages install and conf file specify options
 # 110812-1510 - Added tts sound directories creation
+# 120224-1614 - Added function to clear out web auth log files
 #
 
 ############################################
@@ -2522,6 +2523,12 @@ if ($NOWEB < 1)
 	`chmod 0777 $PATHweb/vicidial/ploticus/`;
 	`chmod 0777 $PATHweb/vicidial/agent_reports/`;
 	`chmod 0777 $PATHweb/vicidial/server_reports/`;
+	`cp -f /dev/null $PATHweb/vicidial/project_auth_entries.txt`;
+	`chmod 0777 $PATHweb/vicidial/project_auth_entries.txt`;
+	`cp -f /dev/null $PATHweb/agc/vicidial_auth_entries.txt`;
+	`chmod 0777 $PATHweb/agc/vicidial_auth_entries.txt`;
+	`cp -f /dev/null $PATHweb/agc/astguiclient_auth_entries.txt`;
+	`chmod 0777 $PATHweb/agc/astguiclient_auth_entries.txt`;
 	}
 
 if ( ($PROMPTcopy_web_lang =~ /y/i) || ($CLIcopy_web_lang =~ /y/i) )

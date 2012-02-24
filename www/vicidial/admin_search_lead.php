@@ -27,6 +27,7 @@
 # 110218-1237 - Added vicidial_lead_search_log logging
 # 111103-1239 - Added admin_hide_phone_data and admin_hide_lead_data options
 # 120221-0118 - Added User Group campaign list restrictions to search queries
+# 120223-2249 - Removed logging of good login passwords if webroot writable is enabled
 #
 
 require("dbconnect.php");
@@ -63,6 +64,26 @@ if (isset($_GET["list_id"]))			{$list_id=$_GET["list_id"];}
 if (isset($_GET["alt_phone_search"]))			{$alt_phone_search=$_GET["alt_phone_search"];}
 	elseif (isset($_POST["alt_phone_search"]))	{$alt_phone_search=$_POST["alt_phone_search"];}
 
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active FROM system_settings;";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$qm_conf_ct = mysql_num_rows($rslt);
+$i=0;
+while ($i < $qm_conf_ct)
+	{
+	$row=mysql_fetch_row($rslt);
+	$non_latin =					$row[0];
+	$webroot_writable =				$row[1];
+	$SSoutbound_autodial_active =	$row[2];
+	$user_territories_active =		$row[3];
+	$i++;
+	}
+##### END SETTINGS LOOKUP #####
+###########################################
+
+
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
 $phone = ereg_replace("[^0-9]","",$phone);
@@ -80,7 +101,7 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
-if ($WeBRooTWritablE > 0)
+if ($webroot_writable > 0)
 	{$fp = fopen ("./project_auth_entries.txt", "a");}
 
 $date = date("r");
@@ -109,17 +130,17 @@ else
 		$LOGadmin_hide_phone_data =	$row[3];
 		$LOGuser_group =			$row[4];
 
-		if ($WeBRooTWritablE > 0)
+		if ($webroot_writable > 0)
 			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
+			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
 			fclose($fp);
 			}
 		}
 	else
 		{
-		if ($WeBRooTWritablE > 0)
+		if ($webroot_writable > 0)
 			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
+			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
 			fclose($fp);
 			}
 		exit;

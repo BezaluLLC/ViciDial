@@ -1,7 +1,7 @@
 <?php 
 # realtime_report.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # live real-time stats for the VICIDIAL Auto-Dialer all servers
 #
@@ -19,10 +19,11 @@
 # 110316-2216 - Added Agent, Carrier and Preset options.php settings
 # 110516-2128 - IE fix
 # 110526-1807 - Added webphone_auto_answer option
+# 120223-1917 - Added multi-user-group options
 #
 
-$version = '2.4-8';
-$build = '110526-1807';
+$version = '2.4-9';
+$build = '120223-1917';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -44,6 +45,8 @@ if (isset($_GET["groups"]))				{$groups=$_GET["groups"];}
 	elseif (isset($_POST["groups"]))	{$groups=$_POST["groups"];}
 if (isset($_GET["usergroup"]))			{$usergroup=$_GET["usergroup"];}
 	elseif (isset($_POST["usergroup"]))	{$usergroup=$_POST["usergroup"];}
+if (isset($_GET["user_group_filter"]))			{$user_group_filter=$_GET["user_group_filter"];}
+	elseif (isset($_POST["user_group_filter"]))	{$user_group_filter=$_POST["user_group_filter"];}
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
 if (isset($_GET["adastats"]))			{$adastats=$_GET["adastats"];}
@@ -265,6 +268,86 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
     echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
 	}
+
+if ($auth) 
+	{
+	$office_no=strtoupper($PHP_AUTH_USER);
+	$password=strtoupper($PHP_AUTH_PW);
+	$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,callcard_admin,force_change_password,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,modify_contacts,modify_same_user_level from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW';";
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$LOGfull_name				=$row[3];
+	$LOGuser_level				=$row[4];
+	$LOGuser_group				=$row[5];
+	$LOGdelete_users			=$row[8];
+	$LOGdelete_user_groups		=$row[9];
+	$LOGdelete_lists			=$row[10];
+	$LOGdelete_campaigns		=$row[11];
+	$LOGdelete_ingroups			=$row[12];
+	$LOGdelete_remote_agents	=$row[13];
+	$LOGload_leads				=$row[14];
+	$LOGcampaign_detail			=$row[15];
+	$LOGast_admin_access		=$row[16];
+	$LOGast_delete_phones		=$row[17];
+	$LOGdelete_scripts			=$row[18];
+	$LOGdelete_filters			=$row[29];
+	$LOGalter_agent_interface	=$row[30];
+	$LOGdelete_call_times		=$row[32];
+	$LOGmodify_call_times		=$row[33];
+	$LOGmodify_users			=$row[34];
+	$LOGmodify_campaigns		=$row[35];
+	$LOGmodify_lists			=$row[36];
+	$LOGmodify_scripts			=$row[37];
+	$LOGmodify_filters			=$row[38];
+	$LOGmodify_ingroups			=$row[39];
+	$LOGmodify_usergroups		=$row[40];
+	$LOGmodify_remoteagents		=$row[41];
+	$LOGmodify_servers			=$row[42];
+	$LOGview_reports			=$row[43];
+	$LOGmodify_dids				=$row[56];
+	$LOGdelete_dids				=$row[57];
+	$LOGmanager_shift_enforcement_override=$row[61];
+	$LOGexport_reports			=$row[64];
+	$LOGdelete_from_dnc			=$row[65];
+	$LOGcallcard_admin			=$row[70];
+	$LOGforce_change_password	=$row[71];
+	$LOGmodify_shifts			=$row[72];
+	$LOGmodify_phones			=$row[73];
+	$LOGmodify_carriers			=$row[74];
+	$LOGmodify_labels			=$row[75];
+	$LOGmodify_statuses			=$row[76];
+	$LOGmodify_voicemail		=$row[77];
+	$LOGmodify_audiostore		=$row[78];
+	$LOGmodify_moh				=$row[79];
+	$LOGmodify_tts				=$row[80];
+	$LOGmodify_contacts			=$row[81];
+	$LOGmodify_same_user_level	=$row[82];
+
+	$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$LOGallowed_campaigns =			$row[0];
+	$LOGallowed_reports =			$row[1];
+	$LOGadmin_viewable_groups =		$row[2];
+	$LOGadmin_viewable_call_times =	$row[3];
+	
+	$LOGadmin_viewable_groupsSQL='';
+	$valLOGadmin_viewable_groupsSQL='';
+	$vmLOGadmin_viewable_groupsSQL='';
+	if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+		{
+		$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+		$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+		$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+		$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+		$valLOGadmin_viewable_groupsSQL = "and val.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+		$vmLOGadmin_viewable_groupsSQL = "and vm.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+		}
+	else 
+		{$admin_viewable_groupsALL=1;}
+
+	}
+
 #  and (preg_match("/MONITOR|BARGE|HIJACK/",$monitor_active) ) )
 if ( (!isset($monitor_phone)) or (strlen($monitor_phone)<1) )
 	{
@@ -346,6 +429,22 @@ while($i < $group_ct)
 	}
 $group_SQL = eregi_replace(",$",'',$group_SQL);
 
+$i=0;
+$user_group_string='|';
+$user_group_ct = count($user_group_filter);
+while($i < $user_group_ct)
+	{
+#	if ( (preg_match("/ $user_group_filter[$i] /",$regexLOGallowed_campaigns)) or (preg_match("/ALL-/",$LOGallowed_campaigns)) )
+#		{
+		$user_group_string .= "$user_group_filter[$i]|";
+		$user_group_SQL .= "'$user_group_filter[$i]',";
+		$usergroupQS .= "&user_group_filter[]=$user_group_filter[$i]";
+#		}
+
+	$i++;
+	}
+$user_group_SQL = eregi_replace(",$",'',$user_group_SQL);
+
 ### if no campaigns selected, display all
 if ( ($group_ct < 1) or (strlen($group_string) < 2) )
 	{
@@ -353,6 +452,15 @@ if ( ($group_ct < 1) or (strlen($group_string) < 2) )
 	$group_string = '|ALL-ACTIVE|';
 	$group = 'ALL-ACTIVE';
 	$groupQS .= "&groups[]=ALL-ACTIVE";
+	}
+### if no user groups selected, display all
+$user_group_none=0;
+if ( ($user_group_ct < 1) or (strlen($user_group_string) < 2) )
+	{
+	$user_group_filter[0] = 'ALL-GROUPS';
+	$user_group_string = '|ALL-GROUPS|';
+	$usergroupQS .= "&user_group_filter[]=ALL-GROUPS";
+	$user_group_none=1;
 	}
 
 if ( (ereg("--NONE--",$group_string) ) or ($group_ct < 1) )
@@ -376,17 +484,43 @@ else
 	$group_SQLwhere = "where campaign_id IN($group_SQL)";
 	}
 
+if ( (ereg("--NONE--",$user_group_string) ) or ($user_group_ct < 1) )
+	{
+	$all_active_groups = 0;
+	$user_group_SQL = "''";
+#	$user_group_SQLand = "and FALSE";
+#	$user_group_SQLwhere = "where FALSE";
+	}
+elseif ( eregi('ALL-GROUPS',$user_group_string) )
+	{
+	$all_active_groups = 1;
+#	$user_group_SQL = '';
+	$user_group_SQL = "'$rawLOGadmin_viewable_groupsSQL'";
+#	$group_SQLand = "and campaign_id IN($allactivecampaigns)";
+#	$group_SQLwhere = "where campaign_id IN($allactivecampaigns)";
+	}
+else
+	{
+	$all_active_groups = 0;
+#	$user_group_SQLand = "and user_group IN($user_group_SQL)";
+#	$user_group_SQLwhere = "where user_group IN($user_group_SQL)";
+	}
 
-$stmt="select user_group from vicidial_user_groups;";
+$stmt="select user_group, group_name from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
 $rslt=mysql_query($stmt, $link);
 if (!isset($DB))   {$DB=0;}
 if ($DB) {echo "$stmt\n";}
 $usergroups_to_print = mysql_num_rows($rslt);
 $i=0;
+$usergroups[$i]='ALL-GROUPS';
+$usergroupnames[$i] = 'All user groups';
+$i++;
+$usergroups_to_print++;
 while ($i < $usergroups_to_print)
 	{
 	$row=mysql_fetch_row($rslt);
 	$usergroups[$i] =$row[0];
+	$usergroupnames[$i] =$row[1];
 	$i++;
 	}
 
@@ -397,7 +531,7 @@ $NFE = '</font></b>';
 $F=''; $FG=''; $B=''; $BG='';
 
 $select_list = "<TABLE WIDTH=700 CELLPADDING=5 BGCOLOR=\"#D9E6FE\"><TR><TD VALIGN=TOP>Select Campaigns: <BR>";
-$select_list .= "<SELECT SIZE=15 NAME=groups[] ID=groups[] multiple>";
+$select_list .= "<SELECT SIZE=8 NAME=groups[] ID=groups[] multiple>";
 $o=0;
 while ($groups_to_print > $o)
 	{
@@ -408,7 +542,26 @@ while ($groups_to_print > $o)
 	$o++;
 	}
 $select_list .= "</SELECT>";
-$select_list .= "<BR><font size=1>(To select more than 1 campaign, hold down the Ctrl key and click)<font>";
+$select_list .= "<BR><font size=1>(To select more than 1 campaign, hold down the Ctrl key and click)</font>";
+
+$select_list .= "<BR><BR>Select User Groups: <BR>";
+$select_list .= "<SELECT SIZE=8 NAME=user_group_filter[] ID=user_group_filter[] multiple>";
+$o=0;
+while ($o < $usergroups_to_print)
+	{
+	if (ereg("\|$usergroups[$o]\|",$user_group_filter_string)) 
+		{$select_list .= "<option selected value=\"$usergroups[$o]\">$usergroups[$o] - $usergroupnames[$o]</option>";}
+	else
+		{
+		if ( ($user_group_none > 0) and ($usergroups[$o] == 'ALL-GROUPS') )
+			{$select_list .= "<option selected value=\"$usergroups[$o]\">$usergroups[$o] - $usergroupnames[$o]</option>";}
+		else
+			{$select_list .= "<option value=\"$usergroups[$o]\">$usergroups[$o] - $usergroupnames[$o]</option>";}
+		}
+	$o++;
+	}
+$select_list .= "</SELECT>";
+
 $select_list .= "</TD><TD VALIGN=TOP ALIGN=CENTER>";
 $select_list .= "<a href=\"#\" onclick=\"hideDiv(\'campaign_select_list\');\">Close Panel</a><BR><BR>";
 $select_list .= "<TABLE CELLPADDING=2 CELLSPACING=2 BORDER=0>";
@@ -710,6 +863,7 @@ var user = '<?php echo $PHP_AUTH_USER ?>';
 var pass = '<?php echo $PHP_AUTH_PW ?>';
 var RR = '<?php echo $RR ?>';
 var groupQS = '<?php echo $groupQS ?>';
+var usergroupQS = '<?php echo $usergroupQS ?>';
 var DB = '<?php echo $DB ?>';
 var adastats = '<?php echo $adastats ?>';
 var SIPmonitorLINK = '<?php echo $SIPmonitorLINK ?>';
@@ -1014,7 +1168,7 @@ function gather_realtime_content()
 		}
 	if (xmlhttp) 
 		{
-		RTupdate_query = "RTajax=1&DB=" + DB + "" + groupQS + "&adastats=" + adastats + "&SIPmonitorLINK=" + SIPmonitorLINK + "&IAXmonitorLINK=" + IAXmonitorLINK + "&usergroup=" + usergroup + "&UGdisplay=" + UGdisplay + "&UidORname=" + UidORname + "&orderby=" + orderby + "&SERVdisplay=" + SERVdisplay + "&CALLSdisplay=" + CALLSdisplay + "&PHONEdisplay=" + PHONEdisplay + "&CUSTPHONEdisplay=" + CUSTPHONEdisplay + "&with_inbound=" + with_inbound + "&monitor_active=" + monitor_active + "&monitor_phone=" + monitor_phone + "&ALLINGROUPstats=" + ALLINGROUPstats + "&DROPINGROUPstats=" + DROPINGROUPstats + "&NOLEADSalert=" + NOLEADSalert + "&CARRIERstats=" + CARRIERstats + "&PRESETstats=" + PRESETstats + "&AGENTtimeSTATS=" + AGENTtimeSTATS + "";
+		RTupdate_query = "RTajax=1&DB=" + DB + "" + groupQS + usergroupQS + "&adastats=" + adastats + "&SIPmonitorLINK=" + SIPmonitorLINK + "&IAXmonitorLINK=" + IAXmonitorLINK + "&usergroup=" + usergroup + "&UGdisplay=" + UGdisplay + "&UidORname=" + UidORname + "&orderby=" + orderby + "&SERVdisplay=" + SERVdisplay + "&CALLSdisplay=" + CALLSdisplay + "&PHONEdisplay=" + PHONEdisplay + "&CUSTPHONEdisplay=" + CUSTPHONEdisplay + "&with_inbound=" + with_inbound + "&monitor_active=" + monitor_active + "&monitor_phone=" + monitor_phone + "&ALLINGROUPstats=" + ALLINGROUPstats + "&DROPINGROUPstats=" + DROPINGROUPstats + "&NOLEADSalert=" + NOLEADSalert + "&CARRIERstats=" + CARRIERstats + "&PRESETstats=" + PRESETstats + "&AGENTtimeSTATS=" + AGENTtimeSTATS + "";
 
 		xmlhttp.open('POST', 'AST_timeonVDADall.php'); 
 		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
@@ -1160,12 +1314,30 @@ function update_variables(task_option,task_choice,force_reload)
 				}
 			}
 		groupQS = temp_camp_choices;
+
+		var temp_usergroup_choices = '';
+		var selCampObj = document.getElementById('user_group_filter[]');
+		var i;
+		var count = 0;
+		var selected_all=0;
+		for (i=0; i<selCampObj.options.length; i++) 
+			{
+			if ( (selCampObj.options[i].selected) && (selected_all < 1) )
+				{
+				temp_usergroup_choices = temp_usergroup_choices + '&user_group_filter[]=' + selCampObj.options[i].value;
+				count++;
+				if (selCampObj.options[i].value == 'ALL-ACTIVE')
+					{selected_all++;}
+				}
+			}
+		usergroupQS = temp_usergroup_choices;
+		
 		hideDiv('campaign_select_list');
 
 		// force a reload if the phone is changed
 		if ( (temp_monitor_phone != monitor_phone) || (force_reload=='YES') )
 			{
-			reload_url = PHP_SELF + "?RR=" + RR + "&DB=" + DB + "" + groupQS + "&adastats=" + adastats + "&SIPmonitorLINK=" + SIPmonitorLINK + "&IAXmonitorLINK=" + IAXmonitorLINK + "&usergroup=" + usergroup + "&UGdisplay=" + UGdisplay + "&UidORname=" + UidORname + "&orderby=" + orderby + "&SERVdisplay=" + SERVdisplay + "&CALLSdisplay=" + CALLSdisplay + "&PHONEdisplay=" + PHONEdisplay + "&CUSTPHONEdisplay=" + CUSTPHONEdisplay + "&with_inbound=" + with_inbound + "&monitor_active=" + monitor_active + "&monitor_phone=" + temp_monitor_phone + "&ALLINGROUPstats=" + ALLINGROUPstats + "&DROPINGROUPstats=" + DROPINGROUPstats + "&NOLEADSalert=" + NOLEADSalert + "&CARRIERstats=" + CARRIERstats + "&PRESETstats=" + PRESETstats + "&AGENTtimeSTATS=" + AGENTtimeSTATS + "";
+			reload_url = PHP_SELF + "?RR=" + RR + "&DB=" + DB + "" + groupQS + usergroupQS + "&adastats=" + adastats + "&SIPmonitorLINK=" + SIPmonitorLINK + "&IAXmonitorLINK=" + IAXmonitorLINK + "&usergroup=" + usergroup + "&UGdisplay=" + UGdisplay + "&UidORname=" + UidORname + "&orderby=" + orderby + "&SERVdisplay=" + SERVdisplay + "&CALLSdisplay=" + CALLSdisplay + "&PHONEdisplay=" + PHONEdisplay + "&CUSTPHONEdisplay=" + CUSTPHONEdisplay + "&with_inbound=" + with_inbound + "&monitor_active=" + monitor_active + "&monitor_phone=" + temp_monitor_phone + "&ALLINGROUPstats=" + ALLINGROUPstats + "&DROPINGROUPstats=" + DROPINGROUPstats + "&NOLEADSalert=" + NOLEADSalert + "&CARRIERstats=" + CARRIERstats + "&PRESETstats=" + PRESETstats + "&AGENTtimeSTATS=" + AGENTtimeSTATS + "";
 
 		//	alert('|' + temp_monitor_phone + '|' + monitor_phone + '|\n' + reload_url);
 			window.location.href = reload_url;

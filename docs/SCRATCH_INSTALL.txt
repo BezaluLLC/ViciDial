@@ -2458,6 +2458,9 @@ SUBPHASE 6.5: setting up astguiclient scripts for continuous running
 #32 0 * * * /usr/share/astguiclient/AST_VDsales_export.pl
 #42 0 * * * /usr/share/astguiclient/AST_sourceID_summary_export.pl
 
+### inventory report optional
+#1 7 * * * /usr/share/astguiclient/AST_dialer_inventory_snapshot.pl -q --override-24hours
+
 ### remove old recordings more than 7 days old
 #24 0 * * * /usr/bin/find /var/spool/asterisk/monitorDONE -maxdepth 2 -type f -mtime +7 -print | xargs rm -f
 

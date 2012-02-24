@@ -8,7 +8,7 @@
 # just needs to enter the leadID and then they can view and modify the 
 # information in the record for that lead
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -45,6 +45,7 @@
 # 110215-1717 - Changed empty lead_id behavior to be add-a-lead functionality
 # 110525-1827 - Added ivr log records display
 # 111103-1533 - Added admin_hide_phone_data and admin_hide_lead_data options
+# 120223-2249 - Removed logging of good login passwords if webroot writable is enabled
 #
 
 require("dbconnect.php");
@@ -164,7 +165,7 @@ $NOW_TIME = date("Y-m-d H:i:s");
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,custom_fields_enabled FROM system_settings;";
+$stmt = "SELECT use_non_latin,custom_fields_enabled,webroot_writable FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -173,6 +174,7 @@ if ($qm_conf_ct > 0)
 	$row=mysql_fetch_row($rslt);
 	$non_latin =				$row[0];
 	$custom_fields_enabled =	$row[1];
+	$webroot_writable =			$row[2];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -201,7 +203,7 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
-if ($WeBRooTWritablE > 0)
+if ($webroot_writable > 0)
 	{$fp = fopen ("./project_auth_entries.txt", "a");}
 
 $date = date("r");
@@ -227,17 +229,17 @@ else
 		$LOGadmin_hide_lead_data =	$row[2];
 		$LOGadmin_hide_phone_data =	$row[3];
 
-		if ($WeBRooTWritablE > 0)
+		if ($webroot_writable > 0)
 			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
+			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
 			fclose($fp);
 			}
 		}
 	else
 		{
-		if ($WeBRooTWritablE > 0)
+		if ($webroot_writable > 0)
 			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
+			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
 			fclose($fp);
 			}
 		}

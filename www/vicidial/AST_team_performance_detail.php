@@ -6,13 +6,14 @@
 # QC statuses of QCFAIL, QCCANC and sales are defined by the Sale=Y status
 # flags being set on those statuses.
 #
-# Copyright (C) 2011  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
 # 110802-2041 - First build
 # 110804-0049 - Added First Call Resolution
 # 111104-1259 - Added user_group restrictions for selecting in-groups
+# 120224-1424 - Added new colums and PRECAL to System Time
 #
 
 require("dbconnect.php");
@@ -411,6 +412,7 @@ if ($SUBMIT=="SUBMIT")
 		$group_average_contact_time=0;
 		$group_talk_time=0; 
 		$group_system_time=0; 
+		$group_nonpause_time=0;
 		$group_calls=0;	
 		$group_leads=0;
 		$group_contacts=0;
@@ -434,10 +436,10 @@ if ($SUBMIT=="SUBMIT")
 		if (mysql_num_rows($user_rslt)>0) 
 			{
 			$j=0;
-			$HTML_text.="+------------------------------------------+------------+-------+-------+----------+---------------+-------------+-----------+-------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+\n";
-			$HTML_text.="| Agent Name                               | Agent ID   | Calls | Leads | Contacts | Contact Ratio | System Time | Talk Time | Sales | Sales to Leads Ratio | Sales to Contacts Ratio | Sales Per Hour | Incomplete Sales | Cancelled Sales | Callbacks | First Call Resolution | Average Sale Time | Average Contact Time |\n";
-			$HTML_text.="+------------------------------------------+------------+-------+-------+----------+---------------+-------------+-----------+-------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+\n";
-			$CSV_text.="\"\",\"Agent Name\",\"Agent ID\",\"Calls\",\"Leads\",\"Contacts\",\"Contact Ratio\",\"System Time\",\"Talk Time\",\"Sales\",\"Sales to Leads Ratio\",\"Sales to Contacts Ratio\",\"Sales Per Hour\",\"Incomplete Sales\",\"Cancelled Sales\",\"Callbacks\",\"First Call Resolution\",\"Average Sale Time\",\"Average Contact Time\"\n";
+			$HTML_text.="+------------------------------------------+------------+-------+-------+----------+---------------+---------------+-------------+-----------+-------+------------------------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+\n";
+			$HTML_text.="| Agent Name                               | Agent ID   | Calls | Leads | Contacts | Contact Ratio | Nonpause Time | System Time | Talk Time | Sales | Sales per Working Hour | Sales to Leads Ratio | Sales to Contacts Ratio | Sales Per Hour | Incomplete Sales | Cancelled Sales | Callbacks | First Call Resolution | Average Sale Time | Average Contact Time |\n";
+			$HTML_text.="+------------------------------------------+------------+-------+-------+----------+---------------+---------------+-------------+-----------+-------+------------------------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+\n";
+			$CSV_text.="\"\",\"Agent Name\",\"Agent ID\",\"Calls\",\"Leads\",\"Contacts\",\"Contact Ratio\",\"Nonpause Time\",\"System Time\",\"Talk Time\",\"Sales\",\"Sales per Working Hour\",\"Sales to Leads Ratio\",\"Sales to Contacts Ratio\",\"Sales Per Hour\",\"Incomplete Sales\",\"Cancelled Sales\",\"Callbacks\",\"First Call Resolution\",\"Average Sale Time\",\"Average Contact Time\"\n";
 			while ($user_row=mysql_fetch_array($user_rslt)) 
 				{
 				$j++;
@@ -448,6 +450,7 @@ if ($SUBMIT=="SUBMIT")
 				$leads=0;
 				$system_time=0;
 				$talk_time=0;
+				$nonpause_time=0;
 				# For each user
 				$user=$user_row["user"];
 				$sale_array[$user]+=0;  # For agents with no sales logged
@@ -468,28 +471,35 @@ if ($SUBMIT=="SUBMIT")
 				$callback_row=mysql_fetch_row($callback_rslt);
 				$callbacks=$callback_row[0];
 
-				$stat_stmt="select val.status, vs.customer_contact, sum(val.talk_sec), sum(val.pause_sec), sum(val.wait_sec), sum(val.dispo_sec), sum(val.dead_sec), count(*) from vicidial_agent_log val, vicidial_statuses vs where val.user='$user' and val.user_group='$user_group[$i]' and val.event_time>='$query_date' and val.event_time<='$end_date' and val.status=vs.status and vs.status in (select status from vicidial_statuses) and val.campaign_id in ($group_SQL_str) group by status, customer_contact UNION select val.status, vs.customer_contact, sum(val.talk_sec), sum(val.pause_sec), sum(val.wait_sec), sum(val.dispo_sec), sum(val.dead_sec), count(*) from vicidial_agent_log val, vicidial_campaign_statuses vs where val.campaign_id in ($group_SQL_str) and val.user='$user' and val.user_group='$user_group[$i]' and val.event_time>='$query_date' and val.event_time<='$end_date' and val.status=vs.status and val.campaign_id=vs.campaign_id and vs.status in (select distinct status from vicidial_campaign_statuses where ".substr($group_SQL, 4).") group by status, customer_contact";
+				$stat_stmt="select val.status, val.sub_status, vs.customer_contact, sum(val.talk_sec), sum(val.pause_sec), sum(val.wait_sec), sum(val.dispo_sec), sum(val.dead_sec), count(*) from vicidial_agent_log val, vicidial_statuses vs where val.user='$user' and val.user_group='$user_group[$i]' and val.event_time>='$query_date' and val.event_time<='$end_date' and val.status=vs.status and vs.status in (select status from vicidial_statuses) and val.campaign_id in ($group_SQL_str) group by status, customer_contact UNION select val.status, val.sub_status, vs.customer_contact, sum(val.talk_sec), sum(val.pause_sec), sum(val.wait_sec), sum(val.dispo_sec), sum(val.dead_sec), count(*) from vicidial_agent_log val, vicidial_campaign_statuses vs where val.campaign_id in ($group_SQL_str) and val.user='$user' and val.user_group='$user_group[$i]' and val.event_time>='$query_date' and val.event_time<='$end_date' and val.status=vs.status and val.campaign_id=vs.campaign_id and vs.status in (select distinct status from vicidial_campaign_statuses where ".substr($group_SQL, 4).") group by status, customer_contact";
 				if ($DB) {$HTML_text.="$stat_stmt\n";}
 				$stat_rslt=mysql_query($stat_stmt, $link);
 				while ($stat_row=mysql_fetch_row($stat_rslt)) 
 					{
-					if ($stat_row[1]=="Y") 
+					if ($stat_row[2]=="Y") 
 						{
-						$contacts+=$stat_row[7]; 
-						$contact_talk_time+=($stat_row[2]-$stat_row[6]);
+						$contacts+=$stat_row[8]; 
+						$contact_talk_time+=($stat_row[3]-$stat_row[7]);
 
-						$group_contact_talk_time+=($stat_row[2]-$stat_row[6]);
+						$group_contact_talk_time+=($stat_row[3]-$stat_row[7]);
 						}
 					# if ($stat_row[2]=="Y") {$callbacks+=$stat_row[8];}
-					$calls+=$stat_row[7];
-					$talk_time+=($stat_row[2]-$stat_row[6]);
-					$system_time+=($stat_row[2]+$stat_row[4]+$stat_row[5]);
+					$calls+=$stat_row[8];
+					$talk_time+=($stat_row[3]-$stat_row[7]);
+					$system_time+=($stat_row[3]+$stat_row[5]+$stat_row[6]);
+					$nonpause_time+=($stat_row[3]+$stat_row[5]+$stat_row[6]);
+					if ($stat_row[1]=="PRECAL") 
+						{
+						$nonpause_time+=$stat_row[4];
+						}
 					}
 				$user_talk_time =		sec_convert($talk_time,'H'); 
 				$group_talk_time+=$talk_time;
 				$user_system_time =		sec_convert($system_time,'H'); 
 				$talk_hours=$talk_time/3600;
 				$group_system_time+=$system_time;
+				$user_nonpause_time =		sec_convert($nonpause_time,'H'); 
+				$group_nonpause_time+=$nonpause_time;
 
 				if ($sale_array[$user]>0) {$average_sale_time=sec_convert(round($sales_talk_time_array[$user]/$sale_array[$user]), 'H');} else {$average_sale_time="00:00";}
 				$group_sales_talk_time+=$sales_talk_time_array[$user];
@@ -509,9 +519,19 @@ if ($SUBMIT=="SUBMIT")
 					$contact_ratio="0.00";
 					}
 				$HTML_text.=" | ".sprintf("%12s", $contact_ratio)."%";
+				$HTML_text.=" | ".sprintf("%13s", $user_nonpause_time);
 				$HTML_text.=" | ".sprintf("%11s", $user_system_time);
 				$HTML_text.=" | ".sprintf("%9s", $user_talk_time);
 				$HTML_text.=" | ".sprintf("%5s", $sale_array[$user]);	$group_sales+=$sale_array[$user];
+				if ($nonpause_time>0) 
+					{
+					$sales_per_working_hours=sprintf("%.2f", ($sale_array[$user]/($nonpause_time/3600)));
+					}
+				else
+					{
+					$sales_per_working_hours="0.00";
+					}
+				$HTML_text.=" | ".sprintf("%22s", $sales_per_working_hours);
 				if ($leads>0) 
 					{
 					$sales_ratio=sprintf("%.2f", (100*$sale_array[$user]/$leads));
@@ -553,7 +573,7 @@ if ($SUBMIT=="SUBMIT")
 				$HTML_text.=" | ".sprintf("%21s", $stcall);	# first call resolution
 				$HTML_text.=" | ".sprintf("%17s", $average_sale_time);
 				$HTML_text.=" | ".sprintf("%20s", $average_contact_time)." |\n";
-				$CSV_text.="\"$j\",\"$user_row[full_name]\",\"$user\",\"$calls\",\"$leads\",\"$contacts\",\"$contact_ratio %\",\"$user_system_time\",\"$user_talk_time\",\"$sale_array[$user]\",\"$sales_ratio\",\"$sale_contact_ratio\",\"$sales_per_hour\",\"$incomplete_array[$user]\",\"$cancel_array[$user]\",\"$callbacks\",\"$stcall\",\"$average_sale_time\",\"$average_contact_time\"\n";
+				$CSV_text.="\"$j\",\"$user_row[full_name]\",\"$user\",\"$calls\",\"$leads\",\"$contacts\",\"$contact_ratio %\",\"$user_nonpause_time\",\"$user_system_time\",\"$user_talk_time\",\"$sale_array[$user]\",\"$sales_per_working_hours\",\"$sales_ratio\",\"$sale_contact_ratio\",\"$sales_per_hour\",\"$incomplete_array[$user]\",\"$cancel_array[$user]\",\"$callbacks\",\"$stcall\",\"$average_sale_time\",\"$average_contact_time\"\n";
 				}
 
 			##### GROUP TOTALS #############
@@ -578,7 +598,7 @@ if ($SUBMIT=="SUBMIT")
 			$GROUP_text.="| ".sprintf("%40s", "$group_name");
 			$GROUP_text.=" | ".sprintf("%10s", "$user_group[$i]");
 
-			$HTML_text.="+------------------------------------------+------------+-------+-------+----------+---------------+-------------+-----------+-------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+\n";
+			$HTML_text.="+------------------------------------------+------------+-------+-------+----------+---------------+---------------+-------------+-----------+-------+------------------------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+\n";
 			$HTML_text.="| ".sprintf("%40s", "");
 			$HTML_text.=" | ".sprintf("%10s", "TOTALS:");
 
@@ -594,9 +614,19 @@ if ($SUBMIT=="SUBMIT")
 				$group_contact_ratio="0.00";
 				}
 			$TOTAL_text.=" | ".sprintf("%12s", $group_contact_ratio)."%";
+			$TOTAL_text.=" | ".sprintf("%13s", sec_convert($group_nonpause_time,'H'));
 			$TOTAL_text.=" | ".sprintf("%11s", sec_convert($group_system_time,'H'));
 			$TOTAL_text.=" | ".sprintf("%9s", sec_convert($group_talk_time,'H'));
 			$TOTAL_text.=" | ".sprintf("%5s", $group_sales);
+			if ($group_nonpause_time>0) 
+				{
+				$sales_per_working_hours=sprintf("%.2f", ($group_sales/($group_nonpause_time/3600)));
+				}
+			else
+				{
+				$sales_per_working_hours="0.00";
+				}
+			$TOTAL_text.=" | ".sprintf("%22s", $sales_per_working_hours);
 			if ($group_leads>0) 
 				{
 				$group_sales_ratio=sprintf("%.2f", (100*$group_sales/$group_leads));
@@ -642,17 +672,18 @@ if ($SUBMIT=="SUBMIT")
 			$HTML_text.=$TOTAL_text;
 			$GROUP_text.=$TOTAL_text;
 
-			$HTML_text.="+------------------------------------------+------------+-------+-------+----------+---------------+-------------+-----------+-------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+\n";
+			$HTML_text.="+------------------------------------------+------------+-------+-------+----------+---------------+---------------+-------------+-----------+-------+------------------------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+\n";
 			$HTML_text.="\n\n";
 
-			$CSV_text.="\"\",\"\",\"TOTALS:\",\"$group_calls\",\"$group_leads\",\"$group_contacts\",\"$group_contact_ratio %\",\"".sec_convert($group_system_time,'H')."\",\"".sec_convert($group_talk_time,'H')."\",\"$group_sales\",\"$group_sales_ratio\",\"$group_sale_contact_ratio\",\"$group_sales_per_hour\",\"$group_inc_sales\",\"$group_cnc_sales\",\"$group_callbacks\",\"$group_stcall\",\"$group_average_sale_time\",\"$group_average_contact_time\"\n";
-			$GROUP_CSV_text.="\"$i\",\"$group_name\",\"$user_group[$i]\",\"$group_calls\",\"$group_leads\",\"$group_contacts\",\"$group_contact_ratio %\",\"".sec_convert($group_system_time,'H')."\",\"".sec_convert($group_talk_time,'H')."\",\"$group_sales\",\"$group_sales_ratio\",\"$group_sale_contact_ratio\",\"$group_sales_per_hour\",\"$group_inc_sales\",\"$group_cnc_sales\",\"$group_callbacks\",\"$group_stcall\",\"$group_average_sale_time\",\"$group_average_contact_time\"\n";
+			$CSV_text.="\"\",\"\",\"TOTALS:\",\"$group_calls\",\"$group_leads\",\"$group_contacts\",\"$group_contact_ratio %\",\"".sec_convert($group_nonpause_time,'H')."\",\"".sec_convert($group_system_time,'H')."\",\"".sec_convert($group_talk_time,'H')."\",\"$group_sales\",\"$sales_per_working_hours\",\"$group_sales_ratio\",\"$group_sale_contact_ratio\",\"$group_sales_per_hour\",\"$group_inc_sales\",\"$group_cnc_sales\",\"$group_callbacks\",\"$group_stcall\",\"$group_average_sale_time\",\"$group_average_contact_time\"\n";
+			$GROUP_CSV_text.="\"$i\",\"$group_name\",\"$user_group[$i]\",\"$group_calls\",\"$group_leads\",\"$group_contacts\",\"$group_contact_ratio %\",\"".sec_convert($group_nonpause_time,'H')."\",\"".sec_convert($group_system_time,'H')."\",\"".sec_convert($group_talk_time,'H')."\",\"$group_sales\",\"$sales_per_working_hours\",\"$group_sales_ratio\",\"$group_sale_contact_ratio\",\"$group_sales_per_hour\",\"$group_inc_sales\",\"$group_cnc_sales\",\"$group_callbacks\",\"$group_stcall\",\"$group_average_sale_time\",\"$group_average_contact_time\"\n";
 			$CSV_text.="\n\n";
 
 			$total_calls+=$group_calls;
 			$total_leads+=$group_leads;
 			$total_contacts+=$group_contacts;
 			$total_system_time+=$group_system_time;
+			$total_nonpause_time+=$group_nonpause_time;
 			$total_talk_time+=$group_talk_time;
 			$total_sales+=$group_sales;
 			$total_inc_sales+=$group_inc_sales;
@@ -672,11 +703,11 @@ if ($SUBMIT=="SUBMIT")
 		}
 
 	$HTML_text.="--- <B>CALL CENTER TOTAL</B>\n";
-	$HTML_text.="+------------------------------------------+------------+-------+-------+----------+---------------+-------------+-----------+-------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+\n";
-	$HTML_text.="| Team Name                                | Team ID    | Calls | Leads | Contacts | Contact Ratio | System Time | Talk Time | Sales | Sales to Leads Ratio | Sales to Contacts Ratio | Sales Per Hour | Incomplete Sales | Cancelled Sales | Callbacks | First Call Resolution | Average Sale Time | Average Contact Time |\n";
-	$HTML_text.="+------------------------------------------+------------+-------+-------+----------+---------------+-------------+-----------+-------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+\n";
+	$HTML_text.="+------------------------------------------+------------+-------+-------+----------+---------------+---------------+-------------+-----------+-------+------------------------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+\n";
+	$HTML_text.="| Team Name                                | Team ID    | Calls | Leads | Contacts | Contact Ratio | Nonpause Time | System Time | Talk Time | Sales | Sales per Working Hour | Sales to Leads Ratio | Sales to Contacts Ratio | Sales Per Hour | Incomplete Sales | Cancelled Sales | Callbacks | First Call Resolution | Average Sale Time | Average Contact Time |\n";
+	$HTML_text.="+------------------------------------------+------------+-------+-------+----------+---------------+---------------+-------------+-----------+-------+------------------------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+\n";
 	$HTML_text.=$GROUP_text;
-	$HTML_text.="+------------------------------------------+------------+-------+-------+----------+---------------+-------------+-----------+-------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+\n";
+	$HTML_text.="+------------------------------------------+------------+-------+-------+----------+---------------+---------------+-------------+-----------+-------+------------------------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+\n";
 
 	if ($total_sales>0) 
 		{
@@ -710,9 +741,19 @@ if ($SUBMIT=="SUBMIT")
 		$total_contact_ratio="0.00";
 		}
 	$HTML_text.=" | ".sprintf("%12s", $total_contact_ratio)."%";
+	$HTML_text.=" | ".sprintf("%13s", sec_convert($total_nonpause_time,'H'));
 	$HTML_text.=" | ".sprintf("%11s", sec_convert($total_system_time,'H'));
 	$HTML_text.=" | ".sprintf("%9s", sec_convert($total_talk_time,'H'));
 	$HTML_text.=" | ".sprintf("%5s", $total_sales);
+	if ($total_nonpause_time>0) 
+		{
+		$sales_per_working_hours=sprintf("%.2f", ($total_sales/($total_nonpause_time/3600)));
+		}
+	else
+		{
+		$sales_per_working_hours="0.00";
+		}
+	$HTML_text.=" | ".sprintf("%22s", $sales_per_working_hours);
 	if ($total_leads>0) 
 		{
 		$total_sales_ratio=sprintf("%.2f", (100*$total_sales/$total_leads));
@@ -754,15 +795,15 @@ if ($SUBMIT=="SUBMIT")
 	$HTML_text.=" | ".sprintf("%21s", $total_stcall); 	# first call resolution
 	$HTML_text.=" | ".sprintf("%17s", $total_average_sale_time);
 	$HTML_text.=" | ".sprintf("%20s", $total_average_contact_time)." |\n";
-	$HTML_text.="+------------------------------------------+------------+-------+-------+----------+---------------+-------------+-----------+-------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+\n";
+	$HTML_text.="+------------------------------------------+------------+-------+-------+----------+---------------+---------------+-------------+-----------+-------+------------------------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+\n";
 	$HTML_text.="</FONT></PRE>";
 	$HTML_text.="</BODY>\n";
 	$HTML_text.="</HTML>\n";
 
 	$CSV_text.="\"\",\"CALL CENTER TOTAL\"\n";
-	$CSV_text.="\"\",\"Team Name\",\"Team ID\",\"Calls\",\"Leads\",\"Contacts\",\"Contact Ratio\",\"System Time\",\"Talk Time\",\"Sales\",\"Sales to Leads Ratio\",\"Sales to Contacts Ratio\",\"Sales Per Hour\",\"Incomplete Sales\",\"Cancelled Sales\",\"Callbacks\",\"First Call Resolution\",\"Average Sale Time\",\"Average Contact Time\"\n";
+	$CSV_text.="\"\",\"Team Name\",\"Team ID\",\"Calls\",\"Leads\",\"Contacts\",\"Contact Ratio\",\"Nonpause Time\",\"System Time\",\"Talk Time\",\"Sales\",\"Sales per Working Hour\",\"Sales to Leads Ratio\",\"Sales to Contacts Ratio\",\"Sales Per Hour\",\"Incomplete Sales\",\"Cancelled Sales\",\"Callbacks\",\"First Call Resolution\",\"Average Sale Time\",\"Average Contact Time\"\n";
 	$CSV_text.=$GROUP_CSV_text;
-	$CSV_text.="\"\",\"\",\"TOTALS:\",\"$total_calls\",\"$total_leads\",\"$total_contacts\",\"$total_contact_ratio %\",\"".sec_convert($total_system_time,'H')."\",\"".sec_convert($total_talk_time,'H')."\",\"$total_sales\",\"$total_sales_ratio\",\"$total_sale_contact_ratio\",\"$total_sales_per_hour\",\"$total_inc_sales\",\"$total_cnc_sales\",\"$total_callbacks\",\"$total_stcall\",\"$total_average_sale_time\",\"$total_average_contact_time\"\n";
+	$CSV_text.="\"\",\"\",\"TOTALS:\",\"$total_calls\",\"$total_leads\",\"$total_contacts\",\"$total_contact_ratio %\",\"".sec_convert($total_nonpause_time,'H')."\",\"".sec_convert($total_system_time,'H')."\",\"".sec_convert($total_talk_time,'H')."\",\"$total_sales\",\"$sales_per_working_hours\",\"$total_sales_ratio\",\"$total_sale_contact_ratio\",\"$total_sales_per_hour\",\"$total_inc_sales\",\"$total_cnc_sales\",\"$total_callbacks\",\"$total_stcall\",\"$total_average_sale_time\",\"$total_average_contact_time\"\n";
 	}
 
 if ($file_download>0) 

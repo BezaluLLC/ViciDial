@@ -1,7 +1,7 @@
 <?php 
 # timeclock_report.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -17,6 +17,7 @@
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 # 110703-1830 - Added download option
 # 111104-1314 - Added user_group restrictions for selecting in-groups
+# 120224-0910 - Added HTML display option with bar graphs
 #
 
 require("dbconnect.php");
@@ -45,6 +46,8 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
 if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
+if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
+	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
 if (strlen($order)<2) {$order='hours_down';}
@@ -204,6 +207,7 @@ $HEADER.="-->\n";
 $HEADER.="</style>\n";
 $HEADER.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
+$HEADER.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 $HEADER.="<TITLE>\n";
 
@@ -305,8 +309,13 @@ $MAIN.="<SELECT SIZE=5 NAME=user_group[] multiple>\n";
 	}
 $MAIN.="</SELECT>\n";
 
-$MAIN.="</TD></TD><TD ALIGN=LEFT VALIGN=TOP>\n";
-$MAIN.="<font class=\"select_bold\"><B>Order:</B></font><BR>\n";
+$MAIN.="</TD></TD><TD ALIGN=LEFT VALIGN=TOP><font class=\"select_bold\">";
+$MAIN.="Display as:<BR>";
+$MAIN.="<select name='report_display_type'>";
+if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
+$MAIN.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR>\n";
+$MAIN.="</font></TD><TD ALIGN=LEFT VALIGN=TOP>\n";
+$MAIN.="<font class=\"select_bold\"><B>Order:</B><BR>\n";
 $MAIN.="<SELECT SIZE=1 NAME=order>\n";
 $MAIN.="<option selected value=\"$order\">$order</option>\n";
 $MAIN.="<option value=\"\">--</option>\n";
@@ -318,7 +327,9 @@ $MAIN.="<option>name_up</option>\n";
 $MAIN.="<option>name_down</option>\n";
 $MAIN.="<option>group_up</option>\n";
 $MAIN.="<option>group_down</option>\n";
-$MAIN.="</SELECT><BR><CENTER>\n";
+$MAIN.="</SELECT>\n";
+$MAIN.="</font><CENTER>\n";
+
 
 $MAIN.="</TD><TD ALIGN=LEFT VALIGN=TOP>\n";
 $MAIN.="<font class=\"select_bold\"><B>User:</B></font><BR>\n";
@@ -337,26 +348,11 @@ $MAIN.="<PRE><FONT SIZE=3>\n";
 
 $MAIN.="User Timeclock Report                        $NOW_TIME\n";
 
-
-$MAIN.="Time range: $query_date to $end_date\n\n";
-$MAIN.="---------- USER TIMECLOCK DETAILS -------------\n";
-$MAIN.="These totals do NOT include any active sessions\n</PRE>\n";
-
 $CSV_text.="\"User Timeclock Report - $NOW_TIME\"\n";
 $CSV_text.="\"Time range: $query_date to $end_date\"\n";
 $CSV_text.="\"---------- USER TIMECLOCK DETAILS -------------\"\n";
 $CSV_text.="\"These totals do NOT include any active sessions\"\n\n";
 
-
-$MAIN.="<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=3><TR BGCOLOR=BLACK>\n";
-$MAIN.="<TD ALIGN=CENTER><FONT class=\"header_white\">#</TD>\n";
-$MAIN.="<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; USER &nbsp;</TD>\n";
-$MAIN.="<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; NAME &nbsp;</TD>\n";
-$MAIN.="<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; GROUP &nbsp;</TD>\n";
-$MAIN.="<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; HOURS &nbsp;</TD>\n";
-$MAIN.="</TR>\n";
-
-$CSV_text.="\"\",\"#\",\"USER\",\"NAME\",\"GROUP\",\"HOURS\"\n";
 
 $order_SQL='';
 if ($order == 'hours_up')	{$order_SQL = "order by login";}
@@ -372,79 +368,145 @@ if (strlen($user) > 0)		{$user_SQL = "and vicidial_timeclock_log.user='$user'";}
 else {$user_SQL='';}
 
 $stmt="select vicidial_users.user,full_name,sum(login_sec) as login,vicidial_timeclock_log.user_group from vicidial_users,vicidial_timeclock_log where event IN('LOGIN','START') and event_date >= '$query_date 00:00:00' and event_date <= '$end_date 23:59:59' and vicidial_users.user=vicidial_timeclock_log.user $user_SQL $user_group_SQL group by vicidial_users.user,vicidial_timeclock_log.user_group $order_SQL limit 100000;";
-$rslt=mysql_query($stmt, $link);
-if ($DB) {$MAIN.="$stmt\n";}
-$rows_to_print = mysql_num_rows($rslt);
-$i=0;
-while ($i < $rows_to_print)
-	{
-	$dbHOURS=0;
-	$row=mysql_fetch_row($rslt);
-	$user_id[$i] =		$row[0];
-	$full_name[$i] =	$row[1];
-	$login_sec[$i] =	$row[2];	$TOTlogin_sec = ($TOTlogin_sec + $row[2]);
-	$u_group[$i] =		$row[3];
 
-	if ($login_sec[$i] > 0)
+
+if (!$report_display_type || $report_display_type=="TEXT") 
+	{
+	$MAIN.="Time range: $query_date to $end_date\n\n";
+	$MAIN.="---------- USER TIMECLOCK DETAILS -------------\n";
+	$MAIN.="These totals do NOT include any active sessions\n</PRE>\n";
+	$MAIN.="<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=3><TR BGCOLOR=BLACK>\n";
+	$MAIN.="<TD ALIGN=CENTER><FONT class=\"header_white\">#</TD>\n";
+	$MAIN.="<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; USER &nbsp;</TD>\n";
+	$MAIN.="<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; NAME &nbsp;</TD>\n";
+	$MAIN.="<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; GROUP &nbsp;</TD>\n";
+	$MAIN.="<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; HOURS &nbsp;</TD>\n";
+	$MAIN.="</TR>\n";
+
+	$CSV_text.="\"\",\"#\",\"USER\",\"NAME\",\"GROUP\",\"HOURS\"\n";
+
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {$MAIN.="$stmt\n";}
+	$rows_to_print = mysql_num_rows($rslt);
+	$i=0;
+
+	while ($i < $rows_to_print)
 		{
-		$dbHOURS = ($login_sec[$i] / 3600);
-		$dbHOURS = round($dbHOURS, 2);
-		$dbHOURS = sprintf("%01.2f", $dbHOURS);
+		$dbHOURS=0;
+		$row=mysql_fetch_row($rslt);
+		$user_id[$i] =		$row[0];
+		$full_name[$i] =	$row[1];
+		$login_sec[$i] =	$row[2];	$TOTlogin_sec = ($TOTlogin_sec + $row[2]);
+		$u_group[$i] =		$row[3];
+
+		if ($login_sec[$i] > 0)
+			{
+			$dbHOURS = ($login_sec[$i] / 3600);
+			$dbHOURS = round($dbHOURS, 2);
+			$dbHOURS = sprintf("%01.2f", $dbHOURS);
+			}
+		else
+			{$dbHOURS='0.00';}
+
+		$hours[$i] =	$dbHOURS;		
+		$hoursSORT[$i] =	"$dbHOURS-----$i";		
+
+		$i++;
+		}
+
+
+	$j=0;
+	while ($j < $rows_to_print)
+		{
+
+		$hours_split = explode("-----",$hoursSORT[$j]);
+		$i = $hours_split[1];
+
+		if (eregi("1$|3$|5$|7$|9$", $j))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+
+		$MAIN.="<TR $bgcolor>\n";
+		$MAIN.="<TD ALIGN=LEFT><FONT class=\"data_records_fix_small\">$j</TD>\n";
+		$MAIN.="<TD><FONT class=\"data_records\"><A HREF=\"user_status.php?user=$user_id[$i]\">$user_id[$i]</A> </TD>\n";
+		$MAIN.="<TD><FONT class=\"data_records\">$full_name[$i] </TD>\n";
+		$MAIN.="<TD><FONT class=\"data_records\">$u_group[$i] </TD>\n";
+		$MAIN.="<TD ALIGN=RIGHT><FONT class=\"data_records_fix\"> $hours[$i]</TD>\n";
+		$MAIN.="</TR>\n";
+		$CSV_text.="\"\",\"$j\",\"$user_id[$i]\",\"$full_name[$i]\",\"$u_group[$i]\",\"$hours[$i]\"\n";
+
+		$j++;
+		}
+
+
+	if ($TOTlogin_sec > 0)
+		{
+		$TOTdbHOURS = ($TOTlogin_sec / 3600);
+		$TOTdbHOURS = round($TOTdbHOURS, 0);
+		$TOTdbHOURS = sprintf("%01.0f", $TOTdbHOURS);
 		}
 	else
-		{$dbHOURS='0.00';}
+		{$TOTdbHOURS='0.00';}
 
-	$hours[$i] =	$dbHOURS;		
-	$hoursSORT[$i] =	"$dbHOURS-----$i";		
-
-	$i++;
-	}
+	$TOThours =	$TOTdbHOURS;		
 
 
-$j=0;
-while ($j < $rows_to_print)
-	{
 
-	$hours_split = explode("-----",$hoursSORT[$j]);
-	$i = $hours_split[1];
-
-	if (eregi("1$|3$|5$|7$|9$", $j))
-		{$bgcolor='bgcolor="#B9CBFD"';} 
-	else
-		{$bgcolor='bgcolor="#9BB9FB"';}
-
-	$MAIN.="<TR $bgcolor>\n";
-	$MAIN.="<TD ALIGN=LEFT><FONT class=\"data_records_fix_small\">$j</TD>\n";
-	$MAIN.="<TD><FONT class=\"data_records\"><A HREF=\"user_status.php?user=$user_id[$i]\">$user_id[$i]</A> </TD>\n";
-	$MAIN.="<TD><FONT class=\"data_records\">$full_name[$i] </TD>\n";
-	$MAIN.="<TD><FONT class=\"data_records\">$u_group[$i] </TD>\n";
-	$MAIN.="<TD ALIGN=RIGHT><FONT class=\"data_records_fix\"> $hours[$i]</TD>\n";
+	$MAIN.="<TR BGCOLOR=#E6E6E6>\n";
+	$MAIN.="<TD ALIGN=LEFT COLSPAN=4><FONT class=\"data_records\">TOTALS</TD>\n";
+	$MAIN.="<TD ALIGN=RIGHT><FONT class=\"data_records_fix\"> $TOThours</TD>\n";
 	$MAIN.="</TR>\n";
-	$CSV_text.="\"\",\"$j\",\"$user_id[$i]\",\"$full_name[$i]\",\"$u_group[$i]\",\"$hours[$i]\"\n";
+	$CSV_text.="\"\",\"TOTALS\",\"\",\"\",\"\",\"$TOThours\"\n";
 
-	$j++;
+	$MAIN.="</TABLE>\n";
 	}
-
-
-if ($TOTlogin_sec > 0)
+else 
 	{
-	$TOTdbHOURS = ($TOTlogin_sec / 3600);
-	$TOTdbHOURS = round($TOTdbHOURS, 0);
-	$TOTdbHOURS = sprintf("%01.0f", $TOTdbHOURS);
+	######## GRAPHING #########
+	$rslt=mysql_query($stmt, $link);
+	$high_ct=0; $i=0;
+	while ($row=mysql_fetch_row($rslt)) {
+
+		if ($row[2] > 0)
+			{
+			$dbHOURS = ($row[2] / 3600);
+			$dbHOURS = round($dbHOURS, 2);
+			$dbHOURS = sprintf("%01.2f", $dbHOURS);
+			}
+		else
+			{$dbHOURS='0.00';}
+
+		if ($dbHOURS>$high_ct) {$high_ct=$dbHOURS;}		
+		$ct_ary[$i][0]="$row[1] ($row[0]) - $row[3]";
+		$ct_ary[$i][1]=$dbHOURS;
+		$i++;
 	}
-else
-	{$TOTdbHOURS='0.00';}
+	if ($high_ct<1) {$high_ct*=10;}
+	$MAIN.="</PRE>\n";
+	$MAIN.="<table cellspacing=\"0\" cellpadding=\"0\" summary=\"CALL HANGUP REASON STATS\" class=\"horizontalgraph\">\n";
+	$MAIN.="  <caption align=\"top\">USER TIMECLOCK DETAILS<br /><font size='-1'>Time range: $query_date to $end_date<br/>These totals do NOT include any active sessions</font><br /></caption>\n";
+	$MAIN.="  <tr>\n";
+	$MAIN.="	<th class=\"thgraph\" scope=\"col\">USER  </th>\n";
+	$MAIN.="	<th class=\"thgraph\" scope=\"col\">HOURS </th>\n";
+	$MAIN.="  </tr>\n";
+	for ($i=0; $i<count($ct_ary); $i++) {
+		if ($i==0) {$class=" first";} else if (($i+1)==count($ct_ary)) {$class=" last";} else {$class="";}
+		$MAIN.="  <tr>\n";
+		$MAIN.="	<td class=\"chart_td$class\">".$ct_ary[$i][0]."</td>\n";
+		$MAIN.="	<td class=\"chart_td value$class\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$ct_ary[$i][1]/$high_ct)."\" height=\"16\" />".$ct_ary[$i][1]."</td>\n";
+		$MAIN.="  </tr>\n";
+	}
+	$MAIN.="  <tr>\n";
+	$MAIN.="	<th class=\"thgraph\" scope=\"col\">TOTAL HOURS:</th>\n";
+	$MAIN.="	<th class=\"thgraph\" scope=\"col\">".trim($TOThours)."</th>\n";
+	$MAIN.="  </tr>\n";
+	$MAIN.="</table>\n";
+	$MAIN.="<PRE>\n";
+	###########################
+	}
 
-$TOThours =	$TOTdbHOURS;		
 
-
-$MAIN.="<TR BGCOLOR=#E6E6E6>\n";
-$MAIN.="<TD ALIGN=LEFT COLSPAN=4><FONT class=\"data_records\">TOTALS</TD>\n";
-$MAIN.="<TD ALIGN=RIGHT><FONT class=\"data_records_fix\"> $TOThours</TD>\n";
-$MAIN.="</TR>\n";
-$CSV_text.="\"\",\"TOTALS\",\"\",\"\",\"\",\"$TOThours\"\n";
-
-$MAIN.="</TABLE>\n";
 $MAIN.="</CENTER>\n";
 $MAIN.="</BODY></HTML>\n";
 

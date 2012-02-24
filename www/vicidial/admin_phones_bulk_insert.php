@@ -10,10 +10,11 @@
 # 110712-0932 - Added extension suffix exception for non-SIP/IAX phones, added HELP
 # 120104-2023 - Added webphone options
 # 120209-1545 - Added phone context option
+# 120223-2249 - Removed logging of good login passwords if webroot writable is enabled
 #
 
-$admin_version = '2.4-4';
-$build = '120209-1545';
+$admin_version = '2.4-5';
+$build = '120223-2249';
 
 
 require("dbconnect.php");
@@ -93,14 +94,15 @@ $NOW_TIME = date("Y-m-d H:i:s");
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $ss_conf_ct = mysql_num_rows($rslt);
 if ($ss_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =						$row[0];
+	$non_latin =					$row[0];
+	$webroot_writable =				$row[1];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -112,7 +114,7 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
-if ($WeBRooTWritablE > 0)
+if ($webroot_writable > 0)
 	{$fp = fopen ("./project_auth_entries.txt", "a");}
 
 $date = date("r");
@@ -141,17 +143,17 @@ else
 		$LOGast_admin_access =		$row[2];
 		$LOGuser_level =			$row[3];
 
-		if ($WeBRooTWritablE > 0)
+		if ($webroot_writable > 0)
 			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
+			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
 			fclose($fp);
 			}
 		}
 	else
 		{
-		if ($WeBRooTWritablE > 0)
+		if ($webroot_writable > 0)
 			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
+			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
 			fclose($fp);
 			}
 		}

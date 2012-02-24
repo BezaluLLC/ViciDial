@@ -1,7 +1,7 @@
 <?php
 # new_listloader_superL.php
 # 
-# Copyright (C) 2010  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # AST GUI lead loader from formatted file
 # 
@@ -34,11 +34,12 @@
 # 100630-1609 - Added a check for invalid ListIds and filtered out ' " ; ` \ from the field <mikec>
 # 100705-1507 - Added custom fields to field chooser, only when liast_id_override is used and only with TXT and CSV file formats
 # 100712-1416 - Added entry_list_id field to vicidial_list to preserve link to custom fields if any
+# 120223-2148 - Removed logging of good login passwords if webroot writable is enabled
 #
 # make sure vicidial_list exists and that your file follows the formatting correctly. This page does not dedupe or do any other lead filtering actions yet at this time.
 
-$version = '2.4-37';
-$build = '100712-1416';
+$version = '2.4-38';
+$build = '120223-2148';
 
 
 require("dbconnect.php");
@@ -143,7 +144,7 @@ $vicidial_list_fields = '|lead_id|vendor_lead_code|source_id|list_id|gmt_offset_
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,admin_web_directory,custom_fields_enabled FROM system_settings;";
+$stmt = "SELECT use_non_latin,admin_web_directory,custom_fields_enabled,webroot_writable FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -153,6 +154,7 @@ if ($qm_conf_ct > 0)
 	$non_latin =				$row[0];
 	$admin_web_directory =		$row[1];
 	$custom_fields_enabled =	$row[2];
+	$webroot_writable =			$row[3];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -181,7 +183,7 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
-if ($WeBRooTWritablE > 0) {$fp = fopen ("./project_auth_entries.txt", "a");}
+if ($webroot_writable > 0) {$fp = fopen ("./project_auth_entries.txt", "a");}
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
@@ -213,17 +215,17 @@ $browser = getenv("HTTP_USER_AGENT");
 			echo "You do not have permissions to load leads\n";
 			exit;
 			}
-		if ($WeBRooTWritablE > 0) 
+		if ($webroot_writable > 0) 
 			{
-			fwrite ($fp, "LIST_LOAD|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
+			fwrite ($fp, "LIST_LOAD|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
 			fclose($fp);
 			}
 		}
 	else
 		{
-		if ($WeBRooTWritablE > 0) 
+		if ($webroot_writable > 0) 
 			{
-			fwrite ($fp, "LIST_LOAD|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
+			fwrite ($fp, "LIST_LOAD|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
 			fclose($fp);
 			}
 		}
@@ -409,7 +411,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 		if (!eregi(".csv", $leadfile_name) && !eregi(".xls", $leadfile_name)) {
 			# copy($leadfile, "./vicidial_temp_file.txt");
 			$file=fopen("$lead_file", "r");
-			if ($WeBRooTWritablE > 0)
+			if ($webroot_writable > 0)
 				{
 				$stmt_file=fopen("listloader_stmts.txt", "w");
 				}
@@ -724,7 +726,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 								$affected_rows = mysql_affected_rows($link);
 								$lead_id = mysql_insert_id($link);
 								if ($DB > 0) {echo "<!-- $affected_rows|$lead_id|$stmtZ -->";}
-								if ($WeBRooTWritablE > 0) 
+								if ($webroot_writable > 0) 
 									{fwrite($stmt_file, $stmtZ."\r\n");}
 								$multistmt='';
 
@@ -740,7 +742,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 									### insert good record into vicidial_list table ###
 									$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id) values$multistmt('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner','0');";
 									$rslt=mysql_query($stmtZ, $link);
-									if ($WeBRooTWritablE > 0) 
+									if ($webroot_writable > 0) 
 										{fwrite($stmt_file, $stmtZ."\r\n");}
 									$multistmt='';
 									$multi_insert_counter=0;
@@ -778,7 +780,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 				if ($multi_insert_counter!=0) {
 					$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id) values".substr($multistmt, 0, -1).";";
 					mysql_query($stmtZ, $link);
-					if ($WeBRooTWritablE > 0) 
+					if ($webroot_writable > 0) 
 						{fwrite($stmt_file, $stmtZ."\r\n");}
 				}
 
@@ -813,7 +815,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 			# copy($leadfile, "./vicidial_temp_file.csv");
 			$file=fopen("$lead_file", "r");
 
-			if ($WeBRooTWritablE > 0)
+			if ($webroot_writable > 0)
 				{$stmt_file=fopen("$WeBServeRRooT/$admin_web_directory/listloader_stmts.txt", "w");}
 			
 			print "<center><font face='arial, helvetica' size=3 color='#009900'><B>Processing CSV file... \n";
@@ -1112,7 +1114,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 							$affected_rows = mysql_affected_rows($link);
 							$lead_id = mysql_insert_id($link);
 							if ($DB > 0) {echo "<!-- $affected_rows|$lead_id|$stmtZ -->";}
-							if ($WeBRooTWritablE > 0) 
+							if ($webroot_writable > 0) 
 								{fwrite($stmt_file, $stmtZ."\r\n");}
 							$multistmt='';
 
@@ -1128,7 +1130,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 								### insert good deal into pending_transactions table ###
 								$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id) values$multistmt('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner','0');";
 								$rslt=mysql_query($stmtZ, $link);
-								if ($WeBRooTWritablE > 0) 
+								if ($webroot_writable > 0) 
 									{fwrite($stmt_file, $stmtZ."\r\n");}
 								$multistmt='';
 								$multi_insert_counter=0;
@@ -1164,7 +1166,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 			if ($multi_insert_counter!=0) {
 				$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id) values".substr($multistmt, 0, -1).";";
 				mysql_query($stmtZ, $link);
-				if ($WeBRooTWritablE > 0) 
+				if ($webroot_writable > 0) 
 					{fwrite($stmt_file, $stmtZ."\r\n");}
 			}
 			print "<BR><BR>Done</B> GOOD: $good &nbsp; &nbsp; &nbsp; BAD: $bad &nbsp; &nbsp; &nbsp; TOTAL: $total</font></center>";
@@ -1187,7 +1189,7 @@ if ($leadfile) {
 
 	if (!eregi(".csv", $leadfile_name) && !eregi(".xls", $leadfile_name)) {
 
-		if ($WeBRooTWritablE > 0)
+		if ($webroot_writable > 0)
 			{
 			copy($LF_path, "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.txt");
 			$lead_file = "./vicidial_temp_file.txt";
@@ -1198,7 +1200,7 @@ if ($leadfile) {
 			$lead_file = "/tmp/vicidial_temp_file.txt";
 			}
 		$file=fopen("$lead_file", "r");
-		if ($WeBRooTWritablE > 0)
+		if ($webroot_writable > 0)
 			{$stmt_file=fopen("$WeBServeRRooT/$admin_web_directory/listloader_stmts.txt", "w");}
 
 		$buffer=fgets($file, 4096);
@@ -1443,7 +1445,7 @@ if ($leadfile) {
 							### insert good deal into pending_transactions table ###
 							$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id) values$multistmt('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner','0');";
 							$rslt=mysql_query($stmtZ, $link);
-							if ($WeBRooTWritablE > 0) 
+							if ($webroot_writable > 0) 
 								{fwrite($stmt_file, $stmtZ."\r\n");}
 							$multistmt='';
 							$multi_insert_counter=0;
@@ -1479,7 +1481,7 @@ if ($leadfile) {
 			if ($multi_insert_counter!=0) {
 				$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id) values".substr($multistmt, 0, -1).";";
 				mysql_query($stmtZ, $link);
-				if ($WeBRooTWritablE > 0) 
+				if ($webroot_writable > 0) 
 					{fwrite($stmt_file, $stmtZ."\r\n");}
 			}
 
@@ -1490,7 +1492,7 @@ if ($leadfile) {
 		}
 	} else if (!eregi(".csv", $leadfile_name)) 
 		{
-		if ($WeBRooTWritablE > 0)
+		if ($webroot_writable > 0)
 			{
 			copy($LF_path, "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.xls");
 			$lead_file = "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.xls";
@@ -1515,7 +1517,7 @@ if ($leadfile) {
 		}
 		else 
 		{
-		if ($WeBRooTWritablE > 0)
+		if ($webroot_writable > 0)
 			{
 			copy($LF_path, "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.csv");
 			$lead_file = "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.csv";
@@ -1526,7 +1528,7 @@ if ($leadfile) {
 			$lead_file = "/tmp/vicidial_temp_file.csv";
 			}
 		$file=fopen("$lead_file", "r");
-		if ($WeBRooTWritablE > 0)
+		if ($webroot_writable > 0)
 			{$stmt_file=fopen("$WeBServeRRooT/$admin_web_directory/listloader_stmts.txt", "w");}
 		
 		print "<center><font face='arial, helvetica' size=3 color='#009900'><B>Processing CSV file... \n";
@@ -1754,7 +1756,7 @@ if ($leadfile) {
 						### insert good deal into pending_transactions table ###
 						$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id) values$multistmt('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner','0');";
 						$rslt=mysql_query($stmtZ, $link);
-						if ($WeBRooTWritablE > 0) 
+						if ($webroot_writable > 0) 
 							{fwrite($stmt_file, $stmtZ."\r\n");}
 						$multistmt='';
 						$multi_insert_counter=0;
@@ -1789,7 +1791,7 @@ if ($leadfile) {
 			if ($multi_insert_counter!=0) {
 				$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id) values".substr($multistmt, 0, -1).";";
 				mysql_query($stmtZ, $link);
-				if ($WeBRooTWritablE > 0) 
+				if ($webroot_writable > 0) 
 					{fwrite($stmt_file, $stmtZ."\r\n");}
 			}
 
@@ -1865,7 +1867,7 @@ if ($leadfile) {
 
 			if (!eregi(".csv", $leadfile_name) && !eregi(".xls", $leadfile_name)) 
 				{
-				if ($WeBRooTWritablE > 0)
+				if ($webroot_writable > 0)
 					{
 					copy($LF_path, "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.txt");
 					$lead_file = "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.txt";
@@ -1876,7 +1878,7 @@ if ($leadfile) {
 					$lead_file = "/tmp/vicidial_temp_file.txt";
 					}
 				$file=fopen("$lead_file", "r");
-				if ($WeBRooTWritablE > 0)
+				if ($webroot_writable > 0)
 					{$stmt_file=fopen("$WeBServeRRooT/$admin_web_directory/listloader_stmts.txt", "w");}
 
 				$buffer=fgets($file, 4096);
@@ -1924,7 +1926,7 @@ if ($leadfile) {
 			} 
 			else if (!eregi(".csv", $leadfile_name)) 
 			{
-				if ($WeBRooTWritablE > 0)
+				if ($webroot_writable > 0)
 					{
 					copy($LF_path, "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.xls");
 					$lead_file = "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.xls";
@@ -1947,7 +1949,7 @@ if ($leadfile) {
 			} 
 			else 
 			{
-				if ($WeBRooTWritablE > 0)
+				if ($webroot_writable > 0)
 					{
 					copy($LF_path, "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.csv");
 					$lead_file = "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.csv";
@@ -1959,7 +1961,7 @@ if ($leadfile) {
 					}
 				$file=fopen("$lead_file", "r");
 
-				if ($WeBRooTWritablE > 0)
+				if ($webroot_writable > 0)
 					{$stmt_file=fopen("$WeBServeRRooT/$admin_web_directory/listloader_stmts.txt", "w");}
 				
 				print "<center><font face='arial, helvetica' size=3 color='#009900'><B>Processing CSV file... \n";

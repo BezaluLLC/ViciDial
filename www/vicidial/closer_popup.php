@@ -1,7 +1,7 @@
 <?php
 # closer_popup.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this is the closer popup of a specific call that grabs the call and allows you
 # to go and fetch info on that caller in the local CRM system.
@@ -10,6 +10,7 @@
 #
 # 60620-1029 - Added variable filtering to eliminate SQL injection attack threat
 # 90508-0644 - Changed to PHP long tags
+# 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 #
 
 require("dbconnect.php");
@@ -50,6 +51,27 @@ if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 
+
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active FROM system_settings;";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$qm_conf_ct = mysql_num_rows($rslt);
+$i=0;
+while ($i < $qm_conf_ct)
+	{
+	$row=mysql_fetch_row($rslt);
+	$non_latin =					$row[0];
+	$webroot_writable =				$row[1];
+	$SSoutbound_autodial_active =	$row[2];
+	$user_territories_active =		$row[3];
+	$i++;
+	}
+##### END SETTINGS LOOKUP #####
+###########################################
+
+
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
 
@@ -64,45 +86,49 @@ $FILE_datetime = $STARTtime;
 
 $ext_context = 'demo';
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 2;";
-		if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 2;";
+	if ($DB) {echo "$stmt\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$auth=$row[0];
 
 $fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICIDIAL-CLOSER\"");
     Header("HTTP/1.0 401 Unauthorized");
     echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
 	}
-  else
+else
 	{
-
 	if($auth>0)
 		{
 		$office_no=strtoupper($PHP_AUTH_USER);
 		$password=strtoupper($PHP_AUTH_PW);
-			$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$LOGfullname=$row[0];
-			$fullname = $row[0];
-		fwrite ($fp, "VD_CLOSER|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
-		fclose($fp);
-
+		$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$LOGfullname=$row[0];
+		$fullname = $row[0];
+		if ($webroot_writable > 0)
+			{
+			fwrite ($fp, "VD_CLOSER|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
+			fclose($fp);
+			}
 		}
 	else
 		{
-		fwrite ($fp, "VD_CLOSER|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
-		fclose($fp);
+		if ($webroot_writable > 0)
+			{
+			fwrite ($fp, "VD_CLOSER|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
+			fclose($fp);
+			}
 		}
 	}
 
@@ -213,9 +239,9 @@ if ($parked_count > 0)
 
 	$stmt="UPDATE park_log set grab_time='$NOW_TIME',status='TALKING',extension='" . mysql_real_escape_string($extension) . "',user='$PHP_AUTH_USER' where parked_time='" . mysql_real_escape_string($parked_time) . "' and server_ip='" . mysql_real_escape_string($server_ip) . "' and  channel='" . mysql_real_escape_string($channel) . "'";
 	if ($DB) {echo "|$stmt|\n";}
-		$fp = fopen ("./closer_SQL_updates.txt", "a");
-		fwrite ($fp, "$date|$PHP_AUTH_USER|$stmt|\n");
-		fclose($fp);
+	#	$fp = fopen ("./closer_SQL_updates.txt", "a");
+	#	fwrite ($fp, "$date|$PHP_AUTH_USER|$stmt|\n");
+	#	fclose($fp);
 
 
 	$rslt=mysql_query($stmt, $link);

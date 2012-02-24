@@ -3,7 +3,7 @@
 # 
 # Pulls all timeclock records for an agent
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 90602-2244 - First build
@@ -12,6 +12,7 @@
 # 100802-2347 - Added User Group Allowed Reports option validation
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 # 111104-1315 - Added user_group restrictions for selecting in-groups
+# 120224-0910 - Added HTML display option with bar graphs
 #
 
 
@@ -41,7 +42,8 @@ if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
-
+if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
+	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 if (strlen($shift)<2) {$shift='ALL';}
 if (strlen($stage)<2) {$stage='ID';}
 
@@ -265,6 +267,7 @@ if ($file_download < 1)
 
 	<script language="JavaScript" src="calendar_db.js"></script>
 	<link rel="stylesheet" href="calendar.css">
+	<link rel="stylesheet" href="horizontalbargraph.css">
 
 	<?php
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
@@ -380,10 +383,19 @@ else
 	##### BEGIN print the output to screen or put into file output variable
 	if ($file_download < 1)
 		{
-		echo "AGENT TIME-CLOCK DETAIL:\n";
-		echo "+-----------------+----------+----------------------+------------+--------------------\n";
-		echo "| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=GROUP\">USER GROUP</a>           | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | TIME CLOCK PUNCHES\n";
-		echo "+-----------------+----------+----------------------+------------+--------------------\n";
+		$ASCII_text.="AGENT TIME-CLOCK DETAIL:\n";
+		$ASCII_text.="+-----------------+----------+----------------------+------------+--------------------\n";
+		$ASCII_text.="| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=GROUP\">USER GROUP</a>           | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | TIME CLOCK PUNCHES\n";
+		$ASCII_text.="+-----------------+----------+----------------------+------------+--------------------\n";
+
+		$GRAPH.="<table cellspacing=\"0\" cellpadding=\"0\" summary=\"AGENT TIME-CLOCK DETAIL\" class=\"horizontalgraph\">\n";
+		$GRAPH.="  <caption align=\"top\">AGENT TIME-CLOCK DETAIL</caption>\n";
+		$GRAPH.="  <tr>\n";
+		$GRAPH.="	<th class=\"thgraph\" scope=\"col\">USER/USER GROUP</th>\n";
+		$GRAPH.="	<th class=\"thgraph\" scope=\"col\" nowrap>TIME CLOCK </th>\n";
+		$GRAPH.="	<th class=\"thgraph\" scope=\"col\">TIME CLOCK PUNCHES</th>\n";
+		$GRAPH.="  </tr>\n";
+		
 		}
 	else
 		{
@@ -402,6 +414,9 @@ else
 	##### BEGIN loop through each user formatting data for output
 	$AUTOLOGOUTflag=0;
 	$m=0;
+	$max_time=1;
+	$graph_stats=array();
+	$q=0;
 	while ( ($m < $uc) and ($m < 50000) )
 		{
 		$TCdetail='';
@@ -439,6 +454,7 @@ else
 				$TOTtimeTC =		($TOTtimeTC + $TCtime[$n]);
 				$StimeTC[$m]=		sec_convert($TCtime[$n],'H'); 
 				$RAWtimeTC =		$StimeTC[$m];
+				if ($RAWtimeTCsec>$max_time) {$max_time=$RAWtimeTCsec;}
 				$StimeTC[$m] =		sprintf("%10s", $StimeTC[$m]);
 				}
 			$n++;
@@ -455,7 +471,7 @@ else
 		$TCuserAUTOLOGOUT = ' ';
 		$stmt="select event_epoch,event_date,login_sec,event,user_group from vicidial_timeclock_log where event_date <= '$query_date_END' and event_date >= '$query_date_BEGIN' and user='$TCuser[$m]' $TCuser_group_SQL order by event_date limit 10000000;";
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$ASCII_text.="$stmt\n";}
 		$TC_results = mysql_num_rows($rslt);
 		$k=0;
 		while ($TC_results > $k)
@@ -509,6 +525,11 @@ else
 		if ($file_download < 1)
 			{
 			$Toutput = "| $Sname[$m] | <a href=\"./user_stats.php?user=$RAWuser&begin_date=$query_date_D&end_date=$end_date_D\">$Suser[$m]</a> | $Sgroup[$m] | $StimeTC[$m]$TCuserAUTOLOGOUT| $TCdetail\n";
+			$graph_stats[$q][0]="$Sname[$m] - $Suser[$m] / $Sgroup[$m]";
+			$graph_stats[$q][1]="$RAWtimeTCsec";
+			$graph_stats[$q][2]="$TCuserAUTOLOGOUT";
+			$graph_stats[$q][3]="$TCdetail";
+			$q++;
 			}
 		else
 			{
@@ -540,7 +561,9 @@ else
 			}
 		if (!ereg("NAME|ID|TCLOCK|GROUP",$stage))
 			if ($file_download < 1)
-				{echo "$Toutput";}
+				{
+				$ASCII_text.="$Toutput";
+				}
 			else
 				{$file_output .= "$fileToutput";}
 
@@ -550,12 +573,19 @@ else
 		$m++;
 		}
 	##### END loop through each user formatting data for output
-
+		for ($i=0; $i<count($graph_stats); $i++) {
+			if ($i==0) {$class=" first";} else if (($i+1)==count($graph_stats)) {$class=" last";} else {$class="";}
+			$GRAPH.="  <tr>\n";
+			$GRAPH.="	<th class=\"thgraph$class\" scope=\"col\">".$graph_stats[$i][0]."</th>\n";
+			$GRAPH.="	<th class=\"thgraph value$class\" scope=\"col\" nowrap><img src=\"images/bar.png\" alt=\"\" width=\"".round(200*$graph_stats[$i][1]/$max_time)."\" height=\"16\" />".sec_convert($graph_stats[$i][1], 'H').$graph_stats[$i][2]."</th>\n";
+			$GRAPH.="	<th class=\"thgraph$class\" scope=\"col\">".$graph_stats[$i][3]."</th>\n";
+			$GRAPH.="  </tr>\n";
+		}
 
 	$TOT_AGENTS = sprintf("%4s", $m);
 	$k=$m;
 
-	if ($DB) {echo "Done analyzing...   $TOTwait|$TOTtalk|$TOTdispo|$TOTpause|$TOTALtime|$TOTcalls|$uc|<BR>\n";}
+	if ($DB) {$ASCII_text.="Done analyzing...   $TOTwait|$TOTtalk|$TOTdispo|$TOTpause|$TOTALtime|$TOTcalls|$uc|<BR>\n";}
 
 
 	### BEGIN sort through output to display properly ###
@@ -577,7 +607,7 @@ else
 			$i = $sort_split[1];
 			$sort_order[$m] = "$i";
 			if ($file_download < 1)
-				{echo "$TOPsorted_output[$i]";}
+				{$ASCII_text.="$TOPsorted_output[$i]";}
 			else
 				{$file_output .= "$TOPsorted_outputFILE[$i]";}
 			$m++;
@@ -606,12 +636,22 @@ else
 
 	if ($file_download < 1)
 		{
-		echo "+-----------------+----------+----------------------+------------+--------------------\n";
-		echo "|  TOTALS        AGENTS:$TOT_AGENTS |                      |$TOTtimeTC |\n";
-		echo "+----------------------------+                      +------------+\n";
+		$ASCII_text.="+-----------------+----------+----------------------+------------+--------------------\n";
+		$ASCII_text.="|  TOTALS        AGENTS:$TOT_AGENTS |                      |$TOTtimeTC |\n";
+		$ASCII_text.="+----------------------------+                      +------------+\n";
+		$GRAPH.="  <tr>\n";
+		$GRAPH.="	<th class=\"thgraph\" scope=\"col\">TOTALS</th>\n";
+		$GRAPH.="	<th class=\"thgraph\" scope=\"col\">AGENTS: $TOT_AGENTS</th>\n";
+		$GRAPH.="	<th class=\"thgraph\" scope=\"col\">$TOTtimeTC</th>\n";
+		$GRAPH.="  </tr>\n";
+		$GRAPH.="  </table>\n";
 		if ($AUTOLOGOUTflag > 0)
-			{echo "     * denotes AUTOLOGOUT from timeclock\n";}
-		echo "\n\n</PRE>";
+			{
+			$ASCII_text.="     * denotes AUTOLOGOUT from timeclock\n";
+			$GRAPH.="     * denotes AUTOLOGOUT from timeclock\n";
+			}
+		$ASCII_text.="</PRE>";
+		$GRAPH.="</PRE>";
 		}
 	else
 		{
@@ -648,6 +688,14 @@ if ($file_download > 0)
 	exit;
 	}
 
+if ($report_display_type=="HTML")
+	{
+	echo $GRAPH;
+	}
+else
+	{
+	echo $ASCII_text;
+	}
 
 ############################################################################
 ##### BEGIN HTML form section
@@ -721,6 +769,11 @@ while ($user_groups_to_print > $o)
 	$o++;
 	}
 echo "</SELECT>\n";
+echo "</TD><TD VALIGN=TOP>";
+echo "Display as:&nbsp;&nbsp;&nbsp;<BR>";
+echo "<select name='report_display_type'>";
+if ($report_display_type) {echo "<option value='$report_display_type' selected>$report_display_type</option>";}
+echo "<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR><BR>";
 echo "</TD><TD VALIGN=TOP>Shift:<BR>";
 echo "<SELECT SIZE=1 NAME=shift>\n";
 echo "<option selected value=\"$shift\">$shift</option>\n";

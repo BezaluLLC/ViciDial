@@ -1,7 +1,7 @@
 <?php 
 # AST_DIDstats.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -14,6 +14,7 @@
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 # 110703-1809 - Added download option
 # 111104-1133 - Added user_group restrictions for selecting in-groups
+# 120224-0910 - Added HTML display option with bar graphs
 #
 
 require("dbconnect.php");
@@ -38,6 +39,8 @@ if (isset($_GET["DB"]))						{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))			{$DB=$_POST["DB"];}
 if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
+if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
+	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 
 $PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
@@ -196,9 +199,23 @@ $HEADER.="   .red {color: black; background-color: #FF9999}\n";
 $HEADER.="   .orange {color: black; background-color: #FFCC99}\n";
 $HEADER.="-->\n";
 $HEADER.=" </STYLE>\n";
+$HEADER.="<style type=\"text/css\">\n";
+$HEADER.="<!--\n";
+$HEADER.=".auraltext\n";
+$HEADER.="	{\n";
+$HEADER.="	position: absolute;\n";
+$HEADER.="	font-size: 0;\n";
+$HEADER.="	left: -1000px;\n";
+$HEADER.="	}\n";
+$HEADER.=".chart_td\n";
+$HEADER.="	{background-image: url(images/gridline58.gif); background-repeat: repeat-x; background-position: left top; border-left: 1px solid #e5e5e5; border-right: 1px solid #e5e5e5; padding:0; border-bottom: 1px solid #e5e5e5; background-color:transparent;}\n";
+$HEADER.="\n";
+$HEADER.="-->\n";
+$HEADER.="</style>\n";
 
 $HEADER.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
+$HEADER.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 $HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -270,8 +287,12 @@ $MAIN.="<option value=\"9AM-1AM\">9AM-1AM</option>\n";
 $MAIN.="<option value=\"845-1745\">845-1745</option>\n";
 $MAIN.="<option value=\"1745-100\">1745-100</option>\n";
 $MAIN.="</SELECT>\n";
-$MAIN.="</TD><TD align=center valign=top>\n";
+$MAIN.="</TD><TD align=left valign=top>\n";
 $MAIN.="<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
+$MAIN.=" &nbsp;";
+$MAIN.="<select name='report_display_type'>";
+if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
+$MAIN.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR><BR>";
 $MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
 $MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&DB=$DB&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a> | <a href=\"./admin.php?ADD=3311&did_id=$group[0]\">MODIFY</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
 $MAIN.="</TD></TR></TABLE>\n";
@@ -519,18 +540,27 @@ else
 	### TOTALS DID SUMMARY SECTION ###
 	if (strlen($extension[0]) > 0)
 		{
-		$MAIN.="DID Summary:\n";
-		$MAIN.="+--------------------+--------------------------------+------------+------------+\n";
-		$MAIN.="| DID                | DESCRIPTION                    | ROUTE      | CALLS      |\n";
-		$MAIN.="+--------------------+--------------------------------+------------+------------+\n";
+		$ASCII_text.="DID Summary:\n";
+		$ASCII_text.="+--------------------+--------------------------------+------------+------------+\n";
+		$ASCII_text.="| DID                | DESCRIPTION                    | ROUTE      | CALLS      |\n";
+		$ASCII_text.="+--------------------+--------------------------------+------------+------------+\n";
 
 		$CSV_text1.="\"DID Summary:\"\n";
 		$CSV_text1.="\"DID\",\"DESCRIPTION\",\"ROUTE\",\"CALLS\"\n";
+
+		$GRAPH_text.="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
+		$GRAPH_text.="  <caption align=\"top\">DID Summary:</caption>\n";
+		$GRAPH_text.="<tr>\n";
+		$GRAPH_text.="<th class=\"thgraph\" scope=\"col\">DID</th>\n";
+		$GRAPH_text.="<th class=\"thgraph\" scope=\"col\">CALLS</th>\n";
+		$GRAPH_text.="</tr>\n";
+
 
 		$stats_array = array_group_count($extension, 'desc');
 		$stats_array_ct = count($stats_array);
 
 		$d=0;
+		$max_calls=1;
 		while ($d < $stats_array_ct)
 			{
 			$stat_description =		' *** default *** ';
@@ -539,6 +569,9 @@ else
 			$stat_record_array = explode(' ',$stats_array[$d]);
 			$stat_count = ($stat_record_array[0] + 0);
 			$stat_pattern = $stat_record_array[1];
+			if ($stat_count>$max_calls) {$max_calls=$stat_count;}
+			$graph_stats[$d][0]=$stat_count;
+			$graph_stats[$d][1]=$stat_pattern;
 
 			$stmt="select did_description,did_route from vicidial_inbound_dids where did_pattern='$stat_pattern';";
 			$rslt=mysql_query($stmt, $link);
@@ -561,16 +594,31 @@ else
 
 			$stat_pattern = "<a href=\"admin.php?ADD=3311&did_pattern=$stat_pattern\">$stat_pattern</a>";
 
-			$MAIN.="| $stat_pattern | $stat_description | $stat_route | $stat_count |\n";
+			$ASCII_text.="| $stat_pattern | $stat_description | $stat_route | $stat_count |\n";
 			$d++;
 			}
 
+			for ($d=0; $d<count($graph_stats); $d++) {
+				if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
+				$GRAPH_text.="  <tr>\n";
+				$GRAPH_text.="	<td class=\"chart_td$class\">".$graph_stats[$d][1]."</td>\n";
+				$GRAPH_text.="	<td nowrap class=\"chart_td value$class\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$graph_stats[$d][0]/$max_calls)."\" height=\"16\" />".$graph_stats[$d][0]."</td>\n";
+				$GRAPH_text.="  </tr>\n";
+			}
+			$GRAPH_text.="  <tr>\n";
+			$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">TOTAL CALLS:</th>\n";
+			$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">".trim($totCALLS)."</th>\n";
+			$GRAPH_text.="  </tr>\n";
+			$GRAPH_text.="</table><PRE>\n";
+
 			$FtotCALLS =	sprintf("%10s", $totCALLS);
 
-		$MAIN.="+--------------------+--------------------------------+------------+------------+\n";
-		$MAIN.="|                                                           TOTALS | $FtotCALLS |\n";
-		$MAIN.="+------------------------------------------------------------------+------------+\n";
+		$ASCII_text.="+--------------------+--------------------------------+------------+------------+\n";
+		$ASCII_text.="|                                                           TOTALS | $FtotCALLS |\n";
+		$ASCII_text.="+------------------------------------------------------------------+------------+\n";
 		$CSV_text1.="\"\",\"\",\"TOTALS\",\"$FtotCALLS\"\n";
+		#$MAIN.=$GRAPH;
+
 		}
 
 
@@ -622,20 +670,29 @@ else
 
 	###################################################
 	### TOTALS DATE SUMMARY SECTION ###
-	$MAIN.="\nDate Summary:\n";
-	$MAIN.="+-------------------------------------------+--------+\n";
-	$MAIN.="| SHIFT                                     |        |\n";
-	$MAIN.="| DATE-TIME RANGE                           | CALLS  |\n";
-	$MAIN.="+-------------------------------------------+--------+\n";
+	$ASCII_text.="\nDate Summary:\n";
+	$ASCII_text.="+-------------------------------------------+--------+\n";
+	$ASCII_text.="| SHIFT                                     |        |\n";
+	$ASCII_text.="| DATE-TIME RANGE                           | CALLS  |\n";
+	$ASCII_text.="+-------------------------------------------+--------+\n";
 
 	$CSV_text1.="\n\"Date Summary:\"\n";
 	$CSV_text1.="\"SHIFT DATE-TIME RANGE\",\"CALLS\"\n";
 
+	$GRAPH_text.="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
+	$GRAPH_text.="  <caption align=\"top\">Date Summary:</caption>\n";
+	$GRAPH_text.="<tr>\n";
+	$GRAPH_text.="<th class=\"thgraph\" scope=\"col\">SHIFT DATE-TIME RANGE</th>\n";
+	$GRAPH_text.="<th class=\"thgraph\" scope=\"col\">CALLS</th>\n";
+	$GRAPH_text.="</tr>\n";
+
 	$d=0;
+	$max_calls=1;
+	$graph_stats=array();
 	while ($d < $DURATIONday)
 		{
 		if ($totCALLSdate[$d] < 1) {$totCALLSdate[$d]=0;}
-
+		
 		if ($totCALLSsecDATE[$d] > 0)
 			{
 			$totCALLSavgDATE[$d] = ($totCALLSsecDATE[$d] / $totCALLSdate[$d]);
@@ -660,17 +717,45 @@ else
 			{$totCALLSdate[$d]='';}
 		$totCALLSdate[$d] =	sprintf("%6s", $totCALLSdate[$d]);
 
-		$MAIN.="| $daySTART[$d] - $dayEND[$d] | $totCALLSdate[$d] |\n";
+		if ($totCALLSdate[$d]>$max_calls) {$max_calls=$totCALLSdate[$d];}
+		$graph_stats[$d][0]=$totCALLSdate[$d]+0;
+		$graph_stats[$d][1]=substr($daySTART[$d],0,10);
+
+		$ASCII_text.="| $daySTART[$d] - $dayEND[$d] | $totCALLSdate[$d] |\n";
 		$CSV_text1.="\"$daySTART[$d]\",\"$dayEND[$d]\",\"$totCALLSdate[$d]\"\n";
 		$d++;
 		}
 
+	for ($d=0; $d<count($graph_stats); $d++) {
+		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
+		$GRAPH_text.="  <tr>\n";
+		$GRAPH_text.="	<td class=\"chart_td$class\">".$graph_stats[$d][1]."</td>\n";
+		$GRAPH_text.="	<td nowrap class=\"chart_td value$class\" nowrap><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$graph_stats[$d][0]/$max_calls)."\" height=\"16\" />".$graph_stats[$d][0]."</td>\n";
+		$GRAPH_text.="  </tr>\n";
+	}
+	$GRAPH_text.="  <tr>\n";
+	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">TOTAL CALLS:</th>\n";
+	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">".trim($totCALLS)."</th>\n";
+	$GRAPH_text.="  </tr>\n";
+	$GRAPH_text.="</table><PRE>\n";
+
+
 	$FtotCALLS =	sprintf("%6s", $totCALLS);
 
-	$MAIN.="+-------------------------------------------+--------+\n";
-	$MAIN.="|                                    TOTALS | $FtotCALLS |\n";
-	$MAIN.="+-------------------------------------------+--------+\n";
+	$ASCII_text.="+-------------------------------------------+--------+\n";
+	$ASCII_text.="|                                    TOTALS | $FtotCALLS |\n";
+	$ASCII_text.="+-------------------------------------------+--------+\n";
 	$CSV_text1.="\"TOTALS\",\"$FtotCALLS\"\n";
+	#$MAIN.=$GRAPH;
+
+	if ($report_display_type=="HTML")
+		{
+		$MAIN.=$GRAPH_text;
+		}
+	else
+		{
+		$MAIN.=$ASCII_text;
+		}
 
 
 	## FORMAT OUTPUT ##
@@ -705,16 +790,15 @@ else
 	#########  HOLD TIME, CALL AND DROP STATS 15-MINUTE INCREMENTS ####
 
 	$MAIN.="\n";
-	$MAIN.="---------- HOLD TIME, CALL AND DROP STATS\n";
+	$ASCII_text.="---------- HOLD TIME, CALL AND DROP STATS\n";
 
 	$CSV_text1.="\n\"HOLD TIME, CALL AND DROP STATS\"\n";
 
-	$MAIN.="<FONT SIZE=0>";
+	$ASCII_text.="<FONT SIZE=0>";
 
-	$MAIN.="<!-- HICOUNT CALLS: $hi_hour_count|$hour_multiplier -->";
-	$MAIN.="<!-- HICOUNT HOLD:  $hi_hold_count|$hold_multiplier -->\n";
-	$MAIN.="GRAPH IN 15 MINUTE INCREMENTS OF AVERAGE HOLD TIME FOR CALLS TAKEN INTO THIS IN-GROUP\n";
-
+	$ASCII_text.="<!-- HICOUNT CALLS: $hi_hour_count|$hour_multiplier -->";
+	$ASCII_text.="<!-- HICOUNT HOLD:  $hi_hold_count|$hold_multiplier -->\n";
+	$ASCII_text.="GRAPH IN 15 MINUTE INCREMENTS OF AVERAGE HOLD TIME FOR CALLS TAKEN INTO THIS IN-GROUP\n";
 
 	$k=1;
 	$Mk=0;
@@ -776,12 +860,19 @@ else
 		}
 
 
-	$MAIN.="+-------------+-------------------------------------------------------------------------+-------+\n";
-	$MAIN.="|    TIME     |    CALLS HANDLED                                                        |       |\n";
-	$MAIN.="| 15 MIN INT  |$call_scale| TOTAL |\n";
-	$MAIN.="+-------------+-------------------------------------------------------------------------+-------+\n";
+	$ASCII_text.="+-------------+-------------------------------------------------------------------------+-------+\n";
+	$ASCII_text.="|    TIME     |    CALLS HANDLED                                                        |       |\n";
+	$ASCII_text.="| 15 MIN INT  |$call_scale| TOTAL |\n";
+	$ASCII_text.="+-------------+-------------------------------------------------------------------------+-------+\n";
 
 	$CSV_text1.="\"TIME 15-MIN INT\",\"TOTAL\"\n";
+
+
+
+	$max_calls=1;
+	$graph_stats=array();
+	$GRAPH_text="<table cellspacing='0' cellpadding='0'><caption align='top'>HOLD TIME, CALL AND DROP STATS</caption><tr><th class='thgraph' scope='col'>TIME 15-MIN INT</th><th class='thgraph' scope='col'>DROPS <img src='./images/bar_blue.png' width='10' height='10'> / CALLS <img src='./images/bar.png' width='10' height='10'></th></tr>";
+
 
 	$i=0;
 	while ($i < $TOTintervals)
@@ -803,10 +894,10 @@ else
 				$TOT_lines++;
 				$qrtQUEUEavg[$i] =	sprintf("%5s", $qrtQUEUEavg[$i]);
 				$qrtQUEUEmax[$i] =	sprintf("%5s", $qrtQUEUEmax[$i]);
-				$MAIN.="|$HMdisplay[$i]|";
+				$ASCII_text.="|$HMdisplay[$i]|";
 				$CSV_text1.="\"$HMdisplay[$i]\",";
-			#	$k=0;   while ($k <= 22) {$MAIN.=" ";   $k++;}
-			#	$MAIN.="| $qrtQUEUEavg[$i] | $qrtQUEUEmax[$i] |";
+			#	$k=0;   while ($k <= 22) {$ASCII_text.=" ";   $k++;}
+			#	$ASCII_text.="| $qrtQUEUEavg[$i] | $qrtQUEUEmax[$i] |";
 				}
 			}
 		else
@@ -819,15 +910,15 @@ else
 			$qrtQUEUEavg[$i] =	sprintf("%5s", $qrtQUEUEavg[$i]);
 			$qrtQUEUEmax[$i] =	sprintf("%5s", $qrtQUEUEmax[$i]);
 
-		#	$MAIN.="|$HMdisplay[$i]|<SPAN class=\"orange\">";
-			$MAIN.="|$HMdisplay[$i]|";
+		#	$ASCII_text.="|$HMdisplay[$i]|<SPAN class=\"orange\">";
+			$ASCII_text.="|$HMdisplay[$i]|";
 			$CSV_text1.="\"$HMdisplay[$i]\",\"\"";
-		#	$k=0;   while ($k <= $Xavg_hold) {$MAIN.="*";   $k++;   $char_counter++;}
-		#	if ($char_counter >= 22) {$MAIN.="H</SPAN>";   $char_counter++;}
-		#	else {$MAIN.="*H</SPAN>";   $char_counter++;   $char_counter++;}
-		#	$k=0;   while ($k <= $Yavg_hold) {$MAIN.=" ";   $k++;   $char_counter++;}
-		#		while ($char_counter <= 22) {$MAIN.=" ";   $char_counter++;}
-		#	$MAIN.="| $qrtQUEUEavg[$i] | $qrtQUEUEmax[$i] |";
+		#	$k=0;   while ($k <= $Xavg_hold) {$ASCII_text.="*";   $k++;   $char_counter++;}
+		#	if ($char_counter >= 22) {$ASCII_text.="H</SPAN>";   $char_counter++;}
+		#	else {$ASCII_text.="*H</SPAN>";   $char_counter++;   $char_counter++;}
+		#	$k=0;   while ($k <= $Yavg_hold) {$ASCII_text.=" ";   $k++;   $char_counter++;}
+		#		while ($char_counter <= 22) {$ASCII_text.=" ";   $char_counter++;}
+		#	$ASCII_text.="| $qrtQUEUEavg[$i] | $qrtQUEUEmax[$i] |";
 			}
 		### END HOLD TIME TOTALS GRAPH ###
 
@@ -844,9 +935,9 @@ else
 				{
 				if ($qrtCALLS[$i] < 1) {$qrtCALLS[$i]='';}
 				$qrtCALLS[$i] =	sprintf("%5s", $qrtCALLS[$i]);
-			#	$MAIN.="  |";
-				$k=0;   while ($k <= 72) {$MAIN.=" ";   $k++;}
-				$MAIN.="| $qrtCALLS[$i] |\n";
+			#	$ASCII_text.="  |";
+				$k=0;   while ($k <= 72) {$ASCII_text.=" ";   $k++;}
+				$ASCII_text.="| $qrtCALLS[$i] |\n";
 				$CSV_text1.="\"0\"\n";
 				}
 			}
@@ -862,13 +953,13 @@ else
 				if ($qrtCALLS[$i] < 1) {$qrtCALLS[$i]='';}
 				$qrtCALLS[$i] =	sprintf("%5s", $qrtCALLS[$i]);
 
-				$MAIN.="<SPAN class=\"green\">";
-				$k=0;   while ($k <= $Xhour_count) {$MAIN.="*";   $k++;   $char_counter++;}
-				if ($char_counter > 71) {$MAIN.="C</SPAN>";   $char_counter++;}
-				else {$MAIN.="*C</SPAN>";   $char_counter++;   $char_counter++;}
-				$k=0;   while ($k <= $Yhour_count) {$MAIN.=" ";   $k++;   $char_counter++;}
-					while ($char_counter <= 72) {$MAIN.=" ";   $char_counter++;}
-				$MAIN.="| $qrtCALLS[$i] |\n";
+				$ASCII_text.="<SPAN class=\"green\">";
+				$k=0;   while ($k <= $Xhour_count) {$ASCII_text.="*";   $k++;   $char_counter++;}
+				if ($char_counter > 71) {$ASCII_text.="C</SPAN>";   $char_counter++;}
+				else {$ASCII_text.="*C</SPAN>";   $char_counter++;   $char_counter++;}
+				$k=0;   while ($k <= $Yhour_count) {$ASCII_text.=" ";   $k++;   $char_counter++;}
+					while ($char_counter <= 72) {$ASCII_text.=" ";   $char_counter++;}
+				$ASCII_text.="| $qrtCALLS[$i] |\n";
 				$CSV_text1.="\"$qrtCALLS[$i]\"\n";
 				}
 			else
@@ -883,20 +974,23 @@ else
 				$qrtCALLS[$i] =	sprintf("%5s", $qrtCALLS[$i]);
 				$qrtDROPS[$i] =	sprintf("%5s", $qrtDROPS[$i]);
 
-				$MAIN.="<SPAN class=\"red\">";
-				$k=0;   while ($k <= $Xdrop_count) {$MAIN.=">";   $k++;   $char_counter++;}
-				$MAIN.="D</SPAN><SPAN class=\"green\">";   $char_counter++;
-				$k=0;   while ($k <= $XXhour_count) {$MAIN.="*";   $k++;   $char_counter++;}
-				$MAIN.="C</SPAN>";   $char_counter++;
-				$k=0;   while ($k <= $Yhour_count) {$MAIN.=" ";   $k++;   $char_counter++;}
-				while ($char_counter <= 72) {$MAIN.=" ";   $char_counter++;}
+				$ASCII_text.="<SPAN class=\"red\">";
+				$k=0;   while ($k <= $Xdrop_count) {$ASCII_text.=">";   $k++;   $char_counter++;}
+				$ASCII_text.="D</SPAN><SPAN class=\"green\">";   $char_counter++;
+				$k=0;   while ($k <= $XXhour_count) {$ASCII_text.="*";   $k++;   $char_counter++;}
+				$ASCII_text.="C</SPAN>";   $char_counter++;
+				$k=0;   while ($k <= $Yhour_count) {$ASCII_text.=" ";   $k++;   $char_counter++;}
+				while ($char_counter <= 72) {$ASCII_text.=" ";   $char_counter++;}
 
-				$MAIN.="| $qrtCALLS[$i] |\n";
+				$ASCII_text.="| $qrtCALLS[$i] |\n";
 				$CSV_text1.="\"$qrtCALLS[$i]\"\n";
 				}
 			}
 		### END CALLS TOTALS GRAPH ###
-
+		$graph_stats[$i][0]=$HMdisplay[$i];
+		$graph_stats[$i][1]=trim($qrtCALLS[$i]);
+		$graph_stats[$i][2]=trim($qrtDROPS[$i]);
+		if (trim($qrtCALLS[$i])>$max_calls) {$max_calls=$qrtCALLS[$i];}
 		$i++;
 		}
 
@@ -913,9 +1007,36 @@ else
 	$totCALLS =	sprintf("%5s", $totCALLS);
 
 
-	$MAIN.="+-------------+-------------------------------------------------------------------------+-------+\n";
-	$MAIN.="| TOTAL       |                                                                         | $totCALLS |\n";
-	$MAIN.="+-------------+-------------------------------------------------------------------------+-------+\n";
+	$ASCII_text.="+-------------+-------------------------------------------------------------------------+-------+\n";
+	$ASCII_text.="| TOTAL       |                                                                         | $totCALLS |\n";
+	$ASCII_text.="+-------------+-------------------------------------------------------------------------+-------+\n";
+
+
+	for ($d=0; $d<count($graph_stats); $d++) {
+		$graph_stats[$d][0]=preg_replace('/\s/', "", $graph_stats[$d][0]); 
+		$GRAPH_text.="  <tr><td class='chart_td' width='50'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value' width='600' valign='bottom'>\n";
+		if ($graph_stats[$d][1]>0) {
+			$GRAPH_text.="<ul class='overlap_barGraph'><li class=\"p1\" style=\"height: 12px; left: 0px; width: ".round(600*$graph_stats[$d][1]/$max_calls)."px\">".$graph_stats[$d][1]."</li>";
+			if ($graph_stats[$d][2]>0) {
+				$GRAPH_text.="<li class=\"p2\" style=\"height: 12px; left: 0px; width: ".round(600*$graph_stats[$d][2]/$max_calls)."px\">".$graph_stats[$d][2]."</li>";
+			}
+			$GRAPH_text.="</ul>\n";
+		} else {
+			$GRAPH_text.="0";
+		}
+		$GRAPH_text.="</td></tr>\n";
+	}
+	$GRAPH_text.="<tr><th class='thgraph' scope='col'>TOTALS:</th><th class='thgraph' scope='col'>".trim($totCALLS)."</th></tr></table>";
+
+	if ($report_display_type=="HTML")
+		{
+		$MAIN.=$GRAPH_text;
+		}
+	else
+		{
+		$MAIN.=$ASCII_text;
+		}
+
 
 	$CSV_text1.="\"TOTAL\",\"$totCALLS\"\n";
 
@@ -953,6 +1074,8 @@ else
 	} else {
 		echo $HEADER;
 		require("admin_header.php");
+
+
 		echo $MAIN;
 	}
 

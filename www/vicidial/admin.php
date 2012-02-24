@@ -1724,6 +1724,11 @@ if (isset($_GET["territory_reset"]))			{$territory_reset=$_GET["territory_reset"
 	elseif (isset($_POST["territory_reset"]))	{$territory_reset=$_POST["territory_reset"];}
 if (isset($_GET["hopper_vlc_dup_check"]))			{$hopper_vlc_dup_check=$_GET["hopper_vlc_dup_check"];}
 	elseif (isset($_POST["hopper_vlc_dup_check"]))	{$hopper_vlc_dup_check=$_POST["hopper_vlc_dup_check"];}
+if (isset($_GET["inventory_report"]))			{$inventory_report=$_GET["inventory_report"];}
+	elseif (isset($_POST["inventory_report"]))	{$inventory_report=$_POST["inventory_report"];}
+if (isset($_GET["report_rank"]))			{$report_rank=$_GET["report_rank"];}
+	elseif (isset($_POST["report_rank"]))	{$report_rank=$_POST["report_rank"];}
+
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2009,6 +2014,7 @@ if ($non_latin < 1)
 	$modify_same_user_level = ereg_replace("[^0-9]","",$modify_same_user_level);
 	$admin_hide_lead_data = ereg_replace("[^0-9]","",$admin_hide_lead_data);
 	$max_calls_count = ereg_replace("[^0-9]","",$max_calls_count);
+	$report_rank = ereg_replace("[^0-9]","",$report_rank);
 
 	$drop_call_seconds = ereg_replace("[^-0-9]","",$drop_call_seconds);
 
@@ -2107,6 +2113,7 @@ if ($non_latin < 1)
 	$completed = ereg_replace("[^NY]","",$completed);
 	$report_option = ereg_replace("[^NY]","",$report_option);
 	$hopper_vlc_dup_check = ereg_replace("[^NY]","",$hopper_vlc_dup_check);
+	$inventory_report = ereg_replace("[^NY]","",$inventory_report);
 
 	$qc_enabled = ereg_replace("[^0-9NY]","",$qc_enabled);
 	$active = ereg_replace("[^0-9NY]","",$active);
@@ -3035,12 +3042,13 @@ else
 # 120207-1955 - Added List territory reset function
 # 120213-1512 - Added remote agent max stats display and campaign VLC hopper dup check option
 # 120221-0054 - Fixed Call Time and User Group restrictions on several pages
+# 120221-1647 - Added inventory report options to lists and shifts
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-360a';
-$build = '120221-0054';
+$admin_version = '2.4-361a';
+$build = '120221-1647';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3097,7 +3105,7 @@ if ($force_logout)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,auto_dial_limit,user_territories_active,allow_custom_dialplan,callcard_enabled,admin_modify_refresh,nocache_admin FROM system_settings;";
+$stmt = "SELECT use_non_latin,auto_dial_limit,user_territories_active,allow_custom_dialplan,callcard_enabled,admin_modify_refresh,nocache_admin,webroot_writable FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -3111,6 +3119,7 @@ if ($qm_conf_ct > 0)
 	$SScallcard_enabled =			$row[4];
 	$SSadmin_modify_refresh =		$row[5];
 	$SSnocache_admin =				$row[6];
+	$SSwebroot_writable =			$row[7];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -3135,7 +3144,7 @@ if ( ($reports_auth > 0) and ($auth < 1) )
 	$reports_only_user=1;
 	}
 
-if ($WeBRooTWritablE > 0)
+if ($SSwebroot_writable > 0)
 	{$fp = fopen ("./project_auth_entries.txt", "a");}
 
 $date = date("r");
@@ -3266,7 +3275,7 @@ if ( ($auth > 0) or ($reports_auth > 0) )
 		$o++;
 		}
 
-	if ($WeBRooTWritablE > 0)
+	if ($SSwebroot_writable > 0)
 		{
 		fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfull_name|\n");
 		fclose($fp);
@@ -3297,9 +3306,9 @@ if ( ($auth > 0) or ($reports_auth > 0) )
 	}
 else
 	{
-	if ($WeBRooTWritablE > 0)
+	if ($SSwebroot_writable > 0)
 		{
-		fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
+		fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
 		fclose($fp);
 		}
 	}
@@ -5710,6 +5719,11 @@ if ($ADD==99999)
 	<B>Xfer-Conf Number Override -</B> These five fields allow for you to override the Transfer Conference number presets when the lead is from this list. Default is blank.
 
 	<BR>
+	<A NAME="vicidial_lists-inventory_report">
+	<BR>
+	<B>Inventory Report -</B> If the Inventory Report is enabled on your system, this option will determine whether this list is included in the report or not. Default is Y for yes.
+
+	<BR>
 	<A NAME="vicidial_lists-time_zone_setting">
 	<BR>
 	<B>Time Zone Setting -</B> This option allows you to set the method of maintaining the current time zone lookup for the leads within this list. This process is only done at night so any changes you make will not be immediate. COUNTRY_AND_AREA_CODE is the default, and will use the country code and area code of the phone number to determine the time zone of the lead. POSTAL_CODE will use the postal code if available to determine the time zone of the lead. NANPA_PREFIX works only in the USA and will use the area code and prefix of the phone number to determine the time zone of the lead, but this is not enabled by default in the system, so please be sure you have the NANPA prefix data loaded onto your system before selecting this option. OWNER_TIME_ZONE_CODE will use the standard time zone abbraviation loaded into the owner field of the lead to determine the time zone, in the USA examples are AST, EST, CST, MST, PST, AKST, HST. This feature must be enabled by your system administrator to go into effect.
@@ -6979,6 +6993,10 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_shifts-report_option">
 	<B>Report Option -</B> This option allows this specific shift to show up in selected reports that support this option.
+
+	<BR>
+	<A NAME="vicidial_shifts-report_rank">
+	<B>Report Rank -</B> This option allows you to rank shifts in selected reports that support this option.
 
 
 
@@ -15583,7 +15601,7 @@ if ($ADD==411)
 
 				echo "<br><B>LIST MODIFIED: $list_id</B>\n";
 
-				$stmt="UPDATE vicidial_lists set list_name='$list_name',campaign_id='$campaign_id',active='$active',list_description='$list_description',list_changedate='$SQLdate',reset_time='$reset_time',agent_script_override='$agent_script_override',campaign_cid_override='$campaign_cid_override',am_message_exten_override='$am_message_exten_override',drop_inbound_group_override='$drop_inbound_group_override',xferconf_a_number='$xferconf_a_number',xferconf_b_number='$xferconf_b_number',xferconf_c_number='$xferconf_c_number',xferconf_d_number='$xferconf_d_number',xferconf_e_number='$xferconf_e_number',web_form_address='" . mysql_real_escape_string($web_form_address) . "',web_form_address_two='" . mysql_real_escape_string($web_form_address_two) . "',time_zone_setting='$time_zone_setting' where list_id='$list_id';";
+				$stmt="UPDATE vicidial_lists set list_name='$list_name',campaign_id='$campaign_id',active='$active',list_description='$list_description',list_changedate='$SQLdate',reset_time='$reset_time',agent_script_override='$agent_script_override',campaign_cid_override='$campaign_cid_override',am_message_exten_override='$am_message_exten_override',drop_inbound_group_override='$drop_inbound_group_override',xferconf_a_number='$xferconf_a_number',xferconf_b_number='$xferconf_b_number',xferconf_c_number='$xferconf_c_number',xferconf_d_number='$xferconf_d_number',xferconf_e_number='$xferconf_e_number',web_form_address='" . mysql_real_escape_string($web_form_address) . "',web_form_address_two='" . mysql_real_escape_string($web_form_address_two) . "',time_zone_setting='$time_zone_setting',inventory_report='$inventory_report' where list_id='$list_id';";
 				$rslt=mysql_query($stmt, $link);
 
 				### LOG INSERTION Admin Log Table ###
@@ -16543,7 +16561,7 @@ if ($ADD==431111111)
 				$p++;
 				}
 			$shift_start_time = preg_replace('/\D/', '', $shift_start_time);
-			$stmt="UPDATE vicidial_shifts set shift_name='$shift_name', shift_start_time='$shift_start_time', shift_length='$shift_length', shift_weekdays='$SHIFT_weekdays',report_option='$report_option',user_group='$user_group' where shift_id='$shift_id';";
+			$stmt="UPDATE vicidial_shifts set shift_name='$shift_name', shift_start_time='$shift_start_time', shift_length='$shift_length', shift_weekdays='$SHIFT_weekdays',report_option='$report_option',user_group='$user_group',report_rank='$report_rank' where shift_id='$shift_id';";
 			$rslt=mysql_query($stmt, $link);
 
 			echo "<br><B>SHIFT MODIFIED</B>\n";
@@ -24074,7 +24092,7 @@ if ($ADD==311)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT list_id,list_name,campaign_id,active,list_description,list_changedate,list_lastcalldate,reset_time,agent_script_override,campaign_cid_override,am_message_exten_override,drop_inbound_group_override,xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number,web_form_address,web_form_address_two,time_zone_setting from vicidial_lists where list_id='$list_id' $LOGallowed_campaignsSQL;";
+		$stmt="SELECT list_id,list_name,campaign_id,active,list_description,list_changedate,list_lastcalldate,reset_time,agent_script_override,campaign_cid_override,am_message_exten_override,drop_inbound_group_override,xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number,web_form_address,web_form_address_two,time_zone_setting,inventory_report from vicidial_lists where list_id='$list_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$list_name =				$row[1];
@@ -24096,6 +24114,7 @@ if ($ADD==311)
 		$web_form_address =			$row[17];
 		$web_form_address_two =		$row[18];
 		$time_zone_setting =		$row[19];
+		$inventory_report =			$row[20];
 
 		# grab names of global statuses and statuses in the selected campaign
 		$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed from vicidial_statuses order by status;";
@@ -24220,6 +24239,8 @@ if ($ADD==311)
 		echo "<tr bgcolor=#8EBCFD><td align=right>Transfer-Conf Number 4 Override: </td><td align=left><input type=text name=xferconf_d_number size=20 maxlength=50 value=\"$xferconf_d_number\">$NWB#vicidial_lists-xferconf_a_dtmf$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#8EBCFD><td align=right>Transfer-Conf Number 5 Override: </td><td align=left><input type=text name=xferconf_e_number size=20 maxlength=50 value=\"$xferconf_e_number\">$NWB#vicidial_lists-xferconf_a_dtmf$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Inventory Report: </td><td align=left><select size=1 name=inventory_report><option>Y</option><option>N</option><option SELECTED>$inventory_report</option></select>$NWB#vicidial_lists-inventory_report$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Time Zone Setting: </td><td align=left><select size=1 name=time_zone_setting><option>COUNTRY_AND_AREA_CODE</option><option>POSTAL_CODE</option><option>NANPA_PREFIX</option><option>OWNER_TIME_ZONE_CODE</option><option SELECTED>$time_zone_setting</option></select>$NWB#vicidial_lists-time_zone_setting$NWE</td></tr>\n";
 
@@ -27946,7 +27967,7 @@ if ($ADD==331111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT shift_id,shift_name,shift_start_time,shift_length,shift_weekdays,report_option,user_group from vicidial_shifts where shift_id='$shift_id' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT shift_id,shift_name,shift_start_time,shift_length,shift_weekdays,report_option,user_group,report_rank from vicidial_shifts where shift_id='$shift_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$shift_name =		$row[1];
@@ -27955,6 +27976,7 @@ if ($ADD==331111111)
 		$shift_weekdays =	$row[4];
 		$report_option =	$row[5];
 		$user_group =		$row[6];
+		$report_rank =		$row[7];
 
 		$shift_start_hour = substr($shift_start_time,0,2);
 		$shift_start_min = substr($shift_start_time,2,2);
@@ -28016,6 +28038,16 @@ if ($ADD==331111111)
 		echo ">Saturday<BR>\n";
 		echo "</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Report Option: </td><td align=left><select size=1 name=report_option><option>Y</option><option>N</option><option SELECTED>$report_option</option></select>$NWB#vicidial_shifts-report_option$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Report Rank: </td><td align=left><select size=1 name=report_rank><option SELECTED>$report_rank</option>";
+		$k=1;
+		while ($k < 100)
+			{
+			echo "<option>$k</option>\n";
+			$k++;
+			}
+		echo "</select>$NWB#vicidial_shifts-report_rank$NWE</td></tr>\n";
+		
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
 		echo "</TABLE></center>\n";
 

@@ -1,7 +1,7 @@
 <?php
 # user_status.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -19,6 +19,7 @@
 # 110124-1134 - Small query fix for large queue_log tables
 # 110224-2350 - Small QM logout fix
 # 110420-0344 - Added DEAD/PARK agent statuses
+# 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -104,7 +105,7 @@ else
 		$modify_timeclock_log =		$row[2];
 		if ($webroot_writable > 0)
 			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
+			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
 			fclose($fp);
 			}
 		}
@@ -112,7 +113,7 @@ else
 		{
 		if ($webroot_writable > 0)
 			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
+			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
 			fclose($fp);
 			echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
 			exit;

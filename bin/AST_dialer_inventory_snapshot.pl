@@ -2,7 +2,7 @@
 #
 # AST_dialer_inventory_snapshot.pl
 # 
-# Copyright (C) 2011  Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
 #                     Matt Florell <vicidial@gmail.com>
 #
 # NOTES:
@@ -17,6 +17,7 @@
 # 111106-1317 - Added help screen and debug output, reformatting
 # 111110-0652 - Added single campaign/list options and call time override option
 # 111230-1140 - Debugging additions and more minor changes
+# 120221-2238 - Added list option for inventory_report, use list_description
 #
 
 use DBI;
@@ -200,7 +201,7 @@ while(@shift_row=$shift_rslt->fetchrow_array)
 
 if ($DB > 0) {print "SHIFT COUNT:    $i\n";}
 
-$campaign_stmt="SELECT campaign_id from vicidial_campaigns  where campaign_id in (SELECT distinct campaign_id from vicidial_lists) $campaign_SQL order by campaign_id;";
+$campaign_stmt="SELECT campaign_id from vicidial_campaigns  where campaign_id in (SELECT distinct campaign_id from vicidial_lists where inventory_report='Y') $campaign_SQL order by campaign_id;";
 $campaign_rslt=$dbhA->prepare($campaign_stmt);
 $campaign_rslt->execute();
 while (@group=$campaign_rslt->fetchrow_array) 
@@ -248,7 +249,7 @@ while (@group=$campaign_rslt->fetchrow_array)
 
 	if ($DB > 0) {print "CAMPAIGN: $group[0]   LIMIT: $call_count_limit   TARGET: $call_count_target   STATUSES: $i\n";}
 
-	$lists_stmt="SELECT list_id, list_name, list_description, if(list_lastcalldate is null, '*** Not called *** ', list_lastcalldate) as list_lastcalldate from vicidial_lists where (campaign_id='$group[0]') $list_SQL order by list_id asc";
+	$lists_stmt="SELECT list_id, list_name, list_description, if(list_lastcalldate is null, '*** Not called *** ', list_lastcalldate) as list_lastcalldate from vicidial_lists where (campaign_id='$group[0]') and inventory_report='Y' $list_SQL order by list_id asc";
 	if ($DBX > 0) {print "     |$lists_stmt|\n";}
 	$lists_rslt=$dbhB->prepare($lists_stmt);
 	$lists_rslt->execute();
@@ -352,7 +353,7 @@ while (@group=$campaign_rslt->fetchrow_array)
 				$shift_data.="$val,$shift_count|";
 				}
 			$shift_data=substr($shift_data,0,-1);
-			$ins_stmt="insert into dialable_inventory_snapshots(snapshot_time, list_id, list_name, campaign_id, list_lastcalldate, list_start_inv, dialable_count, dialable_count_nofilter, dialable_count_oneoff, dialable_count_inactive, average_call_count, penetration, shift_data, time_setting) values('$snapshot_time', '$list_id', '$list_name', '$group[0]', '$last_calldate', '$list_start_inv', '$Xdialable_count', '$Xdialable_count_nofilter', '$oneoff_count', '$Xdialable_inactive_count', '$average_calls', '$penetration', '$shift_data', '$time_setting')";
+			$ins_stmt="insert into dialable_inventory_snapshots(snapshot_time, list_id, list_name, list_description, campaign_id, list_lastcalldate, list_start_inv, dialable_count, dialable_count_nofilter, dialable_count_oneoff, dialable_count_inactive, average_call_count, penetration, shift_data, time_setting) values('$snapshot_time', '$list_id', '$list_name', '$list_description', '$group[0]', '$last_calldate', '$list_start_inv', '$Xdialable_count', '$Xdialable_count_nofilter', '$oneoff_count', '$Xdialable_inactive_count', '$average_calls', '$penetration', '$shift_data', '$time_setting')";
 			if ($DBX > 0) {print "     |$ins_stmt|\n";}
 			$ins_rslt=$dbh->prepare($ins_stmt);
 			$ins_rslt->execute();

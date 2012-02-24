@@ -1,15 +1,16 @@
 <?php
 # phone_only.php - the web-based web-phone-only client application
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 110511-1336 - First Build
 # 110526-1757 - Added webphone_auto_answer option
+# 120223-2124 - Removed logging of good login passwords if webroot writable is enabled
 #
 
-$version = '2.4-2p';
-$build = '110526-1757';
+$version = '2.4-3p';
+$build = '120223-2124';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=72;
 $one_mysql_log=0;
@@ -287,7 +288,7 @@ else
 
 			if ($WeBRooTWritablE > 0)
 				{
-				fwrite ($fp, "vdweb|GOOD|$date|$VD_login|$VD_pass|$ip|$browser|$LOGfullname|\n");
+				fwrite ($fp, "vdweb|GOOD|$date|$VD_login|XXXX|$ip|$browser|$LOGfullname|\n");
 				fclose($fp);
 				}
 			$user_abb = "$VD_login$VD_login$VD_login$VD_login";
@@ -299,7 +300,7 @@ else
 			{
 			if ($WeBRooTWritablE > 0)
 				{
-				fwrite ($fp, "vdweb|FAIL|$date|$VD_login|$VD_pass|$ip|$browser|\n");
+				fwrite ($fp, "vdweb|FAIL|$date|$VD_login|XXXX|$ip|$browser|\n");
 				fclose($fp);
 				}
 			$VDloginDISPLAY=1;
