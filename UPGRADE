@@ -822,6 +822,9 @@ OTHER CHANGES:
 
 187. Added HTML bar chart display options to most of the reports.
 
+188. Added SCRIPT_multirecording.php script that allows triggering of starting
+	and stopping of recordings on demand within a script in a IFRAME
+
 
 
 
