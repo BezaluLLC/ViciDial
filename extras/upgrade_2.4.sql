@@ -1267,3 +1267,9 @@ ALTER TABLE vicidial_lists ADD inventory_report ENUM('Y','N') default 'Y';
 ALTER TABLE vicidial_shifts ADD report_rank SMALLINT(5) default '1';
 
 UPDATE system_settings SET db_schema_version='1314',db_schema_update_date=NOW() where db_schema_version < 1314;
+
+ALTER TABLE dialable_inventory_snapshots ADD COLUMN list_description VARCHAR(255) AFTER list_name;
+
+UPDATE dialable_inventory_snapshots d, vicidial_lists v SET d.list_description=v.list_description where d.list_description is null and d.list_id=v.list_id;
+
+UPDATE system_settings SET db_schema_version='1315',db_schema_update_date=NOW() where db_schema_version < 1315;
