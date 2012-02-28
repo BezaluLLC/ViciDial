@@ -836,6 +836,7 @@ Inventory Report||
 If the Inventory Report is enabled on your system, this option will determine whether this list is included in the report or not. Default is Y for yes||
 Report Rank||
 This option allows you to rank shifts in selected reports that support this option||
+You can also use a special variable IGNORENOSCROLL to force scroll bars on the script tab even if you are using an iframe within it||
 
 
 lead_report_export.php

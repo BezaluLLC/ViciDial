@@ -1,7 +1,7 @@
 <?php
 # vdc_script_display.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed display the contents of the SCRIPT tab in the agent interface
 #
@@ -16,10 +16,11 @@
 # 100902-1344 - Added closecallid, xfercallid, agent_log_id variables
 # 110420-1201 - Added web_vars variable
 # 110730-2339 - Added call_id variable
+# 120227-2017 - Added parsing of IGNORENOSCROLL option in script to force scroll
 #
 
-$version = '2.4-10';
-$build = '110730-2339';
+$version = '2.4-11';
+$build = '120227-2017';
 
 require("dbconnect.php");
 
@@ -509,12 +510,12 @@ $script_text = stripslashes($script_text);
 echo "<!-- IFRAME$IFRAME -->\n";
 echo "<!-- $script_id -->\n";
 echo "<TABLE WIDTH=$script_width><TR><TD>\n";
-if ( ($IFRAME < 1) and ($ScrollDIV > 0) )
-	{ echo "<div class=\"scroll_script\" id=\"NewScriptContents\">";}
+if ( ( ($IFRAME < 1) and ($ScrollDIV > 0) ) or (eregi("IGNORENOSCROLL",$script_text)) )
+	{echo "<div class=\"scroll_script\" id=\"NewScriptContents\">";}
 echo "<center><B>$script_name</B><BR></center>\n";
 echo "$script_text\n";
-if ( ($IFRAME < 1) and ($ScrollDIV > 0) )
-	{ echo "</div>";}
+if ( ( ($IFRAME < 1) and ($ScrollDIV > 0) ) or (eregi("IGNORENOSCROLL",$script_text)) )
+	{echo "</div>";}
 echo "</TD></TR></TABLE>\n";
 
 exit;
