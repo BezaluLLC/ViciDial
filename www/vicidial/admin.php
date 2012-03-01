@@ -20344,6 +20344,8 @@ if ($ADD==31)
 		$dial_status_d = $row[6];
 		$dial_status_e = $row[7];
 		$lead_order = $row[8];
+		$park_ext = $row[9];
+		$park_file_name = $row[10];
 		$web_form_address = stripslashes($row[11]);
 		$allow_closers = $row[12];
 		$hopper_level = $row[13];
@@ -20807,7 +20809,7 @@ if ($ADD==31)
 		echo "<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=41>\n";
 		echo "<input type=hidden name=campaign_id value=\"$campaign_id\">\n";
-		echo "<input type=hidden name=park_ext value=\"$row[9]\">\n";
+		echo "<input type=hidden name=park_ext value=\"$park_ext\">\n";
 		echo "<input type=hidden name=old_campaign_allow_inbound value=\"$campaign_allow_inbound\">\n";
 		echo "<TABLE width=$section_width cellspacing=3>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign ID: </td><td align=left><b>$campaign_id</b>$NWB#vicidial_campaigns-campaign_id$NWE</td></tr>\n";
@@ -20827,7 +20829,7 @@ if ($ADD==31)
 		echo "<option SELECTED value=\"$user_group\">$user_group</option>\n";
 		echo "</select>$NWB#vicidial_campaigns-user_group$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Park Music-on-Hold: </td><td align=left><input type=text name=park_file_name id=park_file_name size=20 maxlength=100 value=\"$row[10]\"> <a href=\"javascript:launch_moh_chooser('park_file_name','moh',200);\">moh chooser</a> $NWB#vicidial_campaigns-park_ext$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Park Music-on-Hold: </td><td align=left><input type=text name=park_file_name id=park_file_name size=20 maxlength=100 value=\"$park_file_name\"> <a href=\"javascript:launch_moh_chooser('park_file_name','moh',200);\">moh chooser</a> $NWB#vicidial_campaigns-park_ext$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Web Form: </td><td align=left><input type=text name=web_form_address size=70 maxlength=9999 value=\"$web_form_address\">$NWB#vicidial_campaigns-web_form_address$NWE</td></tr>\n";
 		if ($SSenable_second_webform > 0)
 			{

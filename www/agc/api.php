@@ -1,7 +1,7 @@
 <?php
 # api.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed as an API(Application Programming Interface) to allow
 # other programs to interact with the VICIDIAL Agent screen
@@ -56,10 +56,11 @@
 # 110430-0953 - Added option to external_dial by lead_id with alt_dial option
 # 110911-1555 - Added logout function
 # 111114-0037 - Added scheduled callback and qm-dispo-code fields to external_status function
+# 120301-1745 - Fixed ereg statements dashes
 #
 
-$version = '2.4-22';
-$build = '111114-0037';
+$version = '2.4-23';
+$build = '120301-1745';
 
 $startMS = microtime();
 
@@ -218,7 +219,7 @@ if ($non_latin < 1)
 	$focus = ereg_replace("[^-\_0-9a-zA-Z]","",$focus);
 	$preview = ereg_replace("[^-\_0-9a-zA-Z]","",$preview);
 		$notes = ereg_replace("\+"," ",$notes);
-	$notes = ereg_replace("[^ -\.\_0-9a-zA-Z]","",$notes);
+	$notes = ereg_replace("[^- \.\_0-9a-zA-Z]","",$notes);
 	$phone_code = ereg_replace("[^0-9X]","",$phone_code);
 	$search = ereg_replace("[^-\_0-9a-zA-Z]","",$search);
 	$group_alias = ereg_replace("[^0-9a-zA-Z]","",$group_alias);
@@ -228,39 +229,39 @@ if ($non_latin < 1)
 	$vtiger_callback = ereg_replace("[^A-Z]","",$vtiger_callback);
 	$alt_dial = ereg_replace("[^0-9A-Z]","",$alt_dial);
 	$blended = ereg_replace("[^A-Z]","",$blended);
-	$ingroup_choices = ereg_replace("[^ -\_0-9a-zA-Z]","",$ingroup_choices);
+	$ingroup_choices = ereg_replace("[^- \_0-9a-zA-Z]","",$ingroup_choices);
 	$set_as_default = ereg_replace("[^A-Z]","",$set_as_default);
 	$phone_number = ereg_replace("[^0-9]","",$phone_number);
-	$address1 = ereg_replace("[^ -\_0-9a-zA-Z]","",$address1);
-	$address2 = ereg_replace("[^ -\_0-9a-zA-Z]","",$address2);
-	$address3 = ereg_replace("[^ -\_0-9a-zA-Z]","",$address3);
-	$alt_phone = ereg_replace("[^ -\_0-9a-zA-Z]","",$alt_phone);
-	$city = ereg_replace("[^ -\_0-9a-zA-Z]","",$city);
-	$comments = ereg_replace("[^ -\_0-9a-zA-Z]","",$comments);
+	$address1 = ereg_replace("[^- \_0-9a-zA-Z]","",$address1);
+	$address2 = ereg_replace("[^- \_0-9a-zA-Z]","",$address2);
+	$address3 = ereg_replace("[^- \_0-9a-zA-Z]","",$address3);
+	$alt_phone = ereg_replace("[^- \_0-9a-zA-Z]","",$alt_phone);
+	$city = ereg_replace("[^- \_0-9a-zA-Z]","",$city);
+	$comments = ereg_replace("[^- \_0-9a-zA-Z]","",$comments);
 	$country_code = ereg_replace("[^A-Z]","",$country_code);
-	$date_of_birth = ereg_replace("[^ -\_0-9]","",$date_of_birth);
+	$date_of_birth = ereg_replace("[^- \_0-9]","",$date_of_birth);
 	$email = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$email);
-	$first_name = ereg_replace("[^ -\_0-9a-zA-Z]","",$first_name);
+	$first_name = ereg_replace("[^- \_0-9a-zA-Z]","",$first_name);
 	$gender = ereg_replace("[^A-Z]","",$gender);
-	$gmt_offset_now = ereg_replace("[^ \.-\_0-9]","",$gmt_offset_now);
-	$last_name = ereg_replace("[^ -\_0-9a-zA-Z]","",$last_name);
+	$gmt_offset_now = ereg_replace("[^- \.\_0-9]","",$gmt_offset_now);
+	$last_name = ereg_replace("[^- \_0-9a-zA-Z]","",$last_name);
 	$lead_id = ereg_replace("[^0-9]","",$lead_id);
-	$middle_initial = ereg_replace("[^ -\_0-9a-zA-Z]","",$middle_initial);
-	$province = ereg_replace("[^ -\.\_0-9a-zA-Z]","",$province);
-	$security_phrase = ereg_replace("[^ -\.\_0-9a-zA-Z]","",$security_phrase);
-	$source_id = ereg_replace("[^ -\.\_0-9a-zA-Z]","",$source_id);
-	$state = ereg_replace("[^ -\_0-9a-zA-Z]","",$state);
-	$title = ereg_replace("[^ -\_0-9a-zA-Z]","",$title);
-	$vendor_lead_code = ereg_replace("[^ -\.\_0-9a-zA-Z]","",$vendor_lead_code);
+	$middle_initial = ereg_replace("[^- \_0-9a-zA-Z]","",$middle_initial);
+	$province = ereg_replace("[^- \.\_0-9a-zA-Z]","",$province);
+	$security_phrase = ereg_replace("[^- \.\_0-9a-zA-Z]","",$security_phrase);
+	$source_id = ereg_replace("[^- \.\_0-9a-zA-Z]","",$source_id);
+	$state = ereg_replace("[^- \_0-9a-zA-Z]","",$state);
+	$title = ereg_replace("[^- \_0-9a-zA-Z]","",$title);
+	$vendor_lead_code = ereg_replace("[^- \.\_0-9a-zA-Z]","",$vendor_lead_code);
 	$rank = ereg_replace("[^-0-9]","",$rank);
 	$owner = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$owner);
 	$dial_override = ereg_replace("[^A-Z]","",$dial_override);
 	$consultative = ereg_replace("[^A-Z]","",$consultative);
 		$callback_datetime = ereg_replace("\+"," ",$callback_datetime);
-	$callback_datetime = ereg_replace("[^ -\.\_0-9a-zA-Z]","",$callback_datetime);
+	$callback_datetime = ereg_replace("[^- \.\_0-9a-zA-Z]","",$callback_datetime);
 	$callback_type = ereg_replace("[^A-Z]","",$callback_type);
 		$callback_comments = ereg_replace("\+"," ",$callback_comments);
-	$callback_comments = ereg_replace("[^ -\.\_0-9a-zA-Z]","",$callback_comments);
+	$callback_comments = ereg_replace("[^- \.\_0-9a-zA-Z]","",$callback_comments);
 	$qm_dispo_code = ereg_replace("[^-\.\_0-9a-zA-Z]","",$qm_dispo_code);
 	}
 else
