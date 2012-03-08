@@ -825,6 +825,8 @@ OTHER CHANGES:
 188. Added SCRIPT_multirecording.php script that allows triggering of starting
 	and stopping of recordings on demand within a script in a IFRAME
 
+189. Added compatibility for DAHDI channelbank phones for agents in vicidial.php
+
 
 
 

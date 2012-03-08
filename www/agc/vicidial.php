@@ -375,10 +375,11 @@
 # 111227-1940 - Added Timer Action for Dx_DIAL_QUIET options
 # 120213-2029 - Changed consultative transfer with custom fields behavior for better data updating
 # 120223-2119 - Removed logging of good login passwords if webroot writable is enabled
+# 120308-1617 - Added compatibility for DAHDI phones using asterisk version for server > 1.4.21.2
 #
 
-$version = '2.4-342c';
-$build = '120223-2119';
+$version = '2.4-343c';
+$build = '120308-1617';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=75;
 $one_mysql_log=0;
@@ -2227,11 +2228,29 @@ else
 			{
 			$local_gmt = ($local_gmt + $isdst);
 			}
+
+		$stmt="SELECT asterisk_version from servers where server_ip='$server_ip';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01028',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+		$row=mysql_fetch_row($rslt);
+		$asterisk_version=$row[0];
+
 		if ($protocol == 'EXTERNAL')
 			{
 			$protocol = 'Local';
 			$extension = "$dialplan_number$AT$ext_context";
 			}
+		if (preg_match("/Zap/i",$protocol))
+			{
+			if (preg_match("/^1\.0|^1\.2|^1\.4\.1|^1\.4\.20|^1\.4\.21/i",$asterisk_version))
+				{$do_nothing=1;}
+			else
+				{
+				$protocol = 'DAHDI';
+				}
+			}
+
 		$SIP_user = "$protocol/$extension";
 		$SIP_user_DiaL = "$protocol/$extension";
 		$qm_extension = "$extension";
@@ -2240,13 +2259,6 @@ else
 			$SIP_user = "$protocol/$extension$VD_login";
 			$qm_extension = "$extension$VD_login";
 			}
-
-		$stmt="SELECT asterisk_version from servers where server_ip='$server_ip';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01028',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
-		$asterisk_version=$row[0];
 
 		# If a park extension is not set, use the default one
 		if ( (strlen($park_ext)>0) && (strlen($park_file_name)>0) )
