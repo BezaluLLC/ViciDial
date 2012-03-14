@@ -13,7 +13,7 @@
 # ;inbound DID catch-all:
 #exten => _X.,1,AGI(agi-DID_route.agi)
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 81007-0324 - First Build
@@ -27,6 +27,7 @@
 # 100123-1423 - Added record call DID option
 # 100805-0943 - Added Filter Phone Group alternate routing feature and CID number cleanup
 # 110822-1210 - Added did_agent_log optional logging
+# 120314-1112 - Fixed small filter bug
 #
 
 $script = 'agi-DID_route.agi';
@@ -457,9 +458,9 @@ if ($filter_inbound_number =~ /GROUP|URL/)
 			}
 		if ( (length($curlbin) > 4) && ($filter_url =~ /http/i) && (length($filter_url) > 8) )
 			{
-			$filter_url =~ s/^VAR//gi;
+			$filter_url =~ s/^VAR|^ //gi;
 			$filter_url =~ s/--A--phone_number--B--/$callerid/gi;
-			$filter_url =~ s/--A--did_pattern--B--/$callerid/gi;
+			$filter_url =~ s/--A--did_pattern--B--/$did_pattern/gi;
 			$filter_url =~ s/&/\\&/gi;
 			$filter_url =~ s/ /+/gi;
 
