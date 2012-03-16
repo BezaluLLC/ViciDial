@@ -63,6 +63,7 @@
 # 120127-1331 - Small fix for plus replacement in custom fields strings for add/update_lead functions
 # 120210-1215 - Small change for hopper adding vendor_lead_code
 # 120213-1613 - Added optional logging of all non-admin.php requests, enabled in options.php
+# 120315-1537 - Added filter for single-quotes and backslashes on custom field data
 #
 
 $version = '2.4-42';
@@ -3902,6 +3903,8 @@ if ($function == 'add_lead')
 										elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
 
 									$form_field_value = preg_replace("/\+/"," ",$form_field_value);
+									$form_field_value = preg_replace("/\'/","",$form_field_value);
+									$form_field_value = preg_replace("/\\b/","",$form_field_value);
 									$A_field_value[$o] = $form_field_value;
 
 									if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') )
@@ -4568,6 +4571,8 @@ if ($function == 'update_lead')
 												elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
 
 											$form_field_value = preg_replace("/\+/"," ",$form_field_value);
+											$form_field_value = preg_replace("/\'/","",$form_field_value);
+											$form_field_value = preg_replace("/\\b/","",$form_field_value);
 											$A_field_value[$o] = $form_field_value;
 
 											if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') )
@@ -4762,6 +4767,8 @@ if ($function == 'update_lead')
 														elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
 
 													$form_field_value = preg_replace("/\+/"," ",$form_field_value);
+													$form_field_value = preg_replace("/\'/","",$form_field_value);
+													$form_field_value = preg_replace("/\\b/","",$form_field_value);
 													$A_field_value[$o] = $form_field_value;
 
 													if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') )

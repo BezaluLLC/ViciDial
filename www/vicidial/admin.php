@@ -3043,12 +3043,13 @@ else
 # 120213-1512 - Added remote agent max stats display and campaign VLC hopper dup check option
 # 120221-0054 - Fixed Call Time and User Group restrictions on several pages
 # 120221-1647 - Added inventory report options to lists and shifts
+# 120316-1203 - Fixed DIALBLE counts for completed statuses
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-361a';
-$build = '120221-1647';
+$admin_version = '2.4-362a';
+$build = '120316-1203';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -21704,7 +21705,7 @@ if ($ADD==31)
 			if ( ($display_leads_count == 'Y') and (strlen($camp_lists) > 3) )
 				{
 				# grab names of global statuses and statuses in the selected campaign
-				$stmt="SELECT status,status_name from vicidial_statuses order by status;";
+				$stmt="SELECT status,status_name,completed from vicidial_statuses order by status;";
 				$rslt=mysql_query($stmt, $link);
 				$statuses_to_print = mysql_num_rows($rslt);
 
@@ -21713,10 +21714,11 @@ if ($ADD==31)
 					{
 					$rowx=mysql_fetch_row($rslt);
 					$statuses_name_list["$rowx[0]"] = "$rowx[1]";
+					$statuses_complete_list["$rowx[0]"] = "$rowx[2]";
 					$o++;
 					}
 
-				$stmt="SELECT status,status_name from vicidial_campaign_statuses where campaign_id='$campaign_id' $LOGallowed_campaignsSQL order by status;";
+				$stmt="SELECT status,status_name,completed from vicidial_campaign_statuses where campaign_id='$campaign_id' $LOGallowed_campaignsSQL order by status;";
 				$rslt=mysql_query($stmt, $link);
 				$Cstatuses_to_print = mysql_num_rows($rslt);
 
@@ -21725,6 +21727,7 @@ if ($ADD==31)
 					{
 					$rowx=mysql_fetch_row($rslt);
 					$statuses_name_list["$rowx[0]"] = "$rowx[1]";
+					$statuses_complete_list["$rowx[0]"] = "$rowx[2]";
 					$o++;
 					}
 				# end grab status names
@@ -21823,7 +21826,10 @@ if ($ADD==31)
 							### call function to calculate dialable leads
 							$single_status=1;
 							$dial_statuses=" $dispo -";
-							$Xdialable_count = dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$call_count_limit,$single_status,$fSQL);
+							if ($statuses_complete_list[$dispo] == 'Y')
+								{$Xdialable_count=0;}
+							else
+								{$Xdialable_count = dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$call_count_limit,$single_status,$fSQL);}
 							$dialable_total = ($dialable_total + $Xdialable_count);
 
 							### get number of complete calls of this status for penetration calculations
@@ -24130,6 +24136,7 @@ if ($ADD==311)
 			{
 			$rowx=mysql_fetch_row($rslt);
 			$statuses_list["$rowx[0]"] = "$rowx[1]";
+			$statuses_complete_list["$rowx[0]"] = "$rowx[11]";
 			$o++;
 			}
 
@@ -24142,6 +24149,7 @@ if ($ADD==311)
 			{
 			$rowx=mysql_fetch_row($rslt);
 			$statuses_list["$rowx[0]"] = "$rowx[1]";
+			$statuses_complete_list["$rowx[0]"] = "$rowx[12]";
 			$o++;
 			}
 		# end grab status names
@@ -24355,7 +24363,10 @@ if ($ADD==311)
 					$single_status=1;
 					$dial_statuses=" $dispo -";
 					$camp_lists=$list_id;
-					$Xdialable_count = dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$call_count_limit,$single_status,$fSQL);
+					if ($statuses_complete_list[$dispo] == 'Y')
+						{$Xdialable_count=0;}
+					else
+						{$Xdialable_count = dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$call_count_limit,$single_status,$fSQL);}
 					$dialable_total = ($dialable_total + $Xdialable_count);
 
 					### get number of complete calls of this status for penetration calculations

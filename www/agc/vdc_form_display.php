@@ -1,7 +1,7 @@
 <?php
 # vdc_form_display.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed display the contents of the FORM tab in the agent 
 # interface, as well as take submission of the form submission when the agent 
@@ -15,10 +15,11 @@
 # 110719-0856 - Added HIDEBLOB type
 # 110730-2335 - Added call_id variable
 # 111025-1433 - Fixed case sensitivity on list fields
+# 120315-1729 - Filtere out single quotes and backslashes from custom fields
 #
 
-$version = '2.4-7';
-$build = '111025-1433';
+$version = '2.4-8';
+$build = '120315-1729';
 
 require("dbconnect.php");
 require_once("functions.php");
@@ -286,6 +287,8 @@ if ($stage=='SUBMIT')
 
 			if (isset($_GET["$field_name_id"]))				{$form_field_value=$_GET["$field_name_id"];}
 				elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
+			$form_field_value = preg_replace("/\'/","",$form_field_value);	// remove single-quote
+			$form_field_value = preg_replace("/\\b/","",$form_field_value);	// remove backslashes
 
 			if ( ($A_field_type[$o]=='MULTI') or ($A_field_type[$o]=='CHECKBOX') or ($A_field_type[$o]=='RADIO') )
 				{
