@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2012-02-13
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2012-03-26
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -22,6 +22,7 @@ update_lead - updates lead information in vicidial_list and associated custom ta
 agent_ingroup_info - shows in-group and outbound auto-dial info for logged-in agent
 recording_lookup - looks up recordings based upon user and date or lead_id
 did_log_export - exports all calls inbound to a DID for one day
+agent_stats_export - exports agent statistics for set time period
 add_user - adds a user to the system
 add_phone - adds a phone to the system
 update_phone - updates or deletes an existing phone record in the system
@@ -69,6 +70,7 @@ Changes:
 120127-1331 - Small fix for plus replacement in custom fields strings for add/update_lead functions
 120210-1215 - Small change for hopper adding vendor_lead_code
 120213-1613 - Added optional logging of all non-admin.php requests, enabled in options.php
+120326-1307 - Added agent_stats_export function
 
 
 
@@ -284,6 +286,42 @@ A SUCCESS response will not show "SUCCESS", but instead will just print the resu
 did_number|call_date|caller_id_number|length_in_sec
 3125551212|2010-12-03 12:00:01|7275551212|123
 
+
+
+
+--------------------------------------------------------------------------------
+agent_stats_export - exports agent activity statistics
+
+NOTE: api user for this function must have user_level set to 7 or higher and "view reports" enabled
+
+REQUIRED FIELDS-
+source -		description of what originated the API call (maximum 20 characters)
+datetime_start -	start date/time of the agent activity to pull (must be in "YYYY-MM-DD+HH:MM:SS" format)
+datetime_end -		end date/time of the agent activity to pull (must be in "YYYY-MM-DD+HH:MM:SS" format)
+
+SETTINGS FIELDS-
+agent_user -		2-20 characters, use only for one agent stats
+stage -			the format of the exported data: csv, tab, pipe(default)
+header -		include a header(YES) or not(NO). This is optional, default is not to include a header
+time_format -		time format('H','HF','M','S') in hours, minutes or seconds: H = 1:23:45, M = 83:45, S = 5023  (default 'HF')
+				* HF will force hour format even for zero seconds time "0:00:00"
+
+NOTES- 
+There is a hard limit of 10000000 records analyzed
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&function=agent_stats_export&time_format=M&stage=pipe&user=6666&pass=1234&agent_user=3125551212&datetime_start=2012-03-26+00:00:00&datetime_end=2012-03-26+23:59:59
+http://server/vicidial/non_agent_apiX.php?DB=0&stage=pipe&user=6666&pass=1234&source=test&function=agent_stats_export&datetime_start=2012-03-26+00:00:00&datetime_end=2012-03-26+23:59:59&header=YES
+
+Example responses:
+ERROR: agent_stats_export USER DOES NOT HAVE PERMISSION TO GET AGENT INFO - 6666|0
+ERROR: agent_stats_export INVALID SEARCH PARAMETERS - 6666||2010-12-03 00:00:00|2010-12-03 00:00:01
+ERROR: agent_stats_export NO RECORDS FOUND - 1255||2010-12-03 00:00:00|2010-12-03 00:00:01
+
+A SUCCESS response will not show "SUCCESS", but instead will just print the results in the following format:
+user|full_name|user_group|calls|login_time|total_talk_time|avg_talk_time|avg_wait_time|pct_of_queue|pause_time|sessions|avg_session|pauses|avg_pause_time|pause_pct|pauses_per_session
+1029|test agent|ADMIN|1|0:01:52|0:00:16|0:00:16|0:00:18|16.7%|54|3|0:00:37|5|0:00:11|48.2%|2
+6666|Admin|ADMIN|5|0:04:11|0:01:48|0:00:22|0:00:17|83.3%|27|2|0:02:06|4|0:00:07|10.8%|2
 
 
 

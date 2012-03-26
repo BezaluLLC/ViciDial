@@ -64,10 +64,11 @@
 # 120210-1215 - Small change for hopper adding vendor_lead_code
 # 120213-1613 - Added optional logging of all non-admin.php requests, enabled in options.php
 # 120315-1537 - Added filter for single-quotes and backslashes on custom field data
+# 120326-1317 - Added agent_stats_export function
 #
 
-$version = '2.4-42';
-$build = '120213-1613';
+$version = '2.4-43';
+$build = '120326-1317';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -291,6 +292,12 @@ if (isset($_GET["callback_comments"]))			{$callback_comments=$_GET["callback_com
 	elseif (isset($_POST["callback_comments"]))	{$callback_comments=$_POST["callback_comments"];}
 if (isset($_GET["admin_user_group"]))			{$admin_user_group=$_GET["admin_user_group"];}
 	elseif (isset($_POST["admin_user_group"]))	{$admin_user_group=$_POST["admin_user_group"];}
+if (isset($_GET["datetime_start"]))				{$datetime_start=$_GET["datetime_start"];}
+	elseif (isset($_POST["datetime_start"]))	{$datetime_start=$_POST["datetime_start"];}
+if (isset($_GET["datetime_end"]))			{$datetime_end=$_GET["datetime_end"];}
+	elseif (isset($_POST["datetime_end"]))	{$datetime_end=$_POST["datetime_end"];}
+if (isset($_GET["time_format"]))			{$time_format=$_GET["time_format"];}
+	elseif (isset($_POST["time_format"]))	{$time_format=$_POST["time_format"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -432,6 +439,9 @@ if ($non_latin < 1)
 	$callback_user = ereg_replace("[^-\_0-9a-zA-Z]","",$callback_user);
 	$callback_comments = ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$callback_comments);
 	$admin_user_group = ereg_replace("[^-\_0-9a-zA-Z]","",$admin_user_group);
+	$datetime_start = ereg_replace("[^- \+\:\_0-9]","",$datetime_start);
+	$datetime_end = ereg_replace("[^- \+\:\_0-9]","",$datetime_end);
+	$time_format = ereg_replace("[^A-Z]","",$time_format);
 	}
 else
 	{
@@ -3363,7 +3373,7 @@ if ($function == 'did_log_export')
 					if ($stage == 'pipe')
 						{$DL = '|';   $DLset++;}
 					if ($DLset < 1)
-						{$DL='pipe';}
+						{$DL='|';   $stage='pipe';}
 					if ($header == 'YES')
 						{$output .= 'did_number' . $DL . 'call_date' . $DL . 'caller_id_number' . $DL . "length_in_sec\n";}
 
@@ -3404,7 +3414,7 @@ if ($function == 'did_log_export')
 
 					$result = 'SUCCESS';
 					$data = "$user|$agent_user|$lead_id|$date|$stage";
-					$result_reason = "did_log_export RECORDINGS FOUND: $rec_recs";
+					$result_reason = "did_log_export RECORDS FOUND: $rec_recs";
 
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					}
@@ -3415,6 +3425,222 @@ if ($function == 'did_log_export')
 	}
 ################################################################################
 ### END did_log_export
+################################################################################
+
+
+
+
+
+
+################################################################################
+### agent_stats_export - exports agent stats for set time period
+################################################################################
+if ($function == 'agent_stats_export')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6;";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_stats_export USER DOES NOT HAVE PERMISSION TO GET AGENT INFO";
+			echo "$result: $result_reason: |$user|$allowed_user|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			$search_SQL='';
+			$search_ready=0;
+
+			require_once("functions.php");
+
+			if ( (strlen($agent_user)>0) and (strlen($agent_user)<21) )
+				{
+				$search_SQL .= "user='$agent_user'";
+				$search_ready++;
+				}
+			if ( (strlen($datetime_start)>18) and (strlen($datetime_start)<20) and (strlen($datetime_end)>18) and (strlen($datetime_end)<20) )
+				{
+				$datetime_start = preg_replace("/\+/",' ',$datetime_start);
+				$datetime_end = preg_replace("/\+/",' ',$datetime_end);
+				if (strlen($search_SQL)>5)
+					{$search_SQL .= " and ";}
+				$search_SQL .= "( (event_time >= \"$datetime_start\") and (event_time <= \"$datetime_end\") )";
+				$search_ready++;
+				}
+			else
+				{$search_ready=0;}
+			if ($search_ready < 1)
+				{
+				$result = 'ERROR';
+				$result_reason = "agent_stats_export INVALID SEARCH PARAMETERS";
+				$data = "$user|$agent_user|$datetime_start|$datetime_end";
+				echo "$result: $result_reason: $data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT user,lead_id,sub_status,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec,pause_epoch from vicidial_agent_log where $search_SQL order by user,agent_log_id limit 10000000;";
+				$rslt=mysql_query($stmt, $link);
+				$rec_recs = mysql_num_rows($rslt);
+				if ($DB>0) {echo "DEBUG: agent_stats_export query - $rec_recs|$stmt\n";}
+				if ($rec_recs < 1)
+					{
+					$result = 'ERROR';
+					$result_reason = "agent_stats_export NO RECORDS FOUND";
+					$data = "$user|$agent_user|$lead_id|$date";
+					echo "$result: $result_reason - $data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					$k=0;
+					$output='';
+					$DLset=0;
+					if ($stage == 'csv')
+						{$DL = ',';   $DLset++;}
+					if ($stage == 'tab')
+						{$DL = "\t";   $DLset++;}
+					if ($stage == 'pipe')
+						{$DL = '|';   $DLset++;}
+					if ($DLset < 1)
+						{$DL='|';   $stage='pipe';}
+					if (strlen($time_format) < 1)
+						{$time_format = 'HF';}
+					if ($header == 'YES')
+						{$output .= 'user' . $DL . 'full_name' . $DL . 'user_group' . $DL . 'calls' . $DL . 'login_time' . $DL . 'total_talk_time' . $DL . 'avg_talk_time' . $DL . 'avg_wait_time' . $DL . 'pct_of_queue' . $DL . 'pause_time' . $DL . 'sessions' . $DL . 'avg_session' . $DL . 'pauses' . $DL . 'avg_pause_time' . $DL . 'pause_pct' . $DL . 'pauses_per_session' . "\n";}
+
+					$last_user='998877665544332211328497';
+					$total_calls=0;
+					$uc=-1;
+					while ($rec_recs > $k)
+						{
+						# user,lead_id,sub_status,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec
+						$row=mysql_fetch_row($rslt);
+						if ($last_user != $row[0])
+							{
+							$uc++;
+							$ASuser[$uc] =			$row[0];
+							$ASstart_epoch[$uc] =	$row[8];
+							$last_user =			$row[0];
+							$AScalls[$uc] =			0;
+							$ASpauses[$uc] =		0;
+							$ASsessions[$uc] =		0;
+							}
+						if ($row[1] > 0)		
+							{
+							$AScalls[$uc]++;
+							$total_calls++;
+							}
+						if ($row[3] > 0)		
+							{
+							$ASpauses[$uc]++;
+							}
+						if (preg_match("/LOGIN/",$row[2])) {$ASsessions[$uc]++;}
+						$ASpause_sec[$uc] =		($ASpause_sec[$uc] + $row[3]);
+						$ASwait_sec[$uc] =		($ASwait_sec[$uc] + $row[4]);
+						$AStalk_sec[$uc] =		($AStalk_sec[$uc] + $row[5]);
+						$ASdispo_sec[$uc] =		($ASdispo_sec[$uc] + $row[6]);
+						$ASdead_sec[$uc] =		($ASdead_sec[$uc] + $row[7]);
+						$ASend_epoch[$uc] =		$row[8];
+						$ASend_sec[$uc] =		($row[3] + $row[4] + $row[5] + $row[6]);
+						$k++;
+						}
+
+					$k=0;
+					while ($uc >= $k)
+						{
+						$stmt="SELECT full_name,user_group from vicidial_users where user='$ASuser[$k]' limit 1;";
+						$rslt=mysql_query($stmt, $link);
+						$vcl_recs = mysql_num_rows($rslt);
+						if ($DB>0) {echo "DEBUG: agent_stats_export query - $vcl_recs|$stmt\n";}
+						if ($vcl_recs > 0)
+							{
+							$row=mysql_fetch_row($rslt);
+							$ASfull_name[$k] =		$row[0];
+							$ASuser_group[$k] =		$row[1];
+							}
+						$login_sec = ($ASpause_sec[$k] + $ASwait_sec[$k] + $AStalk_sec[$k] + $ASdispo_sec[$k]);
+						$login_start_end_check = ( ($ASend_epoch[$k] - $ASstart_epoch[$k]) + $ASend_sec[$k]);
+						if ($login_sec > $login_start_end_check) {$login_sec = $login_start_end_check;}
+						if ($ASsessions[$k] < 1) {$ASsessions[$k] = 1;}
+						$avg_session_sec = ($login_sec / $ASsessions[$k]);
+						if ($ASpauses[$k] < 1)
+							{
+							$avg_pause_sec = 0;
+							$avg_pause_session = 0;
+							$pct_pause = 100;
+							}
+						else
+							{
+							$avg_pause_sec = ($ASpause_sec[$k] / $ASpauses[$k]);
+							$avg_pause_session = ($ASpauses[$k] / $ASsessions[$k]);
+							$pct_pause = ( ($ASpause_sec[$k] / $login_sec) * 100);
+							}
+						if ($AScalls[$k] < 1)
+							{
+							$cust_sec = 0;
+							$avg_cust_sec = 0;
+							$avg_wait_sec = 0;
+							$pct_of_queue = 0;
+							}
+						else
+							{
+							$cust_sec = ($AStalk_sec[$k] - $ASdead_sec[$k]);
+							$avg_cust_sec = ($cust_sec / $AScalls[$k]);
+							$avg_wait_sec = ($ASwait_sec[$k] / $AScalls[$k]);
+							$pct_of_queue = ( ($AScalls[$k] / $total_calls) * 100);
+							}
+						$avg_session_sec = round($avg_session_sec);
+						$avg_pause_sec = round($avg_pause_sec);
+						$avg_pause_session = round($avg_pause_session);
+						$pct_pause = round($pct_pause, 1);
+						$avg_cust_sec = round($avg_cust_sec);
+						$avg_wait_sec = round($avg_wait_sec);
+						$pct_of_queue = round($pct_of_queue, 1);
+						$login_sec =		sec_convert($login_sec,$time_format);
+						$avg_session_sec =	sec_convert($avg_session_sec,$time_format);
+						$avg_pause_sec =	sec_convert($avg_pause_sec,$time_format);
+						$cust_sec =			sec_convert($cust_sec,$time_format);
+						$avg_cust_sec =		sec_convert($avg_cust_sec,$time_format);
+						$avg_wait_sec =		sec_convert($avg_wait_sec,$time_format);
+
+						$output .= "$ASuser[$k]$DL$ASfull_name[$k]$DL$ASuser_group[$k]$DL$AScalls[$k]$DL$login_sec$DL$cust_sec$DL$avg_cust_sec$DL$avg_wait_sec$DL$pct_of_queue%$DL$ASpause_sec[$k]$DL$ASsessions[$k]$DL$avg_session_sec$DL$ASpauses[$k]$DL$avg_pause_sec$DL$pct_pause%$DL$avg_pause_session\n";
+	
+						$k++;
+						}
+
+					echo "$output";
+
+					$result = 'SUCCESS';
+					$data = "$user|$agent_user|$lead_id|$date|$stage";
+					$result_reason = "agent_stats_export AGENTS FOUND: $k";
+
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END agent_stats_export
 ################################################################################
 
 
