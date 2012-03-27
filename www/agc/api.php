@@ -263,6 +263,8 @@ if ($non_latin < 1)
 		$callback_comments = ereg_replace("\+"," ",$callback_comments);
 	$callback_comments = ereg_replace("[^- \.\_0-9a-zA-Z]","",$callback_comments);
 	$qm_dispo_code = ereg_replace("[^-\.\_0-9a-zA-Z]","",$qm_dispo_code);
+	$alt_user = ereg_replace("[^0-9a-zA-Z]","",$alt_user);
+	$postal_code = ereg_replace("[^- \.\_0-9a-zA-Z]","",$postal_code);
 	}
 else
 	{

@@ -84,7 +84,7 @@ if ($non_latin < 1)
 	$DB = ereg_replace("[^0-9]","",$DB);
 	$action = ereg_replace("[^\_0-9a-zA-Z]","",$action);
 	$territory = ereg_replace("[^-\_0-9a-zA-Z]","",$territory);
-	$territory_description = ereg_replace("[^ -\_\.\,0-9a-zA-Z]","",$territory_description);
+	$territory_description = ereg_replace("[^- \_\.\,0-9a-zA-Z]","",$territory_description);
 	$user = ereg_replace("[^-\_0-9a-zA-Z]","",$user);
 	$level = ereg_replace("[^\_A-Z]","",$level);
 	$old_territory = ereg_replace("[^-\_0-9a-zA-Z]","",$old_territory);

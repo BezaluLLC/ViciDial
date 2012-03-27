@@ -112,7 +112,7 @@ if ($non_latin < 1)
 	$batch = ereg_replace("[^0-9]","",$batch);
 	$pack = ereg_replace("[^0-9]","",$pack);
 	$sequence = ereg_replace("[^0-9]","",$sequence);
-	$territory_description = ereg_replace("[^ -\_\.\,0-9a-zA-Z]","",$territory_description);
+	$territory_description = ereg_replace("[^- \_\.\,0-9a-zA-Z]","",$territory_description);
 	$user = ereg_replace("[^-\_0-9a-zA-Z]","",$user);
 	$old_territory = ereg_replace("[^-\_0-9a-zA-Z]","",$old_territory);
 	$old_user = ereg_replace("[^-\_0-9a-zA-Z]","",$old_user);
