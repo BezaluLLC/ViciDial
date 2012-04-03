@@ -827,6 +827,14 @@ OTHER CHANGES:
 
 189. Added compatibility for DAHDI channelbank phones for agents in vicidial.php
 
+190. Added Carrier Log and Hangup Reason reports to Admin Utilities screen
+
+191. Added Lead Loading File Templates
+
+192. Added "--daily" option to the ADMIN_archive_log_tables.pl script allowing
+	for the call_log and vicidial_log_extended tables to be archived every
+	night and only keep the last 24-hours of logs in the active table.
+
 
 
 

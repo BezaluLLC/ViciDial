@@ -3044,12 +3044,13 @@ else
 # 120221-0054 - Fixed Call Time and User Group restrictions on several pages
 # 120221-1647 - Added inventory report options to lists and shifts
 # 120316-1203 - Fixed DIALBLE counts for completed statuses
+# 120402-2111 - Added lead loading template and two carrier log reports to the admin utils page
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-362a';
-$build = '120316-1203';
+$admin_version = '2.4-363a';
+$build = '120402-2111';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -7151,6 +7152,15 @@ if ($ADD==99999)
 
 		<BR>NOTES: The Excel Lead loader functionality is enabled by a series of perl scripts and needs to have a properly configured /etc/astguiclient.conf file in place on the web server. Also, a couple perl modules must be loaded for it to work as well - OLE-Storage_Lite and Spreadsheet-ParseExcel. You can check for runtime errors in these by looking at your apache error_log file. Also, for duplication checks against gampaign lists, the list that has new leads going into it does need to be created in the system before you start to load the leads.
 
+		<BR>
+		<A NAME="vicidial_list_loader-file_layout">
+		<BR>
+		<B>File layout - </B>The layout of the file you are loading.  "Standard Format" uses the pre-defined Vicidial standard file format.  "Custom layout" allows the user to define the layout of the file themselves.  "Custom template" is a hybrid of the previous two options, which allows the user to use a custom format they have defined previously and saved using the Custom Template Maker.
+
+		<BR>
+		<A NAME="vicidial_list_loader-template_id">
+		<BR>
+		<B>Template ID -</B> If the user has selected "Custom layout" from the "File layout" options, then this the the template the lead loader will use.  It will also override the selected list ID with the list ID that was assigned to the selected template when it was created.
 
 
 
@@ -8435,6 +8445,49 @@ if ($ADD==99999)
 	<BR>
 	<B>Through the use of system status categories, you can group together statuses to allow for statistical analysis on a group of statuses. The Category ID must be 2-20 characters in length with no spaces, the name must be 2-50 characters in length, the description is optional and TimeonVDAD Display defines whether that status will be one of the upto 4 statuses that can be calculated and displayed on the Time On VDAD Real-Time report.</B> The Sale Category and Dead Lead Category are both used by the List Suggestion system when analyzing list statistics.
 
+
+
+	<BR><BR><BR><BR>
+
+	<B><FONT SIZE=3>VICIDIAL CUSTOM TEMPLATE MAKER</FONT></B><BR><BR>
+	<A NAME="vicidial_template_maker">
+	<BR>
+	The Vicidial custom template maker allows you to define your own file layouts for use with the Vicidial listloader and also delete them, if necessary.  If you frequently upload files that are in a consistent layout other than the Vicidial standard layout, you may find this tool helpful.  The saved layout will work on any uploaded file it matches, regardless of file type or delimiter.
+
+	<BR>
+	<A NAME="vicidial_template_maker-create_template">
+	<BR>
+	<B>Create a new template - </B>In order to begin creating your new listloader template, you must first load a lead file that has the layout you wish to create the template for.  Click "Choose file", and open the file on your computer you wish to use.  This will upload a copy to your server and process it to determine the file type and delimiter (for TXT files).
+
+	<BR>
+	<A NAME="vicidial_template_maker-delete_template">
+	<BR>
+	<B>Delete template -</B> If you have a template you no longer use or you mis-entered information on it and would like to re-enter it, select the template from the drop-down menu and click "DELETE TEMPLATE".
+
+	<BR>
+	<A NAME="vicidial_template_maker-template_id">
+	<BR>
+	<B>Template ID -</B> This field is where you enter an arbitrary ID for your new custom template.  It must be between 2 and 20 characters and consist of alphanumeric characters and underscores.
+
+	<BR>
+	<A NAME="vicidial_template_maker-template_name">
+	<BR>
+	<B>Template Name -</B> This field is where you enter the name for your new custom template.  Can be up to 30 characters long.
+
+	<BR>
+	<A NAME="vicidial_template_maker-template_description">
+	<BR>
+	<B>Template Description -</B> This field is where you enter the description for your new custom template.  It can be up to 255 characters long.
+
+	<BR>
+	<A NAME="vicidial_template_maker-list_id">
+	<BR>
+	<B>List ID -</B> All templates must load their records into a list.  Select a list ID to load leads into from this drop-down list, which will display any lists available to you given your user settings.
+
+	<BR>
+	<A NAME="vicidial_template_maker-assign_columns">
+	<BR>
+	<B>Assigning columns -</B> Once you have loaded a sample file matching the layout you wish to make into a template and select a list ID to load leads into, all the available columns from the vicidial_list table and the custom table for the list you selected (if any) will be displayed here.  Columns highlighted in blue are standard columns from the vicidial_list table.  Columns highlighted in pink belong to the custom table for the selected list.  Each column listed has a drop-down menu, which should be populated with the fields from the first row of the sample file you uploaded.  Assign the appropriate fields to the appropriate columns and press "SUBMIT TEMPLATE" to create your template.  You do not need to assign every field to a column, and you do not need to assign every column a field.  For details on the standard vicidial_list columns, click <a href="#vicidial_list_loader">HERE</a>.
 
 
 	<BR><BR><BR><BR>
@@ -32960,6 +33013,8 @@ if ($ADD==999994)
 		echo "<UL>\n";
 		echo "<LI><a href=\"welcome_languages.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Welcome Languages Page</a></FONT>\n";
 		echo "<LI><a href=\"campaign_debug.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Campaign Debug Page</a></FONT>\n";
+		echo "<LI><a href=\"AST_carrier_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Carrier Log Report</a></FONT>\n";
+		echo "<LI><a href=\"AST_hangup_cause_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Hangup Cause Report</a></FONT>\n";
 		echo "<LI><a href=\"admin_phones_bulk_insert.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Bulk Phone Insert Page</a></FONT>\n";
 		echo "<LI><a href=\"send_CID_call.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Send a Call With Custom CID Page</a></FONT>\n";
 		echo "<LI><a href=\"voice_lab.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Speech Voice Lab Page</a></FONT>\n";

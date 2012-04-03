@@ -1273,3 +1273,17 @@ ALTER TABLE dialable_inventory_snapshots ADD COLUMN list_description VARCHAR(255
 UPDATE dialable_inventory_snapshots d, vicidial_lists v SET d.list_description=v.list_description where d.list_description is null and d.list_id=v.list_id;
 
 UPDATE system_settings SET db_schema_version='1315',db_schema_update_date=NOW() where db_schema_version < 1315;
+
+CREATE TABLE vicidial_custom_leadloader_templates (
+template_id VARCHAR(20) PRIMARY KEY NOT NULL,
+template_name VARCHAR(30) DEFAULT NULL,
+template_description VARCHAR(255) DEFAULT NULL,
+list_id INT(10) UNSIGNED DEFAULT NULL,
+standard_variables TEXT,
+custom_table VARCHAR(20) DEFAULT NULL,
+custom_variables TEXT
+);
+
+INSERT INTO vicidial_custom_leadloader_templates VALUES ('SAMPLE_TEMPLATE','Sample template','',999,'phone_number,9|first_name,0|last_name,1|address1,3|address2,4|address3,5|city,6|state,7|postal_code,8|','custom_999','appointment_date,2|appointment_notes,9|nearest_city,2|');
+
+UPDATE system_settings SET db_schema_version='1316',db_schema_update_date=NOW() where db_schema_version < 1316;

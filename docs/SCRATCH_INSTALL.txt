@@ -2467,6 +2467,9 @@ SUBPHASE 6.5: setting up astguiclient scripts for continuous running
 ### roll logs monthly on high-volume dialing systems
 #30 1 1 * * /usr/share/astguiclient/ADMIN_archive_log_tables.pl
 
+### roll call_log and vicidial_log_extended daily on very high-volume dialing systems
+#20 1 * * * /usr/share/astguiclient/ADMIN_archive_log_tables.pl --daily
+
 ### remove old vicidial logs and asterisk logs more than 2 days old
 28 0 * * * /usr/bin/find /var/log/astguiclient -maxdepth 1 -type f -mtime +2 -print | xargs rm -f
 29 0 * * * /usr/bin/find /var/log/asterisk -maxdepth 3 -type f -mtime +2 -print | xargs rm -f

@@ -1,7 +1,7 @@
 <?php
 # admin_header.php - VICIDIAL administration header
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
 # CHANGES
@@ -36,6 +36,7 @@
 # 111015-2305 - Added Contacts menu to Admin
 # 111106-0939 - Changes for user group restrictions
 # 111116-0208 - Added ALT and ADDR3 in-group handle methods
+# 120402-2134 - Changed lead loader link to fourth gen
 #
 
 
@@ -1188,7 +1189,7 @@ $SScustom_fields_enabled =	$row[3];
 			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
 			<a href="<?php echo $ADMIN ?>?ADD=121"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo $DNClink ?> </a>
 			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
-			<a href="./admin_listloader_third_gen.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Load New Leads </a>
+			<a href="./admin_listloader_fourth_gen.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Load New Leads </a>
 			<?php
 			if ($SScustom_fields_enabled > 0)
 				{

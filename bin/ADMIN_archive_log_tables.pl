@@ -20,7 +20,7 @@
 # Based on perl scripts in ViciDial from Matt Florell and post: 
 # http://www.vicidial.org/VICIDIALforum/viewtopic.php?p=22506&sid=ca5347cffa6f6382f56ce3db9fb3d068#22506
 #
-# Copyright (C) 2011  I. Taushanov, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  I. Taushanov, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 90615-1701 - First version
@@ -34,6 +34,7 @@
 # 110801-2140 - Added vicidial_url_log table purging and vicidial_log_extended to rolling processes
 # 110808-0055 - Added vicidial_log_noanswer process
 # 110822-1257 - Added did_agent_log process
+# 120402-2144 - Added "--daily" flag that will archive call_log and vicidial_log_extended logs past 24 hours
 #
 
 ### begin parsing run-time options ###
@@ -49,6 +50,7 @@ if (length($ARGV[0])>1)
 	if ($args =~ /--help/i)
 		{
 		print "allowed run time options:\n";
+		print "  [--daily] = only archives call_log and vicidial_log_extended tables, only last 24 hours kept\n";
 		print "  [--months=XX] = number of months to archive past, must be 12 or less, default is 2\n";
 		print "  [--closer-log] = archive vicidial_closer_log records\n";
 		print "  [--queue-log] = archive QM queue_log records\n";
@@ -66,6 +68,12 @@ if (length($ARGV[0])>1)
 			{
 			$T=1;   $TEST=1;
 			print "\n-----TESTING-----\n\n";
+			}
+		if ($args =~ /--daily/i)
+			{
+			$daily=1;
+			if ($Q < 1) 
+				{print "\n----- DAILY ONLY -----\n\n";}
 			}
 		if ($args =~ /--months=/i)
 			{
@@ -118,6 +126,21 @@ if ($mon < 10) {$mon = "0$mon";}
 if ($mday < 10) {$mday = "0$mday";}	
 
 $del_time = "$year-$mon-$mday 01:00:00";
+
+if ($daily > 0)
+	{
+	$CLImonths = '*** DAILY MODE ***';
+	$del_epoch = ($secX - 86400);   # 24 hours ago
+	($RMsec,$RMmin,$RMhour,$RMmday,$RMmon,$RMyear,$RMwday,$RMyday,$RMisdst) = localtime($del_epoch);
+	$RMyear = ($RMyear + 1900);
+	$RMmon++;
+	if ($RMmon < 10) {$RMmon = "0$RMmon";}
+	if ($RMmday < 10) {$RMmday = "0$RMmday";}
+	if ($RMhour < 10) {$RMhour = "0$RMhour";}
+	if ($RMmin < 10) {$RMmin = "0$RMmin";}
+	if ($RMsec < 10) {$RMsec = "0$RMsec";}
+	$del_time = "$RMyear-$RMmon-$RMmday $RMhour:$RMmin:$RMsec";
+	}
 
 if (!$Q) {print "\n\n-- ADMIN_archive_log_tables.pl --\n\n";}
 if (!$Q) {print "This program is designed to put all records from  call_log, vicidial_log,\n";}
@@ -175,6 +198,119 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 if (!$T) 
 	{
+	if ($daily > 0)
+		{
+		# The --daily option was added because these two tables(call_log and 
+		# vicidial_log_extended) are not used for any processes or reports past
+		# 24 hours, and on systems dialing 500,000 calls per day or more, this
+		# can lead to system delay issues even if the 1-month archive process is
+		# run every weekend. This --daily option will keep only the last 
+		# 24-hours and can improve DB performance greatly
+
+		##### BEGIN call_log DAILY processing #####
+		$stmtA = "SELECT count(*) from call_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$call_log_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		$stmtA = "SELECT count(*) from call_log_archive;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$call_log_archive_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		if (!$Q) {print "\nProcessing call_log table...  ($call_log_count|$call_log_archive_count)\n";}
+		$stmtA = "INSERT IGNORE INTO call_log_archive SELECT * from call_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows = $sthA->rows;
+		if (!$Q) {print "$sthArows rows inserted into call_log_archive table\n";}
+		
+		$rv = $sthA->err();
+		if (!$rv)
+			{
+			$stmtA = "DELETE FROM call_log WHERE start_time < '$del_time';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows = $sthA->rows;
+			if (!$Q) {print "$sthArows rows deleted from call_log table \n";}
+
+			$stmtA = "optimize table call_log;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			}
+		##### END call_log DAILY processing #####
+
+
+		##### BEGIN vicidial_log_extended DAILY processing #####
+		$stmtA = "SELECT count(*) from vicidial_log_extended;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$vicidial_log_extended_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		$stmtA = "SELECT count(*) from vicidial_log_extended_archive;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$vicidial_log_extended_archive_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		if (!$Q) {print "\nProcessing vicidial_log_extended table...  ($vicidial_log_extended_count|$vicidial_log_extended_archive_count)\n";}
+		$stmtA = "INSERT IGNORE INTO vicidial_log_extended_archive SELECT * from vicidial_log_extended;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		
+		$sthArows = $sthA->rows;
+		if (!$Q) {print "$sthArows rows inserted into vicidial_log_extended_archive table \n";}
+		
+		$rv = $sthA->err();
+		if (!$rv) 
+			{	
+			$stmtA = "DELETE FROM vicidial_log_extended WHERE call_date < '$del_time';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows = $sthA->rows;
+			if (!$Q) {print "$sthArows rows deleted from vicidial_log_extended table \n";}
+
+			$stmtA = "optimize table vicidial_log_extended;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			}
+		##### END vicidial_log_extended DAILY processing #####
+
+
+		### calculate time to run script ###
+		$secY = time();
+		$secZ = ($secY - $secX);
+		$secZm = ($secZ /60);
+		if (!$Q) {print "\nscript execution time in seconds: $secZ     minutes: $secZm\n";}
+
+		exit;
+		}
+
+
+
 	if ($queue_log > 0)
 		{
 		#############################################

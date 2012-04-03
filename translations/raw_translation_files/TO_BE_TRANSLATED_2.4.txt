@@ -837,6 +837,7 @@ If the Inventory Report is enabled on your system, this option will determine wh
 Report Rank||
 This option allows you to rank shifts in selected reports that support this option||
 You can also use a special variable IGNORENOSCROLL to force scroll bars on the script tab even if you are using an iframe within it||
+Carrier Log Report||
 
 
 lead_report_export.php
