@@ -7128,7 +7128,7 @@ if ($ADD==99999)
 			<LI>Vendor Lead Code - shows up in the Vendor ID field of the GUI
 			<LI>Source Code - internal use only for admins and DBAs
 			<LI>List ID - the list number that these leads will show up under
-			<LI>Phone Code - the prefix for the phone number - 1 for US, 01144 for UK, 01161 for AUS, etc
+			<LI>Phone Code - the prefix for the phone number - 1 for US, 44 for UK, 61 for AUS, etc
 			<LI>Phone Number - must be at least 8 digits long
 			<LI>Title - title of the customer - Mr. Ms. Mrs, etc...
 			<LI>First Name

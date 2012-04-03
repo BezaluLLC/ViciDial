@@ -460,7 +460,7 @@ PHASE 6: ADDING CRONTAB ENTRIES FOR ASTGUICLIENT/VICIDIAL SCRIPTS
 * * * * * /usr/share/astguiclient/AST_VDhopper.pl -q
 
 ### adjust the GMT offset for the leads in the vicidial_list table
-1 1,7 * * * /usr/share/astguiclient/ADMIN_adjust_GMTnow_on_leads.pl --debug
+1 1,7 * * * /usr/share/astguiclient/ADMIN_adjust_GMTnow_on_leads.pl --debug --list-settings
 
 ### reset several temporary-info tables in the database
 2 1 * * * /usr/share/astguiclient/AST_reset_mysql_vars.pl
