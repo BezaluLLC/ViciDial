@@ -835,6 +835,10 @@ OTHER CHANGES:
 	for the call_log and vicidial_log_extended tables to be archived every
 	night and only keep the last 24-hours of logs in the active table.
 
+193. Changed the AST_flush_DBqueue.pl script to only need to run on one server
+	NOTE: IMPORTANT !!!!! disable this script on the crontab of all but one
+	server on your cluster.
+
 
 
 

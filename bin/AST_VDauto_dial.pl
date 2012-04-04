@@ -107,6 +107,7 @@
 # 110809-1516 - Added section for noanswer logging
 # 110901-1125 - Added campaign areacode cid function
 # 110922-1202 - Added logging of last calltime to campaign
+# 120403-1839 - Changed auto-alt-dial multi-lead processing to use server max recording time value for time
 #
 
 
@@ -226,7 +227,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 or die "Couldn't connect to database: " . DBI->errstr;
 
 ### Grab Server values from the database
-$stmtA = "SELECT telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,max_vicidial_trunks,answer_transfer_agent,local_gmt,ext_context,vd_server_logs FROM servers where server_ip = '$server_ip';";
+$stmtA = "SELECT telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,max_vicidial_trunks,answer_transfer_agent,local_gmt,ext_context,vd_server_logs,vicidial_recording_limit FROM servers where server_ip = '$server_ip';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -245,6 +246,7 @@ if ($sthArows > 0)
 	$DBSERVER_GMT		=		$aryA[9];
 	$DBext_context	=			$aryA[10];
 	$DBvd_server_logs =			$aryA[11];
+	$DBvicidial_recording_limit = $aryA[12];
 	if ($DBtelnet_host)				{$telnet_host = $DBtelnet_host;}
 	if ($DBtelnet_port)				{$telnet_port = $DBtelnet_port;}
 	if ($DBASTmgrUSERNAME)			{$ASTmgrUSERNAME = $DBASTmgrUSERNAME;}
@@ -365,7 +367,7 @@ while($one_day_interval > 0)
 		$CPcount=0;
 
 		##### Get maximum calls per second that this process can send out
-		$stmtA = "SELECT outbound_calls_per_second FROM servers where server_ip='$server_ip';";
+		$stmtA = "SELECT outbound_calls_per_second,vicidial_recording_limit FROM servers where server_ip='$server_ip';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -373,6 +375,7 @@ while($one_day_interval > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
 			$outbound_calls_per_second =	$aryA[0];
+			$DBvicidial_recording_limit =	$aryA[1];
 			}
 		$sthA->finish();
 
@@ -2407,7 +2410,7 @@ while($one_day_interval > 0)
 		
 		$MLincall='|INCALL|QUEUE|DISPO|';
 		$multi_alt_count=0;
-		$stmtA = "SELECT count(*) FROM vicidial_campaigns where auto_alt_dial='MULTI_LEAD' and dial_method NOT IN('MANUAL','INBOUND_MAN') and campaign_calldate > \"$RMSQLdate\";";
+		$stmtA = "SELECT count(*) FROM vicidial_campaigns where auto_alt_dial='MULTI_LEAD' and dial_method NOT IN('MANUAL','INBOUND_MAN') and campaign_calldate > \"$MCDSQLdate\";";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -2424,7 +2427,7 @@ while($one_day_interval > 0)
 			@MLlists = @MT;
 
 			$MLcampaigns='|';
-			$stmtA = "SELECT campaign_id,auto_alt_dial_statuses FROM vicidial_campaigns where auto_alt_dial='MULTI_LEAD' and dial_method NOT IN('MANUAL','INBOUND_MAN') and campaign_calldate > \"$RMSQLdate\";";
+			$stmtA = "SELECT campaign_id,auto_alt_dial_statuses FROM vicidial_campaigns where auto_alt_dial='MULTI_LEAD' and dial_method NOT IN('MANUAL','INBOUND_MAN') and campaign_calldate > \"$MCDSQLdate\";";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -2459,7 +2462,7 @@ while($one_day_interval > 0)
 				$MLcamp_count++;
 				}
 
-			$event_string = "     MULTI_LEAD auto-alt-dial check:   $multi_alt_count active, checking unprocessed calls...";
+			$event_string = "     MULTI_LEAD auto-alt-dial check:   $multi_alt_count active($MCDSQLdate), checking unprocessed calls...";
 			 &event_logger;
 
 			@MLuniqueid = @MT;
@@ -2470,7 +2473,7 @@ while($one_day_interval > 0)
 			@MLcampaign = @MT;
 			@MLstatus = @MT;
 
-			$stmtA = "SELECT uniqueid,lead_id,call_date,caller_code FROM vicidial_log_extended where server_ip='$server_ip' and call_date > \"$RMSQLdate\" and multi_alt_processed='N' order by call_date,lead_id limit 100000;";
+			$stmtA = "SELECT uniqueid,lead_id,call_date,caller_code FROM vicidial_log_extended where server_ip='$server_ip' and call_date > \"$MCDSQLdate\" and multi_alt_processed='N' order by call_date,lead_id limit 100000;";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -2514,7 +2517,7 @@ while($one_day_interval > 0)
 
 					if ($vac_count < 1)
 						{
-						$stmtA = "SELECT campaign_id,status FROM vicidial_log where uniqueid='$MLuniqueid[$vle_count]' and lead_id='$MLleadid[$vle_count]' and call_date > \"$RMSQLdate\";";
+						$stmtA = "SELECT campaign_id,status FROM vicidial_log where uniqueid='$MLuniqueid[$vle_count]' and lead_id='$MLleadid[$vle_count]' and call_date > \"$MCDSQLdate\";";
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 						$sthArows=$sthA->rows;
@@ -3310,6 +3313,18 @@ sub get_time_now	#get the current date and time and epoch for logging call lengt
 	if ($Tsec < 10) {$Tsec = "0$Tsec";}
 	$TDtsSQLdate = "$Tyear$Tmon$Tmday$Thour$Tmin$Tsec";
 	$TDSQLdate = "$Tyear-$Tmon-$Tmday $Thour:$Tmin:$Tsec";
+
+	$MCDtarget = ($secX - ($DBvicidial_recording_limit * 60));
+	($MCsec,$MCmin,$MChour,$MCmday,$MCmon,$MCyear,$MCwday,$MCyday,$MCisdst) = localtime($MCDtarget);
+	$MCyear = ($MCyear + 1900);
+	$MCmon++;
+	if ($MCmon < 10) {$MCmon = "0$MCmon";}
+	if ($MCmday < 10) {$MCmday = "0$MCmday";}
+	if ($MChour < 10) {$MChour = "0$MChour";}
+	if ($MCmin < 10) {$MCmin = "0$MCmin";}
+	if ($MCsec < 10) {$MCsec = "0$MCsec";}
+	$MCDtsSQLdate = "$MCyear$MCmon$MCmday$MChour$MCmin$MCsec";
+	$MCDSQLdate = "$MCyear-$MCmon-$MCmday $MChour:$MCmin:$MCsec";
 
 	$RMtarget = ($secX - 21600);	# 6 hours ago
 	($RMsec,$RMmin,$RMhour,$RMmday,$RMmon,$RMyear,$RMwday,$RMyday,$RMisdst) = localtime($RMtarget);

@@ -376,10 +376,11 @@
 # 120213-2029 - Changed consultative transfer with custom fields behavior for better data updating
 # 120223-2119 - Removed logging of good login passwords if webroot writable is enabled
 # 120308-1617 - Added compatibility for DAHDI phones using asterisk version for server > 1.4.21.2
+# 120403-1204 - Fixed issue with MANUAL dial method hotkeys, added 1 second delay
 #
 
-$version = '2.4-343c';
-$build = '120308-1617';
+$version = '2.4-344c';
+$build = '120403-1204';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=75;
 $one_mysql_log=0;
@@ -8290,7 +8291,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								alt_dial_active = 0;
 								alt_dial_status_display = 0;
 								reselect_alt_dial = 0;
-								manual_auto_hotkey = 1;
+								manual_auto_hotkey = 2;
 								}
 							}
 						}
@@ -8301,7 +8302,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						{
 						alt_dial_active = 0;
 						alt_dial_status_display = 0;
-						manual_auto_hotkey = 1;
+						manual_auto_hotkey = 2;
 						}
 					else
 						{
@@ -8329,7 +8330,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							{
 							if (hotkeysused == 'YES')
 								{
-								manual_auto_hotkey = 1;
+								manual_auto_hotkey = 2;
 								alt_dial_active=0;
 								alt_dial_status_display = 0;
 
@@ -9170,11 +9171,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							else
 								{
 								// trigger HotKeys manual dial automatically go to next lead
-								if (manual_auto_hotkey == '1')
-									{
-									manual_auto_hotkey = 0;
-									ManualDialNext('','','','','','0');
-									}
+							//	if (manual_auto_hotkey > 0)
+							//		{
+							//		manual_auto_hotkey = 0;
+							//		ManualDialNext('','','','','','0');
+							//		}
 								}
 							}
 						}
@@ -11994,6 +11995,13 @@ function phone_number_format(formatphone) {
 			if ( (custchannellive < -10) && (lastcustchannel.length > 3) ) {ReChecKCustoMerChaN();}
 			if ( (nochannelinsession > 16) && (check_n > 15) && (no_empty_session_warnings < 1) ) {NoneInSession();}
 			if (external_transferconf_count > 0) {external_transferconf_count = (external_transferconf_count - 1);}
+			if (manual_auto_hotkey == "1")
+				{
+				manual_auto_hotkey = 0;
+				ManualDialNext('','','','','','0');
+				}
+			if (manual_auto_hotkey > 1) {manual_auto_hotkey = (manual_auto_hotkey - 1);}
+
 			if (WaitingForNextStep==0)
 				{
 				if (trigger_ready > 0)

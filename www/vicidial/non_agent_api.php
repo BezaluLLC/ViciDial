@@ -3533,7 +3533,7 @@ if ($function == 'agent_stats_export')
 						{
 						# user,lead_id,sub_status,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec
 						$row=mysql_fetch_row($rslt);
-						if ($last_user != $row[0])
+						if (!preg_match("/^$last_user$/i", $row[0]))
 							{
 							$uc++;
 							$ASuser[$uc] =			$row[0];
@@ -3548,7 +3548,7 @@ if ($function == 'agent_stats_export')
 							$AScalls[$uc]++;
 							$total_calls++;
 							}
-						if ($row[3] > 0)		
+						if ($row[3] > -1)		
 							{
 							$ASpauses[$uc]++;
 							}

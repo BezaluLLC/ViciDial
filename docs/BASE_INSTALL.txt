@@ -442,6 +442,7 @@ PHASE 6: ADDING CRONTAB ENTRIES FOR ASTGUICLIENT/VICIDIAL SCRIPTS
 * * * * * /usr/share/astguiclient/AST_conf_update.pl
 
 ### flush queue DB table every hour for entries older than 1 hour
+###### SHOULD ONLY BE RUN ON ONE SERVER IN A CLUSTER!!!!! #####
 11 * * * * /usr/share/astguiclient/AST_flush_DBqueue.pl -q
 
 ### fix the vicidial_agent_log once every hour and the full day run at night
