@@ -12,6 +12,7 @@ maxsilence=10
 silencethreshold=128
 maxlogins=3
 maxmsg=500
+maxmessage=300
 emailbody=Dear ${VM_NAME}:\n\n\tJust wanted to let you know you were just left a ${VM_DUR} long message (number ${VM_MSGNUM})\nin mailbox ${VM_MAILBOX} from ${VM_CIDNAME} ${VM_CIDNUM}, on ${VM_DATE}, so you might\nwant to check it when you get a chance.  Thanks!\n\n\t\t\t\t--PBX\n
 
 [zonemessages]
