@@ -28,6 +28,7 @@
 # 111103-1239 - Added admin_hide_phone_data and admin_hide_lead_data options
 # 120221-0118 - Added User Group campaign list restrictions to search queries
 # 120223-2249 - Removed logging of good login passwords if webroot writable is enabled
+# 120409-1131 - Added option for log searches done through slave DB server
 #
 
 require("dbconnect.php");
@@ -66,7 +67,7 @@ if (isset($_GET["alt_phone_search"]))			{$alt_phone_search=$_GET["alt_phone_sear
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,slave_db_server,reports_use_slave_db FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -78,11 +79,14 @@ while ($i < $qm_conf_ct)
 	$webroot_writable =				$row[1];
 	$SSoutbound_autodial_active =	$row[2];
 	$user_territories_active =		$row[3];
+	$slave_db_server =				$row[4];
+	$reports_use_slave_db =			$row[5];
 	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
+$report_name = 'Search Leads Logs';
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
@@ -354,7 +358,16 @@ else
 			$stmtB="SELECT lead_id,phone_number,campaign_id,call_date,status,user,list_id,length_in_sec from vicidial_closer_log where phone_number='" . mysql_real_escape_string($log_phone) . "' $LOGallowed_listsSQL";
 			$stmtC="SELECT extension,caller_id_number,did_id,call_date from vicidial_did_log where caller_id_number='" . mysql_real_escape_string($log_phone) . "'";
 			}
-		
+
+		if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+			{
+			mysql_close($link);
+			$use_slave_server=1;
+			$db_source = 'S';
+			require("dbconnect.php");
+			echo "<!-- Using slave server $slave_db_server $db_source -->\n";
+			}
+
 		$rslt=mysql_query("$stmtA", $link);
 		$results_to_print = mysql_num_rows($rslt);
 		if ( ($results_to_print < 1) and ($results_to_printX < 1) )
