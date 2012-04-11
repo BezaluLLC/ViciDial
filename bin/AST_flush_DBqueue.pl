@@ -18,41 +18,8 @@
 # 90628-2358 - Added vicidial_drop_rate_groups optimization
 # 91206-2149 - Added vicidial_campaigns and vicidial_lists optimization
 # 120404-1315 - Changed to run only on DB server<you should remove from other servers' crontabs>
+# 120411-1637 - Added --seconds option
 #
-
-$secX = time();
-($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
-$year = ($year + 1900);
-$yy = $year; $yy =~ s/^..//gi;
-$mon++;
-if ($mon < 10) {$mon = "0$mon";}
-if ($mday < 10) {$mday = "0$mday";}
-if ($hour < 10) {$hour = "0$hour";}
-if ($min < 10) {$min = "0$min";}
-if ($sec < 10) {$sec = "0$sec";}
-$SQLdate_NOW="$year-$mon-$mday $hour:$min:$sec";
-
-($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time()-3600);
-$year = ($year + 1900);
-$yy = $year; $yy =~ s/^..//gi;
-$mon++;
-if ($mon < 10) {$mon = "0$mon";}
-if ($mday < 10) {$mday = "0$mday";}
-if ($hour < 10) {$hour = "0$hour";}
-if ($min < 10) {$min = "0$min";}
-if ($sec < 10) {$sec = "0$sec";}
-$SQLdate_NEG_1hour="$year-$mon-$mday $hour:$min:$sec";
-
-($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time()-1800);
-$year = ($year + 1900);
-$yy = $year; $yy =~ s/^..//gi;
-$mon++;
-if ($mon < 10) {$mon = "0$mon";}
-if ($mday < 10) {$mday = "0$mday";}
-if ($hour < 10) {$hour = "0$hour";}
-if ($min < 10) {$min = "0$min";}
-if ($sec < 10) {$sec = "0$sec";}
-$SQLdate_NEG_halfhour="$year-$mon-$mday $hour:$min:$sec";
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -66,7 +33,14 @@ if (length($ARGV[0])>1)
 
 	if ($args =~ /--help/i)
 		{
-		print "allowed run time options:\n  [-q] = quiet\n  [-t] = test\n  [--debug] = debugging messages\n\n";
+		print "allowed run time options:\n";
+		print "  [-q] = quiet\n";
+		print "  [-t] = test\n";
+		print "  [--debug] = debugging messages\n";
+		print "  [--seconds=XXX] = optional, minimum number of seconds worth of records to keep(default 3600)\n";
+		print "\n";
+
+		exit;
 		}
 	else
 		{
@@ -84,6 +58,26 @@ if (length($ARGV[0])>1)
 			$T=1; $TEST=1;
 			print "\n-----TESTING -----\n\n";
 			}
+		if ($args =~ /--seconds=/i)
+			{
+			@data_in = split(/--seconds=/,$args);
+			$purge_seconds = $data_in[1];
+			$purge_seconds =~ s/ .*$//gi;
+			$purge_seconds =~ s/\D//gi;
+			$purge_seconds_half = $purge_seconds;
+			if ($Q < 1)
+				{print "\n----- SECONDS OVERRIDE: $purge_seconds -----\n\n";}
+			if (length($purge_seconds) < 3)
+				{
+				print "ERROR! Invalid Seconds: $purge_seconds     Exiting...\n";
+				exit;
+				}
+			}
+		else
+			{
+			$purge_seconds = '3600';
+			$purge_seconds_half = '1800';
+			}
 		}
 	}
 else
@@ -91,6 +85,40 @@ else
 	print "no command line options set\n";
 	}
 ### end parsing run-time options ###
+
+$secX = time();
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+$year = ($year + 1900);
+$yy = $year; $yy =~ s/^..//gi;
+$mon++;
+if ($mon < 10) {$mon = "0$mon";}
+if ($mday < 10) {$mday = "0$mday";}
+if ($hour < 10) {$hour = "0$hour";}
+if ($min < 10) {$min = "0$min";}
+if ($sec < 10) {$sec = "0$sec";}
+$SQLdate_NOW="$year-$mon-$mday $hour:$min:$sec";
+
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time() - $purge_seconds);
+$year = ($year + 1900);
+$yy = $year; $yy =~ s/^..//gi;
+$mon++;
+if ($mon < 10) {$mon = "0$mon";}
+if ($mday < 10) {$mday = "0$mday";}
+if ($hour < 10) {$hour = "0$hour";}
+if ($min < 10) {$min = "0$min";}
+if ($sec < 10) {$sec = "0$sec";}
+$SQLdate_NEG_1hour="$year-$mon-$mday $hour:$min:$sec";
+
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time() - $purge_seconds_half);
+$year = ($year + 1900);
+$yy = $year; $yy =~ s/^..//gi;
+$mon++;
+if ($mon < 10) {$mon = "0$mon";}
+if ($mday < 10) {$mday = "0$mday";}
+if ($hour < 10) {$hour = "0$hour";}
+if ($min < 10) {$min = "0$min";}
+if ($sec < 10) {$sec = "0$sec";}
+$SQLdate_NEG_halfhour="$year-$mon-$mday $hour:$min:$sec";
 
 
 if (!$Q) {print "TEST\n\n";}
