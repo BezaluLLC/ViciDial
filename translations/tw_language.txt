@@ -28,6 +28,7 @@ agc|functions.php|1
 agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
+agc|phone_only.php|0
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"一月"|
@@ -43,6 +44,7 @@ agc|calendar_db.js|0
 "NOV"|"十一月"|
 "DEC"|"十二月"|
 \./images/|../agc/images/|
+css/|../agc/css/|
 BORDER|邊界|
 VALUE=SUBMIT|VALUE=SUBMIT|
 TYPE=SUBMIT|TYPE=Submit|
@@ -102,6 +104,12 @@ vdc_XB_header.gif|vdc_XB_header_tw.gif|
 vdc_XB_number.gif|vdc_XB_number_tw.gif|
 vdc_XB_channel.gif|vdc_XB_channel_tw.gif|
 vdc_XB_seconds.gif|vdc_XB_seconds_tw.gif|
+agc_live_call_DEAD.gif|agc_live_call_DEAD.gif|
+vdc_LB_startrecording_OFF.gif|vdc_LB_startrecording_OFF.gif|
+vdc_LB_webform_two.gif|vdc_LB_webform_two.gif|
+vdc_LB_webform_two_OFF.gif|vdc_LB_webform_two_OFF.gif|
+vdc_volume_MUTE.gif|vdc_volume_MUTE.gif|
+vdc_volume_UNMUTE.gif|vdc_volume_UNMUTE.gif|
 You have now logged out. Thank you|您已成功登出系統|
 astGUIclient web-client VERSION|astGUIclient web-client版本|
 astGUIclient web client|astGUIclient web client|
@@ -522,3 +530,73 @@ CONSULTATIVE|協商|
 Close Message|關閉消息|
 TIMER NOTIFICATION|計時器通知|
 >AGENTS<|>經營者<|
+### START translations for 2.4 release ###
+VIEW CALL LOG|查看通話記錄|
+click to dial|點擊撥號|
+Close Call Log|關閉通話記錄|
+YOU MUST BE PAUSED TO VIEW YOUR CALL LOG|你必須停下來查看呼叫記錄|
+Close Info Box|關閉信息框|
+No calls on this day|在這一天沒有電話|
+You are in ALT dial mode, you must finish the lead before logging out|你是在ALT撥號模式，你必須完成註銷前率先|
+Presets Button|預設按鈕|
+SELECT A PRESET|選擇預設|
+Customer Hung-up, 3-way Call Ended Automatically|顧客洪，三路電話自動結束|
+Manual Dial Queue Calls Waiting|手動撥號隊列呼叫等待|
+Manual Queue|手冊隊列|
+This phone number is outside of the local call time|這個電話號碼是本地通話時間之外|
+Manual Queue is Off|手動隊列是關|
+Manual Queue is On|手冊隊列是在|
+Call Notes:|呼叫備註：|
+Call Notes List|呼叫債券清單|
+view notes|查看筆記|
+CALL NOTES LOG|調用Notes日誌|
+Close Call Notes|千鈞一發說明|
+CALL LOG FOR THIS LEAD|這導致通話記錄|
+SEARCH FOR A LEAD|作者：帶頭作用|
+SEARCH RESULTS|搜尋結果|
+YOU MUST BE PAUSED TO SEARCH FOR A LEAD|你必須停下來尋找率先|
+Notes: when doing a search for a lead, the phone number, lead ID or|注：做一個領先的搜索時，電話號碼，導致ID或|
+are the best fields to use|是最好的領域使用|
+Using the other fields may be slower. Lead searching does not allow for wildcard or partial search terms|使用的其他領域可能會比較慢。鉛搜索不允許通配符或部分搜索字詞|
+Lead search requests are all logged in the system|鉛的搜索請求都記錄在系統|
+Main Phone Number|主要電話號碼|
+Alternate Phone Number|備用電話號碼|
+Address3 Phone Number|地址3電話號碼|
+No results found|沒有找到結果|
+Results Found:|結果發現：|
+No calls found|沒有調用發現|
+reset form|復位形式|
+Callback Status|回調狀態|
+Callback Lead Status|回調鉛狀態|
+Callback Entry Time|回調錄入時間|
+Callback Trigger Time|回調觸發時間|
+Callback Comments|回調評論|
+To see information on one of the callbacks below, click on the INFO link. To call the customer back now, click on the DIAL link. If you click on a record below to dial it, it will be removed from the list|看到下面的回調的信息，請單擊“信息”鏈接。現在回頭來調用客戶，單擊撥號鏈接。如果您單擊下面的記錄撥打它，它會被從名單中剔除|
+rings all available agents until one picks up the phone|環所有可用了電話，直到一個選秀權代理|
+No calls for this lead|這個領先的地位沒有電話|
+Time Zone Warning|時區警告|
+Phone Area Code Outside Dialable Zone|可撥打區外的電話區號|
+Postal Code Outside Dialable Zone|可撥打區外的郵政編碼|
+Custom Transfer|自定義傳輸|
+System Delay, Please try again|系統延遲，請再試一次|
+Disposition Status List Hidden|處置狀態列表隱藏|
+The system has received a command to log you out, you have been logged out of your session|該系統已收到您註銷命令，你已註銷會話|
+Notes: when doing a search for a contact, wildcard or partial search terms are not allowed|注：時，做了一個接觸搜索，通配符或部分搜索條件不允許|
+Contact search requests are all logged in the system|聯繫人搜索請求都記錄在系統|
+SEARCH FOR A CONTACT|搜索聯繫人|
+CONTACTS SEARCH RESULTS|聯繫人搜索結果|
+LEAD SEARCH|引領搜索|
+Customer Time|客戶的時間|
+TERRITORY SELECTION|領地的選擇|
+TERRITORIES NOT SELECTED|新界未選擇|
+SELECTED TERRITORIES|選定地區。|
+Dialable Leads|可撥打信息|
+You have now logged-in|你現在登錄|
+You logged in at|您在登錄|
+Refresh Campaign List|刷新活動列表|
+PLEASE SELECT A CAMPAIGN|請選擇一個廣告系列|
+Agents View|代理商查看|
+-READY|-準備就緒|
+-INCALL|-門店|
+-PAUSED|-暫停|
+CALL DISPOSITION|認購證的處置|

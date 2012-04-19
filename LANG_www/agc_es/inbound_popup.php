@@ -125,7 +125,7 @@ while ( (strlen($user_abb) > 4) and ($forever_stop < 200) )
 
 echo "<html>\n";
 echo "<head>\n";
-echo "<!-- VERSIÓN: $version     CONSTRUCCION: $build    UNIQUEID: $uniqueid   server_ip: $server_ip-->\n";
+echo "<!-- VERSIÓN: $version     CONSTRUCCIÓN: $build    UNIQUEID: $uniqueid   server_ip: $server_ip-->\n";
 ?>
 	<script language="Javascript">	
 		var server_ip = '<?php echo $server_ip ?>';
@@ -251,11 +251,11 @@ echo "<!-- VERSIÓN: $version     CONSTRUCCION: $build    UNIQUEID: $uniqueid   
 	</script>
 
 <?php
-echo "<title>LLAMADA DE ENTRADA ACTIVA";
+echo "<title>LLAMADA ENTRANTE ACTIVA";
 echo "</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=\"#CCC2E0\" marginheight=0 marginwidth=0 leftmargin=0 topmargin=0 onload=\"link_timeout();\">\n";
-echo "<CENTER><H2>LLAMADA DE ENTRADA ACTIVA</H2>\n";
+echo "<CENTER><H2>LLAMADA ENTRANTE ACTIVA</H2>\n";
 echo "<B>$NOW_TIME</B><BR><BR>\n";
 }
 
@@ -319,11 +319,11 @@ else
 		echo "<a href=\"$local_web_callerID_URL$local_web_callerID_QUERY_STRING\" target=\"_blank\">CUSTOM</a> - \n";
 
 		echo "</td></tr>\n";
-		echo "<tr bgcolor=\"#DDDDFF\"><td>Número Marcado: </td><td align=left>$row[8]</td></tr>\n";
+		echo "<tr bgcolor=\"#DDDDFF\"><td>Número marcado: </td><td align=left>$row[8]</td></tr>\n";
 		echo "<tr bgcolor=\"#DDDDFF\"><td>Notas:</td><td align=left>$row[9]|$row[10]|$row[11]|$row[12]|$row[13]|</td></tr>\n";
 		echo "<tr bgcolor=\"#DDDDFF\"><td colspan=2 align=center>\n<span id=\"callactions\">";
 		echo "<a href=\"#\" onclick=\"livehangup_send_hangup('$row[1]');return false;\">COLGAR</a> - \n";
-		echo "<a href=\"#\" onclick=\"liveredirect_send_vmail('$row[1]','$vmail_box');return false;\">ENVIAR  A MI BUZÓN DE VOZ</a>\n";
+		echo "<a href=\"#\" onclick=\"liveredirect_send_vmail('$row[1]','$vmail_box');return false;\">ENVIAR A MI BUZÓN DE VOZ</a>\n";
 		echo "</span></td></tr>\n";
 		echo "</table>\n";
 
@@ -343,7 +343,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- tiempo de ejecución del Script: $RUNtime segundos -->";
+	echo "\n<!-- tiempo de ejecución del guión: $RUNtime segundos -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

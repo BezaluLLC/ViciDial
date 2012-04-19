@@ -839,6 +839,8 @@ OTHER CHANGES:
 	NOTE: IMPORTANT !!!!! disable this script on the crontab of all but one
 	server on your cluster.
 
+194. Added Danish agent web interface translation
+
 
 
 

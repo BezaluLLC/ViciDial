@@ -125,7 +125,7 @@ while ( (strlen($user_abb) > 4) and ($forever_stop < 200) )
 
 echo "<html>\n";
 echo "<head>\n";
-echo "<!-- VERSION: $version     SKAPA: $build    UNIQUEID: $uniqueid   server_ip: $server_ip-->\n";
+echo "<!-- VERSION: $version     BUILD: $build    UNIQUEID: $uniqueid   server_ip: $server_ip-->\n";
 ?>
 	<script language="Javascript">	
 		var server_ip = '<?php echo $server_ip ?>';
@@ -320,7 +320,7 @@ else
 
 		echo "</td></tr>\n";
 		echo "<tr bgcolor=\"#DDDDFF\"><td>Uppringt nummer: </td><td align=left>$row[8]</td></tr>\n";
-		echo "<tr bgcolor=\"#DDDDFF\"><td>Noteringar:</td><td align=left>$row[9]|$row[10]|$row[11]|$row[12]|$row[13]|</td></tr>\n";
+		echo "<tr bgcolor=\"#DDDDFF\"><td>Noteringar: </td><td align=left>$row[9]|$row[10]|$row[11]|$row[12]|$row[13]|</td></tr>\n";
 		echo "<tr bgcolor=\"#DDDDFF\"><td colspan=2 align=center>\n<span id=\"callactions\">";
 		echo "<a href=\"#\" onclick=\"livehangup_send_hangup('$row[1]');return false;\">Lägg på</a> - \n";
 		echo "<a href=\"#\" onclick=\"liveredirect_send_vmail('$row[1]','$vmail_box');return false;\">SKICKA TILL MIN RÖSTBREVLÅDA</a>\n";

@@ -86,7 +86,7 @@ if ( (eregi("^Zap",$channel)) and (!eregi("-",$channel)) ) {$channel = "$channel
 
   if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Недопустимо Username/Пароль: |$user|$pass|\n";
+    echo "Неверный Имя агента/Пароль: |$user|$pass|\n";
     exit;
 	}
   else
@@ -94,7 +94,7 @@ if ( (eregi("^Zap",$channel)) and (!eregi("-",$channel)) ) {$channel = "$channel
 
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
-		echo "Недопустимо server_ip: |$server_ip|  or  Недопустимо session_name: |$session_name|\n";
+		echo "Неверный server_ip: |$server_ip|  or  Неверный session_name: |$session_name|\n";
 		exit;
 		}
 	else
@@ -106,7 +106,7 @@ if ( (eregi("^Zap",$channel)) and (!eregi("-",$channel)) ) {$channel = "$channel
 		$SNauth=$row[0];
 		  if($SNauth==0)
 			{
-			echo "Недопустимо session_name: |$session_name|$server_ip|\n";
+			echo "Неверный session_name: |$session_name|$server_ip|\n";
 			exit;
 			}
 		  else
@@ -234,7 +234,7 @@ echo "<!-- ВЕРСИЯ: $version     СБОРКА: $build    UNIQUEID: $uniquei
 
 
 // ################################################################################
-// timeout to deactivate the call action links after 30 секунды
+// timeout to deactivate the call action links after 30 секунд
 	function link_timeout() 
 		{
 		window.focus();
@@ -251,11 +251,11 @@ echo "<!-- ВЕРСИЯ: $version     СБОРКА: $build    UNIQUEID: $uniquei
 	</script>
 
 <?php
-echo "<title>ЖИВОЙ ВХОДЯЩИЙ ВЫЗОВ";
+echo "<title>АКТИВНЫЙ ВХОДЯЩИЙ ВЫЗОВ";
 echo "</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=\"#CCC2E0\" marginheight=0 marginwidth=0 leftmargin=0 topmargin=0 onload=\"link_timeout();\">\n";
-echo "<CENTER><H2>ЖИВОЙ ВХОДЯЩИЙ ВЫЗОВ</H2>\n";
+echo "<CENTER><H2>АКТИВНЫЙ ВХОДЯЩИЙ ВЫЗОВ</H2>\n";
 echo "<B>$NOW_TIME</B><BR><BR>\n";
 }
 
@@ -266,7 +266,7 @@ $channel_live=1;
 if (strlen($uniqueid)<9)
 	{
 	$channel_live=0;
-	echo "Uniqueid $uniqueid это неправильно\n";
+	echo "Uniqueid $uniqueid неверный\n";
 	exit;
 	}
 else
@@ -296,9 +296,9 @@ else
 		echo "<a href=\"http://www.anywho.com/qry/wp_rl?npa=$NPA&telephone=$NXX$XXXX\" target=\"_blank\">ANYWHO</a> - \n";
 		echo "<a href=\"http://www.switchboard.com/bin/cgirlookup.dll?SR=&MEM=1&LNK=32%3A36&type=BOTH&at=$NPA&e=$NXX&n=$XXXX&search.x=55&search.y=20\" target=\"_blank\">SWITCHBOARD</a> - \n";
 		echo "<a href=\"http://yellowpages.superpages.com/listings.jsp?SRC=&STYPE=&PG=L&CB=&C=&N=&E=&T=&S=&Z=&A=727&X=533&P=8730&AXP=$NPA$NXX$XXXX&R=N&PS=15&search=Find+It\" target=\"_blank\">VERIZON</a> - \n";
-		echo "<a href=\"http://www.whitepages.com/1014/log_click/search/Reverse_Телефон?npa=$NPA&phone=$NXX$XXXX\" target=\"_blank\">WHITEPAGES</a> - \n";
-		echo "<a href=\"http://www.411.com/10742/search/Reverse_Телефон?phone=%28$NPA%29+$NXX$D$XXXX\" target=\"_blank\">411.COM</a> - \n";
-		echo "<a href=\"http://www.phonenumber.com/10006/search/Reverse_Телефон?npa=$NPA&phone=$NXX$XXXX\" target=\"_blank\">411.COM</a> - \n";
+		echo "<a href=\"http://www.whitepages.com/1014/log_click/search/Reverse_телефон?npa=$NPA&phone=$NXX$XXXX\" target=\"_blank\">WHITEPAGES</a> - \n";
+		echo "<a href=\"http://www.411.com/10742/search/Reverse_телефон?phone=%28$NPA%29+$NXX$D$XXXX\" target=\"_blank\">411.COM</a> - \n";
+		echo "<a href=\"http://www.phonenumber.com/10006/search/Reverse_телефон?npa=$NPA&phone=$NXX$XXXX\" target=\"_blank\">411.COM</a> - \n";
 
 			$local_web_callerID_QUERY_STRING ='';
 			$local_web_callerID_QUERY_STRING.="?callerID_areacode=$NPA";
@@ -319,11 +319,11 @@ else
 		echo "<a href=\"$local_web_callerID_URL$local_web_callerID_QUERY_STRING\" target=\"_blank\">CUSTOM</a> - \n";
 
 		echo "</td></tr>\n";
-		echo "<tr bgcolor=\"#DDDDFF\"><td>Набранный Номер: </td><td align=left>$row[8]</td></tr>\n";
+		echo "<tr bgcolor=\"#DDDDFF\"><td>Набранный номер: </td><td align=left>$row[8]</td></tr>\n";
 		echo "<tr bgcolor=\"#DDDDFF\"><td>Примечания:</td><td align=left>$row[9]|$row[10]|$row[11]|$row[12]|$row[13]|</td></tr>\n";
 		echo "<tr bgcolor=\"#DDDDFF\"><td colspan=2 align=center>\n<span id=\"callactions\">";
-		echo "<a href=\"#\" onclick=\"livehangup_send_hangup('$row[1]');return false;\">РАЗЪЕДИНЕНИЕ</a> - \n";
-		echo "<a href=\"#\" onclick=\"liveredirect_send_vmail('$row[1]','$vmail_box');return false;\">ПОСЛАТЬ В МОЙ VOICEMAIL</a>\n";
+		echo "<a href=\"#\" onclick=\"livehangup_send_hangup('$row[1]');return false;\">ЗАВЕРШЕНИЕ</a> - \n";
+		echo "<a href=\"#\" onclick=\"liveredirect_send_vmail('$row[1]','$vmail_box');return false;\">ПЕРЕВЕСТИ НА МОЮ ГОЛОСОВУЮ ПОЧТУ</a>\n";
 		echo "</span></td></tr>\n";
 		echo "</table>\n";
 
@@ -343,7 +343,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- время выполнения скрипта: $RUNtime секунды -->";
+	echo "\n<!-- время исполнения скрипта: $RUNtime секунд -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

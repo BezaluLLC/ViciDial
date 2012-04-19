@@ -27,6 +27,7 @@ agc|functions.php|1
 agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
+agc|phone_only.php|0
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"ΙΑΝ"|
@@ -42,6 +43,7 @@ agc|calendar_db.js|0
 "NOV"|"ΝΟΕ"|
 "DEC"|"ΔΕΚ"|
 \./images/|../agc/images/|
+css/|../agc/css/|
 BORDER|Border|
 VALUE=SUBMIT|VALUE=SUBMIT|
 TYPE=SUBMIT|TYPE=Submit|
@@ -102,6 +104,12 @@ vdc_XB_number.gif|vdc_XB_number_el.gif|
 vdc_XB_channel.gif|vdc_XB_channel_el.gif|
 vdc_XB_seconds.gif|vdc_XB_seconds_el.gif|
 vdc_tab_script.gif|vdc_tab_script.gif|
+agc_live_call_DEAD.gif|agc_live_call_DEAD.gif|
+vdc_LB_startrecording_OFF.gif|vdc_LB_startrecording_OFF.gif|
+vdc_LB_webform_two.gif|vdc_LB_webform_two.gif|
+vdc_LB_webform_two_OFF.gif|vdc_LB_webform_two_OFF.gif|
+vdc_volume_MUTE.gif|vdc_volume_MUTE.gif|
+vdc_volume_UNMUTE.gif|vdc_volume_UNMUTE.gif|
 You have now logged out. Thank you|Έχετε αποσυνδεθεί. Σας ευχαριστούμε|
 astGUIclient web-client VERSION|ΈΚΔΟΣΗ astGUIclient|
 astGUIclient web client|χειριστής astGUIclient|
@@ -485,3 +493,73 @@ CONSULTATIVE|ΣΥΜΒΟΥΛΕΥΤΙΚΗ|
 Close Message|Κλείσιμο Μηνύματος|
 TIMER NOTIFICATION|ΚΟΙΝΟΠΟΙΗΣΗ ΧΡΟΝΟΥ|
 >AGENTS<|>ΧΕΙΡΙΣΤΕΣ<|
+### START translations for 2.4 release ###
+VIEW CALL LOG|ΔΕΙΤΕ ΠΡΟΣΚΛΗΣΗ LOG|
+click to dial|κάντε κλικ για να καλέσετε|
+Close Call Log|Κλείστε Πρόσκληση Σύνδεση|
+YOU MUST BE PAUSED TO VIEW YOUR CALL LOG|ΘΑ ΠΡΕΠΕΙ ΝΑ ΠΑΥΣΗ ΓΙΑ ΝΑ ΔΕΙΤΕ Κλήσεων ΣΑΣ|
+Close Info Box|Κλείσιμο Πληροφορίες|
+No calls on this day|Δεν υπάρχουν κλήσεις για αυτή την ημέρα|
+You are in ALT dial mode, you must finish the lead before logging out|Είστε σε λειτουργία κλήσης ALT, θα πρέπει να τελειώσει το προβάδισμα πριν από την αποσύνδεση|
+Presets Button|Προεπιλογές Κουμπί|
+SELECT A PRESET|Επιλέξτε ένα προκαθορισμένο|
+Customer Hung-up, 3-way Call Ended Automatically|Πελάτης Hung-up, 3-Way Κλήση τερματίζεται αυτόματα|
+Manual Dial Queue Calls Waiting|Εγχειρίδιο Ουρά σύνδεση κλήσεων Αναμονή|
+Manual Queue|Εγχειρίδιο Ουρά|
+This phone number is outside of the local call time|Αυτός ο αριθμός τηλεφώνου είναι έξω από την τοπική ώρα κλήσης|
+Manual Queue is Off|Εγχειρίδιο ουρά είναι εκτός λειτουργίας|
+Manual Queue is On|Εγχειρίδιο Ουρά είναι σε|
+Call Notes:|Καλέστε Σημειώσεις:|
+Call Notes List|Καλέστε Σημειώσεις Λίστα|
+view notes|δείτε τις σημειώσεις|
+CALL NOTES LOG|Σημειώσεων μητρώου κλήσεων|
+Close Call Notes|Κλείστε σημειώσεις κλήσεων|
+CALL LOG FOR THIS LEAD|Κλήσεων ΓΙΑ ΑΥΤΟ ΤΟ ΜΟΛΥΒΔΟ|
+SEARCH FOR A LEAD|Αναζήτηση ΜΟΛΥΒΔΟΥ|
+SEARCH RESULTS|ΑΠΟΤΕΛΕΣΜΑΤΑ ΑΝΑΖΗΤΗΣΗΣ|
+YOU MUST BE PAUSED TO SEARCH FOR A LEAD|ΘΑ ΠΡΕΠΕΙ ΝΑ ΠΑΥΣΗ Για να αναζητήσετε ένα ΜΟΛΥΒΔΟΥ|
+Notes: when doing a search for a lead, the phone number, lead ID or|Σημειώσεις: όταν κάνετε μια αναζήτηση για το μόλυβδο, τον αριθμό τηλεφώνου, να οδηγήσει ταυτότητας ή|
+are the best fields to use|είναι τα καλύτερα πεδία για να χρησιμοποιήσετε|
+Using the other fields may be slower. Lead searching does not allow for wildcard or partial search terms|Χρησιμοποιώντας τα άλλα πεδία μπορεί να είναι βραδύτερη. Ο μόλυβδος έρευνα δεν επιτρέπει μπαλαντέρ ή μερική όρους αναζήτησης|
+Lead search requests are all logged in the system|Οι επικεφαλής όλων των αιτημάτων αναζήτησης συνδεδεμένοι στο σύστημα|
+Main Phone Number|Κύρια Τηλέφωνο|
+Alternate Phone Number|Αναπληρωτής Τηλέφωνο|
+Address3 Phone Number|Address3 Τηλέφωνο|
+No results found|Δεν βρέθηκαν αποτελέσματα|
+Results Found:|Αποτελέσματα:|
+No calls found|Δεν υπάρχουν Προκηρύξεις|
+reset form|επαναφέρετε μορφή|
+Callback Status|Κατάσταση επανάκλησης|
+Callback Lead Status|Επανάκληση Κατάσταση μόλυβδο|
+Callback Entry Time|Χρόνος εισόδου επανάκλησης|
+Callback Trigger Time|Επανάκληση χρόνο ενεργοποίησης|
+Callback Comments|Σχόλια επανάκλησης|
+To see information on one of the callbacks below, click on the INFO link. To call the customer back now, click on the DIAL link. If you click on a record below to dial it, it will be removed from the list|Για να δείτε πληροφορίες για ένα από τα παρακάτω callbacks, κάντε κλικ στο link. Για να καλέσετε τον πελάτη πίσω τώρα, κάντε κλικ στο σύνδεσμο DIAL. Αν κάνετε κλικ σε ένα αρχείο για να το καλέσετε, θα πρέπει να αφαιρεθεί από τον κατάλογο|
+rings all available agents until one picks up the phone|δαχτυλίδια όλα τα διαθέσιμα μέσα έως ότου ένας να σηκώσει το τηλέφωνο|
+No calls for this lead|Δεν υπάρχουν προσκλήσεις για το μόλυβδο|
+Time Zone Warning|Χρόνος προειδοποίησης ζώνης|
+Phone Area Code Outside Dialable Zone|Κώδικας Τηλέφωνο περιοχή εκτός της ζώνης Dialable|
+Postal Code Outside Dialable Zone|Τ.Κ. Έξω Dialable Ζώνη|
+Custom Transfer|Προσαρμοσμένη Μεταφορά|
+System Delay, Please try again|Καθυστέρηση Σύστημα, παρακαλώ προσπαθήστε ξανά|
+Disposition Status List Hidden|Διάθεση Λίστα Κρυφό Κατάσταση|
+The system has received a command to log you out, you have been logged out of your session|Το σύστημα έχει λάβει εντολή για να κάνετε log out, σας έχει αποσυνδεθεί από τη συνεδρία σας|
+Notes: when doing a search for a contact, wildcard or partial search terms are not allowed|Σημειώσεις: όταν κάνετε μια αναζήτηση για μια επαφή, δεν επιτρέπεται μπαλαντέρ ή μερική όρους αναζήτησης|
+Contact search requests are all logged in the system|Τα αιτήματα αναζήτησης Επικοινωνία όλοι συνδεδεμένοι στο σύστημα|
+SEARCH FOR A CONTACT|Αναζήτηση επαφής|
+CONTACTS SEARCH RESULTS|ΕΠΙΚΟΙΝΩΝΙΑ ΑΠΟΤΕΛΕΣΜΑΤΑ ΑΝΑΖΗΤΗΣΗΣ|
+LEAD SEARCH|ΜΟΛΥΒΔΟΣ ΑΝΑΖΗΤΗΣΗ|
+Customer Time|Χρόνος πελατών|
+TERRITORY SELECTION|ΕΠΙΛΟΓΗ ΕΔΑΦΟΣ|
+TERRITORIES NOT SELECTED|Εδάφη που δεν ΕΠΙΛΕΓΜΕΝΕΣ|
+SELECTED TERRITORIES|επιλεγμένα εδάφη|
+Dialable Leads|Dialable Εκκινήσεις|
+You have now logged-in|Τώρα έχετε συνδεδεμένων|
+You logged in at|Μπορείτε συνδεδεμένος στο|
+Refresh Campaign List|Ανανέωση Λίστα Εκστρατεία|
+PLEASE SELECT A CAMPAIGN|Επιλέξτε μια καμπάνια|
+Agents View|Δείτε πράκτορες|
+-READY|-ΕΤΟΙΜΟ|
+-INCALL|-Incall|
+-PAUSED|-ΠΑΥΣΗ|
+CALL DISPOSITION|ΠΡΟΣΚΛΗΣΗ διάθεση|

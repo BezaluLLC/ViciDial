@@ -1,7 +1,7 @@
 <?php
-# manager_send.php    version 2.2.0
+# manager_send.php    version 2.4
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to insert records into the vicidial_manager table to signal Actions to an asterisk server
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -12,7 +12,7 @@
 #  - $user
 #  - $pass
 # optional variables:
-#  - $ACTION - ('Originate','Redirect','Hangup','Command','Monitor','StopMonitor','SysCIDOriginate','RedirectName','RedirectNameVmail','MonitorConf','StopMonitorConf','RedirectXtra','RedirectXtraCX','RedirectVD','HangupConfDial','VolumeControl','OriginateVDRelogin')
+#  - $ACTION - ('Originate','Redirect','Hangup','Command','Monitor','StopMonitor','SysCIDOriginate','SysCIDdtmfOriginate','RedirectName','RedirectNameVmail','MonitorConf','StopMonitorConf','RedirectXtra','RedirectXtraCX','RedirectVD','HangupConfDial','VolumeControl','OriginateVDRelogin')
 #  - $queryCID - ('CN012345678901234567',...)
 #  - $format - ('text','debug')
 #  - $channel - ('Zap/41-1','SIP/test101-1jut','IAX2/iaxy@iaxy',...)
@@ -41,6 +41,11 @@
 #  - $agent_dialed_number - ('1','')
 #  - $agent_dialed_type - ('MANUAL_OVERRIDE','MANUAL_DIALNOW','MANUAL_PREVIEW',...)
 #  - $nodeletevdac - ('0','1')
+#  - $alertCID - ('0','1')
+#  - $preset_name = ('TESTING PRESET',...)
+#  - $call_variables = ('Variable: vendor_lead_code=1234|campaign=TESTCAMP|...')
+#  - $log_campaign
+#  - $qm_extension
 #
 # CHANGELOG:
 # 50401-1002 - First build of script, Hangup function only
@@ -94,12 +99,21 @@
 # 91112-1110 - Added CALLOUTBOUND value to QM entry lookup
 # 91205-2103 - Code cleanup
 # 91213-1208 - Added queue_position to queue_log COMPLETE... records
-#
+# 100327-0846 - Fix for list_id override answering machine message
+# 100423-2304 - Added alertCID
+# 100527-1014 - Added SysCIDdtmfOriginate function
+# 100813-0833 - Added preset_name variable and logging
+# 101004-1345 - Added Ivr park functions
+# 101024-1638 - Added park_log logging for parked calls
+# 101107-2331 - Added CALLERONHOLD/CALLEROFFHOLD queue_log entries
+# 101125-1018 - Added call_variables Originate variables
+# 110224-1710 - Added compatibility with QM phone environment logging
+# 110626-2320 - Added qm_extension
 
-$version = '2.2.0-46';
-$build = '91213-1208';
+$version = '2.4-56';
+$build = '110626-2320';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=85;
+$mysql_log_count=116;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -185,6 +199,17 @@ if (isset($_GET["agent_dialed_type"]))				{$agent_dialed_type=$_GET["agent_diale
 	elseif (isset($_POST["agent_dialed_type"]))		{$agent_dialed_type=$_POST["agent_dialed_type"];}
 if (isset($_GET["nodeletevdac"]))				{$nodeletevdac=$_GET["nodeletevdac"];}
 	elseif (isset($_POST["nodeletevdac"]))		{$nodeletevdac=$_POST["nodeletevdac"];}
+if (isset($_GET["alertCID"]))				{$alertCID=$_GET["alertCID"];}
+	elseif (isset($_POST["alertCID"]))		{$alertCID=$_POST["alertCID"];}
+if (isset($_GET["preset_name"]))			{$preset_name=$_GET["preset_name"];}
+	elseif (isset($_POST["preset_name"]))	{$preset_name=$_POST["preset_name"];}
+if (isset($_GET["call_variables"]))				{$call_variables=$_GET["call_variables"];}
+	elseif (isset($_POST["call_variables"]))	{$call_variables=$_POST["call_variables"];}
+if (isset($_GET["log_campaign"]))			{$log_campaign=$_GET["log_campaign"];}
+	elseif (isset($_POST["log_campaign"]))	{$log_campaign=$_POST["log_campaign"];}
+if (isset($_GET["qm_extension"]))			{$qm_extension=$_GET["qm_extension"];}
+	elseif (isset($_POST["qm_extension"]))	{$qm_extension=$_POST["qm_extension"];}
+
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -239,14 +264,14 @@ $auth=$row[0];
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Недопустимо Username/Пароль: |$user|$pass|\n";
+    echo "Неверный Имя агента/Пароль: |$user|$pass|\n";
     exit;
 	}
 else
 	{
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
-		echo "Недопустимо server_ip: |$server_ip|  or  Недопустимо session_name: |$session_name|\n";
+		echo "Неверный server_ip: |$server_ip|  or  Неверный session_name: |$session_name|\n";
 		exit;
 		}
 	else
@@ -259,7 +284,7 @@ else
 		$SNauth=$row[0];
 		  if($SNauth==0)
 			{
-			echo "Недопустимо session_name: |$session_name|$server_ip|\n";
+			echo "Неверный session_name: |$session_name|$server_ip|\n";
 			exit;
 			}
 		  else
@@ -274,7 +299,7 @@ if ($format=='debug')
 	echo "<html>\n";
 	echo "<head>\n";
 	echo "<!-- ВЕРСИЯ: $version     СБОРКА: $build    ACTION: $ACTION   server_ip: $server_ip-->\n";
-	echo "<title>Отослать Менеджеру: ";
+	echo "<title>Перевод менеджеру: ";
 	if ($ACTION=="Originate")		{echo "Originate";}
 	if ($ACTION=="Redirect")		{echo "Redirect";}
 	if ($ACTION=="RedirectName")	{echo "RedirectName";}
@@ -289,6 +314,20 @@ if ($format=='debug')
 
 
 
+######################
+# ACTION=SysCIDdtmfOriginate  - prep the send dtmf command
+######################
+if ($ACTION=="SysCIDdtmfOriginate")
+	{
+	$stmt="UPDATE vicidial_live_agents SET external_dtmf='' where user='$user';";
+		if ($format=='debug') {echo "\n<!-- $stmt -->";}
+	$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02092',$user,$server_ip,$session_name,$one_mysql_log);}
+
+	$ACTION="SysCIDOriginate";
+	}
+
+
 
 ######################
 # ACTION=SysCIDOriginate  - insert Originate Manager statement allowing small CIDs for system calls
@@ -297,7 +336,7 @@ if ($ACTION=="SysCIDOriginate")
 	{
 	if ( (strlen($exten)<1) or (strlen($channel)<1) or (strlen($ext_context)<1) or (strlen($queryCID)<1) )
 		{
-		echo "Exten $exten это неправильно or queryCID $queryCID это неправильно, Originate команда не введена\n";
+		echo "Exten $exten неверный or queryCID $queryCID неверный, Originate команда не включена\n";
 		}
 	else
 		{
@@ -305,7 +344,7 @@ if ($ACTION=="SysCIDOriginate")
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02004',$user,$server_ip,$session_name,$one_mysql_log);}
-		echo "Originate посылать команду для Exten $exten Канал $channel на $server_ip\n";
+		echo "Originate команда отправлена Exten $exten Линия $channel на $server_ip\n";
 		}
 	}
 
@@ -319,13 +358,13 @@ if ($ACTION=="OriginateName")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15)  or (strlen($extenName)<1)  or (strlen($ext_context)<1)  or (strlen($ext_priority)<1) )
 		{
 		$channel_live=0;
-		echo "Одна из этих переменных это неправильно:\n";
-		echo "Channel $channel должно быть больше чем 2 символа\n";
-		echo "queryCID $queryCID должно быть больше чем 14 символов\n";
-		echo "extenName $extenName должен быть установлен\n";
-		echo "ext_context $ext_context должен быть установлен\n";
-		echo "ext_priority $ext_priority должен быть установлен\n";
-		echo "\nOriginateName Action не послано\n";
+		echo "Одна из этих переменных неверный:\n";
+		echo "Channel $channel должен быть длиннее 2 символов\n";
+		echo "queryCID $queryCID должен быть длиннее 14 символов\n";
+		echo "extenName $extenName должен быть указан\n";
+		echo "ext_context $ext_context должен быть указан\n";
+		echo "ext_priority $ext_priority должен быть указан\n";
+		echo "\nOriginateName Action не отправлен\n";
 		}
 	else
 		{
@@ -348,14 +387,14 @@ if ($ACTION=="OriginateNameVmail")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15)  or (strlen($extenName)<1)  or (strlen($exten)<1)  or (strlen($ext_context)<1)  or (strlen($ext_priority)<1) )
 		{
 		$channel_live=0;
-		echo "Одна из этих переменных это неправильно:\n";
-		echo "Channel $channel должно быть больше чем 2 символа\n";
-		echo "queryCID $queryCID должно быть больше чем 14 символов\n";
-		echo "extenName $extenName должен быть установлен\n";
-		echo "exten $exten должен быть установлен\n";
-		echo "ext_context $ext_context должен быть установлен\n";
-		echo "ext_priority $ext_priority должен быть установлен\n";
-		echo "\nOriginateNameVmail Action не послано\n";
+		echo "Одна из этих переменных неверный:\n";
+		echo "Channel $channel должен быть длиннее 2 символов\n";
+		echo "queryCID $queryCID должен быть длиннее 14 символов\n";
+		echo "extenName $extenName должен быть указан\n";
+		echo "exten $exten должен быть указан\n";
+		echo "ext_context $ext_context должен быть указан\n";
+		echo "ext_priority $ext_priority должен быть указан\n";
+		echo "\nOriginateNameVmail Action не отправлен\n";
 		}
 	else
 		{
@@ -390,15 +429,15 @@ if ($ACTION=="OriginateVDRelogin")
 
 if ($ACTION=="Originate")
 	{
-	if ( (strlen($exten)<1) or (strlen($channel)<1) or (strlen($ext_context)<1) or (strlen($queryCID)<10) )
+	if ( (strlen($exten)<1) or (strlen($channel)<1) or (strlen($ext_context)<1) or ( (strlen($queryCID)<10) and ($alertCID < 1) ) )
 		{
-		echo "ERROR Exten $exten это неправильно or queryCID $queryCID это неправильно, Originate команда не введена\n";
+		echo "ERROR Exten $exten неверный or queryCID $queryCID неверный, Originate команда не включена\n";
 		}
 	else
 		{
 		if ( (eregi('MANUAL',$agent_dialed_type)) and ( (preg_match("/^\d860\d\d\d\d$/i",$exten)) or (preg_match("/^860\d\d\d\d$/i",$exten)) ) )
 			{
-			echo "ERROR Вы не можете набрать в других сессиях агент $exten\n";
+			echo "ERROR Вам не разрешено звонить в сессии других агентов $exten\n";
 			exit;
 			}
 
@@ -410,22 +449,48 @@ if ($ACTION=="Originate")
 			{
 			$RAWaccount = $account;
 			$account = "Account: $account";
-			$variable = "Variable: usegroupalias=1";
+			$variable = "Variable: _usegroupalias=1";
+			if (strlen($call_variables)>9)
+				{$variable = "Variable: _usegroupalias=1";}   # |$call_variables
 			}
 		else
-			{$account='';   $variable='';}
+			{$variable='';   $account="Variable: $call_variables";}
 		$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$queryCID','Channel: $channel','Context: $ext_context','Exten: $exten','Priority: $ext_priority','Callerid: $outCID','$account','$variable','','','');";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02007',$user,$server_ip,$session_name,$one_mysql_log);}
-		echo "Originate посылать команду для Exten $exten Канал $channel на $server_ip |$account|$variable|\n";
+		echo "Originate команда отправлена Exten $exten Линия $channel на $server_ip |$account|$variable|\n";
 
 		if ($agent_dialed_number > 0)
 			{
-			$stmt = "INSERT INTO user_call_log (user,call_date,call_type,server_ip,phone_number,number_dialed,lead_id,callerid,group_alias_id) values('$user','$NOW_TIME','$agent_dialed_type','$server_ip','$exten','$channel','0','$outbound_cid','$RAWaccount')";
+			if (strlen($lead_id)<1) {$lead_id='0';}
+			$customer_hungup='';
+			if ( ($stage > 0) and (preg_match("/3WAY/",$agent_dialed_type)) ) 
+				{$customer_hungup = 'BEFORE_CALL';}
+			$stmt = "INSERT INTO user_call_log (user,call_date,call_type,server_ip,phone_number,number_dialed,lead_id,callerid,group_alias_id,preset_name,campaign_id,customer_hungup) values('$user','$NOW_TIME','$agent_dialed_type','$server_ip','$exten','$channel','$lead_id','$outbound_cid','$RAWaccount','$preset_name','$campaign','$customer_hungup')";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00192',$user,$server_ip,$session_name,$one_mysql_log);}
+
+			if (strlen($preset_name) > 0)
+				{
+				$stmt = "SELECT count(*) from vicidial_xfer_stats where campaign_id='$campaign' and preset_name='$preset_name';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02093',$user,$server_ip,$session_name,$one_mysql_log);}
+				$row=mysql_fetch_row($rslt);
+				if ($row[0] > 0)
+					{
+					$stmt = "UPDATE vicidial_xfer_stats SET xfer_count=(xfer_count+1) where campaign_id='$campaign' and preset_name='$preset_name';";
+					}
+				else
+					{
+					$stmt = "INSERT INTO vicidial_xfer_stats SET campaign_id='$campaign',preset_name='$preset_name',xfer_count='1';";
+					}
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02094',$user,$server_ip,$session_name,$one_mysql_log);}
+				}
 			}
 		}
 	}
@@ -442,7 +507,7 @@ if ($ACTION=="HangupConfDial")
 	if ( (strlen($exten)<3) or (strlen($queryCID)<15) or (strlen($ext_context)<1) )
 		{
 		$channel_live=0;
-		echo "conference $exten это неправильно or ext_context $ext_context or queryCID $queryCID это неправильно, Hangup команда не введена\n";
+		echo "conference $exten неверный or ext_context $ext_context or queryCID $queryCID неверный, Hangup команда не включена\n";
 		}
 	else
 		{
@@ -486,7 +551,7 @@ if ($ACTION=="Hangup")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) )
 		{
 		$channel_live=0;
-		echo "Channel $channel это неправильно or queryCID $queryCID это неправильно, Hangup команда не введена\n";
+		echo "Channel $channel неверный or queryCID $queryCID неверный, Hangup команда не включена\n";
 		}
 	else
 		{
@@ -517,7 +582,7 @@ if ($ACTION=="Hangup")
 			$rowx=mysql_fetch_row($rslt);
 			if ($rowx[0]==0)
 				{
-				echo "Call $CalLCID $channel это не активно на $call_server_ip, Checking Live Канал...\n";
+				echo "Call $CalLCID $channel не активен на $call_server_ip, Checking Live Линия...\n";
 
 				$stmt="SELECT count(*) FROM live_channels where server_ip = '$call_server_ip' and channel='$channel' and extension LIKE \"%$exten\";";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
@@ -527,7 +592,7 @@ if ($ACTION=="Hangup")
 				if ($row[0]==0)
 					{
 					$channel_live=0;
-					echo "Channel $channel это не активно на $call_server_ip, Hangup команда не введена $rowx[0]\n$stmt\n";
+					echo "Channel $channel не активен на $call_server_ip, Hangup команда не включена $rowx[0]\n$stmt\n";
 					}
 				else
 					{
@@ -545,7 +610,7 @@ if ($ACTION=="Hangup")
 			if ($row[0] > 0)
 				{
 				$channel_live=0;
-				echo "Channel $channel in use by another agent на $call_server_ip, Hangup команда не введена $rowx[0]\n$stmt\n";
+				echo "Channel $channel in use by another agent на $call_server_ip, Hangup команда не включена $rowx[0]\n$stmt\n";
 				if ($WeBRooTWritablE > 0)
 					{
 					$fp = fopen ("./vicidial_debug.txt", "a");
@@ -572,7 +637,7 @@ if ($ACTION=="Hangup")
 					{
 					#############################################
 					##### START QUEUEMETRICS LOGGING LOOKUP #####
-					$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+					$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append FROM system_settings;";
 					$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02014',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
@@ -587,6 +652,7 @@ if ($ACTION=="Hangup")
 						$queuemetrics_login	=			$row[3];
 						$queuemetrics_pass =			$row[4];
 						$queuemetrics_log_id =			$row[5];
+						$queuemetrics_pe_phone_append = $row[6];
 						$i++;
 						}
 					##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -661,8 +727,23 @@ if ($ACTION=="Hangup")
 								if ($time_id > 100000) 
 									{$secondS = ($StarTtime - $time_id);}
 
+								$data4SQL='';
+								$stmt="SELECT queuemetrics_phone_environment FROM vicidial_campaigns where campaign_id='$log_campaign' and queuemetrics_phone_environment!='';";
+								$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02116',$user,$server_ip,$session_name,$one_mysql_log);}
+								if ($DB) {echo "$stmt\n";}
+								$cqpe_ct = mysql_num_rows($rslt);
+								if ($cqpe_ct > 0)
+									{
+									$row=mysql_fetch_row($rslt);
+									$pe_append='';
+									if ( ($queuemetrics_pe_phone_append > 0) and (strlen($row[0])>0) )
+										{$pe_append = "-$qm_extension";}
+									$data4SQL = ",data4='$row[0]$pe_append'";
+									}
+
 								if ($format=='debug') {echo "\n<!-- $caller_complete|$stmt -->";}
-								$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$CLcampaign_id',agent='Agent/$user',verb='COMPLETEAGENT',data1='$CLstage',data2='$secondS',data3='$CLqueue_position',serverid='$queuemetrics_log_id';";
+								$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$CLcampaign_id',agent='Agent/$user',verb='COMPLETEAGENT',data1='$CLstage',data2='$secondS',data3='$CLqueue_position',serverid='$queuemetrics_log_id' $data4SQL;";
 								$rslt=mysql_query($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02019',$user,$server_ip,$session_name,$one_mysql_log);}
 								$affected_rows = mysql_affected_rows($linkB);
@@ -677,7 +758,7 @@ if ($ACTION=="Hangup")
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02020',$user,$server_ip,$session_name,$one_mysql_log);}
-			echo "Hangup посылать команду для Канал $channel на $call_server_ip\n";
+			echo "Hangup команда отправлена Линия $channel на $call_server_ip\n";
 			}
 		}
 	}
@@ -693,17 +774,17 @@ if ($ACTION=="RedirectVD")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($campaign)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) or (strlen($uniqueid)<2) or (strlen($lead_id)<1) )
 		{
 		$channel_live=0;
-		echo "Одна из этих переменных это неправильно:\n";
-		echo "Channel $channel должно быть больше чем 2 символа\n";
-		echo "queryCID $queryCID должно быть больше чем 14 символов\n";
-		echo "exten $exten должен быть установлен\n";
-		echo "ext_context $ext_context должен быть установлен\n";
-		echo "ext_priority $ext_priority должен быть установлен\n";
-		echo "auto_dial_level $auto_dial_level должен быть установлен\n";
-		echo "campaign $campaign должен быть установлен\n";
-		echo "uniqueid $uniqueid должен быть установлен\n";
-		echo "lead_id $lead_id должен быть установлен\n";
-		echo "\nRedirectVD Action не послано\n";
+		echo "Одна из этих переменных неверный:\n";
+		echo "Channel $channel должен быть длиннее 2 символов\n";
+		echo "queryCID $queryCID должен быть длиннее 14 символов\n";
+		echo "exten $exten должен быть указан\n";
+		echo "ext_context $ext_context должен быть указан\n";
+		echo "ext_priority $ext_priority должен быть указан\n";
+		echo "auto_dial_level $auto_dial_level должен быть указан\n";
+		echo "campaign $campaign должен быть указан\n";
+		echo "uniqueid $uniqueid должен быть указан\n";
+		echo "lead_id $lead_id должен быть указан\n";
+		echo "\nRedirectVD Action не отправлен\n";
 		}
 	else
 		{
@@ -734,39 +815,32 @@ if ($ACTION=="RedirectVD")
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02024',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
-		else
+
+		if (strlen($preset_name) > 0)
 			{
-			if (strlen($lead_id) > 1)
+			$stmt = "INSERT INTO user_call_log (user,call_date,call_type,server_ip,phone_number,number_dialed,lead_id,preset_name,campaign_id) values('$user','$NOW_TIME','BLIND_XFER','$server_ip','$exten','$channel','$lead_id','$preset_name','$campaign')";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02095',$user,$server_ip,$session_name,$one_mysql_log);}
+
+			$stmt = "SELECT count(*) from vicidial_xfer_stats where campaign_id='$campaign' and preset_name='$preset_name';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02096',$user,$server_ip,$session_name,$one_mysql_log);}
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
 				{
-				$list_id='';
-				$stmt = "SELECT list_id FROM vicidial_list where lead_id='$lead_id';";
-				$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02084',$user,$server_ip,$session_name,$one_mysql_log);}
-				if ($DB) {echo "$stmt\n";}
-				$lio_ct = mysql_num_rows($rslt);
-				if ($lio_ct > 0)
-					{
-					$row=mysql_fetch_row($rslt);
-					$list_id =	$row[0];
-
-					if (strlen($list_id) > 1)
-						{
-						$stmt = "SELECT am_message_exten_override FROM vicidial_lists where list_id='$list_id';";
-						$rslt=mysql_query($stmt, $link);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02085',$user,$server_ip,$session_name,$one_mysql_log);}
-						if ($DB) {echo "$stmt\n";}
-						$lio_ct = mysql_num_rows($rslt);
-						if ($lio_ct > 0)
-							{
-							$row=mysql_fetch_row($rslt);
-							$am_message_exten_override =	$row[0];
-							if (strlen($am_message_exten_override) > 0) {$exten = "$am_message_exten_override";}
-							}
-						}
-					}
+				$stmt = "UPDATE vicidial_xfer_stats SET xfer_count=(xfer_count+1) where campaign_id='$campaign' and preset_name='$preset_name';";
 				}
-
+			else
+				{
+				$stmt = "INSERT INTO vicidial_xfer_stats SET campaign_id='$campaign',preset_name='$preset_name',xfer_count='1';";
+				}
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02097',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
+
 		$ACTION="Redirect";
 		}
 	}
@@ -776,15 +850,15 @@ if ($ACTION=="RedirectToPark")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($extenName)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) or (strlen($parkedby)<1) )
 		{
 		$channel_live=0;
-		echo "Одна из этих переменных это неправильно:\n";
-		echo "Channel $channel должно быть больше чем 2 символа\n";
-		echo "queryCID $queryCID должно быть больше чем 14 символов\n";
-		echo "exten $exten должен быть установлен\n";
-		echo "extenName $extenName должен быть установлен\n";
-		echo "ext_context $ext_context должен быть установлен\n";
-		echo "ext_priority $ext_priority должен быть установлен\n";
-		echo "parkedby $parkedby должен быть установлен\n";
-		echo "\nRedirectToPark Action не послано\n";
+		echo "Одна из этих переменных неверный:\n";
+		echo "Channel $channel должен быть длиннее 2 символов\n";
+		echo "queryCID $queryCID должен быть длиннее 14 символов\n";
+		echo "exten $exten должен быть указан\n";
+		echo "extenName $extenName должен быть указан\n";
+		echo "ext_context $ext_context должен быть указан\n";
+		echo "ext_priority $ext_priority должен быть указан\n";
+		echo "parkedby $parkedby должен быть указан\n";
+		echo "\nRedirectToPark Action не отправлен\n";
 		}
 	else
 		{
@@ -795,10 +869,73 @@ if ($ACTION=="RedirectToPark")
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02025',$user,$server_ip,$session_name,$one_mysql_log);}
 		$ACTION="Redirect";
 
+		$stmt = "INSERT INTO park_log SET uniqueid='$uniqueid',status='ПАРКОВКАED',channel='$channel',channel_group='$campaign',server_ip='$server_ip',parked_time='$NOW_TIME',parked_sec=0,extension='$CalLCID',user='$user',lead_id='$lead_id';";
+			if ($format=='debug') {echo "\n<!-- $stmt -->";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02098',$user,$server_ip,$session_name,$one_mysql_log);}
+
+
+		#############################################
+		##### START QUEUEMETRICS LOGGING LOOKUP #####
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+		$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02099',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
+		$qm_conf_ct = mysql_num_rows($rslt);
+		$i=0;
+		while ($i < $qm_conf_ct)
+			{
+			$row=mysql_fetch_row($rslt);
+			$enable_queuemetrics_logging =	$row[0];
+			$queuemetrics_server_ip	=		$row[1];
+			$queuemetrics_dbname =			$row[2];
+			$queuemetrics_login	=			$row[3];
+			$queuemetrics_pass =			$row[4];
+			$queuemetrics_log_id =			$row[5];
+			$i++;
+			}
+		##### END QUEUEMETRICS LOGGING LOOKUP #####
+		###########################################
+		if ($enable_queuemetrics_logging > 0)
+			{
+			$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+			mysql_select_db("$queuemetrics_dbname", $linkB);
+
+			$time_id=0;
+			$stmt="SELECT time_id,queue,agent from queue_log where call_id='$CalLCID' and verb='CONNECT' order by time_id desc limit 1;";
+			$rslt=mysql_query($stmt, $linkB);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02100',$user,$server_ip,$session_name,$one_mysql_log);}
+			$VAC_eq_ct = mysql_num_rows($rslt);
+			if ($VAC_eq_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$time_id =	$row[0];
+				$queue =	$row[1];
+				$agent =	$row[2];
+				}
+			$StarTtime = date("U");
+			if ($time_id > 100000) 
+				{$secondS = ($StarTtime - $time_id);}
+
+			if ($VAC_eq_ct > 0)
+				{
+				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLERONHOLD',data1='ПАРКОВКА',serverid='$queuemetrics_log_id';";
+				$rslt=mysql_query($stmt, $linkB);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02101',$user,$server_ip,$session_name,$one_mysql_log);}
+				$affected_rows = mysql_affected_rows($linkB);
+				if ($format=='debug') {echo "\n<!-- $affected_rows|$stmt -->";}
+				}
+			}
+
 	#	$fp = fopen ("./vicidial_debug.txt", "a");
 	#	fwrite ($fp, "$NOW_TIME|MS_LOG_0|$queryCID|$stmt|\n");
 	#	fclose($fp);
 		}
+
+	$stmt="UPDATE vicidial_live_agents SET external_park='' where user='$user';";
+		if ($format=='debug') {echo "\n<!-- $stmt -->";}
+	$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02086',$user,$server_ip,$session_name,$one_mysql_log);}
 	}
 
 if ($ACTION=="RedirectFromPark")
@@ -806,13 +943,13 @@ if ($ACTION=="RedirectFromPark")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) )
 		{
 		$channel_live=0;
-		echo "Одна из этих переменных это неправильно:\n";
-		echo "Channel $channel должно быть больше чем 2 символа\n";
-		echo "queryCID $queryCID должно быть больше чем 14 символов\n";
-		echo "exten $exten должен быть установлен\n";
-		echo "ext_context $ext_context должен быть установлен\n";
-		echo "ext_priority $ext_priority должен быть установлен\n";
-		echo "\nRedirectFromPark Action не послано\n";
+		echo "Одна из этих переменных неверный:\n";
+		echo "Channel $channel должен быть длиннее 2 символов\n";
+		echo "queryCID $queryCID должен быть длиннее 14 символов\n";
+		echo "exten $exten должен быть указан\n";
+		echo "ext_context $ext_context должен быть указан\n";
+		echo "ext_priority $ext_priority должен быть указан\n";
+		echo "\nRedirectFromPark Action не отправлен\n";
 		}
 	else
 		{
@@ -822,21 +959,293 @@ if ($ACTION=="RedirectFromPark")
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02026',$user,$server_ip,$session_name,$one_mysql_log);}
 		$ACTION="Redirect";
+
+		$parked_sec=0;
+		$stmt = "SELECT UNIX_TIMESTAMP(parked_time) FROM park_log where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' and (parked_sec < 1 or grab_time is NULL) order by parked_time desc limit 1;";
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02102',$user,$server_ip,$session_name,$one_mysql_log);}
+		$VAC_pl_ct = mysql_num_rows($rslt);
+		if ($VAC_pl_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$parked_sec	= ($StarTtime - $row[0]);
+
+			$stmt = "UPDATE park_log SET status='GRABBED',grab_time='$NOW_TIME',parked_sec='$parked_sec' where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' order by parked_time desc limit 1;";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02103',$user,$server_ip,$session_name,$one_mysql_log);}
+
+			#############################################
+			##### START QUEUEMETRICS LOGGING LOOKUP #####
+			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02104',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
+			$qm_conf_ct = mysql_num_rows($rslt);
+			$i=0;
+			while ($i < $qm_conf_ct)
+				{
+				$row=mysql_fetch_row($rslt);
+				$enable_queuemetrics_logging =	$row[0];
+				$queuemetrics_server_ip	=		$row[1];
+				$queuemetrics_dbname =			$row[2];
+				$queuemetrics_login	=			$row[3];
+				$queuemetrics_pass =			$row[4];
+				$queuemetrics_log_id =			$row[5];
+				$i++;
+				}
+			##### END QUEUEMETRICS LOGGING LOOKUP #####
+			###########################################
+			if ($enable_queuemetrics_logging > 0)
+				{
+				$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+				mysql_select_db("$queuemetrics_dbname", $linkB);
+
+				$time_id=0;
+				$stmt="SELECT time_id,queue,agent from queue_log where call_id='$CalLCID' and verb='CONNECT' order by time_id desc limit 1;";
+				$rslt=mysql_query($stmt, $linkB);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02105',$user,$server_ip,$session_name,$one_mysql_log);}
+				$VAC_eq_ct = mysql_num_rows($rslt);
+				if ($VAC_eq_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$time_id =	$row[0];
+					$queue =	$row[1];
+					$agent =	$row[2];
+					}
+				$StarTtime = date("U");
+				if ($time_id > 100000) 
+					{$secondS = ($StarTtime - $time_id);}
+
+				if ($VAC_eq_ct > 0)
+					{
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLEROFFHOLD',data1='$parked_sec',data2='ПАРКОВКА',serverid='$queuemetrics_log_id';";
+					$rslt=mysql_query($stmt, $linkB);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02106',$user,$server_ip,$session_name,$one_mysql_log);}
+					$affected_rows = mysql_affected_rows($linkB);
+					if ($format=='debug') {echo "\n<!-- $affected_rows|$stmt -->";}
+					}
+				}
+			}
 		}
+
+	$stmt="UPDATE vicidial_live_agents SET external_park='' where user='$user';";
+		if ($format=='debug') {echo "\n<!-- $stmt -->";}
+	$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02087',$user,$server_ip,$session_name,$one_mysql_log);}
 	}
+
+if ($ACTION=="RedirectToParkIVR")
+	{
+	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($extenName)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) or (strlen($parkedby)<1) )
+		{
+		$channel_live=0;
+		echo "Одна из этих переменных неверный:\n";
+		echo "Channel $channel должен быть длиннее 2 символов\n";
+		echo "queryCID $queryCID должен быть длиннее 14 символов\n";
+		echo "exten $exten должен быть указан\n";
+		echo "extenName $extenName должен быть указан\n";
+		echo "ext_context $ext_context должен быть указан\n";
+		echo "ext_priority $ext_priority должен быть указан\n";
+		echo "parkedby $parkedby должен быть указан\n";
+		echo "\nRedirectToPark Action не отправлен\n";
+		}
+	else
+		{
+		if (strlen($call_server_ip)>6) {$server_ip = $call_server_ip;}
+		$stmt = "INSERT INTO parked_channels values('$channel','$server_ip','$CalLCID','$extenName','$parkedby','$NOW_TIME');";
+			if ($format=='debug') {echo "\n<!-- $stmt -->";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02025',$user,$server_ip,$session_name,$one_mysql_log);}
+		$ACTION="Redirect";
+
+		$stmt = "UPDATE vicidial_auto_calls SET extension='ПАРКОВКА_IVR' where callerid='$CalLCID' limit 1;";
+			if ($format=='debug') {echo "\n<!-- $stmt -->";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02088',$user,$server_ip,$session_name,$one_mysql_log);}
+
+		$stmt = "INSERT INTO park_log SET uniqueid='$uniqueid',status='IVRПАРКОВКАED',channel='$channel',channel_group='$campaign',server_ip='$server_ip',parked_time='$NOW_TIME',parked_sec=0,extension='$CalLCID',user='$user',lead_id='$lead_id';";
+			if ($format=='debug') {echo "\n<!-- $stmt -->";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02107',$user,$server_ip,$session_name,$one_mysql_log);}
+
+		#############################################
+		##### START QUEUEMETRICS LOGGING LOOKUP #####
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+		$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02108',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
+		$qm_conf_ct = mysql_num_rows($rslt);
+		$i=0;
+		while ($i < $qm_conf_ct)
+			{
+			$row=mysql_fetch_row($rslt);
+			$enable_queuemetrics_logging =	$row[0];
+			$queuemetrics_server_ip	=		$row[1];
+			$queuemetrics_dbname =			$row[2];
+			$queuemetrics_login	=			$row[3];
+			$queuemetrics_pass =			$row[4];
+			$queuemetrics_log_id =			$row[5];
+			$i++;
+			}
+		##### END QUEUEMETRICS LOGGING LOOKUP #####
+		###########################################
+		if ($enable_queuemetrics_logging > 0)
+			{
+			$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+			mysql_select_db("$queuemetrics_dbname", $linkB);
+
+			$time_id=0;
+			$stmt="SELECT time_id,queue,agent from queue_log where call_id='$CalLCID' and verb='CONNECT' order by time_id desc limit 1;";
+			$rslt=mysql_query($stmt, $linkB);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02109',$user,$server_ip,$session_name,$one_mysql_log);}
+			$VAC_eq_ct = mysql_num_rows($rslt);
+			if ($VAC_eq_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$time_id =	$row[0];
+				$queue =	$row[1];
+				$agent =	$row[2];
+				}
+			$StarTtime = date("U");
+			if ($time_id > 100000) 
+				{$secondS = ($StarTtime - $time_id);}
+
+			if ($VAC_eq_ct > 0)
+				{
+				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLERONHOLD',data1='IVRПАРКОВКА',serverid='$queuemetrics_log_id';";
+				$rslt=mysql_query($stmt, $linkB);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02110',$user,$server_ip,$session_name,$one_mysql_log);}
+				$affected_rows = mysql_affected_rows($linkB);
+				if ($format=='debug') {echo "\n<!-- $affected_rows|$stmt -->";}
+				}
+			}
+	#	$fp = fopen ("./vicidial_debug.txt", "a");
+	#	fwrite ($fp, "$NOW_TIME|MS_LOG_0|$queryCID|$stmt|\n");
+	#	fclose($fp);
+		}
+
+	$stmt="UPDATE vicidial_live_agents SET external_park='' where user='$user';";
+		if ($format=='debug') {echo "\n<!-- $stmt -->";}
+	$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02089',$user,$server_ip,$session_name,$one_mysql_log);}
+	}
+
+if ($ACTION=="RedirectFromParkIVR")
+	{
+	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) )
+		{
+		$channel_live=0;
+		echo "Одна из этих переменных неверный:\n";
+		echo "Channel $channel должен быть длиннее 2 символов\n";
+		echo "queryCID $queryCID должен быть длиннее 14 символов\n";
+		echo "exten $exten должен быть указан\n";
+		echo "ext_context $ext_context должен быть указан\n";
+		echo "ext_priority $ext_priority должен быть указан\n";
+		echo "\nRedirectFromPark Action не отправлен\n";
+		}
+	else
+		{
+		if (strlen($call_server_ip)>6) {$server_ip = $call_server_ip;}
+		$stmt = "DELETE FROM parked_channels where server_ip='$server_ip' and channel='$channel';";
+			if ($format=='debug') {echo "\n<!-- $stmt -->";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02026',$user,$server_ip,$session_name,$one_mysql_log);}
+		$ACTION="Redirect";
+
+		$stmt = "UPDATE vicidial_auto_calls SET extension='' where callerid='$CalLCID' limit 1;";
+			if ($format=='debug') {echo "\n<!-- $stmt -->";}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02090',$user,$server_ip,$session_name,$one_mysql_log);}
+
+		$parked_sec=0;
+		$stmt = "SELECT UNIX_TIMESTAMP(parked_time) FROM park_log where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' and (parked_sec < 1 or grab_time is NULL) order by parked_time desc limit 1;";
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02111',$user,$server_ip,$session_name,$one_mysql_log);}
+		$VAC_pl_ct = mysql_num_rows($rslt);
+		if ($VAC_pl_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$parked_sec	= ($StarTtime - $row[0]);
+
+			$stmt = "UPDATE park_log SET status='GRABBEDIVR',grab_time='$NOW_TIME',parked_sec='$parked_sec' where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' order by parked_time desc limit 1;";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02112',$user,$server_ip,$session_name,$one_mysql_log);}
+
+			#############################################
+			##### START QUEUEMETRICS LOGGING LOOKUP #####
+			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02113',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
+			$qm_conf_ct = mysql_num_rows($rslt);
+			$i=0;
+			while ($i < $qm_conf_ct)
+				{
+				$row=mysql_fetch_row($rslt);
+				$enable_queuemetrics_logging =	$row[0];
+				$queuemetrics_server_ip	=		$row[1];
+				$queuemetrics_dbname =			$row[2];
+				$queuemetrics_login	=			$row[3];
+				$queuemetrics_pass =			$row[4];
+				$queuemetrics_log_id =			$row[5];
+				$i++;
+				}
+			##### END QUEUEMETRICS LOGGING LOOKUP #####
+			###########################################
+			if ($enable_queuemetrics_logging > 0)
+				{
+				$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+				mysql_select_db("$queuemetrics_dbname", $linkB);
+
+				$time_id=0;
+				$stmt="SELECT time_id,queue,agent from queue_log where call_id='$CalLCID' and verb='CONNECT' order by time_id desc limit 1;";
+				$rslt=mysql_query($stmt, $linkB);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02114',$user,$server_ip,$session_name,$one_mysql_log);}
+				$VAC_eq_ct = mysql_num_rows($rslt);
+				if ($VAC_eq_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$time_id =	$row[0];
+					$queue =	$row[1];
+					$agent =	$row[2];
+					}
+				$StarTtime = date("U");
+				if ($time_id > 100000) 
+					{$secondS = ($StarTtime - $time_id);}
+
+				if ($VAC_eq_ct > 0)
+					{
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLEROFFHOLD',data1='$parked_sec',data2='IVRПАРКОВКА',serverid='$queuemetrics_log_id';";
+					$rslt=mysql_query($stmt, $linkB);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02115',$user,$server_ip,$session_name,$one_mysql_log);}
+					$affected_rows = mysql_affected_rows($linkB);
+					if ($format=='debug') {echo "\n<!-- $affected_rows|$stmt -->";}
+					}
+				}
+			}
+		}
+
+	$stmt="UPDATE vicidial_live_agents SET external_park='' where user='$user';";
+		if ($format=='debug') {echo "\n<!-- $stmt -->";}
+	$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02091',$user,$server_ip,$session_name,$one_mysql_log);}
+	}
+
 
 if ($ACTION=="RedirectName")
 	{
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15)  or (strlen($extenName)<1)  or (strlen($ext_context)<1)  or (strlen($ext_priority)<1) )
 		{
 		$channel_live=0;
-		echo "Одна из этих переменных это неправильно:\n";
-		echo "Channel $channel должно быть больше чем 2 символа\n";
-		echo "queryCID $queryCID должно быть больше чем 14 символов\n";
-		echo "extenName $extenName должен быть установлен\n";
-		echo "ext_context $ext_context должен быть установлен\n";
-		echo "ext_priority $ext_priority должен быть установлен\n";
-		echo "\nRedirectName Action не послано\n";
+		echo "Одна из этих переменных неверный:\n";
+		echo "Channel $channel должен быть длиннее 2 символов\n";
+		echo "queryCID $queryCID должен быть длиннее 14 символов\n";
+		echo "extenName $extenName должен быть указан\n";
+		echo "ext_context $ext_context должен быть указан\n";
+		echo "ext_priority $ext_priority должен быть указан\n";
+		echo "\nRedirectName Action не отправлен\n";
 		}
 	else
 		{
@@ -859,14 +1268,14 @@ if ($ACTION=="RedirectNameVmail")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15)  or (strlen($extenName)<1)  or (strlen($exten)<1)  or (strlen($ext_context)<1)  or (strlen($ext_priority)<1) )
 		{
 		$channel_live=0;
-		echo "Одна из этих переменных это неправильно:\n";
-		echo "Channel $channel должно быть больше чем 2 символа\n";
-		echo "queryCID $queryCID должно быть больше чем 14 символов\n";
-		echo "extenName $extenName должен быть установлен\n";
-		echo "exten $exten должен быть установлен\n";
-		echo "ext_context $ext_context должен быть установлен\n";
-		echo "ext_priority $ext_priority должен быть установлен\n";
-		echo "\nRedirectNameVmail Action не послано\n";
+		echo "Одна из этих переменных неверный:\n";
+		echo "Channel $channel должен быть длиннее 2 символов\n";
+		echo "queryCID $queryCID должен быть длиннее 14 символов\n";
+		echo "extenName $extenName должен быть указан\n";
+		echo "exten $exten должен быть указан\n";
+		echo "ext_context $ext_context должен быть указан\n";
+		echo "ext_priority $ext_priority должен быть указан\n";
+		echo "\nRedirectNameVmail Action не отправлен\n";
 		}
 	else
 		{
@@ -899,14 +1308,14 @@ if ($ACTION=="RedirectXtraCXNeW")
 		{
 		$channel_liveX=0;
 		$channel_liveY=0;
-		echo "Одна из этих переменных это неправильно:\n";
-		echo "Channel $channel должно быть больше чем 2 символа\n";
-		echo "ExtraChannel $extrachannel должно быть больше чем 2 символа\n";
-		echo "queryCID $queryCID должно быть больше чем 14 символов\n";
-		echo "exten $exten должен быть установлен\n";
-		echo "ext_context $ext_context должен быть установлен\n";
-		echo "ext_priority $ext_priority должен быть установлен\n";
-		echo "\nRedirect Action не послано\n";
+		echo "Одна из этих переменных неверный:\n";
+		echo "Channel $channel должен быть длиннее 2 символов\n";
+		echo "ExtraChannel $extrachannel должен быть длиннее 2 символов\n";
+		echo "queryCID $queryCID должен быть длиннее 14 символов\n";
+		echo "exten $exten должен быть указан\n";
+		echo "ext_context $ext_context должен быть указан\n";
+		echo "ext_priority $ext_priority должен быть указан\n";
+		echo "\nRedirect Action не отправлен\n";
 		if (ereg("SECOND|FIRST|DEBUG",$filename))
 			{
 			if ($WeBRooTWritablE > 0)
@@ -986,8 +1395,8 @@ if ($ACTION=="RedirectXtraCXNeW")
 			else
 				{
 				$channel_liveX=0;
-				echo "Cannot find empty vicidial_conference на $server_ip, Redirect команда не введена\n|$stmt|";
-				if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "Не могу найти свободную конференцию на $server_ip";}
+				echo "Cannot find empty vicidial_conference на $server_ip, Redirect команда не включена\n|$stmt|";
+				if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "Не найдена свободная конференция на $server_ip";}
 				}
 			}
 
@@ -1008,8 +1417,8 @@ if ($ACTION=="RedirectXtraCXNeW")
 			if ($rowx[0]==0)
 				{
 				$channel_liveX=0;
-				echo "Channel $channel это не активно на $call_server_ip, Redirect команда не введена\n";
-				if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel это не активно на $call_server_ip";}
+				echo "Channel $channel не активен на $call_server_ip, Redirect команда не включена\n";
+				if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel не активен на $call_server_ip";}
 				}	
 			}
 		$stmt="SELECT count(*) FROM live_channels where server_ip = '$server_ip' and channel='$extrachannel';";
@@ -1027,11 +1436,11 @@ if ($ACTION=="RedirectXtraCXNeW")
 			if ($rowx[0]==0)
 				{
 				$channel_liveY=0;
-				echo "Channel $channel это не активно на $server_ip, Redirect команда не введена\n";
-				if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel это не активно на $server_ip";}
+				echo "Channel $channel не активен на $server_ip, Redirect команда не включена\n";
+				if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel не активен на $server_ip";}
 				}	
 			}
-		if ( ($channel_liveX==1) && ($channel_liveY==1) )
+		if ( ($channel_liveX==1) and ($channel_liveY==1) )
 			{
 			$stmt="SELECT count(*) FROM vicidial_live_agents where lead_id='$lead_id' and user!='$user';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
@@ -1041,7 +1450,7 @@ if ($ACTION=="RedirectXtraCXNeW")
 			if ($rowx[0] < 1)
 				{
 				$channel_liveY=0;
-				echo "No Local agent to send call to, Redirect команда не введена\n";
+				echo "No Local agent to send call to, Redirect команда не включена\n";
 				if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "No Local agent to send call to";}
 				}	
 			else
@@ -1077,7 +1486,7 @@ if ($ACTION=="RedirectXtraCXNeW")
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02044',$user,$server_ip,$session_name,$one_mysql_log);}
 
-				echo "RedirectXtraCX посылать команду для Канал $channel на $call_server_ip and \nHungup $extrachannel на $server_ip\n";
+				echo "RedirectXtraCX команда отправлена Линия $channel на $call_server_ip and \nHungup $extrachannel на $server_ip\n";
 				if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel на $call_server_ip, Hungup $extrachannel на $server_ip";}
 				}
 			}
@@ -1124,21 +1533,21 @@ if ($ACTION=="RedirectXtraNeW")
 			{
 			$channel_liveX=0;
 			$channel_liveY=0;
-			echo "Одна из этих переменных это неправильно:\n";
-			echo "Channel $channel должно быть больше чем 2 символа\n";
-			echo "ExtraChannel $extrachannel должно быть больше чем 2 символа\n";
-			echo "queryCID $queryCID должно быть больше чем 14 символов\n";
-			echo "exten $exten должен быть установлен\n";
-			echo "ext_context $ext_context должен быть установлен\n";
-			echo "ext_priority $ext_priority должен быть установлен\n";
-			echo "session_id $session_id должен быть установлен\n";
-			echo "\nRedirect Action не послано\n";
+			echo "Одна из этих переменных неверный:\n";
+			echo "Channel $channel должен быть длиннее 2 символов\n";
+			echo "ExtraChannel $extrachannel должен быть длиннее 2 символов\n";
+			echo "queryCID $queryCID должен быть длиннее 14 символов\n";
+			echo "exten $exten должен быть указан\n";
+			echo "ext_context $ext_context должен быть указан\n";
+			echo "ext_priority $ext_priority должен быть указан\n";
+			echo "session_id $session_id должен быть указан\n";
+			echo "\nRedirect Action не отправлен\n";
 			if (ereg("SECOND|FIRST|DEBUG",$filename))
 				{
 				if ($WeBRooTWritablE > 0)
 					{
 					$fp = fopen ("./vicidial_debug.txt", "a");
-					fwrite ($fp, "$NOW_TIME|RDX|$filename|$user|$campaign|$$channel|$extrachannel|$queryCID|$exten|$ext_context|ext_priority|$session_id|\n");
+					fwrite ($fp, "$NOW_TIME|RDX|$filename|$user|$campaign|$channel|$extrachannel|$queryCID|$exten|$ext_context|ext_priority|$session_id|\n");
 					fclose($fp);
 					}
 				}
@@ -1203,8 +1612,8 @@ if ($ACTION=="RedirectXtraNeW")
 				else
 					{
 					$channel_liveX=0;
-					echo "Cannot find empty vicidial_conference на $server_ip, Redirect команда не введена\n|$stmt|";
-					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "Не могу найти свободную конференцию на $server_ip";}
+					echo "Cannot find empty vicidial_conference на $server_ip, Redirect команда не включена\n|$stmt|";
+					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "Не найдена свободная конференция на $server_ip";}
 					}
 				}
 
@@ -1215,7 +1624,7 @@ if ($ACTION=="RedirectXtraNeW")
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02053',$user,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysql_fetch_row($rslt);
-			if ( ($row[0]==0) && (!ereg("SECOND",$filename)) )
+			if ( ($row[0]==0) and (!ereg("SECOND",$filename)) )
 				{
 				$stmt="SELECT count(*) FROM live_sip_channels where server_ip = '$call_server_ip' and channel='$channel';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
@@ -1225,8 +1634,8 @@ if ($ACTION=="RedirectXtraNeW")
 				if ($rowx[0]==0)
 					{
 					$channel_liveX=0;
-					echo "Channel $channel это не активно на $call_server_ip, Redirect команда не введена\n";
-					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel это не активно на $call_server_ip";}
+					echo "Channel $channel не активен на $call_server_ip, Redirect команда не включена\n";
+					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel не активен на $call_server_ip";}
 					}	
 				}
 			$stmt="SELECT count(*) FROM live_channels where server_ip = '$server_ip' and channel='$extrachannel';";
@@ -1234,7 +1643,7 @@ if ($ACTION=="RedirectXtraNeW")
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02055',$user,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysql_fetch_row($rslt);
-			if ( ($row[0]==0) && (!ereg("SECOND",$filename)) )
+			if ( ($row[0]==0) and (!ereg("SECOND",$filename)) )
 				{
 				$stmt="SELECT count(*) FROM live_sip_channels where server_ip = '$server_ip' and channel='$extrachannel';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
@@ -1244,11 +1653,11 @@ if ($ACTION=="RedirectXtraNeW")
 				if ($rowx[0]==0)
 					{
 					$channel_liveY=0;
-					echo "Channel $channel это не активно на $server_ip, Redirect команда не введена\n";
-					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel это не активно на $server_ip";}
+					echo "Channel $channel не активен на $server_ip, Redirect команда не включена\n";
+					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel не активен на $server_ip";}
 					}	
 				}
-			if ( ($channel_liveX==1) && ($channel_liveY==1) )
+			if ( ($channel_liveX==1) and ($channel_liveY==1) )
 				{
 				if ( ($server_ip=="$call_server_ip") or (strlen($call_server_ip)<7) )
 					{
@@ -1257,7 +1666,7 @@ if ($ACTION=="RedirectXtraNeW")
 					$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02057',$user,$server_ip,$session_name,$one_mysql_log);}
 
-					echo "RedirectXtra посылать команду для Канал $channel and \nExtraChannel $extrachannel\n to $exten на $server_ip\n";
+					echo "RedirectXtra команда отправлена Линия $channel and \nExtraChannel $extrachannel\n to $exten на $server_ip\n";
 					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel and $extrachannel to $exten на $server_ip";}
 					}
 				else
@@ -1284,7 +1693,7 @@ if ($ACTION=="RedirectXtraNeW")
 					$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02059',$user,$server_ip,$session_name,$one_mysql_log);}
 
-					echo "RedirectXtra посылать команду для Канал $channel на $call_server_ip and \nExtraChannel $extrachannel\n to $exten на $server_ip\n";
+					echo "RedirectXtra команда отправлена Линия $channel на $call_server_ip and \nExtraChannel $extrachannel\n to $exten на $server_ip\n";
 					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel/$call_server_ip and $extrachannel/$server_ip to $exten";}
 					}
 				}
@@ -1345,13 +1754,13 @@ if ($ACTION=="Redirect")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15)  or (strlen($exten)<1)  or (strlen($ext_context)<1)  or (strlen($ext_priority)<1) )
 		{
 		$channel_live=0;
-		echo "Одна из этих переменных это неправильно:\n";
-		echo "Channel $channel должно быть больше чем 2 символа\n";
-		echo "queryCID $queryCID должно быть больше чем 14 символов\n";
-		echo "exten $exten должен быть установлен\n";
-		echo "ext_context $ext_context должен быть установлен\n";
-		echo "ext_priority $ext_priority должен быть установлен\n";
-		echo "\nRedirect Action не послано\n";
+		echo "Одна из этих переменных неверный:\n";
+		echo "Channel $channel должен быть длиннее 2 символов\n";
+		echo "queryCID $queryCID должен быть длиннее 14 символов\n";
+		echo "exten $exten должен быть указан\n";
+		echo "ext_context $ext_context должен быть указан\n";
+		echo "ext_priority $ext_priority должен быть указан\n";
+		echo "\nRedirect Action не отправлен\n";
 		}
 	else
 		{
@@ -1371,7 +1780,7 @@ if ($ACTION=="Redirect")
 			if ($rowx[0]==0)
 				{
 				$channel_live=0;
-				echo "Channel $channel это не активно на $server_ip, Redirect команда не введена\n";
+				echo "Channel $channel не активен на $server_ip, Redirect команда не включена\n";
 				}	
 			}
 		if ($channel_live==1)
@@ -1381,7 +1790,7 @@ if ($ACTION=="Redirect")
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02064',$user,$server_ip,$session_name,$one_mysql_log);}
 
-			echo "Redirect посылать команду для Канал $channel на $server_ip\n";
+			echo "Redirect команда отправлена Линия $channel на $server_ip\n";
 			}
 		}
 	}
@@ -1403,7 +1812,7 @@ if ( ($ACTION=="Monitor") || ($ACTION=="StopMonitor") )
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($filename)<8) )
 		{
 		$channel_live=0;
-		echo "Channel $channel это неправильно or queryCID $queryCID это неправильно or filename: $filename это неправильно, $ACTION команда не введена\n";
+		echo "Channel $channel неверный or queryCID $queryCID неверный or filename: $filename неверный, $ACTION команда не включена\n";
 		}
 	else
 		{
@@ -1422,7 +1831,7 @@ if ( ($ACTION=="Monitor") || ($ACTION=="StopMonitor") )
 			if ($rowx[0]==0)
 				{
 				$channel_live=0;
-				echo "Channel $channel это не активно на $server_ip, $ACTION команда не введена\n";
+				echo "Channel $channel не активен на $server_ip, $ACTION команда не включена\n";
 				}	
 			}
 		if ($channel_live==1)
@@ -1468,7 +1877,7 @@ if ( ($ACTION=="Monitor") || ($ACTION=="StopMonitor") )
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02071',$user,$server_ip,$session_name,$one_mysql_log);}
 					}
 				}
-			echo "$ACTION посылать команду для Канал $channel на $server_ip\nFilename: $filename\nRecorDing_ID: $recording_id\n";
+			echo "$ACTION команда отправлена Линия $channel на $server_ip\nFilename: $filename\nRecorDing_ID: $recording_id\n";
 			}
 		}
 	}
@@ -1490,7 +1899,7 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 	if ( (strlen($exten)<3) or (strlen($channel)<4) or (strlen($filename)<8) )
 		{
 		$channel_live=0;
-		echo "Channel $channel это неправильно or exten $exten это неправильно or filename: $filename это неправильно, $ACTION команда не введена\n";
+		echo "Channel $channel неверный or exten $exten неверный or filename: $filename неверный, $ACTION команда не включена\n";
 		}
 	else
 		{
@@ -1624,7 +2033,7 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 				$i++;
 				}
 			}
-			echo "$ACTION посылать команду для Канал $channel на $server_ip\nFilename: $filename\nRecorDing_ID: $recording_id\n ЗАПИСЬ МОЖЕТ ПРОДОЛЖАТЬСЯ ДО 60 МИН.\n";
+			echo "$ACTION команда отправлена Линия $channel на $server_ip\nFilename: $filename\nRecorDing_ID: $recording_id\n ЗАПИСЬ БУДЕТ ПРОДОЛЖАТЬСЯ ДО 60 МИНУТ\n";
 		}
 	}
 
@@ -1639,7 +2048,7 @@ if ($ACTION=="VolumeControl")
 	{
 	if ( (strlen($exten)<1) or (strlen($channel)<1) or (strlen($stage)<1) or (strlen($queryCID)<1) )
 		{
-		echo "Конференция $exten, Stage $stage это неправильно or queryCID $queryCID это неправильно, Originate команда не введена\n";
+		echo "Конференция $exten, Stage $stage неверный or queryCID $queryCID неверный, Originate команда не включена\n";
 		}
 	else
 		{
@@ -1656,7 +2065,7 @@ if ($ACTION=="VolumeControl")
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02082',$user,$server_ip,$session_name,$one_mysql_log);}
-		echo "Volume посылать команду для Конференция $exten, Stage $stage Канал $channel на $server_ip\n";
+		echo "Volume команда отправлена Конференция $exten, Stage $stage Линия $channel на $server_ip\n";
 		}
 	}
 
@@ -1673,7 +2082,7 @@ if ($ACTION=="VolumeControl")
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $StarTtime);
-if ($format=='debug') {echo "\n<!-- время выполнения скрипта: $RUNtime секунды -->";}
+if ($format=='debug') {echo "\n<!-- время исполнения скрипта: $RUNtime секунд -->";}
 if ($format=='debug') {echo "\n</body>\n</html>\n";}
 	
 exit; 
@@ -1683,7 +2092,7 @@ exit;
 function mysql_error_logging($NOW_TIME,$link,$mel,$stmt,$query_id,$user,$server_ip,$session_name,$one_mysql_log)
 	{
 	$NOW_TIME = date("Y-m-d H:i:s");
-	#	mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00001',$user,$server_ip,$session_name,$one_mysql_log);
+	#	mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02001',$user,$server_ip,$session_name,$one_mysql_log);
 	$errno='';   $error='';
 	if ( ($mel > 0) or ($one_mysql_log > 0) )
 		{

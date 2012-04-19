@@ -109,8 +109,8 @@ if ($format=='debug')
 {
 echo "<html>\n";
 echo "<head>\n";
-echo "<!-- VERSIÓN: $version     CONSTRUCCION: $build    EXTEN: $exten   server_ip: $server_ip-->\n";
-echo "<title>Comprobar Extensión  Activa";
+echo "<!-- VERSIÓN: $version     CONSTRUCCIÓN: $build    EXTEN: $exten   server_ip: $server_ip-->\n";
+echo "<title>Revisar la extensión activa";
 echo "</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -270,7 +270,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- tiempo de ejecución del Script: $RUNtime segundos -->";
+	echo "\n<!-- tiempo de ejecución del guión: $RUNtime segundos -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

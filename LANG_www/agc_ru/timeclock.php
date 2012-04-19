@@ -9,10 +9,11 @@
 # 80525-2351 - Added an audit log that is not to be editable
 # 80602-0641 - Fixed status update bug
 # 90508-0727 - Changed to PHP long tags
+# 100621-1023 - Added admin_web_directory variable
 #
 
-$version = '2.2.0-5';
-$build = '90508-0727';
+$version = '2.2.0-6';
+$build = '100621-1023';
 
 $StarTtimE = date("U");
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -87,7 +88,7 @@ require("dbconnect.php");
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,admin_home_url FROM system_settings;";
+$stmt = "SELECT use_non_latin,admin_home_url,admin_web_directory FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -95,8 +96,9 @@ $i=0;
 while ($i < $qm_conf_ct)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =	$row[0];
-	$welcomeURL =	$row[1];
+	$non_latin =			$row[0];
+	$welcomeURL =			$row[1];
+	$admin_web_directory =	$row[2];
 	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
@@ -120,10 +122,10 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 	if ($valid_user < 1)
 		{
 		### NOT A VALID USER/PASS
-		$VDdisplayMESSAGE = "Пользователя и пароль, которые вы вступили, не действующих в системе<BR>Пожалуйста, повторите попытку:";
+		$VDdisplayMESSAGE = "Имя и пароль, введенные Вами, системе неизвестны<BR>Пожалуйста, попробуйте еще раз:";
 
 		echo"<HTML><HEAD>\n";
-		echo"<TITLE>AgentTimeclock</TITLE>\n";
+		echo"<TITLE>Agent Табельные часы</TITLE>\n";
 		echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 		echo"</HEAD>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -138,14 +140,14 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 		echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Timeclock </B></TD>";
+		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Табельные часы </B></TD>";
 		echo "</TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>Логин Пользователя:  </TD>";
+		echo "<TR><TD ALIGN=RIGHT>Ваше имя:  </TD>";
 		echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=user SIZE=10 maxlength=20 VALUE=\"$VD_login\"></TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>Пароль Пользователя:  </TD>";
+		echo "<TR><TD ALIGN=RIGHT>Ваш пароль:  </TD>";
 		echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 maxlength=20 VALUE=''></TD></TR>\n";
-		echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=SUBMIT VALUE=SUBMIT> &nbsp; </TD></TR>\n";
+		echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=ВВОД VALUE=ВВОД> &nbsp; </TD></TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>ВЕРСИЯ: $version &nbsp; &nbsp; &nbsp; СБОРКА: $build</TD></TR>\n";
 		echo "</TABLE>\n";
 		echo "</FORM>\n\n";
@@ -224,11 +226,11 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			}
 		if ( ($last_action_sec < 30) and ($status != 'START') )
 			{
-			### You cannot log in or out within 30 секунды of your last login/logout
-			$VDdisplayMESSAGE = "Вы не можете войти или в течение 30 секунд после вашего последнего входа в систему или Logout";
+			### You cannot log in or out within 30 секунд of your last login/logout
+			$VDdisplayMESSAGE = "Нельзя войти или выйти из системы в течение 30 секунд после последнего входа или выхода";
 
 			echo"<HTML><HEAD>\n";
-			echo"<TITLE>AgentTimeclock</TITLE>\n";
+			echo"<TITLE>Agent Табельные часы</TITLE>\n";
 			echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 			echo"</HEAD>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -243,14 +245,14 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 			echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 			echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Timeclock </B></TD>";
+			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Табельные часы </B></TD>";
 			echo "</TR>\n";
 			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-			echo "<TR><TD ALIGN=RIGHT>Логин Пользователя:  </TD>";
+			echo "<TR><TD ALIGN=RIGHT>Ваше имя:  </TD>";
 			echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=user SIZE=10 maxlength=20 VALUE=\"$VD_login\"></TD></TR>\n";
-			echo "<TR><TD ALIGN=RIGHT>Пароль Пользователя:  </TD>";
+			echo "<TR><TD ALIGN=RIGHT>Ваш пароль:  </TD>";
 			echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 maxlength=20 VALUE=''></TD></TR>\n";
-			echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=SUBMIT VALUE=SUBMIT> &nbsp; </TD></TR>\n";
+			echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=ВВОД VALUE=ВВОД> &nbsp; </TD></TR>\n";
 			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>ВЕРСИЯ: $version &nbsp; &nbsp; &nbsp; СБОРКА: $build</TD></TR>\n";
 			echo "</TABLE>\n";
 			echo "</FORM>\n\n";
@@ -264,8 +266,8 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			{
 			if ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='login') )
 				{
-				$VDdisplayMESSAGE = "You have now logged-in";
-				$LOGtimeMESSAGE = "You logged in at $NOW_TIME";
+				$VDdisplayMESSAGE = "Вы вошли в систему";
+				$LOGtimeMESSAGE = "Вы вошли в систему в $NOW_TIME";
 
 				### Add a record to the timeclock log
 				$stmt="INSERT INTO vicidial_timeclock_log set event='LOGIN', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', event_date='$NOW_TIME';";
@@ -292,8 +294,8 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 			if ( ($status=='LOGIN') and ($stage=='logout') )
 				{
-				$VDdisplayMESSAGE = "Вы уже зарегистрированы отказа";
-				$LOGtimeMESSAGE = "Вы вошли на$NOW_TIME<BR>Количество раз, когда вы были зарегистрированы в:$totTIME_HMS";
+				$VDdisplayMESSAGE = "Вы вышли из системы";
+				$LOGtimeMESSAGE = "Вы вышли из системы в $NOW_TIME<BR>Время, проведенное Вами в системе: $totTIME_HMS";
 
 				### Add a record to the timeclock log
 				$stmt="INSERT INTO vicidial_timeclock_log set event='LOGOUT', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
@@ -333,24 +335,24 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				}
 
 			if ( ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='logout') ) or ( ($status=='LOGIN') and ($stage=='login') ) )
-				{echo "ОШИБКА: timeclock вход вход уже сделал:$status|$stage";  exit;}
+				{echo "ОШИБКА: запись в журнале табельных часов уже сделана: $status|$stage";  exit;}
 
 			if ($referrer=='agent') 
-				{$BACKlink = "<A HREF=\"./vicidial.php?pl=$phone_login&pp=$phone_pass&VD_login=$user\"><font color=\"#003333\">BACK TO Агент Логин экрана</font></A>";}
+				{$BACKlink = "<A HREF=\"./vicidial.php?pl=$phone_login&pp=$phone_pass&VD_login=$user\"><font color=\"#003333\">ВОЗВРАТ к странице агентского входа в систему</font></A>";}
 			if ($referrer=='admin') 
-				{$BACKlink = "<A HREF=\"../vicidial/admin.php\"><font color=\"#003333\">BACK TO администрации</font></A>";}
+				{$BACKlink = "<A HREF=\"/$admin_web_directory/admin.php\"><font color=\"#003333\">ВОЗВРАТ к администрированию</font></A>";}
 			if ($referrer=='welcome') 
-				{$BACKlink = "<A HREF=\"$welcomeURL\"><font color=\"#003333\">BACK приветствовать экрана</font></A>";}
+				{$BACKlink = "<A HREF=\"$welcomeURL\"><font color=\"#003333\">ВОЗВРАТ к странице приветствия</font></A>";}
 
 			echo"<HTML><HEAD>\n";
-			echo"<TITLE>AgentTimeclock</TITLE>\n";
+			echo"<TITLE>Agent Табельные часы</TITLE>\n";
 			echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 			echo"</HEAD>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 			echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 			echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 			echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Timeclock </B></TD>";
+			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Табельные часы </B></TD>";
 			echo "</TR>\n";
 			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 			echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=3><B> $LOGtimeMESSAGE<BR>&nbsp; </B></TD></TR>\n";
@@ -368,21 +370,21 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 		if ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') )
 			{
-			$VDdisplayMESSAGE = "Время с момента вашего последнего входа в:$totTIME_HMS";
+			$VDdisplayMESSAGE = "Время после Вашего входа в систему:$totTIME_HMS";
 			$log_action = 'login';
 			$button_name = 'LOGIN';
-			$LOGtimeMESSAGE = "Вы последнего зарегистрированного по адресу:$last_action_date<BR><BR>Нажмите кнопку Вход для входа в";
+			$LOGtimeMESSAGE = "Ваш последний выход из системы был произведен в: $last_action_date<BR><BR>Кликните ВОЙТИ ниже для входа в систему";
 			}
 		if ($status=='LOGIN')
 			{
-			$VDdisplayMESSAGE = "Количество раз, когда вы вышли в:$totTIME_HMS";
+			$VDdisplayMESSAGE = "Время, проведенное Вами в системе: $totTIME_HMS";
 			$log_action = 'logout';
 			$button_name = 'LOGOUT';
-			$LOGtimeMESSAGE = "Вы вошли в по адресу: $last_action_date<BR>Количество раз, когда вы вышли в:$totTIME_HMS<BR><BR>Нажмите LOGOUT для входа из";
+			$LOGtimeMESSAGE = "Вы вошли в систему в: $last_action_date<BR>Время, проведенное Вами в системе: $totTIME_HMS<BR><BR>Кликните ВЫЙТИ для выхода из системы";
 			}
 
 		echo"<HTML><HEAD>\n";
-		echo"<TITLE>AgentTimeclock</TITLE>\n";
+		echo"<TITLE>Agent Табельные часы</TITLE>\n";
 		echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 		echo"</HEAD>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -400,7 +402,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 		echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Timeclock </B></TD>";
+		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Табельные часы </B></TD>";
 		echo "</TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 		echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=3><B> $LOGtimeMESSAGE<BR>&nbsp; </B></TD></TR>\n";
@@ -421,7 +423,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 else
 	{
 	echo"<HTML><HEAD>\n";
-	echo"<TITLE>AgentTimeclock</TITLE>\n";
+	echo"<TITLE>Agent Табельные часы</TITLE>\n";
 	echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 	echo"</HEAD>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -436,14 +438,14 @@ else
 	echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 	echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-	echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Timeclock </B></TD>";
+	echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Табельные часы </B></TD>";
 	echo "</TR>\n";
 	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Логин Пользователя:  </TD>";
+	echo "<TR><TD ALIGN=RIGHT>Ваше имя:  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=user SIZE=10 maxlength=20 VALUE=\"$VD_login\"></TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Пароль Пользователя:  </TD>";
+	echo "<TR><TD ALIGN=RIGHT>Ваш пароль:  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 maxlength=20 VALUE=''></TD></TR>\n";
-	echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=SUBMIT VALUE=SUBMIT> &nbsp; </TD></TR>\n";
+	echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=ВВОД VALUE=ВВОД> &nbsp; </TD></TR>\n";
 	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>ВЕРСИЯ: $version &nbsp; &nbsp; &nbsp; СБОРКА: $build</TD></TR>\n";
 	echo "</TABLE>\n";
 	echo "</FORM>\n\n";

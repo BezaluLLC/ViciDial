@@ -4,7 +4,7 @@
 
 // default settins
 var A_TCALDEF = {
-	'months' : ['Enero', 'February', 'Marcha', 'Abril', 'Puede', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+	'months' : ['Enero', 'February', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
 	'weekdays' : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
 	'yearscroll': true, // show year scroller
 	'weekstart': 0, // first day of week: 0-Su or 1-Mo

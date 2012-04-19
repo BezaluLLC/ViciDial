@@ -126,7 +126,7 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
   if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Недопустимо Username/Пароль: |$user|$pass|\n";
+    echo "Неверный Имя агента/Пароль: |$user|$pass|\n";
     exit;
 	}
   else
@@ -134,7 +134,7 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
-		echo "Недопустимо server_ip: |$server_ip|  or  Недопустимо session_name: |$session_name|\n";
+		echo "Неверный server_ip: |$server_ip|  or  Неверный session_name: |$session_name|\n";
 		exit;
 		}
 	else
@@ -146,7 +146,7 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 		$SNauth=$row[0];
 		  if($SNauth==0)
 			{
-			echo "Недопустимо session_name: |$session_name|$server_ip|\n";
+			echo "Неверный session_name: |$session_name|$server_ip|\n";
 			exit;
 			}
 		  else
@@ -161,11 +161,11 @@ if ($format=='table')
 echo "<html>\n";
 echo "<head>\n";
 echo "<!-- ВЕРСИЯ: $version     СБОРКА: $build    ADD: $ADD   server_ip: $server_ip-->\n";
-echo "<title>Показывать Списки: ";
-if ($ADD==1)		{echo "Активные расширения";}
-if ($ADD==2)		{echo "Занятые Расширения";}
-if ($ADD==3)		{echo "Внешние Линии";}
-if ($ADD==4)		{echo "Локальные Расширения";}
+echo "<title>Отображение списка: ";
+if ($ADD==1)		{echo "Активные номера";}
+if ($ADD==2)		{echo "Занятые номера";}
+if ($ADD==3)		{echo "Внешние линии";}
+if ($ADD==4)		{echo "Местные номера";}
 if ($ADD==5)		{echo "Конференции";}
 if ($ADD==99999)	{echo "ПОМОЩЬ";}
 echo "</title>\n";
@@ -470,7 +470,7 @@ if ($ADD==5)
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $StarTtime);
-if ($format=='table') {echo "\n<!-- время выполнения скрипта: $RUNtime секунды -->";}
+if ($format=='table') {echo "\n<!-- время исполнения скрипта: $RUNtime секунд -->";}
 if ($format=='table') {echo "\n</body>\n</html>\n";}
 	
 exit; 

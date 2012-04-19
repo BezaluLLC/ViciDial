@@ -9,10 +9,11 @@
 # 80525-2351 - Added an audit log that is not to be editable
 # 80602-0641 - Fixed status update bug
 # 90508-0727 - Changed to PHP long tags
+# 100621-1023 - Added admin_web_directory variable
 #
 
-$version = '2.2.0-5';
-$build = '90508-0727';
+$version = '2.2.0-6';
+$build = '100621-1023';
 
 $StarTtimE = date("U");
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -87,7 +88,7 @@ require("dbconnect.php");
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,admin_home_url FROM system_settings;";
+$stmt = "SELECT use_non_latin,admin_home_url,admin_web_directory FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -95,8 +96,9 @@ $i=0;
 while ($i < $qm_conf_ct)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =	$row[0];
-	$welcomeURL =	$row[1];
+	$non_latin =			$row[0];
+	$welcomeURL =			$row[1];
+	$admin_web_directory =	$row[2];
 	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
@@ -123,7 +125,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		$VDdisplayMESSAGE = "Användaren och lösenordet du har skrivit in är inte aktivt i systemet<BR>Vänligen försök igen:";
 
 		echo"<HTML><HEAD>\n";
-		echo"<TITLE>AgentStämpelklocka</TITLE>\n";
+		echo"<TITLE>Agent Stämpelklocka</TITLE>\n";
 		echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 		echo"</HEAD>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -138,7 +140,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 		echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Stämpelklocka </B></TD>";
+		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Stämpelklocka </B></TD>";
 		echo "</TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 		echo "<TR><TD ALIGN=RIGHT>Användare:  </TD>";
@@ -146,7 +148,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		echo "<TR><TD ALIGN=RIGHT>Lösenord:  </TD>";
 		echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 maxlength=20 VALUE=''></TD></TR>\n";
 		echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=SKICKA VALUE=SKICKA> &nbsp; </TD></TR>\n";
-		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; SKAPA: $build</TD></TR>\n";
+		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
 		echo "</TABLE>\n";
 		echo "</FORM>\n\n";
 		echo "</body>\n\n";
@@ -228,7 +230,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			$VDdisplayMESSAGE = "Du kan inte logga in eller ut på 30 sekunder efter ditt senaste försök";
 
 			echo"<HTML><HEAD>\n";
-			echo"<TITLE>AgentStämpelklocka</TITLE>\n";
+			echo"<TITLE>Agent Stämpelklocka</TITLE>\n";
 			echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 			echo"</HEAD>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -243,7 +245,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 			echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 			echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Stämpelklocka </B></TD>";
+			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Stämpelklocka </B></TD>";
 			echo "</TR>\n";
 			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 			echo "<TR><TD ALIGN=RIGHT>Användare:  </TD>";
@@ -251,7 +253,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			echo "<TR><TD ALIGN=RIGHT>Lösenord:  </TD>";
 			echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 maxlength=20 VALUE=''></TD></TR>\n";
 			echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=SKICKA VALUE=SKICKA> &nbsp; </TD></TR>\n";
-			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; SKAPA: $build</TD></TR>\n";
+			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
 			echo "</TABLE>\n";
 			echo "</FORM>\n\n";
 			echo "</body>\n\n";
@@ -264,8 +266,8 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			{
 			if ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='login') )
 				{
-				$VDdisplayMESSAGE = "You have now logged-in";
-				$LOGtimeMESSAGE = "You logged in at $NOW_TIME";
+				$VDdisplayMESSAGE = "Du har nu inloggade";
+				$LOGtimeMESSAGE = "Du loggat in på $NOW_TIME";
 
 				### Add a record to the timeclock log
 				$stmt="INSERT INTO vicidial_timeclock_log set event='LOGIN', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', event_date='$NOW_TIME';";
@@ -292,8 +294,8 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 			if ( ($status=='LOGIN') and ($stage=='logout') )
 				{
-				$VDdisplayMESSAGE = "Du har nu loggats ur";
-				$LOGtimeMESSAGE = "Du loggade ur kl$NOW_TIME<BR>Inloggad tid:$totTIME_HMS";
+				$VDdisplayMESSAGE = "Du har nu loggats ut";
+				$LOGtimeMESSAGE = "Du loggade ut kl $NOW_TIME<BR>Inloggad tid: $totTIME_HMS";
 
 				### Add a record to the timeclock log
 				$stmt="INSERT INTO vicidial_timeclock_log set event='LOGOUT', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
@@ -333,29 +335,29 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				}
 
 			if ( ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='logout') ) or ( ($status=='LOGIN') and ($stage=='login') ) )
-				{echo "ERROR: stämpelklockan har redan använts:$status|$stage";  exit;}
+				{echo "ERROR: stämpelklockan har redan använts: $status|$stage";  exit;}
 
 			if ($referrer=='agent') 
 				{$BACKlink = "<A HREF=\"./vicidial.php?pl=$phone_login&pp=$phone_pass&VD_login=$user\"><font color=\"#003333\">TILLBAKA till inloggningssidan</font></A>";}
 			if ($referrer=='admin') 
-				{$BACKlink = "<A HREF=\"../vicidial/admin.php\"><font color=\"#003333\">TILLBAKA till administration</font></A>";}
+				{$BACKlink = "<A HREF=\"/$admin_web_directory/admin.php\"><font color=\"#003333\">TILLBAKA till administration</font></A>";}
 			if ($referrer=='welcome') 
 				{$BACKlink = "<A HREF=\"$welcomeURL\"><font color=\"#003333\">TILLBAKA till välkomstssidan</font></A>";}
 
 			echo"<HTML><HEAD>\n";
-			echo"<TITLE>AgentStämpelklocka</TITLE>\n";
+			echo"<TITLE>Agent Stämpelklocka</TITLE>\n";
 			echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 			echo"</HEAD>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 			echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 			echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 			echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Stämpelklocka </B></TD>";
+			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Stämpelklocka </B></TD>";
 			echo "</TR>\n";
 			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 			echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=3><B> $LOGtimeMESSAGE<BR>&nbsp; </B></TD></TR>\n";
 			echo "<TR><TD ALIGN=CENTER COLSPAN=2><B> $BACKlink <BR>&nbsp; </B></TD></TR>\n";
-			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; SKAPA: $build</TD></TR>\n";
+			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
 			echo "</TABLE>\n";
 			echo "</body>\n\n";
 			echo "</html>\n\n";
@@ -368,21 +370,21 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 		if ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') )
 			{
-			$VDdisplayMESSAGE = "Tid sen du senast loggade in:$totTIME_HMS";
+			$VDdisplayMESSAGE = "Tid sen du senast loggade in: $totTIME_HMS";
 			$log_action = 'login';
 			$button_name = 'LOGIN';
-			$LOGtimeMESSAGE = "Du loggade senast ur kl:$last_action_date<BR><BR>Klicka på LOGIN nedan för att logga in";
+			$LOGtimeMESSAGE = "Du loggade senast ut kl: $last_action_date<BR><BR>Klicka på LOGIN nedan för att logga in";
 			}
 		if ($status=='LOGIN')
 			{
-			$VDdisplayMESSAGE = "Hur lång tid du varit inloggad:$totTIME_HMS";
+			$VDdisplayMESSAGE = "Hur lång tid du varit inloggad: $totTIME_HMS";
 			$log_action = 'logout';
 			$button_name = 'LOGOUT';
-			$LOGtimeMESSAGE = "Du loggade in kl: $last_action_date<BR>Hur lång tid du varit inloggad:$totTIME_HMS<BR><BR>Klicka på LOGOUT nedan för att logga ut";
+			$LOGtimeMESSAGE = "Du loggade in kl: $last_action_date<BR>Hur lång tid du varit inloggad: $totTIME_HMS<BR><BR>Klicka på LOGOUT nedan för att logga ut";
 			}
 
 		echo"<HTML><HEAD>\n";
-		echo"<TITLE>AgentStämpelklocka</TITLE>\n";
+		echo"<TITLE>Agent Stämpelklocka</TITLE>\n";
 		echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 		echo"</HEAD>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -400,12 +402,12 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 		echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Stämpelklocka </B></TD>";
+		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Stämpelklocka </B></TD>";
 		echo "</TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 		echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=3><B> $LOGtimeMESSAGE<BR>&nbsp; </B></TD></TR>\n";
 		echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=$button_name VALUE=$button_name> &nbsp; </TD></TR>\n";
-		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; SKAPA: $build</TD></TR>\n";
+		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
 		echo "</TABLE>\n";
 		echo "</FORM>\n\n";
 		echo "</body>\n\n";
@@ -421,7 +423,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 else
 	{
 	echo"<HTML><HEAD>\n";
-	echo"<TITLE>AgentStämpelklocka</TITLE>\n";
+	echo"<TITLE>Agent Stämpelklocka</TITLE>\n";
 	echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 	echo"</HEAD>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -436,7 +438,7 @@ else
 	echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 	echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-	echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Stämpelklocka </B></TD>";
+	echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Stämpelklocka </B></TD>";
 	echo "</TR>\n";
 	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>Användare:  </TD>";
@@ -444,7 +446,7 @@ else
 	echo "<TR><TD ALIGN=RIGHT>Lösenord:  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 maxlength=20 VALUE=''></TD></TR>\n";
 	echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=SKICKA VALUE=SKICKA> &nbsp; </TD></TR>\n";
-	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; SKAPA: $build</TD></TR>\n";
+	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
 	echo "</TABLE>\n";
 	echo "</FORM>\n\n";
 	echo "</body>\n\n";

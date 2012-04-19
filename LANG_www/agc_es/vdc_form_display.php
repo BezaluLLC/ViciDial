@@ -1,7 +1,7 @@
 <?php
 # vdc_form_display.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed display the contents of the FORM tab in the agent 
 # interface, as well as take submission of the form submission when the agent 
@@ -12,10 +12,14 @@
 # 100703-1124 - Added submit_button,admin_submit fields, which will log to admin log
 # 100712-2322 - Added code to log vicidial_list.entry_list_id field if data altered
 # 100916-1749 - Added non-lead variable parsing
+# 110719-0856 - Added HIDEBLOB type
+# 110730-2335 - Added call_id variable
+# 111025-1433 - Fixed case sensitivity on list fields
+# 120315-1729 - Filtere out single quotes and backslashes from custom fields
 #
 
-$version = '2.4-4';
-$build = '100916-1749';
+$version = '2.4-8';
+$build = '120315-1729';
 
 require("dbconnect.php");
 require_once("functions.php");
@@ -138,6 +142,8 @@ if (isset($_GET["xfercallid"]))				{$xfercallid=$_GET["xfercallid"];}
 	elseif (isset($_POST["xfercallid"]))	{$xfercallid=$_POST["xfercallid"];}
 if (isset($_GET["agent_log_id"]))			{$agent_log_id=$_GET["agent_log_id"];}
 	elseif (isset($_POST["agent_log_id"]))	{$agent_log_id=$_POST["agent_log_id"];}
+if (isset($_GET["call_id"]))			{$call_id=$_GET["call_id"];}
+	elseif (isset($_POST["call_id"]))	{$call_id=$_POST["call_id"];}
 if (isset($_GET["web_vars"]))			{$web_vars=$_GET["web_vars"];}
 	elseif (isset($_POST["web_vars"]))	{$web_vars=$_POST["web_vars"];}
 
@@ -281,6 +287,8 @@ if ($stage=='SUBMIT')
 
 			if (isset($_GET["$field_name_id"]))				{$form_field_value=$_GET["$field_name_id"];}
 				elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
+			$form_field_value = preg_replace("/\'/","",$form_field_value);	// remove single-quote
+			$form_field_value = preg_replace("/\\b/","",$form_field_value);	// remove backslashes
 
 			if ( ($A_field_type[$o]=='MULTI') or ($A_field_type[$o]=='CHECKBOX') or ($A_field_type[$o]=='RADIO') )
 				{
@@ -306,13 +314,13 @@ if ($stage=='SUBMIT')
 
 			$A_field_value[$o] = $form_field_value;
 
-			if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') or ($A_field_type[$o]=='HIDDEN') or ($A_field_type[$o]=='READONLY') )
+			if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') or ($A_field_type[$o]=='HIDDEN') or ($A_field_type[$o]=='HIDEBLOB') or ($A_field_type[$o]=='READONLY') )
 				{
 				$A_field_value[$o]='----IGNORE----';
 				}
 			else
 				{
-				if (preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
+				if (preg_match("/\|$A_field_label[$o]\|/i",$vicidial_list_fields))
 					{
 					$VL_update_SQL .= "$A_field_label[$o]='$A_field_value[$o]',";
 					}

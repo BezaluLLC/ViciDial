@@ -1,7 +1,7 @@
 <?php
 # vdc_script_display.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed display the contents of the SCRIPT tab in the agent interface
 #
@@ -15,10 +15,12 @@
 # 100823-1644 - Added DID variables
 # 100902-1344 - Added closecallid, xfercallid, agent_log_id variables
 # 110420-1201 - Added web_vars variable
+# 110730-2339 - Added call_id variable
+# 120227-2017 - Added parsing of IGNORENOSCROLL option in script to force scroll
 #
 
-$version = '2.4-9';
-$build = '110420-1201';
+$version = '2.4-11';
+$build = '120227-2017';
 
 require("dbconnect.php");
 
@@ -186,6 +188,8 @@ if (isset($_GET["CF_uses_custom_fields"]))			{$CF_uses_custom_fields=$_GET["CF_u
 	elseif (isset($_POST["CF_uses_custom_fields"]))	{$CF_uses_custom_fields=$_POST["CF_uses_custom_fields"];}
 if (isset($_GET["entry_list_id"]))			{$entry_list_id=$_GET["entry_list_id"];}
 	elseif (isset($_POST["entry_list_id"]))	{$entry_list_id=$_POST["entry_list_id"];}
+if (isset($_GET["call_id"]))			{$call_id=$_GET["call_id"];}
+	elseif (isset($_POST["call_id"]))	{$call_id=$_POST["call_id"];}
 if (isset($_GET["web_vars"]))			{$web_vars=$_GET["web_vars"];}
 	elseif (isset($_POST["web_vars"]))	{$web_vars=$_POST["web_vars"];}
 
@@ -475,6 +479,7 @@ $script_text = eregi_replace('--A--closecallid--B--',"$closecallid",$script_text
 $script_text = eregi_replace('--A--xfercallid--B--',"$xfercallid",$script_text);
 $script_text = eregi_replace('--A--agent_log_id--B--',"$agent_log_id",$script_text);
 $script_text = eregi_replace('--A--entry_list_id--B--',"$entry_list_id",$script_text);
+$script_text = eregi_replace('--A--call_id--B--',"$call_id",$script_text);
 $script_text = eregi_replace('--A--web_vars--B--',"$web_vars",$script_text);
 
 if ($CF_uses_custom_fields=='Y')
@@ -505,12 +510,12 @@ $script_text = stripslashes($script_text);
 echo "<!-- IFRAME$IFRAME -->\n";
 echo "<!-- $script_id -->\n";
 echo "<TABLE WIDTH=$script_width><TR><TD>\n";
-if ( ($IFRAME < 1) and ($ScrollDIV > 0) )
-	{ echo "<div class=\"scroll_script\" id=\"NewScriptContents\">";}
+if ( ( ($IFRAME < 1) and ($ScrollDIV > 0) ) or (eregi("IGNORENOSCROLL",$script_text)) )
+	{echo "<div class=\"scroll_script\" id=\"NewScriptContents\">";}
 echo "<center><B>$script_name</B><BR></center>\n";
 echo "$script_text\n";
-if ( ($IFRAME < 1) and ($ScrollDIV > 0) )
-	{ echo "</div>";}
+if ( ( ($IFRAME < 1) and ($ScrollDIV > 0) ) or (eregi("IGNORENOSCROLL",$script_text)) )
+	{echo "</div>";}
 echo "</TD></TR></TABLE>\n";
 
 exit;

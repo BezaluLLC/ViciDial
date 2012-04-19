@@ -109,7 +109,7 @@ if ($format=='debug')
 {
 echo "<html>\n";
 echo "<head>\n";
-echo "<!-- VERSION: $version     SKAPA: $build    EXTEN: $exten   server_ip: $server_ip-->\n";
+echo "<!-- VERSION: $version     BUILD: $build    EXTEN: $exten   server_ip: $server_ip-->\n";
 echo "<title>Kolla aktiv anknytning";
 echo "</title>\n";
 echo "</head>\n";

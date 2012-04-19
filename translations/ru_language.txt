@@ -27,6 +27,7 @@ agc|functions.php|1
 agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
+agc|phone_only.php|0
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"ЯНВ"|
@@ -42,6 +43,7 @@ agc|calendar_db.js|0
 "NOV"|"НОЯ"|
 "DEC"|"ДЕК"|
 \./images/|../agc/images/|
+css/|../agc/css/|
 BORDER|Border|
 VALUE=SUBMIT|VALUE=SUBMIT|
 TYPE=SUBMIT|TYPE=Submit|
@@ -52,357 +54,365 @@ Spanish|Испанский|
 French|Французский|
 German|Немецкий|
 Italian|Итальянский|
-agc_check_voicemail_BLINK.gif|agc_check_voicemail_BLINK.gif|
-agc_check_voicemail_OFF.gif|agc_check_voicemail_OFF.gif|
-agc_check_voicemail_ON.gif|agc_check_voicemail_ON.gif|
-agc_live_call_OFF.gif|agc_live_call_OFF.gif|
-agc_live_call_ON.gif|agc_live_call_ON.gif|
-agc_tab_active_lines.gif|agc_tab_active_lines.gif|
-agc_tab_conferences.gif|agc_tab_conferences.gif|
-agc_tab_main.gif|agc_tab_main.gif|
-vdc_LB_dialnextnumber.gif|vdc_LB_dialnextnumber.gif|
-vdc_LB_dialnextnumber_OFF.gif|vdc_LB_dialnextnumber_OFF.gif|
-vdc_LB_grabparkedcall.gif|vdc_LB_grabparkedcall.gif|
-vdc_LB_hangupcustomer.gif|vdc_LB_hangupcustomer.gif|
-vdc_LB_hangupcustomer_OFF.gif|vdc_LB_hangupcustomer_OFF.gif|
-vdc_LB_parkcall.gif|vdc_LB_parkcall.gif|
-vdc_LB_parkcall_OFF.gif|vdc_LB_parkcall_OFF.gif|
-vdc_LB_pause.gif|vdc_LB_pause.gif|
-vdc_LB_pause_OFF.gif|vdc_LB_pause_OFF.gif|
-vdc_LB_resume.gif|vdc_LB_resume.gif|
-vdc_LB_resume_OFF.gif|vdc_LB_resume_OFF.gif|
-vdc_LB_startrecording.gif|vdc_LB_startrecording.gif|
-vdc_LB_stoprecording.gif|vdc_LB_stoprecording.gif|
-vdc_LB_transferconf.gif|vdc_LB_transferconf.gif|
-vdc_LB_transferconf_OFF.gif|vdc_LB_transferconf_OFF.gif|
-vdc_LB_webform.gif|vdc_LB_webform.gif|
-vdc_LB_webform_OFF.gif|vdc_LB_webform_OFF.gif|
-vdc_XB_blindtransfer.gif|vdc_XB_blindtransfer.gif|
-vdc_XB_blindtransfer_OFF.gif|vdc_XB_blindtransfer_OFF.gif|
-vdc_XB_dialwithcustomer.gif|vdc_XB_dialwithcustomer.gif|
-vdc_XB_dialwithcustomer_OFF.gif|vdc_XB_dialwithcustomer_OFF.gif|
-vdc_XB_hangupbothlines.gif|vdc_XB_hangupbothlines.gif|
-vdc_XB_hangupbothlines_OFF.gif|vdc_XB_hangupbothlines_OFF.gif|
-vdc_XB_hangupxferline.gif|vdc_XB_hangupxferline.gif|
-vdc_XB_hangupxferline_OFF.gif|vdc_XB_hangupxferline_OFF.gif|
-vdc_XB_internalcloser.gif|vdc_XB_internalcloser.gif|
-vdc_XB_internalcloser_OFF.gif|vdc_XB_internalcloser_OFF.gif|
-vdc_XB_leave3waycall.gif|vdc_XB_leave3waycall.gif|
-vdc_XB_leave3waycall_OFF.gif|vdc_XB_leave3waycall_OFF.gif|
-vdc_XB_localcloser.gif|vdc_XB_localcloser.gif|
-vdc_XB_localcloser_OFF.gif|vdc_XB_localcloser_OFF.gif|
-vdc_XB_parkcustomerdial.gif|vdc_XB_parkcustomerdial.gif|
-vdc_XB_parkcustomerdial_OFF.gif|vdc_XB_parkcustomerdial_OFF.gif|
-vdc_XB_hotkeysactive.gif|vdc_XB_hotkeysactive.gif|
-vdc_XB_hotkeysactive_OFF.gif|vdc_XB_hotkeysactive_OFF.gif|
-vdc_LB_senddtmf.gif|vdc_LB_senddtmf.gif|
-vdc_LB_senddtmf_OFF.gif|vdc_LB_senddtmf_OFF.gif|
-vdc_XB_header.gif|vdc_XB_header.gif|
-vdc_XB_number.gif|vdc_XB_number.gif|
-vdc_XB_channel.gif|vdc_XB_channel.gif|
-vdc_XB_seconds.gif|vdc_XB_seconds.gif|
-vdc_tab_script.gif|vdc_tab_script.gif|
+agc_check_voicemail_BLINK.gif|agc_check_voicemail_BLINK_ru.gif|
+agc_check_voicemail_OFF.gif|agc_check_voicemail_OFF_ru.gif|
+agc_check_voicemail_ON.gif|agc_check_voicemail_ON_ru.gif|
+agc_live_call_DEAD.gif|agc_live_call_DEAD_ru.gif|
+agc_live_call_OFF.gif|agc_live_call_OFF_ru.gif|
+agc_live_call_ON.gif|agc_live_call_ON_ru.gif|
+agc_tab_active_lines.gif|agc_tab_active_lines_ru.gif|
+agc_tab_conferences.gif|agc_tab_conferences_ru.gif|
+agc_tab_main.gif|agc_tab_main_ru.gif|
+vdc_LB_dialnextnumber.gif|vdc_LB_dialnextnumber_ru.gif|
+vdc_LB_dialnextnumber_OFF.gif|vdc_LB_dialnextnumber_OFF_ru.gif|
+vdc_LB_grabparkedcall.gif|vdc_LB_grabparkedcall_ru.gif|
+vdc_LB_hangupcustomer.gif|vdc_LB_hangupcustomer_ru.gif|
+vdc_LB_hangupcustomer_OFF.gif|vdc_LB_hangupcustomer_OFF_ru.gif|
+vdc_LB_parkcall.gif|vdc_LB_parkcall_ru.gif|
+vdc_LB_parkcall_OFF.gif|vdc_LB_parkcall_OFF_ru.gif|
+vdc_LB_pause.gif|vdc_LB_pause_ru.gif|
+vdc_LB_pause_OFF.gif|vdc_LB_pause_OFF_ru.gif|
+vdc_LB_resume.gif|vdc_LB_resume_ru.gif|
+vdc_LB_resume_OFF.gif|vdc_LB_resume_OFF_ru.gif|
+vdc_LB_startrecording.gif|vdc_LB_startrecording_ru.gif|
+vdc_LB_startrecording_OFF.gif|vdc_LB_startrecording_OFF_ru.gif|
+vdc_LB_stoprecording.gif|vdc_LB_stoprecording_ru.gif|
+vdc_LB_transferconf.gif|vdc_LB_transferconf_ru.gif|
+vdc_LB_transferconf_OFF.gif|vdc_LB_transferconf_OFF_ru.gif|
+vdc_LB_webform.gif|vdc_LB_webform_ru.gif|
+vdc_LB_webform_OFF.gif|vdc_LB_webform_OFF_ru.gif|
+vdc_LB_webform_two.gif|vdc_LB_webform_two_ru.gif|
+vdc_LB_webform_two_OFF.gif|vdc_LB_webform_two_OFF_ru.gif|
+vdc_XB_blindtransfer.gif|vdc_XB_blindtransfer_ru.gif|
+vdc_XB_blindtransfer_OFF.gif|vdc_XB_blindtransfer_OFF_ru.gif|
+vdc_XB_dialwithcustomer.gif|vdc_XB_dialwithcustomer_ru.gif|
+vdc_XB_dialwithcustomer_OFF.gif|vdc_XB_dialwithcustomer_OFF_ru.gif|
+vdc_XB_hangupbothlines.gif|vdc_XB_hangupbothlines_ru.gif|
+vdc_XB_hangupbothlines_OFF.gif|vdc_XB_hangupbothlines_OFF_ru.gif|
+vdc_XB_hangupxferline.gif|vdc_XB_hangupxferline_ru.gif|
+vdc_XB_hangupxferline_OFF.gif|vdc_XB_hangupxferline_OFF_ru.gif|
+vdc_XB_internalcloser.gif|vdc_XB_internalcloser_ru.gif|
+vdc_XB_internalcloser_OFF.gif|vdc_XB_internalcloser_OFF_ru.gif|
+vdc_XB_leave3waycall.gif|vdc_XB_leave3waycall_ru.gif|
+vdc_XB_leave3waycall_OFF.gif|vdc_XB_leave3waycall_OFF_ru.gif|
+vdc_XB_localcloser.gif|vdc_XB_localcloser_ru.gif|
+vdc_XB_localcloser_OFF.gif|vdc_XB_localcloser_OFF_ru.gif|
+vdc_XB_parkcustomerdial.gif|vdc_XB_parkcustomerdial_ru.gif|
+vdc_XB_parkcustomerdial_OFF.gif|vdc_XB_parkcustomerdial_OFF_ru.gif|
+vdc_XB_hotkeysactive.gif|vdc_XB_hotkeysactive_ru.gif|
+vdc_XB_hotkeysactive_OFF.gif|vdc_XB_hotkeysactive_OFF_ru.gif|
+vdc_LB_senddtmf.gif|vdc_LB_senddtmf_ru.gif|
+vdc_LB_senddtmf_OFF.gif|vdc_LB_senddtmf_OFF_ru.gif|
+vdc_XB_header.gif|vdc_XB_header_ru.gif|
+vdc_XB_number.gif|vdc_XB_number_ru.gif|
+vdc_XB_channel.gif|vdc_XB_channel_ru.gif|
+vdc_XB_seconds.gif|vdc_XB_seconds_ru.gif|
+vdc_tab_script.gif|vdc_tab_script_ru.gif|
+vdc_volume_MUTE.gif|vdc_volume_MUTE.gif|
+vdc_volume_UNMUTE.gif|vdc_volume_UNMUTE.gif|
 You have now logged out. Thank you|Вы вышли из системы. Спасибо|
-astGUIclient web-client VERSION|Версия web-клиента astGUIclient |
-astGUIclient web client|web-клиент astGUIclient|
-VICIDIAL web client|web-клиент VICIDIAL|
-VICIDIAL web-client version|Версия web-клиента VICIDIAL|
-You can only monitor Zap channels|Вы можете только контролировать Zap каналы|
-Stop Record|Остановить Запись|
-you are logged into this phone|вы зарегистрированы на телефон|
-Back to Main Window|Вернуться к Главному Окну|
-LIVE CALLS ON THIS PHONE|ЖИВЫЕ ВЫЗОВЫ НА ЭТОТ ТЕЛЕФОН|
-LIVE CALLS IN THIS CONFERENCE|ЖИВЫЕ ВЫЗОВЫ В ЭТОЙ КОНФЕРЕНЦИИ|
-LIVE CALL TRANSFER|ПЕРЕВОД ЖИВОГО ВЫЗОВА|
-CLIENT CHANNEL|КАНАЛ КЛИЕНТА|
-REMOTE CHANNEL|УДАЛЕННЫЙ КАНАЛ|
-CLICK HERE TO LOG IN AGAIN|КЛИКНИТЕ ЗДЕСЬ, ЧТОБЫ СНОВА ВОЙТИ|
-ACTIVE DISPLAY PAUSED|ACTIVE DISPLAY PAUSED|
-Main Panel|Главная Панель|
-Active Lines Panel|Панель Активных Линий|
-Conferences Panel|Панель Конференций|
-Check Voicemail|Проверьте Голосовую почту|
-Live Call|Живой Вызов|
+astGUIclient web-client VERSION|Версия веб-клиента astGUIclient|
+astGUIclient web client|Веб-клиент astGUIclient|
+VICIDIAL web client|Веб-клиент VICIDIAL|
+VICIDIAL web-client version|Версия веб-клиента VICIDIAL|
+Agent web-client version|Версия веб-клиента|
+You can only monitor Zap channels|Отслеживать можно только линии ISDN (ZAP)|
+Stop Record|Остановить запись|
+you are logged into this phone|Ваш телефон|
+Back to Main Window|Вернуться в главное окно|
+LIVE CALLS ON THIS PHONE|АКТИВНЫЕ ЗВОНКИ ДЛЯ ЭТОГО ТЕЛЕФОНА|
+LIVE CALLS IN THIS CONFERENCE|АКТИВНЫЕ ЗВОНКИ ДЛЯ ЭТОЙ КОНФЕРЕНЦИИ|
+LIVE CALL TRANSFER|ПЕРЕВОД АКТИВНОГО ЗВОНКА|
+CLIENT CHANNEL|ЛИНИЯ КЛИЕНТА|
+REMOTE CHANNEL|УДАЛЕННАЯ ЛИНИЯ|
+CLICK HERE TO LOG IN AGAIN|КЛИКНИТЕ ЗДЕСЬ ДЛЯ ПОВТОРНОГО ВХОДА В СИСТЕМУ|
+ACTIVE DISPLAY PAUSED|АКТИВНОЕ ОТОБРАЖЕНИЕ ПРИОСТАНОВЛЕНО|
+Main Panel|Главная панель|
+Active Lines Panel|Панель активных линий|
+Conferences Panel|Панель конференций|
+Check Voicemail|Проверить голосовую почту|
+Live Call|Активный звонок|
 Hangup Trunk|Hangup Trunk|
 Hijack Trunk|Hijack Trunk|
 Listen Trunk|Listen Trunk|
-Active Local Menu|Активное Локальное Меню|
+Active Local Menu|Активное местное меню|
 Hangup Local|Hangup Local|
 Hijack Local|Hijack Local|
 Listen Local|Listen Local|
-Channel to be transferred|Канал в который будет переведен|
-Extensions Menu|Меню Расширений|
-Send to selected extension|Отправить в выбранное расширение|
-Send to selected vmail box|Отправить в выбранный vmail box|
-Send to this number|Отправить в этот номер|
-click on a number below to send to a conference|кликните на номере ниже, чтобы отправить в конференцию|
-Send my channel too|Отправить также мой канал|
-Conferences Menu|Меню Конференций|
-LOCAL Extensions Dial|ЛОКАЛЬНОЕ Расширение Набора номера|
-Phone calling from|Телефонный вызов от|
-Call selected extension|Вызов в выбранное расширение|
-Call selected vmail box|Вызов в выбранный vmail box|
-LOCAL DIAL EXTENSIONS|ЛОКАЛЬНЫЕ РАСШИРЕНИЯ НАБОРА НОМЕРА|
-OUTBOUND CALLS|ИСХОДЯЩИЕ ВЫЗОВЫ|
-INBOUND CALLS|ВХОДЯЩИЕ ВЫЗОВЫ|
-Refresh rate|Норма обновлений|
-MANUAL DIAL|РУЧНОЙ НАБОР НОМЕРА|
-CALL DATE\/TIME|ЗВОНИТЬ ДАТА/ВРЕМЯ|
-LOCAL HANGUP|ЛОКАЛЬНВЙ HANGUP|
-PARKED CALLS|ПАРКОВАТЬ ВЫЗОВ|
-PARKED BY|ПАРКОВАНЫЙ|
+Channel to be transferred|Линия будет переключена|
+Extensions Menu|Меню номеров|
+Send to selected extension|Перевести на выбранный номер|
+Send to selected vmail box|Перевести на выбранный номер голосовой почты|
+Send to this number|Перевести на этот номер|
+click on a number below to send to a conference|кликните на номере внизу для отправки в конференцию|
+Send my channel too|Перевести также мою линию|
+Conferences Menu|Меню конференций|
+LOCAL Extensions Dial|Позвонить на МЕСТНЫЕ номера|
+Phone calling from|Телефон звонит от|
+Call selected extension|Позвонить на выбранный номер|
+Call selected vmail box|Позвонить на выбранный номер голосовой почты|
+LOCAL DIAL EXTENSIONS|МЕСТНЫЕ НОМЕРА ДЛЯ ВЫЗОВА|
+OUTBOUND CALLS|ИСХОДЯЩИЕ ЗВОНКИ|
+INBOUND CALLS|ВХОДЯЩИЕ ЗВОНКИ|
+Refresh rate|Темп обновления|
+MANUAL DIAL|РУЧНОЙ НАБОР|
+CALL DATE\/TIME|ДАТА И ВРЕМЯ ЗВОНКА|
+LOCAL HANGUP|МЕСТНЫЙ ОТБОЙ|
+PARKED CALLS|ЗАПАРКОВАННЫЕ ВЫЗОВЫ|
+PARKED BY|ЗАПАРКОВАНО|
 PARKED TIME|ВРЕМЯ ПАРКОВКИ|
-Registered to|Registered to|
-Enter Conference|Вход на Конференцию|
-Dial From Conf|Набор номера Conf|
-Active Extensions|Активные Расширения|
-Outside Lines|Внешние Линии|
-Local Extensions|Локальные Расширения|
-Data Goes Here|Данные Идут Сюда|
-Trunk Action|Trunk Action|
-Local Action|Local Action|
-Conferences List|Список Конференций|
-Click on a conference room number on the left for info on that conference|Для информации о конференции кликните на номер конференции слева|
-List Display|Показывать Списки|
-Live Extensions|Активные расширения|
-Busy Extensions|Занятые Расширения|
-Outside Lines|Внешние Линии|
-script runtime|время выполнения скрипта|
-Call Log Display|Показать Логи Вызовов|
-is not valid|это неправильно|
+Registered to|Зарегистрировано на|
+Enter Conference|Войти в конференцию|
+Dial From Conf|Позвонить из конференции|
+Active Extensions|Активные номера|
+Outside Lines|Внешние линии|
+Local Extensions|Местные номера|
+Data Goes Here|Данные идут сюда|
+Trunk Action|Операция над транком|
+Local Action|Местная операция|
+Conferences List|Список конференций|
+Click on a conference room number on the left for info on that conference|Кликните на номере конференции слева для сведений о ней|
+List Display|Отображение списка|
+Live Extensions|Активные номера|
+Busy Extensions|Занятые номера|
+Outside Lines|Внешние линии|
+script runtime|время исполнения скрипта|
+Call Log Display|Отображение журнала вызовов|
+is not valid|неверный|
 or protocol|или протокол|
-Conf Extension Check|Conf Extension Check|
-has been registered to|был зарегистрирован на|
-LIVE INBOUND CALL|ЖИВОЙ ВХОДЯЩИЙ ВЫЗОВ|
-Number Dialed|Набранный Номер|
-SEND TO MY VOICEMAIL|ПОСЛАТЬ В МОЙ VOICEMAIL|
-Live Extension Check|Live Extension Check|
-Manager Send|Отослать Менеджеру|
-command not inserted|команда не введена|
-command sent for|посылать команду для|
+Conf Extension Check|Проверка номера конференции|
+has been registered to|Был зарегистрирован|
+LIVE INBOUND CALL|АКТИВНЫЙ ВХОДЯЩИЙ ВЫЗОВ|
+Number Dialed|Набранный номер|
+SEND TO MY VOICEMAIL|ПЕРЕВЕСТИ НА МОЮ ГОЛОСОВУЮ ПОЧТУ|
+Live Extension Check|Проверка активного номера|
+Manager Send|Перевод менеджеру|
+command not inserted|команда не включена|
+command sent for|команда отправлена|
 One of these variables|Одна из этих переменных|
-must be greater than 2 characters|должно быть больше чем 2 символа|
-must be greater than 14 characters|должно быть больше чем 14 символов|
-must be set|должен быть установлен|
-not sent|не послано|
-Cannot find empty conference|Не могу найти свободную конференцию|
-is not live|это не активно|
-RECORDING WILL LAST UP TO 60 MINUTES|ЗАПИСЬ МОЖЕТ ПРОДОЛЖАТЬСЯ ДО 60 МИН.|
-Parked Calls Display|Показать Паркованные Вызовы|
-Database Query Script|Скрипт Запроса Базы Данных|
-Group Choice|Выбор Группы|
-has been registered to user|был зарегистрован пользователем|
-HOPPER EMPTY|ПУСТОЙ КОНТЕЙНЕР|
-LOG NOT ENTERED|LOG НЕ ВВЕДЕН|
+must be greater than 2 characters|должен быть длиннее 2 символов|
+must be greater than 14 characters|должен быть длиннее 14 символов|
+must be set|должен быть указан|
+not sent|не отправлен|
+Cannot find empty conference|Не найдена свободная конференция|
+is not live|не активен|
+RECORDING WILL LAST UP TO 60 MINUTES|ЗАПИСЬ БУДЕТ ПРОДОЛЖАТЬСЯ ДО 60 МИНУТ|
+Parked Calls Display|Отображение запаркованных вызовов|
+Database Query Script|Скрипт запроса базы данных|
+Group Choice|Выбор группы|
+has been registered to user|был зарегистрирован|
+HOPPER EMPTY|БУФЕР ПУСТ|
+LOG NOT ENTERED|ЖУРНАЛ НЕ УКАЗАН|
 has been changed to|был изменен на|
-information has been updated|информация обновлена|
-is now in status|новый статус|
-Voicemail Check|Проверка Voicemail|
-voicemail box|voicemail box|
-Re-Login|Re-Login|
-User Password|Пароль Пользователя|
-User Login|Логин Пользователя|
-Phone Login|Логин Телефона|
-Phone Password|Пароль Телефона|
-Campaign not active, please try again|Кампания не активна, пожалуйста, попробуйте еще раз|
-Login incorrect, please try again|Логин неправильный, пожалуйста, попробуйте еще раз|
-Campaign Login|Логин Кампании|
-Sorry, your phone login and password are not active in this system, please try again|Извините, но ваш логин и пароль телефона не активен в этой системе. Пожалуйста, попробуйте еще раз|
-leads left to call in hopper|Leads оставил вызовы в контейнере|
-CAMPAIGN CUSTOM PARKING|ПОЛЬЗОВАТЕЛЬСКИЙ РЕЖИМ ПАРКОВКИ КАМПАНИИ|
-CAMPAIGN DEFAULT PARKING|РЕЖИМ ПАРКОВКИ КАМПАНИИ ПО УМОЛЧАНИЮ|
-CAMPAIGN CUSTOM WEB FORM|ПОЛЬЗОВАТЕЛЬСКАЯ WEB-ФОРМА КАМПАНИИ|
-CAMPAIGN DEFAULT WEB FORM|WEB-ФОРМА КАМПАНИИ ПО УМОЛЧАНИЮ|
-CAMPAIGN ALLOWS CLOSERS|КАМПАНИЯ ПОЗВОЛЯЕТ CLOSERS|
-CAMPAIGN ALLOWS NO CLOSERS|КАМПАНИЯ НЕ ПОЗВОЛЯЕТ CLOSERS|
-USING PREVIOUS MEETME ROOM|ИСПОЛЬЗОВАНИЕ ПРЕДЫДУЩЕЙ MEETME ROOM|
-USING NEW MEETME ROOM|ИСПОЛЬЗОВАНИЕ НОВОЙ MEETME ROOM|
-old QUEUE and INCALL reverted list|old QUEUE and INCALL reverted list|
-old QUEUE and INCALL reverted hopper|old QUEUE and INCALL reverted hopper|
-old vicidial_live_agents records cleared|старые отчеты vicidial_live_agents очищены|
-campaign is set to auto_dial_level|кампания установлена в auto_dial_level|
-new vicidial_live_agents record inserted|новая vicidial_live_agents запись вставлено|
-campaign is set to manual dial|кампания установлена в ручной набор номера|
-Sorry, there are no leads in the hopper for this campaign|Жаль, но leads нет в контейнере этой кампании|
-Dial Next Number|Набрать следующий номер|
-LIVE CALLS IN YOUR SESSION|ЖИВЫЕ ВЫЗОВЫ В ВАШЕЙ СЕССИИ|
-Stop Recording|Остановить Запись|
-Start Recording|Начать Запись|
-Transfer number must have more than 1 digit|У номера перевода должно быть больше чем 1 цифра|
-Grab Parked Call|Захват Ожидающего Вызова|
-Park Call|Парковать Вызов|
-Waiting for Ring|Ожидание Кольца вызова|
-Called 3rd party|Вызов третьей стороны|
-LEAVE 3-WAY CALL|ОСТАВИТЬ 3-WAY ЗАПРОС|
-Dial With Customer|Набор номера С Клиентом|
-Park Customer Dial|Парковать Набор номера Клиента|
-Hangup Xfer Line|Разъединение Xfer Линии|
-Hangup Both Lines|Разъединить Обе Линии|
-Hangup Customer|Разъединить Клиента|
-Transfer - Conference|Перевод - Конференция|
-LOCAL CLOSER|ЛОКАЛЬНЫЙ CLOSER|
-INTERNAL CLOSER|ВНУТРЕННИЙ CLOSER|
-Dial Blind Transfer|Слепой Перевод Набора номера|
-Dial timed out, contact your system administrator|Превышено время ожидания набора номера, свяжитесь с сисадмином|
-No more leads in the hopper for campaign|Нет больше leads для кампании в контейнере|
-Web Form|Web Форма|
-You Must Select a Disposition|Вы Должны Выбрать Диспозицию|
-GROUPS NOT SELECTED|ГРУППЫ НЕ ВЫБРАНЫ|
+information has been updated|сведения были обновлены|
+is now in status|теперь находится в состоянии|
+Voicemail Check|Проверка голосовой почты|
+voicemail box|ящик голосовой почты|
+Re-Login|Повторный вход|
+User Password|Ваш пароль|
+User Login|Ваше имя|
+Phone Login|Ваш телефон|
+Phone Password|Пароль телефона|
+Campaign not active, please try again|Кампания не активна, попробуйте снова, пожалуйста|
+Login incorrect, please try again|Имя неверно, попробуйте еще раз, пожалуйста|
+Campaign Login|Вход в кампанию|
+Sorry, your phone login and password are not active in this system, please try again|Извините, Ваш телефон и его пароль не активировны в системе, попробуйте еще раз, пожалуйста|
+leads left to call in hopper|номера для обзвона в буфере|
+CAMPAIGN CUSTOM PARKING|ОСОБАЯ ПАРКОВКА ДЛЯ КАМПАНИИ|
+CAMPAIGN DEFAULT PARKING|ОБЫЧНАЯ ПАРКОВКА ДЛЯ КАМПАНИИ|
+CAMPAIGN CUSTOM WEB FORM|ОСОБАЯ ВЕБ-ФОРМА ДЛЯ КАМПАНИИ|
+CAMPAIGN DEFAULT WEB FORM|ОБЫЧНАЯ ВЕБ-ФОРМА ДЛЯ КАМПАНИИ|
+CAMPAIGN ALLOWS CLOSERS|КАМПАНИЯ РАЗРЕШАЕТ ЗАВЕРШЕНИЕ|
+CAMPAIGN ALLOWS NO CLOSERS|КАМПАНИЯ НЕ РАЗРЕШАЕТ ЗАВЕРШЕНИЕ|
+USING PREVIOUS MEETME ROOM|ИСПОЛЬЗУЕТСЯ ПРЕДЫДУЩАЯ КОНФЕРЕНЦИЯ|
+USING NEW MEETME ROOM|ИСПОЛЬЗУЕТСЯ НОВАЯ КОНФЕРЕНЦИЯ|
+old QUEUE and INCALL reverted list|старый обратный список для очереди и входящих|
+old QUEUE and INCALL reverted hopper|старый обратный буфер для очереди и входящих|
+old vicidial_live_agents records cleared|старые записи активных агентов очищены|
+campaign is set to auto_dial_level|в кампании установлен уровень автодозвона|
+new vicidial_live_agents record inserted|новая запись активного агента добавлена|
+campaign is set to manual dial|в кампании задан ручной дозвон|
+Sorry, there are no leads in the hopper for this campaign|Извините, в буфере нет номеров для кампании|
+Dial Next Number|Позвонить по следующему номеру|
+LIVE CALLS IN YOUR SESSION|АКТИВНЫЕ ЗВОНКИ В ВАШЕЙ СЕССИИ|
+Stop Recording|Остановить запись|
+Start Recording|Начать запись|
+Transfer number must have more than 1 digit|В номере для перевода должно быть больше 1 цифры|
+Grab Parked Call|Отпарковать вызов|
+Park Call|Запарковать вызов|
+Waiting for Ring|Ожидание звонка|
+Called 3rd party|Третья сторона в вызове|
+LEAVE 3-WAY CALL|Покинуть трехсторонний вызов|
+Dial With Customer|Набрать с клиентом|
+Park Customer Dial|Запарковать вызов клиента|
+Hangup Xfer Line|Отключить линию перевода|
+Hangup Both Lines|Отключить обе линии|
+Hangup Customer|Завершить вызов|
+Transfer - Conference|Перевод - конференция|
+LOCAL CLOSER|МЕСТНОЕ ЗАВЕРШЕНИЕ|
+INTERNAL CLOSER|ВНУТРЕННЕ ЗАВЕРШЕНИЕ|
+Dial Blind Transfer|Перевести вслепую|
+Dial timed out, contact your system administrator|Время дозвона истекло, свяжитесь со своим системным администратором|
+No more leads in the hopper for campaign|В буфере больше нет номеров для кампании|
+Web Form|Веб-форма|
+You Must Select a Disposition|Вы должны выбрать код завершения|
+GROUPS NOT SELECTED|НЕ ВЫБРАННЫЕ ГРУППЫ|
 SELECTED GROUPS|ВЫБРАННЫЕ ГРУППЫ|
-You cannot log out during a Dial attempt|Вы не можете выйти из системы во время попытки Набора номера|
-Wait 50 seconds for the dial to fail out if it is not answered|Ждите 50 секунд набора номера для явного 'нет ответа'|
-STILL A LIVE CALL! Hang it up then you can log out|ВСЕ ЕЩЕ АКТИВНЫЙ ЗАПРОС! Разъедините и тогда выходите из системы|
-Hide conference call channel information|Скрыть информацию о канале конференц-связи|
-Show conference call channel information|Показать информацию о канале конференц-связи|
-Logged in as User|Пользователь|
-No one is in your session|Никого нет в вашей сессии|
-Customer has hung up|Клиент разъединен|
-End-of-call Disposition Selection|Выбор Диспозиции End-of-call|
-CLOSER INBOUND GROUP SELECTION|ВЫБОР INBOUND ГРУППЫ CLOSER|
-Closer Inbound Group Selection|Closer Inbound Group Selection|
-BLENDED CALLING|BLENDED CALLING|
+You cannot log out during a Dial attempt|Нельзя выйти из системы во время дозвона|
+Wait 50 seconds for the dial to fail out if it is not answered|Если на звонок не отвечают, подождите 50 секунд до истечения времени дозвона|
+STILL A LIVE CALL! Hang it up then you can log out|ВЫЗОВ ВСЕ ЕЩЕ АКТИВЕН! Завершите его, а потом выходите из системы|
+Hide conference call channel information|Скрыть сведения о линии конференции|
+Show conference call channel information|Показать сведения о линии конференции|
+Logged in as User|Вход от имени|
+Noone is in your session|В Вашей сессии никого нет|
+Customer has hung up|Клиент повесил трубку|
+End-of-call Disposition Selection|Выбор кода завершения по окончании вызова|
+CALL DISPOSITION|КОД ЗАВЕРШЕНИЯ ВЫЗОВА|
+CLOSER INBOUND GROUP SELECTION|ВЫБОР ВХОДЯЩЕЙ ГРУППЫ|
+Closer Inbound Group Selection|Выбор входящей группы|
+BLENDED CALLING|Смешанный дозвон|
 outbound activated|исходящие активированы|
-Preview the Lead then|Просмотр Lead тогда|
-Lead was not reverted, there was an error|Lead не вернулся, была ошибка|
-call was not placed, there was an error|вызов не был обслужен, была ошибка|
-Number to call|Номер для вызова|
-Customer Information|Информация Клиента|
-Lead Dispositioned As|Lead Диспозицию как|
-Any changes made to the customer information below at this time will not be comitted, You must change customer information before you Hangup the call|Any changes made to the customer information below at this time will not be comitted, You must change customer information before you Hangup the call|
-When active, simply press the keyboard key for the desired disposition for this call. The call will then be hungup and dispositioned automatically|Когда активно, просто нажмите клавишу желаемой диспозиции для этого запроса. Тогда запрос будет автоматически разъединен и dispositioned|
-Disposition Hot Keys|Горячие Клавиши Диспозиции|
-Cust Time|Cust Время|
-RECORD ID|ID ЗАПИСИ|
+Preview the Lead then|Предпросмотр сведений о номере|
+Lead was not reverted, there was an error|Номер не был возвращен из-за ошибки|
+call was not placed, there was an error|вызов не был произведен из-за ошибки|
+Number to call|Вызываемый номер|
+Customer Information|Сведения о клиенте|
+Lead Dispositioned As|Вызов завершен с кодом|
+Any changes made to the customer information below at this time will not be comitted, You must change customer information before you Hangup the call|Любые изменения в сведениях о клиенте, произведенные в настоящий момент не будут сохранены. Это нужно делать до завершения вызова|
+When active, simply press the keyboard key for the desired disposition for this call. The call will then be hungup and dispositioned automatically|Если включено, просто нажмите клавишу выбора кода завершения. Вызов будет завершен автоматически|
+Disposition Hot Keys|Клавиши кодов завершения|
+Cust Time|Время|
+RECORD ID|КОД ЗАПИСИ|
 RECORDING FILE|ФАЙЛ ЗАПИСИ|
-HOT KEYS ACTIVE|АКТИВНЫЕ ГОРЯЧИЕ КЛАВИШИ|
-HOT KEYS INACTIVE|НЕАКТИВНЫЕ ГОРЯЧИЕ КЛАВИШИ|
-DIAL OVERRIDE|НАБЕРИТЕ ОТМЕНУ|
-SKIP LEAD|ПРОПУСТИТЬ LEAD|
-DIAL LEAD|НАБОР LEAD|
-LEAD PREVIEW|ПРЕДВАРИТЕЛЬНЫЙ ПРОСМОТР LEAD|
-PAUSE AGENT DIALING|ПАУЗА ВЫЗОВА|
-DISPOSITION CALL|DISPOSITION CALL|
- session ID| ID сессии|
- to campaign| в кампанию|
-Select a CallBack Date|Выберите дату для CallBack|
- maximize| максимизировать|
- minimize| минимизировать|
+HOT KEYS ACTIVE|КЛАВИШИ КОДОВ ВКЛЮЧЕНЫ|
+HOT KEYS INACTIVE|КЛАВИШИ КОДОВ ВЫКЛЮЧЕНЫ|
+DIAL OVERRIDE|НАБОР ДРУГОГО НОМЕРА|
+SKIP LEAD|ПРОПУСТИТЬ НОМЕР|
+DIAL LEAD|НАБРАТЬ НОМЕР|
+LEAD PREVIEW|ПРЕДПРОСМОСТР СВЕДЕНИЙ О НОМЕРЕ|
+PAUSE AGENT DIALING|ПРИОСТАНОВИТЬ ДОЗВОН АГЕНТА|
+DISPOSITION CALL|ЗАВЕРШИТЬ ВЫЗОВ|
+ session ID| код сессии|
+ to campaign| в кампании|
+Select a CallBack Date|Выбрать дату обратного звонка|
+ maximize | увеличить |
+ minimize | уменьшить |
 You must choose a date|Вы должны выбрать дату|
-Select a Date Below|Выберите Дату Ниже|
-Click on a callback below to call the customer back now. If you click on a record below to call it, it will be removed from the list|Чтобы позвонить клиенту сейчас, кликните на callback ниже. Если Вы нажмете на record ниже, чтобы позвонить, то это будет удалено из списка|
-If you want to dial a number and have it NOT be added as a new lead, enter in the exact dialstring that you want to call in the Dial Override field below. To hangup this call you will have to open the CALLS IN THIS SESSION link at the bottom of the screen and hang it up by clicking on its channel link there|Если вы хотите набрать номер, но не добовлять новый lead, введите точный dialstring который вы хотите вызвать в поле Отмены Номера ниже. Для разъединения этого запроса вы должны будете открыть ссылку ЗАПРОСЫ В ЭТОЙ СЕССИИ внизу экрана, at the bottom of the screen and hang it up by clicking on its channel link there|
-YOU CANNOT SKIP A CALLBACK OR MANUAL DIAL, YOU MUST DIAL THE LEAD|ВЫ НЕ МОЖЕТЕ ПРОПУСТИТЬ ПОВТОРНЫЙ ЗВОНОК ИЛИ РУЧНОЙ НАБОР НОМЕРА, ВЫ ДОЛЖНЫ DIAL THE LEAD|
-YOU MUST BE PAUSED TO MANUAL DIAL A NEW LEAD IN AUTO-DIAL MODE|ВЫ ДОЛЖНЫ СДЕЛАТЬ ПАУЗУ РУЧНОГО НАБОРА НОМЕРА НОВЫЙ LEAD В РЕЖИМЕ АВТО НАБОРА НОМЕРА|
-Enter information below for the new lead you wish to call|Ведите информацию ниже для нового lead который вы хотите вызвать|
-YOU MUST BE PAUSED TO CHECK CALLBACKS IN AUTO-DIAL MODE|ВЫ ДОЛЖНЫ СДЕЛАТЬ ПАУЗУ, ЧТОБЫ ПРОВЕРИТЬ ВЫЗОВЫ В РЕЖИМЕ АВТОМАТИЧЕСКОГО НАБОРА НОМЕРА|
-Note: all new manual dial leads will go into list 999|Примечание: все новые leads ручного набора номера войдут в список 999|
-YOU DO NOT HAVE PERMISSIONS TO TRANSFER CALLS|У ВАС НЕТ РАЗРЕШЕНИЯ ДЛЯ ПЕРЕВОДА ВЫЗОВА|
-will be added to the beginning of this number|будет добавлен в начале этого номера|
-This is usually a 1 in the USA-Canada|Обычно 7 для России и некоторых стран СНГ|
-NEW MANUAL DIAL LEAD FOR|НОВЫЙ LEAD РУЧНОЙ НАБОР НОМЕРА ДЛЯ|
-Finish and Disposition Call|Конец и Вызов Диспозиции|
-10 digits max - digits only|максимально 10 цифр - только цифры|
-Note: a dial prefix of|Примечание: префикс набора номера |
-Hangup Again|Разъединить Снова|
+Select a Date Below|Выберите дату ниже|
+Click on a callback below to call the customer back now. If you click on a record below to call it, it will be removed from the list|Кликните на обратном вызове ниже, чтобы отзвониться клиенту. Если вы кликните на записи ниже для вызова, она будет удалена из списка|
+If you want to dial a number and have it NOT be added as a new lead, enter in the exact dialstring that you want to call in the Dial Override field below. To hangup this call you will have to open the CALLS IN THIS SESSION link at the bottom of the screen and hang it up by clicking on its channel link there|Если Вы хотите набрать номер, но не добавлять его в буфер, введите полный номер, который хотите вызвать, в поле ВВОД ДРУГОГО НОМЕРА ниже. Чтобы завершить этот вызов, Вам придется открыть ссылку ВЫЗОВЫ В ЭТОЙ СЕССИИ снизу на экране и завершить его кликом по ссылке на соответствующую линию|
+YOU CANNOT SKIP A CALLBACK OR MANUAL DIAL, YOU MUST DIAL THE LEAD|ОБРАТНЫЙ ВЫЗОВ ИЛИ РУЧНОЙ НАБОР ПРОПУСТИТЬ НЕЛЬЗЯ, ВЫ ДОЛЖНЫ ПРОИЗВЕСТИ ВЫЗОВ|
+YOU MUST BE PAUSED TO MANUAL DIAL A NEW LEAD IN AUTO-DIAL MODE|ЧТОБЫ ПРОИЗВЕСТИ РУЧНОЙ НАБОР В РЕЖИМЕ АВТОДОЗВОНА ВАМ НУЖНО БЫТЬ В СОСТОЯНИИ ПАУЗЫ|
+Enter information below for the new lead you wish to call|Введите сведения о номере, который Вы хотите вызвать|
+YOU MUST BE PAUSED TO CHECK CALLBACKS IN AUTO-DIAL MODE|ДЛЯ ПРОВЕРКИ ОБРАТНЫХ ВЫЗОВОВ В РЕЖИМЕ АВТОДОЗВОНА ВЫ ДОЛЖНЫ БЫТЬ В СОСТОЯНИИ ПАУЗЫ|
+Note: all new manual dial leads will go into list 999|Примечание: вре новые номера для ручного набора сохраняются в списке 999|
+YOU DO NOT HAVE PERMISSIONS TO TRANSFER CALLS|ВАМ НЕ РАЗРЕШЕНО ПЕРЕВОДИТЬ ВЫЗОВЫ|
+will be added to the beginning of this number|будет добавлено в начало этого номера|
+This is usually a 1 in the USA-Canada|В США и Канаде это обычно единица|
+NEW MANUAL DIAL LEAD FOR|НОВЫЙ РУЧНОЙ НАБОР НОМЕРА ДЛЯ|
+Finish and Disposition Call|Завершить вызов с кодом|
+10 digits max - digits only|не более 10 цифр - только цифры|
+Note: a dial prefix of|Примечание: префикс набора|
+Hangup Again|Снова завершить вызов|
 Go Back|Вернуться|
-Call Agent Again|Вызов Оператора Снова|
-MY CALLBACK ONLY|ТОЛЬКО МОИ CALLBACK|
-NO ACTIVE CALLBACKS|НЕТ АКТИВНЫХ CALLBACK|
-ACTIVE CALLBACKS|АКТИВНЫЕ CALLBACK|
-CALLBACKS FOR AGENT|CALLBACK ДЛЯ ОПЕРАТОРА|
-Dial Code:|Код страны:|
-Dial Override|Отмененный набор номера|
+Call Agent Again|Снова вызвать агента|
+MY CALLBACK ONLY|ТОЛЬКО МОИ ОБРАТНЫЕ ВЫЗОВЫ|
+NO ACTIVE CALLBACKS|НЕТ АКТИВНЫХ ОБРАТНЫХ ВЫЗОВОВ|
+ACTIVE CALLBACKS|АКТИВНЫЕ ОБРАТНЫЕ ВЫЗОВЫ|
+CALLBACKS FOR AGENT|ОБРАТНЫЕ ВЫЗОВЫ АГЕНТА|
+Dial Code:|Код набора:|
+Dial Override|Ввод другого номера|
 digits only please|только цифры, пожалуйста|
-Dial Now|Новый Набор номера|
-CB Comments|CB Комментарии|
-Title|Title|
-Your Status|Ваш Статус|
- STATUS| СТАТУС|
- RESET| RESET|
+Dial Now|Вызвать немедленно|
+CB Comments|Примечания|
+Title|Должность|
+Your Status|Ваше состояние|
+ STATUS| СОСТОЯНИЕ|
+ RESET| СБРОС|
 CLEAR FORM|ОЧИСТИТЬ ФОРМУ|
-SUBMIT|SUBMIT|
-Incoming|Входящий|
-Calling|Запрос|
-Called|Вызванный|
+SUBMIT|ВВОД|
+Incoming|Входящие|
+Calling|Вызываю|
+Called|Вызван|
 Campaign|Кампания|
-Status|Статус|
-Inserted|Введенный|
- seconds| секунды|
+Status|Состояние|
+Inserted|Добавлено|
+ seconds| секунд|
 HELP|ПОМОЩЬ|
- Login | Логин |
-Login:|Логин:|
-User |Пользователь |
+ Login | Вход |
+Login:|Имя:|
+User |Агент |
 Password|Пароль|
 VERSION|ВЕРСИЯ|
 BUILD|СБОРКА|
 Server|Сервер|
 RECORD |ЗАПИСЬ |
->HANGUP|>РАЗЪЕДИНЕНИЕ|
+>HANGUP|>ЗАВЕРШЕНИЕ|
 >XFER|>ПЕРЕВОД|
 PARK|ПАРКОВКА|
-IN-NUMBER|В-НОМЕР|
+IN-NUMBER|ВХОДЯЩИЙ-НОМЕР|
 NUMBER|НОМЕР|
-CALLERID|ВЫЗЫВАЮЩИЙID|
+CALLERID|CALLERID|
  CALL| ВЫЗОВ|
-PICKUP|PICKUP|
+PICKUP|ПЕРЕХВАТИТЬ|
 CONFERENCE|КОНФЕРЕНЦИЯ|
-Refresh|Обновление|
-Send DTMF|Послать DTMF|
-ORDER|ПОРЯДОК|
+Refresh|Обновить|
+Send DTMF|Набор DTMF|
+ORDER|ОРДЕР|
  on | на |
 >LOGOUT|>ВЫХОД|
- Channel| Канал|
-Extensions|Расширения|
+ Channel| Линия|
+Extensions|Номера|
 Conferences|Конференции|
 Conference|Конференция|
-Recording|Recording|
-Record|Record|
-Welcome|Добро пожаловать|
-VOICEMAIL|VOICEMAIL|
+Recording|Запись|
+Record|Запись|
+Welcome|Здравствуйте|
+VOICEMAIL|ГОЛОСОВАЯПОЧТА|
  NEW| НОВЫЙ|
  OLD| СТАРЫЙ|
  Pause | Пауза |
-Resume|Резюме|
+Resume|Работа|
 Faster|Быстрее|
-Slower|Медленее|
+Slower|Медленнее|
 Initializing|Инициализация|
-Invalid|Недопустимо|
-Username|Username|
+Invalid|Неверный|
+Username|Имя агента|
 Notes|Примечания|
 First|Имя|
-MI: |MI: |
+MI: |Отч: |
 Last|Фамилия|
 Address|Адрес|
 City|Город|
-State|Округ|
-PostCode|Индекс|
-Province|Область/Край|
-Vendor ID|ID Вендора|
-DialCode|Код|
-Alt. Phone|Альт. Телефон|
+State|Штат|
+PostCode|Почт.индекс|
+Province|Область|
+Vendor ID|Код п.|
+DialCode|Префикс|
+Alt. Phone|Доп. телефон|
 Show|Показать|
-Email|Email|
-Comments|Комментарии|
+Email|Эл.почта|
+Comments|Заметки|
 REFRESH|ОБНОВИТЬ|
-ALT PHONE DIAL|НАБРАТЬ АЛЬТ. НОМЕР|
+ALT PHONE DIAL|НАБОР ДОП.НОМЕРА|
 MAIN PHONE|ОСНОВНОЙ ТЕЛЕФОН|
-ALT PHONE|АЛЬТ. ТЕЛЕФОН|
-ADDRESS3|АДРЕСС 3|
-FINISH LEAD|ФИНИШ LEAD|
-Dial Alt Phone Number|Набор Альт.Номера|
-Phone|Телефон|
- DIAL| НАБОР НОМЕРА|
-SUBMIT FAVORITES CHANGES - requires logout|ПОДТВЕРДИТЕ ИЗМЕНЕНИЕ ИЗБРАННОГО - требование для выхода из системы|
-BACK TO MAIN WINDOW - ignore changes made|ВЕРНУТЬСЯ К ГЛАВНОМУ ОКНУ - игнорирует сделанные изменения|
-AVAILABLE EXTENSIONS|ДОСТУПНЫЕ РАСШИРЕНИЯ|
- edit|редактировать|
- FAVORITES|ИЗБРАННОЕ|
+ALT PHONE|ДОП.ТЕЛЕФОН|
+ADDRESS3|АДРЕС3|
+FINISH LEAD|ЗАВЕРШИТЬ|
+Dial Alt Phone Number|Вызвать доп.номер|
+Phone|телефон|
+ DIAL| ВЫЗОВ|
+SUBMIT FAVORITES CHANGES - requires logout|СОХРАНИТЬ ИЗМЕНЕНИЯ ПРЕДПОЧТЕНИЙ - нужно выйти|
+BACK TO MAIN WINDOW - ignore changes made|ВОЗВРАТ В ГЛАВНОЕ ОКНО - отмена произведенных изменений|
+AVAILABLE EXTENSIONS|ДОСТУПНЫЕ НОМЕРА|
+ edit| изменить|
+ FAVORITES| ПРЕДПОЧТЕНИЯ|
 ### END translation phrases through 1.1.11 release ###
-Search Existing Leads|Поиск Существующих Leads|
-This option if checked will attempt to find the phone number in the system before inserting it as a new lead|Если эта опция выбрана, то будет предпринята попытка найти телефонный номер в системе, прежде чем вставить его как новый lead|
-Finish Wrapup and Move On|Финиш Wrapup и Переход|
-seconds remaining in wrapup|секунд осталось в wrapup|
-Call Wrapup:|Call Wrapup:|
+Search Existing Leads|Искать в имеющихся номерах|
+This option if checked will attempt to find the phone number in the system before inserting it as a new lead|При включении этой функции перед добавлением номера в качестве нового, его наличие в системе перепроверяется|
+Finish Wrapup and Move On|Окончить передышку и продолжить|
+seconds remaining in wrapup|секунд до окончание передышки|
+Call Wrapup:|Передышка:|
 ### months of the year for CallBack date select screen ###
 January|Январь|
 Frebruary|Февраль|
@@ -417,77 +427,150 @@ October|Октябрь|
 November|Ноябрь|
 December|Декабрь|
 ### BEGIN translation phrases for 2.0.1 release ###
-Previous Callback Information|Предыдущая Информация о Callback|
-Last Call: |Последний Вызов:|
-CallBack: |CallBack:|
-Agent: |Оператор:|
-Comments: |Комментарии:|
+Previous Callback Information|Сведения о предыдущем обратном вызове|
+Last Call: |Последний вызов:|
+CallBack: |Обратный вызов:|
+Agent: |Агент:|
+Comments: |Заметки:|
 ### BEGIN translation phrases for 2.0.2 release ###
 VOLUME|ГРОМКОСТЬ|
 ### BEGIN translation phrases for 2.0.3 release ###
-FAST DIAL|БЫСТРЫЙ НАБОР НОМЕРА|
-YOU MUST ENTER A PHONE NUMBER AND DIAL CODE TO USE FAST DIAL|ЧТОБЫ ИСПОЛЬЗОВАТЬ БЫСТРЫЙ НАБОР НОМЕРА, ВЫ ДОЛЖНЫ ВВЕСТИ НОМЕР ТЕЛЕФОНА И КОД СТРАНЫ|
- SELECT A PAUSE CODE :| ВЫБЕРИТЕ КОД ПАУЗЫ :|
-ENTER A PAUSE CODE|ВВЕДИТЕ КОД ПАУЗЫ|
-YOU MUST BE PAUSED TO ENTER A PAUSE CODE IN AUTO-DIAL MODE|ВЫ ДОЛЖНЫ АКТИВИРОВАТЬ ПАУЗУ, ЧТОБЫ ВВЕСТИ КОД ПАУЗЫ В РЕЖИМЕ АВТО-НАБОРА|
+FAST DIAL|БЫСТРЫЙ НАБОР|
+YOU MUST ENTER A PHONE NUMBER AND DIAL CODE TO USE FAST DIAL|ДЛЯ БЫСТРОГО НАБОРА НУЖНО ВВЕСТИ НОМЕР И КОД НАБОРА|
+ SELECT A PAUSE CODE :| УКАЖИТЕ КОД ПАУЗЫ :|
+ENTER A PAUSE CODE|ВВЕСТИ КОД ПАУЗЫ|
+YOU MUST BE PAUSED TO ENTER A PAUSE CODE IN AUTO-DIAL MODE|В РЕЖИМЕ АВТОДОЗВОНА ДЛЯ ВВОДА КОДА ПАУЗЫ НУЖНО БЫТЬ В СОСТОЯНИИ ПАУЗЫ|
 Your session has been disabled|Ваша сессия отключена|
 ### BEGIN translation phrases for 2.0.5 release ###
 Gender: |Пол:|
 Date of Birth: |Дата рождения:|
-YOU MUST BE PAUSED TO CHANGE GROUPS|ТЫ ДОЛЖЕН БЫТЬ PAUSED сменить группу|
-Calls in Queue:|Звонки в очереди:|
- Timeclock|Timeclock|
-The user and password you entered are not active in the system|Пользователя и пароль, которые вы вступили, не действующих в системе|
-Please try again|Пожалуйста, повторите попытку|
-You cannot log in or out within 30 seconds of your last login or logout|Вы не можете войти или в течение 30 секунд после вашего последнего входа в систему или Logout|
-You have now logged-out|Вы уже зарегистрированы отказа|
-You logged out at |Вы вошли на|
-Amount of time you were logged-in: |Количество раз, когда вы были зарегистрированы в:|
-ERROR: timeclock log entry already made: |ОШИБКА: timeclock вход вход уже сделал:|
-BACK to Agent Login Screen|BACK TO Агент Логин экрана|
-BACK to Administration|BACK TO администрации|
-BACK to Welcome Screen|BACK приветствовать экрана|
-Time since you were last logged-in: |Время с момента вашего последнего входа в:|
-You last logged-out at: |Вы последнего зарегистрированного по адресу:|
-Click LOGIN below to log-in|Нажмите кнопку Вход для входа в|
-Amount of time you have been logged-in: |Количество раз, когда вы вышли в:|
-You logged-in at:|Вы вошли в по адресу:|
-Click LOGOUT below to log-out|Нажмите LOGOUT для входа из|
-Undefined|Undefined|
-This phone number is not in the campaign lists|Этот телефон не находится в списках кампании|
+YOU MUST BE PAUSED TO CHANGE GROUPS|ДЛЯ СМЕНЫ ГРУПП НУЖНО БЫТЬ В СОСТОЯНИИ ПАУЗЫ|
+Calls in Queue:|Вызовов в очереди:|
+ Timeclock| Табельные часы|
+The user and password you entered are not active in the system|Имя и пароль, введенные Вами, системе неизвестны|
+Please try again|Пожалуйста, попробуйте еще раз|
+You cannot log in or out within 30 seconds of your last login or logout|Нельзя войти или выйти из системы в течение 30 секунд после последнего входа или выхода|
+You have now logged-in|Вы вошли в систему|
+You have now logged-out|Вы вышли из системы|
+You logged in at |Вы вошли в систему в |
+You logged out at |Вы вышли из системы в |
+Amount of time you were logged-in: |Время, проведенное Вами в системе: |
+ERROR: timeclock log entry already made: |ОШИБКА: запись в журнале табельных часов уже сделана: |
+BACK to Agent Login Screen|ВОЗВРАТ к странице агентского входа в систему|
+BACK to Administration|ВОЗВРАТ к администрированию|
+BACK to Welcome Screen|ВОЗВРАТ к странице приветствия|
+Time since you were last logged-in: |Время после Вашего входа в систему:|
+You last logged-out at: |Ваш последний выход из системы был произведен в: |
+Click LOGIN below to log-in|Кликните ВОЙТИ ниже для входа в систему|
+Amount of time you have been logged-in: |Время, проведенное Вами в системе: |
+You logged-in at:|Вы вошли в систему в:|
+Click LOGOUT below to log-out|Кликните ВЫЙТИ для выхода из системы|
+Undefined|Не определено|
+This phone number is not in the campaign lists|Этого телефонного номера нет в списках кампании|
 Unspecified error|Неизвестная ошибка|
-Extended Alt Phone Information: |Расширенная информация Alt Телефон:|
-ALT DIAL NUMBER:|ALT номер:|
-Phone Code and Number:|Телефон кодекса и номер:|
+Extended Alt Phone Information: |Расширенные сведения о дополнительном номере:|
+ALT DIAL NUMBER:|ДОПОЛНИТЕЛЬНЫЙ НОМЕР:|
+Phone Code and Number:|Код набора и номер:|
 Notes: |Примечания:|
-Active: |Активно:|
-Alt Count: |Alt Кол-во:|
-Change this phone number to INACTIVE|Изменить этот телефонный номер НЕАКТИВНОЕ|
-Change this phone number to ACTIVE|Изменить этот телефонный номер АКТИВНЫМ|
-YOU MUST LOG IN TO THE TIMECLOCK FIRST|Вы должны войти в систему TIMECLOCK ПЕРВЫЙ|
-There is a time synchronization problem with your system, please tell your system administrator|Существует проблема синхронизации времени с вашей системой, пожалуйста, сообщите об этом вашему системному администратору|
-Preview Call|Предварительный Звоните|
-SELECT A GROUP ALIAS|ВЫБОР ГРУППЫ ALIAS|
-Group Alias Selection|Группа Alias выбора|
-Click Here to Choose a Group Alias|Нажмите здесь, чтобы Выбери группу Alias|
-Group Alias|Группа Alias|
-ERROR: There are no Shifts enabled for your user group|ОШИБКА: Есть сдвиги не включена для пользователя группы|
-ERROR: You are not allowed to log in outside of your shift|ОШИБКА: Вы не можете войти в вашу за переход|
-MANAGER OVERRIDE|МЕНЕДЖЕР Переопределить|
-Your Shift is over or has changed, you have been logged out of your session|Ваш Shift больше или изменилась, Вы вышли из Вашей сессии|
+Active: |Активный:|
+Alt Count: |Доп. счетчик:|
+Change this phone number to INACTIVE|Сделать этот номер НЕ АКТИВНЫМ|
+Change this phone number to ACTIVE|Сделать этот номер АКТИВНЫМ|
+YOU MUST LOG IN TO THE TIMECLOCK FIRST|СНАЧАЛА НУЖНО ОТМЕТИТЬСЯ В ТАБЕЛЬНЫХ ЧАСАХ|
+There is a time synchronization problem with your system, please tell your system administrator|В вашей системе есть ошибки синхронизации времени, сообщите, пожалуйста, своему системному администратору|
+Preview Call|Предпросмотр сведений о вызове|
+SELECT A GROUP ALIAS|ВЫБРАТЬ ПСЕВДОНИМ ГРУППЫ|
+Group Alias Selection|Выбор превдонима группы|
+Click Here to Choose a Group Alias|Кликните здесь для выбора псевдонима группы|
+Group Alias|Псевдоним группы|
+ERROR: There are no Shifts enabled for your user group|ОШИБКА: для Вашей группы нет разрешенных смен|
+ERROR: You are not allowed to log in outside of your shift|ОШИБКА: Вам не разрешено входить в систему вне своей смены|
+MANAGER OVERRIDE|УКАЗАТЬ ДРУГОГО НАЧАЛЬНИКА|
+Your Shift is over or has changed, you have been logged out of your session|Ваша смена закончилась или изменена, Вы были выведены из своей сессии|
 ### START translations for 2.2.0 release ###
-You are not allowed to dial into other agent sessions|Вы не можете набрать в других сессиях агент|
-QUICK TRANSFER|Быстрой передачи|
-Other Agents Status|Другие агенты Статус|
-Available Agents Transfer|Доступные Агенты передачи|
-Show Calls In Queue|Показать Звонки в очередь|
-Calls In Queue|Звонки в очередь|
-Hide Calls In Queue|Скрыть Звонки в очередь|
-Calls in Queue View Disabled for this campaign|Звонки в Очередь Открыть инвалидов для этой кампании|
-YOU MUST BE PAUSED TO GRAB CALLS IN QUEUE|ВЫ ДОЛЖНЫ быть приостановлена схватить Звонки в ОЧЕРЕДЬ|
-Manager |Менеджер|
-has selected your in-group choices|выбрал в вашей группе выбора|
-CONSULTATIVE|КОНСУЛЬТАТИВНЫЙ|
+You are not allowed to dial into other agent sessions|Вам не разрешено звонить в сессии других агентов|
+QUICK TRANSFER|БЫСТРЫЙ ПЕРЕВОД|
+Other Agents Status|Состояние других агентов|
+Available Agents Transfer|Перевод доступным агентам|
+Show Calls In Queue|Показать вызовы в очереди|
+Calls In Queue|Вызовы в очереди|
+Hide Calls In Queue|Спрятать вызовы в очереди|
+Calls in Queue View Disabled for this campaign|Для этой кампании просмотр вызовов в очереди запрещен|
+YOU MUST BE PAUSED TO GRAB CALLS IN QUEUE|ЧТОБЫ ВЗЯТЬ ВЫЗОВ ИЗ ОЧЕРЕДИ НУЖНО БЫТЬ В СОСТОЯНИИ ПАУЗЫ|
+Manager |Начальник |
+has selected groups for you|назначил Вам входящие группы|
+CONSULTATIVE|СОВЕЩАТЕЛЬНЫЙ|
 Close Message|Закрыть сообщение|
-TIMER NOTIFICATION|ТАЙМЕР УВЕДОМЛЕНИЯ|
->AGENTS<|>агенты<|
+TIMER NOTIFICATION|УВЕДОМЛЕНИЕ ПО ТАЙМЕРУ|
+login_language=en_us|login_language=ru_ru|
+>AGENTS<|>АГЕНТЫ<|
+### START translations for 2.4 release ###
+VIEW CALL LOG|View Call LOG|
+click to dial|нажмите, чтобы набрать|
+Close Call Log|Закрыть журнал вызовов|
+YOU MUST BE PAUSED TO VIEW YOUR CALL LOG|ВЫ ДОЛЖНЫ быть приостановлена ​​ЧТОБЫ УВИДЕТЬ журнала вызовов|
+Close Info Box|Закрыть Box информация|
+No calls on this day|Нет звонков в этот день|
+You are in ALT dial mode, you must finish the lead before logging out|Вы находитесь в режиме набора ALT, вы должны закончить свинца до выхода из|
+Presets Button|Кнопка Presets|
+SELECT A PRESET|Выбор занесенных в памяти|
+Customer Hung-up, 3-way Call Ended Automatically|Клиент Хун-до, 3-полосная окончании разговора автоматически|
+Manual Dial Queue Calls Waiting|Руководство очереди ожидания набора звонков|
+Manual Queue|Руководство очереди|
+This phone number is outside of the local call time|Этот телефон находится вне местному времени вызова|
+Manual Queue is Off|Руководство Очередь Off|
+Manual Queue is On|Руководство Очередь на|
+Call Notes:|Вызовите Примечания:|
+Call Notes List|Call Notes список|
+view notes|просмотра заметок|
+CALL NOTES LOG|Call Notes LOG|
+Close Call Notes|Закрыть Call Notes|
+CALL LOG FOR THIS LEAD|Журнал вызовов У объявления|
+SEARCH FOR A LEAD|ПОИСК LEAD|
+SEARCH RESULTS|РЕЗУЛЬТАТЫ ПОИСКА|
+YOU MUST BE PAUSED TO SEARCH FOR A LEAD|ВЫ ДОЛЖНЫ быть приостановлена ​​Для поиска LEAD|
+Notes: when doing a search for a lead, the phone number, lead ID or|Примечание: при выполнении поиска для свинца, номер телефона, или привести ID|
+are the best fields to use|самые лучшие поля для использования|
+Using the other fields may be slower. Lead searching does not allow for wildcard or partial search terms|Использование других областях может быть медленным. Ведущий поиски не позволяет шаблону или частичное условия поиска|
+Lead search requests are all logged in the system|Ведущие поисковые запросы все вошли в систему|
+Main Phone Number|Основной номер телефона|
+Alternate Phone Number|Альтернативный номер телефона|
+Address3 Phone Number|Адрес3 номер телефона|
+No results found|Ничего не найдено|
+Results Found:|Результаты Найдено:|
+No calls found|Нет звонков найден|
+reset form|восстановить форму|
+Callback Status|Ответный статус|
+Callback Lead Status|Обратный вызов ведущий статус|
+Callback Entry Time|Время обратного вызова Вступление|
+Callback Trigger Time|Обратный вызов Trigger время|
+Callback Comments|Ответный Комментарии|
+To see information on one of the callbacks below, click on the INFO link. To call the customer back now, click on the DIAL link. If you click on a record below to dial it, it will be removed from the list|Чтобы посмотреть информацию об одном из обратного вызова ниже, нажмите на ссылку INFO. Чтобы позвонить клиенту обратно сейчас, нажмите на ссылку DIAL. Если вы нажмете на запись ниже, чтобы набрать его, то он будет удален из списка|
+rings all available agents until one picks up the phone|Кольца все доступные средства, пока не поднимает телефонную трубку|
+No calls for this lead|Не требует этого свинца|
+Time Zone Warning|Предупреждение часовых поясов|
+Phone Area Code Outside Dialable Zone|Телефон Код города Вне зоны Dialable|
+Postal Code Outside Dialable Zone|Индекс Вне зоны Dialable|
+Custom Transfer|Пользовательские передачи|
+System Delay, Please try again|Система задержки, пожалуйста, попробуйте еще раз|
+Disposition Status List Hidden|Расположение Статус Список Скрытые|
+The system has received a command to log you out, you have been logged out of your session|Система получила команду войти вы, вы вышли из вашей сессии|
+Notes: when doing a search for a contact, wildcard or partial search terms are not allowed|Примечание: при выполнении поиска контакта, шаблона или частичное условия поиска не допускается|
+Contact search requests are all logged in the system|Просьбы связаться с поиска всех зарегистрированных в системе|
+SEARCH FOR A CONTACT|Поиск контакта|
+CONTACTS SEARCH RESULTS|Результаты КОНТАКТЫ ПОИСК|
+LEAD SEARCH|ВЕСТИ ПОИСК|
+Customer Time|Время клиентов|
+TERRITORY SELECTION|ВЫБОР ТЕРРИТОРИИ|
+TERRITORIES NOT SELECTED|Территории, не ИЗБРАННЫЕ|
+SELECTED TERRITORIES|ОТДЕЛЬНЫХ ТЕРРИТОРИЙ|
+Dialable Leads|Dialable снабжении|
+You have now logged-in|Вы сейчас вошли в|
+You logged in at|Вы вошли в|
+Refresh Campaign List|Обновить список кампания|
+PLEASE SELECT A CAMPAIGN|ПОЖАЛУЙСТА ВЫБЕРИТЕ КАМПАНИЮ|
+>Agents View|>Список агентов|
+-READY|-ОЖИДАНИЕ|
+-INCALL|-ВЫЗОВ|
+Refresh Campaign List|Обновить список кампаний|
+-PAUSED|-ПАУЗА|

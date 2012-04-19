@@ -27,6 +27,7 @@ agc|functions.php|1
 agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
+agc|phone_only.php|0
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"JAN"|
@@ -42,6 +43,7 @@ agc|calendar_db.js|0
 "NOV"|"NOV"|
 "DEC"|"DEC"|
 \./images/|../agc/images/|
+css/|../agc/css/|
 BORDER|Border|
 VALUE=SUBMIT|VALUE=SUBMIT|
 TYPE=SUBMIT|TYPE=Submit|
@@ -102,6 +104,12 @@ vdc_XB_number.gif|vdc_XB_number.gif|
 vdc_XB_channel.gif|vdc_XB_channel.gif|
 vdc_XB_seconds.gif|vdc_XB_seconds.gif|
 vdc_tab_script.gif|vdc_tab_script.gif|
+agc_live_call_DEAD.gif|agc_live_call_DEAD.gif|
+vdc_LB_startrecording_OFF.gif|vdc_LB_startrecording_OFF.gif|
+vdc_LB_webform_two.gif|vdc_LB_webform_two.gif|
+vdc_LB_webform_two_OFF.gif|vdc_LB_webform_two_OFF.gif|
+vdc_volume_MUTE.gif|vdc_volume_MUTE.gif|
+vdc_volume_UNMUTE.gif|vdc_volume_UNMUTE.gif|
 You have now logged out. Thank you|Vous êtes maintenant déconnecté.|
 astGUIclient web-client VERSION|astGUIclient Client Web|
 astGUIclient web client|astGUIclient Client Web|
@@ -491,3 +499,73 @@ CONSULTATIVE|CONSULTATIF|
 Close Message|Fermer Message|
 TIMER NOTIFICATION|TIMER NOTIFICATION|
 >AGENTS<|>AGENTS<|
+### START translations for 2.4 release ###
+VIEW CALL LOG|VOIR JOURNAL DES APPELS|
+click to dial|cliquez pour composer|
+Close Call Log|Fermer journal des appels|
+YOU MUST BE PAUSED TO VIEW YOUR CALL LOG|VOUS DEVEZ ÊTRE EN PAUSE POUR VOIR VOTRE JOURNAL DES APPELS|
+Close Info Box|Info Box Fermer|
+No calls on this day|Pas d'appels pour ce jour|
+You are in ALT dial mode, you must finish the lead before logging out|Vous êtes dans le mode de numérotation ALT, vous devez terminer le plomb avant de vous déconnecter|
+Presets Button|Boutons prédéfinis|
+SELECT A PRESET|Sélectionnez un Preset|
+Customer Hung-up, 3-way Call Ended Automatically|Client Hung-up, 3-way appel sest terminé automatiquement|
+Manual Dial Queue Calls Waiting|Queue numérotation manuelle Appels en attente|
+Manual Queue|Manuel de la file|
+This phone number is outside of the local call time|Ce numéro de téléphone est en dehors du temps d'un appel local|
+Manual Queue is Off|Manuel de la file est désactivé|
+Manual Queue is On|Manuel de la file est activée|
+Call Notes:|Notes d'appel:|
+Call Notes List|Appelez liste de notes|
+view notes|visualiser les notes|
+CALL NOTES LOG|NOTES D'APPEL LOG|
+Close Call Notes|Fermer Notes d'appel|
+CALL LOG FOR THIS LEAD|APPELS POUR CE FIL|
+SEARCH FOR A LEAD|RECHERCHE D'UN PLOMB|
+SEARCH RESULTS|RÉSULTATS DE RECHERCHE|
+YOU MUST BE PAUSED TO SEARCH FOR A LEAD|VOUS DEVEZ ÊTRE EN PAUSE POUR RECHERCHER UN PLOMB|
+Notes: when doing a search for a lead, the phone number, lead ID or|Notes: lorsque vous faites une recherche d'un chef de file, le numéro de téléphone, conduire ou ID|
+are the best fields to use|sont les meilleurs champs à utiliser|
+Using the other fields may be slower. Lead searching does not allow for wildcard or partial search terms|En utilisant les champs d'autres peut être plus lente. Recherche de plomb ne permet pas de termes de recherche génériques ou partielle|
+Lead search requests are all logged in the system|Demandes de recherche de plomb sont tous enregistrés dans le système de|
+Main Phone Number|Numéro de téléphone principal|
+Alternate Phone Number|Autre numéro de téléphone|
+Address3 Phone Number|Address3 numéro de téléphone|
+No results found|Aucun résultat trouvé|
+Results Found:|Résultats trouvés:|
+No calls found|Pas d'appels trouvé|
+reset form|réinitialiser la forme|
+Callback Status|Statut de rappel|
+Callback Lead Status|Callback d'état plomb|
+Callback Entry Time|Heure d'entrée de rappel|
+Callback Trigger Time|Temps de déclenchement de rappel|
+Callback Comments|Commentaires de rappel|
+To see information on one of the callbacks below, click on the INFO link. To call the customer back now, click on the DIAL link. If you click on a record below to dial it, it will be removed from the list|Pour voir les informations sur l'un des rappels ci-dessous, cliquez sur le lien INFO. Pour appeler le client en arrière maintenant, cliquez sur le lien DIAL. Si vous cliquez sur un enregistrement ci-dessous pour composer le numéro, il sera retiré de la liste|
+rings all available agents until one picks up the phone|bagues à tous les agents disponibles jusqu'à ce que l'on prend le téléphone|
+No calls for this lead|Pas d'appels pour ce plomb|
+Time Zone Warning|Attention fuseau horaire|
+Phone Area Code Outside Dialable Zone|Indicatif régional Téléphone dehors de la zone composable|
+Postal Code Outside Dialable Zone|Code postal dehors de la zone composable|
+Custom Transfer|Transfert sur mesure|
+System Delay, Please try again|Retard du système, S'il vous plaît essayez de nouveau|
+Disposition Status List Hidden|Liste d'état Disposition Caché|
+The system has received a command to log you out, you have been logged out of your session|Le système a reçu une commande pour que vous vous déconnectez, vous avez été déconnecté de votre session|
+Notes: when doing a search for a contact, wildcard or partial search terms are not allowed|Notes: lorsque vous faites une recherche pour un contact, des termes de recherche génériques ou partielle ne sont pas autorisés|
+Contact search requests are all logged in the system|Demandes de recherche de contact sont tous enregistrés dans le système de|
+SEARCH FOR A CONTACT|Rechercher un contact|
+CONTACTS SEARCH RESULTS|RÉSULTATS DE RECHERCHE CONTACTS|
+LEAD SEARCH|LEAD RECHERCHE|
+Customer Time|temps à la clientèle|
+TERRITORY SELECTION|SÉLECTION DU TERRITOIRE|
+TERRITORIES NOT SELECTED|TERRITOIRES NON CHOISI|
+SELECTED TERRITORIES|TERRITOIRES CHOISIS|
+Dialable Leads|Leads composable|
+You have now logged-in|Vous avez maintenant connecté|
+You logged in at|Vous connecté à|
+Refresh Campaign List|Liste campagne Actualiser|
+PLEASE SELECT A CAMPAIGN|S'IL VOUS PLAÎT Sélectionnez une campagne|
+Agents View|Agents Voir|
+-READY|-PRÊT|
+-INCALL|-INCALL|
+-PAUSED|-PAUSE|
+CALL DISPOSITION|APPEL DISPOSITION|

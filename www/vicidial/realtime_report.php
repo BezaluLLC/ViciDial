@@ -549,7 +549,7 @@ $select_list .= "<SELECT SIZE=8 NAME=user_group_filter[] ID=user_group_filter[] 
 $o=0;
 while ($o < $usergroups_to_print)
 	{
-	if (ereg("\|$usergroups[$o]\|",$user_group_filter_string)) 
+	if (ereg("\|$usergroups[$o]\|",$user_group_string))
 		{$select_list .= "<option selected value=\"$usergroups[$o]\">$usergroups[$o] - $usergroupnames[$o]</option>";}
 	else
 		{

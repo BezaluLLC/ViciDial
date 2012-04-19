@@ -27,6 +27,7 @@ agc|functions.php|1
 agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
+agc|phone_only.php|0
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"JAN"|
@@ -42,6 +43,7 @@ agc|calendar_db.js|0
 "NOV"|"NOV"|
 "DEC"|"DEC"|
 \./images/|../agc/images/|
+css/|../agc/css/|
 BORDER|Border|
 VALUE=SUBMIT|VALUE=SUBMIT|
 TYPE=SUBMIT|TYPE=Submit|
@@ -102,6 +104,12 @@ vdc_XB_number.gif|vdc_XB_number.gif|
 vdc_XB_channel.gif|vdc_XB_channel.gif|
 vdc_XB_seconds.gif|vdc_XB_seconds.gif|
 vdc_tab_script.gif|vdc_tab_script.gif|
+agc_live_call_DEAD.gif|agc_live_call_DEAD.gif|
+vdc_LB_startrecording_OFF.gif|vdc_LB_startrecording_OFF.gif|
+vdc_LB_webform_two.gif|vdc_LB_webform_two.gif|
+vdc_LB_webform_two_OFF.gif|vdc_LB_webform_two_OFF.gif|
+vdc_volume_MUTE.gif|vdc_volume_MUTE.gif|
+vdc_volume_UNMUTE.gif|vdc_volume_UNMUTE.gif|
 You have now logged out. Thank you|Je ben nu uitgelogd. Bedankt|
 astGUIclient web-client VERSION|astGUIclient web-client VERSIE|
 astGUIclient web client|astGUIclient web client|
@@ -523,3 +531,73 @@ CONSULTATIVE|ADVIESGROEP|
 Close Message|Close Message|
 TIMER NOTIFICATION|TIMER AANMELDING|
 >AGENTS<|>agenten<|
+### START translations for 2.4 release ###
+VIEW CALL LOG|VIEW CALL LOG|
+click to dial|klik om te bellen|
+Close Call Log|Sluit Call Log|
+YOU MUST BE PAUSED TO VIEW YOUR CALL LOG|JE MOET worden onderbroken om gesprekslog bekijken|
+Close Info Box|Sluiten Info Box|
+No calls on this day|Geen oproepen op deze dag|
+You are in ALT dial mode, you must finish the lead before logging out|Je bent in de ALT knop mode, moet je de leiding af eerst uit te loggen|
+Presets Button|Presets Button|
+SELECT A PRESET|SELECT A PRESET|
+Customer Hung-up, 3-way Call Ended Automatically|Klant Hung-up, 3-weg gesprek beëindigd automatisch|
+Manual Dial Queue Calls Waiting|Handmatig kiezen Wachtrij Oproepen Wachten|
+Manual Queue|Handleiding Queue|
+This phone number is outside of the local call time|Dit telefoonnummer is buiten het lokale oproep tijd|
+Manual Queue is Off|Handmatig wachtrij is uitgeschakeld|
+Manual Queue is On|Handmatig wachtrij staat Aan|
+Call Notes:|Call Opmerkingen:|
+Call Notes List|Call Notes Lijst|
+view notes|Notities bekijken|
+CALL NOTES LOG|Opmerkingen bij oproep LOG|
+Close Call Notes|Sluit Call Notes|
+CALL LOG FOR THIS LEAD|OPROEP VOOR DEZE LOG LOOD|
+SEARCH FOR A LEAD|ZOEK NAAR EEN LOOD|
+SEARCH RESULTS|ZOEKRESULTATEN|
+YOU MUST BE PAUSED TO SEARCH FOR A LEAD|JE MOET worden gepauzeerd wilt zoeken naar een LOOD|
+Notes: when doing a search for a lead, the phone number, lead ID or|Opmerkingen: bij het doen van een zoektocht naar een voorsprong, het telefoonnummer, leiden ID of|
+are the best fields to use|worden de beste velden|
+Using the other fields may be slower. Lead searching does not allow for wildcard or partial search terms|De andere velden kunnen vertragen. Lead zoeken houdt geen rekening met wildcard of gedeeltelijke zoektermen|
+Lead search requests are all logged in the system|Lead zoekopdrachten zijn allemaal geregistreerd in het systeem|
+Main Phone Number|Belangrijkste Telefoonnummer|
+Alternate Phone Number|Andere telefoonnummer|
+Address3 Phone Number|Address3 Telefoonnummer|
+No results found|Er zijn geen resultaten gevonden|
+Results Found:|Gevonden resultaten:|
+No calls found|Geen gesprekken gevonden|
+reset form|opnieuw in te stellen formulier|
+Callback Status|Terugbellen Status|
+Callback Lead Status|Terugbellen Lead Status|
+Callback Entry Time|Terugbellen Entry Time|
+Callback Trigger Time|Terugbellen Trigger Time|
+Callback Comments|Terugbellen Reacties|
+To see information on one of the callbacks below, click on the INFO link. To call the customer back now, click on the DIAL link. If you click on a record below to dial it, it will be removed from the list|Als u informatie over een van de callbacks zie hieronder, klik op de INFO link. Om de klant nu terug te bellen, klik op de DIAL link. Als u hieronder klikt op een record om te bellen, wordt deze verwijderd uit de lijst|
+rings all available agents until one picks up the phone|ringen van alle beschikbare middelen tot een neemt de telefoon op|
+No calls for this lead|Geen roept op tot deze draad|
+Time Zone Warning|Time Zone Waarschuwing|
+Phone Area Code Outside Dialable Zone|Telefoon netnummer Buiten kiesbaar Zone|
+Postal Code Outside Dialable Zone|Postcode Buiten kiesbaar Zone|
+Custom Transfer|Custom Transfer|
+System Delay, Please try again|System Delay, Probeer het opnieuw|
+Disposition Status List Hidden|Disposition Status Lijst Verborgen|
+The system has received a command to log you out, you have been logged out of your session|Het systeem heeft een opdracht om je uitlogt ontvangen, heb je uitgelogd van uw sessie|
+Notes: when doing a search for a contact, wildcard or partial search terms are not allowed|Opmerkingen: bij het doen van een zoektocht naar een contactpersoon, worden wildcard of gedeeltelijke zoektermen niet toegestaan|
+Contact search requests are all logged in the system|Contact zoekopdrachten zijn allen geregistreerd in het systeem|
+SEARCH FOR A CONTACT|Zoeken naar een contactpersoon|
+CONTACTS SEARCH RESULTS|CONTACTEN ZOEKRESULTATEN|
+LEAD SEARCH|LEIDEN ZOEKEN|
+Customer Time|Klant Tijd|
+TERRITORY SELECTION|GRONDGEBIED SELECTIE|
+TERRITORIES NOT SELECTED|Gebieden die geen GESELECTEERD|
+SELECTED TERRITORIES|GESELECTEERDE GEBIEDEN|
+Dialable Leads|kiesbaar Leads|
+You have now logged-in|U heeft nu aangemelde|
+You logged in at|U ingelogd op|
+Refresh Campaign List|Vernieuwen campagne Lijst|
+PLEASE SELECT A CAMPAIGN|Selecteer een campagne|
+Agents View|agenten bekijken|
+-READY|-KLAAR|
+-INCALL|-INCALL|
+-PAUSED|-PAUSED|
+CALL DISPOSITION|CALL GEAARDHEID|

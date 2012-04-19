@@ -2,7 +2,7 @@
 # welcome_languages.php - VICIDIAL welcome Languages page
 # 
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: GPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: GPLv2
 #
 header ("Content-type: text/html; charset=utf-8");
 
@@ -59,6 +59,9 @@ echo "<font size=3><b> &nbsp; <a href=\"../agc_tw/vicidial.php\"><IMG SRC=\"../a
 echo "</TD></TR>\n";
 echo "<TR><TD ALIGN=LEFT >";
 echo "<font size=3><b> &nbsp; <a href=\"../agc_se/vicidial.php\"><IMG SRC=\"../agc/images/se.gif\" border=0> Swedish Agent Login</a>";
+echo "</TD></TR>\n";
+echo "<TR><TD ALIGN=LEFT >";
+echo "<font size=3><b> &nbsp; <a href=\"../agc_dk/vicidial.php\"><IMG SRC=\"../agc/images/dk.gif\" border=0> Danish Agent Login</a>";
 echo "</TD></TR></TABLE>\n";
 
 echo "</TD><TD VALIGN=TOP>\n";

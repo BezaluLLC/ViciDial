@@ -27,6 +27,7 @@ agc|functions.php|1
 agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
+agc|phone_only.php|0
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"JAN"|
@@ -42,6 +43,7 @@ agc|calendar_db.js|0
 "NOV"|"NOV"|
 "DEC"|"DEC"|
 \./images/|../agc/images/|
+css/|../agc/css/|
 BORDER|Border|
 VALUE=SUBMIT|VALUE=SUBMIT|
 TYPE=SUBMIT|TYPE=Submit|
@@ -102,6 +104,12 @@ vdc_XB_number.gif|vdc_XB_number.gif|
 vdc_XB_channel.gif|vdc_XB_channel.gif|
 vdc_XB_seconds.gif|vdc_XB_seconds.gif|
 vdc_tab_script.gif|vdc_tab_script.gif|
+agc_live_call_DEAD.gif|agc_live_call_DEAD.gif|
+vdc_LB_startrecording_OFF.gif|vdc_LB_startrecording_OFF.gif|
+vdc_LB_webform_two.gif|vdc_LB_webform_two.gif|
+vdc_LB_webform_two_OFF.gif|vdc_LB_webform_two_OFF.gif|
+vdc_volume_MUTE.gif|vdc_volume_MUTE.gif|
+vdc_volume_UNMUTE.gif|vdc_volume_UNMUTE.gif|
 You have now logged out. Thank you|Práve ste sa odhlásili, Ďakujeme|
 astGUIclient web-client VERSION|astGUIclient verzia web-klient|
 astGUIclient web client|web klient astGUIclient|
@@ -491,3 +499,73 @@ CONSULTATIVE|PORADNÝ|
 Close Message|Zavrieť správu|
 TIMER NOTIFICATION|TIMER OZNAM|
 >AGENTS<|>AGENTI<|
+### START translations for 2.4 release ###
+VIEW CALL LOG|POHĽAD Denník hovorov|
+click to dial|kliknite pre vytočenie|
+Close Call Log|Zavrieť Call Log|
+YOU MUST BE PAUSED TO VIEW YOUR CALL LOG|MUSÍTE byť pozastavená Ak chcete zobraziť CALL LOG|
+Close Info Box|Zavrieť Info Box|
+No calls on this day|Žiadne vyzýva tento deň|
+You are in ALT dial mode, you must finish the lead before logging out|Nachádzate sa v móde voľby ALT, je nutné dokončiť náskok pred odhlásením|
+Presets Button|Tlačidlo predvoľby|
+SELECT A PRESET|SELECT PRESET|
+Customer Hung-up, 3-way Call Ended Automatically|Zákazník Hung-up, 3-way volanie končiace automaticky|
+Manual Dial Queue Calls Waiting|Manuálna voľba fronty hovorov Čakanie|
+Manual Queue|Ručné fronty|
+This phone number is outside of the local call time|Toto telefónne číslo je mimo miestnej pohotovosti|
+Manual Queue is Off|Ručné Fronta je vypnuté|
+Manual Queue is On|Ručné fronta je na|
+Call Notes:|Výzva Poznámky:|
+Call Notes List|Výzva Poznámky Zoznam|
+view notes|zobraziť poznámky|
+CALL NOTES LOG|VÝZVA NOTES LOG|
+Close Call Notes|Zavrieť volanie poznámky|
+CALL LOG FOR THIS LEAD|VÝZVA PRE LOG tohto kábla|
+SEARCH FOR A LEAD|Hľadanie olova|
+SEARCH RESULTS|VÝSLEDKY HĽADANIE|
+YOU MUST BE PAUSED TO SEARCH FOR A LEAD|MUSÍTE byť pozastavená na vyhľadávanie vodítku|
+Notes: when doing a search for a lead, the phone number, lead ID or|Poznámky: pri tom hľadaní na vedenie, telefónne číslo, vedie ID alebo|
+are the best fields to use|sú najlepšie polia na použitie|
+Using the other fields may be slower. Lead searching does not allow for wildcard or partial search terms|Použitie iných oblastiach môže byť pomalší. Vedúci vyhľadávania neumožňuje zástupných alebo čiastočnú vyhľadávacie termíny|
+Lead search requests are all logged in the system|Olovo hľadanie požiadavky sú zaznamenané v systéme|
+Main Phone Number|Hlavné telefónne číslo|
+Alternate Phone Number|Alternatívne telefónne číslo|
+Address3 Phone Number|Address3 telefónne číslo|
+No results found|Neboli nájdené žiadne výsledky|
+Results Found:|Nájdené:|
+No calls found|Žiadne volanie nájdené|
+reset form|resetovať formulár|
+Callback Status|Spätné volanie Stav|
+Callback Lead Status|Spätné volanie Lead stavu|
+Callback Entry Time|Spätné volanie Vstup čas|
+Callback Trigger Time|Spätné volanie oneskorenie|
+Callback Comments|Komentáre spätné volanie|
+To see information on one of the callbacks below, click on the INFO link. To call the customer back now, click on the DIAL link. If you click on a record below to dial it, it will be removed from the list|Ak chcete zobraziť informácie o jednej z nižšie uvedených spätné volanie, kliknite na odkaz INFO. Ak chcete volať zákazníkovi späť, kliknite na odkaz DIAL. Ak kliknete na záznam nižšie vytočiť ho, bude odstránený zo zoznamu|
+rings all available agents until one picks up the phone|prstene všetky dostupné prostriedky, kým jeden zdvihne telefón|
+No calls for this lead|Žiadne žiada, aby táto vedenie|
+Time Zone Warning|Časové pásmo Upozornenie|
+Phone Area Code Outside Dialable Zone|Telefón Area Code Mimo Dialable zóny|
+Postal Code Outside Dialable Zone|PSČ Mimo Dialable zóny|
+Custom Transfer|Vlastný prenos|
+System Delay, Please try again|Systém Delay, prosím skúste to znova|
+Disposition Status List Hidden|Dispozície Stav Hidden Zoznam|
+The system has received a command to log you out, you have been logged out of your session|Systém dostal príkaz na prihlásenie vás, ste boli odhlásený zo svojho zasadnutia|
+Notes: when doing a search for a contact, wildcard or partial search terms are not allowed|Poznámky: pri tom hľadaní kontaktu, sú zástupné alebo čiastočné vyhľadávacie termíny nie sú povolené|
+Contact search requests are all logged in the system|Žiadosti Kontakt vyhľadávania sú prihlásení do systému|
+SEARCH FOR A CONTACT|Hľadanie kontaktu|
+CONTACTS SEARCH RESULTS|VÝSLEDKY HĽADANIE KONTAKTY|
+LEAD SEARCH|HĽADANIE LEAD|
+Customer Time|zákazník čas|
+TERRITORY SELECTION|VÝBER ÚZEMIA|
+TERRITORIES NOT SELECTED|ÚZEMÍ NEZARADENÉ|
+SELECTED TERRITORIES|vybraných teritórií|
+Dialable Leads|vedie Dialable|
+You have now logged-in|Máte teraz prihlásených|
+You logged in at|Ste prihlásení na|
+Refresh Campaign List|Obnoviť kampaň Zoznam|
+PLEASE SELECT A CAMPAIGN|Vyberte KAMPAŇ|
+Agents View|agenti Zobraziť|
+-READY|-READY|
+-INCALL|-Incall|
+-PAUSED|-pozastavené|
+CALL DISPOSITION|VÝZVA Disposition|

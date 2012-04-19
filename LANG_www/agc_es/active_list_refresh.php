@@ -160,10 +160,10 @@ if ($format=='table')
 {
 echo "<html>\n";
 echo "<head>\n";
-echo "<!-- VERSIÓN: $version     CONSTRUCCION: $build    ADD: $ADD   server_ip: $server_ip-->\n";
-echo "<title>Mostrar Listas: ";
-if ($ADD==1)		{echo "Extensiones Activas";}
-if ($ADD==2)		{echo "Extensiones Ocupadas";}
+echo "<!-- VERSIÓN: $version     CONSTRUCCIÓN: $build    ADD: $ADD   server_ip: $server_ip-->\n";
+echo "<title>Despliegue de listas: ";
+if ($ADD==1)		{echo "Extensiones activas";}
+if ($ADD==2)		{echo "Extensiones ocupadas";}
 if ($ADD==3)		{echo "Líneas de salida";}
 if ($ADD==4)		{echo "Extensiones Locales";}
 if ($ADD==5)		{echo "Conferencias";}
@@ -470,7 +470,7 @@ if ($ADD==5)
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $StarTtime);
-if ($format=='table') {echo "\n<!-- tiempo de ejecución del Script: $RUNtime segundos -->";}
+if ($format=='table') {echo "\n<!-- tiempo de ejecución del guión: $RUNtime segundos -->";}
 if ($format=='table') {echo "\n</body>\n</html>\n";}
 	
 exit; 

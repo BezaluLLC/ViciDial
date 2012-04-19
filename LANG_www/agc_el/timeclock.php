@@ -266,8 +266,8 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			{
 			if ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='login') )
 				{
-				$VDdisplayMESSAGE = "You have now logged-in";
-				$LOGtimeMESSAGE = "You logged in at $NOW_TIME";
+				$VDdisplayMESSAGE = "Τώρα έχετε συνδεδεμένων";
+				$LOGtimeMESSAGE = "Μπορείτε συνδεδεμένος στο $NOW_TIME";
 
 				### Add a record to the timeclock log
 				$stmt="INSERT INTO vicidial_timeclock_log set event='LOGIN', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', event_date='$NOW_TIME';";

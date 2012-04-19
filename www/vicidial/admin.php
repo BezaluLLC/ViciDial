@@ -24506,7 +24506,7 @@ if ($ADD==311)
 			while (list($tzone,) = each($lead_list[$since_reset]))
 				{
 				$LOCALzone=3600 * $tzone;
-				$LOCALdate=gmdate("D M Y H:i", time() + $LOCALzone);
+				$LOCALdate=gmdate("D j M Y H:i", time() + $LOCALzone);
 
 				if ($tzone >= 0) {$DISPtzone = "$plus$tzone";}
 				else {$DISPtzone = "$tzone";}

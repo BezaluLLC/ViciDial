@@ -27,6 +27,7 @@ agc|functions.php|1
 agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
+agc|phone_only.php|0
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"Jan"|
@@ -42,6 +43,7 @@ agc|calendar_db.js|0
 "NOV"|"NOV"|
 "DEC"|"DEC"|
 \./images/|../agc/images/|
+css/|../agc/css/|
 BORDER|Border|
 VALUE=SUBMIT|VALUE=SUBMIT|
 TYPE=SUBMIT|TYPE=Submit|
@@ -52,6 +54,62 @@ Spanish|Spanska|
 French|Franska|
 German|Tyska|
 Italian|Italienska|
+agc_check_voicemail_BLINK.gif|agc_check_voicemail_BLINK.gif|
+agc_check_voicemail_OFF.gif|agc_check_voicemail_OFF.gif|
+agc_check_voicemail_ON.gif|agc_check_voicemail_ON.gif|
+agc_live_call_OFF.gif|agc_live_call_OFF.gif|
+agc_live_call_ON.gif|agc_live_call_ON.gif|
+agc_tab_active_lines.gif|agc_tab_active_lines.gif|
+agc_tab_conferences.gif|agc_tab_conferences.gif|
+agc_tab_main.gif|agc_tab_main.gif|
+vdc_LB_dialnextnumber.gif|vdc_LB_dialnextnumber.gif|
+vdc_LB_dialnextnumber_OFF.gif|vdc_LB_dialnextnumber_OFF.gif|
+vdc_LB_grabparkedcall.gif|vdc_LB_grabparkedcall.gif|
+vdc_LB_hangupcustomer.gif|vdc_LB_hangupcustomer.gif|
+vdc_LB_hangupcustomer_OFF.gif|vdc_LB_hangupcustomer_OFF.gif|
+vdc_LB_parkcall.gif|vdc_LB_parkcall.gif|
+vdc_LB_parkcall_OFF.gif|vdc_LB_parkcall_OFF.gif|
+vdc_LB_pause.gif|vdc_LB_pause.gif|
+vdc_LB_pause_OFF.gif|vdc_LB_pause_OFF.gif|
+vdc_LB_resume.gif|vdc_LB_resume.gif|
+vdc_LB_resume_OFF.gif|vdc_LB_resume_OFF.gif|
+vdc_LB_startrecording.gif|vdc_LB_startrecording.gif|
+vdc_LB_stoprecording.gif|vdc_LB_stoprecording.gif|
+vdc_LB_transferconf.gif|vdc_LB_transferconf.gif|
+vdc_LB_transferconf_OFF.gif|vdc_LB_transferconf_OFF.gif|
+vdc_LB_webform.gif|vdc_LB_webform.gif|
+vdc_LB_webform_OFF.gif|vdc_LB_webform_OFF.gif|
+vdc_XB_blindtransfer.gif|vdc_XB_blindtransfer.gif|
+vdc_XB_blindtransfer_OFF.gif|vdc_XB_blindtransfer_OFF.gif|
+vdc_XB_dialwithcustomer.gif|vdc_XB_dialwithcustomer.gif|
+vdc_XB_dialwithcustomer_OFF.gif|vdc_XB_dialwithcustomer_OFF.gif|
+vdc_XB_hangupbothlines.gif|vdc_XB_hangupbothlines.gif|
+vdc_XB_hangupbothlines_OFF.gif|vdc_XB_hangupbothlines_OFF.gif|
+vdc_XB_hangupxferline.gif|vdc_XB_hangupxferline.gif|
+vdc_XB_hangupxferline_OFF.gif|vdc_XB_hangupxferline_OFF.gif|
+vdc_XB_internalcloser.gif|vdc_XB_internalcloser.gif|
+vdc_XB_internalcloser_OFF.gif|vdc_XB_internalcloser_OFF.gif|
+vdc_XB_leave3waycall.gif|vdc_XB_leave3waycall.gif|
+vdc_XB_leave3waycall_OFF.gif|vdc_XB_leave3waycall_OFF.gif|
+vdc_XB_localcloser.gif|vdc_XB_localcloser.gif|
+vdc_XB_localcloser_OFF.gif|vdc_XB_localcloser_OFF.gif|
+vdc_XB_parkcustomerdial.gif|vdc_XB_parkcustomerdial.gif|
+vdc_XB_parkcustomerdial_OFF.gif|vdc_XB_parkcustomerdial_OFF.gif|
+vdc_XB_hotkeysactive.gif|vdc_XB_hotkeysactive.gif|
+vdc_XB_hotkeysactive_OFF.gif|vdc_XB_hotkeysactive_OFF.gif|
+vdc_LB_senddtmf.gif|vdc_LB_senddtmf.gif|
+vdc_LB_senddtmf_OFF.gif|vdc_LB_senddtmf_OFF.gif|
+vdc_XB_header.gif|vdc_XB_header.gif|
+vdc_XB_number.gif|vdc_XB_number.gif|
+vdc_XB_channel.gif|vdc_XB_channel.gif|
+vdc_XB_seconds.gif|vdc_XB_seconds.gif|
+vdc_tab_script.gif|vdc_tab_script.gif|
+agc_live_call_DEAD.gif|agc_live_call_DEAD.gif|
+vdc_LB_startrecording_OFF.gif|vdc_LB_startrecording_OFF.gif|
+vdc_LB_webform_two.gif|vdc_LB_webform_two.gif|
+vdc_LB_webform_two_OFF.gif|vdc_LB_webform_two_OFF.gif|
+vdc_volume_MUTE.gif|vdc_volume_MUTE.gif|
+vdc_volume_UNMUTE.gif|vdc_volume_UNMUTE.gif|
 You have now logged out. Thank you|Du är nu utloggad ur systemet, välkommen åter!
 astGUIclient web-client VERSION|astGUI webklientversion|
 astGUIclient web client| astGUI webklient|
@@ -232,19 +290,19 @@ DIAL LEAD|RING LEAD|
 LEAD PREVIEW|FÖRHANDSGRANSKA LEAD|
 PAUSE AGENT DIALING|PAUSA AGENTUPPRINGNING|
 DISPOSITION CALL|SAMTALSUTFALL|
- session ID| sesion ID|
+ session ID| session ID|
  to campaign| till kampanj|
-Select a CallBack Date|Välj ett datum för återkomsten|
+Select a CallBack Date|Välj ett datum för återuppringningen|
  maximize | maximera |
  minimize | minimera |
 You must choose a date|Du måste välja ett datum|
 Select a Date Below|Välj datum|
-Click on a callback below to call the customer back now. If you click on a record below to call it, it will be removed from the list|Klicka på en återkomst nedan för att ringa, numret försvinner då från listan och du får välja nytt utfall|
+Click on a callback below to call the customer back now. If you click on a record below to call it, it will be removed from the list|Klicka på en återuppringning nedan för att ringa, numret försvinner då från listan och du får välja nytt utfall|
 If you want to dial a number and have it NOT be added as a new lead, enter in the exact dialstring that you want to call in the Dial Override field below. To hangup this call you will have to open the CALLS IN THIS SESSION link at the bottom of the screen and hang it up by clicking on its channel link there|Om du vill ringa ett nummer och INTE lägga till det som en ny lead, skriv in det exakta numret i \"Dial override\" nedan.För att avsluta detta samtal måste du öppna SAMTAL I DENNA SESSION i botten av fönstret och klicka på kanallänken där.|
 YOU CANNOT SKIP A CALLBACK OR MANUAL DIAL, YOU MUST DIAL THE LEAD|DU KAN INTE SKIPPA EN CALLBACK ELLER MANUELL UPPRINGNING, DU MÅSTE RINGA LEADET|
 YOU MUST BE PAUSED TO MANUAL DIAL A NEW LEAD IN AUTO-DIAL MODE|DU MÅSTE VARA I PAUSLÄGE FÖR ATT RINGA ETT NUMMER MANUELLT NÄR DIALERN ÄR I AUTODIAL|
 Enter information below for the new lead you wish to call|Skriv in informationen för det nya leadet du vill ringa|
-YOU MUST BE PAUSED TO CHECK CALLBACKS IN AUTO-DIAL MODE|DU MÅSTE VARA I PAUSLÄGE FÖR ATT KOLLA ÅTERKOMSTER NÄR DIALERN ÄR I AUTODIAL|
+YOU MUST BE PAUSED TO CHECK CALLBACKS IN AUTO-DIAL MODE|DU MÅSTE VARA I PAUSLÄGE FÖR ATT KOLLA ÅTERUPPRINGNINGAR NÄR DIALERN ÄR I AUTODIAL|
 Note: all new manual dial leads will go into list 999|Notera: alla nya manuellt uppringda leads hamnar i lista 999|
 YOU DO NOT HAVE PERMISSIONS TO TRANSFER CALLS|DU HAR EJ BEHÖRIGHET ATT VIDAREKOPPLA SAMTAL|
 will be added to the beginning of this number|kommer att läggas till i början av numret|
@@ -256,15 +314,15 @@ Note: a dial prefix of|Notera: ett prefix för|
 Hangup Again|Lägg på igen|
 Go Back|Tillbaka|
 Call Agent Again|Ring agent igen|
-MY CALLBACK ONLY|PERSONLIG ÅTERKOMST|
-NO ACTIVE CALLBACKS|INGA AKTIVA ÅTERKOMSTER|
-ACTIVE CALLBACKS|AKTIVA ÅTERKOMSTER|
-CALLBACKS FOR AGENT|PERSONLIGA ÅTERKOMSTER|
+MY CALLBACK ONLY|PERSONLIG ÅTERUPPRINGNING|
+NO ACTIVE CALLBACKS|INGA AKTIVA ÅTERUPPNINGNINGAR|
+ACTIVE CALLBACKS|AKTIVA ÅTERUPPNINGNINGAR|
+CALLBACKS FOR AGENT|PERSONLIGA ÅTERUPPNINGNINGAR|
 Dial Code:|Landskod|
 Dial Override|Dial Override|
 digits only please|enbart siffror|
 Dial Now|Ring nu|
-CB Comments|Kommentar till ÅK|
+CB Comments|Kommentar till Återuppringning|
 Title|Titel|
 Your Status|Din status|
  STATUS| STATUS|
@@ -284,14 +342,14 @@ Login:|Logga in:|
 User |Användare |
 Password|Lösenord|
 VERSION|VERSION|
-BUILD|SKAPA|
+BUILD|BUILD|
 Server|Server|
 RECORD |Spela in |
 >HANGUP|>Lägg på|
 >XFER|>XFER|
 PARK|PARKERA|
 IN-NUMBER|IN-NUMMER|
-NUMBER|NUNNER|
+NUMBER|NUMMER|
 CALLERID|SAMTALSID|
  CALL| SAMTAL|
 PICKUP|SVARA|
@@ -367,11 +425,11 @@ October|Oktober|
 November|November|
 December|December|
 ### BEGIN translation phrases for 2.0.1 release ###
-Previous Callback Information|Informaci�n Anterior Del Servicio repetido|
-Last Call: |Senaste samtal:|
-CallBack: |Återkomst:|
-Agent: |Agent:|
-Comments: |Kommentarer:|
+Previous Callback Information|Information från återuppringning|
+Last Call: |Senaste samtal: |
+CallBack: |Återuppringning: |
+Agent: |Agent: |
+Comments: |Kommentarer: |
 ### BEGIN translation phrases for 2.0.2 release ###
 VOLUME|VOLYM|
 ### BEGIN translation phrases for 2.0.3 release ###
@@ -380,27 +438,27 @@ YOU MUST ENTER A PHONE NUMBER AND DIAL CODE TO USE FAST DIAL|DU MÅSTE KNAPPA IN
  SELECT A PAUSE CODE :| VÄLJ PAUSKOD :|
 ENTER A PAUSE CODE|SKRIV PAUSKOD|
 YOU MUST BE PAUSED TO ENTER A PAUSE CODE IN AUTO-DIAL MODE|DU MÅSTE VARA I PAUSLÄGE FÖR ATT SKRIVA IN EN PAUSKOD NÄR DIALERN STÅR I AUTODIAL|
-Your session has been disabled|Din session har avbrytits|
+Your session has been disabled|Din session har avbrutits|
 ### BEGIN translation phrases for 2.0.5 release ###
-Gender: |Kön:|
-Date of Birth: |Personnummer:|
-YOU MUST BE PAUSED TO CHANGE GROUPS|DU MÅSTE VARA I PAUS FÖR ATT BYTA GRUPP|
+Gender: |Kön: |
+Date of Birth: |Personnummer: |
+YOU MUST BE PAUSED TO CHANGE GROUPS|DU MÅSTE VARA PAUSAD FÖR ATT BYTA GRUPP|
 Calls in Queue:|Samtal i kö:|
- Timeclock|Stämpelklocka|
+ Timeclock| Stämpelklocka|
 The user and password you entered are not active in the system|Användaren och lösenordet du har skrivit in är inte aktivt i systemet|
 Please try again|Vänligen försök igen|
 You cannot log in or out within 30 seconds of your last login or logout|Du kan inte logga in eller ut på 30 sekunder efter ditt senaste försök|
-You have now logged-out|Du har nu loggats ur|
-You logged out at |Du loggade ur kl|
-Amount of time you were logged-in: |Inloggad tid:|
-ERROR: timeclock log entry already made: |ERROR: stämpelklockan har redan använts:|
+You have now logged-out|Du har nu loggats ut|
+You logged out at |Du loggade ut kl |
+Amount of time you were logged-in: |Inloggad tid: |
+ERROR: timeclock log entry already made: |ERROR: stämpelklockan har redan använts: |
 BACK to Agent Login Screen|TILLBAKA till inloggningssidan|
 BACK to Administration|TILLBAKA till administration|
 BACK to Welcome Screen|TILLBAKA till välkomstssidan|
-Time since you were last logged-in: |Tid sen du senast loggade in:|
-You last logged-out at: |Du loggade senast ur kl:|
+Time since you were last logged-in: |Tid sen du senast loggade in: |
+You last logged-out at: |Du loggade senast ut kl: |
 Click LOGIN below to log-in|Klicka på LOGIN nedan för att logga in|
-Amount of time you have been logged-in: |Hur lång tid du varit inloggad:|
+Amount of time you have been logged-in: |Hur lång tid du varit inloggad: |
 You logged-in at:|Du loggade in kl:|
 Click LOGOUT below to log-out|Klicka på LOGOUT nedan för att logga ut|
 Undefined|Odefinierad|
@@ -408,10 +466,10 @@ This phone number is not in the campaign lists|Detta nummer finns ej i kampanjli
 Unspecified error|Ospecifierat fel|
 Extended Alt Phone Information: |Utökad information om alternativt telefonnummer:|
 ALT DIAL NUMBER:|ALT RING NUMMER:|
-Phone Code and Number:|Prefuix och telefonnummer:|
-Notes: |Noteringar:|
-Active: |Aktiv:|
-Alt Count: |Alt Count:|
+Phone Code and Number:|Prefix och telefonnummer:|
+Notes: |Noteringar: |
+Active: |Aktiv: |
+Alt Count: |Alt Count: |
 Change this phone number to INACTIVE|Ändra detta nummer till INAKTIV|
 Change this phone number to ACTIVE|Ändra detta nummer till AKTIVT|
 YOU MUST LOG IN TO THE TIMECLOCK FIRST|DU MÅSTE STÄMPLA IN FÖRST|
@@ -424,7 +482,7 @@ Group Alias|Gruppalias|
 ERROR: There are no Shifts enabled for your user group|ERROR: Det finns inga skift definierade för din användargrupp|
 ERROR: You are not allowed to log in outside of your shift|ERROR: Du har inte behörighet att logga in utanför ditt skift|
 MANAGER OVERRIDE|MANAGER OVERRIDE|
-Your Shift is over or has changed, you have been logged out of your session|Ditt skift är slut eller har ändrats, du är nu urloggad från din session|
+Your Shift is over or has changed, you have been logged out of your session|Ditt skift är slut eller har ändrats, du är nu utloggad från din session|
 ### START translations for 2.2.0 release ###
 You are not allowed to dial into other agent sessions|Du har inte behörighet att logga in på andra agenters sessions|
 QUICK TRANSFER|SNABBKOPPLA|
@@ -435,10 +493,80 @@ Calls In Queue|Samtalskö|
 Hide Calls In Queue|Dölj samtalskö|
 Calls in Queue View Disabled for this campaign|Samtalskö är frånkopplad för denna kampanj|
 YOU MUST BE PAUSED TO GRAB CALLS IN QUEUE|DU MÅSTE VARA I PAUSLÄGE FÖR ATT TA SAMTAL FRÅN KÖN|
-Manager |Manager|
+Manager |Manager |
 has selected your in-group choices|har valt dina ingruppsval|
 CONSULTATIVE|KONSULTERANDE|
 Close Message|Avslutningsmeddelande|
 TIMER NOTIFICATION|TIMERNOTIFIERING|
 login_language=en_us|login_language=se_se|
 >AGENTS<|>AGENTER<|
+### START translations for 2.4 release ###
+VIEW CALL LOG|VISA CALL LOG|
+click to dial|klicka för att ringa|
+Close Call Log|Stäng Samtalslogg|
+YOU MUST BE PAUSED TO VIEW YOUR CALL LOG|DU MÅSTE pausas vill visa CALL LOG|
+Close Info Box|Stäng Info Box|
+No calls on this day|Inga samtal denna dag|
+You are in ALT dial mode, you must finish the lead before logging out|Du är i ALT uppringningsläge måste du avsluta ledningen innan du loggar ut|
+Presets Button|Förinställningar Button|
+SELECT A PRESET|Välj en förinställd|
+Customer Hung-up, 3-way Call Ended Automatically|Kund Hung-up, slutade 3-vägs samtal automatiskt|
+Manual Dial Queue Calls Waiting|Manuell uppringning Queue samtal väntar|
+Manual Queue|Manuell Kö|
+This phone number is outside of the local call time|Detta telefonnummer är utanför den lokala samtalstid|
+Manual Queue is Off|Manuell Queue är av|
+Manual Queue is On|Manuell Queue är På|
+Call Notes:|Ring Anmärkningar:|
+Call Notes List|Ring listan över anteckningar|
+view notes|visa anteckningar|
+CALL NOTES LOG|RING ANMÄRKNINGAR LOG|
+Close Call Notes|Stäng Call Notes|
+CALL LOG FOR THIS LEAD|Samtalslogg FÖR DENNA LEAD|
+SEARCH FOR A LEAD|SÖK Ett LEAD|
+SEARCH RESULTS|SÖKRESULTAT|
+YOU MUST BE PAUSED TO SEARCH FOR A LEAD|DU MÅSTE pausas att söka efter ett LEAD|
+Notes: when doing a search for a lead, the phone number, lead ID or|Anteckningar: när du gör en sökning efter en bly, telefonnummer, bly-ID eller|
+are the best fields to use|är de bästa fält som ska användas|
+Using the other fields may be slower. Lead searching does not allow for wildcard or partial search terms|Med de övriga fält kan vara långsammare. Bly sökande tillåter inte jokertecken eller delvis sökord|
+Lead search requests are all logged in the system|Lead sökförfrågningar alla inloggade i systemet|
+Main Phone Number|Huvud telefonnummer|
+Alternate Phone Number|Alternativt telefonnummer|
+Address3 Phone Number|Address3 telefonnummer|
+No results found|Inga resultat hittades|
+Results Found:|Hittade:|
+No calls found|Inga samtal finns|
+reset form|återställa formen|
+Callback Status|Återuppringning Status|
+Callback Lead Status|Återuppringning Bly status|
+Callback Entry Time|Återuppringning Entry Time|
+Callback Trigger Time|Återuppringning Trigger Time|
+Callback Comments|Återuppringning Kommentarer|
+To see information on one of the callbacks below, click on the INFO link. To call the customer back now, click on the DIAL link. If you click on a record below to dial it, it will be removed from the list|För att se information på en av de återbesök nedan, klicka på INFO länken. Att ringa kunden tillbaka nu, klicka på DIAL länken. Om du klickar på en post nedan för att slå det, kommer det att tas bort från listan|
+rings all available agents until one picks up the phone|ringar alla tillgängliga medel tills man plockar upp telefonen|
+No calls for this lead|Inga samtal för denna ledning|
+Time Zone Warning|Time Zone Varning|
+Phone Area Code Outside Dialable Zone|Telefon Riktnummer Utanför Dialable Zone|
+Postal Code Outside Dialable Zone|Postnummer Utanför Dialable Zone|
+Custom Transfer|Anpassad Transfer|
+System Delay, Please try again|System Delay, försök igen|
+Disposition Status List Hidden|Disposition Status List Dold|
+The system has received a command to log you out, you have been logged out of your session|Systemet har fått ett kommando för att logga ut dig, har du loggat ut från sessionen|
+Notes: when doing a search for a contact, wildcard or partial search terms are not allowed|Anteckningar: när du gör en sökning efter en kontakt, är wild card eller partiell söktermer inte tillåtet|
+Contact search requests are all logged in the system|Kontakt Sök förfrågningar alla inloggade i systemet|
+SEARCH FOR A CONTACT|Sök efter en kontakt|
+CONTACTS SEARCH RESULTS|KONTAKTER SÖKRESULTAT|
+LEAD SEARCH|LEAD SÖK|
+Customer Time|kund tid|
+TERRITORY SELECTION|territorium SELECTION|
+TERRITORIES NOT SELECTED|Territorier som inte SELECTED|
+SELECTED TERRITORIES|områden som väljs ut|
+Dialable Leads|Dialable Leads|
+You have now logged-in|Du har nu inloggade|
+You logged in at|Du loggat in på|
+Refresh Campaign List|Uppdatera kampanj List|
+PLEASE SELECT A CAMPAIGN|Välj en kampanj|
+Agents View|medel Se|
+-READY|-KLAR|
+-INCALL|-ANROP|
+-PAUSED|-pause|
+CALL DISPOSITION|RING DISPOSITION|

@@ -160,7 +160,7 @@ if ($format=='table')
 {
 echo "<html>\n";
 echo "<head>\n";
-echo "<!-- VERSION: $version     SKAPA: $build    ADD: $ADD   server_ip: $server_ip-->\n";
+echo "<!-- VERSION: $version     BUILD: $build    ADD: $ADD   server_ip: $server_ip-->\n";
 echo "<title>Visa Lista: ";
 if ($ADD==1)		{echo "Aktiva anknytningar";}
 if ($ADD==2)		{echo "Upptagna anknytningar";}

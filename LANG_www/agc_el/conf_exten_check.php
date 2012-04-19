@@ -1,7 +1,7 @@
 <?php
 # conf_exten_check.php    version 2.4
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to send whether the meetme conference has live channels connected and which they are
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -52,17 +52,23 @@
 # 100109-1337 - Fixed Manual dial live call detection
 # 100527-0957 - Added send_dtmf, transfer_conference and park_call API functions
 # 100727-2209 - Added timer actions for hangup, extension, callmenu and ingroup as well as destination
+# 101123-1105 - Added api manual dial queue feature to external_dial function
+# 101208-0308 - Moved the Calls in Queue count and other counts outside of the autodial section (issue 406)
+# 110610-0059 - Small fix for manual dial calls lasting more than 100 minutes in real-time report
 #
 
-$version = '2.4-27';
-$build = '100727-2209';
+$version = '2.4-30';
+$build = '110610-0059';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=32;
+$mysql_log_count=38;
 $one_mysql_log=0;
+$DB=0;
 
 require("dbconnect.php");
 
 ### If you have globals turned off uncomment these lines
+if (isset($_GET["DB"]))						{$DB=$_GET["DB"];}
+	elseif (isset($_POST["DB"]))			{$DB=$_POST["DB"];}
 if (isset($_GET["user"]))					{$user=$_GET["user"];}
 	elseif (isset($_POST["user"]))			{$user=$_POST["user"];}
 if (isset($_GET["pass"]))					{$pass=$_GET["pass"];}
@@ -107,10 +113,15 @@ if ($qm_conf_ct > 0)
 ###########################################
 
 if ($non_latin < 1)
-{
-$user=ereg_replace("[^0-9a-zA-Z]","",$user);
-$pass=ereg_replace("[^0-9a-zA-Z]","",$pass);
-}
+	{
+	$user=ereg_replace("[^-_0-9a-zA-Z]","",$user);
+	$pass=ereg_replace("[^-_0-9a-zA-Z]","",$pass);
+	}
+else
+	{
+	$user = ereg_replace("'|\"|\\\\|;","",$user);
+	$pass = ereg_replace("'|\"|\\\\|;","",$pass);
+	}
 
 # default optional vars if not set
 if (!isset($format))   {$format="text";}
@@ -144,7 +155,6 @@ if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	}
 else
 	{
-
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
 		echo "Ακυρο server_ip: |$server_ip|  or  Ακυρο session_name: |$session_name|\n";
@@ -171,30 +181,29 @@ else
 	}
 
 if ($format=='debug')
-{
-echo "<html>\n";
-echo "<head>\n";
-echo "<!-- ΕΚΔΟΣΗ: $version     ΔΗΜΙΟΥΡΓΙΑ: $build    MEETME: $conf_exten   server_ip: $server_ip-->\n";
-echo "<title>Ελεγχος τηλ.σύνδεσης διάσκεψης";
-echo "</title>\n";
-echo "</head>\n";
-echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
-}
-
-	if ($ACTION == 'refresh')
 	{
-		$MT[0]='';
-		$row='';   $rowx='';
-		$channel_live=1;
-		if (strlen($conf_exten)<1)
+	echo "<html>\n";
+	echo "<head>\n";
+	echo "<!-- ΕΚΔΟΣΗ: $version     ΔΗΜΙΟΥΡΓΙΑ: $build    MEETME: $conf_exten   server_ip: $server_ip-->\n";
+	echo "<title>Ελεγχος τηλ.σύνδεσης διάσκεψης";
+	echo "</title>\n";
+	echo "</head>\n";
+	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+	}
+
+if ($ACTION == 'refresh')
+	{
+	$MT[0]='';
+	$row='';   $rowx='';
+	$channel_live=1;
+	if (strlen($conf_exten)<1)
 		{
 		$channel_live=0;
 		echo "Conf Exten $conf_exten δεν ισχύει\n";
 		exit;
 		}
-		else
+	else
 		{
-
 		if ($client == 'vdc')
 			{
 			$Acount=0;
@@ -215,7 +224,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 
 			if ($Acount > 0)
 				{
-				$stmt="SELECT status,callerid,agent_log_id,campaign_id from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
+				$stmt="SELECT status,callerid,agent_log_id,campaign_id,lead_id from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
 				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03004',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -224,6 +233,17 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 				$Acallerid =		$row[1];
 				$Aagent_log_id =	$row[2];
 				$Acampaign_id =		$row[3];
+				$Alead_id =			$row[4];
+
+				$api_manual_dial='STANDARD';
+				$stmt = "SELECT api_manual_dial FROM vicidial_campaigns where campaign_id='$Acampaign_id';";
+				$rslt=mysql_query($stmt, $link);
+				$vcc_conf_ct = mysql_num_rows($rslt);
+				if ($vcc_conf_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$api_manual_dial =	$row[0];
+					}
 				}
 		#	### find out if external table shows agent should be disabled
 		#	$stmt="SELECT count(*) from another_table where user='$user' and status='DEAD';";
@@ -231,6 +251,53 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 		#	$rslt=mysql_query($stmt, $link);
 		#	$row=mysql_fetch_row($rslt);
 		#	$AexternalDEAD=$row[0];
+
+			##### BEGIN check στο calls in queue, number of active calls in the campaign
+			if ($campagentstdisp == 'YES')
+				{
+				$ADsql='';
+				### grab the status of this agent to display
+				$stmt="SELECT status,campaign_id,closer_campaigns from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03006',$user,$server_ip,$session_name,$one_mysql_log);}
+				$row=mysql_fetch_row($rslt);
+				$Alogin=$row[0];
+				$Acampaign=$row[1];
+				$AccampSQL=$row[2];
+				$AccampSQL = ereg_replace(' -','', $AccampSQL);
+				$AccampSQL = ereg_replace(' ',"','", $AccampSQL);
+				if (eregi('AGENTDIRECT', $AccampSQL))
+					{
+					$AccampSQL = ereg_replace('AGENTDIRECT','', $AccampSQL);
+					$ADsql = "or ( (campaign_id LIKE \"%AGENTDIRECT%\") and (agent_only='$user') )";
+					}
+
+				### grab the number of calls being placed from this server and campaign
+				$stmt="SELECT count(*) from vicidial_auto_calls where status IN('LIVE') and ( (campaign_id='$Acampaign') or (campaign_id IN('$AccampSQL')) $ADsql);";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03007',$user,$server_ip,$session_name,$one_mysql_log);}
+				$row=mysql_fetch_row($rslt);
+				$RingCalls=$row[0];
+				if ($RingCalls > 0) {$RingCalls = "<font class=\"queue_text_red\">Κλήσεις στη ουρά: $RingCalls</font>";}
+				else {$RingCalls = "<font class=\"queue_text\">Κλήσεις στη ουρά: $RingCalls</font>";}
+
+				### grab the number of calls being placed from this server and campaign
+				$stmt="SELECT count(*) from vicidial_auto_calls where status NOT IN('XFER') and ( (campaign_id='$Acampaign') or (campaign_id IN('$AccampSQL')) );";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03008',$user,$server_ip,$session_name,$one_mysql_log);}
+				$row=mysql_fetch_row($rslt);
+				$DiaLCalls=$row[0];
+				}
+			else
+				{
+				$Alogin='N';
+				$RingCalls='N';
+				$DiaLCalls='N';
+				}
+			##### END check στο calls in queue, number of active calls in the campaign
 
 			if ($auto_dial_level > 0)
 				{
@@ -257,6 +324,15 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03018',$user,$server_ip,$session_name,$one_mysql_log);}
 				$row=mysql_fetch_row($rslt);
 				$AcalleridCOUNT=$row[0];
+
+				if ( ($AcalleridCOUNT > 0) and (eregi("INCALL",$Astatus)) and (preg_match("/^M/",$Acallerid)) )
+					{
+					$updateNOW_TIME = date("Y-m-d H:i:s");
+					$stmt="UPDATE vicidial_auto_calls set last_update_time='$updateNOW_TIME' where callerid='$Acallerid';";
+						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_query($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03038',$user,$server_ip,$session_name,$one_mysql_log);}
+					}
 
 				if ( ($AcalleridCOUNT < 1) and (eregi("INCALL",$Astatus)) and (strlen($Aagent_log_id) > 0) )
 					{
@@ -285,59 +361,9 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 						}
 					}
 				##### END DEAD logging section #####
-
-				if ($campagentstdisp == 'YES')
-					{
-					$ADsql='';
-					### grab the status of this agent to display
-					$stmt="SELECT status,campaign_id,closer_campaigns from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
-					if ($DB) {echo "|$stmt|\n";}
-					$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03006',$user,$server_ip,$session_name,$one_mysql_log);}
-					$row=mysql_fetch_row($rslt);
-					$Alogin=$row[0];
-					$Acampaign=$row[1];
-					$AccampSQL=$row[2];
-					$AccampSQL = ereg_replace(' -','', $AccampSQL);
-					$AccampSQL = ereg_replace(' ',"','", $AccampSQL);
-					if (eregi('AGENTDIRECT', $AccampSQL))
-						{
-						$AccampSQL = ereg_replace('AGENTDIRECT','', $AccampSQL);
-						$ADsql = "or ( (campaign_id LIKE \"%AGENTDIRECT%\") and (agent_only='$user') )";
-						}
-
-					### grab the number of calls being placed from this server and campaign
-					$stmt="SELECT count(*) from vicidial_auto_calls where status IN('LIVE') and ( (campaign_id='$Acampaign') or (campaign_id IN('$AccampSQL')) $ADsql);";
-					if ($DB) {echo "|$stmt|\n";}
-					$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03007',$user,$server_ip,$session_name,$one_mysql_log);}
-					$row=mysql_fetch_row($rslt);
-					$RingCalls=$row[0];
-					if ($RingCalls > 0) {$RingCalls = "<font class=\"queue_text_red\">Κλήσεις στη ουρά: $RingCalls</font>";}
-					else {$RingCalls = "<font class=\"queue_text\">Κλήσεις στη ουρά: $RingCalls</font>";}
-
-					### grab the number of calls being placed from this server and campaign
-					$stmt="SELECT count(*) from vicidial_auto_calls where status NOT IN('XFER') and ( (campaign_id='$Acampaign') or (campaign_id IN('$AccampSQL')) );";
-					if ($DB) {echo "|$stmt|\n";}
-					$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03008',$user,$server_ip,$session_name,$one_mysql_log);}
-					$row=mysql_fetch_row($rslt);
-					$DiaLCalls=$row[0];
-
-					}
-				else
-					{
-					$Alogin='N';
-					$RingCalls='N';
-					$DiaLCalls='N';
-					}
 				}
 			else
 				{
-				$Alogin='N';
-				$RingCalls='N';
-				$DiaLCalls='N';
-
 				### update the vicidial_live_agents every second with a new random number so it is shown to be alive
 				$stmt="UPDATE vicidial_live_agents set random_id='$random' where user='$user' and server_ip='$server_ip';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
@@ -360,6 +386,15 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03029',$user,$server_ip,$session_name,$one_mysql_log);}
 				$row=mysql_fetch_row($rslt);
 				$AcalleridCOUNT=$row[0];
+
+				if ( ($AcalleridCOUNT > 0) and (eregi("INCALL",$Astatus)) )
+					{
+					$updateNOW_TIME = date("Y-m-d H:i:s");
+					$stmt="UPDATE vicidial_auto_calls set last_update_time='$updateNOW_TIME' where callerid='$Acallerid';";
+						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_query($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03037',$user,$server_ip,$session_name,$one_mysql_log);}
+					}
 
 				if ( ($AcalleridCOUNT < 1) and (eregi("INCALL",$Astatus)) and (strlen($Aagent_log_id) > 0) )
 					{
@@ -409,6 +444,52 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 			$external_transferconf =		$row[10];
 			$external_park =				$row[11];
 			$timer_action_destination =		$row[12];
+
+			$MDQ_count=0;
+			if ( ($api_manual_dial=='QUEUE') or ($api_manual_dial=='QUEUE_AND_AUTOCALL') )
+				{
+				$stmt="SELECT count(*) FROM vicidial_manual_dial_queue where user='$user' and status='READY';";
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03033',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$mdq_count_record_ct = mysql_num_rows($rslt);
+				if ($mdq_count_record_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$MDQ_count =			$row[0];
+					}
+
+				if ( ($MDQ_count > 0) and (strlen($external_dial) < 16) and ($Astatus=='PAUSED') and ($Alead_id < 1) )
+					{
+					$stmt="SELECT mdq_id,external_dial FROM vicidial_manual_dial_queue where user='$user' and status='READY' order by entry_time limit 1;";
+					$rslt=mysql_query($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03034',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$mdq_record_ct = mysql_num_rows($rslt);
+					if ($mdq_record_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$MDQ_mdq_id =			$row[0];
+						$MDQ_external_dial =	$row[1];
+						$external_dial = $MDQ_external_dial;
+
+						$stmt="UPDATE vicidial_manual_dial_queue SET status='QUEUE' where mdq_id='$MDQ_mdq_id';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03035',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+						$UMDQaffected_rows_update = mysql_affected_rows($link);
+
+						if ($UMDQaffected_rows_update > 0)
+							{
+							$stmt="UPDATE vicidial_live_agents SET external_dial='$MDQ_external_dial' where user='$user' and server_ip='$server_ip';";
+							if ($DB) {echo "$stmt\n";}
+							$rslt=mysql_query($stmt, $link);
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03036',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+							$VLAMDQaffected_rows_update = mysql_affected_rows($link);
+							}
+						}
+					}
+				}
 
 			if (strlen($external_status)<1) {$external_status = '::::::::::';}
 
@@ -577,8 +658,13 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 				{$Alogin='DEAD_EXTERNAL';}
 			if ($Ashift_logout > 0)
 				{$Alogin='SHIFT_LOGOUT';}
+			if ($external_pause == 'LOGOUT')
+				{
+				$Alogin='API_LOGOUT';
+				$external_pause='';
+				}
 
-			echo 'DateTime: ' . $NOW_TIME . '|UnixTime: ' . $StarTtime . '|Logged-in: ' . $Alogin . '|CampCalls: ' . $RingCalls . '|Κατάσταση: ' . $Astatus . '|DiaLCalls: ' . $DiaLCalls . '|APIHanguP: ' . $external_hangup . '|APIStatuS: ' . $external_status . '|APIPausE: ' . $external_pause . '|APIDiaL: ' . $external_dial . '|DEADcall: ' . $DEADcustomer . '|InGroupChange: ' . $InGroupChangeDetails . '|APIFields: ' . $external_update_fields . '|APIFieldsData: ' . $external_update_fields_data . '|APITimerAction: ' . $timer_action . '|APITimerMessage: ' . $timer_action_message . '|APITimerSeconds: ' . $timer_action_seconds . '|APIdtmf: ' . $external_dtmf . '|APItransferconf: ' . $external_transferconf . '|APIpark: ' . $external_park . '|APITimerDestination: ' . $timer_action_destination . "\n";
+			echo 'DateTime: ' . $NOW_TIME . '|UnixTime: ' . $StarTtime . '|Logged-in: ' . $Alogin . '|CampCalls: ' . $RingCalls . '|Κατάσταση: ' . $Astatus . '|DiaLCalls: ' . $DiaLCalls . '|APIHanguP: ' . $external_hangup . '|APIStatuS: ' . $external_status . '|APIPausE: ' . $external_pause . '|APIDiaL: ' . $external_dial . '|DEADcall: ' . $DEADcustomer . '|InGroupChange: ' . $InGroupChangeDetails . '|APIFields: ' . $external_update_fields . '|APIFieldsData: ' . $external_update_fields_data . '|APITimerAction: ' . $timer_action . '|APITimerMessage: ' . $timer_action_message . '|APITimerSeconds: ' . $timer_action_seconds . '|APIdtmf: ' . $external_dtmf . '|APItransferconf: ' . $external_transferconf . '|APIpark: ' . $external_park . '|APITimerDestination: ' . $timer_action_destination . '|APIManualDialQueue: ' . $MDQ_count . "\n";
 
 			if (strlen($timer_action) > 3)
 				{
@@ -619,40 +705,40 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 			if ($format=='debug') {echo "\n<!-- $row[0] -->";}
 			}
 		}
-		$channels_list = ($channels_list + $sip_list);
-		echo "$channels_list|";
+	$channels_list = ($channels_list + $sip_list);
+	echo "$channels_list|";
 
-		$counter=0;
-		$countecho='';
-		while($total_conf > $counter)
+	$counter=0;
+	$countecho='';
+	while($total_conf > $counter)
 		{
-			$counter++;
-			$countecho = "$countecho$ChannelA[$counter] ~";
-		#	echo "$ChannelA[$counter] ~";
+		$counter++;
+		$countecho = "$countecho$ChannelA[$counter] ~";
+	#	echo "$ChannelA[$counter] ~";
 		}
 
 	echo "$countecho\n";
 	}
 
-	if ($ACTION == 'register')
+if ($ACTION == 'register')
 	{
-		$MT[0]='';
-		$row='';   $rowx='';
-		$channel_live=1;
-		if ( (strlen($conf_exten)<1) || (strlen($exten)<1) )
+	$MT[0]='';
+	$row='';   $rowx='';
+	$channel_live=1;
+	if ( (strlen($conf_exten)<1) || (strlen($exten)<1) )
 		{
 		$channel_live=0;
 		echo "Conf Exten $conf_exten δεν ισχύει or Exten $exten δεν ισχύει\n";
 		exit;
 		}
-		else
+	else
 		{
 		$stmt="UPDATE conferences set extension='$exten' where server_ip = '$server_ip' and conf_exten = '$conf_exten';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03013',$user,$server_ip,$session_name,$one_mysql_log);}
 		}
-		echo "Διάσκεψη $conf_exten έχει καταχωρηθεί $exten\n";
+	echo "Διάσκεψη $conf_exten έχει καταχωρηθεί $exten\n";
 	}
 
 

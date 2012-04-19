@@ -3581,7 +3581,7 @@ if ($function == 'agent_stats_export')
 						if ($login_sec > $login_start_end_check) {$login_sec = $login_start_end_check;}
 						if ($ASsessions[$k] < 1) {$ASsessions[$k] = 1;}
 						$avg_session_sec = ($login_sec / $ASsessions[$k]);
-						if ($ASpauses[$k] < 1)
+						if ( ($ASpauses[$k] < 1) or ($login_sec < 1) )
 							{
 							$avg_pause_sec = 0;
 							$avg_pause_session = 0;

@@ -9,10 +9,11 @@
 # 80525-2351 - Added an audit log that is not to be editable
 # 80602-0641 - Fixed status update bug
 # 90508-0727 - Changed to PHP long tags
+# 100621-1023 - Added admin_web_directory variable
 #
 
-$version = '2.2.0-5';
-$build = '90508-0727';
+$version = '2.2.0-6';
+$build = '100621-1023';
 
 $StarTtimE = date("U");
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -87,7 +88,7 @@ require("dbconnect.php");
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,admin_home_url FROM system_settings;";
+$stmt = "SELECT use_non_latin,admin_home_url,admin_web_directory FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -95,8 +96,9 @@ $i=0;
 while ($i < $qm_conf_ct)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =	$row[0];
-	$welcomeURL =	$row[1];
+	$non_latin =			$row[0];
+	$welcomeURL =			$row[1];
+	$admin_web_directory =	$row[2];
 	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
@@ -120,10 +122,10 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 	if ($valid_user < 1)
 		{
 		### NOT A VALID USER/PASS
-		$VDdisplayMESSAGE = "O usuário ea senha que você digitou não são ativos no sistema<BR>Por favor, tente novamente:";
+		$VDdisplayMESSAGE = "O usuário e a senha que você digitou não estão ativos no sistema<BR>Por favor, tente novamente:";
 
 		echo"<HTML><HEAD>\n";
-		echo"<TITLE>AgentTimeclock</TITLE>\n";
+		echo"<TITLE>Agent Relogio ponto</TITLE>\n";
 		echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 		echo"</HEAD>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -138,7 +140,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 		echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Timeclock </B></TD>";
+		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Relogio ponto </B></TD>";
 		echo "</TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 		echo "<TR><TD ALIGN=RIGHT>Login do Usuário:  </TD>";
@@ -225,10 +227,10 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		if ( ($last_action_sec < 30) and ($status != 'START') )
 			{
 			### You cannot log in or out within 30 segundos of your last login/logout
-			$VDdisplayMESSAGE = "Você não pode efetuar login ou para fora dentro de 30 segundos do seu último login ou logout";
+			$VDdisplayMESSAGE = "Você não pode entrar ou sair dentro de 30 segundos do seu último login ou logout";
 
 			echo"<HTML><HEAD>\n";
-			echo"<TITLE>AgentTimeclock</TITLE>\n";
+			echo"<TITLE>Agent Relogio ponto</TITLE>\n";
 			echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 			echo"</HEAD>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -243,7 +245,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 			echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 			echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Timeclock </B></TD>";
+			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Relogio ponto </B></TD>";
 			echo "</TR>\n";
 			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 			echo "<TR><TD ALIGN=RIGHT>Login do Usuário:  </TD>";
@@ -264,8 +266,8 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			{
 			if ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='login') )
 				{
-				$VDdisplayMESSAGE = "You have now logged-in";
-				$LOGtimeMESSAGE = "You logged in at $NOW_TIME";
+				$VDdisplayMESSAGE = "Você tem agora registrados em";
+				$LOGtimeMESSAGE = "Você logou em $NOW_TIME";
 
 				### Add a record to the timeclock log
 				$stmt="INSERT INTO vicidial_timeclock_log set event='LOGIN', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', event_date='$NOW_TIME';";
@@ -292,8 +294,8 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 			if ( ($status=='LOGIN') and ($stage=='logout') )
 				{
-				$VDdisplayMESSAGE = "Você tem agora autenticado-out";
-				$LOGtimeMESSAGE = "Você saiu em$NOW_TIME<BR>Quantidade de tempo que foram registradas em:$totTIME_HMS";
+				$VDdisplayMESSAGE = "Você efetuou logout";
+				$LOGtimeMESSAGE = "Você saiu em$NOW_TIME<BR>Quantidade de tempo que ficou logado:$totTIME_HMS";
 
 				### Add a record to the timeclock log
 				$stmt="INSERT INTO vicidial_timeclock_log set event='LOGOUT', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
@@ -333,24 +335,24 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				}
 
 			if ( ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='logout') ) or ( ($status=='LOGIN') and ($stage=='login') ) )
-				{echo "ERRO: timeclock entrada do log já realizados:$status|$stage";  exit;}
+				{echo "ERRO: relogio ponto já registrado:$status|$stage";  exit;}
 
 			if ($referrer=='agent') 
-				{$BACKlink = "<A HREF=\"./vicidial.php?pl=$phone_login&pp=$phone_pass&VD_login=$user\"><font color=\"#003333\">BACK TO Agent Login Screen</font></A>";}
+				{$BACKlink = "<A HREF=\"./vicidial.php?pl=$phone_login&pp=$phone_pass&VD_login=$user\"><font color=\"#003333\">VOLTAR para tela de login do Agente</font></A>";}
 			if ($referrer=='admin') 
-				{$BACKlink = "<A HREF=\"../vicidial/admin.php\"><font color=\"#003333\">Retornar para Administração</font></A>";}
+				{$BACKlink = "<A HREF=\"/$admin_web_directory/admin.php\"><font color=\"#003333\">VOLTAR para Administração</font></A>";}
 			if ($referrer=='welcome') 
-				{$BACKlink = "<A HREF=\"$welcomeURL\"><font color=\"#003333\">ANTERIOR a tela Bem-vindo</font></A>";}
+				{$BACKlink = "<A HREF=\"$welcomeURL\"><font color=\"#003333\">VOLTAR para Tela Inicial</font></A>";}
 
 			echo"<HTML><HEAD>\n";
-			echo"<TITLE>AgentTimeclock</TITLE>\n";
+			echo"<TITLE>Agent Relogio ponto</TITLE>\n";
 			echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 			echo"</HEAD>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 			echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 			echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 			echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Timeclock </B></TD>";
+			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Relogio ponto </B></TD>";
 			echo "</TR>\n";
 			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 			echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=3><B> $LOGtimeMESSAGE<BR>&nbsp; </B></TD></TR>\n";
@@ -368,21 +370,21 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 		if ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') )
 			{
-			$VDdisplayMESSAGE = "Vez desde que foi registrado em:$totTIME_HMS";
+			$VDdisplayMESSAGE = "Tempo desde o último login:$totTIME_HMS";
 			$log_action = 'login';
 			$button_name = 'LOGIN';
-			$LOGtimeMESSAGE = "Você última autenticado-out em:$last_action_date<BR><BR>LOGIN Clique abaixo para log-in";
+			$LOGtimeMESSAGE = "Você saiu pela última vez em:$last_action_date<BR><BR>Clique LOGIN abaixo para entrar";
 			}
 		if ($status=='LOGIN')
 			{
-			$VDdisplayMESSAGE = "Quantidade de tempo que tem sido registrado em:$totTIME_HMS";
+			$VDdisplayMESSAGE = "Tempo total desde que entrou no sistema:$totTIME_HMS";
 			$log_action = 'logout';
 			$button_name = 'LOGOUT';
-			$LOGtimeMESSAGE = "Você autenticado-nos em: $last_action_date<BR>Quantidade de tempo que tem sido registrado em:$totTIME_HMS<BR><BR>SAIR Clique abaixo para log-out";
+			$LOGtimeMESSAGE = "Você entrou em: $last_action_date<BR>Tempo total desde que entrou no sistema:$totTIME_HMS<BR><BR>Clique LOGOUT abaixo para sair";
 			}
 
 		echo"<HTML><HEAD>\n";
-		echo"<TITLE>AgentTimeclock</TITLE>\n";
+		echo"<TITLE>Agent Relogio ponto</TITLE>\n";
 		echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 		echo"</HEAD>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -400,7 +402,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 		echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Timeclock </B></TD>";
+		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Relogio ponto </B></TD>";
 		echo "</TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 		echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=3><B> $LOGtimeMESSAGE<BR>&nbsp; </B></TD></TR>\n";
@@ -421,7 +423,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 else
 	{
 	echo"<HTML><HEAD>\n";
-	echo"<TITLE>AgentTimeclock</TITLE>\n";
+	echo"<TITLE>Agent Relogio ponto</TITLE>\n";
 	echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 	echo"</HEAD>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -436,7 +438,7 @@ else
 	echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 	echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-	echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Timeclock </B></TD>";
+	echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Relogio ponto </B></TD>";
 	echo "</TR>\n";
 	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>Login do Usuário:  </TD>";

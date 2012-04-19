@@ -184,8 +184,8 @@ if ($format=='debug')
 	{
 	echo "<html>\n";
 	echo "<head>\n";
-	echo "<!-- VERSIÓN: $version     CONSTRUCCION: $build    MEETME: $conf_exten   server_ip: $server_ip-->\n";
-	echo "<title>Comprobar la Extensión de Conf";
+	echo "<!-- VERSIÓN: $version     CONSTRUCCIÓN: $build    MEETME: $conf_exten   server_ip: $server_ip-->\n";
+	echo "<title>Revisar la extensión de configuración";
 	echo "</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -280,8 +280,8 @@ if ($ACTION == 'refresh')
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03007',$user,$server_ip,$session_name,$one_mysql_log);}
 				$row=mysql_fetch_row($rslt);
 				$RingCalls=$row[0];
-				if ($RingCalls > 0) {$RingCalls = "<font class=\"queue_text_red\">Pide, en la cola: $RingCalls</font>";}
-				else {$RingCalls = "<font class=\"queue_text\">Pide, en la cola: $RingCalls</font>";}
+				if ($RingCalls > 0) {$RingCalls = "<font class=\"queue_text_red\">Llamadas en cola: $RingCalls</font>";}
+				else {$RingCalls = "<font class=\"queue_text\">Llamadas en cola: $RingCalls</font>";}
 
 				### grab the number of calls being placed from this server and campaign
 				$stmt="SELECT count(*) from vicidial_auto_calls where status NOT IN('XFER') and ( (campaign_id='$Acampaign') or (campaign_id IN('$AccampSQL')) );";
@@ -658,6 +658,11 @@ if ($ACTION == 'refresh')
 				{$Alogin='DEAD_EXTERNAL';}
 			if ($Ashift_logout > 0)
 				{$Alogin='SHIFT_LOGOUT';}
+			if ($external_pause == 'LOGOUT')
+				{
+				$Alogin='API_LOGOUT';
+				$external_pause='';
+				}
 
 			echo 'DateTime: ' . $NOW_TIME . '|UnixTime: ' . $StarTtime . '|Logged-in: ' . $Alogin . '|CampCalls: ' . $RingCalls . '|Estado: ' . $Astatus . '|DiaLCalls: ' . $DiaLCalls . '|APIHanguP: ' . $external_hangup . '|APIStatuS: ' . $external_status . '|APIPausE: ' . $external_pause . '|APIDiaL: ' . $external_dial . '|DEADcall: ' . $DEADcustomer . '|InGroupChange: ' . $InGroupChangeDetails . '|APIFields: ' . $external_update_fields . '|APIFieldsData: ' . $external_update_fields_data . '|APITimerAction: ' . $timer_action . '|APITimerMessage: ' . $timer_action_message . '|APITimerSeconds: ' . $timer_action_seconds . '|APIdtmf: ' . $external_dtmf . '|APItransferconf: ' . $external_transferconf . '|APIpark: ' . $external_park . '|APITimerDestination: ' . $timer_action_destination . '|APIManualDialQueue: ' . $MDQ_count . "\n";
 
@@ -742,7 +747,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- tiempo de ejecución del Script: $RUNtime segundos -->";
+	echo "\n<!-- tiempo de ejecución del guión: $RUNtime segundos -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

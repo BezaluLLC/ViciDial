@@ -251,11 +251,11 @@ echo "<!-- VERSÃO: $version     CONFIGURAÇÃO: $build    UNIQUEID: $uniqueid  
 	</script>
 
 <?php
-echo "<title>CHAMADA ENTRANDO";
+echo "<title>CHAMADA ENTRANTE";
 echo "</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=\"#CCC2E0\" marginheight=0 marginwidth=0 leftmargin=0 topmargin=0 onload=\"link_timeout();\">\n";
-echo "<CENTER><H2>CHAMADA ENTRANDO</H2>\n";
+echo "<CENTER><H2>CHAMADA ENTRANTE</H2>\n";
 echo "<B>$NOW_TIME</B><BR><BR>\n";
 }
 

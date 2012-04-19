@@ -4,14 +4,17 @@
 #
 # functions for agent scripts
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES:
 # 100629-1201 - First Build
 # 101124-0625 - Added lookup_gmt and dialable_gmt functions
+# 110630-0026 - Added HIDDEN and READONLY field types
+# 110719-0858 - Added HIDEBLOB field type
+# 110730-2336 - Added call_id variable
+# 120213-1709 - Commented out default of READONLY fields since they cannot change
 #
-
 
 
 ##### BEGIN gather values for display of custom list fields for a lead #####
@@ -71,7 +74,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 				$A_field_order[$o] =		$rowx[15];
 				$A_field_value[$o] =		'';
 
-				if (!preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
+				if (!preg_match("/\|$A_field_label[$o]\|/i",$vicidial_list_fields))
 					{
 					if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') )
 						{
@@ -116,7 +119,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 					$A_field_value[$o]		= trim("$row[$o]");
 					if ($A_field_select[$o]=='----EMPTY----')
 						{$A_field_value[$o]='';}
-					if (preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
+					if (preg_match("/\|$A_field_label[$o]\|/i",$vicidial_list_fields))
 						{$A_field_value[$o] = '--A--' . $A_field_label[$o] . '--B--';}
 					$o++;
 					}
@@ -152,7 +155,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 						{$CFoutput .= "right";}
 					$CFoutput .= "><font size=2>";
 					}
-				if ($A_field_type[$o]!='SCRIPT')
+				if ( ($A_field_type[$o]!='SCRIPT') and ($A_field_type[$o]!='HIDDEN') and ($A_field_type[$o]!='HIDEBLOB') )
 					{$CFoutput .= "<B>$A_field_name[$o]</B>";}
 				if ( ($A_name_position[$o]=='TOP') or ($A_field_type[$o]=='SCRIPT') )
 					{$CFoutput .= " &nbsp; <span style=\"position:static;\" id=P_HELP_$A_field_label[$o]></span><span style=\"position:static;background:white;\" id=HELP_$A_field_label[$o]> $helpHTML</span><BR>";}
@@ -239,6 +242,18 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 					if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
 					$field_HTML .= "$A_field_default[$o]\n";
 					}
+				if ($A_field_type[$o]=='READONLY')
+					{
+					if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
+				#	if (strlen($A_field_value[$o]) < 1) {$A_field_value[$o] = $A_field_default[$o];}
+					$field_HTML .= "<input type=hidden name=$A_field_label[$o] id=$A_field_label[$o] value=\"$A_field_value[$o]\"> $A_field_value[$o]\n";
+					}
+				if ( ($A_field_type[$o]=='HIDDEN') or ($A_field_type[$o]=='HIDEBLOB') )
+					{
+					if (strlen($A_field_value[$o]) < 1) {$A_field_value[$o] = $A_field_default[$o];}
+					if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
+					$field_HTML .= "<input type=hidden name=$A_field_label[$o] id=$A_field_label[$o] value=\"$A_field_value[$o]\">\n";
+					}
 				if ($A_field_type[$o]=='SCRIPT')
 					{
 					if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
@@ -317,7 +332,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 					$field_HTML .= "</SELECT>";
 					}
 
-				if ( ($A_name_position[$o]=='LEFT') and ($A_field_type[$o]!='SCRIPT') )
+				if ( ($A_name_position[$o]=='LEFT') and ($A_field_type[$o]!='SCRIPT') and ($A_field_type[$o]!='HIDDEN') and ($A_field_type[$o]!='HIDEBLOB') )
 					{
 					$CFoutput .= " $field_HTML <span style=\"position:static;\" id=P_HELP_$A_field_label[$o]></span><span style=\"position:static;background:white;\" id=HELP_$A_field_label[$o]> $helpHTML</span>";
 					}
@@ -476,6 +491,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 		$CFoutput = eregi_replace('--A--closecallid--B--',"$closecallid",$CFoutput);
 		$CFoutput = eregi_replace('--A--xfercallid--B--',"$xfercallid",$CFoutput);
 		$CFoutput = eregi_replace('--A--agent_log_id--B--',"$agent_log_id",$CFoutput);
+		$CFoutput = eregi_replace('--A--call_id--B--',"$call_id",$CFoutput);
 
 		# custom fields replacement
 		$o=0;

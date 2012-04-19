@@ -99,7 +99,7 @@ if ($format=='debug')
 echo "<html>\n";
 echo "<head>\n";
 echo "<!-- VERSÃO: $version     CONFIGURAÇÃO: $build    EXTEN: $exten   server_ip: $server_ip-->\n";
-echo "<title>Mostra as ligações em espera";
+echo "<title>Mostrar ligações em espera";
 echo "</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";

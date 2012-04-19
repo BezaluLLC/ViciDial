@@ -298,8 +298,8 @@ if ($format=='debug')
 	{
 	echo "<html>\n";
 	echo "<head>\n";
-	echo "<!-- VERSIÓN: $version     CONSTRUCCION: $build    ACTION: $ACTION   server_ip: $server_ip-->\n";
-	echo "<title>Enviar al Manager: ";
+	echo "<!-- VERSIÓN: $version     CONSTRUCCIÓN: $build    ACTION: $ACTION   server_ip: $server_ip-->\n";
+	echo "<title>Enviar al gerente: ";
 	if ($ACTION=="Originate")		{echo "Originate";}
 	if ($ACTION=="Redirect")		{echo "Redirect";}
 	if ($ACTION=="RedirectName")	{echo "RedirectName";}
@@ -336,7 +336,7 @@ if ($ACTION=="SysCIDOriginate")
 	{
 	if ( (strlen($exten)<1) or (strlen($channel)<1) or (strlen($ext_context)<1) or (strlen($queryCID)<1) )
 		{
-		echo "Exten $exten No es válido or queryCID $queryCID No es válido, Originate comando no insertado\n";
+		echo "Exten $exten No es válido or queryCID $queryCID No es válido, Originate No se ingresó el comando\n";
 		}
 	else
 		{
@@ -344,7 +344,7 @@ if ($ACTION=="SysCIDOriginate")
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02004',$user,$server_ip,$session_name,$one_mysql_log);}
-		echo "Originate comando enviado a Exten $exten Canal $channel en $server_ip\n";
+		echo "Originate comando enviado para Exten $exten Canal $channel en $server_ip\n";
 		}
 	}
 
@@ -359,12 +359,12 @@ if ($ACTION=="OriginateName")
 		{
 		$channel_live=0;
 		echo "Una de estas variables No es válido:\n";
-		echo "Channel $channel debe ser mayor de 2 caracteres\n";
-		echo "queryCID $queryCID debe ser mayor de 14 caracteres\n";
-		echo "extenName $extenName debe ser fijado\n";
-		echo "ext_context $ext_context debe ser fijado\n";
-		echo "ext_priority $ext_priority debe ser fijado\n";
-		echo "\nOriginateName Action no enviado\n";
+		echo "Channel $channel debe ser mayor a 2 caracteres\n";
+		echo "queryCID $queryCID debe ser mayor a 14 caracteres\n";
+		echo "extenName $extenName debe ser fijo\n";
+		echo "ext_context $ext_context debe ser fijo\n";
+		echo "ext_priority $ext_priority debe ser fijo\n";
+		echo "\nOriginateName Action no se envió\n";
 		}
 	else
 		{
@@ -388,13 +388,13 @@ if ($ACTION=="OriginateNameVmail")
 		{
 		$channel_live=0;
 		echo "Una de estas variables No es válido:\n";
-		echo "Channel $channel debe ser mayor de 2 caracteres\n";
-		echo "queryCID $queryCID debe ser mayor de 14 caracteres\n";
-		echo "extenName $extenName debe ser fijado\n";
-		echo "exten $exten debe ser fijado\n";
-		echo "ext_context $ext_context debe ser fijado\n";
-		echo "ext_priority $ext_priority debe ser fijado\n";
-		echo "\nOriginateNameVmail Action no enviado\n";
+		echo "Channel $channel debe ser mayor a 2 caracteres\n";
+		echo "queryCID $queryCID debe ser mayor a 14 caracteres\n";
+		echo "extenName $extenName debe ser fijo\n";
+		echo "exten $exten debe ser fijo\n";
+		echo "ext_context $ext_context debe ser fijo\n";
+		echo "ext_priority $ext_priority debe ser fijo\n";
+		echo "\nOriginateNameVmail Action no se envió\n";
 		}
 	else
 		{
@@ -431,7 +431,7 @@ if ($ACTION=="Originate")
 	{
 	if ( (strlen($exten)<1) or (strlen($channel)<1) or (strlen($ext_context)<1) or ( (strlen($queryCID)<10) and ($alertCID < 1) ) )
 		{
-		echo "ERROR Exten $exten No es válido or queryCID $queryCID No es válido, Originate comando no insertado\n";
+		echo "ERROR Exten $exten No es válido or queryCID $queryCID No es válido, Originate No se ingresó el comando\n";
 		}
 	else
 		{
@@ -459,7 +459,7 @@ if ($ACTION=="Originate")
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02007',$user,$server_ip,$session_name,$one_mysql_log);}
-		echo "Originate comando enviado a Exten $exten Canal $channel en $server_ip |$account|$variable|\n";
+		echo "Originate comando enviado para Exten $exten Canal $channel en $server_ip |$account|$variable|\n";
 
 		if ($agent_dialed_number > 0)
 			{
@@ -507,7 +507,7 @@ if ($ACTION=="HangupConfDial")
 	if ( (strlen($exten)<3) or (strlen($queryCID)<15) or (strlen($ext_context)<1) )
 		{
 		$channel_live=0;
-		echo "conference $exten No es válido or ext_context $ext_context or queryCID $queryCID No es válido, Hangup comando no insertado\n";
+		echo "conference $exten No es válido or ext_context $ext_context or queryCID $queryCID No es válido, Hangup No se ingresó el comando\n";
 		}
 	else
 		{
@@ -551,7 +551,7 @@ if ($ACTION=="Hangup")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) )
 		{
 		$channel_live=0;
-		echo "Channel $channel No es válido or queryCID $queryCID No es válido, Hangup comando no insertado\n";
+		echo "Channel $channel No es válido or queryCID $queryCID No es válido, Hangup No se ingresó el comando\n";
 		}
 	else
 		{
@@ -592,7 +592,7 @@ if ($ACTION=="Hangup")
 				if ($row[0]==0)
 					{
 					$channel_live=0;
-					echo "Channel $channel no está activo en $call_server_ip, Hangup comando no insertado $rowx[0]\n$stmt\n";
+					echo "Channel $channel no está activo en $call_server_ip, Hangup No se ingresó el comando $rowx[0]\n$stmt\n";
 					}
 				else
 					{
@@ -610,7 +610,7 @@ if ($ACTION=="Hangup")
 			if ($row[0] > 0)
 				{
 				$channel_live=0;
-				echo "Channel $channel in use by another agent en $call_server_ip, Hangup comando no insertado $rowx[0]\n$stmt\n";
+				echo "Channel $channel in use by another agent en $call_server_ip, Hangup No se ingresó el comando $rowx[0]\n$stmt\n";
 				if ($WeBRooTWritablE > 0)
 					{
 					$fp = fopen ("./vicidial_debug.txt", "a");
@@ -758,7 +758,7 @@ if ($ACTION=="Hangup")
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02020',$user,$server_ip,$session_name,$one_mysql_log);}
-			echo "Hangup comando enviado a Canal $channel en $call_server_ip\n";
+			echo "Hangup comando enviado para Canal $channel en $call_server_ip\n";
 			}
 		}
 	}
@@ -775,16 +775,16 @@ if ($ACTION=="RedirectVD")
 		{
 		$channel_live=0;
 		echo "Una de estas variables No es válido:\n";
-		echo "Channel $channel debe ser mayor de 2 caracteres\n";
-		echo "queryCID $queryCID debe ser mayor de 14 caracteres\n";
-		echo "exten $exten debe ser fijado\n";
-		echo "ext_context $ext_context debe ser fijado\n";
-		echo "ext_priority $ext_priority debe ser fijado\n";
-		echo "auto_dial_level $auto_dial_level debe ser fijado\n";
-		echo "campaign $campaign debe ser fijado\n";
-		echo "uniqueid $uniqueid debe ser fijado\n";
-		echo "lead_id $lead_id debe ser fijado\n";
-		echo "\nRedirectVD Action no enviado\n";
+		echo "Channel $channel debe ser mayor a 2 caracteres\n";
+		echo "queryCID $queryCID debe ser mayor a 14 caracteres\n";
+		echo "exten $exten debe ser fijo\n";
+		echo "ext_context $ext_context debe ser fijo\n";
+		echo "ext_priority $ext_priority debe ser fijo\n";
+		echo "auto_dial_level $auto_dial_level debe ser fijo\n";
+		echo "campaign $campaign debe ser fijo\n";
+		echo "uniqueid $uniqueid debe ser fijo\n";
+		echo "lead_id $lead_id debe ser fijo\n";
+		echo "\nRedirectVD Action no se envió\n";
 		}
 	else
 		{
@@ -851,14 +851,14 @@ if ($ACTION=="RedirectToPark")
 		{
 		$channel_live=0;
 		echo "Una de estas variables No es válido:\n";
-		echo "Channel $channel debe ser mayor de 2 caracteres\n";
-		echo "queryCID $queryCID debe ser mayor de 14 caracteres\n";
-		echo "exten $exten debe ser fijado\n";
-		echo "extenName $extenName debe ser fijado\n";
-		echo "ext_context $ext_context debe ser fijado\n";
-		echo "ext_priority $ext_priority debe ser fijado\n";
-		echo "parkedby $parkedby debe ser fijado\n";
-		echo "\nRedirectToPark Action no enviado\n";
+		echo "Channel $channel debe ser mayor a 2 caracteres\n";
+		echo "queryCID $queryCID debe ser mayor a 14 caracteres\n";
+		echo "exten $exten debe ser fijo\n";
+		echo "extenName $extenName debe ser fijo\n";
+		echo "ext_context $ext_context debe ser fijo\n";
+		echo "ext_priority $ext_priority debe ser fijo\n";
+		echo "parkedby $parkedby debe ser fijo\n";
+		echo "\nRedirectToPark Action no se envió\n";
 		}
 	else
 		{
@@ -869,7 +869,7 @@ if ($ACTION=="RedirectToPark")
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02025',$user,$server_ip,$session_name,$one_mysql_log);}
 		$ACTION="Redirect";
 
-		$stmt = "INSERT INTO park_log SET uniqueid='$uniqueid',status='PARKINGED',channel='$channel',channel_group='$campaign',server_ip='$server_ip',parked_time='$NOW_TIME',parked_sec=0,extension='$CalLCID',user='$user',lead_id='$lead_id';";
+		$stmt = "INSERT INTO park_log SET uniqueid='$uniqueid',status='RETENERED',channel='$channel',channel_group='$campaign',server_ip='$server_ip',parked_time='$NOW_TIME',parked_sec=0,extension='$CalLCID',user='$user',lead_id='$lead_id';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02098',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -919,7 +919,7 @@ if ($ACTION=="RedirectToPark")
 
 			if ($VAC_eq_ct > 0)
 				{
-				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLERONHOLD',data1='PARKING',serverid='$queuemetrics_log_id';";
+				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLERONHOLD',data1='RETENER',serverid='$queuemetrics_log_id';";
 				$rslt=mysql_query($stmt, $linkB);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02101',$user,$server_ip,$session_name,$one_mysql_log);}
 				$affected_rows = mysql_affected_rows($linkB);
@@ -944,12 +944,12 @@ if ($ACTION=="RedirectFromPark")
 		{
 		$channel_live=0;
 		echo "Una de estas variables No es válido:\n";
-		echo "Channel $channel debe ser mayor de 2 caracteres\n";
-		echo "queryCID $queryCID debe ser mayor de 14 caracteres\n";
-		echo "exten $exten debe ser fijado\n";
-		echo "ext_context $ext_context debe ser fijado\n";
-		echo "ext_priority $ext_priority debe ser fijado\n";
-		echo "\nRedirectFromPark Action no enviado\n";
+		echo "Channel $channel debe ser mayor a 2 caracteres\n";
+		echo "queryCID $queryCID debe ser mayor a 14 caracteres\n";
+		echo "exten $exten debe ser fijo\n";
+		echo "ext_context $ext_context debe ser fijo\n";
+		echo "ext_priority $ext_priority debe ser fijo\n";
+		echo "\nRedirectFromPark Action no se envió\n";
 		}
 	else
 		{
@@ -1019,7 +1019,7 @@ if ($ACTION=="RedirectFromPark")
 
 				if ($VAC_eq_ct > 0)
 					{
-					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLEROFFHOLD',data1='$parked_sec',data2='PARKING',serverid='$queuemetrics_log_id';";
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLEROFFHOLD',data1='$parked_sec',data2='RETENER',serverid='$queuemetrics_log_id';";
 					$rslt=mysql_query($stmt, $linkB);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02106',$user,$server_ip,$session_name,$one_mysql_log);}
 					$affected_rows = mysql_affected_rows($linkB);
@@ -1041,14 +1041,14 @@ if ($ACTION=="RedirectToParkIVR")
 		{
 		$channel_live=0;
 		echo "Una de estas variables No es válido:\n";
-		echo "Channel $channel debe ser mayor de 2 caracteres\n";
-		echo "queryCID $queryCID debe ser mayor de 14 caracteres\n";
-		echo "exten $exten debe ser fijado\n";
-		echo "extenName $extenName debe ser fijado\n";
-		echo "ext_context $ext_context debe ser fijado\n";
-		echo "ext_priority $ext_priority debe ser fijado\n";
-		echo "parkedby $parkedby debe ser fijado\n";
-		echo "\nRedirectToPark Action no enviado\n";
+		echo "Channel $channel debe ser mayor a 2 caracteres\n";
+		echo "queryCID $queryCID debe ser mayor a 14 caracteres\n";
+		echo "exten $exten debe ser fijo\n";
+		echo "extenName $extenName debe ser fijo\n";
+		echo "ext_context $ext_context debe ser fijo\n";
+		echo "ext_priority $ext_priority debe ser fijo\n";
+		echo "parkedby $parkedby debe ser fijo\n";
+		echo "\nRedirectToPark Action no se envió\n";
 		}
 	else
 		{
@@ -1059,12 +1059,12 @@ if ($ACTION=="RedirectToParkIVR")
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02025',$user,$server_ip,$session_name,$one_mysql_log);}
 		$ACTION="Redirect";
 
-		$stmt = "UPDATE vicidial_auto_calls SET extension='PARKING_IVR' where callerid='$CalLCID' limit 1;";
+		$stmt = "UPDATE vicidial_auto_calls SET extension='RETENER_IVR' where callerid='$CalLCID' limit 1;";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02088',$user,$server_ip,$session_name,$one_mysql_log);}
 
-		$stmt = "INSERT INTO park_log SET uniqueid='$uniqueid',status='IVRPARKINGED',channel='$channel',channel_group='$campaign',server_ip='$server_ip',parked_time='$NOW_TIME',parked_sec=0,extension='$CalLCID',user='$user',lead_id='$lead_id';";
+		$stmt = "INSERT INTO park_log SET uniqueid='$uniqueid',status='IVRRETENERED',channel='$channel',channel_group='$campaign',server_ip='$server_ip',parked_time='$NOW_TIME',parked_sec=0,extension='$CalLCID',user='$user',lead_id='$lead_id';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02107',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -1113,7 +1113,7 @@ if ($ACTION=="RedirectToParkIVR")
 
 			if ($VAC_eq_ct > 0)
 				{
-				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLERONHOLD',data1='IVRPARKING',serverid='$queuemetrics_log_id';";
+				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLERONHOLD',data1='IVRRETENER',serverid='$queuemetrics_log_id';";
 				$rslt=mysql_query($stmt, $linkB);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02110',$user,$server_ip,$session_name,$one_mysql_log);}
 				$affected_rows = mysql_affected_rows($linkB);
@@ -1137,12 +1137,12 @@ if ($ACTION=="RedirectFromParkIVR")
 		{
 		$channel_live=0;
 		echo "Una de estas variables No es válido:\n";
-		echo "Channel $channel debe ser mayor de 2 caracteres\n";
-		echo "queryCID $queryCID debe ser mayor de 14 caracteres\n";
-		echo "exten $exten debe ser fijado\n";
-		echo "ext_context $ext_context debe ser fijado\n";
-		echo "ext_priority $ext_priority debe ser fijado\n";
-		echo "\nRedirectFromPark Action no enviado\n";
+		echo "Channel $channel debe ser mayor a 2 caracteres\n";
+		echo "queryCID $queryCID debe ser mayor a 14 caracteres\n";
+		echo "exten $exten debe ser fijo\n";
+		echo "ext_context $ext_context debe ser fijo\n";
+		echo "ext_priority $ext_priority debe ser fijo\n";
+		echo "\nRedirectFromPark Action no se envió\n";
 		}
 	else
 		{
@@ -1217,7 +1217,7 @@ if ($ACTION=="RedirectFromParkIVR")
 
 				if ($VAC_eq_ct > 0)
 					{
-					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLEROFFHOLD',data1='$parked_sec',data2='IVRPARKING',serverid='$queuemetrics_log_id';";
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLEROFFHOLD',data1='$parked_sec',data2='IVRRETENER',serverid='$queuemetrics_log_id';";
 					$rslt=mysql_query($stmt, $linkB);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02115',$user,$server_ip,$session_name,$one_mysql_log);}
 					$affected_rows = mysql_affected_rows($linkB);
@@ -1240,12 +1240,12 @@ if ($ACTION=="RedirectName")
 		{
 		$channel_live=0;
 		echo "Una de estas variables No es válido:\n";
-		echo "Channel $channel debe ser mayor de 2 caracteres\n";
-		echo "queryCID $queryCID debe ser mayor de 14 caracteres\n";
-		echo "extenName $extenName debe ser fijado\n";
-		echo "ext_context $ext_context debe ser fijado\n";
-		echo "ext_priority $ext_priority debe ser fijado\n";
-		echo "\nRedirectName Action no enviado\n";
+		echo "Channel $channel debe ser mayor a 2 caracteres\n";
+		echo "queryCID $queryCID debe ser mayor a 14 caracteres\n";
+		echo "extenName $extenName debe ser fijo\n";
+		echo "ext_context $ext_context debe ser fijo\n";
+		echo "ext_priority $ext_priority debe ser fijo\n";
+		echo "\nRedirectName Action no se envió\n";
 		}
 	else
 		{
@@ -1269,13 +1269,13 @@ if ($ACTION=="RedirectNameVmail")
 		{
 		$channel_live=0;
 		echo "Una de estas variables No es válido:\n";
-		echo "Channel $channel debe ser mayor de 2 caracteres\n";
-		echo "queryCID $queryCID debe ser mayor de 14 caracteres\n";
-		echo "extenName $extenName debe ser fijado\n";
-		echo "exten $exten debe ser fijado\n";
-		echo "ext_context $ext_context debe ser fijado\n";
-		echo "ext_priority $ext_priority debe ser fijado\n";
-		echo "\nRedirectNameVmail Action no enviado\n";
+		echo "Channel $channel debe ser mayor a 2 caracteres\n";
+		echo "queryCID $queryCID debe ser mayor a 14 caracteres\n";
+		echo "extenName $extenName debe ser fijo\n";
+		echo "exten $exten debe ser fijo\n";
+		echo "ext_context $ext_context debe ser fijo\n";
+		echo "ext_priority $ext_priority debe ser fijo\n";
+		echo "\nRedirectNameVmail Action no se envió\n";
 		}
 	else
 		{
@@ -1309,13 +1309,13 @@ if ($ACTION=="RedirectXtraCXNeW")
 		$channel_liveX=0;
 		$channel_liveY=0;
 		echo "Una de estas variables No es válido:\n";
-		echo "Channel $channel debe ser mayor de 2 caracteres\n";
-		echo "ExtraChannel $extrachannel debe ser mayor de 2 caracteres\n";
-		echo "queryCID $queryCID debe ser mayor de 14 caracteres\n";
-		echo "exten $exten debe ser fijado\n";
-		echo "ext_context $ext_context debe ser fijado\n";
-		echo "ext_priority $ext_priority debe ser fijado\n";
-		echo "\nRedirect Action no enviado\n";
+		echo "Channel $channel debe ser mayor a 2 caracteres\n";
+		echo "ExtraChannel $extrachannel debe ser mayor a 2 caracteres\n";
+		echo "queryCID $queryCID debe ser mayor a 14 caracteres\n";
+		echo "exten $exten debe ser fijo\n";
+		echo "ext_context $ext_context debe ser fijo\n";
+		echo "ext_priority $ext_priority debe ser fijo\n";
+		echo "\nRedirect Action no se envió\n";
 		if (ereg("SECOND|FIRST|DEBUG",$filename))
 			{
 			if ($WeBRooTWritablE > 0)
@@ -1395,8 +1395,8 @@ if ($ACTION=="RedirectXtraCXNeW")
 			else
 				{
 				$channel_liveX=0;
-				echo "Cannot find empty vicidial_conference en $server_ip, Redirect comando no insertado\n|$stmt|";
-				if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "No puede encontrar conferencia vacía en $server_ip";}
+				echo "Cannot find empty vicidial_conference en $server_ip, Redirect No se ingresó el comando\n|$stmt|";
+				if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "No puede encontrar una conferencia vacía en $server_ip";}
 				}
 			}
 
@@ -1417,7 +1417,7 @@ if ($ACTION=="RedirectXtraCXNeW")
 			if ($rowx[0]==0)
 				{
 				$channel_liveX=0;
-				echo "Channel $channel no está activo en $call_server_ip, Redirect comando no insertado\n";
+				echo "Channel $channel no está activo en $call_server_ip, Redirect No se ingresó el comando\n";
 				if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel no está activo en $call_server_ip";}
 				}	
 			}
@@ -1436,7 +1436,7 @@ if ($ACTION=="RedirectXtraCXNeW")
 			if ($rowx[0]==0)
 				{
 				$channel_liveY=0;
-				echo "Channel $channel no está activo en $server_ip, Redirect comando no insertado\n";
+				echo "Channel $channel no está activo en $server_ip, Redirect No se ingresó el comando\n";
 				if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel no está activo en $server_ip";}
 				}	
 			}
@@ -1450,7 +1450,7 @@ if ($ACTION=="RedirectXtraCXNeW")
 			if ($rowx[0] < 1)
 				{
 				$channel_liveY=0;
-				echo "No Local agent to send call to, Redirect comando no insertado\n";
+				echo "No Local agent to send call to, Redirect No se ingresó el comando\n";
 				if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "No Local agent to send call to";}
 				}	
 			else
@@ -1486,7 +1486,7 @@ if ($ACTION=="RedirectXtraCXNeW")
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02044',$user,$server_ip,$session_name,$one_mysql_log);}
 
-				echo "RedirectXtraCX comando enviado a Canal $channel en $call_server_ip and \nHungup $extrachannel en $server_ip\n";
+				echo "RedirectXtraCX comando enviado para Canal $channel en $call_server_ip and \nHungup $extrachannel en $server_ip\n";
 				if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel en $call_server_ip, Hungup $extrachannel en $server_ip";}
 				}
 			}
@@ -1534,14 +1534,14 @@ if ($ACTION=="RedirectXtraNeW")
 			$channel_liveX=0;
 			$channel_liveY=0;
 			echo "Una de estas variables No es válido:\n";
-			echo "Channel $channel debe ser mayor de 2 caracteres\n";
-			echo "ExtraChannel $extrachannel debe ser mayor de 2 caracteres\n";
-			echo "queryCID $queryCID debe ser mayor de 14 caracteres\n";
-			echo "exten $exten debe ser fijado\n";
-			echo "ext_context $ext_context debe ser fijado\n";
-			echo "ext_priority $ext_priority debe ser fijado\n";
-			echo "session_id $session_id debe ser fijado\n";
-			echo "\nRedirect Action no enviado\n";
+			echo "Channel $channel debe ser mayor a 2 caracteres\n";
+			echo "ExtraChannel $extrachannel debe ser mayor a 2 caracteres\n";
+			echo "queryCID $queryCID debe ser mayor a 14 caracteres\n";
+			echo "exten $exten debe ser fijo\n";
+			echo "ext_context $ext_context debe ser fijo\n";
+			echo "ext_priority $ext_priority debe ser fijo\n";
+			echo "session_id $session_id debe ser fijo\n";
+			echo "\nRedirect Action no se envió\n";
 			if (ereg("SECOND|FIRST|DEBUG",$filename))
 				{
 				if ($WeBRooTWritablE > 0)
@@ -1612,8 +1612,8 @@ if ($ACTION=="RedirectXtraNeW")
 				else
 					{
 					$channel_liveX=0;
-					echo "Cannot find empty vicidial_conference en $server_ip, Redirect comando no insertado\n|$stmt|";
-					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "No puede encontrar conferencia vacía en $server_ip";}
+					echo "Cannot find empty vicidial_conference en $server_ip, Redirect No se ingresó el comando\n|$stmt|";
+					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "No puede encontrar una conferencia vacía en $server_ip";}
 					}
 				}
 
@@ -1634,7 +1634,7 @@ if ($ACTION=="RedirectXtraNeW")
 				if ($rowx[0]==0)
 					{
 					$channel_liveX=0;
-					echo "Channel $channel no está activo en $call_server_ip, Redirect comando no insertado\n";
+					echo "Channel $channel no está activo en $call_server_ip, Redirect No se ingresó el comando\n";
 					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel no está activo en $call_server_ip";}
 					}	
 				}
@@ -1653,7 +1653,7 @@ if ($ACTION=="RedirectXtraNeW")
 				if ($rowx[0]==0)
 					{
 					$channel_liveY=0;
-					echo "Channel $channel no está activo en $server_ip, Redirect comando no insertado\n";
+					echo "Channel $channel no está activo en $server_ip, Redirect No se ingresó el comando\n";
 					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel no está activo en $server_ip";}
 					}	
 				}
@@ -1666,7 +1666,7 @@ if ($ACTION=="RedirectXtraNeW")
 					$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02057',$user,$server_ip,$session_name,$one_mysql_log);}
 
-					echo "RedirectXtra comando enviado a Canal $channel and \nExtraChannel $extrachannel\n to $exten en $server_ip\n";
+					echo "RedirectXtra comando enviado para Canal $channel and \nExtraChannel $extrachannel\n to $exten en $server_ip\n";
 					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel and $extrachannel to $exten en $server_ip";}
 					}
 				else
@@ -1693,7 +1693,7 @@ if ($ACTION=="RedirectXtraNeW")
 					$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02059',$user,$server_ip,$session_name,$one_mysql_log);}
 
-					echo "RedirectXtra comando enviado a Canal $channel en $call_server_ip and \nExtraChannel $extrachannel\n to $exten en $server_ip\n";
+					echo "RedirectXtra comando enviado para Canal $channel en $call_server_ip and \nExtraChannel $extrachannel\n to $exten en $server_ip\n";
 					if (ereg("SECOND|FIRST|DEBUG",$filename)) {$DBout .= "$channel/$call_server_ip and $extrachannel/$server_ip to $exten";}
 					}
 				}
@@ -1755,12 +1755,12 @@ if ($ACTION=="Redirect")
 		{
 		$channel_live=0;
 		echo "Una de estas variables No es válido:\n";
-		echo "Channel $channel debe ser mayor de 2 caracteres\n";
-		echo "queryCID $queryCID debe ser mayor de 14 caracteres\n";
-		echo "exten $exten debe ser fijado\n";
-		echo "ext_context $ext_context debe ser fijado\n";
-		echo "ext_priority $ext_priority debe ser fijado\n";
-		echo "\nRedirect Action no enviado\n";
+		echo "Channel $channel debe ser mayor a 2 caracteres\n";
+		echo "queryCID $queryCID debe ser mayor a 14 caracteres\n";
+		echo "exten $exten debe ser fijo\n";
+		echo "ext_context $ext_context debe ser fijo\n";
+		echo "ext_priority $ext_priority debe ser fijo\n";
+		echo "\nRedirect Action no se envió\n";
 		}
 	else
 		{
@@ -1780,7 +1780,7 @@ if ($ACTION=="Redirect")
 			if ($rowx[0]==0)
 				{
 				$channel_live=0;
-				echo "Channel $channel no está activo en $server_ip, Redirect comando no insertado\n";
+				echo "Channel $channel no está activo en $server_ip, Redirect No se ingresó el comando\n";
 				}	
 			}
 		if ($channel_live==1)
@@ -1790,7 +1790,7 @@ if ($ACTION=="Redirect")
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02064',$user,$server_ip,$session_name,$one_mysql_log);}
 
-			echo "Redirect comando enviado a Canal $channel en $server_ip\n";
+			echo "Redirect comando enviado para Canal $channel en $server_ip\n";
 			}
 		}
 	}
@@ -1812,7 +1812,7 @@ if ( ($ACTION=="Monitor") || ($ACTION=="StopMonitor") )
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($filename)<8) )
 		{
 		$channel_live=0;
-		echo "Channel $channel No es válido or queryCID $queryCID No es válido or filename: $filename No es válido, $ACTION comando no insertado\n";
+		echo "Channel $channel No es válido or queryCID $queryCID No es válido or filename: $filename No es válido, $ACTION No se ingresó el comando\n";
 		}
 	else
 		{
@@ -1831,7 +1831,7 @@ if ( ($ACTION=="Monitor") || ($ACTION=="StopMonitor") )
 			if ($rowx[0]==0)
 				{
 				$channel_live=0;
-				echo "Channel $channel no está activo en $server_ip, $ACTION comando no insertado\n";
+				echo "Channel $channel no está activo en $server_ip, $ACTION No se ingresó el comando\n";
 				}	
 			}
 		if ($channel_live==1)
@@ -1877,7 +1877,7 @@ if ( ($ACTION=="Monitor") || ($ACTION=="StopMonitor") )
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02071',$user,$server_ip,$session_name,$one_mysql_log);}
 					}
 				}
-			echo "$ACTION comando enviado a Canal $channel en $server_ip\nFilename: $filename\nRecorDing_ID: $recording_id\n";
+			echo "$ACTION comando enviado para Canal $channel en $server_ip\nFilename: $filename\nRecorDing_ID: $recording_id\n";
 			}
 		}
 	}
@@ -1899,7 +1899,7 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 	if ( (strlen($exten)<3) or (strlen($channel)<4) or (strlen($filename)<8) )
 		{
 		$channel_live=0;
-		echo "Channel $channel No es válido or exten $exten No es válido or filename: $filename No es válido, $ACTION comando no insertado\n";
+		echo "Channel $channel No es válido or exten $exten No es válido or filename: $filename No es válido, $ACTION No se ingresó el comando\n";
 		}
 	else
 		{
@@ -2033,7 +2033,7 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 				$i++;
 				}
 			}
-			echo "$ACTION comando enviado a Canal $channel en $server_ip\nFilename: $filename\nRecorDing_ID: $recording_id\n LA GRABACIÓN DURARÁ HASTA 60 MINUTOS\n";
+			echo "$ACTION comando enviado para Canal $channel en $server_ip\nFilename: $filename\nRecorDing_ID: $recording_id\n LA GRABACIÓN DURARÁ HASTA 60 MINUTOS\n";
 		}
 	}
 
@@ -2048,7 +2048,7 @@ if ($ACTION=="VolumeControl")
 	{
 	if ( (strlen($exten)<1) or (strlen($channel)<1) or (strlen($stage)<1) or (strlen($queryCID)<1) )
 		{
-		echo "Conferencia $exten, Stage $stage No es válido or queryCID $queryCID No es válido, Originate comando no insertado\n";
+		echo "Conferencia $exten, Stage $stage No es válido or queryCID $queryCID No es válido, Originate No se ingresó el comando\n";
 		}
 	else
 		{
@@ -2065,7 +2065,7 @@ if ($ACTION=="VolumeControl")
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02082',$user,$server_ip,$session_name,$one_mysql_log);}
-		echo "Volume comando enviado a Conferencia $exten, Stage $stage Canal $channel en $server_ip\n";
+		echo "Volume comando enviado para Conferencia $exten, Stage $stage Canal $channel en $server_ip\n";
 		}
 	}
 
@@ -2082,7 +2082,7 @@ if ($ACTION=="VolumeControl")
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $StarTtime);
-if ($format=='debug') {echo "\n<!-- tiempo de ejecución del Script: $RUNtime segundos -->";}
+if ($format=='debug') {echo "\n<!-- tiempo de ejecución del guión: $RUNtime segundos -->";}
 if ($format=='debug') {echo "\n</body>\n</html>\n";}
 	
 exit; 

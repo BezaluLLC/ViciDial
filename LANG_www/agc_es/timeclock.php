@@ -122,10 +122,10 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 	if ($valid_user < 1)
 		{
 		### NOT A VALID USER/PASS
-		$VDdisplayMESSAGE = "El usuario y la contraseña que ha introducido no son activos en el sistema<BR>Por favor, inténtelo de nuevo:";
+		$VDdisplayMESSAGE = "El usuario y la contraseña que ha introducido no están activos en el sistema<BR>Por favor, inténtelo de nuevo:";
 
 		echo"<HTML><HEAD>\n";
-		echo"<TITLE>AgentTimeclock</TITLE>\n";
+		echo"<TITLE>Agent Reloj checador</TITLE>\n";
 		echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 		echo"</HEAD>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -140,15 +140,15 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 		echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Timeclock </B></TD>";
+		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Reloj checador </B></TD>";
 		echo "</TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>Conexión Del Usuario:  </TD>";
+		echo "<TR><TD ALIGN=RIGHT>Inicio de sesión del usuario:  </TD>";
 		echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=user SIZE=10 maxlength=20 VALUE=\"$VD_login\"></TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>Contraseña Del Usuario:  </TD>";
+		echo "<TR><TD ALIGN=RIGHT>Contraseña del usuario:  </TD>";
 		echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 maxlength=20 VALUE=''></TD></TR>\n";
-		echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=ENVIAR VALUE=ENVIAR> &nbsp; </TD></TR>\n";
-		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSIÓN: $version &nbsp; &nbsp; &nbsp; CONSTRUCCION: $build</TD></TR>\n";
+		echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=INGRESAR VALUE=INGRESAR> &nbsp; </TD></TR>\n";
+		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSIÓN: $version &nbsp; &nbsp; &nbsp; CONSTRUCCIÓN: $build</TD></TR>\n";
 		echo "</TABLE>\n";
 		echo "</FORM>\n\n";
 		echo "</body>\n\n";
@@ -227,10 +227,10 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		if ( ($last_action_sec < 30) and ($status != 'START') )
 			{
 			### You cannot log in or out within 30 segundos of your last login/logout
-			$VDdisplayMESSAGE = "No puede iniciar sesión o en un plazo de 30 segundos de su última conexión o desconexión";
+			$VDdisplayMESSAGE = "No puede iniciar o cerrar sesión en un plazo de 30 segundos después su último inicio o cierre de sesión";
 
 			echo"<HTML><HEAD>\n";
-			echo"<TITLE>AgentTimeclock</TITLE>\n";
+			echo"<TITLE>Agent Reloj checador</TITLE>\n";
 			echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 			echo"</HEAD>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -245,15 +245,15 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 			echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 			echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Timeclock </B></TD>";
+			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Reloj checador </B></TD>";
 			echo "</TR>\n";
 			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-			echo "<TR><TD ALIGN=RIGHT>Conexión Del Usuario:  </TD>";
+			echo "<TR><TD ALIGN=RIGHT>Inicio de sesión del usuario:  </TD>";
 			echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=user SIZE=10 maxlength=20 VALUE=\"$VD_login\"></TD></TR>\n";
-			echo "<TR><TD ALIGN=RIGHT>Contraseña Del Usuario:  </TD>";
+			echo "<TR><TD ALIGN=RIGHT>Contraseña del usuario:  </TD>";
 			echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 maxlength=20 VALUE=''></TD></TR>\n";
-			echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=ENVIAR VALUE=ENVIAR> &nbsp; </TD></TR>\n";
-			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSIÓN: $version &nbsp; &nbsp; &nbsp; CONSTRUCCION: $build</TD></TR>\n";
+			echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=INGRESAR VALUE=INGRESAR> &nbsp; </TD></TR>\n";
+			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSIÓN: $version &nbsp; &nbsp; &nbsp; CONSTRUCCIÓN: $build</TD></TR>\n";
 			echo "</TABLE>\n";
 			echo "</FORM>\n\n";
 			echo "</body>\n\n";
@@ -266,8 +266,8 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			{
 			if ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='login') )
 				{
-				$VDdisplayMESSAGE = "You have now logged-in";
-				$LOGtimeMESSAGE = "You logged in at $NOW_TIME";
+				$VDdisplayMESSAGE = "Usted ahora tiene registrados";
+				$LOGtimeMESSAGE = "Está conectado a una $NOW_TIME";
 
 				### Add a record to the timeclock log
 				$stmt="INSERT INTO vicidial_timeclock_log set event='LOGIN', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', event_date='$NOW_TIME';";
@@ -294,8 +294,8 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 			if ( ($status=='LOGIN') and ($stage=='logout') )
 				{
-				$VDdisplayMESSAGE = "Ya ha iniciado la sesión en";
-				$LOGtimeMESSAGE = "Que en la sesión$NOW_TIME<BR>Cantidad de tiempo que se han registrado en:$totTIME_HMS";
+				$VDdisplayMESSAGE = "Usted ha cerrado su sesión";
+				$LOGtimeMESSAGE = "Usted cerró su sesión en$NOW_TIME<BR>El tiempo durante el cual tuvo su sesión abierta:$totTIME_HMS";
 
 				### Add a record to the timeclock log
 				$stmt="INSERT INTO vicidial_timeclock_log set event='LOGOUT', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
@@ -335,29 +335,29 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				}
 
 			if ( ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='logout') ) or ( ($status=='LOGIN') and ($stage=='login') ) )
-				{echo "ERROR: timeclock entrada de registro ya realizados:$status|$stage";  exit;}
+				{echo "ERROR: ya se había ingresado el registro en el reloj checador:$status|$stage";  exit;}
 
 			if ($referrer=='agent') 
-				{$BACKlink = "<A HREF=\"./vicidial.php?pl=$phone_login&pp=$phone_pass&VD_login=$user\"><font color=\"#003333\">VOLVER a la pantalla de Inicio</font></A>";}
+				{$BACKlink = "<A HREF=\"./vicidial.php?pl=$phone_login&pp=$phone_pass&VD_login=$user\"><font color=\"#003333\">REGRESAR a la pantalla de inicio de sesión del agente</font></A>";}
 			if ($referrer=='admin') 
-				{$BACKlink = "<A HREF=\"/$admin_web_directory/admin.php\"><font color=\"#003333\">VOLVER a la Administración</font></A>";}
+				{$BACKlink = "<A HREF=\"/$admin_web_directory/admin.php\"><font color=\"#003333\">REGRESAR a Administración</font></A>";}
 			if ($referrer=='welcome') 
-				{$BACKlink = "<A HREF=\"$welcomeURL\"><font color=\"#003333\">VOLVER a la pantalla de bienvenida</font></A>";}
+				{$BACKlink = "<A HREF=\"$welcomeURL\"><font color=\"#003333\">REGRESAR a la pantalla de bienvenida</font></A>";}
 
 			echo"<HTML><HEAD>\n";
-			echo"<TITLE>AgentTimeclock</TITLE>\n";
+			echo"<TITLE>Agent Reloj checador</TITLE>\n";
 			echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 			echo"</HEAD>\n";
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 			echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 			echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 			echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Timeclock </B></TD>";
+			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Reloj checador </B></TD>";
 			echo "</TR>\n";
 			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 			echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=3><B> $LOGtimeMESSAGE<BR>&nbsp; </B></TD></TR>\n";
 			echo "<TR><TD ALIGN=CENTER COLSPAN=2><B> $BACKlink <BR>&nbsp; </B></TD></TR>\n";
-			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSIÓN: $version &nbsp; &nbsp; &nbsp; CONSTRUCCION: $build</TD></TR>\n";
+			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSIÓN: $version &nbsp; &nbsp; &nbsp; CONSTRUCCIÓN: $build</TD></TR>\n";
 			echo "</TABLE>\n";
 			echo "</body>\n\n";
 			echo "</html>\n\n";
@@ -370,21 +370,21 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 		if ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') )
 			{
-			$VDdisplayMESSAGE = "Vez desde que se conectó por última vez en:$totTIME_HMS";
+			$VDdisplayMESSAGE = "Tiempo transcurrido desde la última vez que inició sesión:$totTIME_HMS";
 			$log_action = 'login';
 			$button_name = 'LOGIN';
-			$LOGtimeMESSAGE = "-Usted se conectó por última vez en:$last_action_date<BR><BR>Haga clic en Conectarse a continuación para acceder al sistema";
+			$LOGtimeMESSAGE = "Usted cerró sesión por última vez el:$last_action_date<BR><BR>Haga click en INICIAR SESIÓN a continuación para acceder al sistema";
 			}
 		if ($status=='LOGIN')
 			{
-			$VDdisplayMESSAGE = "Cantidad de tiempo que se han registrado en:$totTIME_HMS";
+			$VDdisplayMESSAGE = "Tiempo transcurrido desde que inició sesión:$totTIME_HMS";
 			$log_action = 'logout';
 			$button_name = 'LOGOUT';
-			$LOGtimeMESSAGE = "Iniciado la sesión en que usted en: $last_action_date<BR>Cantidad de tiempo que se han registrado en:$totTIME_HMS<BR><BR>Haga clic a continuación para acceder LOGOUT-out";
+			$LOGtimeMESSAGE = "Inició sesión en: $last_action_date<BR>Tiempo transcurrido desde que inició sesión:$totTIME_HMS<BR><BR>Haga click en CERRAR SESIÓN a continuación para salir del sistema";
 			}
 
 		echo"<HTML><HEAD>\n";
-		echo"<TITLE>AgentTimeclock</TITLE>\n";
+		echo"<TITLE>Agent Reloj checador</TITLE>\n";
 		echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 		echo"</HEAD>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -402,12 +402,12 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 		echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Timeclock </B></TD>";
+		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Reloj checador </B></TD>";
 		echo "</TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 		echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=3><B> $LOGtimeMESSAGE<BR>&nbsp; </B></TD></TR>\n";
 		echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=$button_name VALUE=$button_name> &nbsp; </TD></TR>\n";
-		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSIÓN: $version &nbsp; &nbsp; &nbsp; CONSTRUCCION: $build</TD></TR>\n";
+		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSIÓN: $version &nbsp; &nbsp; &nbsp; CONSTRUCCIÓN: $build</TD></TR>\n";
 		echo "</TABLE>\n";
 		echo "</FORM>\n\n";
 		echo "</body>\n\n";
@@ -423,7 +423,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 else
 	{
 	echo"<HTML><HEAD>\n";
-	echo"<TITLE>AgentTimeclock</TITLE>\n";
+	echo"<TITLE>Agent Reloj checador</TITLE>\n";
 	echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 	echo"</HEAD>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -438,15 +438,15 @@ else
 	echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 	echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
 	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vtc_tab_vicidial.gif\" Border=0></TD>";
-	echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B>Timeclock </B></TD>";
+	echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Reloj checador </B></TD>";
 	echo "</TR>\n";
 	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Conexión Del Usuario:  </TD>";
+	echo "<TR><TD ALIGN=RIGHT>Inicio de sesión del usuario:  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=user SIZE=10 maxlength=20 VALUE=\"$VD_login\"></TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Contraseña Del Usuario:  </TD>";
+	echo "<TR><TD ALIGN=RIGHT>Contraseña del usuario:  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 maxlength=20 VALUE=''></TD></TR>\n";
-	echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=ENVIAR VALUE=ENVIAR> &nbsp; </TD></TR>\n";
-	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSIÓN: $version &nbsp; &nbsp; &nbsp; CONSTRUCCION: $build</TD></TR>\n";
+	echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=INGRESAR VALUE=INGRESAR> &nbsp; </TD></TR>\n";
+	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSIÓN: $version &nbsp; &nbsp; &nbsp; CONSTRUCCIÓN: $build</TD></TR>\n";
 	echo "</TABLE>\n";
 	echo "</FORM>\n\n";
 	echo "</body>\n\n";

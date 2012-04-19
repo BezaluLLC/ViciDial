@@ -96,8 +96,8 @@ if ($format=='debug')
 {
 echo "<html>\n";
 echo "<head>\n";
-echo "<!-- VERSIÓN: $version     CONSTRUCCION: $build    VMBOX: $vmail_box   server_ip: $server_ip-->\n";
-echo "<title>Comprobar el buzón de voz";
+echo "<!-- VERSIÓN: $version     CONSTRUCCIÓN: $build    VMBOX: $vmail_box   server_ip: $server_ip-->\n";
+echo "<title>Revisar el buzón de voz";
 echo "</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -108,7 +108,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 	if (strlen($vmail_box)<1)
 	{
 	$channel_live=0;
-	echo "caja del buzón de voz $vmail_box No es válido\n";
+	echo "buzón de voz $vmail_box No es válido\n";
 	exit;
 	}
 	else
@@ -132,7 +132,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- tiempo de ejecución del Script: $RUNtime segundos -->";
+	echo "\n<!-- tiempo de ejecución del guión: $RUNtime segundos -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

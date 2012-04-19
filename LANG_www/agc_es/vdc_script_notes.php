@@ -258,13 +258,13 @@ $label_city =				'Ciudad';
 $label_state =				'Estado';
 $label_province =			'Provincia';
 $label_postal_code =		'CódigoPostal';
-$label_vendor_lead_code =	'VendedorID';
+$label_vendor_lead_code =	'ID del vendedor';
 $label_gender =				'Gender';
 $label_phone_number =		'Teléfono';
-$label_phone_code =			'Código Del Dial';
-$label_alt_phone =			'Teléfono Alt';
-$label_security_phrase =	'Demostración';
-$label_email =				'Email';
+$label_phone_code =			'Código de marcación';
+$label_alt_phone =			'Teléfono alternativo';
+$label_security_phrase =	'Mostrar';
+$label_email =				'Correo electrónico';
 $label_comments =			'Comentarios';
 
 $stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
@@ -316,7 +316,7 @@ else
 
 echo "<HTML>\n";
 echo "<head>\n";
-echo "<!-- VERSIÓN: $version     CONSTRUCCION: $build    USER: $user   server_ip: $server_ip-->\n";
+echo "<!-- VERSIÓN: $version     CONSTRUCCIÓN: $build    USER: $user   server_ip: $server_ip-->\n";
 echo "<title>ViciDial Notas";
 echo "</title>\n";
 echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
@@ -391,7 +391,7 @@ $URLsubmit = $URLarray[0];
 </TD></TR>
 
 <!-- <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">VendedorID: </TD><TD ALIGN=LEFT><input type=text name=vendor_id id=vendor_id size=20 maxlength=20 value="<?php echo $vendor_id ?>"></TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">ID del vendedor: </TD><TD ALIGN=LEFT><input type=text name=vendor_id id=vendor_id size=20 maxlength=20 value="<?php echo $vendor_id ?>"></TD>
 </TR> -->
 <!-- <TR BGCOLOR="#E6E6E6">
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Source ID: </TD><TD ALIGN=LEFT>$source_id<input type=hidden name=source_id id=source_id value="<?php echo $source_id ?>"></TD>
@@ -515,13 +515,13 @@ $URLsubmit = $URLarray[0];
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Fecha de nacimiento:</TD><TD ALIGN=LEFT><input type=text name=date_if_birth id=date_if_birth size=12 maxlength=12 value="<?php echo $date_of_birth ?>"></TD>
 </TR> -->
 <!-- <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Teléfono Alt: </TD><TD ALIGN=LEFT><input type=text name=alt_phone id=alt_phone size=12 maxlength=12 value="<?php echo $alt_phone ?>"> *</TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Teléfono alternativo: </TD><TD ALIGN=LEFT><input type=text name=alt_phone id=alt_phone size=12 maxlength=12 value="<?php echo $alt_phone ?>"> *</TD>
 </TR> -->
 <!-- <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Email: </TD><TD ALIGN=LEFT><input type=text name=email id=email size=30 maxlength=70 value="<?php echo $email ?>"> *</TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Correo electrónico: </TD><TD ALIGN=LEFT><input type=text name=email id=email size=30 maxlength=70 value="<?php echo $email ?>"> *</TD>
 </TR> -->
 <!-- <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Demostración: </TD><TD ALIGN=LEFT><input type=text name=security_phrase id=security_phrase size=30 maxlength=100 value="<?php echo $security_phrase ?>"> *</TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Mostrar: </TD><TD ALIGN=LEFT><input type=text name=security_phrase id=security_phrase size=30 maxlength=100 value="<?php echo $security_phrase ?>"> *</TD>
 </TR> -->
 <!-- <TR BGCOLOR="#E6E6E6">
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Comentarios:</TD><TD ALIGN=LEFT><input type=text name=comments id=comments size=40 maxlength=255 value="<?php echo $comments ?>"> *</TD>
@@ -605,7 +605,7 @@ o_cal.a_tpl.yearscroll = false;
 </TR>
 
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=CENTER COLSPAN=2><FONT FACE="ARIAL,HELVETICA" size=1>Please click ENVIAR to commit the changes, &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; * denotes required fields</font><br>
+<TD ALIGN=CENTER COLSPAN=2><FONT FACE="ARIAL,HELVETICA" size=1>Please click INGRESAR to commit the changes, &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; * denotes required fields</font><br>
 </TD>
 </TR>
 
@@ -628,7 +628,7 @@ function submit_form()
 
 </SCRIPT>
 
-<input type=button value="ENVIAR" name=smt id=smt onClick="submit_form()">
+<input type=button value="INGRESAR" name=smt id=smt onClick="submit_form()">
 </TD>
 </TR>
 

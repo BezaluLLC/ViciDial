@@ -166,7 +166,7 @@ if ($ADD==1)		{echo "Extensões Ativas";}
 if ($ADD==2)		{echo "Extensões Ocupadas";}
 if ($ADD==3)		{echo "Linhas externas";}
 if ($ADD==4)		{echo "Extensões Locais";}
-if ($ADD==5)		{echo "Conferencias";}
+if ($ADD==5)		{echo "Conferências";}
 if ($ADD==99999)	{echo "AJUDA";}
 echo "</title>\n";
 echo "</head>\n";

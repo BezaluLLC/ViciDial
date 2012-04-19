@@ -62,7 +62,7 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
   if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Недопустимо Username/Пароль: |$user|$pass|\n";
+    echo "Неверный Имя агента/Пароль: |$user|$pass|\n";
     exit;
 	}
   else
@@ -70,7 +70,7 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
-		echo "Недопустимо server_ip: |$server_ip|  or  Недопустимо session_name: |$session_name|\n";
+		echo "Неверный server_ip: |$server_ip|  or  Неверный session_name: |$session_name|\n";
 		exit;
 		}
 	else
@@ -82,7 +82,7 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 		$SNauth=$row[0];
 		  if($SNauth==0)
 			{
-			echo "Недопустимо session_name: |$session_name|$server_ip|\n";
+			echo "Неверный session_name: |$session_name|$server_ip|\n";
 			exit;
 			}
 		  else
@@ -97,7 +97,7 @@ if ($format=='debug')
 echo "<html>\n";
 echo "<head>\n";
 echo "<!-- ВЕРСИЯ: $version     СБОРКА: $build    VMBOX: $vmail_box   server_ip: $server_ip-->\n";
-echo "<title>Проверка Voicemail";
+echo "<title>Проверка голосовой почты";
 echo "</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -108,7 +108,7 @@ echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 	if (strlen($vmail_box)<1)
 	{
 	$channel_live=0;
-	echo "voicemail box $vmail_box это неправильно\n";
+	echo "ящик голосовой почты $vmail_box неверный\n";
 	exit;
 	}
 	else
@@ -132,7 +132,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- время выполнения скрипта: $RUNtime секунды -->";
+	echo "\n<!-- время исполнения скрипта: $RUNtime секунд -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

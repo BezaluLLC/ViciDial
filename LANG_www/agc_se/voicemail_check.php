@@ -96,7 +96,7 @@ if ($format=='debug')
 {
 echo "<html>\n";
 echo "<head>\n";
-echo "<!-- VERSION: $version     SKAPA: $build    VMBOX: $vmail_box   server_ip: $server_ip-->\n";
+echo "<!-- VERSION: $version     BUILD: $build    VMBOX: $vmail_box   server_ip: $server_ip-->\n";
 echo "<title>Lyssna av röstbrevlåda";
 echo "</title>\n";
 echo "</head>\n";
