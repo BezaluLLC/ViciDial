@@ -1,7 +1,7 @@
 <?php
 # new_listloader_superL.php
 # 
-# Copyright (C) 2010  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # AST GUI lead loader from formatted file
 # 
@@ -30,11 +30,16 @@
 # 90721-1339 - Added rank and owner as vicidial_list fields
 # 91112-0616 - Added title/alt-phone duplicate checking
 # 100118-0543 - Added new Australian and New Zealand DST schemes (FSO-FSA and LSS-FSA)
+# 100621-1026 - Added admin_web_directory variable
+# 100630-1609 - Added a check for invalid ListIds and filtered out ' " ; ` \ from the field <mikec>
+# 100705-1507 - Added custom fields to field chooser, only when liast_id_override is used and only with TXT and CSV file formats
+# 100712-1416 - Added entry_list_id field to vicidial_list to preserve link to custom fields if any
+# 120223-2148 - Removed logging of good login passwords if webroot writable is enabled
 #
 # make sure vicidial_list exists and that your file follows the formatting correctly. This page does not dedupe or do any other lead filtering actions yet at this time.
 
-$version = '2.2.0-34';
-$build = '100118-0543';
+$version = '2.4-38';
+$build = '120223-2148';
 
 
 require("dbconnect.php");
@@ -127,22 +132,29 @@ if (isset($_GET["postalgmt"]))				{$postalgmt=$_GET["postalgmt"];}
 if (isset($_GET["phone_code_override"]))			{$phone_code_override=$_GET["phone_code_override"];}
 	elseif (isset($_POST["phone_code_override"]))	{$phone_code_override=$_POST["phone_code_override"];}
 	$phone_code_override = (preg_replace("/\D/","",$phone_code_override));
+if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
+	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
 
 # $country_field=$_GET["country_field"];					if (!$country_field) {$country_field=$_POST["country_field"];}
 
+### REGEX to prevent weird characters from ending up in the fields
+$field_regx = "['\"`\\;]";
+
+$vicidial_list_fields = '|lead_id|vendor_lead_code|source_id|list_id|gmt_offset_now|called_since_last_reset|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|called_count|last_local_call_time|rank|owner|entry_list_id|';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
+$stmt = "SELECT use_non_latin,admin_web_directory,custom_fields_enabled,webroot_writable FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =					$row[0];
-	$i++;
+	$non_latin =				$row[0];
+	$admin_web_directory =		$row[1];
+	$custom_fields_enabled =	$row[2];
+	$webroot_writable =			$row[3];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -171,7 +183,7 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
-if ($WeBRooTWritablE > 0) {$fp = fopen ("./project_auth_entries.txt", "a");}
+if ($webroot_writable > 0) {$fp = fopen ("./project_auth_entries.txt", "a");}
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
@@ -203,17 +215,17 @@ $browser = getenv("HTTP_USER_AGENT");
 			echo "You do not have permissions to load leads\n";
 			exit;
 			}
-		if ($WeBRooTWritablE > 0) 
+		if ($webroot_writable > 0) 
 			{
-			fwrite ($fp, "LIST_LOAD|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
+			fwrite ($fp, "LIST_LOAD|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
 			fclose($fp);
 			}
 		}
 	else
 		{
-		if ($WeBRooTWritablE > 0) 
+		if ($webroot_writable > 0) 
 			{
-			fwrite ($fp, "LIST_LOAD|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
+			fwrite ($fp, "LIST_LOAD|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
 			fclose($fp);
 			}
 		}
@@ -348,6 +360,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
 <form action=<?php echo $PHP_SELF ?> method=post onSubmit="ParseFileName()" enctype="multipart/form-data">
 <input type=hidden name='leadfile_name' value="<?php echo $leadfile_name ?>">
+<input type=hidden name='DB' value="<?php echo $DB ?>">
 <?php if ($file_layout!="custom") { ?>
 <table align=center width="700" border=0 cellpadding=5 cellspacing=0 bgcolor=#D9E6FE>
   <tr>
@@ -384,7 +397,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 <tr>
 	<td align=center colspan=2><input type=submit value="SUBMIT" name='submit_file'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button onClick="javascript:document.location='new_listloader_superL.php'" value="BEGINNEN SIE RÜBER" name='reload_page'></td>
   </tr>
-  <tr><td align=left><font size=1> &nbsp; &nbsp; &nbsp; &nbsp; <a href="admin.php?ADD=100" target="_parent">ZURÜCK ZU ADMIN</a></font></td><td align=right><font size=1>LIST LOADER- &nbsp; &nbsp; VERSION: <?php echo $version ?> &nbsp; &nbsp; BAU: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
+  <tr><td align=left><font size=1> &nbsp; &nbsp; &nbsp; &nbsp; <a href="admin.php?ADD=100" target="_parent">ZURÜCK ZU ADMIN</a> &nbsp; &nbsp; &nbsp; &nbsp; <a href="./admin_listloader_third_gen.php">3rd Gen Lead Loader</a> &nbsp; &nbsp; </font></td><td align=right><font size=1>LIST LOADER- &nbsp; &nbsp; VERSION: <?php echo $version ?> &nbsp; &nbsp; BAU: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
 </table>
 <?php } ?>
 
@@ -398,7 +411,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 		if (!eregi(".csv", $leadfile_name) && !eregi(".xls", $leadfile_name)) {
 			# copy($leadfile, "./vicidial_temp_file.txt");
 			$file=fopen("$lead_file", "r");
-			if ($WeBRooTWritablE > 0)
+			if ($webroot_writable > 0)
 				{
 				$stmt_file=fopen("listloader_stmts.txt", "w");
 				}
@@ -409,7 +422,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 			if ($tab_count>$pipe_count) {$delimiter="\t";  $delim_name="tab";} else {$delimiter="|";  $delim_name="pipe";}
 			$field_check=explode($delimiter, $buffer);
 
-			if (count($field_check)>=5) {
+			if (count($field_check)>=2) {
 				flush();
 				$file=fopen("$lead_file", "r");
 				print "<center><font face='arial, helvetica' size=3 color='#009900'><B>Verarbeitung$delim_name-delimited file...\n";
@@ -445,7 +458,6 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 						$called_since_last_reset='N';
 						$phone_code =			eregi_replace("[^0-9]", "", $row[$phone_code_field]);
 						$phone_number =			eregi_replace("[^0-9]", "", $row[$phone_number_field]);
-							$USarea = 			substr($phone_number, 0, 3);
 						$title =				$row[$title_field];
 						$first_name =			$row[$first_name_field];
 						$middle_initial =		$row[$middle_initial_field];
@@ -466,6 +478,36 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 						$comments =				trim($row[$comments_field]);
 						$rank =					$row[$rank_field];
 						$owner =				$row[$owner_field];
+						
+						# replace ' " ` \ ; with nothing
+						$vendor_lead_code =		eregi_replace($field_regx, "", $vendor_lead_code);
+						$source_code =			eregi_replace($field_regx, "", $source_code);
+						$source_id = 			eregi_replace($field_regx, "", $source_id);
+						$list_id =				eregi_replace($field_regx, "", $list_id);
+						$phone_code =			eregi_replace($field_regx, "", $phone_code);
+						$phone_number =			eregi_replace($field_regx, "", $phone_number);
+						$title =				eregi_replace($field_regx, "", $title);
+						$first_name =			eregi_replace($field_regx, "", $first_name);
+						$middle_initial =		eregi_replace($field_regx, "", $middle_initial);
+						$last_name =			eregi_replace($field_regx, "", $last_name);
+						$address1 =				eregi_replace($field_regx, "", $address1);
+						$address2 =				eregi_replace($field_regx, "", $address2);
+						$address3 =				eregi_replace($field_regx, "", $address3);
+						$city =					eregi_replace($field_regx, "", $city);
+						$state =				eregi_replace($field_regx, "", $state);
+						$province =				eregi_replace($field_regx, "", $province);
+						$postal_code =			eregi_replace($field_regx, "", $postal_code);
+						$country_code =			eregi_replace($field_regx, "", $country_code);
+						$gender =				eregi_replace($field_regx, "", $gender);
+						$date_of_birth =		eregi_replace($field_regx, "", $date_of_birth);
+						$alt_phone =			eregi_replace($field_regx, "", $alt_phone);
+						$email =				eregi_replace($field_regx, "", $email);
+						$security_phrase =		eregi_replace($field_regx, "", $security_phrase);
+						$comments =				eregi_replace($field_regx, "", $comments);
+						$rank =					eregi_replace($field_regx, "", $rank);
+						$owner =				eregi_replace($field_regx, "", $owner);
+						
+						$USarea = 			substr($phone_number, 0, 3);
 
 						if (strlen($list_id_override)>0) 
 							{
@@ -476,6 +518,69 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 							{
 							$phone_code = $phone_code_override;
 							}
+
+						##### BEGIN custom fields columns list ###
+						$custom_SQL='';
+						if ($custom_fields_enabled > 0)
+							{
+							$stmt="ZeigeTABELLES LIKE \"custom_$list_id_override\";";
+							if ($DB>0) {echo "$stmt\n";}
+							$rslt=mysql_query($stmt, $link);
+							$tablecount_to_print = mysql_num_rows($rslt);
+							if ($tablecount_to_print > 0) 
+								{
+								$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id_override';";
+								if ($DB>0) {echo "$stmt\n";}
+								$rslt=mysql_query($stmt, $link);
+								$fieldscount_to_print = mysql_num_rows($rslt);
+								if ($fieldscount_to_print > 0) 
+									{
+									$rowx=mysql_fetch_row($rslt);
+									$custom_records_count =	$rowx[0];
+									
+									$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$list_id_override' order by field_rank,field_order,field_label;";
+									if ($DB>0) {echo "$stmt\n";}
+									$rslt=mysql_query($stmt, $link);
+									$fields_to_print = mysql_num_rows($rslt);
+									$fields_list='';
+									$o=0;
+									while ($fields_to_print > $o) 
+										{
+										$rowx=mysql_fetch_row($rslt);
+										$A_field_label[$o] =	$rowx[1];
+										$A_field_type[$o] =		$rowx[6];
+										$A_field_value[$o] =	'';
+
+										$field_name_id = $A_field_label[$o] . "_field";
+
+										if ($DB>0) {echo "$A_field_label[$o]|$A_field_type[$o]\n";}
+
+										if ( ($A_field_type[$o]!='DISPLAY') and ($A_field_type[$o]!='SCRIPT') )
+											{
+											if (!preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
+												{
+												if (isset($_GET["$field_name_id"]))				{$form_field_value=$_GET["$field_name_id"];}
+													elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
+
+												if ($form_field_value >= 0)
+													{
+													$A_field_value[$o] =	$row[$form_field_value];
+													# replace ' " ` \ ; with nothing
+													$A_field_value[$o] =	eregi_replace($field_regx, "", $A_field_value[$o]);
+
+													$custom_SQL .= "$A_field_label[$o]='$A_field_value[$o]',";
+													}
+												}
+											}
+										$o++;
+										}
+									}
+								}
+							}
+						##### END custom fields columns list ###
+
+						$custom_SQL = preg_replace("/,$/","",$custom_SQL);
+
 
 						##### Check for duplicate phone numbers in vicidial_list table for all lists in a campaign #####
 						if (eregi("DUPCAMP",$dupcheck))
@@ -603,7 +708,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 							}
 
 
-						if ( (strlen($phone_number)>6) and ($dup_lead<1) )
+						if ( (strlen($phone_number)>6) and ($dup_lead<1) and ($list_id >= 100 ))
 							{
 							if (strlen($phone_code)<1) {$phone_code = '1';}
 
@@ -614,23 +719,54 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
 							$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code);
 
-							if ($multi_insert_counter > 8) {
-								### insert good deal into pending_transactions table ###
-								$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values$multistmt('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner');";
+							if (strlen($custom_SQL)>3)
+								{
+								$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id) values('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner','$list_id');";
 								$rslt=mysql_query($stmtZ, $link);
-								if ($WeBRooTWritablE > 0) 
+								$affected_rows = mysql_affected_rows($link);
+								$lead_id = mysql_insert_id($link);
+								if ($DB > 0) {echo "<!-- $affected_rows|$lead_id|$stmtZ -->";}
+								if ($webroot_writable > 0) 
 									{fwrite($stmt_file, $stmtZ."\r\n");}
 								$multistmt='';
-								$multi_insert_counter=0;
 
-							} else {
-								$multistmt .= "('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner'),";
-								$multi_insert_counter++;
-							}
+								$custom_SQL_query = "INSERT INTO custom_$list_id_override SET lead_id='$lead_id',$custom_SQL;";
+								$rslt=mysql_query($custom_SQL_query, $link);
+								$affected_rows = mysql_affected_rows($link);
+								if ($DB > 0) {echo "<!-- $affected_rows|$custom_SQL_query -->";}
+								}
+							else
+								{
+								if ($multi_insert_counter > 8) 
+									{
+									### insert good record into vicidial_list table ###
+									$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id) values$multistmt('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner','0');";
+									$rslt=mysql_query($stmtZ, $link);
+									if ($webroot_writable > 0) 
+										{fwrite($stmt_file, $stmtZ."\r\n");}
+									$multistmt='';
+									$multi_insert_counter=0;
+									}
+								else
+									{
+									$multistmt .= "('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner','0'),";
+									$multi_insert_counter++;
+									}
+								}
 
 							$good++;
 						} else {
-							if ($bad < 1000000) {print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead  $dup_lead_list</font><b>\n";}
+							if ($bad < 1000000)
+								{
+								if ( $list_id < 100 )
+									{
+									print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INVALID LISTE IDENTIFIKATION</font><b>\n";
+									}
+								else
+									{
+									print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead  $dup_lead_list</font><b>\n";
+									}
+								}
 							$bad++;
 						}
 						$total++;
@@ -642,9 +778,9 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 					}
 				}
 				if ($multi_insert_counter!=0) {
-					$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values".substr($multistmt, 0, -1).";";
+					$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id) values".substr($multistmt, 0, -1).";";
 					mysql_query($stmtZ, $link);
-					if ($WeBRooTWritablE > 0) 
+					if ($webroot_writable > 0) 
 						{fwrite($stmt_file, $stmtZ."\r\n");}
 				}
 
@@ -666,7 +802,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 			{
 			print "<BR><BR>TELEFON-CODE-ÜBERSTEUERUNG FÜR DIESE AKTE: $phone_code_override<BR><BR>\n";
 			}
-		# print "|$WeBServeRRooT/vicidial/listloader_super.pl $vendor_lead_code_field,$source_id_field,$list_id_field,$phone_code_field,$phone_number_field,$title_field,$first_name_field,$middle_initial_field,$last_name_field,$address1_field,$address2_field,$address3_field,$city_field,$state_field,$province_field,$postal_code_field,$country_code_field,$gender_field,$date_of_birth_field,$alt_phone_field,$email_field,$security_phrase_field,$comments_field,$rank_field,$owner_field, --forcelistid=$list_id_override --lead_file=$lead_file|";
+		# print "|$WeBServeRRooT/$admin_web_directory/listloader_super.pl $vendor_lead_code_field,$source_id_field,$list_id_field,$phone_code_field,$phone_number_field,$title_field,$first_name_field,$middle_initial_field,$last_name_field,$address1_field,$address2_field,$address3_field,$city_field,$state_field,$province_field,$postal_code_field,$country_code_field,$gender_field,$date_of_birth_field,$alt_phone_field,$email_field,$security_phrase_field,$comments_field,$rank_field,$owner_field, --forcelistid=$list_id_override --lead_file=$lead_file|";
 			$dupcheckCLI=''; $postalgmtCLI='';
 			if (eregi("DUPLIST",$dupcheck)) {$dupcheckCLI='--duplicate-check';}
 			if (eregi("DUPCAMP",$dupcheck)) {$dupcheckCLI='--duplicate-campaign-check';}
@@ -674,13 +810,13 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 			if (eregi("DUPTITLEALTPHONELIST",$dupcheck)) {$dupcheckCLI='--duplicate-tap-list-check';}
 			if (eregi("DUPTITLEALTPHONESYS",$dupcheck)) {$dupcheckCLI='--duplicate-tap-system-check';}
 			if (eregi("POSTAL",$postalgmt)) {$postalgmtCLI='--postal-code-gmt';}
-			passthru("$WeBServeRRooT/vicidial/listloader_super.pl $vendor_lead_code_field,$source_id_field,$list_id_field,$phone_code_field,$phone_number_field,$title_field,$first_name_field,$middle_initial_field,$last_name_field,$address1_field,$address2_field,$address3_field,$city_field,$state_field,$province_field,$postal_code_field,$country_code_field,$gender_field,$date_of_birth_field,$alt_phone_field,$email_field,$security_phrase_field,$comments_field,$rank_field,$owner_field, --forcelistid=$list_id_override --forcephonecode=$phone_code_override --lead-file=$lead_file $postalgmtCLI $dupcheckCLI");
+			passthru("$WeBServeRRooT/$admin_web_directory/listloader_super.pl $vendor_lead_code_field,$source_id_field,$list_id_field,$phone_code_field,$phone_number_field,$title_field,$first_name_field,$middle_initial_field,$last_name_field,$address1_field,$address2_field,$address3_field,$city_field,$state_field,$province_field,$postal_code_field,$country_code_field,$gender_field,$date_of_birth_field,$alt_phone_field,$email_field,$security_phrase_field,$comments_field,$rank_field,$owner_field, --forcelistid=$list_id_override --forcephonecode=$phone_code_override --lead-file=$lead_file $postalgmtCLI $dupcheckCLI");
 		} else {
 			# copy($leadfile, "./vicidial_temp_file.csv");
 			$file=fopen("$lead_file", "r");
 
-			if ($WeBRooTWritablE > 0)
-				{$stmt_file=fopen("$WeBServeRRooT/vicidial/listloader_stmts.txt", "w");}
+			if ($webroot_writable > 0)
+				{$stmt_file=fopen("$WeBServeRRooT/$admin_web_directory/listloader_stmts.txt", "w");}
 			
 			print "<center><font face='arial, helvetica' size=3 color='#009900'><B>VerarbeitungCSV file... \n";
 			if (strlen($list_id_override)>0) 
@@ -708,7 +844,6 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 				$called_since_last_reset='N';
 				$phone_code =			eregi_replace("[^0-9]", "", $row[$phone_code_field]);
 				$phone_number =			eregi_replace("[^0-9]", "", $row[$phone_number_field]);
-					$USarea = 			substr($phone_number, 0, 3);
 				$title =				$row[$title_field];
 				$first_name =			$row[$first_name_field];
 				$middle_initial =		$row[$middle_initial_field];
@@ -729,18 +864,112 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 				$comments =				trim($row[$comments_field]);
 				$rank =					$row[$rank_field];
 				$owner =				$row[$owner_field];
+				
+				# replace ' " ` \ ; with nothing
+				$vendor_lead_code =		eregi_replace($field_regx, "", $vendor_lead_code);
+				$source_code =			eregi_replace($field_regx, "", $source_code);
+				$source_id = 			eregi_replace($field_regx, "", $source_id);
+				$list_id =				eregi_replace($field_regx, "", $list_id);
+				$phone_code =			eregi_replace($field_regx, "", $phone_code);
+				$phone_number =			eregi_replace($field_regx, "", $phone_number);
+				$title =				eregi_replace($field_regx, "", $title);
+				$first_name =			eregi_replace($field_regx, "", $first_name);
+				$middle_initial =		eregi_replace($field_regx, "", $middle_initial);
+				$last_name =			eregi_replace($field_regx, "", $last_name);
+				$address1 =				eregi_replace($field_regx, "", $address1);
+				$address2 =				eregi_replace($field_regx, "", $address2);
+				$address3 =				eregi_replace($field_regx, "", $address3);
+				$city =					eregi_replace($field_regx, "", $city);
+				$state =				eregi_replace($field_regx, "", $state);
+				$province =				eregi_replace($field_regx, "", $province);
+				$postal_code =			eregi_replace($field_regx, "", $postal_code);
+				$country_code =			eregi_replace($field_regx, "", $country_code);
+				$gender =				eregi_replace($field_regx, "", $gender);
+				$date_of_birth =		eregi_replace($field_regx, "", $date_of_birth);
+				$alt_phone =			eregi_replace($field_regx, "", $alt_phone);
+				$email =				eregi_replace($field_regx, "", $email);
+				$security_phrase =		eregi_replace($field_regx, "", $security_phrase);
+				$comments =				eregi_replace($field_regx, "", $comments);
+				$rank =					eregi_replace($field_regx, "", $rank);
+				$owner =				eregi_replace($field_regx, "", $owner);
+				
+				$USarea = 			substr($phone_number, 0, 3);
 
-					if (strlen($rank)<1) {$rank='0';}
 
-					if (strlen($list_id_override)>0) 
+				if (strlen($rank)<1) {$rank='0';}
+
+				if (strlen($list_id_override)>0) 
+					{
+					$list_id = $list_id_override;
+					}
+				if (strlen($phone_code_override)>0) 
+					{
+					$phone_code = $phone_code_override;
+					}
+
+					##### BEGIN custom fields columns list ###
+					$custom_SQL='';
+					if ($custom_fields_enabled > 0)
 						{
-						$list_id = $list_id_override;
-						}
-					if (strlen($phone_code_override)>0) 
-						{
-						$phone_code = $phone_code_override;
-						}
+						$stmt="ZeigeTABELLES LIKE \"custom_$list_id_override\";";
+						if ($DB>0) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $link);
+						$tablecount_to_print = mysql_num_rows($rslt);
+						if ($tablecount_to_print > 0) 
+							{
+							$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id_override';";
+							if ($DB>0) {echo "$stmt\n";}
+							$rslt=mysql_query($stmt, $link);
+							$fieldscount_to_print = mysql_num_rows($rslt);
+							if ($fieldscount_to_print > 0) 
+								{
+								$rowx=mysql_fetch_row($rslt);
+								$custom_records_count =	$rowx[0];
 
+								$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$list_id_override' order by field_rank,field_order,field_label;";
+								if ($DB>0) {echo "$stmt\n";}
+								$rslt=mysql_query($stmt, $link);
+								$fields_to_print = mysql_num_rows($rslt);
+								$fields_list='';
+								$o=0;
+								while ($fields_to_print > $o) 
+									{
+									$rowx=mysql_fetch_row($rslt);
+									$A_field_label[$o] =	$rowx[1];
+									$A_field_type[$o] =		$rowx[6];
+									$A_field_value[$o] =	'';
+
+									$field_name_id = $A_field_label[$o] . "_field";
+
+									if ($DB>0) {echo "$A_field_label[$o]|$A_field_type[$o]\n";}
+
+									if ( ($A_field_type[$o]!='DISPLAY') and ($A_field_type[$o]!='SCRIPT') )
+										{
+										if (!preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
+											{
+											if (isset($_GET["$field_name_id"]))				{$form_field_value=$_GET["$field_name_id"];}
+												elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
+
+											if ($form_field_value >= 0)
+												{
+												$A_field_value[$o] =	$row[$form_field_value];
+												# replace ' " ` \ ; with nothing
+												$A_field_value[$o] =	eregi_replace($field_regx, "", $A_field_value[$o]);
+
+												$custom_SQL .= "$A_field_label[$o]='$A_field_value[$o]',";
+												}
+											}
+										}
+									$o++;
+									}
+								}
+							}
+						}
+					##### END custom fields columns list ###
+
+					$custom_SQL = preg_replace("/,$/","",$custom_SQL);
+
+					
 					##### Check for duplicate phone numbers in vicidial_list table for all lists in a campaign #####
 					if (eregi("DUPCAMP",$dupcheck))
 						{
@@ -865,7 +1094,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 							}
 						}
 
-					if ( (strlen($phone_number)>6) and ($dup_lead<1) )
+					if ( (strlen($phone_number)>6) and ($dup_lead<1) and ($list_id >= 100 ))
 						{
 						if (strlen($phone_code)<1) {$phone_code = '1';}
 
@@ -878,23 +1107,53 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 						$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code);
 
 
-					if ($multi_insert_counter > 8) {
-						### insert good deal into pending_transactions table ###
-						$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values$multistmt('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner');";
-						$rslt=mysql_query($stmtZ, $link);
-						if ($WeBRooTWritablE > 0) 
-							{fwrite($stmt_file, $stmtZ."\r\n");}
-						$multistmt='';
-						$multi_insert_counter=0;
+						if (strlen($custom_SQL)>3)
+							{
+							$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id) values('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner','$list_id');";
+							$rslt=mysql_query($stmtZ, $link);
+							$affected_rows = mysql_affected_rows($link);
+							$lead_id = mysql_insert_id($link);
+							if ($DB > 0) {echo "<!-- $affected_rows|$lead_id|$stmtZ -->";}
+							if ($webroot_writable > 0) 
+								{fwrite($stmt_file, $stmtZ."\r\n");}
+							$multistmt='';
 
-					} else {
-						$multistmt .= "('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner'),";
-						$multi_insert_counter++;
-					}
-
+							$custom_SQL_query = "INSERT INTO custom_$list_id_override SET lead_id='$lead_id',$custom_SQL;";
+							$rslt=mysql_query($custom_SQL_query, $link);
+							$affected_rows = mysql_affected_rows($link);
+							if ($DB > 0) {echo "<!-- $affected_rows|$custom_SQL_query -->";}
+							}
+						else
+							{
+							if ($multi_insert_counter > 8) 
+								{
+								### insert good deal into pending_transactions table ###
+								$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id) values$multistmt('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner','0');";
+								$rslt=mysql_query($stmtZ, $link);
+								if ($webroot_writable > 0) 
+									{fwrite($stmt_file, $stmtZ."\r\n");}
+								$multistmt='';
+								$multi_insert_counter=0;
+								}
+							else
+								{
+								$multistmt .= "('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner','0'),";
+								$multi_insert_counter++;
+								}
+							}
 					$good++;
 				} else {
-					if ($bad < 1000000) {print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead</font><b>\n";}
+					if ($bad < 1000000)
+						{
+						if ( $list_id < 100 )
+							{
+							print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INVALID LISTE IDENTIFIKATION</font><b>\n";
+							}
+						else
+							{
+							print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead  $dup_lead_list</font><b>\n";
+							}
+						}
 					$bad++;
 				}
 				$total++;
@@ -905,9 +1164,9 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 				}
 			}
 			if ($multi_insert_counter!=0) {
-				$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values".substr($multistmt, 0, -1).";";
+				$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id) values".substr($multistmt, 0, -1).";";
 				mysql_query($stmtZ, $link);
-				if ($WeBRooTWritablE > 0) 
+				if ($webroot_writable > 0) 
 					{fwrite($stmt_file, $stmtZ."\r\n");}
 			}
 			print "<BR><BR>Done</B> GOOD: $good &nbsp; &nbsp; &nbsp; BAD: $bad &nbsp; &nbsp; &nbsp; TOTAL: $total</font></center>";
@@ -919,7 +1178,7 @@ if ($leadfile) {
 		$total=0; $good=0; $bad=0; $dup=0; $post=0; $phone_list='';
 
 		### LOG INSERTION Admin Log Table ###
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTEN', event_type='LOAD', record_id='$list_id_override', event_code='ADMIN LOAD LIST', event_sql='', event_notes='File Name: $leadfile_name';";
+		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='LOAD', record_id='$list_id_override', event_code='ADMIN LOAD LIST', event_sql='', event_notes='File Name: $leadfile_name';";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
 
@@ -930,9 +1189,9 @@ if ($leadfile) {
 
 	if (!eregi(".csv", $leadfile_name) && !eregi(".xls", $leadfile_name)) {
 
-		if ($WeBRooTWritablE > 0)
+		if ($webroot_writable > 0)
 			{
-			copy($LF_path, "$WeBServeRRooT/vicidial/vicidial_temp_file.txt");
+			copy($LF_path, "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.txt");
 			$lead_file = "./vicidial_temp_file.txt";
 			}
 		else
@@ -941,8 +1200,8 @@ if ($leadfile) {
 			$lead_file = "/tmp/vicidial_temp_file.txt";
 			}
 		$file=fopen("$lead_file", "r");
-		if ($WeBRooTWritablE > 0)
-			{$stmt_file=fopen("$WeBServeRRooT/vicidial/listloader_stmts.txt", "w");}
+		if ($webroot_writable > 0)
+			{$stmt_file=fopen("$WeBServeRRooT/$admin_web_directory/listloader_stmts.txt", "w");}
 
 		$buffer=fgets($file, 4096);
 		$tab_count=substr_count($buffer, "\t");
@@ -951,7 +1210,7 @@ if ($leadfile) {
 		if ($tab_count>$pipe_count) {$delimiter="\t";  $delim_name="tab";} else {$delimiter="|";  $delim_name="pipe";}
 		$field_check=explode($delimiter, $buffer);
 
-		if (count($field_check)>=5) {
+		if (count($field_check)>=2) {
 			flush();
 			$file=fopen("$lead_file", "r");
 			$total=0; $good=0; $bad=0; $dup=0; $post=0; $phone_list='';
@@ -985,7 +1244,6 @@ if ($leadfile) {
 					$called_since_last_reset='N';
 					$phone_code =			eregi_replace("[^0-9]", "", $row[3]);
 					$phone_number =			eregi_replace("[^0-9]", "", $row[4]);
-						$USarea = 			substr($phone_number, 0, 3);
 					$title =				$row[5];
 					$first_name =			$row[6];
 					$middle_initial =		$row[7];
@@ -1006,6 +1264,36 @@ if ($leadfile) {
 					$comments =				trim($row[22]);
 					$rank =					$row[23];
 					$owner =				$row[24];
+						
+					# replace ' " ` \ ; with nothing
+					$vendor_lead_code =		eregi_replace($field_regx, "", $vendor_lead_code);
+					$source_code =			eregi_replace($field_regx, "", $source_code);
+					$source_id = 			eregi_replace($field_regx, "", $source_id);
+					$list_id =				eregi_replace($field_regx, "", $list_id);
+					$phone_code =			eregi_replace($field_regx, "", $phone_code);
+					$phone_number =			eregi_replace($field_regx, "", $phone_number);
+					$title =				eregi_replace($field_regx, "", $title);
+					$first_name =			eregi_replace($field_regx, "", $first_name);
+					$middle_initial =		eregi_replace($field_regx, "", $middle_initial);
+					$last_name =			eregi_replace($field_regx, "", $last_name);
+					$address1 =				eregi_replace($field_regx, "", $address1);
+					$address2 =				eregi_replace($field_regx, "", $address2);
+					$address3 =				eregi_replace($field_regx, "", $address3);
+					$city =					eregi_replace($field_regx, "", $city);
+					$state =				eregi_replace($field_regx, "", $state);
+					$province =				eregi_replace($field_regx, "", $province);
+					$postal_code =			eregi_replace($field_regx, "", $postal_code);
+					$country_code =			eregi_replace($field_regx, "", $country_code);
+					$gender =				eregi_replace($field_regx, "", $gender);
+					$date_of_birth =		eregi_replace($field_regx, "", $date_of_birth);
+					$alt_phone =			eregi_replace($field_regx, "", $alt_phone);
+					$email =				eregi_replace($field_regx, "", $email);
+					$security_phrase =		eregi_replace($field_regx, "", $security_phrase);
+					$comments =				eregi_replace($field_regx, "", $comments);
+					$rank =					eregi_replace($field_regx, "", $rank);
+					$owner =				eregi_replace($field_regx, "", $owner);
+					
+					$USarea = 			substr($phone_number, 0, 3);
 
 					if (strlen($list_id_override)>0) 
 						{
@@ -1140,7 +1428,7 @@ if ($leadfile) {
 							}
 						}
 
-					if ( (strlen($phone_number)>6) and ($dup_lead<1) )
+					if ( (strlen($phone_number)>6) and ($dup_lead<1) and ($list_id >= 100 ))
 						{
 						if (strlen($phone_code)<1) {$phone_code = '1';}
 
@@ -1155,21 +1443,31 @@ if ($leadfile) {
 
 						if ($multi_insert_counter > 8) {
 							### insert good deal into pending_transactions table ###
-							$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values$multistmt('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner');";
+							$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id) values$multistmt('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner','0');";
 							$rslt=mysql_query($stmtZ, $link);
-							if ($WeBRooTWritablE > 0) 
+							if ($webroot_writable > 0) 
 								{fwrite($stmt_file, $stmtZ."\r\n");}
 							$multistmt='';
 							$multi_insert_counter=0;
 
 						} else {
-							$multistmt .= "('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner'),";
+							$multistmt .= "('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner','0'),";
 							$multi_insert_counter++;
 						}
 
 						$good++;
 					} else {
-						if ($bad < 1000000) {print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead</font><b>\n";}
+						if ($bad < 1000000)
+							{
+							if ( $list_id < 100 )
+								{
+								print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INVALID LISTE IDENTIFIKATION</font><b>\n";
+								}
+							else
+								{
+								print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead  $dup_lead_list</font><b>\n";
+								}
+							}
 						$bad++;
 					}
 					$total++;
@@ -1181,9 +1479,9 @@ if ($leadfile) {
 				}
 			}
 			if ($multi_insert_counter!=0) {
-				$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values".substr($multistmt, 0, -1).";";
+				$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id) values".substr($multistmt, 0, -1).";";
 				mysql_query($stmtZ, $link);
-				if ($WeBRooTWritablE > 0) 
+				if ($webroot_writable > 0) 
 					{fwrite($stmt_file, $stmtZ."\r\n");}
 			}
 
@@ -1194,10 +1492,10 @@ if ($leadfile) {
 		}
 	} else if (!eregi(".csv", $leadfile_name)) 
 		{
-		if ($WeBRooTWritablE > 0)
+		if ($webroot_writable > 0)
 			{
-			copy($LF_path, "$WeBServeRRooT/vicidial/vicidial_temp_file.xls");
-			$lead_file = "$WeBServeRRooT/vicidial/vicidial_temp_file.xls";
+			copy($LF_path, "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.xls");
+			$lead_file = "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.xls";
 			}
 		else
 			{
@@ -1206,7 +1504,7 @@ if ($leadfile) {
 			}
 		$file=fopen("$lead_file", "r");
 
-	#	echo "|$WeBServeRRooT/vicidial/listloader.pl --forcelistid=$list_id_override --lead-file=$lead_file|";
+	#	echo "|$WeBServeRRooT/$admin_web_directory/listloader.pl --forcelistid=$list_id_override --lead-file=$lead_file|";
 		$dupcheckCLI=''; $postalgmtCLI='';
 		if (eregi("DUPLIST",$dupcheck)) {$dupcheckCLI='--duplicate-check';}
 		if (eregi("DUPCAMP",$dupcheck)) {$dupcheckCLI='--duplicate-campaign-check';}
@@ -1214,15 +1512,15 @@ if ($leadfile) {
 		if (eregi("DUPTITLEALTPHONELIST",$dupcheck)) {$dupcheckCLI='--duplicate-tap-list-check';}
 		if (eregi("DUPTITLEALTPHONESYS",$dupcheck)) {$dupcheckCLI='--duplicate-tap-system-check';}
 		if (eregi("POSTAL",$postalgmt)) {$postalgmtCLI='--postal-code-gmt';}
-		passthru("$WeBServeRRooT/vicidial/listloader.pl --forcelistid=$list_id_override --forcephonecode=$phone_code_override --lead-file=$lead_file  $postalgmtCLI $dupcheckCLI");
+		passthru("$WeBServeRRooT/$admin_web_directory/listloader.pl --forcelistid=$list_id_override --forcephonecode=$phone_code_override --lead-file=$lead_file  $postalgmtCLI $dupcheckCLI");
 	
 		}
 		else 
 		{
-		if ($WeBRooTWritablE > 0)
+		if ($webroot_writable > 0)
 			{
-			copy($LF_path, "$WeBServeRRooT/vicidial/vicidial_temp_file.csv");
-			$lead_file = "$WeBServeRRooT/vicidial/vicidial_temp_file.csv";
+			copy($LF_path, "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.csv");
+			$lead_file = "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.csv";
 			}
 		else
 			{
@@ -1230,8 +1528,8 @@ if ($leadfile) {
 			$lead_file = "/tmp/vicidial_temp_file.csv";
 			}
 		$file=fopen("$lead_file", "r");
-		if ($WeBRooTWritablE > 0)
-			{$stmt_file=fopen("$WeBServeRRooT/vicidial/listloader_stmts.txt", "w");}
+		if ($webroot_writable > 0)
+			{$stmt_file=fopen("$WeBServeRRooT/$admin_web_directory/listloader_stmts.txt", "w");}
 		
 		print "<center><font face='arial, helvetica' size=3 color='#009900'><B>VerarbeitungCSV file... \n";
 
@@ -1258,7 +1556,6 @@ if ($leadfile) {
 				$called_since_last_reset='N';
 				$phone_code =			eregi_replace("[^0-9]", "", $row[3]);
 				$phone_number =			eregi_replace("[^0-9]", "", $row[4]);
-					$USarea = 			substr($phone_number, 0, 3);
 				$title =				$row[5];
 				$first_name =			$row[6];
 				$middle_initial =		$row[7];
@@ -1279,6 +1576,36 @@ if ($leadfile) {
 				$comments =				trim($row[22]);
 				$rank =					$row[23];
 				$owner =				$row[24];
+				
+				# replace ' " ` \ ; with nothing
+				$vendor_lead_code =		eregi_replace($field_regx, "", $vendor_lead_code);
+				$source_code =			eregi_replace($field_regx, "", $source_code);
+				$source_id = 			eregi_replace($field_regx, "", $source_id);
+				$list_id =				eregi_replace($field_regx, "", $list_id);
+				$phone_code =			eregi_replace($field_regx, "", $phone_code);
+				$phone_number =			eregi_replace($field_regx, "", $phone_number);
+				$title =				eregi_replace($field_regx, "", $title);
+				$first_name =			eregi_replace($field_regx, "", $first_name);
+				$middle_initial =		eregi_replace($field_regx, "", $middle_initial);
+				$last_name =			eregi_replace($field_regx, "", $last_name);
+				$address1 =				eregi_replace($field_regx, "", $address1);
+				$address2 =				eregi_replace($field_regx, "", $address2);
+				$address3 =				eregi_replace($field_regx, "", $address3);
+				$city =					eregi_replace($field_regx, "", $city);
+				$state =				eregi_replace($field_regx, "", $state);
+				$province =				eregi_replace($field_regx, "", $province);
+				$postal_code =			eregi_replace($field_regx, "", $postal_code);
+				$country_code =			eregi_replace($field_regx, "", $country_code);
+				$gender =				eregi_replace($field_regx, "", $gender);
+				$date_of_birth =		eregi_replace($field_regx, "", $date_of_birth);
+				$alt_phone =			eregi_replace($field_regx, "", $alt_phone);
+				$email =				eregi_replace($field_regx, "", $email);
+				$security_phrase =		eregi_replace($field_regx, "", $security_phrase);
+				$comments =				eregi_replace($field_regx, "", $comments);
+				$rank =					eregi_replace($field_regx, "", $rank);
+				$owner =				eregi_replace($field_regx, "", $owner);
+				
+				$USarea = 			substr($phone_number, 0, 3);
 
 					if (strlen($list_id_override)>0) 
 						{
@@ -1413,7 +1740,7 @@ if ($leadfile) {
 							}
 						}
 
-					if ( (strlen($phone_number)>6) and ($dup_lead<1) )
+					if ( (strlen($phone_number)>6) and ($dup_lead<1) and ($list_id >= 100 ))
 						{
 						if (strlen($phone_code)<1) {$phone_code = '1';}
 
@@ -1427,21 +1754,31 @@ if ($leadfile) {
 
 					if ($multi_insert_counter > 8) {
 						### insert good deal into pending_transactions table ###
-						$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values$multistmt('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner');";
+						$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id) values$multistmt('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner','0');";
 						$rslt=mysql_query($stmtZ, $link);
-						if ($WeBRooTWritablE > 0) 
+						if ($webroot_writable > 0) 
 							{fwrite($stmt_file, $stmtZ."\r\n");}
 						$multistmt='';
 						$multi_insert_counter=0;
 
 					} else {
-						$multistmt .= "('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner'),";
+						$multistmt .= "('','$entry_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country_code','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments',0,'2008-01-01 00:00:00','$rank','$owner','0'),";
 						$multi_insert_counter++;
 					}
 
 					$good++;
 				} else {
-					if ($bad < 1000000) {print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead</font><b>\n";}
+					if ($bad < 1000000)
+						{
+						if ( $list_id < 100 )
+							{
+							print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INVALID LISTE IDENTIFIKATION</font><b>\n";
+							}
+						else
+							{
+							print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead  $dup_lead_list</font><b>\n";
+							}
+						}
 					$bad++;
 				}
 				$total++;
@@ -1452,9 +1789,9 @@ if ($leadfile) {
 				}
 			}
 			if ($multi_insert_counter!=0) {
-				$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values".substr($multistmt, 0, -1).";";
+				$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id) values".substr($multistmt, 0, -1).";";
 				mysql_query($stmtZ, $link);
-				if ($WeBRooTWritablE > 0) 
+				if ($webroot_writable > 0) 
 					{fwrite($stmt_file, $stmtZ."\r\n");}
 			}
 
@@ -1464,6 +1801,7 @@ if ($leadfile) {
 		print "<script language='JavaScript1.2'>document.forms[0].leadfile.disabled=false; document.forms[0].submit_file.disabled=false; document.forms[0].reload_page.disabled=false;</script>";
 
 		} else {
+			##### BEGIN field chooser #####
 			print "<script language='JavaScript1.2'>document.forms[0].leadfile.disabled=true; document.forms[0].submit_file.disabled=true; document.forms[0].reload_page.disabled=true;</script><HR>";
 			flush();
 			print "<table border=0 cellpadding=3 cellspacing=0 width=700 align=center>\r\n";
@@ -1472,15 +1810,67 @@ if ($leadfile) {
 			print "    <th><font class='standard' color='white'>Akte Daten</font></th>\r\n";
 			print "  </tr>\r\n";
 
-			$rslt=mysql_query("select vendor_lead_code, source_id, list_id, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, rank, owner from vicidial_list limit 1", $link);
-			
+			$fields_stmt = "SELECT vendor_lead_code, source_id, list_id, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, rank, owner from vicidial_list limit 1";
+
+			##### BEGIN custom fields columns list ###
+			if ($custom_fields_enabled > 0)
+				{
+				$stmt="ZeigeTABELLES LIKE \"custom_$list_id_override\";";
+				if ($DB>0) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$tablecount_to_print = mysql_num_rows($rslt);
+				if ($tablecount_to_print > 0) 
+					{
+					$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id_override';";
+					if ($DB>0) {echo "$stmt\n";}
+					$rslt=mysql_query($stmt, $link);
+					$fieldscount_to_print = mysql_num_rows($rslt);
+					if ($fieldscount_to_print > 0) 
+						{
+						$rowx=mysql_fetch_row($rslt);
+						$custom_records_count =	$rowx[0];
+
+						$custom_SQL='';
+						$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$list_id_override' order by field_rank,field_order,field_label;";
+						if ($DB>0) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $link);
+						$fields_to_print = mysql_num_rows($rslt);
+						$fields_list='';
+						$o=0;
+						while ($fields_to_print > $o) 
+							{
+							$rowx=mysql_fetch_row($rslt);
+							$A_field_label[$o] =	$rowx[1];
+							$A_field_type[$o] =		$rowx[6];
+
+							if ($DB>0) {echo "$A_field_label[$o]|$A_field_type[$o]\n";}
+
+							if ( ($A_field_type[$o]!='DISPLAY') and ($A_field_type[$o]!='SCRIPT') )
+								{
+								if (!preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
+									{
+									$custom_SQL .= ",$A_field_label[$o]";
+									}
+								}
+							$o++;
+							}
+
+						$fields_stmt = "SELECT vendor_lead_code, source_id, list_id, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, rank, owner $custom_SQL from vicidial_list, custom_$list_id_override limit 1";
+
+						}
+					}
+				}
+			##### END custom fields columns list ###
+
+
+			$rslt=mysql_query("$fields_stmt", $link);
 
 			if (!eregi(".csv", $leadfile_name) && !eregi(".xls", $leadfile_name)) 
 				{
-				if ($WeBRooTWritablE > 0)
+				if ($webroot_writable > 0)
 					{
-					copy($LF_path, "$WeBServeRRooT/vicidial/vicidial_temp_file.txt");
-					$lead_file = "$WeBServeRRooT/vicidial/vicidial_temp_file.txt";
+					copy($LF_path, "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.txt");
+					$lead_file = "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.txt";
 					}
 				else
 					{
@@ -1488,8 +1878,8 @@ if ($leadfile) {
 					$lead_file = "/tmp/vicidial_temp_file.txt";
 					}
 				$file=fopen("$lead_file", "r");
-				if ($WeBRooTWritablE > 0)
-					{$stmt_file=fopen("$WeBServeRRooT/vicidial/listloader_stmts.txt", "w");}
+				if ($webroot_writable > 0)
+					{$stmt_file=fopen("$WeBServeRRooT/$admin_web_directory/listloader_stmts.txt", "w");}
 
 				$buffer=fgets($file, 4096);
 				$tab_count=substr_count($buffer, "\t");
@@ -1536,10 +1926,10 @@ if ($leadfile) {
 			} 
 			else if (!eregi(".csv", $leadfile_name)) 
 			{
-				if ($WeBRooTWritablE > 0)
+				if ($webroot_writable > 0)
 					{
-					copy($LF_path, "$WeBServeRRooT/vicidial/vicidial_temp_file.xls");
-					$lead_file = "$WeBServeRRooT/vicidial/vicidial_temp_file.xls";
+					copy($LF_path, "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.xls");
+					$lead_file = "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.xls";
 					}
 				else
 					{
@@ -1547,7 +1937,7 @@ if ($leadfile) {
 					$lead_file = "/tmp/vicidial_temp_file.xls";
 					}
 
-			#	echo "|$WeBServeRRooT/vicidial/listloader_rowdisplay.pl --lead-file=$lead_file|";
+			#	echo "|$WeBServeRRooT/$admin_web_directory/listloader_rowdisplay.pl --lead-file=$lead_file|";
 				$dupcheckCLI=''; $postalgmtCLI='';
 				if (eregi("DUPLIST",$dupcheck)) {$dupcheckCLI='--duplicate-check';}
 				if (eregi("DUPCAMP",$dupcheck)) {$dupcheckCLI='--duplicate-campaign-check';}
@@ -1555,14 +1945,14 @@ if ($leadfile) {
 				if (eregi("DUPTITLEALTPHONELIST",$dupcheck)) {$dupcheckCLI='--duplicate-tap-list-check';}
 				if (eregi("DUPTITLEALTPHONESYS",$dupcheck)) {$dupcheckCLI='--duplicate-tap-system-check';}
 				if (eregi("POSTAL",$postalgmt)) {$postalgmtCLI='--postal-code-gmt';}
-				passthru("$WeBServeRRooT/vicidial/listloader_rowdisplay.pl --lead-file=$lead_file $postalgmtCLI $dupcheckCLI");
+				passthru("$WeBServeRRooT/$admin_web_directory/listloader_rowdisplay.pl --lead-file=$lead_file $postalgmtCLI $dupcheckCLI");
 			} 
 			else 
 			{
-				if ($WeBRooTWritablE > 0)
+				if ($webroot_writable > 0)
 					{
-					copy($LF_path, "$WeBServeRRooT/vicidial/vicidial_temp_file.csv");
-					$lead_file = "$WeBServeRRooT/vicidial/vicidial_temp_file.csv";
+					copy($LF_path, "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.csv");
+					$lead_file = "$WeBServeRRooT/$admin_web_directory/vicidial_temp_file.csv";
 					}
 				else
 					{
@@ -1571,8 +1961,8 @@ if ($leadfile) {
 					}
 				$file=fopen("$lead_file", "r");
 
-				if ($WeBRooTWritablE > 0)
-					{$stmt_file=fopen("$WeBServeRRooT/vicidial/listloader_stmts.txt", "w");}
+				if ($webroot_writable > 0)
+					{$stmt_file=fopen("$WeBServeRRooT/$admin_web_directory/listloader_stmts.txt", "w");}
 				
 				print "<center><font face='arial, helvetica' size=3 color='#009900'><B>VerarbeitungCSV file... \n";
 				
@@ -1617,6 +2007,8 @@ if ($leadfile) {
 			print "</table>\r\n";
 	# }
 		print "<script language='JavaScript1.2'>document.forms[0].leadfile.disabled=false; document.forms[0].submit_file.disabled=false; document.forms[0].reload_page.disabled=false;</script>";
+
+		##### END field chooser #####
 	}
 #} else if (filesize($leadfile)>8388608) {
 #		print "<center><font face='arial, helvetica' size=3 color='#990000'><B>ERROR: File exceeds the 8MB limit.</B></font></center>";
@@ -1638,7 +2030,7 @@ exit;
 
 function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code)
 {
-require("dbconnect.php");
+global $link;
 
 $postalgmt_found=0;
 if ( (eregi("POSTAL",$postalgmt)) && (strlen($postal_code)>4) )

@@ -1,7 +1,7 @@
 <?php
 # user_stats.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -28,9 +28,14 @@
 # 100802-2347 - Added User Group Allowed Reports option validation
 # 100908-1205 - Added customer 3way hangup flags to user calls display
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
+# 110218-1523 - Added searches display
+# 110703-1836 - Added download option
+# 110718-1204 - Added skipped manual dial leads display
+# 111103-1050 - Added admin_hide_phone_data and admin_hide_lead_data options
+# 111106-1105 - Added user_group restrictions
+# 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 #
 
-header ("Content-type: text/html; charset=utf-8");
 
 require("dbconnect.php");
 require("functions.php");
@@ -41,9 +46,9 @@ $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active,webroot_writable FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
@@ -53,6 +58,7 @@ if ($qm_conf_ct > 0)
 	$slave_db_server =				$row[2];
 	$reports_use_slave_db =			$row[3];
 	$user_territories_active =		$row[4];
+	$webroot_writable =				$row[5];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -63,7 +69,7 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 	$use_slave_server=1;
 	$db_source = 'S';
 	require("dbconnect.php");
-	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
+	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -87,6 +93,8 @@ if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["ENVIAR"]))					{$ENVIAR=$_GET["ENVIAR"];}
 	elseif (isset($_POST["ENVIAR"]))		{$ENVIAR=$_POST["ENVIAR"];}
+if (isset($_GET["file_download"]))					{$file_download=$_GET["file_download"];}
+	elseif (isset($_POST["file_download"]))		{$file_download=$_POST["file_download"];}
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
@@ -104,7 +112,7 @@ $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$MAIN.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $reports_only_user=$row[0];
@@ -122,40 +130,82 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
     exit;
 	}
 
-$stmt="SELECT full_name,user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+$stmt="SELECT full_name,user_group,admin_hide_lead_data,admin_hide_phone_data from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
-$LOGfullname =		$row[0];
-$LOGuser_group =	$row[1];
+$LOGfullname =				$row[0];
+$LOGuser_group =			$row[1];
+$LOGadmin_hide_lead_data =	$row[2];
+$LOGadmin_hide_phone_data =	$row[3];
 
-fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
-fclose($fp);
+if ($webroot_writable > 0)
+	{
+	fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
+	fclose($fp);
+	}
 
-$stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
-if ($DB) {echo "|$stmt|\n";}
+$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {$MAIN.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
-$LOGallowed_campaigns = $row[0];
-$LOGallowed_reports =	$row[1];
+$LOGallowed_campaigns =		$row[0];
+$LOGallowed_reports =		$row[1];
+$LOGadmin_viewable_groups =	$row[2];
+
+$LOGadmin_viewable_groupsSQL='';
+$vuLOGadmin_viewable_groupsSQL='';
+$whereLOGadmin_viewable_groupsSQL='';
+if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+	{
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+	$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$vuLOGadmin_viewable_groupsSQL = "and vicidial_users.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+
+	if (strlen($user) > 0)
+		{
+		if ($did > 0)
+			{
+			$stmt="SELECT count(*) from vicidial_inbound_dids where did_pattern='$user' $LOGadmin_viewable_groupsSQL;";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$allowed_count = $row[0];
+			}
+		else
+			{
+			$stmt="SELECT count(*) from vicidial_users where user='$user' $LOGadmin_viewable_groupsSQL;";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$allowed_count = $row[0];
+			}
+
+		if ($allowed_count < 1)
+			{
+			echo "This user does not exist: |$PHP_AUTH_USER|$user|\n";
+			exit;
+			}
+		}
+	}
 
 if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL INFORMES/",$LOGallowed_reports)) )
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo "No tienes permiso para ver este informe: |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
 if ($did > 0)
 	{
-	$stmt="SELECT did_description from vicidial_inbound_dids where did_pattern='$user';";
+	$stmt="SELECT did_description from vicidial_inbound_dids where did_pattern='$user' $LOGadmin_viewable_groupsSQL;";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$full_name = $row[0];
 	}
 else
 	{
-	$stmt="SELECT full_name from vicidial_users where user='$user';";
+	$stmt="SELECT full_name from vicidial_users where user='$user' $LOGadmin_viewable_groupsSQL;";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$full_name = $row[0];
@@ -163,21 +213,16 @@ else
 
 
 
-
-?>
-<html>
-<head>
-
-<script language="JavaScript" src="calendar_db.js"></script>
-<link rel="stylesheet" href="calendar.css">
-
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<?php
+$HEADER.="<html>\n";
+$HEADER.="<head>\n";
+$HEADER.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
+$HEADER.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
+$HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 
 if ($did > 0)
-	{echo "<title>ADMINISTRATION: DID Call Stats";}
+	{$HEADER.="<title>ADMINISTRATION: DID Call Stats";}
 else
-	{echo "<title>ADMINISTRATION: $report_name";}
+	{$HEADER.="<title>ADMINISTRATION: $report_name";}
 
 
 
@@ -207,98 +252,93 @@ if ($did > 0)
 	}
 ##### END Set variables to make header show properly #####
 
-require("admin_header.php");
+#require("admin_header.php");
 
 
 
-?>
-<TABLE WIDTH=770 BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=0><TR BGCOLOR=#E6E6E6><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" SIZE=2>
-<?php 
+$MAIN.="<TABLE WIDTH=770 BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=0><TR BGCOLOR=#E6E6E6><TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2>\n";
 if ($did > 0)
-	{echo "<B> &nbsp; DID Call Stats for $user";}
+	{$MAIN.="<B> &nbsp; DID Call Stats for $user";}
 else
-	{echo "<B> &nbsp; Estadísticas de usuario for $user";}
+	{$MAIN.="<B> &nbsp; Estadísticas de usuario for $user";}
 
-?>
-</TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" SIZE=2> &nbsp; </TD></TR>
-<?php 
+$MAIN.="</TD><TD ALIGN=RIGHT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> &nbsp; </TD></TR>\n";
 
+$MAIN.="<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><B> &nbsp; \n";
 
+$download_link="$PHP_SELF?DB=$DB&did_id=$did_id&did=$did&begin_date=$begin_date&end_date=$end_date&user=$user&submit=$submit\n";
 
-echo "<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><B> &nbsp; \n";
+$MAIN.="<form action=$PHP_SELF method=GET name=vicidial_report id=vicidial_report>\n";
+$MAIN.="<input type=hidden name=DB value=\"$DB\">\n";
+$MAIN.="<input type=hidden name=did_id value=\"$did_id\">\n";
+$MAIN.="<input type=hidden name=did value=\"$did\">\n";
+$MAIN.="<input type=text name=begin_date value=\"$begin_date\" size=10 maxsize=10>";
 
-echo "<form action=$PHP_SELF method=POST name=vicidial_report id=vicidial_report>\n";
-echo "<input type=hidden name=DB value=\"$DB\">\n";
-echo "<input type=hidden name=did_id value=\"$did_id\">\n";
-echo "<input type=hidden name=did value=\"$did\">\n";
-echo "<input type=text name=begin_date value=\"$begin_date\" size=10 maxsize=10>";
+$MAIN.="<script language=\"JavaScript\">\n";
+$MAIN.="var o_cal = new tcal ({\n";
+$MAIN.="	// form name\n";
+$MAIN.="	'formname': 'vicidial_report',\n";
+$MAIN.="	// input name\n";
+$MAIN.="	'controlname': 'begin_date'\n";
+$MAIN.="});\n";
+$MAIN.="o_cal.a_tpl.yearscroll = false;\n";
+$MAIN.="// o_cal.a_tpl.weekstart = 1; // Lunes week start\n";
+$MAIN.="</script>\n";
 
-?>
-<script language="JavaScript">
-var o_cal = new tcal ({
-	// form name
-	'formname': 'vicidial_report',
-	// input name
-	'controlname': 'begin_date'
-});
-o_cal.a_tpl.yearscroll = false;
-// o_cal.a_tpl.weekstart = 1; // Lunes week start
-</script>
-<?php
+$MAIN.=" to <input type=text name=end_date value=\"$end_date\" size=10 maxsize=10>";
 
-echo " to <input type=text name=end_date value=\"$end_date\" size=10 maxsize=10>";
-
-?>
-<script language="JavaScript">
-var o_cal = new tcal ({
-	// form name
-	'formname': 'vicidial_report',
-	// input name
-	'controlname': 'end_date'
-});
-o_cal.a_tpl.yearscroll = false;
-// o_cal.a_tpl.weekstart = 1; // Lunes week start
-</script>
-<?php
+$MAIN.="<script language=\"JavaScript\">\n";
+$MAIN.="var o_cal = new tcal ({\n";
+$MAIN.="	// form name\n";
+$MAIN.="	'formname': 'vicidial_report',\n";
+$MAIN.="	// input name\n";
+$MAIN.="	'controlname': 'end_date'\n";
+$MAIN.="});\n";
+$MAIN.="o_cal.a_tpl.yearscroll = false;\n";
+$MAIN.="// o_cal.a_tpl.weekstart = 1; // Lunes week start\n";
+$MAIN.="</script>\n";
 
 if (strlen($user)>1)
-	{echo "<input type=hidden name=user value=\"$user\">\n";}
+	{$MAIN.="<input type=hidden name=user value=\"$user\">\n";}
 else
-	{echo "<input type=text name=user size=12 maxlength=10>\n";}
-echo "<input type=submit name=submit value=submit>\n";
+	{$MAIN.="<input type=text name=user size=12 maxlength=10>\n";}
+$MAIN.="<input type=submit name=submit value=submit>\n";
 
 
-echo " &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; $user - $full_name<BR><BR>\n";
+$MAIN.=" &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; $user - $full_name<BR><BR>\n";
 
-echo "<center>\n";
+$MAIN.="<center>\n";
 if ($did > 0)
 	{
-	echo "<a href=\"./AST_DIDstats.php?group[0]=$did_id&query_date=$begin_date&end_date=$end_date\">DID traffic report</a>\n";
-	echo " | <a href=\"./admin.php?ADD=3311&did_id=$did_id\">ModificarDID</a>\n";
+	$MAIN.="<a href=\"./AST_DIDstats.php?group[0]=$did_id&query_date=$begin_date&end_date=$end_date\">DID traffic report</a>\n";
+	$MAIN.=" | <a href=\"./admin.php?ADD=3311&did_id=$did_id\">ModificarDID</a>\n";
 	}
 else
 	{
-	echo "<a href=\"./AST_agent_time_sheet.php?agent=$user\">Agent Hoja de tiempo</a>\n";
-	echo " | <a href=\"./user_status.php?user=$user\">Condición de Usuario</a>\n";
-	echo " | <a href=\"./admin.php?ADD=3&user=$user\">Modificar Usuario</a>\n";
-	echo " | <a href=\"./AST_agent_days_detail.php?user=$user&query_date=$begin_date&end_date=$end_date&group[]=--ALL--&shift=ALL\">Usuario multiple day status detail report</a>";
+	$MAIN.="<a href=\"./AST_agent_time_sheet.php?agent=$user\">Agent Hoja de tiempo</a>\n";
+	$MAIN.=" | <a href=\"./user_status.php?user=$user\">Condición de Usuario</a>\n";
+	$MAIN.=" | <a href=\"./admin.php?ADD=3&user=$user\">Modificar Usuario</a>\n";
+	$MAIN.=" | <a href=\"./AST_agent_days_detail.php?user=$user&query_date=$begin_date&end_date=$end_date&group[]=--ALL--&shift=ALL\">Usuario multiple day status detail report</a>";
 	}
-echo "</center>\n";
+$MAIN.="</center>\n";
 
 
-echo "</B></TD></TR>\n";
-echo "<TR><TD ALIGN=LEFT COLSPAN=2>\n";
+$MAIN.="</B></TD></TR>\n";
+$MAIN.="<TR><TD ALIGN=LEFT COLSPAN=2>\n";
 
-echo "<br><center>\n";
+$MAIN.="<br><center>\n";
 
 
 if ($did < 1)
 	{
 	##### vicidial agent talk time and status #####
-	echo "<B>AGENTE TIEMPO Y ESTADO DE CONVERSACIÓN:</B>\n";
+	$MAIN.="<B>AGENTE TIEMPO Y ESTADO DE CONVERSACIÓN:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=1'>[DESCARGAR]</a></B>\n";
 
-	echo "<center><TABLE width=300 cellspacing=0 cellpadding=1>\n";
-	echo "<tr><td><font size=2>ESTADO</td><td align=right><font size=2>CUENTA</td><td align=right><font size=2>HOURS:MM:SS</td></tr>\n";
+	$MAIN.="<center><TABLE width=300 cellspacing=0 cellpadding=1>\n";
+	$MAIN.="<tr><td><font size=2>ESTADO</td><td align=right><font size=2>CUENTA</td><td align=right><font size=2>HOURS:MM:SS</td></tr>\n";
+
+	$CSV_text1.="\"AGENTE TIEMPO Y ESTADO DE CONVERSACIÓN\"\n";
+	$CSV_text1.="\"\",\"STATUS\",\"COUNT\",\"HOURS:MM:SS\"\n";
 
 	$stmt="SELECT count(*),status, sum(length_in_sec) from vicidial_log where user='" . mysql_real_escape_string($user) . "' and call_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and call_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' group by status order by status";
 	$rslt=mysql_query($stmt, $link);
@@ -356,9 +396,10 @@ if ($did < 1)
 
 		$call_hours_minutes =		sec_convert($call_sec[$o],'H'); 
 
-		echo "<tr $bgcolor><td><font size=2>$status[$o]</td>";
-		echo "<td align=right><font size=2> $counts[$o]</td>\n";
-		echo "<td align=right><font size=2> $call_hours_minutes</td></tr>\n";
+		$MAIN.="<tr $bgcolor><td><font size=2>$status[$o]</td>";
+		$MAIN.="<td align=right><font size=2> $counts[$o]</td>\n";
+		$MAIN.="<td align=right><font size=2> $call_hours_minutes</td></tr>\n";
+		$CSV_text1.="\"\",\"$status[$o]\",\"$counts[$o]\",\"$call_hours_minutes\"\n";
 		$total_calls = ($total_calls + $counts[$o]);
 		$total_sec = ($total_sec + $call_sec[$o]);
 		$call_seconds=0;
@@ -367,21 +408,25 @@ if ($did < 1)
 
 	$call_hours_minutes =		sec_convert($total_sec,'H'); 
 
-	echo "<tr><td><font size=2>LLAMADAS TOTALES </td><td align=right><font size=2> $total_calls</td><td align=right><font size=2> $call_hours_minutes</td></tr>\n";
-	echo "</TABLE></center>\n";
+	$MAIN.="<tr><td><font size=2>LLAMADAS TOTALES </td><td align=right><font size=2> $total_calls</td><td align=right><font size=2> $call_hours_minutes</td></tr>\n";
+	$CSV_text1.="\"\",\"LLAMADAS TOTALES\",\"$total_calls\",\"$call_hours_minutes\"\n";
+	$MAIN.="</TABLE></center>\n";
 
 
 	##### Login and Salir time from vicidial agent interface #####
 
-	echo "<br><br>\n";
+	$MAIN.="<br><br>\n";
 
-	echo "<center>\n";
+	$MAIN.="<center>\n";
 
-	echo "<B>AGENTE TIEMPO LOGIN/LOGOUT:</B>\n";
-	echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
-	echo "<tr><td><font size=2>EVENTO</td><td align=right><font size=2> FECHA</td><td align=right><font size=2> CAMPAÑA</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HOURS:MM:SS</td><td align=right><font size=2>SESSION</td><td align=right><font size=2>SERVER</td><td align=right><font size=2>PHONE</td><td align=right><font size=2>COMPUTER</td></tr>\n";
+	$MAIN.="<B>AGENTE TIEMPO LOGIN/LOGOUT:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=2'>[DESCARGAR]</a></B>\n";
+	$MAIN.="<TABLE width=750 cellspacing=0 cellpadding=1>\n";
+	$MAIN.="<tr><td><font size=2>EVENTO</td><td align=right><font size=2> FECHA</td><td align=right><font size=2> CAMPAÑA</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HOURS:MM:SS</td><td align=right><font size=2>SESSION</td><td align=right><font size=2>SERVER</td><td align=right><font size=2>PHONE</td><td align=right><font size=2>COMPUTER</td></tr>\n";
 
-		$stmt="SELECT event,event_epoch,event_date,campaign_id,user_group,session_id,server_ip,extension,computer_ip from vicidial_user_log where user='" . mysql_real_escape_string($user) . "' and event_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59'";
+	$CSV_text2.="\"AGENTE TIEMPO LOGIN/LOGOUT\"\n";
+	$CSV_text2.="\"\",\"EVENT\",\"DATE\",\"CAMPAIGN\",\"GROUP\",\"HOURS:MM:SS\",\"SESSION\",\"SERVER\",\"PHONE\",\"COMPUTER\"\n";
+
+		$stmt="SELECT event,event_epoch,event_date,campaign_id,user_group,session_id,server_ip,extension,computer_ip from vicidial_user_log where user='" . mysql_real_escape_string($user) . "' and event_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by event_date;";
 		$rslt=mysql_query($stmt, $link);
 		$events_to_print = mysql_num_rows($rslt);
 
@@ -399,15 +444,16 @@ if ($did < 1)
 			if (ereg("LOGIN", $row[0]))
 				{
 				$event_start_seconds = $row[1];
-				echo "<tr $bgcolor><td><font size=2>$row[0]</td>";
-				echo "<td align=right><font size=2> $row[2]</td>\n";
-				echo "<td align=right><font size=2> $row[3]</td>\n";
-				echo "<td align=right><font size=2> $row[4]</td>\n";
-				echo "<td align=right><font size=2> </td>\n";
-				echo "<td align=right><font size=2> $row[5] </td>\n";
-				echo "<td align=right><font size=2> $row[6] </td>\n";
-				echo "<td align=right><font size=2> $row[7] </td>\n";
-				echo "<td align=right><font size=2> $row[8] </td></tr>\n";
+				$MAIN.="<tr $bgcolor><td><font size=2>$row[0]</td>";
+				$MAIN.="<td align=right><font size=2> $row[2]</td>\n";
+				$MAIN.="<td align=right><font size=2> $row[3]</td>\n";
+				$MAIN.="<td align=right><font size=2> $row[4]</td>\n";
+				$MAIN.="<td align=right><font size=2> </td>\n";
+				$MAIN.="<td align=right><font size=2> $row[5] </td>\n";
+				$MAIN.="<td align=right><font size=2> $row[6] </td>\n";
+				$MAIN.="<td align=right><font size=2> $row[7] </td>\n";
+				$MAIN.="<td align=right><font size=2> $row[8] </td></tr>\n";
+				$CSV_text2.="\"\",\"$row[0]\",$row[2]\",\"$row[3]\",\"$row[4]\",\"\",\"$row[5]\",\"$row[6]\",\"$row[7]\",\"$row[8]\"\n";
 				}
 			if (ereg("LOGOUT", $row[0]))
 				{
@@ -419,22 +465,24 @@ if ($did < 1)
 					$total_login_time = ($total_login_time + $event_seconds);
 					$event_hours_minutes =		sec_convert($event_seconds,'H'); 
 
-					echo "<tr $bgcolor><td><font size=2>$row[0]</td>";
-					echo "<td align=right><font size=2> $row[2]</td>\n";
-					echo "<td align=right><font size=2> $row[3]</td>\n";
-					echo "<td align=right><font size=2> $row[4]</td>\n";
-					echo "<td align=right><font size=2> $event_hours_minutes</td>\n";
-					echo "<td align=right colspan=4><font size=2> &nbsp;</td></tr>\n";
+					$MAIN.="<tr $bgcolor><td><font size=2>$row[0]</td>";
+					$MAIN.="<td align=right><font size=2> $row[2]</td>\n";
+					$MAIN.="<td align=right><font size=2> $row[3]</td>\n";
+					$MAIN.="<td align=right><font size=2> $row[4]</td>\n";
+					$MAIN.="<td align=right><font size=2> $event_hours_minutes</td>\n";
+					$MAIN.="<td align=right colspan=4><font size=2> &nbsp;</td></tr>\n";
 					$event_start_seconds='';
 					$event_stop_seconds='';
+					$CSV_text2.="\"\",\"$row[0]\",\"$row[2]\",\"$row[3]\",\"$row[4]\",\"$event_hours_minutes\"\n";
 					}
 				else
 					{
-					echo "<tr $bgcolor><td><font size=2>$row[0]</td>";
-					echo "<td align=right><font size=2> $row[2]</td>\n";
-					echo "<td align=right><font size=2> $row[3]</td>\n";
-					echo "<td align=right><font size=2> </td>\n";
-					echo "<td align=right colspan=5><font size=2> &nbsp;</td></tr>\n";
+					$MAIN.="<tr $bgcolor><td><font size=2>$row[0]</td>";
+					$MAIN.="<td align=right><font size=2> $row[2]</td>\n";
+					$MAIN.="<td align=right><font size=2> $row[3]</td>\n";
+					$MAIN.="<td align=right><font size=2> </td>\n";
+					$MAIN.="<td align=right colspan=5><font size=2> &nbsp;</td></tr>\n";
+					$CSV_text2.="\"\",\"$row[0]\",\"$row[2]\",\"$row[3]\"\n";
 					}
 				}
 
@@ -446,13 +494,14 @@ if ($did < 1)
 
 	$total_login_hours_minutes =		sec_convert($total_login_time,'H'); 
 
-	echo "<tr><td><font size=2>TOTAL</td>";
-	echo "<td align=right><font size=2> </td>\n";
-	echo "<td align=right><font size=2> </td>\n";
-	echo "<td align=right><font size=2> </td>\n";
-	echo "<td align=right><font size=2> $total_login_hours_minutes</td></tr>\n";
+	$MAIN.="<tr><td><font size=2>TOTAL</td>";
+	$MAIN.="<td align=right><font size=2> </td>\n";
+	$MAIN.="<td align=right><font size=2> </td>\n";
+	$MAIN.="<td align=right><font size=2> </td>\n";
+	$MAIN.="<td align=right><font size=2> $total_login_hours_minutes</td></tr>\n";
+	$CSV_text2.="\"\",\"TOTAL\",\"\",\"\",\"\",\"$total_login_hours_minutes\"\n";
 
-	echo "</TABLE></center>\n";
+	$MAIN.="</TABLE></center>\n";
 
 
 
@@ -466,16 +515,18 @@ if ($did < 1)
 	$SQepoch = mktime(0, 0, 0, $SQday_ARY[1], $SQday_ARY[2], $SQday_ARY[0]);
 	$EQepoch = mktime(23, 59, 59, $EQday_ARY[1], $EQday_ARY[2], $EQday_ARY[0]);
 
-	echo "<br><br>\n";
+	$MAIN.="<br><br>\n";
 
-	echo "<center>\n";
+	$MAIN.="<center>\n";
 
-	echo "<B>TIMECLOCK TIEMPO LOGIN/LOGOUT:</B>\n";
-	echo "<TABLE width=550 cellspacing=0 cellpadding=1>\n";
-	echo "<tr><td><font size=2>ID </td><td><font size=2>EDIT </td><td align=right><font size=2>EVENTO</td><td align=right><font size=2> FECHA</td><td align=right><font size=2> IP ADDRESS</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HOURS:MM:SS</td></tr>\n";
+	$MAIN.="<B>TIMECLOCK TIEMPO LOGIN/LOGOUT:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=3'>[DESCARGAR]</a></B>\n";
+	$MAIN.="<TABLE width=550 cellspacing=0 cellpadding=1>\n";
+	$MAIN.="<tr><td><font size=2>ID </td><td><font size=2>EDIT </td><td align=right><font size=2>EVENTO</td><td align=right><font size=2> FECHA</td><td align=right><font size=2> IP ADDRESS</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HOURS:MM:SS</td></tr>\n";
+	$CSV_text3.="\"TIMECLOCK TIEMPO LOGIN/LOGOUT\"\n";
+	$CSV_text3.="\"\",\"ID\",\"EDIT\",\"EVENT\",\"DATE\",\"IPADDRESS\",\"GROUP\",\"HOURS:MM:SS\"\n";
 
 		$stmt="SELECT event,event_epoch,user_group,login_sec,ip_address,timeclock_id,manager_user from vicidial_timeclock_log where user='" . mysql_real_escape_string($user) . "' and event_epoch >= '$SQepoch'  and event_epoch <= '$EQepoch';";
-		if ($DB>0) {echo "|$stmt|";}
+		if ($DB>0) {$MAIN.="|$stmt|";}
 		$rslt=mysql_query($stmt, $link);
 		$events_to_print = mysql_num_rows($rslt);
 
@@ -496,13 +547,14 @@ if ($did < 1)
 			if (ereg("LOGIN", $row[0]))
 				{
 				$login_sec='';
-				echo "<tr $bgcolor><td><font size=2><A HREF=\"./timeclock_edit.php?timeclock_id=$row[5]\">$row[5]</A></td>";
-				echo "<td align=right><font size=2>$manager_edit</td>";
-				echo "<td align=right><font size=2>$row[0]</td>";
-				echo "<td align=right><font size=2> $TC_log_date</td>\n";
-				echo "<td align=right><font size=2> $row[4]</td>\n";
-				echo "<td align=right><font size=2> $row[2]</td>\n";
-				echo "<td align=right><font size=2> </td></tr>\n";
+				$MAIN.="<tr $bgcolor><td><font size=2><A HREF=\"./timeclock_edit.php?timeclock_id=$row[5]\">$row[5]</A></td>";
+				$MAIN.="<td align=right><font size=2>$manager_edit</td>";
+				$MAIN.="<td align=right><font size=2>$row[0]</td>";
+				$MAIN.="<td align=right><font size=2> $TC_log_date</td>\n";
+				$MAIN.="<td align=right><font size=2> $row[4]</td>\n";
+				$MAIN.="<td align=right><font size=2> $row[2]</td>\n";
+				$MAIN.="<td align=right><font size=2> </td></tr>\n";
+				$CSV_text3.="\"\",\"$row[5]\",\"$manager_edit\",\"$row[0]\",\"$TC_log_date\",\"$row[4]\",\"$row[2]\"\n";
 				}
 			if (ereg("LOGOUT", $row[0]))
 				{
@@ -510,15 +562,16 @@ if ($did < 1)
 				$total_login_time = ($total_login_time + $login_sec);
 				$event_hours_minutes =		sec_convert($login_sec,'H'); 
 
-				echo "<tr $bgcolor><td><font size=2><A HREF=\"./timeclock_edit.php?timeclock_id=$row[5]\">$row[5]</A></td>";
-				echo "<td align=right><font size=2>$manager_edit</td>";
-				echo "<td align=right><font size=2>$row[0]</td>";
-				echo "<td align=right><font size=2> $TC_log_date</td>\n";
-				echo "<td align=right><font size=2> $row[4]</td>\n";
-				echo "<td align=right><font size=2> $row[2]</td>\n";
-				echo "<td align=right><font size=2> $event_hours_minutes";
-				if ($DB) {echo " - $total_login_time - $login_sec";}
-				echo "</td></tr>\n";
+				$MAIN.="<tr $bgcolor><td><font size=2><A HREF=\"./timeclock_edit.php?timeclock_id=$row[5]\">$row[5]</A></td>";
+				$MAIN.="<td align=right><font size=2>$manager_edit</td>";
+				$MAIN.="<td align=right><font size=2>$row[0]</td>";
+				$MAIN.="<td align=right><font size=2> $TC_log_date</td>\n";
+				$MAIN.="<td align=right><font size=2> $row[4]</td>\n";
+				$MAIN.="<td align=right><font size=2> $row[2]</td>\n";
+				$MAIN.="<td align=right><font size=2> $event_hours_minutes";
+				if ($DB) {$MAIN.=" - $total_login_time - $login_sec";}
+				$MAIN.="</td></tr>\n";
+				$CSV_text3.="\"\",\"$row[5]\",\"$manager_edit\",\"$row[0]\",\"$TC_log_date\",\"$row[4]\",\"$row[2]\",\"$event_hours_minutes\"\n";
 				}
 			$o++;
 		}
@@ -526,32 +579,35 @@ if ($did < 1)
 		{
 		$login_sec = ($STARTtime - $row[1]);
 		$total_login_time = ($total_login_time + $login_sec);
-			if ($DB) {echo "LOGIN ONLY - $total_login_time - $login_sec";}
+			if ($DB) {$MAIN.="LOGIN ONLY - $total_login_time - $login_sec";}
 		}
 	$total_login_hours_minutes =		sec_convert($total_login_time,'H'); 
 
-	if ($DB) {echo " - $total_login_time - $login_sec";}
+	if ($DB) {$MAIN.=" - $total_login_time - $login_sec";}
 
-	echo "<tr><td align=right><font size=2> </td>";
-	echo "<td align=right><font size=2> </td>\n";
-	echo "<td align=right><font size=2> </td>\n";
-	echo "<td align=right><font size=2> </td>\n";
-	echo "<td align=right><font size=2><font size=2>TOTAL </td>\n";
-	echo "<td align=right><font size=2> $total_login_hours_minutes  </td></tr>\n";
-
-	echo "</TABLE></center>\n";
+	$MAIN.="<tr><td align=right><font size=2> </td>";
+	$MAIN.="<td align=right><font size=2> </td>\n";
+	$MAIN.="<td align=right><font size=2> </td>\n";
+	$MAIN.="<td align=right><font size=2> </td>\n";
+	$MAIN.="<td align=right><font size=2><font size=2>TOTAL </td>\n";
+	$MAIN.="<td align=right><font size=2> $total_login_hours_minutes  </td></tr>\n";
+	$CSV_text3.="\"\",\"\",\"\",\"\",\"\",\"TOTAL\",\"$total_login_hours_minutes\"\n";
+	$MAIN.="</TABLE></center>\n";
 
 
 
 	##### closer in-group selection logs #####
 
-	echo "<br><br>\n";
+	$MAIN.="<br><br>\n";
 
-	echo "<center>\n";
+	$MAIN.="<center>\n";
 
-	echo "<B>CLOSER IN-GROUP SELECTION LOGS:</B>\n";
-	echo "<TABLE width=670 cellspacing=0 cellpadding=1>\n";
-	echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2> CAMPAÑA</td><td align=left><font size=2>BLEND</td><td align=left><font size=2> GROUPS</td><td align=left><font size=2> MANAGER</td></tr>\n";
+	$MAIN.="<B>CLOSER IN-GROUP SELECTION LOGS:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=4'>[DESCARGAR]</a></B>\n";
+	$MAIN.="<TABLE width=670 cellspacing=0 cellpadding=1>\n";
+	$MAIN.="<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2> CAMPAÑA</td><td align=left><font size=2>BLEND</td><td align=left><font size=2> GROUPS</td><td align=left><font size=2> MANAGER</td></tr>\n";
+
+	$CSV_text4.="\"CLOSER IN-GROUP SELECTION LOGS\"\n";
+	$CSV_text4.="\"\",\"#\",\"DATE/TIME\",\"CAMPAIGN\",\"BLEND\",\"GROUPS\",\"MANAGER\"\n";
 
 	$stmt="select user,campaign_id,event_date,blended,closer_campaigns,manager_change from vicidial_user_closer_log where user='" . mysql_real_escape_string($user) . "' and event_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by event_date desc limit 1000;";
 	$rslt=mysql_query($stmt, $link);
@@ -567,25 +623,28 @@ if ($did < 1)
 			{$bgcolor='bgcolor="#9BB9FB"';}
 
 		$u++;
-		echo "<tr $bgcolor>";
-		echo "<td><font size=1>$u</td>";
-		echo "<td><font size=2>$row[2]</td>";
-		echo "<td align=left><font size=2> $row[1]</td>\n";
-		echo "<td align=left><font size=2> $row[3]</td>\n";
-		echo "<td align=left><font size=2> $row[4] </td>\n";
-		echo "<td align=left><font size=2> $row[5]</td>\n";
-		echo "</tr>\n";
+		$MAIN.="<tr $bgcolor>";
+		$MAIN.="<td><font size=1>$u</td>";
+		$MAIN.="<td><font size=2>$row[2]</td>";
+		$MAIN.="<td align=left><font size=2> $row[1]</td>\n";
+		$MAIN.="<td align=left><font size=2> $row[3]</td>\n";
+		$MAIN.="<td align=left><font size=2> $row[4] </td>\n";
+		$MAIN.="<td align=left><font size=2> $row[5]</td>\n";
+		$CSV_text4.="\"\",\"$u\",\"$row[2]\",\"$row[1]\",\"$row[3]\",\"$row[4]\",\"$row[5] \"\n";
+		$MAIN.="</tr>\n";
 		}
 
 
-	echo "</TABLE><BR><BR>\n";
+	$MAIN.="</TABLE><BR><BR>\n";
 
 
 	##### vicidial agent outbound calls for this time period #####
 
-	echo "<B>SALIENTE CALLS FOR THIS TIME PERIOD: (10000 record limit)</B>\n";
-	echo "<TABLE width=670 cellspacing=0 cellpadding=1>\n";
-	echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> CAMPAÑA</td><td align=right><font size=2> GROUP</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
+	$MAIN.="<B>OUTBOUND CALLS FOR THIS TIME PERIOD: (10000 record limit)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=5'>[DESCARGAR]</a></B>\n";
+	$MAIN.="<TABLE width=670 cellspacing=0 cellpadding=1>\n";
+	$MAIN.="<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> CAMPAÑA</td><td align=right><font size=2> GROUP</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
+	$CSV_text5.="\"OUTBOUND CALLS FOR THIS TIME PERIOD: (10000 record limit)\"\n";
+	$CSV_text5.="\"\",\"#\",\"DATE/TIME\",\"LENGTH\",\"STATUS\",\"PHONE\",\"CAMPAIGN\",\"GROUP\",\"LIST\",\"LEAD\",\"HANGUP REASON\"\n";
 
 	$stmt="select uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,user_group,term_reason,alt_dial from vicidial_log where user='" . mysql_real_escape_string($user) . "' and call_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and call_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by call_date desc limit 10000;";
 	$rslt=mysql_query($stmt, $link);
@@ -601,33 +660,53 @@ if ($did < 1)
 			{$bgcolor='bgcolor="#9BB9FB"';}
 
 		$u++;
-		echo "<tr $bgcolor>";
-		echo "<td><font size=1>$u</td>";
-		echo "<td><font size=2>$row[4]</td>";
-		echo "<td align=left><font size=2> $row[7]</td>\n";
-		echo "<td align=left><font size=2> $row[8]</td>\n";
-		echo "<td align=left><font size=2> $row[10] </td>\n";
-		echo "<td align=right><font size=2> $row[3] </td>\n";
-		echo "<td align=right><font size=2> $row[14] </td>\n";
-		echo "<td align=right><font size=2> $row[2] </td>\n";
-		echo "<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$row[1]\" target=\"_blank\">$row[1]</A> </td>\n";
-		echo "<td align=right><font size=2> $row[15] </td></tr>\n";
+
+		if ($LOGadmin_hide_phone_data != '0')
+			{
+			if ($DB > 0) {echo "PIELPHONEDATA|$row[10]|$LOGadmin_hide_phone_data|\n";}
+			$phone_temp = $row[10];
+			if (strlen($phone_temp) > 0)
+				{
+				if ($LOGadmin_hide_phone_data == '4_DIGITS')
+					{$row[10] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
+				elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
+					{$row[10] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
+				elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
+					{$row[10] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
+				else
+					{$row[10] = preg_replace("/./",'X',$phone_temp);}
+				}
+			}
+		$MAIN.="<tr $bgcolor>";
+		$MAIN.="<td><font size=1>$u</td>";
+		$MAIN.="<td><font size=2>$row[4]</td>";
+		$MAIN.="<td align=left><font size=2> $row[7]</td>\n";
+		$MAIN.="<td align=left><font size=2> $row[8]</td>\n";
+		$MAIN.="<td align=left><font size=2> $row[10] </td>\n";
+		$MAIN.="<td align=right><font size=2> $row[3] </td>\n";
+		$MAIN.="<td align=right><font size=2> $row[14] </td>\n";
+		$MAIN.="<td align=right><font size=2> $row[2] </td>\n";
+		$MAIN.="<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$row[1]\" target=\"_blank\">$row[1]</A> </td>\n";
+		$MAIN.="<td align=right><font size=2> $row[15] </td></tr>\n";
+		$CSV_text5.="\"\",\"$u\",\"$row[4]\",\"$row[7]\",\"$row[8]\",\"$row[10]\",\"$row[3]\",\"$row[14]\",\"$row[2]\",\"$row[1]\",\"$row[15]\"\n";
 		}
 
 
-	echo "</TABLE><BR><BR>\n";
+	$MAIN.="</TABLE><BR><BR>\n";
 	}
 
 ##### vicidial agent inbound calls for this time period #####
 
-echo "<B>Entrantes/CLOSER CALLS FOR THIS TIME PERIOD: (10000 record limit)</B>\n";
-echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
-echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> CAMPAÑA</td><td align=right><font size=2> WAIT (S)</td><td align=right><font size=2> AGENTE (S)</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
+$MAIN.="<B>INBOUND/CLOSER CALLS FOR THIS TIME PERIOD: (10000 record limit)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=6'>[DESCARGAR]</a></B>\n";
+$MAIN.="<TABLE width=750 cellspacing=0 cellpadding=1>\n";
+$MAIN.="<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> CAMPAÑA</td><td align=right><font size=2> WAIT (S)</td><td align=right><font size=2> AGENTE (S)</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
+$CSV_text6.="\"INBOUND/CLOSER CALLS FOR THIS TIME PERIOD: (10000 record limit)\"\n";
+$CSV_text6.="\"\",\"#\",\"DATE/TIME\",\"LENGTH\",\"STATUS\",\"PHONE\",\"CAMPAIGN\",\"WAIT(S)\",\"AGENT(S)\",\"LIST\",\"LEAD\",\"HANGUP REASON\"\n";
 
 $stmt="select call_date,length_in_sec,status,phone_number,campaign_id,queue_seconds,list_id,lead_id,term_reason from vicidial_closer_log where user='" . mysql_real_escape_string($user) . "' and call_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and call_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by call_date desc limit 10000;";
 if ($did > 0)
 	{
-	$stmt="select start_time,length_in_sec,0,caller_code,0,0,0,extension,0 from call_log where channel_group='DID_Entrantes' and number_dialed='" . mysql_real_escape_string($user) . "' and start_time >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and start_time <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by start_time desc limit 10000;";
+	$stmt="select start_time,length_in_sec,0,caller_code,0,0,0,extension,0 from call_log where channel_group='DID_INBOUND' and number_dialed='" . mysql_real_escape_string($user) . "' and start_time >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and start_time <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by start_time desc limit 10000;";
 	}
 $rslt=mysql_query($stmt, $link);
 $logs_to_print = mysql_num_rows($rslt);
@@ -660,37 +739,58 @@ while ($logs_to_print > $u)
 
 	$TOTALagentSECONDS = ($TOTALagentSECONDS + $AGENTseconds);
 
+	if ($LOGadmin_hide_phone_data != '0')
+		{
+		if ($DB > 0) {echo "PIELPHONEDATA|$row[10]|$LOGadmin_hide_phone_data|\n";}
+		$phone_temp = $row[3];
+		if (strlen($phone_temp) > 0)
+			{
+			if ($LOGadmin_hide_phone_data == '4_DIGITS')
+				{$row[3] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
+			elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
+				{$row[3] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
+			elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
+				{$row[3] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
+			else
+				{$row[3] = preg_replace("/./",'X',$phone_temp);}
+			}
+		}
+
 	$u++;
-	echo "<tr $bgcolor>";
-	echo "<td><font size=1>$u</td>";
-	echo "<td><font size=2>$row[0]</td>";
-	echo "<td align=left><font size=2> $row[1]</td>\n";
-	echo "<td align=left><font size=2> $row[2]</td>\n";
-	echo "<td align=left><font size=2> $row[3] </td>\n";
-	echo "<td align=right><font size=2> $row[4] </td>\n";
-	echo "<td align=right><font size=2> $row[5] </td>\n";
-	echo "<td align=right><font size=2> $AGENTseconds </td>\n";
-	echo "<td align=right><font size=2> $row[6] </td>\n";
-	echo "<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$row[7]\" target=\"_blank\">$row[7]</A> </td>\n";
-	echo "<td align=right><font size=2> $row[8] </td></tr>\n";
+	$MAIN.="<tr $bgcolor>";
+	$MAIN.="<td><font size=1>$u</td>";
+	$MAIN.="<td><font size=2>$row[0]</td>";
+	$MAIN.="<td align=left><font size=2> $row[1]</td>\n";
+	$MAIN.="<td align=left><font size=2> $row[2]</td>\n";
+	$MAIN.="<td align=left><font size=2> $row[3] </td>\n";
+	$MAIN.="<td align=right><font size=2> $row[4] </td>\n";
+	$MAIN.="<td align=right><font size=2> $row[5] </td>\n";
+	$MAIN.="<td align=right><font size=2> $AGENTseconds </td>\n";
+	$MAIN.="<td align=right><font size=2> $row[6] </td>\n";
+	$MAIN.="<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$row[7]\" target=\"_blank\">$row[7]</A> </td>\n";
+	$MAIN.="<td align=right><font size=2> $row[8] </td></tr>\n";
+	$CSV_text6.="\"\",\"$u\",\"$row[0]\",\"$row[1]\",\"$row[2]\",\"$row[3]\",\"$row[4]\",\"$row[5]\",\"$AGENTseconds\",\"$row[6]\",\"$row[7]\",\"$row[8]\"\n";
 	}
 
-echo "<tr bgcolor=white>";
-echo "<td colspan=2><font size=2>TOTALS</td>";
-echo "<td align=left><font size=2> $TOTALinSECONDS</td>\n";
-echo "<td colspan=4><font size=2> &nbsp; </td>\n";
-echo "<td align=right><font size=2> $TOTALagentSECONDS</td>\n";
-echo "<td colspan=3><font size=2> &nbsp; </td></tr>\n";
-echo "</TABLE></center><BR><BR>\n";
+$MAIN.="<tr bgcolor=white>";
+$MAIN.="<td colspan=2><font size=2>TOTALS</td>";
+$MAIN.="<td align=left><font size=2> $TOTALinSECONDS</td>\n";
+$MAIN.="<td colspan=4><font size=2> &nbsp; </td>\n";
+$MAIN.="<td align=right><font size=2> $TOTALagentSECONDS</td>\n";
+$MAIN.="<td colspan=3><font size=2> &nbsp; </td></tr>\n";
+$MAIN.="</TABLE></center><BR><BR>\n";
+$CSV_text6.="\"\",\"\",\"TOTALS\",\"$TOTALinSECONDS\",\"\",\"\",\"\",\"\",\"$TOTALagentSECONDS\"\n";
 
 
 ##### vicidial agent activity records for this time period #####
 if ($did < 1)
 	{
-	echo "<B>AGENTE ACTIVITY FOR THIS TIME PERIOD: (10000 record limit)</B>\n";
-	echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
-	echo "<tr><td colspan=2><font size=1> &nbsp; </td><td colspan=6 align=center bgcolor=white><font size=1>these fields are in seconds </td><td colspan=4><font size=1> &nbsp; </td></tr>\n";
-	echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>PAUSE</td><td align=left><font size=2> WAIT</td><td align=left><font size=2> TALK</td><td align=right><font size=2> DISPO</td><td align=right><font size=2> DEAD</td><td align=right><font size=2> CUSTOMER</td><td align=right><font size=2> STATUS</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> CAMPAÑA</td><td align=right><font size=2> PAUSE CODE</td></tr>\n";
+	$MAIN.="<B>AGENTE DE LA ACTIVIDAD PARA ESTE PERIODO DE TIEMPO: (10000 record limit)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=7'>[DESCARGAR]</a></B>\n";
+	$MAIN.="<TABLE width=750 cellspacing=0 cellpadding=1>\n";
+	$MAIN.="<tr><td colspan=2><font size=1> &nbsp; </td><td colspan=6 align=center bgcolor=white><font size=1>estos campos son en segundos </td><td colspan=4><font size=1> &nbsp; </td></tr>\n";
+	$MAIN.="<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>PAUSE</td><td align=left><font size=2> WAIT</td><td align=left><font size=2> TALK</td><td align=right><font size=2> DISPO</td><td align=right><font size=2> DEAD</td><td align=right><font size=2> CUSTOMER</td><td align=right><font size=2> STATUS</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> CAMPAÑA</td><td align=right><font size=2> PAUSE CODE</td></tr>\n";
+	$CSV_text7.="\"AGENTE DE LA ACTIVIDAD PARA ESTE PERIODO DE TIEMPO: (10000 record limit)\"\n";
+	$CSV_text7.="\"\",\"#\",\"DATE/TIME\",\"PAUSE\",\"WAIT\",\"TALK\",\"DISPO\",\"DEAD\",\"CUSTOMER\",\"STATUS\",\"LEAD\",\"CAMPAIGN\",\"PAUSE CODE\"\n";
 
 	$stmt="select event_time,lead_id,campaign_id,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec,status,sub_status,user_group from vicidial_agent_log where user='" . mysql_real_escape_string($user) . "' and event_time >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_time <= '" . mysql_real_escape_string($end_date) . " 23:59:59' and ( (pause_sec > 0) or (wait_sec > 0) or (talk_sec > 0) or (dispo_sec > 0) ) order by event_time desc limit 10000;";
 	$rslt=mysql_query($stmt, $link);
@@ -742,46 +842,48 @@ if ($did < 1)
 	
 			$DBcall_end_sec = mktime($DBtime[0], $DBtime[1], ($DBtime[2] + $DBtotal_sec), $DBdate[1], $DBdate[2], $DBdate[0]);
 			$DBcall_end = date("Y-m-d H:i:s",$DBcall_end_sec);
-			echo "<tr $bgcolor>";
-			echo "<td><font size=1> &nbsp;</td>";
-			echo "<td><font size=2>$DBcall_end</td>";
-			echo "<td align=right><font size=2> $DBtotal_sec </td>\n";
-			echo "<td align=right><font size=2> &nbsp; </td>\n";
-			echo "<td align=right><font size=2> &nbsp; </td>\n";
-			echo "<td align=right><font size=2> &nbsp; </td>\n";
-			echo "<td align=right><font size=2> &nbsp; </td>\n";
-			echo "<td align=right><font size=2> &nbsp; </td>\n";
-			echo "<td align=right><font size=2> &nbsp; </td>\n";
-			echo "<td align=right><font size=2> &nbsp; </td>\n";
-			echo "<td align=right><font size=2> &nbsp; </td>\n";
-			echo "<td align=right><font size=2> &nbsp; </td></tr>\n";
+			$MAIN.="<tr $bgcolor>";
+			$MAIN.="<td><font size=1> &nbsp;</td>";
+			$MAIN.="<td><font size=2>$DBcall_end</td>";
+			$MAIN.="<td align=right><font size=2> $DBtotal_sec </td>\n";
+			$MAIN.="<td align=right><font size=2> &nbsp; </td>\n";
+			$MAIN.="<td align=right><font size=2> &nbsp; </td>\n";
+			$MAIN.="<td align=right><font size=2> &nbsp; </td>\n";
+			$MAIN.="<td align=right><font size=2> &nbsp; </td>\n";
+			$MAIN.="<td align=right><font size=2> &nbsp; </td>\n";
+			$MAIN.="<td align=right><font size=2> &nbsp; </td>\n";
+			$MAIN.="<td align=right><font size=2> &nbsp; </td>\n";
+			$MAIN.="<td align=right><font size=2> &nbsp; </td>\n";
+			$MAIN.="<td align=right><font size=2> &nbsp; </td></tr>\n";
 			}
 
 		$u++;
-		echo "<tr $bgcolor>";
-		echo "<td><font size=1>$u</td>";
-		echo "<td><font size=2>$event_time</td>";
-		echo "<td align=right><font size=2> $pause_sec</td>\n";
-		echo "<td align=right><font size=2> $wait_sec</td>\n";
-		echo "<td align=right><font size=2> $talk_sec </td>\n";
-		echo "<td align=right><font size=2> $dispo_sec </td>\n";
-		echo "<td align=right><font size=2> $dead_sec </td>\n";
-		echo "<td align=right><font size=2> $customer_sec </td>\n";
-		echo "<td align=right><font size=2> $status </td>\n";
-		echo "<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$lead_id\" target=\"_blank\">$lead_id</A> </td>\n";
-		echo "<td align=right><font size=2> $campaign_id </td>\n";
-		echo "<td align=right><font size=2> $pause_code </td></tr>\n";
+		$MAIN.="<tr $bgcolor>";
+		$MAIN.="<td><font size=1>$u</td>";
+		$MAIN.="<td><font size=2>$event_time</td>";
+		$MAIN.="<td align=right><font size=2> $pause_sec</td>\n";
+		$MAIN.="<td align=right><font size=2> $wait_sec</td>\n";
+		$MAIN.="<td align=right><font size=2> $talk_sec </td>\n";
+		$MAIN.="<td align=right><font size=2> $dispo_sec </td>\n";
+		$MAIN.="<td align=right><font size=2> $dead_sec </td>\n";
+		$MAIN.="<td align=right><font size=2> $customer_sec </td>\n";
+		$MAIN.="<td align=right><font size=2> $status </td>\n";
+		$MAIN.="<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$lead_id\" target=\"_blank\">$lead_id</A> </td>\n";
+		$MAIN.="<td align=right><font size=2> $campaign_id </td>\n";
+		$MAIN.="<td align=right><font size=2> $pause_code </td></tr>\n";
+		$CSV_text7.="\"\",\"$u\",\"$event_time\",\"$pause_sec\",\"$wait_sec\",\"$talk_sec\",\"$dispo_sec\",\"$dead_sec\",\"$customer_sec\",\"$status\",\"$lead_id\",\"$campaign_id\",\"$pause_code \"\n";
 		}
 
-	echo "<tr bgcolor=white>";
-	echo "<td colspan=2><font size=2>TOTALS</td>";
-	echo "<td align=right><font size=2> $TOTALpauseSECONDS</td>\n";
-	echo "<td align=right><font size=2> $TOTALwaitSECONDS</td>\n";
-	echo "<td align=right><font size=2> $TOTALtalkSECONDS</td>\n";
-	echo "<td align=right><font size=2> $TOTALdispoSECONDS</td>\n";
-	echo "<td align=right><font size=2> $TOTALdeadSECONDS</td>\n";
-	echo "<td align=right><font size=2> $TOTALcustomerSECONDS</td>\n";
-	echo "<td colspan=4><font size=2> &nbsp; </td></tr>\n";
+	$MAIN.="<tr bgcolor=white>";
+	$MAIN.="<td colspan=2><font size=2>TOTALS</td>";
+	$MAIN.="<td align=right><font size=2> $TOTALpauseSECONDS</td>\n";
+	$MAIN.="<td align=right><font size=2> $TOTALwaitSECONDS</td>\n";
+	$MAIN.="<td align=right><font size=2> $TOTALtalkSECONDS</td>\n";
+	$MAIN.="<td align=right><font size=2> $TOTALdispoSECONDS</td>\n";
+	$MAIN.="<td align=right><font size=2> $TOTALdeadSECONDS</td>\n";
+	$MAIN.="<td align=right><font size=2> $TOTALcustomerSECONDS</td>\n";
+	$MAIN.="<td colspan=4><font size=2> &nbsp; </td></tr>\n";
+	$CSV_text7.="\"\",\"\",\"TOTALS\",\"$TOTALpauseSECONDS\",\"$TOTALwaitSECONDS\",\"$TOTALtalkSECONDS\",\"$TOTALdispoSECONDS\",\"$TOTALdeadSECONDS\",\"$TOTALcustomerSECONDS\"\n";
 
 	$TOTALpauseSECONDShh =	sec_convert($TOTALpauseSECONDS,'H'); 
 	$TOTALwaitSECONDShh =	sec_convert($TOTALwaitSECONDS,'H'); 
@@ -790,25 +892,28 @@ if ($did < 1)
 	$TOTALdeadSECONDShh =	sec_convert($TOTALdeadSECONDS,'H'); 
 	$TOTALcustomerSECONDShh =	sec_convert($TOTALcustomerSECONDS,'H'); 
 
-	echo "<tr bgcolor=white>";
-	echo "<td colspan=2><font size=1>(in HH:MM:SS)</td>";
-	echo "<td align=right><font size=2> $TOTALpauseSECONDShh</td>\n";
-	echo "<td align=right><font size=2> $TOTALwaitSECONDShh</td>\n";
-	echo "<td align=right><font size=2> $TOTALtalkSECONDShh</td>\n";
-	echo "<td align=right><font size=2> $TOTALdispoSECONDShh</td>\n";
-	echo "<td align=right><font size=2> $TOTALdeadSECONDShh</td>\n";
-	echo "<td align=right><font size=2> $TOTALcustomerSECONDShh</td>\n";
-	echo "<td colspan=4><font size=2> &nbsp; </td></tr>\n";
+	$MAIN.="<tr bgcolor=white>";
+	$MAIN.="<td colspan=2><font size=1>(in HH:MM:SS)</td>";
+	$MAIN.="<td align=right><font size=2> $TOTALpauseSECONDShh</td>\n";
+	$MAIN.="<td align=right><font size=2> $TOTALwaitSECONDShh</td>\n";
+	$MAIN.="<td align=right><font size=2> $TOTALtalkSECONDShh</td>\n";
+	$MAIN.="<td align=right><font size=2> $TOTALdispoSECONDShh</td>\n";
+	$MAIN.="<td align=right><font size=2> $TOTALdeadSECONDShh</td>\n";
+	$MAIN.="<td align=right><font size=2> $TOTALcustomerSECONDShh</td>\n";
+	$MAIN.="<td colspan=4><font size=2> &nbsp; </td></tr>\n";
+	$CSV_text7.="\"\",\"\",\"(in HH:MM:SS)\",\"$TOTALpauseSECONDShh\",\"$TOTALwaitSECONDShh\",\"$TOTALtalkSECONDShh\",\"$TOTALdispoSECONDShh\",\"$TOTALdeadSECONDShh\",\"$TOTALcustomerSECONDShh\"\n";
 
-	echo "</TABLE></center><BR><BR>\n";
+	$MAIN.="</TABLE></center><BR><BR>\n";
 	}
 
 
 ##### vicidial recordings for this time period #####
 
-echo "<B>RECORDINGS FOR THIS TIME PERIOD: (10000 record limit)</B>\n";
-echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
-echo "<tr><td><font size=1># </td><td align=left><font size=2> LEAD</td><td><font size=2>DATE/TIME </td><td align=left><font size=2>SECONDS </td><td align=left><font size=2> &nbsp; RECID</td><td align=center><font size=2>FILENAME</td><td align=center><font size=2>LOCATION &nbsp; </td></tr>\n";
+$MAIN.="<B>RECORDINGS FOR THIS TIME PERIOD: (10000 record limit)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=8'>[DESCARGAR]</a></B>\n";
+$MAIN.="<TABLE width=750 cellspacing=0 cellpadding=1>\n";
+$MAIN.="<tr><td><font size=1># </td><td align=left><font size=2> LEAD</td><td><font size=2>DATE/TIME </td><td align=left><font size=2>SECONDS </td><td align=left><font size=2> &nbsp; RECID</td><td align=center><font size=2>FILENAME</td><td align=center><font size=2>LOCATION &nbsp; </td></tr>\n";
+$CSV_text8.="\"RECORDINGS FOR THIS TIME PERIOD: (10000 record limit)\"\n";
+$CSV_text8.="\"\",\"#\",\"LEAD\",\"DATE/TIME\",\"SECONDS\",\"RECID\",\"FILENAME\",\"LOCATION\"\n";
 
 	$stmt="select recording_id,channel,server_ip,extension,start_time,start_epoch,end_time,end_epoch,length_in_sec,length_in_min,filename,location,lead_id,user,vicidial_id from recording_log where user='" . mysql_real_escape_string($user) . "' and start_time >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and start_time <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by recording_id desc limit 10000;";
 	$rslt=mysql_query($stmt, $link);
@@ -824,6 +929,7 @@ echo "<tr><td><font size=1># </td><td align=left><font size=2> LEAD</td><td><fon
 			{$bgcolor='bgcolor="#9BB9FB"';}
 
 		$location = $row[11];
+		$CSV_location=$row[11];
 
 		if (strlen($location)>2)
 			{
@@ -837,13 +943,17 @@ echo "<tr><td><font size=1># </td><td align=left><font size=2> LEAD</td><td><fon
 			
 			if ($rowx[0] > 0)
 				{
-				$stmt="select recording_web_link,alt_server_ip from servers where server_ip='$URLserver_ip';";
+				$stmt="select recording_web_link,alt_server_ip,external_server_ip from servers where server_ip='$URLserver_ip';";
 				$rsltx=mysql_query($stmt, $link);
 				$rowx=mysql_fetch_row($rsltx);
 				
 				if (eregi("ALT_IP",$rowx[0]))
 					{
 					$location = eregi_replace($URLserver_ip, $rowx[1], $location);
+					}
+				if (eregi("EXTERNAL_IP",$rowx[0]))
+					{
+					$location = eregi_replace($URLserver_ip, $rowx[2], $location);
 					}
 				}
 			}
@@ -857,27 +967,30 @@ echo "<tr><td><font size=1># </td><td align=left><font size=2> LEAD</td><td><fon
 		else
 			{$location = $locat;}
 		$u++;
-		echo "<tr $bgcolor>";
-		echo "<td><font size=1>$u</td>";
-		echo "<td align=left><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$row[12]\" target=\"_blank\">$row[12]</A> </td>";
-		echo "<td align=left><font size=2> $row[4] </td>\n";
-		echo "<td align=left><font size=2> $row[8] </td>\n";
-		echo "<td align=left><font size=2> $row[0] </td>\n";
-		echo "<td align=center><font size=2> $row[10] </td>\n";
-		echo "<td align=right><font size=2> $location &nbsp; </td>\n";
-		echo "</tr>\n";
+		$MAIN.="<tr $bgcolor>";
+		$MAIN.="<td><font size=1>$u</td>";
+		$MAIN.="<td align=left><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$row[12]\" target=\"_blank\">$row[12]</A> </td>";
+		$MAIN.="<td align=left><font size=2> $row[4] </td>\n";
+		$MAIN.="<td align=left><font size=2> $row[8] </td>\n";
+		$MAIN.="<td align=left><font size=2> $row[0] </td>\n";
+		$MAIN.="<td align=center><font size=2> $row[10] </td>\n";
+		$MAIN.="<td align=right><font size=2> $location &nbsp; </td>\n";
+		$MAIN.="</tr>\n";
+		$CSV_text8.="\"\",\"$u\",\"$row[12]\",\"$row[4]\",\"$row[8]\",\"$row[0]\",\"$row[10]\",\"$CSV_location\"\n";
 		}
 
-echo "</TABLE><BR><BR>\n";
+$MAIN.="</TABLE><BR><BR>\n";
 
 
 if ($did < 1)
 	{
 	##### vicidial agent outbound user manual calls for this time period #####
 
-	echo "<B>MANUAL SALIENTE CALLS FOR THIS TIME PERIOD: (10000 record limit)</B>\n";
-	echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
-	echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2> CALL TYPE</td><td align=left><font size=2> SERVER</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> DIALED</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> CALLERID</td><td align=right><font size=2> ALIAS</td><td align=right><font size=2> PRESET</td><td align=right><font size=2>C3HU</td></tr>\n";
+	$MAIN.="<B>MANUAL OUTBOUND CALLS FOR THIS TIME PERIOD: (10000 record limit)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=9'>[DESCARGAR]</a></B>\n";
+	$MAIN.="<TABLE width=750 cellspacing=0 cellpadding=1>\n";
+	$MAIN.="<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2> CALL TYPE</td><td align=left><font size=2> SERVER</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> DIALED</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> CALLERID</td><td align=right><font size=2> ALIAS</td><td align=right><font size=2> PRESET</td><td align=right><font size=2>C3HU</td></tr>\n";
+	$CSV_text9.="\"MANUAL OUTBOUND CALLS FOR THIS TIME PERIOD: (10000 record limit)\"\n";
+	$CSV_text9.="\"\",\"#\",\"DATE/TIME\",\"CALL TYPE\",\"SERVER\",\"PHONE\",\"DIALED\",\"LEAD\",\"CALLERID\",\"ALIAS\",\"PRESET\",\"C3HU\"\n";
 
 	$stmt="select call_date,call_type,server_ip,phone_number,number_dialed,lead_id,callerid,group_alias_id,preset_name,customer_hungup,customer_hungup_seconds from user_call_log where user='" . mysql_real_escape_string($user) . "' and call_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and call_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by call_date desc limit 10000;";
 	$rslt=mysql_query($stmt, $link);
@@ -898,21 +1011,134 @@ if ($did < 1)
 		if (strlen($row[9]) > 1)
 			{$C3HU = "$row[9] $row[10]";}
 
-		$u++;
-		echo "<tr $bgcolor>";
-		echo "<td><font size=1>$u</td>";
-		echo "<td><font size=2>$row[0]</td>";
-		echo "<td align=left><font size=2> $row[1]</td>\n";
-		echo "<td align=left><font size=2> $row[2]</td>\n";
-		echo "<td align=left><font size=2> $row[3] </td>\n";
-		echo "<td align=right><font size=2> $row[4] </td>\n";
-		echo "<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$row[5]\" target=\"_blank\">$row[5]</A> </td>\n";
-		echo "<td align=right><font size=2> $row[6] </td>\n";
-		echo "<td align=right><font size=2> $row[7] </td>\n";
-		echo "<td align=right><font size=2> $row[8] </td>\n";
-		echo "<td align=right NOWRAP><font size=2> $C3HU </td></tr>\n";
+	if ($LOGadmin_hide_phone_data != '0')
+		{
+		if ($DB > 0) {echo "PIELPHONEDATA|$row[10]|$LOGadmin_hide_phone_data|\n";}
+		$phone_temp = $row[3];
+		$dialed_temp = $row[4];
+		if ($LOGadmin_hide_phone_data == '4_DIGITS')
+			{
+			if (strlen($phone_temp) > 0)
+				{$row[3] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
+			if (strlen($dialed_temp) > 0)
+				{$row[4] = str_repeat("X", (strlen($dialed_temp) - 4)) . substr($dialed_temp,-4,4);}
+			}
+		elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
+			{
+			if (strlen($phone_temp) > 0)
+				{$row[3] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
+			if (strlen($dialed_temp) > 0)
+				{$row[4] = str_repeat("X", (strlen($dialed_temp) - 3)) . substr($dialed_temp,-3,3);}
+			}
+		elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
+			{
+			if (strlen($phone_temp) > 0)
+				{$row[3] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
+			if (strlen($dialed_temp) > 0)
+				{$row[4] = str_repeat("X", (strlen($dialed_temp) - 2)) . substr($dialed_temp,-2,2);}
+			}
+		else
+			{
+			if (strlen($phone_temp) > 0)
+				{$row[3] = preg_replace("/./",'X',$phone_temp);}
+			if (strlen($dialed_temp) > 0)
+				{$row[4] = preg_replace("/./",'X',$dialed_temp);}
+			}
 		}
-	echo "</TABLE><BR><BR>\n";
+
+		$u++;
+		$MAIN.="<tr $bgcolor>";
+		$MAIN.="<td><font size=1>$u</td>";
+		$MAIN.="<td><font size=2>$row[0]</td>";
+		$MAIN.="<td align=left><font size=2> $row[1]</td>\n";
+		$MAIN.="<td align=left><font size=2> $row[2]</td>\n";
+		$MAIN.="<td align=left><font size=2> $row[3] </td>\n";
+		$MAIN.="<td align=right><font size=2> $row[4] </td>\n";
+		$MAIN.="<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$row[5]\" target=\"_blank\">$row[5]</A> </td>\n";
+		$MAIN.="<td align=right><font size=2> $row[6] </td>\n";
+		$MAIN.="<td align=right><font size=2> $row[7] </td>\n";
+		$MAIN.="<td align=right><font size=2> $row[8] </td>\n";
+		$MAIN.="<td align=right NOWRAP><font size=2> $C3HU </td></tr>\n";
+		$CSV_text9.="\"\",\"$u\",\"$row[0]\",\"$row[1]\",\"$row[2]\",\"$row[3]\",\"$row[4]\",\"$row[5]\",\"$row[6]\",\"$row[7]\",\"$row[8]\",\"$C3HU\"\n";
+		}
+	$MAIN.="</TABLE><BR><BR>\n";
+	}
+
+if ($did < 1)
+	{
+	##### vicidial lead searches for this time period #####
+
+	$MAIN.="<B>PLOMO PARA BÚSQUEDAS Este período de tiempo: (10000 record limit)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=10'>[DESCARGAR]</a></B>\n";
+	$MAIN.="<TABLE width=750 cellspacing=0 cellpadding=1>\n";
+	$MAIN.="<tr><td><font size=1># </td><td NOWRAP><font size=2>DATE/TIME &nbsp; </td><td align=left NOWRAP><font size=2> TYPE &nbsp; </td><td align=left NOWRAP><font size=2> RESULTS &nbsp; </td><td align=left NOWRAP><font size=2> SEC &nbsp; </td><td align=right NOWRAP><font size=2> QUERY</td></tr>\n";
+	$CSV_text10.="\"PLOMO PARA BÚSQUEDAS Este período de tiempo: (10000 record limit)\"\n";
+	$CSV_text10.="\"\",\"#\",\"DATE/TIME\",\"TYPE\",\"RESULTS\",\"SEC\",\"QUERY\"\n";
+
+	$stmt="select event_date,source,results,seconds,search_query from vicidial_lead_search_log where user='" . mysql_real_escape_string($user) . "' and event_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by event_date desc limit 10000;";
+	$rslt=mysql_query($stmt, $link);
+	$logs_to_print = mysql_num_rows($rslt);
+
+	$u=0;
+	while ($logs_to_print > $u) 
+		{
+		$row=mysql_fetch_row($rslt);
+		if (eregi("1$|3$|5$|7$|9$", $u))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+
+		$row[4] = preg_replace('/select count\(\*\) from vicidial_list where/','',$row[4]);
+ 		$row[4] = preg_replace('/SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner from vicidial_list where /','',$row[4]);
+
+		while (strlen($row[4]) > 100)
+			{$row[4] = preg_replace("/.$/",'',$row[4]);}
+		$u++;
+		$MAIN.="<tr $bgcolor>";
+		$MAIN.="<td><font size=1>$u</td>";
+		$MAIN.="<td><font size=2>$row[0]</td>";
+		$MAIN.="<td align=center><font size=2> $row[1] </td>\n";
+		$MAIN.="<td align=right><font size=2> $row[2] </td>\n";
+		$MAIN.="<td align=right><font size=2> $row[3] </td>\n";
+		$MAIN.="<td align=right><font size=2> $row[4] </td></tr>\n";
+		$CSV_text10.="\"\",\"$u\",\"$row[0]\",\"$row[1]\",\"$row[2]\",\"$row[3]\",\"$row[4]\"\n";
+		}
+	$MAIN.="</TABLE><BR><BR>\n";
+	}
+
+if ($did < 1)
+	{
+	##### vicidial agent manual dial lead preview skips for this time period #####
+
+	$MAIN.="<B>PREVIEW LEAD SKIPS FOR THIS TIME PERIOD: (10000 record limit)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=11'>[DESCARGAR]</a></B>\n";
+	$MAIN.="<TABLE width=750 cellspacing=0 cellpadding=1>\n";
+	$MAIN.="<tr><td><font size=1># </td><td NOWRAP><font size=2>DATE/TIME &nbsp; </td><td align=right NOWRAP><font size=2> LEAD ID &nbsp; </td><td align=right NOWRAP><font size=2> STATUS &nbsp; </td><td align=right NOWRAP><font size=2> COUNT &nbsp; </td><td align=right NOWRAP><font size=2> CAMPAÑA</td></tr>\n";
+	$CSV_text11.="\"PREVIEW LEAD SKIPS FOR THIS TIME PERIOD: (10000 record limit)\"\n";
+	$CSV_text11.="\"\",\"#\",\"DATE/TIME\",\"LEAD ID\",\"STATUS\",\"COUNT\",\"CAMPAIGN\"\n";
+
+	$stmt="select user,event_date,lead_id,campaign_id,previous_status,previous_called_count from vicidial_agent_skip_log where user='" . mysql_real_escape_string($user) . "' and event_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by event_date desc limit 10000;";
+	$rslt=mysql_query($stmt, $link);
+	$logs_to_print = mysql_num_rows($rslt);
+
+	$u=0;
+	while ($logs_to_print > $u) 
+		{
+		$row=mysql_fetch_row($rslt);
+		if (eregi("1$|3$|5$|7$|9$", $u))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+
+		$u++;
+		$MAIN.="<tr $bgcolor>";
+		$MAIN.="<td><font size=1>$u</td>";
+		$MAIN.="<td><font size=2>$row[1]</td>";
+		$MAIN.="<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$row[2]\" target=\"_blank\">$row[2]</A> </td>\n";
+		$MAIN.="<td align=right><font size=2> $row[4] </td>\n";
+		$MAIN.="<td align=right><font size=2> $row[5] </td>\n";
+		$MAIN.="<td align=right><font size=2> $row[3] </td></tr>\n";
+		$CSV_text11.="\"\",\"$u\",\"$row[1]\",\"$row[2]\",\"$row[4]\",\"$row[5]\",\"$row[3]\"\n";
+		}
+	$MAIN.="</TABLE><BR><BR>\n";
 	}
 
 
@@ -920,22 +1146,50 @@ $ENDtime = date("U");
 
 $RUNtime = ($ENDtime - $STARTtime);
 
-echo "\n\n\n<br><br><br>\n\n";
+$MAIN.="\n\n\n<br><br><br>\n\n";
 
 
-echo "<font size=0>\n\n\n<br><br><br>\nScript runtime: $RUNtime seconds|$db_source</font>";
+$MAIN.="<font size=0>\n\n\n<br><br><br>\nScript runtime: $RUNtime seconds|$db_source</font>";
+
+$MAIN.="</TD></TR><TABLE>";
+$MAIN.="</body>";
+$MAIN.="</html>";
 
 
-?>
+if ($file_download>0) 
+	{
+	$FILE_TIME = date("Ymd-His");
+	$CSVfilename = "user_stats_$US$FILE_TIME.csv";
+	$CSV_var="CSV_text".$file_download;
+	$CSV_text=preg_replace('/^\s+/', '', $$CSV_var);
+	$CSV_text=preg_replace('/\n\s+,/', ',', $CSV_text);
+	$CSV_text=preg_replace('/ +\"/', '"', $CSV_text);
+	$CSV_text=preg_replace('/\" +/', '"', $CSV_text);
+	// We'll be outputting a TXT file
+	header('Content-type: application/octet-stream');
 
+	// It will be called LIST_101_20090209-121212.txt
+	header("Content-Disposition: attachment; filename=\"$CSVfilename\"");
+	header('Expires: 0');
+	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+	header('Pragma: public');
+	ob_clean();
+	flush();
 
-</TD></TR><TABLE>
-</body>
-</html>
+	echo "$CSV_text";
 
-<?php
+	exit;
+	}
+else
+	{
+	header ("Content-type: text/html; charset=utf-8");
+	echo $HEADER;
+	require("admin_header.php");
+	echo $MAIN;
+	exit; 
+	}
+
 	
-exit; 
 
 
 

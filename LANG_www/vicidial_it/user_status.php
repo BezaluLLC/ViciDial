@@ -1,7 +1,7 @@
 <?php
 # user_status.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -15,6 +15,11 @@
 # 91130-2039 - Added user closer log manager flag display
 # 91212-0656 - Added more complete logging of Emergency Logout process
 # 100309-0544 - Added queuemetrics_loginout option
+# 101108-0032 - Added ADDMEMBER queue_log code
+# 110124-1134 - Small query fix for large queue_log tables
+# 110224-2350 - Small QM logout fix
+# 110420-0344 - Added DEAD/PARK agent statuses
+# 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -65,6 +70,7 @@ $StarTtimE = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $ip = getenv("REMOTE_ADDR");
+$check_time = ($StarTtimE - 86400);
 
 if (!isset($begin_date)) {$begin_date = $TODAY;}
 if (!isset($end_date)) {$end_date = $TODAY;}
@@ -99,7 +105,7 @@ else
 		$modify_timeclock_log =		$row[2];
 		if ($webroot_writable > 0)
 			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
+			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
 			fclose($fp);
 			}
 		}
@@ -107,7 +113,7 @@ else
 		{
 		if ($webroot_writable > 0)
 			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
+			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
 			fclose($fp);
 			echo "Utentename/Password non validi: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
 			exit;
@@ -133,6 +139,7 @@ else
 		$Aextension =				$row[4];
 		$Astatus =					$row[5];
 		$Acampaign =				$row[7];
+		$Acallerid =				$row[9];
 		$Alast_call =				$row[14];
 		$Acl_campaigns =			$row[15];
 		$agent_territories = 		$row[27];
@@ -155,6 +162,30 @@ else
 		$i++;
 		}
 
+	if ($Astatus == 'INCALL')
+		{
+		$stmtP="select count(*) from parked_channels where channel_group='$Acallerid';";
+		$rsltP=mysql_query($stmtP,$link);
+		$rowP=mysql_fetch_row($rsltP);
+		$parked_channel = $rowP[0];
+
+		if ($parked_channel > 0)
+			{
+			$Astatus =	'PARK';
+			}
+		else
+			{
+			$stmtP="select count(*) from vicidial_auto_calls where callerid='$Acallerid';";
+			$rsltP=mysql_query($stmtP,$link);
+			$rowP=mysql_fetch_row($rsltP);
+			$live_channel = $rowP[0];
+
+			if ($live_channel < 1)
+				{
+				$Astatus =	'DEAD';
+				}
+			}
+		}
 	}
 
 $stmt="select campaign_id from vicidial_campaigns;";
@@ -271,7 +302,7 @@ if ($stage == "log_agent_out")
 
 				if ($DB) {echo "\n<BR>VAL VALUES: $VAL_agent_log_id|$VAL_status|$VAL_lead_id\n";}
 
-				if ( ($VAL_wait_epoch < 1) || ( ($VAL_status == 'PAUSE') && ($VAL_dispo_epoch < 1) ) )
+				if ( ($VAL_wait_epoch < 1) or ( ($VAL_status == 'PAUSE') and ($VAL_dispo_epoch < 1) ) )
 					{
 					$VAL_pause_sec = ( ($now_date_epoch - $VAL_pause_epoch) + $VAL_pause_sec);
 					$stmt = "UPDATE vicidial_agent_log SET wait_epoch='$now_date_epoch', pause_sec='$VAL_pause_sec' where agent_log_id='$VAL_agent_log_id';";
@@ -339,20 +370,22 @@ if ($stage == "log_agent_out")
 
 		#############################################
 		##### START QUEUEMETRICS LOGGING LOOKUP #####
-		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_loginout FROM system_settings;";
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_pe_phone_append FROM system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "<BR>$stmt\n";}
 		$qm_conf_ct = mysql_num_rows($rslt);
 		if ($qm_conf_ct > 0)
 			{
 			$row=mysql_fetch_row($rslt);
-			$enable_queuemetrics_logging =	$row[0];
-			$queuemetrics_server_ip	=		$row[1];
-			$queuemetrics_dbname =			$row[2];
-			$queuemetrics_login	=			$row[3];
-			$queuemetrics_pass =			$row[4];
-			$queuemetrics_log_id =			$row[5];
-			$queuemetrics_loginout =		$row[6];
+			$enable_queuemetrics_logging =		$row[0];
+			$queuemetrics_server_ip	=			$row[1];
+			$queuemetrics_dbname =				$row[2];
+			$queuemetrics_login	=				$row[3];
+			$queuemetrics_pass =				$row[4];
+			$queuemetrics_log_id =				$row[5];
+			$queuemetrics_loginout =			$row[6];
+			$queuemetrics_addmember_enabled =	$row[7];
+			$queuemetrics_pe_phone_append =		$row[8];
 			}
 		##### END QUEUEMETRICS LOGGING LOOKUP #####
 		###########################################
@@ -367,26 +400,84 @@ if ($stage == "log_agent_out")
 
 			$agents='@agents';
 			$agent_logged_in='';
-			$time_logged_in='';
+			$time_logged_in='0';
 
-			$stmtB = "SELECT agent,time_id,data1 FROM queue_log where agent='Agent/" . mysql_real_escape_string($user) . "' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') order by time_id desc limit 1;";
+			if ($queuemetrics_loginout == 'NONE')
+				{
+				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='Agent/" . mysql_real_escape_string($user) . "',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LOGOFF';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $linkB);
+				$affected_rows = mysql_affected_rows($linkB);
+				}
+
+			$stmtB = "SELECT agent,time_id,data1 FROM queue_log where agent='Agent/" . mysql_real_escape_string($user) . "' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') and time_id > $check_time order by time_id desc limit 1;";
 			$rsltB=mysql_query($stmtB, $linkB);
 			if ($DB) {echo "<BR>$stmtB\n";}
 			$qml_ct = mysql_num_rows($rsltB);
 			if ($qml_ct > 0)
 				{
 				$row=mysql_fetch_row($rsltB);
-				$agent_logged_in =	$row[0];
-				$time_logged_in =	$row[1];
-				$phone_logged_in =	$row[2];
+				$agent_logged_in =		$row[0];
+				$time_logged_in =		$row[1];
+				$RAWtime_logged_in =	$row[1];
+				$phone_logged_in =		$row[2];
 				}
 
 			$time_logged_in = ($now_date_epoch - $time_logged_in);
 			if ($time_logged_in > 1000000) {$time_logged_in=1;}
 
-			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='$agent_logged_in',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in';";
-			if ($DB) {echo "<BR>$stmtB\n";}
-			$rsltB=mysql_query($stmtB, $linkB);
+			if ($queuemetrics_addmember_enabled > 0)
+				{
+				$queuemetrics_phone_environment='';
+				$stmt = "SELECT queuemetrics_phone_environment FROM vicidial_campaigns where campaign_id='$VLA_campaign_id';";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "<BR>$stmt\n";}
+				$cqpe_ct = mysql_num_rows($rslt);
+				if ($cqpe_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$queuemetrics_phone_environment =	$row[0];
+					}
+
+				$stmt = "SELECT distinct queue FROM queue_log where time_id >= $RAWtime_logged_in and agent='$agent_logged_in' and verb IN('ADDMEMBER','ADDMEMBER2') and queue != '$VLA_campaign_id' order by time_id desc;";
+				$rslt=mysql_query($stmt, $linkB);
+				if ($DB) {echo "$stmt\n";}
+				$amq_conf_ct = mysql_num_rows($rslt);
+				$i=0;
+				while ($i < $amq_conf_ct)
+					{
+					$row=mysql_fetch_row($rslt);
+					$AMqueue[$i] =	$row[0];
+					$i++;
+					}
+
+				### add the logged-in campaign as well
+				$AMqueue[$i] = $VLA_campaign_id;
+				$i++;
+				$amq_conf_ct++;
+
+				$i=0;
+				while ($i < $amq_conf_ct)
+					{
+					$pe_append='';
+					if ( ($queuemetrics_pe_phone_append > 0) and (strlen($queuemetrics_phone_environment)>0) )
+						{
+						$qm_extension = explode('/',$phone_logged_in);
+						$pe_append = "-$qm_extension[1]";
+						}
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='$AMqueue[$i]',agent='$agent_logged_in',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id',data4='$queuemetrics_phone_environment$pe_append';";
+					$rslt=mysql_query($stmt, $linkB);
+					$affected_rows = mysql_affected_rows($linkB);
+					$i++;
+					}
+				}
+
+			if ($queuemetrics_loginout != 'NONE')
+				{
+				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='$agent_logged_in',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in';";
+				if ($DB) {echo "<BR>$stmtB\n";}
+				$rsltB=mysql_query($stmtB, $linkB);
+				}
 			}
 
 		echo "Agent $user - $full_name has been emergency logged out, make sure they close their web browser<BR>\n";

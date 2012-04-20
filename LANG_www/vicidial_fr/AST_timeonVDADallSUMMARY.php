@@ -1,7 +1,7 @@
 <?php 
 # AST_timeonVDADallSUMMARY.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Summary for all campaigns live real-time stats for the VICIDIAL Auto-Dialer all servers
 #
@@ -16,9 +16,14 @@
 # 80525-1040 - Added IVR status summary display for inbound calls
 # 90310-2119 - Added admin header
 # 90508-0644 - Changed to PHP long tags
+# 100709-1806 - Added system setting slave server option
+# 100802-2347 - Added User Group Allowed Reports option validation and allowed campaigns restrictions
+# 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
+# 101214-1142 - Added Agent time stats
+# 110110-1327 - Changed campaign real-time link to the new realtime_report.php
+# 110517-0059 - Added campaign type display option
+# 110703-1854 - Added doanload option
 #
-
-header ("Content-type: text/html; charset=utf-8");
 
 require("dbconnect.php");
 
@@ -31,24 +36,64 @@ if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
 if (isset($_GET["adastats"]))			{$adastats=$_GET["adastats"];}
 	elseif (isset($_POST["adastats"]))	{$adastats=$_POST["adastats"];}
+if (isset($_GET["types"]))				{$types=$_GET["types"];}
+	elseif (isset($_POST["types"]))		{$types=$_POST["types"];}
 if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))	{$submit=$_POST["submit"];}
 if (isset($_GET["VALIDER"]))				{$VALIDER=$_GET["VALIDER"];}
 	elseif (isset($_POST["VALIDER"]))	{$VALIDER=$_POST["VALIDER"];}
+if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
+	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 
 if (!isset($RR))			{$gRRroup=4;}
+if (!isset($types))			{$types='MONTRER ALL CAMPAIGNS';}
+
+$report_name = 'Real-Time Campagne Summary';
+$db_source = 'M';
+
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {$MAIN.="$stmt\n";}
+$qm_conf_ct = mysql_num_rows($rslt);
+if ($qm_conf_ct > 0)
+	{
+	$row=mysql_fetch_row($rslt);
+	$non_latin =					$row[0];
+	$outbound_autodial_active =		$row[1];
+	$slave_db_server =				$row[2];
+	$reports_use_slave_db =			$row[3];
+	}
+##### END SETTINGS LOOKUP #####
+###########################################
+
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysql_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect.php");
+	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
+	}
 
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+if ($DB) {$MAIN.="|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$auth=$row[0];
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
+if ($DB) {$MAIN.="|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$reports_only_user=$row[0];
+
+if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
@@ -56,13 +101,49 @@ $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
     exit;
 	}
 
+$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+if ($DB) {$MAIN.="|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGuser_group =			$row[0];
+
+$stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {$MAIN.="|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns = $row[0];
+$LOGallowed_reports =	$row[1];
+
+if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL RAPPORTS/",$LOGallowed_reports)) )
+	{
+    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("HTTP/1.0 401 Unauthorized");
+    echo "Vous n'êtes pas autorisé à consulter ce rapport: |$PHP_AUTH_USER|$report_name|\n";
+    exit;
+	}
+
 $NOW_TIME = date("Y-m-d H:i:s");
 $STARTtime = date("U");
 
-$stmt="select campaign_id from vicidial_campaigns where active='Y';";
+$LOGallowed_campaignsSQL='';
+$whereLOGallowed_campaignsSQL='';
+if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+	{
+	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	}
+
+$campaign_typeSQL='';
+if ($types == 'AUTO-DIAL ONLY')			{$campaign_typeSQL="and dial_method IN('RATIO','ADAPT_HARD_LIMIT','ADAPT_TAPERED','ADAPT_AVERAGE')";} 
+if ($types == 'MANUAL ONLY')			{$campaign_typeSQL="and dial_method IN('MANUAL','INBOUND_MAN')";} 
+if ($types == 'INBOUND ONLY')			{$campaign_typeSQL="and campaign_allow_inbound='Y'";} 
+
+$stmt="select campaign_id from vicidial_campaigns where active='Y' $LOGallowed_campaignsSQL $campaign_typeSQL order by campaign_id;";
 $rslt=mysql_query($stmt, $link);
 if (!isset($DB))   {$DB=0;}
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $groups_to_print)
@@ -74,62 +155,78 @@ while ($i < $groups_to_print)
 
 if (!isset($RR))   {$RR=4;}
 
-?>
+$HEADER.="<HTML>\n";
+$HEADER.="<HEAD>\n";
+$HEADER.="<STYLE type=\"text/css\">\n";
+$HEADER.="<!--\n";
+$HEADER.="	.green {color: white; background-color: green}\n";
+$HEADER.="	.red {color: white; background-color: red}\n";
+$HEADER.="	.lightblue {color: black; background-color: #ADD8E6}\n";
+$HEADER.="	.blue {color: white; background-color: blue}\n";
+$HEADER.="	.midnightblue {color: white; background-color: #191970}\n";
+$HEADER.="	.purple {color: white; background-color: purple}\n";
+$HEADER.="	.violet {color: black; background-color: #EE82EE} \n";
+$HEADER.="	.thistle {color: black; background-color: #D8BFD8} \n";
+$HEADER.="	.olive {color: white; background-color: #808000}\n";
+$HEADER.="	.yellow {color: black; background-color: yellow}\n";
+$HEADER.="	.khaki {color: black; background-color: #F0E68C}\n";
+$HEADER.="	.orange {color: black; background-color: orange}\n";
 
-<HTML>
-<HEAD>
-<STYLE type="text/css">
-<!--
-	.green {color: white; background-color: green}
-	.red {color: white; background-color: red}
-	.lightblue {color: black; background-color: #ADD8E6}
-	.blue {color: white; background-color: blue}
-	.midnightblue {color: white; background-color: #191970}
-	.purple {color: white; background-color: purple}
-	.violet {color: black; background-color: #EE82EE} 
-	.thistle {color: black; background-color: #D8BFD8} 
-	.olive {color: white; background-color: #808000}
-	.yellow {color: black; background-color: yellow}
-	.khaki {color: black; background-color: #F0E68C}
-	.orange {color: black; background-color: orange}
+$HEADER.="	.r1 {color: black; background-color: #FFCCCC}\n";
+$HEADER.="	.r2 {color: black; background-color: #FF9999}\n";
+$HEADER.="	.r3 {color: black; background-color: #FF6666}\n";
+$HEADER.="	.r4 {color: white; background-color: #FF0000}\n";
+$HEADER.="	.b1 {color: black; background-color: #CCCCFF}\n";
+$HEADER.="	.b2 {color: black; background-color: #9999FF}\n";
+$HEADER.="	.b3 {color: black; background-color: #6666FF}\n";
+$HEADER.="	.b4 {color: white; background-color: #0000FF}\n";
+$HEADER.="-->\n";
+$HEADER.=" </STYLE>\n";
 
-	.r1 {color: black; background-color: #FFCCCC}
-	.r2 {color: black; background-color: #FF9999}
-	.r3 {color: black; background-color: #FF6666}
-	.r4 {color: white; background-color: #FF0000}
-	.b1 {color: black; background-color: #CCCCFF}
-	.b2 {color: black; background-color: #9999FF}
-	.b3 {color: black; background-color: #6666FF}
-	.b4 {color: white; background-color: #0000FF}
--->
- </STYLE>
 
-<?php 
-
-echo"<META HTTP-EQUIV=Refresh CONTENT=\"$RR; URL=$PHP_SELF?RR=$RR&DB=$DB&adastats=$adastats\">\n";
-echo "<TITLE>Real-Time All Campagnes Summary</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HEADER.="<META HTTP-EQUIV=Refresh CONTENT=\"$RR; URL=$PHP_SELF?RR=$RR&DB=$DB&adastats=$adastats&types=$types\">\n";
+$HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 	$short_header=1;
 
-	require("admin_header.php");
+#	require("admin_header.php");
 
-echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+$MAIN.="<FORM action=$PHP_SELF method=POST><TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
-echo "<b>Real-Time All Campagnes Summary</b> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; \n";
-echo "<a href=\"$PHP_SELF?group=$group&RR=4000&DB=$DB&adastats=$adastats\">STOP</a> | ";
-echo "<a href=\"$PHP_SELF?group=$group&RR=40&DB=$DB&adastats=$adastats\">SLOW</a> | ";
-echo "<a href=\"$PHP_SELF?group=$group&RR=4&DB=$DB&adastats=$adastats\">GO</a> ";
-echo " &nbsp; &nbsp; &nbsp; </FONT>\n";
+$MAIN.="<b>Real-Time All Campagnes Summary</b> &nbsp; &nbsp; &nbsp; \n";
+$MAIN.="<a href=\"$PHP_SELF?group=$group&RR=4000&DB=$DB&adastats=$adastats&types=$types\">STOP</a> | ";
+$MAIN.="<a href=\"$PHP_SELF?group=$group&RR=40&DB=$DB&adastats=$adastats&types=$types\">SLOW</a> | ";
+$MAIN.="<a href=\"$PHP_SELF?group=$group&RR=4&DB=$DB&adastats=$adastats&types=$types\">GO</a> ";
+$MAIN.=" &nbsp; &nbsp; </FONT>\n";
 if ($adastats<2)
 	{
-	echo "<a href=\"$PHP_SELF?group=$group&RR=$RR&DB=$DB&adastats=2\"><font size=1>+ VIEW MORE SETTINGS</font></a>";
+	$MAIN.="<a href=\"$PHP_SELF?group=$group&RR=$RR&DB=$DB&adastats=2&types=$types\"><font size=1>+ VIEW MORE SETTINGS</font></a>";
 	}
 else
 	{
-	echo "<a href=\"$PHP_SELF?group=$group&RR=$RR&DB=$DB&adastats=1\"><font size=1>- VIEW LESS SETTINGS</font></a>";
+	$MAIN.="<a href=\"$PHP_SELF?group=$group&RR=$RR&DB=$DB&adastats=1&types=$types\"><font size=1>- VIEW LESS SETTINGS</font></a>";
 	}
-echo " &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=999999\">RAPPORTS</a>";
-echo "<BR><BR>\n\n";
+$MAIN.=" &nbsp; &nbsp; &nbsp;<a href=\"$PHP_SELF?group=$group&RR=$RR&DB=$DB&adastats=$adastats&types=$types&file_download=1\">TÉLÉCHARGER</a> | <a href=\"./admin.php?ADD=999999\">RAPPORTS</a>";
+$MAIN.="\n";
+$MAIN.="<input type=hidden name=RR value=$RR>\n";
+$MAIN.="<input type=hidden name=DB value=$DB>\n";
+$MAIN.="<input type=hidden name=adastats value=$adastats>\n";
+$MAIN.="<select size=1 name=types>\n";
+$MAIN.="<option value=\"MONTRER ALL CAMPAIGNS\"";
+	if ($types == 'MONTRER ALL CAMPAIGNS') {$MAIN.=" selected";} 
+$MAIN.=">MONTRER ALL CAMPAIGNS</option>";
+$MAIN.="<option value=\"AUTO-DIAL ONLY\"";
+	if ($types == 'AUTO-DIAL ONLY') {$MAIN.=" selected";} 
+$MAIN.=">AUTO-DIAL ONLY</option>";
+$MAIN.="<option value=\"MANUAL ONLY\"";
+	if ($types == 'MANUAL ONLY') {$MAIN.=" selected";} 
+$MAIN.=">MANUAL ONLY</option>";
+$MAIN.="<option value=\"INBOUND ONLY\"";
+	if ($types == 'INBOUND ONLY') {$MAIN.=" selected";} 
+$MAIN.=">INBOUND ONLY</option>";
+$MAIN.="</select> \n";
+$MAIN.="<input type=submit name=submit value='VALIDER'>\n";
+$MAIN.="<BR><BR>\n\n";
 
 $k=0;
 while($k<$groups_to_print)
@@ -139,9 +236,9 @@ $NFE = '</font></b>';
 $F=''; $FG=''; $B=''; $BG='';
 
 $group = $groups[$k];
-echo "<b><a href=\"./AST_timeonVDADall.php?group=$group&RR=$RR&DB=$DB&adastats=$adastats\">$group</a></b> &nbsp; - &nbsp; ";
-echo "<a href=\"./admin.php?ADD=34&campaign_id=$group\">Modify</a>\n";
-
+$MAIN.="<b><a href=\"./realtime_report.php?group=$group&RR=$RR&DB=$DB&adastats=$adastats\">$group</a></b> &nbsp; - &nbsp; ";
+$MAIN.="<a href=\"./admin.php?ADD=34&campaign_id=$group\">Modify</a>\n";
+$CSV_text.="\"$group\"\n";
 
 $stmt = "select count(*) from vicidial_campaigns where campaign_id='$group' and campaign_allow_inbound='Y';";
 $rslt=mysql_query($stmt, $link);
@@ -178,25 +275,30 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $VDhop = $row[0];
 
-$stmt="select dialable_leads,calls_today,drops_today,drops_answers_today_pct,differential_onemin,agents_average_onemin,balance_trunk_fill,answers_today,status_category_1,status_category_count_1,status_category_2,status_category_count_2,status_category_3,status_category_count_3,status_category_4,status_category_count_4 from vicidial_campaign_stats where campaign_id='" . mysql_real_escape_string($group) . "';";
+$stmt="select dialable_leads,calls_today,drops_today,drops_answers_today_pct,differential_onemin,agents_average_onemin,balance_trunk_fill,answers_today,status_category_1,status_category_count_1,status_category_2,status_category_count_2,status_category_3,status_category_count_3,status_category_4,status_category_count_4,agent_calls_today,agent_wait_today,agent_custtalk_today,agent_acw_today,agent_pause_today from vicidial_campaign_stats where campaign_id='" . mysql_real_escape_string($group) . "';";
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
-$DAleads =		$row[0];
-$callsTODAY =	$row[1];
-$dropsTODAY =	$row[2];
-$drpctTODAY =	$row[3];
-$diffONEMIN =	$row[4];
-$agentsONEMIN = $row[5];
-$balanceFILL =	$row[6];
-$answersTODAY = $row[7];
-$VSCcat1 =		$row[8];
-$VSCcat1tally = $row[9];
-$VSCcat2 =		$row[10];
-$VSCcat2tally = $row[11];
-$VSCcat3 =		$row[12];
-$VSCcat3tally = $row[13];
-$VSCcat4 =		$row[14];
-$VSCcat4tally = $row[15];
+$DAleads =			$row[0];
+$callsTODAY =		$row[1];
+$dropsTODAY =		$row[2];
+$drpctTODAY =		$row[3];
+$diffONEMIN =		$row[4];
+$agentsONEMIN =		$row[5];
+$balanceFILL =		$row[6];
+$answersTODAY =		$row[7];
+$VSCcat1 =			$row[8];
+$VSCcat1tally =		$row[9];
+$VSCcat2 =			$row[10];
+$VSCcat2tally =		$row[11];
+$VSCcat3 =			$row[12];
+$VSCcat3tally =		$row[13];
+$VSCcat4 =			$row[14];
+$VSCcat4tally =		$row[15];
+$VSCagentcalls =	$row[16];
+$VSCagentwait =		$row[17];
+$VSCagentcust =		$row[18];
+$VSCagentacw =		$row[19];
+$VSCagentpause =	$row[20];
 
 if ( ($diffONEMIN != 0) and ($agentsONEMIN > 0) )
 	{
@@ -210,70 +312,126 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $balanceSHORT = $row[0];
 
-echo "<BR><table cellpadding=0 cellspacing=0><TR>";
-echo "<TD ALIGN=RIGHT><font size=2><B>DIAL NIVEAU:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALlev&nbsp; &nbsp; </TD>";
-echo "<TD ALIGN=RIGHT><font size=2><B>TRUNK SHORT/FILL:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $balanceSHORT / $balanceFILL &nbsp; &nbsp; </TD>";
-echo "<TD ALIGN=RIGHT><font size=2><B>FILTER:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALfilter &nbsp; </TD>";
-echo "<TD ALIGN=RIGHT><font size=2><B> TIME:</B> &nbsp; </TD><TD ALIGN=LEFT><font size=2> $NOW_TIME </TD>";
-echo "";
-echo "</TR>";
+$MAIN.="<BR><table cellpadding=0 cellspacing=0><TR>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>DIAL NIVEAU:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALlev&nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>TRUNK SHORT/FILL:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $balanceSHORT / $balanceFILL &nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>FILTER:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALfilter &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B> TIME:</B> &nbsp; </TD><TD ALIGN=LEFT><font size=2> $NOW_TIME </TD>";
+$MAIN.="";
+$MAIN.="</TR>";
+
+$CSV_text.="\"DIAL NIVEAU:\",\"$DIALlev\",\"TRUNK SHORT/FILL:\",\"$balanceSHORT / $balanceFILL\",\"FILTER:\",\"$DIALfilter\",\"TIME:\",\"$NOW_TIME\"\n";
 
 if ($adastats>1)
 	{
-	echo "<TR BGCOLOR=\"#CCCCCC\">";
-	echo "<TD ALIGN=RIGHT><font size=2>&nbsp; <B>MAX NIVEAU:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $maxDIALlev &nbsp; </TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>DROPPED MAX:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DROPmax% &nbsp; &nbsp;</TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>TARGET DIFF:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $targetDIFF &nbsp; &nbsp; </TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>INTENSITY:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $ADAintense &nbsp; &nbsp; </TD>";
-	echo "</TR>";
+	$MAIN.="<TR BGCOLOR=\"#CCCCCC\">";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2>&nbsp; <B>MAX NIVEAU:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $maxDIALlev &nbsp; </TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>DROPPED MAX:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DROPmax% &nbsp; &nbsp;</TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>TARGET DIFF:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $targetDIFF &nbsp; &nbsp; </TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>INTENSITY:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $ADAintense &nbsp; &nbsp; </TD>";
+	$MAIN.="</TR>";
+	$CSV_text.="\"MAX NIVEAU:\",\"$maxDIALlev\",\"DROPPED MAX:\",\"$DROPmax\",\"TARGET DIFF:\",\"$targetDIFF\",\"INTENSITY:\",\"$ADAintense\"\n";
 
-	echo "<TR BGCOLOR=\"#CCCCCC\">";
-	echo "<TD ALIGN=RIGHT><font size=2><B>DIAL TIMEOUT:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALtimeout &nbsp;</TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>TAPER TIME:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $TAPERtime &nbsp;</TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>LOCAL TIME:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $CALLtime &nbsp;</TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>AVAIL ONLY:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $ADAavailonly &nbsp;</TD>";
-	echo "</TR>";
+	$MAIN.="<TR BGCOLOR=\"#CCCCCC\">";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>DIAL TIMEOUT:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALtimeout &nbsp;</TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>TAPER TIME:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $TAPERtime &nbsp;</TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>LOCAL TIME:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $CALLtime &nbsp;</TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>AVAIL ONLY:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $ADAavailonly &nbsp;</TD>";
+	$MAIN.="</TR>";
+	$CSV_text.="\"DIAL TIMEOUT:\",\"$DIALtimeout\",\"TAPER TIME:\",\"$TAPERtime\",\"LOCAL TIME:\",\"$CALLtime\",\"AVAIL ONLY:\",\"$ADAavailonly\"\n";
 	}
 
-echo "<TR>";
-echo "<TD ALIGN=RIGHT><font size=2><B>DIALABLE LEADS:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DAleads &nbsp; &nbsp; </TD>";
-echo "<TD ALIGN=RIGHT><font size=2><B>CALLS TODAY:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $callsTODAY &nbsp; &nbsp; </TD>";
-echo "<TD ALIGN=RIGHT><font size=2><B>AVG AGENTS:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $agentsONEMIN &nbsp; &nbsp; </TD>";
-echo "<TD ALIGN=RIGHT><font size=2><B>DIAL PROCEDE:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALmethod &nbsp; &nbsp; </TD>";
-echo "</TR>";
+$MAIN.="<TR>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>DIALABLE LEADS:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DAleads &nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>CALLS TODAY:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $callsTODAY &nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>AVG AGENTS:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $agentsONEMIN &nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>DIAL PROCEDE:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALmethod &nbsp; &nbsp; </TD>";
+$MAIN.="</TR>";
+$CSV_text.="\"DIALABLE LEADS:\",\"$DAleads\",\"CALLS TODAY:\",\"$callsTODAY\",\"AVG AGENTS:\",\"$agentsONEMIN\",\"DIAL PROCEDE:\",\"$DIALmethod\"\n";
 
-echo "<TR>";
-echo "<TD ALIGN=RIGHT><font size=2><B>HOPPER NIVEAU:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $HOPlev &nbsp; &nbsp; </TD>";
-echo "<TD ALIGN=RIGHT><font size=2><B>DROPPED / REPONSEED:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $dropsTODAY / $answersTODAY &nbsp; </TD>";
-echo "<TD ALIGN=RIGHT><font size=2><B>DL DIFF:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $diffONEMIN &nbsp; &nbsp; </TD>";
-echo "<TD ALIGN=RIGHT><font size=2><B>STATUSES:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALstatuses &nbsp; &nbsp; </TD>";
-echo "</TR>";
+$MAIN.="<TR>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>HOPPER NIVEAU:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $HOPlev &nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>DROPPED / REPONSEED:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $dropsTODAY / $answersTODAY &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>DL DIFF:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $diffONEMIN &nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>STATUSES:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALstatuses &nbsp; &nbsp; </TD>";
+$MAIN.="</TR>";
+$CSV_text.="\"HOPPER NIVEAU:\",\"$HOPlev\",\"DROPPED / REPONSEED:\",\"$dropsTODAY / $answersTODAY\",\"DL DIFF:\",\"$diffONEMIN\",\"STATUSES:\",\"$DIALstatuses\"\n";
 
-echo "<TR>";
-echo "<TD ALIGN=RIGHT><font size=2><B>LEADS IN HOPPER:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $VDhop &nbsp; &nbsp; </TD>";
-echo "<TD ALIGN=RIGHT><font size=2><B>DROPPED PERCENT:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; ";
+$MAIN.="<TR>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>LEADS IN HOPPER:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $VDhop &nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>DROPPED PERCENT:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; ";
 if ($drpctTODAY >= $DROPmax)
-	{echo "<font color=red><B>$drpctTODAY%</B></font>";}
+	{$MAIN.="<font color=red><B>$drpctTODAY%</B></font>";}
 else
-	{echo "$drpctTODAY%";}
-echo " &nbsp; &nbsp;</TD>";
-echo "<TD ALIGN=RIGHT><font size=2><B>DIFF:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $diffpctONEMIN% &nbsp; &nbsp; </TD>";
-echo "<TD ALIGN=RIGHT><font size=2><B>ORDER:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALorder &nbsp; &nbsp; </TD>";
-echo "</TR>";
+	{$MAIN.="$drpctTODAY%";}
+$MAIN.=" &nbsp; &nbsp;</TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>DIFF:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $diffpctONEMIN% &nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>ORDER:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALorder &nbsp; &nbsp; </TD>";
+$MAIN.="</TR>";
+$CSV_text.="\"LEADS IN HOPPER:\",\"$VDhop\",\"DROPPED PERCENT:\",\"$drpctTODAY%\",\"DIFF:\",\"$diffpctONEMIN%\",\"ORDER:\",\"$DIALorder\"\n";
 
-echo "<TR>";
-echo "<TD ALIGN=LEFT COLSPAN=8>";
+$MAIN.="<TR>";
+$MAIN.="<TD ALIGN=LEFT COLSPAN=8>";
 if ( (!eregi('NULL',$VSCcat1)) and (strlen($VSCcat1)>0) )
-	{echo "<font size=2><B>$VSCcat1:</B> &nbsp; $VSCcat1tally &nbsp;  &nbsp;  &nbsp; \n";}
+	{$MAIN.="<font size=2><B>$VSCcat1:</B> &nbsp; $VSCcat1tally &nbsp;  &nbsp;  &nbsp; \n";}
 if ( (!eregi('NULL',$VSCcat2)) and (strlen($VSCcat2)>0) )
-	{echo "<font size=2><B>$VSCcat2:</B> &nbsp; $VSCcat2tally &nbsp;  &nbsp;  &nbsp; \n";}
+	{$MAIN.="<font size=2><B>$VSCcat2:</B> &nbsp; $VSCcat2tally &nbsp;  &nbsp;  &nbsp; \n";}
 if ( (!eregi('NULL',$VSCcat3)) and (strlen($VSCcat3)>0) )
-	{echo "<font size=2><B>$VSCcat3:</B> &nbsp; $VSCcat3tally &nbsp;  &nbsp;  &nbsp; \n";}
+	{$MAIN.="<font size=2><B>$VSCcat3:</B> &nbsp; $VSCcat3tally &nbsp;  &nbsp;  &nbsp; \n";}
 if ( (!eregi('NULL',$VSCcat4)) and (strlen($VSCcat4)>0) )
-	{echo "<font size=2><B>$VSCcat4:</B> &nbsp; $VSCcat4tally &nbsp;  &nbsp;  &nbsp; \n";}
-echo "</TD></TR>";
-echo "<TR>";
-echo "<TD ALIGN=LEFT COLSPAN=8>";
+	{$MAIN.="<font size=2><B>$VSCcat4:</B> &nbsp; $VSCcat4tally &nbsp;  &nbsp;  &nbsp; \n";}
+$MAIN.="</TD></TR>";
+$CSV_text.="\"$VSCcat1:\",\"$VSCcat1tally\",\"$VSCcat2:\",\"$VSCcat2tally\",\"$VSCcat3:\",\"$VSCcat3tally\",\"$VSCcat4:\",\"$VSCcat4tally\"\n";
+
+if ($VSCagentcalls > 0)
+	{
+	if ( ($VSCagentcalls > 0) and ($VSCagentpause > 0) )
+		{
+		$avgpauseTODAY = ($VSCagentpause / $VSCagentcalls);
+		$avgpauseTODAY = round($avgpauseTODAY, 0);
+		$avgpauseTODAY = sprintf("%01.0f", $avgpauseTODAY);
+		}
+	else
+		{$avgpauseTODAY=0;}
+
+	if ( ($VSCagentcalls > 0) and ($VSCagentwait > 0) )
+		{
+		$avgwaitTODAY = ($VSCagentwait / $VSCagentcalls);
+		$avgwaitTODAY = round($avgwaitTODAY, 0);
+		$avgwaitTODAY = sprintf("%01.0f", $avgwaitTODAY);
+		}
+	else
+		{$avgwaitTODAY=0;}
+
+	if ( ($VSCagentcalls > 0) and ($VSCagentcust > 0) )
+		{
+		$avgcustTODAY = ($VSCagentcust / $VSCagentcalls);
+		$avgcustTODAY = round($avgcustTODAY, 0);
+		$avgcustTODAY = sprintf("%01.0f", $avgcustTODAY);
+		}
+	else
+		{$avgcustTODAY=0;}
+
+	if ( ($VSCagentcalls > 0) and ($VSCagentacw > 0) )
+		{
+		$avgacwTODAY = ($VSCagentacw / $VSCagentcalls);
+		$avgacwTODAY = round($avgacwTODAY, 0);
+		$avgacwTODAY = sprintf("%01.0f", $avgacwTODAY);
+		}
+	else
+		{$avgacwTODAY=0;}
+
+	$MAIN.="<TR>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>AGENT AVG WAIT:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgwaitTODAY &nbsp;</TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>AVG CUSTTIME:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgcustTODAY &nbsp;</TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>AVG ACW:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgacwTODAY &nbsp;</TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>AVG PAUSE:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgpauseTODAY &nbsp;</TD>";
+	$MAIN.="</TR>";
+	$CSV_text.="\"AGENT AVG WAIT:\",\"$avgwaitTODAY\",\"AVG CUSTTIME:\",\"$avgcustTODAY\",\"AVG ACW:\",\"$avgacwTODAY\",\"AVG PAUSE:\",\"$avgpauseTODAY\"\n";
+	}
+
+$MAIN.="<TR>";
+$MAIN.="<TD ALIGN=LEFT COLSPAN=8>";
 
 ### Header finish
 
@@ -307,7 +465,7 @@ else
 	$stmt="select status from vicidial_auto_calls where status NOT IN('XFER') $groupSQL;";
 	}
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $parked_to_print = mysql_num_rows($rslt);
 	if ($parked_to_print > 0)
 	{
@@ -341,17 +499,25 @@ $parked_to_print = mysql_num_rows($rslt);
 		if ($out_live > 14) {$F='<FONT class="r4">'; $FG='</FONT>';}
 
 		if ($campaign_allow_inbound > 0)
-			{echo "$NFB$out_total$NFE current active calls&nbsp; &nbsp; &nbsp; \n";}
+			{
+			$MAIN.="$NFB$out_total$NFE current active calls&nbsp; &nbsp; &nbsp; \n";
+			$CSV_text.="\"$out_total current active calls\",\"\"\n";
+			}
 		else
-			{echo "$NFB$out_total$NFE calls being placed &nbsp; &nbsp; &nbsp; \n";}
+			{
+			$MAIN.="$NFB$out_total$NFE calls being placed &nbsp; &nbsp; &nbsp; \n";
+			$CSV_text.="\"$NFB$out_total$NFE calls being placed\",\"\"\n";
+			}
 		
-		echo "$NFB$out_ring$NFE calls ringing &nbsp; &nbsp; &nbsp; &nbsp; \n";
-		echo "$NFB$F &nbsp;$out_live $FG$NFE calls waiting for agents &nbsp; &nbsp; &nbsp; \n";
-		echo "$NFB &nbsp;$in_ivr$NFE calls in IVR &nbsp; &nbsp; &nbsp; \n";
+		$MAIN.="$NFB$out_ring$NFE calls ringing &nbsp; &nbsp; &nbsp; &nbsp; \n";
+		$MAIN.="$NFB$F &nbsp;$out_live $FG$NFE calls waiting for agents &nbsp; &nbsp; &nbsp; \n";
+		$MAIN.="$NFB &nbsp;$in_ivr$NFE calls in IVR &nbsp; &nbsp; &nbsp; \n";
+		$CSV_text.="\"$out_ring calls ringing\",\"$out_live calls waiting for agents\",\"$in_ivr calls in IVR\"\n";
 		}
 	else
 	{
-	echo " PAS D'APPEL EN ATTENTE\n";
+	$MAIN.=" PAS D'APPEL EN ATTENTE\n";
+	$CSV_text.="\"NO LIVE CALLS WAITING\"\n";
 	}
 
 
@@ -366,7 +532,7 @@ $agent_total=0;
 
 $stmt="select extension,user,conf_exten,status,server_ip,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_call_finish),call_server_ip,campaign_id from vicidial_live_agents where campaign_id='" . mysql_real_escape_string($group) . "';";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $talking_to_print = mysql_num_rows($rslt);
 	if ($talking_to_print > 0)
 	{
@@ -419,19 +585,21 @@ $talking_to_print = mysql_num_rows($rslt);
 		if ($agent_ready > 9) {$B='<FONT class="b3">'; $BG='</FONT>';}
 		if ($agent_ready > 14) {$B='<FONT class="b4">'; $BG='</FONT>';}
 
-		echo "\n<BR>\n";
+		$MAIN.="\n<BR>\n";
 
-		echo "$NFB$agent_total$NFE agents logged in &nbsp; &nbsp; &nbsp; &nbsp; \n";
-		echo "$NFB$agent_incall$NFE agents in calls &nbsp; &nbsp; &nbsp; \n";
-		echo "$NFB$B &nbsp;$agent_ready $BG$NFE agents waiting &nbsp; &nbsp; &nbsp; \n";
-		echo "$NFB$agent_paused$NFE paused agents &nbsp; &nbsp; &nbsp; \n";
-		
-		echo "<PRE><FONT SIZE=2>";
-		echo "";
+		$MAIN.="$NFB$agent_total$NFE agents logged in &nbsp; &nbsp; &nbsp; &nbsp; \n";
+		$MAIN.="$NFB$agent_incall$NFE agents in calls &nbsp; &nbsp; &nbsp; \n";
+		$MAIN.="$NFB$B &nbsp;$agent_ready $BG$NFE agents waiting &nbsp; &nbsp; &nbsp; \n";
+		$MAIN.="$NFB$agent_paused$NFE paused agents &nbsp; &nbsp; &nbsp; \n";
+		$CSV_text.="\"$agent_total agents logged in\",\"$agent_incall agents in calls\",\"$agent_ready agents waiting\",\"$agent_paused paused agents\"\n\n";
+				
+		$MAIN.="<PRE><FONT SIZE=2>";
+		$MAIN.="";
 	}
 	else
 	{
-	echo " NO AGENTS ON CALLS<BR>\n";
+	$MAIN.=" NO AGENTS ON CALLS<BR>\n";
+	$CSV_text.="\"NO AGENTS ON CALLS\"\n\n";
 	}
 
 ################################################################################
@@ -442,16 +610,47 @@ $talking_to_print = mysql_num_rows($rslt);
 
 
 
-echo "</TD>";
-echo "</TR>";
-echo "</TABLE>";
+$MAIN.="</TD>";
+$MAIN.="</TR>";
+$MAIN.="</TABLE>\n\n<BR>";
 
-echo "</FORM>\n\n";
 $k++;
 }
+$MAIN.="</FORM>\n\n<BR>";
+$MAIN.="</PRE>\n";
+$MAIN.="</TD></TR></TABLE>\n";
+
+$MAIN.="</BODY></HTML>\n";
+
+$MAIN.="$db_source\n";
+
+	if ($file_download>0) {
+		$FILE_TIME = date("Ymd-His");
+		$CSVfilename = "AST_timeonVDADallSUMMARY_$US$FILE_TIME.csv";
+		$CSV_text=preg_replace('/\n +,/', ',', $CSV_text);
+		$CSV_text=preg_replace('/ +\"/', '"', $CSV_text);
+		$CSV_text=preg_replace('/\" +/', '"', $CSV_text);
+		// We'll be outputting a TXT file
+		header('Content-type: application/octet-stream');
+
+		// It will be called LIST_101_20090209-121212.txt
+		header("Content-Disposition: attachment; filename=\"$CSVfilename\"");
+		header('Expires: 0');
+		header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+		header('Pragma: public');
+		ob_clean();
+		flush();
+
+		echo "$CSV_text";
+
+		exit;
+	} else {
+		header ("Content-type: text/html; charset=utf-8");
+
+		echo $HEADER;
+		require("admin_header.php");
+		echo $MAIN;
+	}
 
 ?>
-</PRE>
-</TD></TR></TABLE>
 
-</BODY></HTML>

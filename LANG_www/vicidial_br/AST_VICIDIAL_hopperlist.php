@@ -1,7 +1,7 @@
 <?php 
 # AST_VICIDIAL_hopperlist.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -12,6 +12,10 @@
 # 71030-2118 - Added priority to display
 # 90508-0644 - Changed to PHP long tags
 # 91023-1540 - Changed to only show hopper status of READY
+# 101111-1253 - Added source field
+# 111103-1207 - Added admin_hide_phone_data and admin_hide_lead_data options
+# 120210-1218 - Added vendor_lead_code to output
+# 120221-0059 - Added User Group restriction settings
 #
 
 require("dbconnect.php");
@@ -19,12 +23,14 @@ require("dbconnect.php");
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
+if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
+	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
 if (isset($_GET["group"]))				{$group=$_GET["group"];}
 	elseif (isset($_POST["group"]))		{$group=$_POST["group"];}
 if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
-	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
+	elseif (isset($_POST["submit"]))	{$submit=$_POST["submit"];}
 if (isset($_GET["ENVIAR"]))				{$ENVIAR=$_GET["ENVIAR"];}
-	elseif (isset($_POST["ENVIAR"]))		{$ENVIAR=$_POST["ENVIAR"];}
+	elseif (isset($_POST["ENVIAR"]))	{$ENVIAR=$_POST["ENVIAR"];}
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
@@ -43,6 +49,14 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
     exit;
 	}
 
+$stmt="SELECT full_name,user_group,admin_hide_lead_data,admin_hide_phone_data from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGfullname =				$row[0];
+$LOGuser_group =			$row[1];
+$LOGadmin_hide_lead_data =	$row[2];
+$LOGadmin_hide_phone_data =	$row[3];
+
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $STARTtime = date("U");
@@ -50,7 +64,28 @@ if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($server_ip)) {$server_ip = '10.10.10.15';}
 
-$stmt="select campaign_id,campaign_name from vicidial_campaigns order by campaign_id;";
+$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {$HTML_text.="|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns =			$row[0];
+$LOGallowed_reports =			$row[1];
+$LOGadmin_viewable_groups =		$row[2];
+$LOGadmin_viewable_call_times =	$row[3];
+
+$LOGallowed_campaignsSQL='';
+$whereLOGallowed_campaignsSQL='';
+if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+	{
+	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	}
+$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
+
+
+$stmt="select campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $campaigns_to_print = mysql_num_rows($rslt);
@@ -77,10 +112,14 @@ while ($i < $campaigns_to_print)
 
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>Lista De Hopper Report</TITLE></HEAD><BODY BGCOLOR=WHITE>\n";
+echo "<TITLE>Lista De Hopper Report</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+
+	$short_header=1;
+
+	require("admin_header.php");
+
+echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
-#echo "<INPUT TYPE=HIDDEN NAME=server_ip VALUE=\"$server_ip\">\n";
-#echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
 echo "<SELECT SIZE=1 NAME=group>\n";
 $o=0;
 while ($campaigns_to_print > $o)
@@ -110,7 +149,7 @@ else
 	echo "\n";
 	echo "---------- TOTALS\n";
 
-	$stmt="select count(*) from vicidial_hopper where campaign_id='" . mysql_real_escape_string($group) . "';";
+	$stmt="select count(*) from vicidial_hopper where campaign_id='" . mysql_real_escape_string($group) . "' $LOGallowed_campaignsSQL;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$row=mysql_fetch_row($rslt);
@@ -125,11 +164,11 @@ else
 
 	echo "\n";
 	echo "---------- LEADS IN HOPPER\n";
-	echo "+------+--------+-----------+------------+------------+-------+--------+-------+--------+-------+\n";
-	echo "|ORDER |PRIORIDADE| LEAD ID   | ID DA LISTA    | PHONE NUM  | STATE | STATUS | COUNT | GMT    | ALT   |\n";
-	echo "+------+--------+-----------+------------+------------+-------+--------+-------+--------+-------+\n";
+	echo "+------+--------+-----------+------------+------------+-------+--------+-------+--------+-------+-------+----------------------+\n";
+	echo "|ORDER |PRIORIDADE| LEAD ID   | ID DA LISTA    | PHONE NUM  | STATE | STATUS | COUNT | GMT    | ALT   | SOURCE| VENDOR LEAD CODE     |\n";
+	echo "+------+--------+-----------+------------+------------+-------+--------+-------+--------+-------+-------+----------------------+\n";
 
-	$stmt="select vicidial_hopper.lead_id,phone_number,vicidial_hopper.state,vicidial_list.status,called_count,vicidial_hopper.gmt_offset_now,hopper_id,alt_dial,vicidial_hopper.list_id,vicidial_hopper.priority from vicidial_hopper,vicidial_list where vicidial_hopper.campaign_id='" . mysql_real_escape_string($group) . "' and vicidial_hopper.status='READY' and vicidial_hopper.lead_id=vicidial_list.lead_id order by priority desc,hopper_id limit 5000;";
+	$stmt="select vicidial_hopper.lead_id,phone_number,vicidial_hopper.state,vicidial_list.status,called_count,vicidial_hopper.gmt_offset_now,hopper_id,alt_dial,vicidial_hopper.list_id,vicidial_hopper.priority,vicidial_hopper.source,vicidial_hopper.vendor_lead_code from vicidial_hopper,vicidial_list where vicidial_hopper.campaign_id='" . mysql_real_escape_string($group) . "' and vicidial_hopper.status='READY' and vicidial_hopper.lead_id=vicidial_list.lead_id $LOGallowed_campaignsSQL order by priority desc,hopper_id limit 5000;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$users_to_print = mysql_num_rows($rslt);
@@ -137,6 +176,31 @@ else
 	while ($i < $users_to_print)
 		{
 		$row=mysql_fetch_row($rslt);
+
+		if ($LOGadmin_hide_phone_data != '0')
+			{
+			if ($DB > 0) {echo "ESCONDERPHONEDATA|$row[1]|$LOGadmin_hide_phone_data|\n";}
+			$phone_temp = $row[1];
+			if (strlen($phone_temp) > 0)
+				{
+				if ($LOGadmin_hide_phone_data == '4_DIGITS')
+					{$row[1] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
+				elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
+					{$row[1] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
+				elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
+					{$row[1] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
+				else
+					{$row[1] = preg_replace("/./",'X',$phone_temp);}
+				}
+			}
+		if ($LOGadmin_hide_lead_data != '0')
+			{
+			if ($DB > 0) {echo "ESCONDERLEADDATA|$row[2]|$LOGadmin_hide_lead_data|\n";}
+			if (strlen($row[2]) > 0)
+				{$state_temp = $row[2];   $row[2] = preg_replace("/./",'X',$state_temp);}
+			if (strlen($row[11]) > 0)
+				{$vlc_temp = $row[11];   $row[11] = preg_replace("/./",'X',$vlc_temp);}
+			}
 
 		$FMT_i =		sprintf("%-4s", $i);
 		$lead_id =		sprintf("%-9s", $row[0]);
@@ -149,19 +213,33 @@ else
 		$alt_dial =		sprintf("%-5s", $row[7]);
 		$list_id =		sprintf("%-10s", $row[8]);
 		$priority =		sprintf("%-6s", $row[9]);
+		$source =		sprintf("%-5s", $row[10]);
+		$vendor_lead_code =	sprintf("%-20s", $row[11]);
 
 		if ($DB) {echo "| $FMT_i | $priority | $lead_id | $list_id | $phone_number | $state | $status | $count | $gmt | $hopper_id |\n";}
-		else {echo "| $FMT_i | $priority | $lead_id | $list_id | $phone_number | $state | $status | $count | $gmt | $alt_dial |\n";}
+		else {echo "| $FMT_i | $priority | $lead_id | $list_id | $phone_number | $state | $status | $count | $gmt | $alt_dial | $source | $vendor_lead_code |\n";}
 
 		$i++;
 		}
 
-	echo "+------+--------+-----------+------------+------------+-------+--------+-------+--------+-------+\n";
+	echo "+------+--------+-----------+------------+------------+-------+--------+-------+--------+-------+-------+----------------------+\n";
 
 	}
 
 
 ?>
+
+Sources:
+A = Auto-alt-dial
+C = Scheduled Callbacks
+N = Xth New lead order
+P = Non-Agent API hopper load
+Q = No-hopper queue insert
+R = Recycled leads
+S = Standard hopper load
+
 </PRE>
+
+</TD></TR></TABLE>
 
 </BODY></HTML>

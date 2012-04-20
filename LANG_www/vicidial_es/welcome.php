@@ -8,7 +8,7 @@ echo "<title>ViciDial Bienvenido</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 echo "<BR><BR><BR><BR><BR><CENTER><TABLE WIDTH=300 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCCCCC\"><TR BGCOLOR=WHITE>";
-echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/vdc_tab_vicidial.gif\" Border=0></TD>";
+echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/../vicidial/images/vdc_tab_vicidial.gif\" Border=0></TD>";
 echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Recepción </TD>";
 echo "</TR>\n";
 echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";

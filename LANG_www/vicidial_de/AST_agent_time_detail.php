@@ -4,7 +4,7 @@
 # Pulls time stats per agent selectable by campaign or user group
 # should be most accurate agent stats of all of the reports
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 90522-0723 - First build
@@ -12,6 +12,17 @@
 # 100203-1147 - Added CUSTOMER time statistics
 # 100214-1421 - Sort menu alphabetically
 # 100216-0042 - Added popup date selector
+# 100712-1324 - Added system setting slave server option
+# 100802-2347 - Added User Group Allowed Reports option validation
+# 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
+# 101207-1634 - Changed limits on seconds to 65000 from 30000 in vicidial_agent_log
+# 101207-1719 - Fixed download file formatting bugs(issue 394)
+# 101208-0320 - Fixed issue 404
+# 110307-1057 - Added user_case setting in options.php
+# 110623-0728 - Fixed user group selection bug
+# 110708-1727 - Added options.php setting for time precision
+# 111104-1248 - Added user_group restrictions for selecting in-groups
+# 120224-0910 - Added HTML display option with bar graphs
 #
 
 require("dbconnect.php");
@@ -40,13 +51,35 @@ if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
+if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
+	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
 if (strlen($stage)<2) {$stage='NAME';}
 
+$report_name = 'Agent Time Detail';
+$db_source = 'M';
+$JS_text="<script language='Javascript'>\n";
+$JS_onload="onload = function() {\n";
+
+$user_case = '';
+$TIME_agenttimedetail = '';
+if (file_exists('options.php'))
+	{
+	require('options.php');
+	}
+if ($user_case == '1')
+	{$userSQL = 'ucase(user)';}
+if ($user_case == '2')
+	{$userSQL = 'lcase(user)';}
+if (strlen($userSQL)<2)
+	{$userSQL = 'user';}
+if (strlen($TIME_agenttimedetail)<1)
+	{$TIME_agenttimedetail = 'H';}
+
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -54,26 +87,98 @@ if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
+	$outbound_autodial_active =		$row[1];
+	$slave_db_server =				$row[2];
+	$reports_use_slave_db =			$row[3];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysql_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect.php");
+#	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
+	}
+
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
 if ($DB) {echo "|$stmt|\n";}
 if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$reports_only_user=$row[0];
+
 if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
+    echo "Unzulässiges Username/Kennwort:|$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
+	}
+
+$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGuser_group =			$row[0];
+
+$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns =			$row[0];
+$LOGallowed_reports =			$row[1];
+$LOGadmin_viewable_groups =		$row[2];
+$LOGadmin_viewable_call_times =	$row[3];
+
+if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+	{
+    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("HTTP/1.0 401 Unauthorized");
+    echo "Sie sind nicht berechtigt, diesen Bericht zu sehen: |$PHP_AUTH_USER|$report_name|\n";
+    exit;
+	}
+
+$LOGallowed_campaignsSQL='';
+$whereLOGallowed_campaignsSQL='';
+if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+	{
+	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	}
+$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
+
+$LOGadmin_viewable_groupsSQL='';
+$whereLOGadmin_viewable_groupsSQL='';
+if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+	{
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+	$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	}
+
+$LOGadmin_viewable_call_timesSQL='';
+$whereLOGadmin_viewable_call_timesSQL='';
+if ( (!eregi("--ALL--",$LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
+	{
+	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ -/",'',$LOGadmin_viewable_call_times);
+	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_call_timesSQL);
+	$LOGadmin_viewable_call_timesSQL = "and call_time_id IN('---ALL---','$rawLOGadmin_viewable_call_timesSQL')";
+	$whereLOGadmin_viewable_call_timesSQL = "where call_time_id IN('---ALL---','$rawLOGadmin_viewable_call_timesSQL')";
 	}
 
 $MT[0]='';
@@ -84,7 +189,18 @@ if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 
-$stmt="select campaign_id from vicidial_campaigns order by campaign_id;";
+
+
+$i=0;
+$group_string='|';
+$group_ct = count($group);
+while($i < $group_ct)
+	{
+	$group_string .= "$group[$i]|";
+	$i++;
+	}
+
+$stmt="select campaign_id from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $campaigns_to_print = mysql_num_rows($rslt);
@@ -93,9 +209,33 @@ while ($i < $campaigns_to_print)
 	{
 	$row=mysql_fetch_row($rslt);
 	$groups[$i] =$row[0];
+	if (ereg("-ALL",$group_string) )
+		{$group[$i] = $groups[$i];}
 	$i++;
 	}
-$stmt="select user_group from vicidial_user_groups order by user_group;";
+
+$i=0;
+$group_string='|';
+$group_ct = count($group);
+while($i < $group_ct)
+	{
+	if ( (preg_match("/ $group[$i] /",$regexLOGallowed_campaigns)) or (preg_match("/-ALL/",$LOGallowed_campaigns)) )
+		{
+		$group_string .= "$group[$i]|";
+		$group_SQL .= "'$group[$i]',";
+		$groupQS .= "&group[]=$group[$i]";
+		}
+	$i++;
+	}
+if ( (ereg("--ALL--",$group_string) ) or ($group_ct < 1) )
+	{$group_SQL = "";}
+else
+	{
+	$group_SQL = eregi_replace(",$",'',$group_SQL);
+	$group_SQL = "and campaign_id IN($group_SQL)";
+	}
+
+$stmt="select user_group from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $user_groups_to_print = mysql_num_rows($rslt);
@@ -105,24 +245,6 @@ while ($i < $user_groups_to_print)
 	$row=mysql_fetch_row($rslt);
 	$user_groups[$i] =$row[0];
 	$i++;
-	}
-
-$i=0;
-$group_string='|';
-$group_ct = count($group);
-while($i < $group_ct)
-	{
-	$group_string .= "$group[$i]|";
-	$group_SQL .= "'$group[$i]',";
-	$groupQS .= "&group[]=$group[$i]";
-	$i++;
-	}
-if ( (ereg("--ALL--",$group_string) ) or ($group_ct < 1) )
-	{$group_SQL = "";}
-else
-	{
-	$group_SQL = eregi_replace(",$",'',$group_SQL);
-	$group_SQL = "and campaign_id IN($group_SQL)";
 	}
 
 $i=0;
@@ -140,8 +262,8 @@ if ( (ereg("--ALL--",$user_group_string) ) or ($user_group_ct < 1) )
 else
 	{
 	$user_group_SQL = eregi_replace(",$",'',$user_group_SQL);
+	$TCuser_group_SQL = $user_group_SQL;
 	$user_group_SQL = "and vicidial_agent_log.user_group IN($user_group_SQL)";
-	$TCuser_group_SQL = eregi_replace(",$",'',$TCuser_group_SQL);
 	$TCuser_group_SQL = "and user_group IN($TCuser_group_SQL)";
 	}
 
@@ -181,9 +303,10 @@ if ($file_download < 1)
 
 	echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 	echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
+	echo "<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-	echo "<TITLE>Agent Time Detail</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+	echo "<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 	echo "<span style=\"position:absolute;left:0px;top:0px;z-index:20;\" id=admin_header>";
 
 	$short_header=1;
@@ -198,7 +321,7 @@ if ($file_download < 1)
 if ( (strlen($group[0]) < 1) or (strlen($user_group[0]) < 1) )
 	{
 	echo "\n";
-	echo "PLEASE SELECT A CAMPAIGN OR USER GROUP AND DATE-TIME ABOVE AND CLICK SUBMIT\n";
+	echo "Bitte wählen Sie eine Kampagne oder Benutzergruppe und Datum-Zeit oben ein und klicken dann SUBMIT\n";
 	echo " NOTE: stats taken from shift specified\n";
 	}
 
@@ -253,11 +376,34 @@ else
 	############################################################################
 
 	### BEGIN gather user IDs and names for matching up later
-	$stmt="select full_name,user from vicidial_users order by user limit 100000;";
+	$stmt="select full_name,$userSQL from vicidial_users $whereLOGadmin_viewable_groupsSQL order by user limit 100000;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$users_to_print = mysql_num_rows($rslt);
 	$i=0;
+	$graph_stats=array();
+	$max_calls=1;
+	$max_timeclock=1;
+	$max_agenttime=1;
+	$max_wait=1;
+	$max_talk=1;
+	$max_dispo=1;
+	$max_pause=1;
+	$max_dead=1;
+	$max_customer=1;
+	$GRAPH="<a name='timegraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
+	$GRAPH2="<tr><th class='column_header grey_graph_cell' id='timegraph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">CALLS</a></th><th class='column_header grey_graph_cell' id='timegraph2'><a href='#' onClick=\"DrawGraph('TIMECLOCK', '2'); return false;\">TIME CLOCK</a></th><th class='column_header grey_graph_cell' id='timegraph3'><a href='#' onClick=\"DrawGraph('AGENTTIME', '3'); return false;\">MITTELTIME</a></th><th class='column_header grey_graph_cell' id='timegraph4'><a href='#' onClick=\"DrawGraph('WAIT', '4'); return false;\">WAIT</a></th><th class='column_header grey_graph_cell' id='timegraph5'><a href='#' onClick=\"DrawGraph('TALK', '5'); return false;\">TALK</a></th><th class='column_header grey_graph_cell' id='timegraph6'><a href='#' onClick=\"DrawGraph('DISPO', '6'); return false;\">DISPO</a></th><th class='column_header grey_graph_cell' id='timegraph7'><a href='#' onClick=\"DrawGraph('PAUSE', '7'); return false;\">PAUSE</a></th><th class='column_header grey_graph_cell' id='timegraph8'><a href='#' onClick=\"DrawGraph('DEAD', '8'); return false;\">DEAD</a></th><th class='column_header grey_graph_cell' id='timegraph9'><a href='#' onClick=\"DrawGraph('CUSTOMER', '9'); return false;\">CUSTOMER</a></th>";
+	$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>MITTELTIME BREAKDOWN</caption><tr><th class='thgraph' scope='col'>STATUS</th>";
+	$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>CALLS </th></tr>";
+	$TIMECLOCK_graph=$graph_header."<th class='thgraph' scope='col'>TIME CLOCK</th></tr>";
+	$AGENTTIME_graph=$graph_header."<th class='thgraph' scope='col'>MITTELTIME</th></tr>";
+	$WAIT_graph=$graph_header."<th class='thgraph' scope='col'>WAIT</th></tr>";
+	$TALK_graph=$graph_header."<th class='thgraph' scope='col'>TALK</th></tr>";
+	$DISPO_graph=$graph_header."<th class='thgraph' scope='col'>DISPO</th></tr>";
+	$PAUSE_graph=$graph_header."<th class='thgraph' scope='col'>PAUSE</th></tr>";
+	$DEAD_graph=$graph_header."<th class='thgraph' scope='col'>DEAD</th></tr>";
+	$CUSTOMER_graph=$graph_header."<th class='thgraph' scope='col'>CUSTOMER</th></tr>";
+	
 	while ($i < $users_to_print)
 		{
 		$row=mysql_fetch_row($rslt);
@@ -269,7 +415,7 @@ else
 
 
 	### BEGIN gather timeclock records per agent
-	$stmt="select user,sum(login_sec) from vicidial_timeclock_log where event IN('LOGIN','START') and event_date >= '$query_date_BEGIN' and event_date <= '$query_date_END' $TCuser_group_SQL group by user limit 10000000;";
+	$stmt="select $userSQL,sum(login_sec) from vicidial_timeclock_log where event IN('LOGIN','START') and event_date >= '$query_date_BEGIN' and event_date <= '$query_date_END' $TCuser_group_SQL group by user limit 10000000;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$punches_to_print = mysql_num_rows($rslt);
@@ -296,11 +442,11 @@ else
 	$PCusersARY=$MT;
 	$PCuser_namesARY=$MT;
 	$user_count=0;
-	$stmt="select user,sum(pause_sec),sub_status from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 30000 $group_SQL $user_group_SQL group by user,sub_status order by user,sub_status desc limit 10000000;";
+	$stmt="select $userSQL,sum(pause_sec),sub_status from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 65000 $group_SQL $user_group_SQL group by user,sub_status order by user,sub_status desc limit 10000000;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$subs_to_print = mysql_num_rows($rslt);
-	$i=0;
+	$i=0; 
 	while ($i < $subs_to_print)
 		{
 		$row=mysql_fetch_row($rslt);
@@ -317,6 +463,9 @@ else
 			$sub_statuses .= "$sub_status[$i]-";
 			$sub_statusesARY[$sub_status_count] = $sub_status[$i];
 			$sub_status_count++;
+
+			$max_varname="max_".$sub_status[$i];
+			$$max_varname=1;
 			}
 		if (!eregi("-$PCuser[$i]-", $PCusers))
 			{
@@ -331,7 +480,7 @@ else
 
 
 	##### BEGIN Gather all agent time records and parse through them in PHP to save on DB load
-	$stmt="select user,wait_sec,talk_sec,dispo_sec,pause_sec,lead_id,status,dead_sec from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' $group_SQL $user_group_SQL limit 10000000;";
+	$stmt="select $userSQL,wait_sec,talk_sec,dispo_sec,pause_sec,lead_id,status,dead_sec from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' $group_SQL $user_group_SQL limit 10000000;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$rows_to_print = mysql_num_rows($rslt);
@@ -350,11 +499,11 @@ else
 		$lead =			$row[5];
 		$status =		$row[6];
 		$dead =			$row[7];
-		if ($wait > 30000) {$wait=0;}
-		if ($talk > 30000) {$talk=0;}
-		if ($dispo > 30000) {$dispo=0;}
-		if ($pause > 30000) {$pause=0;}
-		if ($dead > 30000) {$dead=0;}
+		if ($wait > 65000) {$wait=0;}
+		if ($talk > 65000) {$talk=0;}
+		if ($dispo > 65000) {$dispo=0;}
+		if ($pause > 65000) {$pause=0;}
+		if ($dead > 65000) {$dead=0;}
 		$customer =		($talk - $dead);
 		if ($customer < 1)
 			{$customer=0;}
@@ -419,14 +568,16 @@ else
 	##### BEGIN print the output to screen or put into file output variable
 	if ($file_download < 1)
 		{
-		echo "AGENT TIME BREAKDOWN:\n";
-		echo "+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
-		echo "| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">LEADS</a>    | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | <a href=\"$LINKbase&stage=TIME\">AGENT TIME</a> | WAIT       | TALK       | DISPO      | PAUSE      | DEAD       | CUSTOMER   |   |$sub_statusesHTML\n";
-		echo "+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
+		$ASCII_text.="MITTELTIME BREAKDOWN:\n";
+		$ASCII_text.="+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
+		$ASCII_text.="| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>    | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | <a href=\"$LINKbase&stage=TIME\">MITTELTIME</a> | WAIT       | TALK       | DISPO      | PAUSE      | DEAD       | CUSTOMER   |   |$sub_statusesHTML\n";
+		$ASCII_text.="+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
+
+		
 		}
 	else
 		{
-		$file_output .= "USER,ID,LEADS,TIME CLOCK,AGENT TIME,WAIT,TALK,DISPO,PAUSE,DEAD,CUSTOMER$sub_statusesFILE\n";
+		$file_output .= "USER,ID,CALLS,TIME CLOCK,MITTELTIME,WAIT,TALK,DISPO,PAUSE,DEAD,CUSTOMER$sub_statusesFILE\n";
 		}
 	##### END print the output to screen or put into file output variable
 
@@ -450,13 +601,30 @@ else
 		$RAWcalls = $Scalls[$m];
 		$RAWtimeSEC = $Stime[$m];
 
-		$Swait[$m]=		sec_convert($Swait[$m],'H'); 
-		$Stalk[$m]=		sec_convert($Stalk[$m],'H'); 
-		$Sdispo[$m]=	sec_convert($Sdispo[$m],'H'); 
-		$Spause[$m]=	sec_convert($Spause[$m],'H'); 
-		$Sdead[$m]=	sec_convert($Sdead[$m],'H'); 
-		$Scustomer[$m]=	sec_convert($Scustomer[$m],'H'); 
-		$Stime[$m]=		sec_convert($Stime[$m],'H'); 
+		if (trim($Scalls[$m])>$max_calls) {$max_calls=trim($Scalls[$m]);}
+		if (trim($Stime[$m])>$max_agenttime) {$max_agenttime=trim($Stime[$m]);}
+		if (trim($Swait[$m])>$max_wait) {$max_wait=trim($Swait[$m]);}
+		if (trim($Stalk[$m])>$max_talk) {$max_talk=trim($Stalk[$m]);}
+		if (trim($Sdispo[$m])>$max_dispo) {$max_dispo=trim($Sdispo[$m]);}
+		if (trim($Spause[$m])>$max_pause) {$max_pause=trim($Spause[$m]);}
+		if (trim($Sdead[$m])>$max_dead) {$max_dead=trim($Sdead[$m]);}
+		if (trim($Scustomer[$m])>$max_customer) {$max_customer=trim($Scustomer[$m]);}
+		$graph_stats[$m][1]=trim($Scalls[$m]);
+		$graph_stats[$m][3]=trim($Stime[$m]);
+		$graph_stats[$m][4]=trim($Swait[$m]);
+		$graph_stats[$m][5]=trim($Stalk[$m]);
+		$graph_stats[$m][6]=trim($Sdispo[$m]);
+		$graph_stats[$m][7]=trim($Spause[$m]);
+		$graph_stats[$m][8]=trim($Sdead[$m]);
+		$graph_stats[$m][9]=trim($Scustomer[$m]);
+
+		$Swait[$m]=		sec_convert($Swait[$m],$TIME_agenttimedetail);
+		$Stalk[$m]=		sec_convert($Stalk[$m],$TIME_agenttimedetail);
+		$Sdispo[$m]=	sec_convert($Sdispo[$m],$TIME_agenttimedetail);
+		$Spause[$m]=	sec_convert($Spause[$m],$TIME_agenttimedetail);
+		$Sdead[$m]=	sec_convert($Sdead[$m],$TIME_agenttimedetail);
+		$Scustomer[$m]=	sec_convert($Scustomer[$m],$TIME_agenttimedetail);
+		$Stime[$m]=		sec_convert($Stime[$m],$TIME_agenttimedetail);
 
 		$RAWtime = $Stime[$m];
 		$RAWwait = $Swait[$m];
@@ -493,7 +661,11 @@ else
 				$punches_found++;
 				$RAWtimeTCsec =		$TCtime[$n];
 				$TOTtimeTC =		($TOTtimeTC + $TCtime[$n]);
-				$StimeTC[$m]=		sec_convert($TCtime[$n],'H'); 
+
+				if (trim($RAWtimeTCsec)>$max_timeclock) {$max_timeclock=trim($RAWtimeTCsec);}
+				$graph_stats[$m][2]=trim($RAWtimeTCsec);
+
+				$StimeTC[$m]=		sec_convert($TCtime[$n],$TIME_agenttimedetail);
 				$RAWtimeTC =		$StimeTC[$m];
 				$StimeTC[$m] =		sprintf("%10s", $StimeTC[$m]);
 				}
@@ -502,7 +674,12 @@ else
 		if ($punches_found < 1)
 			{
 			$RAWtimeTCsec =		"0";
-			$StimeTC[$m]=		"0:00"; 
+
+			$graph_stats[$m][2]=0;
+			
+			$StimeTC[$m] =		"0:00"; 
+			if ($TIME_agenttimedetail == 'HF')
+				{$StimeTC[$m] =		"0:00:00";}
 			$RAWtimeTC =		$StimeTC[$m];
 			$StimeTC[$m] =		sprintf("%10s", $StimeTC[$m]);
 			}
@@ -529,25 +706,41 @@ else
 			{
 			$Sstatus=$sub_statusesARY[$n];
 			$SstatusTXT='';
+			$varname=$Sstatus."_graph";
+			$$varname=$graph_header."<th class='thgraph' scope='col'>$Sstatus</th></tr>";
+			$max_varname="max_".$Sstatus;
 			### BEGIN loop through each stat line ###
 			$i=0; $status_found=0;
 			while ( ($i < $subs_to_print) and ($status_found < 1) )
 				{
 				if ( ($Suser[$m]=="$PCuser[$i]") and ($Sstatus=="$sub_status[$i]") )
 					{
-					$USERcodePAUSE_MS =		sec_convert($PCpause_sec[$i],'H'); 
+					$USERcodePAUSE_MS =		sec_convert($PCpause_sec[$i],$TIME_agenttimedetail);
+					if (strlen($USERcodePAUSE_MS)<1) {$USERcodePAUSE_MS='0';}
 					$pfUSERcodePAUSE_MS =	sprintf("%10s", $USERcodePAUSE_MS);
+					
+					if ($PCpause_sec[$i]>$$max_varname) {$$max_varname=$PCpause_sec[$i];}
+					$graph_stats_sub[$m][$n]=$PCpause_sec[$i];					
 
 					$SstatusTXT = sprintf("%10s", $pfUSERcodePAUSE_MS);
 					$SstatusesHTML .= " $SstatusTXT |";
-					$SstatusesFILE .= ",$pfUSERcodePAUSE_MS";
+					$SstatusesFILE .= ",$USERcodePAUSE_MS";
 					$status_found++;
 					}
 				$i++;
 				}
 			if ($status_found < 1)
 				{
-				$SstatusesHTML .= "       0:00 |";
+				if ($TIME_agenttimedetail == 'HF')
+					{
+					$SstatusesHTML .= "    0:00:00 |";
+					$SstatusesFILE .= ",0:00:00";
+					}
+				else
+					{
+					$SstatusesHTML .= "       0:00 |";
+					$SstatusesFILE .= ",0:00";
+					}
 				}
 			### END loop through each stat line ###
 			$n++;
@@ -582,9 +775,18 @@ else
 		if ($file_download < 1)
 			{
 			$Toutput = "| $Sname[$m] | <a href=\"./user_stats.php?user=$RAWuser\">$Suser[$m]</a> | $Scalls[$m] | $StimeTC[$m]$TCuserAUTOLOGOUT| $Stime[$m] | $Swait[$m] | $Stalk[$m] | $Sdispo[$m] | $Spause[$m] | $Sdead[$m] | $Scustomer[$m] |   |$SstatusesHTML\n";
+			$graph_stats[$m][0]=trim("$Suser[$m] - $Sname[$m]");
+#CALLS    | TIME CLOCK | AGENT TIME | WAIT       | TALK       | DISPO      | PAUSE      | DEAD       | CUSTOMER   |   |      LOGIN |      TRAIN |     TOILET |     PRECAL |      BREAK |            |      LUNCH |     LAGGED
 			}
 		else
 			{
+			if (strlen($RAWtime)<1) {$RAWtime='0';}
+			if (strlen($RAWwait)<1) {$RAWwait='0';}
+			if (strlen($RAWtalk)<1) {$RAWtalk='0';}
+			if (strlen($RAWdispo)<1) {$RAWdispo='0';}
+			if (strlen($RAWpause)<1) {$RAWpause='0';}
+			if (strlen($RAWdead)<1) {$RAWdead='0';}
+			if (strlen($RAWcustomer)<1) {$RAWcustomer='0';}
 			$fileToutput = "$RAWname,$RAWuser,$RAWcalls,$RAWtimeTC,$RAWtime,$RAWwait,$RAWtalk,$RAWdispo,$RAWpause,$RAWdead,$RAWcustomer$SstatusesFILE\n";
 			}
 
@@ -618,7 +820,7 @@ else
 			}
 		if (!ereg("NAME|ID|TIME|LEADS|TCLOCK",$stage))
 			if ($file_download < 1)
-				{echo "$Toutput";}
+				{$ASCII_text.="$Toutput";}
 			else
 				{$file_output .= "$fileToutput";}
 
@@ -630,14 +832,15 @@ else
 	##### END loop through each user formatting data for output
 
 
-	$TOT_AGENTS = sprintf("%4s", $m);
+	$TOT_AGENTS = $m;
+	$hTOT_AGENTS = sprintf("%4s", $TOT_AGENTS);
 	$k=$m;
 
 	if ($DB) {echo "Done analyzing...   $TOTwait|$TOTtalk|$TOTdispo|$TOTpause|$TOTdead|$TOTcustomer|$TOTALtime|$TOTcalls|$uc|<BR>\n";}
 
 
 	### BEGIN sort through output to display properly ###
-	if (ereg("NAME|ID|TIME|LEADS|TCLOCK",$stage))
+	if ( ($TOT_AGENTS > 0) and (ereg("NAME|ID|TIME|LEADS|TCLOCK",$stage)) )
 		{
 		if (ereg("ID",$stage))
 			{sort($TOPsort, SORT_NUMERIC);}
@@ -653,7 +856,7 @@ else
 			$i = $sort_split[1];
 			$sort_order[$m] = "$i";
 			if ($file_download < 1)
-				{echo "$TOPsorted_output[$i]";}
+				{$ASCII_text.="$TOPsorted_output[$i]";}
 			else
 				{$file_output .= "$TOPsorted_outputFILE[$i]";}
 			$m++;
@@ -680,6 +883,7 @@ else
 		$Scalls=0;
 		$Sstatus=$sub_statusesARY[$n];
 		$SUMstatusTXT='';
+		$total_var=$Sstatus."_total";
 		### BEGIN loop through each stat line ###
 		$i=0; $status_found=0;
 		while ($i < $subs_to_print)
@@ -695,53 +899,132 @@ else
 		if ($status_found < 1)
 			{
 			$SUMstatusesHTML .= "          0 |";
+			$$total_var="0";
 			}
 		else
 			{
 			$TOTtotPAUSE = ($TOTtotPAUSE + $Scalls);
 
-			$USERsumstatPAUSE_MS =		sec_convert($Scalls,'H'); 
+			$USERsumstatPAUSE_MS =		sec_convert($Scalls,$TIME_agenttimedetail);
 			$pfUSERsumstatPAUSE_MS =	sprintf("%11s", $USERsumstatPAUSE_MS);
+			$$total_var="$pfUSERsumstatPAUSE_MS";
 
 			$SUMstatusTXT = sprintf("%10s", $pfUSERsumstatPAUSE_MS);
 			$SUMstatusesHTML .= "$SUMstatusTXT |";
-			$SUMstatusesFILE .= ",$pfUSERsumstatPAUSE_MS";
+			$SUMstatusesFILE .= ",$USERsumstatPAUSE_MS";
 			}
 		$n++;
 		}
 	### END loop through each status ###
 
 	### call function to calculate and print dialable leads
-	$TOTwait = sec_convert($TOTwait,'H');
-	$TOTtalk = sec_convert($TOTtalk,'H');
-	$TOTdispo = sec_convert($TOTdispo,'H');
-	$TOTpause = sec_convert($TOTpause,'H');
-	$TOTdead = sec_convert($TOTdead,'H');
-	$TOTcustomer = sec_convert($TOTcustomer,'H');
-	$TOTALtime = sec_convert($TOTALtime,'H');
-	$TOTtimeTC = sec_convert($TOTtimeTC,'H');
+	$TOTwait = sec_convert($TOTwait,$TIME_agenttimedetail);
+	$TOTtalk = sec_convert($TOTtalk,$TIME_agenttimedetail);
+	$TOTdispo = sec_convert($TOTdispo,$TIME_agenttimedetail);
+	$TOTpause = sec_convert($TOTpause,$TIME_agenttimedetail);
+	$TOTdead = sec_convert($TOTdead,$TIME_agenttimedetail);
+	$TOTcustomer = sec_convert($TOTcustomer,$TIME_agenttimedetail);
+	$TOTALtime = sec_convert($TOTALtime,$TIME_agenttimedetail);
+	$TOTtimeTC = sec_convert($TOTtimeTC,$TIME_agenttimedetail);
 
-	$TOTcalls = sprintf("%8s", $TOTcalls);
-	$TOTwait =	sprintf("%11s", $TOTwait);
-	$TOTtalk =	sprintf("%11s", $TOTtalk);
-	$TOTdispo =	sprintf("%11s", $TOTdispo);
-	$TOTpause =	sprintf("%11s", $TOTpause);
-	$TOTdead =	sprintf("%11s", $TOTdead);
-	$TOTcustomer =	sprintf("%11s", $TOTcustomer);
-	$TOTALtime = sprintf("%11s", $TOTALtime);
-	$TOTtimeTC = sprintf("%11s", $TOTtimeTC);
+	$hTOTcalls = sprintf("%8s", $TOTcalls);
+	$hTOTwait =	sprintf("%11s", $TOTwait);
+	$hTOTtalk =	sprintf("%11s", $TOTtalk);
+	$hTOTdispo =	sprintf("%11s", $TOTdispo);
+	$hTOTpause =	sprintf("%11s", $TOTpause);
+	$hTOTdead =	sprintf("%11s", $TOTdead);
+	$hTOTcustomer =	sprintf("%11s", $TOTcustomer);
+	$hTOTALtime = sprintf("%11s", $TOTALtime);
+	$hTOTtimeTC = sprintf("%11s", $TOTtimeTC);
 	###### END LAST LINE TOTALS FORMATTING ##########
 
 
 
 	if ($file_download < 1)
 		{
-		echo "+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
-		echo "|  TOTALS        AGENTS:$TOT_AGENTS | $TOTcalls |$TOTtimeTC |$TOTALtime |$TOTwait |$TOTtalk |$TOTdispo |$TOTpause |$TOTdead |$TOTcustomer |   |$SUMstatusesHTML\n";
-		echo "+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
+		$ASCII_text.="+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
+		$ASCII_text.="|  TOTALS        AGENTS:$hTOT_AGENTS | $hTOTcalls |$hTOTtimeTC |$hTOTALtime |$hTOTwait |$hTOTtalk |$hTOTdispo |$hTOTpause |$hTOTdead |$hTOTcustomer |   |$SUMstatusesHTML\n";
+		$ASCII_text.="+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
 		if ($AUTOLOGOUTflag > 0)
 			{echo "     * denotes AUTOLOGOUT from timeclock\n";}
-		echo "\n\n</PRE>";
+		$ASCII_text.="\n\n</PRE>";
+
+		for ($e=0; $e<count($sub_statusesARY); $e++) {
+			$Sstatus=$sub_statusesARY[$e];
+			$SstatusTXT=$Sstatus;
+			if ($Sstatus=="") {$SstatusTXT="(blank)";}
+			$GRAPH2.="<th class='column_header grey_graph_cell' id='timegraph".(10+$e)."'><a href='#' onClick=\"DrawGraph('$Sstatus', '".(10+$e)."'); return false;\">$SstatusTXT</a></th>";
+		}
+
+		for ($d=0; $d<count($graph_stats); $d++) {
+			if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
+			$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+			$TIMECLOCK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(400*$graph_stats[$d][2]/$max_timeclock)."' height='16' />".sec_convert($graph_stats[$d][2], 'HF')."</td></tr>";
+			$AGENTTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(400*$graph_stats[$d][3]/$max_agenttime)."' height='16' />".sec_convert($graph_stats[$d][3], 'HF')."</td></tr>";
+			$WAIT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(400*$graph_stats[$d][4]/$max_wait)."' height='16' />".sec_convert($graph_stats[$d][4], 'HF')."</td></tr>";
+			$TALK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(400*$graph_stats[$d][5]/$max_talk)."' height='16' />".sec_convert($graph_stats[$d][5], 'HF')."</td></tr>";
+			$DISPO_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(400*$graph_stats[$d][6]/$max_dispo)."' height='16' />".sec_convert($graph_stats[$d][6], 'HF')."</td></tr>";
+			$PAUSE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(400*$graph_stats[$d][7]/$max_pause)."' height='16' />".sec_convert($graph_stats[$d][7], 'HF')."</td></tr>";
+			$DEAD_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(400*$graph_stats[$d][8]/$max_dead)."' height='16' />".sec_convert($graph_stats[$d][8], 'HF')."</td></tr>";
+			$CUSTOMER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(400*$graph_stats[$d][9]/$max_customer)."' height='16' />".sec_convert($graph_stats[$d][9], 'HF')."</td></tr>";
+
+			for ($e=0; $e<count($sub_statusesARY); $e++) {
+				$Sstatus=$sub_statusesARY[$e];
+				$varname=$Sstatus."_graph";
+				$max_varname="max_".$Sstatus;
+				#$max.= "<!-- $max_varname => ".$$max_varname." //-->\n";
+			
+				$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(400*$graph_stats_sub[$d][$e]/$$max_varname)."' height='16' />".sec_convert($graph_stats_sub[$d][$e], 'HF')."</td></tr>";
+			}
+		}
+		$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTcalls)."</th></tr></table>";
+		$TIMECLOCK_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTtimeTC)."</th></tr></table>";
+		$AGENTTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTALtime)."</th></tr></table>";
+		$WAIT_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTwait)."</th></tr></table>";
+		$TALK_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTtalk)."</th></tr></table>";
+		$DISPO_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTdispo)."</th></tr></table>";
+		$PAUSE_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTpause)."</th></tr></table>";
+		$DEAD_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTdead)."</th></tr></table>";
+		$CUSTOMER_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTcustomer)."</th></tr></table>";
+		for ($e=0; $e<count($sub_statusesARY); $e++) {
+			$Sstatus=$sub_statusesARY[$e];
+			$total_var=$Sstatus."_total";
+			$graph_var=$Sstatus."_graph";
+			$$graph_var.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($$total_var)."</th></tr></table>";
+#			$JS_text.="var ".$Sstatus."_graph=\"".$$graph_var."\";\n";
+		}
+		$JS_onload.="\tDrawGraph('CALLS', '1');\n"; 
+		$JS_text.="function DrawGraph(graph, th_id) {\n";
+		$JS_text.="	var CALLS_graph=\"$CALLS_graph\";\n";
+		$JS_text.="	var TIMECLOCK_graph=\"$TIMECLOCK_graph\";\n";
+		$JS_text.="	var AGENTTIME_graph=\"$AGENTTIME_graph\";\n";
+		$JS_text.="	var WAIT_graph=\"$WAIT_graph\";\n";
+		$JS_text.="	var TALK_graph=\"$TALK_graph\";\n";
+		$JS_text.="	var DISPO_graph=\"$DISPO_graph\";\n";
+		$JS_text.="	var PAUSE_graph=\"$PAUSE_graph\";\n";
+		$JS_text.="	var DEAD_graph=\"$DEAD_graph\";\n";
+		$JS_text.="	var CUSTOMER_graph=\"$CUSTOMER_graph\";\n";
+
+		for ($e=0; $e<count($sub_statusesARY); $e++) {
+			$Sstatus=$sub_statusesARY[$e];
+			$graph_var=$Sstatus."_graph";
+			$JS_text.="	var ".$Sstatus."_graph=\"".$$graph_var."\";\n";
+		}
+
+		$JS_text.="	for (var i=1; i<=".(9+count($sub_statusesARY))."; i++) {\n";
+		$JS_text.="		var cellID=\"timegraph\"+i;\n";
+		$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
+		$JS_text.="	}\n";
+		$JS_text.="	var cellID=\"timegraph\"+th_id;\n";
+		$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
+		$JS_text.="\n";
+		$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
+		$JS_text.="	document.getElementById('agent_time_detail_graph').innerHTML=graph_to_display;\n";
+		$JS_text.="}\n";
+
+		$GRAPH3="<tr><td colspan='".(9+$sub_status_count)."' class='graph_span_cell'><span id='agent_time_detail_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
+		
+		# echo $GRAPH.$GRAPH2.$GRAPH3.$max;
 		}
 	else
 		{
@@ -782,8 +1065,22 @@ if ($file_download > 0)
 ############################################################################
 ##### BEGIN HTML form section
 ############################################################################
+$JS_onload.="}\n";
+$JS_text.=$JS_onload;
+$JS_text.="</script>\n";
+
+if ($report_display_type=="HTML")
+	{
+	echo $JS_text;
+	echo $GRAPH.$GRAPH2.$GRAPH3.$max;
+	}
+else
+	{
+	echo $ASCII_text;
+	}
+
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> Dates:<BR>";
+echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> Termine:<BR>";
 echo "<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
 echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
@@ -796,7 +1093,7 @@ var o_cal = new tcal ({
 	'controlname': 'query_date'
 });
 o_cal.a_tpl.yearscroll = false;
-// o_cal.a_tpl.weekstart = 1; // Monday week start
+// o_cal.a_tpl.weekstart = 1; // Montag week start
 </script>
 <?php
 
@@ -811,16 +1108,16 @@ var o_cal = new tcal ({
 	'controlname': 'end_date'
 });
 o_cal.a_tpl.yearscroll = false;
-// o_cal.a_tpl.weekstart = 1; // Monday week start
+// o_cal.a_tpl.weekstart = 1; // Montag week start
 </script>
 <?php
 
-echo "</TD><TD VALIGN=TOP> Campaigns:<BR>";
+echo "</TD><TD VALIGN=TOP> Kampagnen:<BR>";
 echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
 if  (eregi("--ALL--",$group_string))
-	{echo "<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
+	{echo "<option value=\"--ALL--\" selected>-- ALL KAMPAGNEN --</option>\n";}
 else
-	{echo "<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
+	{echo "<option value=\"--ALL--\">-- ALL KAMPAGNEN --</option>\n";}
 $o=0;
 while ($campaigns_to_print > $o)
 {
@@ -829,13 +1126,13 @@ while ($campaigns_to_print > $o)
 	$o++;
 }
 echo "</SELECT>\n";
-echo "</TD><TD VALIGN=TOP>User Groups:<BR>";
+echo "</TD><TD VALIGN=TOP>Benutzer-Gruppen:<BR>";
 echo "<SELECT SIZE=5 NAME=user_group[] multiple>\n";
 
 if  (eregi("--ALL--",$user_group_string))
-	{echo "<option value=\"--ALL--\" selected>-- ALL USER GROUPS --</option>\n";}
+	{echo "<option value=\"--ALL--\" selected>-- ALL BENUTZER-GRUPPEN --</option>\n";}
 else
-	{echo "<option value=\"--ALL--\">-- ALL USER GROUPS --</option>\n";}
+	{echo "<option value=\"--ALL--\">-- ALL BENUTZER-GRUPPEN --</option>\n";}
 $o=0;
 while ($user_groups_to_print > $o)
 	{
@@ -852,7 +1149,11 @@ echo "<option value=\"AM\">AM</option>\n";
 echo "<option value=\"PM\">PM</option>\n";
 echo "<option value=\"ALL\">ALL</option>\n";
 echo "</SELECT><BR><BR>\n";
-echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
+echo "Anzeige as:<BR>";
+echo "<select name='report_display_type'>";
+if ($report_display_type) {echo "<option value='$report_display_type' selected>$report_display_type</option>";}
+echo "<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR><BR>";
+echo "<INPUT TYPE=Submit NAME=SUBMIT VALUE=SUBMIT>\n";
 echo "</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
 echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
@@ -861,7 +1162,7 @@ echo " <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
 echo "</FONT>\n";
 echo "</TD></TR></TABLE>";
 
-echo "</FORM>\n\n";
+echo "</FORM>\n\n<BR>$db_source";
 ############################################################################
 ##### END HTML form section
 ############################################################################

@@ -1,7 +1,7 @@
 <?php
 # audio_store.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Central Audio Storage script
 # 
@@ -9,10 +9,12 @@
 # 90511-1325 - First build
 # 90618-0640 - Fix for users going through proxy or tunnel
 # 100401-1037 - remove spaces and special characters from filenames, admin log uploads
+# 110922-2331 - Added modify_audiostore user option for access
+# 111122-1332 - Added more filename filtering
 #
 
-$version = '2.2.0-3';
-$build = '100401-1037';
+$version = '2.4-5';
+$build = '111122-1332';
 
 $MT[0]='';
 
@@ -126,7 +128,7 @@ if ( (!preg_match("/\|$ip\|/", $server_ips)) and ($formIPvalid < 1) )
 	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
 	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and modify_campaigns='1'";
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and ( (modify_campaigns='1') or (modify_audiostore='1') )";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
@@ -196,8 +198,24 @@ if ($action == "AUTOUPLOAD")
 		{
 		$AF_path = preg_replace("/ /",'\ ',$AF_path);
 		$AF_path = preg_replace("/@/",'\@',$AF_path);
+		$AF_path = preg_replace("/\(/",'\(',$AF_path);
+		$AF_path = preg_replace("/\)/",'\)',$AF_path);
+		$AF_path = preg_replace("/\#/",'\#',$AF_path);
+		$AF_path = preg_replace("/\&/",'\&',$AF_path);
+		$AF_path = preg_replace("/\*/",'\*',$AF_path);
+		$AF_path = preg_replace("/\!/",'\!',$AF_path);
+		$AF_path = preg_replace("/\%/",'\%',$AF_path);
+		$AF_path = preg_replace("/\^/",'\^',$AF_path);
 		$audiofile_name = preg_replace("/ /",'',$audiofile_name);
 		$audiofile_name = preg_replace("/@/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\(/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\)/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\#/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\&/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\*/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\!/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\%/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\^/",'',$audiofile_name);
 		copy($AF_path, "$WeBServeRRooT/$sounds_web_directory/$audiofile_name");
 		chmod("$WeBServeRRooT/$sounds_web_directory/$audiofile_name", 0766);
 
@@ -284,8 +302,24 @@ if ($action == "MANUALUPLOAD")
 		{
 		$AF_path = preg_replace("/ /",'\ ',$AF_path);
 		$AF_path = preg_replace("/@/",'\@',$AF_path);
+		$AF_path = preg_replace("/\(/",'\(',$AF_path);
+		$AF_path = preg_replace("/\)/",'\)',$AF_path);
+		$AF_path = preg_replace("/\#/",'\#',$AF_path);
+		$AF_path = preg_replace("/\&/",'\&',$AF_path);
+		$AF_path = preg_replace("/\*/",'\*',$AF_path);
+		$AF_path = preg_replace("/\!/",'\!',$AF_path);
+		$AF_path = preg_replace("/\%/",'\%',$AF_path);
+		$AF_path = preg_replace("/\^/",'\^',$AF_path);
 		$audiofile_name = preg_replace("/ /",'',$audiofile_name);
 		$audiofile_name = preg_replace("/@/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\(/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\)/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\#/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\&/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\*/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\!/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\%/",'',$audiofile_name);
+		$audiofile_name = preg_replace("/\^/",'',$audiofile_name);
 		copy($AF_path, "$WeBServeRRooT/$sounds_web_directory/$audiofile_name");
 		chmod("$WeBServeRRooT/$sounds_web_directory/$audiofile_name", 0766);
 		

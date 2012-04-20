@@ -155,7 +155,7 @@ $parked_to_print = mysql_num_rows($rslt);
 echo "\n\n";
 echo "----------------------------------------------------------------------------------------";
 echo "\n\n";
-echo "VICIDIAL: Agenti Time On Inbound Calls                             $NOW_TIME\n\n";
+echo "VICIDIAL: Agenti Time On Inbound Calls                             $NOW_TIME\n\n";
 echo "+------------|--------+------------+-----------------+---------------------+---------+\n";
 echo "| STATION    | USER   | CHANNEL    | GROUP           | START TIME          | MINUTES |\n";
 echo "+------------|--------+------------+-----------------+---------------------+---------+\n";

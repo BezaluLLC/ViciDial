@@ -79,7 +79,7 @@ while ($i < $inbound_to_print)
 <?php 
 echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 #echo"<META HTTP-EQUIV=Refresh CONTENT=\"7; URL=$PHP_SELF?server_ip=$server_ip&DB=$DB\">\n";
-echo "<TITLE>ASTERISK: Inbound Anruf-Notfall</TITLE></HEAD><BODY BGCOLOR=WHITE>\n";
+echo "<TITLE>ASTERISK: Inbound Anruf-Notfall</TITLE></HEAD><BODY BGCOLOR=WHITE>\n";
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
 echo "<INPUT TYPE=HIDDEN NAME=server_ip VALUE=\"$server_ip\">\n";
 echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
@@ -108,7 +108,7 @@ else
 {
 
 
-echo "ASTERISK: Inbound Anruf-Notfall                      $NOW_TIME\n";
+echo "ASTERISK: Inbound Anruf-Notfall                      $NOW_TIME\n";
 
 echo "\n";
 echo "---------- TOTALS\n";

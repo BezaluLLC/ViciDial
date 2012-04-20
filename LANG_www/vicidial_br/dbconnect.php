@@ -1,11 +1,15 @@
 <?php
 # 
-# dbconnect.php    version 2.2.0
+# dbconnect.php    version 2.4
 #
 # database connection settings and some global web settings
 #
 # Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
+# CHANGES
+# 100712-1430 - Added slave server option for connection
+#
+
 if ( file_exists("/etc/astguiclient.conf") )
 	{
 	$DBCagc = file("/etc/astguiclient.conf");
@@ -26,6 +30,10 @@ if ( file_exists("/etc/astguiclient.conf") )
 			{$VARDB_user = $DBCline;   $VARDB_user = preg_replace("/.*=/","",$VARDB_user);}
 		if (ereg("^VARDB_pass", $DBCline))
 			{$VARDB_pass = $DBCline;   $VARDB_pass = preg_replace("/.*=/","",$VARDB_pass);}
+		if (ereg("^VARDB_custom_user", $DBCline))
+			{$VARDB_custom_user = $DBCline;   $VARDB_custom_user = preg_replace("/.*=/","",$VARDB_custom_user);}
+		if (ereg("^VARDB_custom_pass", $DBCline))
+			{$VARDB_custom_pass = $DBCline;   $VARDB_custom_pass = preg_replace("/.*=/","",$VARDB_custom_pass);}
 		if (ereg("^VARDB_port", $DBCline))
 			{$VARDB_port = $DBCline;   $VARDB_port = preg_replace("/.*=/","",$VARDB_port);}
 		}
@@ -37,10 +45,14 @@ else
 	$VARDB_port = '3306';
 	$VARDB_user = 'cron';
 	$VARDB_pass = '1234';
+	$VARDB_custom_user = 'custom';
+	$VARDB_custom_pass = 'custom1234';
 	$VARDB_database = '1234';
 	$WeBServeRRooT = '/usr/local/apache2/htdocs';
 	}
 
+if ( ($use_slave_server > 0) and (strlen($slave_db_server)>5) )
+	{$VARDB_server = $slave_db_server;}
 $link=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass");
 if (!$link) 
 	{
@@ -51,9 +63,9 @@ mysql_select_db("$VARDB_database");
 $local_DEF = 'Local/';
 $conf_silent_prefix = '7';
 $local_AMP = '@';
-$ext_context = 'demo';
+$ext_context = 'default';
 $recording_exten = '8309';
-$WeBRooTWritablE = '1';
+$webroot_writable = '0';
 $non_latin = '0';	# set to 1 for UTF rules
 $AM_shift_BEGIN = '03:45:00';
 $AM_shift_END = '17:45:00';

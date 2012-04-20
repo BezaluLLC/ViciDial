@@ -4,7 +4,7 @@
 # make sure you have added a user to the vicidial_users MySQL table with at 
 # least user_level 4 to access this page the first time
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Changes
 # 50307-1721 - First version
@@ -13,10 +13,11 @@
 # 60619-1603 - Added variable filtering to eliminate SQL injection attack threat
 # 90508-0644 - Changed to PHP long tags
 # 91129-2249 - Replaced SELECT STAR in SQL queries, formatting fixes
+# 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 #
 
-$version = '2.2.0';
-$build = '91129-2249';
+$version = '2.2.4-7';
+$build = '120223-2135';
 
 require("dbconnect.php");
 
@@ -124,12 +125,12 @@ else
 			$server_ip=$row[1];
 			if (!$number_of_lines) {$number_of_lines=$row[2];}
 
-			fwrite ($fp, "VDremote|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
+			fwrite ($fp, "VDremote|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
 			fclose($fp);
 			}
 		else
 			{
-			fwrite ($fp, "VDremote|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
+			fwrite ($fp, "VDremote|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
 			fclose($fp);
 			echo "This remote agent does not exist: |$PHP_AUTH_USER|\n";
 			exit;
@@ -137,7 +138,7 @@ else
 		}
 	else
 		{
-		fwrite ($fp, "VDremote|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
+		fwrite ($fp, "VDremote|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
 		fclose($fp);
 		}
 	}

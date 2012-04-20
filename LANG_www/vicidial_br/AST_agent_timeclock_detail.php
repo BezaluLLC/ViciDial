@@ -3,11 +3,16 @@
 # 
 # Pulls all timeclock records for an agent
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 90602-2244 - First build
 # 100301-1401 - Added popup date selector
+# 100712-1324 - Added system setting slave server option and added user stats link dates
+# 100802-2347 - Added User Group Allowed Reports option validation
+# 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
+# 111104-1315 - Added user_group restrictions for selecting in-groups
+# 120224-0910 - Added HTML display option with bar graphs
 #
 
 
@@ -35,15 +40,19 @@ if (isset($_GET["DB"]))						{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))			{$DB=$_POST["DB"];}
 if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
-if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
-	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
-
+if (isset($_GET["ENVIAR"]))					{$ENVIAR=$_GET["ENVIAR"];}
+	elseif (isset($_POST["ENVIAR"]))		{$ENVIAR=$_POST["ENVIAR"];}
+if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
+	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 if (strlen($shift)<2) {$shift='ALL';}
 if (strlen($stage)<2) {$stage='ID';}
 
+$report_name = 'UsuarioRelógio Ponto Detalle Informe';
+$db_source = 'M';
+
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -51,26 +60,98 @@ if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
+	$outbound_autodial_active =		$row[1];
+	$slave_db_server =				$row[2];
+	$reports_use_slave_db =			$row[3];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysql_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect.php");
+#	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
+	}
+
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
 if ($DB) {echo "|$stmt|\n";}
 if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$reports_only_user=$row[0];
+
 if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
+    echo "Nome ou Senha inválidos: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
+	}
+
+$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGuser_group =			$row[0];
+
+$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns =			$row[0];
+$LOGallowed_reports =			$row[1];
+$LOGadmin_viewable_groups =		$row[2];
+$LOGadmin_viewable_call_times =	$row[3];
+
+if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL RELATÓRIOS/",$LOGallowed_reports)) )
+	{
+    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("HTTP/1.0 401 Unauthorized");
+    echo "Você não tem permissão para ver este relatório: |$PHP_AUTH_USER|$report_name|\n";
+    exit;
+	}
+
+$LOGallowed_campaignsSQL='';
+$whereLOGallowed_campaignsSQL='';
+if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+	{
+	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	}
+$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
+
+$LOGadmin_viewable_groupsSQL='';
+$whereLOGadmin_viewable_groupsSQL='';
+if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+	{
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+	$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	}
+
+$LOGadmin_viewable_call_timesSQL='';
+$whereLOGadmin_viewable_call_timesSQL='';
+if ( (!eregi("--ALL--",$LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
+	{
+	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ -/",'',$LOGadmin_viewable_call_times);
+	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_call_timesSQL);
+	$LOGadmin_viewable_call_timesSQL = "and call_time_id IN('---ALL---','$rawLOGadmin_viewable_call_timesSQL')";
+	$whereLOGadmin_viewable_call_timesSQL = "where call_time_id IN('---ALL---','$rawLOGadmin_viewable_call_timesSQL')";
 	}
 
 $MT[0]='';
@@ -90,7 +171,7 @@ $end_dateARRAY = explode(" ",$end_date);
 $end_date_D = $end_dateARRAY[0];
 $end_date_T = $end_dateARRAY[1];
 
-$stmt="select campaign_id from vicidial_campaigns;";
+$stmt="select campaign_id from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $campaigns_to_print = mysql_num_rows($rslt);
@@ -101,7 +182,7 @@ while ($i < $campaigns_to_print)
 	$groups[$i] =$row[0];
 	$i++;
 	}
-$stmt="select user_group from vicidial_user_groups;";
+$stmt="select user_group from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $user_groups_to_print = mysql_num_rows($rslt);
@@ -186,10 +267,11 @@ if ($file_download < 1)
 
 	<script language="JavaScript" src="calendar_db.js"></script>
 	<link rel="stylesheet" href="calendar.css">
+	<link rel="stylesheet" href="horizontalbargraph.css">
 
 	<?php
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-	echo "<TITLE>User Time-Clock Detail</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+	echo "<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 	echo "<span style=\"position:absolute;left:0px;top:0px;z-index:20;\" id=admin_header>";
 
 	$short_header=1;
@@ -204,7 +286,7 @@ if ($file_download < 1)
 if (strlen($user_group[0]) < 1)
 	{
 	echo "\n";
-	echo "PLEASE SELECT A CAMPAIGN OR USER GROUP AND DATE-TIME ABOVE AND CLICK SUBMIT\n";
+	echo "POR FAVOR SELECIONE UMA CAMPANHA OU GRUPO DE USUÁRIO E PERÍODO ACIMA E CLIQUE ENVIAR\n";
 	echo " NOTE: stats taken from shift specified\n";
 	}
 
@@ -242,13 +324,13 @@ else
 
 	if ($file_download < 1)
 		{
-		echo "User Time-Clock Detail                     $NOW_TIME\n";
+		echo "Usuário Time-Clock Detalhes                     $NOW_TIME\n";
 
 		echo "Time range: $query_date_BEGIN to $query_date_END\n\n";
 		}
 	else
 		{
-		$file_output .= "User Time-Clock Detail                     $NOW_TIME\n";
+		$file_output .= "Usuário Time-Clock Detalhes                     $NOW_TIME\n";
 		$file_output .= "Time range: $query_date_BEGIN to $query_date_END\n\n";
 		}
 
@@ -259,7 +341,7 @@ else
 	############################################################################
 
 	### BEGIN gather user IDs and names for matching up later
-	$stmt="select full_name,user,user_group from vicidial_users order by user limit 100000;";
+	$stmt="select full_name,user,user_group from vicidial_users $whereLOGadmin_viewable_groupsSQL order by user limit 100000;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$users_to_print = mysql_num_rows($rslt);
@@ -301,10 +383,19 @@ else
 	##### BEGIN print the output to screen or put into file output variable
 	if ($file_download < 1)
 		{
-		echo "AGENT TIME-CLOCK DETAIL:\n";
-		echo "+-----------------+----------+----------------------+------------+--------------------\n";
-		echo "| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=GROUP\">USER GROUP</a>           | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | TIME CLOCK PUNCHES\n";
-		echo "+-----------------+----------+----------------------+------------+--------------------\n";
+		$ASCII_text.="AGENTE TIME-CLOCK DETAIL:\n";
+		$ASCII_text.="+-----------------+----------+----------------------+------------+--------------------\n";
+		$ASCII_text.="| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=GROUP\">GRUPO DE USUÁRIOS</a>           | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | TIME CLOCK PUNCHES\n";
+		$ASCII_text.="+-----------------+----------+----------------------+------------+--------------------\n";
+
+		$GRAPH.="<table cellspacing=\"0\" cellpadding=\"0\" summary=\"AGENTE TIME-CLOCK DETAIL\" class=\"horizontalgraph\">\n";
+		$GRAPH.="  <caption align=\"top\">AGENTE TIME-CLOCK DETAIL</caption>\n";
+		$GRAPH.="  <tr>\n";
+		$GRAPH.="	<th class=\"thgraph\" scope=\"col\">USER/GRUPO DE USUÁRIOS</th>\n";
+		$GRAPH.="	<th class=\"thgraph\" scope=\"col\" nowrap>TIME CLOCK </th>\n";
+		$GRAPH.="	<th class=\"thgraph\" scope=\"col\">TIME CLOCK PUNCHES</th>\n";
+		$GRAPH.="  </tr>\n";
+		
 		}
 	else
 		{
@@ -323,6 +414,9 @@ else
 	##### BEGIN loop through each user formatting data for output
 	$AUTOLOGOUTflag=0;
 	$m=0;
+	$max_time=1;
+	$graph_stats=array();
+	$q=0;
 	while ( ($m < $uc) and ($m < 50000) )
 		{
 		$TCdetail='';
@@ -360,6 +454,7 @@ else
 				$TOTtimeTC =		($TOTtimeTC + $TCtime[$n]);
 				$StimeTC[$m]=		sec_convert($TCtime[$n],'H'); 
 				$RAWtimeTC =		$StimeTC[$m];
+				if ($RAWtimeTCsec>$max_time) {$max_time=$RAWtimeTCsec;}
 				$StimeTC[$m] =		sprintf("%10s", $StimeTC[$m]);
 				}
 			$n++;
@@ -376,7 +471,7 @@ else
 		$TCuserAUTOLOGOUT = ' ';
 		$stmt="select event_epoch,event_date,login_sec,event,user_group from vicidial_timeclock_log where event_date <= '$query_date_END' and event_date >= '$query_date_BEGIN' and user='$TCuser[$m]' $TCuser_group_SQL order by event_date limit 10000000;";
 		$rslt=mysql_query($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$ASCII_text.="$stmt\n";}
 		$TC_results = mysql_num_rows($rslt);
 		$k=0;
 		while ($TC_results > $k)
@@ -429,7 +524,12 @@ else
 
 		if ($file_download < 1)
 			{
-			$Toutput = "| $Sname[$m] | <a href=\"./user_stats.php?user=$RAWuser\">$Suser[$m]</a> | $Sgroup[$m] | $StimeTC[$m]$TCuserAUTOLOGOUT| $TCdetail\n";
+			$Toutput = "| $Sname[$m] | <a href=\"./user_stats.php?user=$RAWuser&begin_date=$query_date_D&end_date=$end_date_D\">$Suser[$m]</a> | $Sgroup[$m] | $StimeTC[$m]$TCuserAUTOLOGOUT| $TCdetail\n";
+			$graph_stats[$q][0]="$Sname[$m] - $Suser[$m] / $Sgroup[$m]";
+			$graph_stats[$q][1]="$RAWtimeTCsec";
+			$graph_stats[$q][2]="$TCuserAUTOLOGOUT";
+			$graph_stats[$q][3]="$TCdetail";
+			$q++;
 			}
 		else
 			{
@@ -461,7 +561,9 @@ else
 			}
 		if (!ereg("NAME|ID|TCLOCK|GROUP",$stage))
 			if ($file_download < 1)
-				{echo "$Toutput";}
+				{
+				$ASCII_text.="$Toutput";
+				}
 			else
 				{$file_output .= "$fileToutput";}
 
@@ -471,12 +573,19 @@ else
 		$m++;
 		}
 	##### END loop through each user formatting data for output
-
+		for ($i=0; $i<count($graph_stats); $i++) {
+			if ($i==0) {$class=" first";} else if (($i+1)==count($graph_stats)) {$class=" last";} else {$class="";}
+			$GRAPH.="  <tr>\n";
+			$GRAPH.="	<th class=\"thgraph$class\" scope=\"col\">".$graph_stats[$i][0]."</th>\n";
+			$GRAPH.="	<th class=\"thgraph value$class\" scope=\"col\" nowrap><img src=\"../vicidial/images/bar.png\" alt=\"\" width=\"".round(200*$graph_stats[$i][1]/$max_time)."\" height=\"16\" />".sec_convert($graph_stats[$i][1], 'H').$graph_stats[$i][2]."</th>\n";
+			$GRAPH.="	<th class=\"thgraph$class\" scope=\"col\">".$graph_stats[$i][3]."</th>\n";
+			$GRAPH.="  </tr>\n";
+		}
 
 	$TOT_AGENTS = sprintf("%4s", $m);
 	$k=$m;
 
-	if ($DB) {echo "Done analyzing...   $TOTwait|$TOTtalk|$TOTdispo|$TOTpause|$TOTALtime|$TOTcalls|$uc|<BR>\n";}
+	if ($DB) {$ASCII_text.="Done analyzing...   $TOTwait|$TOTtalk|$TOTdispo|$TOTpause|$TOTALtime|$TOTcalls|$uc|<BR>\n";}
 
 
 	### BEGIN sort through output to display properly ###
@@ -498,7 +607,7 @@ else
 			$i = $sort_split[1];
 			$sort_order[$m] = "$i";
 			if ($file_download < 1)
-				{echo "$TOPsorted_output[$i]";}
+				{$ASCII_text.="$TOPsorted_output[$i]";}
 			else
 				{$file_output .= "$TOPsorted_outputFILE[$i]";}
 			$m++;
@@ -527,12 +636,22 @@ else
 
 	if ($file_download < 1)
 		{
-		echo "+-----------------+----------+----------------------+------------+--------------------\n";
-		echo "|  TOTALS        AGENTS:$TOT_AGENTS |                      |$TOTtimeTC |\n";
-		echo "+----------------------------+                      +------------+\n";
+		$ASCII_text.="+-----------------+----------+----------------------+------------+--------------------\n";
+		$ASCII_text.="|  TOTALS        AGENTS:$TOT_AGENTS |                      |$TOTtimeTC |\n";
+		$ASCII_text.="+----------------------------+                      +------------+\n";
+		$GRAPH.="  <tr>\n";
+		$GRAPH.="	<th class=\"thgraph\" scope=\"col\">TOTALS</th>\n";
+		$GRAPH.="	<th class=\"thgraph\" scope=\"col\">AGENTS: $TOT_AGENTS</th>\n";
+		$GRAPH.="	<th class=\"thgraph\" scope=\"col\">$TOTtimeTC</th>\n";
+		$GRAPH.="  </tr>\n";
+		$GRAPH.="  </table>\n";
 		if ($AUTOLOGOUTflag > 0)
-			{echo "     * denotes AUTOLOGOUT from timeclock\n";}
-		echo "\n\n</PRE>";
+			{
+			$ASCII_text.="     * denotes AUTOLOGOUT from timeclock\n";
+			$GRAPH.="     * denotes AUTOLOGOUT from timeclock\n";
+			}
+		$ASCII_text.="</PRE>";
+		$GRAPH.="</PRE>";
 		}
 	else
 		{
@@ -569,12 +688,20 @@ if ($file_download > 0)
 	exit;
 	}
 
+if ($report_display_type=="HTML")
+	{
+	echo $GRAPH;
+	}
+else
+	{
+	echo $ASCII_text;
+	}
 
 ############################################################################
 ##### BEGIN HTML form section
 ############################################################################
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> Dates:<BR>";
+echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> Datas:<BR>";
 echo "<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
 echo "<INPUT TYPE=hidden NAME=query_date ID=query_date VALUE=\"$query_date\">\n";
 echo "<INPUT TYPE=hidden NAME=end_date ID=end_date VALUE=\"$end_date\">\n";
@@ -589,7 +716,7 @@ var o_cal = new tcal ({
 	'controlname': 'query_date_D'
 });
 o_cal.a_tpl.yearscroll = false;
-// o_cal.a_tpl.weekstart = 1; // Monday week start
+// o_cal.a_tpl.weekstart = 1; // Segunda week start
 </script>
 <?php
 
@@ -606,7 +733,7 @@ var o_cal = new tcal ({
 	'controlname': 'end_date_D'
 });
 o_cal.a_tpl.yearscroll = false;
-// o_cal.a_tpl.weekstart = 1; // Monday week start
+// o_cal.a_tpl.weekstart = 1; // Segunda week start
 </script>
 <?php
 
@@ -627,13 +754,13 @@ echo " &nbsp; <INPUT TYPE=TEXT NAME=end_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$end_d
 #	}
 #	echo "</SELECT>\n";
 
-echo "</TD><TD VALIGN=TOP>User Groups:<BR>";
+echo "</TD><TD VALIGN=TOP>Grupos de Usuário:<BR>";
 echo "<SELECT SIZE=5 NAME=user_group[] multiple>\n";
 
 if  (eregi("--ALL--",$user_group_string))
-	{echo "<option value=\"--ALL--\" selected>-- ALL USER GROUPS --</option>\n";}
+	{echo "<option value=\"--ALL--\" selected>-- ALL GRUPOS DE USUÁRIOS --</option>\n";}
 else
-	{echo "<option value=\"--ALL--\">-- ALL USER GROUPS --</option>\n";}
+	{echo "<option value=\"--ALL--\">-- ALL GRUPOS DE USUÁRIOS --</option>\n";}
 $o=0;
 while ($user_groups_to_print > $o)
 	{
@@ -642,6 +769,11 @@ while ($user_groups_to_print > $o)
 	$o++;
 	}
 echo "</SELECT>\n";
+echo "</TD><TD VALIGN=TOP>";
+echo "Mostrar as:&nbsp;&nbsp;&nbsp;<BR>";
+echo "<select name='report_display_type'>";
+if ($report_display_type) {echo "<option value='$report_display_type' selected>$report_display_type</option>";}
+echo "<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR><BR>";
 echo "</TD><TD VALIGN=TOP>Shift:<BR>";
 echo "<SELECT SIZE=1 NAME=shift>\n";
 echo "<option selected value=\"$shift\">$shift</option>\n";
@@ -665,7 +797,7 @@ function submit_form()
 
 </SCRIPT>
 
-<input type=button value="SUBMIT" name=smt id=smt onClick="submit_form()">
+<input type=button value="ENVIAR" name=smt id=smt onClick="submit_form()">
 <?php
 
 
@@ -673,7 +805,7 @@ echo "</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
 echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
 echo " <a href=\"$LINKbase&stage=$stage&file_download=1\">DOWNLOAD</a> | \n";
-echo " <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+echo " <a href=\"./admin.php?ADD=999999\">RELATÓRIOS</a> </FONT>\n";
 echo "</FONT>\n";
 echo "</TD></TR></TABLE>";
 
@@ -685,7 +817,7 @@ echo "</FORM>\n\n";
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $STARTtime);
-echo "<font size=1 color=white>$RUNtime</font>\n";
+echo "<font size=1 color=white>$RUNtime|$db_source</font>\n";
 
 ?>
 

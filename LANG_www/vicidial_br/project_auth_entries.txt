@@ -1,0 +1,2 @@
+VICIDIAL|GOOD|Fri, 20 Apr 2012 09:33:47 -0400|6666|XXXX|24.160.112.94|Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.9) Gecko/20100824 Firefox/3.6.9 ( .NET CLR 3.5.30729)|Admin|
+VICIDIAL|GOOD|Fri, 20 Apr 2012 09:33:50 -0400|6666|XXXX|24.160.112.94|Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.9) Gecko/20100824 Firefox/3.6.9 ( .NET CLR 3.5.30729)|Admin|

@@ -1,5 +1,5 @@
 <?php
-# AST_admin_template_maker.php - version 2.4
+# leadloader_template_display.php - version 2.4
 # 
 # Copyright (C) 2012  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #

@@ -838,6 +838,8 @@ Report Rank||
 This option allows you to rank shifts in selected reports that support this option||
 You can also use a special variable IGNORENOSCROLL to force scroll bars on the script tab even if you are using an iframe within it||
 Carrier Log Report||
+ADMINISTRATION: Campaign Multi-Alt-Leads||
+Multi-Lead Auto Alt Dialing Settings Form||
 
 
 lead_report_export.php
@@ -891,8 +893,6 @@ Callback Comments||
 To see information on one of the callbacks below, click on the INFO link. To call the customer back now, click on the DIAL link. If you click on a record below to dial it, it will be removed from the list||
 rings all available agents until one picks up the phone||
 No calls for this lead||
-ADMINISTRATION: Campaign Multi-Alt-Leads||
-Multi-Lead Auto Alt Dialing Settings Form||
 Time Zone Warning||
 Phone Area Code Outside Dialable Zone||
 Postal Code Outside Dialable Zone||
@@ -904,6 +904,21 @@ Notes: when doing a search for a contact, wildcard or partial search terms are n
 Contact search requests are all logged in the system||
 SEARCH FOR A CONTACT||
 CONTACTS SEARCH RESULTS||
+LEAD SEARCH
+Customer Time
+TERRITORY SELECTION
+TERRITORIES NOT SELECTED
+SELECTED TERRITORIES
+Dialable Leads
+You have now logged-in
+You logged in at
+Refresh Campaign List
+PLEASE SELECT A CAMPAIGN
+Agents View
+-READY
+-INCALL
+-PAUSED
+CALL DISPOSITION
 
 
 ############################################################  MANAGER Manual

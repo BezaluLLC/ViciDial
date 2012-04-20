@@ -88,7 +88,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 <input type="hidden" name="list_ids">
 <table border=0 cellpadding=5 cellspacing=0 align=center width=600>
 <tr>
-	<th colspan=3><font class="standard_bold">Vicidial ΕΞΕΡΧΟΜΕΝΟ recent sales report &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </font><font class="standard"><a href="admin.php?ADD=999999">Back to Admin</a></font>
+	<th colspan=3><font class="standard_bold">Vicidial OUTBOUND recent sales report &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </font><font class="standard"><a href="admin.php?ADD=999999">Back to Admin</a></font>
 	<BR></th>
 </tr>
 <tr bgcolor='#CCCCCC'>

@@ -1,13 +1,15 @@
 <?php
 # user_group_bulk_change.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 81119-0918 - First build
 # 90309-1830 - Added admin_log logging
 # 90310-2144 - Added admin header
 # 90508-0644 - Changed to PHP long tags
+# 120221-0025 - Added in User Group restrictions
+# 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -59,38 +61,38 @@ $ip = getenv("REMOTE_ADDR");
 if (!isset($begin_date)) {$begin_date = $TODAY;}
 if (!isset($end_date)) {$end_date = $TODAY;}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
-	if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
+if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$auth=$row[0];
 
 $fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Ακυρο Ονομα Χρήστη/Κωδικός Πρόσβασης: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "Ακυρο Ονομα Χρήστη/Κωδικός Πρόσβασης: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
+	exit;
 	}
-  else
+else
 	{
-
 	if($auth>0)
 		{
-			$stmt="SELECT full_name,change_agent_campaign,modify_timeclock_log from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$LOGfullname =				$row[0];
-			$change_agent_campaign =	$row[1];
-			$modify_timeclock_log =		$row[2];
+		$stmt="SELECT full_name,change_agent_campaign,modify_timeclock_log,user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$LOGfullname =				$row[0];
+		$change_agent_campaign =	$row[1];
+		$modify_timeclock_log =		$row[2];
+		$LOGuser_group =			$row[3];
 		if ($webroot_writable > 0)
 			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
+			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
 			fclose($fp);
 			}
 		}
@@ -98,13 +100,33 @@ $browser = getenv("HTTP_USER_AGENT");
 		{
 		if ($webroot_writable > 0)
 			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
+			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
 			fclose($fp);
 			}
+		exit;
 		}
 	}
 
-$stmt="select user_group,group_name from vicidial_user_groups order by user_group desc;";
+$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {$HTML_text.="|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns =			$row[0];
+$LOGallowed_reports =			$row[1];
+$LOGadmin_viewable_groups =		$row[2];
+$LOGadmin_viewable_call_times =	$row[3];
+
+$LOGadmin_viewable_groupsSQL='';
+$whereLOGadmin_viewable_groupsSQL='';
+if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+	{
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+	$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	}
+
+$stmt="SELECT user_group,group_name from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group desc;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);
@@ -116,7 +138,6 @@ while ($i < $groups_to_print)
 	$group_names[$i] =	$row[1];
 	$i++;
 	}
-
 
 
 ?>
@@ -164,7 +185,7 @@ echo "<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVET
 ##### GROUP CHANGE FOR ALL USERS IN A USER GROUP #####
 if ($stage == "one_user_group_change")
 	{
-	$stmt="UPDATE vicidial_users set user_group='" . mysql_real_escape_string($group) . "' where user_group='" . mysql_real_escape_string($old_group) . "';";
+	$stmt="UPDATE vicidial_users set user_group='" . mysql_real_escape_string($group) . "' where user_group='" . mysql_real_escape_string($old_group) . "' $LOGadmin_viewable_groupsSQL;";
 	$rslt=mysql_query($stmt, $link);
 
 	echo "All Ομάδα Χρήστη $old_group Χρήστες changed to the $group Ομάδα Χρήστη<BR>\n";
@@ -183,7 +204,7 @@ if ($stage == "one_user_group_change")
 ##### GROUP CHANGE FOR ALL USERS IN THE SYSTEM EXCEPT FOR LEVEL > 6 AND ADMIN GROUP #####
 if ($stage == "all_user_group_change")
 	{
-	$stmt="UPDATE vicidial_users set user_group='" . mysql_real_escape_string($group) . "' where user_group!='ADMIN' and user_group < 7;";
+	$stmt="UPDATE vicidial_users set user_group='" . mysql_real_escape_string($group) . "' where user_group!='ADMIN' and user_group < 7 $LOGadmin_viewable_groupsSQL;";
 	$rslt=mysql_query($stmt, $link);
 
 	echo "All non-Admin Χρήστες changed to the $group Ομάδα Χρήστη<BR>\n";
@@ -266,6 +287,4 @@ echo "|$stage|$group|";
 exit; 
 
 
-
 ?>
-

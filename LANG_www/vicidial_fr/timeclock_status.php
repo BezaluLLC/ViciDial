@@ -1,7 +1,7 @@
 <?php
 # timeclock_status.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -10,9 +10,14 @@
 # 90310-2103 - Added admin header
 # 90508-0644 - Changed to PHP long tags
 # 100214-1421 - Sort menu alphabetically
+# 100712-1324 - Added system setting slave server option
+# 100802-2347 - Added User Group Allowed Reports option validation
+# 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
+# 110703-1833 - Added download option
+# 111104-1315 - Added user_group restrictions for selecting in-groups
 #
 
-header ("Content-type: text/html; charset=utf-8");
+#header ("Content-type: text/html; charset=utf-8");
 
 require("dbconnect.php");
 
@@ -33,24 +38,40 @@ if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["VALIDER"]))					{$VALIDER=$_GET["VALIDER"];}
 	elseif (isset($_POST["VALIDER"]))		{$VALIDER=$_POST["VALIDER"];}
+if (isset($_GET["file_download"]))					{$file_download=$_GET["file_download"];}
+	elseif (isset($_POST["file_download"]))		{$file_download=$_POST["file_download"];}
 
+
+$report_name = 'Groupe utilisateurHorloge en temps Status Report';
+$db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable,timeclock_end_of_day,outbound_autodial_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,webroot_writable,timeclock_end_of_day FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
-	$webroot_writable =				$row[1];
-	$timeclock_end_of_day =			$row[2];
-	$SSoutbound_autodial_active =	$row[3];
+	$SSoutbound_autodial_active =	$row[1];
+	$slave_db_server =				$row[2];
+	$reports_use_slave_db =			$row[3];
+	$webroot_writable =				$row[4];
+	$timeclock_end_of_day =			$row[5];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysql_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect.php");
+	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
+	}
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
@@ -68,13 +89,18 @@ else
 
 $EoDdate = date("Y-m-d H:i:s", $EoD);
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
 if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
-$fp = fopen ("./project_auth_entries.txt", "a");
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
+if ($DB) {$MAIN.="|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$reports_only_user=$row[0];
+
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
@@ -86,35 +112,53 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
     echo "Login ou mot de passe invalide: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
 	}
-else
-	{
-	if($auth>0)
-		{
-			$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$LOGfullname=$row[0];
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
-			}
-		}
-	else
-		{
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
-			fclose($fp);
-			}
-		}
 
+$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+if ($DB) {$MAIN.="|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGuser_group =			$row[0];
+
+$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {$MAIN.="|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns =			$row[0];
+$LOGallowed_reports =			$row[1];
+$LOGadmin_viewable_groups =		$row[2];
+$LOGadmin_viewable_call_times =	$row[3];
+
+if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL RAPPORTS/",$LOGallowed_reports)) )
+	{
+    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("HTTP/1.0 401 Unauthorized");
+    echo "Vous n'êtes pas autorisé à consulter ce rapport: |$PHP_AUTH_USER|$report_name|\n";
+    exit;
 	}
 
+$LOGadmin_viewable_groupsSQL='';
+$whereLOGadmin_viewable_groupsSQL='';
+if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+	{
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+	$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	}
 
-$stmt="select user_group from vicidial_user_groups order by user_group;";
+$LOGadmin_viewable_call_timesSQL='';
+$whereLOGadmin_viewable_call_timesSQL='';
+if ( (!eregi("--ALL--",$LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
+	{
+	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ -/",'',$LOGadmin_viewable_call_times);
+	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_call_timesSQL);
+	$LOGadmin_viewable_call_timesSQL = "and call_time_id IN('---ALL---','$rawLOGadmin_viewable_call_timesSQL')";
+	$whereLOGadmin_viewable_call_timesSQL = "where call_time_id IN('---ALL---','$rawLOGadmin_viewable_call_timesSQL')";
+	}
+
+$stmt="select user_group from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$MAIN.="$stmt\n";}
 $user_groups_to_print = mysql_num_rows($rslt);
 	$i=0;
 	$user_groups_to_print++;
@@ -131,18 +175,17 @@ while ($i < $user_groups_to_print)
 
 if (strlen($user_group) > 0)
 	{
-	$stmt="SELECT group_name from vicidial_user_groups where user_group='$user_group';";
+	$stmt="SELECT group_name from vicidial_user_groups where user_group='$user_group' $LOGadmin_viewable_groupsSQL;";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$group_name = $row[0];
 	}
 
-?>
-<html>
-<head>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>ADMINISTRATION:Horloge en temps Status
-<?php
+$HEADER.="<html>\n";
+$HEADER.="<head>\n";
+$HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
+$HEADER.="<title>ADMINISTRATION: \n";
+$HEADER.="$report_name";
 
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'311111';
@@ -162,45 +205,41 @@ $usergroups_color =		'#E6E6E6';
 $subcamp_color =	'#C6C6C6';
 ##### END Set variables to make header show properly #####
 
-require("admin_header.php");
+# require("admin_header.php");
 
 
 
-?>
-<CENTER>
-<TABLE WIDTH=750 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT>
-<FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Horloge en temps Status for <?php echo $user_group ?></TD><TD ALIGN=RIGHT> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-<?php 
-echo "<a href=\"./timeclock_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2><B>TIMECLOCK REPORT</a> | ";
-echo "<a href=\"./admin.php?ADD=311111&user_group=$user_group\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2><B>GROUPE D'UTILISATEURS</a>\n";
-?>
-</TD></TR>
+$MAIN.="<CENTER>\n";
+$MAIN.="<TABLE WIDTH=750 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT>\n";
+$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2><B>Horloge en temps Status for $user_group</TD><TD ALIGN=RIGHT> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
+$MAIN.="<a href=\"./timeclock_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2><B>TIMECLOCK REPORT</a> | ";
+$MAIN.="<a href=\"./admin.php?ADD=311111&user_group=$user_group\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2><B>GROUPE D'UTILISATEURS</a>\n";
+$MAIN.="</TD></TR>\n";
 
+$MAIN.="<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><B> &nbsp; \n";
 
+$MAIN.="<form action=$PHP_SELF method=GET>\n";
+$MAIN.="<input type=hidden name=DB value=\"$DB\">\n";
+$MAIN.="<select size=1 name=user_group>$FORMuser_groups</select>";
+$MAIN.="<input type=submit name=submit value=submit>\n";
 
-
-<?php 
-
-echo "<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><B> &nbsp; \n";
-
-echo "<form action=$PHP_SELF method=POST>\n";
-echo "<input type=hidden name=DB value=\"$DB\">\n";
-echo "<select size=1 name=user_group>$FORMuser_groups</select>";
-echo "<input type=submit name=submit value=submit>\n";
-
-echo "</B></TD></TR>\n";
-echo "<TR><TD ALIGN=LEFT COLSPAN=2>\n";
-echo "<br><center>\n";
+$MAIN.="</B></TD></TR>\n";
+$MAIN.="<TR><TD ALIGN=LEFT COLSPAN=2>\n";
+$MAIN.="<br><center>\n";
 
 if (strlen($user_group) < 1)
 	{
+	header ("Content-type: text/html; charset=utf-8");
+	echo "$HEADER";
+	require("admin_header.php");
+	echo "$MAIN";
 	exit;
 	}
 
 
 ##### grab all users in this user_group #####
-$stmt="SELECT user,full_name from vicidial_users where user_group='" . mysql_real_escape_string($user_group) . "' order by full_name;";
-if ($DB>0) {echo "|$stmt|";}
+$stmt="SELECT user,full_name from vicidial_users where user_group='" . mysql_real_escape_string($user_group) . "' $LOGadmin_viewable_groupsSQL order by full_name;";
+if ($DB>0) {$MAIN.="|$stmt|";}
 $rslt=mysql_query($stmt, $link);
 $users_to_print = mysql_num_rows($rslt);
 $o=0;
@@ -228,7 +267,7 @@ while ($users_to_print > $o)
 	$total_login_time = 0;
 	##### grab timeclock status record for this user #####
 	$stmt="SELECT event_epoch,event_date,status,ip_address from vicidial_timeclock_status where user='$users[$o]' and event_epoch >= '$EoD';";
-	if ($DB>0) {echo "|$stmt|";}
+	if ($DB>0) {$MAIN.="|$stmt|";}
 	$rslt=mysql_query($stmt, $link);
 	$stats_to_print = mysql_num_rows($rslt);
 	if ($stats_to_print > 0) 
@@ -247,7 +286,7 @@ while ($users_to_print > $o)
 
 	##### grab timeclock logged-in time for each user #####
 	$stmt="SELECT event,event_epoch,login_sec from vicidial_timeclock_log where user='$users[$o]' and event_epoch >= '$EoD';";
-	if ($DB>0) {echo "|$stmt|";}
+	if ($DB>0) {$MAIN.="|$stmt|";}
 	$rslt=mysql_query($stmt, $link);
 	$logs_to_parse = mysql_num_rows($rslt);
 	$p=0;
@@ -291,11 +330,11 @@ while ($users_to_print > $o)
 		$Tlogin_sec[$o] = $total_login_time;
 		}
 
-	if ($DB>0) {echo "|$Tlogin_sec[$o]|$Tlogin_time[$o]|";}
+	if ($DB>0) {$MAIN.="|$Tlogin_sec[$o]|$Tlogin_time[$o]|";}
 
 	##### grab vicidial_agent_log records in this user_group #####
 	$stmt="SELECT event_time,UNIX_TIMESTAMP(event_time),campaign_id from vicidial_agent_log where user='$users[$o]' and event_time >= '$EoDdate' order by agent_log_id desc limit 1;";
-	if ($DB>0) {echo "|$stmt|";}
+	if ($DB>0) {$MAIN.="|$stmt|";}
 	$rslt=mysql_query($stmt, $link);
 	$vals_to_print = mysql_num_rows($rslt);
 	if ($vals_to_print > 0) 
@@ -311,23 +350,26 @@ while ($users_to_print > $o)
 
 
 ##### print each user that has any activity for today #####
-echo "<br>\n";
-echo "<center>\n";
+$MAIN.="<br>\n";
+$MAIN.="<center>\n";
 
-echo "<TABLE width=720 cellspacing=0 cellpadding=1>\n";
-echo "<TR>\n";
-echo "<TD bgcolor=\"#99FF33\"> &nbsp; &nbsp; </TD><TD align=left> TC Logged in and VICI active</TD>\n"; # bright green
-echo "<TD bgcolor=\"#FFFF33\"> &nbsp; &nbsp; </TD><TD align=left> TC Logged in only</TD>\n"; # bright yellow
-echo "<TD bgcolor=\"#FF6666\"> &nbsp; &nbsp; </TD><TD align=left> VICI active only</TD>\n"; # bright red
-echo "</TR><TR>\n";
-echo "<TD bgcolor=\"#66CC66\"> &nbsp; &nbsp; </TD><TD align=left> TC Logged out and VICI active</TD>\n"; # dull green
-echo "<TD bgcolor=\"#CCCC00\"> &nbsp; &nbsp; </TD><TD align=left> TC Logged out only</TD>\n"; # dull yellow
-echo "<TD> &nbsp; &nbsp; </TD><TD align=left> &nbsp; </TD>\n";
-echo "</TR></TABLE><BR>\n";
+$MAIN.="<TABLE width=720 cellspacing=0 cellpadding=1>\n";
+$MAIN.="<TR>\n";
+$MAIN.="<TD bgcolor=\"#99FF33\"> &nbsp; &nbsp; </TD><TD align=left> TC Logged in and VICI active</TD>\n"; # bright green
+$MAIN.="<TD bgcolor=\"#FFFF33\"> &nbsp; &nbsp; </TD><TD align=left> TC Logged in only</TD>\n"; # bright yellow
+$MAIN.="<TD bgcolor=\"#FF6666\"> &nbsp; &nbsp; </TD><TD align=left> VICI active only</TD>\n"; # bright red
+$MAIN.="</TR><TR>\n";
+$MAIN.="<TD bgcolor=\"#66CC66\"> &nbsp; &nbsp; </TD><TD align=left> TC Logged out and VICI active</TD>\n"; # dull green
+$MAIN.="<TD bgcolor=\"#CCCC00\"> &nbsp; &nbsp; </TD><TD align=left> TC Logged out only</TD>\n"; # dull yellow
+$MAIN.="<TD> &nbsp; &nbsp; </TD><TD align=left> &nbsp; </TD>\n";
+$MAIN.="</TR></TABLE><BR>\n";
 
-echo "<B>USER STATUS FOR GROUPE D'UTILISATEURS: $user_group</B>\n";
-echo "<TABLE width=700 cellspacing=0 cellpadding=1>\n";
-echo "<tr><td><font size=2># </td><td><font size=2>USER </td><td align=left><font size=2>NAME </td><td align=right><font size=2> IP ADDRESS</td><td align=right><font size=2> TC TIME</td><td align=right><font size=2>TC LOGIN</td><td align=right><font size=2> VICI LAST LOG</td><td align=right><font size=2> VICI CAMPAIGN</td></tr>\n";
+$MAIN.="<B>USER STATUS FOR GROUPE D'UTILISATEURS: $user_group &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$PHP_SELF?DB=$DB&user_group=$user_group&submit=$submit&file_download=1'>[TÉLÉCHARGER]</a></B>\n";
+$MAIN.="<TABLE width=700 cellspacing=0 cellpadding=1>\n";
+$MAIN.="<tr><td><font size=2># </td><td><font size=2>USER </td><td align=left><font size=2>NAME </td><td align=right><font size=2> IP ADDRESS</td><td align=right><font size=2> TC TIME</td><td align=right><font size=2>TC LOGIN</td><td align=right><font size=2> VICI LAST LOG</td><td align=right><font size=2> VICI CAMPAIGN</td></tr>\n";
+
+$CSV_text.="\"USER STATUS FOR GROUPE D'UTILISATEURS: $user_group\"\n";
+$CSV_text.="\"\",\"#\",\"USER\",\"NAME\",\"STATUS\",\"IP ADDRESS\",\"TC TIME\",\"TC LOGIN\",\"VICI LAST LOG\",\"VICI CAMPAIGN\"\n";
 
 $o=0;
 $s=0;
@@ -338,31 +380,33 @@ while ($users_to_print > $o)
 		if ( ($Tstatus[$o]=='START') or ($Tstatus[$o]=='LOGIN') )
 			{
 			if ($Tlogin_sec[$o] > 0)
-				{$bgcolor[$o]='bgcolor="#FFFF33"';} # yellow
+				{$bgcolor[$o]='bgcolor="#FFFF33"'; $CSV_status="TC Logged in only";} # yellow
 			if ( ($Tlogin_sec[$o] > 0) and (strlen($Vevent_time[$o]) > 0) )
-				{$bgcolor[$o]='bgcolor="#99FF33"';} # green
+				{$bgcolor[$o]='bgcolor="#99FF33"'; $CSV_status="TC Logged in and VICI active";} # green
 			}
 		else
 			{
 			if ($Tlogin_sec[$o] > 0)
-				{$bgcolor[$o]='bgcolor="#CCCC00"';} # yellow
+				{$bgcolor[$o]='bgcolor="#CCCC00"'; $CSV_status="TC Logged out only";} # yellow
 			if (strlen($Vevent_time[$o]) > 0)
-				{$bgcolor[$o]='bgcolor="#FF6666"';} # red
+				{$bgcolor[$o]='bgcolor="#FF6666"'; $CSV_status="VICI active only";} # red
 			if ( ($Tlogin_sec[$o] > 0) and (strlen($Vevent_time[$o]) > 0) )
-				{$bgcolor[$o]='bgcolor="#66CC66"';} # green
+				{$bgcolor[$o]='bgcolor="#66CC66"'; $CSV_status="TC Logged out and VICI active";} # green
 			}
 
 		$s++;
-		echo "<tr $bgcolor[$o]>";
-		echo "<td><font size=1>$s</td>";
-		echo "<td><font size=2><a href=\"./user_status.php?user=$users[$o]\">$users[$o]</a></td>";
-		echo "<td><font size=2>$full_name[$o]</td>";
-		echo "<td><font size=2>$Tip_address[$o]</td>";
-		echo "<td align=right><font size=2>$Tlogin_time[$o]</td>";
-		echo "<td align=right><font size=2>$Tevent_time[$o]</td>";
-		echo "<td align=right><font size=2>$Vevent_time[$o]</td>";
-		echo "<td align=right><font size=2>$Vcampaign[$o]</td>";
-		echo "</tr>";
+		$MAIN.="<tr $bgcolor[$o]>";
+		$MAIN.="<td><font size=1>$s</td>";
+		$MAIN.="<td><font size=2><a href=\"./user_status.php?user=$users[$o]\">$users[$o]</a></td>";
+		$MAIN.="<td><font size=2>$full_name[$o]</td>";
+		$MAIN.="<td><font size=2>$Tip_address[$o]</td>";
+		$MAIN.="<td align=right><font size=2>$Tlogin_time[$o]</td>";
+		$MAIN.="<td align=right><font size=2>$Tevent_time[$o]</td>";
+		$MAIN.="<td align=right><font size=2>$Vevent_time[$o]</td>";
+		$MAIN.="<td align=right><font size=2>$Vcampaign[$o]</td>";
+		$MAIN.="</tr>";
+
+		$CSV_text.="\"\",\"$s\",\"$users[$o]\",\"$full_name[$o]\",\"$CSV_status\",\"$Tip_address[$o]\",\"$Tlogin_time[$o]\",\"$Tevent_time[$o]\",\"$Vevent_time[$o]\",\"$Vcampaign[$o]\"\n";
 
 		if (strlen($Tstatus[$o])>0)
 			{$TOTlogin_sec = ($TOTlogin_sec + $Tlogin_sec[$o]);}
@@ -380,36 +424,61 @@ $total_login_minutes = ($total_login_minutes * 60);
 $total_login_minutes_int = round($total_login_minutes, 0);
 if ($total_login_minutes_int < 10) {$total_login_minutes_int = "0$total_login_minutes_int";}
 
-echo "<tr bgcolor=white>";
-echo "<td colspan=4><font size=2>TOTALS</td>";
-echo "<td align=right><font size=2>$total_login_hours_int:$total_login_minutes_int</td>";
-echo "<td align=right><font size=2></td>";
-echo "<td align=right><font size=2></td>";
-echo "<td align=right><font size=2></td>";
-echo "</tr>";
-echo "</table>";
+$MAIN.="<tr bgcolor=white>";
+$MAIN.="<td colspan=4><font size=2>TOTALS</td>";
+$MAIN.="<td align=right><font size=2>$total_login_hours_int:$total_login_minutes_int</td>";
+$MAIN.="<td align=right><font size=2></td>";
+$MAIN.="<td align=right><font size=2></td>";
+$MAIN.="<td align=right><font size=2></td>";
+$MAIN.="</tr>";
+$MAIN.="</table>";
 
-
+$CSV_text.="\"\",\"TOTALS\",\"\",\"\",\"\",\"\",\"$total_login_hours_int:$total_login_minutes_int\"\n";
 
 
 $ENDtime = date("U");
 
 $RUNtime = ($ENDtime - $STARTtime);
 
-echo "\n\n\n<br><br><br>\n\n";
+$MAIN.="\n\n\n<br><br><br>\n\n";
 
 
-echo "<font size=0>\n\n\n<br><br><br>\ntemps d'exécution du script: $RUNtime seconds</font>";
+$MAIN.="<font size=0>\n\n\n<br><br><br>\ntemps d'exécution du script: $RUNtime seconds|$db_source</font>";
+
+$MAIN.="</TD></TR><TABLE>\n";
+$MAIN.="</body>\n";
+$MAIN.="</html>\n";
+
+if ($file_download > 0)
+	{
+	$FILE_TIME = date("Ymd-His");
+	$CSVfilename = "timeclock_status_$US$FILE_TIME.csv";
+	$CSV_text=preg_replace('/ +\"/', '"', $CSV_text);
+	$CSV_text=preg_replace('/\" +/', '"', $CSV_text);
+	// We'll be outputting a TXT file
+	header('Content-type: application/octet-stream');
+
+	// It will be called LIST_101_20090209-121212.txt
+	header("Content-Disposition: attachment; filename=\"$CSVfilename\"");
+	header('Expires: 0');
+	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+	header('Pragma: public');
+	ob_clean();
+	flush();
+
+	echo "$CSV_text";
+
+	exit;
+	}
+	else 
+	{
+	header ("Content-type: text/html; charset=utf-8");
+	echo "$HEADER";
+	require("admin_header.php");
+	echo "$MAIN";
+	}
 
 
-?>
-
-
-</TD></TR><TABLE>
-</body>
-</html>
-
-<?php
 exit;
 
 
@@ -429,16 +498,16 @@ $EQday_ARY =	explode('-',$end_date);
 $SQepoch = mktime(0, 0, 0, $SQday_ARY[1], $SQday_ARY[2], $SQday_ARY[0]);
 $EQepoch = mktime(23, 59, 59, $EQday_ARY[1], $EQday_ARY[2], $EQday_ARY[0]);
 
-echo "<br><br>\n";
+$MAIN.="<br><br>\n";
 
-echo "<center>\n";
+$MAIN.="<center>\n";
 
-echo "<B>TIMECLOCK HEURE DE CONNECTION/DECONNECTION:</B>\n";
-echo "<TABLE width=550 cellspacing=0 cellpadding=1>\n";
-echo "<tr><td><font size=2>ID </td><td><font size=2>EDIT </td><td align=right><font size=2>EVENEMENT</td><td align=right><font size=2> DATE</td><td align=right><font size=2> IP ADDRESS</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HEURES:MINUTES</td></tr>\n";
+$MAIN.="<B>TIMECLOCK HEURE DE CONNECTION/DECONNECTION:</B>\n";
+$MAIN.="<TABLE width=550 cellspacing=0 cellpadding=1>\n";
+$MAIN.="<tr><td><font size=2>ID </td><td><font size=2>EDIT </td><td align=right><font size=2>EVENEMENT</td><td align=right><font size=2> DATE</td><td align=right><font size=2> IP ADDRESS</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HEURES:MINUTES</td></tr>\n";
 
 	$stmt="SELECT event,event_epoch,user_group,login_sec,ip_address,timeclock_id,manager_user from vicidial_timeclock_log where user='" . mysql_real_escape_string($user) . "' and event_epoch >= '$SQepoch'  and event_epoch <= '$EQepoch';";
-	if ($DB>0) {echo "|$stmt|";}
+	if ($DB>0) {$MAIN.="|$stmt|";}
 	$rslt=mysql_query($stmt, $link);
 	$events_to_print = mysql_num_rows($rslt);
 
@@ -459,13 +528,13 @@ echo "<tr><td><font size=2>ID </td><td><font size=2>EDIT </td><td align=right><f
 		if (ereg("LOGIN", $row[0]))
 			{
 			$login_sec='';
-			echo "<tr $bgcolor><td><font size=2>$row[5]</td>";
-			echo "<td align=right><font size=2>$manager_edit</td>";
-			echo "<td align=right><font size=2>$row[0]</td>";
-			echo "<td align=right><font size=2> $TC_log_date</td>\n";
-			echo "<td align=right><font size=2> $row[4]</td>\n";
-			echo "<td align=right><font size=2> $row[2]</td>\n";
-			echo "<td align=right><font size=2> </td></tr>\n";
+			$MAIN.="<tr $bgcolor><td><font size=2>$row[5]</td>";
+			$MAIN.="<td align=right><font size=2>$manager_edit</td>";
+			$MAIN.="<td align=right><font size=2>$row[0]</td>";
+			$MAIN.="<td align=right><font size=2> $TC_log_date</td>\n";
+			$MAIN.="<td align=right><font size=2> $row[4]</td>\n";
+			$MAIN.="<td align=right><font size=2> $row[2]</td>\n";
+			$MAIN.="<td align=right><font size=2> </td></tr>\n";
 			}
 		if (ereg("LOGOUT", $row[0]))
 			{
@@ -478,13 +547,13 @@ echo "<tr><td><font size=2>ID </td><td><font size=2>EDIT </td><td align=right><f
 			$event_minutes = ($event_minutes * 60);
 			$event_minutes_int = round($event_minutes, 0);
 			if ($event_minutes_int < 10) {$event_minutes_int = "0$event_minutes_int";}
-			echo "<tr $bgcolor><td><font size=2>$row[5]</td>";
-			echo "<td align=right><font size=2>$manager_edit</td>";
-			echo "<td align=right><font size=2>$row[0]</td>";
-			echo "<td align=right><font size=2> $TC_log_date</td>\n";
-			echo "<td align=right><font size=2> $row[4]</td>\n";
-			echo "<td align=right><font size=2> $row[2]</td>\n";
-			echo "<td align=right><font size=2> $event_hours_int:$event_minutes_int</td></tr>\n";
+			$MAIN.="<tr $bgcolor><td><font size=2>$row[5]</td>";
+			$MAIN.="<td align=right><font size=2>$manager_edit</td>";
+			$MAIN.="<td align=right><font size=2>$row[0]</td>";
+			$MAIN.="<td align=right><font size=2> $TC_log_date</td>\n";
+			$MAIN.="<td align=right><font size=2> $row[4]</td>\n";
+			$MAIN.="<td align=right><font size=2> $row[2]</td>\n";
+			$MAIN.="<td align=right><font size=2> $event_hours_int:$event_minutes_int</td></tr>\n";
 			}
 		$o++;
 	}
@@ -501,14 +570,14 @@ $total_login_minutes = ($total_login_minutes * 60);
 $total_login_minutes_int = round($total_login_minutes, 0);
 if ($total_login_minutes_int < 10) {$total_login_minutes_int = "0$total_login_minutes_int";}
 
-echo "<tr><td align=right><font size=2> </td>";
-echo "<td align=right><font size=2> </td>\n";
-echo "<td align=right><font size=2> </td>\n";
-echo "<td align=right><font size=2> </td>\n";
-echo "<td align=right><font size=2><font size=2>TOTAL </td>\n";
-echo "<td align=right><font size=2> $total_login_hours_int:$total_login_minutes_int  </td></tr>\n";
+$MAIN.="<tr><td align=right><font size=2> </td>";
+$MAIN.="<td align=right><font size=2> </td>\n";
+$MAIN.="<td align=right><font size=2> </td>\n";
+$MAIN.="<td align=right><font size=2> </td>\n";
+$MAIN.="<td align=right><font size=2><font size=2>TOTAL </td>\n";
+$MAIN.="<td align=right><font size=2> $total_login_hours_int:$total_login_minutes_int  </td></tr>\n";
 
-echo "</TABLE></center>\n";
+$MAIN.="</TABLE></center>\n";
 
 
 
@@ -520,20 +589,15 @@ $ENDtime = date("U");
 
 $RUNtime = ($ENDtime - $STARTtime);
 
-echo "\n\n\n<br><br><br>\n\n";
+$MAIN.="\n\n\n<br><br><br>\n\n";
 
 
-echo "<font size=0>\n\n\n<br><br><br>\ntemps d'exécution du script: $RUNtime seconds</font>";
+$MAIN.="<font size=0>\n\n\n<br><br><br>\ntemps d'exécution du script: $RUNtime seconds|$db_source</font>";
 
+$MAIN.="</TD></TR><TABLE>\n";
+$MAIN.="</body>\n";
+$MAIN.="</html>\n";
 
-?>
-
-
-</TD></TR><TABLE>
-</body>
-</html>
-
-<?php
 	
 exit; 
 

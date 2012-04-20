@@ -1,7 +1,7 @@
 <?php
 # group_hourly_stats.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -9,6 +9,8 @@
 #            - Added required user/pass to gain access to this page
 # 90310-2138 - Added admin header
 # 90508-0644 - Changed to PHP long tags
+# 120221-0159 - Added User Group restrictions
+# 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 #
 
 require("dbconnect.php");
@@ -56,7 +58,7 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $auth=$row[0];
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
     Header("HTTP/1.0 401 Unauthorized");
@@ -75,10 +77,10 @@ if (!isset($date_with_hour)) {$date_with_hour = $date_with_hour_default;}
 if (!isset($begin_date)) {$begin_date = $TODAY;}
 if (!isset($end_date)) {$end_date = $TODAY;}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7;";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7;";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$auth=$row[0];
 
 $fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
@@ -100,17 +102,26 @@ $browser = getenv("HTTP_USER_AGENT");
 		{
 		$office_no=strtoupper($PHP_AUTH_USER);
 		$password=strtoupper($PHP_AUTH_PW);
-			$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$LOGfullname=$row[0];
-		fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
-		fclose($fp);
+		$stmt="SELECT full_name,user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$LOGfullname =		$row[0];
+		$LOGuser_group =	$row[1];
+
+		if ($webroot_writable > 0)
+			{
+			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
+			fclose($fp);
+			}
 		}
 	else
 		{
-		fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
-		fclose($fp);
+		if ($webroot_writable > 0)
+			{
+			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
+			fclose($fp);
+			}
+		exit;
 		}
 
 #	$stmt="SELECT full_name from vicidial_users where user='$user';";
@@ -120,6 +131,24 @@ $browser = getenv("HTTP_USER_AGENT");
 
 	}
 
+$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {$HTML_text.="|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns =			$row[0];
+$LOGallowed_reports =			$row[1];
+$LOGadmin_viewable_groups =		$row[2];
+$LOGadmin_viewable_call_times =	$row[3];
+
+$LOGadmin_viewable_groupsSQL='';
+$whereLOGadmin_viewable_groupsSQL='';
+if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+	{
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+	$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	}
 
 
 
@@ -163,41 +192,41 @@ require("admin_header.php");
 
 if ( ($group) and ($status) and ($date_with_hour) )
 {
-$stmt="SELECT user,full_name from vicidial_users where user_group = '" . mysql_real_escape_string($group) . "' order by full_name desc;";
+$stmt="SELECT user,full_name from vicidial_users where user_group = '" . mysql_real_escape_string($group) . "' $LOGadmin_viewable_groupsSQL order by full_name desc;";
 	if ($DB) {echo "$stmt\n";}
 $rslt=mysql_query($stmt, $link);
 $tsrs_to_print = mysql_num_rows($rslt);
 	$o=0;
 	while($o < $tsrs_to_print)
-	{
+		{
 		$row=mysql_fetch_row($rslt);
 		$VDuser[$o] = "$row[0]";
 		$VDname[$o] = "$row[1]";
 		$o++;
-	}
+		}
 
 	$o=0;
 	while($o < $tsrs_to_print)
-	{
-		$stmt="select count(*) from vicidial_log where call_date >= '" . mysql_real_escape_string($date_with_hour) . ":00:00' and  call_date <= '" . mysql_real_escape_string($date_with_hour) . ":59:59' and user='$VDuser[$o]';";
+		{
+		$stmt="select count(*) from vicidial_log where call_date >= '" . mysql_real_escape_string($date_with_hour) . ":00:00' and  call_date <= '" . mysql_real_escape_string($date_with_hour) . ":59:59' and user='$VDuser[$o]' $LOGadmin_viewable_groupsSQL;";
 			if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$VDtotal[$o] = "$row[0]";
 
-		$stmt="select count(*) from vicidial_log where call_date >= '" . mysql_real_escape_string($date_no_hour) . " 00:00:00' and  call_date <= '" . mysql_real_escape_string($date_no_hour) . " 23:59:59' and user='$VDuser[$o]' and status='" . mysql_real_escape_string($status) . "';";
+		$stmt="select count(*) from vicidial_log where call_date >= '" . mysql_real_escape_string($date_no_hour) . " 00:00:00' and  call_date <= '" . mysql_real_escape_string($date_no_hour) . " 23:59:59' and user='$VDuser[$o]' and status='" . mysql_real_escape_string($status) . "' $LOGadmin_viewable_groupsSQL;";
 			if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$VDday[$o] = "$row[0]";
 
-		$stmt="select count(*) from vicidial_log where call_date >= '" . mysql_real_escape_string($date_with_hour) . ":00:00' and  call_date <= '" . mysql_real_escape_string($date_with_hour) . ":59:59' and user='$VDuser[$o]' and status='" . mysql_real_escape_string($status) . "';";
+		$stmt="select count(*) from vicidial_log where call_date >= '" . mysql_real_escape_string($date_with_hour) . ":00:00' and  call_date <= '" . mysql_real_escape_string($date_with_hour) . ":59:59' and user='$VDuser[$o]' and status='" . mysql_real_escape_string($status) . "' $LOGadmin_viewable_groupsSQL;";
 			if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$VDcount[$o] = "$row[0]";
 		$o++;
-	}
+		}
 
 echo "<TR><TD ALIGN=LEFT COLSPAN=2>\n";
 
@@ -213,7 +242,7 @@ echo "<tr><td><font size=2>TSR </td><td align=left><font size=2>ID </td><td alig
 	$total_calls=0;
 	$o=0;
 	while($o < $tsrs_to_print)
-	{
+		{
 		if (eregi("1$|3$|5$|7$|9$", $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
@@ -229,39 +258,40 @@ echo "<tr><td><font size=2>TSR </td><td align=left><font size=2>ID </td><td alig
 		$day_calls = ($day_calls + $VDday[$o]);
 
 		$o++;
+		}
+
+	echo "<tr><td><font size=2>TOTAL </td><td align=right><font size=2> $status </td><td align=right><font size=2> $hour_calls</td><td align=right><font size=2> $total_calls</td><td align=right><font size=2> $day_calls</td></tr>\n";
+
+
 	}
-
-echo "<tr><td><font size=2>TOTAL </td><td align=right><font size=2> $status </td><td align=right><font size=2> $hour_calls</td><td align=right><font size=2> $total_calls</td><td align=right><font size=2> $day_calls</td></tr>\n";
-
-
-}
 
 echo "</TABLE></center>\n";
 echo "<br><br>\n";
 
 
-	echo "<br>Por favor entre com o grupo que deseja visualizar estatísticas horárias: <form action=$PHP_SELF method=POST>\n";
-	echo "<input type=hidden name=DB value=$DB>\n";
-	echo "group: <select size=1 name=group>\n";
+echo "<br>Por favor entre com o grupo que deseja visualizar estatísticas horárias: <form action=$PHP_SELF method=POST>\n";
+echo "<input type=hidden name=DB value=$DB>\n";
+echo "group: <select size=1 name=group>\n";
 
-		$stmt="SELECT user_group,group_name from vicidial_user_groups order by user_group";
-		$rslt=mysql_query($stmt, $link);
-		$groups_to_print = mysql_num_rows($rslt);
-		$o=0;
-		$groups_list='';
-		while ($groups_to_print > $o) {
-			$rowx=mysql_fetch_row($rslt);
-			if ($group == $group)
-				{$groups_list .= "<option selected value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
-			else
-				{$groups_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
-			$o++;
-		}
-	echo "$groups_list</select><br>\n";
-	echo "status: <input type=text name=status size=10 maxlength=10 value=\"$status\"> &nbsp; (example: XFER)<br>\n";
-	echo "date with hour: <input type=text name=date_with_hour size=14 maxlength=13 value=\"$date_with_hour\"> &nbsp; (example: 2004-06-25 14)<br>\n";
-	echo "<input type=submit name=submit value=ENVIAR>\n";
-	echo "<BR><BR><BR>\n";
+$stmt="SELECT user_group,group_name from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group";
+$rslt=mysql_query($stmt, $link);
+$groups_to_print = mysql_num_rows($rslt);
+$o=0;
+$groups_list='';
+while ($groups_to_print > $o) 
+	{
+	$rowx=mysql_fetch_row($rslt);
+	if ($group == $group)
+		{$groups_list .= "<option selected value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
+	else
+		{$groups_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
+	$o++;
+	}
+echo "$groups_list</select><br>\n";
+echo "status: <input type=text name=status size=10 maxlength=10 value=\"$status\"> &nbsp; (example: XFER)<br>\n";
+echo "date with hour: <input type=text name=date_with_hour size=14 maxlength=13 value=\"$date_with_hour\"> &nbsp; (example: 2004-06-25 14)<br>\n";
+echo "<input type=submit name=submit value=ENVIAR>\n";
+echo "<BR><BR><BR>\n";
 
 
 $ENDtime = date("U");
@@ -285,11 +315,4 @@ echo "<font size=0>\n\n\n<br><br><br>\nScript runtime: $RUNtime seconds</font>";
 	
 exit; 
 
-
-
 ?>
-
-
-
-
-
