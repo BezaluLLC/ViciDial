@@ -2681,7 +2681,7 @@ INSERT INTO vicidial_inbound_groups(group_id,group_name,group_color,active,queue
 INSERT INTO vicidial_lists SET list_id='999',list_name='Default inbound list',campaign_id='TESTCAMP',active='N';
 INSERT INTO vicidial_lists SET list_id='998',list_name='Default Manual list',campaign_id='TESTCAMP',active='N';
 
-INSERT INTO system_settings (version,install_date,first_login_trigger) values('2.4b0.5', CURDATE(), 'Y');
+INSERT INTO system_settings (version,install_date,first_login_trigger) values('2.6b0.5', CURDATE(), 'Y');
 
 INSERT INTO vicidial_status_categories (vsc_id,vsc_name) values('UNDEFINED','Default Category');
 
@@ -2809,7 +2809,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1316',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1318',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

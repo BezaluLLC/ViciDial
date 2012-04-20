@@ -377,10 +377,11 @@
 # 120223-2119 - Removed logging of good login passwords if webroot writable is enabled
 # 120308-1617 - Added compatibility for DAHDI phones using asterisk version for server > 1.4.21.2
 # 120403-1204 - Fixed issue with MANUAL dial method hotkeys, added 1 second delay
+# 120420-1621 - Forked 2.4 to branches, changing trunk to 2.6
 #
 
-$version = '2.4-344c';
-$build = '120403-1204';
+$version = '2.6-345c';
+$build = '120420-1621';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=75;
 $one_mysql_log=0;

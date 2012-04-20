@@ -3046,12 +3046,13 @@ else
 # 120316-1203 - Fixed DIALBLE counts for completed statuses
 # 120402-2111 - Added lead loading template and two carrier log reports to the admin utils page
 # 120409-1136 - Added Search Leads Logs as slave db option
+# 120420-1620 - Forked 2.4 to branches, changing trunk to 2.6
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.4-364a';
-$build = '120409-1136';
+$admin_version = '2.6-365a';
+$build = '120420-1620';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
