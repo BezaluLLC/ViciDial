@@ -378,10 +378,11 @@
 # 120308-1617 - Added compatibility for DAHDI phones using asterisk version for server > 1.4.21.2
 # 120403-1204 - Fixed issue with MANUAL dial method hotkeys, added 1 second delay
 # 120420-1621 - Forked 2.4 to branches, changing trunk to 2.6
+# 120427-1718 - Fixed 3-way logging issue
 #
 
-$version = '2.6-345c';
-$build = '120420-1621';
+$version = '2.6-347c';
+$build = '120427-1718';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=75;
 $one_mysql_log=0;
@@ -6021,7 +6022,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			}
 		if (xmlhttp) 
 			{ 
-			manDiaLlook_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLlookCaLL&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&MDnextCID=" + CIDcheck + "&agent_log_id=" + agent_log_id + "&lead_id=" + document.vicidial_form.lead_id.value + "&DiaL_SecondS=" + MD_ring_secondS;
+			manDiaLlook_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLlookCaLL&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&MDnextCID=" + CIDcheck + "&agent_log_id=" + agent_log_id + "&lead_id=" + document.vicidial_form.lead_id.value + "&DiaL_SecondS=" + MD_ring_secondS + "&stage=" + taskCheckOR;
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(manDiaLlook_query); 

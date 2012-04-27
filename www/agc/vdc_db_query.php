@@ -304,10 +304,11 @@
 # 120104-2031 - Fixed missing fullname variable before dispo and start URLs
 # 120213-1700 - Added vendor_lead_code to all vicidial_hopper inserts
 # 120221-2125 - Manual dials update lastcalldate, and other small changes
+# 120427-1717 - Fixed 3-way logging issue
 #
 
-$version = '2.4-204';
-$build = '120221-2125';
+$version = '2.4-205';
+$build = '120427-1717';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=438;
 $one_mysql_log=0;
@@ -3326,31 +3327,33 @@ if ($ACTION == 'manDiaLlookCaLL')
 
 		if ($call_good > 0)
 			{
-			$wait_sec=0;
-			$dead_epochSQL = '';
-			$stmt = "SELECT wait_epoch,wait_sec,dead_epoch from vicidial_agent_log where agent_log_id='$agent_log_id';";
-			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00053',$user,$server_ip,$session_name,$one_mysql_log);}
-			$VDpr_ct = mysql_num_rows($rslt);
-			if ($VDpr_ct > 0)
+			if ($stage != "YES")
 				{
-				$row=mysql_fetch_row($rslt);
-				$wait_sec = (($StarTtime - $row[0]) + $row[1]);
-				$now_dead_epoch = $row[2];
-				if ( ($now_dead_epoch > 1000) and ($now_dead_epoch < $StarTtime) )
-					{$dead_epochSQL = ",dead_epoch='$StarTtime'";}
+				$wait_sec=0;
+				$dead_epochSQL = '';
+				$stmt = "SELECT wait_epoch,wait_sec,dead_epoch from vicidial_agent_log where agent_log_id='$agent_log_id';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00053',$user,$server_ip,$session_name,$one_mysql_log);}
+				$VDpr_ct = mysql_num_rows($rslt);
+				if ($VDpr_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$wait_sec = (($StarTtime - $row[0]) + $row[1]);
+					$now_dead_epoch = $row[2];
+					if ( ($now_dead_epoch > 1000) and ($now_dead_epoch < $StarTtime) )
+						{$dead_epochSQL = ",dead_epoch='$StarTtime'";}
+					}
+				$stmt="UPDATE vicidial_agent_log set wait_sec='$wait_sec',talk_epoch='$StarTtime',lead_id='$lead_id' $dead_epochSQL where agent_log_id='$agent_log_id';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00054',$user,$server_ip,$session_name,$one_mysql_log);}
+
+				$stmt="UPDATE vicidial_auto_calls set uniqueid='$uniqueid',channel='$channel' where callerid='$MDnextCID';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00055',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
-			$stmt="UPDATE vicidial_agent_log set wait_sec='$wait_sec',talk_epoch='$StarTtime',lead_id='$lead_id' $dead_epochSQL where agent_log_id='$agent_log_id';";
-				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00054',$user,$server_ip,$session_name,$one_mysql_log);}
-
-			$stmt="UPDATE vicidial_auto_calls set uniqueid='$uniqueid',channel='$channel' where callerid='$MDnextCID';";
-				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00055',$user,$server_ip,$session_name,$one_mysql_log);}
-
 			$stmt="UPDATE call_log set uniqueid='$uniqueid',channel='$channel' where caller_code='$MDnextCID';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
