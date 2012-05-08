@@ -36,6 +36,7 @@
 # 110504-0737 - Small bug fix in agent log corrections
 # 111208-0627 - Added concurrency check option
 # 120123-0925 - Added vicidial_log duplicate check
+# 120426-1622 - Added agent log park fix
 #
 
 # constants
@@ -69,6 +70,7 @@ if (length($ARGV[0])>1)
 		print "  [-only-qm-live-call-check] = will only check the queue_log calls that report as live, in ViciDial\n";
 		print "  [-only-fix-old-lagged] = will go through old lagged entries and add a new entry after\n";
 		print "  [-only-dedupe-vicidial-log] = will look for duplicate vicidial_log and extended entries\n";
+		print "  [-only-hold-cleanup] = will look for hold entries and correct agent log wait/talk times\n";
 		print "  [-run-check] = concurrency check, die if another instance is running\n";
 		print "  [-q] = quiet, no output\n";
 		print "  [-test] = test\n";
@@ -169,6 +171,11 @@ if (length($ARGV[0])>1)
 			$fix_old_lagged_entries=1;
 			if ($Q < 1) {print "\n----- FIX OLD LAGGED ENTRIES ONLY -----\n\n";}
 			}
+		if ($args =~ /-only-hold-cleanup/i)
+			{
+			$hold_cleanup=1;
+			if ($Q < 1) {print "\n----- FIX HOLD ENTRIES ONLY -----\n\n";}
+			}
 		if ($args =~ /-run-check/i)
 			{
 			$run_check=1;
@@ -220,6 +227,7 @@ if ($Tsec < 10) {$Tsec = "0$Tsec";}
 $VDAD_SQL_time = "and event_time > \"$TDSQLdate\" and event_time < \"$FDSQLdate\"";
 $VDCL_SQL_time = "and call_date > \"$TDSQLdate\" and call_date < \"$FDSQLdate\"";
 $VDCL_SQL_time_where = "where call_date > \"$TDSQLdate\" and call_date < \"$FDSQLdate\"";
+$VDP_SQL_time = "and parked_time > \"$TDSQLdate\" and parked_time < \"$FDSQLdate\"";
 $QM_SQL_time = "and time_id > $TDtarget and time_id < $FDtarget";
 $QM_SQL_time_H = "and time_id > $TDtarget and time_id < $HDtarget";
 
@@ -246,6 +254,7 @@ if ($ONE_MINUTE > 0)
 	$VDAD_SQL_time = "and event_time < \"$MDSQLdate\" and event_time > \"$TDSQLdate\"";
 	$VDCL_SQL_time = "and call_date < \"$MDSQLdate\" and call_date > \"$TDSQLdate\"";
 	$VDCL_SQL_time_where = "where call_date < \"$MDSQLdate\" and call_date > \"$TDSQLdate\"";
+	$VDP_SQL_time = "and parked_time > \"$TDSQLdate\" and parked_time < \"$MDSQLdate\"";
 	$QM_SQL_time = "and time_id < $MDtarget and time_id > $TDtarget";
 	$QM_SQL_time_H = "and time_id < $MDtarget and time_id > $TDtarget";
 	}
@@ -265,6 +274,7 @@ if ($TWENTYFOUR_HOURS > 0)
 	$VDAD_SQL_time = "and event_time > \"$TDSQLdate\" and event_time < \"$FDSQLdate\"";
 	$VDCL_SQL_time = "and call_date > \"$TDSQLdate\" and call_date < \"$FDSQLdate\"";
 	$VDCL_SQL_time_where = "where call_date > \"$TDSQLdate\" and call_date < \"$FDSQLdate\"";
+	$VDP_SQL_time = "and parked_time > \"$TDSQLdate\" and parked_time < \"$FDSQLdate\"";
 	$QM_SQL_time = "and time_id > $TDtarget and time_id < $FDtarget";
 	$QM_SQL_time_H = "and time_id > $TDtarget and time_id < $HDtarget";
 	}
@@ -295,6 +305,7 @@ if ($ONEDAYAGO > 0)
 	$VDAD_SQL_time = "and event_time > \"$KDSQLdate\" and event_time < \"$TDSQLdate\"";
 	$VDCL_SQL_time = "and call_date > \"$KDSQLdate\" and call_date < \"$TDSQLdate\"";
 	$VDCL_SQL_time_where = "where call_date > \"$KDSQLdate\" and call_date < \"$TDSQLdate\"";
+	$VDP_SQL_time = "and parked_time > \"$KDSQLdate\" and parked_time < \"$TDSQLdate\"";
 	$QM_SQL_time = "and time_id > $KDtarget and time_id < $TDtarget";
 	$QM_SQL_time_H = "and time_id > $KDtarget and time_id < $TDtarget";
 	}
@@ -314,6 +325,7 @@ if ($TWENTYFOUR_OLDER > 0)
 	$VDAD_SQL_time = "and event_time < \"$TDSQLdate\"";
 	$VDCL_SQL_time = "and call_date < \"$TDSQLdate\"";
 	$VDCL_SQL_time_where = "where call_date < \"$TDSQLdate\"";
+	$VDP_SQL_time = "and parked_time < \"$TDSQLdate\"";
 	$QM_SQL_time = "and time_id < $TDtarget";
 	$QM_SQL_time_H = "and time_id < $TDtarget";
 	}
@@ -333,6 +345,7 @@ if ($THIRTY_DAYS > 0)
 	$VDAD_SQL_time = "and event_time > \"$TDSQLdate\" and event_time < \"$FDSQLdate\"";
 	$VDCL_SQL_time = "and call_date > \"$TDSQLdate\" and call_date < \"$FDSQLdate\"";
 	$VDCL_SQL_time_where = "where call_date > \"$TDSQLdate\" and call_date < \"$FDSQLdate\"";
+	$VDP_SQL_time = "and parked_time > \"$TDSQLdate\" and parked_time < \"$FDSQLdate\"";
 	$QM_SQL_time = "and time_id > $TDtarget and time_id < $FDtarget";
 	$QM_SQL_time_H = "and time_id > $TDtarget and time_id < $HDtarget";
 	}
@@ -422,6 +435,136 @@ if ($sthArows > 0)
 $sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
 ###########################################
+
+
+##### BEGIN hold entries process (not recurring process, only run once) #####
+### NOTE: after running with this flag, you need to run without this flag to recalculate wait_sec and talk_sec of affected records
+if ($hold_cleanup > 0)
+	{
+	if ($DBX) {print "\n\n";}
+	if ($DB) {print " - starting validation of on-hold entries\n";}
+	$total_corrected_records=0;
+	$total_scanned_records=0;
+	$total_bad_records=0;
+	$total_good=0;
+	$total_pause=0;
+	$total_wait=0;
+	$total_talk=0;
+	$total_dispo=0;
+	$total_dead=0;
+
+	### Gather distinct users in vicidial_agent_log during time period
+	$stmtA = "SELECT user,parked_time,UNIX_TIMESTAMP(parked_time),parked_sec,lead_id,uniqueid from park_log where parked_sec > 0 $VDP_SQL_time;";
+	if ($DBX) {print "$stmtA\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArowsU=$sthA->rows;
+
+	$i=0;
+	while ($sthArowsU > $i)
+		{
+		@aryA = $sthA->fetchrow_array;	
+		$Vuser[$i] =		$aryA[0];
+		$Vpark_time[$i] =	$aryA[1];
+		$Vpark_epoch[$i] =	$aryA[2];
+		$Vpark_sec[$i] =	$aryA[3];
+		$Vlead_id[$i] =		$aryA[4];
+		$Vuniqueid[$i] = 	$aryA[5];
+		$i++;
+		}
+	$sthA->finish();
+
+	$i=0;
+	while ($sthArowsU > $i)
+		{
+		### Gather distinct users in vicidial_agent_log during time period
+		$stmtA = "SELECT talk_epoch,agent_log_id from vicidial_agent_log where lead_id='$Vlead_id[$i]' and uniqueid='$Vuniqueid[$i]' and user='$Vuser[$i]' and talk_epoch >= '$Vpark_epoch[$i]' $VDAD_SQL_time;";
+		if ($DBX) {print "$stmtA\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$VCL_bad_records=$sthA->rows;
+		if ($VCL_bad_records < 1)
+			{
+			if ($DBX) {print "   VAL record good: $Vlead_id[$i]|$Vuser[$i]|$Vpark_epoch[$i]|$Vpark_time[$i]|$Vuniqueid[$i]\n";}
+			$val_good++;
+			}
+		else
+			{
+			@aryAbad = $sthA->fetchrow_array;
+			$Vold_talk_epoch[$i] =	$aryAbad[0];
+			$Vagent_log_id[$i] =	$aryAbad[1];
+			if ($DB) {print "      VAL record BAD: $Vlead_id[$i]|$Vuser[$i]|$Vpark_epoch[$i]|$Vpark_time[$i]|$Vuniqueid[$i]|$Vold_talk_epoch[$i]\n";}
+
+			### check inbound log ###
+			$stmtA = "SELECT start_epoch,length_in_sec,queue_seconds from vicidial_closer_log where lead_id='$Vlead_id[$i]' and uniqueid='$Vuniqueid[$i]' and user='$Vuser[$i]' $VDCL_SQL_time;";
+			if ($DBX) {print "$stmtA\n";}
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$VCL_records=$sthA->rows;
+			if ($DBX) {print "vicidial_closer_log record: $VCL_records|$stmtA|\n\n";}
+			$h=0;
+			while ($VCL_records > $h)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$Vagent_talk_epoch[$i] =	($aryA[0] + $aryA[2]);
+				
+				$h++;
+				}
+			if ($h < 1)
+				{
+				### check outbound log ###
+				$stmtA = "SELECT start_epoch,length_in_sec from vicidial_log where lead_id='$Vlead_id[$i]' and uniqueid='$Vuniqueid[$i]' and user='$Vuser[$i]' $VDCL_SQL_time;";
+				if ($DBX) {print "$stmtA\n";}
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$VCL_records=$sthA->rows;
+				if ($DBX) {print "vicidial_closer_log record: $VCL_records|$stmtA|\n\n";}
+				$h=0;
+				while ($VCL_records > $h)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$Vagent_talk_epoch[$i] =	$aryA[0];
+
+					$h++;
+					}
+				if ($h < 1)
+					{
+					if ($DBX) {print "ERROR: No call record found!\n\n";}
+					$total_dead++;
+					}
+				}
+			if ($h > 0)
+				{
+				$Vagent_talk_epochROUND[$i] = int($Vagent_talk_epoch[$i] + 0.5);
+				if ($DBX) {print "UPDATE $Vagent_log_id[$i]  ---  $Vold_talk_epoch[$i]($Vpark_epoch[$i]) with $Vagent_talk_epoch[$i]($Vagent_talk_epochROUND[$i])\n";}
+
+				##### insert vicidial_agent_log record
+				$stmtAX = "UPDATE vicidial_agent_log SET talk_epoch='$Vagent_talk_epochROUND[$i]' where agent_log_id='$Vagent_log_id[$i]';";
+				if ($TEST < 1)
+					{$VALaffected_rows = $dbhA->do($stmtAX);}
+				if ($DB) {print "          BAD VAL record updated: $VALaffected_rows|$stmtAX|\n";}
+
+				$total_corrected_records++;
+				}
+
+			$total_bad_records++;
+			}
+
+		$i++;
+		}
+
+	if ($DB) {print " - finished hold scan:\n";}
+	if ($DB) {print "     records scanned:         $i\n";}
+	if ($DB) {print "     records good:       $total_good\n";}
+	if ($DB) {print "     records bad:        $total_bad_records\n";}
+	if ($DB) {print "     records not found:    $total_dead\n";}
+	if ($DB) {print "     records corrected:    $total_corrected_records\n";}
+
+	if ($DB) {print "process completed, exiting...\n";}
+
+	exit;
+	}
+##### END hold entries process (not recurring process, only run once) #####
 
 
 ##### BEGIN fix_old_lagged_entries process (not recurring process, only run once) #####

@@ -1847,6 +1847,7 @@ while ($drop_timer <= $DROP_TIME)
 			$sthA->finish();
 			$READY_agent_closer_camps =~ s/.$//gi;
 			$READY_users =~ s/.$//gi;
+			if (length($READY_agent_closer_camps) < 2) {$READY_agent_closer_camps="''";}
 
 			if (length($READY_users)>2)
 				{
@@ -2356,6 +2357,7 @@ while ($drop_timer <= $DROP_TIME)
 			$sthA->finish();
 			$READY_agent_closer_camps =~ s/.$//gi;
 			$READY_users =~ s/.$//gi;
+			if (length($READY_agent_closer_camps) < 2) {$READY_agent_closer_camps="''";}
 
 			if (length($READY_users)>2)
 				{
