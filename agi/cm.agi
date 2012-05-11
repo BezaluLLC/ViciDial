@@ -15,6 +15,10 @@
 #exten => 1,1,AGI(cm.agi,INBOUND-----1-----province)
 #exten => 1,2,...
 #
+# ;to allow for multi-digit entries, put similar entry in the Custom Dialplan Entry:
+#exten => _XXXXX,1,AGI(cm.agi,INBOUND-----${EXTEN}-----postal_code)
+#exten => _XXXXX,n,Goto(next_callmenu_here,s,1)
+#
 # Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
