@@ -7,7 +7,7 @@
 #
 # /usr/share/astguiclient/AST_VDsales_export.pl --campaign=GOODB-GROUP1-GROUP3-GROUP4-SPECIALS-DNC_BEDS --output-format=fixed-as400 --sale-statuses=SALE --debug --filename=BEDSsaleMMDD.txt --date=yesterday --email-list=test@gmail.com --email-sender=test@test.com
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 61219-1118 - First version
@@ -28,6 +28,7 @@
 # 90909-2322 - Added totals-only option
 # 101022-1022 - Added hours minutes seconds to filename variables
 # 110829-1045 - Changed recording lookup to try to find by vicidial_id first
+# 120511-2029 - Added CLI options for FTP login details
 #
 
 $txt = '.txt';
@@ -92,6 +93,55 @@ if ($Tmin < 10) {$Tmin = "0$Tmin";}
 if ($Tsec < 10) {$Tsec = "0$Tsec";}
 
 
+# default path to astguiclient configuration file:
+$PATHconf =		'/etc/astguiclient.conf';
+
+open(conf, "$PATHconf") || die "can't open $PATHconf: $!\n";
+@conf = <conf>;
+close(conf);
+$i=0;
+foreach(@conf)
+	{
+	$line = $conf[$i];
+	$line =~ s/ |>|\n|\r|\t|\#.*|;.*//gi;
+	if ( ($line =~ /^PATHhome/) && ($CLIhome < 1) )
+		{$PATHhome = $line;   $PATHhome =~ s/.*=//gi;}
+	if ( ($line =~ /^PATHlogs/) && ($CLIlogs < 1) )
+		{$PATHlogs = $line;   $PATHlogs =~ s/.*=//gi;}
+	if ( ($line =~ /^PATHagi/) && ($CLIagi < 1) )
+		{$PATHagi = $line;   $PATHagi =~ s/.*=//gi;}
+	if ( ($line =~ /^PATHweb/) && ($CLIweb < 1) )
+		{$PATHweb = $line;   $PATHweb =~ s/.*=//gi;}
+	if ( ($line =~ /^PATHsounds/) && ($CLIsounds < 1) )
+		{$PATHsounds = $line;   $PATHsounds =~ s/.*=//gi;}
+	if ( ($line =~ /^PATHmonitor/) && ($CLImonitor < 1) )
+		{$PATHmonitor = $line;   $PATHmonitor =~ s/.*=//gi;}
+	if ( ($line =~ /^VARserver_ip/) && ($CLIserver_ip < 1) )
+		{$VARserver_ip = $line;   $VARserver_ip =~ s/.*=//gi;}
+	if ( ($line =~ /^VARDB_server/) && ($CLIDB_server < 1) )
+		{$VARDB_server = $line;   $VARDB_server =~ s/.*=//gi;}
+	if ( ($line =~ /^VARDB_database/) && ($CLIDB_database < 1) )
+		{$VARDB_database = $line;   $VARDB_database =~ s/.*=//gi;}
+	if ( ($line =~ /^VARDB_user/) && ($CLIDB_user < 1) )
+		{$VARDB_user = $line;   $VARDB_user =~ s/.*=//gi;}
+	if ( ($line =~ /^VARDB_pass/) && ($CLIDB_pass < 1) )
+		{$VARDB_pass = $line;   $VARDB_pass =~ s/.*=//gi;}
+	if ( ($line =~ /^VARDB_port/) && ($CLIDB_port < 1) )
+		{$VARDB_port = $line;   $VARDB_port =~ s/.*=//gi;}
+	if ( ($line =~ /^VARREPORT_host/) && ($CLIREPORT_host < 1) )
+		{$VARREPORT_host = $line;   $VARREPORT_host =~ s/.*=//gi;}
+	if ( ($line =~ /^VARREPORT_user/) && ($CLIREPORT_user < 1) )
+		{$VARREPORT_user = $line;   $VARREPORT_user =~ s/.*=//gi;}
+	if ( ($line =~ /^VARREPORT_pass/) && ($CLIREPORT_pass < 1) )
+		{$VARREPORT_pass = $line;   $VARREPORT_pass =~ s/.*=//gi;}
+	if ( ($line =~ /^VARREPORT_port/) && ($CLIREPORT_port < 1) )
+		{$VARREPORT_port = $line;   $VARREPORT_port =~ s/.*=//gi;}
+	if ( ($line =~ /^VARREPORT_dir/) && ($CLIREPORT_dir < 1) )
+		{$VARREPORT_dir = $line;   $VARREPORT_dir =~ s/.*=//gi;}
+	$i++;
+	}
+
+
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
 	{
@@ -121,6 +171,10 @@ if (length($ARGV[0])>1)
 		print "  [--ftp-transfer] = Send results file by FTP to another server\n";
 		print "  [--ftp-audio-transfer] = Send associated audio files to FTP server, dated directories\n";
 		print "  [--ftp-norun] = Stop program when you get to the FTP transfer\n";
+		print "  [--ftp-server=XXXXXXXX] = FTP server to send file to\n";
+		print "  [--ftp-login=XXXXXXXX] = FTP user\n";
+		print "  [--ftp-pass=XXXXXXXX] = FTP pass\n";
+		print "  [--ftp-dir=XXXXXXXX] = remote FTP server directory to post files to\n";
 		print "  [--with-transfer-audio] = Different method for finding audio, also grabs transfer audio filenames\n";
 		print "  [--with-did-lookup] = Looks up the DID pattern and name the call came in on if possible\n";
 		print "  [--email-list=test@test.com:test2@test.com] = send email results to these addresses\n";
@@ -378,6 +432,47 @@ if (length($ARGV[0])>1)
 			}
 		else
 			{$email_sender = 'vicidial@localhost';}
+
+		if ($args =~ /--ftp-server=/i)
+			{
+			@data_in = split(/--ftp-server=/,$args);
+			$VARREPORT_host = $data_in[1];
+			$VARREPORT_host =~ s/ .*//gi;
+			$VARREPORT_host =~ s/:/,/gi;
+			if ($DB > 0) {print "\n----- FTP SERVER: $VARREPORT_host -----\n\n";}
+			}
+		else
+			{$VARREPORT_host = '';}
+		if ($args =~ /--ftp-login=/i)
+			{
+			@data_in = split(/--ftp-login=/,$args);
+			$VARREPORT_user = $data_in[1];
+			$VARREPORT_user =~ s/ .*//gi;
+			$VARREPORT_user =~ s/:/,/gi;
+			if ($DB > 0) {print "\n----- FTP LOGIN: $VARREPORT_user -----\n\n";}
+			}
+		else
+			{$VARREPORT_user = '';}
+		if ($args =~ /--ftp-pass=/i)
+			{
+			@data_in = split(/--ftp-pass=/,$args);
+			$VARREPORT_pass = $data_in[1];
+			$VARREPORT_pass =~ s/ .*//gi;
+			$VARREPORT_pass =~ s/:/,/gi;
+			if ($DB > 0) {print "\n----- FTP PASS: <SET> -----\n\n";}
+			}
+		else
+			{$VARREPORT_pass = '';}
+		if ($args =~ /--ftp-dir=/i)
+			{
+			@data_in = split(/--ftp-dir=/,$args);
+			$VARREPORT_dir = $data_in[1];
+			$VARREPORT_dir =~ s/ .*//gi;
+			$VARREPORT_dir =~ s/:/,/gi;
+			if ($DB > 0) {print "\n----- FTP DIR: $VARREPORT_dir -----\n\n";}
+			}
+		else
+			{$VARREPORT_dir = '';}
 		}
 	}
 else
@@ -386,53 +481,6 @@ else
 	}
 ### end parsing run-time options ###
 
-# default path to astguiclient configuration file:
-$PATHconf =		'/etc/astguiclient.conf';
-
-open(conf, "$PATHconf") || die "can't open $PATHconf: $!\n";
-@conf = <conf>;
-close(conf);
-$i=0;
-foreach(@conf)
-	{
-	$line = $conf[$i];
-	$line =~ s/ |>|\n|\r|\t|\#.*|;.*//gi;
-	if ( ($line =~ /^PATHhome/) && ($CLIhome < 1) )
-		{$PATHhome = $line;   $PATHhome =~ s/.*=//gi;}
-	if ( ($line =~ /^PATHlogs/) && ($CLIlogs < 1) )
-		{$PATHlogs = $line;   $PATHlogs =~ s/.*=//gi;}
-	if ( ($line =~ /^PATHagi/) && ($CLIagi < 1) )
-		{$PATHagi = $line;   $PATHagi =~ s/.*=//gi;}
-	if ( ($line =~ /^PATHweb/) && ($CLIweb < 1) )
-		{$PATHweb = $line;   $PATHweb =~ s/.*=//gi;}
-	if ( ($line =~ /^PATHsounds/) && ($CLIsounds < 1) )
-		{$PATHsounds = $line;   $PATHsounds =~ s/.*=//gi;}
-	if ( ($line =~ /^PATHmonitor/) && ($CLImonitor < 1) )
-		{$PATHmonitor = $line;   $PATHmonitor =~ s/.*=//gi;}
-	if ( ($line =~ /^VARserver_ip/) && ($CLIserver_ip < 1) )
-		{$VARserver_ip = $line;   $VARserver_ip =~ s/.*=//gi;}
-	if ( ($line =~ /^VARDB_server/) && ($CLIDB_server < 1) )
-		{$VARDB_server = $line;   $VARDB_server =~ s/.*=//gi;}
-	if ( ($line =~ /^VARDB_database/) && ($CLIDB_database < 1) )
-		{$VARDB_database = $line;   $VARDB_database =~ s/.*=//gi;}
-	if ( ($line =~ /^VARDB_user/) && ($CLIDB_user < 1) )
-		{$VARDB_user = $line;   $VARDB_user =~ s/.*=//gi;}
-	if ( ($line =~ /^VARDB_pass/) && ($CLIDB_pass < 1) )
-		{$VARDB_pass = $line;   $VARDB_pass =~ s/.*=//gi;}
-	if ( ($line =~ /^VARDB_port/) && ($CLIDB_port < 1) )
-		{$VARDB_port = $line;   $VARDB_port =~ s/.*=//gi;}
-	if ( ($line =~ /^VARREPORT_host/) && ($CLIREPORT_host < 1) )
-		{$VARREPORT_host = $line;   $VARREPORT_host =~ s/.*=//gi;}
-	if ( ($line =~ /^VARREPORT_user/) && ($CLIREPORT_user < 1) )
-		{$VARREPORT_user = $line;   $VARREPORT_user =~ s/.*=//gi;}
-	if ( ($line =~ /^VARREPORT_pass/) && ($CLIREPORT_pass < 1) )
-		{$VARREPORT_pass = $line;   $VARREPORT_pass =~ s/.*=//gi;}
-	if ( ($line =~ /^VARREPORT_port/) && ($CLIREPORT_port < 1) )
-		{$VARREPORT_port = $line;   $VARREPORT_port =~ s/.*=//gi;}
-	if ( ($line =~ /^VARREPORT_dir/) && ($CLIREPORT_dir < 1) )
-		{$VARREPORT_dir = $line;   $VARREPORT_dir =~ s/.*=//gi;}
-	$i++;
-	}
 
 # Customized Variables
 $server_ip = $VARserver_ip;		# Asterisk server IP
