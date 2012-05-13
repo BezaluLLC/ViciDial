@@ -71,6 +71,7 @@
 # 120124-1032 - Added Answer to all call menus at the top
 # 120209-1525 - Separated all vicidial-auto dialplan contexts into their own contexts to allow for more control of dialing access through phones
 # 120213-1405 - Added vicidial_daily_ra_stats rolling
+# 120512-2332 - Added loopback dialaround for ringing of calls
 #
 
 $DB=0; # Debug flag
@@ -1536,7 +1537,6 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	$Vext .= "exten => 8310,3,Wait,$vicidial_recording_limit\n";
 	$Vext .= "exten => 8310,4,Hangup\n";
 
-
 	$Vext .= "\n;     agent alert extension\n";
 	$Vext .= "exten => 83047777777777,1,Answer\n";
 	if ($asterisk_version =~ /^1.2/)
@@ -1544,6 +1544,16 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	else
 		{$Vext .= "exten => 83047777777777,2,Playback(\${CALLERID(name)})\n";}
 	$Vext .= "exten => 83047777777777,3,Hangup\n";
+
+	$Vext .= "; This is a loopback dial-around to allow for immediate answer of outbound calls\n";
+	$Vext .= "exten => _8305888888888888.,1,Answer\n";
+	$Vext .= "exten => _8305888888888888.,n,Wait(\${EXTEN:16:1})\n";
+	$Vext .= "exten => _8305888888888888.,n,Dial(\${TRUNKloop}/\${EXTEN:17},,To)\n";
+	$Vext .= "exten => _8305888888888888.,n,Hangup\n";
+	$Vext .= "; No-call silence extension\n";
+	$Vext .= "exten => _8305888888888888X999,1,Answer\n";
+	$Vext .= "exten => _8305888888888888X999,n,Wait($vicidial_recording_limit)\n";
+	$Vext .= "exten => _8305888888888888X999,n,Hangup\n";
 	##### END Create Voicemail extensions for this server_ip #####
 
 

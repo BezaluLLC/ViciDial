@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-VDAD_ALL_inbound.agi version 2.4
+# agi-VDAD_ALL_inbound.agi version 2.6
 # 
 # runs when a call comes in from an inbound call. This script will 
 # send the calls out to the closers that are logged in.
@@ -174,6 +174,7 @@
 # 111219-2124 - Added max stats updating
 # 111229-1726 - Changed call time overflow to look at previous day stop time
 # 120130-1708 - Fix for ring agent EXTERNAL protocol phone issue
+# 120513-0051 - Added ability to have Dial In-Group agent calls go directly to agents
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -485,12 +486,14 @@ if ($call_handle_method =~ /^CLOSER/)
 		$park_extension =		$EXT_vars[4];	# filename of the on-hold music file
 		$phone_number =			$EXT_vars[5];	# phone number of customer
 		$fronter =				$EXT_vars[6];	# user of the fronter that transferred the call
-		if ($channel_group =~ /AGENTDIRECT/) 
+		$fronter_call_seconds =	$EXT_vars[8];	# not currently used
+		$dial_ingroup_flag =	$EXT_vars[9];	# used by dial in-group feature
+		if ( ($channel_group =~ /AGENTDIRECT/) || ($dial_ingroup_flag > 0) )
 			{
-			$agent_only =		$EXT_vars[7];	# optional AGENTDIRECT user to queue call for
+			$agent_only =			$EXT_vars[7];	# optional AGENTDIRECT user to queue call for
+			$agent_grab_extension = $EXT_vars[10];	# used by dial in-group feature
 			}
 		$CIDlead_id = $parked_by;
-		$fronter_call_seconds =	$EXT_vars[8];	# not currently used
 		$originalCID = $phone_number;
 
 		$PADlead_id = sprintf("%010s", $parked_by);	while (length($PADlead_id) > 10) {chop($PADlead_id);}
@@ -1459,7 +1462,7 @@ if ( ($no_agent_no_queue =~ /Y|NO_PAUSED/) || ($$MCnanque_override > 0) )
 	$ADsql='';
 	if ($no_agent_no_queue =~ /NO_PAUSED/) 
 		{$NPsql = "and status NOT IN('PAUSED')";}
-	if ( ($channel_group =~ /AGENTDIRECT/i) && (length($agent_only) > 1) )
+	if ( ( ($channel_group =~ /AGENTDIRECT/i) || ($dial_ingroup_flag > 0) ) && (length($agent_only) > 1) )
 		{$ADsql = "and user='$agent_only'";}
 	$stmtA = "SELECT count(*) FROM vicidial_live_agents where closer_campaigns LIKE \"% $channel_group %\" $NPsql $ADsql;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1832,7 +1835,7 @@ if ($enable_queuemetrics_logging > 0)
 
 ### If AGENTDIRECT set variable accordingly ###
 $adSQL='';
-if ($channel_group =~ /AGENTDIRECT/)
+if ( ($channel_group =~ /AGENTDIRECT/) || ($dial_ingroup_flag > 0) )
 	{$adSQL = ",agent_only='$agent_only'";}
 
 ### check for an IVR status record in vicidial_auto_calls
@@ -1900,8 +1903,11 @@ if ($sthArows > 0)
 	$queue_position = $aryA[0];
 	}
 
+$dial_ingroup_grab_SQL='';
+if ($dial_ingroup_flag > 0)
+	{$dial_ingroup_grab_SQL = ",agent_grab='$agent_only',agent_grab_extension='$agent_grab_extension'";}
 ### UPDATE vicidial_auto_calls record with starting queue_position
-$stmtA = "UPDATE vicidial_auto_calls SET queue_position='$queue_position' WHERE auto_call_id='$auto_call_id';";
+$stmtA = "UPDATE vicidial_auto_calls SET queue_position='$queue_position' $dial_ingroup_grab_SQL WHERE auto_call_id='$auto_call_id';";
 $Uaffected_rows = $dbhA->do($stmtA);
 	if ($AGILOG) {$agi_string = "$Uaffected_rows|$stmtA|";   &agi_output;}
 	$dbhP=$dbhA;   $mysql_count='02121';   $MEL_aff_rows=$Uaffected_rows;   &mysql_error_logging;
@@ -1951,7 +1957,7 @@ $ring_no_answer_agents = "'',";
 
 ##########################################################
 ### For AGENTDIRECT calls try to send call to an agent ###
-if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) )
+if ( ( ($channel_group =~ /AGENTDIRECT/) || ($dial_ingroup_flag > 0) ) && (length($agent_only) > 1) )
 	{
 	$skipLOSO=1;
 	$ADfindSQL = "and agent_only='$agent_only'";

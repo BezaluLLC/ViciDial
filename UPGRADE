@@ -52,7 +52,10 @@ REQUIRED STEPS!!!
 
 OTHER CHANGES:
 
-1. Nothing new yet, we just forked 2.4. New features will go here...
+1. Added the ability for an agent to place manual dial calls out as if they were
+	in-group inbound calls. Also allows for no-dial calls that are not 
+	actually placed out the telco, but are logged as calls. For more
+	information see the "In-Group Manual Dial" options in Campaign Detail
 
 
 
