@@ -308,12 +308,13 @@
 # 120221-2125 - Manual dials update lastcalldate, and other small changes
 # 120427-1717 - Fixed 3-way logging issue
 # 120513-0045 - Added Dial In-group and No-Dial compatibility
+# 120514-0934 - Added Dial In-group cid-override
 #
 
-$version = '2.6-206';
-$build = '120513-0045';
+$version = '2.6-207';
+$build = '120514-0934';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=438;
+$mysql_log_count=440;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -2349,7 +2350,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 			$stmt="UPDATE vicidial_lists set list_lastcalldate=NOW() where list_id='$list_id';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00439',$user,$server_ip,$session_name,$one_mysql_log);}
 
 			$campaign_cid_override='';
 			$LISTweb_form_address='';
@@ -2471,6 +2472,20 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$preset_name='';
 				if (strlen($dial_ingroup) > 1)
 					{
+					### look for a dial-ingroup cid
+					$dial_ingroup_cid='';
+					$stmt = "SELECT dial_ingroup_cid FROM vicidial_inbound_groups where group_id='$dial_ingroup';";
+					$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00440',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$digcid_ct = mysql_num_rows($rslt);
+					if ($digcid_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$dial_ingroup_cid =	$row[0];
+						}
+					if (strlen($dial_ingroup_cid) > 6) {$CCID = "$dial_ingroup_cid";   $CCID_on++;}
+
 					$preset_name='DIG';
 					$MqueryCID = "Y$CIDdate$PADlead_id";
 					
@@ -2484,8 +2499,14 @@ if ($ACTION == 'manDiaLnextCaLL')
 					else
 						{$Ndialstring = "$loop_ingroup_dial_prefix$dial_wait_seconds$Ndialstring";}
 
+	#				$dial_ingroup_dialstring = "90009*$dial_ingroup" . "**$lead_id" . "**$agent_dialed_number" . "*$user" . "*$user" . "**1*$conf_exten";
+	#				$dial_channel = "$local_DEF$dial_ingroup_dialstring$local_AMP$ext_context$Local_persist";
+
+					$dial_channel = "$local_DEF$Ndialstring$local_AMP$ext_context$Local_persist";
+
+					$dial_wait_seconds = '0';	# 1 digit only
 					$dial_ingroup_dialstring = "90009*$dial_ingroup" . "**$lead_id" . "**$agent_dialed_number" . "*$user" . "*$user" . "**1*$conf_exten";
-					$dial_channel = "$local_DEF$dial_ingroup_dialstring$local_AMP$ext_context$Local_persist";
+					$Ndialstring = "$loop_ingroup_dial_prefix$dial_wait_seconds$dial_ingroup_dialstring";
 					}
 
 				if ($CCID_on) {$CIDstring = "\"$MqueryCID$EAC\" <$CCID>";}

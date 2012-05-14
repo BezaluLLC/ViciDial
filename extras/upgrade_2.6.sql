@@ -7,3 +7,6 @@ ALTER TABLE vicidial_campaigns ADD in_group_dial_select ENUM('AGENT_SELECTED','C
 
 UPDATE system_settings SET db_schema_version='1319',db_schema_update_date=NOW() where db_schema_version < 1319;
 
+ALTER TABLE vicidial_inbound_groups ADD dial_ingroup_cid VARCHAR(20) default '';
+
+UPDATE system_settings SET db_schema_version='1320',db_schema_update_date=NOW() where db_schema_version < 1320;

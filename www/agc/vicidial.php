@@ -385,7 +385,7 @@
 $version = '2.6-348c';
 $build = '120512-0849';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=75;
+$mysql_log_count=77;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -1781,7 +1781,7 @@ else
 						$VARdialingroups='';
 						$stmt="select group_id from vicidial_inbound_groups where active = 'Y' and group_id IN($closer_campaigns) order by group_id limit 800;";
 						$rslt=mysql_query($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01076',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 						if ($DB) {echo "$stmt\n";}
 						$dialcloser_ct = mysql_num_rows($rslt);
 						$dialINgrpCT=0;
@@ -1799,7 +1799,7 @@ else
 						$VARdialingroups='';
 						$stmt="select group_id from vicidial_inbound_groups where active = 'Y' and user_group IN('---ALL---','$user_group') order by group_id limit 800;";
 						$rslt=mysql_query($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01077',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 						if ($DB) {echo "$stmt\n";}
 						$dialcloser_ct = mysql_num_rows($rslt);
 						$dialINgrpCT=0;

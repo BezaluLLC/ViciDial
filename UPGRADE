@@ -57,7 +57,9 @@ OTHER CHANGES:
 	actually placed out the telco, but are logged as calls. For more
 	information see the "In-Group Manual Dial" options in Campaign Detail
 
-
+2. Added Dial In-Group CallerID override to In-Groups Modify screen, allowing
+	for the callerid to automatically be set per in-group on agent manual
+	dial in-group calls
 
 
 

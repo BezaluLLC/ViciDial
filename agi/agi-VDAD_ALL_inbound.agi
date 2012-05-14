@@ -175,6 +175,7 @@
 # 111229-1726 - Changed call time overflow to look at previous day stop time
 # 120130-1708 - Fix for ring agent EXTERNAL protocol phone issue
 # 120513-0051 - Added ability to have Dial In-Group agent calls go directly to agents
+# 120514-0953 - Added force checks for dial-ingroup calls
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -188,6 +189,7 @@ $S='*';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=195;
 $one_mysql_log=0;
+$dial_ingroup_flag=0;
 
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -1265,7 +1267,7 @@ if ( ($max_calls_method !~ /DISABLED/) && ($max_calls_count > 0) )
 $ct_stop_overflow=0;   # allow for overflow time, past midnight
 if ($ct_yest_stop > 2400)
 	{$ct_stop_overflow = ($ct_yest_stop - 2400);}
-if ( ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_stop_overflow) ) || ($MCafterhours_override > 0) )
+if ( ( ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_stop_overflow) ) || ($MCafterhours_override > 0) ) && ($dial_ingroup_flag < 1) )
 	{
 	$VHqueryCID = "VA$CIDdate$hour$min$sec$sec";
 	$AHstatus='AFTHRS';
@@ -1456,7 +1458,7 @@ if ( ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_
 
 
 ##### BEGIN NO AGENT NO QUEUE CHECK #####
-if ( ($no_agent_no_queue =~ /Y|NO_PAUSED/) || ($$MCnanque_override > 0) )
+if ( ( ($no_agent_no_queue =~ /Y|NO_PAUSED/) || ($MCnanque_override > 0) ) && ($dial_ingroup_flag < 1) )
 	{
 	$NPsql='';
 	$ADsql='';
@@ -1687,7 +1689,7 @@ if ( ($no_agent_no_queue =~ /Y|NO_PAUSED/) || ($$MCnanque_override > 0) )
 
 
 ##### PLAY WELCOME MESSAGE #####
-if ( ( ($welcome_message_filename !~ /---NONE---/) && (length($welcome_message_filename) > 0) && ( ($play_welcome_message =~ /ALWAYS/) || ( ($no_delay_call_route =~ /N/) && ($play_welcome_message =~ /YES_UNLESS_NODELAY/) ) ) ) && ($MCdrop_override < 1) )
+if ( ( ( ($welcome_message_filename !~ /---NONE---/) && (length($welcome_message_filename) > 0) && ( ($play_welcome_message =~ /ALWAYS/) || ( ($no_delay_call_route =~ /N/) && ($play_welcome_message =~ /YES_UNLESS_NODELAY/) ) ) ) && ($MCdrop_override < 1) ) && ($dial_ingroup_flag < 1) )
 	{
 	if ($welcome_message_filename =~ /\|/)
 		{

@@ -1053,7 +1053,8 @@ after_hours_callmenu VARCHAR(50) default '',
 user_group VARCHAR(20) default '---ALL---',
 max_calls_method ENUM('TOTAL','IN_QUEUE','DISABLED') default 'DISABLED',
 max_calls_count SMALLINT(5) default '0',
-max_calls_action ENUM('DROP','AFTERHOURS','NO_AGENT_NO_QUEUE') default 'NO_AGENT_NO_QUEUE'
+max_calls_action ENUM('DROP','AFTERHOURS','NO_AGENT_NO_QUEUE') default 'NO_AGENT_NO_QUEUE',
+dial_ingroup_cid VARCHAR(20) default ''
 );
 
 CREATE TABLE vicidial_stations (
@@ -2811,7 +2812,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1319',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1320',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
