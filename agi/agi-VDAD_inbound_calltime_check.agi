@@ -26,7 +26,7 @@
 #exten => 1234,2,AGI(agi-VDAD_inbound_calltime_check.agi,INBOUND-----YES-----START-----24hours-----EXTENSION-----101-----default)
 #exten => 1234,3,Hangup
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 80525-0144 - First Build
@@ -39,6 +39,7 @@
 # 101219-2110 - Added call time overflow
 # 110525-1347 - Added compatibility for outbound IVR logging
 # 111229-1716 - Changed call time overflow to look at previous day stop time
+# 120517-1257 - Added CALLMENU timeout option
 #
 
 $script = 'agi-VDAD_inbound_calltime_check.agi';
@@ -478,8 +479,13 @@ if ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_st
 		$dbhB->disconnect();
 		}
 
-	if ($after_hours_action =~ /EXTENSION|VOICEMAIL|IN_GROUP/)
+	if ($after_hours_action =~ /EXTENSION|VOICEMAIL|IN_GROUP|CALLMENU/)
 		{
+		if ($after_hours_action =~ /CALLMENU/)
+			{
+			$DROPexten = 's';
+			$ext_context = "$after_hours_exten";
+			}
 		if ($after_hours_action =~ /EXTENSION/)
 			{
 			$DROPexten = "$after_hours_exten";
