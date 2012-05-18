@@ -3057,12 +3057,13 @@ else
 # 120420-1620 - Forked 2.4 to branches, changing trunk to 2.6
 # 120512-0844 - Added In-Group Manual Dial options to campaign screen
 # 120514-0936 - Added Dial In-group CID override setting
+# 120518-1456 - Added XFTAMM/LTMG special hotkeys for send to answering machine message
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-367a';
-$build = '120514-0936';
+$admin_version = '2.6-368a';
+$build = '120518-1456';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -6699,7 +6700,7 @@ if ($ADD==99999)
 		<B><FONT SIZE=3>VICIDIAL_CAMPAIGN_HOTKEYS TABLE</FONT></B><BR><BR>
 		<A NAME="vicidial_campaign_hotkeys">
 		<BR>
-		<B>Through the use of custom campaign hot keys, agents that use the vicidial web-client can hang up and disposition calls just by pressing a single key on their keyboard.</B> There are two special HotKey options that you can use in conjunction with Alternate Phone number dialing, ALTPH2 - Alternate Phone Hot Dial and ADDR3-----Address3 Hot Dial allow an agent to use a hotkey to hang up their call, stay on the same lead, and dial another contact number from that lead. 
+		<B>Through the use of custom campaign hot keys, agents that use the vicidial web-client can hang up and disposition calls just by pressing a single key on their keyboard.</B> There are two special HotKey options that you can use in conjunction with Alternate Phone number dialing, ALTPH2 - Alternate Phone Hot Dial and ADDR3-----Address3 Hot Dial allow an agent to use a hotkey to hang up their call, stay on the same lead, and dial another contact number from that lead. You can also use LTMG or XFTAMM as statuses to trigger an automatic transfer to the Leave-Voicemail option.
 
 
 
@@ -22201,8 +22202,10 @@ if ($ADD==31)
 		echo "</select> &nbsp; \n";
 		echo "Status: <select size=1 name=HKstatus>\n";
 		echo "$HKstatuses_list\n";
-		echo "<option value=\"ALTPH2-----Alternate Phone Hot Dial\">ALTPH2 - Alternate Phone Hot Dial</option>\n";
-		echo "<option value=\"ADDR3-----Address3 Hot Dial\">ADDR3 - Address3 Hot Dial</option>\n";
+		echo "<option value=\"ALTPH2\">ALTPH2 - Alternate Phone Hot Dial</option>\n";
+		echo "<option value=\"ADDR3\">ADDR3 - Address3 Hot Dial</option>\n";
+		echo "<option value=\"LTMG\">LTMG - Send to Answering Machine Message</option>\n";
+		echo "<option value=\"XFTAMM\">XFTAMM - Send to Answering Machine Message</option>\n";
 		echo "</select> &nbsp; \n";
 		echo "<input type=submit name=submit value=ADD><BR>\n";
 		echo "</form><BR>\n";

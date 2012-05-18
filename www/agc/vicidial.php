@@ -380,10 +380,11 @@
 # 120420-1621 - Forked 2.4 to branches, changing trunk to 2.6
 # 120427-1718 - Fixed 3-way logging issue
 # 120512-0849 - Added In-Group Manual Dial functions
+# 120518-1225 - Added transfer call to answering maching message with hotkey (LTMG or XFTAMM)
 #
 
-$version = '2.6-348c';
-$build = '120512-0849';
+$version = '2.6-349c';
+$build = '120518-1225';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=77;
 $one_mysql_log=0;
@@ -10114,19 +10115,27 @@ if ($useIE > 0)
 					}
 				else
 					{
-					HKdispo_display = 4;
-					HKfinish=1;
-					alt_phone_dialing=starting_alt_phone_dialing;
-					alt_dial_active = 0;
-					alt_dial_status_display = 0;
-					document.getElementById("HotKeyDispo").innerHTML = HKdispo_ary[0] + " - " + HKdispo_ary[1];
-					showDiv('HotKeyActionBox');
-					hideDiv('HotKeyEntriesBox');
-					document.vicidial_form.DispoSelection.value = HKdispo_ary[0];
-					dialedcall_send_hangup('NO', 'YES', HKdispo_ary[0]);
-					if (custom_fields_enabled > 0)
+					// transfer call to answering maching message with hotkey
+					if ( (HKdispo_ary[0] == 'LTMG') || (HKdispo_ary[0] == 'XFTAMM') )
 						{
-						vcFormIFrame.document.form_custom_fields.submit();
+						mainxfer_send_redirect('XfeRVMAIL', lastcustchannel, lastcustserverip);
+						}
+					else
+						{
+						HKdispo_display = 4;
+						HKfinish=1;
+						alt_phone_dialing=starting_alt_phone_dialing;
+						alt_dial_active = 0;
+						alt_dial_status_display = 0;
+						document.getElementById("HotKeyDispo").innerHTML = HKdispo_ary[0] + " - " + HKdispo_ary[1];
+						showDiv('HotKeyActionBox');
+						hideDiv('HotKeyEntriesBox');
+						document.vicidial_form.DispoSelection.value = HKdispo_ary[0];
+						dialedcall_send_hangup('NO', 'YES', HKdispo_ary[0]);
+						if (custom_fields_enabled > 0)
+							{
+							vcFormIFrame.document.form_custom_fields.submit();
+							}
 						}
 					}
 				}
@@ -10170,19 +10179,27 @@ else
 					}
 				else
 					{
-					HKdispo_display = 4;
-					HKfinish=1;
-					document.getElementById("HotKeyDispo").innerHTML = HKdispo_ary[0] + " - " + HKdispo_ary[1];
-					showDiv('HotKeyActionBox');
-					hideDiv('HotKeyEntriesBox');
-					document.vicidial_form.DispoSelection.value = HKdispo_ary[0];
-					alt_phone_dialing=starting_alt_phone_dialing;
-					alt_dial_active = 0;
-					alt_dial_status_display = 0;
-					dialedcall_send_hangup('NO', 'YES', HKdispo_ary[0]);
-					if (custom_fields_enabled > 0)
+					// transfer call to answering maching message with hotkey
+					if ( (HKdispo_ary[0] == 'LTMG') || (HKdispo_ary[0] == 'XFTAMM') )
 						{
-						vcFormIFrame.document.form_custom_fields.submit();
+						mainxfer_send_redirect('XfeRVMAIL', lastcustchannel, lastcustserverip);
+						}
+					else
+						{
+						HKdispo_display = 4;
+						HKfinish=1;
+						document.getElementById("HotKeyDispo").innerHTML = HKdispo_ary[0] + " - " + HKdispo_ary[1];
+						showDiv('HotKeyActionBox');
+						hideDiv('HotKeyEntriesBox');
+						document.vicidial_form.DispoSelection.value = HKdispo_ary[0];
+						alt_phone_dialing=starting_alt_phone_dialing;
+						alt_dial_active = 0;
+						alt_dial_status_display = 0;
+						dialedcall_send_hangup('NO', 'YES', HKdispo_ary[0]);
+						if (custom_fields_enabled > 0)
+							{
+							vcFormIFrame.document.form_custom_fields.submit();
+							}
 						}
 					}
 			//	DispoSelect_submit();
