@@ -46,6 +46,7 @@
 # 110525-1827 - Added ivr log records display
 # 111103-1533 - Added admin_hide_phone_data and admin_hide_lead_data options
 # 120223-2249 - Removed logging of good login passwords if webroot writable is enabled
+# 120518-1004 - Fix for multi-line comments
 #
 
 require("dbconnect.php");
@@ -324,6 +325,8 @@ echo "<a href=\"./admin.php?ADD=100\">ADMINISTRATION</a>: Lead record modificati
 
 if ($lead_id == 'NEW')
 	{
+	$comments = preg_replace("/\n/",'!N',$comments);
+	$comments = preg_replace("/\r/",'',$comments);
 	$stmt="INSERT INTO vicidial_list set status='" . mysql_real_escape_string($status) . "',title='" . mysql_real_escape_string($title) . "',first_name='" . mysql_real_escape_string($first_name) . "',middle_initial='" . mysql_real_escape_string($middle_initial) . "',last_name='" . mysql_real_escape_string($last_name) . "',address1='" . mysql_real_escape_string($address1) . "',address2='" . mysql_real_escape_string($address2) . "',address3='" . mysql_real_escape_string($address3) . "',city='" . mysql_real_escape_string($city) . "',state='" . mysql_real_escape_string($state) . "',province='" . mysql_real_escape_string($province) . "',postal_code='" . mysql_real_escape_string($postal_code) . "',country_code='" . mysql_real_escape_string($country_code) . "',alt_phone='" . mysql_real_escape_string($alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysql_real_escape_string($email) . "',security_phrase='" . mysql_real_escape_string($security) . "',comments='" . mysql_real_escape_string($comments) . "',rank='" . mysql_real_escape_string($rank) . "',owner='" . mysql_real_escape_string($owner) . "',vendor_lead_code='" . mysql_real_escape_string($vendor_id) . "', list_id='" . mysql_real_escape_string($list_id) . "'";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_query($stmt, $link);
@@ -343,6 +346,8 @@ if (strlen($lead_id) < 1)
 
 if ($end_call > 0)
 	{
+	$comments = preg_replace("/\n/",'!N',$comments);
+	$comments = preg_replace("/\r/",'',$comments);
 	### update the lead record in the vicidial_list table 
 	$stmt="UPDATE vicidial_list set status='" . mysql_real_escape_string($status) . "',title='" . mysql_real_escape_string($title) . "',first_name='" . mysql_real_escape_string($first_name) . "',middle_initial='" . mysql_real_escape_string($middle_initial) . "',last_name='" . mysql_real_escape_string($last_name) . "',address1='" . mysql_real_escape_string($address1) . "',address2='" . mysql_real_escape_string($address2) . "',address3='" . mysql_real_escape_string($address3) . "',city='" . mysql_real_escape_string($city) . "',state='" . mysql_real_escape_string($state) . "',province='" . mysql_real_escape_string($province) . "',postal_code='" . mysql_real_escape_string($postal_code) . "',country_code='" . mysql_real_escape_string($country_code) . "',alt_phone='" . mysql_real_escape_string($alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysql_real_escape_string($email) . "',security_phrase='" . mysql_real_escape_string($security) . "',comments='" . mysql_real_escape_string($comments) . "',rank='" . mysql_real_escape_string($rank) . "',owner='" . mysql_real_escape_string($owner) . "',vendor_lead_code='" . mysql_real_escape_string($vendor_id) . "' where lead_id='" . mysql_real_escape_string($lead_id) . "'";
 	if ($DB) {echo "|$stmt|\n";}
@@ -439,6 +444,8 @@ if ($end_call > 0)
 
 	if ($add_closer_record > 0)
 		{
+		$comments = preg_replace("/\n/",'!N',$comments);
+		$comments = preg_replace("/\r/",'',$comments);
 		### insert a NEW record to the vicidial_closer_log table 
 		$stmt="INSERT INTO vicidial_closer_log (lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed) values('" . mysql_real_escape_string($lead_id) . "','" . mysql_real_escape_string($list_id) . "','" . mysql_real_escape_string($campaign_id) . "','" . mysql_real_escape_string($parked_time) . "','$NOW_TIME','$STARTtime','1','" . mysql_real_escape_string($status) . "','" . mysql_real_escape_string($phone_code) . "','" . mysql_real_escape_string($phone_number) . "','$PHP_AUTH_USER','" . mysql_real_escape_string($comments) . "','Y')";
 		if ($DB) {echo "|$stmt|\n";}
@@ -480,6 +487,8 @@ else
 	
 	if ($CBchangeDATE == 'YES')
 		{
+		$comments = preg_replace("/\n/",' ',$comments);
+		$comments = preg_replace("/\r/",'',$comments);
 		### change date/time of vicidial_callbacks record for this lead 
 		$stmt="UPDATE vicidial_callbacks set callback_time='" . mysql_real_escape_string($appointment_date) . " " . mysql_real_escape_string($appointment_time) . "',comments='" . mysql_real_escape_string($comments) . "',lead_status='" . mysql_real_escape_string($CBstatus) . "' where callback_id='" . mysql_real_escape_string($callback_id) . "';";
 		if ($DB) {echo "|$stmt|\n";}
@@ -749,6 +758,8 @@ else
 	$rank				= $row[32];
 	$owner				= $row[33];
 	$entry_list_id		= $row[34];
+
+	$comments = preg_replace("/!N/","\n",$comments);
 
 	if ($lead_id == 'NEW')
 		{
