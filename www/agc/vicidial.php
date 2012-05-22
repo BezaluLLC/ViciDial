@@ -380,7 +380,7 @@
 # 120420-1621 - Forked 2.4 to branches, changing trunk to 2.6
 # 120427-1718 - Fixed 3-way logging issue
 # 120512-0849 - Added In-Group Manual Dial functions
-# 120518-1225 - Added transfer call to answering maching message with hotkey (LTMG or XFTAMM)
+# 120518-1225 - Added transfer call to answering machine message with hotkey (LTMG or XFTAMM)
 #
 
 $version = '2.6-349c';

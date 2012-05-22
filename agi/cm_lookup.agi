@@ -459,7 +459,7 @@ if ($sthArows > 0)
 		if ($phone_update =~ /Y/i)
 			{
 			if ( (length($callerid) > 6) && ($callerid !~ /unknown|private/i) ) 
-				{$phone_update_SQL = "phone_number='$callerid'";}
+				{$phone_update_SQL = ",phone_number='$callerid'";}
 			else
 				{
 				if ($AGILOG) {$agi_string = "--  CMLOOKUP vl record failed: Invalid CIDnumber - $callerid|$phone_number";   &agi_output;}
