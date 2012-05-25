@@ -383,7 +383,7 @@ if ($ingrp_check) {
 ### concurrency check
 if ($run_check > 0)
 	{
-	my $grepout = `/bin/ps ax | grep $0 | grep -v grep`;
+	my $grepout = `/bin/ps ax | grep $0 | grep -v grep | grep -v '/bin/sh'`;
 	my $grepnum=0;
 	$grepnum++ while ($grepout =~ m/\n/g);
 	if ($grepnum > 1) 

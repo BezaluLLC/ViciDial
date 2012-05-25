@@ -5,6 +5,7 @@
 #
 # CHANGES
 # 120402-2238 - First Build
+# 120525-1039 - Added uploaded filename filtering
 #
 
 require("dbconnect.php");
@@ -45,6 +46,8 @@ if (isset($_GET["buffer"]))				{$buffer=$_GET["buffer"];}
 
 ### REGEX to prevent weird characters from ending up in the fields
 $field_regx = "['\"`\\;]";
+$sample_template_file_name = preg_replace("/;|:|\/|\^|\[|\]|\"|\'|\*/","",$sample_template_file_name);
+
 if ($form_action=="prime_file" && $sample_template_file_name) 
 	{
 	$delim_set=0;

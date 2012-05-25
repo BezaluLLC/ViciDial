@@ -45,10 +45,11 @@
 # 120221-0140 - Added User Group restrictions
 # 120223-2318 - Removed logging of good login passwords if webroot writable is enabled
 # 120402-2128 - Added template options
+# 120525-1038 - Added uploaded filename filtering
 #
 
-$version = '2.4-44';
-$build = '120402-2128';
+$version = '2.4-45';
+$build = '120525-1038';
 
 
 require("dbconnect.php");
@@ -153,6 +154,8 @@ if ( $phone_code_override == "in_file" ) { $phone_code_override = ""; }
 
 ### REGEX to prevent weird characters from ending up in the fields
 $field_regx = "['\"`\\;]";
+$lead_file = preg_replace("/;|:|\/|\^|\[|\]|\"|\'|\*/","",$lead_file);
+$leadfile_name = preg_replace("/;|:|\/|\^|\[|\]|\"|\'|\*/","",$leadfile_name);
 
 $vicidial_list_fields = '|lead_id|vendor_lead_code|source_id|list_id|gmt_offset_now|called_since_last_reset|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|called_count|last_local_call_time|rank|owner|entry_list_id|';
 

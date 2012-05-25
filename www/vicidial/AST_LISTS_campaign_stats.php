@@ -10,6 +10,7 @@
 # 100916-0928 - First build
 # 110703-1815 - Added download option
 # 120224-0910 - Added HTML display option with bar graphs
+# 120524-1754 - Fixed status categories issue
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -180,7 +181,7 @@ else
 
 $stmt="select vsc_id,vsc_name from vicidial_status_categories;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {$MAIN.="$stmt\n";}
+if ($DB) {echo "$stmt\n";}
 $statcats_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $statcats_to_print)
@@ -188,10 +189,24 @@ while ($i < $statcats_to_print)
 	$row=mysql_fetch_row($rslt);
 	$vsc_id[$i] =	$row[0];
 	$vsc_name[$i] =	$row[1];
-	$vsc_count[$i] = 0;
+
+	$category_statuses="";
+	$status_stmt="select distinct status from vicidial_statuses where category='$row[0]' UNION select distinct status from vicidial_campaign_statuses where category='$row[0]' $group_SQLand";
+	if ($DB) {echo "$status_stmt\n";}
+	$status_rslt=mysql_query($status_stmt, $link);
+	while ($status_row=mysql_fetch_row($status_rslt)) 
+		{
+		$category_statuses.="'$status_row[0]',";
+        }
+	$category_statuses=substr($category_statuses, 0, -1);
+
+	$category_stmt="select count(*) from vicidial_list where status in ($category_statuses) and list_id IN( SELECT list_id from vicidial_lists where active IN('Y','N') $group_SQLand)";
+	if ($DB) {echo "$category_stmt\n";}
+	$category_rslt=mysql_query($category_stmt, $link);
+	$category_row=mysql_fetch_row($category_rslt);
+	$vsc_count[$i] = $category_row[0];
 	$i++;
 	}
-
 
 
 
