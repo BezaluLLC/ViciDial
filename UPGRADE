@@ -64,6 +64,8 @@ OTHER CHANGES:
 3. Added transfer call to answering machine message with hotkey option,
 	currently hard-coded to these two statuses: (LTMG or XFTAMM)
 
+4. Added User Group Login Report
+
 
 
 
