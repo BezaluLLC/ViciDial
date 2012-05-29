@@ -57,10 +57,11 @@
 # 110911-1555 - Added logout function
 # 111114-0037 - Added scheduled callback and qm-dispo-code fields to external_status function
 # 120301-1745 - Fixed ereg statements dashes
+# 120529-1551 - Fixed callback_datetime filter
 #
 
-$version = '2.4-23';
-$build = '120301-1745';
+$version = '2.4-24';
+$build = '120529-1551';
 
 $startMS = microtime();
 
@@ -258,7 +259,7 @@ if ($non_latin < 1)
 	$dial_override = ereg_replace("[^A-Z]","",$dial_override);
 	$consultative = ereg_replace("[^A-Z]","",$consultative);
 		$callback_datetime = ereg_replace("\+"," ",$callback_datetime);
-	$callback_datetime = ereg_replace("[^- \.\_0-9a-zA-Z]","",$callback_datetime);
+	$callback_datetime = ereg_replace("[^- \:\.\_0-9a-zA-Z]","",$callback_datetime);
 	$callback_type = ereg_replace("[^A-Z]","",$callback_type);
 		$callback_comments = ereg_replace("\+"," ",$callback_comments);
 	$callback_comments = ereg_replace("[^- \.\_0-9a-zA-Z]","",$callback_comments);
