@@ -46,10 +46,11 @@
 # 120223-2318 - Removed logging of good login passwords if webroot writable is enabled
 # 120402-2128 - Added template options
 # 120525-1038 - Added uploaded filename filtering
+# 120529-1348 - Filename filter fix
 #
 
-$version = '2.4-45';
-$build = '120525-1038';
+$version = '2.4-46';
+$build = '120529-1348';
 
 
 require("dbconnect.php");
@@ -154,8 +155,6 @@ if ( $phone_code_override == "in_file" ) { $phone_code_override = ""; }
 
 ### REGEX to prevent weird characters from ending up in the fields
 $field_regx = "['\"`\\;]";
-$lead_file = preg_replace("/;|:|\/|\^|\[|\]|\"|\'|\*/","",$lead_file);
-$leadfile_name = preg_replace("/;|:|\/|\^|\[|\]|\"|\'|\*/","",$leadfile_name);
 
 $vicidial_list_fields = '|lead_id|vendor_lead_code|source_id|list_id|gmt_offset_now|called_since_last_reset|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|called_count|last_local_call_time|rank|owner|entry_list_id|';
 
@@ -249,6 +248,13 @@ else
 		exit;
 		}
 	}
+
+if (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$LF_orig))
+	{
+	echo "ERROR: Invalid File Name: $LF_orig\n";
+	exit;
+	}
+
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {echo "|$stmt|\n";}

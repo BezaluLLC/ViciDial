@@ -12,10 +12,11 @@
 # 110922-2331 - Added modify_audiostore user option for access
 # 111122-1332 - Added more filename filtering
 # 120525-0739 - Added yet more filename filtering
+# 120529-1345 - Filename filter fix
 #
 
-$version = '2.4-6';
-$build = '120525-0739';
+$version = '2.4-7';
+$build = '120529-1345';
 
 $MT[0]='';
 
@@ -75,6 +76,11 @@ if ( ( (strlen($sounds_web_server)) != (strlen($server_name)) ) or (!eregi("$sou
 	exit;
 	}
 
+if (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$AF_orig))
+	{
+	echo "ERROR: Invalid File Name: $AF_orig\n";
+	exit;
+	}
 
 ### check if web directory exists, if not generate one
 if (strlen($sounds_web_directory) < 30)

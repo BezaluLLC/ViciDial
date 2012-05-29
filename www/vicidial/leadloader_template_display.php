@@ -6,6 +6,7 @@
 # CHANGES
 # 120402-2238 - First Build
 # 120525-1039 - Added uploaded filename filtering
+# 120529-1345 - Filename filter fix
 #
 
 require("dbconnect.php");
@@ -46,7 +47,11 @@ if (isset($_GET["buffer"]))				{$buffer=$_GET["buffer"];}
 
 ### REGEX to prevent weird characters from ending up in the fields
 $field_regx = "['\"`\\;]";
-$sample_template_file_name = preg_replace("/;|:|\/|\^|\[|\]|\"|\'|\*/","",$sample_template_file_name);
+if ( (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$LF_orig)) or (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$sample_template_file_name)) )
+	{
+	echo "ERROR: Invalid File Name: $LF_orig $sample_template_file_name\n";
+	exit;
+	}
 
 if ($form_action=="prime_file" && $sample_template_file_name) 
 	{
@@ -101,9 +106,18 @@ if ($form_action=="prime_file" && $sample_template_file_name)
 	echo "</script>";
 	$field_check=explode($delimiter, $buffer);
 	flush();
-} else if ($form_action=="update_template") {
+	}
+else if ($form_action=="update_template") 
+	{
 	echo "Hi";
-} else  {
+	} 
+else
+	{
+	if ( (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$LF_orig)) or (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$sample_template_file_name)) )
+		{
+		echo "ERROR: Invalid File Name: $LF_orig $sample_template_file_name\n";
+		exit;
+		}
 #	echo "<B>** $form_action</b>"; die;
 $fields_stmt = "SELECT list_id, vendor_lead_code, source_id, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, rank, owner from vicidial_list limit 1";
 

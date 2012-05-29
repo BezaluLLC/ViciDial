@@ -36,11 +36,12 @@
 # 100712-1416 - Added entry_list_id field to vicidial_list to preserve link to custom fields if any
 # 120223-2148 - Removed logging of good login passwords if webroot writable is enabled
 # 120525-0731 - Added uploaded filename filtering
+# 120529-1346 - Filename filter fix
 #
 # make sure vicidial_list exists and that your file follows the formatting correctly. This page does not dedupe or do any other lead filtering actions yet at this time.
 
-$version = '2.4-39';
-$build = '120525-0731';
+$version = '2.4-40';
+$build = '120529-1346';
 
 
 require("dbconnect.php");
@@ -140,8 +141,6 @@ if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 
 ### REGEX to prevent weird characters from ending up in the fields
 $field_regx = "['\"`\\;]";
-$lead_file = preg_replace("/;|:|\/|\^|\[|\]|\"|\'|\*/","",$lead_file);
-$leadfile_name = preg_replace("/;|:|\/|\^|\[|\]|\"|\'|\*/","",$leadfile_name);
 
 $vicidial_list_fields = '|lead_id|vendor_lead_code|source_id|list_id|gmt_offset_now|called_since_last_reset|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|called_count|last_local_call_time|rank|owner|entry_list_id|';
 
@@ -234,6 +233,11 @@ $browser = getenv("HTTP_USER_AGENT");
 		}
 	}
 
+if (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$LF_orig))
+	{
+	echo "ERROR: Invalid File Name: $LF_orig\n";
+	exit;
+	}
 
 $script_name = getenv("SCRIPT_NAME");
 $server_name = getenv("SERVER_NAME");
