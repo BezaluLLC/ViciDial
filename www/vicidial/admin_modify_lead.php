@@ -47,6 +47,7 @@
 # 111103-1533 - Added admin_hide_phone_data and admin_hide_lead_data options
 # 120223-2249 - Removed logging of good login passwords if webroot writable is enabled
 # 120518-1004 - Fix for multi-line comments
+# 120529-1635 - Added User Group Campaign-Lists validation
 #
 
 require("dbconnect.php");
@@ -222,13 +223,15 @@ else
 	{
 	if($auth>0)
 		{
-		$stmt="SELECT full_name,modify_leads,admin_hide_lead_data,admin_hide_phone_data from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+		$stmt="SELECT full_name,modify_leads,admin_hide_lead_data,admin_hide_phone_data,user_group,user_level from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$LOGfullname =				$row[0];
 		$LOGmodify_leads =			$row[1];
 		$LOGadmin_hide_lead_data =	$row[2];
 		$LOGadmin_hide_phone_data =	$row[3];
+		$LOGuser_group =			$row[4];
+		$LOGuser_level =			$row[5];
 
 		if ($webroot_writable > 0)
 			{
@@ -244,6 +247,36 @@ else
 			fclose($fp);
 			}
 		}
+	}
+
+$LOGallowed_listsSQL='';
+$stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {$HTML_text.="|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns =			$row[0];
+
+if (!eregi("-ALL",$LOGallowed_campaigns))
+	{
+	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+
+	$stmt="SELECT list_id from vicidial_lists $whereLOGallowed_campaignsSQL;";
+	$rslt=mysql_query($stmt, $link);
+	$lists_to_print = mysql_num_rows($rslt);
+	$o=0;
+	while ($lists_to_print > $o) 
+		{
+		$rowx=mysql_fetch_row($rslt);
+		$camp_lists .= "'$rowx[0]',";
+		$o++;
+		}
+	$camp_lists = eregi_replace(".$","",$camp_lists);
+	if (strlen($camp_lists)<2) {$camp_lists="''";}
+	$LOGallowed_listsSQL = "and list_id IN($camp_lists)";
+	$whereLOGallowed_listsSQL = "where list_id IN($camp_lists)";
 	}
 
 $label_title =				'Title';
@@ -339,6 +372,25 @@ if ($lead_id == 'NEW')
 		}
 	else
 		{echo "ERROR: Lead not added, please go back and look at what you entered<BR><BR>\n";}
+	}
+else
+	{
+	$stmt="SELECT count(*) from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "'";
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$row=mysql_fetch_row($rslt);
+	$lead_exists =	$row[0];
+
+	$stmt="SELECT count(*) from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "' $LOGallowed_listsSQL";
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$row=mysql_fetch_row($rslt);
+	$lead_count =	$row[0];
+	if ( ($lead_exists > 0) and ($lead_count < 1) )
+		{
+		echo "lead does not exist\n";
+		exit;
+		}
 	}
 
 if (strlen($lead_id) < 1)
@@ -668,7 +720,7 @@ else
 		}
 
 	##### grab vicidial_list data for lead #####
-	$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "'";
+	$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "' $LOGallowed_listsSQL";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$row=mysql_fetch_row($rslt);
