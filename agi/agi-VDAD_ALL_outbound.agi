@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-VDAD_ALL_outbound.agi version 2.4
+# agi-VDAD_ALL_outbound.agi version 2.6
 # 
 # runs when an outbound call is answered. This script will 
 # send the calls out to the agents that are logged in.
@@ -46,7 +46,7 @@
 #exten => 8366,4,AGI(agi-VDAD_ALL_outbound.agi,SURVEY-----LB-----US_pol_survey_hello-----1238-----8-----US_pol_survey_transfer-----US_thanks_no_contact-----OPTOUT-----DNC)
 #exten => 8366,5,Hangup
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 80218-2027 - First Build
@@ -93,12 +93,13 @@
 # 110926-1929 - Small fixes
 # 111201-1751 - Added grade-random next-agent-call option
 # 111219-2256 - Added max stats updating
+# 120529-2112 - Added safe_harbor_audio_field campaign option
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
 $AGILOG = '0';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=96;
+$mysql_log_count=97;
 $one_mysql_log=0;
 
 
@@ -532,7 +533,7 @@ if ($VDACaffected_rows > 0)
 	##### END - Max call stats
 
 	### Grab campaign values from the database
-	$stmtA = "SELECT drop_call_seconds,drop_action,safe_harbor_exten,concurrent_transfers,next_agent_call,voicemail_ext,drop_inbound_group,use_internal_dnc,use_campaign_dnc,cpd_amd_action,am_message_exten,three_way_call_cid,campaign_cid,survey_first_audio_file,survey_opt_in_audio_file,survey_ni_audio_file,survey_third_audio_file,survey_fourth_audio_file,extension_appended_cidname,queue_priority,closer_campaigns,queuemetrics_phone_environment,campaign_recording,campaign_rec_filename,safe_harbor_audio,safe_harbor_menu_id,survey_recording FROM vicidial_campaigns where campaign_id = '$VDADcampaign';";
+	$stmtA = "SELECT drop_call_seconds,drop_action,safe_harbor_exten,concurrent_transfers,next_agent_call,voicemail_ext,drop_inbound_group,use_internal_dnc,use_campaign_dnc,cpd_amd_action,am_message_exten,three_way_call_cid,campaign_cid,survey_first_audio_file,survey_opt_in_audio_file,survey_ni_audio_file,survey_third_audio_file,survey_fourth_audio_file,extension_appended_cidname,queue_priority,closer_campaigns,queuemetrics_phone_environment,campaign_recording,campaign_rec_filename,safe_harbor_audio,safe_harbor_menu_id,survey_recording,safe_harbor_audio_field FROM vicidial_campaigns where campaign_id = '$VDADcampaign';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -570,6 +571,7 @@ if ($VDACaffected_rows > 0)
 		$safe_harbor_audio =			$aryA[24];
 		$safe_harbor_menu_id =			$aryA[25];
 		$survey_recording =				$aryA[26];
+		$safe_harbor_audio_field =		$aryA[27];
 		if (length($closer_campaigns) > 2)
 			{
 			$closer_campaigns =~ s/^ | -$//gi;
@@ -2970,6 +2972,27 @@ if ($drop_timer > $DROP_TIME)
 
 	if ($drop_action =~ /AUDIO/)
 		{
+		if ($safe_harbor_audio_field !~ /DISABLED/)
+			{
+			$stmtA = "SELECT $safe_harbor_audio_field FROM vicidial_list where lead_id='$CIDlead_id';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+				$dbhP=$dbhA;   $mysql_count='01097';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$safe_harbor_audio_value =	$aryA[0];
+
+				if (length($safe_harbor_audio_value)>0)
+					{
+					if ($AGILOG) {$agi_string = "playing drop message FIELD: $safe_harbor_audio_value|$safe_harbor_audio_field|$safe_harbor_audio";   &agi_output;}
+					$safe_harbor_audio = $safe_harbor_audio_value;
+					}
+				}
+			$sthA->finish();
+
+			}
 		$DROPexten='';
 		if ($AGILOG) {$agi_string = "playing drop message: $safe_harbor_audio";   &agi_output;}
 

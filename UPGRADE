@@ -66,6 +66,9 @@ OTHER CHANGES:
 
 4. Added User Group Login Report
 
+5. Added Safe Harbor Audio Field to campaign options which allows for a lead
+	field to be used as an override safe harbor audio on a per-lead basis
+
 
 
 
