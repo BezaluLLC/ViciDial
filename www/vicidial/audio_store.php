@@ -13,10 +13,11 @@
 # 111122-1332 - Added more filename filtering
 # 120525-0739 - Added yet more filename filtering
 # 120529-1345 - Filename filter fix
+# 120531-1747 - Another filtering fix
 #
 
-$version = '2.4-7';
-$build = '120529-1345';
+$version = '2.4-8';
+$build = '120531-1747';
 
 $MT[0]='';
 
@@ -213,7 +214,6 @@ if ($action == "AUTOUPLOAD")
 		$AF_path = preg_replace("/\!/",'\!',$AF_path);
 		$AF_path = preg_replace("/\%/",'\%',$AF_path);
 		$AF_path = preg_replace("/\^/",'\^',$AF_path);
-		$AF_path = preg_replace("/;|:|\/|\[|\]|\"|\'/",'',$AF_path);
 		$audiofile_name = preg_replace("/ /",'',$audiofile_name);
 		$audiofile_name = preg_replace("/@/",'',$audiofile_name);
 		$audiofile_name = preg_replace("/\(/",'',$audiofile_name);
@@ -224,7 +224,6 @@ if ($action == "AUTOUPLOAD")
 		$audiofile_name = preg_replace("/\!/",'',$audiofile_name);
 		$audiofile_name = preg_replace("/\%/",'',$audiofile_name);
 		$audiofile_name = preg_replace("/\^/",'',$audiofile_name);
-		$audiofile_name = preg_replace("/;|:|\/|\[|\]|\"|\'/",'',$audiofile_name);
 		copy($AF_path, "$WeBServeRRooT/$sounds_web_directory/$audiofile_name");
 		chmod("$WeBServeRRooT/$sounds_web_directory/$audiofile_name", 0766);
 
@@ -319,7 +318,6 @@ if ($action == "MANUALUPLOAD")
 		$AF_path = preg_replace("/\!/",'\!',$AF_path);
 		$AF_path = preg_replace("/\%/",'\%',$AF_path);
 		$AF_path = preg_replace("/\^/",'\^',$AF_path);
-		$AF_path = preg_replace("/;|:|\/|\[|\]|\"|\'/",'',$AF_path);
 		$audiofile_name = preg_replace("/ /",'',$audiofile_name);
 		$audiofile_name = preg_replace("/@/",'',$audiofile_name);
 		$audiofile_name = preg_replace("/\(/",'',$audiofile_name);
@@ -330,7 +328,6 @@ if ($action == "MANUALUPLOAD")
 		$audiofile_name = preg_replace("/\!/",'',$audiofile_name);
 		$audiofile_name = preg_replace("/\%/",'',$audiofile_name);
 		$audiofile_name = preg_replace("/\^/",'',$audiofile_name);
-		$audiofile_name = preg_replace("/;|:|\/|\[|\]|\"|\'/",'',$audiofile_name);
 		copy($AF_path, "$WeBServeRRooT/$sounds_web_directory/$audiofile_name");
 		chmod("$WeBServeRRooT/$sounds_web_directory/$audiofile_name", 0766);
 		
