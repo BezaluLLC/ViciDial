@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# cm_lookup.agi version 2.4
+# cm_lookup.agi version 2.6
 # 
 # for use with a Call Menu in the custom dialplan section.
 #
@@ -23,19 +23,23 @@
 # ;     Y - update the lead record's 'user' field with the agent_user_id variable
 # ;     COMMENTS - update the lead record's 'comments' field with the agent_user_id variable
 # ;     N - Do nothing (default)
+# ; 8. Update the lead's record with the call's title variable
+# ;     Y - update the lead record's 'title' field with the call's title variable
+# ;     N - Do nothing (default)
 # 
 # Found entries will send the call to the 'A' option in the source call menu
 # Not-Found entries will send the call to the 'B' option in the source call menu
 #
 #; example with 8-digit vendor lead codes
-# exten => _XXXXXXXX,1,AGI(cm_lookup.agi,vendor_lead_code---CAMPLISTSALL---TESTCAMP---lastname_oneyestwono---N---N---Y)
+# exten => _XXXXXXXX,1,AGI(cm_lookup.agi,vendor_lead_code---CAMPLISTSALL---TESTCAMP---lastname_oneyestwono---N---N---Y---N)
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 111004-1450 - First Build
 # 111212-1507 - Added update of vicidial_list phone_number with caller callerid number option
 # 120511-1508 - Added option for 'address3' uniqueid update and 'user' agent_user_id field update if AGENT-dial-in AGI is used beforoe this AGI
+# 120604-1311 - Added title call variable option
 #
 
 $script = 'cm_lookup.agi';
@@ -152,6 +156,7 @@ if (length($ARGV[0])>1)
 	$phone_update =			$ARGV_vars[4];
 	$uniqueid_address3 =	$ARGV_vars[5];
 	$agent_id_update =		$ARGV_vars[6];
+	$title_update =			$ARGV_vars[7];
 	}
 if ( (length($field) < 2) || ($vicidial_list_fields !~ /\|$field\|/) )
 	{$field = 'vendor_lead_code';}
@@ -197,7 +202,8 @@ if ( (!$callerid) or ($callerid =~ /unknown/) )
 	{$callerid = $calleridname;}
 
 $agent_user_id = $AGI->get_variable('agent_user_id');
-if ( ($AGILOG) && (length($agent_user_id)>0) ) {$agi_string = "user id AGI variable:    |$agent_user_id|";   &agi_output;}
+$call_var_title = $AGI->get_variable('title');
+if ( ($AGILOG) && (length($agent_user_id)>0) ) {$agi_string = "user id AGI variables:    |$agent_user_id|$call_var_title|";   &agi_output;}
 
 $listSQL = '';
 if ($search_method =~ /LIST$/)
@@ -456,6 +462,7 @@ if ($sthArows > 0)
 		$phone_update_SQL='';
 		$user_update_SQL='';
 		$uniqueid_address3_SQL='';
+		$title_update_SQL='';
 		if ($phone_update =~ /Y/i)
 			{
 			if ( (length($callerid) > 6) && ($callerid !~ /unknown|private/i) ) 
@@ -467,6 +474,8 @@ if ($sthArows > 0)
 			}
 		if ($uniqueid_address3 =~ /Y/)
 			{$uniqueid_address3_SQL = ",address3='$uniqueid'";}
+		if ( (length($call_var_title) > 1) && ($title_update =~ /Y/i) )
+			{$title_update_SQL = ",title='$call_var_title'";}
 		if (length($agent_user_id) > 1)
 			{
 			if ($agent_id_update =~ /COMMENT/i)
@@ -475,9 +484,9 @@ if ($sthArows > 0)
 				{$user_update_SQL = ",user='$agent_user_id'";}
 			}
 
-		$stmtA = "UPDATE vicidial_list SET modify_date=NOW() $phone_update_SQL $user_update_SQL $uniqueid_address3_SQL where lead_id='$lead_id';";
+		$stmtA = "UPDATE vicidial_list SET modify_date=NOW() $phone_update_SQL $user_update_SQL $uniqueid_address3_SQL $title_update_SQL where lead_id='$lead_id';";
 		$affected_rows = $dbhA->do($stmtA);
-		if ($AGILOG) {$agi_string = "--  CMLOOKUP vl record updated: |$affected_rows| $lead_id|$callerid|$phone_number|$first_name|$last_name|$agent_user_id|$uniqueid|";   &agi_output;}
+		if ($AGILOG) {$agi_string = "--  CMLOOKUP vl record updated: |$affected_rows| $lead_id|$callerid|$phone_number|$first_name|$last_name|$agent_user_id|$call_var_title|$uniqueid|";   &agi_output;}
 		}
 	}
 else
