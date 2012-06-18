@@ -474,7 +474,7 @@ if ($sthArows > 0)
 			}
 		if ($uniqueid_address3 =~ /Y/)
 			{$uniqueid_address3_SQL = ",address3='$uniqueid'";}
-		if ( (length($call_var_title) > 1) && ($title_update =~ /Y/i) )
+		if ( (length($call_var_title) > 0) && ($title_update =~ /Y/i) )
 			{$title_update_SQL = ",title='$call_var_title'";}
 		if (length($agent_user_id) > 1)
 			{

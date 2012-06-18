@@ -8,7 +8,8 @@
 # 111119-1234 - First build
 # 120118-2116 - Changed headers on CSV download
 # 120224-0910 - Added HTML display option with bar graphs
-#
+# 120601-2235 - Added group name to header, added status breakdown counts to page and CSV with option to display them
+# 120611-2200 - Added ability to filter output by call time
 
 require("dbconnect.php");
 
@@ -27,6 +28,8 @@ if (isset($_GET["file_download"]))			{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 if (isset($_GET["hourly_breakdown"]))			{$hourly_breakdown=$_GET["hourly_breakdown"];}
 	elseif (isset($_POST["hourly_breakdown"]))	{$hourly_breakdown=$_POST["hourly_breakdown"];}
+if (isset($_GET["show_disposition_statuses"]))			{$show_disposition_statuses=$_GET["show_disposition_statuses"];}
+	elseif (isset($_POST["show_disposition_statuses"]))	{$show_disposition_statuses=$_POST["show_disposition_statuses"];}
 if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))	{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
@@ -153,6 +156,20 @@ while ($i < $groups_to_print)
 	$groups[$i] =		$row[0];
 	$group_names[$i] =	$row[1];
 	$groups_string .= "$groups[$i]|";
+	if ($group && $groups[$i]==$group) {$group_name=$group_names[$i];}
+	$i++;
+	}
+
+$stmt="select call_time_id,call_time_name from vicidial_call_times $whereLOGadmin_viewable_call_timesSQL order by call_time_id;";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {$MAIN.="$stmt\n";}
+$times_to_print = mysql_num_rows($rslt);
+$i=0;
+while ($i < $times_to_print)
+	{
+	$row=mysql_fetch_row($rslt);
+	$call_times[$i] =		$row[0];
+	$call_time_names[$i] =	$row[1];
 	$i++;
 	}
 
@@ -183,9 +200,9 @@ $short_header=1;
 
 # require("admin_header.php");
 
-$MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
-
 $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
+$MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD colspan=2>";
+
 $MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
 $MAIN.="<script language=\"JavaScript\">\n";
@@ -226,21 +243,18 @@ $MAIN.="<select name='report_display_type'>";
 if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
 $MAIN.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>&nbsp; ";
 $MAIN.="<SELECT SIZE=1 NAME=shift>\n";
-$MAIN.="<option selected value=\"$shift\">$shift</option>\n";
 $MAIN.="<option value=\"\">--</option>\n";
-$MAIN.="<option value=\"AM\">AM</option>\n";
-$MAIN.="<option value=\"PM\">PM</option>\n";
-$MAIN.="<option value=\"ALL\">ALL</option>\n";
-$MAIN.="<option value=\"DAYTIME\">DAYTIME</option>\n";
-$MAIN.="<option value=\"10AM-6PM\">10AM-6PM</option>\n";
-$MAIN.="<option value=\"9AM-1AM\">9AM-1AM</option>\n";
-$MAIN.="<option value=\"845-1745\">845-1745</option>\n";
-$MAIN.="<option value=\"1745-100\">1745-100</option>\n";
+$o=0;
+while ($times_to_print > $o)
+	{
+	if ($call_times[$o] == $shift) {$MAIN.="<option selected value=\"$call_times[$o]\">$call_times[$o] - $call_time_names[$o]</option>\n";}
+	else {$MAIN.="<option value=\"$call_times[$o]\">$call_times[$o] - $call_time_names[$o]</option>\n";}
+	$o++;
+	}
 $MAIN.="</SELECT>\n";
-$MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
-$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&group=$group&shift=$shift&hourly_breakdown=$hourly_breakdown&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a> | <a href=\"./admin.php?ADD=3111&group_id=$group\">MODIFY</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a><BR><INPUT TYPE=checkbox NAME=hourly_breakdown VALUE='checked' $hourly_breakdown>Show hourly results</FONT>\n";
-$MAIN.="</FORM>\n\n";
-
+$MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT></TD></TR>\n";
+$MAIN.="<TR><TD align='left'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><INPUT TYPE=checkbox NAME=hourly_breakdown VALUE='checked' $hourly_breakdown>Show hourly results<BR><INPUT TYPE=checkbox NAME=show_disposition_statuses VALUE='checked' $show_disposition_statuses>Show disposition statuses</FONT></TD><TD align='right'><a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&group=$group&shift=$shift&hourly_breakdown=$hourly_breakdown&show_disposition_statuses=$show_disposition_statuses&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a> | <a href=\"./admin.php?ADD=3111&group_id=$group\">MODIFY</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a></TD></TR>\n";
+$MAIN.="<TR><TD colspan=2>";
 $MAIN.="<PRE><FONT SIZE=2>\n\n";
 
 
@@ -256,94 +270,243 @@ if (!$group)
 else
 	{
 	### FOR SHIFTS IT IS BEST TO STICK TO 15-MINUTE INCREMENTS FOR START TIMES ###
+	if ($shift && $shift!="ALL") {
+		# call_time_id | call_time_name              | call_time_comments | ct_default_start | ct_default_stop | ct_sunday_start | ct_sunday_stop | ct_monday_start | ct_monday_stop | ct_tuesday_start | ct_tuesday_stop | ct_wednesday_start | ct_wednesday_stop | ct_thursday_start | ct_thursday_stop | ct_friday_start | ct_friday_stop | ct_saturday_start | ct_saturday_stop
+		$big_shift_time_SQL_clause ="";
+		$shift_stmt="select * from vicidial_call_times where call_time_id='$shift'";
+		$shift_rslt=mysql_query($shift_stmt, $link);
+		$shift_row=mysql_fetch_array($shift_rslt);
+		$default_start_time=substr("0000".$shift_row["ct_default_start"], -4);
+		$default_stop_time=substr("0000".$shift_row["ct_default_stop"], -4);
+		$ct_default_start=substr($default_start_time,0,2).":".substr($default_start_time,2,2).":00";
+		$ct_default_stop=substr($default_stop_time,0,2).":".substr($default_stop_time,2,2).":00";
 
-	if ($shift == 'AM') 
-		{
-		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "00:00:00";}   
-		if (strlen($time_END) < 6) {$time_END = "11:59:59";}
+		if ($shift_row["ct_sunday_start"]!=$shift_row["ct_sunday_stop"]) {
+			$sunday_start_time=substr("0000".$shift_row["ct_sunday_start"], -4);
+			$sunday_stop_time=substr("0000".$shift_row["ct_sunday_stop"], -4);
+			$ct_sunday_start=substr($sunday_start_time,0,2).":".substr($sunday_start_time,2,2).":00";
+			$ct_sunday_stop=substr($sunday_stop_time,0,2).":".substr($sunday_stop_time,2,2).":00";
+		} else if ($shift_row["ct_sunday_start"]!="2400") {
+			$ct_sunday_start=$ct_default_start;
+			$ct_sunday_stop=$ct_default_stop;
+		} else {
+			$ct_sunday_start="00:00:00";
+			$ct_sunday_stop=1;
 		}
-	if ($shift == 'PM') 
-		{
-		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "12:00:00";}
-		if (strlen($time_END) < 6) {$time_END = "23:59:59";}
+		$stop_time_stmt="select TIMEDIFF('$ct_sunday_stop', 1)";  # subtract one second - don't allow the actual final time - this can cause an extra row to print
+		$stop_time_rslt=mysql_query($stop_time_stmt, $link);
+		$strow=mysql_fetch_row($stop_time_rslt);
+		$ct_sunday_stop=$strow[0];
+		$start_time_ary[0]=$ct_sunday_start;
+		$stop_time_ary[0]=$ct_sunday_stop;
+		$big_shift_time_SQL_clause.="(date_format(call_date, '%w')=0 and date_format(call_date, '%H:%i:%s')>='$ct_sunday_start' and date_format(call_date, '%H:%i:%s')<='$ct_sunday_stop') or ";
+
+		if ($shift_row["ct_monday_start"]!=$shift_row["ct_monday_stop"]) {
+			$monday_start_time=substr("0000".$shift_row["ct_monday_start"], -4);
+			$monday_stop_time=substr("0000".$shift_row["ct_monday_stop"], -4);
+			$ct_monday_start=substr($monday_start_time,0,2).":".substr($monday_start_time,2,2).":00";
+			$ct_monday_stop=substr($monday_stop_time,0,2).":".substr($monday_stop_time,2,2).":00";
+		} else if ($shift_row["ct_monday_start"]!="2400") {
+			$ct_monday_start=$ct_default_start;
+			$ct_monday_stop=$ct_default_stop;
+		} else {
+			$ct_monday_start="00:00:00";
+			$ct_monday_stop=1;
 		}
-	if ($shift == 'ALL') 
-		{
-		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "00:00:00";}
-		if (strlen($time_END) < 6) {$time_END = "23:59:59";}
+		$stop_time_stmt="select TIMEDIFF('$ct_monday_stop', 1)";  # subtract one second - don't allow the actual final time - this can cause an extra row to print
+		$stop_time_rslt=mysql_query($stop_time_stmt, $link);
+		$strow=mysql_fetch_row($stop_time_rslt);
+		$ct_monday_stop=$strow[0];
+		$start_time_ary[1]=$ct_monday_start;
+		$stop_time_ary[1]=$ct_monday_stop;
+		$big_shift_time_SQL_clause.="(date_format(call_date, '%w')=1 and date_format(call_date, '%H:%i:%s')>='$ct_monday_start' and date_format(call_date, '%H:%i:%s')<='$ct_monday_stop') or ";
+
+		if ($shift_row["ct_tuesday_start"]!=$shift_row["ct_tuesday_stop"]) {
+			$tuesday_start_time=substr("0000".$shift_row["ct_tuesday_start"], -4);
+			$tuesday_stop_time=substr("0000".$shift_row["ct_tuesday_stop"], -4);
+			$ct_tuesday_start=substr($tuesday_start_time,0,2).":".substr($tuesday_start_time,2,2).":00";
+			$ct_tuesday_stop=substr($tuesday_stop_time,0,2).":".substr($tuesday_stop_time,2,2).":00";
+		} else if ($shift_row["ct_tuesday_start"]!="2400") {
+			$ct_tuesday_start=$ct_default_start;
+			$ct_tuesday_stop=$ct_default_stop;
+		} else {
+			$ct_tuesday_start="00:00:00";
+			$ct_tuesday_stop=1;
 		}
-	if ($shift == 'DAYTIME') 
-		{
-		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "08:45:00";}
-		if (strlen($time_END) < 6) {$time_END = "00:59:59";}
+		$stop_time_stmt="select TIMEDIFF('$ct_tuesday_stop', 1)";  # subtract one second - don't allow the actual final time - this can cause an extra row to print
+		$stop_time_rslt=mysql_query($stop_time_stmt, $link);
+		$strow=mysql_fetch_row($stop_time_rslt);
+		$ct_tuesday_stop=$strow[0];
+		$start_time_ary[2]=$ct_tuesday_start;
+		$stop_time_ary[2]=$ct_tuesday_stop;
+		$big_shift_time_SQL_clause.="(date_format(call_date, '%w')=2 and date_format(call_date, '%H:%i:%s')>='$ct_tuesday_start' and date_format(call_date, '%H:%i:%s')<='$ct_tuesday_stop') or ";
+
+		if ($shift_row["ct_wednesday_start"]!=$shift_row["ct_wednesday_stop"]) {
+			$wednesday_start_time=substr("0000".$shift_row["ct_wednesday_start"], -4);
+			$wednesday_stop_time=substr("0000".$shift_row["ct_wednesday_stop"], -4);
+			$ct_wednesday_start=substr($wednesday_start_time,0,2).":".substr($wednesday_start_time,2,2).":00";
+			$ct_wednesday_stop=substr($wednesday_stop_time,0,2).":".substr($wednesday_stop_time,2,2).":00";
+		} else if ($shift_row["ct_wednesday_start"]!="2400") {
+			$ct_wednesday_start=$ct_default_start;
+			$ct_wednesday_stop=$ct_default_stop;
+		} else {
+			$ct_wednesday_start="00:00:00";
+			$ct_wednesday_stop=1;
 		}
-	if ($shift == '10AM-6PM') 
-		{
-		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "10:00:00";}
-		if (strlen($time_END) < 6) {$time_END = "17:59:59";}
+		$stop_time_stmt="select TIMEDIFF('$ct_wednesday_stop', 1)";  # subtract one second - don't allow the actual final time - this can cause an extra row to print
+		$stop_time_rslt=mysql_query($stop_time_stmt, $link);
+		$strow=mysql_fetch_row($stop_time_rslt);
+		$ct_wednesday_stop=$strow[0];
+		$start_time_ary[3]=$ct_wednesday_start;
+		$stop_time_ary[3]=$ct_wednesday_stop;
+		$big_shift_time_SQL_clause.="(date_format(call_date, '%w')=3 and date_format(call_date, '%H:%i:%s')>='$ct_wednesday_start' and date_format(call_date, '%H:%i:%s')<='$ct_wednesday_stop') or ";
+
+		if ($shift_row["ct_thursday_start"]!=$shift_row["ct_thursday_stop"]) {
+			$thursday_start_time=substr("0000".$shift_row["ct_thursday_start"], -4);
+			$thursday_stop_time=substr("0000".$shift_row["ct_thursday_stop"], -4);
+			$ct_thursday_start=substr($thursday_start_time,0,2).":".substr($thursday_start_time,2,2).":00";
+			$ct_thursday_stop=substr($thursday_stop_time,0,2).":".substr($thursday_stop_time,2,2).":00";
+		} else if ($shift_row["ct_thursday_start"]!="2400") {
+			$ct_thursday_start=$ct_default_start;
+			$ct_thursday_stop=$ct_default_stop;
+		} else {
+			$ct_thursday_start="00:00:00";
+			$ct_thursday_stop=1;
 		}
-	if ($shift == '9AM-1AM') 
-		{
-		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "09:00:00";}
-		if (strlen($time_END) < 6) {$time_END = "00:59:59";}
+		$stop_time_stmt="select TIMEDIFF('$ct_thursday_stop', 1)";  # subtract one second - don't allow the actual final time - this can cause an extra row to print
+		$stop_time_rslt=mysql_query($stop_time_stmt, $link);
+		$strow=mysql_fetch_row($stop_time_rslt);
+		$ct_thursday_stop=$strow[0];
+		$start_time_ary[4]=$ct_thursday_start;
+		$stop_time_ary[4]=$ct_thursday_stop;
+		$big_shift_time_SQL_clause.="(date_format(call_date, '%w')=4 and date_format(call_date, '%H:%i:%s')>='$ct_thursday_start' and date_format(call_date, '%H:%i:%s')<='$ct_thursday_stop') or ";
+
+		if ($shift_row["ct_friday_start"]!=$shift_row["ct_friday_stop"]) {
+			$friday_start_time=substr("0000".$shift_row["ct_friday_start"], -4);
+			$friday_stop_time=substr("0000".$shift_row["ct_friday_stop"], -4);
+			$ct_friday_start=substr($friday_start_time,0,2).":".substr($friday_start_time,2,2).":00";
+			$ct_friday_stop=substr($friday_stop_time,0,2).":".substr($friday_stop_time,2,2).":00";
+		} else if ($shift_row["ct_friday_start"]!="2400") {
+			$ct_friday_start=$ct_default_start;
+			$ct_friday_stop=$ct_default_stop;
+		} else {
+			$ct_friday_start="00:00:00";
+			$ct_friday_stop=1;
 		}
-	if ($shift == '845-1745') 
-		{
-		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "08:45:00";}
-		if (strlen($time_END) < 6) {$time_END = "17:44:59";}
+		$stop_time_stmt="select TIMEDIFF('$ct_friday_stop', 1)";  # subtract one second - don't allow the actual final time - this can cause an extra row to print
+		$stop_time_rslt=mysql_query($stop_time_stmt, $link);
+		$strow=mysql_fetch_row($stop_time_rslt);
+		$ct_friday_stop=$strow[0];
+		$start_time_ary[5]=$ct_friday_start;
+		$stop_time_ary[5]=$ct_friday_stop;
+		$big_shift_time_SQL_clause.="(date_format(call_date, '%w')=5 and date_format(call_date, '%H:%i:%s')>='$ct_friday_start' and date_format(call_date, '%H:%i:%s')<='$ct_friday_stop') or ";
+
+		if ($shift_row["ct_saturday_start"]!=$shift_row["ct_saturday_stop"]) {
+			$saturday_start_time=substr("0000".$shift_row["ct_saturday_start"], -4);
+			$saturday_stop_time=substr("0000".$shift_row["ct_saturday_stop"], -4);
+			$ct_saturday_start=substr($saturday_start_time,0,2).":".substr($saturday_start_time,2,2).":00";
+			$ct_saturday_stop=substr($saturday_stop_time,0,2).":".substr($saturday_stop_time,2,2).":00";
+		} else if ($shift_row["ct_saturday_start"]!="2400") {
+			$ct_saturday_start=$ct_default_start;
+			$ct_saturday_stop=$ct_default_stop;
+		} else {
+			$ct_saturday_start="00:00:00";
+			$ct_saturday_stop=1;
 		}
-	if ($shift == '1745-100') 
-		{
-		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "17:45:00";}
-		if (strlen($time_END) < 6) {$time_END = "00:59:59";}
-		}
+		$stop_time_stmt="select TIMEDIFF('$ct_saturday_stop', 1)";  # subtract one second - don't allow the actual final time - this can cause an extra row to print
+		$stop_time_rslt=mysql_query($stop_time_stmt, $link);
+		$strow=mysql_fetch_row($stop_time_rslt);
+		$ct_saturday_stop=$strow[0];
+		$start_time_ary[6]=$ct_saturday_start;
+		$stop_time_ary[6]=$ct_saturday_stop;
+		$big_shift_time_SQL_clause.="(date_format(call_date, '%w')=6 and date_format(call_date, '%H:%i:%s')>='$ct_saturday_start' and date_format(call_date, '%H:%i:%s')<='$ct_saturday_stop') or ";
 
-	$time1 = strtotime($time_BEGIN);
-	$time2 = strtotime($time_END)+1;
+		$query_time_stmt="select date_format('$query_date', '%w'), date_format('$end_date', '%w')";
+		$query_time_rslt=mysql_query($query_time_stmt, $link);
+		$qrow=mysql_fetch_row($query_time_rslt);
+		$time_BEGIN=$start_time_ary[$qrow[0]];
+		$time_END=$stop_time_ary[$qrow[0]];
+		#$time_BEGIN="00:00:00"; # Need this so the $SQepoch value can be tweaked per day (i.e. only adding the hours for the start time);
 
-	$hpd = ceil(($time2 - $time1) / 3600);
-	if ($hpd<0) {$hpd+=24;}
+		$query_date_BEGIN = "$query_date ".$time_BEGIN;   
+		$query_date_END = "$end_date ".$time_END;
+		RecalculateHPD($query_date_BEGIN, $query_date_END, $time_BEGIN, $time_END); # Only calling it here to get the DURATIONday, EQepoch, and intial SQepoch
+		# Will be called repeatedly for each day
 
+		$big_shift_time_SQL_clause=preg_replace('/\sor\s$/', '', $big_shift_time_SQL_clause);
+		$big_shift_time_SQL_clause=" and ($big_shift_time_SQL_clause)";
+		#echo $big_shift_time_SQL_clause;
+		#print_r($start_time_ary); echo "<BR>";
+		#print_r($stop_time_ary); echo "<BR>";
+	} else {
 
-	$query_date_BEGIN = "$query_date $time_BEGIN";   
-	$query_date_END = "$end_date $time_END";
+		if ($shift == 'ALL') 
+			{
+			if (strlen($time_BEGIN) < 6) {$time_BEGIN = "00:00:00";}
+			if (strlen($time_END) < 6) {$time_END = "23:59:59";}
+			}
 
-	$SQdate_ARY =	explode(' ',$query_date_BEGIN);
-	$SQday_ARY =	explode('-',$SQdate_ARY[0]);
-	$SQtime_ARY =	explode(':',$SQdate_ARY[1]);
-	$EQdate_ARY =	explode(' ',$query_date_END);
-	$EQday_ARY =	explode('-',$EQdate_ARY[0]);
-	$EQtime_ARY =	explode(':',$EQdate_ARY[1]);
+		$query_date_BEGIN = "$query_date $time_BEGIN";   
+		$query_date_END = "$end_date $time_END";
 
-	$SQepochDAY = mktime(0, 0, 0, $SQday_ARY[1], $SQday_ARY[2], $SQday_ARY[0]);
-	$SQepoch = mktime($SQtime_ARY[0], $SQtime_ARY[1], $SQtime_ARY[2], $SQday_ARY[1], $SQday_ARY[2], $SQday_ARY[0]);
-	$EQepoch = mktime($EQtime_ARY[0], $EQtime_ARY[1], $EQtime_ARY[2], $EQday_ARY[1], $EQday_ARY[2], $EQday_ARY[0]);
-
-	$SQsec = ( ($SQtime_ARY[0] * 3600) + ($SQtime_ARY[1] * 60) + ($SQtime_ARY[2] * 1) );
-	$EQsec = ( ($EQtime_ARY[0] * 3600) + ($EQtime_ARY[1] * 60) + ($EQtime_ARY[2] * 1) );
-
-	$DURATIONsec = ($EQepoch - $SQepoch);
-	$DURATIONday = intval( ($DURATIONsec / 86400) + 1 );
-
-	if ( ($EQsec < $SQsec) and ($DURATIONday < 1) )
-		{
-		$EQepoch = ($SQepochDAY + ($EQsec + 86400) );
-		$query_date_END = date("Y-m-d H:i:s", $EQepoch);
-		$DURATIONday++;
-		}
+		RecalculateHPD($query_date_BEGIN, $query_date_END, $time_BEGIN, $time_END);
+	}
 
 	$MAIN.="Inbound Daily Report                      $NOW_TIME\n";
-	$MAIN.="Selected in-group: $group\n";
+	$MAIN.="Selected in-group: $group - $group_name\n";
+	if ($shift) {$MAIN.="Selected shift: $shift\n";}
 	$MAIN.="Time range $DURATIONday days: $query_date_BEGIN to $query_date_END for $shift shift\n\n";
 	#echo "Time range day sec: $SQsec - $EQsec   Day range in epoch: $SQepoch - $EQepoch   Start: $SQepochDAY\n";
 	$CSV_text.="\"Inbound Daily Report\",\"$NOW_TIME\"\n";
-	$CSV_text.="Selected in-group: $group\n";
+	$CSV_text.="Selected in-group: $group - $group_name\n";
+	if ($shift) {$CSV_text.="Selected shift: $shift\n";}
 	$CSV_text.="\"Time range $DURATIONday days:\",\"$query_date_BEGIN to $query_date_END for $shift shift\"\n\n";
 
-	$d=0; $q=0; $hr=0;
+	if ($show_disposition_statuses) {
+		$dispo_stmt="select distinct status from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysql_real_escape_string($group) . "' $big_shift_time_SQL_clause order by status;";
+		#echo $dispo_stmt."<BR>";
+		$dispo_rslt=mysql_query($dispo_stmt, $link);
+		$dispo_str="";
+		$s=0;
+		while($dispo_row=mysql_fetch_row($dispo_rslt)) {
+			$status_array[$s][0]="$dispo_row[0]";
+			$status_array[$s][1]="";
+			$dispo_str.="'$dispo_row[0]',";
+			$stat_stmt="select distinct status, status_name from vicidial_statuses where status='$dispo_row[0]' UNION select distinct status, status_name from vicidial_campaign_statuses where status='$dispo_row[0]' order by status;";
+			#echo $stat_stmt."<BR>";
+			$stat_rslt=mysql_query($stat_stmt, $link);
+			while ($stat_row=mysql_fetch_array($stat_rslt)) {
+				$status_array[$s][1]=$stat_row["status_name"];
+			}
+			$s++;
+		}
+		$dispo_str=substr($dispo_str,0,-1);
+		asort($status_array);
+		#print_r($status_array);
+#		if (strlen($dispo_str)>0) {
+#		}
+	}
+
+	$d=0; $q=0; $hr=0; $shift_hrs=0;
 	while ($d < $DURATIONday)
 		{
 		$dSQepoch = ($SQepoch + ($d * 86400) + ($hr * 3600) );
+		
+		if ($shift && $shift!="ALL" && $RECALC==1) 
+			{
+			# Need to get current day, hours for that day (hpd)
+			$current_dayofweek=date("w", $dSQepoch);
+			$time_BEGIN=$start_time_ary[$current_dayofweek];
+			$time_END=$stop_time_ary[$current_dayofweek];
+			HourDifference($time_BEGIN, $time_END); # new hpd
+			$query_date_BEGIN = "$query_date $time_BEGIN";   
+			$query_date_END = "$end_date $time_END";
+			RecalculateEpochs($query_date_BEGIN, $query_date_END);
+			$dSQepoch = ($SQepoch + ($d * 86400) + ($hr * 3600) + ($shift_hrs * 3600) );
+			#echo " --- NEW DAY: $query_date_BEGIN / $query_date_END --- <BR>";
+			$RECALC=0;
+			}
+
 
 		if ($hourly_breakdown) 
 			{
@@ -358,6 +521,7 @@ else
 				}
 			}
 
+		#echo "$dSQepoch - $dEQepoch, ".date("Y-m-d H:i:s", $dSQepoch)." - ".date("Y-m-d H:i:s", $dEQepoch).", ".date("D", $dSQepoch)." - $hpd hours - shift starts at $shift_hrs:00:00<BR>";
 		$daySTART[$q] = date("Y-m-d H:i:s", $dSQepoch);
 		$dayEND[$q] = date("Y-m-d H:i:s", $dEQepoch);
 
@@ -370,6 +534,7 @@ else
 				{
 				$dayEND[$q] = date("Y-m-d ", $dEQepoch).$time_END;
 				}
+			$RECALC=1;
 			}
 			else
 			{
@@ -533,6 +698,7 @@ else
 	$totANSWERSsec=0;
 	$totABANDONSsec=0;
 	$totANSWERSspeed=0;
+	$totSTATUSES=array();
 
 	$FtotANSWERS=0;
 	$FtotABANDONS=0;
@@ -565,6 +731,10 @@ else
 	#			$qrtCALLSsec[$j] = ($qrtCALLSsec[$j] + $ls[$i]);
 	#			$dtt = $dt[$i];
 				$totCALLSdate[$j]++;
+				
+				$totSTATUSES[$st[$i]]++;
+				$totSTATUSESdate[$j][$st[$i]]++;
+
 				if ($totCALLSmax < $ls[$i]) {$totCALLSmax = $ls[$i];}
 				if ($qrtCALLSmax[$j] < $ls[$i]) {$qrtCALLSmax[$j] = $ls[$i];}
 				if (ereg('ABANDON|NOAGENT|QUEUETIMEOUT|AFTERHOURS|MAXCALLS', $tr[$i])) 
@@ -626,14 +796,34 @@ else
 
 	###################################################
 	### TOTALS SUMMARY SECTION ###
-	$ASCII_text.="+-------------------------------------------+---------+----------+-----------+---------+---------+--------+--------+------------+------------+------------+\n";
-	$ASCII_text.="|                                           | TOTAL   | TOTAL    | TOTAL     | TOTAL   | AVG     | AVG    | AVG    | TOTAL      | TOTAL      | TOTAL      |\n";
-	$ASCII_text.="| SHIFT                                     | CALLS   | CALLS    | CALLS     | ABANDON | ABANDON | ANSWER | TALK   | TALK       | WRAP       | CALL       |\n";
-	$ASCII_text.="| DATE-TIME RANGE                           | OFFERED | ANSWERED | ABANDONED | PERCENT | TIME    | SPEED  | TIME   | TIME       | TIME       | TIME       |\n";
-	$ASCII_text.="+-------------------------------------------+---------+----------+-----------+---------+---------+--------+--------+------------+------------+------------+\n";
-	$CSV_text.="\"\",\"TOTAL\",\"TOTAL\",\"TOTAL\",\"TOTAL\",\"AVG\",\"AVG\",\"AVG\",\"TOTAL\",\"TOTAL\",\"TOTAL\"\n";
-	$CSV_text.="\"\",\"CALLS\",\"CALLS\",\"CALLS\",\"ABANDON\",\"ABANDON\",\"ANSWER\",\"TALK\",\"TALK\",\"WRAP\",\"CALL\"\n";
-	$CSV_text.="\"SHIFT DATE-TIME RANGE\",\"OFFERED\",\"ANSWERED\",\"ABANDONED\",\"PERCENT\",\"TIME\",\"SPEED\",\"TIME\",\"TIME\",\"TIME\",\"TIME\"\n";
+	$MAINH="+-------------------------------------------+---------+----------+-----------+---------+---------+--------+--------+------------+------------+------------+";
+	$MAIN1="|                                           | TOTAL   | TOTAL    | TOTAL     | TOTAL   | AVG     | AVG    | AVG    | TOTAL      | TOTAL      | TOTAL      |";
+	$MAIN2="| SHIFT                                     | CALLS   | CALLS    | CALLS     | ABANDON | ABANDON | ANSWER | TALK   | TALK       | WRAP       | CALL       |";
+	$MAIN3="| DATE-TIME RANGE                           | OFFERED | ANSWERED | ABANDONED | PERCENT | TIME    | SPEED  | TIME   | TIME       | TIME       | TIME       |";
+	$CSV_text1="";
+	$CSV_text2="";
+	$CSV_text3="";
+
+	for ($s=0; $s<count($status_array); $s++) {
+		$status_name=explode(" ", $status_array[$s][1]);
+		$MAINH.="----------+";
+		$MAIN1.=" ".sprintf("%-8s", strtoupper($status_array[$s][0]))." |";
+		$MAIN2.=" ".sprintf("%-8s", substr($status_name[0],0,8))." |";
+		$MAIN3.=" ".sprintf("%-8s", substr($status_name[1],0,8))." |";
+		$CSV_text1.=",\"".strtoupper($status_array[$s][0])."\"";
+		$CSV_text2.=",\"$status_name[0]\"";
+		$CSV_text3.=",\"$status_name[1]\"";
+	}
+	
+	$ASCII_text.="$MAINH\n";
+	$ASCII_text.="$MAIN1\n";
+	$ASCII_text.="$MAIN2\n";
+	$ASCII_text.="$MAIN3\n";
+	$ASCII_text.="$MAINH\n";
+
+	$CSV_text.="\"\",\"TOTAL\",\"TOTAL\",\"TOTAL\",\"TOTAL\",\"AVG\",\"AVG\",\"AVG\",\"TOTAL\",\"TOTAL\",\"TOTAL\"$CSV_text1\n";
+	$CSV_text.="\"\",\"CALLS\",\"CALLS\",\"CALLS\",\"ABANDON\",\"ABANDON\",\"ANSWER\",\"TALK\",\"TALK\",\"WRAP\",\"CALL\"$CSV_text2\n";
+	$CSV_text.="\"SHIFT DATE-TIME RANGE\",\"OFFERED\",\"ANSWERED\",\"ABANDONED\",\"PERCENT\",\"TIME\",\"SPEED\",\"TIME\",\"TIME\",\"TIME\",\"TIME\"$CSV_text3\n";
 
 	##########################
 	$JS_text="<script language='Javascript'>\n";
@@ -707,6 +897,7 @@ else
 	$totANSWERSspeedwtd=0;
 	$totABANDONSwtd=0;
 	$totABANDONSsecwtd=0;
+	$totSTATUSESwtd=array();
 
 	$totCALLSmtd=0;
 	$totANSWERSmtd=0;
@@ -714,6 +905,7 @@ else
 	$totANSWERSspeedmtd=0;
 	$totABANDONSmtd=0;
 	$totABANDONSsecmtd=0;
+	$totSTATUSESmtd=array();
 
 	$totCALLSqtd=0;
 	$totANSWERSqtd=0;
@@ -721,6 +913,7 @@ else
 	$totANSWERSspeedqtd=0;
 	$totABANDONSqtd=0;
 	$totABANDONSsecqtd=0;
+	$totSTATUSESqtd=array();
 
 	$d=0;
 	while ($d < $TOTintervals)
@@ -767,16 +960,8 @@ else
 			$totCALLSavgDATE[$d] = 0;
 			$totTIME_MS='        ';
 			}
-	/*
-		$totCALLSavgDATE[$d] =	sprintf("%6.0f", $totCALLSavgDATE[$d]);
-		$totDROPSavgDATE[$d] =	sprintf("%7.2f", $totDROPSavgDATE[$d]);
-		$totQUEUEavgDATE[$d] =	sprintf("%7.2f", $totQUEUEavgDATE[$d]);
-		$totQUEUEtotDATE[$d] =	sprintf("%7.2f", $totQUEUEtotDATE[$d]);
-		$totDROPSpctDATE[$d] =	sprintf("%6.2f", $totDROPSpctDATE[$d]);
-		$totQUEUEpctDATE[$d] =	sprintf("%6.2f", $totQUEUEpctDATE[$d]);
-		$totDROPSdate[$d] =	sprintf("%6s", $totDROPSdate[$d]);
-		$totQUEUEdate[$d] =	sprintf("%6s", $totQUEUEdate[$d]);
-	*/	$totCALLSdate[$d] =	sprintf("%7s", $totCALLSdate[$d]);
+		$totCALLSdate[$d] =	sprintf("%7s", $totCALLSdate[$d]);
+
 
 		if ($totCALLSdate[$d]>0)
 			{
@@ -896,19 +1081,28 @@ else
 			$wtd_graph_stats[$wa][10]=trim($totANSWERStotTIMEwtd);
 			$wa++;
 
-			$ASCII_text.="+-------------------------------------------+---------+----------+-----------+---------+---------+--------+--------+------------+------------+------------+\n";
-			$ASCII_text.="|                                       WTD | $totCALLSwtd | $totANSWERSwtd | $totABANDONSwtd | $totABANDONSpctwtd%| $totABANDONSavgTIMEwtd | $totANSWERSavgspeedTIMEwtd | $totANSWERSavgTIMEwtd | $totANSWERStalkTIMEwtd | $totANSWERSwrapTIMEwtd | $totANSWERStotTIMEwtd |\n";
-			$ASCII_text.="+-------------------------------------------+---------+----------+-----------+---------+---------+--------+--------+------------+------------+------------+\n";
-			$CSV_text.="\"WTD\",\"$totCALLSwtd\",\"$totANSWERSwtd\",\"$totABANDONSwtd\",\"$totABANDONSpctwtd%\",\"$totABANDONSavgTIMEwtd\",\"$totANSWERSavgspeedTIMEwtd\",\"$totANSWERSavgTIMEwtd\",\"$totANSWERStalkTIMEwtd\",\"$totANSWERSwrapTIMEwtd\",\"$totANSWERStotTIMEwtd\"\n";
+			$ASCII_text.="$MAINH\n";
+			$ASCII_text.="|                                       WTD | $totCALLSwtd | $totANSWERSwtd | $totABANDONSwtd | $totABANDONSpctwtd%| $totABANDONSavgTIMEwtd | $totANSWERSavgspeedTIMEwtd | $totANSWERSavgTIMEwtd | $totANSWERStalkTIMEwtd | $totANSWERSwrapTIMEwtd | $totANSWERStotTIMEwtd |";
+			$CSV_text.="\"WTD\",\"$totCALLSwtd\",\"$totANSWERSwtd\",\"$totABANDONSwtd\",\"$totABANDONSpctwtd%\",\"$totABANDONSavgTIMEwtd\",\"$totANSWERSavgspeedTIMEwtd\",\"$totANSWERSavgTIMEwtd\",\"$totANSWERStalkTIMEwtd\",\"$totANSWERSwrapTIMEwtd\",\"$totANSWERStotTIMEwtd\"";
+			for ($s=0; $s<count($status_array); $s++) {
+				$ASCII_text.=" ".sprintf("%8s", ($totSTATUSESwtd[$status_array[$s][0]]+0))." |";
+				$CSV_text.=",\"".sprintf("%8s", ($totSTATUSESwtd[$status_array[$s][0]]+0))."\"";
+			}
+			$ASCII_text.="\n";
+			$CSV_text.="\n";
+			$ASCII_text.="$MAINH\n";
+
 			$totCALLSwtd=0;
 			$totANSWERSwtd=0;
 			$totANSWERSsecwtd=0;
 			$totANSWERSspeedwtd=0;
 			$totABANDONSwtd=0;
 			$totABANDONSsecwtd=0;
-		}
+			$totSTATUSESwtd=array();
+			}
 
-		if (date("d", strtotime($daySTART[$d]))==1 && $d>0 && date("d", strtotime($daySTART[$d-1]))!=1) {
+		if (date("d", strtotime($daySTART[$d]))==1 && $d>0 && date("d", strtotime($daySTART[$d-1]))!=1) 
+			{
 			if ($totCALLSmtd>0)
 				{
 				$totABANDONSpctmtd =	sprintf("%7.2f", (100*$totABANDONSmtd/$totCALLSmtd));
@@ -976,16 +1170,24 @@ else
 			$mtd_graph_stats[$ma][10]=trim($totANSWERStotTIMEmtd);
 			$ma++;
 
-			$ASCII_text.="+-------------------------------------------+---------+----------+-----------+---------+---------+--------+--------+------------+------------+------------+\n";
-			$ASCII_text.="|                                       MTD | $totCALLSmtd | $totANSWERSmtd | $totABANDONSmtd | $totABANDONSpctmtd%| $totABANDONSavgTIMEmtd | $totANSWERSavgspeedTIMEmtd | $totANSWERSavgTIMEmtd | $totANSWERStalkTIMEmtd | $totANSWERSwrapTIMEmtd | $totANSWERStotTIMEmtd |\n";
-			$ASCII_text.="+-------------------------------------------+---------+----------+-----------+---------+---------+--------+--------+------------+------------+------------+\n";
-			$CSV_text.="\"MTD\",\"$totCALLSmtd\",\"$totANSWERSmtd\",\"$totABANDONSmtd\",\"$totABANDONSpctmtd%\",\"$totABANDONSavgTIMEmtd\",\"$totANSWERSavgspeedTIMEmtd\",\"$totANSWERSavgTIMEmtd\",\"$totANSWERStalkTIMEmtd\",\"$totANSWERSwrapTIMEmtd\",\"$totANSWERStotTIMEmtd\"\n";
+			$ASCII_text.="$MAINH\n";
+			$ASCII_text.="|                                       MTD | $totCALLSmtd | $totANSWERSmtd | $totABANDONSmtd | $totABANDONSpctmtd%| $totABANDONSavgTIMEmtd | $totANSWERSavgspeedTIMEmtd | $totANSWERSavgTIMEmtd | $totANSWERStalkTIMEmtd | $totANSWERSwrapTIMEmtd | $totANSWERStotTIMEmtd |";
+			$CSV_text.="\"MTD\",\"$totCALLSmtd\",\"$totANSWERSmtd\",\"$totABANDONSmtd\",\"$totABANDONSpctmtd%\",\"$totABANDONSavgTIMEmtd\",\"$totANSWERSavgspeedTIMEmtd\",\"$totANSWERSavgTIMEmtd\",\"$totANSWERStalkTIMEmtd\",\"$totANSWERSwrapTIMEmtd\",\"$totANSWERStotTIMEmtd\"";
+			for ($s=0; $s<count($status_array); $s++) {
+				$ASCII_text.=" ".sprintf("%8s", ($totSTATUSESmtd[$status_array[$s][0]]+0))." |";
+				$CSV_text.=",\"".sprintf("%8s", ($totSTATUSESmtd[$status_array[$s][0]]+0))."\"";
+			}
+			$ASCII_text.="\n";
+			$CSV_text.="\n";
+			$ASCII_text.="$MAINH\n";
+
 			$totCALLSmtd=0;
 			$totANSWERSmtd=0;
 			$totANSWERSsecmtd=0;
 			$totANSWERSspeedmtd=0;
 			$totABANDONSmtd=0;
 			$totABANDONSsecmtd=0;
+			$totSTATUSESmtd=array();
 
 			if (date("m", strtotime($daySTART[$d]))==1 || date("m", strtotime($daySTART[$d]))==4 || date("m", strtotime($daySTART[$d]))==7 || date("m", strtotime($daySTART[$d]))==10) # Quarterly line
 				{
@@ -1069,17 +1271,25 @@ else
 				$qtd_graph_stats[$qa][10]=trim($totANSWERStotTIMEqtd);
 				$qa++;
 
-				$ASCII_text.="|                                       QTD | $totCALLSqtd | $totANSWERSqtd | $totABANDONSqtd | $totABANDONSpctqtd%| $totABANDONSavgTIMEqtd | $totANSWERSavgspeedTIMEqtd | $totANSWERSavgTIMEqtd | $totANSWERStalkTIMEqtd | $totANSWERSwrapTIMEqtd | $totANSWERStotTIMEqtd |\n";
-				$ASCII_text.="+-------------------------------------------+---------+----------+-----------+---------+---------+--------+--------+------------+------------+------------+\n";
-				$CSV_text.="\"QTD\",\"$totCALLSqtd\",\"$totANSWERSqtd\",\"$totABANDONSqtd\",\"$totABANDONSpctqtd%\",\"$totABANDONSavgTIMEqtd\",\"$totANSWERSavgspeedTIMEqtd\",\"$totANSWERSavgTIMEqtd\",\"$totANSWERStalkTIMEqtd\",\"$totANSWERSwrapTIMEqtd\",\"$totANSWERStotTIMEqtd\"\n";
+				$ASCII_text.="|                                       QTD | $totCALLSqtd | $totANSWERSqtd | $totABANDONSqtd | $totABANDONSpctqtd%| $totABANDONSavgTIMEqtd | $totANSWERSavgspeedTIMEqtd | $totANSWERSavgTIMEqtd | $totANSWERStalkTIMEqtd | $totANSWERSwrapTIMEqtd | $totANSWERStotTIMEqtd |";
+				$CSV_text.="\"QTD\",\"$totCALLSqtd\",\"$totANSWERSqtd\",\"$totABANDONSqtd\",\"$totABANDONSpctqtd%\",\"$totABANDONSavgTIMEqtd\",\"$totANSWERSavgspeedTIMEqtd\",\"$totANSWERSavgTIMEqtd\",\"$totANSWERStalkTIMEqtd\",\"$totANSWERSwrapTIMEqtd\",\"$totANSWERStotTIMEqtd\"";
+				for ($s=0; $s<count($status_array); $s++) {
+					$ASCII_text.=" ".sprintf("%8s", ($totSTATUSESqtd[$status_array[$s][0]]+0))." |";
+					$CSV_text.=",\"".sprintf("%8s", ($totSTATUSESqtd[$status_array[$s][0]]+0))."\"";
+				}
+				$ASCII_text.="\n";
+				$CSV_text.="\n";
+				$ASCII_text.="$MAINH\n";
+
 				$totCALLSqtd=0;
 				$totANSWERSqtd=0;
 				$totANSWERSsecqtd=0;
 				$totANSWERSspeedqtd=0;
 				$totABANDONSqtd=0;
 				$totABANDONSsecqtd=0;
+				$totSTATUSESqtd=array();
 				}
-		}
+			}
 
 		$totCALLSwtd+=$totCALLSdate[$d];
 		$totANSWERSwtd+=$totANSWERSdate[$d];
@@ -1120,8 +1330,17 @@ else
 		$graph_stats[$d][9]=trim($totANSWERSwrapTIME[$d]);
 		$graph_stats[$d][10]=trim($totANSWERStotTIME[$d]);
 
-		$ASCII_text.="| $daySTART[$d] - $dayEND[$d] | $totCALLSdate[$d] | $totANSWERSdate[$d] | $totABANDONSdate[$d] | $totABANDONSpctDATE[$d]%| $totABANDONSavgTIME[$d] | $totANSWERSavgspeedTIME[$d] | $totANSWERSavgTIME[$d] | $totANSWERStalkTIME[$d] | $totANSWERSwrapTIME[$d] | $totANSWERStotTIME[$d] |\n";
-		$CSV_text.="\"$daySTART[$d] - $dayEND[$d]\",\"$totCALLSdate[$d]\",\"$totANSWERSdate[$d]\",\"$totABANDONSdate[$d]\",\"$totABANDONSpctDATE[$d]%\",\"$totABANDONSavgTIME[$d]\",\"$totANSWERSavgspeedTIME[$d]\",\"$totANSWERSavgTIME[$d]\",\"$totANSWERStalkTIME[$d]\",\"$totANSWERSwrapTIME[$d]\",\"$totANSWERStotTIME[$d]\"\n";
+		$ASCII_text.="| $daySTART[$d] - $dayEND[$d] | $totCALLSdate[$d] | $totANSWERSdate[$d] | $totABANDONSdate[$d] | $totABANDONSpctDATE[$d]%| $totABANDONSavgTIME[$d] | $totANSWERSavgspeedTIME[$d] | $totANSWERSavgTIME[$d] | $totANSWERStalkTIME[$d] | $totANSWERSwrapTIME[$d] | $totANSWERStotTIME[$d] |";
+		$CSV_text.="\"$daySTART[$d] - $dayEND[$d]\",\"$totCALLSdate[$d]\",\"$totANSWERSdate[$d]\",\"$totABANDONSdate[$d]\",\"$totABANDONSpctDATE[$d]%\",\"$totABANDONSavgTIME[$d]\",\"$totANSWERSavgspeedTIME[$d]\",\"$totANSWERSavgTIME[$d]\",\"$totANSWERStalkTIME[$d]\",\"$totANSWERSwrapTIME[$d]\",\"$totANSWERStotTIME[$d]\"";
+		for ($s=0; $s<count($status_array); $s++) {
+			$ASCII_text.=" ".sprintf("%8s", ($totSTATUSESdate[$d][$status_array[$s][0]]+0))." |";
+			$CSV_text.=",\"".sprintf("%8s", ($totSTATUSESdate[$d][$status_array[$s][0]]+0))."\"";
+			$totSTATUSESwtd[$status_array[$s][0]]+=$totSTATUSESdate[$d][$status_array[$s][0]];
+			$totSTATUSESmtd[$status_array[$s][0]]+=$totSTATUSESdate[$d][$status_array[$s][0]];
+			$totSTATUSESqtd[$status_array[$s][0]]+=$totSTATUSESdate[$d][$status_array[$s][0]];
+		}
+		$ASCII_text.="\n";
+		$CSV_text.="\n";
 
 		$d++;
 		}
@@ -1301,9 +1520,16 @@ else
 				$wtd_TOTALCALLTIME_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$wtd_graph_stats[$q][14]/$max_wtd_totalcalltime)."' height='16' />".$wtd_graph_stats[$q][10]."</td></tr>";
 			}
 
-			$ASCII_text.="+-------------------------------------------+---------+----------+-----------+---------+---------+--------+--------+------------+------------+------------+\n";
-			$ASCII_text.="|                                       WTD | $totCALLSwtd | $totANSWERSwtd | $totABANDONSwtd | $totABANDONSpctwtd%| $totABANDONSavgTIMEwtd | $totANSWERSavgspeedTIMEwtd | $totANSWERSavgTIMEwtd | $totANSWERStalkTIMEwtd | $totANSWERSwrapTIMEwtd | $totANSWERStotTIMEwtd |\n";
-			$CSV_text.="\"WTD\",\"$totCALLSwtd\",\"$totANSWERSwtd\",\"$totABANDONSwtd\",\"$totABANDONSpctwtd%\",\"$totABANDONSavgTIMEwtd\",\"$totANSWERSavgspeedTIMEwtd\",\"$totANSWERSavgTIMEwtd\",\"$totANSWERStalkTIMEwtd\",\"$totANSWERSwrapTIMEwtd\",\"$totANSWERStotTIMEwtd\"\n";
+			$ASCII_text.="$MAINH\n";
+			$ASCII_text.="|                                       WTD | $totCALLSwtd | $totANSWERSwtd | $totABANDONSwtd | $totABANDONSpctwtd%| $totABANDONSavgTIMEwtd | $totANSWERSavgspeedTIMEwtd | $totANSWERSavgTIMEwtd | $totANSWERStalkTIMEwtd | $totANSWERSwrapTIMEwtd | $totANSWERStotTIMEwtd |";
+			$CSV_text.="\"WTD\",\"$totCALLSwtd\",\"$totANSWERSwtd\",\"$totABANDONSwtd\",\"$totABANDONSpctwtd%\",\"$totABANDONSavgTIMEwtd\",\"$totANSWERSavgspeedTIMEwtd\",\"$totANSWERSavgTIMEwtd\",\"$totANSWERStalkTIMEwtd\",\"$totANSWERSwrapTIMEwtd\",\"$totANSWERStotTIMEwtd\"";
+			for ($s=0; $s<count($status_array); $s++) {
+				$ASCII_text.=" ".sprintf("%8s", ($totSTATUSESwtd[$status_array[$s][0]]+0))." |";
+				$CSV_text.=",\"".sprintf("%8s", ($totSTATUSESwtd[$status_array[$s][0]]+0))."\"";
+			}
+			$ASCII_text.="\n";
+			$CSV_text.="\n";
+
 			$totCALLSwtd=0;
 			$totANSWERSwtd=0;
 			$totANSWERSsecwtd=0;
@@ -1414,10 +1640,17 @@ else
 				$graph_totANSWERSwrapTIMEmtd+=$mtd_graph_stats[$q][9];
 				$graph_totANSWERStotTIMEmtd+=$mtd_graph_stats[$q][10];
 			}			
+
+			$ASCII_text.="$MAINH\n";
+			$ASCII_text.="|                                       MTD | $totCALLSmtd | $totANSWERSmtd | $totABANDONSmtd | $totABANDONSpctmtd%| $totABANDONSavgTIMEmtd | $totANSWERSavgspeedTIMEmtd | $totANSWERSavgTIMEmtd | $totANSWERStalkTIMEmtd | $totANSWERSwrapTIMEmtd | $totANSWERStotTIMEmtd |";
+			$CSV_text.="\"MTD\",\"$totCALLSmtd\",\"$totANSWERSmtd\",\"$totABANDONSmtd\",\"$totABANDONSpctmtd%\",\"$totABANDONSavgTIMEmtd\",\"$totANSWERSavgspeedTIMEmtd\",\"$totANSWERSavgTIMEmtd\",\"$totANSWERStalkTIMEmtd\",\"$totANSWERSwrapTIMEmtd\",\"$totANSWERStotTIMEmtd\"";
+			for ($s=0; $s<count($status_array); $s++) {
+				$ASCII_text.=" ".sprintf("%8s", ($totSTATUSESmtd[$status_array[$s][0]]+0))." |";
+				$CSV_text.=",\"".sprintf("%8s", ($totSTATUSESmtd[$status_array[$s][0]]+0))."\"";
+			}
+			$ASCII_text.="\n";
+			$CSV_text.="\n";
 			
-			$ASCII_text.="+-------------------------------------------+---------+----------+-----------+---------+---------+--------+--------+------------+------------+------------+\n";
-			$ASCII_text.="|                                       MTD | $totCALLSmtd | $totANSWERSmtd | $totABANDONSmtd | $totABANDONSpctmtd%| $totABANDONSavgTIMEmtd | $totANSWERSavgspeedTIMEmtd | $totANSWERSavgTIMEmtd | $totANSWERStalkTIMEmtd | $totANSWERSwrapTIMEmtd | $totANSWERStotTIMEmtd |\n";
-			$CSV_text.="\"MTD\",\"$totCALLSmtd\",\"$totANSWERSmtd\",\"$totABANDONSmtd\",\"$totABANDONSpctmtd%\",\"$totABANDONSavgTIMEmtd\",\"$totANSWERSavgspeedTIMEmtd\",\"$totANSWERSavgTIMEmtd\",\"$totANSWERStalkTIMEmtd\",\"$totANSWERSwrapTIMEmtd\",\"$totANSWERStotTIMEmtd\"\n";
 			$totCALLSmtd=0;
 			$totANSWERSmtd=0;
 			$totANSWERSsecmtd=0;
@@ -1541,9 +1774,16 @@ else
 					$graph_totANSWERStotTIMEqtd+=$qtd_graph_stats[$q][10];
 				}
 
-				$ASCII_text.="+-------------------------------------------+---------+----------+-----------+---------+---------+--------+--------+------------+------------+------------+\n";
-				$ASCII_text.="|                                       QTD | $totCALLSqtd | $totANSWERSqtd | $totABANDONSqtd | $totABANDONSpctqtd%| $totABANDONSavgTIMEqtd | $totANSWERSavgspeedTIMEqtd | $totANSWERSavgTIMEqtd | $totANSWERStalkTIMEqtd | $totANSWERSwrapTIMEqtd | $totANSWERStotTIMEqtd |\n";
-				$CSV_text.="\"QTD\",\"$totCALLSqtd\",\"$totANSWERSqtd\",\"$totABANDONSqtd\",\"$totABANDONSpctqtd%\",\"$totABANDONSavgTIMEqtd\",\"$totANSWERSavgspeedTIMEqtd\",\"$totANSWERSavgTIMEqtd\",\"$totANSWERStalkTIMEqtd\",\"$totANSWERSwrapTIMEqtd\",\"$totANSWERStotTIMEqtd\"\n";
+				$ASCII_text.="$MAINH\n";
+				$ASCII_text.="|                                       QTD | $totCALLSqtd | $totANSWERSqtd | $totABANDONSqtd | $totABANDONSpctqtd%| $totABANDONSavgTIMEqtd | $totANSWERSavgspeedTIMEqtd | $totANSWERSavgTIMEqtd | $totANSWERStalkTIMEqtd | $totANSWERSwrapTIMEqtd | $totANSWERStotTIMEqtd |";
+				$CSV_text.="\"QTD\",\"$totCALLSqtd\",\"$totANSWERSqtd\",\"$totABANDONSqtd\",\"$totABANDONSpctqtd%\",\"$totABANDONSavgTIMEqtd\",\"$totANSWERSavgspeedTIMEqtd\",\"$totANSWERSavgTIMEqtd\",\"$totANSWERStalkTIMEqtd\",\"$totANSWERSwrapTIMEqtd\",\"$totANSWERStotTIMEqtd\"";
+				for ($s=0; $s<count($status_array); $s++) {
+					$ASCII_text.=" ".sprintf("%8s", ($totSTATUSESqtd[$status_array[$s][0]]+0))." |";
+					$CSV_text.=",\"".sprintf("%8s", ($totSTATUSESqtd[$status_array[$s][0]]+0))."\"";
+				}
+				$ASCII_text.="\n";
+				$CSV_text.="\n";
+
 				$totCALLSqtd=0;
 				$totANSWERSqtd=0;
 				$totANSWERSsecqtd=0;
@@ -1696,10 +1936,39 @@ else
 			$JS_text.="}\n";
 
 
-	$ASCII_text.="+-------------------------------------------+---------+----------+-----------+---------+---------+--------+--------+------------+------------+------------+\n";
-	$ASCII_text.="|                                    TOTALS | $FtotCALLS | $FtotANSWERS | $FtotABANDONS | $FtotABANDONSpct%| $FtotABANDONSavgTIME | $FtotANSWERSavgspeedTIME | $FtotANSWERSavgTIME | $FtotANSWERStalkTIME | $FtotANSWERSwrapTIME | $FtotANSWERStotTIME |\n";
-	$ASCII_text.="+-------------------------------------------+---------+----------+-----------+---------+---------+--------+--------+------------+------------+------------+\n";
-	$CSV_text.="\"TOTALS\",\"$FtotCALLS\",\"$FtotANSWERS\",\"$FtotABANDONS\",\"$FtotABANDONSpct%\",\"$FtotABANDONSavgTIME\",\"$FtotANSWERSavgspeedTIME\",\"$FtotANSWERSavgTIME\",\"$FtotANSWERStalkTIME\",\"$FtotANSWERSwrapTIME\",\"$FtotANSWERStotTIME\"\n";
+	$ASCII_text.="$MAINH\n";
+	$ASCII_text.="|                                    TOTALS | $FtotCALLS | $FtotANSWERS | $FtotABANDONS | $FtotABANDONSpct%| $FtotABANDONSavgTIME | $FtotANSWERSavgspeedTIME | $FtotANSWERSavgTIME | $FtotANSWERStalkTIME | $FtotANSWERSwrapTIME | $FtotANSWERStotTIME |";
+	$CSV_text.="\"TOTALS\",\"$FtotCALLS\",\"$FtotANSWERS\",\"$FtotABANDONS\",\"$FtotABANDONSpct%\",\"$FtotABANDONSavgTIME\",\"$FtotANSWERSavgspeedTIME\",\"$FtotANSWERSavgTIME\",\"$FtotANSWERStalkTIME\",\"$FtotANSWERSwrapTIME\",\"$FtotANSWERStotTIME\"";
+	for ($s=0; $s<count($status_array); $s++) {
+		$ASCII_text.=" ".sprintf("%8s", ($totSTATUSES[$status_array[$s][0]]+0))." |";
+		$CSV_text.=",\"".sprintf("%8s", ($totSTATUSES[$status_array[$s][0]]+0))."\"";
+	}
+	$ASCII_text.="\n";
+	$CSV_text.="\n\n\n";
+	$ASCII_text.="$MAINH\n\n\n";
+
+	if ($show_disposition_statuses) 
+		{
+		$total_count=0;
+		$ASCII_text.="+--------+----------------------+------------+\n";
+		$ASCII_text.="| STATUS | DESCRIPTION          | CALLS      |\n";
+		$ASCII_text.="+--------+----------------------+------------+\n";
+		$CSV_text.="\"STATUS\",\"DISPOSITION\",\"CALLS\"\n";
+		for ($s=0; $s<count($status_array); $s++) {
+			$status_code=$status_array[$s][0];
+			$status_name=$status_array[$s][1];
+			$status_count=$totSTATUSES[$status_array[$s][0]]+0;
+			#$MAIN.=" ".sprintf("%8s", ($totSTATUSES[$status_array[$s][0]]+0))." |";
+			#$CSV_text.=",\"".sprintf("%8s", ($totSTATUSES[$status_array[$s][0]]+0))."\"";
+			$ASCII_text.="| ".sprintf("%-6s", substr($status_code,0,6))." | ".sprintf("%-20s", substr($status_name,0,20))." | ".sprintf("%10s", $status_count)." |\n";
+			$CSV_text.="\"$status_code\",\"$status_name\",\"$status_count\"\n";
+			$total_count+=$status_count;
+		}
+		$ASCII_text.="+--------+----------------------+------------+\n";
+		$ASCII_text.="| TOTAL:                        | ".sprintf("%10s", $total_count)." |\n";
+		$ASCII_text.="+-------------------------------+------------+\n";
+		$CSV_text.="\"\",\"TOTAL:\",\"$total_count\"\n";
+		}
 
 	## FORMAT OUTPUT ##
 	$i=0;
@@ -1757,6 +2026,7 @@ else
 	$MAIN.="\nRun Time: $RUNtime seconds|$db_source\n";
 	$MAIN.="</PRE>\n";
 	$MAIN.="</TD></TR></TABLE>\n";
+	$MAIN.="</FORM>\n\n";
 	$MAIN.="</BODY></HTML>\n";
 
 	if ($file_download > 0)
@@ -1789,6 +2059,103 @@ else
 		}
 	}
 
+function HourDifference($time_BEGIN, $time_END) {
+	global $hpd;
+	$TB_array =	explode(':',$time_BEGIN);
+	$TE_array =	explode(':',$time_END);
+	$TBoffset=0;
+	$TEoffset=0;
 
+	if ($TB_array[0]>24) {
+		while($TB_array[0]>24) {
+			$TB_array[0]--;
+			$TBoffset+=3600;
+		}
+		$time_BEGIN="$TB_array[0]:$TB_array[1]:$TB_array[2]";
+	}
+	if ($TE_array[0]>24) {
+		while($TE_array[0]>24) {
+			$TE_array[0]--;
+			$TEoffset+=3600;
+		}
+		$time_END="$TE_array[0]:$TE_array[1]:$TE_array[2]";
+	}
+	$time1 = strtotime($time_BEGIN)+$TBoffset;
+	$time2 = strtotime($time_END)+1+$TEoffset;
+	$hpd = ceil(($time2 - $time1) / 3600);
+	if ($hpd<0) {$hpd+=24;}
+}
 
+function RecalculateEpochs($query_date_BEGIN, $query_date_END) {
+	global $query_date_BEGIN, $query_date_END, $SQepoch, $EQepoch, $SQepochDAY, $SQsec, $EQsec;
+	$SQdate_ARY =	explode(' ',$query_date_BEGIN);
+	$SQday_ARY =	explode('-',$SQdate_ARY[0]);
+	$SQtime_ARY =	explode(':',$SQdate_ARY[1]);
+	#$EQdate_ARY =	explode(' ',$query_date_END);
+	#$EQday_ARY =	explode('-',$EQdate_ARY[0]);
+	#$EQtime_ARY =	explode(':',$EQdate_ARY[1]);
+
+	$SQepochDAY = mktime(0, 0, 0, $SQday_ARY[1], $SQday_ARY[2], $SQday_ARY[0]);
+	$SQepoch = mktime($SQtime_ARY[0], $SQtime_ARY[1], $SQtime_ARY[2], $SQday_ARY[1], $SQday_ARY[2], $SQday_ARY[0]);
+	#$EQepoch = mktime($EQtime_ARY[0], $EQtime_ARY[1], $EQtime_ARY[2], $EQday_ARY[1], $EQday_ARY[2], $EQday_ARY[0]);
+
+	$SQsec = ( ($SQtime_ARY[0] * 3600) + ($SQtime_ARY[1] * 60) + ($SQtime_ARY[2] * 1) );
+	#$EQsec = ( ($EQtime_ARY[0] * 3600) + ($EQtime_ARY[1] * 60) + ($EQtime_ARY[2] * 1) );
+}
+
+function RecalculateHPD($query_date_BEGIN, $query_date_END, $time_BEGIN, $time_END) {
+	global $hpd, $query_date_BEGIN, $query_date_END, $time_BEGIN, $time_END;
+	global $DURATIONday, $SQepoch, $EQepoch, $SQepochDAY, $SQsec, $EQsec;
+
+	$TB_array =	explode(':',$time_BEGIN);
+	$TE_array =	explode(':',$time_END);
+	$TBoffset=0;
+	$TEoffset=0;
+
+	if ($TB_array[0]>24) {
+		while($TB_array[0]>24) {
+			$TB_array[0]--;
+			$TBoffset+=3600;
+		}
+		$time_BEGIN="$TB_array[0]:$TB_array[1]:$TB_array[2]";
+	}
+	if ($TE_array[0]>24) {
+		while($TE_array[0]>24) {
+			$TE_array[0]--;
+			$TEoffset+=3600;
+		}
+		$time_END="$TE_array[0]:$TE_array[1]:$TE_array[2]";
+	}
+	$time1 = strtotime($time_BEGIN)+$TBoffset;
+	$time2 = strtotime($time_END)+1+$TEoffset;
+	$hpd = ceil(($time2 - $time1) / 3600);
+	if ($hpd<0) {$hpd+=24;}
+
+	$SQdate_ARY =	explode(' ',$query_date_BEGIN);
+	$SQday_ARY =	explode('-',$SQdate_ARY[0]);
+	$SQtime_ARY =	explode(':',$SQdate_ARY[1]);
+	$EQdate_ARY =	explode(' ',$query_date_END);
+	$EQday_ARY =	explode('-',$EQdate_ARY[0]);
+	$EQtime_ARY =	explode(':',$EQdate_ARY[1]);
+
+	$SQepochDAY = mktime(0, 0, 0, $SQday_ARY[1], $SQday_ARY[2], $SQday_ARY[0]);
+	$SQepoch = mktime($SQtime_ARY[0], $SQtime_ARY[1], $SQtime_ARY[2], $SQday_ARY[1], $SQday_ARY[2], $SQday_ARY[0]);
+	$EQepoch = mktime($EQtime_ARY[0], $EQtime_ARY[1], $EQtime_ARY[2], $EQday_ARY[1], $EQday_ARY[2], $EQday_ARY[0]);
+
+	$SQsec = ( ($SQtime_ARY[0] * 3600) + ($SQtime_ARY[1] * 60) + ($SQtime_ARY[2] * 1) );
+	$EQsec = ( ($EQtime_ARY[0] * 3600) + ($EQtime_ARY[1] * 60) + ($EQtime_ARY[2] * 1) );
+
+	if (!$DURATIONday) 
+		{
+		$DURATIONsec = ($EQepoch - $SQepoch);
+		$DURATIONday = intval( ($DURATIONsec / 86400) + 1 );
+
+		if ( ($EQsec < $SQsec) and ($DURATIONday < 1) )
+			{
+			$EQepoch = ($SQepochDAY + ($EQsec + 86400) );
+			$query_date_END = date("Y-m-d H:i:s", $EQepoch);
+			$DURATIONday++;
+			}
+		}
+}
 ?>

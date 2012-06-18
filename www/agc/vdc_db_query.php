@@ -2549,7 +2549,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					}
 
 				### Skip logging and list overrides if dial in-group is used
-				if (strlen($dial_ingroup) > 1)
+				if (strlen($dial_ingroup) < 1)
 					{
 					$val_pause_epoch=0;
 					$val_pause_sec=0;
@@ -2590,6 +2590,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 						}
 					##### END QUEUEMETRICS LOGGING LOOKUP #####
 					###########################################
+
 					if ($enable_queuemetrics_logging > 0)
 						{
 						$data4SQL='';

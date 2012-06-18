@@ -76,6 +76,7 @@
 # 110314-1735 - Fixed another query that was causing load spikes on systems with millions of log entries
 # 111103-1220 - Added admin_hide_phone_data and admin_hide_lead_data options
 # 120223-1934 - Added user group options
+# 120612-2150 - Added percentages to counts for carrier stats and TOTAL line to carrier display stats as well
 #
 
 $version = '2.4-67';
@@ -1292,6 +1293,7 @@ if ($CARRIERstats > 0)
 		$row=mysql_fetch_row($rslt);
 		$TFhour_status[$ctp] =	$row[0];
 		$TFhour_count[$ctp] =	$row[1];
+		$TFhour_total+=$row[1];
 		$dialstatuses .=		"'$row[0]',";
 		$ctp++;
 		}
@@ -1320,6 +1322,7 @@ if ($CARRIERstats > 0)
 		while ($scar_to_print > $print_sctp)
 			{
 			$row=mysql_fetch_row($rslt);
+			$SIXhour_total+=$row[1];
 			$print_ctp=0;
 			while ($print_ctp < $ctp)
 				{
@@ -1338,6 +1341,7 @@ if ($CARRIERstats > 0)
 		while ($scar_to_print > $print_sctp)
 			{
 			$row=mysql_fetch_row($rslt);
+			$ONEhour_total+=$row[1];
 			$print_ctp=0;
 			while ($print_ctp < $ctp)
 				{
@@ -1356,6 +1360,7 @@ if ($CARRIERstats > 0)
 		while ($scar_to_print > $print_sctp)
 			{
 			$row=mysql_fetch_row($rslt);
+			$FTminute_total+=$row[1];
 			$print_ctp=0;
 			while ($print_ctp < $ctp)
 				{
@@ -1374,6 +1379,7 @@ if ($CARRIERstats > 0)
 		while ($scar_to_print > $print_sctp)
 			{
 			$row=mysql_fetch_row($rslt);
+			$FIVEminute_total+=$row[1];
 			$print_ctp=0;
 			while ($print_ctp < $ctp)
 				{
@@ -1392,6 +1398,7 @@ if ($CARRIERstats > 0)
 		while ($scar_to_print > $print_sctp)
 			{
 			$row=mysql_fetch_row($rslt);
+			$ONEminute_total+=$row[1];
 			$print_ctp=0;
 			while ($print_ctp < $ctp)
 				{
@@ -1415,16 +1422,27 @@ if ($CARRIERstats > 0)
 
 			$CARRIERstatsHTML .= "<TR>";
 			$CARRIERstatsHTML .= "<TD BGCOLOR=white><font size=2>&nbsp;</TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=LEFT><font size=2>&nbsp; &nbsp; $TFhour_status[$print_ctp]</TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $TFhour_count[$print_ctp] </TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $SIXhour_count[$print_ctp] </TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $ONEhour_count[$print_ctp] </TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $FTminute_count[$print_ctp] </TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $FIVEminute_count[$print_ctp] </TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $ONEminute_count[$print_ctp] </TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=LEFT><font size=2>&nbsp; &nbsp; $TFhour_status[$print_ctp] </TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $TFhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", (100*($TFhour_count[$print_ctp]/$TFhour_total)))."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $SIXhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", (100*($SIXhour_count[$print_ctp]/$SIXhour_total)))."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $ONEhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", (100*($ONEhour_count[$print_ctp]/$ONEhour_total)))."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $FTminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", (100*($FTminute_count[$print_ctp]/$FTminute_total)))."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $FIVEminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", (100*($FIVEminute_count[$print_ctp]/$FIVEminute_total)))."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $ONEminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", (100*($ONEminute_count[$print_ctp]/$ONEminute_total)))."%</font></TD>";
 			$CARRIERstatsHTML .= "</TR>";
 			$print_ctp++;
 			}
+		$CARRIERstatsHTML .= "<TR>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR=white><font size=2>&nbsp;</TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=LEFT><font size=2><B>&nbsp; &nbsp; TOTALS</B></TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2><B> ".($TFhour_total+0)."</B> </TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2><B> ".($SIXhour_total+0)."</B> </TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2><B> ".($ONEhour_total+0)."</B> </TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2><B> ".($FTminute_total+0)."</B> </TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2><B> ".($FIVEminute_total+0)."</B> </TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2><B> ".($ONEminute_total+0)."</B> </TD>";
+		$CARRIERstatsHTML .= "</TR>";
+
 		}
 	else
 		{
