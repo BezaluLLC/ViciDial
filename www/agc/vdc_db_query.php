@@ -309,12 +309,13 @@
 # 120427-1717 - Fixed 3-way logging issue
 # 120513-0045 - Added Dial In-group and No-Dial compatibility
 # 120514-0934 - Added Dial In-group cid-override
+# 120619-0616 - Corrected xfer_log logging of manual preview dialed calls
 #
 
-$version = '2.6-207';
-$build = '120514-0934';
+$version = '2.6-208';
+$build = '120619-0616';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=440;
+$mysql_log_count=441;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -2230,33 +2231,6 @@ if ($ACTION == 'manDiaLnextCaLL')
 			##### END check for postal_code and phone time zones if alert enabled
 
 
-			##### check if system is set to generate logfile for transfers
-			$stmt="SELECT enable_agc_xfer_log FROM system_settings;";
-			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00027',$user,$server_ip,$session_name,$one_mysql_log);}
-			if ($DB) {echo "$stmt\n";}
-			$enable_agc_xfer_log_ct = mysql_num_rows($rslt);
-			if ($enable_agc_xfer_log_ct > 0)
-				{
-				$row=mysql_fetch_row($rslt);
-				$enable_agc_xfer_log =$row[0];
-				}
-
-			if ( ($WeBRooTWritablE > 0) and ($enable_agc_xfer_log > 0) )
-				{
-				# generate callerID for unique identifier in xfer_log file
-				$PADlead_id = sprintf("%010s", $lead_id);
-					while (strlen($PADlead_id) > 10) {$PADlead_id = substr("$PADlead_id", 1);}
-				# Create unique calleridname to track the call: MmddhhmmssLLLLLLLLLL
-					$MqueryCID = "M$CIDdate$PADlead_id";
-
-				#	DATETIME|campaign|lead_id|phone_number|user|type
-				#	2007-08-22 11:11:11|TESTCAMP|65432|3125551212|1234|M
-				$fp = fopen ("./xfer_log.txt", "a");
-				fwrite ($fp, "$NOW_TIME|$campaign|$lead_id|$agent_dialed_number|$user|M|$MqueryCID||$province\n");
-				fclose($fp);
-				}
-
 			##### if lead is a callback, grab the callback comments
 			$CBentry_time =		'';
 			$CBcallback_time =	'';
@@ -2444,7 +2418,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					}
 
 				# Create unique calleridname to track the call: MmddhhmmssLLLLLLLLLL
-					$MqueryCID = "M$CIDdate$PADlead_id";
+				$MqueryCID = "M$CIDdate$PADlead_id";
 				$EAC='';
 				if ($use_eac > 0)
 					{
@@ -2750,6 +2724,25 @@ if ($ACTION == 'manDiaLnextCaLL')
 							}
 						}
 					}
+				##### check if system is set to generate logfile for transfers
+				$stmt="SELECT enable_agc_xfer_log FROM system_settings;";
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00027',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$enable_agc_xfer_log_ct = mysql_num_rows($rslt);
+				if ($enable_agc_xfer_log_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$enable_agc_xfer_log =$row[0];
+					}
+				if ( ($WeBRooTWritablE > 0) and ($enable_agc_xfer_log > 0) )
+					{
+					#	DATETIME|campaign|lead_id|phone_number|user|type
+					#	2007-08-22 11:11:11|TESTCAMP|65432|3125551212|1234|M
+					$fp = fopen ("./xfer_log.txt", "a");
+					fwrite ($fp, "$NOW_TIME|$campaign|$lead_id|$agent_dialed_number|$user|M|$MqueryCID||$province\n");
+					fclose($fp);
+					}
 				}
 
 
@@ -2990,7 +2983,7 @@ if ($ACTION == 'manDiaLonly')
 		if (strlen($lead_id) > 1)
 			{
 			$list_id='';
-			$stmt = "SELECT list_id FROM vicidial_list where lead_id='$lead_id';";
+			$stmt = "SELECT list_id,province FROM vicidial_list where lead_id='$lead_id';";
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00246',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -2999,6 +2992,7 @@ if ($ACTION == 'manDiaLonly')
 				{
 				$row=mysql_fetch_row($rslt);
 				$list_id =	$row[0];
+				$province =	$row[1];
 
 				if (strlen($list_id) > 1)
 					{
@@ -3275,7 +3269,25 @@ if ($ACTION == 'manDiaLonly')
 
 			mysql_close($linkB);
 			}
-
+		##### check if system is set to generate logfile for transfers
+		$stmt="SELECT enable_agc_xfer_log FROM system_settings;";
+		$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00441',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($DB) {echo "$stmt\n";}
+		$enable_agc_xfer_log_ct = mysql_num_rows($rslt);
+		if ($enable_agc_xfer_log_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$enable_agc_xfer_log =$row[0];
+			}
+		if ( ($WeBRooTWritablE > 0) and ($enable_agc_xfer_log > 0) )
+			{
+			#	DATETIME|campaign|lead_id|phone_number|user|type
+			#	2007-08-22 11:11:11|TESTCAMP|65432|3125551212|1234|M
+			$fp = fopen ("./xfer_log.txt", "a");
+			fwrite ($fp, "$NOW_TIME|$campaign|$lead_id|$phone_number|$user|M|$MqueryCID||$province\n");
+			fclose($fp);
+			}
 		}
 	}
 
