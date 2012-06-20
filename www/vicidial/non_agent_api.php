@@ -556,10 +556,11 @@ if ($function == 'sounds_list')
 		if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
 		  else {$HTTPprotocol = 'http://';}
 		$admDIR = "$HTTPprotocol$server_name:$server_port";
+		$admin_web_dir='';
 
 		#############################################
 		##### START SYSTEM_SETTINGS LOOKUP #####
-		$stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory FROM system_settings;";
+		$stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory,admin_web_directory FROM system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		$ss_conf_ct = mysql_num_rows($rslt);
 		if ($ss_conf_ct > 0)
@@ -569,6 +570,9 @@ if ($function == 'sounds_list')
 			$sounds_central_control_active =	$row[1];
 			$sounds_web_server =				$row[2];
 			$sounds_web_directory =				$row[3];
+			$admin_web_directory =				$row[4];
+			if (preg_match("/\//",$admin_web_directory))
+				{$admin_web_dir = dirname("$admin_web_directory");   $admin_web_dir .= "/";}
 			}
 		##### END SETTINGS LOOKUP #####
 		###########################################
@@ -631,7 +635,7 @@ if ($function == 'sounds_list')
 					if (eregi('tab',$format))
 						{echo "$k\t$file_names[$m]\t$file_dates[$m]\t$file_sizes[$m]\t$file_epoch[$m]\n";}
 					if (eregi('link',$format))
-						{echo "<a href=\"http://$sounds_web_server/$sounds_web_directory/$file_names[$m]\">$file_names[$m]</a><br>\n";}
+						{echo "<a href=\"http://$sounds_web_server/$admin_web_dir$sounds_web_directory/$file_names[$m]\">$file_names[$m]</a><br>\n";}
 					if (eregi('selectframe',$format))
 						{
 						if ($sf < 1)
@@ -674,7 +678,7 @@ if ($function == 'sounds_list')
 						echo "<td><a href=\"javascript:choose_file('$file_namesPROMPT[$m]','$comments');\"><font size=1 face=\"Arial,Helvetica\">$file_names[$m]</a></td>\n";
 						echo "<td><font size=1 face=\"Arial,Helvetica\">$file_dates[$m]</td>\n";
 						echo "<td><font size=1 face=\"Arial,Helvetica\">$file_sizes[$m]</td>\n";
-						echo "<td><a href=\"$admDIR/$sounds_web_directory/$file_names[$m]\" target=\"_blank\"><font size=1 face=\"Arial,Helvetica\">PLAY</a></td></tr>\n";
+						echo "<td><a href=\"$admDIR/$admin_web_dir$sounds_web_directory/$file_names[$m]\" target=\"_blank\"><font size=1 face=\"Arial,Helvetica\">PLAY</a></td></tr>\n";
 						}
 					}
 				$k++;

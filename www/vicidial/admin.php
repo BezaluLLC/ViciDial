@@ -29891,7 +29891,12 @@ if ($ADD==311111111111111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Central Sound Control Active: </td><td align=left><select size=1 name=sounds_central_control_active><option>1</option><option>0</option><option selected>$sounds_central_control_active</option></select>$NWB#settings-sounds_central_control_active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Sounds Web Server: </td><td align=left><input type=text name=sounds_web_server size=30 maxlength=50 value=\"$sounds_web_server\">$NWB#settings-sounds_web_server$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Sounds Web Directory: </td><td align=left><a href=\"http://$sounds_web_server/$sounds_web_directory\">$sounds_web_directory</a> $NWB#settings-sounds_web_directory$NWE</td></tr>\n";
+
+		$admin_web_dir='';
+		if (preg_match("/\//",$admin_web_directory))
+			{$admin_web_dir = dirname("$admin_web_directory");   $admin_web_dir .= "/";}
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Sounds Web Directory: </td><td align=left><a href=\"http://$sounds_web_server/$admin_web_dir$sounds_web_directory\">$sounds_web_directory</a> $NWB#settings-sounds_web_directory$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Admin Web Directory: </td><td align=left><input type=text name=admin_web_directory size=50 maxlength=255 value=\"$admin_web_directory\">$NWB#settings-admin_web_directory$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active Voicemail Server: </td><td align=left><select size=1 name=active_voicemail_server>\n";
