@@ -3,7 +3,7 @@
 # 
 # Used for integration with QueueMetrics of audio recordings
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # Copyright (C) 2007  Lenz Emilitri <lenz.loway@gmail.com> LICENSE: ????
 # 
 # CHANGES
@@ -12,6 +12,7 @@
 # 91012-0641 - Fixed to work with non-sequential time_ids in the queue_log
 # 100127-0603 - Added OpenSuSE install instructions
 # 100903-0041 - Changed lead_id max length to 10 digits
+# 120621-0728 - Added commented-out debug logging
 #
 
 // $Id: xmlrpc_audio_server.php,v 1.3 2007/11/12 17:53:09 lenz Exp $
@@ -69,6 +70,11 @@ function find_file( $ServerID, $AsteriskID, $QMUserID, $QMUserName )
 	global $FILE_LENGTH;
 	global $FILE_ENCODING;
 	global $FILE_DURATION;
+
+# uncomment below to enable basic logging of requests
+#	$fp = fopen ("./qm_rpc_debug.txt", "a");
+#	fwrite ($fp, date("U") . "|$ServerID|$AsteriskID|$QMUserID|$QMUserName|\n");
+#	fclose($fp);
 
 	require("dbconnect.php");
 	require("functions.php");
@@ -298,17 +304,6 @@ function xmlrpc_find_file( $params ) {
 	
 	return new XML_RPC_Response($response);
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 

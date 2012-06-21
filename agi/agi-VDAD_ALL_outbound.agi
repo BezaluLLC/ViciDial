@@ -94,12 +94,13 @@
 # 111201-1751 - Added grade-random next-agent-call option
 # 111219-2256 - Added max stats updating
 # 120529-2112 - Added safe_harbor_audio_field campaign option
+# 120621-0726 - Changed survey opt-in non-agent qm logging to log connection to VDAD agent
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
 $AGILOG = '0';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=97;
+$mysql_log_count=99;
 $one_mysql_log=0;
 
 
@@ -1517,16 +1518,28 @@ if ($call_handle_method =~ /SURVEY/)
 
 			if ($enable_queuemetrics_logging > 0)
 				{
+				$qm_call_time = ($now_date_epoch - $start_time_epoch);
+				$qm_complete_time = ($now_date_epoch + 1);
+				$qm_complete_sec = ($qm_call_time + 1);
+
 				$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
 				 or die "Couldn't connect to database: " . DBI->errstr;
 
 				if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='EXITWITHTIMEOUT',data1='1',serverid='$queuemetrics_log_id';";
+				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='Agent/VDAD',verb='CONNECT',data1='0',serverid='$queuemetrics_log_id';";
 				$Baffected_rows = $dbhB->do($stmtB);
-					$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01079';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+					$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01098';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
-				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='CALLSTATUS',data1='$survey_status',serverid='$queuemetrics_log_id';";
+				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$qm_complete_time',call_id='$callerid',queue='$VDADcampaign',agent='Agent/VDAD',verb='COMPLETEAGENT',data1='0',data2='$qm_complete_sec',data3='1',serverid='$queuemetrics_log_id';";
+				$Baffected_rows = $dbhB->do($stmtB);
+					$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01099';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+
+			#	$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='EXITWITHTIMEOUT',data1='1',serverid='$queuemetrics_log_id';";
+			#	$Baffected_rows = $dbhB->do($stmtB);
+			#		$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01079';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+
+				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$qm_complete_time',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='CALLSTATUS',data1='$survey_status',serverid='$queuemetrics_log_id';";
 				$Baffected_rows = $dbhB->do($stmtB);
 					$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01080';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
