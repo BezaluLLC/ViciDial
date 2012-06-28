@@ -18,6 +18,13 @@ DIAL IN-GROUP||
 Dial In-Group||
 Click Here to Activate||
 Click Here to Deactivate||
+ERROR: You must enter in search terms, one of these must be populated: lead ID, vendor ID, phone number, last name||
+ERROR: You must enter in search terms, one of these must be populated: office number, last name, first name||
+ERROR: There was a problem with your search terms||
+Phone and Post Code Time Zone Mismatch||
+Last Local Call Time||
+Called Count||
+Unidentified Hangup Cause Code||
 
 
 ############################################################  MANAGER Manual
