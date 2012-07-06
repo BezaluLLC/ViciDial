@@ -29,6 +29,7 @@
 # 101022-1022 - Added hours minutes seconds to filename variables
 # 110829-1045 - Changed recording lookup to try to find by vicidial_id first
 # 120511-2029 - Added CLI options for FTP login details
+# 120705-1954 - Added --temp-dir=XXX option
 #
 
 $txt = '.txt';
@@ -176,6 +177,7 @@ if (length($ARGV[0])>1)
 		print "  [--ftp-pass=XXXXXXXX] = FTP pass\n";
 		print "  [--ftp-dir=XXXXXXXX] = remote FTP server directory to post files to\n";
 		print "  [--with-transfer-audio] = Different method for finding audio, also grabs transfer audio filenames\n";
+		print "  [--temp-dir=XXX] = If running more than one instance at a time, specify a unique temp directory suffix\n";
 		print "  [--with-did-lookup] = Looks up the DID pattern and name the call came in on if possible\n";
 		print "  [--email-list=test@test.com:test2@test.com] = send email results to these addresses\n";
 		print "  [--email-sender=vicidial@localhost] = sender for the email results\n";
@@ -338,6 +340,16 @@ if (length($ARGV[0])>1)
 			if (!$Q)
 				{print "\n----- IGNORE CALLTIME FOR OUTBOUND -----\n\n";}
 			}
+		if ($args =~ /--temp-dir=/i)
+			{
+			@data_in = split(/--temp-dir=/,$args);
+			$temp_dir = $data_in[1];
+			$temp_dir =~ s/ .*//gi;
+			$temp_dir =~ s/:/,/gi;
+			if ($DB > 0) {print "\n----- TEMP DIR: $temp_dir -----\n\n";}
+			}
+		else
+			{$temp_dir = '';}
 		if ($args =~ /-ftp-transfer/i)
 			{
 			if (!$Q)
@@ -382,7 +394,7 @@ if (length($ARGV[0])>1)
 						}
 					}
 				}
-			$tempdir = '/root/tempaudioexport';
+			$tempdir = "/root/tempaudioexport$temp_dir";
 			if (!-e "$tempdir") 
 				{`mkdir -p $tempdir`;}
 			## remove old audio files from directory

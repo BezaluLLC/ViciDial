@@ -20,6 +20,7 @@
 # 110703-1828 - Added download option
 # 111104-1213 - Added user_group restrictions for selecting in-groups
 # 120224-0910 - Added HTML display option with bar graphs
+# 120705-2007 - Changed SALES to use sales status flag
 #
 
 require("dbconnect.php");
@@ -279,7 +280,18 @@ $HTML_text.="In-Group Fronter-Closer Stats Report                      $NOW_TIME
 $HTML_text.="\n";
 $HTML_text.="---------- TOTALS FOR $query_date_BEGIN to $query_date_END\n";
 
-$stmt="select count(*) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='" . mysql_real_escape_string($group) . "' and status = 'SALE';";
+$sale_dispo_stmt="select distinct status from vicidial_campaign_statuses where sale='Y' and campaign_id in (SELECT campaign_id from vicidial_campaigns where closer_campaigns LIKE \"% " . mysql_real_escape_string($group) . " %\" $LOGallowed_campaignsSQL) UNION select distinct status from vicidial_statuses where sale='Y'";
+if ($DB) {$HTML_text.="$sale_dispo_stmt\n";}
+$sale_dispo_rslt=mysql_query($sale_dispo_stmt, $link);
+$sale_dispos="'SALE'"; $sale_dispo_str="|SALE";
+while ($ssrow=mysql_fetch_row($sale_dispo_rslt)) {
+	$sale_dispos.=",'$ssrow[0]'";
+	$sale_dispo_str.="|$ssrow[0]";
+}
+$sale_dispo_str.="|";
+if ($DB) {$HTML_text.="Sale dispo string: $sale_dispo_str\n";}
+
+$stmt="select count(*) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='" . mysql_real_escape_string($group) . "' and status in ($sale_dispos);";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
 $row=mysql_fetch_row($rslt);
@@ -665,12 +677,13 @@ while ($i < $users_to_print)
 		{
 		$row=mysql_fetch_row($rslt);
 		$recL=0;
-		if ( ($row[0]=='SALE') and ($recL < 1) ) 
+		if ( preg_match("/\|$row[0]\|/", $sale_dispo_str) and ($recL < 1) ) 
 			{
 			$A1=$row[1]; $recL++; 
 			$sales=($sales + $row[1]);
 			$points = ($points + ($row[1] * 1) );
 			}
+		/*
 		if ( ($row[0]=='A2') and ($recL < 1) ) 
 			{
 			$A2=$row[1]; $recL++; 
@@ -693,6 +706,7 @@ while ($i < $users_to_print)
 			$uBOT=($uBOT + $row[1]);
 			$points = ($points + ($row[1] * 3) );
 			}
+		*/
 #		if ( ($row[0]=='A5') and ($recL < 1) ) {$A5=$row[1]; $recL++;}
 #		if ( ($row[0]=='A6') and ($recL < 1) ) {$A6=$row[1]; $recL++;}
 #		if ( ($row[0]=='A7') and ($recL < 1) ) {$A7=$row[1]; $recL++;}
@@ -745,7 +759,7 @@ while ($i < $users_to_print)
 	if ($A1>$max_sales) {$max_sales=$A1;}
 	if ($DROP>$max_drops) {$max_drops=$DROP;}
 	if ($OTHER>$max_other) {$max_other=$OTHER;}
-	if ($sales>$max_sales2) {$max_sales=$sales;}
+	if ($sales>$max_sales2) {$max_sales2=$sales;}
 	if ($Cpct>$max_conv_pct) {$max_conv_pct=$Cpct;}
 	$graph_stats[$i][0]="$user[$i] - $full_name[$i]";
 	$graph_stats[$i][1]=$USERcalls[$i];
