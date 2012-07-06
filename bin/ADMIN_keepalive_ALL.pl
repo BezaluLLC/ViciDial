@@ -72,6 +72,7 @@
 # 120209-1525 - Separated all vicidial-auto dialplan contexts into their own contexts to allow for more control of dialing access through phones
 # 120213-1405 - Added vicidial_daily_ra_stats rolling
 # 120512-2332 - Added loopback dialaround for ringing of calls
+# 120706-1325 - Added Call Menu qualify SQL option
 #
 
 $DB=0; # Debug flag
@@ -1132,7 +1133,7 @@ if ($timeclock_end_of_day_NOW > 0)
 ################################################################################
 
 ##### Get the settings from system_settings #####
-$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone FROM system_settings;";
+$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled FROM system_settings;";
 #	print "$stmtA\n";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1146,7 +1147,8 @@ if ($sthArows > 0)
 	$SSdefault_codecs =					$aryA[3];
 	$SSgenerate_cross_server_exten =	$aryA[4];
 	$SSvoicemail_timezones =			$aryA[5];
-	$SSdefault_voicemail_timezone =		$aryA[6];	
+	$SSdefault_voicemail_timezone =		$aryA[6];
+	$SScall_menu_qualify_enabled =		$aryA[7];
 	}
 $sthA->finish();
 if ($DBXXX > 0) {print "SYSTEM SETTINGS:     $sounds_central_control_active|$active_voicemail_server|$SScustom_dialplan_entry|$SSdefault_codecs\n";}
@@ -1958,7 +1960,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### BEGIN Generate the Call Menu entries #####
-	$stmtA = "SELECT menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log,dtmf_field FROM vicidial_call_menu order by menu_id;";
+	$stmtA = "SELECT menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log,dtmf_field,qualify_sql FROM vicidial_call_menu order by menu_id;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1981,11 +1983,16 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$tracking_group[$i] =		$aryA[11];
 		$dtmf_log[$i] =				$aryA[12];
 		$dtmf_field[$i] =			$aryA[13];
+		$qualify_sql[$i] =			$aryA[14];
 
 		if ($track_in_vdac[$i] > 0)
-			{$track_in_vdac[$i] = 'YES'}
+			{$track_in_vdac[$i] = 'YES';}
 		else
-			{$track_in_vdac[$i] = 'NO'}
+			{$track_in_vdac[$i] = 'NO';}
+		if ( (length($qualify_sql[$i]) > 5) && ($SScall_menu_qualify_enabled > 0) )
+			{$qualify_sql_active[$i] = 'YES';}
+		else
+			{$qualify_sql_active[$i] = 'NO';}
 		$i++;
 		}
 	$sthA->finish();
@@ -2304,7 +2311,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$call_menu_ext .= "; $menu_name[$i]\n";
 		$call_menu_ext .= "[$menu_id[$i]]\n";
 		$call_menu_ext .= "exten => s,1,Answer\n";
-		$call_menu_ext .= "exten => s,n,AGI(agi-VDAD_inbound_calltime_check.agi,$tracking_group[$i]-----$track_in_vdac[$i]-----$menu_id[$i]-----$time_check_scheme-----$time_check_route-----$time_check_route_value-----$time_check_route_context)\n";
+		$call_menu_ext .= "exten => s,n,AGI(agi-VDAD_inbound_calltime_check.agi,$tracking_group[$i]-----$track_in_vdac[$i]-----$menu_id[$i]-----$time_check_scheme-----$time_check_route-----$time_check_route_value-----$time_check_route_context-----$qualify_sql_active[$i])\n";
 		$call_menu_ext .= "exten => s,n,Set(INVCOUNT=0) \n";
 		$call_menu_ext .= "$menu_prompt_ext";
 		if ($menu_timeout[$i] > 0)

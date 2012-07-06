@@ -20,10 +20,15 @@
 # ; 5. call route after hours override
 # ; 6. call route value after hours override
 # ; 7. call route context after hours override
+# ; 8. vicidial_list query qualification (YES/NO, default is NO) 
+# ;    * only works with lead_id-populated calleridname phone calls.
+# ;    This option allows you to specify a SQL fragment used to do a count(*)
+# ;    against the vicidial_list table for the lead and other field values
+# ;    This feature will look for the qualify_sql in the cacll menu record
 # ;
 # ;inbound calls check calltime:
 #exten => 1234,1,Answer                  ; Answer the line
-#exten => 1234,2,AGI(agi-VDAD_inbound_calltime_check.agi,INBOUND-----YES-----START-----24hours-----EXTENSION-----101-----default)
+#exten => 1234,2,AGI(agi-VDAD_inbound_calltime_check.agi,INBOUND-----YES-----START-----24hours-----EXTENSION-----101-----default-----NO)
 #exten => 1234,3,Hangup
 #
 # Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
@@ -40,6 +45,7 @@
 # 110525-1347 - Added compatibility for outbound IVR logging
 # 111229-1716 - Changed call time overflow to look at previous day stop time
 # 120517-1257 - Added CALLMENU timeout option
+# 120706-1659 - Added Qualify SQL option
 #
 
 $script = 'agi-VDAD_inbound_calltime_check.agi';
@@ -145,7 +151,7 @@ $sthA->finish();
 
 #############################################
 ##### START QUEUEMETRICS LOGGING LOOKUP #####
-$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend FROM system_settings;";
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,call_menu_qualify_enabled FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -153,12 +159,13 @@ if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
 	$enable_queuemetrics_logging =	$aryA[0];
-	$queuemetrics_server_ip	=	$aryA[1];
-	$queuemetrics_dbname =		$aryA[2];
-	$queuemetrics_login=		$aryA[3];
-	$queuemetrics_pass =		$aryA[4];
-	$queuemetrics_log_id =		$aryA[5];
-	$queuemetrics_eq_prepend =	$aryA[6];
+	$queuemetrics_server_ip	=		$aryA[1];
+	$queuemetrics_dbname =			$aryA[2];
+	$queuemetrics_login=			$aryA[3];
+	$queuemetrics_pass =			$aryA[4];
+	$queuemetrics_log_id =			$aryA[5];
+	$queuemetrics_eq_prepend =		$aryA[6];
+	$call_menu_qualify_enabled =	$aryA[7];
 	}
 $sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -188,6 +195,7 @@ if (length($ARGV[0])>1)
 	$route_override =			$ARGV_vars[4];
 	$route_value_override =		$ARGV_vars[5];
 	$route_context_override =	$ARGV_vars[6];
+	$query_qualification =		$ARGV_vars[7];
 	}
 
 $|=1;
@@ -215,6 +223,7 @@ while(<STDIN>)
 
 $outboundIVR=0;
 $ingroupIVR=0;
+$lead_id='';
 if ($calleridname =~ /^V\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d|^Y\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
 	{
 	$callerid = $calleridname;
@@ -536,6 +545,64 @@ if ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_st
 	}
 ##### END AFTER HOURS CHECK #####
 
+
+
+
+##### BEGIN QUALIFY SQL CHECK #####
+if ( ($call_menu_qualify_enabled > 0) && ($query_qualification =~ /YES/) && ( ($outboundIVR > 0) || ($ingroupIVR > 0) ) )
+	{
+	$qualify_count=0;
+	$stmtA = "SELECT qualify_sql FROM vicidial_call_menu where menu_id='$context';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$qualify_sql =	$aryA[0];
+		}
+	$sthA->finish();
+
+	if (length($qualify_sql) > 5)
+		{
+		$lead_id = substr($calleridname, 10, 10);
+		$lead_id = ($lead_id + 0);
+
+		$stmtA = "SELECT count(*) FROM vicidial_list where lead_id='$lead_id' and $qualify_sql;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$qualify_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		if ($AGILOG) {$agi_string = "Exiting the TimeCheck App Qualify SQL   |$qualify_count|$lead_id|$context|$calleridname|$stmtA|";   &agi_output;}
+
+		if ($qualify_count < 1)
+			{
+			$AGI->stream_file('sip-silence'); # stop music-on-hold process
+			$AGI->stream_file('sip-silence'); # stop music-on-hold process
+
+			# sleep for one tenth of a second
+			usleep(1*100*1000);
+
+			if ($AGILOG) {$agi_string = "      TimeCheck App Qualify SQL FAIL, transferring call to D   |$qualify_count|$lead_id|$context|$calleridname|";   &agi_output;}
+
+			print "SET CONTEXT $context\n";
+				checkresult($result);
+			print "SET EXTENSION D\n";
+				checkresult($result);
+			print "SET PRIORITY 1\n";
+				checkresult($result);
+			
+			exit;
+			}
+		}
+	}
+##### END QUALIFY SQL CHECK #####
 
 
 ### insert an IVR record to the vicidial_auto_calls table

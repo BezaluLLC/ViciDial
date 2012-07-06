@@ -71,6 +71,11 @@ OTHER CHANGES:
 
 6. Added Japanese agent web interface translation
 
+7. Added ability to qualify callers before they go through a Call Menu by using
+	a SQL fragment(like in Filters) that you define in a Call Menu. Must be
+	enabled in System Settings. Calls must be passed from an outbound
+	campaign or an in-group.
+
 
 
 

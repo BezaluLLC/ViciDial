@@ -14,3 +14,9 @@ UPDATE system_settings SET db_schema_version='1320',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD safe_harbor_audio_field VARCHAR(30) default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1321',db_schema_update_date=NOW() where db_schema_version < 1321;
+
+ALTER TABLE system_settings ADD call_menu_qualify_enabled ENUM('0','1') default '0';
+
+ALTER TABLE vicidial_call_menu ADD qualify_sql TEXT;
+
+UPDATE system_settings SET db_schema_version='1322',db_schema_update_date=NOW() where db_schema_version < 1322;

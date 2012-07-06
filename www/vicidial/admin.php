@@ -1736,6 +1736,14 @@ if (isset($_GET["dial_ingroup_cid"]))			{$dial_ingroup_cid=$_GET["dial_ingroup_c
 	elseif (isset($_POST["dial_ingroup_cid"]))	{$dial_ingroup_cid=$_POST["dial_ingroup_cid"];}
 if (isset($_GET["safe_harbor_audio_field"]))			{$safe_harbor_audio_field=$_GET["safe_harbor_audio_field"];}
 	elseif (isset($_POST["safe_harbor_audio_field"]))	{$safe_harbor_audio_field=$_POST["safe_harbor_audio_field"];}
+if (isset($_GET["query_date"]))			{$query_date=$_GET["query_date"];}
+	elseif (isset($_POST["query_date"]))	{$query_date=$_POST["query_date"];}
+if (isset($_GET["end_date"]))			{$end_date=$_GET["end_date"];}
+	elseif (isset($_POST["end_date"]))	{$end_date=$_POST["end_date"];}
+if (isset($_GET["call_menu_qualify_enabled"]))			{$call_menu_qualify_enabled=$_GET["call_menu_qualify_enabled"];}
+	elseif (isset($_POST["call_menu_qualify_enabled"]))	{$call_menu_qualify_enabled=$_POST["call_menu_qualify_enabled"];}
+if (isset($_GET["qualify_sql"]))			{$qualify_sql=$_GET["qualify_sql"];}
+	elseif (isset($_POST["qualify_sql"]))	{$qualify_sql=$_POST["qualify_sql"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -1749,7 +1757,7 @@ if (strlen($dial_status) > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -1787,6 +1795,7 @@ if ($qm_conf_ct > 0)
 	$SSalt_log_login =						$row[28];
 	$SSalt_log_pass =						$row[29];
 	$SStables_use_alt_log_db =				$row[30];
+	$SScall_menu_qualify_enabled =			$row[31];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -2023,6 +2032,7 @@ if ($non_latin < 1)
 	$max_calls_count = ereg_replace("[^0-9]","",$max_calls_count);
 	$report_rank = ereg_replace("[^0-9]","",$report_rank);
 	$dial_ingroup_cid = ereg_replace("[^0-9]","",$dial_ingroup_cid);
+	$call_menu_qualify_enabled = ereg_replace("[^0-9]","",$call_menu_qualify_enabled);
 
 	$drop_call_seconds = ereg_replace("[^-0-9]","",$drop_call_seconds);
 
@@ -2646,6 +2656,10 @@ if ($non_latin < 1)
 	$modify_url = ereg_replace(";","",$modify_url);
 	$modify_url = ereg_replace("\r","",$modify_url);
 	$modify_url = ereg_replace("\"","",$modify_url);
+	$qualify_sql = ereg_replace("\\\\","",$qualify_sql);
+	$qualify_sql = ereg_replace(";","",$qualify_sql);
+	$qualify_sql = ereg_replace("\r","",$qualify_sql);
+	$qualify_sql = ereg_replace("'",'"',$qualify_sql);
 	### VARIABLES TO BE mysql_real_escape_string ###
 	# $web_form_address
 	# $queuemetrics_url
@@ -3063,12 +3077,13 @@ else
 # 120518-1456 - Added XFTAMM/LTMG special hotkeys for send to answering machine message
 # 120526-0827 - Added User Group User Login Report
 # 120529-2112 - Added safe_harbor_audio_field campaign option
+# 120706-1255 - Added Max stats date range and call menu qualify_sql options
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-370a';
-$build = '120529-2112';
+$admin_version = '2.6-371a';
+$build = '120706-1255';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3353,6 +3368,8 @@ echo "<!-- VERSION: $admin_version   BUILD: $build   ADD: $ADD   PHP_SELF: $PHP_
 echo "<META NAME=\"ROBOTS\" CONTENT=\"NONE\">\n";
 echo "<META NAME=\"COPYRIGHT\" CONTENT=\"&copy; 2012 ViciDial Group\">\n";
 echo "<META NAME=\"AUTHOR\" CONTENT=\"ViciDial Group\">\n";
+echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
+echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 if ($SSnocache_admin=='1')
 	{
 	echo "<META HTTP-EQUIV=\"Pragma\" CONTENT=\"no-cache\">\n";
@@ -6579,6 +6596,12 @@ if ($ADD==99999)
 	<BR>
 	<B>Custom Dialplan Entry -</B> This field allows you to enter in any dialplan elements that you want for the Call Menu.
 
+	<BR>
+	<A NAME="vicidial_call_menu-qualify_sql">
+	<BR>
+	<B>Qualify SQL -</B> This field allows you to input SQL - Structured Query Language - database fragments, like with Filters, to determine whether this call menu should play for the caller or not. This feature only works if the call has the callerIDname set prior to being sent to this call menu, either as an outbound survey transfer, or through the use of a drop call menu for an In-Group call. If there is a match, the call will proceed as normal. If there is no match, the call will go to the D option or the invalid option if no D option is set. You cannot use single-quotes in this field, only double-quotes if they are needed. Default is empty for disabled.
+
+
 
 
 
@@ -8237,6 +8260,11 @@ if ($ADD==99999)
 	<A NAME="settings-contacts_enabled">
 	<BR>
 	<B>Contacts Enabled -</B> This setting enables the Contacts sub-section in Admin which allows a manager to add modify or delete contacts in the system that can be used as part of a Custom Transfer in a campaign where an agent can search for contacts by first name last name or office number and then select one of many numbers associated with that contact. This feature is often used by operators or in switchboard functions where the user would need to transfer a call to a non-agent phone. Default is 0 for disabled.
+
+	<BR>
+	<A NAME="settings-call_menu_qualify_enabled">
+	<BR>
+	<B>Call Menu Qualify Enabled -</B> This setting enables the option in Call Menus to put a SQL qualification on the people that hear that call menu. For more information on how that feature works, view the help for Call Menus. Default is 0 for disabled.
 
 	<BR>
 	<A NAME="settings-first_login_trigger">
@@ -12519,7 +12547,7 @@ if ($ADD==2611)
 				}
 			else
 				{
-				$stmt="INSERT INTO vicidial_call_menu (menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log,dtmf_field,user_group) SELECT \"$menu_id\",\"$menu_name\",menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log,dtmf_field,user_group from vicidial_call_menu where menu_id=\"$source_menu\";";
+				$stmt="INSERT INTO vicidial_call_menu (menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log,dtmf_field,user_group,qualify_sql) SELECT \"$menu_id\",\"$menu_name\",menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log,dtmf_field,user_group,qualify_sql from vicidial_call_menu where menu_id=\"$source_menu\";";
 				$rslt=mysql_query($stmt, $link);
 
 				$stmtA="INSERT INTO vicidial_call_menu_options (menu_id,option_value,option_description,option_route,option_route_value,option_route_value_context) SELECT \"$menu_id\",option_value,option_description,option_route,option_route_value,option_route_value_context from vicidial_call_menu_options where menu_id='$source_menu';";
@@ -15988,7 +16016,7 @@ if ($ADD==4511)
 			{
 			echo "<br><B>CALL MENU MODIFIED: $menu_id</B>\n";
 
-			$stmt="UPDATE vicidial_call_menu set menu_name='$menu_name',menu_prompt='$menu_prompt',menu_timeout='$menu_timeout',menu_timeout_prompt='$menu_timeout_prompt',menu_invalid_prompt='$menu_invalid_prompt',menu_repeat='$menu_repeat',menu_time_check='$menu_time_check',call_time_id='$call_time_id',track_in_vdac='$track_in_vdac',custom_dialplan_entry='$custom_dialplan_entry',tracking_group='$tracking_group',dtmf_log='$dtmf_log',dtmf_field='$dtmf_field',user_group='$user_group' where menu_id='$menu_id';";
+			$stmt="UPDATE vicidial_call_menu set menu_name='$menu_name',menu_prompt='$menu_prompt',menu_timeout='$menu_timeout',menu_timeout_prompt='$menu_timeout_prompt',menu_invalid_prompt='$menu_invalid_prompt',menu_repeat='$menu_repeat',menu_time_check='$menu_time_check',call_time_id='$call_time_id',track_in_vdac='$track_in_vdac',custom_dialplan_entry='$custom_dialplan_entry',tracking_group='$tracking_group',dtmf_log='$dtmf_log',dtmf_field='$dtmf_field',user_group='$user_group',qualify_sql='$qualify_sql' where menu_id='$menu_id';";
 			$rslt=mysql_query($stmt, $link);
 
 			$h=0;
@@ -17373,7 +17401,7 @@ if ($ADD==411111111111111)
 			}
 		$tables_use_alt_log_db = preg_replace("/,$/","",$new_altlog_value);
 
-		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysql_real_escape_string($webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',custom_dialplan_entry='$custom_dialplan_entry',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db',webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',admin_modify_refresh='$admin_modify_refresh',nocache_admin='$nocache_admin',generate_cross_server_exten='$generate_cross_server_exten',queuemetrics_addmember_enabled='$queuemetrics_addmember_enabled',queuemetrics_dispo_pause='$queuemetrics_dispo_pause',label_hide_field_logs='$label_hide_field_logs',queuemetrics_pe_phone_append='$queuemetrics_pe_phone_append',test_campaign_calls='$test_campaign_calls',agents_calls_reset='$agents_calls_reset',default_voicemail_timezone='$default_voicemail_timezone',default_local_gmt='$default_local_gmt',noanswer_log='$noanswer_log',alt_log_server_ip='$alt_log_server_ip',alt_log_dbname='$alt_log_dbname',alt_log_login='$alt_log_login',alt_log_pass='$alt_log_pass',tables_use_alt_log_db='$tables_use_alt_log_db',did_agent_log='$did_agent_log',campaign_cid_areacodes_enabled='$campaign_cid_areacodes_enabled',pllb_grouping_limit='$pllb_grouping_limit',did_ra_extensions_enabled='$did_ra_extensions_enabled',expanded_list_stats='$expanded_list_stats',contacts_enabled='$contacts_enabled';";
+		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysql_real_escape_string($webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',custom_dialplan_entry='$custom_dialplan_entry',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db',webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',admin_modify_refresh='$admin_modify_refresh',nocache_admin='$nocache_admin',generate_cross_server_exten='$generate_cross_server_exten',queuemetrics_addmember_enabled='$queuemetrics_addmember_enabled',queuemetrics_dispo_pause='$queuemetrics_dispo_pause',label_hide_field_logs='$label_hide_field_logs',queuemetrics_pe_phone_append='$queuemetrics_pe_phone_append',test_campaign_calls='$test_campaign_calls',agents_calls_reset='$agents_calls_reset',default_voicemail_timezone='$default_voicemail_timezone',default_local_gmt='$default_local_gmt',noanswer_log='$noanswer_log',alt_log_server_ip='$alt_log_server_ip',alt_log_dbname='$alt_log_dbname',alt_log_login='$alt_log_login',alt_log_pass='$alt_log_pass',tables_use_alt_log_db='$tables_use_alt_log_db',did_agent_log='$did_agent_log',campaign_cid_areacodes_enabled='$campaign_cid_areacodes_enabled',pllb_grouping_limit='$pllb_grouping_limit',did_ra_extensions_enabled='$did_ra_extensions_enabled',expanded_list_stats='$expanded_list_stats',contacts_enabled='$contacts_enabled',call_menu_qualify_enabled='$call_menu_qualify_enabled';";
 		$rslt=mysql_query($stmt, $link);
 
 		if ($reload_dialplan_on_servers > 0)
@@ -26557,7 +26585,7 @@ if ($ADD==3511)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log,dtmf_field,user_group from vicidial_call_menu where menu_id='$menu_id' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log,dtmf_field,user_group,qualify_sql from vicidial_call_menu where menu_id='$menu_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$menu_name =			$row[0];
@@ -26574,6 +26602,7 @@ if ($ADD==3511)
 		$dtmf_log =				$row[11];
 		$dtmf_field =			$row[12];
 		$user_group =			$row[13];
+		$qualify_sql =			$row[14];
 
 
 		echo "<br>MODIFY A CALL MENU RECORD: $menu_id<form action=$PHP_SELF method=POST name=admin_form id=admin_form>\n";
@@ -26824,6 +26853,13 @@ if ($ADD==3511)
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=right>Custom Dialplan Entry: </td><td align=left>Disabled <input type=hidden name=custom_dialplan_entry value=\"\">$NWB#vicidial_call_menu-custom_dialplan_entry$NWE</td></tr>\n";
 			}
+
+		if ($SScall_menu_qualify_enabled > 0)
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>Qualify SQL: <BR> $NWB#vicidial_call_menu-qualify_sql$NWE</td><td align=left><TEXTAREA NAME=qualify_sql ROWS=5 COLS=70>$qualify_sql</TEXTAREA></td></tr>\n";
+			}
+		else
+			{echo "<tr bgcolor=#B6D3FC><td align=right> </td><td align=left> <input type=hidden name=qualify_sql value=\"\"></td></tr>\n";}
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
 		echo "</table>\n";
@@ -29693,7 +29729,7 @@ if ($ADD==311111111111111)
 			$ALLagent_count =		$rowx[2];
 			}
 
-		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset,default_voicemail_timezone,default_local_gmt,noanswer_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_agent_log,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled from system_settings;";
+		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset,default_voicemail_timezone,default_local_gmt,noanswer_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_agent_log,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,call_menu_qualify_enabled from system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$version =						$row[0];
@@ -29801,6 +29837,7 @@ if ($ADD==311111111111111)
 		$did_ra_extensions_enabled =	$row[102];
 		$expanded_list_stats =			$row[103];
 		$contacts_enabled =				$row[104];
+		$call_menu_qualify_enabled =	$row[105];
 
 		echo "<br>MODIFY VICIDIAL SYSTEM SETTINGS<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=411111111111111>\n";
@@ -29985,6 +30022,8 @@ if ($ADD==311111111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Enable Remote Agent Extension Overrides: </td><td align=left><select size=1 name=did_ra_extensions_enabled><option>1</option><option>0</option><option selected>$did_ra_extensions_enabled</option></select>$NWB#settings-did_ra_extensions_enabled$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Enable Contacts: </td><td align=left><select size=1 name=contacts_enabled><option>1</option><option>0</option><option selected>$contacts_enabled</option></select>$NWB#settings-contacts_enabled$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Call Menu Qualify Enabled: </td><td align=left><select size=1 name=call_menu_qualify_enabled><option>1</option><option>0</option><option selected>$call_menu_qualify_enabled</option></select>$NWB#settings-call_menu_qualify_enabled$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>First Login Trigger: </td><td align=left><input type=hidden name=first_login_trigger value=\"$first_login_trigger\"> $first_login_trigger &nbsp; $NWB#settings-first_login_trigger$NWE</td></tr>\n";
 
@@ -33188,10 +33227,46 @@ if ($ADD==999993)
 ######################
 if ($ADD==999992)
 	{
+	if (!$query_date) {$query_date=date("Y-m-d", time()-(29*86400));}
+	if (!$end_date) {
+		$end_date=date("Y-m-d", time());
+	} else if (strtotime($end_date)>strtotime(date("Y-m-d"))) {
+		$end_date=date("Y-m-d");
+	}
+	if ($query_date>$end_date) {$query_date=$end_date;}
+
+	
+	$num_graph_days = ceil(abs(strtotime($end_date) - strtotime($query_date)) / 86400)+1;
+
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	echo "<br><B> Administration: Maximum System Stats &nbsp; $NWB#vicidial_max_stats$NWE</B><BR><BR>\n";
+	echo "<form name=\"vicidial_report\" action=\"admin.php\"><INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
+
+	echo "<script language=\"JavaScript\">\n";
+	echo "var o_cal = new tcal ({\n";
+	echo "	// form name\n";
+	echo "	'formname': 'vicidial_report',\n";
+	echo "	// input name\n";
+	echo "	'controlname': 'query_date'\n";
+	echo "});\n";
+	echo "o_cal.a_tpl.yearscroll = false;\n";
+	echo "// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
+	echo "</script>\n";
+
+	echo " to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+
+	echo "<script language=\"JavaScript\">\n";
+	echo "var o_cal = new tcal ({\n";
+	echo "	// form name\n";
+	echo "	'formname': 'vicidial_report',\n";
+	echo "	// input name\n";
+	echo "	'controlname': 'end_date'\n";
+	echo "});\n";
+	echo "o_cal.a_tpl.yearscroll = false;\n";
+	echo "// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
+	echo "</script>&nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='max_system_stats_submit' VALUE='ADJUST DATE RANGE'><input type='hidden' name='ADD' value='$ADD'><input type='hidden' name='stage' value='$stage'></form><BR>\n";
 	echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=2>\n";
 
 	if ( (preg_match("/Maximum System Stats/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
@@ -33209,31 +33284,31 @@ if ($ADD==999992)
 			}
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-			horizontal_bar_chart($campaign_id,'30','system',$link,'total_calls','total call count in and out',0);
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'total_calls','total call count in and out',0,$end_date);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-			horizontal_bar_chart($campaign_id,'30','system',$link,'total_calls_inbound_all','total inbound call count',0);
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'total_calls_inbound_all','total inbound call count',0,$end_date);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-			horizontal_bar_chart($campaign_id,'30','system',$link,'total_calls_outbound_all','total outbound call count',0);
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'total_calls_outbound_all','total outbound call count',0,$end_date);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-			horizontal_bar_chart($campaign_id,'30','system',$link,'(max_inbound + max_outbound)','most concurrent calls in and out',0);
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'(max_inbound + max_outbound)','most concurrent calls in and out',0,$end_date);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-			horizontal_bar_chart($campaign_id,'30','system',$link,'max_inbound','most concurrent calls inbound total',0);
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'max_inbound','most concurrent calls inbound total',0,$end_date);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-			horizontal_bar_chart($campaign_id,'30','system',$link,'max_outbound','most concurrent calls outbound total',0);
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'max_outbound','most concurrent calls outbound total',0,$end_date);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-			horizontal_bar_chart($campaign_id,'30','system',$link,'max_agents','most concurrent agents',0);
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'max_agents','most concurrent agents',0,$end_date);
 		echo "</td></tr>\n";
 		}
 	else

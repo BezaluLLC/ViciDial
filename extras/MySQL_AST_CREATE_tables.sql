@@ -1481,7 +1481,8 @@ pllb_grouping_limit SMALLINT(5) default '100',
 did_ra_extensions_enabled ENUM('0','1') default '0',
 expanded_list_stats ENUM('0','1') default '1',
 contacts_enabled ENUM('0','1') default '0',
-svn_version VARCHAR(100) default ''
+svn_version VARCHAR(100) default '',
+call_menu_qualify_enabled ENUM('0','1') default '0'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -1924,7 +1925,8 @@ custom_dialplan_entry TEXT,
 tracking_group VARCHAR(20) default 'CALLMENU',
 dtmf_log ENUM('0','1') default '0',
 dtmf_field VARCHAR(50) default 'NONE',
-user_group VARCHAR(20) default '---ALL---'
+user_group VARCHAR(20) default '---ALL---',
+qualify_sql TEXT
 );
 
 CREATE TABLE vicidial_call_menu_options (
@@ -2813,7 +2815,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1321',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1322',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
