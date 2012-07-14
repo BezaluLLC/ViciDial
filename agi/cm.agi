@@ -40,7 +40,7 @@ if ($sec < 10) {$sec = "0$sec";}
 $now_date_epoch = time();
 $now_date = "$year-$mon-$mday $hour:$min:$sec";
 
-$vicidial_list_fields = '|vendor_lead_code|source_id|phone_code|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|alt_phone|email|security_phrase|comments|rank|owner|status|user|';
+$vicidial_list_fields = '|vendor_lead_code|source_id|phone_code|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|alt_phone|email|security_phrase|comments|rank|owner|status|user|q01|q02|q03|q04|q05|q06|q07|q08|q09|q10|q11|q12|q13|q14|q15|q16|q17|q18|q19|q20|';
 
 # default path to astguiclient configuration file:
 $PATHconf =		'/etc/astguiclient.conf';
