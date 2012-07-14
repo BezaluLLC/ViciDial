@@ -1724,6 +1724,10 @@ if (isset($_GET["territory_reset"]))			{$territory_reset=$_GET["territory_reset"
 	elseif (isset($_POST["territory_reset"]))	{$territory_reset=$_POST["territory_reset"];}
 if (isset($_GET["hopper_vlc_dup_check"]))			{$hopper_vlc_dup_check=$_GET["hopper_vlc_dup_check"];}
 	elseif (isset($_POST["hopper_vlc_dup_check"]))	{$hopper_vlc_dup_check=$_POST["hopper_vlc_dup_check"];}
+if (isset($_GET["download_max_system_stats_metric"]))			{$download_max_system_stats_metric=$_GET["download_max_system_stats_metric"];}
+	elseif (isset($_POST["download_max_system_stats_metric"]))	{$download_max_system_stats_metric=$_POST["download_max_system_stats_metric"];}
+if (isset($_GET["download_max_system_stats_metric_name"]))			{$download_max_system_stats_metric_name=$_GET["download_max_system_stats_metric_name"];}
+	elseif (isset($_POST["download_max_system_stats_metric_name"]))	{$download_max_system_stats_metric_name=$_POST["download_max_system_stats_metric_name"];}
 if (isset($_GET["inventory_report"]))			{$inventory_report=$_GET["inventory_report"];}
 	elseif (isset($_POST["inventory_report"]))	{$inventory_report=$_POST["inventory_report"];}
 if (isset($_GET["report_rank"]))			{$report_rank=$_GET["report_rank"];}
@@ -1754,6 +1758,58 @@ if (strlen($dial_status) > 0)
 	$ADD='28';
 	$status = $dial_status;
 	}
+
+if ($download_max_system_stats_metric_name) {
+	if (!$query_date) {$query_date=date("Y-m-d", time()-(29*86400));}
+	if (!$end_date) {
+		$end_date=date("Y-m-d", time());
+	} else if (strtotime($end_date)>strtotime(date("Y-m-d"))) {
+		$end_date=date("Y-m-d");
+	}
+	if ($query_date>$end_date) {$query_date=$end_date;}
+
+	$num_graph_days = ceil(abs(strtotime($end_date) - strtotime($query_date)) / 86400)+1;
+	$CSV_text="";
+
+	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="total call count in and out") {
+		download_max_system_stats($campaign_id,$num_graph_days,'system','total_calls','total call count in and out',$end_date);
+	}
+	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="total inbound call count") {
+		download_max_system_stats($campaign_id,$num_graph_days,'system','total_calls_inbound_all','total inbound call count',$end_date);
+	}
+	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="total outbound call count") {
+		download_max_system_stats($campaign_id,$num_graph_days,'system','total_calls_outbound_all','total outbound call count',$end_date);
+	}
+	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="most concurrent calls in and out") {
+		download_max_system_stats($campaign_id,$num_graph_days,'system','(max_inbound + max_outbound)','most concurrent calls in and out',$end_date);
+	}
+	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="most concurrent calls inbound total") {
+		download_max_system_stats($campaign_id,$num_graph_days,'system','max_inbound','most concurrent calls inbound total',$end_date);
+	}
+	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="most concurrent calls outbound total") {
+		download_max_system_stats($campaign_id,$num_graph_days,'system','max_outbound','most concurrent calls outbound total',$end_date);
+	}
+	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="most concurrent agents") {
+		download_max_system_stats($campaign_id,$num_graph_days,'system','max_agents','most concurrent agents',$end_date);
+	}
+
+	$FILE_TIME = date("Ymd-His");
+	$CSVfilename = "MAX_SYSTEM_STATS_$US$FILE_TIME.csv";
+	$CSV_text=preg_replace('/ +\"/', '"', $CSV_text);
+	$CSV_text=preg_replace('/\" +/', '"', $CSV_text);
+	header('Content-type: application/octet-stream');
+
+	header("Content-Disposition: attachment; filename=\"$CSVfilename\"");
+	header('Expires: 0');
+	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+	header('Pragma: public');
+	ob_clean();
+	flush();
+
+	echo "$CSV_text";
+
+	exit;
+}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -3078,12 +3134,13 @@ else
 # 120526-0827 - Added User Group User Login Report
 # 120529-2112 - Added safe_harbor_audio_field campaign option
 # 120706-1255 - Added Max stats date range and call menu qualify_sql options
+# 120713-2123 - Added max stats download link and extended_vl option
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-371a';
-$build = '120706-1255';
+$admin_version = '2.6-372a';
+$build = '120713-2123';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -26660,8 +26717,17 @@ if ($ADD==3511)
 			{
 			echo "<option selected value=\"0\">0 - No DTMF Logging</option><option value=\"1\">1 - DTMF Logging Enabled</option>\n";
 			}
+
+		if (file_exists('options.php'))
+			{require('options.php');}
+		$extended_vl_fields_OPTIONS='';
+		if ($extended_vl_fields > 0)
+			{
+			$extended_vl_fields_OPTIONS = '<option>q01</option><option>q02</option><option>q03</option><option>q04</option><option>q05</option><option>q06</option><option>q07</option><option>q08</option><option>q09</option><option>q10</option><option>q11</option><option>q12</option><option>q13</option><option>q14</option><option>q15</option><option>q16</option><option>q17</option><option>q18</option><option>q19</option><option>q20</option>';
+			}
+
 		echo "</select>$NWB#vicidial_call_menu-dtmf_log$NWE &nbsp; &nbsp; Log Field: \n";
-		echo "<select size=1 name=dtmf_field><option>NONE</option><option>vendor_lead_code</option><option>source_id</option><option>phone_code</option><option>title</option><option>first_name</option><option>middle_initial</option><option>last_name</option><option>address1</option><option>address2</option><option>address3</option><option>city</option><option>state</option><option>province</option><option>postal_code</option><option>country_code</option><option>alt_phone</option><option>email</option><option>security_phrase</option><option>comments</option><option>rank</option><option>owner</option><option>status</option><option>user</option><option SELECTED>$dtmf_field</option></select>$NWB#vicidial_call_menu-dtmf_field$NWE</td></tr>\n";
+		echo "<select size=1 name=dtmf_field><option>NONE</option><option>vendor_lead_code</option><option>source_id</option><option>phone_code</option><option>title</option><option>first_name</option><option>middle_initial</option><option>last_name</option><option>address1</option><option>address2</option><option>address3</option><option>city</option><option>state</option><option>province</option><option>postal_code</option><option>country_code</option><option>alt_phone</option><option>email</option><option>security_phrase</option><option>comments</option><option>rank</option><option>owner</option><option>status</option><option>user</option><option SELECTED>$dtmf_field</option>$extended_vl_fields_OPTIONS</select>$NWB#vicidial_call_menu-dtmf_field$NWE</td></tr>\n";
 
 		echo "<tr><td align=center colspan=2> <input type=submit name=SUBMIT value=SUBMIT> </td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=CENTER colspan=2> Call Menu Options: </td></tr>\n";
@@ -33267,7 +33333,7 @@ if ($ADD==999992)
 	echo "o_cal.a_tpl.yearscroll = false;\n";
 	echo "// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 	echo "</script>&nbsp;&nbsp;&nbsp;&nbsp;<input type='submit' name='max_system_stats_submit' VALUE='ADJUST DATE RANGE'><input type='hidden' name='ADD' value='$ADD'><input type='hidden' name='stage' value='$stage'></form><BR>\n";
-	echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=2>\n";
+	echo "<center><a href='$PHP_SELF?query_date=$query_date&end_date=$end_date&max_system_stats_submit=$max_system_stats_submit&ADD=$ADD&stage=$stage&download_max_system_stats_metric_name=ALL'>[DOWNLOAD ALL]</a><TABLE width=$section_width cellspacing=5 cellpadding=2>\n";
 
 	if ( (preg_match("/Maximum System Stats/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 		{
@@ -33284,31 +33350,38 @@ if ($ADD==999992)
 			}
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'total_calls','total call count in and out',0,$end_date);
+			$download_link="<font size='-2'><a href='$PHP_SELF?query_date=$query_date&end_date=$end_date&max_system_stats_submit=$max_system_stats_submit&ADD=$ADD&stage=$stage&download_max_system_stats_metric_name=total+call+count+in+and+out'>[DOWNLOAD]</a></font>";
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'total_calls','total call count in and out',0,$end_date,$download_link);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'total_calls_inbound_all','total inbound call count',0,$end_date);
+			$download_link="<font size='-2'><a href='$PHP_SELF?query_date=$query_date&end_date=$end_date&max_system_stats_submit=$max_system_stats_submit&ADD=$ADD&stage=$stage&download_max_system_stats_metric_name=total+inbound+call+count'>[DOWNLOAD]</a></font>";
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'total_calls_inbound_all','total inbound call count',0,$end_date,$download_link);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'total_calls_outbound_all','total outbound call count',0,$end_date);
+			$download_link="<font size='-2'><a href='$PHP_SELF?query_date=$query_date&end_date=$end_date&max_system_stats_submit=$max_system_stats_submit&ADD=$ADD&stage=$stage&download_max_system_stats_metric_name=total+outbound+call+count'>[DOWNLOAD]</a></font>";
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'total_calls_outbound_all','total outbound call count',0,$end_date,$download_link);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'(max_inbound + max_outbound)','most concurrent calls in and out',0,$end_date);
+			$download_link="<font size='-2'><a href='$PHP_SELF?query_date=$query_date&end_date=$end_date&max_system_stats_submit=$max_system_stats_submit&ADD=$ADD&stage=$stage&download_max_system_stats_metric_name=most+concurrent+calls+in+and+out'>[DOWNLOAD]</a></font>";
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'(max_inbound + max_outbound)','most concurrent calls in and out',0,$end_date,$download_link);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'max_inbound','most concurrent calls inbound total',0,$end_date);
+			$download_link="<font size='-2'><a href='$PHP_SELF?query_date=$query_date&end_date=$end_date&max_system_stats_submit=$max_system_stats_submit&ADD=$ADD&stage=$stage&download_max_system_stats_metric_name=most+concurrent+calls+inbound+total'>[DOWNLOAD]</a></font>";
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'max_inbound','most concurrent calls inbound total',0,$end_date,$download_link);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'max_outbound','most concurrent calls outbound total',0,$end_date);
+			$download_link="<font size='-2'><a href='$PHP_SELF?query_date=$query_date&end_date=$end_date&max_system_stats_submit=$max_system_stats_submit&ADD=$ADD&stage=$stage&download_max_system_stats_metric_name=most+concurrent+calls+outbound+total'>[DOWNLOAD]</a></font>";
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'max_outbound','most concurrent calls outbound total',0,$end_date,$download_link);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'max_agents','most concurrent agents',0,$end_date);
+			$download_link="<font size='-2'><a href='$PHP_SELF?query_date=$query_date&end_date=$end_date&max_system_stats_submit=$max_system_stats_submit&ADD=$ADD&stage=$stage&download_max_system_stats_metric_name=most+concurrent+agents'>[DOWNLOAD]</a></font>";
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'max_agents','most concurrent agents',0,$end_date,$download_link);
 		echo "</td></tr>\n";
 		}
 	else

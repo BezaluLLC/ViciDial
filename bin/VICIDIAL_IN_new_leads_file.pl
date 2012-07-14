@@ -10,7 +10,7 @@
 #
 # NOTE: the machine this is run on must have a servers entry in the database
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES
@@ -53,9 +53,10 @@
 # 110424-0948 - Added time-zone-code-gmt option to use time zone code from the owner field
 # 110705-1913 - Added options for USACAN prefix(no 0 or 1) and valid areacode filtering
 # 110929-1423 - Added new format for abbreviated timezone in owner(pipe30tz) and list creation options
+# 120713-1009 - Added new --duplicate-tnm-delete option to check for a duplicate phone with different title and delete existing if found in same list
 #
 
-$version = '110929-1423';
+$version = '120713-1009';
 
 $secX = time();
 $MT[0]='';
@@ -173,6 +174,9 @@ if (length($ARGV[0])>1)
 		print "  [--duplicate-system-check] = checks for the same phone number in the entire system before inserting lead\n";
 		print "  [--duplicate-tap-list-check] = checks for the same title/alt-number in the same list ID before inserting lead\n";
 		print "  [--duplicate-tap-system-check] = checks for the same title/alt-number in the entire system before inserting lead\n";
+		print "  [--duplicate-tnm-delete] = checks for same phone and title in same list then deletes original if title is different\n";
+		print "  [--dob-mmddyyy] = checks for slashes in the date of birth field and formats from MM/DD/YYYY to MySQL\n";
+		print "  [--dob-ddmmyyy] = checks for slashes in the date of birth field and formats from DD/MM/YYYY to MySQL\n";
 		print "  [--postal-code-gmt] = checks for the time zone based on the postal code given where available\n";
 		print "  [--time-zone-code-gmt] = checks for the time zone based on the owner field time zone code given where available\n";
 		print "  [--ftp-pull] = grabs lead files from a remote FTP server, uses REPORTS FTP login information\n";
@@ -325,6 +329,21 @@ if (length($ARGV[0])>1)
 			{
 			$duptapchecksys=1;
 			if ($q < 1) {print "\n----- DUPLICATE TITLE/ALT-PHONE SYSTEM CHECK -----\n\n";}
+			}
+		if ($args =~ /-duplicate-tnm-delete/i)
+			{
+			$duptnmdelete=1;
+			if ($q < 1) {print "\n----- DUPLICATE TITLE DIFF DELETE -----\n\n";}
+			}
+		if ($args =~ /--dob-mmddyyy/i)
+			{
+			$dob_mmddyyy=1;
+			if ($q < 1) {print "\n----- DOB FORMAT MMDDYYYY -----\n\n";}
+			}
+		if ($args =~ /--dob-ddmmyyy/i)
+			{
+			$dob_ddmmyyy=1;
+			if ($q < 1) {print "\n----- DOB FORMAT DDMMYYYY -----\n\n";}
 			}
 		if ($args =~ /-postal-code-gmt/i)
 			{
@@ -614,7 +633,7 @@ foreach(@FILES)
 				$new_list_id = "$list_id_prefix$listdate$x";
 				while ( ($xloop < 10000) && ($dup_list_id > 0) )
 					{
-					$stmtA = "select count(*) from vicidial_lists where list_id='$new_list_id';";
+					$stmtA = "SELECT count(*) from vicidial_lists where list_id='$new_list_id';";
 						if($DBX){print STDERR "\n|$stmtA|\n";}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1199,7 +1218,7 @@ foreach(@FILES)
 					}
 
 				### look up the custom CID to use for this state
-				$stmtA = "select cid from vicidial_custom_cid where state='$state';";
+				$stmtA = "SELECT cid from vicidial_custom_cid where state='$state';";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -1311,7 +1330,7 @@ foreach(@FILES)
 					}
 
 				### look up the custom CID to use for this state
-				$stmtA = "select cid from vicidial_custom_cid where state='$state';";
+				$stmtA = "SELECT cid from vicidial_custom_cid where state='$state';";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -1432,7 +1451,7 @@ foreach(@FILES)
 					}
 
 				### look up the custom CID to use for this state
-				$stmtA = "select cid from vicidial_custom_cid where state='$state';";
+				$stmtA = "SELECT cid from vicidial_custom_cid where state='$state';";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -1517,7 +1536,7 @@ foreach(@FILES)
 					}
 
 				### look up the custom CID to use for this state
-				$stmtA = "select cid from vicidial_custom_cid where state='$state';";
+				$stmtA = "SELECT cid from vicidial_custom_cid where state='$state';";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -1610,13 +1629,13 @@ foreach(@FILES)
 				$called_count =			$m[23];		$called_count =~ s/\D|\r|\n|\t//gi; if (length($called_count)<1) {$called_count=0;}
 				$status =				$m[24];		$status =~ s/ |\r|\n|\t//gi;  if (length($status)<1) {$status='NEW';}
 				$insert_date =			$m[25];	$insert_date =~ s/\r|\n|\t|[a-zA-Z]//gi;  if (length($insert_date)<6) {$insert_date=$pulldate0;}
-					if ($insert_date =~ /\//) 
-						{
-						@iD = split(/\//, $insert_date);
-						$iD[0] = sprintf("%02d", $iD[0]);
-						$iD[1] = sprintf("%02d", $iD[1]);
-						$insert_date = "$iD[2]-$iD[0]-$iD[1]";
-						}
+				if ($insert_date =~ /\//) 
+					{
+					@iD = split(/\//, $insert_date);
+					$iD[0] = sprintf("%02d", $iD[0]);
+					$iD[1] = sprintf("%02d", $iD[1]);
+					$insert_date = "$iD[2]-$iD[0]-$iD[1]";
+					}
 				$multi_alt_phones =		$m[26];
 
 				$map_count=0;
@@ -1661,6 +1680,20 @@ foreach(@FILES)
 				{
 				$phone_code =	$forcephonecode;	# set phone_code to override value
 				}
+			if ( ($dob_mmddyyy > 0) && ($date_of_birth =~ /\//) )
+				{
+				@iD = split(/\//, $date_of_birth);
+				$iD[0] = sprintf("%02d", $iD[0]);
+				$iD[1] = sprintf("%02d", $iD[1]);
+				$date_of_birth = "$iD[2]-$iD[0]-$iD[1]";
+				}
+			if ( ($dob_ddmmyyy > 0) && ($date_of_birth =~ /\//) )
+				{
+				@iD = split(/\//, $date_of_birth);
+				$iD[0] = sprintf("%02d", $iD[0]);
+				$iD[1] = sprintf("%02d", $iD[1]);
+				$date_of_birth = "$iD[2]-$iD[1]-$iD[0]";
+				}
 
 			if ($DBX) {print "$a|$phone_number\n";}
 
@@ -1681,7 +1714,7 @@ foreach(@FILES)
 			if ( ($usacan_areacode_check > 0) && ($valid_lead > 0) )
 				{
 				$USarea = 			substr($phone_number, 0, 3);
-				$stmtA = "select count(*) from vicidial_phone_codes where areacode='$USarea' and country_code='1';";
+				$stmtA = "SELECT count(*) from vicidial_phone_codes where areacode='$USarea' and country_code='1';";
 					if($DBX){print STDERR "\n|$stmtA|\n";}
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1702,7 +1735,7 @@ foreach(@FILES)
 			if ($dupchecksys > 0)
 				{
 				$dup_lead=0;
-				$stmtA = "select count(*) from vicidial_list where phone_number='$phone_number';";
+				$stmtA = "SELECT count(*) from vicidial_list where phone_number='$phone_number';";
 					if($DBX){print STDERR "\n|$stmtA|\n";}
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1724,7 +1757,7 @@ foreach(@FILES)
 			if ($dupcheck > 0)
 				{
 				$dup_lead=0;
-				$stmtA = "select list_id from vicidial_list where phone_number='$phone_number' and list_id='$list_id' limit 1;";
+				$stmtA = "SELECT list_id from vicidial_list where phone_number='$phone_number' and list_id='$list_id' limit 1;";
 					if($DBX){print STDERR "\n|$stmtA|\n";}
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1748,7 +1781,7 @@ foreach(@FILES)
 				$dup_lead=0;
 				$dup_lists='';
 
-				$stmtA = "select count(*) from vicidial_lists where list_id='$list_id';";
+				$stmtA = "SELECT count(*) from vicidial_lists where list_id='$list_id';";
 					if($DBX){print STDERR "\n|$stmtA|\n";}
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1757,7 +1790,7 @@ foreach(@FILES)
 				$sthA->finish();
 				if ($ci_recs > 0)
 					{
-					$stmtA = "select campaign_id from vicidial_lists where list_id='$list_id';";
+					$stmtA = "SELECT campaign_id from vicidial_lists where list_id='$list_id';";
 						if($DBX){print STDERR "\n|$stmtA|\n";}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1765,7 +1798,7 @@ foreach(@FILES)
 						$dup_camp = $aryA[0];
 					$sthA->finish();
 
-					$stmtA = "select list_id from vicidial_lists where campaign_id='$dup_camp';";
+					$stmtA = "SELECT list_id from vicidial_lists where campaign_id='$dup_camp';";
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 					$sthArows=$sthA->rows;
@@ -1779,7 +1812,7 @@ foreach(@FILES)
 					$sthA->finish();
 
 					chop($dup_lists);
-					$stmtA = "select list_id from vicidial_list where phone_number='$phone_number' and list_id IN($dup_lists) limit 1;";
+					$stmtA = "SELECT list_id from vicidial_list where phone_number='$phone_number' and list_id IN($dup_lists) limit 1;";
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 					$sthArows=$sthA->rows;
@@ -1803,7 +1836,7 @@ foreach(@FILES)
 			if ($duptapchecksys > 0)
 				{
 				$dup_lead=0;
-				$stmtA = "select count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone';";
+				$stmtA = "SELECT count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone';";
 					if($DBX){print STDERR "\n|$stmtA|\n";}
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1825,7 +1858,7 @@ foreach(@FILES)
 			if ($duptapchecklist > 0)
 				{
 				$dup_lead=0;
-				$stmtA = "select list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id' limit 1;";
+				$stmtA = "SELECT list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id' limit 1;";
 					if($DBX){print STDERR "\n|$stmtA|\n";}
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1843,7 +1876,35 @@ foreach(@FILES)
 						{$dup_lead++;}
 					}
 				}
+			##### Check for duplicate phone with different title in vicidial_list table for one list_id, delete if different #####
+			if ( ($dup_lead > 0) && ($duptnmdelete > 0) )
+				{
+				$tnm_delete=0;
+				$tnm_lead_id='';
+				$stmtA = "SELECT lead_id,title from vicidial_list where phone_number='$phone_number' and list_id='$list_id' limit 1;";
+					if($DBX){print STDERR "\n|$stmtA|\n";}
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$tnm_lead_id =		$aryA[0];
+					$tnm_title_check =	$aryA[1];
+					if ( (length($tnm_title_check) > 0) && (length($title) > 0) && ($tnm_title_check !~ /^$title$/) )
+						{$tnm_delete++;}
+					}
+				$sthA->finish();
+				if ($tnm_delete > 0)
+					{
+					$stmtZ = "DELETE FROM vicidial_list where lead_id='$tnm_lead_id' limit 1;";
+					if (!$T) {$affected_rows = $dbhA->do($stmtZ); } #  or die  "Couldn't execute query: |$stmtZ|\n";
+					if($DB){print STDERR "\n|$affected_rows|$tnm_title_check|$title|$tnm_lead_id|$list_id|$stmtZ|\n";}
+					$tnm_delete_count++;
+					}
+				}
 
+			##### final checks before inserting the lead
 			if ( (length($phone_number)>6) && ($dup_lead < 1) && ($valid_lead > 0) )
 				{
 				if ( ($duptapchecklist > 0) || ($duptapchecksys > 0) )
@@ -1867,7 +1928,7 @@ foreach(@FILES)
 						{
 						if ($phone_code =~ /^1$/)
 							{
-							$stmtA = "select postal_code,state,GMT_offset,DST,DST_range,country,country_code from vicidial_postal_codes where country_code='$phone_code' and postal_code LIKE \"$postal_code%\";";
+							$stmtA = "SELECT postal_code,state,GMT_offset,DST,DST_range,country,country_code from vicidial_postal_codes where country_code='$phone_code' and postal_code LIKE \"$postal_code%\";";
 								if($DBX){print STDERR "\n|$stmtA|\n";}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1893,7 +1954,7 @@ foreach(@FILES)
 						$dst='N';
 						$gmt_offset=0;
 
-						$stmtA="select GMT_offset from vicidial_phone_codes where tz_code='$owner' and country_code='$phone_code' limit 1;";
+						$stmtA="SELECT GMT_offset from vicidial_phone_codes where tz_code='$owner' and country_code='$phone_code' limit 1;";
 							if($DBX){print STDERR "\n|$stmtA|\n";}
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1907,7 +1968,7 @@ foreach(@FILES)
 							}
 						$sthA->finish();
 
-						$stmtA = "select distinct DST_range from vicidial_phone_codes where tz_code='$owner' and country_code='$phone_code' order by DST_range desc limit 1;";
+						$stmtA = "SELECT distinct DST_range from vicidial_phone_codes where tz_code='$owner' and country_code='$phone_code' order by DST_range desc limit 1;";
 							if($DBX){print STDERR "\n|$stmtA|\n";}
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1927,7 +1988,7 @@ foreach(@FILES)
 						### UNITED STATES ###
 						if ($phone_code =~ /^1$/)
 							{
-							$stmtA = "select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
+							$stmtA = "SELECT country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
 								if($DBX){print STDERR "\n|$stmtA|\n";}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1947,7 +2008,7 @@ foreach(@FILES)
 						### MEXICO ###
 						if ($phone_code =~ /^52$/)
 							{
-							$stmtA = "select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
+							$stmtA = "SELECT country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
 								if($DBX){print STDERR "\n|$stmtA|\n";}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1967,7 +2028,7 @@ foreach(@FILES)
 						### AUSTRALIA ###
 						if ($phone_code =~ /^61$/)
 							{
-							$stmtA = "select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and state='$state';";
+							$stmtA = "SELECT country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and state='$state';";
 								if($DBX){print STDERR "\n|$stmtA|\n";}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1987,7 +2048,7 @@ foreach(@FILES)
 						### ALL OTHER COUNTRY CODES ###
 						if (!$PC_processed)
 							{
-							$stmtA = "select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code';";
+							$stmtA = "SELECT country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code';";
 								if($DBX){print STDERR "\n|$stmtA|\n";}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2206,6 +2267,8 @@ foreach(@FILES)
 				{$Falert .= "DUPLICATES:         $f\n";}
 			if ($h > 0)
 				{$Falert .= "INVALID PHONES:     $h\n";}
+			if ($tnm_delete_count > 0)
+				{$Falert .= "TNM DELETE COUNT:   $tnm_delete_count\n";}
 
 			if ($q < 1) {print "$Falert";}
 			print Sout "$Falert";

@@ -11,6 +11,7 @@
 # 110708-1730 - Added precision time setting
 # 120102-2112 - Added inventory_allow_realtime option
 # 120213-1500 - Added option to log non-agent-API calls
+# 120713-1915 - Added option for extended vicidial_list fields for long surveys
 #
 
 # used by the realtime_report.php script
@@ -63,5 +64,7 @@ $inventory_allow_realtime = 0;	# allow real-time report generation for inventory
 # used by non-agent-API for non-admin functions
 $api_url_log = 0;				# log non-agent-api calls to the vicidial_url_log
 
+# extended vicidial_list fields for long surveys(requires database schema change)
+$extended_vl_fields = 0;
 
 ?>

@@ -392,13 +392,14 @@ else
 	$max_dead=1;
 	$max_customer=1;
 	$GRAPH="<a name='timegraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-	$GRAPH2="<tr><th class='column_header grey_graph_cell' id='timegraph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">CALLS</a></th><th class='column_header grey_graph_cell' id='timegraph2'><a href='#' onClick=\"DrawGraph('TIMECLOCK', '2'); return false;\">TIME CLOCK</a></th><th class='column_header grey_graph_cell' id='timegraph3'><a href='#' onClick=\"DrawGraph('AGENTTIME', '3'); return false;\">AGENT TIME</a></th><th class='column_header grey_graph_cell' id='timegraph4'><a href='#' onClick=\"DrawGraph('WAIT', '4'); return false;\">WAIT</a></th><th class='column_header grey_graph_cell' id='timegraph5'><a href='#' onClick=\"DrawGraph('TALK', '5'); return false;\">TALK</a></th><th class='column_header grey_graph_cell' id='timegraph6'><a href='#' onClick=\"DrawGraph('DISPO', '6'); return false;\">DISPO</a></th><th class='column_header grey_graph_cell' id='timegraph7'><a href='#' onClick=\"DrawGraph('PAUSE', '7'); return false;\">PAUSE</a></th><th class='column_header grey_graph_cell' id='timegraph8'><a href='#' onClick=\"DrawGraph('DEAD', '8'); return false;\">DEAD</a></th><th class='column_header grey_graph_cell' id='timegraph9'><a href='#' onClick=\"DrawGraph('CUSTOMER', '9'); return false;\">CUSTOMER</a></th>";
+	$GRAPH2="<tr><th class='column_header grey_graph_cell' id='timegraph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">CALLS</a></th><th class='column_header grey_graph_cell' id='timegraph2'><a href='#' onClick=\"DrawGraph('TIMECLOCK', '2'); return false;\">TIME CLOCK</a></th><th class='column_header grey_graph_cell' id='timegraph3'><a href='#' onClick=\"DrawGraph('AGENTTIME', '3'); return false;\">AGENT TIME</a></th><th class='column_header grey_graph_cell' id='timegraph4'><a href='#' onClick=\"DrawGraph('WAIT', '4'); return false;\">WAIT</a></th><th class='column_header grey_graph_cell' id='timegraph5'><a href='#' onClick=\"DrawGraph('TALK', '5'); return false;\">TALK</a></th><th class='column_header grey_graph_cell' id='timegraph10'><a href='#' onClick=\"DrawGraph('TALKPCT', '10'); return false;\">TALKTIME%</a></th><th class='column_header grey_graph_cell' id='timegraph6'><a href='#' onClick=\"DrawGraph('DISPO', '6'); return false;\">DISPO</a></th><th class='column_header grey_graph_cell' id='timegraph7'><a href='#' onClick=\"DrawGraph('PAUSE', '7'); return false;\">PAUSE</a></th><th class='column_header grey_graph_cell' id='timegraph8'><a href='#' onClick=\"DrawGraph('DEAD', '8'); return false;\">DEAD</a></th><th class='column_header grey_graph_cell' id='timegraph9'><a href='#' onClick=\"DrawGraph('CUSTOMER', '9'); return false;\">CUSTOMER</a></th>";
 	$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>AGENT TIME BREAKDOWN</caption><tr><th class='thgraph' scope='col'>STATUS</th>";
 	$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>CALLS </th></tr>";
 	$TIMECLOCK_graph=$graph_header."<th class='thgraph' scope='col'>TIME CLOCK</th></tr>";
 	$AGENTTIME_graph=$graph_header."<th class='thgraph' scope='col'>AGENT TIME</th></tr>";
 	$WAIT_graph=$graph_header."<th class='thgraph' scope='col'>WAIT</th></tr>";
 	$TALK_graph=$graph_header."<th class='thgraph' scope='col'>TALK</th></tr>";
+	$TALKPCT_graph=$graph_header."<th class='thgraph' scope='col'>TALK TIME %</th></tr>";
 	$DISPO_graph=$graph_header."<th class='thgraph' scope='col'>DISPO</th></tr>";
 	$PAUSE_graph=$graph_header."<th class='thgraph' scope='col'>PAUSE</th></tr>";
 	$DEAD_graph=$graph_header."<th class='thgraph' scope='col'>DEAD</th></tr>";
@@ -569,15 +570,15 @@ else
 	if ($file_download < 1)
 		{
 		$ASCII_text.="AGENT TIME BREAKDOWN:\n";
-		$ASCII_text.="+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
-		$ASCII_text.="| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>    | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | <a href=\"$LINKbase&stage=TIME\">AGENT TIME</a> | WAIT       | TALK       | DISPO      | PAUSE      | DEAD       | CUSTOMER   |   |$sub_statusesHTML\n";
-		$ASCII_text.="+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
+		$ASCII_text.="+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
+		$ASCII_text.="| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>    | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | <a href=\"$LINKbase&stage=TIME\">AGENT TIME</a> | WAIT       | TALK       | TALK TIME %| DISPO      | PAUSE      | DEAD       | CUSTOMER   |   |$sub_statusesHTML\n";
+		$ASCII_text.="+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
 
 		
 		}
 	else
 		{
-		$file_output .= "USER,ID,CALLS,TIME CLOCK,AGENT TIME,WAIT,TALK,DISPO,PAUSE,DEAD,CUSTOMER$sub_statusesFILE\n";
+		$file_output .= "USER,ID,CALLS,TIME CLOCK,AGENT TIME,WAIT,TALK,TALK TIME %,DISPO,PAUSE,DEAD,CUSTOMER$sub_statusesFILE\n";
 		}
 	##### END print the output to screen or put into file output variable
 
@@ -597,6 +598,7 @@ else
 		$SstatusesHTML='';
 		$SstatusesFILE='';
 		$Stime[$m] = ($Swait[$m] + $Stalk[$m] + $Sdispo[$m] + $Spause[$m]);
+		$Stalkpct[$m]=(100*$Stalk[$m]/$Stime[$m]);
 		$RAWuser = $Suser[$m];
 		$RAWcalls = $Scalls[$m];
 		$RAWtimeSEC = $Stime[$m];
@@ -609,6 +611,7 @@ else
 		if (trim($Spause[$m])>$max_pause) {$max_pause=trim($Spause[$m]);}
 		if (trim($Sdead[$m])>$max_dead) {$max_dead=trim($Sdead[$m]);}
 		if (trim($Scustomer[$m])>$max_customer) {$max_customer=trim($Scustomer[$m]);}
+		if (trim($Stalkpct[$m])>$max_talkpct) {$max_talkpct=trim($Stalkpct[$m]);}
 		$graph_stats[$m][1]=trim($Scalls[$m]);
 		$graph_stats[$m][3]=trim($Stime[$m]);
 		$graph_stats[$m][4]=trim($Swait[$m]);
@@ -617,7 +620,9 @@ else
 		$graph_stats[$m][7]=trim($Spause[$m]);
 		$graph_stats[$m][8]=trim($Sdead[$m]);
 		$graph_stats[$m][9]=trim($Scustomer[$m]);
+		$graph_stats[$m][10]=trim(sprintf("%01.2f", $Stalkpct[$m]));
 
+		$Stalkpct[$m]=	sprintf("%01.2f", $Stalkpct[$m]);
 		$Swait[$m]=		sec_convert($Swait[$m],$TIME_agenttimedetail);
 		$Stalk[$m]=		sec_convert($Stalk[$m],$TIME_agenttimedetail);
 		$Sdispo[$m]=	sec_convert($Sdispo[$m],$TIME_agenttimedetail);
@@ -633,6 +638,7 @@ else
 		$RAWpause = $Spause[$m];
 		$RAWdead = $Sdead[$m];
 		$RAWcustomer = $Scustomer[$m];
+		$RAWtalkpct = $Stalkpct[$m];
 
 		$n=0;
 		$user_name_found=0;
@@ -747,6 +753,7 @@ else
 			}
 		### END loop through each status ###
 
+		$Stalkpct[$m]=		sprintf("%9s", $Stalkpct[$m])."%";
 		$Swait[$m]=		sprintf("%10s", $Swait[$m]); 
 		$Stalk[$m]=		sprintf("%10s", $Stalk[$m]); 
 		$Sdispo[$m]=	sprintf("%10s", $Sdispo[$m]); 
@@ -774,7 +781,7 @@ else
 
 		if ($file_download < 1)
 			{
-			$Toutput = "| $Sname[$m] | <a href=\"./user_stats.php?user=$RAWuser\">$Suser[$m]</a> | $Scalls[$m] | $StimeTC[$m]$TCuserAUTOLOGOUT| $Stime[$m] | $Swait[$m] | $Stalk[$m] | $Sdispo[$m] | $Spause[$m] | $Sdead[$m] | $Scustomer[$m] |   |$SstatusesHTML\n";
+			$Toutput = "| $Sname[$m] | <a href=\"./user_stats.php?user=$RAWuser\">$Suser[$m]</a> | $Scalls[$m] | $StimeTC[$m]$TCuserAUTOLOGOUT| $Stime[$m] | $Swait[$m] | $Stalk[$m] | $Stalkpct[$m] | $Sdispo[$m] | $Spause[$m] | $Sdead[$m] | $Scustomer[$m] |   |$SstatusesHTML\n";
 			$graph_stats[$m][0]=trim("$Suser[$m] - $Sname[$m]");
 #CALLS    | TIME CLOCK | AGENT TIME | WAIT       | TALK       | DISPO      | PAUSE      | DEAD       | CUSTOMER   |   |      LOGIN |      TRAIN |     TOILET |     PRECAL |      BREAK |            |      LUNCH |     LAGGED
 			}
@@ -783,11 +790,12 @@ else
 			if (strlen($RAWtime)<1) {$RAWtime='0';}
 			if (strlen($RAWwait)<1) {$RAWwait='0';}
 			if (strlen($RAWtalk)<1) {$RAWtalk='0';}
+			if (strlen($RAWtalkpct)<0) {$RAWtalkpct='0.0%';}
 			if (strlen($RAWdispo)<1) {$RAWdispo='0';}
 			if (strlen($RAWpause)<1) {$RAWpause='0';}
 			if (strlen($RAWdead)<1) {$RAWdead='0';}
 			if (strlen($RAWcustomer)<1) {$RAWcustomer='0';}
-			$fileToutput = "$RAWname,$RAWuser,$RAWcalls,$RAWtimeTC,$RAWtime,$RAWwait,$RAWtalk,$RAWdispo,$RAWpause,$RAWdead,$RAWcustomer$SstatusesFILE\n";
+			$fileToutput = "$RAWname,$RAWuser,$RAWcalls,$RAWtimeTC,$RAWtime,$RAWwait,$RAWtalk,$RAWtalkpct %,$RAWdispo,$RAWpause,$RAWdead,$RAWcustomer$SstatusesFILE\n";
 			}
 
 		$TOPsorted_output[$m] = $Toutput;
@@ -918,6 +926,7 @@ else
 	### END loop through each status ###
 
 	### call function to calculate and print dialable leads
+	$TOTtalkpct=sprintf("%01.2f", (100*$TOTtalk/$TOTALtime));
 	$TOTwait = sec_convert($TOTwait,$TIME_agenttimedetail);
 	$TOTtalk = sec_convert($TOTtalk,$TIME_agenttimedetail);
 	$TOTdispo = sec_convert($TOTdispo,$TIME_agenttimedetail);
@@ -927,6 +936,7 @@ else
 	$TOTALtime = sec_convert($TOTALtime,$TIME_agenttimedetail);
 	$TOTtimeTC = sec_convert($TOTtimeTC,$TIME_agenttimedetail);
 
+	$hTOTtalkpct =	sprintf("%10s", $TOTtalkpct)."%";
 	$hTOTcalls = sprintf("%8s", $TOTcalls);
 	$hTOTwait =	sprintf("%11s", $TOTwait);
 	$hTOTtalk =	sprintf("%11s", $TOTtalk);
@@ -939,12 +949,12 @@ else
 	###### END LAST LINE TOTALS FORMATTING ##########
 
 
-
+ 
 	if ($file_download < 1)
 		{
-		$ASCII_text.="+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
-		$ASCII_text.="|  TOTALS        AGENTS:$hTOT_AGENTS | $hTOTcalls |$hTOTtimeTC |$hTOTALtime |$hTOTwait |$hTOTtalk |$hTOTdispo |$hTOTpause |$hTOTdead |$hTOTcustomer |   |$SUMstatusesHTML\n";
-		$ASCII_text.="+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
+		$ASCII_text.="+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
+		$ASCII_text.="|  TOTALS        AGENTS:$hTOT_AGENTS | $hTOTcalls |$hTOTtimeTC |$hTOTALtime |$hTOTwait |$hTOTtalk |$hTOTtalkpct |$hTOTdispo |$hTOTpause |$hTOTdead |$hTOTcustomer |   |$SUMstatusesHTML\n";
+		$ASCII_text.="+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
 		if ($AUTOLOGOUTflag > 0)
 			{echo "     * denotes AUTOLOGOUT from timeclock\n";}
 		$ASCII_text.="\n\n</PRE>";
@@ -967,6 +977,7 @@ else
 			$PAUSE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][7]/$max_pause)."' height='16' />".sec_convert($graph_stats[$d][7], 'HF')."</td></tr>";
 			$DEAD_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][8]/$max_dead)."' height='16' />".sec_convert($graph_stats[$d][8], 'HF')."</td></tr>";
 			$CUSTOMER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][9]/$max_customer)."' height='16' />".sec_convert($graph_stats[$d][9], 'HF')."</td></tr>";
+			$TALKPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][10]/$max_talkpct)."' height='16' />".$graph_stats[$d][10]." %</td></tr>";
 
 			for ($e=0; $e<count($sub_statusesARY); $e++) {
 				$Sstatus=$sub_statusesARY[$e];
@@ -986,6 +997,7 @@ else
 		$PAUSE_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTpause)."</th></tr></table>";
 		$DEAD_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTdead)."</th></tr></table>";
 		$CUSTOMER_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTcustomer)."</th></tr></table>";
+		$TALKPCT_graph.="<tr><th class='thgraph' scope='col'>AVERAGE:</th><th class='thgraph' scope='col'>".trim($hTOTtalkpct)."</th></tr></table>";
 		for ($e=0; $e<count($sub_statusesARY); $e++) {
 			$Sstatus=$sub_statusesARY[$e];
 			$total_var=$Sstatus."_total";
@@ -1004,6 +1016,7 @@ else
 		$JS_text.="	var PAUSE_graph=\"$PAUSE_graph\";\n";
 		$JS_text.="	var DEAD_graph=\"$DEAD_graph\";\n";
 		$JS_text.="	var CUSTOMER_graph=\"$CUSTOMER_graph\";\n";
+		$JS_text.="	var TALKPCT_graph=\"$TALKPCT_graph\";\n";
 
 		for ($e=0; $e<count($sub_statusesARY); $e++) {
 			$Sstatus=$sub_statusesARY[$e];
@@ -1022,13 +1035,13 @@ else
 		$JS_text.="	document.getElementById('agent_time_detail_graph').innerHTML=graph_to_display;\n";
 		$JS_text.="}\n";
 
-		$GRAPH3="<tr><td colspan='".(9+$sub_status_count)."' class='graph_span_cell'><span id='agent_time_detail_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
+		$GRAPH3="<tr><td colspan='".(10+$sub_status_count)."' class='graph_span_cell'><span id='agent_time_detail_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
 		
 		# echo $GRAPH.$GRAPH2.$GRAPH3.$max;
 		}
 	else
 		{
-		$file_output .= "TOTALS,$TOT_AGENTS,$TOTcalls,$TOTtimeTC,$TOTALtime,$TOTwait,$TOTtalk,$TOTdispo,$TOTpause,$TOTdead,$TOTcustomer$SUMstatusesFILE\n";
+		$file_output .= "TOTALS,$TOT_AGENTS,$TOTcalls,$TOTtimeTC,$TOTALtime,$TOTwait,$TOTtalk,$TOTtalkpct %,$TOTdispo,$TOTpause,$TOTdead,$TOTcustomer$SUMstatusesFILE\n";
 		}
 	}
 

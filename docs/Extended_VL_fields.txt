@@ -1,0 +1,35 @@
+Extended vicidial_list fields					2012-07-13
+
+
+These fields were added to allow for more complex Call Menu setups with an 
+additional 20 TINYINT fields allowed for DTMF Log data storage.
+
+To enable this feature, you must make the database changes shown at the bottom, 
+and the options.php file needs to have $extended_vl_fields set to '1'.
+
+
+
+Database changes:
+
+ALTER TABLE vicidial_list
+ADD q01 TINYINT(1) default '-1',
+ADD q02 TINYINT(1) default '-1',
+ADD q03 TINYINT(1) default '-1',
+ADD q04 TINYINT(1) default '-1',
+ADD q05 TINYINT(1) default '-1',
+ADD q06 TINYINT(1) default '-1',
+ADD q07 TINYINT(1) default '-1',
+ADD q08 TINYINT(1) default '-1',
+ADD q09 TINYINT(1) default '-1',
+ADD q10 TINYINT(1) default '-1',
+ADD q11 TINYINT(1) default '-1',
+ADD q12 TINYINT(1) default '-1',
+ADD q13 TINYINT(1) default '-1',
+ADD q14 TINYINT(1) default '-1',
+ADD q15 TINYINT(1) default '-1',
+ADD q16 TINYINT(1) default '-1',
+ADD q17 TINYINT(1) default '-1',
+ADD q18 TINYINT(1) default '-1',
+ADD q19 TINYINT(1) default '-1',
+ADD q20 TINYINT(1) default '-1';
+

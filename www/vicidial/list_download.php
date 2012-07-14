@@ -4,7 +4,7 @@
 # downloads the entire contents of a vicidial list ID to a flat text file
 # that is tab delimited
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -20,6 +20,7 @@
 # 100924-1609 - Added ALL-LISTS option for downloading everything
 # 100929-1919 - Fixed ALL-LISTS download option to include custom fields
 # 101004-2108 - Added generic custom column headers for custom fields
+# 120713-2110 - Added extended_vl_fields option
 #
 
 require("dbconnect.php");
@@ -110,6 +111,16 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
  #   Header("HTTP/1.0 401 Unauthorized");
     echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
     exit;
+	}
+
+if (file_exists('options.php'))
+	{require('options.php');}
+$extended_vl_fields_SQL='';
+$extended_vl_fields_HEADER='';
+if ($extended_vl_fields > 0)
+	{
+	$extended_vl_fields_SQL = ',q01,q02,q03,q04,q05,q06,q07,q08,q09,q10,q11,q12,q13,q14,q15,q16,q17,q18,q19,q20';
+	$extended_vl_fields_HEADER = "\tq01\tq02\tq03\tq04\tq05\tq06\tq07\tq08\tq09\tq10\tq11\tq12\tq13\tq14\tq15\tq16\tq17\tq18\tq19\tq20";
 	}
 
 $LOGallowed_campaignsSQL='';
@@ -304,13 +315,13 @@ else
 	{
 	$TXTfilename = "LIST_$list_id$US$FILE_TIME.txt";
 	$list_id_header='';
-	$stmt="select lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner from vicidial_list where list_id='$list_id';";
+	$stmt="select lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner $extended_vl_fields_SQL from vicidial_list where list_id='$list_id';";
 	if ($list_id=='ALL-LISTS')
 		{
 		$list_id_header="list_id\t";   
-		$stmt="select list_id,lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner from vicidial_list where list_id > 0;";
+		$stmt="select list_id,lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner $extended_vl_fields_SQL from vicidial_list where list_id > 0;";
 		}
-	$header_row = $list_id_header . "lead_id\tentry_date\tmodify_date\tstatus\tuser\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tcalled_since_last_reset\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tcalled_count\tlast_local_call_time\trank\towner";
+	$header_row = $list_id_header . "lead_id\tentry_date\tmodify_date\tstatus\tuser\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tcalled_since_last_reset\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tcalled_count\tlast_local_call_time\trank\towner$extended_vl_fields_HEADER";
 	$header_columns='';
 	}
 
@@ -342,16 +353,21 @@ while ($i < $leads_to_print)
 	else
 		{
 		$row[29] = preg_replace("/\n|\r/",'!N',$row[29]);
+		$extended_vl_fields_DATA='';
 
 		if ($list_id=='ALL-LISTS')
 			{
-			$row_data[$i] .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]";
+			if ($extended_vl_fields > 0)
+				{$extended_vl_fields_DATA = "\t$row[33]\t$row[34]\t$row[35]\t$row[36]\t$row[37]\t$row[38]\t$row[39]\t$row[40]\t$row[41]\t$row[42]\t$row[43]\t$row[44]\t$row[45]\t$row[46]\t$row[47]\t$row[48]\t$row[49]\t$row[50]\t$row[51]\t$row[52]";}
+			$row_data[$i] .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]$extended_vl_fields_DATA";
 			$export_list_id[$i] = $row[0];
 			$export_lead_id[$i] = $row[1];
 			}
 		else
 			{
-			$row_data[$i] .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]";
+			if ($extended_vl_fields > 0)
+				{$extended_vl_fields_DATA = "\t$row[34]\t$row[35]\t$row[36]\t$row[37]\t$row[38]\t$row[39]\t$row[40]\t$row[41]\t$row[42]\t$row[43]\t$row[44]\t$row[45]\t$row[46]\t$row[47]\t$row[48]\t$row[49]\t$row[50]\t$row[51]\t$row[52]\t$row[53]";}
+			$row_data[$i] .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]$extended_vl_fields_DATA";
 			$export_list_id[$i] = $list_id;
 			$export_lead_id[$i] = $row[0];
 			}

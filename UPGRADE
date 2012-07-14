@@ -76,6 +76,8 @@ OTHER CHANGES:
 	enabled in System Settings. Calls must be passed from an outbound
 	campaign or an in-group.
 
+8. Added ability to download the Max System Stats and display by date range.
+
 
 
 
