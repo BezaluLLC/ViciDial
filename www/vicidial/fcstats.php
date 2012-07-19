@@ -424,7 +424,7 @@ while ($i < $users_to_print)
 		{
 		$row=mysql_fetch_row($rslt);
 		$recL=0;
-		if ( ($row[0]=='SALE') and ($recL < 1) ) {$A1=$row[1]; $recL++; $sales=($sales + $row[1]);}
+		if ( (preg_match("/\|$row[0]\|/", $sale_dispo_str)) and ($recL < 1) ) {$A1=$row[1]; $recL++; $sales=($sales + $row[1]);}
 	#	if ( ($row[0]=='A2') and ($recL < 1) ) {$A2=$row[1]; $recL++; $sales=($sales + $row[1]);}
 	#	if ( ($row[0]=='A3') and ($recL < 1) ) {$A3=$row[1]; $recL++; $sales=($sales + $row[1]);}
 	#	if ( ($row[0]=='A4') and ($recL < 1) ) {$A4=$row[1]; $recL++; $sales=($sales + $row[1]);}
