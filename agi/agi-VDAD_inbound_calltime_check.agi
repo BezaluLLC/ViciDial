@@ -46,6 +46,7 @@
 # 111229-1716 - Changed call time overflow to look at previous day stop time
 # 120517-1257 - Added CALLMENU timeout option
 # 120706-1659 - Added Qualify SQL option
+# 120719-1411 - Fixed issue with inbound IVR calls not showing up in real-time screen
 #
 
 $script = 'agi-VDAD_inbound_calltime_check.agi';
@@ -226,9 +227,7 @@ $ingroupIVR=0;
 $lead_id='';
 if ($calleridname =~ /^V\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d|^Y\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
 	{
-	$callerid = $calleridname;
-
-	$stmtA = "SELECT campaign_id,lead_id FROM vicidial_auto_calls where callerid='$callerid';";
+	$stmtA = "SELECT campaign_id,lead_id FROM vicidial_auto_calls where callerid='$calleridname';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -238,12 +237,23 @@ if ($calleridname =~ /^V\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d|^Y\d\d\d\d\d\d\d\
 		$campaign_id =	$aryA[0];
 		$lead_id =		$aryA[1];
 		}
+	else
+		{
+		$lead_id = substr($calleridname, 10, 10);
+		$lead_id = ($lead_id + 0);
+		$callerid =~ s/\D|\'//gi;
+		if (length($callerid)>0) {$phone_number = $callerid;}
+		   else {$phone_number = '';}
+		$phone_code='1';
+		}
 	$sthA->finish();
 
 	if ($calleridname =~ /^V\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
 		{$outboundIVR=1;}
 	if ($calleridname =~ /^Y\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
 		{$ingroupIVR=1;}
+
+	$callerid = $calleridname;
 	}
 else
 	{
@@ -455,7 +465,7 @@ if ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_st
 		{
 		$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and campaign_id='$campaign_id' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
 		$affected_rows = $dbhA->do($stmtA);
-		if ($AGILOG) {$agi_string = "--    AH VDAC vac record deleted: |$affected_rows|$campaign_id|$callerid|";   &agi_output;}
+		if ($AGILOG) {$agi_string = "--    AH VDAC vac record deleted: |$affected_rows|$campaign_id|$callerid|$call_time_id|";   &agi_output;}
 
 		$stmtA = "INSERT INTO vicidial_outbound_ivr_log (uniqueid,caller_code,event_date,campaign_id,lead_id,menu_id,menu_action) values('$uniqueid','$callerid','$SQLdate','$campaign_id','$lead_id','$context','AFTERHOURSDROP')";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
@@ -466,7 +476,7 @@ if ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_st
 		{
 		$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and uniqueid='$uniqueid' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
 		$affected_rows = $dbhA->do($stmtA);
-		if ($AGILOG) {$agi_string = "--    AH VDAC vac record deleted: |$affected_rows|$uniqueid|$callerid|";   &agi_output;}
+		if ($AGILOG) {$agi_string = "--    AH VDAC vac record deleted: |$affected_rows|$uniqueid|$callerid|$call_time_id|";   &agi_output;}
 
 		$stmtA = "INSERT INTO live_inbound_log (uniqueid,channel,server_ip,caller_id,extension,phone_ext,start_time,comment_a,comment_b,comment_c,comment_d,comment_e) values('$uniqueid','$channel','$VARserver_ip','$callerid','$extension','$phone_number','$SQLdate','$channel_group','$note','AFTERHOURSDROP','$context','$priority')";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
@@ -628,6 +638,13 @@ else
 				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 			$affected_rowsV = $dbhA->do($stmtA);
 			if ($AGILOG) {$agi_string = "--    VAC update: |$affected_rowsV|$uniqueid|$callerid|$last_update_time|";   &agi_output;}
+			if ($affected_rowsV < 1)
+				{
+				$stmtA = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,lead_id,status,uniqueid,callerid,channel,phone_code,phone_number,call_time,call_type,stage,queue_priority,last_update_time) values('$VARserver_ip','$channel_group','$lead_id','IVR','$uniqueid','$callerid','$channel','$phone_code','$phone_number','$SQLdate','IN','IVR-0','0','$last_update_time')";
+					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+				$affected_rowsV = $dbhA->do($stmtA);
+				if ($AGILOG) {$agi_string = "--    VAC insert: |$affected_rowsV|$uniqueid|$callerid|$extension|$lead_id|";   &agi_output;}
+				}
 			}
 		else
 			{
