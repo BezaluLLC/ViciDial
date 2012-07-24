@@ -2529,6 +2529,9 @@ if ($NOWEB < 1)
 	`chmod 0777 $PATHweb/agc/vicidial_auth_entries.txt`;
 	`cp -f /dev/null $PATHweb/agc/astguiclient_auth_entries.txt`;
 	`chmod 0777 $PATHweb/agc/astguiclient_auth_entries.txt`;
+	`rm -f $PATHweb/vicidial/new_listloader_superL.php`;
+	`rm -f $PATHweb/vicidial/listloader_super.pl`;
+	`rm -f $PATHweb/vicidial/listloader.pl`;
 	}
 
 if ( ($PROMPTcopy_web_lang =~ /y/i) || ($CLIcopy_web_lang =~ /y/i) )

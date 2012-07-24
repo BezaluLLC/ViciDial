@@ -491,7 +491,7 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard") ) )
 		<tr>
 			<td align=center colspan=2><input type=submit value="SUBMIT" name='submit_file'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button onClick="javascript:document.location='admin_listloader_third_gen.php'" value="START OVER" name='reload_page'></td>
 		  </tr>
-		  <tr><td align=left><font size=1> &nbsp; &nbsp; &nbsp; &nbsp; <a href="admin.php?ADD=100" target="_parent">BACK TO ADMIN</a> &nbsp; &nbsp; &nbsp; &nbsp; <a href="./new_listloader_superL.php">Old Lead Loader</a> &nbsp; &nbsp; </font></td><td align=right><font size=1>LIST LOADER 3rd Gen- &nbsp; &nbsp; VERSION: <?php echo $version ?> &nbsp; &nbsp; BUILD: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
+		  <tr><td align=left><font size=1> &nbsp; &nbsp; &nbsp; &nbsp; <a href="admin.php?ADD=100" target="_parent">BACK TO ADMIN</a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </font></td><td align=right><font size=1>LIST LOADER 3rd Gen- &nbsp; &nbsp; VERSION: <?php echo $version ?> &nbsp; &nbsp; BUILD: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
 		</table>
 		<?php 
 
