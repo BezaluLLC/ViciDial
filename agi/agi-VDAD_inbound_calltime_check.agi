@@ -47,6 +47,7 @@
 # 120517-1257 - Added CALLMENU timeout option
 # 120706-1659 - Added Qualify SQL option
 # 120719-1411 - Fixed issue with inbound IVR calls not showing up in real-time screen
+# 120730-0727 - Fixed issue with non-populating phone number
 #
 
 $script = 'agi-VDAD_inbound_calltime_check.agi';
@@ -217,7 +218,7 @@ while(<STDIN>)
 	if (/^agi_uniqueid\:\s+(.*)$/)		{$unique_id = $1; $uniqueid = $unique_id;}
 	if (/^agi_channel\:\s+(.*)$/)		{$channel = $1;}
 	if (/^agi_extension\:\s+(.*)$/)		{$extension = $1;}
-	if (/^agi_type\:\s+(.*)$/)		{$type = $1;}
+	if (/^agi_type\:\s+(.*)$/)			{$type = $1;}
 	if (/^agi_callerid\:\s+(.*)$/)		{$callerid = $1;}
 	if (/^agi_calleridname\:\s+(.*)$/)	{$calleridname = $1;}
 	}
@@ -253,6 +254,19 @@ if ($calleridname =~ /^V\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d|^Y\d\d\d\d\d\d\d\
 	if ($calleridname =~ /^Y\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
 		{$ingroupIVR=1;}
 
+	if (length($phone_number) < 6)
+		{
+		$stmtA = "SELECT phone_number FROM vicidial_list where lead_id='$lead_id';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$phone_number =	$aryA[0];
+			}
+		$sthA->finish();
+		}
 	$callerid = $calleridname;
 	}
 else

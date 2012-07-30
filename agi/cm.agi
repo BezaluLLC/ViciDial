@@ -19,11 +19,12 @@
 #exten => _XXXXX,1,AGI(cm.agi,INBOUND-----${EXTEN}-----postal_code)
 #exten => _XXXXX,n,Goto(next_callmenu_here,s,1)
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 110525-2100 - First Build
 # 111003-2150 - Added field to update
+# 120730-0729 - Changed to allow inbound logging when lead is defined
 #
 
 $script = 'cm.agi';
@@ -176,6 +177,7 @@ $outboundIVR=0;
 $fieldUPDATE=0;
 if ($calleridname =~ /^V\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
 	{
+	$phone_number = $callerid;
 	$callerid = $calleridname;
 	$outboundIVR=1;
 
@@ -195,6 +197,7 @@ elsif ($calleridname =~ /^Y\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
 	{
 	$lead_id = substr($calleridname, 10, 10);
 	$lead_id = ($lead_id + 0);
+	$phone_number = $callerid;
 	$callerid = $calleridname;
 
 	if ( (length($field)>2) && ($vicidial_list_fields =~ /\|$field\|/) )
@@ -266,15 +269,16 @@ if ($outboundIVR > 0)
 		if ($AGILOG) {$agi_string = "--    VL update: |$affected_rowsL|$field|$dtmf|$lead_id|$context|";   &agi_output;}
 		}
 	}
-elsif ($fieldUPDATE > 0)
-	{
-	$stmtA = "UPDATE vicidial_list SET $field='$dtmf' where lead_id='$lead_id';";
-		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-	$affected_rowsL = $dbhA->do($stmtA);
-	if ($AGILOG) {$agi_string = "--    VL update: |$affected_rowsL|$field|$dtmf|$lead_id|$context|";   &agi_output;}
-	}
 else
 	{
+	if ($fieldUPDATE > 0)
+		{
+		$stmtA = "UPDATE vicidial_list SET $field='$dtmf' where lead_id='$lead_id';";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$affected_rowsL = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    VL update: |$affected_rowsL|$field|$dtmf|$lead_id|$context|";   &agi_output;}
+		}
+
 	$stmtA = "INSERT INTO live_inbound_log (uniqueid,channel,server_ip,caller_id,extension,phone_ext,start_time,comment_a,comment_b,comment_d,comment_e) values('$uniqueid','$channel','$VARserver_ip','$callerid','$extension','$phone_number','$now_date','$channel_group','$dtmf','$context>$dtmf','$priority');";
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$affected_rowsL = $dbhA->do($stmtA);

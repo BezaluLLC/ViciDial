@@ -35,6 +35,7 @@
 # 111103-0632 - Added MAXCAL as a drop status
 # 111103-2003 - Added user_group restrictions for selecting in-groups
 # 120224-0910 - Added HTML display option with bar graphs
+# 120730-0724 - Small fix for HTML output
 #
 
 require("dbconnect.php");
@@ -1486,6 +1487,7 @@ $CSV_text3.="\"TOTAL:\",\"$TOTALcalls\"\n";
 
 if ($report_display_type=="HTML") 
 	{
+	$ct_ary=array();
 	$rslt=mysql_query($stmt, $link);
 	$high_ct=0; $i=0;
 	while ($row=mysql_fetch_row($rslt)) {
@@ -1744,7 +1746,7 @@ $CSV_text5.="\"TOTAL\",\"$TOTCATcalls\"\n";
 
 if ($report_display_type=="HTML") 
 	{
-	$ct_ary="";
+	$ct_ary=array();
 	$r=0; $i=0;
 	$high_ct=0;
 	while ($r < $statcats_to_print)
