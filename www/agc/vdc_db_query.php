@@ -310,10 +310,11 @@
 # 120513-0045 - Added Dial In-group and No-Dial compatibility
 # 120514-0934 - Added Dial In-group cid-override
 # 120619-0616 - Corrected xfer_log logging of manual preview dialed calls
+# 120731-1205 - Small fix for vendor_lead_code population on new lead during manual dial
 #
 
-$version = '2.6-208';
-$build = '120619-0616';
+$version = '2.6-209';
+$build = '120731-1205';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=441;
 $one_mysql_log=0;
@@ -1557,7 +1558,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 			else
 				{
 				### insert a new lead in the system with this phone number
-				$stmt = "INSERT INTO vicidial_list SET phone_code='$phone_code',phone_number='$phone_number',list_id='$list_id',status='QUEUE',user='$user',called_since_last_reset='Y',entry_date='$ENTRYdate',last_local_call_time='$NOW_TIME';";
+				$stmt = "INSERT INTO vicidial_list SET phone_code='$phone_code',phone_number='$phone_number',list_id='$list_id',status='QUEUE',user='$user',called_since_last_reset='Y',entry_date='$ENTRYdate',last_local_call_time='$NOW_TIME',vendor_lead_code='$vendor_lead_code';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00023',$user,$server_ip,$session_name,$one_mysql_log);}

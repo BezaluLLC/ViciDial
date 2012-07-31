@@ -58,10 +58,11 @@
 # 111114-0037 - Added scheduled callback and qm-dispo-code fields to external_status function
 # 120301-1745 - Fixed ereg statements dashes
 # 120529-1551 - Fixed callback_datetime filter
+# 120731-1206 - Allow dot in vendor_id
 #
 
-$version = '2.4-24';
-$build = '120529-1551';
+$version = '2.4-25';
+$build = '120731-1206s';
 
 $startMS = microtime();
 
@@ -216,7 +217,7 @@ if ($non_latin < 1)
 	$agent_user=ereg_replace("[^0-9a-zA-Z]","",$agent_user);
 	$function = ereg_replace("[^-\_0-9a-zA-Z]","",$function);
 	$value = ereg_replace("[^-\_0-9a-zA-Z]","",$value);
-	$vendor_id = ereg_replace("[^-\_0-9a-zA-Z]","",$vendor_id);
+	$vendor_id = ereg_replace("[^-\.\_0-9a-zA-Z]","",$vendor_id);
 	$focus = ereg_replace("[^-\_0-9a-zA-Z]","",$focus);
 	$preview = ereg_replace("[^-\_0-9a-zA-Z]","",$preview);
 		$notes = ereg_replace("\+"," ",$notes);
