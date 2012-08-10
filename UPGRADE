@@ -78,6 +78,8 @@ OTHER CHANGES:
 
 8. Added ability to download the Max System Stats and display by date range.
 
+9. Added 'recording' and 'webserver' functions to the agent API
+
 
 
 

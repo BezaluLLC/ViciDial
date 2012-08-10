@@ -59,10 +59,11 @@
 # 120301-1745 - Fixed ereg statements dashes
 # 120529-1551 - Fixed callback_datetime filter
 # 120731-1206 - Allow dot in vendor_id
+# 120809-2338 - Added recording and webserver functions
 #
 
-$version = '2.4-25';
-$build = '120731-1206s';
+$version = '2.6-26';
+$build = '120809-2338';
 
 $startMS = microtime();
 
@@ -381,6 +382,54 @@ if ($format=='debug')
 	}
 ################################################################################
 ### END - user validation section
+################################################################################
+
+
+
+
+
+################################################################################
+### BEGIN - webserver - show webserver information
+################################################################################
+if ($function == 'webserver')
+	{
+	exec('ps aux | grep httpd', $output);
+	$processes = count($output);
+	$load = sys_getloadavg();
+
+	$data="Webserver Data:\n";
+	$data .= "set.timezone: " . date('e') . "\n";
+	$data .= "abbr.timezone: " . date('T') . "\n";
+	$data .= "dst.timezone: " . date('I') . "\n";
+	$data .= "uname: " . php_uname('e') . "\n";
+	$data .= "host name: " . php_uname('n') . "\n";
+	$data .= "server name: " . $_SERVER['SERVER_NAME'] . "\n";
+	$data .= "php version: " . phpversion() . "\n";
+	$data .= "apache version: " . apache_get_version() . "\n";
+	$data .= "apache processes: " . $processes . "\n";
+	$data .= "system loadavg: " . $load[0] . "\n";
+	$data .= "disk_free_space: " . disk_free_space('/') . "\n";
+
+	if (ini_get('date.timezone')) 
+		{
+		$data .= "date.timezone: " . ini_get('date.timezone') . "\n";
+		$data .= "max_execution_time: " . ini_get('max_execution_time') . "\n";
+		$data .= "max_input_time: " . ini_get('max_input_time') . "\n";
+		$data .= "memory_limit: " . ini_get('memory_limit') . "\n";
+		$data .= "post_max_size: " . ini_get('post_max_size') . "\n";
+		$data .= "upload_max_filesize: " . ini_get('upload_max_filesize') . "\n";
+		$data .= "default_socket_timeout: " . ini_get('default_socket_timeout') . "\n";
+		}
+	else {$data .= "ini_get not allowed: \n";}
+
+	$result = 'SUCCESS';
+	echo "<PRE>$data</PRE>\n";
+	$data = preg_replace("/\n/",'|',$data);
+	api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+	exit;
+	}
+################################################################################
+### END - webserver
 ################################################################################
 
 
@@ -709,6 +758,127 @@ if ($function == 'logout')
 	}
 ################################################################################
 ### END - logout
+################################################################################
+
+
+
+
+
+
+################################################################################
+### BEGIN - recording - send a start or stop recording signal to agent screen
+################################################################################
+if ($function == 'recording')
+	{
+	if ( ( ($value!='START') and ($value!='STOP') and ($value!='STATUS') ) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
+		{
+		$result = 'ERROR';
+		$result_reason = "recording not valid";
+		echo "$result: $result_reason - $value|$agent_user\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		}
+	else
+		{
+		if (strlen($alt_user)>1)
+			{
+			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "select user from vicidial_users where custom_three='$alt_user' order by user;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$agent_user = $row[0];
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "no user found";
+				echo "$result: $result_reason - $alt_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$stmt = "select external_recording,server_ip,conf_exten,status from vicidial_live_agents where user='$agent_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$recording_id =		$row[0];
+			$AGENTserver_ip =	$row[1];
+			$AGENTconf_exten =	$row[2];
+			$AGENTstatus =		$row[3];
+
+			if ($value=='STATUS')
+				{
+				if ( ($recording_id!='START') and ($recording_id!='STOP') and ($recording_id > 0) )
+					{
+					$RECfilename =		'';
+					$RECserver_ip =		'';
+					$RECstart_time =	'';
+					$stmt = "SELECT filename,server_ip,start_time FROM recording_log where recording_id='$recording_id';";
+					$rslt=mysql_query($stmt, $link);
+					$rl_ct = mysql_num_rows($rslt);
+					if ($rl_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$RECfilename =		$row[0];
+						$RECserver_ip =		$row[1];
+						$RECstart_time =	$row[2];
+						}
+
+					$result = 'NOTICE';
+					$result_reason = "recording active";
+					echo "$result: $result_reason - $agent_user|$recording_id|$RECfilename|$RECserver_ip|$RECstart_time|$AGENTserver_ip|$AGENTconf_exten|$AGENTstatus\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				else
+					{
+					$result = 'NOTICE';
+					$result_reason = "not recording";
+					echo "$result: $result_reason - $agent_user|||||$AGENTserver_ip|$AGENTconf_exten|$AGENTstatus\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
+			else
+				{
+				if ( ($value=='STOP') and ( ($recording_id=='STOP') or ($recording_id < 1) ) )
+					{
+					$result = 'ERROR';
+					$result_reason = "stop recording error";
+					echo "$result: $result_reason - $agent_user|$recording_id||||$AGENTserver_ip|$AGENTconf_exten|$AGENTstatus\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+
+					exit;
+					}
+
+				$stmt="UPDATE vicidial_live_agents set external_recording='$value' where user='$agent_user';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_query($stmt, $link);
+				$result = 'SUCCESS';
+				$result_reason = "recording function sent";
+				echo "$result: $result_reason - $agent_user|$value||||$AGENTserver_ip|$AGENTconf_exten|$AGENTstatus\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		else
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_user is not logged in";
+			echo "$result: $result_reason - $agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		}
+	}
+################################################################################
+### END - recording
 ################################################################################
 
 

@@ -1,4 +1,4 @@
-AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2011-11-14
+AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2012-08-10
 
 This document describes the functions of an API(Application Programming Interface)
 for the VICIDIAL Agent screen. This functionality will be rather limited at first
@@ -26,6 +26,8 @@ send_dtmf - sends dtmf signal string to agent's session
 transfer_conference - sends several commands related to the agent transfer-conf frame
 park_call - sends command to park customer or grab customer from park or ivr
 logout - logs the agent out of the agent interface
+recording - sends a recording start/stop signal or status of agent recording
+webserver - display webserver information, very useful for load balanced setups
 
 
 New scripts:
@@ -76,6 +78,41 @@ http://server/agc/api.php?function=version
 
 RESPONSES:
 VERSION: 2.0.5-2|BUILD: 90116-1229|DATE: 2009-01-15 14:59:33|EPOCH: 1222020803 
+
+
+
+--------------------------------------------------------------------------------
+webserver -
+
+DESCRIPTION:
+shows version and build of the API, along with the date/time
+
+VALUES: NONE
+
+EXAMPLE URL:
+http://server/agc/api.php?source=test&user=6666&pass=1234&function=webserver
+
+RESPONSES:
+Webserver Data:
+set.timezone: America/New_York
+abbr.timezone: EDT
+dst.timezone: 1
+uname: Linux dev-db 2.6.34.8-0.2-default #1 SMP 2011-04-06 18:11:26 +0200 x86_64
+host name: dev-db
+server name: www.vicidial.org
+php version: 5.3.3
+apache version: Apache/2.2.15 (Linux/SUSE)
+apache processes: 13
+system loadavg: 0.06
+disk_free_space: 444174315520
+date.timezone: America/New_York
+max_execution_time: 360
+max_input_time: 360
+memory_limit: 128M
+post_max_size: 48M
+upload_max_filesize: 42M
+default_socket_timeout: 360
+
 
 
 
@@ -324,9 +361,6 @@ SUCCESS: change_ingroups function set - YES| TEST_IN SALESLINE -|6666
 
 
 
-
-
-
 --------------------------------------------------------------------------------
 update_fields -
 
@@ -377,6 +411,8 @@ SUCCESS: update_fields lead updated - 6666|1234|87498|vendor_lead_code='1234567'
 
 
 
+
+
 --------------------------------------------------------------------------------
 set_timer_action - 
 
@@ -405,6 +441,8 @@ SUCCESS: set_timer_action lead updated - 6666|1234|MESSAGE_ONLY|test message|15
 
 
 
+
+
 --------------------------------------------------------------------------------
 st_login_log - 
 
@@ -424,6 +462,8 @@ RESPONSES:
 ERROR: st_login_log not valid - 6666|207
 ERROR: no user found - 6666
 SUCCESS: st_login_log user found - 6666
+
+
 
 
 
@@ -448,6 +488,8 @@ ERROR: no user found - 6666
 ERROR: user not logged in - 6666
 ERROR: no active lead found - 6666
 SUCCESS: st_get_agent_active_lead lead found - 6666|7275551212|123456|9987-1234765|SK|WILLIAMS|JUH764AJJJ9
+
+
 
 
 
@@ -487,6 +529,8 @@ SUCCESS: ra_call_control hungup - 6666|Y0315201639000402027|HANGUP
 
 
 
+
+
 --------------------------------------------------------------------------------
 send_dtmf - 
 
@@ -507,6 +551,8 @@ ERROR: send_dtmf not valid - QQ|6666
 ERROR: no user found - 6666
 ERROR: agent_user is not logged in - 6666
 SUCCESS: send_dtmf function set - QQQQ1234SQQQQQ6654P|6666
+
+
 
 
 
@@ -536,6 +582,8 @@ ERROR: no user found - 6666
 ERROR: agent_user is not logged in - 6666
 ERROR: agent_user does not have a lead on their screen - 6666
 SUCCESS: park_call function set - PARK_CUSTOMER|6666
+
+
 
 
 
@@ -590,6 +638,37 @@ SUCCESS: transfer_conference function set - LOCAL_CLOSER|SALESLINE||YES|6666
 
 
 
+
+
+--------------------------------------------------------------------------------
+recording - 
+
+DESCRIPTION:
+sends a recording start/stop signal or status of agent recording
+
+VALUES:
+ value - 
+  REQUIRED, choices are below
+   START - sends a "start recording" signal to the agent screen
+            (you can have multiple recordings going at the same time)
+   STOP - sends a "stop recording" signal to the agent screen
+            (this will stop all active recordings onthe agent screen)
+   STATUS - displays results of active recording and agent session information
+            (returns: user|recording_id|filename|server|start_time|agent_server|session|agent_status)
+
+EXAMPLE URLS:
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=recording&value=START
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=recording&value=STOP
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=recording&value=STATUS
+
+RESPONSES:
+ERROR: no user found - 6666
+ERROR: agent_user is not logged in - 6666 
+ERROR: stop recording error - 6666|||||192.168.1.5|8600051|PAUSED 
+SUCCESS: recording function sent - 6666|STOP||||192.168.1.5|8600051|PAUSED
+SUCCESS: recording function sent - 6666|START||||192.168.1.5|8600051|PAUSED 
+NOTICE: not recording - 6666|||||192.168.1.5|8600051|PAUSED
+NOTICE: recording active - 6666|121242|20120810-012008__6666_|192.168.1.5|2012-08-10 01:20:10|192.168.1.5|8600051|PAUSED
 
 
 

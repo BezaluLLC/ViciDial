@@ -381,10 +381,11 @@
 # 120427-1718 - Fixed 3-way logging issue
 # 120512-0849 - Added In-Group Manual Dial functions
 # 120518-1225 - Added transfer call to answering machine message with hotkey (LTMG or XFTAMM)
+# 120810-0056 - Added recording api function
 #
 
-$version = '2.6-349c';
-$build = '120518-1225';
+$version = '2.6-350c';
+$build = '120810-0056';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=77;
 $one_mysql_log=0;
@@ -4449,6 +4450,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						api_timer_action_seconds = APITimerSeconds_array[1];
 						var APITimerDestination_array = check_time_array[23].split("APITimerDestination: ");
 						api_timer_action_destination = APITimerDestination_array[1];
+						var APIRecording_array = check_time_array[25].split("APIRecording: ");
+						var api_recording = APIRecording_array[1];
 						var APIdtmf_array = check_time_array[20].split("APIdtmf: ");
 						api_dtmf = APIdtmf_array[1];
 						var APItransfercond_array = check_time_array[21].split("APItransferconf: ");
@@ -4461,6 +4464,14 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						var APIpark_array = check_time_array[22].split("APIpark: ");
 						api_parkcustomer = APIpark_array[1];
 
+						if (api_recording=='START')
+							{
+							conf_send_recording('MonitorConf', session_id,'','1');
+							}
+						if (api_recording=='STOP')
+							{
+							conf_send_recording('StopMonitorConf', session_id, recording_filename,'1');
+							}
 						if (api_transferconf_function.length > 0)
 							{
 							if (api_transferconf_function == 'HANGUP_XFER')
@@ -4905,7 +4916,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 // ################################################################################
 // Send MonitorConf/StopMonitorConf command for recording of conferences
-	function conf_send_recording(taskconfrectype,taskconfrec,taskconffile) 
+	function conf_send_recording(taskconfrectype,taskconfrec,taskconffile,taskfromapi) 
 		{
 		if (inOUT == 'OUT')
 			{
@@ -4992,7 +5003,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					document.getElementById("RecorDControl").innerHTML = conf_rec_start_html;
 					}
 				}
-			confmonitor_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=" + taskconfrectype + "&format=text&channel=" + channelrec + "&filename=" + filename + "&exten=" + query_recording_exten + "&ext_context=" + ext_context + "&lead_id=" + document.vicidial_form.lead_id.value + "&ext_priority=1&FROMvdc=YES&uniqueid=" + tmp_vicidial_id;
+			confmonitor_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=" + taskconfrectype + "&format=text&channel=" + channelrec + "&filename=" + filename + "&exten=" + query_recording_exten + "&ext_context=" + ext_context + "&lead_id=" + document.vicidial_form.lead_id.value + "&ext_priority=1&FROMvdc=YES&uniqueid=" + tmp_vicidial_id + "&FROMapi=" + taskfromapi;
 			xmlhttp.open('POST', 'manager_send.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(confmonitor_query); 

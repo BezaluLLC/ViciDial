@@ -1,7 +1,7 @@
 <?php
-# manager_send.php    version 2.4
+# manager_send.php    version 2.6
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to insert records into the vicidial_manager table to signal Actions to an asterisk server
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -109,11 +109,13 @@
 # 101125-1018 - Added call_variables Originate variables
 # 110224-1710 - Added compatibility with QM phone environment logging
 # 110626-2320 - Added qm_extension
+# 120810-0030 - Added external_recording
+#
 
-$version = '2.4-56';
-$build = '110626-2320';
+$version = '2.6-57';
+$build = '120810-0030';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=116;
+$mysql_log_count=118;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -1924,6 +1926,12 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 
 			if ($FROMvdc=='YES')
 				{
+				##### update vla record with recording_id
+				$stmt = "UPDATE vicidial_live_agents SET external_recording='$recording_id' where user='$user';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02117',$user,$server_ip,$session_name,$one_mysql_log);}
+
 				##### get call type from vicidial_live_agents table
 				$VLA_inOUT='NONE';
 				$stmt="SELECT comments FROM vicidial_live_agents where user='$user' order by last_update_time desc limit 1;";
@@ -1987,6 +1995,15 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 				{
 				if (strlen($uniqueid) > 8)
 					{$uniqueidSQL	= ",vicidial_id='$uniqueid'";}
+				}
+
+			if ($FROMvdc=='YES')
+				{
+				##### update vla recording record to blank
+				$stmt = "UPDATE vicidial_live_agents SET external_recording='' where user='$user';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02118',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
 			
 			$stmt="SELECT recording_id,start_epoch FROM recording_log where filename='$filename'";

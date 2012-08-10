@@ -20,3 +20,10 @@ ALTER TABLE system_settings ADD call_menu_qualify_enabled ENUM('0','1') default 
 ALTER TABLE vicidial_call_menu ADD qualify_sql TEXT;
 
 UPDATE system_settings SET db_schema_version='1322',db_schema_update_date=NOW() where db_schema_version < 1322;
+
+ALTER TABLE recording_log MODIFY filename VARCHAR(100);
+
+ALTER TABLE vicidial_live_agents ADD external_recording VARCHAR(20) default '';
+
+UPDATE system_settings SET db_schema_version='1323',db_schema_update_date=NOW() where db_schema_version < 1323;
+

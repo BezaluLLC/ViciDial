@@ -177,7 +177,7 @@ end_time DATETIME,
 end_epoch INT(10) UNSIGNED,
 length_in_sec MEDIUMINT(8) UNSIGNED,
 length_in_min DOUBLE(8,2),
-filename VARCHAR(50),
+filename VARCHAR(100),
 location VARCHAR(255),
 lead_id INT(9) UNSIGNED,
 user VARCHAR(20),
@@ -398,6 +398,7 @@ ring_callerid VARCHAR(20) default '',
 last_inbound_call_time DATETIME,
 last_inbound_call_finish DATETIME,
 campaign_grade TINYINT(2) UNSIGNED default '1',
+external_recording VARCHAR(20) default '',
 index (random_id),
 index (last_call_time),
 index (last_update_time),
@@ -2815,7 +2816,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1322',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1323',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
