@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2012-03-26
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2012-08-10
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -30,6 +30,7 @@ add_phone_alias - adds a phone alias record to the system
 update_phone_alias - updates or deletes an existing phone alias record in the system
 add_list - adds a list to the system
 update_list - updates list settings in the system, reset leads in list, delete list
+add_group_alias - adds group alias to the system
 
 
 
@@ -71,6 +72,7 @@ Changes:
 120210-1215 - Small change for hopper adding vendor_lead_code
 120213-1613 - Added optional logging of all non-admin.php requests, enabled in options.php
 120326-1307 - Added agent_stats_export function
+120810-0859 - Added add_group_alias function, altered agent_stats_export function
 
 
 
@@ -310,7 +312,7 @@ NOTES-
 There is a hard limit of 10000000 records analyzed
 
 Example URL strings for API calls:
-http://server/vicidial/non_agent_api.php?source=test&function=agent_stats_export&time_format=M&stage=pipe&user=6666&pass=1234&agent_user=3125551212&datetime_start=2012-03-26+00:00:00&datetime_end=2012-03-26+23:59:59
+http://server/vicidial/non_agent_api.php?source=test&function=agent_stats_export&time_format=M&stage=pipe&user=6666&pass=1234&agent_user=6666&datetime_start=2012-08-09+00:00:00&datetime_end=2012-08-10+23:59:59
 http://server/vicidial/non_agent_apiX.php?DB=0&stage=pipe&user=6666&pass=1234&source=test&function=agent_stats_export&datetime_start=2012-03-26+00:00:00&datetime_end=2012-03-26+23:59:59&header=YES
 
 Example responses:
@@ -319,9 +321,9 @@ ERROR: agent_stats_export INVALID SEARCH PARAMETERS - 6666||2010-12-03 00:00:00|
 ERROR: agent_stats_export NO RECORDS FOUND - 1255||2010-12-03 00:00:00|2010-12-03 00:00:01
 
 A SUCCESS response will not show "SUCCESS", but instead will just print the results in the following format:
-user|full_name|user_group|calls|login_time|total_talk_time|avg_talk_time|avg_wait_time|pct_of_queue|pause_time|sessions|avg_session|pauses|avg_pause_time|pause_pct|pauses_per_session
-1029|test agent|ADMIN|1|0:01:52|0:00:16|0:00:16|0:00:18|16.7%|54|3|0:00:37|5|0:00:11|48.2%|2
-6666|Admin|ADMIN|5|0:04:11|0:01:48|0:00:22|0:00:17|83.3%|27|2|0:02:06|4|0:00:07|10.8%|2
+user|full_name|user_group|calls|login_time|total_talk_time|avg_talk_time|avg_wait_time|pct_of_queue|pause_time|sessions|avg_session|pauses|avg_pause_time|pause_pct|pauses_per_session|total_wait_time
+1029|test agent|ADMIN|1|0:01:52|0:00:16|0:00:16|0:00:18|16.7%|54|3|0:00:37|5|0:00:11|48.2%|2|0:00:32
+6666|Admin|ADMIN|5|0:04:11|0:01:48|0:00:22|0:00:17|83.3%|27|2|0:02:06|4|0:00:07|10.8%|2|0:00:32
 
 
 
@@ -627,6 +629,36 @@ ERROR: add_user USER DOES NOT HAVE PERMISSION TO ADD USERS IN THIS USER LEVEL - 
 ERROR: add_user USER GROUP DOES NOT EXIST - 6666|ADFHR
 ERROR: add_user USER ALREADY EXISTS - 6666|6666
 SUCCESS: add_user USER HAS BEEN ADDED - 6666|1000|1234|8|Testing+Person|AGENTS
+
+
+
+
+
+--------------------------------------------------------------------------------
+add_group_alias - adds group alias to the system
+
+NOTE: api user for this function must have user_level set to 8 or higher and "ast admin access" enabled
+
+REQUIRED FIELDS-
+caller_id_number -	6-20 characters
+
+OPTIONAL FIELDS-
+group_alias_id -	3-30 characters, no spaces or punctuation allowed, if not defined, caller_id_number is used
+group_alias_name -	3-50 characters, if not defined, caller_id_number is used
+caller_id_name -	6-20 characters, if not defined '' is default
+active -		'Y' or 'N', if not defined 'Y' is default
+admin_user_group -	a valid user group or '---ALL---' is used as default
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&function=add_group_alias&user=6666&pass=1234&caller_id_number=7275551212
+http://server/vicidial/non_agent_api.php?source=test&function=add_group_alias&user=6666&pass=1234&caller_id_number=7275551212&group_alias_id=test_group_alias&group_alias_name=test+group+alias
+
+Example responses:
+ERROR: add_group_alias USER DOES NOT HAVE PERMISSION TO ADD GROUP ALIASES - 6666|0
+ERROR: add_group_alias YOU MUST USE ALL REQUIRED FIELDS - 6666|||1000
+ERROR: add_group_alias GROUP ALIAS ALREADY EXISTS - 6666|7275551212
+SUCCESS: add_group_alias GROUP ALIAS HAS BEEN ADDED - 6666|7275551212|test_group_alias|test group alias
+
 
 
 

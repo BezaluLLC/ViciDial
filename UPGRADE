@@ -80,6 +80,10 @@ OTHER CHANGES:
 
 9. Added 'recording' and 'webserver' functions to the agent API
 
+10. Added add_group_alias non-agent API function
+
+11. Added System Settings option to disable list counts in admin web screens
+
 
 
 

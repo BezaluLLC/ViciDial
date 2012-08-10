@@ -65,10 +65,11 @@
 # 120213-1613 - Added optional logging of all non-admin.php requests, enabled in options.php
 # 120315-1537 - Added filter for single-quotes and backslashes on custom field data
 # 120326-1317 - Added agent_stats_export function
+# 120810-0859 - Added add_group_alias function, altered agent_stats_export function
 #
 
-$version = '2.4-43';
-$build = '120326-1317';
+$version = '2.6-44';
+$build = '120810-0859';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -298,6 +299,14 @@ if (isset($_GET["datetime_end"]))			{$datetime_end=$_GET["datetime_end"];}
 	elseif (isset($_POST["datetime_end"]))	{$datetime_end=$_POST["datetime_end"];}
 if (isset($_GET["time_format"]))			{$time_format=$_GET["time_format"];}
 	elseif (isset($_POST["time_format"]))	{$time_format=$_POST["time_format"];}
+if (isset($_GET["group_alias_id"]))				{$group_alias_id=$_GET["group_alias_id"];}
+	elseif (isset($_POST["group_alias_id"]))	{$group_alias_id=$_POST["group_alias_id"];}
+if (isset($_GET["group_alias_name"]))			{$group_alias_name=$_GET["group_alias_name"];}
+	elseif (isset($_POST["group_alias_name"]))	{$group_alias_name=$_POST["group_alias_name"];}
+if (isset($_GET["caller_id_number"]))			{$caller_id_number=$_GET["caller_id_number"];}
+	elseif (isset($_POST["caller_id_number"]))	{$caller_id_number=$_POST["caller_id_number"];}
+if (isset($_GET["caller_id_name"]))				{$caller_id_name=$_GET["caller_id_name"];}
+	elseif (isset($_POST["caller_id_name"]))	{$caller_id_name=$_POST["caller_id_name"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -442,6 +451,10 @@ if ($non_latin < 1)
 	$datetime_start = ereg_replace("[^- \+\:\_0-9]","",$datetime_start);
 	$datetime_end = ereg_replace("[^- \+\:\_0-9]","",$datetime_end);
 	$time_format = ereg_replace("[^A-Z]","",$time_format);
+	$group_alias_id = ereg_replace("[^\_0-9a-zA-Z]","",$group_alias_id);
+	$group_alias_name = ereg_replace("[^- \+\_0-9a-zA-Z]","",$group_alias_name);
+	$caller_id_number = ereg_replace("[^0-9]","",$caller_id_number);
+	$caller_id_name = ereg_replace("[^- \+\_0-9a-zA-Z]","",$caller_id_name);
 	}
 else
 	{
@@ -1664,6 +1677,97 @@ if ($function == 'add_user')
 
 
 
+################################################################################
+### add_group_alias - adds group alias to the system
+################################################################################
+if ($function == 'add_group_alias')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8;";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "add_group_alias USER DOES NOT HAVE PERMISSION TO ADD GROUP ALIASES";
+			$data = "$allowed_user";
+			echo "$result: $result_reason: |$user|$data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if (strlen($caller_id_number)<6)
+				{
+				$result = 'ERROR';
+				$result_reason = "add_group_alias YOU MUST USE ALL REQUIRED FIELDS";
+				$data = "$group_alias_id|$group_alias_name|$caller_id_number";
+				echo "$result: $result_reason: |$user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				if (strlen($group_alias_id)<2) {$group_alias_id = $caller_id_number;}
+				if (strlen($group_alias_name)<2) {$group_alias_name = $caller_id_number;}
+				if (strlen($active)<1) {$active = 'Y';}
+				if (strlen($admin_user_group)<1) {$admin_user_group = '---ALL---';}
+				$group_alias_name = preg_replace("/\+/",' ',$group_alias_name);
+				$caller_id_name = preg_replace("/\+/",' ',$caller_id_name);
+
+				$stmt="SELECT count(*) from groups_alias where group_alias_id='$group_alias_id';";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$alias_exists=$row[0];
+				if ($alias_exists > 0)
+					{
+					$result = 'ERROR';
+					$result_reason = "add_group_alias GROUP ALIAS ALREADY EXISTS";
+					$data = "$group_alias_id|$caller_id_number";
+					echo "$result: $result_reason: |$user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					$stmt="INSERT INTO groups_alias (group_alias_id,group_alias_name,caller_id_number,caller_id_name,active,user_group) values('$group_alias_id','$group_alias_name','$caller_id_number','$caller_id_name','$active','$admin_user_group');";
+					$rslt=mysql_query($stmt, $link);
+
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='GROUPALIASES', event_type='ADD', record_id='$group_alias_id', event_code='ADMIN API ADD GROUP ALIAS', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+
+					$result = 'SUCCESS';
+					$result_reason = "add_group_alias GROUP ALIAS HAS BEEN ADDED";
+					$data = "$group_alias_id|$group_alias_name|$caller_id_number";
+					echo "$result: $result_reason - $user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END add_group_alias
+################################################################################
+
+
 
 ################################################################################
 ### add_phone - adds phone to the phones table
@@ -2211,8 +2315,6 @@ if ($function == 'update_phone')
 ################################################################################
 ### END update_phone
 ################################################################################
-
-
 
 
 
@@ -3600,6 +3702,7 @@ if ($function == 'agent_stats_export')
 						if ($AScalls[$k] < 1)
 							{
 							$cust_sec = 0;
+							$wait_sec = 0;
 							$avg_cust_sec = 0;
 							$avg_wait_sec = 0;
 							$pct_of_queue = 0;
@@ -3607,6 +3710,7 @@ if ($function == 'agent_stats_export')
 						else
 							{
 							$cust_sec = ($AStalk_sec[$k] - $ASdead_sec[$k]);
+							$wait_sec = $ASwait_sec[$k];
 							$avg_cust_sec = ($cust_sec / $AScalls[$k]);
 							$avg_wait_sec = ($ASwait_sec[$k] / $AScalls[$k]);
 							$pct_of_queue = ( ($AScalls[$k] / $total_calls) * 100);
@@ -3622,10 +3726,11 @@ if ($function == 'agent_stats_export')
 						$avg_session_sec =	sec_convert($avg_session_sec,$time_format);
 						$avg_pause_sec =	sec_convert($avg_pause_sec,$time_format);
 						$cust_sec =			sec_convert($cust_sec,$time_format);
+						$wait_sec =			sec_convert($wait_sec,$time_format);
 						$avg_cust_sec =		sec_convert($avg_cust_sec,$time_format);
 						$avg_wait_sec =		sec_convert($avg_wait_sec,$time_format);
 
-						$output .= "$ASuser[$k]$DL$ASfull_name[$k]$DL$ASuser_group[$k]$DL$AScalls[$k]$DL$login_sec$DL$cust_sec$DL$avg_cust_sec$DL$avg_wait_sec$DL$pct_of_queue%$DL$ASpause_sec[$k]$DL$ASsessions[$k]$DL$avg_session_sec$DL$ASpauses[$k]$DL$avg_pause_sec$DL$pct_pause%$DL$avg_pause_session\n";
+						$output .= "$ASuser[$k]$DL$ASfull_name[$k]$DL$ASuser_group[$k]$DL$AScalls[$k]$DL$login_sec$DL$cust_sec$DL$avg_cust_sec$DL$avg_wait_sec$DL$pct_of_queue%$DL$ASpause_sec[$k]$DL$ASsessions[$k]$DL$avg_session_sec$DL$ASpauses[$k]$DL$avg_pause_sec$DL$pct_pause%$DL$avg_pause_session$DL$wait_sec\n";
 	
 						$k++;
 						}

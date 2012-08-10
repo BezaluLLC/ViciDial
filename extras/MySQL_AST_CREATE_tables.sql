@@ -1483,7 +1483,8 @@ did_ra_extensions_enabled ENUM('0','1') default '0',
 expanded_list_stats ENUM('0','1') default '1',
 contacts_enabled ENUM('0','1') default '0',
 svn_version VARCHAR(100) default '',
-call_menu_qualify_enabled ENUM('0','1') default '0'
+call_menu_qualify_enabled ENUM('0','1') default '0',
+admin_list_counts ENUM('0','1') default '1'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2816,7 +2817,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1323',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1324',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
