@@ -9181,7 +9181,7 @@ if ($ADD==11)
 		echo "<option SELECTED value=\"---ALL---\">All Admin User Groups</option>\n";
 		echo "</select>$NWB#vicidial_campaigns-user_group$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option>N</option></select>$NWB#vicidial_campaigns-active$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Park Music-on-Hold: </td><td align=left><input type=text name=park_file_name id=park_file_name size=20 maxlength=100> <a href=\"javascript:launch_moh_chooser('park_file_name','moh',200);\">moh chooser</a> $NWB#vicidial_campaigns-park_ext$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Park Music-on-Hold: </td><td align=left><input type=text name=park_file_name id=park_file_name size=20 maxlength=100> <a href=\"javascript:launch_moh_chooser('park_file_name','moh',400);\">moh chooser</a> $NWB#vicidial_campaigns-park_ext$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Web Form: </td><td align=left><input type=text name=web_form_address size=70 maxlength=9999>$NWB#vicidial_campaigns-web_form_address$NWE</td></tr>\n";
 		if ($SSoutbound_autodial_active > 0)
 			{
@@ -20281,7 +20281,7 @@ if ($ADD==3)
 			echo "<tr bgcolor=#B6D3FC><td align=right>Phone Login: </td><td align=left><input type=text name=phone_login size=20 maxlength=20 value=\"$phone_login\">$NWB#vicidial_users-phone_login$NWE</td></tr>\n";
 			echo "<tr bgcolor=#B6D3FC><td align=right>Phone Pass: </td><td align=left><input type=text name=phone_pass size=20 maxlength=20 value=\"$phone_pass\">$NWB#vicidial_users-phone_pass$NWE</td></tr>\n";
 			echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option>N</option><option SELECTED>$active</option></select>$NWB#vicidial_users-active$NWE</td></tr>\n";
-			echo "<tr bgcolor=#B6D3FC><td align=right>Voicemail ID: </td><td align=left><input type=text name=voicemail_id id=voicemail_id size=12 maxlength=10 value=\"$voicemail_id\"> <a href=\"javascript:launch_vm_chooser('voicemail_id','vm',100);\">voicemail chooser</a>$NWB#vicidial_users-voicemail_id$NWE</td></tr>\n";
+			echo "<tr bgcolor=#B6D3FC><td align=right>Voicemail ID: </td><td align=left><input type=text name=voicemail_id id=voicemail_id size=12 maxlength=10 value=\"$voicemail_id\"> <a href=\"javascript:launch_vm_chooser('voicemail_id','vm',300);\">voicemail chooser</a>$NWB#vicidial_users-voicemail_id$NWE</td></tr>\n";
 			echo "<tr bgcolor=#B6D3FC><td align=right>Email: </td><td align=left><input type=text name=email size=40 maxlength=100 value=\"$email\">$NWB#vicidial_users-optional$NWE</td></tr>\n";
 			echo "<tr bgcolor=#B6D3FC><td align=right>User Code: </td><td align=left><input type=text name=user_code size=40 maxlength=100 value=\"$user_code\">$NWB#vicidial_users-optional$NWE</td></tr>\n";
 			echo "<tr bgcolor=#B6D3FC><td align=right>Main Territory: </td><td align=left><input type=text name=territory size=40 maxlength=100 value=\"$territory\">$NWB#vicidial_users-optional$NWE</td></tr>\n";
@@ -21021,7 +21021,7 @@ if ($ADD==31)
 		echo "<option SELECTED value=\"$user_group\">$user_group</option>\n";
 		echo "</select>$NWB#vicidial_campaigns-user_group$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Park Music-on-Hold: </td><td align=left><input type=text name=park_file_name id=park_file_name size=20 maxlength=100 value=\"$park_file_name\"> <a href=\"javascript:launch_moh_chooser('park_file_name','moh',200);\">moh chooser</a> $NWB#vicidial_campaigns-park_ext$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Park Music-on-Hold: </td><td align=left><input type=text name=park_file_name id=park_file_name size=20 maxlength=100 value=\"$park_file_name\"> <a href=\"javascript:launch_moh_chooser('park_file_name','moh',400);\">moh chooser</a> $NWB#vicidial_campaigns-park_ext$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Web Form: </td><td align=left><input type=text name=web_form_address size=70 maxlength=9999 value=\"$web_form_address\">$NWB#vicidial_campaigns-web_form_address$NWE</td></tr>\n";
 		if ($SSenable_second_webform > 0)
 			{
@@ -21489,7 +21489,7 @@ if ($ADD==31)
 			{$cfwHTML = '<option>FORM</option>';}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Get Call Launch: </td><td align=left><select size=1 name=get_call_launch><option selected>NONE</option><option>SCRIPT</option><option>WEBFORM</option>$eswHTML$cfwHTML<option selected>$get_call_launch</option></select>$NWB#vicidial_campaigns-get_call_launch$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#8EBCFD><td align=right>Answering Machine Message: </td><td><input type=text size=50 maxlength=100 name=am_message_exten id=am_message_exten value=\"$am_message_exten\"> <a href=\"javascript:launch_chooser('am_message_exten','date',2000);\">audio chooser</a>  $NWB#vicidial_campaigns-am_message_exten$NWE\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Answering Machine Message: </td><td><input type=text size=50 maxlength=100 name=am_message_exten id=am_message_exten value=\"$am_message_exten\"> <a href=\"javascript:launch_chooser('am_message_exten','date',2300);\">audio chooser</a>  $NWB#vicidial_campaigns-am_message_exten$NWE\n";
 		$stmt="SELECT count(*) from vicidial_lists where campaign_id='$campaign_id' and am_message_exten_override != '' and active='Y' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 		$rowx=mysql_fetch_row($rslt);
@@ -21567,13 +21567,13 @@ if ($ADD==31)
 
 			echo "<tr bgcolor=#8EBCFD><td align=right>Safe Harbor Exten: </td><td align=left><input type=text name=safe_harbor_exten size=10 maxlength=20 value=\"$safe_harbor_exten\">$NWB#vicidial_campaigns-safe_harbor_exten$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#8EBCFD><td align=right>Safe Harbor Audio: </td><td align=left><input type=text name=safe_harbor_audio id=safe_harbor_audio size=40 maxlength=100 value=\"$safe_harbor_audio\"> <a href=\"javascript:launch_chooser('safe_harbor_audio','date',2200);\">audio chooser</a> $NWB#vicidial_campaigns-safe_harbor_audio$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Safe Harbor Audio: </td><td align=left><input type=text name=safe_harbor_audio id=safe_harbor_audio size=40 maxlength=100 value=\"$safe_harbor_audio\"> <a href=\"javascript:launch_chooser('safe_harbor_audio','date',3300);\">audio chooser</a> $NWB#vicidial_campaigns-safe_harbor_audio$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#8EBCFD><td align=right>Safe Harbor Audio Field: </td><td align=left><select size=1 name=safe_harbor_audio_field><option>DISABLED</option><option>vendor_lead_code</option><option>source_id</option><option>list_id</option><option>phone_code</option><option>phone_number</option><option>title</option><option>first_name</option><option>middle_initial</option><option>last_name</option><option>address1</option><option>address2</option><option>address3</option><option>city</option><option>state</option><option>province</option><option>postal_code</option><option>country_code</option><option>gender</option><option>alt_phone</option><option>email</option><option>security_phrase</option><option>comments</option><option>rank</option><option>owner</option><option>entry_list_id</option><option SELECTED>$safe_harbor_audio_field</option></select>$NWB#vicidial_campaigns-safe_harbor_audio_field$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#8EBCFD><td align=right>Safe Harbor Call Menu: </td><td align=left><select size=1 name=safe_harbor_menu_id id=safe_harbor_menu_id>$call_menu_list<option SELECTED>$safe_harbor_menu_id</option></select>$NWB#vicidial_campaigns-safe_harbor_menu_id$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#8EBCFD><td align=right>Voicemail: </td><td align=left><input type=text name=voicemail_ext id=voicemail_ext size=12 maxlength=10 value=\"$voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',3200);\">voicemail chooser</a>$NWB#vicidial_campaigns-voicemail_ext$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Voicemail: </td><td align=left><input type=text name=voicemail_ext id=voicemail_ext size=12 maxlength=10 value=\"$voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',3400);\">voicemail chooser</a>$NWB#vicidial_campaigns-voicemail_ext$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#8EBCFD><td align=right>Drop Transfer Group: </td><td align=left><select size=1 name=drop_inbound_group>";
 			echo "$Dgroups_menu";
@@ -21773,7 +21773,7 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#8EBCFD><td align=right>Blind Monitor Notice: </td><td align=left><input type=text name=blind_monitor_message size=70 maxlength=255 value=\"$blind_monitor_message\">$NWB#vicidial_campaigns-blind_monitor_message$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#8EBCFD><td align=right>Blind Monitor Filename: </td><td align=left><input type=text name=blind_monitor_filename id=blind_monitor_filename size=40 maxlength=100 value=\"$blind_monitor_filename\"> <a href=\"javascript:launch_chooser('blind_monitor_filename','date',3200);\">audio chooser</a> $NWB#vicidial_campaigns-blind_monitor_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Blind Monitor Filename: </td><td align=left><input type=text name=blind_monitor_filename id=blind_monitor_filename size=40 maxlength=100 value=\"$blind_monitor_filename\"> <a href=\"javascript:launch_chooser('blind_monitor_filename','date',5000);\">audio chooser</a> $NWB#vicidial_campaigns-blind_monitor_filename$NWE</td></tr>\n";
 
 		if ($campaign_allow_inbound == 'Y')
 			{
@@ -25382,7 +25382,7 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#99FFCC><td align=right>Drop Exten: </td><td align=left><input type=text name=drop_exten size=10 maxlength=20 value=\"$drop_exten\">$NWB#vicidial_inbound_groups-drop_exten$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#99FFCC><td align=right>Voicemail: </td><td align=left><input type=text name=voicemail_ext id=voicemail_ext size=12 maxlength=10 value=\"$voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',500);\">voicemail chooser</a>$NWB#vicidial_inbound_groups-voicemail_ext$NWE</td></tr>\n";
+		echo "<tr bgcolor=#99FFCC><td align=right>Voicemail: </td><td align=left><input type=text name=voicemail_ext id=voicemail_ext size=12 maxlength=10 value=\"$voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',900);\">voicemail chooser</a>$NWB#vicidial_inbound_groups-voicemail_ext$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#99FFCC><td align=right><a href=\"$PHP_SELF?ADD=3111&group_id=$drop_inbound_group\">Drop Transfer Group:</a> </td><td align=left><select size=1 name=drop_inbound_group>";
 		echo "$Dgroups_menu";
@@ -25399,11 +25399,11 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Action: </td><td align=left><select size=1 name=after_hours_action><option>HANGUP</option><option>MESSAGE</option><option>EXTENSION</option><option>VOICEMAIL</option><option>IN_GROUP</option><option>CALLMENU</option><option SELECTED>$after_hours_action</option></select>$NWB#vicidial_inbound_groups-after_hours_action$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Message Filename: </td><td align=left><input type=text name=after_hours_message_filename id=after_hours_message_filename size=50 maxlength=255 value=\"$after_hours_message_filename\"> <a href=\"javascript:launch_chooser('after_hours_message_filename','date',600);\">audio chooser</a> $NWB#vicidial_inbound_groups-after_hours_message_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Message Filename: </td><td align=left><input type=text name=after_hours_message_filename id=after_hours_message_filename size=50 maxlength=255 value=\"$after_hours_message_filename\"> <a href=\"javascript:launch_chooser('after_hours_message_filename','date',1000);\">audio chooser</a> $NWB#vicidial_inbound_groups-after_hours_message_filename$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Extension: </td><td align=left><input type=text name=after_hours_exten size=10 maxlength=20 value=\"$after_hours_exten\">$NWB#vicidial_inbound_groups-after_hours_exten$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Voicemail: </td><td align=left><input type=text name=after_hours_voicemail id=after_hours_voicemail size=12 maxlength=10 value=\"$after_hours_voicemail\"> <a href=\"javascript:launch_vm_chooser('after_hours_voicemail','vm',700);\">voicemail chooser</a>$NWB#vicidial_inbound_groups-after_hours_voicemail$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Voicemail: </td><td align=left><input type=text name=after_hours_voicemail id=after_hours_voicemail size=12 maxlength=10 value=\"$after_hours_voicemail\"> <a href=\"javascript:launch_vm_chooser('after_hours_voicemail','vm',1100);\">voicemail chooser</a>$NWB#vicidial_inbound_groups-after_hours_voicemail$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right><a href=\"$PHP_SELF?ADD=3111&group_id=$afterhours_xfer_group\">After Hours Transfer Group:</a> </td><td align=left><select size=1 name=afterhours_xfer_group>";
 		echo "$Agroups_menu";
@@ -25466,7 +25466,7 @@ if ($ADD==3111)
 			{
 			if (strlen($no_agent_action_value) < 3)
 				{$no_agent_action_value = 'nbdy-avail-to-take-call|vm-goodbye';}
-			echo "Audio File: <input type=text name=no_agent_action_value id=no_agent_action_value size=50 maxlength=255 value=\"$no_agent_action_value\"> <a href=\"javascript:launch_chooser('no_agent_action_value','date',600);\">audio chooser</a>\n";
+			echo "Audio File: <input type=text name=no_agent_action_value id=no_agent_action_value size=50 maxlength=255 value=\"$no_agent_action_value\"> <a href=\"javascript:launch_chooser('no_agent_action_value','date',1200);\">audio chooser</a>\n";
 			}
 		if ($no_agent_action=='EXTENSION')
 			{
@@ -25479,7 +25479,7 @@ if ($ADD==3111)
 			}
 		if ($no_agent_action=='VOICEMAIL')
 			{
-			echo "Voicemail Box: <input type=text name=no_agent_action_value id=no_agent_action_value size=12 maxlength=10 value=\"$no_agent_action_value\"> <a href=\"javascript:launch_vm_chooser('no_agent_action_value','vm',700);\">voicemail chooser</a>\n";
+			echo "Voicemail Box: <input type=text name=no_agent_action_value id=no_agent_action_value size=12 maxlength=10 value=\"$no_agent_action_value\"> <a href=\"javascript:launch_vm_chooser('no_agent_action_value','vm',1200);\">voicemail chooser</a>\n";
 			}
 
 		echo "</span>
@@ -25491,13 +25491,13 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#99FFCC><td align=right>Max Calls Action: </td><td align=left><select size=1 name=max_calls_action><option>DROP</option><option>AFTERHOURS</option><option>NO_AGENT_NO_QUEUE</option><option SELECTED>$max_calls_action</option></select>$NWB#vicidial_inbound_groups-max_calls_action$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Welcome Message Filename: </td><td align=left><input type=text name=welcome_message_filename id=welcome_message_filename size=50 maxlength=255 value=\"$welcome_message_filename\"> <a href=\"javascript:launch_chooser('welcome_message_filename','date',800);\">audio chooser</a> $NWB#vicidial_inbound_groups-welcome_message_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Welcome Message Filename: </td><td align=left><input type=text name=welcome_message_filename id=welcome_message_filename size=50 maxlength=255 value=\"$welcome_message_filename\"> <a href=\"javascript:launch_chooser('welcome_message_filename','date',1300);\">audio chooser</a> $NWB#vicidial_inbound_groups-welcome_message_filename$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Play Welcome Message: </td><td align=left><select size=1 name=play_welcome_message><option>ALWAYS</option><option>NEVER</option><option>IF_WAIT_ONLY</option><option>YES_UNLESS_NODELAY</option><option SELECTED>$play_welcome_message</option></select>$NWB#vicidial_inbound_groups-play_welcome_message$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Music On Hold Context: </td><td align=left><input type=text name=moh_context id=moh_context size=50 maxlength=50 value=\"$moh_context\"> <a href=\"javascript:launch_moh_chooser('moh_context','moh',800);\">moh chooser</a> $NWB#vicidial_inbound_groups-moh_context$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Music On Hold Context: </td><td align=left><input type=text name=moh_context id=moh_context size=50 maxlength=50 value=\"$moh_context\"> <a href=\"javascript:launch_moh_chooser('moh_context','moh',1400);\">moh chooser</a> $NWB#vicidial_inbound_groups-moh_context$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>On Hold Prompt Filename: </td><td align=left><input type=text name=onhold_prompt_filename id=onhold_prompt_filename size=50 maxlength=255 value=\"$onhold_prompt_filename\"> <a href=\"javascript:launch_chooser('onhold_prompt_filename','date',800);\">audio chooser</a> $NWB#vicidial_inbound_groups-onhold_prompt_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>On Hold Prompt Filename: </td><td align=left><input type=text name=onhold_prompt_filename id=onhold_prompt_filename size=50 maxlength=255 value=\"$onhold_prompt_filename\"> <a href=\"javascript:launch_chooser('onhold_prompt_filename','date',1450);\">audio chooser</a> $NWB#vicidial_inbound_groups-onhold_prompt_filename$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>On Hold Prompt Interval: </td><td align=left><input type=text name=prompt_interval size=5 maxlength=5 value=\"$prompt_interval\">$NWB#vicidial_inbound_groups-prompt_interval$NWE</td></tr>\n";
 
@@ -25511,7 +25511,7 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Calculate Estimated Hold Seconds: </td><td align=left><input type=text name=calculate_estimated_hold_seconds size=5 maxlength=5 value=\"$calculate_estimated_hold_seconds\">$NWB#vicidial_inbound_groups-calculate_estimated_hold_seconds$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Estimated Hold Time Minimum Filename: </td><td align=left><input type=text name=eht_minimum_prompt_filename id=eht_minimum_prompt_filename size=50 maxlength=255 value=\"$eht_minimum_prompt_filename\"> <a href=\"javascript:launch_chooser('eht_minimum_prompt_filename','date',800);\">audio chooser</a> $NWB#vicidial_inbound_groups-eht_minimum_prompt_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Estimated Hold Time Minimum Filename: </td><td align=left><input type=text name=eht_minimum_prompt_filename id=eht_minimum_prompt_filename size=50 maxlength=255 value=\"$eht_minimum_prompt_filename\"> <a href=\"javascript:launch_chooser('eht_minimum_prompt_filename','date',1600);\">audio chooser</a> $NWB#vicidial_inbound_groups-eht_minimum_prompt_filename$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Estimated Hold Time Minimum Prompt No Block: </td><td align=left><select size=1 name=eht_minimum_prompt_no_block><option>N</option><option>Y</option><option SELECTED>$eht_minimum_prompt_no_block</option></select>$NWB#vicidial_inbound_groups-eht_minimum_prompt_no_block$NWE</td></tr>\n";
 
@@ -25531,19 +25531,19 @@ if ($ADD==3111)
 		echo "$Wmenuslist";
 		echo "</select>$NWB#vicidial_inbound_groups-wait_time_option_callmenu$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Voicemail: </td><td align=left><input type=text name=wait_time_option_voicemail id=wait_time_option_voicemail size=12 maxlength=10 value=\"$wait_time_option_voicemail\"> <a href=\"javascript:launch_vm_chooser('wait_time_option_voicemail','vm',1100);\">voicemail chooser</a> $NWB#vicidial_inbound_groups-wait_time_option_voicemail$NWE</td></tr>\n";
+		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Voicemail: </td><td align=left><input type=text name=wait_time_option_voicemail id=wait_time_option_voicemail size=12 maxlength=10 value=\"$wait_time_option_voicemail\"> <a href=\"javascript:launch_vm_chooser('wait_time_option_voicemail','vm',1900);\">voicemail chooser</a> $NWB#vicidial_inbound_groups-wait_time_option_voicemail$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Transfer In-Group: </td><td align=left><select size=1 name=wait_time_option_xfer_group>";
 		echo "$Wgroups_menu";
 		echo "</select>$NWB#vicidial_inbound_groups-wait_time_option_xfer_group$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Press Filename: </td><td align=left><input type=text name=wait_time_option_press_filename id=wait_time_option_press_filename size=50 maxlength=255 value=\"$wait_time_option_press_filename\"> <a href=\"javascript:launch_chooser('wait_time_option_press_filename','date',1200);\">audio chooser</a> $NWB#vicidial_inbound_groups-wait_time_option_press_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Press Filename: </td><td align=left><input type=text name=wait_time_option_press_filename id=wait_time_option_press_filename size=50 maxlength=255 value=\"$wait_time_option_press_filename\"> <a href=\"javascript:launch_chooser('wait_time_option_press_filename','date',1950);\">audio chooser</a> $NWB#vicidial_inbound_groups-wait_time_option_press_filename$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Press No Block: </td><td align=left><select size=1 name=wait_time_option_no_block><option>N</option><option>Y</option><option SELECTED>$wait_time_option_no_block</option></select>$NWB#vicidial_inbound_groups-wait_time_option_no_block$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Press Filename Seconds: </td><td align=left><input type=text name=wait_time_option_prompt_seconds size=5 maxlength=5 value=\"$wait_time_option_prompt_seconds\">$NWB#vicidial_inbound_groups-wait_time_option_prompt_seconds$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option After Press Filename: </td><td align=left><input type=text name=wait_time_option_callback_filename id=wait_time_option_callback_filename size=50 maxlength=255 value=\"$wait_time_option_callback_filename\"> <a href=\"javascript:launch_chooser('wait_time_option_callback_filename','date',1300);\">audio chooser</a> $NWB#vicidial_inbound_groups-wait_time_option_callback_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option After Press Filename: </td><td align=left><input type=text name=wait_time_option_callback_filename id=wait_time_option_callback_filename size=50 maxlength=255 value=\"$wait_time_option_callback_filename\"> <a href=\"javascript:launch_chooser('wait_time_option_callback_filename','date',2050);\">audio chooser</a> $NWB#vicidial_inbound_groups-wait_time_option_callback_filename$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Callback List ID: </td><td align=left><input type=text name=wait_time_option_callback_list_id size=14 maxlength=14 value=\"$wait_time_option_callback_list_id\">$NWB#vicidial_inbound_groups-wait_time_option_callback_list_id$NWE</td></tr>\n";
 
@@ -25565,23 +25565,23 @@ if ($ADD==3111)
 		echo "$Xmenuslist";
 		echo "</select>$NWB#vicidial_inbound_groups-hold_time_option_callmenu$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Voicemail: </td><td align=left><input type=text name=hold_time_option_voicemail id=hold_time_option_voicemail size=12 maxlength=10 value=\"$hold_time_option_voicemail\"> <a href=\"javascript:launch_vm_chooser('hold_time_option_voicemail','vm',1100);\">voicemail chooser</a> $NWB#vicidial_inbound_groups-hold_time_option_voicemail$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Voicemail: </td><td align=left><input type=text name=hold_time_option_voicemail id=hold_time_option_voicemail size=12 maxlength=10 value=\"$hold_time_option_voicemail\"> <a href=\"javascript:launch_vm_chooser('hold_time_option_voicemail','vm',2300);\">voicemail chooser</a> $NWB#vicidial_inbound_groups-hold_time_option_voicemail$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Transfer In-Group: </td><td align=left><select size=1 name=hold_time_option_xfer_group>";
 		echo "$Tgroups_menu";
 		echo "</select>$NWB#vicidial_inbound_groups-hold_time_option_xfer_group$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Press Filename: </td><td align=left><input type=text name=hold_time_option_press_filename id=hold_time_option_press_filename size=50 maxlength=255 value=\"$hold_time_option_press_filename\"> <a href=\"javascript:launch_chooser('hold_time_option_press_filename','date',1200);\">audio chooser</a> $NWB#vicidial_inbound_groups-hold_time_option_press_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Press Filename: </td><td align=left><input type=text name=hold_time_option_press_filename id=hold_time_option_press_filename size=50 maxlength=255 value=\"$hold_time_option_press_filename\"> <a href=\"javascript:launch_chooser('hold_time_option_press_filename','date',2350);\">audio chooser</a> $NWB#vicidial_inbound_groups-hold_time_option_press_filename$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Press No Block: </td><td align=left><select size=1 name=hold_time_option_no_block><option>N</option><option>Y</option><option SELECTED>$hold_time_option_no_block</option></select>$NWB#vicidial_inbound_groups-hold_time_option_no_block$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Press Filename Seconds: </td><td align=left><input type=text name=hold_time_option_prompt_seconds size=5 maxlength=5 value=\"$hold_time_option_prompt_seconds\">$NWB#vicidial_inbound_groups-hold_time_option_prompt_seconds$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option After Press Filename: </td><td align=left><input type=text name=hold_time_option_callback_filename id=hold_time_option_callback_filename size=50 maxlength=255 value=\"$hold_time_option_callback_filename\"> <a href=\"javascript:launch_chooser('hold_time_option_callback_filename','date',1300);\">audio chooser</a> $NWB#vicidial_inbound_groups-hold_time_option_callback_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option After Press Filename: </td><td align=left><input type=text name=hold_time_option_callback_filename id=hold_time_option_callback_filename size=50 maxlength=255 value=\"$hold_time_option_callback_filename\"> <a href=\"javascript:launch_chooser('hold_time_option_callback_filename','date',2400);\">audio chooser</a> $NWB#vicidial_inbound_groups-hold_time_option_callback_filename$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Callback List ID: </td><td align=left><input type=text name=hold_time_option_callback_list_id size=14 maxlength=14 value=\"$hold_time_option_callback_list_id\">$NWB#vicidial_inbound_groups-hold_time_option_callback_list_id$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Alert Filename: </td><td align=left><input type=text name=agent_alert_exten id=agent_alert_exten size=40 maxlength=100 value=\"$agent_alert_exten\"> <a href=\"javascript:launch_chooser('agent_alert_exten','date',1500);\">audio chooser</a> $NWB#vicidial_inbound_groups-agent_alert_exten$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Alert Filename: </td><td align=left><input type=text name=agent_alert_exten id=agent_alert_exten size=40 maxlength=100 value=\"$agent_alert_exten\"> <a href=\"javascript:launch_chooser('agent_alert_exten','date',2500);\">audio chooser</a> $NWB#vicidial_inbound_groups-agent_alert_exten$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Alert Delay: </td><td align=left><input type=text name=agent_alert_delay size=6 maxlength=6 value=\"$agent_alert_delay\">$NWB#vicidial_inbound_groups-agent_alert_delay$NWE</td></tr>\n";
 
@@ -26217,7 +26217,7 @@ if ($ADD==3311)
 		echo "<tr bgcolor=#99FFCC><td align=right>Record Call: </td><td align=left><select size=1 name=record_call><option>N</option><option>Y_QUEUESTOP</option><option>Y</option><option SELECTED>$record_call</option></select>$NWB#vicidial_inbound_dids-record_call$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Extension: </td><td align=left><input type=text name=extension size=40 maxlength=50 value=\"$extension\">$NWB#vicidial_inbound_dids-extension$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Extension Context: </td><td align=left><input type=text name=exten_context size=40 maxlength=50 value=\"$exten_context\">$NWB#vicidial_inbound_dids-exten_context$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Voicemail Box: </td><td align=left><input type=text name=voicemail_ext id=voicemail_ext size=12 maxlength=10 value=\"$voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',100);\">voicemail chooser</a>$NWB#vicidial_inbound_dids-voicemail_ext$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Voicemail Box: </td><td align=left><input type=text name=voicemail_ext id=voicemail_ext size=12 maxlength=10 value=\"$voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',300);\">voicemail chooser</a>$NWB#vicidial_inbound_dids-voicemail_ext$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Phone Extension: </td><td align=left><input type=text name=phone size=20 maxlength=100 value=\"$phone\">$NWB#vicidial_inbound_dids-phone$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Server IP: </td><td align=left><select size=1 name=server_ip>\n";
 		echo "$servers_list";
@@ -26279,7 +26279,7 @@ if ($ADD==3311)
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Extension: </td><td align=left><input type=text name=filter_extension size=40 maxlength=50 value=\"$filter_extension\">$NWB#vicidial_inbound_dids-extension$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Extension Context: </td><td align=left><input type=text name=filter_exten_context size=40 maxlength=50 value=\"$filter_exten_context\">$NWB#vicidial_inbound_dids-exten_context$NWE</td></tr>\n";
-		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Voicemail Box: </td><td align=left><input type=text name=filter_voicemail_ext id=voicemail_ext size=12 maxlength=10 value=\"$filter_voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',100);\">voicemail chooser</a>$NWB#vicidial_inbound_dids-voicemail_ext$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Voicemail Box: </td><td align=left><input type=text name=filter_voicemail_ext id=voicemail_ext size=12 maxlength=10 value=\"$filter_voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',1400);\">voicemail chooser</a>$NWB#vicidial_inbound_dids-voicemail_ext$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Phone Extension: </td><td align=left><input type=text name=filter_phone size=20 maxlength=100 value=\"$filter_phone\">$NWB#vicidial_inbound_dids-phone$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Server IP: </td><td align=left><select size=1 name=filter_server_ip>\n";
 		echo "$servers_list";
@@ -26686,10 +26686,10 @@ if ($ADD==3511)
 		echo "$UUgroups_list";
 		echo "<option SELECTED value=\"$user_group\">$user_group</option>\n";
 		echo "</select>$NWB#vicidial_call_menu-user_group$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Menu Prompt: </td><td align=left><input type=text name=menu_prompt id=menu_prompt size=60 maxlength=255 value=\"$menu_prompt\"> <a href=\"javascript:launch_chooser('menu_prompt','date',30);\">audio chooser</a> $NWB#vicidial_call_menu-menu_prompt$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Menu Prompt: </td><td align=left><input type=text name=menu_prompt id=menu_prompt size=60 maxlength=255 value=\"$menu_prompt\"> <a href=\"javascript:launch_chooser('menu_prompt','date',100);\">audio chooser</a> $NWB#vicidial_call_menu-menu_prompt$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Menu Timeout: </td><td align=left><input type=text name=menu_timeout size=10 maxlength=5 value=\"$menu_timeout\">$NWB#vicidial_call_menu-menu_timeout$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Menu Timeout Prompt: </td><td align=left><input type=text name=menu_timeout_prompt id=menu_timeout_prompt size=60 maxlength=255 value=\"$menu_timeout_prompt\"> <a href=\"javascript:launch_chooser('menu_timeout_prompt','date',30);\">audio chooser</a> $NWB#vicidial_call_menu-menu_timeout_prompt$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Menu Invalid Prompt: </td><td align=left><input type=text name=menu_invalid_prompt id=menu_invalid_prompt size=60 maxlength=255 value=\"$menu_invalid_prompt\"> <a href=\"javascript:launch_chooser('menu_invalid_prompt','date',30);\">audio chooser</a> $NWB#vicidial_call_menu-menu_invalid_prompt$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Menu Timeout Prompt: </td><td align=left><input type=text name=menu_timeout_prompt id=menu_timeout_prompt size=60 maxlength=255 value=\"$menu_timeout_prompt\"> <a href=\"javascript:launch_chooser('menu_timeout_prompt','date',120);\">audio chooser</a> $NWB#vicidial_call_menu-menu_timeout_prompt$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Menu Invalid Prompt: </td><td align=left><input type=text name=menu_invalid_prompt id=menu_invalid_prompt size=60 maxlength=255 value=\"$menu_invalid_prompt\"> <a href=\"javascript:launch_chooser('menu_invalid_prompt','date',140);\">audio chooser</a> $NWB#vicidial_call_menu-menu_invalid_prompt$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Menu Repeat: </td><td align=left><input type=text name=menu_repeat size=4 maxlength=3 value=\"$menu_repeat\">$NWB#vicidial_call_menu-menu_repeat$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Menu Time Check: </td><td align=left><select size=1 name=menu_time_check>\n";
 		if ($menu_time_check > 0)
@@ -26765,7 +26765,7 @@ if ($ADD==3511)
 		$j=0;
 		while ($menus_to_print > $j)
 			{
-			$choose_height = (($j * 40) + 400);
+			$choose_height = (($j * 80) + 550);
 			$option_value =					$Aoption_value[$j];
 			$option_description =			$Aoption_description[$j];
 			$option_route =					$Aoption_route[$j];
@@ -26874,7 +26874,7 @@ if ($ADD==3511)
 				}
 			if ($option_route=='VOICEMAIL')
 				{
-				echo "Voicemail Box: <input type=text name=option_route_value_$j id=option_route_value_$j size=12 maxlength=10 value=\"$option_route_value\"> <a href=\"javascript:launch_vm_chooser('option_route_value_$j','vm',700);\">voicemail chooser</a>\n";
+				echo "Voicemail Box: <input type=text name=option_route_value_$j id=option_route_value_$j size=12 maxlength=10 value=\"$option_route_value\"> <a href=\"javascript:launch_vm_chooser('option_route_value_$j','vm',$choose_height);\">voicemail chooser</a>\n";
 				}
 			if ($option_route=='AGI')
 				{
@@ -26888,7 +26888,7 @@ if ($ADD==3511)
 
 		while ($j <= 20)
 			{
-			$choose_height = (($j * 40) + 400);
+			$choose_height = (($j * 80) + 550);
 			$dtmf_list = "<select size=1 name=option_value_$j><option value=\"\"></option>";
 			$h=0;
 			while ($h <= 20)
