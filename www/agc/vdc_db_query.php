@@ -3535,6 +3535,7 @@ if ($stage == "start")
 if ($stage == "end")
 	{
 	$status_dispo = 'DISPO';
+	$log_no_enter=0;
 	if ($alt_num_status > 0)
 		{$status_dispo = 'ALTNUM';}
 	##### get call type from vicidial_live_agents table
@@ -3561,7 +3562,7 @@ if ($stage == "end")
 		{
 		echo "LOG NOT ENTERED\n";
 		echo "uniqueid $uniqueid or lead_id: $lead_id is not valid\n";
-		exit;
+		$log_no_enter=1;
 		}
 	else
 		{
@@ -4560,6 +4561,14 @@ if ($stage == "end")
 			}
 		}
 
+	if ($log_no_enter > 0)
+		{
+		$fp = fopen ("./vicidial_debug.txt", "a");
+		fwrite ($fp, "$NOW_TIME|DIAL_LOG_1N|$uniqueid|$lead_id|$user|$inOUT|$VLA_inOUT|$start_epoch|$phone_number|$MDnextCID|$agentchannel|$loop_count|$total_rec|$total_hangup|$VDstop_rec_after_each_call\n");
+		fclose($fp);
+
+		exit;
+		}
 
 	$talk_sec=0;
 	$talk_epochSQL='';

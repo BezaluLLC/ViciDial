@@ -8285,8 +8285,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				delete xmlhttp;
 				}
 			}
-			else {process_post_hangup=1;}
-			if (process_post_hangup==1)
+		else 
+			{process_post_hangup=1;}
+		if (process_post_hangup==1)
 			{
 			VD_live_customer_call = 0;
 			VD_live_call_secondS = 0;
