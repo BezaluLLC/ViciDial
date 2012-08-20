@@ -31,3 +31,18 @@ ALTER TABLE system_settings ADD admin_list_counts ENUM('0','1') default '1';
 
 UPDATE system_settings SET db_schema_version='1324',db_schema_update_date=NOW() where db_schema_version < 1324;
 
+ALTER TABLE phones MODIFY is_webphone ENUM('Y','N','Y_API_LAUNCH') default 'N';
+
+CREATE TABLE vicidial_session_data (
+session_name VARCHAR(40) UNIQUE NOT NULL,
+user VARCHAR(20),
+campaign_id VARCHAR(8),
+server_ip VARCHAR(15) NOT NULL,
+conf_exten VARCHAR(20),
+extension VARCHAR(100) NOT NULL,
+login_time DATETIME NOT NULL,
+webphone_url TEXT,
+agent_login_call TEXT
+);
+
+UPDATE system_settings SET db_schema_version='1325',db_schema_update_date=NOW() where db_schema_version < 1325;

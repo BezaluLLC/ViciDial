@@ -382,12 +382,13 @@
 # 120512-0849 - Added In-Group Manual Dial functions
 # 120518-1225 - Added transfer call to answering machine message with hotkey (LTMG or XFTAMM)
 # 120810-0056 - Added recording api function
+# 120819-1747 - Added vicidial_session_data logging for webphone api function
 #
 
-$version = '2.6-350c';
-$build = '120810-0056';
+$version = '2.6-351c';
+$build = '120819-1747';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=77;
+$mysql_log_count=79;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -2499,16 +2500,18 @@ else
 				$SIqueryCID = "$SIPSAK_prefix$VD_campaign$DS$CIDdate";
 				}
 
+			$WebPhonEurl='';
 			$webphone_content='';
-			if ($is_webphone != 'Y')
+			$TEMP_SIP_user_DiaL = $SIP_user_DiaL;
+			if ($on_hook_agent == 'Y')
+				{$TEMP_SIP_user_DiaL = 'Local/8300@default';}
+			### insert a NEW record to the vicidial_manager table to be processed
+			$agent_login_data="||$NOW_TIME|NEW|N|$server_ip||Originate|$SIqueryCID|Channel: $TEMP_SIP_user_DiaL|Context: $ext_context|Exten: $session_id|Priority: 1|Callerid: $SIqueryCID|||||";
+			$agent_login_stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$SIqueryCID','Channel: $TEMP_SIP_user_DiaL','Context: $ext_context','Exten: $session_id','Priority: 1','Callerid: \"$SIqueryCID\" <$campaign_cid>','','','','','');";
+			if ( ($is_webphone != 'Y') and ($is_webphone != 'Y_API_LAUNCH') )
 				{
-				$TEMP_SIP_user_DiaL = $SIP_user_DiaL;
-				if ($on_hook_agent == 'Y')
-					{$TEMP_SIP_user_DiaL = 'Local/8300@default';}
-				### insert a NEW record to the vicidial_manager table to be processed
-				$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$SIqueryCID','Channel: $TEMP_SIP_user_DiaL','Context: $ext_context','Exten: $session_id','Priority: 1','Callerid: \"$SIqueryCID\" <$campaign_cid>','','','','','');";
-				if ($DB) {echo "$stmt\n";}
-				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$agent_login_stmt\n";}
+				$rslt=mysql_query($agent_login_stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01041',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$affected_rows = mysql_affected_rows($link);
 				echo "<!-- call placed to session_id: $session_id from phone: $SIP_user $SIP_user_DiaL -->\n";
@@ -2582,15 +2585,29 @@ else
 				$b64_system_key =		base64_encode($system_key);
 
 				$WebPhonEurl = "$webphone_url?phone_login=$b64_phone_login&phone_login=$b64_phone_login&phone_pass=$b64_phone_pass&server_ip=$b64_server_ip&callerid=$b64_callerid&protocol=$b64_protocol&codecs=$b64_codecs&options=$b64_options&system_key=$b64_system_key";
-				if ($webphone_location == 'bar')
+
+				if ($is_webphone == 'Y')
 					{
-					$webphone_content = "<iframe src=\"$WebPhonEurl\" style=\"width:" . $webphone_width . "px;height:" . $webphone_height . "px;background-color:transparent;z-index:17;\" scrolling=\"no\" frameborder=\"0\" allowtransparency=\"true\" id=\"webphone\" name=\"webphone\" width=\"" . $webphone_width . "px\" height=\"" . $webphone_height . "px\"> </iframe>";
-					}
-				else
-					{
-					$webphone_content = "<iframe src=\"$WebPhonEurl\" style=\"width:" . $webphone_width . "px;height:" . $webphone_height . "px;background-color:transparent;z-index:17;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"webphone\" name=\"webphone\" width=\"" . $webphone_width . "px\" height=\"" . $webphone_height . "px\"> </iframe>";
+					if ($webphone_location == 'bar')
+						{
+						$webphone_content = "<iframe src=\"$WebPhonEurl\" style=\"width:" . $webphone_width . "px;height:" . $webphone_height . "px;background-color:transparent;z-index:17;\" scrolling=\"no\" frameborder=\"0\" allowtransparency=\"true\" id=\"webphone\" name=\"webphone\" width=\"" . $webphone_width . "px\" height=\"" . $webphone_height . "px\"> </iframe>";
+						}
+					else
+						{
+						$webphone_content = "<iframe src=\"$WebPhonEurl\" style=\"width:" . $webphone_width . "px;height:" . $webphone_height . "px;background-color:transparent;z-index:17;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"webphone\" name=\"webphone\" width=\"" . $webphone_width . "px\" height=\"" . $webphone_height . "px\"> </iframe>";
+						}
 					}
 				}
+
+			$stmt="DELETE from vicidial_session_data where user='$VD_login';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01078',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+
+			$stmt="INSERT INTO vicidial_session_data SET session_name='$session_name',user='$VD_login',campaign_id='$VD_campaign',server_ip='$server_ip',conf_exten='$session_id',extension='$extension',login_time='$NOW_TIME',webphone_url='$WebPhonEurl',agent_login_call='$agent_login_data';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01079',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 
 			##### grab the campaign_weight and number of calls today on that campaign for the agent
 			$stmt="SELECT campaign_weight,calls_today,campaign_grade FROM vicidial_campaign_agents where user='$VD_login' and campaign_id = '$VD_campaign';";

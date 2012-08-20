@@ -86,6 +86,9 @@ OTHER CHANGES:
 
 12. Added callback user transfer page, linked from Admin Utilities in Reports
 
+13. Added non-loading webphone options and API agent call and webphone url 
+	functions
+
 
 
 

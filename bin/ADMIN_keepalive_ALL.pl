@@ -73,6 +73,7 @@
 # 120213-1405 - Added vicidial_daily_ra_stats rolling
 # 120512-2332 - Added loopback dialaround for ringing of calls
 # 120706-1325 - Added Call Menu qualify SQL option
+# 120820-1026 - Added clearing of vicidial_session_data table at end of day
 #
 
 $DB=0; # Debug flag
@@ -919,6 +920,19 @@ if ($timeclock_end_of_day_NOW > 0)
 	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
 	$sthA->finish();
 
+	$stmtA = "delete from vicidial_session_data where login_time < \"$TDSQLdate\";";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "\n|$affected_rows vicidial_session_data old records deleted|\n";}
+
+	$stmtA = "optimize table vicidial_session_data;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
 
 
 	##### BEGIN max stats end of day process #####

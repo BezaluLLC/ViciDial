@@ -60,10 +60,11 @@
 # 120529-1551 - Fixed callback_datetime filter
 # 120731-1206 - Allow dot in vendor_id
 # 120809-2338 - Added recording and webserver functions
+# 120819-1758 - Added webphone_url and call_agent functions
 #
 
-$version = '2.6-26';
-$build = '120809-2338';
+$version = '2.6-27';
+$build = '120819-1758';
 
 $startMS = microtime();
 
@@ -881,6 +882,207 @@ if ($function == 'recording')
 ### END - recording
 ################################################################################
 
+
+
+
+
+
+################################################################################
+### BEGIN - webphone_url - display or launch the webphone url for the current agent's session
+################################################################################
+if ($function == 'webphone_url')
+	{
+	if ( ( ($value!='DISPLAY') and ($value!='LAUNCH') ) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
+		{
+		$result = 'ERROR';
+		$result_reason = "webphone_url not valid";
+		echo "$result: $result_reason - $value|$agent_user\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		}
+	else
+		{
+		if (strlen($alt_user)>1)
+			{
+			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "select user from vicidial_users where custom_three='$alt_user' order by user;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$agent_user = $row[0];
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "no user found";
+				echo "$result: $result_reason - $alt_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$stmt = "select webphone_url from vicidial_session_data where user='$agent_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$rl_ct = mysql_num_rows($rslt);
+			if ($rl_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$webphone_url =		$row[0];
+
+				if (strlen($webphone_url) > 5)
+					{
+					if ($value=='DISPLAY')
+						{
+						$result = 'NOTICE';
+						$result_reason = "webphone_url active and displayed";
+						echo "$webphone_url";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					else
+						{
+						$result = 'NOTICE';
+						$result_reason = "webphone_url active and launched";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						echo"<META HTTP-EQUIV=Refresh CONTENT=\"0; URL=$webphone_url\">\n";
+						echo"</HEAD>\n";
+						echo"<BODY BGCOLOR=#FFFFFF marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+						echo"<a href=\"$webphone_url\">click here to continue. . .</a>\n";
+						echo"</BODY>\n";
+						}
+					}
+				else
+					{
+					$result = 'ERROR';
+					$result_reason = "webphone_url error - webphone url is empty";
+					echo "$result: $result_reason - $agent_user\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "webphone_url error - no session data";
+				echo "$result: $result_reason - $agent_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		else
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_user is not logged in";
+			echo "$result: $result_reason - $agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		}
+	}
+################################################################################
+### END - webphone_url
+################################################################################
+
+
+
+
+
+################################################################################
+### BEGIN - call_agent - send a call to connect the agent to their session
+################################################################################
+if ($function == 'call_agent')
+	{
+	if ( ($value!='CALL') or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
+		{
+		$result = 'ERROR';
+		$result_reason = "call_agent not valid";
+		echo "$result: $result_reason - $value|$agent_user\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		}
+	else
+		{
+		if (strlen($alt_user)>1)
+			{
+			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "select user from vicidial_users where custom_three='$alt_user' order by user;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$agent_user = $row[0];
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "no user found";
+				echo "$result: $result_reason - $alt_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$stmt = "select agent_login_call from vicidial_session_data where user='$agent_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_query($stmt, $link);
+			$rl_ct = mysql_num_rows($rslt);
+			if ($rl_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$agent_login_call =		$row[0];
+
+				if (strlen($agent_login_call) > 5)
+					{
+					$call_agent_string = preg_replace("/\|/","','",$agent_login_call);
+					$stmt="INSERT INTO vicidial_manager values('$call_agent_string');";
+						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_query($stmt, $link);
+					$result = 'SUCCESS';
+					$result_reason = "call_agent function sent";
+					echo "$result: $result_reason - $agent_user\n";
+					$data = "$epoch";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				else
+					{
+					$result = 'ERROR';
+					$result_reason = "call_agent error - entry is empty";
+					echo "$result: $result_reason - $agent_user\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "call_agent error - no session data";
+				echo "$result: $result_reason - $agent_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		else
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_user is not logged in";
+			echo "$result: $result_reason - $agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		}
+	}
+################################################################################
+### END - call_agent
+################################################################################
 
 
 

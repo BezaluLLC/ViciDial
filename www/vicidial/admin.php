@@ -2162,7 +2162,7 @@ if ($non_latin < 1)
 	$delete_vm_after_email = ereg_replace("[^NY]","",$delete_vm_after_email);
 	$crm_popup_login = ereg_replace("[^NY]","",$crm_popup_login);
 	$ignore_list_script_override = ereg_replace("[^NY]","",$ignore_list_script_override);
-	$is_webphone = ereg_replace("[^NY]","",$is_webphone);
+	$is_webphone = ereg_replace("[^-_0-9a-zA-Z]","",$is_webphone);
 	$use_external_server_ip = ereg_replace("[^NY]","",$use_external_server_ip);
 	$agent_xfer_consultative = ereg_replace("[^NY]","",$agent_xfer_consultative);
 	$agent_xfer_dial_override = ereg_replace("[^NY]","",$agent_xfer_dial_override);
@@ -3140,12 +3140,13 @@ else
 # 120706-1255 - Added Max stats date range and call menu qualify_sql options
 # 120713-2123 - Added max stats download link and extended_vl option
 # 120810-1018 - Added Admin List Counts system settings option
+# 120820-1104 - Added is_webphone option Y_API_LAUNCH
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-373a';
-$build = '120810-1018';
+$admin_version = '2.6-374a';
+$build = '120820-1104';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -7362,7 +7363,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="phones-is_webphone">
 	<BR>
-	<B>Set As Webphone -</B>  Setting this option to Y will attempt to load a web-based phone when the agent logs into their agent screen. Default is N.
+	<B>Set As Webphone -</B>  Setting this option to Y will attempt to load a web-based phone when the agent logs into their agent screen. Default is N. The Y_API_LAUNCH option can be used with the agent API to launch the webphone in a separate Iframe or window.
 
 	<BR>
 	<A NAME="phones-webphone_dialpad">
@@ -28370,7 +28371,7 @@ if ($ADD==31111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Screen Login: </td><td align=left><input type=text name=login size=15 maxlength=15 value=\"$row[6]\">$NWB#phones-login$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Login Password: </td><td align=left><input type=text name=pass size=10 maxlength=10 value=\"$row[7]\">$NWB#phones-pass$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Registration Password: </td><td align=left style=\"display:table-cell; vertical-align:middle;\"><input type=text id=reg_pass name=conf_secret size=20 maxlength=20 value=\"$row[72]\" onkeyup=\"return pwdChanged('reg_pass','reg_pass_img');\">$NWB#phones-conf_secret$NWE &nbsp; &nbsp; Strength: <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img');\"></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Set As Webphone: </td><td align=left><select size=1 name=is_webphone><option>Y</option><option>N</option><option selected>$row[74]</option></select>$NWB#phones-is_webphone$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Set As Webphone: </td><td align=left><select size=1 name=is_webphone><option>Y</option><option>N</option><option>Y_API_LAUNCH</option><option selected>$row[74]</option></select>$NWB#phones-is_webphone$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Webphone Dialpad: </td><td align=left><select size=1 name=webphone_dialpad><option>Y</option><option>N</option><option>TOGGLE</option><option>TOGGLE_OFF</option><option SELECTED>$row[78]</option></select>$NWB#phones-webphone_dialpad$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Webphone Auto-Answer: </td><td align=left><select size=1 name=webphone_auto_answer><option>Y</option><option>N</option><option SELECTED>$row[80]</option></select>$NWB#phones-webphone_auto_answer$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Use External Server IP: </td><td align=left><select size=1 name=use_external_server_ip><option>Y</option><option>N</option><option selected>$row[75]</option></select>$NWB#phones-use_external_server_ip$NWE</td></tr>\n";

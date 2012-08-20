@@ -15,6 +15,7 @@ Qualify SQL||
 This field allows you to input SQL - Structured Query Language - database fragments, like with Filters, to determine whether this call menu should play for the caller or not. This feature only works if the call has the callerIDname set prior to being sent to this call menu, either as an outbound survey transfer, or through the use of a drop call menu for an In-Group call. If there is a match, the call will proceed as normal. If there is no match, the call will go to the D option or the invalid option if no D option is set. You cannot use single-quotes in this field, only double-quotes if they are needed. Default is empty for disabled||
 Admin List Counts||
 This setting allows you to disable the list counts that appear on the Lists listing and the Campaign modify screens. Default is 1 for enabled||
+The Y_API_LAUNCH option can be used with the agent API to launch the webphone in a separate Iframe or window||
 
 
 ############################################################ CLIENT

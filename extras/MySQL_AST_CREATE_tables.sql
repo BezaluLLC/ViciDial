@@ -73,7 +73,7 @@ phone_context VARCHAR(20) default 'default',
 phone_ring_timeout SMALLINT(3) default '60',
 conf_secret VARCHAR(20) default 'test',
 delete_vm_after_email ENUM('N','Y') default 'N',
-is_webphone ENUM('Y','N') default 'N',
+is_webphone ENUM('Y','N','Y_API_LAUNCH') default 'N',
 use_external_server_ip ENUM('Y','N') default 'N',
 codecs_list VARCHAR(100) default '',
 codecs_with_template ENUM('0','1') default '0',
@@ -2661,6 +2661,18 @@ custom_table VARCHAR(20) DEFAULT NULL,
 custom_variables TEXT
 );
 
+CREATE TABLE vicidial_session_data (
+session_name VARCHAR(40) UNIQUE NOT NULL,
+user VARCHAR(20),
+campaign_id VARCHAR(8),
+server_ip VARCHAR(15) NOT NULL,
+conf_exten VARCHAR(20),
+extension VARCHAR(100) NOT NULL,
+login_time DATETIME NOT NULL,
+webphone_url TEXT,
+agent_login_call TEXT
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=MEMORY;
 
@@ -2817,7 +2829,7 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1324',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1325',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
