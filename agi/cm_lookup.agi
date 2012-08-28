@@ -33,6 +33,9 @@
 #; example with 8-digit vendor lead codes
 # exten => _XXXXXXXX,1,AGI(cm_lookup.agi,vendor_lead_code---CAMPLISTSALL---TESTCAMP---lastname_oneyestwono---N---N---Y---N)
 #
+#; example with 8-digit vendor lead codes
+# exten => _XXXXXXXX,1,AGI(cm_lookup.agi,vendor_lead_code---CAMPLISTSALL---TESTCAMP---lastname_oneyestwono---N---N---Y---N)
+#
 # Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
@@ -40,6 +43,7 @@
 # 111212-1507 - Added update of vicidial_list phone_number with caller callerid number option
 # 120511-1508 - Added option for 'address3' uniqueid update and 'user' agent_user_id field update if AGENT-dial-in AGI is used beforoe this AGI
 # 120604-1311 - Added title call variable option
+# 120824-1221 - Added filtering for non-digits in extension, and example of variable-digit account number
 #
 
 $script = 'cm_lookup.agi';
@@ -200,6 +204,9 @@ $callerid =~ s/\D|\'//gi;
 $calleridname =~ s/unknown|\'//gi;
 if ( (!$callerid) or ($callerid =~ /unknown/) )
 	{$callerid = $calleridname;}
+
+# remove non-digits from extension
+$extension =~ s/\D//gi;
 
 $agent_user_id = $AGI->get_variable('agent_user_id');
 $call_var_title = $AGI->get_variable('title');

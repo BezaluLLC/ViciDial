@@ -4568,7 +4568,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							timer_action_destination = api_timer_action_destination;
 						//	alert("TIMER_API:" + timer_action + '|' + timer_action_message + '|' + timer_action_seconds + '|' + timer_action_destination + '|');
 							}
-						if ( (APIHanguP==1) && (VD_live_customer_call==1) )
+						if ( (APIHanguP==1) && ( (VD_live_customer_call==1) || (MD_channel_look==1) ) )
 							{
 							hideDiv('CustomerGoneBox');
 							WaitingForNextStep=0;

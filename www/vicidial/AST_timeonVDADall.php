@@ -2349,8 +2349,10 @@ else
 	if ($orderby=='userdown') {$orderSQL='vicidial_live_agents.user desc';}
 	}
 
-if ( (eregi('ALL-ACTIVE',$group_string)) and (strlen($group_SQL) < 3) ) {$UgroupSQL = '';}
+if ( !preg_match("/ALL-/",$LOGallowed_campaigns) ) {$UgroupSQL = " and vicidial_live_agents.campaign_id IN($group_SQL)";}
+else if ( (eregi('ALL-ACTIVE',$group_string)) and (strlen($group_SQL) < 3) ) {$UgroupSQL = '';}
 else {$UgroupSQL = " and vicidial_live_agents.campaign_id IN($group_SQL)";}
+
 if (strlen($usergroup)<1) {$usergroupSQL = '';}
 else {$usergroupSQL = " and user_group='" . mysql_real_escape_string($usergroup) . "'";}
 
