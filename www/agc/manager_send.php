@@ -110,12 +110,13 @@
 # 110224-1710 - Added compatibility with QM phone environment logging
 # 110626-2320 - Added qm_extension
 # 120810-0030 - Added external_recording
+# 120831-1458 - Added vicidial_dial_log outbound call logging
 #
 
-$version = '2.6-57';
-$build = '120810-0030';
+$version = '2.6-58';
+$build = '120831-1458';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=118;
+$mysql_log_count=119;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -462,6 +463,12 @@ if ($ACTION=="Originate")
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02007',$user,$server_ip,$session_name,$one_mysql_log);}
 		echo "Originate command sent for Exten $exten Channel $channel on $server_ip |$account|$variable|\n";
+
+		### log outbound call in the dial log
+		$stmt = "INSERT INTO vicidial_dial_log SET caller_code='$queryCID',lead_id='$lead_id',server_ip='$server_ip',call_date='$NOW_TIME',extension='$exten',channel='$channel',timeout='0',outbound_cid='$outCID',context='$ext_context';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02119',$user,$server_ip,$session_name,$one_mysql_log);}
 
 		if ($agent_dialed_number > 0)
 			{

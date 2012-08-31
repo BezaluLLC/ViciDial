@@ -46,3 +46,22 @@ agent_login_call TEXT
 );
 
 UPDATE system_settings SET db_schema_version='1325',db_schema_update_date=NOW() where db_schema_version < 1325;
+
+CREATE TABLE vicidial_dial_log (
+caller_code VARCHAR(30) NOT NULL,
+lead_id INT(9) UNSIGNED default '0',
+server_ip VARCHAR(15),
+call_date DATETIME,
+extension VARCHAR(100) default '',
+channel VARCHAR(100) default '',
+context VARCHAR(100) default '',
+timeout MEDIUMINT(7) UNSIGNED default '0',
+outbound_cid VARCHAR(100) default '',
+index (caller_code),
+index (call_date)
+);
+
+CREATE TABLE vicidial_dial_log_archive LIKE vicidial_dial_log;
+CREATE UNIQUE INDEX vddla on vicidial_dial_log_archive (caller_code,call_date);
+
+UPDATE system_settings SET db_schema_version='1326',db_schema_update_date=NOW() where db_schema_version < 1326;

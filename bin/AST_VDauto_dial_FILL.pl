@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_VDauto_dial_FILL.pl version 2.4
+# AST_VDauto_dial_FILL.pl version 2.6
 #
 # DESCRIPTION:
 # Places auto_dial calls on the VICIDIAL dialer system across all servers only 
@@ -12,7 +12,7 @@
 #
 # Should only be run on one server in a multi-server Asterisk/VICIDIAL cluster
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 61115-1246 - First build, framework setup, non-functional
@@ -32,6 +32,7 @@
 # 101207-0713 - Added more info to Originate for rare VDAC issue
 # 110901-1127 - Added campaign areacode cid function
 # 110922-1203 - Added logging of last calltime to campaign
+# 120831-1502 - Added vicidial_dial_log outbound call logging
 #
 
 ### begin parsing run-time options ###
@@ -820,6 +821,10 @@ while($one_day_interval > 0)
 													$stmtA = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,callerid,phone_code,phone_number,call_time,call_type,alt_dial,queue_priority) values('$DB_camp_server_server_ip[$server_CIPct]','$DBfill_campaign[$camp_CIPct]','SENT','$lead_id','$VqueryCID','$phone_code','$phone_number','$SQLdate','OUTBALANCE','$alt_dial','$DBIPqueue_priority[$camp_CIPct]')";
 													$affected_rows = $dbhA->do($stmtA);
 													$calls_placed++;
+
+												### insert log record into vicidial_dial_log table 
+													$stmtA = "INSERT INTO vicidial_dial_log SET caller_code='$VqueryCID',lead_id='$lead_id',server_ip='$DB_camp_server_server_ip[$server_CIPct]',call_date='$SQLdate',extension='$VDAD_dial_exten',channel='$local_DEF$Ndialstring$local_AMP$ext_context',timeout='$Local_dial_timeout',outbound_cid='$CIDstring',context='$ext_context';";
+													$affected_rows = $dbhA->do($stmtA);
 													}
 												else
 													{
@@ -829,6 +834,8 @@ while($one_day_interval > 0)
 													$vac_inserts[$staggered_ct] = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,callerid,phone_code,phone_number,call_time,call_type,alt_dial,queue_priority) values('XXXXXXXXXXXXXXX','$DBfill_campaign[$camp_CIPct]','SENT','$lead_id','$VqueryCID','$phone_code','$phone_number','$SQLdate','OUTBALANCE','$alt_dial','$DBIPqueue_priority[$camp_CIPct]')";
 
 													$st_logged[$staggered_ct] = "$phone_number|$DBfill_campaign[$camp_CIPct]|$VqueryCID|$gmt_offset_now|$alt_dial|";
+
+													$vddl_inserts[$staggered_ct] = "INSERT INTO vicidial_dial_log SET caller_code='$VqueryCID',lead_id='$lead_id',server_ip='XXXXXXXXXXXXXXX',call_date='$SQLdate',extension='$VDAD_dial_exten',channel='$local_DEF$Ndialstring$local_AMP$ext_context',timeout='$Local_dial_timeout',outbound_cid='$CIDstring',context='$ext_context';";
 
 													$calls_placed++;
 													$staggered_ct++;
@@ -930,18 +937,21 @@ while($one_day_interval > 0)
 							$TEMP_vac_insert = $vac_inserts[$staggered_fill];
 							$TEMP_vl_update = $vl_updates[$staggered_fill];
 							$TEMP_st_logged = $st_logged[$staggered_fill];
+							$TEMP_vddl_inserts = $vddl_inserts[$staggered_fill];
 
 							$TEMP_vm_insert =~ s/XXXXXXXXXXXXXXX/$TEMP_server_ip/gi;
 							$TEMP_vac_insert =~ s/XXXXXXXXXXXXXXX/$TEMP_server_ip/gi;
+							$TEMP_vddl_inserts =~ s/XXXXXXXXXXXXXXX/$TEMP_server_ip/gi;
 
 							if (length($TEMP_vm_insert) > 20)
 								{
 								$affected_rows_vl = $dbhA->do($TEMP_vl_update);
 								$affected_rows_vm = $dbhA->do($TEMP_vm_insert);
 								$affected_rows_vac = $dbhA->do($TEMP_vac_insert);
+								$affected_rows_vddl = $dbhA->do($TEMP_vddl_inserts);
 								}
 
-							$event_string = "|     number call stagger dialed|$TEMP_server_ip|$staggered_fill|$staggered_ct|$affected_rows_vm|$affected_rows_vac|$affected_rows_vl   $TEMP_st_logged";
+							$event_string = "|     number call stagger dialed|$TEMP_server_ip|$staggered_fill|$staggered_ct|$affected_rows_vm|$affected_rows_vac|$affected_rows_vl|$affected_rows_vddl   $TEMP_st_logged";
 							 &event_logger;
 
 							### sleep for 2.5 hundredths of a second to not flood the server with new calls
@@ -964,6 +974,7 @@ while($one_day_interval > 0)
 				@vac_inserts=@MT;
 				@vl_updates=@MT;
 				@st_logged=@MT;
+				@vddl_inserts=@MT;
 				###############################################################################
 				###### END - experimental balanced FILL dialing ($staggered)
 				###############################################################################

@@ -89,6 +89,8 @@ OTHER CHANGES:
 13. Added non-loading webphone options and API agent call and webphone url 
 	functions
 
+14. Added outbound call logging in vicidial_dial_log table
+
 
 
 

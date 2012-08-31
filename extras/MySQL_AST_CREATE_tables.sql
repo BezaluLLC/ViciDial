@@ -2673,6 +2673,20 @@ webphone_url TEXT,
 agent_login_call TEXT
 );
 
+CREATE TABLE vicidial_dial_log (
+caller_code VARCHAR(30) NOT NULL,
+lead_id INT(9) UNSIGNED default '0',
+server_ip VARCHAR(15),
+call_date DATETIME,
+extension VARCHAR(100) default '',
+channel VARCHAR(100) default '',
+context VARCHAR(100) default '',
+timeout MEDIUMINT(7) UNSIGNED default '0',
+outbound_cid VARCHAR(100) default '',
+index (caller_code),
+index (call_date)
+);
+
 
 ALTER TABLE vicidial_campaign_server_stats ENGINE=MEMORY;
 
@@ -2829,7 +2843,10 @@ CREATE TABLE vicidial_log_noanswer_archive LIKE vicidial_log_noanswer;
 CREATE TABLE vicidial_did_agent_log_archive LIKE vicidial_did_agent_log; 
 CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,did_route);
 
-UPDATE system_settings SET db_schema_version='1325',db_schema_update_date=NOW();
+CREATE TABLE vicidial_dial_log_archive LIKE vicidial_dial_log;
+CREATE UNIQUE INDEX vddla on vicidial_dial_log_archive (caller_code,call_date);
+
+UPDATE system_settings SET db_schema_version='1326',db_schema_update_date=NOW();
 
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;

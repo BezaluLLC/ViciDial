@@ -3141,12 +3141,13 @@ else
 # 120713-2123 - Added max stats download link and extended_vl option
 # 120810-1018 - Added Admin List Counts system settings option
 # 120820-1104 - Added is_webphone option Y_API_LAUNCH
+# 120831-1523 - Added vicidial_dial_log outbound call logging
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-374a';
-$build = '120820-1104';
+$admin_version = '2.6-375a';
+$build = '120831-1523';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -7272,6 +7273,8 @@ if ($ADD==99999)
 			<LI>Email Address
 			<LI>Security Phrase
 			<LI>Comments
+			<LI>Rank
+			<LI>Owner
 			</OL>
 
 		<BR>NOTES: The Excel Lead loader functionality is enabled by a series of perl scripts and needs to have a properly configured /etc/astguiclient.conf file in place on the web server. Also, a couple perl modules must be loaded for it to work as well - OLE-Storage_Lite and Spreadsheet-ParseExcel. You can check for runtime errors in these by looking at your apache error_log file. Also, for duplication checks against gampaign lists, the list that has new leads going into it does need to be created in the system before you start to load the leads.
@@ -14823,6 +14826,10 @@ if ($ADD==41)
 					### insert a SENT record to the vicidial_auto_calls table 
 					$stmtC = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,callerid,phone_code,phone_number,call_time,call_type,alt_dial,queue_priority) values('$SSactive_voicemail_server','$campaign_id','SENT','$lead_id','$VqueryCID','$phone_code','$phone_number','$SQLdate','OUT','MAIN','99')";
 					$rslt=mysql_query($stmtC, $link);
+
+					### insert a record in the vicidial_dial_log table 
+					$stmtD = "INSERT INTO vicidial_dial_log SET caller_code='$VqueryCID',lead_id='$lead_id',server_ip='$SSactive_voicemail_server',call_date='$SQLdate',extension='$VDAD_dial_exten',channel='$local_DEF$Ndialstring$local_AMP$ext_context',timeout='$Local_dial_timeout',outbound_cid='$CIDstring',context='$ext_context';";
+					$rslt=mysql_query($stmtD, $link);
 
 					### LOG INSERTION Admin Log Table, for campaign ###
 					$SQL_log = "$stmtA|$stmtB|$stmtC|";

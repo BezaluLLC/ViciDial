@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_VDauto_dial.pl version 2.4
+# AST_VDauto_dial.pl version 2.6
 #
 # DESCRIPTION:
 # Places auto_dial calls on the VICIDIAL dialer system 
@@ -25,7 +25,7 @@
 # It is good practice to keep this program running by placing the associated 
 # KEEPALIVE script running every minute to ensure this program is always running
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 50125-1201 - Changed dial timeout to 120 seconds from 180 seconds
@@ -108,6 +108,7 @@
 # 110901-1125 - Added campaign areacode cid function
 # 110922-1202 - Added logging of last calltime to campaign
 # 120403-1839 - Changed auto-alt-dial multi-lead processing to use server max recording time value for time
+# 120831-1503 - Added vicidial_dial_log outbound call logging
 #
 
 
@@ -1223,6 +1224,10 @@ while($one_day_interval > 0)
 
 									### insert a SENT record to the vicidial_auto_calls table 
 										$stmtA = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,callerid,phone_code,phone_number,call_time,call_type,alt_dial,queue_priority,last_update_time) values('$DBIPaddress[$user_CIPct]','$DBIPcampaign[$user_CIPct]','SENT','$lead_id','$VqueryCID','$phone_code','$phone_number','$SQLdate','OUT','$alt_dial','$DBIPqueue_priority[$user_CIPct]','$SQLdate')";
+										$affected_rows = $dbhA->do($stmtA);
+
+									### insert log record into vicidial_dial_log table 
+										$stmtA = "INSERT INTO vicidial_dial_log SET caller_code='$VqueryCID',lead_id='$lead_id',server_ip='$DBIPaddress[$user_CIPct]',call_date='$SQLdate',extension='$VDAD_dial_exten',channel='$local_DEF$Ndialstring$local_AMP$ext_context',timeout='$Local_dial_timeout',outbound_cid='$CIDstring',context='$ext_context';";
 										$affected_rows = $dbhA->do($stmtA);
 
 										### sleep for a five hundredths of a second to not flood the server with new calls

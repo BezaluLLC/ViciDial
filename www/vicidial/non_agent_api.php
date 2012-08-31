@@ -66,10 +66,11 @@
 # 120315-1537 - Added filter for single-quotes and backslashes on custom field data
 # 120326-1317 - Added agent_stats_export function
 # 120810-0859 - Added add_group_alias function, altered agent_stats_export function
+# 120831-1529 - Added vicidial_dial_log outbound call logging
 #
 
-$version = '2.6-44';
-$build = '120810-0859';
+$version = '2.6-45';
+$build = '120831-1529';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -1457,6 +1458,9 @@ if ($function == 'blind_monitor')
 					if ($affected_rows > 0)
 						{
 						$man_id = mysql_insert_id($link);
+
+						$stmt = "INSERT INTO vicidial_dial_log SET caller_code='$BMquery',lead_id='0',server_ip='$monitor_server_ip',call_date='$NOW_TIME',extension='$dialplan_number',channel='Local/$monitor_dialstring$stage$session_id@default',timeout='0',outbound_cid='\"VC Blind Monitor\" <$outbound_cid>',context='default';";
+						$rslt=mysql_query($stmt, $link);
 
 						$result = 'SUCCESS';
 						$result_reason = "blind_monitor HAS BEEN LAUNCHED";

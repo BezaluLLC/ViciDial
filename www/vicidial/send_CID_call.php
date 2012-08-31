@@ -3,11 +3,12 @@
 #
 # Send calls with custom callerID numbers from web form
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: GPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: GPLv2
 #
 # CHANGES
 #
 # 90714-1355 - First Build
+# 120831-1527 - Added vicidial_dial_log logging
 #
 
 require("dbconnect.php");
@@ -122,6 +123,10 @@ else
 	$stmt = "INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','TESTCIDCALL098765432','Exten: 91$receiver','Context: default','Channel: Local/91$sender$Local_end','Priority: 1','Callerid: \"$cid_number\" <$cid_number>','','','','','');";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_query($stmt, $link);
+
+	$stmt = "INSERT INTO vicidial_dial_log SET caller_code='TESTCIDCALL098765432',lead_id='0',server_ip='$server_ip',call_date='$NOW_TIME',extension='91$receiver',channel='Local/91$sender$Local_end',timeout='$Local_dial_timeout',outbound_cid='\"$cid_number\" <$cid_number>',context='default';";
+	$rslt=mysql_query($stmt, $link);
+
 
 	echo "<B>Call sent from $sender to $receiver using CIDnumber: $cid_number</B>";
 	}
