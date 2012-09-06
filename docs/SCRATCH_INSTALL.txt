@@ -1591,6 +1591,9 @@ GRANT SELECT,INSERT,UPDATE,DELETE,LOCK TABLES on asterisk.* TO cron@localhost ID
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
 
+GRANT ALTER,CREATE on asterisk.* TO custom@'%' IDENTIFIED BY 'custom1234';
+GRANT ALTER,CREATE on asterisk.* TO custom@localhost IDENTIFIED BY 'custom1234';
+
 flush privileges;
 
 # To make sure that new processes can connect to the Database under load we should 
