@@ -54,9 +54,10 @@
 # 110705-1913 - Added options for USACAN prefix(no 0 or 1) and valid areacode filtering
 # 110929-1423 - Added new format for abbreviated timezone in owner(pipe30tz) and list creation options
 # 120713-1009 - Added new --duplicate-tnm-delete option to check for a duplicate phone with different title and delete existing if found in same list
+# 120907-1109 - Added vote17csv format
 #
 
-$version = '120713-1009';
+$version = '120907-1109';
 
 $secX = time();
 $MT[0]='';
@@ -212,6 +213,9 @@ if (length($ARGV[0])>1)
 		print "\"100998\",\"ANGELA    \",\"SMITH     \",\"3145551212\",\"3145551213\",\"3145551214\",\"0\",\"3145551215\",\"3145551216\",\"0\",\n\n";
 		print "pipe30tz:\n";
 		print "TEST01||09292011|1|5125554727||Mike||Frank|||||||||||||||||C|2145559922|TESTSURVEY|TESTSURVEY|111\n";
+		print "vote17csv:\n";
+		print "Voter ID,County Code,Name Last,Gender,Race,Birth Date,Party Affiliation,Precinct,Congressional District,House District,Senate District,County Commission District,School Board District,Age Bracket,_2010_GEN,_2012_PRI_A_Date,Phone_10digit\n";
+		print "\"110306742\",\"DAD\",\"Da Silva Ramos\",\"F\",\"5\",\"06/12/1950\",\"DEM\",\"100\",\"23\",\"0\",\"0\",\"0\",\"0\",\"4\",\"A\",\"\",\"0033559433\"\n\n";
 		print "dccsv43, dccsvref51, dccsv52 and dccsvref52:\n";
 		print "---format too confusing to list in the help screen---\n\n";
 
@@ -786,6 +790,45 @@ foreach(@FILES)
 				$email =				'';
 				$security_phrase =		'';
 				$comments =				'';
+				$called_count =			0;
+				$status =				'NEW';
+
+				$format_set++;
+				}
+
+		# This is the format for the vote17csv lead files
+		# Voter ID,County Code,Name Last,Gender,Race,Birth Date,Party Affiliation,Precinct,Congressional District,House District,Senate District,County Commission District,School Board District,Age Bracket,_2010_GEN,_2012_PRI_A_Date,Phone_10digit
+		# "110555742","DAD","Bob Smith","F","5","06/14/1970","DEM","100","23","0","0","0","0","4","A","","8135559433"
+			if ( ($format =~ /vote17csv/) && ($format_set < 1) )
+				{
+				@name=@MT;
+				$vendor_lead_code =		'';
+				$source_id =			$m[0];	# voter ID number
+				$list_id =				'995';
+				$phone_code =			'1';
+				$phone_number =			$m[16];		chomp($phone_number);	$phone_number =~ s/\D//gi;
+					$USarea = 			substr($phone_number, 0, 3);
+				$title =				$m[6];	# political party
+				$first_name =			'';
+				$last_name =			$m[2];		chomp($first_name);
+
+				$middle_initial =		'';
+				$address1 =				$m[9];	# state House district
+				$address2 =				$m[10];	# state Senate district
+				$address3 =				$m[1];	# county
+				$city =					'';
+				$state =				$m[4];	# race/ethnicity
+				$province =				$m[7];	# precinct
+				$postal_code =			'';
+				$country =				'USA';
+				$gender =				$m[3];
+				$date_of_birth =		$m[5];
+				$alt_phone =			$m[12];	# school district
+				$email =				$m[11];	# county commission district
+				$security_phrase =		'';		# first survey question response
+				$comments =				'';
+				$rank =					'0';
+				$owner =				$m[8];	# US Congress district
 				$called_count =			0;
 				$status =				'NEW';
 
