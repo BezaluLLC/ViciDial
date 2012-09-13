@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2012-09-12
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2012-09-13
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -75,7 +75,7 @@ Changes:
 120326-1307 - Added agent_stats_export function
 120810-0859 - Added add_group_alias function, altered agent_stats_export function
 120912-2042 - Added user_group_status and in_group_status functions
-
+120913-1255 - Added update_log_entry function
 
 
 
@@ -387,6 +387,36 @@ ERROR: in_group_status INVALID SEARCH PARAMETERS - 6666||
 A SUCCESS response will not show "SUCCESS", but instead will just print the results in the following format:
 ingroups,total_calls,calls_waiting,agents_logged_in,agents_in_calls,agents_waiting,agents_paused,agents_in_dispo
 SALESLINE SUPPORT,31,0,75,54,0,20,1
+
+
+
+
+
+--------------------------------------------------------------------------------
+update_log_entry - updates the status of a vicidial_log or vicidial_closer_log entry
+
+NOTE: api user for this function must have user_level set to 8 or higher and "modify leads" enabled
+
+REQUIRED FIELDS-
+source -		description of what originated the API call (maximum 20 characters)
+call_id -		either the uniqueid or the 20-character ID of the call
+group -			either a campaign_id or an in-group group_id
+status -		the new status for the log record to be set to
+
+NOTES- 
+There is a hard limit of 10000000 records analyzed
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_log_entry&group=SALESLINE&call_id=Y2010309520000000234&status=SALEX
+
+Example responses:
+ERROR: update_log_entry USER DOES NOT HAVE PERMISSION TO UPDATE LOGS - 6666|0
+ERROR: update_log_entry INVALID SEARCH PARAMETERS - 6666||
+ERROR: update_log_entry GROUP NOT FOUND - 6666||
+ERROR: update_log_entry NO RECORDS FOUND - 6666||||
+ERROR: update_log_entry NO RECORDS UPDATED - 6666|TESTCAMP|M9131554060000426264|SALEX|SALEX|1347566056.399
+SUCCESS: update_log_entry RECORD HAS BEEN UPDATED - 6666|6666|TESTCAMP|M9131554060000426264|SALEX|WN|1347566056.399|
+
 
 
 

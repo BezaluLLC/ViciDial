@@ -93,6 +93,9 @@ OTHER CHANGES:
 
 15. Added user_group_status and in_group_status functions to the non-agent API.
 
+16. Added update_log_entry function to the non-agent API, which allows the 
+	updating of the status of an inbound or outbound call log entry.
+
 
 
 
