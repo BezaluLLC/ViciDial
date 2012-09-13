@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2012-08-10
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2012-09-12
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -31,7 +31,8 @@ update_phone_alias - updates or deletes an existing phone alias record in the sy
 add_list - adds a list to the system
 update_list - updates list settings in the system, reset leads in list, delete list
 add_group_alias - adds group alias to the system
-
+user_group_status - real-time status of one or more user groups
+in_group_status - real-time status of one or more in groups
 
 
 New scripts:
@@ -73,7 +74,7 @@ Changes:
 120213-1613 - Added optional logging of all non-admin.php requests, enabled in options.php
 120326-1307 - Added agent_stats_export function
 120810-0859 - Added add_group_alias function, altered agent_stats_export function
-
+120912-2042 - Added user_group_status and in_group_status functions
 
 
 
@@ -324,6 +325,68 @@ A SUCCESS response will not show "SUCCESS", but instead will just print the resu
 user|full_name|user_group|calls|login_time|total_talk_time|avg_talk_time|avg_wait_time|pct_of_queue|pause_time|sessions|avg_session|pauses|avg_pause_time|pause_pct|pauses_per_session|total_wait_time
 1029|test agent|ADMIN|1|0:01:52|0:00:16|0:00:16|0:00:18|16.7%|54|3|0:00:37|5|0:00:11|48.2%|2|0:00:32
 6666|Admin|ADMIN|5|0:04:11|0:01:48|0:00:22|0:00:17|83.3%|27|2|0:02:06|4|0:00:07|10.8%|2|0:00:32
+
+
+
+
+
+--------------------------------------------------------------------------------
+user_group_status - real-time status of one or more user groups
+
+NOTE: api user for this function must have user_level set to 7 or higher and "view reports" enabled
+
+REQUIRED FIELDS-
+source -		description of what originated the API call (maximum 20 characters)
+user_groups -		pipe-delimited list of user groups to get status information for "ADMIN|AGENTS"
+
+SETTINGS FIELDS-
+stage -			the format of the exported data: csv, tab, pipe(default)
+header -		include a header(YES) or not(NO). This is optional, default is not to include a header
+
+NOTES- 
+There is a hard limit of 10000000 records analyzed
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=user_group_status&user_groups=ADMIN|AGENT&header=YES
+
+Example responses:
+ERROR: user_group_status USER DOES NOT HAVE PERMISSION TO GET USER GROUP INFO - 6666|0
+ERROR: user_group_status INVALID SEARCH PARAMETERS - 6666||
+
+A SUCCESS response will not show "SUCCESS", but instead will just print the results in the following format:
+usergroups|calls_waiting|agents_logged_in|agents_in_calls|agents_waiting|agents_paused|agents_in_dead_calls|agents_in_dispo
+ADMIN AGENT|0|1|0|1|0|0|0
+
+
+
+
+
+--------------------------------------------------------------------------------
+in_group_status - real-time status of one or more in groups
+
+NOTE: api user for this function must have user_level set to 7 or higher and "view reports" enabled
+
+REQUIRED FIELDS-
+source -		description of what originated the API call (maximum 20 characters)
+in_groups -		pipe-delimited list of inbound groups to get status information for "SALESLINE|SUPPORT"
+
+SETTINGS FIELDS-
+stage -			the format of the exported data: csv, tab, pipe(default)
+header -		include a header(YES) or not(NO). This is optional, default is not to include a header
+
+NOTES- 
+There is a hard limit of 10000000 records analyzed
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&stage=csv&function=in_group_status&user_groups=SALESLINE|SUPPORT&header=YES
+
+Example responses:
+ERROR: in_group_status USER DOES NOT HAVE PERMISSION TO GET IN-GROUP INFO - 6666|0
+ERROR: in_group_status INVALID SEARCH PARAMETERS - 6666||
+
+A SUCCESS response will not show "SUCCESS", but instead will just print the results in the following format:
+ingroups,total_calls,calls_waiting,agents_logged_in,agents_in_calls,agents_waiting,agents_paused,agents_in_dispo
+SALESLINE SUPPORT,31,0,75,54,0,20,1
 
 
 

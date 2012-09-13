@@ -91,6 +91,8 @@ OTHER CHANGES:
 
 14. Added outbound call logging in vicidial_dial_log table
 
+15. Added user_group_status and in_group_status functions to the non-agent API.
+
 
 
 

@@ -67,10 +67,11 @@
 # 120326-1317 - Added agent_stats_export function
 # 120810-0859 - Added add_group_alias function, altered agent_stats_export function
 # 120831-1529 - Added vicidial_dial_log outbound call logging
+# 120912-2042 - Added user_group_status and in_group_status functions
 #
 
-$version = '2.6-45';
-$build = '120831-1529';
+$version = '2.6-46';
+$build = '120912-2042';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -308,6 +309,10 @@ if (isset($_GET["caller_id_number"]))			{$caller_id_number=$_GET["caller_id_numb
 	elseif (isset($_POST["caller_id_number"]))	{$caller_id_number=$_POST["caller_id_number"];}
 if (isset($_GET["caller_id_name"]))				{$caller_id_name=$_GET["caller_id_name"];}
 	elseif (isset($_POST["caller_id_name"]))	{$caller_id_name=$_POST["caller_id_name"];}
+if (isset($_GET["user_groups"]))				{$user_groups=$_GET["user_groups"];}
+	elseif (isset($_POST["user_groups"]))		{$user_groups=$_POST["user_groups"];}
+if (isset($_GET["in_groups"]))				{$in_groups=$_GET["in_groups"];}
+	elseif (isset($_POST["in_groups"]))		{$in_groups=$_POST["in_groups"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -3754,6 +3759,443 @@ if ($function == 'agent_stats_export')
 	}
 ################################################################################
 ### END agent_stats_export
+################################################################################
+
+
+
+
+
+################################################################################
+### user_group_status - exports user group real-time stats
+################################################################################
+if ($function == 'user_group_status')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "user_group_status USER DOES NOT HAVE PERMISSION TO GET USER GROUP INFO";
+			echo "$result: $result_reason: |$user|$allowed_user|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			$search_SQL='';
+			$search_ready=0;
+
+			require_once("functions.php");
+
+			if ( (strlen($user_groups)>0) and (strlen($user_groups)<10000) )
+				{
+				$user_groupsOUTPUT = preg_replace("/\|/",' ',$user_groups);
+				$user_groupsSQL = preg_replace("/\|/","','",$user_groups);
+				$search_SQL .= "and user_group IN('$user_groupsSQL')";
+				$search_ready++;
+				}
+			if ($search_ready < 1)
+				{
+				$result = 'ERROR';
+				$result_reason = "user_group_status INVALID SEARCH PARAMETERS";
+				$data = "$user|$user_groups";
+				echo "$result: $result_reason: $data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level > 6 and view_reports='1' and active='Y';";
+				if ($DB) {$MAIN.="|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$LOGuser_group =			$row[0];
+
+				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+				if ($DB) {$MAIN.="|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$LOGallowed_campaigns =			$row[0];
+				$LOGadmin_viewable_groups =		$row[1];
+
+				$LOGadmin_viewable_groupsSQL='';
+				$whereLOGadmin_viewable_groupsSQL='';
+				if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+					{
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+					$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					}
+				$LOGallowed_campaignsSQL='';
+				$whereLOGallowed_campaignsSQL='';
+				$whereLOGallowed_callsSQL='';
+				if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+					{
+					$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+					$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+					$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+
+					$stmt="select group_id from vicidial_inbound_groups $whereLOGadmin_viewable_groupsSQL order by group_id;";
+					$rslt=mysql_query($stmt, $link);
+					$groups_to_print = mysql_num_rows($rslt);
+					$i=0;
+					$rawLOGallowed_ingroupsSQL='';
+					while ($i < $groups_to_print)
+						{
+						$row=mysql_fetch_row($rslt);
+						$rawLOGallowed_ingroupsSQL .=	"row[0]','";
+						$i++;
+						}
+					$whereLOGallowed_callsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL','$rawLOGallowed_ingroupsSQL')";
+					}
+
+				$k=0;
+				$output='';
+				$DLset=0;
+				if ($stage == 'csv')
+					{$DL = ',';   $DLset++;}
+				if ($stage == 'tab')
+					{$DL = "\t";   $DLset++;}
+				if ($stage == 'pipe')
+					{$DL = '|';   $DLset++;}
+				if ($DLset < 1)
+					{$DL='|';   $stage='pipe';}
+				if (strlen($time_format) < 1)
+					{$time_format = 'HF';}
+				if ($header == 'YES')
+					{$output .= 'usergroups' . $DL . 'calls_waiting' . $DL . 'agents_logged_in' . $DL . 'agents_in_calls' . $DL . 'agents_waiting' . $DL . 'agents_paused' . $DL . 'agents_in_dead_calls' . $DL . 'agents_in_dispo' . "\n";}
+
+				$total_agents=0;
+				$total_agents_in_calls=0;
+				$total_agents_waiting=0;
+				$total_agents_paused=0;
+				$total_agents_dead=0;
+				$total_agents_dispo=0;
+				$total_calls=0;
+				$total_calls_waiting=0;
+				$call_camps[0]='';
+				$call_types[0]='';
+
+				$callerids='';
+				$pausecode='';
+				$stmt="select callerid,status,campaign_id,call_type from vicidial_auto_calls $whereLOGallowed_callsSQL;";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$calls_to_list = mysql_num_rows($rslt);
+				if ($calls_to_list > 0)
+					{
+					$i=0;
+					while ($i < $calls_to_list)
+						{
+						$row=mysql_fetch_row($rslt);
+						$callerids .=	"$row[0]|";
+						if (eregi("LIVE",$row[1])) 
+							{$total_calls_waiting++;}
+						$call_camps[$i] = $row[2];
+						$call_types[$i] = $row[3];
+						$i++;
+						}
+					}
+
+				$stmt="select vicidial_live_agents.user,vicidial_live_agents.status,vicidial_live_agents.campaign_id,vicidial_users.user_group,vicidial_live_agents.comments,vicidial_live_agents.callerid,lead_id from vicidial_live_agents,vicidial_users where vicidial_live_agents.user=vicidial_users.user $search_SQL $LOGadmin_viewable_groupsSQL limit 10000000;";
+				$rslt=mysql_query($stmt, $link);
+				$rec_recs = mysql_num_rows($rslt);
+				if ($DB>0) {echo "DEBUG: user_group_status query - $rec_recs|$stmt\n";}
+				if ($rec_recs > 0)
+					{
+					while ($rec_recs > $k)
+						{
+						# user,status,campaign_id,user_group,comments,callerid,lead_id
+						$row=mysql_fetch_row($rslt);
+
+						if (eregi("READY|PAUSED",$row[1]))
+							{
+							if ($row[6] > 0)
+								{$row[1] =	'DISPO';}
+							}
+
+						if (eregi("INCALL",$row[1])) 
+							{
+							$stmtP="select count(*) from parked_channels where channel_group='$row[5]';";
+							$rsltP=mysql_query($stmtP,$link);
+							$rowP=mysql_fetch_row($rsltP);
+							$parked_channel = $rowP[0];
+
+							if ($parked_channel > 0)
+								{$row[1] =	'PARK';}
+							else
+								{
+								if (!ereg("$row[5]\|",$callerids))
+									{$row[1] =	'DEAD';}
+								}
+							}
+
+						if ($row[1]=='DEAD')
+							{$total_agents_dead++;}
+						if ($row[1]=='DISPO')
+							{$total_agents_dispo++;}
+						if ($row[1]=='PAUSED') 
+							{$total_agents_paused++;}
+						if ( (eregi("INCALL",$row[1])) or (eregi("QUEUE",$row[1])) or (eregi("PARK",$row[1]))) 
+							{$total_agents_in_calls++;}
+						if ( (eregi("READY",$row[1])) or (eregi("CLOSER",$row[1])) ) 
+							{$total_agents_waiting++;}
+
+						$total_agents++;
+						$k++;
+						}
+					}
+				$output .= "$user_groupsOUTPUT$DL$total_calls_waiting$DL$total_agents$DL$total_agents_in_calls$DL$total_agents_waiting$DL$total_agents_paused$DL$total_agents_dead$DL$total_agents_dispo\n";
+
+				echo "$output";
+
+				$result = 'SUCCESS';
+				$data = "$user|$user_groups|$stage";
+				$result_reason = "user_group_status AGENTS FOUND: $k";
+
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END user_group_status
+################################################################################
+
+
+
+
+
+################################################################################
+### in_group_status - exports in-group real-time stats
+################################################################################
+if ($function == 'in_group_status')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "in_group_status USER DOES NOT HAVE PERMISSION TO GET IN-GROUP INFO";
+			echo "$result: $result_reason: |$user|$allowed_user|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			$search_SQL='';
+			$search_ready=0;
+
+			require_once("functions.php");
+
+			if ( (strlen($in_groups)>0) and (strlen($in_groups)<10000) )
+				{
+				$in_groupsOUTPUT = preg_replace("/\|/",' ',$in_groups);
+				$in_groupsSQL = preg_replace("/\|/","','",$in_groups);
+				$search_SQL .= "where campaign_id IN('$in_groupsSQL')";
+				$agent_search_SQL .= "where group_id IN('$in_groupsSQL')";
+				$search_ready++;
+				}
+			if ($search_ready < 1)
+				{
+				$result = 'ERROR';
+				$result_reason = "in_group_status INVALID SEARCH PARAMETERS";
+				$data = "$user|$in_groups";
+				echo "$result: $result_reason: $data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level > 6 and view_reports='1' and active='Y';";
+				if ($DB) {$MAIN.="|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$LOGuser_group =			$row[0];
+
+				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+				if ($DB) {$MAIN.="|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$LOGallowed_campaigns =			$row[0];
+				$LOGadmin_viewable_groups =		$row[1];
+
+				$LOGadmin_viewable_groupsSQL='';
+				$whereLOGadmin_viewable_groupsSQL='';
+				if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+					{
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+					$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					}
+				$LOGallowed_campaignsSQL='';
+				$whereLOGallowed_campaignsSQL='';
+				$LOGallowed_callsSQL='';
+				if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+					{
+					$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+					$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+					$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+
+					$stmt="select group_id from vicidial_inbound_groups $whereLOGadmin_viewable_groupsSQL order by group_id;";
+					$rslt=mysql_query($stmt, $link);
+					$groups_to_print = mysql_num_rows($rslt);
+					$i=0;
+					$rawLOGallowed_ingroupsSQL='';
+					while ($i < $groups_to_print)
+						{
+						$row=mysql_fetch_row($rslt);
+						$rawLOGallowed_ingroupsSQL .=	"row[0]','";
+						$i++;
+						}
+					$LOGallowed_callsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL','$rawLOGallowed_ingroupsSQL')";
+					}
+
+
+				$k=0;
+				$output='';
+				$DLset=0;
+				if ($stage == 'csv')
+					{$DL = ',';   $DLset++;}
+				if ($stage == 'tab')
+					{$DL = "\t";   $DLset++;}
+				if ($stage == 'pipe')
+					{$DL = '|';   $DLset++;}
+				if ($DLset < 1)
+					{$DL='|';   $stage='pipe';}
+				if (strlen($time_format) < 1)
+					{$time_format = 'HF';}
+				if ($header == 'YES')
+					{$output .= 'ingroups' . $DL . 'total_calls' . $DL . 'calls_waiting' . $DL . 'agents_logged_in' . $DL . 'agents_in_calls' . $DL . 'agents_waiting' . $DL . 'agents_paused' . $DL . 'agents_in_dispo' . "\n";}
+
+				$total_agents=0;
+				$total_agents_in_calls=0;
+				$total_agents_waiting=0;
+				$total_agents_paused=0;
+				$total_agents_dead=0;
+				$total_agents_dispo=0;
+				$total_calls=0;
+				$total_calls_waiting=0;
+				$call_camps[0]='';
+				$call_types[0]='';
+
+				$callerids='';
+				$pausecode='';
+				$stmt="select callerid,status,campaign_id,call_type from vicidial_auto_calls $search_SQL $LOGallowed_callsSQL;";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$calls_to_list = mysql_num_rows($rslt);
+				if ($calls_to_list > 0)
+					{
+					$i=0;
+					while ($i < $calls_to_list)
+						{
+						$row=mysql_fetch_row($rslt);
+						$callerids .=	"$row[0]|";
+						if (eregi("LIVE",$row[1])) 
+							{$total_calls_waiting++;}
+						$call_camps[$i] = $row[2];
+						$call_types[$i] = $row[3];
+						$total_calls++;
+						$i++;
+						}
+					}
+
+				$users='';
+				$stmt="SELECT distinct user from vicidial_live_inbound_agents where group_id IN('$in_groupsSQL');";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$IG_users = mysql_num_rows($rslt);
+				if ($IG_users > 0)
+					{
+					$i=0;
+					while ($i < $IG_users)
+						{
+						$row=mysql_fetch_row($rslt);
+						$users .=	"$row[0]','";
+						$i++;
+						}
+					}
+
+				$k=0;
+				$stmt="select vicidial_live_agents.user,vicidial_live_agents.status,vicidial_live_agents.campaign_id,vicidial_users.user_group,vicidial_live_agents.comments,vicidial_live_agents.callerid,lead_id from vicidial_live_agents,vicidial_users where vicidial_live_agents.user=vicidial_users.user and vicidial_live_agents.user IN('$users') $LOGadmin_viewable_groupsSQL limit 10000000;";
+				$rslt=mysql_query($stmt, $link);
+				$rec_recs = mysql_num_rows($rslt);
+				if ($DB>0) {echo "DEBUG: in_group_status query - $rec_recs|$stmt\n";}
+				if ($rec_recs > 0)
+					{
+					while ($rec_recs > $k)
+						{
+						# user,status,campaign_id,user_group,comments,callerid,lead_id
+						$row=mysql_fetch_row($rslt);
+
+						if (eregi("READY|PAUSED",$row[1]))
+							{
+							if ($row[6] > 0)
+								{$row[1] =	'DISPO';}
+							}
+						if ($row[1]=='DISPO')
+							{$total_agents_dispo++;}
+						if ($row[1]=='PAUSED') 
+							{$total_agents_paused++;}
+						if ( (eregi("INCALL",$row[1])) or (eregi("QUEUE",$row[1])) or (eregi("PARK",$row[1]))) 
+							{$total_agents_in_calls++;}
+						if ( (eregi("READY",$row[1])) or (eregi("CLOSER",$row[1])) ) 
+							{$total_agents_waiting++;}
+
+						$total_agents++;
+						$k++;
+						}
+					}
+				$output .= "$in_groupsOUTPUT$DL$total_calls$DL$total_calls_waiting$DL$total_agents$DL$total_agents_in_calls$DL$total_agents_waiting$DL$total_agents_paused$DL$total_agents_dispo\n";
+
+				echo "$output";
+
+				$result = 'SUCCESS';
+				$data = "$user|$in_groups|$stage";
+				$result_reason = "in_group_status CALLS FOUND: $k";
+
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END in_group_status
 ################################################################################
 
 
