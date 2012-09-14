@@ -61,10 +61,11 @@
 # 120731-1206 - Allow dot in vendor_id
 # 120809-2338 - Added recording and webserver functions
 # 120819-1758 - Added webphone_url and call_agent functions
+# 120913-2039 - Added group_alias to transfer_conference function
 #
 
-$version = '2.6-27';
-$build = '120819-1758';
+$version = '2.6-28';
+$build = '120913-2039';
 
 $startMS = microtime();
 
@@ -2882,8 +2883,40 @@ if ($function == 'transfer_conference')
 						else
 							{
 							$SUCCESS++;
-							
-							$external_transferconf = "$value---$ingroup_choices---$phone_number---$consultative---";
+
+							$caller_id_number='';
+							if (strlen($group_alias)>1)
+								{
+								$stmt = "select caller_id_number from groups_alias where group_alias_id='$group_alias';";
+								if ($DB) {echo "$stmt\n";}
+								$rslt=mysql_query($stmt, $link);
+								$VDIG_cidnum_ct = mysql_num_rows($rslt);
+								if ($VDIG_cidnum_ct > 0)
+									{
+									$row=mysql_fetch_row($rslt);
+									$caller_id_number	= $row[0];
+									if ($caller_id_number < 4)
+										{
+										$result = 'ERROR';
+										$result_reason = "caller_id_number from group_alias is not valid";
+										$data = "$group_alias|$caller_id_number";
+										echo "$result: $result_reason - $agent_user|$data\n";
+										api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+										exit;
+										}
+									}
+								else
+									{
+									$result = 'ERROR';
+									$result_reason = "group_alias is not valid";
+									$data = "$group_alias";
+									echo "$result: $result_reason - $agent_user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								}
+
+							$external_transferconf = "$value---$ingroup_choices---$phone_number---$consultative------$group_alias---$caller_id_number";
 							}
 						}
 					}
@@ -2892,8 +2925,40 @@ if ($function == 'transfer_conference')
 				### START other transfers ###
 				if ( ($processed < 1) and (($value=='BLIND_TRANSFER') or ($value=='LEAVE_VM') or ($value=='DIAL_WITH_CUSTOMER') or ($value=='PARK_CUSTOMER_DIAL')) )
 					{
+					$caller_id_number='';
+					if (strlen($group_alias)>1)
+						{
+						$stmt = "select caller_id_number from groups_alias where group_alias_id='$group_alias';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $link);
+						$VDIG_cidnum_ct = mysql_num_rows($rslt);
+						if ($VDIG_cidnum_ct > 0)
+							{
+							$row=mysql_fetch_row($rslt);
+							$caller_id_number	= $row[0];
+							if ($caller_id_number < 4)
+								{
+								$result = 'ERROR';
+								$result_reason = "caller_id_number from group_alias is not valid";
+								$data = "$group_alias|$caller_id_number";
+								echo "$result: $result_reason - $agent_user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							}
+						else
+							{
+							$result = 'ERROR';
+							$result_reason = "group_alias is not valid";
+							$data = "$group_alias";
+							echo "$result: $result_reason - $agent_user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						}
+
 					$processed++;
-					$external_transferconf = "$value------$phone_number---NO---$dial_override";
+					$external_transferconf = "$value------$phone_number---NO---$dial_override---$group_alias---$caller_id_number";
 					$SUCCESS++;
 					}
 

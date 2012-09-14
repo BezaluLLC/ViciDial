@@ -383,10 +383,11 @@
 # 120518-1225 - Added transfer call to answering machine message with hotkey (LTMG or XFTAMM)
 # 120810-0056 - Added recording api function
 # 120819-1747 - Added vicidial_session_data logging for webphone api function
+# 120914-1357 - Added group_alias to transfer_conference function
 #
 
-$version = '2.6-351c';
-$build = '120819-1747';
+$version = '2.6-352c';
+$build = '120914-1357';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -3551,6 +3552,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var api_transferconf_number='';
 	var api_transferconf_consultative='';
 	var api_transferconf_override='';
+	var api_transferconf_group_alias='';
+	var api_transferconf_cid_number='';
 	var api_parkcustomer='';
 	var API_selected_xfergroup='';
 	var API_selected_callmenu='';
@@ -4478,6 +4481,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						api_transferconf_number = api_transferconf_values_array[2];
 						api_transferconf_consultative = api_transferconf_values_array[3];
 						api_transferconf_override = api_transferconf_values_array[4];
+						api_transferconf_group_alias = api_transferconf_values_array[5];
+						api_transferconf_cid_number = api_transferconf_values_array[6];
 						var APIpark_array = check_time_array[22].split("APIpark: ");
 						api_parkcustomer = APIpark_array[1];
 
@@ -4522,6 +4527,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 										{document.vicidial_form.xferoverride.checked=true;}
 									API_selected_xfergroup = api_transferconf_group;
 									document.vicidial_form.xfernumber.value = api_transferconf_number;
+									active_group_alias = api_transferconf_group_alias;
+									cid_choice = api_transferconf_cid_number;
 									SendManualDial('YES');
 									}
 								if (api_transferconf_function == 'PARK_CUSTOMER_DIAL')
@@ -4534,6 +4541,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 										{document.vicidial_form.xferoverride.checked=true;}
 									API_selected_xfergroup = api_transferconf_group;
 									document.vicidial_form.xfernumber.value = api_transferconf_number;
+									active_group_alias = api_transferconf_group_alias;
+									cid_choice = api_transferconf_cid_number;
 									xfer_park_dial();
 									}
 								external_transferconf_count=3;
