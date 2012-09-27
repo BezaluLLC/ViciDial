@@ -18,6 +18,7 @@
 #
 # changes:
 # 120909-2301 - First Build
+# 120924-0637 - Added log updating
 #
 
 $script = 'cm_status_dial.agi';
@@ -101,22 +102,22 @@ $sthA->finish();
 
 #############################################
 ##### START QUEUEMETRICS LOGGING LOOKUP #####
-#$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend FROM system_settings;";
-#$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-#$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-#$sthArows=$sthA->rows;
-#if ($sthArows > 0)
-#	{
-#	@aryA = $sthA->fetchrow_array;
-#	$enable_queuemetrics_logging =	$aryA[0];
-#	$queuemetrics_server_ip	=	$aryA[1];
-#	$queuemetrics_dbname =		$aryA[2];
-#	$queuemetrics_login=		$aryA[3];
-#	$queuemetrics_pass =		$aryA[4];
-#	$queuemetrics_log_id =		$aryA[5];
-#	$queuemetrics_eq_prepend =	$aryA[6];
-#	}
-#$sthA->finish();
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend FROM system_settings;";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$enable_queuemetrics_logging =	$aryA[0];
+	$queuemetrics_server_ip	=		$aryA[1];
+	$queuemetrics_dbname =			$aryA[2];
+	$queuemetrics_login=			$aryA[3];
+	$queuemetrics_pass =			$aryA[4];
+	$queuemetrics_log_id =			$aryA[5];
+	$queuemetrics_eq_prepend =		$aryA[6];
+	}
+$sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
 ###########################################
 
@@ -247,6 +248,11 @@ if ($outboundIVR > 0)
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$affected_rowsL = $dbhA->do($stmtA);
 	if ($AGILOG) {$agi_string = "--    VL update: |$affected_rowsL|$new_status|$dtmf|$lead_id|$context|";   &agi_output;}
+
+	$stmtA = "UPDATE vicidial_log SET status='$new_status' where lead_id='$lead_id' order by call_date desc limit 1;";
+		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+	$affected_rowsL = $dbhA->do($stmtA);
+	if ($AGILOG) {$agi_string = "--    VLOG update: |$affected_rowsL|$new_status|$dtmf|$lead_id|$context|";   &agi_output;}
 	}
 else
 	{
@@ -256,25 +262,26 @@ else
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$affected_rowsL = $dbhA->do($stmtA);
 		if ($AGILOG) {$agi_string = "--    VL update: |$affected_rowsL|$new_status|$dtmf|$lead_id|$context|";   &agi_output;}
+
+		$stmtA = "UPDATE vicidial_closer_log SET status='$new_status' where lead_id='$lead_id' order by call_date desc limit 1;";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$affected_rowsL = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    VCLOG update: |$affected_rowsL|$new_status|$dtmf|$lead_id|$context|";   &agi_output;}
 		}
 	}
 
 ### QueueMetrics logging if enabled
-#if ($enable_queuemetrics_logging > 0)
-#	{
-#	$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
-#	 or die "Couldn't connect to database: " . DBI->errstr;
-#
-#	if ($DBX) {print "CONNECTED TO QueueMetrics DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
-#
-#	if ($outboundIVR > 0)
-#		{$uniqueid = $caller_id;}
-#
-#	$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVR',data2='$context',serverid='$queuemetrics_log_id';";
-#		if ($AGILOG) {$agi_string = "|$stmtB|";   &agi_output;}
-#	$Baffected_rows = $dbhB->do($stmtB);
-#	$dbhB->disconnect();
-#	}
+if ($enable_queuemetrics_logging > 0)
+	{
+	$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+	 or die "Couldn't connect to database: " . DBI->errstr;
+	$stmtB = "UPDATE queue_log SET data1='$new_status' where call_id='$calleridname' and verb='CALLSTATUS' order by time_id desc limit 1;";
+		if ($AGILOG) {$agi_string = "|$stmtB|";   &agi_output;}
+	$Baffected_rows = $dbhB->do($stmtB);
+	$dbhB->disconnect();
+
+	if ($DBX) {print "QueueMetrics UPDATE:  $queuemetrics_server_ip|$queuemetrics_dbname|$calleridname|$new_status\n";}
+	}
 
 
 $sthA->finish();
