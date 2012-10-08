@@ -55,9 +55,10 @@
 # 110929-1423 - Added new format for abbreviated timezone in owner(pipe30tz) and list creation options
 # 120713-1009 - Added new --duplicate-tnm-delete option to check for a duplicate phone with different title and delete existing if found in same list
 # 120907-1109 - Added vote17csv format
+# 121005-0728 - Added twotab format
 #
 
-$version = '120907-1109';
+$version = '121005-0728';
 
 $secX = time();
 $MT[0]='';
@@ -216,6 +217,9 @@ if (length($ARGV[0])>1)
 		print "vote17csv:\n";
 		print "Voter ID,County Code,Name Last,Gender,Race,Birth Date,Party Affiliation,Precinct,Congressional District,House District,Senate District,County Commission District,School Board District,Age Bracket,_2010_GEN,_2012_PRI_A_Date,Phone_10digit\n";
 		print "\"110306742\",\"DAD\",\"Da Silva Ramos\",\"F\",\"5\",\"06/12/1950\",\"DEM\",\"100\",\"23\",\"0\",\"0\",\"0\",\"0\",\"4\",\"A\",\"\",\"0033559433\"\n\n";
+		print "twotab:\n";
+		print "UniqueID,PhoneNumber\n";
+		print "110306742,3125556666\n\n";
 		print "dccsv43, dccsvref51, dccsv52 and dccsvref52:\n";
 		print "---format too confusing to list in the help screen---\n\n";
 
@@ -783,6 +787,45 @@ foreach(@FILES)
 				$state =				$m[4];		chomp($state);
 				$province =				'';
 				$postal_code =			$m[5];		chomp($postal_code);
+				$country =				'USA';
+				$gender =				'U';
+				$date_of_birth =		'0000-00-00';
+				$alt_phone =			'';
+				$email =				'';
+				$security_phrase =		'';
+				$comments =				'';
+				$called_count =			0;
+				$status =				'NEW';
+
+				$format_set++;
+				}
+
+		# This is the format for the twotab lead files
+		#14234243,3125556677
+			if ( ($format =~ /twotab/) && ($format_set < 1) )
+				{
+				@name=@MT;
+				$raw_number =~ s/\'|\r|\n|\l//gi;
+				$raw_number =~ s/,|\t/\|/gi;
+				@m = split(/\|/, $raw_number);
+				$vendor_lead_code =		$m[0];
+				$source_id =			'';
+				$list_id =				'995';
+				$phone_code =			'1';
+				$phone_number =			$m[1];		chomp($phone_number);	$phone_number =~ s/\D//gi;
+					$USarea = 			substr($phone_number, 0, 3);
+				$title =				'';
+				$full_name =			'';
+				$first_name =			'';
+				$last_name =			'';
+				$middle_initial =		'';
+				$address1 =				'';
+				$address2 =				'';
+				$address3 =				'';
+				$city =					'';
+				$state =				'';
+				$province =				'';
+				$postal_code =			'';
 				$country =				'USA';
 				$gender =				'U';
 				$date_of_birth =		'0000-00-00';
