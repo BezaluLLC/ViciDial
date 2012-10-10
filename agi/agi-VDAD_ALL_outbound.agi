@@ -95,7 +95,7 @@
 # 111219-2256 - Added max stats updating
 # 120529-2112 - Added safe_harbor_audio_field campaign option
 # 120621-0726 - Changed survey opt-in non-agent qm logging to log connection to VDAD agent
-# 121009-1458 - Changed survey method HANGUP to not wait for digits, added LCRERR Local channel logging
+# 121009-1458 - Changed survey method HANGUP to not wait for digits, added LRERR Local channel logging
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -363,14 +363,14 @@ if ( ($channel =~ /Local/i) && ($AST_ver !~ /^1\.0\.8|^1\.0\.9/) )
 			}
 		$sthA->finish();
 
-		if ($AGILOG) {$agi_string = "LLLLLLLLL   LOCAL CHANNEL PRIORITY 4 LOGGING: (this is usually caused by carrier issues) LCRERR $priority";   &agi_output;}
+		if ($AGILOG) {$agi_string = "LLLLLLLLL   LOCAL CHANNEL PRIORITY 4 LOGGING: (this is usually caused by carrier issues) LRERR $priority";   &agi_output;}
 
 		# flag the lead as being Answered or Picked up
-		$stmtA = "UPDATE vicidial_list set status='LCRERR' where lead_id='$CIDlead_id' and status NOT IN($SCstatuses);";
+		$stmtA = "UPDATE vicidial_list set status='LRERR' where lead_id='$CIDlead_id' and status NOT IN($SCstatuses);";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='01100';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-		if ($AGILOG) {$agi_string = "--    LCRERR vicidial_list LCRERR update: |$affected_rows|$uniqueid|$CIDlead_id|";   &agi_output;}
+		if ($AGILOG) {$agi_string = "--    LRERR vicidial_list LRERR update: |$affected_rows|$uniqueid|$CIDlead_id|";   &agi_output;}
 
 		$xCLlist_id=0;
 		$stmtA = "SELECT list_id,security_phrase from vicidial_list where lead_id='$CIDlead_id' limit 1;";
@@ -404,17 +404,17 @@ if ( ($channel =~ /Local/i) && ($AST_ver !~ /^1\.0\.8|^1\.0\.9/) )
 			}
 		$sthA->finish();
 
-		$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,alt_dial,list_id) values('$uniqueid','$CIDlead_id','$VDADcampaign','$SQLdate','$now_date_epoch','LCRERR','$VDADphone_code','$VDADphone','VDAD','N','$VDADalt_dial','$xCLlist_id')";
+		$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,alt_dial,list_id) values('$uniqueid','$CIDlead_id','$VDADcampaign','$SQLdate','$now_date_epoch','LRERR','$VDADphone_code','$VDADphone','VDAD','N','$VDADalt_dial','$xCLlist_id')";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='01103';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 
-		if ($AGILOG) {$agi_string = "--    LCRERR : |$VDADlead_id|$CIDlead_id|insert to vicidial_log: $uniqueid";   &agi_output;}
+		if ($AGILOG) {$agi_string = "--    LRERR : |$VDADlead_id|$CIDlead_id|insert to vicidial_log: $uniqueid";   &agi_output;}
 
 		$stmtA = "INSERT INTO vicidial_log_extended set uniqueid='$uniqueid',server_ip='$VARserver_ip',call_date='$SQLdate',lead_id = '$CIDlead_id',caller_code='$callerid',custom_call_id='';";
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='01104';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-		if ($AGILOG) {$agi_string = "--  LCRERR VLE insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
+		if ($AGILOG) {$agi_string = "--  LRERR VLE insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
 		}
 	exit;
 	}

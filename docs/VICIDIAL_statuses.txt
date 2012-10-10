@@ -61,3 +61,4 @@ IVRXFR - Outbound drop to Call Menu
 SVYCLM - Survey sent to Call Menu - Survey outbound campaign status only
 MLINAT - Multi-Lead auto-alt-dial lead set to inactive
 MAXCAL - Max Calls drop from in-group
+LRERR - Outbound Local Channel Resolution Error
