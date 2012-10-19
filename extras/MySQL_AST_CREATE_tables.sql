@@ -83,6 +83,7 @@ webphone_auto_answer ENUM('Y','N') default 'Y',
 voicemail_timezone VARCHAR(30) default 'eastern',
 voicemail_options VARCHAR(255) default '',
 user_group VARCHAR(20) default '---ALL---',
+voicemail_greeting VARCHAR(100) default '',
 index (server_ip),
 unique index extenserver (extension, server_ip)
 );
@@ -130,7 +131,8 @@ conf_secret VARCHAR(20) default 'test',
 external_server_ip VARCHAR(100) default '',
 custom_dialplan_entry TEXT,
 active_twin_server_ip VARCHAR(15) default '',
-user_group VARCHAR(20) default '---ALL---'
+user_group VARCHAR(20) default '---ALL---',
+audio_store_purge TEXT
 );
 
 CREATE UNIQUE INDEX server_id on servers (server_id);
@@ -1484,7 +1486,9 @@ expanded_list_stats ENUM('0','1') default '1',
 contacts_enabled ENUM('0','1') default '0',
 svn_version VARCHAR(100) default '',
 call_menu_qualify_enabled ENUM('0','1') default '0',
-admin_list_counts ENUM('0','1') default '1'
+admin_list_counts ENUM('0','1') default '1',
+allow_voicemail_greeting ENUM('0','1') default '0',
+audio_store_purge TEXT
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2205,7 +2209,8 @@ email VARCHAR(100),
 delete_vm_after_email ENUM('N','Y') default 'N',
 voicemail_timezone VARCHAR(30) default 'eastern',
 voicemail_options VARCHAR(255) default '',
-user_group VARCHAR(20) default '---ALL---'
+user_group VARCHAR(20) default '---ALL---',
+voicemail_greeting VARCHAR(100) default ''
 );
 
 CREATE TABLE vicidial_user_territory_log (
@@ -2908,4 +2913,4 @@ INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,cate
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('MAXCAL','Inbound Max Calls Drop','N','Y','UNDEFINED','N','N','N','N','N','N','N');
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('LRERR','Outbound Local Channel Res Err','N','Y','UNDEFINED','N','N','N','N','N','N','N');
 
-UPDATE system_settings SET db_schema_version='1327',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1328',db_schema_update_date=NOW();

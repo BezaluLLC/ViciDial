@@ -70,3 +70,13 @@ ALTER TABLE vicidial_campaigns MODIFY agent_dial_owner_only ENUM('NONE','USER','
 
 UPDATE system_settings SET db_schema_version='1327',db_schema_update_date=NOW() where db_schema_version < 1327;
 
+ALTER TABLE phones ADD voicemail_greeting VARCHAR(100) default '';
+
+ALTER TABLE vicidial_voicemail ADD voicemail_greeting VARCHAR(100) default '';
+
+ALTER TABLE system_settings ADD allow_voicemail_greeting ENUM('0','1') default '0';
+ALTER TABLE system_settings ADD audio_store_purge TEXT;
+
+ALTER TABLE servers ADD audio_store_purge TEXT;
+
+UPDATE system_settings SET db_schema_version='1328',db_schema_update_date=NOW() where db_schema_version < 1328;

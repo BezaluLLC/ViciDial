@@ -17,6 +17,11 @@ Admin List Counts||
 This setting allows you to disable the list counts that appear on the Lists listing and the Campaign modify screens. Default is 1 for enabled||
 The Y_API_LAUNCH option can be used with the agent API to launch the webphone in a separate Iframe or window||
 If the option has BLANK at the end, then users are allowed to dial leads with no owner defined in addition to owner defined leads||
+Voicemail Greeting||
+This optional setting allows you to define a voicemail greeting audio file from the audio store. Default is blank||
+Allow Voicemail Greeting Chooser||
+If this setting is enabled it will allow you to choose an audio file from the audio store to be played as the voicemail greeting to a specific voicemail box. Default is 0 for disabled||
+File to Delete||
 
 
 ############################################################ CLIENT

@@ -74,6 +74,7 @@
 # 120512-2332 - Added loopback dialaround for ringing of calls
 # 120706-1325 - Added Call Menu qualify SQL option
 # 120820-1026 - Added clearing of vicidial_session_data table at end of day
+# 121019-1021 - Added voicemail greeting option
 #
 
 $DB=0; # Debug flag
@@ -1147,7 +1148,7 @@ if ($timeclock_end_of_day_NOW > 0)
 ################################################################################
 
 ##### Get the settings from system_settings #####
-$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled FROM system_settings;";
+$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled,allow_voicemail_greeting FROM system_settings;";
 #	print "$stmtA\n";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1163,9 +1164,30 @@ if ($sthArows > 0)
 	$SSvoicemail_timezones =			$aryA[5];
 	$SSdefault_voicemail_timezone =		$aryA[6];
 	$SScall_menu_qualify_enabled =		$aryA[7];
+	$SSallow_voicemail_greeting =		$aryA[8];
 	}
 $sthA->finish();
 if ($DBXXX > 0) {print "SYSTEM SETTINGS:     $sounds_central_control_active|$active_voicemail_server|$SScustom_dialplan_entry|$SSdefault_codecs\n";}
+
+##### Get the settings for this server's server_ip #####
+$stmtA = "SELECT active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,asterisk_version,sounds_update,conf_secret,custom_dialplan_entry FROM servers where server_ip='$server_ip';";
+#	print "$stmtA\n";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$active_asterisk_server	=		$aryA[0];
+	$generate_vicidial_conf	=		$aryA[1];
+	$rebuild_conf_files	=			$aryA[2];
+	$asterisk_version =				$aryA[3];
+	$sounds_update =				$aryA[4];
+	$self_conf_secret =				$aryA[5];
+	$SERVERcustom_dialplan_entry =	$aryA[6];
+	}
+$sthA->finish();
+
 if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_server)) eq (length($server_ip))) )
 	{
 	$THISserver_voicemail=1;
@@ -1332,6 +1354,72 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 		#####  END Parsing of the voicemail.conf file
 		################################################################################
 		}
+	if (($SSallow_voicemail_greeting > 0) && ($sounds_update =~ /Y/) )
+		{
+		$stmtA = "SELECT voicemail_id,voicemail_greeting,count(*) FROM phones where voicemail_greeting != '' and voicemail_greeting is not NULL and active='Y' group by voicemail_id order by voicemail_id limit 10000;";
+		#	print "$stmtA\n";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$vmb_ct=0;
+		while ($sthArows > $vmb_ct)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$VG_voicemail_id =				$aryA[0];
+			$VG_voicemail_greeting =		$aryA[1];
+			
+			$gsm='.gsm';
+			$wav='.wav';
+			$audio_file_copied=0;
+			if ( -e ("/var/lib/asterisk/sounds/$VG_voicemail_greeting$wav"))
+				{
+				`cp /var/lib/asterisk/sounds/$VG_voicemail_greeting$wav /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail$wav`;
+				$audio_file_copied++;
+				}
+			if ( -e ("/var/lib/asterisk/sounds/$VG_voicemail_greeting$gsm"))
+				{
+				`cp /var/lib/asterisk/sounds/$VG_voicemail_greeting$gsm /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail$gsm`;
+				$audio_file_copied++;
+				}
+			if ($audio_file_copied < 1)
+				{if ($DB) {print "no voicemail greeting copied: $VG_voicemail_id|$VG_voicemail_greeting\n";}}
+			if ($DBX>0) {print "Custom Voicemail Greeting: $VG_voicemail_id|$VG_voicemail_greeting|$audio_file_copied\n";}
+
+			$vmb_ct++;
+			}
+
+		$stmtA = "SELECT voicemail_id,voicemail_greeting,count(*) FROM vicidial_voicemail where voicemail_greeting != '' and voicemail_greeting is not NULL and active='Y' group by voicemail_id order by voicemail_id limit 10000;";
+		#	print "$stmtA\n";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$vmb_ct=0;
+		while ($sthArows > $vmb_ct)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$VG_voicemail_id =				$aryA[0];
+			$VG_voicemail_greeting =		$aryA[1];
+			
+			$gsm='.gsm';
+			$wav='.wav';
+			$audio_file_copied=0;
+			if ( -e ("/var/lib/asterisk/sounds/$VG_voicemail_greeting$wav"))
+				{
+				`cp /var/lib/asterisk/sounds/$VG_voicemail_greeting$wav /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail$wav`;
+				$audio_file_copied++;
+				}
+			if ( -e ("/var/lib/asterisk/sounds/$VG_voicemail_greeting$gsm"))
+				{
+				`cp /var/lib/asterisk/sounds/$VG_voicemail_greeting$gsm /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail$gsm`;
+				$audio_file_copied++;
+				}
+			if ($audio_file_copied < 1)
+				{if ($DB) {print "no voicemail greeting copied: $VG_voicemail_id|$VG_voicemail_greeting\n";}}
+			if ($DBX>0) {print "Custom Voicemail Greeting: $VG_voicemail_id|$VG_voicemail_greeting|$audio_file_copied\n";}
+
+			$vmb_ct++;
+			}
+		}
 	}
 else
 	{
@@ -1347,26 +1435,6 @@ else
 		}
 	$sthA->finish();
 	}
-
-##### Get the settings for this server's server_ip #####
-$stmtA = "SELECT active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,asterisk_version,sounds_update,conf_secret,custom_dialplan_entry FROM servers where server_ip='$server_ip';";
-#	print "$stmtA\n";
-$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-$sthArows=$sthA->rows;
-if ($sthArows > 0)
-	{
-	@aryA = $sthA->fetchrow_array;
-	$active_asterisk_server	=		$aryA[0];
-	$generate_vicidial_conf	=		$aryA[1];
-	$rebuild_conf_files	=			$aryA[2];
-	$asterisk_version =				$aryA[3];
-	$sounds_update =				$aryA[4];
-	$self_conf_secret =				$aryA[5];
-	$SERVERcustom_dialplan_entry =	$aryA[6];
-	}
-$sthA->finish();
-
 
 if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($rebuild_conf_files =~ /Y/) ) 
 	{
@@ -1501,8 +1569,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		{
 		$Vext .= "; Voicemail Extensions:\n";
 		$Vext .= "exten => _85026666666666.,1,Wait(1)\n";
-		$Vext .= "exten => _85026666666666.,2,Voicemail(\${EXTEN:14}|u)\n";
-		$Vext .= "exten => _85026666666666.,3,Hangup\n";
+		$Vext .= "exten => _85026666666666.,n,Voicemail(\${EXTEN:14},u)\n";
+		$Vext .= "exten => _85026666666666.,n,Hangup\n";
 		$Vext .= "exten => 8500,1,VoicemailMain\n";
 		$Vext .= "exten => 8500,2,Goto(s,6)\n";
 		if ($asterisk_version =~ /^1.2/)

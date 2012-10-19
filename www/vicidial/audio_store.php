@@ -14,10 +14,11 @@
 # 120525-0739 - Added yet more filename filtering
 # 120529-1345 - Filename filter fix
 # 120531-1747 - Another filtering fix
+# 121019-0816 - Added audio file delete process
 #
 
-$version = '2.4-8';
-$build = '120531-1747';
+$version = '2.6-9';
+$build = '121019-0816';
 
 $MT[0]='';
 
@@ -30,6 +31,8 @@ $audiofile=$_FILES["audiofile"];
 	$AF_path = $_FILES['audiofile']['tmp_name'];
 if (isset($_GET["submit_file"]))			{$submit_file=$_GET["submit_file"];}
 	elseif (isset($_POST["submit_file"]))	{$submit_file=$_POST["submit_file"];}
+if (isset($_GET["delete_file"]))			{$delete_file=$_GET["delete_file"];}
+	elseif (isset($_POST["delete_file"]))	{$delete_file=$_POST["delete_file"];}
 if (isset($_GET["DB"]))						{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))			{$DB=$_POST["DB"];}
 if (isset($_GET["overwrite"]))				{$overwrite=$_GET["overwrite"];}
@@ -135,12 +138,19 @@ if ( (!preg_match("/\|$ip\|/", $server_ips)) and ($formIPvalid < 1) )
 	$PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
 	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
+	$delete_file = ereg_replace("[^-\._0-9a-zA-Z]","",$delete_file);
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and ( (modify_campaigns='1') or (modify_audiostore='1') )";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$auth=$row[0];
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 8 and ( (ast_admin_access='1') and (modify_audiostore='1') )";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$auth_delete=$row[0];
 
 	if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 		{
@@ -150,6 +160,32 @@ if ( (!preg_match("/\|$ip\|/", $server_ips)) and ($formIPvalid < 1) )
 		exit;
 		}
 	}
+
+
+
+$delete_message='';
+### delete a file from the audio store
+if ( ($action == "DELETE") and ($auth_delete > 0) )
+	{
+	if (strlen($delete_file) > 0)
+		{
+		$gsm='.gsm';
+		$wav='.wav';
+		unlink("$WeBServeRRooT/$sounds_web_directory/$delete_file$gsm");
+		unlink("$WeBServeRRooT/$sounds_web_directory/$delete_file$wav");
+
+		$stmt="UPDATE servers SET sounds_update='Y',audio_store_purge=CONCAT(audio_store_purge,\"$delete_file\\n\");";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+
+		$stmt="UPDATE system_settings SET audio_store_purge=CONCAT(audio_store_purge,\"$delete_file\\n\");";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+
+		$delete_message = "AUDIO FILE SET FOR DELETION: $delete_file\n";
+		}
+	}
+
 
 
 ### list all files in sounds web directory
@@ -304,6 +340,8 @@ $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIG
 $secX = date("U");
 $pulldate0 = "$year-$mon-$mday $hour:$min:$sec";
 
+echo "$delete_message";
+
 if ($action == "MANUALUPLOAD")
 	{
 	if ($audiofile) 
@@ -355,7 +393,6 @@ if ($action == "MANUALUPLOAD")
 
 <form action=<?php echo $PHP_SELF ?> method=post enctype="multipart/form-data">
 <input type=hidden name=action value="MANUALUPLOAD">
-<input type=hidden name=sample_prompt id=sample_prompt value="">
 
 <table align=center width="700" border=0 cellpadding=5 cellspacing=0 bgcolor=#D9E6FE>
   <tr>
@@ -367,16 +404,30 @@ if ($action == "MANUALUPLOAD")
   </tr>
   <tr><td align=left><font size=1> &nbsp; </font></td><td align=right><font size=1>Audio Store- &nbsp; &nbsp; VERSION: <?php echo $version ?> &nbsp; &nbsp; BUILD: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
 </table>
+</form>
 <BR><BR>
 <CENTER><B>We STRONGLY recommend uploading only 16bit Mono 8k PCM WAV audio files(.wav)</B>
 <BR><BR><font size=1>All spaces will be stripped from uploaded audio file names</font><BR><BR>
-<B><a href="javascript:launch_chooser('sample_prompt','date',30);">audio file list</a></CENTER>
+<B><a href="javascript:launch_chooser('delete_file','date',30);">audio file list</a></CENTER>
 
 
 
 <?php
+echo "<center><BR><BR>File to Delete:<BR>\n";
+echo "<form action=$PHP_SELF method=post>\n";
+echo "<input type=hidden name=action value=\"DELETE\">\n";
+if ($auth_delete > 0)
+	{
+	echo "<input type=text size=50 maxlength=100 name=delete_file id=delete_file value=\"\">\n";
+	echo "<input type=hidden name=DB value=\"$DB\">\n";
+	echo "<input type=submit name=submit value=submit>\n";
+	}
+else
+	{
+	echo "<input type=hidden name=delete_file id=delete_file value=\"\">\n";
+	}
+echo "</form><BR><BR><BR>\n";
 
-echo "<BR><BR><BR><BR><BR><BR>\n";
 
 echo "</B></B><br><br><a href=\"admin.php?ADD=720000000000000&category=AUDIOSTORE&stage=manualupload\">Click here to see a log of the uploads to the audio store</FONT>\n";
 

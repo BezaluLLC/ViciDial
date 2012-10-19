@@ -15,6 +15,7 @@
 # 100621-1018 - Added admin_web_directory variable use
 # 100824-0032 - Fixed issue with first MoH file being skipped when playing in non-random order
 # 101217-2137 - Small fix for admin directories not directly off of the webroot
+# 121019-0729 - Added audio_store_purge feature
 #
 
 # constants
@@ -163,7 +164,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 
 ### Grab Server values from the database
-$stmtA = "SELECT active_asterisk_server FROM servers where server_ip = '$VARserver_ip';";
+$stmtA = "SELECT active_asterisk_server,audio_store_purge FROM servers where server_ip = '$VARserver_ip';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -171,6 +172,7 @@ if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
 	$active_asterisk_server =	$aryA[0];
+	$audio_store_purge =		$aryA[1];
 	}
 $sthA->finish();
 
@@ -205,6 +207,37 @@ $stmtA="UPDATE servers SET sounds_update='N' where server_ip='$VARserver_ip';";
 $affected_rows = $dbhA->do($stmtA);
 
 
+$gsm='.gsm';
+$wav='.wav';
+$ulaw='.ulaw';
+$audio_file_deleted=0;
+if (length($audio_store_purge) > 0)
+	{
+	if ($DB) {print "starting audio file deletion process...\n";}
+
+	$stmtA="UPDATE servers SET audio_store_purge='' where server_ip='$VARserver_ip';";
+	$affected_rows = $dbhA->do($stmtA);
+
+	@purge_data = split(/\n/, $audio_store_purge);
+	$i=0;
+	foreach(@purge_data)
+		{
+		if (length($purge_data[$i])>0)
+			{
+			if ( -e ("/var/lib/asterisk/sounds/$purge_data[$i]$wav"))
+				{`rm -f /var/lib/asterisk/sounds/$purge_data[$i]$wav`;		$audio_file_deleted++;}
+			if ( -e ("/var/lib/asterisk/sounds/$purge_data[$i]$gsm"))
+				{`rm -f /var/lib/asterisk/sounds/$purge_data[$i]$gsm`;		$audio_file_deleted++;}
+			if ( -e ("/var/lib/asterisk/sounds/$purge_data[$i]$ulaw"))
+				{`rm -f /var/lib/asterisk/sounds/$purge_data[$i]$ulaw`;		$audio_file_deleted++;}
+			if ($audio_file_deleted < 1)
+				{if ($DB) {print "no audio file deleted: $purge_data[$i]|$i\n";}}
+			if ($DBX>0) {print "audio file delete process: $purge_data[$i]|$i|$audio_file_deleted\n";}
+			}
+		$i++;
+		}
+	if ($DB) {print "total audio files deleted: $audio_file_deleted|$i\n";}
+	}
 
 
 ### find wget binary
