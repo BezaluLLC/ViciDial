@@ -312,10 +312,11 @@
 # 120619-0616 - Corrected xfer_log logging of manual preview dialed calls
 # 120731-1205 - Small fix for vendor_lead_code population on new lead during manual dial
 # 120831-1438 - Added vicidial_dial_log logging of outbound phone calls
+# 121018-2320 - Added blank option to owner only dialing
 #
 
-$version = '2.6-210';
-$build = '120831-1438';
+$version = '2.6-211';
+$build = '121018-2320';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=443;
 $one_mysql_log=0;
@@ -2024,6 +2025,12 @@ if ($ACTION == 'manDiaLnextCaLL')
 						}
 					if (eregi("USER",$agent_dial_owner_only)) {$adooSQL = "and owner='$user'";}
 					if (eregi("USER_GROUP",$agent_dial_owner_only)) {$adooSQL = "and owner='$user_group'";}
+					if (preg_match("/_BLANK/",$agent_dial_owner_only))
+						{
+						$adooSQLa = preg_replace("/^and /",'',$adooSQL);
+						$blankSQL = "and ( ($adooSQLa) or (owner='') or (owner is NULL) )";
+						$adooSQL = $blankSQL;
+						}
 
 					if ($lead_order_randomize == 'Y') {$last_order = "RAND()";}
 					else 

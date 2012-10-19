@@ -771,7 +771,7 @@ grab_calls_in_queue ENUM('Y','N') default 'N',
 call_requeue_button ENUM('Y','N') default 'N',
 pause_after_each_call ENUM('Y','N') default 'N',
 no_hopper_dialing ENUM('Y','N') default 'N',
-agent_dial_owner_only ENUM('NONE','USER','TERRITORY','USER_GROUP') default 'NONE',
+agent_dial_owner_only ENUM('NONE','USER','TERRITORY','USER_GROUP','USER_BLANK','TERRITORY_BLANK','USER_GROUP_BLANK') default 'NONE',
 agent_display_dialable_leads ENUM('Y','N') default 'N',
 web_form_address_two TEXT,
 waitforsilence_options VARCHAR(25) default '',
@@ -2908,4 +2908,4 @@ INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,cate
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('MAXCAL','Inbound Max Calls Drop','N','Y','UNDEFINED','N','N','N','N','N','N','N');
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('LRERR','Outbound Local Channel Res Err','N','Y','UNDEFINED','N','N','N','N','N','N','N');
 
-UPDATE system_settings SET db_schema_version='1326',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1327',db_schema_update_date=NOW();

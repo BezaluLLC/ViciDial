@@ -16,6 +16,7 @@ This field allows you to input SQL - Structured Query Language - database fragme
 Admin List Counts||
 This setting allows you to disable the list counts that appear on the Lists listing and the Campaign modify screens. Default is 1 for enabled||
 The Y_API_LAUNCH option can be used with the agent API to launch the webphone in a separate Iframe or window||
+If the option has BLANK at the end, then users are allowed to dial leads with no owner defined in addition to owner defined leads||
 
 
 ############################################################ CLIENT

@@ -3142,12 +3142,13 @@ else
 # 120810-1018 - Added Admin List Counts system settings option
 # 120820-1104 - Added is_webphone option Y_API_LAUNCH
 # 120831-1523 - Added vicidial_dial_log outbound call logging
+# 121018-2321 - Added blank option to owner only dialing
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-375a';
-$build = '120831-1523';
+$admin_version = '2.6-376a';
+$build = '121018-2321';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -5091,7 +5092,7 @@ if ($ADD==99999)
 		<BR>
 		<A NAME="vicidial_campaigns-agent_dial_owner_only">
 		<BR>
-		<B>Owner Only Dialing -</B> If This is enabled, the agent will only receive leads that they are within the ownership parameters for. If this is set to USER then the agent must be the user defined in the database as the owner of this lead. If this is set to TERRITORY then the owner of the lead must match the territory listed in the User Modification screen for this agent. If this is set to USER_GROUP then the owner of the lead must match the user group that the agent is a member of. For this feature to work the dial method must be set to MANUAL or INBOUND_MAN and No Hopper Dialing must be enabled. Default is NONE for disabled.
+		<B>Owner Only Dialing -</B> If This is enabled, the agent will only receive leads that they are within the ownership parameters for. If this is set to USER then the agent must be the user defined in the database as the owner of this lead. If this is set to TERRITORY then the owner of the lead must match the territory listed in the User Modification screen for this agent. If this is set to USER_GROUP then the owner of the lead must match the user group that the agent is a member of. For this feature to work the dial method must be set to MANUAL or INBOUND_MAN and No Hopper Dialing must be enabled. Default is NONE for disabled. If the option has BLANK at the end, then users are allowed to dial leads with no owner defined in addition to owner defined leads.
 
 		<?php
 		if ($SSuser_territories_active > 0)
@@ -21626,7 +21627,7 @@ if ($ADD==31)
 
 			echo "<tr bgcolor=#B6D3FC><td align=right>No Hopper Dialing: </td><td align=left><select size=1 name=no_hopper_dialing><option>Y</option><option>N</option><option SELECTED>$no_hopper_dialing</option></select>$NWB#vicidial_campaigns-no_hopper_dialing$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>Owner Only Dialing: </td><td align=left><select size=1 name=agent_dial_owner_only><option>NONE</option><option>USER</option><option>TERRITORY</option><option>USER_GROUP</option><option SELECTED>$agent_dial_owner_only</option></select>$NWB#vicidial_campaigns-agent_dial_owner_only$NWE</td></tr>\n";
+			echo "<tr bgcolor=#B6D3FC><td align=right>Owner Only Dialing: </td><td align=left><select size=1 name=agent_dial_owner_only><option>NONE</option><option>USER</option><option>TERRITORY</option><option>USER_GROUP</option><option>USER_BLANK</option><option>TERRITORY_BLANK</option><option>USER_GROUP_BLANK</option><option SELECTED>$agent_dial_owner_only</option></select>$NWB#vicidial_campaigns-agent_dial_owner_only$NWE</td></tr>\n";
 
 			if ($SSuser_territories_active > 0)
 				{

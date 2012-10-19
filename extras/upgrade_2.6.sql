@@ -65,3 +65,8 @@ CREATE TABLE vicidial_dial_log_archive LIKE vicidial_dial_log;
 CREATE UNIQUE INDEX vddla on vicidial_dial_log_archive (caller_code,call_date);
 
 UPDATE system_settings SET db_schema_version='1326',db_schema_update_date=NOW() where db_schema_version < 1326;
+
+ALTER TABLE vicidial_campaigns MODIFY agent_dial_owner_only ENUM('NONE','USER','TERRITORY','USER_GROUP','USER_BLANK','TERRITORY_BLANK','USER_GROUP_BLANK') default 'NONE';
+
+UPDATE system_settings SET db_schema_version='1327',db_schema_update_date=NOW() where db_schema_version < 1327;
+
