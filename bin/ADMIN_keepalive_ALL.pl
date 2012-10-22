@@ -1191,6 +1191,7 @@ $sthA->finish();
 if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_server)) eq (length($server_ip))) )
 	{
 	$THISserver_voicemail=1;
+	if ($DB) {print "   voicemail server configuration\n";}
 
 	if ( !-e ('/etc/asterisk/voicemail.conf'))
 		{`echo -e \"; END OF FILE\n\" > /etc/asterisk/voicemail.conf`;}
@@ -1371,6 +1372,11 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 			$gsm='.gsm';
 			$wav='.wav';
 			$audio_file_copied=0;
+			if ( !-e ("/var/spool/asterisk/voicemail/default/$VG_voicemail_id"))
+				{
+				`mkdir /var/spool/asterisk/voicemail/default/$VG_voicemail_id`;
+				if ($DB) {print "voicemail directory created: /var/spool/asterisk/voicemail/default/$VG_voicemail_id/\n";}
+				}
 			if ( -e ("/var/lib/asterisk/sounds/$VG_voicemail_greeting$wav"))
 				{
 				`cp /var/lib/asterisk/sounds/$VG_voicemail_greeting$wav /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail$wav`;
@@ -1403,6 +1409,11 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 			$gsm='.gsm';
 			$wav='.wav';
 			$audio_file_copied=0;
+			if ( !-e ("/var/spool/asterisk/voicemail/default/$VG_voicemail_id"))
+				{
+				`mkdir /var/spool/asterisk/voicemail/default/$VG_voicemail_id`;
+				if ($DB) {print "voicemail directory created: /var/spool/asterisk/voicemail/default/$VG_voicemail_id/\n";}
+				}
 			if ( -e ("/var/lib/asterisk/sounds/$VG_voicemail_greeting$wav"))
 				{
 				`cp /var/lib/asterisk/sounds/$VG_voicemail_greeting$wav /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail$wav`;

@@ -21045,7 +21045,7 @@ if ($ADD==31)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Campaign Call Date: </td><td align=left>$campaign_calldate &nbsp; $NWB#vicidial_campaigns-campaign_calldate$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-			horizontal_bar_chart($campaign_id,'8','campaign',$link,'total_calls','call count',1);
+			horizontal_bar_chart($campaign_id,'8','campaign',$link,'total_calls','call count',1,'','');
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#8EBCFD><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option>N</option><option SELECTED>$campaign_active</option></select>$NWB#vicidial_campaigns-active$NWE</td></tr>\n";
@@ -25338,7 +25338,7 @@ if ($ADD==3111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Calldate: </td><td align=left>$group_calldate$NWB#vicidial_inbound_groups-group_calldate$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-			horizontal_bar_chart($group_id,'8','in-group',$link,'total_calls','call count',1);
+			horizontal_bar_chart($group_id,'8','in-group',$link,'total_calls','call count',1,'','');
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Admin User Group: </td><td align=left><select size=1 name=user_group>\n";
@@ -27106,7 +27106,7 @@ if ($ADD==31111)
 			echo "<tr bgcolor=#B6D3FC><td align=right>On-Hook Ring Time: </td><td align=left><input type=text name=on_hook_ring_time size=5 maxlength=4 value=\"$on_hook_ring_time\"> $NWB#vicidial_remote_agents-on_hook_ring_time$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-				horizontal_bar_chart($user_start,'8','remote-agent',$link,'ra_total_calls','call count',1);
+				horizontal_bar_chart($user_start,'8','remote-agent',$link,'ra_total_calls','call count',1,'','');
 			echo "</td></tr>\n";
 
 			echo "<tr bgcolor=#B6D3FC><td align=right>Inbound Groups: </td><td align=left>\n";
@@ -33329,25 +33329,25 @@ if ($ADD==999993)
 		if ($stage == 'remote-agent')
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-				horizontal_bar_chart($campaign_id,'30',$stage,$link,'ra_total_calls','call count',0);
+				horizontal_bar_chart($campaign_id,'30',$stage,$link,'ra_total_calls','call count',0,'','');
 			echo "</td></tr>\n";
 
 			echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-				horizontal_bar_chart($campaign_id,'30',$stage,$link,'ra_concurrent_calls','most concurrent calls',0);
+				horizontal_bar_chart($campaign_id,'30',$stage,$link,'ra_concurrent_calls','most concurrent calls',0,'','');
 			echo "</td></tr>\n";
 			}
 		else
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-				horizontal_bar_chart($campaign_id,'30',$in_out,$link,'total_calls','call count',0);
+				horizontal_bar_chart($campaign_id,'30',$in_out,$link,'total_calls','call count',0,'','');
 			echo "</td></tr>\n";
 
 			echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-				horizontal_bar_chart($campaign_id,'30',$in_out,$link,$max_type,'most concurrent calls',0);
+				horizontal_bar_chart($campaign_id,'30',$in_out,$link,$max_type,'most concurrent calls',0,'','');
 			echo "</td></tr>\n";
 
 			echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-				horizontal_bar_chart($campaign_id,'30',$in_out,$link,'max_agents','most concurrent agents',0);
+				horizontal_bar_chart($campaign_id,'30',$in_out,$link,'max_agents','most concurrent agents',0,'','');
 			echo "</td></tr>\n";
 			}
 		}
