@@ -3151,12 +3151,13 @@ else
 # 120831-1523 - Added vicidial_dial_log outbound call logging
 # 121018-2321 - Added blank option to owner only dialing
 # 121019-0520 - Added voicemail greeting audio chooser options to phones and voicemail boxes
+# 121025-2339 - Added without-filter output to test filter function, added server option to test call
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-377a';
-$build = '121019-0520';
+$admin_version = '2.6-378a';
+$build = '121025-2339';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3976,7 +3977,7 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 
 	##### BEGIN get inbound groups listing for checkboxes #####
 	$xfer_groupsSQL='';
-	if ( (($ADD>20) and ($ADD<70)) and ($ADD!=41) or ( ($ADD==41) and (eregi('list_activation', $stage))) )
+	if ( (($ADD>20) and ($ADD<70)) and ($ADD!=41) or ( ($ADD==41) and ( (eregi('list_activation', $stage)) or (ereg('test_call',$stage)) ) ) )
 		{
 		$stmt="SELECT closer_campaigns,xfer_groups from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
@@ -8752,10 +8753,18 @@ if ($ADD==73)
 		echo "<B>FILTER:</B> $lead_filter_id<BR>\n";
 		echo "<B>CALL LIMIT:</B> $call_count_limit\n";
 		echo "<B>CALL TIME:</B> $local_call_time<BR><BR>\n";
+		echo "<B>With Filter:</B>\n";
+		echo "<BR><BR>\n";
 
 		### call function to calculate and print dialable leads
 		$single_status=0;
 		dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$call_count_limit,$single_status,$fSQL);
+
+		echo "<BR><BR>\n";
+		echo "<B>Without Filter:</B>\n";
+		echo "<BR><BR>\n";
+
+		dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$call_count_limit,$single_status,'');
 
 		echo "<BR><BR>\n";
 		echo "</BODY></HTML>\n";
@@ -14842,15 +14851,15 @@ if ($ADD==41)
 					else {$CIDstring = "$VqueryCID";}
 
 					### insert a NEW record to the vicidial_manager table to be processed
-					$stmtB = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$SSactive_voicemail_server','','Originate','$VqueryCID','Exten: $VDAD_dial_exten','Context: $ext_context','Channel: $local_DEF$Ndialstring$local_AMP$ext_context','Priority: 1','Callerid: $CIDstring','Timeout: $Local_dial_timeout','','','','VDACnote: $campaign_id|$lead_id|$phone_code|$phone_number|OUT|MAIN|99')";
+					$stmtB = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$old_server_ip','','Originate','$VqueryCID','Exten: $VDAD_dial_exten','Context: $ext_context','Channel: $local_DEF$Ndialstring$local_AMP$ext_context','Priority: 1','Callerid: $CIDstring','Timeout: $Local_dial_timeout','','','','VDACnote: $campaign_id|$lead_id|$phone_code|$phone_number|OUT|MAIN|99')";
 					$rslt=mysql_query($stmtB, $link);
 
 					### insert a SENT record to the vicidial_auto_calls table 
-					$stmtC = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,callerid,phone_code,phone_number,call_time,call_type,alt_dial,queue_priority) values('$SSactive_voicemail_server','$campaign_id','SENT','$lead_id','$VqueryCID','$phone_code','$phone_number','$SQLdate','OUT','MAIN','99')";
+					$stmtC = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,callerid,phone_code,phone_number,call_time,call_type,alt_dial,queue_priority) values('$old_server_ip','$campaign_id','SENT','$lead_id','$VqueryCID','$phone_code','$phone_number','$SQLdate','OUT','MAIN','99')";
 					$rslt=mysql_query($stmtC, $link);
 
 					### insert a record in the vicidial_dial_log table 
-					$stmtD = "INSERT INTO vicidial_dial_log SET caller_code='$VqueryCID',lead_id='$lead_id',server_ip='$SSactive_voicemail_server',call_date='$SQLdate',extension='$VDAD_dial_exten',channel='$local_DEF$Ndialstring$local_AMP$ext_context',timeout='$Local_dial_timeout',outbound_cid='$CIDstring',context='$ext_context';";
+					$stmtD = "INSERT INTO vicidial_dial_log SET caller_code='$VqueryCID',lead_id='$lead_id',server_ip='$old_server_ip',call_date='$SQLdate',extension='$VDAD_dial_exten',channel='$local_DEF$Ndialstring$local_AMP$ext_context',timeout='$Local_dial_timeout',outbound_cid='$CIDstring',context='$ext_context';";
 					$rslt=mysql_query($stmtD, $link);
 
 					### LOG INSERTION Admin Log Table, for campaign ###
@@ -22142,6 +22151,18 @@ if ($ADD==31)
 			{
 			if ( ($SStest_campaign_calls > 0) and ($campaign_active == 'Y') )
 				{
+				##### get list of active asterisk server for dynamic pulldown list menu
+				$stmt="SELECT server_id,server_ip from servers where active='Y' and active_asterisk_server='Y' $LOGadmin_viewable_groupsSQL order by server_id;";
+				$rslt=mysql_query($stmt, $link);
+				$servers_to_print = mysql_num_rows($rslt);
+				$servers_menu="<option SELECTED value=\"$SSactive_voicemail_server\">DEFAULT - $SSactive_voicemail_server</option>\n";
+				$os=0;
+				while ($servers_to_print > $os) 
+					{
+					$rowx=mysql_fetch_row($rslt);
+					$servers_menu .= "<option value=\"$rowx[1]\">$rowx[0] - $rowx[1]</option>\n";
+					$os++;
+					}
 				echo "<form action=$PHP_SELF method=POST>\n";
 				echo "<input type=hidden name=ADD value=41>\n";
 				echo "<input type=hidden name=DB value=$DB>\n";
@@ -22154,8 +22175,9 @@ if ($ADD==31)
 				echo "<input type=hidden name=campaign_vdad_exten value=\"$campaign_vdad_exten\">\n";
 				echo "<input type=hidden name=omit_phone_code value=\"$omit_phone_code\">\n";
 				echo "Test Outbound Call: ";
-				echo "code: <input type=text name=phone_code id=phone_code size=4 maxlength=10 value=\"\"> &nbsp; ";
+				echo "code: <input type=text name=phone_code id=phone_code size=2 maxlength=10 value=\"\"> &nbsp; ";
 				echo "number: <input type=text name=phone_number id=phone_number size=14 maxlength=20 value=\"\"> &nbsp; ";
+				echo "server: <select size=1 name=old_server_ip>$servers_menu</select> &nbsp; ";
 				echo "<input type=submit value=\"PLACE TEST CALL\"> &nbsp; $NWB#settings-test_campaign_calls$NWE</form><br><br>\n";
 				}
 			else

@@ -1191,7 +1191,7 @@ $sthA->finish();
 if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_server)) eq (length($server_ip))) )
 	{
 	$THISserver_voicemail=1;
-	if ($DB) {print "   voicemail server configuration\n";}
+	if ($DB) {print "   voicemail server configuration: $SSallow_voicemail_greeting|$sounds_update\n";}
 
 	if ( !-e ('/etc/asterisk/voicemail.conf'))
 		{`echo -e \"; END OF FILE\n\" > /etc/asterisk/voicemail.conf`;}

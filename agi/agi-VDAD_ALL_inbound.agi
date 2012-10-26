@@ -176,7 +176,9 @@
 # 120130-1708 - Fix for ring agent EXTERNAL protocol phone issue
 # 120513-0051 - Added ability to have Dial In-Group agent calls go directly to agents
 # 120514-0953 - Added force checks for dial-ingroup calls
+# 121025-2210 - If AGENTDIRECT and no agent defined, set drop call seconds to 1
 #
+
 
 $script = 'agi-VDAD_ALL_inbound.agi';
 $dtmf_silent_prefix = '7';
@@ -490,7 +492,7 @@ if ($call_handle_method =~ /^CLOSER/)
 		$fronter =				$EXT_vars[6];	# user of the fronter that transferred the call
 		$fronter_call_seconds =	$EXT_vars[8];	# not currently used
 		$dial_ingroup_flag =	$EXT_vars[9];	# used by dial in-group feature
-		if ( ($channel_group =~ /AGENTDIRECT/) || ($dial_ingroup_flag > 0) )
+		if ( ($channel_group =~ /AGENTDIRECT/i) || ($dial_ingroup_flag > 0) )
 			{
 			$agent_only =			$EXT_vars[7];	# optional AGENTDIRECT user to queue call for
 			$agent_grab_extension = $EXT_vars[10];	# used by dial in-group feature
@@ -837,6 +839,14 @@ if ($ingroup_active !~ /Y/)
 	$ct_default_start	=	2400;
 	$ct_default_stop	=	2400;
 	if ($AGILOG) {$agi_string = "IN-GROUP INACTIVE!    Sending to After Hours Action:    |$after_hours_action|$ingroup_active|";   &agi_output;}
+	}
+
+# set the drop time to 1 second if AGENTDIRECT without a user assigned
+if ( ($channel_group =~ /AGENTDIRECT/i) && (length($agent_only) < 1) )
+	{
+	if ($AGILOG) {$agi_string = "AGENTDIRECT with no agent defined!    Setting drop seconds to 1:    |$channel_group|$agent_only|";   &agi_output;}
+	$DROP_TIME = 1;
+	$drop_call_seconds = 1;
 	}
 
 $AGI->stream_file('sip-silence');
@@ -1332,7 +1342,7 @@ if ( ( ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $c
 			}
 		if ($after_hours_action =~ /EXTENSION/)
 			{
-			if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ($after_hours_exten =~ /AGENTEXT/) )
+			if ( ($channel_group =~ /AGENTDIRECT/i) && (length($agent_only) > 1) && ($after_hours_exten =~ /AGENTEXT/) )
 				{
 				### Grab user's custom_five field from the database
 				$stmtA = "SELECT custom_five FROM vicidial_users where user='$agent_only';";
@@ -1357,7 +1367,7 @@ if ( ( ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $c
 			}
 		if ($after_hours_action =~ /VOICEMAIL/)
 			{
-			if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ($after_hours_voicemail =~ /AGENTVMAIL/) )
+			if ( ($channel_group =~ /AGENTDIRECT/i) && (length($agent_only) > 1) && ($after_hours_voicemail =~ /AGENTVMAIL/) )
 				{
 				### Grab user's voicemail ID from the database
 				$stmtA = "SELECT voicemail_id FROM vicidial_users where user='$agent_only';";
@@ -1538,7 +1548,7 @@ if ( ( ($no_agent_no_queue =~ /Y|NO_PAUSED/) || ($MCnanque_override > 0) ) && ($
 				$DROPexten =	$EXno_agent_action_value[0];
 				$ext_context =	$EXno_agent_action_value[1];
 
-				if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ($DROPexten =~ /AGENTEXT/) )
+				if ( ($channel_group =~ /AGENTDIRECT/i) && (length($agent_only) > 1) && ($DROPexten =~ /AGENTEXT/) )
 					{
 					### Grab user's custom_five field from the database
 					$stmtA = "SELECT custom_five FROM vicidial_users where user='$agent_only';";
@@ -1586,7 +1596,7 @@ if ( ( ($no_agent_no_queue =~ /Y|NO_PAUSED/) || ($MCnanque_override > 0) ) && ($
 				}
 			if ($no_agent_action =~ /VOICEMAIL/)
 				{
-				if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ($no_agent_action_value =~ /AGENTVMAIL/) )
+				if ( ($channel_group =~ /AGENTDIRECT/i) && (length($agent_only) > 1) && ($no_agent_action_value =~ /AGENTVMAIL/) )
 					{
 					### Grab user's voicemail ID from the database
 					$stmtA = "SELECT voicemail_id FROM vicidial_users where user='$agent_only';";
@@ -1837,7 +1847,7 @@ if ($enable_queuemetrics_logging > 0)
 
 ### If AGENTDIRECT set variable accordingly ###
 $adSQL='';
-if ( ($channel_group =~ /AGENTDIRECT/) || ($dial_ingroup_flag > 0) )
+if ( ($channel_group =~ /AGENTDIRECT/i) || ($dial_ingroup_flag > 0) )
 	{$adSQL = ",agent_only='$agent_only'";}
 
 ### check for an IVR status record in vicidial_auto_calls
@@ -1959,7 +1969,7 @@ $ring_no_answer_agents = "'',";
 
 ##########################################################
 ### For AGENTDIRECT calls try to send call to an agent ###
-if ( ( ($channel_group =~ /AGENTDIRECT/) || ($dial_ingroup_flag > 0) ) && (length($agent_only) > 1) )
+if ( ( ($channel_group =~ /AGENTDIRECT/i) || ($dial_ingroup_flag > 0) ) && (length($agent_only) > 1) )
 	{
 	$skipLOSO=1;
 	$ADfindSQL = "and agent_only='$agent_only'";
@@ -3816,7 +3826,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 				{
 				$DROPexten = "$wait_time_option_exten";
 
-				if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ($DROPexten =~ /AGENTEXT/) )
+				if ( ($channel_group =~ /AGENTDIRECT/i) && (length($agent_only) > 1) && ($DROPexten =~ /AGENTEXT/) )
 					{
 					### Grab user's custom_five field from the database
 					$stmtA = "SELECT custom_five FROM vicidial_users where user='$agent_only';";
@@ -3842,7 +3852,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 
 		if ($wait_time_option =~ /VOICEMAIL/)
 			{
-			if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ($wait_time_option_voicemail =~ /AGENTVMAIL/) )
+			if ( ($channel_group =~ /AGENTDIRECT/i) && (length($agent_only) > 1) && ($wait_time_option_voicemail =~ /AGENTVMAIL/) )
 				{
 				### Grab user's voicemail ID from the database
 				$stmtA = "SELECT voicemail_id FROM vicidial_users where user='$agent_only';";
@@ -4226,7 +4236,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 						{
 						$DROPexten = "$hold_time_option_exten";
 
-						if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ($DROPexten =~ /AGENTEXT/) )
+						if ( ($channel_group =~ /AGENTDIRECT/i) && (length($agent_only) > 1) && ($DROPexten =~ /AGENTEXT/) )
 							{
 							### Grab user's custom_five field from the database
 							$stmtA = "SELECT custom_five FROM vicidial_users where user='$agent_only';";
@@ -4252,7 +4262,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 
 				if ($hold_time_option =~ /VOICEMAIL/)
 					{
-					if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ($hold_time_option_voicemail =~ /AGENTVMAIL/) )
+					if ( ($channel_group =~ /AGENTDIRECT/i) && (length($agent_only) > 1) && ($hold_time_option_voicemail =~ /AGENTVMAIL/) )
 						{
 						### Grab user's voicemail ID from the database
 						$stmtA = "SELECT voicemail_id FROM vicidial_users where user='$agent_only';";
@@ -4594,7 +4604,7 @@ if ( ($drop_timer > $DROP_TIME) || ($MCdrop_override > 0) )
 		$drop_seconds = $DROP_TIME;
 		}
 
-	if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && ( (length($user_unavailable_action) > 1) || ($VDADvoicemail_ext =~ /AGENTVMAIL/) ) )
+	if ( ($channel_group =~ /AGENTDIRECT/i) && (length($agent_only) > 1) && ( (length($user_unavailable_action) > 1) || ($VDADvoicemail_ext =~ /AGENTVMAIL/) ) )
 		{
 		if ($VDADvoicemail_ext !~ /AGENTVMAIL/) 
 			{
@@ -4627,7 +4637,7 @@ if ( ($drop_timer > $DROP_TIME) || ($MCdrop_override > 0) )
 
 	if ($drop_action =~ /MESSAGE|EXTEN/)
 		{
-		if ( ($channel_group =~ /AGENTDIRECT/) && (length($agent_only) > 1) && (length($user_unavailable_action) > 1) )
+		if ( ($channel_group =~ /AGENTDIRECT/i) && (length($agent_only) > 1) && (length($user_unavailable_action) > 1) )
 			{
 			if ($drop_exten =~ /AGENTEXT/)
 				{

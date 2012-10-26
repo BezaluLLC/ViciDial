@@ -38,6 +38,7 @@ Phone and Post Code Time Zone Mismatch||
 Last Local Call Time||
 Called Count||
 Unidentified Hangup Cause Code||
+YOU MUST SELECT AN AGENT TO TRANSFER TO WHEN USING AGENTDIRECT||
 
 
 ############################################################  MANAGER Manual
