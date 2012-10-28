@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# install.pl version 2.4
+# install.pl version 2.6
 #
 # Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -26,6 +26,7 @@
 # 110619-2153 - Added languages install and conf file specify options
 # 110812-1510 - Added tts sound directories creation
 # 120224-1614 - Added function to clear out web auth log files
+# 121027-1750 - Added svn logging information
 #
 
 ############################################
@@ -2471,8 +2472,6 @@ if ($WEBONLY < 1)
 	`chmod 0755 $PATHhome/*`;
 
 	print "Copying extras files to $PATHhome ...\n";
-#	`cp -f ./extras/GMT_USA_zip.txt $PATHhome/`;
-#	`cp -f ./extras/phone_codes_GMT.txt $PATHhome/`;
 	`cp -f ./extras/MySQL_AST_CREATE_tables.sql $PATHhome/`;
 
 	print "Copying agi-bin scripts to $PATHagi ...\n";
@@ -2539,11 +2538,13 @@ if ( ($PROMPTcopy_web_lang =~ /y/i) || ($CLIcopy_web_lang =~ /y/i) )
 	print "Copying web language translation files to $PATHweb...\n";
 	if (!-e "$PATHweb/agc_br/")						{`mkdir -p $PATHweb/agc_br/`;}
 	if (!-e "$PATHweb/agc_de/")						{`mkdir -p $PATHweb/agc_de/`;}
+	if (!-e "$PATHweb/agc_dk/")						{`mkdir -p $PATHweb/agc_dk/`;}
 	if (!-e "$PATHweb/agc_el/")						{`mkdir -p $PATHweb/agc_el/`;}
 	if (!-e "$PATHweb/agc_en/")						{`mkdir -p $PATHweb/agc_en/`;}
 	if (!-e "$PATHweb/agc_es/")						{`mkdir -p $PATHweb/agc_es/`;}
 	if (!-e "$PATHweb/agc_fr/")						{`mkdir -p $PATHweb/agc_fr/`;}
 	if (!-e "$PATHweb/agc_it/")						{`mkdir -p $PATHweb/agc_it/`;}
+	if (!-e "$PATHweb/agc_jp/")						{`mkdir -p $PATHweb/agc_jp/`;}
 	if (!-e "$PATHweb/agc_nl/")						{`mkdir -p $PATHweb/agc_nl/`;}
 	if (!-e "$PATHweb/agc_pl/")						{`mkdir -p $PATHweb/agc_pl/`;}
 	if (!-e "$PATHweb/agc_pt/")						{`mkdir -p $PATHweb/agc_pt/`;}
@@ -2566,11 +2567,13 @@ if ( ($PROMPTcopy_web_lang =~ /y/i) || ($CLIcopy_web_lang =~ /y/i) )
 	`chmod 0777 $PATHweb/`;
 	`chmod -R 0755 $PATHweb/agc_br/`;
 	`chmod -R 0755 $PATHweb/agc_de/`;
+	`chmod -R 0755 $PATHweb/agc_dk/`;
 	`chmod -R 0755 $PATHweb/agc_el/`;
 	`chmod -R 0755 $PATHweb/agc_en/`;
 	`chmod -R 0755 $PATHweb/agc_es/`;
 	`chmod -R 0755 $PATHweb/agc_fr/`;
 	`chmod -R 0755 $PATHweb/agc_it/`;
+	`chmod -R 0755 $PATHweb/agc_jp/`;
 	`chmod -R 0755 $PATHweb/agc_nl/`;
 	`chmod -R 0755 $PATHweb/agc_pl/`;
 	`chmod -R 0755 $PATHweb/agc_pt/`;
@@ -2587,11 +2590,13 @@ if ( ($PROMPTcopy_web_lang =~ /y/i) || ($CLIcopy_web_lang =~ /y/i) )
 	`chmod -R 0755 $PATHweb/vicidial_it/`;
 	`chmod 0777 $PATHweb/agc_br/`;
 	`chmod 0777 $PATHweb/agc_de/`;
+	`chmod 0777 $PATHweb/agc_dk/`;
 	`chmod 0777 $PATHweb/agc_el/`;
 	`chmod 0777 $PATHweb/agc_en/`;
 	`chmod 0777 $PATHweb/agc_es/`;
 	`chmod 0777 $PATHweb/agc_fr/`;
 	`chmod 0777 $PATHweb/agc_it/`;
+	`chmod 0777 $PATHweb/agc_jp/`;
 	`chmod 0777 $PATHweb/agc_nl/`;
 	`chmod 0777 $PATHweb/agc_pl/`;
 	`chmod 0777 $PATHweb/agc_pt/`;
@@ -2633,10 +2638,12 @@ if ($PATHconf !~ /\/etc\/astguiclient.conf/)
 
 		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_br/dbconnect.php `;
 		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_de/dbconnect.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_dk/dbconnect.php `;
 		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_el/dbconnect.php `;
 		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_es/dbconnect.php `;
 		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_fr/dbconnect.php `;
 		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_it/dbconnect.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_jp/dbconnect.php `;
 		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_nl/dbconnect.php `;
 		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_pl/dbconnect.php `;
 		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_pt/dbconnect.php `;
@@ -2685,22 +2692,92 @@ if ( ($PROMPTcopy_conf_files =~ /y/i) || ($CLIcopy_conf_files =~ /y/i) )
 	}
 
 
-### format the new server_ip dialstring for example to use with extensions.conf
-$S='*';
-if( $VARserver_ip =~ m/(\S+)\.(\S+)\.(\S+)\.(\S+)/ )
-	{
-	$a = leading_zero($1); 
-	$b = leading_zero($2); 
-	$c = leading_zero($3); 
-	$d = leading_zero($4);
-	$VARremDIALstr = "$a$S$b$S$c$S$d";
-	}
+##### BEGIN attempt to connect to database, if successful then update code information in database #####
+use DBI;	  
 
-#	print "\nIMPORTANT NOTE!\n";
-#	print "\nPlease remember to put these lines in your extensions.conf file:\n";
-#	print "exten => _$VARremDIALstr*.,1,Goto(default,\${EXTEN:16},1)\n";
-#	print "exten => _8600XXX*.,1,AGI(agi-VDADfixCXFER.agi)\n";
-#	print "exten => _78600XXX*.,1,AGI(agi-VDADfixCXFER.agi)\n";
+$dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
+ or warn "Couldn't connect to database: " . DBI->errstr;
+
+if ($dbhA)
+	{
+	print "Updating version information in the database...\n";
+
+	$svn_notes='';
+	$svn_revision=0;
+
+	### find pwd binary to do the compression
+	$pwdbin = '';
+	if ( -e ('/bin/pwd')) {$pwdbin = '/bin/pwd';}
+	else 
+		{
+		if ( -e ('/usr/bin/pwd')) {$pwdbin = '/usr/bin/pwd';}
+		else 
+			{
+			if ( -e ('/usr/local/bin/pwd')) {$pwdbin = '/usr/local/bin/pwd';}
+			else
+				{
+				print "Can't find pwd binary!\n";
+				}
+			}
+		}
+	### find svn binary to do the compression
+	$svnbin = '';
+	if ( -e ('/bin/svn')) {$svnbin = '/bin/svn';}
+	else 
+		{
+		if ( -e ('/usr/bin/svn')) {$svnbin = '/usr/bin/svn';}
+		else 
+			{
+			if ( -e ('/usr/local/bin/svn')) {$svnbin = '/usr/local/bin/svn';}
+			else
+				{
+				print "Can't find svn binary!\n";
+				}
+			}
+		}
+
+	### gather current path
+	if (length($pwdbin) > 4)
+		{
+		@pwd_output = `$pwdbin`;
+		chomp($pwd_output[0]);
+		$svn_notes .= "$pwd_output[0]\n";
+		}
+	### gather svn information
+	if (length($svnbin) > 4)
+		{
+		$svn_output_string='';
+		$svn_output_string='';
+		@svn_output = `$svnbin info`;
+		$s=0;
+		foreach(@svn_output)
+			{
+			$svn_output_string .= "$svn_output[$s]";
+			if ($svn_output[$s] =~ /Revision: /)
+				{
+				$svn_revision = $svn_output[$s];
+				$svn_revision =~ s/\D//gi;
+				}
+			$s++;
+			}
+		$svn_notes .= "$svn_output_string\n";
+		}
+
+	$stmtA = "UPDATE servers SET svn_revision='$svn_revision',svn_info='$svn_notes' where server_ip='$VARserver_ip';";
+		if($DB){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
+
+	$stmtA = "UPDATE system_settings SET svn_revision='$svn_revision';";
+		if($DB){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
+
+	print "Version information updated: $svn_revision|$VARserver_ip\n";
+	}
+##### END attempt to connect to database, if successful then update code information in database #####
+
+
+
+
 
 print "\nASTGUICLIENT VICIDIAL INSTALLATION FINISHED!     ENJOY!\n";
 

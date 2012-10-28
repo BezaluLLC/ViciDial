@@ -1819,7 +1819,7 @@ if ($download_max_system_stats_metric_name) {
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -1860,6 +1860,7 @@ if ($qm_conf_ct > 0)
 	$SScall_menu_qualify_enabled =			$row[31];
 	$SSadmin_list_counts =					$row[32];
 	$SSallow_voicemail_greeting =			$row[33];
+	$SSsvn_revision =						$row[34];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -3152,12 +3153,13 @@ else
 # 121018-2321 - Added blank option to owner only dialing
 # 121019-0520 - Added voicemail greeting audio chooser options to phones and voicemail boxes
 # 121025-2339 - Added without-filter output to test filter function, added server option to test call
+# 121027-2344 - Added servers versions page
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-378a';
-$build = '121025-2339';
+$admin_version = '2.6-379a';
+$build = '121027-2344';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3777,6 +3779,7 @@ if ($ADD==999995)		{$hh='reports';		echo "COPYRIGHT TRADEMARK LICENSE";}
 if ($ADD==999994)		{$hh='reports';		echo "ADMIN UTILITIES";}
 if ($ADD==999993)		{$hh='reports';		echo "SUMMARY STATS";}
 if ($ADD==999992)		{$hh='reports';		echo "SYSTEM SUMMARY STATS";}
+if ($ADD==999991)		{$hh='reports';		echo "SERVERS VERSIONS";}
 
 
 if ( ($ADD>9) and ($ADD < 99998) )
@@ -29879,7 +29882,7 @@ if ($ADD==311111111111111)
 			$ALLagent_count =		$rowx[2];
 			}
 
-		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset,default_voicemail_timezone,default_local_gmt,noanswer_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_agent_log,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting from system_settings;";
+		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset,default_voicemail_timezone,default_local_gmt,noanswer_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_agent_log,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision from system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$version =						$row[0];
@@ -29990,12 +29993,14 @@ if ($ADD==311111111111111)
 		$call_menu_qualify_enabled =	$row[105];
 		$admin_list_counts =			$row[106];
 		$allow_voicemail_greeting =		$row[107];
+		$svn_revision =					$row[108];
 
 		echo "<br>MODIFY VICIDIAL SYSTEM SETTINGS<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=411111111111111>\n";
 		echo "<input type=hidden name=sounds_web_directory value=\"$sounds_web_directory\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Version: </td><td align=left> $version</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>SVN Version: </td><td align=left> <a href=\"$PHP_SELF?ADD=999991\">$svn_revision</a></td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>DB Schema Version: </td><td align=left> $db_schema_version</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>DB Schema Update Date: </td><td align=left> $db_schema_update_date</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Auto User-add Value: </td><td align=left> $auto_user_add_value</td></tr>\n";
@@ -32892,7 +32897,7 @@ if ($ADD==999999)
 			if ($stage == 'TIME')
 				{
 				echo "<TR><TD>SERVER <a href=\"$PHP_SELF?ADD=999999\">-</a></TD>";
-				echo "<TD>DESCRIPTION</TD><TD>IP</TD><TD>ACT</TD><TD>LOAD</TD><TD>CHAN</TD><TD>DISK</TD><TD>TIME</TD></TR>\n";
+				echo "<TD>DESCRIPTION</TD><TD>IP</TD><TD>ACT</TD><TD>LOAD</TD><TD>CHAN</TD><TD>DISK</TD><TD>TIME</TD><TD>VER</TD></TR>\n";
 				}
 			else
 				{
@@ -32929,6 +32934,8 @@ if ($ADD==999999)
 				echo "<TD ALIGN=RIGHT>$disk</TD>\n";
 				if ($stage == 'TIME')
 					{
+					$s_time='&nbsp;';
+					$s_ver='&nbsp;';
 					$stmt="SELECT last_update from server_updater where server_ip='$server_ip[$o]';";
 					$rslt=mysql_query($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
@@ -32936,8 +32943,18 @@ if ($ADD==999999)
 					if ($servertime_to_print)
 						{
 						$row=mysql_fetch_row($rslt);
-						echo "<TD NOWRAP>$row[0]</TD>";
+						$s_time = $row[0];
 						}
+					$stmt="SELECT svn_revision from servers where server_ip='$server_ip[$o]';";
+					$rslt=mysql_query($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					$serverver_to_print = mysql_num_rows($rslt);
+					if ($serverver_to_print)
+						{
+						$row=mysql_fetch_row($rslt);
+						$s_ver = $row[0];
+						}
+					echo "<TD NOWRAP>$s_time</TD><TD NOWRAP>$s_ver</TD>";
 					}
 				else
 					{
@@ -32958,7 +32975,7 @@ if ($ADD==999999)
 
 			if ($stage == 'TIME')
 				{
-				echo "<TR><TD COLSPAN=2> &nbsp; </TD><TD>PHP Time</TD><TD COLSPAN=4> &nbsp; </TD><TD NOWRAP>" . date("Y-m-d H:i:s") . "</TD></TR>";
+				echo "<TR><TD COLSPAN=2> &nbsp; </TD><TD>PHP Time</TD><TD COLSPAN=4> &nbsp; </TD><TD NOWRAP>" . date("Y-m-d H:i:s") . "</TD><TD> &nbsp; </TD></TR>";
 
 				$stmt="SELECT NOW();";
 				$rslt=mysql_query($stmt, $link);
@@ -32967,7 +32984,7 @@ if ($ADD==999999)
 				if ($dbtime_to_print)
 					{
 					$row=mysql_fetch_row($rslt);
-					echo "<TR><TD COLSPAN=2> &nbsp; </TD><TD>DB Time</TD><TD COLSPAN=4> &nbsp; </TD><TD NOWRAP>$row[0]</TD></TR>";
+					echo "<TR><TD COLSPAN=2> &nbsp; </TD><TD>DB Time</TD><TD COLSPAN=4> &nbsp; </TD><TD NOWRAP>$row[0]</TD><TD> &nbsp; </TD></TR>";
 					}
 				}
 			echo "</TABLE>\n";
@@ -33271,6 +33288,7 @@ if ($ADD==999994)
 		echo "<UL>\n";
 		echo "<LI><a href=\"welcome_languages.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Welcome Languages Page</a></FONT>\n";
 		echo "<LI><a href=\"campaign_debug.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Campaign Debug Page</a></FONT>\n";
+		echo "<LI><a href=\"$PHP_SELF?ADD=999991\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Servers Versions</a></FONT>\n";
 		echo "<LI><a href=\"AST_carrier_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Carrier Log Report</a></FONT>\n";
 		echo "<LI><a href=\"AST_hangup_cause_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Hangup Cause Report</a></FONT>\n";
 		echo "<LI><a href=\"admin_phones_bulk_insert.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Bulk Phone Insert Page</a></FONT>\n";
@@ -33484,7 +33502,112 @@ if ($ADD==999992)
 ##### END max system stats report #####
 
 
+######################
+# ADD=999991 display server version info
+######################
+if ($ADD==999991)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
+	echo "<br><B> Administration: Server Version Information</B><BR><BR>\n";
+
+	if ($LOGview_reports==1)
+		{
+		if ($reports_only_user < 1)
+			{
+			echo "<PRE><TABLE BORDER=1 CELLPADDING=4 cellspacing=0>\n";
+
+			echo "<TR><TD>SERVER</TD>";
+			echo "<TD>DESCRIPTION</TD><TD>IP</TD><TD>ACT</TD><TD>LOAD</TD><TD>CHAN</TD><TD>DISK</TD><TD>TIME</TD><TD>VER</TD></TR>\n";
+
+			$stmt="SELECT server_id,server_description,server_ip,active,sysload,channels_total,cpu_idle_percent,disk_usage from servers order by server_id;";
+			$rslt=mysql_query($stmt, $link);
+			if ($DB) {echo "$stmt\n";}
+			$servers_to_print = mysql_num_rows($rslt);
+			$i=0;
+			while ($i < $servers_to_print)
+				{
+				$row=mysql_fetch_row($rslt);
+				$server_id[$i] =			$row[0];
+				$server_description[$i] =	$row[1];
+				$server_ip[$i] =			$row[2];
+				$active[$i] =				$row[3];
+				$sysload[$i] =				$row[4];
+				$channels_total[$i] =		$row[5];
+				$cpu_idle_percent[$i] =		$row[6];
+				$disk_usage[$i] =			$row[7];
+				$i++;
+				}
+
+			$o=0;
+			while ($servers_to_print > $o)
+				{
+				$cpu = (100 - $cpu_idle_percent[$o]);
+				$disk = '';
+				$disk_ary = explode('|',$disk_usage[$o]);
+				$disk_ary_ct = count($disk_ary);
+				$k=0;
+				while ($k < $disk_ary_ct)
+					{
+					$disk_ary[$k] = preg_replace("/^\d* /","",$disk_ary[$k]);
+					if ($k<1) {$disk = "$disk_ary[$k]";}
+					else
+						{
+						if ($disk_ary[$k] > $disk) {$disk = "$disk_ary[$k]";}
+						}
+					$k++;
+					}
+				$disk = "$disk%";
+				echo "<TR>\n";
+				echo "<TD><a href=\"$PHP_SELF?ADD=311111111111&server_id=$server_id[$o]\">$server_id[$o]</a></TD>\n";
+				echo "<TD>$server_description[$o]</TD>\n";
+				echo "<TD>$server_ip[$o]</TD>\n";
+				echo "<TD>$active[$o]</TD>\n";
+				echo "<TD>$sysload[$o] - $cpu%</TD>\n";
+				echo "<TD>$channels_total[$o]</TD>\n";
+				echo "<TD ALIGN=RIGHT>$disk</TD>\n";
+
+				$s_time='&nbsp;';
+				$s_ver='&nbsp;';
+				$s_info_print='no svn information';
+				$stmt="SELECT last_update from server_updater where server_ip='$server_ip[$o]';";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$servertime_to_print = mysql_num_rows($rslt);
+				if ($servertime_to_print)
+					{
+					$row=mysql_fetch_row($rslt);
+					$s_time = $row[0];
+					}
+				$stmt="SELECT svn_revision,svn_info from servers where server_ip='$server_ip[$o]';";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$serverver_to_print = mysql_num_rows($rslt);
+				if ($serverver_to_print)
+					{
+					$row=mysql_fetch_row($rslt);
+					$s_ver = $row[0];
+					$s_info = $row[1];
+					$s_info_print = preg_replace("/\n/",'<BR>',$s_info);
+					}
+				if (strlen($s_info_print) < 1) {$s_info_print='no svn information';}
+				echo "<TD NOWRAP>$s_time</TD><TD NOWRAP>$s_ver</TD></TR>";
+				echo "<TR><TD NOWRAP>&nbsp;</TD><TD COLSPAN=8 NOWRAP>$s_info_print</TD>";
+
+				echo "</TR>\n";
+				$o++;
+				}
+			echo "</TABLE>\n";
+			}
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	}
+##### END server version info #####
 
 
 echo "</TD></TR></TABLE></center>\n";

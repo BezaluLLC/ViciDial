@@ -80,3 +80,10 @@ ALTER TABLE system_settings ADD audio_store_purge TEXT;
 ALTER TABLE servers ADD audio_store_purge TEXT;
 
 UPDATE system_settings SET db_schema_version='1328',db_schema_update_date=NOW() where db_schema_version < 1328;
+
+ALTER TABLE system_settings ADD svn_revision INT(9) default '0';
+
+ALTER TABLE servers ADD svn_revision INT(9) default '0';
+ALTER TABLE servers ADD svn_info TEXT;
+
+UPDATE system_settings SET db_schema_version='1329',db_schema_update_date=NOW() where db_schema_version < 1329;

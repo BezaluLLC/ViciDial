@@ -132,7 +132,9 @@ external_server_ip VARCHAR(100) default '',
 custom_dialplan_entry TEXT,
 active_twin_server_ip VARCHAR(15) default '',
 user_group VARCHAR(20) default '---ALL---',
-audio_store_purge TEXT
+audio_store_purge TEXT,
+svn_revision INT(9) default '0',
+svn_info TEXT
 );
 
 CREATE UNIQUE INDEX server_id on servers (server_id);
@@ -1488,7 +1490,8 @@ svn_version VARCHAR(100) default '',
 call_menu_qualify_enabled ENUM('0','1') default '0',
 admin_list_counts ENUM('0','1') default '1',
 allow_voicemail_greeting ENUM('0','1') default '0',
-audio_store_purge TEXT
+audio_store_purge TEXT,
+svn_revision INT(9) default '0'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2913,4 +2916,4 @@ INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,cate
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('MAXCAL','Inbound Max Calls Drop','N','Y','UNDEFINED','N','N','N','N','N','N','N');
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('LRERR','Outbound Local Channel Res Err','N','Y','UNDEFINED','N','N','N','N','N','N','N');
 
-UPDATE system_settings SET db_schema_version='1328',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1329',db_schema_update_date=NOW();

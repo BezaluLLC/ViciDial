@@ -100,6 +100,8 @@ OTHER CHANGES:
 
 18. Added ability to delete audio files from the audio store
 
+19. Added logging of svn version information in database
+
 
 
 
