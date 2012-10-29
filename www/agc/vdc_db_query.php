@@ -313,10 +313,11 @@
 # 120731-1205 - Small fix for vendor_lead_code population on new lead during manual dial
 # 120831-1438 - Added vicidial_dial_log logging of outbound phone calls
 # 121018-2320 - Added blank option to owner only dialing
+# 121029-0159 - Added owner_populate campaign option
 #
 
-$version = '2.6-211';
-$build = '121018-2320';
+$version = '2.6-212';
+$build = '121029-0159';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=443;
 $one_mysql_log=0;
@@ -2184,7 +2185,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 
 			##### BEGIN check for postal_code and phone time zones if alert enabled
 			$post_phone_time_diff_alert_message='';
-			$stmt="SELECT post_phone_time_diff_alert,local_call_time FROM vicidial_campaigns where campaign_id='$campaign';";
+			$stmt="SELECT post_phone_time_diff_alert,local_call_time,owner_populate FROM vicidial_campaigns where campaign_id='$campaign';";
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00414',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -2194,6 +2195,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$row=mysql_fetch_row($rslt);
 				$post_phone_time_diff_alert =	$row[0];
 				$local_call_time =				$row[1];
+				$owner_populate =				$row[2];
 				}
 			if ( ($post_phone_time_diff_alert == 'ENABLED') or (preg_match("/OUTSIDE_CALLTIME/",$post_phone_time_diff_alert)) )
 				{
@@ -2310,8 +2312,14 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$called_since_last_reset = "Y$called_since_last_reset";
 				}
 			else {$called_since_last_reset = 'Y';}
+			$ownerSQL='';
+			if ( ($owner_populate=='ENABLED') and ( (strlen($owner) < 1) or ($owner=='NULL') ) )
+				{
+				$ownerSQL = ",owner='$user'";
+				$owner=$user;
+				}
 			### flag the lead as called and change it's status to INCALL
-			$stmt = "UPDATE vicidial_list set status='INCALL', called_since_last_reset='$called_since_last_reset', called_count='$called_count',user='$user',last_local_call_time='$LLCT_DATE' where lead_id='$lead_id';";
+			$stmt = "UPDATE vicidial_list set status='INCALL', called_since_last_reset='$called_since_last_reset', called_count='$called_count',user='$user',last_local_call_time='$LLCT_DATE'$ownerSQL where lead_id='$lead_id';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00030',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -4867,9 +4875,25 @@ if ($ACTION == 'VDADcheckINCOMING')
 					$CBcomments =		trim("$row[3]");
 					}
 				}
+			$stmt="SELECT owner_populate FROM vicidial_campaigns where campaign_id='$campaign';";
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$camp_op_ct = mysql_num_rows($rslt);
+			if ($camp_op_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				$owner_populate =				$row[0];
+				}
+			$ownerSQL='';
+			if ( ($owner_populate=='ENABLED') and ( (strlen($owner) < 1) or ($owner=='NULL') ) )
+				{
+				$ownerSQL = ",owner='$user'";
+				$owner=$user;
+				}
 
 			### update the lead status to INCALL
-			$stmt = "UPDATE vicidial_list set status='INCALL', user='$user' where lead_id='$lead_id';";
+			$stmt = "UPDATE vicidial_list set status='INCALL', user='$user' $ownerSQL where lead_id='$lead_id';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00110',$user,$server_ip,$session_name,$one_mysql_log);}

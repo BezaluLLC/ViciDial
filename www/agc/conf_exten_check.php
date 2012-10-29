@@ -56,12 +56,13 @@
 # 101208-0308 - Moved the Calls in Queue count and other counts outside of the autodial section (issue 406)
 # 110610-0059 - Small fix for manual dial calls lasting more than 100 minutes in real-time report
 # 120809-2353 - Added external_recording function
+# 121028-2305 - Added extra check on session_name to validate agent screen requests
 #
 
-$version = '2.6-31';
-$build = '120809-2353';
+$version = '2.6-32';
+$build = '121028-2305';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=38;
+$mysql_log_count=39;
 $one_mysql_log=0;
 $DB=0;
 
@@ -208,6 +209,7 @@ if ($ACTION == 'refresh')
 		if ($client == 'vdc')
 			{
 			$Acount=0;
+			$Scount=0;
 			$AexternalDEAD=0;
 			$Aagent_log_id='';
 			$Acallerid='';
@@ -222,6 +224,14 @@ if ($ACTION == 'refresh')
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03003',$user,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysql_fetch_row($rslt);
 			$Acount=$row[0];
+
+			### see if the agent has a record in the vicidial_session_data table
+			$stmt="SELECT count(*) from vicidial_session_data where user='$user' and server_ip='$server_ip' and session_name='$session_name';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03039',$user,$server_ip,$session_name,$one_mysql_log);}
+			$row=mysql_fetch_row($rslt);
+			$Scount=$row[0];
 
 			if ($Acount > 0)
 				{
@@ -654,7 +664,7 @@ if ($ACTION == 'refresh')
 
 			if ( ( ($time_diff > 8) or ($time_diff < -8) or ($web_diff > 8) or ($web_diff < -8) ) and (eregi("0$",$StarTtime)) ) 
 				{$Alogin='TIME_SYNC';}
-			if ($Acount < 1) 
+			if ( ($Acount < 1) or ($Scount < 1) )
 				{$Alogin='DEAD_VLA';}
 			if ($AexternalDEAD > 0) 
 				{$Alogin='DEAD_EXTERNAL';}

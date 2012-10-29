@@ -100,7 +100,14 @@ OTHER CHANGES:
 
 18. Added ability to delete audio files from the audio store
 
-19. Added logging of svn version information in database
+19. Added logging of svn version info in the database at server install/update
+
+20. Added more validation of agent sessions to prevent double-logins
+
+21. Added campaign option to show a "Pause After Next Call" link to the agent
+	screen below the Pause/Resume buttons
+
+22. Added campaign option to set owner field to user if the owner field is empty
 
 
 

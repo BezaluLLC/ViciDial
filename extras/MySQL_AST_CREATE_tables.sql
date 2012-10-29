@@ -857,7 +857,9 @@ user_group VARCHAR(20) default '---ALL---',
 hopper_vlc_dup_check ENUM('Y','N') default 'N',
 in_group_dial ENUM('DISABLED','MANUAL_DIAL','NO_DIAL','BOTH') default 'DISABLED',
 in_group_dial_select ENUM('AGENT_SELECTED','CAMPAIGN_SELECTED','ALL_USER_GROUP') default 'CAMPAIGN_SELECTED',
-safe_harbor_audio_field VARCHAR(30) default 'DISABLED'
+safe_harbor_audio_field VARCHAR(30) default 'DISABLED',
+pause_after_next_call ENUM('ENABLED','DISABLED') default 'DISABLED',
+owner_populate ENUM('ENABLED','DISABLED') default 'DISABLED'
 );
 
 CREATE TABLE vicidial_lists (
@@ -2916,4 +2918,4 @@ INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,cate
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('MAXCAL','Inbound Max Calls Drop','N','Y','UNDEFINED','N','N','N','N','N','N','N');
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('LRERR','Outbound Local Channel Res Err','N','Y','UNDEFINED','N','N','N','N','N','N','N');
 
-UPDATE system_settings SET db_schema_version='1329',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1330',db_schema_update_date=NOW();

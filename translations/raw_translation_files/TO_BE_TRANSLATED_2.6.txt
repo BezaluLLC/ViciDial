@@ -22,6 +22,10 @@ This optional setting allows you to define a voicemail greeting audio file from 
 Allow Voicemail Greeting Chooser||
 If this setting is enabled it will allow you to choose an audio file from the audio store to be played as the voicemail greeting to a specific voicemail box. Default is 0 for disabled||
 File to Delete||
+Agent Pause After Next Call Link||
+This option if enabled will display a link on the agent screen that will let the agent go on pause automatically after they hang up their next call. Default is DISABLED||
+Owner Populate||
+If this is enabled and the owner field of the lead is blank, the owner field for the lead will populate with the user ID of the agent that handles the call first. Default is DISABLED||
 
 
 ############################################################ CLIENT
@@ -39,6 +43,7 @@ Last Local Call Time||
 Called Count||
 Unidentified Hangup Cause Code||
 YOU MUST SELECT AN AGENT TO TRANSFER TO WHEN USING AGENTDIRECT||
+Another live agent session was open using your user ID. It has been disabled. Click OK to continue to the agent screen||
 
 
 ############################################################  MANAGER Manual

@@ -87,3 +87,8 @@ ALTER TABLE servers ADD svn_revision INT(9) default '0';
 ALTER TABLE servers ADD svn_info TEXT;
 
 UPDATE system_settings SET db_schema_version='1329',db_schema_update_date=NOW() where db_schema_version < 1329;
+
+ALTER TABLE vicidial_campaigns ADD pause_after_next_call ENUM('ENABLED','DISABLED') default 'DISABLED';
+ALTER TABLE vicidial_campaigns ADD owner_populate ENUM('ENABLED','DISABLED') default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1330',db_schema_update_date=NOW() where db_schema_version < 1330;
