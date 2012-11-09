@@ -9623,7 +9623,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		WaitingForNextStep=0;
 		nochannelinsession=0;
 		}
-	function NoneInSessionCalL()
+	function NoneInSessionCalL(tempstate)
 		{
 		hideDiv('NoneInSessionBox');
 		WaitingForNextStep=0;
@@ -9677,7 +9677,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				}
 			delete xmlhttp;
 			}
-		if (auto_dial_level > 0)
+		if ( (auto_dial_level > 0) && (tempstate != 'LOGIN') )
 			{
 			AutoDial_ReSume_PauSe("VDADpause");
 			}
@@ -12157,7 +12157,7 @@ function phone_number_format(formatphone) {
 			if (is_webphone=='Y')
 				{
 				NoneInSession();
-				document.getElementById("NoneInSessionLink").innerHTML = "<a href=\"#\" onclick=\"NoneInSessionCalL();return false;\">Call Agent Webphone -></a>";
+				document.getElementById("NoneInSessionLink").innerHTML = "<a href=\"#\" onclick=\"NoneInSessionCalL('LOGIN');return false;\">Call Agent Webphone -></a>";
 				
 				var WebPhonEtarget = 'webphonewindow';
 
