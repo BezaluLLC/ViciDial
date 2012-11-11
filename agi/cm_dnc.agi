@@ -267,7 +267,7 @@ if ($new_status =~ /DNC/)	# set the phone_number to DNC
 		$use_campaign_dnc =	$aryA[1];
 		$sthA->finish();
 
-		if ($use_internal_dnc =~ /Y|AREACODE/)
+		if ( ($use_internal_dnc =~ /Y|AREACODE/) && ($dnc_default =~ /YES/) )
 			{
 			### add the number to the vicidial_dnc table
 			$stmtA = "INSERT IGNORE INTO vicidial_dnc SET phone_number='$phone_number';";
