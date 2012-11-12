@@ -209,7 +209,9 @@ if ( (length($campaign_id) > 0) && ($camp_sys =~ /CAMP/) )
 	$sthA->finish();
 	chop($SlistsSQL);
 
-	if (length($SlistsSQL)>3)
+	if (length($SlistsSQL)<3)
+		{$SlistsSQL = "''";}
+	if (length($SlistsSQL)>1)
 		{$listSQL = "and list_id IN($SlistsSQL)";}
 	}
 
