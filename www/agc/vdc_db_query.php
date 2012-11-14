@@ -314,10 +314,11 @@
 # 120831-1438 - Added vicidial_dial_log logging of outbound phone calls
 # 121018-2320 - Added blank option to owner only dialing
 # 121029-0159 - Added owner_populate campaign option
+# 121114-1749 - Fixed manual dial lead preview script variable issue
 #
 
-$version = '2.6-212';
-$build = '121029-0159';
+$version = '2.6-213';
+$build = '121114-1749';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=443;
 $one_mysql_log=0;
@@ -2634,32 +2635,6 @@ if ($ACTION == 'manDiaLnextCaLL')
 
 					}
 
-				##### find if script contains recording fields
-				$stmt="SELECT count(*) FROM vicidial_lists WHERE list_id='$list_id' and agent_script_override!='' and agent_script_override IS NOT NULL and agent_script_override!='NONE';";
-				$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00259',$user,$server_ip,$session_name,$one_mysql_log);}
-				if ($DB) {echo "$stmt\n";}
-				$vls_vc_ct = mysql_num_rows($rslt);
-				if ($vls_vc_ct > 0)
-					{
-					$row=mysql_fetch_row($rslt);
-					if ($row[0] > 0)
-						{
-						$script_recording_delay=0;
-						##### find if script contains recording fields
-						$stmt="SELECT count(*) FROM vicidial_scripts vs,vicidial_lists vls WHERE list_id='$list_id' and vs.script_id=vls.agent_script_override and script_text LIKE \"%--A--recording_%\";";
-						$rslt=mysql_query($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00260',$user,$server_ip,$session_name,$one_mysql_log);}
-						if ($DB) {echo "$stmt\n";}
-						$vs_vc_ct = mysql_num_rows($rslt);
-						if ($vs_vc_ct > 0)
-							{
-							$row=mysql_fetch_row($rslt);
-							$script_recording_delay = $row[0];
-							}
-						}
-					}
-
 				### Check for List ID override settings
 				$VDCL_xferconf_a_number='';
 				$VDCL_xferconf_b_number='';
@@ -2681,72 +2656,6 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$VDCL_xferconf_e_number =	$row[4];
 					}
 
-				if (strlen($list_id)>0)
-					{
-					$stmt = "SELECT xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number from vicidial_lists where list_id='$list_id';";
-					if ($DB) {echo "$stmt\n";}
-					$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00278',$user,$server_ip,$session_name,$one_mysql_log);}
-					$VDIG_preset_ct = mysql_num_rows($rslt);
-					if ($VDIG_preset_ct > 0)
-						{
-						$row=mysql_fetch_row($rslt);
-						if (strlen($row[0]) > 0)
-							{$VDCL_xferconf_a_number =	$row[0];}
-						if (strlen($row[1]) > 0)
-							{$VDCL_xferconf_b_number =	$row[1];}
-						if (strlen($row[2]) > 0)
-							{$VDCL_xferconf_c_number =	$row[2];}
-						if (strlen($row[3]) > 0)
-							{$VDCL_xferconf_d_number =	$row[3];}
-						if (strlen($row[4]) > 0)
-							{$VDCL_xferconf_e_number =	$row[4];}
-						}
-					
-					$custom_field_names='|';
-					$custom_field_names_SQL='';
-					$custom_field_values='----------';
-					$custom_field_types='|';
-					### find the names of all custom fields, if any
-					$stmt = "SELECT field_label,field_type FROM vicidial_lists_fields where list_id='$entry_list_id' and field_type NOT IN('SCRIPT','DISPLAY') and field_label NOT IN('vendor_lead_code','source_id','list_id','gmt_offset_now','called_since_last_reset','phone_code','phone_number','title','first_name','middle_initial','last_name','address1','address2','address3','city','state','province','postal_code','country_code','gender','date_of_birth','alt_phone','email','security_phrase','comments','called_count','last_local_call_time','rank','owner');";
-					$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00334',$user,$server_ip,$session_name,$one_mysql_log);}
-					if ($DB) {echo "$stmt\n";}
-					$cffn_ct = mysql_num_rows($rslt);
-					$d=0;
-					while ($cffn_ct > $d)
-						{
-						$row=mysql_fetch_row($rslt);
-						$custom_field_names .=	"$row[0]|";
-						$custom_field_names_SQL .=	"$row[0],";
-						$custom_field_types .=	"$row[1]|";
-						$custom_field_values .=	"----------";
-						$d++;
-						}
-					if ($cffn_ct > 0)
-						{
-						$custom_field_names_SQL = eregi_replace(".$","",$custom_field_names_SQL);
-						### find the values of the named custom fields
-						$stmt = "SELECT $custom_field_names_SQL FROM custom_$entry_list_id where lead_id='$lead_id' limit 1;";
-						$rslt=mysql_query($stmt, $link);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00335',$user,$server_ip,$session_name,$one_mysql_log);}
-						if ($DB) {echo "$stmt\n";}
-						$cffv_ct = mysql_num_rows($rslt);
-						if ($cffv_ct > 0)
-							{
-							$custom_field_values='----------';
-							$row=mysql_fetch_row($rslt);
-							$d=0;
-							while ($cffn_ct > $d)
-								{
-								$custom_field_values .=	"$row[$d]----------";
-								$d++;
-								}
-							$custom_field_values = preg_replace("/\n/"," ",$custom_field_values);
-							$custom_field_values = preg_replace("/\r/","",$custom_field_values);
-							}
-						}
-					}
 				##### check if system is set to generate logfile for transfers
 				$stmt="SELECT enable_agc_xfer_log FROM system_settings;";
 				$rslt=mysql_query($stmt, $link);
@@ -2765,6 +2674,100 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$fp = fopen ("./xfer_log.txt", "a");
 					fwrite ($fp, "$NOW_TIME|$campaign|$lead_id|$agent_dialed_number|$user|M|$MqueryCID||$province\n");
 					fclose($fp);
+					}
+				}
+
+
+			##### find if script contains recording fields
+			$stmt="SELECT count(*) FROM vicidial_lists WHERE list_id='$list_id' and agent_script_override!='' and agent_script_override IS NOT NULL and agent_script_override!='NONE';";
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00259',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$vls_vc_ct = mysql_num_rows($rslt);
+			if ($vls_vc_ct > 0)
+				{
+				$row=mysql_fetch_row($rslt);
+				if ($row[0] > 0)
+					{
+					$script_recording_delay=0;
+					##### find if script contains recording fields
+					$stmt="SELECT count(*) FROM vicidial_scripts vs,vicidial_lists vls WHERE list_id='$list_id' and vs.script_id=vls.agent_script_override and script_text LIKE \"%--A--recording_%\";";
+					$rslt=mysql_query($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00260',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$vs_vc_ct = mysql_num_rows($rslt);
+					if ($vs_vc_ct > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$script_recording_delay = $row[0];
+						}
+					}
+				}
+
+			if (strlen($list_id)>0)
+				{
+				$stmt = "SELECT xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number from vicidial_lists where list_id='$list_id';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00278',$user,$server_ip,$session_name,$one_mysql_log);}
+				$VDIG_preset_ct = mysql_num_rows($rslt);
+				if ($VDIG_preset_ct > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					if (strlen($row[0]) > 0)
+						{$VDCL_xferconf_a_number =	$row[0];}
+					if (strlen($row[1]) > 0)
+						{$VDCL_xferconf_b_number =	$row[1];}
+					if (strlen($row[2]) > 0)
+						{$VDCL_xferconf_c_number =	$row[2];}
+					if (strlen($row[3]) > 0)
+						{$VDCL_xferconf_d_number =	$row[3];}
+					if (strlen($row[4]) > 0)
+						{$VDCL_xferconf_e_number =	$row[4];}
+					}
+				
+				$custom_field_names='|';
+				$custom_field_names_SQL='';
+				$custom_field_values='----------';
+				$custom_field_types='|';
+				### find the names of all custom fields, if any
+				$stmt = "SELECT field_label,field_type FROM vicidial_lists_fields where list_id='$entry_list_id' and field_type NOT IN('SCRIPT','DISPLAY') and field_label NOT IN('vendor_lead_code','source_id','list_id','gmt_offset_now','called_since_last_reset','phone_code','phone_number','title','first_name','middle_initial','last_name','address1','address2','address3','city','state','province','postal_code','country_code','gender','date_of_birth','alt_phone','email','security_phrase','comments','called_count','last_local_call_time','rank','owner');";
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00334',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$cffn_ct = mysql_num_rows($rslt);
+				$d=0;
+				while ($cffn_ct > $d)
+					{
+					$row=mysql_fetch_row($rslt);
+					$custom_field_names .=	"$row[0]|";
+					$custom_field_names_SQL .=	"$row[0],";
+					$custom_field_types .=	"$row[1]|";
+					$custom_field_values .=	"----------";
+					$d++;
+					}
+				if ($cffn_ct > 0)
+					{
+					$custom_field_names_SQL = eregi_replace(".$","",$custom_field_names_SQL);
+					### find the values of the named custom fields
+					$stmt = "SELECT $custom_field_names_SQL FROM custom_$entry_list_id where lead_id='$lead_id' limit 1;";
+					$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00335',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$cffv_ct = mysql_num_rows($rslt);
+					if ($cffv_ct > 0)
+						{
+						$custom_field_values='----------';
+						$row=mysql_fetch_row($rslt);
+						$d=0;
+						while ($cffn_ct > $d)
+							{
+							$custom_field_values .=	"$row[$d]----------";
+							$d++;
+							}
+						$custom_field_values = preg_replace("/\n/"," ",$custom_field_values);
+						$custom_field_values = preg_replace("/\r/","",$custom_field_values);
+						}
 					}
 				}
 

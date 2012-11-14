@@ -386,10 +386,11 @@
 # 120914-1357 - Added group_alias to transfer_conference function
 # 121025-2335 - Do not allow AGENTDIRECT transfers without a user defined
 # 121029-0122 - Added pause_after_next_call and owner_populate campaign options
+# 121114-1759 - Fixed manual dial lead preview script variable issue
 #
 
-$version = '2.6-354c';
-$build = '121029-0122';
+$version = '2.6-355c';
+$build = '121114-1759';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -6970,6 +6971,16 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									}
 								else
 									{
+									if (custom_fields_enabled > 0)
+										{
+										FormContentsLoad();
+										}
+									if ( (view_scripts == 1) && (campaign_script.length > 0) )
+										{
+										var SCRIPT_web_form = 'http://127.0.0.1/testing.php';
+										var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','1');
+										RefresHScript();
+										}
 									reselect_preview_dial = 1;
 									}
 								}
@@ -7121,6 +7132,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				agent_dialed_number='';
 				agent_dialed_type='';
 				CalL_ScripT_id='';
+				RefresHScript('CLEAR');
+			//	document.getElementById('vcFormIFrame').src='./vdc_form_display.php?lead_id=&list_id=&stage=WELCOME';
 				}
 			}
 		}

@@ -109,6 +109,9 @@ OTHER CHANGES:
 
 22. Added campaign option to set owner field to user if the owner field is empty
 
+23. Added Lead Tools web page from Admin Utilities. Allows for some basic lead 
+	management through the web interface.
+
 
 
 

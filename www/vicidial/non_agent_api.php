@@ -466,10 +466,10 @@ if ($non_latin < 1)
 	$group_alias_name = ereg_replace("[^- \+\_0-9a-zA-Z]","",$group_alias_name);
 	$caller_id_number = ereg_replace("[^0-9]","",$caller_id_number);
 	$caller_id_name = ereg_replace("[^- \+\_0-9a-zA-Z]","",$caller_id_name);
-	$user_groups = ereg_replace("[^-\_0-9a-zA-Z]","",$user_groups);
-	$in_groups = ereg_replace("[^-\_0-9a-zA-Z]","",$in_groups);
+	$user_groups = ereg_replace("[^-\|\_0-9a-zA-Z]","",$user_groups);
+	$in_groups = ereg_replace("[^-\|\_0-9a-zA-Z]","",$in_groups);
 	$call_id = ereg_replace("[^0-9a-zA-Z]","",$call_id);
-	$group = ereg_replace("[^-\_0-9a-zA-Z]","",$group);
+	$group = ereg_replace("[^-\|\_0-9a-zA-Z]","",$group);
 	}
 else
 	{
