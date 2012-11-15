@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_cleanup_agent_log.pl version 2.4
+# AST_cleanup_agent_log.pl version 2.6
 #
 # DESCRIPTION:
 # to be run frequently to clean up the vicidial_agent_log to fix erroneous time 
@@ -37,6 +37,7 @@
 # 111208-0627 - Added concurrency check option
 # 120123-0925 - Added vicidial_log duplicate check
 # 120426-1622 - Added agent log park fix
+# 121115-0624 - Added buffer time for agent log validation of LOGIN between record and next record
 #
 
 # constants
@@ -1390,6 +1391,7 @@ if ( ($skip_agent_log_validation < 1) && ($VAL_validate > 0) )
 			$Vpause_date="1970-01-01 00:00:00";
 			if ($Vpause_epoch[$next_r] > 1000)
 				{
+				$Vpause_epoch_min5 = ($Vpause_epoch[$next_r] - 5);
 				($Ksec,$Kmin,$Khour,$Kmday,$Kmon,$Kyear,$Kwday,$Kyday,$Kisdst) = localtime($Vpause_epoch[$next_r]);
 				$Kyear = ($Kyear + 1900);
 				$Kmon++;
@@ -1400,11 +1402,21 @@ if ( ($skip_agent_log_validation < 1) && ($VAL_validate > 0) )
 				if ($Ksec < 10) {$Ksec = "0$Ksec";}
 				$Vpause_date = "$Kyear-$Kmon-$Kmday $Khour:$Kmin:$Ksec";
 				$Vpause_dayB = "$Kyear-$Kmon-$Kmday 00:00:00";
+
+				($KFsec,$KFmin,$KFhour,$KFmday,$KFmon,$KFyear,$KFwday,$KFyday,$KFisdst) = localtime($Vpause_epoch_min5);
+				$KFyear = ($KFyear + 1900);
+				$KFmon++;
+				if ($KFmon < 10) {$KFmon = "0$KFmon";}
+				if ($KFmday < 10) {$KFmday = "0$KFmday";}
+				if ($KFhour < 10) {$KFhour = "0$KFhour";}
+				if ($KFmin < 10) {$KFmin = "0$KFmin";}
+				if ($KFsec < 10) {$KFsec = "0$KFsec";}
+				$VFpause_date = "$KFyear-$KFmon-$KFmday $KFhour:$KFmin:$KFsec";
 				}
 
 			### find if next record is a LOGIN
 			$LOGOUT_update=0;
-			$stmtA = "SELECT count(*) from vicidial_user_log where user='$Vuser[$i]' and event_date='$Vpause_date' and event='LOGIN';";
+			$stmtA = "SELECT count(*) from vicidial_user_log where user='$Vuser[$i]' and event_date<='$Vpause_date' and event_date > '$VFpause_date' and event='LOGIN';";
 		#	if ($DBX) {print "$stmtA\n";}
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1417,7 +1429,7 @@ if ( ($skip_agent_log_validation < 1) && ($VAL_validate > 0) )
 				@aryA = $sthA->fetchrow_array;	
 				$next_begin_epoch = $aryA[0];
 				$LOGOUT_update++;
-			#	if ($DBX) {print "$next_begin_epoch|$aryA[1]|$LOGOUT_update|$stmtA\n";}
+			#	if ($DBX) {print "LOGOUT UPDATE: $next_begin_epoch|$aryA[1]|$Vpause_date|$VFpause_date|$LOGOUT_update|$stmtA\n";}
 				}
 
 			if ( ($Vwait_epoch[$r] < 1000) || ( ($Vwait_epoch[$r] <= $Vpause_epoch[$r]) && ($Vtalk_epoch[$r] < 1000) && ($Vpause_sec[$r] > 0) ) )

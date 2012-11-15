@@ -26,6 +26,9 @@ Agent Pause After Next Call Link||
 This option if enabled will display a link on the agent screen that will let the agent go on pause automatically after they hang up their next call. Default is DISABLED||
 Owner Populate||
 If this is enabled and the owner field of the lead is blank, the owner field for the lead will populate with the user ID of the agent that handles the call first. Default is DISABLED||
+This field allows you to customize the name of the recording when Campaign recording is ONDEMAND or ALLCALLS. The allowed variables are||
+The default is FULLDATE_AGENT and would look like this 20051020-103108_6666. Another example is CAMPAIGN_TINYDATE_CUSTPHONE which would look like this TESTCAMP_51020103108_3125551212. Te resulting filename must be less than 90 characters in length||
+This field will override the Campaign Recording Filenaming Scheme unless it is set to NONE. The allowed variables are||
 
 
 ############################################################ CLIENT

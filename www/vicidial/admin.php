@@ -3161,12 +3161,13 @@ else
 # 121025-2339 - Added without-filter output to test filter function, added server option to test call
 # 121027-2344 - Added servers versions page
 # 121029-0109 - Added pause_after_next_call and owner_populate campaign options
+# 121114-1923 - Added Basic Lead Management page link. Added INGROUP as a recording filename option
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-380a';
-$build = '121029-0109';
+$admin_version = '2.6-381a';
+$build = '121114-1923';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -5315,7 +5316,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_campaigns-campaign_rec_filename">
 	<BR>
-	<B>Campaign Rec Filename -</B> This field allows you to customize the name of the recording when Campaign recording is ONDEMAND or ALLCALLS. The allowed variables are CAMPAIGN CUSTPHONE FULLDATE TINYDATE EPOCH AGENT VENDORLEADCODE LEADID. The default is FULLDATE_AGENT and would look like this 20051020-103108_6666. Another example is CAMPAIGN_TINYDATE_CUSTPHONE which would look like this TESTCAMP_51020103108_3125551212. 50 char max.
+	<B>Campaign Rec Filename -</B> This field allows you to customize the name of the recording when Campaign recording is ONDEMAND or ALLCALLS. The allowed variables are CAMPAIGN INGROUP CUSTPHONE FULLDATE TINYDATE EPOCH AGENT VENDORLEADCODE LEADID. The default is FULLDATE_AGENT and would look like this 20051020-103108_6666. Another example is CAMPAIGN_TINYDATE_CUSTPHONE which would look like this TESTCAMP_51020103108_3125551212. Te resulting filename must be less than 90 characters in length.
 
 	<BR>
 	<A NAME="vicidial_campaigns-allcalls_delay">
@@ -6327,7 +6328,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_inbound_groups-ingroup_rec_filename">
 	<BR>
-	<B>In-Group Recording Filename -</B> This field will override the Campaign Recording Filenaming Scheme unless it is set to NONE. The allowed variables are CAMPAIGN CUSTPHONE FULLDATE TINYDATE EPOCH AGENT VENDORLEADCODE LEADID. The default is FULLDATE_AGENT and would look like this 20051020-103108_6666. Another example is CAMPAIGN_TINYDATE_CUSTPHONE which would look like this TESTCAMP_51020103108_3125551212. 50 char max. Default is NONE.
+	<B>In-Group Recording Filename -</B> This field will override the Campaign Recording Filenaming Scheme unless it is set to NONE. The allowed variables are CAMPAIGN INGROUP CUSTPHONE FULLDATE TINYDATE EPOCH AGENT VENDORLEADCODE LEADID. The default is FULLDATE_AGENT and would look like this 20051020-103108_6666. Another example is CAMPAIGN_TINYDATE_CUSTPHONE which would look like this TESTCAMP_51020103108_3125551212. Te resulting filename must be less than 90 characters in length. Default is NONE.
 
 	<?php
 	if ($SSqc_features_active > 0)

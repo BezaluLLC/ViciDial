@@ -11,6 +11,7 @@
 # 120601-2235 - Added group name to header, added status breakdown counts to page and CSV with option to display them
 # 120611-2200 - Added ability to filter output by call time
 # 120819-0118 - Formatting changes
+# 121115-0621 - Changed to multi-select for in-group selection
 #
 
 require("dbconnect.php");
@@ -174,6 +175,25 @@ $STARTtime = date("U");
 if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
+$groups_selected = count($group);
+$group_name_str="";
+$groups_selected_str="";
+$groups_selected_URLstr="";
+for ($i=0; $i<$groups_selected; $i++) 
+	{
+	$selected_group_URLstr.="&group[]=$group[$i]";
+	if ($group[$i]=="--ALL--") 
+		{
+		$group=array("--ALL--");
+		$groups_selected=1;
+		$group_name_str.="-- ALL INGROUPS --";
+		$all_selected="selected";
+		}
+	else 
+		{
+		$groups_selected_str.="'$group[$i]', ";
+		}
+	}
 
 $stmt="select group_id,group_name from vicidial_inbound_groups $whereLOGadmin_viewable_groupsSQL order by group_id;";
 $rslt=mysql_query($stmt, $link);
@@ -187,9 +207,15 @@ while ($i < $groups_to_print)
 	$groups[$i] =		$row[0];
 	$group_names[$i] =	$row[1];
 	$groups_string .= "$groups[$i]|";
-	if ($group && $groups[$i]==$group) {$group_name=$group_names[$i];}
+	for ($j=0; $j<$groups_selected; $j++) {
+		if ($group[$j] && $groups[$i]==$group[$j]) {$group_name_str.="$groups[$i] - $group_names[$i], ";}
+		if ($group[$j]=="--ALL--") {$groups_selected_str.="'$groups[$i]', ";}
+	}
 	$i++;
 	}
+
+$groups_selected_str=preg_replace('/, $/', '', $groups_selected_str);
+$group_name_str=preg_replace('/, $/', '', $group_name_str);
 
 $stmt="select call_time_id,call_time_name from vicidial_call_times $whereLOGadmin_viewable_call_timesSQL order by call_time_id;";
 $rslt=mysql_query($stmt, $link);
@@ -214,11 +240,11 @@ $HEADER.="   .orange {color: black; background-color: #FFCC99}\n";
 $HEADER.="-->\n";
 $HEADER.=" </STYLE>\n";
 
-if (!preg_match("/\|$group\|/i",$groups_string))
-	{
-	$HEADER.="<!-- group not found: $group  $groups_string -->\n";
-	$group='';
-	}
+#if (!preg_match("/\|$group\|/i",$groups_string))
+#	{
+#	$HEADER.="<!-- group not found: $group  $groups_string -->\n";
+#	$group='';
+#	}
 
 $HEADER.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
@@ -232,7 +258,7 @@ $short_header=1;
 # require("admin_header.php");
 
 $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-$MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD colspan=2>";
+$MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR valign='bottom'><TD colspan=2>";
 
 $MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
@@ -260,12 +286,17 @@ $MAIN.="o_cal.a_tpl.yearscroll = false;\n";
 $MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 $MAIN.="</script>\n";
 
-$MAIN.="<SELECT SIZE=1 NAME=group>\n";
+$MAIN.="<SELECT SIZE=5 NAME=group[] multiple>\n";
+$MAIN.="<option $all_selected value=\"--ALL--\">--ALL INGROUPS--</option>\n";
 	$o=0;
 while ($groups_to_print > $o)
 	{
-	if ($groups[$o] == $group) {$MAIN.="<option selected value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
-	else {$MAIN.="<option value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
+	$selected="";
+	for ($i=0; $i<$groups_selected; $i++) {
+		echo "<!-- $groups[$o] == $group[$i] //-->\n";
+		if ($groups[$o] == $group[$i]) {$selected="selected";}
+	}
+	$MAIN.="<option $selected value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";
 	$o++;
 	}
 $MAIN.="</SELECT>\n";
@@ -290,12 +321,12 @@ if ($IDR_calltime_available==1)
 	}
 
 $MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT></TD></TR>\n";
-$MAIN.="<TR><TD align='left'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><INPUT TYPE=checkbox NAME=hourly_breakdown VALUE='checked' $hourly_breakdown>Show hourly results<BR><INPUT TYPE=checkbox NAME=show_disposition_statuses VALUE='checked' $show_disposition_statuses>Show disposition statuses<BR><INPUT TYPE=checkbox NAME=ignore_afterhours VALUE='checked' $ignore_afterhours>Ignore after-hours calls</FONT></TD><TD align='right'><a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&group=$group&shift=$shift&hourly_breakdown=$hourly_breakdown&show_disposition_statuses=$show_disposition_statuses&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a> | <a href=\"./admin.php?ADD=3111&group_id=$group\">MODIFY</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a></TD></TR>\n";
+$MAIN.="<TR><TD align='left'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><INPUT TYPE=checkbox NAME=hourly_breakdown VALUE='checked' $hourly_breakdown>Show hourly results<BR><INPUT TYPE=checkbox NAME=show_disposition_statuses VALUE='checked' $show_disposition_statuses>Show disposition statuses<BR><INPUT TYPE=checkbox NAME=ignore_afterhours VALUE='checked' $ignore_afterhours>Ignore after-hours calls</FONT></TD><TD align='right'><a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date$selected_group_URLstr&shift=$shift&hourly_breakdown=$hourly_breakdown&show_disposition_statuses=$show_disposition_statuses&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a> | <a href=\"./admin.php?ADD=3111&group_id=$group\">MODIFY</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a></TD></TR>\n";
 $MAIN.="<TR><TD colspan=2>";
 $MAIN.="<PRE><FONT SIZE=2>\n\n";
 
 
-if (!$group)
+if ($groups_selected==0)
 	{
 	$MAIN.="\n\n";
 	$MAIN.="PLEASE SELECT AN IN-GROUP AND DATE RANGE ABOVE AND CLICK SUBMIT\n";
@@ -490,21 +521,21 @@ else
 	}
 
 	$MAIN.="Inbound Daily Report                      $NOW_TIME\n";
-	$MAIN.="Selected in-group: $group - $group_name\n";
+	$MAIN.="Selected in-groups: $group_name_str\n";
 	if ($shift && $IDR_calltime_available) {$MAIN.="Selected shift: $shift\n";}
 	$MAIN.="Time range $DURATIONday days: $query_date_BEGIN to $query_date_END";
 	if ($shift && $IDR_calltime_available) {$MAIN.="for $shift shift";}
 	$MAIN.="\n\n";
 	#echo "Time range day sec: $SQsec - $EQsec   Day range in epoch: $SQepoch - $EQepoch   Start: $SQepochDAY\n";
 	$CSV_text.="\"Inbound Daily Report\",\"$NOW_TIME\"\n";
-	$CSV_text.="Selected in-group: $group - $group_name\n";
+	$CSV_text.="Selected in-groups: $group_name_str\n";
 	if ($shift && $IDR_calltime_available) {$CSV_text.="Selected shift: $shift\n";}
 	$CSV_text.="\"Time range $DURATIONday days:\",\"$query_date_BEGIN to $query_date_END\"";
 	if ($shift && $IDR_calltime_available) {$CSV_text.="for $shift shift";}
 	$CSV_text.="\n\n";
 
 	if ($show_disposition_statuses) {
-		$dispo_stmt="select distinct status from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysql_real_escape_string($group) . "' $big_shift_time_SQL_clause order by status;";
+		$dispo_stmt="select distinct status from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id in (" . $groups_selected_str . ") $big_shift_time_SQL_clause order by status;";
 		#echo $dispo_stmt."<BR>";
 		$dispo_rslt=mysql_query($dispo_stmt, $link);
 		$dispo_str="";
@@ -672,7 +703,7 @@ else
 
 
 	### GRAB ALL RECORDS WITHIN RANGE FROM THE DATABASE ###
-	$stmt="select queue_seconds,UNIX_TIMESTAMP(call_date),length_in_sec,status,term_reason,call_date from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysql_real_escape_string($group) . "';";
+	$stmt="select queue_seconds,UNIX_TIMESTAMP(call_date),length_in_sec,status,term_reason,call_date from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id in (" . $groups_selected_str . ");";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {$ASCII_text.="$stmt\n";}
 	$records_to_grab = mysql_num_rows($rslt);

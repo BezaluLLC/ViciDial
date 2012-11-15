@@ -439,7 +439,7 @@ campaign_dnc_check -	Y, N or AREACODE, default is N
 campaign_id -		2-8 Character campaign ID, required if using campaign_dnc_check or callbacks
 add_to_hopper -		Y or N, default is N
 hopper_priority -	99 to -99, the higher number the higher priority, default is 0
-hopper_local_call_time_check - Y or N, default is N. Validate the local call time before inserting lead in the hopper
+hopper_local_call_time_check - Y or N, default is N. Validate the local call time before inserting lead in the hopper(Call Time only, not State Call Times)
 duplicate_check -	Check for duplicate records in the system, can select more than one (duplicate_check=DUPLIST-DUPTITLEALTPHONELIST)
 			If duplicate is found, will return error, the duplicate data and lead_id and list_id of existing record
 			Here are the duplicate_check options:

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-VDAD_RINGALL.agi version 2.4
+# agi-VDAD_RINGALL.agi version 2.6
 # 
 # NOTE: this script is used for on-hook agents to be connected to customer calls
 # when they answer their ringing phones
@@ -12,12 +12,13 @@
 # exten => _8331*.,n,AGI(agi-VDAD_RINGALL.agi,${EXTEN})
 # exten => _8331*.,n,Hangup
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 110303-2325 - First build
 # 110324-2328 - Added recording of remote agent calls, per in-group and campaign recording settings
 # 110325-1411 - Added user recording override settings checking for remote agent recording
+# 121114-1935 - Added INGROUP recording option
 #
 
 $script = 'agi-VDAD_RINGALL.agi';
@@ -325,6 +326,7 @@ if ($NAGcount > 0)
 								$tinydate = "$Tyear$mon$mday$hour$min$sec";
 
 								$campaign_rec_filename =~ s/CAMPAIGN/$VLAcampaign_id/gi;
+								$campaign_rec_filename =~ s/INGROUP/$VAC_campaign_id/gi;
 								$campaign_rec_filename =~ s/CUSTPHONE/$VAC_phone_number/gi;
 								$campaign_rec_filename =~ s/FULLDATE/$recdate/gi;
 								$campaign_rec_filename =~ s/TINYDATE/$tinydate/gi;

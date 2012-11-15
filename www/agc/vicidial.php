@@ -387,10 +387,11 @@
 # 121025-2335 - Do not allow AGENTDIRECT transfers without a user defined
 # 121029-0122 - Added pause_after_next_call and owner_populate campaign options
 # 121114-1759 - Fixed manual dial lead preview script variable issue
+# 121114-1937 - Added INGROUP recording option
 #
 
-$version = '2.6-355c';
-$build = '121114-1759';
+$version = '2.6-356c';
+$build = '121114-1937';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -4995,6 +4996,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				//	var campaign_rec_filename = '<?php echo $campaign_rec_filename ?>';
 				//	CAMPAIGN CUSTPHONE FULLDATE TINYDATE EPOCH AGENT VENDORLEADCODE LEADID
 				var REGrecCAMPAIGN = new RegExp("CAMPAIGN","g");
+				var REGrecINGROUP = new RegExp("INGROUP","g");
 				var REGrecCUSTPHONE = new RegExp("CUSTPHONE","g");
 				var REGrecFULLDATE = new RegExp("FULLDATE","g");
 				var REGrecTINYDATE = new RegExp("TINYDATE","g");
@@ -5004,6 +5006,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				var REGrecLEADID = new RegExp("LEADID","g");
 				filename = LIVE_campaign_rec_filename;
 				filename = filename.replace(REGrecCAMPAIGN, campaign);
+				filename = filename.replace(REGrecINGROUP, VDCL_group_id);
 				filename = filename.replace(REGrecCUSTPHONE, lead_dial_number);
 				filename = filename.replace(REGrecFULLDATE, filedate);
 				filename = filename.replace(REGrecTINYDATE, tinydate);

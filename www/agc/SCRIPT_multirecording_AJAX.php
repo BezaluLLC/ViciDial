@@ -45,6 +45,7 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_array($rslt);
 $filename=$row["campaign_rec_filename"];
 $filename=eregi_replace("CAMPAIGN", $campaign, $filename);
+$filename=eregi_replace("INGROUP", $campaign, $filename);
 $filename=eregi_replace("CUSTPHONE", $phone_number, $filename);
 $filename=eregi_replace("FULLDATE", date("Ymd-His"), $filename);
 $filename=eregi_replace("TINYDATE", (date("Y")-2000).date("mdHis"), $filename);

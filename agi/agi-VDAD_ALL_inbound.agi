@@ -177,6 +177,7 @@
 # 120513-0051 - Added ability to have Dial In-Group agent calls go directly to agents
 # 120514-0953 - Added force checks for dial-ingroup calls
 # 121025-2210 - If AGENTDIRECT and no agent defined, set drop call seconds to 1
+# 121114-1936 - Added INGROUP recording option
 #
 
 
@@ -3108,6 +3109,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 						$tinydate = "$Tyear$mon$mday$hour$min$sec";
 
 						$campaign_rec_filename =~ s/CAMPAIGN/$VDADcampaign/gi;
+						$campaign_rec_filename =~ s/INGROUP/$channel_group/gi;
 						$campaign_rec_filename =~ s/CUSTPHONE/$phone_number/gi;
 						$campaign_rec_filename =~ s/FULLDATE/$recdate/gi;
 						$campaign_rec_filename =~ s/TINYDATE/$tinydate/gi;

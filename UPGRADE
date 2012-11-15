@@ -112,6 +112,8 @@ OTHER CHANGES:
 23. Added Lead Tools web page from Admin Utilities. Allows for some basic lead 
 	management through the web interface.
 
+24. Added recording filename variable INGROUP for the In-Group ID of a call
+
 
 
 

@@ -504,6 +504,7 @@ else
 				}
 
 			$campaign_rec_filename =~ s/CAMPAIGN/$VD_campaign_id/gi;
+			$campaign_rec_filename =~ s/INGROUP/$VD_campaign_id/gi;
 			$campaign_rec_filename =~ s/CUSTPHONE/$VD_phone_number/gi;
 			$campaign_rec_filename =~ s/FULLDATE/$recdate/gi;
 			$campaign_rec_filename =~ s/TINYDATE/$tinydate/gi;

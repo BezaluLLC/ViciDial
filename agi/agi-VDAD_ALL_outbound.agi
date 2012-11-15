@@ -688,6 +688,7 @@ if ($VDACaffected_rows > 0)
 		$tinydate = "$Tyear$mon$mday$hour$min$sec";
 
 		$campaign_rec_filename =~ s/CAMPAIGN/$VDADcampaign/gi;
+		$campaign_rec_filename =~ s/INGROUP/$VDADcampaign/gi;
 		$campaign_rec_filename =~ s/CUSTPHONE/$VDADphone/gi;
 		$campaign_rec_filename =~ s/FULLDATE/$recdate/gi;
 		$campaign_rec_filename =~ s/TINYDATE/$tinydate/gi;
