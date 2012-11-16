@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# ADMIN_qm_sync.pl version 2.4
+# ADMIN_qm_sync.pl version 2.6
 #
 # DESCRIPTION:
 # to be run frequently to sync the vicidial_users and remote agents to the QM
@@ -8,18 +8,23 @@
 #
 # This program only needs to be run by one server
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 110425-0853 - First Build
 # 110506-1516 - Added DIDs, IVRs, in-groups(queues), campaigns(queues) and all-alias to the sync options
 # 111203-0737 - Added queue key options for in-group ID and ALLQ
+# 121115-1908 - Added CLI options for alternate QM MySQL connection information
 #
 
 # constants
-$version = '111203-0737';
+$version = '121115-1908';
 $US='__';
 $MT[0]='';
+$CLIQMDB_host=0;
+$CLIQMDB_dbname=0;
+$CLIQMDB_user=0;
+$CLIQMDB_pass=0;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -48,7 +53,11 @@ if (length($ARGV[0])>1)
 		print "  [--all-alias-sync] = will sync all queues in QM into the default \"00 All Queues\" alias\n";
 		print "  [--key-id-ig] = will ensure that the queue has the in-group id set as a key\n";
 		print "  [--key-id-allq] = will ensure that the queue has \"ALLQ\" id set as a key\n";
-		print "  [-q] = quiet, no output\n";
+		print "  [--qm-db-server=XXX] = alternate QM mysql server\n";
+		print "  [--qm-db-dbname=XXX] = alternate QM mysql database name\n";
+		print "  [--qm-db-login=XXX] = alternate QM mysql server login account\n";
+		print "  [--qm-db-pass=XXX] = alternate QM mysql server password\n";
+		print "  [--quiet] = quiet, no output\n";
 		print "  [--test] = test\n";
 		print "  [--version] = display version of this script\n";
 		print "  [--debug] = verbose debug messages\n";
@@ -57,11 +66,11 @@ if (length($ARGV[0])>1)
 		}
 	else
 		{
-		if ($args =~ /-q/i)
+		if ($args =~ /--quiet/i)
 			{
 			$Q=1; # quiet
 			}
-		if ($args =~ /-debug/i)
+		if ($args =~ /--debug/i)
 			{
 			$DB=1; # Debug flag
 			if ($Q < 1) {print "\n----- DEBUGGING -----\n\n";}
@@ -71,18 +80,18 @@ if (length($ARGV[0])>1)
 			$DBX=1;
 			if ($Q < 1) {print "\n----- SUPER-DUPER DEBUGGING -----\n\n";}
 			}
-		if ($args =~ /-test/i)
+		if ($args =~ /--test/i)
 			{
 			$TEST=1;
 			$T=1;
 			if ($Q < 1) {print "\n----- TEST RUN, NO UPDATES -----\n\n";}
 			}
-		if ($args =~ /-all-alias-sync/i)
+		if ($args =~ /--all-alias-sync/i)
 			{
 			$SYNC_all_alias=1;
 			if ($Q < 1) {print "\n----- ALL ALIAS SYNC -----\n\n";}
 			}
-		if ($args =~ /-all-sync/i)
+		if ($args =~ /--all-sync/i)
 			{
 			$SYNC_user=1;
 			$SYNC_remoteagents=1;
@@ -92,45 +101,81 @@ if (length($ARGV[0])>1)
 			$SYNC_campaigns=1;
 			if ($Q < 1) {print "\n----- ALL SYNC -----\n\n";}
 			}
-		if ($args =~ /-user/i)
+		if ($args =~ /--user/i)
 			{
 			$SYNC_user=1;
 			if ($Q < 1) {print "\n----- USER SYNC -----\n\n";}
 			}
-		if ($args =~ /-remote-agents/i)
+		if ($args =~ /--remote-agents/i)
 			{
 			$SYNC_remoteagents=1;
 			if ($Q < 1) {print "\n----- REMOTE AGENT SYNC -----\n\n";}
 			}
-		if ($args =~ /-dids/i)
+		if ($args =~ /--dids/i)
 			{
 			$SYNC_dids=1;
 			if ($Q < 1) {print "\n----- DID SYNC -----\n\n";}
 			}
-		if ($args =~ /-ivrs/i)
+		if ($args =~ /--ivrs/i)
 			{
 			$SYNC_ivrs=1;
 			if ($Q < 1) {print "\n----- IVR SYNC -----\n\n";}
 			}
-		if ($args =~ /-ingroups/i)
+		if ($args =~ /--ingroups/i)
 			{
 			$SYNC_ingroups=1;
 			if ($Q < 1) {print "\n----- IN-GROUP SYNC -----\n\n";}
 			}
-		if ($args =~ /-campaigns/i)
+		if ($args =~ /--campaigns/i)
 			{
 			$SYNC_campaigns=1;
 			if ($Q < 1) {print "\n----- CAMPAIGN SYNC -----\n\n";}
 			}
-		if ($args =~ /-key-id-ig/i)
+		if ($args =~ /--key-id-ig/i)
 			{
 			$KEY_ingroup=1;
 			if ($Q < 1) {print "\n----- QUEUE KEY INGROUP -----\n\n";}
 			}
-		if ($args =~ /-key-id-allq/i)
+		if ($args =~ /--key-id-allq/i)
 			{
 			$KEY_allq=1;
 			if ($Q < 1) {print "\n----- QUEUE KEY ALLQ -----\n\n";}
+			}
+		if ($args =~ /--qm-db-server=/i) 
+			{
+			my @data_in = split(/--qm-db-server=/,$args);
+			$VARQMDB_host = $data_in[1];
+			$VARQMDB_host =~ s/ .*//gi;
+			$CLIQMDB_host=1;
+			if ($DB > 0) 
+				{print "\n----- QM DB SERVER: $VARQMDB_host -----\n\n";}
+			}
+		if ($args =~ /--qm-db-login=/i) 
+			{
+			my @data_in = split(/--qm-db-login=/,$args);
+			$VARQMDB_user = $data_in[1];
+			$VARQMDB_user =~ s/ .*//gi;
+			$CLIQMDB_user=1;
+			if ($DB > 0) 
+				{print "\n----- QM DB LOGIN: $VARQMDB_user -----\n\n";}
+			}
+		if ($args =~ /--qm-db-pass=/i) 
+			{
+			my @data_in = split(/--qm-db-pass=/,$args);
+			$VARQMDB_pass = $data_in[1];
+			$VARQMDB_pass =~ s/ .*//gi;
+			$CLIQMDB_pass=1;
+			if ($DB > 0) 
+				{print "\n----- QM DB PASS: $VARQMDB_pass -----\n\n";}
+			}
+		if ($args =~ /--qm-db-dbname=/i) 
+			{
+			my @data_in = split(/--qm-db-dbname=/,$args);
+			$VARQMDB_dbname = $data_in[1];
+			$VARQMDB_dbname =~ s/ .*//gi;
+			$CLIQMDB_dbname=1;
+			if ($DB > 0) 
+				{print "\n----- QM DB DBNAME: $VARQMDB_dbname -----\n\n";}
 			}
 		}
 	}
@@ -179,8 +224,6 @@ foreach(@conf)
 	$i++;
 	}
 
-# Customized Variables
-$server_ip = $VARserver_ip;		# Asterisk server IP
 
 if (!$CLEANLOGfile) {$CLEANLOGfile = "$PATHlogs/qmsync.$Hyear-$Hmon-$Hmday";}
 
@@ -201,22 +244,26 @@ if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
 	$enable_queuemetrics_logging =	$aryA[0];
-	$queuemetrics_server_ip	=	$aryA[1];
-	$queuemetrics_dbname =		$aryA[2];
-	$queuemetrics_login=		$aryA[3];
-	$queuemetrics_pass =		$aryA[4];
-	$queuemetrics_log_id =		$aryA[5];
+	$queuemetrics_server_ip	=		$aryA[1];
+	$queuemetrics_dbname =			$aryA[2];
+	$queuemetrics_login=			$aryA[3];
+	$queuemetrics_pass =			$aryA[4];
+	$queuemetrics_log_id =			$aryA[5];
 	}
 $sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
 ###########################################
+
+if ($CLIQMDB_host > 0)		{$queuemetrics_server_ip =	$VARQMDB_host;}
+if ($CLIQMDB_dbname > 0)	{$queuemetrics_dbname =		$VARQMDB_dbname;}
+if ($CLIQMDB_user > 0)		{$queuemetrics_login =		$VARQMDB_user;}
+if ($CLIQMDB_pass > 0)		{$queuemetrics_pass =		$VARQMDB_pass;}
 
 
 $dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
  or die "Couldn't connect to database: " . DBI->errstr;
 
 if ($DBX) {print "CONNECTED TO QM DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
-
 
 
 
