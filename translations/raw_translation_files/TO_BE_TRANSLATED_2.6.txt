@@ -29,6 +29,8 @@ If this is enabled and the owner field of the lead is blank, the owner field for
 This field allows you to customize the name of the recording when Campaign recording is ONDEMAND or ALLCALLS. The allowed variables are||
 The default is FULLDATE_AGENT and would look like this 20051020-103108_6666. Another example is CAMPAIGN_TINYDATE_CUSTPHONE which would look like this TESTCAMP_51020103108_3125551212. Te resulting filename must be less than 90 characters in length||
 This field will override the Campaign Recording Filenaming Scheme unless it is set to NONE. The allowed variables are||
+Audit Comments||
+This option allows comments to be moved to an audit table. No longer editable, but viewable along with the date-time-creator of each comment. Default is N. This is a part of the Quality Control Add-On||
 
 
 ############################################################ CLIENT
@@ -47,6 +49,7 @@ Called Count||
 Unidentified Hangup Cause Code||
 YOU MUST SELECT AN AGENT TO TRANSFER TO WHEN USING AGENTDIRECT||
 Another live agent session was open using your user ID. It has been disabled. Click OK to continue to the agent screen||
+View Comment History||
 
 
 ############################################################  MANAGER Manual

@@ -315,10 +315,11 @@
 # 121018-2320 - Added blank option to owner only dialing
 # 121029-0159 - Added owner_populate campaign option
 # 121114-1749 - Fixed manual dial lead preview script variable issue
+# 121116-1409 - Added QC functionality
 #
 
-$version = '2.6-213';
-$build = '121114-1749';
+$version = '2.6-214';
+$build = '121116-1409';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=443;
 $one_mysql_log=0;
@@ -650,7 +651,7 @@ $hangup_cause_dictionary = array(
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db FROM system_settings;";
+$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,qc_features_active FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00001',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -666,6 +667,7 @@ if ($qm_conf_ct > 0)
 	$alt_log_login =						$row[5];
 	$alt_log_pass =							$row[6];
 	$tables_use_alt_log_db =				$row[7];
+	$qc_features_active =					$row[8];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -1186,6 +1188,14 @@ if ($ACTION == 'UpdateFields')
 		{
 		$rowx=mysql_fetch_row($rslt);
 		if ($rowx[0] > 0) {$lead_id = $rowx[0];}
+                ### ADDED BY POUNDTEAM FOR AUDITED COMMENTS! acquire audited comment count for this lead
+		$stmt="SELECT count(comment_id) as comment_count FROM vicidial_comments where lead_id='$lead_id' and hidden is null";
+		$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00275',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($DB) {echo "$stmt\n";}
+		$row=mysql_fetch_row($rslt);
+                $lead_comment_count		= trim("$row[0]");
+
 		##### grab the data from vicidial_list for the lead_id
 		$stmt="SELECT vendor_lead_code,source_id,gmt_offset_now,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,rank,owner FROM vicidial_list where lead_id='$lead_id' LIMIT 1;";
 		$rslt=mysql_query($stmt, $link);
@@ -1250,6 +1260,7 @@ if ($ACTION == 'UpdateFields')
 			$LeaD_InfO .=	$comments . "\n";
 			$LeaD_InfO .=	$rank . "\n";
 			$LeaD_InfO .=	$owner . "\n";
+			$LeaD_InfO .=	$lead_comment_count . "\n";
 			$LeaD_InfO .=	"\n";
 
 			echo $LeaD_InfO;
@@ -2166,6 +2177,23 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$entry_list_id	= trim("$row[34]");
 					if ($entry_list_id < 100) {$entry_list_id = $list_id;}
 				}
+			if ($qc_features_active > 0)
+				{
+				//Added by Poundteam for Audited Comments
+				##### if list has audited comments, grab the audited comments
+				require_once('audit_comments.php');
+				$ACcount =		'';
+				$ACcomments =		'';
+				$audit_comments_active=audit_comments_active($list_id,$format,$user,$mel,$NOW_TIME,$link,$server_ip,$session_name,$one_mysql_log);
+				if ($audit_comments_active)
+					{
+					get_audited_comments($lead_id,$format,$user,$mel,$NOW_TIME,$link,$server_ip,$session_name,$one_mysql_log);
+					}
+				$ACcomments = strip_tags(htmlentities($ACcomments));
+				$ACcomments = eregi_replace("\r",'',$ACcomments);
+				$ACcomments = eregi_replace("\n",'!N',$ACcomments);
+				//END Added by Poundteam for Audited Comments
+				}
 
 			$called_count++;
 
@@ -2826,6 +2854,8 @@ if ($ACTION == 'manDiaLnextCaLL')
 			$LeaD_InfO .=	$LISTweb_form_address . "\n";
 			$LeaD_InfO .=	$LISTweb_form_address_two . "\n";
 			$LeaD_InfO .=	$post_phone_time_diff_alert_message . "\n";
+			$LeaD_InfO .=   $ACcount . "\n";
+			$LeaD_InfO .=   $ACcomments . "\n";
 
 			echo $LeaD_InfO;
 			}
@@ -4831,6 +4861,23 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$entry_list_id	= trim("$row[34]");
 				if ($entry_list_id < 100) {$entry_list_id = $list_id;}
 				}
+			if ($qc_features_active > 0)
+				{
+				//Added by Poundteam for Audited Comments
+				##### if list has audited comments, grab the audited comments
+				require_once('audit_comments.php');
+				$ACcount =		'';
+				$ACcomments =		'';
+				$audit_comments_active=audit_comments_active($list_id,$format,$user,$mel,$NOW_TIME,$link,$server_ip,$session_name,$one_mysql_log);
+				if ($audit_comments_active)
+					{
+					get_audited_comments($lead_id,$format,$user,$mel,$NOW_TIME,$link,$server_ip,$session_name,$one_mysql_log);
+					}
+				$ACcomments = strip_tags(htmlentities($ACcomments));
+				$ACcomments = eregi_replace("\r",'',$ACcomments);
+				$ACcomments = eregi_replace("\n",'!N',$ACcomments);
+				//END Added by Poundteam for Audited Comments
+				}
 
 			##### if lead is a callback, grab the callback comments
 			$CBentry_time =		'';
@@ -5549,6 +5596,10 @@ if ($ACTION == 'VDADcheckINCOMING')
 			$LeaD_InfO .=	$custom_field_names . "\n";
 			$LeaD_InfO .=	$custom_field_values . "\n";
 			$LeaD_InfO .=	$custom_field_types . "\n";
+			$LeaD_InfO .=   $LISTweb_form_address . "\n";
+			$LeaD_InfO .=   $LISTweb_form_address_two . "\n";
+			$LeaD_InfO .=   $ACcount . "\n";
+			$LeaD_InfO .=   $ACcomments . "\n";
 
 			echo $LeaD_InfO;
 
@@ -6198,12 +6249,14 @@ if ($ACTION == 'updateDISPO')
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00285',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
-
 		$stmt="UPDATE vicidial_list set status='$dispo_choice', user='$user' where lead_id='$lead_id';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00142',$user,$server_ip,$session_name,$one_mysql_log);}
 
+                //Added by Poundteam Incorporated for Audit Comments Package
+                require_once('audit_comments.php');
+                audit_comments($lead_id,$list_id,$format,$user,$mel,$NOW_TIME,$link,$server_ip,$session_name,$one_mysql_log,$campaign);
 	#	$fp = fopen ("./vicidial_debug.txt", "a");
 	#	fwrite ($fp, "$NOW_TIME|DISPO_CALL |$MDnextCID|$stage|$campaign|$lead_id|$dispo_choice|$user|$uniqueid|$auto_dial_level|$agent_log_id|\n");
 	#	fclose($fp);

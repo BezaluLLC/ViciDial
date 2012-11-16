@@ -1,5 +1,5 @@
 <?php
-# admin_modify_lead.php   version 2.4
+# admin_modify_lead.php   version 2.6
 # 
 # ViciDial database administration modify lead in vicidial_list
 # admin_modify_lead.php
@@ -48,6 +48,7 @@
 # 120223-2249 - Removed logging of good login passwords if webroot writable is enabled
 # 120518-1004 - Fix for multi-line comments
 # 120529-1635 - Added User Group Campaign-Lists validation
+# 121116-1411 - Added QC functionality
 #
 
 require("dbconnect.php");
@@ -1411,7 +1412,8 @@ else
 			{
 			echo "<a href=\"./admin.php?ADD=720000000000000&stage=$lead_id&category=LEADS\">Click here to see Lead Modify changes to this lead</a>\n";
 			}
-
+                //Display link to QC if user has QC permissions
+                require('./qc/QC_admin_modify_lead_include.php');
 		echo "</center>\n";
 		}
 	}

@@ -2698,6 +2698,63 @@ index (call_date)
 );
 
 
+CREATE TABLE vicidial_qc_agent_log (
+qc_agent_log_id INT(9) unsigned NOT NULL AUTO_INCREMENT,
+qc_user VARCHAR(20) COLLATE utf8_unicode_ci NOT NULL,
+qc_user_group VARCHAR(20) COLLATE utf8_unicode_ci NOT NULL,
+qc_user_ip VARCHAR(15) COLLATE utf8_unicode_ci NOT NULL,
+lead_user VARCHAR(20) COLLATE utf8_unicode_ci NOT NULL,
+web_server_ip VARCHAR(15) COLLATE utf8_unicode_ci NOT NULL,
+view_datetime DATETIME NOT NULL,
+save_datetime DATETIME DEFAULT NULL,
+view_epoch INT(10) unsigned NOT NULL,
+save_epoch INT(10) unsigned DEFAULT NULL,
+elapsed_seconds SMALLINT(5) unsigned DEFAULT NULL,
+lead_id INT(9) unsigned NOT NULL,
+list_id BIGINT(14) unsigned NOT NULL,
+campaign_id VARCHAR(8) COLLATE utf8_unicode_ci NOT NULL,
+old_status VARCHAR(6) COLLATE utf8_unicode_ci DEFAULT NULL,
+new_status VARCHAR(6) COLLATE utf8_unicode_ci DEFAULT NULL,
+details TEXT COLLATE utf8_unicode_ci,
+processed ENUM('Y','N') COLLATE utf8_unicode_ci NOT NULL,
+PRIMARY KEY (qc_agent_log_id),
+KEY view_epoch (view_epoch)
+);
+
+CREATE TABLE vicidial_comments (
+comment_id BIGINT(20) unsigned NOT NULL AUTO_INCREMENT,
+lead_id INT(11) NOT NULL,
+user_id INT(11) NOT NULL,
+timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+list_id INT(11) NOT NULL,
+campaign_id INT(11) NOT NULL,
+comment VARCHAR(255) COLLATE utf8_unicode_ci NOT NULL,
+hidden TINYINT(1) DEFAULT NULL,
+hidden_user_id INT(11) DEFAULT NULL,
+hidden_timestamp DATETIME DEFAULT NULL,
+unhidden_user_id INT(11) DEFAULT NULL,
+unhidden_timestamp DATETIME DEFAULT NULL,
+PRIMARY KEY (comment_id),
+index (lead_id)
+);
+
+CREATE TABLE vicidial_configuration (
+id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+name VARCHAR(36) NOT NULL ,
+value VARCHAR(36) NOT NULL ,
+UNIQUE (name)
+);
+
+CREATE TABLE vicidial_lists_custom (
+list_id BIGINT(14) unsigned NOT NULL,
+audit_comments TINYINT(1) DEFAULT NULL COMMENT 'visible',
+audit_comments_enabled TINYINT(1) DEFAULT NULL COMMENT 'invisible',
+PRIMARY KEY (list_id)
+);
+
+
+ALTER TABLE vicidial_qc_codes ADD qc_result_type ENUM( 'PASS', 'FAIL', 'CANCEL', 'COMMIT' ) NOT NULL;
+
 ALTER TABLE vicidial_campaign_server_stats ENGINE=MEMORY;
 
 ALTER TABLE live_channels ENGINE=MEMORY;
@@ -2917,5 +2974,15 @@ INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,cate
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('MLINAT','Multi-Lead auto-alt-dial lead set to inactive','N','Y','UNDEFINED','N','N','N','N','N','N','Y');
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('MAXCAL','Inbound Max Calls Drop','N','Y','UNDEFINED','N','N','N','N','N','N','N');
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('LRERR','Outbound Local Channel Res Err','N','Y','UNDEFINED','N','N','N','N','N','N','N');
+INSERT INTO vicidial_statuses (status, status_name, selectable, human_answered, category, sale, dnc, customer_contact, not_interested, unworkable, scheduled_callback) VALUES ('QCFAIL', 'QC_FAIL_CALLBK', 'N', 'Y', 'QC', 'N', 'N', 'Y', 'N', 'N', 'Y');
 
-UPDATE system_settings SET db_schema_version='1330',db_schema_update_date=NOW();
+INSERT INTO vicidial_qc_codes (code,code_name,qc_result_type) VALUES ('QCPASS','PASS','PASS');
+INSERT INTO vicidial_qc_codes (code,code_name,qc_result_type) VALUES ('QCFAIL','FAIL','FAIL');
+INSERT INTO vicidial_qc_codes (code,code_name,qc_result_type) VALUES ('QCCANCEL','CANCEL','CANCEL');
+
+INSERT INTO vicidial_configuration (id, name, value) VALUES (NULL, 'qc_database_version', '1638');
+UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
+
+UPDATE system_settings set vdc_agent_api_active='1';
+
+UPDATE system_settings SET db_schema_version='1331',db_schema_update_date=NOW();

@@ -70,6 +70,8 @@ $reports_font =		'BLACK';
 	$cts_font = 	'BLACK';
 $subcamp_font =		'BLACK';
 
+### QC font and color variables
+require_once('qc/QC_admin_variables.php');
 ### comment this section out for colorful section headings
 $users_color =		'#E6E6E6';
 $campaigns_color =	'#E6E6E6';
@@ -1540,6 +1542,8 @@ if (isset($_GET["auto_resume_precall"]))			{$auto_resume_precall=$_GET["auto_res
 	elseif (isset($_POST["auto_resume_precall"]))	{$auto_resume_precall=$_POST["auto_resume_precall"];}
 if (isset($_GET["auto_pause_precall_code"]))			{$auto_pause_precall_code=$_GET["auto_pause_precall_code"];}
 	elseif (isset($_POST["auto_pause_precall_code"]))	{$auto_pause_precall_code=$_POST["auto_pause_precall_code"];}
+if (isset($_GET["audit_comments"]))                    {$audit_comments=$_GET["audit_comments"];}
+	elseif (isset($_POST["audit_comments"]))        {$audit_comments=$_POST["audit_comments"];}
 if (isset($_GET["reload_dialplan_on_servers"]))				{$reload_dialplan_on_servers=$_GET["reload_dialplan_on_servers"];}
 	elseif (isset($_POST["reload_dialplan_on_servers"]))	{$reload_dialplan_on_servers=$_POST["reload_dialplan_on_servers"];}
 if (isset($_GET["manual_dial_cid"]))			{$manual_dial_cid=$_GET["manual_dial_cid"];}
@@ -3162,12 +3166,13 @@ else
 # 121027-2344 - Added servers versions page
 # 121029-0109 - Added pause_after_next_call and owner_populate campaign options
 # 121114-1923 - Added Basic Lead Management page link. Added INGROUP as a recording filename option
+# 121116-1410 - Added QC functionality
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-381a';
-$build = '121114-1923';
+$admin_version = '2.6-382a';
+$build = '121116-1410';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3221,7 +3226,6 @@ if ($force_logout)
 	echo "You have now logged out. Thank you\n";
 	exit;
 	}
-
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,auto_dial_limit,user_territories_active,allow_custom_dialplan,callcard_enabled,admin_modify_refresh,nocache_admin,webroot_writable FROM system_settings;";
@@ -3262,6 +3266,10 @@ if ( ($reports_auth > 0) and ($auth < 1) )
 	$ADD=999999;
 	$reports_only_user=1;
 	}
+##############################################
+# Include QC Agents with no other permission #
+##############################################
+require_once('qc/QC_admin_include02.php');
 
 if ($SSwebroot_writable > 0)
 	{$fp = fopen ("./project_auth_entries.txt", "a");}
@@ -3270,7 +3278,7 @@ $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
-if ( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or ( ($auth < 1 ) and ($reports_auth < 1) ) )
+if ( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or ( ($auth < 1 ) and ($reports_auth < 1) and ($qc_auth < 1)) )
 	{
 	Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
 	Header("HTTP/1.0 401 Unauthorized");
@@ -3278,7 +3286,7 @@ if ( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or ( ($auth < 1 ) an
 	exit;
 	}
 
-if ( ($auth > 0) or ($reports_auth > 0) )
+if ( ($auth > 0) or ($reports_auth > 0) or ($qc_auth > 0) )
 	{
 	$office_no=strtoupper($PHP_AUTH_USER);
 	$password=strtoupper($PHP_AUTH_PW);
@@ -3774,6 +3782,8 @@ if ($ADD==180000000000)	{$hh='admin';	$sh='label';	echo "SCREEN LABELS LIST";}
 if ($ADD==190000000000)	{$hh='admin';	$sh='cts';	echo "CONTACTS LIST";}
 if ($ADD==1000000000000)	{$hh='admin';	$sh='conference';	echo "CONFERENCE LIST";}
 if ($ADD==10000000000000)	{$hh='admin';	$sh='conference';	echo "VICIDIAL CONFERENCE LIST";}
+##QC
+require_once('qc/QC_admin_variables01.php');
 if ($ADD==550)			{$hh='users';		echo "Search Form";}
 if ($ADD==551)			{$hh='users';		echo "SEARCH PHONES";}
 if ($ADD==660)			{$hh='users';		echo "Search Results";}
@@ -5835,6 +5845,11 @@ if ($ADD==99999)
 	<A NAME="vicidial_lists-reset_time">
 	<BR>
 	<B>Reset Times -</B> This field allows you to put times in, separated by a dash-, that this list will be automatically reset by the system. The times must be in 24 hour format with no punctuation, for example 0800-1700 would reset the list at 8AM and 5PM every day. Default is empty.
+
+	<BR>
+	<A NAME="vicidial_lists-audit_comments">
+	<BR>
+	<B>Audit Comments -</B> This option allows comments to be moved to an audit table. No longer editable, but viewable along with the date-time-creator of each comment. Default is N. This is a part of the Quality Control Add-On.
 
 	<BR>
 	<A NAME="vicidial_lists-agent_script_override">
@@ -13975,41 +13990,7 @@ if ($ADD==231111111111111)
 ######################
 # ADD=241111111111111 adds the new qc status code to the system
 ######################
-
-if ($ADD==241111111111111)
-	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_qc_codes where code='$code';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>QC STATUS CODE NOT ADDED - there is already a qc status code in the system with this name: $row[0]\n";}
-	else
-		{
-		if ( (strlen($code) < 1) or (strlen($code_name) < 2) )
-			{
-			echo "<br>QC STATUS CODE NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>code must be between 1 and 8 characters in length\n";
-			echo "<br>code name must be between 2 and 30 characters in length\n";
-			}
-		else
-			{
-			echo "<br><B>QC STATUS CODE ADDED: $code_name - $code</B>\n";
-
-			$stmt="INSERT INTO vicidial_qc_codes (code,code_name) values('$code','$code_name');";
-			$rslt=mysql_query($stmt, $link);
-
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='QCSTATUSES', event_type='ADD', record_id='$code', event_code='ADMIN ADD QC STATUS', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
-			}
-		}
-	$ADD=341111111111111;
-	}
+//Moved to qc/QC_status_codes_include.php include file
 
 
 
@@ -15782,7 +15763,6 @@ if ($ADD==401)
 
 			$stmt="UPDATE vicidial_xfer_presets SET preset_dtmf='$preset_dtmf',preset_number='$preset_number',preset_hide_number='$preset_hide_number' where campaign_id='$campaign_id' and preset_name='$preset_name';";
 			$rslt=mysql_query($stmt, $link);
-
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|";
 			$SQL_log = ereg_replace(';','',$SQL_log);
@@ -15854,6 +15834,12 @@ if ($ADD==411)
 
 				$stmt="UPDATE vicidial_lists set list_name='$list_name',campaign_id='$campaign_id',active='$active',list_description='$list_description',list_changedate='$SQLdate',reset_time='$reset_time',agent_script_override='$agent_script_override',campaign_cid_override='$campaign_cid_override',am_message_exten_override='$am_message_exten_override',drop_inbound_group_override='$drop_inbound_group_override',xferconf_a_number='$xferconf_a_number',xferconf_b_number='$xferconf_b_number',xferconf_c_number='$xferconf_c_number',xferconf_d_number='$xferconf_d_number',xferconf_e_number='$xferconf_e_number',web_form_address='" . mysql_real_escape_string($web_form_address) . "',web_form_address_two='" . mysql_real_escape_string($web_form_address_two) . "',time_zone_setting='$time_zone_setting',inventory_report='$inventory_report' where list_id='$list_id';";
 				$rslt=mysql_query($stmt, $link);
+
+## BEGIN QC Addition for Audited Comments
+			$stmt="INSERT INTO vicidial_lists_custom (audit_comments, list_id) VALUES ('" . mysql_real_escape_string($audit_comments) . "','$list_id') ON DUPLICATE KEY UPDATE audit_comments='" . mysql_real_escape_string($audit_comments) . "';";
+			$rslt=mysql_query($stmt, $link);
+                        if ($DB) {echo "|$stmt|\n";}
+## END QC Addition for Audited Comments
 
 				### LOG INSERTION Admin Log Table ###
 				$SQL_log = "$stmt|";
@@ -24387,8 +24373,9 @@ if ($ADD==311)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT list_id,list_name,campaign_id,active,list_description,list_changedate,list_lastcalldate,reset_time,agent_script_override,campaign_cid_override,am_message_exten_override,drop_inbound_group_override,xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number,web_form_address,web_form_address_two,time_zone_setting,inventory_report from vicidial_lists where list_id='$list_id' $LOGallowed_campaignsSQL;";
+		$stmt="SELECT vicidial_lists.list_id,list_name,campaign_id,active,list_description,list_changedate,list_lastcalldate,reset_time,agent_script_override,campaign_cid_override,am_message_exten_override,drop_inbound_group_override,xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number,web_form_address,web_form_address_two,time_zone_setting,inventory_report,IFNULL(audit_comments,0) from vicidial_lists left outer join vicidial_lists_custom on vicidial_lists.list_id=vicidial_lists_custom.list_id where vicidial_lists.list_id='$list_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
+                if ($DB) {echo "$stmt\n";}
 		$row=mysql_fetch_row($rslt);
 		$list_name =				$row[1];
 		$campaign_id =				$row[2];
@@ -24410,6 +24397,7 @@ if ($ADD==311)
 		$web_form_address_two =		$row[18];
 		$time_zone_setting =		$row[19];
 		$inventory_report =			$row[20];
+		$audit_comments = 			$row[21];
 
 		# grab names of global statuses and statuses in the selected campaign
 		$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed from vicidial_statuses order by status;";
@@ -24505,6 +24493,11 @@ if ($ADD==311)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option>N</option><option SELECTED>$active</option></select>$NWB#vicidial_lists-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Reset Lead-Called-Status for this list: </td><td align=left><select size=1 name=reset_list><option>Y</option><option SELECTED>N</option></select>$NWB#vicidial_lists-reset_list$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Reset Times: </td><td align=left><input type=text name=reset_time size=30 maxlength=100 value=\"$reset_time\">$NWB#vicidial_lists-reset_time$NWE</td></tr>\n";
+		if($audit_comments=='1') {
+			echo "<tr bgcolor=#B6D3FC><td align=right>Audit Comments: </td><td align=left><select size=1 name=audit_comments><option value='1' selected>Y</option><option value='0'>N</option></select>$NWB#vicidial_lists-audit_comments$NWE</td></tr>\n";
+		} else {
+			echo "<tr bgcolor=#B6D3FC><td align=right>Audit Comments: </td><td align=left><select size=1 name=audit_comments><option value='1'>Y</option><option value='0' selected>N</option></select>$NWB#vicidial_lists-audit_comments$NWE</td></tr>\n";
+		}
 		echo "<tr bgcolor=#B6D3FC><td align=right>List Change Date: </td><td align=left>$list_changedate &nbsp; $NWB#vicidial_lists-list_changedate$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>List Last Call Date: </td><td align=left>$list_lastcalldate &nbsp; $NWB#vicidial_lists-list_lastcalldate$NWE</td></tr>\n";
 
@@ -30621,89 +30614,12 @@ if ($ADD==331111111111111)
 
 
 
+##QC
+require_once('qc/QC_status_codes_include.php');
 ######################
 # ADD=341111111111111 modify vicidial QC status code
 ######################
-
-if ($ADD==341111111111111)
-	{
-	if ( ($LOGmodify_servers==1) and ($SSqc_features_active > 0) )
-		{
-		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
-			{
-			$modify_url = "$PHP_SELF?ADD=341111111111111";
-			$modify_footer_refresh=1;
-			}
-		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-
-		echo "<br><center>\n";
-		echo "<b>VICIDIAL QC STATUS CODES WITHIN THIS SYSTEM: &nbsp; $NWB#vicidial_qc_status_codes$NWE</b><br>\n";
-		echo "<TABLE width=600 cellspacing=3>\n";
-		echo "<tr><td>STATUS CODE</td><td>DESCRIPTION</td><td>MODIFY/DELETE</td></tr>\n";
-
-		##### go through each QC status code
-		$stmt="SELECT count(*) from vicidial_qc_codes;";
-		$rslt=mysql_query($stmt, $link);
-		$rowx=mysql_fetch_row($rslt);
-		if ($rowx[0] > 0)
-			{
-			$stmt="SELECT code,code_name from vicidial_qc_codes order by code;";
-			$rslt=mysql_query($stmt, $link);
-			$statuses_to_print = mysql_num_rows($rslt);
-			$o=0;
-			while ($statuses_to_print > $o) 
-				{
-				$rowx=mysql_fetch_row($rslt);
-				$o++;
-
-				if (eregi("1$|3$|5$|7$|9$", $o))
-					{$bgcolor='bgcolor="#B9CBFD"';} 
-				else
-					{$bgcolor='bgcolor="#9BB9FB"';}
-
-				echo "<tr $bgcolor><td><form action=$PHP_SELF method=POST>\n";
-				echo "<input type=hidden name=ADD value=441111111111111>\n";
-				echo "<input type=hidden name=stage value=modify>\n";
-				echo "<input type=hidden name=code value=\"$rowx[0]\">\n";
-				echo "<font size=2><B>$rowx[0]</B></td>\n";
-				echo "<td><input type=text name=code_name size=20 maxlength=30 value=\"$rowx[1]\"></td>\n";
-				echo "<td align=center nowrap><font size=1><input type=submit name=submit value=MODIFY> &nbsp; &nbsp; &nbsp; &nbsp; \n";
-				echo " &nbsp; \n";
-				
-				if (preg_match("/^B$|^NA$|^DNC$|^NA$|^DROP$|^INCALL$|^QUEUE$|^NEW$/i",$rowx[0]))
-					{
-					echo "<DEL>DELETE</DEL>\n";
-					}
-				else
-					{
-					echo "<a href=\"$PHP_SELF?ADD=441111111111111&status=$rowx[0]&stage=delete\">DELETE</a>\n";
-					}
-				echo "</form></td></tr>\n";
-				}
-			}
-		echo "</table>\n";
-
-		echo "<br>ADD NEW QC STATUS CODE<BR><form action=$PHP_SELF method=POST>\n";
-		echo "<input type=hidden name=ADD value=241111111111111>\n";
-		echo "Status: <input type=text name=code size=9 maxlength=8> &nbsp; \n";
-		echo "Description: <input type=text name=code_name size=30 maxlength=30><BR>\n";
-		echo "<input type=submit name=submit value=ADD><BR>\n";
-
-		echo "</FORM><br>\n";
-
-		}
-	else
-		{
-		echo "You do not have permission to view this page\n";
-		exit;
-		}
-	}
-
-
-
-
-
+//This section moved to include file as part of QC
 
 ######################
 # ADD=550 user search form
@@ -32387,7 +32303,10 @@ if ($ADD==10000000000000)
 	}
 
 
-
+######################
+# ADD=100000000000000 display all qc campaigns
+######################
+require_once('qc/QC_admin_include01.php');
 
 
 ######################

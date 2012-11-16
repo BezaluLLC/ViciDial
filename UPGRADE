@@ -114,6 +114,10 @@ OTHER CHANGES:
 
 24. Added recording filename variable INGROUP for the In-Group ID of a call
 
+25. Added QC functionality contributed by PoundTeam and Affinity On-Call.
+	To enable, go to Admin -> System Settings and set "QC Features Active"
+	to "1", then submit.
+
 
 
 
