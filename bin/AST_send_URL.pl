@@ -1,18 +1,20 @@
 #!/usr/bin/perl
 #
-# AST_send_URL.pl   version 2.4
+# AST_send_URL.pl   version 2.6
 # 
 # DESCRIPTION:
 # This script is spawned for remote agents when the Start Call URL is set in the
 # campaign or in-group that the call came from when sent to the remote agent.
-# This script is also used for the Add-Lead-URL feature in In-groups.
+# This script is also used for the Add-Lead-URL feature in In-groups and for
+# QM socket-send.
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 100622-0929 - First Build
 # 100929-0918 - Added function variable and new Add Lead URL function
 # 110731-0127 - Added call_id variable and logging
+# 121120-0925 - Added QM socket-send functionality
 #
 
 $|++;
@@ -53,7 +55,8 @@ if (scalar @ARGV) {
 		'function=s' => \$function,
 		'debug!' => \$DB,
 		'debugX!' => \$DBX,
-		'fulllog!' => \$FULL_LOG);
+		'fulllog!' => \$FULL_LOG,
+		'compat_url=s' => \$compat_url);
 
 	$DB = 1 if ($DBX);
 	if ($DB) 
@@ -70,6 +73,7 @@ if (scalar @ARGV) {
 		print "  alt_dial:              $alt_dial\n" if ($alt_dial);
 		print "  call_id:               $call_id\n" if ($call_id);
 		print "  function:              $function\n" if ($function);
+		print "  compat_url:            $compat_url\n" if ($compat_url);
 		print "\n";
 		}
 	if ($CLOhelp) 
@@ -86,9 +90,11 @@ if (scalar @ARGV) {
 		print "  [--uniqueid] = uniqueid of the call\n";
 		print "  [--alt_dial] = label of the phone number dialed\n";
 		print "  [--call_id] = call_id or caller_code of the call\n";
+		print "  [--compat_url] = full compatible URL to send\n";
 		print "  [--function] = which function is to be run, default is REMOTE_AGENT_START_CALL_URL\n";
 		print "      *REMOTE_AGENT_START_CALL_URL - performs a Start Call URL get for Remote Agent Calls\n";
 		print "      *INGROUP_ADD_LEAD_URL - performs an Add Lead URL get for In-Groups when a lead is added\n";
+		print "      *QM_SOCKET_SEND - performs a queue_log socket send url function\n";
 		print "\n";
 		print "You may prefix an option with 'no' to disable it.\n";
 		print " ie. --noSYSLOG or --noFULLLOG\n";
@@ -205,7 +211,17 @@ if (length($lead_id) > 0)
 	$VAR_did_description =	'';
 	$VAR_closecallid =		'';
 
-	if ($function =~ /INGROUP_ADD_LEAD_URL/)
+
+	if ($function =~ /QM_SOCKET_SEND/)
+		{
+		##### BEGIN QM socket-send URL function #####
+		$compat_url =~ s/ /+/gi;
+		$compat_url =~ s/&/\\&/gi;
+		$parse_url = $compat_url;
+		$url_function = 'qm_socket';
+		##### END QM socket-send URL function #####
+		}
+	elsif ($function =~ /INGROUP_ADD_LEAD_URL/)
 		{
 		##### BEGIN Add Lead URL function #####
 		$stmtA = "SELECT list_id,phone_code,vendor_lead_code FROM vicidial_list where lead_id='$lead_id';";

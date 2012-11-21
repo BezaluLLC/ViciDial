@@ -118,6 +118,8 @@ OTHER CHANGES:
 	To enable, go to Admin -> System Settings and set "QC Features Active"
 	to "1", then submit.
 
+26. Added QM Socket-Send functionality for custom queue_log record sending.
+
 
 
 

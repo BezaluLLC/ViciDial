@@ -1493,7 +1493,9 @@ call_menu_qualify_enabled ENUM('0','1') default '0',
 admin_list_counts ENUM('0','1') default '1',
 allow_voicemail_greeting ENUM('0','1') default '0',
 audio_store_purge TEXT,
-svn_revision INT(9) default '0'
+svn_revision INT(9) default '0',
+queuemetrics_socket VARCHAR(20) default 'NONE',
+queuemetrics_socket_url TEXT
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2985,4 +2987,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1331',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1332',db_schema_update_date=NOW();

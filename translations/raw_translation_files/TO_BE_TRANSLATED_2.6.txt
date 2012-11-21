@@ -31,6 +31,10 @@ The default is FULLDATE_AGENT and would look like this 20051020-103108_6666. Ano
 This field will override the Campaign Recording Filenaming Scheme unless it is set to NONE. The allowed variables are||
 Audit Comments||
 This option allows comments to be moved to an audit table. No longer editable, but viewable along with the date-time-creator of each comment. Default is N. This is a part of the Quality Control Add-On||
+QueueMetrics Socket Send||
+This option, if enabled, will send QM data to a web page that will send it through a socket for logging. The CONNECT_COMPLETE option will send CONNECT, COMPLETEAGENT and COMPLETECALLER events to the url defined below. Default is NONE for disabled||
+QueueMetrics Socket Send URL||
+If Socket Send is enabled above, this is the URL that is used to send the data to. Default is EMPTY for disabled||
 
 
 ############################################################ CLIENT

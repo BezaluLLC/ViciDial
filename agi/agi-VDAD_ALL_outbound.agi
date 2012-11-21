@@ -96,6 +96,7 @@
 # 120529-2112 - Added safe_harbor_audio_field campaign option
 # 120621-0726 - Changed survey opt-in non-agent qm logging to log connection to VDAD agent
 # 121009-1458 - Changed survey method HANGUP to not wait for digits, added LRERR Local channel logging
+# 121120-0922 - Added QM socket-send functionality
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -973,7 +974,7 @@ if ($VDACaffected_rows > 0)
 
 	#############################################
 	##### START QUEUEMETRICS LOGGING LOOKUP #####
-	$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,queuemetrics_pe_phone_append FROM system_settings;";
+	$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,queuemetrics_pe_phone_append,queuemetrics_socket,queuemetrics_socket_url FROM system_settings;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -990,6 +991,8 @@ if ($VDACaffected_rows > 0)
 		$queuemetrics_log_id =			$aryA[5];
 		$queuemetrics_eq_prepend =		$aryA[6];
 		$queuemetrics_pe_phone_append = $aryA[7];
+		$queuemetrics_socket =			$aryA[8];
+		$queuemetrics_socket_url =		$aryA[9];
 		$rec_count++;
 		}
 	$sthA->finish();
@@ -1617,6 +1620,63 @@ if ($call_handle_method =~ /SURVEY/)
 					$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01080';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
 				$dbhB->disconnect();
+
+				if ( ($queuemetrics_socket =~ /CONNECT_COMPLETE/) and (length($queuemetrics_socket_url) > 10) )
+					{
+					#### run for CONNECT
+					$socket_send_data_begin='?';
+					$socket_send_data = "time_id=$now_date_epoch&call_id=$callerid&queue=$VDADcampaign&agent=Agent/VDAD&verb=CONNECT&data1=0&data2=&data3=&data4=";
+					if ($queuemetrics_socket_url =~ /\?/)
+						{$socket_send_data_begin='&';}
+					### send queue_log data to the queuemetrics_socket_url ###
+					$compat_url = "$queuemetrics_socket_url$socket_send_data_begin$socket_send_data";
+					$compat_url =~ s/ /+/gi;
+					$compat_url =~ s/&/\\&/gi;
+
+					$launch = $PATHhome . "/AST_send_URL.pl";
+					$launch .= " --SYSLOG" if ($SYSLOG);
+					$launch .= " --lead_id=" . $CIDlead_id;
+					$launch .= " --phone_number=" . $VDADphone;
+					$launch .= " --user=VDAD";
+					$launch .= " --call_type=";
+					$launch .= " --campaign=" . $VDADcampaign;
+					$launch .= " --uniqueid=" . $uniqueid;
+					$launch .= " --call_id=" . $callerid;
+					$launch .= " --alt_dial=";
+					$launch .= " --function=QM_SOCKET_SEND";
+					$launch .= " --compat_url=" . $compat_url;
+
+					system($launch . ' &');
+
+					if ($AGILOG) {$agi_string = "$launch|";   &agi_output;}
+
+					### run for COMPLETEAGENT
+					$socket_send_data_begin='?';
+					$socket_send_data = "time_id=$qm_complete_time&call_id=$callerid&queue=$VDADcampaign&agent=Agent/VDAD&verb=COMPLETEAGENT&data1=0&data2=$qm_complete_sec&data3=1&data4=";
+					if ($queuemetrics_socket_url =~ /\?/)
+						{$socket_send_data_begin='&';}
+					### send queue_log data to the queuemetrics_socket_url ###
+					$compat_url = "$queuemetrics_socket_url$socket_send_data_begin$socket_send_data";
+					$compat_url =~ s/ /+/gi;
+					$compat_url =~ s/&/\\&/gi;
+
+					$launch = $PATHhome . "/AST_send_URL.pl";
+					$launch .= " --SYSLOG" if ($SYSLOG);
+					$launch .= " --lead_id=" . $CIDlead_id;
+					$launch .= " --phone_number=" . $VDADphone;
+					$launch .= " --user=VDAD";
+					$launch .= " --call_type=";
+					$launch .= " --campaign=" . $VDADcampaign;
+					$launch .= " --uniqueid=" . $uniqueid;
+					$launch .= " --call_id=" . $callerid;
+					$launch .= " --alt_dial=";
+					$launch .= " --function=QM_SOCKET_SEND";
+					$launch .= " --compat_url=" . $compat_url;
+
+					system($launch . ' &');
+
+					if ($AGILOG) {$agi_string = "$launch|";   &agi_output;}
+					}
 				}
 
 			if (length($DROPexten) > 0)
@@ -2311,6 +2371,35 @@ while ($drop_timer <= $DROP_TIME)
 						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01039';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
 					$dbhB->disconnect();
+
+					if ( ($queuemetrics_socket =~ /CONNECT_COMPLETE/) and (length($queuemetrics_socket_url) > 10) )
+						{
+						$socket_send_data_begin='?';
+						$socket_send_data = "time_id=$now_date_epoch&call_id=$callerid&queue=$VDADcampaign&agent=Agent/$VDADuser&verb=CONNECT&data1=$drop_timer&data2=&data3=&data4=$queuemetrics_phone_environment$pe_append";
+						if ($queuemetrics_socket_url =~ /\?/)
+							{$socket_send_data_begin='&';}
+						### send queue_log data to the queuemetrics_socket_url ###
+						$compat_url = "$queuemetrics_socket_url$socket_send_data_begin$socket_send_data";
+						$compat_url =~ s/ /+/gi;
+						$compat_url =~ s/&/\\&/gi;
+
+						$launch = $PATHhome . "/AST_send_URL.pl";
+						$launch .= " --SYSLOG" if ($SYSLOG);
+						$launch .= " --lead_id=" . $CIDlead_id;
+						$launch .= " --phone_number=" . $VDADphone;
+						$launch .= " --user=" . $VDADuser;
+						$launch .= " --call_type=";
+						$launch .= " --campaign=" . $VDADcampaign;
+						$launch .= " --uniqueid=" . $uniqueid;
+						$launch .= " --call_id=" . $callerid;
+						$launch .= " --alt_dial=";
+						$launch .= " --function=QM_SOCKET_SEND";
+						$launch .= " --compat_url=" . $compat_url;
+
+						system($launch . ' &');
+
+						if ($AGILOG) {$agi_string = "$launch|";   &agi_output;}
+						}
 					}
 
 				if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $VDADconf_exten";   &agi_output;}
@@ -2838,6 +2927,35 @@ while ($drop_timer <= $DROP_TIME)
 						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01046';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
 					$dbhB->disconnect();
+
+					if ( ($queuemetrics_socket =~ /CONNECT_COMPLETE/) and (length($queuemetrics_socket_url) > 10) )
+						{
+						$socket_send_data_begin='?';
+						$socket_send_data = "time_id=$now_date_epoch&call_id=$callerid&queue=$VDADcampaign&agent=Agent/$VDADuser&verb=CONNECT&data1=$drop_timer&data2=&data3=&data4=$queuemetrics_phone_environment$pe_append";
+						if ($queuemetrics_socket_url =~ /\?/)
+							{$socket_send_data_begin='&';}
+						### send queue_log data to the queuemetrics_socket_url ###
+						$compat_url = "$queuemetrics_socket_url$socket_send_data_begin$socket_send_data";
+						$compat_url =~ s/ /+/gi;
+						$compat_url =~ s/&/\\&/gi;
+
+						$launch = $PATHhome . "/AST_send_URL.pl";
+						$launch .= " --SYSLOG" if ($SYSLOG);
+						$launch .= " --lead_id=" . $CIDlead_id;
+						$launch .= " --phone_number=" . $VDADphone;
+						$launch .= " --user=" . $VDADuser;
+						$launch .= " --call_type=";
+						$launch .= " --campaign=" . $VDADcampaign;
+						$launch .= " --uniqueid=" . $uniqueid;
+						$launch .= " --call_id=" . $callerid;
+						$launch .= " --alt_dial=";
+						$launch .= " --function=QM_SOCKET_SEND";
+						$launch .= " --compat_url=" . $compat_url;
+
+						system($launch . ' &');
+
+						if ($AGILOG) {$agi_string = "$launch|";   &agi_output;}
+						}
 					}
 
 				if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $VDADremDIALstr";   &agi_output;}

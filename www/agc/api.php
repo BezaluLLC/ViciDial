@@ -62,10 +62,11 @@
 # 120809-2338 - Added recording and webserver functions
 # 120819-1758 - Added webphone_url and call_agent functions
 # 120913-2039 - Added group_alias to transfer_conference function
+# 121120-0855 - Added QM socket-send functionality
 #
 
-$version = '2.6-28';
-$build = '120913-2039';
+$version = '2.6-29';
+$build = '121120-0855';
 
 $startMS = microtime();
 
@@ -2513,7 +2514,7 @@ if ($function == 'ra_call_control')
 
 					#############################################
 					##### START QUEUEMETRICS LOGGING LOOKUP #####
-					$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append FROM system_settings;";
+					$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append,queuemetrics_socket,queuemetrics_socket_url FROM system_settings;";
 					$rslt=mysql_query($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
 					$qm_conf_ct = mysql_num_rows($rslt);
@@ -2527,6 +2528,8 @@ if ($function == 'ra_call_control')
 						$queuemetrics_pass =			$row[4];
 						$queuemetrics_log_id =			$row[5];
 						$queuemetrics_pe_phone_append =	$row[6];
+						$queuemetrics_socket =			$row[7];
+						$queuemetrics_socket_url =		$row[8];
 						}
 					##### END QUEUEMETRICS LOGGING LOOKUP #####
 					###########################################
@@ -2550,6 +2553,7 @@ if ($function == 'ra_call_control')
 						if ($ra_stage < 0.25) {$ra_stage=0;}
 
 						$data4SQL='';
+						$data4SS='';
 						$stmt="SELECT queuemetrics_phone_environment FROM vicidial_campaigns where campaign_id='$campaign_id' and queuemetrics_phone_environment!='';";
 						$rslt=mysql_query($stmt, $link);
 						if ($DB) {echo "$stmt\n";}
@@ -2564,6 +2568,7 @@ if ($function == 'ra_call_control')
 								$pe_append = "-$qm_extension[1]";
 								}
 							$data4SQL = ",data4='$row[0]$pe_append'";
+							$data4SS = "&data4=$row[0]$pe_append";
 							}
 
 						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$value',queue='$campaign_id',agent='Agent/$ra_user',verb='COMPLETEAGENT',data1='$ra_stage',data2='$ra_length',data3='$queue_position',serverid='$queuemetrics_log_id' $data4SQL;";
@@ -2581,6 +2586,18 @@ if ($function == 'ra_call_control')
 						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$ra_user',verb='UNPAUSEALL',serverid='$queuemetrics_log_id' $data4SQL;";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_query($stmt, $linkB);
+
+						if ( ($queuemetrics_socket == 'CONNECT_COMPLETE') and (strlen($queuemetrics_socket_url) > 10) )
+							{
+							$socket_send_data_begin='?';
+							$socket_send_data = "time_id=$StarTtime&call_id=$value&queue=$campaign_id&agent=Agent/$ra_user&verb=COMPLETEAGENT&data1=$ra_stage&data2=$ra_length&data3=$queue_position$data4SS";
+							if (preg_match("/\?/",$queuemetrics_socket_url))
+								{$socket_send_data_begin='&';}
+							### send queue_log data to the queuemetrics_socket_url ###
+							if ($DB > 0) {echo "$queuemetrics_socket_url$socket_send_data_begin$socket_send_data<BR>\n";}
+							$SCUfile = file("$queuemetrics_socket_url$socket_send_data_begin$socket_send_data");
+							if ($DB > 0) {echo "$SCUfile[0]<BR>\n";}
+							}
 						}
 
 					### finally send the call

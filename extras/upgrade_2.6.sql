@@ -161,3 +161,8 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 UPDATE system_settings set vdc_agent_api_active='1';
 
 UPDATE system_settings SET db_schema_version='1331',db_schema_update_date=NOW() where db_schema_version < 1331;
+
+ALTER TABLE system_settings ADD queuemetrics_socket VARCHAR(20) default 'NONE';
+ALTER TABLE system_settings ADD queuemetrics_socket_url TEXT;
+
+UPDATE system_settings SET db_schema_version='1332',db_schema_update_date=NOW() where db_schema_version < 1332;

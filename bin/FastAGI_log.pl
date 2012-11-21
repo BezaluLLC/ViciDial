@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# FastAGI_log.pl version 2.4
+# FastAGI_log.pl version 2.6
 # 
 # Experimental Deamon using perl Net::Server that runs as FastAGI to reduce load
 # replaces the following AGI scripts:
@@ -25,7 +25,7 @@
 # exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})
 # 
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 61010-1007 - First test build
@@ -61,6 +61,7 @@
 # 110224-1854 - Added compatibility with QM phone environment logging
 # 110304-0005 - Small changes for CPD and on-hook agent features
 # 110324-2336 - Changes to CPD logging of calls and addition of the PDROP status
+# 121120-0922 - Added QM socket-send functionality
 #
 
 # defaults for PreFork
@@ -1003,7 +1004,7 @@ sub process_request
 
 							#############################################
 							##### START QUEUEMETRICS LOGGING LOOKUP #####
-							$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
+							$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_socket,queuemetrics_socket_url FROM system_settings;";
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
@@ -1016,6 +1017,8 @@ sub process_request
 								$queuemetrics_login=			$aryA[3];
 								$queuemetrics_pass =			$aryA[4];
 								$queuemetrics_log_id =			$aryA[5];
+								$queuemetrics_socket =			$aryA[6];
+								$queuemetrics_socket_url = 		$aryA[7];
 								}
 							$sthA->finish();
 							##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -1097,6 +1100,35 @@ sub process_request
 									{
 									$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='$VD_callerid',queue='$VD_campaign_id',agent='$VD_agent',verb='COMPLETECALLER',data1='$VD_stage',data2='$VD_call_length',data3='$queue_position',serverid='$queuemetrics_log_id',data4='$data_four';";
 									$Baffected_rows = $dbhB->do($stmtB);
+
+									if ( ($queuemetrics_socket =~ /CONNECT_COMPLETE/) and (length($queuemetrics_socket_url) > 10) )
+										{
+										$socket_send_data_begin='?';
+										$socket_send_data = "time_id=$secX&call_id=$VD_callerid&queue=$VD_campaign_id&agent=$VD_agent&verb=COMPLETECALLER&data1=$VD_stage&data2=$VD_call_length&data3=$queue_position&data4=$data_four";
+										if ($queuemetrics_socket_url =~ /\?/)
+											{$socket_send_data_begin='&';}
+										### send queue_log data to the queuemetrics_socket_url ###
+										$compat_url = "$queuemetrics_socket_url$socket_send_data_begin$socket_send_data";
+										$compat_url =~ s/ /+/gi;
+										$compat_url =~ s/&/\\&/gi;
+
+										$launch = $PATHhome . "/AST_send_URL.pl";
+										$launch .= " --SYSLOG" if ($SYSLOG);
+										$launch .= " --lead_id=" . $VD_lead_id;
+										$launch .= " --phone_number=" . $VD_phone_number;
+										$launch .= " --user=" . $VD_agent;
+										$launch .= " --call_type=X";
+										$launch .= " --campaign=" . $VD_campaign_id;
+										$launch .= " --uniqueid=" . $uniqueid;
+										$launch .= " --call_id=" . $VD_callerid;
+										$launch .= " --alt_dial=UNKNOWN";
+										$launch .= " --function=QM_SOCKET_SEND";
+										$launch .= " --compat_url=" . $compat_url;
+
+										system($launch . ' &');
+
+										if ($AGILOG) {$agi_string = "$launch|";   &agi_output;}
+										}
 									}
 
 								if ($AGILOG) {$agi_string = "|$stmtB|";   &agi_output;}
