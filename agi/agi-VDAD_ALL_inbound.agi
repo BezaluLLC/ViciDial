@@ -179,6 +179,7 @@
 # 121025-2210 - If AGENTDIRECT and no agent defined, set drop call seconds to 1
 # 121114-1936 - Added INGROUP recording option
 # 121120-0921 - Added QM socket-send functionality
+# 121124-1345 - Added call times holidays function
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -802,7 +803,7 @@ if ($wday==6)
 	}
 
 ### Grab call_times values from the database
-$stmtA = "SELECT ct_default_start,ct_default_stop,default_afterhours_filename_override $daySQL $yestSQL FROM vicidial_call_times where call_time_id = '$call_time_id';";
+$stmtA = "SELECT ct_default_start,ct_default_stop,default_afterhours_filename_override $daySQL $yestSQL,ct_holidays FROM vicidial_call_times where call_time_id = '$call_time_id';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -816,6 +817,7 @@ $ct_day_stop =							$aryA[4];
 $day_afterhours_filename_override =		$aryA[5];
 $ct_yest_start =						$aryA[6];
 $ct_yest_stop =							$aryA[7];
+$ct_holidays =							$aryA[8];
 $sthA->finish();
 
 if ( ($ct_yest_start < 1) && ($ct_yest_stop < 1) )  
@@ -829,10 +831,58 @@ if ( ($ct_day_start > 0) || ($ct_day_stop > 0) )
 	$ct_default_stop	=	$ct_day_stop;
 	}
 
+if (length($ct_holidays) > 2)
+	{
+	$stmtA = "SELECT count(*) from vicidial_call_time_holidays where holiday_date='$YMD' and holiday_status='ACTIVE';";
+	if ($DBX) {print "   |$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	@aryA = $sthA->fetchrow_array;
+	$holiday_today_count =	$aryA[0];
+	if ($AGILOG) {$agi_string = "Holiday check: |$holiday_today_count|$stmtA|$ct_holidays|";   &agi_output;}
+
+	$ct_hrs=0;
+	$b=0;
+	if ($holiday_today_count > 0)
+		{
+		@holiday_rules = split(/\|/,$ct_holidays);
+		$ct_hrs = ($#holiday_rules - 0);
+		while($ct_hrs >= $b)
+			{
+			if (length($holiday_rules[$b])>1)
+				{
+				$stmtA = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop,default_afterhours_filename_override from vicidial_call_time_holidays where holiday_id='$holiday_rules[$b]' and holiday_status='ACTIVE' and holiday_date='$YMD';";
+				if ($DBX) {print "   |$stmtA|\n";}
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$holiday_id =								$aryA[0];
+					$holiday_date =								$aryA[1];
+					$holiday_name =								$aryA[2];
+					$ct_default_start =							$aryA[3];
+					$ct_default_stop =							$aryA[4];
+					$default_afterhours_filename_override =		$aryA[5];
+					$holiday_afterhours_filename_override =		$aryA[5];
+
+					if ($AGILOG) {$agi_string = "Active Holiday found!    |$holiday_id|$holiday_date|$holiday_name|$ct_default_start|$ct_default_stop|$default_afterhours_filename_override|";   &agi_output;}
+					}
+				$sthA->finish();
+				}
+			$b++;
+			}
+		}
+	}
+
+
 if ( (length($deafult_afterhours_filename_override) > 0) && ($deafult_afterhours_filename_override !~ /---NONE---/) )
 	{$after_hours_message_filename = $deafult_afterhours_filename_override;}
 if ( (length($day_afterhours_filename_override) > 0) && ($day_afterhours_filename_override !~ /---NONE---/) )
 	{$after_hours_message_filename = $day_afterhours_filename_override;}
+if ( (length($holiday_afterhours_filename_override) > 0) && ($holiday_afterhours_filename_override !~ /---NONE---/) )
+	{$after_hours_message_filename = $holiday_afterhours_filename_override;}
 
 # send call to after hours action if in-group is set to inactive
 if ($ingroup_active !~ /Y/)

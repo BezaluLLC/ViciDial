@@ -1766,6 +1766,18 @@ if (isset($_GET["queuemetrics_socket"]))			{$queuemetrics_socket=$_GET["queuemet
 	elseif (isset($_POST["queuemetrics_socket"]))	{$queuemetrics_socket=$_POST["queuemetrics_socket"];}
 if (isset($_GET["queuemetrics_socket_url"]))			{$queuemetrics_socket_url=$_GET["queuemetrics_socket_url"];}
 	elseif (isset($_POST["queuemetrics_socket_url"]))	{$queuemetrics_socket_url=$_POST["queuemetrics_socket_url"];}
+if (isset($_GET["holiday_id"]))					{$holiday_id=$_GET["holiday_id"];}
+	elseif (isset($_POST["holiday_id"]))		{$holiday_id=$_POST["holiday_id"];}
+if (isset($_GET["holiday_name"]))				{$holiday_name=$_GET["holiday_name"];}
+	elseif (isset($_POST["holiday_name"]))		{$holiday_name=$_POST["holiday_name"];}
+if (isset($_GET["holiday_comments"]))			{$holiday_comments=$_GET["holiday_comments"];}
+	elseif (isset($_POST["holiday_comments"]))	{$holiday_comments=$_POST["holiday_comments"];}
+if (isset($_GET["holiday_date"]))				{$holiday_date=$_GET["holiday_date"];}
+	elseif (isset($_POST["holiday_date"]))		{$holiday_date=$_POST["holiday_date"];}
+if (isset($_GET["holiday_status"]))				{$holiday_status=$_GET["holiday_status"];}
+	elseif (isset($_POST["holiday_status"]))	{$holiday_status=$_POST["holiday_status"];}
+if (isset($_GET["holiday_rule"]))				{$holiday_rule=$_GET["holiday_rule"];}
+	elseif (isset($_POST["holiday_rule"]))		{$holiday_rule=$_POST["holiday_rule"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2356,6 +2368,7 @@ if ($non_latin < 1)
 	$server_id = ereg_replace("[^-_0-9a-zA-Z]","",$server_id);
 	$stage = ereg_replace("[^-_0-9a-zA-Z]","",$stage);
 	$state_rule = ereg_replace("[^-_0-9a-zA-Z]","",$state_rule);
+	$holiday_rule = ereg_replace("[^-_0-9a-zA-Z]","",$holiday_rule);
 	$trunk_restriction = ereg_replace("[^-_0-9a-zA-Z]","",$trunk_restriction);
 	$user = ereg_replace("[^-_0-9a-zA-Z]","",$user);
 	$user_group = ereg_replace("[^-_0-9a-zA-Z]","",$user_group);
@@ -2505,6 +2518,9 @@ if ($non_latin < 1)
 	$in_group_dial = ereg_replace("[^-_0-9a-zA-Z]","",$in_group_dial);
 	$in_group_dial_select = ereg_replace("[^-_0-9a-zA-Z]","",$in_group_dial_select);
 	$queuemetrics_socket = ereg_replace("[^-_0-9a-zA-Z]","",$queuemetrics_socket);
+	$holiday_id = ereg_replace("[^-_0-9a-zA-Z]","",$holiday_id);
+	$holiday_date = ereg_replace("[^-_0-9a-zA-Z]","",$holiday_date);
+	$holiday_status = ereg_replace("[^-_0-9a-zA-Z]","",$holiday_status);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_prompt);
@@ -2659,6 +2675,8 @@ if ($non_latin < 1)
 	$group = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$group);
 	$job_title = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$job_title);
 	$location = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$location);
+	$holiday_name = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$holiday_name);
+	$holiday_comments = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$holiday_comments);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot
 	$call_out_number_group = ereg_replace("[^-\.\:\/\@\_0-9a-zA-Z]","",$call_out_number_group);
@@ -3177,12 +3195,13 @@ else
 # 121114-1923 - Added Basic Lead Management page link. Added INGROUP as a recording filename option
 # 121116-1410 - Added QC functionality
 # 121120-0824 - Added queuemetrics_socket functionality to system settings
+# 121123-1208 - Added inbound holiday functions
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-383a';
-$build = '121120-0824';
+$admin_version = '2.6-384a';
+$build = '121123-1208';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3510,6 +3529,7 @@ if ($ADD==11111111)		{$hh='filters';		echo "Add New Filter";}
 if ($ADD==111111111)	{$hh='admin';	$sh='times';	echo "Add New Call Time";}
 if ($ADD==131111111)	{$hh='admin';	$sh='shifts';	echo "Add New Shift";}
 if ($ADD==1111111111)	{$hh='admin';	$sh='times';	echo "Add New State Call Time";}
+if ($ADD==1211111111)	{$hh='admin';	$sh='times';	echo "Add Holiday";}
 if ($ADD==11111111111)	{$hh='admin';	$sh='phones';	echo "ADD NEW PHONE";}
 if ($ADD==12111111111)	{$hh='admin';	$sh='phones';	echo "ADD NEW PHONE ALIAS";}
 if ($ADD==13111111111)	{$hh='admin';	$sh='phones';	echo "ADD NEW GROUP ALIAS";}
@@ -3553,6 +3573,7 @@ if ($ADD==21111111)		{$hh='filters';		echo "New Filter Addition";}
 if ($ADD==211111111)	{$hh='admin';	$sh='times';	echo "New Call Time Addition";}
 if ($ADD==231111111)	{$hh='admin';	$sh='shifts';	echo "New Shift Addition";}
 if ($ADD==2111111111)	{$hh='admin';	$sh='times';	echo "New State Call Time Addition";}
+if ($ADD==2211111111)	{$hh='admin';	$sh='times';	echo "New Holiday Addition";}
 if ($ADD==21111111111)	{$hh='admin';	$sh='phones';	echo "ADDING NEW PHONE";}
 if ($ADD==22111111111)	{$hh='admin';	$sh='phones';	echo "ADDING NEW PHONE ALIAS";}
 if ($ADD==23111111111)	{$hh='admin';	$sh='phones';	echo "ADDING NEW GROUP ALIAS";}
@@ -3625,6 +3646,7 @@ if ($ADD==311111111)	{$hh='admin';	$sh='times';	echo "Modify Call Time";}
 if ($ADD==321111111)	{$hh='admin';	$sh='times';	echo "Modify Call Time State Definitions List";}
 if ($ADD==331111111)	{$hh='admin';	$sh='shifts';	echo "Modify Shift";}
 if ($ADD==3111111111)	{$hh='admin';	$sh='times';	echo "Modify State Call Time";}
+if ($ADD==3211111111)	{$hh='admin';	$sh='times';	echo "Modify Holiday";}
 if ($ADD==31111111111)	{$hh='admin';	$sh='phones';	echo "MODIFY PHONE";}
 if ($ADD==32111111111)	{$hh='admin';	$sh='phones';	echo "MODIFY PHONE ALIAS";}
 if ($ADD==33111111111)	{$hh='admin';	$sh='phones';	echo "MODIFY GROUP ALIAS";}
@@ -3668,6 +3690,7 @@ if ($ADD==41111111)		{$hh='filters';		echo "Modify Filter";}
 if ($ADD==411111111)	{$hh='admin';	$sh='times';	echo "Modify Call Time";}
 if ($ADD==431111111)	{$hh='admin';	$sh='shifts';	echo "Modify Shift";}
 if ($ADD==4111111111)	{$hh='admin';	$sh='times';	echo "Modify State Call Time";}
+if ($ADD==4211111111)	{$hh='admin';	$sh='times';	echo "Modify Holiday";}
 if ($ADD==41111111111)	{$hh='admin';	$sh='phones';	echo "MODIFY PHONE";}
 if ($ADD==42111111111)	{$hh='admin';	$sh='phones';	echo "MODIFY PHONE ALIAS";}
 if ($ADD==43111111111)	{$hh='admin';	$sh='phones';	echo "MODIFY GROUP ALIAS";}
@@ -3703,6 +3726,7 @@ if ($ADD==51111111)		{$hh='filters';		echo "Delete Filter";}
 if ($ADD==511111111)	{$hh='admin';	$sh='times';	echo "Delete Call Time";}
 if ($ADD==531111111)	{$hh='admin';	$sh='shifts';	echo "Delete Shift";}
 if ($ADD==5111111111)	{$hh='admin';	$sh='times';	echo "Delete State Call Time";}
+if ($ADD==5211111111)	{$hh='admin';	$sh='times';	echo "Delete Holiday";}
 if ($ADD==51111111111)	{$hh='admin';	$sh='phones';	echo "DELETE PHONE";}
 if ($ADD==52111111111)	{$hh='admin';	$sh='phones';	echo "DELETE PHONE ALIAS";}
 if ($ADD==53111111111)	{$hh='admin';	$sh='phones';	echo "DELETE GROUP ALIAS";}
@@ -3739,6 +3763,7 @@ if ($ADD==61111111)		{$hh='filters';		echo "Delete Filter";}
 if ($ADD==611111111)	{$hh='admin';	$sh='times';	echo "Delete Call Time";}
 if ($ADD==631111111)	{$hh='admin';	$sh='shifts';	echo "Delete Shift";}
 if ($ADD==6111111111)	{$hh='admin';	$sh='times';	echo "Delete State Call Time";}
+if ($ADD==6211111111)	{$hh='admin';	$sh='times';	echo "Delete Holiday";}
 if ($ADD==61111111111)	{$hh='admin';	$sh='phones';	echo "DELETE PHONE";}
 if ($ADD==62111111111)	{$hh='admin';	$sh='phones';	echo "DELETE PHONE ALIAS";}
 if ($ADD==63111111111)	{$hh='admin';	$sh='phones';	echo "DELETE GROUP ALIAS";}
@@ -3779,6 +3804,7 @@ if ($ADD==10000000)		{$hh='filters';		echo "Filters";}
 if ($ADD==100000000)	{$hh='admin';	$sh='times';	echo "Call Times";}
 if ($ADD==130000000)	{$hh='admin';	$sh='shifts';	echo "Shifts";}
 if ($ADD==1000000000)	{$hh='admin';	$sh='times';	echo "State Call Times";}
+if ($ADD==1200000000)	{$hh='admin';	$sh='times';	echo "Holidays";}
 if ($ADD==10000000000)	{$hh='admin';	$sh='phones';	echo "PHONE LIST";}
 if ($ADD==12000000000)	{$hh='admin';	$sh='phones';	echo "PHONE ALIAS LIST";}
 if ($ADD==13000000000)	{$hh='admin';	$sh='phones';	echo "GROUP ALIAS LIST";}
@@ -7144,6 +7170,26 @@ if ($ADD==99999)
 	<A NAME="vicidial_call_times-state_call_time_state">
 	<B>State Call Time State -</B> This is the two letter code for the state that this calling time definition is for. For this to be in effect the local call time that is set in the campaign must have this state call time record in it as well as all of the leads having two letter state codes in them.
 
+	<A NAME="vicidial_call_times-holiday_id">
+	<BR>
+	<B>Holiday ID -</B> This is the short name of a Holiday Definition. This needs to be a unique identifier. Do not use any spaces or punctuation for this field. max 30 characters, minimum of 2 characters.
+
+	<BR>
+	<A NAME="vicidial_call_times-holiday_name">
+	<B>Holiday Name -</B> This is a more descriptive name of the Holiday Definition. This is a short summary of the Holiday definition. max 100 characters, minimum of 2 characters.
+
+	<BR>
+	<A NAME="vicidial_call_times-holiday_comments">
+	<B>Holiday Comments -</B> This is where you can place comments for a Holiday Definition such as -10am to 4pm boxing day restrictions-.  max 255 characters.
+
+	<BR>
+	<A NAME="vicidial_call_times-holiday_date">
+	<B>Holiday Date -</B> This is the date of the holiday.
+
+	<BR>
+	<A NAME="vicidial_call_times-holiday_status">
+	<B>Holiday Status -</B> This is the status of the holiday entry. ACTIVE status means that the holiday will be enabled on the holiday date. INACTIVE status means that the holiday will be ignored even on the holiday date. EXPIRED means that the holiday has passed it's holiday date. Default is INACTIVE.
+
 
 
 
@@ -9339,6 +9385,7 @@ if ($ADD==11)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Local Call Time: </td><td align=left><select size=1 name=local_call_time>";
 		echo "$call_times_list";
 		echo "</select>$NWB#vicidial_campaigns-local_call_time$NWE</td></tr>\n";
+
 		if ($SSoutbound_autodial_active > 0)
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=right>Voicemail: </td><td align=left><input type=text name=voicemail_ext size=10 maxlength=10 value=\"$voicemail_ext\">$NWB#vicidial_campaigns-voicemail_ext$NWE</td></tr>\n";
@@ -10474,6 +10521,53 @@ if ($ADD==1111111111)
 		echo "</select>$NWB#vicidial_call_times-user_group$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>Day and time options will appear once you have created the Call Time Definition</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+		echo "</TABLE></center>\n";
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	}
+
+
+######################
+# ADD=1211111111 display the ADD NEW HOLIDAY SCREEN
+######################
+
+if ($ADD==1211111111)
+	{
+	if ($LOGmodify_call_times==1)
+		{
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		echo "<br>ADD NEW STATE CALL TIME<form action=$PHP_SELF method=POST name=vicidial_report id=vicidial_report>\n";
+		echo "<input type=hidden name=ADD value=2211111111>\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Holiday ID: </td><td align=left><input type=text name=holiday_id size=20 maxlength=30> (no spaces or punctuation)$NWB#vicidial_call_times-holiday_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Holiday Name: </td><td align=left><input type=text name=holiday_name size=50 maxlength=100> (short description of the holiday)$NWB#vicidial_call_times-holiday_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Holiday Comments: </td><td align=left><input type=text name=holiday_comments size=50 maxlength=255> $NWB#vicidial_call_times-holiday_comments$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Holiday Date: </td><td align=left><input type=text name=holiday_date id=holiday_date size=10 maxlength=10> $NWB#vicidial_call_times-holiday_date$NWE\n";
+		echo "<script language=\"JavaScript\">\n";
+		echo "var o_cal = new tcal ({\n";
+		echo "	// form name\n";
+		echo "	'formname': 'vicidial_report',\n";
+		echo "	// input name\n";
+		echo "	'controlname': 'holiday_date'\n";
+		echo "});\n";
+		echo "o_cal.a_tpl.yearscroll = false;\n";
+		echo "// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
+		echo "</script></td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Admin User Group: </td><td align=left><select size=1 name=user_group>\n";
+		echo "$UUgroups_list";
+		echo "<option SELECTED value=\"---ALL---\">All Admin User Groups</option>\n";
+		echo "</select>$NWB#vicidial_call_times-user_group$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>Day and time options will appear once you have created the Holiday Definition</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
 		echo "</TABLE></center>\n";
 		}
@@ -13150,7 +13244,7 @@ if ($ADD==211111111)
 			}
 		else
 			{
-			$stmt="INSERT INTO vicidial_call_times SET call_time_id='$call_time_id',call_time_name='$call_time_name',call_time_comments='$call_time_comments',user_group='$user_group';";
+			$stmt="INSERT INTO vicidial_call_times SET call_time_id='$call_time_id',call_time_name='$call_time_name',call_time_comments='$call_time_comments',user_group='$user_group',ct_state_call_times='',ct_holidays='';";
 			$rslt=mysql_query($stmt, $link);
 			if ($DB > 0) {echo "|$stmt|";}
 
@@ -13206,6 +13300,46 @@ if ($ADD==2111111111)
 			}
 		}
 	$ADD=3111111111;
+	}
+
+
+######################
+# ADD=2211111111 adds new holiday definition to the system
+######################
+
+if ($ADD==2211111111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	$stmt="SELECT count(*) from vicidial_call_time_holidays where holiday_id='$holiday_id';";
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	if ($row[0] > 0)
+		{echo "<br>HOLIDAY DEFINITION NOT ADDED - there is already a holiday entry with this ID\n";}
+	else
+		{
+		if ( (strlen($holiday_id) < 2) or (strlen($holiday_name) < 2) or (strlen($holiday_date) < 10) )
+			{
+			echo "<br>HOLIDAY DEFINITION NOT ADDED - Please go back and look at the data you entered\n";
+			echo "<br>Holiday ID, name and date must be populated\n";
+			}
+		else
+			{
+			$stmt="INSERT INTO vicidial_call_time_holidays SET holiday_id='$holiday_id',holiday_name='$holiday_name',holiday_comments='$holiday_comments',holiday_date='$holiday_date',holiday_status='INACTIVE',user_group='$user_group';";
+			$rslt=mysql_query($stmt, $link);
+			if ($DB > 0) {echo "|$stmt|";}
+
+			echo "<br><B>HOLIDAY ADDED: $holiday_id</B>\n";
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='HOLIDAYS', event_type='ADD', record_id='$holiday_id', event_code='ADMIN ADD HOLIDAY', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			}
+		}
+	$ADD=3211111111;
 	}
 
 
@@ -16776,7 +16910,7 @@ if ($ADD==4111111111)
 			$SQL_log = "$stmt|";
 			$SQL_log = ereg_replace(';','',$SQL_log);
 			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLTIMES', event_type='MODIFY', record_id='$call_time_id', event_code='ADMIN MODIFY STATE CALL TIME', event_sql=\"$SQL_log\", event_notes='';";
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLTIMES_STATE', event_type='MODIFY', record_id='$call_time_id', event_code='ADMIN MODIFY STATE CALL TIME', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 			}
@@ -16787,6 +16921,48 @@ if ($ADD==4111111111)
 		exit;
 		}
 	$ADD=3111111111;	# go to state call time modification form below
+	}
+
+
+######################
+# ADD=4211111111 modify holiday in the system
+######################
+
+if ($ADD==4211111111)
+	{
+	if ($LOGmodify_call_times==1)
+		{
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		if ( (strlen($holiday_id) < 2) or (strlen($holiday_name) < 2) or (strlen($holiday_date) < 10) )
+			{
+			echo "<br>HOLIDAY NOT MODIFIED - Please go back and look at the data you entered\n";
+			echo "<br>Holiday ID, name and date must be populated\n";
+			}
+		else
+			{
+			$ct_default_start = preg_replace('/\D/', '', $ct_default_start);
+			$ct_default_stop = preg_replace('/\D/', '', $ct_default_stop);
+			$stmt="UPDATE vicidial_call_time_holidays set holiday_name='$holiday_name', holiday_comments='$holiday_comments', holiday_date='$holiday_date', holiday_status='$holiday_status', ct_default_start='$ct_default_start', ct_default_stop='$ct_default_stop',user_group='$user_group', default_afterhours_filename_override='$default_afterhours_filename_override' where holiday_id='$holiday_id';";
+			$rslt=mysql_query($stmt, $link);
+
+			echo "<br><B>HOLIDAY MODIFIED</B>\n";
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='HOLIDAYS', event_type='MODIFY', record_id='$holiday_id', event_code='ADMIN MODIFY HOLIDAY', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			}
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	$ADD=3211111111;	# go to holiday modification form below
 	}
 
 
@@ -18136,6 +18312,30 @@ if ($ADD==5111111111)
 
 	$ADD='3111111111';		# go to state call time modification below
 	}
+
+
+######################
+# ADD=5211111111 confirmation before deletion of holiday record
+######################
+
+if ($ADD==5211111111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if ( (strlen($holiday_id) < 2) or ($LOGdelete_call_times < 1) )
+		{
+		echo "<br>HOLIDAY NOT DELETED - Please go back and look at the data you entered\n";
+		echo "<br>Holiday ID must be at least 2 characters in length\n";
+		}
+	else
+		{
+		echo "<br><B>HOLIDAY DELETION CONFIRMATION: $holiday_id</B>\n";
+		echo "<br><br><a href=\"$PHP_SELF?ADD=6211111111&holiday_id=$holiday_id&CoNfIrM=YES\">Click here to delete holiday $holiday_id</a><br><br><br>\n";
+		}
+
+	$ADD='3211111111';		# go to holiday modification below
+	}
+
 
 ######################
 # ADD=531111111 confirmation before deletion of shift record
@@ -19613,6 +19813,64 @@ if ($ADD==6111111111)
 		}
 
 	$ADD='1000000000';		# go to call times list
+	}
+
+
+######################
+# ADD=6211111111 delete holiday record
+######################
+
+if ($ADD==6211111111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if ( (strlen($holiday_id) < 2) or ($LOGdelete_call_times < 1) )
+		{
+		echo "<br>HOLIDAY NOT DELETED - Please go back and look at the data you entered\n";
+		echo "<br>Holiday ID must be at least 2 characters in length\n";
+		}
+	else
+		{
+		$stmtA="DELETE from vicidial_call_time_holidays where holiday_id='$holiday_id' $LOGadmin_viewable_groupsSQL limit 1;";
+		$rslt=mysql_query($stmtA, $link);
+
+		$stmt="SELECT call_time_id,ct_holidays from vicidial_call_times where ct_holidays LIKE \"%|$holiday_id|%\" order by call_time_id;";
+		$rslt=mysql_query($stmt, $link);
+		$hct_to_print = mysql_num_rows($rslt);
+		$hct_list='';
+
+		$o=0;
+		while ($hct_to_print > $o) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$hct_ids[$o] = "$rowx[0]";
+			$hct_holidays[$o] = "$rowx[1]";
+			$o++;
+			}
+		$o=0;
+		while ($hct_to_print > $o) 
+			{
+			$hct_holidays[$o] = eregi_replace("\|$holiday_id\|",'|',$hct_holidays[$o]);
+			$stmt="UPDATE vicidial_call_times set ct_holidays='$hct_holidays[$o]' where call_time_id='$hct_ids[$o]';";
+			$rslt=mysql_query($stmt, $link);
+			if ($DB) {echo "|$stmt|\n";}
+			echo "Holiday Rule Removed: $hct_ids[$o]<BR>\n";
+			$o++;
+			}
+
+		### LOG INSERTION Admin Log Table ###
+		$SQL_log = "$stmtA|";
+		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = addslashes($SQL_log);
+		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='HOLIDAYS', event_type='DELETE', record_id='$holiday_id', event_code='ADMIN DELETE HOLIDAY', event_sql=\"$SQL_log\", event_notes='';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+
+		echo "<br><B>HOLIDAY DELETION COMPLETED: $holiday_id</B>\n";
+		echo "<br><br>\n";
+		}
+
+	$ADD='1200000000';		# go to holidays list
 	}
 
 
@@ -21503,6 +21761,23 @@ if ($ADD==31)
 		echo "$call_times_list";
 		echo "<option selected value=\"$local_call_time\">$local_call_time - $call_timename_list[$local_call_time]</option>\n";
 		echo "</select>$NWB#vicidial_campaigns-local_call_time$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
+		$stmt="SELECT ct_state_call_times from vicidial_call_times where call_time_id='$local_call_time';";
+		$rslt=mysql_query($stmt, $link);
+		$call_times_to_print = mysql_num_rows($rslt);
+		if ($call_times_to_print > 0) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$ct_state_call_times =	$rowx[0];
+			$state_rules = explode('|',$ct_state_call_times);
+			$ct_srs = ((count($state_rules)) - 2);
+			if ($ct_srs < 0) {$ct_hrs=0;}
+			echo "State rules defined for this call time: $ct_srs\n";
+			}
+		else
+			{echo "<BLINK><B><font color=red>Call time not found!: $local_call_time</font></B></BLINK>\n";}
+		echo "</td></tr>\n";
 
 		if ($SSoutbound_autodial_active > 0)
 			{
@@ -25490,6 +25765,23 @@ if ($ADD==3111)
 		echo "<option selected value=\"$call_time_id\">$call_time_id - $call_timename_list[$call_time_id]</option>\n";
 		echo "</select>$NWB#vicidial_inbound_groups-call_time_id$NWE</td></tr>\n";
 
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
+		$stmt="SELECT ct_holidays from vicidial_call_times where call_time_id='$call_time_id';";
+		$rslt=mysql_query($stmt, $link);
+		$call_times_to_print = mysql_num_rows($rslt);
+		if ($call_times_to_print > 0) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$ct_holidays =	$rowx[0];
+			$holiday_rules = explode('|',$ct_holidays);
+			$ct_hrs = ((count($holiday_rules)) - 2);
+			if ($ct_hrs < 0) {$ct_hrs=0;}
+			echo "Holidays defined for this call time: $ct_hrs\n";
+			}
+		else
+			{echo "<BLINK><B><font color=red>Call time not found!: $call_time_id</font></B></BLINK>\n";}
+		echo "</td></tr>\n";
+
 		echo "<tr bgcolor=#B6D3FC><td align=right>Action Transfer CID: </td><td align=left><input type=text name=action_xfer_cid size=12 maxlength=18 value=\"$action_xfer_cid\">$NWB#vicidial_inbound_groups-action_xfer_cid$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Action: </td><td align=left><select size=1 name=after_hours_action><option>HANGUP</option><option>MESSAGE</option><option>EXTENSION</option><option>VOICEMAIL</option><option>IN_GROUP</option><option>CALLMENU</option><option SELECTED>$after_hours_action</option></select>$NWB#vicidial_inbound_groups-after_hours_action$NWE</td></tr>\n";
@@ -26799,7 +27091,22 @@ if ($ADD==3511)
 		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=311111111&call_time_id=$call_time_id\">Call Time: </a></td><td align=left><select size=1 name=call_time_id>\n";
 		echo "$call_times_list";
 		echo "<option selected value=\"$call_time_id\">$call_time_id - $call_timename_list[$call_time_id]</option>\n";
-		echo "</select>$NWB#vicidial_call_menu-call_time_id$NWE</td></tr>\n";
+		echo "</select>$NWB#vicidial_call_menu-call_time_id$NWE ";
+		$stmt="SELECT ct_holidays from vicidial_call_times where call_time_id='$call_time_id';";
+		$rslt=mysql_query($stmt, $link);
+		$call_times_to_print = mysql_num_rows($rslt);
+		if ($call_times_to_print > 0) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$ct_holidays =	$rowx[0];
+			$holiday_rules = explode('|',$ct_holidays);
+			$ct_hrs = ((count($holiday_rules)) - 2);
+			if ($ct_hrs < 0) {$ct_hrs=0;}
+			echo " &nbsp; Holidays defined for this call time: $ct_hrs\n";
+			}
+		else
+			{echo "<BLINK><B><font color=red>Call time not found!</font></B></BLINK>\n";}
+		echo "</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Track Calls in Real-Time Report: </td><td align=left><select size=1 name=track_in_vdac>";
 		if ($track_in_vdac > 0)
 			{
@@ -27978,6 +28285,7 @@ if ($ADD==321111111)
 			$modify_url = "$PHP_SELF?ADD=311111111&call_time_id=$call_time_id";
 			$modify_footer_refresh=1;
 			}
+		### add-remove state rule
 		if ( ($stage=="ADD") and (strlen($state_rule)>0) )
 			{
 			$stmt="SELECT ct_state_call_times from vicidial_call_times where call_time_id='$call_time_id';";
@@ -27991,6 +28299,15 @@ if ($ADD==321111111)
 				{$ct_state_call_times = "$ct_state_call_times\|$state_rule\|";}
 			$stmt="UPDATE vicidial_call_times set ct_state_call_times='$ct_state_call_times' where call_time_id='$call_time_id';";
 			$rslt=mysql_query($stmt, $link);
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLTIMES', event_type='MODIFY', record_id='$call_time_id', event_code='ADMIN MODIFY CALL TIME ADD STATE RULE', event_sql=\"$SQL_log\", event_notes='State Rule Added: $state_rule';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+
 			echo "State Rule Added: $state_rule<BR>\n";
 			}
 		if ( ($stage=="REMOVE") and (strlen($state_rule)>0) )
@@ -28003,7 +28320,62 @@ if ($ADD==321111111)
 			$ct_state_call_times = eregi_replace("\|$state_rule\|",'|',$ct_state_call_times);
 			$stmt="UPDATE vicidial_call_times set ct_state_call_times='$ct_state_call_times' where call_time_id='$call_time_id';";
 			$rslt=mysql_query($stmt, $link);
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLTIMES', event_type='MODIFY', record_id='$call_time_id', event_code='ADMIN MODIFY CALL TIME REMOVE STATE RULE', event_sql=\"$SQL_log\", event_notes='State Rule Removed: $state_rule';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+
 			echo "State Rule Removed: $state_rule<BR>\n";
+			}
+		### add-remove holiday rule
+		if ( ($stage=="ADD") and (strlen($holiday_rule)>0) )
+			{
+			$stmt="SELECT ct_holidays from vicidial_call_times where call_time_id='$call_time_id';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$ct_holidays = $row[0];
+
+			if (eregi("\|$",$ct_holidays))
+				{$ct_holidays = "$ct_holidays$holiday_rule\|";}
+			else
+				{$ct_holidays = "$ct_holidays\|$holiday_rule\|";}
+			$stmt="UPDATE vicidial_call_times set ct_holidays='$ct_holidays' where call_time_id='$call_time_id';";
+			$rslt=mysql_query($stmt, $link);
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLTIMES', event_type='MODIFY', record_id='$call_time_id', event_code='ADMIN MODIFY CALL TIME ADD HOLIDAY RULE', event_sql=\"$SQL_log\", event_notes='Holiday Rule Added: $holiday_rule';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+
+			echo "Holiday Rule Added: $holiday_rule<BR>\n";
+			}
+		if ( ($stage=="REMOVE") and (strlen($holiday_rule)>0) )
+			{
+			$stmt="SELECT ct_holidays from vicidial_call_times where call_time_id='$call_time_id';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$ct_holidays = $row[0];
+
+			$ct_holidays = eregi_replace("\|$holiday_rule\|",'|',$ct_holidays);
+			$stmt="UPDATE vicidial_call_times set ct_holidays='$ct_holidays' where call_time_id='$call_time_id';";
+			$rslt=mysql_query($stmt, $link);
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLTIMES', event_type='MODIFY', record_id='$call_time_id', event_code='ADMIN MODIFY CALL TIME REMOVE HOLIDAY RULE', event_sql=\"$SQL_log\", event_notes='Holiday Rule Removed: $holiday_rule';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+
+			echo "Holiday Rule Removed: $holiday_rule<BR>\n";
 			}
 
 		$ADD=311111111;
@@ -28031,7 +28403,7 @@ if ($ADD==311111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT call_time_id,call_time_name,call_time_comments,ct_default_start,ct_default_stop,ct_sunday_start,ct_sunday_stop,ct_monday_start,ct_monday_stop,ct_tuesday_start,ct_tuesday_stop,ct_wednesday_start,ct_wednesday_stop,ct_thursday_start,ct_thursday_stop,ct_friday_start,ct_friday_stop,ct_saturday_start,ct_saturday_stop,ct_state_call_times,default_afterhours_filename_override,sunday_afterhours_filename_override,monday_afterhours_filename_override,tuesday_afterhours_filename_override,wednesday_afterhours_filename_override,thursday_afterhours_filename_override,friday_afterhours_filename_override,saturday_afterhours_filename_override,user_group from vicidial_call_times where call_time_id='$call_time_id' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT call_time_id,call_time_name,call_time_comments,ct_default_start,ct_default_stop,ct_sunday_start,ct_sunday_stop,ct_monday_start,ct_monday_stop,ct_tuesday_start,ct_tuesday_stop,ct_wednesday_start,ct_wednesday_stop,ct_thursday_start,ct_thursday_stop,ct_friday_start,ct_friday_stop,ct_saturday_start,ct_saturday_stop,ct_state_call_times,default_afterhours_filename_override,sunday_afterhours_filename_override,monday_afterhours_filename_override,tuesday_afterhours_filename_override,wednesday_afterhours_filename_override,thursday_afterhours_filename_override,friday_afterhours_filename_override,saturday_afterhours_filename_override,user_group,ct_holidays from vicidial_call_times where call_time_id='$call_time_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$call_time_name =		$row[1];
@@ -28062,6 +28434,7 @@ if ($ADD==311111111)
 		$friday_afterhours_filename_override =		$row[26];
 		$saturday_afterhours_filename_override =	$row[27];
 		$user_group =			$row[28];
+		$ct_holidays =			$row[29];
 
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -28073,7 +28446,7 @@ if ($ADD==311111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Call Time ID: </td><td align=left colspan=3><B>$call_time_id</B>$NWB#vicidial_call_times-call_time_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Call Time Name: </td><td align=left colspan=3><input type=text name=call_time_name size=40 maxlength=50 value=\"$call_time_name\"> (short description of the call time)$NWB#vicidial_call_times-call_time_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Call Time Comments: </td><td align=left colspan=3><input type=text name=call_time_comments size=50 maxlength=255 value=\"$call_time_comments\"> $NWB#vicidial_call_times-call_time_comments$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Admin User Group: </td><td align=left><select size=1 name=user_group>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Admin User Group: </td><td align=left colspan=3><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
 		echo "<option SELECTED value=\"$user_group\">$user_group</option>\n";
 		echo "</select>$NWB#vicidial_call_times-user_group$NWE</td></tr>\n";
@@ -28138,6 +28511,60 @@ if ($ADD==311111111)
 		echo "$sct_list";
 		echo "</select></td>\n";
 		echo "<td align=center colspan=4><input type=submit name=SUBMIT value=SUBMIT></FORM></td></tr>\n";
+
+
+		$ct_hrs=1;
+		$b=0;
+		$hrs_SQL ='';
+		if (strlen($ct_holidays)>2)
+			{
+			$holiday_rules = explode('|',$ct_holidays);
+			$ct_hrs = ((count($holiday_rules)) - 1);
+			}
+		echo "<tr bgcolor=#B6D3FC><td align=center rowspan=$ct_hrs>Active Inbound Holiday Definitions for this Record: </td>\n";
+		echo "<td align=center colspan=3>&nbsp;</td></tr>\n";
+		while($ct_hrs >= $b)
+			{
+			if (strlen($holiday_rules[$b])>0)
+				{
+				$stmt="SELECT holiday_date,holiday_name from vicidial_call_time_holidays where holiday_id='$holiday_rules[$b]';";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				echo "<tr bgcolor=#B6D3FC><td align=right colspan=2><a href=\"$PHP_SELF?ADD=3211111111&holiday_id=$holiday_rules[$b]\">$holiday_rules[$b] </a> - <a href=\"$PHP_SELF?ADD=321111111&call_time_id=$call_time_id&holiday_rule=$holiday_rules[$b]&stage=REMOVE\">REMOVE </a></td><td align=left>$row[0] - $row[1]</td></tr>\n";
+				$hrs_SQL .= "'$holiday_rules[$b]',";
+				$hrs_holiday_SQL .= "'$row[0]',";
+				}
+			$b++;
+			}
+		if (strlen($hrs_SQL)>2)
+			{
+			$hrs_SQL = "$hrs_SQL''";
+			$hrs_holiday_SQL = "$hrs_holiday_SQL''";
+			$hrs_SQL = "where holiday_id NOT IN($hrs_SQL) and holiday_date NOT IN($hrs_holiday_SQL) $LOGadmin_viewable_groupsSQL";
+			}
+		else
+			{$hrs_SQL="$whereLOGadmin_viewable_groupsSQL";}
+		$stmt="SELECT holiday_id,holiday_date from vicidial_call_time_holidays $hrs_SQL order by holiday_date;";
+		$rslt=mysql_query($stmt, $link);
+		$hct_to_print = mysql_num_rows($rslt);
+		$hct_list='';
+
+		$o=0;
+		while ($hct_to_print > $o) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$hct_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+			$o++;
+			}
+		echo "<tr bgcolor=#B6D3FC><td align=right><form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=321111111>\n";
+		echo "<input type=hidden name=stage value=\"ADD\">\n";
+		echo "<input type=hidden name=call_time_id value=\"$call_time_id\">\n";
+		echo "Add inbound holiday rule: </td><td align=left colspan=2><select size=1 name=holiday_rule>\n";
+		echo "$hct_list";
+		echo "</select></td>\n";
+		echo "<td align=center colspan=4><input type=submit name=SUBMIT value=SUBMIT></FORM></td></tr>\n";
+
 
 		echo "</TABLE><BR><BR>\n";
 		echo "<B>CAMPAIGNS USING THIS CALL TIME:</B><BR>\n";
@@ -28240,7 +28667,7 @@ if ($ADD==3111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>State Call Time State: </td><td align=left colspan=3><input type=text name=state_call_time_state size=4 maxlength=2 value=\"$state_call_time_state\"> $NWB#vicidial_call_times-state_call_time_state$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>State Call Time Name: </td><td align=left colspan=3><input type=text name=call_time_name size=40 maxlength=50 value=\"$call_time_name\"> (short description of the call time)$NWB#vicidial_call_times-call_time_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>State Call Time Comments: </td><td align=left colspan=3><input type=text name=call_time_comments size=50 maxlength=255 value=\"$call_time_comments\"> $NWB#vicidial_call_times-call_time_comments$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Admin User Group: </td><td align=left><select size=1 name=user_group>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Admin User Group: </td><td align=left colspan=3><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
 		echo "<option SELECTED value=\"$user_group\">$user_group</option>\n";
 		echo "</select>$NWB#vicidial_call_times-user_group$NWE</td></tr>\n";
@@ -28275,6 +28702,105 @@ if ($ADD==3111111111)
 		if ($LOGdelete_call_times > 0)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=5111111111&call_time_id=$call_time_id\">DELETE THIS STATE CALL TIME DEFINITION</a>\n";
+			}
+		if ($LOGuser_level >= 9)
+			{
+			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=CALLTIMES_STATE&stage=$call_time_id\">Click here to see Admin changes to this call time</FONT>\n";
+			}
+		}
+	else
+		{
+		echo "You are not authorized to view this page. Please go back.";
+		}
+	}
+
+
+######################
+# ADD=3211111111 modify holiday definition info in the system
+######################
+
+if ($ADD==3211111111)
+	{
+	if ($LOGmodify_call_times==1)
+		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=3211111111&holiday_id=$holiday_id";
+			$modify_footer_refresh=1;
+			}
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		$stmt="SELECT holiday_id,holiday_date,holiday_name,holiday_comments,holiday_status,ct_default_start,ct_default_stop,user_group,default_afterhours_filename_override from vicidial_call_time_holidays where holiday_id='$holiday_id' $LOGadmin_viewable_groupsSQL;";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$holiday_date =							$row[1];
+		$holiday_name =							$row[2];
+		$holiday_comments =						$row[3];
+		$holiday_status =						$row[4];
+		$ct_default_start =						$row[5];
+		$ct_default_stop =						$row[6];
+		$user_group =							$row[7];
+		$default_afterhours_filename_override =	$row[8];
+
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		echo "<br>MODIFY A HOLIDAY<form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=4211111111>\n";
+		echo "<input type=hidden name=DB value=\"$DB\">\n";
+		echo "<input type=hidden name=holiday_id value=\"$holiday_id\">\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Holiday ID: </td><td align=left colspan=3><B>$holiday_id</B>$NWB#vicidial_call_times-holiday_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Holiday Name: </td><td align=left colspan=3><input type=text name=holiday_name size=40 maxlength=100 value=\"$holiday_name\"> (short description of the holiday)$NWB#vicidial_call_times-holiday_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Holiday Comments: </td><td align=left colspan=3><input type=text name=holiday_comments size=50 maxlength=255 value=\"$holiday_comments\"> $NWB#vicidial_call_times-holiday_comments$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Admin User Group: </td><td align=left colspan=3><select size=1 name=user_group>\n";
+		echo "$UUgroups_list";
+		echo "<option SELECTED value=\"$user_group\">$user_group</option>\n";
+		echo "</select>$NWB#vicidial_call_times-user_group$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Default Start:</td><td align=left><input type=text name=ct_default_start size=5 maxlength=4 value=\"$ct_default_start\"> </td><td align=right>Default Stop:</td><td align=left><input type=text name=ct_default_stop size=5 maxlength=4 value=\"$ct_default_stop\"> $NWB#vicidial_call_times-ct_default_start$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>AH Override: </td><td align=left colspan=3><input type=text name=default_afterhours_filename_override id=default_afterhours_filename_override size=50 maxlength=255 value=\"$default_afterhours_filename_override\"> <a href=\"javascript:launch_chooser('default_afterhours_filename_override','date',30);\">audio chooser</a> $NWB#vicidial_call_times-default_afterhours_filename_override$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Holiday Date: </td><td align=left colspan=3><input type=text name=holiday_date id=holiday_date size=10 maxlength=10 value=\"$holiday_date\">\n";
+		echo "<script language=\"JavaScript\">\n";
+		echo "var o_cal = new tcal ({\n";
+		echo "	// form name\n";
+		echo "	'formname': 'vicidial_report',\n";
+		echo "	// input name\n";
+		echo "	'controlname': 'holiday_date'\n";
+		echo "});\n";
+		echo "o_cal.a_tpl.yearscroll = false;\n";
+		echo "// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
+		echo "</script> $NWB#vicidial_call_times-holiday_date$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Holiday Status: </td><td align=left colspan=3><select size=1 name=holiday_status><option SELECTED>ACTIVE</option><option>INACTIVE</option><option>EXPIRED</option><option SELECTED>$holiday_status</option></select>$NWB#vicidial_call_times-holiday_status$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=4><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+		echo "</TABLE><BR><BR>\n";
+		echo "<B>CALL TIMES USING THIS HOLIDAY:</B><BR>\n";
+		echo "<TABLE>\n";
+
+		$stmt="SELECT call_time_id,call_time_name from vicidial_call_times where ct_holidays LIKE \"%|$holiday_id|%\" $whereLOGadmin_viewable_call_timesSQL;";
+		$rslt=mysql_query($stmt, $link);
+		$camps_to_print = mysql_num_rows($rslt);
+		$o=0;
+		while ($camps_to_print > $o) 
+			{
+			$row=mysql_fetch_row($rslt);
+			echo "<TR><TD><a href=\"$PHP_SELF?ADD=311111111&call_time_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+			$o++;
+			}
+
+		echo "</TABLE>\n";
+		echo "</center><BR><BR>\n";
+
+		if ($LOGdelete_call_times > 0)
+			{
+			echo "<br><br><a href=\"$PHP_SELF?ADD=5211111111&call_time_id=$call_time_id\">DELETE THIS HOLIDAY DEFINITION</a>\n";
+			}
+		if ($LOGuser_level >= 9)
+			{
+			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=HOLIDAYS&stage=$holiday_id\">Click here to see Admin changes to this holiday</FONT>\n";
 			}
 		}
 	else
@@ -31683,6 +32209,52 @@ if ($ADD==1000000000)
 	}
 
 ######################
+# ADD=1200000000 display all holidays
+######################
+if ($ADD==1200000000)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	$stmt="SELECT holiday_id,holiday_date,holiday_name,holiday_status,ct_default_start,ct_default_stop,user_group from vicidial_call_time_holidays $whereLOGadmin_viewable_groupsSQL order by holiday_date,holiday_id;";
+	$rslt=mysql_query($stmt, $link);
+	$holidays_to_print = mysql_num_rows($rslt);
+
+	echo "<br>HOLIDAY LISTINGS:\n";
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<tr bgcolor=black>";
+	echo "<td><font size=1 color=white align=left><B>HOLIDAY ID</B></td>";
+	echo "<td><font size=1 color=white><B>DATE</B></td>";
+	echo "<td><font size=1 color=white><B>NAME</B></td>";
+	echo "<td><font size=1 color=white><B>STATUS</B></td>";
+	echo "<td><font size=1 color=white><B>START</B></td>";
+	echo "<td><font size=1 color=white><B>STOP</B></td>";
+	echo "<td><font size=1 color=white><B>ADMIN GROUP</B></td>";
+	echo "<td align=center><font size=1 color=white><B>MODIFY</B></td></tr>\n";
+
+	$o=0;
+	while ($holidays_to_print > $o) 
+		{
+		$row=mysql_fetch_row($rslt);
+		if (eregi("1$|3$|5$|7$|9$", $o))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3211111111&holiday_id=$row[0]\">$row[0]</a></td>";
+		echo "<td><font size=1> $row[1]</td>";
+		echo "<td><font size=1> $row[2]</td>";
+		echo "<td><font size=1> $row[3] </td>";
+		echo "<td><font size=1> $row[4] </td>";
+		echo "<td><font size=1> $row[5] </td>";
+		echo "<td><font size=1> $row[6] </td>";
+		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=3211111111&holiday_id=$row[0]\">MODIFY</a></td></tr>\n";
+		$o++;
+		}
+
+	echo "</TABLE></center>\n";
+	}
+
+######################
 # ADD=130000000 display all shifts
 ######################
 if ($ADD==130000000)
@@ -32561,6 +33133,8 @@ if ($ADD==720000000000000)
 			if (eregi('REMOTEAGENT',$row[4])) {$record_link = "$PHP_SELF?ADD=31111&remote_agent_id=$row[6]";}
 			if (eregi('PHONE',$row[4])) {$record_link = "$PHP_SELF?ADD=10000000000";}
 			if (eregi('CALLTIME',$row[4])) {$record_link = "$PHP_SELF?ADD=311111111&call_time_id=$row[6]";}
+			if (eregi('CALLTIMES_STATE',$row[4])) {$record_link = "$PHP_SELF?ADD=3111111111&call_time_id=$row[6]";}
+			if (eregi('HOLIDAY',$row[4])) {$record_link = "$PHP_SELF?ADD=3211111111&holiday_id=$row[6]";}
 			if (eregi('SHIFT',$row[4])) {$record_link = "$PHP_SELF?ADD=331111111&shift_id=$row[6]";}
 			if (eregi('CONFTEMPLATE',$row[4])) {$record_link = "$PHP_SELF?ADD=331111111111&template_id=$row[6]";}
 			if (eregi('CARRIER',$row[4])) {$record_link = "$PHP_SELF?ADD=341111111111&carrier_id=$row[6]";}

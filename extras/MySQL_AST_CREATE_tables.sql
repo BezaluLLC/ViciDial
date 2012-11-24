@@ -1252,7 +1252,8 @@ wednesday_afterhours_filename_override VARCHAR(255) default '',
 thursday_afterhours_filename_override VARCHAR(255) default '',
 friday_afterhours_filename_override VARCHAR(255) default '',
 saturday_afterhours_filename_override VARCHAR(255) default '',
-user_group VARCHAR(20) default '---ALL---'
+user_group VARCHAR(20) default '---ALL---',
+ct_holidays TEXT default ''
 );
 
 CREATE TABLE vicidial_state_call_times (
@@ -2754,6 +2755,18 @@ audit_comments_enabled TINYINT(1) DEFAULT NULL COMMENT 'invisible',
 PRIMARY KEY (list_id)
 );
 
+CREATE TABLE vicidial_call_time_holidays (
+holiday_id VARCHAR(30) PRIMARY KEY NOT NULL,
+holiday_name VARCHAR(100) NOT NULL,
+holiday_comments VARCHAR(255) default '',
+holiday_date DATE,
+holiday_status ENUM('ACTIVE','INACTIVE','EXPIRED') default 'INACTIVE',
+ct_default_start SMALLINT(4) unsigned NOT NULL default '900',
+ct_default_stop SMALLINT(4) unsigned NOT NULL default '2100',
+default_afterhours_filename_override VARCHAR(255) default '',
+user_group VARCHAR(20) default '---ALL---'
+);
+
 
 ALTER TABLE vicidial_qc_codes ADD qc_result_type ENUM( 'PASS', 'FAIL', 'CANCEL', 'COMMIT' ) NOT NULL;
 
@@ -2987,4 +3000,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1332',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1333',db_schema_update_date=NOW();

@@ -120,6 +120,8 @@ OTHER CHANGES:
 
 26. Added QM Socket-Send functionality for custom queue_log record sending.
 
+27. Added inbound call time holiday functions.
+
 
 
 

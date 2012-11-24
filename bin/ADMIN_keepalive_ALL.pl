@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# ADMIN_keepalive_ALL.pl   version  2.4
+# ADMIN_keepalive_ALL.pl   version  2.6
 #
 # Designed to keep the astGUIclient processes alive and check every minute
 # Replaces all other ADMIN_keepalive scripts
@@ -75,6 +75,7 @@
 # 120706-1325 - Added Call Menu qualify SQL option
 # 120820-1026 - Added clearing of vicidial_session_data table at end of day
 # 121019-1021 - Added voicemail greeting option
+# 121124-1440 - Added holiday expiration function
 #
 
 $DB=0; # Debug flag
@@ -639,7 +640,7 @@ $sthArows=$sthA->rows;
 if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$timeclock_end_of_day_NOW =	"$aryA[0]";
+	$timeclock_end_of_day_NOW =	$aryA[0];
 	}
 $sthA->finish();
 
@@ -935,8 +936,7 @@ if ($timeclock_end_of_day_NOW > 0)
 	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
 	$sthA->finish();
 
-
-	##### BEGIN max stats end of day process #####
+	### calculate the date and time for 24 hours ago
 	$secX = time();
 	$RMtarget = ($secX - 86400);	# 24 hours ago
 	($RMsec,$RMmin,$RMhour,$RMmday,$RMmon,$RMyear,$RMwday,$RMyday,$RMisdst) = localtime($RMtarget);
@@ -948,7 +948,16 @@ if ($timeclock_end_of_day_NOW > 0)
 	if ($RMmin < 10) {$RMmin = "0$RMmin";}
 	if ($RMsec < 10) {$RMsec = "0$RMsec";}
 	$RMSQLdate = "$RMyear-$RMmon-$RMmday $RMhour:$RMmin:$RMsec";
+	$RMdate = "$RMyear-$RMmon-$RMmday";
 
+	# set past holidays to EXPIRED status
+	$stmtA = "UPDATE vicidial_call_time_holidays SET holiday_status='EXPIRED' where holiday_date < \"$RMdate\" and holiday_status!='EXPIRED';";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "\n|$affected_rows Holidays set to expired|\n";}
+
+
+	##### BEGIN max stats end of day process #####
 	# set OPEN max stats records to CLOSING for processing
 	$stmtA = "UPDATE vicidial_daily_max_stats SET stats_flag='CLOSING' where stats_flag='OPEN';";
 	if($DBX){print STDERR "\n|$stmtA|\n";}

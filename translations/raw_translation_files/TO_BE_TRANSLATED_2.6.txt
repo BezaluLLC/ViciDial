@@ -35,6 +35,43 @@ QueueMetrics Socket Send||
 This option, if enabled, will send QM data to a web page that will send it through a socket for logging. The CONNECT_COMPLETE option will send CONNECT, COMPLETEAGENT and COMPLETECALLER events to the url defined below. Default is NONE for disabled||
 QueueMetrics Socket Send URL||
 If Socket Send is enabled above, this is the URL that is used to send the data to. Default is EMPTY for disabled||
+Add Holiday||
+Modify Holiday||
+Delete Holiday||
+New Holiday Addition||
+Holidays||
+Holiday ID||
+This is the short name of a Holiday Definition. This needs to be a unique identifier. Do not use any spaces or punctuation for this field. max 30 characters, minimum of 2 characters||
+Holiday Name||
+This is a more descriptive name of the Holiday Definition. This is a short summary of the Holiday definition. max 100 characters, minimum of 2 characters||
+Holiday Comments||
+This is where you can place comments for a Holiday Definition such as -10am to 4pm boxing day restrictions-.  max 255 characters||
+Holiday Date||
+This is the date of the holiday||
+Holiday Status||
+This is the status of the holiday entry. ACTIVE status means that the holiday will be enabled on the holiday date. INACTIVE status means that the holiday will be ignored even on the holiday date. EXPIRED means that the holiday has passed it's holiday date. Default is INACTIVE||
+short description of the holiday||
+Day and time options will appear once you have created the Holiday Definition||
+HOLIDAY DEFINITION NOT ADDED||
+there is already a holiday entry with this ID||
+Holiday ID, name and date must be populated||
+HOLIDAY ADDED||
+HOLIDAY NOT MODIFIED||
+HOLIDAY MODIFIED||
+HOLIDAY NOT DELETED||
+Holiday ID must be at least 2 characters in length||
+HOLIDAY DELETION CONFIRMATION||
+Click here to delete holiday||
+HOLIDAY DELETION COMPLETED||
+Holiday Rule Removed||
+MODIFY A HOLIDAY||
+CALL TIMES USING THIS HOLIDAY||
+DELETE THIS HOLIDAY DEFINITION||
+Active Inbound Holiday Definitions for this Record||
+Add inbound holiday rule||
+Holiday Rule Added||
+Holiday Rule Removed||
+Click here to see Admin changes to this holiday||
 
 
 ############################################################ CLIENT

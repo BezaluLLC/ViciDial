@@ -38,6 +38,7 @@
 # 111116-0208 - Added ALT and ADDR3 in-group handle methods
 # 120402-2134 - Changed lead loader link to fourth gen
 # 121116-1412 - Added QC functionality
+# 121123-0911 - Added Call Times Holidays Inbound functionality
 #
 
 
@@ -1463,7 +1464,7 @@ $SScustom_fields_enabled =	$row[3];
 
 	if (strlen($times_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $times_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=100000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Call Times </a> &nbsp;| <a href="<?php echo $ADMIN ?>?ADD=111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Call Time </a> &nbsp;| <a href="<?php echo $ADMIN ?>?ADD=1000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show State Call Times </a> &nbsp;| <a href="<?php echo $ADMIN ?>?ADD=1111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New State Call Time </a></TD></TR>
+	<TR BGCOLOR=<?php echo $times_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=100000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Call Times </a> &nbsp;| <a href="<?php echo $ADMIN ?>?ADD=111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Call Time </a> &nbsp;| <a href="<?php echo $ADMIN ?>?ADD=1000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show State Call Times </a> &nbsp;| <a href="<?php echo $ADMIN ?>?ADD=1111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New State Call Time </a> &nbsp;| <a href="<?php echo $ADMIN ?>?ADD=1200000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Holidays </a> &nbsp;| <a href="<?php echo $ADMIN ?>?ADD=1211111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add Holiday </a></TD></TR>
 		<?php } 
 	if (strlen($shifts_sh) > 1) { 
 		?>

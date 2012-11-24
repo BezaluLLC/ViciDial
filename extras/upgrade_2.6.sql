@@ -166,3 +166,20 @@ ALTER TABLE system_settings ADD queuemetrics_socket VARCHAR(20) default 'NONE';
 ALTER TABLE system_settings ADD queuemetrics_socket_url TEXT;
 
 UPDATE system_settings SET db_schema_version='1332',db_schema_update_date=NOW() where db_schema_version < 1332;
+
+CREATE TABLE vicidial_call_time_holidays (
+holiday_id VARCHAR(30) PRIMARY KEY NOT NULL,
+holiday_name VARCHAR(100) NOT NULL,
+holiday_comments VARCHAR(255) default '',
+holiday_date DATE,
+holiday_status ENUM('ACTIVE','INACTIVE','EXPIRED') default 'INACTIVE',
+ct_default_start SMALLINT(4) unsigned NOT NULL default '900',
+ct_default_stop SMALLINT(4) unsigned NOT NULL default '2100',
+default_afterhours_filename_override VARCHAR(255) default '',
+user_group VARCHAR(20) default '---ALL---'
+);
+
+ALTER TABLE vicidial_call_times ADD ct_holidays TEXT default '';
+UPDATE vicidial_call_times SET ct_holidays='' where ct_holidays is NULL;
+
+UPDATE system_settings SET db_schema_version='1333',db_schema_update_date=NOW() where db_schema_version < 1333;

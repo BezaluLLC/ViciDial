@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-VDAD_inbound_calltime_check.agi   version 2.4
+# agi-VDAD_inbound_calltime_check.agi   version 2.6
 # 
 # Runs when a call comes in from an inbound call. This script will check the
 # settings of the defined calltime scheme in VICIDIAL and either send the call
@@ -48,6 +48,7 @@
 # 120706-1659 - Added Qualify SQL option
 # 120719-1411 - Fixed issue with inbound IVR calls not showing up in real-time screen
 # 120730-0727 - Fixed issue with non-populating phone number
+# 121124-1414 - Added call times holidays function
 #
 
 $script = 'agi-VDAD_inbound_calltime_check.agi';
@@ -67,6 +68,7 @@ $hm = ($hm + 0);
 $now_date_epoch = time();
 $now_date = "$year-$mon-$mday $hour:$min:$sec";
 $CLInow_date = "$year-$mon-$mday\\ $hour:$min:$sec";
+$YMD = "$year-$mon-$mday";
 $start_time=$now_date;
 $CIDdate = "$mon$mday$hour$min$sec";
 $tsSQLdate = "$year$mon$mday$hour$min$sec";
@@ -437,7 +439,7 @@ $ct_default_start = '0';
 $ct_default_stop = '9999';
 
 ### Grab call_times values from the database
-$stmtA = "SELECT ct_default_start,ct_default_stop $daySQL $yestSQL FROM vicidial_call_times where call_time_id = '$call_time_id';";
+$stmtA = "SELECT ct_default_start,ct_default_stop $daySQL $yestSQL,ct_holidays FROM vicidial_call_times where call_time_id = '$call_time_id';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -450,6 +452,7 @@ if ($sthArows > 0)
 	$ct_day_stop =			$aryA[3];
 	$ct_yest_start =		$aryA[4];
 	$ct_yest_stop =			$aryA[5];
+	$ct_holidays =			$aryA[6];
 	$sthA->finish();
 
 	if ( ($ct_yest_start < 1) && ($ct_yest_stop < 1) )  
@@ -461,6 +464,50 @@ if ($sthArows > 0)
 		{
 		$ct_default_start =		$ct_day_start;
 		$ct_default_stop =		$ct_day_stop;
+		}
+	}
+
+if (length($ct_holidays) > 2)
+	{
+	$stmtA = "SELECT count(*) from vicidial_call_time_holidays where holiday_date='$YMD' and holiday_status='ACTIVE';";
+	if ($DBX) {print "   |$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	@aryA = $sthA->fetchrow_array;
+	$holiday_today_count =	$aryA[0];
+	if ($AGILOG) {$agi_string = "Holiday check: |$holiday_today_count|$stmtA|$ct_holidays|";   &agi_output;}
+
+	$ct_hrs=0;
+	$b=0;
+	if ($holiday_today_count > 0)
+		{
+		@holiday_rules = split(/\|/,$ct_holidays);
+		$ct_hrs = ($#holiday_rules - 0);
+		while($ct_hrs >= $b)
+			{
+			if (length($holiday_rules[$b])>1)
+				{
+				$stmtA = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop,default_afterhours_filename_override from vicidial_call_time_holidays where holiday_id='$holiday_rules[$b]' and holiday_status='ACTIVE' and holiday_date='$YMD';";
+				if ($DBX) {print "   |$stmtA|\n";}
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$holiday_id =								$aryA[0];
+					$holiday_date =								$aryA[1];
+					$holiday_name =								$aryA[2];
+					$ct_default_start =							$aryA[3];
+					$ct_default_stop =							$aryA[4];
+					$default_afterhours_filename_override =		$aryA[5];
+
+					if ($AGILOG) {$agi_string = "Active Holiday found!    |$holiday_id|$holiday_date|$holiday_name|$ct_default_start|$ct_default_stop|$default_afterhours_filename_override|";   &agi_output;}
+					}
+				$sthA->finish();
+				}
+			$b++;
+			}
 		}
 	}
 
