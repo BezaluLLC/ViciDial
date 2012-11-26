@@ -97,12 +97,13 @@
 # 120621-0726 - Changed survey opt-in non-agent qm logging to log connection to VDAD agent
 # 121009-1458 - Changed survey method HANGUP to not wait for digits, added LRERR Local channel logging
 # 121120-0922 - Added QM socket-send functionality
+# 121125-0035 - Added Other Campaign DNC option
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
 $AGILOG = '0';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=105;
+$mysql_log_count=108;
 $one_mysql_log=0;
 
 
@@ -607,7 +608,7 @@ if ($VDACaffected_rows > 0)
 	##### END - Max call stats
 
 	### Grab campaign values from the database
-	$stmtA = "SELECT drop_call_seconds,drop_action,safe_harbor_exten,concurrent_transfers,next_agent_call,voicemail_ext,drop_inbound_group,use_internal_dnc,use_campaign_dnc,cpd_amd_action,am_message_exten,three_way_call_cid,campaign_cid,survey_first_audio_file,survey_opt_in_audio_file,survey_ni_audio_file,survey_third_audio_file,survey_fourth_audio_file,extension_appended_cidname,queue_priority,closer_campaigns,queuemetrics_phone_environment,campaign_recording,campaign_rec_filename,safe_harbor_audio,safe_harbor_menu_id,survey_recording,safe_harbor_audio_field FROM vicidial_campaigns where campaign_id = '$VDADcampaign';";
+	$stmtA = "SELECT drop_call_seconds,drop_action,safe_harbor_exten,concurrent_transfers,next_agent_call,voicemail_ext,drop_inbound_group,use_internal_dnc,use_campaign_dnc,cpd_amd_action,am_message_exten,three_way_call_cid,campaign_cid,survey_first_audio_file,survey_opt_in_audio_file,survey_ni_audio_file,survey_third_audio_file,survey_fourth_audio_file,extension_appended_cidname,queue_priority,closer_campaigns,queuemetrics_phone_environment,campaign_recording,campaign_rec_filename,safe_harbor_audio,safe_harbor_menu_id,survey_recording,safe_harbor_audio_field,use_other_campaign_dnc FROM vicidial_campaigns where campaign_id = '$VDADcampaign';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -646,6 +647,7 @@ if ($VDACaffected_rows > 0)
 		$safe_harbor_menu_id =			$aryA[25];
 		$survey_recording =				$aryA[26];
 		$safe_harbor_audio_field =		$aryA[27];
+		$use_other_campaign_dnc =		$aryA[28];
 		if (length($closer_campaigns) > 2)
 			{
 			$closer_campaigns =~ s/^ | -$//gi;
@@ -1255,7 +1257,7 @@ if ($call_handle_method =~ /SURVEY/)
 			&agi_output;
 			}
 
-		if (($use_internal_dnc =~ /Y/) && ($survey_ni_status eq "DNC"))
+		if (($use_internal_dnc =~ /Y|AREACODE/) && ($survey_ni_status eq "DNC"))
 			{
 			$stmtA = "INSERT INTO vicidial_dnc set phone_number='$VDADphone';";
 			if ($AGILOG) { $agi_string = "|$stmtA|"; &agi_output; }
@@ -1267,15 +1269,30 @@ if ($call_handle_method =~ /SURVEY/)
 				&agi_output;
 				}
 			}
-		if (($use_campaign_dnc =~ /Y/) && ($survey_ni_status eq "DNC"))
+		if (($use_campaign_dnc =~ /Y|AREACODE/) && ($survey_ni_status eq "DNC"))
 			{
-			$stmtA = "INSERT INTO vicidial_campaign_dnc set phone_number='$VDADphone', campaign_id='$VDADcampaign';";
+			$stmtA = "SELECT use_other_campaign_dnc FROM vicidial_campaigns where campaign_id='$VDADcampaign';";
+				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+				$dbhP=$dbhA;   $mysql_count='01106';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$use_other_campaign_dnc		= $aryA[0];
+				}
+			$sthA->finish();
+			$temp_campaign_id = $VDADcampaign;
+			if (length($use_other_campaign_dnc) > 0) {$temp_campaign_id = $use_other_campaign_dnc;}
+
+			$stmtA = "INSERT INTO vicidial_campaign_dnc set phone_number='$VDADphone', campaign_id='$temp_campaign_id';";
 			if ($AGILOG) { $agi_string = "|$stmtA|"; &agi_output; }
 			$affected_rows = $dbhA->do($stmtA);
 				$dbhP=$dbhA;   $mysql_count='01021';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 			if ($AGILOG) 
 				{
-				$agi_string = "--    VDAD vicidial_campaign_dnc insert: $affected_rows|$VDADphone|$VDADcampaign";
+				$agi_string = "--    VDAD vicidial_campaign_dnc insert: $affected_rows|$VDADphone|$VDADcampaign|$temp_campaign_id";
 				&agi_output;
 				}
 			}
@@ -1340,7 +1357,7 @@ if ($call_handle_method =~ /SURVEY/)
 			&agi_output;
 			}
 
-		if (($use_internal_dnc =~ /Y/) && ($survey_third_status eq "DNC"))
+		if (($use_internal_dnc =~ /Y|AREACODE/) && ($survey_third_status eq "DNC"))
 			{
 			$stmtA = "INSERT INTO vicidial_dnc set phone_number='$VDADphone';";
 			if ($AGILOG) { $agi_string = "|$stmtA|"; &agi_output; }
@@ -1352,15 +1369,30 @@ if ($call_handle_method =~ /SURVEY/)
 				&agi_output;
 				}
 			}
-		if (($use_campaign_dnc =~ /Y/) && ($survey_third_status eq "DNC"))
+		if (($use_campaign_dnc =~ /Y|AREACODE/) && ($survey_third_status eq "DNC"))
 			{
-			$stmtA = "INSERT INTO vicidial_campaign_dnc set phone_number='$VDADphone', campaign_id='$VDADcampaign';";
+			$stmtA = "SELECT use_other_campaign_dnc FROM vicidial_campaigns where campaign_id='$VDADcampaign';";
+				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+				$dbhP=$dbhA;   $mysql_count='01107';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$use_other_campaign_dnc		= $aryA[0];
+				}
+			$sthA->finish();
+			$temp_campaign_id = $VDADcampaign;
+			if (length($use_other_campaign_dnc) > 0) {$temp_campaign_id = $use_other_campaign_dnc;}
+
+			$stmtA = "INSERT INTO vicidial_campaign_dnc set phone_number='$VDADphone', campaign_id='$temp_campaign_id';";
 			if ($AGILOG) { $agi_string = "|$stmtA|"; &agi_output; }
 			$affected_rows = $dbhA->do($stmtA);
 				$dbhP=$dbhA;   $mysql_count='01021';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 			if ($AGILOG) 
 				{
-				$agi_string = "--    VDAD vicidial_campaign_dnc insert: $affected_rows|$VDADphone|$VDADcampaign";
+				$agi_string = "--    VDAD vicidial_campaign_dnc insert: $affected_rows|$VDADphone|$VDADcampaign|$temp_campaign_id";
 				&agi_output;
 				}
 			}
@@ -1437,7 +1469,7 @@ if ($call_handle_method =~ /SURVEY/)
 			&agi_output;
 			}
 
-		if (($use_internal_dnc =~ /Y/) && ($survey_fourth_status eq "DNC"))
+		if (($use_internal_dnc =~ /Y|AREACODE/) && ($survey_fourth_status eq "DNC"))
 			{
 			$stmtA = "INSERT INTO vicidial_dnc set phone_number='$VDADphone';";
 			if ($AGILOG) { $agi_string = "|$stmtA|"; &agi_output; }
@@ -1449,15 +1481,30 @@ if ($call_handle_method =~ /SURVEY/)
 				&agi_output;
 				}
 			}
-		if (($use_campaign_dnc =~ /Y/) && ($survey_fourth_status eq "DNC"))
+		if (($use_campaign_dnc =~ /Y|AREACODE/) && ($survey_fourth_status eq "DNC"))
 			{
-			$stmtA = "INSERT INTO vicidial_campaign_dnc set phone_number='$VDADphone', campaign_id='$VDADcampaign';";
+			$stmtA = "SELECT use_other_campaign_dnc FROM vicidial_campaigns where campaign_id='$VDADcampaign';";
+				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+				$dbhP=$dbhA;   $mysql_count='01108';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$use_other_campaign_dnc		= $aryA[0];
+				}
+			$sthA->finish();
+			$temp_campaign_id = $VDADcampaign;
+			if (length($use_other_campaign_dnc) > 0) {$temp_campaign_id = $use_other_campaign_dnc;}
+
+			$stmtA = "INSERT INTO vicidial_campaign_dnc set phone_number='$VDADphone', campaign_id='$temp_campaign_id';";
 			if ($AGILOG) { $agi_string = "|$stmtA|"; &agi_output; }
 			$affected_rows = $dbhA->do($stmtA);
 				$dbhP=$dbhA;   $mysql_count='01021';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 			if ($AGILOG) 
 				{
-				$agi_string = "--    VDAD vicidial_campaign_dnc insert: $affected_rows|$VDADphone|$VDADcampaign";
+				$agi_string = "--    VDAD vicidial_campaign_dnc insert: $affected_rows|$VDADphone|$VDADcampaign|$temp_campaign_id";
 				&agi_output;
 				}
 			}

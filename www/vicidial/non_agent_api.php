@@ -70,10 +70,11 @@
 # 120912-2042 - Added user_group_status and in_group_status functions
 # 120913-1255 - Added update_log_entry function
 # 121116-1938 - Added state call time restrictions to add_lead hopper insert function
+# 121125-2210 - Added Other Campaign DNC option and list expiration date option
 #
 
-$version = '2.6-48';
-$build = '121116-1938';
+$version = '2.6-49';
+$build = '121125-2210';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -319,6 +320,8 @@ if (isset($_GET["call_id"]))				{$call_id=$_GET["call_id"];}
 	elseif (isset($_POST["call_id"]))		{$call_id=$_POST["call_id"];}
 if (isset($_GET["group"]))					{$group=$_GET["group"];}
 	elseif (isset($_POST["group"]))			{$group=$_POST["group"];}
+if (isset($_GET["expiration_date"]))			{$expiration_date=$_GET["expiration_date"];}
+	elseif (isset($_POST["expiration_date"]))	{$expiration_date=$_POST["expiration_date"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -471,6 +474,7 @@ if ($non_latin < 1)
 	$in_groups = ereg_replace("[^-\|\_0-9a-zA-Z]","",$in_groups);
 	$call_id = ereg_replace("[^0-9a-zA-Z]","",$call_id);
 	$group = ereg_replace("[^-\|\_0-9a-zA-Z]","",$group);
+	$expiration_date = ereg_replace("[^-_0-9a-zA-Z]","",$expiration_date);
 	}
 else
 	{
@@ -2734,6 +2738,7 @@ if ($function == 'update_list')
 					$webformSQL='';
 					$webformtwoSQL='';
 					$resettimeSQL='';
+					$expiration_dateSQL='';
 					if (strlen($campaign_id) > 0)
 						{
 						$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id';";
@@ -2883,6 +2888,25 @@ if ($function == 'update_list')
 								{$resettimeSQL = " ,reset_time='$reset_time'";}
 							}
 						}
+					if (strlen($expiration_date) > 9)
+						{
+						if ($expiration_date == '--BLANK--')
+							{$expiration_dateSQL = " ,expiration_date='2099-12-31'";}
+						else
+							{
+							if (strlen($expiration_date) < 10)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_list EXPIRATION DATE IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$expiration_date";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$resettimeSQL = " ,expiration_date='$expiration_date'";}
+							}
+						}
 					if (strlen($web_form_address) > 0)
 						{
 						if ($web_form_address == '--BLANK--')
@@ -2898,7 +2922,7 @@ if ($function == 'update_list')
 							{$webformtwoSQL = " ,web_form_address_two='$web_form_address_two'";}
 						}
 
-					$updateSQL = "$webformtwoSQL$webformSQL$ammessageSQL$outboundcidSQL$activeSQL$listnameSQL$campaignSQL$scriptSQL$dropingroupSQL$resettimeSQL";
+					$updateSQL = "$webformtwoSQL$webformSQL$ammessageSQL$outboundcidSQL$activeSQL$listnameSQL$campaignSQL$scriptSQL$dropingroupSQL$resettimeSQL$expiration_dateSQL";
 
 					if (strlen($updateSQL)< 3)
 						{
@@ -3211,8 +3235,9 @@ if ($function == 'add_list')
 								exit;
 								}
 							if (strlen($active)<1) {$active='N';}
+							if (strlen($expiration_date)<10) {$expiration_date='2099-12-31';}
 
-							$stmt="INSERT INTO vicidial_lists SET list_id='$list_id', list_name='$list_name', campaign_id='$campaign_id', active='$active', campaign_cid_override='$outbound_cid', agent_script_override='$script', am_message_exten_override='$am_message', drop_inbound_group_override='$drop_inbound_group', web_form_address='$web_form_address', web_form_address_two='$web_form_address_two', reset_time='$reset_time';";
+							$stmt="INSERT INTO vicidial_lists SET list_id='$list_id', list_name='$list_name', campaign_id='$campaign_id', active='$active', campaign_cid_override='$outbound_cid', agent_script_override='$script', am_message_exten_override='$am_message', drop_inbound_group_override='$drop_inbound_group', web_form_address='$web_form_address', web_form_address_two='$web_form_address_two', reset_time='$reset_time', expiration_date='$expiration_date';";
 							$rslt=mysql_query($stmt, $link);
 							if ($DB) {echo "|$stmt|\n";}
 
@@ -4458,14 +4483,22 @@ if ($function == 'add_lead')
 				if ( ($campaign_dnc_check == 'Y') or ($campaign_dnc_check == 'AREACODE') )
 					{
 					if ($DB>0) {echo "DEBUG: Checking for campaign DNC\n";}
+
+					$stmt="SELECT use_other_campaign_dnc from vicidial_campaigns where campaign_id='$campaign_id';";
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					$use_other_campaign_dnc =	$row[0];
+					$temp_campaign_id = $campaign_id;
+					if (strlen($use_other_campaign_dnc) > 0) {$temp_campaign_id = $use_other_campaign_dnc;}
+
 					if ($campaign_dnc_check == 'AREACODE')
 						{
 						$phone_areacode = substr($phone_number, 0, 3);
 						$phone_areacode .= "XXXXXXX";
-						$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number IN('$phone_number','$phone_areacode') and campaign_id='$campaign_id';";
+						$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number IN('$phone_number','$phone_areacode') and campaign_id='$temp_campaign_id';";
 						}
 					else
-						{$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number='$phone_number' and campaign_id='$campaign_id';";}
+						{$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number='$phone_number' and campaign_id='$temp_campaign_id';";}
 					if ($DB>0) {echo "DEBUG: add_lead query - $stmt\n";}
 					$rslt=mysql_query($stmt, $link);
 					$row=mysql_fetch_row($rslt);

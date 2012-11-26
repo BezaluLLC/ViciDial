@@ -62,6 +62,7 @@
 # 110304-0005 - Small changes for CPD and on-hook agent features
 # 110324-2336 - Changes to CPD logging of calls and addition of the PDROP status
 # 121120-0922 - Added QM socket-send functionality
+# 121124-2303 - Added Other Campaign DNC option
 #
 
 # defaults for PreFork
@@ -1322,7 +1323,7 @@ sub process_request
 							### check to see if campaign has alt_dial enabled
 							$VD_auto_alt_dial = 'NONE';
 							$VD_auto_alt_dial_statuses='';
-							$stmtA="SELECT auto_alt_dial,auto_alt_dial_statuses,use_internal_dnc,use_campaign_dnc FROM vicidial_campaigns where campaign_id='$VD_campaign_id';";
+							$stmtA="SELECT auto_alt_dial,auto_alt_dial_statuses,use_internal_dnc,use_campaign_dnc,use_other_campaign_dnc FROM vicidial_campaigns where campaign_id='$VD_campaign_id';";
 								if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1335,6 +1336,7 @@ sub process_request
 								$VD_auto_alt_dial_statuses	=	$aryA[1];
 								$VD_use_internal_dnc =			$aryA[2];
 								$VD_use_campaign_dnc =			$aryA[3];
+								$VD_use_other_campaign_dnc =	$aryA[4];
 								$epc_countCAMPDATA++;
 								}
 							$sthA->finish();
@@ -1387,14 +1389,16 @@ sub process_request
 										else {$VD_alt_dnc_count=0;}
 										if ( ($VD_use_campaign_dnc =~ /Y/) || ($VD_use_campaign_dnc =~ /AREACODE/) )
 											{
+											$temp_campaign_id = $VD_campaign_id;
+											if (length($VD_use_other_campaign_dnc) > 0) {$temp_campaign_id = $VD_use_other_campaign_dnc;}
 											if ($VD_use_campaign_dnc =~ /AREACODE/)
 												{
 												$alt_areacode = substr($VD_alt_phone, 0, 3);
 												$alt_areacode .= "XXXXXXX";
-												$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_alt_phone','$alt_areacode') and campaign_id='$VD_campaign_id';";
+												$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_alt_phone','$alt_areacode') and campaign_id='$temp_campaign_id';";
 												}
 											else
-												{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_alt_phone' and campaign_id='$VD_campaign_id';";}
+												{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_alt_phone' and campaign_id='$temp_campaign_id';";}
 												if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 											$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 											$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1467,14 +1471,16 @@ sub process_request
 										else {$VD_alt_dnc_count=0;}
 										if ( ($VD_use_campaign_dnc =~ /Y/) || ($VD_use_campaign_dnc =~ /AREACODE/) )
 											{
+											$temp_campaign_id = $VD_campaign_id;
+											if (length($VD_use_other_campaign_dnc) > 0) {$temp_campaign_id = $VD_use_other_campaign_dnc;}
 											if ($VD_use_campaign_dnc =~ /AREACODE/)
 												{
 												$addr3_areacode = substr($VD_address3, 0, 3);
 												$addr3_areacode .= "XXXXXXX";
-												$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_address3','$alt_areacode') and campaign_id='$VD_campaign_id';";
+												$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_address3','$alt_areacode') and campaign_id='$temp_campaign_id';";
 												}
 											else
-												{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_address3' and campaign_id='$VD_campaign_id';";}
+												{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_address3' and campaign_id='$temp_campaign_id';";}
 												if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 											$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 											$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1585,14 +1591,16 @@ sub process_request
 											else {$VD_alt_dnc_count=0;}
 											if ( ($VD_use_campaign_dnc =~ /Y/) || ($VD_use_campaign_dnc =~ /AREACODE/) )
 												{
+												$temp_campaign_id = $VD_campaign_id;
+												if (length($VD_use_other_campaign_dnc) > 0) {$temp_campaign_id = $VD_use_other_campaign_dnc;}
 												if ($VD_use_campaign_dnc =~ /AREACODE/)
 													{
 													$ap_areacode = substr($VD_altdial_phone, 0, 3);
 													$ap_areacode .= "XXXXXXX";
-													$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_altdial_phone','$ap_areacode') and campaign_id='$VD_campaign_id';";
+													$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_altdial_phone','$ap_areacode') and campaign_id='$temp_campaign_id';";
 													}
 												else
-													{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_altdial_phone' and campaign_id='$VD_campaign_id';";}
+													{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_altdial_phone' and campaign_id='$temp_campaign_id';";}
 													if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 												$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 												$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;

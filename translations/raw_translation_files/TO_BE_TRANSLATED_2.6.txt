@@ -72,6 +72,11 @@ Add inbound holiday rule||
 Holiday Rule Added||
 Holiday Rule Removed||
 Click here to see Admin changes to this holiday||
+Expiration Date||
+This option allows you to set the date after which leads in this list will not be allowed to be auto-dialed or manual-list-dialed by the system. Default is 2099-12-31||
+Other Campaign DNC||
+If the option Use Campaign DNC List is enabled, this option can allow you to use a different campaign DNC list, just put the Campaign ID of the other campaign in this field. If you use this option, the original campaign DNC list will no longer be checked, only the OTHER campaign DNC list will be used. This does not affect use of the Internal System DNC list. Default is EMPTY||
+LIST EXPIRED AND SET TO ACTIVE||
 
 
 ############################################################ CLIENT

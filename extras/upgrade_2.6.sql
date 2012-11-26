@@ -183,3 +183,9 @@ ALTER TABLE vicidial_call_times ADD ct_holidays TEXT default '';
 UPDATE vicidial_call_times SET ct_holidays='' where ct_holidays is NULL;
 
 UPDATE system_settings SET db_schema_version='1333',db_schema_update_date=NOW() where db_schema_version < 1333;
+
+ALTER TABLE vicidial_lists ADD expiration_date DATE default '2099-12-31';
+
+ALTER TABLE vicidial_campaigns ADD use_other_campaign_dnc VARCHAR(8) default '';
+
+UPDATE system_settings SET db_schema_version='1334',db_schema_update_date=NOW() where db_schema_version < 1334;

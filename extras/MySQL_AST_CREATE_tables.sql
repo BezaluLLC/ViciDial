@@ -859,7 +859,8 @@ in_group_dial ENUM('DISABLED','MANUAL_DIAL','NO_DIAL','BOTH') default 'DISABLED'
 in_group_dial_select ENUM('AGENT_SELECTED','CAMPAIGN_SELECTED','ALL_USER_GROUP') default 'CAMPAIGN_SELECTED',
 safe_harbor_audio_field VARCHAR(30) default 'DISABLED',
 pause_after_next_call ENUM('ENABLED','DISABLED') default 'DISABLED',
-owner_populate ENUM('ENABLED','DISABLED') default 'DISABLED'
+owner_populate ENUM('ENABLED','DISABLED') default 'DISABLED',
+use_other_campaign_dnc VARCHAR(8) default ''
 );
 
 CREATE TABLE vicidial_lists (
@@ -883,7 +884,8 @@ xferconf_e_number VARCHAR(50) default '',
 web_form_address TEXT,
 web_form_address_two TEXT,
 time_zone_setting ENUM('COUNTRY_AND_AREA_CODE','POSTAL_CODE','NANPA_PREFIX','OWNER_TIME_ZONE_CODE') default 'COUNTRY_AND_AREA_CODE',
-inventory_report ENUM('Y','N') default 'Y'
+inventory_report ENUM('Y','N') default 'Y',
+expiration_date DATE default '2099-12-31'
 );
 
 CREATE TABLE vicidial_statuses (
@@ -3000,4 +3002,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1333',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1334',db_schema_update_date=NOW();

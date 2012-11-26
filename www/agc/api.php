@@ -63,10 +63,11 @@
 # 120819-1758 - Added webphone_url and call_agent functions
 # 120913-2039 - Added group_alias to transfer_conference function
 # 121120-0855 - Added QM socket-send functionality
+# 121124-2354 - Added Other Campaign DNC option
 #
 
-$version = '2.6-29';
-$build = '121120-0855';
+$version = '2.6-30';
+$build = '121124-2354';
 
 $startMS = microtime();
 
@@ -1485,9 +1486,16 @@ if ($function == 'external_add_lead')
 					}
 
 				# Campaign DNC Check
-				if ($campaign_dnc_check == 'YES' or $campaign_dnc_check=='Y')
+				if ( ($campaign_dnc_check=='YES') or ($campaign_dnc_check=='Y') )
 					{
-					$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number='$value' and campaign_id='$campaign_id';";
+					$stmt="SELECT use_other_campaign_dnc from vicidial_campaigns where campaign_id='$campaign_id';";
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					$use_other_campaign_dnc =	$row[0];
+					$temp_campaign_id = $campaign_id;
+					if (strlen($use_other_campaign_dnc) > 0) {$temp_campaign_id = $use_other_campaign_dnc;}
+
+					$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number='$value' and campaign_id='$temp_campaign_id';";
 					if ($DB) {echo "|$stmt|\n";}
 					$rslt=mysql_query($stmt, $link);
 					$row=mysql_fetch_row($rslt);
