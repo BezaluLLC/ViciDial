@@ -690,6 +690,8 @@ else
 
 $session_name = ereg_replace("'|\"|\\\\|;","",$session_name);
 $server_ip = ereg_replace("'|\"|\\\\|;","",$server_ip);
+$alt_phone = ereg_replace(" ","",$alt_phone);
+$phone_number = ereg_replace(" ","",$phone_number);
 
 # default optional vars if not set
 if (!isset($format))   {$format="text";}
