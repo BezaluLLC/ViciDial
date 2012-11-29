@@ -180,6 +180,7 @@
 # 121114-1936 - Added INGROUP recording option
 # 121120-0921 - Added QM socket-send functionality
 # 121124-1345 - Added call times holidays function
+# 121129-1618 - Small fix for estimated hold time, excluding QUEUE status
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -3587,7 +3588,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 			$dbhP=$dbhA;   $mysql_count='02083';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		if ($AGILOG) {$agi_string = "--    VDAC posttime record: |$affected_rows|$FDtsSQLdate|$callerid|";   &agi_output;}
 
-		$stmtA = "SELECT queue_seconds FROM vicidial_closer_log where campaign_id = '$channel_group' and status NOT IN('NANQUE') order by call_date desc limit 5;";
+		$stmtA = "SELECT queue_seconds FROM vicidial_closer_log where campaign_id = '$channel_group' and status NOT IN('NANQUE','QUEUE') order by call_date desc limit 5;";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;

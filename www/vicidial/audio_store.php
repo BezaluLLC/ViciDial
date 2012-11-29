@@ -15,10 +15,11 @@
 # 120529-1345 - Filename filter fix
 # 120531-1747 - Another filtering fix
 # 121019-0816 - Added audio file delete process
+# 121129-1620 - Hide delete option text if not allowed
 #
 
-$version = '2.6-9';
-$build = '121019-0816';
+$version = '2.6-10';
+$build = '121129-1620';
 
 $MT[0]='';
 
@@ -413,17 +414,20 @@ if ($action == "MANUALUPLOAD")
 
 
 <?php
-echo "<center><BR><BR>File to Delete:<BR>\n";
-echo "<form action=$PHP_SELF method=post>\n";
-echo "<input type=hidden name=action value=\"DELETE\">\n";
 if ($auth_delete > 0)
 	{
+	echo "<center><BR><BR>File to Delete:<BR>\n";
+	echo "<form action=$PHP_SELF method=post>\n";
+	echo "<input type=hidden name=action value=\"DELETE\">\n";
 	echo "<input type=text size=50 maxlength=100 name=delete_file id=delete_file value=\"\">\n";
 	echo "<input type=hidden name=DB value=\"$DB\">\n";
 	echo "<input type=submit name=submit value=submit>\n";
 	}
 else
 	{
+	echo "<BR>\n";
+	echo "<form action=$PHP_SELF method=post>\n";
+	echo "<input type=hidden name=action value=\"DELETE\">\n";
 	echo "<input type=hidden name=delete_file id=delete_file value=\"\">\n";
 	}
 echo "</form><BR><BR><BR>\n";
