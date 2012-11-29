@@ -1,5 +1,5 @@
 <!-- QC NAVIGATION -->
-<?
+<?php
 # QC_header_include.php
 # 
 # Copyright (C) 2012  poundteam.com    LICENSE: AGPLv2

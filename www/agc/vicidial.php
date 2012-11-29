@@ -13691,7 +13691,7 @@ Available Agents Transfer: <span id="AgentXferViewSelect"></span></center></font
     </font></td>
     </tr></table>
 </span>
-<? //AUDIT COMMENTS ADDED BY POUNDTEAM // ?>
+<?php //AUDIT COMMENTS ADDED BY POUNDTEAM // ?>
 <span style="position:absolute;left:5px;top:350px;z-index:<?php $zi++; echo $zi ?>;" id="ViewCommentsBox">
     <TABLE border=0 bgcolor="#FFDD99" width=<?php echo $HCwidth; ?>px height='<?php echo $BROWSER_HEIGHT-380; ?>px'>
 	<TR bgcolor="#FFEEBB">
@@ -13703,7 +13703,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 	</TR>
     </TABLE>
 </span>
-<? //end AUDIT COMMENTS ADDED BY POUNDTEAM // ?>
+<?php //end AUDIT COMMENTS ADDED BY POUNDTEAM // ?>
 <span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="CBcommentsBox">
     <table border="0" bgcolor="#FFFFCC" width="<?php echo $HCwidth ?>px" height="70px">
     <tr bgcolor="#FFFF66">

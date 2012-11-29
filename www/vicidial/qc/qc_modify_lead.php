@@ -275,7 +275,7 @@ $scheduled_callback =$row['scheduled_callback'];
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>QC Modify Lead: <?PHP echo "$lead_id - ".urldecode($lead_name).urldecode(" (Campaign: $campaign_id - $campaign_name)"); ?></title>
+<title>QC Modify Lead: <?php echo "$lead_id - ".urldecode($lead_name).urldecode(" (Campaign: $campaign_id - $campaign_name)"); ?></title>
 <script language="JavaScript" src="../calendar_db.js"></script>
 <link rel="stylesheet" href="../calendar.css">
 </head>
@@ -1066,7 +1066,7 @@ if ($end_call > 0) {
 			<input type=button value="SUBMIT" name=smt id=smt onClick="submit_form()">
 			</TD>
 			</TR>
-<input type=hidden name=viewtime value='<? echo $STARTtime; ?>' />
+<input type=hidden name=viewtime value='<?php echo $STARTtime; ?>' />
 			</TABLE>
 			</FORM>
 
