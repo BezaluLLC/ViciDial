@@ -110,6 +110,7 @@
 # 120403-1839 - Changed auto-alt-dial multi-lead processing to use server max recording time value for time
 # 120831-1503 - Added vicidial_dial_log outbound call logging
 # 121124-2249 - Added Other Campaign DNC option
+# 121129-1840 - Fix for issue #600
 #
 
 
@@ -944,6 +945,11 @@ while($one_day_interval > 0)
 					$DBIPtrunk_shortage[$user_CIPct] = 0;
 					}
 				$stmtA = "UPDATE vicidial_campaign_server_stats SET local_trunk_shortage='$DBIPtrunk_shortage[$user_CIPct]',update_time='$now_date' where server_ip='$server_ip' and campaign_id='$DBIPcampaign[$user_CIPct]';";
+				$affected_rows = $dbhA->do($stmtA);
+				}
+			else 
+				{
+				$stmtA = "UPDATE vicidial_campaign_server_stats SET update_time='$now_date' where server_ip='$server_ip' and campaign_id='$DBIPcampaign[$user_CIPct]';";
 				$affected_rows = $dbhA->do($stmtA);
 				}
 
