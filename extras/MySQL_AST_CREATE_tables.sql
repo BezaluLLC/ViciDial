@@ -1498,7 +1498,8 @@ allow_voicemail_greeting ENUM('0','1') default '0',
 audio_store_purge TEXT,
 svn_revision INT(9) default '0',
 queuemetrics_socket VARCHAR(20) default 'NONE',
-queuemetrics_socket_url TEXT
+queuemetrics_socket_url TEXT,
+enhanced_disconnect_logging ENUM('0','1') default '0'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2991,7 +2992,8 @@ INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,cate
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('MLINAT','Multi-Lead auto-alt-dial lead set to inactive','N','Y','UNDEFINED','N','N','N','N','N','N','Y');
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('MAXCAL','Inbound Max Calls Drop','N','Y','UNDEFINED','N','N','N','N','N','N','N');
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('LRERR','Outbound Local Channel Res Err','N','Y','UNDEFINED','N','N','N','N','N','N','N');
-INSERT INTO vicidial_statuses (status, status_name, selectable, human_answered, category, sale, dnc, customer_contact, not_interested, unworkable, scheduled_callback) VALUES ('QCFAIL', 'QC_FAIL_CALLBK', 'N', 'Y', 'QC', 'N', 'N', 'Y', 'N', 'N', 'Y');
+INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('QCFAIL','QC_FAIL_CALLBK','N','Y','QC','N','N','Y','N','N','Y','N');
+INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('ADCT','Disconnected Number Temporary','N','N','UNDEFINED','N','N','N','N','N','N','N');
 
 INSERT INTO vicidial_qc_codes (code,code_name,qc_result_type) VALUES ('QCPASS','PASS','PASS');
 INSERT INTO vicidial_qc_codes (code,code_name,qc_result_type) VALUES ('QCFAIL','FAIL','FAIL');
@@ -3002,4 +3004,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1334',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1335',db_schema_update_date=NOW();

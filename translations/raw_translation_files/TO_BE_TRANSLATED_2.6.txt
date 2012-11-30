@@ -77,6 +77,8 @@ This option allows you to set the date after which leads in this list will not b
 Other Campaign DNC||
 If the option Use Campaign DNC List is enabled, this option can allow you to use a different campaign DNC list, just put the Campaign ID of the other campaign in this field. If you use this option, the original campaign DNC list will no longer be checked, only the OTHER campaign DNC list will be used. This does not affect use of the Internal System DNC list. Default is EMPTY||
 LIST EXPIRED AND SET TO ACTIVE||
+Enhanced Disconnect Logging||
+This setting enables logging of calls that get a CONGESTION signal with a cause code of 1, 19, 21, 34 or 38. We usually do not recommend enabling this in the USA. Default is 0 for disabled||
 
 
 ############################################################ CLIENT

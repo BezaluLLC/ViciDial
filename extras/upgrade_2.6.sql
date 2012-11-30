@@ -189,3 +189,7 @@ ALTER TABLE vicidial_lists ADD expiration_date DATE default '2099-12-31';
 ALTER TABLE vicidial_campaigns ADD use_other_campaign_dnc VARCHAR(8) default '';
 
 UPDATE system_settings SET db_schema_version='1334',db_schema_update_date=NOW() where db_schema_version < 1334;
+
+ALTER TABLE system_settings ADD enhanced_disconnect_logging ENUM('0','1') default '0';
+
+UPDATE system_settings SET db_schema_version='1335',db_schema_update_date=NOW() where db_schema_version < 1335;

@@ -63,6 +63,7 @@
 # 110324-2336 - Changes to CPD logging of calls and addition of the PDROP status
 # 121120-0922 - Added QM socket-send functionality
 # 121124-2303 - Added Other Campaign DNC option
+# 121129-2322 - Added enhanced_disconnect_logging option
 #
 
 # defaults for PreFork
@@ -775,6 +776,22 @@ sub process_request
 
 				if ($channel =~ /^Local/)
 					{
+					$enhanced_disconnect_logging=0;
+					#############################################
+					##### SYSTEM SETTINGS LOOKUP #####
+					$stmtA = "SELECT enhanced_disconnect_logging FROM system_settings;";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$enhanced_disconnect_logging =	$aryA[0];
+						}
+					$sthA->finish();
+					##### END SYSTEM SETTINGS LOOKUP #####
+					###########################################
+
 					$CPDfound=0;
 
 					# V2251502010052435563
@@ -832,12 +849,17 @@ sub process_request
 						### END - CPD Look for result for B/DC calls
 						##############################################################
 						}
-					if ( ($PRI =~ /^PRI$/) && ($callerid =~ /\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/) && ( ( ($dialstatus =~ /BUSY/) || ( ($dialstatus =~ /CHANUNAVAIL/) && ($hangup_cause =~ /^1$|^28$/) ) ) || ($CPDfound > 0) ))
+					if ( ($PRI =~ /^PRI$/) && ($callerid =~ /\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/) && ( ( ($dialstatus =~ /BUSY/) || ( ($dialstatus =~ /CHANUNAVAIL/) && ($hangup_cause =~ /^1$|^28$/) ) || ( ($enhanced_disconnect_logging > 0) && ( ($dialstatus =~ /CONGESTION/) && ($hangup_cause =~ /^1$|^19$|^21$|^34$|^38$/) ) ) ) || ($CPDfound > 0) ))
 						{
 						if ($CPDfound < 1) 
 							{
 							if ($dialstatus =~ /BUSY/) {$VDL_status = 'AB'; $VDAC_status = 'BUSY';}
 							if ($dialstatus =~ /CHANUNAVAIL/) {$VDL_status = 'ADC'; $VDAC_status = 'DISCONNECT';}
+							if ($enhanced_disconnect_logging > 0)
+								{
+								if ($dialstatus =~ /CONGESTION/ && $hangup_cause =~ /^1$/) {$VDL_status = 'ADC'; $VDAC_status = 'DISCONNECT';}
+								if ($dialstatus =~ /CONGESTION/ && $hangup_cause =~ /^19$|^21$|^34$|^38$/) {$VDL_status = 'ADCT'; $VDAC_status = 'DISCONNECT';}
+								}
 							}
 
 						$stmtA = "UPDATE vicidial_list set status='$VDL_status' where lead_id = '$CIDlead_id';";
