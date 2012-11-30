@@ -98,6 +98,7 @@ Unidentified Hangup Cause Code||
 YOU MUST SELECT AN AGENT TO TRANSFER TO WHEN USING AGENTDIRECT||
 Another live agent session was open using your user ID. It has been disabled. Click OK to continue to the agent screen||
 View Comment History||
+reset form||
 
 
 ############################################################  MANAGER Manual
