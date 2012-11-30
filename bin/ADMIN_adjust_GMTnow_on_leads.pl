@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# ADMIN_adjust_GMTnow_on_leads.pl    verison 2.4
+# ADMIN_adjust_GMTnow_on_leads.pl    verison 2.6
 #
 # program goes throught the vicidial_list table and adjusts the gmt_offset_now
 # field to change it to today's offset if needed because of Daylight Saving Time
@@ -29,6 +29,7 @@
 # 110406-0652 - Added omitlistid option
 # 110424-0834 - Added ownertimezone option
 # 110513-1444 - Added list-settings option to use settings from the vicidial_lists table
+# 121129-1858 - Fixes for issue #562, reported by DomeDan
 #
 
 use Time::Local;
@@ -52,7 +53,7 @@ if (length($ARGV[0])>1)
 		$i++;
 		}
 
-	if ($args =~ /--help/i)
+	if ($args =~ /--help|-h/i)
 		{
 		print "allowed run time options:\n";
 		print "  [-q] = quiet\n";
@@ -110,12 +111,15 @@ if (length($ARGV[0])>1)
 			{
 			@data_in = split(/-singlelistid=/,$args);
 			$singlelistid = $data_in[1];
+			$singlelistid =~ s/ .*$//gi;
+			$singlelistid =~ s/\D//gi;
 			if ($q < 1) {print "\n----- SINGLE LISTID OVERRIDE: $singlelistid -----\n\n";}
 			}
 		if ($args =~ /-omitlistid=/i)
 			{
 			@data_in = split(/-omitlistid=/,$args);
 			$omitlistidSQL = $data_in[1];
+			$omitlistidSQL =~ s/ .*$//gi;
 			if ($q < 1) {print "\n----- OMIT LISTID OVERRIDE: $omitlistidSQL -----\n\n";}
 			$omitlistidSQL =~ s/-/','/gi;
 			}
@@ -128,6 +132,7 @@ if (length($ARGV[0])>1)
 			{
 			@data_in = split(/-force-date=/,$args);
 			$forcedate = $data_in[1];
+			$forcedate =~ s/ .*$//gi;
 			@cli_date = split("-",$forcedate);
 			$year = $cli_date[0];
 			$mon =	$cli_date[1];
@@ -369,7 +374,7 @@ while ($sthArows > $rec_countY)
 	 
 	$phone_codes[$rec_countY] = $aryA[0];
 	$phone_codes_ORIG[$rec_countY] = $aryA[0];
-	$phone_codes[$rec_countY] =~ s/011|0011| |\t|\r|\n//gi;
+	$phone_codes[$rec_countY] =~ s/011|0011|^00| |\t|\r|\n//gi; # need ^ to not remove 00 from country code 500, but 00 from 0046
 
 	$phone_codes_list .= "'$aryA[0]',";
 
@@ -477,7 +482,7 @@ $TOTALnanpa_updated_count=0;
 foreach (@phone_codes)
 	{
 	$match_code = $phone_codes[$d];
-	$match_code_ORIG = $phone_codes[$d];
+	$match_code_ORIG = $phone_codes_ORIG[$d];
 
 	if ($DB) {print "\nRUNNING LOOP FOR COUNTRY CODE: $match_code\n";}
 
