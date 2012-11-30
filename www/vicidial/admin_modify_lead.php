@@ -49,6 +49,7 @@
 # 120518-1004 - Fix for multi-line comments
 # 120529-1635 - Added User Group Campaign-Lists validation
 # 121116-1411 - Added QC functionality
+# 121130-1033 - Changed scheduled callback user ID field to be 20 characters, issue #467
 #
 
 require("dbconnect.php");
@@ -1034,7 +1035,7 @@ else
 					echo "<input type=hidden name=DB value=\"$DB\">\n";
 					echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
 					echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
-					echo "New Callback Owner UserID: <input type=text name=CBuser size=8 maxlength=10 value=\"$rowx[8]\"> \n";
+					echo "New Callback Owner UserID: <input type=text name=CBuser size=18 maxlength=20 value=\"$rowx[8]\"> \n";
 					echo "<input type=submit name=submit value=\"CHANGE USERONLY CALLBACK USER\"></form><BR>\n";
 					}
 				else
@@ -1044,7 +1045,7 @@ else
 					echo "<input type=hidden name=DB value=\"$DB\">\n";
 					echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
 					echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
-					echo "New Callback Owner UserID: <input type=text name=CBuser size=8 maxlength=10 value=\"$rowx[8]\"> \n";
+					echo "New Callback Owner UserID: <input type=text name=CBuser size=18 maxlength=20 value=\"$rowx[8]\"> \n";
 					echo "<input type=submit name=submit value=\"CHANGE TO USERONLY CALLBACK\"></form><BR>\n";
 					}
 				$callback_id = $rowx[0];

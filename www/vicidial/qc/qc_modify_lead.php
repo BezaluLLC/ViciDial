@@ -11,6 +11,7 @@
 #
 # changes:
 # 121116-1324 - First build, added to vicidial codebase
+# 121130-1034 - Changed scheduled callback user ID field to be 20 characters, issue #467
 #
 
 require("../dbconnect.php");
@@ -943,7 +944,7 @@ if ($end_call > 0) {
 				echo "<input type=hidden name=DB value=\"$DB\">\n";
 				echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
 				echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
-				echo "New Callback Owner UserID: <input type=text name=CBuser size=8 maxlength=10 value=\"$rowx[8]\"> \n";
+				echo "New Callback Owner UserID: <input type=text name=CBuser size=18 maxlength=20 value=\"$rowx[8]\"> \n";
 				echo "<input type=submit name=submit value=\"CHANGE USERONLY CALLBACK USER\"><input type=hidden name=viewtime value='$STARTtime' /></form><BR>\n";
 				}
 			else
@@ -953,7 +954,7 @@ if ($end_call > 0) {
 				echo "<input type=hidden name=DB value=\"$DB\">\n";
 				echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
 				echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
-				echo "New Callback Owner UserID: <input type=text name=CBuser size=8 maxlength=10 value=\"$rowx[8]\"> \n";
+				echo "New Callback Owner UserID: <input type=text name=CBuser size=18 maxlength=20 value=\"$rowx[8]\"> \n";
 				echo "<input type=submit name=submit value=\"CHANGE TO USERONLY CALLBACK\"><input type=hidden name=viewtime value='$STARTtime' /></form><BR>\n";
 				}
 
