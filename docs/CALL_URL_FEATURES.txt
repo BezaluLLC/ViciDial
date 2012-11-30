@@ -23,7 +23,7 @@ dial calls. Default is blank.
 Dispo Call URL - This web URL address is not seen by the agent, but it
 is called every time a call is dispositioned by an agent if it is
 populated. Uses the same variables as the web form fields and scripts.
-dispo and talk_time are the variables you can use to retrieve the
+dispo, talk_time and call_notes are the variables you can use to retrieve the
 agent-defined disposition for the call and the actual talk time in
 seconds of the call. This URL can NOT be a relative path. Default is
 blank.

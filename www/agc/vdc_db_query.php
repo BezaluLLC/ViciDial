@@ -318,10 +318,11 @@
 # 121116-1409 - Added QC functionality
 # 121120-0838 - Added QM socket-send functionality
 # 121124-2357 - Added Other Campaign DNC option
+# 121130-0740 - Added call notes option to dispo call url
 #
 
-$version = '2.6-216';
-$build = '121124-2357';
+$version = '2.6-217';
+$build = '121130-0740';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=446;
 $one_mysql_log=0;
@@ -7419,6 +7420,13 @@ if ($ACTION == 'updateDISPO')
 			}
 		$dispo_name = urlencode(trim($status_name));
 
+		if (eregi('--A--call_notes',$dispo_call_url))
+			{
+			if (strlen($call_notes) > 1)
+				{$url_call_notes =		urlencode(trim($call_notes));}
+			else
+				{$url_call_notes =		urlencode(" ");}
+			}
 
 		if (eregi('--A--dialed_',$dispo_call_url))
 			{
@@ -7608,6 +7616,7 @@ if ($ACTION == 'updateDISPO')
 		$dispo_call_url = eregi_replace('--A--closecallid--B--',urlencode(trim($INclosecallid)),$dispo_call_url);
 		$dispo_call_url = eregi_replace('--A--xfercallid--B--',urlencode(trim($INxfercallid)),$dispo_call_url);
 		$dispo_call_url = eregi_replace('--A--call_id--B--',urlencode(trim($MDnextCID)),$dispo_call_url);
+		$dispo_call_url = eregi_replace('--A--call_notes--B--',"$url_call_notes",$dispo_call_url);
 
 		if (strlen($FORMcustom_field_names)>2)
 			{
