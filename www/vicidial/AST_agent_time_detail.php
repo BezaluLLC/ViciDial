@@ -23,6 +23,7 @@
 # 110708-1727 - Added options.php setting for time precision
 # 111104-1248 - Added user_group restrictions for selecting in-groups
 # 120224-0910 - Added HTML display option with bar graphs
+# 121130-0957 - Fix for user group permissions issue #588
 #
 
 require("dbconnect.php");
@@ -235,6 +236,10 @@ else
 	$group_SQL = "and campaign_id IN($group_SQL)";
 	}
 
+for ($i=0; $i<count($user_group); $i++)
+	{
+	if (eregi("--ALL--", $user_group[$i])) {$all_user_groups=1; $user_group="";}
+	}
 $stmt="select user_group from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
@@ -244,6 +249,7 @@ while ($i < $user_groups_to_print)
 	{
 	$row=mysql_fetch_row($rslt);
 	$user_groups[$i] =$row[0];
+	if ($all_user_groups) {$user_group[$i]=$row[0];}
 	$i++;
 	}
 
