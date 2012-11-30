@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_VDremote_agents.pl version 2.4
+# AST_VDremote_agents.pl version 2.6
 #
 # SUMMARY:
 # To use VICIDIAL with remote agents, this must always be running 
@@ -44,6 +44,7 @@
 # 110707-1342 - Added last_inbound_call_time to next agent call options for inbound
 # 111201-1428 - Added grade-random next-agent-call option for inbound
 # 120213-1701 - Added remote-agent daily stats
+# 121129-1929 - Fix for issue #601, reported by Acidshock
 #
 
 ### begin parsing run-time options ###
@@ -329,10 +330,10 @@ while($one_day_interval > 0)
 					$stmtC = "UPDATE vicidial_closer_log set status='XFER',user='$QHuser[$w]',comments='REMOTE' where lead_id='$QHlead_id[$w]' and uniqueid='$QHuniqueid[$w]' and campaign_id='$QHcampaign_id[$w]' limit 1;";
 					$Caffected_rows = $dbhA->do($stmtC);
 
-					$stmtD = "INSERT IGNORE INTO vicidial_live_inbound_agents SET calls_today='1',last_call_time='$SQLdate' where user='$QHuser[$w]' and group_id='$QHcampaign_id[$w]' ON DUPLICATE KEY UPDATE calls_today=(calls_today + 1),last_call_time='$SQLdate';";
+					$stmtD = "INSERT IGNORE INTO vicidial_live_inbound_agents SET calls_today='1',last_call_time='$SQLdate',user='$QHuser[$w]', group_id='$QHcampaign_id[$w]' ON DUPLICATE KEY UPDATE calls_today=(calls_today + 1),last_call_time='$SQLdate';";
 					$Daffected_rows = $dbhA->do($stmtD);
 
-					$stmtE = "INSERT IGNORE INTO vicidial_inbound_group_agents set calls_today=1 where user='$QHuser[$w]' and group_id='$QHcampaign_id[$w]' ON DUPLICATE KEY UPDATE calls_today=(calls_today + 1);";
+					$stmtE = "INSERT IGNORE INTO vicidial_inbound_group_agents set calls_today=1,user='$QHuser[$w]',group_id='$QHcampaign_id[$w]' ON DUPLICATE KEY UPDATE calls_today=(calls_today + 1);";
 					$Eaffected_rows = $dbhA->do($stmtE);
 
 					$stmtG = "SELECT start_call_url FROM vicidial_inbound_groups where group_id='$QHcampaign_id[$w]';";
