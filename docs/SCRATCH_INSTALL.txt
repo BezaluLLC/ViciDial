@@ -389,10 +389,8 @@ a more loaded system.
 
 SUBPHASE 3.2: Installing Perl Modules
 
-NOTE - you can install ActiveState http://www.activestate.com perl, but it is 
-not required. Here's the source for ActiveState
-Perl 5.8: (it's free)
-	http://downloads.activestate.com/ActivePerl/src/5.8/AP817_source.tgz
+NOTE - you can install ActiveState http://www.activestate.com perl, but it is not required.
+	http://www.activestate.com/activeperl/downloads
 
 cpan is the "Comprehensive Perl Archive Network". It's a mirrored archive of 
 most of the perl modules out there complete with a installation and management 
@@ -419,12 +417,15 @@ following modules first:   (say YES if asked to install prerequisites)
    - install Bundle::CPAN
    - reload cpan
 - then you can install other modules:
+   - install Pod::Usage    (this is a core module and should already be installed,
+                            but we want to be sure it's been installed)
+   - install Getopt::Long  (this a core module and should already be installed,
+                            but we want to be sure it's been installed)
    - install DBI
    - force install DBD::mysql	(must at least have mysqlclientlibs installed)
    - install Net::Telnet
    - install Time::HiRes
    - install Net::Server
-   - install Switch
    - install Mail::Sendmail
    - install Unicode::Map		(needed for super list loader Excel)
    - install Jcode			(needed for super list loader Excel)
@@ -841,7 +842,6 @@ are running in it.
 	- cd mtop-0.6.6
 	- cpan 
 		- install Curses
-		- install Getopt::Long
 		- install Net::Domain
 		- quit
 	- perl Makefile.PL

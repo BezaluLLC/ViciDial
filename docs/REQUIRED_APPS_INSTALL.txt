@@ -50,10 +50,11 @@ install readline
 install Bundle::CPAN
 install DBI
 force install DBD::mysql
+install Pod::Usage
+install Getopt::Long
 install Net::Telnet
 install Time::HiRes
 install Net::Server
-install Switch
 install Mail::Sendmail
 install Unicode::Map
 install Jcode
@@ -319,7 +320,6 @@ php -v
 cpan 
 
 install Curses
-install Getopt::Long
 install Net::Domain
 quit
 
