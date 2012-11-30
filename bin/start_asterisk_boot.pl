@@ -2,6 +2,10 @@
 #
 # start_asterisk_boot.pl    version 2.0.5
 #
+# This script is designed to start Asterisk in the proper way for Vicidial to 
+# operate as intended
+#
+#
 # Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES

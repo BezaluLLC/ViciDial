@@ -5,6 +5,13 @@
 # well as the the vendor_lead code from the list, and the status_name from
 # either the vicidial_statuses or vicidial_campaign_statuses table and
 # puts all that information into a CSV file which gets emailed out.
+#
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+#
+#
+# CHANGES
+# 90815-1540 - latest build
+#
 
 # lets play nice
 use 5.008;
