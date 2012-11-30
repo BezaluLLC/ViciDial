@@ -354,9 +354,6 @@ else
 	$query_date_BEGIN = "$query_date $time_BEGIN";   
 	$query_date_END = "$end_date $time_END";
 
-	if (strlen($user_group)>0) {$ugSQL="and vicidial_agent_log.user_group='$user_group'";}
-	else {$ugSQL='';}
-
 	if ($file_download < 1)
 		{
 		$ASCII_text.="<BR><BR>Agent Status Detail Report                     $NOW_TIME\n";

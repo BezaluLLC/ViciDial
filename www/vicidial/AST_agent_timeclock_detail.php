@@ -319,9 +319,6 @@ else
 	$query_date_BEGIN = "$query_date";   
 	$query_date_END = "$end_date";
 
-	if (strlen($user_group)>0) {$ugSQL="and vicidial_agent_log.user_group='$user_group'";}
-	else {$ugSQL='';}
-
 	if ($file_download < 1)
 		{
 		echo "User Time-Clock Detail                     $NOW_TIME\n";

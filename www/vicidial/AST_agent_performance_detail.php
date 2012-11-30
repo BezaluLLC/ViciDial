@@ -400,9 +400,6 @@ if ($shift == 'ALL')
 $query_date_BEGIN = "$query_date $time_BEGIN";   
 $query_date_END = "$end_date $time_END";
 
-if (strlen($user_group)>0) {$ugSQL="and vicidial_agent_log.user_group='$user_group'";}
-else {$ugSQL='';}
-
 $HTML_text.="Agent Performance Detail                        $NOW_TIME\n";
 
 $HTML_text.="Time range: $query_date_BEGIN to $query_date_END\n\n";
