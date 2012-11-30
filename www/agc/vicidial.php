@@ -389,10 +389,11 @@
 # 121114-1759 - Fixed manual dial lead preview script variable issue
 # 121114-1937 - Added INGROUP recording option
 # 121116-1407 - Added QC functionality
+# 121129-2149 - Corrected hotkeys activation conditions
 #
 
-$version = '2.6-357c';
-$build = '121116-1407';
+$version = '2.6-358c';
+$build = '121129-2149';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -511,7 +512,7 @@ if ($qm_conf_ct > 0)
 # set defaults for hard-coded variables
 $conf_silent_prefix		= '5';	# vicidial_conferences prefix to enter silently and muted for recording
 $dtmf_silent_prefix		= '7';	# vicidial_conferences prefix to enter silently
-$HKuser_level			= '5';	# minimum vicidial user_level for HotKeys
+$HKuser_level			= '1';	# minimum vicidial user_level for HotKeys
 $campaign_login_list	= '1';	# show drop-down list of campaigns at login	
 $manual_dial_preview	= '1';	# allow preview lead option when manual dial
 $multi_line_comments	= '1';	# set to 1 to allow multi-line comment box
@@ -12025,7 +12026,7 @@ function phone_number_format(formatphone) {
 // GLOBAL FUNCTIONS
 	function begin_all_refresh()
 		{
-		<?php if ( ($HK_statuses_camp > 0) && ( ($user_level>=$HKuser_level) or ($VU_hotkeys_active > 0) ) ) {echo "document.onkeypress = hotkeypress;\n";} ?>
+		<?php if ( ($HK_statuses_camp > 0) && ($user_level>=$HKuser_level) && ($VU_hotkeys_active > 0) ) {echo "document.onkeypress = hotkeypress;\n";} ?>
 		all_refresh();
 		}
 	function start_all_refresh()
@@ -13437,7 +13438,7 @@ $zi=2;
     </td></tr></table>
 </span>
 
-<?php if ( ($HK_statuses_camp > 0) && ( ($user_level>=$HKuser_level) or ($VU_hotkeys_active > 0) ) ) { ?>
+<?php if ( ($HK_statuses_camp > 0) && ($user_level>=$HKuser_level) or ($VU_hotkeys_active > 0) ) { ?>
 <span style="position:absolute;left:<?php echo $HKwidth ?>px;top:<?php echo $HKheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="hotkeysdisplay"><a href="#" onMouseOver="HotKeys('ON')"><img src="./images/vdc_XB_hotkeysactive_OFF.gif" border="0" alt="HOT KEYS INACTIVE" /></a></span>
 <?php } ?>
 
