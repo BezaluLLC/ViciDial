@@ -3204,12 +3204,13 @@ else
 # 121123-1208 - Added inbound holiday functions
 # 121124-1957 - Added List Expiration Date feature and Campaign Other-DNC-List feature
 # 121129-2319 - Added enhanced_disconnect_logging option
+# 121130-1425 - Fixed user group permissions issue with allowed campaigns modifications of user groups
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-386a';
-$build = '121129-2319';
+$admin_version = '2.6-387a';
+$build = '121130-1425';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -16653,6 +16654,39 @@ if ($ADD==411111)
 					$k++;
 					}
 				$allowed_reports = preg_replace("/,$/","",$new_field_value);
+
+				# update allowed_camapigns with values that the editor cant see http://www.vicidial.org/VICIDIALforum/viewtopic.php?f=5&t=26101
+				if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+					{
+					$changer_allowed_campaigns = preg_replace("/ -/",'',$LOGallowed_campaigns);
+					$changer_allowed_campaigns = explode(" ", $changer_allowed_campaigns);
+
+					$stmt="SELECT allowed_campaigns FROM vicidial_user_groups WHERE user_group='$OLDuser_group';";
+					$rslt=mysql_query($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					$old_allowed_rows = mysql_num_rows($rslt);
+					if ($old_allowed_rows > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$old_allowed =  $row[0];  
+						}
+					if ( (!eregi("-ALL",$old_allowed)) )
+						{
+						$invis_campaigns="";
+						$campaigns_value = preg_replace("/ -/",'',$campaigns_value);
+						$old_allowed = preg_replace("/ -/",'',$old_allowed);
+						$old_allowed = explode(" ", $old_allowed);
+
+						foreach ($old_allowed as $oac) 
+							{
+							if (!in_array($oac, $changer_allowed_campaigns))
+								{
+								$invis_campaigns .= "$oac ";
+								}
+							}
+						$campaigns_value .= " $invis_campaigns-";
+						}
+					}
 
 				$stmt="UPDATE vicidial_user_groups set user_group='$user_group', group_name='$group_name',allowed_campaigns='$campaigns_value',qc_allowed_campaigns='$qc_campaigns_value',qc_allowed_inbound_groups='$qc_groups_value',group_shifts='$GROUP_shifts',forced_timeclock_login='$forced_timeclock_login',shift_enforcement='$shift_enforcement',agent_status_viewable_groups='$VGROUP_vgroups',agent_status_view_time='$agent_status_view_time',agent_call_log_view='$agent_call_log_view',agent_xfer_consultative='$agent_xfer_consultative',agent_xfer_dial_override='$agent_xfer_dial_override',agent_xfer_vm_transfer='$agent_xfer_vm_transfer',agent_xfer_blind_transfer='$agent_xfer_blind_transfer',agent_xfer_dial_with_customer='$agent_xfer_dial_with_customer',agent_xfer_park_customer_dial='$agent_xfer_park_customer_dial',agent_fullscreen='$agent_fullscreen',allowed_reports='$allowed_reports',webphone_url_override='" . mysql_real_escape_string($webphone_url_override) . "',webphone_systemkey_override='$webphone_systemkey_override',webphone_dialpad_override='$webphone_dialpad_override',admin_viewable_groups='$Vadmin_viewable_groups',admin_viewable_call_times='$Vadmin_viewable_call_times' where user_group='$OLDuser_group';";
 				$rslt=mysql_query($stmt, $link);
