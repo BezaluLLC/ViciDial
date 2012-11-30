@@ -484,7 +484,7 @@ while ($i < $rows_to_print)
 	$pause_sec[$i] =	$row[4];
 	$wait_sec[$i] =		$row[5];
 	$dispo_sec[$i] =	$row[6];
-	$status[$i] =		$row[7];
+	$status[$i] =		strtoupper($row[7]);
 	$dead_sec[$i] =		$row[8];
 	$customer_sec[$i] =	($talk_sec[$i] - $dead_sec[$i]);
 
