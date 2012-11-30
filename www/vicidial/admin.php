@@ -2146,9 +2146,6 @@ if ($non_latin < 1)
 	$campaign_rank = ereg_replace("[^-0-9]","",$campaign_rank);
 	$queue_priority = ereg_replace("[^-0-9]","",$queue_priority);
 
-	### DIGITS and NEWLINES
-	$phone_numbers = ereg_replace("[^X\n0-9]","",$phone_numbers);
-
 	### Y or N ONLY ###
 	$allow_closers = ereg_replace("[^NY]","",$allow_closers);
 	$reset_hopper = ereg_replace("[^NY]","",$reset_hopper);
@@ -2590,7 +2587,7 @@ if ($non_latin < 1)
 	$group_color = ereg_replace("[^\#0-9a-zA-Z]","",$group_color);
 	### ALPHA-NUMERIC and hash and star and dot and underscore
 	$hold_time_option_exten = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$hold_time_option_exten);
-	$did_pattern = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$did_pattern);
+	$did_pattern = ereg_replace("[^\+\*\#\.\_0-9a-zA-Z]","",$did_pattern);
 	$voicemail_ext = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$voicemail_ext);
 	$phone = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$phone);
 	$phone_code = ereg_replace("[^\*\#\.\_0-9a-zA-Z]","",$phone_code);
@@ -9572,6 +9569,9 @@ if ($ADD==111)
 
 if ($ADD==121)
 	{
+	### filter for DIGITS and NEWLINES
+	$phone_numbers = ereg_replace("[^X\n0-9]","",$phone_numbers);
+
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -9736,6 +9736,9 @@ if ($ADD==121)
 
 if ($ADD==171)
 	{
+	### filter for Letters DIGITS and NEWLINES
+	$phone_numbers = ereg_replace("[^\n0-9a-zA-Z]","",$phone_numbers);
+
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -12636,8 +12639,8 @@ if ($ADD==2311)
 		if ($row[0] > 0)
 			{echo "<br>DID NOT ADDED - there is already a DID in the system with this extension\n";}
 		else
-			{
-			if ( (strlen($did_pattern) < 2) or (eregi(' ',$did_pattern)) or (eregi('-',$did_pattern)) or (eregi("\+",$did_pattern)) )
+			{ #  or (eregi("\+",$did_pattern))
+			if ( (strlen($did_pattern) < 2) or (eregi(' ',$did_pattern)) or (eregi('-',$did_pattern)) )
 				{
 				echo "<br>DID NOT ADDED - Please go back and look at the data you entered\n";
 				echo "<br>DID Extension must be between 2 and 20 characters in length and contain no ' -+'.\n";
