@@ -20,10 +20,11 @@
 # 110516-2128 - IE fix
 # 110526-1807 - Added webphone_auto_answer option
 # 120223-1917 - Added multi-user-group options
+# 121129-2131 - Fixed Choose link position
 #
 
-$version = '2.4-9';
-$build = '120223-1917';
+$version = '2.6-10';
+$build = '121129-2131';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -1400,9 +1401,9 @@ echo "\n-->\n
 
 $stmt = "select count(*) from vicidial_campaigns where active='Y' and campaign_allow_inbound='Y' $group_SQLand;";
 $rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
-	$campaign_allow_inbound = $row[0];
+if ($DB) {echo "$stmt\n";}
+$row=mysql_fetch_row($rslt);
+$campaign_allow_inbound = $row[0];
 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 echo "<TITLE>$report_name: $group</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -1437,12 +1438,12 @@ echo "<INPUT TYPE=HIDDEN NAME=cursorY ID=cursorY>\n";
 #echo "<INPUT TYPE=HIDDEN NAME=AGENTtimeSTATS ID=AGENTtimeSTATS VALUE=\"$AGENTtimeSTATS\">\n";
 
 echo "Real-Time Report &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; \n";
-echo "<span style=\"position:absolute;left:160px;top:27px;z-index:20;\" id=campaign_select_list_link>\n";
+echo "<span style=\"position:absolute;left:160px;z-index:20;\" id=campaign_select_list_link>\n";
 echo "<TABLE WIDTH=250 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#D9E6FE\"><TR><TD ALIGN=CENTER>\n";
 echo "<a href=\"#\" onclick=\"showDiv('campaign_select_list');\">Choose Report Display Options</a>";
 echo "</TD></TR></TABLE>\n";
 echo "</span>\n";
-echo "<span style=\"position:absolute;left:0px;top:27px;z-index:21;\" id=campaign_select_list>\n";
+echo "<span style=\"position:absolute;left:0px;z-index:21;\" id=campaign_select_list>\n";
 echo "<TABLE WIDTH=0 HEIGHT=0 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#D9E6FE\"><TR><TD ALIGN=CENTER>\n";
 echo "";
 echo "</TD></TR></TABLE>\n";
