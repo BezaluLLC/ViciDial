@@ -319,10 +319,11 @@
 # 121120-0838 - Added QM socket-send functionality
 # 121124-2357 - Added Other Campaign DNC option
 # 121130-0740 - Added call notes option to dispo call url
+# 121205-1620 - Added parentheses around filter SQL when in SQL queries
 #
 
-$version = '2.6-217';
-$build = '121130-0740';
+$version = '2.6-218';
+$build = '121205-1620';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=446;
 $one_mysql_log=0;
@@ -1969,7 +1970,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					if ($filtersql_ct > 0)
 						{
 						$row=mysql_fetch_row($rslt);
-						$fSQL = "and $row[0]";
+						$fSQL = "and ($row[0])";
 						$fSQL = preg_replace('/\\\\/','',$fSQL);
 						}
 

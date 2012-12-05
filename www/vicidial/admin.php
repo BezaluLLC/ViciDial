@@ -3205,12 +3205,13 @@ else
 # 121124-1957 - Added List Expiration Date feature and Campaign Other-DNC-List feature
 # 121129-2319 - Added enhanced_disconnect_logging option
 # 121130-1425 - Fixed user group permissions issue with allowed campaigns modifications of user groups
+# 121205-1619 - Added parentheses around filter SQL when in SQL queries
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-387a';
-$build = '121130-1425';
+$admin_version = '2.6-388a';
+$build = '121205-1619';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -8867,7 +8868,7 @@ if ($ADD==73)
 		$filterSQL = preg_replace("/\\\\/","",$filterSQL);
 		$filterSQL = eregi_replace("^and|and$|^or|or$","",$filterSQL);
 		if (strlen($filterSQL)>4)
-			{$fSQL = "and $filterSQL";}
+			{$fSQL = "and ($filterSQL)";}
 		else
 			{$fSQL = '';}
 
@@ -22316,7 +22317,7 @@ if ($ADD==31)
 			$filterSQL = preg_replace("/\\\\/","",$filterSQL);
 			$filterSQL = eregi_replace("^and|and$|^or|or$","",$filterSQL);
 			if (strlen($filterSQL)>4)
-				{$fSQL = "and $filterSQL";}
+				{$fSQL = "and ($filterSQL)";}
 			else
 				{$fSQL = '';}
 
@@ -22375,7 +22376,7 @@ if ($ADD==31)
 						$filterSQL = preg_replace("/\\\\/","",$filterSQL);
 						$filterSQL = eregi_replace("^and|and$|^or|or$","",$filterSQL);
 						if (strlen($filterSQL)>4)
-							{$fSQL = "and $filterSQL";}
+							{$fSQL = "and ($filterSQL)";}
 						else
 							{$fSQL = '';}
 						}
@@ -23779,7 +23780,7 @@ if ($ADD==34)
 		$filterSQL = preg_replace("/\\\\/","",$filterSQL);
 		$filterSQL = eregi_replace("^and|and$|^or|or$","",$filterSQL);
 		if (strlen($filterSQL)>4)
-			{$fSQL = "and $filterSQL";}
+			{$fSQL = "and ($filterSQL)";}
 		else
 			{$fSQL = '';}
 
@@ -24966,7 +24967,7 @@ if ($ADD==311)
 				$filterSQL = preg_replace("/\\\\/","",$filterSQL);
 				$filterSQL = eregi_replace("^and|and$|^or|or$","",$filterSQL);
 				if (strlen($filterSQL)>4)
-					{$fSQL = "and $filterSQL";}
+					{$fSQL = "and ($filterSQL)";}
 				else
 					{$fSQL = '';}
 				}

@@ -72,6 +72,7 @@
 # 120210-1735 - Added vendor_lead_code duplication check per campaign option 
 # 120402-2211 - Fixed call count limit bug
 # 121124-2052 - Added List Expiration Date and Other Campaign DNC options
+# 121205-1621 - Added parentheses around filter SQL when in SQL queries
 #
 
 # constants
@@ -1781,7 +1782,7 @@ foreach(@campaign_id)
 				}
 			$sthA->finish();
 			$lead_filter_sql[$i] =~ s/^and|and$|^or|or$|^ and|and $|^ or|or $//gi;
-			$lead_filter_sql[$i] = "and $lead_filter_sql[$i]";
+			$lead_filter_sql[$i] = "and ($lead_filter_sql[$i])";
 			if ($DB) {print "     lead filter $lead_filter_id[$i] defined for $campaign_id[$i]\n";}
 			if ($DBX) {print "     |$lead_filter_sql[$i]|\n";}
 			}
