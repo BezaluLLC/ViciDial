@@ -193,3 +193,9 @@ UPDATE system_settings SET db_schema_version='1334',db_schema_update_date=NOW() 
 ALTER TABLE system_settings ADD enhanced_disconnect_logging ENUM('0','1') default '0';
 
 UPDATE system_settings SET db_schema_version='1335',db_schema_update_date=NOW() where db_schema_version < 1335;
+
+ALTER TABLE vicidial_campaigns MODIFY agent_lead_search ENUM('ENABLED','LIVE_CALL_INBOUND','LIVE_CALL_INBOUND_AND_MANUAL','DISABLED') default 'DISABLED';
+
+ALTER TABLE vicidial_users MODIFY agent_lead_search_override ENUM('NOT_ACTIVE','ENABLED','LIVE_CALL_INBOUND','LIVE_CALL_INBOUND_AND_MANUAL','DISABLED') default 'NOT_ACTIVE';
+
+UPDATE system_settings SET db_schema_version='1336',db_schema_update_date=NOW() where db_schema_version < 1336;

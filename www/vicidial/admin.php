@@ -3206,12 +3206,13 @@ else
 # 121129-2319 - Added enhanced_disconnect_logging option
 # 121130-1425 - Fixed user group permissions issue with allowed campaigns modifications of user groups
 # 121205-1619 - Added parentheses around filter SQL when in SQL queries
+# 121206-0630 - Added inbound lead search feature
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-388a';
-$build = '121205-1619';
+$admin_version = '2.6-389a';
+$build = '121206-0630';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4537,7 +4538,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_users-agent_lead_search_override">
 	<BR>
-	<B>Agent Lead Search Override -</B> This setting will override whatever the campaign has set for Agent Lead Search. NOT_ACTIVE will use the campaign setting. ENABLED will allow lead searching and DISABLED will not allow lead searching. Default is NOT_ACTIVE.
+	<B>Agent Lead Search Override -</B> This setting will override whatever the campaign has set for Agent Lead Search. NOT_ACTIVE will use the campaign setting. ENABLED will allow lead searching and DISABLED will not allow lead searching. Default is NOT_ACTIVE. LIVE_CALL_INBOUND will allow search for a lead while on an inbound call only. LIVE_CALL_INBOUND_AND_MANUAL will allow search for a lead while on an inbound call or while paused. When Lead Search is used on a live inbound call, the lead of the call when it went to the agent will be changed to a status of LSMERG, and the logs for the call will be modified to link to the agent selected lead instead.
 
 	<BR>
 	<A NAME="vicidial_users-alert_enabled">
@@ -5388,7 +5389,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_campaigns-agent_lead_search">
 	<BR>
-	<B>Agent Lead Search -</B> Setting this option to ENABLED will allow agents to search for leads and view lead information while paused in the agent interface. Also, if the Agent User Group is allowed to view Call Logs then the agent will be able to view past call notes for any lead that they are viewing information on. Default is DISABLED.
+	<B>Agent Lead Search -</B> Setting this option to ENABLED will allow agents to search for leads and view lead information while paused in the agent interface. Also, if the Agent User Group is allowed to view Call Logs then the agent will be able to view past call notes for any lead that they are viewing information on. Default is DISABLED. LIVE_CALL_INBOUND will allow search for a lead while on an inbound call only. LIVE_CALL_INBOUND_AND_MANUAL will allow search for a lead while on an inbound call or while paused. When Lead Search is used on a live inbound call, the lead of the call when it went to the agent will be changed to a status of LSMERG, and the logs for the call will be modified to link to the agent selected lead instead.
 
 	<BR>
 	<A NAME="vicidial_campaigns-agent_lead_search_method">
@@ -6105,7 +6106,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_inbound_groups-action_xfer_cid">
 	<BR>
-	<B>Action Transfer CID -</B> Used for Drop, After-hours and No-agent-no-queue actions. This is the caller ID number that the call uses before it is transferred to extensions, messages, voicemail or call menus. You can use CUSTOMER in this field to use the customer phone number, or CAMPAIGN to use the first allowed campaign caller id number. Default is CUSTOMER.
+	<B>Action Transfer CID -</B> Used for Drop, After-hours and No-agent-no-queue actions. This is the caller ID number that the call uses before it is transferred to extensions, messages, voicemail or call menus. You can use CUSTOMER in this field to use the customer phone number, or CAMPAIGN to use the first allowed campaign caller id number. Default is CUSTOMER. If this is a call that will go to a Call Menu and then back to an in-group, we suggest you use CUSTOMERCLOSER in this field, and also you need to set the In-Group Search Method in the Call Menu to CLOSER.
 
 	<BR>
 	<A NAME="vicidial_inbound_groups-call_time_id">
@@ -20720,7 +20721,7 @@ if ($ADD==3)
 
 				echo "<tr bgcolor=#B6D3FC><td align=right>Agent Shift Enforcement Override: </td><td align=left><select size=1 name=agent_shift_enforcement_override><option>DISABLED</option><option>OFF</option><option>START</option><option>ALL</option><option SELECTED>$agent_shift_enforcement_override</option></select>$NWB#vicidial_users-agent_shift_enforcement_override$NWE</td></tr>\n";
 				echo "<tr bgcolor=#B6D3FC><td align=right>Agent Call Log View Override: </td><td align=left><select size=1 name=agent_call_log_view_override><option>DISABLED</option><option>Y</option><option>N</option><option SELECTED>$agent_call_log_view_override</option></select>$NWB#vicidial_users-agent_call_log_view_override$NWE</td></tr>\n";
-				echo "<tr bgcolor=#B6D3FC><td align=right>Agent Lead Search Override: </td><td align=left><select size=1 name=agent_lead_search><option>DISABLED</option><option>ENABLED</option><option>NOT_ACTIVE</option><option SELECTED>$agent_lead_search_override</option></select>$NWB#vicidial_users-agent_lead_search_override$NWE</td></tr>\n";
+				echo "<tr bgcolor=#B6D3FC><td align=right>Agent Lead Search Override: </td><td align=left><select size=1 name=agent_lead_search><option>DISABLED</option><option>ENABLED</option><option>LIVE_CALL_INBOUND</option><option>LIVE_CALL_INBOUND_AND_MANUAL</option><option>NOT_ACTIVE</option><option SELECTED>$agent_lead_search_override</option></select>$NWB#vicidial_users-agent_lead_search_override$NWE</td></tr>\n";
 
 				echo "<tr bgcolor=#B6D3FC><td align=right>Alert Enabled: </td><td align=left>$alert_enabled $NWB#vicidial_users-alert_enabled$NWE</td></tr>\n";
 
@@ -21880,7 +21881,7 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Call Notes Per Call: </td><td align=left><select size=1 name=per_call_notes><option>ENABLED</option><option>DISABLED</option><option SELECTED>$per_call_notes</option></select>$NWB#vicidial_campaigns-per_call_notes$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Lead Search: </td><td align=left><select size=1 name=agent_lead_search><option>ENABLED</option><option>DISABLED</option><option SELECTED>$agent_lead_search</option></select>$NWB#vicidial_campaigns-agent_lead_search$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Lead Search: </td><td align=left><select size=1 name=agent_lead_search><option>ENABLED</option><option>DISABLED</option><option>LIVE_CALL_INBOUND</option><option>LIVE_CALL_INBOUND_AND_MANUAL</option><option SELECTED>$agent_lead_search</option></select>$NWB#vicidial_campaigns-agent_lead_search$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Lead Search Method: </td><td align=left><select size=1 name=agent_lead_search_method><option>SYSTEM</option><option>CAMPAIGNLISTS</option><option>CAMPLISTS_ALL</option><option>LIST</option>USER_CAMPAIGNLISTS</option><option>USER_CAMPLISTS_ALL</option><option>USER_LIST</option><option>GROUP_SYSTEM</option><option>GROUP_CAMPAIGNLISTS</option><option>GROUP_CAMPLISTS_ALL</option><option>GROUP_LIST</option><option>TERRITORY_SYSTEM</option><option>TERRITORY_CAMPAIGNLISTS</option><option>TERRITORY_CAMPLISTS_ALL</option><option>TERRITORY_LIST<option SELECTED>$agent_lead_search_method</option></select>$NWB#vicidial_campaigns-agent_lead_search_method$NWE</td></tr>\n";
 

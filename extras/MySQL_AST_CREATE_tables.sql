@@ -585,7 +585,7 @@ agent_choose_blended ENUM('0','1') default '1',
 realtime_block_user_info ENUM('0','1') default '0',
 custom_fields_modify ENUM('0','1') default '0',
 force_change_password ENUM('Y','N') default 'N',
-agent_lead_search_override ENUM('NOT_ACTIVE','ENABLED','DISABLED') default 'NOT_ACTIVE',
+agent_lead_search_override ENUM('NOT_ACTIVE','ENABLED','LIVE_CALL_INBOUND','LIVE_CALL_INBOUND_AND_MANUAL','DISABLED') default 'NOT_ACTIVE',
 modify_shifts ENUM('1','0') default '0',
 modify_phones ENUM('1','0') default '0',
 modify_carriers ENUM('1','0') default '0',
@@ -823,7 +823,7 @@ lead_order_randomize ENUM('Y','N') default 'N',
 lead_order_secondary ENUM('LEAD_ASCEND','LEAD_DESCEND','CALLTIME_ASCEND','CALLTIME_DESCEND') default 'LEAD_ASCEND',
 per_call_notes ENUM('ENABLED','DISABLED') default 'DISABLED',
 my_callback_option ENUM('CHECKED','UNCHECKED') default 'UNCHECKED',
-agent_lead_search ENUM('ENABLED','DISABLED') default 'DISABLED',
+agent_lead_search ENUM('ENABLED','LIVE_CALL_INBOUND','LIVE_CALL_INBOUND_AND_MANUAL','DISABLED') default 'DISABLED',
 agent_lead_search_method VARCHAR(30) default 'CAMPLISTS_ALL',
 queuemetrics_phone_environment VARCHAR(20) default '',
 auto_pause_precall ENUM('Y','N') default 'N',
@@ -2994,6 +2994,7 @@ INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,cate
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('LRERR','Outbound Local Channel Res Err','N','Y','UNDEFINED','N','N','N','N','N','N','N');
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('QCFAIL','QC_FAIL_CALLBK','N','Y','QC','N','N','Y','N','N','Y','N');
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('ADCT','Disconnected Number Temporary','N','N','UNDEFINED','N','N','N','N','N','N','N');
+INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('LSMERG','Agent lead search old lead merge','N','N','UNDEFINED','N','N','N','N','N','N','N');
 
 INSERT INTO vicidial_qc_codes (code,code_name,qc_result_type) VALUES ('QCPASS','PASS','PASS');
 INSERT INTO vicidial_qc_codes (code,code_name,qc_result_type) VALUES ('QCFAIL','FAIL','FAIL');
@@ -3004,4 +3005,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1335',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1336',db_schema_update_date=NOW();

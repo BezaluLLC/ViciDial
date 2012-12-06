@@ -79,6 +79,8 @@ If the option Use Campaign DNC List is enabled, this option can allow you to use
 LIST EXPIRED AND SET TO ACTIVE||
 Enhanced Disconnect Logging||
 This setting enables logging of calls that get a CONGESTION signal with a cause code of 1, 19, 21, 34 or 38. We usually do not recommend enabling this in the USA. Default is 0 for disabled||
+LIVE_CALL_INBOUND will allow search for a lead while on an inbound call only. LIVE_CALL_INBOUND_AND_MANUAL will allow search for a lead while on an inbound call or while paused. When Lead Search is used on a live inbound call, the lead of the call when it went to the agent will be changed to a status of LSMERG, and the logs for the call will be modified to link to the agent selected lead instead||
+If this is a call that will go to a Call Menu and then back to an in-group, we suggest you use CUSTOMERCLOSER in this field, and also you need to set the In-Group Search Method in the Call Menu to CLOSER||
 
 
 ############################################################ CLIENT
@@ -99,6 +101,8 @@ YOU MUST SELECT AN AGENT TO TRANSFER TO WHEN USING AGENTDIRECT||
 Another live agent session was open using your user ID. It has been disabled. Click OK to continue to the agent screen||
 View Comment History||
 reset form||
+SELECT THIS LEAD||
+YOU MUST BE ON AN ACTIVE INBOUND CALL TO SEARCH FOR A LEAD||
 
 
 ############################################################  MANAGER Manual

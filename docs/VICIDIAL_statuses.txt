@@ -63,3 +63,4 @@ MLINAT - Multi-Lead auto-alt-dial lead set to inactive
 MAXCAL - Max Calls drop from in-group
 LRERR - Outbound Local Channel Resolution Error
 QCFAIL - QC_FAIL_CALLBK
+LSMERG - Agent lead search old lead merge

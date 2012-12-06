@@ -128,6 +128,10 @@ OTHER CHANGES:
 
 30. Added Enhanced Disconnect logging for outside the USA, disabled by default
 
+31. Added a campaign feature to allow an agent to search for a lead while on an
+	inbound call and have their active lead change to a search result lead
+	that they select.
+
 
 
 
