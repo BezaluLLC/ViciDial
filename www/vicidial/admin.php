@@ -3207,12 +3207,13 @@ else
 # 121130-1425 - Fixed user group permissions issue with allowed campaigns modifications of user groups
 # 121205-1619 - Added parentheses around filter SQL when in SQL queries
 # 121206-0630 - Added inbound lead search feature
+# 121212-1529 - Standardization of list_id fields at 19 digits in forms
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-389a';
-$build = '121206-0630';
+$admin_version = '2.6-390a';
+$build = '121212-1529';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -9533,7 +9534,7 @@ if ($ADD==111)
 			}
 		else
 			{
-			echo "<tr bgcolor=#B6D3FC><td align=right>List ID: </td><td align=left><input type=text name=list_id size=8 maxlength=8> (digits only)$NWB#vicidial_lists-list_id$NWE</td></tr>\n";
+			echo "<tr bgcolor=#B6D3FC><td align=right>List ID: </td><td align=left><input type=text name=list_id size=19 maxlength=19> (digits only)$NWB#vicidial_lists-list_id$NWE</td></tr>\n";
 			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>List Name: </td><td align=left><input type=text name=list_name size=20 maxlength=20>$NWB#vicidial_lists-list_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>List Description: </td><td align=left><input type=text name=list_description size=30 maxlength=255>$NWB#vicidial_lists-list_description$NWE</td></tr>\n";
@@ -12458,7 +12459,7 @@ if ($ADD==211)
 		{echo "<br>LIST NOT ADDED - there is already a list in the system with this ID\n";}
 	else
 		{
-		if ( (strlen($campaign_id) < 2) or (strlen($list_name) < 2)  or ($list_id < 100) or (strlen($list_id) > 8) )
+		if ( (strlen($campaign_id) < 2) or (strlen($list_name) < 2)  or ($list_id < 100) or (strlen($list_id) > 19) )
 			{
 			echo "<br>LIST NOT ADDED - Please go back and look at the data you entered\n";
 			echo "<br>List ID must be between 2 and 8 characters in length\n";
@@ -22066,7 +22067,7 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#8EBCFD><td align=right>Manual Dial Override: </td><td align=left><select size=1 name=manual_dial_override><option>NONE</option><option>ALLOW_ALL</option><option>DISABLE_ALL</option><option SELECTED>$manual_dial_override</option></select>$NWB#vicidial_campaigns-manual_dial_override$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#8EBCFD><td align=right>Manual Dial List ID: </td><td align=left><input type=text name=manual_dial_list_id size=15 maxlength=12 value=\"$manual_dial_list_id\">$NWB#vicidial_campaigns-manual_dial_list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Manual Dial List ID: </td><td align=left><input type=text name=manual_dial_list_id size=19 maxlength=19 value=\"$manual_dial_list_id\">$NWB#vicidial_campaigns-manual_dial_list_id$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#8EBCFD><td align=right>Manual Dial Filter: </td><td align=left><select size=1 name=manual_dial_filter><option>NONE</option><option>DNC_ONLY</option><option>CAMPLISTS_ONLY</option><option>CAMPLISTS_ALL</option><option>DNC_AND_CAMPLISTS</option><option>DNC_AND_CAMPLISTS_ALL</option><option SELECTED>$manual_dial_filter</option></select>$NWB#vicidial_campaigns-manual_dial_filter$NWE</td></tr>\n";
 
@@ -25939,7 +25940,7 @@ if ($ADD==3111)
 			echo "$IGhandle_method_list<option SELECTED>$IGhandle_method</option></select>\n";
 			echo "<BR>Search Method: <select size=1 name=IGsearch_method_$j id=IGsearch_method_$j>";
 			echo "$IGsearch_method_list<option SELECTED>$IGsearch_method</option></select>\n";
-			echo " &nbsp; List ID: <input type=text size=5 maxlength=14 name=IGlist_id_$j id=IGlist_id_$j value=\"$IGlist_id\">";
+			echo " &nbsp; List ID: <input type=text size=5 maxlength=19 name=IGlist_id_$j id=IGlist_id_$j value=\"$IGlist_id\">";
 			echo "<BR>Campaign ID: <select size=1 name=IGcampaign_id_$j id=IGcampaign_id_$j>";
 			echo "$IGcampaign_id_list<option SELECTED>$IGcampaign_id</option></select>\n";
 			echo " &nbsp; Phone Code: <input type=text size=5 maxlength=14 name=IGphone_code_$j id=IGphone_code_$j value=\"$IGphone_code\">";
@@ -26039,7 +26040,7 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option After Press Filename: </td><td align=left><input type=text name=wait_time_option_callback_filename id=wait_time_option_callback_filename size=50 maxlength=255 value=\"$wait_time_option_callback_filename\"> <a href=\"javascript:launch_chooser('wait_time_option_callback_filename','date',2050);\">audio chooser</a> $NWB#vicidial_inbound_groups-wait_time_option_callback_filename$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Callback List ID: </td><td align=left><input type=text name=wait_time_option_callback_list_id size=14 maxlength=14 value=\"$wait_time_option_callback_list_id\">$NWB#vicidial_inbound_groups-wait_time_option_callback_list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Callback List ID: </td><td align=left><input type=text name=wait_time_option_callback_list_id size=19 maxlength=19 value=\"$wait_time_option_callback_list_id\">$NWB#vicidial_inbound_groups-wait_time_option_callback_list_id$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Wait Hold Option Priority: </td><td align=left><select size=1 name=wait_hold_option_priority><option>WAIT</option><option>BOTH</option><option SELECTED>$wait_hold_option_priority</option></select>$NWB#vicidial_inbound_groups-wait_hold_option_priority$NWE</td></tr>\n";
 
@@ -26073,7 +26074,7 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option After Press Filename: </td><td align=left><input type=text name=hold_time_option_callback_filename id=hold_time_option_callback_filename size=50 maxlength=255 value=\"$hold_time_option_callback_filename\"> <a href=\"javascript:launch_chooser('hold_time_option_callback_filename','date',2400);\">audio chooser</a> $NWB#vicidial_inbound_groups-hold_time_option_callback_filename$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Callback List ID: </td><td align=left><input type=text name=hold_time_option_callback_list_id size=14 maxlength=14 value=\"$hold_time_option_callback_list_id\">$NWB#vicidial_inbound_groups-hold_time_option_callback_list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Callback List ID: </td><td align=left><input type=text name=hold_time_option_callback_list_id size=19 maxlength=19 value=\"$hold_time_option_callback_list_id\">$NWB#vicidial_inbound_groups-hold_time_option_callback_list_id$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Alert Filename: </td><td align=left><input type=text name=agent_alert_exten id=agent_alert_exten size=40 maxlength=100 value=\"$agent_alert_exten\"> <a href=\"javascript:launch_chooser('agent_alert_exten','date',2500);\">audio chooser</a> $NWB#vicidial_inbound_groups-agent_alert_exten$NWE</td></tr>\n";
 
@@ -26742,7 +26743,7 @@ if ($ADD==3311)
 		echo "</select>$NWB#vicidial_inbound_dids-group_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Call Handle Method: </td><td align=left><select size=1 name=call_handle_method><option>CID</option><option>CIDLOOKUP</option><option>CIDLOOKUPRL</option><option>CIDLOOKUPRC</option><option>CIDLOOKUPALT</option><option>CIDLOOKUPRLALT</option><option>CIDLOOKUPRCALT</option><option>CIDLOOKUPADDR3</option><option>CIDLOOKUPRLADDR3</option><option>CIDLOOKUPRCADDR3</option><option>CIDLOOKUPALTADDR3</option><option>CIDLOOKUPRLALTADDR3</option><option>CIDLOOKUPRCALTADDR3</option><option>ANI</option><option>ANILOOKUP</option><option>ANILOOKUPRL</option><option>VIDPROMPT</option><option>VIDPROMPTLOOKUP</option><option>VIDPROMPTLOOKUPRL</option><option>VIDPROMPTLOOKUPRC</option><option>CLOSER</option><option>3DIGITID</option><option>4DIGITID</option><option>5DIGITID</option><option>10DIGITID</option><option SELECTED>$call_handle_method</option></select>$NWB#vicidial_inbound_dids-call_handle_method$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Agent Search Method: </td><td align=left><select size=1 name=agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$agent_search_method</option></select>$NWB#vicidial_inbound_dids-agent_search_method$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group List ID: </td><td align=left><input type=text name=list_id size=14 maxlength=14 value=\"$list_id\">$NWB#vicidial_inbound_dids-list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group List ID: </td><td align=left><input type=text name=list_id size=19 maxlength=19 value=\"$list_id\">$NWB#vicidial_inbound_dids-list_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Campaign ID: </td><td align=left><select size=1 name=campaign_id>\n";
 		echo "$campaigns_list";
 		echo "<option SELECTED>$campaign_id</option>\n";
@@ -26792,7 +26793,7 @@ if ($ADD==3311)
 		echo "</select>$NWB#vicidial_inbound_dids-group_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter In-Group Call Handle Method: </td><td align=left><select size=1 name=filter_call_handle_method><option>CID</option><option>CIDLOOKUP</option><option>CIDLOOKUPRL</option><option>CIDLOOKUPRC</option><option>CIDLOOKUPALT</option><option>CIDLOOKUPRLALT</option><option>CIDLOOKUPRCALT</option><option>CIDLOOKUPADDR3</option><option>CIDLOOKUPRLADDR3</option><option>CIDLOOKUPRCADDR3</option><option>CIDLOOKUPALTADDR3</option><option>CIDLOOKUPRLALTADDR3</option><option>CIDLOOKUPRCALTADDR3</option><option>ANI</option><option>ANILOOKUP</option><option>ANILOOKUPRL</option><option>VIDPROMPT</option><option>VIDPROMPTLOOKUP</option><option>VIDPROMPTLOOKUPRL</option><option>VIDPROMPTLOOKUPRC</option><option>CLOSER</option><option>3DIGITID</option><option>4DIGITID</option><option>5DIGITID</option><option>10DIGITID</option><option SELECTED>$filter_call_handle_method</option></select>$NWB#vicidial_inbound_dids-call_handle_method$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter In-Group Agent Search Method: </td><td align=left><select size=1 name=filter_agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$filter_agent_search_method</option></select>$NWB#vicidial_inbound_dids-agent_search_method$NWE</td></tr>\n";
-		echo "<tr bgcolor=#CCFFFF><td align=right>Filter In-Group List ID: </td><td align=left><input type=text name=filter_list_id size=14 maxlength=14 value=\"$filter_list_id\">$NWB#vicidial_inbound_dids-list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter In-Group List ID: </td><td align=left><input type=text name=filter_list_id size=19 maxlength=19 value=\"$filter_list_id\">$NWB#vicidial_inbound_dids-list_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter In-Group Campaign ID: </td><td align=left><select size=1 name=filter_campaign_id>\n";
 		echo "$campaigns_list";
 		echo "<option SELECTED>$filter_campaign_id</option>\n";
@@ -27348,7 +27349,7 @@ if ($ADD==3511)
 				echo "$IGhandle_method_list<option SELECTED>$IGhandle_method</option></select> $NWB#vicidial_call_menu-ingroup_settings$NWE\n";
 				echo "<BR>Search Method: <select size=1 name=IGsearch_method_$j id=IGsearch_method_$j>";
 				echo "$IGsearch_method_list<option SELECTED>$IGsearch_method</option></select>\n";
-				echo " &nbsp; List ID: <input type=text size=5 maxlength=14 name=IGlist_id_$j id=IGlist_id_$j value=\"$IGlist_id\">";
+				echo " &nbsp; List ID: <input type=text size=5 maxlength=19 name=IGlist_id_$j id=IGlist_id_$j value=\"$IGlist_id\">";
 				echo "<BR>Campaign ID: <select size=1 name=IGcampaign_id_$j id=IGcampaign_id_$j>";
 				echo "$IGcampaign_id_list<option SELECTED>$IGcampaign_id</option></select>\n";
 				echo " &nbsp; Phone Code: <input type=text size=5 maxlength=14 name=IGphone_code_$j id=IGphone_code_$j value=\"$IGphone_code\">";
