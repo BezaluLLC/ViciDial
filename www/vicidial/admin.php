@@ -8939,7 +8939,7 @@ if ($SSallow_emails>0)
 	<B><FONT SIZE=3>Maximum System Stats Reports</FONT></B><BR><BR>
 	<A NAME="vicidial_max_stats">
 	<BR>
-	<B>These statistics are cached totals that are stored throughout each day in real-time through back-end processes. For inbound calls, the total calls per in-group are calculated for each call that enters the process that calculates. For the whole system counts, the totals are generated from log entries as well as other in-group and campaign totals. These totals may not add up due to the settings that you have in your system as well as when the call is hung up.
+	<B>These statistics are cached totals that are stored throughout each day in real-time through back-end processes. For inbound calls, the total calls per in-group are calculated for each call that enters the process that calculates. For the whole system counts, the totals are generated from log entries as well as other in-group and campaign totals. These totals may not add up due to the settings that you have in your system as well as when the call is hung up.</B>
 
 
 	<?php
@@ -8955,6 +8955,59 @@ if ($SSallow_emails>0)
 		<?php
 		}
 	?>
+
+
+	<BR><BR><BR><BR>
+	<B><FONT SIZE=3>Reports</FONT></B><BR><BR>
+	
+	<A NAME="agent_time_detail">
+	<BR>
+	<B>Agent Time Detail -</B> In this report you can view how much time agents spent on what.<BR>
+	<U>TIME CLOCK</U> = Time the agent been logged in to the time clock.<BR>
+	<U>AGENT TIME</U> = Total time on the system (<U>WAIT</U> + <U>TALK</U> + <U>DISPO</U> + <U>PAUSE</U>).<BR>
+	<U>WAIT</U> = Time the agent waits for a call.<BR>
+	<U>TALK</U> = Time the agent talks to a customer or is in dead state (<U>DEAD</U> + <U>CUSTOMER</U>).<BR>
+	<U>DISPO</U> = Time the agent uses at the disposition screen (where the agent picks NI, SALE etc).<BR>
+	<U>PAUSE</U> = Time the agent is in pause mode (<U>LOGIN</U> + <U>LAGGED</U> + ...).<BR>
+	<U>DEAD</U> = Time the agent is in a call where the customer has hung up.<BR>
+	<U>CUSTOMER</U> = Time the agent is in a live call with a customer.<BR>
+	- The next table is pause codes and their time.<BR>
+	<U>LOGIN</U> = The pause code when going from login directly to pause.<BR>
+	<U>LAGGED</U> = The time the agent had some network problem or similar.<BR>
+	<U>ANDIAL</U> = This pause code triggers if the agent been on dispo screen for longer than 1000 seconds.<BR>
+	and empty is undefined pause code. <BR>
+	
+	<A NAME="agent_status_detail">
+	<BR>
+	<B>Agent Status Detail -</B> In this report you can view what and how many statuses has been selected by the agents.<BR>
+	<U>CALLS</U> = Total number of calls sent to the user.<BR>
+	<U>CIcalls</U> = Total number of call where there was a Human Answer which is set under "Admin" -> "System Statuses".<BR>
+	<U>DNC/CI%</U> = How much in percent DNC (Do Not Call) per Human Answers.<BR>
+	And the rest is just System Statuses that the agent picked and how many, to find out what they means then head over to "Admin" -> "System Statuses".<BR>
+	
+	<A NAME="agent_performance_detail">
+	<BR>
+	<B>Agent Performance Detail -</B> This is a combination of Agent Time Detail and Agent Status Detail.<BR>
+	(Statistics related to handling of calls only)<BR>
+	<U>CALLS</U> = Total number of calls sent to the user.<BR>
+	<U>TIME</U> = Total time of these (<U>PAUSE</U> + <U>WAIT</U> + <U>TALK</U> + <U>DISPO</U>).<BR>
+	<U>PAUSE</U> = Amount of time being paused in related to call handling.<BR>
+	<U>AVG</U> means Average so everything -AVG is for example amount of PAUSE-time divided by total number of calls: (<U>PAUSE</U> / <U>CALLS</U> = <U>PAUSAVG</U>)<BR>
+	<U>WAIT</U> = Time the agent waits for a call.<BR>
+	<U>TALK</U> = Time the agent talks to a customer or is in dead state (<U>DEAD</U> + <U>CUSTOMER</U>).<BR>
+	<U>DISPO</U> = Time the agent uses at the disposition screen (where the agent picks NI, SALE etc).<BR>
+	<U>DEAD</U> = Time the agent is in a call where the customer has hung up.<BR>
+	<U>CUSTOMER</U> = Time the agent is in a live call with a customer.<BR>
+	And the rest is just System Statuses that the agent picked and how many, to find out what they means then head over to "Admin" -> "System Statuses".<BR>
+	- Next table is Pause Codes.<BR>
+	<U>TOTAL</U> = Total time on the system (<U>WAIT</U> + <U>TALK</U> + <U>DISPO</U> + <U>PAUSE</U>).<BR>
+	<U>NONPAUSE</U> = Everything except pause (<U>WAIT</U> + <U>TALK</U> + <U>DISPO</U>).<BR>
+	<U>PAUSE</U> = Only Pause.<BR>
+	- The last table is pause codes and their time (like "Agent Time Detail").<BR>
+	<U>LOGIN</U> = The pause code when going from login directly to pause.<BR>
+	<U>LAGGED</U> = The time the agent had some network problem or similar.<BR>
+	<U>ANDIAL</U> = This pause code triggers if the agent been on dispo screen for longer than 1000 seconds.<BR>
+	and empty is undefined pause code. <BR>
 
 
 

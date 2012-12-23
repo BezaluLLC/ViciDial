@@ -1129,6 +1129,8 @@ if ($file_download > 0)
 	exit;
 	}
 
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('/vicidial/admin.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
 ############################################################################
 ##### BEGIN HTML form section
@@ -1154,6 +1156,11 @@ echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\
 
 ?>
 <script language="JavaScript">
+function openNewWindow(url)
+	{
+	window.open (url,"",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');
+	}
+
 var o_cal = new tcal ({
 	// form name
 	'formname': 'vicidial_report',
@@ -1179,6 +1186,7 @@ o_cal.a_tpl.yearscroll = false;
 // o_cal.a_tpl.weekstart = 1; // Monday week start
 </script>
 <?php
+
 
 echo "</TD><TD VALIGN=TOP> Campaigns:<BR>";
 echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
@@ -1221,7 +1229,7 @@ echo "Display as:<BR>";
 echo "<select name='report_display_type'>";
 if ($report_display_type) {echo "<option value='$report_display_type' selected>$report_display_type</option>";}
 echo "<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR><BR>";
-echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
+echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>$NWB#agent_time_detail$NWE\n";
 echo "</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
 echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
