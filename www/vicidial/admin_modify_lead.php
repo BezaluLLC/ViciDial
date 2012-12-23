@@ -50,6 +50,7 @@
 # 120529-1635 - Added User Group Campaign-Lists validation
 # 121116-1411 - Added QC functionality
 # 121130-1033 - Changed scheduled callback user ID field to be 20 characters, issue #467
+# 121222-2145 - Added email log
 #
 
 require("dbconnect.php");
@@ -169,7 +170,7 @@ $NOW_TIME = date("Y-m-d H:i:s");
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,custom_fields_enabled,webroot_writable FROM system_settings;";
+$stmt = "SELECT use_non_latin,custom_fields_enabled,webroot_writable,allow_emails FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -179,6 +180,7 @@ if ($qm_conf_ct > 0)
 	$non_latin =				$row[0];
 	$custom_fields_enabled =	$row[1];
 	$webroot_writable =			$row[2];
+	$allow_emails =			$row[3];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -1329,6 +1331,46 @@ else
 			}
 
 		echo "</TABLE><BR><BR>\n";
+
+	##### vicidial agent outbound calls for this time period #####
+
+		if ($allow_emails>0) 
+			{
+			echo "<B>OUTBOUND EMAILS FOR THIS LEAD:</B>\n";
+			echo "<TABLE width=750 cellspacing=1 cellpadding=1>\n";
+			echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=right><font size=2> USER</td><td align=right><font size=2> CAMPAIGN</td><td align=left><font size=2>EMAIL TO</td><td align=left><font size=2> MESSAGE</td><td align=right><font size=2> ATTACHMENTS</td></tr>\n";
+
+			$stmt="select * from vicidial_email_log where lead_id='" . mysql_real_escape_string($lead_id) . "' order by email_date desc limit 500;";
+			$rslt=mysql_query($stmt, $link);
+			$logs_to_print = mysql_num_rows($rslt);
+
+			$u=0;
+			while ($logs_to_print > $u) 
+				{
+				$row=mysql_fetch_row($rslt);
+				if (eregi("1$|3$|5$|7$|9$", $u))
+					{$bgcolor='bgcolor="#B9CBFD"';} 
+				else
+					{$bgcolor='bgcolor="#9BB9FB"';}
+				if (strlen($row[6])>100) {$row[6]=substr($row[6],0,100)."...";}
+				$row[8]=preg_replace('/\|/', ', ', $row[8]);
+				$row[8]=preg_replace('/,\s+$/', '', $row[8]);
+				$u++;
+
+				echo "<tr $bgcolor>";
+				echo "<td><font size=1>$u</td>";
+				echo "<td><font size=1>$row[3]</td>";
+				echo "<td align=right><font size=2> <A HREF=\"user_stats.php?lead_id=$row[4]\" target=\"_blank\">$row[4]</A> </td>\n";
+				echo "<td align=left><font size=2> $row[7]</td>\n";
+				echo "<td align=left><font size=1> $row[5]</td>\n";
+				echo "<td align=left><font size=1> $row[6] </td>\n";
+				echo "<td align=right><font size=1> $row[8] </td></tr>\n";
+				}
+
+
+			echo "</TABLE><BR><BR>\n";
+			}
+
 
 
 		echo "<B>RECORDINGS FOR THIS LEAD:</B>\n";

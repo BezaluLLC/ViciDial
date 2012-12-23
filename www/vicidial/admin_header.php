@@ -39,6 +39,7 @@
 # 120402-2134 - Changed lead loader link to fourth gen
 # 121116-1412 - Added QC functionality
 # 121123-0911 - Added Call Times Holidays Inbound functionality
+# 121214-2238 - Added email menus
 #
 
 
@@ -872,7 +873,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 	}
 
 ### Javascript for dynamic in-group option value entries
-if ( ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111) )
+if ( ($ADD==2811) or ($ADD==3811) or ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111) )
 	{
 
 	?>
@@ -1057,14 +1058,14 @@ else
 	
 echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 
-$stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled from system_settings;";
+$stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled,allow_emails from system_settings;";
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $admin_home_url_LU =		$row[0];
 $SSenable_tts_integration = $row[1];
 $SScallcard_enabled =		$row[2];
 $SScustom_fields_enabled =	$row[3];
-
+$SSemail_enabled =			$row[4];
 ?>
 <CENTER>
 
@@ -1261,6 +1262,20 @@ $SScustom_fields_enabled =	$row[3];
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1211"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy In-Group </a>
 		<HR>
+		<?php
+		if ($SSemail_enabled>0) 
+			{
+		?>
+		<TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<a href="<?php echo $ADMIN ?>?ADD=1800"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Email Groups </a>
+		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<a href="<?php echo $ADMIN ?>?ADD=1811"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add New Email Group </a>
+		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<a href="<?php echo $ADMIN ?>?ADD=1911"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy Email Group </a>
+		<HR>
+		<?php
+			}
+		?>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1300"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show DIDs </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
@@ -1370,6 +1385,9 @@ $SScustom_fields_enabled =	$row[3];
 			else {$cc_sh=''; $cc_fc='BLACK';}
 		if ($sh=='cts') {$cts_sh="bgcolor=\"$cts_color\""; $cts_fc="$cc_font";}
 			else {$cts_sh=''; $cts_fc='BLACK';}
+		if ($sh=='emails') {$emails_sh="bgcolor=\"$subcamp_color\""; $emails_fc="$subcamp_font";}
+			else {$emails_sh=''; $emails_fc='BLACK';}
+
 
 		?>
 		<TR BGCOLOR=<?php echo $admin_color ?>>
@@ -1396,7 +1414,14 @@ $SScustom_fields_enabled =	$row[3];
 		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $vm_sh ?>> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=170000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $vm_fc ?> SIZE=<?php echo $header_font_size ?>> Voicemail </a></TD>
 		</TR>
-		<?php if ( ($sounds_central_control_active > 0) or ($SSsounds_central_control_active > 0) )
+		<?php
+		if ($SSemail_enabled > 0)
+			{ ?>
+			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $emails_sh ?>> &nbsp; 
+			<a href="admin_email_accounts.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $emails_fc ?> SIZE=<?php echo $header_font_size ?>> Email Accounts </a></TD>
+			</TR>
+		<?php }
+		if ( ($sounds_central_control_active > 0) or ($SSsounds_central_control_active > 0) )
 			{ ?>
 			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $audio_sh ?>> &nbsp; 
 			<a href="audio_store.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $audio_fc ?> SIZE=<?php echo $header_font_size ?>> Audio Store </a></TD>
@@ -1489,6 +1514,10 @@ $SScustom_fields_enabled =	$row[3];
 	if ( (strlen($carriers_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
 	<TR BGCOLOR=<?php echo $carriers_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=140000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Carriers </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=141111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Carrier </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=140111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy A Carrier </a></TD></TR>
+	<?php }
+	if ( (strlen($emails_sh) > 1) and (strlen($admin_hh) > 1) ) { 
+		?>
+	<TR BGCOLOR=<?php echo $emails_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="admin_email_accounts.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Email Accounts </a> &nbsp; | &nbsp; <a href="admin_email_accounts.php?eact=ADD"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2> Add A New Account </a> &nbsp; | &nbsp; <a href="admin_email_accounts.php?eact=COPY"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy An Account </a></TD></TR>
 	<?php }
 	if ( (strlen($tts_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>

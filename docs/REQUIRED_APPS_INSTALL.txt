@@ -74,6 +74,17 @@ install Text::CSV_PP
 install File::Temp
 install Text::CSV_XS
 install Spreadsheet::Read
+install LWP::UserAgent
+install HTML::Entities
+install HTML::Strip
+install HTML::FormatText
+install HTML::TreeBuilder
+install Switch
+install Time::Local
+install MIME::Decoder
+install Mail::POP3Client
+install Mail::IMAPClient
+install Mail::Message
 quit
 
 

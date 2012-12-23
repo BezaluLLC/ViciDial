@@ -27,6 +27,7 @@
 # 110812-1510 - Added tts sound directories creation
 # 120224-1614 - Added function to clear out web auth log files
 # 121027-1750 - Added svn logging information
+# 121215-2059 - Added keepalive option E for email process
 #
 
 ############################################
@@ -189,6 +190,7 @@ if (length($ARGV[0])>1)
 		print "     7 - AST_VDauto_dial_FILL (only for multi-server, this must only be on one server)\n";
 		print "     8 - ip_relay (used for blind agent monitoring)\n";
 		print "     9 - Timeclock auto-logout\n";
+		print "     E - Email processor, (If multi-server system, this must only be on one server)\n";
 		print "  [--asterisk_version] = set the asterisk version you want to install for\n";
 		print "  [--copy_sample_conf_files] = copies the sample conf files to /etc/asterisk/\n";
 		print "  [--web-languages] = copy language translations (WARNING! may not work on trunk installs)\n";
@@ -1800,6 +1802,7 @@ else
 			print " 7 - AST_VDauto_dial_FILL (only for multi-server, this must only be on one server)\n";
 			print " 8 - ip_relay (used for blind agent monitoring)\n";
 			print " 9 - Timeclock auto logout\n";
+			print " E - Email processor, (If multi-server system, this must only be on one server)\n";
 			print "Enter active keepalives or press enter for default: [$VARactive_keepalives] ";
 			$PROMPTactive_keepalives = <STDIN>;
 			chomp($PROMPTactive_keepalives);
@@ -2378,6 +2381,7 @@ print conf "#  6 - FastAGI_log\n";
 print conf "#  7 - AST_VDauto_dial_FILL (only for multi-server, this must only be on one server)\n";
 print conf "#  8 - ip_relay (used for blind agent monitoring)\n";
 print conf "#  9 - Timeclock auto logout\n";
+print conf "#  E - Email processor, (If multi-server system, this must only be on one server)\n";
 print conf "VARactive_keepalives => $VARactive_keepalives\n";
 print conf "\n";
 print conf "# Asterisk version VICIDIAL is installed for\n";

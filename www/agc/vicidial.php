@@ -392,10 +392,10 @@
 # 121129-2149 - Corrected hotkeys activation conditions
 # 121130-0734 - Fixed call notes amphersand issue #612
 # 121206-0634 - Added inbound lead search feature
-#
+# 121222-2315 - Added inbound email features
 
-$version = '2.6-360c';
-$build = '121206-0634';
+$version = '2.6-361c';
+$build = '121222-2315';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -480,7 +480,7 @@ $random = (rand(1000000, 9999999) + 10000000);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,email_enabled FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -503,6 +503,7 @@ if ($qm_conf_ct > 0)
 	$custom_fields_enabled =		$row[12];
 	$SSpllb_grouping_limit =		$row[13];
 	$qc_enabled =					$row[14];
+	$email_enabled =				$row[15];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -1765,23 +1766,46 @@ else
 
 				##### grab the inbound groups to choose from if campaign contains CLOSER
 				$VARingroups="''";
+				$VARingroup_handlers="''";
+				$VARphonegroups="''";
+				$VARemailgroups="''";
 				if ( ($campaign_allow_inbound == 'Y') and ($dial_method != 'MANUAL') )
 					{
 					$VARingroups='';
-					$stmt="select group_id from vicidial_inbound_groups where active = 'Y' and group_id IN($closer_campaigns) order by group_id limit 800;";
+					$VARingroup_handlers='';
+					$VARphonegroups='';
+					$VARemailgroups='';
+					$stmt="select group_id,group_handling from vicidial_inbound_groups where active = 'Y' and group_id IN($closer_campaigns) order by group_id limit 800;";
 					$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01015',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
 					$closer_ct = mysql_num_rows($rslt);
 					$INgrpCT=0;
+					$EMAILgrpCT=0;
+					$PHONEgrpCT=0;
 					while ($INgrpCT < $closer_ct)
 						{
 						$row=mysql_fetch_row($rslt);
 						$closer_groups[$INgrpCT] =$row[0];
+						$closer_group_handling[$INgrpCT] =$row[1]; // PHONE OR EMAIL - this is important
 						$VARingroups = "$VARingroups'$closer_groups[$INgrpCT]',";
+						$VARingroup_handlers = "$VARingroup_handlers'$closer_group_handling[$INgrpCT]',";
+						if ($row[1]=="EMAIL") // Make a list of ingroups for email handling groups and one for phones, so there is no overlap
+							{
+							$VARemailgroups = "$VARemailgroups'$closer_groups[$INgrpCT]',";
+							$EMAILgrpCT++;
+							} 
+						else 
+							{
+							$VARphonegroups = "$VARphonegroups'$closer_groups[$INgrpCT]',";
+							$PHONEgrpCT++;
+							}
 						$INgrpCT++;
 						}
 					$VARingroups = substr("$VARingroups", 0, -1); 
+					$VARingroup_handlers = substr("$VARingroup_handlers", 0, -1); 
+					$VARphonegroups = substr("$VARphonegroups", 0, -1); 
+					$VARemailgroups = substr("$VARemailgroups", 0, -1); 
 					}
 				else
 					{$closer_campaigns = "''";}
@@ -3199,6 +3223,19 @@ $CCAL_OUT .= "</table>";
 	var VARSELstatuses_ct = '<?php echo $VARSELstatuses_ct ?>';
 	VARingroups = new Array(<?php echo $VARingroups ?>);
 	var INgroupCOUNT = '<?php echo $INgrpCT ?>';
+
+	VARemailgroups = new Array(<?php echo $VARemailgroups ?>);
+	// var EMAILgroupCOUNT = '<?php echo $EMAILgrpCT ?>';
+	var EMAILgroupCOUNT = 0;
+	var incomingEMAILgroups= new Array();
+
+	VARphonegroups = new Array(<?php echo $VARphonegroups ?>);
+	// var PHONEgroupCOUNT = '<?php echo $PHONEgrpCT ?>';
+	var PHONEgroupCOUNT = 0;
+
+	var VARingroup_handlers = new Array(<?php echo $VARingroup_handlers ?>);
+	var QUEUEpadding=0;
+
 	VARdialingroups = new Array(<?php echo $VARdialingroups ?>);
 	var dialINgroupCOUNT = '<?php echo $dialINgrpCT ?>';
 	VARterritories = new Array(<?php echo $VARterritories ?>);
@@ -3471,6 +3508,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var APIDiaL_ID = '99999';
 	var CheckDEADcall = 0;
 	var CheckDEADcallON = 0;
+	var currently_in_email = 0;
 	var VtigeRLogiNScripT = '<?php echo $vtiger_screen_login ?>';
 	var VtigeRurl = '<?php echo $vtiger_url ?>';
 	var VtigeREnableD = '<?php echo $enable_vtiger_integration ?>';
@@ -3570,6 +3608,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var API_selected_callmenu='';
 	var custom_fields_enabled='<?php echo $custom_fields_enabled ?>';
 	var form_contents_loaded=0;
+	var email_enabled='<?php echo $email_enabled ?>';
 	var enable_xfer_presets='<?php echo $enable_xfer_presets ?>';
 	var hide_xfer_number_to_dial='<?php echo $hide_xfer_number_to_dial ?>';
 	var Presets_HTML='';
@@ -5114,357 +5153,449 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			if (taskvar == 'XfeRLOCAL')
 				{consultativexfer_checked = 0;}
 
-		//	conf_dialed=1;
-			if (auto_dial_level == 0) {RedirecTxFEr = 1;}
-			var xmlhttpXF=false;
-			/*@cc_on @*/
-			/*@if (@_jscript_version >= 5)
-			// JScript gives us Conditional compilation, we can cope with old IE versions.
-			// and security blocked creation of the objects.
-			 try {
-			  xmlhttpXF = new ActiveXObject("Msxml2.XMLHTTP");
-			 } catch (e) {
-			  try {
-			   xmlhttpXF = new ActiveXObject("Microsoft.XMLHTTP");
-			  } catch (E) {
-			   xmlhttpXF = false;
-			  }
-			 }
-			@end @*/
-			if (!xmlhttpXF && typeof XMLHttpRequest!='undefined')
-				{
-				xmlhttpXF = new XMLHttpRequest();
-				}
-			if (xmlhttpXF) 
+			if (taskxferconf=='EMAIL') // If it's an EMAIL you're transferring, it will work differently from a call, BIG TIME.  So a new function was made.
 				{ 
-				var redirectvalue = MDchannel;
-				var redirectserverip = lastcustserverip;
-				if (redirectvalue.length < 2)
-					{redirectvalue = lastcustchannel}
-				if ( (taskvar == 'XfeRBLIND') || (taskvar == 'XfeRVMAIL') )
+				var email_row_id=taskserverip; // Change variable name to what it actually is; too confusing otherwise
+				transfer_email(taskvar, document.vicidial_form.lead_id.value, document.vicidial_form.uniqueid.value, email_row_id);
+				} 
+			else 
+				{
+			//	conf_dialed=1;
+				if (auto_dial_level == 0) {RedirecTxFEr = 1;}
+				var xmlhttpXF=false;
+				/*@cc_on @*/
+				/*@if (@_jscript_version >= 5)
+				// JScript gives us Conditional compilation, we can cope with old IE versions.
+				// and security blocked creation of the objects.
+				 try {
+				  xmlhttpXF = new ActiveXObject("Msxml2.XMLHTTP");
+				 } catch (e) {
+				  try {
+				   xmlhttpXF = new ActiveXObject("Microsoft.XMLHTTP");
+				  } catch (E) {
+				   xmlhttpXF = false;
+				  }
+				 }
+				@end @*/
+				if (!xmlhttpXF && typeof XMLHttpRequest!='undefined')
 					{
-					if (tasklockedquick > 0)
-						{document.vicidial_form.xfernumber.value = quick_transfer_button_orig;}
-					var queryCID = "XBvdcW" + epoch_sec + user_abb;
-					var blindxferdialstring = document.vicidial_form.xfernumber.value;
-					var blindxferhiddendialstring = document.vicidial_form.xfernumhidden.value;
-					if ( (blindxferdialstring.length < 1) && (blindxferhiddendialstring.length > 0) )
-						{blindxferdialstring=blindxferhiddendialstring;}
-					var regXFvars = new RegExp("XFER","g");
-					if (blindxferdialstring.match(regXFvars))
+					xmlhttpXF = new XMLHttpRequest();
+					}
+				if (xmlhttpXF) 
+					{ 
+					var redirectvalue = MDchannel;
+					var redirectserverip = lastcustserverip;
+					if (redirectvalue.length < 2)
+						{redirectvalue = lastcustchannel}
+					if ( (taskvar == 'XfeRBLIND') || (taskvar == 'XfeRVMAIL') )
 						{
-						var regAXFvars = new RegExp("AXFER","g");
-						if (blindxferdialstring.match(regAXFvars))
+						if (tasklockedquick > 0)
+							{document.vicidial_form.xfernumber.value = quick_transfer_button_orig;}
+						var queryCID = "XBvdcW" + epoch_sec + user_abb;
+						var blindxferdialstring = document.vicidial_form.xfernumber.value;
+						var blindxferhiddendialstring = document.vicidial_form.xfernumhidden.value;
+						if ( (blindxferdialstring.length < 1) && (blindxferhiddendialstring.length > 0) )
+							{blindxferdialstring=blindxferhiddendialstring;}
+						var regXFvars = new RegExp("XFER","g");
+						if (blindxferdialstring.match(regXFvars))
 							{
-							var Ctasknum = blindxferdialstring.replace(regAXFvars, '');
-							if (Ctasknum.length < 2)
-								{Ctasknum = '83009';}
-							var closerxfercamptail = '_L';
-							if (closerxfercamptail.length < 3)
-								{closerxfercamptail = 'IVR';}
-							blindxferdialstring = Ctasknum + '*' + document.vicidial_form.phone_number.value + '*' + document.vicidial_form.lead_id.value + '*' + campaign + '*' + closerxfercamptail + '*' + user + '**' + VD_live_call_secondS + '*';
+							var regAXFvars = new RegExp("AXFER","g");
+							if (blindxferdialstring.match(regAXFvars))
+								{
+								var Ctasknum = blindxferdialstring.replace(regAXFvars, '');
+								if (Ctasknum.length < 2)
+									{Ctasknum = '83009';}
+								var closerxfercamptail = '_L';
+								if (closerxfercamptail.length < 3)
+									{closerxfercamptail = 'IVR';}
+								blindxferdialstring = Ctasknum + '*' + document.vicidial_form.phone_number.value + '*' + document.vicidial_form.lead_id.value + '*' + campaign + '*' + closerxfercamptail + '*' + user + '**' + VD_live_call_secondS + '*';
+								}
 							}
-						}
-					else
-						{
-						if (document.vicidial_form.xferoverride.checked==false)
+						else
 							{
-							if (three_way_dial_prefix == 'X') {var temp_dial_prefix = '';}
-							else {var temp_dial_prefix = three_way_dial_prefix;}
-							if (omit_phone_code == 'Y') {var temp_phone_code = '';}
-							else {var temp_phone_code = document.vicidial_form.phone_code.value;}
+							if (document.vicidial_form.xferoverride.checked==false)
+								{
+								if (three_way_dial_prefix == 'X') {var temp_dial_prefix = '';}
+								else {var temp_dial_prefix = three_way_dial_prefix;}
+								if (omit_phone_code == 'Y') {var temp_phone_code = '';}
+								else {var temp_phone_code = document.vicidial_form.phone_code.value;}
 
-							if (blindxferdialstring.length > 7)
-								{blindxferdialstring = temp_dial_prefix + "" + temp_phone_code + "" + blindxferdialstring;}
+								if (blindxferdialstring.length > 7)
+									{blindxferdialstring = temp_dial_prefix + "" + temp_phone_code + "" + blindxferdialstring;}
+								}
+							}
+						if (API_selected_callmenu.length > 0)
+							{
+							var blindxferdialstring = 's';
+							var blindxfercontext = document.vicidial_form.xfernumber.value;
+							}
+						else
+							{var blindxfercontext = ext_context;}
+						no_delete_VDAC=0;
+						if (taskvar == 'XfeRVMAIL')
+							{
+							var blindxferdialstring = campaign_am_message_exten + '*' + campaign + '*' + document.vicidial_form.phone_code.value + '*' + document.vicidial_form.phone_number.value + '*' + document.vicidial_form.lead_id.value;
+							no_delete_VDAC=1;
+							}
+						if (blindxferdialstring.length<'1')
+							{
+							xferredirect_query='';
+							taskvar = 'NOTHING';
+							alert_box("Transfer number must have at least 1 digit:" + blindxferdialstring);
+							}
+						else
+							{
+							xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectVD&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&exten=" + blindxferdialstring + "&ext_context=" + blindxfercontext + "&ext_priority=1&auto_dial_level=" + auto_dial_level + "&campaign=" + campaign + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&secondS=" + VD_live_call_secondS + "&session_id=" + session_id + "&nodeletevdac=" + no_delete_VDAC + "&preset_name=" + document.vicidial_form.xfername.value;
 							}
 						}
-					if (API_selected_callmenu.length > 0)
+					if (taskvar == 'XfeRINTERNAL') 
 						{
-						var blindxferdialstring = 's';
-						var blindxfercontext = document.vicidial_form.xfernumber.value;
+						var closerxferinternal = '';
+						taskvar = 'XfeRLOCAL';
 						}
-					else
-						{var blindxfercontext = ext_context;}
-					no_delete_VDAC=0;
-					if (taskvar == 'XfeRVMAIL')
+					else 
 						{
-						var blindxferdialstring = campaign_am_message_exten + '*' + campaign + '*' + document.vicidial_form.phone_code.value + '*' + document.vicidial_form.phone_number.value + '*' + document.vicidial_form.lead_id.value;
-						no_delete_VDAC=1;
+						var closerxferinternal = '9';
 						}
-					if (blindxferdialstring.length<'1')
+					if (taskvar == 'XfeRLOCAL')
+						{
+						if (consult_custom_sent < 1)
+							{CustomerData_update();}
+
+						document.vicidial_form.xfername.value='';
+						var XfeRSelecT = document.getElementById("XfeRGrouP");
+						var XfeR_GrouP = XfeRSelecT.value;
+						if (API_selected_xfergroup.length > 1)
+							{var XfeR_GrouP = API_selected_xfergroup;}
+						if (tasklockedquick > 0)
+							{XfeR_GrouP = quick_transfer_button_orig;}
+						var queryCID = "XLvdcW" + epoch_sec + user_abb;
+						// 		 "90009*$group**$lead_id**$phone_number*$user*$agent_only*";
+						var redirectdestination = closerxferinternal + '90009*' + XfeR_GrouP + '**' + document.vicidial_form.lead_id.value + '**' + dialed_number + '*' + user + '*' + document.vicidial_form.xfernumber.value + '*';
+
+
+						xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectVD&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&exten=" + redirectdestination + "&ext_context=" + ext_context + "&ext_priority=1&auto_dial_level=" + auto_dial_level + "&campaign=" + campaign + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&secondS=" + VD_live_call_secondS + "&session_id=" + session_id;
+						}
+					if (taskvar == 'XfeR')
+						{
+						var queryCID = "LRvdcW" + epoch_sec + user_abb;
+						var redirectdestination = document.vicidial_form.extension_xfer.value;
+						xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectName&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&extenName=" + redirectdestination + "&ext_context=" + ext_context + "&ext_priority=1" + "&session_id=" + session_id;
+						}
+					if (taskvar == 'VMAIL')
+						{
+						var queryCID = "LVvdcW" + epoch_sec + user_abb;
+						var redirectdestination = document.vicidial_form.extension_xfer.value;
+						xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectNameVmail&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&exten=" + voicemail_dump_exten + "&extenName=" + redirectdestination + "&ext_context=" + ext_context + "&ext_priority=1" + "&session_id=" + session_id;
+						}
+					if (taskvar == 'ENTRY')
+						{
+						var queryCID = "LEvdcW" + epoch_sec + user_abb;
+						var redirectdestination = document.vicidial_form.extension_xfer_entry.value;
+						xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=Redirect&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&exten=" + redirectdestination + "&ext_context=" + ext_context + "&ext_priority=1" + "&session_id=" + session_id;
+						}
+					if (taskvar == '3WAY')
 						{
 						xferredirect_query='';
-						taskvar = 'NOTHING';
-						alert_box("Transfer number must have at least 1 digit:" + blindxferdialstring);
-						}
-					else
-						{
-						xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectVD&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&exten=" + blindxferdialstring + "&ext_context=" + blindxfercontext + "&ext_priority=1&auto_dial_level=" + auto_dial_level + "&campaign=" + campaign + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&secondS=" + VD_live_call_secondS + "&session_id=" + session_id + "&nodeletevdac=" + no_delete_VDAC + "&preset_name=" + document.vicidial_form.xfername.value;
-						}
-					}
-				if (taskvar == 'XfeRINTERNAL') 
-					{
-					var closerxferinternal = '';
-					taskvar = 'XfeRLOCAL';
-					}
-				else 
-					{
-					var closerxferinternal = '9';
-					}
-				if (taskvar == 'XfeRLOCAL')
-					{
-					if (consult_custom_sent < 1)
-						{CustomerData_update();}
 
-					document.vicidial_form.xfername.value='';
-					var XfeRSelecT = document.getElementById("XfeRGrouP");
-					var XfeR_GrouP = XfeRSelecT.value;
-					if (API_selected_xfergroup.length > 1)
-						{var XfeR_GrouP = API_selected_xfergroup;}
-					if (tasklockedquick > 0)
-						{XfeR_GrouP = quick_transfer_button_orig;}
-					var queryCID = "XLvdcW" + epoch_sec + user_abb;
-					// 		 "90009*$group**$lead_id**$phone_number*$user*$agent_only*";
-					var redirectdestination = closerxferinternal + '90009*' + XfeR_GrouP + '**' + document.vicidial_form.lead_id.value + '**' + dialed_number + '*' + user + '*' + document.vicidial_form.xfernumber.value + '*';
-
-
-					xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectVD&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&exten=" + redirectdestination + "&ext_context=" + ext_context + "&ext_priority=1&auto_dial_level=" + auto_dial_level + "&campaign=" + campaign + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&secondS=" + VD_live_call_secondS + "&session_id=" + session_id;
-					}
-				if (taskvar == 'XfeR')
-					{
-					var queryCID = "LRvdcW" + epoch_sec + user_abb;
-					var redirectdestination = document.vicidial_form.extension_xfer.value;
-					xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectName&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&extenName=" + redirectdestination + "&ext_context=" + ext_context + "&ext_priority=1" + "&session_id=" + session_id;
-					}
-				if (taskvar == 'VMAIL')
-					{
-					var queryCID = "LVvdcW" + epoch_sec + user_abb;
-					var redirectdestination = document.vicidial_form.extension_xfer.value;
-					xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectNameVmail&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&exten=" + voicemail_dump_exten + "&extenName=" + redirectdestination + "&ext_context=" + ext_context + "&ext_priority=1" + "&session_id=" + session_id;
-					}
-				if (taskvar == 'ENTRY')
-					{
-					var queryCID = "LEvdcW" + epoch_sec + user_abb;
-					var redirectdestination = document.vicidial_form.extension_xfer_entry.value;
-					xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=Redirect&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&exten=" + redirectdestination + "&ext_context=" + ext_context + "&ext_priority=1" + "&session_id=" + session_id;
-					}
-				if (taskvar == '3WAY')
-					{
-					xferredirect_query='';
-
-					var queryCID = "VXvdcW" + epoch_sec + user_abb;
-					var redirectdestination = "NEXTAVAILABLE";
-					var redirectXTRAvalue = XDchannel;
-					var redirecttype_test = document.vicidial_form.xfernumber.value;
-					var XfeRSelecT = document.getElementById("XfeRGrouP");
-					var XfeR_GrouP = XfeRSelecT.value;
-					if (API_selected_xfergroup.length > 1)
-						{var XfeR_GrouP = API_selected_xfergroup;}
-					var regRXFvars = new RegExp("CXFER","g");
-					if ( ( (redirecttype_test.match(regRXFvars)) || (consultativexfer_checked > 0) ) && (local_consult_xfers > 0) )
-						{var redirecttype = 'RedirectXtraCXNeW';}
-					else
-						{var redirecttype = 'RedirectXtraNeW';}
-					DispO3waychannel = redirectvalue;
-					DispO3wayXtrAchannel = redirectXTRAvalue;
-					DispO3wayCalLserverip = redirectserverip;
-					DispO3wayCalLxfernumber = document.vicidial_form.xfernumber.value;
-					DispO3wayCalLcamptail = '';
-
-					xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=" + redirecttype + "&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&exten=" + redirectdestination + "&ext_context=" + ext_context + "&ext_priority=1&extrachannel=" + redirectXTRAvalue + "&lead_id=" + document.vicidial_form.lead_id.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&phone_number=" + document.vicidial_form.phone_number.value + "&filename=" + taskdebugnote + "&campaign=" + XfeR_GrouP + "&session_id=" + session_id + "&agentchannel=" + agentchannel + "&protocol=" + protocol + "&extension=" + extension + "&auto_dial_level=" + auto_dial_level;
-
-					if (taskdebugnote == 'FIRST') 
-						{
-						document.getElementById("DispoSelectHAspan").innerHTML = "<a href=\"#\" onclick=\"DispoLeavE3wayAgaiN()\">Leave 3Way Call Again</a>";
-						}
-					}
-				if (taskvar == 'ParK')
-					{
-					if (CalLCID.length < 1)
-						{
-						CalLCID = MDnextCID;
-						}
-					blind_transfer=0;
-					var queryCID = "LPvdcW" + epoch_sec + user_abb;
-					var redirectdestination = taskxferconf;
-					var redirectdestserverip = taskserverip;
-					var parkedby = protocol + "/" + extension;
-					xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectToPark&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + park_on_extension + "&ext_context=" + ext_context + "&ext_priority=1&extenName=park&parkedby=" + parkedby + "&session_id=" + session_id + "&CalLCID=" + CalLCID + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign;
-
-					document.getElementById("ParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('FROMParK','" + redirectdestination + "','" + redirectdestserverip + "');return false;\"><img src=\"./images/vdc_LB_grabparkedcall.gif\" border=\"0\" alt=\"Grab Parked Call\" /></a>";
-					if ( (ivr_park_call=='ENABLED') || (ivr_park_call=='ENABLED_PARK_ONLY') )
-						{
-						document.getElementById("ivrParkControl").innerHTML ="<img src=\"./images/vdc_LB_grabivrparkcall_OFF.gif\" border=\"0\" alt=\"Grab IVR Parked Call\" />";
-						}
-					customerparked=1;
-					customerparkedcounter=0;
-					}
-				if (taskvar == 'FROMParK')
-					{
-					blind_transfer=0;
-					var queryCID = "FPvdcW" + epoch_sec + user_abb;
-					var redirectdestination = taskxferconf;
-					var redirectdestserverip = taskserverip;
-
-					if( (server_ip == taskserverip) && (taskserverip.length > 6) )
-						{var dest_dialstring = session_id;}
-					else
-						{
-						if(taskserverip.length > 6)
-							{var dest_dialstring = server_ip_dialstring + "" + session_id;}
+						var queryCID = "VXvdcW" + epoch_sec + user_abb;
+						var redirectdestination = "NEXTAVAILABLE";
+						var redirectXTRAvalue = XDchannel;
+						var redirecttype_test = document.vicidial_form.xfernumber.value;
+						var XfeRSelecT = document.getElementById("XfeRGrouP");
+						var XfeR_GrouP = XfeRSelecT.value;
+						if (API_selected_xfergroup.length > 1)
+							{var XfeR_GrouP = API_selected_xfergroup;}
+						var regRXFvars = new RegExp("CXFER","g");
+						if ( ( (redirecttype_test.match(regRXFvars)) || (consultativexfer_checked > 0) ) && (local_consult_xfers > 0) )
+							{var redirecttype = 'RedirectXtraCXNeW';}
 						else
-							{var dest_dialstring = session_id;}
-						}
+							{var redirecttype = 'RedirectXtraNeW';}
+						DispO3waychannel = redirectvalue;
+						DispO3wayXtrAchannel = redirectXTRAvalue;
+						DispO3wayCalLserverip = redirectserverip;
+						DispO3wayCalLxfernumber = document.vicidial_form.xfernumber.value;
+						DispO3wayCalLcamptail = '';
 
-					xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectFromPark&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + dest_dialstring + "&ext_context=" + ext_context + "&ext_priority=1" + "&session_id=" + session_id + "&CalLCID=" + CalLCID + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign;
+						xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=" + redirecttype + "&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&exten=" + redirectdestination + "&ext_context=" + ext_context + "&ext_priority=1&extrachannel=" + redirectXTRAvalue + "&lead_id=" + document.vicidial_form.lead_id.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&phone_number=" + document.vicidial_form.phone_number.value + "&filename=" + taskdebugnote + "&campaign=" + XfeR_GrouP + "&session_id=" + session_id + "&agentchannel=" + agentchannel + "&protocol=" + protocol + "&extension=" + extension + "&auto_dial_level=" + auto_dial_level;
 
-					document.getElementById("ParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParK','" + redirectdestination + "','" + redirectdestserverip + "');return false;\"><img src=\"./images/vdc_LB_parkcall.gif\" border=\"0\" alt=\"Park Call\" /></a>";
-					if ( (ivr_park_call=='ENABLED') || (ivr_park_call=='ENABLED_PARK_ONLY') )
-						{
-						document.getElementById("ivrParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParKivr','" + redirectdestination + "','" + redirectdestserverip + "');return false;\"><img src=\"./images/vdc_LB_ivrparkcall.gif\" border=\"0\" alt=\"IVR Park Call\" /></a>";
-						}
-					customerparked=0;
-					customerparkedcounter=0;
-					}
-				if (taskvar == 'ParKivr')
-					{
-					if (CalLCID.length < 1)
-						{
-						CalLCID = MDnextCID;
-						}
-					blind_transfer=0;
-					var queryCID = "LPvdcW" + epoch_sec + user_abb;
-					var redirectdestination = taskxferconf;
-					var redirectdestserverip = taskserverip;
-					var parkedby = protocol + "/" + extension;
-					xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectToParkIVR&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + park_on_extension + "&ext_context=" + ext_context + "&ext_priority=1&extenName=park&parkedby=" + parkedby + "&session_id=" + session_id + "&CalLCID=" + CalLCID + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign;
-
-					document.getElementById("ParkControl").innerHTML ="<img src=\"./images/vdc_LB_parkcall_OFF.gif\" border=\"0\" alt=\"Grab Parked Call\" />";
-					if (ivr_park_call=='ENABLED_PARK_ONLY')
-						{
-						document.getElementById("ivrParkControl").innerHTML ="<img src=\"./images/vdc_LB_grabivrparkcall_OFF.gif\" border=\"0\" alt=\"Grab IVR Parked Call\" />";
-						}
-					if (ivr_park_call=='ENABLED')
-						{
-						document.getElementById("ivrParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('FROMParKivr','" + redirectdestination + "','" + redirectdestserverip + "');return false;\"><img src=\"./images/vdc_LB_grabivrparkcall.gif\" border=\"0\" alt=\"Grab IVR Parked Call\" /></a>";
-						}
-					customerparked=1;
-					customerparkedcounter=0;
-					}
-				if (taskvar == 'FROMParKivr')
-					{
-					blind_transfer=0;
-					var queryCID = "FPvdcW" + epoch_sec + user_abb;
-					var redirectdestination = taskxferconf;
-					var redirectdestserverip = taskserverip;
-
-					if( (server_ip == taskserverip) && (taskserverip.length > 6) )
-						{var dest_dialstring = session_id;}
-					else
-						{
-						if(taskserverip.length > 6)
-							{var dest_dialstring = server_ip_dialstring + "" + session_id;}
-						else
-							{var dest_dialstring = session_id;}
-						}
-
-					xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectFromParkIVR&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + dest_dialstring + "&ext_context=" + ext_context + "&ext_priority=1" + "&session_id=" + session_id + "&CalLCID=" + CalLCID + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign;
-
-					document.getElementById("ParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParK','" + redirectdestination + "','" + redirectdestserverip + "');return false;\"><img src=\"./images/vdc_LB_parkcall.gif\" border=\"0\" alt=\"Park Call\" /></a>";
-					if ( (ivr_park_call=='ENABLED') || (ivr_park_call=='ENABLED_PARK_ONLY') )
-						{
-						document.getElementById("ivrParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParKivr','" + redirectdestination + "','" + redirectdestserverip + "');return false;\"><img src=\"./images/vdc_LB_ivrparkcall.gif\" border=\"0\" alt=\"IVR Park Call\" /></a>";
-						}
-					customerparked=0;
-					customerparkedcounter=0;
-					}
-
-				var XFRDop = '';
-				xmlhttpXF.open('POST', 'manager_send.php'); 
-				xmlhttpXF.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
-				xmlhttpXF.send(xferredirect_query); 
-				xmlhttpXF.onreadystatechange = function() 
-					{ 
-					if (xmlhttpXF.readyState == 4 && xmlhttpXF.status == 200) 
-						{
-						var XfeRRedirecToutput = null;
-						XfeRRedirecToutput = xmlhttpXF.responseText;
-						var XfeRRedirecToutput_array=XfeRRedirecToutput.split("|");
-						var XFRDop = XfeRRedirecToutput_array[0];
-						if (XFRDop == "NeWSessioN")
+						if (taskdebugnote == 'FIRST') 
 							{
-							threeway_end=1;
-							document.getElementById("callchannel").innerHTML = '';
-							document.vicidial_form.callserverip.value = '';
-							dialedcall_send_hangup();
-
-							document.vicidial_form.xferchannel.value = '';
-							xfercall_send_hangup();
-
-							session_id = XfeRRedirecToutput_array[1];
-							document.getElementById("sessionIDspan").innerHTML = session_id;
-
-					//		alert("session_id changed to: " + session_id);
+							document.getElementById("DispoSelectHAspan").innerHTML = "<a href=\"#\" onclick=\"DispoLeavE3wayAgaiN()\">Leave 3Way Call Again</a>";
 							}
-					//	alert(xferredirect_query + "\n" + xmlhttpXF.responseText);
-					//	document.getElementById("debugbottomspan").innerHTML = xferredirect_query + "\n" + xmlhttpXF.responseText;
+						}
+					if (taskvar == 'ParK')
+						{
+						if (CalLCID.length < 1)
+							{
+							CalLCID = MDnextCID;
+							}
+						blind_transfer=0;
+						var queryCID = "LPvdcW" + epoch_sec + user_abb;
+						var redirectdestination = taskxferconf;
+						var redirectdestserverip = taskserverip;
+						var parkedby = protocol + "/" + extension;
+						xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectToPark&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + park_on_extension + "&ext_context=" + ext_context + "&ext_priority=1&extenName=park&parkedby=" + parkedby + "&session_id=" + session_id + "&CalLCID=" + CalLCID + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign;
+
+						document.getElementById("ParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('FROMParK','" + redirectdestination + "','" + redirectdestserverip + "');return false;\"><img src=\"./images/vdc_LB_grabparkedcall.gif\" border=\"0\" alt=\"Grab Parked Call\" /></a>";
+						if ( (ivr_park_call=='ENABLED') || (ivr_park_call=='ENABLED_PARK_ONLY') )
+							{
+							document.getElementById("ivrParkControl").innerHTML ="<img src=\"./images/vdc_LB_grabivrparkcall_OFF.gif\" border=\"0\" alt=\"Grab IVR Parked Call\" />";
+							}
+						customerparked=1;
+						customerparkedcounter=0;
+						}
+					if (taskvar == 'FROMParK')
+						{
+						blind_transfer=0;
+						var queryCID = "FPvdcW" + epoch_sec + user_abb;
+						var redirectdestination = taskxferconf;
+						var redirectdestserverip = taskserverip;
+
+						if( (server_ip == taskserverip) && (taskserverip.length > 6) )
+							{var dest_dialstring = session_id;}
+						else
+							{
+							if(taskserverip.length > 6)
+								{var dest_dialstring = server_ip_dialstring + "" + session_id;}
+							else
+								{var dest_dialstring = session_id;}
+							}
+
+						xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectFromPark&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + dest_dialstring + "&ext_context=" + ext_context + "&ext_priority=1" + "&session_id=" + session_id + "&CalLCID=" + CalLCID + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign;
+
+						document.getElementById("ParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParK','" + redirectdestination + "','" + redirectdestserverip + "');return false;\"><img src=\"./images/vdc_LB_parkcall.gif\" border=\"0\" alt=\"Park Call\" /></a>";
+						if ( (ivr_park_call=='ENABLED') || (ivr_park_call=='ENABLED_PARK_ONLY') )
+							{
+							document.getElementById("ivrParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParKivr','" + redirectdestination + "','" + redirectdestserverip + "');return false;\"><img src=\"./images/vdc_LB_ivrparkcall.gif\" border=\"0\" alt=\"IVR Park Call\" /></a>";
+							}
+						customerparked=0;
+						customerparkedcounter=0;
+						}
+					if (taskvar == 'ParKivr')
+						{
+						if (CalLCID.length < 1)
+							{
+							CalLCID = MDnextCID;
+							}
+						blind_transfer=0;
+						var queryCID = "LPvdcW" + epoch_sec + user_abb;
+						var redirectdestination = taskxferconf;
+						var redirectdestserverip = taskserverip;
+						var parkedby = protocol + "/" + extension;
+						xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectToParkIVR&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + park_on_extension + "&ext_context=" + ext_context + "&ext_priority=1&extenName=park&parkedby=" + parkedby + "&session_id=" + session_id + "&CalLCID=" + CalLCID + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign;
+
+						document.getElementById("ParkControl").innerHTML ="<img src=\"./images/vdc_LB_parkcall_OFF.gif\" border=\"0\" alt=\"Grab Parked Call\" />";
+						if (ivr_park_call=='ENABLED_PARK_ONLY')
+							{
+							document.getElementById("ivrParkControl").innerHTML ="<img src=\"./images/vdc_LB_grabivrparkcall_OFF.gif\" border=\"0\" alt=\"Grab IVR Parked Call\" />";
+							}
+						if (ivr_park_call=='ENABLED')
+							{
+							document.getElementById("ivrParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('FROMParKivr','" + redirectdestination + "','" + redirectdestserverip + "');return false;\"><img src=\"./images/vdc_LB_grabivrparkcall.gif\" border=\"0\" alt=\"Grab IVR Parked Call\" /></a>";
+							}
+						customerparked=1;
+						customerparkedcounter=0;
+						}
+					if (taskvar == 'FROMParKivr')
+						{
+						blind_transfer=0;
+						var queryCID = "FPvdcW" + epoch_sec + user_abb;
+						var redirectdestination = taskxferconf;
+						var redirectdestserverip = taskserverip;
+
+						if( (server_ip == taskserverip) && (taskserverip.length > 6) )
+							{var dest_dialstring = session_id;}
+						else
+							{
+							if(taskserverip.length > 6)
+								{var dest_dialstring = server_ip_dialstring + "" + session_id;}
+							else
+								{var dest_dialstring = session_id;}
+							}
+
+						xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectFromParkIVR&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + dest_dialstring + "&ext_context=" + ext_context + "&ext_priority=1" + "&session_id=" + session_id + "&CalLCID=" + CalLCID + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign;
+
+						document.getElementById("ParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParK','" + redirectdestination + "','" + redirectdestserverip + "');return false;\"><img src=\"./images/vdc_LB_parkcall.gif\" border=\"0\" alt=\"Park Call\" /></a>";
+						if ( (ivr_park_call=='ENABLED') || (ivr_park_call=='ENABLED_PARK_ONLY') )
+							{
+							document.getElementById("ivrParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParKivr','" + redirectdestination + "','" + redirectdestserverip + "');return false;\"><img src=\"./images/vdc_LB_ivrparkcall.gif\" border=\"0\" alt=\"IVR Park Call\" /></a>";
+							}
+						customerparked=0;
+						customerparkedcounter=0;
+						}
+
+					var XFRDop = '';
+					xmlhttpXF.open('POST', 'manager_send.php'); 
+					xmlhttpXF.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+					xmlhttpXF.send(xferredirect_query); 
+					xmlhttpXF.onreadystatechange = function() 
+						{ 
+						if (xmlhttpXF.readyState == 4 && xmlhttpXF.status == 200) 
+							{
+							var XfeRRedirecToutput = null;
+							XfeRRedirecToutput = xmlhttpXF.responseText;
+							var XfeRRedirecToutput_array=XfeRRedirecToutput.split("|");
+							var XFRDop = XfeRRedirecToutput_array[0];
+							if (XFRDop == "NeWSessioN")
+								{
+								threeway_end=1;
+								document.getElementById("callchannel").innerHTML = '';
+								document.vicidial_form.callserverip.value = '';
+								dialedcall_send_hangup();
+
+								document.vicidial_form.xferchannel.value = '';
+								xfercall_send_hangup();
+
+								session_id = XfeRRedirecToutput_array[1];
+								document.getElementById("sessionIDspan").innerHTML = session_id;
+
+						//		alert("session_id changed to: " + session_id);
+								}
+						//	alert(xferredirect_query + "\n" + xmlhttpXF.responseText);
+						//	document.getElementById("debugbottomspan").innerHTML = xferredirect_query + "\n" + xmlhttpXF.responseText;
+							}
+						}
+					delete xmlhttpXF;
+					}
+
+					// used to send second Redirect for manual dial calls
+					if ( (auto_dial_level == 0) && (taskvar != '3WAY') )
+					{
+						RedirecTxFEr = 1;
+						var xmlhttpXF2=false;
+						/*@cc_on @*/
+						/*@if (@_jscript_version >= 5)
+						// JScript gives us Conditional compilation, we can cope with old IE versions.
+						// and security blocked creation of the objects.
+						 try {
+						  xmlhttpXF2 = new ActiveXObject("Msxml2.XMLHTTP");
+						 } catch (e) {
+						  try {
+						   xmlhttpXF2 = new ActiveXObject("Microsoft.XMLHTTP");
+						  } catch (E) {
+						   xmlhttpXF2 = false;
+						  }
+						 }
+						@end @*/
+						if (!xmlhttpXF2 && typeof XMLHttpRequest!='undefined')
+						{
+							xmlhttpXF2 = new XMLHttpRequest();
+						}
+						if (xmlhttpXF2) 
+						{ 
+							xmlhttpXF2.open('POST', 'manager_send.php'); 
+							xmlhttpXF2.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+							xmlhttpXF2.send(xferredirect_query + "&stage=2NDXfeR"); 
+							xmlhttpXF2.onreadystatechange = function() 
+								{ 
+								if (xmlhttpXF2.readyState == 4 && xmlhttpXF2.status == 200) 
+									{
+									Nactiveext = null;
+									Nactiveext = xmlhttpXF2.responseText;
+							//		alert(RedirecTxFEr + "|" + xmlhttpXF2.responseText);
+								}
+						}
+						delete xmlhttpXF2;
 						}
 					}
-				delete xmlhttpXF;
-				}
 
-				// used to send second Redirect for manual dial calls
-				if ( (auto_dial_level == 0) && (taskvar != '3WAY') )
-				{
-					RedirecTxFEr = 1;
-					var xmlhttpXF2=false;
-					/*@cc_on @*/
-					/*@if (@_jscript_version >= 5)
-					// JScript gives us Conditional compilation, we can cope with old IE versions.
-					// and security blocked creation of the objects.
-					 try {
-					  xmlhttpXF2 = new ActiveXObject("Msxml2.XMLHTTP");
-					 } catch (e) {
-					  try {
-					   xmlhttpXF2 = new ActiveXObject("Microsoft.XMLHTTP");
-					  } catch (E) {
-					   xmlhttpXF2 = false;
-					  }
-					 }
-					@end @*/
-					if (!xmlhttpXF2 && typeof XMLHttpRequest!='undefined')
+				if ( (taskvar == 'XfeRLOCAL') || (taskvar == 'XfeRBLIND') || (taskvar == 'XfeRVMAIL') )
 					{
-						xmlhttpXF2 = new XMLHttpRequest();
+					if (auto_dial_level == 0) {RedirecTxFEr = 1;}
+					document.getElementById("callchannel").innerHTML = '';
+					document.vicidial_form.callserverip.value = '';
+					if( document.images ) { document.images['livecall'].src = image_livecall_OFF.src;}
+				//	alert(RedirecTxFEr + "|" + auto_dial_level);
+					dialedcall_send_hangup(taskdispowindow,'','',no_delete_VDAC);
 					}
-					if (xmlhttpXF2) 
-					{ 
-						xmlhttpXF2.open('POST', 'manager_send.php'); 
-						xmlhttpXF2.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
-						xmlhttpXF2.send(xferredirect_query + "&stage=2NDXfeR"); 
-						xmlhttpXF2.onreadystatechange = function() 
-							{ 
-							if (xmlhttpXF2.readyState == 4 && xmlhttpXF2.status == 200) 
-								{
-								Nactiveext = null;
-								Nactiveext = xmlhttpXF2.responseText;
-						//		alert(RedirecTxFEr + "|" + xmlhttpXF2.responseText);
-							}
-					}
-					delete xmlhttpXF2;
-					}
-				}
-
-			if ( (taskvar == 'XfeRLOCAL') || (taskvar == 'XfeRBLIND') || (taskvar == 'XfeRVMAIL') )
-				{
-				if (auto_dial_level == 0) {RedirecTxFEr = 1;}
-				document.getElementById("callchannel").innerHTML = '';
-				document.vicidial_form.callserverip.value = '';
-				if( document.images ) { document.images['livecall'].src = image_livecall_OFF.src;}
-			//	alert(RedirecTxFEr + "|" + auto_dial_level);
-				dialedcall_send_hangup(taskdispowindow,'','',no_delete_VDAC);
-				}
+				} // END ELSE FOR EMAIL CHECK
 			}
 		}
+
+// ################################################################################
+// Transfer an email to an in-group for another rep.
+// Currently this behaves as a blind transfer no matter which button you press, but saving the taskvar variable just in case
+	function transfer_email(EMAILtaskvar, EMAILlead_id, EMAILuniqueid, email_row_id) {
+
+		var xmlhttpXF=false;
+		/*@cc_on @*/
+		/*@if (@_jscript_version >= 5)
+		// JScript gives us Conditional compilation, we can cope with old IE versions.
+		// and security blocked creation of the objects.
+		 try {
+		  xmlhttpXF = new ActiveXObject("Msxml2.XMLHTTP");
+		 } catch (e) {
+		  try {
+		   xmlhttpXF = new ActiveXObject("Microsoft.XMLHTTP");
+		  } catch (E) {
+		   xmlhttpXF = false;
+		  }
+		 }
+		@end @*/
+		if (!xmlhttpXF && typeof XMLHttpRequest!='undefined')
+			{
+			xmlhttpXF = new XMLHttpRequest();
+			}
+		if (xmlhttpXF) 
+			{ 
+			var redirectvalue = MDchannel;
+			var redirectserverip = lastcustserverip;
+			var queryCID='';
+			var exten='';
+			var ext_context='';
+			var redirectXTRAvalue='';
+			var redirectdestination='';
+			var taskdebugnote='';
+			if (redirectvalue.length < 2)
+				{redirectvalue = lastcustchannel}
+			var XFRDop = '';
+			var XfeRSelecT = document.getElementById("XfeRGrouP");
+			var XfeR_GrouP = XfeRSelecT.value;
+			if (API_selected_xfergroup.length > 1)
+				{var XfeR_GrouP = API_selected_xfergroup;}
+			// + "&queryCID=" + queryCID + "&exten=" + redirectdestination + "&ext_context=" + ext_context
+			xferemail_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=XFERemail&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&exten=" + redirectdestination + "&ext_context=" + ext_context + "&ext_priority=1&extrachannel=" + redirectXTRAvalue + "&lead_id=" + document.vicidial_form.lead_id.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&phone_number=" + document.vicidial_form.phone_number.value + "&filename=" + taskdebugnote + "&campaign=" + XfeR_GrouP + "&session_id=" + session_id + "&agentchannel=" + agentchannel + "&protocol=" + protocol + "&extension=" + extension + "&auto_dial_level=" + auto_dial_level + "&list_id=" + document.vicidial_form.list_id.value + "&email_row_id=" + email_row_id;
+			//alert(xferemail_query);
+
+			xmlhttpXF.open('POST', 'vdc_db_query.php'); 
+			xmlhttpXF.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+			xmlhttpXF.send(xferemail_query); 
+			xmlhttpXF.onreadystatechange = function() 
+				{ 
+				if (xmlhttpXF.readyState == 4 && xmlhttpXF.status == 200) 
+					{
+					var XfeRRedirecToutput = null;
+					XfeRRedirecToutput = xmlhttpXF.responseText;
+					// alert(XfeRRedirecToutput);
+					var XfeRRedirecToutput_array=XfeRRedirecToutput.split("|");
+					var XFRDop = XfeRRedirecToutput_array[0];
+					if (XFRDop == 1)
+						{
+						threeway_end=1;
+						document.getElementById("callchannel").innerHTML = '';
+						document.vicidial_form.callserverip.value = '';
+						dialedcall_send_hangup(); // Put this in the transfer_email function
+
+				//*		document.vicidial_form.xferchannel.value = '';
+				//*		xfercall_send_hangup();
+
+				//*		session_id = XfeRRedirecToutput_array[1];
+				//*		document.getElementById("sessionIDspan").innerHTML = session_id;
+
+				//		alert("session_id changed to: " + session_id);
+						}
+						else 
+						{
+							//
+						}
+				//	alert(xferredirect_query + "\n" + xmlhttpXF.responseText);
+				//	document.getElementById("debugbottomspan").innerHTML = xferredirect_query + "\n" + xmlhttpXF.responseText;
+					}
+				}
+			delete xmlhttpXF;
+			}
+	}
 
 // ################################################################################
 // Finish the alternate dialing and move on to disposition the call
@@ -6958,6 +7089,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						if (fields_list.match(regUDformreload))
 							{FormContentsLoad();}
 
+						// JOEJ 082812 - new for email feature
+						var regUDemailreload = new RegExp("emailreload,","ig");
+						if (fields_list.match(regUDemailreload))
+							{EmailContentsLoad();}
+
 						var regWFAcustom = new RegExp("^VAR","ig");
 						if (VDIC_web_form_address.match(regWFAcustom))
 							{
@@ -7350,6 +7486,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 										{
 										FormContentsLoad();
 										}
+									// JOEJ 082812 - new for email feature
+									// Will populate email tab in case this is a customer with an email record AND that the user selected a campaign that handles emails instead of phones
+									if (email_enabled > 0 && EMAILgroupCOUNT > 0)
+										{
+										EmailContentsLoad();
+										}
 									if (get_call_launch == 'SCRIPT')
 										{
 										if (delayed_script_load == 'YES')
@@ -7364,6 +7506,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 										FormPanelToFront();
 										}
 
+									if (get_call_launch == 'EMAIL')
+										{
+										EmailPanelToFront();
+										}
 
 									if (get_call_launch == 'WEBFORM')
 										{
@@ -7711,6 +7857,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							{
 							FormContentsLoad();
 							}
+						// JOEJ 082812 - new for email feature
+						// Will populate email tab in case this is a customer with an email record
+						if (email_enabled > 0)
+							{
+							EmailContentsLoad();
+							}
 						if (get_call_launch == 'SCRIPT')
 							{
 							if (delayed_script_load == 'YES')
@@ -7722,6 +7874,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						if (get_call_launch == 'FORM')
 							{
 							FormPanelToFront();
+							}
+						if (get_call_launch == 'EMAIL')
+							{
+							EmailPanelToFront();
 							}
 						if (get_call_launch == 'WEBFORM')
 							{
@@ -8046,6 +8202,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							{
 						//	alert(xmlhttprequestcheckauto.responseText);
 							AutoDialWaiting = 0;
+							QUEUEpadding = 0;
 
 							var VDIC_data_VDAC=check_VDIC_array[1].split("|");
 							VDIC_web_form_address = VICIDiaL_web_form_address
@@ -8478,6 +8635,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								{
 								FormContentsLoad();
 								}
+							// JOEJ 082812 - new for email feature
+							if (email_enabled > 0)
+								{
+								EmailContentsLoad();
+								}
 							if (CalL_AutO_LauncH == 'SCRIPT')
 								{
 								if (delayed_script_load == 'YES')
@@ -8489,6 +8651,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							if (CalL_AutO_LauncH == 'FORM')
 								{
 								FormPanelToFront();
+								}
+							if (CalL_AutO_LauncH == 'EMAIL')
+								{
+								EmailPanelToFront();
 								}
 
 							if (CalL_AutO_LauncH == 'WEBFORM')
@@ -8521,12 +8687,545 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								alert(" Incoming: " + dial_display_number + "\n Group- " + VDIC_data_VDIG[1] + " &nbsp; " + VDIC_fronter);
 								}
 							}
-						else
+						else if (email_enabled>0 && EMAILgroupCOUNT>0 && AutoDialWaiting==1)
 							{
-							// do nothing
+							// JOEJ check for EMAIL
+							// QUEUEpadding is needed to allow inbound calls to get through QUEUE status
+							QUEUEpadding++;
+							if (QUEUEpadding==5) 
+								{
+								QUEUEpadding=0;
+								check_for_incoming_email();
+								}
 							}
 							xmlhttprequestcheckauto = undefined;
 							delete xmlhttprequestcheckauto;
+						}
+					}
+				}
+			}
+		}
+
+
+// ################################################################################
+// Check to see if there is an email unanswered in queue
+// This should not happen if the agent is INCALL
+	function check_for_incoming_email()
+		{
+		if (typeof(xmlhttprequestcheckemail) == "undefined") 
+			{
+			all_record = 'NO';
+			all_record_count=0;
+			var xmlhttprequestcheckemail=false;
+			if (!xmlhttprequestcheckemail && typeof XMLHttpRequest!='undefined')
+				{
+				xmlhttprequestcheckemail = new XMLHttpRequest();
+				}
+			if (xmlhttprequestcheckemail) 
+				{ 
+		
+				checkVDAI_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&campaign=" + campaign + "&ACTION=VDADcheckINCOMINGemail" + "&agent_log_id=" + agent_log_id;
+
+				// Add on all the email groups the user selected in order to pass them to the vdc_db_query script
+				for (var i = 0; i < incomingEMAILgroups.length; i++) {
+				    checkVDAI_query+="&inbound_email_groups[]="+incomingEMAILgroups[i];
+				}
+
+				xmlhttprequestcheckemail.open('POST', 'vdc_db_query.php'); 
+				xmlhttprequestcheckemail.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+				xmlhttprequestcheckemail.send(checkVDAI_query); 
+
+				xmlhttprequestcheckemail.onreadystatechange = function() 
+					{ 
+					if (xmlhttprequestcheckemail.readyState == 4 && xmlhttprequestcheckemail.status == 200) 
+						{
+						var check_incoming = null;
+						check_incoming = xmlhttprequestcheckemail.responseText;
+						// alert(checkVDAI_query);
+						//alert(xmlhttprequestcheckemail.responseText);
+						var check_VDIC_array=check_incoming.split("\n");
+						if (check_VDIC_array[0] == '1')
+							{
+						//	alert(xmlhttprequestcheckemail.responseText);
+							AutoDialWaiting = 0;
+	
+							var VDIC_data_VDAC=check_VDIC_array[1].split("|");
+							VDIC_web_form_address = VICIDiaL_web_form_address
+							VDIC_web_form_address_two = VICIDiaL_web_form_address_two
+							var VDIC_fronter='';
+
+							var VDIC_data_VDIG=check_VDIC_array[2].split("|");
+							if (VDIC_data_VDIG[0].length > 5)
+								{VDIC_web_form_address = VDIC_data_VDIG[0];}
+							var VDCL_group_name			= VDIC_data_VDIG[1];
+							var VDCL_group_color		= VDIC_data_VDIG[2];
+							var VDCL_fronter_display	= VDIC_data_VDIG[3];
+							 VDCL_group_id				= VDIC_data_VDIG[4];
+							 CalL_ScripT_id				= VDIC_data_VDIG[5];
+							 CalL_AutO_LauncH			= 'EMAIL'; // FORCE EMAIL tab
+							 CalL_XC_a_Dtmf				= VDIC_data_VDIG[7];
+							 CalL_XC_a_NuMber			= VDIC_data_VDIG[8];
+							 CalL_XC_b_Dtmf				= VDIC_data_VDIG[9];
+							 CalL_XC_b_NuMber			= VDIC_data_VDIG[10];
+							if ( (VDIC_data_VDIG[11].length > 1) && (VDIC_data_VDIG[11] != '---NONE---') )
+								{LIVE_default_xfer_group = VDIC_data_VDIG[11];}
+							else
+								{LIVE_default_xfer_group = default_xfer_group;}
+
+							if ( (VDIC_data_VDIG[12].length > 1) && (VDIC_data_VDIG[12]!='DISABLED') )
+								{LIVE_campaign_recording = VDIC_data_VDIG[12];}
+							else
+								{LIVE_campaign_recording = campaign_recording;}
+
+							if ( (VDIC_data_VDIG[13].length > 1) && (VDIC_data_VDIG[13]!='NONE') )
+								{LIVE_campaign_rec_filename = VDIC_data_VDIG[13];}
+							else
+								{LIVE_campaign_rec_filename = campaign_rec_filename;}
+
+							if ( (VDIC_data_VDIG[14].length > 1) && (VDIC_data_VDIG[14]!='NONE') )
+								{LIVE_default_group_alias = VDIC_data_VDIG[14];}
+							else
+								{LIVE_default_group_alias = default_group_alias;}
+
+							if ( (VDIC_data_VDIG[15].length > 1) && (VDIC_data_VDIG[15]!='NONE') )
+								{LIVE_caller_id_number = VDIC_data_VDIG[15];}
+							else
+								{LIVE_caller_id_number = default_group_alias_cid;}
+
+							if (VDIC_data_VDIG[16].length > 0)
+								{LIVE_web_vars = VDIC_data_VDIG[16];}
+							else
+								{LIVE_web_vars = default_web_vars;}
+
+							if (VDIC_data_VDIG[17].length > 5)
+								{VDIC_web_form_address_two = VDIC_data_VDIG[17];}
+
+							var call_timer_action							= VDIC_data_VDIG[18];
+
+							if ( (call_timer_action == 'NONE') || (call_timer_action.length < 2) )
+								{
+								timer_action = campaign_timer_action;
+								timer_action_message = campaign_timer_action_message;
+								timer_action_seconds = campaign_timer_action_seconds;
+								timer_action_destination = campaign_timer_action_destination;
+								}
+							else
+								{
+								var call_timer_action_message				= VDIC_data_VDIG[19];
+								var call_timer_action_seconds				= VDIC_data_VDIG[20];
+								var call_timer_action_destination			= VDIC_data_VDIG[27];
+								timer_action = call_timer_action;
+								timer_action_message = call_timer_action_message;
+								timer_action_seconds = call_timer_action_seconds;
+								timer_action_destination = call_timer_action_destination;
+								}
+
+							CalL_XC_c_NuMber			= VDIC_data_VDIG[21];
+							CalL_XC_d_NuMber			= VDIC_data_VDIG[22];
+							CalL_XC_e_NuMber			= VDIC_data_VDIG[23];
+							CalL_XC_e_NuMber			= VDIC_data_VDIG[23];
+							uniqueid_status_display		= VDIC_data_VDIG[24];
+							uniqueid_status_prefix		= VDIC_data_VDIG[26];
+							did_id						= VDIC_data_VDIG[28];
+							did_extension				= VDIC_data_VDIG[29];
+							did_pattern					= VDIC_data_VDIG[30];
+							did_description				= VDIC_data_VDIG[31];
+							closecallid					= VDIC_data_VDIG[32];
+							xfercallid					= VDIC_data_VDIG[33];
+
+							var VDIC_data_VDFR=check_VDIC_array[3].split("|");
+							if ( (VDIC_data_VDFR[1].length > 1) && (VDCL_fronter_display == 'Y') )
+								{VDIC_fronter = "  Fronter: " + VDIC_data_VDFR[0] + " - " + VDIC_data_VDFR[1];}
+							
+							document.vicidial_form.lead_id.value		= VDIC_data_VDAC[0];
+							document.vicidial_form.uniqueid.value		= VDIC_data_VDAC[1];
+							CIDcheck									= VDIC_data_VDAC[2];
+							CalLCID										= VDIC_data_VDAC[2];
+							LastCallCID									= VDIC_data_VDAC[2];
+							document.getElementById("callchannel").innerHTML	= VDIC_data_VDAC[3];
+							lastcustchannel = VDIC_data_VDAC[3];
+							document.vicidial_form.callserverip.value	= VDIC_data_VDAC[4];
+							lastcustserverip = VDIC_data_VDAC[4];
+							if( document.images ) { document.images['livecall'].src = image_livecall_ON.src;}
+							document.vicidial_form.SecondS.value		= 0;
+							document.getElementById("SecondSDISP").innerHTML = '0';
+
+							if (uniqueid_status_display=='ENABLED')
+								{custom_call_id			= " Call ID " + VDIC_data_VDAC[1];}
+							if (uniqueid_status_display=='ENABLED_PREFIX')
+								{custom_call_id			= " Call ID " + uniqueid_status_prefix + "" + VDIC_data_VDAC[1];}
+							if (uniqueid_status_display=='ENABLED_PRESERVE')
+								{custom_call_id			= " Call ID " + VDIC_data_VDIG[25];}
+
+							VD_live_customer_call = 1;
+							VD_live_call_secondS = 0;
+							CheckDEADcallON = 1; // Do this to keep the interface from instantly reading an email as a hangup
+							currently_in_email = 1; // Do this to block channel checks (or anything else) that would indicate a completed call
+
+							// INSERT VICIDIAL_LOG ENTRY FOR THIS CALL PROCESS
+						//	DialLog("start");
+
+							custchannellive=1;
+
+							LasTCID											= check_VDIC_array[4];
+							LeaDPreVDispO									= check_VDIC_array[6];
+							fronter											= check_VDIC_array[7];
+							document.vicidial_form.vendor_lead_code.value	= check_VDIC_array[8];
+							document.vicidial_form.list_id.value			= check_VDIC_array[9];
+							document.vicidial_form.gmt_offset_now.value		= check_VDIC_array[10];
+							document.vicidial_form.phone_code.value			= check_VDIC_array[11];
+							if ( (disable_alter_custphone=='Y') || (disable_alter_custphone=='HIDE') )
+								{
+								var tmp_pn = document.getElementById("phone_numberDISP");
+								if (disable_alter_custphone=='Y')
+									{
+									tmp_pn.innerHTML						= check_VDIC_array[12];
+									}
+								}
+							document.vicidial_form.phone_number.value		= check_VDIC_array[12];
+							document.vicidial_form.title.value				= check_VDIC_array[13];
+							document.vicidial_form.first_name.value			= check_VDIC_array[14];
+							document.vicidial_form.middle_initial.value		= check_VDIC_array[15];
+							document.vicidial_form.last_name.value			= check_VDIC_array[16];
+							document.vicidial_form.address1.value			= check_VDIC_array[17];
+							document.vicidial_form.address2.value			= check_VDIC_array[18];
+							document.vicidial_form.address3.value			= check_VDIC_array[19];
+							document.vicidial_form.city.value				= check_VDIC_array[20];
+							document.vicidial_form.state.value				= check_VDIC_array[21];
+							document.vicidial_form.province.value			= check_VDIC_array[22];
+							document.vicidial_form.postal_code.value		= check_VDIC_array[23];
+							document.vicidial_form.country_code.value		= check_VDIC_array[24];
+							document.vicidial_form.gender.value				= check_VDIC_array[25];
+							document.vicidial_form.date_of_birth.value		= check_VDIC_array[26];
+							document.vicidial_form.alt_phone.value			= check_VDIC_array[27];
+							document.vicidial_form.email.value				= check_VDIC_array[28];
+							document.vicidial_form.security_phrase.value	= check_VDIC_array[29];
+							var REGcommentsNL = new RegExp("!N","g");
+							check_VDIC_array[30] = check_VDIC_array[30].replace(REGcommentsNL, "\n");
+							document.vicidial_form.comments.value			= check_VDIC_array[30];
+							document.vicidial_form.called_count.value		= check_VDIC_array[31];
+							CBentry_time									= check_VDIC_array[32];
+							CBcallback_time									= check_VDIC_array[33];
+							CBuser											= check_VDIC_array[34];
+							CBcomments										= check_VDIC_array[35];
+							dialed_number									= check_VDIC_array[36];
+							dialed_label									= check_VDIC_array[37];
+							source_id										= check_VDIC_array[38];
+							EAphone_code									= check_VDIC_array[39];
+							EAphone_number									= check_VDIC_array[40];
+							EAalt_phone_notes								= check_VDIC_array[41];
+							EAalt_phone_active								= check_VDIC_array[42];
+							EAalt_phone_count								= check_VDIC_array[43];
+							document.vicidial_form.rank.value				= check_VDIC_array[44];
+							document.vicidial_form.owner.value				= check_VDIC_array[45];
+							script_recording_delay							= check_VDIC_array[46];
+							document.vicidial_form.entry_list_id.value		= check_VDIC_array[47];
+							custom_field_names								= check_VDIC_array[48];
+							custom_field_values								= check_VDIC_array[49];
+							custom_field_types								= check_VDIC_array[50];
+
+
+							if (hide_gender > 0)
+								{
+								document.vicidial_form.gender_list.value	= check_VDIC_array[25];
+								}
+							else
+								{
+								var gIndex = 0;
+								if (document.vicidial_form.gender.value == 'M') {var gIndex = 1;}
+								if (document.vicidial_form.gender.value == 'F') {var gIndex = 2;}
+								document.getElementById("gender_list").selectedIndex = gIndex;
+								}
+
+							lead_dial_number = document.vicidial_form.phone_number.value;
+							var dispnum = document.vicidial_form.phone_number.value;
+							var status_display_number = phone_number_format(dispnum);
+							var callnum = dialed_number;
+							var dial_display_number = phone_number_format(callnum);
+
+							var status_display_content='';
+							if (status_display_CALLID > 0) {status_display_content = status_display_content + " UID: " + LasTCID;}
+							if (status_display_LEADID > 0) {status_display_content = status_display_content + " Lead: " + document.vicidial_form.lead_id.value;}
+							if (status_display_LISTID > 0) {status_display_content = status_display_content + " List: " + document.vicidial_form.list_id.value;}
+
+							document.getElementById("MainStatuSSpan").innerHTML = " Incoming: " + dial_display_number + " " + custom_call_id + " " + status_display_content + " &nbsp; " + VDIC_fronter; 
+
+							if (CBentry_time.length > 2)
+								{
+								document.getElementById("CusTInfOSpaN").innerHTML = " <b> PREVIOUS CALLBACK </b>";
+								document.getElementById("CusTInfOSpaN").style.background = CusTCB_bgcolor;
+								document.getElementById("CBcommentsBoxA").innerHTML = "<b>Last Call: </b>" + CBentry_time;
+								document.getElementById("CBcommentsBoxB").innerHTML = "<b>CallBack: </b>" + CBcallback_time;
+								document.getElementById("CBcommentsBoxC").innerHTML = "<b>Agent: </b>" + CBuser;
+								document.getElementById("CBcommentsBoxD").innerHTML = "<b>Comments: </b><br />" + CBcomments;
+								showDiv('CBcommentsBox');
+								}
+							if (dialed_label == 'ALT')
+								{document.getElementById("CusTInfOSpaN").innerHTML = " <b> ALT DIAL NUMBER: ALT </b>";}
+							if (dialed_label == 'ADDR3')
+								{document.getElementById("CusTInfOSpaN").innerHTML = " <b> ALT DIAL NUMBER: ADDRESS3 </b>";}
+							var REGalt_dial = new RegExp("X","g");
+							if (dialed_label.match(REGalt_dial))
+								{
+								document.getElementById("CusTInfOSpaN").innerHTML = " <b> ALT DIAL NUMBER: " + dialed_label + "</b>";
+								document.getElementById("EAcommentsBoxA").innerHTML = "<b>Phone Code and Number: </b>" + EAphone_code + " " + EAphone_number;
+
+								var EAactive_link = '';
+								if (EAalt_phone_active == 'Y') 
+									{EAactive_link = "<a href=\"#\" onclick=\"alt_phone_change('" + EAphone_number + "','" + EAalt_phone_count + "','" + document.vicidial_form.lead_id.value + "','N');\">Change this phone number to INACTIVE</a>";}
+								else
+									{EAactive_link = "<a href=\"#\" onclick=\"alt_phone_change('" + EAphone_number + "','" + EAalt_phone_count + "','" + document.vicidial_form.lead_id.value + "','Y');\">Change this phone number to ACTIVE</a>";}
+
+								document.getElementById("EAcommentsBoxB").innerHTML = "<b>Active: </b>" + EAalt_phone_active + "<br />" + EAactive_link;
+								document.getElementById("EAcommentsBoxC").innerHTML = "<b>Alt Count: </b>" + EAalt_phone_count;
+								document.getElementById("EAcommentsBoxD").innerHTML = "<b>Notes: </b>" + EAalt_phone_notes;
+								showDiv('EAcommentsBox');
+								}
+
+							if (VDIC_data_VDIG[1].length > 0)
+								{
+								inOUT = 'IN';
+								if (VDIC_data_VDIG[2].length > 2)
+									{
+									document.getElementById("MainStatuSSpan").style.background = VDIC_data_VDIG[2];
+									}
+								var dispnum = document.vicidial_form.phone_number.value;
+								var status_display_number = phone_number_format(dispnum);
+								var callnum = dialed_number;
+								var dial_display_number = phone_number_format(callnum);
+
+								var status_display_content='';
+								if (status_display_CALLID > 0) {status_display_content = status_display_content + " UID: " + CIDcheck;}
+								if (status_display_LEADID > 0) {status_display_content = status_display_content + " Lead: " + document.vicidial_form.lead_id.value;}
+								if (status_display_LISTID > 0) {status_display_content = status_display_content + " List: " + document.vicidial_form.list_id.value;}
+
+								document.getElementById("MainStatuSSpan").innerHTML = " Incoming: " + dial_display_number + " " + custom_call_id + " Group- " + VDIC_data_VDIG[1] + " &nbsp; " + VDIC_fronter + " " + status_display_content; 
+								}
+
+							document.getElementById("ParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParK','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><img src=\"./images/vdc_LB_parkcall.gif\" border=\"0\" alt=\"Park Call\" /></a>";
+							if ( (ivr_park_call=='ENABLED') || (ivr_park_call=='ENABLED_PARK_ONLY') )
+								{
+								document.getElementById("ivrParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParKivr','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><img src=\"./images/vdc_LB_ivrparkcall.gif\" border=\"0\" alt=\"IVR Park Call\" /></a>";
+								}
+
+							document.getElementById("HangupControl").innerHTML = "<a href=\"#\" onclick=\"dialedcall_send_hangup();\"><img src=\"./images/vdc_LB_hangupcustomer.gif\" border=\"0\" alt=\"Hangup Customer\" /></a>";
+
+							document.getElementById("XferControl").innerHTML = "<a href=\"#\" onclick=\"ShoWTransferMain('ON');\"><img src=\"./images/vdc_LB_transferconf.gif\" border=\"0\" alt=\"Transfer - Conference\" /></a>";
+
+							document.getElementById("LocalCloser").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><img src=\"./images/vdc_XB_localcloser.gif\" border=\"0\" alt=\"LOCAL CLOSER\" style=\"vertical-align:middle\" /></a>";
+
+							document.getElementById("DialBlindTransfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><img src=\"./images/vdc_XB_blindtransfer.gif\" border=\"0\" alt=\"Dial Blind Transfer\" style=\"vertical-align:middle\" /></a>";
+
+							document.getElementById("DialBlindVMail").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRVMAIL','" + lastcustchannel + "','" + lastcustserverip + "');return false;\"><img src=\"./images/vdc_XB_ammessage.gif\" border=\"0\" alt=\"Blind Transfer VMail Message\" style=\"vertical-align:middle\" /></a>";
+
+							if ( (quick_transfer_button == 'IN_GROUP') || (quick_transfer_button == 'LOCKED_IN_GROUP') )
+								{
+								if (quick_transfer_button_locked > 0)
+									{quick_transfer_button_orig = default_xfer_group;}
+
+								document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRLOCAL','" + lastcustchannel + "','" + lastcustserverip + "','','','" + quick_transfer_button_locked + "');return false;\"><img src=\"./images/vdc_LB_quickxfer.gif\" border=\"0\" alt=\"QUICK TRANSFER\" /></a>";
+								}
+							if (prepopulate_transfer_preset_enabled > 0)
+								{
+								if ( (prepopulate_transfer_preset == 'PRESET_1') || (prepopulate_transfer_preset == 'LOCKED_PRESET_1') )
+									{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;   document.vicidial_form.xfername.value='D1';}
+								if ( (prepopulate_transfer_preset == 'PRESET_2') || (prepopulate_transfer_preset == 'LOCKED_PRESET_2') )
+									{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;   document.vicidial_form.xfername.value='D2';}
+								if ( (prepopulate_transfer_preset == 'PRESET_3') || (prepopulate_transfer_preset == 'LOCKED_PRESET_3') )
+									{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;   document.vicidial_form.xfername.value='D3';}
+								if ( (prepopulate_transfer_preset == 'PRESET_4') || (prepopulate_transfer_preset == 'LOCKED_PRESET_4') )
+									{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;   document.vicidial_form.xfername.value='D4';}
+								if ( (prepopulate_transfer_preset == 'PRESET_5') || (prepopulate_transfer_preset == 'LOCKED_PRESET_5') )
+									{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;   document.vicidial_form.xfername.value='D5';}
+								}
+							if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'PRESET_2') || (quick_transfer_button == 'PRESET_3') || (quick_transfer_button == 'PRESET_4') || (quick_transfer_button == 'PRESET_5') || (quick_transfer_button == 'LOCKED_PRESET_1') || (quick_transfer_button == 'LOCKED_PRESET_2') || (quick_transfer_button == 'LOCKED_PRESET_3') || (quick_transfer_button == 'LOCKED_PRESET_4') || (quick_transfer_button == 'LOCKED_PRESET_5') )
+								{
+								if ( (quick_transfer_button == 'PRESET_1') || (quick_transfer_button == 'LOCKED_PRESET_1') )
+									{document.vicidial_form.xfernumber.value = CalL_XC_a_NuMber;   document.vicidial_form.xfername.value='D1';}
+								if ( (quick_transfer_button == 'PRESET_2') || (quick_transfer_button == 'LOCKED_PRESET_2') )
+									{document.vicidial_form.xfernumber.value = CalL_XC_b_NuMber;   document.vicidial_form.xfername.value='D2';}
+								if ( (quick_transfer_button == 'PRESET_3') || (quick_transfer_button == 'LOCKED_PRESET_3') )
+									{document.vicidial_form.xfernumber.value = CalL_XC_c_NuMber;   document.vicidial_form.xfername.value='D3';}
+								if ( (quick_transfer_button == 'PRESET_4') || (quick_transfer_button == 'LOCKED_PRESET_4') )
+									{document.vicidial_form.xfernumber.value = CalL_XC_d_NuMber;   document.vicidial_form.xfername.value='D4';}
+								if ( (quick_transfer_button == 'PRESET_5') || (quick_transfer_button == 'LOCKED_PRESET_5') )
+									{document.vicidial_form.xfernumber.value = CalL_XC_e_NuMber;   document.vicidial_form.xfername.value='D5';}
+								if (quick_transfer_button_locked > 0)
+									{quick_transfer_button_orig = document.vicidial_form.xfernumber.value;}
+
+								document.getElementById("QuickXfer").innerHTML = "<a href=\"#\" onclick=\"mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "','','','" + quick_transfer_button_locked + "');return false;\"><img src=\"./images/vdc_LB_quickxfer.gif\" border=\"0\" alt=\"QUICK TRANSFER\" /></a>";
+								}
+
+							if (custom_3way_button_transfer_enabled > 0)
+								{
+								document.getElementById("CustomXfer").innerHTML = "<a href=\"#\" onclick=\"custom_button_transfer();return false;\"><img src=\"./images/vdc_LB_customxfer.gif\" border=\"0\" alt=\"Custom Transfer\" /></a>";
+								}
+
+
+							if (call_requeue_button > 0)
+								{
+								var CloserSelectChoices = document.vicidial_form.CloserSelectList.value;
+								var regCRB = new RegExp("AGENTDIRECT","ig");
+								if ( (CloserSelectChoices.match(regCRB)) || (VU_closer_campaigns.match(regCRB)) )
+									{
+									document.getElementById("ReQueueCall").innerHTML =  "<a href=\"#\" onclick=\"call_requeue_launch();return false;\"><img src=\"./images/vdc_LB_requeue_call.gif\" border=\"0\" alt=\"Re-Queue Call\" /></a>";
+									}
+								else
+									{
+									document.getElementById("ReQueueCall").innerHTML =  "<img src=\"./images/vdc_LB_requeue_call_OFF.gif\" border=\"0\" alt=\"Re-Queue Call\" />";
+									}
+								}
+
+							// Build transfer pull-down list
+							var loop_ct = 0;
+							var live_XfeR_HTML = '';
+							var XfeR_SelecT = '';
+							while (loop_ct < XFgroupCOUNT)
+								{
+								if (VARxfergroups[loop_ct] == LIVE_default_xfer_group)
+									{XfeR_SelecT = 'selected ';}
+								else {XfeR_SelecT = '';}
+								live_XfeR_HTML = live_XfeR_HTML + "<option " + XfeR_SelecT + "value=\"" + VARxfergroups[loop_ct] + "\">" + VARxfergroups[loop_ct] + " - " + VARxfergroupsnames[loop_ct] + "</option>\n";
+								loop_ct++;
+								}
+							document.getElementById("XfeRGrouPLisT").innerHTML = "<select size=\"1\" name=\"XfeRGrouP\" class=\"cust_form\" id=\"XfeRGrouP\" onChange=\"XferAgentSelectLink();return false;\">" + live_XfeR_HTML + "</select>";
+
+							if (lastcustserverip == server_ip)
+								{
+								document.getElementById("VolumeUpSpan").innerHTML = "<a href=\"#\" onclick=\"volume_control('UP','" + lastcustchannel + "','');return false;\"><img src=\"./images/vdc_volume_up.gif\" border=\"0\" /></a>";
+								document.getElementById("VolumeDownSpan").innerHTML = "<a href=\"#\" onclick=\"volume_control('DOWN','" + lastcustchannel + "','');return false;\"><img src=\"./images/vdc_volume_down.gif\" border=\"0\" /></a>";
+								}
+
+							if (dial_method == "INBOUND_MAN")
+								{
+								document.getElementById("DiaLControl").innerHTML = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" /><br /><img src=\"./images/vdc_LB_dialnextnumber_OFF.gif\" border=\"0\" alt=\"Dial Next Number\" />";
+								}
+							else
+								{
+								document.getElementById("DiaLControl").innerHTML = DiaLControl_auto_HTML_OFF;
+								}
+
+							if (VDCL_group_id.length > 1)
+								{var group = VDCL_group_id;}
+							else
+								{var group = campaign;}
+							if ( (dialed_label.length < 2) || (dialed_label=='NONE') ) {dialed_label='MAIN';}
+
+							if (hide_gender < 1)
+								{
+								var genderIndex = document.getElementById("gender_list").selectedIndex;
+								var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
+								document.vicidial_form.gender.value = genderValue;
+								}
+
+							LeaDDispO='';
+
+							var regWFAcustom = new RegExp("^VAR","ig");
+							if (VDIC_web_form_address.match(regWFAcustom))
+								{
+								TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES','CUSTOM');
+								TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAcustom, '');
+								}
+							else
+								{
+								TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES','DEFAULT','1');
+								}
+
+							if (VDIC_web_form_address_two.match(regWFAcustom))
+								{
+								TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES','CUSTOM');
+								TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAcustom, '');
+								}
+							else
+								{
+								TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES','DEFAULT','2');
+								}
+
+
+							document.getElementById("WebFormSpan").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormRefresH();\"><img src=\"./images/vdc_LB_webform.gif\" border=\"0\" alt=\"Web Form\" /></a>\n";
+
+							if (enable_second_webform > 0)
+								{
+								document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormTwoRefresH();\"><img src=\"./images/vdc_LB_webform_two.gif\" border=\"0\" alt=\"Web Form 2\" /></a>\n";
+								}
+
+							if ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') )
+								{all_record = 'YES';}
+
+							if ( (view_scripts == 1) && (CalL_ScripT_id.length > 0) )
+								{
+								var SCRIPT_web_form = 'http://127.0.0.1/testing.php';
+								var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','1');
+
+								if ( (script_recording_delay > 0) && ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') ) )
+									{
+									delayed_script_load = 'YES';
+									RefresHScript('CLEAR');
+									}
+								else
+									{
+									load_script_contents();
+									}
+								}
+
+							if (custom_fields_enabled > 0)
+								{
+								FormContentsLoad();
+								}
+							// JOEJ 082812 - new for email feature
+							if (email_enabled > 0)
+								{
+								EmailContentsLoad();
+								}
+							if (CalL_AutO_LauncH == 'SCRIPT')
+								{
+								if (delayed_script_load == 'YES')
+									{
+									load_script_contents();
+									}
+								ScriptPanelToFront();
+								}
+							if (CalL_AutO_LauncH == 'FORM')
+								{
+								FormPanelToFront();
+								}
+							if (CalL_AutO_LauncH == 'EMAIL')
+								{
+								EmailPanelToFront();
+								}
+
+							if (CalL_AutO_LauncH == 'WEBFORM')
+								{
+								window.open(TEMP_VDIC_web_form_address, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
+								}
+							if (CalL_AutO_LauncH == 'WEBFORMTWO')
+								{
+								window.open(TEMP_VDIC_web_form_address_two, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
+								}
+
+							if (useIE > 0)
+								{
+								var regCTC = new RegExp("^NONE","ig");
+								if (CopY_tO_ClipboarD.match(regCTC))
+									{var nothing=1;}
+								else
+									{
+									var tmp_clip = document.getElementById(CopY_tO_ClipboarD);
+							//		alert_box("Copy to clipboard SETTING: |" + useIE + "|" + CopY_tO_ClipboarD + "|" + tmp_clip.value + "|");
+									window.clipboardData.setData('Text', tmp_clip.value)
+							//		alert_box("Copy to clipboard: |" + tmp_clip.value + "|" + CopY_tO_ClipboarD + "|");
+									}
+								}
+
+							if (alert_enabled=='ON')
+								{
+								var callnum = dialed_number;
+								var dial_display_number = phone_number_format(callnum);
+								alert(" Incoming: " + dial_display_number + "\n Group- " + VDIC_data_VDIG[1] + " &nbsp; " + VDIC_fronter);
+								}
+							}
+							xmlhttprequestcheckemail = undefined;
+							delete xmlhttprequestcheckemail;
 						}
 					}
 				}
@@ -9571,6 +10270,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		leaving_threeway=0;
 		blind_transfer=0;
 		CheckDEADcallON=0;
+		currently_in_email=0;
 		customer_3way_hangup_counter=0;
 		customer_3way_hangup_counter_trigger=0;
 		waiting_on_dispo=1;
@@ -9619,7 +10319,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					}
 				if (xmlhttp) 
 					{ 
-					DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&CallBackLeadStatus=" + CallBackLeadStatus + "&comments=" + encodeURIComponent(CallBackCommenTs) + "&custom_field_names=" + custom_field_names + "&call_notes=" + encodeURIComponent(document.vicidial_form.call_notes_dispo.value) + "&qm_dispo_code=" + DispoQMcsCODE;
+					DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&CallBackLeadStatus=" + CallBackLeadStatus + "&comments=" + encodeURIComponent(CallBackCommenTs) + "&custom_field_names=" + custom_field_names + "&call_notes=" + encodeURIComponent(document.vicidial_form.call_notes_dispo.value) + "&qm_dispo_code=" + DispoQMcsCODE + "&email_enabled=" + email_enabled;
 					xmlhttp.open('POST', 'vdc_db_query.php');
 					xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 					xmlhttp.send(DSupdate_query); 
@@ -9808,6 +10508,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							if (auto_dial_level != '0')
 								{
 								AutoDialWaiting = 0;
+								QUEUEpadding = 0;
 								AutoDial_ReSume_PauSe("VDADpause");
 								}
 							VICIDiaL_pause_calling = 1;
@@ -10204,10 +10905,13 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		if (CSCchange==1) 
 			{
 			var loop_ct = 0;
+			EMAILgroupCOUNT = 0;
+			PHONEgroupCOUNT = 0;
 			var CSCcolumn = '';
 			var live_CSC_HTML_ADD = '';
 			var live_CSC_HTML_DELETE = '';
 			var live_CSC_LIST_value = " ";
+			incomingEMAILS = 0;
 			while (loop_ct < INgroupCOUNT)
 				{
 				var regCSL = new RegExp(" " + VARingroups[loop_ct] + " ","ig");
@@ -10221,6 +10925,16 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					{
                     live_CSC_HTML_DELETE = live_CSC_HTML_DELETE + "<a href=\"#\" onclick=\"CloserSelect_change('" + VARingroups[loop_ct] + "','DELETE');return false;\">" + VARingroups[loop_ct] + "<br />";
 					live_CSC_LIST_value = live_CSC_LIST_value + VARingroups[loop_ct] + " ";
+					if (VARingroup_handlers[loop_ct]=="EMAIL") 
+						{
+						incomingEMAILgroups[incomingEMAILS]=VARingroups[loop_ct];
+						EMAILgroupCOUNT++;
+						incomingEMAILS++;
+						}
+					else
+						{
+						PHONEgroupCOUNT++;
+						}
 					}
 				else
 					{
@@ -12084,6 +12798,20 @@ function phone_number_format(formatphone) {
 		}
 
 // ################################################################################
+// Refresh the EMAIL content
+	function EmailContentsLoad()
+		{
+		var form_list_id = document.vicidial_form.list_id.value;
+		var form_entry_list_id = document.vicidial_form.entry_list_id.value;
+		if (form_entry_list_id.length > 2)
+			{form_list_id = form_entry_list_id}
+		document.getElementById('vcEmailIFrame').src='./vdc_email_display.php?lead_id=' + document.vicidial_form.lead_id.value + '&list_id=' + form_list_id + '&user=' + user + '&pass=' + pass + '&campaign=' + campaign + '&server_ip=' + server_ip + '&session_id=' + '&uniqueid=' + document.vicidial_form.uniqueid.value + '&stage=DISPLAY' + "&campaign=" + campaign + "&phone_login=" + phone_login + "&original_phone_login=" + original_phone_login +"&phone_pass=" + phone_pass + "&fronter=" + fronter + "&closer=" + user + "&group=" + group + "&channel_group=" + group + "&SQLdate=" + SQLdate + "&epoch=" + UnixTime + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&customer_zap_channel=" + lastcustchannel + "&customer_server_ip=" + lastcustserverip +"&server_ip=" + server_ip + "&SIPexten=" + extension + "&session_id=" + session_id + "&phone=" + document.vicidial_form.phone_number.value + "&parked_by=" + document.vicidial_form.lead_id.value +"&dispo=" + LeaDDispO + '' +"&dialed_number=" + dialed_number + '' +"&dialed_label=" + dialed_label + '' +"&camp_script=" + campaign_script + '' +"&in_script=" + CalL_ScripT_id + '' +"&script_width=" + script_width + '' +"&script_height=" + script_height + '' +"&fullname=" + LOGfullname + '' +"&recording_filename=" + recording_filename + '' +"&recording_id=" + recording_id + '' +"&user_custom_one=" + VU_custom_one + '' +"&user_custom_two=" + VU_custom_two + '' +"&user_custom_three=" + VU_custom_three + '' +"&user_custom_four=" + VU_custom_four + '' +"&user_custom_five=" + VU_custom_five + '' +"&preset_number_a=" + CalL_XC_a_NuMber + '' +"&preset_number_b=" + CalL_XC_b_NuMber + '' +"&preset_number_c=" + CalL_XC_c_NuMber + '' +"&preset_number_d=" + CalL_XC_d_NuMber + '' +"&preset_number_e=" + CalL_XC_e_NuMber + '' +"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +"&did_id=" + did_id + '' +"&did_extension=" + did_extension + '' +"&did_pattern=" + did_pattern + '' +"&did_description=" + did_description + '' +"&closecallid=" + closecallid + '' +"&xfercallid=" + xfercallid + '' + "&agent_log_id=" + agent_log_id + "&call_id=" + LasTCID + '' +"&web_vars=" + LIVE_web_vars + '';
+		form_list_id = '';
+		form_entry_list_id = '';
+		}
+
+
+// ################################################################################
 // Move the Dispo frame out of the way and change the link to maximize
 	function DispoMinimize()
 		{
@@ -12454,6 +13182,8 @@ function phone_number_format(formatphone) {
 			hideDiv('MainPanel');
 			hideDiv('ScriptPanel');
 			hideDiv('ScriptRefresH');
+			hideDiv('EmailPanel');
+			hideDiv('EmailRefresH');
 			hideDiv('FormPanel');
 			hideDiv('FormRefresH');
 			hideDiv('DispoSelectBox');
@@ -13334,6 +14064,8 @@ function phone_number_format(formatphone) {
 		hideDiv('ScriptRefresH');
 		hideDiv('FormPanel');
 		hideDiv('FormRefresH');
+		hideDiv('EmailPanel');
+		hideDiv('EmailRefresH');
 		showDiv('MainPanel');
 		ShoWGenDerPulldown();
 
@@ -13387,6 +14119,8 @@ function phone_number_format(formatphone) {
 		showDiv('ScriptRefresH');
 		hideDiv('FormPanel');
 		hideDiv('FormRefresH');
+		hideDiv('EmailPanel');
+		hideDiv('EmailRefresH');
 		document.getElementById("MainTable").style.backgroundColor="<?php echo $SCRIPT_COLOR ?>";
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $SCRIPT_COLOR ?>";
 		panel_bgcolor='<?php echo $SCRIPT_COLOR ?>';
@@ -13402,6 +14136,22 @@ function phone_number_format(formatphone) {
 		document.getElementById("CallbacksButtons").style.left = '360px';
 		showDiv('FormPanel');
 		showDiv('FormRefresH');
+		hideDiv('EmailPanel');
+		hideDiv('EmailRefresH');
+		document.getElementById("MainTable").style.backgroundColor="<?php echo $FORM_COLOR ?>";
+		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $FORM_COLOR ?>";
+		panel_bgcolor='<?php echo $FORM_COLOR ?>';
+	//	document.getElementById("MainStatuSSpan").style.background = panel_bgcolor;
+
+		HidEGenDerPulldown();
+		}
+	function EmailPanelToFront()
+		{
+		var CBFPheight = '<?php echo $QLheight ?>px';
+		document.getElementById("CallbacksButtons").style.top = CBFPheight;
+		document.getElementById("CallbacksButtons").style.left = '360px';
+		showDiv('EmailPanel');
+		showDiv('EmailRefresH');
 		document.getElementById("MainTable").style.backgroundColor="<?php echo $FORM_COLOR ?>";
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $FORM_COLOR ?>";
 		panel_bgcolor='<?php echo $FORM_COLOR ?>';
@@ -13506,6 +14256,9 @@ $zi=2;
     <td align="left" width="90px"><a href="#" onclick="ScriptPanelToFront();"><img src="./images/vdc_tab_script.gif" alt="SCRIPT" width="90px" height="30px" border="0" /></a></td>
 	<?php if ($custom_fields_enabled > 0)
     {echo "<td align=\"left\" width=\"67px\"><a href=\"#\" onclick=\"FormPanelToFront();\"><img src=\"./images/vdc_tab_form.gif\" alt=\"FORM\" width=\"67px\" height=\"30px\" border=\"0\" /></a></td>\n";}
+	?>
+	<?php if ($email_enabled > 0)
+    {echo "<td align=\"left\" width=\"67px\"><a href=\"#\" onclick=\"EmailPanelToFront();\"><img src=\"./images/vdc_tab_email.gif\" alt=\"EMAIL\" width=\"67px\" height=\"30px\" border=\"0\" /></a></td>\n";}
 	?>
     <td width="<?php echo $HSwidth ?>px" valign="middle" align="center"><font class="body_text">&nbsp; <span id="status">LIVE</span>&nbsp; &nbsp;session ID: <span id="sessionIDspan"></span>&nbsp; &nbsp;<span id="AgentStatusCalls"></span></font></td>
     <td width="109px"><img src="./images/agc_live_call_OFF.gif" name="livecall" alt="Live Call" width="109px" height="30px" border="0" /></td>
@@ -13950,8 +14703,20 @@ if ($agent_display_dialable_leads > 0)
     <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_script" id="FormContents"><iframe src="./vdc_form_display.php?lead_id=&list_id=&stage=WELCOME" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="vcFormIFrame" name="vcFormIFrame" width="<?php echo $SDwidth ?>px" height="<?php echo $SSheight ?>px" STYLE="z-index:18"> </iframe></div></font></td></tr></table>
 </span>
 
+<span style="position:absolute;left:154px;top:<?php echo $SFheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="EmailPanel">
+	<?php
+	if ($webphone_location == 'bar')
+        {echo "<img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+	?>
+    <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_script" id="EmailContents"><iframe src="./vdc_email_display.php?lead_id=&list_id=&stage=WELCOME" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="vcEmailIFrame" name="vcEmailIFrame" width="<?php echo $SDwidth ?>px" height="<?php echo $SSheight ?>px" STYLE="z-index:19"> </iframe></div></font></td></tr></table>
+</span>
+
 <span style="position:absolute;left:<?php $tempAMwidth = ($AMwidth - 15); echo $tempAMwidth ?>px;top:<?php echo $SRheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="FormRefresH">
 <a href="#" onclick="FormContentsLoad()"><font class="body_small">reset form</font></a>
+</span>
+
+<span style="position:absolute;left:<?php echo $AMwidth ?>px;top:<?php echo $SRheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="EmailRefresH">
+<a href="#" onclick="EmailContentsLoad()"><font class="body_small">refresh</font></a>
 </span>
 
 

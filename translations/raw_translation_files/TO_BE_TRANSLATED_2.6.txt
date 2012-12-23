@@ -81,6 +81,98 @@ Enhanced Disconnect Logging||
 This setting enables logging of calls that get a CONGESTION signal with a cause code of 1, 19, 21, 34 or 38. We usually do not recommend enabling this in the USA. Default is 0 for disabled||
 LIVE_CALL_INBOUND will allow search for a lead while on an inbound call only. LIVE_CALL_INBOUND_AND_MANUAL will allow search for a lead while on an inbound call or while paused. When Lead Search is used on a live inbound call, the lead of the call when it went to the agent will be changed to a status of LSMERG, and the logs for the call will be modified to link to the agent selected lead instead||
 If this is a call that will go to a Call Menu and then back to an in-group, we suggest you use CUSTOMERCLOSER in this field, and also you need to set the In-Group Search Method in the Call Menu to CLOSER||
+Add New EMAIL In-Group||
+Copy EMAIL In-Group||
+New Email Group Addition||
+New Copied Email Group Addition||
+Modify EMAIL In-Group||
+Email In-Groups||
+Modify Email Accounts||
+This option if set to 1 allows the user to modify email accounts in the email account management page||
+Allow Emails||
+This is where you can set whether the users of this campaign will be able to receive inbound emails in addition to phone calls||
+This is where you can set whether this system will be able to receive inbound emails in addition to phone calls||
+VICIDIAL EMAIL ACCOUNTS||
+The Vicidial Email Accounts management section allows you to create, copy, and delete email account settings that will allow you to have email messages come into your Vicidial system and be treated as regular calls.  EMAIL ACCOUNTS MUST BE SET UP BY YOU AND AN EMAIL SERVICE PROVIDER - THAT IS NOT COVERED BY THIS MODULE||
+Email Account ID||
+This is the short name of the email account, it is not editable after initial submission, must not contain any spaces and must be between 2 and 20 characters in length||
+Email Account Name||
+This is the full name of the email account, it must be between 2 and 30 characters in length||
+This determines whether this account will be checked for new email messages to be loaded into the dialer||
+Email Account Description||
+This allows for a lengthy description, if needed, of the email account.  255 characters max||
+Email Account Type||
+Specifies whether the account is used for inbound or outbound email messages.  Should be set to INBOUND||
+Admin User Group||
+This is the administrative user group for this inbound group, this allows admin viewing of this in-group restricted by user group. Default is --ALL-- which allows any admin user to view this in-group||
+Email Account Protocol||
+This is the email protocol used by the account you are setting up access to.  Currently only IMAP and POP3 accounts are supported||
+Email Reply-to Address||
+The email address of the account you are setting up access to.  Replies to email messages from the agent interface will read as coming from this address||
+Email Account Server||
+The email server that the account is housed on||
+Email Account User||
+The login used to access this account.  Usually it's the portion of the reply-to address before the -at- symbol||
+Email Account Password||
+The password used to access this account.  This is usually set at the time the email account is created||
+Email Frequency Check Rate (mins)||
+How often this email account should be checked.  The highest rate of frequency at the moment is five minutes; some email providers will not allow more than three login attempts in fifteen minutes before locking the account for an indeterminate amount of time||
+In-Group ID||
+The In-Group that email messages will be sent to||
+Default List ID||
+The List ID that leads will be inserted into if necessary||
+In-Group Call Handle Method||
+This is the action that will be taken when a new email is found in the account.  EMAIL means all email messages will be inserted into vicidial_list as a new lead.  EMAILLOOKUP will search the entire vicidial_list table for the email address in the email column - if the lead is found, that lead's list ID will be used in the record that goes into the vicidial_email_list table.  EMAILLOOKUPRC does the same, but it will only search lists belonging to the campaign selected in the "In-Group Campaign ID" box below.  EMAILLOOKUPRL will only search one particular list, which is the one entered into the "In-Group List ID" box below||
+In-Group Agent Search Method||
+The agent search method to be used by the inbound group, LO is Load-Balanced-Overflow and will try to send the call to an agent on the local server before trying to send it to an agent on another server, LB is Load-Balanced and will try to send the call to the next agent no matter what server they are on, SO is Server-Only and will only try to send the calls to agents on the server that the call came in on. Default is LB.||
+In-Group List ID||
+This is the List ID that will be used to search for a match within||
+In-Group Campaign ID||
+This is the Campaign ID that will be used to search for a match within||
+Group Handling||
+COPY EMAIL GROUP||
+Email Group ID||
+Email Group Name||
+Source Email Group ID||
+Email Accounts||
+Next Agent Email||
+Start Email URL||
+Dispo Email URL||
+No Agent Email URL||
+EMAIL ACCOUNTS USING THIS IN-GROUP||
+EMAIL GROUP NOT ADDED||
+Email group ID must be between 2 and 20 characters in length and contain no||
+Email group name and group color must be at least 2 characters in length||
+EMAIL GROUP ADDED||
+Show Email Accounts||
+Add A New Account||
+Copy An Account||
+Dialer Email Account fields||
+NEW ACCOUNT||
+SUCCESSFULLY CREATED||
+All Admin User Groups||
+ERROR: Inbound emails are not active on this system||
+invalid or null||
+SUCCESSFULLY MODIFIED||
+There was an unknown error when attempting to copy the new account||
+SUCCESSFULLY COPIED FROM||
+source email does not exist||
+ACCOUNT NOT COPIED||
+Copy New Account from Existing Account||
+Account ID to Copy From||
+New Account ID||
+New Account Name||
+There are no existing accounts to copy from||
+The data you submitted has the following errors||
+ACCOUNT NOT INSERTED||
+ADD NEW INBOUND EMAIL ACCOUNT||
+CONFIRM DELETION OF INBOUND EMAIL ACCOUNT||
+Click to delete account||
+ACCOUNT NOT UPDATED||
+UPDATE AN EXISTING INBOUND EMAIL ACCOUNT||
+INBOUND EMAIL ACCOUNT LISTINGS||
+UNREAD EMAILS||
+Un-handled Emails||
 
 
 ############################################################ CLIENT
@@ -103,6 +195,7 @@ View Comment History||
 reset form||
 SELECT THIS LEAD||
 YOU MUST BE ON AN ACTIVE INBOUND CALL TO SEARCH FOR A LEAD||
+Attachments||
 
 
 ############################################################  MANAGER Manual

@@ -34,6 +34,7 @@
 # 111103-1050 - Added admin_hide_phone_data and admin_hide_lead_data options
 # 111106-1105 - Added user_group restrictions
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
+# 121222-2152 - Added email log display
 #
 
 
@@ -46,7 +47,7 @@ $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active,webroot_writable FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active,webroot_writable,allow_emails FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -59,6 +60,7 @@ if ($qm_conf_ct > 0)
 	$reports_use_slave_db =			$row[3];
 	$user_territories_active =		$row[4];
 	$webroot_writable =				$row[5];
+	$allow_emails =					$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -694,6 +696,54 @@ if ($did < 1)
 
 	$MAIN.="</TABLE><BR><BR>\n";
 	}
+
+	##### vicidial agent outbound emails for this time period #####
+
+	if ($allow_emails>0) 
+		{
+		$MAIN.="<B>OUTBOUND EMAILS FOR THIS TIME PERIOD: (10000 record limit)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=5'>[DOWNLOAD]</a></B>\n";
+		$MAIN.="<TABLE width=670 cellspacing=0 cellpadding=3>\n";
+		$MAIN.="<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>USER</td><td align=left><font size=2> CAMPAIGN</td><td align=left><font size=2> EMAIL TO</td><td align=right><font size=2> ATTACHMENTS</td><td align=right><font size=2> LEAD</td></tr>\n";
+		$CSV_text5.="\"OUTBOUND EMAILS FOR THIS TIME PERIOD: (10000 record limit)\"\n";
+		$CSV_text5.="\"\",\"#\",\"DATE/TIME\",\"USER\",\"CAMPAIGN\",\"EMAIL TO\",\"ATTACHMENT\",\"LEAD\",\"MESSAGE\"\n";
+
+		$stmt="select * from vicidial_email_log where user='" . mysql_real_escape_string($user) . "' and email_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and email_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by email_date desc limit 10000;";
+		$rslt=mysql_query($stmt, $link);
+		$logs_to_print = mysql_num_rows($rslt);
+
+		$u=0;
+		while ($logs_to_print > $u) 
+			{
+			$row=mysql_fetch_row($rslt);
+			if (eregi("1$|3$|5$|7$|9$", $u))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+			if (strlen($row[6])>400) {$row[6]=substr($row[6],0,400)."...";}
+			$row[8]=preg_replace('/\|/', ', ', $row[8]);
+			$row[8]=preg_replace('/,\s+$/', '', $row[8]);
+			$u++;
+
+			$MAIN .= "<tr $bgcolor>";
+			$MAIN .= "<td><font size=1>$u</td>";
+			$MAIN .= "<td align=left><font size=1> &nbsp; $row[3]</td>";
+			$MAIN .= "<td align=left><font size=2> &nbsp; $row[4] </td>\n";
+			$MAIN .= "<td align=left><font size=2> &nbsp; $row[7]</td>\n";
+			$MAIN .= "<td align=left><font size=1> &nbsp; $row[5]</td>\n";
+			$MAIN .= "<td align=left><font size=1> &nbsp; $row[8] </td>\n";
+			$MAIN .= "<td align=left><font size=1> &nbsp;  <A HREF=\"admin_modify_lead.php?lead_id=$row[2]\" target=\"_blank\">$row[2]</A> </td>\n";
+			$MAIN .= "</tr>\n";
+			$MAIN .= "<tr>";
+			$MAIN .= "<td><font size=1> &nbsp; </td>\n";
+			$MAIN .= "<td align=left colspan=6 $bgcolor><font size=1> MESSAGE: $row[6] </td>\n";
+			$MAIN .= "</tr>\n";
+
+			$CSV_text5.="\"\",\"$u\",\"$row[3]\",\"$row[4]\",\"$row[7]\",\"$row[5]\",\"$row[8]\",\"$row[2]\",\"$row[6]\"\n";
+			}
+
+
+		$MAIN.="</TABLE><BR><BR>\n";
+		}
 
 ##### vicidial agent inbound calls for this time period #####
 

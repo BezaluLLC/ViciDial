@@ -448,6 +448,17 @@ following modules first:   (say YES if asked to install prerequisites)
    - install File::Temp
    - install Text::CSV_XS
    - install Spreadsheet::Read
+   - install LWP::UserAgent
+   - install HTML::Entities
+   - install HTML::Strip
+   - install HTML::FormatText
+   - install HTML::TreeBuilder
+   - install Switch
+   - install Time::Local
+   - install MIME::Decoder
+   - install Mail::POP3Client
+   - install Mail::IMAPClient
+   - install Mail::Message
 - then quit cpan, you are done
 5. Go to http://asterisk.gnuinter.net/ and download the asterisk-perl module
 (backup link: http://download.vicidial.com/packages/asterisk-perl-0.08.tar.gz)
@@ -2461,6 +2472,9 @@ SUBPHASE 6.5: setting up astguiclient scripts for continuous running
 ### VICIDIAL campaign export scripts (OPTIONAL)
 #32 0 * * * /usr/share/astguiclient/AST_VDsales_export.pl
 #42 0 * * * /usr/share/astguiclient/AST_sourceID_summary_export.pl
+
+### inbound email parser
+#* * * * * /usr/share/astguiclient/AST_inbound_email_parser.pl
 
 ### inventory report optional
 #1 7 * * * /usr/share/astguiclient/AST_dialer_inventory_snapshot.pl -q --override-24hours

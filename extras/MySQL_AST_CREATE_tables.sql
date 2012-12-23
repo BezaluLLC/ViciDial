@@ -357,7 +357,7 @@ user VARCHAR(20),
 server_ip VARCHAR(15) NOT NULL,
 conf_exten VARCHAR(20),
 extension VARCHAR(100),
-status ENUM('READY','QUEUE','INCALL','PAUSED','CLOSER') default 'PAUSED',
+status ENUM('READY','QUEUE','INCALL','PAUSED','CLOSER','MQUEUE') default 'PAUSED',
 lead_id INT(9) UNSIGNED NOT NULL,
 campaign_id VARCHAR(8),
 uniqueid VARCHAR(20),
@@ -599,7 +599,9 @@ preset_contact_search ENUM('NOT_ACTIVE','ENABLED','DISABLED') default 'NOT_ACTIV
 modify_contacts ENUM('1','0') default '0',
 modify_same_user_level ENUM('0','1') default '1',
 admin_hide_lead_data ENUM('0','1') default '0',
-admin_hide_phone_data ENUM('0','1','2_DIGITS','3_DIGITS','4_DIGITS') default '0'
+admin_hide_phone_data ENUM('0','1','2_DIGITS','3_DIGITS','4_DIGITS') default '0',
+agentcall_email ENUM('0','1') default '0',
+modify_email_accounts ENUM('0','1') default '0'
 );
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -860,7 +862,8 @@ in_group_dial_select ENUM('AGENT_SELECTED','CAMPAIGN_SELECTED','ALL_USER_GROUP')
 safe_harbor_audio_field VARCHAR(30) default 'DISABLED',
 pause_after_next_call ENUM('ENABLED','DISABLED') default 'DISABLED',
 owner_populate ENUM('ENABLED','DISABLED') default 'DISABLED',
-use_other_campaign_dnc VARCHAR(8) default ''
+use_other_campaign_dnc VARCHAR(8) default '',
+allow_emails ENUM('Y','N') default 'N'
 );
 
 CREATE TABLE vicidial_lists (
@@ -961,7 +964,7 @@ voicemail_ext VARCHAR(10),
 next_agent_call VARCHAR(30) default 'longest_wait_time',
 fronter_display ENUM('Y','N') default 'Y',
 ingroup_script VARCHAR(10),
-get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','FORM') default 'NONE',
+get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','FORM','EMAIL') default 'NONE',
 xferconf_a_dtmf VARCHAR(50),
 xferconf_a_number VARCHAR(50),
 xferconf_b_dtmf VARCHAR(50),
@@ -1064,7 +1067,8 @@ user_group VARCHAR(20) default '---ALL---',
 max_calls_method ENUM('TOTAL','IN_QUEUE','DISABLED') default 'DISABLED',
 max_calls_count SMALLINT(5) default '0',
 max_calls_action ENUM('DROP','AFTERHOURS','NO_AGENT_NO_QUEUE') default 'NO_AGENT_NO_QUEUE',
-dial_ingroup_cid VARCHAR(20) default ''
+dial_ingroup_cid VARCHAR(20) default '',
+group_handling ENUM('PHONE','EMAIL') default 'PHONE'
 );
 
 CREATE TABLE vicidial_stations (
@@ -1499,7 +1503,8 @@ audio_store_purge TEXT,
 svn_revision INT(9) default '0',
 queuemetrics_socket VARCHAR(20) default 'NONE',
 queuemetrics_socket_url TEXT,
-enhanced_disconnect_logging ENUM('0','1') default '0'
+enhanced_disconnect_logging ENUM('0','1') default '0',
+allow_emails ENUM('0','1') default '0'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2770,6 +2775,84 @@ default_afterhours_filename_override VARCHAR(255) default '',
 user_group VARCHAR(20) default '---ALL---'
 );
 
+CREATE TABLE vicidial_email_list (
+email_row_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+lead_id INT(9) UNSIGNED DEFAULT NULL,
+email_date DATETIME DEFAULT NULL,
+protocol ENUM('POP3','IMAP','NONE') DEFAULT 'IMAP',
+email_to VARCHAR(255) DEFAULT NULL,
+email_from VARCHAR(255) DEFAULT NULL,
+email_from_name VARCHAR(255) DEFAULT NULL,
+subject TEXT,
+mime_type TEXT,
+content_type TEXT,
+x_mailer TEXT,
+sender_ip VARCHAR(25) DEFAULT NULL,
+message TEXT,
+email_account_id VARCHAR(20) DEFAULT NULL,
+group_id VARCHAR(20) DEFAULT NULL,
+user VARCHAR(20) DEFAULT NULL,
+status VARCHAR(10) DEFAULT NULL,
+direction ENUM('INBOUND','OUTBOUND') DEFAULT 'INBOUND',
+uniqueid VARCHAR(20) DEFAULT NULL,
+xfercallid INT(9) UNSIGNED DEFAULT NULL,
+PRIMARY KEY (email_row_id),
+KEY email_list_account_key (email_account_id),
+KEY email_list_user_key (user),
+KEY vicidial_email_lead_id_key (lead_id)
+);
+
+CREATE TABLE vicidial_email_accounts (
+email_account_id VARCHAR(20) NOT NULL,
+email_account_name VARCHAR(100) DEFAULT NULL,
+email_account_description VARCHAR(255) DEFAULT NULL,
+user_group VARCHAR(20) DEFAULT '---ALL---',
+protocol ENUM('POP3','IMAP','SMTP') DEFAULT 'IMAP',
+email_replyto_address VARCHAR(255) DEFAULT NULL,
+email_account_server VARCHAR(255) DEFAULT NULL,
+email_account_user VARCHAR(255) DEFAULT NULL,
+email_account_pass VARCHAR(100) DEFAULT NULL,
+active ENUM('Y','N') DEFAULT 'N',
+email_frequency_check_mins TINYINT(3) UNSIGNED DEFAULT '5',
+group_id VARCHAR(20) DEFAULT NULL,
+default_list_id BIGINT(14) UNSIGNED DEFAULT NULL,
+call_handle_method VARCHAR(20) DEFAULT 'CID',
+agent_search_method ENUM('LO','LB','SO') DEFAULT 'LB',
+campaign_id VARCHAR(8) DEFAULT NULL,
+list_id BIGINT(14) UNSIGNED DEFAULT NULL,
+email_account_type ENUM('INBOUND','OUTBOUND') DEFAULT 'INBOUND',
+PRIMARY KEY (email_account_id),
+KEY email_accounts_group_key (group_id)
+);
+
+CREATE TABLE inbound_email_attachments (
+attachment_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+email_row_id INT(10) UNSIGNED DEFAULT NULL,
+filename VARCHAR(250) NOT NULL DEFAULT '',
+file_type VARCHAR(100) DEFAULT NULL,
+file_encoding VARCHAR(20) DEFAULT NULL,
+file_size VARCHAR(45) DEFAULT NULL,
+file_extension VARCHAR(5) NOT NULL DEFAULT '',
+file_contents LONGBLOB NOT NULL,
+PRIMARY KEY (attachment_id),
+KEY attachments_email_id_key (email_row_id)
+);
+
+CREATE TABLE vicidial_email_log (
+email_log_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+email_row_id INT(10) UNSIGNED DEFAULT NULL,
+lead_id INT(9) UNSIGNED DEFAULT NULL,
+email_date DATETIME DEFAULT NULL,
+user VARCHAR(20) DEFAULT NULL,
+email_to VARCHAR(255) DEFAULT NULL,
+message TEXT,
+campaign_id VARCHAR(10) DEFAULT NULL,
+attachments TEXT,
+PRIMARY KEY (email_log_id),
+KEY vicidial_email_log_lead_id_key (lead_id),
+KEY vicidial_email_log_email_row_id_key (email_row_id)
+);
+
 
 ALTER TABLE vicidial_qc_codes ADD qc_result_type ENUM( 'PASS', 'FAIL', 'CANCEL', 'COMMIT' ) NOT NULL;
 
@@ -3005,4 +3088,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1336',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1337',db_schema_update_date=NOW();

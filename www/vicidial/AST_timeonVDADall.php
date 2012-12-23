@@ -77,10 +77,11 @@
 # 111103-1220 - Added admin_hide_phone_data and admin_hide_lead_data options
 # 120223-1934 - Added user group options
 # 120612-2150 - Added percentages to counts for carrier stats and TOTAL line to carrier display stats as well
+# 121222-2151 - Added email status
 #
 
-$version = '2.4-67';
-$build = '120223-1934';
+$version = '2.6-68';
+$build = '121222-2151';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -2600,7 +2601,7 @@ $talking_to_print = mysql_num_rows($rslt);
 				}
 			else
 				{
-				if (!ereg("$Acallerid[$i]\|",$callerids))
+				if (!ereg("$Acallerid[$i]\|",$callerids) && !eregi("EMAIL",$comments))
 					{
 					$Acall_time[$i]=$Astate_change[$i];
 
@@ -2616,6 +2617,8 @@ $talking_to_print = mysql_num_rows($rslt);
 				{
 				if (eregi("INBOUND",$comments)) 
 					{$CM='I';}
+				else if (eregi("EMAIL",$comments)) 
+					{$CM='E';}
 				else
 					{$CM='M';}
 				}

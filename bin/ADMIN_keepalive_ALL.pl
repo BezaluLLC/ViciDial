@@ -76,6 +76,7 @@
 # 120820-1026 - Added clearing of vicidial_session_data table at end of day
 # 121019-1021 - Added voicemail greeting option
 # 121124-1440 - Added holiday expiration function
+# 121215-2036 - Added email inbound script keepalive, option E
 #
 
 $DB=0; # Debug flag
@@ -197,6 +198,7 @@ foreach(@conf)
 #	7 - AST_VDauto_dial_FILL\n";
 #	8 - ip_relay for blind monitoring\n";
 #	9 - Timeclock auto logout\n";
+#	E - Email parser script
 #     - Other setting are set by configuring them in the database
 
 if ($VARactive_keepalives =~ /X/)
@@ -211,6 +213,7 @@ $AST_VDauto_dial=0;
 $AST_VDremote_agents=0;
 $AST_VDadapt=0;
 $FastAGI_log=0;
+$email_inbound=0;
 $AST_VDauto_dial_FILL=0;
 $ip_relay=0;
 $timeclock_auto_logout=0;
@@ -224,6 +227,7 @@ $runningFastAGI_log=0;
 $runningAST_VDauto_dial_FILL=0;
 $runningip_relay=0;
 $runningAST_conf_3way=0;
+$runningemail_inbound=0;
 $AST_conf_3way=0;
 
 if ($VARactive_keepalives =~ /1/) 
@@ -270,6 +274,11 @@ if ($VARactive_keepalives =~ /9/)
 	{
 	$timeclock_auto_logout=1;
 	if ($DB) {print "Check to see if Timeclock auto logout should run\n";}
+	}
+if ($VARactive_keepalives =~ /E/) 
+	{
+	$email_inbound=1;
+	if ($DB) {print "Check to see if email parser should run\n";}
 	}
 if ($cu3way > 0) 
 	{
@@ -343,6 +352,11 @@ foreach (@psoutput)
 		{
 		$runningAST_VDauto_dial_FILL++;
 		if ($DB) {print "AST_VDauto_dial_FILL RUNNING:    |$psline[1]|\n";}
+		}
+	if ($psline[1] =~ /$REGhome\/VD_email_inbound\.pl/) 
+		{
+		$runningemail_inbound++;
+		if ($DB) {print "VD_email_inbound RUNNING:|$psline[1]|\n";}
 		}
 	if ($psoutput[$i] =~ / ip_relay /) 
 		{
@@ -425,7 +439,8 @@ if (
 	( ($FastAGI_log > 0) && ($runningFastAGI_log < 1) ) ||
 	( ($AST_VDauto_dial_FILL > 0) && ($runningAST_VDauto_dial_FILL < 1) ) ||
 	( ($ip_relay > 0) && ($runningip_relay < 1) ) ||
-	( ($AST_conf_3way > 0) && ($runningAST_conf_3way < 1) )
+	( ($AST_conf_3way > 0) && ($runningAST_conf_3way < 1) ) || 
+	( ($email_inbound > 0) && ($runningemail_inbound < 1) )
    )
 	{
 
@@ -444,7 +459,7 @@ if (
 	$i=0;
 	foreach (@psoutput2)
 		{
-			chomp($psoutput2[$i]);
+		chomp($psoutput2[$i]);
 		if ($DBX) {print "$i|$psoutput2[$i]|     \n";}
 		@psline = split(/\/usr\/bin\/perl /,$psoutput2[$i]);
 
@@ -487,6 +502,11 @@ if (
 			{
 			$runningAST_VDauto_dial_FILL++;
 			if ($DB) {print "AST_VDauto_dial_FILL RUNNING:    |$psline[1]|\n";}
+			}
+		if ($psline[1] =~ /$REGhome\/VD_email_inbound\.pl/) 
+			{
+			$runningemail_inbound++;
+			if ($DB) {print "VD_email_inbound RUNNING:|$psline[1]|\n";}
 			}
 		if ($psoutput2[$i] =~ / ip_relay /) 
 			{
@@ -549,6 +569,12 @@ if (
 		if ($DB) {print "starting AST_VDauto_dial_FILL...\n";}
 		# add a '-L' to the command below to activate logging
 		`/usr/bin/screen -d -m -S ASTVDautoFILL $PATHhome/AST_VDauto_dial_FILL.pl`;
+		}
+	if ( ($email_inbound > 0) && ($runningemail_inbound < 1) )
+		{ 
+		if ($DB) {print "starting VD_email_inbound...\n";}
+		# add a '-L' to the command below to activate logging
+		`/usr/bin/screen -d -m -S ASTemail $PATHhome/VD_email_inbound.pl`;
 		}
 	if ( ($ip_relay > 0) && ($runningip_relay < 1) )
 		{ 

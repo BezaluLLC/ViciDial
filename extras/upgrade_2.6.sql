@@ -199,3 +199,95 @@ ALTER TABLE vicidial_campaigns MODIFY agent_lead_search ENUM('ENABLED','LIVE_CAL
 ALTER TABLE vicidial_users MODIFY agent_lead_search_override ENUM('NOT_ACTIVE','ENABLED','LIVE_CALL_INBOUND','LIVE_CALL_INBOUND_AND_MANUAL','DISABLED') default 'NOT_ACTIVE';
 
 UPDATE system_settings SET db_schema_version='1336',db_schema_update_date=NOW() where db_schema_version < 1336;
+
+CREATE TABLE vicidial_email_list (
+email_row_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+lead_id INT(9) UNSIGNED DEFAULT NULL,
+email_date DATETIME DEFAULT NULL,
+protocol ENUM('POP3','IMAP','NONE') DEFAULT 'IMAP',
+email_to VARCHAR(255) DEFAULT NULL,
+email_from VARCHAR(255) DEFAULT NULL,
+email_from_name VARCHAR(255) DEFAULT NULL,
+subject TEXT,
+mime_type TEXT,
+content_type TEXT,
+x_mailer TEXT,
+sender_ip VARCHAR(25) DEFAULT NULL,
+message TEXT,
+email_account_id VARCHAR(20) DEFAULT NULL,
+group_id VARCHAR(20) DEFAULT NULL,
+user VARCHAR(20) DEFAULT NULL,
+status VARCHAR(10) DEFAULT NULL,
+direction ENUM('INBOUND','OUTBOUND') DEFAULT 'INBOUND',
+uniqueid VARCHAR(20) DEFAULT NULL,
+xfercallid INT(9) UNSIGNED DEFAULT NULL,
+PRIMARY KEY (email_row_id),
+KEY email_list_account_key (email_account_id),
+KEY email_list_user_key (user),
+KEY vicidial_email_lead_id_key (lead_id)
+);
+
+CREATE TABLE vicidial_email_accounts (
+email_account_id VARCHAR(20) NOT NULL,
+email_account_name VARCHAR(100) DEFAULT NULL,
+email_account_description VARCHAR(255) DEFAULT NULL,
+user_group VARCHAR(20) DEFAULT '---ALL---',
+protocol ENUM('POP3','IMAP','SMTP') DEFAULT 'IMAP',
+email_replyto_address VARCHAR(255) DEFAULT NULL,
+email_account_server VARCHAR(255) DEFAULT NULL,
+email_account_user VARCHAR(255) DEFAULT NULL,
+email_account_pass VARCHAR(100) DEFAULT NULL,
+active ENUM('Y','N') DEFAULT 'N',
+email_frequency_check_mins TINYINT(3) UNSIGNED DEFAULT '5',
+group_id VARCHAR(20) DEFAULT NULL,
+default_list_id BIGINT(14) UNSIGNED DEFAULT NULL,
+call_handle_method VARCHAR(20) DEFAULT 'CID',
+agent_search_method ENUM('LO','LB','SO') DEFAULT 'LB',
+campaign_id VARCHAR(8) DEFAULT NULL,
+list_id BIGINT(14) UNSIGNED DEFAULT NULL,
+email_account_type ENUM('INBOUND','OUTBOUND') DEFAULT 'INBOUND',
+PRIMARY KEY (email_account_id),
+KEY email_accounts_group_key (group_id)
+);
+
+CREATE TABLE inbound_email_attachments (
+attachment_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+email_row_id INT(10) UNSIGNED DEFAULT NULL,
+filename VARCHAR(250) NOT NULL DEFAULT '',
+file_type VARCHAR(100) DEFAULT NULL,
+file_encoding VARCHAR(20) DEFAULT NULL,
+file_size VARCHAR(45) DEFAULT NULL,
+file_extension VARCHAR(5) NOT NULL DEFAULT '',
+file_contents LONGBLOB NOT NULL,
+PRIMARY KEY (attachment_id),
+KEY attachments_email_id_key (email_row_id)
+);
+
+CREATE TABLE vicidial_email_log (
+email_log_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+email_row_id INT(10) UNSIGNED DEFAULT NULL,
+lead_id INT(9) UNSIGNED DEFAULT NULL,
+email_date DATETIME DEFAULT NULL,
+user VARCHAR(20) DEFAULT NULL,
+email_to VARCHAR(255) DEFAULT NULL,
+message TEXT,
+campaign_id VARCHAR(10) DEFAULT NULL,
+attachments TEXT,
+PRIMARY KEY (email_log_id),
+KEY vicidial_email_log_lead_id_key (lead_id),
+KEY vicidial_email_log_email_row_id_key (email_row_id)
+);
+
+ALTER TABLE system_settings ADD allow_emails ENUM('0','1') default '0';
+
+ALTER TABLE vicidial_campaigns ADD allow_emails ENUM('Y','N') default 'N';
+
+ALTER TABLE vicidial_inbound_groups ADD group_handling ENUM('PHONE','EMAIL') default 'PHONE';
+ALTER TABLE vicidial_inbound_groups MODIFY get_call_launch get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','FORM','EMAIL') default 'NONE';
+
+ALTER TABLE vicidial_users ADD agentcall_email ENUM('0','1') default '0';
+ALTER TABLE vicidial_users ADD modify_email_accounts ENUM('0','1') default '0';
+
+ALTER TABLE vicidial_live_agents MODIFY status ENUM('READY','QUEUE','INCALL','PAUSED','CLOSER','MQUEUE') default 'PAUSED';
+
+UPDATE system_settings SET db_schema_version='1337',db_schema_update_date=NOW() where db_schema_version < 1337;

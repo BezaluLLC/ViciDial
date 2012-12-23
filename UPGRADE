@@ -1902,6 +1902,20 @@ OTHER CHANGES:
 15. Tested new asterisk-perl module (0.09) and found that it is NOT compatible.
 	Please make sure you use asterisk-perl-0.08 ONLY.
 
+16. Added email support, it needs to be enabled in your System Settings. Also,
+	the following perl modules need to be installed on your voicemail server
+		install LWP::UserAgent
+		install HTML::Entities
+		install HTML::Strip
+		install HTML::FormatText
+		install HTML::TreeBuilder
+		install Switch
+		install Time::Local
+		install MIME::Decoder
+		install Mail::POP3Client
+		install Mail::IMAPClient
+		install Mail::Message
+
 
 
 
