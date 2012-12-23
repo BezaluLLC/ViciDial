@@ -73,6 +73,7 @@
 # 120402-2211 - Fixed call count limit bug
 # 121124-2052 - Added List Expiration Date and Other Campaign DNC options
 # 121205-1621 - Added parentheses around filter SQL when in SQL queries
+# 121223-1540 - Fix for issue #627 preventing issues when filter is deleted, DomeDan
 #
 
 # constants
@@ -1781,10 +1782,18 @@ foreach(@campaign_id)
 				$rec_count++;
 				}
 			$sthA->finish();
-			$lead_filter_sql[$i] =~ s/^and|and$|^or|or$|^ and|and $|^ or|or $//gi;
-			$lead_filter_sql[$i] = "and ($lead_filter_sql[$i])";
-			if ($DB) {print "     lead filter $lead_filter_id[$i] defined for $campaign_id[$i]\n";}
-			if ($DBX) {print "     |$lead_filter_sql[$i]|\n";}
+			if ($lead_filter_sql[$i] eq '' || !defined($lead_filter_sql[$i]))
+				{
+				if ($DB) {print "     lead filter $lead_filter_id[$i] does not exist\n";}
+				if ($DBX) {print "     |$lead_filter_id[$i]|\n";}
+				}
+			else
+				{
+				$lead_filter_sql[$i] =~ s/^and|and$|^or|or$|^ and|and $|^ or|or $//gi;
+				$lead_filter_sql[$i] = "and ($lead_filter_sql[$i])";
+				if ($DB) {print "     lead filter $lead_filter_id[$i] defined for $campaign_id[$i]\n";}
+				if ($DBX) {print "     |$lead_filter_sql[$i]|\n";}
+				}
 			}
 		else
 			{
