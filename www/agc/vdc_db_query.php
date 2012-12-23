@@ -322,11 +322,13 @@
 # 121205-1620 - Added parentheses around filter SQL when in SQL queries
 # 121206-0635 - Added inbound lead search feature
 # 121214-2208 - Added inbound email features
+# 121223-1627 - Fixed issue with manual alt dial manual dial filter
+#
 
-$version = '2.6-220';
-$build = '121214-2208';
+$version = '2.6-221';
+$build = '121223-1627';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=528;
+$mysql_log_count=533;
 $one_mysql_log=0;
 
 require("dbconnect.php");
@@ -1415,7 +1417,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				
 				if ($dialable < 1)
 					{
-					### insert a new lead in the system with this phone number
+					### purge from the dial queue and api
 					$stmt = "DELETE from vicidial_manual_dial_queue where phone_number='$phone_number' and user='$user';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $link);
@@ -1449,7 +1451,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$row=mysql_fetch_row($rslt);
 				if ($row[0] > 0)
 					{
-					### insert a new lead in the system with this phone number
+					### purge from the dial queue and api
 					$stmt = "DELETE from vicidial_manual_dial_queue where phone_number='$phone_number' and user='$user';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $link);
@@ -1489,7 +1491,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$row=mysql_fetch_row($rslt);
 					if ($row[0] > 0)
 						{
-						### insert a new lead in the system with this phone number
+						### purge from the dial queue and api
 						$stmt = "DELETE from vicidial_manual_dial_queue where phone_number='$phone_number' and user='$user';";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_query($stmt, $link);
@@ -1541,7 +1543,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				
 				if ($row[0] < 1)
 					{
-					### insert a new lead in the system with this phone number
+					### purge from the dial queue and api
 					$stmt = "DELETE from vicidial_manual_dial_queue where phone_number='$phone_number' and user='$user';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_query($stmt, $link);
@@ -3050,18 +3052,116 @@ if ($ACTION == 'manDiaLonly')
 			{$calls_today ='0';}
 		$calls_today++;
 
-		### check for extension append in campaign
+
+		### check for manual dial filter and extension append settings in campaign
 		$use_eac=0;
-		$stmt = "SELECT count(*) FROM vicidial_campaigns where extension_appended_cidname='Y' and campaign_id='$campaign';";
+		$use_custom_cid=0;
+		$stmt = "SELECT manual_dial_filter,use_internal_dnc,use_campaign_dnc,use_other_campaign_dnc,extension_appended_cidname FROM vicidial_campaigns where campaign_id='$campaign';";
 		$rslt=mysql_query($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00325',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
-		$eacid_ct = mysql_num_rows($rslt);
-		if ($eacid_ct > 0)
+		$vcstgs_ct = mysql_num_rows($rslt);
+		if ($vcstgs_ct > 0)
 			{
 			$row=mysql_fetch_row($rslt);
-			$use_eac =	$row[0];
+			$manual_dial_filter =			$row[0];
+			$use_internal_dnc =				$row[1];
+			$use_campaign_dnc =				$row[2];
+			$use_other_campaign_dnc =		$row[3];
+			$extension_appended_cidname =	$row[4];
+			if ($extension_appended_cidname == 'Y')
+				{$use_eac++;}
 			}
+
+		### BEGIN check phone filtering for DNC or camplists if enabled ###
+		if (ereg("DNC",$manual_dial_filter))
+			{
+			if (ereg("AREACODE",$use_internal_dnc))
+				{
+				$phone_number_areacode = substr($phone_number, 0, 3);
+				$phone_number_areacode .= "XXXXXXX";
+				$stmt="SELECT count(*) from vicidial_dnc where phone_number IN('$phone_number','$phone_number_areacode');";
+				}
+			else
+				{$stmt="SELECT count(*) FROM vicidial_dnc where phone_number='$phone_number';";}
+			$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00529',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				echo " CALL NOT PLACED\nDNC NUMBER\n";
+				exit;
+				}
+			if ( (ereg("Y",$use_campaign_dnc)) or (ereg("AREACODE",$use_campaign_dnc)) )
+				{
+				$stmt="SELECT use_other_campaign_dnc from vicidial_campaigns where campaign_id='$campaign';";
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00530',$user,$server_ip,$session_name,$one_mysql_log);}
+				$row=mysql_fetch_row($rslt);
+				$use_other_campaign_dnc =	$row[0];
+				$temp_campaign_id = $campaign;
+				if (strlen($use_other_campaign_dnc) > 0) {$temp_campaign_id = $use_other_campaign_dnc;}
+
+				if (ereg("AREACODE",$use_campaign_dnc))
+					{
+					$phone_number_areacode = substr($phone_number, 0, 3);
+					$phone_number_areacode .= "XXXXXXX";
+					$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number IN('$phone_number','$phone_number_areacode') and campaign_id='$temp_campaign_id';";
+					}
+				else
+					{$stmt="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$phone_number' and campaign_id='$temp_campaign_id';";}
+				$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00531',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$row=mysql_fetch_row($rslt);
+				if ($row[0] > 0)
+					{
+					echo " CALL NOT PLACED\nDNC NUMBER\n";
+					exit;
+					}
+				}
+			}
+		if (ereg("CAMPLISTS",$manual_dial_filter))
+			{
+			$stmt="SELECT list_id,active from vicidial_lists where campaign_id='$campaign'";
+			$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00532',$user,$server_ip,$session_name,$one_mysql_log);}
+			$lists_to_parse = mysql_num_rows($rslt);
+			$camp_lists='';
+			$o=0;
+			while ($lists_to_parse > $o) 
+				{
+				$rowx=mysql_fetch_row($rslt);
+				if (ereg("Y", $rowx[1])) {$active_lists++;   $camp_lists .= "'$rowx[0]',";}
+				if (ereg("ALL",$manual_dial_filter))
+					{
+					if (ereg("N", $rowx[1])) 
+						{$inactive_lists++; $camp_lists .= "'$rowx[0]',";}
+					}
+				else
+					{
+					if (ereg("N", $rowx[1])) 
+						{$inactive_lists++;}
+					}
+				$o++;
+				}
+			$camp_lists = eregi_replace(".$","",$camp_lists);
+
+			$stmt="SELECT count(*) FROM vicidial_list where phone_number='$phone_number' and list_id IN($camp_lists);";
+			$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00533',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$row=mysql_fetch_row($rslt);
+			
+			if ($row[0] < 1)
+				{
+				echo " CALL NOT PLACED\nNUMBER NOT IN CAMPLISTS\n";
+				exit;
+				}
+			}
+		### END check phone filtering for DNC or camplists if enabled ###
+
 
 		### prepare variables to place manual call from VICIDiaL
 		$CCID_on=0;   $CCID='';
