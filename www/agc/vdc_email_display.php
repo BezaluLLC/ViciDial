@@ -209,9 +209,15 @@ if ($REPLY)
 	if ($sendmail) 
 		{
 		$reply_message=preg_replace('/(\"|\||\'|\;)/', '\\\$1', $reply_message); 
-		$log_stmt="insert into vicidial_email_log(email_row_id, lead_id, email_date, user, email_to, message, campaign_id, attachments) VALUES('$email_row_id', '$lead_id', now(), '$user', '$reply_to_address', '$reply_message', '$campaign', '$attachment_str')";
+		$log_stmt="INSERT INTO vicidial_email_log(email_row_id, lead_id, email_date, user, email_to, message, campaign_id, attachments) VALUES('$email_row_id', '$lead_id', now(), '$user', '$reply_to_address', '$reply_message', '$campaign', '$attachment_str')";
 		$log_rslt=mysql_query($log_stmt, $link);
-		echo "<p>mail sent to $to!</p>"; 
+		echo "<p>mail sent to $to!</p>";
+
+		# Hangup the "call" on the agent screen
+		$stmt="UPDATE vicidial_live_agents set external_hangup='1' where user='$user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$affected_rows = mysql_affected_rows($link);
 		}
 	else 
 		{
