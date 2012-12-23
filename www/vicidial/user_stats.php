@@ -707,7 +707,7 @@ if ($did < 1)
 		$CSV_text5.="\"OUTBOUND EMAILS FOR THIS TIME PERIOD: (10000 record limit)\"\n";
 		$CSV_text5.="\"\",\"#\",\"DATE/TIME\",\"USER\",\"CAMPAIGN\",\"EMAIL TO\",\"ATTACHMENT\",\"LEAD\",\"MESSAGE\"\n";
 
-		$stmt="select * from vicidial_email_log where user='" . mysql_real_escape_string($user) . "' and email_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and email_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by email_date desc limit 10000;";
+		$stmt="select email_log_id,email_row_id,lead_id,email_date,user,email_to,message,campaign_id,attachments from vicidial_email_log where user='" . mysql_real_escape_string($user) . "' and email_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and email_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by email_date desc limit 10000;";
 		$rslt=mysql_query($stmt, $link);
 		$logs_to_print = mysql_num_rows($rslt);
 

@@ -664,7 +664,7 @@ $hangup_cause_dictionary = array(
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,qc_features_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,qc_features_active,allow_emails FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00001',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -681,6 +681,7 @@ if ($qm_conf_ct > 0)
 	$alt_log_pass =							$row[6];
 	$tables_use_alt_log_db =				$row[7];
 	$qc_features_active =					$row[8];
+	$allow_emails =							$row[9];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -11683,51 +11684,53 @@ if ($ACTION == 'LEADINFOview')
 
 
 		### BEGIN Email log
-		$NOTESout .= "<CENTER>EMAIL LOG FOR THIS LEAD:<br>\n";
-		$NOTESout .= "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=$stage>";
-		$NOTESout .= "<TR>";
-		$NOTESout .= "<td BGCOLOR=\"#CCCCCC\"><font style=\"font-size:10px;font-family:sans-serif;\"><B> # </B></font></td>";
-		$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; DATE/TIME </B></font></td>";
-		$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; USER </B></font></td>";
-		$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; CAMPAIGN </B></font></td>";
-		$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; EMAIL TO </B></font></td>";
-		$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; ATTACHMENTS </B></font></td>";
-		$NOTESout .= "</tr>\n";
-
-
-		$stmt="select email_log_id,email_row_id,lead_id,email_date,user,email_to,message,campaign_id,attachments from vicidial_email_log where lead_id='$lead_id' order by email_date desc limit 500;";
-		$rslt=mysql_query($stmt, $link);
-		$logs_to_print = mysql_num_rows($rslt);
-
-		$u=0;
-		while ($logs_to_print > $u) 
+		if ($allow_emails>0)
 			{
-			$row=mysql_fetch_row($rslt);
-			if (eregi("1$|3$|5$|7$|9$", $u))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
-			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
-			if (strlen($row[6])>400) {$row[6]=substr($row[6],0,400)."...";}
-			$row[8]=preg_replace('/\|/', ', ', $row[8]);
-			$row[8]=preg_replace('/,\s+$/', '', $row[8]);
-			$u++;
+			$NOTESout .= "<CENTER>EMAIL LOG FOR THIS LEAD:<br>\n";
+			$NOTESout .= "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=$stage>";
+			$NOTESout .= "<TR>";
+			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\"><font style=\"font-size:10px;font-family:sans-serif;\"><B> # </B></font></td>";
+			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; DATE/TIME </B></font></td>";
+			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; USER </B></font></td>";
+			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; CAMPAIGN </B></font></td>";
+			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; EMAIL TO </B></font></td>";
+			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; ATTACHMENTS </B></font></td>";
+			$NOTESout .= "</tr>\n";
 
-			$NOTESout .= "<tr $bgcolor>";
-			$NOTESout .= "<td><font size=1>$u</td>";
-			$NOTESout .= "<td align=left><font size=1> &nbsp; $row[3]</td>";
-			$NOTESout .= "<td align=left><font size=2> &nbsp; $row[4] </td>\n";
-			$NOTESout .= "<td align=left><font size=2> &nbsp; $row[7]</td>\n";
-			$NOTESout .= "<td align=left><font size=1> &nbsp; $row[5]</td>\n";
-			$NOTESout .= "<td align=left><font size=1> &nbsp; $row[8] </td>\n";
-			$NOTESout .= "</tr>\n";
-			$NOTESout .= "<tr>";
-			$NOTESout .= "<td><font size=1> &nbsp; </td>\n";
-			$NOTESout .= "<td align=left colspan=5 $bgcolor><font size=1> MESSAGE: $row[6] </td>\n";
-			$NOTESout .= "</tr>\n";
-			}
+
+			$stmt="select email_log_id,email_row_id,lead_id,email_date,user,email_to,message,campaign_id,attachments from vicidial_email_log where lead_id='$lead_id' order by email_date desc limit 500;";
+			$rslt=mysql_query($stmt, $link);
+			$logs_to_print = mysql_num_rows($rslt);
+
+			$u=0;
+			while ($logs_to_print > $u) 
+				{
+				$row=mysql_fetch_row($rslt);
+				if (eregi("1$|3$|5$|7$|9$", $u))
+					{$bgcolor='bgcolor="#B9CBFD"';} 
+				else
+					{$bgcolor='bgcolor="#9BB9FB"';}
+				if (strlen($row[6])>400) {$row[6]=substr($row[6],0,400)."...";}
+				$row[8]=preg_replace('/\|/', ', ', $row[8]);
+				$row[8]=preg_replace('/,\s+$/', '', $row[8]);
+				$u++;
+
+				$NOTESout .= "<tr $bgcolor>";
+				$NOTESout .= "<td><font size=1>$u</td>";
+				$NOTESout .= "<td align=left><font size=2> &nbsp; $row[3]</td>";
+				$NOTESout .= "<td align=left><font size=2> &nbsp; $row[4] </td>\n";
+				$NOTESout .= "<td align=left><font size=2> &nbsp; $row[7]</td>\n";
+				$NOTESout .= "<td align=left><font size=2> &nbsp; $row[5]</td>\n";
+				$NOTESout .= "<td align=left><font size=1> &nbsp; $row[8] </td>\n";
+				$NOTESout .= "</tr>\n";
+				$NOTESout .= "<tr>";
+				$NOTESout .= "<td><font size=1> &nbsp; </td>\n";
+				$NOTESout .= "<td align=left colspan=5 $bgcolor><font size=1> MESSAGE: $row[6] </td>\n";
+				$NOTESout .= "</tr>\n";
+				}
 
 			$NOTESout .= "</TABLE>";
-
+			}
 		### END Email Log ##
 
 		if ($search == 'logfirst')
