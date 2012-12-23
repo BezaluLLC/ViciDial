@@ -184,7 +184,7 @@ while (@row=$rslt->fetchrow_array) {
 			  Port     => 993,
 			  Ssl      =>  1,
 			  )
-			  or die "Cannot connect through IMAPClient: $!";
+			  or die "Cannot connect through IMAPClient: $@";
 
 			# Include options for folders in IMAP?  POP3 doesn't support this.
 

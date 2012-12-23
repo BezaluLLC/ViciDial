@@ -4518,6 +4518,11 @@ if ($ADD==99999)
 	<B>Agent Call Manual -</B> This option allows an agent to manually enter a new lead into the system and call them. This also allows the calling of any phone number from their vicidial screen and puts that call into their session. Use this option with caution.
 
 	<BR>
+	<A NAME="vicidial_users-agentcall_email">
+	<BR>
+	<B>Agent Call Email -</B> This option is disabled.
+
+	<BR>
 	<A NAME="vicidial_users-vicidial_recording">
 	<BR>
 	<B>Vicidial Recording -</B> This option can prevent an agent from doing any recordings after they log in to vicidial. This option must be on for vicidial to follow the campaign recording session.

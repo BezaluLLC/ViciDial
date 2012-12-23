@@ -85,6 +85,7 @@ install MIME::Decoder
 install Mail::POP3Client
 install Mail::IMAPClient
 install Mail::Message
+install IO::Socket::SSL
 quit
 
 

@@ -132,6 +132,27 @@ OTHER CHANGES:
 	inbound call and have their active lead change to a search result lead
 	that they select.
 
+32. Added inbound email to queue to agent features. To enable, you must add an
+	"E" keepalive to ONLY ONE of your servers. You will also need to enable
+	email in System Settings. You also need the following perl cpan modules
+	installed:
+		install LWP::UserAgent
+		install HTML::Entities
+		install HTML::Strip
+		install HTML::FormatText
+		install HTML::TreeBuilder
+		install Switch
+		install Time::Local
+		install MIME::Decoder
+		install Mail::POP3Client
+		install Mail::IMAPClient
+		install Mail::Message
+		install IO::Socket::SSL
+	Also, the inbound email parser must be added to the crontab of ONLY ONE
+	server:
+		### inbound email parser
+		* * * * * /usr/share/astguiclient/AST_inbound_email_parser.pl
+
 
 
 

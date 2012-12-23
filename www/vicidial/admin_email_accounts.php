@@ -74,7 +74,7 @@ if (isset($_GET["agent_search_method"]))					{$agent_search_method=$_GET["agent_
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,allow_emails,email_enabled FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,allow_emails,allow_emails FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -127,9 +127,9 @@ if ($non_latin < 1)
 	$email_account_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$email_account_name);
 	$email_account_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$email_account_description);
 	$user_group = ereg_replace("[^_0-9a-zA-Z]","",$user_group);
-	$protocol = preg_replace("/^(IMAP|POP3|SMTP)/","",$protocol);
+	$protocol = ereg_replace("[^_0-9a-zA-Z]","",$protocol);
 	$email_account_server = ereg_replace("[^\.\-\_0-9a-zA-Z]","",$email_account_server);
-	$active = preg_replace("/^(Y|N)/","",$active);
+	$active = ereg_replace("[^_0-9a-zA-Z]","",$active);
 	$email_frequency_check_mins = preg_replace("/^0-9/","",$email_frequency_check_mins);
 	$list_id = ereg_replace("[^0-9]","",$list_id);
 
@@ -591,7 +591,7 @@ else if ($eact == "ADD")
 
 		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=1000\">Default List ID</a>: </td><td align=left><input type=text name=default_list_id size=20 maxlength=255 value='$default_list_id'>$NWB#vicidial_email_accounts-default_list_id$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Call Handle Method: </td><td align=left><select size=1 name=call_handle_method><option>CID</option><option>CIDLOOKUP</option><option>CIDLOOKUPRL</option><option>CIDLOOKUPRC</option><option SELECTED>$call_handle_method</option></select>$NWB#vicidial_email_accounts-call_handle_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Call Handle Method: </td><td align=left><select size=1 name=call_handle_method><option>EMAIL</option><option>EMAILLOOKUP</option><option>EMAILLOOKUPRL</option><option>EMAILLOOKUPRC</option><option SELECTED>$call_handle_method</option></select>$NWB#vicidial_email_accounts-call_handle_method$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Agent Search Method: </td><td align=left><select size=1 name=agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$agent_search_method</option></select>$NWB#vicidial_email_accounts-agent_search_method$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group List ID: </td><td align=left><input type=text name=list_id size=14 maxlength=14 value=\"$list_id\">$NWB#vicidial_email_accounts-ingroup_list_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Campaign ID: </td><td align=left><select size=1 name=campaign_id>\n";

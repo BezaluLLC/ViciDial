@@ -459,6 +459,7 @@ following modules first:   (say YES if asked to install prerequisites)
    - install Mail::POP3Client
    - install Mail::IMAPClient
    - install Mail::Message
+   - install IO::Socket::SSL
 - then quit cpan, you are done
 5. Go to http://asterisk.gnuinter.net/ and download the asterisk-perl module
 (backup link: http://download.vicidial.com/packages/asterisk-perl-0.08.tar.gz)
