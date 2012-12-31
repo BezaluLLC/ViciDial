@@ -283,7 +283,7 @@ ALTER TABLE system_settings ADD allow_emails ENUM('0','1') default '0';
 ALTER TABLE vicidial_campaigns ADD allow_emails ENUM('Y','N') default 'N';
 
 ALTER TABLE vicidial_inbound_groups ADD group_handling ENUM('PHONE','EMAIL') default 'PHONE';
-ALTER TABLE vicidial_inbound_groups MODIFY get_call_launch get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','FORM','EMAIL') default 'NONE';
+ALTER TABLE vicidial_inbound_groups MODIFY get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','FORM','EMAIL') default 'NONE';
 
 ALTER TABLE vicidial_users ADD agentcall_email ENUM('0','1') default '0';
 ALTER TABLE vicidial_users ADD modify_email_accounts ENUM('0','1') default '0';
