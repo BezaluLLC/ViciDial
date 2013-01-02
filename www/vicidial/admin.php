@@ -1,7 +1,7 @@
 <?php
 # admin.php - VICIDIAL administration page
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
 require("dbconnect.php");
@@ -3218,12 +3218,13 @@ else
 # 121206-0630 - Added inbound lead search feature
 # 121212-1529 - Standardization of list_id fields at 19 digits in forms
 # 121222-2146 - Added new email features
+# 130102-1135 - Small change to admin log viewing for email accounts
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-391a';
-$build = '121222-2146';
+$admin_version = '2.6-392a';
+$build = '130102-1135';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3511,7 +3512,7 @@ echo "<html>\n";
 echo "<head>\n";
 echo "<!-- VERSION: $admin_version   BUILD: $build   ADD: $ADD   PHP_SELF: $PHP_SELF-->\n";
 echo "<META NAME=\"ROBOTS\" CONTENT=\"NONE\">\n";
-echo "<META NAME=\"COPYRIGHT\" CONTENT=\"&copy; 2012 ViciDial Group\">\n";
+echo "<META NAME=\"COPYRIGHT\" CONTENT=\"&copy; 2013 ViciDial Group\">\n";
 echo "<META NAME=\"AUTHOR\" CONTENT=\"ViciDial Group\">\n";
 echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
@@ -34524,6 +34525,7 @@ if ($ADD==720000000000000)
 			if (eregi('CATEGOR',$row[4])) {$record_link = "$PHP_SELF?ADD=331111111111111";}
 			if (eregi('GROUPALIAS',$row[4])) {$record_link = "$PHP_SELF?ADD=33111111111&group_alias_id=$row[6]";}
 			if (eregi('LEADS',$row[4])) {$record_link = "./admin_modify_lead.php?lead_id=$row[6]";}
+			if (eregi('EMAIL',$row[4])) {$record_link = "./admin_email_accounts.php?eact=UPDATE&email_account_id=$row[6]";}
 
 			if (eregi("1$|3$|5$|7$|9$", $o))
 				{$bgcolor='bgcolor="#B9CBFD"';} 
@@ -35179,7 +35181,7 @@ if ($ADD==999995)
 	echo "<br><B> Welcome to ViciDial: copyright, trademark and license page</B><BR><BR>\n";
 	echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=2>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=right valign=top><B><font size=3>Copyright: </B></td><td align=left> &nbsp; The ViciDial Call Center Suite is maintained by the <a href=\"http://www.vicidial.com/\" target=\"_blank\">ViciDial Group</a>, &copy; 2012</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right valign=top><B><font size=3>Copyright: </B></td><td align=left> &nbsp; The ViciDial Call Center Suite is maintained by the <a href=\"http://www.vicidial.com/\" target=\"_blank\">ViciDial Group</a>, &copy; 2013</td></tr>\n";
 
 	echo "<tr bgcolor=#B6D3FC><td align=right valign=top><B><font size=3>Trademark: </B></td><td align=left> &nbsp; \"VICIDIAL\" is a registered trademark of the <a href=\"http://www.vicidial.com/\" target=\"_blank\">ViciDial Group</a>. Here is our <a href=\"http://www.vicidial.com/trademark.html\" target=\"_blank\">trademark use policy</a></td></tr>\n";
 
@@ -35549,7 +35551,7 @@ echo "<font size=0 color=white><br><br><!-- RUNTIME: $RUNtime seconds<BR> -->";
 echo "VERSION: $admin_version<BR>";
 echo "BUILD: $build\n";
 if (!preg_match("/_BUILD_/",$SShosted_settings))
-	{echo "<BR><a href=\"$PHP_SELF?ADD=999995\"><font color=white>&copy; 2012 ViciDial Group</font></a><BR><img src=\"images/pixel.gif\">";}
+	{echo "<BR><a href=\"$PHP_SELF?ADD=999995\"><font color=white>&copy; 2013 ViciDial Group</font></a><BR><img src=\"images/pixel.gif\">";}
 echo "</font>\n";
 ?>
 

@@ -1,16 +1,17 @@
 <?php
 # admin_email_accounts.php
 # 
-# Copyright (C) 2012  Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This page manages the inbound email accounts in ViciDial
 #
 # changes:
 # 121214-2245 - First Build
+# 130102-1131 - Small admin log change
 #
 
-$admin_version = '2.6-1';
-$build = '121214-2245';
+$admin_version = '2.6-2';
+$build = '130102-1131';
 
 $sh="emails"; 
 
@@ -377,7 +378,7 @@ if (($SUBMIT=="SUBMIT" || $SUBMIT=="UPDATE") && $email_account_id)
 				$SQL_log = "$upd_stmt|";
 				$SQL_log = ereg_replace(';','',$SQL_log);
 				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date=now(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='EMAIL', event_type='MODIFY', record_id='$user', event_code='EMAIL ACCOUNT MODIFIED', event_sql=\"$SQL_log\", event_notes='';";
+				$stmt="INSERT INTO vicidial_admin_log set event_date=now(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='EMAIL', event_type='MODIFY', record_id='$email_account_id', event_code='EMAIL ACCOUNT MODIFIED', event_sql=\"$SQL_log\", event_notes='';";
 				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 				}
@@ -791,7 +792,7 @@ else if (($eact=="DELETE" || $eact=="UPDATE") && $email_account_id)
 		echo "</TABLE><BR><BR>";
 		if ($LOGuser_level >= 9)
 			{
-			echo "<br><br><a href=\"admin.php?ADD=720000000000000&category=EMAIL&stage=$user\">Click here to see Admin changes to this record</FONT>\n";
+			echo "<br><br><a href=\"admin.php?ADD=720000000000000&category=EMAIL&stage=$email_account_id\">Click here to see Admin changes to this record</FONT>\n";
 			}
 		echo "<BR><BR><a href='$PHP_SELF?eact=DELETE&email_account_id=$email_account_id'>DELETE EMAIL ACCOUNT</a></center></form>\n";
 		}
