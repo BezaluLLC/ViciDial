@@ -14,7 +14,7 @@
 #  - Runs trigger processes at defined times
 #  - Auto reset lists at defined times
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 61011-1348 - First build
@@ -77,6 +77,7 @@
 # 121019-1021 - Added voicemail greeting option
 # 121124-1440 - Added holiday expiration function
 # 121215-2036 - Added email inbound script keepalive, option E
+# 130103-0808 - Added CLI options for delay to be used with auto-dial and FILL processes
 #
 
 $DB=0; # Debug flag
@@ -96,6 +97,8 @@ if ($sec < 10) {$sec = "0$sec";}
 $now_date = "$year-$mon-$mday $hour:$min:$sec";
 $reset_test = "$hour$min";
 $cu3way_delay='';
+$autodial_delay='';
+$adfill_delay='';
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -110,7 +113,9 @@ if (length($ARGV[0])>1)
 	if ($args =~ /--help/i)
 		{
 		print "allowed run time options:\n";
-		print "  [-t] = test\n";
+		print "  [-test] = test\n";
+		print "  [-autodial-delay=X] = setting delay milliseconds on local auto-dial process\n";
+		print "  [-adfill-delay=X] = setting delay milliseconds on auto-dial FILL process\n";
 		print "  [-cu3way] = keepalive for the optional 3way conference checker\n";
 		print "  [-cu3way-delay=X] = setting delay seconds on 3way conference checker\n";
 		print "  [-debug] = verbose debug messages\n";
@@ -135,6 +140,36 @@ if (length($ARGV[0])>1)
 			$DBXXX=1;
 			print "\n----- TRIPLE DEBUGGING -----\n\n";
 			}
+		if ($args =~ /-autodial-delay=/i) # CLI defined delay
+			{
+			@CLIvarADARY = split(/-autodial-delay=/,$args);
+			@CLIvarADARX = split(/ /,$CLIvarADARY[1]);
+			if (length($CLIvarADARX[0])>0)
+				{
+				$CLIautodialdelay = $CLIvarADARX[0];
+				$CLIautodialdelay =~ s/\/$| |\r|\n|\t//gi;
+				$CLIautodialdelay =~ s/\D//gi;
+				if ( ($CLIautodialdelay > 0) && (length($CLIautodialdelay)> 0) )	
+					{$autodial_delay = "--delay=$CLIautodialdelay";}
+				if ($DB > 0) {print "AD Delay set to $CLIautodialdelay $autodial_delay\n";}
+				}
+			@CLIvarADARY=@MT;   @CLIvarADARY=@MT;
+			}
+		if ($args =~ /-adfill-delay=/i) # CLI defined delay
+			{
+			@CLIvarADFARY = split(/-autodial-delay=/,$args);
+			@CLIvarADFARX = split(/ /,$CLIvarADFARY[1]);
+			if (length($CLIvarADFARX[0])>0)
+				{
+				$CLIadfilldelay = $CLIvarADFARX[0];
+				$CLIadfilldelay =~ s/\/$| |\r|\n|\t//gi;
+				$CLIadfilldelay =~ s/\D//gi;
+				if ( ($CLIadfilldelay > 0) && (length($CLIadfilldelay)> 0) )	
+					{$adfill_delay = "--delay=$CLIadfilldelay";}
+				if ($DB > 0) {print "ADFILL Delay set to $CLIadfilldelay $adfill_delay\n";}
+				}
+			@CLIvarADFARY=@MT;   @CLIvarADFARY=@MT;
+			}
 		if ($args =~ /-cu3way/i)
 			{
 			$cu3way=1;
@@ -151,11 +186,11 @@ if (length($ARGV[0])>1)
 				$CLIdelay =~ s/\D//gi;
 				if ( ($CLIdelay > 0) && (length($CLIdelay)> 0) )	
 					{$cu3way_delay = "--delay=$CLIdelay";}
-				if ($DB > 0) {print "Delay set to $CLIdelay $cu3way_delay\n";}
+				if ($DB > 0) {print "CU3 Delay set to $CLIdelay $cu3way_delay\n";}
 				}
 			@CLIvarARY=@MT;   @CLIvarARY=@MT;
 			}
-		if ($args =~ /-t/i)
+		if ($args =~ /-test/i)
 			{
 			$TEST=1;
 			$T=1;
@@ -544,7 +579,7 @@ if (
 		{ 
 		if ($DB) {print "starting AST_VDauto_dial...\n";}
 		# add a '-L' to the command below to activate logging
-		`/usr/bin/screen -d -m -S ASTVDauto $PATHhome/AST_VDauto_dial.pl`;
+		`/usr/bin/screen -d -m -S ASTVDauto $PATHhome/AST_VDauto_dial.pl $autodial_delay`;
 		}
 	if ( ($AST_VDremote_agents > 0) && ($runningAST_VDremote_agents < 1) )
 		{ 
@@ -568,7 +603,7 @@ if (
 		{ 
 		if ($DB) {print "starting AST_VDauto_dial_FILL...\n";}
 		# add a '-L' to the command below to activate logging
-		`/usr/bin/screen -d -m -S ASTVDautoFILL $PATHhome/AST_VDauto_dial_FILL.pl`;
+		`/usr/bin/screen -d -m -S ASTVDautoFILL $PATHhome/AST_VDauto_dial_FILL.pl $adfill_delay`;
 		}
 	if ( ($email_inbound > 0) && ($runningemail_inbound < 1) )
 		{ 

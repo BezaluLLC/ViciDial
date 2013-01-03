@@ -36,6 +36,12 @@ NOTE: if you have a dedicated MySQL database server with a lot of RAM(8GB or gre
 
 
 
+USE OF AGENT-ONLY AND DIAL-ONLY SERVERS ON YOUR CLUSTER:
+
+If you are using servers where agents only log in and handle calls, but no calls are placed out from it, then you can use the new delay options on those servers to enhance efficient operations. The --autodial-delay=X option in the ADMIN_keepalive_ALL.pl script will allow you to set the delay to 100 milliseconds for these agent-only servers(the default is 2500ms). Lowering the delay for agent-only servers makes the auto-dial FILL process more responsive to the changes in the agent state on the agent-only servers which will enhance how your cluster operates. You can also use the --adfill-delay=X CLI option for the ADMIN_keepalive_ALL.pl script on the server that is running the FILL process and lower it as well if you have a larger cluster. The default of that process is also 2500ms, but you can lower it down to 500ms if needed.
+
+
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 AS OF RELEASE 2.2.0 YOU SHOULD NOT HAVE TO TAKE ANY STEPS BEYOND STEP 2 IN THIS DOCUMENT TO GET MULTI-SERVER VICIDIAL TO WORK IF YOU ARE USING THE DEFAULT VICIDIAL CONF FILES.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
