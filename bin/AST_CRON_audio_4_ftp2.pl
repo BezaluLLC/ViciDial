@@ -26,13 +26,14 @@
 # 
 # This program assumes that recordings are saved by Asterisk as .wav
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 
 # 91123-0005 - First Build
 # 110524-1052 - Added run-check concurrency check option
 # 111128-1617 - Added Ftp persistence option
 # 111130-1801 - Added Ftp validate option
+# 130116-1536 - Added ftp port CLI flag
 #
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -83,6 +84,7 @@ if (length($ARGV[0])>1)
 		print "  [--debugX] = super debug\n";
 		print "  [--nodatedir] = do not put into dated directories\n\n";
 		print "  [--ftp-server=XXX] = FTP server\n";
+		print "  [--ftp-port=XXX] = FTP server port\n";
 		print "  [--ftp-login=XXX] = FTP server login account\n";
 		print "  [--ftp-pass=XXX] = FTP server password\n";
 		print "  [--ftp-dir=XXX] = FTP server directory\n";
@@ -140,6 +142,15 @@ if (length($ARGV[0])>1)
 			$CLIFTP_host=1;
 			if ($DB > 0) 
 				{print "\n----- FTP SERVER: $VARFTP_host -----\n\n";}
+			}
+		if ($args =~ /--ftp-port=/i)
+			{
+			my @data_in = split(/--ftp-port=/,$args);
+			$VARFTP_port = $data_in[1];
+			$VARFTP_port =~ s/ .*//gi;
+			$CLIFTP_port=1;
+			if ($DB > 0)
+				{print "\n----- FTP PORT: $VARFTP_port -----\n\n";}
 			}
 		if ($args =~ /--ftp-login=/i) 
 			{
