@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# park_CID.agi version 2.4
+# park_CID.agi version 2.6
 # 
 # runs before the park extension to populate the parked_channels entry with the channel's callerid
 # 
@@ -12,7 +12,7 @@
 # exten => 8301,3,Playback(park)
 # exten => 8301,4,Hangup 
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 60731-1423 - changed to use DBI-DBD::mysql
@@ -20,6 +20,7 @@
 # 60815-1256 - added output options check from database
 # 90909-0922 - Fixed calleridname issue
 # 101004-1012 - Changed park to Music On Hold, added option for park on AGI
+# 130108-1817 - Changes for Asterisk 1.8 compatibility
 #
 
 $script = 'park_CID.agi';
@@ -305,6 +306,7 @@ $AGI->stream_file('sip-silence');
 if ($AGILOG) {$agi_string = "--    Starting MoH: |$park_context|   |$callerid|";   &agi_output;}
 
 print "SET MUSIC ON $park_context\n";
+	$result = <STDIN>;
 	checkresult($result);
 
 sleep(360);

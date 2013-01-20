@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# VDL_CID_lookup.agi version 0.1   *DBI-version*
+# VDL_CID_lookup.agi      version 2.6
 #
 # runs after a call goes through AMD in extensions.conf to send the call on to
 # it's proper destination
@@ -19,11 +19,12 @@
 # exten => 8369,9,Hangup
 # 
 #
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: GPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: GPLv2
 #
 # changes:
 # 80930-0226 - first build
 # 81015-1702 - added filter stats
+# 130108-1836 - Changes for Asterisk 1.8 compatibility
 #
 
 $filter_stats = 1;
@@ -235,6 +236,7 @@ if ($filter_stats > 0)
 			if ($AGILOG) {$agi_string = "--    cid_lookup finish: : |$affected_rows|$callerid|$priority|NOT_FOUND|";   &agi_output;}
 
 		print "SET PRIORITY $priority\n";
+			$result = <STDIN>;
 			checkresult($result);
 
 		$dbhA->disconnect();
@@ -263,6 +265,7 @@ if ($filter_stats > 0)
 			if ($AGILOG) {$agi_string = "--    cid_lookup finish: : |$affected_rows|$callerid|$priority|EXISTING|SALE|";   &agi_output;}
 
 			print "SET PRIORITY $priority\n";
+				$result = <STDIN>;
 				checkresult($result);
 
 			$dbhA->disconnect();
@@ -290,6 +293,7 @@ if ($filter_stats > 0)
 			if ($AGILOG) {$agi_string = "--    cid_lookup finish: : |$affected_rows|$callerid|$priority|EXISTING|DNC|";   &agi_output;}
 
 			print "SET PRIORITY $priority\n";
+				$result = <STDIN>;
 				checkresult($result);
 
 			$dbhA->disconnect();
@@ -317,6 +321,7 @@ if ($filter_stats > 0)
 			if ($AGILOG) {$agi_string = "--    cid_lookup finish: : |$affected_rows|$callerid|$priority|EXISTING|ARCHIVE|";   &agi_output;}
 
 			print "SET PRIORITY $priority\n";
+				$result = <STDIN>;
 				checkresult($result);
 
 			$dbhA->disconnect();
@@ -353,6 +358,7 @@ else
 		$priority = ($priority + 3);
 		if ($AGILOG) {$agi_string = "--    cid_lookup finish: |$priority|$callerid";   &agi_output;}
 		print "SET PRIORITY $priority\n";
+			$result = <STDIN>;
 			checkresult($result);
 		}
 

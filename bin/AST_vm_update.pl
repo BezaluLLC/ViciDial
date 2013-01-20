@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_vm_update.pl version 2.4
+# AST_vm_update.pl version 2.6
 #
 # DESCRIPTION:
 # uses the Asterisk Manager interface to update the count of voicemail messages 
@@ -12,7 +12,7 @@
 # more than this either change the cron when this script is run or change the 
 # wait interval below
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 50823-1422 - Added database server variable definitions lookup
 # 50823-1452 - Added commandline arguments for debug at runtime
@@ -20,6 +20,7 @@
 # 60715-2301 - Changed to use /etc/astguiclient.conf for configs
 # 90919-1739 - Added other voicemail checking from vicidial_voicemail table
 # 100625-1220 - Added waitfors after logout to fix broken pipe errors in asterisk <MikeC>
+# 130108-1713 - Changes for Asterisk 1.8 compatibility
 #
 
 # constants
@@ -111,7 +112,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
  or die "Couldn't connect to database: " . DBI->errstr;
  
 ### Grab Server values from the database
-$stmtA = "SELECT telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,max_vicidial_trunks,answer_transfer_agent,local_gmt,ext_context FROM servers where server_ip = '$server_ip';";
+$stmtA = "SELECT telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,max_vicidial_trunks,answer_transfer_agent,local_gmt,ext_context,asterisk_version FROM servers where server_ip = '$server_ip';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 if ($DB) {print "|$stmtA|\n";}
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -120,17 +121,18 @@ $rec_count=0;
 if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$DBtelnet_host	=			"$aryA[0]";
-	$DBtelnet_port	=			"$aryA[1]";
-	$DBASTmgrUSERNAME	=		"$aryA[2]";
-	$DBASTmgrSECRET	=			"$aryA[3]";
-	$DBASTmgrUSERNAMEupdate	=	"$aryA[4]";
-	$DBASTmgrUSERNAMElisten	=	"$aryA[5]";
-	$DBASTmgrUSERNAMEsend	=	"$aryA[6]";
-	$DBmax_vicidial_trunks	=	"$aryA[7]";
-	$DBanswer_transfer_agent=	"$aryA[8]";
-	$DBSERVER_GMT		=		"$aryA[9]";
-	$DBext_context	=			"$aryA[10]";
+	$DBtelnet_host	=			$aryA[0];
+	$DBtelnet_port	=			$aryA[1];
+	$DBASTmgrUSERNAME	=		$aryA[2];
+	$DBASTmgrSECRET	=			$aryA[3];
+	$DBASTmgrUSERNAMEupdate	=	$aryA[4];
+	$DBASTmgrUSERNAMElisten	=	$aryA[5];
+	$DBASTmgrUSERNAMEsend	=	$aryA[6];
+	$DBmax_vicidial_trunks	=	$aryA[7];
+	$DBanswer_transfer_agent=	$aryA[8];
+	$DBSERVER_GMT		=		$aryA[9];
+	$DBext_context	=			$aryA[10];
+	$asterisk_version	=		$aryA[11];
 	if ($DBtelnet_host)				{$telnet_host = $DBtelnet_host;}
 	if ($DBtelnet_port)				{$telnet_port = $DBtelnet_port;}
 	if ($DBASTmgrUSERNAME)			{$ASTmgrUSERNAME = $DBASTmgrUSERNAME;}
@@ -177,26 +179,49 @@ $t->waitfor('/[01]\n$/');			# print login
 $t->print("Action: Login\nUsername: $telnet_login\nSecret: $ASTmgrSECRET\n\n");
 $t->waitfor('/Authentication accepted/');		# waitfor auth accepted
 
-
 $i=0;
 foreach(@PTextensions)
 	{
 	@list_channels=@MT;
 	$t->buffer_empty;
-	@list_channels = $t->cmd(String => "Action: MailboxCount\nMailbox: $PTvoicemail_ids[$i]\n\nAction: Ping\n\n", Prompt => '/Response: Pong.*/'); 
-
-	$j=0;
-	foreach(@list_channels)
+	%ast_ver_str = parse_asterisk_version($asterisk_version);
+	if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
 		{
-		if ($list_channels[$j] =~ /Mailbox: $PTvoicemail_ids[$i]/)
+		@list_channels = $t->cmd(String => "Action: MailboxCount\nMailbox: $PTvoicemail_ids[$i]\n\nAction: Ping\n\n", Prompt => '/Response: Pong.*/'); 
+		
+		$j=0;
+		foreach(@list_channels)
 			{
-			$NEW_messages[$i] = "$list_channels[$j+1]";
-			$NEW_messages[$i] =~ s/NewMessages: |\n//gi;
-			$OLD_messages[$i] = "$list_channels[$j+2]";
-			$OLD_messages[$i] =~ s/OldMessages: |\n//gi;
+			if ($list_channels[$j] =~ /Mailbox: $PTvoicemail_ids[$i]/)
+				{
+				$NEW_messages[$i] = "$list_channels[$j+1]";
+				$NEW_messages[$i] =~ s/NewMessages: |\n//gi;
+				$OLD_messages[$i] = "$list_channels[$j+2]";
+				$OLD_messages[$i] =~ s/OldMessages: |\n//gi;
+				}
+			$j++;
 			}
+		}
+	else
+		{
+		@list_channels = $t->cmd(String => "Action: MailboxCount\nMailbox: $PTvoicemail_ids[$i]\n\nAction: Ping\n\n", Prompt => '/Response: Success\nPing: Pong.*/');
+	
+		$j=0;
+		foreach(@list_channels)
+			{
+			if($DB){print "$j - $list_channels[$j]";}
+			if ($list_channels[$j] =~ /Mailbox: $PTvoicemail_ids[$i]/)
+				{
+				$URG_messages[$i] = "$list_channels[$j+1]";
+				$URG_messages[$i] =~ s/UrgMessages: |\n//gi;
+				$NEW_messages[$i] = "$list_channels[$j+2]";
+				$NEW_messages[$i] =~ s/NewMessages: |\n//gi;
+				$OLD_messages[$i] = "$list_channels[$j+3]";
+				$OLD_messages[$i] =~ s/OldMessages: |\n//gi;
+				}
 
-		$j++;
+			$j++;
+			}
 		}
 
 	if($DB){print "MailboxCount- $PTvoicemail_ids[$i]    NEW:|$NEW_messages[$i]|  OLD:|$OLD_messages[$i]|    ";}
@@ -258,21 +283,46 @@ if ($active_voicemail_server > 0)
 		{
 		@list_channels=@MT;
 		$t->buffer_empty;
-		@list_channels = $t->cmd(String => "Action: MailboxCount\nMailbox: $PTvoicemail_ids[$i]\n\nAction: Ping\n\n", Prompt => '/Response: Pong.*/'); 
-
-		$j=0;
-		foreach(@list_channels)
+		%ast_ver_str = parse_asterisk_version($asterisk_version);
+		if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
 			{
-			if ($list_channels[$j] =~ /Mailbox: $PTvoicemail_ids[$i]/)
+			@list_channels = $t->cmd(String => "Action: MailboxCount\nMailbox: $PTvoicemail_ids[$i]\n\nAction: Ping\n\n", Prompt => '/Response: Pong.*/');
+	
+			$j=0;
+			foreach(@list_channels)
 				{
-				$NEW_messages[$i] = "$list_channels[$j+1]";
-				$NEW_messages[$i] =~ s/NewMessages: |\n//gi;
-				$OLD_messages[$i] = "$list_channels[$j+2]";
-				$OLD_messages[$i] =~ s/OldMessages: |\n//gi;
+				if ($list_channels[$j] =~ /Mailbox: $PTvoicemail_ids[$i]/)
+					{
+					$NEW_messages[$i] = "$list_channels[$j+1]";
+					$NEW_messages[$i] =~ s/NewMessages: |\n//gi;
+					$OLD_messages[$i] = "$list_channels[$j+2]";
+					$OLD_messages[$i] =~ s/OldMessages: |\n//gi;
+					}
+				$j++;
 				}
-
-			$j++;
 			}
+		else
+			{
+			@list_channels = $t->cmd(String => "Action: MailboxCount\nMailbox: $PTvoicemail_ids[$i]\n\nAction: Ping\n\n", Prompt => '/Response: Success\nPing: Pong.*/');
+	
+			$j=0;
+			foreach(@list_channels)
+				{
+				if($DB){print "$j - $list_channels[$j]";}
+				if ($list_channels[$j] =~ /Mailbox: $PTvoicemail_ids[$i]/)
+					{
+					$URG_messages[$i] = "$list_channels[$j+1]";
+					$URG_messages[$i] =~ s/UrgMessages: |\n//gi;
+					$NEW_messages[$i] = "$list_channels[$j+2]";
+					$NEW_messages[$i] =~ s/NewMessages: |\n//gi;
+					$OLD_messages[$i] = "$list_channels[$j+3]";
+					$OLD_messages[$i] =~ s/OldMessages: |\n//gi;
+					}
+
+				$j++;
+				}
+			}
+
 
 		if($DB){print "MailboxCount- $PTvoicemail_ids[$i]    NEW:|$NEW_messages[$i]|  OLD:|$OLD_messages[$i]|    ";}
 		if ( ($NEW_messages[$i] eq $PTmessages[$i]) && ($OLD_messages[$i] eq $PTold_messages[$i]) )
@@ -309,3 +359,47 @@ $dbhA->disconnect();
 if($DB){print "DONE... Exiting... Goodbye... See you later... \n";}
 
 exit;
+
+
+# subroutine to parse the asterisk version
+# and return a hash with the various part
+sub parse_asterisk_version
+{
+	# grab the arguments
+	my $ast_ver_str = $_[0];
+
+	# get everything after the - and put it in $ast_ver_postfix
+	my @hyphen_parts = split( /-/ , $ast_ver_str );
+
+	my $ast_ver_postfix = $hyphen_parts[1];
+
+	# now split everything before the - up by the .
+	my @dot_parts = split( /\./ , $hyphen_parts[0] );
+
+	my %ast_ver_hash;
+
+	if ( $dot_parts[0] <= 1 )
+		{
+			%ast_ver_hash = (
+				"major" => $dot_parts[0],
+				"minor" => $dot_parts[1],
+				"build" => $dot_parts[2],
+				"revision" => $dot_parts[3],
+				"postfix" => $ast_ver_postfix
+			);
+		}
+
+	# digium dropped the 1 from asterisk 10 but we still need it
+	if ( $dot_parts[0] > 1 )
+		{
+			%ast_ver_hash = (
+				"major" => 1,
+				"minor" => $dot_parts[0],
+				"build" => $dot_parts[1],
+				"revision" => $dot_parts[2],
+				"postfix" => $ast_ver_postfix
+			);
+		}
+
+	return ( %ast_ver_hash );
+}

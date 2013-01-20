@@ -31,7 +31,7 @@
 #exten => 1234,2,AGI(agi-VDAD_inbound_calltime_check.agi,INBOUND-----YES-----START-----24hours-----EXTENSION-----101-----default-----NO)
 #exten => 1234,3,Hangup
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 80525-0144 - First Build
@@ -49,6 +49,7 @@
 # 120719-1411 - Fixed issue with inbound IVR calls not showing up in real-time screen
 # 120730-0727 - Fixed issue with non-populating phone number
 # 121124-1414 - Added call times holidays function
+# 130108-1807 - Changes for Asterisk 1.8 compatibility
 #
 
 $script = 'agi-VDAD_inbound_calltime_check.agi';
@@ -589,10 +590,13 @@ if ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_st
 
 			if ($AGILOG) {$agi_string = "exiting the VDAD app after hours, transferring call to $DROPexten   |$hm|$ct_default_start|$ct_default_stop|$ct_stop_overflow|";   &agi_output;}
 			print "SET CONTEXT $ext_context\n";
+				$result = <STDIN>;
 				checkresult($result);
 			print "SET EXTENSION $DROPexten\n";
+				$result = <STDIN>;
 				checkresult($result);
 			print "SET PRIORITY 1\n";
+				$result = <STDIN>;
 				checkresult($result);
 			}
 		}
@@ -663,10 +667,13 @@ if ( ($call_menu_qualify_enabled > 0) && ($query_qualification =~ /YES/) && ( ($
 			if ($AGILOG) {$agi_string = "      TimeCheck App Qualify SQL FAIL, transferring call to D   |$qualify_count|$lead_id|$context|$calleridname|";   &agi_output;}
 
 			print "SET CONTEXT $context\n";
+				$result = <STDIN>;
 				checkresult($result);
 			print "SET EXTENSION D\n";
+				$result = <STDIN>;
 				checkresult($result);
 			print "SET PRIORITY 1\n";
+				$result = <STDIN>;
 				checkresult($result);
 			
 			exit;

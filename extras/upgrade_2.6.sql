@@ -291,3 +291,8 @@ ALTER TABLE vicidial_users ADD modify_email_accounts ENUM('0','1') default '0';
 ALTER TABLE vicidial_live_agents MODIFY status ENUM('READY','QUEUE','INCALL','PAUSED','CLOSER','MQUEUE') default 'PAUSED';
 
 UPDATE system_settings SET db_schema_version='1337',db_schema_update_date=NOW() where db_schema_version < 1337;
+
+CREATE INDEX pvmid on phones (voicemail_id);
+CREATE INDEX pdpn on phones (dialplan_number);
+
+UPDATE system_settings SET db_schema_version='1338',db_schema_update_date=NOW() where db_schema_version < 1338;

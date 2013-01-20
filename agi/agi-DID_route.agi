@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-DID_route.agi version 2.4
+# agi-DID_route.agi version 2.6
 # 
 # runs when a call comes into an inbound context on a trunk. This script will 
 # send the calls to various places depending on the settings for each DID.
@@ -13,7 +13,7 @@
 # ;inbound DID catch-all:
 #exten => _X.,1,AGI(agi-DID_route.agi)
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 81007-0324 - First Build
@@ -28,6 +28,8 @@
 # 100805-0943 - Added Filter Phone Group alternate routing feature and CID number cleanup
 # 110822-1210 - Added did_agent_log optional logging
 # 120314-1112 - Fixed small filter bug
+# 120430-2214 - Converted call to Monitor app to be asterisk 1.8 compatible
+# 130108-1810 - Changes for Asterisk 1.8 compatibility
 #
 
 $script = 'agi-DID_route.agi';
@@ -109,7 +111,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
     or die "Couldn't connect to database: " . DBI->errstr;
 
 ### Grab Server values from the database
-$stmtA = "SELECT agi_output,local_gmt FROM servers where server_ip = '$VARserver_ip';";
+$stmtA = "SELECT agi_output,local_gmt,asterisk_version FROM servers where server_ip = '$VARserver_ip';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -117,8 +119,9 @@ if ($sthArows > 0)
 	{
 	$AGILOG = '0';
 	@aryA = $sthA->fetchrow_array;
-	$DBagi_output =		"$aryA[0]";
-	$local_gmt =		"$aryA[1]";
+	$DBagi_output =		$aryA[0];
+	$local_gmt =		$aryA[1];
+	$asterisk_version = $aryA[2];
 	if ($DBagi_output =~ /STDERR/)	{$AGILOG = '1';}
 	if ($DBagi_output =~ /FILE/)	{$AGILOG = '2';}
 	if ($DBagi_output =~ /BOTH/)	{$AGILOG = '3';}
@@ -339,7 +342,15 @@ if ($record_call =~ /Y/)
 	$filename = "$tsSQLdate$US$extension$US$callerid";
 	### code to record call goes here ###
 
-	$AGI->exec("Monitor wav|/var/spool/asterisk/monitor/MIX/$filename"); 
+	%ast_ver_str = parse_asterisk_version($asterisk_version);
+	if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+		{
+		$AGI->exec("Monitor wav|/var/spool/asterisk/monitor/MIX/$filename");
+		}
+	else
+		{
+		$AGI->exec("Monitor","wav,/var/spool/asterisk/monitor/MIX/$filename"); 
+		}
 
 	### insert record into recording_log table ###
 	$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$callerid','$SQLdate','$now_date_epoch','0','$filename','0','$extension','$filename','$unique_id');";
@@ -590,10 +601,13 @@ if ($did_route =~ /EXTEN/)
 	$XFERexten = "$did_extension";
 	if ($AGILOG) {$agi_string = "exiting the DID app, transferring call to $XFERexten @ $exten_context";   &agi_output;}
 	print "SET CONTEXT $exten_context\n";
+		$result = <STDIN>;
 		checkresult($result);
 	print "SET EXTENSION $XFERexten\n";
+		$result = <STDIN>;
 		checkresult($result);
 	print "SET PRIORITY 1\n";
+		$result = <STDIN>;
 		checkresult($result);
 	
 	exit;
@@ -606,10 +620,13 @@ if ($did_route =~ /CALLMENU/)
 	$XFERcontext = "$menu_id";
 	if ($AGILOG) {$agi_string = "exiting the DID app, transferring call to CALLMENU $XFERcontext";   &agi_output;}
 	print "SET CONTEXT $XFERcontext\n";
+		$result = <STDIN>;
 		checkresult($result);
 	print "SET EXTENSION s\n";
+		$result = <STDIN>;
 		checkresult($result);
 	print "SET PRIORITY 1\n";
+		$result = <STDIN>;
 		checkresult($result);
 	
 	exit;
@@ -685,4 +702,47 @@ sub did_output
 		close(Dout);
 		}
 	$did_string='';
+	}
+
+# subroutine to parse the asterisk version
+# and return a hash with the various part
+sub parse_asterisk_version
+	{
+	# grab the arguments
+	my $ast_ver_str = $_[0];
+
+	# get everything after the - and put it in $ast_ver_postfix
+	my @hyphen_parts = split( /-/ , $ast_ver_str );
+
+	my $ast_ver_postfix = $hyphen_parts[1];
+
+	# now split everything before the - up by the .
+	my @dot_parts = split( /\./ , $hyphen_parts[0] );
+
+	my %ast_ver_hash;
+
+	if ( $dot_parts[0] <= 1 )
+		{
+			%ast_ver_hash = (
+				"major" => $dot_parts[0],
+				"minor" => $dot_parts[1],
+				"build" => $dot_parts[2],
+				"revision" => $dot_parts[3],
+				"postfix" => $ast_ver_postfix
+			);
+		}
+
+	# digium dropped the 1 from asterisk 10 but we still need it
+	if ( $dot_parts[0] > 1 )
+		{
+			%ast_ver_hash = (
+				"major" => 1,
+				"minor" => $dot_parts[0],
+				"build" => $dot_parts[1],
+				"revision" => $dot_parts[2],
+				"postfix" => $ast_ver_postfix
+			);
+		}
+
+	return ( %ast_ver_hash );
 	}

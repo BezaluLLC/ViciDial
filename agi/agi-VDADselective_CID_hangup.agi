@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-VDADselective_CID_hangup.agi version 2.0.5   *NO DB Connection*
+# agi-VDADselective_CID_hangup.agi      version 2.6
 # 
 # Will hangup a call if it is not within the specified area codes
 #
@@ -11,11 +11,12 @@
 #exten => 8352,2,Playback(85100001)
 #exten => 8352,3,Hangup
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 60918-1151 - First build
 # 100903-0041 - Changed lead_id max length to 10 digits
+# 130108-1813 - Changes for Asterisk 1.8 compatibility
 #
 
 $script = 'agi-VDADselective_CID_hangup.agi';
@@ -171,11 +172,14 @@ foreach $i (sort keys %AGI)
 if ($areacode !~ /$clear_area_codes/)
 {
 	print "SET HANGUP $channel\n";
+	$result = <STDIN>;
 	checkresult($result);
 	if ($AGILOG) {$agi_string = "channel Hungup: $channel";   &agi_output;}
 	print "SET EXTENSION $extension\n";
+	$result = <STDIN>;
 	checkresult($result);
 	print "SET PRIORITY 3\n";
+	$result = <STDIN>;
 	checkresult($result);
 
 }

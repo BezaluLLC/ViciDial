@@ -1,16 +1,17 @@
 #!/usr/bin/perl
 #
-# ADMIN_restart_roll_logs.pl    version 2.2.0
+# ADMIN_restart_roll_logs.pl    version 2.6
 #
 # script to roll the Asterisk logs on machine restart
 #
 # have this run on the astersik server 
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES:
 # 90311-0921 - Added /var/log/asterisk/screenlog log rolling
 # 90508-0535 - Changes root screenlog to /var/log/astguiclient
+# 130108-1715 - Changes for new log rolling script compatibility
 #
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -27,23 +28,42 @@ $now_date = "$year-$mon-$mday---$hour$min$sec";
 
 
 print "rolling Asterisk messages log...\n";
-`mv -f /var/log/asterisk/messages /var/log/asterisk/messages.$now_date`;
+if ( -e '/var/log/asterisk/messages' )
+	{
+	`mv -f /var/log/asterisk/messages /var/log/asterisk/messages.$now_date`;
+	}
 
 print "rolling Asterisk event log...\n";
-`mv -f /var/log/asterisk/event_log /var/log/asterisk/event_log.$now_date`;
+if ( -e '/var/log/asterisk/event_log' )
+	{
+	`mv -f /var/log/asterisk/event_log /var/log/asterisk/event_log.$now_date`;
+	}
 
 print "rolling Asterisk cdr logs...\n";
-`mv -f /var/log/asterisk/cdr-csv/Master.csv /var/log/asterisk/cdr-csv/Master.csv.$now_date`;
-`mv -f /var/log/asterisk/cdr-custom/Master.csv /var/log/asterisk/cdr-custom/Master.csv.$now_date`;
+if ( -e '/var/log/asterisk/cdr-csv/Master.csv' )
+	{
+	`mv -f /var/log/asterisk/cdr-csv/Master.csv /var/log/asterisk/cdr-csv/Master.csv.$now_date`;
+	}
+if ( -e '/var/log/asterisk/cdr-custom/Master.csv' )
+	{
+	`mv -f /var/log/asterisk/cdr-custom/Master.csv /var/log/asterisk/cdr-custom/Master.csv.$now_date`;
+	}
 
 print "rolling Asterisk screen log...\n";
-`mv -f /var/log/astguiclient/screenlog.0 /var/log/astguiclient/screenlog.0.$now_date`;
+if ( -e '/var/log/astguiclient/screenlog.0' )
+	{
+	`mv -f /var/log/astguiclient/screenlog.0 /var/log/astguiclient/screenlog.0.$now_date`;
+	}
 
-print "rolling Asterisk root screen log...\n";
-`mv -f /root/screenlog.0 /root/screenlog.0.$now_date`;
+if ( -e '/root/screenlog.0' )
+	{
+	`mv -f /root/screenlog.0 /var/log/astguiclient/screenlog.0.root.$now_date`;
+	}
 
-print "rolling Asterisk var log screen log...\n";
-`mv -f /var/log/asterisk/screenlog.0 /var/log/asterisk/screenlog.0.$now_date`;
+if ( -e '/var/log/asterisk/screenlog.0' )
+	{
+	`mv -f /var/log/asterisk/screenlog.0 /var/log/asterisk/screenlog.0.asterisk.$now_date`;
+	}
 
 
 print "FINISHED... EXITING\n";

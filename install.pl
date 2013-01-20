@@ -2,7 +2,7 @@
 
 # install.pl version 2.6
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 
 # CHANGES
@@ -28,6 +28,7 @@
 # 120224-1614 - Added function to clear out web auth log files
 # 121027-1750 - Added svn logging information
 # 121215-2059 - Added keepalive option E for email process
+# 130108-1853 - Added Asterisk 1.8 option with default conf files copy
 #
 
 ############################################
@@ -1824,9 +1825,10 @@ else
 		while ($continue =~/NO/)
 			{
 			print "\nEnter the Asterisk version that you are installing VICIDIAL for\n";
-			print "(value should be listing of characters with no spaces: 123456)\n";
+			print "(value should be only one of the options below:)\n";
 			print " 1.2\n";
 			print " 1.4\n";
+			print " 1.8\n";
 			print "Enter asterisk version or press enter for default: [$VARasterisk_version] ";
 			$PROMPTasterisk_version = <STDIN>;
 			chomp($PROMPTasterisk_version);
@@ -2676,9 +2678,19 @@ if ( ($PROMPTcopy_conf_files =~ /y/i) || ($CLIcopy_conf_files =~ /y/i) )
 		}
 	else
 		{
-		`cp -f ./docs/conf_examples/extensions.conf.sample-1.4 /etc/asterisk/extensions.conf`;
-		`cp -f ./docs/conf_examples/iax.conf.sample-1.4 /etc/asterisk/iax.conf`;
-		`cp -f ./docs/conf_examples/sip.conf.sample-1.4 /etc/asterisk/sip.conf`;
+		if ($VARasterisk_version =~ /^1.8/)
+			{
+			`cp -f ./docs/conf_examples/extensions.conf.sample-1.8 /etc/asterisk/extensions.conf`;
+			`cp -f ./docs/conf_examples/manager.conf.sample-1.8 /etc/asterisk/manager.conf`;
+			`cp -f ./docs/conf_examples/iax.conf.sample-1.4 /etc/asterisk/iax.conf`;
+			`cp -f ./docs/conf_examples/sip.conf.sample-1.4 /etc/asterisk/sip.conf`;
+			}
+		else
+			{
+			`cp -f ./docs/conf_examples/extensions.conf.sample-1.4 /etc/asterisk/extensions.conf`;
+			`cp -f ./docs/conf_examples/iax.conf.sample-1.4 /etc/asterisk/iax.conf`;
+			`cp -f ./docs/conf_examples/sip.conf.sample-1.4 /etc/asterisk/sip.conf`;
+			}
 		}
 	`cp -f ./docs/conf_examples/meetme.conf.sample /etc/asterisk/meetme.conf`;
 	`cp -f ./docs/conf_examples/manager.conf.sample /etc/asterisk/manager.conf`;

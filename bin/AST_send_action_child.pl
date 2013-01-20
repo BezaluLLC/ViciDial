@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_send_action_child.pl version 2.4
+# AST_send_action_child.pl version 2.6
 # 
 # Part of the Asterisk Central Queue System (ACQS)
 #
@@ -14,7 +14,7 @@
 # to be executed. connect to the manager interface, send the action and logoff
 # then exit.
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 50810-1547 - Added database server variable definitions lookup
@@ -30,6 +30,7 @@
 # 80418-0927 - Added man_id to logging output for better tracking, raised sleep times
 # 100625-1141 - Added waitfors after orginate and logout to fix broken pipe errors in asterisk <MikeC>
 # 100625-1206 - Use strict is a performance hit and should only be uncommented for debugging <MikeC>
+# 130108-1714 - Changes for Asterisk 1.8 compatibility
 #
 
 $|++;
@@ -249,7 +250,7 @@ if ($action) {
 	$tn->cmd(String => "Action: Logoff\n\n", Prompt => "/.*/");
         $tn->buffer_empty;	
 	
-	$tn->waitfor(Match => '/Message:.*\n\n/', Timeout => 10);
+	$tn->waitfor(Match => '/Message:.*\n\n/', Timeout => 15);
 
 	if ($FULL_LOG and $SYSLOG) {
 		my $event_string = $man_id . "|2|" . $data1 . "|";

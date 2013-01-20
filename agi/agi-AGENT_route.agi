@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-AGENT_route.agi version 2.4
+# agi-AGENT_route.agi version 2.6
 # 
 # for use with a Call Menu in the custom dialplan section or as an AGI route.
 #
@@ -28,11 +28,12 @@
 #; example with 4-digit agent IDs
 # exten => _XXXX,1,AGI(agi-AGENT_route.agi,default---AGENTDIRECT---ACTIVE)
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 100321-0108 - First Build
 # 100704-2128 - Added several options
+# 130108-1811 - Changes for Asterisk 1.8 compatibility
 #
 
 $script = 'agi-AGENT_route.agi';
@@ -325,10 +326,13 @@ if (length($transfer_prompt) > 1)
 
 if ($AGILOG) {$agi_string = "exiting the AGENT app, transferring call to $did_extension @ $ext_context";   &agi_output;}
 print "SET CONTEXT $ext_context\n";
+	$result = <STDIN>;
 	checkresult($result);
 print "SET EXTENSION $did_extension\n";
+	$result = <STDIN>;
 	checkresult($result);
 print "SET PRIORITY 1\n";
+	$result = <STDIN>;
 	checkresult($result);
 
 exit;

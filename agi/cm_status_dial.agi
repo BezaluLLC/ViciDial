@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# cm_status_dial.agi   version 2.4
+# cm_status_dial.agi   version 2.6
 # 
 # Used as a Call Menu AGI option route to alter status of a lead before dialing.
 # The lead is only updated if the call is tagged with a lead_id before this script.
@@ -14,11 +14,12 @@
 # ;inbound calls check calltime:
 #cm_status_dial.agi,XFER-----917275551212-----default
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 120909-2301 - First Build
 # 120924-0637 - Added log updating
+# 130108-1820 - Changes for Asterisk 1.8 compatibility
 #
 
 $script = 'cm_status_dial.agi';
@@ -291,10 +292,13 @@ $dbhA->disconnect();
 if ($AGILOG) {$agi_string = "      Status Dial, transferring call   |$dial_extension|$dial_context|$lead_id|$calleridname|";   &agi_output;}
 
 print "SET CONTEXT $dial_context\n";
+	$result = <STDIN>;
 	checkresult($result);
 print "SET EXTENSION $dial_extension\n";
+	$result = <STDIN>;
 	checkresult($result);
 print "SET PRIORITY 1\n";
+	$result = <STDIN>;
 	checkresult($result);
 
 

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# VD_amd.agi version 2.4
+# VD_amd.agi version 2.6
 #
 # runs after a call goes through AMD in extensions.conf to send the call on to
 # it's proper destination, or when agent sends to VM message
@@ -21,7 +21,7 @@
 # exten => _8320*.,1,AGI(VD_amd.agi,${EXTEN}-----YES)
 # exten => _8320*.,2,Hangup
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 60206-1434 - first build
@@ -42,6 +42,8 @@
 # 110324-2334 - Logging changes made
 # 110812-1515 - Added static tts file parsing and replacement
 # 110926-1902 - Added extended logging and additional waitforsilence options
+# 120430-2214 - Converted call to Monitor app to be asterisk 1.8 compatible
+# 130108-1808 - Changes for Asterisk 1.8 compatibility
 #
 
 $script = 'VD_amd.agi';
@@ -113,7 +115,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
     or die "Couldn't connect to database: " . DBI->errstr;
 
 ### Grab Server values from the database
-$stmtA = "SELECT agi_output FROM servers where server_ip = '$VARserver_ip';";
+$stmtA = "SELECT agi_output,asterisk_version FROM servers where server_ip = '$VARserver_ip';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -122,6 +124,7 @@ if ($sthArows > 0)
 	$AGILOG = '0';
 	@aryA = $sthA->fetchrow_array;
 	$DBagi_output =			$aryA[0];
+	$asterisk_version =		$aryA[1];
 	if ($DBagi_output =~ /STDERR/)	{$AGILOG = '1';}
 	if ($DBagi_output =~ /FILE/)	{$AGILOG = '2';}
 	if ($DBagi_output =~ /BOTH/)	{$AGILOG = '3';}
@@ -515,7 +518,15 @@ else
 			$campaign_rec_filename =~ s/\"|\'//gi;
 			$campaign_rec_filename =~ s/ //gi;
 
-			$AGI->exec("Monitor wav|/var/spool/asterisk/monitor/MIX/$campaign_rec_filename"); 
+			%ast_ver_str = parse_asterisk_version($asterisk_version);
+			if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+				{
+				$AGI->exec("Monitor wav|/var/spool/asterisk/monitor/MIX/$campaign_rec_filename");
+				}
+			else
+				{
+				$AGI->exec("Monitor","wav,/var/spool/asterisk/monitor/MIX/$campaign_rec_filename"); 
+				}
 
 			### insert record into recording_log table ###
 			$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$VD_phone_number','$now_date','$now_date_epoch','0','$campaign_rec_filename','$VD_lead_id','VDAD','$campaign_rec_filename','$uniqueid');";
@@ -837,4 +848,47 @@ sub agi_output
 	if ( ($AGILOG == '1') || ($AGILOG == '3') )
 		{print STDERR "$now_date|$script|$agi_string\n";}
 	$agi_string='';
+	}
+
+# subroutine to parse the asterisk version
+# and return a hash with the various part
+sub parse_asterisk_version
+	{
+	# grab the arguments
+	my $ast_ver_str = $_[0];
+
+	# get everything after the - and put it in $ast_ver_postfix
+	my @hyphen_parts = split( /-/ , $ast_ver_str );
+
+	my $ast_ver_postfix = $hyphen_parts[1];
+
+	# now split everything before the - up by the .
+	my @dot_parts = split( /\./ , $hyphen_parts[0] );
+
+	my %ast_ver_hash;
+
+	if ( $dot_parts[0] <= 1 )
+		{
+			%ast_ver_hash = (
+				"major" => $dot_parts[0],
+				"minor" => $dot_parts[1],
+				"build" => $dot_parts[2],
+				"revision" => $dot_parts[3],
+				"postfix" => $ast_ver_postfix
+			);
+		}
+
+	# digium dropped the 1 from asterisk 10 but we still need it
+	if ( $dot_parts[0] > 1 )
+		{
+			%ast_ver_hash = (
+				"major" => 1,
+				"minor" => $dot_parts[0],
+				"build" => $dot_parts[1],
+				"revision" => $dot_parts[2],
+				"postfix" => $ast_ver_postfix
+			);
+		}
+
+	return ( %ast_ver_hash );
 	}

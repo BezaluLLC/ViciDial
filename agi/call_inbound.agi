@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# call_inbound.agi version 2.0.5   *DBI-version*
+# call_inbound.agi      version 2.6
 # 
 # runs at the beginning and ending of every inbound call received
 # 
@@ -17,12 +17,13 @@
 # 
 # 
 #
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 60731-1435 - changed to use DBI-DBD::mysql
 #            - changed to use /etc/astguiclient.conf for configs
 # 60817-1102 - added output options check from database
+# 130108-1838 - Changes for Asterisk 1.8 compatibility
 #
 
 $script = 'call_inbound.agi';
@@ -196,6 +197,7 @@ while(<STDIN>) {
 
 		### set the callerid if sent with DNIS
 		print "SET CALLERID $callerid\n";
+		$result = <STDIN>;
 		checkresult($result);
 		}
 }

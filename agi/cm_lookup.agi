@@ -36,7 +36,7 @@
 #; example with 8-digit vendor lead codes
 # exten => _XXXXXXXX,1,AGI(cm_lookup.agi,vendor_lead_code---CAMPLISTSALL---TESTCAMP---lastname_oneyestwono---N---N---Y---N)
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 111004-1450 - First Build
@@ -44,6 +44,7 @@
 # 120511-1508 - Added option for 'address3' uniqueid update and 'user' agent_user_id field update if AGENT-dial-in AGI is used beforoe this AGI
 # 120604-1311 - Added title call variable option
 # 120824-1221 - Added filtering for non-digits in extension, and example of variable-digit account number
+# 130108-1817 - Changes for Asterisk 1.8 compatibility
 #
 
 $script = 'cm_lookup.agi';
@@ -513,10 +514,13 @@ $AGI->stream_file('sip-silence');
 
 if ($AGILOG) {$agi_string = "exiting the cm_lookup.agi app, transferring call to $found_extension @ $context + $found_priority";   &agi_output;}
 print "SET CONTEXT $context\n";
+	$result = <STDIN>;
 	checkresult($result);
 print "SET EXTENSION $found_extension\n";
+	$result = <STDIN>;
 	checkresult($result);
 print "SET PRIORITY $found_priority\n";
+	$result = <STDIN>;
 	checkresult($result);
 
 exit;

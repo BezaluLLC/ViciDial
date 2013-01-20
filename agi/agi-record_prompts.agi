@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-record_prompts.agi version 2.2.0-4
+# agi-record_prompts.agi      version 2.6
 #
 # for recording prompts to GSM file over the phone
 # Saves recordings with 8-digit filenames to be played when exten is dialed
@@ -29,11 +29,12 @@
 #	- vm-msgsaved
 #	- vm-goodbye
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 71226-1303 - Added option to change format GSM/WAV and timeout through flags
 # 90519-1019 - Changed formatting to conform to other scripts
+# 130108-1815 - Changes for Asterisk 1.8 compatibility
 #
 
 $US='_';
@@ -157,10 +158,13 @@ sub welcome_1
 		{
 		print STDERR "\nexiting the ping app\n";
 		print "SET CONTEXT demo\n";
+			$result = <STDIN>;
 			checkresult($result);
 		print "SET EXTENSION 8158\n";
+			$result = <STDIN>;
 			checkresult($result);
 		print "SET PRIORITY 3\n";
+			$result = <STDIN>;
 			checkresult($result);
 		exit;
 		}

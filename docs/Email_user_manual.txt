@@ -81,6 +81,9 @@ groups, most of these fields work in the same way) and submit the new email
 account.  When you are ready to have Vicidial start checking it for emails, be 
 sure the "Active" setting is set to "Y".
 
+Also make sure that any campaigns that you want to have email handling active on
+should have the "Allow Emails" setting set to Y.
+
 The checking of email accounts is handled by a cron job that should only be 
 active on ONLY ONE server on your Vicidial installation:
 

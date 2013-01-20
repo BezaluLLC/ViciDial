@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-VDADautoREMINDER.agi version 0.4    *DBI-version*
+# agi-VDADautoREMINDER.agi      version 2.6
 # 
 # runs when a call comes in from the VICIDIAL auto_dialer. This script will 
 # send the calls out to specified voicemail boxes in if called person presses key.
@@ -22,13 +22,14 @@
 # exten => 8372,1,AGI(call_log.agi,${EXTEN})
 # exten => 8372,2,AGI(agi-VDADautoREMINDER.agi,${EXTEN})
 #
-# Copyright (C) 2006  Matt Florell <vicidial@gmail.com>    LICENSE: GPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: GPLv2
 #
 # CHANGES
 # 60313-1626 - First build
 # 60810-1729 - Changed to DBI
 #            - changed to use /etc/astguiclient.conf for configs
 # 60818-1144 - added output options check from database
+# 130108-1814 - Changes for Asterisk 1.8 compatibility
 #
 
 $script = 'agi-VDADautoREMINDER.agi';
@@ -207,6 +208,7 @@ if ( (length($callerid)>20) && ($callerid =~ /\"\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S
    $callerid =~ s/\".*$//gi;
 	### set the callerid to the ACQS value(calleridname)
 	print "SET CALLERID $callerid\n";
+	$result = <STDIN>;
 	checkresult($result);
 	if ($AGILOG) {$agi_string = "callerID changed: $callerid";   &agi_output;}
   }
@@ -217,6 +219,7 @@ if ( (
    $callerid = $calleridname;
 	### set the callerid to the ACQS value(calleridname)
 	print "SET CALLERID $callerid\n";
+	$result = <STDIN>;
 	checkresult($result);
 	if ($AGILOG) {$agi_string = "callerID changed: $callerid";   &agi_output;}
   }
@@ -413,10 +416,13 @@ if ($pin == "1")	### send call to voicemail
 	### SEND CALL TO VOICEMAIL BOX ###
 	if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $voicemail_dump_exten$VMAIL_box";   &agi_output;}
 	print "SET CONTEXT $ext_context\n";
+		$result = <STDIN>;
 		checkresult($result);
 	print "SET EXTENSION $voicemail_dump_exten$VMAIL_box\n";
+		$result = <STDIN>;
 		checkresult($result);
 	print "SET PRIORITY 1\n";
+		$result = <STDIN>;
 		checkresult($result);
 
 

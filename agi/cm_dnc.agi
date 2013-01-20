@@ -17,10 +17,11 @@
 # example of what to put in the AGI entry for a Call Menu AGI route:
 # cm_dnc.agi,DNC---YES---TESTCAMP---B---CAMP
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 121109-1623 - First draft
+# 130108-1817 - Changes for Asterisk 1.8 compatibility
 #
 
 $script = 'cm_dnc.agi';
@@ -299,10 +300,13 @@ $dbhA->disconnect();
 
 if ($AGILOG) {$agi_string = "exiting the cm_dnc app, transferring call to $next_step:$context   |$phone_number|";   &agi_output;}
 print "SET CONTEXT $context\n";
+	$result = <STDIN>;
 	checkresult($result);
 print "SET EXTENSION $next_step\n";
+	$result = <STDIN>;
 	checkresult($result);
 print "SET PRIORITY 1\n";
+	$result = <STDIN>;
 	checkresult($result);
 
 exit;

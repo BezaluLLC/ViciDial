@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-VDADfixCXFER.agi version 2.0.5   *DBI-version*
+# agi-VDADfixCXFER.agi      version 2.6
 # 
 # runs when a Consultative transfer is released by the vicidial fronter as the
 # call arrives on another channel so that the vicidial_live_agents record is
@@ -12,12 +12,13 @@
 # exten => _8600XXX*.,1,AGI(agi-VDADfixCXFER.agi)
 # exten => _010*010*010*015*8600XXX*.,1,AGI(agi-VDADfixCXFER.agi)
 # 
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 60809-1749 - First build
 # 60817-1122 - Added output options check from database
 # 70212-1252 - Fixed issue with Local/ channel transfers on same server
+# 130108-1812 - Changes for Asterisk 1.8 compatibility
 #
 
 $script = 'agi-VDADfixCXFER.agi';
@@ -189,6 +190,7 @@ if ($AGILOG) {$agi_string = "CXFERfix : $lead_id $user $channel $uniqueid";   &a
 	$CIDlead = sprintf("%010s", $lead_id);
 	$CIDlead = "C123412345$CIDlead";
 	print "SET CALLERID $CIDlead\n";
+	$result = <STDIN>;
 	checkresult($result);
 	if ($AGILOG) {$agi_string = "callerID changed: $CIDlead";   &agi_output;}
 
@@ -211,8 +213,10 @@ if ($AGILOG) {$agi_string = "exiting the CXFERfix app, transferring call to $con
 #print "SET CONTEXT $ext_context\n";
 #	checkresult($result);
 print "SET EXTENSION $conf_exten\n";
+	$result = <STDIN>;
 	checkresult($result);
 print "SET PRIORITY 1\n";
+	$result = <STDIN>;
 	checkresult($result);
 
 

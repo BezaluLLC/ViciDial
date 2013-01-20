@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_update.pl version 2.4
+# AST_update.pl version 2.6
 #
 # DESCRIPTION:
 # uses the Asterisk Manager interface and Net::MySQL to update the live_channels
@@ -30,7 +30,7 @@
 #
 # It is recommended that you run this program on the local Asterisk machine
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # version changes:
 # 41228-1659 - modified to compensate for manager output response hiccups
@@ -60,9 +60,10 @@
 # 90604-1127 - Added support for DAHDI channels
 # 100625-1220 - Added waitfors after logout to fix broken pipe errors in asterisk <MikeC>
 # 101004-1042 - Updated parked_channels checking for changes to parked calls functions
+# 130108-1710 - Changes for Asterisk 1.8 compatibility
 #
 
-$build = '101004-1042';
+$build = '130108-1710';
 
 # constants
 $SYSPERF=0;	# system performance logging to MySQL server_performance table every 5 seconds
@@ -289,6 +290,8 @@ $sthA->finish();
 $show_channels_format = 1;
 if ($AST_ver =~ /^1\.0/i) {$show_channels_format = 0;}
 if ($AST_ver =~ /^1\.4/i) {$show_channels_format = 2;}
+if ($AST_ver =~ /^1\.6/i) {$show_channels_format = 3;}
+if ($AST_ver =~ /^1\.8/i) {$show_channels_format = 4;}
 print STDERR "SHOW CHANNELS format: $show_channels_format\n";
 
 
@@ -848,7 +851,8 @@ while($one_day_interval > 0)
 						#	$bridged =		$list_chan_12[11];
 							}
 						$extension =~ s/^SIP\/|-\S+$//gi;
-						$extension =~ s/\|.*//gi;
+						$extension =~ s/\|.*//gi; # remove everything after the |
+						$extension =~ s/,.*//gi; # remove everything after the ,
 						$QRYchannel = "$channel$US$extension";
 
 						if( ($DB) or ($UD_bad_grab) ){print "channel:   |$channel|\n";}

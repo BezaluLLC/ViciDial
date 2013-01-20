@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 #
-# AST_conf_update.pl version 2.4
+# AST_conf_update.pl version 2.6
 #
 # This script checks if there are channels in reserved conferences
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 50810-1532 - Added database server variable definitions lookup
 # 50823-1456 - Added commandline arguments for debug at runtime
@@ -16,6 +16,7 @@
 # 100625-1220 - Added waitfors after logout to fix broken pipe errors in asterisk <MikeC>
 # 100811-2054 - Added --no-vc-3way-check flag to use when AST_conf_update_3way.pl script is used
 # 100928-1506 - Changed from hard-coded 60 minute limit to servers.vicidial_recording_limit
+# 130108-1712 - Changes for Asterisk 1.8 compatibility
 #
 
 # constants
@@ -119,7 +120,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
  or die "Couldn't connect to database: " . DBI->errstr;
 
 ### Grab Server values from the database
-$stmtA = "SELECT telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,max_vicidial_trunks,answer_transfer_agent,local_gmt,ext_context,vicidial_recording_limit FROM servers where server_ip = '$server_ip';";
+$stmtA = "SELECT telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,max_vicidial_trunks,answer_transfer_agent,local_gmt,ext_context,vicidial_recording_limit,asterisk_version FROM servers where server_ip = '$server_ip';";
 if ($DB) {print "|$stmtA|\n";}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -140,6 +141,7 @@ if ($sthArows > 0)
 	$DBSERVER_GMT		=		$aryA[9];
 	$DBext_context	=			$aryA[10];
 	$vicidial_recording_limit = $aryA[11];
+	$asterisk_version	=		$aryA[12];
 	if ($DBtelnet_host)				{$telnet_host = $DBtelnet_host;}
 	if ($DBtelnet_port)				{$telnet_port = $DBtelnet_port;}
 	if ($DBASTmgrUSERNAME)			{$ASTmgrUSERNAME = $DBASTmgrUSERNAME;}
@@ -238,7 +240,7 @@ if ($no_vc_3way_check < 1)
 		@aryA = $sthA->fetchrow_array;
 		$PTextensions[$rec_count] =		 $aryA[0];
 		$PT_conf_extens[$rec_count] =	 $aryA[1];
-			if ($DB) {print "|$PT_conf_extens[$rec_count]|$PTextensions[$rec_count]|\n";}
+		if ($DB) {print "|$PT_conf_extens[$rec_count]|$PTextensions[$rec_count]|\n";}
 		$rec_count++;
 		}
 	$sthA->finish(); 
@@ -260,71 +262,81 @@ if ($no_vc_3way_check < 1)
 
 
 	$i=0;
-	foreach(@PTextensions)
-		{
-		@list_channels=@MT;
-		$t->buffer_empty;
-		$COMMAND = "Action: Command\nCommand: Meetme list $PT_conf_extens[$i]\n\nAction: Ping\n\n";
-		if ($DB) {print "|$PT_conf_extens[$i]|$COMMAND|\n";}
-		@list_channels = $t->cmd(String => "$COMMAND", Prompt => '/Response: Pong.*/'); 
-
-
-		$j=0;
-		$conf_empty[$i]=0;
-		$conf_users[$i]='';
-		foreach(@list_channels)
-			{
-			if($DB){print "|$list_channels[$j]|\n";}
-			### mark all empty conferences and conferences with only one channel as empty
-			if ($list_channels[$j] =~ /No active conferences|No such conference/i)
-				{$conf_empty[$i]++;}
-			if ($list_channels[$j] =~ /1 users in that conference/i)
-				{$conf_empty[$i]++;}
-			$j++;
-			}
-
-		if($DB){print "Meetme list $PT_conf_extens[$i]-  Exten:|$PTextensions[$i]| Empty:|$conf_empty[$i]|    ";}
-		if (!$conf_empty[$i])
-			{
-			if($DB){print "CONFERENCE STILL HAS PARTICIPANTS, DOING NOTHING FOR THIS CONFERENCE\n";}
-			if ($PTextensions[$i] =~ /Xtimeout\d$/i) 
+	if ( !( ( @PTextensions == 1 ) && ( $PTextensions[0] eq '') ) ) 
+		{ 
+		foreach(@PTextensions)
+			{	
+			@list_channels=@MT;
+			$t->buffer_empty;
+			$COMMAND = "Action: Command\nCommand: Meetme list $PT_conf_extens[$i]\n\nAction: Ping\n\n";
+			if ($DB) {print "|$PTextensions[$i]|$PT_conf_extens[$i]|$COMMAND|\n";}
+			%ast_ver_str = parse_asterisk_version($asterisk_version);
+			if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
 				{
-				$PTextensions[$i] =~ s/Xtimeout\d$//gi;
-				$stmtA = "UPDATE vicidial_conferences set extension='$PTextensions[$i]' where server_ip='$server_ip' and conf_exten='$PT_conf_extens[$i]';";
+				@list_channels = $t->cmd(String => "$COMMAND", Prompt => '/Response: Pong.*/'); 
+				}
+			else
+				{
+				@list_channels = $t->cmd(String => "$COMMAND", Prompt => '/Response: Success\nPing: Pong.*/');
+				}
+
+			$j=0;
+			$conf_empty[$i]=0;
+			$conf_users[$i]='';
+			foreach(@list_channels)
+				{
+				if($DB){print "|$list_channels[$j]|\n";}
+				### mark all empty conferences and conferences with only one channel as empty
+				if ($list_channels[$j] =~ /No active conferences|No active MeetMe conferences|No such conference/i)
+					{$conf_empty[$i]++;}
+				if ($list_channels[$j] =~ /1 users in that conference/i)
+					{$conf_empty[$i]++;}
+				$j++;
+				}
+
+			if($DB){print "Meetme list $PT_conf_extens[$i]-  Exten:|$PTextensions[$i]| Empty:|$conf_empty[$i]|    ";}
+			if (!$conf_empty[$i])
+				{
+				if($DB){print "CONFERENCE STILL HAS PARTICIPANTS, DOING NOTHING FOR THIS CONFERENCE\n";}
+				if ($PTextensions[$i] =~ /Xtimeout\d$/i) 
+					{
+					$PTextensions[$i] =~ s/Xtimeout\d$//gi;
+					$stmtA = "UPDATE vicidial_conferences set extension='$PTextensions[$i]' where server_ip='$server_ip' and conf_exten='$PT_conf_extens[$i]';";
+					if($DB){print STDERR "\n|$stmtA|\n";}
+					$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
+					}
+				}
+			else
+				{
+				$NEWexten[$i] = $PTextensions[$i];
+				$leave_3waySQL='1';
+				if ($PTextensions[$i] =~ /Xtimeout3$/i) {$NEWexten[$i] =~ s/Xtimeout3$/Xtimeout2/gi;}
+				if ($PTextensions[$i] =~ /Xtimeout2$/i) {$NEWexten[$i] =~ s/Xtimeout2$/Xtimeout1/gi;}
+				if ($PTextensions[$i] =~ /Xtimeout1$/i) {$NEWexten[$i] = ''; $leave_3waySQL='0';}
+				if ( ($PTextensions[$i] !~ /Xtimeout\d$/i) and (length($PTextensions[$i])> 0) ) {$NEWexten[$i] .= 'Xtimeout3';}
+
+				if ($NEWexten[$i] =~ /Xtimeout1$/i)
+					{
+					### Kick all participants if there are any left in the conference so it can be reused
+					$local_DEF = 'Local/5555';
+					$local_AMP = '@';
+					$kick_local_channel = "$local_DEF$PT_conf_extens[$i]$local_AMP$ext_context";
+					$queryCID = "ULGC36$TDnum";
+
+					$stmtA="INSERT INTO vicidial_manager values('','','$now_date','NEW','N','$server_ip','','Originate','$queryCID','Channel: $kick_local_channel','Context: $ext_context','Exten: 8300','Priority: 1','Callerid: $queryCID','','','','','');";
+					$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
+					if($DB){print STDERR "\n|$affected_rows|$stmtA|\n";}
+					}
+
+				$stmtA = "UPDATE vicidial_conferences set extension='$NEWexten[$i]',leave_3way='$leave_3waySQL' where server_ip='$server_ip' and conf_exten='$PT_conf_extens[$i]';";
 					if($DB){print STDERR "\n|$stmtA|\n";}
 				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
 				}
+
+			$i++;
+				### sleep for 10 hundredths of a second
+				usleep(1*100*1000);
 			}
-		else
-			{
-			$NEWexten[$i] = $PTextensions[$i];
-			$leave_3waySQL='1';
-			if ($PTextensions[$i] =~ /Xtimeout3$/i) {$NEWexten[$i] =~ s/Xtimeout3$/Xtimeout2/gi;}
-			if ($PTextensions[$i] =~ /Xtimeout2$/i) {$NEWexten[$i] =~ s/Xtimeout2$/Xtimeout1/gi;}
-			if ($PTextensions[$i] =~ /Xtimeout1$/i) {$NEWexten[$i] = ''; $leave_3waySQL='0';}
-			if ( ($PTextensions[$i] !~ /Xtimeout\d$/i) and (length($PTextensions[$i])> 0) ) {$NEWexten[$i] .= 'Xtimeout3';}
-
-			if ($NEWexten[$i] =~ /Xtimeout1$/i)
-				{
-				### Kick all participants if there are any left in the conference so it can be reused
-				$local_DEF = 'Local/5555';
-				$local_AMP = '@';
-				$kick_local_channel = "$local_DEF$PT_conf_extens[$i]$local_AMP$ext_context";
-				$queryCID = "ULGC36$TDnum";
-
-				$stmtA="INSERT INTO vicidial_manager values('','','$now_date','NEW','N','$server_ip','','Originate','$queryCID','Channel: $kick_local_channel','Context: $ext_context','Exten: 8300','Priority: 1','Callerid: $queryCID','','','','','');";
-					$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
-				if($DB){print STDERR "\n|$affected_rows|$stmtA|\n";}
-				}
-
-			$stmtA = "UPDATE vicidial_conferences set extension='$NEWexten[$i]',leave_3way='$leave_3waySQL' where server_ip='$server_ip' and conf_exten='$PT_conf_extens[$i]';";
-				if($DB){print STDERR "\n|$stmtA|\n";}
-			$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
-			}
-
-		$i++;
-			### sleep for 10 hundredths of a second
-			usleep(1*100*1000);
 		}
 
 	$t->buffer_empty;
@@ -379,64 +391,75 @@ $t->waitfor('/Authentication accepted/');		# waitfor auth accepted
 
 
 $i=0;
-foreach(@PTextensions)
+if ( !( ( @PTextensions == 1 ) && ( $PTextensions[0] eq '') ) )
 	{
-	if (length($PT_conf_extens[$i]) > 0)
+	foreach(@PTextensions)
 		{
-		@list_channels=@MT;
-		$t->buffer_empty;
-		$COMMAND = "Action: Command\nCommand: Meetme list $PT_conf_extens[$i]\n\nAction: Ping\n\n";
-		if ($DB) {print "|$PT_conf_extens[$i]|$COMMAND|\n";}
-		@list_channels = $t->cmd(String => "$COMMAND", Prompt => '/Response: Pong.*/'); 
-
-
-		$j=0;
-		$conf_empty[$i]=0;
-		$conf_users[$i]='';
-		foreach(@list_channels)
+		if (length($PT_conf_extens[$i]) > 0)
 			{
-			if($DB){print "|$list_channels[$j]|\n";}
-			if ($list_channels[$j] =~ /No active conferences|No such conference/i)
-				{$conf_empty[$i]++;}
-	#		if ($list_channels[$j] =~ /^User /i)
-	#			{
-	#			$userx = '';
-	#			$userx = $list_channels[$j];
-	#			$userx =~ s/User \#: //gi;
-	#			$conf_users[$i] .= "$userx|";
-	#			}
-			$j++;
-			}
-
-		if($DB){print "Meetme list $PT_conf_extens[$i]-  Exten:|$PTextensions[$i]| Empty:|$conf_empty[$i]|    ";}
-		if (!$conf_empty[$i])
-			{
-			if($DB){print "CONFERENCE STILL HAS PARTICIPANTS, DOING NOTHING FOR THIS CONFERENCE\n";}
-			if ($PTextensions[$i] =~ /Xtimeout\d$/i) 
+			@list_channels=@MT;
+			$t->buffer_empty;
+			$COMMAND = "Action: Command\nCommand: Meetme list $PT_conf_extens[$i]\n\nAction: Ping\n\n";
+			if ($DB) {print "|$PT_conf_extens[$i]|$COMMAND|\n";}
+			%ast_ver_str = parse_asterisk_version($asterisk_version);
+			if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
 				{
-				$PTextensions[$i] =~ s/Xtimeout\d$//gi;
-				$stmtA = "UPDATE conferences set extension='$PTextensions[$i]' where server_ip='$server_ip' and conf_exten='$PT_conf_extens[$i]';";
+				@list_channels = $t->cmd(String => "$COMMAND", Prompt => '/Response: Pong.*/'); 
+				}
+			else
+				{
+				@list_channels = $t->cmd(String => "$COMMAND", Prompt => '/Response: Success\nPing: Pong.*/');
+				}
+
+
+			$j=0;
+			$conf_empty[$i]=0;
+			$conf_users[$i]='';
+			foreach(@list_channels)
+				{
+				if($DB){print "|$list_channels[$j]|\n";}
+				if ($list_channels[$j] =~ /No active conferences|No active MeetMe conferences|No such conference/i) 
+					{$conf_empty[$i]++;}
+		#		if ($list_channels[$j] =~ /^User /i)
+		#			{
+		#			$userx = '';
+		#			$userx = $list_channels[$j];
+		#			$userx =~ s/User \#: //gi;
+		#			$conf_users[$i] .= "$userx|";
+		#			}
+				$j++;
+				}
+
+			if($DB){print "Meetme list $PT_conf_extens[$i]-  Exten:|$PTextensions[$i]| Empty:|$conf_empty[$i]|    ";}
+			if (!$conf_empty[$i])
+				{
+				if($DB){print "CONFERENCE STILL HAS PARTICIPANTS, DOING NOTHING FOR THIS CONFERENCE\n";}
+				if ($PTextensions[$i] =~ /Xtimeout\d$/i) 
+					{
+					$PTextensions[$i] =~ s/Xtimeout\d$//gi;
+					$stmtA = "UPDATE conferences set extension='$PTextensions[$i]' where server_ip='$server_ip' and conf_exten='$PT_conf_extens[$i]';";
 					if($DB){print STDERR "\n|$stmtA|\n";}
+					$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
+					}
+				}
+			else
+				{
+				$NEWexten[$i] = $PTextensions[$i];
+				if ($PTextensions[$i] =~ /Xtimeout3$/i) {$NEWexten[$i] =~ s/Xtimeout3$/Xtimeout2/gi;}
+				if ($PTextensions[$i] =~ /Xtimeout2$/i) {$NEWexten[$i] =~ s/Xtimeout2$/Xtimeout1/gi;}
+				if ($PTextensions[$i] =~ /Xtimeout1$/i) {$NEWexten[$i] = '';}
+				if ( ($PTextensions[$i] !~ /Xtimeout\d$/i) and (length($PTextensions[$i])> 0) ) {$NEWexten[$i] .= 'Xtimeout3';}
+
+
+				$stmtA = "UPDATE conferences set extension='$NEWexten[$i]' where server_ip='$server_ip' and conf_exten='$PT_conf_extens[$i]';";
+				if($DB){print STDERR "\n|$stmtA|\n";}
 				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
 				}
 			}
-		else
-			{
-			$NEWexten[$i] = $PTextensions[$i];
-			if ($PTextensions[$i] =~ /Xtimeout3$/i) {$NEWexten[$i] =~ s/Xtimeout3$/Xtimeout2/gi;}
-			if ($PTextensions[$i] =~ /Xtimeout2$/i) {$NEWexten[$i] =~ s/Xtimeout2$/Xtimeout1/gi;}
-			if ($PTextensions[$i] =~ /Xtimeout1$/i) {$NEWexten[$i] = '';}
-			if ( ($PTextensions[$i] !~ /Xtimeout\d$/i) and (length($PTextensions[$i])> 0) ) {$NEWexten[$i] .= 'Xtimeout3';}
-
-
-			$stmtA = "UPDATE conferences set extension='$NEWexten[$i]' where server_ip='$server_ip' and conf_exten='$PT_conf_extens[$i]';";
-				if($DB){print STDERR "\n|$stmtA|\n";}
-			$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
-			}
-		}
-	$i++;
+		$i++;
 		### sleep for 10 hundredths of a second
 		usleep(1*100*1000);
+		}
 	}
 
 
@@ -452,3 +475,45 @@ if($DB){print "DONE... Exiting... Goodbye... See you later... \n";}
 
 exit;
 
+# subroutine to parse the asterisk version
+# and return a hash with the various part
+sub parse_asterisk_version
+{
+	# grab the arguments
+	my $ast_ver_str = $_[0];
+
+	# get everything after the - and put it in $ast_ver_postfix
+	my @hyphen_parts = split( /-/ , $ast_ver_str );
+
+	my $ast_ver_postfix = $hyphen_parts[1];
+
+	# now split everything before the - up by the .
+	my @dot_parts = split( /\./ , $hyphen_parts[0] );
+
+	my %ast_ver_hash;
+
+	if ( $dot_parts[0] <= 1 )
+		{
+			%ast_ver_hash = (
+				"major" => $dot_parts[0],
+				"minor" => $dot_parts[1],
+				"build" => $dot_parts[2],
+				"revision" => $dot_parts[3],
+				"postfix" => $ast_ver_postfix
+			);
+		}
+
+	# digium dropped the 1 from asterisk 10 but we still need it
+	if ( $dot_parts[0] > 1 )
+		{
+			%ast_ver_hash = (
+				"major" => 1,
+				"minor" => $dot_parts[0],
+				"build" => $dot_parts[1],
+				"revision" => $dot_parts[2],
+				"postfix" => $ast_ver_postfix
+			);
+		}
+
+	return ( %ast_ver_hash );
+}

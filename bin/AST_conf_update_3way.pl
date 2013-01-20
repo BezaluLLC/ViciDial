@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_conf_update_3way.pl version 2.4
+# AST_conf_update_3way.pl version 2.6
 #
 # This script checks leave 3way vicidial_conferences for participants
 # This is a constantly running script that is in the keepalive_ALL script, to
@@ -11,10 +11,11 @@
 #      script's crontab entry that does some of these functions:
 #      AST_conf_update.pl --no-vc-3way-check
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 100811-2119 - First build, based upon AST_conf_update.pl script
 # 100928-1506 - Changed from hard-coded 60 minute limit to servers.vicidial_recording_limit
+# 130108-1707 - Changes for Asterisk 1.8 compatibility
 #
 
 # constants
@@ -138,7 +139,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
  or die "Couldn't connect to database: " . DBI->errstr;
 
 ### Grab Server values from the database
-$stmtA = "SELECT telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,max_vicidial_trunks,answer_transfer_agent,local_gmt,ext_context,vicidial_recording_limit FROM servers where server_ip = '$server_ip';";
+$stmtA = "SELECT telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,max_vicidial_trunks,answer_transfer_agent,local_gmt,ext_context,vicidial_recording_limit,asterisk_version FROM servers where server_ip = '$server_ip';";
 if ($DB) {print "|$stmtA|\n";}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -159,6 +160,7 @@ if ($sthArows > 0)
 	$DBSERVER_GMT		=		$aryA[9];
 	$DBext_context	=			$aryA[10];
 	$vicidial_recording_limit = $aryA[11];
+	$asterisk_version	=		$aryA[12];
 	if ($DBtelnet_host)				{$telnet_host = $DBtelnet_host;}
 	if ($DBtelnet_port)				{$telnet_port = $DBtelnet_port;}
 	if ($DBASTmgrUSERNAME)			{$ASTmgrUSERNAME = $DBASTmgrUSERNAME;}
@@ -252,7 +254,15 @@ while ($loops > $loop_counter)
 			$t->buffer_empty;
 			$COMMAND = "Action: Command\nCommand: Meetme list $PT_conf_extens[$i]\n\nAction: Ping\n\n";
 			if ($DBX) {print "|$PT_conf_extens[$i]|$COMMAND|\n";}
-			@list_channels = $t->cmd(String => "$COMMAND", Prompt => '/Response: Pong.*/'); 
+			%ast_ver_str = parse_asterisk_version($asterisk_version);
+			if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+				{
+				@list_channels = $t->cmd(String => "$COMMAND", Prompt => '/Response: Pong.*/'); 
+				}
+			else
+				{
+				@list_channels = $t->cmd(String => "$COMMAND", Prompt => '/Response: Success\nPing: Pong.*/');
+				}
 
 			$j=0;
 			$conf_empty[$i]=0;
@@ -261,7 +271,7 @@ while ($loops > $loop_counter)
 				{
 				if($DBX){print "|$list_channels[$j]|\n";}
 				### mark all empty conferences and conferences with only one channel as empty
-				if ($list_channels[$j] =~ /No active conferences|No such conference/i)
+				if ($list_channels[$j] =~ /No active conferences|No active MeetMe conferences|No such conference/i)
 					{$conf_empty[$i]++;}
 				if ($list_channels[$j] =~ /1 users in that conference/i)
 					{$conf_empty[$i]++;}
@@ -354,3 +364,46 @@ if($DB){print "DONE... Exiting... Goodbye... See you later... \n";}
 
 exit;
 
+
+# subroutine to parse the asterisk version
+# and return a hash with the various part
+sub parse_asterisk_version
+{
+	# grab the arguments
+	my $ast_ver_str = $_[0];
+
+	# get everything after the - and put it in $ast_ver_postfix
+	my @hyphen_parts = split( /-/ , $ast_ver_str );
+
+	my $ast_ver_postfix = $hyphen_parts[1];
+
+	# now split everything before the - up by the .
+	my @dot_parts = split( /\./ , $hyphen_parts[0] );
+
+	my %ast_ver_hash;
+
+	if ( $dot_parts[0] <= 1 )
+		{
+			%ast_ver_hash = (
+				"major" => $dot_parts[0],
+				"minor" => $dot_parts[1],
+				"build" => $dot_parts[2],
+				"revision" => $dot_parts[3],
+				"postfix" => $ast_ver_postfix
+			);
+		}
+
+	# digium dropped the 1 from asterisk 10 but we still need it
+	if ( $dot_parts[0] > 1 )
+		{
+			%ast_ver_hash = (
+				"major" => 1,
+				"minor" => $dot_parts[0],
+				"build" => $dot_parts[1],
+				"revision" => $dot_parts[2],
+				"postfix" => $ast_ver_postfix
+			);
+		}
+
+	return ( %ast_ver_hash );
+}

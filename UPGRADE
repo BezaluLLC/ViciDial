@@ -153,6 +153,15 @@ OTHER CHANGES:
 		### inbound email parser
 		* * * * * /usr/share/astguiclient/AST_inbound_email_parser.pl
 
+33. Added Asterisk 1.8 support. This is in the BETA testing phase currently,
+	and is not recommended for use in production at this time. If you are 
+	upgrading an existing system, please make note of the many conf file
+	changes(extensions.conf and manager.conf) that will need to be made for 
+	Vicidial to function properly while interfacing with Asterisk 1.8. Also,
+	make sure that the Admin -> Servers -> modify server "Asterisk Version"
+	setting is set properly for the version you have installed on that
+	server.
+
 
 
 

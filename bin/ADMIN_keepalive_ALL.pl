@@ -78,6 +78,7 @@
 # 121124-1440 - Added holiday expiration function
 # 121215-2036 - Added email inbound script keepalive, option E
 # 130103-0808 - Added CLI options for delay to be used with auto-dial and FILL processes
+# 130108-1657 - Changes for Asterisk 1.8 compatibility
 #
 
 $DB=0; # Debug flag
@@ -1544,6 +1545,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	$Lext  = "\n";
 	$Lext .= "; Local Server: $server_ip\n";
 	$Lext .= "exten => _$VARremDIALstr*.,1,Goto(default,\${EXTEN:16},1)\n";
+	$Lext .= "exten => _$VARremDIALstr*.,2,Hangup()\n";
 
 	$Liax .= "\n";
 	$Liax .= "[ASTloop]\n";
@@ -1623,6 +1625,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 		$Lext .= "; Remote Server VDAD extens: $server_id[$i] $server_ip[$i]\n";
 		$Lext .= "exten => _$VARremDIALstr*.,1,Dial(\${TRUNK$server_id[$i]}/\${EXTEN:16},55,oT)\n";
+		$Lext .= "exten => _$VARremDIALstr*.,2,Hangup()\n";
 
 		$Liax .= "\n";
 		$Liax .= "[$server_id[$i]]\n";
@@ -1651,33 +1654,38 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$Vext .= "; Voicemail Extensions:\n";
 		$Vext .= "exten => _85026666666666.,1,Wait(1)\n";
 		$Vext .= "exten => _85026666666666.,n,Voicemail(\${EXTEN:14},u)\n";
-		$Vext .= "exten => _85026666666666.,n,Hangup\n";
+		$Vext .= "exten => _85026666666666.,n,Hangup()\n";
 		$Vext .= "exten => 8500,1,VoicemailMain\n";
 		$Vext .= "exten => 8500,2,Goto(s,6)\n";
+		$Vext .= "exten => 8500,3,Hangup()\n";
 		if ($asterisk_version =~ /^1.2/)
 			{$Vext .= "exten => 8501,1,VoicemailMain(s\${CALLERIDNUM})\n";}
 		else
 			{$Vext .= "exten => 8501,1,VoicemailMain(s\${CALLERID(num)})\n";}
-		$Vext .= "exten => 8501,2,Hangup\n";
+		$Vext .= "exten => 8501,2,Hangup()\n";
 		$Vext .= "\n";
 		$Vext .= "; Prompt Extensions:\n";
 		$Vext .= "exten => 8167,1,Answer\n";
 		$Vext .= "exten => 8167,2,AGI(agi-record_prompts.agi,wav-----720000)\n";
-		$Vext .= "exten => 8167,3,Hangup\n";
+		$Vext .= "exten => 8167,3,Hangup()\n";
 		$Vext .= "exten => 8168,1,Answer\n";
 		$Vext .= "exten => 8168,2,AGI(agi-record_prompts.agi,gsm-----720000)\n";
-		$Vext .= "exten => 8168,3,Hangup\n";
+		$Vext .= "exten => 8168,3,Hangup()\n";
 		}
 	else
 		{
 		$Vext .= "; Voicemail Extensions go to main voicemail server:\n";
 		$Vext .= "exten => _85026666666666.,1,Dial(\${TRUNK$voicemail_server_id}/\${EXTEN},99,oT)\n";
 		$Vext .= "exten => 8500,1,Dial(\${TRUNK$voicemail_server_id}/\${EXTEN},99,oT)\n";
+		$Vext .= "exten => 8500,2,Hangup()\n";
 		$Vext .= "exten => 8501,1,Dial(\${TRUNK$voicemail_server_id}/\${EXTEN},99,oT)\n";
+		$Vext .= "exten => 8501,2,Hangup()\n";
 		$Vext .= "\n";
 		$Vext .= "; Prompt Extensions go to main voicemail server:\n";
 		$Vext .= "exten => 8167,1,Dial(\${TRUNK$voicemail_server_id}/\${EXTEN},99,oT)\n";
+		$Vext .= "exten => 8167,2,Hangup()\n";
 		$Vext .= "exten => 8168,1,Dial(\${TRUNK$voicemail_server_id}/\${EXTEN},99,oT)\n";
+		$Vext .= "exten => 8168,2,Hangup()\n";
 		}
 
 	$Vext .= "\n";
@@ -1691,16 +1699,16 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		{$Vext .= "exten => 8309,2,Monitor(wav,\${CALLERIDNAME})\n";}
 	else
 		{$Vext .= "exten => 8309,2,Monitor(wav,\${CALLERID(name)})\n";}
-	$Vext .= "exten => 8309,3,Wait,$vicidial_recording_limit\n";
-	$Vext .= "exten => 8309,4,Hangup\n";
+	$Vext .= "exten => 8309,3,Wait($vicidial_recording_limit)\n";
+	$Vext .= "exten => 8309,4,Hangup()\n";
 	$Vext .= ";     this is the GSM verison\n";
 	$Vext .= "exten => 8310,1,Answer\n";
 	if ($asterisk_version =~ /^1.2/)
 		{$Vext .= "exten => 8310,2,Monitor(gsm,\${CALLERIDNAME})\n";}
 	else
 		{$Vext .= "exten => 8310,2,Monitor(gsm,\${CALLERID(name)})\n";}
-	$Vext .= "exten => 8310,3,Wait,$vicidial_recording_limit\n";
-	$Vext .= "exten => 8310,4,Hangup\n";
+	$Vext .= "exten => 8310,3,Wait($vicidial_recording_limit)\n";
+	$Vext .= "exten => 8310,4,Hangup()\n";
 
 	$Vext .= "\n;     agent alert extension\n";
 	$Vext .= "exten => 83047777777777,1,Answer\n";
@@ -1708,17 +1716,17 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		{$Vext .= "exten => 83047777777777,2,Playback(\${CALLERIDNAME})\n";}
 	else
 		{$Vext .= "exten => 83047777777777,2,Playback(\${CALLERID(name)})\n";}
-	$Vext .= "exten => 83047777777777,3,Hangup\n";
+	$Vext .= "exten => 83047777777777,3,Hangup()\n";
 
 	$Vext .= "; This is a loopback dial-around to allow for immediate answer of outbound calls\n";
 	$Vext .= "exten => _8305888888888888.,1,Answer\n";
 	$Vext .= "exten => _8305888888888888.,n,Wait(\${EXTEN:16:1})\n";
 	$Vext .= "exten => _8305888888888888.,n,Dial(\${TRUNKloop}/\${EXTEN:17},,To)\n";
-	$Vext .= "exten => _8305888888888888.,n,Hangup\n";
+	$Vext .= "exten => _8305888888888888.,n,Hangup()\n";
 	$Vext .= "; No-call silence extension\n";
 	$Vext .= "exten => _8305888888888888X999,1,Answer\n";
 	$Vext .= "exten => _8305888888888888X999,n,Wait($vicidial_recording_limit)\n";
-	$Vext .= "exten => _8305888888888888X999,n,Hangup\n";
+	$Vext .= "exten => _8305888888888888X999,n,Hangup()\n";
 	##### END Create Voicemail extensions for this server_ip #####
 
 
@@ -1947,8 +1955,20 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$Piax .= "auth=md5\n";
 			$Piax .= "host=dynamic\n";
 			}
-		$Pext .= "exten => $dialplan[$i],1,Dial(IAX2/$extension[$i]|$phone_ring_timeout[$i]|)\n";
+		%ast_ver_str = parse_asterisk_version($asterisk_version);
+		if (!(( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6)))
+			{
+			$Pext .= "exten => $dialplan[$i],1,Dial(IAX2/$extension[$i]|$phone_ring_timeout[$i]|)\n";
+			}
+		else
+			{
+			$Pext .= "exten => $dialplan[$i],1,Dial(IAX2/$extension[$i],$phone_ring_timeout[$i],)\n";
+			}
 		$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
+		if (!(( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6)))
+			{
+			$Pext .= "exten => $dialplan[$i],3,Hangup()\n";
+			}
 
 		if ($delete_vm_after_email[$i] =~ /Y/)
 			{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i],,|delete=yes|tz=$voicemail_timezone[$i]|$voicemail_options[$i]\n";}
@@ -2066,8 +2086,20 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$Psip .= "type=friend\n";
 			$Psip .= "host=dynamic\n";
 			}
-		$Pext .= "exten => $dialplan[$i],1,Dial(SIP/$extension[$i]|$phone_ring_timeout[$i]|)\n";
+		%ast_ver_str = parse_asterisk_version($asterisk_version);
+		if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+			{
+			$Pext .= "exten => $dialplan[$i],1,Dial(SIP/$extension[$i]|$phone_ring_timeout[$i]|)\n";
+			}
+		else
+			{
+			$Pext .= "exten => $dialplan[$i],1,Dial(SIP/$extension[$i],$phone_ring_timeout[$i],)\n";
+			}
 		$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
+		if (!(( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6)))
+			{
+			$Pext .= "exten => $dialplan[$i],3,Hangup()\n";
+			}
 
 		if ($delete_vm_after_email[$i] =~ /Y/)
 			{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i],,|delete=yes|tz=$voicemail_timezone[$i]|$voicemail_options[$i]\n";}
@@ -2289,12 +2321,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 						$menu_invalid_prompt_ext .= "exten => i,$PRI,Set(INVCOUNT=\$[\$\{INVCOUNT\} + 1]) \n";   $PRI++;
 						$menu_invalid_prompt_ext .= "exten => i,$PRI,NoOp(\$\{INVCOUNT\}) \n";   $PRI++;
 						$menu_invalid_prompt_ext .= "exten => i,$PRI,Gotoif(\$[0\$\{INVCOUNT\} < 2]?" . $menu_id[$i] . ",s,4) \n";   $PRI++;
+						$menu_invalid_prompt_ext .= "exten => i,$PRI,Hangup()\n";   $PRI++;
 						}
 					if ( ($option_value[$j] =~ /INVALID_3RD/) && ($cm_invalid_set < 1) )
 						{
 						$menu_invalid_prompt_ext .= "exten => i,$PRI,Set(INVCOUNT=\$[\$\{INVCOUNT\} + 1]) \n";   $PRI++;
 						$menu_invalid_prompt_ext .= "exten => i,$PRI,NoOp(\${INVCOUNT}) \n";   $PRI++;
 						$menu_invalid_prompt_ext .= "exten => i,$PRI,Gotoif(\$[0\$\{INVCOUNT\} < 3]?" . $menu_id[$i] . ",s,4) \n";   $PRI++;
+						$menu_invalid_prompt_ext .= "exten => i,$PRI,Hangup()\n";   $PRI++;
 						}
 
 					$call_menu_line .= "$menu_invalid_prompt_ext";
@@ -2305,19 +2339,22 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 					{
 					if ($dtmf_log[$i] > 0) 
 						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i])\n";   $PRI++;}
-					$call_menu_line .= "exten => $option_value[$j],$PRI,AGI($option_route_value[$j])\n";
+					$call_menu_line .= "exten => $option_value[$j],$PRI,AGI($option_route_value[$j])\n";   $PRI++;
+					$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup()\n";
 					}
 				if ($option_route[$j] =~ /CALLMENU/)
 					{
 					if ($dtmf_log[$i] > 0) 
 						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i])\n";   $PRI++;}
-					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto($option_route_value[$j],s,1)\n";
+					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto($option_route_value[$j],s,1)\n";   $PRI++;
+					$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup()\n";
 					}
 				if ($option_route[$j] =~ /DID/)
 					{
 					if ($dtmf_log[$i] > 0) 
 						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i])\n";   $PRI++;}
-					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto(trunkinbound,$option_route_value[$j],1)\n";
+					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto(trunkinbound,$option_route_value[$j],1)\n";   $PRI++;
+					$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup()\n";
 					}
 				if ($option_route[$j] =~ /INGROUP/)
 					{
@@ -2334,20 +2371,23 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 					if ($dtmf_log[$i] > 0) 
 						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i])\n";   $PRI++;}
-					$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(agi-VDAD_ALL_inbound.agi,$IGhandle_method-----$IGsearch_method-----$option_route_value[$j]-----$menu_id[$i]--------------------$IGlist_id-----$IGphone_code-----$IGcampaign_id---------------$IGvid_enter_filename-----$IGvid_id_number_filename-----$IGvid_confirm_filename-----$IGvid_validate_digits)\n";
+					$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(agi-VDAD_ALL_inbound.agi,$IGhandle_method-----$IGsearch_method-----$option_route_value[$j]-----$menu_id[$i]--------------------$IGlist_id-----$IGphone_code-----$IGcampaign_id---------------$IGvid_enter_filename-----$IGvid_id_number_filename-----$IGvid_confirm_filename-----$IGvid_validate_digits)\n";   $PRI++;
+					$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup()\n";
 					}
 				if ($option_route[$j] =~ /EXTENSION/)
 					{
 					if ($dtmf_log[$i] > 0) 
 						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i])\n";   $PRI++;}
 					if (length($option_route_value_context[$j])>0) {$option_route_value_context[$j] = "$option_route_value_context[$j],";}
-					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto($option_route_value_context[$j]$option_route_value[$j],1)\n";
+					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto($option_route_value_context[$j]$option_route_value[$j],1)\n";   $PRI++;
+					$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup()\n";
 					}
 				if ($option_route[$j] =~ /VOICEMAIL/)
 					{
 					if ($dtmf_log[$i] > 0) 
 						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i])\n";   $PRI++;}
-					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto(default,85026666666666$option_route_value[$j],1)\n";
+					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto(default,85026666666666$option_route_value[$j],1)\n";   $PRI++;
+					$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup()\n";
 					}
 				if ($option_route[$j] =~ /HANGUP/)
 					{
@@ -2377,13 +2417,13 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 						$call_menu_line .= "$hangup_prompt_ext";
 						if ($dtmf_log[$i] > 0) 
 							{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i])\n";   $PRI++;}
-						$call_menu_line .= "exten => $option_value[$j],n,Hangup\n";
+						$call_menu_line .= "exten => $option_value[$j],n,Hangup()\n";
 						}
 					else
 						{
 						if ($dtmf_log[$i] > 0) 
 							{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i])\n";   $PRI++;}
-						$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup\n";
+						$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup()\n";
 						}
 					}
 				if ($option_route[$j] =~ /PHONE/)
@@ -2411,7 +2451,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 							}
 						if ($dtmf_log[$i] > 0) 
 							{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i])\n";   $PRI++;}
-						$call_menu_line .= "exten => $option_value[$j],$PRI,Goto(default,$DIALstring$Pdialplan,1)\n";
+						$call_menu_line .= "exten => $option_value[$j],$PRI,Goto(default,$DIALstring$Pdialplan,1)\n";   $PRI++;
+						$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup()\n";
 						}
 					$sthA->finish();
 					}
@@ -2456,6 +2497,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			{
 			$call_menu_options_ext .= "; time check after hours AGI special extension\n";
 			$call_menu_options_ext .= "exten => 9999999999999999999988,1,AGI($time_check_route_value)\n";
+			$call_menu_options_ext .= "exten => 9999999999999999999988,2,Hangup()\n";
 
 			$time_check_route = 'EXTENSION';
 			$time_check_route_value = '9999999999999999999988';
@@ -2465,6 +2507,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			{
 			$call_menu_options_ext .= "; time check after hours INGROUP special extension\n";
 			$call_menu_options_ext .= "exten => 9999999999999999999988,1,AGI($CM_agi_string)\n";
+			$call_menu_options_ext .= "exten => 9999999999999999999988,2,Hangup()\n";
 
 			$time_check_route = 'EXTENSION';
 			$time_check_route_value = '9999999999999999999988';
@@ -2487,7 +2530,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 				{$call_menu_ext .= "exten => s,n,WaitExten($menu_timeout[$i])\n";}
 			$k++;
 			}
-	#	$call_menu_ext .= "exten => s,n,Hangup\n";
+	#	$call_menu_ext .= "exten => s,n,Hangup()\n";
 		$call_menu_ext .= "\n";
 		$call_menu_ext .= "$call_menu_options_ext";
 		$call_menu_ext .= "\n";
@@ -2498,10 +2541,12 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 				{
 				$call_menu_ext .= "exten => t,1,Playback($menu_timeout_prompt[$i])\n";
 				$call_menu_ext .= "exten => t,n,Goto(s,4)\n";
+				$call_menu_ext .= "exten => t,n,Hangup()\n";
 				}
 			else
 				{
 				$call_menu_ext .= "exten => t,1,Goto(s,4)\n";
+				$call_menu_ext .= "exten => t,n,Hangup()\n";
 				}
 			}
 		else
@@ -2514,10 +2559,12 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 				{
 				$call_menu_ext .= "exten => i,1,Playback($menu_invalid_prompt[$i])\n";
 				$call_menu_ext .= "exten => i,n,Goto(s,4)\n";
+				$call_menu_ext .= "exten => i,n,Hangup()\n";
 				}
 			else
 				{
 				$call_menu_ext .= "exten => i,1,Goto(s,4)\n";
+				$call_menu_ext .= "exten => i,n,Hangup()\n";
 				}
 			}
 		else
@@ -2525,7 +2572,15 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$call_menu_ext .= "$call_menu_invalid_ext";
 			}
 		$call_menu_ext .= "; hangup\n";
+
+		%ast_ver_str = parse_asterisk_version($asterisk_version);
+		if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+		{
 		$call_menu_ext .= 'exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})';
+		} else {
+			$call_menu_ext .= 'exten => h,1,AGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})';
+		}
+
 
 		if (length($custom_dialplan_entry[$i]) > 4) 
 			{
@@ -2753,34 +2808,70 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	if (length($SScustom_dialplan_entry)>5)
 		{
 		print ext "[vicidial-auto-system-setting-custom]\n";
+		%ast_ver_str = parse_asterisk_version($asterisk_version);
+		if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+		{
 		print ext 'exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})';
+		} else {
+			print ext 'exten => h,1,AGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})';
+		}
 		print ext "\n";
 		print ext "; System Setting Custom Dialplan\n$SScustom_dialplan_entry\n\n";
 		}
 	if (length($SERVERcustom_dialplan_entry)>5)
 		{
 		print ext "[vicidial-auto-server-custom]\n";
+		%ast_ver_str = parse_asterisk_version($asterisk_version);
+		if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+		{
 		print ext 'exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})';
+		} else {
+			print ext 'exten => h,1,AGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})';
+		}
 		print ext "\n";
 		print ext "; Server Custom Dialplan\n$SERVERcustom_dialplan_entry\n\n";
 		}
 	print ext "[vicidial-auto-external]\n";
+	%ast_ver_str = parse_asterisk_version($asterisk_version);
+	if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+	{
 	print ext 'exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})';
+	} else {
+		print ext 'exten => h,1,AGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})';
+	}
 	print ext "\n";
 	print ext "$Lext\n";
 
 	print ext "[vicidial-auto-internal]\n";
+	%ast_ver_str = parse_asterisk_version($asterisk_version);
+	if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+	{
 	print ext 'exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})';
+	} else {
+		print ext 'exten => h,1,AGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})';
+	}
 	print ext "\n";
 	print ext "$Vext\n";
 
 	print ext "[vicidial-auto-phones]\n";
+	%ast_ver_str = parse_asterisk_version($asterisk_version);
+	if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+	{
 	print ext 'exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})';
+	} else {
+		print ext 'exten => h,1,AGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})';
+	}
 	print ext "\n";
 	print ext "$Pext\n";
 
 	print ext "[vicidial-auto]\n";
+	%ast_ver_str = parse_asterisk_version($asterisk_version);
+	if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+	{
 	print ext 'exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})';
+	} else {
+		print ext 'exten => h,1,AGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})';
+	}
 	print ext "\n";
 	print ext "\n";
 	print ext "include => vicidial-auto-internal\n";
@@ -3159,3 +3250,46 @@ sub leading_zero($)
     s/^(\d\d)$/0$1/;
     return $_;
 } # End of the leading_zero() routine.
+
+# subroutine to parse the asterisk version
+# and return a hash with the various part
+sub parse_asterisk_version
+{
+		# grab the arguments
+		my $ast_ver_str = $_[0];
+
+		# get everything after the - and put it in $ast_ver_postfix
+		my @hyphen_parts = split( /-/ , $ast_ver_str );
+
+		my $ast_ver_postfix = $hyphen_parts[1];
+
+		# now split everything before the - up by the .
+		my @dot_parts = split( /\./ , $hyphen_parts[0] );
+
+		my %ast_ver_hash;
+
+		if ( $dot_parts[0] <= 1 )
+		{
+				%ast_ver_hash = (
+						"major" => $dot_parts[0],
+						"minor" => $dot_parts[1],
+						"build" => $dot_parts[2],
+						"revision" => $dot_parts[3],
+						"postfix" => $ast_ver_postfix
+				);
+		}
+
+		# digium dropped the 1 from asterisk 10 but we still need it
+		if ( $dot_parts[0] > 1 )
+		{
+				%ast_ver_hash = (
+						"major" => 1,
+						"minor" => $dot_parts[0],
+						"build" => $dot_parts[1],
+						"revision" => $dot_parts[2],
+						"postfix" => $ast_ver_postfix
+				);
+		}
+
+		return ( %ast_ver_hash );
+}

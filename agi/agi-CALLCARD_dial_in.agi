@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-CALLCARD_dial_in.agi version 0.1
+# agi-CALLCARD_dial_in.agi      version 2.6
 #
 # This script is designed to allow customers the ability to dial in to a DID and
 # enter in a PIN number that would look up their account and send on to a
@@ -36,10 +36,11 @@
 # - vm-youhave
 # - callcard_minutes_left
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 100311-1135 - First build
+# 130108-1812 - Changes for Asterisk 1.8 compatibility
 #
 
 &get_time_now;
@@ -339,10 +340,13 @@ else
 	if ($AGILOG) {$agi_string = "Customer $PIN_number sent to $forward_extension";   &agi_output;}
 
 	print "SET CONTEXT $ext_context\n";
+		$result = <STDIN>;
 		checkresult($result);
 	print "SET EXTENSION $forward_extension\n";
+		$result = <STDIN>;
 		checkresult($result);
 	print "SET PRIORITY 1\n";
+		$result = <STDIN>;
 		checkresult($result);
 	}
 

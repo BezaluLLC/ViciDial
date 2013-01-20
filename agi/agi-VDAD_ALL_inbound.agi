@@ -82,7 +82,7 @@
 #exten => _99909*.,2,AGI(agi-VDAD_ALL_inbound.agi)
 #exten => _99909*.,3,Hangup
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 70828-0924 - First Build
@@ -174,6 +174,8 @@
 # 111219-2124 - Added max stats updating
 # 111229-1726 - Changed call time overflow to look at previous day stop time
 # 120130-1708 - Fix for ring agent EXTERNAL protocol phone issue
+# 120430-2214 - Converted call to Monitor app to be asterisk 1.8 compatible
+# 120430-2237 - For AGI commands not made through the AGI object added a read from STDIN before calling checkresult
 # 120513-0051 - Added ability to have Dial In-Group agent calls go directly to agents
 # 120514-0953 - Added force checks for dial-ingroup calls
 # 121025-2210 - If AGENTDIRECT and no agent defined, set drop call seconds to 1
@@ -181,6 +183,7 @@
 # 121120-0921 - Added QM socket-send functionality
 # 121124-1345 - Added call times holidays function
 # 121129-1618 - Small fix for estimated hold time, excluding QUEUE status
+# 130108-1804 - Changes for Asterisk 1.8 compatibility
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -647,13 +650,13 @@ while ($sthArows > $cbc)
 	$DBext_context		=			$aryA[1];
 	$DBanswer_transfer_agent	=	$aryA[2];
 	$DBSERVER_GMT		=			$aryA[3];
-	$DBasterisk_version	=			$aryA[4];
+	$asterisk_version	=			$aryA[4];
 	$DBmax_vicidial_trunks	=		$aryA[5];
 	if ($DBvoicemail_dump_exten)	{$voicemail_dump_exten = $DBvoicemail_dump_exten;}
 	if ($DBext_context)				{$ext_context = $DBext_context;}
 	if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
 	if ($DBSERVER_GMT)				{$SERVER_GMT = $DBSERVER_GMT;}
-	if ($DBasterisk_version)		{$AST_ver = $DBasterisk_version;}
+	if ($asterisk_version)			{$AST_ver = $asterisk_version;}
 	if ($DBmax_vicidial_trunks)		{$max_vicidial_trunks = $DBmax_vicidial_trunks;}
 	$cbc++;
 	}
@@ -962,7 +965,7 @@ if ($call_handle_method =~ /LOOKUP/)
 			$launch .= " --call_type=IN";
 			$launch .= " --campaign=" . $channel_group;
 			$launch .= " --uniqueid=" . $uniqueid;
-			$launch .= " --alt_dial=";
+			$launch .= " --alt_dial=MAIN";
 			$launch .= " --call_id=" . $XXqueryCID;
 			$launch .= " --function=INGROUP_ADD_LEAD_URL";
 
@@ -1101,7 +1104,7 @@ if ($call_handle_method =~ /LOOKUP/)
 					$launch .= " --call_type=IN";
 					$launch .= " --campaign=" . $channel_group;
 					$launch .= " --uniqueid=" . $uniqueid;
-					$launch .= " --alt_dial=";
+					$launch .= " --alt_dial=MAIN";
 					$launch .= " --call_id=" . $XXqueryCID;
 					$launch .= " --function=INGROUP_ADD_LEAD_URL";
 
@@ -1176,7 +1179,7 @@ else
 			$launch .= " --call_type=IN";
 			$launch .= " --campaign=" . $channel_group;
 			$launch .= " --uniqueid=" . $uniqueid;
-			$launch .= " --alt_dial=";
+			$launch .= " --alt_dial=MAIN";
 			$launch .= " --call_id=" . $XXqueryCID;
 			$launch .= " --function=INGROUP_ADD_LEAD_URL";
 
@@ -1462,10 +1465,13 @@ if ( ( ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $c
 
 			if ($AGILOG) {$agi_string = "exiting the VDAD app after hours, transferring call to $DROPexten";   &agi_output;}
 			print "SET CONTEXT $ext_context\n";
+				$result = <STDIN>;
 				checkresult($result);
 			print "SET EXTENSION $DROPexten\n";
+				$result = <STDIN>;
 				checkresult($result);
 			print "SET PRIORITY 1\n";
+				$result = <STDIN>;
 				checkresult($result);
 			}
 		}
@@ -1701,10 +1707,13 @@ if ( ( ($no_agent_no_queue =~ /Y|NO_PAUSED/) || ($MCnanque_override > 0) ) && ($
 
 				if ($AGILOG) {$agi_string = "exiting the VDAD app no agent no queue, transferring call to $DROPexten";   &agi_output;}
 				print "SET CONTEXT $ext_context\n";
+					$result = <STDIN>;
 					checkresult($result);
 				print "SET EXTENSION $DROPexten\n";
+					$result = <STDIN>;
 					checkresult($result);
 				print "SET PRIORITY 1\n";
+					$result = <STDIN>;
 					checkresult($result);
 				}
 			}
@@ -2104,7 +2113,16 @@ if ( ($CLchannel_group =~ /DID_INBOUND/) && (length($CLend_epoch) < 5) )
 				$CLlength_in_min = ($CLlength_in_sec / 60);
 				$CLlength_in_min = sprintf("%8.2f", $CLlength_in_min);
 
-				$AGI->exec("StopMonitor wav|/var/spool/asterisk/monitor/MIX/$CLfilename"); 
+				%ast_ver_str = parse_asterisk_version($asterisk_version);
+				if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+					{
+					$AGI->exec("StopMonitor wav|/var/spool/asterisk/monitor/MIX/$CLfilename");
+					}
+				else
+					{
+					$AGI->exec("StopMonitor","wav,/var/spool/asterisk/monitor/MIX/$CLfilename"); 
+					}
+
 
 				$stmtA = "UPDATE recording_log set end_time='$now_date',end_epoch='$now_date_epoch',length_in_sec=$CLlength_in_sec,length_in_min='$CLlength_in_min' where recording_id='$CLrecording_id'";
 				$affected_rowsRL = $dbhA->do($stmtA);
@@ -3203,7 +3221,15 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 						$campaign_rec_filename =~ s/LEADID/$insert_lead_id/gi;
 						$campaign_rec_filename =~ s/\"|\'//gi;
 
-						$AGI->exec("Monitor wav|/var/spool/asterisk/monitor/MIX/$campaign_rec_filename"); 
+						%ast_ver_str = parse_asterisk_version($asterisk_version);
+						if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+							{
+							$AGI->exec("Monitor wav|/var/spool/asterisk/monitor/MIX/$campaign_rec_filename");
+							}
+						else
+							{
+							$AGI->exec("Monitor","wav,/var/spool/asterisk/monitor/MIX/$campaign_rec_filename"); 
+							}
 
 						### insert record into recording_log table ###
 						$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$phone_number','$now_date','$now_date_epoch','0','$campaign_rec_filename','$insert_lead_id','$VDADuser','$campaign_rec_filename','$uniqueid');";
@@ -3249,10 +3275,13 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 				$AGI->stream_file('sip-silence');
 
 				print "SET CONTEXT $ext_context\n";
+					$result = <STDIN>;
 					checkresult($result);
 				print "SET EXTENSION $VDADremDIALstr\n";
+					$result = <STDIN>;
 					checkresult($result);
 				print "SET PRIORITY 1\n";
+					$result = <STDIN>;
 					checkresult($result);
 
 				$dbhA->disconnect();
@@ -3260,7 +3289,8 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 					$now_date_epoch = time();
 					$now_date = "$year-$mon-$mday $hour:$min:$sec";
 				if ($AGILOG) {$agi_string = "XXXXX VDAD transferred: start|stop  $start_time|$now_date|$VDADremDIALstr";   &agi_output;}
-				
+
+				$result = <STDIN>;
 				exit;
 				}
 			else
@@ -3382,10 +3412,13 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 
 			if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $DROPexten";   &agi_output;}
 			print "SET CONTEXT $ext_context\n";
+				$result = <STDIN>;
 				checkresult($result);
 			print "SET EXTENSION $DROPexten\n";
+				$result = <STDIN>;
 				checkresult($result);
 			print "SET PRIORITY 1\n";
+				$result = <STDIN>;
 				checkresult($result);
 				
 			$dbhA->disconnect();
@@ -4015,7 +4048,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 					$launch .= " --campaign=" . $channel_group;
 					$launch .= " --uniqueid=" . $uniqueid;
 					$launch .= " --call_id=" . $callerid;
-					$launch .= " --alt_dial=";
+					$launch .= " --alt_dial=MAIN";
 					$launch .= " --function=INGROUP_ADD_LEAD_URL";
 
 					system($launch . ' &');
@@ -4126,10 +4159,13 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 
 				if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $DROPexten";   &agi_output;}
 				print "SET CONTEXT $ext_context\n";
+					$result = <STDIN>;
 					checkresult($result);
 				print "SET EXTENSION $DROPexten\n";
+					$result = <STDIN>;
 					checkresult($result);
 				print "SET PRIORITY 1\n";
+					$result = <STDIN>;
 					checkresult($result);
 
 				$dbhA->disconnect();
@@ -4424,7 +4460,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 							$launch .= " --call_type=IN";
 							$launch .= " --campaign=" . $channel_group;
 							$launch .= " --uniqueid=" . $uniqueid;
-							$launch .= " --alt_dial=";
+							$launch .= " --alt_dial=MAIN";
 							$launch .= " --call_id=" . $callerid;
 							$launch .= " --function=INGROUP_ADD_LEAD_URL";
 
@@ -4535,10 +4571,13 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 
 						if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $DROPexten";   &agi_output;}
 						print "SET CONTEXT $ext_context\n";
+							$result = <STDIN>;
 							checkresult($result);
 						print "SET EXTENSION $DROPexten\n";
+							$result = <STDIN>;
 							checkresult($result);
 						print "SET PRIORITY 1\n";
+							$result = <STDIN>;
 							checkresult($result);
 
 						$dbhA->disconnect();
@@ -4572,6 +4611,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 				{
 				$start_moh=0;
 				print "SET MUSIC ON $moh_context\n";
+					$result = <STDIN>;
 					checkresult($result);
 				}
 			if ($moh_delay > 0)
@@ -4850,10 +4890,13 @@ if ( ($drop_timer > $DROP_TIME) || ($MCdrop_override > 0) )
 
 		if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $DROPexten";   &agi_output;}
 		print "SET CONTEXT $ext_context\n";
+			$result = <STDIN>;
 			checkresult($result);
 		print "SET EXTENSION $DROPexten\n";
+			$result = <STDIN>;
 			checkresult($result);
 		print "SET PRIORITY 1\n";
+			$result = <STDIN>;
 			checkresult($result);
 		}
 	else
@@ -5245,6 +5288,49 @@ sub mysql_error_logging
 			}
 		}
 	$one_mysql_log=0;
+	}
+
+# subroutine to parse the asterisk version
+# and return a hash with the various part
+sub parse_asterisk_version
+	{
+	# grab the arguments
+	my $ast_ver_str = $_[0];
+
+	# get everything after the - and put it in $ast_ver_postfix
+	my @hyphen_parts = split( /-/ , $ast_ver_str );
+
+	my $ast_ver_postfix = $hyphen_parts[1];
+
+	# now split everything before the - up by the .
+	my @dot_parts = split( /\./ , $hyphen_parts[0] );
+
+	my %ast_ver_hash;
+
+	if ( $dot_parts[0] <= 1 )
+		{
+			%ast_ver_hash = (
+				"major" => $dot_parts[0],
+				"minor" => $dot_parts[1],
+				"build" => $dot_parts[2],
+				"revision" => $dot_parts[3],
+				"postfix" => $ast_ver_postfix
+			);
+		}
+
+	# digium dropped the 1 from asterisk 10 but we still need it
+	if ( $dot_parts[0] > 1 )
+		{
+			%ast_ver_hash = (
+				"major" => 1,
+				"minor" => $dot_parts[0],
+				"build" => $dot_parts[1],
+				"revision" => $dot_parts[2],
+				"postfix" => $ast_ver_postfix
+			);
+		}
+
+	return ( %ast_ver_hash );
 	}
 
 

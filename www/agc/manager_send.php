@@ -1,7 +1,7 @@
 <?php
 # manager_send.php    version 2.6
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to insert records into the vicidial_manager table to signal Actions to an asterisk server
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -112,10 +112,11 @@
 # 120810-0030 - Added external_recording
 # 120831-1458 - Added vicidial_dial_log outbound call logging
 # 121120-0848 - Added QM socket-send functionality
+# 130108-1641 - Change for Asterisk 1.8 compatibility
 #
 
-$version = '2.6-59';
-$build = '121120-0848';
+$version = '2.6-60';
+$build = '130108-1641';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=119;
 $one_mysql_log=0;
@@ -2051,7 +2052,7 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 				}
 
 			# find and hang up all recordings going on in this conference # and extension = '$exten' 
-			$stmt="SELECT channel FROM live_sip_channels where server_ip = '$server_ip' and channel LIKE \"$channel%\" and channel LIKE \"%,1\";";
+			$stmt="SELECT channel FROM live_sip_channels where server_ip = '$server_ip' and channel LIKE \"$channel%\" and (channel LIKE \"%,1\" or channel LIKE \"%;1\");";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02080',$user,$server_ip,$session_name,$one_mysql_log);}

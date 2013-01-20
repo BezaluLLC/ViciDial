@@ -85,6 +85,8 @@ voicemail_options VARCHAR(255) default '',
 user_group VARCHAR(20) default '---ALL---',
 voicemail_greeting VARCHAR(100) default '',
 index (server_ip),
+index (voicemail_id),
+index (dialplan_number),
 unique index extenserver (extension, server_ip)
 );
 
@@ -93,7 +95,7 @@ server_id VARCHAR(10) NOT NULL,
 server_description VARCHAR(255),
 server_ip VARCHAR(15) NOT NULL,
 active ENUM('Y','N'),
-asterisk_version VARCHAR(20) default '1.4.21.1',
+asterisk_version VARCHAR(20) default '1.4.21.2',
 max_vicidial_trunks SMALLINT(4) default '23',
 telnet_host VARCHAR(20) NOT NULL default 'localhost',
 telnet_port INT(5) NOT NULL default '5038',
@@ -3088,4 +3090,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1337',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1338',db_schema_update_date=NOW();

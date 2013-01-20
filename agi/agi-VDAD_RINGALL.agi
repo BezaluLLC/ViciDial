@@ -12,13 +12,14 @@
 # exten => _8331*.,n,AGI(agi-VDAD_RINGALL.agi,${EXTEN})
 # exten => _8331*.,n,Hangup
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 110303-2325 - First build
 # 110324-2328 - Added recording of remote agent calls, per in-group and campaign recording settings
 # 110325-1411 - Added user recording override settings checking for remote agent recording
 # 121114-1935 - Added INGROUP recording option
+# 130108-1808 - Changes for Asterisk 1.8 compatibility
 #
 
 $script = 'agi-VDAD_RINGALL.agi';
@@ -86,7 +87,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
     or die "Couldn't connect to database: " . DBI->errstr;
 
 ### Grab Server values from the database
-$stmtA = "SELECT agi_output,ext_context FROM servers where server_ip = '$VARserver_ip';";
+$stmtA = "SELECT agi_output,ext_context,asterisk_version FROM servers where server_ip = '$VARserver_ip';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -95,8 +96,9 @@ while ($sthArows > $rec_count)
 	{
 	$AGILOG = '0';
 	@aryA = $sthA->fetchrow_array;
-	$DBagi_output =	$aryA[0];
-	$ext_context =	$aryA[1];
+	$DBagi_output =			$aryA[0];
+	$ext_context =			$aryA[1];
+	$asterisk_version =		$aryA[2];
 	if ($DBagi_output =~ /STDERR/)	{$AGILOG = '1';}
 	if ($DBagi_output =~ /FILE/)	{$AGILOG = '2';}
 	if ($DBagi_output =~ /BOTH/)	{$AGILOG = '3';}
@@ -336,7 +338,15 @@ if ($NAGcount > 0)
 								$campaign_rec_filename =~ s/LEADID/$VAC_lead_id/gi;
 								$campaign_rec_filename =~ s/\"|\'//gi;
 
-								$AGI->exec("Monitor wav|/var/spool/asterisk/monitor/MIX/$campaign_rec_filename"); 
+								%ast_ver_str = parse_asterisk_version($asterisk_version);
+								if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+									{
+									$AGI->exec("Monitor wav|/var/spool/asterisk/monitor/MIX/$campaign_rec_filename");
+									}
+								else
+									{
+									$AGI->exec("Monitor","wav,/var/spool/asterisk/monitor/MIX/$campaign_rec_filename"); 
+									}
 
 								### insert record into recording_log table ###
 								$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$VAC_phone_number','$now_date','$now_date_epoch','0','$campaign_rec_filename','$VAC_lead_id','$dial_user','$campaign_rec_filename','$uniqueid');";
@@ -404,10 +414,13 @@ if ($NAGcount > 0)
 			if ($AGILOG) {$agi_string = "--    Ring-Agent Sending Call: |$callerid|$auto_call_id|$dial_user|$VLA_DIALstr|";   &agi_output;}
 
 			print "SET CONTEXT $ext_context\n";
+				$result = <STDIN>;
 				checkresult($result);
 			print "SET EXTENSION $VLA_DIALstr\n";
+				$result = <STDIN>;
 				checkresult($result);
 			print "SET PRIORITY 1\n";
+				$result = <STDIN>;
 				checkresult($result);
 			
 			$dbhA->disconnect();
@@ -521,3 +534,46 @@ sub leading_zero($)
 	s/^(\d\d)$/0$1/;
 	return $_;
 	} # End of the leading_zero() routine.
+
+# subroutine to parse the asterisk version
+# and return a hash with the various part
+sub parse_asterisk_version
+	{
+	# grab the arguments
+	my $ast_ver_str = $_[0];
+
+	# get everything after the - and put it in $ast_ver_postfix
+	my @hyphen_parts = split( /-/ , $ast_ver_str );
+
+	my $ast_ver_postfix = $hyphen_parts[1];
+
+	# now split everything before the - up by the .
+	my @dot_parts = split( /\./ , $hyphen_parts[0] );
+
+	my %ast_ver_hash;
+
+	if ( $dot_parts[0] <= 1 )
+		{
+			%ast_ver_hash = (
+				"major" => $dot_parts[0],
+				"minor" => $dot_parts[1],
+				"build" => $dot_parts[2],
+				"revision" => $dot_parts[3],
+				"postfix" => $ast_ver_postfix
+			);
+		}
+
+	# digium dropped the 1 from asterisk 10 but we still need it
+	if ( $dot_parts[0] > 1 )
+		{
+			%ast_ver_hash = (
+				"major" => 1,
+				"minor" => $dot_parts[0],
+				"build" => $dot_parts[1],
+				"revision" => $dot_parts[2],
+				"postfix" => $ast_ver_postfix
+			);
+		}
+
+	return ( %ast_ver_hash );
+	}

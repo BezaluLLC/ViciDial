@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-AGENT_dial_in.agi version 0.1
+# agi-AGENT_dial_in.agi      version 2.6
 #
 # This script is designed to allow agents the ability to dial in to an extension
 # to establish the phone connection to their VICIDIAL session. The user login
@@ -28,11 +28,12 @@
 # ; call menu with options:
 # 	agi-AGENT_dial_in.agi,Y---Y
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 81022-2115 - First build
 # 120511-1423 - Added new options
+# 130108-1809 - Changes for Asterisk 1.8 compatibility
 #
 
 &get_time_now;
@@ -273,10 +274,13 @@ if ($VALID_login < 1)
 		{
 		if ($AGILOG) {$agi_string = "exiting the agent dial-in app, transferring call to B @ $context";   &agi_output;}
 		print "SET CONTEXT $context\n";
+			$result = <STDIN>;
 			checkresult($result);
 		print "SET EXTENSION B\n";
+			$result = <STDIN>;
 			checkresult($result);
 		print "SET PRIORITY 1\n";
+			$result = <STDIN>;
 			checkresult($result);
 		}
 	else
@@ -308,10 +312,13 @@ else
 		{
 		if ($AGILOG) {$agi_string = "exiting the agent dial-in app, transferring call to A @ $context";   &agi_output;}
 		print "SET CONTEXT $context\n";
+			$result = <STDIN>;
 			checkresult($result);
 		print "SET EXTENSION A\n";
+			$result = <STDIN>;
 			checkresult($result);
 		print "SET PRIORITY 1\n";
+			$result = <STDIN>;
 			checkresult($result);
 
 
@@ -378,10 +385,13 @@ else
 			if ($AGILOG) {$agi_string = "Agent $PIN_number sent to $VDADremDIALstr";   &agi_output;}
 
 			print "SET CONTEXT $ext_context\n";
+				$result = <STDIN>;
 				checkresult($result);
 			print "SET EXTENSION $VDADremDIALstr\n";
+				$result = <STDIN>;
 				checkresult($result);
 			print "SET PRIORITY 1\n";
+				$result = <STDIN>;
 				checkresult($result);
 			}
 		}
