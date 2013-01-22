@@ -3290,7 +3290,6 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 					$now_date = "$year-$mon-$mday $hour:$min:$sec";
 				if ($AGILOG) {$agi_string = "XXXXX VDAD transferred: start|stop  $start_time|$now_date|$VDADremDIALstr";   &agi_output;}
 
-				$result = <STDIN>;
 				exit;
 				}
 			else

@@ -2504,7 +2504,6 @@ while ($drop_timer <= $DROP_TIME)
 					$now_date = "$year-$mon-$mday $hour:$min:$sec";
 				if ($AGILOG) {$agi_string = "XXXXXXXXXX VDAD transferred: start|stop   $start_time|$now_date";   &agi_output;}
 
-				$result = <STDIN>;
 				exit;
 				}
 			else
@@ -3072,7 +3071,6 @@ while ($drop_timer <= $DROP_TIME)
 				$now_date = "$year-$mon-$mday $hour:$min:$sec";
 				if ($AGILOG) {$agi_string = "XXXXXXXXXX VDAD transferred: start|stop      $start_time|$now_date";   &agi_output;}
 
-				$result = <STDIN>;
 				exit;
 				}
 			else

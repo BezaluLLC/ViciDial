@@ -640,7 +640,7 @@ if (length($lead_id) > 0)
 
 my $secZ = time();
 my $script_time = ($secZ - $secX);
-print "DONE execute time: $script_time seconds\n";
+if ($DB) {print "DONE execute time: $script_time seconds\n";}
 
 exit 0;
 # Program ends.
