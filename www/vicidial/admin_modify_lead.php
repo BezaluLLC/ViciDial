@@ -8,7 +8,7 @@
 # just needs to enter the leadID and then they can view and modify the 
 # information in the record for that lead
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -51,6 +51,7 @@
 # 121116-1411 - Added QC functionality
 # 121130-1033 - Changed scheduled callback user ID field to be 20 characters, issue #467
 # 121222-2145 - Added email log
+# 130123-1940 - Added options.php option to allow display of non-selectable statuses
 #
 
 require("dbconnect.php");
@@ -167,6 +168,16 @@ $PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
+
+$nonselectable_statuses=0;
+if (file_exists('options.php'))
+	{
+	require('options.php');
+	}
+$selectableSQL = "where selectable='Y'";
+$selectableSQLand = "and selectable='Y'";
+if ($nonselectable_statuses > 0) 
+	{$selectableSQL='';   $selectableSQLand='';}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -947,7 +958,7 @@ else
 			$list_campaign = $row[0];
 			}
 
-		$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_statuses where selectable='Y' order by status";
+		$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_statuses $selectableSQL order by status";
 		$rslt=mysql_query($stmt, $link);
 		$statuses_to_print = mysql_num_rows($rslt);
 		$statuses_list='';
@@ -964,7 +975,7 @@ else
 			$o++;
 			}
 
-		$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_campaign_statuses where selectable='Y' and campaign_id='$list_campaign' order by status";
+		$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_campaign_statuses where campaign_id='$list_campaign' $selectableSQLand order by status";
 		$rslt=mysql_query($stmt, $link);
 		$CAMPstatuses_to_print = mysql_num_rows($rslt);
 
@@ -1061,7 +1072,7 @@ else
 
 
 
-				$stmt="SELECT status,status_name from vicidial_statuses where scheduled_callback='Y' and selectable='Y' and status NOT IN('CBHOLD') order by status";
+				$stmt="SELECT status,status_name from vicidial_statuses where scheduled_callback='Y' $selectableSQLand and status NOT IN('CBHOLD') order by status";
 				$rslt=mysql_query($stmt, $link);
 				$statuses_to_print = mysql_num_rows($rslt);
 				$statuses_list='';
@@ -1078,7 +1089,7 @@ else
 					$o++;
 					}
 
-				$stmt="SELECT status,status_name from vicidial_campaign_statuses where scheduled_callback='Y' and selectable='Y' and status NOT IN('CBHOLD') and campaign_id='$list_campaign' order by status";
+				$stmt="SELECT status,status_name from vicidial_campaign_statuses where scheduled_callback='Y' $selectableSQLand and status NOT IN('CBHOLD') and campaign_id='$list_campaign' order by status";
 				$rslt=mysql_query($stmt, $link);
 				$CAMPstatuses_to_print = mysql_num_rows($rslt);
 
