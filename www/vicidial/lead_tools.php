@@ -1,15 +1,16 @@
 <?php
 # lead_tools.php - Various tools for lead basic lead management.
 #
-# Copyright (C) 2012  Matt Florell,Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell,Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 121110-1446 - Initial Build
 # 121114-0956 - Added input filtering and vicidial_admin_log logging
+# 130124-1129 - Added new options, from issue #632<noah>
 #
 
-$version = '2.6-2a';
-$build = '121114-0956';
+$version = '2.6-3a';
+$build = '130124-1129';
 
 # This limit is to prevent data inconsistancies.
 # If there are too many leads in a list this
@@ -209,7 +210,7 @@ if ($move_submit == "move" )
 	if (isset($_GET["move_count_num"])) {$move_count_num=$_GET["move_count_num"];}
 		elseif (isset($_POST["move_count_num"])) {$move_count_num=$_POST["move_count_num"];}
 	
-	$move_status = ereg_replace("[^-_0-9a-zA-Z]","",$move_status);
+	#$move_status = ereg_replace("[^-_0-9a-zA-Z]","",$move_status);
 	$move_from_list = ereg_replace("[^0-9]","",$move_from_list);
 	$move_to_list = ereg_replace("[^0-9]","",$move_to_list);
 	$move_count_num = ereg_replace("[^0-9]","",$move_count_num);
@@ -236,7 +237,7 @@ if ($move_submit == "move" )
 
 	# get the number of leads this action will move
 	$move_lead_count=0;
-	$move_lead_count_stmt = "SELECT count(1) FROM vicidial_list WHERE list_id = '$move_from_list' and status = '$move_status' and called_count $move_count_op $move_count_num";
+	$move_lead_count_stmt = "SELECT count(1) FROM vicidial_list WHERE list_id = '$move_from_list' and status like '$move_status' and called_count $move_count_op $move_count_num";
 	if ($DB) { echo "|$move_lead_count_stmt|\n"; }
 	$move_lead_count_rslt = mysql_query($move_lead_count_stmt, $link);
 	$move_lead_count_row = mysql_fetch_row($move_lead_count_rslt);
@@ -299,7 +300,7 @@ if ($confirm_move == "confirm")
 	if (isset($_GET["move_count_num"])) {$move_count_num=$_GET["move_count_num"];}
 		elseif (isset($_POST["move_count_num"])) {$move_count_num=$_POST["move_count_num"];}
 			
-	$move_status = ereg_replace("[^-_0-9a-zA-Z]","",$move_status);
+	#$move_status = ereg_replace("[^-_0-9a-zA-Z]","",$move_status);
 	$move_from_list = ereg_replace("[^0-9]","",$move_from_list);
 	$move_to_list = ereg_replace("[^0-9]","",$move_to_list);
 	$move_count_num = ereg_replace("[^0-9]","",$move_count_num);
@@ -323,7 +324,7 @@ if ($confirm_move == "confirm")
 		$move_count_op_phrase= "greater than or equal to ";
 		}
 
-	$move_lead_stmt = "UPDATE vicidial_list SET list_id = '$move_to_list' WHERE list_id = '$move_from_list' and status = '$move_status' and called_count $move_count_op $move_count_num";
+	$move_lead_stmt = "UPDATE vicidial_list SET list_id = '$move_to_list' WHERE list_id = '$move_from_list' and status like '$move_status' and called_count $move_count_op $move_count_num";
 	if ($DB) { echo "|$move_lead_stmt|\n"; }
 	$move_lead_rslt = mysql_query($move_lead_stmt, $link);
 	$move_lead_count = mysql_affected_rows( $link );
@@ -742,6 +743,7 @@ if (
 	echo "<tr bgcolor=#B6D3FC><td align=right>Status</td><td align=left>\n";
 	echo "<select size=1 name=move_status>\n";
 	echo "<option value='-'>Select A Status</option>\n";
+	echo "<option value='%'>All Statuses</option>\n";
 
 	$i = 0;
 	while ( $i < $status_count )
@@ -749,7 +751,7 @@ if (
 		echo "<option value='$statuses[$i]'>$statuses[$i]</option>\n";
 		$i++;
 		}
-
+		
 	echo "</select></td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Called Count</td><td align=left>\n";
 	echo "<select size=1 name=move_count_op>\n";
