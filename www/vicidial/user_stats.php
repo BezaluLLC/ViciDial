@@ -1,7 +1,7 @@
 <?php
 # user_stats.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -35,6 +35,7 @@
 # 111106-1105 - Added user_group restrictions
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 # 121222-2152 - Added email log display
+# 130124-1740 - Added option to display first and last name of lead
 #
 
 
@@ -44,6 +45,12 @@ require("functions.php");
 
 $report_name = 'User Stats';
 $db_source = 'M';
+
+$firstlastname_display_user_stats=0;
+if (file_exists('options.php'))
+	{
+	require('options.php');
+	}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -643,12 +650,27 @@ if ($did < 1)
 	##### vicidial agent outbound calls for this time period #####
 
 	$MAIN.="<B>OUTBOUND CALLS FOR THIS TIME PERIOD: (10000 record limit)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=5'>[DOWNLOAD]</a></B>\n";
-	$MAIN.="<TABLE width=670 cellspacing=0 cellpadding=1>\n";
-	$MAIN.="<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> GROUP</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
+	$MAIN.="<TABLE width=700 cellspacing=0 cellpadding=1>\n";
+	if ($firstlastname_display_user_stats > 0)
+		{
+		$MAIN.="<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> GROUP</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> NAME</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
+		}
+	else
+		{
+		$MAIN.="<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> GROUP</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
+		}
 	$CSV_text5.="\"OUTBOUND CALLS FOR THIS TIME PERIOD: (10000 record limit)\"\n";
-	$CSV_text5.="\"\",\"#\",\"DATE/TIME\",\"LENGTH\",\"STATUS\",\"PHONE\",\"CAMPAIGN\",\"GROUP\",\"LIST\",\"LEAD\",\"HANGUP REASON\"\n";
+	if ($firstlastname_display_user_stats > 0)
+		{$CSV_text5.="\"\",\"#\",\"DATE/TIME\",\"LENGTH\",\"STATUS\",\"PHONE\",\"CAMPAIGN\",\"GROUP\",\"LIST\",\"LEAD\",\"NAME\",\"HANGUP REASON\"\n";}
+	else
+		{$CSV_text5.="\"\",\"#\",\"DATE/TIME\",\"LENGTH\",\"STATUS\",\"PHONE\",\"CAMPAIGN\",\"GROUP\",\"LIST\",\"LEAD\",\"HANGUP REASON\"\n";}
 
 	$stmt="select uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,user_group,term_reason,alt_dial from vicidial_log where user='" . mysql_real_escape_string($user) . "' and call_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and call_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by call_date desc limit 10000;";
+	if ($firstlastname_display_user_stats > 0)
+		{
+		$stmt="select uniqueid,vlog.lead_id,vlog.list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,vlog.status,vlog.phone_code,vlog.phone_number,vlog.user,vlog.comments,processed,user_group,term_reason,alt_dial,first_name,last_name from vicidial_log vlog, vicidial_list vlist where vlog.user='" . mysql_real_escape_string($user) . "' and call_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and call_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' and vlog.lead_id=vlist.lead_id order by call_date desc limit 10000;";
+		}
+	if ($DB) {$MAIN.="outbound calls|$stmt|";}
 	$rslt=mysql_query($stmt, $link);
 	$logs_to_print = mysql_num_rows($rslt);
 
@@ -689,8 +711,19 @@ if ($did < 1)
 		$MAIN.="<td align=right><font size=2> $row[14] </td>\n";
 		$MAIN.="<td align=right><font size=2> $row[2] </td>\n";
 		$MAIN.="<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$row[1]\" target=\"_blank\">$row[1]</A> </td>\n";
+		if ($firstlastname_display_user_stats > 0)
+			{
+			$MAIN.="<td align=right><font size=2> $row[17] $row[18] </td>\n";
+			}
 		$MAIN.="<td align=right><font size=2> $row[15] </td></tr>\n";
-		$CSV_text5.="\"\",\"$u\",\"$row[4]\",\"$row[7]\",\"$row[8]\",\"$row[10]\",\"$row[3]\",\"$row[14]\",\"$row[2]\",\"$row[1]\",\"$row[15]\"\n";
+		if ($firstlastname_display_user_stats > 0)
+			{
+			$CSV_text5.="\"\",\"$u\",\"$row[4]\",\"$row[7]\",\"$row[8]\",\"$row[10]\",\"$row[3]\",\"$row[14]\",\"$row[2]\",\"$row[1]\",\"$row[17] $row[18]\",\"$row[15]\"\n";
+			}
+		else
+			{
+			$CSV_text5.="\"\",\"$u\",\"$row[4]\",\"$row[7]\",\"$row[8]\",\"$row[10]\",\"$row[3]\",\"$row[14]\",\"$row[2]\",\"$row[1]\",\"$row[15]\"\n";
+			}
 		}
 
 
@@ -749,15 +782,37 @@ if ($did < 1)
 
 $MAIN.="<B>INBOUND/CLOSER CALLS FOR THIS TIME PERIOD: (10000 record limit)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=6'>[DOWNLOAD]</a></B>\n";
 $MAIN.="<TABLE width=750 cellspacing=0 cellpadding=1>\n";
-$MAIN.="<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> WAIT (S)</td><td align=right><font size=2> AGENT (S)</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
+if ($firstlastname_display_user_stats > 0)
+	{
+	$MAIN.="<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> WAIT (S)</td><td align=right><font size=2> AGENT (S)</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> NAME</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
+	}
+else
+	{
+	$MAIN.="<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> WAIT (S)</td><td align=right><font size=2> AGENT (S)</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
+	}
 $CSV_text6.="\"INBOUND/CLOSER CALLS FOR THIS TIME PERIOD: (10000 record limit)\"\n";
-$CSV_text6.="\"\",\"#\",\"DATE/TIME\",\"LENGTH\",\"STATUS\",\"PHONE\",\"CAMPAIGN\",\"WAIT(S)\",\"AGENT(S)\",\"LIST\",\"LEAD\",\"HANGUP REASON\"\n";
+if ($firstlastname_display_user_stats > 0)
+	{
+	$CSV_text6.="\"\",\"#\",\"DATE/TIME\",\"LENGTH\",\"STATUS\",\"PHONE\",\"CAMPAIGN\",\"WAIT(S)\",\"AGENT(S)\",\"LIST\",\"LEAD\",\"NAME\",\"HANGUP REASON\"\n";
+	}
+else
+	{
+	$CSV_text6.="\"\",\"#\",\"DATE/TIME\",\"LENGTH\",\"STATUS\",\"PHONE\",\"CAMPAIGN\",\"WAIT(S)\",\"AGENT(S)\",\"LIST\",\"LEAD\",\"HANGUP REASON\"\n";
+	}
 
 $stmt="select call_date,length_in_sec,status,phone_number,campaign_id,queue_seconds,list_id,lead_id,term_reason from vicidial_closer_log where user='" . mysql_real_escape_string($user) . "' and call_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and call_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by call_date desc limit 10000;";
 if ($did > 0)
 	{
 	$stmt="select start_time,length_in_sec,0,caller_code,0,0,0,extension,0 from call_log where channel_group='DID_INBOUND' and number_dialed='" . mysql_real_escape_string($user) . "' and start_time >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and start_time <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by start_time desc limit 10000;";
 	}
+else
+	{
+	if ($firstlastname_display_user_stats > 0)
+		{
+		$stmt="select call_date,length_in_sec,vlog.status,vlog.phone_number,campaign_id,queue_seconds,vlog.list_id,vlog.lead_id,term_reason,first_name,last_name from vicidial_closer_log vlog, vicidial_list vlist where vlog.user='" . mysql_real_escape_string($user) . "' and call_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and call_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' and vlog.lead_id=vlist.lead_id order by call_date desc limit 10000;";
+		}
+	}
+if ($DB) {$MAIN.="inbound calls|$stmt|";}
 $rslt=mysql_query($stmt, $link);
 $logs_to_print = mysql_num_rows($rslt);
 
@@ -818,8 +873,17 @@ while ($logs_to_print > $u)
 	$MAIN.="<td align=right><font size=2> $AGENTseconds </td>\n";
 	$MAIN.="<td align=right><font size=2> $row[6] </td>\n";
 	$MAIN.="<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$row[7]\" target=\"_blank\">$row[7]</A> </td>\n";
+	if ($firstlastname_display_user_stats > 0)
+		{$MAIN.="<td align=right><font size=2> $row[9] $row[10] </td>\n";}
 	$MAIN.="<td align=right><font size=2> $row[8] </td></tr>\n";
-	$CSV_text6.="\"\",\"$u\",\"$row[0]\",\"$row[1]\",\"$row[2]\",\"$row[3]\",\"$row[4]\",\"$row[5]\",\"$AGENTseconds\",\"$row[6]\",\"$row[7]\",\"$row[8]\"\n";
+	if ($firstlastname_display_user_stats > 0)
+		{
+		$CSV_text6.="\"\",\"$u\",\"$row[0]\",\"$row[1]\",\"$row[2]\",\"$row[3]\",\"$row[4]\",\"$row[5]\",\"$AGENTseconds\",\"$row[6]\",\"$row[7]\",\"$row[9] $row[10]\",\"$row[8]\"\n";
+		}
+	else
+		{
+		$CSV_text6.="\"\",\"$u\",\"$row[0]\",\"$row[1]\",\"$row[2]\",\"$row[3]\",\"$row[4]\",\"$row[5]\",\"$AGENTseconds\",\"$row[6]\",\"$row[7]\",\"$row[8]\"\n";
+		}
 	}
 
 $MAIN.="<tr bgcolor=white>";
@@ -843,6 +907,7 @@ if ($did < 1)
 	$CSV_text7.="\"\",\"#\",\"DATE/TIME\",\"PAUSE\",\"WAIT\",\"TALK\",\"DISPO\",\"DEAD\",\"CUSTOMER\",\"STATUS\",\"LEAD\",\"CAMPAIGN\",\"PAUSE CODE\"\n";
 
 	$stmt="select event_time,lead_id,campaign_id,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec,status,sub_status,user_group from vicidial_agent_log where user='" . mysql_real_escape_string($user) . "' and event_time >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_time <= '" . mysql_real_escape_string($end_date) . " 23:59:59' and ( (pause_sec > 0) or (wait_sec > 0) or (talk_sec > 0) or (dispo_sec > 0) ) order by event_time desc limit 10000;";
+	if ($DB) {$MAIN.="agent activity|$stmt|";}
 	$rslt=mysql_query($stmt, $link);
 	$logs_to_print = mysql_num_rows($rslt);
 

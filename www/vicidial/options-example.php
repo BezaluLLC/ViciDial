@@ -13,6 +13,7 @@
 # 120213-1500 - Added option to log non-agent-API calls
 # 120713-1915 - Added option for extended vicidial_list fields for long surveys
 # 130123-1950 - Added option for using non-selectable statuses in admin_modify_lead.php
+# 130124-1735 - Added option to display first and last name in user stats results
 #
 
 # used by the realtime_report.php script
@@ -70,5 +71,8 @@ $extended_vl_fields = 0;
 
 # allow non-selectable statuses on the modify lead page
 $nonselectable_statuses = 0;
+
+# display first and last name in user stats results
+$firstlastname_display_user_stats = 0;
 
 ?>
