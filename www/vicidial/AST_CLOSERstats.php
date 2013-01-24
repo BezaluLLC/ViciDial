@@ -1,7 +1,7 @@
 <?php 
 # AST_CLOSERstats.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -36,6 +36,7 @@
 # 111103-2003 - Added user_group restrictions for selecting in-groups
 # 120224-0910 - Added HTML display option with bar graphs
 # 120730-0724 - Small fix for HTML output
+# 130124-1719 - Added email report support
 #
 
 require("dbconnect.php");
@@ -58,6 +59,8 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
 if (isset($_GET["DID"]))				{$DID=$_GET["DID"];}
 	elseif (isset($_POST["DID"]))		{$DID=$_POST["DID"];}
+if (isset($_GET["EMAIL"]))				{$EMAIL=$_GET["EMAIL"];}
+	elseif (isset($_POST["EMAIL"]))		{$EMAIL=$_POST["EMAIL"];}
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
 if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
@@ -186,9 +189,16 @@ if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 
-$stmt="select group_id,group_name,8 from vicidial_inbound_groups $whereLOGadmin_viewable_groupsSQL order by group_id;";
+$stmt="select group_id,group_name,8 from vicidial_inbound_groups where group_handling='PHONE' $LOGadmin_viewable_groupsSQL order by group_id;";
 if ($DID=='Y')
-	{$stmt="select did_pattern,did_description,did_id from vicidial_inbound_dids $whereLOGadmin_viewable_groupsSQL order by did_pattern;";}
+	{
+	$stmt="select did_pattern,did_description,did_id from vicidial_inbound_dids $whereLOGadmin_viewable_groupsSQL order by did_pattern;";
+	}
+if ($EMAIL=='Y')
+	{
+	$stmt="select email_account_id,email_account_name,email_account_id from vicidial_email_accounts $whereLOGadmin_viewable_groupsSQL order by email_account_id;";
+	$stmt="select group_id,group_name,8 from vicidial_inbound_groups where group_handling='EMAIL' $LOGadmin_viewable_groupsSQL order by group_id;";
+	}
 $rslt=mysql_query($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $groups_to_print = mysql_num_rows($rslt);
@@ -287,6 +297,7 @@ $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=POST name=vicidial_report id=vicidial_
 $MAIN.="<TABLE BORDER=0><TR><TD VALIGN=TOP>\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DID VALUE=\"$DID\">\n";
+$MAIN.="<INPUT TYPE=HIDDEN NAME=EMAIL VALUE=\"$EMAIL\">\n";
 $MAIN.="Date Range:<BR>\n";
 $MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
@@ -315,7 +326,9 @@ $MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 $MAIN.="</script>\n";
 
 $MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
-if ($DID=='Y')
+if ($EMAIL=='Y')
+	{$MAIN.="Email Accts: \n";}
+else if ($DID=='Y')
 	{$MAIN.="Inbound DIDs: \n";}
 else
 	{$MAIN.="Inbound Groups: \n";}
@@ -373,6 +386,8 @@ $MAIN.="<PRE><FONT SIZE=2>\n\n";
 if ($groups_to_print < 1)
 	{
 	$MAIN.="\n\n";
+	if ($EMAIL=='Y')
+		{$MAIN.="PLEASE SELECT AN EMAIL ACCOUNT AND DATE RANGE ABOVE AND CLICK SUBMIT\n";}
 	if ($DID=='Y')
 		{$MAIN.="PLEASE SELECT A DID AND DATE RANGE ABOVE AND CLICK SUBMIT\n";}
 	else
@@ -403,11 +418,17 @@ if ($shift == 'ALL')
 $query_date_BEGIN = "$query_date $time_BEGIN";   
 $query_date_END = "$end_date $time_END";
 
+if ($EMAIL=='Y') 
+	{
+	$MAIN.="Inbound Email Stats: $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a>\n";
+	$CSV_text1.="\"Inbound Call Stats:\",\"$group_string\",\"$NOW_TIME\"\n";
+	}
+else
+	{
+	$MAIN.="Inbound Call Stats: $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a>\n";
+	$CSV_text1.="\"Inbound Call Stats:\",\"$group_string\",\"$NOW_TIME\"\n";
+	}
 
-
-$MAIN.="Inbound Call Stats: $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a>\n";
-
-$CSV_text1.="\"Inbound Call Stats:\",\"$group_string\",\"$NOW_TIME\"\n";
 
 
 if ($DID=='Y')
@@ -453,7 +474,14 @@ if ($group_ct > 1)
 
 	$CSV_text1.="\n\"MULTI-GROUP BREAKDOWN:\"\n";
 
-	if ($DID=='Y')
+	if ($EMAIL=='Y')
+		{
+		$ASCII_text.="+----------------------+---------+---------+---------+---------+\n";
+		$ASCII_text.="| EMAIL                | EMAILS  | DROPS   | DROP %  | IVR     |\n";
+		$ASCII_text.="+----------------------+---------+---------+---------+---------+\n";
+		$CSV_text1.="\"EMAIL\",\"CALLS\",\"DROPS\",\"DROP %\",\"IVR\"\n";
+		}
+	else if ($DID=='Y')
 		{
 		$ASCII_text.="+----------------------+---------+---------+---------+---------+\n";
 		$ASCII_text.="| DID                  | CALLS   | DROPS   | DROP %  | IVR     |\n";
@@ -656,18 +684,34 @@ else
 	$average_answer_seconds =	sprintf("%10s", $average_answer_seconds);
 	}
 
+if ($EMAIL=='Y')
+	{
+	$MAIN.="Total Emails taken in to this In-Group:        $TOTALcalls\n";
+	$MAIN.="Average Email Length for all Emails:            $average_call_seconds seconds\n";
+	$MAIN.="Answered Emails:                               $ANSWEREDcalls  $ANSWEREDpercent%\n";
+	$MAIN.="Average queue time for Answered Emails:        $average_answer_seconds seconds\n";
+	$MAIN.="Emails taken into the IVR for this In-Group:   $IVRcalls\n";
 
-$MAIN.="Total calls taken in to this In-Group:        $TOTALcalls\n";
-$MAIN.="Average Call Length for all Calls:            $average_call_seconds seconds\n";
-$MAIN.="Answered Calls:                               $ANSWEREDcalls  $ANSWEREDpercent%\n";
-$MAIN.="Average queue time for Answered Calls:        $average_answer_seconds seconds\n";
-$MAIN.="Calls taken into the IVR for this In-Group:   $IVRcalls\n";
+	$CSV_text1.="\"Total Emails taken in to this In-Group:\",\"$TOTALcalls\"\n";
+	$CSV_text1.="\"Average Email Length for all Emails:\",\"$average_call_seconds seconds\"\n";
+	$CSV_text1.="\"Answered Emails:\",\"$ANSWEREDcalls\",\"$ANSWEREDpercent%\"\n";
+	$CSV_text1.="\"Average queue time for Answered Emails:\",\"$average_answer_seconds seconds\"\n";
+	$CSV_text1.="\"Emails taken into the IVR for this In-Group:\",\"$IVRcalls\"\n";
+	}
+else
+	{
+	$MAIN.="Total calls taken in to this In-Group:        $TOTALcalls\n";
+	$MAIN.="Average Call Length for all Calls:            $average_call_seconds seconds\n";
+	$MAIN.="Answered Calls:                               $ANSWEREDcalls  $ANSWEREDpercent%\n";
+	$MAIN.="Average queue time for Answered Calls:        $average_answer_seconds seconds\n";
+	$MAIN.="Calls taken into the IVR for this In-Group:   $IVRcalls\n";
 
-$CSV_text1.="\"Total calls taken in to this In-Group:\",\"$TOTALcalls\"\n";
-$CSV_text1.="\"Average Call Length for all Calls:\",\"$average_call_seconds seconds\"\n";
-$CSV_text1.="\"Answered Calls:\",\"$ANSWEREDcalls\",\"$ANSWEREDpercent%\"\n";
-$CSV_text1.="\"Average queue time for Answered Calls:\",\"$average_answer_seconds seconds\"\n";
-$CSV_text1.="\"Calls taken into the IVR for this In-Group:\",\"$IVRcalls\"\n";
+	$CSV_text1.="\"Total calls taken in to this In-Group:\",\"$TOTALcalls\"\n";
+	$CSV_text1.="\"Average Call Length for all Calls:\",\"$average_call_seconds seconds\"\n";
+	$CSV_text1.="\"Answered Calls:\",\"$ANSWEREDcalls\",\"$ANSWEREDpercent%\"\n";
+	$CSV_text1.="\"Average queue time for Answered Calls:\",\"$average_answer_seconds seconds\"\n";
+	$CSV_text1.="\"Calls taken into the IVR for this In-Group:\",\"$IVRcalls\"\n";
+	}
 
 $MAIN.="\n";
 $MAIN.="---------- DROPS\n";
@@ -710,12 +754,22 @@ else
 	$DROP_ANSWEREDpercent = round($DROP_ANSWEREDpercent, 0);
 	}
 
-$MAIN.="Total DROP Calls:                             $DROPcalls  $DROPpercent%               drop/answered: $DROP_ANSWEREDpercent%\n";
-$MAIN.="Average hold time for DROP Calls:             $average_hold_seconds seconds\n";
+if ($EMAIL=='Y')
+	{
+	$MAIN.="Total DROP Emails:                             $DROPcalls  $DROPpercent%               drop/answered: $DROP_ANSWEREDpercent%\n";
+	$MAIN.="Average hold time for DROP Emails:             $average_hold_seconds seconds\n";
 
-$CSV_text1.="\"Total DROP Calls:\",\"$DROPcalls\",\"$DROPpercent%\",\"drop/answered:\",\"$DROP_ANSWEREDpercent%\"\n";
-$CSV_text1.="\"Average hold time for DROP Calls:\",\"$average_hold_seconds seconds\"\n";
+	$CSV_text1.="\"Total DROP Emails:\",\"$DROPcalls\",\"$DROPpercent%\",\"drop/answered:\",\"$DROP_ANSWEREDpercent%\"\n";
+	$CSV_text1.="\"Average hold time for DROP Emails:\",\"$average_hold_seconds seconds\"\n";
+	}
+else
+	{
+	$MAIN.="Total DROP Calls:                             $DROPcalls  $DROPpercent%               drop/answered: $DROP_ANSWEREDpercent%\n";
+	$MAIN.="Average hold time for DROP Calls:             $average_hold_seconds seconds\n";
 
+	$CSV_text1.="\"Total DROP Calls:\",\"$DROPcalls\",\"$DROPpercent%\",\"drop/answered:\",\"$DROP_ANSWEREDpercent%\"\n";
+	$CSV_text1.="\"Average hold time for DROP Calls:\",\"$average_hold_seconds seconds\"\n";
+	}
 
 if (strlen($group_SQL)>3)
 	{
@@ -751,14 +805,29 @@ if (strlen($group_SQL)>3)
 			}
 		}
 	}
-$MAIN.="\n";
-$MAIN.="---------- CUSTOM INDICATORS\n";
-$MAIN.="GDE (Answered/Total calls taken in to this In-Group):  $ANSWEREDpercent%\n";
-$MAIN.="ACR (Dropped/Answered):                                $DROP_ANSWEREDpercent%\n";
 
-$CSV_text1.="\n\"CUSTOM INDICATORS\"\n";
-$CSV_text1.="\"GDE (Answered/Total calls taken in to this In-Group):\",\"$ANSWEREDpercent%\"\n";
-$CSV_text1.="\"ACR (Dropped/Answered):\",\"$DROP_ANSWEREDpercent%\"\n";
+if ($EMAIL=='Y')
+	{
+	$MAIN.="\n";
+	$MAIN.="---------- CUSTOM INDICATORS\n";
+	$MAIN.="GDE (Answered/Total emails taken in to this In-Group):  $ANSWEREDpercent%\n";
+	$MAIN.="ACR (Dropped/Answered):                                $DROP_ANSWEREDpercent%\n";
+
+	$CSV_text1.="\n\"CUSTOM INDICATORS\"\n";
+	$CSV_text1.="\"GDE (Answered/Total emails taken in to this In-Group):\",\"$ANSWEREDpercent%\"\n";
+	$CSV_text1.="\"ACR (Dropped/Answered):\",\"$DROP_ANSWEREDpercent%\"\n";
+	}
+else
+	{
+	$MAIN.="\n";
+	$MAIN.="---------- CUSTOM INDICATORS\n";
+	$MAIN.="GDE (Answered/Total calls taken in to this In-Group):  $ANSWEREDpercent%\n";
+	$MAIN.="ACR (Dropped/Answered):                                $DROP_ANSWEREDpercent%\n";
+
+	$CSV_text1.="\n\"CUSTOM INDICATORS\"\n";
+	$CSV_text1.="\"GDE (Answered/Total calls taken in to this In-Group):\",\"$ANSWEREDpercent%\"\n";
+	$CSV_text1.="\"ACR (Dropped/Answered):\",\"$DROP_ANSWEREDpercent%\"\n";
+	}
 
 if ($DID!='Y')
 	{
@@ -849,15 +918,34 @@ else
 	$average_total_queue_seconds = sprintf("%10.2f", $average_total_queue_seconds);
 	}
 
-$MAIN.="Total Calls That entered Queue:               $QUEUEcalls  $QUEUEpercent%\n";
-$MAIN.="Average QUEUE Length for queue calls:         $average_queue_seconds seconds\n";
-$MAIN.="Average QUEUE Length across all calls:        $average_total_queue_seconds seconds\n";
+if ($EMAIL=='Y')
+	{
+	$MAIN.="Total Emails That entered Queue:               $QUEUEcalls  $QUEUEpercent%\n";
+	$MAIN.="Average QUEUE Length for queue emails:         $average_queue_seconds seconds\n";
+	$MAIN.="Average QUEUE Length across all emails:        $average_total_queue_seconds seconds\n";
 
-$CSV_text1.="\"Total Calls That entered Queue:\",\"$QUEUEcalls\",\"$QUEUEpercent%\"\n";
-$CSV_text1.="\"Average QUEUE Length for queue calls:\",\"$average_queue_seconds seconds\"\n";
-$CSV_text1.="\"Average QUEUE Length across all calls:\",\"$average_total_queue_seconds seconds\"\n";
+	$CSV_text1.="\"Total Emails That entered Queue:\",\"$QUEUEcalls\",\"$QUEUEpercent%\"\n";
+	$CSV_text1.="\"Average QUEUE Length for queue emails:\",\"$average_queue_seconds seconds\"\n";
+	$CSV_text1.="\"Average QUEUE Length across all emails:\",\"$average_total_queue_seconds seconds\"\n";
+	}
+else 
+	{
+	$MAIN.="Total Calls That entered Queue:               $QUEUEcalls  $QUEUEpercent%\n";
+	$MAIN.="Average QUEUE Length for queue calls:         $average_queue_seconds seconds\n";
+	$MAIN.="Average QUEUE Length across all calls:        $average_total_queue_seconds seconds\n";
 
+	$CSV_text1.="\"Total Calls That entered Queue:\",\"$QUEUEcalls\",\"$QUEUEpercent%\"\n";
+	$CSV_text1.="\"Average QUEUE Length for queue calls:\",\"$average_queue_seconds seconds\"\n";
+	$CSV_text1.="\"Average QUEUE Length across all calls:\",\"$average_total_queue_seconds seconds\"\n";
+	}
 
+if ($EMAIL=='Y') {
+	$rpt_type_verbiage='EMAIL';
+	$rpt_type_verbiages='EMAILS';
+} else {
+	$rpt_type_verbiage='CALL ';
+	$rpt_type_verbiages='CALLS ';
+}
 
 ##############################
 #########  CALL HOLD TIME BREAKDOWN IN SECONDS
@@ -865,12 +953,12 @@ $CSV_text1.="\"Average QUEUE Length across all calls:\",\"$average_total_queue_s
 $TOTALcalls = 0;
 
 $ASCII_text="\n";
-$ASCII_text.="---------- CALL HOLD TIME BREAKDOWN IN SECONDS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=2\">DOWNLOAD</a>\n";
+$ASCII_text.="---------- $rpt_type_verbiage HOLD TIME BREAKDOWN IN SECONDS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=2\">DOWNLOAD</a>\n";
 $ASCII_text.="+-------------------------------------------------------------------------------------------+------------+\n";
 $ASCII_text.="|     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | TOTAL      |\n";
 $ASCII_text.="+-------------------------------------------------------------------------------------------+------------+\n";
 
-$CSV_text2.="\n\"CALL HOLD TIME BREAKDOWN IN SECONDS\"\n";
+$CSV_text2.="\n\"$rpt_type_verbiage HOLD TIME BREAKDOWN IN SECONDS\"\n";
 $CSV_text2.="\"\",\"0\",\"5\",\"10\",\"15\",\"20\",\"25\",\"30\",\"35\",\"40\",\"45\",\"50\",\"55\",\"60\",\"90\",\"+90\",\"TOTAL\"\n";
 
 
@@ -1010,12 +1098,12 @@ else
 $BDdropCALLS = 0;
 
 $ASCII_text="\n";
-$ASCII_text.="---------- CALL DROP TIME BREAKDOWN IN SECONDS\n";
+$ASCII_text.="---------- $rpt_type_verbiage DROP TIME BREAKDOWN IN SECONDS\n";
 $ASCII_text.="+-------------------------------------------------------------------------------------------+------------+\n";
 $ASCII_text.="|     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | TOTAL      |\n";
 $ASCII_text.="+-------------------------------------------------------------------------------------------+------------+\n";
 
-$CSV_text2.="\n\"CALL DROP TIME BREAKDOWN IN SECONDS\"\n";
+$CSV_text2.="\n\"$rpt_type_verbiage DROP TIME BREAKDOWN IN SECONDS\"\n";
 $CSV_text2.="\"\",\"0\",\"5\",\"10\",\"15\",\"20\",\"25\",\"30\",\"35\",\"40\",\"45\",\"50\",\"55\",\"60\",\"90\",\"+90\",\"TOTAL\"\n";
 
 $stmt="select count(*),queue_seconds from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and status IN('DROP','XDROP') group by queue_seconds;";
@@ -1155,12 +1243,12 @@ else
 $BDansweredCALLS = 0;
 
 $ASCII_text="\n";
-$ASCII_text.="           CALL ANSWERED TIME AND PERCENT BREAKDOWN IN SECONDS\n";
+$ASCII_text.="           $rpt_type_verbiage ANSWERED TIME AND PERCENT BREAKDOWN IN SECONDS\n";
 $ASCII_text.="          +-------------------------------------------------------------------------------------------+------------+\n";
 $ASCII_text.="          |     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | TOTAL      |\n";
 $ASCII_text.="----------+-------------------------------------------------------------------------------------------+------------+\n";
 
-$CSV_text2.="\n\"CALL ANSWERED TIME AND PERCENT BREAKDOWN IN SECONDS\"\n";
+$CSV_text2.="\n\"$rpt_type_verbiage ANSWERED TIME AND PERCENT BREAKDOWN IN SECONDS\"\n";
 $CSV_text2.="\"\",\"0\",\"5\",\"10\",\"15\",\"20\",\"25\",\"30\",\"35\",\"40\",\"45\",\"50\",\"55\",\"60\",\"90\",\"+90\",\"TOTAL\"\n";
 
 $stmt="select count(*),queue_seconds from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by queue_seconds;";
@@ -1443,13 +1531,13 @@ else
 $TOTALcalls = 0;
 
 $ASCII_text="\n";
-$ASCII_text.="---------- CALL HANGUP REASON STATS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=3\">DOWNLOAD</a>\n";
+$ASCII_text.="---------- $rpt_type_verbiage HANGUP REASON STATS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=3\">DOWNLOAD</a>\n";
 $ASCII_text.="+----------------------+------------+\n";
-$ASCII_text.="| HANGUP REASON        | CALLS      |\n";
+$ASCII_text.="| HANGUP REASON        | $rpt_type_verbiages      |\n";
 $ASCII_text.="+----------------------+------------+\n";
 
-$CSV_text3.="\n\"CALL HANGUP REASON STATS\"\n";
-$CSV_text3.="\"HANGUP REASON\",\"CALLS\"\n";
+$CSV_text3.="\n\"$rpt_type_verbiage HANGUP REASON STATS\"\n";
+$CSV_text3.="\"HANGUP REASON\",\"$rpt_type_verbiages\"\n";
 
 $stmt="select count(*),term_reason from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) group by term_reason order by term_reason;";
 if ($DID=='Y')
@@ -1497,11 +1585,11 @@ if ($report_display_type=="HTML")
 		$i++;
 	}
 	$GRAPH_text="</PRE>\n";
-	$GRAPH_text.="<table cellspacing=\"0\" cellpadding=\"0\" summary=\"CALL HANGUP REASON STATS\" class=\"horizontalgraph\">\n";
-	$GRAPH_text.="  <caption align=\"top\">CALL HANGUP REASON STATS</caption>\n";
+	$GRAPH_text.="<table cellspacing=\"0\" cellpadding=\"0\" summary=\"$rpt_type_verbiage HANGUP REASON STATS\" class=\"horizontalgraph\">\n";
+	$GRAPH_text.="  <caption align=\"top\">$rpt_type_verbiage HANGUP REASON STATS</caption>\n";
 	$GRAPH_text.="  <tr>\n";
 	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">REASON </th>\n";
-	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">CALLS </th>\n";
+	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">$rpt_type_verbiages </th>\n";
 	$GRAPH_text.="  </tr>\n";
 	for ($i=0; $i<count($ct_ary); $i++) {
 		if ($i==0) {$class=" first";} else if (($i+1)==count($ct_ary)) {$class=" last";} else {$class="";}
@@ -1511,7 +1599,7 @@ if ($report_display_type=="HTML")
 		$GRAPH_text.="  </tr>\n";
 	}
 	$GRAPH_text.="  <tr>\n";
-	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">TOTAL CALLS:</th>\n";
+	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">TOTAL ".$rpt_type_verbiage.":</th>\n";
 	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">".trim($TOTALcalls)."</th>\n";
 	$GRAPH_text.="  </tr>\n";
 	$GRAPH_text.="</table>\n";
@@ -1529,17 +1617,17 @@ else
 $TOTALcalls = 0;
 
 $ASCII_text="\n";
-$ASCII_text.="---------- CALL STATUS STATS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=4\">DOWNLOAD</a>\n";
-$ASCII_text.="+--------+----------------------+----------------------+------------+------------+----------+----------+\n";
-$ASCII_text.="| STATUS | DESCRIPTION          | CATEGORY             | CALLS      | TOTAL TIME | AVG TIME |CALLS/HOUR|\n";
-$ASCII_text.="+--------+----------------------+----------------------+------------+------------+----------+----------+\n";
+$ASCII_text.="---------- $rpt_type_verbiage STATUS STATS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=4\">DOWNLOAD</a>\n";
+$ASCII_text.="+--------+----------------------+----------------------+------------+------------+----------+-----------+\n";
+$ASCII_text.="| STATUS | DESCRIPTION          | CATEGORY             | $rpt_type_verbiages     | TOTAL TIME | AVG TIME |$rpt_type_verbiages/HOUR|\n";
+$ASCII_text.="+--------+----------------------+----------------------+------------+------------+----------+-----------+\n";
 
 $GRAPH="<BR><BR><a name='cssgraph'><table border='0' cellpadding='0' cellspacing='2' width='800'>";
 $GRAPH.="<tr><th width='25%' class='grey_graph_cell' id='cssgraph1'><a href='#' onClick=\"DrawCSSGraph('CALLS', '1'); return false;\">CALLS</a></th><th width=25% class='grey_graph_cell' id='cssgraph2'><a href='#' onClick=\"DrawCSSGraph('TOTALTIME', '2'); return false;\">TOTAL TIME</a></th><th width=25% class='grey_graph_cell' id='cssgraph3'><a href='#' onClick=\"DrawCSSGraph('AVGTIME', '3'); return false;\">AVG TIME</a></th><th width=25% class='grey_graph_cell' id='cssgraph4'><a href='#' onClick=\"DrawCSSGraph('CALLSHOUR', '4'); return false;\">CALLS/HR</a></th></tr>";
 $GRAPH.="<tr><td colspan='4' class='graph_span_cell'><span id='call_status_stats_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
 
-$CSV_text4.="\n\"CALL STATUS STATS\"\n";
-$CSV_text4.="\"STATUS\",\"DESCRIPTION\",\"CATEGORY\",\"CALLS\",\"TOTAL TIME\",\"AVG TIME\",\"CALLS/HOUR\"\n";
+$CSV_text4.="\n\"$rpt_type_verbiage STATUS STATS\"\n";
+$CSV_text4.="\"STATUS\",\"DESCRIPTION\",\"CATEGORY\",\"$rpt_type_verbiages\",\"TOTAL TIME\",\"AVG TIME\",\"$rpt_type_verbiages/HOUR\"\n";
 
 
 
@@ -1712,11 +1800,11 @@ else
 $ASCII_text="\n";
 $ASCII_text.="---------- CUSTOM STATUS CATEGORY STATS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=5\">DOWNLOAD</a>\n";
 $ASCII_text.="+----------------------+------------+--------------------------------+\n";
-$ASCII_text.="| CATEGORY             | CALLS      | DESCRIPTION                    |\n";
+$ASCII_text.="| CATEGORY             | $rpt_type_verbiages     | DESCRIPTION                    |\n";
 $ASCII_text.="+----------------------+------------+--------------------------------+\n";
 
 $CSV_text5.="\n\"CUSTOM STATUS CATEGORY STATS\"\n";
-$CSV_text5.="\"CATEGORY\",\"CALLS\",\"DESCRIPTION\"\n";
+$CSV_text5.="\"CATEGORY\",\"$rpt_type_verbiages\",\"DESCRIPTION\"\n";
 
 $TOTCATcalls=0;
 $r=0;
@@ -1796,12 +1884,12 @@ else
 $TOTALcalls = 0;
 
 $ASCII_text="\n";
-$ASCII_text.="---------- CALL INITIAL QUEUE POSITION BREAKDOWN       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=6\">DOWNLOAD</a>\n";
+$ASCII_text.="---------- $rpt_type_verbiage INITIAL QUEUE POSITION BREAKDOWN       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=6\">DOWNLOAD</a>\n";
 $ASCII_text.="+-------------------------------------------------------------------------------------+------------+\n";
 $ASCII_text.="|     1     2     3     4     5     6     7     8     9    10    15    20    25   +25 | TOTAL      |\n";
 $ASCII_text.="+-------------------------------------------------------------------------------------+------------+\n";
 
-$CSV_text6.="\n\"CALL INITIAL QUEUE POSITION BREAKDOWN\"\n";
+$CSV_text6.="\n\"$rpt_type_verbiage INITIAL QUEUE POSITION BREAKDOWN\"\n";
 $CSV_text6.="\"\",\"1\",\"2\",\"3\",\"4\",\"5\",\"6\",\"7\",\"8\",\"9\",\"10\",\"15\",\"20\",\"25\",\"+25\",\"TOTAL\"\n";
 
 
@@ -1940,11 +2028,11 @@ $TOTavg=0;
 $ASCII_text="\n";
 $ASCII_text.="---------- AGENT STATS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=7\">DOWNLOAD</a>\n";
 $ASCII_text.="+--------------------------+------------+------------+--------+\n";
-$ASCII_text.="| AGENT                    | CALLS      | TIME H:M:S |AVERAGE |\n";
+$ASCII_text.="| AGENT                    | $rpt_type_verbiages     | TIME H:M:S |AVERAGE |\n";
 $ASCII_text.="+--------------------------+------------+------------+--------+\n";
 
 $CSV_text7.="\n\"AGENT STATS\"\n";
-$CSV_text7.="\"AGENT\",\"CALLS\",\"TIME H:M:S\",\"AVERAGE\"\n";
+$CSV_text7.="\"AGENT\",\"$rpt_type_verbiages\",\"TIME H:M:S\",\"AVERAGE\"\n";
 
 
 $max_calls=1;
@@ -1955,7 +2043,7 @@ $GRAPH="<BR><BR><a name='agent_stats_graph'/><table border='0' cellpadding='0' c
 $GRAPH.="<tr><th width='34%' class='grey_graph_cell' id='agent_stats_graph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">CALLS</a></th><th width=33% class='grey_graph_cell' id='agent_stats_graph2'><a href='#' onClick=\"DrawGraph('TIMEHMS', '2'); return false;\">TIME H:M:S</a></th><th width=33% class='grey_graph_cell' id='agent_stats_graph3'><a href='#' onClick=\"DrawGraph('AVERAGE', '3'); return false;\">AVERAGE</a></th></tr>";
 $GRAPH.="<tr><td colspan='4' class='graph_span_cell'><span id='agentstats_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
 $graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>AGENT STATS</caption><tr><th class='thgraph' scope='col'>AGENT</th>";
-$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>CALLS </th></tr>";
+$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>$rpt_type_verbiages </th></tr>";
 $TIMEHMS_graph=$graph_header."<th class='thgraph' scope='col'>TIME H:M:S</th></tr>";
 $AVERAGE_graph=$graph_header."<th class='thgraph' scope='col'>AVERAGE</th></tr>";
 
@@ -2175,7 +2263,7 @@ else
 	}
 
 $ASCII_text.="<!-- HICOUNT: $hi_hour_count|$hour_multiplier -->\n";
-$ASCII_text.="GRAPH IN 15 MINUTE INCREMENTS OF TOTAL CALLS TAKEN INTO THIS IN-GROUP\n";
+$ASCII_text.="GRAPH IN 15 MINUTE INCREMENTS OF TOTAL $rpt_type_verbiages TAKEN INTO THIS IN-GROUP\n";
 
 
 $k=1;
@@ -2349,12 +2437,12 @@ else
 
 ##### Answered wait time breakdown
 $MAIN.="\n";
-$MAIN.="---------- CALL ANSWERED TIME BREAKDOWN IN SECONDS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=8\">DOWNLOAD</a>\n";
+$MAIN.="---------- $rpt_type_verbiage ANSWERED TIME BREAKDOWN IN SECONDS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=8\">DOWNLOAD</a>\n";
 $MAIN.="+------+-------------------------------------------------------------------------------------------+------------+\n";
 $MAIN.="| HOUR |     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | TOTAL      |\n";
 $MAIN.="+------+-------------------------------------------------------------------------------------------+------------+\n";
 
-$CSV_text8.="\n\"CALL ANSWERED TIME BREAKDOWN IN SECONDS\"\n";
+$CSV_text8.="\n\"$rpt_type_verbiage ANSWERED TIME BREAKDOWN IN SECONDS\"\n";
 $CSV_text8.="\"HOUR\",\"0\",\"5\",\"10\",\"15\",\"20\",\"25\",\"30\",\"35\",\"40\",\"45\",\"50\",\"55\",\"60\",\"90\",\"+90\",\"TOTAL\"\n";
 
 $ZZ = '00';

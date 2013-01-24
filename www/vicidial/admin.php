@@ -109,7 +109,7 @@ $QUERY_STRING = getenv("QUERY_STRING");
 
 $Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report, Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Single Agent Daily, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Maximum System Stats, Maximum Stats Detail, Search Leads Logs';
 
-$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report , Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Single Agent Daily, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Custom Reports Links, CallCard Search, Maximum System Stats, Maximum Stats Detail, Search Leads Logs';
+$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound Email Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report , Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Single Agent Daily, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Custom Reports Links, CallCard Search, Maximum System Stats, Maximum Stats Detail, Search Leads Logs';
 
 $Vtables = 'NONE,log_noanswer,did_agent_log,contact_information';
 
@@ -3219,12 +3219,13 @@ else
 # 121212-1529 - Standardization of list_id fields at 19 digits in forms
 # 121222-2146 - Added new email features
 # 130102-1135 - Small change to admin log viewing for email accounts
+# 130124-1721 - Added Inbound Email report link, added Status Display LEADID options(issue #639)
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-392a';
-$build = '130102-1135';
+$admin_version = '2.6-393a';
+$build = '130124-1721';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -22545,7 +22546,7 @@ if ($ADD==31)
 		else {$ASLlink = "$PHP_SELF?ADD=381111111111&label_id=$screen_labels";}
 		echo "<tr bgcolor=#8EBCFD><td align=right><a href=\"$ASLlink\">Agent Screen Labels</a>: </td><td align=left><select size=1 name=screen_labels>$labels_menu<option value=\"--SYSTEM-SETTINGS--\">--SYSTEM-SETTINGS-- - Default</option><option SELECTED>$screen_labels</option></select>$NWB#vicidial_campaigns-screen_labels$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#8EBCFD><td align=right>Status Display Fields: </td><td align=left><select size=1 name=status_display_fields><option>CALLID</option><option>CALLID_LEADID</option><option>CALLID_LEADID_LISTID</option><option>---NONE---</option><option SELECTED>$status_display_fields</option></select>$NWB#vicidial_campaigns-status_display_fields$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Status Display Fields: </td><td align=left><select size=1 name=status_display_fields><option>CALLID</option><option>LEADID</option><option>LISTID</option><option>CALLID_LEADID</option><option>CALLID_LEADID_LISTID</option><option>---NONE---</option><option SELECTED>$status_display_fields</option></select>$NWB#vicidial_campaigns-status_display_fields$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#8EBCFD><td align=right>Agent Display Queue Count: </td><td align=left><select size=1 name=display_queue_count><option>Y</option><option>N</option><option SELECTED>$display_queue_count</option></select>$NWB#vicidial_campaigns-display_queue_count$NWE</td></tr>\n";
 
@@ -34701,6 +34702,8 @@ if ($ADD==999999)
 			{echo "<LI><a href=\"AST_CLOSERstats.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Inbound Report</a></FONT>\n";}
 		if ( ( (preg_match("/Inbound Report/",$LOGallowed_reports)) and (preg_match("/Inbound DID Report/",$LOGallowed_reports)) ) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 			{echo "<LI><a href=\"AST_CLOSERstats.php?DID=Y\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Inbound Report by DID</a></FONT>\n";}
+		if ( ( (preg_match("/Inbound Report/",$LOGallowed_reports)) and (preg_match("/Inbound Email Report/",$LOGallowed_reports)) ) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"AST_CLOSERstats.php?EMAIL=Y\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Inbound Email Report</a></FONT>\n";}
 		if ( (preg_match("/Inbound Service Level Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 			{echo "<LI><a href=\"AST_CLOSER_service_level.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Inbound Service Level Report</a></FONT>\n";}
 		if ( (preg_match("/Inbound Summary Hourly Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
