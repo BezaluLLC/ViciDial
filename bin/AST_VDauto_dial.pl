@@ -1456,7 +1456,7 @@ while($one_day_interval > 0)
 							if ($CLstatus =~ /BUSY/) {$CLnew_status = 'B';}
 							else
 								{
-								if ($CLstatus =~ /DISCONNECT/) {$CLnew_status = 'DC';}
+								if ($CLstatus =~ /DISCONNECT/) {$CLnew_status = 'ADC';}
 								else {$CLnew_status = 'NA';}
 								}
 							if ($CLstatus =~ /LIVE/) {$CLnew_status = 'DROP';}
