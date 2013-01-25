@@ -324,6 +324,7 @@ if ($action == "BLANK")
 	echo "<tr bgcolor=#B6D3FC><td align=right>Webphone Auto-Answer: </td><td align=left><select size=1 name=webphone_auto_answer><option selected>Y</option><option>N</option></select>$NWB#webphone_auto_answer$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Use External Server IP: </td><td align=left><select size=1 name=use_external_server_ip><option>Y</option><option selected>N</option></select>$NWB#use_external_server_ip$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>NOTE: Submitting this form will NOT trigger a conf file rebuild</td></tr>\n";
 	echo "</TABLE></center>\n";
 	echo "</TD></TR></TABLE>\n";
 	}
@@ -513,6 +514,7 @@ if ($action == "ADD_PHONES_SUBMIT")
 			
 			echo "Phones Inserted: $phones_inserted\n<BR>";
 			echo "Phones Aliases Inserted: $phone_alias_inserted\n<BR>";
+			echo "You now need to manually trigger a conf file rebuild from the System Settings screen\n<BR>";
 			echo "<BR><a href=\"$PHP_SELF\">Start Over</a><BR>\n";
 			}
 		else
