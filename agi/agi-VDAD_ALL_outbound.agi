@@ -101,6 +101,7 @@
 # 121120-0922 - Added QM socket-send functionality
 # 121125-0035 - Added Other Campaign DNC option
 # 130108-1806 - Changes for Asterisk 1.8 compatibility
+# 130124-1853 - Issue #637 fix <karlb>
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -3209,20 +3210,20 @@ if ($drop_timer > $DROP_TIME)
 			$Baffected_rows = $dbhB->do($stmtB);
 				$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01081';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
-			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='CALLSTATUS',data1='IVRXFR',serverid='$queuemetrics_log_id';";
+			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='CALLSTATUS',data1='DROP',serverid='$queuemetrics_log_id';";
 			$Baffected_rows = $dbhB->do($stmtB);
 				$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01082';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
 			$dbhB->disconnect();
 			}
 
-		$stmtA = "UPDATE vicidial_log FORCE INDEX(lead_id) set status='IVRXFR',end_epoch='$now_date_epoch',length_in_sec='$drop_seconds',term_reason='CALLMENUXFER' where lead_id = '$CIDlead_id' and uniqueid LIKE \"$Euniqueid%\";";
+		$stmtA = "UPDATE vicidial_log FORCE INDEX(lead_id) set status='DROP',end_epoch='$now_date_epoch',length_in_sec='$drop_seconds',term_reason='CALLMENUXFER' where lead_id = '$CIDlead_id' and uniqueid LIKE \"$Euniqueid%\";";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='01083';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		if ($AGILOG) {$agi_string = "--    VDAD vicidial_log update: |$affected_rows|$uniqueid";   &agi_output;}
 
-		$stmtA = "UPDATE vicidial_list set status='IVRXFR' where lead_id = '$CIDlead_id';";
+		$stmtA = "UPDATE vicidial_list set status='DROP' where lead_id = '$CIDlead_id';";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='01084';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
