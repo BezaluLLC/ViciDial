@@ -296,3 +296,10 @@ CREATE INDEX pvmid on phones (voicemail_id);
 CREATE INDEX pdpn on phones (dialplan_number);
 
 UPDATE system_settings SET db_schema_version='1338',db_schema_update_date=NOW() where db_schema_version < 1338;
+
+ALTER TABLE vicidial_email_list ADD COLUMN content_transfer_encoding TEXT AFTER content_type;
+ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
+
+ALTER TABLE vicidial_email_log MODIFY message text character set utf8;
+
+UPDATE system_settings SET db_schema_version='1339',db_schema_update_date=NOW() where db_schema_version < 1339;

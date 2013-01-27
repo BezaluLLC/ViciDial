@@ -6,8 +6,10 @@ use HTML::Strip;
 use Switch;
 use Time::Local;
 use MIME::Decoder;
+use Encode;
+use MIME::Base64;
 
-# Copyright (C) 2012  Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell, Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 # AST_inbound_email_parser.pl - This script is essential for periodically checking any active POP3 or IMAP 
 # email accounts set up through the Vicidial admin.
@@ -50,6 +52,7 @@ use MIME::Decoder;
 #
 # changes:
 # 121213-2200 - First Build
+# 130127-0025 - Added better non-latin characters support
 #
 
 # default path to astguiclient configuration file:
@@ -184,7 +187,7 @@ while (@row=$rslt->fetchrow_array) {
 			  Port     => 993,
 			  Ssl      =>  1,
 			  )
-			  or die "Cannot connect through IMAPClient: $@";
+			  or die "Cannot connect through IMAPClient: $!";
 
 			# Include options for folders in IMAP?  POP3 doesn't support this.
 
@@ -198,12 +201,17 @@ while (@row=$rslt->fetchrow_array) {
 					my $msgcount = $client->message_count($folder_array[$i]);
 					#print "+---+ Messages: ".$msgcount."\n";
 					if ($msgcount>0) {
+						$file=open(STORAGE, "> ./raw_emails.txt");
 						$client->select($folder_array[$i]);
 						my @msgs = $client->messages or die "Could not messages: $@\n";
 						my @unseenMsgs = $client->unseen;
 						for(my $j=0; $j<scalar(@msgs); $j++) {
 							if (grep {$_ eq $msgs[$j]} @unseenMsgs) {
 								$new_messages++;
+
+								my $string = $client->message_string($msgs[$j]) or die "Could not message_string: $@\n";
+								$client->message_to_file($file,$msgs[$j]) or die "Could not message_to_file: $@\n";
+
 								my $hashref = $client->parse_headers($msgs[$j], 'ALL');
 								my %email_values=%{$hashref};
 								my $email_to=$email_values{"To"}->[0];
@@ -212,10 +220,14 @@ while (@row=$rslt->fetchrow_array) {
 								my $subject=$email_values{"Subject"}->[0];
 								my $mime_type=$email_values{"MIME-Version"}->[0];
 								my $content_type=$email_values{"Content-Type"}->[0];
+								my $content_transfer_encoding=$email_values{"Content-Transfer-Encoding"}->[0];
 								my $x_mailer=$email_values{"X-Mailer"}->[0];
 								my $auth_results=$email_values{"Authentication-Results"}->[0];
 								my $spf=$email_values{"Received-SPF"}->[0];
 								$message = $client->body_string($msgs[$j]);
+
+								print "\n############\n$content_transfer_encoding - $content_type - $message\n###########\n";
+								
 								$text_written=0;  ## Keeps track of whether or not text of email was grabbed
 								$attach_ct=0; ## Keeps number
 								@ins_values=();
@@ -235,7 +247,6 @@ while (@row=$rslt->fetchrow_array) {
 									$email_date="$day $month $year $hour:$min:$sec";
 									if ($ARGV[0]=~/debug/) {print "Time stamp on email is $email_date\n";}
 								} elsif ($ARGV[0]=~/debug/) {print "WARNING: Time stamp on email is $email_date\n";}
-
 
 	############# MESSAGE ACTIONS
 								if ($content_type=~/^text\/plain/i) {
@@ -293,6 +304,7 @@ while (@row=$rslt->fetchrow_array) {
 											## Check if the content-type is plain or html
 											if ($alt_email_text=~/Content\-Type\:\s+text\/html/i && $text_written==0) {
 												$message=$body_contents;
+												$content_transfer_encoding=$encoding_type;
 												if ($ARGV[0]=~/debug/i) {print "First acceptable content-type match is text/html.  Stripping headers and stripping tags from the body/message...\n";}
 												if ($ARGV[0]=~/debugX/i) {print "$k)\n***Pre-HTML strip:\n$message\n***\n";}
 												StripHTML();
@@ -302,6 +314,7 @@ while (@row=$rslt->fetchrow_array) {
 												if ($ARGV[0]=~/debug/i) {print "First acceptable content-type match is text/plain.  Stripping headers to get text...\n";}
 												$text_written=1;
 												$message=$body_contents;
+												$content_transfer_encoding=$encoding_type;
 											}
 
 											## Check for attachments
@@ -368,12 +381,20 @@ while (@row=$rslt->fetchrow_array) {
 								}
 								#print "\n";
 
+								# Do a clean-and-covert on the message, to decode base64 messages and also to UTF8 decode quoted printable text, in order to pick up special characters
+								if ($content_transfer_encoding eq "base64") {
+									$message=decode_base64($message);
+								} elsif ($content_transfer_encoding eq "quoted-printable") {
+									UTFTextDecoder();
+								}
+
 								$message=~s/(\"|\||\'|\;)/\\$&/g;
 								$email_to=~s/(\"|\||\'|\;)/\\$&/g;
 								$email_from=~s/(\"|\||\'|\;)/\\$&/g;								
 								$subject=~s/(\"|\||\'|\;)/\\$&/g;
 								$mime_type=~s/(\"|\||\'|\;)/\\$&/g;
 								$content_type=~s/(\"|\||\'|\;)/\\$&/g;
+								$content_transfer_encoding=~s/(\"|\||\'|\;)/\\$&/g;
 								$x_mailer=~s/(\"|\||\'|\;)/\\$&/g;
 								$sender_ip=~s/(\"|\||\'|\;)/\\$&/g;
 								$message=~s/\s{2,}/ /gi;
@@ -435,7 +456,7 @@ while (@row=$rslt->fetchrow_array) {
 								}
 
 								## Insert a new record into vicidial_email_list.  This is ALWAYS done for new email messages.
-								$ins_stmt="insert into vicidial_email_list(lead_id, protocol, email_date, email_to, email_from, email_from_name, subject, mime_type, content_type, x_mailer, sender_ip, message, email_account_id, group_id, status, direction) values('$lead_id', 'IMAP', STR_TO_DATE('$email_date', '%d %b %Y %T'), '$email_to', '$email_from', '$email_from_name', '$subject', '$mime_type', '$content_type', '$x_mailer', '$sender_ip', trim('$message'), '$VARemail_ID', '$VARemail_groupid', '$status', 'INBOUND')";
+								$ins_stmt="insert into vicidial_email_list(lead_id, protocol, email_date, email_to, email_from, email_from_name, subject, mime_type, content_type, content_transfer_encoding, x_mailer, sender_ip, message, email_account_id, group_id, status, direction) values('$lead_id', 'IMAP', STR_TO_DATE('$email_date', '%d %b %Y %T'), '$email_to', '$email_from', '$email_from_name', '$subject', '$mime_type', '$content_type', '$content_transfer_encoding', '$x_mailer', '$sender_ip', trim('$message'), '$VARemail_ID', '$VARemail_groupid', '$status', 'INBOUND')";
 
 								if ($ARGV[0]=~/debugX/i) {print $ins_stmt."\n";}
 								my $ins_rslt=$dbhA->prepare($ins_stmt);
@@ -464,6 +485,7 @@ while (@row=$rslt->fetchrow_array) {
 
 							}
 						}
+						close(STORAGE);
 					}
 				}
 				if ($ARGV[0]=~/debug/i) {
@@ -485,20 +507,20 @@ while (@row=$rslt->fetchrow_array) {
 										   HOST     => "$VARemail_server",
 										   PORT		=> 995,
 										   USESSL   => true,
-										   DEBUG => true,
 										 )
 			  or die "Cannot connect through POP3Client: $!";
 
 			if ($pop->Count()<0) {die "Error connecting to server.  Please try again later.\n";}
 			for( $i = 1; $i <= $pop->Count(); $i++ ) {
 				foreach( $pop->Head( $i ) ) {
-					if ($_=~/^(To|From|Date|Subject|MIME-Version|Content-Type|X-Mailer|Authentication-Results|Received-SPF|Message|Body):\s+/i) {
+					# print $_."\n";
+					if ($_=~/^(To|From|Date|Subject|MIME-Version|Content-Type|Content-Transfer-Encoding|X-Mailer|Authentication-Results|Message|Body):\s+/i) {
 						$value=$_;
 						$ptn=$&;
 						$value=~s/$ptn//i;
 						$ptn=~s/^\s*(.*?)\s*$/$1/;
 						$ptn=~s/:$//;
-						$ptn=~s/\-/_/i;
+						$ptn=~s/\-/_/gi;
 						$varname=lc($ptn);
 						$$varname=$value;
 					}
@@ -506,6 +528,10 @@ while (@row=$rslt->fetchrow_array) {
 						$bkup_boundary=$&;
 					}
 				}
+				#Rename variables so they aren't as vague.
+				$email_to=$to;
+				$email_from=$from;
+
 				$message=$pop->Body( $i );
 				$text_written=0;  ## Keeps track of whether or not text of email was grabbed
 				$attach_ct=0; ## Keeps number
@@ -571,6 +597,7 @@ while (@row=$rslt->fetchrow_array) {
 							## Check if the content-type is plain or html
 							if ($alt_email_text=~/Content\-Type\:\s+text\/html/i && $text_written==0) {
 								$message=$body_contents;
+								$content_transfer_encoding=$encoding_type;
 								if ($ARGV[0]=~/debug/i) {print "First acceptable content-type match is text/html.  Stripping headers and stripping tags from the body/message...\n";}
 								if ($ARGV[0]=~/debugX/i) {print "$k)\n***Pre-HTML strip:\n$message\n***\n";}
 								StripHTML();
@@ -580,6 +607,7 @@ while (@row=$rslt->fetchrow_array) {
 								if ($ARGV[0]=~/debug/i) {print "First acceptable content-type match is text/plain.  Stripping headers to get text...\n";}
 								$text_written=1;
 								$message=$body_contents;
+								$content_transfer_encoding=$encoding_type;
 							}
 
 							## Check for attachments
@@ -647,6 +675,13 @@ while (@row=$rslt->fetchrow_array) {
 				}
 				# print "\n";
 
+				# Do a clean-and-covert on the message, to decode base64 messages and also to UTF8 decode quoted printable text, in order to pick up special characters
+				if ($content_transfer_encoding eq "base64") {
+					$message=decode_base64($message);
+				} elsif ($content_transfer_encoding eq "quoted-printable") {
+					UTFTextDecoder();
+				}
+
 				if ($date=~/[0-9]{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+[0-9]{4}\s+[0-9]{1,2}\:[0-9]{1,2}(\:[0-9]{1,2})?/) {
 					$date=$&;
 					$date=~s/\s+/ /gi;
@@ -668,10 +703,9 @@ while (@row=$rslt->fetchrow_array) {
 				$subject=~s/(\"|\||\'|\;)/\\$&/g;
 				$mime_type=~s/(\"|\||\'|\;)/\\$&/g;
 				$content_type=~s/(\"|\||\'|\;)/\\$&/g;
+				$content_transfer_encoding=~s/(\"|\||\'|\;)/\\$&/g;
 				$x_mailer=~s/(\"|\||\'|\;)/\\$&/g;
 				$sender_ip=~s/(\"|\||\'|\;)/\\$&/g;
-				$message=~s/\s{2,}/ /gi;
-				my $status="NEW";
 				$message=~s/\s{2,}/ /gi;
 
 				### Parses the actual email address from the "Email From:" value in order to run it against vicidial_list
@@ -720,7 +754,7 @@ while (@row=$rslt->fetchrow_array) {
 					$lead_id=$lead_id_row[0];
 				} else {
 					my $vicidial_list_stmt="insert into vicidial_list(list_id, email, comments, status) values('$default_list_id', '$email_from', '".substr($message,0,255)."', '$status')";
-					if ($ARGV[0]=~/debugX/i) {print $vicidial_list_stmt;}
+					if ($ARGV[0]=~/debugX/i) {print $vicidial_list_stmt."\n";}
 					my $vicidial_list_rslt=$dbhA->prepare($vicidial_list_stmt);
 					if ($vicidial_list_rslt->execute()) {
 						$lead_id=$dbhA->last_insert_id(undef, undef, 'vicidial_list', 'lead_id');
@@ -730,9 +764,8 @@ while (@row=$rslt->fetchrow_array) {
 				}
 
 				## Insert a new record into vicidial_email_list.  This is ALWAYS done for new email messages.
-				my $ins_stmt="insert into vicidial_email_list(lead_id, protocol, email_date, email_to, email_from, email_from_name, subject, mime_type, content_type, x_mailer, sender_ip, message, email_account_id, group_id, status, direction) values('$lead_id', 'IMAP', STR_TO_DATE('$email_date', '%d %b %Y %T'), '$email_to', '$email_from', '$email_from_name', '$subject', '$mime_type', '$content_type', '$x_mailer', '$sender_ip', trim('$message'), '$VARemail_ID', '$VARemail_groupid', '$status', 'INBOUND')";
-
-				if ($ARGV[0]=~/debugX/i) {print $ins_stmt;}
+				my $ins_stmt="insert into vicidial_email_list(lead_id, protocol, email_date, email_to, email_from, email_from_name, subject, mime_type, content_type, content_transfer_encoding, x_mailer, sender_ip, message, email_account_id, group_id, status, direction) values('$lead_id', 'POP3', STR_TO_DATE('$date', '%d %b %Y %T'), '$email_to', '$email_from', '$email_from_name', '$subject', '$mime_type', '$content_type', '$content_transfer_encoding', '$x_mailer', '$sender_ip', trim('$message'), '$VARemail_ID', '$VARemail_groupid', '$status', 'INBOUND')";
+				if ($ARGV[0]=~/debugX/i) {print $ins_stmt."\n";}
 				my $ins_rslt=$dbhA->prepare($ins_stmt);
 				if ($ins_rslt->execute()) {
 					$pop->Delete($i);
@@ -799,3 +832,28 @@ sub StripHTML()
 		$hs->eof;
 	} 
 }
+
+sub UTFTextDecoder()
+{
+	# Clean carriage returns preceded by an equal sign; these can throw off some of the decoding
+	$message=~s/\=(\r|\n)+//gi;
+
+	# Decode occurrences of two sets of characters together
+	@m = ($message=~/(\=[a-fA-F0-9][a-fA-F0-9]\=[a-fA-F0-9][a-fA-F0-9])/g );
+	for ($utf_ct=0; $utf_ct<scalar(@m); $utf_ct++) {
+		$char=$m[$utf_ct];
+		$char=~s/\=//gi;
+		$char=~ s/([a-fA-F0-9][a-fA-F0-9])/chr(hex($1))/eg;
+		$message =~ s/$m[$utf_ct]/$char/eg;
+	}
+
+	# Decode one set of characters together
+	@m = ($message=~/(\=[a-fA-F0-9][a-fA-F0-9])/g );
+	for ($utf_ct=0; $utf_ct<scalar(@m); $utf_ct++) {
+		$char=$m[$utf_ct];
+		$char=~s/\=//gi;
+		$char=~ s/([a-fA-F0-9][a-fA-F0-9])/chr(hex($1))/eg;
+		$message =~ s/$m[$utf_ct]/$char/eg;
+	}
+}
+

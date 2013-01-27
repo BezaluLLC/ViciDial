@@ -148,6 +148,7 @@ OTHER CHANGES:
 		install Mail::IMAPClient
 		install Mail::Message
 		install IO::Socket::SSL
+		install MIME::Base64
 	Also, the inbound email parser must be added to the crontab of ONLY ONE
 	server:
 		### inbound email parser

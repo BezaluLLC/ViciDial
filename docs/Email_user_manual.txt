@@ -19,6 +19,7 @@ install Mail::POP3Client
 install Mail::IMAPClient
 install Mail::Message
 install IO::Socket::SSL
+install MIME::Base64
 quit
 
 

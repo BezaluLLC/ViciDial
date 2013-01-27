@@ -1,7 +1,7 @@
 <?php
 # vdc_email_display.php - VICIDIAL administration page
 #
-# Copyright (C) 2012  Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell, Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This page displays any incoming emails in the Vicidial user interface.  It 
 # also allows the user to download and view any attachments sent in the email,
@@ -11,6 +11,7 @@
 #
 # changes:
 # 121214-2300 - First Build
+# 130127-0027 - Better non-latin characters support
 #
 
 require("dbconnect.php");
@@ -172,7 +173,7 @@ if ($REPLY)
 	$semi_rand = md5(time()); 
 	$mime_boundary = "==Multipart_Boundary_x{$semi_rand}x";
 	$headers .= "\nMIME-Version: 1.0\n" . "Content-Type: multipart/mixed;\n" . " boundary=\"{$mime_boundary}\""; 
-	$message = "This is a multi-part message in MIME format.\n\n" . "--{$mime_boundary}\n" . "Content-Type: text/plain; charset=\"iso-8859-1\"\n" . "Content-Transfer-Encoding: 7bit\n\n" . $message . "\n\n"; 
+	$message = "This is a multi-part message in MIME format.\n\n" . "--{$mime_boundary}\n" . "Content-Type: text/plain; charset=\"utf-8\"\n" . "Content-Transfer-Encoding: 7bit\n\n" . $message . "\n\n"; 
 	$message .= "--{$mime_boundary}\n";
 
 	for ($i=1; $i<=5; $i++) 
@@ -343,9 +344,10 @@ if ($lead_id) {
 			else
 				{
 				full_msg+=msg_line+"\n";
-				msg_line="> ";
+				msg_line="> "+msg_array[i]+" ";
 				}
 			}
+			full_msg+=msg_line+"\n";
 			var email_field_value=document.getElementById("reply_message").value+"\n";
 			email_field_value+=full_msg;
 			document.getElementById("reply_message").value=email_field_value;

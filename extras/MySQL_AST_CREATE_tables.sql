@@ -2788,6 +2788,7 @@ email_from_name VARCHAR(255) DEFAULT NULL,
 subject TEXT,
 mime_type TEXT,
 content_type TEXT,
+content_transfer_encoding TEXT,
 x_mailer TEXT,
 sender_ip VARCHAR(25) DEFAULT NULL,
 message TEXT,
@@ -2855,6 +2856,9 @@ KEY vicidial_email_log_lead_id_key (lead_id),
 KEY vicidial_email_log_email_row_id_key (email_row_id)
 );
 
+ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
+
+ALTER TABLE vicidial_email_log MODIFY message text character set utf8;
 
 ALTER TABLE vicidial_qc_codes ADD qc_result_type ENUM( 'PASS', 'FAIL', 'CANCEL', 'COMMIT' ) NOT NULL;
 
@@ -3090,4 +3094,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1338',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1339',db_schema_update_date=NOW();
