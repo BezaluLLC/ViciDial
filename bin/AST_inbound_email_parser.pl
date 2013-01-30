@@ -6,8 +6,9 @@ use HTML::Strip;
 use Switch;
 use Time::Local;
 use MIME::Decoder;
-use Encode;
+use Encode qw(from_to decode encode);
 use MIME::Base64;
+use MIME::QuotedPrint;
 
 # Copyright (C) 2013  Matt Florell, Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
@@ -150,7 +151,7 @@ $dbhA3 = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$V
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 if($min==0) {$min=60;}
 $minutes=($hour*60)+$min;
-$minutes=0;
+# $minutes=0; # Uncomment if you want to TEST ONLY, so you can test this at any time.
 
 $stmt="select * from vicidial_email_accounts where active='Y'";
 $rslt=$dbhA->prepare($stmt);
@@ -225,9 +226,12 @@ while (@row=$rslt->fetchrow_array) {
 								my $auth_results=$email_values{"Authentication-Results"}->[0];
 								my $spf=$email_values{"Received-SPF"}->[0];
 								$message = $client->body_string($msgs[$j]);
+								$charset="";
 
-								print "\n############\n$content_transfer_encoding - $content_type - $message\n###########\n";
-								
+								$content_type=~/charset\=(KOI8\-R|ISO\-8859\-[0-9]+|windows\-12[0-9]+|utf\-8)/i;
+								$charset=$&;
+								$charset=substr($charset, 8);
+
 								$text_written=0;  ## Keeps track of whether or not text of email was grabbed
 								$attach_ct=0; ## Keeps number
 								@ins_values=();
@@ -317,6 +321,11 @@ while (@row=$rslt->fetchrow_array) {
 												$content_transfer_encoding=$encoding_type;
 											}
 
+											## Do a second check for a charset in the message, just in case.
+											$sub_content_type=~/charset\=(KOI8\-R|ISO\-8859\-[0-9]+|windows\-12[0-9]+|utf\-8)/i;
+											$charset=$&;
+											$charset=substr($charset, 8);
+
 											## Check for attachments
 											if ($sub_content_disposition=~/attachment/) {
 												$attachment_fulltype="";
@@ -384,8 +393,23 @@ while (@row=$rslt->fetchrow_array) {
 								# Do a clean-and-covert on the message, to decode base64 messages and also to UTF8 decode quoted printable text, in order to pick up special characters
 								if ($content_transfer_encoding eq "base64") {
 									$message=decode_base64($message);
+									if ($charset ne "") {
+										# decode to Perl's internal format
+										$message=decode($charset, $message);
+										#encodetoUTF-8
+										$message=encode('utf-8', $message);
+										$content_type.="; charset=$charset";
+									}
 								} elsif ($content_transfer_encoding eq "quoted-printable") {
-									UTFTextDecoder();
+									$message=decode_qp($message);
+
+									if ($charset ne "") {
+										# decode to Perl's internal format
+										$message=decode($charset, $message);
+										#encodetoUTF-8
+										$message=encode('utf-8', $message);
+										$content_type.="; charset=$charset";
+									}
 								}
 
 								$message=~s/(\"|\||\'|\;)/\\$&/g;
@@ -457,6 +481,8 @@ while (@row=$rslt->fetchrow_array) {
 
 								## Insert a new record into vicidial_email_list.  This is ALWAYS done for new email messages.
 								$ins_stmt="insert into vicidial_email_list(lead_id, protocol, email_date, email_to, email_from, email_from_name, subject, mime_type, content_type, content_transfer_encoding, x_mailer, sender_ip, message, email_account_id, group_id, status, direction) values('$lead_id', 'IMAP', STR_TO_DATE('$email_date', '%d %b %Y %T'), '$email_to', '$email_from', '$email_from_name', '$subject', '$mime_type', '$content_type', '$content_transfer_encoding', '$x_mailer', '$sender_ip', trim('$message'), '$VARemail_ID', '$VARemail_groupid', '$status', 'INBOUND')";
+
+								print $ins_stmt."\n";
 
 								if ($ARGV[0]=~/debugX/i) {print $ins_stmt."\n";}
 								my $ins_rslt=$dbhA->prepare($ins_stmt);
@@ -537,6 +563,11 @@ while (@row=$rslt->fetchrow_array) {
 				$attach_ct=0; ## Keeps number
 				@ins_values=();
 				@output_ins_values=();
+		
+				# Check for charset, in case decoding is necessary
+				$content_type=~/charset\=(KOI8\-R|ISO\-8859\-[0-9]+|windows\-12[0-9]+|utf\-8)/i;
+				$charset=$&;
+				$charset=substr($charset, 8);
 
 				if ($content_type=~/^text\/plain/i) {
 					## Do nothing - it's plain text and needs no further work on it.
@@ -610,6 +641,12 @@ while (@row=$rslt->fetchrow_array) {
 								$content_transfer_encoding=$encoding_type;
 							}
 
+							## Do a second check for a charset in the message, just in case.
+							$sub_content_type=~/charset\=(KOI8\-R|ISO\-8859\-[0-9]+|windows\-12[0-9]+|utf\-8)/i;
+							$charset=$&;
+							$charset=substr($charset, 8);
+							$content_type.="; charset=$charset";
+
 							## Check for attachments
 							if ($sub_content_disposition=~/attachment/) {
 								$attachment_fulltype="";
@@ -678,8 +715,21 @@ while (@row=$rslt->fetchrow_array) {
 				# Do a clean-and-covert on the message, to decode base64 messages and also to UTF8 decode quoted printable text, in order to pick up special characters
 				if ($content_transfer_encoding eq "base64") {
 					$message=decode_base64($message);
+					if ($charset ne "") {
+						# decode to Perl's internal format
+						$message=decode($charset, $message);
+						#encodetoUTF-8
+						$message=encode('utf-8', $message);
+					}
 				} elsif ($content_transfer_encoding eq "quoted-printable") {
-					UTFTextDecoder();
+					$message=decode_qp($message);
+
+					if ($charset ne "") {
+						# decode to Perl's internal format
+						$message=decode($charset, $message);
+						#encodetoUTF-8
+						$message=encode('utf-8', $message);
+					}
 				}
 
 				if ($date=~/[0-9]{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+[0-9]{4}\s+[0-9]{1,2}\:[0-9]{1,2}(\:[0-9]{1,2})?/) {
@@ -832,28 +882,3 @@ sub StripHTML()
 		$hs->eof;
 	} 
 }
-
-sub UTFTextDecoder()
-{
-	# Clean carriage returns preceded by an equal sign; these can throw off some of the decoding
-	$message=~s/\=(\r|\n)+//gi;
-
-	# Decode occurrences of two sets of characters together
-	@m = ($message=~/(\=[a-fA-F0-9][a-fA-F0-9]\=[a-fA-F0-9][a-fA-F0-9])/g );
-	for ($utf_ct=0; $utf_ct<scalar(@m); $utf_ct++) {
-		$char=$m[$utf_ct];
-		$char=~s/\=//gi;
-		$char=~ s/([a-fA-F0-9][a-fA-F0-9])/chr(hex($1))/eg;
-		$message =~ s/$m[$utf_ct]/$char/eg;
-	}
-
-	# Decode one set of characters together
-	@m = ($message=~/(\=[a-fA-F0-9][a-fA-F0-9])/g );
-	for ($utf_ct=0; $utf_ct<scalar(@m); $utf_ct++) {
-		$char=$m[$utf_ct];
-		$char=~s/\=//gi;
-		$char=~ s/([a-fA-F0-9][a-fA-F0-9])/chr(hex($1))/eg;
-		$message =~ s/$m[$utf_ct]/$char/eg;
-	}
-}
-

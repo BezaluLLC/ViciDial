@@ -327,7 +327,10 @@ if ($lead_id) {
 		}
 	function CopyMessage()
 		{
-		<?php echo "var message=\"".preg_replace('/\"/', '\\\"', $row["message"])."\";\n"; ?>
+		<?php 
+			$row["message"]=preg_replace('/\r|\n/', ' ', $row["message"]); 
+			echo "var message=\"".preg_replace('/\"/', '\\\"', $row["message"])."\";\n"; 
+		?>
 		var msg_array=message.split(" ");
 		var full_msg="";
 		var msg_line="> ";
