@@ -173,6 +173,13 @@ UPDATE AN EXISTING INBOUND EMAIL ACCOUNT||
 INBOUND EMAIL ACCOUNT LISTINGS||
 UNREAD EMAILS||
 Un-handled Emails||
+Setting this to INGROUP will send an answering machine to an inbound group. Setting this to CALLMENU will send an answering machine to a Call Menu in the system||
+AMD send to Action||
+This option allows you to define whether a call is sent to the AMD Action when an answering machine is detected. If this is set to N, then the call will be hung up as soon as it is determined to be an answering machine. Default is N||
+AMD Inbound Group||
+If CPD AMD Action is set to INGROUP, then this is the Inbound Group that the call will be sent to if an answering machine is detected||
+AMD Call Menu||
+If CPD AMD Action is set to CALLMENU, then this is the Call Menu that the call will be sent to if an answering machine is detected||
 
 
 ############################################################ CLIENT

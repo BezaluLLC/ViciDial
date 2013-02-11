@@ -756,7 +756,7 @@ vtiger_search_category VARCHAR(100) default 'LEAD',
 vtiger_create_call_record ENUM('Y','N','DISPO') default 'Y',
 vtiger_create_lead_record ENUM('Y','N') default 'Y',
 vtiger_screen_login ENUM('Y','N','NEW_WINDOW') default 'Y',
-cpd_amd_action ENUM('DISABLED','DISPO','MESSAGE') default 'DISABLED',
+cpd_amd_action ENUM('DISABLED','DISPO','MESSAGE','CALLMENU','INGROUP') default 'DISABLED',
 agent_allow_group_alias ENUM('Y','N') default 'N',
 default_group_alias VARCHAR(30) default '',
 vtiger_search_dead ENUM('DISABLED','ASK','RESURRECT') default 'ASK',
@@ -865,7 +865,9 @@ safe_harbor_audio_field VARCHAR(30) default 'DISABLED',
 pause_after_next_call ENUM('ENABLED','DISABLED') default 'DISABLED',
 owner_populate ENUM('ENABLED','DISABLED') default 'DISABLED',
 use_other_campaign_dnc VARCHAR(8) default '',
-allow_emails ENUM('Y','N') default 'N'
+allow_emails ENUM('Y','N') default 'N',
+amd_inbound_group VARCHAR(20) default '',
+amd_callmenu VARCHAR(50) default ''
 );
 
 CREATE TABLE vicidial_lists (
@@ -3094,4 +3096,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1339',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1340',db_schema_update_date=NOW();

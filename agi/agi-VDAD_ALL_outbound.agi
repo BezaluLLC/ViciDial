@@ -102,6 +102,7 @@
 # 121125-0035 - Added Other Campaign DNC option
 # 130108-1806 - Changes for Asterisk 1.8 compatibility
 # 130124-1853 - Issue #637 fix <karlb>
+# 130210-1013 - Added options for CALLMENU|INGROUP cpd_amd_actions
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -1070,7 +1071,7 @@ if ($call_handle_method =~ /REMIND/)
 	$AGI->stream_file('sip-silence');
 
 	############# BEGIN CPD AMD SECTION ############################
-	if ($cpd_amd_action =~ /DISPO|MESSAGE/)
+	if ($cpd_amd_action =~ /DISPO|MESSAGE|CALLMENU|INGROUP/)
 		{
 		$stmtA = "SELECT count(*) FROM vicidial_cpd_log where callerid='$callerid' and result NOT IN('Voice','Unknown','???','') and status='NEW';";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
@@ -1128,7 +1129,7 @@ if ($call_handle_method =~ /SURVEY/)
 	$AGI->stream_file('sip-silence');
 
 	############# BEGIN CPD AMD SECTION ############################
-	if ($cpd_amd_action =~ /DISPO|MESSAGE/)
+	if ($cpd_amd_action =~ /DISPO|MESSAGE|CALLMENU|INGROUP/)
 		{
 		$stmtA = "SELECT count(*) FROM vicidial_cpd_log where callerid='$callerid' and result NOT IN('Voice','Unknown','???','') and status='NEW';";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
@@ -1922,7 +1923,7 @@ while ($drop_timer <= $DROP_TIME)
 		}
 
 	############# BEGIN CPD AMD SECTION ############################
-	if ($cpd_amd_action =~ /DISPO|MESSAGE/)
+	if ($cpd_amd_action =~ /DISPO|MESSAGE|CALLMENU|INGROUP/)
 		{
 		$stmtA = "SELECT count(*) FROM vicidial_cpd_log where callerid='$callerid' and result NOT IN('Voice','Unknown','???','') and status='NEW';";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
@@ -3569,7 +3570,7 @@ sub cpd_end_call
 		$drop_seconds = $DROP_TIME;
 		}
 
-	if ( ($cpd_amd_action =~ /MESSAGE/) && ($cpd_result !~ /Fax/i) )
+	if ( ($cpd_amd_action =~ /MESSAGE|CALLMENU|INGROUP/) && ($cpd_result !~ /Fax/i) )
 		{
 		$DROPexten = "8320";
 		$AMDSTATUS_set =	$AGI->set_variable('AMDSTATUS', "CPDMACHINE");

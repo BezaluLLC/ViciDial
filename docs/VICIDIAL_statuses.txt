@@ -10,6 +10,7 @@ A - Answering Machine - Agent-defined Answering Machine
 AA - Answering Machine Auto - Dialer-defined Answering Machine
 AM - Answering Machine Sent to Mesg - AMD(Answering Machine Detection) call sent to a message to be played
 AL - Answering Machine Msg Played - AMD(Answering Machine Detection) call sent to a message and message has been played
+AMDXFR - Answering Machine Transfer to Call Menu or In-Group
 AFAX - Fax Machine Auto - Dialer-defined Fax Machine
 B - Busy - Agent-defined Busy signal
 AB - Busy Auto - Carrier-received Busy signal

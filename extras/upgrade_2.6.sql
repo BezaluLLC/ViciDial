@@ -303,3 +303,9 @@ ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 ALTER TABLE vicidial_email_log MODIFY message text character set utf8;
 
 UPDATE system_settings SET db_schema_version='1339',db_schema_update_date=NOW() where db_schema_version < 1339;
+
+ALTER TABLE vicidial_campaigns MODIFY cpd_amd_action ENUM('DISABLED','DISPO','MESSAGE','CALLMENU','INGROUP') default 'DISABLED';
+ALTER TABLE vicidial_campaigns ADD amd_inbound_group VARCHAR(20) default '';
+ALTER TABLE vicidial_campaigns ADD amd_callmenu VARCHAR(50) default '';
+
+UPDATE system_settings SET db_schema_version='1340',db_schema_update_date=NOW() where db_schema_version < 1340;

@@ -44,6 +44,7 @@
 # 110926-1902 - Added extended logging and additional waitforsilence options
 # 120430-2214 - Converted call to Monitor app to be asterisk 1.8 compatible
 # 130108-1808 - Changes for Asterisk 1.8 compatibility
+# 130210-1113 - Added options for CALLMENU|INGROUP cpd_amd_actions
 #
 
 $script = 'VD_amd.agi';
@@ -115,7 +116,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
     or die "Couldn't connect to database: " . DBI->errstr;
 
 ### Grab Server values from the database
-$stmtA = "SELECT agi_output,asterisk_version FROM servers where server_ip = '$VARserver_ip';";
+$stmtA = "SELECT agi_output,asterisk_version,ext_context FROM servers where server_ip = '$VARserver_ip';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -125,6 +126,8 @@ if ($sthArows > 0)
 	@aryA = $sthA->fetchrow_array;
 	$DBagi_output =			$aryA[0];
 	$asterisk_version =		$aryA[1];
+	$DBext_context =		$aryA[2];
+	if ($DBext_context)		{$ext_context = $DBext_context;}
 	if ($DBagi_output =~ /STDERR/)	{$AGILOG = '1';}
 	if ($DBagi_output =~ /FILE/)	{$AGILOG = '2';}
 	if ($DBagi_output =~ /BOTH/)	{$AGILOG = '3';}
@@ -283,23 +286,6 @@ else
 	$AGI->stream_file('sip-silence');
 
 
-	########## FIND ext_context from the servers table ##########
-	$stmtA = "SELECT ext_context FROM servers where server_ip = '$VARserver_ip';";
-		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	 $rec_count=0;
-	while ($sthArows > $rec_count)
-		{
-		@aryA = $sthA->fetchrow_array;
-		$DBext_context	= $aryA[0];
-		if ($DBext_context)		{$ext_context = $DBext_context;}
-		 $rec_count++;
-		}
-	$sthA->finish();
-
-
 	########## FIND vicidial_auto_calls record ##########
 	$stmtA = "SELECT campaign_id,phone_code,phone_number FROM vicidial_auto_calls where callerid='$callerid' order by auto_call_id desc limit 1;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -393,7 +379,7 @@ else
 		}
 
 	### Grab vmail forward message values from the database
-	$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename FROM vicidial_campaigns where campaign_id = '$VD_campaign_id' limit 1;";
+	$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename,cpd_amd_action,amd_inbound_group,amd_callmenu FROM vicidial_campaigns where campaign_id = '$VD_campaign_id' limit 1;";
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -401,18 +387,21 @@ else
 	if ($sthArows > 0)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$DB_am_message_exten	= $aryA[0];
-		$DB_amd_send_to_vmx		= $aryA[1];
-		$waitforsilence_options = $aryA[2];
-		$survey_recording		= $aryA[3];
-		$campaign_rec_filename	= $aryA[4];
+		$DB_am_message_exten =		$aryA[0];
+		$DB_amd_send_to_vmx =		$aryA[1];
+		$waitforsilence_options =	$aryA[2];
+		$survey_recording =			$aryA[3];
+		$campaign_rec_filename =	$aryA[4];
+		$cpd_amd_action =			$aryA[5];
+		$amd_inbound_group =		$aryA[6];
+		$amd_callmenu =				$aryA[7];
 		$sthA->finish();
 		}
 	else
 		{
 		$sthA->finish();
 		### Grab vmail forward message values from the database
-		$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename FROM vicidial_campaigns where closer_campaigns LIKE \"% $VD_campaign_id %\" order by campaign_id limit 1;";
+		$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename,cpd_amd_action,amd_inbound_group,amd_callmenu FROM vicidial_campaigns where closer_campaigns LIKE \"% $VD_campaign_id %\" order by campaign_id limit 1;";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -420,11 +409,14 @@ else
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$DB_am_message_exten	= $aryA[0];
-			$DB_amd_send_to_vmx		= $aryA[1];
-			$waitforsilence_options = $aryA[2];
-			$survey_recording		= $aryA[3];
-			$campaign_rec_filename	= $aryA[4];
+			$DB_am_message_exten =		$aryA[0];
+			$DB_amd_send_to_vmx =		$aryA[1];
+			$waitforsilence_options =	$aryA[2];
+			$survey_recording =			$aryA[3];
+			$campaign_rec_filename =	$aryA[4];
+			$cpd_amd_action =			$aryA[5];
+			$amd_inbound_group =		$aryA[6];
+			$amd_callmenu =				$aryA[7];
 			$sthA->finish();
 			}
 		else
@@ -762,6 +754,54 @@ else
 			if ($AGILOG) {$agi_string = "Wait time seconds in WaitForSilence field: |$waitforsilence_seconds|$waitforsilence_options|";   &agi_output;}
 			sleep($waitforsilence_seconds);
 			}
+
+
+		### if call menu or in-group method
+		if ($cpd_amd_action =~ /CALLMENU|INGROUP/)
+			{
+			$DROPexten='';
+			if ($cpd_amd_action =~ /CALLMENU/)
+				{
+				$DROPexten =	's';
+				$ext_context =	$amd_callmenu;
+				}
+			if ($cpd_amd_action =~ /INGROUP/)
+				{ # 90009*CL_uk3survy_*8301*10000123*universal*7275551212*1234*"
+				$fronter='VDAMD';
+				$DROPexten = "90009*$amd_inbound_group$S$S$VD_lead_id$S$S$VD_phone_number$S$fronter$S";
+				}
+			if (length($DROPexten)>0)
+				{
+				$stmtA = "UPDATE vicidial_log set status='AMDXFR' where uniqueid='$uniqueid' and lead_id='$VD_lead_id' order by call_date desc limit 1;";
+					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+				$affected_rows = $dbhA->do($stmtA);
+				if ($AGILOG) {$agi_string = "--    VDAD vicidial_log AMDXFR update: |$affected_rows|$uniqueid|";   &agi_output;}
+
+				$stmtA = "UPDATE vicidial_list set status='AMDXFR' where lead_id='$VD_lead_id';";
+					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+				$affected_rows = $dbhA->do($stmtA);
+				if ($AGILOG) {$agi_string = "--    VDAD vicidial_list AMDXFR update: |$affected_rows|$uniqueid|";   &agi_output;}
+
+				$AGI->stream_file('sip-silence');
+				$AGI->stream_file('sip-silence');
+				$AGI->stream_file('sip-silence');
+				$AGI->stream_file('sip-silence');
+
+				if ($AGILOG) {$agi_string = "exiting the VD_AMD app, transferring call to $DROPexten:$ext_context";   &agi_output;}
+				print "SET CONTEXT $ext_context\n";
+					$result = <STDIN>;
+					checkresult($result);
+				print "SET EXTENSION $DROPexten\n";
+					$result = <STDIN>;
+					checkresult($result);
+				print "SET PRIORITY 1\n";
+					$result = <STDIN>;
+					checkresult($result);
+
+				exit;
+				}
+			}
+
 
 		### play messages
 		if ($DB_am_message_exten =~ /\|/)

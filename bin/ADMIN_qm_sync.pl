@@ -8,17 +8,18 @@
 #
 # This program only needs to be run by one server
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 110425-0853 - First Build
 # 110506-1516 - Added DIDs, IVRs, in-groups(queues), campaigns(queues) and all-alias to the sync options
 # 111203-0737 - Added queue key options for in-group ID and ALLQ
 # 121115-1908 - Added CLI options for alternate QM MySQL connection information
+# 130131-2225 - Added key-id-wipe options
 #
 
 # constants
-$version = '121115-1908';
+$version = '130131-2225';
 $US='__';
 $MT[0]='';
 $CLIQMDB_host=0;
@@ -53,6 +54,7 @@ if (length($ARGV[0])>1)
 		print "  [--all-alias-sync] = will sync all queues in QM into the default \"00 All Queues\" alias\n";
 		print "  [--key-id-ig] = will ensure that the queue has the in-group id set as a key\n";
 		print "  [--key-id-allq] = will ensure that the queue has \"ALLQ\" id set as a key\n";
+		print "  [--key-id-wipe] = will start with a blank queue key before the other key options\n";
 		print "  [--qm-db-server=XXX] = alternate QM mysql server\n";
 		print "  [--qm-db-dbname=XXX] = alternate QM mysql database name\n";
 		print "  [--qm-db-login=XXX] = alternate QM mysql server login account\n";
@@ -130,6 +132,11 @@ if (length($ARGV[0])>1)
 			{
 			$SYNC_campaigns=1;
 			if ($Q < 1) {print "\n----- CAMPAIGN SYNC -----\n\n";}
+			}
+		if ($args =~ /--key-id-wipe/i)
+			{
+			$KEY_wipe=1;
+			if ($Q < 1) {print "\n----- QUEUE KEY WIPE -----\n\n";}
 			}
 		if ($args =~ /--key-id-ig/i)
 			{
@@ -725,6 +732,20 @@ if ($SYNC_ingroups > 0)
 		if ($KEY_allq > 0)
 			{$visibility_keySEARCH .= " and visibility_key LIKE \"%ALLQ%\"";}
 
+		if ($KEY_wipe > 0)
+			{
+			$visibility_keySEARCH='';
+			if ( ($KEY_ingroup > 0) && ($KEY_allq > 0) )
+				{$visibility_keySEARCH = " and visibility_key = '$Vid[$i] ALLQ'";}
+			else
+				{
+				if ($KEY_ingroup > 0)
+					{$visibility_keySEARCH .= " and visibility_key ='$Vid[$i]'";}
+				if ($KEY_allq > 0)
+					{$visibility_keySEARCH .= " and visibility_key ='ALLQ'";}
+				}
+			}
+
 		### Find if queue exists with id and description identical
 		$stmtB = "SELECT count(*) FROM code_possibili where composizione_coda='$Vid[$i]' and nome_coda='$Vdescription[$i]' and q_direction='inbound' $visibility_keySEARCH;";
 		$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
@@ -792,6 +813,9 @@ if ($SYNC_ingroups > 0)
 						$visibility_key =	$aryB[0];
 						}
 					$sthB->finish();
+					
+					if ($KEY_wipe > 0)
+						{$visibility_key='';}
 
 					if (length($visibility_key) < 2)
 						{
