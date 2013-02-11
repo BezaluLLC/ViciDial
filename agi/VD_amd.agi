@@ -767,6 +767,7 @@ else
 				}
 			if ($cpd_amd_action =~ /INGROUP/)
 				{ # 90009*CL_uk3survy_*8301*10000123*universal*7275551212*1234*"
+				$S='*';
 				$fronter='VDAMD';
 				$DROPexten = "90009*$amd_inbound_group$S$S$VD_lead_id$S$S$VD_phone_number$S$fronter$S";
 				}
