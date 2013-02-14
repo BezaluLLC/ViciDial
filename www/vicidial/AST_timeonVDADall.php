@@ -1,7 +1,7 @@
 <?php 
 # AST_timeonVDADall.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # live real-time stats for the VICIDIAL Auto-Dialer all servers
 #
@@ -78,10 +78,11 @@
 # 120223-1934 - Added user group options
 # 120612-2150 - Added percentages to counts for carrier stats and TOTAL line to carrier display stats as well
 # 121222-2151 - Added email status
+# 130214-1323 - Added link to in-group selected users report for in-queue inbound calls
 #
 
-$version = '2.6-68';
-$build = '121222-2151';
+$version = '2.6-69';
+$build = '130214-1323';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -2162,6 +2163,7 @@ while($p<$k)
 	if ($CDcall_type[$p] == 'IN')
 		{
 		$G="<SPAN class=\"csc$CDcampaign_id[$p]\"><B>"; $EG='</B></SPAN>';
+		$Ccampaign_id="<a href=\"AST_VICIDIAL_ingrouplist.php?group=$CDcampaign_id[$p]&SUBMIT=SUBMIT\">$Ccampaign_id</a>";
 		}
 	if (strlen($CDagent_only[$p]) > 0)
 		{$Gcalltypedisplay = "$G$Cagent_only$EG";}
