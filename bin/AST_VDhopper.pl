@@ -21,7 +21,7 @@
 #  - R = Recycled leads
 #  - S = Standard hopper load
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 50810-1613 - Added database server variable definitions lookup
@@ -74,6 +74,7 @@
 # 121124-2052 - Added List Expiration Date and Other Campaign DNC options
 # 121205-1621 - Added parentheses around filter SQL when in SQL queries
 # 121223-1540 - Fix for issue #627 preventing issues when filter is deleted, DomeDan
+# 130219-1501 - Fixed issue with other campaign dnc
 #
 
 # constants
@@ -821,7 +822,7 @@ if ($CLIcampaign)
 	}
 else
 	{
-	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper,lead_order_randomize,lead_order_secondary,call_count_limit,hopper_vlc_dup_check from vicidial_campaigns where active='Y';";
+	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper,lead_order_randomize,lead_order_secondary,call_count_limit,hopper_vlc_dup_check,use_other_campaign_dnc from vicidial_campaigns where active='Y';";
 	}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -952,6 +953,10 @@ while ($sthArows > $rec_count)
 			}
 		if ($DB) { print "\n"; }
 		}	
+	if (length($use_other_campaign_dnc[$rec_count]) > 0) 
+		{
+		print "OTHER CAMPAIGN DNC SELECTED: $use_other_campaign_dnc[$rec_count]\n";
+		}
 	$rec_count++;
 	}
 $sthA->finish();
@@ -2341,7 +2346,8 @@ foreach(@campaign_id)
 								}
 							else
 								{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$phone_to_hopper[$h]' and campaign_id='$temp_campaign_id';";}
-							if ($DB) {print "Doing CAMP DNC Check: $phone_to_hopper[$h] - $use_campaign_dnc[$i]\n";}
+							if ($DBX) {print "$use_other_campaign_dnc[$i]|$stmtA\n";}
+							if ($DB) {print "Doing CAMP DNC Check: $phone_to_hopper[$h] - $use_campaign_dnc[$i] - $temp_campaign_id\n";}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
