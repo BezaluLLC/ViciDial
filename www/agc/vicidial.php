@@ -1,7 +1,7 @@
 <?php
 # vicidial.php - the web-based version of the astVICIDIAL client application
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Other scripts that this application depends on:
 # - vdc_db_query.php: Updates information in the database
@@ -393,9 +393,11 @@
 # 121130-0734 - Fixed call notes amphersand issue #612
 # 121206-0634 - Added inbound lead search feature
 # 121222-2315 - Added inbound email features
+# 130220-1214 - Fixed issue with 3-way call dial timeout
+#
 
-$version = '2.6-361c';
-$build = '121222-2315';
+$version = '2.6-362c';
+$build = '130220-1214';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -6929,8 +6931,13 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			MD_channel_look=0;
 			MD_ring_secondS=0;
 			alert_box("Dial timed out, contact your system administrator\n");
-			}
 
+			if (taskCheckOR == 'YES')
+				{
+				document.getElementById("DialWithCustomer").innerHTML ="<a href=\"#\" onclick=\"SendManualDial('YES');return false;\"><img src=\"./images/vdc_XB_dialwithcustomer.gif\" border=\"0\" alt=\"Dial With Customer\" style=\"vertical-align:middle\" /></a>";
+				document.getElementById("ParkCustomerDial").innerHTML ="<a href=\"#\" onclick=\"xfer_park_dial();return false;\"><img src=\"./images/vdc_XB_parkcustomerdial.gif\" border=\"0\" alt=\"Park Customer Dial\" style=\"vertical-align:middle\" /></a>";
+				}
+			}
 		}
 
 // ################################################################################
