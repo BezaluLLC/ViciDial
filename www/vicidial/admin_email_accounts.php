@@ -8,10 +8,11 @@
 # changes:
 # 121214-2245 - First Build
 # 130102-1131 - Small admin log change
+# 130221-1754 - Added level 8 disable add feature
 #
 
-$admin_version = '2.6-2';
-$build = '130102-1131';
+$admin_version = '2.6-3';
+$build = '130221-1754';
 
 $sh="emails"; 
 
@@ -75,7 +76,7 @@ if (isset($_GET["agent_search_method"]))					{$agent_search_method=$_GET["agent_
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,allow_emails,allow_emails FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,allow_emails,allow_emails,level_8_disable_add FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -115,6 +116,7 @@ if ($qm_conf_ct > 0)
 	$SStables_use_alt_log_db =				$row[30];
 	$SSallow_emails =						$row[31];
 	$SSemail_enabled =						$row[32];
+	$SSlevel_8_disable_add =				$row[33];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -144,7 +146,7 @@ else
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
-
+$add_copy_disabled=0;
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and modify_email_accounts='1';";
 if ($DB) {echo "|$stmt|\n";}
@@ -180,6 +182,9 @@ else
 		$LOGuser_level =			$row[1];
 		$LOGuser_group =			$row[2];
 		$LOGemails_modify =			$row[3];
+
+		if (($LOGuser_level < 9) and ($SSlevel_8_disable_add > 0))
+			{$add_copy_disabled++;}
 
 		$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 		$rslt=mysql_query($stmt, $link);
@@ -339,25 +344,32 @@ if (($SUBMIT=="SUBMIT" || $SUBMIT=="UPDATE") && $email_account_id)
 		{
 		if ($SUBMIT=="SUBMIT") 
 			{
-			$ins_stmt="INSERT INTO vicidial_email_accounts(email_account_id, email_account_name, email_account_description, user_group, email_replyto_address, protocol, email_account_server, email_account_user, email_account_pass, active, email_frequency_check_mins, group_id, default_list_id, email_account_type, call_handle_method, agent_search_method, list_id, campaign_id) VALUES('$email_account_id', '$email_account_name', '$email_account_description', '$user_group', '$email_replyto_address', '$protocol', '$email_account_server', '$email_account_user', '$email_account_pass', '$active', '$email_frequency_check_mins', '$group_id', '$default_list_id', '$email_account_type', '$call_handle_method', '$agent_search_method', '$list_id', '$campaign_id')";
-			$ins_rslt=mysql_query($ins_stmt, $link);
-			if (mysql_affected_rows($link)==0) 
+			if ($add_copy_disabled > 0)
 				{
-				$error_msg.="- There was an unknown error when attempting to create the new account<BR/>";
-				if($DB>0) {$error_msg.="<B>$ins_stmt</B><BR>";}
+				echo "<br>You do not have permission to add records on this system -system_settings-\n";
 				}
-			else 
+			else
 				{
-				$message="NEW ACCOUNT $email_account_id SUCCESSFULLY CREATED";
-				$eact="";
+				$ins_stmt="INSERT INTO vicidial_email_accounts(email_account_id, email_account_name, email_account_description, user_group, email_replyto_address, protocol, email_account_server, email_account_user, email_account_pass, active, email_frequency_check_mins, group_id, default_list_id, email_account_type, call_handle_method, agent_search_method, list_id, campaign_id) VALUES('$email_account_id', '$email_account_name', '$email_account_description', '$user_group', '$email_replyto_address', '$protocol', '$email_account_server', '$email_account_user', '$email_account_pass', '$active', '$email_frequency_check_mins', '$group_id', '$default_list_id', '$email_account_type', '$call_handle_method', '$agent_search_method', '$list_id', '$campaign_id')";
+				$ins_rslt=mysql_query($ins_stmt, $link);
+				if (mysql_affected_rows($link)==0) 
+					{
+					$error_msg.="- There was an unknown error when attempting to create the new account<BR/>";
+					if($DB>0) {$error_msg.="<B>$ins_stmt</B><BR>";}
+					}
+				else 
+					{
+					$message="NEW ACCOUNT $email_account_id SUCCESSFULLY CREATED";
+					$eact="";
 
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$ins_stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date=now(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='EMAIL', event_type='ADD', record_id='$user', event_code='NEW EMAIL ACCOUNT ADDED', event_sql=\"$SQL_log\", event_notes='';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$ins_stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date=now(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='EMAIL', event_type='ADD', record_id='$user', event_code='NEW EMAIL ACCOUNT ADDED', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
 				}
 			}
 		else
@@ -391,26 +403,33 @@ else if ($SUBMIT=="COPY")
 	$rslt=mysql_query($stmt, $link);
 	if (mysql_num_rows($rslt)>0) 
 		{
-		$row=mysql_fetch_array($rslt);
-		$ins_stmt="insert into vicidial_email_accounts(email_account_id, email_account_name, email_account_description, user_group, protocol, email_replyto_address, email_account_server, email_account_user, email_account_pass, active, email_frequency_check_mins, group_id, default_list_id, email_account_type, call_handle_method, agent_search_method, list_id, campaign_id) VALUES('$new_account_id', '$email_account_name', '$row[email_account_description]', '$row[user_group]', '$row[protocol]', '$row[email_replyto_address]', '$row[email_account_server]', '$row[email_account_user]', '$row[email_account_pass]', '$row[active]', '$row[email_frequency_check_mins]', '$row[group_id]','$row[default_list_id]', '$row[email_account_type]', '$row[call_handle_method]','$row[agent_search_method]', '$row[list_id]', '$row[campaign_id]')";
-		$ins_rslt=mysql_query($ins_stmt, $link);
-		if (mysql_affected_rows($link)==0) 
+		if ($add_copy_disabled > 0)
 			{
-			$error_msg.="- There was an unknown error when attempting to copy the new account<BR/>";
-			if($DB>0) {$error_msg.="<B>$ins_stmt</B><BR>";}
+			echo "<br>You do not have permission to add records on this system -system_settings-\n";
 			}
 		else
 			{
-			$message="NEW ACCOUNT $new_account_id SUCCESSFULLY COPIED FROM $source_email_account<BR/>";
-			$eact="";
+			$row=mysql_fetch_array($rslt);
+			$ins_stmt="insert into vicidial_email_accounts(email_account_id, email_account_name, email_account_description, user_group, protocol, email_replyto_address, email_account_server, email_account_user, email_account_pass, active, email_frequency_check_mins, group_id, default_list_id, email_account_type, call_handle_method, agent_search_method, list_id, campaign_id) VALUES('$new_account_id', '$email_account_name', '$row[email_account_description]', '$row[user_group]', '$row[protocol]', '$row[email_replyto_address]', '$row[email_account_server]', '$row[email_account_user]', '$row[email_account_pass]', '$row[active]', '$row[email_frequency_check_mins]', '$row[group_id]','$row[default_list_id]', '$row[email_account_type]', '$row[call_handle_method]','$row[agent_search_method]', '$row[list_id]', '$row[campaign_id]')";
+			$ins_rslt=mysql_query($ins_stmt, $link);
+			if (mysql_affected_rows($link)==0) 
+				{
+				$error_msg.="- There was an unknown error when attempting to copy the new account<BR/>";
+				if($DB>0) {$error_msg.="<B>$ins_stmt</B><BR>";}
+				}
+			else
+				{
+				$message="NEW ACCOUNT $new_account_id SUCCESSFULLY COPIED FROM $source_email_account<BR/>";
+				$eact="";
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$ins_stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date=now(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='EMAIL', event_type='ADD', record_id='$user', event_code='NEW EMAIL ACCOUNT ADDED', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$ins_stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date=now(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='EMAIL', event_type='ADD', record_id='$user', event_code='NEW EMAIL ACCOUNT ADDED', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	else

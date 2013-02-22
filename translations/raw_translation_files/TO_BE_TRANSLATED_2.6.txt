@@ -180,6 +180,9 @@ AMD Inbound Group||
 If CPD AMD Action is set to INGROUP, then this is the Inbound Group that the call will be sent to if an answering machine is detected||
 AMD Call Menu||
 If CPD AMD Action is set to CALLMENU, then this is the Call Menu that the call will be sent to if an answering machine is detected||
+Level 8 Disable Add||
+This setting if enabled will prevent any level 8 user from adding or copying any record in the system, no matter what their user settings are. Excluded from these restrictions are the ability to add DNC and Filter Phone Groups numbers and the Add a New Lead page. Default is 0 for disabled||
+You do not have permission to add records on this system||
 
 
 ############################################################ CLIENT

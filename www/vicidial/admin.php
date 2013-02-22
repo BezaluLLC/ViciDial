@@ -107,9 +107,9 @@ $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
 $QUERY_STRING = getenv("QUERY_STRING");
 
-$Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report, Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Single Agent Daily, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Maximum System Stats, Maximum Stats Detail, Search Leads Logs';
+$Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report, Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Single Agent Daily, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report';
 
-$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound Email Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report , Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Single Agent Daily, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Custom Reports Links, CallCard Search, Maximum System Stats, Maximum Stats Detail, Search Leads Logs';
+$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound Email Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report , Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Single Agent Daily, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Custom Reports Links, CallCard Search, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report';
 
 $Vtables = 'NONE,log_noanswer,did_agent_log,contact_information';
 
@@ -1796,6 +1796,8 @@ if (isset($_GET["amd_inbound_group"]))			{$amd_inbound_group=$_GET["amd_inbound_
 	elseif (isset($_POST["amd_inbound_group"]))	{$amd_inbound_group=$_POST["amd_inbound_group"];}
 if (isset($_GET["amd_callmenu"]))				{$amd_callmenu=$_GET["amd_callmenu"];}
 	elseif (isset($_POST["amd_callmenu"]))		{$amd_callmenu=$_POST["amd_callmenu"];}
+if (isset($_GET["level_8_disable_add"]))			{$level_8_disable_add=$_GET["level_8_disable_add"];}
+	elseif (isset($_POST["level_8_disable_add"]))	{$level_8_disable_add=$_POST["level_8_disable_add"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -1861,7 +1863,7 @@ if ($download_max_system_stats_metric_name) {
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,allow_emails FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,allow_emails,level_8_disable_add FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -1904,6 +1906,7 @@ if ($qm_conf_ct > 0)
 	$SSallow_voicemail_greeting =			$row[33];
 	$SSsvn_revision =						$row[34];
 	$SSallow_emails =						$row[35];
+	$SSlevel_8_disable_add =				$row[36];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -2144,6 +2147,7 @@ if ($non_latin < 1)
 	$admin_list_counts = ereg_replace("[^0-9]","",$admin_list_counts);
 	$allow_voicemail_greeting = ereg_replace("[^0-9]","",$allow_voicemail_greeting);
 	$enhanced_disconnect_logging = ereg_replace("[^0-9]","",$enhanced_disconnect_logging);
+	$level_8_disable_add = ereg_replace("[^0-9]","",$level_8_disable_add);
 
 	$drop_call_seconds = ereg_replace("[^-0-9]","",$drop_call_seconds);
 
@@ -3227,12 +3231,13 @@ else
 # 130102-1135 - Small change to admin log viewing for email accounts
 # 130124-1721 - Added Inbound Email report link, added Status Display LEADID options(issue #639)
 # 130130-1207 - Added new CPD AMD options for In-Groups and CallMenus
+# 130221-1736 - Added Level 8 Disable Add option to system settings and new Email Log Report link
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-394a';
-$build = '130130-1207';
+$admin_version = '2.6-395a';
+$build = '130221-1736';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3249,6 +3254,7 @@ $modify_refresh_set=0;
 $modify_footer_refresh=0;
 $check_time = ($STARTtime - 86400);
 $SSanswer_transfer_agent =	'8368';
+$add_copy_disabled=0;
 
 $month_old = mktime(0, 0, 0, date("m")-1, date("d"),  date("Y"));
 $past_month_date = date("Y-m-d H:i:s",$month_old);
@@ -3492,6 +3498,9 @@ if ( ($auth > 0) or ($reports_auth > 0) or ($qc_auth > 0) )
 		{
 		$reports_only_user=1;
 		}
+
+	if (($LOGuser_level < 9) and ($SSlevel_8_disable_add > 0))
+		{$add_copy_disabled++;}
 	}
 else
 	{
@@ -8541,6 +8550,11 @@ if ($ADD==99999)
 	<B>Call Menu Qualify Enabled -</B> This setting enables the option in Call Menus to put a SQL qualification on the people that hear that call menu. For more information on how that feature works, view the help for Call Menus. Default is 0 for disabled.
 
 	<BR>
+	<A NAME="settings-level_8_disable_add">
+	<BR>
+	<B>Level 8 Disable Add -</B> This setting if enabled will prevent any level 8 user from adding or copying any record in the system, no matter what their user settings are. Excluded from these restrictions are the ability to add DNC and Filter Phone Groups numbers and the Add a New Lead page. Default is 0 for disabled.
+
+	<BR>
 	<A NAME="settings-admin_list_counts">
 	<BR>
 	<B>Admin List Counts -</B> This setting allows you to disable the list counts that appear on the Lists listing and the Campaign modify screens. Default is 1 for enabled.
@@ -11580,289 +11594,295 @@ if ($ADD==11111111111111)
 
 if ($ADD=="2")
 	{
-	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
-	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_users' and active='1';";
-	$rslt=mysql_query($stmt, $link);
-	$voi_ct = mysql_num_rows($rslt);
-	if ($voi_ct > 0)
+	if ($add_copy_disabled > 0)
 		{
-		$row=mysql_fetch_row($rslt);
-		$user = ($row[0] + 1);
-
-		$stmt="UPDATE vicidial_override_ids SET value='$user' where id_table='vicidial_users' and active='1';";
-		$rslt=mysql_query($stmt, $link);
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
 		}
-	##### END ID override optional section #####
-
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_users where user='$user';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>USER NOT ADDED - there is already a user in the system with this user number\n";}
 	else
 		{
-		if (ereg('AUTOGENERA',$user))
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_users' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
 			{
-			$user = 'AUTOGENERA';
+			$row=mysql_fetch_row($rslt);
+			$user = ($row[0] + 1);
+
+			$stmt="UPDATE vicidial_override_ids SET value='$user' where id_table='vicidial_users' and active='1';";
+			$rslt=mysql_query($stmt, $link);
 			}
-		if ( (strlen($user) < 2) or (strlen($pass) < 2) or (strlen($full_name) < 2) or (strlen($user_group) < 2) or ( (strlen($user) > 20) and (!ereg('AUTOGENERA',$user)) ) )
-			{
-			echo "<br>USER NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>user id must be between 2 and 20 characters long\n";
-			echo "<br>full name and password must be at least 2 characters long\n";
-			echo "<br>you must select a user group\n";
-			}
+		##### END ID override optional section #####
+
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_users where user='$user';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>USER NOT ADDED - there is already a user in the system with this user number\n";}
 		else
 			{
 			if (ereg('AUTOGENERA',$user))
 				{
-				$new_user=0;
-				$auto_user_add_value=0;
-				while ($new_user < 2)
+				$user = 'AUTOGENERA';
+				}
+			if ( (strlen($user) < 2) or (strlen($pass) < 2) or (strlen($full_name) < 2) or (strlen($user_group) < 2) or ( (strlen($user) > 20) and (!ereg('AUTOGENERA',$user)) ) )
+				{
+				echo "<br>USER NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>user id must be between 2 and 20 characters long\n";
+				echo "<br>full name and password must be at least 2 characters long\n";
+				echo "<br>you must select a user group\n";
+				}
+			else
+				{
+				if (ereg('AUTOGENERA',$user))
 					{
-					if ($new_user < 1)
+					$new_user=0;
+					$auto_user_add_value=0;
+					while ($new_user < 2)
 						{
-						$stmt = "SELECT auto_user_add_value FROM system_settings;";
-						$rslt=mysql_query($stmt, $link);
-						$ss_auav_ct = mysql_num_rows($rslt);
-						if ($ss_auav_ct > 0)
+						if ($new_user < 1)
 							{
-							$row=mysql_fetch_row($rslt);
-							$auto_user_add_value = $row[0];
+							$stmt = "SELECT auto_user_add_value FROM system_settings;";
+							$rslt=mysql_query($stmt, $link);
+							$ss_auav_ct = mysql_num_rows($rslt);
+							if ($ss_auav_ct > 0)
+								{
+								$row=mysql_fetch_row($rslt);
+								$auto_user_add_value = $row[0];
+								}
+							$new_user++;
 							}
-						$new_user++;
+						$stmt = "SELECT count(*) FROM vicidial_users where user='$auto_user_add_value';";
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						if ($row[0] < 1)
+							{
+							$new_user++;
+							}
+						else 
+							{
+							echo "<!-- AG: $auto_user_add_value -->\n";
+							$auto_user_add_value = ($auto_user_add_value + 7);
+							}
 						}
-					$stmt = "SELECT count(*) FROM vicidial_users where user='$auto_user_add_value';";
+					$user = $auto_user_add_value;
+					echo "<br><B>user_id has been auto-generated: $user</B><br>\n";
+
+					$stmt="UPDATE system_settings SET auto_user_add_value='$user';";
 					$rslt=mysql_query($stmt, $link);
-					$row=mysql_fetch_row($rslt);
-					if ($row[0] < 1)
-						{
-						$new_user++;
-						}
-					else 
-						{
-						echo "<!-- AG: $auto_user_add_value -->\n";
-						$auto_user_add_value = ($auto_user_add_value + 7);
-						}
 					}
-				$user = $auto_user_add_value;
-				echo "<br><B>user_id has been auto-generated: $user</B><br>\n";
+				echo "<br><B>USER ADDED: $user</B>\n";
 
-				$stmt="UPDATE system_settings SET auto_user_add_value='$user';";
+				$stmt="INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass) values('$user','$pass','$full_name','$user_level','$user_group','$phone_login','$phone_pass');";
 				$rslt=mysql_query($stmt, $link);
-				}
-			echo "<br><B>USER ADDED: $user</B>\n";
 
-			$stmt="INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass) values('$user','$pass','$full_name','$user_level','$user_group','$phone_login','$phone_pass');";
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='ADD', record_id='$user', event_code='ADMIN ADD USER', event_sql=\"$SQL_log\", event_notes='user: $user';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='ADD', record_id='$user', event_code='ADMIN ADD USER', event_sql=\"$SQL_log\", event_notes='user: $user';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
-
-			###############################################################
-			##### START SYSTEM_SETTINGS VTIGER CONNECTION INFO LOOKUP #####
-			$stmt = "SELECT enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url FROM system_settings;";
-			$rslt=mysql_query($stmt, $link);
-			if ($DB) {echo "$stmt\n";}
-			$ss_conf_ct = mysql_num_rows($rslt);
-			if ($ss_conf_ct > 0)
-				{
-				$row=mysql_fetch_row($rslt);
-				$enable_vtiger_integration =	$row[0];
-				$vtiger_server_ip	=			$row[1];
-				$vtiger_dbname =				$row[2];
-				$vtiger_login =					$row[3];
-				$vtiger_pass =					$row[4];
-				$vtiger_url =					$row[5];
-				}
-			##### END SYSTEM_SETTINGS VTIGER CONNECTION INFO LOOKUP #####
-			#############################################################
-
-			if ($enable_vtiger_integration > 0)
-				{
-				### connect to your vtiger database
-				$linkV=mysql_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass");
-				if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysql_error());}
-				echo 'Connected successfully';
-				mysql_select_db("$vtiger_dbname", $linkV);
-
-				$user_name =		$user;
-				$user_password =	$pass;
-				$last_name =		$full_name;
-				$is_admin =			'off';
-				$roleid =			'H5';
-				$status =			'Active';
-				$groupid =			'1';
-					if ($user_level >= 7) {$roleid = 'H3';}
-					if ($user_level >= 8) {$roleid = 'H4';}
-					if ($user_level >= 9) {$roleid = 'H2';}
-					if ($user_level >= 9) {$is_admin = 'on';}
-				$salt = substr($user_name, 0, 2);
-				$salt = '$1$' . $salt . '$';
-				$encrypted_password = crypt($user_password, $salt);
-				### search for role in ViciDial
-				$stmt = "SELECT vtiger_role FROM vtiger_vicidial_roles where user_level='$user_level';";
+				###############################################################
+				##### START SYSTEM_SETTINGS VTIGER CONNECTION INFO LOOKUP #####
+				$stmt = "SELECT enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url FROM system_settings;";
 				$rslt=mysql_query($stmt, $link);
 				if ($DB) {echo "$stmt\n";}
-				$vvr_ct = mysql_num_rows($rslt);
-				if ($vvr_ct > 0)
+				$ss_conf_ct = mysql_num_rows($rslt);
+				if ($ss_conf_ct > 0)
 					{
 					$row=mysql_fetch_row($rslt);
-					$roleid =	$row[0];
+					$enable_vtiger_integration =	$row[0];
+					$vtiger_server_ip	=			$row[1];
+					$vtiger_dbname =				$row[2];
+					$vtiger_login =					$row[3];
+					$vtiger_pass =					$row[4];
+					$vtiger_url =					$row[5];
 					}
+				##### END SYSTEM_SETTINGS VTIGER CONNECTION INFO LOOKUP #####
+				#############################################################
 
-				######################################
-				##### BEGIN Add/Update group info in Vtiger
-				$stmt="SELECT count(*) from vtiger_groups where groupname='$user_group';";
-				$rslt=mysql_query($stmt, $linkV);
-				if ($DB) {echo "$stmt\n";}
-				if (!$rslt) {die('Could not execute: ' . mysql_error());}
-				$row=mysql_fetch_row($rslt);
-				$group_found_count = $row[0];
-
-				### group exists in vtiger, update it
-				if ($group_found_count > 0)
+				if ($enable_vtiger_integration > 0)
 					{
-					$stmt="SELECT groupid from vtiger_groups where groupname='$user_group';";
-					$rslt=mysql_query($stmt, $linkV);
+					### connect to your vtiger database
+					$linkV=mysql_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass");
+					if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysql_error());}
+					echo 'Connected successfully';
+					mysql_select_db("$vtiger_dbname", $linkV);
+
+					$user_name =		$user;
+					$user_password =	$pass;
+					$last_name =		$full_name;
+					$is_admin =			'off';
+					$roleid =			'H5';
+					$status =			'Active';
+					$groupid =			'1';
+						if ($user_level >= 7) {$roleid = 'H3';}
+						if ($user_level >= 8) {$roleid = 'H4';}
+						if ($user_level >= 9) {$roleid = 'H2';}
+						if ($user_level >= 9) {$is_admin = 'on';}
+					$salt = substr($user_name, 0, 2);
+					$salt = '$1$' . $salt . '$';
+					$encrypted_password = crypt($user_password, $salt);
+					### search for role in ViciDial
+					$stmt = "SELECT vtiger_role FROM vtiger_vicidial_roles where user_level='$user_level';";
+					$rslt=mysql_query($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-					$row=mysql_fetch_row($rslt);
-					$groupid = $row[0];
-					}
-
-				### user doesn't exist in vtiger, insert it
-				else
-					{
-					#### BEGIN CREATE NEW GROUP RECORD IN VTIGER
-					# Get next available id from vtiger_users_seq to use as groupid
-					$stmt="SELECT id from vtiger_users_seq;";
-					if ($DB) {echo "$stmt\n";}
-					$rslt=mysql_query($stmt, $linkV);
-					$row=mysql_fetch_row($rslt);
-					$groupid = ($row[0] + 1);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-					# Increase next available groupid with 1 so next record gets proper id
-					$stmt="UPDATE vtiger_users_seq SET id = '$groupid';";
-					if ($DB) {echo "$stmt\n";}
-					$rslt=mysql_query($stmt, $linkV);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-					$stmtA = "INSERT INTO vtiger_groups SET groupid='$groupid',groupname='$user_group',description='';";
-					if ($DB) {echo "|$stmtA|\n";}
-					$rslt=mysql_query($stmtA, $linkV);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-					#### END CREATE NEW GROUP RECORD IN VTIGER
-					}
-				##### END Add/Update group info in Vtiger
-				######################################
-
-				######################################
-				##### BEGIN Add/Update user info in Vtiger
-				$stmt="SELECT count(*) from vtiger_users where user_name='$user_name';";
-				$rslt=mysql_query($stmt, $linkV);
-				if ($DB) {echo "$stmt\n";}
-				if (!$rslt) {die('Could not execute: ' . mysql_error());}
-				$row=mysql_fetch_row($rslt);
-				$found_count = $row[0];
-
-				### user exists in vtiger, update it
-				if ($found_count > 0)
-					{
-					$stmt="SELECT id from vtiger_users where user_name='$user_name';";
-					$rslt=mysql_query($stmt, $linkV);
-					if ($DB) {echo "$stmt\n";}
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-					$row=mysql_fetch_row($rslt);
-					$userid = $row[0];
-
-					$stmt="SELECT count(*) from vtiger_users2group WHERE userid='$userid' and groupid='$groupid';";
-					$rslt=mysql_query($stmt, $linkV);
-					if ($DB) {echo "$stmt\n";}
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-					$row=mysql_fetch_row($rslt);
-					$usergroupcount = $row[0];
-
-					$stmtA = "UPDATE vtiger_users SET user_password='$encrypted_password',last_name='$last_name',is_admin='$is_admin',status='$status' where id='$userid';";
-					if ($DB) {echo "|$stmtA|\n";}
-					$rslt=mysql_query($stmtA, $linkV);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-					$stmtB = "UPDATE vtiger_user2role SET roleid='$roleid' where userid='$userid';";
-					if ($DB) {echo "|$stmtB|\n";}
-					$rslt=mysql_query($stmtB, $linkV);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-					if ($usergroupcount < 1)
+					$vvr_ct = mysql_num_rows($rslt);
+					if ($vvr_ct > 0)
 						{
-						$stmt="SELECT user_group FROM vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
-						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						$roleid =	$row[0];
+						}
+
+					######################################
+					##### BEGIN Add/Update group info in Vtiger
+					$stmt="SELECT count(*) from vtiger_groups where groupname='$user_group';";
+					$rslt=mysql_query($stmt, $linkV);
+					if ($DB) {echo "$stmt\n";}
+					if (!$rslt) {die('Could not execute: ' . mysql_error());}
+					$row=mysql_fetch_row($rslt);
+					$group_found_count = $row[0];
+
+					### group exists in vtiger, update it
+					if ($group_found_count > 0)
+						{
+						$stmt="SELECT groupid from vtiger_groups where groupname='$user_group';";
+						$rslt=mysql_query($stmt, $linkV);
 						if ($DB) {echo "$stmt\n";}
-						$VD_groups_ct = mysql_num_rows($rslt);
-						$k=0;
-						$VD_groups_list='';
-						while ($k < $VD_groups_ct)
-							{
-							$row=mysql_fetch_row($rslt);
-							$VD_groups_list .= "'$row[0]',";
-							$k++;
-							}
-						$VD_groups_list = preg_replace("/.$/",'',$VD_groups_list);
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+						$row=mysql_fetch_row($rslt);
+						$groupid = $row[0];
+						}
 
-						$stmtC = "DELETE FROM vtiger_users2group WHERE userid='$userid' and groupid IN(SELECT groupid from vtiger_groups where groupname IN($VD_groups_list));";
+					### user doesn't exist in vtiger, insert it
+					else
+						{
+						#### BEGIN CREATE NEW GROUP RECORD IN VTIGER
+						# Get next available id from vtiger_users_seq to use as groupid
+						$stmt="SELECT id from vtiger_users_seq;";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $linkV);
+						$row=mysql_fetch_row($rslt);
+						$groupid = ($row[0] + 1);
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+						# Increase next available groupid with 1 so next record gets proper id
+						$stmt="UPDATE vtiger_users_seq SET id = '$groupid';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $linkV);
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+						$stmtA = "INSERT INTO vtiger_groups SET groupid='$groupid',groupname='$user_group',description='';";
+						if ($DB) {echo "|$stmtA|\n";}
+						$rslt=mysql_query($stmtA, $linkV);
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+						#### END CREATE NEW GROUP RECORD IN VTIGER
+						}
+					##### END Add/Update group info in Vtiger
+					######################################
+
+					######################################
+					##### BEGIN Add/Update user info in Vtiger
+					$stmt="SELECT count(*) from vtiger_users where user_name='$user_name';";
+					$rslt=mysql_query($stmt, $linkV);
+					if ($DB) {echo "$stmt\n";}
+					if (!$rslt) {die('Could not execute: ' . mysql_error());}
+					$row=mysql_fetch_row($rslt);
+					$found_count = $row[0];
+
+					### user exists in vtiger, update it
+					if ($found_count > 0)
+						{
+						$stmt="SELECT id from vtiger_users where user_name='$user_name';";
+						$rslt=mysql_query($stmt, $linkV);
+						if ($DB) {echo "$stmt\n";}
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+						$row=mysql_fetch_row($rslt);
+						$userid = $row[0];
+
+						$stmt="SELECT count(*) from vtiger_users2group WHERE userid='$userid' and groupid='$groupid';";
+						$rslt=mysql_query($stmt, $linkV);
+						if ($DB) {echo "$stmt\n";}
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+						$row=mysql_fetch_row($rslt);
+						$usergroupcount = $row[0];
+
+						$stmtA = "UPDATE vtiger_users SET user_password='$encrypted_password',last_name='$last_name',is_admin='$is_admin',status='$status' where id='$userid';";
+						if ($DB) {echo "|$stmtA|\n";}
+						$rslt=mysql_query($stmtA, $linkV);
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+						$stmtB = "UPDATE vtiger_user2role SET roleid='$roleid' where userid='$userid';";
+						if ($DB) {echo "|$stmtB|\n";}
+						$rslt=mysql_query($stmtB, $linkV);
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+						if ($usergroupcount < 1)
+							{
+							$stmt="SELECT user_group FROM vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
+							$rslt=mysql_query($stmt, $link);
+							if ($DB) {echo "$stmt\n";}
+							$VD_groups_ct = mysql_num_rows($rslt);
+							$k=0;
+							$VD_groups_list='';
+							while ($k < $VD_groups_ct)
+								{
+								$row=mysql_fetch_row($rslt);
+								$VD_groups_list .= "'$row[0]',";
+								$k++;
+								}
+							$VD_groups_list = preg_replace("/.$/",'',$VD_groups_list);
+
+							$stmtC = "DELETE FROM vtiger_users2group WHERE userid='$userid' and groupid IN(SELECT groupid from vtiger_groups where groupname IN($VD_groups_list));";
+							if ($DB) {echo "|$stmtC|\n";}
+							$rslt=mysql_query($stmtC, $linkV);
+							if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+							$stmtD = "INSERT INTO vtiger_users2group SET userid='$userid',groupid='$groupid';";
+							if ($DB) {echo "|$stmtD|\n";}
+							$rslt=mysql_query($stmtD, $linkV);
+							if (!$rslt) {die('Could not execute: ' . mysql_error());}
+							}
+						}
+
+					### user doesn't exist in vtiger, insert it
+					else
+						{
+						#### BEGIN CREATE NEW USER RECORD IN VTIGER
+						$stmtA = "INSERT INTO vtiger_users SET user_name='$user_name',user_password='$encrypted_password',last_name='$last_name',is_admin='$is_admin',status='$status',date_format='yyyy-mm-dd',first_name='',reports_to_id='',description='',title='',department='',phone_home='',phone_mobile='',phone_work='',phone_other='',phone_fax='',email1='',email2='',yahoo_id='',signature='',address_street='',address_city='',address_state='',address_country='',address_postalcode='',user_preferences='',imagename='';";
+						if ($DB) {echo "|$stmtA|\n";}
+						$rslt=mysql_query($stmtA, $linkV);
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+						$userid = mysql_insert_id($linkV);
+					
+						$stmtB = "INSERT INTO vtiger_user2role SET userid='$userid',roleid='$roleid';";
+						if ($DB) {echo "|$stmtB|\n";}
+						$rslt=mysql_query($stmtB, $linkV);
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+						$stmtC = "INSERT INTO vtiger_users2group SET userid='$userid',groupid='$groupid';";
 						if ($DB) {echo "|$stmtC|\n";}
 						$rslt=mysql_query($stmtC, $linkV);
 						if (!$rslt) {die('Could not execute: ' . mysql_error());}
 
-						$stmtD = "INSERT INTO vtiger_users2group SET userid='$userid',groupid='$groupid';";
+						$stmtD = "UPDATE vtiger_users_seq SET id='$userid';";
 						if ($DB) {echo "|$stmtD|\n";}
 						$rslt=mysql_query($stmtD, $linkV);
 						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+						#### END CREATE NEW USER RECORD IN VTIGER
 						}
+					##### END Add/Update user info in Vtiger
+					######################################
 					}
-
-				### user doesn't exist in vtiger, insert it
-				else
-					{
-					#### BEGIN CREATE NEW USER RECORD IN VTIGER
-					$stmtA = "INSERT INTO vtiger_users SET user_name='$user_name',user_password='$encrypted_password',last_name='$last_name',is_admin='$is_admin',status='$status',date_format='yyyy-mm-dd',first_name='',reports_to_id='',description='',title='',department='',phone_home='',phone_mobile='',phone_work='',phone_other='',phone_fax='',email1='',email2='',yahoo_id='',signature='',address_street='',address_city='',address_state='',address_country='',address_postalcode='',user_preferences='',imagename='';";
-					if ($DB) {echo "|$stmtA|\n";}
-					$rslt=mysql_query($stmtA, $linkV);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-					$userid = mysql_insert_id($linkV);
-				
-					$stmtB = "INSERT INTO vtiger_user2role SET userid='$userid',roleid='$roleid';";
-					if ($DB) {echo "|$stmtB|\n";}
-					$rslt=mysql_query($stmtB, $linkV);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-					$stmtC = "INSERT INTO vtiger_users2group SET userid='$userid',groupid='$groupid';";
-					if ($DB) {echo "|$stmtC|\n";}
-					$rslt=mysql_query($stmtC, $linkV);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-					$stmtD = "UPDATE vtiger_users_seq SET id='$userid';";
-					if ($DB) {echo "|$stmtD|\n";}
-					$rslt=mysql_query($stmtD, $linkV);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-					#### END CREATE NEW USER RECORD IN VTIGER
-					}
-				##### END Add/Update user info in Vtiger
-				######################################
+				### END vtiger integration
 				}
-			### END vtiger integration
 			}
 		}
-
 	$ADD=3;
 	}
 
@@ -11872,292 +11892,299 @@ if ($ADD=="2")
 
 if ($ADD=="2A")
 	{
-	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
-	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_users' and active='1';";
-	$rslt=mysql_query($stmt, $link);
-	$voi_ct = mysql_num_rows($rslt);
-	if ($voi_ct > 0)
+	if ($add_copy_disabled > 0)
 		{
-		$row=mysql_fetch_row($rslt);
-		$user = ($row[0] + 1);
-
-		$stmt="UPDATE vicidial_override_ids SET value='$user' where id_table='vicidial_users' and active='1';";
-		$rslt=mysql_query($stmt, $link);
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
 		}
-	##### END ID override optional section #####
-
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_users where user='$user';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>USER NOT ADDED - there is already a user in the system with this user number\n";}
 	else
 		{
-		if ( (strlen($user) < 2) or (strlen($pass) < 2) or (strlen($full_name) < 2) or (strlen($user) > 20) )
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_users' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
 			{
-			echo "<br>USER NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>user id must be between 2 and 20 characters long\n";
-			echo "<br>full name and password must be at least 2 characters long\n";
-			echo "<!-- |$user|$pass|$full_name| -->\n";
+			$row=mysql_fetch_row($rslt);
+			$user = ($row[0] + 1);
+
+			$stmt="UPDATE vicidial_override_ids SET value='$user' where id_table='vicidial_users' and active='1';";
+			$rslt=mysql_query($stmt, $link);
 			}
+		##### END ID override optional section #####
+
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_users where user='$user';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>USER NOT ADDED - there is already a user in the system with this user number\n";}
 		else
 			{
-			if (ereg('AUTOGEN',$user))
+			if ( (strlen($user) < 2) or (strlen($pass) < 2) or (strlen($full_name) < 2) or (strlen($user) > 20) )
 				{
-				$new_user=0;
-				$auto_user_add_value=0;
-				while ($new_user < 2)
+				echo "<br>USER NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>user id must be between 2 and 20 characters long\n";
+				echo "<br>full name and password must be at least 2 characters long\n";
+				echo "<!-- |$user|$pass|$full_name| -->\n";
+				}
+			else
+				{
+				if (ereg('AUTOGEN',$user))
 					{
-					if ($new_user < 1)
+					$new_user=0;
+					$auto_user_add_value=0;
+					while ($new_user < 2)
 						{
-						$stmt = "SELECT auto_user_add_value FROM system_settings;";
-						$rslt=mysql_query($stmt, $link);
-						$ss_auav_ct = mysql_num_rows($rslt);
-						if ($ss_auav_ct > 0)
+						if ($new_user < 1)
 							{
-							$row=mysql_fetch_row($rslt);
-							$auto_user_add_value = $row[0];
+							$stmt = "SELECT auto_user_add_value FROM system_settings;";
+							$rslt=mysql_query($stmt, $link);
+							$ss_auav_ct = mysql_num_rows($rslt);
+							if ($ss_auav_ct > 0)
+								{
+								$row=mysql_fetch_row($rslt);
+								$auto_user_add_value = $row[0];
+								}
+							$new_user++;
 							}
-						$new_user++;
+						$stmt = "SELECT count(*) FROM vicidial_users where user='$auto_user_add_value';";
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						if ($row[0] < 1)
+							{
+							$new_user++;
+							}
+						else 
+							{
+							echo "<!-- AG: $auto_user_add_value -->\n";
+							$auto_user_add_value = ($auto_user_add_value + 7);
+							}
 						}
-					$stmt = "SELECT count(*) FROM vicidial_users where user='$auto_user_add_value';";
+					$user = $auto_user_add_value;
+					echo "<br><B>user_id has been auto-generated: $user</B><br>\n";
+
+					$stmt="UPDATE system_settings SET auto_user_add_value='$user';";
 					$rslt=mysql_query($stmt, $link);
-					$row=mysql_fetch_row($rslt);
-					if ($row[0] < 1)
-						{
-						$new_user++;
-						}
-					else 
-						{
-						echo "<!-- AG: $auto_user_add_value -->\n";
-						$auto_user_add_value = ($auto_user_add_value + 7);
-						}
 					}
-				$user = $auto_user_add_value;
-				echo "<br><B>user_id has been auto-generated: $user</B><br>\n";
-
-				$stmt="UPDATE system_settings SET auto_user_add_value='$user';";
+				$stmt="INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data) SELECT \"$user\",\"$pass\",\"$full_name\",user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data from vicidial_users where user=\"$source_user_id\";";
 				$rslt=mysql_query($stmt, $link);
-				}
-			$stmt="INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data) SELECT \"$user\",\"$pass\",\"$full_name\",user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data from vicidial_users where user=\"$source_user_id\";";
-			$rslt=mysql_query($stmt, $link);
 
-			$stmtA="INSERT INTO vicidial_inbound_group_agents (user,group_id,group_rank,group_weight,calls_today) SELECT \"$user\",group_id,group_rank,group_weight,\"0\" from vicidial_inbound_group_agents where user=\"$source_user_id\";";
-			$rslt=mysql_query($stmtA, $link);
+				$stmtA="INSERT INTO vicidial_inbound_group_agents (user,group_id,group_rank,group_weight,calls_today) SELECT \"$user\",group_id,group_rank,group_weight,\"0\" from vicidial_inbound_group_agents where user=\"$source_user_id\";";
+				$rslt=mysql_query($stmtA, $link);
 
-			$stmtA="INSERT INTO vicidial_campaign_agents (user,campaign_id,campaign_rank,campaign_weight,calls_today) SELECT \"$user\",campaign_id,campaign_rank,campaign_weight,\"0\" from vicidial_campaign_agents where user=\"$source_user_id\";";
-			$rslt=mysql_query($stmtA, $link);
+				$stmtA="INSERT INTO vicidial_campaign_agents (user,campaign_id,campaign_rank,campaign_weight,calls_today) SELECT \"$user\",campaign_id,campaign_rank,campaign_weight,\"0\" from vicidial_campaign_agents where user=\"$source_user_id\";";
+				$rslt=mysql_query($stmtA, $link);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='COPY', record_id='$user', event_code='ADMIN COPY USER', event_sql=\"$SQL_log\", event_notes='user: $user';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='COPY', record_id='$user', event_code='ADMIN COPY USER', event_sql=\"$SQL_log\", event_notes='user: $user';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
 
-			###############################################################
-			##### START SYSTEM_SETTINGS VTIGER CONNECTION INFO LOOKUP #####
-			$stmt = "SELECT enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url FROM system_settings;";
-			$rslt=mysql_query($stmt, $link);
-			if ($DB) {echo "$stmt\n";}
-			$ss_conf_ct = mysql_num_rows($rslt);
-			if ($ss_conf_ct > 0)
-				{
-				$row=mysql_fetch_row($rslt);
-				$enable_vtiger_integration =	$row[0];
-				$vtiger_server_ip	=			$row[1];
-				$vtiger_dbname =				$row[2];
-				$vtiger_login =					$row[3];
-				$vtiger_pass =					$row[4];
-				$vtiger_url =					$row[5];
-				}
-			##### END SYSTEM_SETTINGS VTIGER CONNECTION INFO LOOKUP #####
-			#############################################################
-
-			if ($enable_vtiger_integration > 0)
-				{
-				### connect to your vtiger database
-				$linkV=mysql_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass");
-				if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysql_error());}
-				echo 'Connected successfully';
-				mysql_select_db("$vtiger_dbname", $linkV);
-
-				$user_name =		$user;
-				$user_password =	$pass;
-				$last_name =		$full_name;
-				$is_admin =			'off';
-				$roleid =			'H5';
-				$status =			'Active';
-				$groupid =			'1';
-					if ($user_level >= 7) {$roleid = 'H3';}
-					if ($user_level >= 8) {$roleid = 'H4';}
-					if ($user_level >= 9) {$roleid = 'H2';}
-					if ($user_level >= 9) {$is_admin = 'on';}
-				$salt = substr($user_name, 0, 2);
-				$salt = '$1$' . $salt . '$';
-				$encrypted_password = crypt($user_password, $salt);
-				### search for role in ViciDial
-				$stmt = "SELECT vtiger_role FROM vtiger_vicidial_roles where user_level='$user_level';";
+				###############################################################
+				##### START SYSTEM_SETTINGS VTIGER CONNECTION INFO LOOKUP #####
+				$stmt = "SELECT enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url FROM system_settings;";
 				$rslt=mysql_query($stmt, $link);
 				if ($DB) {echo "$stmt\n";}
-				$vvr_ct = mysql_num_rows($rslt);
-				if ($vvr_ct > 0)
+				$ss_conf_ct = mysql_num_rows($rslt);
+				if ($ss_conf_ct > 0)
 					{
 					$row=mysql_fetch_row($rslt);
-					$roleid =	$row[0];
+					$enable_vtiger_integration =	$row[0];
+					$vtiger_server_ip	=			$row[1];
+					$vtiger_dbname =				$row[2];
+					$vtiger_login =					$row[3];
+					$vtiger_pass =					$row[4];
+					$vtiger_url =					$row[5];
 					}
+				##### END SYSTEM_SETTINGS VTIGER CONNECTION INFO LOOKUP #####
+				#############################################################
 
-				######################################
-				##### BEGIN Add/Update group info in Vtiger
-				$stmt="SELECT count(*) from vtiger_groups where groupname='$user_group';";
-				$rslt=mysql_query($stmt, $linkV);
-				if ($DB) {echo "$stmt\n";}
-				if (!$rslt) {die('Could not execute: ' . mysql_error());}
-				$row=mysql_fetch_row($rslt);
-				$group_found_count = $row[0];
-
-				### group exists in vtiger, update it
-				if ($group_found_count > 0)
+				if ($enable_vtiger_integration > 0)
 					{
-					$stmt="SELECT groupid from vtiger_groups where groupname='$user_group';";
-					$rslt=mysql_query($stmt, $linkV);
+					### connect to your vtiger database
+					$linkV=mysql_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass");
+					if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysql_error());}
+					echo 'Connected successfully';
+					mysql_select_db("$vtiger_dbname", $linkV);
+
+					$user_name =		$user;
+					$user_password =	$pass;
+					$last_name =		$full_name;
+					$is_admin =			'off';
+					$roleid =			'H5';
+					$status =			'Active';
+					$groupid =			'1';
+						if ($user_level >= 7) {$roleid = 'H3';}
+						if ($user_level >= 8) {$roleid = 'H4';}
+						if ($user_level >= 9) {$roleid = 'H2';}
+						if ($user_level >= 9) {$is_admin = 'on';}
+					$salt = substr($user_name, 0, 2);
+					$salt = '$1$' . $salt . '$';
+					$encrypted_password = crypt($user_password, $salt);
+					### search for role in ViciDial
+					$stmt = "SELECT vtiger_role FROM vtiger_vicidial_roles where user_level='$user_level';";
+					$rslt=mysql_query($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-					$row=mysql_fetch_row($rslt);
-					$groupid = $row[0];
-					}
-
-				### user doesn't exist in vtiger, insert it
-				else
-					{
-					#### BEGIN CREATE NEW GROUP RECORD IN VTIGER
-					# Get next available id from vtiger_users_seq to use as groupid
-					$stmt="SELECT id from vtiger_users_seq;";
-					if ($DB) {echo "$stmt\n";}
-					$rslt=mysql_query($stmt, $linkV);
-					$row=mysql_fetch_row($rslt);
-					$groupid = ($row[0] + 1);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-					# Increase next available groupid with 1 so next record gets proper id
-					$stmt="UPDATE vtiger_users_seq SET id = '$groupid';";
-					if ($DB) {echo "$stmt\n";}
-					$rslt=mysql_query($stmt, $linkV);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-					$stmtA = "INSERT INTO vtiger_groups SET groupid='$groupid',groupname='$user_group',description='';";
-					if ($DB) {echo "|$stmtA|\n";}
-					$rslt=mysql_query($stmtA, $linkV);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-					#### END CREATE NEW GROUP RECORD IN VTIGER
-					}
-				##### END Add/Update group info in Vtiger
-				######################################
-
-				######################################
-				##### BEGIN Add/Update user info in Vtiger
-				$stmt="SELECT count(*) from vtiger_users where user_name='$user_name';";
-				$rslt=mysql_query($stmt, $linkV);
-				if ($DB) {echo "$stmt\n";}
-				if (!$rslt) {die('Could not execute: ' . mysql_error());}
-				$row=mysql_fetch_row($rslt);
-				$found_count = $row[0];
-
-				### user exists in vtiger, update it
-				if ($found_count > 0)
-					{
-					$stmt="SELECT id from vtiger_users where user_name='$user_name';";
-					$rslt=mysql_query($stmt, $linkV);
-					if ($DB) {echo "$stmt\n";}
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-					$row=mysql_fetch_row($rslt);
-					$userid = $row[0];
-
-					$stmt="SELECT count(*) from vtiger_users2group WHERE userid='$userid' and groupid='$groupid';";
-					$rslt=mysql_query($stmt, $linkV);
-					if ($DB) {echo "$stmt\n";}
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-					$row=mysql_fetch_row($rslt);
-					$usergroupcount = $row[0];
-
-					$stmtA = "UPDATE vtiger_users SET user_password='$encrypted_password',last_name='$last_name',is_admin='$is_admin',status='$status' where id='$userid';";
-					if ($DB) {echo "|$stmtA|\n";}
-					$rslt=mysql_query($stmtA, $linkV);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-					$stmtB = "UPDATE vtiger_user2role SET roleid='$roleid' where userid='$userid';";
-					if ($DB) {echo "|$stmtB|\n";}
-					$rslt=mysql_query($stmtB, $linkV);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-					if ($usergroupcount < 1)
+					$vvr_ct = mysql_num_rows($rslt);
+					if ($vvr_ct > 0)
 						{
-						$stmt="SELECT user_group FROM vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
-						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						$roleid =	$row[0];
+						}
+
+					######################################
+					##### BEGIN Add/Update group info in Vtiger
+					$stmt="SELECT count(*) from vtiger_groups where groupname='$user_group';";
+					$rslt=mysql_query($stmt, $linkV);
+					if ($DB) {echo "$stmt\n";}
+					if (!$rslt) {die('Could not execute: ' . mysql_error());}
+					$row=mysql_fetch_row($rslt);
+					$group_found_count = $row[0];
+
+					### group exists in vtiger, update it
+					if ($group_found_count > 0)
+						{
+						$stmt="SELECT groupid from vtiger_groups where groupname='$user_group';";
+						$rslt=mysql_query($stmt, $linkV);
 						if ($DB) {echo "$stmt\n";}
-						$VD_groups_ct = mysql_num_rows($rslt);
-						$k=0;
-						$VD_groups_list='';
-						while ($k < $VD_groups_ct)
-							{
-							$row=mysql_fetch_row($rslt);
-							$VD_groups_list .= "'$row[0]',";
-							$k++;
-							}
-						$VD_groups_list = preg_replace("/.$/",'',$VD_groups_list);
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+						$row=mysql_fetch_row($rslt);
+						$groupid = $row[0];
+						}
 
-						$stmtC = "DELETE FROM vtiger_users2group WHERE userid='$userid' and groupid IN(SELECT groupid from vtiger_groups where groupname IN($VD_groups_list));";
+					### user doesn't exist in vtiger, insert it
+					else
+						{
+						#### BEGIN CREATE NEW GROUP RECORD IN VTIGER
+						# Get next available id from vtiger_users_seq to use as groupid
+						$stmt="SELECT id from vtiger_users_seq;";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $linkV);
+						$row=mysql_fetch_row($rslt);
+						$groupid = ($row[0] + 1);
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+						# Increase next available groupid with 1 so next record gets proper id
+						$stmt="UPDATE vtiger_users_seq SET id = '$groupid';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $linkV);
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+						$stmtA = "INSERT INTO vtiger_groups SET groupid='$groupid',groupname='$user_group',description='';";
+						if ($DB) {echo "|$stmtA|\n";}
+						$rslt=mysql_query($stmtA, $linkV);
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+						#### END CREATE NEW GROUP RECORD IN VTIGER
+						}
+					##### END Add/Update group info in Vtiger
+					######################################
+
+					######################################
+					##### BEGIN Add/Update user info in Vtiger
+					$stmt="SELECT count(*) from vtiger_users where user_name='$user_name';";
+					$rslt=mysql_query($stmt, $linkV);
+					if ($DB) {echo "$stmt\n";}
+					if (!$rslt) {die('Could not execute: ' . mysql_error());}
+					$row=mysql_fetch_row($rslt);
+					$found_count = $row[0];
+
+					### user exists in vtiger, update it
+					if ($found_count > 0)
+						{
+						$stmt="SELECT id from vtiger_users where user_name='$user_name';";
+						$rslt=mysql_query($stmt, $linkV);
+						if ($DB) {echo "$stmt\n";}
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+						$row=mysql_fetch_row($rslt);
+						$userid = $row[0];
+
+						$stmt="SELECT count(*) from vtiger_users2group WHERE userid='$userid' and groupid='$groupid';";
+						$rslt=mysql_query($stmt, $linkV);
+						if ($DB) {echo "$stmt\n";}
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+						$row=mysql_fetch_row($rslt);
+						$usergroupcount = $row[0];
+
+						$stmtA = "UPDATE vtiger_users SET user_password='$encrypted_password',last_name='$last_name',is_admin='$is_admin',status='$status' where id='$userid';";
+						if ($DB) {echo "|$stmtA|\n";}
+						$rslt=mysql_query($stmtA, $linkV);
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+						$stmtB = "UPDATE vtiger_user2role SET roleid='$roleid' where userid='$userid';";
+						if ($DB) {echo "|$stmtB|\n";}
+						$rslt=mysql_query($stmtB, $linkV);
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+						if ($usergroupcount < 1)
+							{
+							$stmt="SELECT user_group FROM vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
+							$rslt=mysql_query($stmt, $link);
+							if ($DB) {echo "$stmt\n";}
+							$VD_groups_ct = mysql_num_rows($rslt);
+							$k=0;
+							$VD_groups_list='';
+							while ($k < $VD_groups_ct)
+								{
+								$row=mysql_fetch_row($rslt);
+								$VD_groups_list .= "'$row[0]',";
+								$k++;
+								}
+							$VD_groups_list = preg_replace("/.$/",'',$VD_groups_list);
+
+							$stmtC = "DELETE FROM vtiger_users2group WHERE userid='$userid' and groupid IN(SELECT groupid from vtiger_groups where groupname IN($VD_groups_list));";
+							if ($DB) {echo "|$stmtC|\n";}
+							$rslt=mysql_query($stmtC, $linkV);
+							if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+							$stmtD = "INSERT INTO vtiger_users2group SET userid='$userid',groupid='$groupid';";
+							if ($DB) {echo "|$stmtD|\n";}
+							$rslt=mysql_query($stmtD, $linkV);
+							if (!$rslt) {die('Could not execute: ' . mysql_error());}
+							}
+						}
+
+					### user doesn't exist in vtiger, insert it
+					else
+						{
+						#### BEGIN CREATE NEW USER RECORD IN VTIGER
+						$stmtA = "INSERT INTO vtiger_users SET user_name='$user_name',user_password='$encrypted_password',last_name='$last_name',is_admin='$is_admin',status='$status',date_format='yyyy-mm-dd',first_name='',reports_to_id='',description='',title='',department='',phone_home='',phone_mobile='',phone_work='',phone_other='',phone_fax='',email1='',email2='',yahoo_id='',signature='',address_street='',address_city='',address_state='',address_country='',address_postalcode='',user_preferences='',imagename='';";
+						if ($DB) {echo "|$stmtA|\n";}
+						$rslt=mysql_query($stmtA, $linkV);
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+						$userid = mysql_insert_id($linkV);
+					
+						$stmtB = "INSERT INTO vtiger_user2role SET userid='$userid',roleid='$roleid';";
+						if ($DB) {echo "|$stmtB|\n";}
+						$rslt=mysql_query($stmtB, $linkV);
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+						$stmtC = "INSERT INTO vtiger_users2group SET userid='$userid',groupid='$groupid';";
 						if ($DB) {echo "|$stmtC|\n";}
 						$rslt=mysql_query($stmtC, $linkV);
 						if (!$rslt) {die('Could not execute: ' . mysql_error());}
 
-						$stmtD = "INSERT INTO vtiger_users2group SET userid='$userid',groupid='$groupid';";
+						$stmtD = "UPDATE vtiger_users_seq SET id='$userid';";
 						if ($DB) {echo "|$stmtD|\n";}
 						$rslt=mysql_query($stmtD, $linkV);
 						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+						#### END CREATE NEW USER RECORD IN VTIGER
 						}
+					##### END Add/Update user info in Vtiger
+					######################################
 					}
+				### END vtiger integration
 
-				### user doesn't exist in vtiger, insert it
-				else
-					{
-					#### BEGIN CREATE NEW USER RECORD IN VTIGER
-					$stmtA = "INSERT INTO vtiger_users SET user_name='$user_name',user_password='$encrypted_password',last_name='$last_name',is_admin='$is_admin',status='$status',date_format='yyyy-mm-dd',first_name='',reports_to_id='',description='',title='',department='',phone_home='',phone_mobile='',phone_work='',phone_other='',phone_fax='',email1='',email2='',yahoo_id='',signature='',address_street='',address_city='',address_state='',address_country='',address_postalcode='',user_preferences='',imagename='';";
-					if ($DB) {echo "|$stmtA|\n";}
-					$rslt=mysql_query($stmtA, $linkV);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-					$userid = mysql_insert_id($linkV);
-				
-					$stmtB = "INSERT INTO vtiger_user2role SET userid='$userid',roleid='$roleid';";
-					if ($DB) {echo "|$stmtB|\n";}
-					$rslt=mysql_query($stmtB, $linkV);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
+				echo "<br><B>USER COPIED: $user copied from $source_user_id</B>\n";
+				echo "<br><br>\n";
+				echo "<a href=\"$PHP_SELF?ADD=3&user=$user\">Click here to go to the user record</a>\n";
+				echo "<br><br>\n";
 
-					$stmtC = "INSERT INTO vtiger_users2group SET userid='$userid',groupid='$groupid';";
-					if ($DB) {echo "|$stmtC|\n";}
-					$rslt=mysql_query($stmtC, $linkV);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-					$stmtD = "UPDATE vtiger_users_seq SET id='$userid';";
-					if ($DB) {echo "|$stmtD|\n";}
-					$rslt=mysql_query($stmtD, $linkV);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-					#### END CREATE NEW USER RECORD IN VTIGER
-					}
-				##### END Add/Update user info in Vtiger
-				######################################
 				}
-			### END vtiger integration
-
-			echo "<br><B>USER COPIED: $user copied from $source_user_id</B>\n";
-			echo "<br><br>\n";
-			echo "<a href=\"$PHP_SELF?ADD=3&user=$user\">Click here to go to the user record</a>\n";
-			echo "<br><br>\n";
-
 			}
 		}
 	exit;
@@ -12169,76 +12196,83 @@ if ($ADD=="2A")
 
 if ($ADD==21)
 	{
-	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
-	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_campaigns' and active='1';";
-	$rslt=mysql_query($stmt, $link);
-	$voi_ct = mysql_num_rows($rslt);
-	if ($voi_ct > 0)
+	if ($add_copy_disabled > 0)
 		{
-		$row=mysql_fetch_row($rslt);
-		$campaign_id = ($row[0] + 1);
-
-		$stmt="UPDATE vicidial_override_ids SET value='$campaign_id' where id_table='vicidial_campaigns' and active='1';";
-		$rslt=mysql_query($stmt, $link);
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
 		}
-	##### END ID override optional section #####
-
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>CAMPAIGN NOT ADDED - there is already a campaign in the system with this ID\n";}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$campaign_id';";
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_campaigns' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$campaign_id = ($row[0] + 1);
+
+			$stmt="UPDATE vicidial_override_ids SET value='$campaign_id' where id_table='vicidial_campaigns' and active='1';";
+			$rslt=mysql_query($stmt, $link);
+			}
+		##### END ID override optional section #####
+
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		if ($row[0] > 0)
-			{echo "<br>CAMPAIGN NOT ADDED - there is already an inbound group in the system with this ID\n";}
+			{echo "<br>CAMPAIGN NOT ADDED - there is already a campaign in the system with this ID\n";}
 		else
 			{
-			if ( (strlen($campaign_id) < 2) or (strlen($campaign_id) > 8) or (strlen($campaign_name) < 6)  or (strlen($campaign_name) > 40) )
-				{
-				echo "<br>CAMPAIGN NOT ADDED - Please go back and look at the data you entered\n";
-				echo "<br>campaign ID must be between 2 and 8 characters in length\n";
-				echo "<br>campaign name must be between 6 and 40 characters in length\n";
-				}
+			$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$campaign_id';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{echo "<br>CAMPAIGN NOT ADDED - there is already an inbound group in the system with this ID\n";}
 			else
 				{
-				echo "<br><B>CAMPAIGN ADDED: $campaign_id</B>\n";
-
-				# if admin user's user group does not have -ALL-CAMPAIGNS- then add this new campaign to their user group's allowable campaigns
-				if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+				if ( (strlen($campaign_id) < 2) or (strlen($campaign_id) > 8) or (strlen($campaign_name) < 6)  or (strlen($campaign_name) > 40) )
 					{
-					$UPDATEallowed_campaigns =	$LOGallowed_campaigns;
-					$UPDATEallowed_campaigns = preg_replace("/ -$/"," $campaign_id -",$UPDATEallowed_campaigns);
-					$LOGallowed_campaigns = $UPDATEallowed_campaigns;
-					$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
-					$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
-					$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
-					$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
-					$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
-					$stmt="UPDATE vicidial_user_groups SET allowed_campaigns='$UPDATEallowed_campaigns' where user_group='$LOGuser_group';";
+					echo "<br>CAMPAIGN NOT ADDED - Please go back and look at the data you entered\n";
+					echo "<br>campaign ID must be between 2 and 8 characters in length\n";
+					echo "<br>campaign name must be between 6 and 40 characters in length\n";
+					}
+				else
+					{
+					echo "<br><B>CAMPAIGN ADDED: $campaign_id</B>\n";
+
+					# if admin user's user group does not have -ALL-CAMPAIGNS- then add this new campaign to their user group's allowable campaigns
+					if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+						{
+						$UPDATEallowed_campaigns =	$LOGallowed_campaigns;
+						$UPDATEallowed_campaigns = preg_replace("/ -$/"," $campaign_id -",$UPDATEallowed_campaigns);
+						$LOGallowed_campaigns = $UPDATEallowed_campaigns;
+						$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+						$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+						$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+						$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+						$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
+						$stmt="UPDATE vicidial_user_groups SET allowed_campaigns='$UPDATEallowed_campaigns' where user_group='$LOGuser_group';";
+						$rslt=mysql_query($stmt, $link);
+						}
+
+					$stmt="INSERT INTO vicidial_campaigns (campaign_id,campaign_name,campaign_description,active,dial_status_a,lead_order,park_ext,park_file_name,web_form_address,allow_closers,hopper_level,auto_dial_level,next_agent_call,local_call_time,voicemail_ext,campaign_script,get_call_launch,campaign_changedate,campaign_stats_refresh,list_order_mix,web_form_address_two,start_call_url,dispo_call_url,na_call_url,user_group) values('$campaign_id','$campaign_name','$campaign_description','$active','NEW','DOWN','$park_ext','$park_file_name','" . mysql_real_escape_string($web_form_address) . "','$allow_closers','$hopper_level','$auto_dial_level','$next_agent_call','$local_call_time','$voicemail_ext','$script_id','$get_call_launch','$SQLdate','Y','DISABLED','','','','','$user_group');";
+					$rslt=mysql_query($stmt, $link);
+
+					$stmtA="INSERT INTO vicidial_campaign_stats (campaign_id) values('$campaign_id');";
+					$rslt=mysql_query($stmtA, $link);
+
+					$stmtA="INSERT INTO vicidial_campaign_stats_debug (campaign_id) values('$campaign_id');";
+					$rslt=mysql_query($stmtA, $link);
+
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGNS', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
 					$rslt=mysql_query($stmt, $link);
 					}
-
-				$stmt="INSERT INTO vicidial_campaigns (campaign_id,campaign_name,campaign_description,active,dial_status_a,lead_order,park_ext,park_file_name,web_form_address,allow_closers,hopper_level,auto_dial_level,next_agent_call,local_call_time,voicemail_ext,campaign_script,get_call_launch,campaign_changedate,campaign_stats_refresh,list_order_mix,web_form_address_two,start_call_url,dispo_call_url,na_call_url,user_group) values('$campaign_id','$campaign_name','$campaign_description','$active','NEW','DOWN','$park_ext','$park_file_name','" . mysql_real_escape_string($web_form_address) . "','$allow_closers','$hopper_level','$auto_dial_level','$next_agent_call','$local_call_time','$voicemail_ext','$script_id','$get_call_launch','$SQLdate','Y','DISABLED','','','','','$user_group');";
-				$rslt=mysql_query($stmt, $link);
-
-				$stmtA="INSERT INTO vicidial_campaign_stats (campaign_id) values('$campaign_id');";
-				$rslt=mysql_query($stmtA, $link);
-
-				$stmtA="INSERT INTO vicidial_campaign_stats_debug (campaign_id) values('$campaign_id');";
-				$rslt=mysql_query($stmtA, $link);
-
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGNS', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN', event_sql=\"$SQL_log\", event_notes='';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
 				}
 			}
 		}
@@ -12251,94 +12285,101 @@ if ($ADD==21)
 
 if ($ADD==20)
 	{
-	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
-	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_campaigns' and active='1';";
-	$rslt=mysql_query($stmt, $link);
-	$voi_ct = mysql_num_rows($rslt);
-	if ($voi_ct > 0)
+	if ($add_copy_disabled > 0)
 		{
-		$row=mysql_fetch_row($rslt);
-		$campaign_id = ($row[0] + 1);
-
-		$stmt="UPDATE vicidial_override_ids SET value='$campaign_id' where id_table='vicidial_campaigns' and active='1';";
-		$rslt=mysql_query($stmt, $link);
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
 		}
-	##### END ID override optional section #####
-
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>CAMPAIGN NOT ADDED - there is already a campaign in the system with this ID\n";}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$campaign_id';";
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_campaigns' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$campaign_id = ($row[0] + 1);
+
+			$stmt="UPDATE vicidial_override_ids SET value='$campaign_id' where id_table='vicidial_campaigns' and active='1';";
+			$rslt=mysql_query($stmt, $link);
+			}
+		##### END ID override optional section #####
+
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		if ($row[0] > 0)
-			{echo "<br>CAMPAIGN NOT ADDED - there is already an inbound group in the system with this ID\n";}
+			{echo "<br>CAMPAIGN NOT ADDED - there is already a campaign in the system with this ID\n";}
 		else
 			{
-			if ( (strlen($campaign_id) < 2) or (strlen($campaign_id) > 8) or  (strlen($campaign_name) < 2) or (strlen($source_campaign_id) < 2) or (strlen($source_campaign_id) > 8) )
-				{
-				echo "<br>CAMPAIGN NOT ADDED - Please go back and look at the data you entered\n";
-				echo "<br>campaign ID must be between 2 and 8 characters in length\n";
-				echo "<br>source campaign ID must be between 2 and 8 characters in length\n";
-				}
+			$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$campaign_id';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{echo "<br>CAMPAIGN NOT ADDED - there is already an inbound group in the system with this ID\n";}
 			else
 				{
-				echo "<br><B>CAMPAIGN COPIED: $campaign_id copied from $source_campaign_id</B>\n";
-
-				# if admin user's user group does not have -ALL-CAMPAIGNS- then add this new campaign to their user group's allowable campaigns
-				if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+				if ( (strlen($campaign_id) < 2) or (strlen($campaign_id) > 8) or  (strlen($campaign_name) < 2) or (strlen($source_campaign_id) < 2) or (strlen($source_campaign_id) > 8) )
 					{
-					$UPDATEallowed_campaigns =	$LOGallowed_campaigns;
-					$UPDATEallowed_campaigns = preg_replace("/ -$/"," $campaign_id -",$UPDATEallowed_campaigns);
-					$LOGallowed_campaigns = $UPDATEallowed_campaigns;
-					$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
-					$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
-					$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
-					$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
-					$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
-					$stmt="UPDATE vicidial_user_groups SET allowed_campaigns='$UPDATEallowed_campaigns' where user_group='$LOGuser_group';";
+					echo "<br>CAMPAIGN NOT ADDED - Please go back and look at the data you entered\n";
+					echo "<br>campaign ID must be between 2 and 8 characters in length\n";
+					echo "<br>source campaign ID must be between 2 and 8 characters in length\n";
+					}
+				else
+					{
+					echo "<br><B>CAMPAIGN COPIED: $campaign_id copied from $source_campaign_id</B>\n";
+
+					# if admin user's user group does not have -ALL-CAMPAIGNS- then add this new campaign to their user group's allowable campaigns
+					if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+						{
+						$UPDATEallowed_campaigns =	$LOGallowed_campaigns;
+						$UPDATEallowed_campaigns = preg_replace("/ -$/"," $campaign_id -",$UPDATEallowed_campaigns);
+						$LOGallowed_campaigns = $UPDATEallowed_campaigns;
+						$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+						$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+						$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+						$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+						$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
+						$stmt="UPDATE vicidial_user_groups SET allowed_campaigns='$UPDATEallowed_campaigns' where user_group='$LOGuser_group';";
+						$rslt=mysql_query($stmt, $link);
+						}
+
+					$stmt="INSERT INTO vicidial_campaigns (campaign_name,campaign_id,active,dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,park_ext,park_file_name,web_form_address,allow_closers,hopper_level,auto_dial_level,next_agent_call,local_call_time,voicemail_ext,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,amd_send_to_vmx,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,lead_filter_id,drop_call_seconds,drop_action,safe_harbor_exten,display_dialable_count,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,concurrent_transfers,auto_alt_dial,auto_alt_dial_statuses,agent_pause_codes_active,campaign_description,campaign_changedate,campaign_stats_refresh,campaign_logindate,dial_statuses,disable_alter_custdata,no_hopper_leads_logins,list_order_mix,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,queue_priority,drop_inbound_group,qc_enabled,qc_statuses,qc_lists,qc_web_form_address,qc_script,survey_first_audio_file,survey_dtmf_digits,survey_ni_digit,survey_opt_in_audio_file,survey_ni_audio_file,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,disable_alter_custphone,display_queue_count,qc_get_record_launch,qc_show_recording,qc_shift_id,manual_dial_filter,agent_clipboard_copy,agent_extended_alt_dial,use_campaign_dnc,three_way_call_cid,three_way_dial_prefix,web_form_target,vtiger_search_category,vtiger_create_call_record,vtiger_create_lead_record,vtiger_screen_login,cpd_amd_action,agent_allow_group_alias,default_group_alias,vtiger_search_dead,vtiger_status_call,survey_third_digit,survey_fourth_digit,survey_third_audio_file,survey_fourth_audio_file,survey_third_status,survey_fourth_status,survey_third_exten,survey_fourth_exten,drop_lockout_time,quick_transfer_button,prepopulate_transfer_preset,drop_rate_group,view_calls_in_queue,view_calls_in_queue_launch,grab_calls_in_queue,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,waitforsilence_options,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,queuemetrics_callstatus_override,extension_appended_cidname,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,inbound_queue_no_dial,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,ivr_park_call_agi,manual_preview_dial,realtime_agent_time_stats,use_auto_hopper,auto_hopper_multi,auto_trim_hopper,api_manual_dial,manual_dial_call_time_check,display_leads_count,lead_order_randomize,lead_order_secondary,per_call_notes,my_callback_option,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_resume_precall,auto_pause_precall_code,manual_dial_cid,post_phone_time_diff_alert,custom_3way_button_transfer,available_only_tally_threshold,available_only_tally_threshold_agents,dial_level_threshold,dial_level_threshold_agents,safe_harbor_audio,safe_harbor_menu_id,survey_menu_id,callback_days_limit,dl_diff_target_method,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,na_call_url,survey_recording,pllb_grouping,pllb_grouping_limit,call_count_limit,call_count_target,callback_hours_block,callback_list_calltime,user_group,hopper_vlc_dup_check,safe_harbor_audio_field,pause_after_next_call,owner_populate,use_other_campaign_dnc,allow_emails,amd_inbound_group,amd_callmenu) SELECT \"$campaign_name\",\"$campaign_id\",\"N\",dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,park_ext,park_file_name,web_form_address,allow_closers,hopper_level,auto_dial_level,next_agent_call,local_call_time,voicemail_ext,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,amd_send_to_vmx,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,lead_filter_id,drop_call_seconds,drop_action,safe_harbor_exten,display_dialable_count,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,concurrent_transfers,auto_alt_dial,auto_alt_dial_statuses,agent_pause_codes_active,campaign_description,campaign_changedate,campaign_stats_refresh,campaign_logindate,dial_statuses,disable_alter_custdata,no_hopper_leads_logins,\"DISABLED\",campaign_allow_inbound,manual_dial_list_id,default_xfer_group,queue_priority,drop_inbound_group,qc_enabled,qc_statuses,qc_lists,qc_web_form_address,qc_script,survey_first_audio_file,survey_dtmf_digits,survey_ni_digit,survey_opt_in_audio_file,survey_ni_audio_file,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,disable_alter_custphone,display_queue_count,qc_get_record_launch,qc_show_recording,qc_shift_id,manual_dial_filter,agent_clipboard_copy,agent_extended_alt_dial,use_campaign_dnc,three_way_call_cid,three_way_dial_prefix,web_form_target,vtiger_search_category,vtiger_create_call_record,vtiger_create_lead_record,vtiger_screen_login,cpd_amd_action,agent_allow_group_alias,default_group_alias,vtiger_search_dead,vtiger_status_call,survey_third_digit,survey_fourth_digit,survey_third_audio_file,survey_fourth_audio_file,survey_third_status,survey_fourth_status,survey_third_exten,survey_fourth_exten,drop_lockout_time,quick_transfer_button,prepopulate_transfer_preset,drop_rate_group,view_calls_in_queue,view_calls_in_queue_launch,grab_calls_in_queue,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,waitforsilence_options,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,queuemetrics_callstatus_override,extension_appended_cidname,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,inbound_queue_no_dial,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,ivr_park_call_agi,manual_preview_dial,realtime_agent_time_stats,use_auto_hopper,auto_hopper_multi,auto_trim_hopper,api_manual_dial,manual_dial_call_time_check,display_leads_count,lead_order_randomize,lead_order_secondary,per_call_notes,my_callback_option,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_resume_precall,auto_pause_precall_code,manual_dial_cid,post_phone_time_diff_alert,custom_3way_button_transfer,available_only_tally_threshold,available_only_tally_threshold_agents,dial_level_threshold,dial_level_threshold_agents,safe_harbor_audio,safe_harbor_menu_id,survey_menu_id,callback_days_limit,dl_diff_target_method,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,na_call_url,survey_recording,pllb_grouping,pllb_grouping_limit,call_count_limit,call_count_target,callback_hours_block,callback_list_calltime,user_group,hopper_vlc_dup_check,safe_harbor_audio_field,pause_after_next_call,owner_populate,use_other_campaign_dnc,allow_emails,amd_inbound_group,amd_callmenu from vicidial_campaigns where campaign_id='$source_campaign_id';";
+					$rslt=mysql_query($stmt, $link);
+
+					$stmtA="INSERT INTO vicidial_campaign_stats (campaign_id) values('$campaign_id');";
+					$rslt=mysql_query($stmtA, $link);
+
+					$stmtA="INSERT INTO vicidial_campaign_stats_debug (campaign_id) values('$campaign_id');";
+					$rslt=mysql_query($stmtA, $link);
+
+					$stmtA="INSERT INTO vicidial_campaign_statuses (status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) SELECT status,status_name,selectable,\"$campaign_id\",human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed from vicidial_campaign_statuses where campaign_id='$source_campaign_id';";
+					$rslt=mysql_query($stmtA, $link);
+
+					$stmtA="INSERT INTO vicidial_campaign_hotkeys (status,hotkey,status_name,selectable,campaign_id) SELECT status,hotkey,status_name,selectable,\"$campaign_id\" from vicidial_campaign_hotkeys where campaign_id='$source_campaign_id';";
+					$rslt=mysql_query($stmtA, $link);
+
+					$stmtA="INSERT INTO vicidial_lead_recycle (status,attempt_delay,attempt_maximum,active,campaign_id) SELECT status,attempt_delay,attempt_maximum,active,\"$campaign_id\" from vicidial_lead_recycle where campaign_id='$source_campaign_id';";
+					$rslt=mysql_query($stmtA, $link);
+
+					$stmtA="INSERT INTO vicidial_pause_codes (pause_code,pause_code_name,billable,campaign_id) SELECT pause_code,pause_code_name,billable,\"$campaign_id\" from vicidial_pause_codes where campaign_id='$source_campaign_id';";
+					$rslt=mysql_query($stmtA, $link);
+
+					$stmtA="INSERT INTO vicidial_xfer_presets (campaign_id,preset_name,preset_number,preset_dtmf,preset_hide_number) SELECT \"$campaign_id\",preset_name,preset_number,preset_dtmf,preset_hide_number from vicidial_xfer_presets where campaign_id='$source_campaign_id';";
+					$rslt=mysql_query($stmtA, $link);
+
+					$stmtA="INSERT INTO vicidial_xfer_stats (campaign_id,preset_name) SELECT \"$campaign_id\",preset_name from vicidial_xfer_presets where campaign_id='$source_campaign_id';";
+					$rslt=mysql_query($stmtA, $link);
+
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGNS', event_type='COPY', record_id='$campaign_id', event_code='ADMIN COPY CAMPAIGN', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
 					$rslt=mysql_query($stmt, $link);
 					}
-
-				$stmt="INSERT INTO vicidial_campaigns (campaign_name,campaign_id,active,dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,park_ext,park_file_name,web_form_address,allow_closers,hopper_level,auto_dial_level,next_agent_call,local_call_time,voicemail_ext,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,amd_send_to_vmx,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,lead_filter_id,drop_call_seconds,drop_action,safe_harbor_exten,display_dialable_count,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,concurrent_transfers,auto_alt_dial,auto_alt_dial_statuses,agent_pause_codes_active,campaign_description,campaign_changedate,campaign_stats_refresh,campaign_logindate,dial_statuses,disable_alter_custdata,no_hopper_leads_logins,list_order_mix,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,queue_priority,drop_inbound_group,qc_enabled,qc_statuses,qc_lists,qc_web_form_address,qc_script,survey_first_audio_file,survey_dtmf_digits,survey_ni_digit,survey_opt_in_audio_file,survey_ni_audio_file,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,disable_alter_custphone,display_queue_count,qc_get_record_launch,qc_show_recording,qc_shift_id,manual_dial_filter,agent_clipboard_copy,agent_extended_alt_dial,use_campaign_dnc,three_way_call_cid,three_way_dial_prefix,web_form_target,vtiger_search_category,vtiger_create_call_record,vtiger_create_lead_record,vtiger_screen_login,cpd_amd_action,agent_allow_group_alias,default_group_alias,vtiger_search_dead,vtiger_status_call,survey_third_digit,survey_fourth_digit,survey_third_audio_file,survey_fourth_audio_file,survey_third_status,survey_fourth_status,survey_third_exten,survey_fourth_exten,drop_lockout_time,quick_transfer_button,prepopulate_transfer_preset,drop_rate_group,view_calls_in_queue,view_calls_in_queue_launch,grab_calls_in_queue,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,waitforsilence_options,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,queuemetrics_callstatus_override,extension_appended_cidname,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,inbound_queue_no_dial,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,ivr_park_call_agi,manual_preview_dial,realtime_agent_time_stats,use_auto_hopper,auto_hopper_multi,auto_trim_hopper,api_manual_dial,manual_dial_call_time_check,display_leads_count,lead_order_randomize,lead_order_secondary,per_call_notes,my_callback_option,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_resume_precall,auto_pause_precall_code,manual_dial_cid,post_phone_time_diff_alert,custom_3way_button_transfer,available_only_tally_threshold,available_only_tally_threshold_agents,dial_level_threshold,dial_level_threshold_agents,safe_harbor_audio,safe_harbor_menu_id,survey_menu_id,callback_days_limit,dl_diff_target_method,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,na_call_url,survey_recording,pllb_grouping,pllb_grouping_limit,call_count_limit,call_count_target,callback_hours_block,callback_list_calltime,user_group,hopper_vlc_dup_check,safe_harbor_audio_field,pause_after_next_call,owner_populate,use_other_campaign_dnc,allow_emails,amd_inbound_group,amd_callmenu) SELECT \"$campaign_name\",\"$campaign_id\",\"N\",dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,park_ext,park_file_name,web_form_address,allow_closers,hopper_level,auto_dial_level,next_agent_call,local_call_time,voicemail_ext,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,amd_send_to_vmx,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,lead_filter_id,drop_call_seconds,drop_action,safe_harbor_exten,display_dialable_count,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,concurrent_transfers,auto_alt_dial,auto_alt_dial_statuses,agent_pause_codes_active,campaign_description,campaign_changedate,campaign_stats_refresh,campaign_logindate,dial_statuses,disable_alter_custdata,no_hopper_leads_logins,\"DISABLED\",campaign_allow_inbound,manual_dial_list_id,default_xfer_group,queue_priority,drop_inbound_group,qc_enabled,qc_statuses,qc_lists,qc_web_form_address,qc_script,survey_first_audio_file,survey_dtmf_digits,survey_ni_digit,survey_opt_in_audio_file,survey_ni_audio_file,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,disable_alter_custphone,display_queue_count,qc_get_record_launch,qc_show_recording,qc_shift_id,manual_dial_filter,agent_clipboard_copy,agent_extended_alt_dial,use_campaign_dnc,three_way_call_cid,three_way_dial_prefix,web_form_target,vtiger_search_category,vtiger_create_call_record,vtiger_create_lead_record,vtiger_screen_login,cpd_amd_action,agent_allow_group_alias,default_group_alias,vtiger_search_dead,vtiger_status_call,survey_third_digit,survey_fourth_digit,survey_third_audio_file,survey_fourth_audio_file,survey_third_status,survey_fourth_status,survey_third_exten,survey_fourth_exten,drop_lockout_time,quick_transfer_button,prepopulate_transfer_preset,drop_rate_group,view_calls_in_queue,view_calls_in_queue_launch,grab_calls_in_queue,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,waitforsilence_options,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,queuemetrics_callstatus_override,extension_appended_cidname,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,inbound_queue_no_dial,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,ivr_park_call_agi,manual_preview_dial,realtime_agent_time_stats,use_auto_hopper,auto_hopper_multi,auto_trim_hopper,api_manual_dial,manual_dial_call_time_check,display_leads_count,lead_order_randomize,lead_order_secondary,per_call_notes,my_callback_option,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_resume_precall,auto_pause_precall_code,manual_dial_cid,post_phone_time_diff_alert,custom_3way_button_transfer,available_only_tally_threshold,available_only_tally_threshold_agents,dial_level_threshold,dial_level_threshold_agents,safe_harbor_audio,safe_harbor_menu_id,survey_menu_id,callback_days_limit,dl_diff_target_method,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,na_call_url,survey_recording,pllb_grouping,pllb_grouping_limit,call_count_limit,call_count_target,callback_hours_block,callback_list_calltime,user_group,hopper_vlc_dup_check,safe_harbor_audio_field,pause_after_next_call,owner_populate,use_other_campaign_dnc,allow_emails,amd_inbound_group,amd_callmenu from vicidial_campaigns where campaign_id='$source_campaign_id';";
-				$rslt=mysql_query($stmt, $link);
-
-				$stmtA="INSERT INTO vicidial_campaign_stats (campaign_id) values('$campaign_id');";
-				$rslt=mysql_query($stmtA, $link);
-
-				$stmtA="INSERT INTO vicidial_campaign_stats_debug (campaign_id) values('$campaign_id');";
-				$rslt=mysql_query($stmtA, $link);
-
-				$stmtA="INSERT INTO vicidial_campaign_statuses (status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) SELECT status,status_name,selectable,\"$campaign_id\",human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed from vicidial_campaign_statuses where campaign_id='$source_campaign_id';";
-				$rslt=mysql_query($stmtA, $link);
-
-				$stmtA="INSERT INTO vicidial_campaign_hotkeys (status,hotkey,status_name,selectable,campaign_id) SELECT status,hotkey,status_name,selectable,\"$campaign_id\" from vicidial_campaign_hotkeys where campaign_id='$source_campaign_id';";
-				$rslt=mysql_query($stmtA, $link);
-
-				$stmtA="INSERT INTO vicidial_lead_recycle (status,attempt_delay,attempt_maximum,active,campaign_id) SELECT status,attempt_delay,attempt_maximum,active,\"$campaign_id\" from vicidial_lead_recycle where campaign_id='$source_campaign_id';";
-				$rslt=mysql_query($stmtA, $link);
-
-				$stmtA="INSERT INTO vicidial_pause_codes (pause_code,pause_code_name,billable,campaign_id) SELECT pause_code,pause_code_name,billable,\"$campaign_id\" from vicidial_pause_codes where campaign_id='$source_campaign_id';";
-				$rslt=mysql_query($stmtA, $link);
-
-				$stmtA="INSERT INTO vicidial_xfer_presets (campaign_id,preset_name,preset_number,preset_dtmf,preset_hide_number) SELECT \"$campaign_id\",preset_name,preset_number,preset_dtmf,preset_hide_number from vicidial_xfer_presets where campaign_id='$source_campaign_id';";
-				$rslt=mysql_query($stmtA, $link);
-
-				$stmtA="INSERT INTO vicidial_xfer_stats (campaign_id,preset_name) SELECT \"$campaign_id\",preset_name from vicidial_xfer_presets where campaign_id='$source_campaign_id';";
-				$rslt=mysql_query($stmtA, $link);
-
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGNS', event_type='COPY', record_id='$campaign_id', event_code='ADMIN COPY CAMPAIGN', event_sql=\"$SQL_log\", event_notes='';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
 				}
 			}
 		}
@@ -12351,41 +12392,48 @@ if ($ADD==20)
 
 if ($ADD==22)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_campaign_statuses where campaign_id='$campaign_id' and status='$status_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>CAMPAIGN STATUS NOT ADDED - there is already a campaign-status in the system with this name\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_statuses where status='$status_id';";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_campaign_statuses where campaign_id='$campaign_id' and status='$status_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		if ($row[0] > 0)
-			{echo "<br>CAMPAIGN STATUS NOT ADDED - there is already a global-status in the system with this name\n";}
+			{echo "<br>CAMPAIGN STATUS NOT ADDED - there is already a campaign-status in the system with this name\n";}
 		else
 			{
-			if ( (strlen($campaign_id) < 2) or (strlen($status_id) < 1) or (strlen($status_name) < 2) )
-				{
-				echo "<br>CAMPAIGN STATUS NOT ADDED - Please go back and look at the data you entered\n";
-				echo "<br>status must be between 1 and 8 characters in length\n";
-				echo "<br>status name must be between 2 and 30 characters in length\n";
-				}
+			$stmt="SELECT count(*) from vicidial_statuses where status='$status_id';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{echo "<br>CAMPAIGN STATUS NOT ADDED - there is already a global-status in the system with this name\n";}
 			else
 				{
-				echo "<br><B>CAMPAIGN STATUS ADDED: $campaign_id - $status_id</B>\n";
+				if ( (strlen($campaign_id) < 2) or (strlen($status_id) < 1) or (strlen($status_name) < 2) )
+					{
+					echo "<br>CAMPAIGN STATUS NOT ADDED - Please go back and look at the data you entered\n";
+					echo "<br>status must be between 1 and 8 characters in length\n";
+					echo "<br>status name must be between 2 and 30 characters in length\n";
+					}
+				else
+					{
+					echo "<br><B>CAMPAIGN STATUS ADDED: $campaign_id - $status_id</B>\n";
 
-				$stmt="INSERT INTO vicidial_campaign_statuses (status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('$status_id','$status_name','$selectable','$campaign_id','$human_answered','$category','$sale','$dnc','$customer_contact','$not_interested','$unworkable','$scheduled_callbacks','$completed');";
-				$rslt=mysql_query($stmt, $link);
+					$stmt="INSERT INTO vicidial_campaign_statuses (status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('$status_id','$status_name','$selectable','$campaign_id','$human_answered','$category','$sale','$dnc','$customer_contact','$not_interested','$unworkable','$scheduled_callbacks','$completed');";
+					$rslt=mysql_query($stmt, $link);
 
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_STATUS', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN STATUS', event_sql=\"$SQL_log\", event_notes='Status: $status_id';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_STATUS', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN STATUS', event_sql=\"$SQL_log\", event_notes='Status: $status_id';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
 				}
 			}
 		}
@@ -12400,38 +12448,45 @@ if ($ADD==22)
 
 if ($ADD==23)
 	{
-	$HKstatus_data = explode('-----',$HKstatus);
-	$status = $HKstatus_data[0];
-	$status_name = $HKstatus_data[1];
-
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_campaign_hotkeys where campaign_id='$campaign_id' and hotkey='$hotkey' and hotkey='$hotkey';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>CAMPAIGN HOT KEY NOT ADDED - there is already a campaign-hotkey in the system with this hotkey\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($campaign_id) < 2) or (strlen($status) < 1) or (strlen($hotkey) < 1) )
-			{
-			echo "<br>CAMPAIGN HOT KEY NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>hotkey must be a single character between 1 and 9 \n";
-			echo "<br>status must be between 1 and 8 characters in length\n";
-			}
+		$HKstatus_data = explode('-----',$HKstatus);
+		$status = $HKstatus_data[0];
+		$status_name = $HKstatus_data[1];
+
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_campaign_hotkeys where campaign_id='$campaign_id' and hotkey='$hotkey' and hotkey='$hotkey';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>CAMPAIGN HOT KEY NOT ADDED - there is already a campaign-hotkey in the system with this hotkey\n";}
 		else
 			{
-			echo "<br><B>CAMPAIGN HOT KEY ADDED: $campaign_id - $status - $hotkey</B>\n";
+			if ( (strlen($campaign_id) < 2) or (strlen($status) < 1) or (strlen($hotkey) < 1) )
+				{
+				echo "<br>CAMPAIGN HOT KEY NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>hotkey must be a single character between 1 and 9 \n";
+				echo "<br>status must be between 1 and 8 characters in length\n";
+				}
+			else
+				{
+				echo "<br><B>CAMPAIGN HOT KEY ADDED: $campaign_id - $status - $hotkey</B>\n";
 
-			$stmt="INSERT INTO vicidial_campaign_hotkeys values('$status','$hotkey','$status_name','$selectable','$campaign_id');";
-			$rslt=mysql_query($stmt, $link);
+				$stmt="INSERT INTO vicidial_campaign_hotkeys values('$status','$hotkey','$status_name','$selectable','$campaign_id');";
+				$rslt=mysql_query($stmt, $link);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_HOTKEY', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN HOTKEY', event_sql=\"$SQL_log\", event_notes='Status: $status|HotKey: $hotkey';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_HOTKEY', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN HOTKEY', event_sql=\"$SQL_log\", event_notes='Status: $status|HotKey: $hotkey';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$SUB=23;
@@ -12445,36 +12500,43 @@ if ($ADD==23)
 
 if ($ADD==25)
 	{
-	$status = eregi_replace("-----.*",'',$status);
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_lead_recycle where campaign_id='$campaign_id' and status='$status';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>CAMPAIGN LEAD RECYCLE NOT ADDED - there is already a lead-recycle for this campaign with this status\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($campaign_id) < 2) or (strlen($status) < 1) or ($attempt_delay < 120) or ($attempt_delay >= 43200) or ($attempt_maximum < 1) or ($attempt_maximum > 10) )
-			{
-			echo "<br>CAMPAIGN LEAD RECYCLE NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>status must be between 1 and 6 characters in length\n";
-			echo "<br>attempt delay must be at least 120 seconds and less than 43200 seconds or 12 hours\n";
-			echo "<br>maximum attempts must be from 1 to 10\n";
-			}
+		$status = eregi_replace("-----.*",'',$status);
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_lead_recycle where campaign_id='$campaign_id' and status='$status';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>CAMPAIGN LEAD RECYCLE NOT ADDED - there is already a lead-recycle for this campaign with this status\n";}
 		else
 			{
-			echo "<br><B>CAMPAIGN LEAD RECYCLE ADDED: $campaign_id - $status - $attempt_delay</B>\n";
+			if ( (strlen($campaign_id) < 2) or (strlen($status) < 1) or ($attempt_delay < 120) or ($attempt_delay >= 43200) or ($attempt_maximum < 1) or ($attempt_maximum > 10) )
+				{
+				echo "<br>CAMPAIGN LEAD RECYCLE NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>status must be between 1 and 6 characters in length\n";
+				echo "<br>attempt delay must be at least 120 seconds and less than 43200 seconds or 12 hours\n";
+				echo "<br>maximum attempts must be from 1 to 10\n";
+				}
+			else
+				{
+				echo "<br><B>CAMPAIGN LEAD RECYCLE ADDED: $campaign_id - $status - $attempt_delay</B>\n";
 
-			$stmt="INSERT INTO vicidial_lead_recycle(campaign_id,status,attempt_delay,attempt_maximum,active) values('$campaign_id','$status','$attempt_delay','$attempt_maximum','$active');";
-			$rslt=mysql_query($stmt, $link);
+				$stmt="INSERT INTO vicidial_lead_recycle(campaign_id,status,attempt_delay,attempt_maximum,active) values('$campaign_id','$status','$attempt_delay','$attempt_maximum','$active');";
+				$rslt=mysql_query($stmt, $link);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_RECYCLE', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN LEAD RECYCLE', event_sql=\"$SQL_log\", event_notes='Status: $status';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_RECYCLE', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN LEAD RECYCLE', event_sql=\"$SQL_log\", event_notes='Status: $status';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$SUB=25;
@@ -12488,40 +12550,47 @@ if ($ADD==25)
 
 if ($ADD==26)
 	{
-	$status = eregi_replace("-----.*",'',$status);
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' and auto_alt_dial_statuses LIKE \"% $status %\";";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>AUTO ALT DIAL STATUS NOT ADDED - there is already an entry for this campaign with this status\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($campaign_id) < 2) or (strlen($status) < 1) )
-			{
-			echo "<br>AUTO ALT DIAL STATUS NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>status must be between 1 and 6 characters in length\n";
-			}
+		$status = eregi_replace("-----.*",'',$status);
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' and auto_alt_dial_statuses LIKE \"% $status %\";";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>AUTO ALT DIAL STATUS NOT ADDED - there is already an entry for this campaign with this status\n";}
 		else
 			{
-			echo "<br><B>AUTO ALT DIAL STATUS ADDED: $campaign_id - $status</B>\n";
+			if ( (strlen($campaign_id) < 2) or (strlen($status) < 1) )
+				{
+				echo "<br>AUTO ALT DIAL STATUS NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>status must be between 1 and 6 characters in length\n";
+				}
+			else
+				{
+				echo "<br><B>AUTO ALT DIAL STATUS ADDED: $campaign_id - $status</B>\n";
 
-			$stmt="SELECT auto_alt_dial_statuses from vicidial_campaigns where campaign_id='$campaign_id';";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
+				$stmt="SELECT auto_alt_dial_statuses from vicidial_campaigns where campaign_id='$campaign_id';";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
 
-			if (strlen($row[0])<2) {$row[0] = ' -';}
-			$auto_alt_dial_statuses = " $status$row[0]";
-			$stmt="UPDATE vicidial_campaigns set auto_alt_dial_statuses='$auto_alt_dial_statuses' where campaign_id='$campaign_id';";
-			$rslt=mysql_query($stmt, $link);
+				if (strlen($row[0])<2) {$row[0] = ' -';}
+				$auto_alt_dial_statuses = " $status$row[0]";
+				$stmt="UPDATE vicidial_campaigns set auto_alt_dial_statuses='$auto_alt_dial_statuses' where campaign_id='$campaign_id';";
+				$rslt=mysql_query($stmt, $link);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_ALTDIAL', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN ALT DIAL', event_sql=\"$SQL_log\", event_notes='Status: $auto_alt_dial_statuses';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_ALTDIAL', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN ALT DIAL', event_sql=\"$SQL_log\", event_notes='Status: $auto_alt_dial_statuses';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$SUB=26;
@@ -12535,34 +12604,41 @@ if ($ADD==26)
 
 if ($ADD==27)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_pause_codes where campaign_id='$campaign_id' and pause_code='$pause_code';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>AGENT PAUSE CODE NOT ADDED - there is already an entry for this campaign with this  pause code\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($campaign_id) < 2) or (strlen($pause_code) < 1) or (strlen($pause_code) > 6) or (strlen($pause_code_name) < 2) )
-			{
-			echo "<br>AGENT PAUSE CODE NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>pause code must be between 1 and 6 characters in length\n";
-			echo "<br>pause code name must be between 2 and 30 characters in length\n";
-			}
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_pause_codes where campaign_id='$campaign_id' and pause_code='$pause_code';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>AGENT PAUSE CODE NOT ADDED - there is already an entry for this campaign with this  pause code\n";}
 		else
 			{
-			echo "<br><B>AGENT PAUSE CODE ADDED: $campaign_id - $pause_code - $pause_code_name</B>\n";
+			if ( (strlen($campaign_id) < 2) or (strlen($pause_code) < 1) or (strlen($pause_code) > 6) or (strlen($pause_code_name) < 2) )
+				{
+				echo "<br>AGENT PAUSE CODE NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>pause code must be between 1 and 6 characters in length\n";
+				echo "<br>pause code name must be between 2 and 30 characters in length\n";
+				}
+			else
+				{
+				echo "<br><B>AGENT PAUSE CODE ADDED: $campaign_id - $pause_code - $pause_code_name</B>\n";
 
-			$stmt="INSERT INTO vicidial_pause_codes(campaign_id,pause_code,pause_code_name,billable) values('$campaign_id','$pause_code','$pause_code_name','$billable');";
-			$rslt=mysql_query($stmt, $link);
+				$stmt="INSERT INTO vicidial_pause_codes(campaign_id,pause_code,pause_code_name,billable) values('$campaign_id','$pause_code','$pause_code_name','$billable');";
+				$rslt=mysql_query($stmt, $link);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_PAUSECODE', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN PAUSE CODE', event_sql=\"$SQL_log\", event_notes='Pause Code: $pause_code';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_PAUSECODE', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN PAUSE CODE', event_sql=\"$SQL_log\", event_notes='Pause Code: $pause_code';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$SUB=27;
@@ -12576,40 +12652,47 @@ if ($ADD==27)
 
 if ($ADD==28)
 	{
-	$status = eregi_replace("-----.*",'',$status);
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' and dial_statuses LIKE \"% $status %\";";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>CAMPAIGN DIAL STATUS NOT ADDED - there is already an entry for this campaign with this status\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($campaign_id) < 2) or (strlen($status) < 1) )
-			{
-			echo "<br>CAMPAIGN DIAL STATUS NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>status must be between 1 and 6 characters in length\n";
-			}
+		$status = eregi_replace("-----.*",'',$status);
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' and dial_statuses LIKE \"% $status %\";";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>CAMPAIGN DIAL STATUS NOT ADDED - there is already an entry for this campaign with this status\n";}
 		else
 			{
-			echo "<br><B>CAMPAIGN DIAL STATUS ADDED: $campaign_id - $status</B>\n";
+			if ( (strlen($campaign_id) < 2) or (strlen($status) < 1) )
+				{
+				echo "<br>CAMPAIGN DIAL STATUS NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>status must be between 1 and 6 characters in length\n";
+				}
+			else
+				{
+				echo "<br><B>CAMPAIGN DIAL STATUS ADDED: $campaign_id - $status</B>\n";
 
-			$stmt="SELECT dial_statuses from vicidial_campaigns where campaign_id='$campaign_id';";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
+				$stmt="SELECT dial_statuses from vicidial_campaigns where campaign_id='$campaign_id';";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
 
-			if (strlen($row[0])<2) {$row[0] = ' -';}
-			$dial_statuses = " $status$row[0]";
-			$stmt="UPDATE vicidial_campaigns set dial_statuses='$dial_statuses' where campaign_id='$campaign_id';";
-			$rslt=mysql_query($stmt, $link);
+				if (strlen($row[0])<2) {$row[0] = ' -';}
+				$dial_statuses = " $status$row[0]";
+				$stmt="UPDATE vicidial_campaigns set dial_statuses='$dial_statuses' where campaign_id='$campaign_id';";
+				$rslt=mysql_query($stmt, $link);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_DIALSTATUS', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN DIAL STATUS', event_sql=\"$SQL_log\", event_notes='Status: $statuses';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_DIALSTATUS', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN DIAL STATUS', event_sql=\"$SQL_log\", event_notes='Status: $statuses';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	#$SUB=28;
@@ -12622,37 +12705,44 @@ if ($ADD==28)
 ######################
 if ($ADD==201)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_xfer_presets where campaign_id='$campaign_id' and preset_name='$preset_name';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>PRESET NOT ADDED - there is already an entry for this campaign with this preset\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($campaign_id) < 2) or (strlen($preset_name) < 1) or (strlen($preset_number) < 1) )
-			{
-			echo "<br>PRESET NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>preset name must be between 1 and 40 characters in length\n";
-			echo "<br>preset number must be between 2 and 50 characters in length\n";
-			}
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_xfer_presets where campaign_id='$campaign_id' and preset_name='$preset_name';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>PRESET NOT ADDED - there is already an entry for this campaign with this preset\n";}
 		else
 			{
-			echo "<br><B>PRESET ADDED: $campaign_id - $preset_name - $preset_number</B>\n";
+			if ( (strlen($campaign_id) < 2) or (strlen($preset_name) < 1) or (strlen($preset_number) < 1) )
+				{
+				echo "<br>PRESET NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>preset name must be between 1 and 40 characters in length\n";
+				echo "<br>preset number must be between 2 and 50 characters in length\n";
+				}
+			else
+				{
+				echo "<br><B>PRESET ADDED: $campaign_id - $preset_name - $preset_number</B>\n";
 
-			$stmt="INSERT INTO vicidial_xfer_presets(campaign_id,preset_name,preset_number,preset_dtmf,preset_hide_number) values('$campaign_id','$preset_name','$preset_number','$preset_dtmf','$preset_hide_number');";
-			$rslt=mysql_query($stmt, $link);
+				$stmt="INSERT INTO vicidial_xfer_presets(campaign_id,preset_name,preset_number,preset_dtmf,preset_hide_number) values('$campaign_id','$preset_name','$preset_number','$preset_dtmf','$preset_hide_number');";
+				$rslt=mysql_query($stmt, $link);
 
-			$stmt="INSERT INTO vicidial_xfer_stats(campaign_id,preset_name) values('$campaign_id','$preset_name');";
-			$rslt=mysql_query($stmt, $link);
+				$stmt="INSERT INTO vicidial_xfer_stats(campaign_id,preset_name) values('$campaign_id','$preset_name');";
+				$rslt=mysql_query($stmt, $link);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_PRESET', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN PRESET', event_sql=\"$SQL_log\", event_notes='Preset: $preset_name - $preset_number';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_PRESET', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN PRESET', event_sql=\"$SQL_log\", event_notes='Preset: $preset_name - $preset_number';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$SUB=201;
@@ -12665,121 +12755,128 @@ if ($ADD==201)
 ######################
 if ($ADD==202)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	if ($stage == 'ADD')
+	if ($add_copy_disabled > 0)
 		{
-		$stmt="SELECT count(*) from vicidial_campaign_cid_areacodes where campaign_id='$campaign_id' and areacode='$areacode' and outbound_cid='$outbound_cid';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		if ($row[0] > 0)
-			{echo "<br>AREACODE CID NOT ADDED - there is already an entry for this campaign with this CID<br>\n";}
-		else
-			{
-			if ( (strlen($campaign_id) < 2) or (strlen($areacode) < 2) or (strlen($outbound_cid) < 6) )
-				{
-				echo "<br>AREACODE CID NOT ADDED - Please go back and look at the data you entered<br>\n";
-				}
-			else
-				{
-				echo "<br><B>AREACODE CID ADDED: $campaign_id - $areacode - $outbound_cid</B><br>\n";
-
-				$stmt="INSERT INTO vicidial_campaign_cid_areacodes(campaign_id,areacode,outbound_cid,cid_description) values('$campaign_id','$areacode','$outbound_cid','$cid_description');";
-				$rslt=mysql_query($stmt, $link);
-
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_AC-CID', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN AC-CID', event_sql=\"$SQL_log\", event_notes='CID: $areacode - $outbound_cid';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
-				}
-			}
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
 		}
-	if ($stage == 'DELETE')
+	else
 		{
-		$stmt="SELECT count(*) from vicidial_campaign_cid_areacodes where campaign_id='$campaign_id' and areacode='$areacode' and outbound_cid='$outbound_cid' $LOGallowed_campaignsSQL;";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		if ($row[0] < 1)
-			{echo "<br>AREACODE CID NOT DELETED - this entry does not exist<br>\n";}
-		else
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		if ($stage == 'ADD')
 			{
-			if ( (strlen($campaign_id) < 2) or (strlen($areacode) < 2) or (strlen($outbound_cid) < 6) )
-				{
-				echo "<br>AREACODE CID NOT DELETED - Please go back and look at the data you entered<br>\n";
-				}
+			$stmt="SELECT count(*) from vicidial_campaign_cid_areacodes where campaign_id='$campaign_id' and areacode='$areacode' and outbound_cid='$outbound_cid';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{echo "<br>AREACODE CID NOT ADDED - there is already an entry for this campaign with this CID<br>\n";}
 			else
 				{
-				echo "<br><B>AREACODE CID DELETED: $campaign_id - $areacode - $outbound_cid</B><br>\n";
+				if ( (strlen($campaign_id) < 2) or (strlen($areacode) < 2) or (strlen($outbound_cid) < 6) )
+					{
+					echo "<br>AREACODE CID NOT ADDED - Please go back and look at the data you entered<br>\n";
+					}
+				else
+					{
+					echo "<br><B>AREACODE CID ADDED: $campaign_id - $areacode - $outbound_cid</B><br>\n";
 
-				$stmt="DELETE FROM vicidial_campaign_cid_areacodes WHERE campaign_id='$campaign_id' and areacode='$areacode' and outbound_cid='$outbound_cid';";
-				$rslt=mysql_query($stmt, $link);
+					$stmt="INSERT INTO vicidial_campaign_cid_areacodes(campaign_id,areacode,outbound_cid,cid_description) values('$campaign_id','$areacode','$outbound_cid','$cid_description');";
+					$rslt=mysql_query($stmt, $link);
 
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_AC-CID', event_type='DELETE', record_id='$campaign_id', event_code='ADMIN DELETE CAMPAIGN AC-CID', event_sql=\"$SQL_log\", event_notes='CID: $areacode - $outbound_cid';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_AC-CID', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN AC-CID', event_sql=\"$SQL_log\", event_notes='CID: $areacode - $outbound_cid';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
 				}
 			}
-		}
-	if ($stage == 'MODIFY')
-		{
-		$stmt="SELECT areacode,outbound_cid,active,cid_description,call_count_today from vicidial_campaign_cid_areacodes where campaign_id='$campaign_id' $LOGallowed_campaignsSQL order by areacode,outbound_cid";
-		$rslt=mysql_query($stmt, $link);
-		$accids_to_print = mysql_num_rows($rslt);
-		$o=0;
-		while ($accids_to_print > $o) 
+		if ($stage == 'DELETE')
 			{
-			$rowx=mysql_fetch_row($rslt);
-			$Xareacode[$o] =			$rowx[0];
-			$Xoutbound_cid[$o] =		$rowx[1];
-			$Xactive[$o] =				$rowx[2];
-			$Xcid_description[$o] =		$rowx[3];
-			$Xcall_count_today[$o] =	$rowx[4];
-			$o++;
-			}
-
-		$o=0;
-		while ($accids_to_print > $o) 
-			{
-			$Factive_value='';
-			$Fcid_description_value='';
-			$Factive = "active_$Xareacode[$o]_$Xoutbound_cid[$o]";
-			$Fcid_description = "cid_description_$Xareacode[$o]_$Xoutbound_cid[$o]";
-
-			if (isset($_GET[$Factive]))						{$Factive_value=$_GET[$Factive];}
-				elseif (isset($_POST[$Factive]))			{$Factive_value=$_POST[$Factive];}
-			if (isset($_GET[$Fcid_description]))			{$Fcid_description_value=$_GET[$Fcid_description];}
-				elseif (isset($_POST[$Fcid_description]))	{$Fcid_description_value=$_POST[$Fcid_description];}
-			$Fcid_description_value = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$Fcid_description_value);
-			$Factive_value = ereg_replace("[^A-Z]","",$Factive_value);
-
-		#	echo "$campaign_id - $Xareacode[$o] - $Xoutbound_cid[$o] - $Factive($Factive_value|$Xactive[$o]) - $Fcid_description($Fcid_description_value|$Xcid_description[$o])<BR>";
-
-			if ( ($Factive_value == $Xactive[$o]) and ($Fcid_description_value == $Xcid_description[$o]) )
-				{
-			#	echo "<br>AREACODE CID NOT MODIFIED - Please go back and look at the data you entered<br>\n";
-				}
+			$stmt="SELECT count(*) from vicidial_campaign_cid_areacodes where campaign_id='$campaign_id' and areacode='$areacode' and outbound_cid='$outbound_cid' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] < 1)
+				{echo "<br>AREACODE CID NOT DELETED - this entry does not exist<br>\n";}
 			else
 				{
-				echo "<B>AREACODE CID MODIFIED: $Xareacode[$o] - $Xoutbound_cid[$o]</B><br>\n";
+				if ( (strlen($campaign_id) < 2) or (strlen($areacode) < 2) or (strlen($outbound_cid) < 6) )
+					{
+					echo "<br>AREACODE CID NOT DELETED - Please go back and look at the data you entered<br>\n";
+					}
+				else
+					{
+					echo "<br><B>AREACODE CID DELETED: $campaign_id - $areacode - $outbound_cid</B><br>\n";
 
-				$stmt="UPDATE vicidial_campaign_cid_areacodes SET active='$Factive_value',cid_description='$Fcid_description_value' WHERE campaign_id='$campaign_id' and areacode='$Xareacode[$o]' and outbound_cid='$Xoutbound_cid[$o]';";
-				$rslt=mysql_query($stmt, $link);
+					$stmt="DELETE FROM vicidial_campaign_cid_areacodes WHERE campaign_id='$campaign_id' and areacode='$areacode' and outbound_cid='$outbound_cid';";
+					$rslt=mysql_query($stmt, $link);
 
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_AC-CID', event_type='MODIFY', record_id='$campaign_id', event_code='ADMIN MODIFY CAMPAIGN AC-CID', event_sql=\"$SQL_log\", event_notes='CID: $Xareacode[$o] - $Xoutbound_cid[$o]';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_AC-CID', event_type='DELETE', record_id='$campaign_id', event_code='ADMIN DELETE CAMPAIGN AC-CID', event_sql=\"$SQL_log\", event_notes='CID: $areacode - $outbound_cid';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
 				}
-			$o++;
+			}
+		if ($stage == 'MODIFY')
+			{
+			$stmt="SELECT areacode,outbound_cid,active,cid_description,call_count_today from vicidial_campaign_cid_areacodes where campaign_id='$campaign_id' $LOGallowed_campaignsSQL order by areacode,outbound_cid";
+			$rslt=mysql_query($stmt, $link);
+			$accids_to_print = mysql_num_rows($rslt);
+			$o=0;
+			while ($accids_to_print > $o) 
+				{
+				$rowx=mysql_fetch_row($rslt);
+				$Xareacode[$o] =			$rowx[0];
+				$Xoutbound_cid[$o] =		$rowx[1];
+				$Xactive[$o] =				$rowx[2];
+				$Xcid_description[$o] =		$rowx[3];
+				$Xcall_count_today[$o] =	$rowx[4];
+				$o++;
+				}
+
+			$o=0;
+			while ($accids_to_print > $o) 
+				{
+				$Factive_value='';
+				$Fcid_description_value='';
+				$Factive = "active_$Xareacode[$o]_$Xoutbound_cid[$o]";
+				$Fcid_description = "cid_description_$Xareacode[$o]_$Xoutbound_cid[$o]";
+
+				if (isset($_GET[$Factive]))						{$Factive_value=$_GET[$Factive];}
+					elseif (isset($_POST[$Factive]))			{$Factive_value=$_POST[$Factive];}
+				if (isset($_GET[$Fcid_description]))			{$Fcid_description_value=$_GET[$Fcid_description];}
+					elseif (isset($_POST[$Fcid_description]))	{$Fcid_description_value=$_POST[$Fcid_description];}
+				$Fcid_description_value = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$Fcid_description_value);
+				$Factive_value = ereg_replace("[^A-Z]","",$Factive_value);
+
+			#	echo "$campaign_id - $Xareacode[$o] - $Xoutbound_cid[$o] - $Factive($Factive_value|$Xactive[$o]) - $Fcid_description($Fcid_description_value|$Xcid_description[$o])<BR>";
+
+				if ( ($Factive_value == $Xactive[$o]) and ($Fcid_description_value == $Xcid_description[$o]) )
+					{
+				#	echo "<br>AREACODE CID NOT MODIFIED - Please go back and look at the data you entered<br>\n";
+					}
+				else
+					{
+					echo "<B>AREACODE CID MODIFIED: $Xareacode[$o] - $Xoutbound_cid[$o]</B><br>\n";
+
+					$stmt="UPDATE vicidial_campaign_cid_areacodes SET active='$Factive_value',cid_description='$Fcid_description_value' WHERE campaign_id='$campaign_id' and areacode='$Xareacode[$o]' and outbound_cid='$Xoutbound_cid[$o]';";
+					$rslt=mysql_query($stmt, $link);
+
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_AC-CID', event_type='MODIFY', record_id='$campaign_id', event_code='ADMIN MODIFY CAMPAIGN AC-CID', event_sql=\"$SQL_log\", event_notes='CID: $Xareacode[$o] - $Xoutbound_cid[$o]';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
+				$o++;
+				}
 			}
 		}
 	$SUB=202;
@@ -12793,49 +12890,56 @@ if ($ADD==202)
 
 if ($ADD==211)
 	{
-	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
-	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_lists' and active='1';";
-	$rslt=mysql_query($stmt, $link);
-	$voi_ct = mysql_num_rows($rslt);
-	if ($voi_ct > 0)
+	if ($add_copy_disabled > 0)
 		{
-		$row=mysql_fetch_row($rslt);
-		$list_id = ($row[0] + 1);
-
-		$stmt="UPDATE vicidial_override_ids SET value='$list_id' where id_table='vicidial_lists' and active='1';";
-		$rslt=mysql_query($stmt, $link);
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
 		}
-	##### END ID override optional section #####
-
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_lists where list_id='$list_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>LIST NOT ADDED - there is already a list in the system with this ID\n";}
 	else
 		{
-		if ( (strlen($campaign_id) < 2) or (strlen($list_name) < 2)  or ($list_id < 100) or (strlen($list_id) > 19) )
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_lists' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
 			{
-			echo "<br>LIST NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>List ID must be between 2 and 8 characters in length\n";
-			echo "<br>List name must be at least 2 characters in length\n";
-			echo "<br>List ID must be greater than 100\n";
+			$row=mysql_fetch_row($rslt);
+			$list_id = ($row[0] + 1);
+
+			$stmt="UPDATE vicidial_override_ids SET value='$list_id' where id_table='vicidial_lists' and active='1';";
+			$rslt=mysql_query($stmt, $link);
 			}
+		##### END ID override optional section #####
+
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_lists where list_id='$list_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>LIST NOT ADDED - there is already a list in the system with this ID\n";}
 		else
 			{
-			echo "<br><B>LIST ADDED: $list_id</B>\n";
+			if ( (strlen($campaign_id) < 2) or (strlen($list_name) < 2)  or ($list_id < 100) or (strlen($list_id) > 19) )
+				{
+				echo "<br>LIST NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>List ID must be between 2 and 8 characters in length\n";
+				echo "<br>List name must be at least 2 characters in length\n";
+				echo "<br>List ID must be greater than 100\n";
+				}
+			else
+				{
+				echo "<br><B>LIST ADDED: $list_id</B>\n";
 
-			$stmt="INSERT INTO vicidial_lists (list_id,list_name,campaign_id,active,list_description,list_changedate) values('$list_id','$list_name','$campaign_id','$active','$list_description','$SQLdate');";
-			$rslt=mysql_query($stmt, $link);
+				$stmt="INSERT INTO vicidial_lists (list_id,list_name,campaign_id,active,list_description,list_changedate) values('$list_id','$list_name','$campaign_id','$active','$list_description','$SQLdate');";
+				$rslt=mysql_query($stmt, $link);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='ADD', record_id='$list_id', event_code='ADMIN ADD LIST', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='ADD', record_id='$list_id', event_code='ADMIN ADD LIST', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=311;
@@ -12849,61 +12953,68 @@ if ($ADD==211)
 
 if ($ADD==2111)
 	{
-	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
-	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_inbound_groups' and active='1';";
-	$rslt=mysql_query($stmt, $link);
-	$voi_ct = mysql_num_rows($rslt);
-	if ($voi_ct > 0)
+	if ($add_copy_disabled > 0)
 		{
-		$row=mysql_fetch_row($rslt);
-		$group_id = ($row[0] + 1);
-
-		$stmt="UPDATE vicidial_override_ids SET value='$group_id' where id_table='vicidial_inbound_groups' and active='1';";
-		$rslt=mysql_query($stmt, $link);
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
 		}
-	##### END ID override optional section #####
-
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$group_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>GROUP NOT ADDED - there is already a group in the system with this ID\n";}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$group_id';";
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_inbound_groups' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$group_id = ($row[0] + 1);
+
+			$stmt="UPDATE vicidial_override_ids SET value='$group_id' where id_table='vicidial_inbound_groups' and active='1';";
+			$rslt=mysql_query($stmt, $link);
+			}
+		##### END ID override optional section #####
+
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$group_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		if ($row[0] > 0)
-			{echo "<br>GROUP NOT ADDED - there is already a campaign in the system with this ID\n";}
+			{echo "<br>GROUP NOT ADDED - there is already a group in the system with this ID\n";}
 		else
 			{
-			if ( (strlen($group_id) < 2) or (strlen($group_name) < 2)  or (strlen($group_color) < 2) or (strlen($group_id) > 20) or (eregi(' ',$group_id)) or (eregi("\-",$group_id)) or (eregi("\+",$group_id)) )
-				{
-				echo "<br>GROUP NOT ADDED - Please go back and look at the data you entered\n";
-				echo "<br>Group ID must be between 2 and 20 characters in length and contain no ' -+'.\n";
-				echo "<br>Group name and group color must be at least 2 characters in length\n";
-				}
+			$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$group_id';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{echo "<br>GROUP NOT ADDED - there is already a campaign in the system with this ID\n";}
 			else
 				{
-				$stmt="INSERT INTO vicidial_inbound_groups (group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,web_form_address_two,start_call_url,dispo_call_url,add_lead_url,na_call_url,user_group,group_handling) values('$group_id','$group_name','$group_color','$active','" . mysql_real_escape_string($web_form_address) . "','$voicemail_ext','$next_agent_call','$fronter_display','$script_id','$get_call_launch','','','','','','$user_group','$group_handling');";
-				$rslt=mysql_query($stmt, $link);
+				if ( (strlen($group_id) < 2) or (strlen($group_name) < 2)  or (strlen($group_color) < 2) or (strlen($group_id) > 20) or (eregi(' ',$group_id)) or (eregi("\-",$group_id)) or (eregi("\+",$group_id)) )
+					{
+					echo "<br>GROUP NOT ADDED - Please go back and look at the data you entered\n";
+					echo "<br>Group ID must be between 2 and 20 characters in length and contain no ' -+'.\n";
+					echo "<br>Group name and group color must be at least 2 characters in length\n";
+					}
+				else
+					{
+					$stmt="INSERT INTO vicidial_inbound_groups (group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,web_form_address_two,start_call_url,dispo_call_url,add_lead_url,na_call_url,user_group,group_handling) values('$group_id','$group_name','$group_color','$active','" . mysql_real_escape_string($web_form_address) . "','$voicemail_ext','$next_agent_call','$fronter_display','$script_id','$get_call_launch','','','','','','$user_group','$group_handling');";
+					$rslt=mysql_query($stmt, $link);
 
-				$stmtA="INSERT INTO vicidial_campaign_stats (campaign_id) values('$group_id');";
-				$rslt=mysql_query($stmtA, $link);
+					$stmtA="INSERT INTO vicidial_campaign_stats (campaign_id) values('$group_id');";
+					$rslt=mysql_query($stmtA, $link);
 
-				$stmtA="INSERT INTO vicidial_campaign_stats_debug (campaign_id) values('$group_id');";
-				$rslt=mysql_query($stmtA, $link);
+					$stmtA="INSERT INTO vicidial_campaign_stats_debug (campaign_id) values('$group_id');";
+					$rslt=mysql_query($stmtA, $link);
 
-				echo "<br><B>GROUP ADDED: $group_id</B>\n";
+					echo "<br><B>GROUP ADDED: $group_id</B>\n";
 
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='INGROUPS', event_type='ADD', record_id='$group_id', event_code='ADMIN ADD INBOUND GROUP', event_sql=\"$SQL_log\", event_notes='';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='INGROUPS', event_type='ADD', record_id='$group_id', event_code='ADMIN ADD INBOUND GROUP', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
 				}
 			}
 		}
@@ -12916,61 +13027,68 @@ if ($ADD==2111)
 
 if ( ($ADD==2811) and ($SSallow_emails>0) )
 	{
-	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
-	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_inbound_groups' and active='1';";
-	$rslt=mysql_query($stmt, $link);
-	$voi_ct = mysql_num_rows($rslt);
-	if ($voi_ct > 0)
+	if ($add_copy_disabled > 0)
 		{
-		$row=mysql_fetch_row($rslt);
-		$group_id = ($row[0] + 1);
-
-		$stmt="UPDATE vicidial_override_ids SET value='$group_id' where id_table='vicidial_inbound_groups' and active='1';";
-		$rslt=mysql_query($stmt, $link);
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
 		}
-	##### END ID override optional section #####
-
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$group_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>EMAIL GROUP NOT ADDED - there is already a group in the system with this ID\n";}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$group_id';";
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_inbound_groups' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$group_id = ($row[0] + 1);
+
+			$stmt="UPDATE vicidial_override_ids SET value='$group_id' where id_table='vicidial_inbound_groups' and active='1';";
+			$rslt=mysql_query($stmt, $link);
+			}
+		##### END ID override optional section #####
+
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$group_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		if ($row[0] > 0)
-			{echo "<br>EMAIL GROUP NOT ADDED - there is already a campaign in the system with this ID\n";}
+			{echo "<br>EMAIL GROUP NOT ADDED - there is already a group in the system with this ID\n";}
 		else
 			{
-			if ( (strlen($group_id) < 2) or (strlen($group_name) < 2)  or (strlen($group_color) < 2) or (strlen($group_id) > 20) or (eregi(' ',$group_id)) or (eregi("\-",$group_id)) or (eregi("\+",$group_id)) )
-				{
-				echo "<br>GROUP NOT ADDED - Please go back and look at the data you entered\n";
-				echo "<br>Group ID must be between 2 and 20 characters in length and contain no ' -+'.\n";
-				echo "<br>Group name and group color must be at least 2 characters in length\n";
-				}
+			$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$group_id';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{echo "<br>EMAIL GROUP NOT ADDED - there is already a campaign in the system with this ID\n";}
 			else
 				{
-				$stmt="INSERT INTO vicidial_inbound_groups (group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,web_form_address_two,start_call_url,dispo_call_url,add_lead_url,na_call_url,user_group,group_handling) values('$group_id','$group_name','$group_color','$active','" . mysql_real_escape_string($web_form_address) . "','$voicemail_ext','$next_agent_call','$fronter_display','$script_id','EMAIL','','','','','','$user_group','EMAIL');";
-				$rslt=mysql_query($stmt, $link);
+				if ( (strlen($group_id) < 2) or (strlen($group_name) < 2)  or (strlen($group_color) < 2) or (strlen($group_id) > 20) or (eregi(' ',$group_id)) or (eregi("\-",$group_id)) or (eregi("\+",$group_id)) )
+					{
+					echo "<br>GROUP NOT ADDED - Please go back and look at the data you entered\n";
+					echo "<br>Group ID must be between 2 and 20 characters in length and contain no ' -+'.\n";
+					echo "<br>Group name and group color must be at least 2 characters in length\n";
+					}
+				else
+					{
+					$stmt="INSERT INTO vicidial_inbound_groups (group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,web_form_address_two,start_call_url,dispo_call_url,add_lead_url,na_call_url,user_group,group_handling) values('$group_id','$group_name','$group_color','$active','" . mysql_real_escape_string($web_form_address) . "','$voicemail_ext','$next_agent_call','$fronter_display','$script_id','EMAIL','','','','','','$user_group','EMAIL');";
+					$rslt=mysql_query($stmt, $link);
 
-				$stmtA="INSERT INTO vicidial_campaign_stats (campaign_id) values('$group_id');";
-				$rslt=mysql_query($stmtA, $link);
+					$stmtA="INSERT INTO vicidial_campaign_stats (campaign_id) values('$group_id');";
+					$rslt=mysql_query($stmtA, $link);
 
-				$stmtA="INSERT INTO vicidial_campaign_stats_debug (campaign_id) values('$group_id');";
-				$rslt=mysql_query($stmtA, $link);
+					$stmtA="INSERT INTO vicidial_campaign_stats_debug (campaign_id) values('$group_id');";
+					$rslt=mysql_query($stmtA, $link);
 
-				echo "<br><B>EMAIL GROUP ADDED: $group_id</B>\n";
+					echo "<br><B>EMAIL GROUP ADDED: $group_id</B>\n";
 
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='INGROUPS', event_type='ADD', record_id='$group_id', event_code='ADMIN ADD INBOUND GROUP', event_sql=\"$SQL_log\", event_notes='';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='INGROUPS', event_type='ADD', record_id='$group_id', event_code='ADMIN ADD INBOUND GROUP', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
 				}
 			}
 		}
@@ -12984,61 +13102,68 @@ if ( ($ADD==2811) and ($SSallow_emails>0) )
 
 if ($ADD==2011)
 	{
-	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
-	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_inbound_groups' and active='1';";
-	$rslt=mysql_query($stmt, $link);
-	$voi_ct = mysql_num_rows($rslt);
-	if ($voi_ct > 0)
+	if ($add_copy_disabled > 0)
 		{
-		$row=mysql_fetch_row($rslt);
-		$group_id = ($row[0] + 1);
-
-		$stmt="UPDATE vicidial_override_ids SET value='$group_id' where id_table='vicidial_inbound_groups' and active='1';";
-		$rslt=mysql_query($stmt, $link);
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
 		}
-	##### END ID override optional section #####
-
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$group_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>GROUP NOT ADDED - there is already a group in the system with this ID\n";}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$group_id';";
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_inbound_groups' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$group_id = ($row[0] + 1);
+
+			$stmt="UPDATE vicidial_override_ids SET value='$group_id' where id_table='vicidial_inbound_groups' and active='1';";
+			$rslt=mysql_query($stmt, $link);
+			}
+		##### END ID override optional section #####
+
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$group_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		if ($row[0] > 0)
-			{echo "<br>GROUP NOT ADDED - there is already a campaign in the system with this ID\n";}
+			{echo "<br>GROUP NOT ADDED - there is already a group in the system with this ID\n";}
 		else
 			{
-			if ( (strlen($group_id) < 2) or (strlen($group_name) < 2) or (strlen($group_id) > 20) or (eregi(' ',$group_id)) or (eregi("\-",$group_id)) or (eregi("\+",$group_id)) )
-				{
-				echo "<br>GROUP NOT ADDED - Please go back and look at the data you entered\n";
-				echo "<br>Group ID must be between 2 and 20 characters in length and contain no ' -+'.\n";
-				echo "<br>Group name and group color must be at least 2 characters in length\n";
-				}
+			$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$group_id';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{echo "<br>GROUP NOT ADDED - there is already a campaign in the system with this ID\n";}
 			else
 				{
-				$stmt="INSERT INTO vicidial_inbound_groups (group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,timer_action_destination,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,na_call_url,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu,user_group,max_calls_method,max_calls_count,max_calls_action,dial_ingroup_cid,group_handling) SELECT \"$group_id\",\"$group_name\",group_color,\"N\",web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,timer_action_destination,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,na_call_url,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu,user_group,max_calls_method,max_calls_count,max_calls_action,dial_ingroup_cid,group_handling from vicidial_inbound_groups where group_id=\"$source_group_id\";";
-				$rslt=mysql_query($stmt, $link);
+				if ( (strlen($group_id) < 2) or (strlen($group_name) < 2) or (strlen($group_id) > 20) or (eregi(' ',$group_id)) or (eregi("\-",$group_id)) or (eregi("\+",$group_id)) )
+					{
+					echo "<br>GROUP NOT ADDED - Please go back and look at the data you entered\n";
+					echo "<br>Group ID must be between 2 and 20 characters in length and contain no ' -+'.\n";
+					echo "<br>Group name and group color must be at least 2 characters in length\n";
+					}
+				else
+					{
+					$stmt="INSERT INTO vicidial_inbound_groups (group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,timer_action_destination,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,na_call_url,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu,user_group,max_calls_method,max_calls_count,max_calls_action,dial_ingroup_cid,group_handling) SELECT \"$group_id\",\"$group_name\",group_color,\"N\",web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,timer_action_destination,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,na_call_url,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu,user_group,max_calls_method,max_calls_count,max_calls_action,dial_ingroup_cid,group_handling from vicidial_inbound_groups where group_id=\"$source_group_id\";";
+					$rslt=mysql_query($stmt, $link);
 
-				$stmtA="INSERT INTO vicidial_campaign_stats (campaign_id) values('$group_id');";
-				$rslt=mysql_query($stmtA, $link);
+					$stmtA="INSERT INTO vicidial_campaign_stats (campaign_id) values('$group_id');";
+					$rslt=mysql_query($stmtA, $link);
 
-				$stmtA="INSERT INTO vicidial_campaign_stats_debug (campaign_id) values('$group_id');";
-				$rslt=mysql_query($stmtA, $link);
+					$stmtA="INSERT INTO vicidial_campaign_stats_debug (campaign_id) values('$group_id');";
+					$rslt=mysql_query($stmtA, $link);
 
-				echo "<br><B>GROUP ADDED: $group_id</B>\n";
+					echo "<br><B>GROUP ADDED: $group_id</B>\n";
 
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='INGROUPS', event_type='COPY', record_id='$group_id', event_code='ADMIN COPY INBOUND GROUP', event_sql=\"$SQL_log\", event_notes='';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='INGROUPS', event_type='COPY', record_id='$group_id', event_code='ADMIN COPY INBOUND GROUP', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
 				}
 			}
 		}
@@ -13051,61 +13176,68 @@ if ($ADD==2011)
 
 if ( ($ADD==2911) and ($SSallow_emails>0) )
 	{
-	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
-	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_inbound_groups' and active='1';";
-	$rslt=mysql_query($stmt, $link);
-	$voi_ct = mysql_num_rows($rslt);
-	if ($voi_ct > 0)
+	if ($add_copy_disabled > 0)
 		{
-		$row=mysql_fetch_row($rslt);
-		$group_id = ($row[0] + 1);
-
-		$stmt="UPDATE vicidial_override_ids SET value='$group_id' where id_table='vicidial_inbound_groups' and active='1';";
-		$rslt=mysql_query($stmt, $link);
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
 		}
-	##### END ID override optional section #####
-
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$group_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>EMAIL GROUP NOT ADDED - there is already a group in the system with this ID\n";}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$group_id';";
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_inbound_groups' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$group_id = ($row[0] + 1);
+
+			$stmt="UPDATE vicidial_override_ids SET value='$group_id' where id_table='vicidial_inbound_groups' and active='1';";
+			$rslt=mysql_query($stmt, $link);
+			}
+		##### END ID override optional section #####
+
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$group_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		if ($row[0] > 0)
-			{echo "<br>EMAIL GROUP NOT ADDED - there is already a campaign in the system with this ID\n";}
+			{echo "<br>EMAIL GROUP NOT ADDED - there is already a group in the system with this ID\n";}
 		else
 			{
-			if ( (strlen($group_id) < 2) or (strlen($group_name) < 2) or (strlen($group_id) > 20) or (eregi(' ',$group_id)) or (eregi("\-",$group_id)) or (eregi("\+",$group_id)) )
-				{
-				echo "<br>EMAIL GROUP NOT ADDED - Please go back and look at the data you entered\n";
-				echo "<br>Email group ID must be between 2 and 20 characters in length and contain no ' -+'.\n";
-				echo "<br>Email group name and group color must be at least 2 characters in length\n";
-				}
+			$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$group_id';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{echo "<br>EMAIL GROUP NOT ADDED - there is already a campaign in the system with this ID\n";}
 			else
 				{
-				$stmt="INSERT INTO vicidial_inbound_groups (group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,timer_action_destination,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,na_call_url,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu,user_group,max_calls_method,max_calls_count,max_calls_action,dial_ingroup_cid,group_handling) SELECT \"$group_id\",\"$group_name\",group_color,\"N\",web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,timer_action_destination,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,na_call_url,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu,user_group,max_calls_method,max_calls_count,max_calls_action,dial_ingroup_cid,group_handling from vicidial_inbound_groups where group_id=\"$source_group_id\";";
-				$rslt=mysql_query($stmt, $link);
+				if ( (strlen($group_id) < 2) or (strlen($group_name) < 2) or (strlen($group_id) > 20) or (eregi(' ',$group_id)) or (eregi("\-",$group_id)) or (eregi("\+",$group_id)) )
+					{
+					echo "<br>EMAIL GROUP NOT ADDED - Please go back and look at the data you entered\n";
+					echo "<br>Email group ID must be between 2 and 20 characters in length and contain no ' -+'.\n";
+					echo "<br>Email group name and group color must be at least 2 characters in length\n";
+					}
+				else
+					{
+					$stmt="INSERT INTO vicidial_inbound_groups (group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,timer_action_destination,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,na_call_url,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu,user_group,max_calls_method,max_calls_count,max_calls_action,dial_ingroup_cid,group_handling) SELECT \"$group_id\",\"$group_name\",group_color,\"N\",web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,timer_action_destination,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,na_call_url,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu,user_group,max_calls_method,max_calls_count,max_calls_action,dial_ingroup_cid,group_handling from vicidial_inbound_groups where group_id=\"$source_group_id\";";
+					$rslt=mysql_query($stmt, $link);
 
-				$stmtA="INSERT INTO vicidial_campaign_stats (campaign_id) values('$group_id');";
-				$rslt=mysql_query($stmtA, $link);
+					$stmtA="INSERT INTO vicidial_campaign_stats (campaign_id) values('$group_id');";
+					$rslt=mysql_query($stmtA, $link);
 
-				$stmtA="INSERT INTO vicidial_campaign_stats_debug (campaign_id) values('$group_id');";
-				$rslt=mysql_query($stmtA, $link);
+					$stmtA="INSERT INTO vicidial_campaign_stats_debug (campaign_id) values('$group_id');";
+					$rslt=mysql_query($stmtA, $link);
 
-				echo "<br><B>EMAIL GROUP ADDED: $group_id</B>\n";
+					echo "<br><B>EMAIL GROUP ADDED: $group_id</B>\n";
 
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='INGROUPS', event_type='COPY', record_id='$group_id', event_code='ADMIN COPY INBOUND GROUP', event_sql=\"$SQL_log\", event_notes='';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='INGROUPS', event_type='COPY', record_id='$group_id', event_code='ADMIN COPY INBOUND GROUP', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
 				}
 			}
 		}
@@ -13119,45 +13251,52 @@ if ( ($ADD==2911) and ($SSallow_emails>0) )
 
 if ($ADD==2311)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_inbound_dids where did_pattern='$did_pattern';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>DID NOT ADDED - there is already a DID in the system with this ID\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 		$stmt="SELECT count(*) from vicidial_inbound_dids where did_pattern='$did_pattern';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		if ($row[0] > 0)
-			{echo "<br>DID NOT ADDED - there is already a DID in the system with this extension\n";}
+			{echo "<br>DID NOT ADDED - there is already a DID in the system with this ID\n";}
 		else
-			{ #  or (eregi("\+",$did_pattern))
-			if ( (strlen($did_pattern) < 2) or (eregi(' ',$did_pattern)) or (eregi('-',$did_pattern)) )
-				{
-				echo "<br>DID NOT ADDED - Please go back and look at the data you entered\n";
-				echo "<br>DID Extension must be between 2 and 20 characters in length and contain no ' -+'.\n";
-				}
+			{
+			$stmt="SELECT count(*) from vicidial_inbound_dids where did_pattern='$did_pattern';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{echo "<br>DID NOT ADDED - there is already a DID in the system with this extension\n";}
 			else
-				{
-				$stmt="INSERT INTO vicidial_inbound_dids (did_pattern,did_description,user_group) values('$did_pattern','$did_description','$user_group');";
-				$rslt=mysql_query($stmt, $link);
+				{ #  or (eregi("\+",$did_pattern))
+				if ( (strlen($did_pattern) < 2) or (eregi(' ',$did_pattern)) or (eregi('-',$did_pattern)) )
+					{
+					echo "<br>DID NOT ADDED - Please go back and look at the data you entered\n";
+					echo "<br>DID Extension must be between 2 and 20 characters in length and contain no ' -+'.\n";
+					}
+				else
+					{
+					$stmt="INSERT INTO vicidial_inbound_dids (did_pattern,did_description,user_group) values('$did_pattern','$did_description','$user_group');";
+					$rslt=mysql_query($stmt, $link);
 
-				$stmt="SELECT did_id from vicidial_inbound_dids where did_pattern='$did_pattern';";
-				$rslt=mysql_query($stmt, $link);
-				$row=mysql_fetch_row($rslt);
-				$did_id = $row[0];
+					$stmt="SELECT did_id from vicidial_inbound_dids where did_pattern='$did_pattern';";
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					$did_id = $row[0];
 
-				echo "<br><B>DID ADDED: $did_pattern $did_description    - $did_id</B>\n";
+					echo "<br><B>DID ADDED: $did_pattern $did_description    - $did_id</B>\n";
 
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='DIDS', event_type='ADD', record_id='$did_id', event_code='ADMIN ADD DID', event_sql=\"$SQL_log\", event_notes='';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='DIDS', event_type='ADD', record_id='$did_id', event_code='ADMIN ADD DID', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
 				}
 			}
 		}
@@ -13171,38 +13310,45 @@ if ($ADD==2311)
 
 if ($ADD==2411)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_inbound_dids where did_pattern='$did_pattern';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>DID NOT ADDED - there is already a DID in the system with this extension\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($source_did) < 1) or (strlen($did_pattern) < 1) or (eregi(' ',$source_did)) or (eregi(' ',$did_pattern)) or (eregi("\+",$source_did)) )
-			{
-			echo "<br>DID NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>DID Extension must be between 2 and 20 characters in length and contain no ' -+'.\n";
-			}
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_inbound_dids where did_pattern='$did_pattern';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>DID NOT ADDED - there is already a DID in the system with this extension\n";}
 		else
 			{
-			$stmt="INSERT INTO vicidial_inbound_dids (did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group) SELECT \"$did_pattern\",\"$did_description\",did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group from vicidial_inbound_dids where did_id=\"$source_did\";";
-			$rslt=mysql_query($stmt, $link);
+			if ( (strlen($source_did) < 1) or (strlen($did_pattern) < 1) or (eregi(' ',$source_did)) or (eregi(' ',$did_pattern)) or (eregi("\+",$source_did)) )
+				{
+				echo "<br>DID NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>DID Extension must be between 2 and 20 characters in length and contain no ' -+'.\n";
+				}
+			else
+				{
+				$stmt="INSERT INTO vicidial_inbound_dids (did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group) SELECT \"$did_pattern\",\"$did_description\",did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group from vicidial_inbound_dids where did_id=\"$source_did\";";
+				$rslt=mysql_query($stmt, $link);
 
-			$stmt="SELECT did_id from vicidial_inbound_dids where did_pattern='$did_pattern';";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$did_id = $row[0];
+				$stmt="SELECT did_id from vicidial_inbound_dids where did_pattern='$did_pattern';";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$did_id = $row[0];
 
-			echo "<br><B>DID ADDED: $did_pattern     - $did_id</B>\n";
+				echo "<br><B>DID ADDED: $did_pattern     - $did_id</B>\n";
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='DIDS', event_type='COPY', record_id='$did_id', event_code='ADMIN COPY DID', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='DIDS', event_type='COPY', record_id='$did_id', event_code='ADMIN COPY DID', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=3311;
@@ -13215,61 +13361,68 @@ if ($ADD==2411)
 
 if ($ADD==2511)
 	{
-	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
-	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_call_menu' and active='1';";
-	$rslt=mysql_query($stmt, $link);
-	$voi_ct = mysql_num_rows($rslt);
-	if ($voi_ct > 0)
+	if ($add_copy_disabled > 0)
 		{
-		$row=mysql_fetch_row($rslt);
-		$menu_id = ($row[0] + 1);
-
-		$stmt="UPDATE vicidial_override_ids SET value='$menu_id' where id_table='vicidial_call_menu' and active='1';";
-		$rslt=mysql_query($stmt, $link);
-		}
-	##### END ID override optional section #####
-
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_call_menu where menu_id='$menu_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{
-		echo "<br>CALL MENU NOT ADDED - there is already a CALL MENU in the system with this ID\n";
-		$ADD=1500;
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
 		}
 	else
 		{
-		if ( (preg_match("/^vicidial$/i",$menu_id)) or (preg_match("/^vicidial-auto$/i",$menu_id)) or (preg_match("/^general$/i",$menu_id)) or (preg_match("/^globals$/i",$menu_id)) or (preg_match("/^default$/i",$menu_id)) or (preg_match("/^trunkinbound$/i",$menu_id)) or (preg_match("/^loopback-no-log$/i",$menu_id)) or (preg_match("/^monitor_exit$/i",$menu_id)) or (preg_match("/^monitor$/i",$menu_id)) )
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_call_menu' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
 			{
-			echo "<br>CALL MENU NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>Call Menu ID cannot use reserved words: vicidial, vicidial-auto, general, globals, default, trunkinbound, loopback-no-log, monitor_exit, monitor\n";
+			$row=mysql_fetch_row($rslt);
+			$menu_id = ($row[0] + 1);
+
+			$stmt="UPDATE vicidial_override_ids SET value='$menu_id' where id_table='vicidial_call_menu' and active='1';";
+			$rslt=mysql_query($stmt, $link);
+			}
+		##### END ID override optional section #####
+
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_call_menu where menu_id='$menu_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			echo "<br>CALL MENU NOT ADDED - there is already a CALL MENU in the system with this ID\n";
 			$ADD=1500;
 			}
 		else
 			{
-			if ( (strlen($menu_id) < 2) or (eregi(' ',$menu_id)) )
+			if ( (preg_match("/^vicidial$/i",$menu_id)) or (preg_match("/^vicidial-auto$/i",$menu_id)) or (preg_match("/^general$/i",$menu_id)) or (preg_match("/^globals$/i",$menu_id)) or (preg_match("/^default$/i",$menu_id)) or (preg_match("/^trunkinbound$/i",$menu_id)) or (preg_match("/^loopback-no-log$/i",$menu_id)) or (preg_match("/^monitor_exit$/i",$menu_id)) or (preg_match("/^monitor$/i",$menu_id)) )
 				{
 				echo "<br>CALL MENU NOT ADDED - Please go back and look at the data you entered\n";
-				echo "<br>Call Menu ID must be between 2 and 50 characters in length and contain no ' '.\n";
+				echo "<br>Call Menu ID cannot use reserved words: vicidial, vicidial-auto, general, globals, default, trunkinbound, loopback-no-log, monitor_exit, monitor\n";
 				$ADD=1500;
 				}
 			else
 				{
-				$stmt="INSERT INTO vicidial_call_menu (menu_id,menu_name,user_group) values('$menu_id','$menu_name','$user_group');";
-				$rslt=mysql_query($stmt, $link);
+				if ( (strlen($menu_id) < 2) or (eregi(' ',$menu_id)) )
+					{
+					echo "<br>CALL MENU NOT ADDED - Please go back and look at the data you entered\n";
+					echo "<br>Call Menu ID must be between 2 and 50 characters in length and contain no ' '.\n";
+					$ADD=1500;
+					}
+				else
+					{
+					$stmt="INSERT INTO vicidial_call_menu (menu_id,menu_name,user_group) values('$menu_id','$menu_name','$user_group');";
+					$rslt=mysql_query($stmt, $link);
 
-				echo "<br><B>CALL MENU ADDED: $menu_id $menu_name</B>\n";
+					echo "<br><B>CALL MENU ADDED: $menu_id $menu_name</B>\n";
 
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLMENUS', event_type='ADD', record_id='$menu_id', event_code='ADMIN ADD CALL MENU', event_sql=\"$SQL_log\", event_notes='';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLMENUS', event_type='ADD', record_id='$menu_id', event_code='ADMIN ADD CALL MENU', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
 
-				$ADD=3511;
+					$ADD=3511;
+					}
 				}
 			}
 		}
@@ -13282,64 +13435,71 @@ if ($ADD==2511)
 
 if ($ADD==2611)
 	{
-	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
-	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_call_menu' and active='1';";
-	$rslt=mysql_query($stmt, $link);
-	$voi_ct = mysql_num_rows($rslt);
-	if ($voi_ct > 0)
+	if ($add_copy_disabled > 0)
 		{
-		$row=mysql_fetch_row($rslt);
-		$menu_id = ($row[0] + 1);
-
-		$stmt="UPDATE vicidial_override_ids SET value='$menu_id' where id_table='vicidial_call_menu' and active='1';";
-		$rslt=mysql_query($stmt, $link);
-		}
-	##### END ID override optional section #####
-
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_call_menu where menu_id='$menu_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{
-		echo "<br>CALL MENU NOT ADDED - there is already a CALL MENU in the system with this ID\n";
-		$ADD=1500;
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
 		}
 	else
 		{
-		if ( (preg_match("/^vicidial$/i",$menu_id)) or (preg_match("/^vicidial-auto$/i",$menu_id)) or (preg_match("/^general$/i",$menu_id)) or (preg_match("/^globals$/i",$menu_id)) or (preg_match("/^default$/i",$menu_id)) or (preg_match("/^trunkinbound$/i",$menu_id)) or (preg_match("/^loopback-no-log$/i",$menu_id)) or (preg_match("/^monitor_exit$/i",$menu_id)) or (preg_match("/^monitor$/i",$menu_id)) )
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_call_menu' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
 			{
-			echo "<br>CALL MENU NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>Call Menu ID cannot use reserved words: vicidial, vicidial-auto, general, globals, default, trunkinbound, loopback-no-log, monitor_exit, monitor\n";
+			$row=mysql_fetch_row($rslt);
+			$menu_id = ($row[0] + 1);
+
+			$stmt="UPDATE vicidial_override_ids SET value='$menu_id' where id_table='vicidial_call_menu' and active='1';";
+			$rslt=mysql_query($stmt, $link);
+			}
+		##### END ID override optional section #####
+
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_call_menu where menu_id='$menu_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			echo "<br>CALL MENU NOT ADDED - there is already a CALL MENU in the system with this ID\n";
 			$ADD=1500;
 			}
 		else
 			{
-			if ( (strlen($menu_id) < 2) or (eregi(' ',$menu_id)) or  (strlen($source_menu) < 2) or (eregi(' ',$source_menu)) )
+			if ( (preg_match("/^vicidial$/i",$menu_id)) or (preg_match("/^vicidial-auto$/i",$menu_id)) or (preg_match("/^general$/i",$menu_id)) or (preg_match("/^globals$/i",$menu_id)) or (preg_match("/^default$/i",$menu_id)) or (preg_match("/^trunkinbound$/i",$menu_id)) or (preg_match("/^loopback-no-log$/i",$menu_id)) or (preg_match("/^monitor_exit$/i",$menu_id)) or (preg_match("/^monitor$/i",$menu_id)) )
 				{
 				echo "<br>CALL MENU NOT ADDED - Please go back and look at the data you entered\n";
-				echo "<br>Call Menu ID must be between 2 and 50 characters in length and contain no ' '.\n";
+				echo "<br>Call Menu ID cannot use reserved words: vicidial, vicidial-auto, general, globals, default, trunkinbound, loopback-no-log, monitor_exit, monitor\n";
 				$ADD=1500;
 				}
 			else
 				{
-				$stmt="INSERT INTO vicidial_call_menu (menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log,dtmf_field,user_group,qualify_sql) SELECT \"$menu_id\",\"$menu_name\",menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log,dtmf_field,user_group,qualify_sql from vicidial_call_menu where menu_id=\"$source_menu\";";
-				$rslt=mysql_query($stmt, $link);
+				if ( (strlen($menu_id) < 2) or (eregi(' ',$menu_id)) or  (strlen($source_menu) < 2) or (eregi(' ',$source_menu)) )
+					{
+					echo "<br>CALL MENU NOT ADDED - Please go back and look at the data you entered\n";
+					echo "<br>Call Menu ID must be between 2 and 50 characters in length and contain no ' '.\n";
+					$ADD=1500;
+					}
+				else
+					{
+					$stmt="INSERT INTO vicidial_call_menu (menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log,dtmf_field,user_group,qualify_sql) SELECT \"$menu_id\",\"$menu_name\",menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log,dtmf_field,user_group,qualify_sql from vicidial_call_menu where menu_id=\"$source_menu\";";
+					$rslt=mysql_query($stmt, $link);
 
-				$stmtA="INSERT INTO vicidial_call_menu_options (menu_id,option_value,option_description,option_route,option_route_value,option_route_value_context) SELECT \"$menu_id\",option_value,option_description,option_route,option_route_value,option_route_value_context from vicidial_call_menu_options where menu_id='$source_menu';";
-				$rslt=mysql_query($stmtA, $link);
+					$stmtA="INSERT INTO vicidial_call_menu_options (menu_id,option_value,option_description,option_route,option_route_value,option_route_value_context) SELECT \"$menu_id\",option_value,option_description,option_route,option_route_value,option_route_value_context from vicidial_call_menu_options where menu_id='$source_menu';";
+					$rslt=mysql_query($stmtA, $link);
 
-				echo "<br><B>CALL MENU ADDED: $menu_id     - $menu_name</B>\n";
+					echo "<br><B>CALL MENU ADDED: $menu_id     - $menu_name</B>\n";
 
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|$stmtA";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLMENUS', event_type='COPY', record_id='$menu_id', event_code='ADMIN COPY MENU', event_sql=\"$SQL_log\", event_notes='';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|$stmtA";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLMENUS', event_type='COPY', record_id='$menu_id', event_code='ADMIN COPY MENU', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
 
-				$ADD=3511;
+					$ADD=3511;
+					}
 				}
 			}
 		}
@@ -13352,33 +13512,40 @@ if ($ADD==2611)
 
 if ($ADD==2711)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_filter_phone_groups where filter_phone_group_id='$filter_phone_group_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>PHONE FILTER GROUP NOT ADDED - there is already a PHONE FILTER GROUP in the system with this ID\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($filter_phone_group_id) < 2) or (strlen($filter_phone_group_id) > 20) or (eregi(' ',$filter_phone_group_id)) )
-			{
-			echo "<br>PHONE FILTER GROUP NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>Phone Filter Group ID must be between 2 and 20 characters in length and contain no ' '.\n";
-			}
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_filter_phone_groups where filter_phone_group_id='$filter_phone_group_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>PHONE FILTER GROUP NOT ADDED - there is already a PHONE FILTER GROUP in the system with this ID\n";}
 		else
 			{
-			$stmt="INSERT INTO vicidial_filter_phone_groups (filter_phone_group_id,filter_phone_group_name,filter_phone_group_description,user_group) values('$filter_phone_group_id','$filter_phone_group_name','$filter_phone_group_description','$user_group');";
-			$rslt=mysql_query($stmt, $link);
+			if ( (strlen($filter_phone_group_id) < 2) or (strlen($filter_phone_group_id) > 20) or (eregi(' ',$filter_phone_group_id)) )
+				{
+				echo "<br>PHONE FILTER GROUP NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>Phone Filter Group ID must be between 2 and 20 characters in length and contain no ' '.\n";
+				}
+			else
+				{
+				$stmt="INSERT INTO vicidial_filter_phone_groups (filter_phone_group_id,filter_phone_group_name,filter_phone_group_description,user_group) values('$filter_phone_group_id','$filter_phone_group_name','$filter_phone_group_description','$user_group');";
+				$rslt=mysql_query($stmt, $link);
 
-			echo "<br><B>PHONE FILTER GROUP ADDED: $filter_phone_group_id $filter_phone_group_name</B>\n";
+				echo "<br><B>PHONE FILTER GROUP ADDED: $filter_phone_group_id $filter_phone_group_name</B>\n";
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='FILTERPHONEGROUPS', event_type='ADD', record_id='$filter_phone_group_id', event_code='ADMIN ADD FILTER PHONE GROUP', event_sql=\"$SQL_log\", event_notes='$filter_phone_group_name';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='FILTERPHONEGROUPS', event_type='ADD', record_id='$filter_phone_group_id', event_code='ADMIN ADD FILTER PHONE GROUP', event_sql=\"$SQL_log\", event_notes='$filter_phone_group_name';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=3711;
@@ -13391,50 +13558,57 @@ if ($ADD==2711)
 
 if ($ADD==21111)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_remote_agents where server_ip='$server_ip' and user_start='$user_start';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>REMOTE AGENTS NOT ADDED - there is already a remote agents entry starting with this userID\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		### check for a valid user that will be associated with this account
-		$stmt="SELECT count(*) from vicidial_users where user='$user_start' $LOGadmin_viewable_groupsSQL;";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_remote_agents where server_ip='$server_ip' and user_start='$user_start';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
-		if ($row[0] < 1)
-			{echo "<br>REMOTE AGENTS NOT ADDED - you must use a valid user as the user_start for remote agents\n";}
+		if ($row[0] > 0)
+			{echo "<br>REMOTE AGENTS NOT ADDED - there is already a remote agents entry starting with this userID\n";}
 		else
 			{
-			### check for closest remote agents to this account to ensure no overlapping
-			$user_finish = ($user_start + $number_of_lines);
-			$stmt="SELECT count(*) from vicidial_remote_agents where user_start >= '$user_start' and user_start < '$user_finish';";
+			### check for a valid user that will be associated with this account
+			$stmt="SELECT count(*) from vicidial_users where user='$user_start' $LOGadmin_viewable_groupsSQL;";
 			$rslt=mysql_query($stmt, $link);
 			$row=mysql_fetch_row($rslt);
-			if ($row[0] > 0)
-				{echo "<br>REMOTE AGENTS NOT ADDED - your number of lines overlaps with another remote agent\n";}
+			if ($row[0] < 1)
+				{echo "<br>REMOTE AGENTS NOT ADDED - you must use a valid user as the user_start for remote agents\n";}
 			else
 				{
-				if ( (strlen($server_ip) < 2) or (strlen($user_start) < 2)  or (strlen($campaign_id) < 2) or (strlen($conf_exten) < 2) )
-					{
-					echo "<br>REMOTE AGENTS NOT ADDED - Please go back and look at the data you entered\n";
-					echo "<br>User ID start and external extension must be at least 2 characters in length\n";
-					}
+				### check for closest remote agents to this account to ensure no overlapping
+				$user_finish = ($user_start + $number_of_lines);
+				$stmt="SELECT count(*) from vicidial_remote_agents where user_start >= '$user_start' and user_start < '$user_finish';";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				if ($row[0] > 0)
+					{echo "<br>REMOTE AGENTS NOT ADDED - your number of lines overlaps with another remote agent\n";}
 				else
 					{
-					$stmt="INSERT INTO vicidial_remote_agents (user_start,number_of_lines,server_ip,conf_exten,status,campaign_id,closer_campaigns) values('$user_start','$number_of_lines','$server_ip','$conf_exten','$status','$campaign_id','$groups_value');";
-					$rslt=mysql_query($stmt, $link);
+					if ( (strlen($server_ip) < 2) or (strlen($user_start) < 2)  or (strlen($campaign_id) < 2) or (strlen($conf_exten) < 2) )
+						{
+						echo "<br>REMOTE AGENTS NOT ADDED - Please go back and look at the data you entered\n";
+						echo "<br>User ID start and external extension must be at least 2 characters in length\n";
+						}
+					else
+						{
+						$stmt="INSERT INTO vicidial_remote_agents (user_start,number_of_lines,server_ip,conf_exten,status,campaign_id,closer_campaigns) values('$user_start','$number_of_lines','$server_ip','$conf_exten','$status','$campaign_id','$groups_value');";
+						$rslt=mysql_query($stmt, $link);
 
-					echo "<br><B>REMOTE AGENTS ADDED: $user_start</B>\n";
+						echo "<br><B>REMOTE AGENTS ADDED: $user_start</B>\n";
 
-					### LOG INSERTION Admin Log Table ###
-					$SQL_log = "$stmt|";
-					$SQL_log = ereg_replace(';','',$SQL_log);
-					$SQL_log = addslashes($SQL_log);
-					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='REMOTEAGENTS', event_type='ADD', record_id='$user_start', event_code='ADMIN ADD REMOTE AGENT', event_sql=\"$SQL_log\", event_notes='';";
-					if ($DB) {echo "|$stmt|\n";}
-					$rslt=mysql_query($stmt, $link);
+						### LOG INSERTION Admin Log Table ###
+						$SQL_log = "$stmt|";
+						$SQL_log = ereg_replace(';','',$SQL_log);
+						$SQL_log = addslashes($SQL_log);
+						$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='REMOTEAGENTS', event_type='ADD', record_id='$user_start', event_code='ADMIN ADD REMOTE AGENT', event_sql=\"$SQL_log\", event_notes='';";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_query($stmt, $link);
+						}
 					}
 				}
 			}
@@ -13449,38 +13623,45 @@ if ($ADD==21111)
 
 if ($ADD==22111)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_extension_groups where extension_group_id='$extension_group_id' and extension='$extension';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>EXTENSION GROUP ENTRY NOT ADDED - there is already an extension group entry with these values\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($extension_group_id) < 2) or (strlen($extension) < 2)  or (strlen($rank) < 1) )
-			{
-			echo "<br>EXTENSION GROUP ENTRY NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>extension group id and extension and rank must be at least 2 characters in length\n";
-			}
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_extension_groups where extension_group_id='$extension_group_id' and extension='$extension';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>EXTENSION GROUP ENTRY NOT ADDED - there is already an extension group entry with these values\n";}
 		else
 			{
-			$stmt="INSERT INTO vicidial_extension_groups (extension_group_id,extension,rank,campaign_groups) values('$extension_group_id','$extension','$rank','$campaign_groups');";
-			$rslt=mysql_query($stmt, $link);
+			if ( (strlen($extension_group_id) < 2) or (strlen($extension) < 2)  or (strlen($rank) < 1) )
+				{
+				echo "<br>EXTENSION GROUP ENTRY NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>extension group id and extension and rank must be at least 2 characters in length\n";
+				}
+			else
+				{
+				$stmt="INSERT INTO vicidial_extension_groups (extension_group_id,extension,rank,campaign_groups) values('$extension_group_id','$extension','$rank','$campaign_groups');";
+				$rslt=mysql_query($stmt, $link);
 
-			$stmt="SELECT extension_id from vicidial_extension_groups where extension_group_id='$extension_group_id' and extension='$extension';";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$extension_id = $row[0];
+				$stmt="SELECT extension_id from vicidial_extension_groups where extension_group_id='$extension_group_id' and extension='$extension';";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$extension_id = $row[0];
 
-			echo "<br><B>EXTENSION GROUP ENTRY ADDED: $extension_id - $extension_group_id - $extension</B>\n";
+				echo "<br><B>EXTENSION GROUP ENTRY ADDED: $extension_id - $extension_group_id - $extension</B>\n";
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='EXTENGROUP', event_type='ADD', record_id='$extension_id', event_code='ADMIN ADD EXTENSION GROUP', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='EXTENGROUP', event_type='ADD', record_id='$extension_id', event_code='ADMIN ADD EXTENSION GROUP', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=12000;
@@ -13493,147 +13674,154 @@ if ($ADD==22111)
 
 if ($ADD==211111)
 	{
-	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
-	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_user_groups' and active='1';";
-	$rslt=mysql_query($stmt, $link);
-	$voi_ct = mysql_num_rows($rslt);
-	if ($voi_ct > 0)
+	if ($add_copy_disabled > 0)
 		{
-		$row=mysql_fetch_row($rslt);
-		$user_group = ($row[0] + 1);
-
-		$stmt="UPDATE vicidial_override_ids SET value='$user_group' where id_table='vicidial_user_groups' and active='1';";
-		$rslt=mysql_query($stmt, $link);
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
 		}
-	##### END ID override optional section #####
-
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_user_groups where user_group='$user_group';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>USER GROUP NOT ADDED - there is already a user group entry with this name\n";}
 	else
 		{
-		if ( (strlen($user_group) < 2) or (strlen($group_name) < 2) )
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_user_groups' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
 			{
-			echo "<br>USER GROUP NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>Group name and description must be at least 2 characters in length\n";
+			$row=mysql_fetch_row($rslt);
+			$user_group = ($row[0] + 1);
+
+			$stmt="UPDATE vicidial_override_ids SET value='$user_group' where id_table='vicidial_user_groups' and active='1';";
+			$rslt=mysql_query($stmt, $link);
 			}
+		##### END ID override optional section #####
+
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_user_groups where user_group='$user_group';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>USER GROUP NOT ADDED - there is already a user group entry with this name\n";}
 		else
 			{
-			$allowed_user_group_insert_SQL = '---ALL---';
-			$allowed_campaign_insert_SQL = '-ALL-CAMPAIGNS-';
-			# if admin user's user group does not have --ALL-- then add this new user group to their user group's allowable user groups
-			if ($admin_viewable_groupsALL < 1)
+			if ( (strlen($user_group) < 2) or (strlen($group_name) < 2) )
 				{
-				$UPDATEadmin_viewable_groups =	$LOGadmin_viewable_groups;
-				$UPDATEadmin_viewable_groups = preg_replace("/ $/"," $user_group ",$UPDATEadmin_viewable_groups);
-				$LOGadmin_viewable_groups = $UPDATEadmin_viewable_groups;
+				echo "<br>USER GROUP NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>Group name and description must be at least 2 characters in length\n";
+				}
+			else
+				{
+				$allowed_user_group_insert_SQL = '---ALL---';
+				$allowed_campaign_insert_SQL = '-ALL-CAMPAIGNS-';
+				# if admin user's user group does not have --ALL-- then add this new user group to their user group's allowable user groups
+				if ($admin_viewable_groupsALL < 1)
+					{
+					$UPDATEadmin_viewable_groups =	$LOGadmin_viewable_groups;
+					$UPDATEadmin_viewable_groups = preg_replace("/ $/"," $user_group ",$UPDATEadmin_viewable_groups);
+					$LOGadmin_viewable_groups = $UPDATEadmin_viewable_groups;
 
-				$stmt="UPDATE vicidial_user_groups SET admin_viewable_groups='$UPDATEadmin_viewable_groups' where user_group='$LOGuser_group';";
+					$stmt="UPDATE vicidial_user_groups SET admin_viewable_groups='$UPDATEadmin_viewable_groups' where user_group='$LOGuser_group';";
+					$rslt=mysql_query($stmt, $link);
+
+					$allowed_user_group_insert_SQL = " $user_group -";
+
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+					$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					}
+				if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+					{
+					$allowed_campaign_insert_SQL = $LOGallowed_campaigns;
+					}
+
+				$stmt="INSERT INTO vicidial_user_groups(user_group,group_name,allowed_campaigns,admin_viewable_groups) values('$user_group','$group_name','$allowed_campaign_insert_SQL','$allowed_user_group_insert_SQL');";
 				$rslt=mysql_query($stmt, $link);
 
-				$allowed_user_group_insert_SQL = " $user_group -";
 
-				$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
-				$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
-				$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
-				$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
-				}
-			if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
-				{
-				$allowed_campaign_insert_SQL = $LOGallowed_campaigns;
-				}
+				echo "<br><B>USER GROUP ADDED: $user_group</B>\n";
 
-			$stmt="INSERT INTO vicidial_user_groups(user_group,group_name,allowed_campaigns,admin_viewable_groups) values('$user_group','$group_name','$allowed_campaign_insert_SQL','$allowed_user_group_insert_SQL');";
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERGROUPS', event_type='ADD', record_id='$user_group', event_code='ADMIN ADD USER GROUP', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
 
-
-			echo "<br><B>USER GROUP ADDED: $user_group</B>\n";
-
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERGROUPS', event_type='ADD', record_id='$user_group', event_code='ADMIN ADD USER GROUP', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
-
-			###############################################################
-			##### START SYSTEM_SETTINGS VTIGER CONNECTION INFO LOOKUP #####
-			$stmt = "SELECT enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url FROM system_settings;";
-			$rslt=mysql_query($stmt, $link);
-			if ($DB) {echo "$stmt\n";}
-			$ss_conf_ct = mysql_num_rows($rslt);
-			if ($ss_conf_ct > 0)
-				{
-				$row=mysql_fetch_row($rslt);
-				$enable_vtiger_integration =	$row[0];
-				$vtiger_server_ip	=			$row[1];
-				$vtiger_dbname =				$row[2];
-				$vtiger_login =					$row[3];
-				$vtiger_pass =					$row[4];
-				$vtiger_url =					$row[5];
-				}
-			##### END SYSTEM_SETTINGS VTIGER CONNECTION INFO LOOKUP #####
-			#############################################################
-
-			if ($enable_vtiger_integration > 0)
-				{
-				### connect to your vtiger database
-				$linkV=mysql_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass");
-				if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysql_error());}
-				echo 'Connected successfully';
-				mysql_select_db("$vtiger_dbname", $linkV);
-
-				######################################
-				##### BEGIN Add/Update group info in Vtiger
-				$stmt="SELECT count(*) from vtiger_groups where groupname='$user_group';";
-				$rslt=mysql_query($stmt, $linkV);
+				###############################################################
+				##### START SYSTEM_SETTINGS VTIGER CONNECTION INFO LOOKUP #####
+				$stmt = "SELECT enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url FROM system_settings;";
+				$rslt=mysql_query($stmt, $link);
 				if ($DB) {echo "$stmt\n";}
-				if (!$rslt) {die('Could not execute: ' . mysql_error());}
-				$row=mysql_fetch_row($rslt);
-				$group_found_count = $row[0];
-
-				### group exists in vtiger, update it
-				if ($group_found_count > 0)
+				$ss_conf_ct = mysql_num_rows($rslt);
+				if ($ss_conf_ct > 0)
 					{
-					$stmt="SELECT groupid from vtiger_groups where groupname='$user_group';";
+					$row=mysql_fetch_row($rslt);
+					$enable_vtiger_integration =	$row[0];
+					$vtiger_server_ip	=			$row[1];
+					$vtiger_dbname =				$row[2];
+					$vtiger_login =					$row[3];
+					$vtiger_pass =					$row[4];
+					$vtiger_url =					$row[5];
+					}
+				##### END SYSTEM_SETTINGS VTIGER CONNECTION INFO LOOKUP #####
+				#############################################################
+
+				if ($enable_vtiger_integration > 0)
+					{
+					### connect to your vtiger database
+					$linkV=mysql_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass");
+					if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysql_error());}
+					echo 'Connected successfully';
+					mysql_select_db("$vtiger_dbname", $linkV);
+
+					######################################
+					##### BEGIN Add/Update group info in Vtiger
+					$stmt="SELECT count(*) from vtiger_groups where groupname='$user_group';";
 					$rslt=mysql_query($stmt, $linkV);
 					if ($DB) {echo "$stmt\n";}
 					if (!$rslt) {die('Could not execute: ' . mysql_error());}
 					$row=mysql_fetch_row($rslt);
-					$groupid = $row[0];
+					$group_found_count = $row[0];
+
+					### group exists in vtiger, update it
+					if ($group_found_count > 0)
+						{
+						$stmt="SELECT groupid from vtiger_groups where groupname='$user_group';";
+						$rslt=mysql_query($stmt, $linkV);
+						if ($DB) {echo "$stmt\n";}
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+						$row=mysql_fetch_row($rslt);
+						$groupid = $row[0];
+						}
+
+					### user doesn't exist in vtiger, insert it
+					else
+						{
+						#### BEGIN CREATE NEW GROUP RECORD IN VTIGER
+						# Get next available id from vtiger_users_seq to use as groupid
+						$stmt="SELECT id from vtiger_users_seq;";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $linkV);
+						$row=mysql_fetch_row($rslt);
+						$groupid = ($row[0] + 1);
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+						# Increase next available groupid with 1 so next record gets proper id
+						$stmt="UPDATE vtiger_users_seq SET id = '$groupid';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_query($stmt, $linkV);
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+						$stmtA = "INSERT INTO vtiger_groups SET groupid='$groupid',groupname='$user_group',description='$group_name';";
+						if ($DB) {echo "|$stmtA|\n";}
+						$rslt=mysql_query($stmtA, $linkV);
+						if (!$rslt) {die('Could not execute: ' . mysql_error());}
+
+						#### END CREATE NEW GROUP RECORD IN VTIGER
+						}
+					##### END Add/Update group info in Vtiger
+					######################################
 					}
-
-				### user doesn't exist in vtiger, insert it
-				else
-					{
-					#### BEGIN CREATE NEW GROUP RECORD IN VTIGER
-					# Get next available id from vtiger_users_seq to use as groupid
-					$stmt="SELECT id from vtiger_users_seq;";
-					if ($DB) {echo "$stmt\n";}
-					$rslt=mysql_query($stmt, $linkV);
-					$row=mysql_fetch_row($rslt);
-					$groupid = ($row[0] + 1);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-					# Increase next available groupid with 1 so next record gets proper id
-					$stmt="UPDATE vtiger_users_seq SET id = '$groupid';";
-					if ($DB) {echo "$stmt\n";}
-					$rslt=mysql_query($stmt, $linkV);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-					$stmtA = "INSERT INTO vtiger_groups SET groupid='$groupid',groupname='$user_group',description='$group_name';";
-					if ($DB) {echo "|$stmtA|\n";}
-					$rslt=mysql_query($stmtA, $linkV);
-					if (!$rslt) {die('Could not execute: ' . mysql_error());}
-
-					#### END CREATE NEW GROUP RECORD IN VTIGER
-					}
-				##### END Add/Update group info in Vtiger
-				######################################
 				}
 			}
 		}
@@ -13646,47 +13834,54 @@ if ($ADD==211111)
 
 if ($ADD==2111111)
 	{
-	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
-	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_scripts' and active='1';";
-	$rslt=mysql_query($stmt, $link);
-	$voi_ct = mysql_num_rows($rslt);
-	if ($voi_ct > 0)
+	if ($add_copy_disabled > 0)
 		{
-		$row=mysql_fetch_row($rslt);
-		$script_id = ($row[0] + 1);
-
-		$stmt="UPDATE vicidial_override_ids SET value='$script_id' where id_table='vicidial_scripts' and active='1';";
-		$rslt=mysql_query($stmt, $link);
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
 		}
-	##### END ID override optional section #####
-
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_scripts where script_id='$script_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>SCRIPT NOT ADDED - there is already a script entry with this name\n";}
 	else
 		{
-		if ( (strlen($script_id) < 2) or (strlen($script_name) < 2) or (strlen($script_text) < 2) )
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_scripts' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
 			{
-			echo "<br>SCRIPT NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>Script name, description and text must be at least 2 characters in length\n";
+			$row=mysql_fetch_row($rslt);
+			$script_id = ($row[0] + 1);
+
+			$stmt="UPDATE vicidial_override_ids SET value='$script_id' where id_table='vicidial_scripts' and active='1';";
+			$rslt=mysql_query($stmt, $link);
 			}
+		##### END ID override optional section #####
+
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_scripts where script_id='$script_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>SCRIPT NOT ADDED - there is already a script entry with this name\n";}
 		else
 			{
-			$stmt="INSERT INTO vicidial_scripts values('$script_id','$script_name','$script_comments','" . mysql_real_escape_string($script_text) . "','$active','$user_group');";
-			$rslt=mysql_query($stmt, $link);
-			if ($DB > 0) {echo "|$stmt|";}
-			echo "<br><B>SCRIPT ADDED: $script_id</B>\n";
+			if ( (strlen($script_id) < 2) or (strlen($script_name) < 2) or (strlen($script_text) < 2) )
+				{
+				echo "<br>SCRIPT NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>Script name, description and text must be at least 2 characters in length\n";
+				}
+			else
+				{
+				$stmt="INSERT INTO vicidial_scripts values('$script_id','$script_name','$script_comments','" . mysql_real_escape_string($script_text) . "','$active','$user_group');";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB > 0) {echo "|$stmt|";}
+				echo "<br><B>SCRIPT ADDED: $script_id</B>\n";
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SCRIPTS', event_type='ADD', record_id='$script_id', event_code='ADMIN ADD SCRIPT', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SCRIPTS', event_type='ADD', record_id='$script_id', event_code='ADMIN ADD SCRIPT', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=1000000;
@@ -13699,48 +13894,55 @@ if ($ADD==2111111)
 
 if ($ADD==21111111)
 	{
-	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
-	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_lead_filters' and active='1';";
-	$rslt=mysql_query($stmt, $link);
-	$voi_ct = mysql_num_rows($rslt);
-	if ($voi_ct > 0)
+	if ($add_copy_disabled > 0)
 		{
-		$row=mysql_fetch_row($rslt);
-		$lead_filter_id = ($row[0] + 1);
-
-		$stmt="UPDATE vicidial_override_ids SET value='$lead_filter_id' where id_table='vicidial_lead_filters' and active='1';";
-		$rslt=mysql_query($stmt, $link);
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
 		}
-	##### END ID override optional section #####
-
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_lead_filters where lead_filter_id='$lead_filter_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>FILTER NOT ADDED - there is already a filter entry with this ID\n";}
 	else
 		{
-		if ( (strlen($lead_filter_id) < 2) or (strlen($lead_filter_name) < 2) or (strlen($lead_filter_sql) < 2) )
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_lead_filters' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
 			{
-			echo "<br>FILTER NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>Filter ID, name and SQL must be at least 2 characters in length\n";
+			$row=mysql_fetch_row($rslt);
+			$lead_filter_id = ($row[0] + 1);
+
+			$stmt="UPDATE vicidial_override_ids SET value='$lead_filter_id' where id_table='vicidial_lead_filters' and active='1';";
+			$rslt=mysql_query($stmt, $link);
 			}
+		##### END ID override optional section #####
+
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_lead_filters where lead_filter_id='$lead_filter_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>FILTER NOT ADDED - there is already a filter entry with this ID\n";}
 		else
 			{
-			$stmt="INSERT INTO vicidial_lead_filters SET lead_filter_id='$lead_filter_id',lead_filter_name='$lead_filter_name',user_group='$user_group',lead_filter_comments='$lead_filter_comments',lead_filter_sql='" . mysql_real_escape_string($lead_filter_sql) . "';";
-			$rslt=mysql_query($stmt, $link);
+			if ( (strlen($lead_filter_id) < 2) or (strlen($lead_filter_name) < 2) or (strlen($lead_filter_sql) < 2) )
+				{
+				echo "<br>FILTER NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>Filter ID, name and SQL must be at least 2 characters in length\n";
+				}
+			else
+				{
+				$stmt="INSERT INTO vicidial_lead_filters SET lead_filter_id='$lead_filter_id',lead_filter_name='$lead_filter_name',user_group='$user_group',lead_filter_comments='$lead_filter_comments',lead_filter_sql='" . mysql_real_escape_string($lead_filter_sql) . "';";
+				$rslt=mysql_query($stmt, $link);
 
-			if ($DB > 0) {echo "|$stmt|";}
-			echo "<br><B>FILTER ADDED: $lead_filter_id</B>\n";
+				if ($DB > 0) {echo "|$stmt|";}
+				echo "<br><B>FILTER ADDED: $lead_filter_id</B>\n";
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='FILTERS', event_type='ADD', record_id='$lead_filter_id', event_code='ADMIN ADD FILTER', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='FILTERS', event_type='ADD', record_id='$lead_filter_id', event_code='ADMIN ADD FILTER', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=10000000;
@@ -13753,34 +13955,41 @@ if ($ADD==21111111)
 
 if ($ADD==211111111)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_call_times where call_time_id='$call_time_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>CALL TIME DEFINITION NOT ADDED - there is already a call time entry with this ID\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($call_time_id) < 2) or (strlen($call_time_name) < 2) )
-			{
-			echo "<br>CALL TIME DEFINITION NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>Call Time ID and name must be at least 2 characters in length\n";
-			}
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_call_times where call_time_id='$call_time_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>CALL TIME DEFINITION NOT ADDED - there is already a call time entry with this ID\n";}
 		else
 			{
-			$stmt="INSERT INTO vicidial_call_times SET call_time_id='$call_time_id',call_time_name='$call_time_name',call_time_comments='$call_time_comments',user_group='$user_group',ct_state_call_times='',ct_holidays='';";
-			$rslt=mysql_query($stmt, $link);
-			if ($DB > 0) {echo "|$stmt|";}
+			if ( (strlen($call_time_id) < 2) or (strlen($call_time_name) < 2) )
+				{
+				echo "<br>CALL TIME DEFINITION NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>Call Time ID and name must be at least 2 characters in length\n";
+				}
+			else
+				{
+				$stmt="INSERT INTO vicidial_call_times SET call_time_id='$call_time_id',call_time_name='$call_time_name',call_time_comments='$call_time_comments',user_group='$user_group',ct_state_call_times='',ct_holidays='';";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB > 0) {echo "|$stmt|";}
 
-			echo "<br><B>CALL TIME ADDED: $call_time_id</B>\n";
+				echo "<br><B>CALL TIME ADDED: $call_time_id</B>\n";
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLTIMES', event_type='ADD', record_id='$call_time_id', event_code='ADMIN ADD CALL TIME', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLTIMES', event_type='ADD', record_id='$call_time_id', event_code='ADMIN ADD CALL TIME', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=311111111;
@@ -13793,34 +14002,41 @@ if ($ADD==211111111)
 
 if ($ADD==2111111111)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_state_call_times where state_call_time_id='$call_time_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>STATE CALL TIME DEFINITION NOT ADDED - there is already a call time entry with this ID\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($call_time_id) < 2) or (strlen($call_time_name) < 2) or (strlen($state_call_time_state) < 2) )
-			{
-			echo "<br>STATE CALL TIME DEFINITION NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>State Call Time ID, name and state must be at least 2 characters in length\n";
-			}
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_state_call_times where state_call_time_id='$call_time_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>STATE CALL TIME DEFINITION NOT ADDED - there is already a call time entry with this ID\n";}
 		else
 			{
-			$stmt="INSERT INTO vicidial_state_call_times SET state_call_time_id='$call_time_id',state_call_time_name='$call_time_name',state_call_time_comments='$call_time_comments',state_call_time_state='$state_call_time_state',user_group='$user_group';";
-			$rslt=mysql_query($stmt, $link);
-			if ($DB > 0) {echo "|$stmt|";}
+			if ( (strlen($call_time_id) < 2) or (strlen($call_time_name) < 2) or (strlen($state_call_time_state) < 2) )
+				{
+				echo "<br>STATE CALL TIME DEFINITION NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>State Call Time ID, name and state must be at least 2 characters in length\n";
+				}
+			else
+				{
+				$stmt="INSERT INTO vicidial_state_call_times SET state_call_time_id='$call_time_id',state_call_time_name='$call_time_name',state_call_time_comments='$call_time_comments',state_call_time_state='$state_call_time_state',user_group='$user_group';";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB > 0) {echo "|$stmt|";}
 
-			echo "<br><B>STATE CALL TIME ADDED: $call_time_id</B>\n";
+				echo "<br><B>STATE CALL TIME ADDED: $call_time_id</B>\n";
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLTIMES_STATE', event_type='ADD', record_id='$call_time_id', event_code='ADMIN ADD STATE CALL TIME', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLTIMES_STATE', event_type='ADD', record_id='$call_time_id', event_code='ADMIN ADD STATE CALL TIME', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=3111111111;
@@ -13833,34 +14049,41 @@ if ($ADD==2111111111)
 
 if ($ADD==2211111111)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_call_time_holidays where holiday_id='$holiday_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>HOLIDAY DEFINITION NOT ADDED - there is already a holiday entry with this ID\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($holiday_id) < 2) or (strlen($holiday_name) < 2) or (strlen($holiday_date) < 10) )
-			{
-			echo "<br>HOLIDAY DEFINITION NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>Holiday ID, name and date must be populated\n";
-			}
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_call_time_holidays where holiday_id='$holiday_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>HOLIDAY DEFINITION NOT ADDED - there is already a holiday entry with this ID\n";}
 		else
 			{
-			$stmt="INSERT INTO vicidial_call_time_holidays SET holiday_id='$holiday_id',holiday_name='$holiday_name',holiday_comments='$holiday_comments',holiday_date='$holiday_date',holiday_status='INACTIVE',user_group='$user_group';";
-			$rslt=mysql_query($stmt, $link);
-			if ($DB > 0) {echo "|$stmt|";}
+			if ( (strlen($holiday_id) < 2) or (strlen($holiday_name) < 2) or (strlen($holiday_date) < 10) )
+				{
+				echo "<br>HOLIDAY DEFINITION NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>Holiday ID, name and date must be populated\n";
+				}
+			else
+				{
+				$stmt="INSERT INTO vicidial_call_time_holidays SET holiday_id='$holiday_id',holiday_name='$holiday_name',holiday_comments='$holiday_comments',holiday_date='$holiday_date',holiday_status='INACTIVE',user_group='$user_group';";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB > 0) {echo "|$stmt|";}
 
-			echo "<br><B>HOLIDAY ADDED: $holiday_id</B>\n";
+				echo "<br><B>HOLIDAY ADDED: $holiday_id</B>\n";
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='HOLIDAYS', event_type='ADD', record_id='$holiday_id', event_code='ADMIN ADD HOLIDAY', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='HOLIDAYS', event_type='ADD', record_id='$holiday_id', event_code='ADMIN ADD HOLIDAY', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=3211111111;
@@ -13873,58 +14096,65 @@ if ($ADD==2211111111)
 
 if ($ADD==231111111)
 	{
-	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
-	$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_shifts' and active='1';";
-	$rslt=mysql_query($stmt, $link);
-	$voi_ct = mysql_num_rows($rslt);
-	if ($voi_ct > 0)
+	if ($add_copy_disabled > 0)
 		{
-		$row=mysql_fetch_row($rslt);
-		$shift_id = ($row[0] + 1);
-
-		$stmt="UPDATE vicidial_override_ids SET value='$shift_id' where id_table='vicidial_shifts' and active='1';";
-		$rslt=mysql_query($stmt, $link);
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
 		}
-	##### END ID override optional section #####
-
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_shifts where shift_id='$shift_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>SHIFT DEFINITION NOT ADDED - there is already a shift entry with this ID\n";}
 	else
 		{
-		$shift_length_test = eregi_replace(':','',$shift_length);
-		if ( (strlen($shift_id) < 2) or (strlen($shift_name) < 2) or (strlen($shift_start_time) < 4) or (strlen($shift_start_time) > 4) or (strlen($shift_length) < 5) or (strlen($shift_length) > 5) or ($shift_start_time > 2359) or ($shift_length_test > 2400) )
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_shifts' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
 			{
-			echo "<br>SHIFT DEFINITION NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>Shift ID and name must be at least 2 characters in length\n";
-			echo "<br>Shift Start Time must be 4 digits in length and be a valid time\n";
-			echo "<br>Shift Length must be 5 characters in length and be 24 hours or less\n";
+			$row=mysql_fetch_row($rslt);
+			$shift_id = ($row[0] + 1);
+
+			$stmt="UPDATE vicidial_override_ids SET value='$shift_id' where id_table='vicidial_shifts' and active='1';";
+			$rslt=mysql_query($stmt, $link);
 			}
+		##### END ID override optional section #####
+
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_shifts where shift_id='$shift_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>SHIFT DEFINITION NOT ADDED - there is already a shift entry with this ID\n";}
 		else
 			{
-			$p=0;
-			$shift_weekdays_ct = count($shift_weekdays);
-			while ($p <= $shift_weekdays_ct)
+			$shift_length_test = eregi_replace(':','',$shift_length);
+			if ( (strlen($shift_id) < 2) or (strlen($shift_name) < 2) or (strlen($shift_start_time) < 4) or (strlen($shift_start_time) > 4) or (strlen($shift_length) < 5) or (strlen($shift_length) > 5) or ($shift_start_time > 2359) or ($shift_length_test > 2400) )
 				{
-				$SHIFT_weekdays .= "$shift_weekdays[$p]";
-				$p++;
+				echo "<br>SHIFT DEFINITION NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>Shift ID and name must be at least 2 characters in length\n";
+				echo "<br>Shift Start Time must be 4 digits in length and be a valid time\n";
+				echo "<br>Shift Length must be 5 characters in length and be 24 hours or less\n";
 				}
-			$stmt="INSERT INTO vicidial_shifts SET shift_id='$shift_id',shift_name='$shift_name',shift_start_time='$shift_start_time',shift_length='$shift_length',report_option='$report_option',shift_weekdays='$SHIFT_weekdays',user_group='$user_group';";
-			$rslt=mysql_query($stmt, $link);
-			if ($DB > 0) {echo "|$stmt|";}
+			else
+				{
+				$p=0;
+				$shift_weekdays_ct = count($shift_weekdays);
+				while ($p <= $shift_weekdays_ct)
+					{
+					$SHIFT_weekdays .= "$shift_weekdays[$p]";
+					$p++;
+					}
+				$stmt="INSERT INTO vicidial_shifts SET shift_id='$shift_id',shift_name='$shift_name',shift_start_time='$shift_start_time',shift_length='$shift_length',report_option='$report_option',shift_weekdays='$SHIFT_weekdays',user_group='$user_group';";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB > 0) {echo "|$stmt|";}
 
-			echo "<br><B>SHIFT ADDED: $shift_id</B>\n";
+				echo "<br><B>SHIFT ADDED: $shift_id</B>\n";
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SHIFTS', event_type='ADD', record_id='$shift_id', event_code='ADMIN ADD SHIFT', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SHIFTS', event_type='ADD', record_id='$shift_id', event_code='ADMIN ADD SHIFT', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=331111111;
@@ -13937,71 +14167,78 @@ if ($ADD==231111111)
 
 if ($ADD==21111111111)
 	{
-	##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
-	$stmt = "SELECT value FROM vicidial_override_ids where id_table='phones' and active='1';";
-	$rslt=mysql_query($stmt, $link);
-	$voi_ct = mysql_num_rows($rslt);
-	if ($voi_ct > 0)
+	if ($add_copy_disabled > 0)
 		{
-		$row=mysql_fetch_row($rslt);
-		$extension = ($row[0] + 1);
-
-		$stmt="UPDATE vicidial_override_ids SET value='$extension' where id_table='phones' and active='1';";
-		$rslt=mysql_query($stmt, $link);
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
 		}
-	##### END ID override optional section #####
-
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from phones where extension='$extension' and server_ip='$server_ip';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>PHONE NOT ADDED - there is already a Phone in the system with this extension/server\n";}
 	else
 		{
-		$stmt="SELECT count(*) from phones where login='$login';";
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT value FROM vicidial_override_ids where id_table='phones' and active='1';";
+		$rslt=mysql_query($stmt, $link);
+		$voi_ct = mysql_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$extension = ($row[0] + 1);
+
+			$stmt="UPDATE vicidial_override_ids SET value='$extension' where id_table='phones' and active='1';";
+			$rslt=mysql_query($stmt, $link);
+			}
+		##### END ID override optional section #####
+
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from phones where extension='$extension' and server_ip='$server_ip';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		if ($row[0] > 0)
-			{echo "<br>PHONE NOT ADDED - there is already a Phone in the system with this login\n";}
+			{echo "<br>PHONE NOT ADDED - there is already a Phone in the system with this extension/server\n";}
 		else
 			{
-			$stmt="SELECT count(*) from phones_alias where alias_id='$login';";
+			$stmt="SELECT count(*) from phones where login='$login';";
 			$rslt=mysql_query($stmt, $link);
 			$row=mysql_fetch_row($rslt);
 			if ($row[0] > 0)
-				{echo "<br>PHONE NOT ADDED - there is already a Phone alias in the system with this login\n";}
+				{echo "<br>PHONE NOT ADDED - there is already a Phone in the system with this login\n";}
 			else
 				{
-				$stmt="SELECT count(*) from vicidial_voicemail where voicemail_id='$voicemail_id';";
+				$stmt="SELECT count(*) from phones_alias where alias_id='$login';";
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
 				if ($row[0] > 0)
-					{echo "<br>PHONE NOT ADDED - there is already a Voicemail ID in the system with this ID\n";}
+					{echo "<br>PHONE NOT ADDED - there is already a Phone alias in the system with this login\n";}
 				else
 					{
-					if ( (strlen($extension) < 1) or (strlen($server_ip) < 7) or (strlen($dialplan_number) < 1) or (strlen($voicemail_id) < 1) or (strlen($login) < 1)  or (strlen($pass) < 1))
-						{
-						echo "<BR>PHONE NOT ADDED - Please go back and look at the data you entered\n";
-						echo "<BR>The following fields must have data: extension, server_ip, dialplan_number, voicemail_id, login, pass\n";
-						}
+					$stmt="SELECT count(*) from vicidial_voicemail where voicemail_id='$voicemail_id';";
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					if ($row[0] > 0)
+						{echo "<br>PHONE NOT ADDED - there is already a Voicemail ID in the system with this ID\n";}
 					else
 						{
-						echo "<br>PHONE ADDED\n";
+						if ( (strlen($extension) < 1) or (strlen($server_ip) < 7) or (strlen($dialplan_number) < 1) or (strlen($voicemail_id) < 1) or (strlen($login) < 1)  or (strlen($pass) < 1))
+							{
+							echo "<BR>PHONE NOT ADDED - Please go back and look at the data you entered\n";
+							echo "<BR>The following fields must have data: extension, server_ip, dialplan_number, voicemail_id, login, pass\n";
+							}
+						else
+							{
+							echo "<br>PHONE ADDED\n";
 
-						$stmt="INSERT INTO phones (extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,protocol,local_gmt,outbound_cid,conf_secret,voicemail_timezone,user_group) values('$extension','$dialplan_number','$voicemail_id','$phone_ip','$computer_ip','$server_ip','$login','$pass','$status','$active','$phone_type','$fullname','$company','$picture','$protocol','$local_gmt','$outbound_cid','$conf_secret','$SSdefault_voicemail_timezone','$user_group');";
-						$rslt=mysql_query($stmt, $link);
+							$stmt="INSERT INTO phones (extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,protocol,local_gmt,outbound_cid,conf_secret,voicemail_timezone,user_group) values('$extension','$dialplan_number','$voicemail_id','$phone_ip','$computer_ip','$server_ip','$login','$pass','$status','$active','$phone_type','$fullname','$company','$picture','$protocol','$local_gmt','$outbound_cid','$conf_secret','$SSdefault_voicemail_timezone','$user_group');";
+							$rslt=mysql_query($stmt, $link);
 
-						$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
-						$rslt=mysql_query($stmtA, $link);
+							$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
+							$rslt=mysql_query($stmtA, $link);
 
-						### LOG INSERTION Admin Log Table ###
-						$SQL_log = "$stmt|";
-						$SQL_log = ereg_replace(';','',$SQL_log);
-						$SQL_log = addslashes($SQL_log);
-						$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='PHONES', event_type='ADD', record_id='$extension', event_code='ADMIN ADD PHONE', event_sql=\"$SQL_log\", event_notes='';";
-						if ($DB) {echo "|$stmt|\n";}
-						$rslt=mysql_query($stmt, $link);
+							### LOG INSERTION Admin Log Table ###
+							$SQL_log = "$stmt|";
+							$SQL_log = ereg_replace(';','',$SQL_log);
+							$SQL_log = addslashes($SQL_log);
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='PHONES', event_type='ADD', record_id='$extension', event_code='ADMIN ADD PHONE', event_sql=\"$SQL_log\", event_notes='';";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_query($stmt, $link);
+							}
 						}
 					}
 				}
@@ -14017,37 +14254,44 @@ if ($ADD==21111111111)
 
 if ($ADD==22111111111)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from phones_alias where alias_id='$alias_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>PHONE ALIAS NOT ADDED - there is already a Phone Alias in the system with this ID\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		$stmt="SELECT count(*) from phones where login='$alias_id';";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from phones_alias where alias_id='$alias_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		if ($row[0] > 0)
-			{echo "<br>PHONE ALIAS NOT ADDED - there is already a Phone Login in the system with this ID\n";}
+			{echo "<br>PHONE ALIAS NOT ADDED - there is already a Phone Alias in the system with this ID\n";}
 		else
 			{
-			if ( (strlen($alias_id) < 1) or (strlen($alias_name) < 2) )
-				{echo "<br>PHONE ALIAS NOT ADDED - Please go back and look at the data you entered\n";}
+			$stmt="SELECT count(*) from phones where login='$alias_id';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{echo "<br>PHONE ALIAS NOT ADDED - there is already a Phone Login in the system with this ID\n";}
 			else
 				{
-				echo "<br>PHONE ALIAS ADDED\n";
+				if ( (strlen($alias_id) < 1) or (strlen($alias_name) < 2) )
+					{echo "<br>PHONE ALIAS NOT ADDED - Please go back and look at the data you entered\n";}
+				else
+					{
+					echo "<br>PHONE ALIAS ADDED\n";
 
-				$stmt="INSERT INTO phones_alias (alias_id,alias_name,logins_list,user_group) values('$alias_id','$alias_name','$logins_list','$user_group');";
-				$rslt=mysql_query($stmt, $link);
+					$stmt="INSERT INTO phones_alias (alias_id,alias_name,logins_list,user_group) values('$alias_id','$alias_name','$logins_list','$user_group');";
+					$rslt=mysql_query($stmt, $link);
 
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='PHONEALIASES', event_type='ADD', record_id='$alias_id', event_code='ADMIN ADD PHONE ALIAS', event_sql=\"$SQL_log\", event_notes='';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='PHONEALIASES', event_type='ADD', record_id='$alias_id', event_code='ADMIN ADD PHONE ALIAS', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
 				}
 			}
 		}
@@ -14061,34 +14305,41 @@ if ($ADD==22111111111)
 
 if ($ADD==23111111111)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from groups_alias where group_alias_id='$group_alias_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>GROUP ALIAS NOT ADDED - there is already a Phone Alias in the system with this ID\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if (preg_match("/AGENT_PHONE|CUSTOMER|CAMPAIGN|NONE/",$group_alias_id))
-			{echo "<br>GROUP ALIAS NOT ADDED - you cannot use reserved words in group aliases\n";}
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from groups_alias where group_alias_id='$group_alias_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>GROUP ALIAS NOT ADDED - there is already a Phone Alias in the system with this ID\n";}
 		else
 			{
-			if ( (strlen($group_alias_id) < 1) or (strlen($group_alias_name) < 2) )
-				{echo "<br>GROUP ALIAS NOT ADDED - Please go back and look at the data you entered\n";}
+			if (preg_match("/AGENT_PHONE|CUSTOMER|CAMPAIGN|NONE/",$group_alias_id))
+				{echo "<br>GROUP ALIAS NOT ADDED - you cannot use reserved words in group aliases\n";}
 			else
 				{
-				echo "<br>GROUP ALIAS ADDED\n";
+				if ( (strlen($group_alias_id) < 1) or (strlen($group_alias_name) < 2) )
+					{echo "<br>GROUP ALIAS NOT ADDED - Please go back and look at the data you entered\n";}
+				else
+					{
+					echo "<br>GROUP ALIAS ADDED\n";
 
-				$stmt="INSERT INTO groups_alias (group_alias_id,group_alias_name,caller_id_number,caller_id_name,active,user_group) values('$group_alias_id','$group_alias_name','$caller_id_number','$caller_id_name','$active','$user_group');";
-				$rslt=mysql_query($stmt, $link);
+					$stmt="INSERT INTO groups_alias (group_alias_id,group_alias_name,caller_id_number,caller_id_name,active,user_group) values('$group_alias_id','$group_alias_name','$caller_id_number','$caller_id_name','$active','$user_group');";
+					$rslt=mysql_query($stmt, $link);
 
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='GROUPALIASES', event_type='ADD', record_id='$group_alias_id', event_code='ADMIN ADD GROUP ALIAS', event_sql=\"$SQL_log\", event_notes='';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='GROUPALIASES', event_type='ADD', record_id='$group_alias_id', event_code='ADMIN ADD GROUP ALIAS', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
 				}
 			}
 		}
@@ -14102,33 +14353,40 @@ if ($ADD==23111111111)
 
 if ($ADD==211111111111)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from servers where server_id='$server_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>SERVER NOT ADDED - there is already a server in the system with this ID\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($server_id) < 1) or (strlen($server_ip) < 7) )
-			{echo "<br>SERVER NOT ADDED - Please go back and look at the data you entered\n";}
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from servers where server_id='$server_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>SERVER NOT ADDED - there is already a server in the system with this ID\n";}
 		else
 			{
-			echo "<br>SERVER ADDED\n";
+			if ( (strlen($server_id) < 1) or (strlen($server_ip) < 7) )
+				{echo "<br>SERVER NOT ADDED - Please go back and look at the data you entered\n";}
+			else
+				{
+				echo "<br>SERVER ADDED\n";
 
-			$stmt="INSERT INTO servers (server_id,server_description,server_ip,active,asterisk_version,conf_secret,local_gmt,user_group) values('$server_id','$server_description','$server_ip','$active','$asterisk_version','$SSdefault_server_password','$SSdefault_local_gmt','$user_group');";
-			$rslt=mysql_query($stmt, $link);
+				$stmt="INSERT INTO servers (server_id,server_description,server_ip,active,asterisk_version,conf_secret,local_gmt,user_group) values('$server_id','$server_description','$server_ip','$active','$asterisk_version','$SSdefault_server_password','$SSdefault_local_gmt','$user_group');";
+				$rslt=mysql_query($stmt, $link);
 
-			$stmtA="UPDATE servers SET rebuild_conf_files='Y',rebuild_music_on_hold='Y',sounds_update='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
-			$rslt=mysql_query($stmtA, $link);
+				$stmtA="UPDATE servers SET rebuild_conf_files='Y',rebuild_music_on_hold='Y',sounds_update='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
+				$rslt=mysql_query($stmtA, $link);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SERVERS', event_type='ADD', record_id='$server_id', event_code='ADMIN ADD SERVER', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SERVERS', event_type='ADD', record_id='$server_id', event_code='ADMIN ADD SERVER', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=311111111111;
@@ -14141,51 +14399,58 @@ if ($ADD==211111111111)
 
 if ($ADD==221111111111)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT max_vicidial_trunks from servers where server_ip='$server_ip';";
-	$rslt=mysql_query($stmt, $link);
-	$rowx=mysql_fetch_row($rslt);
-	$MAXvicidial_trunks = $rowx[0];
-	
-	$stmt="SELECT sum(dedicated_trunks) from vicidial_server_trunks where server_ip='$server_ip' and campaign_id !='$campaign_id';";
-	$rslt=mysql_query($stmt, $link);
-	$rowx=mysql_fetch_row($rslt);
-	$SUMvicidial_trunks = ($rowx[0] + $dedicated_trunks);
-	
-	if ($SUMvicidial_trunks > $MAXvicidial_trunks)
+	if ($add_copy_disabled > 0)
 		{
-		echo "<br>VICIDIAL SERVER TRUNK RECORD NOT ADDED - the number of vicidial trunks is too high: $SUMvicidial_trunks / $MAXvicidial_trunks\n";
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_server_trunks where campaign_id='$campaign_id' and server_ip='$server_ip';";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT max_vicidial_trunks from servers where server_ip='$server_ip';";
 		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		if ($row[0] > 0)
-			{echo "<br>VICIDIAL SERVER TRUNK RECORD NOT ADDED - there is already a server-trunk record for this campaign\n";}
+		$rowx=mysql_fetch_row($rslt);
+		$MAXvicidial_trunks = $rowx[0];
+		
+		$stmt="SELECT sum(dedicated_trunks) from vicidial_server_trunks where server_ip='$server_ip' and campaign_id !='$campaign_id';";
+		$rslt=mysql_query($stmt, $link);
+		$rowx=mysql_fetch_row($rslt);
+		$SUMvicidial_trunks = ($rowx[0] + $dedicated_trunks);
+		
+		if ($SUMvicidial_trunks > $MAXvicidial_trunks)
+			{
+			echo "<br>VICIDIAL SERVER TRUNK RECORD NOT ADDED - the number of vicidial trunks is too high: $SUMvicidial_trunks / $MAXvicidial_trunks\n";
+			}
 		else
 			{
-			if ( (strlen($campaign_id) < 2) or (strlen($server_ip) < 7) or (strlen($dedicated_trunks) < 1) or (strlen($trunk_restriction) < 1) )
-				{
-				echo "<br>VICIDIAL SERVER TRUNK RECORD NOT ADDED - Please go back and look at the data you entered\n";
-				echo "<br>campaign must be between 3 and 8 characters in length\n";
-				echo "<br>server_ip delay must be at least 7 characters\n";
-				echo "<br>trunks must be a digit from 0 to 9999\n";
-				}
+			$stmt="SELECT count(*) from vicidial_server_trunks where campaign_id='$campaign_id' and server_ip='$server_ip';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{echo "<br>VICIDIAL SERVER TRUNK RECORD NOT ADDED - there is already a server-trunk record for this campaign\n";}
 			else
 				{
-				echo "<br><B>VICIDIAL SERVER TRUNK RECORD ADDED: $campaign_id - $server_ip - $dedicated_trunks - $trunk_restriction</B>\n";
+				if ( (strlen($campaign_id) < 2) or (strlen($server_ip) < 7) or (strlen($dedicated_trunks) < 1) or (strlen($trunk_restriction) < 1) )
+					{
+					echo "<br>VICIDIAL SERVER TRUNK RECORD NOT ADDED - Please go back and look at the data you entered\n";
+					echo "<br>campaign must be between 3 and 8 characters in length\n";
+					echo "<br>server_ip delay must be at least 7 characters\n";
+					echo "<br>trunks must be a digit from 0 to 9999\n";
+					}
+				else
+					{
+					echo "<br><B>VICIDIAL SERVER TRUNK RECORD ADDED: $campaign_id - $server_ip - $dedicated_trunks - $trunk_restriction</B>\n";
 
-				$stmt="INSERT INTO vicidial_server_trunks(server_ip,campaign_id,dedicated_trunks,trunk_restriction) values('$server_ip','$campaign_id','$dedicated_trunks','$trunk_restriction');";
-				$rslt=mysql_query($stmt, $link);
+					$stmt="INSERT INTO vicidial_server_trunks(server_ip,campaign_id,dedicated_trunks,trunk_restriction) values('$server_ip','$campaign_id','$dedicated_trunks','$trunk_restriction');";
+					$rslt=mysql_query($stmt, $link);
 
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SERVERS_TRUNK', event_type='ADD', record_id='$server_ip', event_code='ADMIN ADD SERVER TRUNK', event_sql=\"$SQL_log\", event_notes='campaign: $campaign_id';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SERVERS_TRUNK', event_type='ADD', record_id='$server_ip', event_code='ADMIN ADD SERVER TRUNK', event_sql=\"$SQL_log\", event_notes='campaign: $campaign_id';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
 				}
 			}
 		}
@@ -14199,30 +14464,37 @@ if ($ADD==221111111111)
 
 if ($ADD==231111111111)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_conf_templates where template_id='$template_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>CONF TEMPLATE NOT ADDED - there is already a template in the system with this ID\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if (strlen($template_id) < 2)
-			{echo "<br>CONF TEMPLATE NOT ADDED - Please go back and look at the data you entered\n";}
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_conf_templates where template_id='$template_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>CONF TEMPLATE NOT ADDED - there is already a template in the system with this ID\n";}
 		else
 			{
-			echo "<br>CONF TEMPLATE ADDED\n";
+			if (strlen($template_id) < 2)
+				{echo "<br>CONF TEMPLATE NOT ADDED - Please go back and look at the data you entered\n";}
+			else
+				{
+				echo "<br>CONF TEMPLATE ADDED\n";
 
-			$stmt="INSERT INTO vicidial_conf_templates (template_id,template_name,template_contents,user_group) values('$template_id','$template_name','$template_contents','$user_group');";
-			$rslt=mysql_query($stmt, $link);
+				$stmt="INSERT INTO vicidial_conf_templates (template_id,template_name,template_contents,user_group) values('$template_id','$template_name','$template_contents','$user_group');";
+				$rslt=mysql_query($stmt, $link);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CONFTEMPLATES', event_type='ADD', record_id='$template_id', event_code='ADMIN ADD CONF TEMPLATE', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CONFTEMPLATES', event_type='ADD', record_id='$template_id', event_code='ADMIN ADD CONF TEMPLATE', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=331111111111;
@@ -14235,33 +14507,40 @@ if ($ADD==231111111111)
 
 if ($ADD==241111111111)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_server_carriers where carrier_id='$carrier_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>CARRIER NOT ADDED - there is already a carrier in the system with this ID\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($carrier_id) < 2) or (strlen($server_ip) < 7) )
-			{echo "<br>CARRIER NOT ADDED - Please go back and look at the data you entered\n";}
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_server_carriers where carrier_id='$carrier_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>CARRIER NOT ADDED - there is already a carrier in the system with this ID\n";}
 		else
 			{
-			echo "<br>CARRIER ADDED\n";
+			if ( (strlen($carrier_id) < 2) or (strlen($server_ip) < 7) )
+				{echo "<br>CARRIER NOT ADDED - Please go back and look at the data you entered\n";}
+			else
+				{
+				echo "<br>CARRIER ADDED\n";
 
-			$stmt="INSERT INTO vicidial_server_carriers (carrier_id,carrier_name,registration_string,template_id,account_entry,protocol,globals_string,dialplan_entry,server_ip,active,carrier_description,user_group) values('$carrier_id','$carrier_name','$registration_string','$template_id','$account_entry','$protocol','$globals_string','$dialplan_entry','$server_ip','N','$carrier_description','$user_group');";
-			$rslt=mysql_query($stmt, $link);
+				$stmt="INSERT INTO vicidial_server_carriers (carrier_id,carrier_name,registration_string,template_id,account_entry,protocol,globals_string,dialplan_entry,server_ip,active,carrier_description,user_group) values('$carrier_id','$carrier_name','$registration_string','$template_id','$account_entry','$protocol','$globals_string','$dialplan_entry','$server_ip','N','$carrier_description','$user_group');";
+				$rslt=mysql_query($stmt, $link);
 
-			$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
-			$rslt=mysql_query($stmtA, $link);
+				$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
+				$rslt=mysql_query($stmtA, $link);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CARRIERS', event_type='ADD', record_id='$carrier_id', event_code='ADMIN ADD CARRIER', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CARRIERS', event_type='ADD', record_id='$carrier_id', event_code='ADMIN ADD CARRIER', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=341111111111;
@@ -14274,33 +14553,40 @@ if ($ADD==241111111111)
 
 if ($ADD==240111111111)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_server_carriers where carrier_id='$carrier_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>CARRIER NOT ADDED - there is already a carrier in the system with this ID\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($carrier_id) < 2) or (strlen($server_ip) < 7) )
-			{echo "<br>CARRIER NOT ADDED - Please go back and look at the data you entered\n";}
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_server_carriers where carrier_id='$carrier_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>CARRIER NOT ADDED - there is already a carrier in the system with this ID\n";}
 		else
 			{
-			echo "<br>COPIED CARRIER ADDED\n";
+			if ( (strlen($carrier_id) < 2) or (strlen($server_ip) < 7) )
+				{echo "<br>CARRIER NOT ADDED - Please go back and look at the data you entered\n";}
+			else
+				{
+				echo "<br>COPIED CARRIER ADDED\n";
 
-			$stmt="INSERT INTO vicidial_server_carriers (carrier_id,carrier_name,registration_string,template_id,account_entry,protocol,globals_string,dialplan_entry,server_ip,active,carrier_description,user_group) SELECT \"$carrier_id\",\"$carrier_name\",registration_string,template_id,account_entry,protocol,globals_string,dialplan_entry,\"$server_ip\",\"N\",carrier_description,user_group from vicidial_server_carriers where carrier_id=\"$source_carrier\";";
-			$rslt=mysql_query($stmt, $link);
+				$stmt="INSERT INTO vicidial_server_carriers (carrier_id,carrier_name,registration_string,template_id,account_entry,protocol,globals_string,dialplan_entry,server_ip,active,carrier_description,user_group) SELECT \"$carrier_id\",\"$carrier_name\",registration_string,template_id,account_entry,protocol,globals_string,dialplan_entry,\"$server_ip\",\"N\",carrier_description,user_group from vicidial_server_carriers where carrier_id=\"$source_carrier\";";
+				$rslt=mysql_query($stmt, $link);
 
-			$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
-			$rslt=mysql_query($stmtA, $link);
+				$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
+				$rslt=mysql_query($stmtA, $link);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CARRIERS', event_type='COPY', record_id='$carrier_id', event_code='ADMIN COPY CARRIER', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CARRIERS', event_type='COPY', record_id='$carrier_id', event_code='ADMIN COPY CARRIER', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=341111111111;
@@ -14313,30 +14599,37 @@ if ($ADD==240111111111)
 
 if ($ADD==251111111111)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_tts_prompts where tts_id='$tts_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>TTS ENTRY NOT ADDED - there is already a tts entry in the system with this ID\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($tts_id) < 2) or (strlen($tts_name) < 3) )
-			{echo "<br>TTS ENTRY NOT ADDED - Please go back and look at the data you entered\n";}
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_tts_prompts where tts_id='$tts_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>TTS ENTRY NOT ADDED - there is already a tts entry in the system with this ID\n";}
 		else
 			{
-			echo "<br>TTS ENTRY ADDED\n";
+			if ( (strlen($tts_id) < 2) or (strlen($tts_name) < 3) )
+				{echo "<br>TTS ENTRY NOT ADDED - Please go back and look at the data you entered\n";}
+			else
+				{
+				echo "<br>TTS ENTRY ADDED\n";
 
-			$stmt="INSERT INTO vicidial_tts_prompts SET tts_id='$tts_id',tts_name='$tts_name',active='$active',user_group='$user_group';";
-			$rslt=mysql_query($stmt, $link);
+				$stmt="INSERT INTO vicidial_tts_prompts SET tts_id='$tts_id',tts_name='$tts_name',active='$active',user_group='$user_group';";
+				$rslt=mysql_query($stmt, $link);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TTS', event_type='ADD', record_id='$tts_id', event_code='ADMIN ADD TTS', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TTS', event_type='ADD', record_id='$tts_id', event_code='ADMIN ADD TTS', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=351111111111;
@@ -14349,30 +14642,37 @@ if ($ADD==251111111111)
 
 if ($ADD==261111111111)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_music_on_hold where moh_id='$moh_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>MUSIC ON HOLD ENTRY NOT ADDED - there is already a moh entry in the system with this ID\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($moh_id) < 2) or (strlen($moh_name) < 3) or ($moh_id=='sounds') or ($moh_id=='agi-bin') or ($moh_id=='astdb') or ($moh_id=='keys') )
-			{echo "<br>MUSIC ON HOLD ENTRY NOT ADDED - Please go back and look at the data you entered\n";}
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_music_on_hold where moh_id='$moh_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>MUSIC ON HOLD ENTRY NOT ADDED - there is already a moh entry in the system with this ID\n";}
 		else
 			{
-			echo "<br>MUSIC ON HOLD ENTRY ADDED\n";
+			if ( (strlen($moh_id) < 2) or (strlen($moh_name) < 3) or ($moh_id=='sounds') or ($moh_id=='agi-bin') or ($moh_id=='astdb') or ($moh_id=='keys') )
+				{echo "<br>MUSIC ON HOLD ENTRY NOT ADDED - Please go back and look at the data you entered\n";}
+			else
+				{
+				echo "<br>MUSIC ON HOLD ENTRY ADDED\n";
 
-			$stmt="INSERT INTO vicidial_music_on_hold SET moh_id='$moh_id',moh_name='$moh_name',random='$random',user_group='$user_group';";
-			$rslt=mysql_query($stmt, $link);
+				$stmt="INSERT INTO vicidial_music_on_hold SET moh_id='$moh_id',moh_name='$moh_name',random='$random',user_group='$user_group';";
+				$rslt=mysql_query($stmt, $link);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='MOH', event_type='ADD', record_id='$moh_id', event_code='ADMIN ADD MOH', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='MOH', event_type='ADD', record_id='$moh_id', event_code='ADMIN ADD MOH', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=361111111111;
@@ -14385,45 +14685,52 @@ if ($ADD==261111111111)
 
 if ($ADD==271111111111)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_voicemail where voicemail_id='$voicemail_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>VOICEMAIL BOX NOT ADDED - there is already a voicemail box in the system with this ID\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		$stmt="SELECT count(*) from phones where voicemail_id='$voicemail_id';";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_voicemail where voicemail_id='$voicemail_id';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		if ($row[0] > 0)
-			{echo "<br>VOICEMAIL BOX NOT ADDED - there is already a phone in the system with this voicemail ID\n";}
+			{echo "<br>VOICEMAIL BOX NOT ADDED - there is already a voicemail box in the system with this ID\n";}
 		else
 			{
-			if ( (strlen($voicemail_id) < 2) or (strlen($pass) < 2) or (strlen($fullname) < 3) )
-				{echo "<br>VOICEMAIL BOX NOT ADDED - Please go back and look at the data you entered\n";}
+			$stmt="SELECT count(*) from phones where voicemail_id='$voicemail_id';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{echo "<br>VOICEMAIL BOX NOT ADDED - there is already a phone in the system with this voicemail ID\n";}
 			else
 				{
-				echo "<br>VOICEMAIL BOX ADDED\n";
+				if ( (strlen($voicemail_id) < 2) or (strlen($pass) < 2) or (strlen($fullname) < 3) )
+					{echo "<br>VOICEMAIL BOX NOT ADDED - Please go back and look at the data you entered\n";}
+				else
+					{
+					echo "<br>VOICEMAIL BOX ADDED\n";
 
-				$stmt="INSERT INTO vicidial_voicemail SET voicemail_id='$voicemail_id',pass='$pass',email='$email',fullname='$fullname',active='$active',voicemail_timezone='$SSdefault_voicemail_timezone',user_group='$user_group';";
-				$rslt=mysql_query($stmt, $link);
+					$stmt="INSERT INTO vicidial_voicemail SET voicemail_id='$voicemail_id',pass='$pass',email='$email',fullname='$fullname',active='$active',voicemail_timezone='$SSdefault_voicemail_timezone',user_group='$user_group';";
+					$rslt=mysql_query($stmt, $link);
 
-				$stmt="SELECT active_voicemail_server from system_settings;";
-				$rslt=mysql_query($stmt, $link);
-				$row=mysql_fetch_row($rslt);
-				$active_voicemail_server = $row[0];
+					$stmt="SELECT active_voicemail_server from system_settings;";
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					$active_voicemail_server = $row[0];
 
-				$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$active_voicemail_server';";
-				$rslt=mysql_query($stmtA, $link);
+					$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$active_voicemail_server';";
+					$rslt=mysql_query($stmtA, $link);
 
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='VOICEMAIL', event_type='ADD', record_id='$voicemail_id', event_code='ADMIN ADD VOICEMAIL', event_sql=\"$SQL_log\", event_notes='';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='VOICEMAIL', event_type='ADD', record_id='$voicemail_id', event_code='ADMIN ADD VOICEMAIL', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
 				}
 			}
 		}
@@ -14437,30 +14744,37 @@ if ($ADD==271111111111)
 
 if ($ADD==281111111111)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_screen_labels where label_id='$label_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>SCREEN LABEL NOT ADDED - there is already a label in the system with this ID\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($label_id) < 2) or (strlen($label_name) < 2) )
-			{echo "<br>SCREEN LABEL NOT ADDED - Please go back and look at the data you entered\n";}
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_screen_labels where label_id='$label_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>SCREEN LABEL NOT ADDED - there is already a label in the system with this ID\n";}
 		else
 			{
-			echo "<br>SCREEN LABEL ADDED\n";
+			if ( (strlen($label_id) < 2) or (strlen($label_name) < 2) )
+				{echo "<br>SCREEN LABEL NOT ADDED - Please go back and look at the data you entered\n";}
+			else
+				{
+				echo "<br>SCREEN LABEL ADDED\n";
 
-			$stmt="INSERT INTO vicidial_screen_labels SET label_id='$label_id',label_name='$label_name',active='N',user_group='$user_group';";
-			$rslt=mysql_query($stmt, $link);
+				$stmt="INSERT INTO vicidial_screen_labels SET label_id='$label_id',label_name='$label_name',active='N',user_group='$user_group';";
+				$rslt=mysql_query($stmt, $link);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LABELS', event_type='ADD', record_id='$label_id', event_code='ADMIN ADD LABEL', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LABELS', event_type='ADD', record_id='$label_id', event_code='ADMIN ADD LABEL', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=381111111111;
@@ -14473,38 +14787,45 @@ if ($ADD==281111111111)
 
 if ($ADD==291111111111)
 	{
-	if ( (preg_match("/contact_information/",$SStables_use_alt_log_db)) and (strlen($SSalt_log_server_ip)>4) and (strlen($SSalt_log_dbname)>0) )
+	if ($add_copy_disabled > 0)
 		{
-		$linkALT=mysql_connect("$SSalt_log_server_ip", "$SSalt_log_login", "$SSalt_log_pass");
-		mysql_select_db("$SSalt_log_dbname", $linkALT);
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
 		}
 	else
-		{$linkALT = $link;}
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from contact_information where first_name='$first_name' and last_name='$last_name' and office_num='$office_num';";
-	$rslt=mysql_query($stmt, $linkALT);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>CONTACT NOT ADDED - there is already a contact in the system with this name and number\n";}
-	else
 		{
-		if (strlen($last_name) < 2)
-			{echo "<br>CONTACT NOT ADDED - Please go back and look at the data you entered\n";}
+		if ( (preg_match("/contact_information/",$SStables_use_alt_log_db)) and (strlen($SSalt_log_server_ip)>4) and (strlen($SSalt_log_dbname)>0) )
+			{
+			$linkALT=mysql_connect("$SSalt_log_server_ip", "$SSalt_log_login", "$SSalt_log_pass");
+			mysql_select_db("$SSalt_log_dbname", $linkALT);
+			}
+		else
+			{$linkALT = $link;}
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from contact_information where first_name='$first_name' and last_name='$last_name' and office_num='$office_num';";
+		$rslt=mysql_query($stmt, $linkALT);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>CONTACT NOT ADDED - there is already a contact in the system with this name and number\n";}
 		else
 			{
-			echo "<br>CONTACT ADDED\n";
+			if (strlen($last_name) < 2)
+				{echo "<br>CONTACT NOT ADDED - Please go back and look at the data you entered\n";}
+			else
+				{
+				echo "<br>CONTACT ADDED\n";
 
-			$stmt="INSERT INTO contact_information SET first_name='$first_name',last_name='$last_name',office_num='$office_num',cell_num='$cell_num',other_num1='$other_num1',other_num2='$other_num2',bu_name='$bu_name',department='$department',group_name='$group_name',job_title='$job_title',location='$location';";
-			$rslt=mysql_query($stmt, $linkALT);
-			$contact_id = mysql_insert_id($linkALT);
+				$stmt="INSERT INTO contact_information SET first_name='$first_name',last_name='$last_name',office_num='$office_num',cell_num='$cell_num',other_num1='$other_num1',other_num2='$other_num2',bu_name='$bu_name',department='$department',group_name='$group_name',job_title='$job_title',location='$location';";
+				$rslt=mysql_query($stmt, $linkALT);
+				$contact_id = mysql_insert_id($linkALT);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CONTACTS', event_type='ADD', record_id='$contact_id', event_code='ADMIN ADD CONTACT', event_sql=\"$SQL_log\", event_notes='$first_name $last_name $office_num';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CONTACTS', event_type='ADD', record_id='$contact_id', event_code='ADMIN ADD CONTACT', event_sql=\"$SQL_log\", event_notes='$first_name $last_name $office_num';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=391111111111;
@@ -14517,22 +14838,29 @@ if ($ADD==291111111111)
 
 if ($ADD==2111111111111)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from conferences where conf_exten='$conf_exten' and server_ip='$server_ip';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>CONFERENCE NOT ADDED - there is already a conference in the system with this ID and server\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($conf_exten) < 1) or (strlen($server_ip) < 7) )
-			{echo "<br>CONFERENCE NOT ADDED - Please go back and look at the data you entered\n";}
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from conferences where conf_exten='$conf_exten' and server_ip='$server_ip';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>CONFERENCE NOT ADDED - there is already a conference in the system with this ID and server\n";}
 		else
 			{
-			echo "<br>CONFERENCE ADDED\n";
+			if ( (strlen($conf_exten) < 1) or (strlen($server_ip) < 7) )
+				{echo "<br>CONFERENCE NOT ADDED - Please go back and look at the data you entered\n";}
+			else
+				{
+				echo "<br>CONFERENCE ADDED\n";
 
-			$stmt="INSERT INTO conferences (conf_exten,server_ip) values('$conf_exten','$server_ip');";
-			$rslt=mysql_query($stmt, $link);
+				$stmt="INSERT INTO conferences (conf_exten,server_ip) values('$conf_exten','$server_ip');";
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=3111111111111;
@@ -14545,22 +14873,29 @@ if ($ADD==2111111111111)
 
 if ($ADD==21111111111111)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_conferences where conf_exten='$conf_exten' and server_ip='$server_ip';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>VICIDIAL CONFERENCE NOT ADDED - there is already a vicidial conference in the system with this ID and server\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($conf_exten) < 1) or (strlen($server_ip) < 7) )
-			{echo "<br>VICIDIAL CONFERENCE NOT ADDED - Please go back and look at the data you entered\n";}
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_conferences where conf_exten='$conf_exten' and server_ip='$server_ip';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>VICIDIAL CONFERENCE NOT ADDED - there is already a vicidial conference in the system with this ID and server\n";}
 		else
 			{
-			echo "<br>VICIDIAL CONFERENCE ADDED\n";
+			if ( (strlen($conf_exten) < 1) or (strlen($server_ip) < 7) )
+				{echo "<br>VICIDIAL CONFERENCE NOT ADDED - Please go back and look at the data you entered\n";}
+			else
+				{
+				echo "<br>VICIDIAL CONFERENCE ADDED\n";
 
-			$stmt="INSERT INTO vicidial_conferences (conf_exten,server_ip) values('$conf_exten','$server_ip');";
-			$rslt=mysql_query($stmt, $link);
+				$stmt="INSERT INTO vicidial_conferences (conf_exten,server_ip) values('$conf_exten','$server_ip');";
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=31111111111111;
@@ -14573,41 +14908,48 @@ if ($ADD==21111111111111)
 
 if ($ADD==221111111111111)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_campaign_statuses where status='$status_id' $LOGallowed_campaignsSQL;";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>SYSTEM STATUS NOT ADDED - there is already a campaign-status in the system with this name: $row[0]\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_statuses where status='$status_id';";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_campaign_statuses where status='$status_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		if ($row[0] > 0)
-			{echo "<br>SYSTEM STATUS NOT ADDED - there is already a global-status in the system with this name\n";}
+			{echo "<br>SYSTEM STATUS NOT ADDED - there is already a campaign-status in the system with this name: $row[0]\n";}
 		else
 			{
-			if ( (strlen($status_id) < 1) or (strlen($status_name) < 2) )
-				{
-				echo "<br>SYSTEM STATUS NOT ADDED - Please go back and look at the data you entered\n";
-				echo "<br>status must be between 1 and 8 characters in length\n";
-				echo "<br>status name must be between 2 and 30 characters in length\n";
-				}
+			$stmt="SELECT count(*) from vicidial_statuses where status='$status_id';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			if ($row[0] > 0)
+				{echo "<br>SYSTEM STATUS NOT ADDED - there is already a global-status in the system with this name\n";}
 			else
 				{
-				echo "<br><B>SYSTEM STATUS ADDED: $status_name - $status_id</B>\n";
+				if ( (strlen($status_id) < 1) or (strlen($status_name) < 2) )
+					{
+					echo "<br>SYSTEM STATUS NOT ADDED - Please go back and look at the data you entered\n";
+					echo "<br>status must be between 1 and 8 characters in length\n";
+					echo "<br>status name must be between 2 and 30 characters in length\n";
+					}
+				else
+					{
+					echo "<br><B>SYSTEM STATUS ADDED: $status_name - $status_id</B>\n";
 
-				$stmt="INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('$status_id','$status_name','$selectable','$human_answered','$category','$sale','$dnc','$customer_contact','$not_interested','$unworkable','$scheduled_callbacks','$completed');";
-				$rslt=mysql_query($stmt, $link);
+					$stmt="INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('$status_id','$status_name','$selectable','$human_answered','$category','$sale','$dnc','$customer_contact','$not_interested','$unworkable','$scheduled_callbacks','$completed');";
+					$rslt=mysql_query($stmt, $link);
 
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SYSTEMSTATUSES', event_type='ADD', record_id='$status_id', event_code='ADMIN ADD SYSTEM STATUS', event_sql=\"$SQL_log\", event_notes='';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SYSTEMSTATUSES', event_type='ADD', record_id='$status_id', event_code='ADMIN ADD SYSTEM STATUS', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+					}
 				}
 			}
 		}
@@ -14621,43 +14963,50 @@ if ($ADD==221111111111111)
 
 if ($ADD==231111111111111)
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	$stmt="SELECT count(*) from vicidial_status_categories where vsc_id='$vsc_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	if ($row[0] > 0)
-		{echo "<br>STATUS CATEGORY NOT ADDED - there is already a status category in the system with this ID: $row[0]\n";}
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>You do not have permission to add records on this system -system_settings-\n";
+		}
 	else
 		{
-		if ( (strlen($vsc_id) < 2) or (strlen($vsc_id) > 20) or (strlen($vsc_name) < 2) )
-			{
-			echo "<br>STATUS CATEGORY NOT ADDED - Please go back and look at the data you entered\n";
-			echo "<br>ID must be between 2 and 20 characters in length\n";
-			echo "<br>name name must be between 2 and 50 characters in length\n";
-			}
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_status_categories where vsc_id='$vsc_id';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>STATUS CATEGORY NOT ADDED - there is already a status category in the system with this ID: $row[0]\n";}
 		else
 			{
-			echo "<br><B>STATUS CATEGORY ADDED: $vsc_id - $vsc_name</B>\n";
-
-			$stmt="SELECT count(*) from vicidial_status_categories where tovdad_display='Y' and vsc_id NOT IN('$vsc_id');";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			if ( ($row[0] > 3) and (ereg('Y',$tovdad_display)) )
+			if ( (strlen($vsc_id) < 2) or (strlen($vsc_id) > 20) or (strlen($vsc_name) < 2) )
 				{
-				$tovdad_display = 'N';
-				echo "<br><B>ERROR: There are already 4 Status Categories set to TimeOnVDAD Display</B>\n";
+				echo "<br>STATUS CATEGORY NOT ADDED - Please go back and look at the data you entered\n";
+				echo "<br>ID must be between 2 and 20 characters in length\n";
+				echo "<br>name name must be between 2 and 50 characters in length\n";
 				}
+			else
+				{
+				echo "<br><B>STATUS CATEGORY ADDED: $vsc_id - $vsc_name</B>\n";
 
-			$stmt="INSERT INTO vicidial_status_categories (vsc_id,vsc_name,vsc_description,tovdad_display,sale_category,dead_lead_category) values('$vsc_id','$vsc_name','$vsc_description','$tovdad_display','$sale_category','$dead_lead_category');";
-			$rslt=mysql_query($stmt, $link);
+				$stmt="SELECT count(*) from vicidial_status_categories where tovdad_display='Y' and vsc_id NOT IN('$vsc_id');";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				if ( ($row[0] > 3) and (ereg('Y',$tovdad_display)) )
+					{
+					$tovdad_display = 'N';
+					echo "<br><B>ERROR: There are already 4 Status Categories set to TimeOnVDAD Display</B>\n";
+					}
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='STATUSCATEGORIES', event_type='ADD', record_id='$vsc_id', event_code='ADMIN ADD STATUS CATEGORY', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+				$stmt="INSERT INTO vicidial_status_categories (vsc_id,vsc_name,vsc_description,tovdad_display,sale_category,dead_lead_category) values('$vsc_id','$vsc_name','$vsc_description','$tovdad_display','$sale_category','$dead_lead_category');";
+				$rslt=mysql_query($stmt, $link);
+
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='STATUSCATEGORIES', event_type='ADD', record_id='$vsc_id', event_code='ADMIN ADD STATUS CATEGORY', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				}
 			}
 		}
 	$ADD=331111111111111;
@@ -16319,37 +16668,44 @@ if ($ADD==49)
 		##### ADD a NEW list mix #####
 			if ($stage=='NEWMIX')
 			{
-			echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-
-			if ( (strlen($campaign_id) < 2) or (strlen($vcl_id) < 1) or (strlen($vcl_name) < 2) )
+			if ($add_copy_disabled > 0)
 				{
-				echo "<br>LIST MIX NOT ADDED - Please go back and look at the data you entered\n";
-				echo "<br>vcl_id must be between 1 and 20 characters in length\n";
-				echo "<br>vcl_name must be at least 2 characters in length\n";
+				echo "<br>You do not have permission to add records on this system -system_settings-\n";
 				}
 			else
 				{
-				$stmt="SELECT count(*) from vicidial_campaigns_list_mix where vcl_id='$vcl_id' $LOGallowed_campaignsSQL;";
-				$rslt=mysql_query($stmt, $link);
-				$row=mysql_fetch_row($rslt);
-				if ($row[0] > 0)
+				echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+				if ( (strlen($campaign_id) < 2) or (strlen($vcl_id) < 1) or (strlen($vcl_name) < 2) )
 					{
-					echo "<br>LIST MIX NOT ADDED - There is already a list mix with this ID in the system\n";
+					echo "<br>LIST MIX NOT ADDED - Please go back and look at the data you entered\n";
+					echo "<br>vcl_id must be between 1 and 20 characters in length\n";
+					echo "<br>vcl_name must be at least 2 characters in length\n";
 					}
 				else
 					{
-					$stmt="INSERT INTO vicidial_campaigns_list_mix SET list_mix_container='$list_id|1|100| $status -|',campaign_id='$campaign_id',vcl_id='$vcl_id',vcl_name='$vcl_name',mix_method='$mix_method',status='INACTIVE';";
+					$stmt="SELECT count(*) from vicidial_campaigns_list_mix where vcl_id='$vcl_id' $LOGallowed_campaignsSQL;";
 					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					if ($row[0] > 0)
+						{
+						echo "<br>LIST MIX NOT ADDED - There is already a list mix with this ID in the system\n";
+						}
+					else
+						{
+						$stmt="INSERT INTO vicidial_campaigns_list_mix SET list_mix_container='$list_id|1|100| $status -|',campaign_id='$campaign_id',vcl_id='$vcl_id',vcl_name='$vcl_name',mix_method='$mix_method',status='INACTIVE';";
+						$rslt=mysql_query($stmt, $link);
 
-					### LOG INSERTION Admin Log Table ###
-					$SQL_log = "$stmt|";
-					$SQL_log = ereg_replace(';','',$SQL_log);
-					$SQL_log = addslashes($SQL_log);
-					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_LISTMIX', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN LIST MIX', event_sql=\"$SQL_log\", event_notes='List Mix: $vcl_id';";
-					if ($DB) {echo "|$stmt|\n";}
-					$rslt=mysql_query($stmt, $link);
+						### LOG INSERTION Admin Log Table ###
+						$SQL_log = "$stmt|";
+						$SQL_log = ereg_replace(';','',$SQL_log);
+						$SQL_log = addslashes($SQL_log);
+						$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_LISTMIX', event_type='ADD', record_id='$campaign_id', event_code='ADMIN ADD CAMPAIGN LIST MIX', event_sql=\"$SQL_log\", event_notes='List Mix: $vcl_id';";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_query($stmt, $link);
 
-					echo "<br><B>LIST MIX ADDED: $campaign_id - $vcl_id - $vcl_name</B>\n";
+						echo "<br><B>LIST MIX ADDED: $campaign_id - $vcl_id - $vcl_name</B>\n";
+						}
 					}
 				}
 			}
@@ -18273,7 +18629,7 @@ if ($ADD==411111111111111)
 			}
 		$tables_use_alt_log_db = preg_replace("/,$/","",$new_altlog_value);
 
-		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysql_real_escape_string($webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',custom_dialplan_entry='$custom_dialplan_entry',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db',webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',admin_modify_refresh='$admin_modify_refresh',nocache_admin='$nocache_admin',generate_cross_server_exten='$generate_cross_server_exten',queuemetrics_addmember_enabled='$queuemetrics_addmember_enabled',queuemetrics_dispo_pause='$queuemetrics_dispo_pause',label_hide_field_logs='$label_hide_field_logs',queuemetrics_pe_phone_append='$queuemetrics_pe_phone_append',test_campaign_calls='$test_campaign_calls',agents_calls_reset='$agents_calls_reset',default_voicemail_timezone='$default_voicemail_timezone',default_local_gmt='$default_local_gmt',noanswer_log='$noanswer_log',alt_log_server_ip='$alt_log_server_ip',alt_log_dbname='$alt_log_dbname',alt_log_login='$alt_log_login',alt_log_pass='$alt_log_pass',tables_use_alt_log_db='$tables_use_alt_log_db',did_agent_log='$did_agent_log',campaign_cid_areacodes_enabled='$campaign_cid_areacodes_enabled',pllb_grouping_limit='$pllb_grouping_limit',did_ra_extensions_enabled='$did_ra_extensions_enabled',expanded_list_stats='$expanded_list_stats',contacts_enabled='$contacts_enabled',call_menu_qualify_enabled='$call_menu_qualify_enabled',admin_list_counts='$admin_list_counts',allow_voicemail_greeting='$allow_voicemail_greeting',queuemetrics_socket='$queuemetrics_socket',queuemetrics_socket_url='$queuemetrics_socket_url',enhanced_disconnect_logging='$enhanced_disconnect_logging',allow_emails='$allow_emails';";
+		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysql_real_escape_string($webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',custom_dialplan_entry='$custom_dialplan_entry',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db',webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',admin_modify_refresh='$admin_modify_refresh',nocache_admin='$nocache_admin',generate_cross_server_exten='$generate_cross_server_exten',queuemetrics_addmember_enabled='$queuemetrics_addmember_enabled',queuemetrics_dispo_pause='$queuemetrics_dispo_pause',label_hide_field_logs='$label_hide_field_logs',queuemetrics_pe_phone_append='$queuemetrics_pe_phone_append',test_campaign_calls='$test_campaign_calls',agents_calls_reset='$agents_calls_reset',default_voicemail_timezone='$default_voicemail_timezone',default_local_gmt='$default_local_gmt',noanswer_log='$noanswer_log',alt_log_server_ip='$alt_log_server_ip',alt_log_dbname='$alt_log_dbname',alt_log_login='$alt_log_login',alt_log_pass='$alt_log_pass',tables_use_alt_log_db='$tables_use_alt_log_db',did_agent_log='$did_agent_log',campaign_cid_areacodes_enabled='$campaign_cid_areacodes_enabled',pllb_grouping_limit='$pllb_grouping_limit',did_ra_extensions_enabled='$did_ra_extensions_enabled',expanded_list_stats='$expanded_list_stats',contacts_enabled='$contacts_enabled',call_menu_qualify_enabled='$call_menu_qualify_enabled',admin_list_counts='$admin_list_counts',allow_voicemail_greeting='$allow_voicemail_greeting',queuemetrics_socket='$queuemetrics_socket',queuemetrics_socket_url='$queuemetrics_socket_url',enhanced_disconnect_logging='$enhanced_disconnect_logging',allow_emails='$allow_emails',level_8_disable_add='$level_8_disable_add';";
 		$rslt=mysql_query($stmt, $link);
 
 		if ($reload_dialplan_on_servers > 0)
@@ -28202,31 +28558,38 @@ if ($ADD==3321)
 		##### BEGIN Add/Delete/Modify DID Remote Agent Extensions section #####
 		if ($stage == 'ADD')
 			{
-			$stmt="SELECT count(*) from vicidial_did_ra_extensions where did_id='$did_id' and user_start='$user_start' and extension='$extension';";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			if ($row[0] > 0)
-				{echo "<br>DID REMOTE AGENT EXTENSION OVERRIDE NOT ADDED - there is already an entry for this DID with this RA EXTENSION<br>\n";}
+			if ($add_copy_disabled > 0)
+				{
+				echo "<br>You do not have permission to add records on this system -system_settings-\n";
+				}
 			else
 				{
-				if ( (strlen($did_id) < 1) or (strlen($user_start) < 2) or (strlen($extension) < 4) )
-					{
-					echo "<br>DID REMOTE AGENT EXTENSION OVERRIDE NOT ADDED - Please go back and look at the data you entered<br>\n";
-					}
+				$stmt="SELECT count(*) from vicidial_did_ra_extensions where did_id='$did_id' and user_start='$user_start' and extension='$extension';";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				if ($row[0] > 0)
+					{echo "<br>DID REMOTE AGENT EXTENSION OVERRIDE NOT ADDED - there is already an entry for this DID with this RA EXTENSION<br>\n";}
 				else
 					{
-					echo "<br><B>DID REMOTE AGENT EXTENSION OVERRIDE ADDED: $did_id - $user_start - $extension</B><br>\n";
+					if ( (strlen($did_id) < 1) or (strlen($user_start) < 2) or (strlen($extension) < 4) )
+						{
+						echo "<br>DID REMOTE AGENT EXTENSION OVERRIDE NOT ADDED - Please go back and look at the data you entered<br>\n";
+						}
+					else
+						{
+						echo "<br><B>DID REMOTE AGENT EXTENSION OVERRIDE ADDED: $did_id - $user_start - $extension</B><br>\n";
 
-					$stmt="INSERT INTO vicidial_did_ra_extensions(did_id,user_start,extension,description,active) values('$did_id','$user_start','$extension','$description','Y');";
-					$rslt=mysql_query($stmt, $link);
+						$stmt="INSERT INTO vicidial_did_ra_extensions(did_id,user_start,extension,description,active) values('$did_id','$user_start','$extension','$description','Y');";
+						$rslt=mysql_query($stmt, $link);
 
-					### LOG INSERTION Admin Log Table ###
-					$SQL_log = "$stmt|";
-					$SQL_log = ereg_replace(';','',$SQL_log);
-					$SQL_log = addslashes($SQL_log);
-					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='DID_RA-EXTEN', event_type='ADD', record_id='$did_id', event_code='ADMIN ADD DID RA EXTEN', event_sql=\"$SQL_log\", event_notes='DID: $user_start - $extension';";
-					if ($DB) {echo "|$stmt|\n";}
-					$rslt=mysql_query($stmt, $link);
+						### LOG INSERTION Admin Log Table ###
+						$SQL_log = "$stmt|";
+						$SQL_log = ereg_replace(';','',$SQL_log);
+						$SQL_log = addslashes($SQL_log);
+						$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='DID_RA-EXTEN', event_type='ADD', record_id='$did_id', event_code='ADMIN ADD DID RA EXTEN', event_sql=\"$SQL_log\", event_notes='DID: $user_start - $extension';";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_query($stmt, $link);
+						}
 					}
 				}
 			}
@@ -31840,7 +32203,7 @@ if ($ADD==311111111111111)
 			$ALLagent_count =		$rowx[2];
 			}
 
-		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset,default_voicemail_timezone,default_local_gmt,noanswer_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_agent_log,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,queuemetrics_socket,queuemetrics_socket_url,enhanced_disconnect_logging,allow_emails from system_settings;";
+		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset,default_voicemail_timezone,default_local_gmt,noanswer_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_agent_log,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,queuemetrics_socket,queuemetrics_socket_url,enhanced_disconnect_logging,allow_emails,level_8_disable_add from system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$version =						$row[0];
@@ -31956,6 +32319,7 @@ if ($ADD==311111111111111)
 		$queuemetrics_socket_url =		$row[110];
 		$enhanced_disconnect_logging =	$row[111];
 		$allow_emails =					$row[112];
+		$level_8_disable_add =			$row[113];
 
 		echo "<br>MODIFY VICIDIAL SYSTEM SETTINGS<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=411111111111111>\n";
@@ -32147,6 +32511,8 @@ if ($ADD==311111111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Enable Contacts: </td><td align=left><select size=1 name=contacts_enabled><option>1</option><option>0</option><option selected>$contacts_enabled</option></select>$NWB#settings-contacts_enabled$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Call Menu Qualify Enabled: </td><td align=left><select size=1 name=call_menu_qualify_enabled><option>1</option><option>0</option><option selected>$call_menu_qualify_enabled</option></select>$NWB#settings-call_menu_qualify_enabled$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>Level 8 Disable Add: </td><td align=left><select size=1 name=level_8_disable_add><option>1</option><option>0</option><option selected>$level_8_disable_add</option></select>$NWB#settings-level_8_disable_add$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Admin List Counts: </td><td align=left><select size=1 name=admin_list_counts><option>1</option><option>0</option><option selected>$admin_list_counts</option></select>$NWB#settings-admin_list_counts$NWE</td></tr>\n";
 
@@ -34782,8 +35148,6 @@ if ($ADD==999999)
 			{echo "<LI><a href=\"AST_CLOSERstats.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Inbound Report</a></FONT>\n";}
 		if ( ( (preg_match("/Inbound Report/",$LOGallowed_reports)) and (preg_match("/Inbound DID Report/",$LOGallowed_reports)) ) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 			{echo "<LI><a href=\"AST_CLOSERstats.php?DID=Y\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Inbound Report by DID</a></FONT>\n";}
-		if ( ( (preg_match("/Inbound Report/",$LOGallowed_reports)) and (preg_match("/Inbound Email Report/",$LOGallowed_reports)) ) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
-			{echo "<LI><a href=\"AST_CLOSERstats.php?EMAIL=Y\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Inbound Email Report</a></FONT>\n";}
 		if ( (preg_match("/Inbound Service Level Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 			{echo "<LI><a href=\"AST_CLOSER_service_level.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Inbound Service Level Report</a></FONT>\n";}
 		if ( (preg_match("/Inbound Summary Hourly Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
@@ -34817,7 +35181,13 @@ if ($ADD==999999)
 				# echo "<LI><a href=\"vicidial_sales_viewer.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>AGENT SPREADSHEET PERFORMANCE</a></FONT>\n";
 		if ( ( (preg_match("/Dialer Inventory Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) and ($inventory_report_count > 0) )
 			{echo "<LI><a href=\"AST_dialer_inventory_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Dialer Inventory Report</a></FONT>\n";}
-
+		if ($SSemail_enabled > 0)
+			{
+			if ( ( (preg_match("/Inbound Report/",$LOGallowed_reports)) and (preg_match("/Inbound Email Report/",$LOGallowed_reports)) ) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+				{echo "<LI><a href=\"AST_CLOSERstats.php?EMAIL=Y\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Inbound Email Report</a></FONT>\n";}
+			if ( (preg_match("/Email Log Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+				{echo "<LI><a href=\"AST_email_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Email Log Report</a></FONT>\n";}
+			}
 		if ($LOGexport_reports >= 1)
 			{
 			if ( (preg_match("/Export Calls Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )

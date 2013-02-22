@@ -309,3 +309,7 @@ ALTER TABLE vicidial_campaigns ADD amd_inbound_group VARCHAR(20) default '';
 ALTER TABLE vicidial_campaigns ADD amd_callmenu VARCHAR(50) default '';
 
 UPDATE system_settings SET db_schema_version='1340',db_schema_update_date=NOW() where db_schema_version < 1340;
+
+ALTER TABLE system_settings ADD level_8_disable_add ENUM('0','1') default '0';
+
+UPDATE system_settings SET db_schema_version='1341',db_schema_update_date=NOW() where db_schema_version < 1341;

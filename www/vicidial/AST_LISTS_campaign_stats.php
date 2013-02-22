@@ -1,7 +1,7 @@
 <?php 
 # AST_LISTS_campaign_stats.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This is a list inventory report, not a calling report. This report will show
 # statistics for all of the lists in the selected campaigns
@@ -11,6 +11,7 @@
 # 110703-1815 - Added download option
 # 120224-0910 - Added HTML display option with bar graphs
 # 120524-1754 - Fixed status categories issue
+# 130221-1928 - small change to remove nested SQL query
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -179,6 +180,15 @@ else
 	$group_SQL = "where campaign_id IN($group_SQL)";
 	}
 
+# Get lists to query to avoid using a nested query
+$lists_id_str="";
+$list_stmt="SELECT list_id from vicidial_lists where active IN('Y','N') $group_SQLand";
+$list_rslt=mysql_query($list_stmt, $link);
+while ($lrow=mysql_fetch_row($list_rslt)) {
+	$lists_id_str.="'$lrow[0]',";
+}
+$lists_id_str=substr($lists_id_str,0,-1);
+
 $stmt="select vsc_id,vsc_name from vicidial_status_categories;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
@@ -200,7 +210,7 @@ while ($i < $statcats_to_print)
         }
 	$category_statuses=substr($category_statuses, 0, -1);
 
-	$category_stmt="select count(*) from vicidial_list where status in ($category_statuses) and list_id IN( SELECT list_id from vicidial_lists where active IN('Y','N') $group_SQLand)";
+	$category_stmt="select count(*) from vicidial_list where status in ($category_statuses) and list_id IN($lists_id_str)";
 	if ($DB) {echo "$category_stmt\n";}
 	$category_rslt=mysql_query($category_stmt, $link);
 	$category_row=mysql_fetch_row($category_rslt);
@@ -363,7 +373,15 @@ else
 	$GRAPH.="<th class=\"thgraph\" scope=\"col\">LEADS</th>\n";
 	$GRAPH.="</tr>\n";
 
-	$stmt="select count(*),list_id from vicidial_list where list_id IN( SELECT list_id from vicidial_lists where active IN('Y','N') $group_SQLand) group by list_id;";
+	$lists_id_str="";
+	$list_stmt="SELECT list_id from vicidial_lists where active IN('Y','N') $group_SQLand";
+	$list_rslt=mysql_query($list_stmt, $link);
+	while ($lrow=mysql_fetch_row($list_rslt)) {
+		$lists_id_str.="'$lrow[0]',";
+	}
+	$lists_id_str=substr($lists_id_str,0,-1);
+
+	$stmt="select count(*),list_id from vicidial_list where list_id IN($lists_id_str) group by list_id;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
 	$listids_to_print = mysql_num_rows($rslt);
