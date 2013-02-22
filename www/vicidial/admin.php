@@ -3231,7 +3231,7 @@ else
 # 130102-1135 - Small change to admin log viewing for email accounts
 # 130124-1721 - Added Inbound Email report link, added Status Display LEADID options(issue #639)
 # 130130-1207 - Added new CPD AMD options for In-Groups and CallMenus
-# 130221-1736 - Added Level 8 Disable Add option to system settings and new Email Log Report link
+# 130221-1736 - Added Level 8 Disable Add option to system settings and new Email Log Report link, DID exten made non-editable
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
@@ -28343,8 +28343,10 @@ if ($ADD==3311)
 		echo "<br>MODIFY A DID RECORD: $row[0]<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=4311>\n";
 		echo "<input type=hidden name=did_id value=\"$did_id\">\n";
+		echo "<input type=hidden name=did_pattern value=\"$did_pattern\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>DID Extension: </td><td align=left><input type=text name=did_pattern size=30 maxlength=50 value=\"$did_pattern\">$NWB#vicidial_inbound_dids-did_pattern$NWE</td></tr>\n";
+	#	echo "<tr bgcolor=#B6D3FC><td align=right>DID Extension: </td><td align=left><input type=text name=did_pattern size=30 maxlength=50 value=\"$did_pattern\">$NWB#vicidial_inbound_dids-did_pattern$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>DID Extension: </td><td align=left>$did_pattern $NWB#vicidial_inbound_dids-did_pattern$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>DID Description: </td><td align=left><input type=text name=did_description size=40 maxlength=50 value=\"$did_description\">$NWB#vicidial_inbound_dids-did_description$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=did_active><option>Y</option><option>N</option><option SELECTED>$did_active</option></select>$NWB#vicidial_inbound_dids-did_active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Admin User Group: </td><td align=left><select size=1 name=user_group>\n";
