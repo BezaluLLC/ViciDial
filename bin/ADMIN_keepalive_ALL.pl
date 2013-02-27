@@ -79,6 +79,7 @@
 # 121215-2036 - Added email inbound script keepalive, option E
 # 130103-0808 - Added CLI options for delay to be used with auto-dial and FILL processes
 # 130108-1657 - Changes for Asterisk 1.8 compatibility
+# 130227-1605 - Added --fill-staggered option for the AST_VDauto_dialFILL script
 #
 
 $DB=0; # Debug flag
@@ -100,6 +101,7 @@ $reset_test = "$hour$min";
 $cu3way_delay='';
 $autodial_delay='';
 $adfill_delay='';
+$fill_staggered='';
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -117,6 +119,7 @@ if (length($ARGV[0])>1)
 		print "  [-test] = test\n";
 		print "  [-autodial-delay=X] = setting delay milliseconds on local auto-dial process\n";
 		print "  [-adfill-delay=X] = setting delay milliseconds on auto-dial FILL process\n";
+		print "  [-fill-staggered] = enable experimental staggered auto-dial FILL process\n";
 		print "  [-cu3way] = keepalive for the optional 3way conference checker\n";
 		print "  [-cu3way-delay=X] = setting delay seconds on 3way conference checker\n";
 		print "  [-debug] = verbose debug messages\n";
@@ -170,6 +173,11 @@ if (length($ARGV[0])>1)
 				if ($DB > 0) {print "ADFILL Delay set to $CLIadfilldelay $adfill_delay\n";}
 				}
 			@CLIvarADFARY=@MT;   @CLIvarADFARY=@MT;
+			}
+		if ($args =~ /-fill-staggered/i)
+			{
+			$fill_staggered='--staggered';
+			if ($DB > 0) {print "\n----- FILL STAGGERED ENABLED -----\n\n";}
 			}
 		if ($args =~ /-cu3way/i)
 			{
@@ -604,7 +612,7 @@ if (
 		{ 
 		if ($DB) {print "starting AST_VDauto_dial_FILL...\n";}
 		# add a '-L' to the command below to activate logging
-		`/usr/bin/screen -d -m -S ASTVDautoFILL $PATHhome/AST_VDauto_dial_FILL.pl $adfill_delay`;
+		`/usr/bin/screen -d -m -S ASTVDautoFILL $PATHhome/AST_VDauto_dial_FILL.pl --debug $fill_staggered $adfill_delay`;
 		}
 	if ( ($email_inbound > 0) && ($runningemail_inbound < 1) )
 		{ 

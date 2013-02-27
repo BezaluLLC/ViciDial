@@ -12,7 +12,7 @@
 #
 # Should only be run on one server in a multi-server Asterisk/VICIDIAL cluster
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 61115-1246 - First build, framework setup, non-functional
@@ -33,6 +33,7 @@
 # 110901-1127 - Added campaign areacode cid function
 # 110922-1203 - Added logging of last calltime to campaign
 # 120831-1502 - Added vicidial_dial_log outbound call logging
+# 130227-1604 - Cleanup of staggered code, resetting of variables and arrays
 #
 
 ### begin parsing run-time options ###
@@ -48,9 +49,9 @@ if (length($ARGV[0])>1)
 	if ($args =~ /--help/i)
 		{
 		print "allowed run time options:\n";
-		print "  [-t] = test\n";
-		print "  [-debug] = verbose debug messages\n";
-		print "  [-staggered] = experimental staggering of placing calls on large multi-server systems\n";
+		print "  [--test] = test\n";
+		print "  [--debug] = verbose debug messages\n";
+		print "  [--staggered] = experimental staggering of placing calls on large multi-server systems\n";
 		print "  [--delay=XXX] = delay of XXX seconds per loop, default 2.5 seconds\n";
 		print "\n";
 		exit;
@@ -62,7 +63,7 @@ if (length($ARGV[0])>1)
 			$DB=1; # Debug flag, set to 0 for no debug messages
 			print "\n-- DEBUG --\n\n";
 			}
-		if ($args =~ /-t/i)
+		if ($args =~ /--test/i)
 			{
 			$TEST=1;
 			$T=1;
@@ -104,7 +105,7 @@ $RECprefix='7'; ### leave blank for no REC prefix
 
 
 # default path to astguiclient configuration file:
-$PATHconf =		'/etc/astguiclient.conf';
+$PATHconf =	'/etc/astguiclient.conf';
 
 open(conf, "$PATHconf") || die "can't open $PATHconf: $!\n";
 @conf = <conf>;
@@ -146,7 +147,7 @@ $server_ip = $VARserver_ip;		# Asterisk server IP
 
 if (!$VARDB_port) {$VARDB_port='3306';}
 
-	&get_time_now;	# update time/date variables
+&get_time_now;	# update time/date variables
 
 if (!$VDADLOGfile) {$VDADLOGfile = "$PATHlogs/vdautodial_FILL.$year-$mon-$mday";}
 
@@ -193,8 +194,8 @@ if ($sthArows > 0)
 	}
 $sthA->finish();
 
-	$event_string='LOGGED INTO MYSQL SERVER ON 1 CONNECTION|';
-	&event_logger;
+$event_string='LOGGED INTO MYSQL SERVER ON 1 CONNECTION|';
+&event_logger;
 
 $one_day_interval = 12;		# 1 month loops for one year 
 while($one_day_interval > 0)
@@ -208,9 +209,9 @@ while($one_day_interval > 0)
 
 		$VDADLOGfile = "$PATHlogs/vdautodial_FILL.$year-$mon-$mday";
 
-	###############################################################################
-	###### first figure out how many calls should be placed for each campaign per server
-	###############################################################################
+		###############################################################################
+		###### first figure out how many calls should be placed for each campaign per server
+		###############################################################################
 		@DBfill_campaign=@MT;
 		@DBfill_shortage=@MT;
 		@DBfill_tally=@MT;
@@ -251,6 +252,7 @@ while($one_day_interval > 0)
 		$balance_servers=0;
 		$lists_update = '';
 		$LUcount=0;
+		$staggered_ct=0;
 
 		$stmtA = "SELECT count(*) FROM servers where vicidial_balance_active = 'Y';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -555,12 +557,11 @@ while($one_day_interval > 0)
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 						$sthArows=$sthA->rows;
-						$rec_count=0;
-						while ($sthArows > $rec_count)
+						$LVA_count=0;
+						if ($sthArows > 0)
 							{
 							@aryA = $sthA->fetchrow_array;
 							$LVA_count =	$aryA[0];
-							$rec_count++;
 							}
 						$sthA->finish();
 
@@ -679,7 +680,7 @@ while($one_day_interval > 0)
 												if ($Lhour < 10) {$Lhour = "0$Lhour";}
 												if ($Lmin < 10) {$Lmin = "0$Lmin";}
 												if ($Lsec < 10) {$Lsec = "0$Lsec";}
-													$LLCT_DATE = "$Lyear-$Lmon-$Lmday $Lhour:$Lmin:$Lsec";
+												$LLCT_DATE = "$Lyear-$Lmon-$Lmday $Lhour:$Lmin:$Lsec";
 
 												if ( ($alt_dial =~ /ALT|ADDR3|X/) && ($DBIPautoaltdial[$user_CIPct] =~ /ALT|ADDR|X/) )
 													{
@@ -860,13 +861,8 @@ while($one_day_interval > 0)
 							&event_logger;
 							}
 
-
-
-
-
 						$server_CIPct++;
 						}
-
 					}
 				else
 					{
@@ -899,11 +895,11 @@ while($one_day_interval > 0)
 					$staggered_rank_ct=0;
 					while ( ($st_ct > $staggered_rank_ct) && ($staggered_ct > $staggered_fill) )
 						{
-						$TOTAL_available=0;
 						$stmtA = "SELECT server_ip FROM servers where vicidial_balance_rank='$ST_rank[$staggered_rank_ct]' and vicidial_balance_active = 'Y' order by server_ip LIMIT $ST_count[$staggered_rank_ct];";
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 						$sthArowsSIPS=$sthA->rows;
+						$TOTAL_available=0;
 						$st_si_ct=0;
 						while ($sthArowsSIPS > $st_si_ct)
 							{
@@ -929,6 +925,16 @@ while($one_day_interval > 0)
 						$failsafe_ct=0;
 						$RANK_calls_placed=0;
 						$st_si_loop=0;
+						$TEMP_server_ip = '';
+						$TEMP_vm_insert = '';
+						$TEMP_vac_insert = '';
+						$TEMP_vl_update = '';
+						$TEMP_st_logged = '';
+						$TEMP_vddl_inserts = '';
+						$TEMP_vm_insert = '';
+						$TEMP_vac_insert = '';
+						$TEMP_vddl_inserts = '';
+
 						while ( ($TOTAL_available > $RANK_calls_placed) && ($failsafe_ct < 99999) && ($staggered_fill <= $staggered_ct) )
 							{
 							$TEMP_server_ip = $ST_server_ip[$st_si_loop];
@@ -970,6 +976,9 @@ while($one_day_interval > 0)
 						}
 					}
 				$staggered_ct=0;
+				@ST_server_ip=@MT;
+				@ST_available=@MT;
+				@ST_tally=@MT;
 				@vm_inserts=@MT;
 				@vac_inserts=@MT;
 				@vl_updates=@MT;
