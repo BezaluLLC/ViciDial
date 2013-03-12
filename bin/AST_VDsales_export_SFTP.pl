@@ -1,13 +1,16 @@
 #!/usr/bin/perl
 #
-# AST_VDsales_export_SFTP.pl                version: 2.4
+# AST_VDsales_export_SFTP.pl                version: 2.6
 #
-# This script is designed to gather sales for a VICIDIAL Outbound-only campaign and
-# post them to a directory
+# !!!!!! IMPORTANT NOTE !!!!!
+# !!!!!! THIS SCRIPT REQUIRES THE Net::SFTP PERL MODULE TO RUN !!!!!
+#
+# This script is designed to gather sales for a VICIDIAL Outbound-only campaign 
+# and/or inbound groups and posts them to a directory with optional FTP transfer
 #
 # /usr/share/astguiclient/AST_VDsales_export_SFTP.pl --campaign=GOODB-GROUP1-GROUP3-GROUP4-SPECIALS-DNC_BEDS --output-format=fixed-as400 --sale-statuses=SALE --debug --filename=BEDSsaleMMDD.txt --date=yesterday --email-list=test@gmail.com --email-sender=test@test.com
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 61219-1118 - First version
@@ -29,6 +32,7 @@
 # 101022-1022 - Added hours minutes seconds to filename variables
 # 110829-1045 - Changed recording lookup to try to find by vicidial_id first
 # 120228-1855 - Added SFTP(Net::SFTP) file transmission option
+# 130312-1016 - Added several SFTP tweeks
 #
 
 $txt = '.txt';
@@ -800,7 +804,9 @@ if ($ftp_transfer > 0)
 
 		if (!$Q) {print "Sending File Over SFTP: $outfile\n";}
 		my $sftp = Net::SFTP->new($VARREPORT_host, user => "$VARREPORT_user", password => "$VARREPORT_pass", ssh_args => [ port => "$VARREPORT_port", debug => 1 ]);
-		$sftp->put("$PATHweb/vicidial/server_reports/$outfile", "$VARREPORT_dir/$outfile");
+		if ($DBX > 0) {print "put $PATHweb/vicidial/server_reports/$outfile $VARREPORT_dir/$outfile\n";}
+		$sftp_status = $sftp->put("$PATHweb/vicidial/server_reports/$outfile", "$VARREPORT_dir/$outfile", \&writecallback);
+		if ($DB > 0) {print "\n$sftp_status\n";}
 	#	$sftp->do_close();
 		}
 	else
@@ -879,8 +885,15 @@ if ($ftp_audio_transfer > 0)
 					if ($DB > 0) {print "making directory: $newVARREPORT_dir\n";}
 					$sftp->do_mkdir("$newVARREPORT_dir", $attrs);
 					}
-				$sftp->put("$tempdir/$FILES[$i]", "$newVARREPORT_dir/$FILES[$i]");
-				$sftp->do_close();
+				if ($DBX > 0) {print "put $tempdir/$FILES[$i] $newVARREPORT_dir/$FILES[$i]\n";}
+				$sftp_status = $sftp->put("$tempdir/$FILES[$i]", "$newVARREPORT_dir/$FILES[$i]", \&writecallback);
+				if ($DB > 0) {print "\n$sftp_status\n";}
+				if ($sftp_status > 0) 
+					{
+					if ($DB > 0) {print "Removing temp file: $tempdir/$FILES[$i]\n";}
+					`rm -f $tempdir/$FILES[$i]`;
+					}
+		#		$sftp->do_close();
 				}
 			else
 				{
@@ -1023,6 +1036,7 @@ sub select_format_loop
 				$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 				$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 				$sthBrows=$sthB->rows;
+					if ($DBX) {print "   $sthBrows|$stmtB|\n";}
 				$rec_countB=0;
 				while ($sthBrows > $rec_countB)
 					{
@@ -1040,6 +1054,7 @@ sub select_format_loop
 					$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 					$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 					$sthBrows=$sthB->rows;
+						if ($DBX) {print "   $sthBrows|$stmtB|\n";}
 					$rec_countB=0;
 					while ($sthBrows > $rec_countB)
 						{
@@ -1073,6 +1088,7 @@ sub select_format_loop
 			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 			$sthBrows=$sthB->rows;
+				if ($DBX) {print "   $sthBrows|$stmtB|\n";}
 			$rec_countB=0;
 			while ($sthBrows > $rec_countB)
 				{
@@ -1101,7 +1117,7 @@ sub select_format_loop
 			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 			$sthBrows=$sthB->rows;
-			if ($DBX > 0) {print "$sthBrows|$stmtB\n";}
+				if ($DBX > 0) {print "$sthBrows|$stmtB\n";}
 			$rec_countB=0;
 			while ($sthBrows > $rec_countB)
 				{
@@ -1123,7 +1139,7 @@ sub select_format_loop
 				$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 				$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 				$sthBrowsR=$sthB->rows;
-				if ($DBX > 0) {print "$sthBrowsR|$stmtB\n";}
+					if ($DBX > 0) {print "$sthBrowsR|$stmtB\n";}
 				$rec_countBR=0;
 				while ($sthBrowsR > $rec_countBR)
 					{
@@ -1360,6 +1376,12 @@ sub select_format_loop
 			# 17-  Note Time Stamp: Time Stamp of Note
 			# 18-  Note Text: Actual Note taken by agent
 
+                        $appointment_call_date = '';
+                        $order_id =              '';
+                        $appointment_date =      '';
+                        $appointment_time =      '';
+                        $call_notes =            '';
+ 	
 			$stmtB = "select CONVERT_TZ(call_date,$convert_tz),order_id,appointment_date,appointment_time,call_notes from vicidial_call_notes where lead_id='$lead_id' and vicidial_id='$uniqueid' and call_date > '$shipdate 00:00:01' and call_date < '$shipdate 23:59:59' order by call_date desc limit 1;";
 			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
@@ -1378,6 +1400,7 @@ sub select_format_loop
 				}
 			$sthB->finish();
 
+			$RAWuniqueid = $uniqueid;
 			$uniqueid =~ s/\.00000//gi;
 			$uniqueid =~ s/\.0000//gi;
 			$uniqueid =~ s/\.000//gi;
@@ -1430,6 +1453,17 @@ sub select_format_loop
 				{
 				$str = "103$uniqueid\t$call_date_array[0]\t$call_date_array[1]\t$phone_areacode\t$phone_number\t$did_pattern\t$closer\t$queue_seconds\t$talk_seconds\t$dispo_time\t$application\t$status\t$order_id\t$ivr_filename\t$in_out\t$appointment_date $appointment_time\t$appointment_call_date\t$call_notes\t\n";
 
+			#	if ($TEST < 1)
+			#		{
+			#		$stmtA = "UPDATE vicidial_log set processed='Y' where uniqueid='$RAWuniqueid' LIMIT 10;";
+			#		$VLaffected_rows = $dbhA->do($stmtA);
+
+			#		$stmtB = "UPDATE vicidial_closer_log set processed='Y' where uniqueid='$RAWuniqueid' LIMIT 10;";
+			#		$VLCaffected_rows = $dbhA->do($stmtB);
+
+			#		if ($DBX) {print "SET TO PROCESSED: $VLCaffected_rows|$stmtB|$VLaffected_rows|$stmtA|\n";}
+			#		}
+
 				$uniqueidLIST .= "$uniqueid|";
 				if ($DBX > 0) {print "UNIQUE: -----$uniqueidLIST-----$uniqueid";}
 		#		if ($DBX > 0) {print "$uniqueid|$talk_seconds|$outbound|$INcalls|$OUTcalls\n";}
@@ -1465,3 +1499,17 @@ sub select_format_loop
 
 	}
 
+### sftp callback subroutines
+sub writecallback 
+	{
+	my($sftp, $data, $offset, $size) = @_;
+	if ($DB > 0) 
+		{print STDERR "Wrote $offset / $size bytes\r";}
+	}
+
+sub readcallback 
+	{
+	my($sftp, $data, $offset, $size) = @_;
+	if ($DB > 0) 
+		{print STDERR "Read $offset / $size bytes\r";}
+	}
