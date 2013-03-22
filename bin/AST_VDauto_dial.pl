@@ -1362,7 +1362,7 @@ while($one_day_interval > 0)
 					$sthA->finish();
 					}
 
-				$CLlead_id=''; $auto_call_id=''; $CLstatus=''; $CLcampaign_id=''; $CLphone_number=''; $CLphone_code='';
+				$CLlead_id=''; $auto_call_id=''; $CLstatus=''; $CLcampaign_id=''; $CLphone_number=''; $CLphone_code=''; $CLuser='';
 
 				$stmtA = "SELECT auto_call_id,lead_id,phone_number,status,campaign_id,phone_code,alt_dial,stage,call_type,UNIX_TIMESTAMP(last_update_time) FROM vicidial_auto_calls where callerid='$KLcallerid[$kill_vac]';";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
