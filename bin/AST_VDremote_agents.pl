@@ -11,7 +11,7 @@
 # agents that should appear to be logged in so that the calls can be transferred 
 # out to them properly.
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 50215-0954 - First version of script
@@ -45,6 +45,7 @@
 # 111201-1428 - Added grade-random next-agent-call option for inbound
 # 120213-1701 - Added remote-agent daily stats
 # 121129-1929 - Fix for issue #601, reported by Acidshock
+# 130322-1939 - Changed to auto-terminate vars to one day so it can restart for systems that don't reboot nightly
 #
 
 ### begin parsing run-time options ###
@@ -189,10 +190,12 @@ $event_string='PROGRAM STARTED||||||||||||||||||||||||||||||||||||||||||||||||||
 $event_string='LOGGED INTO MYSQL SERVER ON 1 CONNECTION|';
 &event_logger;
 
-$one_day_interval = 12;		# 1 month loops for one year 
+#$one_day_interval = 12;	# 1 month loops for one year 
+$one_day_interval = 1;		# 1 day
 while($one_day_interval > 0)
 	{
-	$endless_loop=5760000;		# 30 days minutes at XXX seconds per loop
+	#$endless_loop=5760000;		# 30 days minutes at XXX seconds per loop
+	$endless_loop= (86400 / ($loop_delay / 1000) );		# 1 day
 	while($endless_loop > 0)
 		{
 		&get_time_now;
@@ -1043,7 +1046,7 @@ while($one_day_interval > 0)
 		usleep(1*$loop_delay*1000);
 
 		$endless_loop--;
-		if($DB){print STDERR "\nloop counter: |$endless_loop|\n";}
+		if($DB){print STDERR "\nloop counter: |$endless_loop|$one_day_interval|     |$loop_delay|\n";}
 
 		### putting a blank file called "VDAD.kill" in the directory will automatically safely kill this program
 		if (-e "$PATHhome/VDAD.kill")
