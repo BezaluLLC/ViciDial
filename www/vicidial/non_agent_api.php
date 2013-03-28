@@ -1,7 +1,7 @@
 <?php
 # non_agent_api.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed as an API(Application Programming Interface) to allow
 # other programs to interact with all non-agent-screen VICIDIAL functions
@@ -71,10 +71,11 @@
 # 120913-1255 - Added update_log_entry function
 # 121116-1938 - Added state call time restrictions to add_lead hopper insert function
 # 121125-2210 - Added Other Campaign DNC option and list expiration date option
+# 130328-0949 - Added update_phone_number option to update_lead function, issue #653
 #
 
-$version = '2.6-49';
-$build = '121125-2210';
+$version = '2.6-50';
+$build = '130328-0949';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -94,6 +95,8 @@ if (isset($_GET["list_id"]))					{$list_id=$_GET["list_id"];}
 	elseif (isset($_POST["list_id"]))			{$list_id=$_POST["list_id"];}
 if (isset($_GET["phone_code"]))					{$phone_code=$_GET["phone_code"];}
 	elseif (isset($_POST["phone_code"]))		{$phone_code=$_POST["phone_code"];}
+if (isset($_GET["update_phone_number"]))		  {$update_phone_number=$_GET["update_phone_number"];}
+	elseif (isset($_POST["update_phone_number"])) {$update_phone_number=$_POST["update_phone_number"];}
 if (isset($_GET["phone_number"]))				{$phone_number=$_GET["phone_number"];}
 	elseif (isset($_POST["phone_number"]))		{$phone_number=$_POST["phone_number"];}
 if (isset($_GET["vendor_lead_code"]))			{$vendor_lead_code=$_GET["vendor_lead_code"];}
@@ -351,6 +354,7 @@ if ($non_latin < 1)
 	$format = ereg_replace("[^0-9a-zA-Z]","",$format);
 	$list_id = ereg_replace("[^0-9]","",$list_id);
 	$phone_code = ereg_replace("[^0-9]","",$phone_code);
+	$update_phone_number=ereg_replace("[^A-Z]","",$update_phone_number);
 	$phone_number = ereg_replace("[^0-9]","",$phone_number);
 	$vendor_lead_code = ereg_replace(";","",$vendor_lead_code);
 		$vendor_lead_code = ereg_replace("\+"," ",$vendor_lead_code);
@@ -5297,6 +5301,7 @@ if ($function == 'update_lead')
 						if (strlen($owner)>0)				{$VL_update_SQL .= "owner='$owner',";}
 						if (strlen($called_count)>0)		{$VL_update_SQL .= "called_count='$called_count',";}
 						if ( (strlen($reset_lead) > 0 && $reset_lead == 'Y') )	{$VL_update_SQL .= "called_since_last_reset='N',";}
+                        if ( (strlen($update_phone_number)>0 && $update_phone_number=='Y' && strlen($phone_number)>0) ) {$VL_update_SQL .= "phone_number='$phone_number',";}
 						$VL_update_SQL = preg_replace("/,$/","",$VL_update_SQL);
 						$VL_update_SQL = preg_replace("/'--BLANK--'/","''",$VL_update_SQL);
 						$VL_update_SQL = preg_replace("/\n/","!N",$VL_update_SQL);

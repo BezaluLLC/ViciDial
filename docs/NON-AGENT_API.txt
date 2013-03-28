@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2012-11-25
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2013-03-28
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -78,6 +78,7 @@ Changes:
 120913-1255 - Added update_log_entry function
 121116-1938 - Added state call time restrictions to add_lead hopper insert function
 121125-2210 - Added Other Campaign DNC option and list expiration date option
+130328-0949 - Added update_phone_number option to update_lead function
 
 
 
@@ -600,6 +601,7 @@ callback_datetime -	YYYY-MM-DD+HH:MM:SS, date and time of scheduled callback. RE
 callback_type -		USERONLY or ANYONE, default is ANYONE
 callback_user -		User ID the USERONLY callback is assigned to
 callback_comments -	Optional comments to appear when the callback is called back
+update_phone_number -	Y or N, Optional setting to update the phone_number field, default is N.
 
 EDITABLE FIELDS- 
 user_field -		1-20 characters, this updates the 'user' field in the vicidial_list table
