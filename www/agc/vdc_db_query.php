@@ -324,10 +324,11 @@
 # 121214-2208 - Added inbound email features
 # 121223-1627 - Fixed issue with manual alt dial manual dial filter
 # 130328-0009 - Converted ereg to preg functions
+# 130328-1015 - Added validation for agent manual dial permission on DIAL links
 #
 
-$version = '2.6-222';
-$build = '130328-0009';
+$version = '2.6-223';
+$build = '130328-1015';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=533;
 $one_mysql_log=0;
@@ -10577,7 +10578,10 @@ if ($ACTION == 'CALLLOGview')
 		echo "<td align=right><font size=2> $ALLalt_dial[$i] </td>\n";
 		echo "<td align=right><font size=2> $ALLhangup_reason[$i] </td>\n";
 		echo "<td align=right><font size=2> <a href=\"#\" onclick=\"VieWLeaDInfO($ALLlead_id[$i]);return false;\">INFO</A> </td>\n";
-		echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG','$ALLphone_code[$i]','$ALLphone_number[$i]','$ALLlead_id[$i]');return false;\">DIAL</A> </td>\n";
+		if ($manual_dial_filter > 0)
+			{echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG','$ALLphone_code[$i]','$ALLphone_number[$i]','$ALLlead_id[$i]');return false;\">DIAL</A> </td>\n";}
+		else
+			{echo "<td align=right><font size=2> DIAL </td>\n";}
 		echo "</tr>\n";
 		}
 
@@ -10899,7 +10903,10 @@ if ($ACTION == 'SEARCHRESULTSview')
 					echo "<td align=right><font size=2> <a href=\"#\" onclick=\"VieWLeaDInfO($ALLlead_id[$i],'','$inbound_lead_search');return false;\">INFO</A> </td>\n";
 					if ($inbound_lead_search < 1)
 						{
-						echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('LEADSEARCH','$ALLphone_code[$i]','$ALLphone_number[$i]','$ALLlead_id[$i]');return false;\">DIAL</A> </td>\n";
+						if ($manual_dial_filter > 0)
+							{echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('LEADSEARCH','$ALLphone_code[$i]','$ALLphone_number[$i]','$ALLlead_id[$i]');return false;\">DIAL</A> </td>\n";}
+						else
+							{echo "<td align=right><font size=2> DIAL </td>\n";}
 						}
 					else
 						{
@@ -11502,11 +11509,19 @@ if ($ACTION == 'LEADINFOview')
 				{
 				$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_phone_number: &nbsp; </td><td ALIGN=left><font size=2>$row[6] - &nbsp; &nbsp; &nbsp; &nbsp; ";
 				if ($hide_dial_links < 1)
-					{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\">DIAL</a>";}
+					{
+					if ($manual_dial_filter > 0)
+						{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\">DIAL</a>";}
+					else
+						{$INFOout .= "DIAL";}
+					}
 				}
 			if ( ($label_phone_number=='---HIDE---') and ($hide_dial_links < 1) )
 				{
-				$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Dial Link: &nbsp; </td><td ALIGN=left><font size=2><a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\">DIAL</a>";
+				if ($manual_dial_filter > 0)
+					{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Dial Link: &nbsp; </td><td ALIGN=left><font size=2><a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\">DIAL</a>";}
+				else
+					{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Dial Link: &nbsp; </td><td ALIGN=left><font size=2>DIAL";}
 				}
 			$INFOout .= "</td></tr>";
 			if ($inbound_lead_search > 0)
@@ -11540,7 +11555,12 @@ if ($ACTION == 'LEADINFOview')
 				{
 				$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_alt_phone: &nbsp; </td><td ALIGN=left><font size=2>$row[20] - &nbsp; &nbsp; &nbsp; &nbsp; ";
 				if ($hide_dial_links < 1)
-					{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[20], $lead_id, 'ALT');return false;\">DIAL</a>";}
+					{
+					if ($manual_dial_filter > 0)
+						{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[20], $lead_id, 'ALT');return false;\">DIAL</a>";}
+					else
+						{$INFOout .= "DIAL";}
+					}
 				}
 			$INFOout .= "</td></tr>";
 			if ( ($label_email!='---HIDE---') or ($label_hide_field_logs=='N') )
