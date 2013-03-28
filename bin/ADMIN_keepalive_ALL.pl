@@ -1965,7 +1965,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$Piax .= "host=dynamic\n";
 			}
 		%ast_ver_str = parse_asterisk_version($asterisk_version);
-		if (!(( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6)))
+		if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
 			{
 			$Pext .= "exten => $dialplan[$i],1,Dial(IAX2/$extension[$i]|$phone_ring_timeout[$i]|)\n";
 			}
