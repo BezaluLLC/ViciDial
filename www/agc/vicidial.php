@@ -394,10 +394,11 @@
 # 121206-0634 - Added inbound lead search feature
 # 121222-2315 - Added inbound email features
 # 130220-1214 - Fixed issue with 3-way call dial timeout
+# 130328-0006 - Converted ereg to preg functions
 #
 
-$version = '2.6-362c';
-$build = '130220-1214';
+$version = '2.6-363c';
+$build = '130328-0006';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -438,7 +439,7 @@ if (!isset($phone_pass))
 if (isset($VD_campaign))
 	{
 	$VD_campaign = strtoupper($VD_campaign);
-	$VD_campaign = eregi_replace(" ",'',$VD_campaign);
+	$VD_campaign = preg_replace("/\s/i",'',$VD_campaign);
 	}
 if (!isset($flag_channels))
 	{
@@ -447,12 +448,12 @@ if (!isset($flag_channels))
 	}
 
 ### security strip all non-alphanumeric characters out of the variables ###
-$DB=ereg_replace("[^0-9a-z]","",$DB);
-$phone_login=ereg_replace("[^\,0-9a-zA-Z]","",$phone_login);
-$phone_pass=ereg_replace("[^0-9a-zA-Z]","",$phone_pass);
-$VD_login=ereg_replace("[^-_0-9a-zA-Z]","",$VD_login);
-$VD_pass=ereg_replace("[^-_0-9a-zA-Z]","",$VD_pass);
-$VD_campaign = ereg_replace("[^-_0-9a-zA-Z]","",$VD_campaign);
+$DB=preg_replace("/[^0-9a-z]/","",$DB);
+$phone_login=preg_replace("/[^\,0-9a-zA-Z]/","",$phone_login);
+$phone_pass=preg_replace("/[^0-9a-zA-Z]/","",$phone_pass);
+$VD_login=preg_replace("/[^-_0-9a-zA-Z]/","",$VD_login);
+$VD_pass=preg_replace("/[^-_0-9a-zA-Z]/","",$VD_pass);
+$VD_campaign = preg_replace("/[^-_0-9a-zA-Z]/","",$VD_campaign);
 
 
 $forever_stop=0;
@@ -627,12 +628,12 @@ $browser = getenv("HTTP_USER_AGENT");
 $script_name = getenv("SCRIPT_NAME");
 $server_name = getenv("SERVER_NAME");
 $server_port = getenv("SERVER_PORT");
-if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
+if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
   else {$HTTPprotocol = 'http://';}
 if (($server_port == '80') or ($server_port == '443') ) {$server_port='';}
 else {$server_port = "$CL$server_port";}
 $agcPAGE = "$HTTPprotocol$server_name$server_port$script_name";
-$agcDIR = eregi_replace('vicidial.php','',$agcPAGE);
+$agcDIR = preg_replace('/vicidial\.php/i','',$agcPAGE);
 if (strlen($static_agent_url) > 5)
 	{$agcPAGE = $static_agent_url;}
 
@@ -670,10 +671,10 @@ if ($campaign_login_list > 0)
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01003',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$row=mysql_fetch_row($rslt);
-		if ( (!eregi("ALL-CAMPAIGNS",$row[0])) )
+		if ( (!preg_match("/ALL-CAMPAIGNS/i",$row[0])) )
 			{
-			$LOGallowed_campaignsSQL = eregi_replace(' -','',$row[0]);
-			$LOGallowed_campaignsSQL = eregi_replace(' ',"','",$LOGallowed_campaignsSQL);
+			$LOGallowed_campaignsSQL = preg_replace('/\s-/i','',$row[0]);
+			$LOGallowed_campaignsSQL = preg_replace('/\s/i',"','",$LOGallowed_campaignsSQL);
 			$LOGallowed_campaignsSQL = "and campaign_id IN('$LOGallowed_campaignsSQL')";
 			}
 		}
@@ -703,7 +704,7 @@ if ($campaign_login_list > 0)
 
 			### Add a record to the vicidial_admin_log
 			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = preg_replace('/;/','',$SQL_log);
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$MGR_login', ip_address='$ip', event_section='AGENT', event_type='OVERRIDE', record_id='$VD_login', event_code='MANAGER OVERRIDE OF AGENT SHIFT ENFORCEMENT', event_sql=\"$SQL_log\", event_notes='user: $VD_login';";
 			if ($DB) {echo "|$stmt|\n";}
@@ -729,17 +730,17 @@ if ($campaign_login_list > 0)
 			{$campname = '';}
 		if ($VD_campaign)
 			{
-			if ( (eregi("$VD_campaign",$rowx[0])) and (strlen($VD_campaign) == strlen($rowx[0])) )
+			if ( (preg_match("/$VD_campaign/i",$rowx[0])) and (strlen($VD_campaign) == strlen($rowx[0])) )
                 {$camp_form_code .= "<option value=\"$rowx[0]\" selected=\"selected\">$rowx[0]$campname</option>\n";}
 			else
 				{
-				if (!ereg('login_allowable_campaigns',$camp_form_code))
+				if (!preg_match('/login_allowable_campaigns/',$camp_form_code))
 					{$camp_form_code .= "<option value=\"$rowx[0]\">$rowx[0]$campname</option>\n";}
 				}
 			}
 		else
 			{
-			if (!ereg('login_allowable_campaigns',$camp_form_code))
+			if (!preg_match('/login_allowable_campaigns/',$camp_form_code))
 					{$camp_form_code .= "<option value=\"$rowx[0]\">$rowx[0]$campname</option>\n";}
 			}
 		$o++;
@@ -765,7 +766,7 @@ if ($LogiNAJAX > 0)
 	function browser_dimensions() 
 		{
 	<?php 
-		if (ereg('MSIE',$browser)) 
+		if (preg_match('/MSIE/',$browser)) 
 			{
 			echo "	if (document.documentElement && document.documentElement.clientHeight)\n";
 			echo "			{BrowseWidth = document.documentElement.clientWidth;}\n";
@@ -1090,12 +1091,12 @@ else
 			$row=mysql_fetch_row($rslt);
 			$forced_timeclock_login =	$row[0];
 			$shift_enforcement =		$row[1];
-			$LOGgroup_shiftsSQL = eregi_replace('  ','',$row[2]);
-			$LOGgroup_shiftsSQL = eregi_replace(' ',"','",$LOGgroup_shiftsSQL);
+			$LOGgroup_shiftsSQL = preg_replace('/\s\s/i','',$row[2]);
+			$LOGgroup_shiftsSQL = preg_replace('/\s/i',"','",$LOGgroup_shiftsSQL);
 			$LOGgroup_shiftsSQL = "shift_id IN('$LOGgroup_shiftsSQL')";
 			$agent_status_viewable_groups = $row[3];
-			$agent_status_viewable_groupsSQL = eregi_replace('  ','',$agent_status_viewable_groups);
-			$agent_status_viewable_groupsSQL = eregi_replace(' ',"','",$agent_status_viewable_groupsSQL);
+			$agent_status_viewable_groupsSQL = preg_replace('/\s\s/i','',$agent_status_viewable_groups);
+			$agent_status_viewable_groupsSQL = preg_replace('/\s/i',"','",$agent_status_viewable_groupsSQL);
 			$agent_status_viewable_groupsSQL = "user_group IN('$agent_status_viewable_groupsSQL')";
 			$agent_status_view = 0;
 			if (strlen($agent_status_viewable_groups) > 2)
@@ -1129,7 +1130,7 @@ else
 				{$webphone_dialpad = $webphone_dialpad_override;}
 
 			### BEGIN - CHECK TO SEE IF AGENT IS LOGGED IN TO TIMECLOCK, IF NOT, OUTPUT ERROR
-			if ( (ereg('Y',$forced_timeclock_login)) or ( (ereg('ADMIN_EXEMPT',$forced_timeclock_login)) and ($VU_user_level < 8) ) )
+			if ( (preg_match('/Y/',$forced_timeclock_login)) or ( (preg_match('/ADMIN_EXEMPT/',$forced_timeclock_login)) and ($VU_user_level < 8) ) )
 				{
 				$last_agent_event='';
 				$HHMM = date("Hi");
@@ -1154,7 +1155,7 @@ else
 					$last_agent_event = $rowx[0];
 					}
 				if ($DB>0) {echo "|$stmt|$events_to_parse|$last_agent_event|";}
-				if ( (strlen($last_agent_event)<2) or (ereg('LOGOUT',$last_agent_event)) )
+				if ( (strlen($last_agent_event)<2) or (preg_match('/LOGOUT/',$last_agent_event)) )
 					{
 					$VDloginDISPLAY=1;
                     $VDdisplayMESSAGE = "YOU MUST LOG IN TO THE TIMECLOCK FIRST<br />";
@@ -1163,7 +1164,7 @@ else
 			### END - CHECK TO SEE IF AGENT IS LOGGED IN TO TIMECLOCK, IF NOT, OUTPUT ERROR
 
 			### BEGIN - CHECK TO SEE IF SHIFT ENFORCEMENT IS ENABLED AND AGENT IS OUTSIDE OF THEIR SHIFTS, IF SO, OUTPUT ERROR
-			if ( ( (ereg("START|ALL",$shift_enforcement)) and (!ereg("OFF",$VU_agent_shift_enforcement_override)) ) or (ereg("START|ALL",$VU_agent_shift_enforcement_override)) )
+			if ( ( (preg_match("/START|ALL/",$shift_enforcement)) and (!preg_match("/OFF/",$VU_agent_shift_enforcement_override)) ) or (preg_match("/START|ALL/",$VU_agent_shift_enforcement_override)) )
 				{
 				$shift_ok=0;
 				if ( (strlen($LOGgroup_shiftsSQL) < 3) and ($VU_shift_override_flag < 1) )
@@ -1190,7 +1191,7 @@ else
 						$shift_length =		$rowx[2];
 						$shift_weekdays =	$rowx[3];
 
-						if (eregi("$wday",$shift_weekdays))
+						if (preg_match("/$wday/i",$shift_weekdays))
 							{
 							$HHshift_length = substr($shift_length,0,2);
 							$MMshift_length = substr($shift_length,3,2);
@@ -1251,7 +1252,7 @@ else
 				}
 			$user_abb = "$VD_login$VD_login$VD_login$VD_login";
 			while ( (strlen($user_abb) > 4) and ($forever_stop < 200) )
-				{$user_abb = eregi_replace("^.","",$user_abb);   $forever_stop++;}
+				{$user_abb = preg_replace("/^\./i","",$user_abb);   $forever_stop++;}
 
 			$stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$VU_user_group';";
 			$rslt=mysql_query($stmt, $link);
@@ -1259,7 +1260,7 @@ else
 			$row=mysql_fetch_row($rslt);
 			$LOGallowed_campaigns		=$row[0];
 
-			if ( (!eregi(" $VD_campaign ",$LOGallowed_campaigns)) and (!eregi("ALL-CAMPAIGNS",$LOGallowed_campaigns)) )
+			if ( (!preg_match("/\s$VD_campaign\s/i",$LOGallowed_campaigns)) and (!preg_match("/ALL-CAMPAIGNS/i",$LOGallowed_campaigns)) )
 				{
 				echo "<title>Agent web client: Campaign Login</title>\n";
 				echo "</head>\n";
@@ -1711,7 +1712,7 @@ else
 					$default_web_vars =	$row[0];
 					}
 
-				if ( (!ereg('DISABLED',$VU_vicidial_recording_override)) and ($VU_vicidial_recording > 0) )
+				if ( (!preg_match('/DISABLED/',$VU_vicidial_recording_override)) and ($VU_vicidial_recording > 0) )
 					{
 					$campaign_recording = $VU_vicidial_recording_override;
 					echo "<!-- USER RECORDING OVERRIDE: |$VU_vicidial_recording_override|$campaign_recording| -->\n";
@@ -1742,7 +1743,7 @@ else
 				$closer_campaigns = preg_replace("/ /","','",$closer_campaigns);
 				$closer_campaigns = "'$closer_campaigns'";
 
-				if ( (ereg('Y',$agent_pause_codes_active)) or (ereg('FORCE',$agent_pause_codes_active)) )
+				if ( (preg_match('/Y/',$agent_pause_codes_active)) or (preg_match('/FORCE/',$agent_pause_codes_active)) )
 					{
 					##### grab the pause codes for this campaign
 					$stmt="SELECT pause_code,pause_code_name FROM vicidial_pause_codes WHERE campaign_id='$VD_campaign' order by pause_code limit 100;";
@@ -1903,7 +1904,7 @@ else
 					$VARxfergroupsnames = substr("$VARxfergroupsnames", 0, -1); 
 					}
 
-				if (ereg('Y',$agent_allow_group_alias))
+				if (preg_match('/Y/',$agent_allow_group_alias))
 					{
 					##### grab the active group aliases
 					$stmt="SELECT group_alias_id,group_alias_name,caller_id_number FROM groups_alias WHERE active='Y' order by group_alias_id limit 1000;";
@@ -2026,7 +2027,7 @@ else
 		}
 
 	$pa=0;
-	if ( (eregi(',',$phone_login)) and (strlen($phone_login) > 2) )
+	if ( (preg_match('/,/i',$phone_login)) and (strlen($phone_login) > 2) )
 		{
 		$phoneSQL = "(";
 		$phones_auto = explode(',',$phone_login);
@@ -2345,7 +2346,7 @@ else
 		$SIP_user = "$protocol/$extension";
 		$SIP_user_DiaL = "$protocol/$extension";
 		$qm_extension = "$extension";
-		if ( (ereg('8300',$dialplan_number)) and (strlen($dialplan_number)<5) and ($protocol == 'Local') )
+		if ( (preg_match('/8300/',$dialplan_number)) and (strlen($dialplan_number)<5) and ($protocol == 'Local') )
 			{
 			$SIP_user = "$protocol/$extension$VD_login";
 			$qm_extension = "$extension$VD_login";
@@ -2401,7 +2402,7 @@ else
 			}
 
 
-		$session_ext = eregi_replace("[^a-z0-9]", "", $extension);
+		$session_ext = preg_replace("/[^a-z0-9]/i", "", $extension);
 		if (strlen($session_ext) > 10) {$session_ext = substr($session_ext, 0, 10);}
 		$session_rand = (rand(1,9999999) + 10000000);
 		$session_name = "$StarTtimE$US$session_ext$session_rand";
@@ -2421,7 +2422,7 @@ else
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01030',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 
-		if ( ( ($campaign_allow_inbound == 'Y') and ($dial_method != 'MANUAL') ) || ($campaign_leads_to_call > 0) || (ereg('Y',$no_hopper_leads_logins)) )
+		if ( ( ($campaign_allow_inbound == 'Y') and ($dial_method != 'MANUAL') ) || ($campaign_leads_to_call > 0) || (preg_match('/Y/',$no_hopper_leads_logins)) )
 			{
 			##### check to see if the user has a conf extension already, this happens if they previously exited uncleanly
 			$stmt="SELECT conf_exten FROM vicidial_conferences where extension='$SIP_user' and server_ip = '$server_ip' LIMIT 1;";
@@ -2530,7 +2531,7 @@ else
 			##### END QUEUEMETRICS LOGGING LOOKUP #####
 			###########################################
 
-			if ( ($enable_sipsak_messages > 0) and ($allow_sipsak_messages > 0) and (eregi("SIP",$protocol)) )
+			if ( ($enable_sipsak_messages > 0) and ($allow_sipsak_messages > 0) and (preg_match("/SIP/i",$protocol)) )
 				{
 				$SIPSAK_prefix = 'LIN-';
 				echo "<!-- sending login sipsak message: $SIPSAK_prefix$VD_campaign -->\n";
@@ -2848,7 +2849,7 @@ else
 			exit;
 			}
 
-		if (ereg('MSIE',$browser)) 
+		if (preg_match('/MSIE/',$browser)) 
 			{
 			$useIE=1;
 			echo "<!-- client web browser used: MSIE |$browser|$useIE| -->\n";
@@ -14478,7 +14479,7 @@ $zi=2;
         {
 		echo "$label_phone_number: </td><td align=\"left\"><font class=\"body_text\">";
 
-		if ( (ereg('Y',$disable_alter_custphone)) or (ereg('HIDE',$disable_alter_custphone)) )
+		if ( (preg_match('/Y/',$disable_alter_custphone)) or (preg_match('/HIDE/',$disable_alter_custphone)) )
 			{
 			echo "<font class=\"body_text\"><span id=\"phone_numberDISP\"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span></font>";
 			echo "<input type=\"hidden\" name=\"phone_number\" id=\"phone_number\" value=\"\" />";
@@ -14595,7 +14596,7 @@ $zi=2;
     <tr><td colspan="3"><span id="outboundcallsspan"></span></td></tr>
     <tr><td colspan="3"><font class="body_small"><span id="AgentAlertSpan">
 	<?php
-	if ( (ereg('ON',$VU_alert_enabled)) and ($AgentAlert_allowed > 0) )
+	if ( (preg_match('/ON/',$VU_alert_enabled)) and ($AgentAlert_allowed > 0) )
 		{echo "<a href=\"#\" onclick=\"alert_control('OFF');return false;\">Alert is ON</a>";}
 	else
 		{echo "<a href=\"#\" onclick=\"alert_control('ON');return false;\">Alert is OFF</a>";}
@@ -15081,7 +15082,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
     <table border="1" bgcolor="#CCFFCC" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> NEW MANUAL DIAL LEAD FOR <?php echo "$VD_login in campaign $VD_campaign" ?>:<br /><br />Enter information below for the new lead you wish to call.
  <br />
 	<?php 
-	if (!eregi("X",$manual_dial_prefix))
+	if (!preg_match("/X/i",$manual_dial_prefix))
 		{
         echo "Note: a dial prefix of $manual_dial_prefix will be added to the beginning of this number<br />\n";
 		}

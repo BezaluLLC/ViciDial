@@ -170,6 +170,11 @@ OTHER CHANGES:
 35. Added System Settings option to disable Add/Copy admin functions for level
 	8 users.
 
+36. Added ability to use .agi scripts in Call Menu prompt. Also added 
+	cm_date.agi script to say date with options
+
+37. Converted ereg to preg in the agc agent interface PHP scripts
+
 
 
 

@@ -1,7 +1,7 @@
 <?php
 # conf_exten_check.php    version 2.6
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to send whether the meetme conference has live channels connected and which they are
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -57,10 +57,11 @@
 # 110610-0059 - Small fix for manual dial calls lasting more than 100 minutes in real-time report
 # 120809-2353 - Added external_recording function
 # 121028-2305 - Added extra check on session_name to validate agent screen requests
+# 130328-0011 - Converted ereg to preg functions
 #
 
-$version = '2.6-32';
-$build = '121028-2305';
+$version = '2.6-33';
+$build = '130328-0011';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=39;
 $one_mysql_log=0;
@@ -116,13 +117,13 @@ if ($qm_conf_ct > 0)
 
 if ($non_latin < 1)
 	{
-	$user=ereg_replace("[^-_0-9a-zA-Z]","",$user);
-	$pass=ereg_replace("[^-_0-9a-zA-Z]","",$pass);
+	$user=preg_replace("/[^\-_0-9a-zA-Z]/i","",$user);
+	$pass=preg_replace("/[^\-_0-9a-zA-Z]/i","",$pass);
 	}
 else
 	{
-	$user = ereg_replace("'|\"|\\\\|;","",$user);
-	$pass = ereg_replace("'|\"|\\\\|;","",$pass);
+	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
+	$pass = preg_replace("/\'|\"|\\\\|;/","",$pass);
 	}
 
 # default optional vars if not set
@@ -276,11 +277,11 @@ if ($ACTION == 'refresh')
 				$Alogin=$row[0];
 				$Acampaign=$row[1];
 				$AccampSQL=$row[2];
-				$AccampSQL = ereg_replace(' -','', $AccampSQL);
-				$AccampSQL = ereg_replace(' ',"','", $AccampSQL);
-				if (eregi('AGENTDIRECT', $AccampSQL))
+				$AccampSQL = preg_replace('/\s\-/','', $AccampSQL);
+				$AccampSQL = preg_replace('/\s/',"','", $AccampSQL);
+				if (preg_match('/AGENTDIRECT/i', $AccampSQL))
 					{
-					$AccampSQL = ereg_replace('AGENTDIRECT','', $AccampSQL);
+					$AccampSQL = preg_replace('/AGENTDIRECT/i','', $AccampSQL);
 					$ADsql = "or ( (campaign_id LIKE \"%AGENTDIRECT%\") and (agent_only='$user') )";
 					}
 
@@ -336,7 +337,7 @@ if ($ACTION == 'refresh')
 				$row=mysql_fetch_row($rslt);
 				$AcalleridCOUNT=$row[0];
 
-				if ( ($AcalleridCOUNT > 0) and (eregi("INCALL",$Astatus)) and (preg_match("/^M/",$Acallerid)) )
+				if ( ($AcalleridCOUNT > 0) and (preg_match("/INCALL/i",$Astatus)) and (preg_match("/^M/",$Acallerid)) )
 					{
 					$updateNOW_TIME = date("Y-m-d H:i:s");
 					$stmt="UPDATE vicidial_auto_calls set last_update_time='$updateNOW_TIME' where callerid='$Acallerid';";
@@ -345,7 +346,7 @@ if ($ACTION == 'refresh')
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03038',$user,$server_ip,$session_name,$one_mysql_log);}
 					}
 
-				if ( ($AcalleridCOUNT < 1) and (eregi("INCALL",$Astatus)) and (strlen($Aagent_log_id) > 0) )
+				if ( ($AcalleridCOUNT < 1) and (preg_match("/INCALL/i",$Astatus)) and (strlen($Aagent_log_id) > 0) )
 					{
 					$DEADcustomer++;
 					### find whether the agent log record has already logged DEAD
@@ -398,7 +399,7 @@ if ($ACTION == 'refresh')
 				$row=mysql_fetch_row($rslt);
 				$AcalleridCOUNT=$row[0];
 
-				if ( ($AcalleridCOUNT > 0) and (eregi("INCALL",$Astatus)) )
+				if ( ($AcalleridCOUNT > 0) and (preg_match("/INCALL/i",$Astatus)) )
 					{
 					$updateNOW_TIME = date("Y-m-d H:i:s");
 					$stmt="UPDATE vicidial_auto_calls set last_update_time='$updateNOW_TIME' where callerid='$Acallerid';";
@@ -407,7 +408,7 @@ if ($ACTION == 'refresh')
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03037',$user,$server_ip,$session_name,$one_mysql_log);}
 					}
 
-				if ( ($AcalleridCOUNT < 1) and (eregi("INCALL",$Astatus)) and (strlen($Aagent_log_id) > 0) )
+				if ( ($AcalleridCOUNT < 1) and (preg_match("/INCALL/i",$Astatus)) and (strlen($Aagent_log_id) > 0) )
 					{
 					$DEADcustomer++;
 					### find whether the agent log record has already logged DEAD
@@ -597,13 +598,13 @@ if ($ACTION == 'refresh')
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03016',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysql_fetch_row($rslt);
 			$shift_enforcement =		$row[0];
-			$LOGgroup_shiftsSQL = eregi_replace('  ','',$row[1]);
-			$LOGgroup_shiftsSQL = eregi_replace(' ',"','",$LOGgroup_shiftsSQL);
+			$LOGgroup_shiftsSQL = preg_replace('/\s\s/','',$row[1]);
+			$LOGgroup_shiftsSQL = preg_replace('/\s/',"','",$LOGgroup_shiftsSQL);
 			$LOGgroup_shiftsSQL = "shift_id IN('$LOGgroup_shiftsSQL')";
 
 			### CHECK TO SEE IF AGENT IS WITHIN THEIR SHIFT IF RESTRICTED, IF NOT, OUTPUT ERROR
 			$Ashift_logout=0;
-			if ( ( (ereg("ALL",$shift_enforcement)) and (!ereg("OFF|START",$VU_agent_shift_enforcement_override)) ) or (ereg("ALL",$VU_agent_shift_enforcement_override)) )
+			if ( ( (preg_match("/ALL/",$shift_enforcement)) and (!preg_match("/OFF|START/",$VU_agent_shift_enforcement_override)) ) or (preg_match("/ALL/",$VU_agent_shift_enforcement_override)) )
 				{
 				$shift_ok=0;
 				if (strlen($LOGgroup_shiftsSQL) < 3)
@@ -627,7 +628,7 @@ if ($ACTION == 'refresh')
 						$shift_length =		$rowx[2];
 						$shift_weekdays =	$rowx[3];
 
-						if (eregi("$wday",$shift_weekdays))
+						if (preg_match("/$wday/i",$shift_weekdays))
 							{
 							$HHshift_length = substr($shift_length,0,2);
 							$MMshift_length = substr($shift_length,3,2);
@@ -662,7 +663,7 @@ if ($ACTION == 'refresh')
 				}
 
 
-			if ( ( ($time_diff > 8) or ($time_diff < -8) or ($web_diff > 8) or ($web_diff < -8) ) and (eregi("0$",$StarTtime)) ) 
+			if ( ( ($time_diff > 8) or ($time_diff < -8) or ($web_diff > 8) or ($web_diff < -8) ) and (preg_match("/0\$/i",$StarTtime)) ) 
 				{$Alogin='TIME_SYNC';}
 			if ( ($Acount < 1) or ($Scount < 1) )
 				{$Alogin='DEAD_VLA';}

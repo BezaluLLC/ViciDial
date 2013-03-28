@@ -80,6 +80,7 @@
 # 130103-0808 - Added CLI options for delay to be used with auto-dial and FILL processes
 # 130108-1657 - Changes for Asterisk 1.8 compatibility
 # 130227-1605 - Added --fill-staggered option for the AST_VDauto_dialFILL script
+# 130326-1754 - Added ability to use .agi scripts as part of Call Menu Prompt
 #
 
 $DB=0; # Debug flag
@@ -2494,12 +2495,31 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			foreach(@menu_prompts_array)
 				{
 				if (length($menu_prompts_array[$w])>0)
-					{$menu_prompt_ext .= "exten => s,n,Background($menu_prompts_array[$w])\n";}
+					{
+					if ($menu_prompts_array[$w] =~ /\.agi/)
+						{
+						$menu_prompt_ext .= "exten => s,n,AGI($menu_prompts_array[$w])\n";
+						}
+					else
+						{
+						$menu_prompt_ext .= "exten => s,n,Background($menu_prompts_array[$w])\n";
+						}
+					}
 				$w++;
 				}
 			}
 		else
-			{$menu_prompt_ext .= "exten => s,n,Background($menu_prompt[$i])\n";}
+			{
+			if ($menu_prompt[$i] =~ /\.agi/)
+				{
+				$menu_prompt_ext .= "exten => s,n,AGI($menu_prompt[$i])\n";
+				}
+			else
+				{
+				$menu_prompt_ext .= "exten => s,n,Background($menu_prompt[$i])\n";
+				}
+			}
+
 
 		if ($time_check_route =~ /AGI/)
 			{

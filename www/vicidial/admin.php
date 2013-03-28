@@ -2548,7 +2548,6 @@ if ($non_latin < 1)
 	$amd_callmenu = ereg_replace("[^-_0-9a-zA-Z]","",$amd_callmenu);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
-	$menu_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_prompt);
 	$menu_timeout_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_timeout_prompt);
 	$menu_invalid_prompt = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$menu_invalid_prompt);
 	$after_hours_message_filename = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$after_hours_message_filename);
@@ -2589,6 +2588,9 @@ if ($non_latin < 1)
 	$survey_fourth_audio_file = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$survey_fourth_audio_file);
 	$safe_harbor_audio_field = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$safe_harbor_audio_field);
 	$voicemail_greeting = ereg_replace("[^-\/\|\._0-9a-zA-Z]","",$voicemail_greeting);
+
+	### ALPHA-NUMERIC and underscore and dash and slash and dot and comma
+	$menu_prompt = ereg_replace("[^-\/\|\,\._0-9a-zA-Z]","",$menu_prompt);
 
 	### ALPHA-NUMERIC and underscore and dash and comma
 	$logins_list = ereg_replace("[^-\,\_0-9a-zA-Z]","",$logins_list);
@@ -5559,7 +5561,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="vicidial_campaigns-scheduled_callbacks_count">
 	<BR>
-	<B>Scheduled Callbacks Count -</B> This option allows you to set whether only LIVE callbacks, user-only scheduled callbacks that have hit their trigger date and time, or ALL_ACTIVE callbacks, user-only callbacks that are active in the system as well as LIVE callbacks, should be3 counted int he agent callback alert section on the agent screen. Default is ALL_ACTIVE.
+	<B>Scheduled Callbacks Count -</B> These options allows you to limit the viewable callbacks in the agent callback alert section on the agent screen, to only LIVE callbacks.  LIVE callbacks are user-only scheduled callbacks that have hit their trigger date and time. ACTIVE call backs are user-only callbacks that are active in the system but have not yet triggered.  You can view both ACTIVE and LIVE callbacks by selecting ALL_ACTIVE.  Default is ALL_ACTIVE.
 
 	<BR>
 	<A NAME="vicidial_campaigns-callback_days_limit">
