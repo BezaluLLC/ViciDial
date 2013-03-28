@@ -395,10 +395,11 @@
 # 121222-2315 - Added inbound email features
 # 130220-1214 - Fixed issue with 3-way call dial timeout
 # 130328-0006 - Converted ereg to preg functions
+# 130328-0934 - Applied changes from Issue #655
 #
 
-$version = '2.6-363c';
-$build = '130328-0006';
+$version = '2.6-364c';
+$build = '130328-0934';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -3034,7 +3035,7 @@ $limit_days=999;
 if ($callback_days_limit > 0)
 	{$limit_days=$callback_days_limit;}
 
-$Cmonths = Array('January','February','March','April','May','June',
+$Cmonths = Array('0','January','February','March','April','May','June',
 				'July','August','September','October','November','December');
 $Cdays = Array('Sun','Mon','Tue','Wed','Thu','Fri','Sat');
 
@@ -3065,7 +3066,7 @@ while ($CINC < 12)
 	$CCAL_OUT .= "<tr>";
 	$CCAL_OUT .= "<td colspan=\"7\" bordercolor=\"#ffffff\" bgcolor=\"#FFFFCC\">";
 	$CCAL_OUT .= "<div align=\"center\"><font color=\"#000066\"><b><font face=\"Arial, Helvetica, sans-serif\" size=\"2\">";
-	$CCAL_OUT .= "$CfirstdayARY[month] $CfirstdayARY[year]";
+	$CCAL_OUT .= $Cmonths[$CfirstdayARY[mon]]." $CfirstdayARY[year]";
 	$CCAL_OUT .= "</font></b></font></div>";
 	$CCAL_OUT .= "</td>";
 	$CCAL_OUT .= "</tr>";
@@ -3101,12 +3102,13 @@ while ($CINC < 12)
 				if ($CPRNTmday < 10) {$CPRNTmday = "0$CPRNTmday";}
 				if ($limit_days > $live_days)
 					{
-					$CBL = "<a href=\"#\" onclick=\"CB_date_pick('$CPRNTDAY-$CPRNTmday');return false;\">";
+					$CB_date_onclick="onclick=\"CB_date_pick('$CPRNTDAY-$CPRNTmday');return false;\"";
+					$CBL = "<a href=\"#\" $CB_date_onclick>";
 					$CEL = "</a>";
 					}
 				else
-					{$CBL='';   $CEL='';}
-				$CCAL_OUT .= "<td bgcolor=\"#FFCCCC\" bordercolor=\"#FFCCCC\">";
+					{$CBL='';   $CEL=''; $CB_date_onclick='';}
+				$CCAL_OUT .= "<td bgcolor=\"#FFCCCC\" bordercolor=\"#FFCCCC\" $CB_date_onclick>";
 				$CCAL_OUT .= "<div align=\"center\"><font face=\"Arial, Helvetica, sans-serif\" size=\"1\">";
 				$CCAL_OUT .= "$CBL$Cdayarray[mday]$CEL";
 				$CCAL_OUT .= "</font></div>";
@@ -3122,6 +3124,7 @@ while ($CINC < 12)
 					$CDCLR="$MAIN_COLOR";
 					$CBL = '';
 					$CEL = '';
+					$CB_date_onclick='';
 					}
 				else
 					{
@@ -3129,15 +3132,16 @@ while ($CINC < 12)
 					if ($CPRNTmday < 10) {$CPRNTmday = "0$CPRNTmday";}
 					if ($limit_days > $live_days)
 						{
-						$CBL = "<a href=\"#\" onclick=\"CB_date_pick('$CPRNTDAY-$CPRNTmday');return false;\">";
+						$CB_date_onclick="onclick=\"CB_date_pick('$CPRNTDAY-$CPRNTmday');return false;\"";
+						$CBL = "<a href=\"#\" $CB_date_onclick>";
 						$CEL = "</a>";
 						}
 					else
-						{$CBL='';   $CEL='';}
+						{$CBL='';   $CEL=''; $CB_date_onclick='';}
 					$live_days++;
 					}
 
-				$CCAL_OUT .= "<td bgcolor=\"$CDCLR\" bordercolor=\"#ffffff\">";
+				$CCAL_OUT .= "<td bgcolor=\"$CDCLR\" bordercolor=\"#ffffff\" $CB_date_onclick>";
 				$CCAL_OUT .= "<div align=\"center\"><font face=\"Arial, Helvetica, sans-serif\" size=1>";
 				$CCAL_OUT .= "$CBL$Cdayarray[mday]$CEL";
 				$CCAL_OUT .= "</font></div>";
@@ -14286,7 +14290,7 @@ $zi=2;
 	<?php
 	if ($webphone_location == 'bar')
 		{
-        echo "<img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";
+        echo "<img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";
 		}
 	?>	
 	<span id="post_phone_time_diff_span"><b><font color="red"><span id="post_phone_time_diff_span_contents"></span></font></b></span>
@@ -14694,7 +14698,7 @@ if ($agent_display_dialable_leads > 0)
 <span style="position:absolute;left:154px;top:<?php echo $SFheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="ScriptPanel">
 	<?php
 	if ($webphone_location == 'bar')
-        {echo "<img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+        {echo "<img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
     <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_script" id="ScriptContents">AGENT SCRIPT</div></font></td></tr></table>
 </span>
@@ -14706,7 +14710,7 @@ if ($agent_display_dialable_leads > 0)
 <span style="position:absolute;left:154px;top:<?php echo $SFheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="FormPanel">
 	<?php
 	if ($webphone_location == 'bar')
-        {echo "<img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+        {echo "<img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
     <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_script" id="FormContents"><iframe src="./vdc_form_display.php?lead_id=&list_id=&stage=WELCOME" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="vcFormIFrame" name="vcFormIFrame" width="<?php echo $SDwidth ?>px" height="<?php echo $SSheight ?>px" STYLE="z-index:18"> </iframe></div></font></td></tr></table>
 </span>
@@ -14714,7 +14718,7 @@ if ($agent_display_dialable_leads > 0)
 <span style="position:absolute;left:154px;top:<?php echo $SFheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="EmailPanel">
 	<?php
 	if ($webphone_location == 'bar')
-        {echo "<img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+        {echo "<img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
     <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_script" id="EmailContents"><iframe src="./vdc_email_display.php?lead_id=&list_id=&stage=WELCOME" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="vcEmailIFrame" name="vcEmailIFrame" width="<?php echo $SDwidth ?>px" height="<?php echo $SSheight ?>px" STYLE="z-index:19"> </iframe></div></font></td></tr></table>
 </span>
@@ -14990,7 +14994,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
     <table border="1" bgcolor="#CCFFCC" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> DISPOSITION CALL :<span id="DispoSelectPhonE"></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectHAspan"><a href="#" onclick="DispoHanguPAgaiN()">Hangup Again</a></span> &nbsp; &nbsp; &nbsp; <span id="DispoSelectMaxMin"><a href="#" onclick="DispoMinimize()"> minimize </a></span><br />
 	<?php
 	if ($webphone_location == 'bar')
-        {echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+        {echo "<br /><img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
 	<span id="Dispo3wayMessage"></span>
 	<span id="DispoManualQueueMessage"></span>
@@ -15010,7 +15014,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
     <table border="1" bgcolor="#CCFFCC" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> Select a CallBack Date :<span id="CallBackDatE"></span><br />
 	<?php
 	if ($webphone_location == 'bar')
-        {echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+        {echo "<br /><img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
     <input type="hidden" name="CallBackDatESelectioN" id="CallBackDatESelectioN" />
     <input type="hidden" name="CallBackTimESelectioN" id="CallBackTimESelectioN" />
@@ -15068,7 +15072,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
  <br />
 	<?php
 	if ($webphone_location == 'bar')
-        {echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+        {echo "<br /><img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
 	<div class="scroll_callback" id="CallBacKsLisT"></div>
     <br /> &nbsp;
@@ -15131,7 +15135,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
     <table border="1" bgcolor="#CCFFCC" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> CLOSER INBOUND GROUP SELECTION <br />
 	<?php
 	if ($webphone_location == 'bar')
-        {echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+        {echo "<br /><img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
 	<span id="CloserSelectContent"> Closer Inbound Group Selection </span>
     <input type="hidden" name="CloserSelectList" id="CloserSelectList" /><br />
@@ -15153,7 +15157,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
     <table border="1" bgcolor="#CCFFCC" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> TERRITORY SELECTION <br />
 	<?php
 	if ($webphone_location == 'bar')
-        {echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+        {echo "<br /><img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
 	<span id="TerritorySelectContent"> Territory Selection </span>
     <input type="hidden" name="TerritorySelectList" id="TerritorySelectList" /><br />
@@ -15178,7 +15182,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 	<table border="1" bgcolor="#CCFFCC" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> &nbsp; &nbsp; &nbsp; AGENT CALL LOG: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="#" onclick="CalLLoGVieWClose();return false;">close [X]</a><br />
 	<?php
 	if ($webphone_location == 'bar')
-		{echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+		{echo "<br /><img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
 	<div class="scroll_calllog" id="CallLogSpan"> Call log List </div>
 	<br /><br /> &nbsp;
@@ -15189,7 +15193,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 	<table border="1" bgcolor="#CCFFFF" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> &nbsp; &nbsp; &nbsp; SEARCH FOR A CONTACT: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="#" onclick="ContactSearcHVieWClose();return false;">close [X]</a><br />
 	<?php
 	if ($webphone_location == 'bar')
-		{echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+		{echo "<br /><img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
 	<br /><br />
 	Notes: when doing a search for a contact, wildcard or partial search terms are not allowed. <br />Contact search requests are all logged in the system.
@@ -15232,7 +15236,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 	<table border="1" bgcolor="#CCFFFF" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> &nbsp; &nbsp; &nbsp; CONTACTS SEARCH RESULTS: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="#" onclick="hideDiv('SearcHResultSContactsBox');return false;">close [X]</a><br />
 	<?php
 	if ($webphone_location == 'bar')
-		{echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+		{echo "<br /><img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
 	<div class="scroll_calllog" id="SearcHResultSContactsSpan"> Search Results </div>
 	<br /><br /> &nbsp;
@@ -15243,7 +15247,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 	<table border="1" bgcolor="#CCFFCC" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> &nbsp; &nbsp; &nbsp; SEARCH FOR A LEAD: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="#" onclick="LeaDSearcHVieWClose();return false;">close [X]</a><br />
 	<?php
 	if ($webphone_location == 'bar')
-		{echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+		{echo "<br /><img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
 	<br /><br />
 	Notes: when doing a search for a lead, the phone number, lead ID or <?php echo $label_vendor_lead_code ?> are the best fields to use. <br />Using the other fields may be slower. Lead searching does not allow for wildcard or partial search terms. <br />Lead search requests are all logged in the system.
@@ -15294,7 +15298,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 	<table border="1" bgcolor="#CCFFCC" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> &nbsp; &nbsp; &nbsp; SEARCH RESULTS: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="#" onclick="hideDiv('SearcHResultSDisplaYBox');return false;">close [X]</a><br />
 	<?php
 	if ($webphone_location == 'bar')
-		{echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+		{echo "<br /><img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
 	<div class="scroll_calllog" id="SearcHResultSSpan"> Search Results </div>
 	<br /><br /> &nbsp;
@@ -15305,7 +15309,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 	<table border="1" bgcolor="#CCFFCC" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> &nbsp; &nbsp; &nbsp; CALL NOTES LOG: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="#" onclick="hideDiv('CalLNotesDisplaYBox');return false;">close [X]</a><br />
 	<?php
 	if ($webphone_location == 'bar')
-		{echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+		{echo "<br /><img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
 	<div class="scroll_calllog" id="CallNotesSpan"> Call Notes List </div>
 	<br /><br /> &nbsp;
@@ -15318,7 +15322,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 	<br />
 	<?php
 	if ($webphone_location == 'bar')
-		{echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+		{echo "<br /><img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
 	<span id="LeaDInfOSpan"> Lead Info </span>
 	<br /><br /> &nbsp;
@@ -15330,7 +15334,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 	<table border="1" bgcolor="#CCFFCC" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> SELECT A PAUSE CODE :<br />
 	<?php
 	if ($webphone_location == 'bar')
-		{echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+		{echo "<br /><img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
 	<span id="PauseCodeSelectContent"> Pause Code Selection </span>
 	<input type="hidden" name="PauseCodeSelection" id="PauseCodeSelection" />
@@ -15342,7 +15346,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 	<table border="0" bgcolor="#9999FF" width="400px" height="<?php echo $HTheight ?>px"><tr><td align="center" valign="top"> SELECT A PRESET :<br />
 	<?php
 	if ($webphone_location == 'bar')
-		{echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+		{echo "<br /><img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
 	<span id="PresetsSelectBoxContent"> Presets Selection </span>
 	<input type="hidden" name="PresetSelection" id="PresetSelection" />
@@ -15353,7 +15357,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 	<table border="1" bgcolor="#CCFFCC" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> SELECT A GROUP ALIAS :<br />
 	<?php
 	if ($webphone_location == 'bar')
-		{echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+		{echo "<br /><img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
 	<span id="GroupAliasSelectContent"> Group Alias Selection </span>
 	<input type="hidden" name="GroupAliasSelection" id="GroupAliasSelection" />
@@ -15365,7 +15369,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 	<table border="1" bgcolor="#CCFFCC" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> SELECT A DIAL IN-GROUP :<br />
 	<?php
 	if ($webphone_location == 'bar')
-		{echo "<br /><img src=\"images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+		{echo "<br /><img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
 	<span id="DiaLInGrouPSelectContent"> Dial In-Group Selection </span>
 	<input type="hidden" name="DiaLInGrouPSelection" id="DiaLInGrouPSelection" />
