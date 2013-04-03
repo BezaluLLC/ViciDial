@@ -175,6 +175,59 @@ OTHER CHANGES:
 
 37. Converted ereg to preg in the agc agent interface PHP scripts
 
+38. Added agi-phone_monitor.agi script to allow monitoring of agents using only
+	their user IDs or phone extensions and no web browser needed.
+	You can add as an AGI to a Call Menu, or just an extension transfer:
+	call menu AGI with options:
+		agi-phone_monitor.agi,USER---N---LISTEN
+	or as extension transfer to "up_monitor_exit" context and "s" extension
+	
+	settings for this script:
+	 1. USER or PHONE, lookup by user id or phone extension (default is USER)
+	 2. Y or N, log in api log (default is N)
+	 3. BARGE or LISTEN, (default is LISTEN)
+
+	For this to work you need to add these lines to your extensions.conf: 
+	(which can be added to the "System Settings -> Custom Dialplan" instead)
+
+		; quiet entry, listen-only, exit-on-dtmf conferences for VICIDIAL (listen)
+		exten => _568600XXX,1,Set(MEETME_EXIT_CONTEXT=up_monitor_exit)
+		exten => _568600XXX,n,Meetme(${EXTEN:2},mqX)
+		exten => _568600XXX,n,Hangup()
+
+		; barge, exit-on-dtmf conferences for VICIDIAL (barge)
+		exten => _578600XXX,1,Set(MEETME_EXIT_CONTEXT=up_monitor_exit)
+		exten => _578600XXX,n,Meetme(${EXTEN:2},X)
+		exten => _578600XXX,n,Hangup()
+
+		[up_monitor]
+		exten => h,1,AGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})
+
+		exten => s,1,Set(MEETME_EXIT_CONTEXT=up_monitor_exit)
+		exten => s,n,AGI(agi-phone_monitor.agi,USER---N---LISTEN)
+		exten => s,n,Hangup()
+
+		exten => i,1,Goto(up_monitor_exit,s,1)
+		exten => i,n,Hangup()
+		exten => #,1,Goto(up_monitor_exit,s,1)
+		exten => #,n,Hangup()
+		exten => t,1,Goto(up_monitor_exit,s,1)
+		exten => t,n,Hangup()
+
+		[up_monitor_exit]
+		exten => h,1,AGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})
+
+		exten => _X,1,Goto(up_monitor,s,1)
+		exten => _X,n,Hangup()
+
+		exten => i,1,Goto(up_monitor,s,1)
+		exten => i,n,Hangup()
+		exten => #,1,Goto(up_monitor,s,1)
+		exten => #,n,Hangup()
+		exten => t,1,Goto(up_monitor,s,1)
+		exten => t,n,Hangup()
+	
+
 
 
 

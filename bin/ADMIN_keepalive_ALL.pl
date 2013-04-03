@@ -81,6 +81,7 @@
 # 130108-1657 - Changes for Asterisk 1.8 compatibility
 # 130227-1605 - Added --fill-staggered option for the AST_VDauto_dialFILL script
 # 130326-1754 - Added ability to use .agi scripts as part of Call Menu Prompt
+# 130402-2148 - Changes to allow for native IAX bridging to other servers
 #
 
 $DB=0; # Debug flag
@@ -1555,6 +1556,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	$Lext .= "; Local Server: $server_ip\n";
 	$Lext .= "exten => _$VARremDIALstr*.,1,Goto(default,\${EXTEN:16},1)\n";
 	$Lext .= "exten => _$VARremDIALstr*.,2,Hangup()\n";
+	$Lext .= "exten => _**$VARremDIALstr*.,1,Goto(default,\${EXTEN:18},1)\n";
+	$Lext .= "exten => _**$VARremDIALstr*.,2,Hangup()\n";
 
 	$Liax .= "\n";
 	$Liax .= "[ASTloop]\n";
@@ -1635,6 +1638,9 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$Lext .= "; Remote Server VDAD extens: $server_id[$i] $server_ip[$i]\n";
 		$Lext .= "exten => _$VARremDIALstr*.,1,Dial(\${TRUNK$server_id[$i]}/\${EXTEN:16},55,oT)\n";
 		$Lext .= "exten => _$VARremDIALstr*.,2,Hangup()\n";
+		$Lext .= "; Remote Server native bridge extens: $server_id[$i] $server_ip[$i]\n";
+		$Lext .= "exten => _**$VARremDIALstr*.,1,Dial(\${TRUNK$server_id[$i]}/\${EXTEN:18},55,o)\n";
+		$Lext .= "exten => _**$VARremDIALstr*.,2,Hangup()\n";
 
 		$Liax .= "\n";
 		$Liax .= "[$server_id[$i]]\n";
