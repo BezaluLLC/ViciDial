@@ -226,7 +226,9 @@ OTHER CHANGES:
 		exten => #,n,Hangup()
 		exten => t,1,Goto(up_monitor,s,1)
 		exten => t,n,Hangup()
-	
+
+39. Added user_group as a script, form, webform, start_call_url and 
+	dispo_call_url variable.
 
 
 

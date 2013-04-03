@@ -18,10 +18,11 @@
 # 110730-2339 - Added call_id variable
 # 120227-2017 - Added parsing of IGNORENOSCROLL option in script to force scroll
 # 130328-0013 - Converted ereg to preg functions
+# 130402-2255 - Added user_group variable
 #
 
-$version = '2.6-12';
-$build = '130328-0013';
+$version = '2.6-13';
+$build = '130402-2255';
 
 require("dbconnect.php");
 
@@ -191,6 +192,8 @@ if (isset($_GET["entry_list_id"]))			{$entry_list_id=$_GET["entry_list_id"];}
 	elseif (isset($_POST["entry_list_id"]))	{$entry_list_id=$_POST["entry_list_id"];}
 if (isset($_GET["call_id"]))			{$call_id=$_GET["call_id"];}
 	elseif (isset($_POST["call_id"]))	{$call_id=$_POST["call_id"];}
+if (isset($_GET["user_group"]))				{$user_group=$_GET["user_group"];}
+	elseif (isset($_POST["user_group"]))	{$user_group=$_POST["user_group"];}
 if (isset($_GET["web_vars"]))			{$web_vars=$_GET["web_vars"];}
 	elseif (isset($_POST["web_vars"]))	{$web_vars=$_POST["web_vars"];}
 
@@ -481,6 +484,7 @@ $script_text = preg_replace('/--A--xfercallid--B--/i',"$xfercallid",$script_text
 $script_text = preg_replace('/--A--agent_log_id--B--/i',"$agent_log_id",$script_text);
 $script_text = preg_replace('/--A--entry_list_id--B--/i',"$entry_list_id",$script_text);
 $script_text = preg_replace('/--A--call_id--B--/i',"$call_id",$script_text);
+$script_text = preg_replace('/--A--user_group--B--/i',"$user_group",$script_text);
 $script_text = preg_replace('/--A--web_vars--B--/i',"$web_vars",$script_text);
 
 if ($CF_uses_custom_fields=='Y')

@@ -325,10 +325,11 @@
 # 121223-1627 - Fixed issue with manual alt dial manual dial filter
 # 130328-0009 - Converted ereg to preg functions
 # 130328-1015 - Added validation for agent manual dial permission on DIAL links
+# 130402-2242 - Added user_group variable to _call_url functions
 #
 
-$version = '2.6-223';
-$build = '130328-1015';
+$version = '2.6-224';
+$build = '130402-2242';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=533;
 $one_mysql_log=0;
@@ -5159,7 +5160,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$custom_call_id =		$row[0];
 				}
 
-			### update the log status to INCALL
+			### gather user_group and full_name of agent
 			$user_group='';
 			$stmt="SELECT user_group,full_name FROM vicidial_users where user='$user' LIMIT 1;";
 			$rslt=mysql_query($stmt, $link);
@@ -5966,6 +5967,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$VDCL_start_call_url = preg_replace('/--A--xfercallid--B--/i',urlencode(trim($INxfercallid)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--agent_log_id--B--/i',urlencode(trim($agent_log_id)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--call_id--B--/i',urlencode(trim($callerid)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--user_group--B--/i',urlencode(trim($user_group)),$VDCL_start_call_url);
 
 				if (strlen($custom_field_names)>2)
 					{
@@ -6356,7 +6358,7 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 				}
 			*/
 
-			### update the log status to INCALL
+			### gather user_group and full_name of agent
 			$user_group='';
 			$stmt="SELECT user_group,full_name FROM vicidial_users where user='$user' LIMIT 1;";
 			$rslt=mysql_query($stmt, $link);
@@ -6900,6 +6902,7 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 				$VDCL_start_call_url = preg_replace('/--A--xfercallid--B--/i',urlencode(trim($INxfercallid)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--agent_log_id--B--/i',urlencode(trim($agent_log_id)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--call_id--B--/i',urlencode(trim($callerid)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--user_group--B--/i',urlencode(trim($user_group)),$VDCL_start_call_url);
 
 				if (strlen($custom_field_names)>2)
 					{
@@ -9104,9 +9107,9 @@ if ($ACTION == 'updateDISPO')
 		$talk_time=0;
 		$talk_time_ms=0;
 		$talk_time_min=0;
-		if ( (preg_match('/--A--user_custom_/i',$dispo_call_url)) or (preg_match('/--A--fullname/i',$dispo_call_url)) )
+		if ( (preg_match('/--A--user_custom_/i',$dispo_call_url)) or (preg_match('/--A--fullname/i',$dispo_call_url)) or (preg_match('/--A--user_group/i',$dispo_call_url)) )
 			{
-			$stmt = "SELECT custom_one,custom_two,custom_three,custom_four,custom_five,full_name from vicidial_users where user='$user';";
+			$stmt = "SELECT custom_one,custom_two,custom_three,custom_four,custom_five,full_name,user_group from vicidial_users where user='$user';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00288',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -9120,6 +9123,7 @@ if ($ACTION == 'updateDISPO')
 				$user_custom_four =		urlencode(trim($row[3]));
 				$user_custom_five =		urlencode(trim($row[4]));
 				$fullname =				urlencode(trim($row[5]));
+				$user_group =			urlencode(trim($row[6]));
 				}
 			}
 
@@ -9375,6 +9379,7 @@ if ($ACTION == 'updateDISPO')
 		$dispo_call_url = preg_replace('/--A--closecallid--B--/i',urlencode(trim($INclosecallid)),$dispo_call_url);
 		$dispo_call_url = preg_replace('/--A--xfercallid--B--/i',urlencode(trim($INxfercallid)),$dispo_call_url);
 		$dispo_call_url = preg_replace('/--A--call_id--B--/i',urlencode(trim($MDnextCID)),$dispo_call_url);
+		$dispo_call_url = preg_replace('/--A--user_group--B--/i',urlencode(trim($user_group)),$dispo_call_url);
 		$dispo_call_url = preg_replace('/--A--call_notes--B--/i',"$url_call_notes",$dispo_call_url);
 
 		if (strlen($FORMcustom_field_names)>2)

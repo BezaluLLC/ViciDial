@@ -17,10 +17,11 @@
 # 111025-1433 - Fixed case sensitivity on list fields
 # 120315-1729 - Filtere out single quotes and backslashes from custom fields
 # 130328-0012 - Converted ereg to preg functions
+# 130402-2256 - Added user_group variable
 #
 
-$version = '2.6-9';
-$build = '130328-0012';
+$version = '2.6-10';
+$build = '130402-2256';
 
 require("dbconnect.php");
 require_once("functions.php");
@@ -145,6 +146,8 @@ if (isset($_GET["agent_log_id"]))			{$agent_log_id=$_GET["agent_log_id"];}
 	elseif (isset($_POST["agent_log_id"]))	{$agent_log_id=$_POST["agent_log_id"];}
 if (isset($_GET["call_id"]))			{$call_id=$_GET["call_id"];}
 	elseif (isset($_POST["call_id"]))	{$call_id=$_POST["call_id"];}
+if (isset($_GET["user_group"]))				{$user_group=$_GET["user_group"];}
+	elseif (isset($_POST["user_group"]))	{$user_group=$_POST["user_group"];}
 if (isset($_GET["web_vars"]))			{$web_vars=$_GET["web_vars"];}
 	elseif (isset($_POST["web_vars"]))	{$web_vars=$_POST["web_vars"];}
 

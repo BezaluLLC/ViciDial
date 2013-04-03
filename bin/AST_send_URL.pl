@@ -8,13 +8,14 @@
 # This script is also used for the Add-Lead-URL feature in In-groups and for
 # QM socket-send.
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 100622-0929 - First Build
 # 100929-0918 - Added function variable and new Add Lead URL function
 # 110731-0127 - Added call_id variable and logging
 # 121120-0925 - Added QM socket-send functionality
+# 130402-2307 - Added user_group variable
 #
 
 $|++;
@@ -336,7 +337,7 @@ if (length($lead_id) > 0)
 
 		if ($na_call_url =~ /--A--user_custom_/)
 			{
-			$stmtA = "SELECT custom_one,custom_two,custom_three,custom_four,custom_five from vicidial_users where user='$user';";
+			$stmtA = "SELECT custom_one,custom_two,custom_three,custom_four,custom_five,user_group from vicidial_users where user='$user';";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -348,6 +349,7 @@ if (length($lead_id) > 0)
 				$VAR_user_custom_three =	$aryA[2];
 				$VAR_user_custom_four =		$aryA[3];
 				$VAR_user_custom_five =		$aryA[4];
+				$VAR_user_group =			$aryA[5];
 				}
 			}
 
@@ -441,6 +443,7 @@ if (length($lead_id) > 0)
 		$na_call_url =~ s/--A--closecallid--B--/$VAR_closecallid/gi;
 		$na_call_url =~ s/--A--uniqueid--B--/$VAR_uniqueid/gi;
 		$na_call_url =~ s/--A--call_id--B--/$VAR_call_id/gi;
+		$na_call_url =~ s/--A--user_group--B--/$VAR_user_group/gi;
 		$na_call_url =~ s/ /+/gi;
 		$na_call_url =~ s/&/\\&/gi;
 		$parse_url = $na_call_url;
@@ -491,7 +494,7 @@ if (length($lead_id) > 0)
 
 		if ($start_call_url =~ /--A--user_custom_/)
 			{
-			$stmtA = "SELECT custom_one,custom_two,custom_three,custom_four,custom_five from vicidial_users where user='$user';";
+			$stmtA = "SELECT custom_one,custom_two,custom_three,custom_four,custom_five,user_group from vicidial_users where user='$user';";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -503,6 +506,7 @@ if (length($lead_id) > 0)
 				$VAR_user_custom_three =	$aryA[2];
 				$VAR_user_custom_four =		$aryA[3];
 				$VAR_user_custom_five =		$aryA[4];
+				$VAR_user_group =			$aryA[5];
 				}
 			}
 
@@ -595,6 +599,7 @@ if (length($lead_id) > 0)
 		$start_call_url =~ s/--A--closecallid--B--/$VAR_closecallid/gi;
 		$start_call_url =~ s/--A--uniqueid--B--/$VAR_uniqueid/gi;
 		$start_call_url =~ s/--A--call_id--B--/$VAR_call_id/gi;
+		$start_call_url =~ s/--A--user_group--B--/$VAR_user_group/gi;
 		$start_call_url =~ s/ /+/gi;
 		$start_call_url =~ s/&/\\&/gi;
 		$parse_url = $start_call_url;
