@@ -230,6 +230,8 @@ OTHER CHANGES:
 39. Added user_group as a script, form, webform, start_call_url and 
 	dispo_call_url variable.
 
+40. Added agent_status function to the non-agent API
+
 
 
 

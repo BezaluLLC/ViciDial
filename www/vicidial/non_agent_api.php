@@ -72,10 +72,11 @@
 # 121116-1938 - Added state call time restrictions to add_lead hopper insert function
 # 121125-2210 - Added Other Campaign DNC option and list expiration date option
 # 130328-0949 - Added update_phone_number option to update_lead function, issue #653
+# 130405-1539 - Added agent_status function
 #
 
-$version = '2.6-50';
-$build = '130328-0949';
+$version = '2.6-51';
+$build = '130405-1539';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -4237,6 +4238,160 @@ if ($function == 'in_group_status')
 ### END in_group_status
 ################################################################################
 
+
+
+
+################################################################################
+### agent_status - exports agent user real-time stats
+################################################################################
+if ($function == 'agent_status')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_status USER DOES NOT HAVE PERMISSION TO GET AGENT INFO";
+			echo "$result: $result_reason: |$user|$allowed_user|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			$agent_search_SQL='';
+			$search_ready=0;
+
+			require_once("functions.php");
+
+			if ( (strlen($agent_user)>0) and (strlen($agent_user)<100) )
+				{
+				$agent_search_SQL .= "where user='$agent_user'";
+				$search_ready++;
+				}
+			if ($search_ready < 1)
+				{
+				$result = 'ERROR';
+				$result_reason = "agent_status INVALID SEARCH PARAMETERS";
+				$data = "$user|$agent_user";
+				echo "$result: $result_reason: $data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level > 6 and view_reports='1' and active='Y';";
+				if ($DB) {$MAIN.="|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$LOGuser_group =			$row[0];
+
+				$stmt="SELECT admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+				if ($DB) {$MAIN.="|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$LOGadmin_viewable_groups =		$row[0];
+
+				$LOGadmin_viewable_groupsSQL='';
+				$whereLOGadmin_viewable_groupsSQL='';
+				if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+					{
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+					$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					}
+
+				$k=0;
+				$output='';
+				$DLset=0;
+				if ($stage == 'csv')
+					{$DL = ',';   $DLset++;}
+				if ($stage == 'tab')
+					{$DL = "\t";   $DLset++;}
+				if ($stage == 'pipe')
+					{$DL = '|';   $DLset++;}
+				if ($DLset < 1)
+					{$DL='|';   $stage='pipe';}
+				if (strlen($time_format) < 1)
+					{$time_format = 'HF';}
+				if ($header == 'YES')
+					{$output .= 'status' . $DL . 'callerid' . $DL . 'lead_id' . $DL . 'campaign_id' . $DL . 'calls_today' . $DL . 'full_name' . $DL . 'user_group' . $DL . 'user_level' . "\n";}
+
+				$stmt="select full_name,user_group,user_level from vicidial_users $agent_search_SQL $LOGadmin_viewable_groupsSQL;";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$user_to_list = mysql_num_rows($rslt);
+				if ($user_to_list > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$full_name = 	$row[0];
+					$user_group = 	$row[1];
+					$user_level = 	$row[2];
+
+					$stmt="select status,callerid,lead_id,campaign_id,calls_today from vicidial_live_agents $agent_search_SQL;";
+					$rslt=mysql_query($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					$agent_to_list = mysql_num_rows($rslt);
+					if ($agent_to_list > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$status =		$row[0];
+						$callerid =		$row[1];
+						$lead_id =		$row[2];
+						$campaign_id =	$row[3];
+						$calls_today =	$row[4];
+
+						$output .= "$status$DL$callerid$DL$lead_id$DL$campaign_id$DL$calls_today$DL$full_name$DL$user_group$DL$user_level\n";
+
+						echo "$output";
+
+						$result = 'SUCCESS';
+						$data = "$user|$agent_user|$stage";
+						$result_reason = "agent_status $output";
+
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					else
+						{
+						$result = 'ERROR';
+						$result_reason = "agent_status AGENT NOT LOGGED IN";
+						$data = "$user|$agent_user";
+						echo "$result: $result_reason: $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				else
+					{
+					$result = 'ERROR';
+					$result_reason = "agent_status AGENT NOT FOUND";
+					$data = "$user|$agent_user";
+					echo "$result: $result_reason: $data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END agent_status
+################################################################################
 
 
 
