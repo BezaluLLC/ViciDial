@@ -2000,6 +2000,7 @@ dial_time SMALLINT(3) UNSIGNED default '0',
 answered_time SMALLINT(4) UNSIGNED default '0',
 sip_hangup_cause SMALLINT(4) UNSIGNED default '0',
 sip_hangup_reason VARCHAR(50) default '',
+caller_code VARCHAR(30) default '',
 index (call_date),
 index (lead_id)
 );
@@ -3104,4 +3105,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1342',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1343',db_schema_update_date=NOW();

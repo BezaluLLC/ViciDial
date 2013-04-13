@@ -609,9 +609,7 @@ sub process_request
 							$sip_hangup_cause=0;
 							$sip_hangup_reason='';
 
-
-
-							$preCtarget = ($beginUNIQUEID - 10);	# 10 seconds before call start
+							$preCtarget = ($beginUNIQUEID - 120);	# 120 seconds before call start
 							($preCsec,$preCmin,$preChour,$preCmday,$preCmon,$preCyear,$preCwday,$preCyday,$preCisdst) = localtime($preCtarget);
 							$preCyear = ($preCyear + 1900);
 							$preCmon++;
@@ -633,8 +631,7 @@ sub process_request
 							if ($postCsec < 10) {$postCsec = "0$postCsec";}
 							$postCSQLdate = "$postCyear-$postCmon-$postCmday $postChour:$postCmin:$postCsec";
 
-							$stmtA = "SELECT sip_hangup_cause,sip_hangup_reason FROM vicidial_dial_log where lead_id='$CIDlead_id' and server_ip='$VARserver_ip' and call_date > \"$preCSQLdate\" and call_date < \"$postCSQLdate\" order by call_date desc;";
-								if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+							$stmtA = "SELECT sip_hangup_cause,sip_hangup_reason FROM vicidial_dial_log where lead_id='$CIDlead_id' and server_ip='$VARserver_ip' and caller_code='$callerid' order by call_date desc limit 1;";
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
@@ -645,8 +642,9 @@ sub process_request
 								$sip_hangup_reason =	$aryA[1];
 								}
 							$sthA->finish();
+								if ($AGILOG) {$agi_string = "$sthArows|$stmtA|$sip_hangup_cause|$sip_hangup_reason|";   &agi_output;}
 
-							$stmtA = "INSERT IGNORE INTO vicidial_carrier_log set uniqueid='$uniqueid',call_date='$now_date',server_ip='$VARserver_ip',lead_id='$CIDlead_id',hangup_cause='$hangup_cause',dialstatus='$dialstatus',channel='$channel',dial_time='$dial_time',answered_time='$answered_time',sip_hangup_cause='$sip_hangup_cause',sip_hangup_reason='$sip_hangup_reason';";
+							$stmtA = "INSERT IGNORE INTO vicidial_carrier_log set uniqueid='$uniqueid',call_date='$now_date',server_ip='$VARserver_ip',lead_id='$CIDlead_id',hangup_cause='$hangup_cause',dialstatus='$dialstatus',channel='$channel',dial_time='$dial_time',answered_time='$answered_time',sip_hangup_cause='$sip_hangup_cause',sip_hangup_reason='$sip_hangup_reason',caller_code='$callerid';";
 								if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 							$VCARaffected_rows = $dbhA->do($stmtA);
 							if ($AGILOG) {$agi_string = "--    CARRIER LOG insert: |$VCARaffected_rows|$CIDlead_id|$hangup_cause|$sip_hangup_cause|$sip_hangup_reason|";   &agi_output;}

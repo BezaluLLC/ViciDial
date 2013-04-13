@@ -330,3 +330,8 @@ CREATE INDEX vddllid on vicidial_dial_log (lead_id);
 CREATE INDEX vdcllid on vicidial_carrier_log (lead_id);
 
 UPDATE system_settings SET db_schema_version='1342',db_schema_update_date=NOW() where db_schema_version < 1342;
+
+ALTER TABLE vicidial_carrier_log ADD caller_code VARCHAR(30) default '';
+ALTER TABLE vicidial_carrier_log_archive ADD caller_code VARCHAR(30) default '';
+
+UPDATE system_settings SET db_schema_version='1343',db_schema_update_date=NOW() where db_schema_version < 1343;
