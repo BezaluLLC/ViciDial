@@ -25,7 +25,7 @@
 # exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})
 # 
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 61010-1007 - First test build
@@ -64,6 +64,7 @@
 # 121120-0922 - Added QM socket-send functionality
 # 121124-2303 - Added Other Campaign DNC option
 # 121129-2322 - Added enhanced_disconnect_logging option
+# 130412-1321 - Added sip_hangup_cause to carrier log
 #
 
 # defaults for PreFork
@@ -588,10 +589,10 @@ sub process_request
 
 						if ($carrier_logging_active > 0)
 							{
+							$beginUNIQUEID = $unique_id;
+							$beginUNIQUEID =~ s/\..*//gi;
 							if ($callerid =~ /^M/) 
 								{
-								$beginUNIQUEID = $unique_id;
-								$beginUNIQUEID =~ s/\..*//gi;
 								$stmtA = "SELECT uniqueid FROM call_log where uniqueid LIKE \"$beginUNIQUEID%\" and caller_code LIKE \"%$CIDlead_id\";";
 								$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 								$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -605,10 +606,50 @@ sub process_request
 									}
 								$sthA->finish();
 								}
-							$stmtA = "INSERT IGNORE INTO vicidial_carrier_log set uniqueid='$uniqueid',call_date='$now_date',server_ip='$VARserver_ip',lead_id='$CIDlead_id',hangup_cause='$hangup_cause',dialstatus='$dialstatus',channel='$channel',dial_time='$dial_time',answered_time='$answered_time';";
+							$sip_hangup_cause=0;
+							$sip_hangup_reason='';
+
+
+
+							$preCtarget = ($beginUNIQUEID - 10);	# 10 seconds before call start
+							($preCsec,$preCmin,$preChour,$preCmday,$preCmon,$preCyear,$preCwday,$preCyday,$preCisdst) = localtime($preCtarget);
+							$preCyear = ($preCyear + 1900);
+							$preCmon++;
+							if ($preCmon < 10) {$preCmon = "0$preCmon";}
+							if ($preCmday < 10) {$preCmday = "0$preCmday";}
+							if ($preChour < 10) {$preChour = "0$preChour";}
+							if ($preCmin < 10) {$preCmin = "0$preCmin";}
+							if ($preCsec < 10) {$preCsec = "0$preCsec";}
+							$preCSQLdate = "$preCyear-$preCmon-$preCmday $preChour:$preCmin:$preCsec";
+
+							$postCtarget = ($beginUNIQUEID + 10);	# 10 seconds after call start
+							($postCsec,$postCmin,$postChour,$postCmday,$postCmon,$postCyear,$postCwday,$postCyday,$postCisdst) = localtime($postCtarget);
+							$postCyear = ($postCyear + 1900);
+							$postCmon++;
+							if ($postCmon < 10) {$postCmon = "0$postCmon";}
+							if ($postCmday < 10) {$postCmday = "0$postCmday";}
+							if ($postChour < 10) {$postChour = "0$postChour";}
+							if ($postCmin < 10) {$postCmin = "0$postCmin";}
+							if ($postCsec < 10) {$postCsec = "0$postCsec";}
+							$postCSQLdate = "$postCyear-$postCmon-$postCmday $postChour:$postCmin:$postCsec";
+
+							$stmtA = "SELECT sip_hangup_cause,sip_hangup_reason FROM vicidial_dial_log where lead_id='$CIDlead_id' and server_ip='$VARserver_ip' and call_date > \"$preCSQLdate\" and call_date < \"$postCSQLdate\" order by call_date desc;";
+								if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+							if ($sthArows > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$sip_hangup_cause =		$aryA[0];
+								$sip_hangup_reason =	$aryA[1];
+								}
+							$sthA->finish();
+
+							$stmtA = "INSERT IGNORE INTO vicidial_carrier_log set uniqueid='$uniqueid',call_date='$now_date',server_ip='$VARserver_ip',lead_id='$CIDlead_id',hangup_cause='$hangup_cause',dialstatus='$dialstatus',channel='$channel',dial_time='$dial_time',answered_time='$answered_time',sip_hangup_cause='$sip_hangup_cause',sip_hangup_reason='$sip_hangup_reason';";
 								if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 							$VCARaffected_rows = $dbhA->do($stmtA);
-							if ($AGILOG) {$agi_string = "--    CARRIER LOG insert: |$VCARaffected_rows|$CIDlead_id|$hangup_cause";   &agi_output;}
+							if ($AGILOG) {$agi_string = "--    CARRIER LOG insert: |$VCARaffected_rows|$CIDlead_id|$hangup_cause|$sip_hangup_cause|$sip_hangup_reason|";   &agi_output;}
 							}
 						}
 					}
@@ -920,7 +961,10 @@ sub process_request
 									}
 								$sthA->finish();
 
-								$stmtA = "INSERT INTO vicidial_log SET uniqueid='$uniqueid',lead_id='$VD_lead_id',list_id='$VD_list_id',status='$VDL_status',campaign_id='$VD_campaign_id',call_date='$VD_call_time',start_epoch='$VD_start_epoch',phone_code='$VD_phone_code',phone_number='$VD_phone_number',user='VDAD',processed='N',length_in_sec='0',end_epoch='$VD_start_epoch',alt_dial='$VD_alt_dial';";
+								$vl_commentsSQL = '';
+								if ($callerid =~ /^M\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
+									{$vl_commentsSQL=",comments='MANUAL'";}
+								$stmtA = "INSERT INTO vicidial_log SET uniqueid='$uniqueid',lead_id='$VD_lead_id',list_id='$VD_list_id',status='$VDL_status',campaign_id='$VD_campaign_id',call_date='$VD_call_time',start_epoch='$VD_start_epoch',phone_code='$VD_phone_code',phone_number='$VD_phone_number',user='VDAD',processed='N',length_in_sec='0',end_epoch='$VD_start_epoch',alt_dial='$VD_alt_dial' $vl_commentsSQL;";
 									if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 								$VDLIaffected_rows = $dbhA->do($stmtA);
 								if ($AGILOG) {$agi_string = "--    VDAD vicidial_log insert: |$VDLIaffected_rows|$uniqueid|$CIDlead_id|$VDL_status|";   &agi_output;}

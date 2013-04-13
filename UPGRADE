@@ -232,6 +232,22 @@ OTHER CHANGES:
 
 40. Added agent_status function to the non-agent API
 
+41. Added method for logging SIP error codes, also display of those codes in the
+	agent screen. The logging goes to the vicidial_carrier_log and 
+	vicidial_dial_log tables and includes both the SIP code and the reason 
+	(i.e. 503 "Service Unavailable"). To get this to work, you need to patch
+	Asterisk with the extras/sipcausecodelog_1.4.39.1.patch file for 
+	Asterisk 1.4, and for Asterisk 1.8 the patch is pending.
+
+	cd /usr/src/asterisk/asterisk-1.4.39.1-vici
+	patch -p1 < ./sipcausecodelog_1.4.39.1.patch
+	   (file to patch: channels/chan_sip.c)
+	make clean
+	./configure
+	make
+	make install
+	   (then stop and restart asterisk)
+
 
 
 

@@ -153,7 +153,7 @@ if($min==0) {$min=60;}
 $minutes=($hour*60)+$min;
 # $minutes=0; # Uncomment if you want to TEST ONLY, so you can test this at any time.
 
-$stmt="select * from vicidial_email_accounts where active='Y'";
+$stmt="select email_account_id,email_account_name,email_account_description,user_group,protocol,email_replyto_address,email_account_server,email_account_user,email_account_pass,active,email_frequency_check_mins,group_id,default_list_id,call_handle_method,agent_search_method,campaign_id,list_id,email_account_type from vicidial_email_accounts where active='Y'";
 $rslt=$dbhA->prepare($stmt);
 $rslt->execute();
 

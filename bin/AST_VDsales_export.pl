@@ -1,13 +1,13 @@
 #!/usr/bin/perl
 #
-# AST_VDsales_export.pl                version: 2.4
+# AST_VDsales_export.pl                version: 2.6
 #
 # This script is designed to gather sales for a VICIDIAL Outbound-only campaign and
 # post them to a directory
 #
 # /usr/share/astguiclient/AST_VDsales_export.pl --campaign=GOODB-GROUP1-GROUP3-GROUP4-SPECIALS-DNC_BEDS --output-format=fixed-as400 --sale-statuses=SALE --debug --filename=BEDSsaleMMDD.txt --date=yesterday --email-list=test@gmail.com --email-sender=test@test.com
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 61219-1118 - First version
@@ -30,6 +30,7 @@
 # 110829-1045 - Changed recording lookup to try to find by vicidial_id first
 # 120511-2029 - Added CLI options for FTP login details
 # 120705-1954 - Added --temp-dir=XXX option
+# 130406-2146 - Added --email-post-audio
 #
 
 $txt = '.txt';
@@ -58,6 +59,7 @@ $OUTtalkmin=0;
 $INcalls=0;
 $INtalk=0;
 $INtalkmin=0;
+$email_post_audio=0;
 
 $secX = time();
 $time = $secX;
@@ -181,6 +183,7 @@ if (length($ARGV[0])>1)
 		print "  [--with-did-lookup] = Looks up the DID pattern and name the call came in on if possible\n";
 		print "  [--email-list=test@test.com:test2@test.com] = send email results to these addresses\n";
 		print "  [--email-sender=vicidial@localhost] = sender for the email results\n";
+		print "  [--email-post-audio] = send an email after sending audio over FTP\n";
 		print "  [--quiet] = quiet\n";
 		print "  [--test] = test\n";
 		print "  [--debug] = debugging messages\n";
@@ -444,6 +447,12 @@ if (length($ARGV[0])>1)
 			}
 		else
 			{$email_sender = 'vicidial@localhost';}
+
+		if ($args =~ /--email-post-audio/i)
+			{
+			$email_post_audio=1;
+			print "\n----- EMAIL POST AUDIO: $email_post_audio -----\n\n";
+			}
 
 		if ($args =~ /--ftp-server=/i)
 			{
@@ -923,6 +932,39 @@ if (!$Q) {print "SALES EXPORT FOR $shipdate: $outfile\n";}
 if (!$Q) {print "TOTAL SALES: $TOTAL_SALES\n";}
 if (!$Q) {print "TOTAL EXCLUDED BY CALLTIME: $CALLTIME_KICK\n";}
 if (!$Q) {print "script execution time in seconds: $secZ     minutes: $secZm\n";}
+
+###### POST FTP EMAIL SECTION
+
+if ( (length($Ealert)>5) && (length($email_list) > 3) && ($email_post_audio > 0) )
+	{
+	print "Sending post-FTP email: $email_list\n";
+
+	use MIME::QuotedPrint;
+	use MIME::Base64;
+	use Mail::Sendmail;
+
+	$mailsubject = "VICIDIAL Lead Export POST AUDIO $outfile";
+
+	%mail = ( To      => "$email_list",
+						From    => "$email_sender",
+						Subject => "$mailsubject",
+				   );
+	$boundary = "====" . time() . "====";
+	$mail{'content-type'} = "multipart/mixed; boundary=\"$boundary\"";
+
+	$message = encode_qp( "VICIDIAL Lead Export POST AUDIO:\n\n Total Records: $TOTAL_SALES\n" );
+
+	$boundary = '--'.$boundary;
+	$mail{body} .= "$boundary\n";
+	$mail{body} .= "Content-Type: text/plain; charset=\"iso-8859-1\"\n";
+	$mail{body} .= "Content-Transfer-Encoding: quoted-printable\n\n";
+	$mail{body} .= "$message\n";
+	$mail{body} .= "$boundary\n";
+	$mail{body} .= "--\n";
+
+	sendmail(%mail) or die $mail::Sendmail::error;
+	print "ok. log says:\n", $mail::sendmail::log;  ### print mail log for status
+	}
 
 exit;
 

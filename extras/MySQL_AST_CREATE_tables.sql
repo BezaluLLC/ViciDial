@@ -1998,7 +1998,10 @@ dialstatus VARCHAR(16),
 channel VARCHAR(100),
 dial_time SMALLINT(3) UNSIGNED default '0',
 answered_time SMALLINT(4) UNSIGNED default '0',
-index (call_date)
+sip_hangup_cause SMALLINT(4) UNSIGNED default '0',
+sip_hangup_reason VARCHAR(50) default '',
+index (call_date),
+index (lead_id)
 );
 
 CREATE TABLE vicidial_list_update_log (
@@ -2709,7 +2712,11 @@ channel VARCHAR(100) default '',
 context VARCHAR(100) default '',
 timeout MEDIUMINT(7) UNSIGNED default '0',
 outbound_cid VARCHAR(100) default '',
+sip_hangup_cause SMALLINT(4) UNSIGNED default '0',
+sip_hangup_reason VARCHAR(50) default '',
+uniqueid VARCHAR(20) default '',
 index (caller_code),
+index (lead_id),
 index (call_date)
 );
 
@@ -3097,4 +3104,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1341',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1342',db_schema_update_date=NOW();

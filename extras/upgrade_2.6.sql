@@ -313,3 +313,20 @@ UPDATE system_settings SET db_schema_version='1340',db_schema_update_date=NOW() 
 ALTER TABLE system_settings ADD level_8_disable_add ENUM('0','1') default '0';
 
 UPDATE system_settings SET db_schema_version='1341',db_schema_update_date=NOW() where db_schema_version < 1341;
+
+ALTER TABLE vicidial_dial_log ADD sip_hangup_cause SMALLINT(4) UNSIGNED default '0';
+ALTER TABLE vicidial_dial_log_archive ADD sip_hangup_cause SMALLINT(4) UNSIGNED default '0';
+ALTER TABLE vicidial_dial_log ADD sip_hangup_reason VARCHAR(50) default '';
+ALTER TABLE vicidial_dial_log_archive ADD sip_hangup_reason VARCHAR(50) default '';
+ALTER TABLE vicidial_dial_log ADD uniqueid VARCHAR(20) default '';
+ALTER TABLE vicidial_dial_log_archive ADD uniqueid VARCHAR(20) default '';
+
+ALTER TABLE vicidial_carrier_log ADD sip_hangup_cause SMALLINT(4) UNSIGNED default '0';
+ALTER TABLE vicidial_carrier_log_archive ADD sip_hangup_cause SMALLINT(4) UNSIGNED default '0';
+ALTER TABLE vicidial_carrier_log ADD sip_hangup_reason VARCHAR(50) default '';
+ALTER TABLE vicidial_carrier_log_archive ADD sip_hangup_reason VARCHAR(50) default '';
+
+CREATE INDEX vddllid on vicidial_dial_log (lead_id);
+CREATE INDEX vdcllid on vicidial_carrier_log (lead_id);
+
+UPDATE system_settings SET db_schema_version='1342',db_schema_update_date=NOW() where db_schema_version < 1342;

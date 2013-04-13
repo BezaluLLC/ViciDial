@@ -38,12 +38,15 @@
 # 100625-1220 - Added waitfors after logout to fix broken pipe errors in asterisk <MikeC>
 # 100903-0041 - Changed lead_id max length to 10 digits
 # 130108-1705 - Changes for Asterisk 1.8 compatibility
+# 130412-1216 - Added sip hangup cause logging from new patch AMI event
 #
 
 # constants
 $DB=1;  # Debug flag, set to 0 for no debug messages, lots of output
 $US='__';
 $MT[0]='';
+$vdcl_update=0;
+$vddl_update=0;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -325,7 +328,7 @@ while($one_day_interval > 0)
 						}
 
 					##### parse through all other important events #####
-					if ( ($input_lines[$ILcount] =~ /State: Ringing|State: Up|State: Dialing|Event: Newstate|Event: Hangup|Event: Newcallerid|Event: Shutdown|Event: CPD-Result/) && ($input_lines[$ILcount] !~ /ZOMBIE/) )
+					if ( ($input_lines[$ILcount] =~ /State: Ringing|State: Up|State: Dialing|Event: Newstate|Event: Hangup|Event: Newcallerid|Event: Shutdown|Event: CPD-Result|Event: SIP-Hangup-Cause/) && ($input_lines[$ILcount] !~ /ZOMBIE/) )
 						{
 						$input_lines[$ILcount] =~ s/^\n|^\n\n//gi;
 						@command_line=split(/\n/, $input_lines[$ILcount]);
@@ -642,6 +645,72 @@ while($one_day_interval > 0)
 									}
 								}
 							}
+						if ($input_lines[$ILcount] =~ /Event: SIP-Hangup-Cause/)
+							{
+							#	Event: SIP-Hangup-Cause
+							#	Privilege: system,all
+							#	ChannelDriver: SIP
+							#	Channel: SIP/paraxip-out-08291448
+							#	CallerIDName: M4121149450000795193
+							#	Uniqueid: 1233564450.141
+							#	Result: 603
+							if ( ($command_line[3] =~ /^Channel: /i) && ($command_line[5] =~ /^Uniqueid: /i) ) 
+								{
+									&get_time_now;
+
+								$channel = $command_line[3];
+								$channel =~ s/Channel: |\s*$//gi;
+								$callid = $command_line[4];
+								$callid =~ s/CallerIDName: |\s*$//gi;
+								   $callid =~ s/^\"//gi;   $callid =~ s/\".*$//gi;
+								   if ($callid =~ /\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S/) {$callid =~ s/ .*//gi;}
+								$uniqueid = $command_line[5];
+								$uniqueid =~ s/Uniqueid: |\s*$//gi;
+								$result = $command_line[6];
+								$result =~ s/Result: |\s*$//gi;
+								@result_details=split(/\|/, $result);
+								if ( (length($result)>0) && ($result_details[0] !~ /^407|^487/) )
+									{
+									$lead_id = substr($callid, 10, 10);
+									$lead_id = ($lead_id + 0);
+									$beginUNIQUEID = $uniqueid;
+									$beginUNIQUEID =~ s/\..*//gi;
+									$stmtA = "UPDATE vicidial_dial_log SET sip_hangup_cause='$result_details[0]',sip_hangup_reason='$result_details[1]',uniqueid='$uniqueid' where caller_code='$callid' and server_ip='$server_ip' and lead_id='$lead_id';";
+									print STDERR "|$stmtA|\n";
+									my $affected_rows = $dbhA->do($stmtA);
+									if($DB){print "|$affected_rows dial_log updated|$callid|$server_ip|$result|\n";}
+									$vddl_update = ($vddl_update + $affected_rows);
+
+									$preCtarget = ($beginUNIQUEID - 10);	# 10 seconds before call start
+									($preCsec,$preCmin,$preChour,$preCmday,$preCmon,$preCyear,$preCwday,$preCyday,$preCisdst) = localtime($preCtarget);
+									$preCyear = ($preCyear + 1900);
+									$preCmon++;
+									if ($preCmon < 10) {$preCmon = "0$preCmon";}
+									if ($preCmday < 10) {$preCmday = "0$preCmday";}
+									if ($preChour < 10) {$preChour = "0$preChour";}
+									if ($preCmin < 10) {$preCmin = "0$preCmin";}
+									if ($preCsec < 10) {$preCsec = "0$preCsec";}
+									$preCSQLdate = "$preCyear-$preCmon-$preCmday $preChour:$preCmin:$preCsec";
+
+									$postCtarget = ($beginUNIQUEID + 10);	# 10 seconds after call start
+									($postCsec,$postCmin,$postChour,$postCmday,$postCmon,$postCyear,$postCwday,$postCyday,$postCisdst) = localtime($postCtarget);
+									$postCyear = ($postCyear + 1900);
+									$postCmon++;
+									if ($postCmon < 10) {$postCmon = "0$postCmon";}
+									if ($postCmday < 10) {$postCmday = "0$postCmday";}
+									if ($postChour < 10) {$postChour = "0$postChour";}
+									if ($postCmin < 10) {$postCmin = "0$postCmin";}
+									if ($postCsec < 10) {$postCsec = "0$postCsec";}
+									$postCSQLdate = "$postCyear-$postCmon-$postCmday $postChour:$postCmin:$postCsec";
+
+									$stmtA = "UPDATE vicidial_carrier_log SET sip_hangup_cause='$result_details[0]',sip_hangup_reason='$result_details[1]' where server_ip='$server_ip' and lead_id='$lead_id' and call_date > \"$preCSQLdate\" and call_date < \"$postCSQLdate\" order by call_date desc limit 1;";
+									print STDERR "|$stmtA|\n";
+									my $affected_rows = $dbhA->do($stmtA);
+									if($DB){print "|$affected_rows carrier_log updated|$callid|$server_ip|$uniqueid|$result_details[0]|$result_details[1]|\n";}
+									$vdcl_update = ($vdcl_update + $affected_rows);
+									}
+								}
+							}
 						}
 					$ILcount++;
 					}
@@ -651,7 +720,7 @@ while($one_day_interval > 0)
 			$endless_loop--;
 			$keepalive_count_loop++;
 
-			if($DB){print STDERR "loop counter: |$endless_loop|$keepalive_count_loop|\r";}
+			if($DB){print STDERR "loop counter: |$endless_loop|$keepalive_count_loop|     |$vddl_update|$vdcl_update|\r";}
 
 			### putting a blank file called "sendmgr.kill" in a directory will automatically safely kill this program
 			if ( (-e "$PATHhome/listenmgr.kill") or ($sendonlyone) )
@@ -817,7 +886,7 @@ while($one_day_interval > 0)
 						}
 
 					##### parse through all other important events #####
-					if ( ($input_lines[$ILcount] =~ /Event: Newstate|Event: Hangup|Event: NewCallerid|Event: Shutdown|Event: CPD-Result/) && ($input_lines[$ILcount] !~ /ZOMBIE/) )
+					if ( ($input_lines[$ILcount] =~ /Event: Newstate|Event: Hangup|Event: NewCallerid|Event: Shutdown|Event: CPD-Result|Event: SIP-Hangup-Cause/) && ($input_lines[$ILcount] !~ /ZOMBIE/) )
 						{
 						$input_lines[$ILcount] =~ s/^\n|^\n\n//gi;
 						@command_line=split(/\n/, $input_lines[$ILcount]);
@@ -982,6 +1051,72 @@ while($one_day_interval > 0)
 									}
 								}
 							}
+						if ($input_lines[$ILcount] =~ /Event: SIP-Hangup-Cause/)
+							{
+							#	Event: SIP-Hangup-Cause
+							#	Privilege: system,all
+							#	ChannelDriver: SIP
+							#	Channel: SIP/paraxip-out-08291448
+							#	CallerIDName: M4121149450000795193
+							#	Uniqueid: 1233564450.141
+							#	Result: 603
+							if ( ($command_line[2] =~ /^Channel: /i) && ($command_line[4] =~ /^Uniqueid: /i) ) 
+								{
+									&get_time_now;
+
+								$channel = $command_line[2];
+								$channel =~ s/Channel: |\s*$//gi;
+								$callid = $command_line[3];
+								$callid =~ s/CallerIDName: |\s*$//gi;
+								   $callid =~ s/^\"//gi;   $callid =~ s/\".*$//gi;
+								   if ($callid =~ /\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S/) {$callid =~ s/ .*//gi;}
+								$uniqueid = $command_line[4];
+								$uniqueid =~ s/Uniqueid: |\s*$//gi;
+								$result = $command_line[5];
+								$result =~ s/Result: |\s*$//gi;
+								@result_details=split(/\|/, $result);
+								if ( (length($result)>0) && ($result_details[0] !~ /^407|^487/) )
+									{
+									$lead_id = substr($callid, 10, 10);
+									$lead_id = ($lead_id + 0);
+									$beginUNIQUEID = $uniqueid;
+									$beginUNIQUEID =~ s/\..*//gi;
+									$stmtA = "UPDATE vicidial_dial_log SET sip_hangup_cause='$result_details[0]',sip_hangup_reason='$result_details[1]',uniqueid='$uniqueid' where caller_code='$callid' and server_ip='$server_ip' and lead_id='$lead_id';";
+									print STDERR "|$stmtA|\n";
+									my $affected_rows = $dbhA->do($stmtA);
+									if($DB){print "|$affected_rows dial_log updated|$callid|$server_ip|$result|\n";}
+									$vddl_update = ($vddl_update + $affected_rows);
+
+									$preCtarget = ($beginUNIQUEID - 10);	# 10 seconds before call start
+									($preCsec,$preCmin,$preChour,$preCmday,$preCmon,$preCyear,$preCwday,$preCyday,$preCisdst) = localtime($preCtarget);
+									$preCyear = ($preCyear + 1900);
+									$preCmon++;
+									if ($preCmon < 10) {$preCmon = "0$preCmon";}
+									if ($preCmday < 10) {$preCmday = "0$preCmday";}
+									if ($preChour < 10) {$preChour = "0$preChour";}
+									if ($preCmin < 10) {$preCmin = "0$preCmin";}
+									if ($preCsec < 10) {$preCsec = "0$preCsec";}
+									$preCSQLdate = "$preCyear-$preCmon-$preCmday $preChour:$preCmin:$preCsec";
+
+									$postCtarget = ($beginUNIQUEID + 10);	# 10 seconds after call start
+									($postCsec,$postCmin,$postChour,$postCmday,$postCmon,$postCyear,$postCwday,$postCyday,$postCisdst) = localtime($postCtarget);
+									$postCyear = ($postCyear + 1900);
+									$postCmon++;
+									if ($postCmon < 10) {$postCmon = "0$postCmon";}
+									if ($postCmday < 10) {$postCmday = "0$postCmday";}
+									if ($postChour < 10) {$postChour = "0$postChour";}
+									if ($postCmin < 10) {$postCmin = "0$postCmin";}
+									if ($postCsec < 10) {$postCsec = "0$postCsec";}
+									$postCSQLdate = "$postCyear-$postCmon-$postCmday $postChour:$postCmin:$postCsec";
+
+									$stmtA = "UPDATE vicidial_carrier_log SET sip_hangup_cause='$result_details[0]',sip_hangup_reason='$result_details[1]' where server_ip='$server_ip' and lead_id='$lead_id' and call_date > \"$preCSQLdate\" and call_date < \"$postCSQLdate\" order by call_date desc limit 1;";
+									print STDERR "|$stmtA|\n";
+									my $affected_rows = $dbhA->do($stmtA);
+									if($DB){print "|$affected_rows carrier_log updated|$callid|$server_ip|$uniqueid|$result_details[0]|$result_details[1]|\n";}
+									$vdcl_update = ($vdcl_update + $affected_rows);
+									}
+								}
+							}
 						}
 					$ILcount++;
 					}
@@ -991,7 +1126,7 @@ while($one_day_interval > 0)
 			$endless_loop--;
 			$keepalive_count_loop++;
 
-			if($DB){print STDERR "loop counter: |$endless_loop|$keepalive_count_loop|\r";}
+			if($DB){print STDERR "loop counter: |$endless_loop|$keepalive_count_loop|     |$vddl_update|$vdcl_update|\r";}
 
 			### putting a blank file called "sendmgr.kill" in a directory will automatically safely kill this program
 			if ( (-e "$PATHhome/listenmgr.kill") or ($sendonlyone) )

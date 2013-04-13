@@ -326,10 +326,11 @@
 # 130328-0009 - Converted ereg to preg functions
 # 130328-1015 - Added validation for agent manual dial permission on DIAL links
 # 130402-2242 - Added user_group variable to _call_url functions
+# 130412-1348 - Added SIP cause code display on failed calls
 #
 
-$version = '2.6-224';
-$build = '130402-2242';
+$version = '2.6-225';
+$build = '130412-1348';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=533;
 $one_mysql_log=0;
@@ -665,6 +666,66 @@ $hangup_cause_dictionary = array(
 111 => "Protocol error, unspecified.",
 127 => "Interworking, unspecified."
 );
+
+##### SIP Hangup Cause Dictionary #####
+$sip_hangup_cause_dictionary = array(
+400 => "Bad Request.",
+401 => "Unauthorized.",
+402 => "Payment Required.",
+403 => "Forbidden.",
+404 => "Not Found.",
+405 => "Method Not Allowed.",
+406 => "Not Acceptable.",
+407 => "Proxy Authentication Required.",
+408 => "Request Timeout.",
+409 => "Conflict.",
+410 => "Gone.",
+411 => "Length Required.",
+412 => "Conditional Request Failed.",
+413 => "Request Entity Too Large.",
+414 => "Request-URI Too Long.",
+415 => "Unsupported Media Type.",
+416 => "Unsupported URI Scheme.",
+417 => "Unknown Resource-Priority.",
+420 => "Bad Extension.",
+421 => "Extension Required.",
+422 => "Session Interval Too Small.",
+423 => "Interval Too Brief.",
+424 => "Bad Location Information.",
+428 => "Use Identity Header.",
+429 => "Provide Referrer Identity.",
+433 => "Anonymity Disallowed.",
+436 => "Bad Identity-Info.",
+437 => "Unsupported Certificate.",
+438 => "Invalid Identity Header.",
+470 => "Consent Needed.",
+480 => "Temporarily Unavailable.",
+481 => "Call/Transaction Does Not Exist.",
+482 => "Loop Detected..",
+483 => "Too Many Hops.",
+484 => "Address Incomplete.",
+485 => "Ambiguous.",
+486 => "Busy Here.",
+487 => "Request Terminated.",
+488 => "Not Acceptable Here.",
+489 => "Bad Event.",
+491 => "Request Pending.",
+493 => "Undecipherable.",
+494 => "Security Agreement Required.",
+500 => "Server Internal Error.",
+501 => "Not Implemented.",
+502 => "Bad Gateway.",
+503 => "Service Unavailable.",
+504 => "Server Time-out.",
+505 => "Version Not Supported.",
+513 => "Message Too Large.",
+580 => "Precondition Failure.",
+600 => "Busy Everywhere.",
+603 => "Decline.",
+604 => "Does Not Exist Anywhere.",
+606 => "Not Acceptable."
+);
+
 
 
 #############################################
@@ -3565,7 +3626,7 @@ if ($ACTION == 'manDiaLlookCaLL')
 					$end_epoch =	$row[2];
 
 					### Check carrier log for error
-					$stmt="SELECT dialstatus,hangup_cause FROM vicidial_carrier_log where uniqueid='$uniqueid' and server_ip='$server_ip' and channel='$channel' and dialstatus IN('BUSY','CHANUNAVAIL','CONGESTION') LIMIT 1;";
+					$stmt="SELECT dialstatus,hangup_cause,sip_hangup_cause,sip_hangup_reason FROM vicidial_carrier_log where uniqueid='$uniqueid' and server_ip='$server_ip' and channel='$channel' and dialstatus IN('BUSY','CHANUNAVAIL','CONGESTION') LIMIT 1;";
 					$rslt=mysql_query($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00292',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
@@ -3573,13 +3634,24 @@ if ($ACTION == 'manDiaLlookCaLL')
 					if ($CL_mancall_ct > 0)
 						{
 						$row=mysql_fetch_row($rslt);
-						$dialstatus =$row[0];
-						$hangup_cause =$row[1];
-						
+						$dialstatus =			$row[0];
+						$hangup_cause =			$row[1];
+						$sip_hangup_cause =		$row[2];
+						$sip_hangup_reason =	$row[3];
+
 						$channel = $dialstatus;
 						$hangup_cause_msg = "Cause: " . $hangup_cause . " - " . hangup_cause_description($hangup_cause);
+						$sip_hangup_cause_msg='';
+						if (strlen($sip_hangup_cause) > 1)
+							{
+							$sip_hangup_cause_msg = "SIP: " . $sip_hangup_cause . " - ";
+							if (strlen($sip_hangup_reason) < 2)
+								{$sip_hangup_cause_msg .= sip_hangup_cause_description($sip_hangup_cause);}
+							else
+								{$sip_hangup_cause_msg .= $sip_hangup_reason;}
+							}
 
-						$call_output = "$uniqueid\n$channel\nERROR\n" . $hangup_cause_msg; 
+						$call_output = "$uniqueid\n$channel\nERROR\n" . $hangup_cause_msg . "\n<br>" . $sip_hangup_cause_msg; 
 						$call_good++;
 
 						### Delete call record
@@ -8147,14 +8219,14 @@ if ($ACTION == 'updateDISPO')
 
 			if ( ($auto_dial_level < 1) or (preg_match('/^M/',$MDnextCID)) )
 				{
-				$stmt = "SELECT count(*) from vicidial_log where lead_id='$lead_id' and user='$user' and call_date > \"$four_hours_ago\";";
+				$stmt = "SELECT count(*) from vicidial_log where lead_id='$lead_id' and call_date > \"$four_hours_ago\" and ( (user='$user') or ( (comments='MANUAL') and status IN('AB','ADC','ADCT') ) );";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_query($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00213',$user,$server_ip,$session_name,$one_mysql_log);}
 					$row=mysql_fetch_row($rslt);
 				if ($row[0] > 0)
 					{
-					$stmt="UPDATE vicidial_log set status='$log_dispo_choice' where lead_id='$lead_id' and user='$user' and call_date > \"$four_hours_ago\" order by uniqueid desc limit 1;";
+					$stmt="UPDATE vicidial_log set status='$log_dispo_choice',user='$user' where lead_id='$lead_id' and call_date > \"$four_hours_ago\" and ( (user='$user') or ( (comments='MANUAL') and status IN('AB','ADC','ADCT') ) ) order by uniqueid desc limit 1;";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 					$rslt=mysql_query($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00145',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -12127,5 +12199,12 @@ function hangup_cause_description($code)
 	else { return "Unidentified Hangup Cause Code."; }
 	}
 
+##### SIP Hangup Cause Description Map  #####
+function sip_hangup_cause_description($sip_code)
+	{
+	global $sip_hangup_cause_dictionary;
+	if ( array_key_exists($sip_code,$sip_hangup_cause_dictionary)  ) { return $sip_hangup_cause_dictionary[$sip_code]; }
+	else { return "Unidentified SIP Hangup Cause Code."; }
+	}
 
 ?>

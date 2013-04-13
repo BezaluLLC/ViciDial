@@ -398,10 +398,11 @@
 # 130328-0934 - Applied changes from Issue #655
 # 130328-1017 - Added validation for agent manual dial permission on DIAL links
 # 130402-2250 - Added user_group variable in scripts, forms and webforms
+# 130412-1359 - Added SIP message for failed calls
 #
 
-$version = '2.6-366c';
-$build = '130402-2250';
+$version = '2.6-367c';
+$build = '130412-1359';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -6745,7 +6746,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							if (XDalert == 'ERROR')
 								{
 								var XDerrorDesc = MDlookResponse_array[3];
-								var DiaLAlerTMessagE = "Call Rejected: " + XDchannel + "\n" + XDerrorDesc;
+								var XDerrorDescSIP = MDlookResponse_array[4];
+								var DiaLAlerTMessagE = "Call Rejected: " + XDchannel + "\n" + XDerrorDesc + "\n" + XDerrorDescSIP;
 								TimerActionRun("DiaLAlerT",DiaLAlerTMessagE);
 								}
 							if ( (XDchannel.match(regMDL)) && (asterisk_version != '1.0.8') && (asterisk_version != '1.0.9') && (MD_ring_secondS < 10) )
@@ -6797,7 +6799,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							if (MDalert == 'ERROR')
 								{
 								var MDerrorDesc = MDlookResponse_array[3];
-								var DiaLAlerTMessagE = "Call Rejected: " + MDchannel + "\n" + MDerrorDesc;
+								var MDerrorDescSIP = MDlookResponse_array[4];
+								var DiaLAlerTMessagE = "Call Rejected: " + MDchannel + "\n" + MDerrorDesc + "\n" + MDerrorDescSIP;
 								TimerActionRun("DiaLAlerT",DiaLAlerTMessagE);
 								}
 							if ( (MDchannel.match(regMDL)) && (asterisk_version != '1.0.8') && (asterisk_version != '1.0.9') )
