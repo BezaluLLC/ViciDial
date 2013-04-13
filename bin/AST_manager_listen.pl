@@ -681,7 +681,7 @@ while($one_day_interval > 0)
 									if($DB){print "|$affected_rows dial_log updated|$callid|$server_ip|$result|\n";}
 									$vddl_update = ($vddl_update + $affected_rows);
 
-									$preCtarget = ($beginUNIQUEID - 120);	# 120 seconds before call start
+									$preCtarget = ($beginUNIQUEID - 180);	# 180 seconds before call start
 									($preCsec,$preCmin,$preChour,$preCmday,$preCmon,$preCyear,$preCwday,$preCyday,$preCisdst) = localtime($preCtarget);
 									$preCyear = ($preCyear + 1900);
 									$preCmon++;
@@ -703,7 +703,7 @@ while($one_day_interval > 0)
 									if ($postCsec < 10) {$postCsec = "0$postCsec";}
 									$postCSQLdate = "$postCyear-$postCmon-$postCmday $postChour:$postCmin:$postCsec";
 
-									$stmtA = "UPDATE vicidial_carrier_log SET sip_hangup_cause='$result_details[0]',sip_hangup_reason='$result_details[1]' where server_ip='$server_ip' and caller_code='$callerid' and lead_id='$lead_id' and call_date > \"$preCSQLdate\" and call_date < \"$postCSQLdate\" order by call_date desc limit 1;";
+									$stmtA = "UPDATE vicidial_carrier_log SET sip_hangup_cause='$result_details[0]',sip_hangup_reason='$result_details[1]' where server_ip='$server_ip' and caller_code='$callid' and lead_id='$lead_id' and call_date > \"$preCSQLdate\" and call_date < \"$postCSQLdate\" order by call_date desc limit 1;";
 									print STDERR "|$stmtA|\n";
 									my $affected_rows = $dbhA->do($stmtA);
 									if($DB){print "|$affected_rows carrier_log updated|$callid|$server_ip|$uniqueid|$result_details[0]|$result_details[1]|\n";}
@@ -1087,7 +1087,7 @@ while($one_day_interval > 0)
 									if($DB){print "|$affected_rows dial_log updated|$callid|$server_ip|$result|\n";}
 									$vddl_update = ($vddl_update + $affected_rows);
 
-									$preCtarget = ($beginUNIQUEID - 120);	# 120 seconds before call start
+									$preCtarget = ($beginUNIQUEID - 180);	# 180 seconds before call start
 									($preCsec,$preCmin,$preChour,$preCmday,$preCmon,$preCyear,$preCwday,$preCyday,$preCisdst) = localtime($preCtarget);
 									$preCyear = ($preCyear + 1900);
 									$preCmon++;
@@ -1109,7 +1109,7 @@ while($one_day_interval > 0)
 									if ($postCsec < 10) {$postCsec = "0$postCsec";}
 									$postCSQLdate = "$postCyear-$postCmon-$postCmday $postChour:$postCmin:$postCsec";
 
-									$stmtA = "UPDATE vicidial_carrier_log SET sip_hangup_cause='$result_details[0]',sip_hangup_reason='$result_details[1]' where server_ip='$server_ip' and caller_code='$callerid' and lead_id='$lead_id' and call_date > \"$preCSQLdate\" and call_date < \"$postCSQLdate\" order by call_date desc limit 1;";
+									$stmtA = "UPDATE vicidial_carrier_log SET sip_hangup_cause='$result_details[0]',sip_hangup_reason='$result_details[1]' where server_ip='$server_ip' and caller_code='$callid' and lead_id='$lead_id' and call_date > \"$preCSQLdate\" and call_date < \"$postCSQLdate\" order by call_date desc limit 1;";
 									print STDERR "|$stmtA|\n";
 									my $affected_rows = $dbhA->do($stmtA);
 									if($DB){print "|$affected_rows carrier_log updated|$callid|$server_ip|$uniqueid|$result_details[0]|$result_details[1]|\n";}

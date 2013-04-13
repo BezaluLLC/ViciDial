@@ -609,28 +609,6 @@ sub process_request
 							$sip_hangup_cause=0;
 							$sip_hangup_reason='';
 
-							$preCtarget = ($beginUNIQUEID - 120);	# 120 seconds before call start
-							($preCsec,$preCmin,$preChour,$preCmday,$preCmon,$preCyear,$preCwday,$preCyday,$preCisdst) = localtime($preCtarget);
-							$preCyear = ($preCyear + 1900);
-							$preCmon++;
-							if ($preCmon < 10) {$preCmon = "0$preCmon";}
-							if ($preCmday < 10) {$preCmday = "0$preCmday";}
-							if ($preChour < 10) {$preChour = "0$preChour";}
-							if ($preCmin < 10) {$preCmin = "0$preCmin";}
-							if ($preCsec < 10) {$preCsec = "0$preCsec";}
-							$preCSQLdate = "$preCyear-$preCmon-$preCmday $preChour:$preCmin:$preCsec";
-
-							$postCtarget = ($beginUNIQUEID + 10);	# 10 seconds after call start
-							($postCsec,$postCmin,$postChour,$postCmday,$postCmon,$postCyear,$postCwday,$postCyday,$postCisdst) = localtime($postCtarget);
-							$postCyear = ($postCyear + 1900);
-							$postCmon++;
-							if ($postCmon < 10) {$postCmon = "0$postCmon";}
-							if ($postCmday < 10) {$postCmday = "0$postCmday";}
-							if ($postChour < 10) {$postChour = "0$postChour";}
-							if ($postCmin < 10) {$postCmin = "0$postCmin";}
-							if ($postCsec < 10) {$postCsec = "0$postCsec";}
-							$postCSQLdate = "$postCyear-$postCmon-$postCmday $postChour:$postCmin:$postCsec";
-
 							$stmtA = "SELECT sip_hangup_cause,sip_hangup_reason FROM vicidial_dial_log where lead_id='$CIDlead_id' and server_ip='$VARserver_ip' and caller_code='$callerid' order by call_date desc limit 1;";
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
