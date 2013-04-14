@@ -73,10 +73,11 @@
 # 121125-2210 - Added Other Campaign DNC option and list expiration date option
 # 130328-0949 - Added update_phone_number option to update_lead function, issue #653
 # 130405-1539 - Added agent_status function
+# 130414-0311 - Added report logging for blind_monitor function
 #
 
-$version = '2.6-51';
-$build = '130405-1539';
+$version = '2.6-52';
+$build = '130414-0311';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -1485,6 +1486,18 @@ if ($function == 'blind_monitor')
 
 						$stmt = "INSERT INTO vicidial_dial_log SET caller_code='$BMquery',lead_id='0',server_ip='$monitor_server_ip',call_date='$NOW_TIME',extension='$dialplan_number',channel='Local/$monitor_dialstring$stage$session_id@default',timeout='0',outbound_cid='\"VC Blind Monitor\" <$outbound_cid>',context='default';";
 						$rslt=mysql_query($stmt, $link);
+
+						##### BEGIN log visit to the vicidial_report_log table #####
+						$endMS = microtime();
+						$startMSary = explode(" ",$startMS);
+						$endMSary = explode(" ",$endMS);
+						$runS = ($endMSary[0] - $startMSary[0]);
+						$runM = ($endMSary[1] - $startMSary[1]);
+						$TOTALrun = ($runS + $runM);
+						$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$user', ip_address='1.1.1.1', report_name='API Blind Monitor', browser='API', referer='realtime_report.php', notes='$user, $monitor_server_ip, $dialplan_number, $session_id, $phone_login', url='REALTIME BLIND MONITOR',run_time='$TOTALrun';";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_query($stmt, $link);
+						##### END log visit to the vicidial_report_log table #####
 
 						$result = 'SUCCESS';
 						$result_reason = "blind_monitor HAS BEEN LAUNCHED";

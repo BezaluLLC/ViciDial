@@ -4,6 +4,8 @@
 # Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
+$startMS = microtime();
+
 require("dbconnect.php");
 require("functions.php");
 
@@ -107,7 +109,7 @@ $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
 $QUERY_STRING = getenv("QUERY_STRING");
 
-$Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report, Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Single Agent Daily, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report';
+$Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report, Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Single Agent Daily, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report, Carrier Log Report, Campaign Debug, Hangup Cause Report';
 
 $UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound Email Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report , Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Single Agent Daily, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Custom Reports Links, CallCard Search, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report';
 
@@ -3235,12 +3237,13 @@ else
 # 130130-1207 - Added new CPD AMD options for In-Groups and CallMenus
 # 130221-1736 - Added Level 8 Disable Add option to system settings and new Email Log Report link, DID exten made non-editable
 # 130402-2322 - Added user_group script variable
+# 130414-1924 - Added report logging and display
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-396a';
-$build = '130402-2322';
+$admin_version = '2.6-397a';
+$build = '130414-1924';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3835,6 +3838,9 @@ if ($ADD==700000000000000)	{$hh='reports';	echo "VICIDIAL ADMIN CHANGE LOG";}
 if ($ADD==710000000000000)	{$hh='reports';	echo "VICIDIAL USER ADMIN CHANGE LOG";}
 if ($ADD==720000000000000)	{$hh='reports';	echo "VICIDIAL SECTION ADMIN CHANGE LOG";}
 if ($ADD==730000000000000)	{$hh='reports';	echo "VICIDIAL DETAIL ADMIN CHANGE LOG";}
+if ($ADD==800000000000000)	{$hh='reports';	echo "VICIDIAL ADMIN REPORT LOG";}
+if ($ADD==810000000000000)	{$hh='reports';	echo "VICIDIAL USER ADMIN REPORT LOG";}
+if ($ADD==830000000000000)	{$hh='reports';	echo "VICIDIAL DETAIL ADMIN REPORT LOG";}
 if ($ADD==0)			{$hh='users';		echo "Users List";}
 if ($ADD==8)			{$hh='users';		echo "CallBacks Within Agent";}
 if ($ADD==81)			{$hh='campaigns';	$sh='list';	echo "CallBacks Within Campaign";}
@@ -3887,6 +3893,33 @@ if ($ADD==999993)		{$hh='reports';		echo "SUMMARY STATS";}
 if ($ADD==999992)		{$hh='reports';		echo "SYSTEM SUMMARY STATS";}
 if ($ADD==999991)		{$hh='reports';		echo "SERVERS VERSIONS";}
 
+if ( ($ADD==999993) or ($ADD==999992) or ($ADD==730000000000000) or ($ADD==830000000000000) )
+	{
+	if ($ADD==999993)		{$report_name = "SUMMARY STATS";}
+	if ($ADD==999992)		{$report_name = "SYSTEM SUMMARY STATS";}
+	if ($ADD==730000000000000)	{$report_name = "DETAIL ADMIN CHANGE LOG";}
+	if ($ADD==830000000000000)	{$report_name = "DETAIL ADMIN REPORT LOG";}
+
+	##### BEGIN log visit to the vicidial_report_log table #####
+	$LOGip = getenv("REMOTE_ADDR");
+	$LOGbrowser = getenv("HTTP_USER_AGENT");
+	$LOGscript_name = getenv("SCRIPT_NAME");
+	$LOGserver_name = getenv("SERVER_NAME");
+	$LOGserver_port = getenv("SERVER_PORT");
+	$LOGrequest_uri = getenv("REQUEST_URI");
+	$LOGhttp_referer = getenv("HTTP_REFERER");
+	if (preg_match("/443/i",$LOGserver_port)) {$HTTPprotocol = 'https://';}
+	  else {$HTTPprotocol = 'http://';}
+	if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='';}
+	else {$LOGserver_port = ":$LOGserver_port";}
+	$LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
+
+	$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group, $query_date, $end_date, $shift, $stage, $report_display_type|', url='$LOGfull_url';";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$report_log_id = mysql_insert_id($link);
+	##### END log visit to the vicidial_report_log table #####
+	}
 
 if ( ($ADD>9) and ($ADD < 99998) )
 	{
@@ -32537,7 +32570,7 @@ if ($ADD==311111111111111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Slave Database Server: </td><td align=left><input type=text name=slave_db_server size=30 maxlength=50 value=\"$slave_db_server\">$NWB#settings-slave_db_server$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Reports to use Slave DB: </td><td align=left><select MULTIPLE size=4 name=reports_use_slave_db[]>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Reports to use Slave DB: </td><td align=left><select MULTIPLE size=5 name=reports_use_slave_db[]>\n";
 
 		$Vreports_ARY = explode(',',$Vreports);
 		$Vreports_ct = count($Vreports_ARY);
@@ -32555,7 +32588,7 @@ if ($ADD==311111111111111)
 
 		if ($SSallow_custom_dialplan > 0)
 			{
-			echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>Custom Dialplan Entry: $NWB#settings-custom_dialplan_entry$NWE <TEXTAREA NAME=custom_dialplan_entry ROWS=5 COLS=80>$custom_dialplan_entry</TEXTAREA></td></tr>\n";
+			echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>Custom Dialplan Entry: $NWB#settings-custom_dialplan_entry$NWE <TEXTAREA NAME=custom_dialplan_entry ROWS=8 COLS=80>$custom_dialplan_entry</TEXTAREA></td></tr>\n";
 
 			echo "<tr bgcolor=#B6D3FC><td align=right>Reload Dialplan On Servers: </td><td align=left><select size=1 name=reload_dialplan_on_servers><option>1</option><option selected>0</option></select>$NWB#settings-reload_dialplan_on_servers$NWE</td></tr>\n";
 			}
@@ -34751,22 +34784,22 @@ if ($ADD==700000000000000)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	if ($stage > 9999)
+	if ($stage > 4999)
 		{
-		$next_limit = ($stage + 10000);
-		$limitSQL = "10000 offset $stage";
+		$next_limit = ($stage + 5000);
+		$limitSQL = "5000 offset $stage";
 		}
 	else
 		{
-		$next_limit = "10000";
-		$limitSQL = "10000";
+		$next_limit = "5000";
+		$limitSQL = "5000";
 		}
 
 	$stmt="SELECT admin_log_id,event_date,user,ip_address,event_section,event_type,record_id,event_code,user_group from vicidial_admin_log $whereLOGadmin_viewable_groupsSQL order by event_date desc limit $limitSQL;";
 	$rslt=mysql_query($stmt, $link);
 	$logs_to_print = mysql_num_rows($rslt);
 
-	echo "<br>ADMIN CHANGE LOG: (Last 10000 records)\n";
+	echo "<br>ADMIN CHANGE LOG: (Last 5000 records)\n";
 	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 	echo "<TR BGCOLOR=BLACK>";
 	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>ID</B></TD>";
@@ -34848,7 +34881,7 @@ if ($ADD==710000000000000)
 		$user_name = $row[0];
 		}
 
-	$stmt="SELECT admin_log_id,event_date,user,ip_address,event_section,event_type,record_id,event_code,user_group from vicidial_admin_log where user='$stage' $LOGadmin_viewable_groupsSQL order by event_date desc limit 10000;";
+	$stmt="SELECT admin_log_id,event_date,user,ip_address,event_section,event_type,record_id,event_code,user_group from vicidial_admin_log where user='$stage' $LOGadmin_viewable_groupsSQL order by event_date desc limit 5000;";
 	$rslt=mysql_query($stmt, $link);
 	$logs_to_print = mysql_num_rows($rslt);
 
@@ -34934,7 +34967,7 @@ if ($ADD==720000000000000)
 		if (preg_match("/DIDS/",$category))
 			{$sectionSQL = "event_section IN('DIDS','DID_RA-EXTEN')";}
 
-		$stmt="SELECT admin_log_id,event_date,user,ip_address,event_section,event_type,record_id,event_code,user_group from vicidial_admin_log where $sectionSQL and record_id='$stage' $LOGadmin_viewable_groupsSQL order by event_date desc limit 10000;";
+		$stmt="SELECT admin_log_id,event_date,user,ip_address,event_section,event_type,record_id,event_code,user_group from vicidial_admin_log where $sectionSQL and record_id='$stage' $LOGadmin_viewable_groupsSQL order by event_date desc limit 5000;";
 		$rslt=mysql_query($stmt, $link);
 		$logs_to_print = mysql_num_rows($rslt);
 
@@ -35069,6 +35102,214 @@ if ($ADD==730000000000000)
 			$row[9] = preg_replace("/\|/","<BR>",$row[9]);
 			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>SQL: </B></TD>";
 			echo "<TD ALIGN=LEFT width=700><p style=\"width: 700; text-wrap: normal; word-wrap: break-word\"><FONT FACE=\"Arial,Helvetica\" size=1>$row[9]</TD>";
+			echo "</TR>\n";
+			echo "</TABLE><BR><BR>\n";
+			echo "\n";
+			echo "</center>\n";
+			}
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	}
+
+
+######################
+# ADD=800000000000000 view all activity in the admin report log
+######################
+
+if ($ADD==800000000000000)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if ($stage > 4999)
+		{
+		$next_limit = ($stage + 5000);
+		$limitSQL = "5000 offset $stage";
+		}
+	else
+		{
+		$next_limit = "5000";
+		$limitSQL = "5000";
+		}
+
+	$stmt="SELECT report_log_id,event_date,user,ip_address,report_name,browser,referer,notes,url,run_time from vicidial_report_log order by event_date desc limit $limitSQL;";
+	$rslt=mysql_query($stmt, $link);
+	$logs_to_print = mysql_num_rows($rslt);
+
+
+	echo "<br>ADMIN REPORT LOG: (Last 5000 records)\n";
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<TR BGCOLOR=BLACK>";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>ID</B></TD>";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>DATE TIME</B></TD>";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>USER</B></TD>\n";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>IP</TD>\n";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>REPORT</TD>\n";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>RUN TIME</TD>\n";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>GOTO</TD>\n";
+	echo "</TR>\n";
+
+	$logs_printed = '';
+	$o=0;
+	while ($logs_to_print > $o)
+		{
+		$row=mysql_fetch_row($rslt);
+
+		if (eregi("1$|3$|5$|7$|9$", $o))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+
+		$run_color='color=blue';
+		if ($row[9] > 5) {$run_color='color=black';} 
+		if ($row[9] > 10) {$run_color='color=purple';} 
+		if ($row[9] > 30) {$run_color='color=red';} 
+
+		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=830000000000000&stage=$row[0]\">$row[0]</a></td>";
+		echo "<td><font size=1> $row[1]</td>";
+		echo "<td><font size=1> <a href=\"$PHP_SELF?ADD=810000000000000&stage=$row[2]\">$row[2]</a></td>";
+		echo "<td><font size=1> $row[3]</td>";
+		echo "<td><font size=1> $row[4]</td>";
+		echo "<td><font size=1 $run_color> $row[9]</td>";
+		echo "<td><font size=1> <a href=\"$PHP_SELF?ADD=830000000000000&stage=$row[0]\">GOTO</a></td>";
+		echo "</tr>\n";
+		$logs_printed .= "'$row[0]',";
+		$o++;
+		}
+	echo "</TABLE><BR><BR>\n";
+	echo "<a href=\"$PHP_SELF?ADD=800000000000000&stage=$next_limit\">NEXT</a>\n";
+	echo "</center>\n";
+	}
+
+
+######################
+# ADD=810000000000000 view all activity in the report log made by one user
+######################
+
+if ($ADD==810000000000000)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	$stmt="SELECT full_name from vicidial_users where user='$stage' $LOGadmin_viewable_groupsSQL;";
+	$rslt=mysql_query($stmt, $link);
+	$names_to_print = mysql_num_rows($rslt);
+	if ($names_to_print > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$user_name = $row[0];
+		}
+
+	$stmt="SELECT report_log_id,event_date,user,ip_address,report_name,browser,referer,notes,url,run_time from vicidial_report_log where user='$stage' order by event_date desc limit 5000;";
+	$rslt=mysql_query($stmt, $link);
+	$logs_to_print = mysql_num_rows($rslt);
+
+	echo "<br>ADMIN REPORT LOG: Changes made by $stage - $user_name\n";
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<TR BGCOLOR=BLACK>";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>ID</B></TD>";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>DATE TIME</B></TD>";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>USER</B></TD>\n";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>IP</TD>\n";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>REPORT</TD>\n";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>RUN TIME</TD>\n";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>GOTO</TD>\n";
+	echo "</TR>\n";
+
+	$logs_printed = '';
+	$o=0;
+	while ($logs_to_print > $o)
+		{
+		$row=mysql_fetch_row($rslt);
+
+		if (eregi("1$|3$|5$|7$|9$", $o))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+
+		$run_color='color=blue';
+		if ($row[9] > 5) {$run_color='color=black';} 
+		if ($row[9] > 10) {$run_color='color=purple';} 
+		if ($row[9] > 30) {$run_color='color=red';} 
+
+		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=830000000000000&stage=$row[0]\">$row[0]</a></td>";
+		echo "<td><font size=1> $row[1]</td>";
+		echo "<td><font size=1> <a href=\"$PHP_SELF?ADD=810000000000000&stage=$row[2]\">$row[2]</a></td>";
+		echo "<td><font size=1> $row[3]</td>";
+		echo "<td><font size=1> $row[4]</td>";
+		echo "<td><font size=1 $run_color> $row[9]</td>";
+		echo "<td><font size=1> <a href=\"$PHP_SELF?ADD=830000000000000&stage=$row[0]\">GOTO</a></td>";
+		echo "</tr>\n";
+		$logs_printed .= "'$row[0]',";
+		$o++;
+		}
+	echo "</TABLE><BR><BR>\n";
+	echo "\n";
+	echo "</center>\n";
+	}
+
+
+######################
+# ADD=830000000000000 detail view of one report log entry
+######################
+
+if ($ADD==830000000000000)
+	{
+	if ($LOGuser_level >= 9)
+		{
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		$stmt="SELECT report_log_id,event_date,vrl.user,ip_address,report_name,browser,referer,notes,url,full_name,val.user_group,run_time from vicidial_report_log vrl, vicidial_users val where report_log_id='$stage' and val.user=vrl.user $valLOGadmin_viewable_groupsSQL;";
+		if ($DB > 0) {echo "$stmt\n";}
+		$rslt=mysql_query($stmt, $link);
+		$logs_to_print = mysql_num_rows($rslt);
+
+		if ($logs_to_print > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+
+			$run_color='color=blue';
+			if ($row[11] > 5) {$run_color='color=black';} 
+			if ($row[11] > 10) {$run_color='color=purple';} 
+			if ($row[11] > 30) {$run_color='color=red';} 
+
+			echo "<br>ADMIN REPORT LOG: Record Detail - $stage<BR><BR>\n";
+			echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=0>\n";
+			echo "<TR>";
+			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>ID: </B></TD>";
+			echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=2>$row[0]</TD>";
+			echo "</TR><TR>\n";
+			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>DATE TIME: </B></TD>";
+			echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=2>$row[1]</TD>";
+			echo "</TR><TR>\n";
+			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>RUN TIME: </B></TD>";
+			echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=2><font $run_color>$row[11]</font> seconds</TD>";
+			echo "</TR><TR>\n";
+			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>USER: </B></TD>";
+			echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=2>$row[2] - $row[9]</TD>";
+			echo "</TR><TR>\n";
+			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>IP: </B></TD>";
+			echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=2>$row[3]</TD>";
+			echo "</TR><TR>\n";
+			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>REPORT: </B></TD>";
+			echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=2>$row[4]</TD>";
+			echo "</TR><TR>\n";
+			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>BROWSER: </B></TD>";
+			echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=1>$row[5]</TD>";
+			echo "</TR><TR>\n";
+			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>NOTES: </B></TD>";
+			echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=1>$row[7]</TD>";
+			echo "</TR><TR>\n";
+			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>REFERER: </B></TD>";
+			echo "<TD ALIGN=LEFT width=700><p style=\"width: 700; text-wrap: normal; word-wrap: break-word\"><FONT FACE=\"Arial,Helvetica\" size=1><a href=\"$row[6]\">$row[6]</a></TD>";
+			echo "</TR><TR>\n";
+			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>URL: </B></TD>";
+			echo "<TD ALIGN=LEFT width=700><p style=\"width: 700; text-wrap: normal; word-wrap: break-word\"><FONT FACE=\"Arial,Helvetica\" size=1><a href=\"$row[8]\">$row[8]</a></TD>";
 			echo "</TR>\n";
 			echo "</TABLE><BR><BR>\n";
 			echo "\n";
@@ -35680,6 +35921,7 @@ if ($ADD==999994)
 		echo "<LI><a href=\"$PHP_SELF?ADD=999991\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Servers Versions</a></FONT>\n";
 		echo "<LI><a href=\"AST_carrier_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Carrier Log Report</a></FONT>\n";
 		echo "<LI><a href=\"AST_hangup_cause_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Hangup Cause Report</a></FONT>\n";
+		echo "<LI><a href=\"admin.php?ADD=800000000000000\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Admin Report Log Viewer</a></FONT>\n";
 		echo "<LI><a href=\"admin_phones_bulk_insert.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Bulk Phone Insert Page</a></FONT>\n";
 		echo "<LI><a href=\"lead_tools.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Basic Lead Management Tools</a></FONT>\n";
 		echo "<LI><a href=\"callbacks_bulk_change.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Callbacks Transferral Page</a></FONT>\n";
@@ -35890,6 +36132,21 @@ if ($ADD==999992)
 	echo "</TABLE></center>\n";
 	}
 ##### END max system stats report #####
+
+##### If report run, update the time in the vicidial_report_log table #####
+if ( ($ADD==999993) or ($ADD==999992) or ($ADD==730000000000000) or ($ADD==830000000000000) )
+	{
+	$endMS = microtime();
+	$startMSary = explode(" ",$startMS);
+	$endMSary = explode(" ",$endMS);
+	$runS = ($endMSary[0] - $startMSary[0]);
+	$runM = ($endMSary[1] - $startMSary[1]);
+	$TOTALrun = ($runS + $runM);
+
+	$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	}
 
 
 ######################

@@ -2867,6 +2867,22 @@ KEY vicidial_email_log_lead_id_key (lead_id),
 KEY vicidial_email_log_email_row_id_key (email_row_id)
 );
 
+CREATE TABLE vicidial_report_log (
+report_log_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+event_date DATETIME NOT NULL,
+user VARCHAR(20) NOT NULL,
+ip_address VARCHAR(15) NOT NULL,
+report_name VARCHAR(50) NOT NULL,
+browser TEXT,
+referer TEXT,
+notes TEXT,
+url TEXT,
+run_time VARCHAR(20) default '0',
+index (user),
+index (report_name)
+);
+
+
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
 ALTER TABLE vicidial_email_log MODIFY message text character set utf8;
@@ -3105,4 +3121,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1343',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1344',db_schema_update_date=NOW();

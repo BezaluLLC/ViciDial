@@ -184,6 +184,11 @@ Level 8 Disable Add||
 This setting if enabled will prevent any level 8 user from adding or copying any record in the system, no matter what their user settings are. Excluded from these restrictions are the ability to add DNC and Filter Phone Groups numbers and the Add a New Lead page. Default is 0 for disabled||
 You do not have permission to add records on this system||
 These options allows you to limit the viewable callbacks in the agent callback alert section on the agent screen, to only LIVE callbacks.  LIVE callbacks are user-only scheduled callbacks that have hit their trigger date and time. ACTIVE call backs are user-only callbacks that are active in the system but have not yet triggered.  You can view both ACTIVE and LIVE callbacks by selecting ALL_ACTIVE.  Default is ALL_ACTIVE||
+VICIDIAL ADMIN REPORT LOG||
+VICIDIAL USER ADMIN REPORT LOG||
+VICIDIAL DETAIL ADMIN REPORT LOG||
+ADMIN REPORT LOG||
+Admin Report Log Viewer||
 
 
 ############################################################ CLIENT

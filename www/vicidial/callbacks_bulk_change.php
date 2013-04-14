@@ -1,10 +1,11 @@
 <?php
 # callbacks_bulk_change.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 120819-0119 - First build
+# 130414-0021 - Added admin logging
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -146,9 +147,17 @@ while ($i < $groups_to_print)
 	}
 
 if ($SUBMIT && $old_user && $new_user && $confirm_transfer) {
-	$upd_stmt="update vicidial_callbacks set user='$new_user' where recipient='USERONLY' and status!='INACTIVE' and user='$old_user' $LOGadmin_viewable_groupsSQL";
+	$upd_stmt="UPDATE vicidial_callbacks set user='$new_user' where recipient='USERONLY' and status!='INACTIVE' and user='$old_user' $LOGadmin_viewable_groupsSQL";
 	$upd_rslt=mysql_query($upd_stmt, $link);
 	if ($DB) {echo "$upd_stmt\n";}
+
+	### LOG INSERTION Admin Log Table ###
+	$SQL_log = "$upd_stmt|";
+	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = addslashes($SQL_log);
+	$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$new_user', event_code='ADMIN CALLBACK BULK CHANGE', event_sql=\"$SQL_log\", event_notes='Old user: $old_user';";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
 }
 ?>
 <html>

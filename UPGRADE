@@ -248,6 +248,10 @@ OTHER CHANGES:
 	make install
 	   (then stop and restart asterisk)
 
+42. Added admin report logging to all reports on the system, and added the 
+	"Admin Report Log Viewer" linked from the "Admin Utilities" page which 
+	allows you to see the reports that have been run on the system.
+
 
 
 

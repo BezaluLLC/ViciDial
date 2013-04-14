@@ -335,3 +335,20 @@ ALTER TABLE vicidial_carrier_log ADD caller_code VARCHAR(30) default '';
 ALTER TABLE vicidial_carrier_log_archive ADD caller_code VARCHAR(30) default '';
 
 UPDATE system_settings SET db_schema_version='1343',db_schema_update_date=NOW() where db_schema_version < 1343;
+
+CREATE TABLE vicidial_report_log (
+report_log_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+event_date DATETIME NOT NULL,
+user VARCHAR(20) NOT NULL,
+ip_address VARCHAR(15) NOT NULL,
+report_name VARCHAR(50) NOT NULL,
+browser TEXT,
+referer TEXT,
+notes TEXT,
+url TEXT,
+run_time VARCHAR(20) default '0',
+index (user),
+index (report_name)
+);
+
+UPDATE system_settings SET db_schema_version='1344',db_schema_update_date=NOW() where db_schema_version < 1344;
