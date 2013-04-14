@@ -3,7 +3,7 @@
 # AST_update.pl version 2.6
 #
 # DESCRIPTION:
-# uses the Asterisk Manager interface and Net::MySQL to update the live_channels
+# uses the Asterisk Manager interface and DBD::MySQL to update the live_channels
 # tables and verify the parked_channels table in the asterisk MySQL database 
 # This near-live-status of Zap/SIP/Local/IAX/DAHDI channels list is used by clients
 #
@@ -16,19 +16,16 @@
 # 
 # Win32 - ActiveState Perl 5.8.0
 # UNIX - Gnome or KDE with Tk/Tcl and perl Tk/Tcl modules loaded
-# Both - Net::MySQL, Net::Telnet and Time::HiRes perl modules loaded
+# Both - DBD::MySQL, Net::Telnet and Time::HiRes perl modules loaded
 #
-# For the client program to work, this program must always be running
+# For the astguiclient program to work, this program must always be running
 # 
 # For this program to work you need to have the "asterisk" MySQL database 
 # created and create the tables listed in the MySQL_AST_CREATE_tables.sql file,
 # also make sure that the machine running this program has select/insert/update/delete
 # access to that database
 # 
-# In your Asterisk server setup you also need to have several things activated
-# and defined. See the CONF_Asterisk.txt file for details
-#
-# It is recommended that you run this program on the local Asterisk machine
+# It is recommended that you run this program on each local Asterisk machine
 #
 # Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -61,16 +58,17 @@
 # 100625-1220 - Added waitfors after logout to fix broken pipe errors in asterisk <MikeC>
 # 101004-1042 - Updated parked_channels checking for changes to parked calls functions
 # 130108-1710 - Changes for Asterisk 1.8 compatibility
+# 130413-2125 - Fix for issue #664, formatting fixes and added --quiet flag
 #
 
-$build = '130108-1710';
+$build = '130413-2125';
 
 # constants
 $SYSPERF=0;	# system performance logging to MySQL server_performance table every 5 seconds
 $SYSPERF_rec=0;	# is dial-time recording turned on
 $SYSLOG=0; # set to 1 to write log to a file
 $DB=0;	# Debug flag, set to 1 for debug messages  WARNING LOTS OF OUTPUT!!!
-$DBX=0;	# Debug flag, set to 1 for debug messages  WARNING LOTS OF OUTPUT!!!
+$DBX=0;	# Debug flag, set to 1 for debug messages  WARNING EVEN MORE OUTPUT!!!
 $US='__';
 $AMP='@';
 $MT[0]='';
@@ -80,7 +78,7 @@ $cpuIDLEprev=0;
 
 # find proper locations of bin utils
 
-# cat
+# cat (display file in unix)
 $bincat = "/usr/bin/cat";
 if (-e "/usr/local/bin/cat")
 	{$bincat = "/usr/local/bin/cat";}
@@ -90,7 +88,7 @@ else
 		{$bincat = "/bin/cat";}
 	}
 
-# free
+# free (amount of free memory)
 $binfree = "/usr/bin/free";
 if (-e "/usr/local/bin/free")
 	{$binfree = "/usr/local/bin/free";}
@@ -100,7 +98,7 @@ else
 		{$binfree = "/bin/free";}
 	}
 
-# ps
+# ps (process listing)
 $binps = "/bin/ps";
 if (-e "/usr/local/bin/ps")
 	{$binps = "/usr/local/bin/ps";}
@@ -110,7 +108,7 @@ else
 		{$binps = "/usr/bin/ps";}
 	}
 
-### find df binary
+### find df binary (partition usage)
 $dfbin = '';
 if ( -e ('/bin/df')) {$dfbin = '/bin/df';}
 else 
@@ -122,6 +120,7 @@ else
 		else
 			{
 			print "Can't find df binary! Exiting...\n";
+			exit;
 			}
 		}
 	}
@@ -149,7 +148,14 @@ if (length($ARGV[0])>1)
 
 	if ($args =~ /--help/i)
 		{
-		print "allowed run time options:\n  [-t] = test\n  [-sysperf] = system performance logging\n  [-sysperfdebug] = system performance debug output\n  [-debug] = verbose debug messages\n  [-debugX] = Extra-verbose debug messages\n\n";
+		print "allowed run time options:\n";
+		print "  [--test] = test\n";
+		print "  [--sysperf] = system performance logging\n";
+		print "  [--sysperfdebug] = system performance debug output\n";
+		print "  [--debug] = verbose debug messages\n";
+		print "  [--debugX] = Extra-verbose debug messages\n";
+		print "  [--quiet] = no output unless error\n";
+		print "\n";
 		exit;
 		}
 	else
@@ -172,10 +178,14 @@ if (length($ARGV[0])>1)
 			$DBX=1;
 			print "\n----- SUPER-DUPER DEBUGGING -----\nBUILD: $build\n";
 			}
-		if ($args =~ /-t/i)
+		if ($args =~ /-test/i)
 			{
 			$TEST=1;
 			$T=1;
+			}
+		if ($args =~ /--quiet/i)
+			{
+			$Q=1;
 			}
 		}
 	}
@@ -228,13 +238,13 @@ foreach(@conf)
 # Customized Variables
 $server_ip = $VARserver_ip;		# Asterisk server IP
 
-	&get_time_now;
+&get_time_now;
 
 if (!$UPLOGfile) {$UPLOGfile = "$PATHlogs/update.$year-$mon-$mday";}
 if (!$VARDB_port) {$VARDB_port='3306';}
 
-	$event_string='PROGRAM STARTED||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||';
-	&event_logger;
+$event_string='PROGRAM STARTED||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||';
+&event_logger;
 
 use Time::HiRes ('gettimeofday','usleep','sleep');  # necessary to have perl sleep command of less than one second
 use Net::Telnet ();
@@ -243,32 +253,31 @@ use DBI;
 $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
  or die "Couldn't connect to database: " . DBI->errstr;
 
-	$event_string='LOGGED INTO MYSQL SERVER ON 1 CONNECTION|';
-	&event_logger;
+$event_string='LOGGED INTO MYSQL SERVER ON 1 CONNECTION|';
+&event_logger;
 
 ### Grab Server values from the database
-$stmtA = "SELECT telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,max_vicidial_trunks,answer_transfer_agent,local_gmt,ext_context,asterisk_version,sys_perf_log,vd_server_logs FROM servers where server_ip = '$server_ip';";
+$stmtA = "SELECT telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,max_vicidial_trunks,answer_transfer_agent,local_gmt,ext_context,asterisk_version,sys_perf_log,vd_server_logs FROM servers where server_ip='$server_ip';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
-$rec_count=0;
-while ($sthArows > $rec_count)
+if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$DBtelnet_host	=			"$aryA[0]";
-	$DBtelnet_port	=			"$aryA[1]";
-	$DBASTmgrUSERNAME	=		"$aryA[2]";
-	$DBASTmgrSECRET	=			"$aryA[3]";
-	$DBASTmgrUSERNAMEupdate	=	"$aryA[4]";
-	$DBASTmgrUSERNAMElisten	=	"$aryA[5]";
-	$DBASTmgrUSERNAMEsend	=	"$aryA[6]";
-	$DBmax_vicidial_trunks	=	"$aryA[7]";
-	$DBanswer_transfer_agent=	"$aryA[8]";
-	$DBSERVER_GMT		=		"$aryA[9]";
-	$DBext_context	=			"$aryA[10]";
-	$DBasterisk_version	=		"$aryA[11]";
-	$DBsys_perf_log	=			"$aryA[12]";
-	$DBvd_server_logs =			"$aryA[13]";
+	$DBtelnet_host	=			$aryA[0];
+	$DBtelnet_port	=			$aryA[1];
+	$DBASTmgrUSERNAME	=		$aryA[2];
+	$DBASTmgrSECRET	=			$aryA[3];
+	$DBASTmgrUSERNAMEupdate	=	$aryA[4];
+	$DBASTmgrUSERNAMElisten	=	$aryA[5];
+	$DBASTmgrUSERNAMEsend	=	$aryA[6];
+	$DBmax_vicidial_trunks	=	$aryA[7];
+	$DBanswer_transfer_agent=	$aryA[8];
+	$DBSERVER_GMT		=		$aryA[9];
+	$DBext_context	=			$aryA[10];
+	$DBasterisk_version	=		$aryA[11];
+	$DBsys_perf_log	=			$aryA[12];
+	$DBvd_server_logs =			$aryA[13];
 	if ($DBtelnet_host)				{$telnet_host = $DBtelnet_host;}
 	if ($DBtelnet_port)				{$telnet_port = $DBtelnet_port;}
 	if ($DBASTmgrUSERNAME)			{$ASTmgrUSERNAME = $DBASTmgrUSERNAME;}
@@ -283,7 +292,6 @@ while ($sthArows > $rec_count)
 	if ($DBasterisk_version)		{$AST_ver = $DBasterisk_version;}
 	if ($DBsys_perf_log =~ /Y/)		{$SYSPERF = '1';}
 	if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
-	$rec_count++;
 	}
 $sthA->finish();
 
@@ -292,18 +300,19 @@ if ($AST_ver =~ /^1\.0/i) {$show_channels_format = 0;}
 if ($AST_ver =~ /^1\.4/i) {$show_channels_format = 2;}
 if ($AST_ver =~ /^1\.6/i) {$show_channels_format = 3;}
 if ($AST_ver =~ /^1\.8/i) {$show_channels_format = 4;}
-print STDERR "SHOW CHANNELS format: $show_channels_format\n";
+if ($Q < 1)
+	{print STDERR "SHOW CHANNELS format: $show_channels_format\n";}
 
 
 ##### Check for a server_updater record, and if not present, insert one
 $SUrec=0;
-$stmtA = "SELECT count(*) FROM $server_updater where server_ip = '$server_ip';";
+$stmtA = "SELECT count(*) FROM $server_updater where server_ip='$server_ip';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 @aryA = $sthA->fetchrow_array;
 $SUrec = $aryA[0];
 $sthA->finish();
-	if($DB){print STDERR "\n|$SUrec|$stmtA|\n";}
+if($DB){print STDERR "\n|$SUrec|$stmtA|\n";}
 
 if ($SUrec < 1)
 	{
@@ -316,10 +325,11 @@ if ($SUrec < 1)
 
 
 ##### LOOK FOR ZAP/DAHDI CLIENTS AS DEFINED IN THE phones TABLE SO THEY ARE NOT MISLABELED AS TRUNKS
-print STDERR "LOOKING FOR Zap/DAHDI clients assigned to this server:\n";
+if ($Q < 1)
+	{print STDERR "LOOKING FOR Zap/DAHDI clients assigned to this server:\n";}
 $Zap_client_count=0;
 $Zap_client_list='|';
-$stmtA = "SELECT extension FROM phones where protocol = 'Zap' and server_ip='$server_ip'";
+$stmtA = "SELECT extension FROM phones where protocol='Zap' and server_ip='$server_ip'";
 if($DB){print STDERR "|$stmtA|\n";}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -328,7 +338,8 @@ $rec_count=0;
 while ($sthArows > $rec_count)
 	{
 	@aryA = $sthA->fetchrow_array;
-	print STDERR $aryA[0],"\n";
+	if ($Q < 1)
+		{print STDERR $aryA[0],"\n";}
 	$Zap_client_list .= "$aryA[0]|";
 	$Zap_client_count++;
 	$rec_count++;
@@ -336,10 +347,11 @@ while ($sthArows > $rec_count)
 $sthA->finish();
 
 ##### LOOK FOR IAX2 CLIENTS AS DEFINED IN THE phones TABLE SO THEY ARE NOT MISLABELED AS TRUNKS
-print STDERR "LOOKING FOR IAX2 clients assigned to this server:\n";
+if ($Q < 1)
+	{print STDERR "LOOKING FOR IAX2 clients assigned to this server:\n";}
 $IAX2_client_count=0;
 $IAX2_client_list='|';
-$stmtA = "SELECT extension FROM phones where protocol = 'IAX2' and server_ip='$server_ip'";
+$stmtA = "SELECT extension FROM phones where protocol='IAX2' and server_ip='$server_ip'";
 if($DB){print STDERR "|$stmtA|\n";}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -348,27 +360,29 @@ $rec_count=0;
 while ($sthArows > $rec_count)
 	{
 	@aryA = $sthA->fetchrow_array;
-		print STDERR $aryA[0],"\n";
-		$IAX2_client_list .= "$aryA[0]|";
-		if ($aryA[0] !~ /\@/)
-			{$IAX2_client_list .= "$aryA[0]$AMP$aryA[0]|";}
-		else
-			{
-			$IAX_user = $aryA[0];
-			$IAX_user =~ s/\@.*$//gi;
-			$IAX2_client_list .= "$IAX_user|";
-			}
-		$IAX2_client_count++;
+	if ($Q < 1)
+		{print STDERR $aryA[0],"\n";}
+	$IAX2_client_list .= "$aryA[0]|";
+	if ($aryA[0] !~ /\@/)
+		{$IAX2_client_list .= "$aryA[0]$AMP$aryA[0]|";}
+	else
+		{
+		$IAX_user = $aryA[0];
+		$IAX_user =~ s/\@.*$//gi;
+		$IAX2_client_list .= "$IAX_user|";
+		}
+	$IAX2_client_count++;
 	$rec_count++;
 	}
 $sthA->finish();
 
 
 ##### LOOK FOR SIP CLIENTS AS DEFINED IN THE phones TABLE SO THEY ARE NOT MISLABELED AS TRUNKS
-print STDERR "LOOKING FOR SIP clients assigned to this server:\n";
+if ($Q < 1)
+	{print STDERR "LOOKING FOR SIP clients assigned to this server:\n";}
 $SIP_client_count=0;
 $SIP_client_list='|';
-$stmtA = "SELECT extension FROM phones where protocol = 'SIP' and server_ip='$server_ip'";
+$stmtA = "SELECT extension FROM phones where protocol='SIP' and server_ip='$server_ip'";
 if($DB){print STDERR "|$stmtA|\n";}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -377,29 +391,33 @@ $rec_count=0;
 while ($sthArows > $rec_count)
 	{
 	@aryA = $sthA->fetchrow_array;
-		print STDERR $aryA[0],"\n";
-		$SIP_client_list .= "$aryA[0]|";
-		if ($aryA[0] !~ /\@/)
-			{$SIP_client_list .= "$aryA[0]$AMP$aryA[0]|";}
-		else
-			{
-			$SIP_user = $aryA[0];
-			$SIP_user =~ s/\@.*$//gi;
-			$SIP_client_list .= "$SIP_user|";
-			}
-		$SIP_client_count++;
+	if ($Q < 1)
+		{print STDERR $aryA[0],"\n";}
+	$SIP_client_list .= "$aryA[0]|";
+	if ($aryA[0] !~ /\@/)
+		{$SIP_client_list .= "$aryA[0]$AMP$aryA[0]|";}
+	else
+		{
+		$SIP_user = $aryA[0];
+		$SIP_user =~ s/\@.*$//gi;
+		$SIP_client_list .= "$SIP_user|";
+		}
+	$SIP_client_count++;
 	$rec_count++;
 	}
 $sthA->finish();
 
-print STDERR "Zap Clients:  $Zap_client_list\n";
-print STDERR "IAX2 Clients: $IAX2_client_list\n";
-print STDERR "SIP Clients:  $SIP_client_list\n";
+if ($Q < 1)
+	{
+	print STDERR "Zap Clients:  $Zap_client_list\n";
+	print STDERR "IAX2 Clients: $IAX2_client_list\n";
+	print STDERR "SIP Clients:  $SIP_client_list\n";
+	}
 
 $one_day_interval = 12;		# 2 hour loops for one day
 while($one_day_interval > 0)
 	{
-		$event_string="STARTING NEW MANAGER TELNET CONNECTION||ATTEMPT|ONE DAY INTERVAL:$one_day_interval|";
+	$event_string="STARTING NEW MANAGER TELNET CONNECTION||ATTEMPT|ONE DAY INTERVAL:$one_day_interval|";
 	&event_logger;
 
 	if (!$telnet_port) {$telnet_port = '5038';}
@@ -515,7 +533,6 @@ while($one_day_interval > 0)
 			}
 
 
-
 		#	$DB_live_lines = ($#DBchannels + $#DBsips);
 		$DB_live_lines = ($channel_counter + $sip_counter);
 		if ( (!$DB_live_lines) or ($#list_channels < 2) )
@@ -558,7 +575,7 @@ while($one_day_interval > 0)
 			$PERCENT_SC_static = sprintf("%6.2f", $PERCENT_SC_static);
 			}
 
-		if ($endless_loop =~ /0$/)
+		if ( ($endless_loop =~ /0$/) && ($Q < 1) )
 			{print "-$now_date   $PERCENT_static    $#list_channels    $#DBchannels:$channel_counter      $#DBsips:$sip_counter    $PERCENT_ZC_static|$test_zap_count:$zap_client_counter    $PERCENT_IC_static|$test_iax_count:$iax_client_counter    $PERCENT_LC_static|$test_local_count:$local_client_counter    $PERCENT_SC_static|$test_sip_count:$sip_client_counter\n";}
 
 		if ( ( ($PERCENT_static < 10) && ( ($channel_counter > 3) or ($sip_counter > 4) ) ) or
@@ -575,7 +592,8 @@ while($one_day_interval > 0)
 			{
 			$UD_bad_grab++;
 			$event_string="------ UPDATER BAD GRAB!!!    UBGcount: $UD_bad_grab\n          $PERCENT_static    $#list_channels    $#DBchannels:$channel_counter      $#DBsips:$sip_counter    $PERCENT_ZC_static|$test_zap_count:$zap_client_counter    $PERCENT_IC_static|$test_iax_count:$iax_client_counter    $PERCENT_LC_static|$test_local_count:$local_client_counter    $PERCENT_SC_static|$test_sip_count:$sip_client_counter\n";
-			print "$event_string\n";
+			if ($Q < 1)
+				{print "$event_string\n";}
 				&event_logger;
 			if ($UD_bad_grab > 20) {$UD_bad_grab=0;}
 			}
@@ -625,7 +643,7 @@ while($one_day_interval > 0)
 				$serverPROCESSES = $#GRABserverPROCESSES;
 
 				if ($SYSPERF_rec) {$recording_count = ($test_local_count / 2)}
-				 else {$recording_count=0;}
+				else {$recording_count=0;}
 
 				if ($SYSPERF)
 					{
@@ -633,14 +651,14 @@ while($one_day_interval > 0)
 						{print "$serverLOAD  $MEMfree  $MEMused  $serverPROCESSES  $#list_channels  $cpuUSERcent  $cpuSYSTcent  $cpuIDLEcent\n";}
 
 					$stmtA = "INSERT INTO server_performance (start_time,server_ip,sysload,freeram,usedram,processes,channels_total,trunks_total,clients_total,clients_zap,clients_iax,clients_local,clients_sip,live_recordings,cpu_user_percent,cpu_system_percent,cpu_idle_percent) values('$now_date','$server_ip','$serverLOAD','$MEMfree','$MEMused','$serverPROCESSES','$#list_channels','$channel_counter','$sip_counter','$test_zap_count','$test_iax_count','$test_local_count','$test_sip_count','$recording_count','$cpuUSERcent','$cpuSYSTcent','$cpuIDLEcent')";
-						if( ($DB) or ($UD_bad_grab) ){print STDERR "\n|$stmtA|\n";}
+						if( ($DB) or ( ($UD_bad_grab) && ($Q < 1) ) ){print STDERR "\n|$stmtA|\n";}
 					$affected_rows = $dbhA->do($stmtA) or die  "Couldn't execute query: |$stmtA|\n";
 					}
 				if ( ($endless_loop =~ /00$/) || ($gather_stats_first >= 1) )
 					{
 					### get disk space usage ###
 					$disk_usage='';
-					@serverDISK = `$dfbin -B 1048576`;
+					@serverDISK = `$dfbin -B 1048576 -x nfs -x cifs -x sshfs -x ftpfs`;
 					#Filesystem           1M-blocks      Used Available Use% Mounted on
 					#/dev/sda1                30030      6867     21613   0% /
 
@@ -662,7 +680,7 @@ while($one_day_interval > 0)
 						}
 
 					$stmtA = "UPDATE servers SET sysload='$serverLOAD',channels_total='$channels_total',cpu_idle_percent='$cpuIDLEcent',disk_usage='$disk_usage' where server_ip='$server_ip';";
-						if( ($DB) or ($UD_bad_grab) ){print STDERR "\n|$stmtA|\n";}
+						if( ($DB) or ( ($UD_bad_grab) && ($Q < 1) ) ){print STDERR "\n|$stmtA|\n";}
 					$affected_rows = $dbhA->do($stmtA) or die  "Couldn't execute query: |$stmtA|\n";
 					}
 				}
@@ -671,10 +689,11 @@ while($one_day_interval > 0)
 		if ($endless_loop =~ /00$/)
 			{
 			##### LOOK FOR ZAP CLIENTS AS DEFINED IN THE phones TABLE SO THEY ARE NOT MISLABELED AS TRUNKS
-			print STDERR "LOOKING FOR Zap clients assigned to this server:\n";
+			if ($Q < 1)
+				{print STDERR "LOOKING FOR Zap clients assigned to this server:\n";}
 			$Zap_client_count=0;
 			$Zap_client_list='|';
-			$stmtA = "SELECT extension FROM phones where protocol = 'Zap' and server_ip='$server_ip'";
+			$stmtA = "SELECT extension FROM phones where protocol='Zap' and server_ip='$server_ip'";
 			if($DB){print STDERR "|$stmtA|\n";}
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -683,7 +702,8 @@ while($one_day_interval > 0)
 			while ($sthArows > $rec_count)
 				{
 				@aryA = $sthA->fetchrow_array;
-				print STDERR $aryA[0],"\n";
+				if ($Q < 1)
+					{print STDERR $aryA[0],"\n";}
 				$Zap_client_list .= "$aryA[0]|";
 				$Zap_client_count++;
 				$rec_count++;
@@ -691,10 +711,11 @@ while($one_day_interval > 0)
 			$sthA->finish();
 
 			##### LOOK FOR IAX2 CLIENTS AS DEFINED IN THE phones TABLE SO THEY ARE NOT MISLABELED AS TRUNKS
-			print STDERR "LOOKING FOR IAX2 clients assigned to this server:\n";
+			if ($Q < 1)
+				{print STDERR "LOOKING FOR IAX2 clients assigned to this server:\n";}
 			$IAX2_client_count=0;
 			$IAX2_client_list='|';
-			$stmtA = "SELECT extension FROM phones where protocol = 'IAX2' and server_ip='$server_ip'";
+			$stmtA = "SELECT extension FROM phones where protocol='IAX2' and server_ip='$server_ip'";
 			if($DB){print STDERR "|$stmtA|\n";}
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -703,7 +724,8 @@ while($one_day_interval > 0)
 			while ($sthArows > $rec_count)
 				{
 				@aryA = $sthA->fetchrow_array;
-				print STDERR $aryA[0],"\n";
+				if ($Q < 1)
+					{print STDERR $aryA[0],"\n";}
 				$IAX2_client_list .= "$aryA[0]|";
 				if ($aryA[0] !~ /\@/)
 					{$IAX2_client_list .= "$aryA[0]$AMP$aryA[0]|";}
@@ -719,10 +741,11 @@ while($one_day_interval > 0)
 			$sthA->finish();
 
 			##### LOOK FOR SIP CLIENTS AS DEFINED IN THE phones TABLE SO THEY ARE NOT MISLABELED AS TRUNKS
-			print STDERR "LOOKING FOR SIP clients assigned to this server:\n";
+			if ($Q < 1)
+				{print STDERR "LOOKING FOR SIP clients assigned to this server:\n";}
 			$SIP_client_count=0;
 			$SIP_client_list='|';
-			$stmtA = "SELECT extension FROM phones where protocol = 'SIP' and server_ip='$server_ip'";
+			$stmtA = "SELECT extension FROM phones where protocol='SIP' and server_ip='$server_ip'";
 			if($DB){print STDERR "|$stmtA|\n";}
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -731,7 +754,8 @@ while($one_day_interval > 0)
 			while ($sthArows > $rec_count)
 				{
 				@aryA = $sthA->fetchrow_array;
-				print STDERR $aryA[0],"\n";
+				if ($Q < 1)
+					{print STDERR $aryA[0],"\n";}
 				$SIP_client_list .= "$aryA[0]|";
 				if ($aryA[0] !~ /\@/)
 					{$SIP_client_list .= "$aryA[0]$AMP$aryA[0]|";}
@@ -746,11 +770,14 @@ while($one_day_interval > 0)
 				}
 			$sthA->finish();
 
-			print STDERR "Zap Clients:  $Zap_client_list\n";
-			print STDERR "IAX2 Clients: $IAX2_client_list\n";
-			print STDERR "SIP Clients:  $SIP_client_list\n";
+			if ($Q < 1)
+				{
+				print STDERR "Zap Clients:  $Zap_client_list\n";
+				print STDERR "IAX2 Clients: $IAX2_client_list\n";
+				print STDERR "SIP Clients:  $SIP_client_list\n";
+				}
 			### Grab Server values from the database
-			$stmtA = "SELECT sys_perf_log,vd_server_logs FROM servers where server_ip = '$server_ip';";
+			$stmtA = "SELECT sys_perf_log,vd_server_logs FROM servers where server_ip='$server_ip';";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -758,8 +785,8 @@ while($one_day_interval > 0)
 			while ($sthArows > $rec_count)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$DBsys_perf_log	=			"$aryA[0]";
-				$DBvd_server_logs =			"$aryA[1]";
+				$DBsys_perf_log	=			$aryA[0];
+				$DBvd_server_logs =			$aryA[1];
 				if ($DBsys_perf_log =~ /Y/)		{$SYSPERF = '1';}
 					else {$SYSPERF = '0';}
 				if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
@@ -786,7 +813,6 @@ while($one_day_interval > 0)
 			{print "concise: $#list_chan_12   loop: $endless_loop\n";}
 		if ( ( ( ($list_channels[1] =~ /State Appl\./) or ($list_channels[2] =~ /State Appl\.|Application\(Data\)/) or ($list_channels[3] =~ /State Appl\.|Application\(Data\)/) ) || ($#list_chan_12 > 8) ) && (!$UD_bad_grab) )
 			{
-
 			$c=0;
 			if($DB){print "lines: $#list_channels\n";}
 			if($DB){print "DBchn: $#DBchannels\n";}
@@ -796,7 +822,7 @@ while($one_day_interval > 0)
 				#	$DBchannels =~ s/^\|//g;
 
 				chomp($list_channels[$c]);
-					if( ($DB) or ($UD_bad_grab) ){print "-|$c|$list_channels[$c]|\n";}
+					if( ($DB) or ( ($UD_bad_grab) && ($Q < 1) ) ){print "-|$c|$list_channels[$c]|\n";}
 				$list_channels[$c] =~ s/Congestion\s+\(Empty\)/ SIP\/CONGEST/gi;
 				$list_channels[$c] =~ s/\(Outgoing Line\)|\(None\)/SIP\/ring/gi;
 				$list_channels[$c] =~ s/\(Empty\)/SIP\/internal/gi;
@@ -821,7 +847,7 @@ while($one_day_interval > 0)
 					$list_channels[$c] = "$list_chan_12[0]     $list_chan_12[6]";
 					}
 				$list_SIP[$c] = $list_channels[$c];
-				if( ($DB) or ($UD_bad_grab) ){print "+|$c|$list_channels[$c]|\n\n";}
+				if( ($DB) or ( ($UD_bad_grab) && ($Q < 1) ) ){print "+|$c|$list_channels[$c]|\n\n";}
 
 				########## PARSE EACH LINE TO DETERMINE WHETHER IT IS TRUNK OR CLIENT AND PUT IN APPROPRIATE TABLE
 				if ($list_channels[$c] =~ /^Zap|^IAX2|^SIP|^Local|^DAHDI/)
@@ -855,10 +881,12 @@ while($one_day_interval > 0)
 						$extension =~ s/,.*//gi; # remove everything after the ,
 						$QRYchannel = "$channel$US$extension";
 
-						if( ($DB) or ($UD_bad_grab) ){print "channel:   |$channel|\n";}
-						if( ($DB) or ($UD_bad_grab) ){print "extension: |$extension|\n";}
-						if( ($DB) or ($UD_bad_grab) ){print "QRYchannel:|$QRYchannel|\n";}
-
+						if( ($DB) or ( ($UD_bad_grab) && ($Q < 1) ) )
+							{
+							print "channel:   |$channel|\n";
+							print "extension: |$extension|\n";
+							print "QRYchannel:|$QRYchannel|\n";
+							}
 						if ($channel =~ /^SIP|^Zap|^IAX2|^DAHDI/) {$line_type = 'TRUNK';}
 						if ($channel =~ /^Local/) {$line_type = 'CLIENT';}
 						if ($IAX2_client_count) 
@@ -890,7 +918,7 @@ while($one_day_interval > 0)
 
 						if ($line_type eq 'TRUNK')
 							{
-							if( ($DB) or ($UD_bad_grab) ){print "current channels: $#DBchannels\n";}
+							if( ($DB) or ( ($UD_bad_grab) && ($Q < 1) ) ){print "current channels: $#DBchannels\n";}
 
 							$k=0;
 							$channel_in_DB=0;
@@ -901,21 +929,21 @@ while($one_day_interval > 0)
 									$DBchannels[$k] = '';
 									$channel_in_DB++;
 									}
-								if( ($DB) or ($UD_bad_grab) ){print "DB $k|$DBchannels[$k]|     |";}
+								if( ($DB) or ( ($UD_bad_grab) && ($Q < 1) ) ){print "DB $k|$DBchannels[$k]|     |";}
 								$k++;
 								}
 
 							if ( (!$channel_in_DB) && (length($QRYchannel)>3) )
 								{
 								$stmtA = "INSERT INTO $live_channels (channel,server_ip,extension,channel_data) values('$channel','$server_ip','$extension','$channel_data')";
-									if( ($DB) or ($UD_bad_grab) ){print STDERR "\n|$stmtA|\n";}
+									if( ($DB) or ( ($UD_bad_grab) && ($Q < 1) ) ){print STDERR "\n|$stmtA|\n";}
 								$affected_rows = $dbhA->do($stmtA) or die  "Couldn't execute query: |$stmtA|\n";
 								}
 							}
 
 						if ($line_type eq 'CLIENT')
 							{
-							if( ($DB) or ($UD_bad_grab) ){print "current sips: $#DBsips\n";}
+							if( ($DB) or ( ($UD_bad_grab) && ($Q < 1) ) ){print "current sips: $#DBsips\n";}
 
 							$k=0;
 							$sipchan_in_DB=0;
@@ -926,20 +954,19 @@ while($one_day_interval > 0)
 									$DBsips[$k] = '';
 									$sipchan_in_DB++;
 									}
-								if( ($DB) or ($UD_bad_grab) ){print "DB $k|$DBsips[$k]|     |";}
+								if( ($DB) or ( ($UD_bad_grab) && ($Q < 1) ) ){print "DB $k|$DBsips[$k]|     |";}
 								$k++;
 								}
 
 							if ( (!$sipchan_in_DB) && (length($QRYchannel)>3) )
 								{
 								$stmtA = "INSERT INTO $live_sip_channels (channel,server_ip,extension,channel_data) values('$channel','$server_ip','$extension','$channel_data')";
-									if( ($DB) or ($UD_bad_grab) ){print STDERR "\n|$stmtA|\n";}
+									if( ($DB) or ( ($UD_bad_grab) && ($Q < 1) ) ){print STDERR "\n|$stmtA|\n";}
 								$affected_rows = $dbhA->do($stmtA) or die  "Couldn't execute query: |$stmtA|\n";
 								}
 							}
 						}
 					}
-
 				$c++;
 				}
 			if($DB){print "COUNT: $c|$#list_channels|$endless_loop\n";}
@@ -953,7 +980,7 @@ while($one_day_interval > 0)
 						{
 						($DELchannel, $DELextension) = split(/\_\_/, $DBchannels[$d]);
 						$stmtB = "DELETE FROM $live_channels where server_ip='$server_ip' and channel='$DELchannel' and extension='$DELextension' limit 1";
-							if( ($DB) or ($UD_bad_grab) ){print STDERR "\n|$stmtB|\n";}
+							if( ($DB) or ( ($UD_bad_grab) && ($Q < 1) ) ){print STDERR "\n|$stmtB|\n";}
 						$affected_rows = $dbhA->do($stmtB);
 						}
 					$d++;
@@ -969,7 +996,7 @@ while($one_day_interval > 0)
 						{
 						($DELchannel, $DELextension) = split(/\_\_/, $DBsips[$d]);
 						$stmtB = "DELETE FROM $live_sip_channels where server_ip='$server_ip' and channel='$DELchannel' and extension='$DELextension' limit 1";
-							if( ($DB) or ($UD_bad_grab) ){print STDERR "\n|$stmtB|\n";}
+							if( ($DB) or ( ($UD_bad_grab) && ($Q < 1) ) ){print STDERR "\n|$stmtB|\n";}
 						$affected_rows = $dbhA->do($stmtB);
 						}
 					$d++;
@@ -990,7 +1017,6 @@ while($one_day_interval > 0)
 				$one_day_interval=0;
 				print "\nPROCESS KILLED MANUALLY... EXITING\n\n"
 				}
-
 			$bad_grabber_counter=0;
 			$no_channels_12_counter=0;
 			}
@@ -1034,16 +1060,15 @@ while($one_day_interval > 0)
 					$event_string="NO CHANNELS HERE|COUNTER: $no_channels_12_counter|$endless_loop|ONE DAY INTERVAL:$one_day_interval|$channel_response";
 					&event_logger;
 					$stmtB = "DELETE FROM $live_sip_channels where server_ip='$server_ip'";
-						if( ($DB) or ($UD_bad_grab) ){print STDERR "\n|$stmtB|\n";}
+						if( ($DB) or ( ($UD_bad_grab) && ($Q < 1) ) ){print STDERR "\n|$stmtB|\n";}
 					$affected_rows = $dbhA->do($stmtB);
 					$stmtB = "DELETE FROM $live_channels where server_ip='$server_ip'";
-						if( ($DB) or ($UD_bad_grab) ){print STDERR "\n|$stmtB|\n";}
+						if( ($DB) or ( ($UD_bad_grab) && ($Q < 1) ) ){print STDERR "\n|$stmtB|\n";}
 					$affected_rows = $dbhA->do($stmtB);
 					}
 				}
 			}
 		}
-
 
 	if($DB){print "DONE... Exiting... Goodbye... See you later... Not really, initiating next loop...\n";}
 
@@ -1062,16 +1087,11 @@ while($one_day_interval > 0)
 $event_string='CLOSING DB CONNECTION|';
 &event_logger;
 
-
 $dbhA->disconnect();
-
 
 if($DB){print "DONE... Exiting... Goodbye... See you later... Really I mean it this time\n";}
 
-
 exit;
-
-
 
 
 
@@ -1092,7 +1112,7 @@ sub get_current_channels
 
 	if($DB){print STDERR "\n|SELECT channel,extension FROM $live_channels where server_ip = '$server_ip'|\n";}
 
-	$stmtA = "SELECT channel,extension FROM $live_channels where server_ip = '$server_ip';";
+	$stmtA = "SELECT channel,extension FROM $live_channels where server_ip='$server_ip';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -1107,7 +1127,7 @@ sub get_current_channels
 		}
 	$sthA->finish();
 
-	$stmtA = "SELECT channel,extension FROM $live_sip_channels where server_ip = '$server_ip';";
+	$stmtA = "SELECT channel,extension FROM $live_sip_channels where server_ip='$server_ip';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -1133,8 +1153,6 @@ sub get_current_channels
 		if($DB){print STDERR "\n|$stmtU|\n";}
 	$affected_rows = $dbhA->do($stmtU);
 	}
-
-
 
 
 
@@ -1189,13 +1207,9 @@ sub validate_parked_channels
 						$$DEL_chan_park_counter=0;
 						$record_deleted++;
 						}
-
 					}
-
 				$AR++;
 				}
-			
-			
 			
 			if (!$record_deleted)
 				{
@@ -1274,11 +1288,8 @@ sub validate_parked_channels
 
 		$run_validate_parked_channels_now=5;	# set to run every five times the subroutine runs
 		}
-
 	$run_validate_parked_channels_now--;
 	}
-
-
 
 
 
@@ -1301,10 +1312,8 @@ sub get_time_now
 
 
 
-
-
 ################################################################################
-##### open the log file for writing ###
+##### open the log file for writing, and print to screen if in debugX mode ###
 sub event_logger 
 	{
 	if ($SYSLOG)
@@ -1313,6 +1322,10 @@ sub event_logger
 				|| die "Can't open $UPLOGfile: $!\n";
 		print Lout "$now_date|$event_string|\n";
 		close(Lout);
+		}
+	if ($DBX > 0)
+		{
+		print "$now_date|$event_string|\n";
 		}
 	$event_string='';
 	}
