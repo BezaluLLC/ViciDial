@@ -327,10 +327,11 @@
 # 130328-1015 - Added validation for agent manual dial permission on DIAL links
 # 130402-2242 - Added user_group variable to _call_url functions
 # 130412-1348 - Added SIP cause code display on failed calls
+# 130414-2142 - Small fix for multi-server inbound setups and did options in url functions
 #
 
-$version = '2.6-225';
-$build = '130412-1348';
+$version = '2.6-226';
+$build = '130414-2142';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=533;
 $one_mysql_log=0;
@@ -5704,7 +5705,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$DID_pattern='';
 				$DID_description='';
 
-				$stmt = "SELECT did_id,extension from vicidial_did_log where uniqueid='$uniqueid' order by call_date desc limit 1;";
+				$stmt = "SELECT did_id,extension from vicidial_did_log where uniqueid='$uniqueid' and caller_id_number='$phone_number' order by call_date desc limit 1;";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00337',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -6670,7 +6671,7 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 			$DID_pattern='';
 			$DID_description='';
 
-			$stmt = "SELECT did_id,extension from vicidial_did_log where uniqueid='$uniqueid' order by call_date desc limit 1;";
+			$stmt = "SELECT did_id,extension from vicidial_did_log where uniqueid='$uniqueid' and caller_id_number='$phone_number' order by call_date desc limit 1;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00509',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -7605,7 +7606,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 			$DID_pattern='';
 			$DID_description='';
 
-			$stmt = "SELECT did_id,extension from vicidial_did_log where uniqueid='$uniqueid' order by call_date desc limit 1;";
+			$stmt = "SELECT did_id,extension from vicidial_did_log where uniqueid='$uniqueid' and caller_id_number='$phone_number' order by call_date desc limit 1;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00474',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -9292,7 +9293,7 @@ if ($ACTION == 'updateDISPO')
 			$DID_pattern='';
 			$DID_description='';
 
-			$stmt = "SELECT did_id,extension from vicidial_did_log where uniqueid='$uniqueid' order by call_date desc limit 1;";
+			$stmt = "SELECT did_id,extension from vicidial_did_log where uniqueid='$uniqueid' and caller_id_number='$phone_number' order by call_date desc limit 1;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00346',$user,$server_ip,$session_name,$one_mysql_log);}
