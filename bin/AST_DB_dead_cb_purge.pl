@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_DB_dead_cb_purge.pl version 2.4
+# AST_DB_dead_cb_purge.pl version 2.6
 #
 # DESCRIPTION:
 # OPTIONAL!!!
@@ -9,11 +9,12 @@
 #
 # It is recommended that you run this program on the local Asterisk machine
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 101128-0149 - first build
 # 110212-2343 - added scheduled callback custom statuses capacity
+# 130414-2145 - added option to remove duplicate callback entries, keeping the newest
 #
 
 ### begin parsing run-time options ###
@@ -29,22 +30,27 @@ if (length($ARGV[0])>1)
 	if ($args =~ /--help/i)
 		{
 		print "allowed run time options:\n";
-		print "  [-purge-non-cb] = delete callback records of leads with no CBHOLD/CALLBK status\n";
-		print "  [-t] = test\n";
-		print "  [-q] = quiet\n";
-		print "  [-debug] = verbose debug messages\n";
-		print "  [-debugX] = extra verbose debug messages\n\n";
+		print "  [--purge-non-cb] = delete callback records of leads with no CBHOLD/CALLBK status\n";
+		print "  [--remove-dup-cb] = remove older duplicate callbacks for same user and lead_id\n";
+		print "  [--test] = test\n";
+		print "  [--quiet] = quiet\n";
+		print "  [--debug] = verbose debug messages\n";
+		print "  [--debugX] = extra verbose debug messages\n\n";
 		exit;
 		}
 	else
 		{
-		if ($args =~ /-q/i)
+		if ($args =~ /-quiet/i)
 			{
 			$Q=1;
 			}
 		if ($args =~ /-purge-non-cb/i)
 			{
 			$purge_non_cb=1;
+			}
+		if ($args =~ /--remove-dup-cb/i)
+			{
+			$remove_dup_cb=1;
 			}
 		if ($args =~ /-debug/i)
 			{
@@ -54,7 +60,7 @@ if (length($ARGV[0])>1)
 			{
 			$DBX=1; # Debug flag, set to 0 for no debug messages, On an active system this will generate hundreds of lines of output per minute
 			}
-		if ($args =~ /-t/i)
+		if ($args =~ /-test/i)
 			{
 			$TEST=1;
 			$T=1;
@@ -121,10 +127,11 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 
 $deleted=0;
+$MT[0]='';
 
 ### find list of callback statuses
 $SCstatuses=' CBHOLD';
-$stmtA = "select status from vicidial_statuses where scheduled_callback='Y' limit 10000000;";
+$stmtA = "SELECT status from vicidial_statuses where scheduled_callback='Y' limit 10000000;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArowsSCS=$sthA->rows;
@@ -136,7 +143,7 @@ while ($sthArowsSCS > $rec_count)
 	$rec_count++;
 	}
 $sthA->finish();
-$stmtA = "select status from vicidial_campaign_statuses where scheduled_callback='Y' limit 10000000;";
+$stmtA = "SELECT status from vicidial_campaign_statuses where scheduled_callback='Y' limit 10000000;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArowsSCS=$sthA->rows;
@@ -153,7 +160,8 @@ if($DB){print STDERR "\nScheduled Callback statuses: |$SCstatuses|\n";}
 
 
 
-$stmtA = "select lead_id,status,callback_id from vicidial_callbacks limit 10000000;";
+##### BEGIN purge callback loop #####
+$stmtA = "SELECT lead_id,status,callback_id from vicidial_callbacks limit 10000000;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArowsCT=$sthA->rows;
@@ -181,7 +189,7 @@ while ($sthArowsCT > $rec_count)
 		}
 	else
 		{
-		$stmtA = "select status from vicidial_list where lead_id='$lead_ids[$rec_count]';";
+		$stmtA = "SELECT status from vicidial_list where lead_id='$lead_ids[$rec_count]';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -197,24 +205,85 @@ while ($sthArowsCT > $rec_count)
 		$sthA->finish();
 		}
 
-
 	if($DBX){print STDERR "$rec_count|  |$lead_ids[$rec_count]|$lead_statuses[$rec_count]|$callback_statuses[$rec_count]|$callback_ids[$rec_count]|\n";}
-
 
 	if ($delete_lead > 0)
 		{
 		$stmtA = "DELETE from vicidial_callbacks where callback_id='$callback_ids[$rec_count]';";
-		$affected_rows = $dbhA->do($stmtA);
+		if (!$T) {$affected_rows = $dbhA->do($stmtA);}
 		if($DB){print STDERR "\n|$stmtA|  |$affected_rows deleted|  |$lead_ids[$rec_count]|$lead_statuses[$rec_count]|$callback_statuses[$rec_count]|$callback_ids[$rec_count]|\n";}
 		$deleted++;
 		}
 	$rec_count++;
 	}
+##### END purge callback loop #####
+
+if($DB>0){print STDERR "\nFIRST PROCESS DONE: $deleted|$rec_count\n\n";}
 
 
 
+if ($remove_dup_cb > 0)
+	{
+	if($DB>0){print STDERR "\nSTARTING DUPLICATE CHECK PROCESS\n";}
+	##### BEGIN callback duplicate check loop #####
+	$dup_deleted=0;
+	@lead_ids=@MT;
+	@lead_statuses=@MT;
+	@callback_ids=@MT;
+	@callback_statuses=@MT;
+	$stmtA = "SELECT lead_id,callback_id from vicidial_callbacks order by lead_id, callback_id desc limit 10000000;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArowsCT=$sthA->rows;
+	$rec_count=0;
+	while ($sthArowsCT > $rec_count)
+		{
+		@aryA = $sthA->fetchrow_array;
 
-if($DB>0){print STDERR "\nDONE: $deleted|$rec_count\n";}
+		$lead_ids[$rec_count] = 		$aryA[0];
+		$callback_ids[$rec_count] = 	$aryA[1];
+
+		$rec_count++;
+		}
+	$sthA->finish();
+
+	$rec_count=0;
+	$last_lead_id=$lead_ids[0];
+	$last_callback_id=$callback_ids[0];
+	if($DBX){print STDERR "        FIRST |$lead_ids[0]|$last_lead_id|   |$callback_ids[0]|$last_callback_id|\n";}
+	while ($sthArowsCT > $rec_count)
+		{
+		$delete_lead=0;
+		if ($rec_count > 0)
+			{
+			if ($lead_ids[$rec_count] =~ /^$last_lead_id$/)
+				{
+				$delete_lead++;
+				if($DBX){print STDERR "          DUP |$lead_ids[$rec_count]|$last_lead_id|   |$callback_ids[$rec_count]|$last_callback_id|\n";}
+				}
+			else
+				{	
+				if($DBX){print STDERR "          NON |$lead_ids[$rec_count]|$last_lead_id|   |$callback_ids[$rec_count]|$last_callback_id|\n";}
+				$last_lead_id=$lead_ids[$rec_count];
+				$last_callback_id=$callback_ids[$rec_count];
+				}
+
+			if($DB){print STDERR "$rec_count|  |$lead_ids[$rec_count]|$callback_ids[$rec_count]|$delete_lead|\n";}
+
+			if ($delete_lead > 0)
+				{
+				$stmtA = "DELETE from vicidial_callbacks where callback_id='$callback_ids[$rec_count]';";
+				if (!$T) {$affected_rows = $dbhA->do($stmtA);}
+				if($DB){print STDERR "\n|$stmtA|  |$affected_rows deleted|  |$lead_ids[$rec_count]|$lead_statuses[$rec_count]|$callback_statuses[$rec_count]|$callback_ids[$rec_count]|\n";}
+				$dup_deleted++;
+				}
+			}
+		$rec_count++;
+		}
+	##### END callback duplicate check loop #####
+
+	if($DB>0){print STDERR "\nSECOND PROCESS DONE: $dup_deleted|$rec_count\n";}
+	}
 
 $dbhA->disconnect();
 
