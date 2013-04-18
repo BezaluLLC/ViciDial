@@ -399,10 +399,11 @@
 # 130328-1017 - Added validation for agent manual dial permission on DIAL links
 # 130402-2250 - Added user_group variable in scripts, forms and webforms
 # 130412-1359 - Added SIP message for failed calls
+# 130417-1937 - Changed locked agent choose in-group/closer/territories to auto-close
 #
 
-$version = '2.6-367c';
-$build = '130412-1359';
+$version = '2.6-368c';
+$build = '130417-1937';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -3695,6 +3696,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var owner_populate='<?php echo $owner_populate ?>';
 	var qc_enabled='<?php echo $qc_enabled ?>';
 	var inbound_lead_search=0;
+	var VU_agent_choose_ingroups_skip_count=0;
+	var agent_select_territories_skip_count=0;
     var DiaLControl_auto_HTML = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/vdc_LB_resume.gif\" border=\"0\" alt=\"Resume\" /></a>";
     var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/vdc_LB_pause.gif\" border=\"0\" alt=\" Pause \" /></a><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
     var DiaLControl_auto_HTML_OFF = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
@@ -13317,6 +13320,8 @@ function phone_number_format(formatphone) {
 				showDiv('CloserSelectBox');
 				var CloserSelecting = 1;
 				CloserSelectContent_create();
+				if (VU_agent_choose_ingroups_DV == "MGRLOCK")
+					{VU_agent_choose_ingroups_skip_count=4;}
 				}
 			else
 				{
@@ -13336,6 +13341,8 @@ function phone_number_format(formatphone) {
 				showDiv('TerritorySelectBox');
 				var TerritorySelecting = 1;
 				TerritorySelectContent_create();
+				if (agent_select_territories == "MGRLOCK")
+					{agent_select_territories_skip_count=4;}
 				}
 			else
 				{
@@ -13446,6 +13453,18 @@ function phone_number_format(formatphone) {
 				WaitingForNextStep=1;
 				check_for_conf_calls(session_id, '0');
 				AgentDispoing++;
+				}
+			if (VU_agent_choose_ingroups_skip_count > 0)
+				{
+				VU_agent_choose_ingroups_skip_count--;
+				if (VU_agent_choose_ingroups_skip_count == 0)
+					{CloserSelect_submit();}
+				}
+			if (agent_select_territories_skip_count > 0)
+				{
+				agent_select_territories_skip_count--;
+				if (agent_select_territories_skip_count == 0)
+					{TerritorySelect_submit();}
 				}
 			if (logout_stop_timeouts==1)	{WaitingForNextStep=1;}
 			if ( (custchannellive < -30) && (lastcustchannel.length > 3) && (no_empty_session_warnings < 1) ) {CustomerChanneLGone();}

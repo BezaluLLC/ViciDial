@@ -6,6 +6,7 @@
 # CHANGES
 # 120210-2202 - First build
 # 130413-2213 - Added SIP codes summary and fields, and report logging
+# 130418-1048 - Changed how server list is generated
 #
 
 $startMS = microtime();
@@ -125,7 +126,7 @@ while($i < $server_ip_ct)
 	$i++;
 	}
 
-$server_stmt="select distinct s.server_ip, s.server_description from servers s, vicidial_carrier_log vcl where s.server_ip=vcl.server_ip order by server_ip asc";
+$server_stmt="select server_ip,server_description from servers where active_asterisk_server='Y' order by server_ip asc";
 $server_rslt=mysql_query($server_stmt, $link);
 $servers_to_print=mysql_num_rows($server_rslt);
 $i=0;
