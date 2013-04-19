@@ -39,6 +39,7 @@
 # 100903-0041 - Changed lead_id max length to 10 digits
 # 130108-1705 - Changes for Asterisk 1.8 compatibility
 # 130412-1216 - Added sip hangup cause logging from new patch AMI event
+# 130418-1946 - Changed asterisk 1.8 compatibility for CPD and SIP Hangup
 #
 
 # constants
@@ -1009,22 +1010,43 @@ while($one_day_interval > 0)
 							#	CallerIDName: V0202034729000030735
 							#	Uniqueid: 1233564450.141
 							#	Result: Answering-Machine
-							if ( ($command_line[2] =~ /^Channel: /i) && ($command_line[4] =~ /^Uniqueid: /i) ) 
+							if ( ($command_line[3] =~ /^Channel: /i) && ($command_line[5] =~ /^Uniqueid: /i) ) 
 								{
 								&get_time_now;
 
-								$channel = $command_line[2];
+								$channel = $command_line[3];
 								$channel =~ s/Channel: |\s*$//gi;
-								$callid = $command_line[3];
+								$callid = $command_line[4];
 								$callid =~ s/CallerIDName: |\s*$//gi;
 								$callid =~ s/^\"//gi;	# remove leading quotes
 								$callid =~ s/\".*$//gi;	# remove trailing quotes and anything else
 								if ($callid =~ /\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S/) {$callid =~ s/ .*//gi;} # remove everything after the space for Orex
-								$uniqueid = $command_line[4];
+								$uniqueid = $command_line[5];
 								$uniqueid =~ s/Uniqueid: |\s*$//gi;
-								$result = $command_line[5];
-								$result =~ s/Result: |\s*$//gi;
-								if (length($result)>0)
+
+								# Pulled from the CPD-Result SIP Header
+								$cpd_result = $command_line[6];
+								$cpd_result =~ s/CPDResult: |\s*$//gi;
+
+								# Pulled from the X-Netborder-Detailed-CPD-Result-v2-0 SIP Header
+								$cpd_detailed_result = $command_line[7];
+								$cpd_detailed_result =~ s/CPDDetailedResult: |\s*$//gi;
+
+								# Pulled from the X-Netborder-Call-ID SIP Header
+								$cpd_call_id = $command_line[8];
+								$cpd_call_id =~ s/CPDCallID: |\s*$//gi;
+
+								# Pulled from the X-Netborder-Cpa-Reference-ID SIP Header
+								$cpd_ref_id = $command_line[9];
+								$cpd_ref_id =~ s/CPDReferenceID: |\s*$//gi;
+
+								# Pulled from the X-Netborder-Cpa-Campaign-Name SIP Header
+								$cpd_camp_name = $command_line[10];
+								$cpd_camp_name =~ s/CPDCampaignName: |\s*$//gi;
+							
+								print STDERR "|cpd_result = $cpd_result|cpd_detailed_result = $cpd_detailed_result|cpd_call_id = $cpd_call_id|cpd_ref_id = $cpd_ref_id|cpd_camp_name = $cpd_camp_name|\n";	
+								
+								if (length($cpd_result)>0)
 									{
 									# 2011-03-22 13:22:12.123   (1277187888 123 456)
 									# ALTER TABLE vicidial_cpd_log ADD hires_time VARCHAR(26) default '';
@@ -1043,8 +1065,10 @@ while($one_day_interval > 0)
 
 									$lead_id = substr($callid, 10, 10);
 									$lead_id = ($lead_id + 0);
-								#	$stmtA = "INSERT INTO vicidial_cpd_log set channel='$channel', uniqueid='$uniqueid', callerid='$callid', server_ip='$server_ip', lead_id='$lead_id', event_date='$now_date', result='$result', hires_time='$HRnow_date';";
-									$stmtA = "INSERT INTO vicidial_cpd_log set channel='$channel', uniqueid='$uniqueid', callerid='$callid', server_ip='$server_ip', lead_id='$lead_id', event_date='$now_date', result='$result';";
+								#	$stmtA = "INSERT INTO vicidial_cpd_log set channel='$channel', uniqueid='$uniqueid', callerid='$callid', server_ip='$server_ip', lead_id='$lead_id', event_date='$now_date', result='$cpd_result', hires_time='$HRnow_date';";
+
+									# TODO change the cpd log and this insert to include the new SIP Headers for 2.0 CPD
+									$stmtA = "INSERT INTO vicidial_cpd_log set channel='$channel', uniqueid='$uniqueid', callerid='$callid', server_ip='$server_ip', lead_id='$lead_id', event_date='$now_date', result='$cpd_result';";
 									print STDERR "|$stmtA|\n";
 									my $affected_rows = $dbhA->do($stmtA);
 									if($DB){print "|$affected_rows CPD_log inserted|$HRnow_date|$s_hires|$usec|\n";}
@@ -1060,19 +1084,19 @@ while($one_day_interval > 0)
 							#	CallerIDName: M4121149450000795193
 							#	Uniqueid: 1233564450.141
 							#	Result: 603
-							if ( ($command_line[2] =~ /^Channel: /i) && ($command_line[4] =~ /^Uniqueid: /i) ) 
+							if ( ($command_line[3] =~ /^Channel: /i) && ($command_line[5] =~ /^Uniqueid: /i) ) 
 								{
 									&get_time_now;
 
-								$channel = $command_line[2];
+								$channel = $command_line[3];
 								$channel =~ s/Channel: |\s*$//gi;
-								$callid = $command_line[3];
+								$callid = $command_line[4];
 								$callid =~ s/CallerIDName: |\s*$//gi;
 								   $callid =~ s/^\"//gi;   $callid =~ s/\".*$//gi;
 								   if ($callid =~ /\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S/) {$callid =~ s/ .*//gi;}
-								$uniqueid = $command_line[4];
+								$uniqueid = $command_line[5];
 								$uniqueid =~ s/Uniqueid: |\s*$//gi;
-								$result = $command_line[5];
+								$result = $command_line[6];
 								$result =~ s/Result: |\s*$//gi;
 								@result_details=split(/\|/, $result);
 								if ( (length($result)>0) && ($result_details[0] !~ /^407/) )
