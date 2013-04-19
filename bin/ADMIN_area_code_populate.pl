@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 #
-# ADMIN_area_code_populate.pl    version 2.4
+# ADMIN_area_code_populate.pl    version 2.6
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Description:
 # server application that allows load areacodes into to asterisk list database
@@ -19,6 +19,7 @@
 # 90317-2353 - Added city, state, postal_code, country to nanpa format
 # 100902-1536 - Move old data files if wgetting new ones
 # 110424-0735 - Added timezone abbreviation column
+# 130419-1237 - Added lata_type field to NANPA file format
 #
 
 
@@ -44,13 +45,13 @@ if (length($ARGV[0])>1)
 		{
 		print "allowed run time options:\n";
 		print "  [-q] = quiet\n";
-		print "  [-t] = test\n";
+		print "  [--test] = test\n";
 		print "  [--debug] = debug output\n";
 		print "  [--use-local-files] = Do not download files, use local copies\n";
 		print "  [--load-NANPA-prefix] = Only loads the special NANPA list into the database\n";
 		print "  [--purge-table] = Purges the table to be inserted before inserting\n";
 		print "\n     files used by this script are:\n";
-		print "   phone_codes_GMT-latest-220.txt - Phone codes and country codes with time zone data\n";
+		print "   phone_codes_GMT-latest-24.txt - Phone codes and country codes with time zone data\n";
 		print "   GMT_USA_zip-latest.txt - USA zip code and time zone data\n";
 		print "   NANPA_prefix-latest.txt - North American areacode, prefix and time zone data\n";
 
@@ -74,7 +75,7 @@ if (length($ARGV[0])>1)
 			{
 			$q=1;
 			}
-		if ($args =~ /-t/i)
+		if ($args =~ /-test/i)
 			{
 			$T=1;
 			$TEST=1;
@@ -162,8 +163,8 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 if ($nanpa_load > 0)
 	{
 	#### load special North American phone code prefix table ####
-	# LONG  # NPA,NXX,,,,,,STATE,COUNTRY,,,,,RC,TZ,DST,ZIP,,,,,,,,,,,LATITUDE,LONGITUDE,,,,,
-	# SHORT # NPA,NXX,TZ,DST,LATITUDE,LONGITUDE,CITY,STATE,POSTAL_CODE,COUNTRY
+	# LONG  # NPA,NXX,,,,LTYPE,,STATE,COUNTRY,,,,,RC,TZ,DST,ZIP,,,,,,,,,,,LATITUDE,LONGITUDE,,,,,
+	# SHORT # NPA,NXX,TZ,DST,LATITUDE,LONGITUDE,CITY,STATE,POSTAL_CODE,COUNTRY,LTYPE
 
 	#### BEGIN vicidial_nanpa_prefix_codes population from NANPA_prefix-latest.txt file ####
 	open(prefixfile, "$PATHhome/NANPA_prefix-latest.txt") || die "can't open $PATHhome/NANPA_prefix-latest.txt: $!\n";
@@ -211,14 +212,14 @@ if ($nanpa_load > 0)
 					$row[14] =~ s/AS/-11.00/gi;
 					$row[14] =~ s/CH/10.00/gi;
 					$row[15] =~ s/X/N/gi;
-					$temp_insert="('$row[0]', '$row[1]', '$row[14]', '$row[15]', '$row[27]', '$row[28]', '$row[13]', '$row[7]', '$row[16]', '$row[8]'), ";
+					$temp_insert="('$row[0]', '$row[1]', '$row[14]', '$row[15]', '$row[27]', '$row[28]', '$row[13]', '$row[7]', '$row[16]', '$row[8]', '$row[5]'), ";
 					}
 				}
 			else
 				{
 				$row[6] =~ s/\'/\\\'/gi;
 				$row[9] =~ s/\r|\n|\t| $//gi;
-				$temp_insert="('$row[0]', '$row[1]', '$row[2]', '$row[3]', '$row[4]', '$row[5]', '$row[6]', '$row[7]', '$row[8]', '$row[9]'), ";
+				$temp_insert="('$row[0]', '$row[1]', '$row[2]', '$row[3]', '$row[4]', '$row[5]', '$row[6]', '$row[7]', '$row[8]', '$row[9]', '$row[10]'), ";
 				}
 
 			$stmtA = "SELECT count(*) FROM vicidial_nanpa_prefix_codes where areacode='$row[0]' and prefix='$row[1]';";

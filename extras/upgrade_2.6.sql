@@ -352,3 +352,7 @@ index (report_name)
 );
 
 UPDATE system_settings SET db_schema_version='1344',db_schema_update_date=NOW() where db_schema_version < 1344;
+
+ALTER TABLE vicidial_nanpa_prefix_codes ADD lata_type VARCHAR(1) default '';
+
+UPDATE system_settings SET db_schema_version='1345',db_schema_update_date=NOW() where db_schema_version < 1345;

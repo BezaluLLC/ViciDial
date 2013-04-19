@@ -1853,7 +1853,8 @@ longitude VARCHAR(17),
 city VARCHAR(50) default '',
 state VARCHAR(2) default '',
 postal_code VARCHAR(10) default '',
-country VARCHAR(2) default ''
+country VARCHAR(2) default '',
+lata_type VARCHAR(1) default ''
 );
 
 CREATE INDEX areaprefix on vicidial_nanpa_prefix_codes (areacode,prefix);
@@ -3121,4 +3122,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1344',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1345',db_schema_update_date=NOW();
