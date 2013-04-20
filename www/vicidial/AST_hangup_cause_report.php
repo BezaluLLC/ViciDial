@@ -6,6 +6,7 @@
 # CHANGES
 # 120331-2301 - First build
 # 130413-2348 - Added report logging
+# 130419-2047 - Changed how menu lists are generated to speed up initial form load
 #
 
 $startMS = microtime();
@@ -27,6 +28,8 @@ if (isset($_GET["server_ip"]))					{$server_ip=$_GET["server_ip"];}
 	elseif (isset($_POST["server_ip"]))			{$server_ip=$_POST["server_ip"];}
 if (isset($_GET["hangup_cause"]))					{$hangup_cause=$_GET["hangup_cause"];}
 	elseif (isset($_POST["hangup_cause"]))			{$hangup_cause=$_POST["hangup_cause"];}
+if (isset($_GET["dial_status"]))					{$dial_status=$_GET["dial_status"];}
+	elseif (isset($_POST["dial_status"]))			{$dial_status=$_POST["dial_status"];}
 if (isset($_GET["file_download"]))			{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 if (isset($_GET["lower_limit"]))			{$lower_limit=$_GET["lower_limit"];}
@@ -42,6 +45,8 @@ if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+
+$START_TIME=date("U");
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -59,6 +64,96 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+##### Hangup Cause Dictionary #####
+$hangup_cause_dictionary = array(
+0 => "Unspecified. No other cause codes applicable.",
+1 => "Unallocated (unassigned) number.",
+2 => "No route to specified transit network (national use).",
+3 => "No route to destination.",
+6 => "Channel unacceptable.",
+7 => "Call awarded, being delivered in an established channel.",
+16 => "Normal call clearing.",
+17 => "User busy.",
+18 => "No user responding.",
+19 => "No answer from user (user alerted).",
+20 => "Subscriber absent.",
+21 => "Call rejected.",
+22 => "Number changed.",
+23 => "Redirection to new destination.",
+25 => "Exchange routing error.",
+27 => "Destination out of order.",
+28 => "Invalid number format (address incomplete).",
+29 => "Facilities rejected.",
+30 => "Response to STATUS INQUIRY.",
+31 => "Normal, unspecified.",
+34 => "No circuit/channel available.",
+38 => "Network out of order.",
+41 => "Temporary failure.",
+42 => "Switching equipment congestion.",
+43 => "Access information discarded.",
+44 => "Requested circuit/channel not available.",
+50 => "Requested facility not subscribed.",
+52 => "Outgoing calls barred.",
+54 => "Incoming calls barred.",
+57 => "Bearer capability not authorized.",
+58 => "Bearer capability not presently available.",
+63 => "Service or option not available, unspecified.",
+65 => "Bearer capability not implemented.",
+66 => "Channel type not implemented.",
+69 => "Requested facility not implemented.",
+79 => "Service or option not implemented, unspecified.",
+81 => "Invalid call reference value.",
+88 => "Incompatible destination.",
+95 => "Invalid message, unspecified.",
+96 => "Mandatory information element is missing.",
+97 => "Message type non-existent or not implemented.",
+98 => "Message not compatible with call state or message type non-existent or not implemented.",
+99 => "Information element / parameter non-existent or not implemented.",
+100 => "Invalid information element contents.",
+101 => "Message not compatible with call state.",
+102 => "Recovery on timer expiry.",
+103 => "Parameter non-existent or not implemented - passed on (national use).",
+111 => "Protocol error, unspecified.",
+127 => "Interworking, unspecified."
+);
+
+$master_hangup_cause_array=array();
+$i=0;
+while (list($key, $val)=each($hangup_cause_dictionary)) {
+	$master_hangup_cause_array[$i]=$key;
+	$i++;
+}
+$hangup_causes_to_print=count($master_hangup_cause_array);
+$master_dialstatus_array=array("ANSWER", "BUSY", "NOANSWER", "CANCEL", "CONGESTION", "CHANUNAVAIL", "DONTCALL", "TORTURE", "INVALIDARGS");
+$dialstatuses_to_print=count($master_dialstatus_array);
+
+/*
+$hangup_cause_ct = count($hangup_cause);
+$dial_status_ct = count($dial_status);
+$i=0;
+while($i < $hangup_cause_ct)
+	{
+	if (preg_match('/\-\-ALL\-\-/', $hangup_cause[$i]))
+		{
+		$hangup_cause=$master_hangup_cause_array;
+		break;
+		}
+	$i++;
+	}
+
+$j=0;
+while($j < $dial_status_ct)
+	{
+	if (preg_match('/\-\-ALL\-\-/', $dial_status[$j]))
+		{
+		$dial_status=$master_dialstatus_array;
+		break;
+		}
+	$j++;
+	}
+*/
+
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 7 and view_reports='1' and active='Y';";
 if ($DB) {$MAIN.="|$stmt|\n";}
@@ -125,7 +220,8 @@ while($i < $server_ip_ct)
 	$i++;
 	}
 
-$server_stmt="SELECT distinct s.server_ip, s.server_description from servers s, vicidial_carrier_log vcl where s.server_ip=vcl.server_ip order by server_ip asc";
+$server_stmt="SELECT server_ip,server_description from servers where active_asterisk_server='Y' order by server_ip asc";
+if ($DB) {echo "|$server_stmt|\n";}
 $server_rslt=mysql_query($server_stmt, $link);
 $servers_to_print=mysql_num_rows($server_rslt);
 $i=0;
@@ -172,65 +268,102 @@ if (strlen($server_ip_SQL)<3) {$server_ip_SQL="";}
 ########### HANGUP CAUSES
 $hangup_cause_string='|';
 $dialstatus_string='|';
-$hangup_and_dialstatus_string='|';
+#$hangup_and_dialstatus_string='|';
 $hangup_cause_ct = count($hangup_cause);
+$dial_status_ct = count($dial_status);
 
 $i=0;
 while($i < $hangup_cause_ct)
 	{
-	$hangup_array=explode("!", $hangup_cause[$i]);
-	$hangup_and_dialstatus_string .= "$hangup_cause[$i]|";
-	$hangup_cause_string .= "$hangup_array[0]|";
-	$dialstatus_string .= "$hangup_array[1]|";
+	$hangup_cause_string .= "$hangup_cause[$i]|";
 	$i++;
 	}
 
-$hangupcause_stmt="SELECT distinct hangup_cause, dialstatus from vicidial_carrier_log order by dialstatus, hangup_cause asc";
-$hangupcause_rslt=mysql_query($hangupcause_stmt, $link);
-$causes_to_print=mysql_num_rows($hangupcause_rslt);
-$i=0;
-while ($i < $causes_to_print)
+$j=0;
+while($j < $dial_status_ct)
 	{
-	$row=mysql_fetch_row($hangupcause_rslt);
-	$LISThangup_causes[$i] =		$row[0];
-	$LISTdialstatuses[$i] =		$row[1];
-	if (ereg("-ALL",$hangup_cause_string) )
+	$dialstatus_string .= "$dial_status[$j]|";
+	$j++;
+	}
+
+$i=0; $j=0;
+$hangup_causes_string='|';
+$dialstatuses_string='|';
+while($i < $hangup_cause_ct)
+	{
+	if ( (strlen($hangup_cause[$i]) > 0) and (preg_match("/\|$hangup_cause[$i]\|/",$hangup_cause_string)) ) 
 		{
-		$hangup_cause[$i] = $LISThangup_causes[$i];
-		$dialstatus[$i] = $LISTdialstatuses[$i];
+		$hangup_causes_string .= "$hangup_cause[$i]|";
+		$hangup_causeQS .= "&hangup_cause[]=$hangup_cause[$i]";
 		}
 	$i++;
 	}
-$i=0;
-$hangup_causes_string='|';
-$hangup_cause_ct = count($hangup_cause);
+while ($j < $dial_status_ct) 
+	{
+	if ( (strlen($dial_status[$j]) > 0) and (preg_match("/\|$dial_status[$j]\|/",$dialstatus_string)) ) 
+		{
+		$dialstatuses_string .= "$dial_status[$j]|";
+		$dial_statusQS .= "&dial_status[]=$dial_status[$j]";
+		}
+	$j++;
+	}
+
+$i=0; 
 while($i < $hangup_cause_ct)
 	{
-	$hangup_array=explode("!", $hangup_cause[$i]);
-	if ( (strlen($hangup_array[0]) > 0) and (preg_match("/\|$hangup_array[0]\|/",$hangup_cause_string)) and (strlen($hangup_array[1]) > 0) and (preg_match("/\|$hangup_array[1]\|/",$dialstatus_string)) )
+	$j=0;
+	while ($j < $dial_status_ct) 
 		{
-		$hangup_causes_string .= "$hangup_array[0]|";
-		$hangup_cause_SQL .= "(hangup_cause='$hangup_array[0]' and dialstatus='$hangup_array[1]') OR";
-		$hangup_causeQS .= "&hangup_cause[]=$hangup_cause[$i]";
+		if ( (strlen($hangup_cause[$i]) > 0) and (preg_match("/\|$hangup_cause[$i]\|/",$hangup_cause_string)) and (strlen($dial_status[$j]) > 0) and (preg_match("/\|$dial_status[$j]\|/",$dialstatus_string)) )
+			{
+			if ( ereg("--ALL--",$hangup_cause_string) ) {$HC_subclause="";} else {$HC_subclause="hangup_cause='$hangup_cause[$i]'";}
+			if ( ereg("--ALL--",$dialstatus_string) ) {$DS_subclause="";} else {$DS_subclause="dialstatus='$dial_status[$j]'";}
+			if ($HC_subclause=="" || $DS_subclause=="") {$conjunction="";} else {$conjunction=" and ";}
+			$hangup_cause_SQL .= "($HC_subclause$conjunction$DS_subclause) OR";
+			$hangup_cause_SQL=preg_replace('/\(\) OR$/', '', $hangup_cause_SQL);
+			#$hangup_cause_SQL .= "(hangup_cause='$hangup_cause[$i]' and dialstatus='$dial_status[$j]') OR";
+			}
+		$j++;
 		}
 	$i++;
 	}
 
 if ( (ereg("--ALL--",$hangup_cause_string) ) or ($hangup_cause_ct < 1) )
 	{
-	$hangup_cause_SQL = "";
+#	$hangup_cause_SQL = "";
 	$HC_rpt_string="- ALL hangup causes ";
 	if (ereg("--ALL--",$hangup_cause_string)) {$hangup_causeQS="&hangup_cause[]=--ALL--";}
 	}
 else
 	{
-	$hangup_cause_SQL=preg_replace('/ OR$/', '', $hangup_cause_SQL);
-	$hangup_cause_SQL = eregi_replace(",$",'',$hangup_cause_SQL);
-	$hangup_cause_SQL = "and ($hangup_cause_SQL)";
-	$hangup_and_dialstatus_string=preg_replace('/\!/', "-", $hangup_and_dialstatus_string);
-	$HC_rpt_string="AND hangup cause(s) ".preg_replace('/\|/', ", ", substr($hangup_and_dialstatus_string, 1, -1));
+#	$hangup_cause_SQL=preg_replace('/ OR$/', '', $hangup_cause_SQL);
+#	$hangup_cause_SQL = eregi_replace(",$",'',$hangup_cause_SQL);
+#	$hangup_cause_SQL = "and ($hangup_cause_SQL)";
+	$hangup_causes_string=preg_replace('/\!/', "-", $hangup_causes_string);
+	$HC_rpt_string="AND hangup cause(s) ".preg_replace('/\|/', ", ", substr($hangup_causes_string, 1, -1));
 	}
-if (strlen($hangup_cause_SQL)<3) {$hangup_cause_SQL="";}
+
+if ( (ereg("--ALL--",$dial_status_string) ) or ($dial_status_ct < 1) )
+	{
+	$dial_status_SQL = "";
+	$DS_rpt_string="- ALL dial statuses ";
+	if (ereg("--ALL--",$dial_status_string)) {$dial_statusQS="&dial_status[]=--ALL--";}
+	}
+else
+	{
+	#$hangup_cause_SQL=preg_replace('/ OR$/', '', $hangup_cause_SQL);
+	#$hangup_cause_SQL = eregi_replace(",$",'',$hangup_cause_SQL);
+	#$hangup_cause_SQL = "and ($hangup_cause_SQL)";
+	$dialstatuses_string=preg_replace('/\!/', "-", $dialstatuses_string);
+	$DS_rpt_string="AND dial status(es) ".preg_replace('/\|/', ", ", substr($dialstatuses_string, 1, -1));
+	}
+
+$hangup_cause_SQL=preg_replace('/ OR$/', '', $hangup_cause_SQL);
+$hangup_cause_SQL = eregi_replace(",$",'',$hangup_cause_SQL);
+$hangup_cause_SQL = "and ($hangup_cause_SQL)";
+
+if (strlen($hangup_cause_SQL)<7) {$hangup_cause_SQL="";}
+
 ########################
 $HEADER.="<HTML>\n";
 $HEADER.="<HEAD>\n";
@@ -291,22 +424,44 @@ while ($servers_to_print > $o)
 	}
 $MAIN.="</SELECT></TD>";
 
-$MAIN.="<TD ROWSPAN=2 VALIGN=top align=center>Hangup Cause/Dial Status:<BR/>";
+$MAIN.="<TD ROWSPAN=2 VALIGN=top align=center>Hangup Cause:<BR/>";
 $MAIN.="<SELECT SIZE=5 NAME=hangup_cause[] multiple>\n";
-if  (eregi("--ALL--",$hangup_cause_string))
+if  (eregi("--ALL--",$hangup_causes_string))
 	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL HANGUP CAUSES --</option>\n";}
 else
 	{$MAIN.="<option value=\"--ALL--\">-- ALL HANGUP CAUSES --</option>\n";}
+
 $o=0;
-while ($causes_to_print > $o)
+while ($hangup_causes_to_print > $o)
 	{
-	if (ereg("\|$LISThangup_causes[$o]!$LISTdialstatuses[$o]\|",$hangup_and_dialstatus_string)) 
-		{$MAIN.="<option selected value=\"$LISThangup_causes[$o]!$LISTdialstatuses[$o]\">$LISThangup_causes[$o] - $LISTdialstatuses[$o]</option>\n";}
+	if (ereg("\|$master_hangup_cause_array[$o]\|",$hangup_causes_string)) 
+		{$MAIN.="<option selected value=\"$master_hangup_cause_array[$o]\">$master_hangup_cause_array[$o]</option>\n";}
 	else
-		{$MAIN.="<option value=\"$LISThangup_causes[$o]!$LISTdialstatuses[$o]\">$LISThangup_causes[$o] - $LISTdialstatuses[$o]</option>\n";}
+		{$MAIN.="<option value=\"$master_hangup_cause_array[$o]\">$master_hangup_cause_array[$o]</option>\n";}
 	$o++;
 	}
-$MAIN.="</SELECT></TD>";
+$MAIN.="</SELECT>";
+$MAIN.="</TD>";
+
+$MAIN.="<TD ROWSPAN=2 VALIGN=top align=center>Dial status:<BR/>";
+$MAIN.="<SELECT SIZE=5 NAME=dial_status[] multiple>\n";
+if  (eregi("--ALL--",$dialstatuses_string))
+	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL DIAL STATUSES --</option>\n";}
+else
+	{$MAIN.="<option value=\"--ALL--\">-- ALL DIAL STATUSES --</option>\n";}
+
+$o=0;
+
+while ($dialstatuses_to_print > $o)
+	{
+	if (ereg("\|$master_dialstatus_array[$o]\|",$dialstatuses_string)) 
+		{$MAIN.="<option selected value=\"$master_dialstatus_array[$o]\">$master_dialstatus_array[$o]</option>\n";}
+	else
+		{$MAIN.="<option value=\"$master_dialstatus_array[$o]\">$master_dialstatus_array[$o]</option>\n";}
+	$o++;
+	}
+$MAIN.="</SELECT>";
+$MAIN.="</TD>";
 
 $MAIN.="<TD ROWSPAN=2 VALIGN=top align=center>";
 
@@ -344,7 +499,7 @@ if ($SUBMIT && $server_ip_ct>0) {
 		if (!$lower_limit) {$lower_limit=1;}
 		if ($lower_limit+999>=mysql_num_rows($rpt_rslt)) {$upper_limit=($lower_limit+mysql_num_rows($rpt_rslt)%1000)-1;} else {$upper_limit=$lower_limit+999;}
 		
-		$MAIN.="--- CARRIER LOG RECORDS FOR $query_date, $query_date_D TO $query_date_T $server_rpt_string, $HC_rpt_string\n --- RECORDS #$lower_limit-$upper_limit               <a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">[DOWNLOAD]</a>\n";
+		$MAIN.="--- CARRIER LOG RECORDS FOR $query_date, $query_date_D TO $query_date_T $server_rpt_string, $HC_rpt_string, $DS_rpt_string\n --- RECORDS #$lower_limit-$upper_limit               <a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">[DOWNLOAD]</a>\n";
 		$carrier_rpt.="+----------------------+---------------------+-----------------+-----------+--------------+-------------+------------------------------------------+-----------+---------------+--------------+\n";
 		$carrier_rpt.="| UNIQUE ID            | CALL DATE           | SERVER IP       | LEAD ID   | HANGUP CAUSE | DIAL STATUS | CHANNEL                                  | DIAL TIME | ANSWERED TIME | PHONE NUMBER |\n";
 		$carrier_rpt.="+----------------------+---------------------+-----------------+-----------+--------------+-------------+------------------------------------------+-----------+---------------+--------------+\n";
@@ -387,14 +542,14 @@ if ($SUBMIT && $server_ip_ct>0) {
 		$carrier_rpt_hf="";
 		$ll=$lower_limit-1000;
 		if ($ll>=1) {
-			$carrier_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$hangup_causeQS$server_ipQS&lower_limit=$ll\">[<<< PREV 1000 records]</a>";
+			$carrier_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$hangup_causeQS$dial_statusQS$server_ipQS&lower_limit=$ll\">[<<< PREV 1000 records]</a>";
 		} else {
 			$carrier_rpt_hf.=sprintf("%-23s", " ");
 		}
 		$carrier_rpt_hf.=sprintf("%-145s", " ");
 		if (($lower_limit+1000)<mysql_num_rows($rpt_rslt)) {
 			if ($upper_limit+1000>=mysql_num_rows($rpt_rslt)) {$max_limit=mysql_num_rows($rpt_rslt)-$upper_limit;} else {$max_limit=1000;}
-			$carrier_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS$hangup_causeQS&lower_limit=".($lower_limit+1000)."\">[NEXT $max_limit records >>>]</a>";
+			$carrier_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS$hangup_causeQS$dial_statusQS&lower_limit=".($lower_limit+1000)."\">[NEXT $max_limit records >>>]</a>";
 		} else {
 			$carrier_rpt_hf.=sprintf("%23s", " ");
 		}
@@ -447,6 +602,10 @@ $endMSary = explode(" ",$endMS);
 $runS = ($endMSary[0] - $startMSary[0]);
 $runM = ($endMSary[1] - $startMSary[1]);
 $TOTALrun = ($runS + $runM);
+
+$END_TIME=date("U");
+
+#print "Total run time: ".($END_TIME-$START_TIME);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
