@@ -74,10 +74,11 @@
 # 130328-0949 - Added update_phone_number option to update_lead function, issue #653
 # 130405-1539 - Added agent_status function
 # 130414-0311 - Added report logging for blind_monitor function
+# 130420-1938 - Added NANPA prefix validation and timezone options
 #
 
-$version = '2.6-52';
-$build = '130414-0311';
+$version = '2.6-53';
+$build = '130420-1938';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -327,6 +328,8 @@ if (isset($_GET["group"]))					{$group=$_GET["group"];}
 	elseif (isset($_POST["group"]))			{$group=$_POST["group"];}
 if (isset($_GET["expiration_date"]))			{$expiration_date=$_GET["expiration_date"];}
 	elseif (isset($_POST["expiration_date"]))	{$expiration_date=$_POST["expiration_date"];}
+if (isset($_GET["nanpa_ac_prefix_check"]))			{$nanpa_ac_prefix_check=$_GET["nanpa_ac_prefix_check"];}
+	elseif (isset($_POST["nanpa_ac_prefix_check"]))	{$nanpa_ac_prefix_check=$_POST["nanpa_ac_prefix_check"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -481,6 +484,7 @@ if ($non_latin < 1)
 	$call_id = ereg_replace("[^0-9a-zA-Z]","",$call_id);
 	$group = ereg_replace("[^-\|\_0-9a-zA-Z]","",$group);
 	$expiration_date = ereg_replace("[^-_0-9a-zA-Z]","",$expiration_date);
+	$nanpa_ac_prefix_check = ereg_replace("[^A-Z]","",$nanpa_ac_prefix_check);
 	}
 else
 	{
@@ -490,6 +494,7 @@ else
 	}
 
 $USarea = 			substr($phone_number, 0, 3);
+$USprefix = 		substr($phone_number, 3, 3);
 if (strlen($hopper_priority)<1) {$hopper_priority=0;}
 if ($hopper_priority < -99) {$hopper_priority=-99;}
 if ($hopper_priority > 99) {$hopper_priority=99;}
@@ -4585,6 +4590,24 @@ if ($function == 'add_lead')
 			if (strlen($rank)<1) {$rank='0';}
 			if (strlen($list_id)<3) {$list_id='999';}
 			if (strlen($phone_code)<1) {$phone_code='1';}
+			if ( ($nanpa_ac_prefix_check == 'Y') or (eregi("NANPA",$tz_method)) )
+				{
+				$stmt="SELECT count(*) from vicidial_nanpa_prefix_codes;";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$vicidial_nanpa_prefix_codes_count = $row[0];
+				if ($vicidial_nanpa_prefix_codes_count < 10)
+					{
+					$nanpa_ac_prefix_check='N';
+					$tz_method = preg_replace("/NANPA/",'',$tz_method);
+
+					$result = 'NOTICE';
+					$result_reason = "add_lead NANPA options disabled, NANPA prefix data not loaded";
+					echo "$result: $result_reason - $vicidial_nanpa_prefix_codes_count|$user\n";
+					$data = "$inserted_alt_phones|$lead_id";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
 
 			$valid_number=1;
 			if ( (strlen($phone_number)<6) || (strlen($phone_number)>16) )
@@ -4613,6 +4636,20 @@ if ($function == 'add_lead')
 				if ($valid_number < 1)
 					{
 					$result_reason = "add_lead INVALID PHONE NUMBER AREACODE";
+					}
+				}
+			if ( ($nanpa_ac_prefix_check=='Y') and ($valid_number > 0) )
+				{
+				$phone_areacode = substr($phone_number, 0, 3);
+				$phone_prefix = substr($phone_number, 3, 3);
+				$stmt = "SELECT count(*) from vicidial_nanpa_prefix_codes where areacode='$phone_areacode' and prefix='$phone_prefix';";
+				if ($DB>0) {echo "DEBUG: add_lead areacode check query - $stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$valid_number=$row[0];
+				if ($valid_number < 1)
+					{
+					$result_reason = "add_lead INVALID PHONE NUMBER NANPA AREACODE PREFIX";
 					}
 				}
 			if ($valid_number < 1)
@@ -4945,7 +4982,7 @@ if ($function == 'add_lead')
 
 				
 				### get current gmt_offset of the phone_number
-				$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner);
+				$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner,$USprefix);
 
 				$new_status='NEW';
 				if ($callback == 'Y')
@@ -5809,7 +5846,7 @@ if ($function == 'update_lead')
 							else
 								{
 								### get current gmt_offset of the phone_number
-								$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner);
+								$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner,$USprefix);
 
 								if (strlen($status)<1)
 									{$status='NEW';}
@@ -6023,7 +6060,7 @@ exit;
 
 ##### LOOKUP GMT, FINDS THE CURRENT GMT OFFSET FOR A PHONE NUMBER #####
 
-function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner)
+function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner,$USprefix)
 {
 require("dbconnect.php");
 
@@ -6073,6 +6110,24 @@ if ( ($tz_method=="TZCODE") && (strlen($owner)>1) )
 		$row=mysql_fetch_row($rslt);
 		$dst_range =	$row[0];
 		if (strlen($dst_range)>2) {$dst = 'Y';}
+		}
+	}
+if ( (eregi("NANPA",$tz_method)) && (strlen($USarea)>2) && (strlen($USprefix)>2) )
+	{
+	$stmt="select GMT_offset,DST from vicidial_nanpa_prefix_codes where areacode='$USarea' and prefix='$USprefix';";
+	$rslt=mysql_query($stmt, $link);
+	$pc_recs = mysql_num_rows($rslt);
+	if ($pc_recs > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$gmt_offset =	$row[0];	 $gmt_offset = eregi_replace("\+","",$gmt_offset);
+		$dst =			$row[1];
+		$dst_range =	'';
+		if ($dst == 'Y')
+			{$dst_range =	'SSM-FSN';}
+		$PC_processed++;
+		$postalgmt_found++;
+		$post++;
 		}
 	}
 if ($postalgmt_found < 1)

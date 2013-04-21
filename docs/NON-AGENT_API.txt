@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2013-04-05
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2013-04-20
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -81,7 +81,7 @@ Changes:
 121125-2210 - Added Other Campaign DNC option and list expiration date option
 130328-0949 - Added update_phone_number option to update_lead function
 130405-1538 - Added agent_status function
-
+130420-1938 - Added NANPA prefix validation and timezone options
 
 
 API Functions use the 'function' variable
@@ -491,12 +491,14 @@ duplicate_check -	Check for duplicate records in the system, can select more tha
 				DUPNAMEPHONESYS - check for duplicate first_name, last_name and phone_number in entire system
 usacan_prefix_check -	Y or N, default is N. Check for a valid 4th digit for USA and Canada phone numbers (cannot be 0 or 1)
 usacan_areacode_check -	Y or N, default is N. Check for a valid areacode for USA and Canada phone numbers
+nanpa_ac_prefix_check -	Y or N, default is N. Check for a valid NANPA areacode and prefix, if optional NANPA data is on the system
 custom_fields -		Y or N, default is N. Defines whether the API will accept custom field data when inserting leads into the vicidial_list table
 			For custom fields to be inserted, just add the field label as a variable to the URL string
 			For example, if the field_label is "favorite_color" you would add "&favorite_color=blue"
-tz_method -		<empty>, POSTAL or TZCODE, default is <empty> which will use the country code and areacode for time zone lookups
+tz_method -		<empty>, POSTAL, TZCODE or NANPA, default is <empty> which will use the country code and areacode for time zone lookups
 				POSTAL relies on the postal_code field
 				TZCODE relies on the owner field being populated with a proper time zone code
+				NANPA relies on the optional NANPA areacode prefix data being loaded on your system
 callback -		Y or N, default is N. Set this lead as a scheduled callback. campaign_id field is REQUIRED for callbacks
 callback_status -	1-6 Character, callback status to use, default is CALLBK (vicidial_list status will be set to CBHOLD to lock)
 callback_datetime -	YYYY-MM-DD+HH:MM:SS, date and time of scheduled callback. REQUIRED if callback is set. NOW can be used for current datetime.
@@ -571,9 +573,12 @@ NOTICE: add_lead SCHEDULED CALLBACK ADDED - 1234|2011-09-29 12:00:01|TESTCAMP|66
 NOTICE: add_lead SCHEDULED CALLBACK NOT ADDED, USER NOT VALID - 1234|TESTCAMP|6|
 NOTICE: add_lead SCHEDULED CALLBACK NOT ADDED, CAMPAIGN NOT VALID - 1234|XYZ
 
+NOTICE: add_lead NANPA options disabled, NANPA prefix data not loaded - 0|6666
+
 ERROR: add_lead INVALID PHONE NUMBER LENGTH - 72755|6666 
 ERROR: add_lead INVALID PHONE NUMBER PREFIX - 72755|6666 
 ERROR: add_lead INVALID PHONE NUMBER AREACODE - 72755|6666 
+ERROR: add_lead INVALID PHONE NUMBER NANPA AREACODE PREFIX - 7275551212|6666
 
 ERROR: add_lead USER DOES NOT HAVE PERMISSION TO ADD LEADS TO THE SYSTEM - 6666|0 
 

@@ -255,6 +255,13 @@ OTHER CHANGES:
 43. Added option to the AST_DB_dead_cb_purge.pl script to remove duplicate 
 	callback entries for a single lead, keeping the newest one only.
 
+44. Added NANPA areacode and prefix phone number validation and timezone setting
+	options to the admin web lead loader, the Non-Agent API and the CLI lead
+	loader. The NANPA prefix list will give you more accurate time zone 
+	encoding of your USA and Canadian lead files within ViciDial. The NANPA 
+	list is available for purchase at the vicidial.org web store: 
+	http://www.vicidial.org/store.php#NANPA
+
 
 
 

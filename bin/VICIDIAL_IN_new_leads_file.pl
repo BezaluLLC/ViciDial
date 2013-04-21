@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# VICIDIAL_IN_new_leads_file.pl version 2.4
+# VICIDIAL_IN_new_leads_file.pl version 2.6
 #
 # DESCRIPTION:
 # script lets you insert leads into the vicidial_list table from a TAB-delimited
@@ -10,7 +10,7 @@
 #
 # NOTE: the machine this is run on must have a servers entry in the database
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES
@@ -56,9 +56,10 @@
 # 120713-1009 - Added new --duplicate-tnm-delete option to check for a duplicate phone with different title and delete existing if found in same list
 # 120907-1109 - Added vote17csv format
 # 121005-0728 - Added twotab format
+# 130419-2138 - Added --NANPA-ac-prefix-check and --nanpa-gmt options using add-on NANPA prefix database
 #
 
-$version = '121005-0728';
+$version = '130419-2138';
 
 $secX = time();
 $MT[0]='';
@@ -171,6 +172,7 @@ if (length($ARGV[0])>1)
 		print "  [--new-list-tz-setting=X] = COUNTRY_AND_AREA_CODE|POSTAL_CODE|NANPA_PREFIX|OWNER_TIME_ZONE_CODE default COUNTRY_AND_AREA_CODE\n";
 		print "  [--USACAN-prefix-check] = check for the 4th digit 2-9, USA and Canada validation\n";
 		print "  [--USACAN-areacode-check] = check for the valid phone code 1 areacodes, USA and Canada validation\n";
+		print "  [--NANPA-ac-prefix-check] = check for the valid areacode and prefix from the NANPA prefix database, if loaded\n";
 		print "  [--duplicate-check] = checks for the same phone number in the same list id before inserting lead\n";
 		print "  [--duplicate-campaign-check] = checks for the same phone number in the same campaign before inserting lead\n";
 		print "  [--duplicate-system-check] = checks for the same phone number in the entire system before inserting lead\n";
@@ -181,6 +183,7 @@ if (length($ARGV[0])>1)
 		print "  [--dob-ddmmyyy] = checks for slashes in the date of birth field and formats from DD/MM/YYYY to MySQL\n";
 		print "  [--postal-code-gmt] = checks for the time zone based on the postal code given where available\n";
 		print "  [--time-zone-code-gmt] = checks for the time zone based on the owner field time zone code given where available\n";
+		print "  [--nanpa-gmt] = checks for the time zone based on the NANPA prefix database, if loaded\n";
 		print "  [--ftp-pull] = grabs lead files from a remote FTP server, uses REPORTS FTP login information\n";
 		print "  [--ftp-dir=leads_in] = remote FTP server directory to grab files from, should have a DONE sub-directory\n";
 		print "  [--email-list=test@test.com:test2@test.com] = send email results for each file to these addresses\n";
@@ -313,6 +316,11 @@ if (length($ARGV[0])>1)
 			$usacan_areacode_check=1;
 			if ($q < 1) {print "\n----- USACAN AREACODE CHECK -----\n\n";}
 			}
+		if ($args =~ /--NANPA-ac-prefix-check/i)
+			{
+			$nanpa_ac_prefix_check=1;
+			if ($q < 1) {print "\n----- NANPA AREACODE AND PREFIX CHECK -----\n\n";}
+			}
 		if ($args =~ /-duplicate-check/i)
 			{
 			$dupcheck=1;
@@ -362,6 +370,11 @@ if (length($ARGV[0])>1)
 			{
 			$tzcodegmt=1;
 			if ($q < 1) {print "\n----- TZ CODE TIMEZONE -----\n\n";}
+			}
+		if ($args =~ /--nanpa-gmt/i)
+			{
+			$nanpagmt=1;
+			if ($q < 1) {print "\n----- NANPA AC-PREFIX TIMEZONE -----\n\n";}
 			}
 
 		if ($args =~ /-new-list-for-each-file/i)
@@ -499,11 +512,44 @@ $sthArows=$sthA->rows;
 if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$non_latin		=		"$aryA[0]";
+	$non_latin		=		$aryA[0];
 	}
 $sthA->finish();
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+if ( ($nanpa_ac_prefix_check > 0) || ($nanpagmt > 0) )
+	{
+	$vicidial_nanpa_prefix_codes_count=0;
+	$stmtA = "SELECT count(*) FROM vicidial_nanpa_prefix_codes;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$vicidial_nanpa_prefix_codes_count = $aryA[0];
+		}
+	$sthA->finish();
+	if ($vicidial_nanpa_prefix_codes_count < 10)
+		{
+		if ($q < 1)
+			{
+			print "NANPA options disabled! NANPA prefix data not loaded: $vicidial_nanpa_prefix_codes_count\n\n";
+			}
+		$nanpa_ac_prefix_check=0;
+		$nanpagmt=0;
+		}
+	else
+		{
+		if ($q < 1)
+			{
+			print "NANPA prefix records: $vicidial_nanpa_prefix_codes_count\n\n";
+			}
+		}
+	}
+
+
 
 if ($non_latin > 0) {$affected_rows = $dbhA->do("SET NAMES 'UTF8'");}
 
@@ -1811,7 +1857,29 @@ foreach(@FILES)
 					$valid_lead = $aryA[0];
 					if ($valid_lead < 1)
 						{
-						if ($DBX) {print "     Invalid USACAN areacode: |$USprefix|$phone_number|\n";}
+						if ($DBX) {print "     Invalid USACAN areacode: |$USarea|$phone_number|\n";}
+						}
+					}
+				$sthA->finish();
+				}
+
+			##### Check for valid NANPA USA and Canada areacodes and prefixes #####
+			if ( ($nanpa_ac_prefix_check > 0) && ($valid_lead > 0) )
+				{
+				$USarea = 			substr($phone_number, 0, 3);
+				$USprefix = 		substr($phone_number, 3, 3);
+				$stmtA="SELECT count(*) from vicidial_nanpa_prefix_codes where areacode='$USarea' and prefix='$USprefix' limit 1;";
+					if($DBX){print STDERR "\n|$stmtA|\n";}
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$valid_lead = $aryA[0];
+					if ($valid_lead < 1)
+						{
+						if ($DBX) {print "     Invalid NANPA areacode-prefix: |$USarea|$USprefix|$phone_number|\n";}
 						}
 					}
 				$sthA->finish();
@@ -2068,6 +2136,33 @@ foreach(@FILES)
 							}
 						$sthA->finish();
 						}
+					if ($nanpagmt > 0)
+						{
+						$dst_range='';
+						$dst='N';
+						$gmt_offset=0;
+						$USarea = 			substr($phone_number, 0, 3);
+						$USprefix = 		substr($phone_number, 3, 3);
+
+						$stmtA="SELECT GMT_offset,DST from vicidial_nanpa_prefix_codes where areacode='$USarea' and prefix='$USprefix' limit 1;";
+							if($DBX){print STDERR "\n|$stmtA|\n";}
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$gmt_offset =	$aryA[0];  $gmt_offset =~ s/\+| //gi;
+							$dst =			$aryA[1];
+							if ($dst =~ /Y/) 
+								{$dst_range = 'SSM-FSN';}
+							$PC_processed++;
+							$postalgmt_found++;
+							if ($DBX) {print "     NANPA AC-Prefix GMT record found for $USarea|$USprefix: |$gmt_offset|$dst|$dst_range|\n";}
+							}
+						$sthA->finish();
+						}
+
 					if ($postalgmt_found < 1)
 						{
 						$PC_processed=0;
