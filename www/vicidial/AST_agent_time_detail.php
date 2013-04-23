@@ -25,6 +25,7 @@
 # 120224-0910 - Added HTML display option with bar graphs
 # 121130-0957 - Fix for user group permissions issue #588
 # 130414-0137 - Added report logging
+# 220414-2111 - Added counts on parked(hold) calls
 #
 
 $startMS = microtime();
@@ -49,6 +50,8 @@ if (isset($_GET["stage"]))					{$stage=$_GET["stage"];}
 	elseif (isset($_POST["stage"]))			{$stage=$_POST["stage"];}
 if (isset($_GET["file_download"]))			{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
+if (isset($_GET["show_parks"]))			{$show_parks=$_GET["show_parks"];}
+	elseif (isset($_POST["show_parks"]))	{$show_parks=$_POST["show_parks"];}
 if (isset($_GET["DB"]))						{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))			{$DB=$_POST["DB"];}
 if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
@@ -252,10 +255,11 @@ while($i < $group_ct)
 	$i++;
 	}
 if ( (ereg("--ALL--",$group_string) ) or ($group_ct < 1) )
-	{$group_SQL = "";}
+	{$group_SQL = ""; $park_log_SQL = "";}
 else
 	{
 	$group_SQL = eregi_replace(",$",'',$group_SQL);
+	$park_log_SQL = "and channel_group in ($group_SQL)";
 	$group_SQL = "and campaign_id IN($group_SQL)";
 	}
 
@@ -417,8 +421,12 @@ else
 	$max_pause=1;
 	$max_dead=1;
 	$max_customer=1;
-	$GRAPH="<a name='timegraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-	$GRAPH2="<tr><th class='column_header grey_graph_cell' id='timegraph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">CALLS</a></th><th class='column_header grey_graph_cell' id='timegraph2'><a href='#' onClick=\"DrawGraph('TIMECLOCK', '2'); return false;\">TIME CLOCK</a></th><th class='column_header grey_graph_cell' id='timegraph3'><a href='#' onClick=\"DrawGraph('AGENTTIME', '3'); return false;\">AGENT TIME</a></th><th class='column_header grey_graph_cell' id='timegraph4'><a href='#' onClick=\"DrawGraph('WAIT', '4'); return false;\">WAIT</a></th><th class='column_header grey_graph_cell' id='timegraph14'><a href='#' onClick=\"DrawGraph('WAITPCT', '14'); return false;\">WAIT %</a></th><th class='column_header grey_graph_cell' id='timegraph5'><a href='#' onClick=\"DrawGraph('TALK', '5'); return false;\">TALK</a></th><th class='column_header grey_graph_cell' id='timegraph10'><a href='#' onClick=\"DrawGraph('TALKPCT', '10'); return false;\">TALKTIME%</a></th><th class='column_header grey_graph_cell' id='timegraph6'><a href='#' onClick=\"DrawGraph('DISPO', '6'); return false;\">DISPO</a></th><th class='column_header grey_graph_cell' id='timegraph11'><a href='#' onClick=\"DrawGraph('DISPOPCT', '11'); return false;\">DISPOTIME%</a></th><th class='column_header grey_graph_cell' id='timegraph7'><a href='#' onClick=\"DrawGraph('PAUSE', '7'); return false;\">PAUSE</a></th><th class='column_header grey_graph_cell' id='timegraph12'><a href='#' onClick=\"DrawGraph('PAUSEPCT', '12'); return false;\">PAUSETIME%</a></th><th class='column_header grey_graph_cell' id='timegraph8'><a href='#' onClick=\"DrawGraph('DEAD', '8'); return false;\">DEAD</a></th><th class='column_header grey_graph_cell' id='timegraph13'><a href='#' onClick=\"DrawGraph('DEADPCT', '13'); return false;\">DEADTIME%</a></th><th class='column_header grey_graph_cell' id='timegraph9'><a href='#' onClick=\"DrawGraph('CUSTOMER', '9'); return false;\">CUSTOMER</a></th>";
+	$GRAPH="<a name='timegraph'/><table border='0' cellpadding='0' cellspacing='2' width='1000'>";
+	$GRAPH2="<tr><th class='column_header grey_graph_cell' id='timegraph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">CALLS</a></th><th class='column_header grey_graph_cell' id='timegraph2'><a href='#' onClick=\"DrawGraph('TIMECLOCK', '2'); return false;\">TIME CLOCK</a></th><th class='column_header grey_graph_cell' id='timegraph3'><a href='#' onClick=\"DrawGraph('AGENTTIME', '3'); return false;\">AGENT TIME</a></th>";
+	if ($show_parks) {
+		$GRAPH2.="<th class='column_header grey_graph_cell' id='timegraph15'><a href='#' onClick=\"DrawGraph('PARKS', '15'); return false;\">PARKS</a></th><th class='column_header grey_graph_cell' id='timegraph16'><a href='#' onClick=\"DrawGraph('PARKTIME', '16'); return false;\">PARKTIME</a></th><th class='column_header grey_graph_cell' id='timegraph17'><a href='#' onClick=\"DrawGraph('AVGPARK', '17'); return false;\">AVGPARK</a></th><th class='column_header grey_graph_cell' id='timegraph18'><a href='#' onClick=\"DrawGraph('PARKSCALL', '18'); return false;\">PARKS/CALL</a></th>";
+	}
+	$GRAPH2.="<th class='column_header grey_graph_cell' id='timegraph4'><a href='#' onClick=\"DrawGraph('WAIT', '4'); return false;\">WAIT</a></th><th class='column_header grey_graph_cell' id='timegraph14'><a href='#' onClick=\"DrawGraph('WAITPCT', '14'); return false;\">WAIT %</a></th><th class='column_header grey_graph_cell' id='timegraph5'><a href='#' onClick=\"DrawGraph('TALK', '5'); return false;\">TALK</a></th><th class='column_header grey_graph_cell' id='timegraph10'><a href='#' onClick=\"DrawGraph('TALKPCT', '10'); return false;\">TALKTIME%</a></th><th class='column_header grey_graph_cell' id='timegraph6'><a href='#' onClick=\"DrawGraph('DISPO', '6'); return false;\">DISPO</a></th><th class='column_header grey_graph_cell' id='timegraph11'><a href='#' onClick=\"DrawGraph('DISPOPCT', '11'); return false;\">DISPOTIME%</a></th><th class='column_header grey_graph_cell' id='timegraph7'><a href='#' onClick=\"DrawGraph('PAUSE', '7'); return false;\">PAUSE</a></th><th class='column_header grey_graph_cell' id='timegraph12'><a href='#' onClick=\"DrawGraph('PAUSEPCT', '12'); return false;\">PAUSETIME%</a></th><th class='column_header grey_graph_cell' id='timegraph8'><a href='#' onClick=\"DrawGraph('DEAD', '8'); return false;\">DEAD</a></th><th class='column_header grey_graph_cell' id='timegraph13'><a href='#' onClick=\"DrawGraph('DEADPCT', '13'); return false;\">DEADTIME%</a></th><th class='column_header grey_graph_cell' id='timegraph9'><a href='#' onClick=\"DrawGraph('CUSTOMER', '9'); return false;\">CUSTOMER</a></th>";
 	$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>AGENT TIME BREAKDOWN</caption><tr><th class='thgraph' scope='col'>STATUS</th>";
 	$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>CALLS </th></tr>";
 	$TIMECLOCK_graph=$graph_header."<th class='thgraph' scope='col'>TIME CLOCK</th></tr>";
@@ -434,6 +442,10 @@ else
 	$DEAD_graph=$graph_header."<th class='thgraph' scope='col'>DEAD</th></tr>";
 	$DEADPCT_graph=$graph_header."<th class='thgraph' scope='col'>DEAD TIME %</th></tr>";
 	$CUSTOMER_graph=$graph_header."<th class='thgraph' scope='col'>CUSTOMER</th></tr>";
+	$PARKS_graph=$graph_header."<th class='thgraph' scope='col'>PARKS</th></tr>";
+	$PARKTIME_graph=$graph_header."<th class='thgraph' scope='col'>PARKTIME</th></tr>";
+	$AVGPARK_graph=$graph_header."<th class='thgraph' scope='col'>AVGPARK</th></tr>";
+	$PARKSCALL_graph=$graph_header."<th class='thgraph' scope='col'>PARKSCALL</th></tr>";
 	
 	while ($i < $users_to_print)
 		{
@@ -473,9 +485,27 @@ else
 	$PCusersARY=$MT;
 	$PCuser_namesARY=$MT;
 	$user_count=0;
+
+	if ($show_parks) {
+		$park_HEADER=" PARKS    | PARK TIME  | AVG PARK   | PARKS/CALL |";
+		$park_HEADER_DIV="+----------+------------+------------+------------";
+		$park_HEADER_CSV=",PARKS,PARK TIME,AVG PARK,PARKS/CALL";
+	}
+
+	# Displays park info - need to run regardless so HTML view will populate
+	$park_array=array();
+	$park_stmt="select user, count(*), sum(parked_sec) From park_log where parked_time <= '$query_date_END' and parked_time >= '$query_date_BEGIN' $park_log_SQL";
+	if ($DB) {$ASCII_text.= "$park_stmt\n";}
+	$park_rslt=mysql_query($park_stmt, $link);
+	while ($park_row=mysql_fetch_row($park_rslt)) {
+		$park_array[$park_row[0]][0]=$park_row[1];
+		$park_array[$park_row[0]][1]=$park_row[2];
+	}
+
 	$stmt="select $userSQL,sum(pause_sec),sub_status from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 65000 $group_SQL $user_group_SQL group by user,sub_status order by user,sub_status desc limit 10000000;";
 	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
+	
+	if ($DB) {$ASCII_text.= "$stmt\n";}
 	$subs_to_print = mysql_num_rows($rslt);
 	$i=0; 
 	while ($i < $subs_to_print)
@@ -513,7 +543,7 @@ else
 	##### BEGIN Gather all agent time records and parse through them in PHP to save on DB load
 	$stmt="select $userSQL,wait_sec,talk_sec,dispo_sec,pause_sec,lead_id,status,dead_sec from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' $group_SQL $user_group_SQL limit 10000000;";
 	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
+	if ($DB) {$ASCII_text.= "$stmt\n";}
 	$rows_to_print = mysql_num_rows($rslt);
 	$i=0;
 	$j=0;
@@ -600,15 +630,15 @@ else
 	if ($file_download < 1)
 		{
 		$ASCII_text.="AGENT TIME BREAKDOWN:\n";
-		$ASCII_text.="+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
-		$ASCII_text.="| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>    | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | <a href=\"$LINKbase&stage=TIME\">AGENT TIME</a> | WAIT       | WAIT %     | TALK       | TALK TIME %| DISPO      | DISPOTIME %| PAUSE      | PAUSETIME %| DEAD       | DEAD TIME %| CUSTOMER   |   |$sub_statusesHTML\n";
-		$ASCII_text.="+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
+		$ASCII_text.="+-----------------+----------+----------+------------+------------$park_HEADER_DIV+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
+		$ASCII_text.="| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>    | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | <a href=\"$LINKbase&stage=TIME\">AGENT TIME</a> |$park_HEADER WAIT       | WAIT %     | TALK       | TALK TIME %| DISPO      | DISPOTIME %| PAUSE      | PAUSETIME %| DEAD       | DEAD TIME %| CUSTOMER   |   |$sub_statusesHTML\n";
+		$ASCII_text.="+-----------------+----------+----------+------------+------------$park_HEADER_DIV+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
 
 		
 		}
 	else
 		{
-		$file_output .= "USER,ID,CALLS,TIME CLOCK,AGENT TIME,WAIT,WAIT %,TALK,TALK TIME %,DISPO,DISPO TIME %,PAUSE,PAUSE TIME %,DEAD,DEAD TIME %,CUSTOMER$sub_statusesFILE\n";
+		$file_output .= "USER,ID,CALLS,TIME CLOCK,AGENT TIME$park_HEADER_CSV,WAIT,WAIT %,TALK,TALK TIME %,DISPO,DISPO TIME %,PAUSE,PAUSE TIME %,DEAD,DEAD TIME %,CUSTOMER$sub_statusesFILE\n";
 		}
 	##### END print the output to screen or put into file output variable
 
@@ -803,6 +833,7 @@ else
 			}
 		### END loop through each status ###
 
+
 		$Swaitpct[$m]=		sprintf("%9s", $Swaitpct[$m])."%";
 		$Stalkpct[$m]=		sprintf("%9s", $Stalkpct[$m])."%";
 		$Sdispopct[$m]=		sprintf("%9s", $Sdispopct[$m])."%";
@@ -816,6 +847,37 @@ else
 		$Scustomer[$m]=		sprintf("%10s", $Scustomer[$m]);
 		$Scalls[$m]=	sprintf("%8s", $Scalls[$m]); 
 		$Stime[$m]=		sprintf("%10s", $Stime[$m]); 
+
+		# PARK INFO
+		if ($show_parks) {
+			$user_holds=$park_array[$Suser[$m]][0]+0;
+			$total_hold_time=$park_array[$Suser[$m]][1]+0;
+			$TOTuser_holds+=$park_array[$Suser[$m]][0];
+			$TOTtotal_hold_time+=$park_array[$Suser[$m]][1];
+
+			$avg_hold_time=round($total_hold_time/$user_holds);
+			$user_hpc=sprintf("%.2f", ($user_holds/$Scalls[$m]));
+
+			$total_hold_time=sec_convert($total_hold_time,$TIME_agenttimedetail);
+			$avg_hold_time=sec_convert($avg_hold_time,$TIME_agenttimedetail);
+
+			$user_holds=	sprintf("%8s", $user_holds); 
+			$total_hold_time=	sprintf("%10s", $total_hold_time); 
+			$avg_hold_time=	sprintf("%10s", $avg_hold_time); 
+			$user_hpc=	sprintf("%10s", $user_hpc); 
+			$park_AGENT_INFO=" $user_holds | $total_hold_time | $avg_hold_time | $user_hpc |";
+			$park_AGENT_INFO_CSV="$user_holds,$total_hold_time,$avg_hold_time,$user_hpc,";
+		}
+
+		if (trim($user_holds)>$max_user_holds) {$max_user_holds=trim($user_holds);}
+		if (trim($park_array[$Suser[$m]][1]+0)>$max_total_hold_time) {$max_total_hold_time=trim($park_array[$Suser[$m]][1]+0);}
+		if (trim(round(($park_array[$Suser[$m]][1]+0)/$user_holds))>$max_avg_hold_time) {$max_avg_hold_time=trim(round(($park_array[$Suser[$m]][1]+0)/$user_holds));}
+		if (trim($user_hpc)>$max_user_hpc) {$max_user_hpc=trim($user_hpc);}
+		$graph_stats[$m][15]=trim($user_holds);
+		$graph_stats[$m][16]=trim($park_array[$Suser[$m]][1]+0);
+		$graph_stats[$m][17]=trim(round(($park_array[$Suser[$m]][1]+0)/$user_holds));
+		$graph_stats[$m][18]=trim($user_hpc);
+
 
 		if ($non_latin < 1)
 			{
@@ -835,7 +897,7 @@ else
 
 		if ($file_download < 1)
 			{
-			$Toutput = "| $Sname[$m] | <a href=\"./user_stats.php?user=$RAWuser\">$Suser[$m]</a> | $Scalls[$m] | $StimeTC[$m]$TCuserAUTOLOGOUT| $Stime[$m] | $Swait[$m] | $Swaitpct[$m] | $Stalk[$m] | $Stalkpct[$m] | $Sdispo[$m] | $Sdispopct[$m] | $Spause[$m] | $Spausepct[$m] | $Sdead[$m] | $Sdeadpct[$m] | $Scustomer[$m] |   |$SstatusesHTML\n";
+			$Toutput = "| $Sname[$m] | <a href=\"./user_stats.php?user=$RAWuser\">$Suser[$m]</a> | $Scalls[$m] | $StimeTC[$m]$TCuserAUTOLOGOUT| $Stime[$m] |$park_AGENT_INFO $Swait[$m] | $Swaitpct[$m] | $Stalk[$m] | $Stalkpct[$m] | $Sdispo[$m] | $Sdispopct[$m] | $Spause[$m] | $Spausepct[$m] | $Sdead[$m] | $Sdeadpct[$m] | $Scustomer[$m] |   |$SstatusesHTML\n";
 			$graph_stats[$m][0]=trim("$Suser[$m] - $Sname[$m]");
 #CALLS    | TIME CLOCK | AGENT TIME | WAIT       | TALK       | DISPO      | PAUSE      | DEAD       | CUSTOMER   |   |      LOGIN |      TRAIN |     TOILET |     PRECAL |      BREAK |            |      LUNCH |     LAGGED
 			}
@@ -853,7 +915,12 @@ else
 			if (strlen($RAWdead)<1) {$RAWdead='0';}
 			if (strlen($RAWdeadpct)<0) {$RAWdeadpct='0.0%';}
 			if (strlen($RAWcustomer)<1) {$RAWcustomer='0';}
-			$fileToutput = "$RAWname,$RAWuser,$RAWcalls,$RAWtimeTC,$RAWtime,$RAWwait,$RAWwaitpct %,$RAWtalk,$RAWtalkpct %,$RAWdispo,$RAWdispopct %,$RAWpause,$RAWpausepct %,$RAWdead,$RAWdeadpct %,$RAWcustomer$SstatusesFILE\n";
+			$user_holds=trim($user_holds); 
+			$total_hold_time=trim($total_hold_time); 
+			$avg_hold_time=trim($avg_hold_time); 
+			$user_hpc=trim($user_hpc); 
+
+			$fileToutput = "$RAWname,$RAWuser,$RAWcalls,$RAWtimeTC,$RAWtime,$park_AGENT_INFO_CSV$RAWwait,$RAWwaitpct %,$RAWtalk,$RAWtalkpct %,$RAWdispo,$RAWdispopct %,$RAWpause,$RAWpausepct %,$RAWdead,$RAWdeadpct %,$RAWcustomer$SstatusesFILE\n";
 			}
 
 		$TOPsorted_output[$m] = $Toutput;
@@ -998,6 +1065,19 @@ else
 	$TOTALtime = sec_convert($TOTALtime,$TIME_agenttimedetail);
 	$TOTtimeTC = sec_convert($TOTtimeTC,$TIME_agenttimedetail);
 
+	if ($show_parks) {
+		$TOTavg_hold_time=round($TOTtotal_hold_time/$TOTuser_holds);
+		$TOTuser_hpc=sprintf("%.2f", ($TOTuser_holds/$TOTcalls));
+		$TOTtotal_hold_time=sec_convert($TOTtotal_hold_time,$TIME_agenttimedetail);
+		$TOTavg_hold_time=sec_convert($TOTavg_hold_time,$TIME_agenttimedetail);
+		$hTOTuser_holds=	sprintf("%8s", $TOTuser_holds); 
+		$hTOTtotal_hold_time=	sprintf("%10s", $TOTtotal_hold_time); 
+		$hTOTavg_hold_time=	sprintf("%10s", $TOTavg_hold_time); 
+		$hTOTuser_hpc=	sprintf("%10s", $TOTuser_hpc); 
+		$park_TOTALS=" $hTOTuser_holds | $hTOTtotal_hold_time | $hTOTavg_hold_time | $hTOTuser_hpc |";
+		$park_TOTALS_CSV="$TOTuser_holds,$TOTtotal_hold_time,$TOTavg_hold_time,$TOTuser_hpc,";
+	}
+
 	$hTOTwaitpct =	sprintf("%10s", $TOTwaitpct)."%";
 	$hTOTtalkpct =	sprintf("%10s", $TOTtalkpct)."%";
 	$hTOTdispopct =	sprintf("%10s", $TOTdispopct)."%";
@@ -1018,9 +1098,9 @@ else
  
 	if ($file_download < 1)
 		{
-		$ASCII_text.="+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
-		$ASCII_text.="|  TOTALS        AGENTS:$hTOT_AGENTS | $hTOTcalls |$hTOTtimeTC |$hTOTALtime |$hTOTwait |$hTOTwaitpct |$hTOTtalk |$hTOTtalkpct |$hTOTdispo |$hTOTdispopct |$hTOTpause |$hTOTpausepct |$hTOTdead |$hTOTdeadpct |$hTOTcustomer |   |$SUMstatusesHTML\n";
-		$ASCII_text.="+-----------------+----------+----------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
+		$ASCII_text.="+-----------------+----------+----------+------------+------------$park_HEADER_DIV+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
+		$ASCII_text.="|  TOTALS        AGENTS:$hTOT_AGENTS | $hTOTcalls |$hTOTtimeTC |$hTOTALtime |$park_TOTALS$hTOTwait |$hTOTwaitpct |$hTOTtalk |$hTOTtalkpct |$hTOTdispo |$hTOTdispopct |$hTOTpause |$hTOTpausepct |$hTOTdead |$hTOTdeadpct |$hTOTcustomer |   |$SUMstatusesHTML\n";
+		$ASCII_text.="+-----------------+----------+----------+------------+------------$park_HEADER_DIV+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
 		if ($AUTOLOGOUTflag > 0)
 			{echo "     * denotes AUTOLOGOUT from timeclock\n";}
 		$ASCII_text.="\n\n</PRE>";
@@ -1034,20 +1114,24 @@ else
 
 		for ($d=0; $d<count($graph_stats); $d++) {
 			if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-			$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
-			$TIMECLOCK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][2]/$max_timeclock)."' height='16' />".sec_convert($graph_stats[$d][2], 'HF')."</td></tr>";
-			$AGENTTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][3]/$max_agenttime)."' height='16' />".sec_convert($graph_stats[$d][3], 'HF')."</td></tr>";
-			$WAIT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][4]/$max_wait)."' height='16' />".sec_convert($graph_stats[$d][4], 'HF')."</td></tr>";
-			$TALK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][5]/$max_talk)."' height='16' />".sec_convert($graph_stats[$d][5], 'HF')."</td></tr>";
-			$DISPO_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][6]/$max_dispo)."' height='16' />".sec_convert($graph_stats[$d][6], 'HF')."</td></tr>";
-			$PAUSE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][7]/$max_pause)."' height='16' />".sec_convert($graph_stats[$d][7], 'HF')."</td></tr>";
-			$DEAD_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][8]/$max_dead)."' height='16' />".sec_convert($graph_stats[$d][8], 'HF')."</td></tr>";
-			$CUSTOMER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][9]/$max_customer)."' height='16' />".sec_convert($graph_stats[$d][9], 'HF')."</td></tr>";
-			$TALKPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][10]/$max_talkpct)."' height='16' />".$graph_stats[$d][10]." %</td></tr>";
-			$DISPOPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][11]/$max_dispopct)."' height='16' />".$graph_stats[$d][11]." %</td></tr>";
-			$PAUSEPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][12]/$max_pausepct)."' height='16' />".$graph_stats[$d][12]." %</td></tr>";
-			$DEADPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][13]/$max_deadpct)."' height='16' />".$graph_stats[$d][13]." %</td></tr>";
-			$WAITPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][14]/$max_waitpct)."' height='16' />".$graph_stats[$d][14]." %</td></tr>";
+			$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+			$TIMECLOCK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][2]/$max_timeclock)."' height='16' />".sec_convert($graph_stats[$d][2], 'HF')."</td></tr>";
+			$AGENTTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][3]/$max_agenttime)."' height='16' />".sec_convert($graph_stats[$d][3], 'HF')."</td></tr>";
+			$WAIT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][4]/$max_wait)."' height='16' />".sec_convert($graph_stats[$d][4], 'HF')."</td></tr>";
+			$TALK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][5]/$max_talk)."' height='16' />".sec_convert($graph_stats[$d][5], 'HF')."</td></tr>";
+			$DISPO_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][6]/$max_dispo)."' height='16' />".sec_convert($graph_stats[$d][6], 'HF')."</td></tr>";
+			$PAUSE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][7]/$max_pause)."' height='16' />".sec_convert($graph_stats[$d][7], 'HF')."</td></tr>";
+			$DEAD_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][8]/$max_dead)."' height='16' />".sec_convert($graph_stats[$d][8], 'HF')."</td></tr>";
+			$CUSTOMER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][9]/$max_customer)."' height='16' />".sec_convert($graph_stats[$d][9], 'HF')."</td></tr>";
+			$TALKPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][10]/$max_talkpct)."' height='16' />".$graph_stats[$d][10]." %</td></tr>";
+			$DISPOPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][11]/$max_dispopct)."' height='16' />".$graph_stats[$d][11]." %</td></tr>";
+			$PAUSEPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][12]/$max_pausepct)."' height='16' />".$graph_stats[$d][12]." %</td></tr>";
+			$DEADPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][13]/$max_deadpct)."' height='16' />".$graph_stats[$d][13]." %</td></tr>";
+			$WAITPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][14]/$max_waitpct)."' height='16' />".$graph_stats[$d][14]." %</td></tr>";
+			$PARKS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][15]/$max_user_holds)."' height='16' />".$graph_stats[$d][15]."</td></tr>";
+			$PARKTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][16]/$max_total_hold_time)."' height='16' />".sec_convert($graph_stats[$d][16],'HF')."</td></tr>";
+			$AVGPARK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][17]/$max_avg_hold_time)."' height='17' />".sec_convert($graph_stats[$d][17],'HF')."</td></tr>";
+			$PARKSCALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][18]/$max_user_hpc)."' height='16' />".$graph_stats[$d][18]."</td></tr>";
 
 			for ($e=0; $e<count($sub_statusesARY); $e++) {
 				$Sstatus=$sub_statusesARY[$e];
@@ -1055,7 +1139,7 @@ else
 				$max_varname="max_".$Sstatus;
 				#$max.= "<!-- $max_varname => ".$$max_varname." //-->\n";
 			
-				$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats_sub[$d][$e]/$$max_varname)."' height='16' />".sec_convert($graph_stats_sub[$d][$e], 'HF')."</td></tr>";
+				$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats_sub[$d][$e]/$$max_varname)."' height='16' />".sec_convert($graph_stats_sub[$d][$e], 'HF')."</td></tr>";
 			}
 		}
 		$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTcalls)."</th></tr></table>";
@@ -1072,6 +1156,11 @@ else
 		$DISPOPCT_graph.="<tr><th class='thgraph' scope='col'>AVERAGE:</th><th class='thgraph' scope='col'>".trim($hTOTdispopct)."</th></tr></table>";
 		$PAUSEPCT_graph.="<tr><th class='thgraph' scope='col'>AVERAGE:</th><th class='thgraph' scope='col'>".trim($hTOTpausepct)."</th></tr></table>";
 		$DEADPCT_graph.="<tr><th class='thgraph' scope='col'>AVERAGE:</th><th class='thgraph' scope='col'>".trim($hTOTdeadpct)."</th></tr></table>";
+		$PARKS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTuser_holds)."</th></tr></table>";
+		$PARKTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTtotal_hold_time)."</th></tr></table>";
+		$AVGPARK_graph.="<tr><th class='thgraph' scope='col'>AVERAGE:</th><th class='thgraph' scope='col'>".trim($hTOTavg_hold_time)."</th></tr></table>";
+		$PARKSCALL_graph.="<tr><th class='thgraph' scope='col'>AVERAGE:</th><th class='thgraph' scope='col'>".trim($hTOTuser_hpc)."</th></tr></table>";
+
 		for ($e=0; $e<count($sub_statusesARY); $e++) {
 			$Sstatus=$sub_statusesARY[$e];
 			$total_var=$Sstatus."_total";
@@ -1095,6 +1184,10 @@ else
 		$JS_text.="	var DISPOPCT_graph=\"$DISPOPCT_graph\";\n";
 		$JS_text.="	var PAUSEPCT_graph=\"$PAUSEPCT_graph\";\n";
 		$JS_text.="	var DEADPCT_graph=\"$DEADPCT_graph\";\n";
+		$JS_text.="	var PARKS_graph=\"$PARKS_graph\";\n";
+		$JS_text.="	var PARKTIME_graph=\"$PARKTIME_graph\";\n";
+		$JS_text.="	var AVGPARK_graph=\"$AVGPARK_graph\";\n";
+		$JS_text.="	var PARKSCALL_graph=\"$PARKSCALL_graph\";\n";
 
 		for ($e=0; $e<count($sub_statusesARY); $e++) {
 			$Sstatus=$sub_statusesARY[$e];
@@ -1113,13 +1206,13 @@ else
 		$JS_text.="	document.getElementById('agent_time_detail_graph').innerHTML=graph_to_display;\n";
 		$JS_text.="}\n";
 
-		$GRAPH3="<tr><td colspan='".(14+$sub_status_count)."' class='graph_span_cell'><span id='agent_time_detail_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
+		$GRAPH3="<tr><td colspan='".(18+$sub_status_count)."' class='graph_span_cell'><span id='agent_time_detail_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
 		
 		# echo $GRAPH.$GRAPH2.$GRAPH3.$max;
 		}
 	else
 		{
-		$file_output .= "TOTALS,$TOT_AGENTS,$TOTcalls,$TOTtimeTC,$TOTALtime,$TOTwait,$TOTwaitpct %,$TOTtalk,$TOTtalkpct %,$TOTdispo,$TOTpause,$TOTdead,$TOTcustomer$SUMstatusesFILE\n";
+		$file_output .= "TOTALS,$TOT_AGENTS,$TOTcalls,$TOTtimeTC,$TOTALtime,$park_TOTALS_CSV$TOTwait,$TOTwaitpct %,$TOTtalk,$TOTtalkpct %,$TOTdispo,$TOTpause,$TOTdead,$TOTcustomer$SUMstatusesFILE\n";
 		}
 	}
 
@@ -1266,7 +1359,8 @@ echo "<option value=\"\">--</option>\n";
 echo "<option value=\"AM\">AM</option>\n";
 echo "<option value=\"PM\">PM</option>\n";
 echo "<option value=\"ALL\">ALL</option>\n";
-echo "</SELECT><BR><BR>\n";
+echo "</SELECT><BR>\n";
+echo "<input type='checkbox' name='show_parks' value='checked' $show_parks>Show parks-holds<BR>";
 echo "Display as:<BR>";
 echo "<select name='report_display_type'>";
 if ($report_display_type) {echo "<option value='$report_display_type' selected>$report_display_type</option>";}
