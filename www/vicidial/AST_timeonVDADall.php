@@ -79,10 +79,11 @@
 # 120612-2150 - Added percentages to counts for carrier stats and TOTAL line to carrier display stats as well
 # 121222-2151 - Added email status
 # 130214-1323 - Added link to in-group selected users report for in-queue inbound calls
+# 130424-1357 - Fixed issue with pause codes display
 #
 
-$version = '2.6-69';
-$build = '130214-1323';
+$version = '2.6-70';
+$build = '130424-1357';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -1497,7 +1498,7 @@ if (ereg('O',$with_inbound))
 	{
 	$multi_drop++;
 
-	$stmt="select agent_pause_codes_active from vicidial_campaigns $group_SQLwhere;";
+	$stmt="select count(*) from vicidial_campaigns where agent_pause_codes_active!='N' $group_SQLand;";
 
 	$stmtB="select sum(calls_today),sum(drops_today),sum(answers_today),max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4),sum(hold_sec_stat_one),sum(hold_sec_stat_two),sum(hold_sec_answer_calls),sum(hold_sec_drop_calls),sum(hold_sec_queue_calls) from vicidial_campaign_stats where campaign_id IN ($closer_campaignsSQL);";
 
@@ -1634,6 +1635,8 @@ else
 		$stmt="select avg(auto_dial_level),min(dial_status_a),min(dial_status_b),min(dial_status_c),min(dial_status_d),min(dial_status_e),min(lead_order),min(lead_filter_id),sum(hopper_level),min(dial_method),avg(adaptive_maximum_level),avg(adaptive_dropped_percentage),avg(adaptive_dl_diff_target),avg(adaptive_intensity),min(available_only_ratio_tally),min(adaptive_latest_server_time),min(local_call_time),avg(dial_timeout),min(dial_statuses),max(agent_pause_codes_active),max(list_order_mix),max(auto_hopper_level) from vicidial_campaigns where active='Y' $group_SQLand;";
 
 		$stmtB="select sum(dialable_leads),sum(calls_today),sum(drops_today),avg(drops_answers_today_pct),avg(differential_onemin),avg(agents_average_onemin),sum(balance_trunk_fill),sum(answers_today),max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4),sum(agent_calls_today),sum(agent_wait_today),sum(agent_custtalk_today),sum(agent_acw_today),sum(agent_pause_today) from vicidial_campaign_stats where calls_today > -1 $non_inboundSQL;";
+
+		$stmtC="select count(*) from vicidial_campaigns where agent_pause_codes_active!='N' and active='Y' $group_SQLand;";
 		}
 	else
 		{
@@ -1647,12 +1650,16 @@ else
 			$stmt="select auto_dial_level,dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,lead_filter_id,hopper_level,dial_method,adaptive_maximum_level,adaptive_dropped_percentage,adaptive_dl_diff_target,adaptive_intensity,available_only_ratio_tally,adaptive_latest_server_time,local_call_time,dial_timeout,dial_statuses,agent_pause_codes_active,list_order_mix,auto_hopper_level from vicidial_campaigns where campaign_id IN ($group_SQL,$closer_campaignsSQL);";
 
 			$stmtB="select sum(dialable_leads),sum(calls_today),sum(drops_today),avg(drops_answers_today_pct),avg(differential_onemin),avg(agents_average_onemin),sum(balance_trunk_fill),sum(answers_today),max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4),sum(agent_calls_today),sum(agent_wait_today),sum(agent_custtalk_today),sum(agent_acw_today),sum(agent_pause_today) from vicidial_campaign_stats where campaign_id IN ($group_SQL,$closer_campaignsSQL);";
+
+			$stmtC="select count(*) from vicidial_campaigns where agent_pause_codes_active!='N' and active='Y' and campaign_id IN ($group_SQL,$closer_campaignsSQL);";
 			}
 		else
 			{
 			$stmt="select avg(auto_dial_level),max(dial_status_a),max(dial_status_b),max(dial_status_c),max(dial_status_d),max(dial_status_e),max(lead_order),max(lead_filter_id),max(hopper_level),max(dial_method),max(adaptive_maximum_level),avg(adaptive_dropped_percentage),avg(adaptive_dl_diff_target),avg(adaptive_intensity),max(available_only_ratio_tally),max(adaptive_latest_server_time),max(local_call_time),max(dial_timeout),max(dial_statuses),max(agent_pause_codes_active),max(list_order_mix),max(auto_hopper_level) from vicidial_campaigns where campaign_id IN($group_SQL);";
 
 			$stmtB="select sum(dialable_leads),sum(calls_today),sum(drops_today),avg(drops_answers_today_pct),avg(differential_onemin),avg(agents_average_onemin),sum(balance_trunk_fill),sum(answers_today),max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4),sum(agent_calls_today),sum(agent_wait_today),sum(agent_custtalk_today),sum(agent_acw_today),sum(agent_pause_today) from vicidial_campaign_stats where campaign_id IN($group_SQL);";
+
+			$stmtC="select count(*) from vicidial_campaigns where agent_pause_codes_active!='N' and active='Y' and campaign_id IN($group_SQL);";
 			}
 		}
 	if ($DB > 0) {echo "\n|$stmt|$stmtB|\n";}
@@ -1678,10 +1685,12 @@ else
 	$CALLtime =		$row[16];
 	$DIALtimeout =	$row[17];
 	$DIALstatuses =	$row[18];
-	$agent_pause_codes_active = $row[19];
 	$DIALmix =		$row[20];
 	$AHOPlev =      $row[21];
 
+	$rslt=mysql_query($stmtC, $link);
+	$row=mysql_fetch_row($rslt);
+	$agent_pause_codes_active = $row[0];
 
 	$stmt="select count(*) from vicidial_hopper $group_SQLwhere;";
 	$rslt=mysql_query($stmt, $link);
@@ -2278,7 +2287,7 @@ $HTpause =	'';
 $HDigcall =			"------+------------------";
 $HTigcall =			" HOLD | IN-GROUP ";
 
-if (!ereg("N",$agent_pause_codes_active))
+if ($agent_pause_codes_active > 0)
 	{
 	$HDstatus =			"----------";
 	$HTstatus =			" STATUS   ";
@@ -2583,7 +2592,7 @@ $talking_to_print = mysql_num_rows($rslt);
 		$comments=		$Acomments[$i];
 		$calls_today =	sprintf("%-5s", $Acalls_today[$i]);
 
-		if (!ereg("N",$agent_pause_codes_active))
+		if ($agent_pause_codes_active > 0)
 			{$pausecode='       ';}
 		else
 			{$pausecode='';}
@@ -2701,7 +2710,7 @@ $talking_to_print = mysql_num_rows($rslt);
 			}
 		if ($Lstatus=='PAUSED') 
 			{
-			if (!ereg("N",$agent_pause_codes_active))
+			if ($agent_pause_codes_active > 0)
 				{
 				$twentyfour_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-24,date("i"),date("s"),date("m"),date("d"),date("Y")));
 				$stmtC="select sub_status from vicidial_agent_log where agent_log_id >= \"$Aagent_log_id[$i]\" and user='$Luser' order by agent_log_id desc limit 1;";
