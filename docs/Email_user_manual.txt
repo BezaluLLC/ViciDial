@@ -1,4 +1,4 @@
-EMAIL HANDLING DOC						2012-12-23
+EMAIL HANDLING DOC		Started: 2012-12-23	Updated: 2013-04-25
 
 (example of how to set up an email account with Gmail is at the bottom)
 
@@ -225,4 +225,24 @@ the database, then the email message is erased.  This is a limitation of the
 software that "sweeps" the email account, which is why IMAP is the preferred 
 protocol.
 
+
+NOTES:
+
+- You may need to install gcc, make and associated libraries in order for some perl modules to install properly. To do this on Vicibox or OpenSuSE you can use the software management utility in "yast".
+- If you see the following error:
+
+*******************************************************************
+Using the default of SSL_verify_mode of SSL_VERIFY_NONE for client
+is depreciated! Please set SSL_verify_mode to SSL_VERIFY_PEER
+together with SSL_ca_file|SSL_ca_path for verification.
+If you really don't want to verify the certificate and keep the
+connection open to Man-In-The-Middle attacks please set
+SSL_verify_mode explicitly to SSL_VERIFY_NONE in your application.
+*******************************************************************
+at /usr/lib/perl5/site_perl/5.12.1/Mail/IMAPClient.pm line 338
+
+go into the IMAPClient.pm file at the path above and added the following line 
+below 338 and the message should go away:
+
+SSL_verify_mode => 'SSL_VERIFY_NONE',
 
