@@ -3242,12 +3242,13 @@ else
 # 130402-2322 - Added user_group script variable
 # 130414-1924 - Added report logging and display
 # 130424-1601 - Added survey_wait_sec campaign survey option
+# 130425-0700 - Added DROP option for survey_no_response_action to go to campaign drop method
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-398a';
-$build = '130424-1601';
+$admin_version = '2.6-399a';
+$build = '130425-0700';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -5377,7 +5378,7 @@ if ($ADD==99999)
 		<BR>
 		<A NAME="vicidial_campaigns-survey_no_response_action">
 		<BR>
-		<B>Survey No-Response Action -</B> This is where you define what will happen if there is no response to the survey question. OPTIN will only send the call on to the Survey Method if the customer presses a dtmf digit. OPTOUT will send the customer on to the Survey Method even if they do not press a dtmf digit.
+		<B>Survey No-Response Action -</B> This is where you define what will happen if there is no response to the survey question. OPTIN will only send the call on to the Survey Method if the customer presses a dtmf digit. OPTOUT will send the customer on to the Survey Method even if they do not press a dtmf digit. DROP will drop the call using the campaign drop method but still log the call as a PM played message status.
 
 		<BR>
 		<A NAME="vicidial_campaigns-survey_response_digit_map">
@@ -24023,7 +24024,7 @@ if ($ADD==31)
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Opt-in Audio File: </td><td><input type=text size=50 maxlength=50 name=survey_opt_in_audio_file id=survey_opt_in_audio_file value=\"$survey_opt_in_audio_file\"> <a href=\"javascript:launch_chooser('survey_opt_in_audio_file','date',30);\">audio chooser</a> $NWB#vicidial_campaigns-survey_opt_in_audio_file$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Not Interested Audio File: </td><td><input type=text size=50 maxlength=50 name=survey_ni_audio_file id=survey_ni_audio_file value=\"$survey_ni_audio_file\"> <a href=\"javascript:launch_chooser('survey_ni_audio_file','date',30);\">audio chooser</a> $NWB#vicidial_campaigns-survey_ni_audio_file$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Method: </td><td><select size=1 name=survey_method><option>AGENT_XFER</option><option>VOICEMAIL</option><option>EXTENSION</option><option>HANGUP</option><option>CAMPREC_60_WAV</option><option>CALLMENU</option><option SELECTED>$survey_method</option></select> $NWB#vicidial_campaigns-survey_method$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B9CBFD><td align=right>Survey No-Response Action: </td><td><select size=1 name=survey_no_response_action><option>OPTIN</option><option>OPTOUT</option><option SELECTED>$survey_no_response_action</option></select> $NWB#vicidial_campaigns-survey_no_response_action$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B9CBFD><td align=right>Survey No-Response Action: </td><td><select size=1 name=survey_no_response_action><option>OPTIN</option><option>OPTOUT</option><option>DROP</option><option SELECTED>$survey_no_response_action</option></select> $NWB#vicidial_campaigns-survey_no_response_action$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Not Interested Status: </td><td><select name=survey_ni_status>$survey_ni_status_list</select> $NWB#vicidial_campaigns-survey_ni_status$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Third Digit: </td><td><input type=text size=5 maxlength=1 name=survey_third_digit id=survey_third_digit value=\"$survey_third_digit\"> $NWB#vicidial_campaigns-survey_third_digit$NWE</td></tr>\n";

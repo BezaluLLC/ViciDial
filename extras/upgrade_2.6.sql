@@ -360,3 +360,7 @@ UPDATE system_settings SET db_schema_version='1345',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD survey_wait_sec TINYINT(3) default '10';
 
 UPDATE system_settings SET db_schema_version='1346',db_schema_update_date=NOW() where db_schema_version < 1346;
+
+ALTER TABLE vicidial_campaigns MODIFY survey_no_response_action ENUM('OPTIN','OPTOUT','DROP') default 'OPTIN';
+
+UPDATE system_settings SET db_schema_version='1347',db_schema_update_date=NOW() where db_schema_version < 1347;

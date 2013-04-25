@@ -262,6 +262,16 @@ OTHER CHANGES:
 	list is available for purchase at the vicidial.org web store: 
 	http://www.vicidial.org/store.php#NANPA
 
+45. Added a NOINT flag option to the Call Menu Prompt so the playback cannot be 
+	interrupted with a key press by the caller, the NOINT should be put 
+	directly in front of the prompt filename, but should not be a part of 
+	the filename, it is a special flag for the system.
+
+45. Added Survey No Response DROP option to send no-response calls to the
+	campaign drop method and added Survey Wait Seconds to allow you to set
+	the amount of time the person called will have to respond after the 
+	survey message is played.
+
 
 
 

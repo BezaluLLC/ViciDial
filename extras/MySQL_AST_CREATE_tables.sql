@@ -738,7 +738,7 @@ survey_ni_digit VARCHAR(1) default '8',
 survey_opt_in_audio_file VARCHAR(50) default 'US_pol_survey_transfer',
 survey_ni_audio_file VARCHAR(50) default 'US_thanks_no_contact',
 survey_method ENUM('AGENT_XFER','VOICEMAIL','EXTENSION','HANGUP','CAMPREC_60_WAV','CALLMENU') default 'AGENT_XFER',
-survey_no_response_action ENUM('OPTIN','OPTOUT') default 'OPTIN',
+survey_no_response_action ENUM('OPTIN','OPTOUT','DROP') default 'OPTIN',
 survey_ni_status VARCHAR(6) default 'NI',
 survey_response_digit_map VARCHAR(255) default '1-DEMOCRAT|2-REPUBLICAN|3-INDEPENDANT|8-OPTOUT|X-NO RESPONSE|',
 survey_xfer_exten VARCHAR(20) default '8300',
@@ -3123,4 +3123,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1346',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1347',db_schema_update_date=NOW();

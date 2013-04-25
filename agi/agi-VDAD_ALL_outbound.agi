@@ -104,6 +104,7 @@
 # 130124-1853 - Issue #637 fix <karlb>
 # 130210-1013 - Added options for CALLMENU|INGROUP cpd_amd_actions
 # 130425-0049 - Added survey_wait_sec option and pre-process time logging
+# 130425-0657 - Added survey_no_response option to drop to campaign drop action
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -343,6 +344,7 @@ if ($AGILOG) {$agi_string = "AGI Variables: |$unique_id|$channel|$extension|$typ
 $VDADcampaign='';
 $VDADphone='';
 $VDADphone_code='';
+$survey_drop=0;
 
 $callerid =~ s/\"//gi;
 $callerid =~ s/ .*//gi;
@@ -1887,18 +1889,28 @@ if ($call_handle_method =~ /SURVEY/)
 			&agi_output;
 			}
 
-		$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' order by call_time desc limit 1;";
-		$affected_rows = $dbhA->do($stmtA);
-			$dbhP=$dbhA;   $mysql_count='01032';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-		if ($AGILOG) 
+		if ($survey_no_response_action !~ /DROP/)
 			{
-			$agi_string = "--    VDAD vac record deleted: |$affected_rows|$VDADcampaign|";
+			$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' order by call_time desc limit 1;";
+			$affected_rows = $dbhA->do($stmtA);
+				$dbhP=$dbhA;   $mysql_count='01032';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+			if ($AGILOG) 
+				{
+				$agi_string = "--    VDAD vac record deleted: |$affected_rows|$VDADcampaign|";
+				&agi_output;
+				}
+
+			$AGI->hangup();
+
+			exit;
+			}
+		else
+			{
+			$survey_drop++;
+			$drop_timer = (($drop_timer + $DROP_TIME) + 1);
+			$agi_string = "--    VDAD survey no-response go to campaign DROP   |$drop_timer|$DROP_TIME|";
 			&agi_output;
 			}
-
-		$AGI->hangup();
-
-		exit;
 		}
 	}
 ################################################################################
@@ -1907,8 +1919,8 @@ if ($call_handle_method =~ /SURVEY/)
 
 
 
-
-$drop_timer=0;
+if ($survey_drop < 1)
+	{$drop_timer=0;}
 $drop_seconds=0;
 $hold_message_counter=25;
 $hold_tone_counter=0;
@@ -3087,7 +3099,7 @@ while ($drop_timer <= $DROP_TIME)
 				}
 			else
 				{
-				if ($AGILOG) {$agi_string = "NNNNNNNNNN No agent record found!!!";   &agi_output;}
+				if ($AGILOG) {$agi_string = "NNNNNNNNNN No agent record found!!!   $drop_timer";   &agi_output;}
 				}
 			}
 		else
@@ -3155,6 +3167,10 @@ if ($drop_timer > $DROP_TIME)
 		$drop_seconds = $DROP_TIME;
 		}
 
+	$drop_status='DROP';
+	if ($survey_drop > 0)
+		{$drop_status='PM';}
+
 	if ($drop_action =~ /MESSAGE/)
 		{
 		$newcallerid = "\"$callerid <$VDADphone>\"";
@@ -3221,20 +3237,20 @@ if ($drop_timer > $DROP_TIME)
 			$Baffected_rows = $dbhB->do($stmtB);
 				$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01081';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
-			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='CALLSTATUS',data1='DROP',serverid='$queuemetrics_log_id';";
+			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='CALLSTATUS',data1='$drop_status',serverid='$queuemetrics_log_id';";
 			$Baffected_rows = $dbhB->do($stmtB);
 				$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01082';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
 			$dbhB->disconnect();
 			}
 
-		$stmtA = "UPDATE vicidial_log FORCE INDEX(lead_id) set status='DROP',end_epoch='$now_date_epoch',length_in_sec='$drop_seconds',term_reason='CALLMENUXFER' where lead_id = '$CIDlead_id' and uniqueid LIKE \"$Euniqueid%\";";
+		$stmtA = "UPDATE vicidial_log FORCE INDEX(lead_id) set status='$drop_status',end_epoch='$now_date_epoch',length_in_sec='$drop_seconds',term_reason='CALLMENUXFER' where lead_id = '$CIDlead_id' and uniqueid LIKE \"$Euniqueid%\";";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='01083';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		if ($AGILOG) {$agi_string = "--    VDAD vicidial_log update: |$affected_rows|$uniqueid";   &agi_output;}
 
-		$stmtA = "UPDATE vicidial_list set status='DROP' where lead_id = '$CIDlead_id';";
+		$stmtA = "UPDATE vicidial_list set status='$drop_status' where lead_id = '$CIDlead_id';";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='01084';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
@@ -3253,20 +3269,20 @@ if ($drop_timer > $DROP_TIME)
 			$Baffected_rows = $dbhB->do($stmtB);
 				$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01048';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
-			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='CALLSTATUS',data1='DROP',serverid='$queuemetrics_log_id';";
+			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$callerid',queue='$VDADcampaign',agent='NONE',verb='CALLSTATUS',data1='$drop_status',serverid='$queuemetrics_log_id';";
 			$Baffected_rows = $dbhB->do($stmtB);
 				$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='01049';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
 			$dbhB->disconnect();
 			}
 
-		$stmtA = "UPDATE vicidial_log FORCE INDEX(lead_id) set status='DROP',end_epoch='$now_date_epoch',length_in_sec='$drop_seconds',term_reason='QUEUETIMEOUT' where lead_id = '$CIDlead_id' and uniqueid LIKE \"$Euniqueid%\";";
+		$stmtA = "UPDATE vicidial_log FORCE INDEX(lead_id) set status='$drop_status',end_epoch='$now_date_epoch',length_in_sec='$drop_seconds',term_reason='QUEUETIMEOUT' where lead_id = '$CIDlead_id' and uniqueid LIKE \"$Euniqueid%\";";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='01050';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		if ($AGILOG) {$agi_string = "--    VDAD vicidial_log update: |$affected_rows|$uniqueid";   &agi_output;}
 
-		$stmtA = "UPDATE vicidial_list set status='DROP' where lead_id = '$CIDlead_id';";
+		$stmtA = "UPDATE vicidial_list set status='$drop_status' where lead_id = '$CIDlead_id';";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='01051';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
