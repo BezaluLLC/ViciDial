@@ -189,6 +189,9 @@ VICIDIAL USER ADMIN REPORT LOG||
 VICIDIAL DETAIL ADMIN REPORT LOG||
 ADMIN REPORT LOG||
 Admin Report Log Viewer||
+Survey Wait Seconds||
+This is the number of seconds when in Survey mode the system will wait for input from the person called until the survey or drop action is triggered. Is not applied if the Survey Method is HANGUP. Default is 10 seconds||
+You can add NOINT directly in front of an audio file name to make it so the playback cannot be interrupted with a key press by the caller, the NOINT should not be a part of the filename, it is a special flag for the system. You may also use special purpose .agi scripts in this field as well like the cm_date.agi script, discuss with your administrator for more details||
 
 
 ############################################################ CLIENT

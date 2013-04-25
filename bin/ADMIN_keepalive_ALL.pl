@@ -82,6 +82,7 @@
 # 130227-1605 - Added --fill-staggered option for the AST_VDauto_dialFILL script
 # 130326-1754 - Added ability to use .agi scripts as part of Call Menu Prompt
 # 130402-2148 - Changes to allow for native IAX bridging to other servers
+# 130424-1607 - Added NOINT prefix option for call menu prompts to do Playback() instead of Background()
 #
 
 $DB=0; # Debug flag
@@ -2508,7 +2509,15 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 						}
 					else
 						{
-						$menu_prompt_ext .= "exten => s,n,Background($menu_prompts_array[$w])\n";
+						if ($menu_prompts_array[$w] =~ /^NOINT/)
+							{
+							$menu_prompts_array[$w] =~ s/^NOINT//g;
+							$menu_prompt_ext .= "exten => s,n,Playback($menu_prompts_array[$w])\n";
+							}
+						else
+							{
+							$menu_prompt_ext .= "exten => s,n,Background($menu_prompts_array[$w])\n";
+							}
 						}
 					}
 				$w++;
@@ -2522,7 +2531,15 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 				}
 			else
 				{
-				$menu_prompt_ext .= "exten => s,n,Background($menu_prompt[$i])\n";
+				if ($menu_prompt[$i] =~ /^NOINT/)
+					{
+					$menu_prompt[$i] =~ s/^NOINT//g;
+					$menu_prompt_ext .= "exten => s,n,Playback($menu_prompt[$i])\n";
+					}
+				else
+					{
+					$menu_prompt_ext .= "exten => s,n,Background($menu_prompt[$i])\n";
+					}
 				}
 			}
 

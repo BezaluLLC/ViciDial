@@ -103,6 +103,7 @@
 # 130108-1806 - Changes for Asterisk 1.8 compatibility
 # 130124-1853 - Issue #637 fix <karlb>
 # 130210-1013 - Added options for CALLMENU|INGROUP cpd_amd_actions
+# 130425-0049 - Added survey_wait_sec option and pre-process time logging
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -111,6 +112,8 @@ $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=108;
 $one_mysql_log=0;
 
+use Time::HiRes ('gettimeofday','usleep','sleep');  # necessary to have perl sleep command of less than one second
+($START_s_hires, $START_usec) = gettimeofday();
 
 $DROP_TIME = 9;	### default number of seconds to wait until you drop a waiting call
 $at='@';
@@ -211,7 +214,6 @@ if (!$ERRLOGfile)	{$ERRLOGfile = "$PATHlogs/MySQLerror.$year-$mon-$mday";}
 if (!$CEPLOGfile)	{$CEPLOGfile = "$PATHlogs/Cepstral.$year-$mon-$mday";}
 
 use DBI;
-use Time::HiRes ('gettimeofday','usleep','sleep');  # necessary to have perl sleep command of less than one second
 use Asterisk::AGI;
 $AGI = new Asterisk::AGI;
 
@@ -976,7 +978,14 @@ if ($VDACaffected_rows > 0)
 		}
 	$sthA->finish();
 
-	$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,alt_dial,list_id) values('$uniqueid','$CIDlead_id','$VDADcampaign','$SQLdate','$now_date_epoch','$vdlog_status','$VDADphone_code','$VDADphone','VDAD','N','$VDADalt_dial','$xCLlist_id')";
+	($END_s_hires, $END_usec) = gettimeofday();
+	$START_time = $START_s_hires . '.' . sprintf("%06s", $START_usec);
+	$END_time = $END_s_hires . '.' . sprintf("%06s", $END_usec);
+	$RUN_time = ($END_time - $START_time);
+	$RUN_time = sprintf("%.3f", $RUN_time);
+	if ($AGILOG) {$agi_string = "Preprocess time: |$RUN_time ($END_time - $START_time)|";   &agi_output;}
+
+	$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,alt_dial,list_id,comments) values('$uniqueid','$CIDlead_id','$VDADcampaign','$SQLdate','$now_date_epoch','$vdlog_status','$VDADphone_code','$VDADphone','VDAD','N','$VDADalt_dial','$xCLlist_id','$RUN_time')";
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='01008';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
@@ -1159,7 +1168,7 @@ if ($call_handle_method =~ /SURVEY/)
 	### check to see if the SURVEY settings should be pulled from the campaign settings in the database
 	if ($call_handle_method =~ /SURVEYCAMP/)
 		{
-		$stmtA = "SELECT survey_dtmf_digits,survey_ni_digit,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,survey_third_digit,survey_third_status,survey_third_exten,survey_fourth_digit,survey_fourth_status,survey_fourth_exten,survey_menu_id FROM vicidial_campaigns where campaign_id='$VDADcampaign';";
+		$stmtA = "SELECT survey_dtmf_digits,survey_ni_digit,survey_method,survey_no_response_action,survey_ni_status,survey_response_digit_map,survey_xfer_exten,survey_camp_record_dir,survey_third_digit,survey_third_status,survey_third_exten,survey_fourth_digit,survey_fourth_status,survey_fourth_exten,survey_menu_id,survey_wait_sec FROM vicidial_campaigns where campaign_id='$VDADcampaign';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -1182,6 +1191,7 @@ if ($call_handle_method =~ /SURVEY/)
 			$survey_fourth_status =			$aryA[12];
 			$survey_fourth_exten =			$aryA[13];
 			$survey_menu_id =				$aryA[14];
+			$survey_wait_sec =				$aryA[15];
 
 			@digit_map = split(/\|/,$survey_response_digit_map);
 
@@ -1192,7 +1202,7 @@ if ($call_handle_method =~ /SURVEY/)
 
 	# play the message and let them press a number
 	$digits_to_collect = '1';
-	$opt_code = enter_pin_number($survey_first_audio_file,$survey_dtmf_digits,$survey_method);
+	$opt_code = enter_pin_number($survey_first_audio_file,$survey_dtmf_digits,$survey_method,$survey_wait_sec);
 	if (length($opt_code) < 1) {$opt_code = 'X';}
 	$opt_description = $opt_code;
 
@@ -3363,6 +3373,10 @@ sub enter_pin_number
 	$sound = $_[0];
 	$survey_dtmf_digits = $_[1];
 	$survey_method_TEMP = $_[2];
+	$survey_wait_sec = $_[3];
+	if (length($survey_wait_sec) < 1)  # 10 seconds if wait time not defined
+		{$survey_wait_sec=10;}
+	$survey_wait_msec = ($survey_wait_sec * 1000);
 
 	$digits_to_collect =~ s/DIGITID//gi;
 
@@ -3376,7 +3390,7 @@ sub enter_pin_number
 
 	$interrupt_digit = $AGI->stream_file("$sound","$survey_dtmf_digits");
 
-	if ($AGILOG) {$agi_string = "interrupt_digit |$interrupt_digit|";   &agi_output;}
+	if ($AGILOG) {$agi_string = "interrupt_digit |$interrupt_digit|   timeout |$survey_wait_sec|$survey_wait_msec|";   &agi_output;}
 
 	$digits_being_entered=1;
 	$totalDTMF='';
@@ -3393,7 +3407,7 @@ sub enter_pin_number
 		{
 		while ( ($digit_loop_counter < $digits_to_collect) )
 			{
-			$digit = chr($AGI->wait_for_digit('10000'));  # wait 10 seconds for input or until the pound key is pressed
+			$digit = chr($AGI->wait_for_digit($survey_wait_msec));  # wait X seconds for input or until the pound key is pressed
 			if ( ($digit =~ /\d/) && ($survey_dtmf_digits =~ /$digit/) )
 				{
 				$totalDTMF = "$totalDTMF$digit";
