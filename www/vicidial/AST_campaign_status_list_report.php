@@ -12,6 +12,7 @@
 # 120224-0910 - Added HTML display option with bar graphs
 # 130414-0129 - Added report logging
 # 130425-2113 - Added status flag summaries and other formatting cleanup
+# 130425-2353 - Fixed bug with subtracting unsigned columns in SQL
 #
 
 $startMS = microtime();
@@ -358,7 +359,7 @@ while($i < $group_ct)
 
 		# 			$stat_stmt="SELECT vs.status_name, count(*), sum(pause_sec), sum(wait_sec), sum(talk_sec), sum(dispo_sec), sum(dead_sec) from vicidial_agent_log val, vicidial_list vl, vicidial_statuses vs where val.event_time>='$query_date' and val.event_time<='$end_date' and val.campaign_id='$group[$i]' and val.lead_id=vl.list_id and vl.list_id='$list_id' and val.status=vs.status group by vs.status_name order by vs.status_name";
 		#$stat_stmt="SELECT val.status, count(*), sum(pause_sec), sum(wait_sec), sum(talk_sec), sum(dispo_sec), sum(dead_sec) from vicidial_agent_log val, vicidial_list vl where val.event_time>='$query_date' and val.event_time<='$end_date' and val.campaign_id='$group[$i]' and val.lead_id=vl.lead_id and vl.list_id='$list_id' group by val.status order by val.status";
-		$stat_stmt="SELECT vicidial_log.status, vicidial_log.uniqueid, vicidial_log.length_in_sec as duration, (vicidial_agent_log.talk_sec-vicidial_agent_log.dead_sec) as handle_time from vicidial_log LEFT OUTER JOIN vicidial_agent_log on vicidial_log.lead_id=vicidial_agent_log.lead_id and vicidial_log.uniqueid=vicidial_agent_log.uniqueid where vicidial_log.call_date>='$query_date' and vicidial_log.call_date<='$end_date' and vicidial_log.list_id='$list_id' UNION SELECT vicidial_closer_log.status, vicidial_closer_log.uniqueid, vicidial_closer_log.length_in_sec as duration, (vicidial_agent_log.talk_sec-vicidial_agent_log.dead_sec) as handle_time from vicidial_closer_log LEFT OUTER JOIN vicidial_agent_log on vicidial_closer_log.lead_id=vicidial_agent_log.lead_id and vicidial_closer_log.uniqueid=vicidial_agent_log.uniqueid where call_date>='$query_date' and call_date<='$end_date' and list_id='$list_id' order by status";
+		$stat_stmt="SELECT vicidial_log.status, vicidial_log.uniqueid, vicidial_log.length_in_sec as duration, cast(vicidial_agent_log.talk_sec-vicidial_agent_log.dead_sec as signed) as handle_time from vicidial_log LEFT OUTER JOIN vicidial_agent_log on vicidial_log.lead_id=vicidial_agent_log.lead_id and vicidial_log.uniqueid=vicidial_agent_log.uniqueid where vicidial_log.call_date>='$query_date' and vicidial_log.call_date<='$end_date' and vicidial_log.list_id='$list_id' UNION SELECT vicidial_closer_log.status, vicidial_closer_log.uniqueid, vicidial_closer_log.length_in_sec as duration, cast(vicidial_agent_log.talk_sec-vicidial_agent_log.dead_sec as signed) as handle_time from vicidial_closer_log LEFT OUTER JOIN vicidial_agent_log on vicidial_closer_log.lead_id=vicidial_agent_log.lead_id and vicidial_closer_log.uniqueid=vicidial_agent_log.uniqueid where call_date>='$query_date' and call_date<='$end_date' and list_id='$list_id' order by status";
 		if ($DB) {$HTML_text.="|$stat_stmt|\n";}
 		# $ASCII_text.=$stat_stmt."\n";
 		$stat_rslt=mysql_query($stat_stmt, $link);
