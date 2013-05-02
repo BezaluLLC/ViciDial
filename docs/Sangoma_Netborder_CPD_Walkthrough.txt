@@ -96,21 +96,9 @@ Congratulations! The free trial of NetBorder CPA Analysis and Vicidial are now s
 
 VICIDIAL Additional statuses for pre-Answer results:
 
-INSERT INTO vicidial_statuses values('CPDATB','CPD All-Trunks-Busy','N','N','UNDEFINED','N','N','N','N','N','N');
-INSERT INTO vicidial_statuses values('CPDB','CPD Busy','N','N','UNDEFINED','N','N','N','N','N','N');
-INSERT INTO vicidial_statuses values('CPDNA','CPD No-Answer','N','N','UNDEFINED','N','N','N','N','N','N');
-INSERT INTO vicidial_statuses values('CPDREJ','CPD Reject','N','N','UNDEFINED','N','N','N','N','N','N');
-INSERT INTO vicidial_statuses values('CPDINV','CPD Invalid-Number','N','N','UNDEFINED','N','N','N','N','N','N');
-INSERT INTO vicidial_statuses values('CPDSUA','CPD Service-Unavailable','N','N','UNDEFINED','N','N','N','N','N','N');
-INSERT INTO vicidial_statuses values('CPDSI','CPD Sit-Intercept','N','N','UNDEFINED','N','N','N','N','N','N');
-INSERT INTO vicidial_statuses values('CPDSNC','CPD Sit-No-Circuit','N','N','UNDEFINED','N','N','N','N','N','N');
-INSERT INTO vicidial_statuses values('CPDSR','CPD Sit-Reorder','N','N','UNDEFINED','N','N','N','N','N','N');
-INSERT INTO vicidial_statuses values('CPDSUK','CPD Sit-Unknown','N','N','UNDEFINED','N','N','N','N','N','N');
-INSERT INTO vicidial_statuses values('CPDSV','CPD Sit-Vacant','N','N','UNDEFINED','N','N','N','N','N','N');
-INSERT INTO vicidial_statuses values('CPDUK','CPD Unknown','N','N','UNDEFINED','N','N','N','N','N','N');
-INSERT INTO vicidial_statuses values('CPDERR','CPD Error','N','N','UNDEFINED','N','N','N','N','N','N');
+***** SEE extras/cpd_statuses.sql SQL FILE FOR THE INSERTS OF THE CPD STATUSES *****
 
-
+\. /usr/src/astguiclient/trunk/extras/cpd_statuses.sql
 
 
 
