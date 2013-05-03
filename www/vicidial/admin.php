@@ -3243,12 +3243,13 @@ else
 # 130414-1924 - Added report logging and display
 # 130424-1601 - Added survey_wait_sec campaign survey option
 # 130425-0700 - Added DROP option for survey_no_response_action to go to campaign drop method
+# 130503-1509 - Added red color to server table on reports page if asterisk out of sync
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-399a';
-$build = '130425-0700';
+$admin_version = '2.6-400a';
+$build = '130503-1509';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -35545,6 +35546,7 @@ if ($ADD==999999)
 				}
 
 			$o=0;
+			$web_u_time = date('U');
 			while ($servers_to_print > $o)
 				{
 				$cpu = (100 - $cpu_idle_percent[$o]);
@@ -35563,7 +35565,23 @@ if ($ADD==999999)
 					$k++;
 					}
 				$disk = "$disk%";
-				echo "<TR>\n";
+				$s_time='&nbsp;';
+				$s_ver='&nbsp;';
+				$u_time=$web_u_time;
+				$stmt="SELECT last_update,UNIX_TIMESTAMP(last_update) from server_updater where server_ip='$server_ip[$o]';";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$servertime_to_print = mysql_num_rows($rslt);
+				if ($servertime_to_print)
+					{
+					$row=mysql_fetch_row($rslt);
+					$s_time = $row[0];
+					$u_time = ($row[1] + 10);
+					}
+				$server_bgcolor='';
+				if ($web_u_time > $u_time)
+					{$server_bgcolor=' bgcolor=red';}
+				echo "<TR$server_bgcolor>\n";
 				echo "<TD><a href=\"$PHP_SELF?ADD=311111111111&server_id=$server_id[$o]\">$server_id[$o]</a></TD>\n";
 				echo "<TD>$server_description[$o]</TD>\n";
 				echo "<TD>$server_ip[$o]</TD>\n";
@@ -35573,17 +35591,6 @@ if ($ADD==999999)
 				echo "<TD ALIGN=RIGHT>$disk</TD>\n";
 				if ($stage == 'TIME')
 					{
-					$s_time='&nbsp;';
-					$s_ver='&nbsp;';
-					$stmt="SELECT last_update from server_updater where server_ip='$server_ip[$o]';";
-					$rslt=mysql_query($stmt, $link);
-					if ($DB) {echo "$stmt\n";}
-					$servertime_to_print = mysql_num_rows($rslt);
-					if ($servertime_to_print)
-						{
-						$row=mysql_fetch_row($rslt);
-						$s_time = $row[0];
-						}
 					$stmt="SELECT svn_revision from servers where server_ip='$server_ip[$o]';";
 					$rslt=mysql_query($stmt, $link);
 					if ($DB) {echo "$stmt\n";}

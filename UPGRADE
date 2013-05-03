@@ -272,6 +272,10 @@ OTHER CHANGES:
 	the amount of time the person called will have to respond after the 
 	survey message is played.
 
+46. Added AST_timecheck.pl script to check for Asterisk update sync issues. Also
+	added red indicator on Reports page servers table if server falls out of 
+	sync.
+
 
 
 
