@@ -1,7 +1,7 @@
 <?php
 # admin_lists_custom.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen manages the custom lists fields in ViciDial
 #
@@ -24,10 +24,11 @@
 # 120223-2315 - Removed logging of good login passwords if webroot writable is enabled
 # 120713-2101 - Added extended_vl_fields option
 # 120907-1209 - Raised extended fields up to 99
+# 130508-1020 - Added default field and length check validation, made errors appear in bold red text
 #
 
-$admin_version = '2.4-18';
-$build = '120907-1209';
+$admin_version = '2.6-19';
+$build = '130508-1020';
 
 
 require("dbconnect.php");
@@ -390,7 +391,7 @@ if ( ($LOGcustom_fields_modify < 1) or ($LOGuser_level < 8) )
 
 if ($SScustom_fields_enabled < 1)
 	{
-	echo "ERROR: Custom Fields are not active on this system\n";
+	echo "<B><font color=red>ERROR: Custom Fields are not active on this system</B></font>\n";
 	exit;
 	}
 
@@ -456,7 +457,7 @@ if ($action == "COPY_FIELDS_FORM")
 if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id > 99) and (strlen($copy_option) > 2) )
 	{
 	if ($list_id=="$source_list_id")
-		{echo "ERROR: You cannot copy fields to the same list: $list_id|$source_list_id";}
+		{echo "<B><font color=red>ERROR: You cannot copy fields to the same list: $list_id|$source_list_id</B></font>\n<BR>";}
 	else
 		{
 		$table_exists=0;
@@ -492,7 +493,7 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 		if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
 		
 		if ($source_field_exists < 1)
-			{echo "ERROR: Source list has no custom fields\n<BR>";}
+			{echo "<B><font color=red>ERROR: Source list has no custom fields</B></font>\n<BR>";}
 		else
 			{
 			##### REPLACE option #####
@@ -596,7 +597,7 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 				{
 				if ($DB > 0) {echo "Starting UPDATE copy\n<BR>";}
 				if ($table_exists < 1)
-					{echo "ERROR: Table does not exist custom_$list_id\n<BR>";}
+					{echo "<B><font color=red>ERROR: Table does not exist custom_$list_id</B></font>\n<BR>";}
 				else
 					{
 					$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$source_list_id' order by field_rank,field_order,field_label;";
@@ -680,11 +681,11 @@ if ( ($action == "DELETE_CUSTOM_FIELD_CONFIRMATION") and ($list_id > 99) and ($f
 	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
 	
 	if ($field_exists < 1)
-		{echo "ERROR: Field does not exist\n<BR>";}
+		{echo "<B><font color=red>ERROR: Field does not exist</B></font>\n<BR>";}
 	else
 		{
 		if ($table_exists < 1)
-			{echo "ERROR: Table does not exist custom_$list_id\n<BR>";}
+			{echo "<B><font color=red>ERROR: Table does not exist custom_$list_id</B></font>\n<BR>";}
 		else
 			{
 			echo "<BR><BR><B><a href=\"$PHP_SELF?action=DELETE_CUSTOM_FIELD&list_id=$list_id&field_id=$field_id&field_label=$field_label&ConFiRm=YES&DB=$DB\">CLICK HERE TO CONFIRM DELETION OF THIS CUSTOM FIELD: $field_label - $field_id - $list_id</a></B><BR><BR>";
@@ -725,11 +726,11 @@ if ( ($action == "DELETE_CUSTOM_FIELD") and ($list_id > 99) and ($field_id > 0) 
 	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
 	
 	if ($field_exists < 1)
-		{echo "ERROR: Field does not exist\n<BR>";}
+		{echo "<B><font color=red>ERROR: Field does not exist</B></font>\n<BR>";}
 	else
 		{
 		if ($table_exists < 1)
-			{echo "ERROR: Table does not exist custom_$list_id\n<BR>";}
+			{echo "<B><font color=red>ERROR: Table does not exist custom_$list_id</B></font>\n<BR>";}
 		else
 			{
 			### delete field function
@@ -761,59 +762,64 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 		}
 	
 	if ( (strlen($field_label)<1) or (strlen($field_name)<2) or (strlen($field_size)<1) )
-		{echo "ERROR: You must enter a field label, field name and field size - $list_id|$field_label|$field_name|$field_size\n<BR>";}
+		{echo "<B><font color=red>ERROR: You must enter a field label, field name and field size - $list_id|$field_label|$field_name|$field_size</B></font>\n<BR>";}
 	else
 		{
-		if (preg_match("/\|$field_label\|/i",$mysql_reserved_words))
-			{echo "ERROR: You cannot use reserved words for field labels - $list_id|$field_label|$field_name|$field_size\n<BR>";}
+		if ( ( ($field_type=='TEXT') or ($field_type=='READONLY') or ($field_type=='HIDDEN') ) and ($field_max < strlen($field_default)) )
+			{echo "<B><font color=red>ERROR: Default value cannot be longer than maximum field length - $list_id|$field_label|$field_name|$field_max|$field_default|</B></font>\n<BR>";}
 		else
 			{
-			$TEST_valid_options=0;
-			if ( ($field_type=='SELECT') or ($field_type=='MULTI') or ($field_type=='RADIO') or ($field_type=='CHECKBOX') )
-				{
-				$TESTfield_options_array = explode("\n",$field_options);
-				$TESTfield_options_count = count($TESTfield_options_array);
-				$te=0;
-				while ($te < $TESTfield_options_count)
-					{
-					if (preg_match("/,/",$TESTfield_options_array[$te]))
-						{
-						$TESTfield_options_value_array = explode(",",$TESTfield_options_array[$te]);
-						if ( (strlen($TESTfield_options_value_array[0]) > 0) and (strlen($TESTfield_options_value_array[1]) > 0) )
-							{$TEST_valid_options++;}
-						}
-					$te++;
-					}
-				$field_options_ENUM = preg_replace("/.$/",'',$field_options_ENUM);
-				}
-
-			if ( ( ($field_type=='SELECT') or ($field_type=='MULTI') or ($field_type=='RADIO') or ($field_type=='CHECKBOX') ) and ( (!preg_match("/,/",$field_options)) or (!preg_match("/\n/",$field_options)) or (strlen($field_options)<6) or ($TEST_valid_options < 1) ) )
-				{echo "ERROR: You must enter field options when adding a SELECT, MULTI, RADIO or CHECKBOX field type  - $list_id|$field_label|$field_type|$field_options\n<BR>";}
+			if (preg_match("/\|$field_label\|/i",$mysql_reserved_words))
+				{echo "<B><font color=red>ERROR: You cannot use reserved words for field labels - $list_id|$field_label|$field_name|$field_size</B></font>\n<BR>";}
 			else
 				{
-				if ($field_exists > 0)
-					{echo "ERROR: Field already exists for this list - $list_id|$field_label\n<BR>";}
+				$TEST_valid_options=0;
+				if ( ($field_type=='SELECT') or ($field_type=='MULTI') or ($field_type=='RADIO') or ($field_type=='CHECKBOX') )
+					{
+					$TESTfield_options_array = explode("\n",$field_options);
+					$TESTfield_options_count = count($TESTfield_options_array);
+					$te=0;
+					while ($te < $TESTfield_options_count)
+						{
+						if (preg_match("/,/",$TESTfield_options_array[$te]))
+							{
+							$TESTfield_options_value_array = explode(",",$TESTfield_options_array[$te]);
+							if ( (strlen($TESTfield_options_value_array[0]) > 0) and (strlen($TESTfield_options_value_array[1]) > 0) )
+								{$TEST_valid_options++;}
+							}
+						$te++;
+						}
+					$field_options_ENUM = preg_replace("/.$/",'',$field_options_ENUM);
+					}
+
+				if ( ( ($field_type=='SELECT') or ($field_type=='MULTI') or ($field_type=='RADIO') or ($field_type=='CHECKBOX') ) and ( (!preg_match("/,/",$field_options)) or (!preg_match("/\n/",$field_options)) or (strlen($field_options)<6) or ($TEST_valid_options < 1) ) )
+					{echo "<B><font color=red>ERROR: You must enter field options when adding a SELECT, MULTI, RADIO or CHECKBOX field type  - $list_id|$field_label|$field_type|$field_options</B></font>\n<BR>";}
 				else
 					{
-					$table_exists=0;
-					$linkCUSTOM=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
-					if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysql_error());}
-					mysql_select_db("$VARDB_database", $linkCUSTOM);
+					if ($field_exists > 0)
+						{echo "<B><font color=red>ERROR: Field already exists for this list - $list_id|$field_label</B></font>\n<BR>";}
+					else
+						{
+						$table_exists=0;
+						$linkCUSTOM=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
+						if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysql_error());}
+						mysql_select_db("$VARDB_database", $linkCUSTOM);
 
-					$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
-					$rslt=mysql_query($stmt, $link);
-					$tablecount_to_print = mysql_num_rows($rslt);
-					if ($tablecount_to_print > 0) 
-						{$table_exists =	1;}
-					if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
-				
-					if (preg_match("/\|$field_label\|/i",$vicidial_list_fields))
-						{$field_label = strtolower($field_label);}
+						$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
+						$rslt=mysql_query($stmt, $link);
+						$tablecount_to_print = mysql_num_rows($rslt);
+						if ($tablecount_to_print > 0) 
+							{$table_exists =	1;}
+						if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
+					
+						if (preg_match("/\|$field_label\|/i",$vicidial_list_fields))
+							{$field_label = strtolower($field_label);}
 
-					### add field function
-					add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields,$mysql_reserved_words);
+						### add field function
+						add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields,$mysql_reserved_words);
 
-					echo "SUCCESS: Custom Field Added - $list_id|$field_label\n<BR>";
+						echo "SUCCESS: Custom Field Added - $list_id|$field_label\n<BR>";
+						}
 					}
 				}
 			}
@@ -852,40 +858,45 @@ if ( ($action == "MODIFY_CUSTOM_FIELD_SUBMIT") and ($list_id > 99) and ($field_i
 	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
 
 	if ($field_exists < 1)
-		{echo "ERROR: Field does not exist\n<BR>";}
+		{echo "<B><font color=red>ERROR: Field does not exist</B></font>\n<BR>";}
 	else
 		{
 		if ($table_exists < 1)
-			{echo "ERROR: Table does not exist\n<BR>";}
+			{echo "<B><font color=red>ERROR: Table does not exist</B></font>\n<BR>";}
 		else
 			{
-			$TEST_valid_options=0;
-			if ( ($field_type=='SELECT') or ($field_type=='MULTI') or ($field_type=='RADIO') or ($field_type=='CHECKBOX') )
-				{
-				$TESTfield_options_array = explode("\n",$field_options);
-				$TESTfield_options_count = count($TESTfield_options_array);
-				$te=0;
-				while ($te < $TESTfield_options_count)
-					{
-					if (preg_match("/,/",$TESTfield_options_array[$te]))
-						{
-						$TESTfield_options_value_array = explode(",",$TESTfield_options_array[$te]);
-						if ( (strlen($TESTfield_options_value_array[0]) > 0) and (strlen($TESTfield_options_value_array[1]) > 0) )
-							{$TEST_valid_options++;}
-						}
-					$te++;
-					}
-				$field_options_ENUM = preg_replace("/.$/",'',$field_options_ENUM);
-				}
-
-			if ( ( ($field_type=='SELECT') or ($field_type=='MULTI') or ($field_type=='RADIO') or ($field_type=='CHECKBOX') ) and ( (!preg_match("/,/",$field_options)) or (!preg_match("/\n/",$field_options)) or (strlen($field_options)<6) or ($TEST_valid_options < 1) ) )
-				{echo "ERROR: You must enter field options when updating a SELECT, MULTI, RADIO or CHECKBOX field type  - $list_id|$field_label|$field_type|$field_options\n<BR>";}
+			if ( ( ($field_type=='TEXT') or ($field_type=='READONLY') or ($field_type=='HIDDEN') ) and ($field_max < strlen($field_default)) )
+				{echo "<B><font color=red>ERROR: Default value cannot be longer than maximum field length - $list_id|$field_label|$field_name|$field_max|$field_default|</B></font>\n<BR>";}
 			else
 				{
-				### modify field function
-				modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields);
+				$TEST_valid_options=0;
+				if ( ($field_type=='SELECT') or ($field_type=='MULTI') or ($field_type=='RADIO') or ($field_type=='CHECKBOX') )
+					{
+					$TESTfield_options_array = explode("\n",$field_options);
+					$TESTfield_options_count = count($TESTfield_options_array);
+					$te=0;
+					while ($te < $TESTfield_options_count)
+						{
+						if (preg_match("/,/",$TESTfield_options_array[$te]))
+							{
+							$TESTfield_options_value_array = explode(",",$TESTfield_options_array[$te]);
+							if ( (strlen($TESTfield_options_value_array[0]) > 0) and (strlen($TESTfield_options_value_array[1]) > 0) )
+								{$TEST_valid_options++;}
+							}
+						$te++;
+						}
+					$field_options_ENUM = preg_replace("/.$/",'',$field_options_ENUM);
+					}
 
-				echo "SUCCESS: Custom Field Modified - $list_id|$field_label\n<BR>";
+				if ( ( ($field_type=='SELECT') or ($field_type=='MULTI') or ($field_type=='RADIO') or ($field_type=='CHECKBOX') ) and ( (!preg_match("/,/",$field_options)) or (!preg_match("/\n/",$field_options)) or (strlen($field_options)<6) or ($TEST_valid_options < 1) ) )
+					{echo "<B><font color=red>ERROR: You must enter field options when updating a SELECT, MULTI, RADIO or CHECKBOX field type  - $list_id|$field_label|$field_type|$field_options</B></font>\n<BR>";}
+				else
+					{
+					### modify field function
+					modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields);
+
+					echo "SUCCESS: Custom Field Modified - $list_id|$field_label\n<BR>";
+					}
 				}
 			}
 		}
