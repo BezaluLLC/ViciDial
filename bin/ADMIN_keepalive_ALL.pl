@@ -83,6 +83,7 @@
 # 130326-1754 - Added ability to use .agi scripts as part of Call Menu Prompt
 # 130402-2148 - Changes to allow for native IAX bridging to other servers
 # 130424-1607 - Added NOINT prefix option for call menu prompts to do Playback() instead of Background()
+# 130508-1009 - Small fix for INVALID_2ND and 3RD
 #
 
 $DB=0; # Debug flag
@@ -2337,14 +2338,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 						$menu_invalid_prompt_ext .= "exten => i,$PRI,Set(INVCOUNT=\$[\$\{INVCOUNT\} + 1]) \n";   $PRI++;
 						$menu_invalid_prompt_ext .= "exten => i,$PRI,NoOp(\$\{INVCOUNT\}) \n";   $PRI++;
 						$menu_invalid_prompt_ext .= "exten => i,$PRI,Gotoif(\$[0\$\{INVCOUNT\} < 2]?" . $menu_id[$i] . ",s,4) \n";   $PRI++;
-						$menu_invalid_prompt_ext .= "exten => i,$PRI,Hangup()\n";   $PRI++;
+					#	$menu_invalid_prompt_ext .= "exten => i,$PRI,Hangup()\n";   $PRI++;
 						}
 					if ( ($option_value[$j] =~ /INVALID_3RD/) && ($cm_invalid_set < 1) )
 						{
 						$menu_invalid_prompt_ext .= "exten => i,$PRI,Set(INVCOUNT=\$[\$\{INVCOUNT\} + 1]) \n";   $PRI++;
 						$menu_invalid_prompt_ext .= "exten => i,$PRI,NoOp(\${INVCOUNT}) \n";   $PRI++;
 						$menu_invalid_prompt_ext .= "exten => i,$PRI,Gotoif(\$[0\$\{INVCOUNT\} < 3]?" . $menu_id[$i] . ",s,4) \n";   $PRI++;
-						$menu_invalid_prompt_ext .= "exten => i,$PRI,Hangup()\n";   $PRI++;
+					#	$menu_invalid_prompt_ext .= "exten => i,$PRI,Hangup()\n";   $PRI++;
 						}
 
 					$call_menu_line .= "$menu_invalid_prompt_ext";
