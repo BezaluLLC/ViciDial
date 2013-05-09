@@ -28,6 +28,8 @@ agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
 agc|phone_only.php|0
+agc|vdc_email_display.php|0
+agc|audit_comments.php|0
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"ΙΑΝ"|
@@ -322,7 +324,7 @@ Dial Override|Αγνόησε Κλήση|
 digits only please|παρακαλώ μόνο ψηφία|
 Dial Now|Κάλεσε Τώρα|
 CB Comments|Σχόλια CB|
-Title|Τίτλος|
+ Title| Τίτλος|
  STATUS| ΚΑΤΑΣΤΑΣΗ|
  RESET| ΕΠΑΝΑΦΟΡΑ|
 CLEAR FORM|ΕΠΑΝΑΦΟΡΑ|
@@ -331,10 +333,9 @@ Incoming|Εισερχόμενο|
 Calling|Σε Κλήση|
 Called|Αποκαλούμενος|
 Campaign|Εκστρατεία|
-Status|Κατάσταση|
+>Status|>Κατάσταση|
 Inserted|Εισαγωγή |
  seconds| δευτερόλεπτα|
-HELP|ΒΟΗΘΕΙΑ|
  Login | Σύνδεση |
 Login:|Σύνδεση:|
 User |Χρήστης |
@@ -345,7 +346,6 @@ Server|Κεντρικός υπολογιστής|
 RECORD |ΕΓΓΡΑΦΗ |
 >HANGUP|>ΚΛΕΙΣΙΜΟ|
 >XFER|>XFER|
-PARK|ΣΤΑΘΜΕΥΣΗ|
 IN-NUMBER|ΣΕ-ΑΡΙΘΜΟ|
 NUMBER|ΑΡΙΘΜΟΣ|
 CALLERID|CALLERID|
@@ -354,16 +354,15 @@ PICKUP|ΕΠΑΝΑΛΕΙΨΗ|
 CONFERENCE|ΣΥΝΔΙΑΣΚΕΨΗ|
 Refresh|Ανανέωση|
 Send DTMF|Στείλε DTMF|
-ORDER|ΤΑΞΙΝ|
+>ORDER|>ΤΑΞΙΝ|
  on | στο |
 >LOGOUT|>ΑΠΟΣΥΝΔΕΣΗ|
  Channel| Κανάλι|
 Extensions|Τηλ.συνδέσεις|
 Conferences|Διασκέψεις|
 Conference|Διάσκεψη|
-Recording|Καταγραφή|
-Record|Εγγραφή|
-Welcome|Χρήστης|
+ Recording| Καταγραφή|
+Welcome |Χρήστης |
 VOICEMAIL|ΦΩΝ.ΤΑΧ.|
  NEW| ΝΕΟ|
  OLD| ΠΑΛΑΙΟ|
@@ -374,21 +373,21 @@ Slower|Πιό αργά|
 Initializing|Αρχή|
 Invalid|Ακυρο|
 Username|Όνομα χρήστη|
-Notes|Σημειώσεις|
+Notes:|Σημειώσεις:|
 First|Πρώτο|
 MI: |Μσ:|
-Last|Επίθετο|
+Last |Επίθετο |
 Address|Διεύθυνση|
 City|Πόλη|
-State|Κράτος|
+ State| Κράτος|
 PostCode|Ταχ.Κωδ.|
 Province|Επαρχία|
 Vendor ID|ID προμηθευτού|
 DialCode|Κωδικός Κλήσης|
 Alt. Phone|Εναλ/κό Τηλ|
 Show|Παρουσίαση|
-Email|Ηλεκτρονικό ταχυδρομείο|
-Comments|Σχόλια|
+ Email| Ηλεκτρονικό ταχυδρομείο|
+ Comments| Σχόλια|
 REFRESH|ΑΝΑΝΕΩΣΗ|
 ALT PHONE DIAL|ΚΛΗΣΗ ENAΛ/ΚΟΥ ΤΗΛΕΦΩΝΟΥ|
 MAIN PHONE|ΚΥΡΙΟ ΤΗΛΕΦΩΝΟ|
@@ -563,3 +562,79 @@ Agents View|Δείτε πράκτορες|
 -INCALL|-Incall|
 -PAUSED|-ΠΑΥΣΗ|
 CALL DISPOSITION|ΠΡΟΣΚΛΗΣΗ διάθεση|
+### START translations for 2.6 release ###
+Click Here to Choose a Dial In-Group|κάντε κλικ εδώ για να επιλέξετε μια σύνδεση μέσω τηλεφώνου στην ομάδα|
+SELECT A DIAL IN-GROUP|επιλέξτε μια κλήση στην ομάδα|
+DIAL IN-GROUP|καλέσουν ομάδα|
+Dial In-Group|καλέσουν ομάδα|
+Click Here to Activate|κάντε κλικ εδώ για να ενεργοποιήσετε|
+Click Here to Deactivate|κάντε κλικ εδώ για να απενεργοποιήσετε|
+ERROR: You must enter in search terms, one of these must be populated: lead ID, vendor ID, phone number, last name|error: θα πρέπει να εισάγετε όρους αναζήτησης, ένα από αυτά πρέπει να είναι πυκνοκατοικημένη: μόλυβδος id, id πωλητή, τον αριθμό τηλεφώνου, το επώνυμο|
+ERROR: You must enter in search terms, one of these must be populated: office number, last name, first name|error: θα πρέπει να εισάγετε όρους αναζήτησης, μία από αυτές θα πρέπει να συμπληρωθεί: αριθμός του γραφείου, το επώνυμο, το όνομα|
+ERROR: There was a problem with your search terms|error: υπήρχε ένα πρόβλημα με δικούς σας όρους αναζήτησης|
+Phone and Post Code Time Zone Mismatch|τηλεφώνου και μετά του χρόνου κωδικό αναντιστοιχία ζώνη|
+Last Local Call Time|τελευταία τοπική ώρα κλήσης|
+Called Count|αριθμό των κλήσεων|
+Unidentified Hangup Cause Code|αγνώστων κωδικό αιτία ανωμαλίας|
+YOU MUST SELECT AN AGENT TO TRANSFER TO WHEN USING AGENTDIRECT|θα πρέπει να επιλέξετε έναν πράκτορα να μεταφέρει κατά τη χρήση agentdirect|
+Another live agent session was open using your user ID. It has been disabled. Click OK to continue to the agent screen|μια άλλη ζωντανή συνεδρία παράγοντα που χρησιμοποιούν ανοικτού όνομα χρήστη σας. έχει απενεργοποιηθεί. κάντε κλικ στο κουμπί OK για να συνεχίσετε στην οθόνη παράγοντα|
+View Comment History|δείτε το ιστορικό σχόλιο|
+reset form|επαναφέρετε μορφή|
+SELECT THIS LEAD|επιλέξτε αυτό το προβάδισμα|
+YOU MUST BE ON AN ACTIVE INBOUND CALL TO SEARCH FOR A LEAD|θα πρέπει να είναι σε μια ενεργή εισερχόμενη κλήση για να αναζητήσετε ένα προβάδισμα|
+Attachments|συνημμένα|
+Next Call Pause|επόμενη παύση κλήσης|
+-History-|-history-|
+SUBMIT SEARCH|υποβολή αναζήτησης|
+close |κοντά |
+AGENT CALL LOG|παράγοντα καταγραφής κλήσεων|
+ LENGTH | μήκος |
+ PHONE | τηλέφωνο |
+ FULL NAME | ονοματεπώνυμο |
+ CAMPAIGN | εκστρατεία |
+ ALT | αναπληρωματικό |
+ HANGUP | ανωμαλίας |
+ INFO | info |
+phone login|Σύνδεση τηλεφώνου|
+LAST CALL|τελευταία κλήση|
+ CALLBACK | επανάκλησης |
+ CITY | πόλη |
+ STATE | κατάσταση |
+ ZIP | zip |
+Phone Number|αριθμός τηλεφώνου|
+Phone Number Fields|πεδία αριθμού τηλεφώνου|
+Lead ID|οδηγήσει id|
+ WAIT | περιμένετε |
+ AGENT | πράκτορας |
+ CALL GROUP | καλέστε την ομάδα |
+ TYPE | τύπος |
+digits only|μόνο ψηφία|
+DIAL ALERT|dial ειδοποιεί|
+WEB FORM SUBMIT|ιστοσελίδα μορφή υποβάλλει|
+in campaign|στην εκστρατεία|
+ DATE\/TIME | Ημερομηνία\/ώρα |
+ IN\/OUT | μέσα και έξω |
+>GROUPS<|>ΟΜΆΔΕΣ<|
+>GO<|>πάμε<|
+>recording<|>σημειώνοντας<|
+>SELECT<|>επιλέξτε<|
+Alert is ON|συναγερμού είναι|
+Alert is OFF|ειδοποίηση είναι απενεργοποιημένη|
+EMAIL LOG FOR THIS LEAD|log email για αυτό το προβάδισμα|
+EMAIL TO|email στο|
+ ATTACHMENTS | συνημμένα |
+Called Since Last Reset|ζήτησε από τον τελευταίο μηδενισμό|
+Timezone:|Χρονική ζώνη:|
+Dial Link|dial link|
+ LAST | τελευταίος |
+SEARCH FOR A CONTACT|αναζητήσετε μια επαφή|
+Notes: when doing a search for a contact, wildcard or partial search terms are not allowed|Σημειώσεις: Όταν κάνετε μια αναζήτηση για μια επαφή, δεν επιτρέπεται μπαλαντέρ ή μερική όρους αναζήτησης|
+Contact search requests are all logged in the system|Τα αιτήματα αναζήτησης επαφών όλοι συνδεδεμένοι στο σύστημα|
+Office Number|αριθμός γραφείων|
+First Name|όνομα|
+Last Name|επώνυμο|
+BU Name|εμπορική επωνυμία|
+Department:|Τμήμα:|
+Group Name|το όνομα της ομάδας|
+Job Title|τίτλος θέσης εργασίας|
+Location:|τοποθεσία:|

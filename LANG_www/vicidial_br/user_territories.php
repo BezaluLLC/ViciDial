@@ -302,11 +302,11 @@ $colspan='3';
 <TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; <a href="<?php echo "$PHP_SELF" ?>">Lista de territorios</a></TD>
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; <a href="<?php echo "$PHP_SELF" ?>?action=ADD_TERRITORY">Añadir Territorio</a></TD>
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; <a href="<?php echo "$PHP_SELF" ?>?action=ADD_USER_TERRITORY">Añadir usuario Territorio</a></TD>
-<?
+<?php
 if ($enable_vtiger_integration > 0)
 	{ ?>
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; <a href="<?php echo "$PHP_SELF" ?>?action=CHANGE_TERRITORY_OWNER">Change Vtiger Territorio Owner</a></TD>
-<?
+<?php
 	$colspan='4';
 	} ?>
 

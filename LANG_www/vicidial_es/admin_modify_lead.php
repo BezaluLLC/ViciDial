@@ -1,5 +1,5 @@
 <?php
-# admin_modify_lead.php   version 2.4
+# admin_modify_lead.php   version 2.6
 # 
 # ViciDial database administration modify lead in vicidial_list
 # admin_modify_lead.php
@@ -8,7 +8,7 @@
 # just needs to enter the leadID and then they can view and modify the 
 # information in the record for that lead
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -46,6 +46,12 @@
 # 110525-1827 - Added ivr log records display
 # 111103-1533 - Added admin_hide_phone_data and admin_hide_lead_data options
 # 120223-2249 - Removed logging of good login passwords if webroot writable is enabled
+# 120518-1004 - Fix for multi-line comments
+# 120529-1635 - Added User Group Campaign-Lists validation
+# 121116-1411 - Added QC functionality
+# 121130-1033 - Changed scheduled callback user ID field to be 20 characters, issue #467
+# 121222-2145 - Added email log
+# 130123-1940 - Added options.php option to allow display of non-selectable statuses
 #
 
 require("dbconnect.php");
@@ -163,9 +169,19 @@ $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 
+$nonselectable_statuses=0;
+if (file_exists('options.php'))
+	{
+	require('options.php');
+	}
+$selectableSQL = "where selectable='Y'";
+$selectableSQLand = "and selectable='Y'";
+if ($nonselectable_statuses > 0) 
+	{$selectableSQL='';   $selectableSQLand='';}
+
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,custom_fields_enabled,webroot_writable FROM system_settings;";
+$stmt = "SELECT use_non_latin,custom_fields_enabled,webroot_writable,allow_emails FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -175,6 +191,7 @@ if ($qm_conf_ct > 0)
 	$non_latin =				$row[0];
 	$custom_fields_enabled =	$row[1];
 	$webroot_writable =			$row[2];
+	$allow_emails =			$row[3];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -221,13 +238,15 @@ else
 	{
 	if($auth>0)
 		{
-		$stmt="SELECT full_name,modify_leads,admin_hide_lead_data,admin_hide_phone_data from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+		$stmt="SELECT full_name,modify_leads,admin_hide_lead_data,admin_hide_phone_data,user_group,user_level from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$LOGfullname =				$row[0];
 		$LOGmodify_leads =			$row[1];
 		$LOGadmin_hide_lead_data =	$row[2];
 		$LOGadmin_hide_phone_data =	$row[3];
+		$LOGuser_group =			$row[4];
+		$LOGuser_level =			$row[5];
 
 		if ($webroot_writable > 0)
 			{
@@ -243,6 +262,36 @@ else
 			fclose($fp);
 			}
 		}
+	}
+
+$LOGallowed_listsSQL='';
+$stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {$HTML_text.="|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns =			$row[0];
+
+if (!eregi("-ALL",$LOGallowed_campaigns))
+	{
+	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+
+	$stmt="SELECT list_id from vicidial_lists $whereLOGallowed_campaignsSQL;";
+	$rslt=mysql_query($stmt, $link);
+	$lists_to_print = mysql_num_rows($rslt);
+	$o=0;
+	while ($lists_to_print > $o) 
+		{
+		$rowx=mysql_fetch_row($rslt);
+		$camp_lists .= "'$rowx[0]',";
+		$o++;
+		}
+	$camp_lists = eregi_replace(".$","",$camp_lists);
+	if (strlen($camp_lists)<2) {$camp_lists="''";}
+	$LOGallowed_listsSQL = "and list_id IN($camp_lists)";
+	$whereLOGallowed_listsSQL = "where list_id IN($camp_lists)";
 	}
 
 $label_title =				'Title';
@@ -324,6 +373,8 @@ echo "<a href=\"./admin.php?ADD=100\">ADMINISTRATION</a>: Registro del Lead modi
 
 if ($lead_id == 'NEW')
 	{
+	$comments = preg_replace("/\n/",'!N',$comments);
+	$comments = preg_replace("/\r/",'',$comments);
 	$stmt="INSERT INTO vicidial_list set status='" . mysql_real_escape_string($status) . "',title='" . mysql_real_escape_string($title) . "',first_name='" . mysql_real_escape_string($first_name) . "',middle_initial='" . mysql_real_escape_string($middle_initial) . "',last_name='" . mysql_real_escape_string($last_name) . "',address1='" . mysql_real_escape_string($address1) . "',address2='" . mysql_real_escape_string($address2) . "',address3='" . mysql_real_escape_string($address3) . "',city='" . mysql_real_escape_string($city) . "',state='" . mysql_real_escape_string($state) . "',province='" . mysql_real_escape_string($province) . "',postal_code='" . mysql_real_escape_string($postal_code) . "',country_code='" . mysql_real_escape_string($country_code) . "',alt_phone='" . mysql_real_escape_string($alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysql_real_escape_string($email) . "',security_phrase='" . mysql_real_escape_string($security) . "',comments='" . mysql_real_escape_string($comments) . "',rank='" . mysql_real_escape_string($rank) . "',owner='" . mysql_real_escape_string($owner) . "',vendor_lead_code='" . mysql_real_escape_string($vendor_id) . "', list_id='" . mysql_real_escape_string($list_id) . "'";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_query($stmt, $link);
@@ -337,12 +388,33 @@ if ($lead_id == 'NEW')
 	else
 		{echo "ERROR: El plomo no se añade, por favor, volver atrás y ver lo que ha introducido<BR><BR>\n";}
 	}
+else
+	{
+	$stmt="SELECT count(*) from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "'";
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$row=mysql_fetch_row($rslt);
+	$lead_exists =	$row[0];
+
+	$stmt="SELECT count(*) from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "' $LOGallowed_listsSQL";
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$row=mysql_fetch_row($rslt);
+	$lead_count =	$row[0];
+	if ( ($lead_exists > 0) and ($lead_count < 1) )
+		{
+		echo "lead does not exist\n";
+		exit;
+		}
+	}
 
 if (strlen($lead_id) < 1)
 	{$lead_id = 'NEW';}
 
 if ($end_call > 0)
 	{
+	$comments = preg_replace("/\n/",'!N',$comments);
+	$comments = preg_replace("/\r/",'',$comments);
 	### update the lead record in the vicidial_list table 
 	$stmt="UPDATE vicidial_list set status='" . mysql_real_escape_string($status) . "',title='" . mysql_real_escape_string($title) . "',first_name='" . mysql_real_escape_string($first_name) . "',middle_initial='" . mysql_real_escape_string($middle_initial) . "',last_name='" . mysql_real_escape_string($last_name) . "',address1='" . mysql_real_escape_string($address1) . "',address2='" . mysql_real_escape_string($address2) . "',address3='" . mysql_real_escape_string($address3) . "',city='" . mysql_real_escape_string($city) . "',state='" . mysql_real_escape_string($state) . "',province='" . mysql_real_escape_string($province) . "',postal_code='" . mysql_real_escape_string($postal_code) . "',country_code='" . mysql_real_escape_string($country_code) . "',alt_phone='" . mysql_real_escape_string($alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysql_real_escape_string($email) . "',security_phrase='" . mysql_real_escape_string($security) . "',comments='" . mysql_real_escape_string($comments) . "',rank='" . mysql_real_escape_string($rank) . "',owner='" . mysql_real_escape_string($owner) . "',vendor_lead_code='" . mysql_real_escape_string($vendor_id) . "' where lead_id='" . mysql_real_escape_string($lead_id) . "'";
 	if ($DB) {echo "|$stmt|\n";}
@@ -439,6 +511,8 @@ if ($end_call > 0)
 
 	if ($add_closer_record > 0)
 		{
+		$comments = preg_replace("/\n/",'!N',$comments);
+		$comments = preg_replace("/\r/",'',$comments);
 		### insert a NEW record to the vicidial_closer_log table 
 		$stmt="INSERT INTO vicidial_closer_log (lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed) values('" . mysql_real_escape_string($lead_id) . "','" . mysql_real_escape_string($list_id) . "','" . mysql_real_escape_string($campaign_id) . "','" . mysql_real_escape_string($parked_time) . "','$NOW_TIME','$STARTtime','1','" . mysql_real_escape_string($status) . "','" . mysql_real_escape_string($phone_code) . "','" . mysql_real_escape_string($phone_number) . "','$PHP_AUTH_USER','" . mysql_real_escape_string($comments) . "','Y')";
 		if ($DB) {echo "|$stmt|\n";}
@@ -480,6 +554,8 @@ else
 	
 	if ($CBchangeDATE == 'YES')
 		{
+		$comments = preg_replace("/\n/",' ',$comments);
+		$comments = preg_replace("/\r/",'',$comments);
 		### change date/time of vicidial_callbacks record for this lead 
 		$stmt="UPDATE vicidial_callbacks set callback_time='" . mysql_real_escape_string($appointment_date) . " " . mysql_real_escape_string($appointment_time) . "',comments='" . mysql_real_escape_string($comments) . "',lead_status='" . mysql_real_escape_string($CBstatus) . "' where callback_id='" . mysql_real_escape_string($callback_id) . "';";
 		if ($DB) {echo "|$stmt|\n";}
@@ -659,7 +735,7 @@ else
 		}
 
 	##### grab vicidial_list data for lead #####
-	$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "'";
+	$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "' $LOGallowed_listsSQL";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$row=mysql_fetch_row($rslt);
@@ -749,6 +825,8 @@ else
 	$rank				= $row[32];
 	$owner				= $row[33];
 	$entry_list_id		= $row[34];
+
+	$comments = preg_replace("/!N/","\n",$comments);
 
 	if ($lead_id == 'NEW')
 		{
@@ -880,7 +958,7 @@ else
 			$list_campaign = $row[0];
 			}
 
-		$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_statuses where selectable='Y' order by status";
+		$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_statuses $selectableSQL order by status";
 		$rslt=mysql_query($stmt, $link);
 		$statuses_to_print = mysql_num_rows($rslt);
 		$statuses_list='';
@@ -897,7 +975,7 @@ else
 			$o++;
 			}
 
-		$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_campaign_statuses where selectable='Y' and campaign_id='$list_campaign' order by status";
+		$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_campaign_statuses where campaign_id='$list_campaign' $selectableSQLand order by status";
 		$rslt=mysql_query($stmt, $link);
 		$CAMPstatuses_to_print = mysql_num_rows($rslt);
 
@@ -970,7 +1048,7 @@ else
 					echo "<input type=hidden name=DB value=\"$DB\">\n";
 					echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
 					echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
-					echo "New Callback Owner UsuarioID: <input type=text name=CBuser size=8 maxlength=10 value=\"$rowx[8]\"> \n";
+					echo "New Callback Owner UsuarioID: <input type=text name=CBuser size=18 maxlength=20 value=\"$rowx[8]\"> \n";
 					echo "<input type=submit name=submit value=\"CHANGE USERONLY CALLBACK USER\"></form><BR>\n";
 					}
 				else
@@ -980,7 +1058,7 @@ else
 					echo "<input type=hidden name=DB value=\"$DB\">\n";
 					echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
 					echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
-					echo "New Callback Owner UsuarioID: <input type=text name=CBuser size=8 maxlength=10 value=\"$rowx[8]\"> \n";
+					echo "New Callback Owner UsuarioID: <input type=text name=CBuser size=18 maxlength=20 value=\"$rowx[8]\"> \n";
 					echo "<input type=submit name=submit value=\"CHANGE TO USERONLY CALLBACK\"></form><BR>\n";
 					}
 				$callback_id = $rowx[0];
@@ -994,7 +1072,7 @@ else
 
 
 
-				$stmt="SELECT status,status_name from vicidial_statuses where scheduled_callback='Y' and selectable='Y' and status NOT IN('CBHOLD') order by status";
+				$stmt="SELECT status,status_name from vicidial_statuses where scheduled_callback='Y' $selectableSQLand and status NOT IN('CBHOLD') order by status";
 				$rslt=mysql_query($stmt, $link);
 				$statuses_to_print = mysql_num_rows($rslt);
 				$statuses_list='';
@@ -1011,7 +1089,7 @@ else
 					$o++;
 					}
 
-				$stmt="SELECT status,status_name from vicidial_campaign_statuses where scheduled_callback='Y' and selectable='Y' and status NOT IN('CBHOLD') and campaign_id='$list_campaign' order by status";
+				$stmt="SELECT status,status_name from vicidial_campaign_statuses where scheduled_callback='Y' $selectableSQLand and status NOT IN('CBHOLD') and campaign_id='$list_campaign' order by status";
 				$rslt=mysql_query($stmt, $link);
 				$CAMPstatuses_to_print = mysql_num_rows($rslt);
 
@@ -1265,6 +1343,46 @@ else
 
 		echo "</TABLE><BR><BR>\n";
 
+	##### vicidial agent outbound calls for this time period #####
+
+		if ($allow_emails>0) 
+			{
+			echo "<B>OUTBOUND EMAILS FOR THIS LEAD:</B>\n";
+			echo "<TABLE width=750 cellspacing=1 cellpadding=1>\n";
+			echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=right><font size=2> USER</td><td align=right><font size=2> CAMPAÑA</td><td align=left><font size=2>EMAIL TO</td><td align=left><font size=2> MESSAGE</td><td align=right><font size=2> ATTACHMENTS</td></tr>\n";
+
+			$stmt="select * from vicidial_email_log where lead_id='" . mysql_real_escape_string($lead_id) . "' order by email_date desc limit 500;";
+			$rslt=mysql_query($stmt, $link);
+			$logs_to_print = mysql_num_rows($rslt);
+
+			$u=0;
+			while ($logs_to_print > $u) 
+				{
+				$row=mysql_fetch_row($rslt);
+				if (eregi("1$|3$|5$|7$|9$", $u))
+					{$bgcolor='bgcolor="#B9CBFD"';} 
+				else
+					{$bgcolor='bgcolor="#9BB9FB"';}
+				if (strlen($row[6])>100) {$row[6]=substr($row[6],0,100)."...";}
+				$row[8]=preg_replace('/\|/', ', ', $row[8]);
+				$row[8]=preg_replace('/,\s+$/', '', $row[8]);
+				$u++;
+
+				echo "<tr $bgcolor>";
+				echo "<td><font size=1>$u</td>";
+				echo "<td><font size=1>$row[3]</td>";
+				echo "<td align=right><font size=2> <A HREF=\"user_stats.php?lead_id=$row[4]\" target=\"_blank\">$row[4]</A> </td>\n";
+				echo "<td align=left><font size=2> $row[7]</td>\n";
+				echo "<td align=left><font size=1> $row[5]</td>\n";
+				echo "<td align=left><font size=1> $row[6] </td>\n";
+				echo "<td align=right><font size=1> $row[8] </td></tr>\n";
+				}
+
+
+			echo "</TABLE><BR><BR>\n";
+			}
+
+
 
 		echo "<B>RECORDINGS FOR THIS LEAD:</B>\n";
 		echo "<TABLE width=750 cellspacing=1 cellpadding=1>\n";
@@ -1348,7 +1466,8 @@ else
 			{
 			echo "<a href=\"./admin.php?ADD=720000000000000&stage=$lead_id&category=LEADS\">Click here to see Lead Modificarchanges to this lead</a>\n";
 			}
-
+                //Exponer link to QC if user has QC permissions
+                require('./qc/QC_admin_modify_lead_include.php');
 		echo "</center>\n";
 		}
 	}

@@ -28,6 +28,8 @@ agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
 agc|phone_only.php|0
+agc|vdc_email_display.php|0
+agc|audit_comments.php|0
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"GEN"|
@@ -323,7 +325,7 @@ Dial Override|Chiamata automatica|
 digits only please|solo cifre per favore|
 Dial Now|Chiama Ora|
 CB Comments|Note Richiamo|
-Title|Titolo|
+ Title| Titolo|
 Your Status|Il tuo stato|
  STATUS| STATO|
  RESET| RESET|
@@ -333,10 +335,9 @@ Incoming|In entrata|
 Calling|In Chiamata|
 Called|Chiamato|
 Campaign|Campagna|
-Status|Stato|
+>Status|>Stato|
 Inserted|Inserito|
  seconds| secondi|
-HELP|AIUTO|
  Login | Login |
 Login:|Login:|
 User |Utente |
@@ -347,7 +348,6 @@ Server|Server|
 RECORD |Registrazione |
 >HANGUP|>RIAGGANCIA|
 >XFER|>TRASF|
-PARK|ATTESA|
 IN-NUMBER|IN-NUMBER|
 NUMBER|NUMERO|
 CALLERID|CALLERID|
@@ -356,16 +356,15 @@ PICKUP|RIPRENDI|
 CONFERENCE|CONFERENZA|
 Refresh|Aggiorna|
 Send DTMF|Trasmetti Tono Tastiera|
-ORDER|ORDINE|
+>ORDER|>ORDINE|
  on | su |
 >LOGOUT|>LOGOUT|
  Channel| Canale|
 Extensions|Interni|
 Conferences|Conferenze|
 Conference|Conferenza|
-Recording|Registrazione|
-Record|Record|
-Welcome|Benvenuto|
+ Recording| Registrazione|
+Welcome |Benvenuto |
 VOICEMAIL|VOICEMAIL|
  NEW| NUOVO|
  OLD| VECCHIO|
@@ -376,21 +375,21 @@ Slower|Più lento|
 Initializing|Inizializzazione|
 Invalid|Non valido|
 Username|Username|
-Notes|Note|
+Notes:|Note:|
 First|Nome|
 MI: |MI: |
-Last|Cognome|
+Last |Cognome |
 Address|Indirizzo|
 City|Città|
-State|Stato|
+ State| Stato|
 PostCode|CAP|
 Province|Provincia|
 Vendor ID|Vendor ID|
 DialCode|Prefisso|
 Alt. Phone|Num. Alternativo|
 Show|Mostra|
-Email|Email|
-Comments|Note|
+ Email| Email|
+ Comments| Note|
 REFRESH|AGGIORNA|
 ALT PHONE DIAL|CHIAMA ALT NUM|
 MAIN PHONE|NUMERO PRINCIPALE|
@@ -586,3 +585,79 @@ Agents View|Agenti Visualizza|
 -INCALL|-Incall|
 -PAUSED|-PAUSA|
 CALL DISPOSITION|CALL DISPOSIZIONE|
+### START translations for 2.6 release ###
+Click Here to Choose a Dial In-Group|Clicca qui per scegliere un quadrante in-group|
+SELECT A DIAL IN-GROUP|selezionare una selezione di gruppo|
+DIAL IN-GROUP|Cassaforte in gruppo|
+Dial In-Group|Cassaforte in gruppo|
+Click Here to Activate|Clicca qui per attivare|
+Click Here to Deactivate|clicca qui per disattivare|
+ERROR: You must enter in search terms, one of these must be populated: lead ID, vendor ID, phone number, last name|Errore: è necessario inserire in termini di ricerca, uno di questi deve essere popolata: id piombo, Vendor ID, numero di telefono, cognome|
+ERROR: You must enter in search terms, one of these must be populated: office number, last name, first name|Errore: è necessario inserire in termini di ricerca, uno di questi deve essere compilato: numero dell'ufficio, il cognome, il nome|
+ERROR: There was a problem with your search terms|errore: c'è stato un problema con i termini di ricerca|
+Phone and Post Code Time Zone Mismatch|telefono cellulare e il codice postale di zona non corrispondente tempo|
+Last Local Call Time|ultima volta chiamata locale|
+Called Count|numero di chiamate|
+Unidentified Hangup Cause Code|identificato codice di causa riaggancio|
+YOU MUST SELECT AN AGENT TO TRANSFER TO WHEN USING AGENTDIRECT|è necessario selezionare un agente di trasferire a quando si utilizza agentdirect|
+Another live agent session was open using your user ID. It has been disabled. Click OK to continue to the agent screen|un'altra sessione di agente di vivere è stato aperto utilizzando l'ID utente. è stato disattivato. Cliccare su OK per passare alla schermata agente|
+View Comment History|visualizzare la cronologia commento|
+reset form|forma reimpostare|
+SELECT THIS LEAD|selezionare questo cavo|
+YOU MUST BE ON AN ACTIVE INBOUND CALL TO SEARCH FOR A LEAD|si deve essere in una chiamata in entrata attiva per la ricerca di un vantaggio|
+Attachments|allegati|
+Next Call Pause|chiamata successiva pausa|
+-History-|-storia-|
+SUBMIT SEARCH|presentare ricerca|
+close |chiudere |
+AGENT CALL LOG|agente del registro chiamate|
+ LENGTH | lunghezza |
+ PHONE | telefono |
+ FULL NAME | nome e cognome |
+ CAMPAIGN | campagna |
+ ALT | alternativo |
+ HANGUP | hangup |
+ INFO | Info |
+phone login|telefono login|
+LAST CALL|ultima chiamata|
+ CALLBACK | callback |
+ CITY | città |
+ STATE | stato |
+ ZIP | zip |
+Phone Number|numero telefonico|
+Phone Number Fields|campi numero di telefono|
+Lead ID|piombo id|
+ WAIT | attendere |
+ AGENT | agente |
+ CALL GROUP | chiamata di gruppo |
+ TYPE | tipo di |
+digits only|solo cifre|
+DIAL ALERT|comporre avvisare|
+WEB FORM SUBMIT|modulo pagina web presentare|
+in campaign|in campagna|
+ DATE\/TIME | data\/ora |
+ IN\/OUT | in e fuori |
+>GROUPS<|>GRUPPI<|
+>GO<|>vai<|
+>recording<|>registrazione<|
+>SELECT<|>selezionare<|
+Alert is ON|segnalazione riguardi|
+Alert is OFF|avviso è spento|
+EMAIL LOG FOR THIS LEAD|log e-mail per questo cavo|
+EMAIL TO|e-mail a|
+ ATTACHMENTS | allegati |
+Called Since Last Reset|chiamato dall'ultimo azzeramento|
+Timezone:|fuso orario:|
+Dial Link|comporre il collegamento|
+ LAST | ultimo |
+SEARCH FOR A CONTACT|cercare un contatto|
+Notes: when doing a search for a contact, wildcard or partial search terms are not allowed|Note: quando si fa una ricerca di un contatto, termini di ricerca con caratteri jolly o parziali non sono ammessi|
+Contact search requests are all logged in the system|richieste di ricerca di contatto sono tutti registrati nel sistema|
+Office Number|numero dell'ufficio|
+First Name|nome|
+Last Name|cognome|
+BU Name|ragione sociale|
+Department:|Dipartimento:|
+Group Name|il nome del gruppo|
+Job Title|titolo di lavoro|
+Location:|posizione:|

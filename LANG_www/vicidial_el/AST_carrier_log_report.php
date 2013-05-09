@@ -1,26 +1,31 @@
 <?php 
 # AST_carrier_log_report.php
 # 
-# Copyright (C) 2012  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 120210-2202 - First build
+# 130413-2213 - Added SIP codes summary and fields, and report logging
+# 130418-1048 - Changed how server list is generated
 #
 
+$startMS = microtime();
 
 require("dbconnect.php");
+
+$report_name='Μεταφορέας Έκθεση Σύνδεση';
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
 if (isset($_GET["query_date"]))				{$query_date=$_GET["query_date"];}
 	elseif (isset($_POST["query_date"]))	{$query_date=$_POST["query_date"];}
-if (isset($_GET["query_date_D"]))				{$query_date_D=$_GET["query_date_D"];}
+if (isset($_GET["query_date_D"]))			{$query_date_D=$_GET["query_date_D"];}
 	elseif (isset($_POST["query_date_D"]))	{$query_date_D=$_POST["query_date_D"];}
-if (isset($_GET["query_date_T"]))				{$query_date_T=$_GET["query_date_T"];}
+if (isset($_GET["query_date_T"]))			{$query_date_T=$_GET["query_date_T"];}
 	elseif (isset($_POST["query_date_T"]))	{$query_date_T=$_POST["query_date_T"];}
-if (isset($_GET["server_ip"]))					{$server_ip=$_GET["server_ip"];}
-	elseif (isset($_POST["server_ip"]))			{$server_ip=$_POST["server_ip"];}
+if (isset($_GET["server_ip"]))				{$server_ip=$_GET["server_ip"];}
+	elseif (isset($_POST["server_ip"]))		{$server_ip=$_POST["server_ip"];}
 if (isset($_GET["file_download"]))			{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 if (isset($_GET["lower_limit"]))			{$lower_limit=$_GET["lower_limit"];}
@@ -54,14 +59,7 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
-	{
-	mysql_close($link);
-	$use_slave_server=1;
-	$db_source = 'S';
-	require("dbconnect.php");
-	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
-	}
+$NOW_DATE = date("Y-m-d");
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 7 and view_reports='1' and active='Y';";
 if ($DB) {$MAIN.="|$stmt|\n";}
@@ -84,10 +82,39 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
     exit;
 	}
 
+##### BEGIN log visit to the vicidial_report_log table #####
+$LOGip = getenv("REMOTE_ADDR");
+$LOGbrowser = getenv("HTTP_USER_AGENT");
+$LOGscript_name = getenv("SCRIPT_NAME");
+$LOGserver_name = getenv("SERVER_NAME");
+$LOGserver_port = getenv("SERVER_PORT");
+$LOGrequest_uri = getenv("REQUEST_URI");
+$LOGhttp_referer = getenv("HTTP_REFERER");
+if (preg_match("/443/i",$LOGserver_port)) {$HTTPprotocol = 'https://';}
+  else {$HTTPprotocol = 'http://';}
+if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='';}
+else {$LOGserver_port = ":$LOGserver_port";}
+$LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
+
+$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name', url='$LOGfull_url';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$report_log_id = mysql_insert_id($link);
+##### END log visit to the vicidial_report_log table #####
+
+
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysql_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect.php");
+	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
+	}
+
 
 if (strlen($query_date_D) < 6) {$query_date_D = "00:00:00";}
 if (strlen($query_date_T) < 6) {$query_date_T = "23:59:59";}
-$NOW_DATE = date("Y-m-d");
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
 $server_ip_string='|';
@@ -99,7 +126,7 @@ while($i < $server_ip_ct)
 	$i++;
 	}
 
-$server_stmt="select distinct s.server_ip, s.server_description from servers s, vicidial_carrier_log vcl where s.server_ip=vcl.server_ip order by server_ip asc";
+$server_stmt="select server_ip,server_description from servers where active_asterisk_server='Y' order by server_ip asc";
 $server_rslt=mysql_query($server_stmt, $link);
 $servers_to_print=mysql_num_rows($server_rslt);
 $i=0;
@@ -223,7 +250,29 @@ if ($ΕΠΙΒΕΒΑΙΩΣΗ && $server_ip_ct>0) {
 		}
 		$MAIN.="+--------------+-------------+---------+\n";
 		$MAIN.="|                      TOTAL | ".sprintf("%-8s", $total_count)."|\n";
-		$MAIN.="+--------------+-------------+---------+\n\n\n";
+		$MAIN.="+--------------+-------------+---------+\n\n";
+
+		$stmt="select sip_hangup_cause,sip_hangup_reason,count(*) as ct From vicidial_carrier_log where call_date>='$query_date $query_date_D' and call_date<='$query_date $query_date_T' $server_ip_SQL group by sip_hangup_cause,sip_hangup_reason order by sip_hangup_cause,sip_hangup_reason";
+		$rslt=mysql_query($stmt, $link);
+		$MAIN.="<PRE><font size=2>\n";
+		if ($DB) {$MAIN.=$stmt."\n";}
+		if (mysql_num_rows($rslt)>0) {
+			$MAIN.="--- SIP ERROR REASON BREAKDOWN FOR $query_date, $query_date_D TO $query_date_T $server_rpt_string\n";
+			$MAIN.="+----------+--------------------------------+---------+\n";
+			$MAIN.="| SIP CODE | SIP HANGUP REASON              |  COUNT  |\n";
+			$MAIN.="+----------+--------------------------------+---------+\n";
+			$total_count=0;
+			while ($row=mysql_fetch_array($rslt)) {
+				$MAIN.="| ".sprintf("%8s", $row["sip_hangup_cause"])." ";
+				$MAIN.="| ".sprintf("%-31s", $row["sip_hangup_reason"]);
+				$MAIN.="| ".sprintf("%-8s", $row["ct"]);
+				$MAIN.="|\n";
+				$total_count+=$row["ct"];
+			}
+			$MAIN.="+----------+--------------------------------+---------+\n";
+			$MAIN.="|                                     TOTAL | ".sprintf("%-8s", $total_count)."|\n";
+			$MAIN.="+-------------------------------------------+---------+\n\n\n";
+		}
 
 		$rpt_stmt="select vicidial_carrier_log.*, vicidial_log.phone_number from vicidial_carrier_log left join vicidial_log on vicidial_log.uniqueid=vicidial_carrier_log.uniqueid where vicidial_carrier_log.call_date>='$query_date $query_date_D' and vicidial_carrier_log.call_date<='$query_date $query_date_T' $server_ip_SQL order by vicidial_carrier_log.call_date asc";
 		$rpt_rslt=mysql_query($rpt_stmt, $link);
@@ -233,10 +282,10 @@ if ($ΕΠΙΒΕΒΑΙΩΣΗ && $server_ip_ct>0) {
 		if ($lower_limit+999>=mysql_num_rows($rpt_rslt)) {$upper_limit=($lower_limit+mysql_num_rows($rpt_rslt)%1000)-1;} else {$upper_limit=$lower_limit+999;}
 		
 		$MAIN.="--- CARRIER LOG RECORDS FOR $query_date, $query_date_D TO $query_date_T $server_rpt_string, RECORDS #$lower_limit-$upper_limit               <a href=\"$PHP_SELF?ΕΠΙΒΕΒΑΙΩΣΗ=$ΕΠΙΒΕΒΑΙΩΣΗ&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">[ΛΗΨΗ]</a>\n";
-		$carrier_rpt.="+----------------------+---------------------+-----------------+-----------+--------------+-------------+------------------------------------------+-----------+---------------+--------------+\n";
-		$carrier_rpt.="| UNIQUE ID            | CALL DATE           | ΔΙΑΚΟΜΙΣΤΗΣ IP       | LEAD ID   | HANGUP CAUSE | DIAL STATUS | CHANNEL                                  | DIAL TIME | ΑΠΑΝΤΗΣΗED TIME | PHONE NUMBER |\n";
-		$carrier_rpt.="+----------------------+---------------------+-----------------+-----------+--------------+-------------+------------------------------------------+-----------+---------------+--------------+\n";
-		$CSV_text="\"UNIQUE ID\",\"CALL DATE\",\"ΔΙΑΚΟΜΙΣΤΗΣ IP\",\"LEAD ID\",\"HANGUP CAUSE\",\"DIAL STATUS\",\"CHANNEL\",\"DIAL TIME\",\"ΑΠΑΝΤΗΣΗED TIME\",\"PHONE NUMBER\"\n";
+		$carrier_rpt.="+----------------------+---------------------+-----------------+-----------+--------------+-------------+------------------------------------------+-----------+---------------+----------+--------------------------------+--------------+\n";
+		$carrier_rpt.="| UNIQUE ID            | CALL DATE           | ΔΙΑΚΟΜΙΣΤΗΣ IP       | LEAD ID   | HANGUP CAUSE | DIAL STATUS | CHANNEL                                  | DIAL TIME | ΑΠΑΝΤΗΣΗED TIME | SIP CODE | SIP HANGUP REASON              | PHONE NUMBER |\n";
+		$carrier_rpt.="+----------------------+---------------------+-----------------+-----------+--------------+-------------+------------------------------------------+-----------+---------------+----------+--------------------------------+--------------+\n";
+		$CSV_text="\"UNIQUE ID\",\"CALL DATE\",\"ΔΙΑΚΟΜΙΣΤΗΣ IP\",\"LEAD ID\",\"HANGUP CAUSE\",\"DIAL STATUS\",\"CHANNEL\",\"DIAL TIME\",\"ΑΠΑΝΤΗΣΗED TIME\",\"SIP CODE\",\"SIP HANGUP REASON\",\"PHONE NUMBER\"\n";
 
 		for ($i=1; $i<=mysql_num_rows($rpt_rslt); $i++) {
 			$row=mysql_fetch_array($rpt_rslt);
@@ -255,7 +304,7 @@ if ($ΕΠΙΒΕΒΑΙΩΣΗ && $server_ip_ct>0) {
 				$phone_number=$row["phone_number"];
 			}
 
-			$CSV_text.="\"$row[uniqueid]\",\"$row[call_date]\",\"$row[server_ip]\",\"$row[lead_id]\",\"$row[hangup_cause]\",\"$row[dialstatus]\",\"$row[channel]\",\"$row[dial_time]\",\"$row[answered_time]\",\"$phone_number\"\n";
+			$CSV_text.="\"$row[uniqueid]\",\"$row[call_date]\",\"$row[server_ip]\",\"$row[lead_id]\",\"$row[hangup_cause]\",\"$row[dialstatus]\",\"$row[channel]\",\"$row[dial_time]\",\"$row[answered_time]\",\"$row[sip_hangup_cause]\",\"$row[sip_hangup_reason]\",\"$phone_number\"\n";
 			if ($i>=$lower_limit && $i<=$upper_limit) {
 				if (strlen($row["channel"])>37) {$row["channel"]=substr($row["channel"],0,37)."...";}
 				$carrier_rpt.="| ".sprintf("%-21s", $row["uniqueid"]); 
@@ -267,10 +316,12 @@ if ($ΕΠΙΒΕΒΑΙΩΣΗ && $server_ip_ct>0) {
 				$carrier_rpt.="| ".sprintf("%-41s", $row["channel"]); 
 				$carrier_rpt.="| ".sprintf("%-10s", $row["dial_time"]); 
 				$carrier_rpt.="| ".sprintf("%-14s", $row["answered_time"]); 
+				$carrier_rpt.="| ".sprintf("%8s", $row["sip_hangup_cause"])." "; 
+				$carrier_rpt.="| ".sprintf("%-31s", $row["sip_hangup_reason"]); 
 				$carrier_rpt.="| ".sprintf("%-13s", $phone_number)."|\n"; 
 			}
 		}
-		$carrier_rpt.="+----------------------+---------------------+-----------------+-----------+--------------+-------------+------------------------------------------+-----------+---------------+--------------+\n";
+		$carrier_rpt.="+----------------------+---------------------+-----------------+-----------+--------------+-------------+------------------------------------------+-----------+---------------+----------+--------------------------------+--------------+\n";
 
 		$carrier_rpt_hf="";
 		$ll=$lower_limit-1000;
@@ -315,11 +366,31 @@ if ($ΕΠΙΒΕΒΑΙΩΣΗ && $server_ip_ct>0) {
 
 		echo "$CSV_text";
 
-		exit;
 	} else {
 		echo $HEADER;
 		require("admin_header.php");
 		echo $MAIN;
 	}
+
+if ($db_source == 'S')
+	{
+	mysql_close($link);
+	$use_slave_server=0;
+	$db_source = 'M';
+	require("dbconnect.php");
+	}
+
+$endMS = microtime();
+$startMSary = explode(" ",$startMS);
+$endMSary = explode(" ",$endMS);
+$runS = ($endMSary[0] - $startMSary[0]);
+$runM = ($endMSary[1] - $startMSary[1]);
+$TOTALrun = ($runS + $runM);
+
+$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+
+exit;
 
 ?>

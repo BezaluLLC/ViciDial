@@ -44,10 +44,12 @@
 # 110705-1947 - Added USACAN check for prefix and areacode
 # 120221-0140 - Added User Group restrictions
 # 120223-2318 - Removed logging of good login passwords if webroot writable is enabled
+# 120525-1037 - Added uploaded filename filtering
+# 120529-1347 - Filename filter fix
 #
 
-$version = '2.4-43';
-$build = '120223-2318';
+$version = '2.4-45';
+$build = '120529-1347';
 
 
 require("dbconnect.php");
@@ -242,6 +244,12 @@ else
 			}
 		exit;
 		}
+	}
+
+if (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$LF_orig))
+	{
+	echo "ERROR: Invalid File Name: $LF_orig\n";
+	exit;
 	}
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
@@ -483,7 +491,7 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard") ) )
 		<tr>
 			<td align=center colspan=2><input type=submit value="ENVIAR" name='submit_file'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button onClick="javascript:document.location='admin_listloader_third_gen.php'" value="RECARGAR" name='reload_page'></td>
 		  </tr>
-		  <tr><td align=left><font size=1> &nbsp; &nbsp; &nbsp; &nbsp; <a href="admin.php?ADD=100" target="_parent">DE NUEVO AL ADMIN</a> &nbsp; &nbsp; &nbsp; &nbsp; <a href="./new_listloader_superL.php">Old Lead Loader</a> &nbsp; &nbsp; </font></td><td align=right><font size=1>LIST LOADER 3rd Gen- &nbsp; &nbsp; VERSIÓN: <?php echo $version ?> &nbsp; &nbsp; CONSTRUCCION: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
+		  <tr><td align=left><font size=1> &nbsp; &nbsp; &nbsp; &nbsp; <a href="admin.php?ADD=100" target="_parent">DE NUEVO AL ADMIN</a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </font></td><td align=right><font size=1>LIST LOADER 3rd Gen- &nbsp; &nbsp; VERSIÓN: <?php echo $version ?> &nbsp; &nbsp; CONSTRUCCION: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
 		</table>
 		<?php 
 

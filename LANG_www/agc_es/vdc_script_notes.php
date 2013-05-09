@@ -1,7 +1,7 @@
 <?php
 # vdc_script_notes.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed open in the SCRIPT tab in the agent interface through
 # an IFRAME. It will create a new record for every SUBMIT
@@ -12,10 +12,11 @@
 # CHANGELOG:
 # 100215-0744 - First build of script
 # 100622-2230 - Added field labels
+# 130328-0020 - Converted ereg to preg functions
 #
 
-$version = '2.4-2';
-$build = '100622-2230';
+$version = '2.6-3';
+$build = '130328-0020';
 
 require("dbconnect.php");
 
@@ -229,16 +230,16 @@ if ($qm_conf_ct > 0)
 
 if ($non_latin < 1)
 	{
-	$user=ereg_replace("[^-_0-9a-zA-Z]","",$user);
-	$pass=ereg_replace("[^-_0-9a-zA-Z]","",$pass);
-	$length_in_sec = ereg_replace("[^0-9]","",$length_in_sec);
-	$phone_code = ereg_replace("[^0-9]","",$phone_code);
-	$phone_number = ereg_replace("[^0-9]","",$phone_number);
+	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
+	$pass=preg_replace("/[^-_0-9a-zA-Z]/","",$pass);
+	$length_in_sec = preg_replace("/[^0-9]/","",$length_in_sec);
+	$phone_code = preg_replace("/[^0-9]/","",$phone_code);
+	$phone_number = preg_replace("/[^0-9]/","",$phone_number);
 	}
 else
 	{
-	$user = ereg_replace("'|\"|\\\\|;","",$user);
-	$pass = ereg_replace("'|\"|\\\\|;","",$pass);
+	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
+	$pass = preg_replace("/\'|\"|\\\\|;/","",$pass);
 	}
 
 if ($DB > 0)
@@ -247,15 +248,15 @@ if ($DB > 0)
 	}
 
 ### BEGIN find any custom field labels ###
-$label_title =				'Título';
+$label_title =				'Title';
 $label_first_name =			'Primero';
 $label_middle_initial =		'MI';
-$label_last_name =			'Último';
+$label_last_name =			'Last';
 $label_address1 =			'Dirección1';
 $label_address2 =			'Dirección2';
 $label_address3 =			'Dirección3';
 $label_city =				'Ciudad';
-$label_state =				'Estado';
+$label_state =				'State';
 $label_province =			'Provincia';
 $label_postal_code =		'CódigoPostal';
 $label_vendor_lead_code =	'ID del vendedor';
@@ -264,8 +265,8 @@ $label_phone_number =		'Teléfono';
 $label_phone_code =			'Código de marcación';
 $label_alt_phone =			'Teléfono alternativo';
 $label_security_phrase =	'Mostrar';
-$label_email =				'Correo electrónico';
-$label_comments =			'Comentarios';
+$label_email =				'Email';
+$label_comments =			'Comments';
 
 $stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
 $rslt=mysql_query($stmt, $link);
@@ -317,7 +318,7 @@ else
 echo "<HTML>\n";
 echo "<head>\n";
 echo "<!-- VERSIÓN: $version     CONSTRUCCIÓN: $build    USER: $user   server_ip: $server_ip-->\n";
-echo "<title>ViciDial Notas";
+echo "<title>ViciDial Notes";
 echo "</title>\n";
 echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
@@ -397,7 +398,7 @@ $URLsubmit = $URLarray[0];
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Source ID: </TD><TD ALIGN=LEFT>$source_id<input type=hidden name=source_id id=source_id value="<?php echo $source_id ?>"></TD>
 </TR> -->
 <!-- <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Título: </TD><TD ALIGN=LEFT><input type=text name=title id=title size=5 maxlength=4 value="<?php echo $title ?>"></TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Title: </TD><TD ALIGN=LEFT><input type=text name=title id=title size=5 maxlength=4 value="<?php echo $title ?>"></TD>
 </TR> -->
 <TR BGCOLOR="#E6E6E6">
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo $label_first_name ?>: </TD><TD ALIGN=LEFT><input type=text name=first_name id=first_name size=30 maxlength=30 value="<?php echo $first_name ?>"> *</TD>
@@ -518,7 +519,7 @@ $URLsubmit = $URLarray[0];
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Teléfono alternativo: </TD><TD ALIGN=LEFT><input type=text name=alt_phone id=alt_phone size=12 maxlength=12 value="<?php echo $alt_phone ?>"> *</TD>
 </TR> -->
 <!-- <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Correo electrónico: </TD><TD ALIGN=LEFT><input type=text name=email id=email size=30 maxlength=70 value="<?php echo $email ?>"> *</TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Email: </TD><TD ALIGN=LEFT><input type=text name=email id=email size=30 maxlength=70 value="<?php echo $email ?>"> *</TD>
 </TR> -->
 <!-- <TR BGCOLOR="#E6E6E6">
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Mostrar: </TD><TD ALIGN=LEFT><input type=text name=security_phrase id=security_phrase size=30 maxlength=100 value="<?php echo $security_phrase ?>"> *</TD>

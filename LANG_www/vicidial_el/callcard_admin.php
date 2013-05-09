@@ -199,7 +199,7 @@ if (strlen($action) < 1)
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <!-- ΕΚΔΟΣΗ: <?php echo $version ?>     ΔΗΜΙΟΥΡΓΙΑ: <?php echo $build ?> -->
-<title>ADMINISTRATION: CallCard Admin
+<title>ADMINISTRATION: Καλέστε Διαχειριστής κάρτα
 <?php
 
 

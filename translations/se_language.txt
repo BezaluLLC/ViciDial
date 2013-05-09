@@ -28,6 +28,8 @@ agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
 agc|phone_only.php|0
+agc|vdc_email_display.php|0
+agc|audit_comments.php|0
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"Jan"|
@@ -323,7 +325,7 @@ Dial Override|Dial Override|
 digits only please|enbart siffror|
 Dial Now|Ring nu|
 CB Comments|Kommentar till Återuppringning|
-Title|Titel|
+ Title| Titel|
 Your Status|Din status|
  STATUS| STATUS|
  RESET| ÅTERSTÄLL|
@@ -333,10 +335,9 @@ Incoming|Inkommande|
 Calling|Ringer|
 Called|Ringde|
 Campaign|Kampanj|
-Status|Status|
+>Status|>Status|
 Inserted|Tillagd|
  seconds| sekunder|
-HELP|HJÄLP|
  Login | Logga in |
 Login:|Logga in:|
 User |Användare |
@@ -347,7 +348,6 @@ Server|Server|
 RECORD |SPELA IN |
 >HANGUP|>Lägg på|
 >XFER|>XFER|
-PARK|PARKERA|
 IN-NUMBER|IN-NUMMER|
 NUMBER|NUMMER|
 CALLERID|SAMTALSID|
@@ -356,16 +356,15 @@ PICKUP|SVARA|
 CONFERENCE|KONFERENS|
 Refresh|Uppdatera|
 Send DTMF|Skicka Tonval|
-ORDER|ORDER|
+>ORDER|>ORDER|
  on | på |
 >LOGOUT|>LOGGA UT|
  Channel| Kanal|
 Extensions|Anknytningar|
 Conferences|Konferenser|
 Conference|Konferens|
-Recording|Inspelning|
-Record|Spela in|
-Welcome|Välkommen|
+ Recording| Inspelning|
+Welcome |Välkommen |
 VOICEMAIL|RÖSTBREVLÅDA|
  NEW| NY|
  OLD| GAMMAL|
@@ -376,21 +375,21 @@ Slower|Långsammare|
 Initializing|Initierar|
 Invalid|Felaktig|
 Username|Användarnamn|
-Notes|Anteckningar|
+Notes:|Anteckningar:|
 First|Förnamn|
 MI: |MI: |
-Last|Efternamn|
+Last |Efternamn |
 Address|Adress|
 City|Stad|
-State|Stat|
+ State| Stat|
 PostCode|Postnummer|
 Province|Provins|
 Vendor ID|Leverantör ID|
 DialCode|Landskod|
 Alt. Phone|Alternativ telefon|
 Show|Visa|
-Email|Email|
-Comments|Kommentarer|
+ Email| Email|
+ Comments| Kommentarer|
 REFRESH|UPPDATERA|
 ALT PHONE DIAL|RING ALTERNATIVT NUMMER|
 MAIN PHONE|HUVUDNUMMER|
@@ -584,3 +583,65 @@ Phone and Post Code Time Zone Mismatch|Telefon och Postkod Tidzon Matchar Ej|
 Last Local Call Time|Lokal Tid För Senaste Samtalet|
 Called Count|Antal Samtal|
 Unidentified Hangup Cause Code|Oidentifierad Orsak-kod För Samtalets Avslut|
+YOU MUST SELECT AN AGENT TO TRANSFER TO WHEN USING AGENTDIRECT|Du måste välja en agent för att överföra till när man använder agentdirect|
+Another live agent session was open using your user ID. It has been disabled. Click OK to continue to the agent screen|annan levande agent session var öppen med ditt användarnamn. det har inaktiverats. Klicka på OK för att fortsätta till agenten skärmen|
+View Comment History|visa kommentar historia|
+reset form|reset formulär|
+SELECT THIS LEAD|väljer denna ledning|
+YOU MUST BE ON AN ACTIVE INBOUND CALL TO SEARCH FOR A LEAD|Du måste vara på en aktiv inkommande samtal för att söka efter en bly|
+Attachments|bilagor|
+Next Call Pause|nästa samtal paus|
+-History-|-history-|
+SUBMIT SEARCH|inkomma sökning|
+close |nära |
+AGENT CALL LOG|agent samtalsloggen|
+ LENGTH | längd |
+ PHONE | telefon |
+ FULL NAME | fullständigt namn |
+ CAMPAIGN | kampanj |
+ ALT | alternativa |
+ HANGUP | påläggningssignal |
+ INFO | info |
+phone login|telefon inloggning|
+LAST CALL|senaste samtalet|
+ CALLBACK | återuppringning |
+ CITY | stad |
+ STATE | tillstånd |
+ ZIP | zip |
+Phone Number|telefonnummer|
+Phone Number Fields|telefonnummerfält|
+Lead ID|leda id|
+ WAIT | vänta |
+ AGENT | agent |
+ CALL GROUP | anropa |
+ TYPE | typ |
+digits only|endast siffror|
+DIAL ALERT|ringa alert|
+WEB FORM SUBMIT|webbsida formen fram|
+in campaign|i kampanjen|
+ DATE\/TIME | datum\/tid |
+ IN\/OUT | in och ut |
+>GROUPS<|>GRUPPER<|
+>GO<|>gå<|
+>recording<|>inspelning<|
+>SELECT<|>välj<|
+Alert is ON|varning är på|
+Alert is OFF|varning är avstängd|
+EMAIL LOG FOR THIS LEAD|e loggen för denna ledning|
+EMAIL TO|e-post till|
+ ATTACHMENTS | bilagor |
+Called Since Last Reset|heter sedan senaste återställning|
+Timezone:|Tidszon:|
+Dial Link|ringa länk|
+ LAST | sista |
+SEARCH FOR A CONTACT|söka efter en kontakt|
+Notes: when doing a search for a contact, wildcard or partial search terms are not allowed|anteckningar: när du gör en sökning efter en kontakt, är wildcard eller partiell söktermer tillåts inte|
+Contact search requests are all logged in the system|kontakt sökfrågor är alla inloggade i systemet|
+Office Number|kontor nummer|
+First Name|förnamn|
+Last Name|efternamn|
+BU Name|firma|
+Department:|avdelning:|
+Group Name|gruppnamn|
+Job Title|jobbtitel|
+Location:|plats:|

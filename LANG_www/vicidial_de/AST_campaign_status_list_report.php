@@ -4,13 +4,18 @@
 # This report is designed to show the breakdown by list_id of the calls and 
 # their statuses for all lists within a campaign for a set time period
 #
-# Copyright (C) 2012  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
 # 110815-2138 - First build
 # 120224-0910 - Added HTML display option with bar graphs
+# 130414-0129 - Added report logging
+# 130425-2113 - Added status flag summaries and other formatting cleanup
+# 130425-2353 - Fixed bug with subtracting unsigned columns in SQL
 #
+
+$startMS = microtime();
 
 require("dbconnect.php");
 require("functions.php");
@@ -64,15 +69,6 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-######################################
-if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
-	{
-	mysql_close($link);
-	$use_slave_server=1;
-	$db_source = 'S';
-	require("dbconnect.php");
-	$HTML_text.="<!-- Using slave server $slave_db_server $db_source -->\n";
-	}
 
 $PHP_AUTH_USER = preg_replace("/[^0-9a-zA-Z]/","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = preg_replace("/[^0-9a-zA-Z]/","",$PHP_AUTH_PW);
@@ -97,6 +93,36 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
     echo "Unzulässiges Username/Kennwort:|$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
 	}
+
+##### BEGIN log visit to the vicidial_report_log table #####
+$LOGip = getenv("REMOTE_ADDR");
+$LOGbrowser = getenv("HTTP_USER_AGENT");
+$LOGscript_name = getenv("SCRIPT_NAME");
+$LOGserver_name = getenv("SERVER_NAME");
+$LOGserver_port = getenv("SERVER_PORT");
+$LOGrequest_uri = getenv("REQUEST_URI");
+$LOGhttp_referer = getenv("HTTP_REFERER");
+if (preg_match("/443/i",$LOGserver_port)) {$HTTPprotocol = 'https://';}
+  else {$HTTPprotocol = 'http://';}
+if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='';}
+else {$LOGserver_port = ":$LOGserver_port";}
+$LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
+
+$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $file_download, $report_display_type|', url='$LOGfull_url';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$report_log_id = mysql_insert_id($link);
+##### END log visit to the vicidial_report_log table #####
+
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysql_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect.php");
+	$HTML_text.="<!-- Using slave server $slave_db_server $db_source -->\n";
+	}
+
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
 if ($DB) {$HTML_text.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
@@ -138,7 +164,7 @@ while($i < $group_ct)
 	$i++;
 	}
 
-$stmt="select campaign_id from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
+$stmt="SELECT campaign_id from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
 $campaigns_to_print = mysql_num_rows($rslt);
@@ -276,17 +302,25 @@ $JS_onload="onload = function() {\n";
 
 while($i < $group_ct)
 	{
-	$stmt="select distinct status, status_name from vicidial_campaign_statuses where campaign_id='$group[$i]' UNION select distinct status, status_name from vicidial_statuses order by status, status_name";
+	$stmt="SELECT status, status_name, human_answered, sale, dnc, customer_contact, not_interested, unworkable, scheduled_callback, completed from vicidial_campaign_statuses where campaign_id='$group[$i]' UNION SELECT status, status_name, human_answered, sale, dnc, customer_contact, not_interested, unworkable, scheduled_callback, completed from vicidial_statuses order by status, status_name";
 	$rslt=mysql_query($stmt, $link);
 	while ($row=mysql_fetch_row($rslt)) 
 		{
-		$status_ary[$row[0]]=" - $row[1]";
+		$status_ary[$row[0]] = " - $row[1]";
+		$HA_ary[$row[0]] =		$row[2];
+		$SALE_ary[$row[0]] =	$row[3];
+		$DNC_ary[$row[0]] =		$row[4];
+		$CC_ary[$row[0]] =		$row[5];
+		$NI_ary[$row[0]] =		$row[6];
+		$UW_ary[$row[0]] =		$row[7];
+		$SC_ary[$row[0]] =		$row[8];
+		$COMP_ary[$row[0]] =	$row[9];
 		}
 	$ASCII_text.="<B>KAMPAGNE: $group[$i]</B>\n";
 	$GRAPH.="<B>KAMPAGNE: $group[$i]</B>\n";
 	$CSV_text.="\"KAMPAGNE: $group[$i]\"\n";
 
-	$stmt="select closer_campaigns from vicidial_campaigns where campaign_id='$group[$i]'";
+	$stmt="SELECT closer_campaigns from vicidial_campaigns where campaign_id='$group[$i]'";
 	$rslt=mysql_query($stmt, $link);
 	if (mysql_num_rows($rslt)>0) 
 		{
@@ -303,20 +337,30 @@ while($i < $group_ct)
 			}
 		}
 
-	$stmt="select distinct list_id, list_name from vicidial_lists where campaign_id='$group[$i]' order by list_id, list_name asc";
+	$stmt="SELECT distinct list_id, list_name, active from vicidial_lists where campaign_id='$group[$i]' order by list_id, list_name asc";
 	$rslt=mysql_query($stmt, $link);
 	while ($row=mysql_fetch_row($rslt)) 
 		{
-		$list_id=$row[0]; $list_name=$row[1];
+		$list_id=$row[0]; $list_name=$row[1]; $list_active=$row[2];
+		$HA_count=0;
+		$SALE_count=0;
+		$DNC_count=0;
+		$CC_count=0;
+		$NI_count=0;
+		$UW_count=0;
+		$SC_count=0;
+		$COMP_count=0;
+
 		$dispo_ary="";
 		$ASCII_text.="<FONT SIZE=2><B>Liste Identifikation #$list_id: $list_name</B>\n";
 		$GRAPH.="<FONT SIZE=2><B>Liste Identifikation #$list_id: $list_name</B>\n";
 		$CSV_text.="\"Liste Identifikation #$list_id: $list_name\"\n";
 
 
-		# 			$stat_stmt="select vs.status_name, count(*), sum(pause_sec), sum(wait_sec), sum(talk_sec), sum(dispo_sec), sum(dead_sec) from vicidial_agent_log val, vicidial_list vl, vicidial_statuses vs where val.event_time>='$query_date' and val.event_time<='$end_date' and val.campaign_id='$group[$i]' and val.lead_id=vl.list_id and vl.list_id='$list_id' and val.status=vs.status group by vs.status_name order by vs.status_name";
-		#$stat_stmt="select val.status, count(*), sum(pause_sec), sum(wait_sec), sum(talk_sec), sum(dispo_sec), sum(dead_sec) from vicidial_agent_log val, vicidial_list vl where val.event_time>='$query_date' and val.event_time<='$end_date' and val.campaign_id='$group[$i]' and val.lead_id=vl.lead_id and vl.list_id='$list_id' group by val.status order by val.status";
-		$stat_stmt="select vicidial_log.status, vicidial_log.uniqueid, vicidial_log.length_in_sec as duration, (vicidial_agent_log.talk_sec-vicidial_agent_log.dead_sec) as handle_time from vicidial_log LEFT OUTER JOIN vicidial_agent_log on vicidial_log.lead_id=vicidial_agent_log.lead_id and vicidial_log.uniqueid=vicidial_agent_log.uniqueid where vicidial_log.call_date>='$query_date' and vicidial_log.call_date<='$end_date' and vicidial_log.list_id='$list_id' UNION select vicidial_closer_log.status, vicidial_closer_log.uniqueid, vicidial_closer_log.length_in_sec as duration, (vicidial_agent_log.talk_sec-vicidial_agent_log.dead_sec) as handle_time from vicidial_closer_log LEFT OUTER JOIN vicidial_agent_log on vicidial_closer_log.lead_id=vicidial_agent_log.lead_id and vicidial_closer_log.uniqueid=vicidial_agent_log.uniqueid where call_date>='$query_date' and call_date<='$end_date' and list_id='$list_id' order by status";
+		# 			$stat_stmt="SELECT vs.status_name, count(*), sum(pause_sec), sum(wait_sec), sum(talk_sec), sum(dispo_sec), sum(dead_sec) from vicidial_agent_log val, vicidial_list vl, vicidial_statuses vs where val.event_time>='$query_date' and val.event_time<='$end_date' and val.campaign_id='$group[$i]' and val.lead_id=vl.list_id and vl.list_id='$list_id' and val.status=vs.status group by vs.status_name order by vs.status_name";
+		#$stat_stmt="SELECT val.status, count(*), sum(pause_sec), sum(wait_sec), sum(talk_sec), sum(dispo_sec), sum(dead_sec) from vicidial_agent_log val, vicidial_list vl where val.event_time>='$query_date' and val.event_time<='$end_date' and val.campaign_id='$group[$i]' and val.lead_id=vl.lead_id and vl.list_id='$list_id' group by val.status order by val.status";
+		$stat_stmt="SELECT vicidial_log.status, vicidial_log.uniqueid, vicidial_log.length_in_sec as duration, cast(vicidial_agent_log.talk_sec-vicidial_agent_log.dead_sec as signed) as handle_time from vicidial_log LEFT OUTER JOIN vicidial_agent_log on vicidial_log.lead_id=vicidial_agent_log.lead_id and vicidial_log.uniqueid=vicidial_agent_log.uniqueid where vicidial_log.call_date>='$query_date' and vicidial_log.call_date<='$end_date' and vicidial_log.list_id='$list_id' UNION SELECT vicidial_closer_log.status, vicidial_closer_log.uniqueid, vicidial_closer_log.length_in_sec as duration, cast(vicidial_agent_log.talk_sec-vicidial_agent_log.dead_sec as signed) as handle_time from vicidial_closer_log LEFT OUTER JOIN vicidial_agent_log on vicidial_closer_log.lead_id=vicidial_agent_log.lead_id and vicidial_closer_log.uniqueid=vicidial_agent_log.uniqueid where call_date>='$query_date' and call_date<='$end_date' and list_id='$list_id' order by status";
+		if ($DB) {$HTML_text.="|$stat_stmt|\n";}
 		# $ASCII_text.=$stat_stmt."\n";
 		$stat_rslt=mysql_query($stat_stmt, $link);
 		if (mysql_num_rows($stat_rslt)>0) 
@@ -336,9 +380,9 @@ while($i < $group_ct)
 			$max_duration=1;
 			$max_handletime=1;
 			
-			$ASCII_text.="+-------------------------------------+-------+-----------+-------------+\n";
-			$ASCII_text.="| DISPOSITION                         | CALLS | DURATION  | HANDLE TIME |\n";
-			$ASCII_text.="+-------------------------------------+-------+-----------+-------------+\n";
+			$ASCII_text.="+------------------------------------------+--------+------------+-------------+\n";
+			$ASCII_text.="| DISPOSITION                              | CALLS  | DURATION   | HANDLE TIME |\n";
+			$ASCII_text.="+------------------------------------------+--------+------------+-------------+\n";
 			$CSV_text.="\"DISPOSITION\",\"CALLS\",\"DURATION\",\"HANDLE TIME\"\n";
 			while ($stat_row=mysql_fetch_row($stat_rslt)) 
 				{
@@ -353,14 +397,22 @@ while($i < $group_ct)
 				$total_calls++;
 				$total_duration+=$stat_row[2];
 				$total_handle_time+=$stat_row[3];
+				if ($HA_ary[$stat_row[0]]=="Y") {$HA_count++;}
+				if ($SALE_ary[$stat_row[0]]=="Y") {$SALE_count++;}
+				if ($DNC_ary[$stat_row[0]]=="Y") {$DNC_count++;}
+				if ($CC_ary[$stat_row[0]]=="Y") {$CC_count++;}
+				if ($NI_ary[$stat_row[0]]=="Y") {$NI_count++;}
+				if ($UW_ary[$stat_row[0]]=="Y") {$UW_count++;}
+				if ($SC_ary[$stat_row[0]]=="Y") {$SC_count++;}
+				if ($COMP_ary[$stat_row[0]]=="Y") {$COMP_count++;}
 				}
 
 			$d=0;
 			while (list($key, $val)=each($dispo_ary)) 
 				{
-				$ASCII_text.="| ".sprintf("%-35s", $key.$status_ary[$key]);
-				$ASCII_text.=" | ".sprintf("%5s", $val[0]);
-				$ASCII_text.=" | ".sprintf("%9s", sec_convert($val[1], 'H'));
+				$ASCII_text.="| ".sprintf("%-40s", $key.$status_ary[$key]);
+				$ASCII_text.=" | ".sprintf("%6s", $val[0]);
+				$ASCII_text.=" | ".sprintf("%10s", sec_convert($val[1], 'H'));
 				$ASCII_text.=" | ".sprintf("%11s", sec_convert($val[2], 'H'))." |\n";
 				$CSV_text.="\"".$key.$status_ary[$key]."\",\"$val[0]\",\"".sec_convert($val[1], 'H')."\",\"".sec_convert($val[2], 'H')."\"\n";
 
@@ -373,20 +425,61 @@ while($i < $group_ct)
 				$graph_stats[$d][3]=$val[2];
 				$d++;
 				}
-			$ASCII_text.="+-------------------------------------+-------+-----------+-------------+\n";
-			$ASCII_text.="|                             TOTALS:";
-			$ASCII_text.=" | ".sprintf("%5s", $total_calls);
-			$ASCII_text.=" | ".sprintf("%9s", sec_convert($total_duration, 'H'));
+			$ASCII_text.="+------------------------------------------+--------+------------+-------------+\n";
+			$ASCII_text.="|                                  TOTALS:";
+			$ASCII_text.=" | ".sprintf("%6s", $total_calls);
+			$ASCII_text.=" | ".sprintf("%10s", sec_convert($total_duration, 'H'));
 			$ASCII_text.=" | ".sprintf("%11s", sec_convert($total_handle_time, 'H'))." |\n";
-			$ASCII_text.="+-------------------------------------+-------+-----------+-------------+\n";
+			$ASCII_text.="+------------------------------------------+--------+------------+-------------+\n";
 			$CSV_text.="\"TOTALS:\",\"$total_calls\",\"".sec_convert($total_duration, 'H')."\",\"".sec_convert($total_handle_time, 'H')."\"\n\n";
 
-			for ($d=0; $d<count($graph_stats); $d++) {
+
+			$HA_percent =	sprintf("%6.2f", 100*($HA_count/$total_calls)); while(strlen($HA_percent)>6) {$HA_percent = substr("$HA_percent", 0, -1);}
+			$SALE_percent =	sprintf("%6.2f", 100*($SALE_count/$total_calls)); while(strlen($SALE_percent)>6) {$SALE_percent = substr("$SALE_percent", 0, -1);}
+			$DNC_percent =	sprintf("%6.2f", 100*($DNC_count/$total_calls)); while(strlen($DNC_percent)>6) {$DNC_percent = substr("$DNC_percent", 0, -1);}
+			$CC_percent =	sprintf("%6.2f", 100*($CC_count/$total_calls)); while(strlen($CC_percent)>6) {$CC_percent = substr("$CC_percent", 0, -1);}
+			$NI_percent =	sprintf("%6.2f", 100*($NI_count/$total_calls)); while(strlen($NI_percent)>6) {$NI_percent = substr("$NI_percent", 0, -1);}
+			$UW_percent =	sprintf("%6.2f", 100*($UW_count/$total_calls)); while(strlen($UW_percent)>6) {$UW_percent = substr("$UW_percent", 0, -1);}
+			$SC_percent =	sprintf("%6.2f", 100*($SC_count/$total_calls)); while(strlen($SC_percent)>6) {$SC_percent = substr("$SC_percent", 0, -1);}
+			$COMP_percent =	sprintf("%6.2f", 100*($COMP_count/$total_calls)); while(strlen($COMP_percent)>6) {$COMP_percent = substr("$COMP_percent", 0, -1);}
+
+			$HA_count =	sprintf("%9s", "$HA_count"); while(strlen($HA_count)>9) {$HA_count = substr("$HA_count", 0, -1);}
+			$SALE_count =	sprintf("%9s", "$SALE_count"); while(strlen($SALE_count)>9) {$SALE_count = substr("$SALE_count", 0, -1);}
+			$DNC_count =	sprintf("%9s", "$DNC_count"); while(strlen($DNC_count)>9) {$DNC_count = substr("$DNC_count", 0, -1);}
+			$CC_count =	sprintf("%9s", "$CC_count"); while(strlen($CC_count)>9) {$CC_count = substr("$CC_count", 0, -1);}
+			$NI_count =	sprintf("%9s", "$NI_count"); while(strlen($NI_count)>9) {$NI_count = substr("$NI_count", 0, -1);}
+			$UW_count =	sprintf("%9s", "$UW_count"); while(strlen($UW_count)>9) {$UW_count = substr("$UW_count", 0, -1);}
+			$SC_count =	sprintf("%9s", "$SC_count"); while(strlen($SC_count)>9) {$SC_count = substr("$SC_count", 0, -1);}
+			$COMP_count =	sprintf("%9s", "$COMP_count"); while(strlen($COMP_count)>9) {$COMP_count = substr("$COMP_count", 0, -1);}
+
+			if ($list_active=='Y') {$list_active = 'ACTIVE  ';} else {$list_active = 'INACTIVE';}
+			$header_list_id = "$list_id - $list_name";
+			$header_list_id =	sprintf("%-51s", $header_list_id); while(strlen($header_list_id)>51) {$header_list_id = substr("$header_list_id", 0, -1);}
+			$header_list_count =	sprintf("%10s", $total_calls); while(strlen($header_list_count)>10) {$header_list_count = substr("$header_list_count", 0, -1);}
+			$ASCII_text .= "\n";
+			$ASCII_text .= "+--------------------------------------------------------------+\n";
+			$ASCII_text .= "| $header_list_id $list_active |\n";
+			$ASCII_text .= "|    GESAMTANRUFE: $header_list_count                                   |\n";
+			$ASCII_text .= "+--------------------------------------------------------------+\n";
+			$ASCII_text .= "| STATUS FLAGS BREAKDOWN:  (and % of total leads in the list)  |\n";
+			$ASCII_text .= "|   Human Antwort:       $HA_count    $HA_percent%                   |\n";
+			$ASCII_text .= "|   Sale:               $SALE_count    $SALE_percent%                   |\n";
+			$ASCII_text .= "|   DNC:                $DNC_count    $DNC_percent%                   |\n";
+			$ASCII_text .= "|   Customer Contact:   $CC_count    $CC_percent%                   |\n";
+			$ASCII_text .= "|   Not Interested:     $NI_count    $NI_percent%                   |\n";
+			$ASCII_text .= "|   Unworkable:         $UW_count    $UW_percent%                   |\n";
+			$ASCII_text .= "|   Scheduled callbk:   $SC_count    $SC_percent%                   |\n";
+			$ASCII_text .= "|   Completed:          $COMP_count    $COMP_percent%                   |\n";
+			$ASCII_text .= "+--------------------------------------------------------------+\n";
+
+
+			for ($d=0; $d<count($graph_stats); $d++) 
+				{
 				if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
 				$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
 				$DURATION_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(400*$graph_stats[$d][2]/$max_duration)."' height='16' />".sec_convert($graph_stats[$d][2], 'H')."</td></tr>";
 				$HANDLETIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(400*$graph_stats[$d][3]/$max_handletime)."' height='16' />".sec_convert($graph_stats[$d][3], 'H')."</td></tr>";
-			}
+				}
 			$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($total_calls)."</th></tr></table>";
 			$DURATION_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".sec_convert($total_duration, 'H')."</th></tr></table>";
 			$HANDLETIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".sec_convert($total_handle_time, 'H')."</th></tr></table>";
@@ -415,7 +508,6 @@ while($i < $group_ct)
 			}
 		$ASCII_text.="</FONT>\n";
 		$GRAPH.="</FONT>\n";
-
 		}
 	$i++;
 	$ASCII_text.="\n\n";
@@ -456,8 +548,6 @@ if ($file_download>0)
 	flush();
 
 	echo "$CSV_text";
-
-	exit;
 	}
 else 
 	{
@@ -468,4 +558,26 @@ else
 	echo $HTML_text;
 	flush();
 	}
+
+if ($db_source == 'S')
+	{
+	mysql_close($link);
+	$use_slave_server=0;
+	$db_source = 'M';
+	require("dbconnect.php");
+	}
+
+$endMS = microtime();
+$startMSary = explode(" ",$startMS);
+$endMSary = explode(" ",$endMS);
+$runS = ($endMSary[0] - $startMSary[0]);
+$runM = ($endMSary[1] - $startMSary[1]);
+$TOTALrun = ($runS + $runM);
+
+$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+
+exit;
+
 ?>

@@ -5,7 +5,7 @@
 # and/or vicidial_closer_log information by status, list_id and date range. 
 # downloads to a flat text file that is tab delimited
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -33,7 +33,10 @@
 # 110911-1445 - Added did fields to the EXTENDED format 
 # 111010-1930 - Added ALTERNATE_1 format
 # 111104-1240 - Added user_group restrictions for selecting in-groups
+# 130414-0122 - Added report logging
 #
+
+$startMS = microtime();
 
 require("dbconnect.php");
 
@@ -79,6 +82,7 @@ if (strlen($shift)<2) {$shift='ALL';}
 
 $report_name = 'Export fordert Bericht';
 $db_source = 'M';
+$file_exported=0;
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -97,15 +101,6 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
-
-if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
-	{
-	mysql_close($link);
-	$use_slave_server=1;
-	$db_source = 'S';
-	require("dbconnect.php");
-#	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
-	}
 
 $PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
@@ -129,6 +124,35 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 #	Header("HTTP/1.0 401 Unauthorized");
     echo "Unzulässiges Username/Password or no export report permission: |$PHP_AUTH_USER|\n";
     exit;
+	}
+
+##### BEGIN log visit to the vicidial_report_log table #####
+$LOGip = getenv("REMOTE_ADDR");
+$LOGbrowser = getenv("HTTP_USER_AGENT");
+$LOGscript_name = getenv("SCRIPT_NAME");
+$LOGserver_name = getenv("SERVER_NAME");
+$LOGserver_port = getenv("SERVER_PORT");
+$LOGrequest_uri = getenv("REQUEST_URI");
+$LOGhttp_referer = getenv("HTTP_REFERER");
+if (preg_match("/443/i",$LOGserver_port)) {$HTTPprotocol = 'https://';}
+  else {$HTTPprotocol = 'http://';}
+if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='';}
+else {$LOGserver_port = ":$LOGserver_port";}
+$LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
+
+$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$campaign[0], $query_date, $end_date|', url='$LOGfull_url';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$report_log_id = mysql_insert_id($link);
+##### END log visit to the vicidial_report_log table #####
+
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysql_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect.php");
+#	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
@@ -434,14 +458,6 @@ if ($run_export > 0)
 
 	if ( ($outbound_to_print > 0) or ($inbound_to_print > 0) )
 		{
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|$stmtA|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LEADS', event_type='EXPORT', record_id='', event_code='ADMIN EXPORT ERSUCHT BERICHT', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-
 		$TXTfilename = "EXPORT_CALL_REPORT_$FILE_TIME.txt";
 
 		// We'll be outputting a TXT file
@@ -768,6 +784,7 @@ if ($run_export > 0)
 				}
 			$i++;
 			}
+		$file_exported++;
 		}
 	else
 		{
@@ -1067,6 +1084,37 @@ else
 	echo "</FORM>\n\n";
 
 	}
+
+if ($db_source == 'S')
+	{
+	mysql_close($link);
+	$use_slave_server=0;
+	$db_source = 'M';
+	require("dbconnect.php");
+	}
+
+$endMS = microtime();
+$startMSary = explode(" ",$startMS);
+$endMSary = explode(" ",$endMS);
+$runS = ($endMSary[0] - $startMSary[0]);
+$runM = ($endMSary[1] - $startMSary[1]);
+$TOTALrun = ($runS + $runM);
+
+$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+
+if ($file_exported > 0)
+	{
+	### LOG INSERTION Admin Log Table ###
+	$SQL_log = "$stmt|$stmtA|";
+	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = addslashes($SQL_log);
+	$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LEADS', event_type='EXPORT', record_id='', event_code='ADMIN EXPORT ERSUCHT BERICHT', event_sql=\"$SQL_log\", event_notes='';";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	}
+
 exit;
 
 ?>

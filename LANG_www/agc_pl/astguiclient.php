@@ -1,7 +1,7 @@
 <?php
 # astguiclient.php - the web-based version of the astGUIclient client application
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least
 # user_level 1 or greater to access this page. Also you need to have the login
@@ -59,6 +59,7 @@
 # 90508-0727 - Changed to PHP long tags
 # 91129-2211 - Replaced SELECT STAR in SQL query
 # 120223-2124 - Removed logging of good login passwords if webroot writable is enabled
+# 130328-0017 - Converted ereg to preg functions
 # 
 
 require("dbconnect.php");
@@ -88,17 +89,17 @@ if (isset($_GET["relogin"]))				{$relogin=$_GET["relogin"];}
 $forever_stop=0;
 $user_abb = "$user$user$user$user";
 while ( (strlen($user_abb) > 4) and ($forever_stop < 200) )
-	{$user_abb = eregi_replace("^.","",$user_abb);   $forever_stop++;}
+	{$user_abb = preg_replace("/^./","",$user_abb);   $forever_stop++;}
 
-$version = '2.2.4-1';
-$build = '120223-2124';
+$version = '2.2.6-1';
+$build = '130328-0017';
 
 ### security strip all non-alphanumeric characters out of the variables ###
-	$DB=ereg_replace("[^0-9a-z]","",$DB);
-	$phone_login=ereg_replace("[^0-9a-zA-Z]","",$phone_login);
-	$phone_pass=ereg_replace("[^0-9a-zA-Z]","",$phone_pass);
-	$user=ereg_replace("[^0-9a-zA-Z]","",$user);
-	$pass=ereg_replace("[^0-9a-zA-Z]","",$pass);
+	$DB=preg_replace("/[^0-9a-z]/","",$DB);
+	$phone_login=preg_replace("/[^0-9a-zA-Z]/","",$phone_login);
+	$phone_pass=preg_replace("/[^0-9a-zA-Z]/","",$phone_pass);
+	$user=preg_replace("/[^0-9a-zA-Z]/","",$user);
+	$pass=preg_replace("/[^0-9a-zA-Z]/","",$pass);
 
 
 if ($force_logout)
@@ -134,13 +135,13 @@ $browser = getenv("HTTP_USER_AGENT");
 $script_name = getenv("SCRIPT_NAME");
 $server_name = getenv("SERVER_NAME");
 $server_port = getenv("SERVER_PORT");
-if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
+if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
   else {$HTTPprotocol = 'http://';}
 if (($server_port == '80') or ($server_port == '443') ) {$server_port='';}
 else {$server_port = "$CL$server_port";}
 $agcPAGE = "$HTTPprotocol$server_name$server_port$script_name";
 $agcDIR = $agcPAGE;
-$agcDIR = eregi_replace('astguiclient.php','',$agcDIR);
+$agcDIR = preg_replace('/astguiclient\.php/i','',$agcDIR);
 
 if( (strlen($user)<2) or (strlen($pass)<2) or (!$auth) or ($relogin == 'YES') )
 	{
@@ -346,7 +347,7 @@ else
 
 	$local_web_callerID_URL_enc = rawurlencode($local_web_callerID_URL);
 
-	$session_ext = eregi_replace("[^a-z0-9]", "", $extension);
+	$session_ext = preg_replace("/[^a-z0-9]/i", "", $extension);
 	if (strlen($session_ext) > 10) {$session_ext = substr($session_ext, 0, 10);}
 	$session_rand = (rand(1,9999999) + 10000000);
 	$session_name = "$StarTtime$US$session_ext$session_rand";
@@ -372,7 +373,7 @@ else
 		$row=mysql_fetch_row($rslt);
 		$favorites_list=$row[0];
 		$h=0;
-		$favorites_listX = eregi_replace("'",'',$favorites_list);
+		$favorites_listX = preg_replace("/\'/i",'',$favorites_list);
 		$favorites = explode(',',$favorites_listX);
 		$favorites_count = count($favorites);
 		$favorites_listX='';
@@ -1387,7 +1388,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=3;
 					if (live_calls > 0)
 						{
-						var live_calls_HTML = "<font face=\"Arial,Helvetica\"><B>AKTYWNE ROZMOWY Z TEGO TELEFONU:</B></font><BR><table width=100%><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">KANAŁ KLIENCKI</td><td><font class=\"log_title\">KANAŁ ZDALNY</td><td><font class=\"log_title\">RECORD</td><td><font class=\"log_title\">ROZŁĄCZ</td><td><font class=\"log_title\">TRANSFER</td><td><font class=\"log_title\">PARKING</td></tr>";
+						var live_calls_HTML = "<font face=\"Arial,Helvetica\"><B>AKTYWNE ROZMOWY Z TEGO TELEFONU:</B></font><BR><table width=100%><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">KANAŁ KLIENCKI</td><td><font class=\"log_title\">KANAŁ ZDALNY</td><td><font class=\"log_title\">RECORD</td><td><font class=\"log_title\">ROZŁĄCZ</td><td><font class=\"log_title\">TRANSFER</td><td><font class=\"log_title\">PARK</td></tr>";
 						if ( (LCAcount > live_calls)  || (LCAcount < live_calls) )
 							{
 							LCAe[0]=''; LCAe[1]=''; LCAe[2]=''; LCAe[3]=''; LCAe[4]=''; LCAe[5]=''; 
@@ -1417,7 +1418,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 							else 
 								{live_calls_HTML = live_calls_HTML + "<span id=\"recordlive" + loop_ct + "\"><a href=\"#\" onclick=\"liverecording_send_recording('Monitor','" + channelfieldBtrunk_array[1] + "','recordlive" + loop_ct + "');return false;\">Record</span>";}
 
-							live_calls_HTML = live_calls_HTML + "</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"livehangup_send_hangup('" + channelfieldBtrunk_array[1] + "');return false;\">ROZŁĄCZ</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"showMainXfeR('MainXfeRBox','" + channelfieldBtrunk_array[1] + "','" + channelfieldA_array[1] + "');return false;\">TRANSFER</a></td><td><font class=\"log_text\"><a href=\"#\" onclick=\"mainxfer_send_redirect('ParK','" + channelfieldBtrunk_array[1] + "');return false;\">PARKING</td></tr>";
+							live_calls_HTML = live_calls_HTML + "</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"livehangup_send_hangup('" + channelfieldBtrunk_array[1] + "');return false;\">ROZŁĄCZ</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"showMainXfeR('MainXfeRBox','" + channelfieldBtrunk_array[1] + "','" + channelfieldA_array[1] + "');return false;\">TRANSFER</a></td><td><font class=\"log_text\"><a href=\"#\" onclick=\"mainxfer_send_redirect('ParK','" + channelfieldBtrunk_array[1] + "');return false;\">PARK</td></tr>";
 
 							if (LCAe[ARY_ct].length < 1) 
 								{LCAe[ARY_ct] = channelfieldA_array[1];   LCAcontent_change++;  LCAalter++;}
@@ -2735,7 +2736,7 @@ echo "</head>\n";
 </span>
 
 <span style="position:absolute;left:0px;top:12px;z-index:29;" id="TrunkHangupBox">
-    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> TRUNK HANGUP <BR><BR>
+    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> TRUNK hangup <BR><BR>
 	<span id="TrunkHangupContent"> Active Trunks Menu </span><BR>
 	<span id="TrunkHangup_HUlink"><a href="#" onclick="busyhangup_send_hangup('Trunk');return false;">Rozłącz międzymiastową</a> &nbsp; | &nbsp; </span>
 	<span id="TrunkHangup_HJlink"><a href="#" onclick="busyhangup_send_redirect('Trunk','HIJACK');return false;">Przejmij międzymiastową</a> &nbsp; | &nbsp; </span>

@@ -13,6 +13,7 @@
 # 111222-2124 - Added max stats bar chart function
 # 120125-1235 - Small changes to max stats function to allow for total system stats
 # 120213-1417 - Changes to allow for ra stats
+# 120713-2137 - Added download function for max stats
 #
 
 ##### reformat seconds into HH:MM:SS or MM:SS #####
@@ -102,28 +103,35 @@ function array_group_count($array, $sort = false)
 
 
 ##### bar chart using max stats data #####
-function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$metric_name,$more_link)
+function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$metric_name,$more_link,$END_DATE,$download_link)
 	{
 	$stats_start_time = time();
-	$Bstats_date[0]=date("Y-m-d");
+	if ($END_DATE) 
+		{
+		$Bstats_date[0]=$END_DATE;
+		}
+	else
+		{
+		$Bstats_date[0]=date("Y-m-d");
+		}
 	$Btotal_calls[0]=0;
 	$link_text='';
 	$max_count=0;
 	$i=0;
-	$NWB = " &nbsp; <a href=\"javascript:openNewWindow('$PHP_SELF?ADD=99999";
+	$NWB = "$download_link &nbsp; <a href=\"javascript:openNewWindow('$PHP_SELF?ADD=99999";
 	$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 Border=0 ALT=\"AJUDA\" ALIGN=TOP></A>";
 
 
 	### get stats for last X days
-	$stmt="SELECT stats_date,$metric from vicidial_daily_max_stats where campaign_id='$campaign_id' and stats_flag='OPEN';";
+	$stmt="SELECT stats_date,$metric from vicidial_daily_max_stats where campaign_id='$campaign_id' and stats_flag='OPEN' and stats_date<='$Bstats_date[0]';";
 	if ($metric=='total_calls_inbound_all')
-		{$stmt="SELECT stats_date,sum(total_calls) from vicidial_daily_max_stats where stats_type='INGROUP' and stats_flag='OPEN' group by stats_date;";}
+		{$stmt="SELECT stats_date,sum(total_calls) from vicidial_daily_max_stats where stats_type='INGROUP' and stats_flag='OPEN' and stats_date<='$Bstats_date[0]' group by stats_date;";}
 	if ($metric=='total_calls_outbound_all')
-		{$stmt="SELECT stats_date,sum(total_calls) from vicidial_daily_max_stats where stats_type='CAMPAIGN' and stats_flag='OPEN' group by stats_date;";}
+		{$stmt="SELECT stats_date,sum(total_calls) from vicidial_daily_max_stats where stats_type='CAMPAIGN' and stats_flag='OPEN' and stats_date<='$Bstats_date[0]' group by stats_date;";}
 	if ($metric=='ra_total_calls')
-		{$stmt="SELECT stats_date,total_calls from vicidial_daily_ra_stats where stats_flag='OPEN' and user='$campaign_id';";}
+		{$stmt="SELECT stats_date,total_calls from vicidial_daily_ra_stats where stats_flag='OPEN' and stats_date<='$Bstats_date[0]' and user='$campaign_id';";}
 	if ($metric=='ra_concurrent_calls')
-		{$stmt="SELECT stats_date,max_calls from vicidial_daily_ra_stats where stats_flag='OPEN' and user='$campaign_id';";}
+		{$stmt="SELECT stats_date,max_calls from vicidial_daily_ra_stats where stats_flag='OPEN' and stats_date<='$Bstats_date[0]' and user='$campaign_id';";}
 	$rslt=mysql_query($stmt, $link);
 	$Xstats_to_print = mysql_num_rows($rslt);
 	if ($Xstats_to_print > 0) 
@@ -137,8 +145,6 @@ function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$met
 	$stats_start_time = mktime(10, 10, 10, $stats_date_ARRAY[1], $stats_date_ARRAY[2], $stats_date_ARRAY[0]);
 	while($i <= $days_graph)
 		{
-		$i++;
-		$stats_start_time = ($stats_start_time - 86400);
 		$Bstats_date[$i] =  date("Y-m-d", $stats_start_time);
 		$Btotal_calls[$i]=0;
 		$stmt="SELECT stats_date,$metric from vicidial_daily_max_stats where campaign_id='$campaign_id' and stats_date='$Bstats_date[$i]';";
@@ -150,6 +156,7 @@ function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$met
 			{$stmt="SELECT stats_date,total_calls from vicidial_daily_ra_stats where stats_date='$Bstats_date[$i]' and user='$campaign_id';";}
 		if ($metric=='ra_concurrent_calls')
 			{$stmt="SELECT stats_date,max_calls from vicidial_daily_ra_stats where stats_date='$Bstats_date[$i]' and user='$campaign_id';";}
+		echo "<!-- $i) $stmt \\-->\n";
 		$rslt=mysql_query($stmt, $link);
 		$Ystats_to_print = mysql_num_rows($rslt);
 		if ($Ystats_to_print > 0) 
@@ -158,6 +165,8 @@ function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$met
 			$Btotal_calls[$i] =		$rowx[1];
 			if ($max_count < $Btotal_calls[$i]) {$max_count = $Btotal_calls[$i];}
 			}
+		$i++;
+		$stats_start_time = ($stats_start_time - 86400);
 		}
 	if ($max_count < 1) 
 		{echo "<!-- no max stats cache summary information available -->";}
@@ -186,6 +195,92 @@ function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$met
 			$i++;
 			}
 		echo "</table>\n";
+		}
+	}
+
+##### bar chart using max stats data #####
+function download_max_system_stats($campaign_id,$days_graph,$title,$metric,$metric_name,$END_DATE)
+	{
+	global $CSV_text, $link;
+	$stats_start_time = time();
+	if ($END_DATE) 
+		{
+		$Bstats_date[0]=$END_DATE;
+		}
+	else
+		{
+		$Bstats_date[0]=date("Y-m-d");
+		}
+	$Btotal_calls[0]=0;
+	$link_text='';
+	$i=0;
+
+	### get stats for last X days
+	$stmt="SELECT stats_date,$metric from vicidial_daily_max_stats where campaign_id='$campaign_id' and stats_flag='OPEN' and stats_date<='$Bstats_date[0]';";
+	if ($metric=='total_calls_inbound_all')
+		{$stmt="SELECT stats_date,sum(total_calls) from vicidial_daily_max_stats where stats_type='INGROUP' and stats_flag='OPEN' and stats_date<='$Bstats_date[0]' group by stats_date;";}
+	if ($metric=='total_calls_outbound_all')
+		{$stmt="SELECT stats_date,sum(total_calls) from vicidial_daily_max_stats where stats_type='CAMPAIGN' and stats_flag='OPEN' and stats_date<='$Bstats_date[0]' group by stats_date;";}
+	if ($metric=='ra_total_calls')
+		{$stmt="SELECT stats_date,total_calls from vicidial_daily_ra_stats where stats_flag='OPEN' and stats_date<='$Bstats_date[0]' and user='$campaign_id';";}
+	if ($metric=='ra_concurrent_calls')
+		{$stmt="SELECT stats_date,max_calls from vicidial_daily_ra_stats where stats_flag='OPEN' and stats_date<='$Bstats_date[0]' and user='$campaign_id';";}
+	$rslt=mysql_query($stmt, $link);
+	$Xstats_to_print = mysql_num_rows($rslt);
+	if ($Xstats_to_print > 0) 
+		{
+		$rowx=mysql_fetch_row($rslt);
+		$Bstats_date[0] =  $rowx[0];
+		$Btotal_calls[0] = $rowx[1];
+		if ($max_count < $Btotal_calls[0]) {$max_count = $Btotal_calls[0];}
+		}
+	$stats_date_ARRAY = explode("-",$Bstats_date[0]);
+	$stats_start_time = mktime(10, 10, 10, $stats_date_ARRAY[1], $stats_date_ARRAY[2], $stats_date_ARRAY[0]);
+	while($i <= $days_graph)
+		{
+		$Bstats_date[$i] =  date("Y-m-d", $stats_start_time);
+		$Btotal_calls[$i]=0;
+		$stmt="SELECT stats_date,$metric from vicidial_daily_max_stats where campaign_id='$campaign_id' and stats_date='$Bstats_date[$i]';";
+		if ($metric=='total_calls_inbound_all')
+			{$stmt="SELECT stats_date,sum(total_calls) from vicidial_daily_max_stats where stats_date='$Bstats_date[$i]' and stats_type='INGROUP' group by stats_date;";}
+		if ($metric=='total_calls_outbound_all')
+			{$stmt="SELECT stats_date,sum(total_calls) from vicidial_daily_max_stats where stats_date='$Bstats_date[$i]' and stats_type='CAMPAIGN' group by stats_date;";}
+		if ($metric=='ra_total_calls')
+			{$stmt="SELECT stats_date,total_calls from vicidial_daily_ra_stats where stats_date='$Bstats_date[$i]' and user='$campaign_id';";}
+		if ($metric=='ra_concurrent_calls')
+			{$stmt="SELECT stats_date,max_calls from vicidial_daily_ra_stats where stats_date='$Bstats_date[$i]' and user='$campaign_id';";}
+		$rslt=mysql_query($stmt, $link);
+		$Ystats_to_print = mysql_num_rows($rslt);
+		if ($Ystats_to_print > 0) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$Btotal_calls[$i] =		$rowx[1];
+			if ($max_count < $Btotal_calls[$i]) {$max_count = $Btotal_calls[$i];}
+			}
+		$i++;
+		$stats_start_time = ($stats_start_time - 86400);
+		}
+
+	if ($title=='campaign') {$out_in_type=' outbound';}
+	if ($title=='in-group') {$out_in_type=' inbound';}
+	$CSV_text.="\"$days_graph Day $out_in_type $metric_name for this $title\"\n";
+
+	if ($max_count < 1) 
+		{$CSV_text.="\"no max stats cache summary information available\"\n";}
+	else
+		{
+		$CSV_text.="\"DATE\",\"$metric_name\"\n";
+
+		$i=0;
+		while($i < $days_graph)
+			{
+			$bar_width = intval($max_multi * $Btotal_calls[$i]);
+			if ($Btotal_calls[$i] < 1) {$Btotal_calls[$i] = "-none-";}
+			$CSV_text.="\"$Bstats_date[$i]\",\"$Btotal_calls[$i]\"\n";
+			$i++;
+			}
+
+		$CSV_text.="\n\n";
 		}
 	}
 ?>

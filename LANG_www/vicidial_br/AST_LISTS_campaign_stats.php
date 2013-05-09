@@ -1,7 +1,7 @@
 <?php 
 # AST_LISTS_campaign_stats.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This is a list inventory report, not a calling report. This report will show
 # statistics for all of the lists in the selected campaigns
@@ -10,7 +10,12 @@
 # 100916-0928 - First build
 # 110703-1815 - Added download option
 # 120224-0910 - Added HTML display option with bar graphs
+# 120524-1754 - Fixed status categories issue
+# 130221-1928 - small change to remove nested SQL query
+# 130414-0127 - Added report logging
 #
+
+$startMS = microtime();
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -58,15 +63,6 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
-	{
-	mysql_close($link);
-	$use_slave_server=1;
-	$db_source = 'S';
-	require("dbconnect.php");
-	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
-	}
-
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 7 and view_reports='1' and active='Y';";
 if ($DB) {$MAIN.="|$stmt|\n";}
 if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
@@ -86,6 +82,35 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
     Header("HTTP/1.0 401 Unauthorized");
     echo "Nome ou Senha inválidos: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
+	}
+
+##### BEGIN log visit to the vicidial_report_log table #####
+$LOGip = getenv("REMOTE_ADDR");
+$LOGbrowser = getenv("HTTP_USER_AGENT");
+$LOGscript_name = getenv("SCRIPT_NAME");
+$LOGserver_name = getenv("SERVER_NAME");
+$LOGserver_port = getenv("SERVER_PORT");
+$LOGrequest_uri = getenv("REQUEST_URI");
+$LOGhttp_referer = getenv("HTTP_REFERER");
+if (preg_match("/443/i",$LOGserver_port)) {$HTTPprotocol = 'https://';}
+  else {$HTTPprotocol = 'http://';}
+if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='';}
+else {$LOGserver_port = ":$LOGserver_port";}
+$LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
+
+$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $file_download, $report_display_type|', url='$LOGfull_url';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$report_log_id = mysql_insert_id($link);
+##### END log visit to the vicidial_report_log table #####
+
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysql_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect.php");
+	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
@@ -178,9 +203,18 @@ else
 	$group_SQL = "where campaign_id IN($group_SQL)";
 	}
 
+# Get lists to query to avoid using a nested query
+$lists_id_str="";
+$list_stmt="SELECT list_id from vicidial_lists where active IN('Y','N') $group_SQLand";
+$list_rslt=mysql_query($list_stmt, $link);
+while ($lrow=mysql_fetch_row($list_rslt)) {
+	$lists_id_str.="'$lrow[0]',";
+}
+$lists_id_str=substr($lists_id_str,0,-1);
+
 $stmt="select vsc_id,vsc_name from vicidial_status_categories;";
 $rslt=mysql_query($stmt, $link);
-if ($DB) {$MAIN.="$stmt\n";}
+if ($DB) {echo "$stmt\n";}
 $statcats_to_print = mysql_num_rows($rslt);
 $i=0;
 while ($i < $statcats_to_print)
@@ -188,10 +222,24 @@ while ($i < $statcats_to_print)
 	$row=mysql_fetch_row($rslt);
 	$vsc_id[$i] =	$row[0];
 	$vsc_name[$i] =	$row[1];
-	$vsc_count[$i] = 0;
+
+	$category_statuses="";
+	$status_stmt="select distinct status from vicidial_statuses where category='$row[0]' UNION select distinct status from vicidial_campaign_statuses where category='$row[0]' $group_SQLand";
+	if ($DB) {echo "$status_stmt\n";}
+	$status_rslt=mysql_query($status_stmt, $link);
+	while ($status_row=mysql_fetch_row($status_rslt)) 
+		{
+		$category_statuses.="'$status_row[0]',";
+        }
+	$category_statuses=substr($category_statuses, 0, -1);
+
+	$category_stmt="select count(*) from vicidial_list where status in ($category_statuses) and list_id IN($lists_id_str)";
+	if ($DB) {echo "$category_stmt\n";}
+	$category_rslt=mysql_query($category_stmt, $link);
+	$category_row=mysql_fetch_row($category_rslt);
+	$vsc_count[$i] = $category_row[0];
 	$i++;
 	}
-
 
 
 
@@ -348,7 +396,15 @@ else
 	$GRAPH.="<th class=\"thgraph\" scope=\"col\">LEADS</th>\n";
 	$GRAPH.="</tr>\n";
 
-	$stmt="select count(*),list_id from vicidial_list where list_id IN( SELECT list_id from vicidial_lists where active IN('Y','N') $group_SQLand) group by list_id;";
+	$lists_id_str="";
+	$list_stmt="SELECT list_id from vicidial_lists where active IN('Y','N') $group_SQLand";
+	$list_rslt=mysql_query($list_stmt, $link);
+	while ($lrow=mysql_fetch_row($list_rslt)) {
+		$lists_id_str.="'$lrow[0]',";
+	}
+	$lists_id_str=substr($lists_id_str,0,-1);
+
+	$stmt="select count(*),list_id from vicidial_list where list_id IN($lists_id_str) group by list_id;";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
 	$listids_to_print = mysql_num_rows($rslt);
@@ -949,7 +1005,6 @@ else
 
 		echo "$CSV_text";
 
-		exit;
 	} else {
 		$JS_onload.="}\n";
 		$JS_text.=$JS_onload;
@@ -962,5 +1017,25 @@ else
 	}
 
 
+if ($db_source == 'S')
+	{
+	mysql_close($link);
+	$use_slave_server=0;
+	$db_source = 'M';
+	require("dbconnect.php");
+	}
+
+$endMS = microtime();
+$startMSary = explode(" ",$startMS);
+$endMSary = explode(" ",$endMS);
+$runS = ($endMSary[0] - $startMSary[0]);
+$runM = ($endMSary[1] - $startMSary[1]);
+$TOTALrun = ($runS + $runM);
+
+$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+
+exit;
 
 ?>

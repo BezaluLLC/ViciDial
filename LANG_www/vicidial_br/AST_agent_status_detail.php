@@ -1,7 +1,7 @@
 <?php 
 # AST_agent_status_detail.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -17,8 +17,11 @@
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 # 111104-1248 - Added user_group restrictions for selecting in-groups
 # 120224-0910 - Added HTML display option with bar graphs
+# 121130-0958 - Fix for user group permissions issue #588
+# 130414-0139 - Added report logging
 #
 
+$startMS = microtime();
 
 require("dbconnect.php");
 
@@ -72,15 +75,6 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
-	{
-	mysql_close($link);
-	$use_slave_server=1;
-	$db_source = 'S';
-	require("dbconnect.php");
-#	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
-	}
-
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
 
@@ -103,6 +97,35 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
     Header("HTTP/1.0 401 Unauthorized");
     echo "Nome ou Senha inválidos: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
+	}
+
+##### BEGIN log visit to the vicidial_report_log table #####
+$LOGip = getenv("REMOTE_ADDR");
+$LOGbrowser = getenv("HTTP_USER_AGENT");
+$LOGscript_name = getenv("SCRIPT_NAME");
+$LOGserver_name = getenv("SERVER_NAME");
+$LOGserver_port = getenv("SERVER_PORT");
+$LOGrequest_uri = getenv("REQUEST_URI");
+$LOGhttp_referer = getenv("HTTP_REFERER");
+if (preg_match("/443/i",$LOGserver_port)) {$HTTPprotocol = 'https://';}
+  else {$HTTPprotocol = 'http://';}
+if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='';}
+else {$LOGserver_port = ":$LOGserver_port";}
+$LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
+
+$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $file_download, $report_display_type|', url='$LOGfull_url';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$report_log_id = mysql_insert_id($link);
+##### END log visit to the vicidial_report_log table #####
+
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysql_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect.php");
+#	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
@@ -190,6 +213,11 @@ while ($i < $campaigns_to_print)
 		{$group[$i] = $groups[$i];}
 	$i++;
 	}
+
+for ($i=0; $i<count($user_group); $i++)
+	{
+	if (eregi("--ALL--", $user_group[$i])) {$all_user_groups=1; $user_group="";}
+	}
 $stmt="select user_group from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
@@ -199,6 +227,7 @@ while ($i < $user_groups_to_print)
 	{
 	$row=mysql_fetch_row($rslt);
 	$user_groups[$i] =$row[0];
+	if ($all_user_groups) {$user_group[$i]=$row[0];}
 	$i++;
 	}
 
@@ -353,9 +382,6 @@ else
 		}
 	$query_date_BEGIN = "$query_date $time_BEGIN";   
 	$query_date_END = "$end_date $time_END";
-
-	if (strlen($user_group)>0) {$ugSQL="and vicidial_agent_log.user_group='$user_group'";}
-	else {$ugSQL='';}
 
 	if ($file_download < 1)
 		{
@@ -787,6 +813,25 @@ if ($file_download > 0)
 
 	echo "$file_output";
 
+	if ($db_source == 'S')
+		{
+		mysql_close($link);
+		$use_slave_server=0;
+		$db_source = 'M';
+		require("dbconnect.php");
+		}
+
+	$endMS = microtime();
+	$startMSary = explode(" ",$startMS);
+	$endMSary = explode(" ",$endMS);
+	$runS = ($endMSary[0] - $startMSary[0]);
+	$runM = ($endMSary[1] - $startMSary[1]);
+	$TOTALrun = ($runS + $runM);
+
+	$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+
 	exit;
 	}
 
@@ -804,6 +849,8 @@ else
 	echo $ASCII_text;
 	}
 
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('/vicidial/admin.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 Border=0 ALT=\"AJUDA\" ALIGN=TOP></A>";
 
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> Datas:<BR>";
@@ -812,6 +859,10 @@ echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\
 
 ?>
 <script language="JavaScript">
+function openNewWindow(url)
+	{
+	window.open (url,"",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');
+	}
 var o_cal = new tcal ({
 	// form name
 	'formname': 'vicidial_report',
@@ -879,7 +930,7 @@ echo "Mostrar as:<BR>";
 echo "<select name='report_display_type'>";
 if ($report_display_type) {echo "<option value='$report_display_type' selected>$report_display_type</option>";}
 echo "<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR><BR>";
-echo "<INPUT TYPE=Submit NAME=ENVIAR VALUE=ENVIAR>\n";
+echo "<INPUT TYPE=Submit NAME=ENVIAR VALUE=ENVIAR>$NWB#agent_status_detail$NWE\n";
 echo "</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
 echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
@@ -923,6 +974,26 @@ if (!$report_display_type || $report_display_type=="TEXT")
 
 	echo "</span>\n";
 	}
+
+if ($db_source == 'S')
+	{
+	mysql_close($link);
+	$use_slave_server=0;
+	$db_source = 'M';
+	require("dbconnect.php");
+	}
+
+$endMS = microtime();
+$startMSary = explode(" ",$startMS);
+$endMSary = explode(" ",$endMS);
+$runS = ($endMSary[0] - $startMSary[0]);
+$runM = ($endMSary[1] - $startMSary[1]);
+$TOTALrun = ($runS + $runM);
+
+$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+
 ?>
 
 </BODY></HTML>

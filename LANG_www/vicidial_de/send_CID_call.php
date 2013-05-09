@@ -3,11 +3,13 @@
 #
 # Send calls with custom callerID numbers from web form
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: GPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: GPLv2
 #
 # CHANGES
 #
 # 90714-1355 - First Build
+# 120831-1527 - Added vicidial_dial_log logging
+# 130414-0039 - Added admin logging
 #
 
 require("dbconnect.php");
@@ -55,6 +57,7 @@ $auth=$row[0];
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $STARTtime = date("U");
+$ip = getenv("REMOTE_ADDR");
 
 
 ?>
@@ -121,6 +124,17 @@ else
 
 	$stmt = "INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','TESTCIDCALL098765432','Exten: 91$receiver','Context: default','Channel: Local/91$sender$Local_end','Priority: 1','Callerid: \"$cid_number\" <$cid_number>','','','','','');";
 	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_query($stmt, $link);
+
+	$stmt = "INSERT INTO vicidial_dial_log SET caller_code='TESTCIDCALL098765432',lead_id='0',server_ip='$server_ip',call_date='$NOW_TIME',extension='91$receiver',channel='Local/91$sender$Local_end',timeout='$Local_dial_timeout',outbound_cid='\"$cid_number\" <$cid_number>',context='default';";
+	$rslt=mysql_query($stmt, $link);
+
+	### LOG INSERTION Admin Log Table ###
+	$SQL_log = "$stmt|";
+	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = addslashes($SQL_log);
+	$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='CIDSEND', event_type='OTHER', record_id='$PHP_AUTH_USER', event_code='ADMIN SEND CID CALL', event_sql=\"$SQL_log\", event_notes='Server: $server_ip';";
+	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_query($stmt, $link);
 
 	echo "<B>Call sent from $sender to $receiver using CIDnumber: $cid_number</B>";

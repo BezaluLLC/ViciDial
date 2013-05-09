@@ -5,6 +5,7 @@
 #
 # CHANGES
 # 120402-2132 - First Build
+# 120529-1427 - Filename filter fix
 #
 
 require("dbconnect.php");
@@ -193,6 +194,8 @@ $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 Border=0 ALT=\"AYUDA\" ALI
 <head>
 </head>
 <script language="Javascript">
+var form_file_name='';
+
 function init() {
 	document.getElementById("listloader_file_primer").onsubmit=function() {
 		document.getElementById("listloader_file_primer").target = "file_holder";
@@ -229,7 +232,7 @@ function DisplayTemplateFields(list_id) {
 		xmlhttp = new XMLHttpRequest();
 	}
 	if (xmlhttp) { 
-		var vs_query = "&custom_fields_enabled="+custom_fields_enabled+"&list_id="+list_id+"&delimiter="+delimiter+"&buffer="+buffer;
+		var vs_query = "&custom_fields_enabled="+custom_fields_enabled+"&list_id="+list_id+"&delimiter="+delimiter+"&buffer="+buffer+"&sample_template_file_name="+form_file_name;
 		xmlhttp.open('POST', 'leadloader_template_display.php'); 
 		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 		xmlhttp.send(vs_query); 
@@ -264,6 +267,7 @@ function DrawTemplateStrings() {
 	document.getElementById("custom_fields_layout").value=custom_string;
 }
 function loadIFrame(form_action, field_value) {
+	form_file_name = field_value;
 	if (field_value=="") {
 		document.getElementById('list_data_display').style.display = 'none'; 
 		document.getElementById('list_data_display').style.visibility = 'hidden';

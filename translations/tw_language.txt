@@ -20,7 +20,6 @@ agc|live_exten_check.php|0
 agc|call_log_display.php|0
 agc|voicemail_check.php|0
 agc|dbconnect.php|1
-agc|htglobalize.php|1
 agc|timeclock.php|0
 agc|vdc_script_display.php|1
 agc|vdc_script_notes.php|0
@@ -29,6 +28,8 @@ agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
 agc|phone_only.php|0
+agc|vdc_email_display.php|0
+agc|audit_comments.php|0
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"一月"|
@@ -323,7 +324,7 @@ Dial Override|Dial Override|
 digits only please|限數字碼輸入|
 Dial Now|立即撥號|
 CB Comments|CB Comments|
-Title|職銜|
+ Title| 職銜|
 Your Status|您目前的狀態|
  STATUS| 狀態|
  RESET| 重置|
@@ -333,10 +334,9 @@ Incoming|Incoming|
 Calling|撥號中|
 Called|已撥號|
 Campaign|活動|
-Status|狀態|
+>Status|>狀態|
 Inserted|已插入|
  seconds| 秒|
-HELP|協助|
  Login | 登入 |
 Login:|登入:|
 User |使用者 |
@@ -347,7 +347,6 @@ Server|主機|
 RECORD |錄音 |
 >HANGUP|>掛斷|
 >XFER|轉接|
-PARK|駐留|
 IN-NUMBER|IN-NUMMER|
 NUMBER|號碼|
 CALLERID|CALLERID|
@@ -356,16 +355,15 @@ PICKUP|接起|
 CONFERENCE|會議|
 Refresh|更新|
 Send DTMF|傳送 DTMF|
-ORDER|次序|
+>ORDER|>次序|
  on | on |
 >LOGOUT|>登出|
  Channel| 渠道|
 Extensions|分機|
 Conferences|會議|
 Conference|會議|
-Recording|錄音|
-Record|錄音|
-Welcome|歡迎|
+ Recording| 錄音|
+Welcome |歡迎 |
 VOICEMAIL|語音信箱|
  NEW| 新|
  OLD| 舊|
@@ -376,21 +374,21 @@ Slower|較慢速|
 Initializing|起始中|
 Invalid|無效|
 Username|Username|
-Notes|注意|
+Notes:|注意:|
 First|名|
 MI: |MI:|
-Last|姓|
+Last |姓 |
 Address|地址|
 City|市|
-State|州|
+ State| 州|
 PostCode|郵遞區號|
 Province|省|
 Vendor ID|Vendor ID|
 DialCode|DialCode|
 Alt. Phone|其他電話|
 Show|展現|
-Email|電郵|
-Comments|備註|
+ Email| 電郵|
+ Comments| 備註|
 REFRESH|更新|
 ALT PHONE DIAL|撥打其他電話|
 MAIN PHONE|主要電話|
@@ -600,3 +598,79 @@ Agents View|代理商查看|
 -INCALL|-門店|
 -PAUSED|-暫停|
 CALL DISPOSITION|認購證的處置|
+### START translations for 2.6 release ###
+Click Here to Choose a Dial In-Group|點擊這裡選擇一個撥號組|
+SELECT A DIAL IN-GROUP|選擇一個撥號組|
+DIAL IN-GROUP|撥號組|
+Dial In-Group|撥號組|
+Click Here to Activate|點擊這裡激活|
+Click Here to Deactivate|點擊這裡取消|
+ERROR: You must enter in search terms, one of these must be populated: lead ID, vendor ID, phone number, last name|錯誤：您必須輸入搜索條件，其中之一必須是人口稠密的：鉛ID，供應商ID，電話號碼，姓氏|
+ERROR: You must enter in search terms, one of these must be populated: office number, last name, first name|錯誤：您必須輸入搜索條件，其中之一必須填充：辦公室的電話號碼，姓氏，名字|
+ERROR: There was a problem with your search terms|錯誤：有一個問題，您的搜索字詞|
+Phone and Post Code Time Zone Mismatch|電話及郵政編碼時區不匹配|
+Last Local Call Time|最後本地通話時間|
+Called Count|的呼叫數|
+Unidentified Hangup Cause Code|不明掛斷原因代碼|
+YOU MUST SELECT AN AGENT TO TRANSFER TO WHEN USING AGENTDIRECT|你必須選擇一個代理轉移到使用agentdirect時|
+Another live agent session was open using your user ID. It has been disabled. Click OK to continue to the agent screen|另一個現場代理會話開放使用您的用戶ID。它已被禁用。點擊“確定”繼續代理屏幕|
+View Comment History|查看評論歷史|
+reset form|復位形式|
+SELECT THIS LEAD|選擇此鉛|
+YOU MUST BE ON AN ACTIVE INBOUND CALL TO SEARCH FOR A LEAD|你必須主動呼入搜索率先|
+Attachments|附件|
+Next Call Pause|下一次調用暫停|
+-History-|-歷史-|
+SUBMIT SEARCH|提交搜索|
+close |關閉|
+AGENT CALL LOG|代理通話記錄|
+ LENGTH | 長度 |
+ PHONE | 電話 |
+ FULL NAME | 全名 |
+ CAMPAIGN | 運動 |
+ ALT | 備用 |
+ HANGUP | 掛斷 |
+ INFO | 信息 |
+phone login|手機登錄|
+LAST CALL|最後一次通話|
+ CALLBACK | 回調 |
+ CITY | 城市 |
+ STATE | 州 |
+ ZIP | 拉鍊 |
+Phone Number|電話號碼|
+Phone Number Fields|電話號碼字段|
+Lead ID|導致ID|
+ WAIT | 等待 |
+ AGENT | 代理人 |
+ CALL GROUP | 呼叫組 |
+ TYPE | 類型 |
+digits only|僅數字|
+DIAL ALERT|撥號提醒|
+WEB FORM SUBMIT|網頁的形式提交|
+in campaign|在競選|
+ DATE\/TIME | 日期\/時間 |
+ IN\/OUT | 輸入和輸出 |
+>GROUPS<|>組<|
+>GO<|>去<|
+>recording<|>記錄<|
+>SELECT<|>選擇<|
+Alert is ON|警報是在|
+Alert is OFF|警報關閉|
+EMAIL LOG FOR THIS LEAD|這個領先的電子郵件日誌|
+EMAIL TO|電郵至|
+ ATTACHMENTS | 附件 |
+Called Since Last Reset|要求自去年復位|
+Timezone:|時區：|
+Dial Link|撥號鏈接|
+ LAST | 最後 |
+SEARCH FOR A CONTACT|搜索聯繫人|
+Notes: when doing a search for a contact, wildcard or partial search terms are not allowed|注意事項：做搜索聯繫人時，通配符或部分的搜索字詞不允許|
+Contact search requests are all logged in the system|聯繫人搜索請求都記錄在系統|
+Office Number|辦公室電話號碼|
+First Name|名字|
+Last Name|姓|
+BU Name|企業名稱|
+Department:|部門：|
+Group Name|組名|
+Job Title|職稱|
+Location:|位置：|

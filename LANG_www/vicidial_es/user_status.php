@@ -1,7 +1,7 @@
 <?php
 # user_status.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -20,9 +20,14 @@
 # 110224-2350 - Small QM logout fix
 # 110420-0344 - Added DEAD/PARK agent statuses
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
+# 130414-0252 - Added report logging
 #
 
+$startMS = microtime();
+
 header ("Content-type: text/html; charset=utf-8");
+
+$report_name='Condición de Usuario';
 
 require("dbconnect.php");
 
@@ -95,6 +100,26 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	}
 else
 	{
+	##### BEGIN log visit to the vicidial_report_log table #####
+	$LOGip = getenv("REMOTE_ADDR");
+	$LOGbrowser = getenv("HTTP_USER_AGENT");
+	$LOGscript_name = getenv("SCRIPT_NAME");
+	$LOGserver_name = getenv("SERVER_NAME");
+	$LOGserver_port = getenv("SERVER_PORT");
+	$LOGrequest_uri = getenv("REQUEST_URI");
+	$LOGhttp_referer = getenv("HTTP_REFERER");
+	if (preg_match("/443/i",$LOGserver_port)) {$HTTPprotocol = 'https://';}
+	  else {$HTTPprotocol = 'http://';}
+	if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='';}
+	else {$LOGserver_port = ":$LOGserver_port";}
+	$LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
+
+	$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$user, $stage, $group|', url='$LOGfull_url';";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$report_log_id = mysql_insert_id($link);
+	##### END log visit to the vicidial_report_log table #####
+
 	if($auth>0)
 		{
 		$stmt="SELECT full_name,change_agent_campaign,modify_timeclock_log from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
@@ -486,7 +511,26 @@ if ($stage == "log_agent_out")
 		{
 		echo "Agent $user is not logged in<BR>\n";
 		}
-	
+
+	if ($db_source == 'S')
+		{
+		mysql_close($link);
+		$use_slave_server=0;
+		$db_source = 'M';
+		require("dbconnect.php");
+		}
+
+	$endMS = microtime();
+	$startMSary = explode(" ",$startMS);
+	$endMSary = explode(" ",$endMS);
+	$runS = ($endMSary[0] - $startMSary[0]);
+	$runM = ($endMSary[1] - $startMSary[1]);
+	$TOTALrun = ($runS + $runM);
+
+	$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+
 	exit;
 	}
 
@@ -652,6 +696,25 @@ if ( ( ($stage == "tc_log_user_OUT") or ($stage == "tc_log_user_IN") ) and ($mod
 
 	echo "$VDdisplayMESSAGE\n";
 	
+	if ($db_source == 'S')
+		{
+		mysql_close($link);
+		$use_slave_server=0;
+		$db_source = 'M';
+		require("dbconnect.php");
+		}
+
+	$endMS = microtime();
+	$startMSary = explode(" ",$startMS);
+	$endMSary = explode(" ",$endMS);
+	$runS = ($endMSary[0] - $startMSary[0]);
+	$runM = ($endMSary[1] - $startMSary[1]);
+	$TOTALrun = ($runS + $runM);
+
+	$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+
 	exit;
 	}
 
@@ -664,7 +727,7 @@ if ($agents_to_print > 0)
 	echo " &nbsp; &nbsp; &nbsp; GROUP: $user_group <BR>\n";
 
 	echo "<TABLE CELLPADDING=0 CELLSPACING=0>";
-	echo "<TR><TD ALIGN=RIGHT>Agent Logged in at server:</TD><TD ALIGN=LEFT> &nbsp; $Aserver_ip</TD></TR>\n";
+	echo "<TR><TD ALIGN=RIGHT>Agent Logged in at servidor:</TD><TD ALIGN=LEFT> &nbsp; $Aserver_ip</TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>in session:</TD><TD ALIGN=LEFT> &nbsp; $Asession_id</TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>from phone:</TD><TD ALIGN=LEFT> &nbsp; $Aextension</TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>Agent is in campaign:</TD><TD ALIGN=LEFT> &nbsp; $Acampaign</TD></TR>\n";
@@ -768,6 +831,26 @@ echo "|$stage|$group|";
 
 <?php
 	
+
+if ($db_source == 'S')
+	{
+	mysql_close($link);
+	$use_slave_server=0;
+	$db_source = 'M';
+	require("dbconnect.php");
+	}
+
+$endMS = microtime();
+$startMSary = explode(" ",$startMS);
+$endMSary = explode(" ",$endMS);
+$runS = ($endMSary[0] - $startMSary[0]);
+$runM = ($endMSary[1] - $startMSary[1]);
+$TOTALrun = ($runS + $runM);
+
+$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+
 exit; 
 
 

@@ -1,7 +1,7 @@
 <?php 
 # AST_agent_performance_detail.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -30,7 +30,11 @@
 # 111007-0709 - Changed user and fullname to use non-truncated for output file
 # 111104-1249 - Added user_group restrictions for selecting in-groups
 # 120224-0910 - Added HTML display option with bar graphs
+# 121130-0952 - Fix for user group permissions issue #588
+# 130414-0140 - Added report logging
 #
+
+$startMS = microtime();
 
 require("dbconnect.php");
 require("functions.php");
@@ -86,15 +90,6 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
-	{
-	mysql_close($link);
-	$use_slave_server=1;
-	$db_source = 'S';
-	require("dbconnect.php");
-	$HTML_text.="<!-- Using slave server $slave_db_server $db_source -->\n";
-	}
-
 $PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
 $PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
 
@@ -117,6 +112,35 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
     Header("HTTP/1.0 401 Unauthorized");
     echo "Utentename/Password non validi: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
+	}
+
+##### BEGIN log visit to the vicidial_report_log table #####
+$LOGip = getenv("REMOTE_ADDR");
+$LOGbrowser = getenv("HTTP_USER_AGENT");
+$LOGscript_name = getenv("SCRIPT_NAME");
+$LOGserver_name = getenv("SERVER_NAME");
+$LOGserver_port = getenv("SERVER_PORT");
+$LOGrequest_uri = getenv("REQUEST_URI");
+$LOGhttp_referer = getenv("HTTP_REFERER");
+if (preg_match("/443/i",$LOGserver_port)) {$HTTPprotocol = 'https://';}
+  else {$HTTPprotocol = 'http://';}
+if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='';}
+else {$LOGserver_port = ":$LOGserver_port";}
+$LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
+
+$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $file_download, $report_display_type|', url='$LOGfull_url';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$report_log_id = mysql_insert_id($link);
+##### END log visit to the vicidial_report_log table #####
+
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysql_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect.php");
+	$HTML_text.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
@@ -204,6 +228,11 @@ while ($i < $campaigns_to_print)
 		{$group[$i] = $groups[$i];}
 	$i++;
 	}
+for ($i=0; $i<count($user_group); $i++)
+	{
+	if (eregi("--ALL--", $user_group[$i])) {$all_user_groups=1; $user_group="";}
+	}
+
 $stmt="select user_group from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
@@ -213,6 +242,7 @@ while ($i < $user_groups_to_print)
 	{
 	$row=mysql_fetch_row($rslt);
 	$user_groups[$i] =$row[0];
+	if ($all_user_groups) {$user_group[$i]=$row[0];}
 	$i++;
 	}
 
@@ -259,6 +289,8 @@ if ($DB) {$HTML_text.="$user_group_string|$user_group_ct|$user_groupQS|$i<BR>";}
 
 $LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&DB=$DB";
 
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('/vicidial/admin.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 Border=0 ALT=\"AIUTO\" ALIGN=TOP></A>";
 
 $HTML_head.="<HTML>\n";
 $HTML_head.="<HEAD>\n";
@@ -291,6 +323,10 @@ $HTML_text.="<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
 $HTML_text.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
 $HTML_text.="<script language=\"JavaScript\">\n";
+$HTML_text.="function openNewWindow(url)\n";
+$HTML_text.="  {\n";
+$HTML_text.="  window.open (url,\"\",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');\n";
+$HTML_text.="  }\n";
 $HTML_text.="var o_cal = new tcal ({\n";
 $HTML_text.="	// form name\n";
 $HTML_text.="	'formname': 'vicidial_report',\n";
@@ -355,7 +391,7 @@ $HTML_text.="Visualizzare as:<BR>";
 $HTML_text.="<select name='report_display_type'>";
 if ($report_display_type) {$HTML_text.="<option value='$report_display_type' selected>$report_display_type</option>";}
 $HTML_text.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR><BR>";
-$HTML_text.="<INPUT TYPE=Submit NAME=INVIA VALUE=INVIA>\n";
+$HTML_text.="<INPUT TYPE=Submit NAME=INVIA VALUE=INVIA>$NWB#agent_performance_detail$NWE\n";
 $HTML_text.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
 $HTML_text.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
@@ -399,9 +435,6 @@ if ($shift == 'ALL')
 	}
 $query_date_BEGIN = "$query_date $time_BEGIN";   
 $query_date_END = "$end_date $time_END";
-
-if (strlen($user_group)>0) {$ugSQL="and vicidial_agent_log.user_group='$user_group'";}
-else {$ugSQL='';}
 
 $HTML_text.="Agent Performance Dettagliata                        $NOW_TIME\n";
 
@@ -480,7 +513,7 @@ while ($i < $rows_to_print)
 	$pause_sec[$i] =	$row[4];
 	$wait_sec[$i] =		$row[5];
 	$dispo_sec[$i] =	$row[6];
-	$status[$i] =		$row[7];
+	$status[$i] =		strtoupper($row[7]);
 	$dead_sec[$i] =		$row[8];
 	$customer_sec[$i] =	($talk_sec[$i] - $dead_sec[$i]);
 
@@ -950,6 +983,25 @@ if ($file_download == 1)
 
 	echo "$CSV_header$CSV_lines$CSV_total";
 
+	if ($db_source == 'S')
+		{
+		mysql_close($link);
+		$use_slave_server=0;
+		$db_source = 'M';
+		require("dbconnect.php");
+		}
+
+	$endMS = microtime();
+	$startMSary = explode(" ",$startMS);
+	$endMSary = explode(" ",$endMS);
+	$runS = ($endMSary[0] - $startMSary[0]);
+	$runM = ($endMSary[1] - $startMSary[1]);
+	$TOTALrun = ($runS + $runM);
+
+	$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+
 	exit;
 	}
 
@@ -960,11 +1012,6 @@ fwrite($CSV_report, $CSV_total);
 
 
 $ASCII_text.="\n\n";
-
-
-
-
-
 
 
 
@@ -1320,6 +1367,25 @@ if ($file_download == 2)
 
 	echo "$CSV_header$CSV_lines$CSV_total";
 
+	if ($db_source == 'S')
+		{
+		mysql_close($link);
+		$use_slave_server=0;
+		$db_source = 'M';
+		require("dbconnect.php");
+		}
+
+	$endMS = microtime();
+	$startMSary = explode(" ",$startMS);
+	$endMSary = explode(" ",$endMS);
+	$runS = ($endMSary[0] - $startMSary[0]);
+	$runM = ($endMSary[1] - $startMSary[1]);
+	$TOTALrun = ($runS + $runM);
+
+	$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+
 	exit;
 	}
 $CSV_report=fopen("AST_pause_code_breakdown.csv", "w");
@@ -1350,5 +1416,25 @@ if ($file_download == 0 || !$file_download) {
 }
 
 
+if ($db_source == 'S')
+	{
+	mysql_close($link);
+	$use_slave_server=0;
+	$db_source = 'M';
+	require("dbconnect.php");
+	}
+
+$endMS = microtime();
+$startMSary = explode(" ",$startMS);
+$endMSary = explode(" ",$endMS);
+$runS = ($endMSary[0] - $startMSary[0]);
+$runM = ($endMSary[1] - $startMSary[1]);
+$TOTALrun = ($runS + $runM);
+
+$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+
+exit;
 ?>
 

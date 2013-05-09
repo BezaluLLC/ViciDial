@@ -1,7 +1,7 @@
 <?php
 # admin_header.php - VICIDIAL administration header
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
 # CHANGES
@@ -37,6 +37,10 @@
 # 111106-0939 - Changes for user group restrictions
 # 111116-0208 - Added ALT and ADDR3 in-group handle methods
 # 120402-2134 - Changed lead loader link to fourth gen
+# 121116-1412 - Added QC functionality
+# 121123-0911 - Added Call Times Holidays Inbound functionality
+# 121214-2238 - Added email menus
+# 130221-1830 - Added Level 8 disable add option
 #
 
 
@@ -50,13 +54,14 @@ if($short_header)
 		?>
 	<TD> &nbsp; <A HREF="admin.php" ALT="Utilisateurs"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Utilisateurs</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=10" ALT="Campagnes"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Campagnes</B></A> &nbsp; </TD>
+        <?php include 'qc/QC_header_include02.php'; ?>
 	<TD> &nbsp; <A HREF="admin.php?ADD=100" ALT="Listes"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Listes</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=1000000" ALT="Scripts"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Scripts</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=10000000" ALT="Filtres"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Filtres</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=1000" ALT="Inbound"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Inbound</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=100000" ALT="Groupes d'utilisateurs"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Groupes d'utilisateurs</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=10000" ALT="Agents distants"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Agents distants</B></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=999998" ALT="Admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Admin</B></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=999998" ALT="Admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> Administrateur </B></A> &nbsp; </TD>
 	<?php 
 		} 
 	else 
@@ -110,6 +115,7 @@ if ($hh=='admin')
 if ($hh=='reports') 
 	{$reports_hh="bgcolor=\"$reports_color\""; $reports_fc="$reports_font"; $reports_bold="$header_selected_bold";}
 	else {$reports_hh=''; $reports_fc='WHITE'; $reports_bold="$header_nonselected_bold";}
+include('qc/QC_header_include01.php');
 
 echo "</title>\n";
 echo "<script language=\"Javascript\">\n";
@@ -475,7 +481,7 @@ else
 		{
 		var audiolistURL = "./non_agent_api.php";
 		var audiolistQuery = "source=admin&function=sounds_list&user=" + user + "&pass=" + pass + "&format=selectframe&stage=" + stage + "&comments=" + fieldname;
-		var Iframe_content = '<IFRAME SRC="' + audiolistURL + '?' + audiolistQuery + '"  style="width:740;height:440;background-color:white;" scrolling="NO" frameborder="0" allowtransparency="true" id="audio_chooser_frame' + epoch + '" name="audio_chooser_frame" width="740" height="460" STYLE="z-index:2"> </iframe>';
+		var Iframe_content = '<IFRAME SRC="' + audiolistURL + '?' + audiolistQuery + '"  style="width:740;height:440;background-color:white;" scrolling="NO" frameborder="0" allowtransparency="true" id="audio_chooser_frame' + epoch + '" name="audio_chooser_frame" width="740" height="460" STYLE="z-index:2"> </IFRAME>';
 
 		document.getElementById("audio_chooser_span").style.position = "absolute";
 		document.getElementById("audio_chooser_span").style.left = "220px";
@@ -488,7 +494,7 @@ else
 		{
 		var audiolistURL = "./non_agent_api.php";
 		var audiolistQuery = "source=admin&function=moh_list&user=" + user + "&pass=" + pass + "&format=selectframe&stage=" + stage + "&comments=" + fieldname;
-		var Iframe_content = '<IFRAME SRC="' + audiolistURL + '?' + audiolistQuery + '"  style="width:740;height:440;background-color:white;" scrolling="NO" frameborder="0" allowtransparency="true" id="audio_chooser_frame' + epoch + '" name="audio_chooser_frame" width="740" height="460" STYLE="z-index:2"> </iframe>';
+		var Iframe_content = '<IFRAME SRC="' + audiolistURL + '?' + audiolistQuery + '"  style="width:740;height:440;background-color:white;" scrolling="NO" frameborder="0" allowtransparency="true" id="audio_chooser_frame' + epoch + '" name="audio_chooser_frame" width="740" height="460" STYLE="z-index:2"> </IFRAME>';
 
 		document.getElementById("audio_chooser_span").style.position = "absolute";
 		document.getElementById("audio_chooser_span").style.left = "220px";
@@ -501,7 +507,7 @@ else
 		{
 		var audiolistURL = "./non_agent_api.php";
 		var audiolistQuery = "source=admin&function=vm_list&user=" + user + "&pass=" + pass + "&format=selectframe&stage=" + stage + "&comments=" + fieldname;
-		var Iframe_content = '<IFRAME SRC="' + audiolistURL + '?' + audiolistQuery + '"  style="width:740;height:440;background-color:white;" scrolling="NO" frameborder="0" allowtransparency="true" id="audio_chooser_frame' + epoch + '" name="audio_chooser_frame" width="740" height="460" STYLE="z-index:2"> </iframe>';
+		var Iframe_content = '<IFRAME SRC="' + audiolistURL + '?' + audiolistQuery + '"  style="width:740;height:440;background-color:white;" scrolling="NO" frameborder="0" allowtransparency="true" id="audio_chooser_frame' + epoch + '" name="audio_chooser_frame" width="740" height="460" STYLE="z-index:2"> </IFRAME>';
 
 		document.getElementById("audio_chooser_span").style.position = "absolute";
 		document.getElementById("audio_chooser_span").style.left = "220px";
@@ -763,9 +769,9 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 			new_content = new_content + '<BR>ID de la campagne: <select size=1 name=IGcampaign_id_' + option + ' id=IGcampaign_id_' + option + '>';
 			new_content = new_content + '' + IGcampaign_id_list + "\n" + '<option SELECTED>' + IGcampaign_id + '</select>';
 			new_content = new_content + ' &nbsp; Phone Code: <input type=text size=5 maxlength=14 name=IGphone_code_' + option + ' id=IGphone_code_' + option + ' value="' + IGphone_code + '">';
-			new_content = new_content + "<BR> &nbsp; VID Entrez Nom: <input type=text name=IGvid_enter_filename_" + option + " id=IGvid_enter_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_enter_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_enter_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
-			new_content = new_content + "<BR> &nbsp; Nom du fichier VID Numéro d'identification: <input type=text name=IGvid_id_number_filename_" + option + " id=IGvid_id_number_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_id_number_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_id_number_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
-			new_content = new_content + "<BR> &nbsp; VID Confirmer Nom: <input type=text name=IGvid_confirm_filename_" + option + " id=IGvid_confirm_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_confirm_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_confirm_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+			new_content = new_content + "<BR> &nbsp; VID Entrez Nom: <input type=text name=IGvid_enter_filename_" + option + " id=IGvid_enter_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_enter_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_enter_filename_" + option + "','date'," + chooser_height + ");\">audio sélecteur</a>";
+			new_content = new_content + "<BR> &nbsp; Nom du fichier VID Numéro d'identification: <input type=text name=IGvid_id_number_filename_" + option + " id=IGvid_id_number_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_id_number_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_id_number_filename_" + option + "','date'," + chooser_height + ");\">audio sélecteur</a>";
+			new_content = new_content + "<BR> &nbsp; VID Confirmer Nom: <input type=text name=IGvid_confirm_filename_" + option + " id=IGvid_confirm_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_confirm_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_confirm_filename_" + option + "','date'," + chooser_height + ");\">audio sélecteur</a>";
 			new_content = new_content + ' &nbsp; Chiffres VID: <input type=text size=3 maxlength=3 name=IGvid_validate_digits_' + option + ' id=IGvid_validate_digits_' + option + ' value="' + IGvid_validate_digits + '">';
 			}
 		if (selected_route=='DID')
@@ -786,7 +792,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				}
 			else
 				{value='vm-goodbye';}
-			new_content = "fichier audio: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=40 maxlength=255 value=\"" + selected_value + "\"> <a href=\"javascript:launch_chooser('option_route_value_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+			new_content = "fichier audio: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=40 maxlength=255 value=\"" + selected_value + "\"> <a href=\"javascript:launch_chooser('option_route_value_" + option + "','date'," + chooser_height + ");\">audio sélecteur</a>";
 			}
 		if (selected_route=='EXTENSION')
 			{
@@ -817,7 +823,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				}
 			else
 				{value='';}
-			new_content = "Boîte vocale:<input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=12 maxlength=10 value=\"" + selected_value + "\"> <a href=\"javascript:launch_vm_chooser('option_route_value_" + option + "','date'," + chooser_height + ");\">voicemail chooser</a>";
+			new_content = "Boîte vocale:<input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=12 maxlength=10 value=\"" + selected_value + "\"> <a href=\"javascript:launch_vm_chooser('option_route_value_" + option + "','date'," + chooser_height + ");\">sélecteur de boîte vocale</a>";
 			}
 		if (selected_route=='AGI')
 			{
@@ -868,7 +874,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 	}
 
 ### Javascript for dynamic in-group option value entries
-if ( ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111) )
+if ( ($ADD==2811) or ($ADD==3811) or ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111) )
 	{
 
 	?>
@@ -930,9 +936,9 @@ if ( ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111
 			new_content = new_content + '<BR>ID de la campagne: <select size=1 name=IGcampaign_id_' + option + ' id=IGcampaign_id_' + option + '>';
 			new_content = new_content + '' + IGcampaign_id_list + "\n" + '<option SELECTED>' + IGcampaign_id + '</select>';
 			new_content = new_content + ' &nbsp; Phone Code: <input type=text size=5 maxlength=14 name=IGphone_code_' + option + ' id=IGphone_code_' + option + ' value="' + IGphone_code + '">';
-		//	new_content = new_content + "<BR> &nbsp; VID Entrez Nom: <input type=text name=IGvid_enter_filename_" + option + " id=IGvid_enter_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_enter_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_enter_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
-		//	new_content = new_content + "<BR> &nbsp; Nom du fichier VID Numéro d'identification: <input type=text name=IGvid_id_number_filename_" + option + " id=IGvid_id_number_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_id_number_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_id_number_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
-		//	new_content = new_content + "<BR> &nbsp; VID Confirmer Nom: <input type=text name=IGvid_confirm_filename_" + option + " id=IGvid_confirm_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_confirm_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_confirm_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+		//	new_content = new_content + "<BR> &nbsp; VID Entrez Nom: <input type=text name=IGvid_enter_filename_" + option + " id=IGvid_enter_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_enter_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_enter_filename_" + option + "','date'," + chooser_height + ");\">audio sélecteur</a>";
+		//	new_content = new_content + "<BR> &nbsp; Nom du fichier VID Numéro d'identification: <input type=text name=IGvid_id_number_filename_" + option + " id=IGvid_id_number_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_id_number_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_id_number_filename_" + option + "','date'," + chooser_height + ");\">audio sélecteur</a>";
+		//	new_content = new_content + "<BR> &nbsp; VID Confirmer Nom: <input type=text name=IGvid_confirm_filename_" + option + " id=IGvid_confirm_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_confirm_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_confirm_filename_" + option + "','date'," + chooser_height + ");\">audio sélecteur</a>";
 		//	new_content = new_content + ' &nbsp; Chiffres VID: <input type=text size=3 maxlength=3 name=IGvid_validate_digits_' + option + ' id=IGvid_validate_digits_' + option + ' value="' + IGvid_validate_digits + '">';
 
 			}
@@ -954,7 +960,7 @@ if ( ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111
 				}
 			else
 				{value = 'nbdy-avail-to-take-call|vm-goodbye';}
-			new_content = "fichier audio: <input type=text name=" + option + "_value id=" + option + "_value size=40 maxlength=255 value=\"" + value + "\"> <a href=\"javascript:launch_chooser('" + option + "_value','date'," + chooser_height + ");\">audio chooser</a>";
+			new_content = "fichier audio: <input type=text name=" + option + "_value id=" + option + "_value size=40 maxlength=255 value=\"" + value + "\"> <a href=\"javascript:launch_chooser('" + option + "_value','date'," + chooser_height + ");\">audio sélecteur</a>";
 			}
 		if (selected_route=='EXTENSION')
 			{
@@ -974,7 +980,7 @@ if ( ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111
 				}
 			else
 				{value = '101';}
-			new_content = "Boîte vocale:<input type=text name=" + option + "_value id=" + option + "_value size=12 maxlength=10 value=\"" + value + "\"> <a href=\"javascript:launch_vm_chooser('" + option + "_value','date'," + chooser_height + ");\">voicemail chooser</a>";
+			new_content = "Boîte vocale:<input type=text name=" + option + "_value id=" + option + "_value size=12 maxlength=10 value=\"" + value + "\"> <a href=\"javascript:launch_vm_chooser('" + option + "_value','date'," + chooser_height + ");\">sélecteur de boîte vocale</a>";
 			}
 
 		if (new_content.length < 1)
@@ -1053,13 +1059,16 @@ else
 	
 echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../vicidial_en/admin.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../vicidial_fr/admin.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">French <img src=\"../agc/images/fr.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";
-$stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled from system_settings;";
+$stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled,allow_emails,level_8_disable_add from system_settings;";
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $admin_home_url_LU =		$row[0];
 $SSenable_tts_integration = $row[1];
 $SScallcard_enabled =		$row[2];
 $SScustom_fields_enabled =	$row[3];
+$SSemail_enabled =			$row[4];
+$SSlevel_8_disable_add =	$row[5];
+
 
 ?>
 <CENTER>
@@ -1081,10 +1090,12 @@ $SScustom_fields_enabled =	$row[3];
 	<TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
 	 &nbsp; <a href="<?php echo $ADMIN ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Voir les utilisateurs </a>
 	</TR><TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
+	<?php if ($add_copy_disabled < 1) { ?>
 	 &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Ajouter un nouvel utilisateur </a>
 	</TR><TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
 	 &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1A"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Utilisateur De Copie</a>
 	</TR><TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
+	<?php } ?>
 	 &nbsp; <a href="<?php echo $ADMIN ?>?ADD=550"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Rechercher un utilisateur </a>
 	</TR><TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
 	 &nbsp; <a href="./user_stats.php?user=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Statistiques utilisateur </a>
@@ -1181,8 +1192,10 @@ $SScustom_fields_enabled =	$row[3];
 			<TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
 			<a href="<?php echo $ADMIN ?>?ADD=100"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir les listes </a>
 			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
+			<?php if ($add_copy_disabled < 1) { ?>
 			<a href="<?php echo $ADMIN ?>?ADD=111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter une nouvelle liste </a>
 			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
+			<?php } ?>
 			<a href="admin_search_lead.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Rechercher une fiche </a>
 			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
 			<a href="admin_modify_lead.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter une nouvelle piste </a>
@@ -1206,6 +1219,7 @@ $SScustom_fields_enabled =	$row[3];
 			}
 		}
 	?>
+        <?php include 'qc/QC_header_include.php'; ?>
 	<!-- SCRIPTS NAVIGATION -->
 	<TR><TD <?php echo $scripts_hh ?>>
 	<a href="<?php echo $ADMIN ?>?ADD=1000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $scripts_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $scripts_bold ?> Scripts </a>
@@ -1217,7 +1231,9 @@ $SScustom_fields_enabled =	$row[3];
 		<TR BGCOLOR=<?php echo $scripts_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir les scripts </a>
 		</TR><TR BGCOLOR=<?php echo $scripts_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
 		<a href="<?php echo $ADMIN ?>?ADD=1111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter un nouveau script </a>
+		<?php } ?>
 		</TD></TR>
 		<?php } 
 	?>
@@ -1234,7 +1250,9 @@ $SScustom_fields_enabled =	$row[3];
 		<TR BGCOLOR=<?php echo $filters_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=10000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir les filtres </a>
 		</TR><TR BGCOLOR=<?php echo $filters_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
 		<a href="<?php echo $ADMIN ?>?ADD=11111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter un nouveau filtre </a>
+		<?php } ?>
 		</TD></TR>
 		<?php } 
 		}
@@ -1252,17 +1270,37 @@ $SScustom_fields_enabled =	$row[3];
 		<TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir les In-Groups </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
 		<a href="<?php echo $ADMIN ?>?ADD=1111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter un nouveau In-Group </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1211"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Dans-Groupe De Copie</a>
+		<?php } ?>
 		<HR>
+		<?php
+		if ($SSemail_enabled>0) 
+			{
+		?>
+		<TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<a href="<?php echo $ADMIN ?>?ADD=1800"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Afficher les groupes de messagerie </a>
+		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
+		<a href="<?php echo $ADMIN ?>?ADD=1811"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter un nouveauEmail Group </a>
+		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<a href="<?php echo $ADMIN ?>?ADD=1911"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> CopieEmail Group </a>
+		<?php } ?>
+		<HR>
+		<?php
+			}
+		?>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1300"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir DiDs </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
 		<a href="<?php echo $ADMIN ?>?ADD=1311"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter une nouvelle DID </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1411"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> CopieDID </a>
 		<?php
+			}
 		if ($SSdid_ra_extensions_enabled > 0)
 			{
 			?>
@@ -1275,15 +1313,19 @@ $SScustom_fields_enabled =	$row[3];
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1500"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Afficher Appel Menus </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
 		<a href="<?php echo $ADMIN ?>?ADD=1511"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter un nouveau menu d-appel </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1611"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copiez Appel du menu </a>
+		<?php } ?>
 		<HR>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1700"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Téléphone Groupes Filter </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
 		<a href="<?php echo $ADMIN ?>?ADD=1711"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter un groupe Téléphone filtre </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php } ?>
 		<a href="<?php echo $ADMIN ?>?ADD=171"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo $FPGlink ?> </a>
 		</TD></TR>
 		<?php } 
@@ -1299,8 +1341,10 @@ $SScustom_fields_enabled =	$row[3];
 		<TR BGCOLOR=<?php echo $usergroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=100000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir les groupes d'utilisateurs </a>
 		</TR><TR BGCOLOR=<?php echo $usergroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
 		<a href="<?php echo $ADMIN ?>?ADD=111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter un nouveau groupe d'utilisateurs </a>
 		</TR><TR BGCOLOR=<?php echo $usergroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php } ?>
 		<a href="group_hourly_stats.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Rapport horaire du groupe </a>
 		</TR><TR BGCOLOR=<?php echo $usergroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="user_group_bulk_change.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Bulk Change Group </a>
@@ -1318,11 +1362,15 @@ $SScustom_fields_enabled =	$row[3];
 		<TR BGCOLOR=<?php echo $remoteagent_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=10000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir les agents distants </a>
 		</TR><TR BGCOLOR=<?php echo $remoteagent_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
 		<a href="<?php echo $ADMIN ?>?ADD=11111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter un nouvel agent distant </a>
 		</TR><TR BGCOLOR=<?php echo $remoteagent_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php } ?>
 		<a href="<?php echo $ADMIN ?>?ADD=12000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Groupes d'extension </a>
 		</TR><TR BGCOLOR=<?php echo $remoteagent_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
 		<a href="<?php echo $ADMIN ?>?ADD=12111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter un groupe d'extension </a>
+		<?php } ?>
 		</TD></TR>
 	<?php } 
 	?>
@@ -1365,6 +1413,9 @@ $SScustom_fields_enabled =	$row[3];
 			else {$cc_sh=''; $cc_fc='BLACK';}
 		if ($sh=='cts') {$cts_sh="bgcolor=\"$cts_color\""; $cts_fc="$cc_font";}
 			else {$cts_sh=''; $cts_fc='BLACK';}
+		if ($sh=='emails') {$emails_sh="bgcolor=\"$subcamp_color\""; $emails_fc="$subcamp_font";}
+			else {$emails_sh=''; $emails_fc='BLACK';}
+
 
 		?>
 		<TR BGCOLOR=<?php echo $admin_color ?>>
@@ -1391,7 +1442,14 @@ $SScustom_fields_enabled =	$row[3];
 		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $vm_sh ?>> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=170000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $vm_fc ?> SIZE=<?php echo $header_font_size ?>> Boîte vocale </a></TD>
 		</TR>
-		<?php if ( ($sounds_central_control_active > 0) or ($SSsounds_central_control_active > 0) )
+		<?php
+		if ($SSemail_enabled > 0)
+			{ ?>
+			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $emails_sh ?>> &nbsp; 
+			<a href="admin_email_accounts.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $emails_fc ?> SIZE=<?php echo $header_font_size ?>> Comptes de messagerie </a></TD>
+			</TR>
+		<?php }
+		if ( ($sounds_central_control_active > 0) or ($SSsounds_central_control_active > 0) )
 			{ ?>
 			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $audio_sh ?>> &nbsp; 
 			<a href="audio_store.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $audio_fc ?> SIZE=<?php echo $header_font_size ?>> Audio Store </a></TD>
@@ -1411,14 +1469,14 @@ $SScustom_fields_enabled =	$row[3];
 		if ($SScallcard_enabled > 0)
 			{ ?>
 			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $cc_sh ?>> &nbsp; 
-			<a href="callcard_admin.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $cc_fc ?> SIZE=<?php echo $header_font_size ?>> CallCard Admin </a></TD>
+			<a href="callcard_admin.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $cc_fc ?> SIZE=<?php echo $header_font_size ?>> CallCard admin </a></TD>
 			</TR>
 
 		<?php }
 		if ($SScontacts_enabled > 0)
 			{ ?>
 			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $cts_sh ?>> &nbsp; 
-			<a href="<?php echo $ADMIN ?>?ADD=190000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $cts_fc ?> SIZE=<?php echo $header_font_size ?>> Contacts </a></TD>
+			<a href="<?php echo $ADMIN ?>?ADD=190000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $cts_fc ?> SIZE=<?php echo $header_font_size ?>> Contacts </a></TD>
 			</TR>
 
 		<?php }
@@ -1454,40 +1512,46 @@ $SScustom_fields_enabled =	$row[3];
 	<?php
 	if (strlen($list_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $subcamp_color ?>><TD ALIGN=LEFT COLSPAN=2><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> Voir les campagnes </a> &nbsp; &nbsp; | &nbsp; &nbsp; <a href="<?php echo $ADMIN ?>?ADD=11"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> Ajouter une nouvelle campagne </a> &nbsp; &nbsp; | &nbsp; &nbsp; <a href="<?php echo $ADMIN ?>?ADD=12"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> Campagne De Copie</a> &nbsp; &nbsp; | &nbsp; &nbsp; <a href="./AST_timeonVDADallSUMMARY.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> Menu temps-réel des campagnes </a></TD></TR>
+	<TR BGCOLOR=<?php echo $subcamp_color ?>><TD ALIGN=LEFT COLSPAN=2><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> Voir les campagnes </a> &nbsp; &nbsp; |<?php if ($add_copy_disabled < 1) { ?>
+&nbsp; &nbsp; <a href="<?php echo $ADMIN ?>?ADD=11"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> Ajouter une nouvelle campagne </a> &nbsp; &nbsp; | &nbsp; &nbsp; <a href="<?php echo $ADMIN ?>?ADD=12"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> Campagne De Copie</a> &nbsp; &nbsp; |<?php } ?> &nbsp; &nbsp; <a href="./AST_timeonVDADallSUMMARY.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> Menu temps-réel des campagnes </a></TD></TR>
 		<?php } 
 
 	if (strlen($times_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $times_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=100000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir les périodes d'appels </a> &nbsp;| <a href="<?php echo $ADMIN ?>?ADD=111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter une période d'appels </a> &nbsp;| <a href="<?php echo $ADMIN ?>?ADD=1000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir les périodes d'appels d'états </a> &nbsp;| <a href="<?php echo $ADMIN ?>?ADD=1111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter une nouvelle période d'appels d'état </a></TD></TR>
+	<TR BGCOLOR=<?php echo $times_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=100000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir les périodes d'appels </a> &nbsp;|<?php if ($add_copy_disabled < 1) { ?>
+ <a href="<?php echo $ADMIN ?>?ADD=111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter une période d'appels </a> &nbsp;|<?php } ?> <a href="<?php echo $ADMIN ?>?ADD=1000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir les périodes d'appels d'états </a> &nbsp;|<?php if ($add_copy_disabled < 1) { ?> <a href="<?php echo $ADMIN ?>?ADD=1111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter une nouvelle période d'appels d'état </a> &nbsp;|<?php } ?> <a href="<?php echo $ADMIN ?>?ADD=1200000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Fêtes </a> &nbsp;|<?php if ($add_copy_disabled < 1) { ?> <a href="<?php echo $ADMIN ?>?ADD=1211111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter vacances </a><?php } ?></TD></TR>
 		<?php } 
 	if (strlen($shifts_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $shifts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=130000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir les changements </a> &nbsp;| <a href="<?php echo $ADMIN ?>?ADD=131111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Shift </a></TD></TR>
+	<TR BGCOLOR=<?php echo $shifts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=130000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir les changements </a> &nbsp;|<?php if ($add_copy_disabled < 1) { ?> <a href="<?php echo $ADMIN ?>?ADD=131111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Shift </a><?php } ?></TD></TR>
 		<?php } 
 	if (strlen($phones_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $phones_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir les téléphones </a>&nbsp;|&nbsp;<a href="<?php echo $ADMIN ?>?ADD=11111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter un nouveau téléphone </a>&nbsp;|&nbsp;<a href="<?php echo $ADMIN ?>?ADD=12000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Téléphone Alias Liste </a>&nbsp;|&nbsp;<a href="<?php echo $ADMIN ?>?ADD=12111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter un nouveau téléphone Alias </a>&nbsp;|&nbsp;<a href="<?php echo $ADMIN ?>?ADD=13000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Groupe Alias Liste </a>&nbsp;|&nbsp;<a href="<?php echo $ADMIN ?>?ADD=13111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter un nouveau groupe Alias </a></TD></TR>
+	<TR BGCOLOR=<?php echo $phones_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir les téléphones </a>&nbsp;|<?php if ($add_copy_disabled < 1) { ?>&nbsp;<a href="<?php echo $ADMIN ?>?ADD=11111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter un nouveau téléphone </a>&nbsp;|<?php } ?>&nbsp;<a href="<?php echo $ADMIN ?>?ADD=12000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Téléphone Alias Liste </a>&nbsp;|<?php if ($add_copy_disabled < 1) { ?>&nbsp;<a href="<?php echo $ADMIN ?>?ADD=12111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter un nouveau téléphone Alias </a>&nbsp;|<?php } ?>&nbsp;<a href="<?php echo $ADMIN ?>?ADD=13000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Groupe Alias Liste </a>&nbsp;|<?php if ($add_copy_disabled < 1) { ?>&nbsp;<a href="<?php echo $ADMIN ?>?ADD=13111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter un nouveau groupe Alias </a><?php } ?></TD></TR>
 		<?php }
 	if (strlen($conference_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $conference_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir les conférences </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter une nouvelle conférence </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir les conférences VICIDIAL </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=11111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter une nouvelle conférence VICIDIAL </a></TD></TR>
+	<TR BGCOLOR=<?php echo $conference_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir les conférences </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter une nouvelle conférence </a> &nbsp; |<?php } ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir les conférences VICIDIAL </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=11111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter une nouvelle conférence VICIDIAL </a><?php } ?></TD></TR>
 		<?php }
 	if ( (strlen($server_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $server_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=100000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir les serveurs </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter un nouveau serveur </a></TD></TR>
+	<TR BGCOLOR=<?php echo $server_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=100000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Voir les serveurs </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter un nouveau serveur </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($templates_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $templates_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=130000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Afficher les modèles </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=131111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter un nouveau modèle </a></TD></TR>
+	<TR BGCOLOR=<?php echo $templates_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=130000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Afficher les modèles </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=131111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter un nouveau modèle </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($carriers_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $carriers_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=140000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Carriers </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=141111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Carrier </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=140111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copier Un Transporteur </a></TD></TR>
+	<TR BGCOLOR=<?php echo $carriers_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=140000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Carriers </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=141111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Carrier </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=140111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copier Un Transporteur </a><?php } ?></TD></TR>
+	<?php }
+	if ( (strlen($emails_sh) > 1) and (strlen($admin_hh) > 1) ) { 
+		?>
+	<TR BGCOLOR=<?php echo $emails_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="admin_email_accounts.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Afficher Comptes de messagerie </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="admin_email_accounts.php?eact=ADD"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2> Ajouter un nouveau compte </a> &nbsp; | &nbsp; <a href="admin_email_accounts.php?eact=COPY"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copier un compte </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($tts_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $tts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=150000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Afficher TTS Entrées </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=151111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter une nouvelle entrée TTS </a></TD></TR>
+	<TR BGCOLOR=<?php echo $tts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=150000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Afficher TTS Entrées </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=151111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter une nouvelle entrée TTS </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($cc_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
@@ -1495,11 +1559,11 @@ $SScustom_fields_enabled =	$row[3];
 	<?php }
 	if ( (strlen($moh_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $moh_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=160000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Afficher MOH Entrées </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=161111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter une nouvelle entrée MOH </a></TD></TR>
+	<TR BGCOLOR=<?php echo $moh_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=160000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Afficher MOH Entrées </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=161111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajouter une nouvelle entrée MOH </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($vm_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $vm_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=170000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Boîte vocale Entries </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=171111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Boîte vocale Entry </a></TD></TR>
+	<TR BGCOLOR=<?php echo $vm_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=170000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Boîte vocale Entries </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=171111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Boîte vocale Entry </a><?php } ?></TD></TR>
 	<?php }
 	if (strlen($settings_sh) > 1) { 
 		?>
@@ -1507,11 +1571,11 @@ $SScustom_fields_enabled =	$row[3];
 	<?php }
 	if (strlen($label_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $label_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=180000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Les étiquettes d'écran </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=181111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajoutez un contrôle Label écran </a></TD></TR>
+	<TR BGCOLOR=<?php echo $label_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=180000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Les étiquettes d'écran </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=181111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajoutez un contrôle Label écran </a><?php } ?></TD></TR>
 	<?php }
 	if (strlen($cts_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $cts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=190000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Contacts </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=191111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajout d'un contact </a></TD></TR>
+	<TR BGCOLOR=<?php echo $cts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=190000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Contacts </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=191111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ajout d'un contact </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($status_sh) > 1) and (!eregi('campaign',$hh) ) ) { 
 		?>

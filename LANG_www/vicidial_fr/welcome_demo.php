@@ -62,6 +62,9 @@ echo "<font size=3><b> &nbsp; <a href=\"../agc_se/vicidial.php?relogin=YES&VD_lo
 echo "</TD></TR>\n";
 echo "<TR><TD ALIGN=LEFT >";
 echo "<font size=3><b> &nbsp; <a href=\"../agc_dk/vicidial.php?relogin=YES&VD_login=6666&VD_campaign=TESTCAMP&phone_login=phone&phone_pass=phone&VD_pass=1234\"><IMG SRC=\"../agc/images/dk.gif\" border=0> Danish Agent Login</a>";
+echo "</TD></TR>\n";
+echo "<TR><TD ALIGN=LEFT >";
+echo "<font size=3><b> &nbsp; <a href=\"../agc_jp/vicidial.php?relogin=YES&VD_login=6666&VD_campaign=TESTCAMP&phone_login=phone&phone_pass=phone&VD_pass=1234\"><IMG SRC=\"../agc/images/jp.gif\" border=0> Japanese Agent Login</a>";
 echo "</TD></TR></TABLE>\n";
 
 echo "</TD><TD VALIGN=TOP>\n";

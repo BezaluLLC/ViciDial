@@ -28,6 +28,8 @@ agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
 agc|phone_only.php|0
+agc|vdc_email_display.php|0
+agc|audit_comments.php|0
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"JAN"|
@@ -267,7 +269,7 @@ Dial Override|Dial Override|
 digits only please|kun tal tak|
 Dial Now|Ring Nu|
 CB Comments|Kommentar vdr genkald|
-Title|Títel|
+ Title| Títel|
 Your Status|Din status|
  STATUS| STATUS|
  RESET| RESET|
@@ -277,10 +279,9 @@ Incoming|Inkommende|
 Calling|Ringer|
 Called|Opringt|
 Campaign|Kampanje|
-Status|Status|
+>Status|>Status|
 Inserted|Indsat|
  seconds| sekunder|
-HELP|HJÆLP|
  Login | Login |
 Login:| Login:|
 User |Bruger |
@@ -291,7 +292,6 @@ Server|Server|
 RECORD |INDSPILLNING |
 >HANGUP|>LÆGPÅ|
 >XFER|>XFER|
-PARK|HOLD|
 IN-NUMBER|IN-NUMMER|
 NUMBER|NUMMER|
 CALLERID|CALLERID|
@@ -300,16 +300,15 @@ PICKUP|LØFT|
 CONFERENCE|konference|
 Refresh|Genopfrisk|
 Send DTMF|Send DTMF|
-ORDER|ORDER|
+>ORDER|>ORDER|
  on | på |
 >LOGOUT|>LOGUD|
  Channel| Kanal|
 Extensions|Linjer|
 Conferences|konferencer|
 Conference|konference|
-Recording|Indspildning|
-Record|indspild|
-Welcome|Velkommen|
+ Recording| Indspildning|
+Welcome |Velkommen |
 VOICEMAIL|VOICEMAIL|
  NEW| NY|
  OLD| GAMMEL|
@@ -320,21 +319,21 @@ Slower|langsomt|
 Initializing|opstart|
 Invalid|Ikke gyldigt|
 Username|Brugernavn|
-Notes|Notat|
+Notes:|Notat:|
 First|Første|
 MI: |IM: |
-Last|Sidste|
+Last |Sidste |
 Address|Adresse|
 City|By|
-State|Stat|
+ State| Stat|
 PostCode|Postnummer|
 Province|Provins|
 Vendor ID|Vendor ID|
 DialCode|Landsnummer|
 Alt. Phone|Alt. telefon|
 Show|Vis|
-Email|Email|
-Comments|kommentar|
+ Email| Email|
+ Comments| kommentar|
 REFRESH|GENOPFRISK|
 ALT PHONE DIAL|RING ALT NUMMER|
 MAIN PHONE|HOVED TELEFON|
@@ -514,3 +513,79 @@ Agents View|Agenter Vis|
 -INCALL|-Indgående|
 -PAUSED|-PAUSE|
 CALL DISPOSITION|CALL Disposition|
+### START translations for 2.6 release ###
+Click Here to Choose a Dial In-Group|Klik her for at vælge en dial in-gruppen|
+SELECT A DIAL IN-GROUP|vælge et dial-in-gruppen|
+DIAL IN-GROUP|ringe ind-gruppen|
+Dial In-Group|ringe ind-gruppen|
+Click Here to Activate|klik her for at aktivere|
+Click Here to Deactivate|klik her for at deaktivere|
+ERROR: You must enter in search terms, one of these must be populated: lead ID, vendor ID, phone number, last name|FEJL: Du skal indtaste søgetermer, skal en af ​​disse være befolket: lead id, leverandør-id, telefonnummer, efternavn|
+ERROR: You must enter in search terms, one of these must be populated: office number, last name, first name|FEJL: Du skal indtaste søgetermer, skal en af ​​disse være befolket: kontor nummer, efternavn, fornavn|
+ERROR: There was a problem with your search terms|fejl: der var et problem med dine søgetermer|
+Phone and Post Code Time Zone Mismatch|telefon og postnummer tidszone mismatch|
+Last Local Call Time|sidste lokalt opkald tid|
+Called Count|Antallet af opkald|
+Unidentified Hangup Cause Code|uidentificeret læg årsagskode|
+YOU MUST SELECT AN AGENT TO TRANSFER TO WHEN USING AGENTDIRECT|du skal vælge en agent til at overføre til, når du bruger agentdirect|
+Another live agent session was open using your user ID. It has been disabled. Click OK to continue to the agent screen|anden live agent session var åben ved hjælp af din bruger-id. Det er blevet deaktiveret. klik ok for at fortsætte til agenten skærmen|
+View Comment History|se kommentar historik|
+reset form|reset formular|
+SELECT THIS LEAD|vælge denne bly|
+YOU MUST BE ON AN ACTIVE INBOUND CALL TO SEARCH FOR A LEAD|du skal være på et aktivt indgående opkald for at søge efter et kundeemne|
+Attachments|vedhæftede filer|
+Next Call Pause|næste opkald pause|
+-History-|-history-|
+SUBMIT SEARCH|Afsend søgning|
+close |lukke |
+AGENT CALL LOG|agent opkaldslog|
+ LENGTH | længde |
+ PHONE | telefon |
+ FULL NAME | fulde navn |
+ CAMPAIGN | kampagne |
+ ALT | suppleant |
+ HANGUP | dille |
+ INFO | info |
+phone login|telefon login|
+LAST CALL|sidste opkald|
+ CALLBACK | tilbagekald |
+ CITY | by |
+ STATE | stat |
+ ZIP | zip |
+Phone Number|telefonnummer|
+Phone Number Fields|telefonnummer felter|
+Lead ID|lede id|
+ WAIT | vente |
+ AGENT | agent |
+ CALL GROUP | kalder gruppen |
+ TYPE | typen |
+digits only|cifre kun|
+DIAL ALERT|dial advare|
+WEB FORM SUBMIT|webside formularindsendelse|
+in campaign|i kampagnen|
+ DATE\/TIME | dato\/tid |
+ IN\/OUT | ind og ud |
+>GROUPS<|>GRUPPER<|
+>GO<|>gå<|
+>recording<|>optagelse<|
+>SELECT<|>Vælg<|
+Alert is ON|indberetning er på|
+Alert is OFF|indberetning er slukket|
+EMAIL LOG FOR THIS LEAD|email loggen for denne bly|
+EMAIL TO|e-mail til|
+ ATTACHMENTS | vedhæftede filer |
+Called Since Last Reset|kaldte siden sidste nulstilling|
+Timezone:|tidszone:|
+Dial Link|dial link|
+ LAST | sidste |
+SEARCH FOR A CONTACT|søge efter en kontakt|
+Notes: when doing a search for a contact, wildcard or partial search terms are not allowed|noter: når du laver en søgning efter en kontakt, der er wildcard eller delvis søgetermer ikke tilladt|
+Contact search requests are all logged in the system|kontakt søgeanmodninger er alle logget ind i systemet|
+Office Number|kontor nummer|
+First Name|fornavn|
+Last Name|efternavn|
+BU Name|firmanavn|
+Department:|afdeling:|
+Group Name|gruppenavn|
+Job Title|stillingsbetegnelse|
+Location:|location:|

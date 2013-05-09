@@ -1,7 +1,7 @@
 <?php
 # non_agent_api.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed as an API(Application Programming Interface) to allow
 # other programs to interact with all non-agent-screen VICIDIAL functions
@@ -65,10 +65,20 @@
 # 120213-1613 - Added optional logging of all non-admin.php requests, enabled in options.php
 # 120315-1537 - Added filter for single-quotes and backslashes on custom field data
 # 120326-1317 - Added agent_stats_export function
+# 120810-0859 - Added add_group_alias function, altered agent_stats_export function
+# 120831-1529 - Added vicidial_dial_log outbound call logging
+# 120912-2042 - Added user_group_status and in_group_status functions
+# 120913-1255 - Added update_log_entry function
+# 121116-1938 - Added state call time restrictions to add_lead hopper insert function
+# 121125-2210 - Added Other Campaign DNC option and list expiration date option
+# 130328-0949 - Added update_phone_number option to update_lead function, issue #653
+# 130405-1539 - Added agent_status function
+# 130414-0311 - Added report logging for blind_monitor function
+# 130420-1938 - Added NANPA prefix validation and timezone options
 #
 
-$version = '2.4-43';
-$build = '120326-1317';
+$version = '2.6-53';
+$build = '130420-1938';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -88,6 +98,8 @@ if (isset($_GET["list_id"]))					{$list_id=$_GET["list_id"];}
 	elseif (isset($_POST["list_id"]))			{$list_id=$_POST["list_id"];}
 if (isset($_GET["phone_code"]))					{$phone_code=$_GET["phone_code"];}
 	elseif (isset($_POST["phone_code"]))		{$phone_code=$_POST["phone_code"];}
+if (isset($_GET["update_phone_number"]))		  {$update_phone_number=$_GET["update_phone_number"];}
+	elseif (isset($_POST["update_phone_number"])) {$update_phone_number=$_POST["update_phone_number"];}
 if (isset($_GET["phone_number"]))				{$phone_number=$_GET["phone_number"];}
 	elseif (isset($_POST["phone_number"]))		{$phone_number=$_POST["phone_number"];}
 if (isset($_GET["vendor_lead_code"]))			{$vendor_lead_code=$_GET["vendor_lead_code"];}
@@ -298,6 +310,26 @@ if (isset($_GET["datetime_end"]))			{$datetime_end=$_GET["datetime_end"];}
 	elseif (isset($_POST["datetime_end"]))	{$datetime_end=$_POST["datetime_end"];}
 if (isset($_GET["time_format"]))			{$time_format=$_GET["time_format"];}
 	elseif (isset($_POST["time_format"]))	{$time_format=$_POST["time_format"];}
+if (isset($_GET["group_alias_id"]))				{$group_alias_id=$_GET["group_alias_id"];}
+	elseif (isset($_POST["group_alias_id"]))	{$group_alias_id=$_POST["group_alias_id"];}
+if (isset($_GET["group_alias_name"]))			{$group_alias_name=$_GET["group_alias_name"];}
+	elseif (isset($_POST["group_alias_name"]))	{$group_alias_name=$_POST["group_alias_name"];}
+if (isset($_GET["caller_id_number"]))			{$caller_id_number=$_GET["caller_id_number"];}
+	elseif (isset($_POST["caller_id_number"]))	{$caller_id_number=$_POST["caller_id_number"];}
+if (isset($_GET["caller_id_name"]))				{$caller_id_name=$_GET["caller_id_name"];}
+	elseif (isset($_POST["caller_id_name"]))	{$caller_id_name=$_POST["caller_id_name"];}
+if (isset($_GET["user_groups"]))				{$user_groups=$_GET["user_groups"];}
+	elseif (isset($_POST["user_groups"]))		{$user_groups=$_POST["user_groups"];}
+if (isset($_GET["in_groups"]))				{$in_groups=$_GET["in_groups"];}
+	elseif (isset($_POST["in_groups"]))		{$in_groups=$_POST["in_groups"];}
+if (isset($_GET["call_id"]))				{$call_id=$_GET["call_id"];}
+	elseif (isset($_POST["call_id"]))		{$call_id=$_POST["call_id"];}
+if (isset($_GET["group"]))					{$group=$_GET["group"];}
+	elseif (isset($_POST["group"]))			{$group=$_POST["group"];}
+if (isset($_GET["expiration_date"]))			{$expiration_date=$_GET["expiration_date"];}
+	elseif (isset($_POST["expiration_date"]))	{$expiration_date=$_POST["expiration_date"];}
+if (isset($_GET["nanpa_ac_prefix_check"]))			{$nanpa_ac_prefix_check=$_GET["nanpa_ac_prefix_check"];}
+	elseif (isset($_POST["nanpa_ac_prefix_check"]))	{$nanpa_ac_prefix_check=$_POST["nanpa_ac_prefix_check"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -327,6 +359,7 @@ if ($non_latin < 1)
 	$format = ereg_replace("[^0-9a-zA-Z]","",$format);
 	$list_id = ereg_replace("[^0-9]","",$list_id);
 	$phone_code = ereg_replace("[^0-9]","",$phone_code);
+	$update_phone_number=ereg_replace("[^A-Z]","",$update_phone_number);
 	$phone_number = ereg_replace("[^0-9]","",$phone_number);
 	$vendor_lead_code = ereg_replace(";","",$vendor_lead_code);
 		$vendor_lead_code = ereg_replace("\+"," ",$vendor_lead_code);
@@ -442,6 +475,16 @@ if ($non_latin < 1)
 	$datetime_start = ereg_replace("[^- \+\:\_0-9]","",$datetime_start);
 	$datetime_end = ereg_replace("[^- \+\:\_0-9]","",$datetime_end);
 	$time_format = ereg_replace("[^A-Z]","",$time_format);
+	$group_alias_id = ereg_replace("[^\_0-9a-zA-Z]","",$group_alias_id);
+	$group_alias_name = ereg_replace("[^- \+\_0-9a-zA-Z]","",$group_alias_name);
+	$caller_id_number = ereg_replace("[^0-9]","",$caller_id_number);
+	$caller_id_name = ereg_replace("[^- \+\_0-9a-zA-Z]","",$caller_id_name);
+	$user_groups = ereg_replace("[^-\|\_0-9a-zA-Z]","",$user_groups);
+	$in_groups = ereg_replace("[^-\|\_0-9a-zA-Z]","",$in_groups);
+	$call_id = ereg_replace("[^0-9a-zA-Z]","",$call_id);
+	$group = ereg_replace("[^-\|\_0-9a-zA-Z]","",$group);
+	$expiration_date = ereg_replace("[^-_0-9a-zA-Z]","",$expiration_date);
+	$nanpa_ac_prefix_check = ereg_replace("[^A-Z]","",$nanpa_ac_prefix_check);
 	}
 else
 	{
@@ -451,6 +494,7 @@ else
 	}
 
 $USarea = 			substr($phone_number, 0, 3);
+$USprefix = 		substr($phone_number, 3, 3);
 if (strlen($hopper_priority)<1) {$hopper_priority=0;}
 if ($hopper_priority < -99) {$hopper_priority=-99;}
 if ($hopper_priority > 99) {$hopper_priority=99;}
@@ -535,7 +579,7 @@ if ($function == 'version')
 ################################################################################
 if ($function == 'sounds_list')
 	{
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 6;";
+	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 6 and active='Y';";
 	if ($DB>0) {echo "DEBUG: sounds_list query - $stmt\n";}
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
@@ -556,10 +600,11 @@ if ($function == 'sounds_list')
 		if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
 		  else {$HTTPprotocol = 'http://';}
 		$admDIR = "$HTTPprotocol$server_name:$server_port";
+		$admin_web_dir='';
 
 		#############################################
 		##### START SYSTEM_SETTINGS LOOKUP #####
-		$stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory FROM system_settings;";
+		$stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory,admin_web_directory FROM system_settings;";
 		$rslt=mysql_query($stmt, $link);
 		$ss_conf_ct = mysql_num_rows($rslt);
 		if ($ss_conf_ct > 0)
@@ -569,6 +614,9 @@ if ($function == 'sounds_list')
 			$sounds_central_control_active =	$row[1];
 			$sounds_web_server =				$row[2];
 			$sounds_web_directory =				$row[3];
+			$admin_web_directory =				$row[4];
+			if (preg_match("/\//",$admin_web_directory))
+				{$admin_web_dir = dirname("$admin_web_directory");   $admin_web_dir .= "/";}
 			}
 		##### END SETTINGS LOOKUP #####
 		###########################################
@@ -631,7 +679,7 @@ if ($function == 'sounds_list')
 					if (eregi('tab',$format))
 						{echo "$k\t$file_names[$m]\t$file_dates[$m]\t$file_sizes[$m]\t$file_epoch[$m]\n";}
 					if (eregi('link',$format))
-						{echo "<a href=\"http://$sounds_web_server/$sounds_web_directory/$file_names[$m]\">$file_names[$m]</a><br>\n";}
+						{echo "<a href=\"http://$sounds_web_server/$admin_web_dir$sounds_web_directory/$file_names[$m]\">$file_names[$m]</a><br>\n";}
 					if (eregi('selectframe',$format))
 						{
 						if ($sf < 1)
@@ -674,7 +722,7 @@ if ($function == 'sounds_list')
 						echo "<td><a href=\"javascript:choose_file('$file_namesPROMPT[$m]','$comments');\"><font size=1 face=\"Arial,Helvetica\">$file_names[$m]</a></td>\n";
 						echo "<td><font size=1 face=\"Arial,Helvetica\">$file_dates[$m]</td>\n";
 						echo "<td><font size=1 face=\"Arial,Helvetica\">$file_sizes[$m]</td>\n";
-						echo "<td><a href=\"$admDIR/$sounds_web_directory/$file_names[$m]\" target=\"_blank\"><font size=1 face=\"Arial,Helvetica\">PLAY</a></td></tr>\n";
+						echo "<td><a href=\"$admDIR/$admin_web_dir$sounds_web_directory/$file_names[$m]\" target=\"_blank\"><font size=1 face=\"Arial,Helvetica\">PLAY</a></td></tr>\n";
 						}
 					}
 				$k++;
@@ -700,7 +748,7 @@ if ($function == 'sounds_list')
 ################################################################################
 if ($function == 'moh_list')
 	{
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 6;";
+	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 6 and active='Y';";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$allowed_user=$row[0];
@@ -866,7 +914,7 @@ if ($function == 'moh_list')
 ################################################################################
 if ($function == 'vm_list')
 	{
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 6;";
+	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 6 and active='Y';";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$allowed_user=$row[0];
@@ -1018,7 +1066,7 @@ if ($function == 'agent_ingroup_info')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and user_level > 6;";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -1114,12 +1162,12 @@ if ($function == 'agent_ingroup_info')
 					$row=mysql_fetch_row($rslt);
 					$allowed_campaign_autodial=$row[0];
 
-					$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and change_agent_campaign='1';";
+					$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and change_agent_campaign='1' and active='Y';";
 					$rslt=mysql_query($stmt, $link);
 					$row=mysql_fetch_row($rslt);
 					$allowed_user_change_ingroups=$row[0];
 
-					$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and modify_users='1';";
+					$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and modify_users='1' and active='Y';";
 					$rslt=mysql_query($stmt, $link);
 					$row=mysql_fetch_row($rslt);
 					$allowed_user_modify_user=$row[0];
@@ -1344,7 +1392,7 @@ if ($function == 'blind_monitor')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and user_level > 6;";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -1441,6 +1489,21 @@ if ($function == 'blind_monitor')
 						{
 						$man_id = mysql_insert_id($link);
 
+						$stmt = "INSERT INTO vicidial_dial_log SET caller_code='$BMquery',lead_id='0',server_ip='$monitor_server_ip',call_date='$NOW_TIME',extension='$dialplan_number',channel='Local/$monitor_dialstring$stage$session_id@default',timeout='0',outbound_cid='\"VC Blind Monitor\" <$outbound_cid>',context='default';";
+						$rslt=mysql_query($stmt, $link);
+
+						##### BEGIN log visit to the vicidial_report_log table #####
+						$endMS = microtime();
+						$startMSary = explode(" ",$startMS);
+						$endMSary = explode(" ",$endMS);
+						$runS = ($endMSary[0] - $startMSary[0]);
+						$runM = ($endMSary[1] - $startMSary[1]);
+						$TOTALrun = ($runS + $runM);
+						$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$user', ip_address='1.1.1.1', report_name='API Blind Monitor', browser='API', referer='realtime_report.php', notes='$user, $monitor_server_ip, $dialplan_number, $session_id, $phone_login', url='REALTIME BLIND MONITOR',run_time='$TOTALrun';";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_query($stmt, $link);
+						##### END log visit to the vicidial_report_log table #####
+
 						$result = 'SUCCESS';
 						$result_reason = "blind_monitor HAS BEEN LAUNCHED";
 						echo "$result: $result_reason - $phone_login|$monitor_dialstring$stage$session_id|$dialplan_number|$session_id|$man_id|$user\n";
@@ -1500,7 +1563,7 @@ if ($function == 'add_user')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_users='1' and user_level >= 8;";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_users='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -1660,6 +1723,97 @@ if ($function == 'add_user')
 
 
 
+################################################################################
+### add_group_alias - adds group alias to the system
+################################################################################
+if ($function == 'add_group_alias')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "add_group_alias USER DOES NOT HAVE PERMISSION TO ADD GROUP ALIASES";
+			$data = "$allowed_user";
+			echo "$result: $result_reason: |$user|$data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if (strlen($caller_id_number)<6)
+				{
+				$result = 'ERROR';
+				$result_reason = "add_group_alias YOU MUST USE ALL REQUIRED FIELDS";
+				$data = "$group_alias_id|$group_alias_name|$caller_id_number";
+				echo "$result: $result_reason: |$user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				if (strlen($group_alias_id)<2) {$group_alias_id = $caller_id_number;}
+				if (strlen($group_alias_name)<2) {$group_alias_name = $caller_id_number;}
+				if (strlen($active)<1) {$active = 'Y';}
+				if (strlen($admin_user_group)<1) {$admin_user_group = '---ALL---';}
+				$group_alias_name = preg_replace("/\+/",' ',$group_alias_name);
+				$caller_id_name = preg_replace("/\+/",' ',$caller_id_name);
+
+				$stmt="SELECT count(*) from groups_alias where group_alias_id='$group_alias_id';";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$alias_exists=$row[0];
+				if ($alias_exists > 0)
+					{
+					$result = 'ERROR';
+					$result_reason = "add_group_alias GROUP ALIAS ALREADY EXISTS";
+					$data = "$group_alias_id|$caller_id_number";
+					echo "$result: $result_reason: |$user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					$stmt="INSERT INTO groups_alias (group_alias_id,group_alias_name,caller_id_number,caller_id_name,active,user_group) values('$group_alias_id','$group_alias_name','$caller_id_number','$caller_id_name','$active','$admin_user_group');";
+					$rslt=mysql_query($stmt, $link);
+
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='GROUPALIASES', event_type='ADD', record_id='$group_alias_id', event_code='ADMIN API ADD GROUP ALIAS', event_sql=\"$SQL_log\", event_notes='';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_query($stmt, $link);
+
+					$result = 'SUCCESS';
+					$result_reason = "add_group_alias GROUP ALIAS HAS BEEN ADDED";
+					$data = "$group_alias_id|$group_alias_name|$caller_id_number";
+					echo "$result: $result_reason - $user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END add_group_alias
+################################################################################
+
+
 
 ################################################################################
 ### add_phone - adds phone to the phones table
@@ -1677,7 +1831,7 @@ if ($function == 'add_phone')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8;";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -1815,7 +1969,7 @@ if ($function == 'update_phone')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8;";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -1896,7 +2050,7 @@ if ($function == 'update_phone')
 						{
 						if ($delete_phone == 'Y')
 							{
-							$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_delete_phones='1' and user_level >= 8;";
+							$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_delete_phones='1' and user_level >= 8 and active='Y';";
 							$rslt=mysql_query($stmt, $link);
 							$row=mysql_fetch_row($rslt);
 							$allowed_user=$row[0];
@@ -2210,8 +2364,6 @@ if ($function == 'update_phone')
 
 
 
-
-
 ################################################################################
 ### add_phone_alias - adds phone alias to the system
 ################################################################################
@@ -2228,7 +2380,7 @@ if ($function == 'add_phone_alias')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8;";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -2337,7 +2489,7 @@ if ($function == 'update_phone_alias')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8;";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -2380,7 +2532,7 @@ if ($function == 'update_phone_alias')
 					{
 					if ($delete_alias == 'Y')
 						{
-						$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_delete_phones='1' and user_level >= 8;";
+						$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_delete_phones='1' and user_level >= 8 and active='Y';";
 						$rslt=mysql_query($stmt, $link);
 						$row=mysql_fetch_row($rslt);
 						$allowed_user=$row[0];
@@ -2522,7 +2674,7 @@ if ($function == 'update_list')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_lists='1' and user_level >= 8;";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_lists='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -2609,6 +2761,7 @@ if ($function == 'update_list')
 					$webformSQL='';
 					$webformtwoSQL='';
 					$resettimeSQL='';
+					$expiration_dateSQL='';
 					if (strlen($campaign_id) > 0)
 						{
 						$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id';";
@@ -2758,6 +2911,25 @@ if ($function == 'update_list')
 								{$resettimeSQL = " ,reset_time='$reset_time'";}
 							}
 						}
+					if (strlen($expiration_date) > 9)
+						{
+						if ($expiration_date == '--BLANK--')
+							{$expiration_dateSQL = " ,expiration_date='2099-12-31'";}
+						else
+							{
+							if (strlen($expiration_date) < 10)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_list EXPIRATION DATE IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$expiration_date";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$resettimeSQL = " ,expiration_date='$expiration_date'";}
+							}
+						}
 					if (strlen($web_form_address) > 0)
 						{
 						if ($web_form_address == '--BLANK--')
@@ -2773,7 +2945,7 @@ if ($function == 'update_list')
 							{$webformtwoSQL = " ,web_form_address_two='$web_form_address_two'";}
 						}
 
-					$updateSQL = "$webformtwoSQL$webformSQL$ammessageSQL$outboundcidSQL$activeSQL$listnameSQL$campaignSQL$scriptSQL$dropingroupSQL$resettimeSQL";
+					$updateSQL = "$webformtwoSQL$webformSQL$ammessageSQL$outboundcidSQL$activeSQL$listnameSQL$campaignSQL$scriptSQL$dropingroupSQL$resettimeSQL$expiration_dateSQL";
 
 					if (strlen($updateSQL)< 3)
 						{
@@ -2846,7 +3018,7 @@ if ($function == 'update_list')
 
 					if ($delete_list == 'Y')
 						{
-						$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_lists='1' and delete_lists='1' and user_level >= 8;";
+						$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_lists='1' and delete_lists='1' and user_level >= 8 and active='Y';";
 						$rslt=mysql_query($stmt, $link);
 						$row=mysql_fetch_row($rslt);
 						$allowed_user=$row[0];
@@ -2884,7 +3056,7 @@ if ($function == 'update_list')
 
 					if ($delete_leads == 'Y')
 						{
-						$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_lists='1' and delete_lists='1' and modify_leads='1' and user_level >= 8;";
+						$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_lists='1' and delete_lists='1' and modify_leads='1' and user_level >= 8 and active='Y';";
 						$rslt=mysql_query($stmt, $link);
 						$row=mysql_fetch_row($rslt);
 						$allowed_user=$row[0];
@@ -2950,7 +3122,7 @@ if ($function == 'add_list')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_lists='1' and user_level >= 8;";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_lists='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -3086,8 +3258,9 @@ if ($function == 'add_list')
 								exit;
 								}
 							if (strlen($active)<1) {$active='N';}
+							if (strlen($expiration_date)<10) {$expiration_date='2099-12-31';}
 
-							$stmt="INSERT INTO vicidial_lists SET list_id='$list_id', list_name='$list_name', campaign_id='$campaign_id', active='$active', campaign_cid_override='$outbound_cid', agent_script_override='$script', am_message_exten_override='$am_message', drop_inbound_group_override='$drop_inbound_group', web_form_address='$web_form_address', web_form_address_two='$web_form_address_two', reset_time='$reset_time';";
+							$stmt="INSERT INTO vicidial_lists SET list_id='$list_id', list_name='$list_name', campaign_id='$campaign_id', active='$active', campaign_cid_override='$outbound_cid', agent_script_override='$script', am_message_exten_override='$am_message', drop_inbound_group_override='$drop_inbound_group', web_form_address='$web_form_address', web_form_address_two='$web_form_address_two', reset_time='$reset_time', expiration_date='$expiration_date';";
 							$rslt=mysql_query($stmt, $link);
 							if ($DB) {echo "|$stmt|\n";}
 
@@ -3136,7 +3309,7 @@ if ($function == 'recording_lookup')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6;";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -3308,7 +3481,7 @@ if ($function == 'did_log_export')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6;";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -3448,7 +3621,7 @@ if ($function == 'agent_stats_export')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6;";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -3596,6 +3769,7 @@ if ($function == 'agent_stats_export')
 						if ($AScalls[$k] < 1)
 							{
 							$cust_sec = 0;
+							$wait_sec = 0;
 							$avg_cust_sec = 0;
 							$avg_wait_sec = 0;
 							$pct_of_queue = 0;
@@ -3603,6 +3777,7 @@ if ($function == 'agent_stats_export')
 						else
 							{
 							$cust_sec = ($AStalk_sec[$k] - $ASdead_sec[$k]);
+							$wait_sec = $ASwait_sec[$k];
 							$avg_cust_sec = ($cust_sec / $AScalls[$k]);
 							$avg_wait_sec = ($ASwait_sec[$k] / $AScalls[$k]);
 							$pct_of_queue = ( ($AScalls[$k] / $total_calls) * 100);
@@ -3618,10 +3793,11 @@ if ($function == 'agent_stats_export')
 						$avg_session_sec =	sec_convert($avg_session_sec,$time_format);
 						$avg_pause_sec =	sec_convert($avg_pause_sec,$time_format);
 						$cust_sec =			sec_convert($cust_sec,$time_format);
+						$wait_sec =			sec_convert($wait_sec,$time_format);
 						$avg_cust_sec =		sec_convert($avg_cust_sec,$time_format);
 						$avg_wait_sec =		sec_convert($avg_wait_sec,$time_format);
 
-						$output .= "$ASuser[$k]$DL$ASfull_name[$k]$DL$ASuser_group[$k]$DL$AScalls[$k]$DL$login_sec$DL$cust_sec$DL$avg_cust_sec$DL$avg_wait_sec$DL$pct_of_queue%$DL$ASpause_sec[$k]$DL$ASsessions[$k]$DL$avg_session_sec$DL$ASpauses[$k]$DL$avg_pause_sec$DL$pct_pause%$DL$avg_pause_session\n";
+						$output .= "$ASuser[$k]$DL$ASfull_name[$k]$DL$ASuser_group[$k]$DL$AScalls[$k]$DL$login_sec$DL$cust_sec$DL$avg_cust_sec$DL$avg_wait_sec$DL$pct_of_queue%$DL$ASpause_sec[$k]$DL$ASsessions[$k]$DL$avg_session_sec$DL$ASpauses[$k]$DL$avg_pause_sec$DL$pct_pause%$DL$avg_pause_session$DL$wait_sec\n";
 	
 						$k++;
 						}
@@ -3648,6 +3824,737 @@ if ($function == 'agent_stats_export')
 
 
 ################################################################################
+### user_group_status - exports user group real-time stats
+################################################################################
+if ($function == 'user_group_status')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "user_group_status USER DOES NOT HAVE PERMISSION TO GET USER GROUP INFO";
+			echo "$result: $result_reason: |$user|$allowed_user|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			$search_SQL='';
+			$search_ready=0;
+
+			require_once("functions.php");
+
+			if ( (strlen($user_groups)>0) and (strlen($user_groups)<10000) )
+				{
+				$user_groupsOUTPUT = preg_replace("/\|/",' ',$user_groups);
+				$user_groupsSQL = preg_replace("/\|/","','",$user_groups);
+				$search_SQL .= "and user_group IN('$user_groupsSQL')";
+				$search_ready++;
+				}
+			if ($search_ready < 1)
+				{
+				$result = 'ERROR';
+				$result_reason = "user_group_status INVALID SEARCH PARAMETERS";
+				$data = "$user|$user_groups";
+				echo "$result: $result_reason: $data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level > 6 and view_reports='1' and active='Y';";
+				if ($DB) {$MAIN.="|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$LOGuser_group =			$row[0];
+
+				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+				if ($DB) {$MAIN.="|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$LOGallowed_campaigns =			$row[0];
+				$LOGadmin_viewable_groups =		$row[1];
+
+				$LOGadmin_viewable_groupsSQL='';
+				$whereLOGadmin_viewable_groupsSQL='';
+				if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+					{
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+					$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					}
+				$LOGallowed_campaignsSQL='';
+				$whereLOGallowed_campaignsSQL='';
+				$whereLOGallowed_callsSQL='';
+				if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+					{
+					$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+					$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+					$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+
+					$stmt="select group_id from vicidial_inbound_groups $whereLOGadmin_viewable_groupsSQL order by group_id;";
+					$rslt=mysql_query($stmt, $link);
+					$groups_to_print = mysql_num_rows($rslt);
+					$i=0;
+					$rawLOGallowed_ingroupsSQL='';
+					while ($i < $groups_to_print)
+						{
+						$row=mysql_fetch_row($rslt);
+						$rawLOGallowed_ingroupsSQL .=	"row[0]','";
+						$i++;
+						}
+					$whereLOGallowed_callsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL','$rawLOGallowed_ingroupsSQL')";
+					}
+
+				$k=0;
+				$output='';
+				$DLset=0;
+				if ($stage == 'csv')
+					{$DL = ',';   $DLset++;}
+				if ($stage == 'tab')
+					{$DL = "\t";   $DLset++;}
+				if ($stage == 'pipe')
+					{$DL = '|';   $DLset++;}
+				if ($DLset < 1)
+					{$DL='|';   $stage='pipe';}
+				if (strlen($time_format) < 1)
+					{$time_format = 'HF';}
+				if ($header == 'YES')
+					{$output .= 'usergroups' . $DL . 'calls_waiting' . $DL . 'agents_logged_in' . $DL . 'agents_in_calls' . $DL . 'agents_waiting' . $DL . 'agents_paused' . $DL . 'agents_in_dead_calls' . $DL . 'agents_in_dispo' . "\n";}
+
+				$total_agents=0;
+				$total_agents_in_calls=0;
+				$total_agents_waiting=0;
+				$total_agents_paused=0;
+				$total_agents_dead=0;
+				$total_agents_dispo=0;
+				$total_calls=0;
+				$total_calls_waiting=0;
+				$call_camps[0]='';
+				$call_types[0]='';
+
+				$callerids='';
+				$pausecode='';
+				$stmt="select callerid,status,campaign_id,call_type from vicidial_auto_calls $whereLOGallowed_callsSQL;";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$calls_to_list = mysql_num_rows($rslt);
+				if ($calls_to_list > 0)
+					{
+					$i=0;
+					while ($i < $calls_to_list)
+						{
+						$row=mysql_fetch_row($rslt);
+						$callerids .=	"$row[0]|";
+						if (eregi("LIVE",$row[1])) 
+							{$total_calls_waiting++;}
+						$call_camps[$i] = $row[2];
+						$call_types[$i] = $row[3];
+						$i++;
+						}
+					}
+
+				$stmt="select vicidial_live_agents.user,vicidial_live_agents.status,vicidial_live_agents.campaign_id,vicidial_users.user_group,vicidial_live_agents.comments,vicidial_live_agents.callerid,lead_id from vicidial_live_agents,vicidial_users where vicidial_live_agents.user=vicidial_users.user $search_SQL $LOGadmin_viewable_groupsSQL limit 10000000;";
+				$rslt=mysql_query($stmt, $link);
+				$rec_recs = mysql_num_rows($rslt);
+				if ($DB>0) {echo "DEBUG: user_group_status query - $rec_recs|$stmt\n";}
+				if ($rec_recs > 0)
+					{
+					while ($rec_recs > $k)
+						{
+						# user,status,campaign_id,user_group,comments,callerid,lead_id
+						$row=mysql_fetch_row($rslt);
+
+						if (eregi("READY|PAUSED",$row[1]))
+							{
+							if ($row[6] > 0)
+								{$row[1] =	'DISPO';}
+							}
+
+						if (eregi("INCALL",$row[1])) 
+							{
+							$stmtP="select count(*) from parked_channels where channel_group='$row[5]';";
+							$rsltP=mysql_query($stmtP,$link);
+							$rowP=mysql_fetch_row($rsltP);
+							$parked_channel = $rowP[0];
+
+							if ($parked_channel > 0)
+								{$row[1] =	'PARK';}
+							else
+								{
+								if (!ereg("$row[5]\|",$callerids))
+									{$row[1] =	'DEAD';}
+								}
+							}
+
+						if ($row[1]=='DEAD')
+							{$total_agents_dead++;}
+						if ($row[1]=='DISPO')
+							{$total_agents_dispo++;}
+						if ($row[1]=='PAUSED') 
+							{$total_agents_paused++;}
+						if ( (eregi("INCALL",$row[1])) or (eregi("QUEUE",$row[1])) or (eregi("PARK",$row[1]))) 
+							{$total_agents_in_calls++;}
+						if ( (eregi("READY",$row[1])) or (eregi("CLOSER",$row[1])) ) 
+							{$total_agents_waiting++;}
+
+						$total_agents++;
+						$k++;
+						}
+					}
+				$output .= "$user_groupsOUTPUT$DL$total_calls_waiting$DL$total_agents$DL$total_agents_in_calls$DL$total_agents_waiting$DL$total_agents_paused$DL$total_agents_dead$DL$total_agents_dispo\n";
+
+				echo "$output";
+
+				$result = 'SUCCESS';
+				$data = "$user|$user_groups|$stage";
+				$result_reason = "user_group_status AGENTS FOUND: $k";
+
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END user_group_status
+################################################################################
+
+
+
+
+
+################################################################################
+### in_group_status - exports in-group real-time stats
+################################################################################
+if ($function == 'in_group_status')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "in_group_status USER DOES NOT HAVE PERMISSION TO GET IN-GROUP INFO";
+			echo "$result: $result_reason: |$user|$allowed_user|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			$search_SQL='';
+			$search_ready=0;
+
+			require_once("functions.php");
+
+			if ( (strlen($in_groups)>0) and (strlen($in_groups)<10000) )
+				{
+				$in_groupsOUTPUT = preg_replace("/\|/",' ',$in_groups);
+				$in_groupsSQL = preg_replace("/\|/","','",$in_groups);
+				$search_SQL .= "where campaign_id IN('$in_groupsSQL')";
+				$agent_search_SQL .= "where group_id IN('$in_groupsSQL')";
+				$search_ready++;
+				}
+			if ($search_ready < 1)
+				{
+				$result = 'ERROR';
+				$result_reason = "in_group_status INVALID SEARCH PARAMETERS";
+				$data = "$user|$in_groups";
+				echo "$result: $result_reason: $data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level > 6 and view_reports='1' and active='Y';";
+				if ($DB) {$MAIN.="|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$LOGuser_group =			$row[0];
+
+				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+				if ($DB) {$MAIN.="|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$LOGallowed_campaigns =			$row[0];
+				$LOGadmin_viewable_groups =		$row[1];
+
+				$LOGadmin_viewable_groupsSQL='';
+				$whereLOGadmin_viewable_groupsSQL='';
+				if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+					{
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+					$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					}
+				$LOGallowed_campaignsSQL='';
+				$whereLOGallowed_campaignsSQL='';
+				$LOGallowed_callsSQL='';
+				if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+					{
+					$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+					$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+					$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+
+					$stmt="select group_id from vicidial_inbound_groups $whereLOGadmin_viewable_groupsSQL order by group_id;";
+					$rslt=mysql_query($stmt, $link);
+					$groups_to_print = mysql_num_rows($rslt);
+					$i=0;
+					$rawLOGallowed_ingroupsSQL='';
+					while ($i < $groups_to_print)
+						{
+						$row=mysql_fetch_row($rslt);
+						$rawLOGallowed_ingroupsSQL .=	"row[0]','";
+						$i++;
+						}
+					$LOGallowed_callsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL','$rawLOGallowed_ingroupsSQL')";
+					}
+
+
+				$k=0;
+				$output='';
+				$DLset=0;
+				if ($stage == 'csv')
+					{$DL = ',';   $DLset++;}
+				if ($stage == 'tab')
+					{$DL = "\t";   $DLset++;}
+				if ($stage == 'pipe')
+					{$DL = '|';   $DLset++;}
+				if ($DLset < 1)
+					{$DL='|';   $stage='pipe';}
+				if (strlen($time_format) < 1)
+					{$time_format = 'HF';}
+				if ($header == 'YES')
+					{$output .= 'ingroups' . $DL . 'total_calls' . $DL . 'calls_waiting' . $DL . 'agents_logged_in' . $DL . 'agents_in_calls' . $DL . 'agents_waiting' . $DL . 'agents_paused' . $DL . 'agents_in_dispo' . "\n";}
+
+				$total_agents=0;
+				$total_agents_in_calls=0;
+				$total_agents_waiting=0;
+				$total_agents_paused=0;
+				$total_agents_dead=0;
+				$total_agents_dispo=0;
+				$total_calls=0;
+				$total_calls_waiting=0;
+				$call_camps[0]='';
+				$call_types[0]='';
+
+				$callerids='';
+				$pausecode='';
+				$stmt="select callerid,status,campaign_id,call_type from vicidial_auto_calls $search_SQL $LOGallowed_callsSQL;";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$calls_to_list = mysql_num_rows($rslt);
+				if ($calls_to_list > 0)
+					{
+					$i=0;
+					while ($i < $calls_to_list)
+						{
+						$row=mysql_fetch_row($rslt);
+						$callerids .=	"$row[0]|";
+						if (eregi("LIVE",$row[1])) 
+							{$total_calls_waiting++;}
+						$call_camps[$i] = $row[2];
+						$call_types[$i] = $row[3];
+						$total_calls++;
+						$i++;
+						}
+					}
+
+				$users='';
+				$stmt="SELECT distinct user from vicidial_live_inbound_agents where group_id IN('$in_groupsSQL');";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$IG_users = mysql_num_rows($rslt);
+				if ($IG_users > 0)
+					{
+					$i=0;
+					while ($i < $IG_users)
+						{
+						$row=mysql_fetch_row($rslt);
+						$users .=	"$row[0]','";
+						$i++;
+						}
+					}
+
+				$k=0;
+				$stmt="select vicidial_live_agents.user,vicidial_live_agents.status,vicidial_live_agents.campaign_id,vicidial_users.user_group,vicidial_live_agents.comments,vicidial_live_agents.callerid,lead_id from vicidial_live_agents,vicidial_users where vicidial_live_agents.user=vicidial_users.user and vicidial_live_agents.user IN('$users') $LOGadmin_viewable_groupsSQL limit 10000000;";
+				$rslt=mysql_query($stmt, $link);
+				$rec_recs = mysql_num_rows($rslt);
+				if ($DB>0) {echo "DEBUG: in_group_status query - $rec_recs|$stmt\n";}
+				if ($rec_recs > 0)
+					{
+					while ($rec_recs > $k)
+						{
+						# user,status,campaign_id,user_group,comments,callerid,lead_id
+						$row=mysql_fetch_row($rslt);
+
+						if (eregi("READY|PAUSED",$row[1]))
+							{
+							if ($row[6] > 0)
+								{$row[1] =	'DISPO';}
+							}
+						if ($row[1]=='DISPO')
+							{$total_agents_dispo++;}
+						if ($row[1]=='PAUSED') 
+							{$total_agents_paused++;}
+						if ( (eregi("INCALL",$row[1])) or (eregi("QUEUE",$row[1])) or (eregi("PARK",$row[1]))) 
+							{$total_agents_in_calls++;}
+						if ( (eregi("READY",$row[1])) or (eregi("CLOSER",$row[1])) ) 
+							{$total_agents_waiting++;}
+
+						$total_agents++;
+						$k++;
+						}
+					}
+				$output .= "$in_groupsOUTPUT$DL$total_calls$DL$total_calls_waiting$DL$total_agents$DL$total_agents_in_calls$DL$total_agents_waiting$DL$total_agents_paused$DL$total_agents_dispo\n";
+
+				echo "$output";
+
+				$result = 'SUCCESS';
+				$data = "$user|$in_groups|$stage";
+				$result_reason = "in_group_status CALLS FOUND: $k";
+
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END in_group_status
+################################################################################
+
+
+
+
+################################################################################
+### agent_status - exports agent user real-time stats
+################################################################################
+if ($function == 'agent_status')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_status USER DOES NOT HAVE PERMISSION TO GET AGENT INFO";
+			echo "$result: $result_reason: |$user|$allowed_user|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			$agent_search_SQL='';
+			$search_ready=0;
+
+			require_once("functions.php");
+
+			if ( (strlen($agent_user)>0) and (strlen($agent_user)<100) )
+				{
+				$agent_search_SQL .= "where user='$agent_user'";
+				$search_ready++;
+				}
+			if ($search_ready < 1)
+				{
+				$result = 'ERROR';
+				$result_reason = "agent_status INVALID SEARCH PARAMETERS";
+				$data = "$user|$agent_user";
+				echo "$result: $result_reason: $data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level > 6 and view_reports='1' and active='Y';";
+				if ($DB) {$MAIN.="|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$LOGuser_group =			$row[0];
+
+				$stmt="SELECT admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+				if ($DB) {$MAIN.="|$stmt|\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$LOGadmin_viewable_groups =		$row[0];
+
+				$LOGadmin_viewable_groupsSQL='';
+				$whereLOGadmin_viewable_groupsSQL='';
+				if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+					{
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+					$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					}
+
+				$k=0;
+				$output='';
+				$DLset=0;
+				if ($stage == 'csv')
+					{$DL = ',';   $DLset++;}
+				if ($stage == 'tab')
+					{$DL = "\t";   $DLset++;}
+				if ($stage == 'pipe')
+					{$DL = '|';   $DLset++;}
+				if ($DLset < 1)
+					{$DL='|';   $stage='pipe';}
+				if (strlen($time_format) < 1)
+					{$time_format = 'HF';}
+				if ($header == 'YES')
+					{$output .= 'status' . $DL . 'callerid' . $DL . 'lead_id' . $DL . 'campaign_id' . $DL . 'calls_today' . $DL . 'full_name' . $DL . 'user_group' . $DL . 'user_level' . "\n";}
+
+				$stmt="select full_name,user_group,user_level from vicidial_users $agent_search_SQL $LOGadmin_viewable_groupsSQL;";
+				$rslt=mysql_query($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$user_to_list = mysql_num_rows($rslt);
+				if ($user_to_list > 0)
+					{
+					$row=mysql_fetch_row($rslt);
+					$full_name = 	$row[0];
+					$user_group = 	$row[1];
+					$user_level = 	$row[2];
+
+					$stmt="select status,callerid,lead_id,campaign_id,calls_today from vicidial_live_agents $agent_search_SQL;";
+					$rslt=mysql_query($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					$agent_to_list = mysql_num_rows($rslt);
+					if ($agent_to_list > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$status =		$row[0];
+						$callerid =		$row[1];
+						$lead_id =		$row[2];
+						$campaign_id =	$row[3];
+						$calls_today =	$row[4];
+
+						$output .= "$status$DL$callerid$DL$lead_id$DL$campaign_id$DL$calls_today$DL$full_name$DL$user_group$DL$user_level\n";
+
+						echo "$output";
+
+						$result = 'SUCCESS';
+						$data = "$user|$agent_user|$stage";
+						$result_reason = "agent_status $output";
+
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					else
+						{
+						$result = 'ERROR';
+						$result_reason = "agent_status AGENT NOT LOGGED IN";
+						$data = "$user|$agent_user";
+						echo "$result: $result_reason: $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				else
+					{
+					$result = 'ERROR';
+					$result_reason = "agent_status AGENT NOT FOUND";
+					$data = "$user|$agent_user";
+					echo "$result: $result_reason: $data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END agent_status
+################################################################################
+
+
+
+################################################################################
+### update_log_entry - updates the status of a log entry
+################################################################################
+if ($function == 'update_log_entry')
+	{
+	if (strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_leads='1' and user_level > 7 and active='Y';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "update_log_entry USER DOES NOT HAVE PERMISSION TO UPDATE LOGS";
+			echo "$result: $result_reason: |$user|$allowed_user|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			$search_SQL='';
+			$search_ready=0;
+			if ( (strlen($group)<2) or (strlen($call_id)<8) or (strlen($status)<8) )
+				{
+				$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$group';";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$inbound_call=$row[0];
+
+				if ($inbound_call < 1)
+					{
+					$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$group';";
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					$outbound_call=$row[0];
+					}
+
+				if ( ($inbound_call < 1) and ($outbound_call < 1) )
+					{
+					$result = 'ERROR';
+					$result_reason = "update_log_entry GROUP NOT FOUND";
+					$data = "$user|$group";
+					echo "$result: $result_reason: $data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					if (preg_match("/\./",$call_id))
+						{
+						if ($inbound_call > 0)
+							{$stmt="SELECT lead_id,status,closecallid from vicidial_closer_log where campaign_id='$group' and uniqueid='$call_id' order by call_date desc limit 1;";}
+						else
+							{$stmt="SELECT lead_id,status,uniqueid from vicidial_log where campaign_id='$group' and uniqueid='$call_id';";}
+						}
+					else
+						{
+						$lead_id = substr($call_id, -10);
+						$lead_id = ($lead_id + 0);
+
+						if ($inbound_call > 0)
+							{$stmt="SELECT lead_id,status,closecallid from vicidial_closer_log where campaign_id='$group' and lead_id='$lead_id' order by call_date desc limit 1;";}
+						else
+							{$stmt="SELECT lead_id,status,uniqueid from vicidial_log where campaign_id='$group' and lead_id='$lead_id' order by call_date desc limit 1;";}
+						}
+					$rslt=mysql_query($stmt, $link);
+					$found_recs = mysql_num_rows($rslt);
+					if ($found_recs > 0)
+						{
+						$row=mysql_fetch_row($rslt);
+						$lead_id =		$row[0];
+						$old_status =	$row[1];
+						$uniqueid =		$row[2];
+						}
+					else
+						{
+						$result = 'ERROR';
+						$result_reason = "update_log_entry NO RECORDS FOUND";
+						$data = "$user|$group|$call_id|$status";
+						echo "$result: $result_reason: $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+
+					if ($inbound_call > 0)
+						{$stmt="UPDATE vicidial_closer_log SET status='$status' where campaign_id='$group' and closecallid='$uniqueid' order by call_date desc limit 1;";}
+					else
+						{$stmt="UPDATE vicidial_log SET status='$status' where campaign_id='$group' and uniqueid='$uniqueid';";}
+					$rslt=mysql_query($stmt, $link);
+					$update_count = mysql_affected_rows($link);
+					if ($update_count > 0) 
+						{
+						$result = 'SUCCESS';
+						$result_reason = "update_log_entry RECORD HAS BEEN UPDATED";
+						$data = "$user|$group|$call_id|$status|$old_status|$uniqueid|$affected_rows";
+						echo "$result: $result_reason - $user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					else
+						{
+						$result = 'ERROR';
+						$result_reason = "update_log_entry NO RECORDS UPDATED";
+						$data = "$user|$group|$call_id|$status|$old_status|$uniqueid";
+						echo "$result: $result_reason: $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "update_log_entry INVALID SEARCH PARAMETERS";
+				$data = "$user|$group|$call_id|$status";
+				echo "$result: $result_reason: $data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END update_log_entry
+################################################################################
+
+
+
+
+
+################################################################################
 ### add_lead - inserts a lead into the vicidial_list table
 ################################################################################
 if ($function == 'add_lead')
@@ -3663,7 +4570,7 @@ if ($function == 'add_lead')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_leads='1' and user_level > 7;";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_leads='1' and user_level > 7 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$modify_leads=$row[0];
@@ -3683,6 +4590,24 @@ if ($function == 'add_lead')
 			if (strlen($rank)<1) {$rank='0';}
 			if (strlen($list_id)<3) {$list_id='999';}
 			if (strlen($phone_code)<1) {$phone_code='1';}
+			if ( ($nanpa_ac_prefix_check == 'Y') or (eregi("NANPA",$tz_method)) )
+				{
+				$stmt="SELECT count(*) from vicidial_nanpa_prefix_codes;";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$vicidial_nanpa_prefix_codes_count = $row[0];
+				if ($vicidial_nanpa_prefix_codes_count < 10)
+					{
+					$nanpa_ac_prefix_check='N';
+					$tz_method = preg_replace("/NANPA/",'',$tz_method);
+
+					$result = 'NOTICE';
+					$result_reason = "add_lead NANPA options disabled, NANPA prefix data not loaded";
+					echo "$result: $result_reason - $vicidial_nanpa_prefix_codes_count|$user\n";
+					$data = "$inserted_alt_phones|$lead_id";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
 
 			$valid_number=1;
 			if ( (strlen($phone_number)<6) || (strlen($phone_number)>16) )
@@ -3711,6 +4636,20 @@ if ($function == 'add_lead')
 				if ($valid_number < 1)
 					{
 					$result_reason = "add_lead INVALID PHONE NUMBER AREACODE";
+					}
+				}
+			if ( ($nanpa_ac_prefix_check=='Y') and ($valid_number > 0) )
+				{
+				$phone_areacode = substr($phone_number, 0, 3);
+				$phone_prefix = substr($phone_number, 3, 3);
+				$stmt = "SELECT count(*) from vicidial_nanpa_prefix_codes where areacode='$phone_areacode' and prefix='$phone_prefix';";
+				if ($DB>0) {echo "DEBUG: add_lead areacode check query - $stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				$valid_number=$row[0];
+				if ($valid_number < 1)
+					{
+					$result_reason = "add_lead INVALID PHONE NUMBER NANPA AREACODE PREFIX";
 					}
 				}
 			if ($valid_number < 1)
@@ -3753,14 +4692,22 @@ if ($function == 'add_lead')
 				if ( ($campaign_dnc_check == 'Y') or ($campaign_dnc_check == 'AREACODE') )
 					{
 					if ($DB>0) {echo "DEBUG: Checking for campaign DNC\n";}
+
+					$stmt="SELECT use_other_campaign_dnc from vicidial_campaigns where campaign_id='$campaign_id';";
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					$use_other_campaign_dnc =	$row[0];
+					$temp_campaign_id = $campaign_id;
+					if (strlen($use_other_campaign_dnc) > 0) {$temp_campaign_id = $use_other_campaign_dnc;}
+
 					if ($campaign_dnc_check == 'AREACODE')
 						{
 						$phone_areacode = substr($phone_number, 0, 3);
 						$phone_areacode .= "XXXXXXX";
-						$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number IN('$phone_number','$phone_areacode') and campaign_id='$campaign_id';";
+						$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number IN('$phone_number','$phone_areacode') and campaign_id='$temp_campaign_id';";
 						}
 					else
-						{$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number='$phone_number' and campaign_id='$campaign_id';";}
+						{$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number='$phone_number' and campaign_id='$temp_campaign_id';";}
 					if ($DB>0) {echo "DEBUG: add_lead query - $stmt\n";}
 					$rslt=mysql_query($stmt, $link);
 					$row=mysql_fetch_row($rslt);
@@ -4035,7 +4982,7 @@ if ($function == 'add_lead')
 
 				
 				### get current gmt_offset of the phone_number
-				$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner);
+				$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner,$USprefix);
 
 				$new_status='NEW';
 				if ($callback == 'Y')
@@ -4225,13 +5172,11 @@ if ($function == 'add_lead')
 							$result = 'NOTICE';
 							$result_reason = "add_lead NOT ADDED TO HOPPER, OUTSIDE OF LOCAL TIME";
 							echo "$result: $result_reason - $phone_number|$lead_id|$gmt_offset|$dialable|$user\n";
-							$data = "$phone_number|$lead_id|$gmt_offset|$dialable";
+							$data = "$phone_number|$lead_id|$gmt_offset|$dialable|$state";
 							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 							}
 						else
 							{
-							### code to insert into hopper goes here
-
 							### insert record into vicidial_hopper for alt_phone call attempt
 							$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$VD_campaign_id',status='READY',list_id='$list_id',gmt_offset_now='$gmt_offset',state='$state',user='',priority='$hopper_priority',source='P',vendor_lead_code='$vendor_lead_code';";
 							if ($DB>0) {echo "DEBUG: add_lead query - $stmt\n";}
@@ -4366,7 +5311,7 @@ if ($function == 'update_lead')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_leads='1' and user_level > 7;";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_leads='1' and user_level > 7 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$modify_leads=$row[0];
@@ -4561,6 +5506,7 @@ if ($function == 'update_lead')
 						if (strlen($owner)>0)				{$VL_update_SQL .= "owner='$owner',";}
 						if (strlen($called_count)>0)		{$VL_update_SQL .= "called_count='$called_count',";}
 						if ( (strlen($reset_lead) > 0 && $reset_lead == 'Y') )	{$VL_update_SQL .= "called_since_last_reset='N',";}
+                        if ( (strlen($update_phone_number)>0 && $update_phone_number=='Y' && strlen($phone_number)>0) ) {$VL_update_SQL .= "phone_number='$phone_number',";}
 						$VL_update_SQL = preg_replace("/,$/","",$VL_update_SQL);
 						$VL_update_SQL = preg_replace("/'--BLANK--'/","''",$VL_update_SQL);
 						$VL_update_SQL = preg_replace("/\n/","!N",$VL_update_SQL);
@@ -4900,7 +5846,7 @@ if ($function == 'update_lead')
 							else
 								{
 								### get current gmt_offset of the phone_number
-								$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner);
+								$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner,$USprefix);
 
 								if (strlen($status)<1)
 									{$status='NEW';}
@@ -5094,11 +6040,6 @@ api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$resul
 
 
 
-
-
-
-
-
 if ($format=='debug') 
 	{
 	$ENDtime = date("U");
@@ -5119,7 +6060,7 @@ exit;
 
 ##### LOOKUP GMT, FINDS THE CURRENT GMT OFFSET FOR A PHONE NUMBER #####
 
-function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner)
+function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner,$USprefix)
 {
 require("dbconnect.php");
 
@@ -5169,6 +6110,24 @@ if ( ($tz_method=="TZCODE") && (strlen($owner)>1) )
 		$row=mysql_fetch_row($rslt);
 		$dst_range =	$row[0];
 		if (strlen($dst_range)>2) {$dst = 'Y';}
+		}
+	}
+if ( (eregi("NANPA",$tz_method)) && (strlen($USarea)>2) && (strlen($USprefix)>2) )
+	{
+	$stmt="select GMT_offset,DST from vicidial_nanpa_prefix_codes where areacode='$USarea' and prefix='$USprefix';";
+	$rslt=mysql_query($stmt, $link);
+	$pc_recs = mysql_num_rows($rslt);
+	if ($pc_recs > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$gmt_offset =	$row[0];	 $gmt_offset = eregi_replace("\+","",$gmt_offset);
+		$dst =			$row[1];
+		$dst_range =	'';
+		if ($dst == 'Y')
+			{$dst_range =	'SSM-FSN';}
+		$PC_processed++;
+		$postalgmt_found++;
+		$post++;
 		}
 	}
 if ($postalgmt_found < 1)
@@ -5924,273 +6883,160 @@ function dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state)
 	$stmt="SELECT call_time_id,call_time_name,call_time_comments,ct_default_start,ct_default_stop,ct_sunday_start,ct_sunday_stop,ct_monday_start,ct_monday_stop,ct_tuesday_start,ct_tuesday_stop,ct_wednesday_start,ct_wednesday_stop,ct_thursday_start,ct_thursday_stop,ct_friday_start,ct_friday_stop,ct_saturday_start,ct_saturday_stop,ct_state_call_times FROM vicidial_call_times where call_time_id='$local_call_time';";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_query($stmt, $link);
-	$rowx=mysql_fetch_row($rslt);
-	$Gct_default_start =	"$rowx[3]";
-	$Gct_default_stop =		"$rowx[4]";
-	$Gct_sunday_start =		"$rowx[5]";
-	$Gct_sunday_stop =		"$rowx[6]";
-	$Gct_monday_start =		"$rowx[7]";
-	$Gct_monday_stop =		"$rowx[8]";
-	$Gct_tuesday_start =	"$rowx[9]";
-	$Gct_tuesday_stop =		"$rowx[10]";
-	$Gct_wednesday_start =	"$rowx[11]";
-	$Gct_wednesday_stop =	"$rowx[12]";
-	$Gct_thursday_start =	"$rowx[13]";
-	$Gct_thursday_stop =	"$rowx[14]";
-	$Gct_friday_start =		"$rowx[15]";
-	$Gct_friday_stop =		"$rowx[16]";
-	$Gct_saturday_start =	"$rowx[17]";
-	$Gct_saturday_stop =	"$rowx[18]";
-	$Gct_state_call_times = "$rowx[19]";
+	$call_times_to_print = mysql_num_rows($rslt);
+	if ($call_times_to_print > 0) 
+		{
+		$rowx=mysql_fetch_row($rslt);
+		$Gct_default_start =	$rowx[3];
+		$Gct_default_stop =		$rowx[4];
+		$Gct_sunday_start =		$rowx[5];
+		$Gct_sunday_stop =		$rowx[6];
+		$Gct_monday_start =		$rowx[7];
+		$Gct_monday_stop =		$rowx[8];
+		$Gct_tuesday_start =	$rowx[9];
+		$Gct_tuesday_stop =		$rowx[10];
+		$Gct_wednesday_start =	$rowx[11];
+		$Gct_wednesday_stop =	$rowx[12];
+		$Gct_thursday_start =	$rowx[13];
+		$Gct_thursday_stop =	$rowx[14];
+		$Gct_friday_start =		$rowx[15];
+		$Gct_friday_stop =		$rowx[16];
+		$Gct_saturday_start =	$rowx[17];
+		$Gct_saturday_stop =	$rowx[18];
+		$Gct_state_call_times = $rowx[19];
 
-	if ($GMT_day==0)	#### Sunday local time
-		{
-		if (($Gct_sunday_start==0) and ($Gct_sunday_stop==0))
+		if ( (strlen($Gct_state_call_times) > 2) and (strlen($state)>0) )
 			{
-			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-				{$dialable=1;}
-			}
-		else
-			{
-			if ( ($GMT_hour>=$Gct_sunday_start) and ($GMT_hour<$Gct_sunday_stop) )
-				{$dialable=1;}
-			}
-		}
-	if ($GMT_day==1)	#### Monday local time
-		{
-		if (($Gct_monday_start==0) and ($Gct_monday_stop==0))
-			{
-			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-				{$dialable=1;}
-			}
-		else
-			{
-			if ( ($GMT_hour>=$Gct_monday_start) and ($GMT_hour<$Gct_monday_stop) )
-				{$dialable=1;}
-			}
-		}
-	if ($GMT_day==2)	#### Tuesday local time
-		{
-		if (($Gct_tuesday_start==0) and ($Gct_tuesday_stop==0))
-			{
-			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-				{$dialable=1;}
-			}
-		else
-			{
-			if ( ($GMT_hour>=$Gct_tuesday_start) and ($GMT_hour<$Gct_tuesday_stop) )
-				{$dialable=1;}
-			}
-		}
-	if ($GMT_day==3)	#### Wednesday local time
-		{
-		if (($Gct_wednesday_start==0) and ($Gct_wednesday_stop==0))
-			{
-			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-				{$dialable=1;}
-			}
-		else
-			{
-			if ( ($GMT_hour>=$Gct_wednesday_start) and ($GMT_hour<$Gct_wednesday_stop) )
-				{$dialable=1;}
-			}
-		}
-	if ($GMT_day==4)	#### Thursday local time
-		{
-		if (($Gct_thursday_start==0) and ($Gct_thursday_stop==0))
-			{
-			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-				{$dialable=1;}
-			}
-		else
-			{
-			if ( ($GMT_hour>=$Gct_thursday_start) and ($GMT_hour<$Gct_thursday_stop) )
-				{$dialable=1;}
-			}
-		}
-	if ($GMT_day==5)	#### Friday local time
-		{
-		if (($Gct_friday_start==0) and ($Gct_friday_stop==0))
-			{
-			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-				{$dialable=1;}
-			}
-		else
-			{
-			if ( ($GMT_hour>=$Gct_friday_start) and ($GMT_hour<$Gct_friday_stop) )
-				{$dialable=1;}
-			}
-		}
-	if ($GMT_day==6)	#### Saturday local time
-		{
-		if (($Gct_saturday_start==0) and ($Gct_saturday_stop==0))
-			{
-			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-				{$dialable=1;}
-			}
-		else
-			{
-			if ( ($GMT_hour>=$Gct_saturday_start) and ($GMT_hour<$Gct_saturday_stop) )
-				{$dialable=1;}
-			}
-		}
+			$Gct_state_call_timesSQL = $Gct_state_call_times;
+			$Gct_state_call_timesSQL = preg_replace("/\|/","','",$Gct_state_call_timesSQL);
+			$Gct_state_call_timesSQL = preg_replace("/^',|,'$/",'',$Gct_state_call_timesSQL);
 
-	return $dialable;
-	}
-
-/*
-	$ct_states = '';
-	$ct_state_gmt_SQL = '';
-	$ct_srs=0;
-	$b=0;
-	if (strlen($Gct_state_call_times)>2)
-		{
-		$state_rules = explode('|',$Gct_state_call_times);
-		$ct_srs = ((count($state_rules)) - 2);
-		}
-	while($ct_srs >= $b)
-		{
-		if ( (strlen($state_rules[$b])>1) and (strlen($state)>1) )
-			{
-			$stmt="SELECT STAR from vicidial_state_call_times where state_call_time_id='$state_rules[$b]' and state_call_time_state='$state';";
+			$stmt="SELECT sct_default_start,sct_default_stop,sct_sunday_start,sct_sunday_stop,sct_monday_start,sct_monday_stop,sct_tuesday_start,sct_tuesday_stop,sct_wednesday_start,sct_wednesday_stop,sct_thursday_start,sct_thursday_stop,sct_friday_start,sct_friday_stop,sct_saturday_start,sct_saturday_stop FROM vicidial_state_call_times where state_call_time_id IN($Gct_state_call_timesSQL) and state_call_time_state='$state';";
+			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$Gstate_call_time_id =		"$row[0]";
-			$Gstate_call_time_state =	"$row[1]";
-			$Gsct_default_start =		"$row[4]";
-			$Gsct_default_stop =		"$row[5]";
-			$Gsct_sunday_start =		"$row[6]";
-			$Gsct_sunday_stop =			"$row[7]";
-			$Gsct_monday_start =		"$row[8]";
-			$Gsct_monday_stop =			"$row[9]";
-			$Gsct_tuesday_start =		"$row[10]";
-			$Gsct_tuesday_stop =		"$row[11]";
-			$Gsct_wednesday_start =		"$row[12]";
-			$Gsct_wednesday_stop =		"$row[13]";
-			$Gsct_thursday_start =		"$row[14]";
-			$Gsct_thursday_stop =		"$row[15]";
-			$Gsct_friday_start =		"$row[16]";
-			$Gsct_friday_stop =			"$row[17]";
-			$Gsct_saturday_start =		"$row[18]";
-			$Gsct_saturday_stop =		"$row[19]";
-
-			$ct_states .="'$Gstate_call_time_state',";
-
-			$r=0;
-			$state_gmt='';
-			while($r < $g)
+			$state_times_to_print = mysql_num_rows($rslt);
+			if ($state_times_to_print > 0) 
 				{
-				if ($GMT_day[$r]==0)	#### Sunday local time
-					{
-					if (($Gsct_sunday_start==0) and ($Gsct_sunday_stop==0))
-						{
-						if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
-							{$state_gmt.="'$GMT_gmt[$r]',";}
-						}
-					else
-						{
-						if ( ($GMT_hour[$r]>=$Gsct_sunday_start) and ($GMT_hour[$r]<$Gsct_sunday_stop) )
-							{$state_gmt.="'$GMT_gmt[$r]',";}
-						}
-					}
-				if ($GMT_day[$r]==1)	#### Monday local time
-					{
-					if (($Gsct_monday_start==0) and ($Gsct_monday_stop==0))
-						{
-						if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
-							{$state_gmt.="'$GMT_gmt[$r]',";}
-						}
-					else
-						{
-						if ( ($GMT_hour[$r]>=$Gsct_monday_start) and ($GMT_hour[$r]<$Gsct_monday_stop) )
-							{$state_gmt.="'$GMT_gmt[$r]',";}
-						}
-					}
-				if ($GMT_day[$r]==2)	#### Tuesday local time
-					{
-					if (($Gsct_tuesday_start==0) and ($Gsct_tuesday_stop==0))
-						{
-						if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
-							{$state_gmt.="'$GMT_gmt[$r]',";}
-						}
-					else
-						{
-						if ( ($GMT_hour[$r]>=$Gsct_tuesday_start) and ($GMT_hour[$r]<$Gsct_tuesday_stop) )
-							{$state_gmt.="'$GMT_gmt[$r]',";}
-						}
-					}
-				if ($GMT_day[$r]==3)	#### Wednesday local time
-					{
-					if (($Gsct_wednesday_start==0) and ($Gsct_wednesday_stop==0))
-						{
-						if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
-							{$state_gmt.="'$GMT_gmt[$r]',";}
-						}
-					else
-						{
-						if ( ($GMT_hour[$r]>=$Gsct_wednesday_start) and ($GMT_hour[$r]<$Gsct_wednesday_stop) )
-							{$state_gmt.="'$GMT_gmt[$r]',";}
-						}
-					}
-				if ($GMT_day[$r]==4)	#### Thursday local time
-					{
-					if (($Gsct_thursday_start==0) and ($Gsct_thursday_stop==0))
-						{
-						if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
-							{$state_gmt.="'$GMT_gmt[$r]',";}
-						}
-					else
-						{
-						if ( ($GMT_hour[$r]>=$Gsct_thursday_start) and ($GMT_hour[$r]<$Gsct_thursday_stop) )
-							{$state_gmt.="'$GMT_gmt[$r]',";}
-						}
-					}
-				if ($GMT_day[$r]==5)	#### Friday local time
-					{
-					if (($Gsct_friday_start==0) and ($Gsct_friday_stop==0))
-						{
-						if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
-							{$state_gmt.="'$GMT_gmt[$r]',";}
-						}
-					else
-						{
-						if ( ($GMT_hour[$r]>=$Gsct_friday_start) and ($GMT_hour[$r]<$Gsct_friday_stop) )
-							{$state_gmt.="'$GMT_gmt[$r]',";}
-						}
-					}
-				if ($GMT_day[$r]==6)	#### Saturday local time
-					{
-					if (($Gsct_saturday_start==0) and ($Gsct_saturday_stop==0))
-						{
-						if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
-							{$state_gmt.="'$GMT_gmt[$r]',";}
-						}
-					else
-						{
-						if ( ($GMT_hour[$r]>=$Gsct_saturday_start) and ($GMT_hour[$r]<$Gsct_saturday_stop) )
-							{$state_gmt.="'$GMT_gmt[$r]',";}
-						}
-					}
-				$r++;
+				$rowx=mysql_fetch_row($rslt);
+				$Gct_default_start =	$rowx[0];
+				$Gct_default_stop =		$rowx[1];
+				$Gct_sunday_start =		$rowx[2];
+				$Gct_sunday_stop =		$rowx[3];
+				$Gct_monday_start =		$rowx[4];
+				$Gct_monday_stop =		$rowx[5];
+				$Gct_tuesday_start =	$rowx[6];
+				$Gct_tuesday_stop =		$rowx[7];
+				$Gct_wednesday_start =	$rowx[8];
+				$Gct_wednesday_stop =	$rowx[9];
+				$Gct_thursday_start =	$rowx[10];
+				$Gct_thursday_stop =	$rowx[11];
+				$Gct_friday_start =		$rowx[12];
+				$Gct_friday_stop =		$rowx[13];
+				$Gct_saturday_start =	$rowx[14];
+				$Gct_saturday_stop =	$rowx[15];
 				}
-			$state_gmt = "$state_gmt'99'";
-			$ct_state_gmt_SQL .= "or (state='$Gstate_call_time_state' and gmt_offset_now IN($state_gmt)) ";
 			}
 
-		$b++;
-		}
-	if (strlen($ct_states)>2)
-		{
-		$ct_states = eregi_replace(",$",'',$ct_states);
-		$ct_statesSQL = "and state NOT IN($ct_states)";
+		### go through each day to determine dialability
+		if ($GMT_day==0)	#### Sunday local time
+			{
+			if (($Gct_sunday_start==0) and ($Gct_sunday_stop==0))
+				{
+				if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+					{$dialable=1;}
+				}
+			else
+				{
+				if ( ($GMT_hour>=$Gct_sunday_start) and ($GMT_hour<$Gct_sunday_stop) )
+					{$dialable=1;}
+				}
+			}
+		if ($GMT_day==1)	#### Monday local time
+			{
+			if (($Gct_monday_start==0) and ($Gct_monday_stop==0))
+				{
+				if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+					{$dialable=1;}
+				}
+			else
+				{
+				if ( ($GMT_hour>=$Gct_monday_start) and ($GMT_hour<$Gct_monday_stop) )
+					{$dialable=1;}
+				}
+			}
+		if ($GMT_day==2)	#### Tuesday local time
+			{
+			if (($Gct_tuesday_start==0) and ($Gct_tuesday_stop==0))
+				{
+				if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+					{$dialable=1;}
+				}
+			else
+				{
+				if ( ($GMT_hour>=$Gct_tuesday_start) and ($GMT_hour<$Gct_tuesday_stop) )
+					{$dialable=1;}
+				}
+			}
+		if ($GMT_day==3)	#### Wednesday local time
+			{
+			if (($Gct_wednesday_start==0) and ($Gct_wednesday_stop==0))
+				{
+				if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+					{$dialable=1;}
+				}
+			else
+				{
+				if ( ($GMT_hour>=$Gct_wednesday_start) and ($GMT_hour<$Gct_wednesday_stop) )
+					{$dialable=1;}
+				}
+			}
+		if ($GMT_day==4)	#### Thursday local time
+			{
+			if (($Gct_thursday_start==0) and ($Gct_thursday_stop==0))
+				{
+				if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+					{$dialable=1;}
+				}
+			else
+				{
+				if ( ($GMT_hour>=$Gct_thursday_start) and ($GMT_hour<$Gct_thursday_stop) )
+					{$dialable=1;}
+				}
+			}
+		if ($GMT_day==5)	#### Friday local time
+			{
+			if (($Gct_friday_start==0) and ($Gct_friday_stop==0))
+				{
+				if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+					{$dialable=1;}
+				}
+			else
+				{
+				if ( ($GMT_hour>=$Gct_friday_start) and ($GMT_hour<$Gct_friday_stop) )
+					{$dialable=1;}
+				}
+			}
+		if ($GMT_day==6)	#### Saturday local time
+			{
+			if (($Gct_saturday_start==0) and ($Gct_saturday_stop==0))
+				{
+				if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+					{$dialable=1;}
+				}
+			else
+				{
+				if ( ($GMT_hour>=$Gct_saturday_start) and ($GMT_hour<$Gct_saturday_stop) )
+					{$dialable=1;}
+				}
+			}
+
+		return $dialable;
 		}
 	else
 		{
-		$ct_statesSQL = "";
+		return 0;
 		}
-
-*/
-
+	}
 
 
 
@@ -6208,7 +7054,6 @@ function api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$val
 		$TOTALrun = ($runS + $runM);
 
 		$NOW_TIME = date("Y-m-d H:i:s");
-	#	api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 		$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$agent_user',function='$function',value='$value',result='$result',result_reason='$result_reason',source='$source',data='$data',api_date='$NOW_TIME',api_script='$api_script',run_time='$TOTALrun';";
 		$rslt=mysql_query($stmt, $link);
 		}

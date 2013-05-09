@@ -1,8 +1,8 @@
 <?php
-# admin_listloader_fourth_gen.php - version 2.4
+# admin_listloader_fourth_gen.php - version 2.6
 #  (based upon - new_listloader_superL.php script)
 # 
-# Copyright (C) 2012  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # ViciDial web-based lead loader from formatted file
 # 
@@ -45,10 +45,13 @@
 # 120221-0140 - Added User Group restrictions
 # 120223-2318 - Removed logging of good login passwords if webroot writable is enabled
 # 120402-2128 - Added template options
+# 120525-1038 - Added uploaded filename filtering
+# 120529-1348 - Filename filter fix
+# 130420-2056 - Added NANPA prefix validation and timezone options
 #
 
-$version = '2.4-44';
-$build = '120402-2128';
+$version = '2.6-47';
+$build = '130420-2056';
 
 
 require("dbconnect.php");
@@ -247,6 +250,13 @@ else
 		}
 	}
 
+if (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$LF_orig))
+	{
+	echo "ERROR: Invalid File Name: $LF_orig\n";
+	exit;
+	}
+
+
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
@@ -399,6 +409,22 @@ require("admin_header.php");
 
 echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
+
+if ( (preg_match("/NANPA/",$usacan_check)) or (preg_match("/NANPA/",$tz_method)) )
+	{
+	$stmt="SELECT count(*) from vicidial_nanpa_prefix_codes;";
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$vicidial_nanpa_prefix_codes_count = $row[0];
+	if ($vicidial_nanpa_prefix_codes_count < 10)
+		{
+		$usacan_check = preg_replace("/NANPA/",'',$usacan_check);
+		$tz_method = preg_replace("/NANPA/",'',$tz_method);
+
+		echo "NOTICE: NANPA options disabled, NANPA prefix data not loaded: $vicidial_nanpa_prefix_codes_count<BR>\n";
+		}
+	}
+
 if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_layout!="template") ) )
 	{
 	?>
@@ -494,11 +520,17 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 			<option value="PREFIX">CHECK FOR VALID PREFIX</option>
 			<option value="CódigoÁrea">CHECK FOR VALID CódigoÁrea</option>
 			<option value="PREFIX_CódigoÁrea">CHECK FOR VALID PREFIX and CódigoÁrea</option>
+			<option value="NANPA">CHECK FOR VALID NANPA PREFIX and CódigoÁrea</option>
 			</select></td>
 		  </tr>
 		  <tr>
 			<td align=right width="25%"><font face="arial, helvetica" size=2>Operaciones de búsqueda De la Zona De Tiempo De Plomo:</font></td>
-			<td align=left width="75%"><font face="arial, helvetica" size=1><select size=1 name=postalgmt><option selected value="AREA">COUNTRY CODE AND AREA CODE ONLY</option><option value="POSTAL">POSTAL CODE FIRST</option><option value="TZCODE">OWNER TIME ZONE CODE FIRST</option></select></td>
+			<td align=left width="75%"><font face="arial, helvetica" size=1><select size=1 name=postalgmt>
+			<option selected value="AREA">COUNTRY CODE AND AREA CODE ONLY</option>
+			<option value="POSTAL">POSTAL CODE FIRST</option>
+			<option value="TZCODE">OWNER TIME ZONE CODE FIRST</option>
+			<option value="NANPA">NANPA CódigoÁrea PREFIX FIRST</option>
+			</select></td>
 		  </tr>
 		<tr>
 			<td align=center colspan=2><input type=submit value="ENVIAR" name='submit_file'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button onClick="javascript:document.location='admin_listloader_fourth_gen.php'" value="RECARGAR" name='reload_page'></td>
@@ -698,6 +730,7 @@ if ($OK_to_process)
 				$owner =				eregi_replace($field_regx, "", $owner);
 				
 				$USarea = 			substr($phone_number, 0, 3);
+				$USprefix = 		substr($phone_number, 3, 3);
 
 				if (strlen($list_id_override)>0) 
 					{
@@ -878,6 +911,7 @@ if ($OK_to_process)
 					}
 
 				$valid_number=1;
+				$invalid_reason='';
 				if ( (strlen($phone_number)<6) || (strlen($phone_number)>16) )
 					{
 					$valid_number=0;
@@ -906,6 +940,20 @@ if ($OK_to_process)
 						$invalid_reason = "INVALID PHONE NUMBER CódigoÁrea";
 						}
 					}
+				if ( (preg_match("/NANPA/",$usacan_check)) and ($valid_number > 0) )
+					{
+					$phone_areacode = substr($phone_number, 0, 3);
+					$phone_prefix = substr($phone_number, 3, 3);
+					$stmt = "SELECT count(*) from vicidial_nanpa_prefix_codes where areacode='$phone_areacode' and prefix='$phone_prefix';";
+					if ($DB>0) {echo "DEBUG: usacan nanpa query - $stmt\n";}
+					$rslt=mysql_query($stmt, $link);
+					$row=mysql_fetch_row($rslt);
+					$valid_number=$row[0];
+					if ($valid_number < 1)
+						{
+						$invalid_reason = "INVALID PHONE NUMBER NANPA CódigoÁrea PREFIX";
+						}
+					}
 
 				if ( ($valid_number>0) and ($dup_lead<1) and ($list_id >= 100 ))
 					{
@@ -916,7 +964,7 @@ if ($OK_to_process)
 					else
 						{$phone_list .= "$phone_number$US$list_id|";}
 
-					$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code,$owner);
+					$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code,$owner,$USprefix);
 
 					if (strlen($custom_SQL)>3)
 						{
@@ -966,7 +1014,7 @@ if ($OK_to_process)
 							{
 							if ($valid_number < 1)
 								{
-								print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INV: $phone_number</font><b>\n";
+								print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INV($invalid_reason): $phone_number</font><b>\n";
 								}
 							else
 								{
@@ -1200,6 +1248,7 @@ if (($leadfile) && ($LF_path))
 					$owner =				eregi_replace($field_regx, "", $owner);
 					
 					$USarea = 			substr($phone_number, 0, 3);
+					$USprefix = 		substr($phone_number, 3, 3);
 
 					if (strlen($list_id_override)>0) 
 						{
@@ -1335,6 +1384,7 @@ if (($leadfile) && ($LF_path))
 						}
 
 					$valid_number=1;
+					$invalid_reason='';
 					if ( (strlen($phone_number)<6) || (strlen($phone_number)>16) )
 						{
 						$valid_number=0;
@@ -1363,6 +1413,20 @@ if (($leadfile) && ($LF_path))
 							$invalid_reason = "INVALID PHONE NUMBER CódigoÁrea";
 							}
 						}
+					if ( (preg_match("/NANPA/",$usacan_check)) and ($valid_number > 0) )
+						{
+						$phone_areacode = substr($phone_number, 0, 3);
+						$phone_prefix = substr($phone_number, 3, 3);
+						$stmt = "SELECT count(*) from vicidial_nanpa_prefix_codes where areacode='$phone_areacode' and prefix='$phone_prefix';";
+						if ($DB>0) {echo "DEBUG: usacan nanpa query - $stmt\n";}
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						$valid_number=$row[0];
+						if ($valid_number < 1)
+							{
+							$invalid_reason = "INVALID PHONE NUMBER NANPA CódigoÁrea PREFIX";
+							}
+						}
 
 					if ( ($valid_number>0) and ($dup_lead<1) and ($list_id >= 100 ))
 						{
@@ -1373,7 +1437,7 @@ if (($leadfile) && ($LF_path))
 						else
 							{$phone_list .= "$phone_number$US$list_id|";}
 
-						$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code,$owner);
+						$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code,$owner,$USprefix);
 
 /*						if ($multi_insert_counter > 8) 
 #							{
@@ -1450,7 +1514,7 @@ if (($leadfile) && ($LF_path))
 								{
 								if ($valid_number < 1)
 									{
-									print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INV: $phone_number</font><b>\n";
+									print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INV($invalid_reason): $phone_number</font><b>\n";
 									}
 								else
 									{
@@ -1646,6 +1710,7 @@ if (($leadfile) && ($LF_path))
 					$owner =				eregi_replace($field_regx, "", $owner);
 					
 					$USarea = 			substr($phone_number, 0, 3);
+					$USprefix = 		substr($phone_number, 3, 3);
 
 					if (strlen($list_id_override)>0) 
 						{
@@ -1781,6 +1846,7 @@ if (($leadfile) && ($LF_path))
 						}
 
 					$valid_number=1;
+					$invalid_reason='';
 					if ( (strlen($phone_number)<6) || (strlen($phone_number)>16) )
 						{
 						$valid_number=0;
@@ -1809,6 +1875,20 @@ if (($leadfile) && ($LF_path))
 							$invalid_reason = "INVALID PHONE NUMBER CódigoÁrea";
 							}
 						}
+					if ( (preg_match("/NANPA/",$usacan_check)) and ($valid_number > 0) )
+						{
+						$phone_areacode = substr($phone_number, 0, 3);
+						$phone_prefix = substr($phone_number, 3, 3);
+						$stmt = "SELECT count(*) from vicidial_nanpa_prefix_codes where areacode='$phone_areacode' and prefix='$phone_prefix';";
+						if ($DB>0) {echo "DEBUG: usacan nanpa query - $stmt\n";}
+						$rslt=mysql_query($stmt, $link);
+						$row=mysql_fetch_row($rslt);
+						$valid_number=$row[0];
+						if ($valid_number < 1)
+							{
+							$invalid_reason = "INVALID PHONE NUMBER NANPA CódigoÁrea PREFIX";
+							}
+						}
 
 					if ( ($valid_number>0) and ($dup_lead<1) and ($list_id >= 100 ))
 						{
@@ -1819,7 +1899,7 @@ if (($leadfile) && ($LF_path))
 						else
 							{$phone_list .= "$phone_number$US$list_id|";}
 
-						$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code,$owner);
+						$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code,$owner,$USprefix);
 
 						if ($multi_insert_counter > 8) 
 							{
@@ -1850,7 +1930,7 @@ if (($leadfile) && ($LF_path))
 								{
 								if ($valid_number < 1)
 									{
-									print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INV: $phone_number</font><b>\n";
+									print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INV($invalid_reason): $phone_number</font><b>\n";
 									}
 								else
 									{
@@ -2073,7 +2153,7 @@ exit;
 
 
 
-function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code,$owner)
+function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code,$owner,$USprefix)
 	{
 	global $link;
 
@@ -2123,6 +2203,24 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 			$row=mysql_fetch_row($rslt);
 			$dst_range =	$row[0];
 			if (strlen($dst_range)>2) {$dst = 'Y';}
+			}
+		}
+	if ( (eregi("NANPA",$tz_method)) && (strlen($USarea)>2) && (strlen($USprefix)>2) )
+		{
+		$stmt="select GMT_offset,DST from vicidial_nanpa_prefix_codes where areacode='$USarea' and prefix='$USprefix';";
+		$rslt=mysql_query($stmt, $link);
+		$pc_recs = mysql_num_rows($rslt);
+		if ($pc_recs > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$gmt_offset =	$row[0];	 $gmt_offset = eregi_replace("\+","",$gmt_offset);
+			$dst =			$row[1];
+			$dst_range =	'';
+			if ($dst == 'Y')
+				{$dst_range =	'SSM-FSN';}
+			$PC_processed++;
+			$postalgmt_found++;
+			$post++;
 			}
 		}
 

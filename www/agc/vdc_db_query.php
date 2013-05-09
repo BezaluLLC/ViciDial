@@ -328,10 +328,11 @@
 # 130402-2242 - Added user_group variable to _call_url functions
 # 130412-1348 - Added SIP cause code display on failed calls
 # 130414-2142 - Small fix for multi-server inbound setups and did options in url functions
+# 130508-2221 - Cleanup for other language builds
 #
 
-$version = '2.6-226';
-$build = '130414-2142';
+$version = '2.6-227';
+$build = '130508-2221';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=533;
 $one_mysql_log=0;
@@ -987,7 +988,7 @@ if ($ACTION == 'LogiNCamPaigns')
 			$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=VD_pass VALUE=\"$pass\">\n";
 			$VDdisplayMESSAGE.= "Manager Login: <INPUT TYPE=TEXT NAME=\"MGR_login$loginDATE\" SIZE=10 MAXLENGTH=20><br>\n";
 			$VDdisplayMESSAGE.= "Manager Password: <INPUT TYPE=PASSWORD NAME=\"MGR_pass$loginDATE\" SIZE=10 MAXLENGTH=20><br>\n";
-			$VDdisplayMESSAGE.= "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT></FORM><BR><BR><BR><BR>\n";
+			$VDdisplayMESSAGE.= "<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT></FORM><BR><BR><BR><BR>\n";
 			echo "$VDdisplayMESSAGE";
 			exit;
 			}
@@ -10418,7 +10419,7 @@ if ($ACTION == 'CALLSINQUEUEview')
 		echo "<TR>";
 		echo "<TD> &nbsp; </TD>";
 		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; PHONE &nbsp; </font></TD>";
-		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; NAME &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; FULL NAME &nbsp; </font></TD>";
 		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; WAIT &nbsp; </font></TD>";
 		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; AGENT &nbsp; </font></TD>";
 		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"> &nbsp; &nbsp; &nbsp; </font></TD>";
@@ -10537,7 +10538,7 @@ if ($ACTION == 'CALLLOGview')
 		{echo "<a href=\"#\" onclick=\"VieWCalLLoG('$next_day_date','');return false;\"> $next_day_date > </a> &nbsp; &nbsp; ";}
 	echo "<input type=text name=calllogdate id=calllogdate value=\"$date\" size=12 maxlength=10> ";
 	echo "<a href=\"#\" onclick=\"VieWCalLLoG('','form');return false;\">GO</a> &nbsp;  &nbsp; &nbsp; ";
-	echo "<a href=\"#\" onclick=\"hideDiv('CalLLoGDisplaYBox');return false;\">close</a>";
+	echo "<a href=\"#\" onclick=\"hideDiv('CalLLoGDisplaYBox');return false;\"> close </a>";
 	echo "</B></font>\n";
 	echo "<BR>\n";
 	echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=$stage>";
@@ -10655,9 +10656,9 @@ if ($ACTION == 'CALLLOGview')
 		echo "<td align=right><font size=2> $ALLin_out[$i] </td>\n";
 		echo "<td align=right><font size=2> $ALLalt_dial[$i] </td>\n";
 		echo "<td align=right><font size=2> $ALLhangup_reason[$i] </td>\n";
-		echo "<td align=right><font size=2> <a href=\"#\" onclick=\"VieWLeaDInfO($ALLlead_id[$i]);return false;\">INFO</A> </td>\n";
+		echo "<td align=right><font size=2> <a href=\"#\" onclick=\"VieWLeaDInfO($ALLlead_id[$i]);return false;\"> INFO </A> </td>\n";
 		if ($manual_dial_filter > 0)
-			{echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG','$ALLphone_code[$i]','$ALLphone_number[$i]','$ALLlead_id[$i]');return false;\">DIAL</A> </td>\n";}
+			{echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG','$ALLphone_code[$i]','$ALLphone_number[$i]','$ALLlead_id[$i]');return false;\"> DIAL </A> </td>\n";}
 		else
 			{echo "<td align=right><font size=2> DIAL </td>\n";}
 		echo "</tr>\n";
@@ -10915,7 +10916,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 			echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=$stage>";
 			echo "<TR>";
 			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:10px;font-family:sans-serif;\"><B> &nbsp; # &nbsp; </font></TD>";
-			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; NAME &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; FULL NAME &nbsp; </font></TD>";
 			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; PHONE &nbsp; </font></TD>";
 			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; STATUS &nbsp; </font></TD>";
 			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; LAST CALL &nbsp; </font></TD>";
@@ -10978,11 +10979,11 @@ if ($ACTION == 'SEARCHRESULTSview')
 					echo "<td align=right><font size=2> $ALLcity[$i] </td>\n";
 					echo "<td align=right><font size=2> $ALLstate[$i]</td>\n";
 					echo "<td align=right><font size=2> $ALLpostal_code[$i] </td>\n";
-					echo "<td align=right><font size=2> <a href=\"#\" onclick=\"VieWLeaDInfO($ALLlead_id[$i],'','$inbound_lead_search');return false;\">INFO</A> </td>\n";
+					echo "<td align=right><font size=2> <a href=\"#\" onclick=\"VieWLeaDInfO($ALLlead_id[$i],'','$inbound_lead_search');return false;\"> INFO </A> </td>\n";
 					if ($inbound_lead_search < 1)
 						{
 						if ($manual_dial_filter > 0)
-							{echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('LEADSEARCH','$ALLphone_code[$i]','$ALLphone_number[$i]','$ALLlead_id[$i]');return false;\">DIAL</A> </td>\n";}
+							{echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('LEADSEARCH','$ALLphone_code[$i]','$ALLphone_number[$i]','$ALLlead_id[$i]');return false;\"> DIAL </A> </td>\n";}
 						else
 							{echo "<td align=right><font size=2> DIAL </td>\n";}
 						}
@@ -11417,25 +11418,25 @@ if ($ACTION == 'LEADINFOview')
 		### BEGIN Display lead info and custom fields ###
 		### BEGIN find any custom field labels ###
 		$INFOout='';
-		$label_title =				'Title';
+		$label_title =				' Title';
 		$label_first_name =			'First';
 		$label_middle_initial =		'MI';
-		$label_last_name =			'Last';
+		$label_last_name =			'Last ';
 		$label_address1 =			'Address1';
 		$label_address2 =			'Address2';
 		$label_address3 =			'Address3';
 		$label_city =				'City';
-		$label_state =				'State';
+		$label_state =				' State';
 		$label_province =			'Province';
 		$label_postal_code =		'PostCode';
 		$label_vendor_lead_code =	'Vendor ID';
-		$label_gender =				'Gender';
+		$label_gender =				' Gender';
 		$label_phone_number =		'Phone';
 		$label_phone_code =			'DialCode';
 		$label_alt_phone =			'Alt. Phone';
 		$label_security_phrase =	'Show';
-		$label_email =				'Email';
-		$label_comments =			'Comments';
+		$label_email =				' Email';
+		$label_comments =			' Comments';
 
 		$stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,label_hide_field_logs from system_settings;";
 		$rslt=mysql_query($stmt, $link);
@@ -11589,17 +11590,17 @@ if ($ACTION == 'LEADINFOview')
 				if ($hide_dial_links < 1)
 					{
 					if ($manual_dial_filter > 0)
-						{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\">DIAL</a>";}
+						{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\"> DIAL </a>";}
 					else
-						{$INFOout .= "DIAL";}
+						{$INFOout .= " DIAL ";}
 					}
 				}
 			if ( ($label_phone_number=='---HIDE---') and ($hide_dial_links < 1) )
 				{
 				if ($manual_dial_filter > 0)
-					{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Dial Link: &nbsp; </td><td ALIGN=left><font size=2><a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\">DIAL</a>";}
+					{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Dial Link: &nbsp; </td><td ALIGN=left><font size=2><a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\"> DIAL </a>";}
 				else
-					{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Dial Link: &nbsp; </td><td ALIGN=left><font size=2>DIAL";}
+					{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Dial Link: &nbsp; </td><td ALIGN=left><font size=2> DIAL ";}
 				}
 			$INFOout .= "</td></tr>";
 			if ($inbound_lead_search > 0)
@@ -11635,9 +11636,9 @@ if ($ACTION == 'LEADINFOview')
 				if ($hide_dial_links < 1)
 					{
 					if ($manual_dial_filter > 0)
-						{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[20], $lead_id, 'ALT');return false;\">DIAL</a>";}
+						{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[20], $lead_id, 'ALT');return false;\"> DIAL </a>";}
 					else
-						{$INFOout .= "DIAL";}
+						{$INFOout .= " DIAL ";}
 					}
 				}
 			$INFOout .= "</td></tr>";
@@ -11890,7 +11891,7 @@ if ($ACTION == 'LEADINFOview')
 			$NOTESout .= "<TR>";
 			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\"><font style=\"font-size:10px;font-family:sans-serif;\"><B> # </B></font></td>";
 			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; DATE/TIME </B></font></td>";
-			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; USER </B></font></td>";
+			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; AGENT </B></font></td>";
 			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; CAMPAIGN </B></font></td>";
 			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; EMAIL TO </B></font></td>";
 			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; ATTACHMENTS </B></font></td>";

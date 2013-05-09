@@ -1,7 +1,7 @@
 <?php
 # admin_header.php - VICIDIAL administration header
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
 # CHANGES
@@ -37,6 +37,10 @@
 # 111106-0939 - Changes for user group restrictions
 # 111116-0208 - Added ALT and ADDR3 in-group handle methods
 # 120402-2134 - Changed lead loader link to fourth gen
+# 121116-1412 - Added QC functionality
+# 121123-0911 - Added Call Times Holidays Inbound functionality
+# 121214-2238 - Added email menus
+# 130221-1830 - Added Level 8 disable add option
 #
 
 
@@ -50,13 +54,14 @@ if($short_header)
 		?>
 	<TD> &nbsp; <A HREF="admin.php" ALT="Χρήστες"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Χρήστες</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=10" ALT="Εκστρατείες"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Εκστρατείες</B></A> &nbsp; </TD>
+        <?php include 'qc/QC_header_include02.php'; ?>
 	<TD> &nbsp; <A HREF="admin.php?ADD=100" ALT="Λίστες"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Λίστες</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=1000000" ALT="Βοηθοί"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Βοηθοί</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=10000000" ALT="Φίλτρα"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Φίλτρα</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=1000" ALT="Inbound"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Inbound</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=100000" ALT="Ομάδες Χρήστη"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Ομάδες Χρήστη</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=10000" ALT="Απομακρυσμένοι Χειριστές"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Απομακρυσμένοι Χειριστές</B></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=999998" ALT="Admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Admin</B></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=999998" ALT="Admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Διαχειριστής</B></A> &nbsp; </TD>
 	<?php 
 		} 
 	else 
@@ -110,6 +115,7 @@ if ($hh=='admin')
 if ($hh=='reports') 
 	{$reports_hh="bgcolor=\"$reports_color\""; $reports_fc="$reports_font"; $reports_bold="$header_selected_bold";}
 	else {$reports_hh=''; $reports_fc='WHITE'; $reports_bold="$header_nonselected_bold";}
+include('qc/QC_header_include01.php');
 
 echo "</title>\n";
 echo "<script language=\"Javascript\">\n";
@@ -475,7 +481,7 @@ else
 		{
 		var audiolistURL = "./non_agent_api.php";
 		var audiolistQuery = "source=admin&function=sounds_list&user=" + user + "&pass=" + pass + "&format=selectframe&stage=" + stage + "&comments=" + fieldname;
-		var Iframe_content = '<IFRAME SRC="' + audiolistURL + '?' + audiolistQuery + '"  style="width:740;height:440;background-color:white;" scrolling="NO" frameborder="0" allowtransparency="true" id="audio_chooser_frame' + epoch + '" name="audio_chooser_frame" width="740" height="460" STYLE="z-index:2"> </iframe>';
+		var Iframe_content = '<IFRAME SRC="' + audiolistURL + '?' + audiolistQuery + '"  style="width:740;height:440;background-color:white;" scrolling="NO" frameborder="0" allowtransparency="true" id="audio_chooser_frame' + epoch + '" name="audio_chooser_frame" width="740" height="460" STYLE="z-index:2"> </IFRAME>';
 
 		document.getElementById("audio_chooser_span").style.position = "absolute";
 		document.getElementById("audio_chooser_span").style.left = "220px";
@@ -488,7 +494,7 @@ else
 		{
 		var audiolistURL = "./non_agent_api.php";
 		var audiolistQuery = "source=admin&function=moh_list&user=" + user + "&pass=" + pass + "&format=selectframe&stage=" + stage + "&comments=" + fieldname;
-		var Iframe_content = '<IFRAME SRC="' + audiolistURL + '?' + audiolistQuery + '"  style="width:740;height:440;background-color:white;" scrolling="NO" frameborder="0" allowtransparency="true" id="audio_chooser_frame' + epoch + '" name="audio_chooser_frame" width="740" height="460" STYLE="z-index:2"> </iframe>';
+		var Iframe_content = '<IFRAME SRC="' + audiolistURL + '?' + audiolistQuery + '"  style="width:740;height:440;background-color:white;" scrolling="NO" frameborder="0" allowtransparency="true" id="audio_chooser_frame' + epoch + '" name="audio_chooser_frame" width="740" height="460" STYLE="z-index:2"> </IFRAME>';
 
 		document.getElementById("audio_chooser_span").style.position = "absolute";
 		document.getElementById("audio_chooser_span").style.left = "220px";
@@ -501,7 +507,7 @@ else
 		{
 		var audiolistURL = "./non_agent_api.php";
 		var audiolistQuery = "source=admin&function=vm_list&user=" + user + "&pass=" + pass + "&format=selectframe&stage=" + stage + "&comments=" + fieldname;
-		var Iframe_content = '<IFRAME SRC="' + audiolistURL + '?' + audiolistQuery + '"  style="width:740;height:440;background-color:white;" scrolling="NO" frameborder="0" allowtransparency="true" id="audio_chooser_frame' + epoch + '" name="audio_chooser_frame" width="740" height="460" STYLE="z-index:2"> </iframe>';
+		var Iframe_content = '<IFRAME SRC="' + audiolistURL + '?' + audiolistQuery + '"  style="width:740;height:440;background-color:white;" scrolling="NO" frameborder="0" allowtransparency="true" id="audio_chooser_frame' + epoch + '" name="audio_chooser_frame" width="740" height="460" STYLE="z-index:2"> </IFRAME>';
 
 		document.getElementById("audio_chooser_span").style.position = "absolute";
 		document.getElementById("audio_chooser_span").style.left = "220px";
@@ -763,9 +769,9 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 			new_content = new_content + '<BR>ID Εκστρατείας: <select size=1 name=IGcampaign_id_' + option + ' id=IGcampaign_id_' + option + '>';
 			new_content = new_content + '' + IGcampaign_id_list + "\n" + '<option SELECTED>' + IGcampaign_id + '</select>';
 			new_content = new_content + ' &nbsp; Phone Code: <input type=text size=5 maxlength=14 name=IGphone_code_' + option + ' id=IGphone_code_' + option + ' value="' + IGphone_code + '">';
-			new_content = new_content + "<BR> &nbsp; VID εισάγει το όνομα αρχείου: <input type=text name=IGvid_enter_filename_" + option + " id=IGvid_enter_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_enter_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_enter_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
-			new_content = new_content + "<BR> &nbsp; Όνομα αρχείου αριθμού ταυτότητας VID: <input type=text name=IGvid_id_number_filename_" + option + " id=IGvid_id_number_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_id_number_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_id_number_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
-			new_content = new_content + "<BR> &nbsp; VID επιβεβαιώνει το όνομα αρχείου: <input type=text name=IGvid_confirm_filename_" + option + " id=IGvid_confirm_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_confirm_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_confirm_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+			new_content = new_content + "<BR> &nbsp; VID εισάγει το όνομα αρχείου: <input type=text name=IGvid_enter_filename_" + option + " id=IGvid_enter_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_enter_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_enter_filename_" + option + "','date'," + chooser_height + ");\">ήχου επιλογέα</a>";
+			new_content = new_content + "<BR> &nbsp; Όνομα αρχείου αριθμού ταυτότητας VID: <input type=text name=IGvid_id_number_filename_" + option + " id=IGvid_id_number_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_id_number_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_id_number_filename_" + option + "','date'," + chooser_height + ");\">ήχου επιλογέα</a>";
+			new_content = new_content + "<BR> &nbsp; VID επιβεβαιώνει το όνομα αρχείου: <input type=text name=IGvid_confirm_filename_" + option + " id=IGvid_confirm_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_confirm_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_confirm_filename_" + option + "','date'," + chooser_height + ");\">ήχου επιλογέα</a>";
 			new_content = new_content + ' &nbsp; VID ψηφία: <input type=text size=3 maxlength=3 name=IGvid_validate_digits_' + option + ' id=IGvid_validate_digits_' + option + ' value="' + IGvid_validate_digits + '">';
 			}
 		if (selected_route=='DID')
@@ -786,7 +792,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				}
 			else
 				{value='vm-goodbye';}
-			new_content = "αρχείου ήχου: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=40 maxlength=255 value=\"" + selected_value + "\"> <a href=\"javascript:launch_chooser('option_route_value_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+			new_content = "αρχείου ήχου: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=40 maxlength=255 value=\"" + selected_value + "\"> <a href=\"javascript:launch_chooser('option_route_value_" + option + "','date'," + chooser_height + ");\">ήχου επιλογέα</a>";
 			}
 		if (selected_route=='EXTENSION')
 			{
@@ -817,7 +823,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				}
 			else
 				{value='';}
-			new_content = "Τηλεφωνητής Box:<input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=12 maxlength=10 value=\"" + selected_value + "\"> <a href=\"javascript:launch_vm_chooser('option_route_value_" + option + "','date'," + chooser_height + ");\">voicemail chooser</a>";
+			new_content = "Τηλεφωνητής Box:<input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=12 maxlength=10 value=\"" + selected_value + "\"> <a href=\"javascript:launch_vm_chooser('option_route_value_" + option + "','date'," + chooser_height + ");\">επιλογέα αυτόματου τηλεφωνητή</a>";
 			}
 		if (selected_route=='AGI')
 			{
@@ -868,7 +874,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 	}
 
 ### Javascript for dynamic in-group option value entries
-if ( ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111) )
+if ( ($ADD==2811) or ($ADD==3811) or ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111) )
 	{
 
 	?>
@@ -930,9 +936,9 @@ if ( ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111
 			new_content = new_content + '<BR>ID Εκστρατείας: <select size=1 name=IGcampaign_id_' + option + ' id=IGcampaign_id_' + option + '>';
 			new_content = new_content + '' + IGcampaign_id_list + "\n" + '<option SELECTED>' + IGcampaign_id + '</select>';
 			new_content = new_content + ' &nbsp; Phone Code: <input type=text size=5 maxlength=14 name=IGphone_code_' + option + ' id=IGphone_code_' + option + ' value="' + IGphone_code + '">';
-		//	new_content = new_content + "<BR> &nbsp; VID εισάγει το όνομα αρχείου: <input type=text name=IGvid_enter_filename_" + option + " id=IGvid_enter_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_enter_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_enter_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
-		//	new_content = new_content + "<BR> &nbsp; Όνομα αρχείου αριθμού ταυτότητας VID: <input type=text name=IGvid_id_number_filename_" + option + " id=IGvid_id_number_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_id_number_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_id_number_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
-		//	new_content = new_content + "<BR> &nbsp; VID επιβεβαιώνει το όνομα αρχείου: <input type=text name=IGvid_confirm_filename_" + option + " id=IGvid_confirm_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_confirm_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_confirm_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+		//	new_content = new_content + "<BR> &nbsp; VID εισάγει το όνομα αρχείου: <input type=text name=IGvid_enter_filename_" + option + " id=IGvid_enter_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_enter_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_enter_filename_" + option + "','date'," + chooser_height + ");\">ήχου επιλογέα</a>";
+		//	new_content = new_content + "<BR> &nbsp; Όνομα αρχείου αριθμού ταυτότητας VID: <input type=text name=IGvid_id_number_filename_" + option + " id=IGvid_id_number_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_id_number_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_id_number_filename_" + option + "','date'," + chooser_height + ");\">ήχου επιλογέα</a>";
+		//	new_content = new_content + "<BR> &nbsp; VID επιβεβαιώνει το όνομα αρχείου: <input type=text name=IGvid_confirm_filename_" + option + " id=IGvid_confirm_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_confirm_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_confirm_filename_" + option + "','date'," + chooser_height + ");\">ήχου επιλογέα</a>";
 		//	new_content = new_content + ' &nbsp; VID ψηφία: <input type=text size=3 maxlength=3 name=IGvid_validate_digits_' + option + ' id=IGvid_validate_digits_' + option + ' value="' + IGvid_validate_digits + '">';
 
 			}
@@ -954,7 +960,7 @@ if ( ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111
 				}
 			else
 				{value = 'nbdy-avail-to-take-call|vm-goodbye';}
-			new_content = "αρχείου ήχου: <input type=text name=" + option + "_value id=" + option + "_value size=40 maxlength=255 value=\"" + value + "\"> <a href=\"javascript:launch_chooser('" + option + "_value','date'," + chooser_height + ");\">audio chooser</a>";
+			new_content = "αρχείου ήχου: <input type=text name=" + option + "_value id=" + option + "_value size=40 maxlength=255 value=\"" + value + "\"> <a href=\"javascript:launch_chooser('" + option + "_value','date'," + chooser_height + ");\">ήχου επιλογέα</a>";
 			}
 		if (selected_route=='EXTENSION')
 			{
@@ -974,7 +980,7 @@ if ( ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111
 				}
 			else
 				{value = '101';}
-			new_content = "Τηλεφωνητής Box:<input type=text name=" + option + "_value id=" + option + "_value size=12 maxlength=10 value=\"" + value + "\"> <a href=\"javascript:launch_vm_chooser('" + option + "_value','date'," + chooser_height + ");\">voicemail chooser</a>";
+			new_content = "Τηλεφωνητής Box:<input type=text name=" + option + "_value id=" + option + "_value size=12 maxlength=10 value=\"" + value + "\"> <a href=\"javascript:launch_vm_chooser('" + option + "_value','date'," + chooser_height + ");\">επιλογέα αυτόματου τηλεφωνητή</a>";
 			}
 
 		if (new_content.length < 1)
@@ -1053,13 +1059,16 @@ else
 	
 echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../vicidial_en/admin.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../vicidial_el/admin.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Ελληνικά <img src=\"../agc/images/el.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";
-$stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled from system_settings;";
+$stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled,allow_emails,level_8_disable_add from system_settings;";
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $admin_home_url_LU =		$row[0];
 $SSenable_tts_integration = $row[1];
 $SScallcard_enabled =		$row[2];
 $SScustom_fields_enabled =	$row[3];
+$SSemail_enabled =			$row[4];
+$SSlevel_8_disable_add =	$row[5];
+
 
 ?>
 <CENTER>
@@ -1081,10 +1090,12 @@ $SScustom_fields_enabled =	$row[3];
 	<TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
 	 &nbsp; <a href="<?php echo $ADMIN ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Δείτε Χρήστες </a>
 	</TR><TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
+	<?php if ($add_copy_disabled < 1) { ?>
 	 &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Προσθήκη νέου χρήστη </a>
 	</TR><TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
 	 &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1A"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Χρήστης αντιγράφων </a>
 	</TR><TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
+	<?php } ?>
 	 &nbsp; <a href="<?php echo $ADMIN ?>?ADD=550"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Αναζήτηση ενός χρήστη </a>
 	</TR><TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
 	 &nbsp; <a href="./user_stats.php?user=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Στατιστικά Χρήστη </a>
@@ -1181,8 +1192,10 @@ $SScustom_fields_enabled =	$row[3];
 			<TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
 			<a href="<?php echo $ADMIN ?>?ADD=100"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Παρουσιάστε καταλόγους </a>
 			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
+			<?php if ($add_copy_disabled < 1) { ?>
 			<a href="<?php echo $ADMIN ?>?ADD=111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε έναν νέο κατάλογο </a>
 			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
+			<?php } ?>
 			<a href="admin_search_lead.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Αναζήτηση ενός μολύβδου </a>
 			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
 			<a href="admin_modify_lead.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε μια νέα πρωτοβουλία πρωτοποριακής </a>
@@ -1206,6 +1219,7 @@ $SScustom_fields_enabled =	$row[3];
 			}
 		}
 	?>
+        <?php include 'qc/QC_header_include.php'; ?>
 	<!-- ΒΟΗΘΟΙ NAVIGATION -->
 	<TR><TD <?php echo $scripts_hh ?>>
 	<a href="<?php echo $ADMIN ?>?ADD=1000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $scripts_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $scripts_bold ?> Χειρόγραφα </a>
@@ -1217,7 +1231,9 @@ $SScustom_fields_enabled =	$row[3];
 		<TR BGCOLOR=<?php echo $scripts_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Παρουσιάστε χειρόγραφα </a>
 		</TR><TR BGCOLOR=<?php echo $scripts_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
 		<a href="<?php echo $ADMIN ?>?ADD=1111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε ένα νέο χειρόγραφο </a>
+		<?php } ?>
 		</TD></TR>
 		<?php } 
 	?>
@@ -1234,7 +1250,9 @@ $SScustom_fields_enabled =	$row[3];
 		<TR BGCOLOR=<?php echo $filters_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=10000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Παρουσιάστε φίλτρα </a>
 		</TR><TR BGCOLOR=<?php echo $filters_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
 		<a href="<?php echo $ADMIN ?>?ADD=11111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε ένα νέο φίλτρο </a>
+		<?php } ?>
 		</TD></TR>
 		<?php } 
 		}
@@ -1252,17 +1270,37 @@ $SScustom_fields_enabled =	$row[3];
 		<TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Παρουσιάστε-ΟΜΑΔΕΣ </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
 		<a href="<?php echo $ADMIN ?>?ADD=1111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε μια νέα-ΟΜΑΔΑ </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1211"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> $$$-ΟΜΑΔΑ αντιγράφων </a>
+		<?php } ?>
 		<HR>
+		<?php
+		if ($SSemail_enabled>0) 
+			{
+		?>
+		<TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<a href="<?php echo $ADMIN ?>?ADD=1800"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> δείχνουν ομάδες ταχυδρομείου </a>
+		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
+		<a href="<?php echo $ADMIN ?>?ADD=1811"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθήκη νέουEmail Group </a>
+		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<a href="<?php echo $ADMIN ?>?ADD=1911"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> ΑντιγραφήEmail Group </a>
+		<?php } ?>
+		<HR>
+		<?php
+			}
+		?>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1300"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Δείτε DIDs </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
 		<a href="<?php echo $ADMIN ?>?ADD=1311"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προστίθεται ένα νέο DID </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1411"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> ΑντιγραφήDID </a>
 		<?php
+			}
 		if ($SSdid_ra_extensions_enabled > 0)
 			{
 			?>
@@ -1275,15 +1313,19 @@ $SScustom_fields_enabled =	$row[3];
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1500"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Δείτε Καλέστε Menus </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
 		<a href="<?php echo $ADMIN ?>?ADD=1511"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε μια νέα κλήση Μενού </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1611"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Αντιγραφή Call Μενού </a>
+		<?php } ?>
 		<HR>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1700"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Φίλτρο Ομάδες Τηλέφωνο </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
 		<a href="<?php echo $ADMIN ?>?ADD=1711"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθήκη φίλτρου Ομίλου Τηλ. </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php } ?>
 		<a href="<?php echo $ADMIN ?>?ADD=171"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo $FPGlink ?> </a>
 		</TD></TR>
 		<?php } 
@@ -1299,8 +1341,10 @@ $SScustom_fields_enabled =	$row[3];
 		<TR BGCOLOR=<?php echo $usergroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=100000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Παρουσιάστε ομάδες χρηστών </a>
 		</TR><TR BGCOLOR=<?php echo $usergroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
 		<a href="<?php echo $ADMIN ?>?ADD=111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε μια νέα ομάδα χρηστών </a>
 		</TR><TR BGCOLOR=<?php echo $usergroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php } ?>
 		<a href="group_hourly_stats.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ωριαία έκθεση ομάδας </a>
 		</TR><TR BGCOLOR=<?php echo $usergroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="user_group_bulk_change.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Μαζική Αλλαγή ομάδας </a>
@@ -1318,11 +1362,15 @@ $SScustom_fields_enabled =	$row[3];
 		<TR BGCOLOR=<?php echo $remoteagent_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=10000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Παρουσιάστε μακρινούς πράκτορες </a>
 		</TR><TR BGCOLOR=<?php echo $remoteagent_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
 		<a href="<?php echo $ADMIN ?>?ADD=11111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε τους νέους μακρινούς πράκτορες </a>
 		</TR><TR BGCOLOR=<?php echo $remoteagent_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php } ?>
 		<a href="<?php echo $ADMIN ?>?ADD=12000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Ομάδες επέκτασης </a>
 		</TR><TR BGCOLOR=<?php echo $remoteagent_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
 		<a href="<?php echo $ADMIN ?>?ADD=12111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε την ομάδα επέκτασης </a>
+		<?php } ?>
 		</TD></TR>
 	<?php } 
 	?>
@@ -1365,6 +1413,9 @@ $SScustom_fields_enabled =	$row[3];
 			else {$cc_sh=''; $cc_fc='BLACK';}
 		if ($sh=='cts') {$cts_sh="bgcolor=\"$cts_color\""; $cts_fc="$cc_font";}
 			else {$cts_sh=''; $cts_fc='BLACK';}
+		if ($sh=='emails') {$emails_sh="bgcolor=\"$subcamp_color\""; $emails_fc="$subcamp_font";}
+			else {$emails_sh=''; $emails_fc='BLACK';}
+
 
 		?>
 		<TR BGCOLOR=<?php echo $admin_color ?>>
@@ -1391,7 +1442,14 @@ $SScustom_fields_enabled =	$row[3];
 		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $vm_sh ?>> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=170000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $vm_fc ?> SIZE=<?php echo $header_font_size ?>> ΦΩΝΗΤΙΚΟ ΤΑΧΥΔΡΟΜΕΙΟ </a></TD>
 		</TR>
-		<?php if ( ($sounds_central_control_active > 0) or ($SSsounds_central_control_active > 0) )
+		<?php
+		if ($SSemail_enabled > 0)
+			{ ?>
+			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $emails_sh ?>> &nbsp; 
+			<a href="admin_email_accounts.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $emails_fc ?> SIZE=<?php echo $header_font_size ?>> Λογαριασμοί Email </a></TD>
+			</TR>
+		<?php }
+		if ( ($sounds_central_control_active > 0) or ($SSsounds_central_control_active > 0) )
 			{ ?>
 			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $audio_sh ?>> &nbsp; 
 			<a href="audio_store.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $audio_fc ?> SIZE=<?php echo $header_font_size ?>> Audio Store </a></TD>
@@ -1411,14 +1469,14 @@ $SScustom_fields_enabled =	$row[3];
 		if ($SScallcard_enabled > 0)
 			{ ?>
 			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $cc_sh ?>> &nbsp; 
-			<a href="callcard_admin.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $cc_fc ?> SIZE=<?php echo $header_font_size ?>> CallCard Admin </a></TD>
+			<a href="callcard_admin.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $cc_fc ?> SIZE=<?php echo $header_font_size ?>> Καλέστε Διαχειριστής κάρτα </a></TD>
 			</TR>
 
 		<?php }
 		if ($SScontacts_enabled > 0)
 			{ ?>
 			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $cts_sh ?>> &nbsp; 
-			<a href="<?php echo $ADMIN ?>?ADD=190000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $cts_fc ?> SIZE=<?php echo $header_font_size ?>> Contacts </a></TD>
+			<a href="<?php echo $ADMIN ?>?ADD=190000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $cts_fc ?> SIZE=<?php echo $header_font_size ?>> Επαφές </a></TD>
 			</TR>
 
 		<?php }
@@ -1454,40 +1512,46 @@ $SScustom_fields_enabled =	$row[3];
 	<?php
 	if (strlen($list_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $subcamp_color ?>><TD ALIGN=LEFT COLSPAN=2><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> Παρουσιάστε εκστρατείες </a> &nbsp; &nbsp; | &nbsp; &nbsp; <a href="<?php echo $ADMIN ?>?ADD=11"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> Προσθέστε μια νέα εκστρατεία </a> &nbsp; &nbsp; | &nbsp; &nbsp; <a href="<?php echo $ADMIN ?>?ADD=12"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> Εκστρατεία αντιγράφων </a> &nbsp; &nbsp; | &nbsp; &nbsp; <a href="./AST_timeonVDADallSUMMARY.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> Σε πραγματικό χρόνο περίληψη εκστρατειών </a></TD></TR>
+	<TR BGCOLOR=<?php echo $subcamp_color ?>><TD ALIGN=LEFT COLSPAN=2><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> Παρουσιάστε εκστρατείες </a> &nbsp; &nbsp; |<?php if ($add_copy_disabled < 1) { ?>
+&nbsp; &nbsp; <a href="<?php echo $ADMIN ?>?ADD=11"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> Προσθέστε μια νέα εκστρατεία </a> &nbsp; &nbsp; | &nbsp; &nbsp; <a href="<?php echo $ADMIN ?>?ADD=12"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> Εκστρατεία αντιγράφων </a> &nbsp; &nbsp; |<?php } ?> &nbsp; &nbsp; <a href="./AST_timeonVDADallSUMMARY.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> Σε πραγματικό χρόνο περίληψη εκστρατειών </a></TD></TR>
 		<?php } 
 
 	if (strlen($times_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $times_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=100000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Παρουσιάστε χρόνους κλήσης </a> &nbsp;| <a href="<?php echo $ADMIN ?>?ADD=111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε έναν νέο χρόνο κλήσης </a> &nbsp;| <a href="<?php echo $ADMIN ?>?ADD=1000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Παρουσιάστε χρόνους κρατικής κλήσης </a> &nbsp;| <a href="<?php echo $ADMIN ?>?ADD=1111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε έναν νέο χρόνο κρατικής κλήσης </a></TD></TR>
+	<TR BGCOLOR=<?php echo $times_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=100000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Παρουσιάστε χρόνους κλήσης </a> &nbsp;|<?php if ($add_copy_disabled < 1) { ?>
+ <a href="<?php echo $ADMIN ?>?ADD=111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε έναν νέο χρόνο κλήσης </a> &nbsp;|<?php } ?> <a href="<?php echo $ADMIN ?>?ADD=1000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Παρουσιάστε χρόνους κρατικής κλήσης </a> &nbsp;|<?php if ($add_copy_disabled < 1) { ?> <a href="<?php echo $ADMIN ?>?ADD=1111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε έναν νέο χρόνο κρατικής κλήσης </a> &nbsp;|<?php } ?> <a href="<?php echo $ADMIN ?>?ADD=1200000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Διακοπές </a> &nbsp;|<?php if ($add_copy_disabled < 1) { ?> <a href="<?php echo $ADMIN ?>?ADD=1211111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθήκη διακοπών </a><?php } ?></TD></TR>
 		<?php } 
 	if (strlen($shifts_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $shifts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=130000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Δείτε Βάρδιες </a> &nbsp;| <a href="<?php echo $ADMIN ?>?ADD=131111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προστίθεται ένα νέο Shift </a></TD></TR>
+	<TR BGCOLOR=<?php echo $shifts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=130000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Δείτε Βάρδιες </a> &nbsp;|<?php if ($add_copy_disabled < 1) { ?> <a href="<?php echo $ADMIN ?>?ADD=131111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προστίθεται ένα νέο Shift </a><?php } ?></TD></TR>
 		<?php } 
 	if (strlen($phones_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $phones_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Παρουσιάστε τηλέφωνα </a>&nbsp;|&nbsp;<a href="<?php echo $ADMIN ?>?ADD=11111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε ένα νέο τηλέφωνο </a>&nbsp;|&nbsp;<a href="<?php echo $ADMIN ?>?ADD=12000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Τηλέφωνο Γνωστός Κατάλογος </a>&nbsp;|&nbsp;<a href="<?php echo $ADMIN ?>?ADD=12111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προστίθεται ένα νέο τηλέφωνο Γνωστός </a>&nbsp;|&nbsp;<a href="<?php echo $ADMIN ?>?ADD=13000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ομάδα Γνωστός Κατάλογος </a>&nbsp;|&nbsp;<a href="<?php echo $ADMIN ?>?ADD=13111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε μια νέα ομάδα Γνωστός </a></TD></TR>
+	<TR BGCOLOR=<?php echo $phones_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Παρουσιάστε τηλέφωνα </a>&nbsp;|<?php if ($add_copy_disabled < 1) { ?>&nbsp;<a href="<?php echo $ADMIN ?>?ADD=11111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε ένα νέο τηλέφωνο </a>&nbsp;|<?php } ?>&nbsp;<a href="<?php echo $ADMIN ?>?ADD=12000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Τηλέφωνο Γνωστός Κατάλογος </a>&nbsp;|<?php if ($add_copy_disabled < 1) { ?>&nbsp;<a href="<?php echo $ADMIN ?>?ADD=12111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προστίθεται ένα νέο τηλέφωνο Γνωστός </a>&nbsp;|<?php } ?>&nbsp;<a href="<?php echo $ADMIN ?>?ADD=13000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ομάδα Γνωστός Κατάλογος </a>&nbsp;|<?php if ($add_copy_disabled < 1) { ?>&nbsp;<a href="<?php echo $ADMIN ?>?ADD=13111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε μια νέα ομάδα Γνωστός </a><?php } ?></TD></TR>
 		<?php }
 	if (strlen($conference_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $conference_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Παρουσιάστε διασκέψεις </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε μια νέα διάσκεψη </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Παρουσιάστε διασκέψεις VICIDIAL </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=11111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε μια νέα διάσκεψη VICIDIAL </a></TD></TR>
+	<TR BGCOLOR=<?php echo $conference_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Παρουσιάστε διασκέψεις </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε μια νέα διάσκεψη </a> &nbsp; |<?php } ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Παρουσιάστε διασκέψεις VICIDIAL </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=11111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε μια νέα διάσκεψη VICIDIAL </a><?php } ?></TD></TR>
 		<?php }
 	if ( (strlen($server_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $server_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=100000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Παρουσιάστε κεντρικούς υπολογιστές </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε έναν νέο κεντρικό υπολογιστή </a></TD></TR>
+	<TR BGCOLOR=<?php echo $server_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=100000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Παρουσιάστε κεντρικούς υπολογιστές </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε έναν νέο κεντρικό υπολογιστή </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($templates_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $templates_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=130000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Δείτε Πρότυπα </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=131111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε ένα νέο πρότυπο </a></TD></TR>
+	<TR BGCOLOR=<?php echo $templates_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=130000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Δείτε Πρότυπα </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=131111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε ένα νέο πρότυπο </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($carriers_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $carriers_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=140000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Carriers </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=141111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Carrier </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=140111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Αντιγράψτε έναν μεταφορέα </a></TD></TR>
+	<TR BGCOLOR=<?php echo $carriers_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=140000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Carriers </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=141111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Carrier </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=140111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Αντιγράψτε έναν μεταφορέα </a><?php } ?></TD></TR>
+	<?php }
+	if ( (strlen($emails_sh) > 1) and (strlen($admin_hh) > 1) ) { 
+		?>
+	<TR BGCOLOR=<?php echo $emails_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="admin_email_accounts.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Εμφάνιση Λογαριασμοί Email </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="admin_email_accounts.php?eact=ADD"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2> Προσθέσετε ένα νέο λογαριασμό </a> &nbsp; | &nbsp; <a href="admin_email_accounts.php?eact=COPY"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Αντιγράψτε ένα λογαριασμό </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($tts_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $tts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=150000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Δείτε TTS Καταχωρήσεις </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=151111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε ένα νέο TTS Έναρξη </a></TD></TR>
+	<TR BGCOLOR=<?php echo $tts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=150000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Δείτε TTS Καταχωρήσεις </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=151111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε ένα νέο TTS Έναρξη </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($cc_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
@@ -1495,11 +1559,11 @@ $SScustom_fields_enabled =	$row[3];
 	<?php }
 	if ( (strlen($moh_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $moh_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=160000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Δείτε ΜΟΗ Καταχωρήσεις </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=161111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε ένα νέο MOH Έναρξη </a></TD></TR>
+	<TR BGCOLOR=<?php echo $moh_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=160000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Δείτε ΜΟΗ Καταχωρήσεις </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=161111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέστε ένα νέο MOH Έναρξη </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($vm_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $vm_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=170000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show ΦΩΝΗΤΙΚΟ ΤΑΧΥΔΡΟΜΕΙΟ Entries </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=171111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New ΦΩΝΗΤΙΚΟ ΤΑΧΥΔΡΟΜΕΙΟ Entry </a></TD></TR>
+	<TR BGCOLOR=<?php echo $vm_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=170000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show ΦΩΝΗΤΙΚΟ ΤΑΧΥΔΡΟΜΕΙΟ Entries </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=171111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New ΦΩΝΗΤΙΚΟ ΤΑΧΥΔΡΟΜΕΙΟ Entry </a><?php } ?></TD></TR>
 	<?php }
 	if (strlen($settings_sh) > 1) { 
 		?>
@@ -1507,11 +1571,11 @@ $SScustom_fields_enabled =	$row[3];
 	<?php }
 	if (strlen($label_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $label_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=180000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ετικέτες οθόνης </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=181111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέσετε μια ετικέτα οθόνης </a></TD></TR>
+	<TR BGCOLOR=<?php echo $label_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=180000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Ετικέτες οθόνης </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=181111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθέσετε μια ετικέτα οθόνης </a><?php } ?></TD></TR>
 	<?php }
 	if (strlen($cts_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $cts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=190000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Contacts </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=191111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθήκη μιας επαφής </a></TD></TR>
+	<TR BGCOLOR=<?php echo $cts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=190000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Επαφές </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=191111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Προσθήκη μιας επαφής </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($status_sh) > 1) and (!eregi('campaign',$hh) ) ) { 
 		?>

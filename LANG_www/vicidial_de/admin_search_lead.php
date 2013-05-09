@@ -1,5 +1,5 @@
 <?php
-# admin_search_lead.php   version 2.4
+# admin_search_lead.php   version 2.6
 # 
 # Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -29,6 +29,7 @@
 # 120221-0118 - Added User Group campaign list restrictions to search queries
 # 120223-2249 - Removed logging of good login passwords if webroot writable is enabled
 # 120409-1131 - Added option for log searches done through slave DB server
+# 121025-1732 - Added owner field search option
 #
 
 require("dbconnect.php");
@@ -60,6 +61,8 @@ if (isset($_GET["status"]))				{$status=$_GET["status"];}
 	elseif (isset($_POST["status"]))	{$status=$_POST["status"];}
 if (isset($_GET["user"]))				{$user=$_GET["user"];}
 	elseif (isset($_POST["user"]))		{$user=$_POST["user"];}
+if (isset($_GET["owner"]))				{$owner=$_GET["owner"];}
+	elseif (isset($_POST["owner"]))		{$owner=$_POST["owner"];}
 if (isset($_GET["list_id"]))			{$list_id=$_GET["list_id"];}
 	elseif (isset($_POST["list_id"]))	{$list_id=$_POST["list_id"];}
 if (isset($_GET["alt_phone_search"]))			{$alt_phone_search=$_GET["alt_phone_search"];}
@@ -268,7 +271,7 @@ echo " Lead search: $vendor_id $phone $lead_id $status $list_id $user\n";
 echo date("l F j, Y G:i:s A");
 echo "<BR>\n";
 
-if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and (!$log_phone)  and (!$log_lead_id) and ( (strlen($status)<1) and (strlen($list_id)<1) and (strlen($user)<1) ) and ( (strlen($first_name)<1) and (strlen($last_name)<1) )) 
+if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and (!$log_phone)  and (!$log_lead_id) and ( (strlen($status)<1) and (strlen($list_id)<1) and (strlen($user)<1) and (strlen($owner)<1) ) and ( (strlen($first_name)<1) and (strlen($last_name)<1) )) 
 	{
 	### Lead search
 	echo "<br><center>\n";
@@ -285,7 +288,7 @@ if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and (!$log_phone)  and (!$log_
 	echo "<TD colspan=3 align=center> &nbsp; </TD>";
 	echo "</TR><TR bgcolor=#B9CBFD>";
 
-	echo "<TD ALIGN=right>$label_phone_number: &nbsp; </TD><TD ALIGN=left><input type=text name=phone size=14 maxlength=18></TD>";
+	echo "<TD ALIGN=right>$label_phone_Anzahl: &nbsp; </TD><TD ALIGN=left><input type=text name=phone size=14 maxlength=18></TD>";
 	echo "<TD rowspan=2><input type=submit name=submit value=SUBMIT></TD>\n";
 	echo "</TR><TR bgcolor=#B9CBFD>";
 	echo "<TD ALIGN=right>$label_alt_phone search: &nbsp; </TD><TD ALIGN=left><select size=1 name=alt_phone_search><option>No</option><option>Yes</option><option SELECTED>$alt_phone_search</option></select></TD>";
@@ -300,11 +303,13 @@ if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and (!$log_phone)  and (!$log_
 	echo "</TR><TR bgcolor=#B9CBFD>";
 
 	echo "<TD ALIGN=right>Status:&nbsp; </TD><TD ALIGN=left><input type=text name=status size=7 maxlength=6></TD>";
-	echo "<TD rowspan=3><input type=submit name=submit value=SUBMIT></TD>\n";
+	echo "<TD rowspan=4><input type=submit name=submit value=SUBMIT></TD>\n";
 	echo "</TR><TR bgcolor=#B9CBFD>";
 	echo "<TD ALIGN=right>Liste Identifikation: &nbsp; </TD><TD ALIGN=left><input type=text name=list_id size=15 maxlength=14></TD>";
 	echo "</TR><TR bgcolor=#B9CBFD>";
 	echo "<TD ALIGN=right>User: &nbsp; </TD><TD ALIGN=left><input type=text name=user size=15 maxlength=20></TD>";
+	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "<TD ALIGN=right>Besitzer:&nbsp; </TD><TD ALIGN=left><input type=text name=owner size=15 maxlength=50></TD>";
 	echo "</TR><TR>";
 	echo "<TD colspan=3 align=center> &nbsp; </TD>";
 	echo "</TR><TR bgcolor=#B9CBFD>";
@@ -609,11 +614,12 @@ else
 				}
 			else
 				{
-				if ( (strlen($status)>0) or (strlen($list_id)>0) or (strlen($user)>0) )
+				if ( (strlen($status)>0) or (strlen($list_id)>0) or (strlen($user)>0) or (strlen($owner)>0) )
 					{
 					$statusSQL = '';
 					$list_idSQL = '';
 					$userSQL = '';
+					$ownerSQL = '';
 					if (strlen($status)>0)	
 						{
 						$statusSQL = "status='" . mysql_real_escape_string($status) . "'"; $SQLctA++;
@@ -626,9 +632,14 @@ else
 					if (strlen($user)>0)	
 						{
 						if ( ($SQLctA > 0) or ($SQLctB > 0) ) {$andB = 'and';}
-						$userSQL = "$andB user='" . mysql_real_escape_string($user) . "'";
+						$userSQL = "$andB user='" . mysql_real_escape_string($user) . "'"; $SQLctC++;
 						}
-					$stmt="SELECT $vicidial_list_fields from vicidial_list where $statusSQL $list_idSQL $userSQL $LOGallowed_listsSQL";
+					if (strlen($owner)>0)	
+						{
+						if ( ($SQLctA > 0) or ($SQLctB > 0) or ($SQLctC > 0) ) {$andC = 'and';}
+						$ownerSQL = "$andC owner='" . mysql_real_escape_string($owner) . "'";
+						}
+					$stmt="SELECT $vicidial_list_fields from vicidial_list where $statusSQL $list_idSQL $userSQL $ownerSQL $LOGallowed_listsSQL";
 					}
 				else
 					{

@@ -400,10 +400,11 @@
 # 130402-2250 - Added user_group variable in scripts, forms and webforms
 # 130412-1359 - Added SIP message for failed calls
 # 130417-1937 - Changed locked agent choose in-group/closer/territories to auto-close
+# 130508-2223 - Cleanup for other language builds
 #
 
-$version = '2.6-368c';
-$build = '130417-1937';
+$version = '2.6-369c';
+$build = '130508-2223';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -575,25 +576,25 @@ if (file_exists('options.php'))
 	}
 
 ### BEGIN find any custom field labels ###
-$label_title =				'Title';
+$label_title =				' Title';
 $label_first_name =			'First';
 $label_middle_initial =		'MI';
-$label_last_name =			'Last';
+$label_last_name =			'Last ';
 $label_address1 =			'Address1';
 $label_address2 =			'Address2';
 $label_address3 =			'Address3';
 $label_city =				'City';
-$label_state =				'State';
+$label_state =				' State';
 $label_province =			'Province';
 $label_postal_code =		'PostCode';
 $label_vendor_lead_code =	'Vendor ID';
-$label_gender =				'Gender';
+$label_gender =				' Gender';
 $label_phone_number =		'Phone';
 $label_phone_code =			'DialCode';
 $label_alt_phone =			'Alt. Phone';
 $label_security_phrase =	'Show';
 $label_email =				'Email';
-$label_comments =			'Comments';
+$label_comments =			' Comments';
 
 $stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
 $rslt=mysql_query($stmt, $link);
@@ -892,7 +893,7 @@ if ($relogin == 'YES')
     echo "<td align=\"left\"><input type=\"password\" name=\"VD_pass\" size=\"10\" maxlength=\"20\" value=\"$VD_pass\" /></td></tr>\n";
     echo "<tr><td align=\"right\">Campaign:  </td>";
     echo "<td align=\"left\"><span id=\"LogiNCamPaigns\">$camp_form_code</span></td></tr>\n";
-    echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\"Submit\" /> &nbsp; \n";
+    echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\"SUBMIT\" /> &nbsp; \n";
     echo "<span id=\"LogiNReseT\"><input type=\"button\" value=\"Refresh Campaign List\" onclick=\"login_allowable_campaigns()\"></span></td></tr>\n";
     echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</font></td></tr>\n";
     echo "</table></center>\n";
@@ -932,7 +933,7 @@ if ($user_login_first == 1)
         echo "<td align=\"left\"><input type=\"password\" name=\"VD_pass\" size=\"10\" maxlength=\"20\" value=\"$VD_pass\" /></td></tr>\n";
         echo "<tr><td align=\"right\">Campaign:  </td>";
         echo "<td align=\"left\"><span id=\"LogiNCamPaigns\">$camp_form_code</span></td></tr>\n";
-        echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\"Submit\" /> &nbsp; \n";
+        echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\"SUBMIT\" /> &nbsp; \n";
         echo "<span id=\"LogiNReseT\"></span></td></tr>\n";
         echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</font></td></tr>\n";
         echo "</table>\n";
@@ -982,7 +983,7 @@ if ($user_login_first == 1)
                 echo "<td align=\"left\"><input type=\"password\" name=\"VD_pass\" size=\"10\" maxlength=\"20\" value=\"$VD_pass\" /></td></tr>\n";
                 echo "<tr><td align=\"right\">Campaign:  </td>";
                 echo "<td align=\"left\"><span id=\"LogiNCamPaigns\">$camp_form_code</span></td></tr>\n";
-                echo "<tr><td align=\"center\" colspan=\"2>\"<input type=\"submit\" name=\"SUBMIT\" value=\"Submit\" /> &nbsp; \n";
+                echo "<tr><td align=\"center\" colspan=\"2>\"<input type=\"submit\" name=\"SUBMIT\" value=\"SUBMIT\" /> &nbsp; \n";
                 echo "<span id=\"LogiNReseT\"></span></td></tr>\n";
                 echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</font></td></tr>\n";
                 echo "</table></center>\n";
@@ -1018,7 +1019,7 @@ if ( (strlen($phone_login)<2) or (strlen($phone_pass)<2) )
     echo "<td align=\"left\"><input type=\"text\" name=\"phone_login\" size=\"10\" maxlength=\"20\" value=\"\" /></td></tr>\n";
     echo "<tr><td align=\"right\">Phone Password:  </td>";
     echo "<td align=\"left\"><input type=\"password\" name=\"phone_pass\" size=\"10\" maxlength=\"20\" value=\"\" /></td></tr>\n";
-    echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\"Submit\" /> &nbsp; \n";
+    echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\"SUBMIT\" /> &nbsp; \n";
     echo "<span id=\"LogiNReseT\"></span></td></tr>\n";
     echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</font></td></tr>\n";
     echo "</table></center>\n";
@@ -1244,7 +1245,7 @@ else
                     $VDdisplayMESSAGE.= "<input type=\"hidden\" name=\"VD_pass\" value=\"$VD_pass\" />\n";
                     $VDdisplayMESSAGE.= "Manager Login: <input type=\"text\" name=\"MGR_login$loginDATE\" size=\"10\" maxlength=\"20\" /><br />\n";
                     $VDdisplayMESSAGE.= "Manager Password: <input type=\"password\" name=\"MGR_pass$loginDATE\" size=\"10\" maxlength=\"20\" /><br />\n";
-                    $VDdisplayMESSAGE.= "<input type=\"submit\" name=\"submit\" value=\"Submit\" /></form>\n";
+                    $VDdisplayMESSAGE.= "<input type=\"submit\" name=\"submit\" value=\"SUBMIT\" /></form>\n";
 					}
 				}
 			### END - CHECK TO SEE IF SHIFT ENFORCEMENT IS ENABLED AND AGENT IS OUTSIDE OF THEIR SHIFTS, IF SO, OUTPUT ERROR
@@ -1285,7 +1286,7 @@ else
                 echo "Login: <input type=\"text\" name=\"VD_login\" size=\"10\" maxlength=\"20\" value=\"$VD_login\" />\n<br />";
                 echo "Password: <input type=\"password\" name=\"VD_pass\" size=\"10\" maxlength=\"20\" value=\"$VD_pass\" /><br />\n";
                 echo "Campaign: <span id=\"LogiNCamPaigns\">$camp_form_code</span><br />\n";
-                echo "<input type=\"submit\" name=\"SUBMIT\" value=\"Submit\" /> &nbsp; \n";
+                echo "<input type=\"submit\" name=\"SUBMIT\" value=\"SUBMIT\" /> &nbsp; \n";
 				echo "<span id=\"LogiNReseT\"></span>\n";
                 echo "</form>\n\n";
 				echo "</body>\n\n";
@@ -1991,7 +1992,7 @@ else
         echo "<td align=\"left\"><input type=\"password\" name=\"VD_pass\" size=\"10\" maxlength=\"20\" value=\"$VD_pass\" /></td></tr>\n";
         echo "<tr><td align=\"right\">Campaign:  </td>";
         echo "<td align=\"left\"><span id=\"LogiNCamPaigns\">$camp_form_code</span></td></tr>\n";
-        echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\"Submit\" /> &nbsp; \n";
+        echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\"SUBMIT\" /> &nbsp; \n";
         echo "<span id=\"LogiNReseT\"></span></td></tr>\n";
         echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</font></td></tr>\n";
         echo "</table>\n";
@@ -2083,7 +2084,7 @@ else
         echo "<td align=\"left\"><input type=\"text\" name=\"phone_login\" size=\"10\" maxlength=\"20\" value=\"$phone_login\"></td></tr>\n";
         echo "<tr><td align=\"right\">Phone Password:  </td>";
         echo "<td align=\"left\"><input type=\"password\" name=\"phone_pass\" size=10 maxlength=20 value=\"$phone_pass\"></td></tr>\n";
-        echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\"Submit\" /></td></tr>\n";
+        echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\"SUBMIT\" /></td></tr>\n";
         echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</font></td></tr>\n";
         echo "</table></center>\n";
         echo "</form>\n\n";
@@ -2846,7 +2847,7 @@ else
             echo "Login: <input type=\"text\" name=\"VD_login\" size=\"10\" maxlength=\"20\" value=\"$VD_login\" />\n<br />";
             echo "Password: <input type=\"password\" name=\"VD_pass\" size=\"10\" maxlength=\"20\" value=\"$VD_pass\" /><br />\n";
             echo "Campaign: <span id=\"LogiNCamPaigns\">$camp_form_code</span><br />\n";
-            echo "<input type=\"submit\" name=\"SUBMIT\" value=\"Submit\" /> &nbsp; \n";
+            echo "<input type=\"submit\" name=\"SUBMIT\" value=\"SUBMIT\" /> &nbsp; \n";
 			echo "<span id=\"LogiNReseT\"></span>\n";
 			echo "</FORM>\n\n";
 			echo "</body>\n\n";
@@ -5929,7 +5930,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						var CB_calls = all_CBs_array[0];
 						var loop_ct=0;
 						var conv_start=0;
-                        var CB_HTML = "<table width=\"<?php echo $HCwidth ?>px\"><tr bgcolor=\"<?php echo $SCRIPT_COLOR ?>\"><td><font class=\"log_title\">#</font></td><td align=\"center\"><font class=\"log_title\"> CALLBACK DATE/TIME</font></td><td align=\"center\"><font class=\"log_title\">NUMBER</font></td><td align=\"center\"><font class=\"log_title\">INFO</font></td><td align=\"center\"><font class=\"log_title\">NAME</font></td><td align=\"center\"><font class=\"log_title\">  STATUS</font></td><td align=\"center\"><font class=\"log_title\">CAMPAIGN</font></td><td align=\"center\"><font class=\"log_title\">LAST CALL DATE/TIME</font></td><td align=\"center\"><font class=\"log_title\"> DIAL</font></td><td align=\"center\"><font class=\"log_title\"> ALT</font></td></tr>"
+                        var CB_HTML = "<table width=\"<?php echo $HCwidth ?>px\"><tr bgcolor=\"<?php echo $SCRIPT_COLOR ?>\"><td><font class=\"log_title\">#</font></td><td align=\"center\"><font class=\"log_title\"> CALLBACK DATE/TIME </font></td><td align=\"center\"><font class=\"log_title\"> NUMBER </font></td><td align=\"center\"><font class=\"log_title\"> INFO </font></td><td align=\"center\"><font class=\"log_title\"> FULL NAME </font></td><td align=\"center\"><font class=\"log_title\">  STATUS </font></td><td align=\"center\"><font class=\"log_title\"> CAMPAIGN </font></td><td align=\"center\"><font class=\"log_title\"> LAST CALL DATE/TIME </font></td><td align=\"center\"><font class=\"log_title\"> DIAL</font></td><td align=\"center\"><font class=\"log_title\"> ALT </font></td></tr>"
 						while (loop_ct < CB_calls)
 							{
 							loop_ct++;
@@ -14301,7 +14302,7 @@ $zi=2;
 	<?php if ($email_enabled > 0)
     {echo "<td align=\"left\" width=\"67px\"><a href=\"#\" onclick=\"EmailPanelToFront();\"><img src=\"./images/vdc_tab_email.gif\" alt=\"EMAIL\" width=\"67px\" height=\"30px\" border=\"0\" /></a></td>\n";}
 	?>
-    <td width="<?php echo $HSwidth ?>px" valign="middle" align="center"><font class="body_text">&nbsp; <span id="status">LIVE</span>&nbsp; &nbsp;session ID: <span id="sessionIDspan"></span>&nbsp; &nbsp;<span id="AgentStatusCalls"></span></font></td>
+    <td width="<?php echo $HSwidth ?>px" valign="middle" align="center"><font class="body_text">&nbsp; <span id="status">LIVE</span>&nbsp; &nbsp; session ID: <span id="sessionIDspan"></span>&nbsp; &nbsp;<span id="AgentStatusCalls"></span></font></td>
     <td width="109px"><img src="./images/agc_live_call_OFF.gif" name="livecall" alt="Live Call" width="109px" height="30px" border="0" /></td>
     </tr>
  </table>
@@ -14559,7 +14560,7 @@ $zi=2;
 		}
 	else
 		{
-        echo "$label_comments: <br><span id='viewcommentsdisplay'><input type='button' id='ViewCommentButton' onClick=\"ViewComments('ON')\" value='History'/></span>
+        echo "$label_comments: <br><span id='viewcommentsdisplay'><input type='button' id='ViewCommentButton' onClick=\"ViewComments('ON')\" value='-History-'/></span>
 		</td><td align=\"left\" colspan=\"5\"><font class=\"body_text\">";
 		if ( ($multi_line_comments) )
             {echo "<textarea name=\"comments\" id=\"comments\" rows=\"2\" cols=\"85\" class=\"cust_form_text\" value=\"\"></textarea>\n";}

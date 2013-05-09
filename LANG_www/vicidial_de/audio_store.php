@@ -1,7 +1,7 @@
 <?php
 # audio_store.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Central Audio Storage script
 # 
@@ -11,10 +11,15 @@
 # 100401-1037 - remove spaces and special characters from filenames, admin log uploads
 # 110922-2331 - Added modify_audiostore user option for access
 # 111122-1332 - Added more filename filtering
+# 120525-0739 - Added yet more filename filtering
+# 120529-1345 - Filename filter fix
+# 120531-1747 - Another filtering fix
+# 121019-0816 - Added audio file delete process
+# 121129-1620 - Hide delete option text if not allowed
 #
 
-$version = '2.4-5';
-$build = '111122-1332';
+$version = '2.6-10';
+$build = '121129-1620';
 
 $MT[0]='';
 
@@ -27,6 +32,8 @@ $audiofile=$_FILES["audiofile"];
 	$AF_path = $_FILES['audiofile']['tmp_name'];
 if (isset($_GET["submit_file"]))			{$submit_file=$_GET["submit_file"];}
 	elseif (isset($_POST["submit_file"]))	{$submit_file=$_POST["submit_file"];}
+if (isset($_GET["delete_file"]))			{$delete_file=$_GET["delete_file"];}
+	elseif (isset($_POST["delete_file"]))	{$delete_file=$_POST["delete_file"];}
 if (isset($_GET["DB"]))						{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))			{$DB=$_POST["DB"];}
 if (isset($_GET["overwrite"]))				{$overwrite=$_GET["overwrite"];}
@@ -74,6 +81,11 @@ if ( ( (strlen($sounds_web_server)) != (strlen($server_name)) ) or (!eregi("$sou
 	exit;
 	}
 
+if (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$AF_orig))
+	{
+	echo "ERROR: Invalid File Name: $AF_orig\n";
+	exit;
+	}
 
 ### check if web directory exists, if not generate one
 if (strlen($sounds_web_directory) < 30)
@@ -127,6 +139,7 @@ if ( (!preg_match("/\|$ip\|/", $server_ips)) and ($formIPvalid < 1) )
 	$PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
 	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
+	$delete_file = ereg_replace("[^-\._0-9a-zA-Z]","",$delete_file);
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and ( (modify_campaigns='1') or (modify_audiostore='1') )";
 	if ($DB) {echo "|$stmt|\n";}
@@ -134,14 +147,46 @@ if ( (!preg_match("/\|$ip\|/", $server_ips)) and ($formIPvalid < 1) )
 	$row=mysql_fetch_row($rslt);
 	$auth=$row[0];
 
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 8 and ( (ast_admin_access='1') and (modify_audiostore='1') )";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$auth_delete=$row[0];
+
 	if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 		{
 		Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
 		Header("HTTP/1.0 401 Unauthorized");
-		echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|\n";
+		echo "Unzulässiges Username/Kennwort:|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|\n";
 		exit;
 		}
 	}
+
+
+
+$delete_message='';
+### delete a file from the audio store
+if ( ($action == "DELETE") and ($auth_delete > 0) )
+	{
+	if (strlen($delete_file) > 0)
+		{
+		$gsm='.gsm';
+		$wav='.wav';
+		unlink("$WeBServeRRooT/$sounds_web_directory/$delete_file$gsm");
+		unlink("$WeBServeRRooT/$sounds_web_directory/$delete_file$wav");
+
+		$stmt="UPDATE servers SET sounds_update='Y',audio_store_purge=CONCAT(audio_store_purge,\"$delete_file\\n\");";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+
+		$stmt="UPDATE system_settings SET audio_store_purge=CONCAT(audio_store_purge,\"$delete_file\\n\");";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+
+		$delete_message = "AUDIO FILE SET FOR DELETION: $delete_file\n";
+		}
+	}
+
 
 
 ### list all files in sounds web directory
@@ -236,8 +281,8 @@ if ($action == "AUTOUPLOAD")
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<!-- VERSION: <?php echo $version ?>     BUILD: <?php echo $build ?> -->
-<title>ADMINISTRATION: Audio Store
+<!-- VERSION: <?php echo $version ?>     BAU: <?php echo $build ?> -->
+<title>ADMINISTRATION: Audio-Store
 <?php
 
 
@@ -269,7 +314,7 @@ $subcamp_color =	'#C6C6C6';
 require("admin_header.php");
 
 ?>
-<TABLE WIDTH=<?php echo $page_width ?> BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=0><TR BGCOLOR=#E6E6E6><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; Audio Store</TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; </TD></TR>
+<TABLE WIDTH=<?php echo $page_width ?> BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=0><TR BGCOLOR=#E6E6E6><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; Audio-Store</TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; </TD></TR>
 
 <?php 
 
@@ -291,10 +336,12 @@ $admDIR = "$HTTPprotocol$server_name:$server_port$script_name";
 $admDIR = eregi_replace('audio_store.php','',$admDIR);
 $admSCR = 'admin.php';
 $NWB = " &nbsp; <a href=\"javascript:openNewWindow('$admDIR$admSCR?ADD=99999";
-$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 Border=0 ALT=\"HILFE\" ALIGN=TOP></A>";
 
 $secX = date("U");
 $pulldate0 = "$year-$mon-$mday $hour:$min:$sec";
+
+echo "$delete_message";
 
 if ($action == "MANUALUPLOAD")
 	{
@@ -347,30 +394,46 @@ if ($action == "MANUALUPLOAD")
 
 <form action=<?php echo $PHP_SELF ?> method=post enctype="multipart/form-data">
 <input type=hidden name=action value="MANUALUPLOAD">
-<input type=hidden name=sample_prompt id=sample_prompt value="">
 
 <table align=center width="700" border=0 cellpadding=5 cellspacing=0 bgcolor=#D9E6FE>
   <tr>
-	<td align=right width="35%"><B><font face="arial, helvetica" size=2>Audio File to Upload:</font></B></td>
+	<td align=right width="35%"><B><font face="arial, helvetica" size=2>Audio-Datei zum hochladen:</font></B></td>
 	<td align=left width="65%"><input type=file name="audiofile" value=""> <?php echo "$NWB#audio_store$NWE"; ?></td>
   </tr>
   <tr>
 	<td align=center colspan=2><input type=submit name=submit value=submit></td>
   </tr>
-  <tr><td align=left><font size=1> &nbsp; </font></td><td align=right><font size=1>Audio Store- &nbsp; &nbsp; VERSION: <?php echo $version ?> &nbsp; &nbsp; BUILD: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
+  <tr><td align=left><font size=1> &nbsp; </font></td><td align=right><font size=1>Audio-Store- &nbsp; &nbsp; VERSION: <?php echo $version ?> &nbsp; &nbsp; BAU: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
 </table>
+</form>
 <BR><BR>
-<CENTER><B>We STRONGLY recommend uploading only 16bit Mono 8k PCM WAV audio files(.wav)</B>
-<BR><BR><font size=1>All spaces will be stripped from uploaded audio file names</font><BR><BR>
-<B><a href="javascript:launch_chooser('sample_prompt','date',30);">audio file list</a></CENTER>
+<CENTER><B>Wir empfehlen DRINGEND Upload nur 16bit Mono 8k PCM WAV-Audiodateien(.wav)</B>
+<BR><BR><font size=1>Alle Räume werden von hochgeladenen Audiodatei Namen abgestreift werden </font><BR><BR>
+<B><a href="javascript:launch_chooser('delete_file','date',30);">audio file list</a></CENTER>
 
 
 
 <?php
+if ($auth_delete > 0)
+	{
+	echo "<center><BR><BR>Zu löschende Datei:<BR>\n";
+	echo "<form action=$PHP_SELF method=post>\n";
+	echo "<input type=hidden name=action value=\"DELETE\">\n";
+	echo "<input type=text size=50 maxlength=100 name=delete_file id=delete_file value=\"\">\n";
+	echo "<input type=hidden name=DB value=\"$DB\">\n";
+	echo "<input type=submit name=submit value=submit>\n";
+	}
+else
+	{
+	echo "<BR>\n";
+	echo "<form action=$PHP_SELF method=post>\n";
+	echo "<input type=hidden name=action value=\"DELETE\">\n";
+	echo "<input type=hidden name=delete_file id=delete_file value=\"\">\n";
+	}
+echo "</form><BR><BR><BR>\n";
 
-echo "<BR><BR><BR><BR><BR><BR>\n";
 
-echo "</B></B><br><br><a href=\"admin.php?ADD=720000000000000&category=AUDIOSTORE&stage=manualupload\">Click here to see a log of the uploads to the audio store</FONT>\n";
+echo "</B></B><br><br><a href=\"admin.php?ADD=720000000000000&category=AUDIOSTORE&stage=manualupload\">Klicken Sie hier um ein Protokoll der Uploads auf den Audio-Speicher zu sehen</FONT>\n";
 
 ?>
 

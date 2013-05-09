@@ -28,6 +28,8 @@ agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
 agc|phone_only.php|0
+agc|vdc_email_display.php|0
+agc|audit_comments.php|0
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"ЯНВ"|
@@ -325,7 +327,7 @@ Dial Override|Ввод другого номера|
 digits only please|только цифры, пожалуйста|
 Dial Now|Вызвать немедленно|
 CB Comments|Примечания|
-Title|Должность|
+ Title| Должность|
 Your Status|Ваше состояние|
  STATUS| СОСТОЯНИЕ|
  RESET| СБРОС|
@@ -335,10 +337,9 @@ Incoming|Входящие|
 Calling|Вызываю|
 Called|Вызван|
 Campaign|Кампания|
-Status|Состояние|
+>Status|>Состояние|
 Inserted|Добавлено|
  seconds| секунд|
-HELP|ПОМОЩЬ|
  Login | Вход |
 Login:|Имя:|
 User |Агент |
@@ -349,7 +350,6 @@ Server|Сервер|
 RECORD |ЗАПИСЬ |
 >HANGUP|>ЗАВЕРШЕНИЕ|
 >XFER|>ПЕРЕВОД|
-PARK|ПАРКОВКА|
 IN-NUMBER|ВХОДЯЩИЙ-НОМЕР|
 NUMBER|НОМЕР|
 CALLERID|CALLERID|
@@ -358,16 +358,15 @@ PICKUP|ПЕРЕХВАТИТЬ|
 CONFERENCE|КОНФЕРЕНЦИЯ|
 Refresh|Обновить|
 Send DTMF|Набор DTMF|
-ORDER|ОРДЕР|
+>ORDER|>ОРДЕР|
  on | на |
 >LOGOUT|>ВЫХОД|
  Channel| Линия|
 Extensions|Номера|
 Conferences|Конференции|
 Conference|Конференция|
-Recording|Запись|
-Record|Запись|
-Welcome|Здравствуйте|
+ Recording| Запись|
+Welcome |Здравствуйте |
 VOICEMAIL|ГОЛОСОВАЯПОЧТА|
  NEW| НОВЫЙ|
  OLD| СТАРЫЙ|
@@ -378,21 +377,21 @@ Slower|Медленнее|
 Initializing|Инициализация|
 Invalid|Неверный|
 Username|Имя агента|
-Notes|Примечания|
+Notes:|Примечания:|
 First|Имя|
 MI: |Отч: |
-Last|Фамилия|
+Last |Фамилия |
 Address|Адрес|
 City|Город|
-State|Штат|
+ State| Штат|
 PostCode|Почт.индекс|
 Province|Область|
 Vendor ID|Код п.|
 DialCode|Префикс|
 Alt. Phone|Доп. телефон|
 Show|Показать|
-Email|Эл.почта|
-Comments|Заметки|
+ Email| Эл.почта|
+ Comments| Заметки|
 REFRESH|ОБНОВИТЬ|
 ALT PHONE DIAL|НАБОР ДОП.НОМЕРА|
 MAIN PHONE|ОСНОВНОЙ ТЕЛЕФОН|
@@ -574,3 +573,79 @@ PLEASE SELECT A CAMPAIGN|ПОЖАЛУЙСТА ВЫБЕРИТЕ КАМПАНИЮ|
 -INCALL|-ВЫЗОВ|
 Refresh Campaign List|Обновить список кампаний|
 -PAUSED|-ПАУЗА|
+### START translations for 2.6 release ###
+Click Here to Choose a Dial In-Group|Нажмите здесь, чтобы выбрать кино-группы|
+SELECT A DIAL IN-GROUP|выбрать диск в группе|
+DIAL IN-GROUP|набрать в группу|
+Dial In-Group|набрать в группу|
+Click Here to Activate|Нажмите здесь для активации|
+Click Here to Deactivate|нажмите здесь, чтобы отключить|
+ERROR: You must enter in search terms, one of these must be populated: lead ID, vendor ID, phone number, last name|Ошибка: Вы должны войти в поисках слагаемых, одно из них должно быть заполнено: свинец ID, Vendor ID, номер телефона, фамилию|
+ERROR: You must enter in search terms, one of these must be populated: office number, last name, first name|Ошибка: Вы должны войти в поисках слагаемых, одно из них должно быть заполнено: рабочий телефон, фамилию, имя, отчество|
+ERROR: There was a problem with your search terms|Ошибка: была проблема с условия поиска|
+Phone and Post Code Time Zone Mismatch|телефон и почтовый индекс часовой пояс несоответствие|
+Last Local Call Time|Последний вызов местному времени|
+Called Count|количество вызовов|
+Unidentified Hangup Cause Code|неизвестный код причины зависания|
+YOU MUST SELECT AN AGENT TO TRANSFER TO WHEN USING AGENTDIRECT|Вы должны выбрать агента передать при использовании agentdirect|
+Another live agent session was open using your user ID. It has been disabled. Click OK to continue to the agent screen|еще один живой сессии агента была открыта под своим именем пользователя. она была отключена. Щелкните ОК, чтобы агент экрана|
+View Comment History|Доска комментариев истории|
+reset form|очистка формы|
+SELECT THIS LEAD|выберите этот провод|
+YOU MUST BE ON AN ACTIVE INBOUND CALL TO SEARCH FOR A LEAD|вы должны быть на активное входящего вызова для поиска свинца|
+Attachments|вложения|
+Next Call Pause|Следующая пауза вызова|
+-History-|-История-|
+SUBMIT SEARCH|начать поиск|
+close |близко |
+AGENT CALL LOG|Журнал вызов агента|
+ LENGTH | длина |
+ PHONE | телефон |
+ FULL NAME | полное имя |
+ CAMPAIGN | кампания |
+ ALT | заместитель |
+ HANGUP | зависание |
+ INFO | информация |
+phone login|телефон Вход|
+LAST CALL|Последний звонок|
+ CALLBACK | Обратный звонок |
+ CITY | город |
+ STATE | государство |
+ ZIP | застежка-молния |
+Phone Number|номер телефона|
+Phone Number Fields|В полях Номер телефона|
+Lead ID|привести ID|
+ WAIT | ждать |
+ AGENT | агент |
+ CALL GROUP | называют группу |
+ TYPE | тип |
+digits only|только цифры|
+DIAL ALERT|набрать Уведомления|
+WEB FORM SUBMIT|веб-страницы отправки формы|
+in campaign|в кампании|
+ DATE\/TIME | дата\/время |
+ IN\/OUT | в и |
+>GROUPS<|>ГРУППЫ<|
+>GO<|>Выбрать<|
+>recording<|>записи<|
+>SELECT<|>выберите<|
+Alert is ON|уведомлении о|
+Alert is OFF|оповещение выключено|
+EMAIL LOG FOR THIS LEAD|Электронная почта Вход У объявления|
+EMAIL TO|по электронной почте к|
+ ATTACHMENTS | вложения |
+Called Since Last Reset|называется с момента последнего сброса|
+Timezone:|часовой пояс:|
+Dial Link|набрать ссылку|
+ LAST | последний |
+SEARCH FOR A CONTACT|Поиск контакта|
+Notes: when doing a search for a contact, wildcard or partial search terms are not allowed|Примечание: при выполнении поиска контакта, маска или частичного условия поиска не допускаются|
+Contact search requests are all logged in the system|запросы Контакты Поиск Все вошли в систему|
+Office Number|номер офиса|
+First Name|имя|
+Last Name|фамилия|
+BU Name|наименование фирмы|
+Department:|отдел:|
+Group Name|название группы|
+Job Title|Должность|
+Location:|Расположение:|

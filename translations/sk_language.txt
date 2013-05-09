@@ -28,6 +28,8 @@ agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
 agc|phone_only.php|0
+agc|vdc_email_display.php|0
+agc|audit_comments.php|0
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"JAN"|
@@ -323,7 +325,7 @@ Dial Override|Prepísanie volania|
 digits only please|prosím len čísla|
 Dial Now|Volať znova|
 CB Comments|Poznámky CB|
-Title|Titul|
+ Title| Titul|
 Your Status|Váš stav|
  STATUS| STAV|
  RESET| ZNOVU INCIALIZOVAŤ|
@@ -333,10 +335,9 @@ Incoming|Príchodzie|
 Calling|Volané|
 Called|Volaný|
 Campaign|Kampaň|
-Status|Stav|
+>Status|>Stav|
 Inserted|Vložiť|
  seconds| sekúnd|
-HELP|POMOC|
  Login | Prihlásiť |
 Login:|Prihlásiť:|
 User |Užívateľ |
@@ -347,7 +348,6 @@ Server|Server|
 RECORD |ZÁZNAM |
 >HANGUP|>POLOŹIŤ|
 >XFER|>PREPOJIŤ|
-PARK|ZAPARKOVAŤ|
 IN-NUMBER|V-ČÍSLE|
 NUMBER|ČÍSLO|
 CALLERID|IDVOLAJÚCEHO|
@@ -356,16 +356,15 @@ PICKUP|PREVZIAŤ|
 CONFERENCE|KONFERENCIA|
 Refresh|Osviežiť|
 Send DTMF|Poslať DTMF|
-ORDER|PORADIE|
+>ORDER|>PORADIE|
  on | na |
 >LOGOUT|>ODHLÁSIŤ|
  Channel| Kanál|
 Extensions|Pobočky|
 Conferences|Konferencie|
 Conference|Konferencia|
-Recording|Nashrávanie|
-Record|NAHRAŤ|
-Welcome|Vítame Vás|
+ Recording| Nashrávanie|
+Welcome |Vítame Vás |
 VOICEMAIL|HLASOVÁ SCHRÁNKA|
  NEW| NOVÁ|
  OLD| STARÁ|
@@ -376,21 +375,21 @@ Slower|Pomalšie|
 Initializing|Inicializovať|
 Invalid|Nesprávny|
 Username|Užívateľské meno|
-Notes|Poznámka|
+Notes:|Poznámka:|
 First|Prvý|
 MI: |MI: |
-Last|Posledný|
+Last |Posledný |
 Address|Adresa|
 City|Mesto|
-State|Štát|
+ State| Štát|
 PostCode|PSČ|
 Province|Kraj|
 Vendor ID|zákaznícke|
 DialCode|Volací kód|
 Alt. Phone|Alter. číslo|
 Show|Prezrieť|
-Email|Email|
-Comments|Komentár|
+ Email| Email|
+ Comments| Komentár|
 REFRESH|OSVIEŽIŤ|
 ALT PHONE DIAL|ALTER. ČÍSLO TELEFÓNU|
 MAIN PHONE|ZÁKLADNÉ TEL. ČÍSLO|
@@ -569,3 +568,79 @@ Agents View|agenti Zobraziť|
 -INCALL|-Incall|
 -PAUSED|-pozastavené|
 CALL DISPOSITION|VÝZVA Disposition|
+### START translations for 2.6 release ###
+Click Here to Choose a Dial In-Group|kliknite sem a vyberte voľby v skupine|
+SELECT A DIAL IN-GROUP|vyberte voľby v skupine|
+DIAL IN-GROUP|dial in-skupiny|
+Dial In-Group|dial in-skupiny|
+Click Here to Activate|kliknite tu pre aktiváciu|
+Click Here to Deactivate|kliknite tu pre deaktiváciu|
+ERROR: You must enter in search terms, one of these must be populated: lead ID, vendor ID, phone number, last name|Chyba: musíte zadať hľadané výrazy, musí byť jeden z nich je obývaných: olovo id, Vendor ID, telefónne číslo, priezvisko|
+ERROR: You must enter in search terms, one of these must be populated: office number, last name, first name|Chyba: musíte zadať hľadané výrazy, musí byť jeden z nich sa vyplní: kancelária číslo, priezvisko, meno|
+ERROR: There was a problem with your search terms|Chyba: tam bol problém s svoje vyhľadávacie termíny|
+Phone and Post Code Time Zone Mismatch|telefón a poštové smerovacie číslo časové pásmo nesúlad|
+Last Local Call Time|posledný miestnej pohotovosti|
+Called Count|počet hovorov|
+Unidentified Hangup Cause Code|Neznáma príčina hangup kód|
+YOU MUST SELECT AN AGENT TO TRANSFER TO WHEN USING AGENTDIRECT|musíte zvoliť zástupcu, ktorý bude prenášať potrebné pri používaní agentdirect|
+Another live agent session was open using your user ID. It has been disabled. Click OK to continue to the agent screen|ďalšie živé agenta relácia bola otvorená pod svojím užívateľským menom. bola zakázaná. kliknite na tlačidlo OK a pokračujte na obrazovke agenta|
+View Comment History|zobraziť komentár históriu|
+reset form|vymazať formulár|
+SELECT THIS LEAD|vyberte túto vedenie|
+YOU MUST BE ON AN ACTIVE INBOUND CALL TO SEARCH FOR A LEAD|musíte byť na aktívnom prichádzajúce volania hľadať vedenie|
+Attachments|Príslušenstvo|
+Next Call Pause|Ďalšia výzva pauza|
+-History-|-História-|
+SUBMIT SEARCH|Odoslať hľadanie|
+close |zavrieť |
+AGENT CALL LOG|Agent protokolu hovoru|
+ LENGTH | dĺžka |
+ PHONE | telefón |
+ FULL NAME | meno a priezvisko |
+ CAMPAIGN | kampaň |
+ ALT | striedavý |
+ HANGUP | hangup |
+ INFO | info |
+phone login|telefón login|
+LAST CALL|Posledná výzva|
+ CALLBACK | callback |
+ CITY | město |
+ STATE | stav |
+ ZIP | zips |
+Phone Number|telefónne číslo|
+Phone Number Fields|Pole telefónne číslo|
+Lead ID|viesť id|
+ WAIT | počkajte |
+ AGENT | zástupca |
+ CALL GROUP | skupiny volajúcich |
+ TYPE | typ |
+digits only|iba číslice|
+DIAL ALERT|vytočiť upozornenie|
+WEB FORM SUBMIT|webové stránky odoslaní formulára|
+in campaign|v kampani|
+ DATE\/TIME | Dátum\/čas |
+ IN\/OUT | dovnútra a von |
+>GROUPS<|>SKUPINY<|
+>GO<|>Prejsť<|
+>recording<|>Nahrávanie<|
+>SELECT<|>Vyberte<|
+Alert is ON|záznam je na|
+Alert is OFF|upozornenie je vypnuté|
+EMAIL LOG FOR THIS LEAD|email Prihlásiť sa k tomuto vedeniu|
+EMAIL TO|e-mail|
+ ATTACHMENTS | Príslušenstvo |
+Called Since Last Reset|volal od posledného vynulovania|
+Timezone:|časové pásmo:|
+Dial Link|vytočiť odkaz|
+ LAST | posledný |
+SEARCH FOR A CONTACT|vyhľadať kontakt|
+Notes: when doing a search for a contact, wildcard or partial search terms are not allowed|Poznámky: Pri hľadaní pre kontakt sú zástupné alebo čiastočné vyhľadávacie termíny nie sú povolené|
+Contact search requests are all logged in the system|žiadosti kontakt vyhľadávania sú zaznamenané v systéme|
+Office Number|číslo kancelárie|
+First Name|krstné meno|
+Last Name|priezvisko|
+BU Name|obchodné meno|
+Department:|oddelenie:|
+Group Name|Názov skupiny|
+Job Title|názov práce|
+Location:|umiestnenie:|

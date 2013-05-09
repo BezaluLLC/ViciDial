@@ -65,7 +65,7 @@ vicidial|welcome_languages.php|1
 vicidial|vicidial_admin_web_logo.gif|1
 vicidial|vicidial_admin_web_logo_small.gif|1
 vicidial|user_territories.php|0
-vicidial|audio_store.php|1
+vicidial|audio_store.php|0
 vicidial|AST_agent_time_detail.php|0
 vicidial|AST_agent_timeclock_detail.php|0
 vicidial|AST_OUTBOUNDsummary_interval.php|0
@@ -96,6 +96,25 @@ vicidial|admin_listloader_fourth_gen.php|0
 vicidial|AST_admin_template_maker.php|0
 vicidial|leadloader_template_display.php|0
 vicidial|admin_listloader_third_gen.php|0
+vicidial|callbacks_bulk_change.php|0
+vicidial|lead_tools.php|0
+vicidial|admin_email_accounts.php|0
+vicidial|AST_email_log_report.php|0
+vicidial|AST_email_log_display.php|0
+vicidial/qc|qc_modify_lead.php|0
+vicidial/qc|QC_admin_variables.php|0
+vicidial/qc|QC_admin_variables01.php|0
+vicidial/qc|QC_call_client_iframe.php|0
+vicidial/qc|QC_call_client_include.php|0
+vicidial/qc|QC_header_include.php|0
+vicidial/qc|QC_header_include01.php|0
+vicidial/qc|QC_header_include02.php|0
+vicidial/qc|audit_comments.php|0
+vicidial/qc|qc_api.php|0
+vicidial/qc|QC_admin_include01.php|0
+vicidial/qc|QC_admin_include02.php|0
+vicidial/qc|QC_admin_modify_lead_include.php|0
+vicidial/qc|QC_status_codes_include.php|0
 vicidial|wz_jsgraphics.js|1
 vicidial|verticalbargraph.css|1
 vicidial|horizontalbargraph.css|1
@@ -2414,7 +2433,6 @@ ADDING NEW MUSIC ON HOLD ENTRY|Adding New Music on Hold ΕΙΣΟΔΟΥ|
 MODIFY MUSIC ON HOLD ENTRY|MODIFY Music on Hold ΕΙΣΟΔΟΥ|
 DELETE MUSIC ON HOLD ENTRY|DELETE Music on Hold ΕΙΣΟΔΟΥ|
 MUSIC ON HOLD ENTRY LIST|Music on Hold Συμμετοχές|
-We STRONGLY recommend uploading only 16bit 8k PCM WAV audio files|Συνιστούμε φόρτωμα μόνο 16bit 8k PCM WAV αρχεία ήχου|
 Music On Hold ID|Music On Hold ID|
 This is the short name of a Music On Hold entry. This needs to be a unique identifier. Do not use any spaces or punctuation for this field. max 100 characters, minimum of 2 characters|Αυτή είναι η σύντομη ονομασία Music On Hold εισόδου. Αυτό πρέπει να είναι ένα μοναδικό αναγνωριστικό. Μην χρησιμοποιείτε κενά ή σημεία στίξης για αυτό τον τομέα. μεγ. 100 χαρακτήρες, τουλάχιστον 2 χαρακτήρες|
 Music On Hold Name|Music Hold On Όνομα|
@@ -2495,7 +2513,7 @@ CAMPAIGNS ALLOWING THIS IN-GROUP|ΕΚΣΤΡΑΤΕΙΕΣ οποίες καθισ�
 This is the secret, or password, for the server in the iax auto-generated conf file for this server on other servers. Limit is 20 characters alphanumeric dash and underscore accepted. Default is test|Αυτό είναι το μυστικό, ή τον κωδικό πρόσβασης για το διακομιστή στο IAX που δημιουργείται αυτόματα conf αρχείο για αυτό το διακομιστή σε άλλους servers. Όριο είναι 20 χαρακτήρες αλφαριθμητικό παύλα και υπογράμμισης δεκτή. Προεπιλογή είναι δοκιμή|
 Delete Voicemail After Email|Διαγραφή Voicemail Μετά Email|
 This optional setting allows you to have the voicemail messages deleted from the system after they have been emailed out. Default is N|Αυτή η προαιρετική ρύθμιση επιτρέπει να έχετε το τηλεφωνητή μηνύματα διαγράφονται από το σύστημα αφού έχουν ήδη αποσταλεί έξω. Προεπιλογή είναι N|
-Last Campaign Call Date|Ημερομηνία τελευταίας Καμπάνια Call|
+Last Campaign Call Date|Ημερομηνία τελευταίας Καμπάνια τηλεφωνώ|
 This is the last time that a call was handled by an agent logged into this campaign|Αυτή είναι η τελευταία φορά που μια κλήση αυτή γίνεται από έναν πράκτορα συνδεθεί σε αυτή την καμπάνια|
 Custom User Fields|Custom χρήστη Κενά|
 These five fields can be used for various purposes, and they can be populated in the web form addresses and scripts as user_custom_one and so on|Αυτές οι πέντε τομείς που μπορούν να χρησιμοποιηθούν για διάφορους σκοπούς, και μπορούν να κατοικείται σε διευθύνσεις φόρμα και σενάρια ως user_custom_one και ούτω καθεξής|
@@ -3407,3 +3425,224 @@ Search Method|Μέθοδος Αναζήτηση|
 USING THIS CALL MENU|Χρησιμοποιώντας αυτό το μενού ΠΡΟΣΚΛΗΣΗ|
 DELETE THIS CALL MENU|ΔΙΑΓΡΑΨΕΤΕ αυτό το μενού Κλήση|
 Click here to see Admin changes to this CALL MENU|Κάντε κλικ εδώ για να δείτε Διαχειριστής αλλαγές σε αυτό το μενού Κλήση |
+### START translations for 2.6 release ###
+In-Group Manual Dial|Σε-Group Dial Εγχειρίδιο|
+In-Group Manual Dial Select|Σε-Group Manual Dial Επιλογή|
+This feature allows you to enable the ability for agents to place manual dial outbound calls that are logged as in-group calls assigned to a specific in-group. The MANUAL_DIAL option allows the placing of phone calls out through an In-Group to the agent placing the call. The NO_DIAL option allows the agent to log time on a call that does not exist, as if it were a real call, this is often used for logging email or faxing time. The BOTH option will allow both call and no-call in-group dialing. The default is DISABLED|Αυτό το χαρακτηριστικό σας επιτρέπει να ενεργοποιήσετε τη δυνατότητα για τους πράκτορες για να τοποθετήσετε το εγχειρίδιο dial εξερχόμενες κλήσεις που έχουν καταγραφεί, όπως στην ομάδα καλεί έναν ειδικό στην ομάδα. Η MANUAL_DIAL επιλογή επιτρέπει τη διάθεση του τηλεφώνου φωνάζει μέσα από μια εσωτερική ομάδα στον πράκτορα διάθεση την κλήση. Η NO_DIAL η επιλογή επιτρέπει στον πράκτορα να συνδεθούν χρόνο σε μια κλήση που δεν υπάρχει, σαν να ήταν μια πραγματική κλήση, αυτό είναι συχνά χρησιμοποιείται για τη σύνδεση ηλεκτρονικού ταχυδρομείου ή φαξ χρόνο. Η ΔΥΟ επιλογή θα επιτρέψει τόσο κλήση και όχι κλήση στην ομάδα κλήσης. Η προεπιλογή είναι απενεργοποιημένη|
+This option is only active if the above In-Group Manual Dial feature is not DISABLED. This option restricts the selectable In-Groups that the agent can place In-Group Manual Dial calls through. CAMPAIGN_SELECTED will show only the in-groups that the campaign has set as allowable in-groups. ALL_USER_GROUP will show all of the in-groups that are viewable to the members of the user group that the agent belongs to|Αυτή η επιλογή είναι ενεργή μόνο αν η παραπάνω Σε ομαδική Manual Dial χαρακτηριστικό δεν είναι απενεργοποιημένη. Η επιλογή αυτή περιορίζει τη δυνατότητα επιλογής In-Groups ότι ο πράκτορας μπορεί να τοποθετήσει Σε ομαδική Manual Dial για κλήσεις μέσω. CAMPAIGN_SELECTED θα δείξει μόνο τις σε ομάδες ότι η εκστρατεία έχει θέσει ως επιτρεπόμενο σε ομάδες. ALL_USER_GROUP θα δείξει όλες τις in-ομάδες που είναι ορατά στα μέλη της ομάδας χρηστών ότι ο παράγων ανήκει|
+Dial In-Group CID|Dial In-Ομάδα CID|
+If the agent campaign allows for Manual In-Group Dialing, this caller ID number will be sent as the outgoing CID of the phone call if it is populated, overriding the campaign settings and list CID override setting. Default is empty|Εάν η καμπάνια παράγοντα επιτρέπει τη χειροκίνητη Σε ομαδική κλήση, ο αριθμός ταυτότητας καλούντος θα αποσταλεί ως ο απερχόμενος CID της τηλεφωνικής κλήσης, εάν έχει συμπληρωθεί, παρακάμπτοντας τις ρυθμίσεις της καμπάνιας και η λίστα CID ρύθμιση παράκαμψης. Η προεπιλογή είναι άδειο|
+You can also use LTMG or XFTAMM as statuses to trigger an automatic transfer to the Leave-Voicemail option|Μπορείτε επίσης να χρησιμοποιήσετε LTMG ή XFTAMM και των καταστάσεων για να προκαλέσει την αυτόματη μεταφορά στην επιλογή Αφήστε-Voicemail|
+Send to Answering Machine Message|Αποστολή μηνύματος Απάντηση Machine|
+Safe Harbor Audio Field|Safe Harbor Πεδίο ήχου|
+This optional setting allows you to define a field in the list that the system will use as the audio filename for each lead in place of the Safe Harbor Audio file. If this is set to DISABLED the Safe Harbor Audio file will always be used. The system will do no validation to make sure that the audio file exists other than to make sure the value of the field is at least one character, so if you want a lead to use the default Safe harbor Audio then you just set the field value in the lead to empty. You can use the pipe character to link multiple audio files together in the field value for each lead. Default is DISABLED. Here is the list of fields that can be used for this setting|Αυτή η προαιρετική ρύθμιση αυτή σας επιτρέπει να ορίσετε ένα πεδίο στη λίστα ότι το σύστημα θα χρησιμοποιεί ως όνομα αρχείου ήχου για κάθε απαγωγή στη θέση του αρχείου ήχου Safe Harbor. Εάν αυτό έχει οριστεί σε απενεργοποιήσει την ασφαλή αρχείο ήχου Harbor θα πρέπει να χρησιμοποιείται πάντα. Το σύστημα θα κάνει καμία επικύρωση για να βεβαιωθείτε ότι το αρχείο ήχου υπάρχει εκτός από το να βεβαιωθείτε ότι η τιμή του πεδίου είναι τουλάχιστον ένα χαρακτήρα, οπότε αν θέλετε ένα προβάδισμα για να χρησιμοποιήσετε την προεπιλεγμένη Safe ήχου λιμάνι, τότε μόλις την τιμή του πεδίου το προβάδισμα για να αδειάσει. Μπορείτε να χρησιμοποιήσετε το χαρακτήρα σωλήνα για να συνδέσετε πολλαπλά αρχεία ήχου μαζί με την τιμή του πεδίου για κάθε απαγωγή. Προεπιλογή είναι απενεργοποιημένη. Εδώ είναι η λίστα των πεδίων που μπορούν να χρησιμοποιηθούν για αυτή τη ρύθμιση|
+Call Menu Qualify Enabled|Μενού κλήσεων Προκριματικά Enabled|
+This setting enables the option in Call Menus to put a SQL qualification on the people that hear that call menu. For more information on how that feature works, view the help for Call Menus. Default is 0 for disabled|Αυτή η ρύθμιση επιτρέπει την επιλογή στο μενού Κλήση για να τεθεί ένα SQL προσόντα για τους ανθρώπους που ακούω ότι το μενού κλήσης. Για περισσότερες πληροφορίες σχετικά με το πώς αυτό το χαρακτηριστικό λειτουργεί, δείτε τη βοήθεια για τα μενού κλήσεων. Η προεπιλογή είναι 0 για άτομα με ειδικές ανάγκες|
+Qualify SQL|Προκριθείτε SQL|
+This field allows you to input SQL - Structured Query Language - database fragments, like with Filters, to determine whether this call menu should play for the caller or not. This feature only works if the call has the callerIDname set prior to being sent to this call menu, either as an outbound survey transfer, or through the use of a drop call menu for an In-Group call. If there is a match, the call will proceed as normal. If there is no match, the call will go to the D option or the invalid option if no D option is set. You cannot use single-quotes in this field, only double-quotes if they are needed. Default is empty for disabled|Το πεδίο αυτό σας επιτρέπει να εισάγετε SQL - Structured Query Language - θραύσματα της βάσης δεδομένων, όπως και με τα φίλτρα, να καθοριστεί αν αυτό το μενού κλήσης θα πρέπει να παίξει για τον καλούντα ή όχι. Αυτό το χαρακτηριστικό λειτουργεί μόνο αν η κλήση έχει το σύνολο callerIDname πριν αποσταλεί σε αυτό το μενού κλήσης, είτε ως εξερχόμενη μεταφορά έρευνα, ή με τη χρήση ενός μενού κλήσης πτώση για μια κλήση Σε-Group. Αν υπάρχει ένας αγώνας, η κλήση θα προχωρήσει κανονικά. Αν δεν υπάρχει αντιστοιχία, η κλήση θα πάει στο D επιλογή ή την επιλογή δεν είναι έγκυρη αν δεν επιλογή Δ έχει οριστεί. Δεν μπορείτε να χρησιμοποιήσετε σε εισαγωγικά σε αυτόν τον τομέα, μόνο διπλά εισαγωγικά, εφόσον είναι αναγκαία. Η προεπιλογή είναι άδειο για άτομα με ειδικές ανάγκες|
+Admin List Counts|Διαχειριστής Counts List|
+This setting allows you to disable the list counts that appear on the Lists listing and the Campaign modify screens. Default is 1 for enabled|Αυτή η ρύθμιση σας επιτρέπει να απενεργοποιήσετε τις μετρήσεις λίστα που εμφανίζεται στην λίστα λίστες και τις οθόνες να τροποποιήσει καμπάνιας. Η προεπιλογή είναι 1 σε ενεργοποιημένο|
+The Y_API_LAUNCH option can be used with the agent API to launch the webphone in a separate Iframe or window|Η επιλογή Y_API_LAUNCH μπορεί να χρησιμοποιηθεί με το API παράγοντα για την έναρξη του webphone σε ένα ξεχωριστό Iframe ή το παράθυρο|
+If the option has BLANK at the end, then users are allowed to dial leads with no owner defined in addition to owner defined leads|Εάν η επιλογή έχει κενό στο άκρο, τότε οι χρήστες έχουν τη δυνατότητα να καλέσετε οδηγεί με καθορισμένους χωρίς ιδιοκτήτη ορίζεται επιπλέον στον ιδιοκτήτη οδηγεί|
+Voicemail Greeting|Χαιρετισμός Voicemail|
+This optional setting allows you to define a voicemail greeting audio file from the audio store. Default is blank|Αυτή η προαιρετική ρύθμιση αυτή σας επιτρέπει να ορίσετε ένα φωνητικό μήνυμα χαιρετισμού αρχείου ήχου από το κατάστημα ήχου. Η προεπιλογή είναι κενή|
+Allow Voicemail Greeting Chooser|Αφήστε Voicemail Ευχετήριες Chooser|
+If this setting is enabled it will allow you to choose an audio file from the audio store to be played as the voicemail greeting to a specific voicemail box. Default is 0 for disabled|Αν αυτή η ρύθμιση είναι ενεργοποιημένη, θα σας επιτρέψει να επιλέξετε ένα αρχείο ήχου από τον ήχο κατάστημα για να παίξει ως το χαιρετισμό φωνητικού ταχυδρομείου σε ένα συγκεκριμένο πλαίσιο τηλεφωνητή. Η προεπιλογή είναι 0 για άτομα με ειδικές ανάγκες|
+File to Delete|Αρχείων για να διαγράψετε|
+Agent Pause After Next Call Link|Παύση Agent Μετά επόμενο σύνδεσμο Call|
+This option if enabled will display a link on the agent screen that will let the agent go on pause automatically after they hang up their next call. Default is DISABLED|Αυτή η επιλογή, αν ενεργοποιηθεί, θα εμφανίσει ένα σύνδεσμο στην οθόνη παράγοντα που θα αφήσει ο πράκτορας πάει σε παύση αυτόματα μετά θα το κλείσεις επόμενη κλήση τους. Προεπιλογή είναι απενεργοποιημένη|
+Owner Populate|Ιδιοκτήτης Συμπλήρωση|
+If this is enabled and the owner field of the lead is blank, the owner field for the lead will populate with the user ID of the agent that handles the call first. Default is DISABLED|Αν αυτό είναι ενεργοποιημένο και το πεδίο ιδιοκτήτης του μολύβδου είναι κενό, το πεδίο ιδιοκτήτη για το μόλυβδο θα συμπληρώσετε με το αναγνωριστικό χρήστη του πράκτορα που χειρίζεται την κλήση πρώτα. Προεπιλογή είναι απενεργοποιημένη|
+This field allows you to customize the name of the recording when Campaign recording is ONDEMAND or ALLCALLS. The allowed variables are|Αυτό το πεδίο σας επιτρέπει να προσαρμόσετε το όνομα της εγγραφής όταν η εγγραφή Εκστρατεία OnDemand ή ALLCALLS. Τα κατοικίδια μεταβλητές είναι|
+The default is FULLDATE_AGENT and would look like this 20051020-103108_6666. Another example is CAMPAIGN_TINYDATE_CUSTPHONE which would look like this TESTCAMP_51020103108_3125551212. Te resulting filename must be less than 90 characters in length|Η προεπιλογή είναι FULLDATE_AGENT και θα μοιάζει με αυτό 20051020-103108_6666. Ένα άλλο παράδειγμα είναι CAMPAIGN_TINYDATE_CUSTPHONE που θα μοιάζει με αυτό TESTCAMP_51020103108_3125551212. Te όνομα αρχείου που προκύπτει πρέπει να είναι μικρότερο από 90 χαρακτήρες σε μήκος|
+This field will override the Campaign Recording Filenaming Scheme unless it is set to NONE. The allowed variables are|Το πεδίο αυτό θα αντικαταστήσει το μενού Εγγραφή Εκστρατεία Σχέδιο filenaming, εκτός αν δεν έχει καθοριστεί. Τα κατοικίδια μεταβλητές είναι|
+Audit Comments|Σχόλια Ελέγχου|
+This option allows comments to be moved to an audit table. No longer editable, but viewable along with the date-time-creator of each comment. Default is N. This is a part of the Quality Control Add-On|Η επιλογή αυτή επιτρέπει σχόλια να μετακινηθεί σε έναν πίνακα ελέγχου. Δεν είναι πλέον επεξεργάσιμη, αλλά προβληθούν μαζί με την ημερομηνία-ώρα-δημιουργός του κάθε σχόλιο. Η προεπιλογή είναι N. Αυτό είναι ένα μέρος της Ποιοτικού Ελέγχου Add-On|
+QueueMetrics Socket Send|QueueMetrics Socket Αποστολή|
+This option, if enabled, will send QM data to a web page that will send it through a socket for logging. The CONNECT_COMPLETE option will send CONNECT, COMPLETEAGENT and COMPLETECALLER events to the url defined below. Default is NONE for disabled|Αυτή η επιλογή, αν ενεργοποιηθεί, θα στείλει QM δεδομένα σε μια ιστοσελίδα που θα στείλει μέσα από μια πρίζα για τη σύνδεση. Η CONNECT_COMPLETE επιλογή θα στείλει CONNECT, COMPLETEAGENT και COMPLETECALLER εκδηλώσεις στο url που ορίζονται κατωτέρω. Προεπιλεγμένη ρύθμιση είναι Καμία για άτομα με ειδικές ανάγκες|
+QueueMetrics Socket Send URL|QueueMetrics Socket Αποστολή URL|
+If Socket Send is enabled above, this is the URL that is used to send the data to. Default is EMPTY for disabled|Αν Socket Send είναι ενεργοποιημένη παραπάνω, είναι η διεύθυνση URL που χρησιμοποιείται για την αποστολή των δεδομένων σε. Προεπιλογή είναι άδειο για άτομα με ειδικές ανάγκες|
+Add Holiday|Προσθήκη διακοπών|
+Modify Holiday|Τροποποίηση διακοπών|
+Delete Holiday|Διαγραφή διακοπών|
+New Holiday Addition|Νέα προσθήκη διακοπών|
+Holidays|Διακοπές|
+Holiday ID|Holiday ID|
+This is the short name of a Holiday Definition. This needs to be a unique identifier. Do not use any spaces or punctuation for this field. max 30 characters, minimum of 2 characters|Αυτή είναι η σύντομη ονομασία ενός Ορισμός διακοπών. Αυτό πρέπει να είναι ένα μοναδικό αναγνωριστικό. Μην χρησιμοποιείτε κενά ή σημεία στίξης για αυτό το πεδίο. max 30 χαρακτήρες, τουλάχιστον 2 χαρακτήρες|
+Holiday Name|Όνομα διακοπών|
+This is a more descriptive name of the Holiday Definition. This is a short summary of the Holiday definition. max 100 characters, minimum of 2 characters|Αυτό είναι ένα πιο περιγραφικό όνομα του Ορισμός διακοπών. Αυτή είναι μια σύντομη περίληψη του ορισμού των διακοπών. max 100 χαρακτήρες, τουλάχιστον 2 χαρακτήρες|
+Holiday Comments|Σχόλια για διακοπές|
+This is where you can place comments for a Holiday Definition such as -10am to 4pm boxing day restrictions-.  max 255 characters|Αυτό είναι όπου μπορείτε να αφήσετε τα σχόλιά έναν ορισμό για διακοπές, όπως-10π.μ. έως 4μ.μ. Boxing Day περιορισμούς-. max 255 χαρακτήρες|
+Holiday Date|Ημερομηνία διακοπών|
+This is the date of the holiday|Αυτή είναι η ημερομηνία των διακοπών|
+Holiday Status|Κατάσταση διακοπών|
+This is the status of the holiday entry. ACTIVE status means that the holiday will be enabled on the holiday date. INACTIVE status means that the holiday will be ignored even on the holiday date. EXPIRED means that the holiday has passed it's holiday date. Default is INACTIVE|Αυτή είναι η κατάσταση από την έναρξη των διακοπών. ACTIVE κατάσταση σημαίνει ότι οι διακοπές θα ενεργοποιηθεί την ημερομηνία διακοπών. Ανενεργή κατάσταση σημαίνει ότι οι διακοπές θα πρέπει να αγνοηθεί, ακόμη και την ημέρα των διακοπών. EXPIRED σημαίνει ότι η αργία έχει περάσει η ημερομηνία των διακοπών του. Προεπιλογή είναι ανενεργό|
+short description of the holiday|σύντομη περιγραφή των διακοπών|
+Day and time options will appear once you have created the Holiday Definition|Ημέρα και ώρα επιλογές θα εμφανιστούν αφού έχετε δημιουργήσει το Ορισμός διακοπών|
+HOLIDAY DEFINITION NOT ADDED|HOLIDAY ορισμός δεν ΠΡΟΣΘΗΚΗ|
+there is already a holiday entry with this ID|υπάρχει ήδη μια καταχώρηση διακοπές με αυτό το ID|
+Holiday ID, name and date must be populated|ID Holiday, το όνομα και η ημερομηνία πρέπει να συμπληρωθεί|
+HOLIDAY ADDED|HOLIDAY ΠΡΟΣΤΙΘΕΜΕΝΗΣ|
+HOLIDAY NOT MODIFIED|HOLIDAY δεν τροποποιούνται|
+HOLIDAY MODIFIED|HOLIDAY MODIFIED|
+HOLIDAY NOT DELETED|HOLIDAY δεν έχουν διαγραφεί|
+Holiday ID must be at least 2 characters in length|ID διακοπές πρέπει να είναι τουλάχιστον 2 χαρακτήρες|
+HOLIDAY DELETION CONFIRMATION|HOLIDAY επιβεβαίωσης διαγραφής|
+Click here to delete holiday|Κάντε κλικ εδώ για να διαγράψετε τις διακοπές|
+HOLIDAY DELETION COMPLETED|ΔΙΑΓΡΑΦΗ HOLIDAY ΟΛΟΚΛΗΡΩΘΗΚΕ|
+Holiday Rule Removed|Κανόνας Holiday Αφαιρέθηκε|
+MODIFY A HOLIDAY|Τροποποιήσετε ένα HOLIDAY|
+CALL TIMES USING THIS HOLIDAY|ΠΡΟΣΚΛΗΣΗ φορές χρησιμοποιώντας αυτό το διακοπών|
+DELETE THIS HOLIDAY DEFINITION|Διαγράψτε αυτό το ΟΡΙΣΜΟΣ HOLIDAY|
+Active Inbound Holiday Definitions for this Record|Active Inbound Ορισμοί διακοπών για αυτό το Record|
+Add inbound holiday rule|Προσθήκη εισερχόμενος κανόνας διακοπών|
+Holiday Rule Added|Κανόνας Holiday Προστέθηκε|
+Holiday Rule Removed|Κανόνας Holiday Αφαιρέθηκε|
+Click here to see Admin changes to this holiday|Κάντε κλικ εδώ για να δείτε Διαχειριστής αλλαγές σε αυτές τις γιορτές|
+Expiration Date|Ημερομηνία λήξης|
+This option allows you to set the date after which leads in this list will not be allowed to be auto-dialed or manual-list-dialed by the system. Default is 2099-12-31|Αυτή η επιλογή σας επιτρέπει να ρυθμίσετε την ημερομηνία μετά την οποία οδηγεί σε αυτή τη λίστα δεν θα επιτρέπεται να είναι αυτόματη ή χειροκίνητη κλήση-list-καλείται από το σύστημα. Η προεπιλογή είναι 12/31/2099|
+Other Campaign DNC|Άλλα DNC Καμπάνιας|
+If the option Use Campaign DNC List is enabled, this option can allow you to use a different campaign DNC list, just put the Campaign ID of the other campaign in this field. If you use this option, the original campaign DNC list will no longer be checked, only the OTHER campaign DNC list will be used. This does not affect use of the Internal System DNC list. Default is EMPTY|Εάν η επιλογή Χρήση Εκστρατεία Λίστα DNC είναι ενεργοποιημένη, αυτή η επιλογή μπορεί να σας επιτρέψει να χρησιμοποιήσετε ένα διαφορετικό κατάλογο DNC εκστρατεία, απλά βάλτε το Αναγνωριστικό καμπάνιας της Άλλης Καμπάνιας σε αυτόν τον τομέα. Εάν χρησιμοποιήσετε αυτήν την επιλογή, ο αρχικός κατάλογος DNC εκστρατεία δεν θα είναι πλέον να ελεγχθεί, μόνο η άλλη λίστα DNC εκστρατεία θα χρησιμοποιηθεί. Αυτό δεν επηρεάζει την χρήση της εσωτερικής λίστας DNC συστήματος. Προεπιλογή είναι άδειο|
+LIST EXPIRED AND SET TO ACTIVE|ΚΑΤΑΛΟΓΟΣ λήξει και ρυθμιστεί ως ενεργή|
+Enhanced Disconnect Logging|Ενισχυμένη Αποσύνδεση Logging|
+This setting enables logging of calls that get a CONGESTION signal with a cause code of 1, 19, 21, 34 or 38. We usually do not recommend enabling this in the USA. Default is 0 for disabled|Αυτή η ρύθμιση επιτρέπει την καταγραφή των κλήσεων που παίρνουν ένα σήμα συμφόρησης κώδικα αιτία των 1, 19, 21, 34 ή 38. Εμείς συνήθως δεν συνιστούμε δίνοντας τους τη δυνατότητα στις ΗΠΑ. Η προεπιλογή είναι 0 για άτομα με ειδικές ανάγκες|
+LIVE_CALL_INBOUND will allow search for a lead while on an inbound call only. LIVE_CALL_INBOUND_AND_MANUAL will allow search for a lead while on an inbound call or while paused. When Lead Search is used on a live inbound call, the lead of the call when it went to the agent will be changed to a status of LSMERG, and the logs for the call will be modified to link to the agent selected lead instead|LIVE_CALL_INBOUND θα επιτρέψει την αναζήτηση για μια στιγμή να οδηγήσει σε μια εισερχόμενη κλήση μόνο. LIVE_CALL_INBOUND_AND_MANUAL θα επιτρέψει την αναζήτηση για μια στιγμή να οδηγήσει σε μια εισερχόμενη κλήση ή όταν είναι σταματημένο. Όταν Lead Αναζήτηση χρησιμοποιείται σε ένα live εισερχόμενη κλήση, το προβάδισμα της κλήσης, όταν πήγε στο πρακτορείο θα πρέπει να αλλάξει σε καθεστώς LSMERG, και τα αρχεία καταγραφής για την κλήση θα πρέπει να τροποποιηθεί ώστε να συνδεθεί με το μέσο που επιλέγεται μολύβδου αντί|
+If this is a call that will go to a Call Menu and then back to an in-group, we suggest you use CUSTOMERCLOSER in this field, and also you need to set the In-Group Search Method in the Call Menu to CLOSER|Εάν αυτό είναι μια κλήση που θα πάει σε ένα μενού κλήσεων και στη συνέχεια πίσω σε μια ομάδα, σας προτείνουμε να χρησιμοποιήσετε CUSTOMERCLOSER σε αυτόν τον τομέα, και επίσης θα πρέπει να ρυθμίσετε το In-Ομάδα μέθοδο αναζήτησης στο μενού Κλήση για στενότερη|
+Add New EMAIL In-Group|Προσθήκη νέου e-mail σε Ομάδα|
+Copy EMAIL In-Group|Αντιγράψτε e-mail σε Ομάδα|
+New Email Group Addition|Νέα προσθήκη Ομάδα Email|
+New Copied Email Group Addition|Νέα Αντιγραφή προσθήκη Ομάδα Email|
+Modify EMAIL In-Group|Τροποποίηση e-mail σε Ομάδα|
+Email In-Groups|E-mail σε Ομάδες|
+Modify Email Accounts|Τροποποίηση Email Λογαριασμοί|
+This option if set to 1 allows the user to modify email accounts in the email account management page|Αυτή η επιλογή, αν έχει ρυθμιστεί στο 1 επιτρέπει στο χρήστη να τροποποιήσει τους λογαριασμούς ηλεκτρονικού ταχυδρομείου στο e-mail τη σελίδα διαχείρισης λογαριασμού|
+Allow Emails|Αφήστε Emails|
+This is where you can set whether the users of this campaign will be able to receive inbound emails in addition to phone calls|Αυτό είναι όπου μπορείτε να ορίσετε αν οι χρήστες αυτής της εκστρατείας θα είναι σε θέση να λάβει τα εισερχόμενα μηνύματα ηλεκτρονικού ταχυδρομείου εκτός από τις τηλεφωνικές κλήσεις|
+This is where you can set whether this system will be able to receive inbound emails in addition to phone calls|Αυτό είναι όπου μπορείτε να ορίσετε αν το σύστημα αυτό θα είναι σε θέση να λάβει τα εισερχόμενα μηνύματα ηλεκτρονικού ταχυδρομείου εκτός από τις τηλεφωνικές κλήσεις|
+VICIDIAL EMAIL ACCOUNTS|VICIDIAL λογαριασμούς ηλεκτρονικού ταχυδρομείου|
+The Vicidial Email Accounts management section allows you to create, copy, and delete email account settings that will allow you to have email messages come into your Vicidial system and be treated as regular calls.  EMAIL ACCOUNTS MUST BE SET UP BY YOU AND AN EMAIL SERVICE PROVIDER - THAT IS NOT COVERED BY THIS MODULE|Η Vicidial τμήμα διαχείρισης λογαριασμών ηλεκτρονικού ταχυδρομείου σας επιτρέπει να δημιουργήσετε, να αντιγράψετε και να διαγράψετε τις ρυθμίσεις του λογαριασμού e-mail που θα σας επιτρέψει να έχετε μηνύματα ηλεκτρονικού ταχυδρομείου που έρχονται σε Vicidial το σύστημά σας και να αντιμετωπίζονται ως κανονικές κλήσεις. ΛΟΓΑΡΙΑΣΜΟΙ EMAIL πρέπει να συσταθεί ΑΠΟ ΕΣΑΣ και μια υπηρεσία παροχής e-mail - το οποίο δεν καλύπτεται από αυτό το module|
+Email Account ID|Email ID λογαριασμού|
+This is the short name of the email account, it is not editable after initial submission, must not contain any spaces and must be between 2 and 20 characters in length|Αυτή είναι η σύντομη ονομασία του λογαριασμού ηλεκτρονικού ταχυδρομείου, δεν είναι δυνατή η επεξεργασία μετά την αρχική υποβολή, δεν πρέπει να περιέχει κενά και πρέπει να είναι μεταξύ 2 και 20 χαρακτήρες|
+Email Account Name|Το όνομα του λογαριασμού|
+This is the full name of the email account, it must be between 2 and 30 characters in length|Αυτό είναι το πλήρες όνομα του λογαριασμού ηλεκτρονικού ταχυδρομείου, θα πρέπει να είναι μεταξύ 2 και 30 χαρακτήρες|
+This determines whether this account will be checked for new email messages to be loaded into the dialer|Αυτό καθορίζει αν αυτός ο λογαριασμός θα πρέπει να ελέγχονται για νέα μηνύματα ηλεκτρονικού ταχυδρομείου που πρέπει να φορτωθεί στο dialer|
+Email Account Description|Email Περιγραφή λογαριασμού|
+This allows for a lengthy description, if needed, of the email account.  255 characters max|Αυτό επιτρέπει για μια μακρά περιγραφή, εάν χρειάζεται, του λογαριασμού ηλεκτρονικού ταχυδρομείου. 255 χαρακτήρες το μέγιστο|
+Email Account Type|Τύπο του λογαριασμού email|
+Specifies whether the account is used for inbound or outbound email messages.  Should be set to INBOUND|Καθορίζει αν ο λογαριασμός που χρησιμοποιείται για τα εισερχόμενα ή εξερχόμενα μηνύματα ηλεκτρονικού ταχυδρομείου. Θα πρέπει να οριστεί σε εισερχόμενα|
+Admin User Group|Διαχειριστής ομάδα χρηστών|
+This is the administrative user group for this inbound group, this allows admin viewing of this in-group restricted by user group. Default is --ALL-- which allows any admin user to view this in-group|Αυτή είναι η διοικητική ομάδα χρηστών για αυτή την εισερχόμενη ομάδα, αυτό επιτρέπει το admin προβολή αυτής στην ομάδα περιορίζεται από ομάδα χρηστών. Η προεπιλογή είναι - ALL - η οποία επιτρέπει σε κάθε χρήστη admin για να δείτε αυτό-ομάδα|
+Email Account Protocol|Email Πρωτόκολλο λογαριασμού|
+This is the email protocol used by the account you are setting up access to.  Currently only IMAP and POP3 accounts are supported|Αυτό είναι το email πρωτόκολλο που χρησιμοποιείται από το λογαριασμό που δημιουργείτε πρόσβαση. Αυτή τη στιγμή υποστηρίζονται μόνο τους λογαριασμούς POP3 και IMAP|
+Email Reply-to Address|Email Απάντηση στη διεύθυνση|
+The email address of the account you are setting up access to.  Replies to email messages from the agent interface will read as coming from this address|Η διεύθυνση ηλεκτρονικού ταχυδρομείου του λογαριασμού σας για τη δημιουργία πρόσβασης. Απαντήσεις σε μηνύματα ηλεκτρονικού ταχυδρομείου από το περιβάλλον παράγοντας θα διαβάσει ότι προέρχονται από αυτή τη διεύθυνση|
+Email Account Server|Email διακομιστή λογαριασμού|
+The email server that the account is housed on|Το e-mail server ότι ο λογαριασμός στεγάζεται σε|
+Email Account User|Email λογαριασμού χρήστη|
+The login used to access this account.  Usually it's the portion of the reply-to address before the -at- symbol|Το login χρησιμοποιείται για την πρόσβαση σε αυτό το λογαριασμό. Συνήθως αυτό είναι το τμήμα της απάντησης για την αντιμετώπιση πριν από την-at-σύμβολο|
+Email Account Password|Email Κωδικός Λογαριασμού|
+The password used to access this account.  This is usually set at the time the email account is created|Ο κωδικός που χρησιμοποιείται για την πρόσβαση σε αυτό το λογαριασμό. Αυτό συνήθως βρίσκεται στην ώρα του λογαριασμού ηλεκτρονικού ταχυδρομείου που έχει δημιουργηθεί|
+Email Frequency Check Rate (mins)|Email ποσοστό ελέγχου συχνότητας (λεπτά)|
+How often this email account should be checked.  The highest rate of frequency at the moment is five minutes; some email providers will not allow more than three login attempts in fifteen minutes before locking the account for an indeterminate amount of time|Πόσο συχνά αυτό το λογαριασμό e-mail θα πρέπει να ελέγχονται. Το υψηλότερο ποσοστό της συχνότητας αυτή τη στιγμή είναι πέντε λεπτά? Ορισμένοι πάροχοι υπηρεσιών ηλεκτρονικού ταχυδρομείου δεν θα επιτρέψει σε περισσότερους από τρεις προσπάθειες σύνδεσης σε δεκαπέντε λεπτά πριν από το κλείδωμα του λογαριασμού για αόριστο χρονικό διάστημα|
+In-Group ID|In-Group ID|
+The In-Group that email messages will be sent to|Η In-Ομάδα ότι τα μηνύματα ηλεκτρονικού ταχυδρομείου θα σταλεί στο|
+Default List ID|Προεπιλογή ID Κατάλογος|
+The List ID that leads will be inserted into if necessary|Το αναγνωριστικό λίστας που οδηγεί θα εισαχθεί στο αν είναι απαραίτητο|
+In-Group Call Handle Method|Σε-Group Μέθοδος λαβή Call|
+This is the action that will be taken when a new email is found in the account.  EMAIL means all email messages will be inserted into vicidial_list as a new lead.  EMAILLOOKUP will search the entire vicidial_list table for the email address in the email column - if the lead is found, that lead's list ID will be used in the record that goes into the vicidial_email_list table.  EMAILLOOKUPRC does the same, but it will only search lists belonging to the campaign selected in the "In-Group Campaign ID" box below.  EMAILLOOKUPRL will only search one particular list, which is the one entered into the "In-Group List ID" box below|Αυτή είναι η δράση που θα πρέπει να ληφθούν όταν ένα νέο μήνυμα ηλεκτρονικού ταχυδρομείου βρίσκεται στο λογαριασμό. EMAIL: όλα τα μηνύματα ηλεκτρονικού ταχυδρομείου θα πρέπει να εισαχθεί σε vicidial_list ως νέο προβάδισμα. EMAILLOOKUP θα ψάξει ολόκληρο τον πίνακα vicidial_list για τη διεύθυνση ηλεκτρονικού ταχυδρομείου στο email στήλη - εάν ο μόλυβδος έχει βρεθεί, ID λίστα που οδηγούν θα χρησιμοποιηθεί στην εγγραφή που πηγαίνει στο vicidial_email_list πίνακα. EMAILLOOKUPRC κάνει το ίδιο, αλλά θα ψάξει μόνο για λίστες που ανήκουν στην εκστρατεία έχει επιλεγεί στο "ID Σε ομαδική εκστρατεία" παρακάτω. EMAILLOOKUPRL θα ψάξει μόνο μια συγκεκριμένη λίστα, η οποία είναι αυτή που έχουν εισαχθεί στο "ID Σε ομαδική List" παρακάτω πλαίσιο|
+In-Group Agent Search Method|Σε-Group Μέθοδος Αναζήτηση Agent|
+The agent search method to be used by the inbound group, LO is Load-Balanced-Overflow and will try to send the call to an agent on the local server before trying to send it to an agent on another server, LB is Load-Balanced and will try to send the call to the next agent no matter what server they are on, SO is Server-Only and will only try to send the calls to agents on the server that the call came in on. Default is LB.|Η μέθοδος αναζήτησης παράγοντα που θα χρησιμοποιηθεί από την εισερχόμενη ομάδα, LO είναι ισορροπημένα-Υπερχείλιση και θα προσπαθήσει να στείλει την κλήση σε έναν πράκτορα στον τοπικό διακομιστή πριν προσπαθήσετε να το στείλετε σε έναν πράκτορα σε άλλο διακομιστή, LB είναι ισορροπημένα και θα προσπαθήσει να στείλει την κλήση στο επόμενο παράγοντα δεν έχει σημασία τι server στον οποίο είναι, έτσι διακομιστή Μόνο και μόνο θα προσπαθήσει να στείλει τις κλήσεις στους πράκτορες στο διακομιστή που ήρθε η κλήση σε σχετικά. Η προεπιλογή είναι LB.|
+In-Group List ID|Σε-Group ID Κατάλογος|
+This is the List ID that will be used to search for a match within|Αυτό είναι το ID Κατάλογος που θα χρησιμοποιηθεί για την αναζήτηση για έναν αγώνα εντός|
+In-Group Campaign ID|Σε Group ID Campaign|
+This is the Campaign ID that will be used to search for a match within|Αυτό είναι το Αναγνωριστικό καμπάνιας που θα χρησιμοποιηθεί για την αναζήτηση για έναν αγώνα εντός|
+Group Handling|Χειρισμός Ομάδα|
+COPY EMAIL GROUP|COPY GROUP EMAIL|
+Email Group ID|Email Group ID|
+Email Group Name|Όνομα Email Ομάδα|
+Source Email Group ID|Πηγή ID ομάδας Email|
+Email Accounts|Λογαριασμοί Email|
+Next Agent Email|Επόμενη Email Agent|
+Start Email URL|Ξεκινήστε URL Email|
+Dispo Email URL|Dispo URL Email|
+No Agent Email URL|Δεν URL Email Agent|
+EMAIL ACCOUNTS USING THIS IN-GROUP|ΛΟΓΑΡΙΑΣΜΟΙ ταχυδρομείου χρησιμοποιώντας αυτή IN-ΟΜΑΔΑ|
+EMAIL GROUP NOT ADDED|ΟΜΙΛΟΣ EMAIL ΧΩΡΙΣ ΠΡΟΣΘΗΚΗ|
+Email group ID must be between 2 and 20 characters in length and contain no|Email ID της ομάδας πρέπει να είναι μεταξύ 2 και 20 χαρακτήρες σε μήκος και δεν περιέχουν|
+Email group name and group color must be at least 2 characters in length|Email όνομα της ομάδας και το χρώμα της ομάδας πρέπει να είναι τουλάχιστον 2 χαρακτήρες|
+EMAIL GROUP ADDED|ΟΜΙΛΟΣ EMAIL ΠΡΟΣΤΙΘΕΜΕΝΗΣ|
+Show Email Accounts|Εμφάνιση Λογαριασμοί Email|
+Add A New Account|Προσθέσετε ένα νέο λογαριασμό|
+Copy An Account|Αντιγράψτε ένα λογαριασμό|
+Dialer Email Account fields|Dialer πεδία λογαριασμό ηλεκτρονικού ταχυδρομείου|
+NEW ACCOUNT|Νέος λογαριασμός|
+SUCCESSFULLY CREATED|Δημιουργήθηκε με επιτυχία|
+All Admin User Groups|Όλα Διαχειριστής Ομάδες Χρηστών|
+ERROR: Inbound emails are not active on this system|ΣΦΑΛΜΑ: Inbound emails δεν δραστηριοποιούνται σε αυτό το σύστημα|
+invalid or null|άκυρη ή null|
+SUCCESSFULLY MODIFIED|Τροποποιήθηκε επιτυχώς|
+There was an unknown error when attempting to copy the new account|Υπήρξε ένα άγνωστο σφάλμα όταν προσπαθείτε να αντιγράψετε το νέο λογαριασμό|
+SUCCESSFULLY COPIED FROM|Αντιγράφηκαν με επιτυχία από|
+source email does not exist|email πηγή δεν υπάρχει|
+ACCOUNT NOT COPIED|Δεν λαμβάνουν υπόψη COPIED|
+Copy New Account from Existing Account|Αντιγράψτε νέου λογαριασμού από τον υπάρχοντα λογαριασμό|
+Account ID to Copy From|Αριθμός λογαριασμού για να αντιγράψει από|
+New Account ID|Νέα αναγνωριστικό λογαριασμού|
+New Account Name|Νέο Όνομα λογαριασμού|
+There are no existing accounts to copy from|Δεν υπάρχουν υπάρχοντες λογαριασμούς να αντιγράψετε από|
+The data you submitted has the following errors|Τα δεδομένα που υποβάλλονται έχει τα ακόλουθα σφάλματα|
+ACCOUNT NOT INSERTED|Δεν λαμβάνουν υπόψη ΕΙΣΗΓΜΕΝΗ|
+ADD NEW INBOUND EMAIL ACCOUNT|Προσθήκη νέων ΕΙΣΕΡΧΟΜΕΝΟ λογαριασμό email|
+CONFIRM DELETION OF INBOUND EMAIL ACCOUNT|Επιβεβαιώστε τη διαγραφή των εισερχόμενων λογαριασμό email|
+Click to delete account|Κάντε κλικ για να διαγράψετε το λογαριασμό|
+ACCOUNT NOT UPDATED|ΔΕΝ υπόψη τις ενημερωμένες|
+UPDATE AN EXISTING INBOUND EMAIL ACCOUNT|Ενημερώσετε μια υπάρχουσα INBOUND λογαριασμό email|
+INBOUND EMAIL ACCOUNT LISTINGS|INBOUND ΑΚΙΝΗΤΑ λογαριασμού e-mail|
+UNREAD EMAILS|Αδιάβασών ηλεκτρονικών ταχυδρομείων|
+Un-handled Emails|Un-χειρισμός Emails|
+Setting this to INGROUP will send an answering machine to an inbound group. Setting this to CALLMENU will send an answering machine to a Call Menu in the system|Ρύθμιση αυτό ingroup θα στείλει έναν αυτόματο τηλεφωνητή σε μια εισερχόμενη ομάδα. Ρύθμιση αυτό CALLMENU θα στείλει έναν αυτόματο τηλεφωνητή σε ένα Μενού Κλήσεων στο σύστημα|
+AMD send to Action|AMD αποστολή σε Δράση|
+This option allows you to define whether a call is sent to the AMD Action when an answering machine is detected. If this is set to N, then the call will be hung up as soon as it is determined to be an answering machine. Default is N|Αυτή η επιλογή σας επιτρέπει να ορίσετε αν μια κλήση στέλνεται στο Action AMD, όταν ένας αυτόματος τηλεφωνητής έχει εντοπιστεί. Εάν αυτό έχει οριστεί σε N, τότε η κλήση θα κρεμαστεί το συντομότερο είναι αποφασισμένη να είναι ένας αυτόματος τηλεφωνητής. Η προεπιλογή είναι N|
+AMD Inbound Group|AMD Inbound Ομάδα|
+If CPD AMD Action is set to INGROUP, then this is the Inbound Group that the call will be sent to if an answering machine is detected|Αν CPD AMD δράση έχει οριστεί σε ingroup, τότε αυτό είναι το Inbound Ομάδα ότι η κλήση θα σταλεί στο αν ένας αυτόματος τηλεφωνητής ανιχνεύεται|
+AMD Call Menu|AMD Μενού Κλήσεων|
+If CPD AMD Action is set to CALLMENU, then this is the Call Menu that the call will be sent to if an answering machine is detected|Αν CPD AMD δράση έχει οριστεί σε CALLMENU, τότε αυτό είναι το Μενού Κλήσεων ότι η κλήση θα σταλεί στο αν ένας αυτόματος τηλεφωνητής ανιχνεύεται|
+Level 8 Disable Add|Επίπεδο 8 Απενεργοποίηση Προσθήκη|
+This setting if enabled will prevent any level 8 user from adding or copying any record in the system, no matter what their user settings are. Excluded from these restrictions are the ability to add DNC and Filter Phone Groups numbers and the Add a New Lead page. Default is 0 for disabled|Η ρύθμιση αυτή εάν είναι ενεργοποιημένη θα αποτρέψει οποιοδήποτε επίπεδο 8 το χρήστη από την προσθήκη ή την αντιγραφή οποιοδήποτε αρχείο στο σύστημα, δεν έχει σημασία ποιες είναι οι ρυθμίσεις των χρηστών τους. Εξαιρούνται από τους περιορισμούς αυτούς είναι η δυνατότητα να προσθέσετε DNC και να φιλτράρω τις ομάδες αριθμών τηλεφώνου και προσθέσετε μια νέα σελίδα Lead. Η προεπιλογή είναι 0 για άτομα με ειδικές ανάγκες|
+You do not have permission to add records on this system|Δεν έχετε άδεια για να προσθέσετε αρχεία σε αυτό το σύστημα|
+These options allows you to limit the viewable callbacks in the agent callback alert section on the agent screen, to only LIVE callbacks.  LIVE callbacks are user-only scheduled callbacks that have hit their trigger date and time. ACTIVE call backs are user-only callbacks that are active in the system but have not yet triggered.  You can view both ACTIVE and LIVE callbacks by selecting ALL_ACTIVE.  Default is ALL_ACTIVE|Αυτές οι επιλογές σάς επιτρέπει να περιορίσετε τα ορατά συναρτήσεις επιστροφής στην επανάκλησης ενότητα συναγερμού παράγοντα στην οθόνη παράγοντα, για να ζήσει μόνο callbacks. ΖΩΝΤΑΝΑ callbacks τον χρήστη προγραμματιστεί μόνο callbacks που έπληξαν την ημερομηνία ενεργοποίησης και το χρόνο τους. ACTIVE πλάτες κλήση από τον χρήστη μόνο callbacks που δραστηριοποιούνται στο σύστημα, αλλά δεν έχουν ακόμη ενεργοποιηθεί. Μπορείτε να δείτε τόσο την ενεργητική όσο και να ζήσουν callbacks επιλέγοντας ALL_ACTIVE. Η προεπιλογή είναι ALL_ACTIVE|
+VICIDIAL ADMIN REPORT LOG|VICIDIAL ADMIN LOG ΕΚΘΕΣΗ|
+VICIDIAL USER ADMIN REPORT LOG|VICIDIAL χρήστη Admin LOG ΕΚΘΕΣΗ|
+VICIDIAL DETAIL ADMIN REPORT LOG|VICIDIAL ADMIN λεπτομερειών καταγραφής ΕΚΘΕΣΗ|
+ADMIN REPORT LOG|ADMIN LOG ΕΚΘΕΣΗ|
+Admin Report Log Viewer|Διαχειριστής Log Viewer Έκθεση|
+Survey Wait Seconds|Έρευνα Περιμένετε Δευτερόλεπτα|
+This is the number of seconds when in Survey mode the system will wait for input from the person called until the survey or drop action is triggered. Is not applied if the Survey Method is HANGUP. Default is 10 seconds|Αυτός είναι ο αριθμός των δευτερολέπτων όταν βρίσκονται σε λειτουργία Survey θα περιμένει το σύστημα για την είσοδο από το πρόσωπο που καλείται μέχρι την έρευνα ή ενέργεια πτώση ενεργοποιείται. Δεν εφαρμόζεται αν η μέθοδος έρευνας είναι ανωμαλίας. Η προεπιλογή είναι 10 δευτερόλεπτα|
+You can add NOINT directly in front of an audio file name to make it so the playback cannot be interrupted with a key press by the caller, the NOINT should not be a part of the filename, it is a special flag for the system. You may also use special purpose .agi scripts in this field as well like the cm_date.agi script, discuss with your administrator for more details|Μπορείτε να προσθέσετε NOINT ακριβώς μπροστά από ένα όνομα αρχείου ήχου να γίνει έτσι η αναπαραγωγή δεν μπορεί να διακοπεί με το πάτημα ενός πλήκτρου από τον καλούντα, ο NOINT δεν θα πρέπει να είναι ένα μέρος του ονόματος του αρχείου, είναι μια ειδική σημαία για το σύστημα. Μπορείτε επίσης να χρησιμοποιήσετε ειδικό σκοπό. AGI σενάρια στον τομέα αυτό, καθώς, όπως το σενάριο cm_date.agi, συζητήστε με το διαχειριστή σας για περισσότερες λεπτομέρειες|
+DROP will drop the call using the campaign drop method but still log the call as a PM played message status|DROP θα μειωθεί η κλήση χρησιμοποιώντας τη μέθοδο της πτώσης της εκστρατείας, αλλά εξακολουθεί να καταγράψει την κλήση ως PM έπαιξε κατάσταση του μηνύματος|
+Quality Control|Ποιοτικός Έλεγχος|
+Source User|Χρήστης πηγή|
+>Admin<|>Διαχειριστής<|
+Campaign Call Date|Εκστρατεία Ημερομηνία κλήσης|
+Lead Recycling|Μόλυβδος Ανακύκλωση|
+Day outbound call count for this campaign|Ημέρα εξερχόμενο αριθμό κλήσης για αυτήν την καμπάνια|
+State rules defined for this call time|Κανόνες για τις κρατικές ορίζεται, για το χρόνο εφημερίας|
+in seconds|σε δευτερόλεπτα|
+Agent Display Dialable Leads|πράκτορα dial απεικόνιση οδηγεί|
+Agent Display Queue Count|πράκτορα μετράνε ουρά οθόνη|
+Manual Dial Filter|εγχειρίδιο dial φίλτρο|
+Agent Call Re-Queue Button|πράκτορα ουρά κλήση και πάλι το κουμπί|
+LEADS COUNT|οδηγεί μετράνε|
+number:|αριθμός:|
+server:|διακομιστή:|
+audio chooser|ήχου επιλογέα|
+voicemail chooser|επιλογέα αυτόματου τηλεφωνητή|
+FILTER ID|φίλτρο ταυτότητα|
+FILTER NAME|Όνομα του φίλτρου|
+Show Email Groups|δείχνουν ομάδες ταχυδρομείου|
+Email Accounts|Λογαριασμοί αλληλογραφίας|
+CallCard Admin|Καλέστε Διαχειριστής κάρτα|
+ Contacts | Επαφές |
+We STRONGLY recommend uploading only 16bit Mono 8k PCM WAV audio files|Συνιστούμε φόρτωμα μόνο 16bit Mono 8k PCM WAV αρχεία ήχου|
+All spaces will be stripped from uploaded audio file names|Όλοι οι χώροι θα πρέπει να αφαιρεθεί από Ανέβηκαν ήχου ονόματα αρχείων|
+ERROR: Default value cannot be longer than maximum field length|σφάλματος: προεπιλεγμένη τιμή δεν μπορεί να είναι μεγαλύτερο από το μέγιστο μήκος του πεδίου|

@@ -1,7 +1,7 @@
 <?php 
 # fcstats.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -20,7 +20,11 @@
 # 110703-1828 - Added download option
 # 111104-1213 - Added user_group restrictions for selecting in-groups
 # 120224-0910 - Added HTML display option with bar graphs
+# 120705-2007 - Changed SALES to use sales status flag
+# 130414-0126 - Added report logging
 #
+
+$startMS = microtime();
 
 require("dbconnect.php");
 
@@ -72,15 +76,6 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
-	{
-	mysql_close($link);
-	$use_slave_server=1;
-	$db_source = 'S';
-	require("dbconnect.php");
-	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
-	}
-
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
 if ($DB) {$HTML_text.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
@@ -99,6 +94,35 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
     Header("HTTP/1.0 401 Unauthorized");
     echo "Nome ou Senha inválidos: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
+	}
+
+##### BEGIN log visit to the vicidial_report_log table #####
+$LOGip = getenv("REMOTE_ADDR");
+$LOGbrowser = getenv("HTTP_USER_AGENT");
+$LOGscript_name = getenv("SCRIPT_NAME");
+$LOGserver_name = getenv("SERVER_NAME");
+$LOGserver_port = getenv("SERVER_PORT");
+$LOGrequest_uri = getenv("REQUEST_URI");
+$LOGhttp_referer = getenv("HTTP_REFERER");
+if (preg_match("/443/i",$LOGserver_port)) {$HTTPprotocol = 'https://';}
+  else {$HTTPprotocol = 'http://';}
+if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='';}
+else {$LOGserver_port = ":$LOGserver_port";}
+$LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
+
+$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group, $query_date, $end_date, $shift, $file_download, $report_display_type|', url='$LOGfull_url';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$report_log_id = mysql_insert_id($link);
+##### END log visit to the vicidial_report_log table #####
+
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysql_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect.php");
+	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
@@ -279,7 +303,18 @@ $HTML_text.="In-Group Fronter-Closer Stats Report                      $NOW_TIME
 $HTML_text.="\n";
 $HTML_text.="---------- TOTALS FOR $query_date_BEGIN to $query_date_END\n";
 
-$stmt="select count(*) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='" . mysql_real_escape_string($group) . "' and status = 'SALE';";
+$sale_dispo_stmt="select distinct status from vicidial_campaign_statuses where sale='Y' and campaign_id in (SELECT campaign_id from vicidial_campaigns where closer_campaigns LIKE \"% " . mysql_real_escape_string($group) . " %\" $LOGallowed_campaignsSQL) UNION select distinct status from vicidial_statuses where sale='Y'";
+if ($DB) {$HTML_text.="$sale_dispo_stmt\n";}
+$sale_dispo_rslt=mysql_query($sale_dispo_stmt, $link);
+$sale_dispos="'SALE'"; $sale_dispo_str="|SALE";
+while ($ssrow=mysql_fetch_row($sale_dispo_rslt)) {
+	$sale_dispos.=",'$ssrow[0]'";
+	$sale_dispo_str.="|$ssrow[0]";
+}
+$sale_dispo_str.="|";
+if ($DB) {$HTML_text.="Sale dispo string: $sale_dispo_str\n";}
+
+$stmt="select count(*) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='" . mysql_real_escape_string($group) . "' and status in ($sale_dispos);";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
 $row=mysql_fetch_row($rslt);
@@ -412,7 +447,7 @@ while ($i < $users_to_print)
 		{
 		$row=mysql_fetch_row($rslt);
 		$recL=0;
-		if ( ($row[0]=='SALE') and ($recL < 1) ) {$A1=$row[1]; $recL++; $sales=($sales + $row[1]);}
+		if ( (preg_match("/\|$row[0]\|/", $sale_dispo_str)) and ($recL < 1) ) {$A1=$row[1]; $recL++; $sales=($sales + $row[1]);}
 	#	if ( ($row[0]=='A2') and ($recL < 1) ) {$A2=$row[1]; $recL++; $sales=($sales + $row[1]);}
 	#	if ( ($row[0]=='A3') and ($recL < 1) ) {$A3=$row[1]; $recL++; $sales=($sales + $row[1]);}
 	#	if ( ($row[0]=='A4') and ($recL < 1) ) {$A4=$row[1]; $recL++; $sales=($sales + $row[1]);}
@@ -665,12 +700,13 @@ while ($i < $users_to_print)
 		{
 		$row=mysql_fetch_row($rslt);
 		$recL=0;
-		if ( ($row[0]=='SALE') and ($recL < 1) ) 
+		if ( preg_match("/\|$row[0]\|/", $sale_dispo_str) and ($recL < 1) ) 
 			{
 			$A1=$row[1]; $recL++; 
 			$sales=($sales + $row[1]);
 			$points = ($points + ($row[1] * 1) );
 			}
+		/*
 		if ( ($row[0]=='A2') and ($recL < 1) ) 
 			{
 			$A2=$row[1]; $recL++; 
@@ -693,6 +729,7 @@ while ($i < $users_to_print)
 			$uBOT=($uBOT + $row[1]);
 			$points = ($points + ($row[1] * 3) );
 			}
+		*/
 #		if ( ($row[0]=='A5') and ($recL < 1) ) {$A5=$row[1]; $recL++;}
 #		if ( ($row[0]=='A6') and ($recL < 1) ) {$A6=$row[1]; $recL++;}
 #		if ( ($row[0]=='A7') and ($recL < 1) ) {$A7=$row[1]; $recL++;}
@@ -745,7 +782,7 @@ while ($i < $users_to_print)
 	if ($A1>$max_sales) {$max_sales=$A1;}
 	if ($DROP>$max_drops) {$max_drops=$DROP;}
 	if ($OTHER>$max_other) {$max_other=$OTHER;}
-	if ($sales>$max_sales2) {$max_sales=$sales;}
+	if ($sales>$max_sales2) {$max_sales2=$sales;}
 	if ($Cpct>$max_conv_pct) {$max_conv_pct=$Cpct;}
 	$graph_stats[$i][0]="$user[$i] - $full_name[$i]";
 	$graph_stats[$i][1]=$USERcalls[$i];
@@ -893,10 +930,8 @@ if ($file_download > 0)
 	flush();
 
 	echo "$CSV_text";
-
-	exit;
 	}
-	else 
+else 
 	{
 	$JS_onload.="}\n";
 	$JS_text.=$JS_onload;
@@ -916,10 +951,28 @@ if ($file_download > 0)
 
 
 
+if ($db_source == 'S')
+	{
+	mysql_close($link);
+	$use_slave_server=0;
+	$db_source = 'M';
+	require("dbconnect.php");
+	}
+
+$endMS = microtime();
+$startMSary = explode(" ",$startMS);
+$endMSary = explode(" ",$endMS);
+$runS = ($endMSary[0] - $startMSary[0]);
+$runM = ($endMSary[1] - $startMSary[1]);
+$TOTALrun = ($runS + $runM);
+
+$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+
+exit;
+
 }
-
-
-
 
 
 ?>

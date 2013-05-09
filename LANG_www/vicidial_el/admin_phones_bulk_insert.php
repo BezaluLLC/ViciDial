@@ -11,10 +11,11 @@
 # 120104-2023 - Added webphone options
 # 120209-1545 - Added phone context option
 # 120223-2249 - Removed logging of good login passwords if webroot writable is enabled
+# 120820-1026 - Added webphone option Y_API_LAUNCH
 #
 
-$admin_version = '2.4-5';
-$build = '120223-2249';
+$admin_version = '2.6-6';
+$build = '120820-1026';
 
 
 require("dbconnect.php");
@@ -76,7 +77,7 @@ if ($non_latin < 1)
 	$alias_suffix = ereg_replace("[^0-9a-zA-Z]","",$alias_suffix);
 	$protocol = ereg_replace("[^-_0-9a-zA-Z]","",$protocol);
 	$local_gmt = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$local_gmt);
-	$is_webphone = ereg_replace("[^NY]","",$is_webphone);
+	$is_webphone = ereg_replace("[^-_0-9a-zA-Z]","",$is_webphone);
 	$webphone_dialpad = ereg_replace("[^-_0-9a-zA-Z]","",$webphone_dialpad);
 	$webphone_auto_answer = ereg_replace("[^NY]","",$webphone_auto_answer);
 	$use_external_server_ip = ereg_replace("[^NY]","",$use_external_server_ip);
@@ -229,7 +230,7 @@ if ($action == "HELP")
 	<BR>
 	<A NAME="is_webphone">
 	<BR>
-	<B>Set As Webphone -</B>  Setting this option to Y will attempt to load a web-based phone when the agent logs into their agent screen. Default is N.
+	<B>Set As Webphone -</B>  Setting this option to Y will attempt to load a web-based phone when the agent logs into their agent screen. Default is N. The Y_API_LAUNCH option can be used with the agent API to launch the webphone in a separate Iframe or window.
 
 	<BR>
 	<A NAME="webphone_dialpad">
@@ -318,11 +319,12 @@ if ($action == "BLANK")
 	echo "<tr bgcolor=#B6D3FC><td align=right>Client Protocol: </td><td align=left><select size=1 name=protocol><option>SIP</option><option>Zap</option><option>IAX2</option><option>EXTERNAL</option></select> $NWB#protocol$NWE </td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Local GMT: </td><td align=left><select size=1 name=local_gmt><option>12.75</option><option>12.00</option><option>11.00</option><option>10.00</option><option>9.50</option><option>9.00</option><option>8.00</option><option>7.00</option><option>6.50</option><option>6.00</option><option>5.75</option><option>5.50</option><option>5.00</option><option>4.50</option><option>4.00</option><option>3.50</option><option>3.00</option><option>2.00</option><option>1.00</option><option>0.00</option><option>-1.00</option><option>-2.00</option><option>-3.00</option><option>-3.50</option><option>-4.00</option><option selected>-5.00</option><option>-6.00</option><option>-7.00</option><option>-8.00</option><option>-9.00</option><option>-10.00</option><option>-11.00</option><option>-12.00</option></select> (Do NOT Adjust for DST) $NWB#gmt$NWE </td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Phone Context: </td><td align=left><input type=text name=phone_context size=20 maxlength=20> $NWB#phone_context$NWE </td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Set As Webphone: </td><td align=left><select size=1 name=is_webphone><option>Y</option><option selected>N</option></select>$NWB#is_webphone$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Set As Webphone: </td><td align=left><select size=1 name=is_webphone><option>Y</option><option selected>N</option><option>Y_API_LAUNCH</option></select>$NWB#is_webphone$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Webphone Dialpad: </td><td align=left><select size=1 name=webphone_dialpad><option selected>Y</option><option>N</option><option>TOGGLE</option><option>TOGGLE_OFF</option></select>$NWB#webphone_dialpad$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Webphone Auto-Answer: </td><td align=left><select size=1 name=webphone_auto_answer><option selected>Y</option><option>N</option></select>$NWB#webphone_auto_answer$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Use External Server IP: </td><td align=left><select size=1 name=use_external_server_ip><option>Y</option><option selected>N</option></select>$NWB#use_external_server_ip$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>NOTE: Submitting this form will NOT trigger a conf file rebuild</td></tr>\n";
 	echo "</TABLE></center>\n";
 	echo "</TD></TR></TABLE>\n";
 	}
@@ -512,6 +514,7 @@ if ($action == "ADD_PHONES_SUBMIT")
 			
 			echo "Phones Inserted: $phones_inserted\n<BR>";
 			echo "Phones Aliases Inserted: $phone_alias_inserted\n<BR>";
+			echo "You now need to manually trigger a conf file rebuild from the System Settings screen\n<BR>";
 			echo "<BR><a href=\"$PHP_SELF\">Start Over</a><BR>\n";
 			}
 		else

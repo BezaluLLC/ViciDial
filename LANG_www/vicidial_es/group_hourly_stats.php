@@ -1,7 +1,7 @@
 <?php
 # group_hourly_stats.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -11,7 +11,12 @@
 # 90508-0644 - Changed to PHP long tags
 # 120221-0159 - Added User Group restrictions
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
+# 130414-0224 - Added report logging
 #
+
+$startMS = microtime();
+
+$report_name='Estadísticas de usuario Cada hora Del Grupo';
 
 require("dbconnect.php");
 
@@ -65,6 +70,26 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
     echo "Nombre y contraseña inválidos del usuario: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
     exit;
 	}
+
+##### BEGIN log visit to the vicidial_report_log table #####
+$LOGip = getenv("REMOTE_ADDR");
+$LOGbrowser = getenv("HTTP_USER_AGENT");
+$LOGscript_name = getenv("SCRIPT_NAME");
+$LOGserver_name = getenv("SERVER_NAME");
+$LOGserver_port = getenv("SERVER_PORT");
+$LOGrequest_uri = getenv("REQUEST_URI");
+$LOGhttp_referer = getenv("HTTP_REFERER");
+if (preg_match("/443/i",$LOGserver_port)) {$HTTPprotocol = 'https://';}
+  else {$HTTPprotocol = 'http://';}
+if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='';}
+else {$LOGserver_port = ":$LOGserver_port";}
+$LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
+
+$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group, $status|', url='$LOGfull_url';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$report_log_id = mysql_insert_id($link);
+##### END log visit to the vicidial_report_log table #####
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
@@ -269,7 +294,7 @@ echo "</TABLE></center>\n";
 echo "<br><br>\n";
 
 
-echo "<br>Inscriba por favor a grupo que usted desea conseguir el stats cada hora para: <form action=$PHP_SELF method=POST>\n";
+echo "<br>Inscriba por favor a grupo que usted desea conseguir el stats cada hora para: <form action=$PHP_SELF method=GET>\n";
 echo "<input type=hidden name=DB value=$DB>\n";
 echo "group: <select size=1 name=group>\n";
 
@@ -312,7 +337,26 @@ echo "<font size=0>\n\n\n<br><br><br>\nScript runtime: $RUNtime seconds</font>";
 </html>
 
 <?php
-	
+
+if ($db_source == 'S')
+	{
+	mysql_close($link);
+	$use_slave_server=0;
+	$db_source = 'M';
+	require("dbconnect.php");
+	}
+
+$endMS = microtime();
+$startMSary = explode(" ",$startMS);
+$endMSary = explode(" ",$endMS);
+$runS = ($endMSary[0] - $startMSary[0]);
+$runM = ($endMSary[1] - $startMSary[1]);
+$TOTALrun = ($runS + $runM);
+
+$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+
 exit; 
 
 ?>

@@ -28,6 +28,8 @@ agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
 agc|phone_only.php|0
+agc|vdc_email_display.php|0
+agc|audit_comments.php|0
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"JAN"|
@@ -323,7 +325,7 @@ Dial Override|Surnumérotation|
 digits only please|Ce champ n'accepte que des chiffres|
 Dial Now|Appel Manuel|
 CB Comments|Commentaires du Rappel|
-Title|Titre|
+ Title| Titre|
 Your Status|Votre Statut|
  STATUS| STATUT|
  RESET| REINITIALISATION|
@@ -333,10 +335,9 @@ Incoming|Entrant|
 Calling|Appeler|
 Called|Appelé|
 Campaign|Campagne|
-Status|Statut|
+>Status|>Statut|
 Inserted|Inséré|
  seconds| secondes|
-HELP|AIDE|
  Login | Ouverture de Session |
 Login:|Ouverture de Session:|
 User |Utilisateur |
@@ -347,7 +348,6 @@ Server|Serveur|
 RECORD |ENREGISTREMENT |
 >HANGUP|>RACCROCHER|
 >XFER|>TRANSFERT|
-PARK|MISE EN ATT|
 IN-NUMBER|IN-NUMBER|
 NUMBER|NOMBRE|
 CALLERID|APPELANT|
@@ -356,16 +356,15 @@ PICKUP|INTERCEPTER|
 CONFERENCE|CONFÉRENCE|
 Refresh|Rafraichir|
 Send DTMF|Envoyez DTMF|
-ORDER|ORDRE|
+>ORDER|>ORDRE|
  on | sur |
 >LOGOUT|>DÉCONNEXION|
  Channel| Canal|
 Extensions|Extensions|
 Conferences|Conférences|
 Conference|Conférence|
-Recording|Enregistrer|
-Record|Enregistrement|
-Welcome|Bienvenue|
+ Recording| Enregistrer|
+Welcome |Bienvenue |
 VOICEMAIL|Boite Vocale|
  NEW| NOUVEAU|
  OLD| ANCIEN|
@@ -376,21 +375,21 @@ Slower|Plus lentement|
 Initializing|Initialisation|
 Invalid|Invalide|
 Username|Username|
-Notes|Notes|
+Notes:|Notes:|
 First|Prenom|
 MI: |Mi:|
-Last|Nom|
+Last |Nom |
 Address|Adresse|
 City|Ville|
-State|État|
+ State| État|
 PostCode|CodePostal|
 Province|Province|
 Vendor ID|CodeVendeur|
 DialCode|DialCode|
 Alt. Phone|Tel. 2nd|
 Show|Visualiser|
-Email|Email|
-Comments|Commentaires|
+ Email| Email|
+ Comments| Commentaires|
 REFRESH|RAFRAICHIR|
 ALT PHONE DIAL|APPEL NUM. 2nd.|
 MAIN PHONE|TÉLÉPHONE PRINCIPAL|
@@ -569,3 +568,79 @@ Agents View|Agents Voir|
 -INCALL|-INCALL|
 -PAUSED|-PAUSE|
 CALL DISPOSITION|APPEL DISPOSITION|
+### START translations for 2.6 release ###
+Click Here to Choose a Dial In-Group|cliquez ici pour choisir un cadran en groupe|
+SELECT A DIAL IN-GROUP|sélectionner un cadran en groupe|
+DIAL IN-GROUP|composer en groupe|
+Dial In-Group|composer en groupe|
+Click Here to Activate|Cliquez ici pour activer|
+Click Here to Deactivate|cliquez ici pour désactiver|
+ERROR: You must enter in search terms, one of these must be populated: lead ID, vendor ID, phone number, last name|erreur: vous devez saisir en termes de recherche, l'un d'entre eux doivent être remplis: id plomb, identification du fournisseur, numéro de téléphone, nom de famille|
+ERROR: You must enter in search terms, one of these must be populated: office number, last name, first name|erreur: vous devez saisir en termes de recherche, l'un d'entre eux doivent être remplis: le numéro du bureau, nom, prénom|
+ERROR: There was a problem with your search terms|erreur: il y avait un problème avec vos termes de recherche|
+Phone and Post Code Time Zone Mismatch|téléphone et code postal fuseau horaire décalage|
+Last Local Call Time|dernière fois d'un appel local|
+Called Count|nombre d'appels|
+Unidentified Hangup Cause Code|non identifiés code de cause de raccrochage|
+YOU MUST SELECT AN AGENT TO TRANSFER TO WHEN USING AGENTDIRECT|vous devez sélectionner un agent de transfert lors de l'utilisation agentdirect|
+Another live agent session was open using your user ID. It has been disabled. Click OK to continue to the agent screen|une autre session de l'agent en direct a été ouvert à l'aide de votre ID utilisateur. il a été désactivé. Cliquez sur OK pour passer à l'écran de l'agent|
+View Comment History|Voir le commentaire historique|
+reset form|réinitialiser|
+SELECT THIS LEAD|sélectionner ce fil|
+YOU MUST BE ON AN ACTIVE INBOUND CALL TO SEARCH FOR A LEAD|vous devez être sur un appel entrant actif pour rechercher un plomb|
+Attachments|pièces jointes|
+Next Call Pause|prochaine pause d'appel|
+-History-|-histoire-|
+SUBMIT SEARCH|soumettre la recherche|
+close |proche |
+AGENT CALL LOG|agent de journal d'appels|
+ LENGTH | longueur |
+ PHONE | téléphone |
+ FULL NAME | nom et prénom |
+ CAMPAIGN | campagne |
+ ALT | autre |
+ HANGUP | raccrochage |
+ INFO | infos |
+phone login|téléphone connexion|
+LAST CALL|dernier appel|
+ CALLBACK | callback |
+ CITY | ville |
+ STATE | Etat |
+ ZIP | zip |
+Phone Number|numéro de téléphone|
+Phone Number Fields|les champs de numéro de téléphone|
+Lead ID|Identifiant conduire|
+ WAIT | attendre |
+ AGENT | Agent |
+ CALL GROUP | appel de groupe |
+ TYPE | catégorie |
+digits only|chiffres seulement|
+DIAL ALERT|composer une alerte|
+WEB FORM SUBMIT|forme web soumettre|
+in campaign|en campagne|
+ DATE\/TIME | Date\/heure |
+ IN\/OUT | dans et hors |
+>GROUPS<|>LES GROUPES<|
+>GO<|>aller<|
+>recording<|>Enregistrement<|
+>SELECT<|>sélectionner<|
+Alert is ON|alerte est présent|
+Alert is OFF|alerte est éteint|
+EMAIL LOG FOR THIS LEAD|email journal pour ce conducteur|
+EMAIL TO|par courriel à|
+ ATTACHMENTS | pièces jointes |
+Called Since Last Reset|appelé depuis la dernière réinitialisation|
+Timezone:|fuseau horaire:|
+Dial Link|composez le lien|
+ LAST | dernier |
+SEARCH FOR A CONTACT|rechercher un contact|
+Notes: when doing a search for a contact, wildcard or partial search terms are not allowed|notes: lors d'une recherche d'un contact, les termes de recherche génériques ou partielle ne sont pas autorisés|
+Contact search requests are all logged in the system|contacts demandes de recherche sont tous enregistrés dans le système|
+Office Number|numéro de bureau|
+First Name|prénom|
+Last Name|nom de famille|
+BU Name|Nom de l'entreprise|
+Department:|département:|
+Group Name|nom de groupe|
+Job Title|titre d'emploi|
+Location:|emplacement:|

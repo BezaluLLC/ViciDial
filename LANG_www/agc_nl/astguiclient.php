@@ -1,7 +1,7 @@
 <?php
 # astguiclient.php - the web-based version of the astGUIclient client application
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least
 # user_level 1 or greater to access this page. Also you need to have the login
@@ -59,6 +59,7 @@
 # 90508-0727 - Changed to PHP long tags
 # 91129-2211 - Replaced SELECT STAR in SQL query
 # 120223-2124 - Removed logging of good login passwords if webroot writable is enabled
+# 130328-0017 - Converted ereg to preg functions
 # 
 
 require("dbconnect.php");
@@ -88,17 +89,17 @@ if (isset($_GET["relogin"]))				{$relogin=$_GET["relogin"];}
 $forever_stop=0;
 $user_abb = "$user$user$user$user";
 while ( (strlen($user_abb) > 4) and ($forever_stop < 200) )
-	{$user_abb = eregi_replace("^.","",$user_abb);   $forever_stop++;}
+	{$user_abb = preg_replace("/^./","",$user_abb);   $forever_stop++;}
 
-$version = '2.2.4-1';
-$build = '120223-2124';
+$version = '2.2.6-1';
+$build = '130328-0017';
 
 ### security strip all non-alphanumeric characters out of the variables ###
-	$DB=ereg_replace("[^0-9a-z]","",$DB);
-	$phone_login=ereg_replace("[^0-9a-zA-Z]","",$phone_login);
-	$phone_pass=ereg_replace("[^0-9a-zA-Z]","",$phone_pass);
-	$user=ereg_replace("[^0-9a-zA-Z]","",$user);
-	$pass=ereg_replace("[^0-9a-zA-Z]","",$pass);
+	$DB=preg_replace("/[^0-9a-z]/","",$DB);
+	$phone_login=preg_replace("/[^0-9a-zA-Z]/","",$phone_login);
+	$phone_pass=preg_replace("/[^0-9a-zA-Z]/","",$phone_pass);
+	$user=preg_replace("/[^0-9a-zA-Z]/","",$user);
+	$pass=preg_replace("/[^0-9a-zA-Z]/","",$pass);
 
 
 if ($force_logout)
@@ -134,13 +135,13 @@ $browser = getenv("HTTP_USER_AGENT");
 $script_name = getenv("SCRIPT_NAME");
 $server_name = getenv("SERVER_NAME");
 $server_port = getenv("SERVER_PORT");
-if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
+if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
   else {$HTTPprotocol = 'http://';}
 if (($server_port == '80') or ($server_port == '443') ) {$server_port='';}
 else {$server_port = "$CL$server_port";}
 $agcPAGE = "$HTTPprotocol$server_name$server_port$script_name";
 $agcDIR = $agcPAGE;
-$agcDIR = eregi_replace('astguiclient.php','',$agcDIR);
+$agcDIR = preg_replace('/astguiclient\.php/i','',$agcDIR);
 
 if( (strlen($user)<2) or (strlen($pass)<2) or (!$auth) or ($relogin == 'YES') )
 	{
@@ -346,7 +347,7 @@ else
 
 	$local_web_callerID_URL_enc = rawurlencode($local_web_callerID_URL);
 
-	$session_ext = eregi_replace("[^a-z0-9]", "", $extension);
+	$session_ext = preg_replace("/[^a-z0-9]/i", "", $extension);
 	if (strlen($session_ext) > 10) {$session_ext = substr($session_ext, 0, 10);}
 	$session_rand = (rand(1,9999999) + 10000000);
 	$session_name = "$StarTtime$US$session_ext$session_rand";
@@ -372,7 +373,7 @@ else
 		$row=mysql_fetch_row($rslt);
 		$favorites_list=$row[0];
 		$h=0;
-		$favorites_listX = eregi_replace("'",'',$favorites_list);
+		$favorites_listX = preg_replace("/\'/i",'',$favorites_list);
 		$favorites = explode(',',$favorites_listX);
 		$favorites_count = count($favorites);
 		$favorites_listX='';
@@ -1208,7 +1209,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 				recLIST = recLIST.replace(regy, '');
 				
 				filename = taskfile;
-				var rec_stop_html = "<a href=\"#\" onclick=\"liverecording_send_recording('Monitor','" + monitorchannelvalue + "','" + taskspan + "','');return false;\">Opnemen";
+				var rec_stop_html = "<a href=\"#\" onclick=\"liverecording_send_recording('Monitor','" + monitorchannelvalue + "','" + taskspan + "','');return false;\">Record";
 				document.getElementById(taskspan).innerHTML = rec_stop_html;
 				}
 			livemonitor_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=" + monitorvalue + "&format=text&channel=" + monitorchannelvalue + "&queryCID=" + queryCID + "&filename=" + filename + "&exten=" + protocol + "/" + extension;
@@ -1271,7 +1272,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 				
 				filename = taskconffile;
 				var channelrec = "Local/" + taskconfrec + "@" + ext_context;
-				var conf_rec_start_html = "<a href=\"#\" onclick=\"conf_send_recording('MonitorConf','" + taskconfspan + "','" + taskconfrec + "','');return false;\">Opnemen</a>";
+				var conf_rec_start_html = "<a href=\"#\" onclick=\"conf_send_recording('MonitorConf','" + taskconfspan + "','" + taskconfrec + "','');return false;\">Record</a>";
 				document.getElementById(taskconfspan).innerHTML = conf_rec_start_html;
 				}
 			confmonitor_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=" + taskconfrectype + "&format=text&channel=" + channelrec + "&filename=" + filename + "&exten=" + recording_exten + "&ext_context=" + ext_context + "&ext_priority=1";
@@ -1387,7 +1388,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=3;
 					if (live_calls > 0)
 						{
-						var live_calls_HTML = "<font face=\"Arial,Helvetica\"><B>LIVE GESPREKKEN OP DEZE TELEFOON:</B></font><BR><table width=100%><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">CLIENT KANAAL</td><td><font class=\"log_title\">REMOTE KANAAL</td><td><font class=\"log_title\">RECORD</td><td><font class=\"log_title\">OPHANGEN</td><td><font class=\"log_title\">XFER</td><td><font class=\"log_title\">PARKEER</td></tr>";
+						var live_calls_HTML = "<font face=\"Arial,Helvetica\"><B>LIVE GESPREKKEN OP DEZE TELEFOON:</B></font><BR><table width=100%><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">CLIENT KANAAL</td><td><font class=\"log_title\">REMOTE KANAAL</td><td><font class=\"log_title\">RECORD</td><td><font class=\"log_title\">OPHANGEN</td><td><font class=\"log_title\">XFER</td><td><font class=\"log_title\">PARK</td></tr>";
 						if ( (LCAcount > live_calls)  || (LCAcount < live_calls) )
 							{
 							LCAe[0]=''; LCAe[1]=''; LCAe[2]=''; LCAe[3]=''; LCAe[4]=''; LCAe[5]=''; 
@@ -1403,7 +1404,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 								{var row_color = '#DDDDFF';}
 							else
 								{var row_color = '#CCCCFF';}
-							var Opnemenbutton = 'Monitor';
+							var Recordbutton = 'Monitor';
 							var conv_ct = (loop_ct + conv_start);
 							var conversation_array = check_live_array[conv_ct].split(" ~");
 							var channelfieldA_array = conversation_array[1].split(": ");
@@ -1415,9 +1416,9 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 							if (recLIST.match(regx)) 
 								{live_calls_HTML = live_calls_HTML + "<span id=\"recordlive" + loop_ct + "\"><a href=\"#\" onclick=\"liverecording_send_recording('StopMonitor','" + channelfieldBtrunk_array[1] + "','recordlive" + loop_ct + "');return false;\">Stop opnemen</span>";}
 							else 
-								{live_calls_HTML = live_calls_HTML + "<span id=\"recordlive" + loop_ct + "\"><a href=\"#\" onclick=\"liverecording_send_recording('Monitor','" + channelfieldBtrunk_array[1] + "','recordlive" + loop_ct + "');return false;\">Opnemen</span>";}
+								{live_calls_HTML = live_calls_HTML + "<span id=\"recordlive" + loop_ct + "\"><a href=\"#\" onclick=\"liverecording_send_recording('Monitor','" + channelfieldBtrunk_array[1] + "','recordlive" + loop_ct + "');return false;\">Record</span>";}
 
-							live_calls_HTML = live_calls_HTML + "</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"livehangup_send_hangup('" + channelfieldBtrunk_array[1] + "');return false;\">OPHANGEN</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"showMainXfeR('MainXfeRBox','" + channelfieldBtrunk_array[1] + "','" + channelfieldA_array[1] + "');return false;\">XFER</a></td><td><font class=\"log_text\"><a href=\"#\" onclick=\"mainxfer_send_redirect('ParK','" + channelfieldBtrunk_array[1] + "');return false;\">PARKEER</td></tr>";
+							live_calls_HTML = live_calls_HTML + "</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"livehangup_send_hangup('" + channelfieldBtrunk_array[1] + "');return false;\">OPHANGEN</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"showMainXfeR('MainXfeRBox','" + channelfieldBtrunk_array[1] + "','" + channelfieldA_array[1] + "');return false;\">XFER</a></td><td><font class=\"log_text\"><a href=\"#\" onclick=\"mainxfer_send_redirect('ParK','" + channelfieldBtrunk_array[1] + "');return false;\">PARK</td></tr>";
 
 							if (LCAe[ARY_ct].length < 1) 
 								{LCAe[ARY_ct] = channelfieldA_array[1];   LCAcontent_change++;  LCAalter++;}
@@ -1637,7 +1638,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=-1;
 					if (parked_count > 0)
 						{
-						var park_HTML = "<table width=600><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">CHANNEL<BR>&nbsp; BEL ID</td><td><font class=\"log_title\">GEPARKEEREERD DOOR<BR>&nbsp; PARKEEREERTIJD</td><td><font class=\"log_title\">OPHANGEN</td><td><font class=\"log_title\">XFER</td><td><font class=\"log_title\">OPPAKKEN</td></tr>"
+						var park_HTML = "<table width=600><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">CHANNEL<BR>&nbsp; BEL ID</td><td><font class=\"log_title\">GEPARKEERD DOOR<BR>&nbsp; PARKEERTIJD</td><td><font class=\"log_title\">OPHANGEN</td><td><font class=\"log_title\">XFER</td><td><font class=\"log_title\">OPPAKKEN</td></tr>"
 						while (loop_ct < parked_count)
 							{
 							loop_ct++;
@@ -1765,7 +1766,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 			show_reglink=1;
 			reglink = "<a href=\"#\" onclick=\"conf_register_room('" + head_conf + "');return false;\">Register</a>";
 			}
-		var conf_head_HTML = "<font class=\"sh_text\">CONFERENTIE " + head_conf + "</b></font><font class=\"sb_text\">&nbsp; &nbsp; Geregistreerd op: " + head_reg + " &nbsp; " + reglink + " &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"basic_originate_call('" + head_conf + "','NO','NO');return false;\">Ga naar conferentie </a><BR><a href=\"#\" onclick=\"check_for_conf_calls('" + head_conf + "','1');return false;\">Ververs </a> &nbsp; &nbsp; <span id=\"conf_rec_link\"><a href=\"#\" onclick=\"conf_send_recording('MonitorConf','conf_rec_link','" + head_conf + "');return false;\">Opnemen</a></span> &nbsp; &nbsp; &nbsp; &nbsp; <input TYPE=TEXT SIZE=15 NAME=conf_dtmf STYLE=\"font-family : sans-serif; font-size : 10px\"> <A HREF=\"#\" onclick=\"SendConfDTMF(" + head_conf + ");\">Stuur DTMF</A> &nbsp; &nbsp; &nbsp; &nbsp; <input TYPE=TEXT SIZE=15 NAME=conf_dial STYLE=\"font-family : sans-serif; font-size : 10px\"> <A HREF=\"#\" onclick=\"SendManualDial('YES'," + head_conf + ");\">Bel van conf</A><BR></font>";
+		var conf_head_HTML = "<font class=\"sh_text\">CONFERENTIE " + head_conf + "</b></font><font class=\"sb_text\">&nbsp; &nbsp; Geregistreerd op: " + head_reg + " &nbsp; " + reglink + " &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"basic_originate_call('" + head_conf + "','NO','NO');return false;\">Ga naar conferentie </a><BR><a href=\"#\" onclick=\"check_for_conf_calls('" + head_conf + "','1');return false;\">Ververs </a> &nbsp; &nbsp; <span id=\"conf_rec_link\"><a href=\"#\" onclick=\"conf_send_recording('MonitorConf','conf_rec_link','" + head_conf + "');return false;\">Record</a></span> &nbsp; &nbsp; &nbsp; &nbsp; <input TYPE=TEXT SIZE=15 NAME=conf_dtmf STYLE=\"font-family : sans-serif; font-size : 10px\"> <A HREF=\"#\" onclick=\"SendConfDTMF(" + head_conf + ");\">Stuur DTMF</A> &nbsp; &nbsp; &nbsp; &nbsp; <input TYPE=TEXT SIZE=15 NAME=conf_dial STYLE=\"font-family : sans-serif; font-size : 10px\"> <A HREF=\"#\" onclick=\"SendManualDial('YES'," + head_conf + ");\">Bel van conf</A><BR></font>";
 	
 		document.getElementById("ConfereNceHeaderContent").innerHTML = conf_head_HTML;
 		check_for_conf_calls(head_conf,taskrefresh);
@@ -2735,7 +2736,7 @@ echo "</head>\n";
 </span>
 
 <span style="position:absolute;left:0px;top:12px;z-index:29;" id="TrunkHangupBox">
-    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> TRUNK HANGUP <BR><BR>
+    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> TRUNK hangup <BR><BR>
 	<span id="TrunkHangupContent"> Active Trunks Menu </span><BR>
 	<span id="TrunkHangup_HUlink"><a href="#" onclick="busyhangup_send_hangup('Trunk');return false;">Trunk Ophangen</a> &nbsp; | &nbsp; </span>
 	<span id="TrunkHangup_HJlink"><a href="#" onclick="busyhangup_send_redirect('Trunk','HIJACK');return false;">Trunk Kapen</a> &nbsp; | &nbsp; </span>
@@ -2786,7 +2787,7 @@ echo "</head>\n";
 </span>
 
 <span style="position:absolute;left:40px;top:12px;z-index:41;" id="ParkDisplayBox">
-    <table border=0 bgcolor="#FFFFCC" width=640 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> PARKEEREER GESPREKKEN:</b> <div class="scroll_park" id="ParkDisplayContents"></div>
+    <table border=0 bgcolor="#FFFFCC" width=640 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> PARKEER GESPREKKEN:</b> <div class="scroll_park" id="ParkDisplayContents"></div>
 	<a href="#" onclick="hideParkDisplay('ParkDisplayBox');">Terug naar hoofdscherm</a> <BR><BR>
 	</td></TR></TABLE>
 </span>
@@ -2799,7 +2800,7 @@ echo "</head>\n";
 <tr><td><span id="busycallsdebug"></span></td></tr>
 <tr><td align=center><font face="Arial,Helvetica"><B>VOICEMAIL &nbsp; &nbsp; </B></font> NIEUW: <span id="new_vmail_span"></span> &nbsp; &nbsp; OUD: <span id="old_vmail_span"></span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <font face="Arial,Helvetica"><B>HANDMATIG BELLEN &nbsp; &nbsp; &nbsp; </B></font><input TYPE=TEXT SIZE=20 NAME=manual_dial STYLE="font-family : sans-serif; font-size : 10px"> <A HREF="#" onclick="SendManualDial();">DIAL</A></td></tr>
 
-<tr><td align=center><a href="#" onclick="showParkDisplay('ParkDisplayBox');return false;"><font face="Arial,Helvetica"><B>PARKEEREER GESPREKKEN</B></a>:  <span id="parked_calls_count">0</span> &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<a href="#" onclick="showLocalDial('LocalDialBox');return false;"><font face="Arial,Helvetica"><B>LOKALE BEL EXTENTIES</a></td></tr>
+<tr><td align=center><a href="#" onclick="showParkDisplay('ParkDisplayBox');return false;"><font face="Arial,Helvetica"><B>PARKEER GESPREKKEN</B></a>:  <span id="parked_calls_count">0</span> &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<a href="#" onclick="showLocalDial('LocalDialBox');return false;"><font face="Arial,Helvetica"><B>LOKALE BEL EXTENTIES</a></td></tr>
 
 <tr><td align=center><font face="Arial,Helvetica"><B>UITGAANDE GESPREKKEN:</B></font></td></tr>
 <tr><td align=center><div class="scroll_log" id="outboundcallsspan"></div></td></tr>

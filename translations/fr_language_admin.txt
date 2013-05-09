@@ -65,7 +65,7 @@ vicidial|welcome_languages.php|1
 vicidial|vicidial_admin_web_logo.gif|1
 vicidial|vicidial_admin_web_logo_small.gif|1
 vicidial|user_territories.php|0
-vicidial|audio_store.php|1
+vicidial|audio_store.php|0
 vicidial|AST_agent_time_detail.php|0
 vicidial|AST_agent_timeclock_detail.php|0
 vicidial|AST_OUTBOUNDsummary_interval.php|0
@@ -96,6 +96,25 @@ vicidial|admin_listloader_fourth_gen.php|0
 vicidial|AST_admin_template_maker.php|0
 vicidial|leadloader_template_display.php|0
 vicidial|admin_listloader_third_gen.php|0
+vicidial|callbacks_bulk_change.php|0
+vicidial|lead_tools.php|0
+vicidial|admin_email_accounts.php|0
+vicidial|AST_email_log_report.php|0
+vicidial|AST_email_log_display.php|0
+vicidial/qc|qc_modify_lead.php|0
+vicidial/qc|QC_admin_variables.php|0
+vicidial/qc|QC_admin_variables01.php|0
+vicidial/qc|QC_call_client_iframe.php|0
+vicidial/qc|QC_call_client_include.php|0
+vicidial/qc|QC_header_include.php|0
+vicidial/qc|QC_header_include01.php|0
+vicidial/qc|QC_header_include02.php|0
+vicidial/qc|audit_comments.php|0
+vicidial/qc|qc_api.php|0
+vicidial/qc|QC_admin_include01.php|0
+vicidial/qc|QC_admin_include02.php|0
+vicidial/qc|QC_admin_modify_lead_include.php|0
+vicidial/qc|QC_status_codes_include.php|0
 vicidial|wz_jsgraphics.js|1
 vicidial|verticalbargraph.css|1
 vicidial|horizontalbargraph.css|1
@@ -2034,7 +2053,7 @@ Click here to see Admin chages to the system settings|Cliquez ici pour voir Admi
 Export Reports|Rapports d'exportation|
 This setting if set to 1 will allow a manager to access the export call reports on the REPORTS screen. Default is 0.|Ce paramètre, s'il est à 1 permettra d'accéder à un gestionnaire de l'exportation des rapports sur l'appel RAPPORTS écran. La valeur par défaut est 0.|
 This setting if set to 1 will allow a manager to click on the download list link at the bottom of a list modification screen to export the entire contents of a list to a flat data file. Default is 0.|Ce paramètre, s'il est à 1 permet à un gestionnaire de téléchargement, cliquez sur le lien de la liste au bas de l'écran de modification d'une liste d'exporter la totalité du contenu d'une liste de données à un fichier plat. La valeur par défaut est 0.|
-Export Calls Report|Appels d'exportation Rapport|
+Export Calls Report|Appels d exportation Rapport|
 EXPORT CALLS REPORT|EXPORTATION DE RAPPORT ENGAGE|
 For the Export Calls Report, the following field order is used for exports|Pour le rapport invite l'exportation, l'ordre suivant est utilisé pour les exportations|
 Timeclock|Horloge en temps|
@@ -3122,7 +3141,7 @@ Disable Dispo Status|Désactiver Statut Dispo|
 If the Disable Dispo Screen option is set to DISPO_DISABLED, then this field must be filled in. You can use any disposition you want for this field as long as it is 1 to 6 characters in length with only letters and numbers|Si l'option Désactiver l'écran est réglé sur Dispo DISPO_DISABLED, ce champ doit être rempli en jeu. Vous pouvez utiliser n'importe quel caractère que vous voulez pour ce domaine tant qu'il est de 1 à 6 caractères de longueur avec des lettres et des chiffres|
 This setting if set to 1 will allow a manager to access the export call and lead reports on the REPORTS screen. Default is 0. For the Export Calls and Leads Reports, the following field order is used for exports|Ce paramètre si elle est définie à 1, permettre à un gestionnaire d'accéder à l'appel d'exportation et les rapports de plomb sur l'écran RAPPORTS. Par défaut est 0. Pour l'exportation Appels et mène des rapports, l'ordre des champs ci-dessous est utilisé pour les exportations|
 This report pulls lead information for calls dialed in the selected date range. A lead is only exported once no matter how many calls were handled. The current lead status is used.|Ce rapport rassemble les informations de plomb pour les appels émis dans la plage de dates sélectionnée. Un plomb est seulement exporté une fois, peu importe combien d'appels ont été traités. Le statut de plomb actuelle est utilisée.|
-Export Leads Report|Pistes d'exportation Rapport|
+Export Leads Report|Pistes d exportation Rapport|
 Screen Labels|Les étiquettes d'écran|
 Add A Screen Label|Ajoutez un contrôle Label écran|
 ADD NEW SCREEN LABEL|Ajouter une étiquette ECRAN NEW|
@@ -3348,7 +3367,7 @@ Maximum System Stats Reports|Maximum du système des rapports statistiques|
 These statistics are cached totals that are stored throughout each day in real-time through back-end processes. For inbound calls, the total calls per in-group are calculated for each call that enters the process that calculates. For the whole system counts, the totals are generated from log entries as well as other in-group and campaign totals. These totals may not add up due to the settings that you have in your system as well as when the call is hung up|Ces statistiques sont mises en cache totaux qui sont stockés sur chaque journée de en temps réel par le biais des processus back-end. Pour les appels entrants, les appels totaux par en-groupe sont calculés pour chaque appel qui pénètre dans le processus qui calcule. Pour les chefs d'accusation ensemble du système, les totaux sont générés à partir des entrées de journal ainsi que d'autres totaux en groupe et de la campagne. Ces totaux peuvent ne pas s'additionner à cause des paramètres que vous avez dans votre système ainsi que lorsque l'appel est raccroché|
 Hopper VLC Dup Check|Hopper VLC Dup Vérifiez|
 Setting this to Y will result in every lead being inserted into the hopper being checked by vendor_lead_code to make sure there are no duplicate leads inserted with the same vendor_lead_code. This is most useful when Auto-Alt-Dialing with MULTI_LEAD. Default is N|Un réglage à Y entraîne chaque piste étant insérée dans la trémie étant vérifiée par vendor_lead_code pour s'assurer qu'il n'y sont pas dupliquer conducteurs insérés avec le même vendor_lead_code. Cela est particulièrement utile lorsque la fonction Auto-Alt-numérotation avec MULTI_LEAD. Par défaut est N|
-Inventory Report|Rapport d'inventaire|
+Inventory Report|Rapport d inventaire|
 If the Inventory Report is enabled on your system, this option will determine whether this list is included in the report or not. Default is Y for yes|Si le Rapport d'inventaire est activé sur votre système, cette option permettra de déterminer si cette liste est inclus dans le rapport ou non. Par défaut est O pour oui|
 Report Rank|Rapport Rang|
 This option allows you to rank shifts in selected reports that support this option|Cette option vous permet de classer les changements dans les rapports sélectionnés qui soutiennent cette option|
@@ -3402,3 +3421,224 @@ Search Method|Méthode de recherche|
 USING THIS CALL MENU|UTILISER CE MENU APPEL|
 DELETE THIS CALL MENU|SUPPRIMER CETTE MENU APPEL|
 Click here to see Admin changes to this CALL MENU|Cliquez ici pour voir les changements d'administration à ce menu APPEL|
+### START translations for 2.6 release ###
+In-Group Manual Dial|In-Group Composition manuelle|
+In-Group Manual Dial Select|In-Group Manuel molette SELECT|
+This feature allows you to enable the ability for agents to place manual dial outbound calls that are logged as in-group calls assigned to a specific in-group. The MANUAL_DIAL option allows the placing of phone calls out through an In-Group to the agent placing the call. The NO_DIAL option allows the agent to log time on a call that does not exist, as if it were a real call, this is often used for logging email or faxing time. The BOTH option will allow both call and no-call in-group dialing. The default is DISABLED|Cette fonction vous permet d'activer la possibilité pour les agents de placer numérotation des appels sortants manuelles qui sont enregistrés comme en appels de groupe affecté à un particulier en groupe. L'option MANUAL_DIAL permet la mise en place des appels téléphoniques à travers un In-groupe à l'agent effectuant l'appel. L'option NO_DIAL permet à l'agent de se connecter de temps sur un appel qui n'existe pas, comme s'il s'agissait d'un véritable appel, ce qui est souvent utilisé pour la connexion e-mail ou télécopie temps. Le BOTH option permettra à la fois appel et sans appel de composition en groupe. Désactivé par défaut|
+This option is only active if the above In-Group Manual Dial feature is not DISABLED. This option restricts the selectable In-Groups that the agent can place In-Group Manual Dial calls through. CAMPAIGN_SELECTED will show only the in-groups that the campaign has set as allowable in-groups. ALL_USER_GROUP will show all of the in-groups that are viewable to the members of the user group that the agent belongs to|Cette option n'est active que si le dessus en groupe fonction de composition manuelle n'est pas désactivé. Cette option limite le choix In-groupes que l'agent peut placer In-Group Manuel composer des appels à travers. CAMPAIGN_SELECTED n'indiquera que les en-groupes que la campagne s'est fixé comme admissible au-groupes. ALL_USER_GROUP montrera tous les en-groupes qui sont visibles pour les membres du groupe d'utilisateurs qui appartient l'agent|
+Dial In-Group CID|Composez In-groupe CID|
+If the agent campaign allows for Manual In-Group Dialing, this caller ID number will be sent as the outgoing CID of the phone call if it is populated, overriding the campaign settings and list CID override setting. Default is empty|Si la campagne de l'agent permet de Manuel Dans la composition de groupe, ce numéro d'identification de l'appelant sera envoyée comme le CID sortant de l'appel téléphonique s'il est rempli, remplaçant les paramètres de la campagne et la liste Paramètre de remplacement CID. Default est vide|
+You can also use LTMG or XFTAMM as statuses to trigger an automatic transfer to the Leave-Voicemail option|Vous pouvez également utiliser LTMG ou XFTAMM que les statuts de déclencher un transfert automatique de l'option Leave-Voicemail|
+Send to Answering Machine Message|Envoyer à Répondeur message|
+Safe Harbor Audio Field|Safe Harbor Audio terrain|
+This optional setting allows you to define a field in the list that the system will use as the audio filename for each lead in place of the Safe Harbor Audio file. If this is set to DISABLED the Safe Harbor Audio file will always be used. The system will do no validation to make sure that the audio file exists other than to make sure the value of the field is at least one character, so if you want a lead to use the default Safe harbor Audio then you just set the field value in the lead to empty. You can use the pipe character to link multiple audio files together in the field value for each lead. Default is DISABLED. Here is the list of fields that can be used for this setting|Ce paramètre optionnel vous permet de définir un champ dans la liste que le système va utiliser comme nom de fichier audio pour chaque conducteur à la place du fichier audio Safe Harbor. Si cela est défini sur Désactivé Le fichier audio Safe Harbor sera toujours utilisé. Le système ne fera pas de validation pour s'assurer que le fichier audio existant autre que de s'assurer que la valeur du champ est au moins un caractère, donc si vous voulez une avance d'utiliser le Safe Audio de port par défaut alors que vous venez de définir la valeur du champ en tête se vider. Vous pouvez utiliser le caractère pipe de relier plusieurs fichiers audio en même temps à la valeur du champ pour chaque fil. Est désactivée par défaut. Voici la liste des champs qui peuvent être utilisés pour ce paramètre|
+Call Menu Qualify Enabled|Menu Appel qualifier Activé|
+This setting enables the option in Call Menus to put a SQL qualification on the people that hear that call menu. For more information on how that feature works, view the help for Call Menus. Default is 0 for disabled|Ce paramètre active l'option dans les menus d'appel pour mettre une qualification SQL sur les personnes qui entendent que le menu d'appel. Pour plus d'informations sur la façon dont cette fonctionnalité fonctionne, consultez l'aide pour les menus d'appel. Par défaut est 0 pour les handicapés|
+Qualify SQL|Qualifiez-SQL|
+This field allows you to input SQL - Structured Query Language - database fragments, like with Filters, to determine whether this call menu should play for the caller or not. This feature only works if the call has the callerIDname set prior to being sent to this call menu, either as an outbound survey transfer, or through the use of a drop call menu for an In-Group call. If there is a match, the call will proceed as normal. If there is no match, the call will go to the D option or the invalid option if no D option is set. You cannot use single-quotes in this field, only double-quotes if they are needed. Default is empty for disabled|Ce champ vous permet d'entrer SQL - Structured Query Language - fragments de bases de données, comme des filtres, afin de déterminer si ce menu d'appel doit jouer pour l'appelant ou non. Cette fonctionnalité ne fonctionne que si l'appel a l'ensemble de callerIDname avant d'être envoyé à ce menu d'appel, soit comme un transfert d'enquête à l'étranger, ou par le biais d'un menu d'appel de baisse pour un appel en groupe. S'il ya un match, l'appel se déroulera comme normal. Si aucune correspondance n'est trouvée, l'appel sera acheminé à l'option D ou l'option non valide si aucune option D est réglé. Vous ne pouvez pas utiliser les guillemets simples dans ce domaine, seuls les guillemets si elles sont nécessaires. Default est vide pour handicapés|
+Admin List Counts|Liste des comtes d'administration|
+This setting allows you to disable the list counts that appear on the Lists listing and the Campaign modify screens. Default is 1 for enabled|Ce réglage permet de désactiver la liste des chefs d'accusation qui figurent sur la liste des listes et des écrans de forçage de la campagne. Défaut est 1 pour activé|
+The Y_API_LAUNCH option can be used with the agent API to launch the webphone in a separate Iframe or window|L'option Y_API_LAUNCH peut être utilisé avec l'API de l'agent pour lancer le webphone dans une Iframe ou fenêtre séparée|
+If the option has BLANK at the end, then users are allowed to dial leads with no owner defined in addition to owner defined leads|Si l'option est vierge à la fin, les utilisateurs sont autorisés à composer pistes sans propriétaire défini en plus de propriétaire défini conduit|
+Voicemail Greeting|Message d'accueil|
+This optional setting allows you to define a voicemail greeting audio file from the audio store. Default is blank|Ce paramètre optionnel vous permet de définir un fichier audio message d'accueil du magasin audio. Défaut est vide|
+Allow Voicemail Greeting Chooser|La messagerie vocale Sélecteur de voeux|
+If this setting is enabled it will allow you to choose an audio file from the audio store to be played as the voicemail greeting to a specific voicemail box. Default is 0 for disabled|Si ce paramètre est activé, il vous permettra de choisir un fichier audio à partir du magasin audio pour être joué que le message d'accueil d'une boîte vocale spécifique. Par défaut est 0 pour les handicapés|
+File to Delete|Fichier à supprimer|
+Agent Pause After Next Call Link|Agent Pause après appel Lien suivant|
+This option if enabled will display a link on the agent screen that will let the agent go on pause automatically after they hang up their next call. Default is DISABLED|Cette option si elle est activée affichera un lien sur l'écran de l'agent qui vous permettra de l'agent aller en pause automatiquement après avoir raccroché leur prochain appel. Est désactivée par défaut|
+Owner Populate|Propriétaire Remplir|
+If this is enabled and the owner field of the lead is blank, the owner field for the lead will populate with the user ID of the agent that handles the call first. Default is DISABLED|Si cette option est activée et le champ propriétaire de la mine est vide, le champ de propriétaire pour le plomb va peupler avec l'ID utilisateur de l'agent qui traite l'appel en premier. Est désactivée par défaut|
+This field allows you to customize the name of the recording when Campaign recording is ONDEMAND or ALLCALLS. The allowed variables are|Ce champ vous permet de personnaliser le nom de l'enregistrement quand la campagne est ONDEMAND ou ALLCALLS. Les variables autorisées sont|
+The default is FULLDATE_AGENT and would look like this 20051020-103108_6666. Another example is CAMPAIGN_TINYDATE_CUSTPHONE which would look like this TESTCAMP_51020103108_3125551212. Te resulting filename must be less than 90 characters in length|La valeur par défaut est FULLDATE_AGENT et devrait ressembler à ceci 20051020-103108_6666. Un autre exemple est CAMPAIGN_TINYDATE_CUSTPHONE qui ressemblerait à ceci TESTCAMP_51020103108_3125551212. Te résultant nom de fichier doit être inférieure à 90 caractères|
+This field will override the Campaign Recording Filenaming Scheme unless it is set to NONE. The allowed variables are|Ce champ remplace le régime de Dénomination de fichiers d'enregistrement de la campagne si elle est réglée sur NONE. Les variables autorisées sont|
+Audit Comments|Commentaires de vérification|
+This option allows comments to be moved to an audit table. No longer editable, but viewable along with the date-time-creator of each comment. Default is N. This is a part of the Quality Control Add-On|Cette option permet de commentaires pour être déplacés vers une table d'audit. Ce n'est plus modifiable, mais visible avec la date-time-créateur de chaque commentaire. Défaut est N. Il s'agit d'une partie du contrôle de la qualité Add-On|
+QueueMetrics Socket Send|QueueMetrics Socket Envoyer|
+This option, if enabled, will send QM data to a web page that will send it through a socket for logging. The CONNECT_COMPLETE option will send CONNECT, COMPLETEAGENT and COMPLETECALLER events to the url defined below. Default is NONE for disabled|Cette option, si elle est activée, va envoyer des données QM vers une page web qui va l'envoyer à travers une prise pour la connexion. L'option CONNECT_COMPLETE enverra événements CONNECT, COMPLETEAGENT et COMPLETECALLER à l'URL définie ci-dessous. Défaut est NONE pour handicapés|
+QueueMetrics Socket Send URL|QueueMetrics Socket Envoyer URL|
+If Socket Send is enabled above, this is the URL that is used to send the data to. Default is EMPTY for disabled|Si Socket Send est activé au-dessus, c'est l'URL qui est utilisé pour envoyer les données. Par défaut est vide pour handicapés|
+Add Holiday|Ajouter vacances|
+Modify Holiday|Modifier vacances|
+Delete Holiday|Supprimer vacances|
+New Holiday Addition|New Addition de vacances|
+Holidays|Fêtes|
+Holiday ID|ID vacances|
+This is the short name of a Holiday Definition. This needs to be a unique identifier. Do not use any spaces or punctuation for this field. max 30 characters, minimum of 2 characters|C'est le nom court d'une définition de vacances. Cela doit être un identifiant unique. Ne pas utiliser d'espaces ou de la ponctuation pour ce champ. maximum 30 caractères, un minimum de 2 caractères|
+Holiday Name|Nom de vacances|
+This is a more descriptive name of the Holiday Definition. This is a short summary of the Holiday definition. max 100 characters, minimum of 2 characters|C'est un nom plus descriptif de la Définition de vacances. Ceci est un bref résumé de la définition de vacances. max 100 caractères, un minimum de 2 caractères|
+Holiday Comments|Vacances Commentaires|
+This is where you can place comments for a Holiday Definition such as -10am to 4pm boxing day restrictions-.max 255 characters|C'est là que vous pouvez placer des commentaires pour une définition de vacances comme-10 heures-16 heures Boxing Day restrictions. max 255 caractères|
+Holiday Date|Date de vacances|
+This is the date of the holiday|Il s'agit de la date de la fête|
+Holiday Status|Statut de vacances|
+This is the status of the holiday entry. ACTIVE status means that the holiday will be enabled on the holiday date. INACTIVE status means that the holiday will be ignored even on the holiday date. EXPIRED means that the holiday has passed it's holiday date. Default is INACTIVE|C'est l'état de l'entrée de vacances. Signifie le statut actif que la fête sera activé à la date de vacances. Signifie inactif que la fête sera ignorée, même sur la date de vacances. Signifie que le jour férié a passé sa date de vacances EXPIRATION. Défaut est inactif|
+short description of the holiday|brève description de la fête|
+Day and time options will appear once you have created the Holiday Definition|options de jour et l'heure s'affichent une fois que vous avez créé la définition de vacances|
+HOLIDAY DEFINITION NOT ADDED|HOLIDAY DEFINITION pas ajouté|
+there is already a holiday entry with this ID|il existe déjà une entrée de vacances avec cette ID|
+Holiday ID, name and date must be populated|ID de vacances, le nom et la date doivent être remplis|
+HOLIDAY ADDED|HOLIDAY AJOUTÉE|
+HOLIDAY NOT MODIFIED|VACANCES PAS MODIFIÉ|
+HOLIDAY MODIFIED|HOLIDAY MODIFIÉ|
+HOLIDAY NOT DELETED|HOLIDAY pas supprimé|
+Holiday ID must be at least 2 characters in length|ID de vacances doit être d'au moins 2 caractères|
+HOLIDAY DELETION CONFIRMATION|HOLIDAY Confirmation de suppression|
+Click here to delete holiday|Cliquez ici pour supprimer vacances|
+HOLIDAY DELETION COMPLETED|SUPPRESSION DE VACANCES REMPLI|
+Holiday Rule Removed|Règle de vacances Enlevée|
+MODIFY A HOLIDAY|MODIFIER DES VACANCES|
+CALL TIMES USING THIS HOLIDAY|APPEL fois en utilisant cette fête|
+DELETE THIS HOLIDAY DEFINITION|EFFACER CETTE DEFINITION DE VACANCES|
+Active Inbound Holiday Definitions for this Record|Actifs entrants Définitions de vacances pour cet enregistrement|
+Add inbound holiday rule|Ajouter une règle de vacances entrant|
+Holiday Rule Added|Règle de vacances Ajouté|
+Holiday Rule Removed|Règle de vacances Enlevée|
+Click here to see Admin changes to this holiday|Cliquez ici pour voir les changements d'administrateur pour cette fête|
+Expiration Date|Date d'expiration|
+This option allows you to set the date after which leads in this list will not be allowed to be auto-dialed or manual-list-dialed by the system. Default is 2099-12-31|Cette option vous permet de définir la date après laquelle conduit dans cette liste ne seront pas autorisés à être composés automatiquement ou manuel-list-composé par le système. Par défaut 2099-12-31|
+Other Campaign DNC|Autre Campagne DNC|
+If the option Use Campaign DNC List is enabled, this option can allow you to use a different campaign DNC list, just put the Campaign ID of the other campaign in this field. If you use this option, the original campaign DNC list will no longer be checked, only the OTHER campaign DNC list will be used. This does not affect use of the Internal System DNC list. Default is EMPTY|Si l'option Utiliser la liste des DNC de campagne est activée, cette option peut vous permettre d'utiliser une liste de DNC de campagne différente, il suffit de mettre l'ID de campagne de l'Autre Campagne dans ce domaine. Si vous utilisez cette option, la liste DNC de campagne originale ne sera plus cochée, seul l'autre liste de DNC de la campagne sera utilisé. Cela n'affecte pas l'utilisation de la liste DNC système interne. Par défaut est vide|
+LIST EXPIRED AND SET TO ACTIVE|LISTE expiré et défini comme actif|
+Enhanced Disconnect Logging|Enhanced Disconnect Logging|
+This setting enables logging of calls that get a CONGESTION signal with a cause code of 1, 19, 21, 34 or 38. We usually do not recommend enabling this in the USA. Default is 0 for disabled|Ce paramètre active la journalisation des appels qui obtiennent un signal d'encombrement avec un code de cause de 1, 19, 21, 34 ou 38. Habituellement, nous ne recommandons pas l'activation de cette aux Etats-Unis. Par défaut est 0 pour les handicapés|
+LIVE_CALL_INBOUND will allow search for a lead while on an inbound call only. LIVE_CALL_INBOUND_AND_MANUAL will allow search for a lead while on an inbound call or while paused. When Lead Search is used on a live inbound call, the lead of the call when it went to the agent will be changed to a status of LSMERG, and the logs for the call will be modified to link to the agent selected lead instead|LIVE_CALL_INBOUND permettra recherche pendant un certain temps d'avance sur un appel entrant uniquement. LIVE_CALL_INBOUND_AND_MANUAL permettra recherche pendant un certain temps d'avance sur un appel entrant ou pendant la pause. Quand Lead Recherche est utilisé sur un appel entrant direct, le chef de file de l'appel quand il est allé à l'agent sera changé pour un statut de LSMERG, et les journaux de l'appel sera modifié pour créer un lien vers l'agent principal choisi à la place|
+If this is a call that will go to a Call Menu and then back to an in-group, we suggest you use CUSTOMERCLOSER in this field, and also you need to set the In-Group Search Method in the Call Menu to CLOSER|Si c'est un appel qui ira à un menu d'appel, puis revenir à un groupe, nous vous suggérons d'utiliser CUSTOMERCLOSER dans ce domaine, et aussi vous devez définir la méthode de recherche In-Group dans le menu d'appel à CLOSER|
+Add New EMAIL In-Group|Ajouter un nouvel e-mail dans-groupe|
+Copy EMAIL In-Group|Copiez EMAIL In-Group|
+New Email Group Addition|Nouveau groupe Email Addition|
+New Copied Email Group Addition|New Copié Email groupe Addition|
+Modify EMAIL In-Group|Modifier EMAIL In-Group|
+Email In-Groups|Email dans-groupes|
+Modify Email Accounts|Modifier Comptes de messagerie|
+This option if set to 1 allows the user to modify email accounts in the email account management page|Cette option, si mis à 1 permet à l'utilisateur de modifier les comptes de messagerie dans la page de gestion de compte de messagerie|
+Allow Emails|Laisser Emails|
+This is where you can set whether the users of this campaign will be able to receive inbound emails in addition to phone calls|C'est là que vous pouvez définir si les utilisateurs de cette campagne seront en mesure de recevoir des e-mails entrants, en plus des appels téléphoniques|
+This is where you can set whether this system will be able to receive inbound emails in addition to phone calls|C'est là que vous pouvez définir si ce système sera en mesure de recevoir des e-mails entrants, en plus des appels téléphoniques|
+VICIDIAL EMAIL ACCOUNTS|Comptes de messagerie Vicidial|
+The Vicidial Email Accounts management section allows you to create, copy, and delete email account settings that will allow you to have email messages come into your Vicidial system and be treated as regular calls.EMAIL ACCOUNTS MUST BE SET UP BY YOU AND AN EMAIL SERVICE PROVIDER - THAT IS NOT COVERED BY THIS MODULE|La section de la gestion des comptes e-mail Vicidial vous permet de créer, copier et supprimer des paramètres de compte email qui vous permettra d'avoir les e-mails arrivent dans votre système Vicidial et être traités comme des appels réguliers. comptes de messagerie doit être configuré PAR VOUS ET UN FOURNISSEUR DE SERVICES EMAIL - qui n'est pas couvert par ce module|
+Email Account ID|Email Account ID|
+This is the short name of the email account, it is not editable after initial submission, must not contain any spaces and must be between 2 and 20 characters in length|C'est le nom abrégé du compte e-mail, il n'est pas modifiable après la présentation initiale, ne doivent pas contenir d'espaces et doit être comprise entre 2 et 20 caractères de long|
+Email Account Name|Email Nom du compte|
+This is the full name of the email account, it must be between 2 and 30 characters in length|Il s'agit du nom complet du compte de messagerie, il doit être compris entre 2 et 30 caractères de long|
+This determines whether this account will be checked for new email messages to be loaded into the dialer|Cela détermine si ce compte sera vérifié pour les nouveaux messages e-mail pour être chargé dans le composeur|
+Email Account Description|Email Description de compte|
+This allows for a lengthy description, if needed, of the email account.255 characters max|Cela permet une longue description, le cas échéant, du compte de courriel. 255 caractères maximum|
+Email Account Type|Email Type de compte|
+Specifies whether the account is used for inbound or outbound email messages.Should be set to INBOUND|Indique si le compte est utilisé pour entrants ou sortants des e-mails. Doit être mis à INBOUND|
+Admin User Group|Groupe d'utilisateurs admin|
+This is the administrative user group for this inbound group, this allows admin viewing of this in-group restricted by user group. Default is --ALL-- which allows any admin user to view this in-group|C'est le groupe d'utilisateur d'administration pour ce groupe entrant, ce système permet de visualiser administrateur de ce en groupe restreint par groupe d'utilisateurs. Par défaut - ALL - qui permet à tout utilisateur admin pour voir ce en groupe|
+Email Account Protocol|Email Protocole de compte|
+This is the email protocol used by the account you are setting up access to.Currently only IMAP and POP3 accounts are supported|C'est le protocole de messagerie utilisé par le compte que vous configurez accès. Actuellement, seuls les comptes IMAP et POP3 sont pris en charge|
+Email Reply-to Address|Email Adresse de réponse|
+The email address of the account you are setting up access to.Replies to email messages from the agent interface will read as coming from this address|L'adresse email du compte vous configurez accès. Les réponses aux e-mails de l'interface de l'agent se lire comme venant de cette adresse|
+Email Account Server|Email Account Serveur|
+The email server that the account is housed on|Le serveur de messagerie que le compte est logé sur|
+Email Account User|Email User Account|
+The login used to access this account.Usually it's the portion of the reply-to address before the -at- symbol|La connexion utilisée pour accéder à ce compte. Habituellement, c'est la partie de l'adresse de réponse avant le-at-symbole|
+Email Account Password|Email Account Mot de passe|
+The password used to access this account.This is usually set at the time the email account is created|Le mot de passe utilisé pour accéder à ce compte. Ceci est habituellement établi au moment du compte de messagerie est créé|
+Email Frequency Check Rate (mins)|Email Fréquence Taux de contrôle (mn)|
+How often this email account should be checked.The highest rate of frequency at the moment is five minutes; some email providers will not allow more than three login attempts in fifteen minutes before locking the account for an indeterminate amount of time|Combien de fois ce compte e-mail doit être vérifiée. Le plus haut taux de fréquence pour l'instant est de cinq minutes; certains fournisseurs de messagerie ne permettra pas plus de trois tentatives de connexion en quinze minutes avant le verrouillage du compte pour une durée indéterminée|
+In-Group ID|ID en groupe|
+The In-Group that email messages will be sent to|L'In-Group que les e-mails seront envoyés aux|
+Default List ID|ID par défaut de la liste|
+The List ID that leads will be inserted into if necessary|L'ID de la liste qui mène sera insérée dans le cas échéant|
+In-Group Call Handle Method|En appel de groupe Méthode de poignée|
+This is the action that will be taken when a new email is found in the account.EMAIL means all email messages will be inserted into vicidial_list as a new lead.EMAILLOOKUP will search the entire vicidial_list table for the email address in the email column - if the lead is found, that lead's list ID will be used in the record that goes into the vicidial_email_list table.EMAILLOOKUPRC does the same, but it will only search lists belonging to the campaign selected in the "In-Group Campaign ID" box below.EMAILLOOKUPRL will only search one particular list, which is the one entered into the "In-Group List ID" box below|C'est l'action qui sera prise quand un nouvel e-mail se trouve dans le compte. Signifie EMAIL tous les messages électroniques seront insérées dans vicidial_list comme une nouvelle piste. EMAILLOOKUP va chercher la totalité de la table vicidial_list pour l'adresse email dans la colonne email - si le plomb est trouvé, que de plomb liste l'ID sera utilisé dans le dossier qui va dans le tableau vicidial_email_list. EMAILLOOKUPRC fait la même chose, mais il ne recherche listes appartenant à la campagne sélectionnée dans la boîte "In-Group ID Campaign" ci-dessous. EMAILLOOKUPRL recherche uniquement une liste particulière, qui est celle indiquée dans la case ci-dessous "In-Group Liste ID"|
+In-Group Agent Search Method|In-Group Agent Méthode de recherche|
+The agent search method to be used by the inbound group, LO is Load-Balanced-Overflow and will try to send the call to an agent on the local server before trying to send it to an agent on another server, LB is Load-Balanced and will try to send the call to the next agent no matter what server they are on, SO is Server-Only and will only try to send the calls to agents on the server that the call came in on. Default is LB.|La méthode de recherche de l'agent pour être utilisé par le groupe entrant, LO est Load-Balanced-débordement et va essayer d'envoyer l'appel à un agent sur le serveur local avant d'essayer de parvenir à un agent sur un autre serveur, LB est à charge équilibrée et va essayer d'envoyer l'appel vers l'agent suivant, peu importe quel serveur ils sont allumées, est serveur uniquement et ne tentera d'envoyer les appels aux agents sur le serveur que l'appel est arrivé sur. Par défaut LB.|
+In-Group List ID|In-Group Liste ID|
+This is the List ID that will be used to search for a match within|C'est l'ID de la liste qui sera utilisé pour rechercher un donneur compatible dans|
+In-Group Campaign ID|Dans le groupe de campagne ID|
+This is the Campaign ID that will be used to search for a match within|C'est l'ID de campagne qui sera utilisé pour rechercher un donneur compatible dans|
+Group Handling|Manipulation du Groupe|
+COPY EMAIL GROUP|COPIEZ LE GROUPE DE COURRIEL|
+Email Group ID|Email groupe ID|
+Email Group Name|Email Nom du groupe|
+Source Email Group ID|Source Email ID de groupe|
+Email Accounts|Comptes de messagerie|
+Next Agent Email|Suivant Agent Email|
+Start Email URL|Commencez Email URL|
+Dispo Email URL|Dispo Email URL|
+No Agent Email URL|Aucun agent de courrier électronique URL|
+EMAIL ACCOUNTS USING THIS IN-GROUP|comptes de messagerie UTILISANT CE EN GROUPE|
+EMAIL GROUP NOT ADDED|GROUPE DE COURRIEL pas ajouté|
+Email group ID must be between 2 and 20 characters in length and contain no|Email groupe ID doit être comprise entre 2 et 20 caractères et ne contiennent pas|
+Email group name and group color must be at least 2 characters in length|Email nom de groupe et la couleur de groupe doit être d'au moins 2 caractères|
+EMAIL GROUP ADDED|GROUPE courriel ajouté|
+Show Email Accounts|Afficher Comptes de messagerie|
+Add A New Account|Ajouter un nouveau compte|
+Copy An Account|Copier un compte|
+Dialer Email Account fields|Dialer champs de compte de messagerie|
+NEW ACCOUNT|NOUVEAU COMPTE|
+SUCCESSFULLY CREATED|Créé avec succès|
+All Admin User Groups|Tous les groupes d'utilisateurs admin|
+ERROR: Inbound emails are not active on this system|ERREUR: emails entrants ne sont pas actifs sur ce système|
+invalid or null|invalide ou nulle|
+SUCCESSFULLY MODIFIED|Modifié avec succès|
+There was an unknown error when attempting to copy the new account|Il y avait une erreur inconnue lors de la tentative de copier le nouveau compte|
+SUCCESSFULLY COPIED FROM|SUCCES copiés à partir|
+source email does not exist|mail source n'existe pas|
+ACCOUNT NOT COPIED|Compte pas copié|
+Copy New Account from Existing Account|Copiez Nouveau compte Compte existant|
+Account ID to Copy From|ID du compte à copier à partir|
+New Account ID|Nouveau numéro de compte|
+New Account Name|Nouveau nom de compte|
+There are no existing accounts to copy from|Il n'y a pas les comptes existants pour copier à partir de|
+The data you submitted has the following errors|Les données présentées ont les erreurs suivantes|
+ACCOUNT NOT INSERTED|Compte non INSERTED|
+ADD NEW INBOUND EMAIL ACCOUNT|Ajouter un nouveau compte de courrier entrant|
+CONFIRM DELETION OF INBOUND EMAIL ACCOUNT|Confirmer la suppression du compte de messagerie INBOUND|
+Click to delete account|Cliquez sur pour supprimer un compte|
+ACCOUNT NOT UPDATED|Compte non JOUR|
+UPDATE AN EXISTING INBOUND EMAIL ACCOUNT|Mettre à jour un compte de messagerie ENTRANT EN VIGUEUR|
+INBOUND EMAIL ACCOUNT LISTINGS|ENTRANTS BIENS compte de messagerie|
+UNREAD EMAILS|Courriers non lus|
+Un-handled Emails|Les e-mails non traités|
+Setting this to INGROUP will send an answering machine to an inbound group. Setting this to CALLMENU will send an answering machine to a Call Menu in the system|Un réglage à ingroup enverra un répondeur à un groupe entrant. Un réglage à CALLMENU enverra un répondeur à un menu d'appel dans le système|
+AMD send to Action|AMD envoyer à l'action|
+This option allows you to define whether a call is sent to the AMD Action when an answering machine is detected. If this is set to N, then the call will be hung up as soon as it is determined to be an answering machine. Default is N|Cette option vous permet de définir si un appel est envoyé à l'action AMD lorsqu'un répondeur est détecté. Si ce paramètre est réglé à N, l'appel sera raccroché dès qu'il est déterminé à être un répondeur. Défaut est N|
+AMD Inbound Group|AMD Inbound Groupe|
+If CPD AMD Action is set to INGROUP, then this is the Inbound Group that the call will be sent to if an answering machine is detected|Si CPD AMD Action est réglé sur ingroup, alors c'est le groupe entrant que l'appel sera envoyé si un répondeur est détecté|
+AMD Call Menu|AMD Appel Menu|
+If CPD AMD Action is set to CALLMENU, then this is the Call Menu that the call will be sent to if an answering machine is detected|Si CPD AMD Action est réglé sur CALLMENU, alors c'est le menu d'appel que l'appel sera envoyé si un répondeur est détecté|
+Level 8 Disable Add|Niveau 8 désactiver des|
+This setting if enabled will prevent any level 8 user from adding or copying any record in the system, no matter what their user settings are. Excluded from these restrictions are the ability to add DNC and Filter Phone Groups numbers and the Add a New Lead page. Default is 0 for disabled|Ce paramètre si elle est activée empêchera tout utilisateur de niveau 8 de l'ajout ou la copie de tout document dans le système, quelles que soient leurs réglages de l'utilisateur sont. Sont exclus de ces restrictions sont la possibilité d'ajouter des numéros de téléphone Groupes DNC et le filtre et la page Ajouter un nouveau chef de file. Par défaut est 0 pour les handicapés|
+You do not have permission to add records on this system|Vous n'avez pas la permission d'ajouter des enregistrements sur ce système|
+These options allows you to limit the viewable callbacks in the agent callback alert section on the agent screen, to only LIVE callbacks.LIVE callbacks are user-only scheduled callbacks that have hit their trigger date and time. ACTIVE call backs are user-only callbacks that are active in the system but have not yet triggered.You can view both ACTIVE and LIVE callbacks by selecting ALL_ACTIVE.Default is ALL_ACTIVE|Ces options vous permet de limiter les rappels visibles dans la section d'alerte de rappel de l'agent sur l'écran de l'agent, pour ne vivent rappels. Callbacks LIVE sont-Seuls les utilisateurs rappels réguliers qui ont frappé leur date et heure de déclenchement. Dos d'appels actives sont faciles à utiliser que les rappels qui sont actives dans le système mais qui n'ont pas encore déclenché. Vous pouvez afficher les rappels fois active et de vivre en sélectionnant ALL_ACTIVE. Default est ALL_ACTIVE|
+VICIDIAL ADMIN REPORT LOG|VICIDIAL ADMIN journal de rapport|
+VICIDIAL USER ADMIN REPORT LOG|VICIDIAL utilisateur admin RAPPORT LOG|
+VICIDIAL DETAIL ADMIN REPORT LOG|VICIDIAL DETAIL rapport Administration LOG|
+ADMIN REPORT LOG|ADMIN journal de rapport|
+Admin Report Log Viewer|Administrateur Rapport Log Viewer|
+Survey Wait Seconds|Enquête Attendez secondes|
+This is the number of seconds when in Survey mode the system will wait for input from the person called until the survey or drop action is triggered. Is not applied if the Survey Method is HANGUP. Default is 10 seconds|C'est le nombre de secondes en mode d'enquête le système attend l'entrée de la personne appelée jusqu'à ce que l'enquête ou de l'action de chute est déclenchée. Ne s'applique pas si la méthode d'enquête est HANGUP. Défaut est de 10 secondes|
+You can add NOINT directly in front of an audio file name to make it so the playback cannot be interrupted with a key press by the caller, the NOINT should not be a part of the filename, it is a special flag for the system. You may also use special purpose .agi scripts in this field as well like the cm_date.agi script, discuss with your administrator for more details|Vous pouvez ajouter NOINT directement en face du nom d'un fichier audio pour en faire de sorte que la lecture ne peut pas être interrompue par une pression sur la touche par l'appelant, le NOINT ne devrait pas être une partie du nom de fichier, c'est un drapeau spécial pour le système. Vous pouvez également utiliser spécial. Scripts agi dans ce domaine ainsi que le script cm_date.agi, discutez avec votre administrateur pour plus de détails|
+DROP will drop the call using the campaign drop method but still log the call as a PM played message status|DROP abandonner l'appel en utilisant la méthode de la goutte de campagne, mais toujours se connecter à l'appel en tant que PM a joué état du message|
+Quality Control|Contrôle de la qualité|
+Source User|Source utilisateur|
+>Admin<|> Administrateur <|
+Campaign Call Date|Campagne date d'appel|
+Lead Recycling|Recyclage du plomb|
+Day outbound call count for this campaign|Journée nombre d'appels sortants pour cette campagne|
+State rules defined for this call time|règles de l'Etat définies pour ce temps d'appel|
+in seconds|en secondes|
+Agent Display Dialable Leads|Agent d'affichage Leads composables|
+Agent Display Queue Count|Agent Nombre d'écrans de file d'attente|
+Manual Dial Filter|Composition manuelle Filter|
+Agent Call Re-Queue Button|Appeler Bouton Re-Queue|
+LEADS COUNT|MÈNE LE COMTE|
+number:|numéro:|
+server:|serveur:|
+audio chooser|audio sélecteur|
+voicemail chooser|sélecteur de boîte vocale|
+FILTER ID|FILTRE ID|
+FILTER NAME|Nom du filtre|
+Show Email Groups|Afficher les groupes de messagerie|
+Email Accounts|Comptes de messagerie|
+CallCard Admin|CallCard admin|
+ Contacts | Contacts |
+We STRONGLY recommend uploading only 16bit Mono 8k PCM WAV audio files|Nous vous recommandons vivement le téléchargement de fichiers uniquement 16bit mono 8k PCM WAV audio|
+All spaces will be stripped from uploaded audio file names|Tous les espaces seront supprimés à partir des noms de fichiers audio téléchargés |
+ERROR: Default value cannot be longer than maximum field length|erreur: valeur par défaut ne peut pas être plus long que la longueur maximale du champ|

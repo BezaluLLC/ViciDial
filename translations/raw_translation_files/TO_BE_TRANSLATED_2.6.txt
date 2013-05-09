@@ -193,6 +193,60 @@ Survey Wait Seconds||
 This is the number of seconds when in Survey mode the system will wait for input from the person called until the survey or drop action is triggered. Is not applied if the Survey Method is HANGUP. Default is 10 seconds||
 You can add NOINT directly in front of an audio file name to make it so the playback cannot be interrupted with a key press by the caller, the NOINT should not be a part of the filename, it is a special flag for the system. You may also use special purpose .agi scripts in this field as well like the cm_date.agi script, discuss with your administrator for more details||
 DROP will drop the call using the campaign drop method but still log the call as a PM played message status||
+Quality Control||
+Source User||
+>Admin<||
+Campaign Call Date||
+Lead Recycling||
+Day outbound call count for this campaign||
+State rules defined for this call time||
+in seconds||
+Agent Display Dialable Leads||
+Agent Display Queue Count||
+Manual Dial Filter||
+Agent Call Re-Queue Button||
+LEADS COUNT||
+number:||
+server:||
+audio chooser||
+voicemail chooser||
+FILTER ID||
+FILTER NAME||
+Show Email Groups||
+Email Accounts||
+CallCard Admin||
+ Contacts ||
+We STRONGLY recommend uploading only 16bit Mono 8k PCM WAV audio files||
+All spaces will be stripped from uploaded audio file names||
+ERROR: Default value cannot be longer than maximum field length||
+
+
+########################## CHANGES TO EXISTING PHRASES IN ADMIN TRANSLATION
+
+removed		We STRONGLY recommend uploading only 16bit 8k PCM WAV audio files
+
+changed to 0	vicidial|audio_store.php|0
+
+
+vicidial|callbacks_bulk_change.php|0
+vicidial|lead_tools.php|0
+vicidial|admin_email_accounts.php|0
+vicidial|AST_email_log_report.php|0
+vicidial|AST_email_log_display.php|0
+vicidial/qc|qc_modify_lead.php|0
+vicidial/qc|QC_admin_variables.php|0
+vicidial/qc|QC_admin_variables01.php|0
+vicidial/qc|QC_call_client_iframe.php|0
+vicidial/qc|QC_call_client_include.php|0
+vicidial/qc|QC_header_include.php|0
+vicidial/qc|QC_header_include01.php|0
+vicidial/qc|QC_header_include02.php|0
+vicidial/qc|audit_comments.php|0
+vicidial/qc|qc_api.php|0
+vicidial/qc|QC_admin_include01.php|0
+vicidial/qc|QC_admin_include02.php|0
+vicidial/qc|QC_admin_modify_lead_include.php|0
+vicidial/qc|QC_status_codes_include.php|0
 
 
 ############################################################ CLIENT
@@ -216,6 +270,77 @@ reset form||
 SELECT THIS LEAD||
 YOU MUST BE ON AN ACTIVE INBOUND CALL TO SEARCH FOR A LEAD||
 Attachments||
+Next Call Pause||
+-History-||
+SUBMIT SEARCH||
+close ||
+AGENT CALL LOG||
+ LENGTH ||
+ PHONE ||
+ FULL NAME ||
+ CAMPAIGN ||
+ ALT ||
+ HANGUP ||
+ INFO ||
+phone login||
+LAST CALL||
+ CALLBACK ||
+ CITY ||
+ STATE ||
+ ZIP ||
+Phone Number||
+Phone Number Fields||
+Lead ID||
+ WAIT ||
+ AGENT ||
+ CALL GROUP ||
+ TYPE ||
+digits only||
+DIAL ALERT||
+WEB FORM SUBMIT||
+in campaign||
+ DATE\/TIME ||
+ IN\/OUT ||
+>GROUPS<||
+>GO<||
+>recording<||
+>SELECT<||
+Alert is ON||
+Alert is OFF||
+EMAIL LOG FOR THIS LEAD||
+EMAIL TO||
+ ATTACHMENTS ||
+Called Since Last Reset||
+Timezone:||
+Dial Link||
+ LAST ||
+SEARCH FOR A CONTACT||
+Notes: when doing a search for a contact, wildcard or partial search terms are not allowed||
+Contact search requests are all logged in the system||
+Office Number||
+First Name||
+Last Name||
+BU Name||
+Department:||
+Group Name||
+Job Title||
+Location:||
+
+
+########################## CHANGES TO EXISTING PHRASES IN AGENT TRANSLATION
+Status		>Status
+ORDER		>ORDER
+Notes		Notes:
+Welcome		<added space after word>
+Last		<added space after word>
+Recording	<added space before word>
+State		<added space before word>
+Title		<added space before word>
+Email		<added space before word>
+Comments	<added space before word>
+Record		<removed>
+HELP		<removed>
+PARK		<removed>
 
 
 ############################################################  MANAGER Manual
