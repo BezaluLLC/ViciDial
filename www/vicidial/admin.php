@@ -3244,12 +3244,13 @@ else
 # 130424-1601 - Added survey_wait_sec campaign survey option
 # 130425-0700 - Added DROP option for survey_no_response_action to go to campaign drop method
 # 130503-1509 - Added red color to server table on reports page if asterisk out of sync
+# 130508-2306 - Branched 2.7, trunk becomes 2.8
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.6-400a';
-$build = '130503-1509';
+$admin_version = '2.8-402a';
+$build = '130508-2306';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");

@@ -401,10 +401,11 @@
 # 130412-1359 - Added SIP message for failed calls
 # 130417-1937 - Changed locked agent choose in-group/closer/territories to auto-close
 # 130508-2223 - Cleanup for other language builds
+# 130508-2307 - Branched 2.7, trunk becomes 2.8
 #
 
-$version = '2.6-369c';
-$build = '130508-2223';
+$version = '2.8-371c';
+$build = '130508-2307';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
