@@ -1288,7 +1288,8 @@ sct_friday_start SMALLINT(4) unsigned default '0',
 sct_friday_stop SMALLINT(4) unsigned default '0',
 sct_saturday_start SMALLINT(4) unsigned default '0',
 sct_saturday_stop SMALLINT(4) unsigned default '0',
-user_group VARCHAR(20) default '---ALL---'
+user_group VARCHAR(20) default '---ALL---',
+ct_holidays TEXT default ''
 );
 
 CREATE TABLE vicidial_campaign_stats (
@@ -3123,4 +3124,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1349',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1350',db_schema_update_date=NOW();

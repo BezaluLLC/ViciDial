@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_VDhopper.pl version 2.6
+# AST_VDhopper.pl version 2.8
 #
 # DESCRIPTION:
 # Updates the VICIDIAL leads hopper for the streamlined 
@@ -75,6 +75,7 @@
 # 121205-1621 - Added parentheses around filter SQL when in SQL queries
 # 121223-1540 - Fix for issue #627 preventing issues when filter is deleted, DomeDan
 # 130219-1501 - Fixed issue with other campaign dnc
+# 130510-0904 - Added state call time holidays functionality
 #
 
 # constants
@@ -102,6 +103,7 @@ if ($sec < 10) {$sec = "0$sec";}
 $file_date = "$year-$mon-$mday";
 $now_date = "$year-$mon-$mday $hour:$min:$sec";
 $VDL_date = "$year-$mon-$mday 00:00:01";
+$YMD = "$year-$mon-$mday";
 
 ### get date-time of one hour ago ###
 $VDL_hour = ($secX - (60 * 60));
@@ -1274,13 +1276,12 @@ foreach(@campaign_id)
 			{
 			if (length($state_rules[$b])>1)
 				{
-				$stmtA = "SELECT state_call_time_id,state_call_time_state,state_call_time_name,state_call_time_comments,sct_default_start,sct_default_stop,sct_sunday_start,sct_sunday_stop,sct_monday_start,sct_monday_stop,sct_tuesday_start,sct_tuesday_stop,sct_wednesday_start,sct_wednesday_stop,sct_thursday_start,sct_thursday_stop,sct_friday_start,sct_friday_stop,sct_saturday_start,sct_saturday_stop from vicidial_state_call_times where state_call_time_id='$state_rules[$b]';";
+				$stmtA = "SELECT state_call_time_id,state_call_time_state,state_call_time_name,state_call_time_comments,sct_default_start,sct_default_stop,sct_sunday_start,sct_sunday_stop,sct_monday_start,sct_monday_stop,sct_tuesday_start,sct_tuesday_stop,sct_wednesday_start,sct_wednesday_stop,sct_thursday_start,sct_thursday_stop,sct_friday_start,sct_friday_stop,sct_saturday_start,sct_saturday_stop,ct_holidays from vicidial_state_call_times where state_call_time_id='$state_rules[$b]';";
 				if ($DBX) {print "   |$stmtA|\n";}
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
-				$rec_count=0;
-				while ($sthArows > $rec_count)
+				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
 					$Gstate_call_time_id =		$aryA[0];
@@ -1301,10 +1302,52 @@ foreach(@campaign_id)
 					$Gsct_friday_stop =			$aryA[17];
 					$Gsct_saturday_start =		$aryA[18];
 					$Gsct_saturday_stop =		$aryA[19];
+					$Sct_holidays =				$aryA[20];
 					$ct_states .="'$Gstate_call_time_state',";
-					$rec_count++;
 					}
 				$sthA->finish();
+
+				### BEGIN Check for outbound state holiday ###
+
+				if (length($Sct_holidays)>2)
+					{
+					$Sct_holidaysSQL = $Sct_holidays;
+					$Sct_holidaysSQL =~ s/^\||\|$//gi;
+					$Sct_holidaysSQL =~ s/\|/','/gi;
+					$Sct_holidaysSQL = "'$Sct_holidaysSQL'";
+
+					$stmtA = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop from vicidial_call_time_holidays where holiday_id IN($Sct_holidaysSQL) and holiday_status='ACTIVE' and holiday_date='$YMD' order by holiday_id;";
+					if ($DBX) {print "   |$stmtA|\n";}
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$holiday_id =				$aryA[0];
+						$holiday_date =				$aryA[1];
+						$holiday_name =				$aryA[2];
+						$Gsct_default_start =		$aryA[3];
+						$Gsct_default_stop =		$aryA[4];
+						$Gsct_sunday_start =		$aryA[3];
+						$Gsct_sunday_stop =			$aryA[4];
+						$Gsct_monday_start =		$aryA[3];
+						$Gsct_monday_stop =			$aryA[4];
+						$Gsct_tuesday_start =		$aryA[3];
+						$Gsct_tuesday_stop =		$aryA[4];
+						$Gsct_wednesday_start =		$aryA[3];
+						$Gsct_wednesday_stop =		$aryA[4];
+						$Gsct_thursday_start =		$aryA[3];
+						$Gsct_thursday_stop =		$aryA[4];
+						$Gsct_friday_start =		$aryA[3];
+						$Gsct_friday_stop =			$aryA[4];
+						$Gsct_saturday_start =		$aryA[3];
+						$Gsct_saturday_stop =		$aryA[4];
+						if ($DBX) {print "STATE CALL TIME HOLIDAY FOUND!   |$Gstate_call_time_id|$Gstate_call_time_state|$holiday_id|$holiday_date|$holiday_name|$Gsct_default_start|$Gsct_default_stop|\n";}
+						}
+					$sthA->finish();
+					}
+				### END Check for outbound state holiday ###
 
 				$r=0;
 				$state_gmt='';

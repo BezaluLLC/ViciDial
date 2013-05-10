@@ -1,0 +1,21 @@
+############################################################  ADMIN
+Active Outbound Holiday Definitions for this Record||
+Modify Call Time State Holiday||
+
+
+########################## CHANGES TO EXISTING PHRASES IN ADMIN TRANSLATION
+
+
+
+############################################################ CLIENT
+
+
+########################## CHANGES TO EXISTING PHRASES IN AGENT TRANSLATION
+
+
+############################################################  MANAGER Manual
+
+
+
+############################################################  AGENT Manual
+

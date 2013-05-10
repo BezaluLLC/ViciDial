@@ -3245,12 +3245,13 @@ else
 # 130425-0700 - Added DROP option for survey_no_response_action to go to campaign drop method
 # 130503-1509 - Added red color to server table on reports page if asterisk out of sync
 # 130508-2306 - Branched 2.7, trunk becomes 2.8
+# 130510-1350 - Added outbound state call time holidays functionality
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.8-402a';
-$build = '130508-2306';
+$admin_version = '2.8-403a';
+$build = '130510-1350';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3704,6 +3705,7 @@ if ($ADD==3111111)		{$hh='scripts';		echo "Modify Script";}
 if ($ADD==31111111)		{$hh='filters';		echo "Modify Filter";}
 if ($ADD==311111111)	{$hh='admin';	$sh='times';	echo "Modify Call Time";}
 if ($ADD==321111111)	{$hh='admin';	$sh='times';	echo "Modify Call Time State Definitions List";}
+if ($ADD==322111111)	{$hh='admin';	$sh='times';	echo "Modify Call Time State Holiday";}
 if ($ADD==331111111)	{$hh='admin';	$sh='shifts';	echo "Modify Shift";}
 if ($ADD==3111111111)	{$hh='admin';	$sh='times';	echo "Modify State Call Time";}
 if ($ADD==3211111111)	{$hh='admin';	$sh='times';	echo "Modify Holiday";}
@@ -30203,6 +30205,75 @@ if ($ADD==321111111)
 
 
 ######################
+# ADD=322111111 modify state call time definition info in the system, ADD/REMOVE
+######################
+
+if ($ADD==322111111)
+	{
+	if ($LOGmodify_call_times==1)
+		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=3111111111&call_time_id=$call_time_id";
+			$modify_footer_refresh=1;
+			}
+		### add-remove holiday rule
+		if ( ($stage=="ADD") and (strlen($holiday_rule)>0) )
+			{
+			$stmt="SELECT ct_holidays from vicidial_state_call_times where state_call_time_id='$call_time_id';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$ct_holidays = $row[0];
+
+			if (eregi("\|$",$ct_holidays))
+				{$ct_holidays = "$ct_holidays$holiday_rule\|";}
+			else
+				{$ct_holidays = "$ct_holidays\|$holiday_rule\|";}
+			$stmt="UPDATE vicidial_state_call_times set ct_holidays='$ct_holidays' where state_call_time_id='$call_time_id';";
+			$rslt=mysql_query($stmt, $link);
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLTIMES', event_type='MODIFY', record_id='$call_time_id', event_code='ADMIN MODIFY STATE CALL TIME ADD HOLIDAY RULE', event_sql=\"$SQL_log\", event_notes='Holiday Rule Added: $holiday_rule';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+
+			echo "Holiday Rule Added: $holiday_rule<BR>\n";
+			}
+		if ( ($stage=="REMOVE") and (strlen($holiday_rule)>0) )
+			{
+			$stmt="SELECT ct_holidays from vicidial_state_call_times where state_call_time_id='$call_time_id';";
+			$rslt=mysql_query($stmt, $link);
+			$row=mysql_fetch_row($rslt);
+			$ct_holidays = $row[0];
+
+			$ct_holidays = eregi_replace("\|$holiday_rule\|",'|',$ct_holidays);
+			$stmt="UPDATE vicidial_state_call_times set ct_holidays='$ct_holidays' where state_call_time_id='$call_time_id';";
+			$rslt=mysql_query($stmt, $link);
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLTIMES', event_type='MODIFY', record_id='$call_time_id', event_code='ADMIN MODIFY STATE CALL TIME REMOVE HOLIDAY RULE', event_sql=\"$SQL_log\", event_notes='Holiday Rule Removed: $holiday_rule';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+
+			echo "Holiday Rule Removed: $holiday_rule<BR>\n";
+			}
+
+		$ADD=3111111111;
+		}
+	else
+		{
+		echo "You are not authorized to view this page. Please go back.";
+		}
+	}
+
+
+######################
 # ADD=311111111 modify call time definition info in the system
 ######################
 
@@ -30447,7 +30518,7 @@ if ($ADD==3111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT state_call_time_id,state_call_time_state,state_call_time_name,state_call_time_comments,sct_default_start,sct_default_stop,sct_sunday_start,sct_sunday_stop,sct_monday_start,sct_monday_stop,sct_tuesday_start,sct_tuesday_stop,sct_wednesday_start,sct_wednesday_stop,sct_thursday_start,sct_thursday_stop,sct_friday_start,sct_friday_stop,sct_saturday_start,sct_saturday_stop,user_group from vicidial_state_call_times where state_call_time_id='$call_time_id' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT state_call_time_id,state_call_time_state,state_call_time_name,state_call_time_comments,sct_default_start,sct_default_stop,sct_sunday_start,sct_sunday_stop,sct_monday_start,sct_monday_stop,sct_tuesday_start,sct_tuesday_stop,sct_wednesday_start,sct_wednesday_stop,sct_thursday_start,sct_thursday_stop,sct_friday_start,sct_friday_stop,sct_saturday_start,sct_saturday_stop,user_group,ct_holidays from vicidial_state_call_times where state_call_time_id='$call_time_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$state_call_time_state =$row[1];
@@ -30470,6 +30541,7 @@ if ($ADD==3111111111)
 		$ct_saturday_start =	$row[18];
 		$ct_saturday_stop =		$row[19];
 		$user_group =			$row[20];
+		$ct_holidays =			$row[21];
 
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -30494,8 +30566,65 @@ if ($ADD==3111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Thursday Start:</td><td align=left><input type=text name=ct_thursday_start size=5 maxlength=4 value=\"$ct_thursday_start\"> </td><td align=right>Thursday Stop:</td><td align=left><input type=text name=ct_thursday_stop size=5 maxlength=4 value=\"$ct_thursday_stop\"> $NWB#vicidial_call_times-ct_sunday_start$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Friday Start:</td><td align=left><input type=text name=ct_friday_start size=5 maxlength=4 value=\"$ct_friday_start\"> </td><td align=right>Friday Stop:</td><td align=left><input type=text name=ct_friday_stop size=5 maxlength=4 value=\"$ct_friday_stop\"> $NWB#vicidial_call_times-ct_sunday_start$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Saturday Start:</td><td align=left><input type=text name=ct_saturday_start size=5 maxlength=4 value=\"$ct_saturday_start\"> </td><td align=right>Saturday Stop:</td><td align=left><input type=text name=ct_saturday_stop size=5 maxlength=4 value=\"$ct_saturday_stop\"> $NWB#vicidial_call_times-ct_sunday_start$NWE</td></tr>\n";
-
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=4><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=4>&nbsp;</td></tr>\n";
+
+
+
+		$ct_hrs=1;
+		$b=0;
+		$hrs_SQL ='';
+		if (strlen($ct_holidays)>2)
+			{
+			$holiday_rules = explode('|',$ct_holidays);
+			$ct_hrs = ((count($holiday_rules)) - 1);
+			}
+		echo "<tr bgcolor=#B6D3FC><td align=center rowspan=$ct_hrs>Active Outbound Holiday Definitions for this Record: </td>\n";
+		echo "<td align=center colspan=3>&nbsp;</td></tr>\n";
+		while($ct_hrs >= $b)
+			{
+			if (strlen($holiday_rules[$b])>0)
+				{
+				$stmt="SELECT holiday_date,holiday_name from vicidial_call_time_holidays where holiday_id='$holiday_rules[$b]';";
+				$rslt=mysql_query($stmt, $link);
+				$row=mysql_fetch_row($rslt);
+				echo "<tr bgcolor=#B6D3FC><td align=right colspan=2><a href=\"$PHP_SELF?ADD=3211111111&holiday_id=$holiday_rules[$b]\">$holiday_rules[$b] </a> - <a href=\"$PHP_SELF?ADD=322111111&call_time_id=$call_time_id&holiday_rule=$holiday_rules[$b]&stage=REMOVE\">REMOVE </a></td><td align=left>$row[0] - $row[1]</td></tr>\n";
+				$hrs_SQL .= "'$holiday_rules[$b]',";
+				$hrs_holiday_SQL .= "'$row[0]',";
+				}
+			$b++;
+			}
+		if (strlen($hrs_SQL)>2)
+			{
+			$hrs_SQL = "$hrs_SQL''";
+			$hrs_holiday_SQL = "$hrs_holiday_SQL''";
+			$hrs_SQL = "where holiday_id NOT IN($hrs_SQL) and holiday_date NOT IN($hrs_holiday_SQL) $LOGadmin_viewable_groupsSQL";
+			}
+		else
+			{$hrs_SQL="$whereLOGadmin_viewable_groupsSQL";}
+		$stmt="SELECT holiday_id,holiday_date from vicidial_call_time_holidays $hrs_SQL order by holiday_date;";
+		$rslt=mysql_query($stmt, $link);
+		$hct_to_print = mysql_num_rows($rslt);
+		$hct_list='';
+
+		$o=0;
+		while ($hct_to_print > $o) 
+			{
+			$rowx=mysql_fetch_row($rslt);
+			$hct_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+			$o++;
+			}
+		echo "<tr bgcolor=#B6D3FC><td align=right><form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=322111111>\n";
+		echo "<input type=hidden name=stage value=\"ADD\">\n";
+		echo "<input type=hidden name=call_time_id value=\"$call_time_id\">\n";
+		echo "Add inbound holiday rule: </td><td align=left colspan=2><select size=1 name=holiday_rule>\n";
+		echo "$hct_list";
+		echo "</select></td>\n";
+		echo "<td align=center colspan=4><input type=submit name=SUBMIT value=SUBMIT></FORM></td></tr>\n";
+
+
+
 		echo "</TABLE><BR><BR>\n";
 		echo "<B>CALL TIMES USING THIS STATE CALL TIME:</B><BR>\n";
 		echo "<TABLE>\n";
@@ -30603,6 +30732,21 @@ if ($ADD==3211111111)
 			{
 			$row=mysql_fetch_row($rslt);
 			echo "<TR><TD><a href=\"$PHP_SELF?ADD=311111111&call_time_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+			$o++;
+			}
+
+		echo "</TABLE><BR><BR>\n";
+		echo "<B>STATE CALL TIMES USING THIS HOLIDAY:</B><BR>\n";
+		echo "<TABLE>\n";
+
+		$stmt="SELECT state_call_time_id,state_call_time_state,state_call_time_name from vicidial_state_call_times where ct_holidays LIKE \"%|$holiday_id|%\";";
+		$rslt=mysql_query($stmt, $link);
+		$camps_to_print = mysql_num_rows($rslt);
+		$o=0;
+		while ($camps_to_print > $o) 
+			{
+			$row=mysql_fetch_row($rslt);
+			echo "<TR><TD><a href=\"$PHP_SELF?ADD=3111111111&call_time_id=$row[0]\">$row[0] </a></TD><TD> $row[1] - $row[2]<BR></TD></TR>\n";
 			$o++;
 			}
 

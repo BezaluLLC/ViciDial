@@ -53,7 +53,9 @@ REQUIRED STEPS!!!
 
 OTHER CHANGES:
 
-1. Nothing yet, 2.7 was just branched, trunk becomes 2.8
+1. Added outbound state call time holidays functionality. Only works if the 
+	"state" field is populated properly in your leads.
+
 
 
 
