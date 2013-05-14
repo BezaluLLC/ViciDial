@@ -494,7 +494,7 @@ else
 
 	# Displays park info - need to run regardless so HTML view will populate
 	$park_array=array();
-	$park_stmt="select user, count(*), sum(parked_sec) From park_log where parked_time <= '$query_date_END' and parked_time >= '$query_date_BEGIN' $park_log_SQL";
+	$park_stmt="select user, count(*), sum(parked_sec) From park_log where parked_time <= '$query_date_END' and parked_time >= '$query_date_BEGIN' $park_log_SQL group by user";
 	if ($DB) {$ASCII_text.= "$park_stmt\n";}
 	$park_rslt=mysql_query($park_stmt, $link);
 	while ($park_row=mysql_fetch_row($park_rslt)) {
