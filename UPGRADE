@@ -255,6 +255,10 @@ OTHER CHANGES:
 		[up_monitor]
 		exten => h,1,AGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})
 
+		exten => _X.,1,Set(MEETME_EXIT_CONTEXT=up_monitor_exit)
+		exten => _X.,n,AGI(agi-phone_monitor.agi,USER---N---LISTEN---${EXTEN})
+		exten => _X.,n,Hangup()
+
 		exten => s,1,Set(MEETME_EXIT_CONTEXT=up_monitor_exit)
 		exten => s,n,AGI(agi-phone_monitor.agi,USER---N---LISTEN)
 		exten => s,n,Hangup()

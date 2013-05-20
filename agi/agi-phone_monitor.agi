@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-phone_monitor.agi      version 2.6
+# agi-phone_monitor.agi      version 2.8
 #
 # This script is designed to allow managers to listen to agent sessions by 
 # dialing a phone exten number or user ID number. For this to work, the user ID
@@ -11,14 +11,15 @@
 # then the user is forwarded to monitor the active vicidial agent session
 #
 # ; settings for this script:
-# ; 1. USER or PHONE, lookup by user id or phone extension (default is USER)
+# ; 1. USER, PHONE or PLOGIN, lookup by user id, phone extension or phone login (default is USER)
 # ; 2. Y or N, log in api log (default is N)
 # ; 3. BARGE or LISTEN, (default is LISTEN)
+# ; 4. Prepopulated ID, for use in context by itself
 #
 # can be added as an AGI to a Call Menu, or just a direct extension transfer:
 #
 # ; call menu AGI with options:
-#  agi-phone_monitor.agi,USER---N---LISTEN
+#  agi-phone_monitor.agi,USER---N---LISTEN---
 #
 # ; or as extension transfer to "up_monitor_exit" context and "s" extension
 #
@@ -26,6 +27,7 @@
 #
 # CHANGELOG
 # 130401-0724 - First build
+# 130520-1013 - Added PLOGIN lookup option and no-prompt extension feature
 #
 
 &get_time_now;
@@ -109,8 +111,9 @@ if (length($ARGV[0])>1)
 	$user_phone =		$ARGV_vars[0];
 	$api_log = 			$ARGV_vars[1];
 	$barge_listen = 	$ARGV_vars[2];
+	$prepop_id =		$ARGV_vars[3];
 	}
-if ( (length($user_phone) < 1) || ($user_phone !~ /USER|PHONE/) )
+if ( (length($user_phone) < 1) || ($user_phone !~ /USER|PHONE|PLOGIN/) )
 	{$user_phone = 'USER';}
 if ( (length($api_log) < 1) || ($api_log !~ /Y|N/) )
 	{$api_log = 'N';}
@@ -186,13 +189,19 @@ while ( ($entry_chances < 3) && ($VALID_login < 1) )
 	$entry_chances++;
 
 
-	&user_phone_gather;
-
+	if (length($prepop_id)<2)
+		{
+		&user_phone_gather;
+		}
+	else
+		{$PIN_number = $prepop_id;}
 
 	###### Check userID and password against vicidial_users table
 	$stmtA = "SELECT count(*) FROM vicidial_users where user='$PIN_number' and active='Y';";
 	if ($user_phone =~ /PHONE/)
 		{$stmtA = "SELECT count(*) FROM phones where extension='$PIN_number' and active='Y';";}
+	if ($user_phone =~ /PLOGIN/)
+		{$stmtA = "SELECT count(*) FROM phones where login='$PIN_number' and active='Y';";}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -268,6 +277,25 @@ else
 	$stmtA = "SELECT count(*) FROM vicidial_live_agents where user='$PIN_number' and last_update_time > \"$PDtsSQLdate\";";
 	if ($user_phone =~ /PHONE/)
 		{$stmtA = "SELECT count(*) FROM vicidial_live_agents where extension LIKE \"%/$PIN_number\" and last_update_time > \"$PDtsSQLdate\";";}
+	if ($user_phone =~ /PLOGIN/)
+		{
+		$PLOGIN_extension='XXXXXXXXXXXXXXXXXX';
+		$PLOGIN_server_ip='1.1.1.1';
+		$stmtA = "SELECT extension,server_ip FROM phones where login='$PIN_number' and active='Y';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$PLOGIN_extension = $aryA[0];
+			$PLOGIN_server_ip = $aryA[1];
+			}
+		$sthA->finish();
+		if ($AGILOG) {$agi_string = "PLOGIN DEBUG:   |$PLOGIN_extension|$PLOGIN_server_ip|$stmtA|";   &agi_output;}
+
+		$stmtA = "SELECT count(*) FROM vicidial_live_agents where extension LIKE \"%/$PLOGIN_extension\" and server_ip='$PLOGIN_server_ip' and last_update_time > \"$PDtsSQLdate\";";
+		}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -280,7 +308,7 @@ else
 
 	if ($ACTIVE_login < 1) 
 		{
-		if ($AGILOG) {$agi_string = "PHONE MONIOR END: Inactive Login   |$VALID_login|$PIN_number|$PASS_word|  |$ACTIVE_login|$PDtsSQLdate|";   &agi_output;}
+		if ($AGILOG) {$agi_string = "PHONE MONIOR END: Inactive Login   |$VALID_login|$PIN_number|$PASS_word|  |$ACTIVE_login|$PDtsSQLdate|$stmtA|";   &agi_output;}
 
 		if ($api_log =~ /Y/)
 			{
@@ -302,6 +330,24 @@ else
 		$stmtA = "SELECT conf_exten,extension,server_ip from vicidial_live_agents WHERE user='$PIN_number' and last_update_time > \"$PDtsSQLdate\" limit 1;";
 		if ($user_phone =~ /PHONE/)
 			{$stmtA = "SELECT conf_exten,extension,server_ip FROM vicidial_live_agents where extension LIKE \"%/$PIN_number\" and last_update_time > \"$PDtsSQLdate\" limit 1;";}
+		if ($user_phone =~ /PLOGIN/)
+			{
+			$PLOGIN_extension='XXXXXXXXXXXXXXXXXX';
+			$PLOGIN_server_ip='1.1.1.1';
+			$stmtA = "SELECT extension,server_ip FROM phones where login='$PIN_number' and active='Y';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$PLOGIN_extension = $aryA[0];
+				$PLOGIN_server_ip = $aryA[1];
+				}
+			$sthA->finish();
+
+			$stmtA = "SELECT conf_exten,extension,server_ip FROM vicidial_live_agents where extension LIKE \"%/$PLOGIN_extension\" and server_ip='$PLOGIN_server_ip' and last_update_time > \"$PDtsSQLdate\" limit 1;";
+			}
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
