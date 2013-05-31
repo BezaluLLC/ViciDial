@@ -65,6 +65,7 @@
 # 121124-2303 - Added Other Campaign DNC option
 # 121129-2322 - Added enhanced_disconnect_logging option
 # 130412-1321 - Added sip_hangup_cause to carrier log
+# 130531-1619 - Fixed issue with busy agent login calls attempting to be logged
 #
 
 # defaults for PreFork
@@ -866,7 +867,7 @@ sub process_request
 						### END - CPD Look for result for B/DC calls
 						##############################################################
 						}
-					if ( ($PRI =~ /^PRI$/) && ($callerid =~ /\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/) && ( ( ($dialstatus =~ /BUSY/) || ( ($dialstatus =~ /CHANUNAVAIL/) && ($hangup_cause =~ /^1$|^28$/) ) || ( ($enhanced_disconnect_logging > 0) && ( ($dialstatus =~ /CONGESTION/) && ($hangup_cause =~ /^1$|^19$|^21$|^34$|^38$/) ) ) ) || ($CPDfound > 0) ))
+					if ( ($PRI =~ /^PRI$/) && ($callerid =~ /\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/) && ( ( ($dialstatus =~ /BUSY/) || ( ($dialstatus =~ /CHANUNAVAIL/) && ($hangup_cause =~ /^1$|^28$/) ) || ( ($enhanced_disconnect_logging > 0) && ( ($dialstatus =~ /CONGESTION/) && ($hangup_cause =~ /^1$|^19$|^21$|^34$|^38$/) ) ) ) || ($CPDfound > 0) ) && ($callerid !~ /^S\d\d\d\d\d\d\d\d\d\d\d\d/) )
 						{
 						if ($CPDfound < 1) 
 							{
