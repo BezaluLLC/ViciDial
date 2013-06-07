@@ -54,6 +54,7 @@ use MIME::QuotedPrint;
 # changes:
 # 121213-2200 - First Build
 # 130127-0025 - Added better non-latin characters support
+# 130607-0155 - Encoding fix
 #
 
 # default path to astguiclient configuration file:
@@ -228,9 +229,10 @@ while (@row=$rslt->fetchrow_array) {
 								$message = $client->body_string($msgs[$j]);
 								$charset="";
 
-								$content_type=~/charset\=(KOI8\-R|ISO\-8859\-[0-9]+|windows\-12[0-9]+|utf\-8)/i;
+								$content_type=~/charset\=\"?(KOI8\-R|ISO\-8859\-[0-9]+|windows\-12[0-9]+|utf\-8|us\-ascii)\"?/i;
 								$charset=$&;
 								$charset=substr($charset, 8);
+								$charset=~s/\"//gi;
 
 								$text_written=0;  ## Keeps track of whether or not text of email was grabbed
 								$attach_ct=0; ## Keeps number
@@ -322,9 +324,10 @@ while (@row=$rslt->fetchrow_array) {
 											}
 
 											## Do a second check for a charset in the message, just in case.
-											$sub_content_type=~/charset\=(KOI8\-R|ISO\-8859\-[0-9]+|windows\-12[0-9]+|utf\-8)/i;
+											$sub_content_type=~/charset\=\"?(KOI8\-R|ISO\-8859\-[0-9]+|windows\-12[0-9]+|utf\-8|us\-ascii)\"?/i;
 											$charset=$&;
 											$charset=substr($charset, 8);
+											$charset=~s/\"//gi;
 
 											## Check for attachments
 											if ($sub_content_disposition=~/attachment/) {
@@ -565,9 +568,10 @@ while (@row=$rslt->fetchrow_array) {
 				@output_ins_values=();
 		
 				# Check for charset, in case decoding is necessary
-				$content_type=~/charset\=(KOI8\-R|ISO\-8859\-[0-9]+|windows\-12[0-9]+|utf\-8)/i;
+				$content_type=~/charset\=\"?(KOI8\-R|ISO\-8859\-[0-9]+|windows\-12[0-9]+|utf\-8|us\-ascii)\"?/i;
 				$charset=$&;
 				$charset=substr($charset, 8);
+				$charset=~s/\"//gi;
 
 				if ($content_type=~/^text\/plain/i) {
 					## Do nothing - it's plain text and needs no further work on it.
@@ -642,9 +646,10 @@ while (@row=$rslt->fetchrow_array) {
 							}
 
 							## Do a second check for a charset in the message, just in case.
-							$sub_content_type=~/charset\=(KOI8\-R|ISO\-8859\-[0-9]+|windows\-12[0-9]+|utf\-8)/i;
+							$sub_content_type=~/charset\=\"?(KOI8\-R|ISO\-8859\-[0-9]+|windows\-12[0-9]+|utf\-8|us\-ascii)\"?/i;
 							$charset=$&;
 							$charset=substr($charset, 8);
+							$charset=~s/\"//gi;
 							$content_type.="; charset=$charset";
 
 							## Check for attachments
