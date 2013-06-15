@@ -17,6 +17,7 @@
 # 120210-1218 - Added vendor_lead_code to output
 # 120221-0059 - Added User Group restriction settings
 # 130414-0159 - Added report logging
+# 130610-0955 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -37,8 +38,8 @@ if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and modify_campaigns='1';";
 if ($DB) {echo "|$stmt|\n";}
@@ -100,7 +101,7 @@ $LOGadmin_viewable_call_times =	$row[3];
 
 $LOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
-if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 	{
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);

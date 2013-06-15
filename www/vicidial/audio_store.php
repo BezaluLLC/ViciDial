@@ -1,7 +1,7 @@
 <?php
 # audio_store.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Central Audio Storage script
 # 
@@ -16,10 +16,11 @@
 # 120531-1747 - Another filtering fix
 # 121019-0816 - Added audio file delete process
 # 121129-1620 - Hide delete option text if not allowed
+# 130610-1052 - Finalized changing of all ereg instances to preg
 #
 
-$version = '2.6-10';
-$build = '121129-1620';
+$version = '2.8-11';
+$build = '130610-1052';
 
 $MT[0]='';
 
@@ -75,7 +76,7 @@ if ($ss_conf_ct > 0)
 
 
 ### check if sounds server matches this server IP, if not then exit with an error
-if ( ( (strlen($sounds_web_server)) != (strlen($server_name)) ) or (!eregi("$sounds_web_server",$server_name) ) )
+if ( ( (strlen($sounds_web_server)) != (strlen($server_name)) ) or (!preg_match("/$sounds_web_server/i",$server_name) ) )
 	{
 	echo "ERROR: server($server_name) does not match sounds web server ip($sounds_web_server)\n";
 	exit;
@@ -137,9 +138,9 @@ if ( (!preg_match("/\|$ip\|/", $server_ips)) and ($formIPvalid < 1) )
 	$user_set=1;
 	$PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 	$PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
-	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
-	$delete_file = ereg_replace("[^-\._0-9a-zA-Z]","",$delete_file);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_PW);
+	$delete_file = preg_replace('/[^-\._0-9a-zA-Z]/','',$delete_file);
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and ( (modify_campaigns='1') or (modify_audiostore='1') )";
 	if ($DB) {echo "|$stmt|\n";}
@@ -290,8 +291,8 @@ if ($user_set < 1)
 	{
 	$PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 	$PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
-	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_PW);
 	}
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'311111111111111';
@@ -330,10 +331,10 @@ $browser = getenv("HTTP_USER_AGENT");
 $script_name = getenv("SCRIPT_NAME");
 $server_name = getenv("SERVER_NAME");
 $server_port = getenv("SERVER_PORT");
-if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
+if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
   else {$HTTPprotocol = 'http://';}
 $admDIR = "$HTTPprotocol$server_name:$server_port$script_name";
-$admDIR = eregi_replace('audio_store.php','',$admDIR);
+$admDIR = preg_replace('/audio_store\.php/i', '',$admDIR);
 $admSCR = 'admin.php';
 $NWB = " &nbsp; <a href=\"javascript:openNewWindow('$admDIR$admSCR?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
@@ -377,7 +378,7 @@ if ($action == "MANUALUPLOAD")
 
 		### LOG INSERTION Admin Log Table ###
 		$SQL_log = "$stmt|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
 		$SQL_log = addslashes($SQL_log);
 		$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='AUDIOSTORE', event_type='LOAD', record_id='manualupload', event_code='$audiofile_name " . filesize("$WeBServeRRooT/$sounds_web_directory/$audiofile_name") . "', event_sql=\"$SQL_log\", event_notes='$audiofile_name $AF_path $AF_orig';";
 		if ($DB) {echo "|$stmt|\n";}

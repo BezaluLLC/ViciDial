@@ -24,7 +24,7 @@
 ### remove temp files
 # 1 7 * * * /usr/bin/find /usr/local/apache2/htdocs/vicidial/temp/ -maxdepth 1 -type f -mtime +1 -print | xargs rm -f
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 
 # CHANGES
@@ -32,6 +32,7 @@
 # 71112-1347 - added GSM option
 # 90508-0644 - Changed to PHP long tags
 # 120223-2129 - Removed logging of good login passwords if webroot writable is enabled
+# 130610-1108 - Finalized changing of all ereg instances to preg
 #
 
 $STARTtime = date("U");
@@ -49,7 +50,7 @@ if (isset($_GET["QUERY_recid"]))				{$QUERY_recid=$_GET["QUERY_recid"];}
 $web_server = '1.1.1.1';
 $US='_';
 
-if( (eregi("VDC",$PHP_AUTH_USER)) or (eregi("VDC",$PHP_AUTH_PW)) )
+if( (preg_match("/VDC/i",$PHP_AUTH_USER)) or (preg_match("/VDC/i",$PHP_AUTH_PW)) )
 	{
 	#	$package='';
 	}
@@ -113,7 +114,7 @@ else
 			$AUDnamect =	(count($AUDname)) - 1;
 
 		
-		eregi_replace('10.10.10.16','10.10.10.16',$AUDname[$AUDnamect]);
+		preg_replace('/10\.10\.10\.16/i', "10.10.10.16",$AUDname[$AUDnamect]);
 
 		echo "Call Date/Time:        $start_time\n";
 		echo "Recording Length:      $length_in_sec\n";
@@ -127,11 +128,11 @@ else
 
 		$fileGSM=$AUDname[$AUDnamect];
 		$locationGSM=$location;
-		$fileGSM = eregi_replace('.wav','.gsm',$fileGSM);
-		if (!eregi('gsm',$locationGSM))
+		$fileGSM = preg_replace('/\.wav/i', ".gsm",$fileGSM);
+		if (!preg_match('/gsm/i',$locationGSM))
 			{
-			$locationGSM = eregi_replace('10.10.10.16','10.10.10.16/GSM',$locationGSM);
-			$locationGSM = eregi_replace('.wav','.gsm',$locationGSM);
+			$locationGSM = preg_replace('/10\.10\.10\.16/i', "10.10.10.16/GSM",$locationGSM);
+			$locationGSM = preg_replace('/\.wav/i', ".gsm",$locationGSM);
 			}
 		passthru("/usr/local/apache2/htdocs/vicidial/wget --output-document=/usr/local/apache2/htdocs/vicidial/temp/$AUDname[$AUDnamect] $location\n");
 		passthru("/usr/local/apache2/htdocs/vicidial/wget --output-document=/usr/local/apache2/htdocs/vicidial/temp/$fileGSM $locationGSM\n");

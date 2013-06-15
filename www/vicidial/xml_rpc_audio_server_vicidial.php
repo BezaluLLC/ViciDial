@@ -3,7 +3,7 @@
 # 
 # Used for integration with QueueMetrics of audio recordings
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # Copyright (C) 2007  Lenz Emilitri <lenz.loway@gmail.com> LICENSE: ????
 # 
 # CHANGES
@@ -13,6 +13,7 @@
 # 100127-0603 - Added OpenSuSE install instructions
 # 100903-0041 - Changed lead_id max length to 10 digits
 # 120621-0728 - Added commented-out debug logging
+# 130610-1100 - Finalized changing of all ereg instances to preg
 #
 
 // $Id: xmlrpc_audio_server.php,v 1.3 2007/11/12 17:53:09 lenz Exp $
@@ -131,14 +132,14 @@ function find_file( $ServerID, $AsteriskID, $QMUserID, $QMUserName )
 				if (strlen($location)>2)
 					{
 					$extension = substr($location, strrpos($location, '.') + 1);
-					if (ereg("mp3|gsm",$extension))
+					if (preg_match("/mp3|gsm/",$extension))
 						{$filesize = (2000 * $length_in_sec);}
 					else
 						{$filesize = (15660 * $length_in_sec);}
 					$URLserver_ip = $location;
-					$URLserver_ip = eregi_replace('http://','',$URLserver_ip);
-					$URLserver_ip = eregi_replace('https://','',$URLserver_ip);
-					$URLserver_ip = eregi_replace("\/.*",'',$URLserver_ip);
+					$URLserver_ip = preg_replace('/http:\/\//i', '',$URLserver_ip);
+					$URLserver_ip = preg_replace('/https:\/\//i', '',$URLserver_ip);
+					$URLserver_ip = preg_replace('/\/.*/i', '',$URLserver_ip);
 					$stmt="select count(*) from servers where server_ip='$URLserver_ip';";
 					$rsltx=mysql_query($stmt, $link);
 					$rowx=mysql_fetch_row($rsltx);
@@ -149,9 +150,9 @@ function find_file( $ServerID, $AsteriskID, $QMUserID, $QMUserName )
 						$rsltx=mysql_query($stmt, $link);
 						$rowx=mysql_fetch_row($rsltx);
 						
-						if (eregi("ALT_IP",$rowx[0]))
+						if (preg_match("/ALT_IP/i",$rowx[0]))
 							{
-							$location = eregi_replace($URLserver_ip, $rowx[1], $location);
+							$location = preg_replace("/$URLserver_ip/i", "$rowx[1]", $location);
 							}
 						}
 					$FILE_FOUND      = true;
@@ -249,10 +250,10 @@ function listen_call( $ServerID, $AsteriskID, $Agent, $QMUserID, $QMUserName )
 				$script_name = getenv("SCRIPT_NAME");
 				$server_name = getenv("SERVER_NAME");
 				$server_port = getenv("SERVER_PORT");
-				if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
+				if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
 				  else {$HTTPprotocol = 'http://';}
 				$admDIR = "$HTTPprotocol$server_name$script_name";
-				$admDIR = eregi_replace('xml_rpc_audio_server_vicidial.php','',$admDIR);
+				$admDIR = preg_replace('/xml_rpc_audio_server_vicidial\.php/i', '',$admDIR);
 				$monitor_script = 'QM_live_monitor.php';
 
 				$CALL_FOUND      = true;

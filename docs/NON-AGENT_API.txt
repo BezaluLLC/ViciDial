@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2013-04-20
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2013-06-14
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -82,6 +82,7 @@ Changes:
 130328-0949 - Added update_phone_number option to update_lead function
 130405-1538 - Added agent_status function
 130420-1938 - Added NANPA prefix validation and timezone options
+130614-0907 - Added pause code to output of agent_status function
 
 
 API Functions use the 'function' variable
@@ -422,8 +423,8 @@ ERROR: agent_status AGENT NOT FOUND - 6666||
 ERROR: agent_status AGENT NOT LOGGED IN - 6666||
 
 A SUCCESS response will not show "SUCCESS", but instead will just print the results in the following format:
-status,call_id,lead_id,campaign_id,calls_today,full_name,user_group,user_level
-INCALL,M4050908070000012345,12345,TESTCAMP,12,Test Agent,AGENTS,3
+status,call_id,lead_id,campaign_id,calls_today,full_name,user_group,user_level,pause_code
+INCALL,M4050908070000012345,12345,TESTCAMP,1,Test Agent,AGENTS,3,LOGIN
 
 
 

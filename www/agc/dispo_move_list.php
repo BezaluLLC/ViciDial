@@ -32,6 +32,7 @@
 # 111005-1102 - Added check and update for scheduled callback entry
 # 120223-2124 - Removed logging of good login passwords if webroot writable is enabled
 # 130328-0015 - Converted ereg to preg functions
+# 130603-2216 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 #
 
 $api_script = 'deactivate';
@@ -39,6 +40,7 @@ $api_script = 'deactivate';
 header ("Content-type: text/html; charset=utf-8");
 
 require("dbconnect.php");
+require("functions.php");
 
 $filedate = date("Ymd");
 $filetime = date("H:i:s");
@@ -141,12 +143,13 @@ if ($match_found > 0)
 		$pass = preg_replace("/\'|\"|\\\\|;/","",$pass);
 		}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-	if ($DB) {echo "|$stmt|\n";}
-	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+	$session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
+	$server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
+
+	$auth=0;
+	$auth_message = user_authorization($user,$pass,'',0);
+	if ($auth_message == 'GOOD')
+		{$auth=1;}
 
 	$stmt="SELECT count(*) from vicidial_live_agents where user='$user';";
 	if ($DB) {echo "|$stmt|\n";}
@@ -156,7 +159,7 @@ if ($match_found > 0)
 
 	if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0) or ($authlive==0))
 		{
-		echo "Invalid Username/Password: |$user|$pass|$auth|$authlive\n";
+		echo "Invalid Username/Password: |$user|$pass|$auth|$authlive|$auth_message|\n";
 		exit;
 		}
 

@@ -34,6 +34,7 @@
 # 111010-1930 - Added ALTERNATE_1 format
 # 111104-1240 - Added user_group restrictions for selecting in-groups
 # 130414-0122 - Added report logging
+# 130610-0952 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -102,8 +103,8 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_PW);
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and export_reports='1' and active='Y';";
 if ($DB) {echo "|$stmt|\n";}
@@ -180,7 +181,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 
 $LOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
-if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 	{
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
@@ -191,7 +192,7 @@ $regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
 
 $LOGadmin_viewable_groupsSQL='';
 $whereLOGadmin_viewable_groupsSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 	{
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -201,7 +202,7 @@ if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewabl
 
 $LOGadmin_viewable_call_timesSQL='';
 $whereLOGadmin_viewable_call_timesSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i', $LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
 	{
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ -/",'',$LOGadmin_viewable_call_times);
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_call_timesSQL);
@@ -244,14 +245,14 @@ if ($run_export > 0)
 			}
 		$i++;
 		}
-	if ( (ereg("--NONE--",$campaign_string) ) or ($campaign_ct < 1) )
+	if ( (preg_match('/\s\-\-NONE\-\-\s/',$campaign_string) ) or ($campaign_ct < 1) )
 		{
 		$campaign_SQL = "campaign_id IN('')";
 		$RUNcampaign=0;
 		}
 	else
 		{
-		$campaign_SQL = eregi_replace(",$",'',$campaign_SQL);
+		$campaign_SQL = preg_replace('/,$/i', '',$campaign_SQL);
 		$campaign_SQL = "and vl.campaign_id IN($campaign_SQL)";
 		$RUNcampaign++;
 		}
@@ -263,7 +264,7 @@ if ($run_export > 0)
 		$group_SQL .= "'$group[$i]',";
 		$i++;
 		}
-	if ( (ereg("--NONE--",$group_string) ) or ($group_ct < 1) )
+	if ( (preg_match('/\s\-\-NONE\-\-\s/',$group_string) ) or ($group_ct < 1) )
 		{
 		$group_SQL = "''";
 		$group_SQL = "campaign_id IN('')";
@@ -271,7 +272,7 @@ if ($run_export > 0)
 		}
 	else
 		{
-		$group_SQL = eregi_replace(",$",'',$group_SQL);
+		$group_SQL = preg_replace('/,$/i', '',$group_SQL);
 		$group_SQL = "and vl.campaign_id IN($group_SQL)";
 		$RUNgroup++;
 		}
@@ -283,13 +284,13 @@ if ($run_export > 0)
 		$user_group_SQL .= "'$user_group[$i]',";
 		$i++;
 		}
-	if ( (ereg("--ALL--",$user_group_string) ) or ($user_group_ct < 1) )
+	if ( (preg_match('/\-\-ALL\-\-/',$user_group_string) ) or ($user_group_ct < 1) )
 		{
 		$user_group_SQL = "";
 		}
 	else
 		{
-		$user_group_SQL = eregi_replace(",$",'',$user_group_SQL);
+		$user_group_SQL = preg_replace('/,$/i', '',$user_group_SQL);
 		$user_group_SQL = "and vl.user_group IN($user_group_SQL)";
 		}
 
@@ -300,13 +301,13 @@ if ($run_export > 0)
 		$list_SQL .= "'$list_id[$i]',";
 		$i++;
 		}
-	if ( (ereg("--ALL--",$list_string) ) or ($list_ct < 1) )
+	if ( (preg_match('/\-\-ALL\-\-/',$list_string) ) or ($list_ct < 1) )
 		{
 		$list_SQL = "";
 		}
 	else
 		{
-		$list_SQL = eregi_replace(",$",'',$list_SQL);
+		$list_SQL = preg_replace('/,$/i', '',$list_SQL);
 		$list_SQL = "and vi.list_id IN($list_SQL)";
 		}
 
@@ -317,13 +318,13 @@ if ($run_export > 0)
 		$status_SQL .= "'$status[$i]',";
 		$i++;
 		}
-	if ( (ereg("--ALL--",$status_string) ) or ($status_ct < 1) )
+	if ( (preg_match('/\-\-ALL\-\-/',$status_string) ) or ($status_ct < 1) )
 		{
 		$status_SQL = "";
 		}
 	else
 		{
-		$status_SQL = eregi_replace(",$",'',$status_SQL);
+		$status_SQL = preg_replace('/,$/i', '',$status_SQL);
 		$status_SQL = "and vl.status IN($status_SQL)";
 		}
 
@@ -1010,7 +1011,7 @@ else
 		$o=0;
 		while ($campaigns_to_print > $o)
 		{
-			if (ereg("\|$LISTcampaigns[$o]\|",$campaign_string)) 
+			if (preg_match("/\|$LISTcampaigns[$o]\|/",$campaign_string)) 
 				{echo "<option selected value=\"$LISTcampaigns[$o]\">$LISTcampaigns[$o]</option>\n";}
 			else 
 				{echo "<option value=\"$LISTcampaigns[$o]\">$LISTcampaigns[$o]</option>\n";}
@@ -1026,7 +1027,7 @@ else
 			$o=0;
 			while ($groups_to_print > $o)
 			{
-				if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
+				if (preg_match("/\|$LISTgroups[$o]\|/",$group_string)) 
 					{echo "<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o]</option>\n";}
 				else
 					{echo "<option value=\"$LISTgroups[$o]\">$LISTgroups[$o]</option>\n";}
@@ -1040,7 +1041,7 @@ else
 		$o=0;
 		while ($lists_to_print > $o)
 		{
-			if (ereg("\|$LISTlists[$o]\|",$list_string)) 
+			if (preg_match("/\|$LISTlists[$o]\|/",$list_string)) 
 				{echo "<option selected value=\"$LISTlists[$o]\">$LISTlists[$o]</option>\n";}
 			else 
 				{echo "<option value=\"$LISTlists[$o]\">$LISTlists[$o]</option>\n";}
@@ -1053,7 +1054,7 @@ else
 		$o=0;
 		while ($statuses_to_print > $o)
 		{
-			if (ereg("\|$LISTstatus[$o]\|",$list_string)) 
+			if (preg_match("/\|$LISTstatus[$o]\|/",$list_string)) 
 				{echo "<option selected value=\"$LISTstatus[$o]\">$LISTstatus[$o]</option>\n";}
 			else 
 				{echo "<option value=\"$LISTstatus[$o]\">$LISTstatus[$o]</option>\n";}
@@ -1068,7 +1069,7 @@ else
 			$o=0;
 			while ($user_groups_to_print > $o)
 			{
-				if (ereg("\|$LISTuser_groups[$o]\|",$user_group_string)) 
+				if (preg_match("/\|$LISTuser_groups[$o]\|/",$user_group_string)) 
 					{echo "<option selected value=\"$LISTuser_groups[$o]\">$LISTuser_groups[$o]</option>\n";}
 				else 
 					{echo "<option value=\"$LISTuser_groups[$o]\">$LISTuser_groups[$o]</option>\n";}
@@ -1108,7 +1109,7 @@ if ($file_exported > 0)
 	{
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|$stmtA|";
-	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = preg_replace('/;/', '', $SQL_log);
 	$SQL_log = addslashes($SQL_log);
 	$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LEADS', event_type='EXPORT', record_id='', event_code='ADMIN EXPORT CALLS REPORT', event_sql=\"$SQL_log\", event_notes='';";
 	if ($DB) {echo "|$stmt|\n";}

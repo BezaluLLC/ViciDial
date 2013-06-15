@@ -8,6 +8,7 @@
 # CHANGELOG:
 # 130221-2117 - First build
 # 130414-0132 - Added report logging
+# 130610-1016 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -163,7 +164,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 
 $LOGadmin_viewable_groupsSQL='';
 $whereLOGadmin_viewable_groupsSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 	{
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -211,14 +212,14 @@ while($i < $group_ct)
 		}
 	$i++;
 	}
-if ( (ereg("--NONE--",$group_string) ) or ($group_ct < 1) )
+if ( (preg_match('/\s\-\-NONE\-\-\s/',$group_string) ) or ($group_ct < 1) )
 	{
 	$group_SQL = "''";
 #	$group_SQL = "group_id IN('')";
 	}
 else
 	{
-	$group_SQL = eregi_replace(",$",'',$group_SQL);
+	$group_SQL = preg_replace('/,$/i', '',$group_SQL);
 #	$group_SQL = "group_id IN($group_SQL)";
 	}
 if (strlen($group_SQL)<3) {$group_SQL="''";}
@@ -314,7 +315,7 @@ $MAIN.="<SELECT SIZE=5 NAME=group[] multiple>\n";
 $o=0;
 while ($groups_to_print > $o)
 	{
-	if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
+	if (preg_match("/\|$LISTgroups[$o]\|/",$group_string)) 
 		{$MAIN.="<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroup_names[$o]</option>\n";}
 	else
 		{$MAIN.="<option value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroup_names[$o]</option>\n";}

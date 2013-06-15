@@ -12,10 +12,11 @@
 # 120209-1545 - Added phone context option
 # 120223-2249 - Removed logging of good login passwords if webroot writable is enabled
 # 120820-1026 - Added webphone option Y_API_LAUNCH
+# 130610-1043 - Changed all ereg to preg
 #
 
-$admin_version = '2.6-6';
-$build = '120820-1026';
+$admin_version = '2.8-7';
+$build = '130610-1043';
 
 
 require("dbconnect.php");
@@ -65,28 +66,28 @@ if (strlen($DB) < 1)
 
 if ($non_latin < 1)
 	{
-	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/[^-_0-9a-zA-Z]/", "",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace("/[^-_0-9a-zA-Z]/", "",$PHP_AUTH_PW);
 
-	$servers = ereg_replace("'|\"|\\\\|;","",$servers);
-	$phones = ereg_replace("'|\"|\\\\|;","",$phones);
-	$action = ereg_replace("[^-_0-9a-zA-Z]","",$action);
-	$conf_secret = ereg_replace("[^-_0-9a-zA-Z]","",$conf_secret);
-	$pass = ereg_replace("[^-_0-9a-zA-Z]","",$pass);
-	$alias_option = ereg_replace("[^-_0-9a-zA-Z]","",$alias_option);
-	$alias_suffix = ereg_replace("[^0-9a-zA-Z]","",$alias_suffix);
-	$protocol = ereg_replace("[^-_0-9a-zA-Z]","",$protocol);
-	$local_gmt = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$local_gmt);
-	$is_webphone = ereg_replace("[^-_0-9a-zA-Z]","",$is_webphone);
-	$webphone_dialpad = ereg_replace("[^-_0-9a-zA-Z]","",$webphone_dialpad);
-	$webphone_auto_answer = ereg_replace("[^NY]","",$webphone_auto_answer);
-	$use_external_server_ip = ereg_replace("[^NY]","",$use_external_server_ip);
-	$phone_context = ereg_replace("[^-\_0-9a-zA-Z]","",$phone_context);
+	$servers = preg_replace("/'|\"|\\\\|;/","",$servers);
+	$phones = preg_replace("/'|\"|\\\\|;/","",$phones);
+	$action = preg_replace("/[^-_0-9a-zA-Z]/", "",$action);
+	$conf_secret = preg_replace("/[^-_0-9a-zA-Z]/", "",$conf_secret);
+	$pass = preg_replace("/[^-_0-9a-zA-Z]/", "",$pass);
+	$alias_option = preg_replace("/[^-_0-9a-zA-Z]/", "",$alias_option);
+	$alias_suffix = preg_replace("/[^0-9a-zA-Z]/","",$alias_suffix);
+	$protocol = preg_replace("/[^-_0-9a-zA-Z]/", "",$protocol);
+	$local_gmt = preg_replace("/[^- \.\,\_0-9a-zA-Z]/","",$local_gmt);
+	$is_webphone = preg_replace("/[^-_0-9a-zA-Z]/", "",$is_webphone);
+	$webphone_dialpad = preg_replace("/[^-_0-9a-zA-Z]/", "",$webphone_dialpad);
+	$webphone_auto_answer = preg_replace("/[^NY]/","",$webphone_auto_answer);
+	$use_external_server_ip = preg_replace("/[^NY]/","",$use_external_server_ip);
+	$phone_context = preg_replace("/[^-\_0-9a-zA-Z]/","",$phone_context);
 	}	# end of non_latin
 else
 	{
-	$PHP_AUTH_USER = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	}
 
 $STARTtime = date("U");
@@ -458,7 +459,7 @@ if ($action == "ADD_PHONES_SUBMIT")
 
 								### LOG INSERTION Admin Log Table ###
 								$SQL_log = "$stmt|";
-								$SQL_log = ereg_replace(';','',$SQL_log);
+								$SQL_log = preg_replace('/;/','',$SQL_log);
 								$SQL_log = addslashes($SQL_log);
 								$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='PHONES', event_type='ADD', record_id='$PN[$p]', event_code='ADMIN BULK ADD PHONE', event_sql=\"$SQL_log\", event_notes='$SN[$s]|$PN[$p]';";
 							#	if ($DB) {echo "|$stmt|\n";}
@@ -497,7 +498,7 @@ if ($action == "ADD_PHONES_SUBMIT")
 							{
 							### LOG INSERTION Admin Log Table ###
 							$SQL_log = "$stmt|";
-							$SQL_log = ereg_replace(';','',$SQL_log);
+							$SQL_log = preg_replace('/;/','',$SQL_log);
 							$SQL_log = addslashes($SQL_log);
 							$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='PHONEALIASES', event_type='ADD', record_id='$alias_id', event_code='ADMIN ADD BULK PHONE ALIAS', event_sql=\"$SQL_log\", event_notes='';";
 						#	if ($DB) {echo "|$stmt|\n";}

@@ -7,6 +7,7 @@
 # 120331-2301 - First build
 # 130413-2348 - Added report logging
 # 130419-2047 - Changed how menu lists are generated to speed up initial form load
+# 132305-2305 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -28,6 +29,8 @@ if (isset($_GET["server_ip"]))					{$server_ip=$_GET["server_ip"];}
 	elseif (isset($_POST["server_ip"]))			{$server_ip=$_POST["server_ip"];}
 if (isset($_GET["hangup_cause"]))					{$hangup_cause=$_GET["hangup_cause"];}
 	elseif (isset($_POST["hangup_cause"]))			{$hangup_cause=$_POST["hangup_cause"];}
+if (isset($_GET["sip_hangup_cause"]))					{$sip_hangup_cause=$_GET["sip_hangup_cause"];}
+	elseif (isset($_POST["sip_hangup_cause"]))			{$sip_hangup_cause=$_POST["sip_hangup_cause"];}
 if (isset($_GET["dial_status"]))					{$dial_status=$_GET["dial_status"];}
 	elseif (isset($_POST["dial_status"]))			{$dial_status=$_POST["dial_status"];}
 if (isset($_GET["file_download"]))			{$file_download=$_GET["file_download"];}
@@ -43,8 +46,8 @@ if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $START_TIME=date("U");
 
@@ -118,41 +121,102 @@ $hangup_cause_dictionary = array(
 127 => "Interworking, unspecified."
 );
 
+#### SIP response code directory
+$sip_response_directory = array(
+	100 => "Trying",
+	180 => "Ringing",
+	181 => "Call is Being Forwarded",
+	182 => "Queued",
+	183 => "Session in Progress",
+	199 => "Early Dialog Terminated",
+	200 => "OK",
+	202 => "Accepted",
+	204 => "No Notification",
+	300 => "Multiple Choices",
+	301 => "Moved Permanently",
+	301 => "Moved Temporarily",
+	302 => "Moved Temporarily",
+	305 => "Use Proxy",
+	380 => "Alternative Service",
+	400 => "Bad Request",
+	401 => "Unauthorized",
+	402 => "Payment Required",
+	403 => "Forbidden",
+	404 => "Not Found",
+	405 => "Method Not Allowed",
+	406 => "Not Acceptable",
+	407 => "Proxy Authentication Required",
+	408 => "Request Timeout",
+	409 => "Conflict",
+	410 => "Gone",
+	411 => "Length Required",
+	412 => "Conditional Request Failed",
+	413 => "Request Entity Too Large",
+	414 => "Request-URI Too Long",
+	415 => "Unsupported Media Type",
+	416 => "Unsupported URI Scheme",
+	417 => "Unknown Resource-Priority",
+	420 => "Bad Extension",
+	421 => "Extension Required",
+	422 => "Session Interval Too Small",
+	423 => "Interval Too Brief",
+	424 => "Bad Location Information",
+	428 => "Use Identity Header",
+	429 => "Provide Referrer Identity",
+	430 => "Flow Failed",
+	433 => "Anonymity Disallowed",
+	436 => "Bad Identity-Info",
+	437 => "Unsupported Certificate",
+	438 => "Invalid Identity Header",
+	439 => "First Hop Lacks Outbound Support",
+	470 => "Consent Needed",
+	480 => "Temporarily Unavailable",
+	481 => "Call/Transaction Does Not Exist",
+	482 => "Loop Detected.",
+	483 => "Too Many Hops",
+	484 => "Address Incomplete",
+	485 => "Ambiguous",
+	486 => "Busy Here",
+	487 => "Request Terminated",
+	488 => "Not Acceptable Here",
+	489 => "Bad Event",
+	491 => "Request Pending",
+	493 => "Undecipherable",
+	494 => "Security Agreement Required",
+	500 => "Server Internal Error",
+	501 => "Not Implemented",
+	502 => "Bad Gateway",
+	503 => "Service Unavailable",
+	504 => "Server Time-out",
+	505 => "Version Not Supported",
+	513 => "Message Too Large",
+	580 => "Precondition Failure",
+	600 => "Busy Everywhere",
+	603 => "Decline",
+	604 => "Does Not Exist Anywhere",
+	606 => "Not Acceptable",
+);
+
 $master_hangup_cause_array=array();
 $i=0;
 while (list($key, $val)=each($hangup_cause_dictionary)) {
 	$master_hangup_cause_array[$i]=$key;
 	$i++;
 }
+
+$master_sip_response_directory=array();
+$master_sip_response_verbiage_directory=array();
+$i=0;
+while (list($key, $val)=each($sip_response_directory)) {
+	$master_sip_response_directory[$i]=$key;
+	$master_sip_response_verbiage_directory[$i]=$val;
+	$i++;
+}
+
 $hangup_causes_to_print=count($master_hangup_cause_array);
+$sip_responses_to_print=count($master_sip_response_directory);
 $master_dialstatus_array=array("ANSWER", "BUSY", "NOANSWER", "CANCEL", "CONGESTION", "CHANUNAVAIL", "DONTCALL", "TORTURE", "INVALIDARGS");
 $dialstatuses_to_print=count($master_dialstatus_array);
-
-/*
-$hangup_cause_ct = count($hangup_cause);
-$dial_status_ct = count($dial_status);
-$i=0;
-while($i < $hangup_cause_ct)
-	{
-	if (preg_match('/\-\-ALL\-\-/', $hangup_cause[$i]))
-		{
-		$hangup_cause=$master_hangup_cause_array;
-		break;
-		}
-	$i++;
-	}
-
-$j=0;
-while($j < $dial_status_ct)
-	{
-	if (preg_match('/\-\-ALL\-\-/', $dial_status[$j]))
-		{
-		$dial_status=$master_dialstatus_array;
-		break;
-		}
-	$j++;
-	}
-*/
 
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 7 and view_reports='1' and active='Y';";
@@ -230,7 +294,7 @@ while ($i < $servers_to_print)
 	$row=mysql_fetch_row($server_rslt);
 	$LISTserverIPs[$i] =		$row[0];
 	$LISTserver_names[$i] =	$row[1];
-	if (ereg("-ALL",$server_ip_string) )
+	if (preg_match('/\-ALL/',$server_ip_string) )
 		{
 		$server_ip[$i] = $LISTserverIPs[$i];
 		}
@@ -251,15 +315,15 @@ while($i < $server_ip_ct)
 	$i++;
 	}
 
-if ( (ereg("--ALL--",$server_ip_string) ) or ($server_ip_ct < 1) )
+if ( (preg_match('/\-\-ALL\-\-/',$server_ip_string) ) or ($server_ip_ct < 1) )
 	{
 	$server_ip_SQL = "";
 	$server_rpt_string="- ALL servers ";
-	if (ereg("--ALL--",$server_ip_string)) {$server_ipQS="&server_ip[]=--ALL--";}
+	if (preg_match('/\-\-ALL\-\-/',$server_ip_string)) {$server_ipQS="&server_ip[]=--ALL--";}
 	}
 else
 	{
-	$server_ip_SQL = eregi_replace(",$",'',$server_ip_SQL);
+	$server_ip_SQL = preg_replace('/,$/i', '',$server_ip_SQL);
 	$server_ip_SQL = "and server_ip IN($server_ip_SQL)";
 	$server_rpt_string="- server(s) ".preg_replace('/\|/', ", ", substr($server_ip_string, 1, -1));
 	}
@@ -268,9 +332,11 @@ if (strlen($server_ip_SQL)<3) {$server_ip_SQL="";}
 ########### HANGUP CAUSES
 $hangup_cause_string='|';
 $dialstatus_string='|';
-#$hangup_and_dialstatus_string='|';
+$sip_hangup_cause_string='|';
+
 $hangup_cause_ct = count($hangup_cause);
 $dial_status_ct = count($dial_status);
+$sip_hangup_cause_ct = count($sip_hangup_cause);
 
 $i=0;
 while($i < $hangup_cause_ct)
@@ -286,9 +352,17 @@ while($j < $dial_status_ct)
 	$j++;
 	}
 
+$i=0;
+while($i < $sip_hangup_cause_ct)
+	{
+	$sip_hangup_cause_string .= "$sip_hangup_cause[$i]|";
+	$i++;
+	}
+
 $i=0; $j=0;
 $hangup_causes_string='|';
 $dialstatuses_string='|';
+$sip_hangup_causes_string='|';
 while($i < $hangup_cause_ct)
 	{
 	if ( (strlen($hangup_cause[$i]) > 0) and (preg_match("/\|$hangup_cause[$i]\|/",$hangup_cause_string)) ) 
@@ -298,6 +372,20 @@ while($i < $hangup_cause_ct)
 		}
 	$i++;
 	}
+
+$i=0; 
+$sip_hangup_cause_SQL="";
+while($i < $sip_hangup_cause_ct)
+	{
+	if ( (strlen($sip_hangup_cause[$i]) > 0) and (preg_match("/\|$sip_hangup_cause[$i]\|/",$sip_hangup_cause_string)) ) 
+		{
+		$sip_hangup_causes_string .= "$sip_hangup_cause[$i]|";
+		$sip_hangup_causeQS .= "&sip_hangup_cause[]=$sip_hangup_cause[$i]";
+		$sip_hangup_cause_SQL.="$sip_hangup_cause[$i],";
+		}
+	$i++;
+	}
+
 while ($j < $dial_status_ct) 
 	{
 	if ( (strlen($dial_status[$j]) > 0) and (preg_match("/\|$dial_status[$j]\|/",$dialstatus_string)) ) 
@@ -316,8 +404,8 @@ while($i < $hangup_cause_ct)
 		{
 		if ( (strlen($hangup_cause[$i]) > 0) and (preg_match("/\|$hangup_cause[$i]\|/",$hangup_cause_string)) and (strlen($dial_status[$j]) > 0) and (preg_match("/\|$dial_status[$j]\|/",$dialstatus_string)) )
 			{
-			if ( ereg("--ALL--",$hangup_cause_string) ) {$HC_subclause="";} else {$HC_subclause="hangup_cause='$hangup_cause[$i]'";}
-			if ( ereg("--ALL--",$dialstatus_string) ) {$DS_subclause="";} else {$DS_subclause="dialstatus='$dial_status[$j]'";}
+			if ( preg_match('/\-\-ALL\-\-/',$hangup_cause_string) ) {$HC_subclause="";} else {$HC_subclause="hangup_cause='$hangup_cause[$i]'";}
+			if ( preg_match('/\-\-ALL\-\-/',$dialstatus_string) ) {$DS_subclause="";} else {$DS_subclause="dialstatus='$dial_status[$j]'";}
 			if ($HC_subclause=="" || $DS_subclause=="") {$conjunction="";} else {$conjunction=" and ";}
 			$hangup_cause_SQL .= "($HC_subclause$conjunction$DS_subclause) OR";
 			$hangup_cause_SQL=preg_replace('/\(\) OR$/', '', $hangup_cause_SQL);
@@ -328,39 +416,54 @@ while($i < $hangup_cause_ct)
 	$i++;
 	}
 
-if ( (ereg("--ALL--",$hangup_cause_string) ) or ($hangup_cause_ct < 1) )
+if ( (preg_match('/\-\-ALL\-\-/',$hangup_cause_string) ) or ($hangup_cause_ct < 1) )
 	{
-#	$hangup_cause_SQL = "";
 	$HC_rpt_string="- ALL hangup causes ";
-	if (ereg("--ALL--",$hangup_cause_string)) {$hangup_causeQS="&hangup_cause[]=--ALL--";}
+	if (preg_match('/\-\-ALL\-\-/',$hangup_cause_string)) {$hangup_causeQS="&hangup_cause[]=--ALL--";}
 	}
 else
 	{
-#	$hangup_cause_SQL=preg_replace('/ OR$/', '', $hangup_cause_SQL);
-#	$hangup_cause_SQL = eregi_replace(",$",'',$hangup_cause_SQL);
-#	$hangup_cause_SQL = "and ($hangup_cause_SQL)";
 	$hangup_causes_string=preg_replace('/\!/', "-", $hangup_causes_string);
 	$HC_rpt_string="AND hangup cause(s) ".preg_replace('/\|/', ", ", substr($hangup_causes_string, 1, -1));
 	}
 
-if ( (ereg("--ALL--",$dial_status_string) ) or ($dial_status_ct < 1) )
+
+if ( (preg_match('/\-\-ALL\-\-/',$sip_hangup_cause_string) ) or ($sip_hangup_cause_ct < 1) )
+	{
+	$HC_rpt_string="- ALL SIP hangup causes ";
+	if (preg_match('/\-\-ALL\-\-/',$sip_hangup_cause_string)) 
+		{
+		$sip_hangup_causeQS="&sip_hangup_cause[]=--ALL--";
+		$sip_hangup_cause_SQL="";
+		}
+	}
+else
+	{
+	$sip_hangup_causes_string=preg_replace('/\!/', "-", $sip_hangup_causes_string);
+	$HC_rpt_string="AND SIP hangup cause(s) ".preg_replace('/\|/', ", ", substr($sip_hangup_causes_string, 1, -1));
+	}
+$sip_hangup_cause_SQL = preg_replace('/,$/i', '',$sip_hangup_cause_SQL);
+if (strlen($sip_hangup_cause_SQL)>0) {$sip_hangup_cause_SQL="and sip_hangup_cause in ($sip_hangup_cause_SQL)";}
+
+
+if ( (preg_match('/\-\-ALL\-\-/',$dial_status_string) ) or ($dial_status_ct < 1) )
 	{
 	$dial_status_SQL = "";
 	$DS_rpt_string="- ALL dial statuses ";
-	if (ereg("--ALL--",$dial_status_string)) {$dial_statusQS="&dial_status[]=--ALL--";}
+	if (preg_match('/\-\-ALL\-\-/',$dial_status_string)) {$dial_statusQS="&dial_status[]=--ALL--";}
 	}
 else
 	{
 	#$hangup_cause_SQL=preg_replace('/ OR$/', '', $hangup_cause_SQL);
-	#$hangup_cause_SQL = eregi_replace(",$",'',$hangup_cause_SQL);
+	#$hangup_cause_SQL = preg_replace('/,$/i', '',$hangup_cause_SQL);
 	#$hangup_cause_SQL = "and ($hangup_cause_SQL)";
 	$dialstatuses_string=preg_replace('/\!/', "-", $dialstatuses_string);
 	$DS_rpt_string="AND dial status(es) ".preg_replace('/\|/', ", ", substr($dialstatuses_string, 1, -1));
 	}
-
 $hangup_cause_SQL=preg_replace('/ OR$/', '', $hangup_cause_SQL);
-$hangup_cause_SQL = eregi_replace(",$",'',$hangup_cause_SQL);
+$hangup_cause_SQL = preg_replace('/,$/i', '',$hangup_cause_SQL);
 $hangup_cause_SQL = "and ($hangup_cause_SQL)";
+
 
 if (strlen($hangup_cause_SQL)<7) {$hangup_cause_SQL="";}
 
@@ -409,14 +512,14 @@ $MAIN.="<BR> to <BR><INPUT TYPE=TEXT NAME=query_date_T SIZE=9 MAXLENGTH=8 VALUE=
 
 $MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>Server IP:<BR/>\n";
 $MAIN.="<SELECT SIZE=5 NAME=server_ip[] multiple>\n";
-if  (eregi("--ALL--",$server_ip_string))
+if  (preg_match('/\-\-ALL\-\-/',$server_ip_string))
 	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL SERVERS --</option>\n";}
 else
 	{$MAIN.="<option value=\"--ALL--\">-- ALL SERVERS --</option>\n";}
 $o=0;
 while ($servers_to_print > $o)
 	{
-	if (ereg("\|$LISTserverIPs[$o]\|",$server_ip_string)) 
+	if (preg_match("/\|$LISTserverIPs[$o]\|/",$server_ip_string)) 
 		{$MAIN.="<option selected value=\"$LISTserverIPs[$o]\">$LISTserverIPs[$o] - $LISTserver_names[$o]</option>\n";}
 	else
 		{$MAIN.="<option value=\"$LISTserverIPs[$o]\">$LISTserverIPs[$o] - $LISTserver_names[$o]</option>\n";}
@@ -426,7 +529,7 @@ $MAIN.="</SELECT></TD>";
 
 $MAIN.="<TD ROWSPAN=2 VALIGN=top align=center>Hangup Cause:<BR/>";
 $MAIN.="<SELECT SIZE=5 NAME=hangup_cause[] multiple>\n";
-if  (eregi("--ALL--",$hangup_causes_string))
+if  (preg_match('/\-\-ALL\-\-/',$hangup_causes_string))
 	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL HANGUP CAUSES --</option>\n";}
 else
 	{$MAIN.="<option value=\"--ALL--\">-- ALL HANGUP CAUSES --</option>\n";}
@@ -434,7 +537,7 @@ else
 $o=0;
 while ($hangup_causes_to_print > $o)
 	{
-	if (ereg("\|$master_hangup_cause_array[$o]\|",$hangup_causes_string)) 
+	if (preg_match("/\|$master_hangup_cause_array[$o]\|/",$hangup_causes_string)) 
 		{$MAIN.="<option selected value=\"$master_hangup_cause_array[$o]\">$master_hangup_cause_array[$o]</option>\n";}
 	else
 		{$MAIN.="<option value=\"$master_hangup_cause_array[$o]\">$master_hangup_cause_array[$o]</option>\n";}
@@ -445,7 +548,7 @@ $MAIN.="</TD>";
 
 $MAIN.="<TD ROWSPAN=2 VALIGN=top align=center>Dial status:<BR/>";
 $MAIN.="<SELECT SIZE=5 NAME=dial_status[] multiple>\n";
-if  (eregi("--ALL--",$dialstatuses_string))
+if  (preg_match('/\-\-ALL\-\-/',$dialstatuses_string))
 	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL DIAL STATUSES --</option>\n";}
 else
 	{$MAIN.="<option value=\"--ALL--\">-- ALL DIAL STATUSES --</option>\n";}
@@ -454,7 +557,7 @@ $o=0;
 
 while ($dialstatuses_to_print > $o)
 	{
-	if (ereg("\|$master_dialstatus_array[$o]\|",$dialstatuses_string)) 
+	if (preg_match("/\|$master_dialstatus_array[$o]\|/",$dialstatuses_string)) 
 		{$MAIN.="<option selected value=\"$master_dialstatus_array[$o]\">$master_dialstatus_array[$o]</option>\n";}
 	else
 		{$MAIN.="<option value=\"$master_dialstatus_array[$o]\">$master_dialstatus_array[$o]</option>\n";}
@@ -463,9 +566,25 @@ while ($dialstatuses_to_print > $o)
 $MAIN.="</SELECT>";
 $MAIN.="</TD>";
 
-$MAIN.="<TD ROWSPAN=2 VALIGN=top align=center>";
+$MAIN.="<TD ROWSPAN=2 VALIGN=top align=center>SIP Response:<BR/>";
+$MAIN.="<SELECT SIZE=5 NAME=sip_hangup_cause[] multiple>\n";
+if  (preg_match('/--ALL--/',$sip_hangup_causes_string))
+	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL SIP CAUSES --</option>\n";}
+else
+	{$MAIN.="<option value=\"--ALL--\">-- ALL SIP CAUSES --</option>\n";}
 
-$MAIN.="</TD>\n";
+$o=0;
+while ($sip_responses_to_print > $o)
+	{
+	if (preg_match("/\|$master_sip_response_directory[$o]\|/",$sip_hangup_causes_string)) 
+		{$MAIN.="<option selected value=\"$master_sip_response_directory[$o]\">$master_sip_response_directory[$o] - $master_sip_response_verbiage_directory[$o]</option>\n";}
+	else
+		{$MAIN.="<option value=\"$master_sip_response_directory[$o]\">$master_sip_response_directory[$o] - $master_sip_response_verbiage_directory[$o]</option>\n";}
+	$o++;
+	}
+$MAIN.="</SELECT>";
+$MAIN.="</TD>";
+
 
 $MAIN.="<TD ROWSPAN=2 VALIGN=middle align=center>\n";
 $MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT><BR/><BR/>\n";
@@ -492,7 +611,7 @@ if ($SUBMIT && $server_ip_ct>0) {
 		$MAIN.="|                      TOTAL | ".sprintf("%-8s", $total_count)."|\n";
 		$MAIN.="+--------------+-------------+---------+\n\n\n";
 
-		$rpt_stmt="SELECT vicidial_carrier_log.*, vicidial_log.phone_number from vicidial_carrier_log left join vicidial_log on vicidial_log.uniqueid=vicidial_carrier_log.uniqueid where vicidial_carrier_log.call_date>='$query_date $query_date_D' and vicidial_carrier_log.call_date<='$query_date $query_date_T' $server_ip_SQL $hangup_cause_SQL order by vicidial_carrier_log.call_date asc";
+		$rpt_stmt="SELECT vicidial_carrier_log.*, vicidial_log.phone_number from vicidial_carrier_log left join vicidial_log on vicidial_log.uniqueid=vicidial_carrier_log.uniqueid where vicidial_carrier_log.call_date>='$query_date $query_date_D' and vicidial_carrier_log.call_date<='$query_date $query_date_T' $server_ip_SQL $hangup_cause_SQL $sip_hangup_cause_SQL order by vicidial_carrier_log.call_date asc";
 		$rpt_rslt=mysql_query($rpt_stmt, $link);
 		if ($DB) {$MAIN.=$rpt_stmt."\n";}
 
@@ -500,10 +619,10 @@ if ($SUBMIT && $server_ip_ct>0) {
 		if ($lower_limit+999>=mysql_num_rows($rpt_rslt)) {$upper_limit=($lower_limit+mysql_num_rows($rpt_rslt)%1000)-1;} else {$upper_limit=$lower_limit+999;}
 		
 		$MAIN.="--- CARRIER LOG RECORDS FOR $query_date, $query_date_D TO $query_date_T $server_rpt_string, $HC_rpt_string, $DS_rpt_string\n --- RECORDS #$lower_limit-$upper_limit               <a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">[DOWNLOAD]</a>\n";
-		$carrier_rpt.="+----------------------+---------------------+-----------------+-----------+--------------+-------------+------------------------------------------+-----------+---------------+--------------+\n";
-		$carrier_rpt.="| UNIQUE ID            | CALL DATE           | SERVER IP       | LEAD ID   | HANGUP CAUSE | DIAL STATUS | CHANNEL                                  | DIAL TIME | ANSWERED TIME | PHONE NUMBER |\n";
-		$carrier_rpt.="+----------------------+---------------------+-----------------+-----------+--------------+-------------+------------------------------------------+-----------+---------------+--------------+\n";
-		$CSV_text="\"UNIQUE ID\",\"CALL DATE\",\"SERVER IP\",\"LEAD ID\",\"HANGUP CAUSE\",\"DIAL STATUS\",\"CHANNEL\",\"DIAL TIME\",\"ANSWERED TIME\",\"PHONE NUMBER\"\n";
+		$carrier_rpt.="+----------------------+---------------------+-----------------+-----------+--------------+-------------+------------------------------------------+-----------+---------------+--------------+--------------+--------------------------------+\n";
+		$carrier_rpt.="| UNIQUE ID            | CALL DATE           | SERVER IP       | LEAD ID   | HANGUP CAUSE | DIAL STATUS | CHANNEL                                  | DIAL TIME | ANSWERED TIME | PHONE NUMBER | SIP RESPONSE | SIP REASON                     |\n";
+		$carrier_rpt.="+----------------------+---------------------+-----------------+-----------+--------------+-------------+------------------------------------------+-----------+---------------+--------------+--------------+--------------------------------+\n";
+		$CSV_text="\"UNIQUE ID\",\"CALL DATE\",\"SERVER IP\",\"LEAD ID\",\"HANGUP CAUSE\",\"DIAL STATUS\",\"CHANNEL\",\"DIAL TIME\",\"ANSWERED TIME\",\"PHONE NUMBER\",\"SIP RESPONSE\",\"SIP REASON\"\n";
 
 		for ($i=1; $i<=mysql_num_rows($rpt_rslt); $i++) {
 			$row=mysql_fetch_array($rpt_rslt);
@@ -522,7 +641,7 @@ if ($SUBMIT && $server_ip_ct>0) {
 				$phone_number=$row["phone_number"];
 			}
 
-			$CSV_text.="\"$row[uniqueid]\",\"$row[call_date]\",\"$row[server_ip]\",\"$row[lead_id]\",\"$row[hangup_cause]\",\"$row[dialstatus]\",\"$row[channel]\",\"$row[dial_time]\",\"$row[answered_time]\",\"$phone_number\"\n";
+			$CSV_text.="\"$row[uniqueid]\",\"$row[call_date]\",\"$row[server_ip]\",\"$row[lead_id]\",\"$row[hangup_cause]\",\"$row[dialstatus]\",\"$row[channel]\",\"$row[dial_time]\",\"$row[answered_time]\",\"$phone_number\",\"$row[sip_hangup_cause]\",\"$row[sip_hangup_reason]\"\n";
 			if ($i>=$lower_limit && $i<=$upper_limit) {
 				if (strlen($row["channel"])>37) {$row["channel"]=substr($row["channel"],0,37)."...";}
 				$carrier_rpt.="| ".sprintf("%-21s", $row["uniqueid"]); 
@@ -534,10 +653,12 @@ if ($SUBMIT && $server_ip_ct>0) {
 				$carrier_rpt.="| ".sprintf("%-41s", $row["channel"]); 
 				$carrier_rpt.="| ".sprintf("%-10s", $row["dial_time"]); 
 				$carrier_rpt.="| ".sprintf("%-14s", $row["answered_time"]); 
-				$carrier_rpt.="| ".sprintf("%-13s", $phone_number)."|\n"; 
+				$carrier_rpt.="| ".sprintf("%-13s", $phone_number); 
+				$carrier_rpt.="| ".sprintf("%-13s", $row["sip_hangup_cause"]); 
+				$carrier_rpt.="| ".sprintf("%-31s", $row["sip_hangup_reason"])."|\n"; 
 			}
 		}
-		$carrier_rpt.="+----------------------+---------------------+-----------------+-----------+--------------+-------------+------------------------------------------+-----------+---------------+--------------+\n";
+		$carrier_rpt.="+----------------------+---------------------+-----------------+-----------+--------------+-------------+------------------------------------------+-----------+---------------+--------------+--------------+--------------------------------+\n";
 
 		$carrier_rpt_hf="";
 		$ll=$lower_limit-1000;

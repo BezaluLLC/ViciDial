@@ -9,6 +9,7 @@
 # 80506-0228 - Added user field to search by
 # 90508-0644 - Changed to PHP long tags
 # 130414-0235 - Added report logging
+# 130610-0942 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -66,8 +67,8 @@ while ($i < $qm_conf_ct)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
 if ($DB) {echo "|$stmt|\n";}
@@ -213,13 +214,13 @@ while($i < $campaign_ct)
 	$campaign_SQL .= "'$campaign[$i]',";
 	$i++;
 	}
-if ( (ereg("--NONE--",$campaign_string) ) or ($campaign_ct < 1) )
+if ( (preg_match('/\s\-\-NONE\-\-\s/',$campaign_string) ) or ($campaign_ct < 1) )
 	{
 	$campaign_SQL = "campaign_id IN('')";
 	}
 else
 	{
-	$campaign_SQL = eregi_replace(",$",'',$campaign_SQL);
+	$campaign_SQL = preg_replace('/,$/i', '',$campaign_SQL);
 	$campaign_SQL = "campaign_id IN($campaign_SQL)";
 	}
 
@@ -230,14 +231,14 @@ while($i < $group_ct)
 	$group_SQL .= "'$group[$i]',";
 	$i++;
 	}
-if ( (ereg("--NONE--",$group_string) ) or ($group_ct < 1) )
+if ( (preg_match('/\s\-\-NONE\-\-\s/',$group_string) ) or ($group_ct < 1) )
 	{
 	$group_SQL = "''";
 #	$group_SQL = "group_id IN('')";
 	}
 else
 	{
-	$group_SQL = eregi_replace(",$",'',$group_SQL);
+	$group_SQL = preg_replace('/,$/i', '',$group_SQL);
 #	$group_SQL = "group_id IN($group_SQL)";
 	}
 
@@ -248,13 +249,13 @@ while($i < $user_group_ct)
 	$user_group_SQL .= "'$user_group[$i]',";
 	$i++;
 	}
-if ( (ereg("--ALL--",$user_group_string) ) or ($user_group_ct < 1) )
+if ( (preg_match('/\-\-ALL\-\-/',$user_group_string) ) or ($user_group_ct < 1) )
 	{
 	$user_group_SQL = "";
 	}
 else
 	{
-	$user_group_SQL = eregi_replace(",$",'',$user_group_SQL);
+	$user_group_SQL = preg_replace('/,$/i', '',$user_group_SQL);
 	$user_group_SQL = "user_group_id IN($user_group_SQL)";
 	}
 
@@ -298,7 +299,7 @@ echo "<SELECT SIZE=5 NAME=campaign[] multiple>\n";
 	$o=0;
 	while ($campaigns_to_print > $o)
 	{
-		if (ereg("\|$LISTcampaigns[$o]\|",$campaign_string)) 
+		if (preg_match("/\|$LISTcampaigns[$o]\|/",$campaign_string)) 
 			{echo "<option selected value=\"$LISTcampaigns[$o]\">$LISTcampaigns[$o]</option>\n";}
 		else 
 			{echo "<option value=\"$LISTcampaigns[$o]\">$LISTcampaigns[$o]</option>\n";}
@@ -312,7 +313,7 @@ echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
 	$o=0;
 	while ($groups_to_print > $o)
 	{
-		if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
+		if (preg_match("/\|$LISTgroups[$o]\|/",$group_string)) 
 			{echo "<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o]</option>\n";}
 		else
 			{echo "<option value=\"$LISTgroups[$o]\">$LISTgroups[$o]</option>\n";}
@@ -325,7 +326,7 @@ echo "<SELECT SIZE=5 NAME=user_group[] multiple>\n";
 	$o=0;
 	while ($user_groups_to_print > $o)
 	{
-		if (ereg("\|$LISTuser_groups[$o]\|",$user_group_string)) 
+		if (preg_match("/\|$LISTuser_groups[$o]\|/",$user_group_string)) 
 			{echo "<option selected value=\"$LISTuser_groups[$o]\">$LISTuser_groups[$o]</option>\n";}
 		else 
 			{echo "<option value=\"$LISTuser_groups[$o]\">$LISTuser_groups[$o]</option>\n";}
@@ -516,7 +517,7 @@ while ($j < $rows_to_print)
 	$sph_split = explode("-----",$sphSORT[$j]);
 	$i = $sph_split[1];
 
-	if (eregi("1$|3$|5$|7$|9$", $j))
+	if (preg_match("/1$|3$|5$|7$|9$/i", $j))
 		{$bgcolor='bgcolor="#B9CBFD"';} 
 	else
 		{$bgcolor='bgcolor="#9BB9FB"';}

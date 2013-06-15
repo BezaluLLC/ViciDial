@@ -1,16 +1,17 @@
 <?php 
 # QM_live_monitor.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Script to initiate live monitoring from QueueMetrics link
 #
 # CHANGELOG:
 # 90529-2115 - First Build
+# 130610-1130 - Finalized changing of all ereg instances to preg
 #
 
-$version = '2.2.0-1';
-$build = '90529-2115';
+$version = '2.8-2';
+$build = '130610-1130';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -87,16 +88,16 @@ if ($enable_queuemetrics_logging > 0)
 				$script_name = getenv("SCRIPT_NAME");
 				$server_name = getenv("SERVER_NAME");
 				$server_port = getenv("SERVER_PORT");
-				if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
+				if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
 				  else {$HTTPprotocol = 'http://';}
 				$admDIR = "$HTTPprotocol$server_name$script_name";
-				$admDIR = eregi_replace('QM_live_monitor.php','',$admDIR);
+				$admDIR = preg_replace('/QM_live_monitor\.php/i', '',$admDIR);
 				$monitor_script = 'non_agent_api.php';
 
 				$monitorURL = "$admDIR$monitor_script?source=queuemetrics&function=blind_monitor&user=$user&pass=$call&phone_login=$extension&session_id=$session&server_ip=$server_ip&stage=$stage";
 				$monitorCONTENTS = file("$monitorURL");
 	
-				if (eregi('SUCCESS',$monitorCONTENTS[0]))
+				if (preg_match('/SUCCESS/i',$monitorCONTENTS[0]))
 					{
 					echo "<HTML><BODY BGCOLOR=\"E6E6E6\" onLoad=\"javascript:window.close();\">\n";
 					}

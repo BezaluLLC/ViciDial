@@ -1,7 +1,7 @@
 <?php
 # callcard_admin.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This callcard script is to administer the callcard accounts in ViciDial
 # it is separate from the standard admin.php script. callcard_enabled in
@@ -13,10 +13,11 @@
 # 100616-0847 - Fixed batch issue
 # 100823-1342 - Added Search option and display for level 7 users, added pin number search
 # 120117-1457 - Security fix, issue #544
+# 130610-1103 - Finalized changing of all ereg instances to preg
 #
 
-$version = '2.4-5';
-$build = '120117-1457';
+$version = '2.8-6';
+$build = '130610-1103';
 
 $MT[0]='';
 
@@ -105,22 +106,22 @@ if ($callcard_enabled < 1)
 if ($non_latin < 1)
 	{
 	### Clean Variable Values ###
-	$DB = ereg_replace("[^0-9]","",$DB);
-	$action = ereg_replace("[^\_0-9a-zA-Z]","",$action);
-	$card_id = ereg_replace("[^-\_0-9]","",$card_id);
-	$run = ereg_replace("[^0-9]","",$run);
-	$batch = ereg_replace("[^0-9]","",$batch);
-	$pack = ereg_replace("[^0-9]","",$pack);
-	$sequence = ereg_replace("[^0-9]","",$sequence);
-	$territory_description = ereg_replace("[^- \_\.\,0-9a-zA-Z]","",$territory_description);
-	$user = ereg_replace("[^-\_0-9a-zA-Z]","",$user);
-	$old_territory = ereg_replace("[^-\_0-9a-zA-Z]","",$old_territory);
-	$old_user = ereg_replace("[^-\_0-9a-zA-Z]","",$old_user);
-	$accountid = ereg_replace("[^-\_0-9a-zA-Z]","",$accountid);
-	$pin = ereg_replace("[^0-9a-zA-Z]","",$pin);
+	$DB = preg_replace('/[^0-9]/','',$DB);
+	$action = preg_replace('/[^\_0-9a-zA-Z]/','',$action);
+	$card_id = preg_replace('/[^-\_0-9]/','',$card_id);
+	$run = preg_replace('/[^0-9]/','',$run);
+	$batch = preg_replace('/[^0-9]/','',$batch);
+	$pack = preg_replace('/[^0-9]/','',$pack);
+	$sequence = preg_replace('/[^0-9]/','',$sequence);
+	$territory_description = preg_replace('/[^- \_\.\,0-9a-zA-Z]/','',$territory_description);
+	$user = preg_replace('/[^-\_0-9a-zA-Z]/', '',$user);
+	$old_territory = preg_replace('/[^-\_0-9a-zA-Z]/', '',$old_territory);
+	$old_user = preg_replace('/[^-\_0-9a-zA-Z]/', '',$old_user);
+	$accountid = preg_replace('/[^-\_0-9a-zA-Z]/', '',$accountid);
+	$pin = preg_replace('/[^0-9a-zA-Z]/','',$pin);
 	}
 
-if (eregi("YES",$batch))
+if (preg_match("/YES/i",$batch))
 	{
 	$USER='batch';
 	$PASS='batch';
@@ -129,8 +130,8 @@ else
 	{
 	$USER=$_SERVER['PHP_AUTH_USER'];
 	$PASS=$_SERVER['PHP_AUTH_PW'];
-	$USER = ereg_replace("[^0-9a-zA-Z]","",$USER);
-	$PASS = ereg_replace("[^0-9a-zA-Z]","",$PASS);
+	$USER = preg_replace('/[^0-9a-zA-Z]/','',$USER);
+	$PASS = preg_replace('/[^0-9a-zA-Z]/','',$PASS);
 
 	$stmt="SELECT count(*) from vicidial_users where user='$USER' and pass='$PASS' and user_level > 7 and callcard_admin='1' and active='Y';";
 	if ($DB) {echo "|$stmt|\n";}
@@ -248,10 +249,10 @@ $browser = getenv("HTTP_USER_AGENT");
 $script_name = getenv("SCRIPT_NAME");
 $server_name = getenv("SERVER_NAME");
 $server_port = getenv("SERVER_PORT");
-if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
+if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
   else {$HTTPprotocol = 'http://';}
 $admDIR = "$HTTPprotocol$server_name:$server_port$script_name";
-$admDIR = eregi_replace('audio_store.php','',$admDIR);
+$admDIR = preg_replace('/callcard_admin\.php/i', '',$admDIR);
 $admSCR = 'admin.php';
 $NWB = " &nbsp; <a href=\"javascript:openNewWindow('$admDIR$admSCR?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
@@ -313,7 +314,7 @@ if ($action == "CALLCARD_STATUS")
 
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='CALLCARD', event_type='MODIFY', record_id='$card_id', event_code='ADMIN MODIFY CALLCARD', event_sql=\"$SQL_log\", event_notes='$status';";
 			if ($DB) {echo "|$stmt|\n";}
@@ -434,7 +435,7 @@ if ($action == "CALLCARD_DETAIL")
 		while ($vt_ct > $i)
 			{
 			$row=mysql_fetch_row($rslt);
-			if (eregi("1$|3$|5$|7$|9$", $i))
+			if (preg_match("/1$|3$|5$|7$|9$/i", $i))
 				{$bgcolor='bgcolor="#9BB9FB"';}
 			else
 				{$bgcolor='bgcolor="#B9CBFD"';} 
@@ -491,7 +492,7 @@ if ($action == "CALLCARD_SUMMARY")
 		$Lcount[$i] =		$row[0];
 		$Lstatus[$i] =		$row[1];
 
-		if (eregi("1$|3$|5$|7$|9$", $i))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $i))
 			{$bgcolor='bgcolor="#9BB9FB"';}
 		else
 			{$bgcolor='bgcolor="#B9CBFD"';} 
@@ -543,7 +544,7 @@ if ($action == "CALLCARD_SUMMARY")
 		while ($vt_ct > $i)
 			{
 			$row=mysql_fetch_row($rslt);
-			if (eregi("1$|3$|5$|7$|9$", $i))
+			if (preg_match("/1$|3$|5$|7$|9$/i", $i))
 				{$bgcolor='bgcolor="#9BB9FB"';}
 			else
 				{$bgcolor='bgcolor="#B9CBFD"';} 
@@ -595,7 +596,7 @@ if ($action == "CALLCARD_RUNS")
 		$Lcount[$i] =		$row[0];
 		$Lrun[$i] =		$row[1];
 
-		if (eregi("1$|3$|5$|7$|9$", $i))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $i))
 			{$bgcolor='bgcolor="#9BB9FB"';}
 		else
 			{$bgcolor='bgcolor="#B9CBFD"';} 
@@ -640,7 +641,7 @@ if ($action == "CALLCARD_BATCHES")
 		$Lcount[$i] =		$row[0];
 		$Lbatch[$i] =		$row[1];
 
-		if (eregi("1$|3$|5$|7$|9$", $i))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $i))
 			{$bgcolor='bgcolor="#9BB9FB"';}
 		else
 			{$bgcolor='bgcolor="#B9CBFD"';} 
@@ -736,7 +737,7 @@ if ($action == "GENERATE_RESULTS")
 					$stmt="INSERT INTO callcard_accounts_details SET card_id='$Pcard_id',status='GENERATE',run='$run',pack='',batch='$Pbatch',sequence='$Psequence',balance_minutes='$balance_minutes',initial_value='$initial_value',initial_minutes='$initial_minutes',note_purchase_order='$note_purchase_order',note_printer='$note_printer',note_did='$note_did',inbound_group_id='$inbound_group_id',note_language='$note_language',note_name='$note_name',note_comments='$note_comments',create_time='$NOW_TIME',create_user='$USER';";
 					$rslt=mysql_query($stmt, $link);
 
-					if (eregi("1$|3$|5$|7$|9$", $i))
+					if (preg_match("/1$|3$|5$|7$|9$/i", $i))
 						{$bgcolor='bgcolor="#9BB9FB"';}
 					else
 						{$bgcolor='bgcolor="#B9CBFD"';} 
@@ -882,7 +883,7 @@ if ($action == "SEARCH_RESULTS")
 			$Lused_time[$i] =		$row[5];
 			$Lvoid_time[$i] =		$row[6];
 
-			if (eregi("1$|3$|5$|7$|9$", $i))
+			if (preg_match("/1$|3$|5$|7$|9$/i", $i))
 				{$bgcolor='bgcolor="#9BB9FB"';}
 			else
 				{$bgcolor='bgcolor="#B9CBFD"';} 

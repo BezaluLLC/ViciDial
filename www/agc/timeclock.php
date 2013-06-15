@@ -11,10 +11,11 @@
 # 90508-0727 - Changed to PHP long tags
 # 100621-1023 - Added admin_web_directory variable
 # 130328-0021 - Converted ereg to preg functions
+# 130603-2211 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 #
 
-$version = '2.6-7';
-$build = '130328-0021';
+$version = '2.8-8';
+$build = '130603-2211';
 
 $StarTtimE = date("U");
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -86,6 +87,7 @@ if (!isset($phone_pass))
 	$referrer=preg_replace("/[^0-9a-zA-Z]/","",$referrer);
 
 require("dbconnect.php");
+require("functions.php");
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -113,11 +115,11 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 if ( ($stage == 'login') or ($stage == 'logout') )
 	{
 	### see if user/pass exist for this user in vicidial_users table
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$valid_user=$row[0];
+	$valid_user=0;
+	$auth_message = user_authorization($user,$pass,'',1);
+	if ($auth_message == 'GOOD')
+		{$valid_user=1;}
+
 	print "<!-- vicidial_users active count for $user:   |$valid_user| -->\n";
 
 	if ($valid_user < 1)
@@ -162,7 +164,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		### VALID USER/PASS, CONTINUE
 
 		### get name and group for this user
-		$stmt="SELECT full_name,user_group from vicidial_users where user='$user' and pass='$pass';";
+		$stmt="SELECT full_name,user_group from vicidial_users where user='$user' and pass='$pass' and active='Y';";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);

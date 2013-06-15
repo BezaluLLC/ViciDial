@@ -32,9 +32,11 @@
 # 60619-1205 - Added variable filters to close security holes for login form
 # 90508-0727 - Changed to PHP long tags
 # 130328-0025 - Converted ereg to preg functions
+# 130603-2215 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 #
 
 require("dbconnect.php");
+require("functions.php");
 
 ### If you have globals turned off uncomment these lines
 if (isset($_GET["user"]))					{$user=$_GET["user"];}
@@ -66,6 +68,8 @@ if (isset($_GET["local_web_callerID_URL_enc"]))			{$local_web_callerID_URL = raw
 
 $user=preg_replace("/[^0-9a-zA-Z]/","",$user);
 $pass=preg_replace("/[^0-9a-zA-Z]/","",$pass);
+$session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
+$server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
 
 # default optional vars if not set
 if (!isset($format))   {$format="text";}
@@ -79,20 +83,18 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 $DO = '-1';
 if ( (preg_match("/^Zap/i",$channel)) and (!preg_match("/-/i",$channel)) ) {$channel = "$channel$DO";}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
-  if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
+if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Invalid Username/Password: |$user|$pass|\n";
-    exit;
+	echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
+	exit;
 	}
-  else
+else
 	{
-
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
 		echo "Invalid server_ip: |$server_ip|  or  Invalid session_name: |$session_name|\n";

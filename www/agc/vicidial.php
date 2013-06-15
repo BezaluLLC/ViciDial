@@ -402,10 +402,12 @@
 # 130417-1937 - Changed locked agent choose in-group/closer/territories to auto-close
 # 130508-2223 - Cleanup for other language builds
 # 130508-2307 - Branched 2.7, trunk becomes 2.8
+# 130603-2209 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130615-1125 - Added recording_id to dispo url
 #
 
-$version = '2.8-371c';
-$build = '130508-2307';
+$version = '2.8-373c';
+$build = '130615-1125';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -667,22 +669,32 @@ if ($campaign_login_list > 0)
 	$LOGallowed_campaignsSQL='';
 	if ($relogin == 'YES')
 		{
-		$stmt="SELECT user_group from vicidial_users where user='$VD_login' and pass='$VD_pass';";
+		$stmt="SELECT user_group from vicidial_users where user='$VD_login' and active='Y';";
 		if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 		$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01002',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
-		$VU_user_group=$row[0];
-
-		$stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$VU_user_group';";
-		$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01003',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
-		if ( (!preg_match("/ALL-CAMPAIGNS/i",$row[0])) )
+		$cl_user_ct = mysql_num_rows($rslt);
+		if ($cl_user_ct > 0)
 			{
-			$LOGallowed_campaignsSQL = preg_replace('/\s-/i','',$row[0]);
-			$LOGallowed_campaignsSQL = preg_replace('/\s/i',"','",$LOGallowed_campaignsSQL);
-			$LOGallowed_campaignsSQL = "and campaign_id IN('$LOGallowed_campaignsSQL')";
+			$row=mysql_fetch_row($rslt);
+			$VU_user_group=$row[0];
+
+			$stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$VU_user_group';";
+			$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01003',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			$row=mysql_fetch_row($rslt);
+			if ( (!preg_match("/ALL-CAMPAIGNS/i",$row[0])) )
+				{
+				$LOGallowed_campaignsSQL = preg_replace('/\s-/i','',$row[0]);
+				$LOGallowed_campaignsSQL = preg_replace('/\s/i',"','",$LOGallowed_campaignsSQL);
+				$LOGallowed_campaignsSQL = "and campaign_id IN('$LOGallowed_campaignsSQL')";
+				}
+			}
+		else
+			{
+			echo "<select size=1 name=VD_campaign id=VD_campaign onFocus=\"login_allowable_campaigns()\">\n";
+			echo "<option value=\"\">-- USER LOGIN ERROR --</option>\n";
+			echo "</select>\n";
 			}
 		}
 
@@ -694,12 +706,13 @@ if ($campaign_login_list > 0)
 		if (isset($_GET["MGR_pass$loginDATE"]))					{$MGR_pass=$_GET["MGR_pass$loginDATE"];}
 				elseif (isset($_POST["MGR_pass$loginDATE"]))	{$MGR_pass=$_POST["MGR_pass$loginDATE"];}
 
-		$stmt="SELECT count(*) from vicidial_users where user='$MGR_login' and pass='$MGR_pass' and manager_shift_enforcement_override='1' and active='Y';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01058',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
-		$MGR_auth=$row[0];
+		$MGR_login = preg_replace("/\'|\"|\\\\|;/","",$MGR_login);
+		$MGR_pass = preg_replace("/\'|\"|\\\\|;/","",$MGR_pass);
+
+		$MGR_auth=0;
+		$auth_message = user_authorization($MGR_login,$MGR_pass,'MGR',0);
+		if ($auth_message == 'GOOD')
+			{$MGR_auth=1;}
 
 		if($MGR_auth>0)
 			{
@@ -947,7 +960,7 @@ if ($user_login_first == 1)
 		{
 		if ( (strlen($phone_login)<2) or (strlen($phone_pass)<2) )
 			{
-			$stmt="SELECT phone_login,phone_pass from vicidial_users where user='$VD_login' and pass='$VD_pass' and user_level > 0 and active='Y';";
+			$stmt="SELECT phone_login,phone_pass from vicidial_users where user='$VD_login' and user_level > 0 and active='Y';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01005',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -1041,19 +1054,17 @@ else
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$VD_login' and pass='$VD_pass' and user_level > 0 and active='Y';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01006',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
-		$auth=$row[0];
+		$auth=0;
+		$auth_message = user_authorization($VD_login,$VD_pass,'',1);
+		if ($auth_message == 'GOOD')
+			{$auth=1;}
 
 		if($auth>0)
 			{
 			$login=strtoupper($VD_login);
 			$password=strtoupper($VD_pass);
-			##### grab the full name of the agent
-			$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,agent_call_log_view_override,agent_choose_blended,agent_lead_search_override,preset_contact_search from vicidial_users where user='$VD_login' and pass='$VD_pass'";
+			##### grab the full name and other settings of the agent
+			$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,agent_call_log_view_override,agent_choose_blended,agent_lead_search_override,preset_contact_search from vicidial_users where user='$VD_login' and pass='$VD_pass' and active='Y';";
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01007',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysql_fetch_row($rslt);
@@ -1962,7 +1973,10 @@ else
 				fclose($fp);
 				}
 			$VDloginDISPLAY=1;
+
             $VDdisplayMESSAGE = "Login incorrect, please try again<br />";
+			if ($auth_message == 'LOCK')
+				{$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes<br />";}
 			}
 		}
 	if ($VDloginDISPLAY)
@@ -2540,6 +2554,8 @@ else
 
 			if ( ($enable_sipsak_messages > 0) and ($allow_sipsak_messages > 0) and (preg_match("/SIP/i",$protocol)) )
 				{
+				$extension = preg_replace("/\'|\"|\\\\|;/","",$extension);
+				$phone_ip = preg_replace("/\'|\"|\\\\|;/","",$phone_ip);
 				$SIPSAK_prefix = 'LIN-';
 				echo "<!-- sending login sipsak message: $SIPSAK_prefix$VD_campaign -->\n";
 				passthru("/usr/local/bin/sipsak -M -O desktop -B \"$SIPSAK_prefix$VD_campaign\" -r 5060 -s sip:$extension@$phone_ip > /dev/null");
@@ -10296,6 +10312,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		customer_3way_hangup_counter=0;
 		customer_3way_hangup_counter_trigger=0;
 		waiting_on_dispo=1;
+		var VDDCU_recording_id=document.getElementById("RecorDID").innerHTML;
 		document.getElementById("callchannel").innerHTML = '';
 		document.vicidial_form.callserverip.value = '';
 		document.vicidial_form.xferchannel.value = '';
@@ -10341,7 +10358,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					}
 				if (xmlhttp) 
 					{ 
-					DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&CallBackLeadStatus=" + CallBackLeadStatus + "&comments=" + encodeURIComponent(CallBackCommenTs) + "&custom_field_names=" + custom_field_names + "&call_notes=" + encodeURIComponent(document.vicidial_form.call_notes_dispo.value) + "&qm_dispo_code=" + DispoQMcsCODE + "&email_enabled=" + email_enabled;
+					DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&CallBackLeadStatus=" + CallBackLeadStatus + "&comments=" + encodeURIComponent(CallBackCommenTs) + "&custom_field_names=" + custom_field_names + "&call_notes=" + encodeURIComponent(document.vicidial_form.call_notes_dispo.value) + "&qm_dispo_code=" + DispoQMcsCODE + "&email_enabled=" + email_enabled +"&recording_id="+VDDCU_recording_id;
 					xmlhttp.open('POST', 'vdc_db_query.php');
 					xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 					xmlhttp.send(DSupdate_query); 
@@ -10889,6 +10906,26 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			}
 		else
 			{
+			// Added to get email counts so inbound emails will come in - this is normally done in CloserSelectContent_select, which is bypassed if agents aren't allowed to select ingroups
+			var loop_ct = 0;
+			EMAILgroupCOUNT = 0;
+			PHONEgroupCOUNT = 0;
+			incomingEMAILS = 0;
+			while (loop_ct < INgroupCOUNT)
+				{
+				if (VARingroup_handlers[loop_ct]=="EMAIL") 
+					{
+					incomingEMAILgroups[incomingEMAILS]=VARingroups[loop_ct];
+					EMAILgroupCOUNT++;
+					incomingEMAILS++;
+					}
+				else
+					{
+					PHONEgroupCOUNT++;
+					}
+				loop_ct++;
+				}
+
 			VU_agent_choose_ingroups_DV = "MGRLOCK";
             var live_CSC_HTML = "Manager has selected groups for you<br />";
 			document.vicidial_form.CloserSelectList.value = '';

@@ -37,6 +37,7 @@
 # 121222-2152 - Added email log display
 # 130124-1740 - Added option to display first and last name of lead
 # 130414-0146 - Added report logging
+# 130610-0938 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -98,8 +99,8 @@ if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 if (isset($_GET["file_download"]))					{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))		{$file_download=$_POST["file_download"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
@@ -186,7 +187,7 @@ $LOGadmin_viewable_groups =	$row[2];
 $LOGadmin_viewable_groupsSQL='';
 $vuLOGadmin_viewable_groupsSQL='';
 $whereLOGadmin_viewable_groupsSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 	{
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -420,7 +421,7 @@ if ($did < 1)
 	$total_sec=0;
 	while ($o < $p)
 		{
-		if (eregi("1$|3$|5$|7$|9$", $o))
+		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -467,12 +468,12 @@ if ($did < 1)
 		$event_stop_seconds='';
 		while ($events_to_print > $o) {
 			$row=mysql_fetch_row($rslt);
-			if (eregi("LOGIN", $row[0]))
+			if (preg_match("/LOGIN/i", $row[0]))
 				{$bgcolor='bgcolor="#B9CBFD"';} 
 			else
 				{$bgcolor='bgcolor="#9BB9FB"';}
 
-			if (ereg("LOGIN", $row[0]))
+			if (preg_match('/LOGIN/', $row[0]))
 				{
 				$event_start_seconds = $row[1];
 				$MAIN.="<tr $bgcolor><td><font size=2>$row[0]</td>";
@@ -486,7 +487,7 @@ if ($did < 1)
 				$MAIN.="<td align=right><font size=2> $row[8] </td></tr>\n";
 				$CSV_text2.="\"\",\"$row[0]\",$row[2]\",\"$row[3]\",\"$row[4]\",\"\",\"$row[5]\",\"$row[6]\",\"$row[7]\",\"$row[8]\"\n";
 				}
-			if (ereg("LOGOUT", $row[0]))
+			if (preg_match('/LOGOUT/', $row[0]))
 				{
 				if ($event_start_seconds)
 					{
@@ -575,7 +576,7 @@ if ($did < 1)
 			$manager_edit='';
 			if (strlen($row[6])>0) {$manager_edit = ' * ';}
 
-			if (ereg("LOGIN", $row[0]))
+			if (preg_match('/LOGIN/', $row[0]))
 				{
 				$login_sec='';
 				$MAIN.="<tr $bgcolor><td><font size=2><A HREF=\"./timeclock_edit.php?timeclock_id=$row[5]\">$row[5]</A></td>";
@@ -587,7 +588,7 @@ if ($did < 1)
 				$MAIN.="<td align=right><font size=2> </td></tr>\n";
 				$CSV_text3.="\"\",\"$row[5]\",\"$manager_edit\",\"$row[0]\",\"$TC_log_date\",\"$row[4]\",\"$row[2]\"\n";
 				}
-			if (ereg("LOGOUT", $row[0]))
+			if (preg_match('/LOGOUT/', $row[0]))
 				{
 				$login_sec = $row[3];
 				$total_login_time = ($total_login_time + $login_sec);
@@ -648,7 +649,7 @@ if ($did < 1)
 	while ($logs_to_print > $u) 
 		{
 		$row=mysql_fetch_row($rslt);
-		if (eregi("1$|3$|5$|7$|9$", $u))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $u))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -700,7 +701,7 @@ if ($did < 1)
 	while ($logs_to_print > $u) 
 		{
 		$row=mysql_fetch_row($rslt);
-		if (eregi("1$|3$|5$|7$|9$", $u))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $u))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -770,7 +771,7 @@ if ($did < 1)
 		while ($logs_to_print > $u) 
 			{
 			$row=mysql_fetch_row($rslt);
-			if (eregi("1$|3$|5$|7$|9$", $u))
+			if (preg_match("/1$|3$|5$|7$|9$/i", $u))
 				{$bgcolor='bgcolor="#B9CBFD"';} 
 			else
 				{$bgcolor='bgcolor="#9BB9FB"';}
@@ -844,7 +845,7 @@ $TOTALagentSECONDS=0;
 while ($logs_to_print > $u) 
 	{
 	$row=mysql_fetch_row($rslt);
-	if (eregi("1$|3$|5$|7$|9$", $u))
+	if (preg_match("/1$|3$|5$|7$|9$/i", $u))
 		{$bgcolor='bgcolor="#B9CBFD"';} 
 	else
 		{$bgcolor='bgcolor="#9BB9FB"';}
@@ -958,7 +959,7 @@ if ($did < 1)
 		if ($customer_sec < 0)
 			{$customer_sec=0;}
 
-		if (eregi("1$|3$|5$|7$|9$", $u))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $u))
 			{$bgcolor='bgcolor="#B9CBFD"';}
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -1060,7 +1061,7 @@ $CSV_text8.="\"\",\"#\",\"LEAD\",\"DATE/TIME\",\"SECONDS\",\"RECID\",\"FILENAME\
 	while ($logs_to_print > $u) 
 		{
 		$row=mysql_fetch_row($rslt);
-		if (eregi("1$|3$|5$|7$|9$", $u))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $u))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -1071,9 +1072,9 @@ $CSV_text8.="\"\",\"#\",\"LEAD\",\"DATE/TIME\",\"SECONDS\",\"RECID\",\"FILENAME\
 		if (strlen($location)>2)
 			{
 			$URLserver_ip = $location;
-			$URLserver_ip = eregi_replace('http://','',$URLserver_ip);
-			$URLserver_ip = eregi_replace('https://','',$URLserver_ip);
-			$URLserver_ip = eregi_replace("\/.*",'',$URLserver_ip);
+			$URLserver_ip = preg_replace('/http:\/\//i', '',$URLserver_ip);
+			$URLserver_ip = preg_replace('/https:\/\//i', '',$URLserver_ip);
+			$URLserver_ip = preg_replace('/\/.*/i', '',$URLserver_ip);
 			$stmt="select count(*) from servers where server_ip='$URLserver_ip';";
 			$rsltx=mysql_query($stmt, $link);
 			$rowx=mysql_fetch_row($rsltx);
@@ -1084,13 +1085,13 @@ $CSV_text8.="\"\",\"#\",\"LEAD\",\"DATE/TIME\",\"SECONDS\",\"RECID\",\"FILENAME\
 				$rsltx=mysql_query($stmt, $link);
 				$rowx=mysql_fetch_row($rsltx);
 				
-				if (eregi("ALT_IP",$rowx[0]))
+				if (preg_match("/ALT_IP/i",$rowx[0]))
 					{
-					$location = eregi_replace($URLserver_ip, $rowx[1], $location);
+					$location = preg_replace("/$URLserver_ip/i", "$rowx[1]", $location);
 					}
-				if (eregi("EXTERNAL_IP",$rowx[0]))
+				if (preg_match("/EXTERNAL_IP/i",$rowx[0]))
 					{
-					$location = eregi_replace($URLserver_ip, $rowx[2], $location);
+					$location = preg_replace("/$URLserver_ip/i", "$rowx[2]", $location);
 					}
 				}
 			}
@@ -1099,7 +1100,7 @@ $CSV_text8.="\"\",\"#\",\"LEAD\",\"DATE/TIME\",\"SECONDS\",\"RECID\",\"FILENAME\
 			{$locat = substr($location,0,27);  $locat = "$locat...";}
 		else
 			{$locat = $location;}
-		if ( (eregi("ftp",$location)) or (eregi("http",$location)) )
+		if ( (preg_match('/ftp/i',$location)) or (preg_match('/http/i',$location)) )
 			{$location = "<a href=\"$location\">$locat</a>";}
 		else
 			{$location = $locat;}
@@ -1137,7 +1138,7 @@ if ($did < 1)
 	while ($logs_to_print > $u) 
 		{
 		$row=mysql_fetch_row($rslt);
-		if (eregi("1$|3$|5$|7$|9$", $u))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $u))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -1219,7 +1220,7 @@ if ($did < 1)
 	while ($logs_to_print > $u) 
 		{
 		$row=mysql_fetch_row($rslt);
-		if (eregi("1$|3$|5$|7$|9$", $u))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $u))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -1260,7 +1261,7 @@ if ($did < 1)
 	while ($logs_to_print > $u) 
 		{
 		$row=mysql_fetch_row($rslt);
-		if (eregi("1$|3$|5$|7$|9$", $u))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $u))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}

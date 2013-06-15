@@ -22,6 +22,7 @@
 # 120223-1917 - Added multi-user-group options
 # 121129-2131 - Fixed Choose link position
 # 130414-0247 - Added report logging
+# 130610-0944 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -240,8 +241,8 @@ $epochTWENTYFOURhoursAGO = ($STARTtime - 86400);
 $timeTWENTYFOURhoursAGO = date("Y-m-d H:i:s",$epochTWENTYFOURhoursAGO);
 $webphone_content='';
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
 if ($DB) {echo "|$stmt|\n";}
@@ -358,7 +359,7 @@ if ($auth)
 	$LOGadmin_viewable_groupsSQL='';
 	$valLOGadmin_viewable_groupsSQL='';
 	$vmLOGadmin_viewable_groupsSQL='';
-	if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+	if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 		{
 		$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 		$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -451,7 +452,7 @@ while($i < $group_ct)
 
 	$i++;
 	}
-$group_SQL = eregi_replace(",$",'',$group_SQL);
+$group_SQL = preg_replace('/,$/i', '',$group_SQL);
 
 $i=0;
 $user_group_string='|';
@@ -467,7 +468,7 @@ while($i < $user_group_ct)
 
 	$i++;
 	}
-$user_group_SQL = eregi_replace(",$",'',$user_group_SQL);
+$user_group_SQL = preg_replace('/,$/i', '',$user_group_SQL);
 
 ### if no campaigns selected, display all
 if ( ($group_ct < 1) or (strlen($group_string) < 2) )
@@ -487,14 +488,14 @@ if ( ($user_group_ct < 1) or (strlen($user_group_string) < 2) )
 	$user_group_none=1;
 	}
 
-if ( (ereg("--NONE--",$group_string) ) or ($group_ct < 1) )
+if ( (preg_match('/\s\-\-NONE\-\-\s/',$group_string) ) or ($group_ct < 1) )
 	{
 	$all_active = 0;
 	$group_SQL = "''";
 	$group_SQLand = "and FALSE";
 	$group_SQLwhere = "where FALSE";
 	}
-elseif ( eregi('ALL-ACTIVE',$group_string) )
+elseif ( preg_match('/ALL\-ACTIVE/i',$group_string) )
 	{
 	$all_active = 1;
 	$group_SQL = $allactivecampaigns;
@@ -508,14 +509,14 @@ else
 	$group_SQLwhere = "where campaign_id IN($group_SQL)";
 	}
 
-if ( (ereg("--NONE--",$user_group_string) ) or ($user_group_ct < 1) )
+if ( (preg_match('/\s\-\-NONE\-\-\s/',$user_group_string) ) or ($user_group_ct < 1) )
 	{
 	$all_active_groups = 0;
 	$user_group_SQL = "''";
 #	$user_group_SQLand = "and FALSE";
 #	$user_group_SQLwhere = "where FALSE";
 	}
-elseif ( eregi('ALL-GROUPS',$user_group_string) )
+elseif ( preg_match('/ALL\-GROUPS/i',$user_group_string) )
 	{
 	$all_active_groups = 1;
 #	$user_group_SQL = '';
@@ -559,7 +560,7 @@ $select_list .= "<SELECT SIZE=8 NAME=groups[] ID=groups[] multiple>";
 $o=0;
 while ($groups_to_print > $o)
 	{
-	if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
+	if (preg_match("/\|$LISTgroups[$o]\|/",$group_string)) 
 		{$select_list .= "<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTnames[$o]</option>";}
 	else
 		{$select_list .= "<option value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTnames[$o]</option>";}
@@ -573,7 +574,7 @@ $select_list .= "<SELECT SIZE=8 NAME=user_group_filter[] ID=user_group_filter[] 
 $o=0;
 while ($o < $usergroups_to_print)
 	{
-	if (ereg("\|$usergroups[$o]\|",$user_group_string))
+	if (preg_match("/\|$usergroups[$o]\|/",$user_group_string))
 		{$select_list .= "<option selected value=\"$usergroups[$o]\">$usergroups[$o] - $usergroupnames[$o]</option>";}
 	else
 		{
@@ -1480,7 +1481,7 @@ echo "<span style=\"position:absolute;left:10px;top:120px;z-index:14;\" id=agent
 echo " &nbsp; ";
 echo "</span>\n";
 echo "<a href=\"#\" onclick=\"update_variables('form_submit','','YES')\">RELOAD NOW</a>";
-if (eregi('ALL-ACTIVE',$group_string))
+if (preg_match('/ALL\-ACTIVE/i',$group_string))
 	{echo " &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=10\">MODIFY</a> | \n";}
 else
 	{echo " &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=34&campaign_id=$group\">MODIFY</a> | \n";}

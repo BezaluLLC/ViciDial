@@ -7,10 +7,11 @@
 # 121110-1446 - Initial Build
 # 121114-0956 - Added input filtering and vicidial_admin_log logging
 # 130124-1129 - Added new options, from issue #632<noah>
+# 130610-1045 - Finalized changing of all ereg instances to preg
 #
 
-$version = '2.6-3a';
-$build = '130124-1129';
+$version = '2.8-4';
+$build = '130610-1045';
 
 # This limit is to prevent data inconsistancies.
 # If there are too many leads in a list this
@@ -51,14 +52,14 @@ if (isset($_GET["confirm_update"])) {$confirm_move=$_GET["confirm_update"];}
 if (isset($_GET["confirm_delete"])) {$confirm_delete=$_GET["confirm_delete"];}
 	elseif (isset($_POST["confirm_delete"])) {$confirm_delete=$_POST["confirm_delete"];}
 	
-$DB = ereg_replace("[^0-9]","",$DB);
-$move_submit = ereg_replace("[^-_0-9a-zA-Z]","",$move_submit);
-$update_submit = ereg_replace("[^-_0-9a-zA-Z]","",$update_submit);
-$delete_submit = ereg_replace("[^-_0-9a-zA-Z]","",$delete_submit);
-$confirm_move = ereg_replace("[^-_0-9a-zA-Z]","",$confirm_move);
-$confirm_update = ereg_replace("[^-_0-9a-zA-Z]","",$confirm_update);
-$confirm_delete = ereg_replace("[^-_0-9a-zA-Z]","",$confirm_delete);
-$delete_status = ereg_replace("[^-_0-9a-zA-Z]","",$delete_status);
+$DB = preg_replace('/[^0-9]/','',$DB);
+$move_submit = preg_replace('/[^-_0-9a-zA-Z]/','',$move_submit);
+$update_submit = preg_replace('/[^-_0-9a-zA-Z]/','',$update_submit);
+$delete_submit = preg_replace('/[^-_0-9a-zA-Z]/','',$delete_submit);
+$confirm_move = preg_replace('/[^-_0-9a-zA-Z]/','',$confirm_move);
+$confirm_update = preg_replace('/[^-_0-9a-zA-Z]/','',$confirm_update);
+$confirm_delete = preg_replace('/[^-_0-9a-zA-Z]/','',$confirm_delete);
+$delete_status = preg_replace('/[^-_0-9a-zA-Z]/','',$delete_status);
 
 
 #############################################
@@ -84,14 +85,14 @@ else
 
 if ($non_latin < 1)
 	{
-	$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
-	$list_id_override = ereg_replace("[^0-9]","",$list_id_override);
+	$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	$list_id_override = preg_replace('/[^0-9]/','',$list_id_override);
 	}
 else
 	{
-	$PHP_AUTH_PW = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_PW);
-	$PHP_AUTH_USER = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	}
 
 $valid_user_stmt = "SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7;";
@@ -210,11 +211,11 @@ if ($move_submit == "move" )
 	if (isset($_GET["move_count_num"])) {$move_count_num=$_GET["move_count_num"];}
 		elseif (isset($_POST["move_count_num"])) {$move_count_num=$_POST["move_count_num"];}
 	
-	#$move_status = ereg_replace("[^-_0-9a-zA-Z]","",$move_status);
-	$move_from_list = ereg_replace("[^0-9]","",$move_from_list);
-	$move_to_list = ereg_replace("[^0-9]","",$move_to_list);
-	$move_count_num = ereg_replace("[^0-9]","",$move_count_num);
-	$move_count_op = ereg_replace("[^<>=]","",$move_count_op);
+	#$move_status = preg_replace('/[^-_0-9a-zA-Z]/','',$move_status);
+	$move_from_list = preg_replace('/[^0-9]/','',$move_from_list);
+	$move_to_list = preg_replace('/[^0-9]/','',$move_to_list);
+	$move_count_num = preg_replace('/[^0-9]/','',$move_count_num);
+	$move_count_op = preg_replace('/[^<>=]/','',$move_count_op);
 
 
 	$move_count_op_phrase="";
@@ -300,11 +301,11 @@ if ($confirm_move == "confirm")
 	if (isset($_GET["move_count_num"])) {$move_count_num=$_GET["move_count_num"];}
 		elseif (isset($_POST["move_count_num"])) {$move_count_num=$_POST["move_count_num"];}
 			
-	#$move_status = ereg_replace("[^-_0-9a-zA-Z]","",$move_status);
-	$move_from_list = ereg_replace("[^0-9]","",$move_from_list);
-	$move_to_list = ereg_replace("[^0-9]","",$move_to_list);
-	$move_count_num = ereg_replace("[^0-9]","",$move_count_num);
-	$move_count_op = ereg_replace("[^<>=]","",$move_count_op);
+	#$move_status = preg_replace('/[^-_0-9a-zA-Z]/','',$move_status);
+	$move_from_list = preg_replace('/[^0-9]/','',$move_from_list);
+	$move_to_list = preg_replace('/[^0-9]/','',$move_to_list);
+	$move_count_num = preg_replace('/[^0-9]/','',$move_count_num);
+	$move_count_op = preg_replace('/[^<>=]/','',$move_count_op);
 
 	$move_count_op_phrase="";
 	if ( $move_count_op == "<" )
@@ -332,7 +333,7 @@ if ($confirm_move == "confirm")
 		$move_sentence = "$move_lead_count leads have been moved from list $move_from_list to $move_to_list with the status $move_status and that were called $move_count_op_phrase$move_count_num times.";
 		
 		$SQL_log = "$move_lead_stmt|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
 		$SQL_log = addslashes($SQL_log);
 		$admin_log_stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='OTHER', record_id='$move_from_list', event_code='ADMIN MOVE LEADS', event_sql=\"$SQL_log\", event_notes='$move_sentence';";
 		if ($DB) {echo "|$admin_log_stmt|\n";}
@@ -365,11 +366,11 @@ if ($update_submit == "update" )
 	if (isset($_GET["update_count_num"])) {$update_count_num=$_GET["update_count_num"];}
 		elseif (isset($_POST["update_count_num"])) {$update_count_num=$_POST["update_count_num"];}
 			
-	$update_from_status = ereg_replace("[^-_0-9a-zA-Z]","",$update_from_status);
-	$update_to_status = ereg_replace("[^-_0-9a-zA-Z]","",$update_to_status);
-	$update_list = ereg_replace("[^0-9]","",$update_list);
-	$update_count_num = ereg_replace("[^0-9]","",$update_count_num);
-	$update_count_op = ereg_replace("[^<>=]","",$update_count_op);
+	$update_from_status = preg_replace('/[^-_0-9a-zA-Z]/','',$update_from_status);
+	$update_to_status = preg_replace('/[^-_0-9a-zA-Z]/','',$update_to_status);
+	$update_list = preg_replace('/[^0-9]/','',$update_list);
+	$update_count_num = preg_replace('/[^0-9]/','',$update_count_num);
+	$update_count_op = preg_replace('/[^<>=]/','',$update_count_op);
 
 	$update_count_op_phrase="";
 	if ( $update_count_op == "<" )
@@ -432,11 +433,11 @@ if ($confirm_update == "confirm")
 	if (isset($_GET["update_count_num"])) {$update_count_num=$_GET["update_count_num"];}
 		elseif (isset($_POST["update_count_num"])) {$update_count_num=$_POST["update_count_num"];}
 
-	$update_from_status = ereg_replace("[^-_0-9a-zA-Z]","",$update_from_status);
-	$update_to_status = ereg_replace("[^-_0-9a-zA-Z]","",$update_to_status);
-	$update_list = ereg_replace("[^0-9]","",$update_list);
-	$update_count_num = ereg_replace("[^0-9]","",$update_count_num);
-	$update_count_op = ereg_replace("[^<>=]","",$update_count_op);
+	$update_from_status = preg_replace('/[^-_0-9a-zA-Z]/','',$update_from_status);
+	$update_to_status = preg_replace('/[^-_0-9a-zA-Z]/','',$update_to_status);
+	$update_list = preg_replace('/[^0-9]/','',$update_list);
+	$update_count_num = preg_replace('/[^0-9]/','',$update_count_num);
+	$update_count_op = preg_replace('/[^<>=]/','',$update_count_op);
 		
 	$update_count_op_phrase="";
 	if ( $update_count_op == "<" )
@@ -464,7 +465,7 @@ if ($confirm_update == "confirm")
 		$update_sentence = "$update_lead_count leads had their status changed from $update_from_status to $update_to_status in list $update_list that were called $update_count_op_phrase$update_count_num times.";
 		
 		$SQL_log = "$update_lead_stmt|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
 		$SQL_log = addslashes($SQL_log);
 		$admin_log_stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='MODIFY', record_id='$update_list', event_code='ADMIN UPDATE LEADS', event_sql=\"$SQL_log\", event_notes='$update_sentence';";
 		if ($DB) {echo "|$admin_log_stmt|\n";}
@@ -493,10 +494,10 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	if (isset($_GET["delete_count_num"])) {$delete_count_num=$_GET["delete_count_num"];}
 		elseif (isset($_POST["delete_count_num"])) {$delete_count_num=$_POST["delete_count_num"];}
 	
-	$delete_status = ereg_replace("[^-_0-9a-zA-Z]","",$delete_status);
-	$delete_list = ereg_replace("[^0-9]","",$delete_list);
-	$delete_count_num = ereg_replace("[^0-9]","",$delete_count_num);
-	$delete_count_op = ereg_replace("[^<>=]","",$delete_count_op);
+	$delete_status = preg_replace('/[^-_0-9a-zA-Z]/','',$delete_status);
+	$delete_list = preg_replace('/[^0-9]/','',$delete_list);
+	$delete_count_num = preg_replace('/[^0-9]/','',$delete_count_num);
+	$delete_count_op = preg_replace('/[^<>=]/','',$delete_count_op);
 
 	$delete_count_op_phrase="";
 		if ( $delete_count_op == "<" )
@@ -555,10 +556,10 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 	if (isset($_GET["delete_count_num"])) {$delete_count_num=$_GET["delete_count_num"];}
 		elseif (isset($_POST["delete_count_num"])) {$delete_count_num=$_POST["delete_count_num"];}
 
-	$delete_status = ereg_replace("[^-_0-9a-zA-Z]","",$delete_status);
-	$delete_list = ereg_replace("[^0-9]","",$delete_list);
-	$delete_count_num = ereg_replace("[^0-9]","",$delete_count_num);
-	$delete_count_op = ereg_replace("[^<>=]","",$delete_count_op);
+	$delete_status = preg_replace('/[^-_0-9a-zA-Z]/','',$delete_status);
+	$delete_list = preg_replace('/[^0-9]/','',$delete_list);
+	$delete_count_num = preg_replace('/[^0-9]/','',$delete_count_num);
+	$delete_count_op = preg_replace('/[^<>=]/','',$delete_count_op);
 		
 	$delete_count_op_phrase="";
 	if ( $delete_count_op == "<" )
@@ -586,7 +587,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		$delete_sentence = "$delete_lead_count leads delete from list $delete_list with the status $delete_status that were called $delete_count_op_phrase$delete_count_num times.";
 		
 		$SQL_log = "$update_lead_stmt|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
 		$SQL_log = addslashes($SQL_log);
 		$admin_log_stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='DELETE', record_id='$delete_list', event_code='ADMIN DELETE LEADS', event_sql=\"$SQL_log\", event_notes='$delete_sentence';";
 		if ($DB) {echo "|$admin_log_stmt|\n";}
@@ -610,7 +611,7 @@ if (
 	$allowed_campaigns = $allowed_campaigns_row[0];
 	if ($DB) { echo "|$allowed_campaigns|\n"; }
 	$allowed_campaigns_sql = "";
-	if ( eregi("ALL-CAMPAIGNS",$allowed_campaigns) )
+	if ( preg_match("/ALL\-CAMPAIGNS/i",$allowed_campaigns) )
 		{
 		if ($DB) { echo "|Processing All Campaigns|\n"; }
 		$campaign_id_stmt = "SELECT campaign_id FROM vicidial_campaigns";

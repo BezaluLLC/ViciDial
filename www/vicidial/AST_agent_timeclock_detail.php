@@ -14,6 +14,7 @@
 # 111104-1315 - Added user_group restrictions for selecting in-groups
 # 120224-0910 - Added HTML display option with bar graphs
 # 130414-0154 - Added report logging
+# 130610-1024 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -69,8 +70,8 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
 if ($DB) {echo "|$stmt|\n";}
@@ -147,7 +148,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 
 $LOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
-if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 	{
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
@@ -158,7 +159,7 @@ $regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
 
 $LOGadmin_viewable_groupsSQL='';
 $whereLOGadmin_viewable_groupsSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 	{
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -168,7 +169,7 @@ if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewabl
 
 $LOGadmin_viewable_call_timesSQL='';
 $whereLOGadmin_viewable_call_timesSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i', $LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
 	{
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ -/",'',$LOGadmin_viewable_call_times);
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_call_timesSQL);
@@ -183,8 +184,8 @@ $STARTtime = date("U");
 if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = "$NOW_DATE 00:00:00";}
 if (!isset($end_date)) {$end_date = "$NOW_DATE 23:59:59";}
-$query_dateURL = ereg_replace(' ','+',$query_date);
-$end_dateURL = ereg_replace(' ','+',$end_date);
+$query_dateURL = preg_replace('/\s/', '+', $query_date);
+$end_dateURL = preg_replace('/\s/', '+', $end_date);
 
 $query_dateARRAY = explode(" ",$query_date);
 $query_date_D = $query_dateARRAY[0];
@@ -226,11 +227,11 @@ while($i < $group_ct)
 	$groupQS .= "&group[]=$group[$i]";
 	$i++;
 	}
-if ( (ereg("--ALL--",$group_string) ) or ($group_ct < 1) )
+if ( (preg_match('/\-\-ALL\-\-/',$group_string) ) or ($group_ct < 1) )
 	{$group_SQL = "";}
 else
 	{
-	$group_SQL = eregi_replace(",$",'',$group_SQL);
+	$group_SQL = preg_replace('/,$/i', '',$group_SQL);
 	$group_SQL = "and campaign_id IN($group_SQL)";
 	}
 
@@ -244,14 +245,14 @@ while($i < $user_group_ct)
 	$user_groupQS .= "&user_group[]=$user_group[$i]";
 	$i++;
 	}
-if ( (ereg("--ALL--",$user_group_string) ) or ($user_group_ct < 1) )
+if ( (preg_match('/\-\-ALL\-\-/',$user_group_string) ) or ($user_group_ct < 1) )
 	{$user_group_SQL = "";}
 else
 	{
 	$TCuser_group_SQL = $user_group_SQL;
-	$user_group_SQL = eregi_replace(",$",'',$user_group_SQL);
+	$user_group_SQL = preg_replace('/,$/i', '',$user_group_SQL);
 	$user_group_SQL = "and vicidial_agent_log.user_group IN($user_group_SQL)";
-	$TCuser_group_SQL = eregi_replace(",$",'',$TCuser_group_SQL);
+	$TCuser_group_SQL = preg_replace('/,$/i', '',$TCuser_group_SQL);
 	$TCuser_group_SQL = "and user_group IN($TCuser_group_SQL)";
 	}
 
@@ -516,14 +517,14 @@ else
 			}
 
 		if ($TC_results > 0)
-			{$rawTCdetail = ereg_replace(",$",'',$rawTCdetail);}
+			{$rawTCdetail = preg_replace('/,$/','',$rawTCdetail);}
 
 		$Stime[$m] =	sprintf("%10s", $Stime[$m]); 
 		$SORTname =	sprintf("%-20s", $Sname[$m]);
 		$SORTgroup =	sprintf("%-20s", $Sgroup[$m]);
 		$Sgroup[$m] =	sprintf("%-20s", $Sgroup[$m]); 
-		$SORTgroup = ereg_replace(" ",'0',$SORTgroup);
-		$SORTname = ereg_replace(" ",'0',$SORTname);
+		$SORTgroup = preg_replace('/\s/', '0',$SORTgroup);
+		$SORTname = preg_replace('/\s/', '0',$SORTname);
 
 		if ($non_latin < 1)
 			{
@@ -578,7 +579,7 @@ else
 			$TOPsort[$m] =	'' . sprintf("%020s", $SORTgroup) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);
 			$TOPsortTALLY[$m]=$SORTgroup;
 			}
-		if (!ereg("NAME|ID|TCLOCK|GROUP",$stage))
+		if (!preg_match('/NAME|ID|TCLOCK|GROUP/',$stage))
 			if ($file_download < 1)
 				{
 				$ASCII_text.="$Toutput";
@@ -608,15 +609,15 @@ else
 
 
 	### BEGIN sort through output to display properly ###
-	if ( (ereg("NAME|ID|TCLOCK|GROUP",$stage)) and ($k > 0) )
+	if ( (preg_match('/NAME|ID|TCLOCK|GROUP/',$stage)) and ($k > 0) )
 		{
-		if (ereg("ID",$stage))
+		if (preg_match('/ID/',$stage))
 			{sort($TOPsort, SORT_NUMERIC);}
-		if (ereg("TCLOCK",$stage))
+		if (preg_match('/TCLOCK/',$stage))
 			{rsort($TOPsort, SORT_NUMERIC);}
-		if (ereg("GROUP",$stage))
+		if (preg_match('/GROUP/',$stage))
 			{sort($TOPsort, SORT_REGULAR);}
-		if (ereg("NAME",$stage))
+		if (preg_match('/NAME/',$stage))
 			{sort($TOPsort, SORT_STRING);}
 
 		$m=0;
@@ -779,14 +780,14 @@ echo " &nbsp; <INPUT TYPE=TEXT NAME=end_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$end_d
 
 #	echo "</TD><TD VALIGN=TOP> Campaigns:<BR>";
 #	echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
-#	if  (eregi("--ALL--",$group_string))
+#	if  (preg_match('/\-\-ALL\-\-/',$group_string))
 #		{echo "<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
 #	else
 #		{echo "<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
 #	$o=0;
 #	while ($campaigns_to_print > $o)
 #	{
-#		if (eregi("$groups[$o]\|",$group_string)) {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
+#		if (preg_match("/$groups[$o]\|/i",$group_string)) {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
 #		  else {echo "<option value=\"$groups[$o]\">$groups[$o]</option>\n";}
 #		$o++;
 #	}
@@ -795,14 +796,14 @@ echo " &nbsp; <INPUT TYPE=TEXT NAME=end_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$end_d
 echo "</TD><TD VALIGN=TOP>User Groups:<BR>";
 echo "<SELECT SIZE=5 NAME=user_group[] multiple>\n";
 
-if  (eregi("--ALL--",$user_group_string))
+if  (preg_match('/\-\-ALL\-\-/',$user_group_string))
 	{echo "<option value=\"--ALL--\" selected>-- ALL USER GROUPS --</option>\n";}
 else
 	{echo "<option value=\"--ALL--\">-- ALL USER GROUPS --</option>\n";}
 $o=0;
 while ($user_groups_to_print > $o)
 	{
-	if  (eregi("\|$user_groups[$o]\|",$user_group_string)) {echo "<option selected value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
+	if  (preg_match("/\|$user_groups[$o]\|/i",$user_group_string)) {echo "<option selected value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
 	  else {echo "<option value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
 	$o++;
 	}

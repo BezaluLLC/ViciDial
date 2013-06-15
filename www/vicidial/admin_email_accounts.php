@@ -9,10 +9,11 @@
 # 121214-2245 - First Build
 # 130102-1131 - Small admin log change
 # 130221-1754 - Added level 8 disable add feature
+# 130610-1041 - Changed all ereg to preg
 #
 
-$admin_version = '2.6-3';
-$build = '130221-1754';
+$admin_version = '2.8-4';
+$build = '130610-1041';
 
 $sh="emails"; 
 
@@ -123,24 +124,24 @@ if ($qm_conf_ct > 0)
 
 if ($non_latin < 1)
 	{
-	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/[^-_0-9a-zA-Z]/", "",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace("/[^-_0-9a-zA-Z]/", "",$PHP_AUTH_PW);
 
-	$email_account_id = ereg_replace("[^_0-9a-zA-Z]","",$email_account_id);
-	$email_account_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$email_account_name);
-	$email_account_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$email_account_description);
-	$user_group = ereg_replace("[^_0-9a-zA-Z]","",$user_group);
-	$protocol = ereg_replace("[^_0-9a-zA-Z]","",$protocol);
-	$email_account_server = ereg_replace("[^\.\-\_0-9a-zA-Z]","",$email_account_server);
-	$active = ereg_replace("[^_0-9a-zA-Z]","",$active);
-	$email_frequency_check_mins = preg_replace("/^0-9/","",$email_frequency_check_mins);
-	$list_id = ereg_replace("[^0-9]","",$list_id);
+	$email_account_id = preg_replace("/[^_0-9a-zA-Z]/","",$email_account_id);
+	$email_account_name = preg_replace("/[^ \.\,-\_0-9a-zA-Z]/","",$email_account_name);
+	$email_account_description = preg_replace("/[^ \.\,-\_0-9a-zA-Z]/","",$email_account_description);
+	$user_group = preg_replace("/[^_0-9a-zA-Z]/","",$user_group);
+	$protocol = preg_replace("/[^_0-9a-zA-Z]/","",$protocol);
+	$email_account_server = preg_replace("/[^\.\-\_0-9a-zA-Z]/","",$email_account_server);
+	$active = preg_replace("/[^_0-9a-zA-Z]/","",$active);
+	$email_frequency_check_mins = preg_replace("/[^0-9]/","",$email_frequency_check_mins);
+	$list_id = preg_replace("/[^0-9]/","",$list_id);
 
 	}	# end of non_latin
 else
 	{
-	$PHP_AUTH_USER = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	}
 
 $STARTtime = date("U");
@@ -198,7 +199,7 @@ else
 		$whereLOGadmin_viewable_groupsSQL='';
 		$valLOGadmin_viewable_groupsSQL='';
 		$vmLOGadmin_viewable_groupsSQL='';
-		if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+		if ( (!preg_match("/\-\-ALL\-\-/i",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 			{
 			$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 			$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -364,7 +365,7 @@ if (($SUBMIT=="SUBMIT" || $SUBMIT=="UPDATE") && $email_account_id)
 
 					### LOG INSERTION Admin Log Table ###
 					$SQL_log = "$ins_stmt|";
-					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = preg_replace('/;/','',$SQL_log);
 					$SQL_log = addslashes($SQL_log);
 					$stmt="INSERT INTO vicidial_admin_log set event_date=now(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='EMAIL', event_type='ADD', record_id='$user', event_code='NEW EMAIL ACCOUNT ADDED', event_sql=\"$SQL_log\", event_notes='';";
 					if ($DB) {echo "|$stmt|\n";}
@@ -388,7 +389,7 @@ if (($SUBMIT=="SUBMIT" || $SUBMIT=="UPDATE") && $email_account_id)
 
 				### LOG INSERTION Admin Log Table ###
 				$SQL_log = "$upd_stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = preg_replace('/;/','',$SQL_log);
 				$SQL_log = addslashes($SQL_log);
 				$stmt="INSERT INTO vicidial_admin_log set event_date=now(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='EMAIL', event_type='MODIFY', record_id='$email_account_id', event_code='EMAIL ACCOUNT MODIFIED', event_sql=\"$SQL_log\", event_notes='';";
 				if ($DB) {echo "|$stmt|\n";}
@@ -424,7 +425,7 @@ else if ($SUBMIT=="COPY")
 
 				### LOG INSERTION Admin Log Table ###
 				$SQL_log = "$ins_stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = preg_replace('/;/','',$SQL_log);
 				$SQL_log = addslashes($SQL_log);
 				$stmt="INSERT INTO vicidial_admin_log set event_date=now(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='EMAIL', event_type='ADD', record_id='$user', event_code='NEW EMAIL ACCOUNT ADDED', event_sql=\"$SQL_log\", event_notes='';";
 				if ($DB) {echo "|$stmt|\n";}
@@ -470,7 +471,7 @@ if ($eact == "COPY")
 		echo "$accounts_list";
 		echo "</select></td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>New Account ID: </td><td align=left><input type=text name=new_account_id value='$new_account_id' size=10 maxlength=20></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>New Account Name: </td><td align=left><input type=text name=email_account_name size=40 maxlength=100>$NWB#vicidial_email_accounts-carrier_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>New Account Name: </td><td align=left><input type=text name=email_account_name size=40 maxlength=100>$NWB#email_accounts-carrier_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='COPY'></td></tr>\n";
 		echo "</TABLE></center>\n";
 		echo "</TD></TR></TABLE>\n";
@@ -583,20 +584,20 @@ else if ($eact == "ADD")
 		echo "<br>ADD NEW INBOUND EMAIL ACCOUNT<form action='$PHP_SELF' method='GET'>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account ID: </td><td align=left><input type=text name=email_account_id size=15 maxlength=20 value='$email_account_id'>$NWB#vicidial_email_accounts-email_account_id$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Name: </td><td align=left><input type=text name=email_account_name size=40 maxlength=100 value='$email_account_name'>$NWB#vicidial_email_accounts-email_account_name$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option SELECTED>N</option></select>$NWB#vicidial_email_accounts-email_account_active$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Description: </td><td align=left><input type=text name=email_account_description size=70 maxlength=255 value='$email_account_description'>$NWB#vicidial_email_accounts-email_account_description$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Type: </td><td align=left><select size=1 name=email_account_type><option>INBOUND</option></select>$NWB#vicidial_email_accounts-email_account_type$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account ID: </td><td align=left><input type=text name=email_account_id size=15 maxlength=20 value='$email_account_id'>$NWB#email_accounts-email_account_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Name: </td><td align=left><input type=text name=email_account_name size=40 maxlength=100 value='$email_account_name'>$NWB#email_accounts-email_account_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option SELECTED>N</option></select>$NWB#email_accounts-email_account_active$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Description: </td><td align=left><input type=text name=email_account_description size=70 maxlength=255 value='$email_account_description'>$NWB#email_accounts-email_account_description$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Type: </td><td align=left><select size=1 name=email_account_type><option>INBOUND</option></select>$NWB#email_accounts-email_account_type$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Admin User Group: </td><td align=left><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
 		echo "<option SELECTED value=\"---ALL---\">All Admin User Groups</option>\n";
-		echo "</select>$NWB#vicidial_email_accounts-admin_user_group$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Protocol: </td><td align=left><select size=1 name=protocol><option SELECTED>IMAP</option><option>POP3</option></select>$NWB#vicidial_email_accounts-protocol$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Reply-to Address: </td><td align=left><input type=text name=email_replyto_address size=70 maxlength=255 value='$email_replyto_address'>$NWB#vicidial_email_accounts-email_replyto_address$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Server: </td><td align=left><input type=text name=email_account_server size=70 maxlength=255 value='$email_account_server'>$NWB#vicidial_email_accounts-email_account_server$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account User: </td><td align=left><input type=text name=email_account_user size=30 maxlength=255 value='$email_account_user'>$NWB#vicidial_email_accounts-email_account_user$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Password: </td><td align=left><input type=text name=email_account_pass size=30 maxlength=100 value='$email_account_pass'>$NWB#vicidial_email_accounts-email_account_pass$NWE</td></tr>\n";
+		echo "</select>$NWB#email_accounts-admin_user_group$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Protocol: </td><td align=left><select size=1 name=protocol><option SELECTED>IMAP</option><option>POP3</option></select>$NWB#email_accounts-protocol$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Email Reply-to Address: </td><td align=left><input type=text name=email_replyto_address size=70 maxlength=255 value='$email_replyto_address'>$NWB#email_accounts-email_replyto_address$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Server: </td><td align=left><input type=text name=email_account_server size=70 maxlength=255 value='$email_account_server'>$NWB#email_accounts-email_account_server$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account User: </td><td align=left><input type=text name=email_account_user size=30 maxlength=255 value='$email_account_user'>$NWB#email_accounts-email_account_user$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Password: </td><td align=left><input type=text name=email_account_pass size=30 maxlength=100 value='$email_account_pass'>$NWB#email_accounts-email_account_pass$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Email Frequency Check Rate (mins): </td><td align=left><select name='email_frequency_check_mins'>";
 		$i=5;
 		while ($i<=60) 
@@ -604,20 +605,20 @@ else if ($eact == "ADD")
 			echo "<option value='$i'>$i</option>";
 			$i+=5;
 			}
-		echo "</select>$NWB#vicidial_email_accounts-email_frequency_check_mins$NWE</td></tr>\n";
+		echo "</select>$NWB#email_accounts-email_frequency_check_mins$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=1000\">In-Group ID</a>: </td><td align=left><select size=1 name=group_id>";
 		echo "$Dgroups_menu";
-		echo "</select>$NWB#vicidial_email_accounts-in_group$NWE</td></tr>\n";
+		echo "</select>$NWB#email_accounts-in_group$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=1000\">Default List ID</a>: </td><td align=left><input type=text name=default_list_id size=20 maxlength=255 value='$default_list_id'>$NWB#vicidial_email_accounts-default_list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=1000\">Default List ID</a>: </td><td align=left><input type=text name=default_list_id size=20 maxlength=255 value='$default_list_id'>$NWB#email_accounts-default_list_id$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Call Handle Method: </td><td align=left><select size=1 name=call_handle_method><option>EMAIL</option><option>EMAILLOOKUP</option><option>EMAILLOOKUPRL</option><option>EMAILLOOKUPRC</option><option SELECTED>$call_handle_method</option></select>$NWB#vicidial_email_accounts-call_handle_method$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Agent Search Method: </td><td align=left><select size=1 name=agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$agent_search_method</option></select>$NWB#vicidial_email_accounts-agent_search_method$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group List ID: </td><td align=left><input type=text name=list_id size=14 maxlength=14 value=\"$list_id\">$NWB#vicidial_email_accounts-ingroup_list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Call Handle Method: </td><td align=left><select size=1 name=call_handle_method><option>EMAIL</option><option>EMAILLOOKUP</option><option>EMAILLOOKUPRL</option><option>EMAILLOOKUPRC</option><option SELECTED>$call_handle_method</option></select>$NWB#email_accounts-call_handle_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Agent Search Method: </td><td align=left><select size=1 name=agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$agent_search_method</option></select>$NWB#email_accounts-agent_search_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group List ID: </td><td align=left><input type=text name=list_id size=14 maxlength=14 value=\"$list_id\">$NWB#email_accounts-ingroup_list_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Campaign ID: </td><td align=left><select size=1 name=campaign_id>\n";
 		echo "$campaigns_list";
 		echo "<option SELECTED>$campaign_id</option>\n";
-		echo "</select>$NWB#vicidial_email_accounts-ingroup_campaign_id$NWE</td></tr>\n";
+		echo "</select>$NWB#email_accounts-ingroup_campaign_id$NWE</td></tr>\n";
 		
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT VALUE=SUBMIT><input type=hidden name='eact' value='ADD'></td></tr>\n";
 		echo "</TABLE></center></form>\n";
@@ -763,23 +764,23 @@ else if (($eact=="DELETE" || $eact=="UPDATE") && $email_account_id)
 		echo "<br>UPDATE AN EXISTING INBOUND EMAIL ACCOUNT<form action='$PHP_SELF' method='GET'>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account ID: </td><td align=left><input type=hidden name=email_account_id value='$email_account_id'><B>$email_account_id$NWB#vicidial_email_accounts-email_account_id$NWE</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Name: </td><td align=left><input type=text name=email_account_name size=40 maxlength=100 value='$email_account_name'>$NWB#vicidial_email_accounts-email_account_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account ID: </td><td align=left><input type=hidden name=email_account_id value='$email_account_id'><B>$email_account_id$NWB#email_accounts-email_account_id$NWE</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Name: </td><td align=left><input type=text name=email_account_name size=40 maxlength=100 value='$email_account_name'>$NWB#email_accounts-email_account_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active>";
 		echo "<option value='$active' selected>$active</option>";
-		echo "<option>Y</option><option>N</option></select>$NWB#vicidial_email_accounts-email_account_active$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Description: </td><td align=left><input type=text name=email_account_description size=70 maxlength=255 value='$email_account_description'>$NWB#vicidial_email_accounts-email_account_description$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Type: </td><td align=left><select size=1 name=email_account_type><option value='$email_account_type' selected>$email_account_type</option><option>INBOUND</option></select>$NWB#vicidial_email_accounts-email_account_type$NWE</td></tr>\n";
+		echo "<option>Y</option><option>N</option></select>$NWB#email_accounts-email_account_active$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Description: </td><td align=left><input type=text name=email_account_description size=70 maxlength=255 value='$email_account_description'>$NWB#email_accounts-email_account_description$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Type: </td><td align=left><select size=1 name=email_account_type><option value='$email_account_type' selected>$email_account_type</option><option>INBOUND</option></select>$NWB#email_accounts-email_account_type$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Admin User Group: </td><td align=left><select size=1 name=user_group>\n";
 		echo "<option value='$user_group' selected>$user_group</option>";
 		echo "$UUgroups_list";
 		echo "<option SELECTED value=\"---ALL---\">All Admin User Groups</option>\n";
-		echo "</select>$NWB#vicidial_email_accounts-admin_user_group$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Protocol: </td><td align=left><select size=1 name=protocol><option>IMAP</option><option>POP3</option><option SELECTED>$protocol</option></select>$NWB#vicidial_email_accounts-protocol$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Reply-to Address: </td><td align=left><input type=text name=email_replyto_address size=70 maxlength=255 value='$email_replyto_address'>$NWB#vicidial_email_accounts-email_replyto_address$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Server: </td><td align=left><input type=text name=email_account_server size=70 maxlength=255 value='$email_account_server'>$NWB#vicidial_email_accounts-email_account_server$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account User: </td><td align=left><input type=text name=email_account_user size=30 maxlength=255 value='$email_account_user'>$NWB#vicidial_email_accounts-email_account_user$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Password: </td><td align=left><input type=text name=email_account_pass size=30 maxlength=100 value='$email_account_pass'>$NWB#vicidial_email_accounts-email_account_pass$NWE</td></tr>\n";
+		echo "</select>$NWB#email_accounts-admin_user_group$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Protocol: </td><td align=left><select size=1 name=protocol><option>IMAP</option><option>POP3</option><option SELECTED>$protocol</option></select>$NWB#email_accounts-protocol$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Email Reply-to Address: </td><td align=left><input type=text name=email_replyto_address size=70 maxlength=255 value='$email_replyto_address'>$NWB#email_accounts-email_replyto_address$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Server: </td><td align=left><input type=text name=email_account_server size=70 maxlength=255 value='$email_account_server'>$NWB#email_accounts-email_account_server$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account User: </td><td align=left><input type=text name=email_account_user size=30 maxlength=255 value='$email_account_user'>$NWB#email_accounts-email_account_user$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Password: </td><td align=left><input type=text name=email_account_pass size=30 maxlength=100 value='$email_account_pass'>$NWB#email_accounts-email_account_pass$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Email Frequency Check Rate (mins): </td><td align=left><select name='email_frequency_check_mins'>";
 		echo "<option value='$email_frequency_check_mins' selected>$email_frequency_check_mins</option>";
 		$i=5;
@@ -788,21 +789,21 @@ else if (($eact=="DELETE" || $eact=="UPDATE") && $email_account_id)
 			echo "<option value='$i'>$i</option>";
 			$i+=5;
 			}
-		echo "</select>$NWB#vicidial_email_accounts-email_frequency_check_mins$NWE</td></tr>\n";
+		echo "</select>$NWB#email_accounts-email_frequency_check_mins$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=3811&group_id=$group_id\">In-Group ID</a>: </td><td align=left><select size=1 name=group_id>";
 		echo "$Dgroups_menu";
-		echo "<option value='$group_id' selected>$group_id</option></select>$NWB#vicidial_email_accounts-in_group$NWE</td></tr>\n";
+		echo "<option value='$group_id' selected>$group_id</option></select>$NWB#email_accounts-in_group$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=1000\">Default List ID</a>: </td><td align=left><input type=text name=default_list_id size=20 maxlength=255 value='$default_list_id'>$NWB#vicidial_email_accounts-default_list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=1000\">Default List ID</a>: </td><td align=left><input type=text name=default_list_id size=20 maxlength=255 value='$default_list_id'>$NWB#email_accounts-default_list_id$NWE</td></tr>\n";
 
 ###############
-		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Call Handle Method: </td><td align=left><select size=1 name=call_handle_method><option>EMAIL</option><option>EMAILLOOKUP</option><option>EMAILLOOKUPRL</option><option>EMAILLOOKUPRC</option><option SELECTED>$call_handle_method</option></select>$NWB#vicidial_email_accounts-call_handle_method$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Agent Search Method: </td><td align=left><select size=1 name=agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$agent_search_method</option></select>$NWB#vicidial_email_accounts-agent_search_method$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group List ID: </td><td align=left><input type=text name=list_id size=14 maxlength=14 value=\"$list_id\">$NWB#vicidial_email_accounts-ingroup_list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Call Handle Method: </td><td align=left><select size=1 name=call_handle_method><option>EMAIL</option><option>EMAILLOOKUP</option><option>EMAILLOOKUPRL</option><option>EMAILLOOKUPRC</option><option SELECTED>$call_handle_method</option></select>$NWB#email_accounts-call_handle_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Agent Search Method: </td><td align=left><select size=1 name=agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$agent_search_method</option></select>$NWB#email_accounts-agent_search_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group List ID: </td><td align=left><input type=text name=list_id size=14 maxlength=14 value=\"$list_id\">$NWB#email_accounts-ingroup_list_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Campaign ID: </td><td align=left><select size=1 name=campaign_id>\n";
 		echo "$campaigns_list";
 		echo "<option SELECTED>$campaign_id</option>\n";
-		echo "</select>$NWB#vicidial_email_accounts-ingroup_campaign_id$NWE</td></tr>\n";
+		echo "</select>$NWB#email_accounts-ingroup_campaign_id$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Un-handled Emails: </td><td align=left><B>$unhandled_emails</B></td></tr>\n";
 ################
@@ -853,7 +854,7 @@ else
 		$ct_row=mysql_fetch_row($ct_rslt);
 		$unhandled_emails=$ct_row[0];
 		
-		if (eregi("1$|3$|5$|7$|9$", $o))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}

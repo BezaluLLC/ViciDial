@@ -11,6 +11,7 @@
 # 100802-2347 - Added User Group Allowed Reports option validation
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 # 130414-0201 - Added report logging
+# 130610-1003 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -32,8 +33,8 @@ if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 if (isset($_GET["DB"]))						{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))			{$DB=$_POST["DB"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 if (strlen($shift)<2) {$shift='ALL';}
 

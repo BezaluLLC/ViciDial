@@ -1,5 +1,5 @@
 <?php
-# manager_send.php    version 2.6
+# manager_send.php    version 2.8
 # 
 # Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -114,15 +114,17 @@
 # 121120-0848 - Added QM socket-send functionality
 # 130108-1641 - Change for Asterisk 1.8 compatibility
 # 130328-0008 - Converted ereg to preg functions
+# 130603-2205 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 #
 
-$version = '2.6-61';
-$build = '130328-0008';
+$version = '2.8-62';
+$build = '130603-2205';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=119;
 $one_mysql_log=0;
 
 require("dbconnect.php");
+require("functions.php");
 
 ### These are variable assignments for PHP globals off
 if (isset($_GET["user"]))					{$user=$_GET["user"];}
@@ -223,7 +225,7 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
+$stmt = "SELECT use_non_latin,allow_sipsak_messages FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02001',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -231,7 +233,8 @@ $qm_conf_ct = mysql_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
-	$non_latin =		$row[0];
+	$non_latin =				$row[0];
+	$allow_sipsak_messages =	$row[1];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -248,6 +251,8 @@ else
 	$pass = preg_replace("/\'|\"|\\\\|;/","",$pass);
 	}
 
+$session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
+$server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
 
 # default optional vars if not set
 if (!isset($ACTION))   {$ACTION="Originate";}
@@ -260,18 +265,15 @@ $NOW_TIME = date("Y-m-d H:i:s");
 $NOWnum = date("YmdHis");
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
-$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-if ($DB) {echo "|$stmt|\n";}
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02002',$user,$server_ip,$session_name,$one_mysql_log);}
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Invalid Username/Password: |$user|$pass|\n";
-    exit;
+	echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
+	exit;
 	}
 else
 	{
@@ -425,10 +427,13 @@ if ($ACTION=="OriginateVDRelogin")
 		$CIDdate = date("ymdHis");
 		$DS='-';
 		$SIPSAK_prefix = 'LIN-';
-		print "<!-- sending login sipsak message: $SIPSAK_prefix$VD_campaign -->\n";
+		$campaign = preg_replace("/\'|\"|\\\\|;/","",$campaign);
+		$extension = preg_replace("/\'|\"|\\\\|;/","",$extension);
+		$phone_ip = preg_replace("/\'|\"|\\\\|;/","",$phone_ip);
+
+		print "<!-- sending login sipsak message: $SIPSAK_prefix$campaign -->\n";
 		passthru("/usr/local/bin/sipsak -M -O desktop -B \"$SIPSAK_prefix$campaign\" -r 5060 -s sip:$extension@$phone_ip > /dev/null");
 		$queryCID = "$SIPSAK_prefix$campaign$DS$CIDdate";
-
 		}
 	$ACTION="Originate";
 	}
@@ -2115,14 +2120,6 @@ if ($ACTION=="VolumeControl")
 
 
 
-
-
-
-
-
-
-
-
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $StarTtime);
 if ($format=='debug') {echo "\n<!-- script runtime: $RUNtime seconds -->";}
@@ -2130,26 +2127,5 @@ if ($format=='debug') {echo "\n</body>\n</html>\n";}
 	
 exit; 
 
-
-##### MySQL Error Logging #####
-function mysql_error_logging($NOW_TIME,$link,$mel,$stmt,$query_id,$user,$server_ip,$session_name,$one_mysql_log)
-	{
-	$NOW_TIME = date("Y-m-d H:i:s");
-	#	mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02001',$user,$server_ip,$session_name,$one_mysql_log);
-	$errno='';   $error='';
-	if ( ($mel > 0) or ($one_mysql_log > 0) )
-		{
-		$errno = mysql_errno($link);
-		if ( ($errno > 0) or ($mel > 1) or ($one_mysql_log > 0) )
-			{
-			$error = mysql_error($link);
-			$efp = fopen ("./vicidial_mysql_errors.txt", "a");
-			fwrite ($efp, "$NOW_TIME|manager_send|$query_id|$errno|$error|$stmt|$user|$server_ip|$session_name|\n");
-			fclose($efp);
-			}
-		}
-	$one_mysql_log=0;
-	return $errno;
-	}
 
 ?>

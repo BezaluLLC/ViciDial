@@ -3,13 +3,14 @@
 #                   vicidial_users table into the Vtiger system as well as
 #                   the groups from VICIDIAL to Vtiger
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 81231-1307 - First build
 # 90228-2152 - Added Groups support
 # 90508-0644 - Changed to PHP long tags
 # 100127-0616 - Added Vtiger ViciDial user_level role lookup
+# 130610-1126 - Finalized changing of all ereg instances to preg
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -85,7 +86,7 @@ while ($i < $VD_users_ct)
 	$row=mysql_fetch_row($rslt);
 	$user[$i] =			$row[0];
 	$pass[$i] =			$row[1];
-	$full_name[$i] =	$row[2];   while (strlen($full_name[$i])>30) {$full_name[$i] = eregi_replace(".$",'',$full_name[$i]);}
+	$full_name[$i] =	$row[2];   while (strlen($full_name[$i])>30) {$full_name[$i] = preg_replace('/.$/i', '',$full_name[$i]);}
 	$user_level[$i] =	$row[3];
 	$active[$i] =		$row[4];
 	$user_group[$i] =	$row[5];
@@ -188,7 +189,7 @@ while ($i < $VD_users_ct)
 	if ($user_level[$i] >= 8) {$roleid = 'H3';}
 	if ($user_level[$i] >= 9) {$roleid = 'H2';}
 	if ($user_level[$i] >= 9) {$is_admin = 'on';}
-	if (ereg('N',$active[$i])) {$status = 'Inactive';}
+	if (preg_match('/N/',$active[$i])) {$status = 'Inactive';}
 	$salt = substr($user_name, 0, 2);
 	$salt = '$1$' . $salt . '$';
 	$encrypted_password = crypt($user_password, $salt);
@@ -208,7 +209,7 @@ while ($i < $VD_users_ct)
 	$all_VICIDIAL_groups_SQL='';
 	while ($j < $VD_groups_ct)
 		{
-		if ( (eregi("$UGid[$j]",$VUgroup)) and ( (strlen($UGid[$j]))==(strlen($VUgroup)) ) )
+		if ( (preg_match("/$UGid[$j]/i",$VUgroup)) and ( (strlen($UGid[$j]))==(strlen($VUgroup)) ) )
 			{
 			$groupid =				$VTugID[$j];
 			$VTgroup_name =			$UGid[$j];

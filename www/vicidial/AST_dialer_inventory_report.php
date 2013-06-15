@@ -15,6 +15,7 @@
 # 111230-1145 - Debugging additions and more minor changes
 # 120221-2237 - Added totals, list options, other small changes
 # 130414-0131 - Added report logging
+# 130610-1021 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -159,7 +160,7 @@ if (file_exists('options.php'))
 
 $LOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
-if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 	{
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
@@ -186,7 +187,7 @@ while ($i < $campaigns_to_print)
 	{
 	$row=mysql_fetch_row($rslt);
 	$groups[$i] =$row[0];
-	if (ereg("-ALL",$group_string) )
+	if (preg_match('/\-ALL/',$group_string) )
 		{$group[$i] = $groups[$i];}
 	$i++;
 	}	
@@ -206,11 +207,11 @@ while($i < $group_ct)
 	$i++;
 	}
 
-if ( (ereg("--ALL--",$group_string) ) or ($group_ct < 1) )
+if ( (preg_match('/\-\-ALL\-\-/',$group_string) ) or ($group_ct < 1) )
 	{$group_SQL = "";}
 else
 	{
-	$group_SQL = eregi_replace(",$",'',$group_SQL);
+	$group_SQL = preg_replace('/,$/i', '',$group_SQL);
 	$group_SQL = "and campaign_id IN($group_SQL)";
 	}
 
@@ -229,14 +230,14 @@ while ($i < $lists_to_print)
 
 $campaign_span_txt="Campaigns:<BR>";
 $campaign_span_txt.="<SELECT SIZE=5 NAME=group[] multiple>";
-if  (eregi("--ALL--",$group_string))
+if  (preg_match('/\-\-ALL\-\-/',$group_string))
 	{$campaign_span_txt.="<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>";}
 else
 	{$campaign_span_txt.="<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>";}
 $o=0;
 while ($campaigns_to_print > $o)
 	{
-	if (eregi("$groups[$o]\|",$group_string)) {$campaign_span_txt.="<option selected value=\"$groups[$o]\">$groups[$o]</option>";}
+	if (preg_match("/$groups[$o]\|/i",$group_string)) {$campaign_span_txt.="<option selected value=\"$groups[$o]\">$groups[$o]</option>";}
 	  else {$campaign_span_txt.="<option value=\"$groups[$o]\">$groups[$o]</option>";}
 	$o++;
 	}

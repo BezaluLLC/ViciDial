@@ -13,12 +13,14 @@
 # 100215-0744 - First build of script
 # 100622-2230 - Added field labels
 # 130328-0020 - Converted ereg to preg functions
+# 130603-2203 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 #
 
-$version = '2.6-3';
-$build = '130328-0020';
+$version = '2.8-4';
+$build = '130603-2203';
 
 require("dbconnect.php");
+require("functions.php");
 
 
 if (isset($_POST["lead_id"]))	{$lead_id=$_POST["lead_id"];}
@@ -298,21 +300,15 @@ if (!isset($format))   {$format="text";}
 if (!isset($ACTION))   {$ACTION="refresh";}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
-$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-if ($DB) {echo "|$stmt|\n";}
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-	echo "Invalid Username/Password: |$user|$pass|\n";
+	echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
 	exit;
-	}
-else
-	{
-	# do nothing for now
 	}
 
 echo "<HTML>\n";

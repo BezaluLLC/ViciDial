@@ -14,6 +14,7 @@
 # 121115-0621 - Changed to multi-select for in-group selection
 # 130322-2008 - Added Unique Agents column
 # 130414-0110 - Added report logging
+# 130610-1008 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -53,8 +54,8 @@ if (isset($_GET["DB"]))				{$DB=$_GET["DB"];}
 if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 if (strlen($shift)<2) {$shift='ALL';}
 
@@ -155,7 +156,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 
 $LOGadmin_viewable_groupsSQL='';
 $whereLOGadmin_viewable_groupsSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 	{
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -167,7 +168,7 @@ if ($IDR_calltime_available==1)
 	{
 	$LOGadmin_viewable_call_timesSQL='';
 	$whereLOGadmin_viewable_call_timesSQL='';
-	if ( (!eregi("--ALL--",$LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
+	if ( (!preg_match('/\-\-ALL\-\-/i', $LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
 		{
 		$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ -/",'',$LOGadmin_viewable_call_times);
 		$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_call_timesSQL);
@@ -839,7 +840,7 @@ else
 
 				if ($totCALLSmax < $ls[$i]) {$totCALLSmax = $ls[$i];}
 				if ($qrtCALLSmax[$j] < $ls[$i]) {$qrtCALLSmax[$j] = $ls[$i];}
-				if (ereg('ABANDON|NOAGENT|QUEUETIMEOUT|AFTERHOURS|MAXCALLS', $tr[$i])) 
+				if (preg_match('/ABANDON|NOAGENT|QUEUETIMEOUT|AFTERHOURS|MAXCALLS/', $tr[$i])) 
 					{
 					$totABANDONSdate[$j]++;
 					$totABANDONSsecdate[$j]+=$ls[$i];
@@ -857,7 +858,7 @@ else
 					$FtotANSWERS++;
 					$FtotANSWERSspeeddate+=$qs[$i];
 					}
-				if (ereg('DROP',$st[$i])) 
+				if (preg_match('/DROP/',$st[$i])) 
 					{
 					$totDROPS++;
 					$totDROPSsec = ($totDROPSsec + $ls[$i]);

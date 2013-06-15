@@ -1,7 +1,7 @@
 <?php 
 # AST_timeonVDADallSUMMARY.php
 # 
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Summary for all campaigns live real-time stats for the VICIDIAL Auto-Dialer all servers
 #
@@ -23,6 +23,7 @@
 # 110110-1327 - Changed campaign real-time link to the new realtime_report.php
 # 110517-0059 - Added campaign type display option
 # 110703-1854 - Added doanload option
+# 130610-1120 - Finalized changing of all ereg instances to preg
 #
 
 require("dbconnect.php");
@@ -78,8 +79,8 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 	}
 
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
 if ($DB) {$MAIN.="|$stmt|\n";}
@@ -127,7 +128,7 @@ $STARTtime = date("U");
 
 $LOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
-if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 	{
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
@@ -268,7 +269,7 @@ $CALLtime =		$row[16];
 $DIALtimeout =	$row[17];
 $DIALstatuses =	$row[18];
 	$DIALstatuses = (preg_replace("/ -$|^ /","",$DIALstatuses));
-	$DIALstatuses = (ereg_replace(' ',', ',$DIALstatuses));
+	$DIALstatuses = (preg_replace('/\s/', ', ', $DIALstatuses));
 
 $stmt="select count(*) from vicidial_hopper where campaign_id='" . mysql_real_escape_string($group) . "';";
 $rslt=mysql_query($stmt, $link);
@@ -372,13 +373,13 @@ $CSV_text.="\"LEADS IN HOPPER:\",\"$VDhop\",\"DROPPED PERCENT:\",\"$drpctTODAY%\
 
 $MAIN.="<TR>";
 $MAIN.="<TD ALIGN=LEFT COLSPAN=8>";
-if ( (!eregi('NULL',$VSCcat1)) and (strlen($VSCcat1)>0) )
+if ( (!preg_match('/NULL/i',$VSCcat1)) and (strlen($VSCcat1)>0) )
 	{$MAIN.="<font size=2><B>$VSCcat1:</B> &nbsp; $VSCcat1tally &nbsp;  &nbsp;  &nbsp; \n";}
-if ( (!eregi('NULL',$VSCcat2)) and (strlen($VSCcat2)>0) )
+if ( (!preg_match('/NULL/i',$VSCcat2)) and (strlen($VSCcat2)>0) )
 	{$MAIN.="<font size=2><B>$VSCcat2:</B> &nbsp; $VSCcat2tally &nbsp;  &nbsp;  &nbsp; \n";}
-if ( (!eregi('NULL',$VSCcat3)) and (strlen($VSCcat3)>0) )
+if ( (!preg_match('/NULL/i',$VSCcat3)) and (strlen($VSCcat3)>0) )
 	{$MAIN.="<font size=2><B>$VSCcat3:</B> &nbsp; $VSCcat3tally &nbsp;  &nbsp;  &nbsp; \n";}
-if ( (!eregi('NULL',$VSCcat4)) and (strlen($VSCcat4)>0) )
+if ( (!preg_match('/NULL/i',$VSCcat4)) and (strlen($VSCcat4)>0) )
 	{$MAIN.="<font size=2><B>$VSCcat4:</B> &nbsp; $VSCcat4tally &nbsp;  &nbsp;  &nbsp; \n";}
 $MAIN.="</TD></TR>";
 $CSV_text.="\"$VSCcat1:\",\"$VSCcat1tally\",\"$VSCcat2:\",\"$VSCcat2tally\",\"$VSCcat3:\",\"$VSCcat3tally\",\"$VSCcat4:\",\"$VSCcat4tally\"\n";
@@ -478,13 +479,13 @@ $parked_to_print = mysql_num_rows($rslt);
 		{
 		$row=mysql_fetch_row($rslt);
 
-		if (eregi("LIVE",$row[0])) 
+		if (preg_match("/LIVE/i",$row[0])) 
 			{$out_live++;}
 		else
 			{
-			if (eregi("IVR",$row[0])) 
+			if (preg_match("/IVR/i",$row[0])) 
 				{$in_ivr++;}
-			if (eregi("CLOSER",$row[0])) 
+			if (preg_match("/CLOSER/i",$row[0])) 
 				{$nothing=1;}
 			else 
 				{$out_ring++;}
@@ -541,13 +542,13 @@ $talking_to_print = mysql_num_rows($rslt);
 	while ($i < $talking_to_print)
 		{
 		$row=mysql_fetch_row($rslt);
-			if (eregi("READY|PAUSED",$row[3]))
+			if (preg_match("/READY|PAUSED/i",$row[3]))
 			{
 			$row[5]=$row[6];
 			}
 		$Lstatus =			$row[3];
 		$status =			sprintf("%-6s", $row[3]);
-		if (!eregi("INCALL|QUEUE",$row[3]))
+		if (!preg_match("/INCALL|QUEUE/i",$row[3]))
 			{$call_time_S = ($STARTtime - $row[6]);}
 		else
 			{$call_time_S = ($STARTtime - $row[5]);}
@@ -562,7 +563,7 @@ $talking_to_print = mysql_num_rows($rslt);
 		$call_time_MS = "$call_time_M_int:$call_time_SEC";
 		$call_time_MS =		sprintf("%7s", $call_time_MS);
 		$G = '';		$EG = '';
-		if (eregi("PAUSED",$row[3])) 
+		if (preg_match("/PAUSED/i",$row[3])) 
 			{
 			if ($call_time_M_int >= 30) 
 				{$i++; continue;} 
@@ -572,8 +573,8 @@ $talking_to_print = mysql_num_rows($rslt);
 				}
 			}
 
-		if ( (eregi("INCALL",$status)) or (eregi("QUEUE",$status)) ) {$agent_incall++;  $agent_total++;}
-		if ( (eregi("READY",$status)) or (eregi("CLOSER",$status)) ) {$agent_ready++;  $agent_total++;}
+		if ( (preg_match("/INCALL/i",$status)) or (preg_match("/QUEUE/i",$status)) ) {$agent_incall++;  $agent_total++;}
+		if ( (preg_match("/READY/i",$status)) or (preg_match("/CLOSER/i",$status)) ) {$agent_ready++;  $agent_total++;}
 		$agentcount++;
 
 

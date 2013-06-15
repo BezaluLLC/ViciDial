@@ -1,5 +1,5 @@
 <?php
-# live_exten_check.php    version 2.6
+# live_exten_check.php    version 2.8
 # 
 # Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -31,9 +31,11 @@
 # 60825-1029 - Fixed translation variable issue ChannelA
 # 90508-0727 - Changed to PHP long tags
 # 130328-0027 - Converted ereg to preg functions
+# 130603-2214 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 #
 
 require("dbconnect.php");
+require("functions.php");
 
 ### If you have globals turned off uncomment these lines
 if (isset($_GET["user"]))				{$user=$_GET["user"];}
@@ -57,6 +59,8 @@ if (isset($_GET["favorites_list"]))				{$favorites_list=$_GET["favorites_list"];
 
 $user=preg_replace("/[^0-9a-zA-Z]/","",$user);
 $pass=preg_replace("/[^0-9a-zA-Z]/","",$pass);
+$session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
+$server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
 
 # default optional vars if not set
 if (!isset($format))   {$format="text";}
@@ -68,16 +72,15 @@ $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Invalid Username/Password: |$user|$pass|\n";
-    exit;
+	echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
+	exit;
 	}
 else
 	{

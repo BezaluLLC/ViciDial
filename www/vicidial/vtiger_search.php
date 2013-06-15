@@ -1,7 +1,7 @@
 <?php
 # vtiger_search.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This page does a search against a standard vtiger CRM system. If the record 
 # is not present, it will create a new one and send the agent's screen to that new page.
@@ -20,6 +20,7 @@
 # 90112-0336 - Added create call and create lead options
 # 90323-2104 - Added deleted account/lead check and reactivation from campaign option
 # 91228-1751 - Added UNIFIED_CONTACT search option
+# 130610-1123 - Finalized changing of all ereg instances to preg
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -193,11 +194,11 @@ mysql_select_db("$vtiger_dbname", $linkV);
 
 $lead_search=0; $account_search=0; $vendor_search=0; $acctid_search=0; $unified_contact=0;
 
-if (ereg('ACCTID',$vtiger_search_category))				{$acctid_search=1;}
-if (ereg('ACCOUNT',$vtiger_search_category))			{$account_search=1;}
-if (ereg('VENDOR',$vtiger_search_category))				{$vendor_search=1;}
-if (ereg('LEAD',$vtiger_search_category))				{$lead_search=1;}
-if (ereg('UNIFIED_CONTACT',$vtiger_search_category))	{$unified_contact=1;}
+if (preg_match('/ACCTID/',$vtiger_search_category))				{$acctid_search=1;}
+if (preg_match('/ACCOUNT/',$vtiger_search_category))			{$account_search=1;}
+if (preg_match('/VENDOR/',$vtiger_search_category))				{$vendor_search=1;}
+if (preg_match('/LEAD/',$vtiger_search_category))				{$lead_search=1;}
+if (preg_match('/UNIFIED_CONTACT/',$vtiger_search_category))	{$unified_contact=1;}
 
 
 
@@ -251,13 +252,13 @@ if ($acctid_search > 0)
 		if (!$rslt) {die('Could not execute: ' . mysql_error());}
 		$row=mysql_fetch_row($rslt);
 		$deleted_count = $row[0];
-		if ( ($deleted_count > 0) and (ereg('DISABLED',$vtiger_search_dead)) )
+		if ( ($deleted_count > 0) and (preg_match('/DISABLED/',$vtiger_search_dead)) )
 			{
 			echo "<!-- ACCTID found but deleted $vendor_id -->\n";
 			}
 		else
 			{
-			if ( ($deleted_count > 0) and ( (ereg('RESURRECT',$vtiger_search_dead)) or (ereg('ASK',$vtiger_search_dead)) ) )
+			if ( ($deleted_count > 0) and ( (preg_match('/RESURRECT/',$vtiger_search_dead)) or (preg_match('/ASK/',$vtiger_search_dead)) ) )
 				{
 				# un-delete the record
 				$stmt="UPDATE vtiger_crmentity SET deleted='0' where crmid='$vendor_id';";
@@ -268,7 +269,7 @@ if ($acctid_search > 0)
 				echo "<!-- ACCTID deleted but resurrected $vendor_id -->\n";
 				}
 
-			if (ereg('Y',$vtiger_create_call_record))
+			if (preg_match('/Y/',$vtiger_create_call_record))
 				{
 				### Log the call in Vtiger
 
@@ -436,13 +437,13 @@ if ($account_search > 0)
 		if (!$rslt) {die('Could not execute: ' . mysql_error());}
 		$row=mysql_fetch_row($rslt);
 		$deleted_count = $row[0];
-		if ( ($deleted_count > 0) and (ereg('DISABLED',$vtiger_search_dead)) )
+		if ( ($deleted_count > 0) and (preg_match('/DISABLED/',$vtiger_search_dead)) )
 			{
 			echo "<!-- ACCTID found but deleted $vendor_id -->\n";
 			}
 		else
 			{
-			if ( ($deleted_count > 0) and ( (ereg('RESURRECT',$vtiger_search_dead)) or (ereg('ASK',$vtiger_search_dead)) ) )
+			if ( ($deleted_count > 0) and ( (preg_match('/RESURRECT/',$vtiger_search_dead)) or (preg_match('/ASK/',$vtiger_search_dead)) ) )
 				{
 				# un-delete the record
 				$stmt="UPDATE vtiger_crmentity SET deleted='0' where crmid='$accountid';";
@@ -452,7 +453,7 @@ if ($account_search > 0)
 				
 				echo "<!-- ACCTID deleted but resurrected $accountid -->\n";
 				}
-			if (ereg('Y',$vtiger_create_call_record))
+			if (preg_match('/Y/',$vtiger_create_call_record))
 				{
 				### Log the call in Vtiger
 
@@ -597,7 +598,7 @@ if ($lead_search > 0)
 	if ($found_count < 1)
 		{
 		echo "<!-- LEAD not found $phone -->\n";
-		if (ereg('Y',$vtiger_create_lead_record))
+		if (preg_match('/Y/',$vtiger_create_lead_record))
 			{
 			echo "</head>\n";
 			echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0\">\n";
@@ -663,7 +664,7 @@ if ($lead_search > 0)
 
 			if ($DB) {echo "DONE creating lead records\n";}
 
-			if (ereg('Y',$vtiger_create_call_record))
+			if (preg_match('/Y/',$vtiger_create_call_record))
 				{
 				### Log the call in Vtiger
 
@@ -754,13 +755,13 @@ if ($lead_search > 0)
 		if (!$rslt) {die('Could not execute: ' . mysql_error());}
 		$row=mysql_fetch_row($rslt);
 		$deleted_count = $row[0];
-		if ( ($deleted_count > 0) and (ereg('DISABLED',$vtiger_search_dead)) )
+		if ( ($deleted_count > 0) and (preg_match('/DISABLED/',$vtiger_search_dead)) )
 			{
 			echo "<!-- LEADID found but deleted $leadid -->\n";
 			}
 		else
 			{
-			if ( ($deleted_count > 0) and ( (ereg('RESURRECT',$vtiger_search_dead)) or (ereg('ASK',$vtiger_search_dead)) ) )
+			if ( ($deleted_count > 0) and ( (preg_match('/RESURRECT/',$vtiger_search_dead)) or (preg_match('/ASK/',$vtiger_search_dead)) ) )
 				{
 				# un-delete the record
 				$stmt="UPDATE vtiger_crmentity SET deleted='0' where crmid='$leadid';";
@@ -771,7 +772,7 @@ if ($lead_search > 0)
 				echo "<!-- LEADID deleted but resurrected $leadid -->\n";
 				}
 
-			if (ereg('Y',$vtiger_create_call_record))
+			if (preg_match('/Y/',$vtiger_create_call_record))
 				{
 				### Log the call in Vtiger
 

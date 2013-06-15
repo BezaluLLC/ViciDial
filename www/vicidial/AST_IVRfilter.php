@@ -10,6 +10,7 @@
 # 90508-0644 - Changed to PHP long tags
 # 120113-2022 - Added new columns for sent to queue and agent
 # 130414-0257 - Added report logging
+# 130610-1007 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -58,8 +59,8 @@ if ($hourly_breakdown) {
 	$checked="";
 }
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####

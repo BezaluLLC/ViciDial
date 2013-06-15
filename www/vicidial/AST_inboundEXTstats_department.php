@@ -1,11 +1,12 @@
 <?php 
 # AST_inboundEXTstats_department.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 70201-1710 - First Build
 # 90508-0644 - Changed to PHP long tags
+# 130610-1134 - Finalized changing of all ereg instances to preg
 #
 
 require("dbconnect.php");
@@ -26,8 +27,8 @@ if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####

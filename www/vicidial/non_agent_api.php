@@ -75,10 +75,12 @@
 # 130405-1539 - Added agent_status function
 # 130414-0311 - Added report logging for blind_monitor function
 # 130420-1938 - Added NANPA prefix validation and timezone options
+# 130614-0907 - Finalized changing of all ereg instances to preg
+#             - Added pause code to output of agent_status function
 #
 
-$version = '2.6-53';
-$build = '130420-1938';
+$version = '2.8-54';
+$build = '130614-0907';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -352,145 +354,145 @@ if ($qm_conf_ct > 0)
 
 if ($non_latin < 1)
 	{
-	$DB=ereg_replace("[^0-9]","",$DB);
-	$user=ereg_replace("[^0-9a-zA-Z]","",$user);
-	$pass=ereg_replace("[^0-9a-zA-Z]","",$pass);
-	$function = ereg_replace("[^-\_0-9a-zA-Z]","",$function);
-	$format = ereg_replace("[^0-9a-zA-Z]","",$format);
-	$list_id = ereg_replace("[^0-9]","",$list_id);
-	$phone_code = ereg_replace("[^0-9]","",$phone_code);
-	$update_phone_number=ereg_replace("[^A-Z]","",$update_phone_number);
-	$phone_number = ereg_replace("[^0-9]","",$phone_number);
-	$vendor_lead_code = ereg_replace(";","",$vendor_lead_code);
-		$vendor_lead_code = ereg_replace("\+"," ",$vendor_lead_code);
-	$source_id = ereg_replace(";","",$source_id);
-		$source_id = ereg_replace("\+"," ",$source_id);
-	$gmt_offset_now = ereg_replace("-\_\.0-9","",$gmt_offset_now);
-	$title = ereg_replace("[^- \_\.0-9a-zA-Z]","",$title);
-	$first_name = ereg_replace("[^- \+\_\.0-9a-zA-Z]","",$first_name);
-		$first_name = ereg_replace("\+"," ",$first_name);
-	$middle_initial = ereg_replace("[^0-9a-zA-Z]","",$middle_initial);
-	$last_name = ereg_replace("[^- \+\_\.0-9a-zA-Z]","",$last_name);
-		$last_name = ereg_replace("\+"," ",$last_name);
-	$address1 = ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$address1);
-	$address2 = ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$address2);
-	$address3 = ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$address3);
-		$address1 = ereg_replace("\+"," ",$address1);
-		$address2 = ereg_replace("\+"," ",$address2);
-		$address3 = ereg_replace("\+"," ",$address3);
-	$city = ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$city);
-		$city = ereg_replace("\+"," ",$city);
-	$state = ereg_replace("[^- 0-9a-zA-Z]","",$state);
-	$province = ereg_replace("[^- \+\.\_0-9a-zA-Z]","",$province);
-		$province = ereg_replace("\+"," ",$province);
-	$postal_code = ereg_replace("[^- \+0-9a-zA-Z]","",$postal_code);
-		$postal_code = ereg_replace("\+"," ",$postal_code);
-	$country_code = ereg_replace("[^A-Z]","",$country_code);
-	$gender = ereg_replace("[^A-Z]","",$gender);
-	$date_of_birth = ereg_replace("[^-0-9]","",$date_of_birth);
-	$alt_phone = ereg_replace("[^- \+\_\.0-9a-zA-Z]","",$alt_phone);
-		$alt_phone = ereg_replace("\+"," ",$alt_phone);
-	$email = ereg_replace("[^- \+\.\:\/\@\%\_0-9a-zA-Z]","",$email);
-		$email = ereg_replace("\+"," ",$email);
-	$security_phrase = ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$security_phrase);
-		$security_phrase = ereg_replace("\+"," ",$security_phrase);
-	$comments = ereg_replace(";","",$comments);
-		$comments = ereg_replace("\+"," ",$comments);
-	$dnc_check = ereg_replace("[^A-Z]","",$dnc_check);
-	$campaign_dnc_check = ereg_replace("[^A-Z]","",$campaign_dnc_check);
-	$add_to_hopper = ereg_replace("[^A-Z]","",$add_to_hopper);
-	$hopper_priority = ereg_replace("-0-9","",$hopper_priority);
-	$hopper_local_call_time_check = ereg_replace("[^A-Z]","",$hopper_local_call_time_check);
-	$campaign_id = ereg_replace("[^-\_0-9a-zA-Z]","",$campaign_id);
-	$multi_alt_phones = ereg_replace("[^- \+\!\:\_0-9a-zA-Z]","",$multi_alt_phones);
-		$multi_alt_phones = ereg_replace("\+"," ",$multi_alt_phones);
-	$source = ereg_replace("[^0-9a-zA-Z]","",$source);
-	$phone_login = ereg_replace("[^-\_0-9a-zA-Z]","",$phone_login);
-	$session_id = ereg_replace("[^0-9]","",$session_id);
-	$server_ip = ereg_replace("[^\.0-9]","",$server_ip);
-	$stage = ereg_replace("[^a-zA-Z]","",$stage);
-	$rank = ereg_replace("[^0-9]","",$rank);
-	$owner = ereg_replace("[^-_0-9a-zA-Z]","",$owner);
-	$duplicate_check = ereg_replace("[^-_0-9a-zA-Z]","",$duplicate_check);
-	$custom_fields = ereg_replace("[^0-9a-zA-Z]","",$custom_fields);
-	$search_method = ereg_replace("[^-_0-9a-zA-Z]","",$search_method);
-	$insert_if_not_found = ereg_replace("[^A-Z]","",$insert_if_not_found);
-	$records = ereg_replace("[^0-9]","",$records);
-	$search_location = ereg_replace("[^A-Z]","",$search_location);
-	$user_field = ereg_replace("[^-_0-9a-zA-Z]","",$user_field);
-	$list_id_field = ereg_replace("[^0-9]","",$list_id_field);
-	$lead_id = ereg_replace("[^0-9]","",$lead_id);
-	$no_update = ereg_replace("[^A-Z]","",$no_update);
-	$delete_lead = ereg_replace("[^A-Z]","",$delete_lead);
-	$called_count=ereg_replace("[^0-9]","",$called_count);
-	$agent_user_level=ereg_replace("[^0-9]","",$agent_user_level);
-	$hotkeys_active=ereg_replace("[^0-9]","",$hotkeys_active);
-	$voicemail_id=ereg_replace("[^0-9]","",$voicemail_id);
-	$agent_pass=ereg_replace("[^-_0-9a-zA-Z]","",$agent_pass);
-	$agent_full_name=ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$agent_full_name);
-	$agent_user_group=ereg_replace("[^-_0-9a-zA-Z]","",$agent_user_group);
-	$phone_pass=ereg_replace("[^-_0-9a-zA-Z]","",$phone_pass);
-	$email=ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$email);
-	$custom_one=ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$custom_one);
-	$custom_two=ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$custom_two);
-	$custom_three=ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$custom_three);
-	$custom_four=ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$custom_four);
-	$custom_five=ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$custom_five);
-	$extension=ereg_replace("[^-_0-9a-zA-Z]","",$extension);
-	$dialplan_number=ereg_replace("[^\*\#0-9a-zA-Z]","",$dialplan_number);
-	$protocol=ereg_replace("[^0-9a-zA-Z]","",$protocol);
-	$registration_password=ereg_replace("[^-_0-9a-zA-Z]","",$registration_password);
-	$phone_full_name=ereg_replace("[^- \+\.\_0-9a-zA-Z]","",$phone_full_name);
-	$local_gmt=ereg_replace("[^-\.0-9]","",$local_gmt);
-	$outbound_cid=ereg_replace("[^0-9]","",$outbound_cid);
-	$phone_context=ereg_replace("[^-_0-9a-zA-Z]","",$phone_context);
-	$list_name=ereg_replace("[^- \+\.\:\/\@\?\&\_0-9a-zA-Z]","",$list_name);
-	$active=ereg_replace("[^A-Z]","",$active);
-	$script=ereg_replace("[^-_0-9a-zA-Z]","",$script);
-	$am_message=ereg_replace("[^-_0-9a-zA-Z]","",$am_message);
-	$drop_inbound_group=ereg_replace("[^-_0-9a-zA-Z]","",$drop_inbound_group);
-	$web_form_address=ereg_replace("[^- \+\.\:\/\@\?\&\_0-9a-zA-Z]","",$web_form_address);
-	$web_form_address_two=ereg_replace("[^- \+\.\:\/\@\?\&\_0-9a-zA-Z]","",$web_form_address_two);
-	$reset_list=ereg_replace("[^A-Z]","",$reset_list);
-	$delete_list=ereg_replace("[^A-Z]","",$delete_list);
-	$delete_leads=ereg_replace("[^A-Z]","",$delete_leads);
-	$reset_time=ereg_replace("[^-_0-9]","",$reset_time);
-	$uniqueid=ereg_replace("[^- \.\_0-9a-zA-Z]","",$uniqueid);
-	$tz_method = ereg_replace("[^-\_0-9a-zA-Z]","",$tz_method);
-	$reset_lead = ereg_replace("[^A-Z]","",$reset_lead);
-	$usacan_areacode_check = ereg_replace("[^A-Z]","",$usacan_areacode_check);
-	$usacan_prefix_check = ereg_replace("[^A-Z]","",$usacan_prefix_check);
-	$delete_phone = ereg_replace("[^A-Z]","",$delete_phone);
-	$alias_id = ereg_replace("[^-\_0-9a-zA-Z]","",$alias_id);
-	$phone_logins = ereg_replace("[^-\,\_0-9a-zA-Z]","",$phone_logins);
-	$alias_name = ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$alias_name);
-	$delete_alias = ereg_replace("[^A-Z]","",$delete_alias);
-	$callback = ereg_replace("[^A-Z]","",$callback);
-	$callback_status = ereg_replace("[^-\_0-9a-zA-Z]","",$callback_status);
-	$callback_datetime = ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$callback_datetime);
-	$callback_type = ereg_replace("[^A-Z]","",$callback_type);
-	$callback_user = ereg_replace("[^-\_0-9a-zA-Z]","",$callback_user);
-	$callback_comments = ereg_replace("[^- \+\.\:\/\@\_0-9a-zA-Z]","",$callback_comments);
-	$admin_user_group = ereg_replace("[^-\_0-9a-zA-Z]","",$admin_user_group);
-	$datetime_start = ereg_replace("[^- \+\:\_0-9]","",$datetime_start);
-	$datetime_end = ereg_replace("[^- \+\:\_0-9]","",$datetime_end);
-	$time_format = ereg_replace("[^A-Z]","",$time_format);
-	$group_alias_id = ereg_replace("[^\_0-9a-zA-Z]","",$group_alias_id);
-	$group_alias_name = ereg_replace("[^- \+\_0-9a-zA-Z]","",$group_alias_name);
-	$caller_id_number = ereg_replace("[^0-9]","",$caller_id_number);
-	$caller_id_name = ereg_replace("[^- \+\_0-9a-zA-Z]","",$caller_id_name);
-	$user_groups = ereg_replace("[^-\|\_0-9a-zA-Z]","",$user_groups);
-	$in_groups = ereg_replace("[^-\|\_0-9a-zA-Z]","",$in_groups);
-	$call_id = ereg_replace("[^0-9a-zA-Z]","",$call_id);
-	$group = ereg_replace("[^-\|\_0-9a-zA-Z]","",$group);
-	$expiration_date = ereg_replace("[^-_0-9a-zA-Z]","",$expiration_date);
-	$nanpa_ac_prefix_check = ereg_replace("[^A-Z]","",$nanpa_ac_prefix_check);
+	$DB=preg_replace('/[^0-9]/','',$DB);
+	$user=preg_replace('/[^0-9a-zA-Z]/','',$user);
+	$pass=preg_replace('/[^0-9a-zA-Z]/','',$pass);
+	$function = preg_replace('/[^-\_0-9a-zA-Z]/', '',$function);
+	$format = preg_replace('/[^0-9a-zA-Z]/','',$format);
+	$list_id = preg_replace('/[^0-9]/','',$list_id);
+	$phone_code = preg_replace('/[^0-9]/','',$phone_code);
+	$update_phone_number=preg_replace('/[^A-Z]/','',$update_phone_number);
+	$phone_number = preg_replace('/[^0-9]/','',$phone_number);
+	$vendor_lead_code = preg_replace('/;/','',$vendor_lead_code);
+		$vendor_lead_code = preg_replace('/\+/',' ',$vendor_lead_code);
+	$source_id = preg_replace('/;/','',$source_id);
+		$source_id = preg_replace('/\+/',' ',$source_id);
+	$gmt_offset_now = preg_replace('/-\_\.0-9/','',$gmt_offset_now);
+	$title = preg_replace('/[^- \_\.0-9a-zA-Z]/','',$title);
+	$first_name = preg_replace('/[^- \+\_\.0-9a-zA-Z]/','',$first_name);
+		$first_name = preg_replace('/\+/',' ',$first_name);
+	$middle_initial = preg_replace('/[^0-9a-zA-Z]/','',$middle_initial);
+	$last_name = preg_replace('/[^- \+\_\.0-9a-zA-Z]/','',$last_name);
+		$last_name = preg_replace('/\+/',' ',$last_name);
+	$address1 = preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$address1);
+	$address2 = preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$address2);
+	$address3 = preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$address3);
+		$address1 = preg_replace('/\+/',' ',$address1);
+		$address2 = preg_replace('/\+/',' ',$address2);
+		$address3 = preg_replace('/\+/',' ',$address3);
+	$city = preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$city);
+		$city = preg_replace('/\+/',' ',$city);
+	$state = preg_replace('/[^- 0-9a-zA-Z]/','',$state);
+	$province = preg_replace('/[^- \+\.\_0-9a-zA-Z]/','',$province);
+		$province = preg_replace('/\+/',' ',$province);
+	$postal_code = preg_replace('/[^- \+0-9a-zA-Z]/','',$postal_code);
+		$postal_code = preg_replace('/\+/',' ',$postal_code);
+	$country_code = preg_replace('/[^A-Z]/','',$country_code);
+	$gender = preg_replace('/[^A-Z]/','',$gender);
+	$date_of_birth = preg_replace('/[^-0-9]/','',$date_of_birth);
+	$alt_phone = preg_replace('/[^- \+\_\.0-9a-zA-Z]/','',$alt_phone);
+		$alt_phone = preg_replace('/\+/',' ',$alt_phone);
+	$email = preg_replace('/[^- \+\.\:\/\@\%\_0-9a-zA-Z]/','',$email);
+		$email = preg_replace('/\+/',' ',$email);
+	$security_phrase = preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$security_phrase);
+		$security_phrase = preg_replace('/\+/',' ',$security_phrase);
+	$comments = preg_replace('/;/','',$comments);
+		$comments = preg_replace('/\+/',' ',$comments);
+	$dnc_check = preg_replace('/[^A-Z]/','',$dnc_check);
+	$campaign_dnc_check = preg_replace('/[^A-Z]/','',$campaign_dnc_check);
+	$add_to_hopper = preg_replace('/[^A-Z]/','',$add_to_hopper);
+	$hopper_priority = preg_replace("/[^-0-9]/", "",$hopper_priority);
+	$hopper_local_call_time_check = preg_replace('/[^A-Z]/','',$hopper_local_call_time_check);
+	$campaign_id = preg_replace('/[^-\_0-9a-zA-Z]/', '',$campaign_id);
+	$multi_alt_phones = preg_replace('/[^- \+\!\:\_0-9a-zA-Z]/','',$multi_alt_phones);
+		$multi_alt_phones = preg_replace('/\+/',' ',$multi_alt_phones);
+	$source = preg_replace('/[^0-9a-zA-Z]/','',$source);
+	$phone_login = preg_replace('/[^-\_0-9a-zA-Z]/', '',$phone_login);
+	$session_id = preg_replace('/[^0-9]/','',$session_id);
+	$server_ip = preg_replace('/[^\.0-9]/','',$server_ip);
+	$stage = preg_replace('/[^a-zA-Z]/','',$stage);
+	$rank = preg_replace('/[^0-9]/','',$rank);
+	$owner = preg_replace('/[^-_0-9a-zA-Z]/','',$owner);
+	$duplicate_check = preg_replace('/[^-_0-9a-zA-Z]/','',$duplicate_check);
+	$custom_fields = preg_replace('/[^0-9a-zA-Z]/','',$custom_fields);
+	$search_method = preg_replace('/[^-_0-9a-zA-Z]/','',$search_method);
+	$insert_if_not_found = preg_replace('/[^A-Z]/','',$insert_if_not_found);
+	$records = preg_replace('/[^0-9]/','',$records);
+	$search_location = preg_replace('/[^A-Z]/','',$search_location);
+	$user_field = preg_replace('/[^-_0-9a-zA-Z]/','',$user_field);
+	$list_id_field = preg_replace('/[^0-9]/','',$list_id_field);
+	$lead_id = preg_replace('/[^0-9]/','',$lead_id);
+	$no_update = preg_replace('/[^A-Z]/','',$no_update);
+	$delete_lead = preg_replace('/[^A-Z]/','',$delete_lead);
+	$called_count=preg_replace('/[^0-9]/','',$called_count);
+	$agent_user_level=preg_replace('/[^0-9]/','',$agent_user_level);
+	$hotkeys_active=preg_replace('/[^0-9]/','',$hotkeys_active);
+	$voicemail_id=preg_replace('/[^0-9]/','',$voicemail_id);
+	$agent_pass=preg_replace('/[^-_0-9a-zA-Z]/','',$agent_pass);
+	$agent_full_name=preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$agent_full_name);
+	$agent_user_group=preg_replace('/[^-_0-9a-zA-Z]/','',$agent_user_group);
+	$phone_pass=preg_replace('/[^-_0-9a-zA-Z]/','',$phone_pass);
+	$email=preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$email);
+	$custom_one=preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$custom_one);
+	$custom_two=preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$custom_two);
+	$custom_three=preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$custom_three);
+	$custom_four=preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$custom_four);
+	$custom_five=preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$custom_five);
+	$extension=preg_replace('/[^-_0-9a-zA-Z]/','',$extension);
+	$dialplan_number=preg_replace('/[^\*\#0-9a-zA-Z]/','',$dialplan_number);
+	$protocol=preg_replace('/[^0-9a-zA-Z]/','',$protocol);
+	$registration_password=preg_replace('/[^-_0-9a-zA-Z]/','',$registration_password);
+	$phone_full_name=preg_replace('/[^- \+\.\_0-9a-zA-Z]/','',$phone_full_name);
+	$local_gmt=preg_replace('/[^-\.0-9]/','',$local_gmt);
+	$outbound_cid=preg_replace('/[^0-9]/','',$outbound_cid);
+	$phone_context=preg_replace('/[^-_0-9a-zA-Z]/','',$phone_context);
+	$list_name=preg_replace('/[^- \+\.\:\/\@\?\&\_0-9a-zA-Z]/','',$list_name);
+	$active=preg_replace('/[^A-Z]/','',$active);
+	$script=preg_replace('/[^-_0-9a-zA-Z]/','',$script);
+	$am_message=preg_replace('/[^-_0-9a-zA-Z]/','',$am_message);
+	$drop_inbound_group=preg_replace('/[^-_0-9a-zA-Z]/','',$drop_inbound_group);
+	$web_form_address=preg_replace('/[^- \+\.\:\/\@\?\&\_0-9a-zA-Z]/','',$web_form_address);
+	$web_form_address_two=preg_replace('/[^- \+\.\:\/\@\?\&\_0-9a-zA-Z]/','',$web_form_address_two);
+	$reset_list=preg_replace('/[^A-Z]/','',$reset_list);
+	$delete_list=preg_replace('/[^A-Z]/','',$delete_list);
+	$delete_leads=preg_replace('/[^A-Z]/','',$delete_leads);
+	$reset_time=preg_replace('/[^-_0-9]/', '',$reset_time);
+	$uniqueid=preg_replace('/[^- \.\_0-9a-zA-Z]/','',$uniqueid);
+	$tz_method = preg_replace('/[^-\_0-9a-zA-Z]/', '',$tz_method);
+	$reset_lead = preg_replace('/[^A-Z]/','',$reset_lead);
+	$usacan_areacode_check = preg_replace('/[^A-Z]/','',$usacan_areacode_check);
+	$usacan_prefix_check = preg_replace('/[^A-Z]/','',$usacan_prefix_check);
+	$delete_phone = preg_replace('/[^A-Z]/','',$delete_phone);
+	$alias_id = preg_replace('/[^-\_0-9a-zA-Z]/', '',$alias_id);
+	$phone_logins = preg_replace('/[^-\,\_0-9a-zA-Z]/','',$phone_logins);
+	$alias_name = preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$alias_name);
+	$delete_alias = preg_replace('/[^A-Z]/','',$delete_alias);
+	$callback = preg_replace('/[^A-Z]/','',$callback);
+	$callback_status = preg_replace('/[^-\_0-9a-zA-Z]/', '',$callback_status);
+	$callback_datetime = preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$callback_datetime);
+	$callback_type = preg_replace('/[^A-Z]/','',$callback_type);
+	$callback_user = preg_replace('/[^-\_0-9a-zA-Z]/', '',$callback_user);
+	$callback_comments = preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$callback_comments);
+	$admin_user_group = preg_replace('/[^-\_0-9a-zA-Z]/', '',$admin_user_group);
+	$datetime_start = preg_replace('/[^- \+\:\_0-9]/','',$datetime_start);
+	$datetime_end = preg_replace('/[^- \+\:\_0-9]/','',$datetime_end);
+	$time_format = preg_replace('/[^A-Z]/','',$time_format);
+	$group_alias_id = preg_replace('/[^\_0-9a-zA-Z]/','',$group_alias_id);
+	$group_alias_name = preg_replace('/[^- \+\_0-9a-zA-Z]/','',$group_alias_name);
+	$caller_id_number = preg_replace('/[^0-9]/','',$caller_id_number);
+	$caller_id_name = preg_replace('/[^- \+\_0-9a-zA-Z]/','',$caller_id_name);
+	$user_groups = preg_replace('/[^-\|\_0-9a-zA-Z]/','',$user_groups);
+	$in_groups = preg_replace('/[^-\|\_0-9a-zA-Z]/','',$in_groups);
+	$call_id = preg_replace('/[^0-9a-zA-Z]/','',$call_id);
+	$group = preg_replace('/[^-\|\_0-9a-zA-Z]/','',$group);
+	$expiration_date = preg_replace('/[^-_0-9a-zA-Z]/','',$expiration_date);
+	$nanpa_ac_prefix_check = preg_replace('/[^A-Z]/','',$nanpa_ac_prefix_check);
 	}
 else
 	{
-	$user = ereg_replace("'|\"|\\\\|;","",$user);
-	$pass = ereg_replace("'|\"|\\\\|;","",$pass);
-	$source = ereg_replace("'|\"|\\\\|;","",$source);
+	$user = preg_replace("/'|\"|\\\\|;/","",$user);
+	$pass = preg_replace("/'|\"|\\\\|;/","",$pass);
+	$source = preg_replace("/'|\"|\\\\|;/","",$source);
 	}
 
 $USarea = 			substr($phone_number, 0, 3);
@@ -544,7 +546,7 @@ if ($gmt_recs > 0)
 else
 	{
 	$SERVER_GMT = date("O");
-	$SERVER_GMT = eregi_replace("\+","",$SERVER_GMT);
+	$SERVER_GMT = preg_replace('/\+/i', '',$SERVER_GMT);
 	$SERVER_GMT = ($SERVER_GMT + 0);
 	$SERVER_GMT = ($SERVER_GMT / 100);
 	}
@@ -597,7 +599,7 @@ if ($function == 'sounds_list')
 		{
 		$server_name = getenv("SERVER_NAME");
 		$server_port = getenv("SERVER_PORT");
-		if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
+		if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
 		  else {$HTTPprotocol = 'http://';}
 		$admDIR = "$HTTPprotocol$server_name:$server_port";
 		$admin_web_dir='';
@@ -650,9 +652,9 @@ if ($function == 'sounds_list')
 						$file_dates[$i] = date ("Y-m-d H:i:s.", filemtime("$dirpath/$file"));
 						$file_sizes[$i] = filesize("$dirpath/$file");
 						$file_sizesPAD[$i] = sprintf("[%020s]\n",filesize("$dirpath/$file"));
-						if (eregi('date',$stage)) {$file_sort[$i] = $file_epoch[$i] . "----------" . $i;}
-						if (eregi('name',$stage)) {$file_sort[$i] = $file_names[$i] . "----------" . $i;}
-						if (eregi('size',$stage)) {$file_sort[$i] = $file_sizesPAD[$i] . "----------" . $i;}
+						if (preg_match('/date/i',$stage)) {$file_sort[$i] = $file_epoch[$i] . "----------" . $i;}
+						if (preg_match('/name/i',$stage)) {$file_sort[$i] = $file_names[$i] . "----------" . $i;}
+						if (preg_match('/size/i',$stage)) {$file_sort[$i] = $file_sizesPAD[$i] . "----------" . $i;}
 
 						$i++;
 						}
@@ -660,9 +662,9 @@ if ($function == 'sounds_list')
 				}
 			closedir($dh);
 
-			if (eregi('date',$stage)) {rsort($file_sort);}
-			if (eregi('name',$stage)) {sort($file_sort);}
-			if (eregi('size',$stage)) {rsort($file_sort);}
+			if (preg_match('/date/i',$stage)) {rsort($file_sort);}
+			if (preg_match('/name/i',$stage)) {sort($file_sort);}
+			if (preg_match('/size/i',$stage)) {rsort($file_sort);}
 
 			sleep(1);
 
@@ -676,11 +678,11 @@ if ($function == 'sounds_list')
 				if ($DB>0) {echo "DEBUG: sounds_list variables - $file_sort[$k]|$size|$NOWsize|\n";}
 				if ($file_sizes[$m] == $NOWsize)
 					{
-					if (eregi('tab',$format))
+					if (preg_match('/tab/i',$format))
 						{echo "$k\t$file_names[$m]\t$file_dates[$m]\t$file_sizes[$m]\t$file_epoch[$m]\n";}
-					if (eregi('link',$format))
+					if (preg_match('/link/i',$format))
 						{echo "<a href=\"http://$sounds_web_server/$admin_web_dir$sounds_web_directory/$file_names[$m]\">$file_names[$m]</a><br>\n";}
-					if (eregi('selectframe',$format))
+					if (preg_match('/selectframe/i',$format))
 						{
 						if ($sf < 1)
 							{
@@ -765,7 +767,7 @@ if ($function == 'moh_list')
 		{
 		$server_name = getenv("SERVER_NAME");
 		$server_port = getenv("SERVER_PORT");
-		if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
+		if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
 		  else {$HTTPprotocol = 'http://';}
 		$admDIR = "$HTTPprotocol$server_name:$server_port";
 
@@ -811,7 +813,7 @@ if ($function == 'moh_list')
 
 			$LOGadmin_viewable_groupsSQL='';
 			$whereLOGadmin_viewable_groupsSQL='';
-			if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+			if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 				{
 				$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 				$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -870,7 +872,7 @@ if ($function == 'moh_list')
 			while ($moh_to_print > $k) 
 				{
 				$sf++;
-				if (eregi("1$|3$|5$|7$|9$", $sf))
+				if (preg_match("/1$|3$|5$|7$|9$/i", $sf))
 					{$bgcolor='bgcolor="#E6E6E6"';} 
 				else
 					{$bgcolor='bgcolor="#F6F6F6"';}
@@ -944,7 +946,7 @@ if ($function == 'vm_list')
 
 		$LOGadmin_viewable_groupsSQL='';
 		$whereLOGadmin_viewable_groupsSQL='';
-		if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+		if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 			{
 			$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 			$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -954,7 +956,7 @@ if ($function == 'vm_list')
 
 		$server_name = getenv("SERVER_NAME");
 		$server_port = getenv("SERVER_PORT");
-		if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
+		if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
 		  else {$HTTPprotocol = 'http://';}
 		$admDIR = "$HTTPprotocol$server_name:$server_port";
 
@@ -1002,7 +1004,7 @@ if ($function == 'vm_list')
 			$fullname[$k] =		$rowx[1];
 			$email[$k] =		$rowx[2];
 			$sf++;
-			if (eregi("1$|3$|5$|7$|9$", $sf))
+			if (preg_match("/1$|3$|5$|7$|9$/i", $sf))
 				{$bgcolor='bgcolor="#E6E6E6"';} 
 			else
 				{$bgcolor='bgcolor="#F6F6F6"';}
@@ -1027,7 +1029,7 @@ if ($function == 'vm_list')
 			$email[$k] =		$rowx[2];
 			$extension[$k] =	$rowx[3];
 			$sf++;
-			if (eregi("1$|3$|5$|7$|9$", $sf))
+			if (preg_match("/1$|3$|5$|7$|9$/i", $sf))
 				{$bgcolor='bgcolor="#E6E6E6"';} 
 			else
 				{$bgcolor='bgcolor="#F6F6F6"';}
@@ -1096,7 +1098,7 @@ if ($function == 'agent_ingroup_info')
 
 			$LOGadmin_viewable_groupsSQL='';
 			$whereLOGadmin_viewable_groupsSQL='';
-			if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+			if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 				{
 				$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 				$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -1476,9 +1478,9 @@ if ($function == 'blind_monitor')
 						while (strlen($PADuser) > 8) {$PADuser = substr("$PADuser", 0, -1);}
 					$BMquery = "BM$StarTtime$PADuser";
 
-					if ( (ereg('MONITOR',$stage)) or (strlen($stage)<1) ) {$stage = '0';}
-					if (ereg('BARGE',$stage)) {$stage = '';}
-					if (ereg('HIJACK',$stage)) {$stage = '';}
+					if ( (preg_match('/MONITOR/',$stage)) or (strlen($stage)<1) ) {$stage = '0';}
+					if (preg_match('/BARGE/',$stage)) {$stage = '';}
+					if (preg_match('/HIJACK/',$stage)) {$stage = '';}
 
 					### insert a new lead in the system with this phone number
 					$stmt = "INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$monitor_server_ip','','Originate','$BMquery','Channel: Local/$monitor_dialstring$stage$session_id@default','Context; default','Exten: $dialplan_number','Priority: 1','Callerid: \"VC Blind Monitor\" <$outbound_cid>','','','','','');";
@@ -1535,8 +1537,8 @@ if ($api_url_log > 0)
 	$POST_URI = '';
 	foreach($_POST as $key=>$value)
 		{$POST_URI .= '&'.$key.'='.$value;} 
-	$REQUEST_URI = ereg_replace("'|\"|\\\\|;","",$REQUEST_URI);
-	$POST_URI = ereg_replace("'|\"|\\\\|;","",$POST_URI);
+	$REQUEST_URI = preg_replace("/'|\"|\\\\|;/","",$REQUEST_URI);
+	$POST_URI = preg_replace("/'|\"|\\\\|;/","",$POST_URI);
 	$NOW_DATE = date("Y-m-d");
 	$NOW_TIME = date("Y-m-d H:i:s");
 	$stmt="INSERT INTO vicidial_url_log set uniqueid='$NOW_DATE',url_date='$NOW_TIME',url_type='non-agent',url='$REQUEST_URI$POST_URI',url_response='$ip';";
@@ -1604,7 +1606,7 @@ if ($function == 'add_user')
 
 				$LOGadmin_viewable_groupsSQL='';
 				$whereLOGadmin_viewable_groupsSQL='';
-				if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+				if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 					{
 					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -1654,7 +1656,7 @@ if ($function == 'add_user')
 						else
 							{
 							# if user value is set to autogenerate then find the next value for user
-							if (ereg('AUTOGENERA',$agent_user))
+							if (preg_match('/AUTOGENERA/',$agent_user))
 								{
 								$new_user=0;
 								$auto_user_add_value=0;
@@ -1698,7 +1700,7 @@ if ($function == 'add_user')
 
 							### LOG INSERTION Admin Log Table ###
 							$SQL_log = "$stmt|";
-							$SQL_log = ereg_replace(';','',$SQL_log);
+							$SQL_log = preg_replace('/;/', '', $SQL_log);
 							$SQL_log = addslashes($SQL_log);
 							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='USERS', event_type='ADD', record_id='$agent_user', event_code='ADMIN API ADD USER', event_sql=\"$SQL_log\", event_notes='user: $agent_user';";
 							if ($DB) {echo "|$stmt|\n";}
@@ -1792,7 +1794,7 @@ if ($function == 'add_group_alias')
 
 					### LOG INSERTION Admin Log Table ###
 					$SQL_log = "$stmt|";
-					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = preg_replace('/;/', '', $SQL_log);
 					$SQL_log = addslashes($SQL_log);
 					$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='GROUPALIASES', event_type='ADD', record_id='$group_alias_id', event_code='ADMIN API ADD GROUP ALIAS', event_sql=\"$SQL_log\", event_notes='';";
 					if ($DB) {echo "|$stmt|\n";}
@@ -1921,7 +1923,7 @@ if ($function == 'add_phone')
 
 								### LOG INSERTION Admin Log Table ###
 								$SQL_log = "$stmt|";
-								$SQL_log = ereg_replace(';','',$SQL_log);
+								$SQL_log = preg_replace('/;/', '', $SQL_log);
 								$SQL_log = addslashes($SQL_log);
 								$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='PHONES', event_type='ADD', record_id='$extension', event_code='ADMIN API ADD PHONE', event_sql=\"$SQL_log\", event_notes='phone: $extension|$server_ip';";
 								if ($DB) {echo "|$stmt|\n";}
@@ -2010,7 +2012,7 @@ if ($function == 'update_phone')
 
 				$LOGadmin_viewable_groupsSQL='';
 				$whereLOGadmin_viewable_groupsSQL='';
-				if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+				if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 					{
 					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -2072,7 +2074,7 @@ if ($function == 'update_phone')
 
 								### LOG INSERTION Admin Log Table ###
 								$SQL_log = "$stmt|";
-								$SQL_log = ereg_replace(';','',$SQL_log);
+								$SQL_log = preg_replace('/;/', '', $SQL_log);
 								$SQL_log = addslashes($SQL_log);
 								$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='PHONES', event_type='DELETE', record_id='$extension', event_code='ADMIN API DELETE PHONE', event_sql=\"$SQL_log\", event_notes='phone: $extension|$server_ip';";
 								if ($DB) {echo "|$stmt|\n";}
@@ -2336,7 +2338,7 @@ if ($function == 'update_phone')
 
 							### LOG INSERTION Admin Log Table ###
 							$SQL_log = "$stmt|";
-							$SQL_log = ereg_replace(';','',$SQL_log);
+							$SQL_log = preg_replace('/;/', '', $SQL_log);
 							$SQL_log = addslashes($SQL_log);
 							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='PHONES', event_type='MODIFY', record_id='$extension', event_code='ADMIN API UPDATE PHONE', event_sql=\"$SQL_log\", event_notes='phone: $extension|$server_ip';";
 							if ($DB) {echo "|$stmt|\n";}
@@ -2448,7 +2450,7 @@ if ($function == 'add_phone_alias')
 
 					### LOG INSERTION Admin Log Table ###
 					$SQL_log = "$stmt|";
-					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = preg_replace('/;/', '', $SQL_log);
 					$SQL_log = addslashes($SQL_log);
 					$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='PHONEALIASES', event_type='ADD', record_id='$alias_id', event_code='ADMIN API ADD PHONE ALIAS', event_sql=\"$SQL_log\", event_notes='phones: $phone_logins';";
 					if ($DB) {echo "|$stmt|\n";}
@@ -2554,7 +2556,7 @@ if ($function == 'update_phone_alias')
 
 							### LOG INSERTION Admin Log Table ###
 							$SQL_log = "$stmt|";
-							$SQL_log = ereg_replace(';','',$SQL_log);
+							$SQL_log = preg_replace('/;/', '', $SQL_log);
 							$SQL_log = addslashes($SQL_log);
 							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='PHONEALIASES', event_type='DELETE', record_id='$alias_id', event_code='ADMIN API DELETE PHONE ALIAS', event_sql=\"$SQL_log\", event_notes='';";
 							if ($DB) {echo "|$stmt|\n";}
@@ -2633,7 +2635,7 @@ if ($function == 'update_phone_alias')
 
 						### LOG INSERTION Admin Log Table ###
 						$SQL_log = "$stmt|";
-						$SQL_log = ereg_replace(';','',$SQL_log);
+						$SQL_log = preg_replace('/;/', '', $SQL_log);
 						$SQL_log = addslashes($SQL_log);
 						$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='PHONEALIASES', event_type='MODIFY', record_id='$alias_id', event_code='ADMIN API UPDATE PHONE', event_sql=\"$SQL_log\", event_notes='phones: $phone_logins';";
 						if ($DB) {echo "|$stmt|\n";}
@@ -2715,7 +2717,7 @@ if ($function == 'update_list')
 
 				$LOGallowed_campaignsSQL='';
 				$whereLOGallowed_campaignsSQL='';
-				if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+				if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 					{
 					$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 					$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
@@ -2977,7 +2979,7 @@ if ($function == 'update_list')
 
 						### LOG INSERTION Admin Log Table ###
 						$SQL_log = "$stmt|";
-						$SQL_log = ereg_replace(';','',$SQL_log);
+						$SQL_log = preg_replace('/;/', '', $SQL_log);
 						$SQL_log = addslashes($SQL_log);
 						$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='LISTS', event_type='MODIFY', record_id='$list_id', event_code='ADMIN API UPDATE LIST', event_sql=\"$SQL_log\", event_notes='list: $list_id';";
 						if ($DB) {echo "|$stmt|\n";}
@@ -3003,7 +3005,7 @@ if ($function == 'update_list')
 
 						### LOG INSERTION Admin Log Table ###
 						$SQL_log = "$stmt|";
-						$SQL_log = ereg_replace(';','',$SQL_log);
+						$SQL_log = preg_replace('/;/', '', $SQL_log);
 						$SQL_log = addslashes($SQL_log);
 						$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='LISTS', event_type='RESET', record_id='$list_id', event_code='ADMIN API RESET LIST', event_sql=\"$SQL_log\", event_notes='list: $list_id';";
 						if ($DB) {echo "|$stmt|\n";}
@@ -3040,7 +3042,7 @@ if ($function == 'update_list')
 
 							### LOG INSERTION Admin Log Table ###
 							$SQL_log = "$stmt|";
-							$SQL_log = ereg_replace(';','',$SQL_log);
+							$SQL_log = preg_replace('/;/', '', $SQL_log);
 							$SQL_log = addslashes($SQL_log);
 							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='LISTS', event_type='DELETE', record_id='$list_id', event_code='ADMIN API DELETE LIST', event_sql=\"$SQL_log\", event_notes='list: $list_id';";
 							if ($DB) {echo "|$stmt|\n";}
@@ -3078,7 +3080,7 @@ if ($function == 'update_list')
 
 							### LOG INSERTION Admin Log Table ###
 							$SQL_log = "$stmt|";
-							$SQL_log = ereg_replace(';','',$SQL_log);
+							$SQL_log = preg_replace('/;/', '', $SQL_log);
 							$SQL_log = addslashes($SQL_log);
 							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='LISTS', event_type='DELETE', record_id='$list_id', event_code='ADMIN API DELETE LEADS', event_sql=\"$SQL_log\", event_notes='list: $list_id';";
 							if ($DB) {echo "|$stmt|\n";}
@@ -3163,7 +3165,7 @@ if ($function == 'add_list')
 
 				$LOGallowed_campaignsSQL='';
 				$whereLOGallowed_campaignsSQL='';
-				if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+				if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 					{
 					$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 					$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
@@ -3266,7 +3268,7 @@ if ($function == 'add_list')
 
 							### LOG INSERTION Admin Log Table ###
 							$SQL_log = "$stmt|";
-							$SQL_log = ereg_replace(';','',$SQL_log);
+							$SQL_log = preg_replace('/;/', '', $SQL_log);
 							$SQL_log = addslashes($SQL_log);
 							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='LISTS', event_type='ADD', record_id='$list_id', event_code='ADMIN API ADD LIST', event_sql=\"$SQL_log\", event_notes='list: $list_id|$campaign_id';";
 							if ($DB) {echo "|$stmt|\n";}
@@ -3892,7 +3894,7 @@ if ($function == 'user_group_status')
 
 				$LOGadmin_viewable_groupsSQL='';
 				$whereLOGadmin_viewable_groupsSQL='';
-				if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+				if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 					{
 					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -3902,7 +3904,7 @@ if ($function == 'user_group_status')
 				$LOGallowed_campaignsSQL='';
 				$whereLOGallowed_campaignsSQL='';
 				$whereLOGallowed_callsSQL='';
-				if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+				if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 					{
 					$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 					$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
@@ -3963,7 +3965,7 @@ if ($function == 'user_group_status')
 						{
 						$row=mysql_fetch_row($rslt);
 						$callerids .=	"$row[0]|";
-						if (eregi("LIVE",$row[1])) 
+						if (preg_match("/LIVE/i",$row[1])) 
 							{$total_calls_waiting++;}
 						$call_camps[$i] = $row[2];
 						$call_types[$i] = $row[3];
@@ -3982,13 +3984,13 @@ if ($function == 'user_group_status')
 						# user,status,campaign_id,user_group,comments,callerid,lead_id
 						$row=mysql_fetch_row($rslt);
 
-						if (eregi("READY|PAUSED",$row[1]))
+						if (preg_match("/READY|PAUSED/i",$row[1]))
 							{
 							if ($row[6] > 0)
 								{$row[1] =	'DISPO';}
 							}
 
-						if (eregi("INCALL",$row[1])) 
+						if (preg_match("/INCALL/i",$row[1])) 
 							{
 							$stmtP="select count(*) from parked_channels where channel_group='$row[5]';";
 							$rsltP=mysql_query($stmtP,$link);
@@ -3999,7 +4001,7 @@ if ($function == 'user_group_status')
 								{$row[1] =	'PARK';}
 							else
 								{
-								if (!ereg("$row[5]\|",$callerids))
+								if (!preg_match("/$row[5]\|/",$callerids))
 									{$row[1] =	'DEAD';}
 								}
 							}
@@ -4010,9 +4012,9 @@ if ($function == 'user_group_status')
 							{$total_agents_dispo++;}
 						if ($row[1]=='PAUSED') 
 							{$total_agents_paused++;}
-						if ( (eregi("INCALL",$row[1])) or (eregi("QUEUE",$row[1])) or (eregi("PARK",$row[1]))) 
+						if ( (preg_match("/INCALL/i",$row[1])) or (preg_match("/QUEUE/i",$row[1])) or (preg_match('/PARK/i',$row[1]))) 
 							{$total_agents_in_calls++;}
-						if ( (eregi("READY",$row[1])) or (eregi("CLOSER",$row[1])) ) 
+						if ( (preg_match("/READY/i",$row[1])) or (preg_match("/CLOSER/i",$row[1])) ) 
 							{$total_agents_waiting++;}
 
 						$total_agents++;
@@ -4111,7 +4113,7 @@ if ($function == 'in_group_status')
 
 				$LOGadmin_viewable_groupsSQL='';
 				$whereLOGadmin_viewable_groupsSQL='';
-				if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+				if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 					{
 					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -4121,7 +4123,7 @@ if ($function == 'in_group_status')
 				$LOGallowed_campaignsSQL='';
 				$whereLOGallowed_campaignsSQL='';
 				$LOGallowed_callsSQL='';
-				if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+				if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 					{
 					$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 					$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
@@ -4183,7 +4185,7 @@ if ($function == 'in_group_status')
 						{
 						$row=mysql_fetch_row($rslt);
 						$callerids .=	"$row[0]|";
-						if (eregi("LIVE",$row[1])) 
+						if (preg_match("/LIVE/i",$row[1])) 
 							{$total_calls_waiting++;}
 						$call_camps[$i] = $row[2];
 						$call_types[$i] = $row[3];
@@ -4220,7 +4222,7 @@ if ($function == 'in_group_status')
 						# user,status,campaign_id,user_group,comments,callerid,lead_id
 						$row=mysql_fetch_row($rslt);
 
-						if (eregi("READY|PAUSED",$row[1]))
+						if (preg_match("/READY|PAUSED/i",$row[1]))
 							{
 							if ($row[6] > 0)
 								{$row[1] =	'DISPO';}
@@ -4229,9 +4231,9 @@ if ($function == 'in_group_status')
 							{$total_agents_dispo++;}
 						if ($row[1]=='PAUSED') 
 							{$total_agents_paused++;}
-						if ( (eregi("INCALL",$row[1])) or (eregi("QUEUE",$row[1])) or (eregi("PARK",$row[1]))) 
+						if ( (preg_match("/INCALL/i",$row[1])) or (preg_match("/QUEUE/i",$row[1])) or (preg_match('/PARK/i',$row[1]))) 
 							{$total_agents_in_calls++;}
-						if ( (eregi("READY",$row[1])) or (eregi("CLOSER",$row[1])) ) 
+						if ( (preg_match("/READY/i",$row[1])) or (preg_match("/CLOSER/i",$row[1])) ) 
 							{$total_agents_waiting++;}
 
 						$total_agents++;
@@ -4325,7 +4327,7 @@ if ($function == 'agent_status')
 
 				$LOGadmin_viewable_groupsSQL='';
 				$whereLOGadmin_viewable_groupsSQL='';
-				if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+				if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 					{
 					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -4360,7 +4362,7 @@ if ($function == 'agent_status')
 					$user_group = 	$row[1];
 					$user_level = 	$row[2];
 
-					$stmt="select status,callerid,lead_id,campaign_id,calls_today from vicidial_live_agents $agent_search_SQL;";
+					$stmt="select status,callerid,lead_id,campaign_id,calls_today,agent_log_id from vicidial_live_agents $agent_search_SQL;";
 					$rslt=mysql_query($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
 					$agent_to_list = mysql_num_rows($rslt);
@@ -4372,8 +4374,20 @@ if ($function == 'agent_status')
 						$lead_id =		$row[2];
 						$campaign_id =	$row[3];
 						$calls_today =	$row[4];
+						$agent_log_id = $row[5];
+						$pause_code =	'';
 
-						$output .= "$status$DL$callerid$DL$lead_id$DL$campaign_id$DL$calls_today$DL$full_name$DL$user_group$DL$user_level\n";
+						$stmt="select sub_status from vicidial_agent_log $agent_search_SQL and agent_log_id='$agent_log_id';";
+						$rslt=mysql_query($stmt, $link);
+						if ($DB) {echo "$stmt\n";}
+						$agent_to_log = mysql_num_rows($rslt);
+						if ($agent_to_log > 0)
+							{
+							$row=mysql_fetch_row($rslt);
+							$pause_code =		$row[0];
+							}
+
+						$output .= "$status$DL$callerid$DL$lead_id$DL$campaign_id$DL$calls_today$DL$full_name$DL$user_group$DL$user_level$DL$pause_code\n";
 
 						echo "$output";
 
@@ -4590,7 +4604,7 @@ if ($function == 'add_lead')
 			if (strlen($rank)<1) {$rank='0';}
 			if (strlen($list_id)<3) {$list_id='999';}
 			if (strlen($phone_code)<1) {$phone_code='1';}
-			if ( ($nanpa_ac_prefix_check == 'Y') or (eregi("NANPA",$tz_method)) )
+			if ( ($nanpa_ac_prefix_check == 'Y') or (preg_match("/NANPA/i",$tz_method)) )
 				{
 				$stmt="SELECT count(*) from vicidial_nanpa_prefix_codes;";
 				$rslt=mysql_query($stmt, $link);
@@ -4726,7 +4740,7 @@ if ($function == 'add_lead')
 				### END checking for DNC if defined ###
 
 				### START checking for duplicate if defined ###
-				if (eregi("CAMP",$duplicate_check)) # find lists within campaign
+				if (preg_match("/CAMP/i",$duplicate_check)) # find lists within campaign
 					{
 					$stmt="SELECT campaign_id from vicidial_lists where list_id='$list_id';";
 					$rslt=mysql_query($stmt, $link);
@@ -4748,12 +4762,12 @@ if ($function == 'add_lead')
 								$duplicate_lists .=	"'$row[0]',";
 								$L++;
 								}
-							$duplicate_lists = eregi_replace(",$",'',$duplicate_lists);
+							$duplicate_lists = preg_replace('/,$/i', '',$duplicate_lists);
 							}
 						}
 					}
 				### find list of list_ids in this campaign
-				if (eregi("DUPLIST",$duplicate_check)) # duplicate check within list
+				if (preg_match("/DUPLIST/i",$duplicate_check)) # duplicate check within list
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPLIST\n";}
 					$duplicate_found=0;
@@ -4778,7 +4792,7 @@ if ($function == 'add_lead')
 						exit;
 						}
 					}
-				if (eregi("DUPCAMP",$duplicate_check)) # duplicate check within campaign lists
+				if (preg_match("/DUPCAMP/i",$duplicate_check)) # duplicate check within campaign lists
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPCAMP - $duplicate_lists\n";}
 					$duplicate_found=0;
@@ -4803,7 +4817,7 @@ if ($function == 'add_lead')
 						exit;
 						}
 					}
-				if (eregi("DUPSYS",$duplicate_check)) # duplicate check within entire system
+				if (preg_match("/DUPSYS/i",$duplicate_check)) # duplicate check within entire system
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPSYS\n";}
 					$duplicate_found=0;
@@ -4828,7 +4842,7 @@ if ($function == 'add_lead')
 						exit;
 						}
 					}
-				if (eregi("DUPTITLEALTPHONELIST",$duplicate_check)) # duplicate title/alt_phone check within list
+				if (preg_match("/DUPTITLEALTPHONELIST/i",$duplicate_check)) # duplicate title/alt_phone check within list
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPTITLEALTPHONELIST\n";}
 					$duplicate_found=0;
@@ -4853,7 +4867,7 @@ if ($function == 'add_lead')
 						exit;
 						}
 					}
-				if (eregi("DUPTITLEALTPHONECAMP",$duplicate_check)) # duplicate title/alt_phone check within campaign lists
+				if (preg_match("/DUPTITLEALTPHONECAMP/i",$duplicate_check)) # duplicate title/alt_phone check within campaign lists
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPTITLEALTPHONECAMP\n";}
 					$duplicate_found=0;
@@ -4878,7 +4892,7 @@ if ($function == 'add_lead')
 						exit;
 						}
 					}
-				if (eregi("DUPTITLEALTPHONESYS",$duplicate_check)) # duplicate title/alt_phone check within entire system
+				if (preg_match("/DUPTITLEALTPHONESYS/i",$duplicate_check)) # duplicate title/alt_phone check within entire system
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPTITLEALTPHONESYS\n";}
 					$duplicate_found=0;
@@ -4903,7 +4917,7 @@ if ($function == 'add_lead')
 						exit;
 						}
 					}
-				if (eregi("DUPNAMEPHONELIST",$duplicate_check)) # duplicate name/phone check within list
+				if (preg_match("/DUPNAMEPHONELIST/i",$duplicate_check)) # duplicate name/phone check within list
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPNAMEPHONELIST\n";}
 					$duplicate_found=0;
@@ -4928,7 +4942,7 @@ if ($function == 'add_lead')
 						exit;
 						}
 					}
-				if (eregi("DUPNAMEPHONECAMP",$duplicate_check)) # duplicate name/phone check within campaign lists
+				if (preg_match("/DUPNAMEPHONECAMP/i",$duplicate_check)) # duplicate name/phone check within campaign lists
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPNAMEPHONECAMP\n";}
 					$duplicate_found=0;
@@ -4953,7 +4967,7 @@ if ($function == 'add_lead')
 						exit;
 						}
 					}
-				if (eregi("DUPNAMEPHONESYS",$duplicate_check)) # duplicate name/phone check within entire system
+				if (preg_match("/DUPNAMEPHONESYS/i",$duplicate_check)) # duplicate name/phone check within entire system
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPNAMEPHONESYS\n";}
 					$duplicate_found=0;
@@ -5366,7 +5380,7 @@ if ($function == 'update_lead')
 				}
 			else
 				{
-				if (eregi("CAMPAIGN",$search_location)) # find lists within campaign
+				if (preg_match("/CAMPAIGN/i",$search_location)) # find lists within campaign
 					{
 					$stmt="SELECT campaign_id from vicidial_lists where list_id='$list_id';";
 					$rslt=mysql_query($stmt, $link);
@@ -5388,12 +5402,12 @@ if ($function == 'update_lead')
 								$search_lists .=	"'$row[0]',";
 								$L++;
 								}
-							$search_lists = eregi_replace(",$",'',$search_lists);
+							$search_lists = preg_replace('/,$/i', '',$search_lists);
 							$search_SQL = "and list_id IN($search_lists)";
 							}
 						}
 					}
-				if (eregi("LIST",$search_location)) # search check within list
+				if (preg_match("/LIST/i",$search_location)) # search check within list
 					{
 					$search_SQL = "and list_id='$list_id'";
 					}
@@ -6065,7 +6079,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 require("dbconnect.php");
 
 $postalgmt_found=0;
-if ( (eregi("POSTAL",$tz_method)) && (strlen($postal_code)>4) )
+if ( (preg_match("/POSTAL/i",$tz_method)) && (strlen($postal_code)>4) )
 	{
 	if (preg_match('/^1$/', $phone_code))
 		{
@@ -6075,7 +6089,7 @@ if ( (eregi("POSTAL",$tz_method)) && (strlen($postal_code)>4) )
 		if ($pc_recs > 0)
 			{
 			$row=mysql_fetch_row($rslt);
-			$gmt_offset =	$row[2];	 $gmt_offset = eregi_replace("\+","",$gmt_offset);
+			$gmt_offset =	$row[2];	 $gmt_offset = preg_replace('/\+/i', '',$gmt_offset);
 			$dst =			$row[3];
 			$dst_range =	$row[4];
 			$PC_processed++;
@@ -6096,7 +6110,7 @@ if ( ($tz_method=="TZCODE") && (strlen($owner)>1) )
 	if ($pc_recs > 0)
 		{
 		$row=mysql_fetch_row($rslt);
-		$gmt_offset =	$row[0];	 $gmt_offset = eregi_replace("\+","",$gmt_offset);
+		$gmt_offset =	$row[0];	 $gmt_offset = preg_replace('/\+/i', '',$gmt_offset);
 		$PC_processed++;
 		$postalgmt_found++;
 		$post++;
@@ -6112,7 +6126,7 @@ if ( ($tz_method=="TZCODE") && (strlen($owner)>1) )
 		if (strlen($dst_range)>2) {$dst = 'Y';}
 		}
 	}
-if ( (eregi("NANPA",$tz_method)) && (strlen($USarea)>2) && (strlen($USprefix)>2) )
+if ( (preg_match("/NANPA/i",$tz_method)) && (strlen($USarea)>2) && (strlen($USprefix)>2) )
 	{
 	$stmt="select GMT_offset,DST from vicidial_nanpa_prefix_codes where areacode='$USarea' and prefix='$USprefix';";
 	$rslt=mysql_query($stmt, $link);
@@ -6120,7 +6134,7 @@ if ( (eregi("NANPA",$tz_method)) && (strlen($USarea)>2) && (strlen($USprefix)>2)
 	if ($pc_recs > 0)
 		{
 		$row=mysql_fetch_row($rslt);
-		$gmt_offset =	$row[0];	 $gmt_offset = eregi_replace("\+","",$gmt_offset);
+		$gmt_offset =	$row[0];	 $gmt_offset = preg_replace('/\+/i', '',$gmt_offset);
 		$dst =			$row[1];
 		$dst_range =	'';
 		if ($dst == 'Y')
@@ -6142,7 +6156,7 @@ if ($postalgmt_found < 1)
 		if ($pc_recs > 0)
 			{
 			$row=mysql_fetch_row($rslt);
-			$gmt_offset =	$row[4];	 $gmt_offset = eregi_replace("\+","",$gmt_offset);
+			$gmt_offset =	$row[4];	 $gmt_offset = preg_replace('/\+/i', '',$gmt_offset);
 			$dst =			$row[5];
 			$dst_range =	$row[6];
 			$PC_processed++;
@@ -6157,7 +6171,7 @@ if ($postalgmt_found < 1)
 		if ($pc_recs > 0)
 			{
 			$row=mysql_fetch_row($rslt);
-			$gmt_offset =	$row[4];	 $gmt_offset = eregi_replace("\+","",$gmt_offset);
+			$gmt_offset =	$row[4];	 $gmt_offset = preg_replace('/\+/i', '',$gmt_offset);
 			$dst =			$row[5];
 			$dst_range =	$row[6];
 			$PC_processed++;
@@ -6172,7 +6186,7 @@ if ($postalgmt_found < 1)
 		if ($pc_recs > 0)
 			{
 			$row=mysql_fetch_row($rslt);
-			$gmt_offset =	$row[4];	 $gmt_offset = eregi_replace("\+","",$gmt_offset);
+			$gmt_offset =	$row[4];	 $gmt_offset = preg_replace('/\+/i', '',$gmt_offset);
 			$dst =			$row[5];
 			$dst_range =	$row[6];
 			$PC_processed++;
@@ -6188,7 +6202,7 @@ if ($postalgmt_found < 1)
 		if ($pc_recs > 0)
 			{
 			$row=mysql_fetch_row($rslt);
-			$gmt_offset =	$row[4];	 $gmt_offset = eregi_replace("\+","",$gmt_offset);
+			$gmt_offset =	$row[4];	 $gmt_offset = preg_replace('/\+/i', '',$gmt_offset);
 			$dst =			$row[5];
 			$dst_range =	$row[6];
 			$PC_processed++;

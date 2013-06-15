@@ -7,6 +7,7 @@
 # 120210-2202 - First build
 # 130413-2213 - Added SIP codes summary and fields, and report logging
 # 130418-1048 - Changed how server list is generated
+# 130610-0935 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -39,8 +40,8 @@ if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -135,7 +136,7 @@ while ($i < $servers_to_print)
 	$row=mysql_fetch_row($server_rslt);
 	$LISTserverIPs[$i] =		$row[0];
 	$LISTserver_names[$i] =	$row[1];
-	if (ereg("-ALL",$server_ip_string) )
+	if (preg_match('/\-ALL/',$server_ip_string) )
 		{
 		$server_ip[$i] = $LISTserverIPs[$i];
 		}
@@ -156,15 +157,15 @@ while($i < $server_ip_ct)
 	$i++;
 	}
 
-if ( (ereg("--ALL--",$server_ip_string) ) or ($server_ip_ct < 1) )
+if ( (preg_match('/\-\-ALL\-\-/',$server_ip_string) ) or ($server_ip_ct < 1) )
 	{
 	$server_ip_SQL = "";
 	$server_rpt_string="- ALL servers ";
-	if (ereg("--ALL--",$server_ip_string)) {$server_ipQS="&server_ip[]=--ALL--";}
+	if (preg_match('/\-\-ALL\-\-/',$server_ip_string)) {$server_ipQS="&server_ip[]=--ALL--";}
 	}
 else
 	{
-	$server_ip_SQL = eregi_replace(",$",'',$server_ip_SQL);
+	$server_ip_SQL = preg_replace('/,$/i', '',$server_ip_SQL);
 	$server_ip_SQL = "and server_ip IN($server_ip_SQL)";
 	$server_rpt_string="- server(s) ".preg_replace('/\|/', ", ", substr($server_ip_string, 1, -1));
 	}
@@ -214,14 +215,14 @@ $MAIN.="<BR> to <BR><INPUT TYPE=TEXT NAME=query_date_T SIZE=9 MAXLENGTH=8 VALUE=
 
 $MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>Server IP:<BR/>\n";
 $MAIN.="<SELECT SIZE=5 NAME=server_ip[] multiple>\n";
-if  (eregi("--ALL--",$server_ip_string))
+if  (preg_match('/\-\-ALL\-\-/',$server_ip_string))
 	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL SERVERS --</option>\n";}
 else
 	{$MAIN.="<option value=\"--ALL--\">-- ALL SERVERS --</option>\n";}
 $o=0;
 while ($servers_to_print > $o)
 	{
-	if (ereg("\|$LISTserverIPs[$o]\|",$server_ip_string)) 
+	if (preg_match("/\|$LISTserverIPs[$o]\|/",$server_ip_string)) 
 		{$MAIN.="<option selected value=\"$LISTserverIPs[$o]\">$LISTserverIPs[$o] - $LISTserver_names[$o]</option>\n";}
 	else
 		{$MAIN.="<option value=\"$LISTserverIPs[$o]\">$LISTserverIPs[$o] - $LISTserver_names[$o]</option>\n";}

@@ -1,7 +1,7 @@
 <?php
 # closer.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # the purpose of this script and webpage is to allow for remote or local users of the system to log in and grab phone calls that are coming inbound into the Asterisk server and being put in the parked_channels table while they hear a soundfile for a limited amount of time before being forwarded on to either a set extension or a voicemail box. This gives remote or local agents a way to grab calls without tying up their phone lines all day. The agent sees the refreshing screen of calls on park and when they want to take one they just click on it, and a small window opens that will allow them to grab the call and/or look up more information on the caller through the callerID that is given(if available)
 # CHANGES
@@ -10,6 +10,7 @@
 #            - Added required user/pass to gain access to this page
 # 90508-0644 - Changed to PHP long tags
 # 120223-2249 - Removed logging of good login passwords if webroot writable is enabled
+# 130610-1116 - Finalized changing of all ereg instances to preg
 #
 
 require("dbconnect.php");
@@ -70,8 +71,8 @@ while ($i < $qm_conf_ct)
 ###########################################
 
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
@@ -306,7 +307,7 @@ $parked_count = $row[0];
 		$with_color=0;
 		while($o < $group_selected)
 			{
-				if (eregi("$groupselect[$o]",$channel_group))
+				if (preg_match("/$groupselect[$o]/i",$channel_group))
 					{
 					$G="<SPAN class=\"$color_class[$o]\"><B>"; $EG='</B></SPAN>';
 					$with_color++;
@@ -315,7 +316,7 @@ $parked_count = $row[0];
 			}
 		if ($with_color)
 			{
-			if (eregi('CL_GAL',$row[2]))
+			if (preg_match('/CL_GAL/i',$row[2]))
 				{
 				echo "$G<A HREF=\"$popup_page?channel=$row[0]&server_ip=$server_ip&parked_time=$row[5]&dialplan_number=$dialplan_number&extension=$extension&channel_group=$row[2]&DB=$DB&debugvars=asdfuiywer786sdg786sfg7sdsgjhg352j3452hg45f2j3h4g5f2j3h4g5f2jhg4f5j3fg45jh23f5j4h23gf&parked_by=$row[4]&debugvars=asdfuiywer786sdg786sfg7sdsgjhg352j3452hg45f2j3h4g5f2j3h4g5f2jhg4f5j3fg45jh23f5j4h23gf\" target=\"_blank\">$channel</A>$server$channel_group$park_extension                     $parked_time $EG\n";
 				}

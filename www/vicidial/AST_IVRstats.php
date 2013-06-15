@@ -21,6 +21,7 @@
 # 111103-2315 - Added user_group restrictions for selecting in-groups
 # 120224-0910 - Added HTML display option with bar graphs
 # 130114-0115 - Added report logging
+# 130610-1004 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -51,8 +52,8 @@ if (isset($_GET["file_download"]))					{$file_download=$_GET["file_download"];}
 if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 if (strlen($shift)<2) {$shift='ALL';}
 if (strlen($type)<2) {$type='inbound';}
@@ -149,7 +150,7 @@ $LOGadmin_viewable_call_times =	$row[3];
 
 $LOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
-if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 	{
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
@@ -159,7 +160,7 @@ if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
 
 $LOGadmin_viewable_groupsSQL='';
 $whereLOGadmin_viewable_groupsSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 	{
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -169,7 +170,7 @@ if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewabl
 
 $LOGadmin_viewable_call_timesSQL='';
 $whereLOGadmin_viewable_call_timesSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i', $LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
 	{
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ -/",'',$LOGadmin_viewable_call_times);
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_call_timesSQL);
@@ -229,14 +230,14 @@ while($i < $group_ct)
 	$groupQS .= "&group[]=$group[$i]";
 	$i++;
 	}
-if ( (ereg("--NONE--",$group_string) ) or ($group_ct < 1) )
+if ( (preg_match('/\s\-\-NONE\-\-\s/',$group_string) ) or ($group_ct < 1) )
 	{
 	$group_SQL = "''";
 #	$group_SQL = "group_id IN('')";
 	}
 else
 	{
-	$group_SQL = eregi_replace(",$",'',$group_SQL);
+	$group_SQL = preg_replace('/,$/i', '',$group_SQL);
 #	$group_SQL = "group_id IN($group_SQL)";
 	}
 if (strlen($group_SQL)<3) {$group_SQL="''";}
@@ -383,7 +384,7 @@ if ($type == 'inbound')
 	$o=0;
 		while ($groups_to_print > $o)
 		{
-		if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
+		if (preg_match("/\|$LISTgroups[$o]\|/",$group_string)) 
 			{$MAIN.="<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroups_names[$o]</option>\n";}
 		else
 			{$MAIN.="<option value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroups_names[$o]</option>\n";}
@@ -406,7 +407,7 @@ else
 	$o=0;
 		while ($groups_to_print > $o)
 		{
-		if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
+		if (preg_match("/\|$LISTgroups[$o]\|/",$group_string)) 
 			{$MAIN.="<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroups_names[$o]</option>\n";}
 		else
 			{$MAIN.="<option value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroups_names[$o]</option>\n";}
@@ -535,7 +536,7 @@ else
 				{$NOCALLERIDcalls++;}
 			else
 				{
-				if (!ereg("_$phone_ext[$p]_",$unique_callerIDs))
+				if (!preg_match("/_$phone_ext[$p]_/",$unique_callerIDs))
 					{
 					$unique_callerIDs .= "_$phone_ext[$p]_";
 					$UNIQUEcallers++;
@@ -685,7 +686,7 @@ else
 				{
 				$row=mysql_fetch_row($rslt);
 				$vcl_statuses[$w] =		$row[0];
-				if ( (ereg("DROP",$vcl_statuses[$w])) or (ereg("XDROP",$vcl_statuses[$w])) )
+				if ( (preg_match('/DROP/',$vcl_statuses[$w])) or (preg_match('/XDROP/',$vcl_statuses[$w])) )
 					{$FLOWdrop[$s]++;}
 				$FLOWclose_time[$s] = ($FLOWclose_time[$s] + $row[1]);
 				$FLOWtotal[$s]++;
@@ -711,7 +712,7 @@ else
 		$FLOWtotal[$s] =	sprintf("%6s", $FLOWtotal[$s]);
 		$FLOWdrop[$s] =		sprintf("%6s", $FLOWdrop[$s]);
 		$FLOWdropPCT[$s] =	sprintf("%6s", $FLOWdropPCT[$s]);
-		$FLOWsummary[1] = ereg_replace('----------',' / ',$FLOWsummary[1]);
+		$FLOWsummary[1] = preg_replace('/\-\-\-\-\-\-\-\-\-\-/', ' / ', $FLOWsummary[1]);
 		$FLOWtotal_time[$s] = ($FLOWivr_time[$s] + $FLOWclose_time[$s]);
 
 		$avgFLOWivr_time[$s] = ($FLOWivr_time[$s] / $FLOWsummary[0]);

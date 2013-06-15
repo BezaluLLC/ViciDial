@@ -12,6 +12,7 @@
 # 120221-0159 - Added User Group restrictions
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 # 130414-0224 - Added report logging
+# 130610-0946 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -53,8 +54,8 @@ while ($i < $qm_conf_ct)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
 if ($DB) {echo "|$stmt|\n";}
@@ -98,7 +99,7 @@ $date_no_hour_default = $TODAY;
 
 if (!isset($date_with_hour)) {$date_with_hour = $date_with_hour_default;}
 	$date_no_hour = $date_with_hour;
-	$date_no_hour = eregi_replace(" ([0-9]{2})",'',$date_no_hour);
+	$date_no_hour = preg_replace('/\s([0-9]{2})/i',$date_no_hour);
 if (!isset($begin_date)) {$begin_date = $TODAY;}
 if (!isset($end_date)) {$end_date = $TODAY;}
 
@@ -167,7 +168,7 @@ $LOGadmin_viewable_call_times =	$row[3];
 
 $LOGadmin_viewable_groupsSQL='';
 $whereLOGadmin_viewable_groupsSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 	{
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -268,7 +269,7 @@ echo "<tr><td><font size=2>TSR </td><td align=left><font size=2>ID </td><td alig
 	$o=0;
 	while($o < $tsrs_to_print)
 		{
-		if (eregi("1$|3$|5$|7$|9$", $o))
+		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}

@@ -26,6 +26,7 @@
 # 121130-0957 - Fix for user group permissions issue #588
 # 130414-0137 - Added report logging
 # 220414-2111 - Added counts on parked(hold) calls
+# 130610-0849 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -101,8 +102,8 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
 if ($DB) {echo "|$stmt|\n";}
@@ -179,7 +180,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 
 $LOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
-if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 	{
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
@@ -190,7 +191,7 @@ $regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
 
 $LOGadmin_viewable_groupsSQL='';
 $whereLOGadmin_viewable_groupsSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 	{
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -200,7 +201,7 @@ if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewabl
 
 $LOGadmin_viewable_call_timesSQL='';
 $whereLOGadmin_viewable_call_timesSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i', $LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
 	{
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ -/",'',$LOGadmin_viewable_call_times);
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_call_timesSQL);
@@ -236,7 +237,7 @@ while ($i < $campaigns_to_print)
 	{
 	$row=mysql_fetch_row($rslt);
 	$groups[$i] =$row[0];
-	if (ereg("-ALL",$group_string) )
+	if (preg_match('/\-ALL/',$group_string) )
 		{$group[$i] = $groups[$i];}
 	$i++;
 	}
@@ -254,18 +255,18 @@ while($i < $group_ct)
 		}
 	$i++;
 	}
-if ( (ereg("--ALL--",$group_string) ) or ($group_ct < 1) )
+if ( (preg_match('/\-\-ALL\-\-/',$group_string) ) or ($group_ct < 1) )
 	{$group_SQL = ""; $park_log_SQL = "";}
 else
 	{
-	$group_SQL = eregi_replace(",$",'',$group_SQL);
+	$group_SQL = preg_replace('/,$/i', '',$group_SQL);
 	$park_log_SQL = "and channel_group in ($group_SQL)";
 	$group_SQL = "and campaign_id IN($group_SQL)";
 	}
 
 for ($i=0; $i<count($user_group); $i++)
 	{
-	if (eregi("--ALL--", $user_group[$i])) {$all_user_groups=1; $user_group="";}
+	if (preg_match('/\-\-ALL\-\-/', $user_group[$i])) {$all_user_groups=1; $user_group="";}
 	}
 $stmt="select user_group from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
 $rslt=mysql_query($stmt, $link);
@@ -290,11 +291,11 @@ while($i < $user_group_ct)
 	$user_groupQS .= "&user_group[]=$user_group[$i]";
 	$i++;
 	}
-if ( (ereg("--ALL--",$user_group_string) ) or ($user_group_ct < 1) )
+if ( (preg_match('/\-\-ALL\-\-/',$user_group_string) ) or ($user_group_ct < 1) )
 	{$user_group_SQL = "";}
 else
 	{
-	$user_group_SQL = eregi_replace(",$",'',$user_group_SQL);
+	$user_group_SQL = preg_replace('/,$/i', '',$user_group_SQL);
 	$TCuser_group_SQL = $user_group_SQL;
 	$user_group_SQL = "and vicidial_agent_log.user_group IN($user_group_SQL)";
 	$TCuser_group_SQL = "and user_group IN($TCuser_group_SQL)";
@@ -515,7 +516,7 @@ else
 		$PCpause_sec[$i] =	$row[1];
 		$sub_status[$i] =	$row[2];
 
-		if (!eregi("-$sub_status[$i]-", $sub_statuses))
+		if (!preg_match("/\-$sub_status[$i]\-/i", $sub_statuses))
 			{
 			$sub_statusesTXT = sprintf("%10s", $sub_status[$i]);
 			$sub_statusesHEAD .= "------------+";
@@ -528,7 +529,7 @@ else
 			$max_varname="max_".$sub_status[$i];
 			$$max_varname=1;
 			}
-		if (!eregi("-$PCuser[$i]-", $PCusers))
+		if (!preg_match("/\-$PCuser[$i]\-/i", $PCusers))
 			{
 			$PCusers .= "$PCuser[$i]-";
 			$PCusersARY[$user_count] = $PCuser[$i];
@@ -575,7 +576,7 @@ else
 		$TOTdead =	($TOTdead + $dead);
 		$TOTcustomer =	($TOTcustomer + $customer);
 		$TOTALtime = ($TOTALtime + $pause + $dispo + $talk + $wait);
-		if ( ($lead > 0) and ((!eregi("NULL",$status)) and (strlen($status) > 0)) ) {$TOTcalls++;}
+		if ( ($lead > 0) and ((!preg_match("/NULL/i",$status)) and (strlen($status) > 0)) ) {$TOTcalls++;}
 		
 		$user_found=0;
 		if ($uc < 1) 
@@ -596,7 +597,7 @@ else
 				$Spause[$m] =	($Spause[$m] + $pause);
 				$Sdead[$m] =	($Sdead[$m] + $dead);
 				$Scustomer[$m] =	($Scustomer[$m] + $customer);
-				if ( ($lead > 0) and ((!eregi("NULL",$status)) and (strlen($status) > 0)) ) {$Scalls[$m]++;}
+				if ( ($lead > 0) and ((!preg_match("/NULL/i",$status)) and (strlen($status) > 0)) ) {$Scalls[$m]++;}
 				}
 			$m++;
 			}
@@ -951,7 +952,7 @@ else
 			$TOPsort[$m] =	'' . sprintf("%010s", $RAWtimeTCsec) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);
 			$TOPsortTALLY[$m]=$RAWtimeTCsec;
 			}
-		if (!ereg("NAME|ID|TIME|LEADS|TCLOCK",$stage))
+		if (!preg_match('/NAME|ID|TIME|LEADS|TCLOCK/',$stage))
 			if ($file_download < 1)
 				{$ASCII_text.="$Toutput";}
 			else
@@ -973,13 +974,13 @@ else
 
 
 	### BEGIN sort through output to display properly ###
-	if ( ($TOT_AGENTS > 0) and (ereg("NAME|ID|TIME|LEADS|TCLOCK",$stage)) )
+	if ( ($TOT_AGENTS > 0) and (preg_match('/NAME|ID|TIME|LEADS|TCLOCK/',$stage)) )
 		{
-		if (ereg("ID",$stage))
+		if (preg_match('/ID/',$stage))
 			{sort($TOPsort, SORT_NUMERIC);}
-		if (ereg("TIME|LEADS|TCLOCK",$stage))
+		if (preg_match('/TIME|LEADS|TCLOCK/',$stage))
 			{rsort($TOPsort, SORT_NUMERIC);}
-		if (ereg("NAME",$stage))
+		if (preg_match('/NAME/',$stage))
 			{rsort($TOPsort, SORT_STRING);}
 
 		$m=0;
@@ -1325,14 +1326,14 @@ o_cal.a_tpl.yearscroll = false;
 
 echo "</TD><TD VALIGN=TOP> Campaigns:<BR>";
 echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
-if  (eregi("--ALL--",$group_string))
+if  (preg_match('/--ALL--/',$group_string))
 	{echo "<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
 else
 	{echo "<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
 $o=0;
 while ($campaigns_to_print > $o)
 {
-	if (eregi("$groups[$o]\|",$group_string)) {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
+	if (preg_match("/$groups[$o]\|/i",$group_string)) {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
 	  else {echo "<option value=\"$groups[$o]\">$groups[$o]</option>\n";}
 	$o++;
 }
@@ -1340,14 +1341,14 @@ echo "</SELECT>\n";
 echo "</TD><TD VALIGN=TOP>User Groups:<BR>";
 echo "<SELECT SIZE=5 NAME=user_group[] multiple>\n";
 
-if  (eregi("--ALL--",$user_group_string))
+if  (preg_match('/\-\-ALL\-\-/',$user_group_string))
 	{echo "<option value=\"--ALL--\" selected>-- ALL USER GROUPS --</option>\n";}
 else
 	{echo "<option value=\"--ALL--\">-- ALL USER GROUPS --</option>\n";}
 $o=0;
 while ($user_groups_to_print > $o)
 	{
-	if  (eregi("$user_groups[$o]\|",$user_group_string)) {echo "<option selected value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
+	if  (preg_match("/$user_groups[$o]\|/i",$user_group_string)) {echo "<option selected value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
 	  else {echo "<option value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
 	$o++;
 	}

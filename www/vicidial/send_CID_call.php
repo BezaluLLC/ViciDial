@@ -10,6 +10,7 @@
 # 90714-1355 - First Build
 # 120831-1527 - Added vicidial_dial_log logging
 # 130414-0039 - Added admin logging
+# 130610-0943 - Finalized changing of all ereg instances to preg
 #
 
 require("dbconnect.php");
@@ -32,13 +33,13 @@ if (isset($_GET["server_ip"]))				{$server_ip=$_GET["server_ip"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 
-$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_PW);
 
-$sender = ereg_replace("[^0-9]","",$sender);
-$receiver = ereg_replace("[^0-9]","",$receiver);
-$cid_number = ereg_replace("[^0-9]","",$cid_number);
-$server_ip = ereg_replace("[^\.0-9]","",$server_ip);
+$sender = preg_replace('/[^0-9]/','',$sender);
+$receiver = preg_replace('/[^0-9]/','',$receiver);
+$cid_number = preg_replace('/[^0-9]/','',$cid_number);
+$server_ip = preg_replace('/[^\.0-9]/','',$server_ip);
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
 if ($DB) {echo "|$stmt|\n";}
@@ -131,7 +132,7 @@ else
 
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|";
-	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = preg_replace('/;/', '', $SQL_log);
 	$SQL_log = addslashes($SQL_log);
 	$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='CIDSEND', event_type='OTHER', record_id='$PHP_AUTH_USER', event_code='ADMIN SEND CID CALL', event_sql=\"$SQL_log\", event_notes='Server: $server_ip';";
 	if ($DB) {echo "|$stmt|\n";}

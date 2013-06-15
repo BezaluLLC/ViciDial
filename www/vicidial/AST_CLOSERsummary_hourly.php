@@ -16,6 +16,7 @@
 # 111103-2315 - Added user_group restrictions for selecting in-groups
 # 120224-0910 - Added HTML display option with bar graphs
 # 130414-0107 - Added report logging
+# 130610-1022 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -58,8 +59,8 @@ if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $MT[0]='0';
 if (strlen($shift)<2) {$shift='ALL';}
@@ -172,7 +173,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 
 $LOGadmin_viewable_groupsSQL='';
 $whereLOGadmin_viewable_groupsSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 	{
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -182,7 +183,7 @@ if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewabl
 
 $LOGadmin_viewable_call_timesSQL='';
 $whereLOGadmin_viewable_call_timesSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i', $LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
 	{
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ -/",'',$LOGadmin_viewable_call_times);
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_call_timesSQL);
@@ -198,7 +199,7 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 
 $exclude_rolloverSQL="$whereLOGadmin_viewable_groupsSQL";
-if (eregi("YES",$exclude_rollover))
+if (preg_match("/YES/i",$exclude_rollover))
 	{$exclude_rolloverSQL = " where group_id NOT IN(SELECT drop_inbound_group from vicidial_campaigns) $LOGadmin_viewable_groupsSQL";}
 $stmt="select group_id,group_name from vicidial_inbound_groups $exclude_rolloverSQL order by group_id;";
 $rslt=mysql_query($stmt, $link);
@@ -231,14 +232,14 @@ while($i < $group_ct)
 		}
 	$i++;
 	}
-if ( (ereg("--NONE--",$group_string) ) or ($group_ct < 1) )
+if ( (preg_match('/\s\-\-NONE\-\-\s/',$group_string) ) or ($group_ct < 1) )
 	{
 	$group_SQL = "''";
 #	$group_SQL = "group_id IN('')";
 	}
 else
 	{
-	$group_SQL = eregi_replace(",$",'',$group_SQL);
+	$group_SQL = preg_replace('/,$/i', '',$group_SQL);
 #	$group_SQL = "group_id IN($group_SQL)";
 	}
 if (strlen($group_SQL)<3) {$group_SQL="''";}
@@ -349,7 +350,7 @@ if ($bareformat < 1)
 	$o=0;
 	while ($groups_to_print > $o)
 		{
-		if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
+		if (preg_match("/\|$LISTgroups[$o]\|/",$group_string)) 
 			{$MAIN.="<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroup_names[$o]</option>\n";}
 		else
 			{$MAIN.="<option value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroup_names[$o]</option>\n";}
@@ -560,7 +561,7 @@ else
 				{
 				$row=mysql_fetch_row($rslt);
 				$call_date = explode(" ", $row[3]);
-				$call_time = ereg_replace("[^0-9]","",$call_date[1]);
+				$call_time = preg_replace('/[^0-9]/','',$call_date[1]);
 				$epoch = $row[4];
 				$Cwday = date("w", $epoch);
 
@@ -593,7 +594,7 @@ else
 					$talk_sec[$i] =	($talk_sec[$i] + $TEMPtalk);
 					if ($max_queue_seconds[$i] < $row[2])
 						{$max_queue_seconds[$i] = $row[2];}
-					if (eregi("DROP",$row[0]))
+					if (preg_match("/DROP/i",$row[0]))
 						{$drop_count[$i]++;}
 					else
 						{$answer_count[$i]++;}
@@ -604,7 +605,7 @@ else
 					$Htalk_sec[$Chour] =	($Htalk_sec[$Chour] + $TEMPtalk);
 					if ($Hmax_queue_seconds[$Chour] < $row[2])
 						{$Hmax_queue_seconds[$Chour] = $row[2];}
-					if (eregi("DROP",$row[0]))
+					if (preg_match("/DROP/i",$row[0]))
 						{$Hdrop_count[$Chour]++;}
 					else
 						{$Hanswer_count[$Chour]++;}
@@ -762,9 +763,9 @@ else
 					if ($Hanswer_count[$h]>$sub_max_answer) {$sub_max_answer=$Hanswer_count[$h];}
 					if ($Htalk_sec[$h]>$sub_max_talk) {$sub_max_talk=$Htalk_sec[$h];}
 					if ($Htalk_avg[$h]>$sub_max_avgtalk) {$sub_max_avgtalk=$Htalk_avg[$h];}
-					if ($Hqueue_seconds[$h]>$sub_max_maxqueue) {$sub_max_maxqueue=$Hqueue_seconds[$h];}
+					if ($Hqueue_seconds[$h]>$sub_max_queue) {$sub_max_queue=$Hqueue_seconds[$h];}
 					if ($Hqueue_avg[$h]>$sub_max_avgqueue) {$sub_max_avgqueue=$Hqueue_avg[$h];}
-					if ($Hsub_max_queue_seconds[$h]>$sub_max_maxqueue) {$sub_max_maxqueue=$Hmax_queue_seconds[$h];}
+					if ($Hmax_queue_seconds[$h]>$sub_max_maxqueue) {$sub_max_maxqueue=$Hmax_queue_seconds[$h];}
 					if ($Hdrop_count[$h]>$sub_max_totalabandons) {$sub_max_totalabandons=$Hdrop_count[$h];}
 					$q++;
 
@@ -800,6 +801,15 @@ else
 				{$hTOTqueue_avg = ($hTOTqueue_seconds / $hTOTcalls_count);}
 			else
 				{$hTOTqueue_avg = 0;}
+
+			$gTOTcalls_count+=$hTOTcalls_count;
+			$gTOTanswer_count+=$hTOTanswer_count;
+			$gTOTtalk_sec+=$hTOTtalk_sec;
+			#$gTOTtalk_avg+=$hTOTtalk_avg;
+			$gTOTqueue_seconds+=$hTOTqueue_seconds;
+			#$gTOTqueue_avg+=$hTOTqueue_avg;
+			$gTOTmax_queue_seconds+=$hTOTmax_queue_seconds;
+			$gTOTdrop_count+=$hTOTdrop_count;
 
 			$hTOTtalk_sec =			sec_convert($hTOTtalk_sec,'H'); 
 			$hTOTtalk_avg =			sec_convert($hTOTtalk_avg,'H'); 
@@ -861,14 +871,12 @@ else
 			$SUBoutput .= "+------+--------+--------+-----------+---------+-----------+---------+---------+--------+\n";
 			$SUBoutput .= "|TOTALS| $hTOTcalls_count | $hTOTanswer_count | $hTOTtalk_sec | $hTOTtalk_avg | $hTOTqueue_seconds | $hTOTqueue_avg | $hTOTmax_queue_seconds | $hTOTdrop_count |\n";
 			$SUBoutput .= "+------+--------+--------+-----------+---------+-----------+---------+---------+--------+\n";
-
 			$CSV_subreports.="\"TOTALS\",\"$hTOTcalls_count\",\"$hTOTanswer_count\",\"$hTOTtalk_sec\",\"$hTOTtalk_avg\",\"$hTOTqueue_seconds\",\"$hTOTqueue_avg\",\"$hTOTmax_queue_seconds\",\"$hTOTdrop_count\"\n";
-
+			
 #			$SUBoutput.=$sub_GRAPH;
 
 			$i++;
 			}
-
 		$rawTOTtalk_sec = $TOTtalk_sec;
 		$rawTOTtalk_min = round($rawTOTtalk_sec / 60);
 
@@ -881,7 +889,6 @@ else
 		else
 			{$TOTqueue_avg = 0;}
 
-
 		for ($q=0; $q<count($graph_stats); $q++) {
 			if ($q==0) {$class=" first";} else if (($q+1)==count($graph_stats)) {$class=" last";} else {$class="";}
 			$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][1]/$max_calls)."' height='16' />".$graph_stats[$q][1]."</td></tr>";
@@ -893,14 +900,28 @@ else
 			$MAXQUEUE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][7]/$max_maxqueue)."' height='16' />".sec_convert($graph_stats[$q][7],'H')."</td></tr>";
 			$TOTALABANDONS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][8]/$max_totalabandons)."' height='16' />".$graph_stats[$q][8]."</td></tr>";
 		}
-		$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTcalls_count)."</th></tr></table>";
-		$ANSWER_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTanswer_count)."</th></tr></table>";
-		$TALK_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTtalk_sec)."</th></tr></table>";
-		$AVGTALK_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTtalk_avg)."</th></tr></table>";
-		$QUEUE_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTqueue_seconds)."</th></tr></table>";
-		$AVGQUEUE_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTqueue_avg)."</th></tr></table>";
-		$MAXQUEUE_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTmax_queue_seconds)."</th></tr></table>";
-		$TOTALABANDONS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTdrop_count)."</th></tr></table>";
+
+		if ( ($gTOTanswer_count > 0) and ($gTOTtalk_sec > 0) )
+			{$gTOTtalk_avg = round($gTOTtalk_sec / $gTOTanswer_count);}
+		else
+			{$gTOTtalk_avg = 0;}
+		if ( ($gTOTcalls_count > 0) and ($gTOTqueue_seconds > 0) )
+			{$gTOTqueue_avg = round($gTOTqueue_seconds / $gTOTcalls_count);}
+		else
+			{$gTOTqueue_avg = 0;}
+		$gTOTtalk_sec =			sec_convert($gTOTtalk_sec,'H'); 
+		$gTOTtalk_avg =			sec_convert($gTOTtalk_avg,'H'); 
+		$gTOTqueue_seconds =		sec_convert($gTOTqueue_seconds,'H'); 
+		$gTOTqueue_avg =			sec_convert($gTOTqueue_avg,'H'); 
+		$gTOTmax_queue_seconds =	sec_convert($gTOTmax_queue_seconds,'H'); 
+		$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($gTOTcalls_count)."</th></tr></table>";
+		$ANSWER_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($gTOTanswer_count)."</th></tr></table>";
+		$TALK_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($gTOTtalk_sec)."</th></tr></table>";
+		$AVGTALK_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($gTOTtalk_avg)."</th></tr></table>";
+		$QUEUE_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($gTOTqueue_seconds)."</th></tr></table>";
+		$AVGQUEUE_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($gTOTqueue_avg)."</th></tr></table>";
+		$MAXQUEUE_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($gTOTmax_queue_seconds)."</th></tr></table>";
+		$TOTALABANDONS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($gTOTdrop_count)."</th></tr></table>";
 		$JS_onload.="\tDrawGraph('CALLS', '1');\n"; 
 		$JS_text.="function DrawGraph(graph, th_id) {\n";
 		$JS_text.="	var CALLS_graph=\"$CALLS_graph\";\n";

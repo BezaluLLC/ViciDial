@@ -25,10 +25,11 @@
 # 120713-2101 - Added extended_vl_fields option
 # 120907-1209 - Raised extended fields up to 99
 # 130508-1020 - Added default field and length check validation, made errors appear in bold red text
+# 130606-0545 - Finalized changing of all ereg instances to preg
 #
 
-$admin_version = '2.6-19';
-$build = '130508-1020';
+$admin_version = '2.8-19';
+$build = '130606-0545';
 
 
 require("dbconnect.php");
@@ -120,36 +121,36 @@ if ( (strlen($field_max) < 1) or ($field_max < 1) )
 
 if ($non_latin < 1)
 	{
-	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_PW);
 
-	$list_id = ereg_replace("[^0-9]","",$list_id);
-	$field_id = ereg_replace("[^0-9]","",$field_id);
-	$field_rank = ereg_replace("[^0-9]","",$field_rank);
-	$field_size = ereg_replace("[^0-9]","",$field_size);
-	$field_max = ereg_replace("[^0-9]","",$field_max);
-	$field_order = ereg_replace("[^0-9]","",$field_order);
-	$source_list_id = ereg_replace("[^0-9]","",$source_list_id);
+	$list_id = preg_replace('/[^0-9]/','',$list_id);
+	$field_id = preg_replace('/[^0-9]/','',$field_id);
+	$field_rank = preg_replace('/[^0-9]/','',$field_rank);
+	$field_size = preg_replace('/[^0-9]/','',$field_size);
+	$field_max = preg_replace('/[^0-9]/','',$field_max);
+	$field_order = preg_replace('/[^0-9]/','',$field_order);
+	$source_list_id = preg_replace('/[^0-9]/','',$source_list_id);
 
-	$field_required = ereg_replace("[^NY]","",$field_required);
+	$field_required = preg_replace('/[^NY]/','',$field_required);
 
-	$field_type = ereg_replace("[^0-9a-zA-Z]","",$field_type);
-	$ConFiRm = ereg_replace("[^0-9a-zA-Z]","",$ConFiRm);
-	$name_position = ereg_replace("[^0-9a-zA-Z]","",$name_position);
-	$multi_position = ereg_replace("[^0-9a-zA-Z]","",$multi_position);
+	$field_type = preg_replace('/[^0-9a-zA-Z]/','',$field_type);
+	$ConFiRm = preg_replace('/[^0-9a-zA-Z]/','',$ConFiRm);
+	$name_position = preg_replace('/[^0-9a-zA-Z]/','',$name_position);
+	$multi_position = preg_replace('/[^0-9a-zA-Z]/','',$multi_position);
 
-	$field_label = ereg_replace("[^_0-9a-zA-Z]","",$field_label);
-	$copy_option = ereg_replace("[^_0-9a-zA-Z]","",$copy_option);
+	$field_label = preg_replace('/[^_0-9a-zA-Z]/','',$field_label);
+	$copy_option = preg_replace('/[^_0-9a-zA-Z]/','',$copy_option);
 
-	$field_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$field_name);
-	$field_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$field_description);
-	$field_options = ereg_replace("[^ \.\n\,-\_0-9a-zA-Z]","",$field_options);
-	$field_default = ereg_replace("[^ \.\n\,-\_0-9a-zA-Z]","",$field_default);
+	$field_name = preg_replace('/[^ \.\,-\_0-9a-zA-Z]/','',$field_name);
+	$field_description = preg_replace('/[^ \.\,-\_0-9a-zA-Z]/','',$field_description);
+	$field_options = preg_replace('/[^ \.\n\,-\_0-9a-zA-Z]/', '',$field_options);
+	$field_default = preg_replace('/[^ \.\n\,-\_0-9a-zA-Z]/', '',$field_default);
 	}	# end of non_latin
 else
 	{
-	$PHP_AUTH_USER = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	}
 
 $STARTtime = date("U");
@@ -266,86 +267,86 @@ if ($action == "HELP")
 	<center>
 	<TABLE WIDTH=98% BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=4><TR><TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>
 	<BR>
-	<B>ViciDial Lists Custom Fields Help</B>
+	<B>Lists Custom Fields Help</B>
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_label">
+	<A NAME="lists_fields-field_label">
 	<BR>
-	 <B>Field Label -</B> This is the database field identifier for this field. This needs to be a unique identifier within the custom fields for this list. Do not use any spaces or punctuation for this field. max 50 characters, minimum of 2 characters. You can also include the default ViciDial fields in a custom field setup, and you will see them in red in the list. These fields will not be added to the custom list database table, the agent interface will instead reference the vicidial_list table directly. The labels that you can use to include the default fieds are - 
+	 <B>Field Label -</B> This is the database field identifier for this field. This needs to be a unique identifier within the custom fields for this list. Do not use any spaces or punctuation for this field. max 50 characters, minimum of 2 characters. You can also include the default fields in a custom field setup, and you will see them in red in the list. These fields will not be added to the custom list database table, the agent interface will instead reference the list table directly. The labels that you can use to include the default fieds are - 
 	lead_id, vendor_lead_code, source_id, list_id, gmt_offset_now, called_since_last_reset, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, called_count, last_local_call_time, rank, owner
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_name">
+	<A NAME="lists_fields-field_name">
 	<BR>
 	 <B>Field Name -</B> This is the name of the field as it will appear to an agent through their interface. You can use spaces in this field, but no punctuation characters, maximum of 50 characters and minimum of 2 characters.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_description">
+	<A NAME="lists_fields-field_description">
 	<BR>
 	 <B>Field Description -</B> The description of this field as it will appear in the administration interface. This is an optional field with a maximum of 100 characters.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_rank">
+	<A NAME="lists_fields-field_rank">
 	<BR>
 	 <B>Field Rank -</B> The order in which these fields is displayed to the agent from lowest on top to highest on the bottom.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_order">
+	<A NAME="lists_fields-field_order">
 	<BR>
 	 <B>Field Order -</B> If more than one field has the same rank, they will be placed on the same line and they will be placed in order by this value from lowest to highest, left to right.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_help">
+	<A NAME="lists_fields-field_help">
 	<BR>
 	 <B>Field Help -</B> Optional field, if you fill it in, the agent will be able to see this text when they click on a help link next to the field in their agent interface.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_type">
+	<A NAME="lists_fields-field_type">
 	<BR>
 	 <B>Field Type -</B> This option defines the type of field that will be displayed. TEXT is a standard single-line entry form, AREA is a multi-line text box, SELECT is a single-selection pull-down menu, MULTI is a multiple-select box, RADIO is a list of radio buttons where only one option can be selected, CHECKBOX is a list of checkboxes where multiple options can be selected, DATE is a year month day calendar popup where the agent can select the date and TIME is a time selection box. The default is TEXT. For the SELECT, MULTI, RADIO and CHECKBOX options you must define the option values below in the Field Options box. DISPLAY will display only and not allow for modification by the agent. SCRIPT will also display only, but you are able to use script variables just like in the Scripts feature. SCRIPT fields will also only display the content in the Options, and not the field name like the DISPLAY type does. HIDDEN will not show the agent the field, but will allow the field to have data imported into it and exported from it, as well as have it available to the script tab and web form address. READONLY will display the value of the data in the field, but will not allow the agent to alter the data. HIDEBLOB is similar to HIDDEN except the data storage type on the database is a BLOB type, suitable for binary data or data that needs to be secured.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_options">
+	<A NAME="lists_fields-field_options">
 	<BR>
 	 <B>Field Options -</B> For the SELECT, MULTI, RADIO and CHECKBOX field types, you must define the option values in this box. You must put a list of comma separated option label and option text here with each option one its own line. The first value should have no spaces in it, and neither values should have any punctuation. For example - electric_meter, Electric Meter
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-multi_position">
+	<A NAME="lists_fields-multi_position">
 	<BR>
 	 <B>Option Position -</B> For CHECKBOX and RADIO field types only, if set to HORIZONTAL the options will appear on the same line possibly wrapping to the line below if there are many options. If set to VERTICAL there will be only one option per line. Default is HORIZONTAL.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_size">
+	<A NAME="lists_fields-field_size">
 	<BR>
 	 <B>Field Size -</B> This setting will mean different things depending on what the field type is. For TEXT fields, the size is the number of characters that will show in the field. For AREA fields, the size is the width of the text box in characters. For MULTI fields, this setting defines the number of options to be shown in the multi select list. For SELECT, RADIO, CHECKBOX, DATE and TIME this setting is ignored.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_max">
+	<A NAME="lists_fields-field_max">
 	<BR>
 	 <B>Field Max -</B> This setting will mean different things depending on what the field type is. For TEXT, HIDDEN and READONLY fields, the size is the maximum number of characters that are allowed in the field. For AREA fields, this field defines the number of rows of text visible in the text box. For MULTI, SELECT, RADIO, CHECKBOX, DATE and TIME this setting is ignored.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_default">
+	<A NAME="lists_fields-field_default">
 	<BR>
 	 <B>Field Default -</B> This optional field lets you define what value to assign to a field if nothing is loaded into that field. Default is NULL which disables the default function. For DATE field types, the default is always set to today unless a number is put in in which case the date will be that many days plus or minus today. For TIME field types, the default is always set to the current server time unless a number is put in in which case the time will be that many minutes plus or minus current time.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_cost">
+	<A NAME="lists_fields-field_cost">
 	<BR>
 	 <B>Field Cost -</B> This read only field tells you what the cost of this field is in the custom field table for this list. There is no hard limit for the number of custom fields you can have in a list, but the total of the cost of all fields for the list must be below 65000. This typically allows for hundreds of fields, but if you specify several TEXT fields that are hundreds or thousands of characters in length then you may hit this limit quickly. If you need that much text in a field you should choose an AREA type, which are stored differently and do not use as much table space.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_required">
+	<A NAME="lists_fields-field_required">
 	<BR>
 	 <B>Field Required -</B> If set to Y, this field will force the agent to enter text or select an option for this field. Default is N.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-name_position">
+	<A NAME="lists_fields-name_position">
 	<BR>
 	 <B>Field Name Position -</B> If set to LEFT, this field name will appear to the left of the field, if set to TOP the field name will take up the entire line and appear above the field. Default is LEFT.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-copy_option">
+	<A NAME="lists_fields-copy_option">
 	<BR>
 	 <B>Copy Option -</B> When copying field definitions from one list to another, you have a few options for how the copying process works. APPEND will add the fields that are not present in the destination list, if there are matching field labels those will remained untouched, no custom field data will be deleted or modified using this option. UPDATE will update the common field_label fields in the destination list to the field definitions from the source list. custom field data may be modified or lost using this option. REPLACE will remove all existing custom fields in the destination list and replace them with the custom fields from the source list, all custom field data will be deleted using this option.
 	<BR><BR>
@@ -442,7 +443,7 @@ if ($action == "COPY_FIELDS_FORM")
 	echo "<option selected>APPEND</option>";
 	echo "<option>UPDATE</option>";
 	echo "<option>REPLACE</option>";
-	echo "</select> $NWB#vicidial_lists_fields-copy_option$NWE</td></tr>\n";
+	echo "</select> $NWB#lists_fields-copy_option$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
 	echo "</TABLE></center>\n";
 	echo "</TD></TR></TABLE>\n";
@@ -995,7 +996,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 			$LcolorB='<font color=red>';
 			$LcolorE='</font>';
 			}
-		if (eregi("1$|3$|5$|7$|9$", $o))
+		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -1232,7 +1233,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 			$LcolorB='<font color=red>';
 			$LcolorE='</font>';
 			}
-		if (eregi("1$|3$|5$|7$|9$", $o))
+		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -1244,11 +1245,11 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		echo "<input type=hidden name=field_label value=\"$A_field_label[$o]\">\n";
 		echo "<a name=\"ANCHOR_$A_field_label[$o]\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3 cellpadding=1>\n";
-		echo "<tr $bgcolor><td align=right>Field Label $A_field_rank[$o]: </td><td align=left> $LcolorB<B>$A_field_label[$o]</B>$LcolorE $NWB#vicidial_lists_fields-field_label$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Field Label $A_field_rank[$o]: </td><td align=left> $LcolorB<B>$A_field_label[$o]</B>$LcolorE $NWB#lists_fields-field_label$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Field Rank $A_field_rank[$o]: </td><td align=left><select size=1 name=field_rank>\n";
 		echo "$rank_select\n";
 		echo "<option selected>$A_field_rank[$o]</option>\n";
-		echo "</select> &nbsp; $NWB#vicidial_lists_fields-field_rank$NWE \n";
+		echo "</select> &nbsp; $NWB#lists_fields-field_rank$NWE \n";
 		echo " &nbsp; &nbsp; &nbsp; &nbsp; Field Order: <select size=1 name=field_order>\n";
 		echo "<option>1</option>\n";
 		echo "<option>2</option>\n";
@@ -1256,15 +1257,15 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		echo "<option>4</option>\n";
 		echo "<option>5</option>\n";
 		echo "<option selected>$A_field_order[$o]</option>\n";
-		echo "</select> &nbsp; $NWB#vicidial_lists_fields-field_order$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Field Name $A_field_rank[$o]: </td><td align=left><textarea name=field_name rows=2 cols=60>$A_field_name[$o]</textarea> $NWB#vicidial_lists_fields-field_name$NWE </td></tr>\n";
+		echo "</select> &nbsp; $NWB#lists_fields-field_order$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Field Name $A_field_rank[$o]: </td><td align=left><textarea name=field_name rows=2 cols=60>$A_field_name[$o]</textarea> $NWB#lists_fields-field_name$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Field Name Position $A_field_rank[$o]: </td><td align=left><select size=1 name=name_position>\n";
 		echo "<option value=\"LEFT\">LEFT</option>\n";
 		echo "<option value=\"TOP\">TOP</option>\n";
 		echo "<option selected>$A_name_position[$o]</option>\n";
-		echo "</select>  $NWB#vicidial_lists_fields-name_position$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Field Description $A_field_rank[$o]: </td><td align=left><input type=text name=field_description size=70 maxlength=100 value=\"$A_field_description[$o]\"> $NWB#vicidial_lists_fields-field_description$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Field Help $A_field_rank[$o]: </td><td align=left><textarea name=field_help rows=2 cols=60>$A_field_help[$o]</textarea> $NWB#vicidial_lists_fields-field_help$NWE </td></tr>\n";
+		echo "</select>  $NWB#lists_fields-name_position$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Field Description $A_field_rank[$o]: </td><td align=left><input type=text name=field_description size=70 maxlength=100 value=\"$A_field_description[$o]\"> $NWB#lists_fields-field_description$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Field Help $A_field_rank[$o]: </td><td align=left><textarea name=field_help rows=2 cols=60>$A_field_help[$o]</textarea> $NWB#lists_fields-field_help$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Field Type $A_field_rank[$o]: </td><td align=left><select size=1 name=field_type>\n";
 		echo "<option>TEXT</option>\n";
 		echo "<option>AREA</option>\n";
@@ -1280,21 +1281,21 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		echo "<option>HIDEBLOB</option>\n";
 		echo "<option>READONLY</option>\n";
 		echo "<option selected>$A_field_type[$o]</option>\n";
-		echo "</select>  $NWB#vicidial_lists_fields-field_type$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Field Options $A_field_rank[$o]: </td><td align=left><textarea name=field_options ROWS=5 COLS=60>$A_field_options[$o]</textarea>  $NWB#vicidial_lists_fields-field_options$NWE </td></tr>\n";
+		echo "</select>  $NWB#lists_fields-field_type$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Field Options $A_field_rank[$o]: </td><td align=left><textarea name=field_options ROWS=5 COLS=60>$A_field_options[$o]</textarea>  $NWB#lists_fields-field_options$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Option Position $A_field_rank[$o]: </td><td align=left><select size=1 name=multi_position>\n";
 		echo "<option value=\"HORIZONTAL\">HORIZONTAL</option>\n";
 		echo "<option value=\"VERTICAL\">VERTICAL</option>\n";
 		echo "<option selected>$A_multi_position[$o]</option>\n";
-		echo "</select>  $NWB#vicidial_lists_fields-multi_position$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Field Size $A_field_rank[$o]: </td><td align=left><input type=text name=field_size size=5 maxlength=3 value=\"$A_field_size[$o]\">  $NWB#vicidial_lists_fields-field_size$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Field Max $A_field_rank[$o]: </td><td align=left><input type=text name=field_max size=5 maxlength=3 value=\"$A_field_max[$o]\">  $NWB#vicidial_lists_fields-field_max$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Field Default $A_field_rank[$o]: </td><td align=left><input type=text name=field_default size=50 maxlength=255 value=\"$A_field_default[$o]\">  $NWB#vicidial_lists_fields-field_default$NWE </td></tr>\n";
+		echo "</select>  $NWB#lists_fields-multi_position$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Field Size $A_field_rank[$o]: </td><td align=left><input type=text name=field_size size=5 maxlength=3 value=\"$A_field_size[$o]\">  $NWB#lists_fields-field_size$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Field Max $A_field_rank[$o]: </td><td align=left><input type=text name=field_max size=5 maxlength=3 value=\"$A_field_max[$o]\">  $NWB#lists_fields-field_max$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Field Default $A_field_rank[$o]: </td><td align=left><input type=text name=field_default size=50 maxlength=255 value=\"$A_field_default[$o]\">  $NWB#lists_fields-field_default$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Field Required $A_field_rank[$o]: </td><td align=left><select size=1 name=field_required>\n";
 		echo "<option value=\"Y\">YES</option>\n";
 		echo "<option value=\"N\">NO</option>\n";
 		echo "<option selected>$A_field_required[$o]</option>\n";
-		echo "</select>  $NWB#vicidial_lists_fields-field_required$NWE </td></tr>\n";
+		echo "</select>  $NWB#lists_fields-field_required$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=center colspan=2><input type=submit name=submit value=\"SUBMIT\"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
 		echo "<B><a href=\"$PHP_SELF?action=DELETE_CUSTOM_FIELD_CONFIRMATION&list_id=$list_id&field_id=$A_field_id[$o]&field_label=$A_field_label[$o]&DB=$DB\">DELETE THIS CUSTOM FIELD</a></B>";
 		echo "</td></tr>\n";
@@ -1315,22 +1316,22 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "<tr $bgcolor><td align=right>New Field Rank: </td><td align=left><select size=1 name=field_rank>\n";
 	echo "$rank_select\n";
 	echo "<option selected>$last_rank</option>\n";
-	echo "</select> &nbsp; $NWB#vicidial_lists_fields-field_rank$NWE \n";
+	echo "</select> &nbsp; $NWB#lists_fields-field_rank$NWE \n";
 	echo " &nbsp; &nbsp; &nbsp; &nbsp; Field Order: <select size=1 name=field_order>\n";
 	echo "<option selected>1</option>\n";
 	echo "<option>2</option>\n";
 	echo "<option>3</option>\n";
 	echo "<option>4</option>\n";
 	echo "<option>5</option>\n";
-	echo "</select> &nbsp; $NWB#vicidial_lists_fields-field_order$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Label: </td><td align=left><input type=text name=field_label size=20 maxlength=50> $NWB#vicidial_lists_fields-field_label$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Name: </td><td align=left><textarea name=field_name rows=2 cols=60></textarea> $NWB#vicidial_lists_fields-field_name$NWE </td></tr>\n";
+	echo "</select> &nbsp; $NWB#lists_fields-field_order$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Field Label: </td><td align=left><input type=text name=field_label size=20 maxlength=50> $NWB#lists_fields-field_label$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Field Name: </td><td align=left><textarea name=field_name rows=2 cols=60></textarea> $NWB#lists_fields-field_name$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>Field Name Position: </td><td align=left><select size=1 name=name_position>\n";
 	echo "<option value=\"LEFT\">LEFT</option>\n";
 	echo "<option value=\"TOP\">TOP</option>\n";
-	echo "</select>  $NWB#vicidial_lists_fields-name_position$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Description: </td><td align=left><input name=field_description type=text size=70 maxlength=100> $NWB#vicidial_lists_fields-field_description$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Help: </td><td align=left><textarea name=field_help rows=2 cols=60></textarea> $NWB#vicidial_lists_fields-field_help$NWE </td></tr>\n";
+	echo "</select>  $NWB#lists_fields-name_position$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Field Description: </td><td align=left><input name=field_description type=text size=70 maxlength=100> $NWB#lists_fields-field_description$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Field Help: </td><td align=left><textarea name=field_help rows=2 cols=60></textarea> $NWB#lists_fields-field_help$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>Field Type: </td><td align=left><select size=1 name=field_type>\n";
 	echo "<option>TEXT</option>\n";
 	echo "<option>AREA</option>\n";
@@ -1346,19 +1347,19 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "<option>HIDEBLOB</option>\n";
 	echo "<option>READONLY</option>\n";
 	echo "<option selected>TEXT</option>\n";
-	echo "</select>  $NWB#vicidial_lists_fields-field_type$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Options: </td><td align=left><textarea name=field_options ROWS=5 COLS=60></textarea>  $NWB#vicidial_lists_fields-field_options$NWE </td></tr>\n";
+	echo "</select>  $NWB#lists_fields-field_type$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Field Options: </td><td align=left><textarea name=field_options ROWS=5 COLS=60></textarea>  $NWB#lists_fields-field_options$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>Option Position: </td><td align=left><select size=1 name=multi_position>\n";
 	echo "<option selected value=\"HORIZONTAL\">HORIZONTAL</option>\n";
 	echo "<option value=\"VERTICAL\">VERTICAL</option>\n";
-	echo "</select>  $NWB#vicidial_lists_fields-multi_position$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Size: </td><td align=left><input type=text name=field_size size=5 maxlength=3>  $NWB#vicidial_lists_fields-field_size$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Max: </td><td align=left><input type=text name=field_max size=5 maxlength=3>  $NWB#vicidial_lists_fields-field_max$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Default: </td><td align=left><input type=text name=field_default size=50 maxlength=255 value=\"NULL\">  $NWB#vicidial_lists_fields-field_default$NWE </td></tr>\n";
+	echo "</select>  $NWB#lists_fields-multi_position$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Field Size: </td><td align=left><input type=text name=field_size size=5 maxlength=3>  $NWB#lists_fields-field_size$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Field Max: </td><td align=left><input type=text name=field_max size=5 maxlength=3>  $NWB#lists_fields-field_max$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Field Default: </td><td align=left><input type=text name=field_default size=50 maxlength=255 value=\"NULL\">  $NWB#lists_fields-field_default$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>Field Required: </td><td align=left><select size=1 name=field_required>\n";
 	echo "<option value=\"Y\">YES</option>\n";
 	echo "<option value=\"N\" SELECTED>NO</option>\n";
-	echo "</select>  $NWB#vicidial_lists_fields-field_required$NWE </td></tr>\n";
+	echo "</select>  $NWB#lists_fields-field_required$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=center colspan=2><input type=submit name=submit value=\"Submit\"></td></tr>\n";
 	echo "</table></center></form><BR><BR>\n";
 	echo "</table></center><BR><BR>\n";
@@ -1415,7 +1416,7 @@ if ($action == "LIST")
 			$rowx=mysql_fetch_row($rslt);
 			$A_list_fields_count[$o] =	$rowx[0];
 			}
-		if (eregi("1$|3$|5$|7$|9$", $o))
+		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -1470,27 +1471,27 @@ if ($action == "ADMIN_LOG")
 			{
 			$row=mysql_fetch_row($rslt);
 
-			if (eregi("USER|AGENT",$row[4])) {$record_link = "ADD=3&user=$row[6]";}
-			if (eregi('CAMPAIGN',$row[4])) {$record_link = "ADD=31&campaign_id=$row[6]";}
-			if (eregi('LIST',$row[4])) {$record_link = "ADD=311&list_id=$row[6]";}
-			if (eregi('SCRIPT',$row[4])) {$record_link = "ADD=3111111&script_id=$row[6]";}
-			if (eregi('FILTER',$row[4])) {$record_link = "ADD=31111111&lead_filter_id=$row[6]";}
-			if (eregi('INGROUP',$row[4])) {$record_link = "ADD=3111&group_id=$row[6]";}
-			if (eregi('DID',$row[4])) {$record_link = "ADD=3311&did_id=$row[6]";}
-			if (eregi('USERGROUP',$row[4])) {$record_link = "ADD=311111&user_group=$row[6]";}
-			if (eregi('REMOTEAGENT',$row[4])) {$record_link = "ADD=31111&remote_agent_id=$row[6]";}
-			if (eregi('PHONE',$row[4])) {$record_link = "ADD=10000000000";}
-			if (eregi('CALLTIME',$row[4])) {$record_link = "ADD=311111111&call_time_id=$row[6]";}
-			if (eregi('SHIFT',$row[4])) {$record_link = "ADD=331111111&shift_id=$row[6]";}
-			if (eregi('CONFTEMPLATE',$row[4])) {$record_link = "ADD=331111111111&template_id=$row[6]";}
-			if (eregi('CARRIER',$row[4])) {$record_link = "ADD=341111111111&carrier_id=$row[6]";}
-			if (eregi('SERVER',$row[4])) {$record_link = "ADD=311111111111&server_id=$row[6]";}
-			if (eregi('CONFERENCE',$row[4])) {$record_link = "ADD=1000000000000";}
-			if (eregi('SYSTEM',$row[4])) {$record_link = "ADD=311111111111111";}
-			if (eregi('CATEGOR',$row[4])) {$record_link = "ADD=331111111111111";}
-			if (eregi('GROUPALIAS',$row[4])) {$record_link = "ADD=33111111111&group_alias_id=$row[6]";}
+			if (preg_match('/USER|AGENT/i', $row[4])) {$record_link = "ADD=3&user=$row[6]";}
+			if (preg_match('/CAMPAIGN/i', $row[4])) {$record_link = "ADD=31&campaign_id=$row[6]";}
+			if (preg_match('/LIST/i', $row[4])) {$record_link = "ADD=311&list_id=$row[6]";}
+			if (preg_match('/SCRIPT/i', $row[4])) {$record_link = "ADD=3111111&script_id=$row[6]";}
+			if (preg_match('/FILTER/i', $row[4])) {$record_link = "ADD=31111111&lead_filter_id=$row[6]";}
+			if (preg_match('/INGROUP/i', $row[4])) {$record_link = "ADD=3111&group_id=$row[6]";}
+			if (preg_match('/DID/i', $row[4])) {$record_link = "ADD=3311&did_id=$row[6]";}
+			if (preg_match('/USERGROUP/i', $row[4])) {$record_link = "ADD=311111&user_group=$row[6]";}
+			if (preg_match('/REMOTEAGENT/i', $row[4])) {$record_link = "ADD=31111&remote_agent_id=$row[6]";}
+			if (preg_match('/PHONE/i', $row[4])) {$record_link = "ADD=10000000000";}
+			if (preg_match('/CALLTIME/i', $row[4])) {$record_link = "ADD=311111111&call_time_id=$row[6]";}
+			if (preg_match('/SHIFT/i', $row[4])) {$record_link = "ADD=331111111&shift_id=$row[6]";}
+			if (preg_match('/CONFTEMPLATE/i', $row[4])) {$record_link = "ADD=331111111111&template_id=$row[6]";}
+			if (preg_match('/CARRIER/i', $row[4])) {$record_link = "ADD=341111111111&carrier_id=$row[6]";}
+			if (preg_match('/SERVER/i', $row[4])) {$record_link = "ADD=311111111111&server_id=$row[6]";}
+			if (preg_match('/CONFERENCE/i', $row[4])) {$record_link = "ADD=1000000000000";}
+			if (preg_match('/SYSTEM/i', $row[4])) {$record_link = "ADD=311111111111111";}
+			if (preg_match('/CATEGOR/i', $row[4])) {$record_link = "ADD=331111111111111";}
+			if (preg_match('/GROUPALIAS/i', $row[4])) {$record_link = "ADD=33111111111&group_alias_id=$row[6]";}
 
-			if (eregi("1$|3$|5$|7$|9$", $o))
+			if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 				{$bgcolor='bgcolor="#B9CBFD"';} 
 			else
 				{$bgcolor='bgcolor="#9BB9FB"';}
@@ -1655,7 +1656,7 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|$stmtCUSTOM";
-	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = preg_replace('/;/', '', $SQL_log);
 	$SQL_log = addslashes($SQL_log);
 	$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$user', ip_address='$ip', event_section='CUSTOM_FIELDS', event_type='ADD', record_id='$list_id', event_code='ADMIN ADD CUSTOM LIST FIELD', event_sql=\"$SQL_log\", event_notes='';";
 	if ($DB) {echo "|$stmt|\n";}
@@ -1777,7 +1778,7 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|$stmtCUSTOM";
-	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = preg_replace('/;/', '', $SQL_log);
 	$SQL_log = addslashes($SQL_log);
 	$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$user', ip_address='$ip', event_section='CUSTOM_FIELDS', event_type='MODIFY', record_id='$list_id', event_code='ADMIN MODIFY CUSTOM LIST FIELD', event_sql=\"$SQL_log\", event_notes='';";
 	if ($DB) {echo "|$stmt|\n";}
@@ -1814,7 +1815,7 @@ function delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|$stmtCUSTOM";
-	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = preg_replace('/;/', '', $SQL_log);
 	$SQL_log = addslashes($SQL_log);
 	$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$user', ip_address='$ip', event_section='CUSTOM_FIELDS', event_type='DELETE', record_id='$list_id', event_code='ADMIN DELETE CUSTOM LIST FIELD', event_sql=\"$SQL_log\", event_notes='';";
 	if ($DB) {echo "|$stmt|\n";}

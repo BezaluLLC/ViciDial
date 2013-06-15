@@ -1,7 +1,7 @@
 <?php
 # closer-fronter_popup.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this is the closer popup of a specific call that starts recording the call and allows you to go and fetch info on that caller in the local CRM system.
 # CHANGES
@@ -10,6 +10,7 @@
 # 61201-1114 - Added lead_id and user to recording_log entry
 # 90508-0644 - Changed to PHP long tags
 # 120223-2124 - Removed logging of good login passwords if webroot writable is enabled
+# 130610-1115 - Finalized changing of all ereg instances to preg
 #
 
 require("dbconnect.php");
@@ -98,8 +99,8 @@ if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 #$DB = '1';	# DEBUG override
 $US = '_';
@@ -146,7 +147,7 @@ $browser = getenv("HTTP_USER_AGENT");
 		fwrite ($fp, "VD_CLOSER|GOOD|$date|$user|XXXX|$ip|$browser|$LOGfullname|\n");
 		fclose($fp);
 		
-		if ( (strlen($customer_zap_channel)>2) and (eregi('zap',$customer_zap_channel)) )
+		if ( (strlen($customer_zap_channel)>2) and (preg_match('/zap/i',$customer_zap_channel)) )
 			{
 			echo "\n<!-- zap channel: $customer_zap_channel -->\n";
 			echo "\n<!-- session_id: $session_id -->\n";
@@ -172,7 +173,7 @@ echo "<head>\n";
 echo "<title>VICIDIAL FRONTER-CLOSER: Popup</title>\n";
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 
-if (eregi('CL_UNIV',$channel_group))
+if (preg_match('/CL_UNIV/i',$channel_group))
 	{
 	?>
 	<script language="Javascript1.2">
@@ -234,8 +235,8 @@ if ($parked_count > 0)
 	### insert a NEW record to the vicidial_manager table to be processed
 
 	$channel = $customer_zap_channel;
-	$channel = eregi_replace('Zap/', "", $channel);
-	$SIPexten = eregi_replace('SIP/', "", $SIPexten);
+	$channel = preg_replace('/Zap\//i', "", $channel);
+	$SIPexten = preg_replace('/SIP\//i', "", $SIPexten);
 	$filename = "$REC_TIME$US$SIPexten";
 
 #	$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Monitor','$DTqueryCID','Channel: Zap/$channel','File: $filename','Callerid: $DTqueryCID','','','','','','','')";
@@ -284,7 +285,7 @@ if ($parked_count > 0)
 ###########################################################################################
 ####### HERE IS WHERE YOU DEFINE DIFFERENT CONTENTS DEPENDING UPON THE CHANNEL_GROUP PREFIX 
 ###########################################################################################
-if (eregi('CL_TEST',$channel_group))
+if (preg_match('/CL_TEST/i',$channel_group))
 	{
 	echo "GALLERIA TEST CLOSER GROUP: $channel_group\n";
 
@@ -319,7 +320,7 @@ if (eregi('CL_TEST',$channel_group))
 	<?php
 	}
 
-if ( (eregi('CL_MWCOF',$channel_group)) or (eregi('MWCOF',$group)) or (eregi('TESTCAMP',$group)))
+if ( (preg_match('/CL_MWCOF/i',$channel_group)) or (preg_match('/MWCOF/i',$group)) or (preg_match('/TESTCAMP/i',$group)))
 	{
 	echo "BUYERS EDGE INTERNAL CLOSER GROUP: $channel_group\n";
 
@@ -356,27 +357,27 @@ if ( (eregi('CL_MWCOF',$channel_group)) or (eregi('MWCOF',$group)) or (eregi('TE
 
 
 
-if (eregi('CL_GAL',$channel_group))
+if (preg_match('/CL_GAL/i',$channel_group))
 	{
 	echo "GALLERIA CLOSER GROUP: $channel_group\n";
 	$group_color='#CCCCCC';
 
-	if (eregi('CL_GALLERIA',$channel_group))
+	if (preg_match('/CL_GALLERIA/i',$channel_group))
 		{
 		echo "<br><font color=green size=3><b>-- INTERNAL CALL GALLERIA FRONT --</b></font><br>\n";
 		$group_color='#99FF99';
 		}
-	if (eregi('CL_GALLER2',$channel_group))
+	if (preg_match('/CL_GALLER2/i',$channel_group))
 		{
 		echo "<br><font color=red size=3><b>-- TouchAsia CALL Simple Escapes FRONT --</b></font><br>\n";
 		$group_color='#FF9999';
 		}
-	if (eregi('CL_GALLER3',$channel_group))
+	if (preg_match('/CL_GALLER3/i',$channel_group))
 		{
 		echo "<br><font color=red size=3><b>-- DebitSupplies CALL Simple Escapes FRONT --</b></font><br>\n";
 		$group_color='#FF9999';
 		}
-	if (eregi('CL_GALLER4',$channel_group))
+	if (preg_match('/CL_GALLER4/i',$channel_group))
 		{
 		echo "<br><font color=red size=3><b>-- Vishnu CALL Simple Escapes FRONT --</b></font><br>\n";
 		$group_color='#FF9999';
@@ -428,7 +429,7 @@ if (eregi('CL_GAL',$channel_group))
 	}
 
 
-if (eregi('CL_UNIV',$channel_group))
+if (preg_match('/CL_UNIV/i',$channel_group))
 	{
 	echo "UNIVERSAL CLOSER GROUP: $channel_group\n";
 

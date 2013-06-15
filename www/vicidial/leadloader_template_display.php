@@ -1,12 +1,13 @@
 <?php
-# leadloader_template_display.php - version 2.4
+# leadloader_template_display.php - version 2.8
 # 
-# Copyright (C) 2012  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 120402-2238 - First Build
 # 120525-1039 - Added uploaded filename filtering
 # 120529-1345 - Filename filter fix
+# 130610-1101 - Finalized changing of all ereg instances to preg
 #
 
 require("dbconnect.php");
@@ -47,6 +48,9 @@ if (isset($_GET["buffer"]))				{$buffer=$_GET["buffer"];}
 
 ### REGEX to prevent weird characters from ending up in the fields
 $field_regx = "['\"`\\;]";
+# echo "-$LF_orig- --$sample_template_file_name--<BR>";
+$sample_template_file_name=preg_replace("/^C:\\\\fakepath\\\\/i", '', $sample_template_file_name); # IE and Chrome patch
+
 if ( (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$LF_orig)) or (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$sample_template_file_name)) )
 	{
 	echo "ERROR: Invalid File Name: $LF_orig $sample_template_file_name\n";
@@ -58,7 +62,7 @@ if ($form_action=="prime_file" && $sample_template_file_name)
 	$delim_set=0;
 	if (preg_match("/\.csv$|\.xls$|\.xlsx$|\.ods$|\.sxc$/i", $sample_template_file_name)) 
 		{
-		$sample_template_file_name = ereg_replace("[^-\.\_0-9a-zA-Z]","_",$sample_template_file_name);
+		$sample_template_file_name = preg_replace('/[^-\.\_0-9a-zA-Z]/','_',$sample_template_file_name);
 		copy($LF_path, "/tmp/$sample_template_file_name");
 		$new_filename = preg_replace("/\.csv$|\.xls$|\.xlsx$|\.ods$|\.sxc$/i", '.txt', $sample_template_file_name);
 		$convert_command = "$WeBServeRRooT/$admin_web_directory/sheet2tab.pl /tmp/$sample_template_file_name /tmp/$new_filename";
@@ -84,7 +88,7 @@ if ($form_action=="prime_file" && $sample_template_file_name)
 		{$stmt_file=fopen("$WeBServeRRooT/$admin_web_directory/listloader_stmts.txt", "w");}
 
 	$buffer=fgets($file, 4096);
-	$buffer=eregi_replace("[\'\"\n]", "", $buffer);
+	$buffer=preg_replace('/[\'\"\n]/i', $buffer);
 	$tab_count=substr_count($buffer, "\t");
 	$pipe_count=substr_count($buffer, "|");
 
@@ -184,7 +188,7 @@ if ($delimiter && $buffer)
 #	$buffer=rtrim(fgets($file, 4096));
 #	$buffer=stripslashes($buffer);
 #	print "<center><font face='arial, helvetica' size=3 color='#009900'><B>Processing $delim_name file...\n";
-	$row=explode($delimiter, eregi_replace("[\'\"]", "", $buffer));
+	$row=explode($delimiter, preg_replace('/[\'\"]/i', '', $buffer));
 #	echo "delimiter: $delimiter<BR>$buffer<BR>";
 } 
 echo "<table border=0 width='100%' cellpadding=0 cellspacing=0>";
@@ -195,7 +199,7 @@ for ($i=0; $i<mysql_num_fields($rslt); $i++)
 		if (preg_match('/'.mysql_field_name($rslt, $i).'/', $vicidial_list_fields)) {$bgcolor="#D9E6FE";} else {$bgcolor="#FED9D9";}
 
 		echo "  <tr bgcolor='$bgcolor'>\r\n";
-		echo "    <td align=right nowrap><font class=standard>".strtoupper(eregi_replace("_", " ", mysql_field_name($rslt, $i))).": </font></td>\r\n";
+		echo "    <td align=right nowrap><font class=standard>".strtoupper(preg_replace('/_/i', ' ', mysql_field_name($rslt, $i))).": </font></td>\r\n";
 		if (mysql_field_name($rslt, $i)!="list_id") 
 			{
 			echo "    <td align=left><select name='$field_prefix".mysql_field_name($rslt, $i)."_field' onChange='DrawTemplateStrings()'>\r\n";
@@ -203,7 +207,7 @@ for ($i=0; $i<mysql_num_fields($rslt); $i++)
 
 			for ($j=0; $j<count($row); $j++) 
 				{
-				eregi_replace("\"", "", $row[$j]);
+				preg_replace('/\"/i', '', $row[$j]);
 				echo "     <option value='$j'>\"$row[$j]\"</option>\r\n";
 				}
 

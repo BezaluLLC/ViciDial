@@ -1,7 +1,7 @@
 <?php
 # closer-fronter_popup2.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this is the closer popup of a specific call that starts recording the call and allows you to go and fetch info on that caller in the local CRM system.
 # CHANGES
@@ -10,6 +10,7 @@
 # 61201-1114 - Added lead_id and user to recording_log entry
 # 90508-0644 - Changed to PHP long tags
 # 120223-2124 - Removed logging of good login passwords if webroot writable is enabled
+# 130610-1114 - Finalized changing of all ereg instances to preg
 #
 
 require("dbconnect.php");
@@ -98,8 +99,8 @@ if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 #$DB = '1';	# DEBUG override
 $US = '_';
@@ -122,7 +123,7 @@ if (!isset($end_date)) {$end_date = $TODAY;}
 
 	if (!$auth)
 	{
-	 if ( (strlen($PHP_AUTH_USER)>1) and ( (eregi("tsr",$PHP_AUTH_PW)) or (eregi("sales",$PHP_AUTH_PW)) ) )
+	 if ( (strlen($PHP_AUTH_USER)>1) and ( (preg_match('/tsr/i',$PHP_AUTH_PW)) or (preg_match('/sales/i',$PHP_AUTH_PW)) ) )
 		{
 		 $auth=1;
 		 $user = $PHP_AUTH_USER;
@@ -158,7 +159,7 @@ $browser = getenv("HTTP_USER_AGENT");
 		fwrite ($fp, "VD_CLOSER|GOOD|$date|$user|XXXX|$ip|$browser|$LOGfullname|\n");
 		fclose($fp);
 		
-		if ( (strlen($customer_zap_channel)>2) and ( (eregi('zap',$customer_zap_channel)) or (eregi('iax',$customer_zap_channel)) ) )
+		if ( (strlen($customer_zap_channel)>2) and ( (preg_match('/zap/i',$customer_zap_channel)) or (preg_match('/iax/i',$customer_zap_channel)) ) )
 			{
 			echo "\n<!-- zap channel: $customer_zap_channel -->\n";
 			echo "<!-- session_id:  $session_id -->\n";
@@ -186,7 +187,7 @@ echo "<head>\n";
 echo "<title>VICIDIAL FRONTER-CLOSER: Popup</title>\n";
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 
-if (eregi('CL_UNIV',$channel_group))
+if (preg_match('/CL_UNIV/i',$channel_group))
 	{
 	?>
 	<script language="Javascript1.2">
@@ -248,8 +249,8 @@ if ($parked_count > 0)
 	### insert a NEW record to the vicidial_manager table to be processed
 
 	$channel = $customer_zap_channel;
-#	$channel = eregi_replace('Zap/', "", $channel);
-	$SIPexten = eregi_replace('SIP/', "", $SIPexten);
+#	$channel = preg_replace('/Zap\//i', "", $channel);
+	$SIPexten = preg_replace('/SIP\//i', "", $SIPexten);
 	$filename = "$REC_TIME$US$SIPexten";
 
 #	$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Monitor','$DTqueryCID','Channel: Zap/$channel','File: $filename','Callerid: $DTqueryCID','','','','','','','')";
@@ -301,7 +302,7 @@ if ($parked_count > 0)
 ####### HERE IS WHERE YOU DEFINE DIFFERENT CONTENTS DEPENDING UPON THE CHANNEL_GROUP PREFIX 
 ###########################################################################################
 
-if (eregi('CL',$channel_group))
+if (preg_match('/CL/i',$channel_group))
 	{
 	if (strlen($phone) > 9) {$search_phone = $phone;}
 	if ( (strlen($search_phone) < 10) or (strlen($fronter) < 1) )
@@ -343,7 +344,7 @@ if (eregi('CL',$channel_group))
 
 
 
-if (eregi('UNIV',$channel_group))
+if (preg_match('/UNIV/i',$channel_group))
 	{
 	echo "UNIVERSAL CLOSER GROUP: $channel_group\n";
 

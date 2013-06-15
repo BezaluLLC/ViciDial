@@ -37,6 +37,7 @@
 # 120730-0724 - Small fix for HTML output
 # 130124-1719 - Added email report support
 # 130414-1429 - Added report logging
+# 130610-1023 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -70,8 +71,8 @@ if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $MT[0]='0';
 if (strlen($shift)<2) {$shift='ALL';}
@@ -157,7 +158,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 
 $LOGadmin_viewable_groupsSQL='';
 $whereLOGadmin_viewable_groupsSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 	{
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -167,7 +168,7 @@ if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewabl
 
 $LOGadmin_viewable_call_timesSQL='';
 $whereLOGadmin_viewable_call_timesSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i', $LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
 	{
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ -/",'',$LOGadmin_viewable_call_times);
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_call_timesSQL);
@@ -223,14 +224,14 @@ while($i < $group_ct)
 		}
 	$i++;
 	}
-if ( (ereg("--NONE--",$group_string) ) or ($group_ct < 1) )
+if ( (preg_match('/\s\-\-NONE\-\-\s/',$group_string) ) or ($group_ct < 1) )
 	{
 	$group_SQL = "''";
 #	$group_SQL = "group_id IN('')";
 	}
 else
 	{
-	$group_SQL = eregi_replace(",$",'',$group_SQL);
+	$group_SQL = preg_replace('/,$/i', '',$group_SQL);
 #	$group_SQL = "group_id IN($group_SQL)";
 	}
 if (strlen($group_SQL)<3) {$group_SQL="''";}
@@ -361,7 +362,7 @@ $MAIN.="<SELECT SIZE=5 NAME=group[] multiple>\n";
 $o=0;
 while ($groups_to_print > $o)
 	{
-	if (ereg("\|$LISTgroups[$o]\|",$group_string)) 
+	if (preg_match("/\|$LISTgroups[$o]\|/",$group_string)) 
 		{$MAIN.="<option selected value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroup_names[$o]</option>\n";}
 	else
 		{$MAIN.="<option value=\"$LISTgroups[$o]\">$LISTgroups[$o] - $LISTgroup_names[$o]</option>\n";}
@@ -469,7 +470,7 @@ if ($DID=='Y')
 		$did_SQL .= "'$row[0]',";
 		$i++;
 		}
-	$did_SQL = eregi_replace(",$",'',$did_SQL);
+	$did_SQL = preg_replace('/,$/i', '',$did_SQL);
 	if (strlen($did_SQL)<3) {$did_SQL="''";}
 
 	$stmt="select uniqueid from vicidial_did_log where did_id IN($did_SQL);";
@@ -483,7 +484,7 @@ if ($DID=='Y')
 		$unid_SQL .= "'$row[0]',";
 		$i++;
 		}
-	$unid_SQL = eregi_replace(",$",'',$unid_SQL);
+	$unid_SQL = preg_replace('/,$/i', '',$unid_SQL);
 	if (strlen($unid_SQL)<3) {$unid_SQL="''";}
 
 	if ($DB > 0)
@@ -546,7 +547,7 @@ if ($group_ct > 1)
 			$DIDunid_SQL .= "'$row[0]',";
 			$k++;
 			}
-		$DIDunid_SQL = eregi_replace(",$",'',$DIDunid_SQL);
+		$DIDunid_SQL = preg_replace('/,$/i', '',$DIDunid_SQL);
 		if (strlen($DIDunid_SQL)<3) {$DIDunid_SQL="''";}
 
 		$stmt="select count(*),sum(length_in_sec) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='$group[$i]';";
@@ -1581,7 +1582,7 @@ while ($i < $reasons_to_print)
 	$REASONcount =	sprintf("%10s", $row[0]);
 	while(strlen($REASONcount)>10) {$REASONcount = substr("$REASONcount", 0, -1);}
 	$reason =	sprintf("%-20s", $row[1]);while(strlen($reason)>20) {$reason = substr("$reason", 0, -1);}
-#	if (ereg("NONE",$reason)) {$reason = 'NO ANSWER           ';}
+#	if (preg_match('/NONE/',$reason)) {$reason = 'NO ANSWER           ';}
 
 	$ASCII_text.="| $reason | $REASONcount |\n";
 	$CSV_text3.="\"$reason\",\"$REASONcount\"\n";
@@ -2227,8 +2228,8 @@ while ($j < $calls_to_print)
 		if ( ($Crem[$j] >= $sec) and ($Crem[$j] < $sec_end) ) 
 			{
 			$Ftotal[$i]++;
-			if (ereg("DROP",$Cstatus[$j])) {$Fdrop[$i]++;}
-			if (!ereg("DROP|XDROP|HXFER|QVMAIL|HOLDTO|LIVE|QUEUE|TIMEOT|AFTHRS|NANQUE|INBND|MAXCAL",$Cstatus[$j]))
+			if (preg_match('/DROP/',$Cstatus[$j])) {$Fdrop[$i]++;}
+			if (!preg_match('/DROP|XDROP|HXFER|QVMAIL|HOLDTO|LIVE|QUEUE|TIMEOT|AFTHRS|NANQUE|INBND|MAXCAL/',$Cstatus[$j]))
 				{
 				$BDansweredCALLS++;
 				$Fanswer[$i]++;

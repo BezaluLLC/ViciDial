@@ -65,14 +65,16 @@
 # 121120-0855 - Added QM socket-send functionality
 # 121124-2354 - Added Other Campaign DNC option
 # 130328-0010 - Converted ereg to preg functions
+# 130603-2221 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 #
 
-$version = '2.6-31';
-$build = '130328-0010';
+$version = '2.8-32';
+$build = '130603-2221';
 
 $startMS = microtime();
 
 require("dbconnect.php");
+require("functions.php");
 
 $query_string = getenv("QUERY_STRING");
 
@@ -335,18 +337,23 @@ else
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access = '1';";
+		$auth=0;
+		$auth_message = user_authorization($user,$pass,'',0);
+		if ($auth_message == 'GOOD')
+			{$auth=1;}
+
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1';";
 		if ($DB) {echo "|$stmt|\n";}
 		if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
-		$auth=$row[0];
+		$auth_api=$row[0];
 
-		if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
+		if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0) or ($auth_api==0))
 			{
 			$result = 'ERROR';
 			$result_reason = "Invalid Username/Password";
-			echo "$result: $result_reason: |$user|$pass|$auth|\n";
+			echo "$result: $result_reason: |$user|$pass|$auth|$auth_api|$auth_message|\n";
 			$data = "$user|$pass|$auth";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			exit;

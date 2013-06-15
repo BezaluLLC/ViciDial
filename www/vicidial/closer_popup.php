@@ -1,7 +1,7 @@
 <?php
 # closer_popup.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this is the closer popup of a specific call that grabs the call and allows you
 # to go and fetch info on that caller in the local CRM system.
@@ -11,6 +11,7 @@
 # 60620-1029 - Added variable filtering to eliminate SQL injection attack threat
 # 90508-0644 - Changed to PHP long tags
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
+# 130610-1113 - Finalized changing of all ereg instances to preg
 #
 
 require("dbconnect.php");
@@ -72,8 +73,8 @@ while ($i < $qm_conf_ct)
 ###########################################
 
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 
 #$DB=1;
@@ -137,7 +138,7 @@ echo "<head>\n";
 echo "<title>VICIDIAL CLOSER: Popup</title>\n";
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 
-if (eregi('CL_UNIV',$channel_group))
+if (preg_match('/CL_UNIV/i',$channel_group))
 	{
 	?>
 	<script language="Javascript1.2">
@@ -194,8 +195,8 @@ if ($parked_count > 0)
 	$rslt=mysql_query($stmt, $link);
 
 
-	#$monitor_channel = eregi_replace('Zap/', "", $channel);
-	$monitor_channel = eregi_replace('-1', "", $channel);
+	#$monitor_channel = preg_replace('/Zap\//i', "", $channel);
+	$monitor_channel = preg_replace('/\-1/i', "", $channel);
 	$SIPexten = $extension;
 	$filename = "$REC_TIME$US$SIPexten";
 	$DTqueryCID = "RR$FILE_datetime$PHP_AUTH_USER";
@@ -249,7 +250,7 @@ if ($parked_count > 0)
 ###########################################################################################
 ####### HERE IS WHERE YOU DEFINE DIFFERENT CONTENTS DEPENDING UPON THE CHANNEL_GROUP PREFIX 
 ###########################################################################################
-if (eregi('CL_TEST',$channel_group))
+if (preg_match('/CL_TEST/i',$channel_group))
 	{
 	echo "GALLERIA TEST CLOSER GROUP: $channel_group\n";
 
@@ -284,7 +285,7 @@ if (eregi('CL_TEST',$channel_group))
 	<?php
 	}
 
-if (eregi('CL_MWCOF',$channel_group))
+if (preg_match('/CL_MWCOF/i',$channel_group))
 	{
 	echo "GALLERIA INTERNAL CLOSER GROUP: $channel_group\n";
 
@@ -321,27 +322,27 @@ if (eregi('CL_MWCOF',$channel_group))
 
 
 
-if (eregi('CL_GAL',$channel_group))
+if (preg_match('/CL_GAL/i',$channel_group))
 	{
 	echo "GALLERIA CLOSER GROUP: $channel_group\n";
 	$group_color='#CCCCCC';
 
-	if (eregi('CL_GALLERIA',$channel_group))
+	if (preg_match('/CL_GALLERIA/i',$channel_group))
 		{
 		echo "<br><font color=green size=3><b>-- INTERNAL CALL GALLERIA FRONT --</b></font><br>\n";
 		$group_color='#99FF99';
 		}
-	if (eregi('CL_GALLER2',$channel_group))
+	if (preg_match('/CL_GALLER2/i',$channel_group))
 		{
 		echo "<br><font color=red size=3><b>-- TouchAsia CALL Simple Escapes FRONT --</b></font><br>\n";
 		$group_color='#FF9999';
 		}
-	if (eregi('CL_GALLER3',$channel_group))
+	if (preg_match('/CL_GALLER3/i',$channel_group))
 		{
 		echo "<br><font color=red size=3><b>-- DebitSupplies CALL Simple Escapes FRONT --</b></font><br>\n";
 		$group_color='#FF9999';
 		}
-	if (eregi('CL_GALLER4',$channel_group))
+	if (preg_match('/CL_GALLER4/i',$channel_group))
 		{
 		echo "<br><font color=red size=3><b>-- Vishnu CALL Simple Escapes FRONT --</b></font><br>\n";
 		$group_color='#FF9999';
@@ -393,7 +394,7 @@ if (eregi('CL_GAL',$channel_group))
 	}
 
 
-if (eregi('CL_UNIV',$channel_group))
+if (preg_match('/CL_UNIV/i',$channel_group))
 	{
 	echo "UNIVERSAL CLOSER GROUP: $channel_group\n";
 

@@ -329,10 +329,12 @@
 # 130412-1348 - Added SIP cause code display on failed calls
 # 130414-2142 - Small fix for multi-server inbound setups and did options in url functions
 # 130508-2221 - Cleanup for other language builds
+# 130603-2207 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130615-1126 - Added recording_id to dispo url
 #
 
-$version = '2.6-227';
-$build = '130508-2221';
+$version = '2.8-229';
+$build = '130615-1126';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=533;
 $one_mysql_log=0;
@@ -561,6 +563,8 @@ if (isset($_GET["email_row_id"]))			{$email_row_id=$_GET["email_row_id"];}
 	elseif (isset($_POST["email_row_id"]))	{$email_row_id=$_POST["email_row_id"];}
 if (isset($_GET["inbound_email_groups"]))			{$inbound_email_groups=$_GET["inbound_email_groups"];}
 	elseif (isset($_POST["inbound_email_groups"]))	{$inbound_email_groups=$_POST["inbound_email_groups"];}
+if (isset($_GET["recording_id"]))			{$recording_id=$_GET["recording_id"];}
+	elseif (isset($_POST["recording_id"]))	{$recording_id=$_POST["recording_id"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -785,17 +789,14 @@ if ($ACTION == 'LogiNCamPaigns')
 	}
 else
 	{
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-	if ($DB) {echo "|$stmt|\n";}
-	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-	$rslt=mysql_query($stmt, $link);
-		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00002',$user,$server_ip,$session_name,$one_mysql_log);}
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+	$auth=0;
+	$auth_message = user_authorization($user,$pass,'',0);
+	if ($auth_message == 'GOOD')
+		{$auth=1;}
 
 	if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 		{
-		echo "Invalid Username/Password: |$user|$pass|\n";
+		echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
 		exit;
 		}
 	else
@@ -854,63 +855,74 @@ if ($ACTION == 'LogiNCamPaigns')
 		}
 	else
 		{
-		$stmt="SELECT user_group,user_level,agent_shift_enforcement_override,shift_override_flag from vicidial_users where user='$user' and pass='$pass'";
+		$stmt="SELECT user_group,user_level,agent_shift_enforcement_override,shift_override_flag from vicidial_users where user='$user';";
 		if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00004',$user,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
-		$VU_user_group =						$row[0];
-		$VU_user_level =						$row[1];
-		$VU_agent_shift_enforcement_override =	$row[2];
-		$VU_shift_override_flag =				$row[3];
-
-		$LOGallowed_campaignsSQL='';
-
-		$stmt="SELECT allowed_campaigns,forced_timeclock_login,shift_enforcement,group_shifts from vicidial_user_groups where user_group='$VU_user_group';";
-		$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00005',$user,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
-		$forced_timeclock_login =	$row[1];
-		$shift_enforcement =		$row[2];
-		$LOGgroup_shiftsSQL = preg_replace('/\s\s/','',$row[3]);
-		$LOGgroup_shiftsSQL = preg_replace('/\s/',"','",$LOGgroup_shiftsSQL);
-		$LOGgroup_shiftsSQL = "shift_id IN('$LOGgroup_shiftsSQL')";
-		if ( (!preg_match("/ALL-CAMPAIGNS/i",$row[0])) )
+		$cl_user_ct = mysql_num_rows($rslt);
+		if ($cl_user_ct > 0)
 			{
-			$LOGallowed_campaignsSQL = preg_replace('/\s-/i','',$row[0]);
-			$LOGallowed_campaignsSQL = preg_replace('/\s/i',"','",$LOGallowed_campaignsSQL);
-			$LOGallowed_campaignsSQL = "and campaign_id IN('$LOGallowed_campaignsSQL')";
-			}
+			$row=mysql_fetch_row($rslt);
+			$VU_user_group =						$row[0];
+			$VU_user_level =						$row[1];
+			$VU_agent_shift_enforcement_override =	$row[2];
+			$VU_shift_override_flag =				$row[3];
 
-		$show_campaign_list=1;
-		### CHECK TO SEE IF AGENT IS LOGGED IN TO TIMECLOCK, IF NOT, OUTPUT ERROR
-		if ( (preg_match('/Y/',$forced_timeclock_login)) or ( (preg_match('/ADMIN_EXEMPT/',$forced_timeclock_login)) and ($VU_user_level < 8) ) )
-			{
-			$last_agent_event='';
-			$HHMM = date("Hi");
-			$HHteod = substr($timeclock_end_of_day,0,2);
-			$MMteod = substr($timeclock_end_of_day,2,2);
+			$LOGallowed_campaignsSQL='';
 
-			if ($HHMM < $timeclock_end_of_day)
-				{$EoD = mktime($HHteod, $MMteod, 10, date("m"), date("d")-1, date("Y"));}
-			else
-				{$EoD = mktime($HHteod, $MMteod, 10, date("m"), date("d"), date("Y"));}
-
-			$EoDdate = date("Y-m-d H:i:s", $EoD);
-
-			##### grab timeclock logged-in time for each user #####
-			$stmt="SELECT event from vicidial_timeclock_log where user='$user' and event_epoch >= '$EoD' order by timeclock_id desc limit 1;";
-			if ($DB>0) {echo "|$stmt|";}
+			$stmt="SELECT allowed_campaigns,forced_timeclock_login,shift_enforcement,group_shifts from vicidial_user_groups where user_group='$VU_user_group';";
 			$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00184',$user,$server_ip,$session_name,$one_mysql_log);}
-			$events_to_parse = mysql_num_rows($rslt);
-			if ($events_to_parse > 0)
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00005',$user,$server_ip,$session_name,$one_mysql_log);}
+			$row=mysql_fetch_row($rslt);
+			$forced_timeclock_login =	$row[1];
+			$shift_enforcement =		$row[2];
+			$LOGgroup_shiftsSQL = preg_replace('/\s\s/','',$row[3]);
+			$LOGgroup_shiftsSQL = preg_replace('/\s/',"','",$LOGgroup_shiftsSQL);
+			$LOGgroup_shiftsSQL = "shift_id IN('$LOGgroup_shiftsSQL')";
+			if ( (!preg_match("/ALL-CAMPAIGNS/i",$row[0])) )
 				{
-				$rowx=mysql_fetch_row($rslt);
-				$last_agent_event = $rowx[0];
+				$LOGallowed_campaignsSQL = preg_replace('/\s-/i','',$row[0]);
+				$LOGallowed_campaignsSQL = preg_replace('/\s/i',"','",$LOGallowed_campaignsSQL);
+				$LOGallowed_campaignsSQL = "and campaign_id IN('$LOGallowed_campaignsSQL')";
 				}
-			if ( (strlen($last_agent_event)<2) or (preg_match('/LOGOUT/',$last_agent_event)) )
-				{$show_campaign_list=0;}
+
+			$show_campaign_list=1;
+			### CHECK TO SEE IF AGENT IS LOGGED IN TO TIMECLOCK, IF NOT, OUTPUT ERROR
+			if ( (preg_match('/Y/',$forced_timeclock_login)) or ( (preg_match('/ADMIN_EXEMPT/',$forced_timeclock_login)) and ($VU_user_level < 8) ) )
+				{
+				$last_agent_event='';
+				$HHMM = date("Hi");
+				$HHteod = substr($timeclock_end_of_day,0,2);
+				$MMteod = substr($timeclock_end_of_day,2,2);
+
+				if ($HHMM < $timeclock_end_of_day)
+					{$EoD = mktime($HHteod, $MMteod, 10, date("m"), date("d")-1, date("Y"));}
+				else
+					{$EoD = mktime($HHteod, $MMteod, 10, date("m"), date("d"), date("Y"));}
+
+				$EoDdate = date("Y-m-d H:i:s", $EoD);
+
+				##### grab timeclock logged-in time for each user #####
+				$stmt="SELECT event from vicidial_timeclock_log where user='$user' and event_epoch >= '$EoD' order by timeclock_id desc limit 1;";
+				if ($DB>0) {echo "|$stmt|";}
+				$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00184',$user,$server_ip,$session_name,$one_mysql_log);}
+				$events_to_parse = mysql_num_rows($rslt);
+				if ($events_to_parse > 0)
+					{
+					$rowx=mysql_fetch_row($rslt);
+					$last_agent_event = $rowx[0];
+					}
+				if ( (strlen($last_agent_event)<2) or (preg_match('/LOGOUT/',$last_agent_event)) )
+					{$show_campaign_list=0;}
+				}
+			}
+		else
+			{
+			echo "<select size=1 name=VD_campaign id=VD_campaign onFocus=\"login_allowable_campaigns()\">\n";
+			echo "<option value=\"\">-- USER LOGIN ERROR --</option>\n";
+			echo "</select>\n";
+			exit;
 			}
 		}
 
@@ -7989,6 +8001,8 @@ if ($ACTION == 'userLOGout')
 			###########################################
 			if ( ($enable_sipsak_messages > 0) and ($allow_sipsak_messages > 0) and (preg_match("/SIP/i",$protocol)) )
 				{
+				$extension = preg_replace("/\'|\"|\\\\|;/","",$extension);
+				$phone_ip = preg_replace("/\'|\"|\\\\|;/","",$phone_ip);
 				$SIPSAK_message = 'LOGGED OUT';
 				passthru("/usr/local/bin/sipsak -M -O desktop -B \"$SIPSAK_message\" -r 5060 -s sip:$extension@$phone_ip > /dev/null");
 				}
@@ -9455,6 +9469,7 @@ if ($ACTION == 'updateDISPO')
 		$dispo_call_url = preg_replace('/--A--call_id--B--/i',urlencode(trim($MDnextCID)),$dispo_call_url);
 		$dispo_call_url = preg_replace('/--A--user_group--B--/i',urlencode(trim($user_group)),$dispo_call_url);
 		$dispo_call_url = preg_replace('/--A--call_notes--B--/i',"$url_call_notes",$dispo_call_url);
+		$dispo_call_url = preg_replace('/--A--recording_id--B--/i',"$recording_id",$dispo_call_url);
 
 		if (strlen($FORMcustom_field_names)>2)
 			{
@@ -10094,6 +10109,8 @@ if ($ACTION == 'PauseCodeSubmit')
 			###########################################
 			if ( ($enable_sipsak_messages > 0) and ($allow_sipsak_messages > 0) and (preg_match("/SIP/i",$protocol)) )
 				{
+				$extension = preg_replace("/\'|\"|\\\\|;/","",$extension);
+				$phone_ip = preg_replace("/\'|\"|\\\\|;/","",$phone_ip);
 				$SIPSAK_prefix = 'BK-';
 				passthru("/usr/local/bin/sipsak -M -O desktop -B \"$SIPSAK_prefix$status\" -r 5060 -s sip:$extension@$phone_ip > /dev/null");
 				}

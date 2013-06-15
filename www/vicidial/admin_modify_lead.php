@@ -1,5 +1,5 @@
 <?php
-# admin_modify_lead.php   version 2.6
+# admin_modify_lead.php   version 2.8
 # 
 # ViciDial database administration modify lead in vicidial_list
 # admin_modify_lead.php
@@ -52,6 +52,7 @@
 # 121130-1033 - Changed scheduled callback user ID field to be 20 characters, issue #467
 # 121222-2145 - Added email log
 # 130123-1940 - Added options.php option to allow display of non-selectable statuses
+# 130610-1049 - Finalized changing of all ereg instances to preg
 #
 
 require("dbconnect.php");
@@ -162,8 +163,8 @@ if (isset($_POST["appointment_time"]))			{$appointment_time=$_POST["appointment_
 if (isset($_GET["CBstatus"]))				{$CBstatus=$_GET["CBstatus"];}
 	elseif (isset($_POST["CBstatus"]))		{$CBstatus=$_POST["CBstatus"];}
 
-$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_PW);
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
@@ -198,17 +199,17 @@ if ($qm_conf_ct > 0)
 
 if ($non_latin < 1)
 	{
-	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_PW);
 
-	$old_phone = ereg_replace("[^0-9]","",$old_phone);
-	$phone_number = ereg_replace("[^0-9]","",$phone_number);
-	$alt_phone = ereg_replace("[^0-9]","",$alt_phone);
+	$old_phone = preg_replace('/[^0-9]/','',$old_phone);
+	$phone_number = preg_replace('/[^0-9]/','',$phone_number);
+	$alt_phone = preg_replace('/[^0-9]/','',$alt_phone);
 	}	# end of non_latin
 else
 	{
-	$PHP_AUTH_USER = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	}
 
 if (strlen($phone_number)<6) {$phone_number=$old_phone;}
@@ -271,7 +272,7 @@ $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
 
-if (!eregi("-ALL",$LOGallowed_campaigns))
+if (!preg_match('/\-ALL/i', $LOGallowed_campaigns))
 	{
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
@@ -288,7 +289,7 @@ if (!eregi("-ALL",$LOGallowed_campaigns))
 		$camp_lists .= "'$rowx[0]',";
 		$o++;
 		}
-	$camp_lists = eregi_replace(".$","",$camp_lists);
+	$camp_lists = preg_replace('/.$/i','',$camp_lists);;
 	if (strlen($camp_lists)<2) {$camp_lists="''";}
 	$LOGallowed_listsSQL = "and list_id IN($camp_lists)";
 	$whereLOGallowed_listsSQL = "where list_id IN($camp_lists)";
@@ -426,7 +427,7 @@ if ($end_call > 0)
 	
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|";
-	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = preg_replace('/;/', '', $SQL_log);
 	$SQL_log = addslashes($SQL_log);
 	$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LEADS', event_type='MODIFY', record_id='$lead_id', event_code='ADMIN MODIFY LEAD', event_sql=\"$SQL_log\", event_notes='';";
 	if ($DB) {echo "|$stmt|\n";}
@@ -583,7 +584,7 @@ else
 		while ($alts_to_print > $c) 
 			{
 			$row=mysql_fetch_row($rslt);
-			if (eregi("1$|3$|5$|7$|9$", $c))
+			if (preg_match("/1$|3$|5$|7$|9$/i", $c))
 				{$bgcolor='bgcolor="#B9CBFD"';} 
 			else
 				{$bgcolor='bgcolor="#9BB9FB"';}
@@ -616,7 +617,7 @@ else
 		{
 		$row=mysql_fetch_row($rslt);
 		if (strlen($log_campaign)<1) {$log_campaign = $row[3];}
-		if (eregi("1$|3$|5$|7$|9$", $u))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $u))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -664,7 +665,7 @@ else
 		{
 		$row=mysql_fetch_row($rslt);
 		if (strlen($Alog_campaign)<1) {$Alog_campaign = $row[5];}
-		if (eregi("1$|3$|5$|7$|9$", $y))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $y))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -698,7 +699,7 @@ else
 		{
 		$row=mysql_fetch_row($rslt);
 		if (strlen($Clog_campaign)<1) {$Clog_campaign = $row[3];}
-		if (eregi("1$|3$|5$|7$|9$", $y))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $y))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -968,7 +969,7 @@ else
 		while ($statuses_to_print > $o) 
 			{
 			$rowx=mysql_fetch_row($rslt);
-			if ( (strlen($dispo) ==  strlen($rowx[0])) and (eregi($dispo,$rowx[0])) )
+			if ( (strlen($dispo) ==  strlen($rowx[0])) and (preg_match("/$dispo/i",$rowx[0])) )
 				{$statuses_list .= "<option SELECTED value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n"; $DS++;}
 			else
 				{$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
@@ -984,7 +985,7 @@ else
 		while ($CAMPstatuses_to_print > $o) 
 			{
 			$rowx=mysql_fetch_row($rslt);
-			if ( (strlen($dispo) ==  strlen($rowx[0])) and (eregi($dispo,$rowx[0])) )
+			if ( (strlen($dispo) ==  strlen($rowx[0])) and (preg_match("/$dispo/i",$rowx[0])) )
 				{$statuses_list .= "<option SELECTED value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n"; $DS++;}
 			else
 				{$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
@@ -1082,7 +1083,7 @@ else
 				while ($statuses_to_print > $o) 
 					{
 					$rowx=mysql_fetch_row($rslt);
-					if ( (strlen($lead_status) == strlen($rowx[0])) and (eregi($lead_status,$rowx[0])) )
+					if ( (strlen($lead_status) == strlen($rowx[0])) and (preg_match("/$lead_status/i",$rowx[0])) )
 						{$statuses_list .= "<option SELECTED value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n"; $DS++;}
 					else
 						{$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
@@ -1098,7 +1099,7 @@ else
 				while ($CAMPstatuses_to_print > $o) 
 					{
 					$rowx=mysql_fetch_row($rslt);
-					if ( (strlen($lead_status) ==  strlen($rowx[0])) and (eregi($lead_status,$rowx[0])) )
+					if ( (strlen($lead_status) ==  strlen($rowx[0])) and (preg_match("/$lead_status/i",$rowx[0])) )
 						{$statuses_list .= "<option SELECTED value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n"; $DS++;}
 					else
 						{$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
@@ -1326,7 +1327,7 @@ else
 		while ($logs_to_print > $u) 
 			{
 			$row=mysql_fetch_row($rslt);
-			if (eregi("1$|3$|5$|7$|9$", $u))
+			if (preg_match("/1$|3$|5$|7$|9$/i", $u))
 				{$bgcolor='bgcolor="#B9CBFD"';} 
 			else
 				{$bgcolor='bgcolor="#9BB9FB"';}
@@ -1359,7 +1360,7 @@ else
 			while ($logs_to_print > $u) 
 				{
 				$row=mysql_fetch_row($rslt);
-				if (eregi("1$|3$|5$|7$|9$", $u))
+				if (preg_match("/1$|3$|5$|7$|9$/i", $u))
 					{$bgcolor='bgcolor="#B9CBFD"';} 
 				else
 					{$bgcolor='bgcolor="#9BB9FB"';}
@@ -1397,7 +1398,7 @@ else
 		while ($logs_to_print > $u) 
 			{
 			$row=mysql_fetch_row($rslt);
-			if (eregi("1$|3$|5$|7$|9$", $u))
+			if (preg_match("/1$|3$|5$|7$|9$/i", $u))
 				{$bgcolor='bgcolor="#B9CBFD"';} 
 			else
 				{$bgcolor='bgcolor="#9BB9FB"';}
@@ -1407,9 +1408,9 @@ else
 			if (strlen($location)>2)
 				{
 				$URLserver_ip = $location;
-				$URLserver_ip = eregi_replace('http://','',$URLserver_ip);
-				$URLserver_ip = eregi_replace('https://','',$URLserver_ip);
-				$URLserver_ip = eregi_replace("\/.*",'',$URLserver_ip);
+				$URLserver_ip = preg_replace('/http:\/\//i', '',$URLserver_ip);
+				$URLserver_ip = preg_replace('/https:\/\//i', '',$URLserver_ip);
+				$URLserver_ip = preg_replace('/\/.*/i', '',$URLserver_ip);
 				$stmt="select count(*) from servers where server_ip='$URLserver_ip';";
 				$rsltx=mysql_query($stmt, $link);
 				$rowx=mysql_fetch_row($rsltx);
@@ -1420,13 +1421,13 @@ else
 					$rsltx=mysql_query($stmt, $link);
 					$rowx=mysql_fetch_row($rsltx);
 					
-					if (eregi("ALT_IP",$rowx[0]))
+					if (preg_match("/ALT_IP/i",$rowx[0]))
 						{
-						$location = eregi_replace($URLserver_ip, $rowx[1], $location);
+						$location = preg_replace("/$URLserver_ip/i", "$rowx[1]", $location);
 						}
-					if (eregi("EXTERNAL_IP",$rowx[0]))
+					if (preg_match("/EXTERNAL_IP/i",$rowx[0]))
 						{
-						$location = eregi_replace($URLserver_ip, $rowx[2], $location);
+						$location = preg_replace("/$URLserver_ip/i", "$rowx[2]", $location);
 						}
 					}
 				}
@@ -1435,7 +1436,7 @@ else
 				{$locat = substr($location,0,27);  $locat = "$locat...";}
 			else
 				{$locat = $location;}
-			if ( (eregi("ftp",$location)) or (eregi("http",$location)) )
+			if ( (preg_match('/ftp/i',$location)) or (preg_match('/http/i',$location)) )
 				{$location = "<a href=\"$location\">$locat</a>";}
 			else
 				{$location = $locat;}

@@ -23,6 +23,7 @@
 # 120713-2110 - Added extended_vl_fields option
 # 120907-1217 - Raised extended fields up to 99
 # 130414-0228 - Added report logging
+# 130610-0945 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -69,8 +70,8 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_PW);
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and download_lists='1' and active='Y';";
 if ($DB) {echo "|$stmt|\n";}
@@ -148,7 +149,7 @@ if ($extended_vl_fields > 0)
 	}
 
 $LOGallowed_campaignsSQL='';
-if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 	{
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
@@ -552,7 +553,7 @@ $rslt=mysql_query($stmt, $link);
 
 ### LOG INSERTION Admin Log Table ###
 $SQL_log = "$stmt|$stmtA|";
-$SQL_log = ereg_replace(';','',$SQL_log);
+$SQL_log = preg_replace('/;/', '', $SQL_log);
 $SQL_log = addslashes($SQL_log);
 $stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LEADS', event_type='EXPORT', record_id='$list_id', event_code='ADMIN EXPORT $event_code_type', event_sql=\"$SQL_log\", event_notes='';";
 if ($DB) {echo "|$stmt|\n";}

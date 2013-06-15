@@ -25,12 +25,13 @@
 ### remove temp files
 # 1 7 * * * /usr/bin/find /usr/local/apache2/htdocs/vicidial/temp/ -maxdepth 1 -type f -mtime +1 -print | xargs rm -f
 #
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 
 # CHANGES
 # 71112-1409 - First Build
 # 90508-0644 - Changed to PHP long tags
+# 130610-1132 - Finalized changing of all ereg instances to preg
 #
 
 $STARTtime = date("U");
@@ -51,7 +52,7 @@ if (isset($_GET["auth"]))				{$auth=$_GET["auth"];}
 
 $US='_';
 
-  if(eregi("VDC1234593JH654398722",$auth))
+  if(preg_match("/VDC1234593JH654398722/i",$auth))
 	{$nothing=1;}
 	else
 	{
@@ -96,15 +97,15 @@ else
 			$AUDname =	explode("/",$location);
 			$AUDnamect =	(count($AUDname)) - 1;
 		
-		eregi_replace('10.10.10.16','10.10.10.16',$AUDname[$AUDnamect]);
+		preg_replace('/10\.10\.10\.16/i', "10.10.10.16",$AUDname[$AUDnamect]);
 
 		$fileGSM=$AUDname[$AUDnamect];
 		$locationGSM=$location;
-		$fileGSM = eregi_replace('.wav','.gsm',$fileGSM);
-		if (!eregi('gsm',$locationGSM))
+		$fileGSM = preg_replace('/\.wav/i', ".gsm",$fileGSM);
+		if (!preg_match('/gsm/i',$locationGSM))
 		{
-			$locationGSM = eregi_replace('10.10.10.16','10.10.10.16/GSM',$locationGSM);
-			$locationGSM = eregi_replace('.wav','.gsm',$locationGSM);
+			$locationGSM = preg_replace('/10\.10\.10\.16/i', "10.10.10.16/GSM",$locationGSM);
+			$locationGSM = preg_replace('/\.wav/i', ".gsm",$locationGSM);
 		}
 		if ($format == 'WAV')
 			{

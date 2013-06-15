@@ -1,7 +1,7 @@
 <?php
 # closer_dispo.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this is the closer disposition screen of a call that has been grabbed. This 
 # allows the closer to modify customer information and disposition the call
@@ -11,6 +11,7 @@
 # 60619-1641 - Added variable filtering to eliminate SQL injection attack threat
 # 90508-0644 - Changed to PHP long tags
 # 120223-2249 - Removed logging of good login passwords if webroot writable is enabled
+# 130610-1114 - Finalized changing of all ereg instances to preg
 #
 
 require("dbconnect.php");
@@ -105,8 +106,8 @@ while ($i < $qm_conf_ct)
 ###########################################
 
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 
 $STARTtime = date("U");

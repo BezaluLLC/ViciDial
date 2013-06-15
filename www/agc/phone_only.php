@@ -9,10 +9,11 @@
 # 120223-2124 - Removed logging of good login passwords if webroot writable is enabled
 # 130123-1923 - Added ability to use user-login-first options.php option
 # 130328-0005 - Converted ereg to preg functions
+# 130603-2212 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 #
 
-$version = '2.6-5p';
-$build = '130328-0005';
+$version = '2.8-6p';
+$build = '130603-2212';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=73;
 $one_mysql_log=0;
@@ -172,7 +173,7 @@ echo "<!-- VERSION: $version     BUILD: $build -->\n";
 echo "<!-- BROWSER: $BROWSER_WIDTH x $BROWSER_HEIGHT     $JS_browser_width x $JS_browser_height -->\n";
 
 
-$stmt="SELECT user_group from vicidial_users where user='$VD_login' and pass='$VD_pass';";
+$stmt="SELECT user_group from vicidial_users where user='$VD_login';";
 if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09002',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -250,7 +251,7 @@ if ($user_login_first == 1)
 		{
 		if ( (strlen($phone_login)<2) or (strlen($phone_pass)<2) )
 			{
-			$stmt="SELECT phone_login,phone_pass from vicidial_users where user='$VD_login' and pass='$VD_pass' and user_level > 0 and active='Y';";
+			$stmt="SELECT phone_login,phone_pass from vicidial_users where user='$VD_login';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09073',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -333,12 +334,10 @@ else
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$VD_login' and pass='$VD_pass' and user_level > 0 and active='Y';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09003',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
-		$auth=$row[0];
+		$auth=0;
+		$auth_message = user_authorization($user,$pass,'',1);
+		if ($auth_message == 'GOOD')
+			{$auth=1;}
 
 		if($auth>0)
 			{
@@ -384,6 +383,8 @@ else
 				}
 			$VDloginDISPLAY=1;
             $VDdisplayMESSAGE = "Login incorrect, please try again<br />";
+			if ($auth_message == 'LOCK')
+				{$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes<br />";}
 			}
 		}
 	if ($VDloginDISPLAY)

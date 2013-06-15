@@ -10,6 +10,7 @@
 #
 # 90914-1003 - First build
 # 130414-0214 - Added report logging
+# 130610-1016 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -33,8 +34,8 @@ if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 if (isset($_GET["DB"]))						{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))			{$DB=$_POST["DB"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 if (strlen($shift)<2) {$shift='ALL';}
 
@@ -200,23 +201,23 @@ while ($i < $records_to_grab)
 	while ($k < $records_to_grabC)
 		{
 		$stmt="SELECT length_in_sec from call_log where extension='$phone_number[$k]'";
-		if (eregi("MANUAL_OVERRIDE",$call_type[$k]))
+		if (preg_match("/MANUAL_OVERRIDE/i",$call_type[$k]))
 			{$stmt="SELECT length_in_sec from call_log where extension='$phone_number[$k]'";}
-		if (eregi("XFER_OVERRIDE",$call_type[$k]))
+		if (preg_match("/XFER_OVERRIDE/i",$call_type[$k]))
 			{
-			$number_dialed[$k] = eregi_replace("Local/",'',$number_dialed[$k]);
-			$number_dialed[$k] = eregi_replace("@default",'',$number_dialed[$k]);
+			$number_dialed[$k] = preg_replace('/Local\//i', '',$number_dialed[$k]);
+			$number_dialed[$k] = preg_replace('/\@default/i', '',$number_dialed[$k]);
 			$stmt="SELECT length_in_sec from call_log where extension='$number_dialed[$k]'";
 			}
-		if (eregi("XFER_3WAY",$call_type[$k]))
+		if (preg_match("/XFER_3WAY/i",$call_type[$k]))
 			{
-			$number_dialed[$k] = eregi_replace("Local/",'',$number_dialed[$k]);
-			$number_dialed[$k] = eregi_replace("@default",'',$number_dialed[$k]);
+			$number_dialed[$k] = preg_replace('/Local\//i', '',$number_dialed[$k]);
+			$number_dialed[$k] = preg_replace('/\@default/i', '',$number_dialed[$k]);
 			$stmt="SELECT length_in_sec from call_log where extension='$number_dialed[$k]'";
 			}
-		if (eregi("MANUAL_DIALNOW",$call_type[$k]))
+		if (preg_match("/MANUAL_DIALNOW/i",$call_type[$k]))
 			{$stmt="SELECT length_in_sec from call_log where extension='$phone_number[$k]'";}
-		if (eregi("MANUAL_DIALFAST",$call_type[$k]))
+		if (preg_match("/MANUAL_DIALFAST/i",$call_type[$k]))
 			{$stmt="SELECT length_in_sec from call_log where extension='$phone_number[$k]'";}
 
 		$stmt .= " and start_epoch >= $call_dateS[$k] and start_epoch <= $call_dateE[$k];";

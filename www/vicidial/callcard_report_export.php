@@ -5,11 +5,12 @@
 # batch, pack and date range. 
 # downloads to a flat text file that is tab delimited
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
 # 100312-2127 - First build
+# 130610-1125 - Finalized changing of all ereg instances to preg
 #
 
 require("dbconnect.php");
@@ -58,8 +59,8 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_PW);
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and callcard_admin='1';";
 if ($DB) {echo "|$stmt|\n";}
@@ -145,7 +146,7 @@ if ($run_export > 0)
 		{
 		### LOG INSERTION Admin Log Table ###
 		$SQL_log = "$stmt|$stmtA|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
 		$SQL_log = addslashes($SQL_log);
 		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLCARD', event_type='EXPORT', record_id='', event_code='ADMIN EXPORT CALLCARD REPORT', event_sql=\"$SQL_log\", event_notes='';";
 		if ($DB) {echo "|$stmt|\n";}

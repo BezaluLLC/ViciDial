@@ -33,6 +33,7 @@
 # 101207-1634 - Changed limits on seconds to 65000 from 36000 in vicidial_agent_log
 # 120224-0910 - Added HTML display option with bar graphs
 # 130414-0117 - Added report logging
+# 130610-0956 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -76,8 +77,8 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 if (strlen($shift)<2) {$shift='ALL';}
 if (strlen($bottom_graph)<2) {$bottom_graph='NO';}
@@ -206,7 +207,7 @@ while($i < $group_ct)
 
 $LOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
-if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 	{
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
@@ -225,7 +226,7 @@ while ($i < $campaigns_to_print)
 	$row=mysql_fetch_row($rslt);
 	$groups[$i] =		$row[0];
 	$group_names[$i] =	$row[1];
-	if (ereg("-ALL",$group_string) )
+	if (preg_match('/\-ALL/',$group_string) )
 		{$group[$i] = $groups[$i];}
 	$i++;
 	}
@@ -243,7 +244,7 @@ while($i < $group_ct)
 		$groupQS .= "&group[]=$group[$i]";
 		}
 
-	if (eregi("YES",$include_rollover))
+	if (preg_match("/YES/i",$include_rollover))
 		{
 		$stmt="select drop_inbound_group from vicidial_campaigns where campaign_id='$group[$i]' $LOGallowed_campaignsSQL and drop_inbound_group NOT LIKE \"%NONE%\" and drop_inbound_group is NOT NULL and drop_inbound_group != '';";
 		$rslt=mysql_query($stmt, $link);
@@ -262,15 +263,15 @@ while($i < $group_ct)
 	}
 if (strlen($group_drop_SQL) < 2)
 	{$group_drop_SQL = "''";}
-if ( (ereg("--ALL--",$group_string) ) or ($group_ct < 1) or (strlen($group_string) < 2) )
+if ( (preg_match('/\-\-ALL\-\-/',$group_string) ) or ($group_ct < 1) or (strlen($group_string) < 2) )
 	{
 	$group_SQL = "$LOGallowed_campaignsSQL";
 	$group_drop_SQL = "";
 	}
 else
 	{
-	$group_SQL = eregi_replace(",$",'',$group_SQL);
-	$group_drop_SQL = eregi_replace(",$",'',$group_drop_SQL);
+	$group_SQL = preg_replace('/,$/i', '',$group_SQL);
+	$group_drop_SQL = preg_replace('/,$/i', '',$group_drop_SQL);
 	$both_group_SQLand = "and ( (campaign_id IN($group_drop_SQL)) or (campaign_id IN($group_SQL)) )";
 	$both_group_SQL = "where ( (campaign_id IN($group_drop_SQL)) or (campaign_id IN($group_SQL)) )";
 	$group_SQLand = "and campaign_id IN($group_SQL)";
@@ -389,14 +390,14 @@ o_cal.a_tpl.yearscroll = false;
 
 echo "</TD><TD VALIGN=TOP> Campaigns:<BR>";
 echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
-if  (eregi("--ALL--",$group_string))
+if  (preg_match('/\-\-ALL\-\-/',$group_string))
 	{echo "<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
 else
 	{echo "<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
 $o=0;
 while ($campaigns_to_print > $o)
 	{
-	if (eregi("$groups[$o]\|",$group_string)) {echo "<option selected value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
+	if (preg_match("/$groups[$o]\|/i",$group_string)) {echo "<option selected value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
 	  else {echo "<option value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
 	$o++;
 	}
@@ -500,7 +501,7 @@ else
 	$TOTALcallsRAW = $row[0];
 	$TOTALsec =		$row[1];
 	$inTOTALcallsRAW=0;
-	if (eregi("YES",$include_rollover))
+	if (preg_match("/YES/i",$include_rollover))
 		{
 		$length_in_secZ=0;
 		$queue_secondsZ=0;
@@ -544,7 +545,7 @@ else
 
 	$OUToutput .= "Total Calls placed from this Campaign:        $TOTALcalls\n";
 	$OUToutput .= "Average Call Length for all Calls in seconds: $average_call_seconds\n";
-	if (eregi("YES",$include_rollover))
+	if (preg_match("/YES/i",$include_rollover))
 		{$OUToutput .= "Calls that went to rollover In-Group:         $inTOTALcalls\n";}
 
 
@@ -558,7 +559,7 @@ else
 	$CIcallsRAW =	$row[0];
 	$CIsec =		$row[1];
 
-	if (eregi("YES",$include_rollover))
+	if (preg_match("/YES/i",$include_rollover))
 		{
 		$length_in_secZ=0;
 		$queue_secondsZ=0;
@@ -659,7 +660,7 @@ else
 		$q++;
 		$p++;
 		}
-	$camp_ANS_STAT_SQL = eregi_replace(",$",'',$camp_ANS_STAT_SQL);
+	$camp_ANS_STAT_SQL = preg_replace('/,$/i', '',$camp_ANS_STAT_SQL);
 
 
 	$stmt="select count(*) from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand and status IN($camp_ANS_STAT_SQL);";
@@ -696,7 +697,7 @@ else
 	$OUToutput .= "Total Outbound DROP Calls:                    $DROPcalls  $DROPpercent%\n";
 	$OUToutput .= "Percent of DROP Calls taken out of Answers:   $DROPcalls / $ANSWERcalls  $DROPANSWERpercent%\n";
 
-	if (eregi("YES",$include_rollover))
+	if (preg_match("/YES/i",$include_rollover))
 		{
 		if ( ($DROPcalls < 1) or ($CIcallsRAW < 1) )
 			{$inDROPANSWERpercent = '0';}
@@ -724,7 +725,7 @@ else
 		$closer_campaignsSQL .= "'$closer_campaigns',";
 		$c++;
 		}
-	$closer_campaignsSQL = eregi_replace(",$",'',$closer_campaignsSQL);
+	$closer_campaignsSQL = preg_replace('/,$/i', '',$closer_campaignsSQL);
 
 	$stmt="select count(*) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($closer_campaignsSQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE');";
 	$rslt=mysql_query($stmt, $link);
@@ -826,8 +827,8 @@ else
 
 		$REASONcount =	sprintf("%10s", $row[0]);while(strlen($REASONcount)>10) {$REASONcount = substr("$REASONcount", 0, -1);}
 		$reason =	sprintf("%-20s", $row[1]);while(strlen($reason)>20) {$reason = substr("$reason", 0, -1);}
-		if (ereg("NONE",$reason))	{$reason = 'NO ANSWER           ';}
-		if (ereg("CALLER",$reason)) {$reason = 'CUSTOMER            ';}
+		if (preg_match('/NONE/',$reason))	{$reason = 'NO ANSWER           ';}
+		if (preg_match('/CALLER/',$reason)) {$reason = 'CUSTOMER            ';}
 
 		$ASCII_text .= "| $reason | $REASONcount |\n";
 
@@ -892,7 +893,7 @@ else
 
 
 	$campaignSQL = "$group_SQLand";
-	if (eregi("YES",$include_rollover))
+	if (preg_match("/YES/i",$include_rollover))
 		{$campaignSQL = "$both_group_SQLand";}
 	## Pull the count of agent seconds for the total tally
 	$stmt="SELECT sum(pause_sec + wait_sec + talk_sec + dispo_sec) from vicidial_agent_log where event_time >= '$query_date_BEGIN' and event_time <= '$query_date_END' $campaignSQL and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000;";
@@ -908,7 +909,7 @@ else
 
 	## get counts and time totals for all statuses in this campaign
 	$rollover_exclude_dropSQL='';
-	if (eregi("YES",$include_rollover))
+	if (preg_match("/YES/i",$include_rollover))
 		{$rollover_exclude_dropSQL = "and status NOT IN('DROP')";}
 	$stmt="select count(*),status,sum(length_in_sec) from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $rollover_exclude_dropSQL $group_SQLand group by status;";
 
@@ -926,13 +927,13 @@ else
 		$statusSQL .=			"'$row[1]',";
 		$i++;
 		}
-	if (eregi("YES",$include_rollover))
+	if (preg_match("/YES/i",$include_rollover))
 		{
 		if (strlen($statusSQL) < 2)
 			{$statusSQL = "''";}
 		else
 			{
-			$statusSQL = eregi_replace(",$",'',$statusSQL);
+			$statusSQL = preg_replace('/,$/i', '',$statusSQL);
 			}
 		$stmt="select distinct status from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status NOT IN($statusSQL) $group_drop_SQLand;";
 		$rslt=mysql_query($stmt, $link);
@@ -958,7 +959,7 @@ else
 		$RAWstatus = $RAWstatusARY[$i];
 		$RAWhours = $RAWhoursARY[$i];
 
-		if (eregi("YES",$include_rollover))
+		if (preg_match("/YES/i",$include_rollover))
 			{
 			$stmt="select count(*),sum(length_in_sec) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status='$RAWstatus' $group_drop_SQLand;";
 			$rslt=mysql_query($stmt, $link);
@@ -1415,7 +1416,7 @@ else
 			{
 			$full_name =	sprintf("%-45s", $RAWfull_name[$i]); while(mb_strlen($full_name,'utf-8')>15) {$full_name = mb_substr("$full_name", 0, -1,'utf-8');}	
 			}
-		if (eregi("YES",$include_rollover))
+		if (preg_match("/YES/i",$include_rollover))
 			{
 			$length_in_secZ=0;
 			$queue_secondsZ=0;
@@ -1550,7 +1551,7 @@ else
 			$tempTALK = ($tempTALK + $row[2]);
 			$w++;
 			}
-		if (eregi("YES",$include_rollover))
+		if (preg_match("/YES/i",$include_rollover))
 			{
 			$stmt="select campaign_id,phone_number,length_in_sec,queue_seconds,agent_alert_delay from vicidial_closer_log,vicidial_inbound_groups where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and group_id=campaign_id $group_drop_SQLand;";
 			$rslt=mysql_query($stmt, $link);

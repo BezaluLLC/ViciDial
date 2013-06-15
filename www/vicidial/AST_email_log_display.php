@@ -7,6 +7,7 @@
 #
 # changes:
 # 130221-2124 - First build
+# 130610-1039 - Finalized changing of all ereg instances to preg
 #
 
 require("dbconnect.php");
@@ -49,13 +50,13 @@ if ($allow_emails<1)
 
 if ($non_latin < 1)
 	{
-	$user=ereg_replace("[^-_0-9a-zA-Z]","",$user);
-	$pass=ereg_replace("[^-_0-9a-zA-Z]","",$pass);
+	$user=preg_replace('/[^-_0-9a-zA-Z]/', '',$user);
+	$pass=preg_replace('/[^-_0-9a-zA-Z]/', '',$pass);
 	}
 else
 	{
-	$user = ereg_replace("'|\"|\\\\|;","",$user);
-	$pass = ereg_replace("'|\"|\\\\|;","",$pass);
+	$user = preg_replace("/'|\"|\\\\|;/","",$user);
+	$pass = preg_replace("/'|\"|\\\\|;/","",$pass);
 	}
 
 if ($email_log_id) {

@@ -56,6 +56,13 @@ OTHER CHANGES:
 1. Added outbound state call time holidays functionality. Only works if the 
 	"state" field is populated properly in your leads.
 
+2. Added several security changes to the agent interface, including freezing a
+	user's account for 15 minutes after 10 failed login attempts.
+
+3. Changing all of the admin scripts from using the PHP ereg functions to preg.
+	This is a requirement for moving to PHP6 where ereg functions are 
+	depricated. This will also have the benefit of speeding up those scripts
+	because preg is supposed to be more efficient and faster than ereg.
 
 
 

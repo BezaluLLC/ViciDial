@@ -17,6 +17,7 @@
 # 100802-2347 - Added User Group Allowed Reports option validation
 # 100914-1326 - Added lookup for user_level 7 users to set to reports only which will remove other admin links
 # 130414-0157 - Added report logging
+# 130610-0959 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -39,8 +40,8 @@ if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $report_name = 'Server Performance Report';
 $db_source = 'M';

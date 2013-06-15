@@ -16,6 +16,7 @@
 # 111104-1205 - Added user_group and calltime restrictions
 # 120224-0910 - Added HTML display option with bar graphs
 # 130414-0119 - Added report logging
+# 130610-1000 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -56,8 +57,8 @@ if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $MT[0]='0';
 if (strlen($shift)<2) {$shift='ALL';}
@@ -165,10 +166,10 @@ if ($records_to_print > 0)
 	$row=mysql_fetch_row($rslt);
 	$LOGallowed_reports =	$row[1];
 	$LOGadmin_viewable_call_times =	$row[2];
-	if ( (!eregi("ALL-CAMPAIGNS",$row[0])) )
+	if ( (!preg_match("/ALL-CAMPAIGNS/i",$row[0])) )
 		{
-		$rawLOGallowed_campaignsSQL = eregi_replace(' -','',$row[0]);
-		$rawLOGallowed_campaignsSQL = eregi_replace(' ',"','",$rawLOGallowed_campaignsSQL);
+		$rawLOGallowed_campaignsSQL = preg_replace('/\s\-/i', '',$row[0]);
+		$rawLOGallowed_campaignsSQL = preg_replace('/\s/i', '\',\'',$rawLOGallowed_campaignsSQL);
 		$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
 		$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
 		}
@@ -186,7 +187,7 @@ else
 
 $LOGadmin_viewable_call_timesSQL='';
 $whereLOGadmin_viewable_call_timesSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i', $LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
 	{
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ -/",'',$LOGadmin_viewable_call_times);
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_call_timesSQL);
@@ -220,7 +221,7 @@ while ($i < $campaigns_to_print)
 	$row=mysql_fetch_row($rslt);
 	$groups[$i] =		$row[0];
 	$group_names[$i] =	$row[1];
-	if (eregi('--ALL--',$group_string))
+	if (preg_match('/\-\-ALL\-\-/i',$group_string))
 		{$group[$i] =	$row[0];}
 	$i++;
 	}
@@ -245,7 +246,7 @@ while($i < $group_ct)
 		$groupQS .= "&group[]=$group[$i]";
 		}
 
-	if (eregi("YES",$include_rollover))
+	if (preg_match("/YES/i",$include_rollover))
 		{
 		$stmt="select drop_inbound_group from vicidial_campaigns where campaign_id='$group[$i]' $LOGallowed_campaignsSQL and drop_inbound_group NOT LIKE \"%NONE%\" and drop_inbound_group is NOT NULL and drop_inbound_group != '';";
 		$rslt=mysql_query($stmt, $link);
@@ -262,15 +263,15 @@ while($i < $group_ct)
 
 	$i++;
 	}
-if ( (ereg("--ALL--",$group_string) ) or ($group_ct < 1) )
+if ( (preg_match('/\-\-ALL\-\-/',$group_string) ) or ($group_ct < 1) )
 	{
 	$group_SQL = "";
 	$group_drop_SQL = "";
 	}
 else
 	{
-	$group_SQL = eregi_replace(",$",'',$group_SQL);
-	$group_drop_SQL = eregi_replace(",$",'',$group_drop_SQL);
+	$group_SQL = preg_replace('/,$/i', '',$group_SQL);
+	$group_drop_SQL = preg_replace('/,$/i', '',$group_drop_SQL);
 	$both_group_SQLand = "and ( (campaign_id IN($group_drop_SQL)) or (campaign_id IN($group_SQL)) )";
 	$both_group_SQL = "where ( (campaign_id IN($group_drop_SQL)) or (campaign_id IN($group_SQL)) )";
 	$group_SQLand = "and campaign_id IN($group_SQL)";
@@ -452,14 +453,14 @@ if ($bareformat < 1)
 
 	$MAIN.="</TD><TD VALIGN=TOP ROWSPAN=2> Campaigns:<BR>";
 	$MAIN.="<SELECT SIZE=5 NAME=group[] multiple>\n";
-	if  (eregi("--ALL--",$group_string))
+	if  (preg_match('/\-\-ALL\-\-/',$group_string))
 		{$MAIN.="<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
 	else
 		{$MAIN.="<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
 	$o=0;
 	while ($campaigns_to_print > $o)
 		{
-		if (eregi("$groups[$o]\|",$group_string)) {$MAIN.="<option selected value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
+		if (preg_match("/$groups[$o]\|/i",$group_string)) {$MAIN.="<option selected value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
 		  else {$MAIN.="<option value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
 		$o++;
 		}
@@ -732,7 +733,7 @@ else
 				}
 
 			$group_drop[$i]='';
-			if (eregi("YES",$include_rollover))
+			if (preg_match("/YES/i",$include_rollover))
 				{
 				##### Gather inbound calls from drop inbound group if selected
 				$stmt="select drop_inbound_group from vicidial_campaigns where campaign_id='$group[$i]' $LOGallowed_campaignsSQL and drop_inbound_group NOT LIKE \"%NONE%\" and drop_inbound_group is NOT NULL and drop_inbound_group != '';";
@@ -859,7 +860,7 @@ else
 			while ($p < $s)
 				{
 				$call_date = explode(" ", $ATcall_date[$p]);
-				$call_time = ereg_replace("[^0-9]","",$call_date[1]);
+				$call_time = preg_replace('/[^0-9]/','',$call_date[1]);
 				$epoch = $ATepoch[$p];
 				$Cwday = date("w", $epoch);
 
@@ -933,7 +934,7 @@ else
 			while ($p < $u)
 				{
 				$call_date = explode(" ", $CPcall_date[$p]);
-				$call_time = ereg_replace("[^0-9]","",$call_date[1]);
+				$call_time = preg_replace('/[^0-9]/','',$call_date[1]);
 				$epoch = $CPepoch[$p];
 				$Cwday = date("w", $epoch);
 
@@ -986,7 +987,7 @@ else
 					$Htalk_sec[$Chour] =	($Htalk_sec[$Chour] + $TEMPtalk);
 
 					$Hcalls_count[$Chour]++;
-					if (eregi("DROP",$CPstatus[$p]))
+					if (preg_match("/DROP/i",$CPstatus[$p]))
 						{
 						if ($CPin_out[$p] == 'OUT')
 							{
@@ -1001,7 +1002,7 @@ else
 						$answer_count[$i]++;
 						$Hanswer_count[$Chour]++;
 						}
-					if (eregi("\|$CPstatus[$p]\|",'|NA|NEW|QUEUE|INCALL|DROP|XDROP|AA|AM|AL|AFAX|AB|ADC|DNCL|DNCC|PU|PM|SVYEXT|SVYHU|SVYVM|SVYREC|QVMAIL|'))
+					if (preg_match("/\|$CPstatus[$p]\|/i",'|NA|NEW|QUEUE|INCALL|DROP|XDROP|AA|AM|AL|AFAX|AB|ADC|DNCL|DNCC|PU|PM|SVYEXT|SVYHU|SVYVM|SVYREC|QVMAIL|'))
 						{
 						$system_count[$i]++;
 						$Hsystem_count[$Chour]++;

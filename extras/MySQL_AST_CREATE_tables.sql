@@ -603,7 +603,11 @@ modify_same_user_level ENUM('0','1') default '1',
 admin_hide_lead_data ENUM('0','1') default '0',
 admin_hide_phone_data ENUM('0','1','2_DIGITS','3_DIGITS','4_DIGITS') default '0',
 agentcall_email ENUM('0','1') default '0',
-modify_email_accounts ENUM('0','1') default '0'
+modify_email_accounts ENUM('0','1') default '0',
+failed_login_count TINYINT(3) UNSIGNED default '0',
+last_login_date DATETIME default '2001-01-01 00:00:01',
+last_ip VARCHAR(15) default '',
+pass_hash VARCHAR(200) default ''
 );
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -1511,7 +1515,8 @@ queuemetrics_socket VARCHAR(20) default 'NONE',
 queuemetrics_socket_url TEXT,
 enhanced_disconnect_logging ENUM('0','1') default '0',
 allow_emails ENUM('0','1') default '0',
-level_8_disable_add ENUM('0','1') default '0'
+level_8_disable_add ENUM('0','1') default '0',
+pass_hash_enabled ENUM('0','1') default '0'
 );
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3124,4 +3129,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1350',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1351',db_schema_update_date=NOW();

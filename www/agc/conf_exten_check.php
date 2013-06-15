@@ -1,5 +1,5 @@
 <?php
-# conf_exten_check.php    version 2.6
+# conf_exten_check.php    version 2.8
 # 
 # Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -58,16 +58,18 @@
 # 120809-2353 - Added external_recording function
 # 121028-2305 - Added extra check on session_name to validate agent screen requests
 # 130328-0011 - Converted ereg to preg functions
+# 130603-2218 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 #
 
-$version = '2.6-33';
-$build = '130328-0011';
+$version = '2.8-34';
+$build = '130603-2218';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=39;
 $one_mysql_log=0;
 $DB=0;
 
 require("dbconnect.php");
+require("functions.php");
 
 ### If you have globals turned off uncomment these lines
 if (isset($_GET["DB"]))						{$DB=$_GET["DB"];}
@@ -126,6 +128,9 @@ else
 	$pass = preg_replace("/\'|\"|\\\\|;/","",$pass);
 	}
 
+$session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
+$server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
+
 # default optional vars if not set
 if (!isset($format))   {$format="text";}
 if (!isset($ACTION))   {$ACTION="refresh";}
@@ -143,18 +148,15 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 $random = (rand(1000000, 9999999) + 10000000);
 
 
-$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-if ($DB) {echo "|$stmt|\n";}
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03002',$user,$server_ip,$session_name,$one_mysql_log);}
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Invalid Username/Password: |$user|$pass|\n";
-    exit;
+	echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
+	exit;
 	}
 else
 	{
@@ -765,27 +767,5 @@ if ($format=='debug')
 	}
 	
 exit; 
-
-
-##### MySQL Error Logging #####
-function mysql_error_logging($NOW_TIME,$link,$mel,$stmt,$query_id,$user,$server_ip,$session_name,$one_mysql_log)
-{
-$NOW_TIME = date("Y-m-d H:i:s");
-#	mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00001',$user,$server_ip,$session_name,$one_mysql_log);
-$errno='';   $error='';
-if ( ($mel > 0) or ($one_mysql_log > 0) )
-	{
-	$errno = mysql_errno($link);
-	if ( ($errno > 0) or ($mel > 1) or ($one_mysql_log > 0) )
-		{
-		$error = mysql_error($link);
-		$efp = fopen ("./vicidial_mysql_errors.txt", "a");
-		fwrite ($efp, "$NOW_TIME|conf_check  |$query_id|$errno|$error|$stmt|$user|$server_ip|$session_name|\n");
-		fclose($efp);
-		}
-	}
-$one_mysql_log=0;
-return $errno;
-}
 
 ?>

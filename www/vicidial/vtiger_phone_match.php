@@ -1,7 +1,7 @@
 <?php
 # vtiger_phone_match.php
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script searches Vtiger contacts for a matching phone number and returns 
 # the number of matches, it was designed to be used with the ViciDial Inbound 
@@ -12,6 +12,7 @@
 #
 # CHANGES
 # 100806-0653 - First Build
+# 130610-1124 - Finalized changing of all ereg instances to preg
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -45,11 +46,11 @@ if ($ss_conf_ct > 0)
 
 if ($non_latin < 1)
 	{
-	$phone=ereg_replace("[^-_0-9a-zA-Z]","",$phone);
+	$phone=preg_replace('/[^-_0-9a-zA-Z]/','',$phone);
 	}
 else
 	{
-	$phone = ereg_replace("'|\"|\\\\|;","",$phone);
+	$phone = preg_replace("/'|\"|\\\\|;/","",$phone);
 	}
 
 $phone_count=0;

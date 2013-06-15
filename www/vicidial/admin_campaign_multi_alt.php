@@ -1,7 +1,7 @@
 <?php
 # admin_campaign_multi_alt.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen will control the campaign settings needed for alternate number 
 # dialing using multiple leads with the same account number and different phone 
@@ -13,10 +13,11 @@
 # 110317-1219 - First Build
 # 110406-1818 - Updated logging
 # 120223-2335 - Removed logging of good login passwords if webroot writable is enabled
+# 130610-1116 - Finalized changing of all ereg instances to preg
 #
 
-$admin_version = '2.4-3';
-$build = '120223-2335';
+$admin_version = '2.8-4';
+$build = '130610-1116';
 
 
 require("dbconnect.php");
@@ -61,16 +62,16 @@ if ($ss_conf_ct > 0)
 
 if ($non_latin < 1)
 	{
-	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
-	$campaign_id = ereg_replace("[^-_0-9a-zA-Z]","",$campaign_id);
-	$lead_order_randomize = ereg_replace("[^-_0-9a-zA-Z]","",$lead_order_randomize);
-	$lead_order_secondary = ereg_replace("[^-_0-9a-zA-Z]","",$lead_order_secondary);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_PW);
+	$campaign_id = preg_replace('/[^-_0-9a-zA-Z]/','',$campaign_id);
+	$lead_order_randomize = preg_replace('/[^-_0-9a-zA-Z]/','',$lead_order_randomize);
+	$lead_order_secondary = preg_replace('/[^-_0-9a-zA-Z]/','',$lead_order_secondary);
 	}	# end of non_latin
 else
 	{
-	$PHP_AUTH_USER = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	}
 
 $STARTtime = date("U");
@@ -189,7 +190,7 @@ $o=0;
 while ($lists_to_print > $o)
 	{
 	$row=mysql_fetch_row($rslt);
-	if (ereg('Y',$row[1]))
+	if (preg_match('/Y/',$row[1]))
 		{
 		$active_lists++;
 		$camp_lists .= "'$row[0]',";
@@ -201,7 +202,7 @@ while ($lists_to_print > $o)
 		}
 	$o++;
 	}
-$camp_lists = eregi_replace(".$","",$camp_lists);
+$camp_lists = preg_replace('/.$/i','',$camp_lists);;
 
 
 
@@ -266,7 +267,7 @@ if ($action == "ALT_MULTI_SUBMIT")
 
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|$filter_stmt|$update_stmts|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGNS', event_type='MODIFY', record_id='$campaign_id', event_code='MODIFY CAMPAIGN MULTI LEAD', event_sql=\"$SQL_log\", event_notes='';";
 			$rslt=mysql_query($stmt, $link);
@@ -376,7 +377,7 @@ if ($action == "BLANK")
 		while (list($owner,) = each($lead_list[$since_reset]))
 			{
 			$owner_var = preg_replace('/ |\n|\r|\t/','',$owner);
-			if (eregi("1$|3$|5$|7$|9$", $o))
+			if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 				{$bgcolor='bgcolor="#B9CBFD"';} 
 			else
 				{$bgcolor='bgcolor="#9BB9FB"';}

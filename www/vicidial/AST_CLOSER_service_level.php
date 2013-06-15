@@ -21,6 +21,7 @@
 # 111103-2300 - Added user_group restrictions for selecting in-groups
 # 120224-0910 - Added HTML display option with bar graphs
 # 130414-0104 - Added report logging
+# 130610-1024 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -47,8 +48,8 @@ if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 if (strlen($shift)<2) {$shift='ALL';}
 
@@ -147,7 +148,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 
 $LOGadmin_viewable_groupsSQL='';
 $whereLOGadmin_viewable_groupsSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 	{
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -157,7 +158,7 @@ if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewabl
 
 $LOGadmin_viewable_call_timesSQL='';
 $whereLOGadmin_viewable_call_timesSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i', $LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
 	{
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ -/",'',$LOGadmin_viewable_call_times);
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_call_timesSQL);
@@ -554,7 +555,7 @@ while ($j < $TOTintervals)
 			$totCALLSdate[$dtt]++;
 			if ($totCALLSmax < $ls[$i]) {$totCALLSmax = $ls[$i];}
 			if ($qrtCALLSmax[$j] < $ls[$i]) {$qrtCALLSmax[$j] = $ls[$i];}
-			if (ereg('DROP',$st[$i])) 
+			if (preg_match('/DROP/',$st[$i])) 
 				{
 				$totDROPS++;
 				$totDROPSsec = ($totDROPSsec + $ls[$i]);
@@ -1091,9 +1092,9 @@ if ($totQUEUEsec > 0)
 else
 	{$totQUEUEavgRAW = 0;}
 $totQUEUEavg =	sprintf("%5s", $totQUEUEavg); 
-	while (strlen($totQUEUEavg)>5) {$totQUEUEavg = ereg_replace(".$",'',$totQUEUEavg);}
+	while (strlen($totQUEUEavg)>5) {$totQUEUEavg = preg_replace('/.$/', '', $totQUEUEavg);}
 $totQUEUEmax =	sprintf("%5s", $totQUEUEmax);
-	while (strlen($totQUEUEmax)>5) {$totQUEUEmax = ereg_replace(".$",'',$totQUEUEmax);}
+	while (strlen($totQUEUEmax)>5) {$totQUEUEmax = preg_replace('/.$/', '', $totQUEUEmax);}
 $totDROPS =	sprintf("%5s", $totDROPS);
 $totCALLS =	sprintf("%5s", $totCALLS);
 
@@ -1188,7 +1189,7 @@ while ($h < $TOTintervals)
 		else {$Phd120[$h]=0;}
 	if ($hd121[$h] > 0) {$Phd121[$h] = round( ( ($hd121[$h] / $qrtCALLS[$h]) * 100) );}
 		else {$Phd121[$h]=0;}
-		while (strlen($qrtQUEUEavg[$h])>4) {$qrtQUEUEavg[$h] = ereg_replace(".$",'',$qrtQUEUEavg[$h]);}
+		while (strlen($qrtQUEUEavg[$h])>4) {$qrtQUEUEavg[$h] = preg_replace('/.$/', '', $qrtQUEUEavg[$h]);}
 	$hd__0[$h] =	sprintf("%4s", $hd__0[$h]);
 	$hd_20[$h] =	sprintf("%4s", $hd_20[$h]);
 	$hd_40[$h] =	sprintf("%4s", $hd_40[$h]);
@@ -1245,7 +1246,7 @@ while ($h < $TOTintervals)
 		}
 
 	$Aavg_hold[$h] = sprintf("%4s", $Aavg_hold[$h]);
-	while (strlen($Aavg_hold[$h])>4) {$Aavg_hold[$h] = ereg_replace("^.",'',$Aavg_hold[$h]);}
+	while (strlen($Aavg_hold[$h])>4) {$Aavg_hold[$h] = preg_replace('/^./', '', $Aavg_hold[$h]);}
 
 	$MAIN.="|$HMdisplay[$h]| $qrtCALLS[$h] | $Phd__0[$h] $Phd_20[$h] $Phd_40[$h] $Phd_60[$h] $Phd_80[$h] $Phd100[$h] $Phd120[$h] $Phd121[$h] | | $Aavg_hold[$h] |$qrtQUEUEavg_scale[$h]|\n";
 	$CSV_text.="\"$HMdisplay[$h]\",\"$qrtCALLS[$h]\",\"$Phd__0[$h]\",\"$Phd_20[$h]\",\"$Phd_40[$h]\",\"$Phd_60[$h]\",\"$Phd_80[$h]\",\"$Phd100[$h]\",\"$Phd120[$h]\",\"$Phd121[$h]\",\"$Aavg_hold[$h]\"\n";
@@ -1271,7 +1272,7 @@ $APhd100 =	sprintf("%4s", $APhd100);
 $APhd120 =	sprintf("%4s", $APhd120);
 $APhd121 =	sprintf("%4s", $APhd121);
 
-	while (strlen($totQUEUEavg)>4) {$totQUEUEavg = ereg_replace(".$",'',$totQUEUEavg);}
+	while (strlen($totQUEUEavg)>4) {$totQUEUEavg = preg_replace('/.$/', '', $totQUEUEavg);}
 
 $MAIN.="+-------------+-------+-----------------------------------------+ +------+--------------------------------+\n";
 $MAIN.="| TOTAL       | $ALLcalls | $APhd__0 $APhd_20 $APhd_40 $APhd_60 $APhd_80 $APhd100 $APhd120 $APhd121 | | $totQUEUEavg |\n";

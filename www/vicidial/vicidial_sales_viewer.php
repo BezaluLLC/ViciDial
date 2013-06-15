@@ -3,12 +3,13 @@
 # vicidial_sales_viewer.php - VICIDIAL administration page
 # 
 # 
-# Copyright (C) 2009  Joe Johnson,Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Joe Johnson,Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 80310-1500 - first build
 # 90310-2135 - Added admin header
 # 90508-0644 - Changed to PHP long tags
+# 130610-1127 - Finalized changing of all ereg instances to preg
 #
 
 if (isset($_GET["dcampaign"]))					{$dcampaign=$_GET["dcampaign"];}
@@ -27,8 +28,8 @@ if (isset($_GET["forc"]))						{$forc=$_GET["forc"];}
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 
-$PHP_AUTH_PW = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_PW);
-$PHP_AUTH_USER = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
 if ($DB) {echo "|$stmt|\n";}
@@ -175,7 +176,7 @@ if ($submit_report && $list_ids) {
 	$list_id_clause.=")";
 
 	if ($sales_number && $sales_number>0) {
-		$sales_number=eregi_replace("[^0-9]", "", $sales_number);
+		$sales_number=preg_replace('/[^0-9]/i', '', $sales_number);
 		$limit_clause="limit $sales_number";
 	} else {
 		$sales_number=0;

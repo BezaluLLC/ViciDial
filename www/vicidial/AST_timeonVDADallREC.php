@@ -1,7 +1,7 @@
 <?php 
 # AST_timeonVDADallREC.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # live real-time stats for the VICIDIAL Auto-Dialer all servers
 #
@@ -27,6 +27,7 @@
 # 70123-1151 - Added non_latin options for substr in display variables, thanks Marin Blu
 # 70206-1140 - Added call-type statuses to display(A-Auto, M-Manual, I-Inbound/Closer)
 # 90508-0644 - Changed to PHP long tags
+# 130610-1126 - Finalized changing of all ereg instances to preg
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -115,8 +116,8 @@ return false;
 
 $load_ave = get_server_load(true);
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
 	if ($DB) {echo "|$stmt|\n";}
@@ -370,7 +371,7 @@ $CALLtime =		$row[16];
 $DIALtimeout =	$row[17];
 $DIALstatuses =	$row[18];
 	$DIALstatuses = (preg_replace("/ -$|^ /","",$DIALstatuses));
-	$DIALstatuses = (ereg_replace(' ',', ',$DIALstatuses));
+	$DIALstatuses = (preg_replace('/\s/', ', ', $DIALstatuses));
 
 $stmt="select count(*) from vicidial_hopper where campaign_id='" . mysql_real_escape_string($group) . "';";
 if ($group=='XXXX-ALL-ACTIVE-XXXX') 
@@ -510,7 +511,7 @@ echo "</FORM>\n\n";
 ###################################################################################
 ###### OUTBOUND CALLS
 ###################################################################################
-if (eregi("(CLOSER|BLEND|INBND|_C$|_B$|_I$)",$group))
+if (preg_match('/(CLOSER|BLEND|INBND|_C$|_B$|_I$)/i',$group))
 	{
 	$stmt="select closer_campaigns from vicidial_campaigns where campaign_id='" . mysql_real_escape_string($group) . "';";
 if ($non_latin > 0)
@@ -549,11 +550,11 @@ $parked_to_print = mysql_num_rows($rslt);
 		{
 		$row=mysql_fetch_row($rslt);
 
-		if (eregi("LIVE",$row[0])) 
+		if (preg_match("/LIVE/i",$row[0])) 
 			{$out_live++;}
 		else
 			{
-			if (eregi("CLOSER",$row[0])) 
+			if (preg_match("/CLOSER/i",$row[0])) 
 				{$nothing=1;}
 			else 
 				{$out_ring++;}
@@ -567,7 +568,7 @@ $parked_to_print = mysql_num_rows($rslt);
 		if ($out_live > 9) {$F='<FONT class="r3">'; $FG='</FONT>';}
 		if ($out_live > 14) {$F='<FONT class="r4">'; $FG='</FONT>';}
 
-		if (eregi("(CLOSER|BLEND|INBND|_C$|_B$|_I$)",$group))
+		if (preg_match('/(CLOSER|BLEND|INBND|_C$|_B$|_I$)/i',$group))
 			{echo "$NFB$out_total$NFE current active calls&nbsp; &nbsp; &nbsp; \n";}
 		else
 			{echo "$NFB$out_total$NFE calls being placed &nbsp; &nbsp; &nbsp; \n";}
@@ -695,21 +696,21 @@ $talking_to_print = mysql_num_rows($rslt);
 	while ($i < $talking_to_print)
 		{
 		$row=mysql_fetch_row($rslt);
-			if (eregi("READY|PAUSED",$row[3]))
+			if (preg_match("/READY|PAUSED/i",$row[3]))
 			{
 			$row[5]=$row[6];
 			}
 			if ($non_latin < 1)
 			{
-			$extension = eregi_replace('Local/',"",$row[0]);
-			$extension = eregi_replace('IAX2/',"",$row[0]);
+			$extension = preg_replace('/Local\//i', '',$row[0]);
+			$extension = preg_replace('/IAX2\//i', '',$row[0]);
 			$extension =		sprintf("%-10s", $extension);
 			while(strlen($extension)>10) {$extension = substr("$extension", 0, -1);}
 			}
 			else
 			{
-			$extension = eregi_replace('Local/',"",$row[0]);
-			$extension = eregi_replace('IAX2/',"",$row[0]);
+			$extension = preg_replace('/Local\//i', '',$row[0]);
+			$extension = preg_replace('/IAX2\//i', '',$row[0]);
 			$extension =		sprintf("%-40s", $extension);
 			while(mb_strlen($extension, 'utf-8')>10) {$extension = mb_substr("$extension", 0, -1,'utf8');}
 			}
@@ -730,13 +731,13 @@ $talking_to_print = mysql_num_rows($rslt);
 		$user_pass =			$row[13];
 
 
-		if (eregi("INCALL",$Lstatus)) 
+		if (preg_match("/INCALL/i",$Lstatus)) 
 			{
-			if ( (eregi("AUTO",$comments)) or (strlen($comments)<1) )
+			if ( (preg_match("/AUTO/i",$comments)) or (strlen($comments)<1) )
 				{$CM='A';}
 			else
 				{
-				if (eregi("INBOUND",$comments)) 
+				if (preg_match("/INBOUND/i",$comments)) 
 					{$CM='I';}
 				else
 					{$CM='M';}
@@ -770,7 +771,7 @@ $talking_to_print = mysql_num_rows($rslt);
 				while(mb_strlen($user, 'utf-8')>18) {$user = mb_substr("$user", 0, -1,'utf8');}
 				}
 			}
-		if (!eregi("INCALL|QUEUE",$row[3]))
+		if (!preg_match("/INCALL|QUEUE/i",$row[3]))
 			{$call_time_S = ($STARTtime - $row[6]);}
 		else
 			{$call_time_S = ($STARTtime - $row[5]);}
@@ -792,7 +793,7 @@ $talking_to_print = mysql_num_rows($rslt);
 			if ($call_time_M_int >= 5) {$G='<SPAN class="purple"><B>'; $EG='</B></SPAN>';}
 	#		if ($call_time_M_int >= 10) {$G='<SPAN class="purple"><B>'; $EG='</B></SPAN>';}
 			}
-		if (eregi("PAUSED",$row[3])) 
+		if (preg_match("/PAUSED/i",$row[3])) 
 			{
 			if ($call_time_M_int >= 30) 
 				{$i++; continue;} 
@@ -808,9 +809,9 @@ $talking_to_print = mysql_num_rows($rslt);
 #		if ( (strlen($row[7])> 4) and ($row[7] != "$row[4]") )
 #				{$G='<SPAN class="orange"><B>'; $EG='</B></SPAN>';}
 
-		if ( (eregi("INCALL",$status)) or (eregi("QUEUE",$status)) ) {$agent_incall++;  $agent_total++;}
-		if ( (eregi("READY",$status)) or (eregi("CLOSER",$status)) ) {$agent_ready++;  $agent_total++;}
-		if ( (eregi("READY",$status)) or (eregi("CLOSER",$status)) ) 
+		if ( (preg_match("/INCALL/i",$status)) or (preg_match("/QUEUE/i",$status)) ) {$agent_incall++;  $agent_total++;}
+		if ( (preg_match("/READY/i",$status)) or (preg_match("/CLOSER/i",$status)) ) {$agent_ready++;  $agent_total++;}
+		if ( (preg_match("/READY/i",$status)) or (preg_match("/CLOSER/i",$status)) ) 
 			{
 			$G='<SPAN class="lightblue"><B>'; $EG='</B></SPAN>';
 			if ($call_time_M_int >= 1) {$G='<SPAN class="blue"><B>'; $EG='</B></SPAN>';}

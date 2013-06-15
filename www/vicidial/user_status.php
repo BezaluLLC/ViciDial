@@ -21,6 +21,7 @@
 # 110420-0344 - Added DEAD/PARK agent statuses
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 # 130414-0252 - Added report logging
+# 130610-0937 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -68,8 +69,8 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $StarTtimE = date("U");
 $TODAY = date("Y-m-d");
@@ -626,7 +627,7 @@ if ( ( ($stage == "tc_log_user_OUT") or ($stage == "tc_log_user_IN") ) and ($mod
 
 		### Add a record to the vicidial_admin_log
 		$SQL_log = "$stmtA|$stmtB|$stmtC|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
 		$SQL_log = addslashes($SQL_log);
 		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TIMECLOCK', event_type='LOGIN', record_id='$user', event_code='USER FORCED LOGIN FROM STATUS PAGE', event_sql=\"$SQL_log\", event_notes='Timeclock ID: $timeclock_id|';";
 		if ($DB) {echo "$stmt\n";}
@@ -679,7 +680,7 @@ if ( ( ($stage == "tc_log_user_OUT") or ($stage == "tc_log_user_IN") ) and ($mod
 
 		### Add a record to the vicidial_admin_log
 		$SQL_log = "$stmtA|$stmtB|$stmtC|$stmtD|$stmtE|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
 		$SQL_log = addslashes($SQL_log);
 		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TIMECLOCK', event_type='LOGOUT', record_id='$user', event_code='USER FORCED LOGOUT FROM STATUS PAGE', event_sql=\"$SQL_log\", event_notes='User login time: $last_action_sec|Timeclock ID: $timeclock_id|';";
 		if ($DB) {echo "$stmt\n";}

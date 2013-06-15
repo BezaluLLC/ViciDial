@@ -15,12 +15,14 @@
 # 110208-1239 - First build of script based upon vdc_script_notes.php
 # 110221-1252 - Added missing variables, accounted for call notes on manual dial calls
 # 130328-0019 - Converted ereg to preg functions
+# 130603-2201 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 #
 
-$version = '2.6-3';
-$build = '130328-0019';
+$version = '2.8-4';
+$build = '130603-2201';
 
 require("dbconnect.php");
+require("functions.php");
 
 
 # Configuration settings-
@@ -330,21 +332,15 @@ if (!isset($format))   {$format="text";}
 if (!isset($ACTION))   {$ACTION="refresh";}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
-$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-if ($DB) {echo "|$stmt|\n";}
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-	echo "Invalid Username/Password: |$user|$pass|\n";
+	echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
 	exit;
-	}
-else
-	{
-	# do nothing for now
 	}
 
 echo "<HTML>\n";

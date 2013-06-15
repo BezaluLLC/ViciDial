@@ -1,11 +1,13 @@
 <?php
 # AST_admin_template_maker.php - version 2.4
 # 
-# Copyright (C) 2012  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 120402-2132 - First Build
 # 120529-1427 - Filename filter fix
+# 130514-2127 - Bug fix on Chrome/IE browsers
+# 130610-1102 - Finalized changing of all ereg instances to preg
 #
 
 require("dbconnect.php");
@@ -81,14 +83,14 @@ if ($qm_conf_ct > 0)
 
 if ($non_latin < 1)
 	{
-	$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
-	$list_id_override = ereg_replace("[^0-9]","",$list_id_override);
+	$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	$list_id_override = preg_replace('/[^0-9]/','',$list_id_override);
 	}
 else
 	{
-	$PHP_AUTH_PW = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_PW);
-	$PHP_AUTH_USER = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	}
 
 $STARTtime = date("U");
@@ -166,7 +168,7 @@ $LOGadmin_viewable_call_times =	$row[3];
 $camp_lists='';
 $LOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
-if (!eregi("-ALL",$LOGallowed_campaigns))
+if (!preg_match('/\-ALL/i', $LOGallowed_campaigns))
 	{
 		echo "<BR/>**$LOGallowed_campaigns**";
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
@@ -180,10 +182,10 @@ $regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
 $script_name = getenv("SCRIPT_NAME");
 $server_name = getenv("SERVER_NAME");
 $server_port = getenv("SERVER_PORT");
-if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
+if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
 	else {$HTTPprotocol = 'http://';}
 $admDIR = "$HTTPprotocol$server_name$script_name";
-$admDIR = eregi_replace('AST_admin_template_maker.php','',$admDIR);
+$admDIR = preg_replace('/AST_admin_template_maker\.php/i', '',$admDIR);
 $admDIR = "/vicidial/";
 $admSCR = 'admin.php';
 $NWB = " &nbsp; <a href=\"javascript:openNewWindow('$admDIR$admSCR?ADD=99999";
@@ -293,7 +295,7 @@ function macfontfix($fontsize)
 	{
 	$browser = getenv("HTTP_USER_AGENT");
 	$pctype = explode("(", $browser);
-	if (ereg("Mac",$pctype[1])) 
+	if (preg_match('/Mac/',$pctype[1])) 
 		{
 		/* Browser is a Mac.  If not Netscape 6, raise fonts */
 		$blownbrowser = explode('/', $browser);

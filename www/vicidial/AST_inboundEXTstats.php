@@ -1,13 +1,14 @@
 <?php 
 # AST_inboundEXTstats.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 60421-1450 - check GET/POST vars lines with isset to not trigger PHP NOTICES
 # 60620-1322 - Added variable filtering to eliminate SQL injection attack threat
 #            - Added required user/pass to gain access to this page
 # 90508-0644 - Changed to PHP long tags
+# 130610-1134 - Finalized changing of all ereg instances to preg
 #
 
 require("dbconnect.php");
@@ -26,8 +27,8 @@ if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
 	if ($DB) {echo "|$stmt|\n";}
@@ -114,7 +115,7 @@ echo "\n";
 echo "---------- TOTALS\n";
 
 $extenSQL = "and extension='" . mysql_real_escape_string($group) . "'";
-if (eregi("\*",$group))
+if (preg_match("/\*/i",$group))
 	{$extenSQL = "and extension LIKE \"%$group\"";}
 $stmt="select count(*),sum(length_in_sec) from call_log where start_time >= '" . mysql_real_escape_string($query_date) . " 00:00:01' and start_time <= '" . mysql_real_escape_string($query_date) . " 23:59:59' and server_ip='" . mysql_real_escape_string($server_ip) . "' $extenSQL ;";
 $rslt=mysql_query($stmt, $link);

@@ -16,6 +16,7 @@
 # 110703-1833 - Added download option
 # 111104-1315 - Added user_group restrictions for selecting in-groups
 # 130414-0152 - Added report logging
+# 130610-0940 - Finalized changing of all ereg instances to preg
 #
 
 #header ("Content-type: text/html; charset=utf-8");
@@ -67,8 +68,8 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
@@ -161,7 +162,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 
 $LOGadmin_viewable_groupsSQL='';
 $whereLOGadmin_viewable_groupsSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 	{
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -171,7 +172,7 @@ if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewabl
 
 $LOGadmin_viewable_call_timesSQL='';
 $whereLOGadmin_viewable_call_timesSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i', $LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
 	{
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ -/",'',$LOGadmin_viewable_call_times);
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_call_timesSQL);
@@ -336,12 +337,12 @@ while ($users_to_print > $o)
 	while ($logs_to_parse > $p) 
 		{
 		$row=mysql_fetch_row($rslt);
-		if ( (ereg("LOGIN", $row[0])) or (ereg("START", $row[0])) )
+		if ( (preg_match('/LOGIN/', $row[0])) or (preg_match('/START/', $row[0])) )
 			{
 			$login_sec='';
 			$Tevent_time[$o] = date("Y-m-d H:i:s", $row[1]);
 			}
-		if (ereg("LOGOUT", $row[0]))
+		if (preg_match('/LOGOUT/', $row[0]))
 			{
 			$login_sec = $row[2];
 			$total_login_time = ($total_login_time + $login_sec);
@@ -584,7 +585,7 @@ $MAIN.="<tr><td><font size=2>ID </td><td><font size=2>EDIT </td><td align=right>
 		$manager_edit='';
 		if (strlen($row[6])>0) {$manager_edit = ' * ';}
 
-		if (ereg("LOGIN", $row[0]))
+		if (preg_match('/LOGIN/', $row[0]))
 			{
 			$login_sec='';
 			$MAIN.="<tr $bgcolor><td><font size=2>$row[5]</td>";
@@ -595,7 +596,7 @@ $MAIN.="<tr><td><font size=2>ID </td><td><font size=2>EDIT </td><td align=right>
 			$MAIN.="<td align=right><font size=2> $row[2]</td>\n";
 			$MAIN.="<td align=right><font size=2> </td></tr>\n";
 			}
-		if (ereg("LOGOUT", $row[0]))
+		if (preg_match('/LOGOUT/', $row[0]))
 			{
 			$login_sec = $row[3];
 			$total_login_time = ($total_login_time + $login_sec);

@@ -1,7 +1,7 @@
 <?php
 # user_territories.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This territories script is for use with custom tables in Vtiger which is why
 # it is separate from the standard admin.php script. user_territories_active in
@@ -12,10 +12,11 @@
 # 90717-0651 - Added batch
 # 90726-2302 - Added vicidial_list user owner update option
 # 91012-0310 - Added vicidial_list counts for territory as owner
+# 130610-1050 - Finalized changing of all ereg instances to preg
 #
 
-$version = '2.2.0-4';
-$build = '91012-0310';
+$version = '2.8-5';
+$build = '130610-1050';
 
 $MT[0]='';
 
@@ -81,18 +82,18 @@ if ($user_territories_active < 1)
 if ($non_latin < 1)
 	{
 	### Clean Variable Values ###
-	$DB = ereg_replace("[^0-9]","",$DB);
-	$action = ereg_replace("[^\_0-9a-zA-Z]","",$action);
-	$territory = ereg_replace("[^-\_0-9a-zA-Z]","",$territory);
-	$territory_description = ereg_replace("[^- \_\.\,0-9a-zA-Z]","",$territory_description);
-	$user = ereg_replace("[^-\_0-9a-zA-Z]","",$user);
-	$level = ereg_replace("[^\_A-Z]","",$level);
-	$old_territory = ereg_replace("[^-\_0-9a-zA-Z]","",$old_territory);
-	$old_user = ereg_replace("[^-\_0-9a-zA-Z]","",$old_user);
-	$accountid = ereg_replace("[^-\_0-9a-zA-Z]","",$accountid);
+	$DB = preg_replace('/[^0-9]/','',$DB);
+	$action = preg_replace('/[^\_0-9a-zA-Z]/','',$action);
+	$territory = preg_replace('/[^-\_0-9a-zA-Z]/', '',$territory);
+	$territory_description = preg_replace('/[^- \_\.\,0-9a-zA-Z]/','',$territory_description);
+	$user = preg_replace('/[^-\_0-9a-zA-Z]/', '',$user);
+	$level = preg_replace('/[^\_A-Z]/','',$level);
+	$old_territory = preg_replace('/[^-\_0-9a-zA-Z]/', '',$old_territory);
+	$old_user = preg_replace('/[^-\_0-9a-zA-Z]/', '',$old_user);
+	$accountid = preg_replace('/[^-\_0-9a-zA-Z]/', '',$accountid);
 	}
 
-if (eregi("YES",$batch))
+if (preg_match("/YES/i",$batch))
 	{
 	$USER='batch';
 	$PASS='batch';
@@ -101,8 +102,8 @@ else
 	{
 	$USER=$_SERVER['PHP_AUTH_USER'];
 	$PASS=$_SERVER['PHP_AUTH_PW'];
-	$USER = ereg_replace("[^0-9a-zA-Z]","",$USER);
-	$PASS = ereg_replace("[^0-9a-zA-Z]","",$PASS);
+	$USER = preg_replace('/[^0-9a-zA-Z]/','',$USER);
+	$PASS = preg_replace('/[^0-9a-zA-Z]/','',$PASS);
 
 	$stmt="SELECT count(*) from vicidial_users where user='$USER' and pass='$PASS' and user_level > 7 and modify_users='1'";
 	if ($DB) {echo "|$stmt|\n";}
@@ -198,7 +199,7 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER_ACCOUNT") and ($enable_vtiger_i
 		}
 	else
 		{
-		if (eregi("YES",$batch))
+		if (preg_match("/YES/i",$batch))
 			{$AID_lookupSQL = "website='$accountid'";}
 		else
 			{$AID_lookupSQL = "accountid='$accountid'";}
@@ -224,7 +225,7 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER_ACCOUNT") and ($enable_vtiger_i
 
 				### LOG INSERTION Admin Log Table ###
 				$SQL_log = "$stmt|$stmtB|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = preg_replace('/;/', '', $SQL_log);
 				$SQL_log = addslashes($SQL_log);
 				$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='ADD', record_id='$territory', event_code='ADMIN ADD USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 				if ($DB) {echo "|$stmt|\n";}
@@ -258,7 +259,7 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER_ACCOUNT") and ($enable_vtiger_i
 
 				### LOG INSERTION Admin Log Table ###
 				$SQL_log = "$stmt|$stmtB|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = preg_replace('/;/', '', $SQL_log);
 				$SQL_log = addslashes($SQL_log);
 				$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='VTIGER', event_type='MODIFY', record_id='$accountid', event_code='VTIGER MODIFY TERRITORY OWNER ACCOUNT', event_sql=\"$SQL_log\", event_notes='';";
 				if ($DB) {echo "|$stmt|\n";}
@@ -327,10 +328,10 @@ $browser = getenv("HTTP_USER_AGENT");
 $script_name = getenv("SCRIPT_NAME");
 $server_name = getenv("SERVER_NAME");
 $server_port = getenv("SERVER_PORT");
-if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
+if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
   else {$HTTPprotocol = 'http://';}
 $admDIR = "$HTTPprotocol$server_name:$server_port$script_name";
-$admDIR = eregi_replace('audio_store.php','',$admDIR);
+$admDIR = preg_replace('/user_territories\.php/i', '',$admDIR);
 $admSCR = 'admin.php';
 $NWB = " &nbsp; <a href=\"javascript:openNewWindow('$admDIR$admSCR?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
@@ -422,7 +423,7 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integrati
 
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|$stmtB|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='ADD', record_id='$territory', event_code='ADMIN ADD USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
@@ -509,7 +510,7 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integrati
 
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|$stmtB|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='VTIGER', event_type='MODIFY', record_id='$territory', event_code='VTIGER MODIFY TERRITORY OWNER', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
@@ -604,7 +605,7 @@ if ($action == "PROCESS_ADD_USER_TERRITORY")
 
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|$stmtB|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='ADD', record_id='$territory', event_code='ADMIN ADD USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
@@ -647,7 +648,7 @@ if ($action == "PROCESS_MODIFY_USER_TERRITORY")
 
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|$stmtB|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='MODIFY', record_id='$territory', event_code='ADMIN MODIFY USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
@@ -684,7 +685,7 @@ if ($action == "DELETE_USER_TERRITORY")
 
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|$stmtB|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='DELETE', record_id='$territory', event_code='ADMIN DELETE USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
@@ -742,7 +743,7 @@ if ($action == "PROCESS_ADD_TERRITORY")
 
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='ADD', record_id='$territory', event_code='ADMIN ADD TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
@@ -779,7 +780,7 @@ if ($action == "DELETE_TERRITORY")
 
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='DELETE', record_id='$territory', event_code='ADMIN DELETE TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
@@ -816,7 +817,7 @@ if ($action == "PROCESS_MODIFY_TERRITORY")
 
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='MODIFY', record_id='$territory', event_code='ADMIN MODIFY TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
@@ -908,7 +909,7 @@ if ($action == "MODIFY_TERRITORY")
 			$rowx=mysql_fetch_row($rslt);
 			$p++;
 
-			if (eregi("1$|3$|5$|7$|9$", $p))
+			if (preg_match("/1$|3$|5$|7$|9$/i", $p))
 				{$bgcolor='bgcolor="#B9CBFD"';} 
 			else
 				{$bgcolor='bgcolor="#9BB9FB"';}
@@ -1050,7 +1051,7 @@ if ($action == "LIST_ALL_TERRITORIES")
 				}
 			}
 
-		if (eregi("1$|3$|5$|7$|9$", $i))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $i))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}

@@ -1,7 +1,7 @@
 <?php
 # timeclock_edit.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -10,6 +10,7 @@
 # 90310-2109 - Added admin header
 # 90508-0644 - Changed to PHP long tags
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
+# 130610-1107 - Finalized changing of all ereg instances to preg
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -69,8 +70,8 @@ while ($i < $qm_conf_ct)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $StarTtimE = date("U");
 $TODAY = date("Y-m-d");
@@ -140,14 +141,14 @@ $browser = getenv("HTTP_USER_AGENT");
 		$event =		$row[0];
 		$tcid_link =	$row[1];
 		}
-	if (ereg("LOGIN",$event))
+	if (preg_match('/LOGIN/',$event))
 		{
 		$LOGINevent_id =	$timeclock_id;
 		$LOGOUTevent_id =	$tcid_link;
-		if ( (ereg('NULL',$LOGOUTevent_id)) or (strlen($LOGOUTevent_id)<1) )
+		if ( (preg_match('/NULL/',$LOGOUTevent_id)) or (strlen($LOGOUTevent_id)<1) )
 			{$invalid_record++;}
 		}
-	if (ereg("LOGOUT",$event))
+	if (preg_match('/LOGOUT/',$event))
 		{
 		$LOGOUTevent_id =	$timeclock_id;
 		$stmt="SELECT timeclock_id from vicidial_timeclock_log where tcid_link='" . mysql_real_escape_string($timeclock_id) . "';";
@@ -159,7 +160,7 @@ $browser = getenv("HTTP_USER_AGENT");
 			$row=mysql_fetch_row($rslt);
 			$LOGINevent_id =		$row[0];
 			}
-		if ( (ereg('NULL',$LOGOUTevent_id)) or (strlen($LOGOUTevent_id)<1) )
+		if ( (preg_match('/NULL/',$LOGOUTevent_id)) or (strlen($LOGOUTevent_id)<1) )
 			{$invalid_record++;}
 		}
 	if (strlen($LOGOUTevent_id)<1)
@@ -330,7 +331,7 @@ if ($stage == "edit_TC_log")
 
 		### Add a record to the vicidial_admin_log
 		$SQL_log = "$stmtA|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
 		$SQL_log = addslashes($SQL_log);
 		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TIMECLOCK', event_type='MODIFY', record_id='$LOGINevent_id', event_code='MANAGER MODIFY TIMECLOCK LOG', event_sql=\"$SQL_log\", event_notes='user: $user|$oldLOGINepoch|$oldLOGINdate|sec: $log_time|';";
 		if ($DB) {echo "$stmt\n";}
@@ -348,7 +349,7 @@ if ($stage == "edit_TC_log")
 
 		### Add a record to the vicidial_admin_log
 		$SQL_log = "$stmtB|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
 		$SQL_log = addslashes($SQL_log);
 		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TIMECLOCK', event_type='MODIFY', record_id='$LOGOUTevent_id', event_code='MANAGER MODIFY TIMECLOCK LOG', event_sql=\"$SQL_log\", event_notes='user: $user|$oldLOGOUTepoch|$oldLOGOUTdate|sec: $log_time|';";
 		if ($DB) {echo "$stmt\n";}

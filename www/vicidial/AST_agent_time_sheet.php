@@ -17,6 +17,7 @@
 # 110703-1848 - Added download option
 # 111104-1308 - Added user_group restrictions for selecting in-groups
 # 130414-0148 - Added report logging
+# 130610-1028 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -64,8 +65,8 @@ if (isset($_GET["file_download"]))					{$file_download=$_GET["file_download"];}
 
 $user=$agent;
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
 if ($DB) {$MAIN.="|$stmt|\n";}
@@ -143,7 +144,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 $LOGadmin_viewable_groupsSQL='';
 $vuLOGadmin_viewable_groupsSQL='';
 $whereLOGadmin_viewable_groupsSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 	{
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -154,7 +155,7 @@ if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewabl
 
 $LOGadmin_viewable_call_timesSQL='';
 $whereLOGadmin_viewable_call_timesSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i', $LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
 	{
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ -/",'',$LOGadmin_viewable_call_times);
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_call_timesSQL);
@@ -367,7 +368,7 @@ $CSV_text2.="\"\",\"ID\",\"EDIT\",\"EVENT\",\"DATE\",\"IP ADDRESS\",\"GROUP\",\"
 		$manager_edit='';
 		if (strlen($row[6])>0) {$manager_edit = ' * ';}
 
-		if (ereg("LOGIN", $row[0]))
+		if (preg_match('/LOGIN/', $row[0]))
 			{
 			$login_sec='';
 			$MAIN.="<tr $bgcolor><td><font size=2><A HREF=\"./timeclock_edit.php?timeclock_id=$row[5]\">$row[5]</A></td>";
@@ -379,7 +380,7 @@ $CSV_text2.="\"\",\"ID\",\"EDIT\",\"EVENT\",\"DATE\",\"IP ADDRESS\",\"GROUP\",\"
 			$MAIN.="<td align=right><font size=2> </td></tr>\n";
 			$CSV_text2.="\"\",\"$row[5]\",\"$manager_edit\",\"$row[0]\",\"$TC_log_date\",\"$row[4]\",\"$row[2]\",\"\"\n";
 			}
-		if (ereg("LOGOUT", $row[0]))
+		if (preg_match('/LOGOUT/', $row[0]))
 			{
 			$login_sec = $row[3];
 			$total_login_time = ($total_login_time + $login_sec);

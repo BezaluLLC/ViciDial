@@ -1,7 +1,7 @@
 <?php
 # user_group_bulk_change.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 81119-0918 - First build
@@ -10,6 +10,7 @@
 # 90508-0644 - Changed to PHP long tags
 # 120221-0025 - Added in User Group restrictions
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
+# 130610-1106 - Finalized changing of all ereg instances to preg
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -50,8 +51,8 @@ while ($i < $qm_conf_ct)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $StarTtimE = date("U");
 $TODAY = date("Y-m-d");
@@ -118,7 +119,7 @@ $LOGadmin_viewable_call_times =	$row[3];
 
 $LOGadmin_viewable_groupsSQL='';
 $whereLOGadmin_viewable_groupsSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 	{
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -192,7 +193,7 @@ if ($stage == "one_user_group_change")
 	
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|";
-	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = preg_replace('/;/', '', $SQL_log);
 	$SQL_log = addslashes($SQL_log);
 	$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERGROUPS', event_type='MODIFY', record_id='$group', event_code='ADMIN BULK USER GROUP CHANGE', event_sql=\"$SQL_log\", event_notes='Old Group: $old_group';";
 	if ($DB) {echo "|$stmt|\n";}
@@ -211,7 +212,7 @@ if ($stage == "all_user_group_change")
 	
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|";
-	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = preg_replace('/;/', '', $SQL_log);
 	$SQL_log = addslashes($SQL_log);
 	$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERGROUPS', event_type='MODIFY', record_id='$group', event_code='ADMIN BULK USER GROUP CHANGE', event_sql=\"$SQL_log\", event_notes='ALL NON-ADMIN;";
 	if ($DB) {echo "|$stmt|\n";}

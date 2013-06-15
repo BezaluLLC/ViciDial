@@ -41,6 +41,7 @@
 # 121123-0911 - Added Call Times Holidays Inbound functionality
 # 121214-2238 - Added email menus
 # 130221-1830 - Added Level 8 disable add option
+# 130610-1040 - Finalized changing of all ereg instances to preg
 #
 
 
@@ -49,7 +50,7 @@ if($short_header)
 	{
 	?>
 	<TABLE CELLPADDING=0 CELLSPACING=0 BGCOLOR="#015B91"><TR>
-	<TD><IMG SRC="vicidial_admin_web_logo_small.gif" WIDTH=71 HEIGHT=22> &nbsp; </TD>
+	<TD><IMG SRC="vicidial_admin_web_logo_small.gif" WIDTH=71 HEIGHT=22 ALT="System logo"> &nbsp; </TD>
 	<?php if ($reports_only_user < 1) {
 		?>
 	<TD> &nbsp; <A HREF="admin.php" ALT="Users"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Users</B></A> &nbsp; </TD>
@@ -206,7 +207,7 @@ if ($TCedit_javascript > 0)
 ######################
 # ADD=31 or 34 and SUB=29 for list mixes
 ######################
-if ( ( ($ADD==34) or ($ADD==31) or ($ADD==49) ) and ($SUB==29) and ($LOGmodify_campaigns==1) and ( (eregi("$campaign_id",$LOGallowed_campaigns)) or (eregi("ALL-CAMPAIGNS",$LOGallowed_campaigns)) ) ) 
+if ( ( ($ADD==34) or ($ADD==31) or ($ADD==49) ) and ($SUB==29) and ($LOGmodify_campaigns==1) and ( (preg_match("/$campaign_id/i", $LOGallowed_campaigns)) or (preg_match("/ALL\-CAMPAIGNS/i",$LOGallowed_campaigns)) ) ) 
 	{
 
 	?>
@@ -1076,7 +1077,7 @@ $SSlevel_8_disable_add =	$row[5];
 <TABLE BGCOLOR=white cellpadding=0 cellspacing=0>
 <!-- BEGIN SIDEBAR NAVIGATION -->
 <TR><TD VALIGN=TOP WIDTH=170 BGCOLOR=#015B91 ALIGN=CENTER>
-<IMG SRC="./vicidial_admin_web_logo.gif" WIDTH=170 HEIGHT=45 ALT="VICIDIAL logo">
+<IMG SRC="./vicidial_admin_web_logo.gif" WIDTH=170 HEIGHT=45 ALT="System logo">
 <B><FONT FACE="ARIAL,HELVETICA" COLOR=white>ADMINISTRATION</FONT></B><BR>
 	<TABLE CELLPADDING=2 CELLSPACING=0 BGCOLOR=#015B91 WIDTH=160>
 	<?php if ($reports_only_user < 1) {
@@ -1577,7 +1578,7 @@ $SSlevel_8_disable_add =	$row[5];
 		?>
 	<TR BGCOLOR=<?php echo $cts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=190000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Contacts </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=191111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A Contact </a><?php } ?></TD></TR>
 	<?php }
-	if ( (strlen($status_sh) > 1) and (!eregi('campaign',$hh) ) ) { 
+	if ( (strlen($status_sh) > 1) and (!preg_match('/campaign/i',$hh) ) ) { 
 		?>
 	<TR BGCOLOR=<?php echo $status_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=321111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> System Statuses </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=331111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Status Categories </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=341111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> QC Status Codes </a></TD></TR>
 	<?php }

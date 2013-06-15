@@ -1,5 +1,5 @@
 <?php
-# admin_search_lead.php   version 2.6
+# admin_search_lead.php   version 2.8
 # 
 # Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -30,6 +30,7 @@
 # 120223-2249 - Removed logging of good login passwords if webroot writable is enabled
 # 120409-1131 - Added option for log searches done through slave DB server
 # 121025-1732 - Added owner field search option
+# 130610-1054 - Finalized changing of all ereg instances to preg
 #
 
 require("dbconnect.php");
@@ -91,9 +92,9 @@ while ($i < $qm_conf_ct)
 
 $report_name = 'Search Leads Logs';
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
-$phone = ereg_replace("[^0-9]","",$phone);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+$phone = preg_replace('/[^0-9]/','',$phone);
 if (strlen($alt_phone_search) < 2) {$alt_phone_search='No';}
 
 $STARTtime = date("U");
@@ -169,7 +170,7 @@ $LOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
 $LOGallowed_listsSQL='';
 $whereLOGallowed_listsSQL='';
-if (!eregi("-ALL",$LOGallowed_campaigns))
+if (!preg_match('/\-ALL/i', $LOGallowed_campaigns))
 	{
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
@@ -186,7 +187,7 @@ if (!eregi("-ALL",$LOGallowed_campaigns))
 		$camp_lists .= "'$rowx[0]',";
 		$o++;
 		}
-	$camp_lists = eregi_replace(".$","",$camp_lists);
+	$camp_lists = preg_replace('/.$/i','',$camp_lists);;
 	if (strlen($camp_lists)<2) {$camp_lists="''";}
 	$LOGallowed_listsSQL = "and list_id IN($camp_lists)";
 	$whereLOGallowed_listsSQL = "where list_id IN($camp_lists)";
@@ -419,7 +420,7 @@ else
 					}
 				$o++;
 				$search_lead = $row[0];
-				if (eregi("1$|3$|5$|7$|9$", $o))
+				if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 					{$bgcolor='bgcolor="#B9CBFD"';} 
 				else
 					{$bgcolor='bgcolor="#9BB9FB"';}
@@ -484,7 +485,7 @@ else
 					}
 				$o++;
 				$search_lead = $row[0];
-				if (eregi("1$|3$|5$|7$|9$", $o))
+				if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 					{$bgcolor='bgcolor="#B9CBFD"';} 
 				else
 					{$bgcolor='bgcolor="#9BB9FB"';}
@@ -546,7 +547,7 @@ else
 						}
 					$o++;
 					$search_lead = $row[0];
-					if (eregi("1$|3$|5$|7$|9$", $o))
+					if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 						{$bgcolor='bgcolor="#B9CBFD"';} 
 					else
 						{$bgcolor='bgcolor="#9BB9FB"';}
@@ -564,7 +565,7 @@ else
 
 		### LOG INSERTION Admin Log Table ###
 		$SQL_log = "$stmt|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
 		$SQL_log = addslashes($SQL_log);
 		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LEADS', event_type='SEARCH', record_id='$search_lead', event_code='ADMIN SEARCH LEAD', event_sql=\"$SQL_log\", event_notes='';";
 		if ($DB) {echo "|$stmt|\n";}
@@ -698,7 +699,7 @@ else
 
 	### LOG INSERTION Search Log Table ###
 	$SQL_log = "$stmt|";
-	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = preg_replace('/;/', '', $SQL_log);
 	$SQL_log = addslashes($SQL_log);
 	$stmtL="INSERT INTO vicidial_lead_search_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', source='admin', results='0', search_query=\"$SQL_log\";";
 	if ($DB) {echo "|$stmtL|\n";}
@@ -794,7 +795,7 @@ else
 
 			$o++;
 			$search_lead = $row[0];
-			if (eregi("1$|3$|5$|7$|9$", $o))
+			if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 				{$bgcolor='bgcolor="#B9CBFD"';} 
 			else
 				{$bgcolor='bgcolor="#9BB9FB"';}
@@ -817,7 +818,7 @@ else
 
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|";
-	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = preg_replace('/;/', '', $SQL_log);
 	$SQL_log = addslashes($SQL_log);
 	$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LEADS', event_type='SEARCH', record_id='$search_lead', event_code='ADMIN SEARCH LEAD', event_sql=\"$SQL_log\", event_notes='';";
 	if ($DB) {echo "|$stmt|\n";}

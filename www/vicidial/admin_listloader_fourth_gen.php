@@ -48,6 +48,7 @@
 # 120525-1038 - Added uploaded filename filtering
 # 120529-1348 - Filename filter fix
 # 130420-2056 - Added NANPA prefix validation and timezone options
+# 130610-0920 - Finalized changing of all ereg instances to preg
 #
 
 $version = '2.6-47';
@@ -178,14 +179,14 @@ if ($qm_conf_ct > 0)
 
 if ($non_latin < 1)
 	{
-	$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
-	$list_id_override = ereg_replace("[^0-9]","",$list_id_override);
+	$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	$list_id_override = preg_replace('/[^0-9]/','',$list_id_override);
 	}
 else
 	{
-	$PHP_AUTH_PW = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_PW);
-	$PHP_AUTH_USER = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	}
 
 $STARTtime = date("U");
@@ -269,7 +270,7 @@ $LOGadmin_viewable_call_times =	$row[3];
 $camp_lists='';
 $LOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
-if (!eregi("-ALL",$LOGallowed_campaigns))
+if (!preg_match('/\-ALL/i', $LOGallowed_campaigns))
 	{
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
@@ -281,10 +282,10 @@ $regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
 $script_name = getenv("SCRIPT_NAME");
 $server_name = getenv("SERVER_NAME");
 $server_port = getenv("SERVER_PORT");
-if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
+if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
 	else {$HTTPprotocol = 'http://';}
 $admDIR = "$HTTPprotocol$server_name$script_name";
-$admDIR = eregi_replace('admin_listloader_fourth_gen.php','',$admDIR);
+$admDIR = preg_replace('/admin_listloader_fourth_gen\.php/i', '',$admDIR);
 $admDIR = "/vicidial/";
 $admSCR = 'admin.php';
 $NWB = " &nbsp; <a href=\"javascript:openNewWindow('$admDIR$admSCR?ADD=99999";
@@ -322,7 +323,7 @@ if ($gmt_recs > 0)
 else
 	{
 	$SERVER_GMT = date("O");
-	$SERVER_GMT = eregi_replace("\+","",$SERVER_GMT);
+	$SERVER_GMT = preg_replace('/\+/i', '',$SERVER_GMT);
 	$SERVER_GMT = ($SERVER_GMT + 0);
 	$SERVER_GMT = ($SERVER_GMT / 100);
 	}
@@ -342,7 +343,7 @@ function macfontfix($fontsize)
 	{
 	$browser = getenv("HTTP_USER_AGENT");
 	$pctype = explode("(", $browser);
-	if (ereg("Mac",$pctype[1])) 
+	if (preg_match('/Mac/',$pctype[1])) 
 		{
 		/* Browser is a Mac.  If not Netscape 6, raise fonts */
 		$blownbrowser = explode('/', $browser);
@@ -665,7 +666,7 @@ if ($OK_to_process)
 
 			if (strlen($buffer)>0) 
 				{
-				$row=explode($delimiter, eregi_replace("[\'\"]", "", $buffer));
+				$row=explode($delimiter, preg_replace('/[\'\"]/i', '', $buffer));
 
 				$pulldate=date("Y-m-d H:i:s");
 				$entry_date =			"$pulldate";
@@ -678,8 +679,8 @@ if ($OK_to_process)
 				$list_id =				$row[$list_id_field];
 				$gmt_offset =			'0';
 				$called_since_last_reset='N';
-				$phone_code =			eregi_replace("[^0-9]", "", $row[$phone_code_field]);
-				$phone_number =			eregi_replace("[^0-9]", "", $row[$phone_number_field]);
+				$phone_code =			preg_replace('/[^0-9]/i', '', $row[$phone_code_field]);
+				$phone_number =			preg_replace('/[^0-9]/i', '', $row[$phone_number_field]);
 				$title =				$row[$title_field];
 				$first_name =			$row[$first_name_field];
 				$middle_initial =		$row[$middle_initial_field];
@@ -694,7 +695,7 @@ if ($OK_to_process)
 				$country_code =			$row[$country_code_field];
 				$gender =				$row[$gender_field];
 				$date_of_birth =		$row[$date_of_birth_field];
-				$alt_phone =			eregi_replace("[^0-9]", "", $row[$alt_phone_field]);
+				$alt_phone =			preg_replace('/[^0-9]/i', '', $row[$alt_phone_field]);
 				$email =				$row[$email_field];
 				$security_phrase =		$row[$security_phrase_field];
 				$comments =				trim($row[$comments_field]);
@@ -702,32 +703,32 @@ if ($OK_to_process)
 				$owner =				$row[$owner_field];
 				
 				# replace ' " ` \ ; with nothing
-				$vendor_lead_code =		eregi_replace($field_regx, "", $vendor_lead_code);
-				$source_code =			eregi_replace($field_regx, "", $source_code);
-				$source_id = 			eregi_replace($field_regx, "", $source_id);
-				$list_id =				eregi_replace($field_regx, "", $list_id);
-				$phone_code =			eregi_replace($field_regx, "", $phone_code);
-				$phone_number =			eregi_replace($field_regx, "", $phone_number);
-				$title =				eregi_replace($field_regx, "", $title);
-				$first_name =			eregi_replace($field_regx, "", $first_name);
-				$middle_initial =		eregi_replace($field_regx, "", $middle_initial);
-				$last_name =			eregi_replace($field_regx, "", $last_name);
-				$address1 =				eregi_replace($field_regx, "", $address1);
-				$address2 =				eregi_replace($field_regx, "", $address2);
-				$address3 =				eregi_replace($field_regx, "", $address3);
-				$city =					eregi_replace($field_regx, "", $city);
-				$state =				eregi_replace($field_regx, "", $state);
-				$province =				eregi_replace($field_regx, "", $province);
-				$postal_code =			eregi_replace($field_regx, "", $postal_code);
-				$country_code =			eregi_replace($field_regx, "", $country_code);
-				$gender =				eregi_replace($field_regx, "", $gender);
-				$date_of_birth =		eregi_replace($field_regx, "", $date_of_birth);
-				$alt_phone =			eregi_replace($field_regx, "", $alt_phone);
-				$email =				eregi_replace($field_regx, "", $email);
-				$security_phrase =		eregi_replace($field_regx, "", $security_phrase);
-				$comments =				eregi_replace($field_regx, "", $comments);
-				$rank =					eregi_replace($field_regx, "", $rank);
-				$owner =				eregi_replace($field_regx, "", $owner);
+				$vendor_lead_code =		preg_replace("/$field_regx/i", "", $vendor_lead_code);
+				$source_code =			preg_replace("/$field_regx/i", "", $source_code);
+				$source_id = 			preg_replace("/$field_regx/i", "", $source_id);
+				$list_id =				preg_replace("/$field_regx/i", "", $list_id);
+				$phone_code =			preg_replace("/$field_regx/i", "", $phone_code);
+				$phone_number =			preg_replace("/$field_regx/i", "", $phone_number);
+				$title =				preg_replace("/$field_regx/i", "", $title);
+				$first_name =			preg_replace("/$field_regx/i", "", $first_name);
+				$middle_initial =		preg_replace("/$field_regx/i", "", $middle_initial);
+				$last_name =			preg_replace("/$field_regx/i", "", $last_name);
+				$address1 =				preg_replace("/$field_regx/i", "", $address1);
+				$address2 =				preg_replace("/$field_regx/i", "", $address2);
+				$address3 =				preg_replace("/$field_regx/i", "", $address3);
+				$city =					preg_replace("/$field_regx/i", "", $city);
+				$state =				preg_replace("/$field_regx/i", "", $state);
+				$province =				preg_replace("/$field_regx/i", "", $province);
+				$postal_code =			preg_replace("/$field_regx/i", "", $postal_code);
+				$country_code =			preg_replace("/$field_regx/i", "", $country_code);
+				$gender =				preg_replace("/$field_regx/i", "", $gender);
+				$date_of_birth =		preg_replace("/$field_regx/i", "", $date_of_birth);
+				$alt_phone =			preg_replace("/$field_regx/i", "", $alt_phone);
+				$email =				preg_replace("/$field_regx/i", "", $email);
+				$security_phrase =		preg_replace("/$field_regx/i", "", $security_phrase);
+				$comments =				preg_replace("/$field_regx/i", "", $comments);
+				$rank =					preg_replace("/$field_regx/i", "", $rank);
+				$owner =				preg_replace("/$field_regx/i", "", $owner);
 				
 				$USarea = 			substr($phone_number, 0, 3);
 				$USprefix = 		substr($phone_number, 3, 3);
@@ -769,7 +770,7 @@ if ($OK_to_process)
 											{
 											$A_field_value[$o] =	$row[$form_field_value];
 											# replace ' " ` \ ; with nothing
-											$A_field_value[$o] =	eregi_replace($field_regx, "", $A_field_value[$o]);
+											$A_field_value[$o] =	preg_replace("/$field_regx/i", "", $A_field_value[$o]);
 
 											$custom_SQL .= "$A_field_label[$o]='$A_field_value[$o]',";
 											}
@@ -786,7 +787,7 @@ if ($OK_to_process)
 
 
 				##### Check for duplicate phone numbers in vicidial_list table for all lists in a campaign #####
-				if (eregi("DUPCAMP",$dupcheck))
+				if (preg_match("/DUPCAMP/i",$dupcheck))
 					{
 					$dup_lead=0;
 					$dup_lists='';
@@ -810,7 +811,7 @@ if ($OK_to_process)
 								$dup_lists .=	"'$row[0]',";
 								$L++;
 								}
-							$dup_lists = eregi_replace(",$",'',$dup_lists);
+							$dup_lists = preg_replace('/,$/i', '',$dup_lists);
 
 							$stmt="select list_id from vicidial_list where phone_number='$phone_number' and list_id IN($dup_lists) limit 1;";
 							$rslt=mysql_query($stmt, $link);
@@ -823,7 +824,7 @@ if ($OK_to_process)
 								}
 							if ($dup_lead < 1)
 								{
-								if (eregi("$phone_number$US$list_id",$phone_list))
+								if (preg_match("/$phone_number$US$list_id/i", $phone_list))
 									{$dup_lead++; $dup++;}
 								}
 							}
@@ -831,7 +832,7 @@ if ($OK_to_process)
 					}
 
 				##### Check for duplicate phone numbers in vicidial_list table entire database #####
-				if (eregi("DUPSYS",$dupcheck))
+				if (preg_match("/DUPSYS/i",$dupcheck))
 					{
 					$dup_lead=0;
 					$stmt="select list_id from vicidial_list where phone_number='$phone_number';";
@@ -845,13 +846,13 @@ if ($OK_to_process)
 						}
 					if ($dup_lead < 1)
 						{
-						if (eregi("$phone_number$US$list_id",$phone_list))
+						if (preg_match("/$phone_number$US$list_id/i", $phone_list))
 							{$dup_lead++; $dup++;}
 						}
 					}
 
 				##### Check for duplicate phone numbers in vicidial_list table for one list_id #####
-				if (eregi("DUPLIST",$dupcheck))
+				if (preg_match("/DUPLIST/i",$dupcheck))
 					{
 					$dup_lead=0;
 					$stmt="select count(*) from vicidial_list where phone_number='$phone_number' and list_id='$list_id';";
@@ -865,13 +866,13 @@ if ($OK_to_process)
 						}
 					if ($dup_lead < 1)
 						{
-						if (eregi("$phone_number$US$list_id",$phone_list))
+						if (preg_match("/$phone_number$US$list_id/i", $phone_list))
 							{$dup_lead++; $dup++;}
 						}
 					}
 
 				##### Check for duplicate title and alt-phone in vicidial_list table for one list_id #####
-				if (eregi("DUPTITLEALTPHONELIST",$dupcheck))
+				if (preg_match("/DUPTITLEALTPHONELIST/i",$dupcheck))
 					{
 					$dup_lead=0;
 					$stmt="select count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id';";
@@ -885,13 +886,13 @@ if ($OK_to_process)
 						}
 					if ($dup_lead < 1)
 						{
-						if (eregi("$alt_phone$title$US$list_id",$phone_list))
+						if (preg_match("/$alt_phone$title$US$list_id/i",$phone_list))
 							{$dup_lead++; $dup++;}
 						}
 					}
 
 				##### Check for duplicate phone numbers in vicidial_list table entire database #####
-				if (eregi("DUPTITLEALTPHONESYS",$dupcheck))
+				if (preg_match("/DUPTITLEALTPHONESYS/i",$dupcheck))
 					{
 					$dup_lead=0;
 					$stmt="select list_id from vicidial_list where title='$title' and alt_phone='$alt_phone';";
@@ -905,7 +906,7 @@ if ($OK_to_process)
 						}
 					if ($dup_lead < 1)
 						{
-						if (eregi("$alt_phone$title$US$list_id",$phone_list))
+						if (preg_match("/$alt_phone$title$US$list_id/i",$phone_list))
 							{$dup_lead++; $dup++;}
 						}
 					}
@@ -959,7 +960,7 @@ if ($OK_to_process)
 					{
 					if (strlen($phone_code)<1) {$phone_code = '1';}
 
-					if (eregi("TITLEALTPHONE",$dupcheck))
+					if (preg_match("/TITLEALTPHONE/i",$dupcheck))
 						{$phone_list .= "$alt_phone$title$US$list_id|";}
 					else
 						{$phone_list .= "$phone_number$US$list_id|";}
@@ -1119,7 +1120,7 @@ if (($leadfile) && ($LF_path))
 		# csv xls xlsx ods sxc conversion
 		if (preg_match("/\.csv$|\.xls$|\.xlsx$|\.ods$|\.sxc$/i", $leadfile_name)) 
 			{
-			$leadfile_name = ereg_replace("[^-\.\_0-9a-zA-Z]","_",$leadfile_name);
+			$leadfile_name = preg_replace('/[^-\.\_0-9a-zA-Z]/','_',$leadfile_name);
 			copy($LF_path, "/tmp/$leadfile_name");
 			$new_filename = preg_replace("/\.csv$|\.xls$|\.xlsx$|\.ods$|\.sxc$/i", '.txt', $leadfile_name);
 			$convert_command = "$WeBServeRRooT/$admin_web_directory/sheet2tab.pl /tmp/$leadfile_name /tmp/$new_filename";
@@ -1183,7 +1184,7 @@ if (($leadfile) && ($LF_path))
 
 				if (strlen($buffer)>0) 
 					{
-					$row=explode($delimiter, eregi_replace("[\'\"]", "", $buffer));
+					$row=explode($delimiter, preg_replace('/[\'\"]/i', '', $buffer));
 					$custom_fields_row=$row;
 					$pulldate=date("Y-m-d H:i:s");
 					$entry_date =			"$pulldate";
@@ -1196,8 +1197,8 @@ if (($leadfile) && ($LF_path))
 					$list_id =				$row[$list_id_field];
 					$gmt_offset =			'0';
 					$called_since_last_reset='N';
-					$phone_code =			eregi_replace("[^0-9]", "", $row[$phone_code_field]);
-					$phone_number =			eregi_replace("[^0-9]", "", $row[$phone_number_field]);
+					$phone_code =			preg_replace('/[^0-9]/i', '', $row[$phone_code_field]);
+					$phone_number =			preg_replace('/[^0-9]/i', '', $row[$phone_number_field]);
 					$title =				$row[$title_field];
 					$first_name =			$row[$first_name_field];
 					$middle_initial =		$row[$middle_initial_field];
@@ -1212,7 +1213,7 @@ if (($leadfile) && ($LF_path))
 					$country_code =			$row[$country_code_field];
 					$gender =				$row[$gender_field];
 					$date_of_birth =		$row[$date_of_birth_field];
-					$alt_phone =			eregi_replace("[^0-9]", "", $row[$alt_phone_field]);
+					$alt_phone =			preg_replace('/[^0-9]/i', '', $row[$alt_phone_field]);
 					$email =				$row[$email_field];
 					$security_phrase =		$row[$security_phrase_field];
 					$comments =				trim($row[$comments_field]);
@@ -1220,32 +1221,32 @@ if (($leadfile) && ($LF_path))
 					$owner =				$row[$owner_field];
 					
 					# replace ' " ` \ ; with nothing
-					$vendor_lead_code =		eregi_replace($field_regx, "", $vendor_lead_code);
-					$source_code =			eregi_replace($field_regx, "", $source_code);
-					$source_id = 			eregi_replace($field_regx, "", $source_id);
-					$list_id =				eregi_replace($field_regx, "", $list_id);
-					$phone_code =			eregi_replace($field_regx, "", $phone_code);
-					$phone_number =			eregi_replace($field_regx, "", $phone_number);
-					$title =				eregi_replace($field_regx, "", $title);
-					$first_name =			eregi_replace($field_regx, "", $first_name);
-					$middle_initial =		eregi_replace($field_regx, "", $middle_initial);
-					$last_name =			eregi_replace($field_regx, "", $last_name);
-					$address1 =				eregi_replace($field_regx, "", $address1);
-					$address2 =				eregi_replace($field_regx, "", $address2);
-					$address3 =				eregi_replace($field_regx, "", $address3);
-					$city =					eregi_replace($field_regx, "", $city);
-					$state =				eregi_replace($field_regx, "", $state);
-					$province =				eregi_replace($field_regx, "", $province);
-					$postal_code =			eregi_replace($field_regx, "", $postal_code);
-					$country_code =			eregi_replace($field_regx, "", $country_code);
-					$gender =				eregi_replace($field_regx, "", $gender);
-					$date_of_birth =		eregi_replace($field_regx, "", $date_of_birth);
-					$alt_phone =			eregi_replace($field_regx, "", $alt_phone);
-					$email =				eregi_replace($field_regx, "", $email);
-					$security_phrase =		eregi_replace($field_regx, "", $security_phrase);
-					$comments =				eregi_replace($field_regx, "", $comments);
-					$rank =					eregi_replace($field_regx, "", $rank);
-					$owner =				eregi_replace($field_regx, "", $owner);
+					$vendor_lead_code =		preg_replace("/$field_regx/i", "", $vendor_lead_code);
+					$source_code =			preg_replace("/$field_regx/i", "", $source_code);
+					$source_id = 			preg_replace("/$field_regx/i", "", $source_id);
+					$list_id =				preg_replace("/$field_regx/i", "", $list_id);
+					$phone_code =			preg_replace("/$field_regx/i", "", $phone_code);
+					$phone_number =			preg_replace("/$field_regx/i", "", $phone_number);
+					$title =				preg_replace("/$field_regx/i", "", $title);
+					$first_name =			preg_replace("/$field_regx/i", "", $first_name);
+					$middle_initial =		preg_replace("/$field_regx/i", "", $middle_initial);
+					$last_name =			preg_replace("/$field_regx/i", "", $last_name);
+					$address1 =				preg_replace("/$field_regx/i", "", $address1);
+					$address2 =				preg_replace("/$field_regx/i", "", $address2);
+					$address3 =				preg_replace("/$field_regx/i", "", $address3);
+					$city =					preg_replace("/$field_regx/i", "", $city);
+					$state =				preg_replace("/$field_regx/i", "", $state);
+					$province =				preg_replace("/$field_regx/i", "", $province);
+					$postal_code =			preg_replace("/$field_regx/i", "", $postal_code);
+					$country_code =			preg_replace("/$field_regx/i", "", $country_code);
+					$gender =				preg_replace("/$field_regx/i", "", $gender);
+					$date_of_birth =		preg_replace("/$field_regx/i", "", $date_of_birth);
+					$alt_phone =			preg_replace("/$field_regx/i", "", $alt_phone);
+					$email =				preg_replace("/$field_regx/i", "", $email);
+					$security_phrase =		preg_replace("/$field_regx/i", "", $security_phrase);
+					$comments =				preg_replace("/$field_regx/i", "", $comments);
+					$rank =					preg_replace("/$field_regx/i", "", $rank);
+					$owner =				preg_replace("/$field_regx/i", "", $owner);
 					
 					$USarea = 			substr($phone_number, 0, 3);
 					$USprefix = 		substr($phone_number, 3, 3);
@@ -1260,7 +1261,7 @@ if (($leadfile) && ($LF_path))
 						}
 
 					##### Check for duplicate phone numbers in vicidial_list table for all lists in a campaign #####
-					if (eregi("DUPCAMP",$dupcheck))
+					if (preg_match("/DUPCAMP/i",$dupcheck))
 						{
 							$dup_lead=0;
 							$dup_lists='';
@@ -1284,7 +1285,7 @@ if (($leadfile) && ($LF_path))
 									$dup_lists .=	"'$row[0]',";
 									$L++;
 									}
-								$dup_lists = eregi_replace(",$",'',$dup_lists);
+								$dup_lists = preg_replace('/,$/i', '',$dup_lists);
 
 								$stmt="select list_id from vicidial_list where phone_number='$phone_number' and list_id IN($dup_lists) limit 1;";
 								$rslt=mysql_query($stmt, $link);
@@ -1297,7 +1298,7 @@ if (($leadfile) && ($LF_path))
 									}
 								if ($dup_lead < 1)
 									{
-									if (eregi("$phone_number$US$list_id",$phone_list))
+									if (preg_match("/$phone_number$US$list_id/i", $phone_list))
 										{$dup_lead++; $dup++;}
 									}
 								}
@@ -1305,7 +1306,7 @@ if (($leadfile) && ($LF_path))
 						}
 
 					##### Check for duplicate phone numbers in vicidial_list table entire database #####
-					if (eregi("DUPSYS",$dupcheck))
+					if (preg_match("/DUPSYS/i",$dupcheck))
 						{
 						$dup_lead=0;
 						$stmt="select list_id from vicidial_list where phone_number='$phone_number';";
@@ -1319,13 +1320,13 @@ if (($leadfile) && ($LF_path))
 							}
 						if ($dup_lead < 1)
 							{
-							if (eregi("$phone_number$US$list_id",$phone_list))
+							if (preg_match("/$phone_number$US$list_id/i", $phone_list))
 								{$dup_lead++; $dup++;}
 							}
 						}
 
 					##### Check for duplicate phone numbers in vicidial_list table for one list_id #####
-					if (eregi("DUPLIST",$dupcheck))
+					if (preg_match("/DUPLIST/i",$dupcheck))
 						{
 						$dup_lead=0;
 						$stmt="select count(*) from vicidial_list where phone_number='$phone_number' and list_id='$list_id';";
@@ -1338,13 +1339,13 @@ if (($leadfile) && ($LF_path))
 							}
 						if ($dup_lead < 1)
 							{
-							if (eregi("$phone_number$US$list_id",$phone_list))
+							if (preg_match("/$phone_number$US$list_id/i", $phone_list))
 								{$dup_lead++; $dup++;}
 							}
 						}
 
 					##### Check for duplicate title and alt-phone in vicidial_list table for one list_id #####
-					if (eregi("DUPTITLEALTPHONELIST",$dupcheck))
+					if (preg_match("/DUPTITLEALTPHONELIST/i",$dupcheck))
 						{
 						$dup_lead=0;
 						$stmt="select count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id';";
@@ -1358,13 +1359,13 @@ if (($leadfile) && ($LF_path))
 							}
 						if ($dup_lead < 1)
 							{
-							if (eregi("$alt_phone$title$US$list_id",$phone_list))
+							if (preg_match("/$alt_phone$title$US$list_id/i",$phone_list))
 								{$dup_lead++; $dup++;}
 							}
 						}
 
 					##### Check for duplicate phone numbers in vicidial_list table entire database #####
-					if (eregi("DUPTITLEALTPHONESYS",$dupcheck))
+					if (preg_match("/DUPTITLEALTPHONESYS/i",$dupcheck))
 						{
 						$dup_lead=0;
 						$stmt="select list_id from vicidial_list where title='$title' and alt_phone='$alt_phone';";
@@ -1378,7 +1379,7 @@ if (($leadfile) && ($LF_path))
 							}
 						if ($dup_lead < 1)
 							{
-							if (eregi("$alt_phone$title$US$list_id",$phone_list))
+							if (preg_match("/$alt_phone$title$US$list_id/i",$phone_list))
 								{$dup_lead++; $dup++;}
 							}
 						}
@@ -1432,7 +1433,7 @@ if (($leadfile) && ($LF_path))
 						{
 						if (strlen($phone_code)<1) {$phone_code = '1';}
 
-						if (eregi("TITLEALTPHONE",$dupcheck))
+						if (preg_match("/TITLEALTPHONE/i",$dupcheck))
 							{$phone_list .= "$alt_phone$title$US$list_id|";}
 						else
 							{$phone_list .= "$phone_number$US$list_id|";}
@@ -1581,7 +1582,7 @@ if (($leadfile) && ($LF_path))
 		# csv xls xlsx ods sxc conversion
 		if (preg_match("/\.csv$|\.xls$|\.xlsx$|\.ods$|\.sxc$/i", $leadfile_name)) 
 			{
-			$leadfile_name = ereg_replace("[^-\.\_0-9a-zA-Z]","_",$leadfile_name);
+			$leadfile_name = preg_replace('/[^-\.\_0-9a-zA-Z]/','_',$leadfile_name);
 			copy($LF_path, "/tmp/$leadfile_name");
 			$new_filename = preg_replace("/\.csv$|\.xls$|\.xlsx$|\.ods$|\.sxc$/i", '.txt', $leadfile_name);
 			$convert_command = "$WeBServeRRooT/$admin_web_directory/sheet2tab.pl /tmp/$leadfile_name /tmp/$new_filename";
@@ -1645,7 +1646,7 @@ if (($leadfile) && ($LF_path))
 
 				if (strlen($buffer)>0) 
 					{
-					$row=explode($delimiter, eregi_replace("[\'\"]", "", $buffer));
+					$row=explode($delimiter, preg_replace('/[\'\"]/i', '', $buffer));
 
 					$pulldate=date("Y-m-d H:i:s");
 					$entry_date =			"$pulldate";
@@ -1658,8 +1659,8 @@ if (($leadfile) && ($LF_path))
 					$list_id =				$row[2];
 					$gmt_offset =			'0';
 					$called_since_last_reset='N';
-					$phone_code =			eregi_replace("[^0-9]", "", $row[3]);
-					$phone_number =			eregi_replace("[^0-9]", "", $row[4]);
+					$phone_code =			preg_replace('/[^0-9]/i', '', $row[3]);
+					$phone_number =			preg_replace('/[^0-9]/i', '', $row[4]);
 					$title =				$row[5];
 					$first_name =			$row[6];
 					$middle_initial =		$row[7];
@@ -1674,7 +1675,7 @@ if (($leadfile) && ($LF_path))
 					$country_code =			$row[16];
 					$gender =				$row[17];
 					$date_of_birth =		$row[18];
-					$alt_phone =			eregi_replace("[^0-9]", "", $row[19]);
+					$alt_phone =			preg_replace('/[^0-9]/i', '', $row[19]);
 					$email =				$row[20];
 					$security_phrase =		$row[21];
 					$comments =				trim($row[22]);
@@ -1682,32 +1683,32 @@ if (($leadfile) && ($LF_path))
 					$owner =				$row[24];
 						
 					# replace ' " ` \ ; with nothing
-					$vendor_lead_code =		eregi_replace($field_regx, "", $vendor_lead_code);
-					$source_code =			eregi_replace($field_regx, "", $source_code);
-					$source_id = 			eregi_replace($field_regx, "", $source_id);
-					$list_id =				eregi_replace($field_regx, "", $list_id);
-					$phone_code =			eregi_replace($field_regx, "", $phone_code);
-					$phone_number =			eregi_replace($field_regx, "", $phone_number);
-					$title =				eregi_replace($field_regx, "", $title);
-					$first_name =			eregi_replace($field_regx, "", $first_name);
-					$middle_initial =		eregi_replace($field_regx, "", $middle_initial);
-					$last_name =			eregi_replace($field_regx, "", $last_name);
-					$address1 =				eregi_replace($field_regx, "", $address1);
-					$address2 =				eregi_replace($field_regx, "", $address2);
-					$address3 =				eregi_replace($field_regx, "", $address3);
-					$city =					eregi_replace($field_regx, "", $city);
-					$state =				eregi_replace($field_regx, "", $state);
-					$province =				eregi_replace($field_regx, "", $province);
-					$postal_code =			eregi_replace($field_regx, "", $postal_code);
-					$country_code =			eregi_replace($field_regx, "", $country_code);
-					$gender =				eregi_replace($field_regx, "", $gender);
-					$date_of_birth =		eregi_replace($field_regx, "", $date_of_birth);
-					$alt_phone =			eregi_replace($field_regx, "", $alt_phone);
-					$email =				eregi_replace($field_regx, "", $email);
-					$security_phrase =		eregi_replace($field_regx, "", $security_phrase);
-					$comments =				eregi_replace($field_regx, "", $comments);
-					$rank =					eregi_replace($field_regx, "", $rank);
-					$owner =				eregi_replace($field_regx, "", $owner);
+					$vendor_lead_code =		preg_replace("/$field_regx/i", "", $vendor_lead_code);
+					$source_code =			preg_replace("/$field_regx/i", "", $source_code);
+					$source_id = 			preg_replace("/$field_regx/i", "", $source_id);
+					$list_id =				preg_replace("/$field_regx/i", "", $list_id);
+					$phone_code =			preg_replace("/$field_regx/i", "", $phone_code);
+					$phone_number =			preg_replace("/$field_regx/i", "", $phone_number);
+					$title =				preg_replace("/$field_regx/i", "", $title);
+					$first_name =			preg_replace("/$field_regx/i", "", $first_name);
+					$middle_initial =		preg_replace("/$field_regx/i", "", $middle_initial);
+					$last_name =			preg_replace("/$field_regx/i", "", $last_name);
+					$address1 =				preg_replace("/$field_regx/i", "", $address1);
+					$address2 =				preg_replace("/$field_regx/i", "", $address2);
+					$address3 =				preg_replace("/$field_regx/i", "", $address3);
+					$city =					preg_replace("/$field_regx/i", "", $city);
+					$state =				preg_replace("/$field_regx/i", "", $state);
+					$province =				preg_replace("/$field_regx/i", "", $province);
+					$postal_code =			preg_replace("/$field_regx/i", "", $postal_code);
+					$country_code =			preg_replace("/$field_regx/i", "", $country_code);
+					$gender =				preg_replace("/$field_regx/i", "", $gender);
+					$date_of_birth =		preg_replace("/$field_regx/i", "", $date_of_birth);
+					$alt_phone =			preg_replace("/$field_regx/i", "", $alt_phone);
+					$email =				preg_replace("/$field_regx/i", "", $email);
+					$security_phrase =		preg_replace("/$field_regx/i", "", $security_phrase);
+					$comments =				preg_replace("/$field_regx/i", "", $comments);
+					$rank =					preg_replace("/$field_regx/i", "", $rank);
+					$owner =				preg_replace("/$field_regx/i", "", $owner);
 					
 					$USarea = 			substr($phone_number, 0, 3);
 					$USprefix = 		substr($phone_number, 3, 3);
@@ -1722,7 +1723,7 @@ if (($leadfile) && ($LF_path))
 						}
 
 					##### Check for duplicate phone numbers in vicidial_list table for all lists in a campaign #####
-					if (eregi("DUPCAMP",$dupcheck))
+					if (preg_match("/DUPCAMP/i",$dupcheck))
 						{
 							$dup_lead=0;
 							$dup_lists='';
@@ -1746,7 +1747,7 @@ if (($leadfile) && ($LF_path))
 									$dup_lists .=	"'$row[0]',";
 									$L++;
 									}
-								$dup_lists = eregi_replace(",$",'',$dup_lists);
+								$dup_lists = preg_replace('/,$/i', '',$dup_lists);
 
 								$stmt="select list_id from vicidial_list where phone_number='$phone_number' and list_id IN($dup_lists) limit 1;";
 								$rslt=mysql_query($stmt, $link);
@@ -1759,7 +1760,7 @@ if (($leadfile) && ($LF_path))
 									}
 								if ($dup_lead < 1)
 									{
-									if (eregi("$phone_number$US$list_id",$phone_list))
+									if (preg_match("/$phone_number$US$list_id/i", $phone_list))
 										{$dup_lead++; $dup++;}
 									}
 								}
@@ -1767,7 +1768,7 @@ if (($leadfile) && ($LF_path))
 						}
 
 					##### Check for duplicate phone numbers in vicidial_list table entire database #####
-					if (eregi("DUPSYS",$dupcheck))
+					if (preg_match("/DUPSYS/i",$dupcheck))
 						{
 						$dup_lead=0;
 						$stmt="select list_id from vicidial_list where phone_number='$phone_number';";
@@ -1781,13 +1782,13 @@ if (($leadfile) && ($LF_path))
 							}
 						if ($dup_lead < 1)
 							{
-							if (eregi("$phone_number$US$list_id",$phone_list))
+							if (preg_match("/$phone_number$US$list_id/i", $phone_list))
 								{$dup_lead++; $dup++;}
 							}
 						}
 
 					##### Check for duplicate phone numbers in vicidial_list table for one list_id #####
-					if (eregi("DUPLIST",$dupcheck))
+					if (preg_match("/DUPLIST/i",$dupcheck))
 						{
 						$dup_lead=0;
 						$stmt="select count(*) from vicidial_list where phone_number='$phone_number' and list_id='$list_id';";
@@ -1800,13 +1801,13 @@ if (($leadfile) && ($LF_path))
 							}
 						if ($dup_lead < 1)
 							{
-							if (eregi("$phone_number$US$list_id",$phone_list))
+							if (preg_match("/$phone_number$US$list_id/i", $phone_list))
 								{$dup_lead++; $dup++;}
 							}
 						}
 
 					##### Check for duplicate title and alt-phone in vicidial_list table for one list_id #####
-					if (eregi("DUPTITLEALTPHONELIST",$dupcheck))
+					if (preg_match("/DUPTITLEALTPHONELIST/i",$dupcheck))
 						{
 						$dup_lead=0;
 						$stmt="select count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id';";
@@ -1820,13 +1821,13 @@ if (($leadfile) && ($LF_path))
 							}
 						if ($dup_lead < 1)
 							{
-							if (eregi("$alt_phone$title$US$list_id",$phone_list))
+							if (preg_match("/$alt_phone$title$US$list_id/i",$phone_list))
 								{$dup_lead++; $dup++;}
 							}
 						}
 
 					##### Check for duplicate phone numbers in vicidial_list table entire database #####
-					if (eregi("DUPTITLEALTPHONESYS",$dupcheck))
+					if (preg_match("/DUPTITLEALTPHONESYS/i",$dupcheck))
 						{
 						$dup_lead=0;
 						$stmt="select list_id from vicidial_list where title='$title' and alt_phone='$alt_phone';";
@@ -1840,7 +1841,7 @@ if (($leadfile) && ($LF_path))
 							}
 						if ($dup_lead < 1)
 							{
-							if (eregi("$alt_phone$title$US$list_id",$phone_list))
+							if (preg_match("/$alt_phone$title$US$list_id/i",$phone_list))
 								{$dup_lead++; $dup++;}
 							}
 						}
@@ -1894,7 +1895,7 @@ if (($leadfile) && ($LF_path))
 						{
 						if (strlen($phone_code)<1) {$phone_code = '1';}
 
-						if (eregi("TITLEALTPHONE",$dupcheck))
+						if (preg_match("/TITLEALTPHONE/i",$dupcheck))
 							{$phone_list .= "$alt_phone$title$US$list_id|";}
 						else
 							{$phone_list .= "$phone_number$US$list_id|";}
@@ -2041,7 +2042,7 @@ if (($leadfile) && ($LF_path))
 		$delim_set=0;
 		if (preg_match("/\.csv$|\.xls$|\.xlsx$|\.ods$|\.sxc$/i", $leadfile_name)) 
 			{
-			$leadfile_name = ereg_replace("[^-\.\_0-9a-zA-Z]","_",$leadfile_name);
+			$leadfile_name = preg_replace('/[^-\.\_0-9a-zA-Z]/','_',$leadfile_name);
 			copy($LF_path, "/tmp/$leadfile_name");
 			$new_filename = preg_replace("/\.csv$|\.xls$|\.xlsx$|\.ods$|\.sxc$/i", '.txt', $leadfile_name);
 			$convert_command = "$WeBServeRRooT/$admin_web_directory/sheet2tab.pl /tmp/$leadfile_name /tmp/$new_filename";
@@ -2096,7 +2097,7 @@ if (($leadfile) && ($LF_path))
 			}
 		$buffer=rtrim(fgets($file, 4096));
 		$buffer=stripslashes($buffer);
-		$row=explode($delimiter, eregi_replace("[\'\"]", "", $buffer));
+		$row=explode($delimiter, preg_replace('/[\'\"]/i', '', $buffer));
 		
 		for ($i=0; $i<mysql_num_fields($rslt); $i++) 
 			{
@@ -2107,13 +2108,13 @@ if (($leadfile) && ($LF_path))
 			else 
 				{
 				print "  <tr bgcolor=#D9E6FE>\r\n";
-				print "    <td align=right><font class=standard>".strtoupper(eregi_replace("_", " ", mysql_field_name($rslt, $i))).": </font></td>\r\n";
+				print "    <td align=right><font class=standard>".strtoupper(preg_replace('/_/i', ' ', mysql_field_name($rslt, $i))).": </font></td>\r\n";
 				print "    <td align=center><select name='".mysql_field_name($rslt, $i)."_field'>\r\n";
 				print "     <option value='-1'>(none)</option>\r\n";
 
 				for ($j=0; $j<count($row); $j++) 
 					{
-					eregi_replace("\"", "", $row[$j]);
+					preg_replace('/\"/i', '', $row[$j]);
 					print "     <option value='$j'>\"$row[$j]\"</option>\r\n";
 					}
 
@@ -2158,7 +2159,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 	global $link;
 
 	$postalgmt_found=0;
-	if ( (eregi("POSTAL",$postalgmt)) && (strlen($postal_code)>4) )
+	if ( (preg_match("/POSTAL/i",$postalgmt)) && (strlen($postal_code)>4) )
 		{
 		if (preg_match('/^1$/', $phone_code))
 			{
@@ -2168,7 +2169,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 			if ($pc_recs > 0)
 				{
 				$row=mysql_fetch_row($rslt);
-				$gmt_offset =	$row[2];	 $gmt_offset = eregi_replace("\+","",$gmt_offset);
+				$gmt_offset =	$row[2];	 $gmt_offset = preg_replace('/\+/i', '',$gmt_offset);
 				$dst =			$row[3];
 				$dst_range =	$row[4];
 				$PC_processed++;
@@ -2189,7 +2190,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 		if ($pc_recs > 0)
 			{
 			$row=mysql_fetch_row($rslt);
-			$gmt_offset =	$row[0];	 $gmt_offset = eregi_replace("\+","",$gmt_offset);
+			$gmt_offset =	$row[0];	 $gmt_offset = preg_replace('/\+/i', '',$gmt_offset);
 			$PC_processed++;
 			$postalgmt_found++;
 			$post++;
@@ -2205,7 +2206,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 			if (strlen($dst_range)>2) {$dst = 'Y';}
 			}
 		}
-	if ( (eregi("NANPA",$tz_method)) && (strlen($USarea)>2) && (strlen($USprefix)>2) )
+	if ( (preg_match("/NANPA/i",$tz_method)) && (strlen($USarea)>2) && (strlen($USprefix)>2) )
 		{
 		$stmt="select GMT_offset,DST from vicidial_nanpa_prefix_codes where areacode='$USarea' and prefix='$USprefix';";
 		$rslt=mysql_query($stmt, $link);
@@ -2213,7 +2214,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 		if ($pc_recs > 0)
 			{
 			$row=mysql_fetch_row($rslt);
-			$gmt_offset =	$row[0];	 $gmt_offset = eregi_replace("\+","",$gmt_offset);
+			$gmt_offset =	$row[0];	 $gmt_offset = preg_replace('/\+/i', '',$gmt_offset);
 			$dst =			$row[1];
 			$dst_range =	'';
 			if ($dst == 'Y')
@@ -2236,7 +2237,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 			if ($pc_recs > 0)
 				{
 				$row=mysql_fetch_row($rslt);
-				$gmt_offset =	$row[4];	 $gmt_offset = eregi_replace("\+","",$gmt_offset);
+				$gmt_offset =	$row[4];	 $gmt_offset = preg_replace('/\+/i', '',$gmt_offset);
 				$dst =			$row[5];
 				$dst_range =	$row[6];
 				$PC_processed++;
@@ -2251,7 +2252,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 			if ($pc_recs > 0)
 				{
 				$row=mysql_fetch_row($rslt);
-				$gmt_offset =	$row[4];	 $gmt_offset = eregi_replace("\+","",$gmt_offset);
+				$gmt_offset =	$row[4];	 $gmt_offset = preg_replace('/\+/i', '',$gmt_offset);
 				$dst =			$row[5];
 				$dst_range =	$row[6];
 				$PC_processed++;
@@ -2266,7 +2267,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 			if ($pc_recs > 0)
 				{
 				$row=mysql_fetch_row($rslt);
-				$gmt_offset =	$row[4];	 $gmt_offset = eregi_replace("\+","",$gmt_offset);
+				$gmt_offset =	$row[4];	 $gmt_offset = preg_replace('/\+/i', '',$gmt_offset);
 				$dst =			$row[5];
 				$dst_range =	$row[6];
 				$PC_processed++;
@@ -2282,7 +2283,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 			if ($pc_recs > 0)
 				{
 				$row=mysql_fetch_row($rslt);
-				$gmt_offset =	$row[4];	 $gmt_offset = eregi_replace("\+","",$gmt_offset);
+				$gmt_offset =	$row[4];	 $gmt_offset = preg_replace('/\+/i', '',$gmt_offset);
 				$dst =			$row[5];
 				$dst_range =	$row[6];
 				$PC_processed++;

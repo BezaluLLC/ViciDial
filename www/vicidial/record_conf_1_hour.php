@@ -1,7 +1,7 @@
 <?php
 # record_conf_1_hour.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # grab: $server_ip $station $session_id
 #
@@ -11,6 +11,7 @@
 #            - Added required user/pass to gain access to this page
 # 90508-0644 - Changed to PHP long tags
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
+# 130610-1109 - Finalized changing of all ereg instances to preg
 #
 
 require("dbconnect.php");
@@ -50,8 +51,8 @@ while ($i < $qm_conf_ct)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
 if ($DB) {echo "|$stmt|\n";}

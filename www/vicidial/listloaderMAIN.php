@@ -1,7 +1,7 @@
 <?php
 # listloaderMAIN.php
 # 
-# Copyright (C) 2012  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this is the main frame page for the lead loading section. This is where you 
 # would upload a file and have it inserted into vicidial_list
@@ -11,6 +11,7 @@
 # 60822-1105 - fixed for nonwritable directories
 # 90508-0644 - Changed to PHP long tags
 # 120223-2151 - Removed logging of good login passwords if webroot writable is enabled
+# 130610-1111 - Finalized changing of all ereg instances to preg
 #
 
 require("dbconnect.php");
@@ -39,8 +40,8 @@ while ($i < $qm_conf_ct)
 ###########################################
 
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
@@ -100,7 +101,7 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 
 ?><HTML>
 <HEAD>
-<TITLE>VICIDIAL: Lead Loader Module</TITLE>
+<TITLE>Lead Loader Module</TITLE>
 </HEAD>
 <FRAMESET ROWS="300,*" border=0>
 <FRAME SRC="listloader.php" NAME="main">

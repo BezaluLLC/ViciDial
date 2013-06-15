@@ -60,9 +60,11 @@
 # 91129-2211 - Replaced SELECT STAR in SQL query
 # 120223-2124 - Removed logging of good login passwords if webroot writable is enabled
 # 130328-0017 - Converted ereg to preg functions
+# 130603-2220 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 
 
 require("dbconnect.php");
+require("functions.php");
 
 ### If you have globals turned off uncomment these lines
 if (isset($_GET["user"]))					{$user=$_GET["user"];}
@@ -116,14 +118,13 @@ if ($force_logout)
 $StarTtime = date("U");
 $NOW_TIME = date("Y-m-d H:i:s");
 $FILE_TIME = date("Ymd-His");
-	$month_old = mktime(0, 0, 0, date("m"), date("d")-7,  date("Y"));
-	$past_month_date = date("Y-m-d H:i:s",$month_old);
+$month_old = mktime(0, 0, 0, date("m"), date("d")-7,  date("Y"));
+$past_month_date = date("Y-m-d H:i:s",$month_old);
 
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
 $US='_';
 $CL=':';
@@ -178,12 +179,11 @@ if( (strlen($user)<2) or (strlen($pass)<2) or (!$auth) or ($relogin == 'YES') )
 	}
 else
 	{
-
 	if($auth>0)
 		{
 		$office_no=strtoupper($user);
 		$password=strtoupper($pass);
-			$stmt="SELECT full_name,user_level from vicidial_users where user='$user' and pass='$pass'";
+			$stmt="SELECT full_name,user_level from vicidial_users where user='$user' and pass='$pass' and active='Y';";
 			$rslt=mysql_query($stmt, $link);
 			$row=mysql_fetch_row($rslt);
 			$LOGfullname=$row[0];

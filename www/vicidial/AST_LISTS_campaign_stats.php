@@ -13,6 +13,8 @@
 # 120524-1754 - Fixed status categories issue
 # 130221-1928 - small change to remove nested SQL query
 # 130414-0127 - Added report logging
+# 130424-2039 - Added lines for new status categories of scheduled callbacks and completed
+# 130610-1001 - Finalized changing of all ereg instances to preg
 #
 
 $startMS = microtime();
@@ -38,8 +40,8 @@ if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 $report_name = 'Lists Campaign Statuses Report';
 $db_source = 'M';
@@ -150,7 +152,7 @@ while($i < $group_ct)
 
 $LOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
-if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 	{
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
@@ -169,7 +171,7 @@ while ($i < $campaigns_to_print)
 	$row=mysql_fetch_row($rslt);
 	$groups[$i] =		$row[0];
 	$group_names[$i] =	$row[1];
-	if (ereg("-ALL",$group_string) )
+	if (preg_match('/\-ALL/',$group_string) )
 		{$group[$i] = $groups[$i];}
 	$i++;
 	}
@@ -190,13 +192,13 @@ while($i < $group_ct)
 	}
 if (strlen($group_drop_SQL) < 2)
 	{$group_drop_SQL = "''";}
-if ( (ereg("--ALL--",$group_string) ) or ($group_ct < 1) or (strlen($group_string) < 2) )
+if ( (preg_match('/\-\-ALL\-\-/',$group_string) ) or ($group_ct < 1) or (strlen($group_string) < 2) )
 	{
 	$group_SQL = "$LOGallowed_campaignsSQL";
 	}
 else
 	{
-	$group_SQL = eregi_replace(",$",'',$group_SQL);
+	$group_SQL = preg_replace('/,$/i', '',$group_SQL);
 	$both_group_SQLand = "and ( (campaign_id IN($group_drop_SQL)) or (campaign_id IN($group_SQL)) )";
 	$both_group_SQL = "where ( (campaign_id IN($group_drop_SQL)) or (campaign_id IN($group_SQL)) )";
 	$group_SQLand = "and campaign_id IN($group_SQL)";
@@ -250,7 +252,7 @@ $dnc_statuses='';
 $customer_contact_statuses='';
 $not_interested_statuses='';
 $unworkable_statuses='';
-$stmt="select status,human_answered,sale,dnc,customer_contact,not_interested,unworkable,status_name from vicidial_statuses;";
+$stmt="select status,human_answered,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,status_name from vicidial_statuses;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $statha_to_print = mysql_num_rows($rslt);
@@ -259,16 +261,18 @@ while ($i < $statha_to_print)
 	{
 	$row=mysql_fetch_row($rslt);
 	$temp_status = $row[0];
-	$statname_list["$temp_status"] = "$row[7]";
+	$statname_list["$temp_status"] = "$row[9]";
 	if ($row[1]=='Y') {$human_answered_statuses .= "'$temp_status',";}
 	if ($row[2]=='Y') {$sale_statuses .= "'$temp_status',";}
 	if ($row[3]=='Y') {$dnc_statuses .= "'$temp_status',";}
 	if ($row[4]=='Y') {$customer_contact_statuses .= "'$temp_status',";}
 	if ($row[5]=='Y') {$not_interested_statuses .= "'$temp_status',";}
 	if ($row[6]=='Y') {$unworkable_statuses .= "'$temp_status',";}
+	if ($row[7]=='Y') {$scheduled_callback_statuses .= "'$temp_status',";}
+	if ($row[8]=='Y') {$completed_statuses .= "'$temp_status',";}
 	$i++;
 	}
-$stmt="select status,human_answered,sale,dnc,customer_contact,not_interested,unworkable,status_name from vicidial_campaign_statuses where selectable IN('Y','N') $group_SQLand;";
+$stmt="select status,human_answered,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,status_name from vicidial_campaign_statuses where selectable IN('Y','N') $group_SQLand;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $statha_to_print = mysql_num_rows($rslt);
@@ -277,13 +281,15 @@ while ($i < $statha_to_print)
 	{
 	$row=mysql_fetch_row($rslt);
 	$temp_status = $row[0];
-	$statname_list["$temp_status"] = "$row[7]";
+	$statname_list["$temp_status"] = "$row[9]";
 	if ( ($row[1]=='Y') and (!preg_match("/'$temp_status'/",$human_answered_statuses)) ) {$human_answered_statuses .= "'$temp_status',";}
 	if ($row[2]=='Y') {$sale_statuses .= "'$temp_status',";}
 	if ($row[3]=='Y') {$dnc_statuses .= "'$temp_status',";}
 	if ($row[4]=='Y') {$customer_contact_statuses .= "'$temp_status',";}
 	if ($row[5]=='Y') {$not_interested_statuses .= "'$temp_status',";}
 	if ($row[6]=='Y') {$unworkable_statuses .= "'$temp_status',";}
+	if ($row[7]=='Y') {$scheduled_callback_statuses .= "'$temp_status',";}
+	if ($row[8]=='Y') {$completed_statuses .= "'$temp_status',";}
 	$i++;
 	}
 if (strlen($human_answered_statuses)>2)		{$human_answered_statuses = substr("$human_answered_statuses", 0, -1);}
@@ -298,6 +304,10 @@ if (strlen($not_interested_statuses)>2)		{$not_interested_statuses = substr("$no
 else {$not_interested_statuses="''";}
 if (strlen($unworkable_statuses)>2)			{$unworkable_statuses = substr("$unworkable_statuses", 0, -1);}
 else {$unworkable_statuses="''";}
+if (strlen($scheduled_callback_statuses)>2)			{$scheduled_callback_statuses = substr("$scheduled_callback_statuses", 0, -1);}
+else {$scheduled_callback_statuses="''";}
+if (strlen($completed_statuses)>2)			{$completed_statuses = substr("$completed_statuses", 0, -1);}
+else {$completed_statuses="''";}
 
 $HEADER.="<HTML>\n";
 $HEADER.="<HEAD>\n";
@@ -324,14 +334,14 @@ $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 
 $MAIN.="</TD><TD VALIGN=TOP> Campaigns:<BR>";
 $MAIN.="<SELECT SIZE=5 NAME=group[] multiple>\n";
-if  (eregi("--ALL--",$group_string))
+if  (preg_match('/\-\-ALL\-\-/',$group_string))
 	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
 else
 	{$MAIN.="<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
 $o=0;
 while ($campaigns_to_print > $o)
 	{
-	if (eregi("$groups[$o]\|",$group_string)) {$MAIN.="<option selected value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
+	if (preg_match("/$groups[$o]\|/i",$group_string)) {$MAIN.="<option selected value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
 	  else {$MAIN.="<option value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
 	$o++;
 	}
@@ -489,6 +499,10 @@ else
 	$NI_percent=0;
 	$UW_count=0;
 	$UW_percent=0;
+	$SC_count=0;
+	$SC_percent=0;
+	$COMP_count=0;
+	$COMP_percent=0;
 
 	$max_calls=1; $graph_stats=array();
 	$GRAPH.="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
@@ -588,6 +602,36 @@ else
 			$UW_percent = ( ($UW_count / $TOTALleads) * 100);
 			}
 		}
+	$stmt="select count(*) from vicidial_list where status IN($scheduled_callback_statuses) and list_id IN($list_id_SQL);";
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {$MAIN.="$stmt\n";}
+	$SC_results = mysql_num_rows($rslt);
+	if ($SC_results > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$SC_count = $row[0];
+		$flag_count+=$row[0];
+		if ($SC_count > 0)
+			{
+			if ($SC_count>$max_calls) {$max_calls=$SC_count;}
+			$SC_percent = ( ($SC_count / $TOTALleads) * 100);
+			}
+		}
+	$stmt="select count(*) from vicidial_list where status IN($completed_statuses) and list_id IN($list_id_SQL);";
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {$MAIN.="$stmt\n";}
+	$COMP_results = mysql_num_rows($rslt);
+	if ($COMP_results > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$COMP_count = $row[0];
+		$flag_count+=$row[0];
+		if ($COMP_count > 0)
+			{
+			if ($COMP_count>$max_calls) {$max_calls=$COMP_count;}
+			$COMP_percent = ( ($COMP_count / $TOTALleads) * 100);
+			}
+		}
 
 	$HA_percent =	sprintf("%6.2f", "$HA_percent"); while(strlen($HA_percent)>6) {$HA_percent = substr("$HA_percent", 0, -1);}
 	$SALE_percent =	sprintf("%6.2f", "$SALE_percent"); while(strlen($SALE_percent)>6) {$SALE_percent = substr("$SALE_percent", 0, -1);}
@@ -595,6 +639,8 @@ else
 	$CC_percent =	sprintf("%6.2f", "$CC_percent"); while(strlen($CC_percent)>6) {$CC_percent = substr("$CC_percent", 0, -1);}
 	$NI_percent =	sprintf("%6.2f", "$NI_percent"); while(strlen($NI_percent)>6) {$NI_percent = substr("$NI_percent", 0, -1);}
 	$UW_percent =	sprintf("%6.2f", "$UW_percent"); while(strlen($UW_percent)>6) {$UW_percent = substr("$UW_percent", 0, -1);}
+	$SC_percent =	sprintf("%6.2f", "$SC_percent"); while(strlen($SC_percent)>6) {$SC_percent = substr("$SC_percent", 0, -1);}
+	$COMP_percent =	sprintf("%6.2f", "$COMP_percent"); while(strlen($COMP_percent)>6) {$COMP_percent = substr("$COMP_percent", 0, -1);}
 
 	$HA_count =	sprintf("%10s", "$HA_count"); while(strlen($HA_count)>10) {$HA_count = substr("$HA_count", 0, -1);}
 	$SALE_count =	sprintf("%10s", "$SALE_count"); while(strlen($SALE_count)>10) {$SALE_count = substr("$SALE_count", 0, -1);}
@@ -602,6 +648,8 @@ else
 	$CC_count =	sprintf("%10s", "$CC_count"); while(strlen($CC_count)>10) {$CC_count = substr("$CC_count", 0, -1);}
 	$NI_count =	sprintf("%10s", "$NI_count"); while(strlen($NI_count)>10) {$NI_count = substr("$NI_count", 0, -1);}
 	$UW_count =	sprintf("%10s", "$UW_count"); while(strlen($UW_count)>10) {$UW_count = substr("$UW_count", 0, -1);}
+	$SC_count =	sprintf("%10s", "$SC_count"); while(strlen($SC_count)>10) {$SC_count = substr("$SC_count", 0, -1);}
+	$COMP_count =	sprintf("%10s", "$COMP_count"); while(strlen($COMP_count)>10) {$COMP_count = substr("$COMP_count", 0, -1);}
 
 	$OUToutput .= "\n";
 	$OUToutput .= "\n";
@@ -613,6 +661,8 @@ else
 	$OUToutput .= "| Customer Contact | $CC_count |  $CC_percent% |\n";
 	$OUToutput .= "| Not Interested   | $NI_count |  $NI_percent% |\n";
 	$OUToutput .= "| Unworkable       | $UW_count |  $UW_percent% |\n";
+	$OUToutput .= "| Sched Callbacks  | $SC_count |  $SC_percent% |\n";
+	$OUToutput .= "| Completed        | $COMP_count |  $COMP_percent% |\n";
 	$OUToutput .= "+------------------+------------+----------+\n";
 	$OUToutput .= "\n";
 
@@ -623,6 +673,8 @@ else
 	$CSV_text2 .= "\"Customer Contact\",\"$CC_count\",\"$CC_percent%\"\n";
 	$CSV_text2 .= "\"Not Interested\",\"$NI_count\",\"$NI_percent%\"\n";
 	$CSV_text2 .= "\"Unworkable\",\"$UW_count\",\"$UW_percent%\"\n";
+	$CSV_text2 .= "\"Scheduled Callbacks\",\"$SC_count\",\"$SC_percent%\"\n";
+	$CSV_text2 .= "\"Completed\",\"$COMP_count\",\"$COMP_percent%\"\n";
 
 	$GRAPH.="  <tr>\n";
 	$GRAPH.="	<td class=\"chart_td first\">Human Answer</td>\n";
@@ -645,8 +697,16 @@ else
 	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$NI_count/$max_calls)."\" height=\"16\" />".$NI_count." ($NI_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<td class=\"chart_td last\">Unworkable</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value last\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$UW_count/$max_calls)."\" height=\"16\" />".$UW_count." ($UW_percent%)</td>\n";
+	$GRAPH.="	<td class=\"chart_td\">Unworkable</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$UW_count/$max_calls)."\" height=\"16\" />".$UW_count." ($UW_percent%)</td>\n";
+	$GRAPH.="  </tr>\n";
+	$GRAPH.="  <tr>\n";
+	$GRAPH.="	<td class=\"chart_td\">Scheduled Callbacks</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$SC_count/$max_calls)."\" height=\"16\" />".$SC_count." ($SC_percent%)</td>\n";
+	$GRAPH.="  </tr>\n";
+	$GRAPH.="  <tr>\n";
+	$GRAPH.="	<td class=\"chart_td last\">Completed</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value last\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$COMP_count/$max_calls)."\" height=\"16\" />".$COMP_count." ($COMP_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
 	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">TOTAL:</th>\n";
@@ -770,6 +830,10 @@ else
 		$NI_percent=0;
 		$UW_count=0;
 		$UW_percent=0;
+		$SC_count=0;
+		$SC_percent=0;
+		$COMP_count=0;
+		$COMP_percent=0;
 
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($human_answered_statuses);";
 		$rslt=mysql_query($stmt, $link);
@@ -855,6 +919,34 @@ else
 				}
 			}
 		if ($UW_count>$max_flags) {$max_flags=$UW_count;}
+		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($scheduled_callback_statuses);";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {$MAIN.="$stmt\n";}
+		$SC_results = mysql_num_rows($rslt);
+		if ($SC_results > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$SC_count = $row[0];
+			if ($SC_count > 0)
+				{
+				$SC_percent = ( ($SC_count / $LISTIDcalls[$i]) * 100);
+				}
+			}
+		if ($SC_count>$max_flags) {$max_flags=$SC_count;}
+		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($completed_statuses);";
+		$rslt=mysql_query($stmt, $link);
+		if ($DB) {$MAIN.="$stmt\n";}
+		$COMP_results = mysql_num_rows($rslt);
+		if ($COMP_results > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$COMP_count = $row[0];
+			if ($COMP_count > 0)
+				{
+				$COMP_percent = ( ($COMP_count / $LISTIDcalls[$i]) * 100);
+				}
+			}
+		if ($COMP_count>$max_flags) {$max_flags=$COMP_count;}
 
 		$HA_percent =	sprintf("%6.2f", "$HA_percent"); while(strlen($HA_percent)>6) {$HA_percent = substr("$HA_percent", 0, -1);}
 		$SALE_percent =	sprintf("%6.2f", "$SALE_percent"); while(strlen($SALE_percent)>6) {$SALE_percent = substr("$SALE_percent", 0, -1);}
@@ -862,6 +954,8 @@ else
 		$CC_percent =	sprintf("%6.2f", "$CC_percent"); while(strlen($CC_percent)>6) {$CC_percent = substr("$CC_percent", 0, -1);}
 		$NI_percent =	sprintf("%6.2f", "$NI_percent"); while(strlen($NI_percent)>6) {$NI_percent = substr("$NI_percent", 0, -1);}
 		$UW_percent =	sprintf("%6.2f", "$UW_percent"); while(strlen($UW_percent)>6) {$UW_percent = substr("$UW_percent", 0, -1);}
+		$SC_percent =	sprintf("%6.2f", "$SC_percent"); while(strlen($SC_percent)>6) {$SC_percent = substr("$SC_percent", 0, -1);}
+		$COMP_percent =	sprintf("%6.2f", "$COMP_percent"); while(strlen($COMP_percent)>6) {$COMP_percent = substr("$COMP_percent", 0, -1);}
 
 		$HA_count =	sprintf("%9s", "$HA_count"); while(strlen($HA_count)>9) {$HA_count = substr("$HA_count", 0, -1);}
 		$SALE_count =	sprintf("%9s", "$SALE_count"); while(strlen($SALE_count)>9) {$SALE_count = substr("$SALE_count", 0, -1);}
@@ -869,6 +963,8 @@ else
 		$CC_count =	sprintf("%9s", "$CC_count"); while(strlen($CC_count)>9) {$CC_count = substr("$CC_count", 0, -1);}
 		$NI_count =	sprintf("%9s", "$NI_count"); while(strlen($NI_count)>9) {$NI_count = substr("$NI_count", 0, -1);}
 		$UW_count =	sprintf("%9s", "$UW_count"); while(strlen($UW_count)>9) {$UW_count = substr("$UW_count", 0, -1);}
+		$SC_count =	sprintf("%9s", "$SC_count"); while(strlen($SC_count)>9) {$SC_count = substr("$SC_count", 0, -1);}
+		$COMP_count =	sprintf("%9s", "$COMP_count"); while(strlen($COMP_count)>9) {$COMP_count = substr("$COMP_count", 0, -1);}
 
 		$OUToutput .= "| STATUS FLAGS BREAKDOWN:  (and % of total leads in the list)  |\n";
 		$OUToutput .= "|   Human Answer:       $HA_count    $HA_percent%                   |\n";
@@ -877,6 +973,8 @@ else
 		$OUToutput .= "|   Customer Contact:   $CC_count    $CC_percent%                   |\n";
 		$OUToutput .= "|   Not Interested:     $NI_count    $NI_percent%                   |\n";
 		$OUToutput .= "|   Unworkable:         $UW_count    $UW_percent%                   |\n";
+		$OUToutput .= "|   Sched Callbacks:    $SC_count    $SC_percent%                   |\n";
+		$OUToutput .= "|   Completed:          $COMP_count    $COMP_percent%                   |\n";
 		$OUToutput .= "+----+--------------------------------------------+------------+\n";
 		$OUToutput .= "     |    STATUS BREAKDOWN:                       |    COUNT   |\n";
 		$OUToutput .= "     +--------+-----------------------------------+------------+\n";
@@ -886,7 +984,9 @@ else
 		$FLAGS_graph.="  <tr><td class='chart_td'>DNC</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(400*$DNC_count/$max_flags)."' height='16' />$DNC_count ($DNC_percent%)</td></tr>";
 		$FLAGS_graph.="  <tr><td class='chart_td'>CUSTOMER CONTACT</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(400*$CC_count/$max_flags)."' height='16' />$CC_count ($CC_percent%)</td></tr>";
 		$FLAGS_graph.="  <tr><td class='chart_td'>NOT INTERESTED</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(400*$NI_count/$max_flags)."' height='16' />$NI_count ($NI_percent%)</td></tr>";
-		$FLAGS_graph.="  <tr><td class='chart_td last'>UNWORKABLE</td><td nowrap class='chart_td value last><img src='images/bar.png' alt='' width='".round(400*$UW_count/$max_flags)."' height='16' />$UW_count ($UW_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>UNWORKABLE</td><td nowrap class='chart_td value last><img src='images/bar.png' alt='' width='".round(400*$UW_count/$max_flags)."' height='16' />$UW_count ($UW_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>SCHEDULED CALLBACKS</td><td nowrap class='chart_td value last><img src='images/bar.png' alt='' width='".round(400*$SC_count/$max_flags)."' height='16' />$SC_count ($SC_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td last'>COMPLETED</td><td nowrap class='chart_td value last><img src='images/bar.png' alt='' width='".round(400*$COMP_count/$max_flags)."' height='16' />$COMP_count ($COMP_percent%)</td></tr>";
 
 		$CSV_text4.="\"STATUS FLAGS BREAKDOWN:\",\"(and % of total leads in the list)\"\n";
 		$CSV_text4.="\"Human Answer:\",\"$HA_count\",\"$HA_percent%\"\n";
@@ -895,6 +995,8 @@ else
 		$CSV_text4.="\"Customer Contact:\",\"$CC_count\",\"$CC_percent%\"\n";
 		$CSV_text4.="\"Not Interested:\",\"$NI_count\",\"$NI_percent%\"\n";
 		$CSV_text4.="\"Unworkable:\",\"$UW_count\",\"$UW_percent%\"\n\n";
+		$CSV_text4.="\"Scheduled Callbacks:\",\"$SC_count\",\"$SC_percent%\"\n\n";
+		$CSV_text4.="\"Completed:\",\"$COMP_count\",\"$COMP_percent%\"\n\n";
 		$CSV_text4.="\"STATUS BREAKDOWN:\",\"\",\"COUNT\"\n";
 
 		$stmt="select status,count(*) from vicidial_list where list_id='$LISTIDlists[$i]' group by status order by status;";

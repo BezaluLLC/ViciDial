@@ -1,6 +1,6 @@
 <?php
 # 
-# functions.php    version 2.6
+# functions.php    version 2.8
 #
 # functions for agent scripts
 #
@@ -15,7 +15,81 @@
 # 110730-2336 - Added call_id variable
 # 120213-1709 - Commented out default of READONLY fields since they cannot change
 # 130328-0018 - Converted ereg to preg functions
+# 130603-2208 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 #
+
+
+##### BEGIN validate user login credentials, check for failed lock out #####
+function user_authorization($user,$pass,$user_option,$user_update)
+	{
+	require("dbconnect.php");
+
+	$STARTtime = date("U");
+	$TODAY = date("Y-m-d");
+	$NOW_TIME = date("Y-m-d H:i:s");
+	$ip = getenv("REMOTE_ADDR");
+	$LOCK_over = ($STARTtime - 900); # failed login lockout time is 15 minutes(900 seconds)
+	$LOCK_trigger_attempts = 10;
+
+	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
+	$pass = preg_replace("/\'|\"|\\\\|;/","",$pass);
+
+	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0 and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";
+	if ($user_option == 'MGR')
+		{$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and manager_shift_enforcement_override='1' and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";}
+	if ($DB) {echo "|$stmt|\n";}
+	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
+	$rslt=mysql_query($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05009',$user,$server_ip,$session_name,$one_mysql_log);}
+	$row=mysql_fetch_row($rslt);
+	$auth=$row[0];
+
+	if ($auth < 1)
+		{
+		$auth_key='BAD';
+		$stmt="SELECT failed_login_count,UNIX_TIMESTAMP(last_login_date) from vicidial_users where user='$user';";
+		if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
+		$rslt=mysql_query($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05010',$user,$server_ip,$session_name,$one_mysql_log);}
+		$cl_user_ct = mysql_num_rows($rslt);
+		if ($cl_user_ct > 0)
+			{
+			$row=mysql_fetch_row($rslt);
+			$failed_login_count =	$row[0];
+			$last_login_date =		$row[1];
+
+			if ($failed_login_count < $LOCK_trigger_attempts)
+				{
+				$stmt="UPDATE vicidial_users set failed_login_count=(failed_login_count+1),last_ip='$ip' where user='$user';";
+				$rslt=mysql_query($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05011',$user,$server_ip,$session_name,$one_mysql_log);}
+				}
+			else
+				{
+				if ($LOCK_over > $last_login_date)
+					{
+					$stmt="UPDATE vicidial_users set last_login_date=NOW(),failed_login_count=1,last_ip='$ip' where user='$user';";
+					$rslt=mysql_query($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05012',$user,$server_ip,$session_name,$one_mysql_log);}
+					}
+				else
+					{$auth_key='LOCK';}
+				}
+			}
+		}
+	else
+		{
+		if ($user_update > 0)
+			{
+			$stmt="UPDATE vicidial_users set last_login_date=NOW(),last_ip='$ip',failed_login_count=0 where user='$user';";
+			$rslt=mysql_query($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05013',$user,$server_ip,$session_name,$one_mysql_log);}
+			}
+		$auth_key='GOOD';
+		}
+	return $auth_key;
+	}
+##### END validate user login credentials, check for failed lock out #####
 
 
 ##### BEGIN gather values for display of custom list fields for a lead #####
