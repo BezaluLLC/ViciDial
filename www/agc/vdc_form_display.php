@@ -19,10 +19,11 @@
 # 130328-0012 - Converted ereg to preg functions
 # 130402-2256 - Added user_group variable
 # 130603-2204 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130615-2155 - Allow qc_enabled user access to this page even if not logged in as an agent
 #
 
-$version = '2.8-11';
-$build = '130603-2204';
+$version = '2.8-12';
+$build = '130615-2155';
 
 require("dbconnect.php");
 require_once("functions.php");
@@ -218,7 +219,7 @@ $auth_message = user_authorization($user,$pass,'',0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
-$stmt="SELECT count(*) from vicidial_users where user='$user' and modify_leads='1';";
+$stmt="SELECT count(*) from vicidial_users where user='$user' and ( (modify_leads='1') or (qc_enabled='1') );";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
