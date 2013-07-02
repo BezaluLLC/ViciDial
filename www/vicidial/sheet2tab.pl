@@ -2,7 +2,7 @@
 #
 # sheet2tab.pl - Convert spreadsheet to tab-delimited text file   version 2.4
 #
-# Copyright (C) 2011  Matt Florell & Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell & Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Lead file conversion and scrubbing script.  This is the first stage in the lead loading process.
 # 
@@ -27,6 +27,7 @@
 # 100706-0833 - Initial build <mikec>
 # 100706-1244 - Reformat and add comments
 # 110927-1750 - Fixed issue with improperly CSV files locking up servers <mikec>
+# 130619-2310 - Fixed missing XLSX perl module declaration
 #
 
 # disable when not debugging
@@ -34,6 +35,7 @@
 #use warnings;
 
 use Spreadsheet::Read;
+use Spreadsheet::XLSX;
 use File::Basename;
 
 

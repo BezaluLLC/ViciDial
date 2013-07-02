@@ -2,6 +2,7 @@
 ### recording_lookup_DIRECT.php
 #
 #	REQUIRED! - check all paths and directory names, need to create a temp directory
+#   CUSTOMIZATION OF THIS SCRIPT IS REQUIRED FOR IT TO WORK!!!
 #
 #	On the normal audio recording interface you now have the option of
 #	downloading the WAV or GSM file:
@@ -32,12 +33,13 @@
 # 71112-1409 - First Build
 # 90508-0644 - Changed to PHP long tags
 # 130610-1132 - Finalized changing of all ereg instances to preg
+# 130616-2225 - Added filtering of input to prevent SQL injection attacks
 #
 
 $STARTtime = date("U");
 $TODAYstart = date("H/i/s 00:00:00");
 
-$linkAST=mysql_connect("10.10.10.15", "cron", "1234");
+$linkAST=mysql_connect("1.1.1.1", "cron", "1234");
 mysql_select_db("asterisk");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -50,22 +52,26 @@ if (isset($_GET["format"]))				{$format=$_GET["format"];}
 if (isset($_GET["auth"]))				{$auth=$_GET["auth"];}
 	elseif (isset($_POST["auth"]))		{$auth=$_POST["auth"];}
 
+$phone = preg_replace("/'|\"|\\\\|;/","",$phone);
+$format = preg_replace("/'|\"|\\\\|;/","",$format);
+$auth = preg_replace("/'|\"|\\\\|;/","",$auth);
+
 $US='_';
 
-  if(preg_match("/VDC1234593JH654398722/i",$auth))
+if(preg_match("/VDC1234593JH654398722/i",$auth))
 	{$nothing=1;}
-	else
+else
 	{
-    echo "auth code: |$auth|\n";
-    exit;
+	echo "auth code: |$auth|\n";
+	exit;
 	}
 
-		$fp = fopen ("/usr/local/apache2/htdocs/vicidial/auth_entries.txt", "a");
-		$date = date("r");
-		$ip = getenv("REMOTE_ADDR");
-		$browser = getenv("HTTP_USER_AGENT");
-		fwrite ($fp, "AUTH|VDC   |$date|$auth|$ip|$phone|$format|$browser|\n");
-		fclose($fp);
+$fp = fopen ("/usr/local/apache2/htdocs/vicidial/auth_entries.txt", "a");
+$date = date("r");
+$ip = getenv("REMOTE_ADDR");
+$browser = getenv("HTTP_USER_AGENT");
+fwrite ($fp, "AUTH|VDC   |$date|$auth|$ip|$phone|$format|$browser|\n");
+fclose($fp);
 
 if (strlen($format)<3) {$format='WAV';}
 if ( (strlen($phone)<10) or (strlen($phone)>10) ) 
@@ -94,8 +100,8 @@ else
 		$filename =		$row[1];
 		$location =		$row[2];
 		$start_time =	$row[3];
-			$AUDname =	explode("/",$location);
-			$AUDnamect =	(count($AUDname)) - 1;
+		$AUDname =	explode("/",$location);
+		$AUDnamect =	(count($AUDname)) - 1;
 		
 		preg_replace('/10\.10\.10\.16/i', "10.10.10.16",$AUDname[$AUDnamect]);
 
@@ -103,10 +109,10 @@ else
 		$locationGSM=$location;
 		$fileGSM = preg_replace('/\.wav/i', ".gsm",$fileGSM);
 		if (!preg_match('/gsm/i',$locationGSM))
-		{
+			{
 			$locationGSM = preg_replace('/10\.10\.10\.16/i', "10.10.10.16/GSM",$locationGSM);
 			$locationGSM = preg_replace('/\.wav/i', ".gsm",$locationGSM);
-		}
+			}
 		if ($format == 'WAV')
 			{
 			exec("/usr/local/apache2/htdocs/vicidial/wget --output-document=/usr/local/apache2/htdocs/vicidial/temp/$AUDname[$AUDnamect] $location\n");
@@ -135,11 +141,9 @@ else
 			readfile($AUDIOfile);
 			}
 		}
-
 	else
 		{
 		echo "ERROR:        $phone|$format\n";
 		}
-
 	}
 ?>

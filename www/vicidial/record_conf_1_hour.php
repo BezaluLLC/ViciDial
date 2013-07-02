@@ -12,9 +12,11 @@
 # 90508-0644 - Changed to PHP long tags
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 # 130610-1109 - Finalized changing of all ereg instances to preg
+# 130616-2230 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
 require("dbconnect.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -24,13 +26,13 @@ if (isset($_GET["server_ip"]))				{$server_ip=$_GET["server_ip"];}
 if (isset($_GET["station"]))				{$station=$_GET["station"];}
 	elseif (isset($_POST["station"]))		{$station=$_POST["station"];}
 if (isset($_GET["session_id"]))				{$session_id=$_GET["session_id"];}
-	elseif (isset($_POST["session_id"]))		{$session_id=$_POST["session_id"];}
-if (isset($_GET["NEW_RECORDING"]))				{$NEW_RECORDING=$_GET["NEW_RECORDING"];}
-	elseif (isset($_POST["NEW_RECORDING"]))		{$NEW_RECORDING=$_POST["NEW_RECORDING"];}
+	elseif (isset($_POST["session_id"]))	{$session_id=$_POST["session_id"];}
+if (isset($_GET["NEW_RECORDING"]))			{$NEW_RECORDING=$_GET["NEW_RECORDING"];}
+	elseif (isset($_POST["NEW_RECORDING"]))	{$NEW_RECORDING=$_POST["NEW_RECORDING"];}
 if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
-	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
+	elseif (isset($_POST["submit"]))	{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
-	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
+	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -38,97 +40,102 @@ $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_ter
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$webroot_writable =				$row[1];
 	$SSoutbound_autodial_active =	$row[2];
 	$user_territories_active =		$row[3];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
-
-$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
-if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
-	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
-	}
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $MYSQL_datetime = date("Y-m-d H:i:s");
 $FILE_datetime = date("Ymd-His_");
 $secX = $STARTtime;
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7;";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-$fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if ($non_latin < 1)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 	}
 else
 	{
-	if($auth>0)
-		{
-		$office_no=strtoupper($PHP_AUTH_USER);
-		$password=strtoupper($PHP_AUTH_PW);
-			$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$LOGfullname=$row[0];
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
-			}
-		}
-	else
-		{
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
-			fclose($fp);
-			}
-		}
-
-	$stmt="SELECT full_name from vicidial_users where user='$user';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$full_name = $row[0];
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	}
 
+$auth=0;
+$reports_auth=0;
+$admin_auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
+if ($auth > 0)
+	{
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$admin_auth=$row[0];
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	if ($reports_auth < 1)
+		{
+		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ( ($reports_auth > 0) and ($admin_auth < 1) )
+		{
+		$ADD=999999;
+		$reports_only_user=1;
+		}
+	}
+else
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
+
+$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER';";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGfullname=$row[0];
+
+$stmt="SELECT full_name from vicidial_users where user='$user';";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$full_name = $row[0];
 
 
 ?>
 <html>
 <head>
-<title>VICIDIAL RECORD CONFERENCE: 1 hour</title>
+<title>RECORD CONFERENCE: 1 hour</title>
 <?php
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 ?>
@@ -138,45 +145,43 @@ echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n"
 
 <?php 
 if ($NEW_RECORDING)
-{
+	{
 	if ( (strlen($server_ip) > 8) && (strlen($session_id) > 3) && (strlen($station) > 3) )
-	{
-	$local_DEF = 'Local/';
-	$local_AMP = '@';
-	$conf_silent_prefix = '7';
-	$ext_context = 'demo';
+		{
+		$local_DEF = 'Local/';
+		$local_AMP = '@';
+		$conf_silent_prefix = '7';
+		$ext_context = 'demo';
 
-	$stmt="INSERT INTO vicidial_manager values('','','$MYSQL_datetime','NEW','N','" . mysql_real_escape_string($server_ip) . "','','Originate','RB$FILE_datetime" . mysql_real_escape_string($station) . "','Channel: $local_DEF$conf_silent_prefix" . mysql_real_escape_string($session_id) . "$local_AMP$ext_context','Context: $ext_context','Exten: 8309','Priority: 1','Callerid: $FILE_datetime" . mysql_real_escape_string($station) . "','','','','','')";
-	echo "|$stmt|\n<BR><BR>\n";
-	$rslt=mysql_query($stmt, $link);
+		$stmt="INSERT INTO vicidial_manager values('','','$MYSQL_datetime','NEW','N','" . mysql_real_escape_string($server_ip) . "','','Originate','RB$FILE_datetime" . mysql_real_escape_string($station) . "','Channel: $local_DEF$conf_silent_prefix" . mysql_real_escape_string($session_id) . "$local_AMP$ext_context','Context: $ext_context','Exten: 8309','Priority: 1','Callerid: $FILE_datetime" . mysql_real_escape_string($station) . "','','','','','')";
+		echo "|$stmt|\n<BR><BR>\n";
+		$rslt=mysql_query($stmt, $link);
 
-	$stmt="INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,filename) values('" . mysql_real_escape_string($session_id) . "','" . mysql_real_escape_string($server_ip) . "','" . mysql_real_escape_string($station) . "','$MYSQL_datetime','$secX','$FILE_datetime" . mysql_real_escape_string($station) . "')";
-	echo "|$stmt|\n<BR><BR>\n";
-	$rslt=mysql_query($stmt, $link);
+		$stmt="INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,filename) values('" . mysql_real_escape_string($session_id) . "','" . mysql_real_escape_string($server_ip) . "','" . mysql_real_escape_string($station) . "','$MYSQL_datetime','$secX','$FILE_datetime" . mysql_real_escape_string($station) . "')";
+		echo "|$stmt|\n<BR><BR>\n";
+		$rslt=mysql_query($stmt, $link);
 
-	echo "Recording started\n<BR><BR>\n";
-	echo "<a href=\"$PHP_SELF\">Back to main recording screen</a>\n<BR><BR>\n";
-	}
+		echo "Recording started\n<BR><BR>\n";
+		echo "<a href=\"$PHP_SELF\">Back to main recording screen</a>\n<BR><BR>\n";
+		}
 	else
-	{
-	echo "ERROR!!!!    Not all info entered properly\n<BR><BR>\n";
-	echo "|$server_ip| |$session_id| |$station|\n<BR><BR>\n";
-	echo "<a href=\"$PHP_SELF\">Back to main recording screen</a>\n<BR><BR>\n";
+		{
+		echo "ERROR!!!!    Not all info entered properly\n<BR><BR>\n";
+		echo "|$server_ip| |$session_id| |$station|\n<BR><BR>\n";
+		echo "<a href=\"$PHP_SELF\">Back to main recording screen</a>\n<BR><BR>\n";
+		}
 	}
-}
 else
-{
-echo "<br>Start recording a conference for 1 hour: <form action=$PHP_SELF method=POST>\n";
-echo "<input type=hidden name=NEW_RECORDING value=1>\n";
-echo "server_ip: <input type=text name=server_ip size=15 maxlength=15> | \n";
-echo "session_id: <input type=text name=session_id size=7 maxlength=7> | \n";
-echo "station: <input type=text name=station size=5 maxlength=5> | \n";
-echo "<input type=submit name=submit value=submit>\n";
-echo "<BR><BR><BR>\n";
-
-
-
-}
+	{
+	echo "<br>Start recording a conference for 1 hour: <form action=$PHP_SELF method=POST>\n";
+	echo "<input type=hidden name=NEW_RECORDING value=1>\n";
+	echo "server_ip: <input type=text name=server_ip size=15 maxlength=15> | \n";
+	echo "session_id: <input type=text name=session_id size=7 maxlength=7> | \n";
+	echo "station: <input type=text name=station size=5 maxlength=5> | \n";
+	echo "<input type=submit name=submit value=submit>\n";
+	echo "<BR><BR><BR>\n";
+	}
 ?>
 
 </BODY></HTML>
+

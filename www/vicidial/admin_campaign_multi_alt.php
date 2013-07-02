@@ -14,13 +14,14 @@
 # 110406-1818 - Updated logging
 # 120223-2335 - Removed logging of good login passwords if webroot writable is enabled
 # 130610-1116 - Finalized changing of all ereg instances to preg
+# 130621-2009 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
-$admin_version = '2.8-4';
-$build = '130610-1116';
-
+$admin_version = '2.8-5';
+$build = '130621-2009';
 
 require("dbconnect.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -38,12 +39,10 @@ if (isset($_GET["lead_order_secondary"]))			{$lead_order_secondary=$_GET["lead_o
 if (isset($_GET["SUBMIT"]))						{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))			{$SUBMIT=$_POST["SUBMIT"];}
 
-
 if (strlen($action) < 2)
 	{$action = 'BLANK';}
 if (strlen($DB) < 1)
 	{$DB=0;}
-
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -77,63 +76,51 @@ else
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
+$date = date("r");
+$ip = getenv("REMOTE_ADDR");
+$browser = getenv("HTTP_USER_AGENT");
+$user = $PHP_AUTH_USER;
 
+$auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and modify_campaigns='1';";
-if ($DB) {echo "|$stmt|\n";}
+if ($auth < 1)
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
+
+$stmt="SELECT full_name,modify_campaigns,user_level from vicidial_users where user='$PHP_AUTH_USER';";
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
-$auth=$row[0];
+$LOGfullname =				$row[0];
+$LOGmodify_campaigns =		$row[1];
+$LOGuser_level =			$row[2];
+
+if ($LOGmodify_campaigns < 1)
+	{
+	Header ("Content-type: text/html; charset=utf-8");
+	echo "You do not have permissions to modify campaigns\n";
+	exit;
+	}
 
 $stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' and auto_alt_dial='MULTI_LEAD';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $camp_multi=$row[0];
-
-if ($webroot_writable > 0)
-	{$fp = fopen ("./project_auth_entries.txt", "a");}
-
-$date = date("r");
-$ip = getenv("REMOTE_ADDR");
-$browser = getenv("HTTP_USER_AGENT");
-$user = $PHP_AUTH_USER;
-
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
-	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
-	}
-else
-	{
-	if ($auth>0)
-		{
-		$office_no=strtoupper($PHP_AUTH_USER);
-		$password=strtoupper($PHP_AUTH_PW);
-		$stmt="SELECT full_name,modify_campaigns,user_level from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGfullname =				$row[0];
-		$LOGmodify_campaigns =		$row[1];
-		$LOGuser_level =			$row[2];
-
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
-			}
-		}
-	else
-		{
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
-			fclose($fp);
-			}
-		}
-	}
 
 ?>
 <html>
@@ -167,11 +154,6 @@ $subcamp_color =	'#C6C6C6';
 
 require("admin_header.php");
 
-if ( ($LOGast_admin_access < 1) or ($LOGuser_level < 8) )
-	{
-	echo "You are not authorized to view this section\n";
-	exit;
-	}
 if ($camp_multi < 1)
 	{
 	echo "This campaign is not set to Auto-Alt-Dial MULTI_LEAD\n";

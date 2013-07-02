@@ -8,16 +8,16 @@
 # CHANGELOG:
 # 90529-2115 - First Build
 # 130610-1130 - Finalized changing of all ereg instances to preg
+# 130617-2128 - Added filtering of input to prevent SQL injection attacks
 #
 
-$version = '2.8-2';
-$build = '130610-1130';
+$version = '2.8-3';
+$build = '130617-2128';
 
 header ("Content-type: text/html; charset=utf-8");
 
 require("dbconnect.php");
 require("functions.php");
-
 
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
@@ -41,6 +41,16 @@ if (isset($_GET["extension"]))			{$extension=$_GET["extension"];}
 	elseif (isset($_POST["extension"]))	{$extension=$_POST["extension"];}
 if (isset($_GET["stage"]))				{$stage=$_GET["stage"];}
 	elseif (isset($_POST["stage"]))		{$stage=$_POST["stage"];}
+
+$call = preg_replace('/[^0-9a-zA-Z]/', '', $call);
+$user = preg_replace('/[^0-9a-zA-Z]/', '', $user);
+$extension = preg_replace("/'|\"|\\\\|;/", '', $extension);
+$server_ip = preg_replace("/'|\"|\\\\|;/", '', $server_ip);
+$stage = preg_replace("/'|\"|\\\\|;/", '', $stage);
+$campaign = preg_replace("/'|\"|\\\\|;/", '', $campaign);
+$phone = preg_replace("/'|\"|\\\\|;/", '', $phone);
+$type = preg_replace("/'|\"|\\\\|;/", '', $type);
+$QMuser = preg_replace("/'|\"|\\\\|;/", '', $QMuser);
 
 
 $ERR=0;
@@ -172,7 +182,4 @@ if ($ERR > 0)
 	}
 
 exit;
-
-
-
 

@@ -24,10 +24,29 @@ function user_authorization($user,$pass,$user_option,$user_update)
 	{
 	require("dbconnect.php");
 
+	#############################################
+	##### START SYSTEM_SETTINGS LOOKUP #####
+	$stmt = "SELECT use_non_latin,webroot_writable,pass_hash_enabled,pass_key,pass_cost FROM system_settings;";
+	$rslt=mysql_query($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$qm_conf_ct = mysql_num_rows($rslt);
+	if ($qm_conf_ct > 0)
+		{
+		$row=mysql_fetch_row($rslt);
+		$non_latin =					$row[0];
+		$SSwebroot_writable =			$row[1];
+		$SSpass_hash_enabled =			$row[2];
+		$SSpass_key =					$row[3];
+		$SSpass_cost =					$row[4];
+		}
+	##### END SETTINGS LOOKUP #####
+	###########################################
+
 	$STARTtime = date("U");
 	$TODAY = date("Y-m-d");
 	$NOW_TIME = date("Y-m-d H:i:s");
 	$ip = getenv("REMOTE_ADDR");
+	$browser = getenv("HTTP_USER_AGENT");
 	$LOCK_over = ($STARTtime - 900); # failed login lockout time is 15 minutes(900 seconds)
 	$LOCK_trigger_attempts = 10;
 
@@ -75,6 +94,12 @@ function user_authorization($user,$pass,$user_option,$user_update)
 				else
 					{$auth_key='LOCK';}
 				}
+			}
+		if ($SSwebroot_writable > 0)
+			{
+			$fp = fopen ("./project_auth_entries.txt", "a");
+			fwrite ($fp, "AGENT|FAIL|$NOW_TIME|$user|$auth_key|$ip|$browser|\n");
+			fclose($fp);
 			}
 		}
 	else

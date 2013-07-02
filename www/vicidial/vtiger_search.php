@@ -21,6 +21,7 @@
 # 90323-2104 - Added deleted account/lead check and reactivation from campaign option
 # 91228-1751 - Added UNIFIED_CONTACT search option
 # 130610-1123 - Finalized changing of all ereg instances to preg
+# 130615-2334 - Added filtering of input to prevent SQL injection attacks
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -141,6 +142,12 @@ if ($ss_conf_ct > 0)
 	}
 ##### END SYSTEM_SETTINGS VTIGER CONNECTION INFO LOOKUP #####
 #############################################################
+
+$phone = preg_replace('/[^-_0-9a-zA-Z]/','',$phone);
+$lead_id = preg_replace('/[^0-9a-zA-Z]/','',$lead_id);
+$campaign = preg_replace('/[^0-9a-zA-Z]/','',$campaign);
+$user = preg_replace('/[^-_0-9a-zA-Z]/','',$user);
+$vendor_id = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$vendor_id);
 
 
 echo "<html>\n";
@@ -879,8 +886,4 @@ exit;
 
 
 ?>
-
-
-
-
 

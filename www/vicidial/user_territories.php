@@ -13,14 +13,16 @@
 # 90726-2302 - Added vicidial_list user owner update option
 # 91012-0310 - Added vicidial_list counts for territory as owner
 # 130610-1050 - Finalized changing of all ereg instances to preg
+# 130616-0010 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
-$version = '2.8-5';
-$build = '130610-1050';
+$version = '2.8-6';
+$build = '130616-0010';
 
 $MT[0]='';
 
 require("dbconnect.php");
+require("functions.php");
 
 $PHP_SELF=$_SERVER['PHP_SELF'];
 if (isset($_GET["action"]))					{$action=$_GET["action"];}
@@ -43,7 +45,6 @@ if (isset($_GET["vl_owner"]))				{$vl_owner=$_GET["vl_owner"];}
 	elseif (isset($_POST["vl_owner"]))		{$vl_owner=$_POST["vl_owner"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
-
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -71,8 +72,6 @@ if ($ss_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-
-
 if ($user_territories_active < 1)
 	{
 	echo "ERROR: User Territories are not active on this system\n";
@@ -92,6 +91,17 @@ if ($non_latin < 1)
 	$old_user = preg_replace('/[^-\_0-9a-zA-Z]/', '',$old_user);
 	$accountid = preg_replace('/[^-\_0-9a-zA-Z]/', '',$accountid);
 	}
+else
+	{
+	$action = preg_replace("/'|\"|\\\\|;/","",$action);
+	$territory = preg_replace("/'|\"|\\\\|;/","",$territory);
+	$territory_description = preg_replace("/'|\"|\\\\|;/","",$territory_description);
+	$user = preg_replace("/'|\"|\\\\|;/","",$user);
+	$level = preg_replace("/'|\"|\\\\|;/","",$level);
+	$old_territory = preg_replace("/'|\"|\\\\|;/","",$old_territory);
+	$old_user = preg_replace("/'|\"|\\\\|;/","",$old_user);
+	$accountid = preg_replace("/'|\"|\\\\|;/","",$accountid);
+	}
 
 if (preg_match("/YES/i",$batch))
 	{
@@ -104,21 +114,26 @@ else
 	$PASS=$_SERVER['PHP_AUTH_PW'];
 	$USER = preg_replace('/[^0-9a-zA-Z]/','',$USER);
 	$PASS = preg_replace('/[^0-9a-zA-Z]/','',$PASS);
+	}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$USER' and pass='$PASS' and user_level > 7 and modify_users='1'";
-	if ($DB) {echo "|$stmt|\n";}
-	if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$auth=0;
+$modify_users_auth=0;
+$auth_message = user_authorization($USER,$PASS,'',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
-	if( (strlen($USER)<2) or (strlen($PASS)<2) or (!$auth))
-		{
-		Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-		Header("HTTP/1.0 401 Unauthorized");
-		echo "Invalid Username/Password: |$USER|$PASS|\n";
-		exit;
-		}
+$stmt="SELECT count(*) from vicidial_users where user='$USER' and user_level > 7 and modify_users='1'";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$modify_users_auth=$row[0];
+
+if( (strlen($USER)<2) or (strlen($PASS)<2) or (!$auth) or (!$modify_users_auth))
+	{
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "Invalid Username/Password: |$USER|$PASS|$auth_message|\n";
+	exit;
 	}
 
 if ($enable_vtiger_integration > 0)
@@ -129,10 +144,8 @@ if ($enable_vtiger_integration > 0)
 	mysql_select_db("$vtiger_dbname", $linkV);
 	}
 
-
 if (strlen($action) < 1)
 	{$action = 'LIST_ALL_TERRITORIES';}
-
 
 
 ?>

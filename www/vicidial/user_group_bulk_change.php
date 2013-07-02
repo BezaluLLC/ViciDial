@@ -11,11 +11,13 @@
 # 120221-0025 - Added in User Group restrictions
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 # 130610-1106 - Finalized changing of all ereg instances to preg
+# 130616-0106 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
 header ("Content-type: text/html; charset=utf-8");
 
 require("dbconnect.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -39,20 +41,21 @@ $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active FROM sys
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$webroot_writable =				$row[1];
 	$SSoutbound_autodial_active =	$row[2];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
 $PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
 $PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+$old_group = preg_replace("/'|\"|\\\\|;/","",$old_group);
+$group = preg_replace("/'|\"|\\\\|;/","",$group);
+$stage = preg_replace("/'|\"|\\\\|;/","",$stage);
 
 $StarTtimE = date("U");
 $TODAY = date("Y-m-d");
@@ -62,50 +65,46 @@ $ip = getenv("REMOTE_ADDR");
 if (!isset($begin_date)) {$begin_date = $TODAY;}
 if (!isset($end_date)) {$end_date = $TODAY;}
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
-if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-$fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+$auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth < 1)
 	{
-	Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-	Header("HTTP/1.0 401 Unauthorized");
-	echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-	exit;
-	}
-else
-	{
-	if($auth>0)
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
 		{
-		$stmt="SELECT full_name,change_agent_campaign,modify_timeclock_log,user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGfullname =				$row[0];
-		$change_agent_campaign =	$row[1];
-		$modify_timeclock_log =		$row[2];
-		$LOGuser_group =			$row[3];
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
-			}
-		}
-	else
-		{
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
-			fclose($fp);
-			}
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
 		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
+
+$stmt="SELECT full_name,change_agent_campaign,modify_timeclock_log,user_group,modify_users from vicidial_users where user='$PHP_AUTH_USER';";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGfullname =				$row[0];
+$change_agent_campaign =	$row[1];
+$modify_timeclock_log =		$row[2];
+$LOGuser_group =			$row[3];
+$modify_users =				$row[4];
+
+# check their permissions
+if ( ($change_agent_campaign < 1 ) or ($modify_users < 1) )
+	{
+	header ("Content-type: text/html; charset=utf-8");
+	echo "You do not have permissions to modify users\n";
+	exit;
 	}
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";

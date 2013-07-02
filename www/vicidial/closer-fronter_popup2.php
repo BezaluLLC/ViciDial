@@ -11,9 +11,11 @@
 # 90508-0644 - Changed to PHP long tags
 # 120223-2124 - Removed logging of good login passwords if webroot writable is enabled
 # 130610-1114 - Finalized changing of all ereg instances to preg
+# 130620-0823 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
 require("dbconnect.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -99,8 +101,34 @@ if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 
-$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active FROM system_settings;";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$qm_conf_ct = mysql_num_rows($rslt);
+if ($qm_conf_ct > 0)
+	{
+	$row=mysql_fetch_row($rslt);
+	$non_latin =					$row[0];
+	$webroot_writable =				$row[1];
+	$SSoutbound_autodial_active =	$row[2];
+	$user_territories_active =		$row[3];
+	}
+##### END SETTINGS LOOKUP #####
+###########################################
+
+if ($non_latin < 1)
+	{
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	}
+else
+	{
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
 
 #$DB = '1';	# DEBUG override
 $US = '_';
@@ -111,80 +139,57 @@ $REC_TIME = date("Ymd-His");
 $FILE_datetime = $STARTtime;
 $parked_time = $STARTtime;
 
-# $ext_context = 'default'; defined in dbconnect file
-if (!isset($begin_date)) {$begin_date = $TODAY;}
-if (!isset($end_date)) {$end_date = $TODAY;}
-
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-		if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
-
-	if (!$auth)
-	{
-	 if ( (strlen($PHP_AUTH_USER)>1) and ( (preg_match('/tsr/i',$PHP_AUTH_PW)) or (preg_match('/sales/i',$PHP_AUTH_PW)) ) )
-		{
-		 $auth=1;
-		 $user = $PHP_AUTH_USER;
-		 $pass = $PHP_AUTH_PW;
-		 }
-	}
-
-$fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
-  if( (strlen($user)<2) or (strlen($pass)<2) or (!$auth))
+$auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'QC',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth < 1)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICIDIAL-CLOSER - $user - $PHP_AUTH_USER\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$user|$pass|\n";
-    exit;
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
 	}
-  else
+
+$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "$stmt\n";}
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGfullname=$row[0];
+$fullname = $row[0];
+
+
+if ( (strlen($customer_zap_channel)>2) and ( (preg_match('/zap/i',$customer_zap_channel)) or (preg_match('/iax/i',$customer_zap_channel)) ) )
 	{
+	echo "\n<!-- zap channel: $customer_zap_channel -->\n";
+	echo "<!-- session_id:  $session_id -->\n";
+	echo "<!-- fronter:     $fronter    -->\n";
+	echo "<!-- user:        $user       -->\n";
 
-	if($auth>0)
-		{
-		$office_no=strtoupper($user);
-		$password=strtoupper($pass);
-		$stmt="SELECT full_name from vicidial_users where user='$user' and pass='$pass'";
-		if ($DB) {echo "$stmt\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGfullname=$row[0];
-		$fullname = $row[0];
-		fwrite ($fp, "VD_CLOSER|GOOD|$date|$user|XXXX|$ip|$browser|$LOGfullname|\n");
-		fclose($fp);
-		
-		if ( (strlen($customer_zap_channel)>2) and ( (preg_match('/zap/i',$customer_zap_channel)) or (preg_match('/iax/i',$customer_zap_channel)) ) )
-			{
-			echo "\n<!-- zap channel: $customer_zap_channel -->\n";
-			echo "<!-- session_id:  $session_id -->\n";
-			echo "<!-- fronter:     $fronter    -->\n";
-			echo "<!-- user:        $user       -->\n";
-
-			}
-		else
-			{
-			echo "Bad channel: $customer_zap_channel\n";
-			echo "Make sure the Zap channel is live and try again\n";
-			exit;
-			}
-
-		}
-	else
-		{
-		fwrite ($fp, "VD_CLOSER|FAIL|$date|$user|XXXX|$ip|$browser|\n");
-		fclose($fp);
-		}
+	}
+else
+	{
+	echo "Bad channel: $customer_zap_channel\n";
+	echo "Make sure the Zap channel is live and try again\n";
+	exit;
 	}
 
 echo "<html>\n";
 echo "<head>\n";
-echo "<title>VICIDIAL FRONTER-CLOSER: Popup</title>\n";
+echo "<title>FRONTER-CLOSER: Popup</title>\n";
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 
 if (preg_match('/CL_UNIV/i',$channel_group))
@@ -424,11 +429,5 @@ echo "<font size=0>\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds</font>";
 	
 exit; 
 
-
-
 ?>
-
-
-
-
 

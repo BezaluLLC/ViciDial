@@ -77,15 +77,18 @@
 # 130420-1938 - Added NANPA prefix validation and timezone options
 # 130614-0907 - Finalized changing of all ereg instances to preg
 #             - Added pause code to output of agent_status function
+# 130617-2232 - Added real-time sub-statuses to output of agent_status function
+#             - Added user authentication process to eliminate brute force attacks
 #
 
-$version = '2.8-54';
-$build = '130614-0907';
+$version = '2.8-55';
+$build = '130617-2232';
 $api_url_log = 0;
 
 $startMS = microtime();
 
 require("dbconnect.php");
+require("functions.php");
 
 ### If you have globals turned off uncomment these lines
 if (isset($_GET["user"]))						{$user=$_GET["user"];}
@@ -355,8 +358,8 @@ if ($qm_conf_ct > 0)
 if ($non_latin < 1)
 	{
 	$DB=preg_replace('/[^0-9]/','',$DB);
-	$user=preg_replace('/[^0-9a-zA-Z]/','',$user);
-	$pass=preg_replace('/[^0-9a-zA-Z]/','',$pass);
+	$user=preg_replace('/[^-_0-9a-zA-Z]/','',$user);
+	$pass=preg_replace('/[^-_0-9a-zA-Z]/','',$pass);
 	$function = preg_replace('/[^-\_0-9a-zA-Z]/', '',$function);
 	$format = preg_replace('/[^0-9a-zA-Z]/','',$format);
 	$list_id = preg_replace('/[^0-9]/','',$list_id);
@@ -573,6 +576,29 @@ if ($function == 'version')
 ### END version
 ################################################################################
 
+
+
+##### BEGIN user authentication for all functions below #####
+$auth=0;
+$auth_message = user_authorization($user,$pass,'REPORTS',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth < 1)
+	{
+	$VDdisplayMESSAGE = "ERROR: Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "ERROR: Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$user|$auth_message|\n";
+		exit;
+		}
+	Header ("Content-type: text/html; charset=utf-8");
+	echo "$VDdisplayMESSAGE: |$user|$pass|$auth_message|\n";
+	exit;
+	}
+##### END user authentication for all functions below #####
 
 
 
@@ -3641,8 +3667,6 @@ if ($function == 'agent_stats_export')
 			$search_SQL='';
 			$search_ready=0;
 
-			require_once("functions.php");
-
 			if ( (strlen($agent_user)>0) and (strlen($agent_user)<21) )
 				{
 				$search_SQL .= "user='$agent_user'";
@@ -3858,8 +3882,6 @@ if ($function == 'user_group_status')
 			{
 			$search_SQL='';
 			$search_ready=0;
-
-			require_once("functions.php");
 
 			if ( (strlen($user_groups)>0) and (strlen($user_groups)<10000) )
 				{
@@ -4077,8 +4099,6 @@ if ($function == 'in_group_status')
 			$search_SQL='';
 			$search_ready=0;
 
-			require_once("functions.php");
-
 			if ( (strlen($in_groups)>0) and (strlen($in_groups)<10000) )
 				{
 				$in_groupsOUTPUT = preg_replace("/\|/",' ',$in_groups);
@@ -4295,8 +4315,6 @@ if ($function == 'agent_status')
 			$agent_search_SQL='';
 			$search_ready=0;
 
-			require_once("functions.php");
-
 			if ( (strlen($agent_user)>0) and (strlen($agent_user)<100) )
 				{
 				$agent_search_SQL .= "where user='$agent_user'";
@@ -4351,7 +4369,7 @@ if ($function == 'agent_status')
 				if ($header == 'YES')
 					{$output .= 'status' . $DL . 'callerid' . $DL . 'lead_id' . $DL . 'campaign_id' . $DL . 'calls_today' . $DL . 'full_name' . $DL . 'user_group' . $DL . 'user_level' . "\n";}
 
-				$stmt="select full_name,user_group,user_level from vicidial_users $agent_search_SQL $LOGadmin_viewable_groupsSQL;";
+				$stmt="SELECT full_name,user_group,user_level from vicidial_users $agent_search_SQL $LOGadmin_viewable_groupsSQL;";
 				$rslt=mysql_query($stmt, $link);
 				if ($DB) {echo "$stmt\n";}
 				$user_to_list = mysql_num_rows($rslt);
@@ -4362,22 +4380,25 @@ if ($function == 'agent_status')
 					$user_group = 	$row[1];
 					$user_level = 	$row[2];
 
-					$stmt="select status,callerid,lead_id,campaign_id,calls_today,agent_log_id from vicidial_live_agents $agent_search_SQL;";
+					$stmt="SELECT status,callerid,lead_id,campaign_id,calls_today,agent_log_id,on_hook_agent,ring_callerid from vicidial_live_agents $agent_search_SQL;";
 					$rslt=mysql_query($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
 					$agent_to_list = mysql_num_rows($rslt);
 					if ($agent_to_list > 0)
 						{
 						$row=mysql_fetch_row($rslt);
-						$status =		$row[0];
-						$callerid =		$row[1];
-						$lead_id =		$row[2];
-						$campaign_id =	$row[3];
-						$calls_today =	$row[4];
-						$agent_log_id = $row[5];
-						$pause_code =	'';
+						$status =			$row[0];
+						$callerid =			$row[1];
+						$lead_id =			$row[2];
+						$campaign_id =		$row[3];
+						$calls_today =		$row[4];
+						$agent_log_id =		$row[5];
+						$on_hook_agent =	$row[6];
+						$ring_callerid =	$row[7];
+						$pause_code =		'';
+						$rtr_status =		'';
 
-						$stmt="select sub_status from vicidial_agent_log $agent_search_SQL and agent_log_id='$agent_log_id';";
+						$stmt="SELECT sub_status from vicidial_agent_log $agent_search_SQL and agent_log_id='$agent_log_id';";
 						$rslt=mysql_query($stmt, $link);
 						if ($DB) {echo "$stmt\n";}
 						$agent_to_log = mysql_num_rows($rslt);
@@ -4387,7 +4408,40 @@ if ($function == 'agent_status')
 							$pause_code =		$row[0];
 							}
 
-						$output .= "$status$DL$callerid$DL$lead_id$DL$campaign_id$DL$calls_today$DL$full_name$DL$user_group$DL$user_level$DL$pause_code\n";
+						if ( ($on_hook_agent == 'Y') and (strlen($ring_callerid) > 18) )
+							{$rtr_status = "RING";}
+
+						if ( ($status == 'PAUSED') and ($lead_id > 0) )
+							{$rtr_status = 'DISPO';}
+
+						if ($status == 'INCALL')
+							{
+							if ($lead_id > 0)
+								{
+								$threewaystmt="select UNIX_TIMESTAMP(last_call_time) from vicidial_live_agents where lead_id='$lead_id' and status='INCALL' order by UNIX_TIMESTAMP(last_call_time) desc;";
+								$threewayrslt=mysql_query($threewaystmt, $link);
+								if (mysql_num_rows($threewayrslt)>1) 
+									{$rtr_status = '3-WAY';}
+								}
+
+							$stmt="SELECT count(*) from parked_channels where channel_group='$callerid';";
+							$rslt=mysql_query($stmt,$link);
+							$row=mysql_fetch_row($rslt);
+							$parked_channel = $row[0];
+							if ($parked_channel > 0)
+								{$rtr_status = 'PARK';}
+							else
+								{
+								$stmt="SELECT count(*) from vicidial_auto_calls where callerid='$callerid';";
+								$rslt=mysql_query($stmt,$link);
+								$row=mysql_fetch_row($rslt);
+								$live_channel = $row[0];
+								if ($live_channel < 1)
+									{$rtr_status = 'DEAD';}
+								}
+							}
+
+						$output .= "$status$DL$callerid$DL$lead_id$DL$campaign_id$DL$calls_today$DL$full_name$DL$user_group$DL$user_level$DL$pause_code$DL$rtr_status\n";
 
 						echo "$output";
 

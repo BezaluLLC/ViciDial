@@ -15,12 +15,14 @@
 # 91129-2249 - Replaced SELECT STAR in SQL queries, formatting fixes
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 # 130610-1105 - Finalized changing of all ereg instances to preg
+# 130616-0005 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
-$version = '2.8-8';
-$build = '130610-1105';
+$version = '2.8-9';
+$build = '130616-0005';
 
 require("dbconnect.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -62,39 +64,37 @@ if ($force_logout)
 	{
 	if( (strlen($PHP_AUTH_USER)>0) or (strlen($PHP_AUTH_PW)>0) )
 		{
-		Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+		Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
 		Header("HTTP/1.0 401 Unauthorized");
 		}
     echo "You have now logged out. Thank you\n";
     exit;
 	}
 
+if (!isset($query_date)) {$query_date = $NOW_DATE;}
 $PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
 $PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
-
+$remote_agent_id = preg_replace('/[^0-9a-zA-Z]/', '', $remote_agent_id);
+$query_date = preg_replace('/[^-_0-9a-zA-Z]/', '', $query_date);
 
 $popup_page = './closer_popup.php';
 $STARTtime = date("U");
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
-if (!isset($query_date)) {$query_date = $NOW_DATE;}
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 3;";
-if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-$fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
+$auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REMOTE',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
 if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
+    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
     exit;
 	}
 else
@@ -103,9 +103,7 @@ else
 
 	if($auth>0)
 		{
-		$office_no=strtoupper($PHP_AUTH_USER);
-		$password=strtoupper($PHP_AUTH_PW);
-		$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+		$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$LOGfullname=$row[0];
@@ -125,22 +123,12 @@ else
 			$remote_agent_id=$row[0];
 			$server_ip=$row[1];
 			if (!$number_of_lines) {$number_of_lines=$row[2];}
-
-			fwrite ($fp, "VDremote|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
 			}
 		else
 			{
-			fwrite ($fp, "VDremote|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
 			echo "This remote agent does not exist: |$PHP_AUTH_USER|\n";
 			exit;
 			}
-		}
-	else
-		{
-		fwrite ($fp, "VDremote|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
-		fclose($fp);
 		}
 	}
 
@@ -176,7 +164,7 @@ if ($ADD==71111)	{echo "Remote Agent Closer Stats";}
 if (strlen($ADD)>4)
 	{
 	##### get server listing for dynamic pulldown
-	$stmt="SELECT server_ip,server_description from servers order by server_ip";
+	$stmt="SELECT server_ip,server_description from servers order by server_ip;";
 	$rslt=mysql_query($stmt, $link);
 	$servers_to_print = mysql_num_rows($rslt);
 	$servers_list='';
@@ -190,7 +178,7 @@ if (strlen($ADD)>4)
 		}
 
 	##### get campaigns listing for dynamic pulldown
-	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns order by campaign_id";
+	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns order by campaign_id;";
 	$rslt=mysql_query($stmt, $link);
 	$campaigns_to_print = mysql_num_rows($rslt);
 	$campaigns_list='';
@@ -214,7 +202,7 @@ if (strlen($ADD)>4)
 		$groups = explode(" ", $closer_campaigns);
 		}
 
-	$stmt="SELECT group_id,group_name from vicidial_inbound_groups order by group_id";
+	$stmt="SELECT group_id,group_name from vicidial_inbound_groups order by group_id;";
 	$rslt=mysql_query($stmt, $link);
 	$groups_to_print = mysql_num_rows($rslt);
 	$groups_list='';
@@ -315,9 +303,9 @@ if ($ADD==41111)
 		echo "<br>REMOTE AGENTS MODIFIED\n";
 
 		### LOG CHANGES TO LOG FILE ###
-		$fp = fopen ("./admin_changes_log.txt", "a");
-		fwrite ($fp, "$date|MODIFY REMOTE AGENTS ENTRY     |$PHP_AUTH_USER|$ip|$stmt|\n");
-		fclose($fp);
+	#	$fp = fopen ("./admin_changes_log.txt", "a");
+	#	fwrite ($fp, "$date|MODIFY REMOTE AGENTS ENTRY     |$PHP_AUTH_USER|$ip|$stmt|\n");
+	#	fclose($fp);
 		}
 
 	$stmt="SELECT remote_agent_id,user_start,number_of_lines,server_ip,conf_exten,status,campaign_id,closer_campaigns from vicidial_remote_agents where remote_agent_id='" . mysql_real_escape_string($remote_agent_id) . "';";

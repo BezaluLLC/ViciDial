@@ -1813,61 +1813,10 @@ if (strlen($dial_status) > 0)
 	$status = $dial_status;
 	}
 
-if ($download_max_system_stats_metric_name) {
-	if (!$query_date) {$query_date=date("Y-m-d", time()-(29*86400));}
-	if (!$end_date) {
-		$end_date=date("Y-m-d", time());
-	} else if (strtotime($end_date)>strtotime(date("Y-m-d"))) {
-		$end_date=date("Y-m-d");
-	}
-	if ($query_date>$end_date) {$query_date=$end_date;}
-
-	$num_graph_days = ceil(abs(strtotime($end_date) - strtotime($query_date)) / 86400)+1;
-	$CSV_text="";
-
-	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="total call count in and out") {
-		download_max_system_stats($campaign_id,$num_graph_days,'system','total_calls','total call count in and out',$end_date);
-	}
-	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="total inbound call count") {
-		download_max_system_stats($campaign_id,$num_graph_days,'system','total_calls_inbound_all','total inbound call count',$end_date);
-	}
-	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="total outbound call count") {
-		download_max_system_stats($campaign_id,$num_graph_days,'system','total_calls_outbound_all','total outbound call count',$end_date);
-	}
-	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="most concurrent calls in and out") {
-		download_max_system_stats($campaign_id,$num_graph_days,'system','(max_inbound + max_outbound)','most concurrent calls in and out',$end_date);
-	}
-	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="most concurrent calls inbound total") {
-		download_max_system_stats($campaign_id,$num_graph_days,'system','max_inbound','most concurrent calls inbound total',$end_date);
-	}
-	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="most concurrent calls outbound total") {
-		download_max_system_stats($campaign_id,$num_graph_days,'system','max_outbound','most concurrent calls outbound total',$end_date);
-	}
-	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="most concurrent agents") {
-		download_max_system_stats($campaign_id,$num_graph_days,'system','max_agents','most concurrent agents',$end_date);
-	}
-
-	$FILE_TIME = date("Ymd-His");
-	$CSVfilename = "MAX_SYSTEM_STATS_$US$FILE_TIME.csv";
-	$CSV_text=preg_replace('/ +\"/', '"', $CSV_text);
-	$CSV_text=preg_replace('/\" +/', '"', $CSV_text);
-	header('Content-type: application/octet-stream');
-
-	header("Content-Disposition: attachment; filename=\"$CSVfilename\"");
-	header('Expires: 0');
-	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-	header('Pragma: public');
-	ob_clean();
-	flush();
-
-	echo "$CSV_text";
-
-	exit;
-}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,allow_emails,level_8_disable_add FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,allow_emails,level_8_disable_add,pass_key FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
@@ -1911,9 +1860,27 @@ if ($qm_conf_ct > 0)
 	$SSsvn_revision =						$row[34];
 	$SSallow_emails =						$row[35];
 	$SSlevel_8_disable_add =				$row[36];
+	$SSpass_key =							$row[37];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+### populate pass_key if not set
+if ( ($qm_conf_ct > 0) and (strlen($SSpass_key)<16) )
+	{
+	$SSpass_key = '';
+	$possible = "0123456789abcdefghijklmnpqrstvwxyzABCDEFGHIJKLMNPQRSTUVWXYZ";  
+	$i = 0; 
+	$length = 16;
+	while ($i < $length) 
+		{ 
+		$char = substr($possible, mt_rand(0, strlen($possible)-1), 1);
+		$SSpass_key .= $char;
+		$i++;
+		}
+	$stmt="UPDATE system_settings set pass_key='$SSpass_key' where ( (pass_key is NULL) or (pass_key='') );";
+	$rslt=mysql_query($stmt, $link);
+	}
 
 
 ######################################################################################################
@@ -3248,12 +3215,14 @@ else
 # 130510-1350 - Added outbound state call time holidays functionality
 # 130605-0841 - Converted ereg to preg
 #             - Added display of agent login information on User Modify screen, and reset of failed_logins on update
+# 130615-2124 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130627-0745 - Added url log, lagged log and user group login reports to admin utilities page
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.8-404a';
-$build = '130605-0841';
+$admin_version = '2.8-406a';
+$build = '130627-0745';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3303,10 +3272,10 @@ if ($force_logout)
 	{
 	if( (strlen($PHP_AUTH_USER)>0) or (strlen($PHP_AUTH_PW)>0) )
 		{
-		Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+		Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
 		Header("HTTP/1.0 401 Unauthorized");
 		}
-	echo "You have now logged out. Thank you\n";
+	echo "You have now logged out. Thank you\n<BR>To log back in, <a href=\"$PHP_SELF\">click here</a>";
 	exit;
 	}
 #############################################
@@ -3331,200 +3300,283 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
+$date = date("r");
+$ip = getenv("REMOTE_ADDR");
+$browser = getenv("HTTP_USER_AGENT");
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and active='Y' and view_reports='1';";
-if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$reports_auth=$row[0];
+$user_auth=0;
+$auth=0;
+$reports_auth=0;
+$qc_auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'QC',1);
+if ($auth_message == 'GOOD')
+	{$user_auth=1;}
 
-$reports_only_user=0;
-if ( ($reports_auth > 0) and ($auth < 1) )
+if ($user_auth > 0)
 	{
-	$ADD=999999;
-	$reports_only_user=1;
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$auth=$row[0];
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 1 and qc_enabled > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$qc_auth=$row[0];
+
+	$reports_only_user=0;
+	$qc_only_user=0;
+	if ( ($reports_auth > 0) and ($auth < 1) )
+		{
+		$ADD=999999;
+		$reports_only_user=1;
+		}
+	if ( ($qc_auth > 0) and ($reports_auth < 1) and ($auth < 1) )
+		{
+		if ( ($ADD != '881') and ($ADD != '100000000000000') )
+			{
+            $ADD=100000000000000;
+			}
+		$qc_only_user=1;
+		}
+	if ( ($qc_auth < 1) and ($reports_auth < 1) and ($auth < 1) )
+		{
+		$VDdisplayMESSAGE = "You do not have permission to be here";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
 	}
+else
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
+
+
 ##############################################
 # Include QC Agents with no other permission #
 ##############################################
 require_once('qc/QC_admin_include02.php');
 
-if ($SSwebroot_writable > 0)
-	{$fp = fopen ("./project_auth_entries.txt", "a");}
+$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,callcard_admin,force_change_password,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,modify_contacts,modify_same_user_level from vicidial_users where user='$PHP_AUTH_USER';";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGfull_name				=$row[3];
+$LOGuser_level				=$row[4];
+$LOGuser_group				=$row[5];
+$LOGdelete_users			=$row[8];
+$LOGdelete_user_groups		=$row[9];
+$LOGdelete_lists			=$row[10];
+$LOGdelete_campaigns		=$row[11];
+$LOGdelete_ingroups			=$row[12];
+$LOGdelete_remote_agents	=$row[13];
+$LOGload_leads				=$row[14];
+$LOGcampaign_detail			=$row[15];
+$LOGast_admin_access		=$row[16];
+$LOGast_delete_phones		=$row[17];
+$LOGdelete_scripts			=$row[18];
+$LOGdelete_filters			=$row[29];
+$LOGalter_agent_interface	=$row[30];
+$LOGdelete_call_times		=$row[32];
+$LOGmodify_call_times		=$row[33];
+$LOGmodify_users			=$row[34];
+$LOGmodify_campaigns		=$row[35];
+$LOGmodify_lists			=$row[36];
+$LOGmodify_scripts			=$row[37];
+$LOGmodify_filters			=$row[38];
+$LOGmodify_ingroups			=$row[39];
+$LOGmodify_usergroups		=$row[40];
+$LOGmodify_remoteagents		=$row[41];
+$LOGmodify_servers			=$row[42];
+$LOGview_reports			=$row[43];
+$LOGmodify_dids				=$row[56];
+$LOGdelete_dids				=$row[57];
+$LOGmanager_shift_enforcement_override=$row[61];
+$LOGexport_reports			=$row[64];
+$LOGdelete_from_dnc			=$row[65];
+$LOGcallcard_admin			=$row[70];
+$LOGforce_change_password	=$row[71];
+$LOGmodify_shifts			=$row[72];
+$LOGmodify_phones			=$row[73];
+$LOGmodify_carriers			=$row[74];
+$LOGmodify_labels			=$row[75];
+$LOGmodify_statuses			=$row[76];
+$LOGmodify_voicemail		=$row[77];
+$LOGmodify_audiostore		=$row[78];
+$LOGmodify_moh				=$row[79];
+$LOGmodify_tts				=$row[80];
+$LOGmodify_contacts			=$row[81];
+$LOGmodify_same_user_level	=$row[82];
 
-$date = date("r");
-$ip = getenv("REMOTE_ADDR");
-$browser = getenv("HTTP_USER_AGENT");
+$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns =			$row[0];
+$LOGallowed_reports =			$row[1];
+$LOGadmin_viewable_groups =		$row[2];
+$LOGadmin_viewable_call_times =	$row[3];
 
-if ( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or ( ($auth < 1 ) and ($reports_auth < 1) and ($qc_auth < 1)) )
+$LOGallowed_campaignsSQL='';
+$whereLOGallowed_campaignsSQL='';
+if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 	{
-	Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-	Header("HTTP/1.0 401 Unauthorized");
-	echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
+	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	}
+$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
+
+$admin_viewable_groupsALL=0;
+$LOGadmin_viewable_groupsSQL='';
+$whereLOGadmin_viewable_groupsSQL='';
+$valLOGadmin_viewable_groupsSQL='';
+$vmLOGadmin_viewable_groupsSQL='';
+if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+	{
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+	$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$valLOGadmin_viewable_groupsSQL = "and val.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$vmLOGadmin_viewable_groupsSQL = "and vm.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	}
+else 
+	{$admin_viewable_groupsALL=1;}
+$regexLOGadmin_viewable_groups = " $LOGadmin_viewable_groups ";
+
+$LOGadmin_viewable_call_timesSQL='';
+$whereLOGadmin_viewable_call_timesSQL='';
+if ( (!preg_match('/\-\-ALL\-\-/i', $LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
+	{
+	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ -/",'',$LOGadmin_viewable_call_times);
+	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_call_timesSQL);
+	$LOGadmin_viewable_call_timesSQL = "and call_time_id IN('---ALL---','$rawLOGadmin_viewable_call_timesSQL')";
+	$whereLOGadmin_viewable_call_timesSQL = "where call_time_id IN('---ALL---','$rawLOGadmin_viewable_call_timesSQL')";
+	}
+$regexLOGadmin_viewable_call_times = " $LOGadmin_viewable_call_times ";
+
+$UUgroups_list='';
+if ($admin_viewable_groupsALL > 0)
+	{$UUgroups_list .= "<option value=\"---ALL---\">All Admin User Groups</option>\n";}
+$stmt="SELECT user_group,group_name from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
+$rslt=mysql_query($stmt, $link);
+$UUgroups_to_print = mysql_num_rows($rslt);
+$o=0;
+while ($UUgroups_to_print > $o) 
+	{
+	$rowx=mysql_fetch_row($rslt);
+	$UUgroups_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+	$o++;
+	}
+
+$first_login_link=0;
+
+if ($LOGforce_change_password=='Y')
+	{
+	$ADD=999997;
+	$reports_only_user=1;
+	}
+if ($SSfirst_login_trigger=='Y')
+	{
+	
+	if ($ADD==999996)
+		{$reports_only_user=1;}
+	else
+		{
+		$ADD=999995;
+		$first_login_link=1;
+		}
+	}
+if ($ADD==999995)
+	{
+	$reports_only_user=1;
+	}
+
+if (($LOGuser_level < 9) and ($SSlevel_8_disable_add > 0))
+	{$add_copy_disabled++;}
+
+
+if ($download_max_system_stats_metric_name) 
+	{
+	if (!$query_date) {$query_date=date("Y-m-d", time()-(29*86400));}
+	if (!$end_date) 
+		{
+		$end_date=date("Y-m-d", time());
+		}
+	else if (strtotime($end_date)>strtotime(date("Y-m-d"))) 
+		{
+		$end_date=date("Y-m-d");
+		}
+	if ($query_date>$end_date) {$query_date=$end_date;}
+
+	$num_graph_days = ceil(abs(strtotime($end_date) - strtotime($query_date)) / 86400)+1;
+	$CSV_text="";
+
+	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="total call count in and out") 
+		{
+		download_max_system_stats($campaign_id,$num_graph_days,'system','total_calls','total call count in and out',$end_date);
+		}
+	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="total inbound call count") 
+		{
+		download_max_system_stats($campaign_id,$num_graph_days,'system','total_calls_inbound_all','total inbound call count',$end_date);
+		}
+	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="total outbound call count") 
+		{
+		download_max_system_stats($campaign_id,$num_graph_days,'system','total_calls_outbound_all','total outbound call count',$end_date);
+		}
+	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="most concurrent calls in and out") 
+		{
+		download_max_system_stats($campaign_id,$num_graph_days,'system','(max_inbound + max_outbound)','most concurrent calls in and out',$end_date);
+		}
+	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="most concurrent calls inbound total") 
+		{
+		download_max_system_stats($campaign_id,$num_graph_days,'system','max_inbound','most concurrent calls inbound total',$end_date);
+		}
+	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="most concurrent calls outbound total") 
+		{
+		download_max_system_stats($campaign_id,$num_graph_days,'system','max_outbound','most concurrent calls outbound total',$end_date);
+		}
+	if ($download_max_system_stats_metric_name=="ALL" || $download_max_system_stats_metric_name=="most concurrent agents") 
+		{
+		download_max_system_stats($campaign_id,$num_graph_days,'system','max_agents','most concurrent agents',$end_date);
+		}
+
+	$FILE_TIME = date("Ymd-His");
+	$CSVfilename = "MAX_SYSTEM_STATS_$US$FILE_TIME.csv";
+	$CSV_text=preg_replace('/ +\"/', '"', $CSV_text);
+	$CSV_text=preg_replace('/\" +/', '"', $CSV_text);
+	header('Content-type: application/octet-stream');
+
+	header("Content-Disposition: attachment; filename=\"$CSVfilename\"");
+	header('Expires: 0');
+	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+	header('Pragma: public');
+	ob_clean();
+	flush();
+
+	echo "$CSV_text";
+
 	exit;
-	}
-
-if ( ($auth > 0) or ($reports_auth > 0) or ($qc_auth > 0) )
-	{
-	$office_no=strtoupper($PHP_AUTH_USER);
-	$password=strtoupper($PHP_AUTH_PW);
-	$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,callcard_admin,force_change_password,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,modify_contacts,modify_same_user_level from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$LOGfull_name				=$row[3];
-	$LOGuser_level				=$row[4];
-	$LOGuser_group				=$row[5];
-	$LOGdelete_users			=$row[8];
-	$LOGdelete_user_groups		=$row[9];
-	$LOGdelete_lists			=$row[10];
-	$LOGdelete_campaigns		=$row[11];
-	$LOGdelete_ingroups			=$row[12];
-	$LOGdelete_remote_agents	=$row[13];
-	$LOGload_leads				=$row[14];
-	$LOGcampaign_detail			=$row[15];
-	$LOGast_admin_access		=$row[16];
-	$LOGast_delete_phones		=$row[17];
-	$LOGdelete_scripts			=$row[18];
-	$LOGdelete_filters			=$row[29];
-	$LOGalter_agent_interface	=$row[30];
-	$LOGdelete_call_times		=$row[32];
-	$LOGmodify_call_times		=$row[33];
-	$LOGmodify_users			=$row[34];
-	$LOGmodify_campaigns		=$row[35];
-	$LOGmodify_lists			=$row[36];
-	$LOGmodify_scripts			=$row[37];
-	$LOGmodify_filters			=$row[38];
-	$LOGmodify_ingroups			=$row[39];
-	$LOGmodify_usergroups		=$row[40];
-	$LOGmodify_remoteagents		=$row[41];
-	$LOGmodify_servers			=$row[42];
-	$LOGview_reports			=$row[43];
-	$LOGmodify_dids				=$row[56];
-	$LOGdelete_dids				=$row[57];
-	$LOGmanager_shift_enforcement_override=$row[61];
-	$LOGexport_reports			=$row[64];
-	$LOGdelete_from_dnc			=$row[65];
-	$LOGcallcard_admin			=$row[70];
-	$LOGforce_change_password	=$row[71];
-	$LOGmodify_shifts			=$row[72];
-	$LOGmodify_phones			=$row[73];
-	$LOGmodify_carriers			=$row[74];
-	$LOGmodify_labels			=$row[75];
-	$LOGmodify_statuses			=$row[76];
-	$LOGmodify_voicemail		=$row[77];
-	$LOGmodify_audiostore		=$row[78];
-	$LOGmodify_moh				=$row[79];
-	$LOGmodify_tts				=$row[80];
-	$LOGmodify_contacts			=$row[81];
-	$LOGmodify_same_user_level	=$row[82];
-
-	$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$LOGallowed_campaigns =			$row[0];
-	$LOGallowed_reports =			$row[1];
-	$LOGadmin_viewable_groups =		$row[2];
-	$LOGadmin_viewable_call_times =	$row[3];
-
-	$LOGallowed_campaignsSQL='';
-	$whereLOGallowed_campaignsSQL='';
-	if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
-		{
-		$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
-		$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
-		$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
-		$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
-		}
-	$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
-
-	$admin_viewable_groupsALL=0;
-	$LOGadmin_viewable_groupsSQL='';
-	$whereLOGadmin_viewable_groupsSQL='';
-	$valLOGadmin_viewable_groupsSQL='';
-	$vmLOGadmin_viewable_groupsSQL='';
-	if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
-		{
-		$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
-		$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
-		$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
-		$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
-		$valLOGadmin_viewable_groupsSQL = "and val.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
-		$vmLOGadmin_viewable_groupsSQL = "and vm.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
-		}
-	else 
-		{$admin_viewable_groupsALL=1;}
-	$regexLOGadmin_viewable_groups = " $LOGadmin_viewable_groups ";
-
-	$LOGadmin_viewable_call_timesSQL='';
-	$whereLOGadmin_viewable_call_timesSQL='';
-	if ( (!preg_match('/\-\-ALL\-\-/i', $LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
-		{
-		$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ -/",'',$LOGadmin_viewable_call_times);
-		$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_call_timesSQL);
-		$LOGadmin_viewable_call_timesSQL = "and call_time_id IN('---ALL---','$rawLOGadmin_viewable_call_timesSQL')";
-		$whereLOGadmin_viewable_call_timesSQL = "where call_time_id IN('---ALL---','$rawLOGadmin_viewable_call_timesSQL')";
-		}
-	$regexLOGadmin_viewable_call_times = " $LOGadmin_viewable_call_times ";
-
-	$UUgroups_list='';
-	if ($admin_viewable_groupsALL > 0)
-		{$UUgroups_list .= "<option value=\"---ALL---\">All Admin User Groups</option>\n";}
-	$stmt="SELECT user_group,group_name from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
-	$rslt=mysql_query($stmt, $link);
-	$UUgroups_to_print = mysql_num_rows($rslt);
-	$o=0;
-	while ($UUgroups_to_print > $o) 
-		{
-		$rowx=mysql_fetch_row($rslt);
-		$UUgroups_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
-		$o++;
-		}
-
-	if ($SSwebroot_writable > 0)
-		{
-		fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfull_name|\n");
-		fclose($fp);
-		}
-
-	$first_login_link=0;
-
-	if ($LOGforce_change_password=='Y')
-		{
-		$ADD=999997;
-		$reports_only_user=1;
-		}
-	if ($SSfirst_login_trigger=='Y')
-		{
-		
-		if ($ADD==999996)
-			{$reports_only_user=1;}
-		else
-			{
-			$ADD=999995;
-			$first_login_link=1;
-			}
-		}
-	if ($ADD==999995)
-		{
-		$reports_only_user=1;
-		}
-
-	if (($LOGuser_level < 9) and ($SSlevel_8_disable_add > 0))
-		{$add_copy_disabled++;}
-	}
-else
-	{
-	if ($SSwebroot_writable > 0)
-		{
-		fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
-		fclose($fp);
-		}
 	}
 
 
@@ -14295,6 +14347,9 @@ if ($ADD==21111111111)
 							$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
 							$rslt=mysql_query($stmtA, $link);
 
+							$stmtB="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$SSactive_voicemail_server';";
+							$rslt=mysql_query($stmtB, $link);
+
 							### LOG INSERTION Admin Log Table ###
 							$SQL_log = "$stmt|";
 							$SQL_log = preg_replace('/;/', '', $SQL_log);
@@ -18027,6 +18082,9 @@ if ($ADD==41111111111)
 				$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
 				$rslt=mysql_query($stmtA, $link);
 
+				$stmtB="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$SSactive_voicemail_server';";
+				$rslt=mysql_query($stmtB, $link);
+
 				### LOG INSERTION Admin Log Table ###
 				$SQL_log = "$stmt|";
 				$SQL_log = preg_replace('/;/', '', $SQL_log);
@@ -20910,6 +20968,9 @@ if ($ADD==61111111111)
 
 		$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
 		$rslt=mysql_query($stmtA, $link);
+
+		$stmtB="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$SSactive_voicemail_server';";
+		$rslt=mysql_query($stmtB, $link);
 
 		### LOG INSERTION Admin Log Table ###
 		$SQL_log = "$stmt|";
@@ -36100,11 +36161,16 @@ if ($ADD==999994)
 		{
 		echo "<UL>\n";
 		echo "<LI><a href=\"welcome_languages.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Welcome Languages Page</a></FONT>\n";
-		echo "<LI><a href=\"campaign_debug.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Campaign Debug Page</a></FONT>\n";
 		echo "<LI><a href=\"$PHP_SELF?ADD=999991\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Servers Versions</a></FONT>\n";
+		echo "<BR><BR>\n";
+		echo "<LI><a href=\"campaign_debug.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Campaign Debug Page</a></FONT>\n";
 		echo "<LI><a href=\"AST_carrier_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Carrier Log Report</a></FONT>\n";
 		echo "<LI><a href=\"AST_hangup_cause_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Hangup Cause Report</a></FONT>\n";
+		echo "<LI><a href=\"AST_url_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>URL Log Report</a></FONT>\n";
+		echo "<LI><a href=\"AST_LAGGED_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Agent LAGGED Report</a></FONT>\n";
+		echo "<LI><a href=\"AST_usergroup_login_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>User Group Login Report</a></FONT>\n";
 		echo "<LI><a href=\"admin.php?ADD=800000000000000\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Admin Report Log Viewer</a></FONT>\n";
+		echo "<BR><BR>\n";
 		echo "<LI><a href=\"admin_phones_bulk_insert.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Bulk Phone Insert Page</a></FONT>\n";
 		echo "<LI><a href=\"lead_tools.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Basic Lead Management Tools</a></FONT>\n";
 		echo "<LI><a href=\"callbacks_bulk_change.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Callbacks Transferral Page</a></FONT>\n";

@@ -31,9 +31,11 @@
 # 120409-1131 - Added option for log searches done through slave DB server
 # 121025-1732 - Added owner field search option
 # 130610-1054 - Finalized changing of all ereg instances to preg
+# 130621-1714 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
 require("dbconnect.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -75,8 +77,7 @@ $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_ter
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
@@ -85,76 +86,78 @@ while ($i < $qm_conf_ct)
 	$user_territories_active =		$row[3];
 	$slave_db_server =				$row[4];
 	$reports_use_slave_db =			$row[5];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
 $report_name = 'Search Leads Logs';
 
-$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
-$phone = preg_replace('/[^0-9]/','',$phone);
-if (strlen($alt_phone_search) < 2) {$alt_phone_search='No';}
+$vicidial_list_fields = 'lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner';
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
-
-$vicidial_list_fields = 'lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner';
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and modify_leads='1';";
-if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-if ($webroot_writable > 0)
-	{$fp = fopen ("./project_auth_entries.txt", "a");}
-
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if (strlen($alt_phone_search) < 2) {$alt_phone_search='No';}
+
+if ($non_latin < 1)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 	}
 else
 	{
-	if ($auth>0)
-		{
-		$office_no=strtoupper($PHP_AUTH_USER);
-		$password=strtoupper($PHP_AUTH_PW);
-		$stmt="SELECT full_name,modify_leads,admin_hide_lead_data,admin_hide_phone_data,user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGfullname =				$row[0];
-		$LOGmodify_leads =			$row[1];
-		$LOGadmin_hide_lead_data =	$row[2];
-		$LOGadmin_hide_phone_data =	$row[3];
-		$LOGuser_group =			$row[4];
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+$phone = preg_replace('/[^0-9]/','',$phone);
 
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
-			}
-		}
-	else
+$auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth < 1)
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
 		{
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
-			fclose($fp);
-			}
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
 		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
 	}
 
+$rights_stmt = "SELECT modify_leads from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rights_rslt=mysql_query($rights_stmt, $link);
+$rights_row=mysql_fetch_row($rights_rslt);
+$modify_leads =		$rights_row[0];
+
+# check their permissions
+if ( $modify_leads < 1 )
+	{
+	header ("Content-type: text/html; charset=utf-8");
+	echo "You do not have permissions to search leads\n";
+	exit;
+	}
+
+$stmt="SELECT full_name,modify_leads,admin_hide_lead_data,admin_hide_phone_data,user_group from vicidial_users where user='$PHP_AUTH_USER';";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGfullname =				$row[0];
+$LOGmodify_leads =			$row[1];
+$LOGadmin_hide_lead_data =	$row[2];
+$LOGadmin_hide_phone_data =	$row[3];
+$LOGuser_group =			$row[4];
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {echo "|$stmt|\n";}

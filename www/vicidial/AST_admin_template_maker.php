@@ -1,5 +1,5 @@
 <?php
-# AST_admin_template_maker.php - version 2.4
+# AST_admin_template_maker.php - version 2.8
 # 
 # Copyright (C) 2013  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -8,14 +8,16 @@
 # 120529-1427 - Filename filter fix
 # 130514-2127 - Bug fix on Chrome/IE browsers
 # 130610-1102 - Finalized changing of all ereg instances to preg
+# 130619-2044 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
 require("dbconnect.php");
+require("functions.php");
 
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
 if (isset($_GET["standard_fields_layout"]))				{$standard_fields_layout=$_GET["standard_fields_layout"];}
-	elseif (isset($_POST["standard_fields_layout"]))		{$standard_fields_layout=$_POST["standard_fields_layout"];}
+	elseif (isset($_POST["standard_fields_layout"]))	{$standard_fields_layout=$_POST["standard_fields_layout"];}
 if (isset($_GET["custom_fields_layout"]))				{$custom_fields_layout=$_GET["custom_fields_layout"];}
 	elseif (isset($_POST["custom_fields_layout"]))		{$custom_fields_layout=$_POST["custom_fields_layout"];}
 if (isset($_GET["template_id"]))				{$template_id=$_GET["template_id"];}
@@ -31,7 +33,7 @@ if (isset($_GET["file_delimiter"]))				{$file_delimiter=$_GET["file_delimiter"];
 if (isset($_GET["template_list_id"]))				{$template_list_id=$_GET["template_list_id"];}
 	elseif (isset($_POST["template_list_id"]))		{$template_list_id=$_POST["template_list_id"];}
 if (isset($_GET["standard_fields_layout"]))				{$standard_fields_layout=$_GET["standard_fields_layout"];}
-	elseif (isset($_POST["standard_fields_layout"]))		{$standard_fields_layout=$_POST["standard_fields_layout"];}
+	elseif (isset($_POST["standard_fields_layout"]))	{$standard_fields_layout=$_POST["standard_fields_layout"];}
 if (isset($_GET["custom_fields_layout"]))				{$custom_fields_layout=$_GET["custom_fields_layout"];}
 	elseif (isset($_POST["custom_fields_layout"]))		{$custom_fields_layout=$_POST["custom_fields_layout"];}
 if (isset($_GET["submit_template"]))				{$submit_template=$_GET["submit_template"];}
@@ -46,22 +48,6 @@ $PHP_SELF=$_SERVER['PHP_SELF'];
 #$vicidial_list_fields = '|lead_id|vendor_lead_code|source_id|list_id|gmt_offset_now|called_since_last_reset|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|called_count|last_local_call_time|rank|owner|entry_list_id|';
 $vicidial_listloader_fields = '|vendor_lead_code|source_id|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|rank|owner|';
 
-if ($submit_template=="SUBMIT TEMPLATE" && $template_id && $template_name && $template_list_id && $standard_fields_layout) {
-	$custom_table="custom_".$template_list_id;
-	$ins_stmt="insert into vicidial_custom_leadloader_templates(template_id, template_name, template_description, list_id, standard_variables, custom_table, custom_variables) values('$template_id', '$template_name', '$template_description', '$template_list_id', '$standard_fields_layout', '$custom_table', '$custom_fields_layout')";
-	$ins_rslt=mysql_query($ins_stmt, $link);
-	if (mysql_affected_rows()>0) {
-		$success_msg="NEW TEMPLATE CREATED SUCCESSFULLY";
-		if (!$custom_fields_layout) {
-			$success_msg.="<BR/>**NO CUSTOM FIELDS ASSIGNED**";
-		}
-	} else {
-		$error_msg="TEMPLATE CREATION FAILED";
-	}
-} else if ($delete_template=="DELETE TEMPLATE" && $template_id) {
-	$delete_stmt="delete from vicidial_custom_leadloader_templates where template_id='$template_id'";
-	$delete_rslt=mysql_query($delete_stmt, $link);
-}
 
 $US='_';
 #############################################
@@ -83,78 +69,93 @@ if ($qm_conf_ct > 0)
 
 if ($non_latin < 1)
 	{
-	$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-	$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
-	$list_id_override = preg_replace('/[^0-9]/','',$list_id_override);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 	}
 else
 	{
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	}
+$list_id_override = preg_replace('/[^0-9]/','',$list_id_override);
+$template_list_id = preg_replace('/[^0-9]/','',$template_list_id);
+$template_id = preg_replace("/'|\"|\\\\|;/","",$template_id);
+$template_name = preg_replace("/'|\"|\\\\|;/","",$template_name);
+$template_description = preg_replace("/'|\"|\\\\|;/","",$template_description);
+$standard_fields_layout = preg_replace("/'|\"|\\\\|;/","",$standard_fields_layout);
+$custom_table = preg_replace("/'|\"|\\\\|;/","",$custom_table);
+$custom_fields_layout = preg_replace("/'|\"|\\\\|;/","",$custom_fields_layout);
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $FILE_datetime = $STARTtime;
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7;";
-if ($DB) {echo "|$stmt|\n";}
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
-if ($webroot_writable > 0) {$fp = fopen ("./project_auth_entries.txt", "a");}
-$date = date("r");
-$ip = getenv("REMOTE_ADDR");
-$browser = getenv("HTTP_USER_AGENT");
-
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if ($auth < 1)
 	{
-#    Header("WWW-Authenticate: Basic realm=\"VICIDIAL-LEAD-LOADER\"");
- #   Header("HTTP/1.0 401 Unauthorized");
-  #  echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
-	}
-else
-	{
-	header ("Content-type: text/html; charset=utf-8");
-	header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
-	header ("Pragma: no-cache");                          // HTTP/1.0
-
-	if($auth>0)
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
 		{
-		$office_no=strtoupper($PHP_AUTH_USER);
-		$password=strtoupper($PHP_AUTH_PW);
-		$stmt="SELECT load_leads,user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGload_leads =	$row[0];
-		$LOGuser_group =	$row[1];
-
-		if ($LOGload_leads < 1)
-			{
-			echo "You do not have permissions to load leads\n";
-			exit;
-			}
-		if ($webroot_writable > 0) 
-			{
-			fwrite ($fp, "LIST_LOAD|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
-			}
-		}
-	else
-		{
-		if ($webroot_writable > 0) 
-			{
-			fwrite ($fp, "LIST_LOAD|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
-			fclose($fp);
-			}
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
 		}
-	
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
 	}
+
+$stmt="SELECT load_leads,user_group from vicidial_users where user='$PHP_AUTH_USER';";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGload_leads =	$row[0];
+$LOGuser_group =	$row[1];
+
+if ($LOGload_leads < 1)
+	{
+	Header ("Content-type: text/html; charset=utf-8");
+	echo "You do not have permissions to load leads: |$PHP_AUTH_USER|\n";
+	exit;
+	}
+
+header ("Content-type: text/html; charset=utf-8");
+header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
+header ("Pragma: no-cache");                          // HTTP/1.0
+
+if ($submit_template=="SUBMIT TEMPLATE" && $template_id && $template_name && $template_list_id && $standard_fields_layout) 
+	{
+	$custom_table="custom_".$template_list_id;
+	$ins_stmt="INSERT INTO vicidial_custom_leadloader_templates(template_id, template_name, template_description, list_id, standard_variables, custom_table, custom_variables) values('$template_id', '$template_name', '$template_description', '$template_list_id', '$standard_fields_layout', '$custom_table', '$custom_fields_layout')";
+	$ins_rslt=mysql_query($ins_stmt, $link);
+	if (mysql_affected_rows($link)>0) 
+		{
+		$success_msg="NEW TEMPLATE CREATED SUCCESSFULLY";
+		if (!$custom_fields_layout) 
+			{
+			$success_msg.="<BR/>**NO CUSTOM FIELDS ASSIGNED**";
+			}
+		}
+	else 
+		{
+		$errno = mysql_errno($link);
+		if ($errno > 0)
+			{$error = mysql_error($link);}
+		$error_msg="TEMPLATE CREATION FAILED<br>\n$errno - $error<br>\n[$ins_stmt]";
+		}
+	}
+else if ($delete_template=="DELETE TEMPLATE" && $template_id) 
+	{
+	$delete_stmt="delete from vicidial_custom_leadloader_templates where template_id='$template_id'";
+	$delete_rslt=mysql_query($delete_stmt, $link);
+	}
+
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {echo "|$stmt|\n";}
@@ -170,10 +171,10 @@ $LOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
 if (!preg_match('/\-ALL/i', $LOGallowed_campaigns))
 	{
-		echo "<BR/>**$LOGallowed_campaigns**";
+	echo "<BR/>**$LOGallowed_campaigns**";
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
-	    echo "<BR/>##$rawLOGallowed_campaignsSQL##";
+	echo "<BR/>##$rawLOGallowed_campaignsSQL##";
 	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
 	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
 	}
@@ -183,7 +184,7 @@ $script_name = getenv("SCRIPT_NAME");
 $server_name = getenv("SERVER_NAME");
 $server_port = getenv("SERVER_PORT");
 if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
-	else {$HTTPprotocol = 'http://';}
+else {$HTTPprotocol = 'http://';}
 $admDIR = "$HTTPprotocol$server_name$script_name";
 $admDIR = preg_replace('/AST_admin_template_maker\.php/i', '',$admDIR);
 $admDIR = "/vicidial/";
@@ -194,6 +195,7 @@ $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIG
 ?>
 <html>
 <head>
+<title>ADMIN: Lead Loader Template Maker</title>
 </head>
 <script language="Javascript">
 var form_file_name='';
@@ -339,16 +341,18 @@ require("admin_header.php");
 <tr><td align="center" bgcolor="#CCFFFF">
 <table border=0 cellpadding=15 cellspacing=0 width="90%" align="center" bgcolor="#D9E6FE">
 <?php
-if ($error_msg) {
+if ($error_msg) 
+	{
 	echo "<tr bgcolor='#990000'>";
 	echo "<th colspan='2'><font color='#FFFFFF'>$error_msg</font></th>";
 	echo "</tr>";
-}
-if ($success_msg) {
+	}
+if ($success_msg) 
+	{
 	echo "<tr bgcolor='#009900'>";
 	echo "<th colspan='2'><font color='#FFFFFF'>$success_msg</font></th>";
 	echo "</tr>";
-}
+	}
 ?>
 	<tr>
 		<th width="50%"><font class="standard_bold">Create a new template</font></th>
@@ -399,7 +403,7 @@ if (mysql_num_rows($template_rslt)>0) {
 	</tr>
 	<tr bgcolor="#D9E6FE">
 		<td align="right" width='25%'><font class="standard">Template Description:</font></td>
-		<td align="left" width='75%'><input type='text' name='template_desc' size='50' maxlength='255'><?php echo "$NWB#vicidial_template_maker-template_description$NWE"; ?></td>
+		<td align="left" width='75%'><input type='text' name='template_description' size='50' maxlength='255'><?php echo "$NWB#vicidial_template_maker-template_description$NWE"; ?></td>
 	</tr>
 	<tr bgcolor="#D9E6FE">
 		<td width='25%' align="right"><font class="standard">List ID template will load into:</font></td>

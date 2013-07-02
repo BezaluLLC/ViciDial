@@ -8,11 +8,13 @@
 # 130413-2213 - Added SIP codes summary and fields, and report logging
 # 130418-1048 - Changed how server list is generated
 # 130610-0935 - Finalized changing of all ereg instances to preg
+# 130621-0801 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
 $startMS = microtime();
 
 require("dbconnect.php");
+require("functions.php");
 
 $report_name='Carrier Log Report';
 
@@ -40,9 +42,6 @@ if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 
-$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
-
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
@@ -62,25 +61,65 @@ if ($qm_conf_ct > 0)
 
 $NOW_DATE = date("Y-m-d");
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 7 and view_reports='1' and active='Y';";
-if ($DB) {$MAIN.="|$stmt|\n";}
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
-if ($DB) {$MAIN.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$reports_only_user=$row[0];
-
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if ($non_latin < 1)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	}
+else
+	{
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+
+$auth=0;
+$reports_auth=0;
+$admin_auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth > 0)
+	{
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$admin_auth=$row[0];
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	if ($reports_auth < 1)
+		{
+		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ( ($reports_auth > 0) and ($admin_auth < 1) )
+		{
+		$ADD=999999;
+		$reports_only_user=1;
+		}
+	}
+else
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
 	}
 
 ##### BEGIN log visit to the vicidial_report_log table #####
@@ -127,7 +166,7 @@ while($i < $server_ip_ct)
 	$i++;
 	}
 
-$server_stmt="select server_ip,server_description from servers where active_asterisk_server='Y' order by server_ip asc";
+$server_stmt="select server_ip,server_description from servers where active_asterisk_server='Y' order by server_ip asc;";
 $server_rslt=mysql_query($server_stmt, $link);
 $servers_to_print=mysql_num_rows($server_rslt);
 $i=0;

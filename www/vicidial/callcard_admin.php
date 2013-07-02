@@ -14,14 +14,16 @@
 # 100823-1342 - Added Search option and display for level 7 users, added pin number search
 # 120117-1457 - Security fix, issue #544
 # 130610-1103 - Finalized changing of all ereg instances to preg
+# 130620-0839 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
-$version = '2.8-6';
-$build = '130610-1103';
+$version = '2.8-7';
+$build = '130620-0839';
 
 $MT[0]='';
 
 require("dbconnect.php");
+require("functions.php");
 
 $PHP_SELF=$_SERVER['PHP_SELF'];
 if (isset($_GET["action"]))					{$action=$_GET["action"];}
@@ -73,11 +75,6 @@ if (isset($_GET["user"]))					{$user=$_GET["user"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 
-
-header ("Content-type: text/html; charset=utf-8");
-header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
-header ("Pragma: no-cache");                          // HTTP/1.0
-
 $report_name = 'CallCard Search';
 $SEARCHONLY=0;
 
@@ -110,7 +107,7 @@ if ($non_latin < 1)
 	$action = preg_replace('/[^\_0-9a-zA-Z]/','',$action);
 	$card_id = preg_replace('/[^-\_0-9]/','',$card_id);
 	$run = preg_replace('/[^0-9]/','',$run);
-	$batch = preg_replace('/[^0-9]/','',$batch);
+	$batch = preg_replace('/[^0-9a-zA-Z]/','',$batch);
 	$pack = preg_replace('/[^0-9]/','',$pack);
 	$sequence = preg_replace('/[^0-9]/','',$sequence);
 	$territory_description = preg_replace('/[^- \_\.\,0-9a-zA-Z]/','',$territory_description);
@@ -130,57 +127,103 @@ else
 	{
 	$USER=$_SERVER['PHP_AUTH_USER'];
 	$PASS=$_SERVER['PHP_AUTH_PW'];
-	$USER = preg_replace('/[^0-9a-zA-Z]/','',$USER);
-	$PASS = preg_replace('/[^0-9a-zA-Z]/','',$PASS);
+	}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$USER' and pass='$PASS' and user_level > 7 and callcard_admin='1' and active='Y';";
+if ($non_latin < 1)
+	{
+	$USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $USER);
+	$PASS = preg_replace('/[^-_0-9a-zA-Z]/', '', $PASS);
+	}
+else
+	{
+	$PASS = preg_replace("/'|\"|\\\\|;/","",$PASS);
+	$USER = preg_replace("/'|\"|\\\\|;/","",$USER);
+	}
+
+$auth=0;
+$reports_auth=0;
+$admin_auth=0;
+$auth_message = user_authorization($USER,$PASS,'',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth > 0)
+	{
+	$stmt="SELECT count(*) from vicidial_users where user='$USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+	$admin_auth=$row[0];
 
-	if( (strlen($USER)<2) or (strlen($PASS)<2) or (!$auth))
+	$stmt="SELECT count(*) from vicidial_users where user='$USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	if ($reports_auth < 1)
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$USER' and pass='$PASS' and user_level > 6 and view_reports='1' and active='Y';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$authreport=$row[0];
+		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$USER|$auth_message|\n";
+		exit;
+		}
+	if ( ($reports_auth > 0) and ($admin_auth < 1) )
+		{
+		$ADD=999999;
+		$reports_only_user=1;
+		}
+	}
+else
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$USER|$PASS|$auth_message|\n";
+	exit;
+	}
 
-		if ($authreport > 0)
-			{
-			$stmt="SELECT full_name,user_group from vicidial_users where user='$USER' and pass='$PASS';";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$LOGfullname =		$row[0];
-			$LOGuser_group =	$row[1];
+$stmt="SELECT callcard_admin,user_group,full_name from vicidial_users where user='$USER';";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGcallcard_admin =	$row[0];
+$LOGuser_group =		$row[1];
+$LOGfullname =			$row[2];
 
-			$stmt="SELECT allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$LOGallowed_reports =	$row[0];
+if($reports_only_user > 0)
+	{
+	$stmt="SELECT allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$LOGallowed_reports =	$row[0];
 
-			if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
-				{
-				Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-				Header("HTTP/1.0 401 Unauthorized");
-				echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
-				exit;
-				}
-			else
-				{
-				$SEARCHONLY=1;
-				}
-			}
-		else
-			{
-			Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-			Header("HTTP/1.0 401 Unauthorized");
-			echo "Invalid Username/Password: |$USER|$PASS|\n";
-			exit;
-			}
+	if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+		{
+		Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+		Header("HTTP/1.0 401 Unauthorized");
+		echo "You are not allowed to view this report: |$USER|$report_name|\n";
+		exit;
+		}
+	else
+		{
+		$SEARCHONLY=1;
+		}
+	}
+else
+	{
+	if ($LOGcallcard_admin < 1)
+		{
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "You do not have permissions for call card administration: |$USER|\n";
+		exit;
 		}
 	}
 
@@ -193,6 +236,10 @@ if ($SEARCHONLY > 0)
 if (strlen($action) < 1)
 	{$action = 'CALLCARD_SUMMARY';}
 
+
+header ("Content-type: text/html; charset=utf-8");
+header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
+header ("Pragma: no-cache");                          // HTTP/1.0
 
 
 ?>

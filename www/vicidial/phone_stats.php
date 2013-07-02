@@ -11,9 +11,11 @@
 # 90508-0644 - Changed to PHP long tags
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 # 130610-1110 - Finalized changing of all ereg instances to preg
+# 130617-2156 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
 require("dbconnect.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -21,9 +23,9 @@ $PHP_SELF=$_SERVER['PHP_SELF'];
 if (isset($_GET["group"]))				{$group=$_GET["group"];}
 	elseif (isset($_POST["group"]))		{$group=$_POST["group"];}
 if (isset($_GET["query_date"]))				{$query_date=$_GET["query_date"];}
-	elseif (isset($_POST["query_date"]))		{$query_date=$_POST["query_date"];}
+	elseif (isset($_POST["query_date"]))	{$query_date=$_POST["query_date"];}
 if (isset($_GET["begin_date"]))				{$begin_date=$_GET["begin_date"];}
-	elseif (isset($_POST["begin_date"]))		{$begin_date=$_POST["begin_date"];}
+	elseif (isset($_POST["begin_date"]))	{$begin_date=$_POST["begin_date"];}
 if (isset($_GET["end_date"]))				{$end_date=$_GET["end_date"];}
 	elseif (isset($_POST["end_date"]))		{$end_date=$_POST["end_date"];}
 if (isset($_GET["extension"]))				{$extension=$_GET["extension"];}
@@ -35,9 +37,9 @@ if (isset($_GET["user"]))				{$user=$_GET["user"];}
 if (isset($_GET["full_name"]))				{$full_name=$_GET["full_name"];}
 	elseif (isset($_POST["full_name"]))		{$full_name=$_POST["full_name"];}
 if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
-	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
+	elseif (isset($_POST["submit"]))	{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
-	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
+	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -45,89 +47,113 @@ $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_ter
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$webroot_writable =				$row[1];
 	$SSoutbound_autodial_active =	$row[2];
 	$user_territories_active =		$row[3];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
-
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $admin_page = './admin.php';
-
-if (!isset($begin_date)) {$begin_date = $TODAY;}
-if (!isset($end_date)) {$end_date = $TODAY;}
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-$fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if (!isset($begin_date)) {$begin_date = $TODAY;}
+if (!isset($end_date)) {$end_date = $TODAY;}
+
+if ($non_latin < 1)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-ASTERISK\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 	}
 else
 	{
-	if($auth>0)
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+$extension = preg_replace("/'|\"|\\\\|;/", '', $extension);
+$server_ip = preg_replace("/'|\"|\\\\|;/", '', $server_ip);
+$begin_date = preg_replace("/'|\"|\\\\|;/","",$begin_date);
+$end_date = preg_replace("/'|\"|\\\\|;/","",$end_date);
+
+$auth=0;
+$reports_auth=0;
+$admin_auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth > 0)
+	{
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$admin_auth=$row[0];
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	if ($reports_auth < 1)
 		{
-		$office_no=strtoupper($PHP_AUTH_USER);
-		$password=strtoupper($PHP_AUTH_PW);
-		$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGfullname=$row[0];
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "ASTERISK|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
-			}
-		##### get server listing for dynamic pulldown
-		$stmt="SELECT fullname from phones where server_ip='$server_ip' and extension='$extension'";
-		$rsltx=mysql_query($stmt, $link);
-		$rowx=mysql_fetch_row($rsltx);
-		$fullname = $row[0];
+		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
 		}
-	else
+	if ( ($reports_auth > 0) and ($admin_auth < 1) )
 		{
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "ASTERISK|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
-			fclose($fp);
-			}
+		$ADD=999999;
+		$reports_only_user=1;
 		}
 	}
+else
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
+
+$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER';";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGfullname=$row[0];
+
+##### get server listing for dynamic pulldown
+$stmt="SELECT fullname from phones where server_ip='$server_ip' and extension='$extension';";
+$rsltx=mysql_query($stmt, $link);
+$rowx=mysql_fetch_row($rsltx);
+$fullname = $row[0];
 
 ?>
 <html>
 <head>
-<title>VICIDIAL ADMIN: Phone Stats</title>
+<title>ADMIN: Phone Stats</title>
 </head>
 <BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 <CENTER>
-<TABLE WIDTH=620 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; VICIDIAL ADMIN: Administration</TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo date("l F j, Y G:i:s A") ?> &nbsp; </TD></TR>
+<TABLE WIDTH=620 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; ADMIN: Administration</TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo date("l F j, Y G:i:s A") ?> &nbsp; </TD></TR>
 <TR BGCOLOR=#F0F5FE><TD ALIGN=LEFT COLSPAN=2><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1><B> &nbsp; <a href="<?php echo $admin_page ?>?ADD=10000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>LIST ALL PHONES</a> | <a href="<?php echo $admin_page ?>?ADD=11111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>ADD A NEW PHONE</a> | <a href="<?php echo $admin_page ?>?ADD=551"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>SEARCH FOR A PHONE</a> | <a href="<?php echo $admin_page ?>?ADD=111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>ADD A SERVER</a> | <a href="<?php echo $admin_page ?>?ADD=100000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>LIST ALL SERVERS</a></TD></TR>
 <TR BGCOLOR=#F0F5FE><TD ALIGN=LEFT COLSPAN=2><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1><B> &nbsp; <a href="<?php echo $admin_page ?>?ADD=1000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>SHOW ALL CONFERENCES</a> | <a href="<?php echo $admin_page ?>?ADD=1111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>ADD A NEW CONFERENCE</a></TD></TR>
-
-
 
 
 <?php 
@@ -148,9 +174,9 @@ echo "</B></TD></TR>\n";
 echo "<TR><TD ALIGN=LEFT COLSPAN=2>\n";
 
 
-	$stmt="SELECT count(*),channel_group, sum(length_in_sec) from call_log where extension='" . mysql_real_escape_string($extension) . "' and server_ip='" . mysql_real_escape_string($server_ip) . "' and start_time >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and start_time <= '" . mysql_real_escape_string($end_date) . " 23:59:59' group by channel_group order by channel_group";
-	$rslt=mysql_query($stmt, $link);
-	$statuses_to_print = mysql_num_rows($rslt);
+$stmt="SELECT count(*),channel_group, sum(length_in_sec) from call_log where extension='" . mysql_real_escape_string($extension) . "' and server_ip='" . mysql_real_escape_string($server_ip) . "' and start_time >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and start_time <= '" . mysql_real_escape_string($end_date) . " 23:59:59' group by channel_group order by channel_group";
+$rslt=mysql_query($stmt, $link);
+$statuses_to_print = mysql_num_rows($rslt);
 #	echo "|$stmt|\n";
 
 echo "<br><center>\n";
@@ -160,31 +186,32 @@ echo "<B>CALL TIME AND CHANNELS:</B>\n";
 echo "<center><TABLE width=300 cellspacing=0 cellpadding=1>\n";
 echo "<tr><td><font size=2>CHANNEL GROUP </td><td align=right><font size=2>COUNT</td><td align=right><font size=2> HOURS:MINUTES</td></tr>\n";
 
-	$total_calls=0;
-	$o=0;
-	while ($statuses_to_print > $o) {
-		$row=mysql_fetch_row($rslt);
-		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
-		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
+$total_calls=0;
+$o=0;
+while ($statuses_to_print > $o) 
+	{
+	$row=mysql_fetch_row($rslt);
+	if (preg_match('/1$|3$|5$|7$|9$/i', $o))
+		{$bgcolor='bgcolor="#B9CBFD"';} 
+	else
+		{$bgcolor='bgcolor="#9BB9FB"';}
 
-		$call_seconds = $row[2];
-		$call_hours = ($call_seconds / 3600);
-		$call_hours = round($call_hours, 2);
-		$call_hours_int = intval("$call_hours");
-		$call_minutes = ($call_hours - $call_hours_int);
-		$call_minutes = ($call_minutes * 60);
-		$call_minutes_int = round($call_minutes, 0);
-		if ($call_minutes_int < 10) {$call_minutes_int = "0$call_minutes_int";}
+	$call_seconds = $row[2];
+	$call_hours = ($call_seconds / 3600);
+	$call_hours = round($call_hours, 2);
+	$call_hours_int = intval("$call_hours");
+	$call_minutes = ($call_hours - $call_hours_int);
+	$call_minutes = ($call_minutes * 60);
+	$call_minutes_int = round($call_minutes, 0);
+	if ($call_minutes_int < 10) {$call_minutes_int = "0$call_minutes_int";}
 
-		echo "<tr $bgcolor><td><font size=2>$row[1]</td>";
-		echo "<td align=right><font size=2> $row[0]</td>\n";
-		echo "<td align=right><font size=2> $call_hours_int:$call_minutes_int</td></tr>\n";
-		$total_calls = ($total_calls + $row[0]);
+	echo "<tr $bgcolor><td><font size=2>$row[1]</td>";
+	echo "<td align=right><font size=2> $row[0]</td>\n";
+	echo "<td align=right><font size=2> $call_hours_int:$call_minutes_int</td></tr>\n";
+	$total_calls = ($total_calls + $row[0]);
 
-		$call_seconds=0;
-		$o++;
+	$call_seconds=0;
+	$o++;
 	}
 
 	$stmt="SELECT sum(length_in_sec) from call_log where extension='" . mysql_real_escape_string($extension) . "' and server_ip='" . mysql_real_escape_string($server_ip) . "' and start_time >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and start_time <= '" . mysql_real_escape_string($end_date) . " 23:59:59'";
@@ -211,44 +238,39 @@ echo "<B>LAST 1000 CALLS FOR DATE RANGE:</B>\n";
 echo "<TABLE width=400 cellspacing=0 cellpadding=1>\n";
 echo "<tr><td><font size=2>NUMBER </td><td><font size=2>CHANNEL GROUP </td><td align=right><font size=2> DATE</td><td align=right><font size=2> LENGTH(MIN.)</td></tr>\n";
 
-	$stmt="SELECT number_dialed,channel_group,start_time,length_in_min from call_log where extension='" . mysql_real_escape_string($extension) . "' and server_ip='" . mysql_real_escape_string($server_ip) . "' and start_time >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and start_time <= '" . mysql_real_escape_string($end_date) . " 23:59:59' LIMIT 1000";
-	$rslt=mysql_query($stmt, $link);
-	$events_to_print = mysql_num_rows($rslt);
+$stmt="SELECT number_dialed,channel_group,start_time,length_in_min from call_log where extension='" . mysql_real_escape_string($extension) . "' and server_ip='" . mysql_real_escape_string($server_ip) . "' and start_time >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and start_time <= '" . mysql_real_escape_string($end_date) . " 23:59:59' LIMIT 1000";
+$rslt=mysql_query($stmt, $link);
+$events_to_print = mysql_num_rows($rslt);
 #	echo "|$stmt|\n";
 
-	$total_calls=0;
-	$o=0;
-	$event_start_seconds='';
-	$event_stop_seconds='';
-	while ($events_to_print > $o) {
-		$row=mysql_fetch_row($rslt);
-		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
-		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-			echo "<tr $bgcolor><td><font size=2>$row[0]</td>";
-			echo "<td align=right><font size=2> $row[1]</td>\n";
-			echo "<td align=right><font size=2> $row[2]</td>\n";
-			echo "<td align=right><font size=2> $row[3]</td></tr>\n";
+$total_calls=0;
+$o=0;
+$event_start_seconds='';
+$event_stop_seconds='';
+while ($events_to_print > $o) 
+	{
+	$row=mysql_fetch_row($rslt);
+	if (preg_match('/1$|3$|5$|7$|9$/i', $o))
+		{$bgcolor='bgcolor="#B9CBFD"';} 
+	else
+		{$bgcolor='bgcolor="#9BB9FB"';}
+	echo "<tr $bgcolor><td><font size=2>$row[0]</td>";
+	echo "<td align=right><font size=2> $row[1]</td>\n";
+	echo "<td align=right><font size=2> $row[2]</td>\n";
+	echo "<td align=right><font size=2> $row[3]</td></tr>\n";
 
-
-		$call_seconds=0;
-		$o++;
+	$call_seconds=0;
+	$o++;
 	}
 
-
 echo "</TABLE></center>\n";
-
 
 $ENDtime = date("U");
 
 $RUNtime = ($ENDtime - $STARTtime);
 
 echo "\n\n\n<br><br><br>\n\n";
-
-
 echo "<font size=0>\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds</font>";
-
 
 ?>
 
@@ -261,11 +283,5 @@ echo "<font size=0>\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds</font>";
 	
 exit; 
 
-
-
 ?>
-
-
-
-
 

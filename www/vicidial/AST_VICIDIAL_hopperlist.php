@@ -18,6 +18,7 @@
 # 120221-0059 - Added User Group restriction settings
 # 130414-0159 - Added report logging
 # 130610-0955 - Finalized changing of all ereg instances to preg
+# 130620-2222 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
 $startMS = microtime();
@@ -25,6 +26,7 @@ $startMS = microtime();
 $report_name='Hopper List Report';
 
 require("dbconnect.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -38,21 +40,93 @@ if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
 
-$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$stmt = "SELECT use_non_latin FROM system_settings;";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$qm_conf_ct = mysql_num_rows($rslt);
+if ($qm_conf_ct > 0)
+	{
+	$row=mysql_fetch_row($rslt);
+	$non_latin =					$row[0];
+	}
+##### END SETTINGS LOOKUP #####
+###########################################
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and modify_campaigns='1';";
-if ($DB) {echo "|$stmt|\n";}
+if ($non_latin < 1)
+	{
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	}
+else
+	{
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+$group = preg_replace("/'|\"|\\\\|;/","",$group);
+
+$auth=0;
+$reports_auth=0;
+$admin_auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth > 0)
+	{
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$admin_auth=$row[0];
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	if ($reports_auth < 1)
+		{
+		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ( ($reports_auth > 0) and ($admin_auth < 1) )
+		{
+		$ADD=999999;
+		$reports_only_user=1;
+		}
+	}
+else
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
+
+$stmt="SELECT modify_campaigns,user_group from vicidial_users where user='$PHP_AUTH_USER';";
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
-$auth=$row[0];
+$LOGmodify_campaigns =	$row[0];
+$LOGuser_group =		$row[1];
 
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if ($LOGmodify_campaigns < 1)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	Header ("Content-type: text/html; charset=utf-8");
+	echo "You do not have permissions for campaign modification: |$PHP_AUTH_USER|\n";
+	exit;
 	}
 
 ##### BEGIN log visit to the vicidial_report_log table #####
@@ -75,7 +149,7 @@ $rslt=mysql_query($stmt, $link);
 $report_log_id = mysql_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
-$stmt="SELECT full_name,user_group,admin_hide_lead_data,admin_hide_phone_data from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+$stmt="SELECT full_name,user_group,admin_hide_lead_data,admin_hide_phone_data from vicidial_users where user='$PHP_AUTH_USER';";
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $LOGfullname =				$row[0];

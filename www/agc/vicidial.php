@@ -404,10 +404,11 @@
 # 130508-2307 - Branched 2.7, trunk becomes 2.8
 # 130603-2209 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130615-1125 - Added recording_id to dispo url
+# 130625-0841 - Added more user log data on login
 #
 
-$version = '2.8-373c';
-$build = '130615-1125';
+$version = '2.8-374c';
+$build = '130625-0841';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -2516,7 +2517,7 @@ else
 
 			### insert an entry into the user log for the login event
 			$vul_data = "$vlERIaffected_rows|$vhICaffected_rows|$vlaLIaffected_rows|$vliaLIaffected_rows";
-			$stmt = "INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group,session_id,server_ip,extension,computer_ip,browser,data) values('$VD_login','LOGIN','$VD_campaign','$NOW_TIME','$StarTtimE','$VU_user_group','$session_id','$server_ip','$protocol/$extension','$ip','$browser','$vul_data')";
+			$stmt = "INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group,session_id,server_ip,extension,computer_ip,browser,data,phone_login,server_phone,phone_ip) values('$VD_login','LOGIN','$VD_campaign','$NOW_TIME','$StarTtimE','$VU_user_group','$session_id','$server_ip','$protocol/$extension','$ip','$browser','$vul_data','$original_phone_login','$phone_login','LOOKUP');";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01031',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -14594,7 +14595,7 @@ $zi=2;
 
 	if ($label_comments == '---HIDE---')
 		{
-        echo " </td><td align=\"left\" colspan=5><input type=\"hidden\" name=\"comments\" id=\"comments\" value=\"\" />\n";
+        echo " </td><td align=\"left\" colspan=5><input type=\"hidden\" name=\"comments\" id=\"comments\" value=\"\" /><span id='viewcommentsdisplay'><input type='button' id='ViewCommentButton' onClick=\"ViewComments('ON')\" value='-History-'/></span>\n";
 		}
 	else
 		{

@@ -8,9 +8,30 @@
 # 120525-1039 - Added uploaded filename filtering
 # 120529-1345 - Filename filter fix
 # 130610-1101 - Finalized changing of all ereg instances to preg
+# 130619-0902 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
 require("dbconnect.php");
+require("functions.php");
+
+$PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
+$PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
+if (isset($_GET["list_id"]))				{$list_id=$_GET["list_id"];}
+	elseif (isset($_POST["list_id"]))		{$list_id=$_POST["list_id"];}
+if (isset($_GET["custom_fields_enabled"]))				{$custom_fields_enabled=$_GET["custom_fields_enabled"];}
+	elseif (isset($_POST["custom_fields_enabled"]))		{$custom_fields_enabled=$_POST["custom_fields_enabled"];}
+$sample_template_file=$_FILES["sample_template_file"];
+$LF_orig = $_FILES['sample_template_file']['name'];
+$LF_path = $_FILES['sample_template_file']['tmp_name'];
+if (isset($_GET["sample_template_file_name"]))			{$sample_template_file_name=$_GET["sample_template_file_name"];}
+	elseif (isset($_POST["sample_template_file_name"]))	{$sample_template_file_name=$_POST["sample_template_file_name"];}
+if (isset($_FILES["sample_template_file"]))				{$sample_template_file_name=$_FILES["sample_template_file"]['name'];}
+if (isset($_GET["form_action"]))				{$form_action=$_GET["form_action"];}
+	elseif (isset($_POST["form_action"]))		{$form_action=$_POST["form_action"];}
+if (isset($_GET["delimiter"]))				{$delimiter=$_GET["delimiter"];}
+	elseif (isset($_POST["delimiter"]))		{$delimiter=$_POST["delimiter"];}
+if (isset($_GET["buffer"]))				{$buffer=$_GET["buffer"];}
+	elseif (isset($_POST["buffer"]))	{$buffer=$_POST["buffer"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -29,22 +50,50 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-if (isset($_GET["list_id"]))				{$list_id=$_GET["list_id"];}
-	elseif (isset($_POST["list_id"]))		{$list_id=$_POST["list_id"];}
-if (isset($_GET["custom_fields_enabled"]))				{$custom_fields_enabled=$_GET["custom_fields_enabled"];}
-	elseif (isset($_POST["custom_fields_enabled"]))		{$custom_fields_enabled=$_POST["custom_fields_enabled"];}
-$sample_template_file=$_FILES["sample_template_file"];
-$LF_orig = $_FILES['sample_template_file']['name'];
-$LF_path = $_FILES['sample_template_file']['tmp_name'];
-if (isset($_GET["sample_template_file_name"]))			{$sample_template_file_name=$_GET["sample_template_file_name"];}
-	elseif (isset($_POST["sample_template_file_name"]))	{$sample_template_file_name=$_POST["sample_template_file_name"];}
-if (isset($_FILES["sample_template_file"]))				{$sample_template_file_name=$_FILES["sample_template_file"]['name'];}
-if (isset($_GET["form_action"]))				{$form_action=$_GET["form_action"];}
-	elseif (isset($_POST["form_action"]))		{$form_action=$_POST["form_action"];}
-if (isset($_GET["delimiter"]))				{$delimiter=$_GET["delimiter"];}
-	elseif (isset($_POST["delimiter"]))		{$delimiter=$_POST["delimiter"];}
-if (isset($_GET["buffer"]))				{$buffer=$_GET["buffer"];}
-	elseif (isset($_POST["buffer"]))		{$buffer=$_POST["buffer"];}
+if ($non_latin < 1)
+	{
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	}
+else
+	{
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+$list_id = preg_replace('/[^0-9]/', '', $list_id);
+
+$auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth < 1)
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
+
+$stmt="SELECT load_leads from vicidial_users where user='$PHP_AUTH_USER';";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGload_leads = $row[0];
+
+if ($LOGload_leads < 1)
+	{
+	Header ("Content-type: text/html; charset=utf-8");
+	echo "You do not have permissions to load leads\n";
+	exit;
+	}
 
 ### REGEX to prevent weird characters from ending up in the fields
 $field_regx = "['\"`\\;]";
@@ -88,7 +137,7 @@ if ($form_action=="prime_file" && $sample_template_file_name)
 		{$stmt_file=fopen("$WeBServeRRooT/$admin_web_directory/listloader_stmts.txt", "w");}
 
 	$buffer=fgets($file, 4096);
-	$buffer=preg_replace('/[\'\"\n]/i', $buffer);
+	$buffer=preg_replace('/[\'\"\n]/i', '', $buffer);
 	$tab_count=substr_count($buffer, "\t");
 	$pipe_count=substr_count($buffer, "|");
 
@@ -174,7 +223,6 @@ if ($custom_fields_enabled > 0)
 				}
 
 			$fields_stmt = "SELECT list_id, vendor_lead_code, source_id, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, rank, owner $custom_SQL from vicidial_list, custom_$list_id limit 1";
-
 			}
 		}
 	}
@@ -190,34 +238,34 @@ if ($delimiter && $buffer)
 #	print "<center><font face='arial, helvetica' size=3 color='#009900'><B>Processing $delim_name file...\n";
 	$row=explode($delimiter, preg_replace('/[\'\"]/i', '', $buffer));
 #	echo "delimiter: $delimiter<BR>$buffer<BR>";
-} 
+	}
 echo "<table border=0 width='100%' cellpadding=0 cellspacing=0>";
 $rslt=mysql_query("$fields_stmt", $link);
 $custom_fields_count=mysql_num_fields($rslt)-$vl_fields_count;
 for ($i=0; $i<mysql_num_fields($rslt); $i++) 
 	{
-		if (preg_match('/'.mysql_field_name($rslt, $i).'/', $vicidial_list_fields)) {$bgcolor="#D9E6FE";} else {$bgcolor="#FED9D9";}
+	if (preg_match('/'.mysql_field_name($rslt, $i).'/', $vicidial_list_fields)) {$bgcolor="#D9E6FE";} else {$bgcolor="#FED9D9";}
 
-		echo "  <tr bgcolor='$bgcolor'>\r\n";
-		echo "    <td align=right nowrap><font class=standard>".strtoupper(preg_replace('/_/i', ' ', mysql_field_name($rslt, $i))).": </font></td>\r\n";
-		if (mysql_field_name($rslt, $i)!="list_id") 
+	echo "  <tr bgcolor='$bgcolor'>\r\n";
+	echo "    <td align=right nowrap><font class=standard>".strtoupper(preg_replace('/_/i', ' ', mysql_field_name($rslt, $i))).": </font></td>\r\n";
+	if (mysql_field_name($rslt, $i)!="list_id") 
+		{
+		echo "    <td align=left><select name='$field_prefix".mysql_field_name($rslt, $i)."_field' onChange='DrawTemplateStrings()'>\r\n";
+		echo "     <option value='-1'>(none)</option>\r\n";
+
+		for ($j=0; $j<count($row); $j++) 
 			{
-			echo "    <td align=left><select name='$field_prefix".mysql_field_name($rslt, $i)."_field' onChange='DrawTemplateStrings()'>\r\n";
-			echo "     <option value='-1'>(none)</option>\r\n";
-
-			for ($j=0; $j<count($row); $j++) 
-				{
-				preg_replace('/\"/i', '', $row[$j]);
-				echo "     <option value='$j'>\"$row[$j]\"</option>\r\n";
-				}
-
-			echo "    </select></td>\r\n";
+			preg_replace('/\"/i', '', $row[$j]);
+			echo "     <option value='$j'>\"$row[$j]\"</option>\r\n";
 			}
-		else 
-			{
-			echo "    <td align=left>&nbsp;<font class='standard_bold'>$list_id<input type='hidden' name='".$field_prefix.$list_id."' value='$list_id'></font></td>\r\n";
-			}
-			echo "  </tr>\r\n";
+
+		echo "    </select></td>\r\n";
+		}
+	else 
+		{
+		echo "    <td align=left>&nbsp;<font class='standard_bold'>$list_id<input type='hidden' name='".$field_prefix.$list_id."' value='$list_id'></font></td>\r\n";
+		}
+		echo "  </tr>\r\n";
 	}
 	echo "</table>";
 }

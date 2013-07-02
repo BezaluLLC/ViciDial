@@ -38,13 +38,14 @@
 # 130124-1740 - Added option to display first and last name of lead
 # 130414-0146 - Added report logging
 # 130610-0938 - Finalized changing of all ereg instances to preg
+# 130616-0059 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130625-1341 - Added phone login and phone_ip display to login/logout section
 #
 
 $startMS = microtime();
 
 require("dbconnect.php");
 require("functions.php");
-
 
 $report_name = 'User Stats';
 $db_source = 'M';
@@ -54,6 +55,28 @@ if (file_exists('options.php'))
 	{
 	require('options.php');
 	}
+
+$PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
+$PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
+$PHP_SELF=$_SERVER['PHP_SELF'];
+if (isset($_GET["did_id"]))					{$did_id=$_GET["did_id"];}
+	elseif (isset($_POST["did_id"]))		{$did_id=$_POST["did_id"];}
+if (isset($_GET["did"]))					{$did=$_GET["did"];}
+	elseif (isset($_POST["did"]))			{$did=$_POST["did"];}
+if (isset($_GET["begin_date"]))				{$begin_date=$_GET["begin_date"];}
+	elseif (isset($_POST["begin_date"]))	{$begin_date=$_POST["begin_date"];}
+if (isset($_GET["end_date"]))				{$end_date=$_GET["end_date"];}
+	elseif (isset($_POST["end_date"]))		{$end_date=$_POST["end_date"];}
+if (isset($_GET["user"]))					{$user=$_GET["user"];}
+	elseif (isset($_POST["user"]))			{$user=$_POST["user"];}
+if (isset($_GET["DB"]))						{$DB=$_GET["DB"];}
+	elseif (isset($_POST["DB"]))			{$DB=$_POST["DB"];}
+if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
+	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
+if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
+	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
+if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
+	elseif (isset($_POST["file_download"]))		{$file_download=$_POST["file_download"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -75,63 +98,81 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
-$PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
-$PHP_SELF=$_SERVER['PHP_SELF'];
-if (isset($_GET["did_id"]))					{$did_id=$_GET["did_id"];}
-	elseif (isset($_POST["did_id"]))		{$did_id=$_POST["did_id"];}
-if (isset($_GET["did"]))					{$did=$_GET["did"];}
-	elseif (isset($_POST["did"]))			{$did=$_POST["did"];}
-if (isset($_GET["begin_date"]))				{$begin_date=$_GET["begin_date"];}
-	elseif (isset($_POST["begin_date"]))	{$begin_date=$_POST["begin_date"];}
-if (isset($_GET["end_date"]))				{$end_date=$_GET["end_date"];}
-	elseif (isset($_POST["end_date"]))		{$end_date=$_POST["end_date"];}
-if (isset($_GET["user"]))					{$user=$_GET["user"];}
-	elseif (isset($_POST["user"]))			{$user=$_POST["user"];}
-if (isset($_GET["campaign"]))				{$campaign=$_GET["campaign"];}
-	elseif (isset($_POST["campaign"]))		{$campaign=$_POST["campaign"];}
-if (isset($_GET["DB"]))						{$DB=$_GET["DB"];}
-	elseif (isset($_POST["DB"]))			{$DB=$_POST["DB"];}
-if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
-	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
-if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
-	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
-if (isset($_GET["file_download"]))					{$file_download=$_GET["file_download"];}
-	elseif (isset($_POST["file_download"]))		{$file_download=$_POST["file_download"];}
-
-$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
-
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 
-if (!isset($begin_date)) {$begin_date = $TODAY;}
-if (!isset($end_date)) {$end_date = $TODAY;}
+if ( (!isset($begin_date)) or (strlen($begin_date) < 10) ) {$begin_date = $TODAY;}
+if ( (!isset($end_date)) or (strlen($end_date) < 10) ) {$end_date = $TODAY;}
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
-if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
+if ($non_latin < 1)
+	{
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	}
+else
+	{
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+$did_id = preg_replace("/'|\"|\\\\|;/","",$did_id);
+$did = preg_replace("/'|\"|\\\\|;/","",$did);
+$begin_date = preg_replace("/'|\"|\\\\|;/","",$begin_date);
+$end_date = preg_replace("/'|\"|\\\\|;/","",$end_date);
+$user = preg_replace("/'|\"|\\\\|;/","",$user);
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
-if ($DB) {$MAIN.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$reports_only_user=$row[0];
+$auth=0;
+$reports_auth=0;
+$admin_auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
-$fp = fopen ("./project_auth_entries.txt", "a");
+if ($auth > 0)
+	{
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$admin_auth=$row[0];
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	if ($reports_auth < 1)
+		{
+		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ( ($reports_auth > 0) and ($admin_auth < 1) )
+		{
+		$ADD=999999;
+		$reports_only_user=1;
+		}
+	}
+else
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
+
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
-
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
-	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
-	}
 
 ##### BEGIN log visit to the vicidial_report_log table #####
 $LOGip = getenv("REMOTE_ADDR");
@@ -162,19 +203,13 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
-$stmt="SELECT full_name,user_group,admin_hide_lead_data,admin_hide_phone_data from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+$stmt="SELECT full_name,user_group,admin_hide_lead_data,admin_hide_phone_data from vicidial_users where user='$PHP_AUTH_USER';";
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
 $LOGfullname =				$row[0];
 $LOGuser_group =			$row[1];
 $LOGadmin_hide_lead_data =	$row[2];
 $LOGadmin_hide_phone_data =	$row[3];
-
-if ($webroot_writable > 0)
-	{
-	fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
-	fclose($fp);
-	}
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {$MAIN.="|$stmt|\n";}
@@ -222,7 +257,7 @@ if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGa
 
 if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
     echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
     exit;
@@ -452,76 +487,81 @@ if ($did < 1)
 	$MAIN.="<center>\n";
 
 	$MAIN.="<B>AGENT LOGIN/LOGOUT TIME:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=2'>[DOWNLOAD]</a></B>\n";
-	$MAIN.="<TABLE width=750 cellspacing=0 cellpadding=1>\n";
-	$MAIN.="<tr><td><font size=2>EVENT </td><td align=right><font size=2> DATE</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HOURS:MM:SS</td><td align=right><font size=2>SESSION</td><td align=right><font size=2>SERVER</td><td align=right><font size=2>PHONE</td><td align=right><font size=2>COMPUTER</td></tr>\n";
+	$MAIN.="<TABLE width=850 cellspacing=0 cellpadding=1>\n";
+	$MAIN.="<tr><td><font size=2>EVENT </td><td align=right><font size=2> DATE</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>SESSION<BR>HOURS:MM:SS</td><td align=right><font size=2>SERVER</td><td align=right><font size=2>PHONE</td><td align=right><font size=2>COMPUTER</td><td align=right><font size=2>PHONE<BR>LOGIN</td><td align=right><font size=2>PHONE IP</td></tr>\n";
 
 	$CSV_text2.="\"AGENT LOGIN/LOGOUT TIME\"\n";
-	$CSV_text2.="\"\",\"EVENT\",\"DATE\",\"CAMPAIGN\",\"GROUP\",\"HOURS:MM:SS\",\"SESSION\",\"SERVER\",\"PHONE\",\"COMPUTER\"\n";
+	$CSV_text2.="\"\",\"EVENT\",\"DATE\",\"CAMPAIGN\",\"GROUP\",\"HOURS:MM:SS\",\"SESSION\",\"SERVER\",\"PHONE\",\"COMPUTER\",\"PHONE_LOGIN\",\"PHONE_IP\"\n";
 
-		$stmt="SELECT event,event_epoch,event_date,campaign_id,user_group,session_id,server_ip,extension,computer_ip from vicidial_user_log where user='" . mysql_real_escape_string($user) . "' and event_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by event_date;";
-		$rslt=mysql_query($stmt, $link);
-		$events_to_print = mysql_num_rows($rslt);
+	$stmt="SELECT event,event_epoch,event_date,campaign_id,user_group,session_id,server_ip,extension,computer_ip,phone_login,phone_ip from vicidial_user_log where user='" . mysql_real_escape_string($user) . "' and event_date >= '" . mysql_real_escape_string($begin_date) . " 0:00:01'  and event_date <= '" . mysql_real_escape_string($end_date) . " 23:59:59' order by event_date;";
+	$rslt=mysql_query($stmt, $link);
+	$events_to_print = mysql_num_rows($rslt);
 
-		$total_calls=0;
-		$o=0;
-		$event_start_seconds='';
-		$event_stop_seconds='';
-		while ($events_to_print > $o) {
-			$row=mysql_fetch_row($rslt);
-			if (preg_match("/LOGIN/i", $row[0]))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
-			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
+	$total_calls=0;
+	$o=0;
+	$event_start_seconds='';
+	$event_stop_seconds='';
+	while ($events_to_print > $o) 
+		{
+		$row=mysql_fetch_row($rslt);
+		if (preg_match("/LOGIN/i", $row[0]))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
 
-			if (preg_match('/LOGIN/', $row[0]))
+		if (preg_match('/LOGIN/', $row[0]))
+			{
+			if ($row[10]=='LOOKUP')
+				{$row[10]='';}
+			$event_start_seconds = $row[1];
+			$MAIN.="<tr $bgcolor><td><font size=2>$row[0] </td>";
+			$MAIN.="<td align=right><font size=2> $row[2] </td>\n";
+			$MAIN.="<td align=right><font size=2> $row[3] </td>\n";
+			$MAIN.="<td align=right><font size=2> $row[4] </td>\n";
+			$MAIN.="<td align=right><font size=2> $row[5] </td>\n";
+			$MAIN.="<td align=right><font size=2> $row[6] </td>\n";
+			$MAIN.="<td align=right><font size=2> $row[7] </td>\n";
+			$MAIN.="<td align=right><font size=2> $row[8] </td>\n";
+			$MAIN.="<td align=right><font size=2> $row[9] </td>\n";
+			$MAIN.="<td align=right><font size=2> $row[10] </td>\n";
+			$MAIN.="</tr>\n";
+			$CSV_text2.="\"\",\"$row[0]\",$row[2]\",\"$row[3]\",\"$row[4]\",\"\",\"$row[5]\",\"$row[6]\",\"$row[7]\",\"$row[8]\",\"$row[9]\",\"$row[10]\"\n";
+			}
+		if (preg_match('/LOGOUT/', $row[0]))
+			{
+			if ($event_start_seconds)
 				{
-				$event_start_seconds = $row[1];
+
+				$event_stop_seconds = $row[1];
+				$event_seconds = ($event_stop_seconds - $event_start_seconds);
+				$total_login_time = ($total_login_time + $event_seconds);
+				$event_hours_minutes =		sec_convert($event_seconds,'H'); 
+
 				$MAIN.="<tr $bgcolor><td><font size=2>$row[0]</td>";
 				$MAIN.="<td align=right><font size=2> $row[2]</td>\n";
 				$MAIN.="<td align=right><font size=2> $row[3]</td>\n";
 				$MAIN.="<td align=right><font size=2> $row[4]</td>\n";
-				$MAIN.="<td align=right><font size=2> </td>\n";
-				$MAIN.="<td align=right><font size=2> $row[5] </td>\n";
-				$MAIN.="<td align=right><font size=2> $row[6] </td>\n";
-				$MAIN.="<td align=right><font size=2> $row[7] </td>\n";
-				$MAIN.="<td align=right><font size=2> $row[8] </td></tr>\n";
-				$CSV_text2.="\"\",\"$row[0]\",$row[2]\",\"$row[3]\",\"$row[4]\",\"\",\"$row[5]\",\"$row[6]\",\"$row[7]\",\"$row[8]\"\n";
+				$MAIN.="<td align=right><font size=2> $event_hours_minutes</td>\n";
+				$MAIN.="<td align=right colspan=5><font size=2> &nbsp;</td></tr>\n";
+				$event_start_seconds='';
+				$event_stop_seconds='';
+				$CSV_text2.="\"\",\"$row[0]\",\"$row[2]\",\"$row[3]\",\"$row[4]\",\"$event_hours_minutes\"\n";
 				}
-			if (preg_match('/LOGOUT/', $row[0]))
+			else
 				{
-				if ($event_start_seconds)
-					{
-
-					$event_stop_seconds = $row[1];
-					$event_seconds = ($event_stop_seconds - $event_start_seconds);
-					$total_login_time = ($total_login_time + $event_seconds);
-					$event_hours_minutes =		sec_convert($event_seconds,'H'); 
-
-					$MAIN.="<tr $bgcolor><td><font size=2>$row[0]</td>";
-					$MAIN.="<td align=right><font size=2> $row[2]</td>\n";
-					$MAIN.="<td align=right><font size=2> $row[3]</td>\n";
-					$MAIN.="<td align=right><font size=2> $row[4]</td>\n";
-					$MAIN.="<td align=right><font size=2> $event_hours_minutes</td>\n";
-					$MAIN.="<td align=right colspan=4><font size=2> &nbsp;</td></tr>\n";
-					$event_start_seconds='';
-					$event_stop_seconds='';
-					$CSV_text2.="\"\",\"$row[0]\",\"$row[2]\",\"$row[3]\",\"$row[4]\",\"$event_hours_minutes\"\n";
-					}
-				else
-					{
-					$MAIN.="<tr $bgcolor><td><font size=2>$row[0]</td>";
-					$MAIN.="<td align=right><font size=2> $row[2]</td>\n";
-					$MAIN.="<td align=right><font size=2> $row[3]</td>\n";
-					$MAIN.="<td align=right><font size=2> </td>\n";
-					$MAIN.="<td align=right colspan=5><font size=2> &nbsp;</td></tr>\n";
-					$CSV_text2.="\"\",\"$row[0]\",\"$row[2]\",\"$row[3]\"\n";
-					}
+				$MAIN.="<tr $bgcolor><td><font size=2>$row[0]</td>";
+				$MAIN.="<td align=right><font size=2> $row[2]</td>\n";
+				$MAIN.="<td align=right><font size=2> $row[3]</td>\n";
+				$MAIN.="<td align=right><font size=2> </td>\n";
+				$MAIN.="<td align=right colspan=5><font size=2> &nbsp;</td></tr>\n";
+				$CSV_text2.="\"\",\"$row[0]\",\"$row[2]\",\"$row[3]\"\n";
 				}
+			}
 
-			$total_calls = ($total_calls + $row[0]);
+		$total_calls = ($total_calls + $row[0]);
 
-			$call_seconds=0;
-			$o++;
+		$call_seconds=0;
+		$o++;
 		}
 
 	$total_login_hours_minutes =		sec_convert($total_login_time,'H'); 

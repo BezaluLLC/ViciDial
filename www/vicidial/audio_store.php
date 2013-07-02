@@ -17,14 +17,16 @@
 # 121019-0816 - Added audio file delete process
 # 121129-1620 - Hide delete option text if not allowed
 # 130610-1052 - Finalized changing of all ereg instances to preg
+# 130620-1729 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
-$version = '2.8-11';
-$build = '130610-1052';
+$version = '2.8-12';
+$build = '130620-1729';
 
 $MT[0]='';
 
 require("dbconnect.php");
+require("functions.php");
 
 $server_name = getenv("SERVER_NAME");
 $PHP_SELF=$_SERVER['PHP_SELF'];
@@ -138,32 +140,63 @@ if ( (!preg_match("/\|$ip\|/", $server_ips)) and ($formIPvalid < 1) )
 	$user_set=1;
 	$PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 	$PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
-	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_USER);
-	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_PW);
+	if ($non_latin < 1)
+		{
+		$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+		$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+		}
+	else
+		{
+		$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+		$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+		}
 	$delete_file = preg_replace('/[^-\._0-9a-zA-Z]/','',$delete_file);
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and ( (modify_campaigns='1') or (modify_audiostore='1') )";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+	$auth=0;
+	$reports_auth=0;
+	$admin_auth=0;
+	$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1);
+	if ($auth_message == 'GOOD')
+		{$auth=1;}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 8 and ( (ast_admin_access='1') and (modify_audiostore='1') )";
+	if ($auth > 0)
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and( (modify_campaigns='1') or (modify_audiostore='1') );";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$admin_auth=$row[0];
+
+		if ($admin_auth < 1)
+			{
+			$VDdisplayMESSAGE = "You are not allowed to upload audio files";
+			Header ("Content-type: text/html; charset=utf-8");
+			echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+			exit;
+			}
+		}
+	else
+		{
+		$VDdisplayMESSAGE = "Login incorrect, please try again";
+		if ($auth_message == 'LOCK')
+			{
+			$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+			Header ("Content-type: text/html; charset=utf-8");
+			echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+			exit;
+			}
+		Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+		Header("HTTP/1.0 401 Unauthorized");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+		exit;
+		}
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 8 and ( (ast_admin_access='1') and (modify_audiostore='1') )";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$auth_delete=$row[0];
-
-	if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
-		{
-		Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-		Header("HTTP/1.0 401 Unauthorized");
-		echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|\n";
-		exit;
-		}
 	}
-
-
 
 $delete_message='';
 ### delete a file from the audio store

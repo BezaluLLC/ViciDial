@@ -64,6 +64,17 @@ OTHER CHANGES:
 	depricated. This will also have the benefit of speeding up those scripts
 	because preg is supposed to be more efficient and faster than ereg.
 
+4. Added several security changes to the admin interface, including freezing a
+	user's account for 15 minutes after 10 failed login attempts.
+
+5. Added 3 new reports to the admin interface: url log, lagged log and 
+	user group login reports
+
+6. Added new AST_phone_update.pl --agent-lookup flag to allow for logging of the
+	IP address of the agent's SIP or IAX phone connection. Can be enabled as
+	a crontab entry to perform the lookups on each asterisk server.
+
+
 
 
 

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# ADMIN_keepalive_ALL.pl   version  2.6
+# ADMIN_keepalive_ALL.pl   version  2.8
 #
 # Designed to keep the astGUIclient processes alive and check every minute
 # Replaces all other ADMIN_keepalive scripts
@@ -84,6 +84,7 @@
 # 130402-2148 - Changes to allow for native IAX bridging to other servers
 # 130424-1607 - Added NOINT prefix option for call menu prompts to do Playback() instead of Background()
 # 130508-1009 - Small fix for INVALID_2ND and 3RD
+# 130624-0733 - Added optimize for vicidial_users due to logging IP and auth timestamp
 #
 
 $DB=0; # Debug flag
@@ -906,6 +907,15 @@ if ($timeclock_end_of_day_NOW > 0)
 	if($DB){print STDERR "\n|$affected_rows vicidial_extension_groups call counts reset|\n";}
 
 	$stmtA = "optimize table vicidial_extension_groups;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+
+	$stmtA = "optimize table vicidial_users;";
 	if($DBX){print STDERR "\n|$stmtA|\n";}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;

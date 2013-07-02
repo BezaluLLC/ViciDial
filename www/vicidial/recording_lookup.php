@@ -2,6 +2,7 @@
 ### recording_lookup.php
 #
 #	REQUIRED! - check all paths and directory names, need to create a temp directory
+#   CUSTOMIZATION OF THIS SCRIPT IS REQUIRED FOR IT TO WORK!!!
 #
 #	On the normal audio recording interface you now have the option of
 #	downloading the WAV or GSM file:
@@ -33,12 +34,13 @@
 # 90508-0644 - Changed to PHP long tags
 # 120223-2129 - Removed logging of good login passwords if webroot writable is enabled
 # 130610-1108 - Finalized changing of all ereg instances to preg
+# 130616-2228 - Added filtering of input to prevent SQL injection attacks
 #
 
 $STARTtime = date("U");
 $TODAYstart = date("H/i/s 00:00:00");
 
-$linkAST=mysql_connect("10.10.10.15", "cron", "1234");
+$linkAST=mysql_connect("1.1.1.1", "cron", "1234");
 mysql_select_db("asterisk");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -46,6 +48,10 @@ $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
 if (isset($_GET["QUERY_recid"]))				{$QUERY_recid=$_GET["QUERY_recid"];}
 	elseif (isset($_POST["QUERY_recid"]))		{$QUERY_recid=$_POST["QUERY_recid"];}
+
+$QUERY_recid = preg_replace("/'|\"|\\\\|;/","",$QUERY_recid);
+$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 
 $web_server = '1.1.1.1';
 $US='_';
@@ -93,9 +99,9 @@ else
 	echo "<B>searching for: $QUERY_recid</B>\n";
 	echo "<PRE>\n";
 
-		$stmt="select recording_id,lead_id,user,filename,location,start_time,length_in_sec from recording_log where filename LIKE \"%$QUERY_recid%\" order by recording_id desc LIMIT 1;";
-		$rslt=mysql_query($stmt, $linkAST);
-		$logs_to_print = mysql_num_rows($rslt);
+	$stmt="select recording_id,lead_id,user,filename,location,start_time,length_in_sec from recording_log where filename LIKE \"%$QUERY_recid%\" order by recording_id desc LIMIT 1;";
+	$rslt=mysql_query($stmt, $linkAST);
+	$logs_to_print = mysql_num_rows($rslt);
 	#echo "|$stmt|";
 
 	$u=0;
@@ -110,8 +116,8 @@ else
 		$location =		$row[4];
 		$start_time =	$row[5];
 		$length_in_sec = $row[6];
-			$AUDname =	explode("/",$location);
-			$AUDnamect =	(count($AUDname)) - 1;
+		$AUDname =	explode("/",$location);
+		$AUDnamect =	(count($AUDname)) - 1;
 
 		
 		preg_replace('/10\.10\.10\.16/i', "10.10.10.16",$AUDname[$AUDnamect]);
@@ -140,15 +146,12 @@ else
 		echo "Link Uncompressed WAV: <a href=\"./temp/$AUDname[$AUDnamect]\">$AUDname[$AUDnamect]</a>\n";
 		echo "Link Compressed GSM:   <a href=\"./temp/$fileGSM\">$fileGSM</a>\n";
 		}
-
 	else
 		{
 		echo "ERROR:        $QUERY_recid\n";
 		}
 
-
 	echo "</PRE>\n";
-
 	}
 
 $ENDtime = date("U");
@@ -166,7 +169,6 @@ echo "\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds";
 
 ?>
 
-
-
 </body>
 </html>
+

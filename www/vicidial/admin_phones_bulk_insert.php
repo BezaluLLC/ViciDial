@@ -1,7 +1,7 @@
 <?php
 # admin_phones_bulk_insert.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen will insert phones into your multi-server system with aliases
 #
@@ -13,13 +13,14 @@
 # 120223-2249 - Removed logging of good login passwords if webroot writable is enabled
 # 120820-1026 - Added webphone option Y_API_LAUNCH
 # 130610-1043 - Changed all ereg to preg
+# 130621-1724 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
-$admin_version = '2.8-7';
-$build = '130610-1043';
-
+$admin_version = '2.8-8';
+$build = '130621-1724';
 
 require("dbconnect.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -57,12 +58,32 @@ if (isset($_GET["use_external_server_ip"]))			{$use_external_server_ip=$_GET["us
 if (isset($_GET["phone_context"]))				{$phone_context=$_GET["phone_context"];}
 	elseif (isset($_POST["phone_context"]))		{$phone_context=$_POST["phone_context"];}
 
-
 if (strlen($action) < 2)
 	{$action = 'BLANK';}
 if (strlen($DB) < 1)
 	{$DB=0;}
 
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$stmt = "SELECT use_non_latin,webroot_writable FROM system_settings;";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$ss_conf_ct = mysql_num_rows($rslt);
+if ($ss_conf_ct > 0)
+	{
+	$row=mysql_fetch_row($rslt);
+	$non_latin =					$row[0];
+	$webroot_writable =				$row[1];
+	}
+##### END SETTINGS LOOKUP #####
+###########################################
+
+$STARTtime = date("U");
+$TODAY = date("Y-m-d");
+$NOW_TIME = date("Y-m-d H:i:s");
+$date = date("r");
+$ip = getenv("REMOTE_ADDR");
+$browser = getenv("HTTP_USER_AGENT");
 
 if ($non_latin < 1)
 	{
@@ -90,76 +111,50 @@ else
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	}
 
-$STARTtime = date("U");
-$TODAY = date("Y-m-d");
-$NOW_TIME = date("Y-m-d H:i:s");
-
-#############################################
-##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
-if ($DB) {echo "$stmt\n";}
-$ss_conf_ct = mysql_num_rows($rslt);
-if ($ss_conf_ct > 0)
-	{
-	$row=mysql_fetch_row($rslt);
-	$non_latin =					$row[0];
-	$webroot_writable =				$row[1];
-	}
-##### END SETTINGS LOOKUP #####
-###########################################
-
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and ast_delete_phones='1';";
-if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-if ($webroot_writable > 0)
-	{$fp = fopen ("./project_auth_entries.txt", "a");}
-
-$date = date("r");
-$ip = getenv("REMOTE_ADDR");
-$browser = getenv("HTTP_USER_AGENT");
 $user = $PHP_AUTH_USER;
 
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
-	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
-	}
-else
-	{
-	if ($auth>0)
-		{
-		$office_no=strtoupper($PHP_AUTH_USER);
-		$password=strtoupper($PHP_AUTH_PW);
-		$stmt="SELECT full_name,ast_delete_phones,ast_admin_access,user_level from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGfullname =				$row[0];
-		$LOGast_delete_phones =		$row[1];
-		$LOGast_admin_access =		$row[2];
-		$LOGuser_level =			$row[3];
+$auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
-			}
-		}
-	else
+if ($auth < 1)
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
 		{
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
-			fclose($fp);
-			}
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
 		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
 	}
+
+$rights_stmt = "SELECT ast_delete_phones from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rights_rslt=mysql_query($rights_stmt, $link);
+$rights_row=mysql_fetch_row($rights_rslt);
+$ast_delete_phones =		$rights_row[0];
+
+# check their permissions
+if ( $ast_delete_phones < 1 )
+	{
+	header ("Content-type: text/html; charset=utf-8");
+	echo "You do not have permissions to manage phones\n";
+	exit;
+	}
+
+$stmt="SELECT full_name,ast_delete_phones,ast_admin_access,user_level from vicidial_users where user='$PHP_AUTH_USER';";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGfullname =				$row[0];
+$LOGast_delete_phones =		$row[1];
+$LOGast_admin_access =		$row[2];
+$LOGuser_level =			$row[3];
 
 ?>
 <html>

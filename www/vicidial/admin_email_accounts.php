@@ -10,14 +10,16 @@
 # 130102-1131 - Small admin log change
 # 130221-1754 - Added level 8 disable add feature
 # 130610-1041 - Changed all ereg to preg
+# 130621-2001 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
-$admin_version = '2.8-4';
-$build = '130610-1041';
+$admin_version = '2.8-5';
+$build = '130621-2001';
 
 $sh="emails"; 
 
 require("dbconnect.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -135,137 +137,124 @@ if ($non_latin < 1)
 	$email_account_server = preg_replace("/[^\.\-\_0-9a-zA-Z]/","",$email_account_server);
 	$active = preg_replace("/[^_0-9a-zA-Z]/","",$active);
 	$email_frequency_check_mins = preg_replace("/[^0-9]/","",$email_frequency_check_mins);
-	$list_id = preg_replace("/[^0-9]/","",$list_id);
-
 	}	# end of non_latin
 else
 	{
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	}
+$list_id = preg_replace("/[^0-9]/","",$list_id);
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
-$add_copy_disabled=0;
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and modify_email_accounts='1';";
-if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-if ($webroot_writable > 0)
-	{$fp = fopen ("./project_auth_entries.txt", "a");}
-
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 $user = $PHP_AUTH_USER;
+$add_copy_disabled=0;
 
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+$auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth < 1)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
 	}
-else
+
+$stmt="SELECT full_name,user_level,user_group,modify_email_accounts from vicidial_users where user='$PHP_AUTH_USER';";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGfullname =				$row[0];
+$LOGuser_level =			$row[1];
+$LOGuser_group =			$row[2];
+$LOGemails_modify =			$row[3];
+
+if ($LOGemails_modify < 1)
 	{
-	if ($auth>0)
-		{
-		$office_no=strtoupper($PHP_AUTH_USER);
-		$password=strtoupper($PHP_AUTH_PW);
-		$stmt="SELECT full_name,user_level,user_group,modify_email_accounts from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGfullname =				$row[0];
-		$LOGuser_level =			$row[1];
-		$LOGuser_group =			$row[2];
-		$LOGemails_modify =			$row[3];
-
-		if (($LOGuser_level < 9) and ($SSlevel_8_disable_add > 0))
-			{$add_copy_disabled++;}
-
-		$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGallowed_campaigns =			$row[0];
-		$LOGallowed_reports =			$row[1];
-		$LOGadmin_viewable_groups =		$row[2];
-		$LOGadmin_viewable_call_times =	$row[3];
-		$admin_viewable_groupsALL=0;
-		$LOGadmin_viewable_groupsSQL='';
-		$whereLOGadmin_viewable_groupsSQL='';
-		$valLOGadmin_viewable_groupsSQL='';
-		$vmLOGadmin_viewable_groupsSQL='';
-		if ( (!preg_match("/\-\-ALL\-\-/i",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
-			{
-			$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
-			$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
-			$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
-			$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
-			$valLOGadmin_viewable_groupsSQL = "and val.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
-			$vmLOGadmin_viewable_groupsSQL = "and vm.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
-			}
-		else 
-			{$admin_viewable_groupsALL=1;}
-		$regexLOGadmin_viewable_groups = " $LOGadmin_viewable_groups ";
-		
-		$UUgroups_list='';
-		if ($admin_viewable_groupsALL > 0)
-			{$UUgroups_list .= "<option value=\"---ALL---\">All Admin User Groups</option>\n";}
-		$stmt="SELECT user_group,group_name from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
-		$rslt=mysql_query($stmt, $link);
-		$UUgroups_to_print = mysql_num_rows($rslt);
-		$o=0;
-		while ($UUgroups_to_print > $o) 
-			{
-			$rowx=mysql_fetch_row($rslt);
-			$UUgroups_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
-			$o++;
-			}
-
-		$stmt="SELECT group_id,group_name from vicidial_inbound_groups where group_handling='EMAIL' $LOGadmin_viewable_groupsSQL order by group_id;";
-	#	$stmt="SELECT group_id,group_name from vicidial_inbound_groups where group_id NOT IN('AGENTDIRECT') order by group_id";
-		$rslt=mysql_query($stmt, $link);
-		$Dgroups_to_print = mysql_num_rows($rslt);
-		$Dgroups_menu='';
-		$Dgroups_selected=0;
-		$o=0;
-		while ($Dgroups_to_print > $o) 
-			{
-			$rowx=mysql_fetch_row($rslt);
-			$Dgroups_menu .= "<option ";
-			if ($drop_inbound_group == "$rowx[0]") 
-				{
-				$Dgroups_menu .= "SELECTED ";
-				$Dgroups_selected++;
-				}
-			$Dgroups_menu .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
-			$o++;
-			}
-		if ($Dgroups_selected < 1) 
-			{$Dgroups_menu .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
-		else 
-			{$Dgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
-
-
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
-			}
-		}
-	else
-		{
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
-			fclose($fp);
-			}
-		}
+	Header ("Content-type: text/html; charset=utf-8");
+	echo "You do not have permissions to modify email accounts\n";
+	exit;
 	}
+
+if (($LOGuser_level < 9) and ($SSlevel_8_disable_add > 0))
+	{$add_copy_disabled++;}
+
+$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns =			$row[0];
+$LOGallowed_reports =			$row[1];
+$LOGadmin_viewable_groups =		$row[2];
+$LOGadmin_viewable_call_times =	$row[3];
+$admin_viewable_groupsALL=0;
+$LOGadmin_viewable_groupsSQL='';
+$whereLOGadmin_viewable_groupsSQL='';
+$valLOGadmin_viewable_groupsSQL='';
+$vmLOGadmin_viewable_groupsSQL='';
+if ( (!preg_match("/\-\-ALL\-\-/i",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+	{
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+	$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$valLOGadmin_viewable_groupsSQL = "and val.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$vmLOGadmin_viewable_groupsSQL = "and vm.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	}
+else 
+	{$admin_viewable_groupsALL=1;}
+$regexLOGadmin_viewable_groups = " $LOGadmin_viewable_groups ";
+
+$UUgroups_list='';
+if ($admin_viewable_groupsALL > 0)
+	{$UUgroups_list .= "<option value=\"---ALL---\">All Admin User Groups</option>\n";}
+$stmt="SELECT user_group,group_name from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
+$rslt=mysql_query($stmt, $link);
+$UUgroups_to_print = mysql_num_rows($rslt);
+$o=0;
+while ($UUgroups_to_print > $o) 
+	{
+	$rowx=mysql_fetch_row($rslt);
+	$UUgroups_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+	$o++;
+	}
+
+$stmt="SELECT group_id,group_name from vicidial_inbound_groups where group_handling='EMAIL' $LOGadmin_viewable_groupsSQL order by group_id;";
+#	$stmt="SELECT group_id,group_name from vicidial_inbound_groups where group_id NOT IN('AGENTDIRECT') order by group_id";
+$rslt=mysql_query($stmt, $link);
+$Dgroups_to_print = mysql_num_rows($rslt);
+$Dgroups_menu='';
+$Dgroups_selected=0;
+$o=0;
+while ($Dgroups_to_print > $o) 
+	{
+	$rowx=mysql_fetch_row($rslt);
+	$Dgroups_menu .= "<option ";
+	if ($drop_inbound_group == "$rowx[0]") 
+		{
+		$Dgroups_menu .= "SELECTED ";
+		$Dgroups_selected++;
+		}
+	$Dgroups_menu .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+	$o++;
+	}
+if ($Dgroups_selected < 1) 
+	{$Dgroups_menu .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
+else 
+	{$Dgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
 
 ?>
 <html>
@@ -297,12 +286,6 @@ $subcamp_color =	'#C6C6C6';
 ##### END Set variables to make header show properly #####
 
 require("admin_header.php");
-
-if ( ($LOGemails_modify < 1) or ($LOGuser_level < 8) )
-	{
-	echo "You are not authorized to view this section\n";
-	exit;
-	}
 
 if ($SSemail_enabled < 1)
 	{

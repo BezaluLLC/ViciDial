@@ -88,7 +88,7 @@ index (server_ip),
 index (voicemail_id),
 index (dialplan_number),
 unique index extenserver (extension, server_ip)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE servers (
 server_id VARCHAR(10) NOT NULL,
@@ -137,7 +137,7 @@ user_group VARCHAR(20) default '---ALL---',
 audio_store_purge TEXT,
 svn_revision INT(9) default '0',
 svn_info TEXT
-);
+) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX server_id on servers (server_id);
 
@@ -147,7 +147,7 @@ server_ip VARCHAR(15) NOT NULL,
 channel_group VARCHAR(30),
 extension VARCHAR(100),
 channel_data VARCHAR(100)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE live_sip_channels (
 channel VARCHAR(100) NOT NULL,
@@ -155,7 +155,7 @@ server_ip VARCHAR(15) NOT NULL,
 channel_group VARCHAR(30),
 extension VARCHAR(100),
 channel_data VARCHAR(100)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE parked_channels (
 channel VARCHAR(100) NOT NULL,
@@ -164,13 +164,13 @@ channel_group VARCHAR(30),
 extension VARCHAR(100),
 parked_by VARCHAR(100),
 parked_time DATETIME
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE conferences (
 conf_exten INT(7) UNSIGNED NOT NULL,
 server_ip VARCHAR(15) NOT NULL,
 extension VARCHAR(100)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE recording_log (
 recording_id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -192,7 +192,7 @@ index(filename),
 index(lead_id),
 index(user),
 index(vicidial_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE live_inbound (
 uniqueid VARCHAR(20) NOT NULL,
@@ -209,7 +209,7 @@ comment_b VARCHAR(50),
 comment_c VARCHAR(50),
 comment_d VARCHAR(50),
 comment_e VARCHAR(50)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE inbound_numbers (
 extension VARCHAR(30) NOT NULL,
@@ -217,13 +217,13 @@ full_number VARCHAR(30) NOT NULL,
 server_ip VARCHAR(15) NOT NULL,
 inbound_name VARCHAR(30),
 department VARCHAR(30)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE server_updater (
 server_ip VARCHAR(15) NOT NULL,
 last_update DATETIME,
 db_time TIMESTAMP
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE call_log (
 uniqueid VARCHAR(20) PRIMARY KEY NOT NULL,
@@ -243,7 +243,7 @@ length_in_min DOUBLE(8,2),
 index (caller_code),
 index (server_ip),
 index (channel)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE park_log (
 uniqueid VARCHAR(20) default '',
@@ -261,7 +261,7 @@ user VARCHAR(20),
 lead_id INT(9) UNSIGNED default '0',
 index (parked_time),
 index (lead_id)
-);
+) ENGINE=MyISAM;
 
 CREATE INDEX uniqueid_park on park_log (uniqueid);
 
@@ -288,7 +288,7 @@ cmd_line_k VARCHAR(100),
 index (callerid),
 index (uniqueid),
 index serverstat(server_ip,status)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_list (
 lead_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -335,7 +335,7 @@ index (postal_code),
 index (last_local_call_time),
 index (rank),
 index (owner)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_hopper (
 hopper_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -351,7 +351,7 @@ priority TINYINT(2) default '0',
 source VARCHAR(1) default '',
 vendor_lead_code VARCHAR(20) default '',
 index (lead_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_live_agents (
 live_agent_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -409,7 +409,7 @@ index (random_id),
 index (last_call_time),
 index (last_update_time),
 index (last_call_finish)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_auto_calls (
 auto_call_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -437,7 +437,7 @@ index (uniqueid),
 index (callerid),
 index (call_time),
 index (last_update_time)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_log (
 uniqueid VARCHAR(20) PRIMARY KEY NOT NULL,
@@ -459,7 +459,7 @@ term_reason  ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','NONE')
 alt_dial VARCHAR(6) default 'NONE',
 index (lead_id),
 index (call_date)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_closer_log (
 closecallid INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -487,7 +487,7 @@ index (lead_id),
 index (call_date),
 index (campaign_id),
 index (uniqueid)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_xfer_log (
 xfercallid INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -501,7 +501,7 @@ user VARCHAR(20),
 closer VARCHAR(20),
 index (lead_id),
 index (call_date)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_users (
 user_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -607,8 +607,8 @@ modify_email_accounts ENUM('0','1') default '0',
 failed_login_count TINYINT(3) UNSIGNED default '0',
 last_login_date DATETIME default '2001-01-01 00:00:01',
 last_ip VARCHAR(15) default '',
-pass_hash VARCHAR(200) default ''
-);
+pass_hash VARCHAR(100) default ''
+) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
 
@@ -626,8 +626,13 @@ extension VARCHAR(50),
 computer_ip VARCHAR(15),
 browser VARCHAR(255),
 data VARCHAR(255),
-index (user)
-);
+phone_login VARCHAR(15) default '',
+server_phone VARCHAR(15) default '',
+phone_ip VARCHAR(15) default '',
+index (user),
+index (event_date),
+index (phone_ip)
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_user_groups (
 user_group VARCHAR(20) NOT NULL,
@@ -654,7 +659,7 @@ webphone_systemkey_override VARCHAR(100) default '',
 webphone_dialpad_override ENUM('DISABLED','Y','N','TOGGLE','TOGGLE_OFF') default 'DISABLED',
 admin_viewable_groups TEXT,
 admin_viewable_call_times TEXT
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns (
 campaign_id VARCHAR(8) PRIMARY KEY NOT NULL,
@@ -873,7 +878,7 @@ allow_emails ENUM('Y','N') default 'N',
 amd_inbound_group VARCHAR(20) default '',
 amd_callmenu VARCHAR(50) default '',
 survey_wait_sec TINYINT(3) default '10'
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
 list_id BIGINT(14) UNSIGNED PRIMARY KEY NOT NULL,
@@ -898,7 +903,7 @@ web_form_address_two TEXT,
 time_zone_setting ENUM('COUNTRY_AND_AREA_CODE','POSTAL_CODE','NANPA_PREFIX','OWNER_TIME_ZONE_CODE') default 'COUNTRY_AND_AREA_CODE',
 inventory_report ENUM('Y','N') default 'Y',
 expiration_date DATE default '2099-12-31'
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_statuses (
 status VARCHAR(6) PRIMARY KEY NOT NULL,
@@ -913,7 +918,7 @@ not_interested ENUM('Y','N') default 'N',
 unworkable ENUM('Y','N') default 'N',
 scheduled_callback ENUM('Y','N') default 'N',
 completed ENUM('Y','N') default 'N'
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaign_statuses (
 status VARCHAR(6) NOT NULL,
@@ -930,7 +935,7 @@ unworkable ENUM('Y','N') default 'N',
 scheduled_callback ENUM('Y','N') default 'N',
 completed ENUM('Y','N') default 'N',
 index (campaign_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaign_hotkeys (
 status VARCHAR(6) NOT NULL,
@@ -939,7 +944,7 @@ status_name VARCHAR(30),
 selectable ENUM('Y','N'),
 campaign_id VARCHAR(8),
 index (campaign_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_conferences (
 conf_exten INT(7) UNSIGNED NOT NULL,
@@ -947,7 +952,7 @@ server_ip VARCHAR(15) NOT NULL,
 extension VARCHAR(100),
 leave_3way ENUM('0','1') default '0',
 leave_3way_datetime DATETIME
-);
+) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX serverconf on vicidial_conferences (server_ip, conf_exten);
 
@@ -961,7 +966,7 @@ DST enum('Y','N'),
 DST_range VARCHAR(8),
 geographic_description VARCHAR(100),
 tz_code VARCHAR(4) default ''
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_inbound_groups (
 group_id VARCHAR(20) PRIMARY KEY NOT NULL,
@@ -1078,7 +1083,7 @@ max_calls_count SMALLINT(5) default '0',
 max_calls_action ENUM('DROP','AFTERHOURS','NO_AGENT_NO_QUEUE') default 'NO_AGENT_NO_QUEUE',
 dial_ingroup_cid VARCHAR(20) default '',
 group_handling ENUM('PHONE','EMAIL') default 'PHONE'
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
 agent_station VARCHAR(10) PRIMARY KEY NOT NULL,
@@ -1089,7 +1094,7 @@ DB_server_ip VARCHAR(15) NOT NULL,
 DB_user VARCHAR(15),
 DB_pass VARCHAR(15),
 DB_port VARCHAR(6)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_remote_agents (
 remote_agent_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -1104,7 +1109,7 @@ extension_group VARCHAR(20) default 'NONE',
 extension_group_order VARCHAR(20) default 'NONE',
 on_hook_agent ENUM('Y','N') default 'N',
 on_hook_ring_time SMALLINT(5) default '15'
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE live_inbound_log (
 uniqueid VARCHAR(20) NOT NULL,
@@ -1124,7 +1129,7 @@ comment_e VARCHAR(50),
 index (uniqueid),
 index (phone_ext),
 index (start_time)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE web_client_sessions (
 extension VARCHAR(100) NOT NULL,
@@ -1132,7 +1137,7 @@ server_ip VARCHAR(15) NOT NULL,
 program ENUM('agc','vicidial','monitor','other') default 'agc',
 start_time DATETIME NOT NULL,
 session_name VARCHAR(40) UNIQUE NOT NULL
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE server_performance (
 start_time DATETIME NOT NULL,
@@ -1152,7 +1157,7 @@ live_recordings SMALLINT(4) UNSIGNED NOT NULL,
 cpu_user_percent SMALLINT(3) UNSIGNED NOT NULL default '0',
 cpu_system_percent SMALLINT(3) UNSIGNED NOT NULL default '0',
 cpu_idle_percent SMALLINT(3) UNSIGNED NOT NULL default '0'
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_agent_log (
 agent_log_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -1180,7 +1185,7 @@ uniqueid VARCHAR(20) default '',
 index (lead_id),
 index (user),
 index (event_time)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_scripts (
 script_id VARCHAR(10) PRIMARY KEY NOT NULL,
@@ -1189,13 +1194,13 @@ script_comments VARCHAR(255),
 script_text TEXT,
 active ENUM('Y','N'),
 user_group VARCHAR(20) default '---ALL---'
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE phone_favorites (
 extension VARCHAR(100),
 server_ip VARCHAR(15),
 extensions_list TEXT
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_callbacks (
 callback_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -1214,7 +1219,7 @@ lead_status VARCHAR(6) default 'CALLBK',
 index (lead_id),
 index (status),
 index (callback_time)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_list_pins (
 pins_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -1228,7 +1233,7 @@ digits VARCHAR(20),
 index (lead_id),
 index (phone_number),
 index (entry_time)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lead_filters (
 lead_filter_id VARCHAR(10) PRIMARY KEY NOT NULL,
@@ -1236,7 +1241,7 @@ lead_filter_name VARCHAR(30) NOT NULL,
 lead_filter_comments VARCHAR(255),
 lead_filter_sql TEXT,
 user_group VARCHAR(20) default '---ALL---'
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_call_times (
 call_time_id VARCHAR(10) PRIMARY KEY NOT NULL,
@@ -1269,7 +1274,7 @@ friday_afterhours_filename_override VARCHAR(255) default '',
 saturday_afterhours_filename_override VARCHAR(255) default '',
 user_group VARCHAR(20) default '---ALL---',
 ct_holidays TEXT default ''
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_state_call_times (
 state_call_time_id VARCHAR(10) PRIMARY KEY NOT NULL,
@@ -1294,7 +1299,7 @@ sct_saturday_start SMALLINT(4) unsigned default '0',
 sct_saturday_stop SMALLINT(4) unsigned default '0',
 user_group VARCHAR(20) default '---ALL---',
 ct_holidays TEXT default ''
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaign_stats (
 campaign_id VARCHAR(20) PRIMARY KEY NOT NULL,
@@ -1343,11 +1348,11 @@ agent_wait_today BIGINT(14) UNSIGNED default '0',
 agent_custtalk_today BIGINT(14) UNSIGNED default '0',
 agent_acw_today BIGINT(14) UNSIGNED default '0',
 agent_pause_today BIGINT(14) UNSIGNED default '0'
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_dnc (
 phone_number VARCHAR(18) PRIMARY KEY NOT NULL
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lead_recycle (
 recycle_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -1357,7 +1362,7 @@ attempt_delay SMALLINT(5) UNSIGNED default '1800',
 attempt_maximum TINYINT(3) UNSIGNED default '2',
 active ENUM('Y','N') default 'N',
 index (campaign_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaign_server_stats (
 campaign_id VARCHAR(20) NOT NULL,
@@ -1366,7 +1371,7 @@ update_time TIMESTAMP,
 local_trunk_shortage SMALLINT(5) UNSIGNED default '0',
 index (campaign_id),
 index (server_ip)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_server_trunks (
 server_ip VARCHAR(15) NOT NULL,
@@ -1375,7 +1380,7 @@ dedicated_trunks SMALLINT(5) UNSIGNED default '0',
 trunk_restriction ENUM('MAXIMUM_LIMIT','OVERFLOW_ALLOWED') default 'OVERFLOW_ALLOWED',
 index (campaign_id),
 index (server_ip)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_postal_codes (
 postal_code VARCHAR(10) NOT NULL,
@@ -1385,7 +1390,7 @@ DST enum('Y','N'),
 DST_range VARCHAR(8),
 country CHAR(3),
 country_code SMALLINT(5) UNSIGNED
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_pause_codes (
 pause_code VARCHAR(6) NOT NULL,
@@ -1393,7 +1398,7 @@ pause_code_name VARCHAR(30),
 billable ENUM('NO','YES','HALF') default 'NO',
 campaign_id VARCHAR(8),
 index (campaign_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE system_settings (
 version VARCHAR(50),
@@ -1516,8 +1521,10 @@ queuemetrics_socket_url TEXT,
 enhanced_disconnect_logging ENUM('0','1') default '0',
 allow_emails ENUM('0','1') default '0',
 level_8_disable_add ENUM('0','1') default '0',
-pass_hash_enabled ENUM('0','1') default '0'
-);
+pass_hash_enabled ENUM('0','1') default '0',
+pass_key VARCHAR(100) default '',
+pass_cost TINYINT(2) UNSIGNED default '2'
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
 vcl_id VARCHAR(20) PRIMARY KEY NOT NULL,
@@ -1527,7 +1534,7 @@ list_mix_container TEXT,
 mix_method ENUM('EVEN_MIX','IN_ORDER','RANDOM') default 'IN_ORDER',
 status ENUM('ACTIVE','INACTIVE') default 'INACTIVE',
 index (campaign_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_status_categories (
 vsc_id VARCHAR(20) PRIMARY KEY NOT NULL,
@@ -1536,7 +1543,7 @@ vsc_description VARCHAR(255),
 tovdad_display ENUM('Y','N') default 'N',
 sale_category ENUM('Y','N') default 'N',
 dead_lead_category ENUM('Y','N') default 'N'
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_ivr (
 ivr_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -1593,7 +1600,7 @@ prompt_audio_20 VARCHAR(20),
 prompt_response_20 TINYINT(1) UNSIGNED default '0',
 index (phone_number),
 index (entry_time)
-);
+) ENGINE=MyISAM;
 
 ALTER TABLE vicidial_ivr AUTO_INCREMENT = 1000000;
 
@@ -1608,7 +1615,7 @@ group_grade TINYINT(2) UNSIGNED default '1',
 index (group_id),
 index (user),
 unique index viga_user_group_id (user, group_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_live_inbound_agents (
 user VARCHAR(20),
@@ -1621,7 +1628,7 @@ group_grade TINYINT(2) UNSIGNED default '1',
 index (group_id),
 index (group_weight),
 unique index vlia_user_group_id (user, group_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaign_agents (
 user VARCHAR(20),
@@ -1633,7 +1640,7 @@ group_web_vars VARCHAR(255) default '',
 campaign_grade TINYINT(2) UNSIGNED default '1',
 index (campaign_id),
 index (user)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_user_closer_log (
 user VARCHAR(20),
@@ -1644,12 +1651,12 @@ closer_campaigns TEXT,
 manager_change VARCHAR(20) default '',
 index (user),
 index (event_date)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_qc_codes (
 code VARCHAR(8) PRIMARY KEY NOT NULL,
 code_name VARCHAR(30)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_agent_sph (
 campaign_group_id VARCHAR(20) NOT NULL,
@@ -1664,14 +1671,14 @@ login_hours DECIMAL(5,2) DEFAULT '0.00',
 sph DECIMAL(6,2) DEFAULT '0.00',
 index (campaign_group_id),
 index (stat_date)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE phones_alias (
 alias_id VARCHAR(20) NOT NULL UNIQUE PRIMARY KEY,
 alias_name VARCHAR(50),
 logins_list VARCHAR(255),
 user_group VARCHAR(20) default '---ALL---'
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_shifts (
 shift_id VARCHAR(20) NOT NULL,
@@ -1683,7 +1690,7 @@ report_option ENUM('Y','N') default 'N',
 user_group VARCHAR(20) default '---ALL---',
 report_rank SMALLINT(5) default '1',
 index (shift_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_timeclock_log (
 timeclock_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -1701,7 +1708,7 @@ manager_ip VARCHAR(15),
 event_datestamp TIMESTAMP NOT NULL,
 tcid_link INT(9) UNSIGNED,
 index (user)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_timeclock_status (
 user VARCHAR(20) UNIQUE NOT NULL,
@@ -1712,7 +1719,7 @@ status VARCHAR(50),
 ip_address VARCHAR(15),
 shift_id VARCHAR(20),
 index (user)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_timeclock_audit_log (
 timeclock_id INT(9) UNSIGNED NOT NULL,
@@ -1728,7 +1735,7 @@ event_datestamp TIMESTAMP NOT NULL,
 tcid_link INT(9) UNSIGNED,
 index (timeclock_id),
 index (user)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_admin_log (
 admin_log_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -1745,7 +1752,7 @@ user_group VARCHAR(20) default '---ALL---',
 index (user),
 index (event_section),
 index (record_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_list_alt_phones (
 alt_phone_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -1757,14 +1764,14 @@ alt_phone_count SMALLINT(5) UNSIGNED,
 active ENUM('Y','N') default 'Y',
 index (lead_id),
 index (phone_number)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaign_dnc (
 phone_number VARCHAR(18) NOT NULL,
 campaign_id VARCHAR(8) NOT NULL,
 index (phone_number),
 unique index phonecamp (phone_number, campaign_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_inbound_dids (
 did_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -1816,7 +1823,7 @@ custom_five VARCHAR(100) default '',
 user_group VARCHAR(20) default '---ALL---',
 unique index (did_pattern),
 index (group_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_did_log (
 uniqueid VARCHAR(20) NOT NULL,
@@ -1832,7 +1839,7 @@ index (uniqueid),
 index (caller_id_number),
 index (extension),
 index (call_date)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_api_log (
 api_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -1848,7 +1855,7 @@ source VARCHAR(20),
 data TEXT,
 run_time VARCHAR(20) default '0',
 index(api_date)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_nanpa_prefix_codes (
 areacode CHAR(3),
@@ -1862,7 +1869,7 @@ state VARCHAR(2) default '',
 postal_code VARCHAR(10) default '',
 country VARCHAR(2) default '',
 lata_type VARCHAR(1) default ''
-);
+) ENGINE=MyISAM;
 
 CREATE INDEX areaprefix on vicidial_nanpa_prefix_codes (areacode,prefix);
 
@@ -1880,7 +1887,7 @@ cpd_seconds DECIMAL(7,2) default '0',
 index(uniqueid),
 index(callerid),
 index(lead_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_conf_templates (
 template_id VARCHAR(15) NOT NULL,
@@ -1888,7 +1895,7 @@ template_name VARCHAR(50) NOT NULL,
 template_contents TEXT,
 user_group VARCHAR(20) default '---ALL---',
 unique index (template_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_server_carriers (
 carrier_id VARCHAR(15) NOT NULL,
@@ -1905,7 +1912,7 @@ carrier_description VARCHAR(255),
 user_group VARCHAR(20) default '---ALL---',
 unique index(carrier_id),
 index (server_ip)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE groups_alias (
 group_alias_id VARCHAR(30) NOT NULL UNIQUE PRIMARY KEY,
@@ -1914,7 +1921,7 @@ caller_id_number VARCHAR(20),
 caller_id_name VARCHAR(20),
 active ENUM('Y','N') default 'N',
 user_group VARCHAR(20) default '---ALL---'
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE user_call_log (
 user_call_log_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -1934,7 +1941,7 @@ customer_hungup_seconds SMALLINT(5) UNSIGNED default '0',
 index (user),
 index (call_date),
 index (group_alias_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_tts_prompts (
 tts_id VARCHAR(50) PRIMARY KEY NOT NULL,
@@ -1943,7 +1950,7 @@ active ENUM('Y','N'),
 tts_text TEXT,
 tts_voice VARCHAR(100) default 'Allison-8kHz',
 user_group VARCHAR(20) default '---ALL---'
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_call_menu (
 menu_id VARCHAR(50) PRIMARY KEY NOT NULL,
@@ -1962,7 +1969,7 @@ dtmf_log ENUM('0','1') default '0',
 dtmf_field VARCHAR(50) default 'NONE',
 user_group VARCHAR(20) default '---ALL---',
 qualify_sql TEXT
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_call_menu_options (
 menu_id VARCHAR(50) NOT NULL,
@@ -1973,7 +1980,7 @@ option_route_value VARCHAR(255),
 option_route_value_context VARCHAR(1000),
 index (menu_id),
 unique index menuoption (menu_id, option_value)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_user_territories (
 user VARCHAR(20) NOT NULL,
@@ -1981,20 +1988,20 @@ territory VARCHAR(100) default '',
 level ENUM('TOP_AGENT','STANDARD_AGENT','BOTTOM_AGENT') default 'STANDARD_AGENT',
 index (user),
 unique index userterritory (user, territory)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_territories (
 territory_id MEDIUMINT(8) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
 territory VARCHAR(100) default '',
 territory_description VARCHAR(255) default '',
 unique index uniqueterritory (territory)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_override_ids (
 id_table VARCHAR(50) PRIMARY KEY NOT NULL,
 active ENUM('0','1') default '1',
 value INT(9) default '0'
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_carrier_log (
 uniqueid VARCHAR(20) PRIMARY KEY NOT NULL,
@@ -2011,7 +2018,7 @@ sip_hangup_reason VARCHAR(50) default '',
 caller_code VARCHAR(30) default '',
 index (call_date),
 index (lead_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_list_update_log (
 event_date DATETIME,
@@ -2025,7 +2032,7 @@ result VARCHAR(20),
 result_rows SMALLINT(3) UNSIGNED default '0',
 list_id VARCHAR(255),
 index (event_date)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_drop_rate_groups (
 group_id VARCHAR(20) PRIMARY KEY NOT NULL,
@@ -2035,7 +2042,7 @@ answers_today INT(9) UNSIGNED default '0',
 drops_today INT(9) UNSIGNED default '0',
 drops_today_pct VARCHAR(6) default '0',
 drops_answers_today_pct VARCHAR(6) default '0'
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_process_triggers (
 trigger_id VARCHAR(20) PRIMARY KEY NOT NULL,
@@ -2045,7 +2052,7 @@ trigger_time DATETIME,
 trigger_run ENUM('0','1') default '0',
 user VARCHAR(20),
 trigger_lines TEXT
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_process_trigger_log (
 trigger_id VARCHAR(20) NOT NULL,
@@ -2056,7 +2063,7 @@ trigger_lines TEXT,
 trigger_results TEXT,
 index (trigger_id),
 index (trigger_time)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vtiger_rank_data (
 account VARCHAR(20) PRIMARY KEY NOT NULL,
@@ -2070,7 +2077,7 @@ imu VARCHAR(10) NOT NULL,
 aov SMALLINT(5) NOT NULL,
 returns SMALLINT(5) NOT NULL,
 rank SMALLINT(5) NOT NULL
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vtiger_rank_parameters (
 parameter_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -2079,7 +2086,7 @@ lower_range VARCHAR(20) NOT NULL,
 upper_range VARCHAR(20) NOT NULL,
 points SMALLINT(5) NOT NULL,
 index (parameter)
-);
+) ENGINE=MyISAM;
 
 
 CREATE TABLE twoday_call_log (
@@ -2100,7 +2107,7 @@ length_in_min DOUBLE(8,2),
 index (caller_code),
 index (server_ip),
 index (channel)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE twoday_vicidial_log (
 uniqueid VARCHAR(20) PRIMARY KEY NOT NULL,
@@ -2122,7 +2129,7 @@ term_reason  ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','NONE')
 alt_dial VARCHAR(6) default 'NONE',
 index (lead_id),
 index (call_date)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE twoday_vicidial_closer_log (
 closecallid INT(9) UNSIGNED PRIMARY KEY NOT NULL,
@@ -2149,7 +2156,7 @@ index (lead_id),
 index (call_date),
 index (campaign_id),
 index (uniqueid)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE twoday_vicidial_xfer_log (
 xfercallid INT(9) UNSIGNED PRIMARY KEY NOT NULL,
@@ -2163,7 +2170,7 @@ user VARCHAR(20),
 closer VARCHAR(20),
 index (lead_id),
 index (call_date)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE twoday_recording_log (
 recording_id INT(10) UNSIGNED PRIMARY KEY NOT NULL,
@@ -2185,7 +2192,7 @@ index(filename),
 index(lead_id),
 index(user),
 index(vicidial_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE twoday_vicidial_agent_log (
 agent_log_id INT(9) UNSIGNED PRIMARY KEY NOT NULL,
@@ -2213,7 +2220,7 @@ uniqueid VARCHAR(20) default '',
 index (lead_id),
 index (user),
 index (event_time)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_music_on_hold (
 moh_id VARCHAR(100) PRIMARY KEY NOT NULL,
@@ -2222,14 +2229,14 @@ active ENUM('Y','N') default 'N',
 random ENUM('Y','N') default 'N',
 remove ENUM('Y','N') default 'N',
 user_group VARCHAR(20) default '---ALL---'
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_music_on_hold_files (
 filename VARCHAR(100) NOT NULL,
 moh_id VARCHAR(100) NOT NULL,
 rank SMALLINT(5),
 unique index mohfile (filename, moh_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_voicemail (
 voicemail_id VARCHAR(10) NOT NULL UNIQUE PRIMARY KEY,
@@ -2244,7 +2251,7 @@ voicemail_timezone VARCHAR(30) default 'eastern',
 voicemail_options VARCHAR(255) default '',
 user_group VARCHAR(20) default '---ALL---',
 voicemail_greeting VARCHAR(100) default ''
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_user_territory_log (
 user VARCHAR(20),
@@ -2253,7 +2260,7 @@ event_date DATETIME,
 agent_territories TEXT,
 index (user),
 index (event_date)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_grab_call_log (
 auto_call_id INT(9) UNSIGNED NOT NULL,
@@ -2270,12 +2277,12 @@ index (auto_call_id),
 index (event_date),
 index (user),
 index (campaign_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vtiger_vicidial_roles (
 user_level TINYINT(2),
 vtiger_role VARCHAR(5)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_call_notes (
 notesid INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -2286,7 +2293,7 @@ order_id VARCHAR(20),
 appointment_date DATE,
 appointment_time TIME,
 call_notes TEXT
-);
+) ENGINE=MyISAM;
 
 ALTER TABLE vicidial_call_notes AUTO_INCREMENT = 100;
 CREATE INDEX lead_id on vicidial_call_notes (lead_id);
@@ -2299,7 +2306,7 @@ country_code SMALLINT(5) UNSIGNED,
 campaign_id VARCHAR(8) default '--ALL--',
 index (state),
 index (areacode)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE callcard_accounts (
 card_id VARCHAR(20) PRIMARY KEY NOT NULL,
@@ -2308,7 +2315,7 @@ status ENUM('GENERATE','PRINT','SHIP','HOLD','ACTIVE','USED','EMPTY','CANCEL','V
 balance_minutes SMALLINT(5) default '3',
 inbound_group_id VARCHAR(20) default '',
 index (pin)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE callcard_accounts_details (
 card_id VARCHAR(20) PRIMARY KEY NOT NULL,
@@ -2335,7 +2342,7 @@ create_time DATETIME,
 activate_time DATETIME,
 used_time DATETIME,
 void_time DATETIME
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE callcard_log (
 uniqueid VARCHAR(20) PRIMARY KEY NOT NULL,
@@ -2352,7 +2359,7 @@ phone_number VARCHAR(18),
 inbound_did VARCHAR(18),
 index (card_id),
 index (call_time)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_extension_groups (
 extension_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -2364,7 +2371,7 @@ call_count_today MEDIUMINT(7) default '0',
 last_call_time DATETIME,
 last_callerid VARCHAR(20) default '',
 index (extension_group_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_remote_agent_log (
 uniqueid VARCHAR(20) default '',
@@ -2382,7 +2389,7 @@ index (call_time),
 index (ra_user),
 index (extension),
 index (phone_number)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_log_extended (
 uniqueid VARCHAR(50) PRIMARY KEY NOT NULL,
@@ -2395,7 +2402,7 @@ start_url_processed ENUM('N','Y','U') default 'N',
 dispo_url_processed ENUM('N','Y','U','XY','XU') default 'N',
 multi_alt_processed ENUM('N','Y','U') default 'N',
 noanswer_processed ENUM('N','Y','U') default 'N'
-);
+) ENGINE=MyISAM;
 
 CREATE INDEX call_date on vicidial_log_extended (call_date);
 
@@ -2417,7 +2424,7 @@ field_required ENUM('Y','N') default 'N',
 name_position ENUM('LEFT','TOP') default 'LEFT',
 multi_position ENUM('HORIZONTAL','VERTICAL') default 'HORIZONTAL',
 field_order SMALLINT(5) default '1'
-);
+) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX listfield on vicidial_lists_fields (list_id, field_label);
 
@@ -2427,14 +2434,14 @@ filter_phone_group_name VARCHAR(40) NOT NULL,
 filter_phone_group_description VARCHAR(100),
 user_group VARCHAR(20) default '---ALL---',
 index (filter_phone_group_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_filter_phone_numbers (
 phone_number VARCHAR(18) NOT NULL,
 filter_phone_group_id VARCHAR(20) NOT NULL,
 index (phone_number),
 unique index phonefilter (phone_number, filter_phone_group_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_xfer_presets (
 campaign_id VARCHAR(20) NOT NULL,
@@ -2443,14 +2450,14 @@ preset_number VARCHAR(50) NOT NULL,
 preset_dtmf VARCHAR(50) default '',
 preset_hide_number ENUM('Y','N') default 'N',
 index (preset_name)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_xfer_stats (
 campaign_id VARCHAR(20) NOT NULL,
 preset_name VARCHAR(40) NOT NULL,
 xfer_count SMALLINT(5) UNSIGNED default '0',
 index (campaign_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_manual_dial_queue (
 mdq_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -2460,7 +2467,7 @@ entry_time DATETIME,
 status ENUM('READY','QUEUE') default 'READY',
 external_dial VARCHAR(100) default '',
 index (user)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lead_search_log (
 search_log_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -2472,7 +2479,7 @@ results INT(9) UNSIGNED default '0',
 seconds MEDIUMINT(7) UNSIGNED default '0',
 index (user),
 index (event_date)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaign_stats_debug (
 campaign_id VARCHAR(20) NOT NULL,
@@ -2483,7 +2490,7 @@ debug_output TEXT,
 adapt_output TEXT,
 index (campaign_id),
 unique index campserver (campaign_id, server_ip)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_outbound_ivr_log (
 uniqueid VARCHAR(50) NOT NULL,
@@ -2497,7 +2504,7 @@ index (event_date),
 index (lead_id),
 index (campaign_id),
 unique index campserver (event_date, lead_id, menu_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_screen_labels (
 label_id VARCHAR(20) PRIMARY KEY NOT NULL,
@@ -2524,7 +2531,7 @@ label_security_phrase VARCHAR(40) default '',
 label_email VARCHAR(40) default '',
 label_comments VARCHAR(40) default '',
 user_group VARCHAR(20) default '---ALL---'
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_agent_skip_log (
 user_skip_log_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -2537,7 +2544,7 @@ previous_called_count SMALLINT(5) UNSIGNED default '0',
 index (user),
 index (event_date),
 index (campaign_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_url_log (
 url_log_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -2548,7 +2555,7 @@ response_sec SMALLINT(5) UNSIGNED default '0',
 url TEXT,
 url_response TEXT,
 index (uniqueid)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_log_noanswer (
 uniqueid VARCHAR(20) PRIMARY KEY NOT NULL,
@@ -2571,7 +2578,7 @@ alt_dial VARCHAR(6) default 'NONE',
 caller_code VARCHAR(30) NOT NULL,
 index (lead_id),
 index (call_date)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_did_agent_log (
 uniqueid VARCHAR(20) NOT NULL,
@@ -2589,7 +2596,7 @@ index (uniqueid),
 index (caller_id_number),
 index (extension),
 index (call_date)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaign_cid_areacodes (
 campaign_id VARCHAR(8) NOT NULL,
@@ -2600,7 +2607,7 @@ cid_description VARCHAR(50),
 call_count_today MEDIUMINT(7) default '0',
 index (campaign_id),
 index (areacode)
-);
+) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX campareacode on vicidial_campaign_cid_areacodes (campaign_id, areacode, outbound_cid);
 
@@ -2613,7 +2620,7 @@ active ENUM('Y','N','') default '',
 call_count_today MEDIUMINT(7) default '0',
 index (did_id),
 index (user_start)
-);
+) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX didraexten on vicidial_did_ra_extensions (did_id, user_start, extension);
 
@@ -2630,7 +2637,7 @@ department VARCHAR(100) default '',
 group_name VARCHAR(100) default '',
 job_title VARCHAR(100) default '',
 location VARCHAR(100) default ''
-);
+) ENGINE=MyISAM;
 
 CREATE INDEX ci_first_name on contact_information (first_name);
 CREATE INDEX ci_last_name on contact_information (last_name);
@@ -2655,7 +2662,7 @@ time_setting ENUM('LOCAL','SERVER') default NULL,
 UNIQUE KEY snapshot_date_list_key
 (snapshot_time,list_id,time_setting),
 KEY snapshot_date_key (snapshot_time)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_daily_max_stats (
 stats_date DATE NOT NULL,
@@ -2674,7 +2681,7 @@ total_calls INT(9) UNSIGNED default '0',
 index (stats_date),
 index (stats_flag),
 index (campaign_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_daily_ra_stats (
 stats_date DATE NOT NULL,
@@ -2687,7 +2694,7 @@ total_calls INT(9) UNSIGNED default '0',
 index (stats_date),
 index (stats_flag),
 index (user)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_custom_leadloader_templates (
 template_id VARCHAR(20) PRIMARY KEY NOT NULL,
@@ -2697,7 +2704,7 @@ list_id BIGINT(14) UNSIGNED DEFAULT NULL,
 standard_variables TEXT,
 custom_table VARCHAR(20) DEFAULT NULL,
 custom_variables TEXT
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_session_data (
 session_name VARCHAR(40) UNIQUE NOT NULL,
@@ -2709,7 +2716,7 @@ extension VARCHAR(100) NOT NULL,
 login_time DATETIME NOT NULL,
 webphone_url TEXT,
 agent_login_call TEXT
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_dial_log (
 caller_code VARCHAR(30) NOT NULL,
@@ -2727,7 +2734,7 @@ uniqueid VARCHAR(20) default '',
 index (caller_code),
 index (lead_id),
 index (call_date)
-);
+) ENGINE=MyISAM;
 
 
 CREATE TABLE vicidial_qc_agent_log (
@@ -2751,7 +2758,7 @@ details TEXT COLLATE utf8_unicode_ci,
 processed ENUM('Y','N') COLLATE utf8_unicode_ci NOT NULL,
 PRIMARY KEY (qc_agent_log_id),
 KEY view_epoch (view_epoch)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_comments (
 comment_id BIGINT(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -2768,21 +2775,21 @@ unhidden_user_id INT(11) DEFAULT NULL,
 unhidden_timestamp DATETIME DEFAULT NULL,
 PRIMARY KEY (comment_id),
 index (lead_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_configuration (
 id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
 name VARCHAR(36) NOT NULL ,
 value VARCHAR(36) NOT NULL ,
 UNIQUE (name)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists_custom (
 list_id BIGINT(14) unsigned NOT NULL,
 audit_comments TINYINT(1) DEFAULT NULL COMMENT 'visible',
 audit_comments_enabled TINYINT(1) DEFAULT NULL COMMENT 'invisible',
 PRIMARY KEY (list_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_call_time_holidays (
 holiday_id VARCHAR(30) PRIMARY KEY NOT NULL,
@@ -2794,7 +2801,7 @@ ct_default_start SMALLINT(4) unsigned NOT NULL default '900',
 ct_default_stop SMALLINT(4) unsigned NOT NULL default '2100',
 default_afterhours_filename_override VARCHAR(255) default '',
 user_group VARCHAR(20) default '---ALL---'
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_email_list (
 email_row_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -2822,7 +2829,7 @@ PRIMARY KEY (email_row_id),
 KEY email_list_account_key (email_account_id),
 KEY email_list_user_key (user),
 KEY vicidial_email_lead_id_key (lead_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_email_accounts (
 email_account_id VARCHAR(20) NOT NULL,
@@ -2845,7 +2852,7 @@ list_id BIGINT(14) UNSIGNED DEFAULT NULL,
 email_account_type ENUM('INBOUND','OUTBOUND') DEFAULT 'INBOUND',
 PRIMARY KEY (email_account_id),
 KEY email_accounts_group_key (group_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE inbound_email_attachments (
 attachment_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -2858,7 +2865,7 @@ file_extension VARCHAR(5) NOT NULL DEFAULT '',
 file_contents LONGBLOB NOT NULL,
 PRIMARY KEY (attachment_id),
 KEY attachments_email_id_key (email_row_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_email_log (
 email_log_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -2873,7 +2880,7 @@ attachments TEXT,
 PRIMARY KEY (email_log_id),
 KEY vicidial_email_log_lead_id_key (lead_id),
 KEY vicidial_email_log_email_row_id_key (email_row_id)
-);
+) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_report_log (
 report_log_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
@@ -2888,7 +2895,7 @@ url TEXT,
 run_time VARCHAR(20) default '0',
 index (user),
 index (report_name)
-);
+) ENGINE=MyISAM;
 
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
@@ -3129,4 +3136,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1351',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1352',db_schema_update_date=NOW();

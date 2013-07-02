@@ -26,13 +26,14 @@
 # 120907-1209 - Raised extended fields up to 99
 # 130508-1020 - Added default field and length check validation, made errors appear in bold red text
 # 130606-0545 - Finalized changing of all ereg instances to preg
+# 130621-1736 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
-$admin_version = '2.8-19';
-$build = '130606-0545';
-
+$admin_version = '2.8-20';
+$build = '130621-1736';
 
 require("dbconnect.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -90,8 +91,7 @@ $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_ter
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
@@ -99,11 +99,9 @@ while ($i < $qm_conf_ct)
 	$SSoutbound_autodial_active =	$row[2];
 	$user_territories_active =		$row[3];
 	$SScustom_fields_enabled =		$row[4];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
-
 
 if ( (strlen($action) < 2) and ($list_id > 99) )
 	{$action = 'MODIFY_CUSTOM_FIELDS';}
@@ -117,7 +115,6 @@ if ( (strlen($field_size) < 1) or ($field_size < 1) )
 	{$field_size = 1;}
 if ( (strlen($field_max) < 1) or ($field_max < 1) )
 	{$field_max = 1;}
-
 
 if ($non_latin < 1)
 	{
@@ -156,6 +153,10 @@ else
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
+$date = date("r");
+$ip = getenv("REMOTE_ADDR");
+$browser = getenv("HTTP_USER_AGENT");
+$user = $PHP_AUTH_USER;
 
 if (file_exists('options.php'))
 	{require('options.php');}
@@ -170,57 +171,48 @@ if ($extended_vl_fields > 0)
 $mysql_reserved_words =
 '|accessible|action|add|all|alter|analyze|and|as|asc|asensitive|before|between|bigint|binary|bit|blob|both|by|call|cascade|case|change|char|character|check|collate|column|condition|constraint|continue|convert|create|cross|current_date|current_time|current_timestamp|current_user|cursor|database|databases|date|day_hour|day_microsecond|day_minute|day_second|dec|decimal|declare|default|delayed|delete|desc|describe|deterministic|distinct|distinctrow|div|double|drop|dual|each|else|elseif|enclosed|enum|escaped|exists|exit|explain|false|fetch|float|float4|float8|for|force|foreign|from|fulltext|grant|group|having|high_priority|hour_microsecond|hour_minute|hour_second|if|ignore|in|index|infile|inner|inout|insensitive|insert|int|int1|int2|int3|int4|int8|integer|interval|into|is|iterate|join|key|keys|kill|leading|leave|left|like|limit|linear|lines|load|localtime|localtimestamp|lock|long|longblob|longtext|loop|low_priority|master_ssl_verify_server_cert|match|mediumblob|mediumint|mediumtext|middleint|minute_microsecond|minute_second|mod|modifies|mysql|natural|no|no_write_to_binlog|not|null|numeric|on|optimize|option|optionally|or|order|out|outer|outfile|precision|primary|procedure|purge|range|read|read_only|read_write|reads|real|references|regexp|release|remove|rename|repeat|replace|require|restrict|return|revoke|right|rlike|schema|schemas|second_microsecond|select|sensitive|separator|set|show|smallint|spatial|specific|sql|sql_big_result|sql_calc_found_rows|sql_small_result|sqlexception|sqlstate|sqlwarning|ssl|starting|straight_join|table|terminated|text|then|time|timestamp|tinyblob|tinyint|tinytext|to|trailing|trigger|true|undo|union|unique|unlock|unsigned|update|usage|use|using|utc_date|utc_time|utc_timestamp|values|varbinary|varchar|varcharacter|varying|when|where|while|with|write|xor|year_month|zerofill|';
 
+$auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and modify_leads='1';";
+if ($auth < 1)
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
+
+$rights_stmt = "SELECT modify_leads from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
+$rights_rslt=mysql_query($rights_stmt, $link);
+$rights_row=mysql_fetch_row($rights_rslt);
+$modify_leads =		$rights_row[0];
+
+# check their permissions
+if ( $modify_leads < 1 )
+	{
+	header ("Content-type: text/html; charset=utf-8");
+	echo "You do not have permissions to modify leads\n";
+	exit;
+	}
+
+$stmt="SELECT full_name,modify_leads,custom_fields_modify,user_level from vicidial_users where user='$PHP_AUTH_USER';";
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-if ($webroot_writable > 0)
-	{$fp = fopen ("./project_auth_entries.txt", "a");}
-
-$date = date("r");
-$ip = getenv("REMOTE_ADDR");
-$browser = getenv("HTTP_USER_AGENT");
-$user = $PHP_AUTH_USER;
-
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
-	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
-	}
-else
-	{
-	if ($auth>0)
-		{
-		$office_no=strtoupper($PHP_AUTH_USER);
-		$password=strtoupper($PHP_AUTH_PW);
-		$stmt="SELECT full_name,modify_leads,custom_fields_modify,user_level from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGfullname =				$row[0];
-		$LOGmodify_leads =			$row[1];
-		$LOGcustom_fields_modify =	$row[2];
-		$LOGuser_level =			$row[3];
-
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
-			}
-		}
-	else
-		{
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
-			fclose($fp);
-			}
-		}
-	}
+$LOGfullname =				$row[0];
+$LOGmodify_leads =			$row[1];
+$LOGcustom_fields_modify =	$row[2];
+$LOGuser_level =			$row[3];
 
 ?>
 <html>

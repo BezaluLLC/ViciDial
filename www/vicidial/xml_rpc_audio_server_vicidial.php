@@ -14,6 +14,7 @@
 # 100903-0041 - Changed lead_id max length to 10 digits
 # 120621-0728 - Added commented-out debug logging
 # 130610-1100 - Finalized changing of all ereg instances to preg
+# 130615-2324 - Added filtering of input to prevent SQL injection attacks
 #
 
 // $Id: xmlrpc_audio_server.php,v 1.3 2007/11/12 17:53:09 lenz Exp $
@@ -42,7 +43,6 @@
 
 
 require_once 'XML/RPC/Server.php';
-
 
 
 // the following variables hold the return status for your file.
@@ -102,6 +102,8 @@ function find_file( $ServerID, $AsteriskID, $QMUserID, $QMUserName )
 		{
 		$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
 		mysql_select_db("$queuemetrics_dbname", $linkB);
+
+		$AsteriskID = preg_replace('/[^\.0-9a-zA-Z]/','',$AsteriskID);
 
 		$stmt="SELECT time_id from queue_log where call_id='$AsteriskID' order by time_id limit 1;";
 		$rslt=mysql_query($stmt, $linkB);
@@ -225,6 +227,8 @@ function listen_call( $ServerID, $AsteriskID, $Agent, $QMUserID, $QMUserName )
 	###########################################
 	if ($enable_queuemetrics_logging > 0)
 		{
+		$AsteriskID = preg_replace('/[^0-9a-zA-Z]/','',$AsteriskID);
+
 		$stmt = "SELECT user,server_ip,conf_exten,comments FROM vicidial_live_agents where callerid='$AsteriskID';";
 		$rslt=mysql_query($stmt, $link);
 		if ($DB) {echo "$stmt\n";}

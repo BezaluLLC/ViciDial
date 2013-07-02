@@ -22,6 +22,7 @@
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 # 130414-0252 - Added report logging
 # 130610-0937 - Finalized changing of all ereg instances to preg
+# 130616-0052 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
 $startMS = microtime();
@@ -31,6 +32,7 @@ header ("Content-type: text/html; charset=utf-8");
 $report_name='User Status';
 
 require("dbconnect.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -69,150 +71,170 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
+if (!isset($begin_date)) {$begin_date = $TODAY;}
+if (!isset($end_date)) {$end_date = $TODAY;}
+
 $PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
 $PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+$user = preg_replace("/'|\"|\\\\|;/","",$user);
+$group = preg_replace("/'|\"|\\\\|;/","",$group);
+$stage = preg_replace("/'|\"|\\\\|;/","",$stage);
+$begin_date = preg_replace("/'|\"|\\\\|;/","",$begin_date);
+$end_date = preg_replace("/'|\"|\\\\|;/","",$end_date);
 
 $StarTtimE = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $ip = getenv("REMOTE_ADDR");
 $check_time = ($StarTtimE - 86400);
-
-if (!isset($begin_date)) {$begin_date = $TODAY;}
-if (!isset($end_date)) {$end_date = $TODAY;}
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
-if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-$fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+$auth=0;
+$reports_auth=0;
+$admin_auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth > 0)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$admin_auth=$row[0];
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	if ($reports_auth < 1)
+		{
+		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ( ($reports_auth > 0) and ($admin_auth < 1) )
+		{
+		$ADD=999999;
+		$reports_only_user=1;
+		}
 	}
 else
 	{
-	##### BEGIN log visit to the vicidial_report_log table #####
-	$LOGip = getenv("REMOTE_ADDR");
-	$LOGbrowser = getenv("HTTP_USER_AGENT");
-	$LOGscript_name = getenv("SCRIPT_NAME");
-	$LOGserver_name = getenv("SERVER_NAME");
-	$LOGserver_port = getenv("SERVER_PORT");
-	$LOGrequest_uri = getenv("REQUEST_URI");
-	$LOGhttp_referer = getenv("HTTP_REFERER");
-	if (preg_match("/443/i",$LOGserver_port)) {$HTTPprotocol = 'https://';}
-	  else {$HTTPprotocol = 'http://';}
-	if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='';}
-	else {$LOGserver_port = ":$LOGserver_port";}
-	$LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
-
-	$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$user, $stage, $group|', url='$LOGfull_url';";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$report_log_id = mysql_insert_id($link);
-	##### END log visit to the vicidial_report_log table #####
-
-	if($auth>0)
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
 		{
-		$stmt="SELECT full_name,change_agent_campaign,modify_timeclock_log from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGfullname =				$row[0];
-		$change_agent_campaign =	$row[1];
-		$modify_timeclock_log =		$row[2];
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
-			}
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
+
+##### BEGIN log visit to the vicidial_report_log table #####
+$LOGip = getenv("REMOTE_ADDR");
+$LOGbrowser = getenv("HTTP_USER_AGENT");
+$LOGscript_name = getenv("SCRIPT_NAME");
+$LOGserver_name = getenv("SERVER_NAME");
+$LOGserver_port = getenv("SERVER_PORT");
+$LOGrequest_uri = getenv("REQUEST_URI");
+$LOGhttp_referer = getenv("HTTP_REFERER");
+if (preg_match("/443/i",$LOGserver_port)) {$HTTPprotocol = 'https://';}
+  else {$HTTPprotocol = 'http://';}
+if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='';}
+else {$LOGserver_port = ":$LOGserver_port";}
+$LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
+
+$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$user, $stage, $group|', url='$LOGfull_url';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_query($stmt, $link);
+$report_log_id = mysql_insert_id($link);
+##### END log visit to the vicidial_report_log table #####
+
+$stmt="SELECT full_name,change_agent_campaign,modify_timeclock_log from vicidial_users where user='$PHP_AUTH_USER';";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGfullname =				$row[0];
+$change_agent_campaign =	$row[1];
+$modify_timeclock_log =		$row[2];
+
+$stmt="SELECT full_name,user_group from vicidial_users where user='" . mysql_real_escape_string($user) . "';";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$full_name = $row[0];
+$user_group = $row[1];
+
+$stmt="SELECT live_agent_id,user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,call_server_ip,user_level,comments,campaign_weight,calls_today,external_hangup,external_status,external_pause,external_dial,agent_log_id,last_state_change,agent_territories,outbound_autodial,manager_ingroup_set,external_igb_set_user from vicidial_live_agents where user='" . mysql_real_escape_string($user) . "';";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$agents_to_print = mysql_num_rows($rslt);
+$i=0;
+while ($i < $agents_to_print)
+	{
+	$row=mysql_fetch_row($rslt);
+	$Aserver_ip =				$row[2];
+	$Asession_id =				$row[3];
+	$Aextension =				$row[4];
+	$Astatus =					$row[5];
+	$Acampaign =				$row[7];
+	$Acallerid =				$row[9];
+	$Alast_call =				$row[14];
+	$Acl_campaigns =			$row[15];
+	$agent_territories = 		$row[27];
+	$outbound_autodial = 		$row[28];
+	$manager_ingroup_set =		$row[29];
+	$external_igb_set_user =	$row[30];
+	$i++;
+	}
+
+$stmt="SELECT event_date,status,ip_address from vicidial_timeclock_status where user='" . mysql_real_escape_string($user) . "';";
+$rslt=mysql_query($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$tc_logs_to_print = mysql_num_rows($rslt);
+if ($tc_logs_to_print > 0)
+	{
+	$row=mysql_fetch_row($rslt);
+	$Tevent_date =		$row[0];
+	$Tstatus =			$row[1];
+	$Tip_address =		$row[2];
+	$i++;
+	}
+
+if ($Astatus == 'INCALL')
+	{
+	$stmtP="select count(*) from parked_channels where channel_group='$Acallerid';";
+	$rsltP=mysql_query($stmtP,$link);
+	$rowP=mysql_fetch_row($rsltP);
+	$parked_channel = $rowP[0];
+
+	if ($parked_channel > 0)
+		{
+		$Astatus =	'PARK';
 		}
 	else
 		{
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
-			fclose($fp);
-			echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-			exit;
-			}
-		}
-
-	$stmt="SELECT full_name,user_group from vicidial_users where user='" . mysql_real_escape_string($user) . "';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$full_name = $row[0];
-	$user_group = $row[1];
-
-	$stmt="SELECT live_agent_id,user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,call_server_ip,user_level,comments,campaign_weight,calls_today,external_hangup,external_status,external_pause,external_dial,agent_log_id,last_state_change,agent_territories,outbound_autodial,manager_ingroup_set,external_igb_set_user from vicidial_live_agents where user='" . mysql_real_escape_string($user) . "';";
-	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
-	$agents_to_print = mysql_num_rows($rslt);
-	$i=0;
-	while ($i < $agents_to_print)
-		{
-		$row=mysql_fetch_row($rslt);
-		$Aserver_ip =				$row[2];
-		$Asession_id =				$row[3];
-		$Aextension =				$row[4];
-		$Astatus =					$row[5];
-		$Acampaign =				$row[7];
-		$Acallerid =				$row[9];
-		$Alast_call =				$row[14];
-		$Acl_campaigns =			$row[15];
-		$agent_territories = 		$row[27];
-		$outbound_autodial = 		$row[28];
-		$manager_ingroup_set =		$row[29];
-		$external_igb_set_user =	$row[30];
-		$i++;
-		}
-
-	$stmt="SELECT event_date,status,ip_address from vicidial_timeclock_status where user='" . mysql_real_escape_string($user) . "';";
-	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
-	$tc_logs_to_print = mysql_num_rows($rslt);
-	if ($tc_logs_to_print > 0)
-		{
-		$row=mysql_fetch_row($rslt);
-		$Tevent_date =		$row[0];
-		$Tstatus =			$row[1];
-		$Tip_address =		$row[2];
-		$i++;
-		}
-
-	if ($Astatus == 'INCALL')
-		{
-		$stmtP="select count(*) from parked_channels where channel_group='$Acallerid';";
+		$stmtP="select count(*) from vicidial_auto_calls where callerid='$Acallerid';";
 		$rsltP=mysql_query($stmtP,$link);
 		$rowP=mysql_fetch_row($rsltP);
-		$parked_channel = $rowP[0];
+		$live_channel = $rowP[0];
 
-		if ($parked_channel > 0)
+		if ($live_channel < 1)
 			{
-			$Astatus =	'PARK';
-			}
-		else
-			{
-			$stmtP="select count(*) from vicidial_auto_calls where callerid='$Acallerid';";
-			$rsltP=mysql_query($stmtP,$link);
-			$rowP=mysql_fetch_row($rsltP);
-			$live_channel = $rowP[0];
-
-			if ($live_channel < 1)
-				{
-				$Astatus =	'DEAD';
-				}
+			$Astatus =	'DEAD';
 			}
 		}
 	}
+
 
 $stmt="select campaign_id from vicidial_campaigns;";
 $rslt=mysql_query($stmt, $link);
@@ -853,7 +875,5 @@ if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 
 exit; 
-
-
 
 ?>

@@ -10,6 +10,7 @@
 # 90310-2135 - Added admin header
 # 90508-0644 - Changed to PHP long tags
 # 130610-1127 - Finalized changing of all ereg instances to preg
+# 130615-2357 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
 if (isset($_GET["dcampaign"]))					{$dcampaign=$_GET["dcampaign"];}
@@ -25,26 +26,65 @@ if (isset($_GET["sales_time_frame"]))			{$sales_time_frame=$_GET["sales_time_fra
 if (isset($_GET["forc"]))						{$forc=$_GET["forc"];}
 	elseif (isset($_POST["forc"]))				{$forc=$_POST["forc"];}
 
+include("dbconnect.php");
+include("functions.php");
+
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 
 $PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 $PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+$dcampaign = preg_replace('/[^0-9a-zA-Z]/', '', $dcampaign);
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
-if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
+$auth=0;
+$reports_auth=0;
+$admin_auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if ($auth > 0)
 	{
-#	Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-#	Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password or no export report permission: |$PHP_AUTH_USER|\n";
-    exit;
-	}
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$admin_auth=$row[0];
 
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	if ($reports_auth < 1)
+		{
+		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ( ($reports_auth > 0) and ($admin_auth < 1) )
+		{
+		$ADD=999999;
+		$reports_only_user=1;
+		}
+	}
+else
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
 
 ?>
 <html>
@@ -52,7 +92,7 @@ $auth=$row[0];
 <title>Recent Sales Lookup</title>
 </head>
 <?php
-include("dbconnect.php");
+#include("dbconnect.php");
 #include("/home/www/phpsubs/stylesheet.inc");
 ?>
 <script language="JavaScript1.2">
@@ -89,7 +129,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 <input type="hidden" name="list_ids">
 <table border=0 cellpadding=5 cellspacing=0 align=center width=600>
 <tr>
-	<th colspan=3><font class="standard_bold">Vicidial OUTBOUND recent sales report &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </font><font class="standard"><a href="admin.php?ADD=999999">Back to Admin</a></font>
+	<th colspan=3><font class="standard_bold">OUTBOUND recent sales report &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </font><font class="standard"><a href="admin.php?ADD=999999">Back to Admin</a></font>
 	<BR></th>
 </tr>
 <tr bgcolor='#CCCCCC'>

@@ -81,10 +81,11 @@
 # 130214-1323 - Added link to in-group selected users report for in-queue inbound calls
 # 130424-1357 - Fixed issue with pause codes display
 # 130610-0905 - Finalized changing of all ereg instances to preg
+# 130620-2303 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
-$version = '2.6-70';
-$build = '130424-1357';
+$version = '2.8-71';
+$build = '130620-2303';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -279,120 +280,151 @@ $timeSIXhoursAGO = date("Y-m-d H:i:s",$epochSIXhoursAGO);
 $epochTWENTYFOURhoursAGO = ($STARTtime - 86400);
 $timeTWENTYFOURhoursAGO = date("Y-m-d H:i:s",$epochTWENTYFOURhoursAGO);
 
-$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$reports_only_user=$row[0];
-
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if ($non_latin < 1)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	}
+else
+	{
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	}
 
-if ($auth) 
-	{
-	$office_no=strtoupper($PHP_AUTH_USER);
-	$password=strtoupper($PHP_AUTH_PW);
-	$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,callcard_admin,force_change_password,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,modify_contacts,modify_same_user_level from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$LOGfull_name				=$row[3];
-	$LOGuser_level				=$row[4];
-	$LOGuser_group				=$row[5];
-	$LOGdelete_users			=$row[8];
-	$LOGdelete_user_groups		=$row[9];
-	$LOGdelete_lists			=$row[10];
-	$LOGdelete_campaigns		=$row[11];
-	$LOGdelete_ingroups			=$row[12];
-	$LOGdelete_remote_agents	=$row[13];
-	$LOGload_leads				=$row[14];
-	$LOGcampaign_detail			=$row[15];
-	$LOGast_admin_access		=$row[16];
-	$LOGast_delete_phones		=$row[17];
-	$LOGdelete_scripts			=$row[18];
-	$LOGdelete_filters			=$row[29];
-	$LOGalter_agent_interface	=$row[30];
-	$LOGdelete_call_times		=$row[32];
-	$LOGmodify_call_times		=$row[33];
-	$LOGmodify_users			=$row[34];
-	$LOGmodify_campaigns		=$row[35];
-	$LOGmodify_lists			=$row[36];
-	$LOGmodify_scripts			=$row[37];
-	$LOGmodify_filters			=$row[38];
-	$LOGmodify_ingroups			=$row[39];
-	$LOGmodify_usergroups		=$row[40];
-	$LOGmodify_remoteagents		=$row[41];
-	$LOGmodify_servers			=$row[42];
-	$LOGview_reports			=$row[43];
-	$LOGmodify_dids				=$row[56];
-	$LOGdelete_dids				=$row[57];
-	$LOGmanager_shift_enforcement_override=$row[61];
-	$LOGexport_reports			=$row[64];
-	$LOGdelete_from_dnc			=$row[65];
-	$LOGcallcard_admin			=$row[70];
-	$LOGforce_change_password	=$row[71];
-	$LOGmodify_shifts			=$row[72];
-	$LOGmodify_phones			=$row[73];
-	$LOGmodify_carriers			=$row[74];
-	$LOGmodify_labels			=$row[75];
-	$LOGmodify_statuses			=$row[76];
-	$LOGmodify_voicemail		=$row[77];
-	$LOGmodify_audiostore		=$row[78];
-	$LOGmodify_moh				=$row[79];
-	$LOGmodify_tts				=$row[80];
-	$LOGmodify_contacts			=$row[81];
-	$LOGmodify_same_user_level	=$row[82];
+$auth=0;
+$reports_auth=0;
+$admin_auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
-	$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($auth > 0)
+	{
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
-	$LOGallowed_campaigns =			$row[0];
-	$LOGallowed_reports =			$row[1];
-	$LOGadmin_viewable_groups =		$row[2];
-	$LOGadmin_viewable_call_times =	$row[3];
-	
-	$LOGadmin_viewable_groupsSQL='';
-	$valLOGadmin_viewable_groupsSQL='';
-	$vmLOGadmin_viewable_groupsSQL='';
-	if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+	$admin_auth=$row[0];
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	if ($reports_auth < 1)
 		{
-		$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
-		$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
-		$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
-		$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
-		$valLOGadmin_viewable_groupsSQL = "and val.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
-		$vmLOGadmin_viewable_groupsSQL = "and vm.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
 		}
-	else 
-		{$admin_viewable_groupsALL=1;}
-
+	if ( ($reports_auth > 0) and ($admin_auth < 1) )
+		{
+		$ADD=999999;
+		$reports_only_user=1;
+		}
 	}
+else
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
+
+$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,callcard_admin,force_change_password,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,modify_contacts,modify_same_user_level from vicidial_users where user='$PHP_AUTH_USER';";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGfull_name				=$row[3];
+$LOGuser_level				=$row[4];
+$LOGuser_group				=$row[5];
+$LOGdelete_users			=$row[8];
+$LOGdelete_user_groups		=$row[9];
+$LOGdelete_lists			=$row[10];
+$LOGdelete_campaigns		=$row[11];
+$LOGdelete_ingroups			=$row[12];
+$LOGdelete_remote_agents	=$row[13];
+$LOGload_leads				=$row[14];
+$LOGcampaign_detail			=$row[15];
+$LOGast_admin_access		=$row[16];
+$LOGast_delete_phones		=$row[17];
+$LOGdelete_scripts			=$row[18];
+$LOGdelete_filters			=$row[29];
+$LOGalter_agent_interface	=$row[30];
+$LOGdelete_call_times		=$row[32];
+$LOGmodify_call_times		=$row[33];
+$LOGmodify_users			=$row[34];
+$LOGmodify_campaigns		=$row[35];
+$LOGmodify_lists			=$row[36];
+$LOGmodify_scripts			=$row[37];
+$LOGmodify_filters			=$row[38];
+$LOGmodify_ingroups			=$row[39];
+$LOGmodify_usergroups		=$row[40];
+$LOGmodify_remoteagents		=$row[41];
+$LOGmodify_servers			=$row[42];
+$LOGview_reports			=$row[43];
+$LOGmodify_dids				=$row[56];
+$LOGdelete_dids				=$row[57];
+$LOGmanager_shift_enforcement_override=$row[61];
+$LOGexport_reports			=$row[64];
+$LOGdelete_from_dnc			=$row[65];
+$LOGcallcard_admin			=$row[70];
+$LOGforce_change_password	=$row[71];
+$LOGmodify_shifts			=$row[72];
+$LOGmodify_phones			=$row[73];
+$LOGmodify_carriers			=$row[74];
+$LOGmodify_labels			=$row[75];
+$LOGmodify_statuses			=$row[76];
+$LOGmodify_voicemail		=$row[77];
+$LOGmodify_audiostore		=$row[78];
+$LOGmodify_moh				=$row[79];
+$LOGmodify_tts				=$row[80];
+$LOGmodify_contacts			=$row[81];
+$LOGmodify_same_user_level	=$row[82];
+
+$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGallowed_campaigns =			$row[0];
+$LOGallowed_reports =			$row[1];
+$LOGadmin_viewable_groups =		$row[2];
+$LOGadmin_viewable_call_times =	$row[3];
+
+$LOGadmin_viewable_groupsSQL='';
+$valLOGadmin_viewable_groupsSQL='';
+$vmLOGadmin_viewable_groupsSQL='';
+if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+	{
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+	$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$valLOGadmin_viewable_groupsSQL = "and val.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$vmLOGadmin_viewable_groupsSQL = "and vm.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	}
+else 
+	{$admin_viewable_groupsALL=1;}
 
 #  and (preg_match("/MONITOR|BARGE|HIJACK/",$monitor_active) ) )
 if ( (!isset($monitor_phone)) or (strlen($monitor_phone)<1) )
 	{
-	$stmt="select phone_login from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and active='Y';";
+	$stmt="select phone_login from vicidial_users where user='$PHP_AUTH_USER';";
 	$rslt=mysql_query($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$row=mysql_fetch_row($rslt);
 	$monitor_phone = $row[0];
 	}
 
-$stmt="SELECT realtime_block_user_info,user_group,admin_hide_lead_data,admin_hide_phone_data from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+$stmt="SELECT realtime_block_user_info,user_group,admin_hide_lead_data,admin_hide_phone_data from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
@@ -410,7 +442,7 @@ $LOGallowed_reports =	$row[1];
 
 if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
     echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
     exit;

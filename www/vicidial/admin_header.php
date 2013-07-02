@@ -42,6 +42,7 @@
 # 121214-2238 - Added email menus
 # 130221-1830 - Added Level 8 disable add option
 # 130610-1040 - Finalized changing of all ereg instances to preg
+# 130615-2314 - Changed Reports only and QC only headers
 #
 
 
@@ -51,8 +52,10 @@ if($short_header)
 	?>
 	<TABLE CELLPADDING=0 CELLSPACING=0 BGCOLOR="#015B91"><TR>
 	<TD><IMG SRC="vicidial_admin_web_logo_small.gif" WIDTH=71 HEIGHT=22 ALT="System logo"> &nbsp; </TD>
-	<?php if ($reports_only_user < 1) {
-		?>
+	<?php 
+	if ( ($reports_only_user < 1) and ($qc_only_user < 1) )
+		{
+	?>
 	<TD> &nbsp; <A HREF="admin.php" ALT="Users"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Users</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=10" ALT="Campaigns"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Campaigns</B></A> &nbsp; </TD>
         <?php include 'qc/QC_header_include02.php'; ?>
@@ -63,13 +66,26 @@ if($short_header)
 	<TD> &nbsp; <A HREF="admin.php?ADD=100000" ALT="User Groups"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>User Groups</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=10000" ALT="Remote Agents"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Remote Agents</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=999998" ALT="Admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Admin</B></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=999999" ALT="Reports"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Reports</B></A> &nbsp; </TD>
 	<?php 
 		} 
 	else 
-		{ ?>
-	<TD width=600> &nbsp; &nbsp; </TD>
-	<?php } ?>
-	<TD> &nbsp; <A HREF="admin.php?ADD=999999" ALT="Reports"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Reports</B></A> &nbsp; </TD>
+		{ 
+		?>
+		<TD width=600> &nbsp; &nbsp; </TD>
+		<?php
+		if ($reports_only_user > 0)
+			{
+			?>
+			<TD> &nbsp; <A HREF="admin.php?ADD=999999" ALT="Reports"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Reports</B></A> &nbsp; </TD>
+			<?php
+			}
+		else
+			{
+			include 'qc/QC_header_include02.php';
+			}
+		}
+	?>
 	</TR>
 	</TABLE>
 	<?php
@@ -1080,8 +1096,10 @@ $SSlevel_8_disable_add =	$row[5];
 <IMG SRC="./vicidial_admin_web_logo.gif" WIDTH=170 HEIGHT=45 ALT="System logo">
 <B><FONT FACE="ARIAL,HELVETICA" COLOR=white>ADMINISTRATION</FONT></B><BR>
 	<TABLE CELLPADDING=2 CELLSPACING=0 BGCOLOR=#015B91 WIDTH=160>
-	<?php if ($reports_only_user < 1) {
-		?>
+	<?php
+	if ( ($reports_only_user < 1) and ($qc_only_user < 1) )
+		{
+	?>
 	<!-- USERS NAVIGATION -->
 	<TR WIDTH=160><TD <?php echo $users_hh ?> WIDTH=160>
 	<a href="<?php echo $ADMIN ?>?ADD=0"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $users_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $users_bold ?>Users</a>
@@ -1483,12 +1501,30 @@ $SSlevel_8_disable_add =	$row[5];
 		<?php }
 
 			}
+		?>
+		<!-- REPORTS NAVIGATION -->
+		<TR><TD <?php echo $reports_hh ?>>
+		<a href="<?php echo $ADMIN ?>?ADD=999999"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $reports_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $reports_bold ?> Reports </a>
+		</TD></TR>
+		<?php
+		}
+	else
+		{
+		if ($reports_only_user > 0)
+			{
+			?>
+			<!-- REPORTS NAVIGATION -->
+			<TR><TD <?php echo $reports_hh ?>>
+			<a href="<?php echo $ADMIN ?>?ADD=999999"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $reports_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $reports_bold ?> Reports </a>
+			</TD></TR>
+			<?php
+			}
+		else
+			{
+			include 'qc/QC_header_include.php';
+			}
 		}
 	?>
-	<!-- REPORTS NAVIGATION -->
-	<TR><TD <?php echo $reports_hh ?>>
-	<a href="<?php echo $ADMIN ?>?ADD=999999"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $reports_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $reports_bold ?> Reports </a>
-	</TD></TR>
 	<TR><TD> &nbsp; </TD></TR>
 	</TABLE>
 </TD><TD VALIGN=TOP WIDTH=<?php echo $page_width ?> BGCOLOR=#D9E6FE>

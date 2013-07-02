@@ -13,6 +13,7 @@
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 # 130414-0224 - Added report logging
 # 130610-0946 - Finalized changing of all ereg instances to preg
+# 130619-2329 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
 $startMS = microtime();
@@ -20,6 +21,7 @@ $startMS = microtime();
 $report_name='User Group Hourly Stats';
 
 require("dbconnect.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -27,13 +29,13 @@ $PHP_SELF=$_SERVER['PHP_SELF'];
 if (isset($_GET["group"]))				{$group=$_GET["group"];}
 	elseif (isset($_POST["group"]))		{$group=$_POST["group"];}
 if (isset($_GET["status"]))				{$status=$_GET["status"];}
-	elseif (isset($_POST["status"]))		{$status=$_POST["status"];}
+	elseif (isset($_POST["status"]))	{$status=$_POST["status"];}
 if (isset($_GET["date_with_hour"]))				{$date_with_hour=$_GET["date_with_hour"];}
-	elseif (isset($_POST["date_with_hour"]))		{$date_with_hour=$_POST["date_with_hour"];}
+	elseif (isset($_POST["date_with_hour"]))	{$date_with_hour=$_POST["date_with_hour"];}
 if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
-	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
+	elseif (isset($_POST["submit"]))	{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
-	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
+	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -41,35 +43,79 @@ $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_ter
 $rslt=mysql_query($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysql_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$webroot_writable =				$row[1];
 	$SSoutbound_autodial_active =	$row[2];
 	$user_territories_active =		$row[3];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
-if ($DB) {echo "|$stmt|\n";}
-if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if ($non_latin < 1)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	}
+else
+	{
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+$group = preg_replace("/'|\"|\\\\|;/","",$group);
+$status = preg_replace("/'|\"|\\\\|;/","",$status);
+$date_with_hour = preg_replace("/'|\"|\\\\|;/","",$date_with_hour);
+
+$auth=0;
+$reports_auth=0;
+$admin_auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth > 0)
+	{
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$admin_auth=$row[0];
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	if ($reports_auth < 1)
+		{
+		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ( ($reports_auth > 0) and ($admin_auth < 1) )
+		{
+		$ADD=999999;
+		$reports_only_user=1;
+		}
+	}
+else
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
 	}
 
 ##### BEGIN log visit to the vicidial_report_log table #####
@@ -96,66 +142,21 @@ $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $date_with_hour_default = date("Y-m-d H");
 $date_no_hour_default = $TODAY;
-
-if (!isset($date_with_hour)) {$date_with_hour = $date_with_hour_default;}
-	$date_no_hour = $date_with_hour;
-	$date_no_hour = preg_replace('/\s([0-9]{2})/i',$date_no_hour);
-if (!isset($begin_date)) {$begin_date = $TODAY;}
-if (!isset($end_date)) {$end_date = $TODAY;}
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7;";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-$fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
-	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
-	}
-  else
-	{
-	header ("Content-type: text/html; charset=utf-8");
+if (!isset($date_with_hour)) {$date_with_hour = $date_with_hour_default;}
+	$date_no_hour = $date_with_hour;
+	$date_no_hour = preg_replace('/\s([0-9]{2})/i','',$date_no_hour);
+if (!isset($begin_date)) {$begin_date = $TODAY;}
+if (!isset($end_date)) {$end_date = $TODAY;}
 
-	if($auth>0)
-		{
-		$office_no=strtoupper($PHP_AUTH_USER);
-		$password=strtoupper($PHP_AUTH_PW);
-		$stmt="SELECT full_name,user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGfullname =		$row[0];
-		$LOGuser_group =	$row[1];
-
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
-			}
-		}
-	else
-		{
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
-			fclose($fp);
-			}
-		exit;
-		}
-
-#	$stmt="SELECT full_name from vicidial_users where user='$user';";
-#	$rslt=mysql_query($stmt, $link);
-#	$row=mysql_fetch_row($rslt);
-#	$full_name = $row[0];
-
-	}
+$stmt="SELECT full_name,user_group from vicidial_users where user='$PHP_AUTH_USER';";
+$rslt=mysql_query($stmt, $link);
+$row=mysql_fetch_row($rslt);
+$LOGfullname =		$row[0];
+$LOGuser_group =	$row[1];
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {$HTML_text.="|$stmt|\n";}
@@ -175,7 +176,6 @@ if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGa
 	$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
 	$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
 	}
-
 
 
 ?>

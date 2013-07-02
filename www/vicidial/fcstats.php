@@ -23,34 +23,33 @@
 # 120705-2007 - Changed SALES to use sales status flag
 # 130414-0126 - Added report logging
 # 130610-0948 - Finalized changing of all ereg instances to preg
+# 130619-2339 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
 $startMS = microtime();
 
 require("dbconnect.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
 if (isset($_GET["DB"]))				{$DB=$_GET["DB"];}
-	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
+	elseif (isset($_POST["DB"]))	{$DB=$_POST["DB"];}
 if (isset($_GET["group"]))				{$group=$_GET["group"];}
 	elseif (isset($_POST["group"]))		{$group=$_POST["group"];}
 if (isset($_GET["query_date"]))				{$query_date=$_GET["query_date"];}
-	elseif (isset($_POST["query_date"]))		{$query_date=$_POST["query_date"];}
+	elseif (isset($_POST["query_date"]))	{$query_date=$_POST["query_date"];}
 if (isset($_GET["shift"]))				{$shift=$_GET["shift"];}
 	elseif (isset($_POST["shift"]))		{$shift=$_POST["shift"];}
 if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
-	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
+	elseif (isset($_POST["submit"]))	{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
-	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
-if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
+	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
+if (isset($_GET["file_download"]))			{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
-if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
+if (isset($_GET["report_display_type"]))			{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
-
-$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 
 if (strlen($shift)<2) {$shift='ALL';}
 
@@ -77,24 +76,66 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
-if ($DB) {$HTML_text.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
-if ($DB) {$HTML_text.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$reports_only_user=$row[0];
-
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if ($non_latin < 1)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	}
+else
+	{
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+$shift = preg_replace("/'|\"|\\\\|;/","",$shift);
+
+$auth=0;
+$reports_auth=0;
+$admin_auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth > 0)
+	{
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$admin_auth=$row[0];
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	if ($reports_auth < 1)
+		{
+		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ( ($reports_auth > 0) and ($admin_auth < 1) )
+		{
+		$ADD=999999;
+		$reports_only_user=1;
+		}
+	}
+else
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
 	}
 
 ##### BEGIN log visit to the vicidial_report_log table #####
@@ -126,7 +167,7 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
-$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {$HTML_text.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
@@ -143,7 +184,7 @@ $LOGadmin_viewable_call_times =	$row[3];
 
 if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
     echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
     exit;

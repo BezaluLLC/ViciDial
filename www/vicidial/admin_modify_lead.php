@@ -53,9 +53,11 @@
 # 121222-2145 - Added email log
 # 130123-1940 - Added options.php option to allow display of non-selectable statuses
 # 130610-1049 - Finalized changing of all ereg instances to preg
+# 130621-1731 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
 require("dbconnect.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -163,12 +165,12 @@ if (isset($_POST["appointment_time"]))			{$appointment_time=$_POST["appointment_
 if (isset($_GET["CBstatus"]))				{$CBstatus=$_GET["CBstatus"];}
 	elseif (isset($_POST["CBstatus"]))		{$CBstatus=$_POST["CBstatus"];}
 
-$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_USER);
-$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_PW);
-
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
+$date = date("r");
+$ip = getenv("REMOTE_ADDR");
+$browser = getenv("HTTP_USER_AGENT");
 
 $nonselectable_statuses=0;
 if (file_exists('options.php'))
@@ -214,56 +216,50 @@ else
 
 if (strlen($phone_number)<6) {$phone_number=$old_phone;}
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and modify_leads='1';";
+$auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth < 1)
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
+
+$rights_stmt = "SELECT modify_leads from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
+$rights_rslt=mysql_query($rights_stmt, $link);
+$rights_row=mysql_fetch_row($rights_rslt);
+$modify_leads =		$rights_row[0];
+
+# check their permissions
+if ( $modify_leads < 1 )
+	{
+	header ("Content-type: text/html; charset=utf-8");
+	echo "You do not have permissions to modify leads\n";
+	exit;
+	}
+
+$stmt="SELECT full_name,modify_leads,admin_hide_lead_data,admin_hide_phone_data,user_group,user_level from vicidial_users where user='$PHP_AUTH_USER';";
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-if ($webroot_writable > 0)
-	{$fp = fopen ("./project_auth_entries.txt", "a");}
-
-$date = date("r");
-$ip = getenv("REMOTE_ADDR");
-$browser = getenv("HTTP_USER_AGENT");
-
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
-	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
-	}
-else
-	{
-	if($auth>0)
-		{
-		$stmt="SELECT full_name,modify_leads,admin_hide_lead_data,admin_hide_phone_data,user_group,user_level from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGfullname =				$row[0];
-		$LOGmodify_leads =			$row[1];
-		$LOGadmin_hide_lead_data =	$row[2];
-		$LOGadmin_hide_phone_data =	$row[3];
-		$LOGuser_group =			$row[4];
-		$LOGuser_level =			$row[5];
-
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
-			}
-		}
-	else
-		{
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
-			fclose($fp);
-			}
-		}
-	}
+$LOGfullname =				$row[0];
+$LOGmodify_leads =			$row[1];
+$LOGadmin_hide_lead_data =	$row[2];
+$LOGadmin_hide_phone_data =	$row[3];
+$LOGuser_group =			$row[4];
+$LOGuser_level =			$row[5];
 
 $LOGallowed_listsSQL='';
 $stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$LOGuser_group';";
@@ -1457,7 +1453,7 @@ else
 		echo "</TABLE><BR><BR>\n";
 
 
-		$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 9 and modify_leads='1';";
+		$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level >= 9 and modify_leads='1';";
 		if ($DB) {echo "|$stmt|\n";}
 		if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 		$rslt=mysql_query($stmt, $link);

@@ -6,15 +6,19 @@
 # qc_modify_lead.php
 # 
 # Copyright (C) 2012  poundteam.com    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to allow QC review and modification of leads, contributed by poundteam.com
 #
 # changes:
 # 121116-1324 - First build, added to vicidial codebase
 # 121130-1034 - Changed scheduled callback user ID field to be 20 characters, issue #467
+# 130621-2328 - Finalized changing of all ereg instances to preg
+#             - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
 require("../dbconnect.php");
+require("../functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -122,9 +126,6 @@ if (isset($_POST["appointment_date"]))			{$appointment_date=$_POST["appointment_
 if (isset($_POST["appointment_time"]))			{$appointment_time=$_POST["appointment_time"];}
 	elseif (isset($_GET["appointment_time"]))	{$appointment_time=$_GET["appointment_time"];}
 
-$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
-
 $STARTtime = date("U");
 $defaultappointment = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -146,69 +147,69 @@ if ($qm_conf_ct > 0)
 
 if ($non_latin < 1)
 	{
-	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_PW);
 
-	$old_phone = ereg_replace("[^0-9]","",$old_phone);
-	$phone_number = ereg_replace("[^0-9]","",$phone_number);
-	$alt_phone = ereg_replace("[^0-9]","",$alt_phone);
+	$old_phone = preg_replace('/[^0-9]/','',$old_phone);
+	$phone_number = preg_replace('/[^0-9]/','',$phone_number);
+	$alt_phone = preg_replace('/[^0-9]/','',$alt_phone);
 	}	# end of non_latin
 else
 	{
-	$PHP_AUTH_USER = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	}
 
 if (strlen($phone_number)<6) {$phone_number=$old_phone;}
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and qc_enabled = '1' and qc_user_level > 0;";
+$auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'QC',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth < 1)
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
+
+$rights_stmt = "SELECT modify_leads,qc_enabled from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
+$rights_rslt=mysql_query($rights_stmt, $link);
+$rights_row=mysql_fetch_row($rights_rslt);
+$modify_leads =		$rights_row[0];
+$qc_enabled =		$rights_row[1];
+
+# check their permissions
+#if ( $modify_leads < 1 )
+#	{
+#	header ("Content-type: text/html; charset=utf-8");
+#	echo "You do not have permissions to modify leads\n";
+#	exit;
+#	}
+if ( $qc_enabled < 1 )
+	{
+	header ("Content-type: text/html; charset=utf-8");
+	echo "QC is not enabled for your user account\n";
+	exit;
+	}
+
+$stmt="SELECT full_name,modify_leads,user_group from vicidial_users where user='$PHP_AUTH_USER';";
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-if ($WeBRooTWritablE > 0)
-	{$fp = fopen ("../project_auth_entries.txt", "a");}
-
-$date = date("r");
-$ip = getenv("REMOTE_ADDR");
-$browser = getenv("HTTP_USER_AGENT");
-
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
-	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
-	}
-else
-	{
-
-	if($auth>0)
-		{
-		$stmt="SELECT full_name,modify_leads,user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGfullname				=$row[0];
-		$LOGmodify_leads			=$row[1];
-                $LOGuser_group  			=$row[2];
-
-		if ($WeBRooTWritablE > 0)
-			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
-			}
-		}
-	else
-		{
-		if ($WeBRooTWritablE > 0)
-			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|$browser|\n");
-			fclose($fp);
-			}
-		}
-	}
+$LOGfullname				=$row[0];
+$LOGmodify_leads			=$row[1];
+$LOGuser_group  			=$row[2];
 
 $label_title =				'Title';
 $label_first_name =			'First';
@@ -320,7 +321,7 @@ if ($end_call > 0) {
             }
             ### insert a NEW record to the vicidial_closer_log table
             $qcchangelist=mysql_real_escape_string($qcchangelist);
-            $view_epoch = ereg_replace("[^0-9]","",$_POST['viewtime']);
+            $view_epoch = preg_replace('/[^0-9]/','',$_POST['viewtime']);
             $elapsed_seconds=$STARTtime-$view_epoch;
 
             $stmt="UPDATE vicidial_qc_agent_log set save_datetime='$NOW_TIME',save_epoch='$STARTtime',elapsed_seconds='$elapsed_seconds',old_status='{$original_record['status']}',new_status='{$new_record['status']}',details='$qcchangelist'
@@ -340,7 +341,7 @@ if ($end_call > 0) {
         echo "<CENTER><B><FONT FACE='Courier' COLOR=BLACK SIZE=3><a href=\"../admin.php?ADD=881&campaign_id=$campaign_id\">Proceed to QC CAMPAIGN $campaign_id Queue</a></B><BR><BR><B><I>Callback Information:</I></B>\n";
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|";
-	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = preg_replace('/;/', '', $SQL_log);
 	$SQL_log = addslashes($SQL_log);
 	$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LEADS', event_type='MODIFY', record_id='$lead_id', event_code='ADMIN MODIFY LEAD', event_sql=\"$SQL_log\", event_notes='';";
 	if ($DB) {echo "|$stmt|\n";}
@@ -573,7 +574,7 @@ if ($end_call > 0) {
                             echo __LINE__."\n";
                         }
 			$row=mysql_fetch_row($rslt);
-			if (eregi("1$|3$|5$|7$|9$", $c))
+			if (preg_match("/1$|3$|5$|7$|9$/i", $c))
 				{$bgcolor='bgcolor="#B9CBFD"';}
 			else
 				{$bgcolor='bgcolor="#9BB9FB"';}
@@ -607,7 +608,7 @@ if ($end_call > 0) {
                 if($DB) echo __LINE__."<br>\n";
 		$row=mysql_fetch_row($rslt);
 		if (strlen($log_campaign)<1) {$log_campaign = $row[3];}
-		if (eregi("1$|3$|5$|7$|9$", $u))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $u))
 			{$bgcolor='bgcolor="#B9CBFD"';}
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -640,7 +641,7 @@ if ($end_call > 0) {
 		{
 		$row=mysql_fetch_row($rslt);
 		if (strlen($Alog_campaign)<1) {$Alog_campaign = $row[5];}
-		if (eregi("1$|3$|5$|7$|9$", $y))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $y))
 			{$bgcolor='bgcolor="#B9CBFD"';}
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -675,7 +676,7 @@ if ($end_call > 0) {
 		{
 		$row=mysql_fetch_assoc($rslt);
 		if (strlen($Alog_campaign)<1) {$Alog_campaign = $row[5];}
-		if (eregi("1$|3$|5$|7$|9$", $y))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $y))
 			{$bgcolor='bgcolor="#B9CBFD"';}
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -720,7 +721,7 @@ if ($end_call > 0) {
 		{
 		$row=mysql_fetch_row($rslt);
 		if (strlen($Clog_campaign)<1) {$Clog_campaign = $row[3];}
-		if (eregi("1$|3$|5$|7$|9$", $y))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $y))
 			{$bgcolor='bgcolor="#B9CBFD"';}
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -882,7 +883,7 @@ if ($end_call > 0) {
                     echo __LINE__."\n";
                 }
 		$rowx=mysql_fetch_row($rslt);
-		if ( (strlen($dispo) ==  strlen($rowx[0])) and (eregi($dispo,$rowx[0])) )
+		if ( (strlen($dispo) ==  strlen($rowx[0])) and (preg_match("/$dispo/",$rowx[0])) )
 			{$statuses_list .= "<option SELECTED value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n"; $DS++;}
 		else
 			{$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
@@ -1185,7 +1186,7 @@ if ($end_call > 0) {
 	while ($logs_to_print > $u)
 		{
 		$row=mysql_fetch_row($rslt);
-		if (eregi("1$|3$|5$|7$|9$", $u))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $u))
 			{$bgcolor='bgcolor="#B9CBFD"';}
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -1195,9 +1196,9 @@ if ($end_call > 0) {
 		if (strlen($location)>2)
 			{
 			$URLserver_ip = $location;
-			$URLserver_ip = eregi_replace('http://','',$URLserver_ip);
-			$URLserver_ip = eregi_replace('https://','',$URLserver_ip);
-			$URLserver_ip = eregi_replace("\/.*",'',$URLserver_ip);
+			$URLserver_ip = preg_replace('/http:\/\//i', '',$URLserver_ip);
+			$URLserver_ip = preg_replace('/https:\/\//i', '',$URLserver_ip);
+			$URLserver_ip = preg_replace('/\/.*/i', '',$URLserver_ip);
 			$stmt="select count(*) from servers where server_ip='$URLserver_ip';";
 			$rsltx=mysql_query($stmt, $link);
 			$rowx=mysql_fetch_row($rsltx);
@@ -1208,9 +1209,13 @@ if ($end_call > 0) {
 				$rsltx=mysql_query($stmt, $link);
 				$rowx=mysql_fetch_row($rsltx);
 
-				if (eregi("ALT_IP",$rowx[0]))
+				if (preg_match("/ALT_IP/i",$rowx[0]))
 					{
-					$location = eregi_replace($URLserver_ip, $rowx[1], $location);
+					$location = preg_replace("/$URLserver_ip/i", "$rowx[1]", $location);
+					}
+				if (preg_match("/EXTERNAL_IP/i",$rowx[0]))
+					{
+					$location = preg_replace("/$URLserver_ip/i", "$rowx[2]", $location);
 					}
 				}
 			}
@@ -1219,7 +1224,7 @@ if ($end_call > 0) {
 			{$locat = substr($location,0,27);  $locat = "$locat...";}
 		else
 			{$locat = $location;}
-		if ( (eregi("ftp",$location)) or (eregi("http",$location)) )
+		if ( (preg_match('/ftp/i',$location)) or (preg_match('/http/i',$location)) )
 			{$location = "<a href=\"$location\">$locat</a>";}
 		else
 			{$location = $locat;}

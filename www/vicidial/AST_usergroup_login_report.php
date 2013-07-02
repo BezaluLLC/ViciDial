@@ -11,6 +11,8 @@
 # 120526-0803 - First build
 # 130414-0145 - Added report logging
 # 130610-0957 - Finalized changing of all ereg instances to preg
+# 130620-2248 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130627-0742 - Added new phone fields
 #
 
 $startMS = microtime();
@@ -55,28 +57,67 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
-if ($DB) {$HTML_text.="|$stmt|\n";}
-if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
-if ($DB) {$HTML_text.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$reports_only_user=$row[0];
-
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if ($non_latin < 1)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	}
+else
+	{
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+$group = preg_replace("/'|\"|\\\\|;/","",$group);
+$user_group = preg_replace("/'|\"|\\\\|;/","",$user_group);
+
+$auth=0;
+$reports_auth=0;
+$admin_auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth > 0)
+	{
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$admin_auth=$row[0];
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	if ($reports_auth < 1)
+		{
+		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ( ($reports_auth > 0) and ($admin_auth < 1) )
+		{
+		$ADD=999999;
+		$reports_only_user=1;
+		}
+	}
+else
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
 	}
 
 ##### BEGIN log visit to the vicidial_report_log table #####
@@ -93,6 +134,8 @@ if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='
 else {$LOGserver_port = ":$LOGserver_port";}
 $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
+$day30range=date("Y-m-d", mktime(0,0,0,date("m"),date("d")-30,date("Y")));
+
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $file_download, $report_display_type|', url='$LOGfull_url';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
@@ -108,7 +151,7 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 	$HTML_text.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
-$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {$HTML_text.="|$stmt|\n";}
 $rslt=mysql_query($stmt, $link);
 $row=mysql_fetch_row($rslt);
@@ -125,7 +168,7 @@ $LOGadmin_viewable_call_times =	$row[3];
 
 if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
     echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
     exit;
@@ -247,31 +290,31 @@ $HTML_text.="</FORM><font size=2><PRE>\n\n";
 
 if ($SUBMIT=="SUBMIT") 
 	{
-	 $ASCII_text="+--------------------------------+----------+----------------------+---------------------+---------------------+----------+-----------------+-----------------+----------------------+--------------+\n";
-	$ASCII_text.="| USER NAME                      | ID       | USER GROUP           | FIRST LOGIN DATE    | LAST LOGIN DATE     | CAMPAIGN | SERVER IP       | COMPUTER IP     | EXTENSION            | BROWSER      |\n";
-	$ASCII_text.="+--------------------------------+----------+----------------------+---------------------+---------------------+----------+-----------------+-----------------+----------------------+--------------+\n";
+	$ASCII_text="+--------------------------------+----------+----------------------+---------------------+---------------------+----------+-----------------+-----------------+----------------------+--------------+-----------------+-----------------+-----------------+\n";
+	$ASCII_text.="| USER NAME                      | ID       | USER GROUP           | FIRST LOGIN DATE    | LAST LOGIN DATE     | CAMPAIGN | SERVER IP       | COMPUTER IP     | EXTENSION            | BROWSER      | PHONE LOGIN     |  SERVER PHONE   | PHONE IP        |\n";
+	$ASCII_text.="+--------------------------------+----------+----------------------+---------------------+---------------------+----------+-----------------+-----------------+----------------------+--------------+-----------------+-----------------+-----------------+\n";
 
 	$CSV_text="\"User group login report\",\"User groups:\",\"$user_group_string\"\n\n";
-	$CSV_text.="\"User name\",\"User ID\",\"User group\",\"First login date\",\"Last login date\",\"Campaign ID\",\"Server IP\",\"Computer IP\",\"Extension\",\"Browser\"\n";
+	$CSV_text.="\"User name\",\"User ID\",\"User group\",\"First login date\",\"Last login date\",\"Campaign ID\",\"Server IP\",\"Computer IP\",\"Extension\",\"Browser\",\"Phone login\",\"Server phone\",\"Phone IP\"\n";
 	$stmt="select distinct user, substr(full_name,1,30) as fullname, full_name from vicidial_users where user_group in ($user_group_SQL) order by user";
 	$rslt=mysql_query($stmt, $link);
 	while ($row=mysql_fetch_array($rslt)) 
 		{
-		$date_stmt="select min(event_date) as min_date, max(event_date) as max_date from vicidial_user_log where user='$row[user]' and event='LOGIN'";
+		$date_stmt="select min(event_date) as min_date, max(event_date) as max_date from vicidial_user_log where user='$row[user]' and event='LOGIN' and event_date>='$day30range'";
 		$date_rslt=mysql_query($date_stmt, $link);
 		$date_row=mysql_fetch_array($date_rslt);
 
-		$data_stmt="select campaign_id, server_ip, computer_ip, user_group, substring(extension,1,20) as ext, extension, browser from vicidial_user_log where user='$row[user]' and event_date='$date_row[max_date]' and event='LOGIN'";
+		$data_stmt="select campaign_id, server_ip, computer_ip, user_group, substring(extension,1,20) as ext, extension, browser, phone_login, server_phone, phone_ip from vicidial_user_log where user='$row[user]' and event_date='$date_row[max_date]' and event='LOGIN'";
 		$data_rslt=mysql_query($data_stmt, $link);
 		while ($data_row=mysql_fetch_array($data_rslt)) 
 			{
 			preg_match('/^[^\s]+/', $data_row["browser"], $browser_ary);
 			$browser=$browser_ary[0];
-			$ASCII_text.="| ".sprintf("%-30s", $row["fullname"])." | <a href='user_stats.php?user=$row[user]'>".sprintf("%-8s", $row["user"])."</a> | ".sprintf("%-20s", $data_row["user_group"])." | ".sprintf("%-19s", $date_row["min_date"])." | ".sprintf("%-19s", $date_row["max_date"])." | ".sprintf("%-8s", $data_row["campaign_id"])." | ".sprintf("%-15s", $data_row["server_ip"])." | ".sprintf("%-15s", $data_row["computer_ip"])." | ".sprintf("%-20s", $data_row["ext"])." | ".sprintf("%-12s", $browser)." |\n";
-			$CSV_text.="\"$row[full_name]\",\"$row[user]\",\"$data_row[user_group]\",\"$date_row[min_date]\",\"$date_row[max_date]\",\"$data_row[campaign_id]\",\"$data_row[server_ip]\",\"$data_row[computer_ip]\",\"$data_row[extension]\",\"$data_row[browser]\"\n";
+			$ASCII_text.="| ".sprintf("%-30s", $row["fullname"])." | <a href='user_stats.php?user=$row[user]'>".sprintf("%-8s", $row["user"])."</a> | ".sprintf("%-20s", $data_row["user_group"])." | ".sprintf("%-19s", $date_row["min_date"])." | ".sprintf("%-19s", $date_row["max_date"])." | ".sprintf("%-8s", $data_row["campaign_id"])." | ".sprintf("%-15s", $data_row["server_ip"])." | ".sprintf("%-15s", $data_row["computer_ip"])." | ".sprintf("%-20s", $data_row["ext"])." | ".sprintf("%-12s", $browser)." | ".sprintf("%-15s", $data_row["phone_login"])." | ".sprintf("%-15s", $data_row["server_phone"])." | ".sprintf("%-15s", $data_row["phone_ip"])." |\n";
+			$CSV_text.="\"$row[full_name]\",\"$row[user]\",\"$data_row[user_group]\",\"$date_row[min_date]\",\"$date_row[max_date]\",\"$data_row[campaign_id]\",\"$data_row[server_ip]\",\"$data_row[computer_ip]\",\"$data_row[extension]\",\"$data_row[browser]\",\"$data_row[phone_login]\",\"$data_row[server_phone]\",\"$data_row[phone_ip]\"\n";
 			}
 		}
-	$ASCII_text.="+--------------------------------+----------+----------------------+---------------------+---------------------+----------+-----------------+-----------------+----------------------+--------------+\n";
+	$ASCII_text.="+--------------------------------+----------+----------------------+---------------------+---------------------+----------+-----------------+-----------------+----------------------+--------------+-----------------+-----------------+-----------------+\n";
 	}
 
 if ($file_download>0) 

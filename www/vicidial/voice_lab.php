@@ -15,6 +15,7 @@
 # 120223-2124 - Removed logging of good login passwords if webroot writable is enabled
 # 130414-0045 - Added report logging
 # 130610-0937 - Finalized changing of all ereg instances to preg
+# 130615-2342 - Added filtering of input to prevent SQL injection attacks and new user auth
 #
 
 $startMS = microtime();
@@ -22,6 +23,7 @@ $startMS = microtime();
 $report_name='Voice Lab';
 
 require("dbconnect.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -47,41 +49,41 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 
 $PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
 $PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+$campaign_id = preg_replace('/[^0-9a-zA-Z]/', '', $campaign_id);
+$server_ip = preg_replace('/[^\.0-9a-zA-Z]/', '', $server_ip);
+$session_id = preg_replace('/[^0-9a-zA-Z]/', '', $session_id);
+$message = preg_replace('/[^0-9a-zA-Z]/', '', $message);
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $MYSQL_datetime = date("Y-m-d H:i:s");
 $FILE_datetime = date("Ymd-His_");
 $secX = $STARTtime;
+$date = date("r");
+$ip = getenv("REMOTE_ADDR");
+$browser = getenv("HTTP_USER_AGENT");
 
 $local_DEF = 'Local/';
 $local_AMP = '@';
 $ext_context = 'demo';
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7;";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-$fp = fopen ("./project_auth_entries.txt", "a");
-$date = date("r");
-$ip = getenv("REMOTE_ADDR");
-$browser = getenv("HTTP_USER_AGENT");
+$auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
 if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
+    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
     exit;
 	}
 else
 	{
 	if($auth>0)
 		{
-		$office_no=strtoupper($PHP_AUTH_USER);
-		$password=strtoupper($PHP_AUTH_PW);
-		$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
+		$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$LOGfullname=$row[0];
@@ -94,7 +96,7 @@ else
 		fclose($fp);
 		}
 
-	$stmt="SELECT full_name from vicidial_users where user='$user';";
+	$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER';";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$full_name = $row[0];
@@ -155,7 +157,7 @@ while ($campaigns_to_print > $o)
 ?>
 <html>
 <head>
-<title>VICIDIAL VOICE LAB: Admin</title>
+<title>VOICE LAB: Admin</title>
 <?php
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 ?>

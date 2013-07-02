@@ -2,11 +2,13 @@
 # QC_admin_include01.php
 # 
 # Copyright (C) 2012  poundteam.com    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to be used by admin.php with QC enabled, contributed by poundteam.com
 #
 # changes:
 # 121116-1334 - First build, added to vicidial codebase
+# 130621-2351 - Finalized changing of all ereg instances to preg
 #
 //Line 28030 admin.php
 ######################
@@ -32,12 +34,14 @@ if (($ADD==100000000000000) && ($qc_auth=='1')) {
     $o=0;
     while ($vicidialconf_to_print > $o) {
         $row=mysql_fetch_row($rslt);
-        if (eregi("1$|3$|5$|7$|9$", $o)) {
+		if (preg_match("/1$|3$|5$|7$|9$/i", $o))
+			{
             $bgcolor='bgcolor="#B9CBFD"';
-        }
-        else {
+			}
+        else 
+			{
             $bgcolor='bgcolor="#9BB9FB"';
-        }
+			}
         echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=881&campaign_id=$row[0]\">$row[0]</a></td>";
         echo "<td><font size=1> $row[1]</td>";
         echo "<td><font size=1> $row[2]</td>";
@@ -82,12 +86,14 @@ if (($ADD==881) && ($qc_auth=='1')) {
                 echo "<td align=center><font size=1 color=white><B>UserID</B></td></tr>\n";
             }
             $row=mysql_fetch_row($rslt);
-            if (eregi("1$|3$|5$|7$|9$", $o)) {
+		if (preg_match("/1$|3$|5$|7$|9$/i", $o))
+				{
                 $bgcolor='bgcolor="#B9CBFD"';
-            }
-            else {
+			    }
+            else
+				{
                 $bgcolor='bgcolor="#9BB9FB"';
-            }
+				}
             echo "<tr $bgcolor><td><font size=1>&nbsp;</td>";
             echo "<td><font size=1> $row[0]</td>";
             $lead_name=trim($row[1].' '.$row[2]);

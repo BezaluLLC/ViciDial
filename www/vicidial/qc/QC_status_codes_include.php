@@ -2,11 +2,13 @@
 # QC_status_codes_include.php
 # 
 # Copyright (C) 2012  poundteam.com    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to display admin sections for QC functions, contributed by poundteam.com
 #
 # changes:
 # 121116-1323 - First build, added to vicidial codebase
+# 130621-2353 - Finalized changing of all ereg instances to preg
 #
 
 /* 
@@ -44,7 +46,7 @@ if ($ADD==241111111111111)
 
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='QCSTATUSES', event_type='ADD', record_id='$code', event_code='ADMIN ADD QC STATUS', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
@@ -73,7 +75,7 @@ if ($ADD==341111111111111)
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br><center>\n";
-		echo "<b>VICIDIAL QC STATUS CODES WITHIN THIS SYSTEM: &nbsp; $NWB#vicidial_qc_status_codes$NWE</b><br>\n";
+		echo "<b>QC STATUS CODES WITHIN THIS SYSTEM: &nbsp; $NWB#vicidial_qc_status_codes$NWE</b><br>\n";
 		echo "<TABLE width=600 cellspacing=3>\n";
 		echo "<tr><td>STATUS CODE</td><td>DESCRIPTION</td><td>QC CATEGORY</td><td>MODIFY/DELETE</td></tr>\n";
 
@@ -92,7 +94,7 @@ if ($ADD==341111111111111)
 				$rowx=mysql_fetch_row($rslt);
 				$o++;
 
-				if (eregi("1$|3$|5$|7$|9$", $o))
+				if (preg_match("/1$|3$|5$|7$|9$/i", $o))
 					{$bgcolor='bgcolor="#B9CBFD"';}
 				else
 					{$bgcolor='bgcolor="#9BB9FB"';}
