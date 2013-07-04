@@ -21,6 +21,7 @@
 # 130414-0139 - Added report logging
 # 130610-1029 - Finalized changing of all ereg instances to preg
 # 130621-0822 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130704-0944 - Fixed issue #675
 #
 
 $startMS = microtime();
@@ -406,7 +407,7 @@ else
 		$time_BEGIN=$AM_shift_BEGIN;
 		$time_END=$AM_shift_END;
 		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "03:45:00";}   
-		if (strlen($time_END) < 6) {$time_END = "15:15:00";}
+		if (strlen($time_END) < 6) {$time_END = "15:14:59";}
 		}
 	if ($shift == 'PM') 
 		{

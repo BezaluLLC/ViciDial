@@ -11,6 +11,7 @@
 # 90508-0644 - Changed to PHP long tags
 # 130610-1135 - Finalized changing of all ereg instances to preg
 # 130621-0825 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130704-0943 - Fixed issue #675
 #
 
 require("dbconnect.php");
@@ -174,7 +175,7 @@ else
 if ($shift == 'AM') 
 	{
 	$query_date_BEGIN = "$query_date 08:45:00";   
-	$query_date_END = "$query_date 15:33:00";
+	$query_date_END = "$query_date 15:32:59";
 	$time_BEGIN = "08:45:00";   
 	$time_END = "15:33:00";
 	}

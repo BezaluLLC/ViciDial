@@ -455,7 +455,7 @@ if ($shift == 'AM')
 	$time_BEGIN=$AM_shift_BEGIN;
 	$time_END=$AM_shift_END;
 	if (strlen($time_BEGIN) < 6) {$time_BEGIN = "03:45:00";}   
-	if (strlen($time_END) < 6) {$time_END = "15:15:00";}
+	if (strlen($time_END) < 6) {$time_END = "15:14:59";}
 	}
 if ($shift == 'PM') 
 	{
