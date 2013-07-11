@@ -1523,7 +1523,8 @@ allow_emails ENUM('0','1') default '0',
 level_8_disable_add ENUM('0','1') default '0',
 pass_hash_enabled ENUM('0','1') default '0',
 pass_key VARCHAR(100) default '',
-pass_cost TINYINT(2) UNSIGNED default '2'
+pass_cost TINYINT(2) UNSIGNED default '2',
+disable_auto_dial ENUM('0','1') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3136,4 +3137,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1352',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1353',db_schema_update_date=NOW();

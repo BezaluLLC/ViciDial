@@ -953,11 +953,11 @@ while ($sthArows > $rec_count)
 				print "DELETING $num_to_delete LEADS FROM THE HOPPER.  |$affected_rows|\n";
 				}
 			}
-		if ($DB) { print "\n"; }
+		if ($DB) {print "\n";}
 		}	
 	if (length($use_other_campaign_dnc[$rec_count]) > 0) 
 		{
-		print "OTHER CAMPAIGN DNC SELECTED: $use_other_campaign_dnc[$rec_count]\n";
+		if ($DB) {print "OTHER CAMPAIGN DNC SELECTED: $use_other_campaign_dnc[$rec_count]\n";}
 		}
 	$rec_count++;
 	}

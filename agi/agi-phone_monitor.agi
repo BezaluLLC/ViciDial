@@ -28,6 +28,7 @@
 # CHANGELOG
 # 130401-0724 - First build
 # 130520-1013 - Added PLOGIN lookup option and no-prompt extension feature
+# 130710-1658 - Small change to allow non-hangup between agent calls
 #
 
 &get_time_now;
@@ -373,9 +374,9 @@ else
 			# use double-star prefix to go through native bridge IAX path
 			$VDADremDIALstr = "$S$S$a$S$b$S$c$S$d$S";
 			}
-		$barge_listen_prefix = '56';
+		$barge_listen_prefix = '58';
 		if($barge_listen =~ /BARGE/)
-			{$barge_listen_prefix = '57';}
+			{$barge_listen_prefix = '59';}
 		$VDADremDIALstr .= "$barge_listen_prefix$VDADconf_exten";
 
 		if ($api_log =~ /Y/)

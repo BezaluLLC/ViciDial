@@ -31,6 +31,7 @@
 # 90508-0727 - Changed to PHP long tags
 # 130328-0028 - Converted ereg to preg functions
 # 130603-2219 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130705-1524 - Added optional encrypted passwords compatibility
 # 
 
 require("dbconnect.php");
@@ -72,7 +73,7 @@ $NOW_TIME = date("Y-m-d H:i:s");
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
 $auth=0;
-$auth_message = user_authorization($user,$pass,'',0);
+$auth_message = user_authorization($user,$pass,'',0,0,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 

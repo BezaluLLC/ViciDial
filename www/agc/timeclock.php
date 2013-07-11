@@ -12,6 +12,7 @@
 # 100621-1023 - Added admin_web_directory variable
 # 130328-0021 - Converted ereg to preg functions
 # 130603-2211 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130705-2010 - Added optional encrypted passwords compatibility
 #
 
 $version = '2.8-8';
@@ -116,7 +117,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 	{
 	### see if user/pass exist for this user in vicidial_users table
 	$valid_user=0;
-	$auth_message = user_authorization($user,$pass,'',1);
+	$auth_message = user_authorization($user,$pass,'',1,0,0);
 	if ($auth_message == 'GOOD')
 		{$valid_user=1;}
 
@@ -164,7 +165,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		### VALID USER/PASS, CONTINUE
 
 		### get name and group for this user
-		$stmt="SELECT full_name,user_group from vicidial_users where user='$user' and pass='$pass' and active='Y';";
+		$stmt="SELECT full_name,user_group from vicidial_users where user='$user' and active='Y';";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);

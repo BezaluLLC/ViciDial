@@ -15,6 +15,7 @@
 # 120213-1417 - Changes to allow for ra stats
 # 120713-2137 - Added download function for max stats
 # 130615-2111 - Added user authentication function and login lockout for 15 minutes after 10 failed login
+# 130705-1957 - Added password encryption compatibility
 #
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
@@ -51,13 +52,22 @@ function user_authorization($user,$pass,$user_option,$user_update)
 	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
 	$pass = preg_replace("/\'|\"|\\\\|;/","",$pass);
 
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 7 and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";
+	$passSQL = "pass='$pass'";
+
+	if ($SSpass_hash_enabled > 0)
+		{
+		$pass_hash = exec("../agc/bp.pl --pass=$pass");
+		$pass_hash = preg_replace("/PHASH: |\n|\r|\t| /",'',$pass_hash);
+		$passSQL = "pass_hash='$pass_hash'";
+		}
+
+	$stmt="SELECT count(*) from vicidial_users where user='$user' and $passSQL and user_level > 7 and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";
 	if ($user_option == 'REPORTS')
-		{$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 6 and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";}
+		{$stmt="SELECT count(*) from vicidial_users where user='$user' and $passSQL and user_level > 6 and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";}
 	if ($user_option == 'REMOTE')
-		{$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 3 and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";}
+		{$stmt="SELECT count(*) from vicidial_users where user='$user' and $passSQL and user_level > 3 and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";}
 	if ($user_option == 'QC')
-		{$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 1 and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";}
+		{$stmt="SELECT count(*) from vicidial_users where user='$user' and $passSQL and user_level > 1 and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";}
 	if ($DB) {echo "|$stmt|\n";}
 	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 	$rslt=mysql_query($stmt, $link);

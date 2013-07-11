@@ -20,6 +20,7 @@
 # 130402-2256 - Added user_group variable
 # 130603-2204 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130615-2155 - Allow qc_enabled user access to this page even if not logged in as an agent
+# 130705-1512 - Added optional encrypted passwords compatibility
 #
 
 $version = '2.8-12';
@@ -28,6 +29,7 @@ $build = '130615-2155';
 require("dbconnect.php");
 require_once("functions.php");
 
+$bcrypt=1;
 
 if (isset($_GET["lead_id"]))			{$lead_id=$_GET["lead_id"];}
 	elseif (isset($_POST["lead_id"]))	{$lead_id=$_POST["lead_id"];}
@@ -152,7 +154,11 @@ if (isset($_GET["user_group"]))				{$user_group=$_GET["user_group"];}
 	elseif (isset($_POST["user_group"]))	{$user_group=$_POST["user_group"];}
 if (isset($_GET["web_vars"]))			{$web_vars=$_GET["web_vars"];}
 	elseif (isset($_POST["web_vars"]))	{$web_vars=$_POST["web_vars"];}
+if (isset($_GET["bcrypt"]))				{$bcrypt=$_GET["bcrypt"];}
+	elseif (isset($_POST["bcrypt"]))	{$bcrypt=$_POST["bcrypt"];}
 
+if ($bcrypt == 'OFF')
+	{$bcrypt=0;}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -196,15 +202,15 @@ if ($qm_conf_ct > 0)
 if ($non_latin < 1)
 	{
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
-	$pass=preg_replace("/[^-_0-9a-zA-Z]/","",$pass);
+	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 	$length_in_sec = preg_replace("/[^0-9]/","",$length_in_sec);
 	$phone_code = preg_replace("/[^0-9]/","",$phone_code);
 	$phone_number = preg_replace("/[^0-9]/","",$phone_number);
 	}
 else
 	{
-	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
-	$pass = preg_replace("/\'|\"|\\\\|;/","",$pass);
+	$user = preg_replace("/\'|\"|\\\\|;| /","",$user);
+	$pass = preg_replace("/\'|\"|\\\\|;| /","",$pass);
 	}
 
 
@@ -215,7 +221,7 @@ if (!isset($ACTION))   {$ACTION="refresh";}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
 $auth=0;
-$auth_message = user_authorization($user,$pass,'',0);
+$auth_message = user_authorization($user,$pass,'',0,$bcrypt,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 

@@ -14,6 +14,7 @@
 # 130127-0027 - Better non-latin characters support
 # 130328-0007 - Converted ereg to preg functions
 # 130603-2210 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130705-1515 - Added optional encrypted passwords compatibility
 #
 
 require("dbconnect.php");
@@ -116,12 +117,12 @@ if ($allow_emails<1)
 if ($non_latin < 1)
 	{
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
-	$pass=preg_replace("/[^-_0-9a-zA-Z]/","",$pass);
+	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 	}
 else
 	{
 	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
-	$pass = preg_replace("/\'|\"|\\\\|;/","",$pass);
+	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 	}
 
 
@@ -132,7 +133,7 @@ if (!isset($ACTION))   {$ACTION="refresh";}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
 $auth=0;
-$auth_message = user_authorization($user,$pass,'',0);
+$auth_message = user_authorization($user,$pass,'',0,0,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -308,7 +309,7 @@ if ($lead_id) {
 ?>
 	<html>
 	<head>
-	<title>VICIDIAL email frame</title>
+	<title>AGENT email frame</title>
 	</head>
 	<script language="Javascript">
 	function ParseFileName() 

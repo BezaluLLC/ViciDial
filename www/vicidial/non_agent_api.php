@@ -79,10 +79,11 @@
 #             - Added pause code to output of agent_status function
 # 130617-2232 - Added real-time sub-statuses to output of agent_status function
 #             - Added user authentication process to eliminate brute force attacks
+# 130705-1725 - Changes for encrypted password compatibility
 #
 
-$version = '2.8-55';
-$build = '130617-2232';
+$version = '2.8-56';
+$build = '130705-1725';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -343,7 +344,7 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,custom_fields_enabled FROM system_settings;";
+$stmt = "SELECT use_non_latin,custom_fields_enabled,pass_hash_enabled FROM system_settings;";
 $rslt=mysql_query($stmt, $link);
 $qm_conf_ct = mysql_num_rows($rslt);
 if ($qm_conf_ct > 0)
@@ -351,6 +352,7 @@ if ($qm_conf_ct > 0)
 	$row=mysql_fetch_row($rslt);
 	$non_latin =				$row[0];
 	$custom_fields_enabled =	$row[1];
+	$SSpass_hash_enabled =		$row[2];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -534,7 +536,7 @@ $pulldate0 = "$year-$mon-$mday $hour:$min:$sec";
 $inSD = $pulldate0;
 $dsec = ( ( ($hour * 3600) + ($min * 60) ) + $sec );
 
-### Grab Server GMT value from the database
+### Grab Server system settings from the database
 $stmt="SELECT local_gmt FROM servers where active='Y' limit 1;";
 if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 $rslt=mysql_query($stmt, $link);
@@ -542,7 +544,7 @@ $gmt_recs = mysql_num_rows($rslt);
 if ($gmt_recs > 0)
 	{
 	$row=mysql_fetch_row($rslt);
-	$DBSERVER_GMT		=		$row[0];
+	$DBSERVER_GMT =			$row[0];
 	if (strlen($DBSERVER_GMT)>0)	{$SERVER_GMT = $DBSERVER_GMT;}
 	if ($isdst) {$SERVER_GMT++;} 
 	}
@@ -607,7 +609,7 @@ if ($auth < 1)
 ################################################################################
 if ($function == 'sounds_list')
 	{
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 6 and active='Y';";
+	$stmt="SELECT count(*) from vicidial_users where user='$user' and user_level > 6 and active='Y';";
 	if ($DB>0) {echo "DEBUG: sounds_list query - $stmt\n";}
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
@@ -776,7 +778,7 @@ if ($function == 'sounds_list')
 ################################################################################
 if ($function == 'moh_list')
 	{
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 6 and active='Y';";
+	$stmt="SELECT count(*) from vicidial_users where user='$user' and user_level > 6 and active='Y';";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$allowed_user=$row[0];
@@ -824,7 +826,7 @@ if ($function == 'moh_list')
 			}
 		else
 			{
-			$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level > 6;";
+			$stmt="SELECT user_group from vicidial_users where user='$user' and user_level > 6;";
 			if ($DB>0) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 			$row=mysql_fetch_row($rslt);
@@ -942,7 +944,7 @@ if ($function == 'moh_list')
 ################################################################################
 if ($function == 'vm_list')
 	{
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 6 and active='Y';";
+	$stmt="SELECT count(*) from vicidial_users where user='$user' and user_level > 6 and active='Y';";
 	$rslt=mysql_query($stmt, $link);
 	$row=mysql_fetch_row($rslt);
 	$allowed_user=$row[0];
@@ -957,7 +959,7 @@ if ($function == 'vm_list')
 		}
 	else
 		{
-		$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level > 6;";
+		$stmt="SELECT user_group from vicidial_users where user='$user' and user_level > 6;";
 		if ($DB>0) {echo "|$stmt|\n";}
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
@@ -1094,7 +1096,7 @@ if ($function == 'agent_ingroup_info')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and user_level > 6 and active='Y';";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -1109,7 +1111,7 @@ if ($function == 'agent_ingroup_info')
 			}
 		else
 			{
-			$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level > 6;";
+			$stmt="SELECT user_group from vicidial_users where user='$user' and user_level > 6;";
 			if ($DB>0) {echo "|$stmt|\n";}
 			$rslt=mysql_query($stmt, $link);
 			$row=mysql_fetch_row($rslt);
@@ -1190,12 +1192,12 @@ if ($function == 'agent_ingroup_info')
 					$row=mysql_fetch_row($rslt);
 					$allowed_campaign_autodial=$row[0];
 
-					$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and change_agent_campaign='1' and active='Y';";
+					$stmt="SELECT count(*) from vicidial_users where user='$user' and change_agent_campaign='1' and active='Y';";
 					$rslt=mysql_query($stmt, $link);
 					$row=mysql_fetch_row($rslt);
 					$allowed_user_change_ingroups=$row[0];
 
-					$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and modify_users='1' and active='Y';";
+					$stmt="SELECT count(*) from vicidial_users where user='$user' and modify_users='1' and active='Y';";
 					$rslt=mysql_query($stmt, $link);
 					$row=mysql_fetch_row($rslt);
 					$allowed_user_modify_user=$row[0];
@@ -1420,7 +1422,7 @@ if ($function == 'blind_monitor')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and user_level > 6 and active='Y';";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -1591,7 +1593,7 @@ if ($function == 'add_user')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_users='1' and user_level >= 8 and active='Y';";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_users='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -1617,7 +1619,7 @@ if ($function == 'add_user')
 				}
 			else
 				{
-				$stmt="SELECT user_level,user_group,modify_same_user_level from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_users='1' and user_level >= 8;";
+				$stmt="SELECT user_level,user_group,modify_same_user_level from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_users='1' and user_level >= 8;";
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
 				$user_level =				$row[0];
@@ -1721,7 +1723,16 @@ if ($function == 'add_user')
 
 							if (strlen($hotkeys_active)<1) {$hotkeys_active='0';}
 
-							$stmt="INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass,hotkeys_active,voicemail_id,email,custom_one,custom_two,custom_three,custom_four,custom_five) values('$agent_user','$agent_pass','$agent_full_name','$agent_user_level','$agent_user_group','$phone_login','$phone_pass','$hotkeys_active','$voicemail_id','$email','$custom_one','$custom_two','$custom_three','$custom_four','$custom_five');";
+							$pass_hash='';
+							if ( ($SSpass_hash_enabled > 0) and (strlen($agent_pass) > 1) )
+								{
+								$agent_pass = preg_replace("/\'|\"|\\\\|;| /","",$agent_pass);
+								$pass_hash = exec("../agc/bp.pl --pass=$agent_pass");
+								$pass_hash = preg_replace("/PHASH: |\n|\r|\t| /",'',$pass_hash);
+								$agent_pass='';
+								}
+
+							$stmt="INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass,hotkeys_active,voicemail_id,email,custom_one,custom_two,custom_three,custom_four,custom_five,pass_hash) values('$agent_user','$agent_pass','$agent_full_name','$agent_user_level','$agent_user_group','$phone_login','$phone_pass','$hotkeys_active','$voicemail_id','$email','$custom_one','$custom_two','$custom_three','$custom_four','$custom_five','$pass_hash');";
 							$rslt=mysql_query($stmt, $link);
 
 							### LOG INSERTION Admin Log Table ###
@@ -1767,7 +1778,7 @@ if ($function == 'add_group_alias')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -1859,7 +1870,7 @@ if ($function == 'add_phone')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -1997,7 +2008,7 @@ if ($function == 'update_phone')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -2023,7 +2034,7 @@ if ($function == 'update_phone')
 				}
 			else
 				{
-				$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level >= 8;";
+				$stmt="SELECT user_group from vicidial_users where user='$user' and user_level >= 8;";
 				if ($DB>0) {echo "|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
@@ -2078,7 +2089,7 @@ if ($function == 'update_phone')
 						{
 						if ($delete_phone == 'Y')
 							{
-							$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_delete_phones='1' and user_level >= 8 and active='Y';";
+							$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and ast_delete_phones='1' and user_level >= 8 and active='Y';";
 							$rslt=mysql_query($stmt, $link);
 							$row=mysql_fetch_row($rslt);
 							$allowed_user=$row[0];
@@ -2408,7 +2419,7 @@ if ($function == 'add_phone_alias')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -2517,7 +2528,7 @@ if ($function == 'update_phone_alias')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -2560,7 +2571,7 @@ if ($function == 'update_phone_alias')
 					{
 					if ($delete_alias == 'Y')
 						{
-						$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and ast_delete_phones='1' and user_level >= 8 and active='Y';";
+						$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and ast_delete_phones='1' and user_level >= 8 and active='Y';";
 						$rslt=mysql_query($stmt, $link);
 						$row=mysql_fetch_row($rslt);
 						$allowed_user=$row[0];
@@ -2702,7 +2713,7 @@ if ($function == 'update_list')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_lists='1' and user_level >= 8 and active='Y';";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_lists='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -2728,7 +2739,7 @@ if ($function == 'update_list')
 				}
 			else
 				{
-				$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level >= 8;";
+				$stmt="SELECT user_group from vicidial_users where user='$user' and user_level >= 8;";
 				if ($DB>0) {echo "|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
@@ -3046,7 +3057,7 @@ if ($function == 'update_list')
 
 					if ($delete_list == 'Y')
 						{
-						$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_lists='1' and delete_lists='1' and user_level >= 8 and active='Y';";
+						$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_lists='1' and delete_lists='1' and user_level >= 8 and active='Y';";
 						$rslt=mysql_query($stmt, $link);
 						$row=mysql_fetch_row($rslt);
 						$allowed_user=$row[0];
@@ -3084,7 +3095,7 @@ if ($function == 'update_list')
 
 					if ($delete_leads == 'Y')
 						{
-						$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_lists='1' and delete_lists='1' and modify_leads='1' and user_level >= 8 and active='Y';";
+						$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_lists='1' and delete_lists='1' and modify_leads='1' and user_level >= 8 and active='Y';";
 						$rslt=mysql_query($stmt, $link);
 						$row=mysql_fetch_row($rslt);
 						$allowed_user=$row[0];
@@ -3150,7 +3161,7 @@ if ($function == 'add_list')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_lists='1' and user_level >= 8 and active='Y';";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_lists='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -3176,7 +3187,7 @@ if ($function == 'add_list')
 				}
 			else
 				{
-				$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level >= 8;";
+				$stmt="SELECT user_group from vicidial_users where user='$user' and user_level >= 8;";
 				if ($DB>0) {echo "|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
@@ -3337,7 +3348,7 @@ if ($function == 'recording_lookup')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -3509,7 +3520,7 @@ if ($function == 'did_log_export')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -3649,7 +3660,7 @@ if ($function == 'agent_stats_export')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -3865,7 +3876,7 @@ if ($function == 'user_group_status')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -3901,7 +3912,7 @@ if ($function == 'user_group_status')
 				}
 			else
 				{
-				$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level > 6 and view_reports='1' and active='Y';";
+				$stmt="SELECT user_group from vicidial_users where user='$user' and user_level > 6 and view_reports='1' and active='Y';";
 				if ($DB) {$MAIN.="|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
@@ -4081,7 +4092,7 @@ if ($function == 'in_group_status')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -4118,7 +4129,7 @@ if ($function == 'in_group_status')
 				}
 			else
 				{
-				$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level > 6 and view_reports='1' and active='Y';";
+				$stmt="SELECT user_group from vicidial_users where user='$user' and user_level > 6 and view_reports='1' and active='Y';";
 				if ($DB) {$MAIN.="|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
@@ -4297,7 +4308,7 @@ if ($function == 'agent_status')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -4331,7 +4342,7 @@ if ($function == 'agent_status')
 				}
 			else
 				{
-				$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass' and user_level > 6 and view_reports='1' and active='Y';";
+				$stmt="SELECT user_group from vicidial_users where user='$user' and user_level > 6 and view_reports='1' and active='Y';";
 				if ($DB) {$MAIN.="|$stmt|\n";}
 				$rslt=mysql_query($stmt, $link);
 				$row=mysql_fetch_row($rslt);
@@ -4497,7 +4508,7 @@ if ($function == 'update_log_entry')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_leads='1' and user_level > 7 and active='Y';";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_leads='1' and user_level > 7 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$allowed_user=$row[0];
@@ -4638,7 +4649,7 @@ if ($function == 'add_lead')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_leads='1' and user_level > 7 and active='Y';";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_leads='1' and user_level > 7 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$modify_leads=$row[0];
@@ -5379,7 +5390,7 @@ if ($function == 'update_lead')
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and vdc_agent_api_access='1' and modify_leads='1' and user_level > 7 and active='Y';";
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_leads='1' and user_level > 7 and active='Y';";
 		$rslt=mysql_query($stmt, $link);
 		$row=mysql_fetch_row($rslt);
 		$modify_leads=$row[0];

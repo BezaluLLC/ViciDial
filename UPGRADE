@@ -67,12 +67,40 @@ OTHER CHANGES:
 4. Added several security changes to the admin interface, including freezing a
 	user's account for 15 minutes after 10 failed login attempts.
 
-5. Added 3 new reports to the admin interface: url log, lagged log and 
-	user group login reports
+5. Added 4 new reports to the admin interface: url log, lagged log, user group
+	login and dial log reports
 
 6. Added new AST_phone_update.pl --agent-lookup flag to allow for logging of the
 	IP address of the agent's SIP or IAX phone connection. Can be enabled as
 	a crontab entry to perform the lookups on each asterisk server.
+
+7. Added optional encrypted passwords capability within the system. If enabled,
+	all user passwords must be converted to encrypted passwords. To use this
+	you need to have this CPAN module installed on your web servers:
+
+	cpan> install Crypt::Eksblowfish::Bcrypt
+	
+	To enable, first go to the Admin -> System Settings page and manually 
+	confirm that Password Encryption is DISABLED (fifth item from the top)
+	
+	Then, just run the following CLI script: (run in test mode first!)
+	   /usr/share/astguiclient/ADMIN_bcrypt_convert.pl --debugX --test
+	
+	For more information on Encrypted Passwords, read the 
+	ENCRYPTED_PASSWORDS.txt document in the docs directory
+
+8. If you are using the agi-phone_monitor script for agent monitoring, then 
+	the following dialplan lines need to be added to the same place where
+	you put the original dialplan additions necessary for this feature
+	to work: (it is shown in context in the 2.6 upgrade instructions below)
+
+		; quiet entry, listen-only, exit-on-dtmf conferences for VICIDIAL (listen)
+		exten => _588600XXX,1,Dial(${TRUNKblind}/56${EXTEN:2},55)
+		exten => _588600XXX,n,Hangup()
+
+		; barge, exit-on-dtmf conferences for VICIDIAL (barge)
+		exten => _598600XXX,1,Dial(${TRUNKblind}/57${EXTEN:2},55)
+		exten => _598600XXX,n,Hangup()
 
 
 
@@ -269,6 +297,14 @@ OTHER CHANGES:
 		exten => _578600XXX,1,Set(MEETME_EXIT_CONTEXT=up_monitor_exit)
 		exten => _578600XXX,n,Meetme(${EXTEN:2},X)
 		exten => _578600XXX,n,Hangup()
+
+		; quiet entry, listen-only, exit-on-dtmf conferences for VICIDIAL (listen)
+		exten => _588600XXX,1,Dial(${TRUNKblind}/56${EXTEN:2},55)
+		exten => _588600XXX,n,Hangup()
+
+		; barge, exit-on-dtmf conferences for VICIDIAL (barge)
+		exten => _598600XXX,1,Dial(${TRUNKblind}/57${EXTEN:2},55)
+		exten => _598600XXX,n,Hangup()
 
 		[up_monitor]
 		exten => h,1,AGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})

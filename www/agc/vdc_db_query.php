@@ -332,10 +332,11 @@
 # 130603-2207 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130615-1126 - Added recording_id to dispo url
 # 130617-0805 - Fixed issue with scheduled callbacks and campaign presets
-#
+# 130705-1512 - Added optional encrypted passwords compatibility
+# 
 
-$version = '2.8-230';
-$build = '130617-0805';
+$version = '2.8-231';
+$build = '130705-1512';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=533;
 $one_mysql_log=0;
@@ -566,6 +567,8 @@ if (isset($_GET["inbound_email_groups"]))			{$inbound_email_groups=$_GET["inboun
 	elseif (isset($_POST["inbound_email_groups"]))	{$inbound_email_groups=$_POST["inbound_email_groups"];}
 if (isset($_GET["recording_id"]))			{$recording_id=$_GET["recording_id"];}
 	elseif (isset($_POST["recording_id"]))	{$recording_id=$_POST["recording_id"];}
+if (isset($_GET["orig_pass"]))			{$orig_pass=$_GET["orig_pass"];}
+	elseif (isset($_POST["orig_pass"]))	{$orig_pass=$_POST["orig_pass"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -762,7 +765,8 @@ if ($qm_conf_ct > 0)
 if ($non_latin < 1)
 	{
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
-	$pass=preg_replace("/[^-_0-9a-zA-Z]/","",$pass);
+	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
+	$orig_pass=preg_replace("/[^-_0-9a-zA-Z]/","",$orig_pass);
 	$length_in_sec = preg_replace("/[^0-9]/","",$length_in_sec);
 	$phone_code = preg_replace("/[^0-9]/","",$phone_code);
 	$phone_number = preg_replace("/[^0-9a-zA-Z]/","",$phone_number);
@@ -770,7 +774,8 @@ if ($non_latin < 1)
 else
 	{
 	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
-	$pass = preg_replace("/\'|\"|\\\\|;/","",$pass);
+	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
+	$orig_pass = preg_replace("/\'|\"|\\\\|;/","",$orig_pass);
 	}
 
 $session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
@@ -791,7 +796,7 @@ if ($ACTION == 'LogiNCamPaigns')
 else
 	{
 	$auth=0;
-	$auth_message = user_authorization($user,$pass,'',0);
+	$auth_message = user_authorization($user,$pass,'',0,1,0);
 	if ($auth_message == 'GOOD')
 		{$auth=1;}
 
@@ -3039,7 +3044,7 @@ if ($ACTION == 'AlertControl')
 		if (preg_match('/ON/',$stage)) {$stage = '1';}
 		else {$stage = '0';}
 
-		$stmt = "UPDATE vicidial_users set alert_enabled='$stage' where user='$user' and pass='$pass';";
+		$stmt = "UPDATE vicidial_users set alert_enabled='$stage' where user='$user';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'000185',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -6012,7 +6017,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$VDCL_start_call_url = preg_replace('/--A--security_phrase--B--/i',urlencode(trim($security_phrase)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--comments--B--/i',urlencode(trim($comments)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--user--B--/i',urlencode(trim($user)),$VDCL_start_call_url);
-				$VDCL_start_call_url = preg_replace('/--A--pass--B--/i',urlencode(trim($pass)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--pass--B--/i',urlencode(trim($orig_pass)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--campaign--B--/i',urlencode(trim($campaign)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--phone_login--B--/i',urlencode(trim($phone_login)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--original_phone_login--B--/i',urlencode(trim($original_phone_login)),$VDCL_start_call_url);
@@ -6947,7 +6952,7 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 				$VDCL_start_call_url = preg_replace('/--A--security_phrase--B--/i',urlencode(trim($security_phrase)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--comments--B--/i',urlencode(trim($comments)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--user--B--/i',urlencode(trim($user)),$VDCL_start_call_url);
-				$VDCL_start_call_url = preg_replace('/--A--pass--B--/i',urlencode(trim($pass)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--pass--B--/i',urlencode(trim($orig_pass)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--campaign--B--/i',urlencode(trim($campaign)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--phone_login--B--/i',urlencode(trim($phone_login)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--original_phone_login--B--/i',urlencode(trim($original_phone_login)),$VDCL_start_call_url);
@@ -9424,7 +9429,7 @@ if ($ACTION == 'updateDISPO')
 		$dispo_call_url = preg_replace('/--A--security_phrase--B--/i',"$security_phrase",$dispo_call_url);
 		$dispo_call_url = preg_replace('/--A--comments--B--/i',"$comments",$dispo_call_url);
 		$dispo_call_url = preg_replace('/--A--user--B--/i',"$user",$dispo_call_url);
-		$dispo_call_url = preg_replace('/--A--pass--B--/i',"$pass",$dispo_call_url);
+		$dispo_call_url = preg_replace('/--A--pass--B--/i',"$orig_pass",$dispo_call_url);
 		$dispo_call_url = preg_replace('/--A--campaign--B--/i',"$campaign",$dispo_call_url);
 		$dispo_call_url = preg_replace('/--A--phone_login--B--/i',"$phone_login",$dispo_call_url);
 		$dispo_call_url = preg_replace('/--A--original_phone_login--B--/i',"$original_phone_login",$dispo_call_url);
@@ -10143,7 +10148,7 @@ if ($ACTION == 'PauseCodeSubmit')
 ################################################################################
 if ($ACTION == 'AGENTSview')
 	{
-	$stmt="SELECT user_group from vicidial_users where user='$user' and pass='$pass'";
+	$stmt="SELECT user_group from vicidial_users where user='$user';";
 	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 	$rslt=mysql_query($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00225',$user,$server_ip,$session_name,$one_mysql_log);}

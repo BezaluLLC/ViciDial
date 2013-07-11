@@ -122,7 +122,7 @@ $month_old = mktime(0, 0, 0, date("m"), date("d")-7,  date("Y"));
 $past_month_date = date("Y-m-d H:i:s",$month_old);
 
 $auth=0;
-$auth_message = user_authorization($user,$pass,'',1);
+$auth_message = user_authorization($user,$pass,'',1,0,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -181,12 +181,10 @@ else
 	{
 	if($auth>0)
 		{
-		$office_no=strtoupper($user);
-		$password=strtoupper($pass);
-			$stmt="SELECT full_name,user_level from vicidial_users where user='$user' and pass='$pass' and active='Y';";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$LOGfullname=$row[0];
+		$stmt="SELECT full_name,user_level from vicidial_users where user='$user' and active='Y';";
+		$rslt=mysql_query($stmt, $link);
+		$row=mysql_fetch_row($rslt);
+		$LOGfullname=$row[0];
 		if ($WeBRooTWritablE > 0)
 			{
 			fwrite ($fp, "VICIDIAL|GOOD|$date|$user|XXXX|$ip|$browser|$LOGfullname|\n");

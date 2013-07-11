@@ -20,10 +20,11 @@
 # 130328-0013 - Converted ereg to preg functions
 # 130402-2255 - Added user_group variable
 # 130603-2206 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130705-1513 - Added optional encrypted passwords compatibility
 #
 
-$version = '2.8-14';
-$build = '130603-2206';
+$version = '2.8-15';
+$build = '130705-1513';
 
 require("dbconnect.php");
 require("functions.php");
@@ -197,6 +198,8 @@ if (isset($_GET["user_group"]))				{$user_group=$_GET["user_group"];}
 	elseif (isset($_POST["user_group"]))	{$user_group=$_POST["user_group"];}
 if (isset($_GET["web_vars"]))			{$web_vars=$_GET["web_vars"];}
 	elseif (isset($_POST["web_vars"]))	{$web_vars=$_POST["web_vars"];}
+if (isset($_GET["orig_pass"]))			{$orig_pass=$_GET["orig_pass"];}
+	elseif (isset($_POST["orig_pass"]))	{$orig_pass=$_POST["orig_pass"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -234,7 +237,8 @@ if ($qm_conf_ct > 0)
 if ($non_latin < 1)
 	{
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
-	$pass=preg_replace("/[^-_0-9a-zA-Z]/","",$pass);
+	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
+	$orig_pass=preg_replace("/[^-_0-9a-zA-Z]/","",$orig_pass);
 	$length_in_sec = preg_replace("/[^0-9]/","",$length_in_sec);
 	$phone_code = preg_replace("/[^0-9]/","",$phone_code);
 	$phone_number = preg_replace("/[^0-9]/","",$phone_number);
@@ -242,7 +246,8 @@ if ($non_latin < 1)
 else
 	{
 	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
-	$pass = preg_replace("/\'|\"|\\\\|;/","",$pass);
+	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
+	$orig_pass = preg_replace("/\'|\"|\\\\|;/","",$orig_pass);
 	}
 
 
@@ -253,7 +258,7 @@ if (!isset($ACTION))   {$ACTION="refresh";}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
 $auth=0;
-$auth_message = user_authorization($user,$pass,'',0);
+$auth_message = user_authorization($user,$pass,'',0,1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -345,7 +350,7 @@ if (preg_match("/iframe\ssrc/i",$script_text))
 	$security_phrase = preg_replace('/\s/i','+',$security_phrase);
 	$comments = preg_replace('/\s/i','+',$comments);
 	$user = preg_replace('/\s/i','+',$user);
-	$pass = preg_replace('/\s/i','+',$pass);
+	$pass = preg_replace('/\s/i','+',$orig_pass);
 	$campaign = preg_replace('/\s/i','+',$campaign);
 	$phone_login = preg_replace('/\s/i','+',$phone_login);
 	$original_phone_login = preg_replace('/\s/i','+',$original_phone_login);

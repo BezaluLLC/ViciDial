@@ -66,10 +66,11 @@
 # 121124-2354 - Added Other Campaign DNC option
 # 130328-0010 - Converted ereg to preg functions
 # 130603-2221 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130705-1526 - Added optional encrypted passwords compatibility
 #
 
-$version = '2.8-32';
-$build = '130603-2221';
+$version = '2.8-33';
+$build = '130705-1526';
 
 $startMS = microtime();
 
@@ -338,7 +339,7 @@ else
 	else
 		{
 		$auth=0;
-		$auth_message = user_authorization($user,$pass,'',0);
+		$auth_message = user_authorization($user,$pass,'',0,0,0);
 		if ($auth_message == 'GOOD')
 			{$auth=1;}
 

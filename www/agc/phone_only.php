@@ -335,7 +335,7 @@ else
 	else
 		{
 		$auth=0;
-		$auth_message = user_authorization($user,$pass,'',1);
+		$auth_message = user_authorization($user,$pass,'',1,0,0);
 		if ($auth_message == 'GOOD')
 			{$auth=1;}
 

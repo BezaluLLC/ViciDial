@@ -54,6 +54,7 @@
 # 130123-1940 - Added options.php option to allow display of non-selectable statuses
 # 130610-1049 - Finalized changing of all ereg instances to preg
 # 130621-1731 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130705-1726 - Minor change for encrypted password compatibility
 #
 
 require("dbconnect.php");
@@ -1274,7 +1275,7 @@ else
 					$custom_records_count =	$rowx[0];
 
 					echo "<B>CUSTOM FIELDS FOR THIS LEAD:</B><BR>\n";
-					echo "<iframe src=\"../agc/vdc_form_display.php?lead_id=$lead_id&list_id=$CLlist_id&stage=DISPLAY&submit_button=YES&user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&bgcolor=E6E6E6\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"2\" allowtransparency=\"true\" id=\"vcFormIFrame\" name=\"vcFormIFrame\" width=\"740\" height=\"300\" STYLE=\"z-index:18\"> </iframe>\n";
+					echo "<iframe src=\"../agc/vdc_form_display.php?lead_id=$lead_id&list_id=$CLlist_id&stage=DISPLAY&submit_button=YES&user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&bcrypt=OFF&bgcolor=E6E6E6\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"2\" allowtransparency=\"true\" id=\"vcFormIFrame\" name=\"vcFormIFrame\" width=\"740\" height=\"300\" STYLE=\"z-index:18\"> </iframe>\n";
 					echo "<BR><BR>";
 					}
 				}

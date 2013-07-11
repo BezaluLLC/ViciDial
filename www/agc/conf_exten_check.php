@@ -59,10 +59,11 @@
 # 121028-2305 - Added extra check on session_name to validate agent screen requests
 # 130328-0011 - Converted ereg to preg functions
 # 130603-2218 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130705-1524 - Added optional encrypted passwords compatibility
 #
 
-$version = '2.8-34';
-$build = '130603-2218';
+$version = '2.8-35';
+$build = '130705-1524';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=39;
 $one_mysql_log=0;
@@ -120,12 +121,12 @@ if ($qm_conf_ct > 0)
 if ($non_latin < 1)
 	{
 	$user=preg_replace("/[^\-_0-9a-zA-Z]/i","",$user);
-	$pass=preg_replace("/[^\-_0-9a-zA-Z]/i","",$pass);
+	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 	}
 else
 	{
 	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
-	$pass = preg_replace("/\'|\"|\\\\|;/","",$pass);
+	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 	}
 
 $session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
@@ -149,7 +150,7 @@ $random = (rand(1000000, 9999999) + 10000000);
 
 
 $auth=0;
-$auth_message = user_authorization($user,$pass,'',0);
+$auth_message = user_authorization($user,$pass,'',0,1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 

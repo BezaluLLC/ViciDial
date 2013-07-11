@@ -88,6 +88,8 @@ install Mail::Message
 install IO::Socket::SSL
 install MIME::Base64
 install MIME::QuotedPrint
+install Crypt::Eksblowfish::Bcrypt
+
 quit
 
 

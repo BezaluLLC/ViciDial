@@ -115,10 +115,11 @@
 # 130108-1641 - Change for Asterisk 1.8 compatibility
 # 130328-0008 - Converted ereg to preg functions
 # 130603-2205 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130705-1521 - Added optional encrypted passwords compatibility
 #
 
-$version = '2.8-62';
-$build = '130603-2205';
+$version = '2.8-63';
+$build = '130705-1521';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=119;
 $one_mysql_log=0;
@@ -242,13 +243,13 @@ if ($qm_conf_ct > 0)
 if ($non_latin < 1)
 	{
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
-	$pass=preg_replace("/[^-_0-9a-zA-Z]/","",$pass);
+	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 	$secondS = preg_replace("/[^0-9]/","",$secondS);
 	}
 else
 	{
 	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
-	$pass = preg_replace("/\'|\"|\\\\|;/","",$pass);
+	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 	}
 
 $session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
@@ -266,7 +267,7 @@ $NOWnum = date("YmdHis");
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
 $auth=0;
-$auth_message = user_authorization($user,$pass,'',0);
+$auth_message = user_authorization($user,$pass,'',0,1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 

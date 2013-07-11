@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_VDauto_dial.pl version 2.6
+# AST_VDauto_dial.pl version 2.8
 #
 # DESCRIPTION:
 # Places auto_dial calls on the VICIDIAL dialer system 
@@ -25,7 +25,7 @@
 # It is good practice to keep this program running by placing the associated 
 # KEEPALIVE script running every minute to ensure this program is always running
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 50125-1201 - Changed dial timeout to 120 seconds from 180 seconds
@@ -111,6 +111,7 @@
 # 120831-1503 - Added vicidial_dial_log outbound call logging
 # 121124-2249 - Added Other Campaign DNC option
 # 121129-1840 - Fix for issue #600
+# 130706-2024 - Added disable_auto_dial system option
 #
 
 
@@ -409,6 +410,7 @@ while($one_day_interval > 0)
 			$alt_log_login =				$aryA[4];
 			$alt_log_pass =					$aryA[5];
 			$tables_use_alt_log_db =		$aryA[6];
+			$disable_auto_dial =			$aryA[7];
 			}
 		$sthA->finish();
 
@@ -972,7 +974,7 @@ while($one_day_interval > 0)
 		foreach(@DBIPcampaign)
 			{
 			$calls_placed=0;
-			if ( ($DBIPdial_method[$user_CIPct] =~ /MANUAL|INBOUND_MAN/) || ($outbound_autodial_active < 1) )
+			if ( ($DBIPdial_method[$user_CIPct] =~ /MANUAL|INBOUND_MAN/) || ($outbound_autodial_active < 1) || ($disable_auto_dial > 1) )
 				{
 				$event_string="$DBIPcampaign[$user_CIPct] $DBIPaddress[$user_CIPct]: MANUAL DIAL CAMPAIGN, NO DIALING";
 				&event_logger;

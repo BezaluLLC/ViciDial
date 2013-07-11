@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_VDauto_dial_FILL.pl version 2.6
+# AST_VDauto_dial_FILL.pl version 2.8
 #
 # DESCRIPTION:
 # Places auto_dial calls on the VICIDIAL dialer system across all servers only 
@@ -34,6 +34,7 @@
 # 110922-1203 - Added logging of last calltime to campaign
 # 120831-1502 - Added vicidial_dial_log outbound call logging
 # 130227-1604 - Cleanup of staggered code, resetting of variables and arrays
+# 130706-2024- Added disable_auto_dial system option
 #
 
 ### begin parsing run-time options ###
@@ -285,7 +286,7 @@ while($one_day_interval > 0)
 		$sthA->finish();
 
 		##### Get maximum calls per second that this process can send out
-		$stmtA = "SELECT outbound_calls_per_second FROM system_settings;";
+		$stmtA = "SELECT outbound_calls_per_second,outbound_autodial_active,disable_auto_dial FROM system_settings;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -293,6 +294,8 @@ while($one_day_interval > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
 			$outbound_calls_per_second =	$aryA[0];
+			$outbound_autodial_active =		$aryA[1];
+			$disable_auto_dial =			$aryA[2];
 			}
 		$sthA->finish();
 
@@ -306,133 +309,90 @@ while($one_day_interval > 0)
 		$event_string.="CAMPAIGNS WITH TRUNK SHORTAGE: $camp_counter| TOTAL SHORTAGE: $total_shortage";
 		&event_logger;
 
-
-
-		##################################################################################
-		##### START LOOP IF THERE ARE BALANCE SERVERS AND THERE ARE SHORTAGES
-		##################################################################################
-		if ( ($balance_servers > 0) && ($camp_counter > 0) )
+		if (($outbound_autodial_active < 1) || ($disable_auto_dial > 1) )
 			{
-			$camp_CIPct = 0;
-			foreach(@DBfill_campaign)
+			$event_string="SYSTEM AUTO-DIAL DISABLED, NO DIALING: |$outbound_autodial_active|$disable_auto_dial|";
+			&event_logger;
+			}
+		else
+			{
+			##################################################################################
+			##### START LOOP IF THERE ARE BALANCE SERVERS AND THERE ARE SHORTAGES
+			##################################################################################
+			if ( ($balance_servers > 0) && ($camp_counter > 0) )
 				{
-				$calls_placed=0;
-				$camp_counter=0;
-				$DB_balance_fill=0;
-				$VAC_balance_fill=0;
-				$AVAIL_balance_servers=0;
-				$DBfill_tally[$camp_CIPct]=0;
-
-				### grab the dial_level and multiply by active agents to get your goalcalls
-				$DBIPadlevel[$camp_CIPct]=0;
-				$stmtA = "SELECT dial_timeout,dial_prefix,campaign_cid,active,campaign_vdad_exten,omit_phone_code,auto_alt_dial,queue_priority,use_custom_cid FROM vicidial_campaigns where campaign_id='$DBfill_campaign[$camp_CIPct]';";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				$sthArows=$sthA->rows;
-				$rec_count=0;
-				$active_only=0;
-				while ($sthArows > $rec_count)
+				$camp_CIPct = 0;
+				foreach(@DBfill_campaign)
 					{
-					@aryA = $sthA->fetchrow_array;
-					$DBIPdialtimeout[$camp_CIPct] =		$aryA[0];
-					$DBIPdialprefix[$camp_CIPct] =		$aryA[1];
-					$DBIPcampaigncid[$camp_CIPct] =		$aryA[2];
-					$DBIPactive[$camp_CIPct] =			$aryA[3];
-					$DBIPvdadexten[$camp_CIPct] =		$aryA[4];
-					$omit_phone_code =					$aryA[5];
-					$DBIPautoaltdial[$camp_CIPct] =		$aryA[6];
-					$DBIPqueue_priority[$camp_CIPct] =	$aryA[7];
-					$DBIPuse_custom_cid[$camp_CIPct] =	$aryA[8];
+					$calls_placed=0;
+					$camp_counter=0;
+					$DB_balance_fill=0;
+					$VAC_balance_fill=0;
+					$AVAIL_balance_servers=0;
+					$DBfill_tally[$camp_CIPct]=0;
 
-					if ($omit_phone_code =~ /Y/) {$DBIPomitcode[$camp_CIPct] = 1;}
-					else {$DBIPomitcode[$camp_CIPct] = 0;}
+					### grab the dial_level and multiply by active agents to get your goalcalls
+					$DBIPadlevel[$camp_CIPct]=0;
+					$stmtA = "SELECT dial_timeout,dial_prefix,campaign_cid,active,campaign_vdad_exten,omit_phone_code,auto_alt_dial,queue_priority,use_custom_cid FROM vicidial_campaigns where campaign_id='$DBfill_campaign[$camp_CIPct]';";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					$rec_count=0;
+					$active_only=0;
+					while ($sthArows > $rec_count)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$DBIPdialtimeout[$camp_CIPct] =		$aryA[0];
+						$DBIPdialprefix[$camp_CIPct] =		$aryA[1];
+						$DBIPcampaigncid[$camp_CIPct] =		$aryA[2];
+						$DBIPactive[$camp_CIPct] =			$aryA[3];
+						$DBIPvdadexten[$camp_CIPct] =		$aryA[4];
+						$omit_phone_code =					$aryA[5];
+						$DBIPautoaltdial[$camp_CIPct] =		$aryA[6];
+						$DBIPqueue_priority[$camp_CIPct] =	$aryA[7];
+						$DBIPuse_custom_cid[$camp_CIPct] =	$aryA[8];
 
-					$rec_count++;
-					}
-				$sthA->finish();
+						if ($omit_phone_code =~ /Y/) {$DBIPomitcode[$camp_CIPct] = 1;}
+						else {$DBIPomitcode[$camp_CIPct] = 0;}
 
-				$stmtA = "SELECT balance_trunk_fill FROM vicidial_campaign_stats where campaign_id='$DBfill_campaign[$camp_CIPct]';";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				$sthArows=$sthA->rows;
-				if ($sthArows > 0)
-					{
-					@aryA = $sthA->fetchrow_array;
-					$DB_balance_fill =	$aryA[0];
-					}
-				$sthA->finish();
+						$rec_count++;
+						}
+					$sthA->finish();
 
-				$stmtA = "SELECT count(*) FROM vicidial_auto_calls where campaign_id='$DBfill_campaign[$camp_CIPct]' and call_type='OUTBALANCE';";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				$sthArows=$sthA->rows;
-				if ($sthArows > 0)
-					{
-					@aryA = $sthA->fetchrow_array;
-					$VAC_balance_fill =	$aryA[0];
-					}
-				$sthA->finish();
-				$DBfill_current_balance[$camp_CIPct] = "$VAC_balance_fill";
+					$stmtA = "SELECT balance_trunk_fill FROM vicidial_campaign_stats where campaign_id='$DBfill_campaign[$camp_CIPct]';";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$DB_balance_fill =	$aryA[0];
+						}
+					$sthA->finish();
 
-				$event_string="               CAMPAIGN: $DBfill_campaign[$camp_CIPct]\n";
-				$event_string.="DB_balance_fill: $DB_balance_fill   VAC_balance_fill: $VAC_balance_fill\n";
+					$stmtA = "SELECT count(*) FROM vicidial_auto_calls where campaign_id='$DBfill_campaign[$camp_CIPct]' and call_type='OUTBALANCE';";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$VAC_balance_fill =	$aryA[0];
+						}
+					$sthA->finish();
+					$DBfill_current_balance[$camp_CIPct] = "$VAC_balance_fill";
 
-				$DBfill_needed[$camp_CIPct] = ($DBfill_shortage[$camp_CIPct] - $VAC_balance_fill);
-				$event_string.="Additional Balance Calls Needed For This Campaign: $DBfill_needed[$camp_CIPct]\n";
+					$event_string="               CAMPAIGN: $DBfill_campaign[$camp_CIPct]\n";
+					$event_string.="DB_balance_fill: $DB_balance_fill   VAC_balance_fill: $VAC_balance_fill\n";
+
+					$DBfill_needed[$camp_CIPct] = ($DBfill_shortage[$camp_CIPct] - $VAC_balance_fill);
+					$event_string.="Additional Balance Calls Needed For This Campaign: $DBfill_needed[$camp_CIPct]\n";
 
 
-				##### Get a listing of the servers in the campaign that have shortages of trunks
-				$full_servers='|';
-				$full_serversSQL='';
-				$stmtA = "SELECT server_ip FROM vicidial_campaign_server_stats where update_time > '$XDSQLdate' and local_trunk_shortage > 0 and campaign_id='$DBfill_campaign[$camp_CIPct]';";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				$sthArows=$sthA->rows;
-				$rec_count=0;
-				while ($sthArows > $rec_count)
-					{
-					@aryA = $sthA->fetchrow_array;
-					$full_servers .=	"$aryA[0]|";
-					$full_serversSQL .=	"'$aryA[0]',";
-					$rec_count++;
-					}
-				$sthA->finish();
-				chop($full_serversSQL);
-				if (length($full_serversSQL)<6) {$full_serversSQL="''";}
-				$event_string.="SERVERS WITH TRUNK FULL for $DBfill_campaign[$camp_CIPct]: $full_servers |$full_serversSQL|";
-				&event_logger;
-
-				##### Check if there are any balance-enabled servers outside of the ones with trunk shortage
-				$stmtA = "SELECT count(*) FROM servers where vicidial_balance_active = 'Y' and server_ip NOT IN($full_serversSQL);";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				$sthArows=$sthA->rows;
-				if ($sthArows > 0)
-					{
-					@aryA = $sthA->fetchrow_array;
-					$AVAIL_balance_servers =	$aryA[0];
-					}
-				$sthA->finish();
-
-				##################################################################################
-				##### CONTINUE IF THERE ARE BALANCE SERVERS AVAILABLE THAT ARE NOT IN TRUNK SHORTAGE
-				##################################################################################
-				if ($AVAIL_balance_servers > 0)
-					{
-					$event_string="Balance Servers available: $AVAIL_balance_servers";
-					&event_logger;
-
-					$DB_camp_servers=0;
-					@DB_camp_server_server_ip=@MT;
-					@DB_camp_server_max_vicidial_trunks=@MT;
-					@DB_camp_server_balance_trunks_offlimits=@MT;
-					@DB_camp_server_dedicated_trunks=@MT;
-					@DB_camp_server_trunk_restriction=@MT;
-					@DB_NONcamp_server_dedicated_trunks=@MT;
-					@DB_camp_server_available=@MT;
-					@DB_camp_server_trunks_to_dial=@MT;
-					##### Get the trunk settings for the campaign across all servers
-					$stmtA = "SELECT server_ip,max_vicidial_trunks,balance_trunks_offlimits,vicidial_balance_rank FROM servers where vicidial_balance_active = 'Y' and server_ip NOT IN($full_serversSQL) order by vicidial_balance_rank desc, server_ip;";
+					##### Get a listing of the servers in the campaign that have shortages of trunks
+					$full_servers='|';
+					$full_serversSQL='';
+					$stmtA = "SELECT server_ip FROM vicidial_campaign_server_stats where update_time > '$XDSQLdate' and local_trunk_shortage > 0 and campaign_id='$DBfill_campaign[$camp_CIPct]';";
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 					$sthArows=$sthA->rows;
@@ -440,186 +400,203 @@ while($one_day_interval > 0)
 					while ($sthArows > $rec_count)
 						{
 						@aryA = $sthA->fetchrow_array;
-						$DB_camp_server_server_ip[$DB_camp_servers] =					$aryA[0];
-						$DB_camp_server_max_vicidial_trunks[$DB_camp_servers] =			$aryA[1];
-						$DB_camp_server_balance_trunks_offlimits[$DB_camp_servers] =	$aryA[2];
-						$DB_camp_servers++;
+						$full_servers .=	"$aryA[0]|";
+						$full_serversSQL .=	"'$aryA[0]',";
 						$rec_count++;
 						}
 					$sthA->finish();
+					chop($full_serversSQL);
+					if (length($full_serversSQL)<6) {$full_serversSQL="''";}
+					$event_string.="SERVERS WITH TRUNK FULL for $DBfill_campaign[$camp_CIPct]: $full_servers |$full_serversSQL|";
+					&event_logger;
 
-
-					##################################################################################
-					##### LOOP THROUGH SERVERS, CALCULATE TRUNKS FOR EACH FOR THIS CAMPAIGN
-					##################################################################################
-					$server_CIPct = 0;
-					foreach(@DB_camp_server_server_ip)
+					##### Check if there are any balance-enabled servers outside of the ones with trunk shortage
+					$stmtA = "SELECT count(*) FROM servers where vicidial_balance_active = 'Y' and server_ip NOT IN($full_serversSQL);";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					if ($sthArows > 0)
 						{
-						$DB_camp_server_dedicated_trunks[$server_CIPct]=0;
-						$DB_camp_server_trunk_restriction[$server_CIPct]=0;
-						$DB_NONcamp_server_dedicated_trunks[$server_CIPct]=0;
-						$SERVER_CAMP_temp_avail[$server_CIPct]=0;
-						$SERVER_CAMP_temp_tally[$server_CIPct]=0;
-						##### Get the campaign-specific trunk settings for the campaign on this server
-						$stmtA = "SELECT dedicated_trunks,trunk_restriction FROM vicidial_server_trunks where server_ip='$DB_camp_server_server_ip[$server_CIPct]' and campaign_id='$DBfill_campaign[$camp_CIPct]';";
-						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-						$sthArows=$sthA->rows;
-						if ($sthArows > 0)
-							{
-							@aryA = $sthA->fetchrow_array;
-							$DB_camp_server_dedicated_trunks[$server_CIPct] =	$aryA[0];
-							$DB_camp_server_trunk_restriction[$server_CIPct] =	$aryA[1];
-							}
-						$sthA->finish();
+						@aryA = $sthA->fetchrow_array;
+						$AVAIL_balance_servers =	$aryA[0];
+						}
+					$sthA->finish();
 
-						##### Get the campaign-specific dedicated trunks count for other campaigns on this server
-						$stmtA = "SELECT sum(dedicated_trunks) FROM vicidial_server_trunks where server_ip='$DB_camp_server_server_ip[$server_CIPct]' and campaign_id NOT IN('$DBfill_campaign[$camp_CIPct]');";
-						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-						$sthArows=$sthA->rows;
-						if ($sthArows > 0)
-							{
-							@aryA = $sthA->fetchrow_array;
-							$DB_NONcamp_server_dedicated_trunks[$server_CIPct] =	$aryA[0];
-							}
-						$sthA->finish();
-
-						$VAC_server_camp=0;
-						$VAC_server_NONcamp=0;
-
-						$stmtA = "SELECT count(*) FROM vicidial_auto_calls where server_ip='$DB_camp_server_server_ip[$server_CIPct]' and campaign_id='$DBfill_campaign[$camp_CIPct]' and call_type='OUTBALANCE';";
-						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-						$sthArows=$sthA->rows;
-						if ($sthArows > 0)
-							{
-							@aryA = $sthA->fetchrow_array;
-							$VAC_server_BALcamp =	$aryA[0];
-							}
-						$sthA->finish();
-
-						$stmtA = "SELECT count(*) FROM vicidial_auto_calls where server_ip='$DB_camp_server_server_ip[$server_CIPct]' and campaign_id='$DBfill_campaign[$camp_CIPct]';";
-						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-						$sthArows=$sthA->rows;
-						if ($sthArows > 0)
-							{
-							@aryA = $sthA->fetchrow_array;
-							$VAC_server_camp =	$aryA[0];
-							}
-						$sthA->finish();
-
-						$stmtA = "SELECT count(*) FROM vicidial_auto_calls where server_ip='$DB_camp_server_server_ip[$server_CIPct]' and campaign_id!='$DBfill_campaign[$camp_CIPct]';";
-						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-						$sthArows=$sthA->rows;
-						if ($sthArows > 0)
-							{
-							@aryA = $sthA->fetchrow_array;
-							$VAC_server_NONcamp =	$aryA[0];
-							}
-						$sthA->finish();
-
-						if($DB) {print "VAC CALLS: |$VAC_server_camp|$VAC_server_NONcamp|$VAC_server_BALcamp|\n";}
-						if($DB) {print "SETTINGS:  |$DB_camp_server_dedicated_trunks[$server_CIPct]|$DB_camp_server_max_vicidial_trunks[$server_CIPct]|$DB_camp_server_balance_trunks_offlimits[$server_CIPct]||\n";}
-
-						if ($DB_camp_server_trunk_restriction[$server_CIPct] =~ /MAXIMUM_LIMIT/)
-							{
-							$DB_camp_server_available[$server_CIPct] = $DB_camp_server_dedicated_trunks[$server_CIPct];
-							}
-						else
-							{
-							$DB_camp_server_available[$server_CIPct] = ( ($DB_camp_server_max_vicidial_trunks[$server_CIPct] - $DB_camp_server_balance_trunks_offlimits[$server_CIPct]) -  $DB_NONcamp_server_dedicated_trunks[$server_CIPct]);
-							}
-						$SERVER_CAMP_temp_tally[$server_CIPct] = ($DBfill_needed[$camp_CIPct] - $DBfill_tally[$camp_CIPct]);
-						$SERVER_CAMP_temp_avail[$server_CIPct] = ( ($DB_camp_server_max_vicidial_trunks[$server_CIPct] - $VAC_server_camp) -  $VAC_server_NONcamp);
-						$DB_camp_server_available[$server_CIPct] = ($DB_camp_server_available[$server_CIPct] - $VAC_server_BALcamp);
-						if ($DB_camp_server_available[$server_CIPct] < 0) {$DB_camp_server_available[$server_CIPct]=0;}
-
-						if($DB) {print "TEMPVALS:  |$SERVER_CAMP_temp_tally[$server_CIPct]|$SERVER_CAMP_temp_avail[$server_CIPct]|$DB_camp_server_available[$server_CIPct]||\n";}
-						if ($DB_camp_server_available[$server_CIPct] >= $SERVER_CAMP_temp_tally[$server_CIPct])
-							{$DB_camp_server_trunks_to_dial[$server_CIPct] = $SERVER_CAMP_temp_tally[$server_CIPct];}
-						else
-							{$DB_camp_server_trunks_to_dial[$server_CIPct] = $DB_camp_server_available[$server_CIPct];}
-
-						if ($SERVER_CAMP_temp_avail[$server_CIPct] < $DB_camp_server_trunks_to_dial[$server_CIPct]) 
-							{$DB_camp_server_trunks_to_dial[$server_CIPct] = $SERVER_CAMP_temp_avail[$server_CIPct];}
-
-						$DBfill_tally[$camp_CIPct] = ($DBfill_tally[$camp_CIPct] + $DB_camp_server_trunks_to_dial[$server_CIPct]);
-
-						$event_string="     Server: $DB_camp_server_server_ip[$server_CIPct]   AVAIL: $DB_camp_server_available[$server_CIPct]   DIAL: $DB_camp_server_trunks_to_dial[$server_CIPct]";
-						$event_string.="     Campaign Dial Fill tally: $DBfill_tally[$camp_CIPct]/$DBfill_needed[$camp_CIPct]";
+					##################################################################################
+					##### CONTINUE IF THERE ARE BALANCE SERVERS AVAILABLE THAT ARE NOT IN TRUNK SHORTAGE
+					##################################################################################
+					if ($AVAIL_balance_servers > 0)
+						{
+						$event_string="Balance Servers available: $AVAIL_balance_servers";
 						&event_logger;
 
-
-						$stmtA = "SELECT count(*) FROM vicidial_live_agents where campaign_id='$DBfill_campaign[$camp_CIPct]' and status NOT IN('PAUSED');";
+						$DB_camp_servers=0;
+						@DB_camp_server_server_ip=@MT;
+						@DB_camp_server_max_vicidial_trunks=@MT;
+						@DB_camp_server_balance_trunks_offlimits=@MT;
+						@DB_camp_server_dedicated_trunks=@MT;
+						@DB_camp_server_trunk_restriction=@MT;
+						@DB_NONcamp_server_dedicated_trunks=@MT;
+						@DB_camp_server_available=@MT;
+						@DB_camp_server_trunks_to_dial=@MT;
+						##### Get the trunk settings for the campaign across all servers
+						$stmtA = "SELECT server_ip,max_vicidial_trunks,balance_trunks_offlimits,vicidial_balance_rank FROM servers where vicidial_balance_active = 'Y' and server_ip NOT IN($full_serversSQL) order by vicidial_balance_rank desc, server_ip;";
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 						$sthArows=$sthA->rows;
-						$LVA_count=0;
-						if ($sthArows > 0)
+						$rec_count=0;
+						while ($sthArows > $rec_count)
 							{
 							@aryA = $sthA->fetchrow_array;
-							$LVA_count =	$aryA[0];
+							$DB_camp_server_server_ip[$DB_camp_servers] =					$aryA[0];
+							$DB_camp_server_max_vicidial_trunks[$DB_camp_servers] =			$aryA[1];
+							$DB_camp_server_balance_trunks_offlimits[$DB_camp_servers] =	$aryA[2];
+							$DB_camp_servers++;
+							$rec_count++;
 							}
 						$sthA->finish();
 
-						if ($LVA_count > 0)
+
+						##################################################################################
+						##### LOOP THROUGH SERVERS, CALCULATE TRUNKS FOR EACH FOR THIS CAMPAIGN
+						##################################################################################
+						$server_CIPct = 0;
+						foreach(@DB_camp_server_server_ip)
 							{
-							##################################################################################
-							##### PLACE THE CALLS
-							##################################################################################
-							$event_string="$DBfill_campaign[$camp_CIPct] $DB_camp_server_server_ip[$server_CIPct]: CALLING";
-							&event_logger;
-							$call_CMPIPct=0;
-							$lead_id_call_list='|';
-							my $UDaffected_rows=0;
-							if ($call_CMPIPct < $DB_camp_server_trunks_to_dial[$server_CIPct])
+							$DB_camp_server_dedicated_trunks[$server_CIPct]=0;
+							$DB_camp_server_trunk_restriction[$server_CIPct]=0;
+							$DB_NONcamp_server_dedicated_trunks[$server_CIPct]=0;
+							$SERVER_CAMP_temp_avail[$server_CIPct]=0;
+							$SERVER_CAMP_temp_tally[$server_CIPct]=0;
+							##### Get the campaign-specific trunk settings for the campaign on this server
+							$stmtA = "SELECT dedicated_trunks,trunk_restriction FROM vicidial_server_trunks where server_ip='$DB_camp_server_server_ip[$server_CIPct]' and campaign_id='$DBfill_campaign[$camp_CIPct]';";
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+							if ($sthArows > 0)
 								{
-								$stmtA = "UPDATE vicidial_hopper set status='QUEUE', user='VDAD_$DB_camp_server_server_ip[$server_CIPct]' where campaign_id='$DBfill_campaign[$camp_CIPct]' and status='READY' order by priority desc,hopper_id LIMIT $DB_camp_server_trunks_to_dial[$server_CIPct];";
-								print "|$stmtA|\n";
-								$UDaffected_rows = $dbhA->do($stmtA);
-								print "hopper rows updated to QUEUE: |$UDaffected_rows|\n";
+								@aryA = $sthA->fetchrow_array;
+								$DB_camp_server_dedicated_trunks[$server_CIPct] =	$aryA[0];
+								$DB_camp_server_trunk_restriction[$server_CIPct] =	$aryA[1];
+								}
+							$sthA->finish();
 
-								if ($UDaffected_rows)
+							##### Get the campaign-specific dedicated trunks count for other campaigns on this server
+							$stmtA = "SELECT sum(dedicated_trunks) FROM vicidial_server_trunks where server_ip='$DB_camp_server_server_ip[$server_CIPct]' and campaign_id NOT IN('$DBfill_campaign[$camp_CIPct]');";
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+							if ($sthArows > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$DB_NONcamp_server_dedicated_trunks[$server_CIPct] =	$aryA[0];
+								}
+							$sthA->finish();
+
+							$VAC_server_camp=0;
+							$VAC_server_NONcamp=0;
+
+							$stmtA = "SELECT count(*) FROM vicidial_auto_calls where server_ip='$DB_camp_server_server_ip[$server_CIPct]' and campaign_id='$DBfill_campaign[$camp_CIPct]' and call_type='OUTBALANCE';";
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+							if ($sthArows > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$VAC_server_BALcamp =	$aryA[0];
+								}
+							$sthA->finish();
+
+							$stmtA = "SELECT count(*) FROM vicidial_auto_calls where server_ip='$DB_camp_server_server_ip[$server_CIPct]' and campaign_id='$DBfill_campaign[$camp_CIPct]';";
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+							if ($sthArows > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$VAC_server_camp =	$aryA[0];
+								}
+							$sthA->finish();
+
+							$stmtA = "SELECT count(*) FROM vicidial_auto_calls where server_ip='$DB_camp_server_server_ip[$server_CIPct]' and campaign_id!='$DBfill_campaign[$camp_CIPct]';";
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+							if ($sthArows > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$VAC_server_NONcamp =	$aryA[0];
+								}
+							$sthA->finish();
+
+							if($DB) {print "VAC CALLS: |$VAC_server_camp|$VAC_server_NONcamp|$VAC_server_BALcamp|\n";}
+							if($DB) {print "SETTINGS:  |$DB_camp_server_dedicated_trunks[$server_CIPct]|$DB_camp_server_max_vicidial_trunks[$server_CIPct]|$DB_camp_server_balance_trunks_offlimits[$server_CIPct]||\n";}
+
+							if ($DB_camp_server_trunk_restriction[$server_CIPct] =~ /MAXIMUM_LIMIT/)
+								{
+								$DB_camp_server_available[$server_CIPct] = $DB_camp_server_dedicated_trunks[$server_CIPct];
+								}
+							else
+								{
+								$DB_camp_server_available[$server_CIPct] = ( ($DB_camp_server_max_vicidial_trunks[$server_CIPct] - $DB_camp_server_balance_trunks_offlimits[$server_CIPct]) -  $DB_NONcamp_server_dedicated_trunks[$server_CIPct]);
+								}
+							$SERVER_CAMP_temp_tally[$server_CIPct] = ($DBfill_needed[$camp_CIPct] - $DBfill_tally[$camp_CIPct]);
+							$SERVER_CAMP_temp_avail[$server_CIPct] = ( ($DB_camp_server_max_vicidial_trunks[$server_CIPct] - $VAC_server_camp) -  $VAC_server_NONcamp);
+							$DB_camp_server_available[$server_CIPct] = ($DB_camp_server_available[$server_CIPct] - $VAC_server_BALcamp);
+							if ($DB_camp_server_available[$server_CIPct] < 0) {$DB_camp_server_available[$server_CIPct]=0;}
+
+							if($DB) {print "TEMPVALS:  |$SERVER_CAMP_temp_tally[$server_CIPct]|$SERVER_CAMP_temp_avail[$server_CIPct]|$DB_camp_server_available[$server_CIPct]||\n";}
+							if ($DB_camp_server_available[$server_CIPct] >= $SERVER_CAMP_temp_tally[$server_CIPct])
+								{$DB_camp_server_trunks_to_dial[$server_CIPct] = $SERVER_CAMP_temp_tally[$server_CIPct];}
+							else
+								{$DB_camp_server_trunks_to_dial[$server_CIPct] = $DB_camp_server_available[$server_CIPct];}
+
+							if ($SERVER_CAMP_temp_avail[$server_CIPct] < $DB_camp_server_trunks_to_dial[$server_CIPct]) 
+								{$DB_camp_server_trunks_to_dial[$server_CIPct] = $SERVER_CAMP_temp_avail[$server_CIPct];}
+
+							$DBfill_tally[$camp_CIPct] = ($DBfill_tally[$camp_CIPct] + $DB_camp_server_trunks_to_dial[$server_CIPct]);
+
+							$event_string="     Server: $DB_camp_server_server_ip[$server_CIPct]   AVAIL: $DB_camp_server_available[$server_CIPct]   DIAL: $DB_camp_server_trunks_to_dial[$server_CIPct]";
+							$event_string.="     Campaign Dial Fill tally: $DBfill_tally[$camp_CIPct]/$DBfill_needed[$camp_CIPct]";
+							&event_logger;
+
+
+							$stmtA = "SELECT count(*) FROM vicidial_live_agents where campaign_id='$DBfill_campaign[$camp_CIPct]' and status NOT IN('PAUSED');";
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+							$LVA_count=0;
+							if ($sthArows > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$LVA_count =	$aryA[0];
+								}
+							$sthA->finish();
+
+							if ($LVA_count > 0)
+								{
+								##################################################################################
+								##### PLACE THE CALLS
+								##################################################################################
+								$event_string="$DBfill_campaign[$camp_CIPct] $DB_camp_server_server_ip[$server_CIPct]: CALLING";
+								&event_logger;
+								$call_CMPIPct=0;
+								$lead_id_call_list='|';
+								my $UDaffected_rows=0;
+								if ($call_CMPIPct < $DB_camp_server_trunks_to_dial[$server_CIPct])
 									{
-									$lead_id=''; $phone_code=''; $phone_number=''; $called_count='';
-									while ($call_CMPIPct < $UDaffected_rows)
+									$stmtA = "UPDATE vicidial_hopper set status='QUEUE', user='VDAD_$DB_camp_server_server_ip[$server_CIPct]' where campaign_id='$DBfill_campaign[$camp_CIPct]' and status='READY' order by priority desc,hopper_id LIMIT $DB_camp_server_trunks_to_dial[$server_CIPct];";
+									print "|$stmtA|\n";
+									$UDaffected_rows = $dbhA->do($stmtA);
+									print "hopper rows updated to QUEUE: |$UDaffected_rows|\n";
+
+									if ($UDaffected_rows)
 										{
-										$stmtA = "SELECT lead_id,alt_dial FROM vicidial_hopper where campaign_id='$DBfill_campaign[$camp_CIPct]' and status='QUEUE' and user='VDAD_$DB_camp_server_server_ip[$server_CIPct]' order by priority desc,hopper_id LIMIT 1;";
-										print "|$stmtA|\n";
-										$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-										$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-										$sthArows=$sthA->rows;
-										$rec_countCUSTDATA=0;
-										if ($sthArows > 0)
+										$lead_id=''; $phone_code=''; $phone_number=''; $called_count='';
+										while ($call_CMPIPct < $UDaffected_rows)
 											{
-											@aryA = $sthA->fetchrow_array;
-											$lead_id =		$aryA[0];
-											$alt_dial =		$aryA[1];
-											}
-										$sthA->finish();
-
-										if ($lead_id_call_list =~ /\|$lead_id\|/)
-											{
-											print "!!!!!!!!!!!!!!!!duplicate lead_id for this run: |$lead_id|     $lead_id_call_list\n";
-											if ($SYSLOG)
-												{
-												open(DUPout, ">>$PATHlogs/VDAD_DUPLICATE.$file_date")
-														|| die "Can't open $PATHlogs/VDAD_DUPLICATE.$file_date: $!\n";
-												print DUPout "$now_date-----$lead_id_call_list-----$lead_id\n";
-												close(DUPout);
-												}
-											}
-										else
-											{
-											$stmtA = "UPDATE vicidial_hopper set status='INCALL' where lead_id='$lead_id';";
-										#	print "|$stmtA|\n";
-											$UQaffected_rows = $dbhA->do($stmtA);
-										#	print "hopper row updated to INCALL: |$UQaffected_rows|$lead_id|\n";
-
-											$stmtA = "SELECT list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,address3,alt_phone,called_count,security_phrase FROM vicidial_list where lead_id='$lead_id';";
+											$stmtA = "SELECT lead_id,alt_dial FROM vicidial_hopper where campaign_id='$DBfill_campaign[$camp_CIPct]' and status='QUEUE' and user='VDAD_$DB_camp_server_server_ip[$server_CIPct]' order by priority desc,hopper_id LIMIT 1;";
+											print "|$stmtA|\n";
 											$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 											$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 											$sthArows=$sthA->rows;
@@ -627,397 +604,428 @@ while($one_day_interval > 0)
 											if ($sthArows > 0)
 												{
 												@aryA = $sthA->fetchrow_array;
-												$list_id =					$aryA[0];
-												$gmt_offset_now	=			$aryA[1];
-												$called_since_last_reset =	$aryA[2];
-												$phone_code	=				$aryA[3];
-												$phone_number =				$aryA[4];
-												$address3 =					$aryA[5];
-												$alt_phone =				$aryA[6];
-												$called_count =				$aryA[7];
-												$security_phrase =			$aryA[8];
-
-												$rec_countCUSTDATA++;
+												$lead_id =		$aryA[0];
+												$alt_dial =		$aryA[1];
 												}
 											$sthA->finish();
 
-											if ($rec_countCUSTDATA)
+											if ($lead_id_call_list =~ /\|$lead_id\|/)
 												{
-												$campaign_cid_override='';
-												### gather list_id overrides
-												$stmtA = "SELECT campaign_cid_override FROM vicidial_lists where list_id='$list_id';";
+												print "!!!!!!!!!!!!!!!!duplicate lead_id for this run: |$lead_id|     $lead_id_call_list\n";
+												if ($SYSLOG)
+													{
+													open(DUPout, ">>$PATHlogs/VDAD_DUPLICATE.$file_date")
+															|| die "Can't open $PATHlogs/VDAD_DUPLICATE.$file_date: $!\n";
+													print DUPout "$now_date-----$lead_id_call_list-----$lead_id\n";
+													close(DUPout);
+													}
+												}
+											else
+												{
+												$stmtA = "UPDATE vicidial_hopper set status='INCALL' where lead_id='$lead_id';";
+											#	print "|$stmtA|\n";
+												$UQaffected_rows = $dbhA->do($stmtA);
+											#	print "hopper row updated to INCALL: |$UQaffected_rows|$lead_id|\n";
+
+												$stmtA = "SELECT list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,address3,alt_phone,called_count,security_phrase FROM vicidial_list where lead_id='$lead_id';";
 												$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 												$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-												$sthArowsL=$sthA->rows;
-												if ($sthArowsL > 0)
+												$sthArows=$sthA->rows;
+												$rec_countCUSTDATA=0;
+												if ($sthArows > 0)
 													{
 													@aryA = $sthA->fetchrow_array;
-													$campaign_cid_override =	$aryA[0];
+													$list_id =					$aryA[0];
+													$gmt_offset_now	=			$aryA[1];
+													$called_since_last_reset =	$aryA[2];
+													$phone_code	=				$aryA[3];
+													$phone_number =				$aryA[4];
+													$address3 =					$aryA[5];
+													$alt_phone =				$aryA[6];
+													$called_count =				$aryA[7];
+													$security_phrase =			$aryA[8];
+
+													$rec_countCUSTDATA++;
 													}
 												$sthA->finish();
 
-												### update called_count
-												$called_count++;
-												if ($called_since_last_reset =~ /^Y/)
+												if ($rec_countCUSTDATA)
 													{
-													if ($called_since_last_reset =~ /^Y$/) {$CSLR = 'Y1';}
-													else
+													$campaign_cid_override='';
+													### gather list_id overrides
+													$stmtA = "SELECT campaign_cid_override FROM vicidial_lists where list_id='$list_id';";
+													$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+													$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+													$sthArowsL=$sthA->rows;
+													if ($sthArowsL > 0)
 														{
-														$called_since_last_reset =~ s/^Y//gi;
-														$called_since_last_reset++;
-														$CSLR = "Y$called_since_last_reset";
+														@aryA = $sthA->fetchrow_array;
+														$campaign_cid_override =	$aryA[0];
 														}
-													}
-												else {$CSLR = 'Y';}
+													$sthA->finish();
 
-												$LLCT_DATE_offset = ($LOCAL_GMT_OFF - $gmt_offset_now);
-												$LLCT_DATE_offset_epoch = ( $secX - ($LLCT_DATE_offset * 3600) );
-												($Lsec,$Lmin,$Lhour,$Lmday,$Lmon,$Lyear,$Lwday,$Lyday,$Lisdst) = localtime($LLCT_DATE_offset_epoch);
-												$Lyear = ($Lyear + 1900);
-												$Lmon++;
-												if ($Lmon < 10) {$Lmon = "0$Lmon";}
-												if ($Lmday < 10) {$Lmday = "0$Lmday";}
-												if ($Lhour < 10) {$Lhour = "0$Lhour";}
-												if ($Lmin < 10) {$Lmin = "0$Lmin";}
-												if ($Lsec < 10) {$Lsec = "0$Lsec";}
-												$LLCT_DATE = "$Lyear-$Lmon-$Lmday $Lhour:$Lmin:$Lsec";
-
-												if ( ($alt_dial =~ /ALT|ADDR3|X/) && ($DBIPautoaltdial[$user_CIPct] =~ /ALT|ADDR|X/) )
-													{
-													if ( ($alt_dial =~ /ALT/) && ($DBIPautoaltdial[$user_CIPct] =~ /ALT/) )
+													### update called_count
+													$called_count++;
+													if ($called_since_last_reset =~ /^Y/)
 														{
-														$alt_phone =~ s/\D//gi;
-														$phone_number = $alt_phone;
-														}
-													if ( ($alt_dial =~ /ADDR3/) && ($DBIPautoaltdial[$user_CIPct] =~ /ADDR3/) )
-														{
-														$address3 =~ s/\D//gi;
-														$phone_number = $address3;
-														}
-													if  ( ($alt_dial =~ /^X/) && ($DBIPautoaltdial[$user_CIPct] =~ /^X/) )
-														{
-														if ($alt_dial =~ /LAST/) 
-															{
-															$stmtA = "SELECT phone_code,phone_number FROM vicidial_list_alt_phones where lead_id='$lead_id' order by alt_phone_count desc limit 1;";
-															}
+														if ($called_since_last_reset =~ /^Y$/) {$CSLR = 'Y1';}
 														else
 															{
-															$Talt_dial = $alt_dial;
-															$Talt_dial =~ s/\D//gi;
-															$stmtA = "SELECT phone_code,phone_number FROM vicidial_list_alt_phones where lead_id='$lead_id' and alt_phone_count='$Talt_dial';";										
+															$called_since_last_reset =~ s/^Y//gi;
+															$called_since_last_reset++;
+															$CSLR = "Y$called_since_last_reset";
 															}
+														}
+													else {$CSLR = 'Y';}
+
+													$LLCT_DATE_offset = ($LOCAL_GMT_OFF - $gmt_offset_now);
+													$LLCT_DATE_offset_epoch = ( $secX - ($LLCT_DATE_offset * 3600) );
+													($Lsec,$Lmin,$Lhour,$Lmday,$Lmon,$Lyear,$Lwday,$Lyday,$Lisdst) = localtime($LLCT_DATE_offset_epoch);
+													$Lyear = ($Lyear + 1900);
+													$Lmon++;
+													if ($Lmon < 10) {$Lmon = "0$Lmon";}
+													if ($Lmday < 10) {$Lmday = "0$Lmday";}
+													if ($Lhour < 10) {$Lhour = "0$Lhour";}
+													if ($Lmin < 10) {$Lmin = "0$Lmin";}
+													if ($Lsec < 10) {$Lsec = "0$Lsec";}
+													$LLCT_DATE = "$Lyear-$Lmon-$Lmday $Lhour:$Lmin:$Lsec";
+
+													if ( ($alt_dial =~ /ALT|ADDR3|X/) && ($DBIPautoaltdial[$user_CIPct] =~ /ALT|ADDR|X/) )
+														{
+														if ( ($alt_dial =~ /ALT/) && ($DBIPautoaltdial[$user_CIPct] =~ /ALT/) )
+															{
+															$alt_phone =~ s/\D//gi;
+															$phone_number = $alt_phone;
+															}
+														if ( ($alt_dial =~ /ADDR3/) && ($DBIPautoaltdial[$user_CIPct] =~ /ADDR3/) )
+															{
+															$address3 =~ s/\D//gi;
+															$phone_number = $address3;
+															}
+														if  ( ($alt_dial =~ /^X/) && ($DBIPautoaltdial[$user_CIPct] =~ /^X/) )
+															{
+															if ($alt_dial =~ /LAST/) 
+																{
+																$stmtA = "SELECT phone_code,phone_number FROM vicidial_list_alt_phones where lead_id='$lead_id' order by alt_phone_count desc limit 1;";
+																}
+															else
+																{
+																$Talt_dial = $alt_dial;
+																$Talt_dial =~ s/\D//gi;
+																$stmtA = "SELECT phone_code,phone_number FROM vicidial_list_alt_phones where lead_id='$lead_id' and alt_phone_count='$Talt_dial';";										
+																}
+															$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+															$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+															$sthArows=$sthA->rows;
+															if ($sthArows > 0)
+																{
+																@aryA = $sthA->fetchrow_array;
+																$phone_code	=	$aryA[0];
+																$phone_number =	$aryA[1];
+																$phone_number =~ s/\D//gi;
+																}
+															$sthA->finish();
+															}
+
+														$stmtA = "UPDATE vicidial_list set called_since_last_reset='$CSLR', called_count='$called_count',user='VDAD',last_local_call_time='$LLCT_DATE' where lead_id='$lead_id';";
+														}
+													else
+														{
+														$stmtA = "UPDATE vicidial_list set called_since_last_reset='$CSLR', called_count='$called_count',user='VDAD',last_local_call_time='$LLCT_DATE' where lead_id='$lead_id';";
+														}
+													if ($staggered < 1)
+														{
+														$affected_rows = $dbhA->do($stmtA);
+														}
+													else
+														{
+														$vl_updates[$staggered_ct] = $stmtA;
+														}
+
+													$stmtA = "DELETE FROM vicidial_hopper where lead_id='$lead_id';";
+													$affected_rows = $dbhA->do($stmtA);
+
+													$CCID_on=0;   $CCID='';
+													$local_DEF = 'Local/';
+													$local_AMP = '@';
+													$Local_out_prefix = '9';
+													$Local_dial_timeout = '60';
+													if ($DBIPdialtimeout[$camp_CIPct] > 4) {$Local_dial_timeout = $DBIPdialtimeout[$camp_CIPct];}
+													$Local_dial_timeout = ($Local_dial_timeout * 1000);
+													if (length($DBIPdialprefix[$camp_CIPct]) > 0) {$Local_out_prefix = "$DBIPdialprefix[$camp_CIPct]";}
+													if (length($DBIPvdadexten[$camp_CIPct]) > 0) {$VDAD_dial_exten = "$DBIPvdadexten[$camp_CIPct]";}
+													else {$VDAD_dial_exten = "$answer_transfer_agent";}
+
+													if (length($DBIPcampaigncid[$camp_CIPct]) > 6) {$CCID = "$DBIPcampaigncid[$camp_CIPct]";   $CCID_on++;}
+													if (length($campaign_cid_override) > 6) {$CCID = "$campaign_cid_override";   $CCID_on++;}
+													if ($DBIPuse_custom_cid[$camp_CIPct] =~ /Y/) 
+														{
+														$temp_CID = $security_phrase;
+														$temp_CID =~ s/\D//gi;
+														if (length($temp_CID) > 6) 
+															{$CCID = "$temp_CID";   $CCID_on++;}
+														}
+													if ($DBIPuse_custom_cid[$camp_CIPct] =~ /AREACODE/) 
+														{
+														$temp_CID='';
+														$temp_vcca='';
+														$temp_ac = substr("$phone_number", 0, 3);
+														$stmtA = "SELECT outbound_cid FROM vicidial_campaign_cid_areacodes where campaign_id='$DBfill_campaign[$camp_CIPct]' and areacode='$temp_ac' and active='Y' order by call_count_today limit 1;";
 														$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 														$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 														$sthArows=$sthA->rows;
 														if ($sthArows > 0)
 															{
 															@aryA = $sthA->fetchrow_array;
-															$phone_code	=	$aryA[0];
-															$phone_number =	$aryA[1];
-															$phone_number =~ s/\D//gi;
+															$temp_vcca	=	$aryA[0];
+															$sthA->finish();
+
+															$stmtA="UPDATE vicidial_campaign_cid_areacodes set call_count_today=(call_count_today + 1) where campaign_id='$DBfill_campaign[$camp_CIPct]' and areacode='$temp_ac' and outbound_cid='$temp_vcca';";
+															$affected_rows = $dbhA->do($stmtA);
 															}
-														$sthA->finish();
+														$temp_CID = $temp_vcca;
+														$temp_CID =~ s/\D//gi;
+														if (length($temp_CID) > 6) 
+															{$CCID = "$temp_CID";   $CCID_on++;}
 														}
 
-													$stmtA = "UPDATE vicidial_list set called_since_last_reset='$CSLR', called_count='$called_count',user='VDAD',last_local_call_time='$LLCT_DATE' where lead_id='$lead_id';";
-													}
-												else
-													{
-													$stmtA = "UPDATE vicidial_list set called_since_last_reset='$CSLR', called_count='$called_count',user='VDAD',last_local_call_time='$LLCT_DATE' where lead_id='$lead_id';";
-													}
-												if ($staggered < 1)
-													{
-													$affected_rows = $dbhA->do($stmtA);
-													}
-												else
-													{
-													$vl_updates[$staggered_ct] = $stmtA;
-													}
+													if ($DBIPdialprefix[$camp_CIPct] =~ /x/i) {$Local_out_prefix = '';}
 
-												$stmtA = "DELETE FROM vicidial_hopper where lead_id='$lead_id';";
-												$affected_rows = $dbhA->do($stmtA);
-
-												$CCID_on=0;   $CCID='';
-												$local_DEF = 'Local/';
-												$local_AMP = '@';
-												$Local_out_prefix = '9';
-												$Local_dial_timeout = '60';
-												if ($DBIPdialtimeout[$camp_CIPct] > 4) {$Local_dial_timeout = $DBIPdialtimeout[$camp_CIPct];}
-												$Local_dial_timeout = ($Local_dial_timeout * 1000);
-												if (length($DBIPdialprefix[$camp_CIPct]) > 0) {$Local_out_prefix = "$DBIPdialprefix[$camp_CIPct]";}
-												if (length($DBIPvdadexten[$camp_CIPct]) > 0) {$VDAD_dial_exten = "$DBIPvdadexten[$camp_CIPct]";}
-												else {$VDAD_dial_exten = "$answer_transfer_agent";}
-
-												if (length($DBIPcampaigncid[$camp_CIPct]) > 6) {$CCID = "$DBIPcampaigncid[$camp_CIPct]";   $CCID_on++;}
-												if (length($campaign_cid_override) > 6) {$CCID = "$campaign_cid_override";   $CCID_on++;}
-												if ($DBIPuse_custom_cid[$camp_CIPct] =~ /Y/) 
-													{
-													$temp_CID = $security_phrase;
-													$temp_CID =~ s/\D//gi;
-													if (length($temp_CID) > 6) 
-														{$CCID = "$temp_CID";   $CCID_on++;}
-													}
-												if ($DBIPuse_custom_cid[$camp_CIPct] =~ /AREACODE/) 
-													{
-													$temp_CID='';
-													$temp_vcca='';
-													$temp_ac = substr("$phone_number", 0, 3);
-													$stmtA = "SELECT outbound_cid FROM vicidial_campaign_cid_areacodes where campaign_id='$DBfill_campaign[$camp_CIPct]' and areacode='$temp_ac' and active='Y' order by call_count_today limit 1;";
-													$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-													$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-													$sthArows=$sthA->rows;
-													if ($sthArows > 0)
+													if ($RECcount)
 														{
-														@aryA = $sthA->fetchrow_array;
-														$temp_vcca	=	$aryA[0];
-														$sthA->finish();
+														if ( (length($RECprefix)>0) && ($called_count < $RECcount) )
+														   {$Local_out_prefix .= "$RECprefix";}
+														}
+													$PADlead_id = sprintf("%010s", $lead_id);	while (length($PADlead_id) > 10) {chop($PADlead_id);}
 
-														$stmtA="UPDATE vicidial_campaign_cid_areacodes set call_count_today=(call_count_today + 1) where campaign_id='$DBfill_campaign[$camp_CIPct]' and areacode='$temp_ac' and outbound_cid='$temp_vcca';";
+													if ($lists_update !~ /'$list_id'/) {$lists_update .= "'$list_id',"; $LUcount++;}
+
+													$lead_id_call_list .= "$lead_id|";
+
+													if (length($alt_dial)<1) {$alt_dial='MAIN';}
+
+													### whether to omit phone_code or not
+													if ($DBIPomitcode[$camp_CIPct] > 0) 
+														{$Ndialstring = "$Local_out_prefix$phone_number";}
+													else
+														{$Ndialstring = "$Local_out_prefix$phone_code$phone_number";}
+
+													if (length($ext_context) < 1) {$ext_context='default';}
+													### use manager middleware-app to connect the next call to the meetme room
+													# VmmddhhmmssLLLLLLLLL
+														$VqueryCID = "V$CIDdate$PADlead_id";
+													if ($CCID_on) {$CIDstring = "\"$VqueryCID\" <$CCID>";}
+													else {$CIDstring = "$VqueryCID";}
+
+													if ($staggered < 1)
+														{
+														### insert a NEW record to the vicidial_manager table to be processed
+														$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$DB_camp_server_server_ip[$server_CIPct]','','Originate','$VqueryCID','Exten: $VDAD_dial_exten','Context: $ext_context','Channel: $local_DEF$Ndialstring$local_AMP$ext_context','Priority: 1','Callerid: $CIDstring','Timeout: $Local_dial_timeout','','','','VDACnote: $DBfill_campaign[$camp_CIPct]|$lead_id|$phone_code|$phone_number|OUTBALANCE|$alt_dial|$DBIPqueue_priority[$camp_CIPct]')";
+														$affected_rows = $dbhA->do($stmtA);
+
+														$event_string = "|     number call dialed|$DBfill_campaign[$camp_CIPct]|$VqueryCID|$stmtA|$gmt_offset_now|$alt_dial|";
+														 &event_logger;
+
+													### insert a SENT record to the vicidial_auto_calls table 
+														$stmtA = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,callerid,phone_code,phone_number,call_time,call_type,alt_dial,queue_priority) values('$DB_camp_server_server_ip[$server_CIPct]','$DBfill_campaign[$camp_CIPct]','SENT','$lead_id','$VqueryCID','$phone_code','$phone_number','$SQLdate','OUTBALANCE','$alt_dial','$DBIPqueue_priority[$camp_CIPct]')";
+														$affected_rows = $dbhA->do($stmtA);
+														$calls_placed++;
+
+													### insert log record into vicidial_dial_log table 
+														$stmtA = "INSERT INTO vicidial_dial_log SET caller_code='$VqueryCID',lead_id='$lead_id',server_ip='$DB_camp_server_server_ip[$server_CIPct]',call_date='$SQLdate',extension='$VDAD_dial_exten',channel='$local_DEF$Ndialstring$local_AMP$ext_context',timeout='$Local_dial_timeout',outbound_cid='$CIDstring',context='$ext_context';";
 														$affected_rows = $dbhA->do($stmtA);
 														}
-													$temp_CID = $temp_vcca;
-													$temp_CID =~ s/\D//gi;
-													if (length($temp_CID) > 6) 
-														{$CCID = "$temp_CID";   $CCID_on++;}
-													}
+													else
+														{
+														##### create dummy records to have their server_ip filled in at the stagger section
+														$vm_inserts[$staggered_ct] = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','XXXXXXXXXXXXXXX','','Originate','$VqueryCID','Exten: $VDAD_dial_exten','Context: $ext_context','Channel: $local_DEF$Ndialstring$local_AMP$ext_context','Priority: 1','Callerid: $CIDstring','Timeout: $Local_dial_timeout','','','','VDACnote: $DBfill_campaign[$camp_CIPct]|$lead_id|$phone_code|$phone_number|OUTBALANCE|$alt_dial|$DBIPqueue_priority[$camp_CIPct]')";
 
-												if ($DBIPdialprefix[$camp_CIPct] =~ /x/i) {$Local_out_prefix = '';}
+														$vac_inserts[$staggered_ct] = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,callerid,phone_code,phone_number,call_time,call_type,alt_dial,queue_priority) values('XXXXXXXXXXXXXXX','$DBfill_campaign[$camp_CIPct]','SENT','$lead_id','$VqueryCID','$phone_code','$phone_number','$SQLdate','OUTBALANCE','$alt_dial','$DBIPqueue_priority[$camp_CIPct]')";
 
-												if ($RECcount)
-													{
-													if ( (length($RECprefix)>0) && ($called_count < $RECcount) )
-													   {$Local_out_prefix .= "$RECprefix";}
-													}
-												$PADlead_id = sprintf("%010s", $lead_id);	while (length($PADlead_id) > 10) {chop($PADlead_id);}
+														$st_logged[$staggered_ct] = "$phone_number|$DBfill_campaign[$camp_CIPct]|$VqueryCID|$gmt_offset_now|$alt_dial|";
 
-												if ($lists_update !~ /'$list_id'/) {$lists_update .= "'$list_id',"; $LUcount++;}
+														$vddl_inserts[$staggered_ct] = "INSERT INTO vicidial_dial_log SET caller_code='$VqueryCID',lead_id='$lead_id',server_ip='XXXXXXXXXXXXXXX',call_date='$SQLdate',extension='$VDAD_dial_exten',channel='$local_DEF$Ndialstring$local_AMP$ext_context',timeout='$Local_dial_timeout',outbound_cid='$CIDstring',context='$ext_context';";
 
-												$lead_id_call_list .= "$lead_id|";
+														$calls_placed++;
+														$staggered_ct++;
+														}
 
-												if (length($alt_dial)<1) {$alt_dial='MAIN';}
-
-												### whether to omit phone_code or not
-												if ($DBIPomitcode[$camp_CIPct] > 0) 
-													{$Ndialstring = "$Local_out_prefix$phone_number";}
-												else
-													{$Ndialstring = "$Local_out_prefix$phone_code$phone_number";}
-
-												if (length($ext_context) < 1) {$ext_context='default';}
-												### use manager middleware-app to connect the next call to the meetme room
-												# VmmddhhmmssLLLLLLLLL
-													$VqueryCID = "V$CIDdate$PADlead_id";
-												if ($CCID_on) {$CIDstring = "\"$VqueryCID\" <$CCID>";}
-												else {$CIDstring = "$VqueryCID";}
-
-												if ($staggered < 1)
-													{
-													### insert a NEW record to the vicidial_manager table to be processed
-													$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$DB_camp_server_server_ip[$server_CIPct]','','Originate','$VqueryCID','Exten: $VDAD_dial_exten','Context: $ext_context','Channel: $local_DEF$Ndialstring$local_AMP$ext_context','Priority: 1','Callerid: $CIDstring','Timeout: $Local_dial_timeout','','','','VDACnote: $DBfill_campaign[$camp_CIPct]|$lead_id|$phone_code|$phone_number|OUTBALANCE|$alt_dial|$DBIPqueue_priority[$camp_CIPct]')";
-													$affected_rows = $dbhA->do($stmtA);
-
-													$event_string = "|     number call dialed|$DBfill_campaign[$camp_CIPct]|$VqueryCID|$stmtA|$gmt_offset_now|$alt_dial|";
-													 &event_logger;
-
-												### insert a SENT record to the vicidial_auto_calls table 
-													$stmtA = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,callerid,phone_code,phone_number,call_time,call_type,alt_dial,queue_priority) values('$DB_camp_server_server_ip[$server_CIPct]','$DBfill_campaign[$camp_CIPct]','SENT','$lead_id','$VqueryCID','$phone_code','$phone_number','$SQLdate','OUTBALANCE','$alt_dial','$DBIPqueue_priority[$camp_CIPct]')";
-													$affected_rows = $dbhA->do($stmtA);
-													$calls_placed++;
-
-												### insert log record into vicidial_dial_log table 
-													$stmtA = "INSERT INTO vicidial_dial_log SET caller_code='$VqueryCID',lead_id='$lead_id',server_ip='$DB_camp_server_server_ip[$server_CIPct]',call_date='$SQLdate',extension='$VDAD_dial_exten',channel='$local_DEF$Ndialstring$local_AMP$ext_context',timeout='$Local_dial_timeout',outbound_cid='$CIDstring',context='$ext_context';";
-													$affected_rows = $dbhA->do($stmtA);
-													}
-												else
-													{
-													##### create dummy records to have their server_ip filled in at the stagger section
-													$vm_inserts[$staggered_ct] = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','XXXXXXXXXXXXXXX','','Originate','$VqueryCID','Exten: $VDAD_dial_exten','Context: $ext_context','Channel: $local_DEF$Ndialstring$local_AMP$ext_context','Priority: 1','Callerid: $CIDstring','Timeout: $Local_dial_timeout','','','','VDACnote: $DBfill_campaign[$camp_CIPct]|$lead_id|$phone_code|$phone_number|OUTBALANCE|$alt_dial|$DBIPqueue_priority[$camp_CIPct]')";
-
-													$vac_inserts[$staggered_ct] = "INSERT INTO vicidial_auto_calls (server_ip,campaign_id,status,lead_id,callerid,phone_code,phone_number,call_time,call_type,alt_dial,queue_priority) values('XXXXXXXXXXXXXXX','$DBfill_campaign[$camp_CIPct]','SENT','$lead_id','$VqueryCID','$phone_code','$phone_number','$SQLdate','OUTBALANCE','$alt_dial','$DBIPqueue_priority[$camp_CIPct]')";
-
-													$st_logged[$staggered_ct] = "$phone_number|$DBfill_campaign[$camp_CIPct]|$VqueryCID|$gmt_offset_now|$alt_dial|";
-
-													$vddl_inserts[$staggered_ct] = "INSERT INTO vicidial_dial_log SET caller_code='$VqueryCID',lead_id='$lead_id',server_ip='XXXXXXXXXXXXXXX',call_date='$SQLdate',extension='$VDAD_dial_exten',channel='$local_DEF$Ndialstring$local_AMP$ext_context',timeout='$Local_dial_timeout',outbound_cid='$CIDstring',context='$ext_context';";
-
-													$calls_placed++;
-													$staggered_ct++;
-													}
-
-												if ($staggered < 1)
-													{
-													### sleep for 2.5 hundredths of a second to not flood the server with new calls
-												#	usleep(1*25*1000);
-													usleep(1*$per_call_delay*1000);
+													if ($staggered < 1)
+														{
+														### sleep for 2.5 hundredths of a second to not flood the server with new calls
+													#	usleep(1*25*1000);
+														usleep(1*$per_call_delay*1000);
+														}
 													}
 												}
+											$call_CMPIPct++;
 											}
-										$call_CMPIPct++;
 										}
 									}
 								}
+							else
+								{
+								$event_string.="No Agents logged in, not dialing";
+								&event_logger;
+								}
+
+							$server_CIPct++;
 							}
-						else
-							{
-							$event_string.="No Agents logged in, not dialing";
-							&event_logger;
-							}
-
-						$server_CIPct++;
 						}
-					}
-				else
-					{
-					$event_string.="No Balance Servers available that do not have a shortage";
-					&event_logger;
-					}
-
-
-				###############################################################################
-				###### BEGIN - experimental balanced FILL dialing ($staggered)
-				###############################################################################
-				if ( ($staggered > 0) && ($staggered_ct > 0) )
-					{
-					$staggered_fill=0;
-					$stmtA = "SELECT count(*),vicidial_balance_rank FROM servers where vicidial_balance_active = 'Y' group by vicidial_balance_rank order by vicidial_balance_rank desc;";
-					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-					$sthArows=$sthA->rows;
-					$st_ct=0;
-					while ($sthArows > $st_ct)
+					else
 						{
-						@aryA = $sthA->fetchrow_array;
-						$ST_count[$st_ct] =	$aryA[0];
-						$ST_rank[$st_ct] =	$aryA[1];
-						$st_ct++;
+						$event_string.="No Balance Servers available that do not have a shortage";
+						&event_logger;
 						}
-					$sthA->finish();
 
-					##### gather available trunks on all servers and place calls
-					$staggered_rank_ct=0;
-					while ( ($st_ct > $staggered_rank_ct) && ($staggered_ct > $staggered_fill) )
+
+					###############################################################################
+					###### BEGIN - experimental balanced FILL dialing ($staggered)
+					###############################################################################
+					if ( ($staggered > 0) && ($staggered_ct > 0) )
 						{
-						$stmtA = "SELECT server_ip FROM servers where vicidial_balance_rank='$ST_rank[$staggered_rank_ct]' and vicidial_balance_active = 'Y' order by server_ip LIMIT $ST_count[$staggered_rank_ct];";
+						$staggered_fill=0;
+						$stmtA = "SELECT count(*),vicidial_balance_rank FROM servers where vicidial_balance_active = 'Y' group by vicidial_balance_rank order by vicidial_balance_rank desc;";
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-						$sthArowsSIPS=$sthA->rows;
-						$TOTAL_available=0;
-						$st_si_ct=0;
-						while ($sthArowsSIPS > $st_si_ct)
+						$sthArows=$sthA->rows;
+						$st_ct=0;
+						while ($sthArows > $st_ct)
 							{
 							@aryA = $sthA->fetchrow_array;
-							$ST_server_ip[$st_si_ct] =	$aryA[0];
-
-							$io=0;
-							foreach(@DB_camp_server_server_ip)
-								{
-								if ( ($DB_camp_server_server_ip[$io] =~ /$ST_server_ip[$st_si_ct]/) && (length($DB_camp_server_server_ip[$io]) == length($ST_server_ip[$st_si_ct])) ) 
-									{
-									$ST_available[$st_si_ct] = $SERVER_CAMP_temp_avail[$io];
-									$ST_tally[$st_si_ct] = $SERVER_CAMP_temp_tally[$io];
-									$TOTAL_available = ($TOTAL_available + $ST_available[$st_si_ct]);
-									}
-								$io++;
-								}
-							$st_si_ct++;
+							$ST_count[$st_ct] =	$aryA[0];
+							$ST_rank[$st_ct] =	$aryA[1];
+							$st_ct++;
 							}
 						$sthA->finish();
 
-						##### place calls
-						$failsafe_ct=0;
-						$RANK_calls_placed=0;
-						$st_si_loop=0;
-						$TEMP_server_ip = '';
-						$TEMP_vm_insert = '';
-						$TEMP_vac_insert = '';
-						$TEMP_vl_update = '';
-						$TEMP_st_logged = '';
-						$TEMP_vddl_inserts = '';
-						$TEMP_vm_insert = '';
-						$TEMP_vac_insert = '';
-						$TEMP_vddl_inserts = '';
-
-						while ( ($TOTAL_available > $RANK_calls_placed) && ($failsafe_ct < 99999) && ($staggered_fill <= $staggered_ct) )
+						##### gather available trunks on all servers and place calls
+						$staggered_rank_ct=0;
+						while ( ($st_ct > $staggered_rank_ct) && ($staggered_ct > $staggered_fill) )
 							{
-							$TEMP_server_ip = $ST_server_ip[$st_si_loop];
-
-							$TEMP_vm_insert = $vm_inserts[$staggered_fill];
-							$TEMP_vac_insert = $vac_inserts[$staggered_fill];
-							$TEMP_vl_update = $vl_updates[$staggered_fill];
-							$TEMP_st_logged = $st_logged[$staggered_fill];
-							$TEMP_vddl_inserts = $vddl_inserts[$staggered_fill];
-
-							$TEMP_vm_insert =~ s/XXXXXXXXXXXXXXX/$TEMP_server_ip/gi;
-							$TEMP_vac_insert =~ s/XXXXXXXXXXXXXXX/$TEMP_server_ip/gi;
-							$TEMP_vddl_inserts =~ s/XXXXXXXXXXXXXXX/$TEMP_server_ip/gi;
-
-							if (length($TEMP_vm_insert) > 20)
+							$stmtA = "SELECT server_ip FROM servers where vicidial_balance_rank='$ST_rank[$staggered_rank_ct]' and vicidial_balance_active = 'Y' order by server_ip LIMIT $ST_count[$staggered_rank_ct];";
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArowsSIPS=$sthA->rows;
+							$TOTAL_available=0;
+							$st_si_ct=0;
+							while ($sthArowsSIPS > $st_si_ct)
 								{
-								$affected_rows_vl = $dbhA->do($TEMP_vl_update);
-								$affected_rows_vm = $dbhA->do($TEMP_vm_insert);
-								$affected_rows_vac = $dbhA->do($TEMP_vac_insert);
-								$affected_rows_vddl = $dbhA->do($TEMP_vddl_inserts);
+								@aryA = $sthA->fetchrow_array;
+								$ST_server_ip[$st_si_ct] =	$aryA[0];
+
+								$io=0;
+								foreach(@DB_camp_server_server_ip)
+									{
+									if ( ($DB_camp_server_server_ip[$io] =~ /$ST_server_ip[$st_si_ct]/) && (length($DB_camp_server_server_ip[$io]) == length($ST_server_ip[$st_si_ct])) ) 
+										{
+										$ST_available[$st_si_ct] = $SERVER_CAMP_temp_avail[$io];
+										$ST_tally[$st_si_ct] = $SERVER_CAMP_temp_tally[$io];
+										$TOTAL_available = ($TOTAL_available + $ST_available[$st_si_ct]);
+										}
+									$io++;
+									}
+								$st_si_ct++;
+								}
+							$sthA->finish();
+
+							##### place calls
+							$failsafe_ct=0;
+							$RANK_calls_placed=0;
+							$st_si_loop=0;
+							$TEMP_server_ip = '';
+							$TEMP_vm_insert = '';
+							$TEMP_vac_insert = '';
+							$TEMP_vl_update = '';
+							$TEMP_st_logged = '';
+							$TEMP_vddl_inserts = '';
+							$TEMP_vm_insert = '';
+							$TEMP_vac_insert = '';
+							$TEMP_vddl_inserts = '';
+
+							while ( ($TOTAL_available > $RANK_calls_placed) && ($failsafe_ct < 99999) && ($staggered_fill <= $staggered_ct) )
+								{
+								$TEMP_server_ip = $ST_server_ip[$st_si_loop];
+
+								$TEMP_vm_insert = $vm_inserts[$staggered_fill];
+								$TEMP_vac_insert = $vac_inserts[$staggered_fill];
+								$TEMP_vl_update = $vl_updates[$staggered_fill];
+								$TEMP_st_logged = $st_logged[$staggered_fill];
+								$TEMP_vddl_inserts = $vddl_inserts[$staggered_fill];
+
+								$TEMP_vm_insert =~ s/XXXXXXXXXXXXXXX/$TEMP_server_ip/gi;
+								$TEMP_vac_insert =~ s/XXXXXXXXXXXXXXX/$TEMP_server_ip/gi;
+								$TEMP_vddl_inserts =~ s/XXXXXXXXXXXXXXX/$TEMP_server_ip/gi;
+
+								if (length($TEMP_vm_insert) > 20)
+									{
+									$affected_rows_vl = $dbhA->do($TEMP_vl_update);
+									$affected_rows_vm = $dbhA->do($TEMP_vm_insert);
+									$affected_rows_vac = $dbhA->do($TEMP_vac_insert);
+									$affected_rows_vddl = $dbhA->do($TEMP_vddl_inserts);
+									}
+
+								$event_string = "|     number call stagger dialed|$TEMP_server_ip|$staggered_fill|$staggered_ct|$affected_rows_vm|$affected_rows_vac|$affected_rows_vl|$affected_rows_vddl   $TEMP_st_logged";
+								 &event_logger;
+
+								### sleep for 2.5 hundredths of a second to not flood the server with new calls
+							#	usleep(1*25*1000);
+								usleep(1*$per_call_delay*1000);
+
+								$RANK_calls_placed++;
+								$staggered_fill++;
+								$failsafe_ct++;
+								$st_si_loop++;
+								if ($st_si_loop >= $st_si_ct)
+									{$st_si_loop=0;}
 								}
 
-							$event_string = "|     number call stagger dialed|$TEMP_server_ip|$staggered_fill|$staggered_ct|$affected_rows_vm|$affected_rows_vac|$affected_rows_vl|$affected_rows_vddl   $TEMP_st_logged";
-							 &event_logger;
-
-							### sleep for 2.5 hundredths of a second to not flood the server with new calls
-						#	usleep(1*25*1000);
-							usleep(1*$per_call_delay*1000);
-
-							$RANK_calls_placed++;
-							$staggered_fill++;
-							$failsafe_ct++;
-							$st_si_loop++;
-							if ($st_si_loop >= $st_si_ct)
-								{$st_si_loop=0;}
+							$staggered_rank_ct++;
 							}
-
-						$staggered_rank_ct++;
 						}
+					$staggered_ct=0;
+					@ST_server_ip=@MT;
+					@ST_available=@MT;
+					@ST_tally=@MT;
+					@vm_inserts=@MT;
+					@vac_inserts=@MT;
+					@vl_updates=@MT;
+					@st_logged=@MT;
+					@vddl_inserts=@MT;
+					###############################################################################
+					###### END - experimental balanced FILL dialing ($staggered)
+					###############################################################################
+
+
+					$temp_balance_total = ($DBfill_current_balance[$camp_CIPct] + $DBfill_tally[$camp_CIPct]);
+					if ($DB) {print "CURRENT FILL: $temp_balance_total = ($DBfill_current_balance[$camp_CIPct] + $DBfill_tally[$camp_CIPct])\n";}
+					$stmtA = "UPDATE vicidial_campaign_stats SET balance_trunk_fill='$temp_balance_total' where campaign_id='$DBfill_campaign[$camp_CIPct]';";
+					$affected_rows = $dbhA->do($stmtA);
+
+					if ($calls_placed > 0)
+						{
+						$stmtA="UPDATE vicidial_campaigns SET campaign_calldate='$now_date' where campaign_id='$DBfill_campaign[$camp_CIPct]';";
+						$affected_rows = $dbhA->do($stmtA);
+						$calls_placed=0;
+						}
+
+					$camp_CIPct++;
 					}
-				$staggered_ct=0;
-				@ST_server_ip=@MT;
-				@ST_available=@MT;
-				@ST_tally=@MT;
-				@vm_inserts=@MT;
-				@vac_inserts=@MT;
-				@vl_updates=@MT;
-				@st_logged=@MT;
-				@vddl_inserts=@MT;
-				###############################################################################
-				###### END - experimental balanced FILL dialing ($staggered)
-				###############################################################################
 
-
-				$temp_balance_total = ($DBfill_current_balance[$camp_CIPct] + $DBfill_tally[$camp_CIPct]);
-				if ($DB) {print "CURRENT FILL: $temp_balance_total = ($DBfill_current_balance[$camp_CIPct] + $DBfill_tally[$camp_CIPct])\n";}
-				$stmtA = "UPDATE vicidial_campaign_stats SET balance_trunk_fill='$temp_balance_total' where campaign_id='$DBfill_campaign[$camp_CIPct]';";
+				}
+		##################################################################################
+		##### END LOOP IF THERE ARE BALANCE SERVERS AND THERE ARE SHORTAGES
+		##################################################################################
+			else
+				{
+				if ($DB) {print "No Balance servers or no shortages\n";}
+				$stmtA = "UPDATE vicidial_campaign_stats SET balance_trunk_fill='0';";
 				$affected_rows = $dbhA->do($stmtA);
 
-				if ($calls_placed > 0)
-					{
-					$stmtA="UPDATE vicidial_campaigns SET campaign_calldate='$now_date' where campaign_id='$DBfill_campaign[$camp_CIPct]';";
-					$affected_rows = $dbhA->do($stmtA);
-					$calls_placed=0;
-					}
-
-				$camp_CIPct++;
+				$event_string.="No Balance Servers available or No Shortages";
+				&event_logger;
 				}
-
 			}
-	##################################################################################
-	##### END LOOP IF THERE ARE BALANCE SERVERS AND THERE ARE SHORTAGES
-	##################################################################################
-		else
-			{
-			if ($DB) {print "No Balance servers or no shortages\n";}
-			$stmtA = "UPDATE vicidial_campaign_stats SET balance_trunk_fill='0';";
-			$affected_rows = $dbhA->do($stmtA);
-
-			$event_string.="No Balance Servers available or No Shortages";
-			&event_logger;
-			}
-
 
 
 

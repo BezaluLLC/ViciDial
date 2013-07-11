@@ -24,3 +24,7 @@ CREATE INDEX phone_ip ON vicidial_user_log (phone_ip);
 CREATE INDEX vuled ON vicidial_user_log (event_date);
 
 UPDATE system_settings SET db_schema_version='1352',db_schema_update_date=NOW() where db_schema_version < 1352;
+
+ALTER TABLE system_settings ADD disable_auto_dial ENUM('0','1') default '0';
+
+UPDATE system_settings SET db_schema_version='1353',db_schema_update_date=NOW() where db_schema_version < 1353;

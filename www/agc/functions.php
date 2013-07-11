@@ -16,11 +16,12 @@
 # 120213-1709 - Commented out default of READONLY fields since they cannot change
 # 130328-0018 - Converted ereg to preg functions
 # 130603-2208 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130705-2004 - Added optional encrypted passwords compatibility
 #
 
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
-function user_authorization($user,$pass,$user_option,$user_update)
+function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$return_hash)
 	{
 	require("dbconnect.php");
 
@@ -49,13 +50,28 @@ function user_authorization($user,$pass,$user_option,$user_update)
 	$browser = getenv("HTTP_USER_AGENT");
 	$LOCK_over = ($STARTtime - 900); # failed login lockout time is 15 minutes(900 seconds)
 	$LOCK_trigger_attempts = 10;
+	$pass_hash='';
 
-	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
-	$pass = preg_replace("/\'|\"|\\\\|;/","",$pass);
+	$user = preg_replace("/\'|\"|\\\\|;| /","",$user);
+	$pass = preg_replace("/\'|\"|\\\\|;| /","",$pass);
 
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0 and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";
+	$passSQL = "pass='$pass'";
+
+	if ($SSpass_hash_enabled > 0)
+		{
+		if ($bcrypt < 1)
+			{
+			$pass_hash = exec("./bp.pl --pass=$pass");
+			$pass_hash = preg_replace("/PHASH: |\n|\r|\t| /",'',$pass_hash);
+			}
+		else
+			{$pass_hash = $pass;}
+		$passSQL = "pass_hash='$pass_hash'";
+		}
+
+	$stmt="SELECT count(*) from vicidial_users where user='$user' and $passSQL and user_level > 0 and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";
 	if ($user_option == 'MGR')
-		{$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and manager_shift_enforcement_override='1' and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";}
+		{$stmt="SELECT count(*) from vicidial_users where user='$user' and $passSQL and manager_shift_enforcement_override='1' and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";}
 	if ($DB) {echo "|$stmt|\n";}
 	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
 	$rslt=mysql_query($stmt, $link);
@@ -111,6 +127,8 @@ function user_authorization($user,$pass,$user_option,$user_update)
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05013',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
 		$auth_key='GOOD';
+		if ( ($return_hash == '1') and ($SSpass_hash_enabled > 0) and (strlen($pass_hash) > 12) )
+			{$auth_key .= "|$pass_hash";}
 		}
 	return $auth_key;
 	}

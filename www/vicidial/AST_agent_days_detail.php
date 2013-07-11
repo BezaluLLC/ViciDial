@@ -889,7 +889,7 @@ if (strlen($user) > 1)
 	echo " <a href=\"./user_stats.php?user=$user&begin_date=$query_date&end_date=$end_date\">USER STATS</a> | \n";
 	}
 else
-	{echo " <a href=\"./admin.php?ADD=0\">USERS</a> | \n";}
+	{echo " <a href=\"./admin.php?ADD=0A\">USERS</a> | \n";}
 echo "<a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
 echo "</TD></TR></TABLE>";
 

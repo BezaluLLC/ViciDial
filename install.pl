@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# install.pl version 2.6
+# install.pl version 2.8
 #
 # Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -29,6 +29,7 @@
 # 121027-1750 - Added svn logging information
 # 121215-2059 - Added keepalive option E for email process
 # 130108-1853 - Added Asterisk 1.8 option with default conf files copy
+# 130705-1805 - Added bp.pl script to the agc web dir
 #
 
 ############################################
@@ -2632,6 +2633,7 @@ if ($PATHconf !~ /\/etc\/astguiclient.conf/)
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHhome/* `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHagi/* `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc/dbconnect.php `;
+	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc/bp.pl `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/dbconnect.php `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/listloader.pl `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/listloader_super.pl `;

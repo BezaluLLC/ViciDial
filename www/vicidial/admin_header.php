@@ -1102,7 +1102,7 @@ $SSlevel_8_disable_add =	$row[5];
 	?>
 	<!-- USERS NAVIGATION -->
 	<TR WIDTH=160><TD <?php echo $users_hh ?> WIDTH=160>
-	<a href="<?php echo $ADMIN ?>?ADD=0"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $users_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $users_bold ?>Users</a>
+	<a href="<?php echo $ADMIN ?>?ADD=0A"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $users_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $users_bold ?>Users</a>
 	</TD></TR>
 	<?php if (strlen($users_hh) > 1) { 
 		?>
