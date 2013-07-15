@@ -3220,12 +3220,13 @@ else
 # 130615-2124 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130627-0745 - Added url log, lagged log and user group login reports to admin utilities page
 # 130709-1350 - Changes for encrypted password compatibility, added Dial Log Report
+# 130711-2208 - Added SYSTEM SNAPSHOT STATS as new welcome screen, and added new 
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.8-407a';
-$build = '130709-1350';
+$admin_version = '2.8-408a';
+$build = '130711-2208';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3619,8 +3620,8 @@ if ( ($SSadmin_modify_refresh > 1) and (preg_match("/^3/",$ADD)) )
 echo "<title>ADMINISTRATION: ";
 
 ### set the default screen to the user list
-if ( (!isset($ADD)) or (strlen($ADD)<1) )   {$ADD="0A";}
-if ($ADD=='0') {$ADD="0A";}
+if ( (!isset($ADD)) or (strlen($ADD)<1) )   {$ADD="999990";}
+if ($ADD=='0') {$ADD="999990";}
 
 ### set the sections and headers
 if ($ADD=="1")			{$hh='users';		echo "Add New User";}
@@ -3961,6 +3962,7 @@ if ($ADD==999994)		{$hh='reports';		echo "ADMIN UTILITIES";}
 if ($ADD==999993)		{$hh='reports';		echo "SUMMARY STATS";}
 if ($ADD==999992)		{$hh='reports';		echo "SYSTEM SUMMARY STATS";}
 if ($ADD==999991)		{$hh='reports';		echo "SERVERS VERSIONS";}
+if ($ADD==999990)		{$hh='reports';		echo "SYSTEM SNAPSHOT STATS";}
 
 if ( ($ADD==999993) or ($ADD==999992) or ($ADD==730000000000000) or ($ADD==830000000000000) )
 	{
@@ -17076,7 +17078,7 @@ if ($ADD==411)
 					$rslt=mysql_query($stmtB, $link);
 
 					### LOG INSERTION Admin Log Table ###
-					$SQL_log = "$stmt|";
+					$SQL_log = "$stmtB|";
 					$SQL_log = preg_replace('/;/', '', $SQL_log);
 					$SQL_log = addslashes($SQL_log);
 					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='RESET', record_id='$list_id', event_code='ADMIN RESET LIST', event_sql=\"$SQL_log\", event_notes='';";
@@ -36287,6 +36289,7 @@ if ($ADD==999994)
 		echo "<BR><BR>\n";
 		echo "<LI><a href=\"admin_phones_bulk_insert.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Bulk Phone Insert Page</a></FONT>\n";
 		echo "<LI><a href=\"lead_tools.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Basic Lead Management Tools</a></FONT>\n";
+		echo "<LI><a href=\"reset_campaign_lists.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Reset Campaign Lists</a></FONT>\n";
 		echo "<LI><a href=\"callbacks_bulk_change.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Callbacks Transferral Page</a></FONT>\n";
 		echo "<LI><a href=\"send_CID_call.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Send a Call With Custom CID Page</a></FONT>\n";
 		echo "<LI><a href=\"voice_lab.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Speech Voice Lab Page</a></FONT>\n";
@@ -36495,6 +36498,195 @@ if ($ADD==999992)
 	echo "</TABLE></center>\n";
 	}
 ##### END max system stats report #####
+
+######################
+# ADD=999990 - new main landing page with system stats
+######################
+if ($ADD==999990)
+	{
+	$section_width=640;
+	echo "<BR><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<center><TABLE width=$section_width cellspacing=2>\n";
+	echo "<tr>";
+	echo "<td align='left' colspan='4'>System Summary:</td>";
+	echo "</tr>";
+
+	$stmt="select closer_campaigns from vicidial_campaigns;";
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_row($rslt);
+	$closer_campaigns = preg_replace("/^ | -$/","",$row[0]);
+	$closer_campaigns = preg_replace("/ /","','",$closer_campaigns);
+	$closer_campaigns = "'$closer_campaigns'";
+
+	$stmt="select status from vicidial_auto_calls where status NOT IN('XFER') and ( (call_type='IN' and campaign_id IN($closer_campaigns)) or (call_type='OUT') );";
+	$rslt=mysql_query($stmt, $link);
+	$active_calls=mysql_num_rows($rslt);
+	$ringing_calls=0;
+	if ($active_calls>0) {
+		while ($row=mysql_fetch_row($rslt)) {
+			if (!preg_match("/LIVE|CLOSER/i",$row[0])) 
+				{$ringing_calls++;}
+		}
+	}
+
+
+	$active_stmt="select active from vicidial_users";
+	$active_rslt=mysql_query($active_stmt, $link);
+	while ($active_row=mysql_fetch_array($active_rslt)) {
+		$users[$active_row["active"]]++;
+	}
+
+	$active_stmt="select active from vicidial_campaigns";
+	$active_rslt=mysql_query($active_stmt, $link);
+	while ($active_row=mysql_fetch_array($active_rslt)) {
+		$campaigns[$active_row["active"]]++;
+	}
+
+	$active_stmt="select active from vicidial_lists";
+	$active_rslt=mysql_query($active_stmt, $link);
+	while ($active_row=mysql_fetch_array($active_rslt)) {
+		$lists[$active_row["active"]]++;
+	}
+
+	$active_stmt="select did_active from vicidial_inbound_dids";
+	$active_rslt=mysql_query($active_stmt, $link);
+	while ($active_row=mysql_fetch_array($active_rslt)) {
+		$dids[$active_row["did_active"]]++;
+	}
+
+	$active_stmt="select active from vicidial_inbound_groups";
+	$active_rslt=mysql_query($active_stmt, $link);
+	while ($active_row=mysql_fetch_array($active_rslt)) {
+		$ingroups[$active_row["active"]]++;
+	}
+
+	$stmt="select extension,user,conf_exten,status,server_ip,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_call_finish),call_server_ip,campaign_id from vicidial_live_agents";
+	$rslt=mysql_query($stmt, $link);
+	$agent_incall=0; $agent_total=0;
+	while($row=mysql_fetch_array($rslt)) {
+		$status=$row[3];
+		$agent_total++;
+		if ( (preg_match("/INCALL/i",$status)) or (preg_match("/QUEUE/i",$status)) ) {$agent_incall++; }
+	}
+	echo "<tr bgcolor=black>";
+	echo "<td nowrap><font size='+1' color=white><B>&nbsp; Agents Logged In &nbsp;</B></font></td>";
+	echo "<td nowrap><font size='+1' color=white><B>&nbsp; Agents In Calls &nbsp;</B></font></td>";
+	echo "<td nowrap><font size='+1' color=white><B>&nbsp; Active Calls &nbsp;</B></font></td>";
+	echo "<td nowrap><font size='+1' color=white><B>&nbsp; Calls Ringing &nbsp;</B></font></td>";
+	echo "</tr>";
+	echo "<tr bgcolor='#B9CBFD'>";
+	echo "<td align='center'><font size='+1'>&nbsp; $agent_total &nbsp;</font></td>";
+	echo "<td align='center'><font size='+1'>&nbsp; $agent_incall &nbsp;</font></td>";
+	echo "<td align='center'><font size='+1'>&nbsp; $active_calls &nbsp;</font></td>";
+	echo "<td align='center'><font size='+1'>&nbsp; $ringing_calls &nbsp;</font></td>";
+	echo "</tr>";
+
+	echo "<tr>";
+	echo "<td align='left' colspan='4'>&nbsp;</td>";  # Padding
+	echo "</tr>";
+
+	echo "<tr bgcolor=black>";
+	echo "<td align='center'><font color=white><B>&nbsp; &nbsp; Records &nbsp;</B></font></td>";
+	echo "<td align='center'><font color=white><B>&nbsp; Active &nbsp;</B></font></td>";
+	echo "<td align='center'><font color=white><B>&nbsp; Inactive &nbsp;</B></font></td>";
+	echo "<td align='center'><font color=white><B>&nbsp; Total &nbsp;</B></font></td>";
+	echo "</tr>";
+	echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=0A'>Users: </a></td><td align=center><b>".($users["Y"]+0)."</b></td><td align=center><b>".($users["N"]+0)."</b></td><td align=center><b>".($users["Y"]+$users["N"]+0)."</b></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=10'>Campaigns: </a></td><td align=center><b>".($campaigns["Y"]+0)."</b></td><td align=center><b>".($campaigns["N"]+0)."</b></td><td align=center><b>".($campaigns["Y"]+$campaigns["N"]+0)."</b></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=100'>Lists: </a></td><td align=center><b>".($lists["Y"]+0)."</b></td><td align=center><b>".($lists["N"]+0)."</b></td><td align=center><b>".($lists["Y"]+$lists["N"]+0)."</b></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=1000'>In-Groups: </a></td><td align=center><b>".($ingroups["Y"]+0)."</b></td><td align=center><b>".($ingroups["N"]+0)."</b></td><td align=center><b>".($ingroups["Y"]+$ingroups["N"]+0)."</b></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=1300'>DIDs: </a></td><td align=center><b>".($dids["Y"]+0)."</b></td><td align=center><b>".($dids["N"]+0)."</b></td><td align=center><b>".($dids["Y"]+$dids["N"]+0)."</b></td></tr>\n";
+	
+	echo "</TABLE></center>\n";
+
+	echo "<BR>\n";
+
+
+	$today=date("Y-m-d");
+	$yesterday=date("Y-m-d", mktime(0,0,0,date("m"),date("d")-1,date("Y")));
+	$thirtydays=date("Y-m-d", mktime(0,0,0,date("m"),date("d")-29,date("Y")));
+
+	$total_calls=0;
+	$total_inbound=0;
+	$total_outbound=0;
+	$stmt="SELECT stats_type,sum(total_calls) from vicidial_daily_max_stats where campaign_id!='' and stats_flag='OPEN' and stats_date='$today' group by stats_type;";
+	$rslt=mysql_query($stmt, $link);
+	$rows_to_print = mysql_num_rows($rslt);
+	if ($rows_to_print > 0) 
+		{
+		while ($rowx=mysql_fetch_row($rslt)) 
+			{
+			$total_calls += $rowx[1];
+			if (preg_match('/INGROUP/', $rowx[0])) {$total_inbound+=$rowx[1];}
+			if (preg_match('/CAMPAIGN/', $rowx[0])) {$total_outbound+=$rowx[1];}
+			}
+		}
+
+
+	$stmt="select * from vicidial_daily_max_stats where stats_date='$today' and stats_flag='OPEN' and stats_type='TOTAL' order by stats_date, campaign_id asc";
+	$rslt=mysql_query($stmt, $link);
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<tr>";
+	echo "<td align='left' colspan='3'>Total Stats for Today:</td>";
+	echo "<td align='right'><font size=1><a href='$PHP_SELF?query_date=$thirtydays&end_date=$today&max_system_stats_submit=ADJUST+DATE+RANGE&ADD=999992&stage=TOTAL'>[view max stats]</a></font></td>";
+	echo "</tr>";
+	echo "<tr bgcolor=black>";
+	# echo "<td><font size=1 color=white align=left><B>CAMPAIGN ID</B></font></td>";
+	echo "<td><font size=1 color=white><B>&nbsp; Total Calls &nbsp;</B></font></td>";
+	echo "<td><font size=1 color=white><B>&nbsp; Total Inbound Calls &nbsp;</B></font></td>";
+	echo "<td><font size=1 color=white><B>&nbsp; Total Outbound Calls &nbsp;</B></font></td>";
+	echo "<td><font size=1 color=white><B>&nbsp; Maximum Agents &nbsp;</B></font></td>";
+
+	if (mysql_num_rows($rslt)>0) {
+		while ($row=mysql_fetch_array($rslt)) {
+			echo "<tr bgcolor='#B9CBFD'>";
+		#	echo "<td align='left'><font size=1>".$row["campaign_id"]."</font></td>";
+			echo "<td align='center'><font size=1>".($total_calls+0)."</font></td>";
+			echo "<td align='center'><font size=1>".($total_inbound+0)."</font></td>";
+			echo "<td align='center'><font size=1>".($total_outbound+0)."</font></td>";
+			echo "<td align='center'><font size=1>".($row["max_agents"]+0)."</font></td>";
+			echo "</tr>";
+		}
+	} else {
+		echo "<tr bgcolor='#B9CBFD'>";
+		echo "<td align='center' colspan='4'><font size=1>*** NO ACTIVITY FOR $today ***</font></td>";
+		echo "</tr>";
+	}
+	echo "</TABLE></center>\n";
+
+	$stmt="select * from vicidial_daily_max_stats where stats_date='$yesterday' and stats_type='TOTAL' order by stats_date, campaign_id asc";
+	$rslt=mysql_query($stmt, $link);
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<tr>";
+	echo "<td align='left' colspan='3'>Total Stats for Yesterday:</td>";
+	echo "<td align='right'><font size=1><a href='$PHP_SELF?query_date=$thirtydays&end_date=$today&max_system_stats_submit=ADJUST+DATE+RANGE&ADD=999992&stage=TOTAL'>[view max stats]</a></font></td>";
+	echo "</tr>";
+	echo "<tr bgcolor=black>";
+#	echo "<td><font size=1 color=white align=left><B>CAMPAIGN ID</B></font></td>";
+	echo "<td><font size=1 color=white><B>&nbsp; Total Calls &nbsp;</B></font></td>";
+	echo "<td><font size=1 color=white><B>&nbsp; Total Inbound Calls &nbsp;</B></font></td>";
+	echo "<td><font size=1 color=white><B>&nbsp; Total Outbound Calls &nbsp;</B></font></td>";
+	echo "<td><font size=1 color=white><B>&nbsp; Maximum Agents &nbsp;</B></font></td>";
+
+	if (mysql_num_rows($rslt)>0) {
+		while ($row=mysql_fetch_array($rslt)) {
+			echo "<tr bgcolor='#B9CBFD'>";
+			#echo "<td align='left'><font size=1>".$row["campaign_id"]."</font></td>";
+			echo "<td align='center'><font size=1>".($row["total_calls"]+0)."</font></td>";
+			echo "<td align='center'><font size=1>".($row["max_inbound"]+0)."</font></td>";
+			echo "<td align='center'><font size=1>".($row["max_outbound"]+0)."</font></td>";
+			echo "<td align='center'><font size=1>".($row["max_agents"]+0)."</font></td>";
+			echo "</tr>";
+		}
+	} else {
+		echo "<tr bgcolor='#B9CBFD'>";
+		echo "<td align='center' colspan='4'><font size=1>*** NO ACTIVITY FOR $today ***</font></td>";
+		echo "</tr>";
+	}
+
+	echo "</FONT><BR><BR>";
+
+	}
 
 ##### If report run, update the time in the vicidial_report_log table #####
 if ( ($ADD==999993) or ($ADD==999992) or ($ADD==730000000000000) or ($ADD==830000000000000) )

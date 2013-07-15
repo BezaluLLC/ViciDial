@@ -102,11 +102,15 @@ OTHER CHANGES:
 		exten => _598600XXX,1,Dial(${TRUNKblind}/57${EXTEN:2},55)
 		exten => _598600XXX,n,Hangup()
 
+9. Added Reset Lead-Called-Status for Campaigns page to Admin Utilities
+
+10. Added System Summary screen as default admin.php screen instead of User List
 
 
 
 
-########## UPGRADING FROM 2.4 TO 2.6 ##########
+
+########## UPGRADING FROM 2.4 TO 2.6 (2.7 release branch) ##########
 
 OPTIONAL STEPS(But highly recommended) - Backup existing system:
 

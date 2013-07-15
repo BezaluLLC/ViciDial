@@ -1093,7 +1093,7 @@ $SSlevel_8_disable_add =	$row[5];
 <TABLE BGCOLOR=white cellpadding=0 cellspacing=0>
 <!-- BEGIN SIDEBAR NAVIGATION -->
 <TR><TD VALIGN=TOP WIDTH=170 BGCOLOR=#015B91 ALIGN=CENTER>
-<IMG SRC="./vicidial_admin_web_logo.gif" WIDTH=170 HEIGHT=45 ALT="System logo">
+<A HREF="./admin.php"><IMG SRC="./vicidial_admin_web_logo.gif" WIDTH=170 HEIGHT=45 BORDER=0 ALT="System logo"></A>
 <B><FONT FACE="ARIAL,HELVETICA" COLOR=white>ADMINISTRATION</FONT></B><BR>
 	<TABLE CELLPADDING=2 CELLSPACING=0 BGCOLOR=#015B91 WIDTH=160>
 	<?php

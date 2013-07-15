@@ -205,6 +205,23 @@ This is the action that will be taken when a new email is found in the account. 
 The custom template maker allows you to define your own file layouts for use with the list loader and also delete them, if necessary.  If you frequently upload files that are in a consistent layout other than the standard layout, you may find this tool helpful.  The saved layout will work on any uploaded file it matches, regardless of file type or delimiter||
 Once you have loaded a sample lead file matching the layout you want to make into a template and select a list ID to load leads into, all of the available columns from the list table and the custom table for the list you selected (if any) will be displayed here.  Columns highlighted in blue are standard columns from the list table.  Columns highlighted in pink belong to the custom table for the selected list.  Each column listed has a drop-down menu, which should be populated with the fields from the first row of the sample lead file you uploaded.  Assign the appropriate fields to the appropriate columns and press SUBMIT TEMPLATE to create your template.  You do not need to assign every field to a column, and you do not need to assign every column a field.  For details on the standard list columns, click||
 The Quality Control - QC function has its own set of status codes separate from those within the call handling functions of the system. QC status codes must be between 2 and 8 characters in length and contain no special characters like a space or colon. The QC status code description must be between 2 and 30 characters in length. For these functions to work, you must have QC enabled in the System Settings||
+SYSTEM SNAPSHOT STATS||
+Reset Lead-Called-Status for Campaigns||
+Total Stats for Today||
+Total Stats for Yesterday||
+Total Calls||
+Total Inbound Calls||
+Total Outbound Calls||
+Maximum Agents||
+System Summary||
+Agents Logged In||
+Agents In Calls||
+Active Calls||
+Calls Ringing||
+ Records ||
+ Active ||
+ Inactive ||
+ Total ||
 
 
 ########################## CHANGES TO EXISTING PHRASES IN ADMIN TRANSLATION
