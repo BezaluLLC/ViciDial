@@ -85,6 +85,7 @@
 # 130424-1607 - Added NOINT prefix option for call menu prompts to do Playback() instead of Background()
 # 130508-1009 - Small fix for INVALID_2ND and 3RD
 # 130624-0733 - Added optimize for vicidial_users due to logging IP and auth timestamp
+# 130716-1441 - Clear out vicidial_monitor_calls records older than 1 day old
 #
 
 $DB=0; # Debug flag
@@ -1012,6 +1013,20 @@ if ($timeclock_end_of_day_NOW > 0)
 	if($DB){print STDERR "\n|$affected_rows vicidial_session_data old records deleted|\n";}
 
 	$stmtA = "optimize table vicidial_session_data;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+
+	$stmtA = "delete from vicidial_monitor_calls where monitor_time < \"$TDSQLdate\";";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "\n|$affected_rows vicidial_monitor_calls old records deleted|\n";}
+
+	$stmtA = "optimize table vicidial_monitor_calls;";
 	if($DBX){print STDERR "\n|$stmtA|\n";}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;

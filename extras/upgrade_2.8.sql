@@ -28,3 +28,38 @@ UPDATE system_settings SET db_schema_version='1352',db_schema_update_date=NOW() 
 ALTER TABLE system_settings ADD disable_auto_dial ENUM('0','1') default '0';
 
 UPDATE system_settings SET db_schema_version='1353',db_schema_update_date=NOW() where db_schema_version < 1353;
+
+CREATE TABLE vicidial_monitor_calls (
+monitor_call_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+callerid VARCHAR(20),
+channel VARCHAR(100),
+context VARCHAR(100),
+uniqueid VARCHAR(20),
+monitor_time DATETIME,
+user_phone VARCHAR(10) default 'USER',
+api_log ENUM('Y','N') default 'N',
+barge_listen ENUM('LISTEN','BARGE') default 'LISTEN',
+prepop_id VARCHAR(100) default '',
+campaigns_limit VARCHAR(1000) default '',
+users_list ENUM('Y','N') default 'N',
+index (callerid),
+index (monitor_time)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_monitor_log (
+server_ip VARCHAR(15) NOT NULL,
+callerid VARCHAR(20),
+channel VARCHAR(100),
+context VARCHAR(100),
+uniqueid VARCHAR(20),
+monitor_time DATETIME,
+user VARCHAR(20),
+campaign_id VARCHAR(8),
+index (user),
+index (campaign_id),
+index (monitor_time)
+) ENGINE=MyISAM;
+
+UPDATE system_settings SET db_schema_version='1354',db_schema_update_date=NOW() where db_schema_version < 1354;
+

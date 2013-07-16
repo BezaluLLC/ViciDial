@@ -30,6 +30,7 @@
 # 121215-2059 - Added keepalive option E for email process
 # 130108-1853 - Added Asterisk 1.8 option with default conf files copy
 # 130705-1805 - Added bp.pl script to the agc web dir
+# 130716-1025 - Added mtemp sounds directory for sox concatenated temp audio
 #
 
 ############################################
@@ -2493,6 +2494,7 @@ if ($WEBONLY < 1)
 	print "Creating sound tts directories...\n";
 	if (!-e "$PATHsounds/tts/")						{`mkdir -p $PATHsounds/tts/`;}
 	if (!-e "$PATHsounds/tts_static/")				{`mkdir -p $PATHsounds/tts_static/`;}
+	if (!-e "$PATHsounds/mtemp/")					{`mkdir -p $PATHsounds/mtemp/`;}
 
 	print "Copying ip_relay scripts to $PATHhome...\n";
 	`cp -fR ./extras/ip_relay $PATHhome/`;

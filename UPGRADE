@@ -106,6 +106,10 @@ OTHER CHANGES:
 
 10. Added System Summary screen as default admin.php screen instead of User List
 
+11. Added new agent_monitor.agi script to replace the  agi-phone_monitor script
+	for agent monitoring. Please read the AGENT_MONITOR.txt document for 
+	more information on the dialplan changes necessary to use this script.
+
 
 
 
