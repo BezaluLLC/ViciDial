@@ -10,10 +10,11 @@
 # 130123-1923 - Added ability to use user-login-first options.php option
 # 130328-0005 - Converted ereg to preg functions
 # 130603-2212 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130718-0946 - Fixed login bug
 #
 
-$version = '2.8-6p';
-$build = '130603-2212';
+$version = '2.8-7p';
+$build = '130718-0946';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=73;
 $one_mysql_log=0;
@@ -335,16 +336,14 @@ else
 	else
 		{
 		$auth=0;
-		$auth_message = user_authorization($user,$pass,'',1,0,0);
+		$auth_message = user_authorization($VD_login,$VD_pass,'',1,0,0);
 		if ($auth_message == 'GOOD')
 			{$auth=1;}
 
 		if($auth>0)
 			{
-			$login=strtoupper($VD_login);
-			$password=strtoupper($VD_pass);
 			##### grab the full name of the agent
-			$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,agent_call_log_view_override,agent_choose_blended,agent_lead_search_override from vicidial_users where user='$VD_login' and pass='$VD_pass'";
+			$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,agent_call_log_view_override,agent_choose_blended,agent_lead_search_override from vicidial_users where user='$VD_login';";
 			$rslt=mysql_query($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09004',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysql_fetch_row($rslt);
