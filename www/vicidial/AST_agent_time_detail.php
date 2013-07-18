@@ -1232,7 +1232,7 @@ else
 		for ($e=0; $e<count($sub_statusesARY); $e++) {
 			$Sstatus=$sub_statusesARY[$e];
 			$graph_var=$Sstatus."_graph";
-			$JS_text.="	var ".$Sstatus."_graph=\"".$$graph_var."\";\n";
+			$JS_text.="	var graph_".$Sstatus."=\"".$$graph_var."\";\n";
 		}
 
 		$JS_text.="	for (var i=1; i<=".(14+count($sub_statusesARY))."; i++) {\n";
@@ -1242,7 +1242,7 @@ else
 		$JS_text.="	var cellID=\"timegraph\"+th_id;\n";
 		$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
 		$JS_text.="\n";
-		$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
+		$JS_text.="	var graph_to_display=eval(\"graph_\"+graph);\n";
 		$JS_text.="	document.getElementById('agent_time_detail_graph').innerHTML=graph_to_display;\n";
 		$JS_text.="}\n";
 

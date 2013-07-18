@@ -542,6 +542,8 @@ sub user_phone_gather
 		$PDtsSQLdate = "$Pyear$Pmon$Pmday$Phour$Pmin$Psec";
 
 		$stmtA = "SELECT user FROM vicidial_live_agents where last_update_time > \"$PDtsSQLdate\" and extension NOT LIKE \"R/%\" $campaigns_limitSQL order by last_update_time desc limit 100;";
+		if ($user_phone =~ /PHONE/)
+			{$stmtA = "SELECT extension FROM vicidial_live_agents where extension NOT LIKE \"R/%\" and last_update_time > \"$PDtsSQLdate\" $campaigns_limitSQL limit 100;";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -552,6 +554,7 @@ sub user_phone_gather
 			@aryA = $sthA->fetchrow_array;
 			$sox_cmd .= " /var/lib/asterisk/sounds/silence.wav /var/lib/asterisk/sounds/user.gsm";
 			$sox_user = $aryA[0];
+			$sox_user =~ s/IAX2\/|IAX\/|SIP\///gi;
 			$sox_user =~ s/\D//gi;
 			foreach $user_char (split //, $sox_user) 
 				{

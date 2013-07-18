@@ -966,25 +966,25 @@ for ($e=0; $e<count($statusesARY); $e++) {
 
 $JS_onload.="\tDrawGraph('CALLS', '1');\n"; 
 $JS_text.="function DrawGraph(graph, th_id) {\n";
-$JS_text.="	var CALLS_graph=\"$CALLS_graph\";\n";
-$JS_text.="	var TIME_graph=\"$TIME_graph\";\n";
-$JS_text.="	var PAUSE_graph=\"$PAUSE_graph\";\n";
-$JS_text.="	var PAUSEAVG_graph=\"$PAUSEAVG_graph\";\n";
-$JS_text.="	var WAIT_graph=\"$WAIT_graph\";\n";
-$JS_text.="	var WAITAVG_graph=\"$WAITAVG_graph\";\n";
-$JS_text.="	var TALK_graph=\"$TALK_graph\";\n";
-$JS_text.="	var TALKAVG_graph=\"$TALKAVG_graph\";\n";
-$JS_text.="	var DISPO_graph=\"$DISPO_graph\";\n";
-$JS_text.="	var DISPOAVG_graph=\"$DISPOAVG_graph\";\n";
-$JS_text.="	var DEAD_graph=\"$DEAD_graph\";\n";
-$JS_text.="	var DEADAVG_graph=\"$DEADAVG_graph\";\n";
-$JS_text.="	var CUST_graph=\"$CUST_graph\";\n";
-$JS_text.="	var CUSTAVG_graph=\"$CUSTAVG_graph\";\n";
+$JS_text.="	var graph_CALLS=\"$CALLS_graph\";\n";
+$JS_text.="	var graph_TIME=\"$TIME_graph\";\n";
+$JS_text.="	var graph_PAUSE=\"$PAUSE_graph\";\n";
+$JS_text.="	var graph_PAUSEAVG=\"$PAUSEAVG_graph\";\n";
+$JS_text.="	var graph_WAIT=\"$WAIT_graph\";\n";
+$JS_text.="	var graph_WAITAVG=\"$WAITAVG_graph\";\n";
+$JS_text.="	var graph_TALK=\"$TALK_graph\";\n";
+$JS_text.="	var graph_TALKAVG=\"$TALKAVG_graph\";\n";
+$JS_text.="	var graph_DISPO=\"$DISPO_graph\";\n";
+$JS_text.="	var graph_DISPOAVG=\"$DISPOAVG_graph\";\n";
+$JS_text.="	var graph_DEAD=\"$DEAD_graph\";\n";
+$JS_text.="	var graph_DEADAVG=\"$DEADAVG_graph\";\n";
+$JS_text.="	var graph_CUST=\"$CUST_graph\";\n";
+$JS_text.="	var graph_CUSTAVG=\"$CUSTAVG_graph\";\n";
 
 for ($e=0; $e<count($statusesARY); $e++) {
 	$Sstatus=$statusesARY[$e];
 	$graph_var=$Sstatus."_graph";
-	$JS_text.="	var ".$Sstatus."_graph=\"".$$graph_var."\";\n";
+	$JS_text.="	var graph_".$Sstatus."=\"".$$graph_var."\";\n";
 }
 
 $JS_text.="	for (var i=1; i<=".(count($statusesARY)+14)."; i++) {\n";
@@ -994,7 +994,7 @@ $JS_text.="	}\n";
 $JS_text.="	var cellID=\"callstatsgraph\"+th_id;\n";
 $JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
 $JS_text.="\n";
-$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
+$JS_text.="	var graph_to_display=eval(\"graph_\"+graph);\n";
 $JS_text.="	document.getElementById('call_stats_graph').innerHTML=graph_to_display;\n";
 $JS_text.="}\n";
 $JS_text.="</script>\n";
@@ -1360,14 +1360,14 @@ for ($e=0; $e<count($sub_statusesARY); $e++) {
 $JS_onload.="\tDrawPauseGraph('TOTAL', '1');\n"; 
 $JS_text="<script language='Javascript'>\n";
 $JS_text.="function DrawPauseGraph(graph, th_id) {\n";
-$JS_text.="	var TOTAL_graph=\"$TOTAL_graph\";\n";
-$JS_text.="	var NONPAUSE_graph=\"$NONPAUSE_graph\";\n";
-$JS_text.="	var PAUSE_graph=\"$PAUSE_graph\";\n";
+$JS_text.="	var graph_TOTAL=\"$TOTAL_graph\";\n";
+$JS_text.="	var graph_NONPAUSE=\"$NONPAUSE_graph\";\n";
+$JS_text.="	var graph_PAUSE=\"$PAUSE_graph\";\n";
 
 for ($e=0; $e<count($sub_statusesARY); $e++) {
 	$Sstatus=$sub_statusesARY[$e];
 	$graph_var=$Sstatus."_graph";
-	$JS_text.="	var ".$Sstatus."_graph=\"".$$graph_var."\";\n";
+	$JS_text.="	var graph_".$Sstatus."=\"".$$graph_var."\";\n";
 }
 
 $JS_text.="	for (var i=1; i<=".(3+count($sub_statusesARY))."; i++) {\n";
@@ -1377,7 +1377,7 @@ $JS_text.="	}\n";
 $JS_text.="	var cellID=\"pausegraph\"+th_id;\n";
 $JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
 $JS_text.="\n";
-$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
+$JS_text.="	var graph_to_display=eval(\"graph_\"+graph);\n";
 $JS_text.="	document.getElementById('pause_detail_graph').innerHTML=graph_to_display;\n";
 $JS_text.="}\n";
 $JS_onload.="}\n";

@@ -333,10 +333,11 @@
 # 130615-1126 - Added recording_id to dispo url
 # 130617-0805 - Fixed issue with scheduled callbacks and campaign presets
 # 130705-1512 - Added optional encrypted passwords compatibility
+# 130718-0737 - Added recording_filename to dispo url
 # 
 
-$version = '2.8-231';
-$build = '130705-1512';
+$version = '2.8-232';
+$build = '130718-0737';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=533;
 $one_mysql_log=0;
@@ -567,6 +568,8 @@ if (isset($_GET["inbound_email_groups"]))			{$inbound_email_groups=$_GET["inboun
 	elseif (isset($_POST["inbound_email_groups"]))	{$inbound_email_groups=$_POST["inbound_email_groups"];}
 if (isset($_GET["recording_id"]))			{$recording_id=$_GET["recording_id"];}
 	elseif (isset($_POST["recording_id"]))	{$recording_id=$_POST["recording_id"];}
+if (isset($_GET["recording_filename"]))				{$recording_filename=$_GET["recording_filename"];}
+	elseif (isset($_POST["recording_filename"]))	{$recording_filename=$_POST["recording_filename"];}
 if (isset($_GET["orig_pass"]))			{$orig_pass=$_GET["orig_pass"];}
 	elseif (isset($_POST["orig_pass"]))	{$orig_pass=$_POST["orig_pass"];}
 
@@ -9478,6 +9481,7 @@ if ($ACTION == 'updateDISPO')
 		$dispo_call_url = preg_replace('/--A--user_group--B--/i',urlencode(trim($user_group)),$dispo_call_url);
 		$dispo_call_url = preg_replace('/--A--call_notes--B--/i',"$url_call_notes",$dispo_call_url);
 		$dispo_call_url = preg_replace('/--A--recording_id--B--/i',"$recording_id",$dispo_call_url);
+		$dispo_call_url = preg_replace('/--A--recording_filename--B--/i',"$recording_filename",$dispo_call_url);
 
 		if (strlen($FORMcustom_field_names)>2)
 			{
