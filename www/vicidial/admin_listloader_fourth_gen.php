@@ -50,10 +50,11 @@
 # 130420-2056 - Added NANPA prefix validation and timezone options
 # 130610-0920 - Finalized changing of all ereg instances to preg
 # 130621-1817 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130719-1914 - Added SQL to filter by template statuses, if template has specific statuses to dedupe against
 #
 
-$version = '2.8-48';
-$build = '130621-1817';
+$version = '2.8-49';
+$build = '130719-1914';
 
 require("dbconnect.php");
 require("functions.php");
@@ -376,6 +377,40 @@ function ParseFileName()
 			}
 		}
 	}
+function TemplateSpecs() {
+	var template_field = document.getElementById("template_id");
+	var template_id_value = template_field.options[template_field.selectedIndex].value;
+	var xmlhttp=false;
+	try {
+		xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+	} catch (e) {
+		try {
+			xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		} catch (E) {
+			xmlhttp = false;
+		}
+	}
+	if (!xmlhttp && typeof XMLHttpRequest!='undefined') {
+		xmlhttp = new XMLHttpRequest();
+	}
+	if (xmlhttp && template_id_value!="") { 
+		var vs_query = "&template_id="+template_id_value;
+		xmlhttp.open('POST', 'leadloader_template_display.php'); 
+		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+		xmlhttp.send(vs_query); 
+		xmlhttp.onreadystatechange = function() { 
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+				var TemplateInfo = null;
+				TemplateInfo = xmlhttp.responseText;
+				if (TemplateInfo.length>0)
+				{
+				alert(TemplateInfo);
+				}
+			}
+		}
+		delete xmlhttp;
+	}
+}
 
 </script>
 <title>ADMINISTRATION: Lead Loader</title>
@@ -467,8 +502,8 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 			<td align=left><font face="arial, helvetica" size=2><input type=radio name="file_layout" value="standard" checked>Standard Format&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="file_layout" value="custom">Custom layout&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="file_layout" value="template">Custom Template <?php echo "$NWB#vicidial_list_loader-file_layout$NWE"; ?></td>
 		  </tr>
 		  <tr>
-			<td align=right><B><font face="arial, helvetica" size=2>Custom template to use:</font></B></td>
-			<td align=left><select name="template_id">
+			<td align=right valign=top><B><font face="arial, helvetica" size=2>Custom template to use:</font></B></td>
+			<td align=left><select name="template_id" id="template_id">
 <?php
 				$template_stmt="select template_id, template_name from vicidial_custom_leadloader_templates order by template_id asc";
 				$template_rslt=mysql_query($template_stmt, $link);
@@ -481,7 +516,7 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 					echo "<option value='' selected>--No custom templates defined--</option>";
 				}
 ?>
-			</select> <a href='AST_admin_template_maker.php'><font face="arial, helvetica" size=1>template builder</font></a><?php echo "$NWB#vicidial_list_loader-template_id$NWE"; ?></td>
+			</select> <a href='AST_admin_template_maker.php'><font face="arial, helvetica" size=1>template builder</font></a><?php echo "$NWB#vicidial_list_loader-template_id$NWE"; ?><BR><a href='#' onClick="TemplateSpecs()"><font face="arial, helvetica" size=1>View template info</font></a></td>
 		  <tr>
 			<td align=right width="25%"><font face="arial, helvetica" size=2>Lead Duplicate Check: </font></td>
 			<td align=left width="75%"><font face="arial, helvetica" size=1><select size=1 name=dupcheck>
@@ -1064,6 +1099,11 @@ if (($leadfile) && ($LF_path))
 			$standard_variables=$template_row["standard_variables"];
 			$custom_table=$template_row["custom_table"];
 			$custom_variables=$template_row["custom_variables"];
+			$template_statuses=$template_row["template_statuses"];
+			if (strlen($template_statuses)>0) {
+				$template_statuses=preg_replace('/\|/', "','", $template_statuses);
+				$statuses_clause=" and status in ('$template_statuses') ";
+			}
 			$standard_fields_ary=explode("|", $standard_variables);
 			for ($i=0; $i<count($standard_fields_ary); $i++) 
 				{
@@ -1149,11 +1189,15 @@ if (($leadfile) && ($LF_path))
 			print "<center><font face='arial, helvetica' size=3 color='#009900'><B>Processing $delim_name file using template $template_id... ($tab_count|$pipe_count)\n";
 			if (strlen($list_id_override)>0) 
 				{
-				print "<BR><BR>LIST ID OVERRIDE FOR THIS FILE: $list_id_override<BR><BR>";
+				print "<BR>LIST ID OVERRIDE FOR THIS FILE: $list_id_override<BR>";
 				}
 			if (strlen($phone_code_override)>0) 
 				{
-				print "<BR><BR>PHONE CODE OVERRIDE FOR THIS FILE: $phone_code_override<BR><BR>\n";
+				print "<BR>PHONE CODE OVERRIDE FOR THIS FILE: $phone_code_override<BR>\n";
+				}
+			if (strlen($template_statuses)>0) 
+				{
+				print "<BR>OMITTING DUPLICATES AGAINST FOLLOWING STATUSES ONLY: ".preg_replace('/\'/', '', $template_statuses)."<BR>\n";
 				}
 			while (!feof($file)) 
 				{
@@ -1266,7 +1310,7 @@ if (($leadfile) && ($LF_path))
 									}
 								$dup_lists = preg_replace('/,$/i', '',$dup_lists);
 
-								$stmt="select list_id from vicidial_list where phone_number='$phone_number' and list_id IN($dup_lists) limit 1;";
+								$stmt="select list_id from vicidial_list where phone_number='$phone_number' and list_id IN($dup_lists) $statuses_clause limit 1;";
 								$rslt=mysql_query($stmt, $link);
 								$pc_recs = mysql_num_rows($rslt);
 								if ($pc_recs > 0)
@@ -1288,7 +1332,7 @@ if (($leadfile) && ($LF_path))
 					if (preg_match("/DUPSYS/i",$dupcheck))
 						{
 						$dup_lead=0;
-						$stmt="select list_id from vicidial_list where phone_number='$phone_number';";
+						$stmt="select list_id from vicidial_list where phone_number='$phone_number' $statuses_clause;";
 						$rslt=mysql_query($stmt, $link);
 						$pc_recs = mysql_num_rows($rslt);
 						if ($pc_recs > 0)
@@ -1308,7 +1352,7 @@ if (($leadfile) && ($LF_path))
 					if (preg_match("/DUPLIST/i",$dupcheck))
 						{
 						$dup_lead=0;
-						$stmt="select count(*) from vicidial_list where phone_number='$phone_number' and list_id='$list_id';";
+						$stmt="select count(*) from vicidial_list where phone_number='$phone_number' and list_id='$list_id' $statuses_clause;";
 						$rslt=mysql_query($stmt, $link);
 						$pc_recs = mysql_num_rows($rslt);
 						if ($pc_recs > 0)
@@ -1327,7 +1371,7 @@ if (($leadfile) && ($LF_path))
 					if (preg_match("/DUPTITLEALTPHONELIST/i",$dupcheck))
 						{
 						$dup_lead=0;
-						$stmt="select count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id';";
+						$stmt="select count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id' $statuses_clause;";
 						$rslt=mysql_query($stmt, $link);
 						$pc_recs = mysql_num_rows($rslt);
 						if ($pc_recs > 0)
@@ -1347,7 +1391,7 @@ if (($leadfile) && ($LF_path))
 					if (preg_match("/DUPTITLEALTPHONESYS/i",$dupcheck))
 						{
 						$dup_lead=0;
-						$stmt="select list_id from vicidial_list where title='$title' and alt_phone='$alt_phone';";
+						$stmt="select list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' $statuses_clause;";
 						$rslt=mysql_query($stmt, $link);
 						$pc_recs = mysql_num_rows($rslt);
 						if ($pc_recs > 0)

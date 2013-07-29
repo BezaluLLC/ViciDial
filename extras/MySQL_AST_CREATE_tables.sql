@@ -2704,7 +2704,8 @@ template_description VARCHAR(255) DEFAULT NULL,
 list_id BIGINT(14) UNSIGNED DEFAULT NULL,
 standard_variables TEXT,
 custom_table VARCHAR(20) DEFAULT NULL,
-custom_variables TEXT
+custom_variables TEXT,
+template_statuses VARCHAR(255)
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_session_data (
@@ -3169,4 +3170,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1354',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1355',db_schema_update_date=NOW();

@@ -9,6 +9,7 @@
 # 130514-2127 - Bug fix on Chrome/IE browsers
 # 130610-1102 - Finalized changing of all ereg instances to preg
 # 130619-2044 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130719-1914 - Added ability to filter by statuses
 #
 
 require("dbconnect.php");
@@ -32,6 +33,8 @@ if (isset($_GET["file_delimiter"]))				{$file_delimiter=$_GET["file_delimiter"];
 	elseif (isset($_POST["file_delimiter"]))		{$file_delimiter=$_POST["file_delimiter"];}
 if (isset($_GET["template_list_id"]))				{$template_list_id=$_GET["template_list_id"];}
 	elseif (isset($_POST["template_list_id"]))		{$template_list_id=$_POST["template_list_id"];}
+if (isset($_GET["template_statuses"]))				{$template_statuses=$_GET["template_statuses"];}
+	elseif (isset($_POST["template_statuses"]))		{$template_statuses=$_POST["template_statuses"];}
 if (isset($_GET["standard_fields_layout"]))				{$standard_fields_layout=$_GET["standard_fields_layout"];}
 	elseif (isset($_POST["standard_fields_layout"]))	{$standard_fields_layout=$_POST["standard_fields_layout"];}
 if (isset($_GET["custom_fields_layout"]))				{$custom_fields_layout=$_GET["custom_fields_layout"];}
@@ -131,9 +134,22 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 
 if ($submit_template=="SUBMIT TEMPLATE" && $template_id && $template_name && $template_list_id && $standard_fields_layout) 
 	{
+
+	$status_str="";
+	$status_count=count($template_statuses);
+	for ($q=0; $q<count($template_statuses); $q++) {
+			echo "<!-- $template_statuses[$q] //-->\n";
+
+		$status_str.="$template_statuses[$q]|";
+	}
+	echo "<!-- $status_str //-->";
+	$status_str=preg_replace('/\|$/', '', $status_str);
+	if (preg_match('/\-\-ALL\-\-/', $status_str)) {$status_str="";}
+	
 	$custom_table="custom_".$template_list_id;
-	$ins_stmt="INSERT INTO vicidial_custom_leadloader_templates(template_id, template_name, template_description, list_id, standard_variables, custom_table, custom_variables) values('$template_id', '$template_name', '$template_description', '$template_list_id', '$standard_fields_layout', '$custom_table', '$custom_fields_layout')";
+	$ins_stmt="INSERT INTO vicidial_custom_leadloader_templates(template_id, template_name, template_description, list_id, standard_variables, custom_table, custom_variables, template_statuses) values('$template_id', '$template_name', '$template_description', '$template_list_id', '$standard_fields_layout', '$custom_table', '$custom_fields_layout', '$status_str')";
 	$ins_rslt=mysql_query($ins_stmt, $link);
+	echo "<!-- $ins_stmt //-->";
 	if (mysql_affected_rows($link)>0) 
 		{
 		$success_msg="NEW TEMPLATE CREATED SUCCESSFULLY";
@@ -209,8 +225,13 @@ function init() {
 function PrimeFile() {
 	document.forms[0].submit();
 }
+
 function DisplayTemplateFields(list_id) {
-	if (list_id!='') {var custom_fields_enabled=1;} else {var custom_fields_enabled=0;}
+	if (list_id!='') {
+		var custom_fields_enabled=1;
+	} else {
+		var custom_fields_enabled=0;
+	}
 	var template_file_type=document.getElementById("template_file_type").value;
 	var delimiter=document.getElementById("template_file_delimiter").value;
 	var buffer=document.getElementById("template_file_buffer").value;
@@ -244,12 +265,16 @@ function DisplayTemplateFields(list_id) {
 			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 				var StatSpanText = null;
 				StatSpanText = xmlhttp.responseText;
-				document.getElementById("field_display").innerHTML = StatSpanText;
+				var output_array=StatSpanText.split("\|\|\|");
+				document.getElementById("statuses_display").innerHTML = output_array[0];
+				document.getElementById("field_display").innerHTML = output_array[1];
 			}
 		}
 		delete xmlhttp;
 	}
+
 }
+
 function DrawTemplateStrings() {
 	var vicidial_string="<?php echo $vicidial_listloader_fields; ?>";
     var standard_string = '';
@@ -271,6 +296,9 @@ function DrawTemplateStrings() {
 	document.getElementById("custom_fields_layout").value=custom_string;
 }
 function loadIFrame(form_action, field_value) {
+	document.getElementById("template_list_id").disabled=true; // Disable these until the file finishes loading...
+	document.getElementById("template_statuses").disabled=true; 
+
 	form_file_name = field_value;
 	if (field_value=="") {
 		document.getElementById('list_data_display').style.display = 'none'; 
@@ -427,6 +455,29 @@ if (mysql_num_rows($template_rslt)>0) {
 		</td>
 	</tr>
 	<tr bgcolor="#D9E6FE">
+		<td width='25%' align="right"><font class="standard">Statuses to dedupe against (optional):</font></td>
+		<td width='75%'>
+		<span id='statuses_display'>
+			<select id='template_statuses' name='template_statuses[]' size=5 multiple>
+			<option value='--ALL--' selected>--ALL DISPOSITIONS--</option>
+			<?php
+			$stmt="SELECT status, status_name from vicidial_statuses order by status;";
+			$rslt=mysql_query($stmt, $link);
+			$num_rows = mysql_num_rows($rslt);
+
+			$count=0;
+			while ( $num_rows > $count ) 
+				{
+				$row = mysql_fetch_row($rslt);
+				echo "\t\t\t<option value='$row[0]'>$row[0] - $row[1]</option>\n";
+				$count++;
+				}
+			?>
+			</select></font><?php echo "$NWB#vicidial_template_maker-list_id$NWE"; ?>
+		</span>
+		</td>
+	</tr>
+	<tr bgcolor="#D9E6FE">
 		<th colspan='2'><input type='submit' name='submit_template' onClick="return checkForm(this.form)" value='SUBMIT TEMPLATE'></th>
 	</tr>
 <tr bgcolor="#D9E6FE"><td align="center" colspan=2>
@@ -446,6 +497,8 @@ if (mysql_num_rows($template_rslt)>0) {
 </table>
 </tr></td>
 </table>
+<input type="hidden" id="sample_template_file_name" name="sample_template_file_name">
+<input type="hidden" id="convert_command" name="convert_command">
 <input type="hidden" id="template_file_type" name="template_file_type">
 <input type="hidden" id="template_file_delimiter" name="template_file_delimiter">
 <input type="hidden" id="template_file_buffer" name="template_file_buffer">

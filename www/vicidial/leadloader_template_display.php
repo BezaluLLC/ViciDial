@@ -9,6 +9,7 @@
 # 120529-1345 - Filename filter fix
 # 130610-1101 - Finalized changing of all ereg instances to preg
 # 130619-0902 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130719-1914 - Added SQL to show template statuses to dedupe against, fixed issue where list IDs should be disabled until lead file for template is uploaded
 #
 
 require("dbconnect.php");
@@ -20,9 +21,11 @@ if (isset($_GET["list_id"]))				{$list_id=$_GET["list_id"];}
 	elseif (isset($_POST["list_id"]))		{$list_id=$_POST["list_id"];}
 if (isset($_GET["custom_fields_enabled"]))				{$custom_fields_enabled=$_GET["custom_fields_enabled"];}
 	elseif (isset($_POST["custom_fields_enabled"]))		{$custom_fields_enabled=$_POST["custom_fields_enabled"];}
+
 $sample_template_file=$_FILES["sample_template_file"];
 $LF_orig = $_FILES['sample_template_file']['name'];
 $LF_path = $_FILES['sample_template_file']['tmp_name'];
+
 if (isset($_GET["sample_template_file_name"]))			{$sample_template_file_name=$_GET["sample_template_file_name"];}
 	elseif (isset($_POST["sample_template_file_name"]))	{$sample_template_file_name=$_POST["sample_template_file_name"];}
 if (isset($_FILES["sample_template_file"]))				{$sample_template_file_name=$_FILES["sample_template_file"]['name'];}
@@ -30,8 +33,12 @@ if (isset($_GET["form_action"]))				{$form_action=$_GET["form_action"];}
 	elseif (isset($_POST["form_action"]))		{$form_action=$_POST["form_action"];}
 if (isset($_GET["delimiter"]))				{$delimiter=$_GET["delimiter"];}
 	elseif (isset($_POST["delimiter"]))		{$delimiter=$_POST["delimiter"];}
+if (isset($_GET["template_id"]))				{$template_id=$_GET["template_id"];}
+	elseif (isset($_POST["template_id"]))		{$template_id=$_POST["template_id"];}
 if (isset($_GET["buffer"]))				{$buffer=$_GET["buffer"];}
 	elseif (isset($_POST["buffer"]))	{$buffer=$_POST["buffer"];}
+if (isset($_GET["DB"]))				{$DB=$_GET["DB"];}
+	elseif (isset($_POST["DB"]))	{$DB=$_POST["DB"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -106,6 +113,19 @@ if ( (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$LF_orig)) or (preg_match("/;|:|\/
 	exit;
 	}
 
+if ($template_id) {
+	$stmt="select * from vicidial_custom_leadloader_templates where template_id='$template_id'";
+	$rslt=mysql_query($stmt, $link);
+	$row=mysql_fetch_array($rslt);
+	echo "TEMPLATE ID: $template_id\n";
+	echo "TEMPLATE INFO: $row[template_name]";
+	if (strlen($row["template_description"])>0) {echo " - $row[template_description]";}
+	echo "\nWILL LOAD INTO LIST: $row[list_id]\n";
+	if (strlen($row["custom_table"])>0) {echo "USES CUSTOM TABLE: YES\n";} else {echo "USES CUSTOM TABLE: NO\n";}
+	if (strlen($row["template_statuses"])>0) {echo "WILL ONLY DEDUPE AGAINST STATUSES: ".preg_replace('/\|/', ',', $row["template_statuses"])."\n";}
+	exit;
+}
+
 if ($form_action=="prime_file" && $sample_template_file_name) 
 	{
 	$delim_set=0;
@@ -115,7 +135,7 @@ if ($form_action=="prime_file" && $sample_template_file_name)
 		copy($LF_path, "/tmp/$sample_template_file_name");
 		$new_filename = preg_replace("/\.csv$|\.xls$|\.xlsx$|\.ods$|\.sxc$/i", '.txt', $sample_template_file_name);
 		$convert_command = "$WeBServeRRooT/$admin_web_directory/sheet2tab.pl /tmp/$sample_template_file_name /tmp/$new_filename";
-		passthru("$convert_command");
+		passthru("$convert_command", $fail_msg);
 		$lead_file = "/tmp/$new_filename";
 		if ($DB > 0) {echo "|$convert_command|";}
 
@@ -153,9 +173,13 @@ if ($form_action=="prime_file" && $sample_template_file_name)
 	else 
 		{$delimiter="|";}
 	echo "<script language='Javascript'>\n";
+	#echo "parent.document.getElementById(\"sample_template_file_name\").value='$fail_msg';\n";
+	#echo "parent.document.getElementById(\"convert_command\").value='$convert_command';\n";
 	echo "parent.document.getElementById(\"template_file_type\").value='$template_file_type';\n";
 	echo "parent.document.getElementById(\"template_file_delimiter\").value='".urlencode($delimiter)."';\n";
 	echo "parent.document.getElementById(\"template_file_buffer\").value='".urlencode($buffer)."';\n";
+	echo "parent.document.getElementById(\"template_list_id\").disabled=false;\n";
+	echo "parent.document.getElementById(\"template_statuses\").disabled=false;\n";
 	echo "</script>";
 	$field_check=explode($delimiter, $buffer);
 	flush();
@@ -166,107 +190,126 @@ else if ($form_action=="update_template")
 	} 
 else
 	{
+
+	if ($list_id) 
+		{
+		$campaign_stmt="select campaign_id from vicidial_lists where list_id='$list_id'";
+		$campaign_rslt=mysql_query($campaign_stmt, $link);
+		if (mysql_num_rows($campaign_rslt)>0) 
+			{
+			$campaign_row=mysql_fetch_row($campaign_rslt);
+			$campaign_id=$campaign_row[0];
+			}
+		$stmt="select status, status_name from vicidial_statuses UNION select status, status_name from vicidial_campaign_statuses where campaign_id='$campaign_id' order by status, status_name asc";
+		$rslt=mysql_query($stmt, $link);
+
+		echo "<select id='template_statuses' name='template_statuses[]' size=5 multiple>\n";
+		echo "\t<option value='--ALL--' selected>--ALL DISPOSITIONS--</option>\n";
+		while ($row=mysql_fetch_array($rslt)) 
+			{
+			echo "\t<option value='$row[status]'>$row[status] - $row[status_name]</option>\n";
+			}
+		echo "</select>\n";
+		}
+	echo "|||";
+	
 	if ( (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$LF_orig)) or (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$sample_template_file_name)) )
 		{
 		echo "ERROR: Invalid File Name: $LF_orig $sample_template_file_name\n";
 		exit;
 		}
-#	echo "<B>** $form_action</b>"; die;
-$fields_stmt = "SELECT list_id, vendor_lead_code, source_id, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, rank, owner from vicidial_list limit 1";
 
-$vicidial_list_fields = '|lead_id|vendor_lead_code|source_id|list_id|gmt_offset_now|called_since_last_reset|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|called_count|last_local_call_time|rank|owner|entry_list_id|';
-# $vicidial_listloader_fields = '|vendor_lead_code|source_id|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|rank|owner|';
+	$fields_stmt = "SELECT list_id, vendor_lead_code, source_id, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, rank, owner from vicidial_list limit 1";
 
-$vl_fields_count=substr_count($vicidial_listloader_fields, "|")-1;
+	$vicidial_list_fields = '|lead_id|vendor_lead_code|source_id|list_id|gmt_offset_now|called_since_last_reset|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|called_count|last_local_call_time|rank|owner|entry_list_id|';
 
-##### BEGIN custom fields columns list ###
-if ($custom_fields_enabled > 0)
-	{
-	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
-	if ($DB>0) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-	$tablecount_to_print = mysql_num_rows($rslt);
-	if ($tablecount_to_print > 0) 
+	$vl_fields_count=substr_count($vicidial_listloader_fields, "|")-1;
+
+	##### BEGIN custom fields columns list ###
+	if ($custom_fields_enabled > 0)
 		{
-		$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id';";
+		$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
 		if ($DB>0) {echo "$stmt\n";}
 		$rslt=mysql_query($stmt, $link);
-		$fieldscount_to_print = mysql_num_rows($rslt);
-		if ($fieldscount_to_print > 0) 
+		$tablecount_to_print = mysql_num_rows($rslt);
+		if ($tablecount_to_print > 0) 
 			{
-			$rowx=mysql_fetch_row($rslt);
-			$custom_records_count =	$rowx[0];
-
-			$custom_SQL='';
-			$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
+			$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id';";
 			if ($DB>0) {echo "$stmt\n";}
 			$rslt=mysql_query($stmt, $link);
-			$fields_to_print = mysql_num_rows($rslt);
-			$fields_list='';
-			$o=0;
-			while ($fields_to_print > $o) 
+			$fieldscount_to_print = mysql_num_rows($rslt);
+			if ($fieldscount_to_print > 0) 
 				{
 				$rowx=mysql_fetch_row($rslt);
-				$A_field_label[$o] =	$rowx[1];
-				$A_field_type[$o] =		$rowx[6];
+				$custom_records_count =	$rowx[0];
 
-				if ($DB>0) {echo "$A_field_label[$o]|$A_field_type[$o]\n";}
-
-				if ( ($A_field_type[$o]!='DISPLAY') and ($A_field_type[$o]!='SCRIPT') )
+				$custom_SQL='';
+				$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
+				if ($DB>0) {echo "$stmt\n";}
+				$rslt=mysql_query($stmt, $link);
+				$fields_to_print = mysql_num_rows($rslt);
+				$fields_list='';
+				$o=0;
+				while ($fields_to_print > $o) 
 					{
-					if (!preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
+					$rowx=mysql_fetch_row($rslt);
+					$A_field_label[$o] =	$rowx[1];
+					$A_field_type[$o] =		$rowx[6];
+
+					if ($DB>0) {echo "$A_field_label[$o]|$A_field_type[$o]\n";}
+
+					if ( ($A_field_type[$o]!='DISPLAY') and ($A_field_type[$o]!='SCRIPT') )
 						{
-						$custom_SQL .= ",$A_field_label[$o]";
+						if (!preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
+							{
+							$custom_SQL .= ",$A_field_label[$o]";
+							}
 						}
+					$o++;
 					}
-				$o++;
+
+				$fields_stmt = "SELECT list_id, vendor_lead_code, source_id, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, rank, owner $custom_SQL from vicidial_list, custom_$list_id limit 1";
+				}
+			}
+		}
+	##### END custom fields columns list ###
+
+	##### Same code from the listloader page.  Since this is a custom template, it's assumed the layout is "custom" instead of "standard" and follows the coding as such
+	#if (($sample_template_file) && ($LF_path))
+	if ($delimiter && $buffer)
+		{
+		$total=0; $good=0; $bad=0; $dup=0; $post=0; $phone_list='';
+		$row=explode($delimiter, preg_replace('/[\'\"]/i', '', $buffer));
+		}
+
+	echo "<table border=0 width='100%' cellpadding=0 cellspacing=0>";
+	$rslt=mysql_query("$fields_stmt", $link);
+	$custom_fields_count=mysql_num_fields($rslt)-$vl_fields_count;
+	for ($i=0; $i<mysql_num_fields($rslt); $i++) 
+		{
+		if (preg_match('/'.mysql_field_name($rslt, $i).'/', $vicidial_list_fields)) {$bgcolor="#D9E6FE";} else {$bgcolor="#FED9D9";}
+
+		echo "  <tr bgcolor='$bgcolor'>\r\n";
+		echo "    <td align=right nowrap><font class=standard>".strtoupper(preg_replace('/_/i', ' ', mysql_field_name($rslt, $i))).": </font></td>\r\n";
+		if (mysql_field_name($rslt, $i)!="list_id") 
+			{
+			echo "    <td align=left><select name='$field_prefix".mysql_field_name($rslt, $i)."_field' onChange='DrawTemplateStrings()'>\r\n";
+			echo "     <option value='-1'>(none)</option>\r\n";
+
+			for ($j=0; $j<count($row); $j++) 
+				{
+				preg_replace('/\"/i', '', $row[$j]);
+				echo "     <option value='$j'>\"$row[$j]\"</option>\r\n";
 				}
 
-			$fields_stmt = "SELECT list_id, vendor_lead_code, source_id, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, rank, owner $custom_SQL from vicidial_list, custom_$list_id limit 1";
+			echo "    </select></td>\r\n";
 			}
-		}
-	}
-##### END custom fields columns list ###
-
-##### Same code from the listloader page.  Since this is a custom template, it's assumed the layout is "custom" instead of "standard" and follows the coding as such
-#if (($sample_template_file) && ($LF_path))
-if ($delimiter && $buffer)
-	{
-	$total=0; $good=0; $bad=0; $dup=0; $post=0; $phone_list='';
-#	$buffer=rtrim(fgets($file, 4096));
-#	$buffer=stripslashes($buffer);
-#	print "<center><font face='arial, helvetica' size=3 color='#009900'><B>Processing $delim_name file...\n";
-	$row=explode($delimiter, preg_replace('/[\'\"]/i', '', $buffer));
-#	echo "delimiter: $delimiter<BR>$buffer<BR>";
-	}
-echo "<table border=0 width='100%' cellpadding=0 cellspacing=0>";
-$rslt=mysql_query("$fields_stmt", $link);
-$custom_fields_count=mysql_num_fields($rslt)-$vl_fields_count;
-for ($i=0; $i<mysql_num_fields($rslt); $i++) 
-	{
-	if (preg_match('/'.mysql_field_name($rslt, $i).'/', $vicidial_list_fields)) {$bgcolor="#D9E6FE";} else {$bgcolor="#FED9D9";}
-
-	echo "  <tr bgcolor='$bgcolor'>\r\n";
-	echo "    <td align=right nowrap><font class=standard>".strtoupper(preg_replace('/_/i', ' ', mysql_field_name($rslt, $i))).": </font></td>\r\n";
-	if (mysql_field_name($rslt, $i)!="list_id") 
-		{
-		echo "    <td align=left><select name='$field_prefix".mysql_field_name($rslt, $i)."_field' onChange='DrawTemplateStrings()'>\r\n";
-		echo "     <option value='-1'>(none)</option>\r\n";
-
-		for ($j=0; $j<count($row); $j++) 
+		else 
 			{
-			preg_replace('/\"/i', '', $row[$j]);
-			echo "     <option value='$j'>\"$row[$j]\"</option>\r\n";
+			echo "    <td align=left>&nbsp;<font class='standard_bold'>$list_id<input type='hidden' name='".$field_prefix.$list_id."' value='$list_id'></font></td>\r\n";
 			}
-
-		echo "    </select></td>\r\n";
+			echo "  </tr>\r\n";
 		}
-	else 
-		{
-		echo "    <td align=left>&nbsp;<font class='standard_bold'>$list_id<input type='hidden' name='".$field_prefix.$list_id."' value='$list_id'></font></td>\r\n";
-		}
-		echo "  </tr>\r\n";
-	}
-	echo "</table>";
+		echo "</table>";
 }
 ?>

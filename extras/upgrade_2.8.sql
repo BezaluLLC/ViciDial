@@ -63,3 +63,6 @@ index (monitor_time)
 
 UPDATE system_settings SET db_schema_version='1354',db_schema_update_date=NOW() where db_schema_version < 1354;
 
+ALTER TABLE vicidial_custom_leadloader_templates ADD template_statuses VARCHAR(255);
+
+UPDATE system_settings SET db_schema_version='1355',db_schema_update_date=NOW() where db_schema_version < 1355;
