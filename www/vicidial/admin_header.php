@@ -51,12 +51,12 @@ if($short_header)
 	{
 	?>
 	<TABLE CELLPADDING=0 CELLSPACING=0 BGCOLOR="#015B91"><TR>
-	<TD><IMG SRC="vicidial_admin_web_logo_small.gif" WIDTH=71 HEIGHT=22 ALT="System logo"> &nbsp; </TD>
+	<TD><A HREF="./admin.php"><IMG SRC="vicidial_admin_web_logo_small.gif" WIDTH=71 HEIGHT=22 BORDER=0 ALT="System logo"></A> &nbsp; </TD>
 	<?php 
 	if ( ($reports_only_user < 1) and ($qc_only_user < 1) )
 		{
 	?>
-	<TD> &nbsp; <A HREF="admin.php" ALT="Users"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Users</B></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=0A" ALT="Users"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Users</B></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=10" ALT="Campaigns"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Campaigns</B></A> &nbsp; </TD>
         <?php include 'qc/QC_header_include02.php'; ?>
 	<TD> &nbsp; <A HREF="admin.php?ADD=100" ALT="Lists"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Lists</B></A> &nbsp; </TD>
@@ -1107,7 +1107,7 @@ $SSlevel_8_disable_add =	$row[5];
 	<?php if (strlen($users_hh) > 1) { 
 		?>
 	<TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
-	 &nbsp; <a href="<?php echo $ADMIN ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Show Users </a>
+	 &nbsp; <a href="<?php echo $ADMIN ?>?ADD=0A"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Show Users </a>
 	</TR><TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
 	<?php if ($add_copy_disabled < 1) { ?>
 	 &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Add A New User </a>
