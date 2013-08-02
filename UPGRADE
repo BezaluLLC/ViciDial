@@ -111,7 +111,7 @@ OTHER CHANGES:
 	more information on the dialplan changes necessary to use this script.
 
 12. Added the ability to deduplicate leads based upon statuses in the web based
-	lead loader using templates only.
+	lead loader using templates and the basic web lead loader.
 
 
 

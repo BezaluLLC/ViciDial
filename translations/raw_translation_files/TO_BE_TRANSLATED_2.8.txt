@@ -222,6 +222,10 @@ Calls Ringing||
  Active ||
  Inactive ||
  Total ||
+Status Duplicate Check||
+OMITTING DUPLICATES AGAINST FOLLOWING STATUSES ONLY||
+Duplicate Checking||
+The duplicate options allow you to check for duplicate entries as you load the leads into the system. You can select to check for duplicates within only the same list, only the same campaign lists or within the entire system. If you have chosen a duplicate check method, you can also optionally select the only specific statuses that you want to duplicate check against||
 
 
 ########################## CHANGES TO EXISTING PHRASES IN ADMIN TRANSLATION

@@ -10,6 +10,7 @@
 # 130610-1101 - Finalized changing of all ereg instances to preg
 # 130619-0902 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130719-1914 - Added SQL to show template statuses to dedupe against, fixed issue where list IDs should be disabled until lead file for template is uploaded
+# 130802-0623 - Added select list query for status deduping
 #
 
 require("dbconnect.php");
@@ -183,6 +184,26 @@ if ($form_action=="prime_file" && $sample_template_file_name)
 	echo "</script>";
 	$field_check=explode($delimiter, $buffer);
 	flush();
+	}
+else if ($list_id && $form_action=="no_template") 
+	{
+	$campaign_stmt="select campaign_id from vicidial_lists where list_id='$list_id'";
+	$campaign_rslt=mysql_query($campaign_stmt, $link);
+	if (mysql_num_rows($campaign_rslt)>0) 
+		{
+		$campaign_row=mysql_fetch_row($campaign_rslt);
+		$campaign_id=$campaign_row[0];
+		}
+	$stmt="select status, status_name from vicidial_statuses UNION select status, status_name from vicidial_campaign_statuses where campaign_id='$campaign_id' order by status, status_name asc";
+	$rslt=mysql_query($stmt, $link);
+
+	echo "<select id='dedupe_statuses' name='dedupe_statuses[]' size=5 multiple>\n";
+	echo "\t<option value='--ALL--' selected>--ALL DISPOSITIONS--</option>\n";
+	while ($row=mysql_fetch_array($rslt)) 
+		{
+		echo "\t<option value='$row[status]'>$row[status] - $row[status_name]</option>\n";
+		}
+	echo "</select>\n";
 	}
 else if ($form_action=="update_template") 
 	{

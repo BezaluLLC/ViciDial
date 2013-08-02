@@ -51,10 +51,11 @@
 # 130610-0920 - Finalized changing of all ereg instances to preg
 # 130621-1817 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130719-1914 - Added SQL to filter by template statuses, if template has specific statuses to dedupe against
+# 130802-0619 - Added status deduping option without template
 #
 
-$version = '2.8-49';
-$build = '130719-1914';
+$version = '2.8-50';
+$build = '130802-0619';
 
 require("dbconnect.php");
 require("functions.php");
@@ -137,6 +138,10 @@ if (isset($_GET["lead_file"]))					{$lead_file=$_GET["lead_file"];}
 	elseif (isset($_POST["lead_file"]))			{$lead_file=$_POST["lead_file"];}
 if (isset($_GET["dupcheck"]))				{$dupcheck=$_GET["dupcheck"];}
 	elseif (isset($_POST["dupcheck"]))		{$dupcheck=$_POST["dupcheck"];}
+if (isset($_GET["dedupe_statuses"]))				{$dedupe_statuses=$_GET["dedupe_statuses"];}
+	elseif (isset($_POST["dedupe_statuses"]))		{$dedupe_statuses=$_POST["dedupe_statuses"];}
+if (isset($_GET["dedupe_statuses_override"]))				{$dedupe_statuses_override=$_GET["dedupe_statuses_override"];}
+	elseif (isset($_POST["dedupe_statuses_override"]))		{$dedupe_statuses_override=$_POST["dedupe_statuses_override"];}
 if (isset($_GET["postalgmt"]))				{$postalgmt=$_GET["postalgmt"];}
 	elseif (isset($_POST["postalgmt"]))		{$postalgmt=$_POST["postalgmt"];}
 if (isset($_GET["phone_code_override"]))			{$phone_code_override=$_GET["phone_code_override"];}
@@ -149,7 +154,9 @@ if (isset($_GET["template_id"]))					{$template_id=$_GET["template_id"];}
 if (isset($_GET["usacan_check"]))			{$usacan_check=$_GET["usacan_check"];}
 	elseif (isset($_POST["usacan_check"]))	{$usacan_check=$_POST["usacan_check"];}
 
-
+if (strlen($dedupe_statuses_override)>0) {
+	$dedupe_statuses=explode(",", $dedupe_statuses_override);
+}
 # if the didnt select an over ride wipe out in_file
 if ( $list_id_override == "in_file" ) { $list_id_override = ""; }
 if ( $phone_code_override == "in_file" ) { $phone_code_override = ""; }
@@ -411,6 +418,37 @@ function TemplateSpecs() {
 		delete xmlhttp;
 	}
 }
+function PopulateStatuses(list_id) {
+	
+	var xmlhttp=false;
+	try {
+		xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+	} catch (e) {
+		try {
+			xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		} catch (E) {
+			xmlhttp = false;
+		}
+	}
+	if (!xmlhttp && typeof XMLHttpRequest!='undefined') {
+		xmlhttp = new XMLHttpRequest();
+	}
+	if (xmlhttp) { 
+		var vs_query = "&form_action=no_template&list_id="+list_id;
+		xmlhttp.open('POST', 'leadloader_template_display.php'); 
+		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+		xmlhttp.send(vs_query); 
+		xmlhttp.onreadystatechange = function() { 
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+				var StatSpanText = null;
+				StatSpanText = xmlhttp.responseText;
+				document.getElementById("statuses_display").innerHTML = StatSpanText;
+			}
+		}
+		delete xmlhttp;
+	}
+
+}
 
 </script>
 <title>ADMINISTRATION: Lead Loader</title>
@@ -450,15 +488,15 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 	if ($file_layout!="custom") 
 		{
 		?>
-		<table align=center width="700" border=0 cellpadding=5 cellspacing=0 bgcolor=#D9E6FE>
+		<table align=center width="780" border=0 cellpadding=5 cellspacing=0 bgcolor=#D9E6FE>
 		  <tr>
 			<td align=right width="35%"><B><font face="arial, helvetica" size=2>Load leads from this file:</font></B></td>
-			<td align=left width="65%"><input type=file name="leadfile" value="<?php echo $leadfile ?>"> <?php echo "$NWB#vicidial_list_loader$NWE"; ?></td>
+			<td align=left width="65%"><input type=file name="leadfile" value="<?php echo $leadfile ?>"> <?php echo "$NWB#list_loader$NWE"; ?></td>
 		  </tr>
 		  <tr>
 			<td align=right width="25%"><font face="arial, helvetica" size=2>List ID Override: </font></td>
 			<td align=left width="75%"><font face="arial, helvetica" size=1>
-			<select name='list_id_override'>
+			<select name='list_id_override' onchange="PopulateStatuses(this.value)">
 			<option value='in_file' selected='yes'>Load from Lead File</option>
 			<?php
 			$stmt="SELECT list_id, list_name from vicidial_lists $whereLOGallowed_campaignsSQL order by list_id;";
@@ -499,7 +537,7 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 		  </tr>
 		  <tr>
 			<td align=right><B><font face="arial, helvetica" size=2>File layout to use:</font></B></td>
-			<td align=left><font face="arial, helvetica" size=2><input type=radio name="file_layout" value="standard" checked>Standard Format&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="file_layout" value="custom">Custom layout&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="file_layout" value="template">Custom Template <?php echo "$NWB#vicidial_list_loader-file_layout$NWE"; ?></td>
+			<td align=left><font face="arial, helvetica" size=2><input type=radio name="file_layout" value="standard" checked>Standard Format&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="file_layout" value="custom">Custom layout&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="file_layout" value="template">Custom Template <?php echo "$NWB#list_loader-file_layout$NWE"; ?></td>
 		  </tr>
 		  <tr>
 			<td align=right valign=top><B><font face="arial, helvetica" size=2>Custom template to use:</font></B></td>
@@ -516,7 +554,7 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 					echo "<option value='' selected>--No custom templates defined--</option>";
 				}
 ?>
-			</select> <a href='AST_admin_template_maker.php'><font face="arial, helvetica" size=1>template builder</font></a><?php echo "$NWB#vicidial_list_loader-template_id$NWE"; ?><BR><a href='#' onClick="TemplateSpecs()"><font face="arial, helvetica" size=1>View template info</font></a></td>
+			</select> <a href='AST_admin_template_maker.php'><font face="arial, helvetica" size=1>template builder</font></a><?php echo "$NWB#list_loader-template_id$NWE"; ?><BR><a href='#' onClick="TemplateSpecs()"><font face="arial, helvetica" size=1>View template info</font></a></td>
 		  <tr>
 			<td align=right width="25%"><font face="arial, helvetica" size=2>Lead Duplicate Check: </font></td>
 			<td align=left width="75%"><font face="arial, helvetica" size=1><select size=1 name=dupcheck>
@@ -526,8 +564,31 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 			<option value="DUPSYS">CHECK FOR DUPLICATES BY PHONE IN ENTIRE SYSTEM</option>
 			<option value="DUPTITLEALTPHONELIST">CHECK FOR DUPLICATES BY TITLE/ALT-PHONE IN LIST ID</option>
 			<option value="DUPTITLEALTPHONESYS">CHECK FOR DUPLICATES BY TITLE/ALT-PHONE IN ENTIRE SYSTEM</option>
-			</select></td>
+			</select> <?php echo "$NWB#list_loader-duplicate_check$NWE"; ?></td>
 		  </tr>
+	<tr bgcolor="#D9E6FE">
+		<td width='25%' align="right"><font class="standard">Status Duplicate Check:</font></td>
+		<td width='75%'>
+		<span id='statuses_display'>
+			<select id='dedupe_statuses' name='dedupe_statuses[]' size=5 multiple>
+			<option value='--ALL--' selected>--ALL DISPOSITIONS--</option>
+			<?php
+			$stmt="SELECT status, status_name from vicidial_statuses order by status;";
+			$rslt=mysql_query($stmt, $link);
+			$num_rows = mysql_num_rows($rslt);
+
+			$count=0;
+			while ( $num_rows > $count ) 
+				{
+				$row = mysql_fetch_row($rslt);
+				echo "\t\t\t<option value='$row[0]'>$row[0] - $row[1]</option>\n";
+				$count++;
+				}
+			?>
+			</select></font>		
+		</span>
+		</td>
+	</tr>
 		  <tr>
 			<td align=right width="25%"><font face="arial, helvetica" size=2>USA-Canada Check: </font></td>
 			<td align=left width="75%"><font face="arial, helvetica" size=1><select size=1 name=usacan_check>
@@ -624,6 +685,23 @@ if ($OK_to_process)
 		$file=fopen("$lead_file", "r");
 		print "<center><font face='arial, helvetica' size=3 color='#009900'><B>Processing file...\n";
 
+		if (count($dedupe_statuses)>0) {
+			$statuses_clause=" and status in (";
+			$status_dedupe_str="";
+			for($ds=0; $ds<count($dedupe_statuses); $ds++) {
+				$statuses_clause.="'$dedupe_statuses[$ds]',";
+				$status_dedupe_str.="$dedupe_statuses[$ds], ";
+				if (preg_match('/\-\-ALL\-\-/', $dedupe_statuses[$ds])) {
+					$statuses_clause="";
+					$status_dedupe_str="";
+					break;
+				}
+			}
+			$statuses_clause=preg_replace('/,$/', "", $statuses_clause);
+			$status_dedupe_str=preg_replace('/,\s$/', "", $status_dedupe_str);
+			if ($statuses_clause!="") {$statuses_clause.=")";}
+		} 
+
 		if (strlen($list_id_override)>0) 
 			{
 			print "<BR><BR>LIST ID OVERRIDE FOR THIS FILE: $list_id_override<BR><BR>";
@@ -632,6 +710,10 @@ if ($OK_to_process)
 		if (strlen($phone_code_override)>0) 
 			{
 			print "<BR><BR>PHONE CODE OVERRIDE FOR THIS FILE: $phone_code_override<BR><BR>";
+			}
+		if (strlen($status_dedupe_str)>0) 
+			{
+			print "<BR>OMITTING DUPLICATES AGAINST FOLLOWING STATUSES ONLY: $status_dedupe_str<BR>\n";
 			}
 
 		if ($custom_fields_enabled > 0)
@@ -827,7 +909,7 @@ if ($OK_to_process)
 								}
 							$dup_lists = preg_replace('/,$/i', '',$dup_lists);
 
-							$stmt="select list_id from vicidial_list where phone_number='$phone_number' and list_id IN($dup_lists) limit 1;";
+							$stmt="select list_id from vicidial_list where phone_number='$phone_number' and list_id IN($dup_lists) $statuses_clause limit 1;";
 							$rslt=mysql_query($stmt, $link);
 							$pc_recs = mysql_num_rows($rslt);
 							if ($pc_recs > 0)
@@ -849,7 +931,7 @@ if ($OK_to_process)
 				if (preg_match("/DUPSYS/i",$dupcheck))
 					{
 					$dup_lead=0;
-					$stmt="select list_id from vicidial_list where phone_number='$phone_number';";
+					$stmt="select list_id from vicidial_list where phone_number='$phone_number' $statuses_clause;";
 					$rslt=mysql_query($stmt, $link);
 					$pc_recs = mysql_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -869,7 +951,7 @@ if ($OK_to_process)
 				if (preg_match("/DUPLIST/i",$dupcheck))
 					{
 					$dup_lead=0;
-					$stmt="select count(*) from vicidial_list where phone_number='$phone_number' and list_id='$list_id';";
+					$stmt="select count(*) from vicidial_list where phone_number='$phone_number' and list_id='$list_id' $statuses_clause;";
 					$rslt=mysql_query($stmt, $link);
 					$pc_recs = mysql_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -889,7 +971,7 @@ if ($OK_to_process)
 				if (preg_match("/DUPTITLEALTPHONELIST/i",$dupcheck))
 					{
 					$dup_lead=0;
-					$stmt="select count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id';";
+					$stmt="select count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id' $statuses_clause;";
 					$rslt=mysql_query($stmt, $link);
 					$pc_recs = mysql_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -909,7 +991,7 @@ if ($OK_to_process)
 				if (preg_match("/DUPTITLEALTPHONESYS/i",$dupcheck))
 					{
 					$dup_lead=0;
-					$stmt="select list_id from vicidial_list where title='$title' and alt_phone='$alt_phone';";
+					$stmt="select list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' $statuses_clause;";
 					$rslt=mysql_query($stmt, $link);
 					$pc_recs = mysql_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -1653,6 +1735,24 @@ if (($leadfile) && ($LF_path))
 			$file=fopen("$lead_file", "r");
 			$total=0; $good=0; $bad=0; $dup=0; $post=0; $phone_list='';
 			print "<center><font face='arial, helvetica' size=3 color='#009900'><B>Processing $delim_name file... ($tab_count|$pipe_count)\n";
+
+			if (count($dedupe_statuses)>0) {
+				$statuses_clause=" and status in (";
+				$status_dedupe_str="";
+				for($ds=0; $ds<count($dedupe_statuses); $ds++) {
+					$statuses_clause.="'$dedupe_statuses[$ds]',";
+					$status_dedupe_str.="$dedupe_statuses[$ds], ";
+					if (preg_match('/\-\-ALL\-\-/', $dedupe_statuses[$ds])) {
+						$statuses_clause="";
+						$status_dedupe_str="";
+						break;
+					}
+				}
+				$statuses_clause=preg_replace('/,$/', "", $statuses_clause);
+				$status_dedupe_str=preg_replace('/,\s$/', "", $status_dedupe_str);
+				if ($statuses_clause!="") {$statuses_clause.=")";}
+			} 
+
 			if (strlen($list_id_override)>0) 
 				{
 				print "<BR><BR>LIST ID OVERRIDE FOR THIS FILE: $list_id_override<BR><BR>";
@@ -1660,6 +1760,10 @@ if (($leadfile) && ($LF_path))
 			if (strlen($phone_code_override)>0) 
 				{
 				print "<BR><BR>PHONE CODE OVERRIDE FOR THIS FILE: $phone_code_override<BR><BR>\n";
+				}
+			if (strlen($status_dedupe_str)>0) 
+				{
+				print "<BR>OMITTING DUPLICATES AGAINST FOLLOWING STATUSES ONLY: $status_dedupe_str<BR>\n";
 				}
 			while (!feof($file)) 
 				{
@@ -1772,7 +1876,7 @@ if (($leadfile) && ($LF_path))
 									}
 								$dup_lists = preg_replace('/,$/i', '',$dup_lists);
 
-								$stmt="select list_id from vicidial_list where phone_number='$phone_number' and list_id IN($dup_lists) limit 1;";
+								$stmt="select list_id from vicidial_list where phone_number='$phone_number' and list_id IN($dup_lists) $statuses_clause limit 1;";
 								$rslt=mysql_query($stmt, $link);
 								$pc_recs = mysql_num_rows($rslt);
 								if ($pc_recs > 0)
@@ -1794,7 +1898,7 @@ if (($leadfile) && ($LF_path))
 					if (preg_match("/DUPSYS/i",$dupcheck))
 						{
 						$dup_lead=0;
-						$stmt="select list_id from vicidial_list where phone_number='$phone_number';";
+						$stmt="select list_id from vicidial_list where phone_number='$phone_number' $statuses_clause;";
 						$rslt=mysql_query($stmt, $link);
 						$pc_recs = mysql_num_rows($rslt);
 						if ($pc_recs > 0)
@@ -1814,7 +1918,7 @@ if (($leadfile) && ($LF_path))
 					if (preg_match("/DUPLIST/i",$dupcheck))
 						{
 						$dup_lead=0;
-						$stmt="select count(*) from vicidial_list where phone_number='$phone_number' and list_id='$list_id';";
+						$stmt="select count(*) from vicidial_list where phone_number='$phone_number' and list_id='$list_id' $statuses_clause;";
 						$rslt=mysql_query($stmt, $link);
 						$pc_recs = mysql_num_rows($rslt);
 						if ($pc_recs > 0)
@@ -1833,7 +1937,7 @@ if (($leadfile) && ($LF_path))
 					if (preg_match("/DUPTITLEALTPHONELIST/i",$dupcheck))
 						{
 						$dup_lead=0;
-						$stmt="select count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id';";
+						$stmt="select count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id' $statuses_clause;";
 						$rslt=mysql_query($stmt, $link);
 						$pc_recs = mysql_num_rows($rslt);
 						if ($pc_recs > 0)
@@ -1853,7 +1957,7 @@ if (($leadfile) && ($LF_path))
 					if (preg_match("/DUPTITLEALTPHONESYS/i",$dupcheck))
 						{
 						$dup_lead=0;
-						$stmt="select list_id from vicidial_list where title='$title' and alt_phone='$alt_phone';";
+						$stmt="select list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' $statuses_clause;";
 						$rslt=mysql_query($stmt, $link);
 						$pc_recs = mysql_num_rows($rslt);
 						if ($pc_recs > 0)
@@ -2106,6 +2210,19 @@ if (($leadfile) && ($LF_path))
 			{$delimiter="|";}
 
 		$field_check=explode($delimiter, $buffer);
+
+		if (count($dedupe_statuses)>0) {
+			$status_dedupe_str="";
+			for($ds=0; $ds<count($dedupe_statuses); $ds++) {
+				$status_dedupe_str.="$dedupe_statuses[$ds],";
+				if (preg_match('/\-\-ALL\-\-/', $dedupe_statuses[$ds])) {
+					$status_dedupe_str="";
+					break;
+				}
+			}
+			$status_dedupe_str=preg_replace('/\,$/', "", $status_dedupe_str);
+		} 
+			
 		flush();
 		$file=fopen("$lead_file", "r");
 		print "<center><font face='arial, helvetica' size=3 color='#009900'><B>Processing $delim_name file...\n";
@@ -2117,6 +2234,10 @@ if (($leadfile) && ($LF_path))
 		if (strlen($phone_code_override)>0) 
 			{
 			print "<BR><BR>PHONE CODE OVERRIDE FOR THIS FILE: $phone_code_override<BR><BR>";
+			}
+		if (strlen($status_dedupe_str)>0) 
+			{
+			print "<BR>OMITTING DUPLICATES AGAINST FOLLOWING STATUSES ONLY: $status_dedupe_str<BR>\n";
 			}
 		$buffer=rtrim(fgets($file, 4096));
 		$buffer=stripslashes($buffer);
@@ -2144,8 +2265,10 @@ if (($leadfile) && ($LF_path))
 				print "    </select></td>\r\n";
 				print "  </tr>\r\n";
 				}
-			}
+			}	
+
 		print "  <tr bgcolor='#330099'>\r\n";
+		print "  <input type=hidden name=dedupe_statuses_override value=\"$status_dedupe_str\">\r\n";
 		print "  <input type=hidden name=dupcheck value=\"$dupcheck\">\r\n";
 		print "  <input type=hidden name=usacan_check value=\"$usacan_check\">\r\n";
 		print "  <input type=hidden name=postalgmt value=\"$postalgmt\">\r\n";

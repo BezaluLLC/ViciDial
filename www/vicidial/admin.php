@@ -7600,6 +7600,11 @@ if ($ADD==99999)
 		<BR>NOTES: The Excel Lead loader functionality is enabled by a series of perl scripts and needs to have a properly configured /etc/astguiclient.conf file in place on the web server. Also, a couple perl modules must be loaded for it to work as well - OLE-Storage_Lite and Spreadsheet-ParseExcel. You can check for runtime errors in these by looking at your apache error_log file. Also, for duplication checks against gampaign lists, the list that has new leads going into it does need to be created in the system before you start to load the leads.
 
 		<BR>
+		<A NAME="list_loader-duplicate_check">
+		<BR>
+		<B>Duplicate Checking - </B>The duplicate options allow you to check for duplicate entries as you load the leads into the system. You can select to check for duplicates within only the same list, only the same campaign lists or within the entire system. If you have chosen a duplicate check method, you can also optionally select the only specific statuses that you want to duplicate check against.
+
+		<BR>
 		<A NAME="list_loader-file_layout">
 		<BR>
 		<B>File layout - </B>The layout of the file you are loading.  "Standard Format" uses the pre-defined standard file format.  "Custom layout" allows the user to define the layout of the file themselves.  "Custom template" is a hybrid of the previous two options, which allows the user to use a custom format they have defined previously and saved using the Custom Template Maker.
@@ -30725,7 +30730,7 @@ if ($ADD==3111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Friday Start:</td><td align=left><input type=text name=ct_friday_start size=5 maxlength=4 value=\"$ct_friday_start\"> </td><td align=right>Friday Stop:</td><td align=left><input type=text name=ct_friday_stop size=5 maxlength=4 value=\"$ct_friday_stop\"> $NWB#call_times-ct_sunday_start$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Saturday Start:</td><td align=left><input type=text name=ct_saturday_start size=5 maxlength=4 value=\"$ct_saturday_start\"> </td><td align=right>Saturday Stop:</td><td align=left><input type=text name=ct_saturday_stop size=5 maxlength=4 value=\"$ct_saturday_stop\"> $NWB#call_times-ct_sunday_start$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=4><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=center colspan=4>&nbsp;</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=4>&nbsp;</form></td></tr>\n";
 
 
 
