@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# FastAGI_log.pl version 2.6
+# FastAGI_log.pl version 2.8
 # 
 # Experimental Deamon using perl Net::Server that runs as FastAGI to reduce load
 # replaces the following AGI scripts:
@@ -66,6 +66,7 @@
 # 121129-2322 - Added enhanced_disconnect_logging option
 # 130412-1321 - Added sip_hangup_cause to carrier log
 # 130531-1619 - Fixed issue with busy agent login calls attempting to be logged
+# 130802-0739 - Added CAMPCUST dialplan variable definition for outbound calls
 #
 
 # defaults for PreFork
@@ -160,7 +161,6 @@ if ($SERVERLOG =~ /Y/)
 package VDfastAGI;
 
 use Net::Server;
-use Asterisk::AGI;
 use vars qw(@ISA);
 use Net::Server::PreFork; # any personality will do
 @ISA = qw(Net::Server::PreFork);
@@ -171,9 +171,14 @@ use Time::HiRes ('gettimeofday','usleep','sleep');  # necessary to have perl sle
 
 sub process_request 
 	{
+	use Asterisk::AGI;
+	$AGI = new Asterisk::AGI;
+
 	$carrier_logging_active=0;
 	$process = 'begin';
 	$script = 'VDfastAGI';
+	$DP_variables_enabled=1;
+
 	########## Get current time, parse configs, get logging preferences ##########
 	($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 	$year = ($year + 1900);
@@ -496,6 +501,28 @@ sub process_request
 				$number_dialed =~ s/\D//gi;
 				if (length($number_dialed)<1) {$number_dialed=$extension;}
 				}
+
+			### set dialplan variable CAMPCUST to the campaign_id of the outbound auto-dial or manual dial call
+			if ( ($callerid =~ /^V|^M/) && ($callerid =~ /\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/) && ($DP_variables_enabled > 0) )
+				{
+				$CAMPCUST='';
+				$stmtA = "SELECT campaign_id FROM vicidial_auto_calls where callerid='$callerid' limit 1;";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$CAMPCUST	=	$aryA[0];
+					}
+				$sthA->finish();
+				if (length($CAMPCUST) > 0)
+					{
+					$AGI->exec("EXEC Set(_CAMPCUST=$CAMPCUST)");
+					if ($AGILOG) {$agi_string = "|CAMPCUST: $CAMPCUST|$callerid|";   &agi_output;}
+					}
+				}
+
 			$stmtA = "INSERT INTO call_log (uniqueid,channel,channel_group,type,server_ip,extension,number_dialed,start_time,start_epoch,end_time,end_epoch,length_in_sec,length_in_min,caller_code) values('$unique_id','$channel','$channel_group','$type','$VARserver_ip','$extension','$number_dialed','$now_date','$now_date_epoch','','','','','$callerid')";
 
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}

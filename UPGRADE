@@ -113,6 +113,14 @@ OTHER CHANGES:
 12. Added the ability to deduplicate leads based upon statuses in the web based
 	lead loader using templates and the basic web lead loader.
 
+13. Added dialplan variable CAMPCUST for manual dial and auto dial outbound 
+	calls that is set to the campaign_id of the phone call. This allows for
+	the ability to put the following in your dialplan for outbound calls 
+	so that you can send out the campaign_id as a SIP header.
+	NOTE: if you want to use this it must be placed immediately below the 
+	AGI call_log line of the dialplan and before the Dial line:
+		exten => _91NXXNXXXXXX,n,SipAddHeader(X-campaignid: ${CAMPCUST})
+
 
 
 
