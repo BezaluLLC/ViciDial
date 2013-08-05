@@ -24,12 +24,13 @@
 # This program assumes that recordings are saved by Asterisk as .wav
 # should be easy to change this code if you use .gsm instead
 # 
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 
 # 80302-1958 - First Build
 # 80731-2253 - Changed size comparisons for more efficiency
 # 91105-1353 - Added --MIX option to only check the /var/spool/asterisk/monitor/MIX directory
+# 130805-1450 - Added check for length and gather length of recording for database record
 #
 
 $MIX=0;
@@ -164,6 +165,22 @@ else
 		}
 	}
 
+### find soxi to gather the length info if needed
+$soxibin = '';
+if ( -e ('/usr/bin/soxi')) {$soxibin = '/usr/bin/soxi';}
+else 
+	{
+	if ( -e ('/usr/local/bin/soxi')) {$soxibin = '/usr/local/bin/soxi';}
+	else
+		{
+		if ( -e ('/usr/sbin/soxi')) {$soxibin = '/usr/sbin/soxi';}
+		else 
+			{
+			if ($DB) {print "Can't find soxi binary! No length calculations will be available...\n";}
+			}
+		}
+	}
+
 ### directory where in/out recordings are saved to by Asterisk
 $dir1 = "$PATHmonitor";
 $dir2 = "$PATHDONEmonitor";
@@ -215,7 +232,8 @@ foreach(@FILES)
 			$SQLFILE = $FILES[$i];
 			$SQLFILE =~ s/-in\.wav|-in\.gsm//gi;
 
-			$stmtA = "select recording_id from recording_log where filename='$SQLFILE' order by recording_id desc LIMIT 1;";
+			$length_in_sec=0;
+			$stmtA = "select recording_id,length_in_sec from recording_log where filename='$SQLFILE' order by recording_id desc LIMIT 1;";
 			if($DBX){print STDERR "\n|$stmtA|\n";}
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -223,15 +241,27 @@ foreach(@FILES)
 			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$recording_id =	"$aryA[0]";
+				$recording_id =		$aryA[0];
+				$length_in_sec =	$aryA[1];
 				}
 			$sthA->finish();
 
-		if ($DB) {print "|$recording_id|$INfile|$OUTfile|     |$ALLfile|\n";}
+			if ($DB) {print "|$recording_id|$length_in_sec|$INfile|$OUTfile|     |$ALLfile|\n";}
 
 			`$soxmixbin "$dir1/$INfile" "$dir1/$OUTfile" "$dir2/$ALLfile"`;
 
-			$stmtA = "UPDATE recording_log set location='http://$server_ip/RECORDINGS/$ALLfile' where recording_id='$recording_id';";
+			$lengthSQL='';
+			if ( ( ($length_in_sec < 1) || ($length_in_sec =~ /^NULL$/i) || (length($length_in_sec)<1) ) && (length($soxibin) > 3) )
+				{
+				@soxi_output = `$soxibin -D $dir2/$ALLfile`;
+				$soxi_sec = $soxi_output[0];
+				$soxi_sec =~ s/\..*|\n|\r| //gi;
+				$soxi_min = ($soxi_sec / 60);
+				$soxi_min = sprintf("%.2f", $soxi_min);
+				$lengthSQL = ",length_in_sec='$soxi_sec',length_in_min='$soxi_min'";
+				}
+
+			$stmtA = "UPDATE recording_log set location='http://$server_ip/RECORDINGS/$ALLfile' $lengthSQL where recording_id='$recording_id';";
 				if($DBX){print STDERR "\n|$stmtA|\n";}
 			$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
 
