@@ -32,9 +32,10 @@
 # 130328-0028 - Converted ereg to preg functions
 # 130603-2219 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130705-1524 - Added optional encrypted passwords compatibility
+# 130802-1005 - Changed to PHP mysqli functions
 # 
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 ### If you have globals turned off uncomment these lines
@@ -93,8 +94,8 @@ else
 		{
 		$stmt="SELECT count(*) from web_client_sessions where session_name='$session_name' and server_ip='$server_ip';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$SNauth=$row[0];
 		if($SNauth==0)
 			{
@@ -133,14 +134,14 @@ else
 	##### print outbound calls from the call_log table
 	$stmt="SELECT uniqueid,start_time,$number_dialed,length_in_sec FROM call_log where server_ip = '$server_ip' and channel LIKE \"$protocol/$exten%\" order by start_time desc limit $out_limit;";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-	if ($rslt) {$out_calls_count = mysql_num_rows($rslt);}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($rslt) {$out_calls_count = mysqli_num_rows($rslt);}
 	echo "$out_calls_count|";
 	$loop_count=0;
 	while ($out_calls_count>$loop_count)
 		{
 		$loop_count++;
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 
 		$call_time_M = ($row[3] / 60);
 		$call_time_M = round($call_time_M, 2);
@@ -159,14 +160,14 @@ else
 	##### print inbound calls from the live_inbound_log table
 	$stmt="SELECT call_log.uniqueid,live_inbound_log.start_time,live_inbound_log.extension,caller_id,length_in_sec from live_inbound_log,call_log where phone_ext='$exten' and live_inbound_log.server_ip = '$server_ip' and call_log.uniqueid=live_inbound_log.uniqueid order by start_time desc limit $in_limit;";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-	if ($rslt) {$in_calls_count = mysql_num_rows($rslt);}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($rslt) {$in_calls_count = mysqli_num_rows($rslt);}
 	echo "$in_calls_count|";
 	$loop_count=0;
 	while ($in_calls_count>$loop_count)
 		{
 		$loop_count++;
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 
 		$call_time_M = ($row[4] / 60);
 		$call_time_M = round($call_time_M, 2);

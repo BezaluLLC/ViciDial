@@ -25,9 +25,10 @@
 # 90508-0727 - Changed to PHP long tags
 # 130328-0025 - Converted ereg to preg functions
 # 130603-2202 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130802-1038 - Changed to PHP mysqli functions
 #
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 ### If you have globals turned off uncomment these lines
@@ -80,8 +81,8 @@ else
 		{
 		$stmt="SELECT count(*) from web_client_sessions where session_name='$session_name' and server_ip='$server_ip';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$SNauth=$row[0];
 		  if($SNauth==0)
 			{
@@ -118,13 +119,13 @@ else
 	{
 	$stmt="SELECT messages,old_messages FROM phones where server_ip='$server_ip' and voicemail_id='$vmail_box' limit 1;";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-	$vmails_list = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$vmails_list = mysqli_num_rows($rslt);
 	$loop_count=0;
 		while ($vmails_list>$loop_count)
 		{
 		$loop_count++;
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		echo "$row[0]|$row[1]";
 		if ($format=='debug') {echo "\n<!-- $row[0]     $row[1] -->";}
 		}

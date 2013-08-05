@@ -1,13 +1,16 @@
 <?php
 # audit_comments.php
 # 
-# Copyright (C) 2012  poundteam.com    LICENSE: AGPLv2
+# Copyright (C) 2013  poundteam.com,vicidial.org    LICENSE: AGPLv2
 #
 # This script is designed to display QC audit comments, contributed by poundteam.com
 #
 # changes:
 # 121116-1322 - First build, added to vicidial codebase
+# 130802-0957 - Changed to PHP mysqli functions
 #
+
+require("functions.php");
 
 function audit_comments($lead_id,$list_id,$format,$user,$mel,$NOW_TIME,$link,$server_ip,$session_name,$one_mysql_log,$campaign) {
     $audit_comments_active=audit_comments_active($list_id,$format,$user,$mel,$NOW_TIME,$link,$server_ip,$session_name,$one_mysql_log);
@@ -17,11 +20,11 @@ function audit_comments($lead_id,$list_id,$format,$user,$mel,$NOW_TIME,$link,$se
         if ($format=='debug') {
             echo "\n<!-- $stmt -->";
         }
-        $rslt=mysql_query($stmt, $link);
+        $rslt=mysql_to_mysqli($stmt, $link);
         if ($mel > 0) {
             mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00142-AuditComments2',$user,$server_ip,$session_name,$one_mysql_log);
         }
-        $row=mysql_fetch_row($rslt);
+        $row=mysqli_fetch_row($rslt);
         if (strlen($row[0]) > 0) {
             $comment=$row[0];
             //Put comment in comment table
@@ -29,17 +32,17 @@ function audit_comments($lead_id,$list_id,$format,$user,$mel,$NOW_TIME,$link,$se
             if ($format=='debug') {
                 echo "\n<!-- $stmt -->";
             }
-            $rslt=mysql_query($stmt, $link);
+            $rslt=mysql_to_mysqli($stmt, $link);
             if ($mel > 0) {
                 mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00142-AuditComments3',$user,$server_ip,$session_name,$one_mysql_log);
             }
-            $affected=mysql_affected_rows();
+            $affected=mysqli_affected_rows($link);
             if($affected>0) {
                 $stmt="UPDATE vicidial_list set comments='' where lead_id='$lead_id';";
                 if ($format=='debug') {
                     echo "\n<!-- $stmt -->";
                 }
-                $rslt=mysql_query($stmt, $link);
+                $rslt=mysql_to_mysqli($stmt, $link);
                 if ($mel > 0) {
                     mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00142-AuditComments4',$user,$server_ip,$session_name,$one_mysql_log);
                 }
@@ -55,11 +58,11 @@ function audit_comments_active($list_id,$format,$user,$mel,$NOW_TIME,$link,$serv
     if ($format=='debug') {
         echo "\n<!-- $stmt -->";
     }
-    $rslt=mysql_query($stmt, $link);
+    $rslt=mysql_to_mysqli($stmt, $link);
     if ($mel > 0) {
         mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00142-AuditComments5',$user,$server_ip,$session_name,$one_mysql_log);
     }
-    $row=mysql_fetch_row($rslt);
+    $row=mysqli_fetch_row($rslt);
     if ($row[0] == '1') {
         return true;
     } else {
@@ -71,18 +74,18 @@ function get_audited_comments($lead_id,$format,$user,$mel,$NOW_TIME,$link,$serve
     global $ACcomments;
     $stmt="select user_id,comment from vicidial_comments where lead_id='$lead_id';";
     if ($mel > 0) {
-        mysql_error_logging($NOW_TIME,$link,$mel,$stmt,"00142-65-AuditComments:$stmt LeadID: $lead_id,$format,$user,$mel,$NOW_TIME,$link,$server_ip,$session_name,$one_mysql_log",$user,$server_ip,$session_name,$one_mysql_log);
+        mysql_error_logging($NOW_TIME,$link,$mel,$stmt,"00142-65-AuditComments:$stmt LeadID: $lead_id,$format,$user,$mel,$NOW_TIME,\$link,$server_ip,$session_name,$one_mysql_log",$user,$server_ip,$session_name,$one_mysql_log);
     }
-    $rslt=mysql_query($stmt, $link);
+    $rslt=mysql_to_mysqli($stmt, $link);
     if ($mel > 0) {
         mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00142-69-AuditComments',$user,$server_ip,$session_name,$one_mysql_log);
     }
-    $ACcount=mysql_num_rows($rslt);
+    $ACcount=mysqli_num_rows($rslt);
     mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00142-72-AuditComments $ACcount='.$ACcount,$user,$server_ip,$session_name,$one_mysql_log);
     if($ACcount>0) {
         $i=0;
         while ($i < $ACcount) {
-            $row=mysql_fetch_row($rslt);
+            $row=mysqli_fetch_row($rslt);
             mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00142-77-AuditComments UserID='.$row[0],$user,$server_ip,$session_name,$one_mysql_log);
             $ACcomments .=	"UserID: $row[0]\n";
             mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00142-79-AuditComments Comment='.$row[1],$user,$server_ip,$session_name,$one_mysql_log);

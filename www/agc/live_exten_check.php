@@ -33,9 +33,10 @@
 # 130328-0027 - Converted ereg to preg functions
 # 130603-2214 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130705-1522 - Added optional encrypted passwords compatibility
+# 130802-1009 - Changed to PHP mysqli functions
 #
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 ### If you have globals turned off uncomment these lines
@@ -94,8 +95,8 @@ else
 		{
 		$stmt="SELECT count(*) from web_client_sessions where session_name='$session_name' and server_ip='$server_ip';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$SNauth=$row[0];
 		if($SNauth==0)
 			{
@@ -126,8 +127,8 @@ echo "UnixTime: $StarTtime|";
 
 $stmt="SELECT count(*) FROM parked_channels where server_ip = '$server_ip';";
 	if ($format=='debug') {echo "\n<!-- $stmt -->";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 echo "$row[0]|";
 
 $MT[0]='';
@@ -143,14 +144,14 @@ else
 	{
 	$stmt="SELECT channel,extension FROM live_sip_channels where server_ip = '$server_ip' and channel LIKE \"$protocol/$exten%\";";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-	if ($rslt) {$channels_list = mysql_num_rows($rslt);}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($rslt) {$channels_list = mysqli_num_rows($rslt);}
 	echo "$channels_list|";
 	$loop_count=0;
 	while ($channels_list>$loop_count)
 		{
 		$loop_count++;
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$ChanneLA[$loop_count] = "$row[0]";
 		$ChanneLB[$loop_count] = "$row[1]";
 		if ($format=='debug') {echo "\n<!-- $row[0]     $row[1] -->";}
@@ -163,11 +164,11 @@ while($loop_count > $counter)
 		$counter++;
 	$stmt="SELECT channel FROM live_channels where server_ip = '$server_ip' and channel_data = '$ChanneLA[$counter]';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-	if ($rslt) {$trunk_count = mysql_num_rows($rslt);}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($rslt) {$trunk_count = mysqli_num_rows($rslt);}
 	if ($trunk_count>0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		echo "Conversation: $counter ~";
 		echo "ChannelA: $ChanneLA[$counter] ~";
 		echo "ChannelB: $ChanneLB[$counter] ~";
@@ -177,11 +178,11 @@ while($loop_count > $counter)
 		{
 		$stmt="SELECT channel FROM live_sip_channels where server_ip = '$server_ip' and channel_data = '$ChanneLA[$counter]';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
-		if ($rslt) {$trunk_count = mysql_num_rows($rslt);}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($rslt) {$trunk_count = mysqli_num_rows($rslt);}
 		if ($trunk_count>0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			echo "Conversation: $counter ~";
 			echo "ChannelA: $ChanneLA[$counter] ~";
 			echo "ChannelB: $ChanneLB[$counter] ~";
@@ -191,11 +192,11 @@ while($loop_count > $counter)
 			{
 			$stmt="SELECT channel FROM live_sip_channels where server_ip = '$server_ip' and channel LIKE \"$ChanneLB[$counter]%\";";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
-			if ($rslt) {$trunk_count = mysql_num_rows($rslt);}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			if ($rslt) {$trunk_count = mysqli_num_rows($rslt);}
 			if ($trunk_count>0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				echo "Conversation: $counter ~";
 				echo "ChannelA: $ChanneLA[$counter] ~";
 				echo "ChannelB: $ChanneLB[$counter] ~";
@@ -205,11 +206,11 @@ while($loop_count > $counter)
 				{
 				$stmt="SELECT channel FROM live_channels where server_ip = '$server_ip' and channel LIKE \"$ChanneLB[$counter]%\";";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_query($stmt, $link);
-				if ($rslt) {$trunk_count = mysql_num_rows($rslt);}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				if ($rslt) {$trunk_count = mysqli_num_rows($rslt);}
 				if ($trunk_count>0)
 					{
-					$row=mysql_fetch_row($rslt);
+					$row=mysqli_fetch_row($rslt);
 					echo "Conversation: $counter ~";
 					echo "ChannelA: $ChanneLA[$counter] ~";
 					echo "ChannelB: $ChanneLB[$counter] ~";
@@ -232,11 +233,11 @@ echo "\n";
 ### check for live_inbound entry
 $stmt="select * from live_inbound where server_ip = '$server_ip' and phone_ext = '$exten' and acknowledged='N';";
 	if ($format=='debug') {echo "\n<!-- $stmt -->";}
-$rslt=mysql_query($stmt, $link);
-if ($rslt) {$channels_list = mysql_num_rows($rslt);}
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($rslt) {$channels_list = mysqli_num_rows($rslt);}
 if ($channels_list>0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$LIuniqueid = "$row[0]";
 	$LIchannel = "$row[1]";
 	$LIcallerid = "$row[3]";
@@ -259,8 +260,8 @@ if ($favorites_count > 0)
 		$fav_extension = explode('/',$favorites[$h]);
 		$stmt="SELECT count(*) FROM live_sip_channels where server_ip = '$server_ip' and channel LIKE \"$favorites[$h]%\";";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$favs_print .= "$fav_extension[1]: $row[0] ~";
 		$h++;
 		}

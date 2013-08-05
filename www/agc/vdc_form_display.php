@@ -21,12 +21,13 @@
 # 130603-2204 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130615-2155 - Allow qc_enabled user access to this page even if not logged in as an agent
 # 130705-1512 - Added optional encrypted passwords compatibility
+# 130802-1033 - Changed to PHP mysqli functions
 #
 
-$version = '2.8-12';
-$build = '130615-2155';
+$version = '2.8-13';
+$build = '130802-1033';
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require_once("functions.php");
 
 $bcrypt=1;
@@ -185,12 +186,12 @@ $IFRAME=0;
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,custom_fields_enabled FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =							$row[0];
 	$timeclock_end_of_day =					$row[1];
 	$agentonly_callback_campaign_lock =		$row[2];
@@ -227,14 +228,14 @@ if ($auth_message == 'GOOD')
 
 $stmt="SELECT count(*) from vicidial_users where user='$user' and ( (modify_leads='1') or (qc_enabled='1') );";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $VUmodify=$row[0];
 
 $stmt="SELECT count(*) from vicidial_live_agents where user='$user';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LVAactive=$row[0];
 
 if ($custom_fields_enabled < 1)
@@ -267,24 +268,24 @@ if ($stage=='SUBMIT')
 	$CFoutput='';
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
 	if ($DB>0) {echo "$stmt";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'06001',$user,$server_ip,$session_name,$one_mysql_log);}
-	$tablecount_to_print = mysql_num_rows($rslt);
+	$tablecount_to_print = mysqli_num_rows($rslt);
 	if ($tablecount_to_print > 0) 
 		{
 		$update_SQL='';
 		$VL_update_SQL='';
 		$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'06003',$user,$server_ip,$session_name,$one_mysql_log);}
-		$fields_to_print = mysql_num_rows($rslt);
+		$fields_to_print = mysqli_num_rows($rslt);
 		$fields_list='';
 		$o=0;
 		while ($fields_to_print > $o) 
 			{
 			$new_field_value='';
 			$form_field_value='';
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$A_field_id[$o] =			$rowx[0];
 			$A_field_label[$o] =		$rowx[1];
 			$A_field_name[$o] =			$rowx[2];
@@ -350,12 +351,12 @@ if ($stage=='SUBMIT')
 			$custom_record_lead_count=0;
 			$stmt="SELECT count(*) from custom_$list_id where lead_id='$lead_id';";
 			if ($DB>0) {echo "$stmt";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'06004',$user,$server_ip,$session_name,$one_mysql_log);}
-			$fieldleadcount_to_print = mysql_num_rows($rslt);
+			$fieldleadcount_to_print = mysqli_num_rows($rslt);
 			if ($fieldleadcount_to_print > 0) 
 				{
-				$rowx=mysql_fetch_row($rslt);
+				$rowx=mysqli_fetch_row($rslt);
 				$custom_record_lead_count =	$rowx[0];
 				}
 			$update_SQL = preg_replace("/,$/","",$update_SQL);
@@ -363,10 +364,10 @@ if ($stage=='SUBMIT')
 			if ($custom_record_lead_count > 0)
 				{$custom_table_update_SQL = "UPDATE custom_$list_id SET $update_SQL where lead_id='$lead_id';";}
 
-			$rslt=mysql_query($custom_table_update_SQL, $link);
-			$custom_update_count = mysql_affected_rows($link);
+			$rslt=mysql_to_mysqli($custom_table_update_SQL, $link);
+			$custom_update_count = mysqli_affected_rows($link);
 			if ($DB) {echo "$custom_update_count|$custom_table_update_SQL\n";}
-			if (!$rslt) {die('Could not execute: ' . mysql_error());}
+			if (!$rslt) {die('Could not execute: ' . mysqli_error($link));}
 
 			$update_sent++;
 			}
@@ -379,10 +380,10 @@ if ($stage=='SUBMIT')
 			$VL_update_SQL = preg_replace("/,$/","",$VL_update_SQL);
 			$list_table_update_SQL = "UPDATE vicidial_list SET $custom_update_vl_SQL $VL_update_SQL where lead_id='$lead_id';";
 
-			$rslt=mysql_query($list_table_update_SQL, $link);
-			$list_update_count = mysql_affected_rows($link);
+			$rslt=mysql_to_mysqli($list_table_update_SQL, $link);
+			$list_update_count = mysqli_affected_rows($link);
 			if ($DB) {echo "$list_update_count|$list_table_update_SQL\n";}
-			if (!$rslt) {die('Could not execute: ' . mysql_error());}
+			if (!$rslt) {die('Could not execute: ' . mysqli_error($link));}
 
 			$update_sent++;
 			}
@@ -391,10 +392,10 @@ if ($stage=='SUBMIT')
 			if ($custom_update_count > 0)
 				{
 				$list_table_update_SQL = "UPDATE vicidial_list SET entry_list_id='$list_id' where lead_id='$lead_id';";
-				$rslt=mysql_query($list_table_update_SQL, $link);
-				$list_update_count = mysql_affected_rows($link);
+				$rslt=mysql_to_mysqli($list_table_update_SQL, $link);
+				$list_update_count = mysqli_affected_rows($link);
 				if ($DB) {echo "$list_update_count|$list_table_update_SQL\n";}
-				if (!$rslt) {die('Could not execute: ' . mysql_error());}
+				if (!$rslt) {die('Could not execute: ' . mysqli_error($link));}
 				}
 			}
 
@@ -407,7 +408,7 @@ if ($stage=='SUBMIT')
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='LEADS', event_type='MODIFY', record_id='$lead_id', event_code='ADMIN MODIFY CUSTOM LEAD', event_sql=\"$SQL_log\", event_notes='$custom_update_count|$list_update_count';";
 			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			}
 		}
 	else

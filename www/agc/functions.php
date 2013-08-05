@@ -17,23 +17,24 @@
 # 130328-0018 - Converted ereg to preg functions
 # 130603-2208 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130705-2004 - Added optional encrypted passwords compatibility
+# 130802-1004 - Changed to PHP mysqli functions
 #
 
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
 function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$return_hash)
 	{
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 
 	#############################################
 	##### START SYSTEM_SETTINGS LOOKUP #####
 	$stmt = "SELECT use_non_latin,webroot_writable,pass_hash_enabled,pass_key,pass_cost FROM system_settings;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$qm_conf_ct = mysql_num_rows($rslt);
+	$qm_conf_ct = mysqli_num_rows($rslt);
 	if ($qm_conf_ct > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$non_latin =					$row[0];
 		$SSwebroot_writable =			$row[1];
 		$SSpass_hash_enabled =			$row[2];
@@ -73,30 +74,30 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 	if ($user_option == 'MGR')
 		{$stmt="SELECT count(*) from vicidial_users where user='$user' and $passSQL and manager_shift_enforcement_override='1' and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";}
 	if ($DB) {echo "|$stmt|\n";}
-	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-	$rslt=mysql_query($stmt, $link);
+	if ($non_latin > 0) {$rslt=mysql_to_mysqli($link, "SET NAMES 'UTF8'");}
+	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05009',$user,$server_ip,$session_name,$one_mysql_log);}
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$auth=$row[0];
 
 	if ($auth < 1)
 		{
-		$auth_key='BAD';
+		$auth_key='BAD'."|$stmt";
 		$stmt="SELECT failed_login_count,UNIX_TIMESTAMP(last_login_date) from vicidial_users where user='$user';";
-		if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-		$rslt=mysql_query($stmt, $link);
+		if ($non_latin > 0) {$rslt=mysql_to_mysqli($link, "SET NAMES 'UTF8'");}
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05010',$user,$server_ip,$session_name,$one_mysql_log);}
-		$cl_user_ct = mysql_num_rows($rslt);
+		$cl_user_ct = mysqli_num_rows($rslt);
 		if ($cl_user_ct > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$failed_login_count =	$row[0];
 			$last_login_date =		$row[1];
 
 			if ($failed_login_count < $LOCK_trigger_attempts)
 				{
 				$stmt="UPDATE vicidial_users set failed_login_count=(failed_login_count+1),last_ip='$ip' where user='$user';";
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05011',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
 			else
@@ -104,7 +105,7 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 				if ($LOCK_over > $last_login_date)
 					{
 					$stmt="UPDATE vicidial_users set last_login_date=NOW(),failed_login_count=1,last_ip='$ip' where user='$user';";
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05012',$user,$server_ip,$session_name,$one_mysql_log);}
 					}
 				else
@@ -123,7 +124,7 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 		if ($user_update > 0)
 			{
 			$stmt="UPDATE vicidial_users set last_login_date=NOW(),last_ip='$ip',failed_login_count=0 where user='$user';";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05013',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
 		$auth_key='GOOD';
@@ -144,36 +145,36 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 
 	$vicidial_list_fields = '|lead_id|vendor_lead_code|source_id|list_id|gmt_offset_now|called_since_last_reset|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|called_count|last_local_call_time|rank|owner|';
 
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 
 	$CFoutput='';
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
 	if ($DB>0) {echo "$stmt";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05002',$user,$server_ip,$session_name,$one_mysql_log);}
-	$tablecount_to_print = mysql_num_rows($rslt);
+	$tablecount_to_print = mysqli_num_rows($rslt);
 	if ($tablecount_to_print > 0) 
 		{
 		$stmt="SELECT count(*) from custom_$list_id;";
 		if ($DB>0) {echo "$stmt";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05003',$user,$server_ip,$session_name,$one_mysql_log);}
-		$fieldscount_to_print = mysql_num_rows($rslt);
+		$fieldscount_to_print = mysqli_num_rows($rslt);
 		if ($fieldscount_to_print > 0) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$custom_records_count =	$rowx[0];
 
 			$select_SQL='';
 			$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05004',$user,$server_ip,$session_name,$one_mysql_log);}
-			$fields_to_print = mysql_num_rows($rslt);
+			$fields_to_print = mysqli_num_rows($rslt);
 			$fields_list='';
 			$o=0;
 			while ($fields_to_print > $o) 
 				{
-				$rowx=mysql_fetch_row($rslt);
+				$rowx=mysqli_fetch_row($rslt);
 				$A_field_id[$o] =			$rowx[0];
 				$A_field_label[$o] =		$rowx[1];
 				$A_field_name[$o] =			$rowx[2];
@@ -223,14 +224,14 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 				{
 				##### BEGIN grab the data from custom table for the lead_id
 				$stmt="SELECT $select_SQL FROM custom_$list_id where lead_id='$lead_id' LIMIT 1;";
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05005',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
-				$list_lead_ct = mysql_num_rows($rslt);
+				$list_lead_ct = mysqli_num_rows($rslt);
 				}
 			if ($list_lead_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$o=0;
 				while ($fields_to_print >= $o) 
 					{
@@ -478,12 +479,12 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 			{
 			$stmt = "select custom_one,custom_two,custom_three,custom_four,custom_five,full_name from vicidial_users where user='$user';";
 			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05006',$user,$server_ip,$session_name,$one_mysql_log);}
-			$VUC_ct = mysql_num_rows($rslt);
+			$VUC_ct = mysqli_num_rows($rslt);
 			if ($VUC_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$user_custom_one	=		trim($row[0]);
 				$user_custom_two	=		trim($row[1]);
 				$user_custom_three	=		trim($row[2]);
@@ -501,12 +502,12 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 			### find the dialed number and label for this call
 			$stmt = "SELECT phone_number,alt_dial from vicidial_log where uniqueid='$uniqueid';";
 			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05008',$user,$server_ip,$session_name,$one_mysql_log);}
-			$vl_dialed_ct = mysql_num_rows($rslt);
+			$vl_dialed_ct = mysqli_num_rows($rslt);
 			if ($vl_dialed_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$dialed_number =	$row[0];
 				$dialed_label =		$row[1];
 				}
@@ -514,13 +515,13 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 
 		##### grab the data from vicidial_list for the lead_id
 		$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner FROM vicidial_list where lead_id='$lead_id' LIMIT 1;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05007',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
-		$list_lead_ct = mysql_num_rows($rslt);
+		$list_lead_ct = mysqli_num_rows($rslt);
 		if ($list_lead_ct > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$dispo				= trim($row[3]);
 			$tsr				= trim($row[4]);
 			$vendor_id			= trim($row[5]);
@@ -635,7 +636,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 
 function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code)
 	{
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 
 	$postalgmt_found=0;
 	if ( (preg_match("/POSTAL/i",$postalgmt)) && (strlen($postal_code)>4) )
@@ -643,11 +644,11 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 		if (preg_match('/^1$/', $phone_code))
 			{
 			$stmt="select postal_code,state,GMT_offset,DST,DST_range,country,country_code from vicidial_postal_codes where country_code='$phone_code' and postal_code LIKE \"$postal_code%\";";
-			$rslt=mysql_query($stmt, $link);
-			$pc_recs = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$pc_recs = mysqli_num_rows($rslt);
 			if ($pc_recs > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$gmt_offset =	$row[2];	 $gmt_offset = preg_replace("/\+/i","",$gmt_offset);
 				$dst =			$row[3];
 				$dst_range =	$row[4];
@@ -664,11 +665,11 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 		if ($phone_code =='1')
 			{
 			$stmt="select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
-			$rslt=mysql_query($stmt, $link);
-			$pc_recs = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$pc_recs = mysqli_num_rows($rslt);
 			if ($pc_recs > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$gmt_offset =	$row[4];	 $gmt_offset = preg_replace("/\+/i","",$gmt_offset);
 				$dst =			$row[5];
 				$dst_range =	$row[6];
@@ -679,11 +680,11 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 		if ($phone_code =='52')
 			{
 			$stmt="select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
-			$rslt=mysql_query($stmt, $link);
-			$pc_recs = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$pc_recs = mysqli_num_rows($rslt);
 			if ($pc_recs > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$gmt_offset =	$row[4];	 $gmt_offset = preg_replace("/\+/i","",$gmt_offset);
 				$dst =			$row[5];
 				$dst_range =	$row[6];
@@ -694,11 +695,11 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 		if ($phone_code =='61')
 			{
 			$stmt="select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and state='$state';";
-			$rslt=mysql_query($stmt, $link);
-			$pc_recs = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$pc_recs = mysqli_num_rows($rslt);
 			if ($pc_recs > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$gmt_offset =	$row[4];	 $gmt_offset = preg_replace("/\+/i","",$gmt_offset);
 				$dst =			$row[5];
 				$dst_range =	$row[6];
@@ -710,11 +711,11 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 			{
 			$PC_processed++;
 			$stmt="select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code';";
-			$rslt=mysql_query($stmt, $link);
-			$pc_recs = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$pc_recs = mysqli_num_rows($rslt);
 			if ($pc_recs > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$gmt_offset =	$row[4];	 $gmt_offset = preg_replace("/\+/i","",$gmt_offset);
 				$dst =			$row[5];
 				$dst_range =	$row[6];
@@ -1396,7 +1397,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 ##### DETERMINE IF LEAD IS DIALABLE #####
 function dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state)
 	{
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 
 	$dialable=0;
 
@@ -1411,8 +1412,8 @@ function dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state)
 
 	$stmt="SELECT call_time_id,call_time_name,call_time_comments,ct_default_start,ct_default_stop,ct_sunday_start,ct_sunday_stop,ct_monday_start,ct_monday_stop,ct_tuesday_start,ct_tuesday_stop,ct_wednesday_start,ct_wednesday_stop,ct_thursday_start,ct_thursday_stop,ct_friday_start,ct_friday_stop,ct_saturday_start,ct_saturday_stop,ct_state_call_times FROM vicidial_call_times where call_time_id='$local_call_time';";
 	if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-	$rowx=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$rowx=mysqli_fetch_row($rslt);
 	$Gct_default_start =	$rowx[3];
 	$Gct_default_stop =		$rowx[4];
 	$Gct_sunday_start =		$rowx[5];
@@ -1536,11 +1537,11 @@ function mysql_error_logging($NOW_TIME,$link,$mel,$stmt,$query_id,$user,$server_
 	$errno='';   $error='';
 	if ( ($mel > 0) or ($one_mysql_log > 0) )
 		{
-		$errno = mysql_errno($link);
+		$errno = mysqli_errno($link);
 		if ( ($errno > 0) or ($mel > 1) or ($one_mysql_log > 0) )
 			{
-			$error = mysql_error($link);
-			$efp = fopen ("./vicidial_mysql_errors.txt", "a");
+			$error = mysqli_error($link);
+			$efp = fopen ("./vicidial_mysqli_errors.txt", "a");
 			fwrite ($efp, "$NOW_TIME|vdc_db_query|$query_id|$errno|$error|$stmt|$user|$server_ip|$session_name|\n");
 			fclose($efp);
 			}
@@ -1549,5 +1550,9 @@ function mysql_error_logging($NOW_TIME,$link,$mel,$stmt,$query_id,$user,$server_
 	return $errno;
 	}
 
+function mysql_to_mysqli($stmt, $link) {
+	$rslt=mysqli_query($link, $stmt);
+	return $rslt;
+}
 
 ?>

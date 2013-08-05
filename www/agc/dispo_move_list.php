@@ -33,13 +33,14 @@
 # 120223-2124 - Removed logging of good login passwords if webroot writable is enabled
 # 130328-0015 - Converted ereg to preg functions
 # 130603-2216 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130802-1007 - Changed to PHP mysqli functions
 #
 
 $api_script = 'deactivate';
 
 header ("Content-type: text/html; charset=utf-8");
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $filedate = date("Ymd");
@@ -121,12 +122,12 @@ if ($match_found > 0)
 	#############################################
 	##### START SYSTEM_SETTINGS INFO LOOKUP #####
 	$stmt = "SELECT use_non_latin FROM system_settings;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$ss_conf_ct = mysql_num_rows($rslt);
+	$ss_conf_ct = mysqli_num_rows($rslt);
 	if ($ss_conf_ct > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$non_latin = $row[0];
 		}
 	##### END SYSTEM_SETTINGS INFO LOOKUP #####
@@ -153,8 +154,8 @@ if ($match_found > 0)
 
 	$stmt="SELECT count(*) from vicidial_live_agents where user='$user';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$authlive=$row[0];
 
 	if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0) or ($authlive==0))
@@ -167,12 +168,12 @@ if ($match_found > 0)
 		{
 		$search_count=0;
 		$stmt = "SELECT count(*) FROM vicidial_list where lead_id='$lead_id' and list_id!='$new_list_id';";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$sc_ct = mysql_num_rows($rslt);
+		$sc_ct = mysqli_num_rows($rslt);
 		if ($sc_ct > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$search_count = $row[0];
 			}
 
@@ -182,30 +183,30 @@ if ($match_found > 0)
 			if ($reset_dialed=='Y') {$reset_dialedSQL=", called_since_last_reset='N'";}
 			$stmt="UPDATE vicidial_list SET list_id='$new_list_id' $reset_dialedSQL where lead_id='$lead_id' limit 1;";
 			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
-			$affected_rows = mysql_affected_rows($link);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$affected_rows = mysqli_affected_rows($link);
 
 			$campaign_idSQL='';
 			$stmtA = "SELECT campaign_id FROM vicidial_lists where list_id='$new_list_id';";
-			$rslt=mysql_query($stmtA, $link);
+			$rslt=mysql_to_mysqli($stmtA, $link);
 			if ($DB) {echo "$stmtA\n";}
-			$vlc_ct = mysql_num_rows($rslt);
+			$vlc_ct = mysqli_num_rows($rslt);
 			if ($vlc_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$campaign_idSQL = ",campaign_id='$row[0]'";
 				}
 
 			$stmtB="UPDATE vicidial_callbacks SET list_id='$new_list_id' $campaign_idSQL where lead_id='$lead_id' limit 1;";
 			if ($DB) {echo "$stmtB\n";}
-			$rslt=mysql_query($stmtB, $link);
-			$CBaffected_rows = mysql_affected_rows($link);
+			$rslt=mysql_to_mysqli($stmtB, $link);
+			$CBaffected_rows = mysqli_affected_rows($link);
 
 			$SQL_log = "$stmt|$stmtB|$CBaffected_rows|";
 			$SQL_log = preg_replace('/;/','',$SQL_log);
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$user',function='deactivate_lead',value='$lead_id',result='$affected_rows',result_reason='$lead_id',source='vdc',data='$SQL_log',api_date='$NOW_TIME',api_script='$api_script';";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 
 			$MESSAGE = "DONE: $search_count match found, $affected_rows updated to $new_list_id with $dispo status";
 			echo "$MESSAGE\n";

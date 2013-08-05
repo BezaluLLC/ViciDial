@@ -1,5 +1,5 @@
 <?php
-# park_calls_display.php    version 2.6
+# park_calls_display.php    version 2.8
 # 
 # Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -25,9 +25,10 @@
 # 90508-0727 - Changed to PHP long tags
 # 130328-0024 - Converted ereg to preg functions
 # 130603-2213 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130802-1024 - Changed to PHP mysqli functions
 # 
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 ### If you have globals turned off uncomment these lines
@@ -83,8 +84,8 @@ else
 		{
 		$stmt="SELECT count(*) from web_client_sessions where session_name='$session_name' and server_ip='$server_ip';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$SNauth=$row[0];
 		  if($SNauth==0)
 			{
@@ -123,14 +124,14 @@ else
 	##### print parked calls from the parked_channels table
 	$stmt="SELECT channel,server_ip,channel_group,extension,parked_by,parked_time from parked_channels where server_ip = '$server_ip' order by parked_time limit $park_limit;";
 	if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-	$park_calls_count = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$park_calls_count = mysqli_num_rows($rslt);
 	echo "$park_calls_count\n";
 	$loop_count=0;
 		while ($park_calls_count>$loop_count)
 		{
 		$loop_count++;
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		echo "$row[0] ~$row[2] ~$row[3] ~$row[4] ~$row[5]|";
 		}
 	echo "\n";

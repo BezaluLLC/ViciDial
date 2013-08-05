@@ -21,12 +21,13 @@
 # 130402-2255 - Added user_group variable
 # 130603-2206 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130705-1513 - Added optional encrypted passwords compatibility
+# 130802-1035 - Changed to PHP mysqli functions
 #
 
-$version = '2.8-15';
-$build = '130705-1513';
+$version = '2.8-16';
+$build = '130802-1035';
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 if (isset($_GET["lead_id"]))	{$lead_id=$_GET["lead_id"];}
@@ -221,12 +222,12 @@ $IFRAME=0;
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =							$row[0];
 	$timeclock_end_of_day =					$row[1];
 	$agentonly_callback_campaign_lock =		$row[2];
@@ -286,12 +287,12 @@ else
 
 $ignore_list_script_override='N';
 $stmt = "SELECT ignore_list_script_override FROM vicidial_inbound_groups where group_id='$group';";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$ilso_ct = mysql_num_rows($rslt);
+$ilso_ct = mysqli_num_rows($rslt);
 if ($ilso_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$ignore_list_script_override =		$row[0];
 	}
 if ($ignore_list_script_override=='Y')
@@ -300,22 +301,22 @@ if ($ignore_list_script_override=='Y')
 if ($ignore_list_script < 1)
 	{
 	$stmt="SELECT agent_script_override from vicidial_lists where list_id='$list_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$agent_script_override =		$row[0];
 	if (strlen($agent_script_override) > 0)
 		{$call_script = $agent_script_override;}
 	}
 
 $stmt="SELECT list_name,list_description from vicidial_lists where list_id='$list_id';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $list_name =			$row[0];
 $list_description =		$row[1];
 
 $stmt="SELECT script_name,script_text from vicidial_scripts where script_id='$call_script';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $script_name =		$row[0];
 $script_text =		stripslashes($row[1]);
 
@@ -491,13 +492,13 @@ if ($CF_uses_custom_fields=='Y')
 	{
 	### find the names of all custom fields, if any
 	$stmt = "SELECT field_label,field_type FROM vicidial_lists_fields where list_id='$entry_list_id' and field_type NOT IN('SCRIPT','DISPLAY') and field_label NOT IN('vendor_lead_code','source_id','list_id','gmt_offset_now','called_since_last_reset','phone_code','phone_number','title','first_name','middle_initial','last_name','address1','address2','address3','city','state','province','postal_code','country_code','gender','date_of_birth','alt_phone','email','security_phrase','comments','called_count','last_local_call_time','rank','owner');";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$cffn_ct = mysql_num_rows($rslt);
+	$cffn_ct = mysqli_num_rows($rslt);
 	$d=0;
 	while ($cffn_ct > $d)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$field_name_id = $row[0];
 		$field_name_tag = "--A--" . $field_name_id . "--B--";
 		if (isset($_GET["$field_name_id"]))				{$form_field_value=$_GET["$field_name_id"];}

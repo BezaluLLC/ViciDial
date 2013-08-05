@@ -26,13 +26,14 @@
 # 120223-2124 - Removed logging of good login passwords if webroot writable is enabled
 # 130328-0016 - Converted ereg to preg functions
 # 130603-2217 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130802-1006 - Changed to PHP mysqli functions
 #
 
 $api_script = 'deactivate';
 
 header ("Content-type: text/html; charset=utf-8");
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $filedate = date("Ymd");
@@ -80,12 +81,12 @@ if (preg_match("/$TD$dispo$TD/",$sale_status))
 	#############################################
 	##### START SYSTEM_SETTINGS INFO LOOKUP #####
 	$stmt = "SELECT use_non_latin FROM system_settings;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$ss_conf_ct = mysql_num_rows($rslt);
+	$ss_conf_ct = mysqli_num_rows($rslt);
 	if ($ss_conf_ct > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$non_latin = $row[0];
 		}
 	##### END SYSTEM_SETTINGS INFO LOOKUP #####
@@ -114,26 +115,26 @@ if (preg_match("/$TD$dispo$TD/",$sale_status))
 		}
 
 	$stmt = "SELECT $search_field FROM vicidial_list where lead_id='$lead_id';";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$sv_ct = mysql_num_rows($rslt);
+	$sv_ct = mysqli_num_rows($rslt);
 	if ($sv_ct > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$search_value = $row[0];
 		}
 
 	if (strlen($search_value) > 0)
 		{
 		$stmt="select list_id from vicidial_lists where campaign_id='$campaign_check';";
-		$rslt=mysql_query($stmt, $link);
-		$li_recs = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$li_recs = mysqli_num_rows($rslt);
 		if ($li_recs > 0)
 			{
 			$L=0;
 			while ($li_recs > $L)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$duplicate_lists .=	"'$row[0]',";
 				$L++;
 				}
@@ -145,12 +146,12 @@ if (preg_match("/$TD$dispo$TD/",$sale_status))
 			{
 			$search_count=0;
 			$stmt = "SELECT count(*) FROM vicidial_list where $search_field='$search_value' and list_id IN($duplicate_lists);";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
-			$sc_ct = mysql_num_rows($rslt);
+			$sc_ct = mysqli_num_rows($rslt);
 			if ($sc_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$search_count = $row[0];
 				}
 
@@ -158,14 +159,14 @@ if (preg_match("/$TD$dispo$TD/",$sale_status))
 				{
 				$stmt="UPDATE vicidial_list SET status='$new_status' where $search_field='$search_value' and list_id IN($duplicate_lists) limit 100;";
 				if ($DB) {echo "$stmt\n";}
-				$rslt=mysql_query($stmt, $link);
-				$affected_rows = mysql_affected_rows($link);
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$affected_rows = mysqli_affected_rows($link);
 
 				$SQL_log = "$stmt|";
 				$SQL_log = preg_replace('/;/','',$SQL_log);
 				$SQL_log = addslashes($SQL_log);
 				$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$user',function='deactivate_lead',value='$lead_id',result='$affected_rows',result_reason='$search_field',source='vdc',data='$SQL_log',api_date='$NOW_TIME',api_script='$api_script';";
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 
 				$MESSAGE = "DONE: $search_count duplicates found, $affected_rows updated to $new_status from $dispo";
 				echo "$MESSAGE\n";

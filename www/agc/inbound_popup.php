@@ -1,5 +1,5 @@
 <?php
-# inbound_popup.php    version 2.6
+# inbound_popup.php    version 2.8
 # 
 # Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -33,9 +33,10 @@
 # 90508-0727 - Changed to PHP long tags
 # 130328-0025 - Converted ereg to preg functions
 # 130603-2215 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130802-1008 - Changed to PHP mysqli functions
 #
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 ### If you have globals turned off uncomment these lines
@@ -104,8 +105,8 @@ else
 		{
 		$stmt="SELECT count(*) from web_client_sessions where session_name='$session_name' and server_ip='$server_ip';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$SNauth=$row[0];
 		  if($SNauth==0)
 			{
@@ -276,11 +277,11 @@ else
 	{
 	$stmt="SELECT uniqueid,channel,server_ip,caller_id,extension,phone_ext,start_time,acknowledged,inbound_number,comment_a,comment_b,comment_c,comment_d,comment_e FROM live_inbound where server_ip = '$server_ip' and uniqueid = '$uniqueid';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-	$channels_list = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$channels_list = mysqli_num_rows($rslt);
 	if ($channels_list>0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 #		echo "$LIuniqueid|$LIchannel|$LIcallerid|$LIdatetime|$row[8]|$row[9]|$row[10]|$row[11]|$row[12]|$row[13]|";
 #		Zap/73|"V.I.C.I. MARKET" <7275338730>|2005-04-28 14:01:21|7274514936|Inbound direct to Matt|||||
 		if ($format=='debug') {echo "\n<!-- $row[0]|$row[1]|$row[2]|$row[3]|$row[4]|$row[5]|$row[6]|$row[7]|$row[8]|$row[9]|$row[10]|$row[11]|$row[12]|$row[13]| -->";}
@@ -333,11 +334,8 @@ else
 
 		$stmt="UPDATE live_inbound set acknowledged='Y' where server_ip = '$server_ip' and uniqueid = '$uniqueid';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
-
-
+		$rslt=mysql_to_mysqli($stmt, $link);
 		}
-
 	
 	}
 

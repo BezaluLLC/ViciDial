@@ -116,15 +116,16 @@
 # 130328-0008 - Converted ereg to preg functions
 # 130603-2205 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130705-1521 - Added optional encrypted passwords compatibility
+# 130802-1021 - Changed to PHP mysqli functions
 #
 
-$version = '2.8-63';
-$build = '130705-1521';
+$version = '2.8-64';
+$build = '130802-1021';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=119;
 $one_mysql_log=0;
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 ### These are variable assignments for PHP globals off
@@ -227,13 +228,13 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,allow_sipsak_messages FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02001',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =				$row[0];
 	$allow_sipsak_messages =	$row[1];
 	}
@@ -287,9 +288,9 @@ else
 		{
 		$stmt="SELECT count(*) from web_client_sessions where session_name='$session_name' and server_ip='$server_ip';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02003',$user,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$SNauth=$row[0];
 		  if($SNauth==0)
 			{
@@ -330,7 +331,7 @@ if ($ACTION=="SysCIDdtmfOriginate")
 	{
 	$stmt="UPDATE vicidial_live_agents SET external_dtmf='' where user='$user';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02092',$user,$server_ip,$session_name,$one_mysql_log);}
 
 	$ACTION="SysCIDOriginate";
@@ -351,7 +352,7 @@ if ($ACTION=="SysCIDOriginate")
 		{
 		$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$queryCID','Channel: $channel','Context: $ext_context','Exten: $exten','Priority: $ext_priority','Callerid: $queryCID','','','','','');";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02004',$user,$server_ip,$session_name,$one_mysql_log);}
 		echo "Originate command sent for Exten $exten Channel $channel on $server_ip\n";
 		}
@@ -379,12 +380,12 @@ if ($ACTION=="OriginateName")
 		{
 		$stmt="SELECT dialplan_number FROM phones where server_ip = '$server_ip' and extension='$extenName';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02005',$user,$server_ip,$session_name,$one_mysql_log);}
-		$name_count = mysql_num_rows($rslt);
+		$name_count = mysqli_num_rows($rslt);
 		if ($name_count>0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$exten = $row[0];
 			$ACTION="Originate";
 			}
@@ -409,12 +410,12 @@ if ($ACTION=="OriginateNameVmail")
 		{
 		$stmt="SELECT voicemail_id FROM phones where server_ip = '$server_ip' and extension='$extenName';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02006',$user,$server_ip,$session_name,$one_mysql_log);}
-		$name_count = mysql_num_rows($rslt);
+		$name_count = mysqli_num_rows($rslt);
 		if ($name_count>0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$exten = "$exten$row[0]";
 			$ACTION="Originate";
 			}
@@ -469,14 +470,14 @@ if ($ACTION=="Originate")
 			{$variable='';   $account="Variable: $call_variables";}
 		$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$queryCID','Channel: $channel','Context: $ext_context','Exten: $exten','Priority: $ext_priority','Callerid: $outCID','$account','$variable','','','');";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02007',$user,$server_ip,$session_name,$one_mysql_log);}
 		echo "Originate command sent for Exten $exten Channel $channel on $server_ip |$account|$variable|\n";
 
 		### log outbound call in the dial log
 		$stmt = "INSERT INTO vicidial_dial_log SET caller_code='$queryCID',lead_id='$lead_id',server_ip='$server_ip',call_date='$NOW_TIME',extension='$exten',channel='$channel',timeout='0',outbound_cid='$outCID',context='$ext_context';";
 		if ($DB) {echo "$stmt\n";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02119',$user,$server_ip,$session_name,$one_mysql_log);}
 
 		if ($agent_dialed_number > 0)
@@ -487,16 +488,16 @@ if ($ACTION=="Originate")
 				{$customer_hungup = 'BEFORE_CALL';}
 			$stmt = "INSERT INTO user_call_log (user,call_date,call_type,server_ip,phone_number,number_dialed,lead_id,callerid,group_alias_id,preset_name,campaign_id,customer_hungup) values('$user','$NOW_TIME','$agent_dialed_type','$server_ip','$exten','$channel','$lead_id','$outbound_cid','$RAWaccount','$preset_name','$campaign','$customer_hungup')";
 			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00192',$user,$server_ip,$session_name,$one_mysql_log);}
 
 			if (strlen($preset_name) > 0)
 				{
 				$stmt = "SELECT count(*) from vicidial_xfer_stats where campaign_id='$campaign' and preset_name='$preset_name';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02093',$user,$server_ip,$session_name,$one_mysql_log);}
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				if ($row[0] > 0)
 					{
 					$stmt = "UPDATE vicidial_xfer_stats SET xfer_count=(xfer_count+1) where campaign_id='$campaign' and preset_name='$preset_name';";
@@ -506,7 +507,7 @@ if ($ACTION=="Originate")
 					$stmt = "INSERT INTO vicidial_xfer_stats SET campaign_id='$campaign',preset_name='$preset_name',xfer_count='1';";
 					}
 				if ($DB) {echo "$stmt\n";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02094',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
 			}
@@ -535,16 +536,16 @@ if ($ACTION=="HangupConfDial")
 
 		$stmt="SELECT count(*) FROM live_sip_channels where server_ip = '$server_ip' and channel LIKE \"$hangup_channel_prefix%\";";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02008',$user,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		if ($row > 0)
 			{
 			$stmt="SELECT channel FROM live_sip_channels where server_ip = '$server_ip' and channel LIKE \"$hangup_channel_prefix%\";";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02009',$user,$server_ip,$session_name,$one_mysql_log);}
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$channel=$rowx[0];
 			$ACTION="Hangup";
 			$queryCID = preg_replace("/^./i","G",$queryCID);  # GTvdcW...
@@ -561,7 +562,7 @@ if ($ACTION=="Hangup")
 	{
 	$stmt="UPDATE vicidial_live_agents SET external_hangup='0' where user='$user';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02010',$user,$server_ip,$session_name,$one_mysql_log);}
 
 	$row='';   $rowx='';
@@ -577,14 +578,14 @@ if ($ACTION=="Hangup")
 
 #		$stmt="SELECT count(*) FROM live_channels where server_ip = '$call_server_ip' and channel='$channel';";
 #			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-#		$rslt=mysql_query($stmt, $link);
-#		$row=mysql_fetch_row($rslt);
+#		$rslt=mysql_to_mysqli($stmt, $link);
+#		$row=mysqli_fetch_row($rslt);
 #		if ($row[0]==0)
 #			{
 #			$stmt="SELECT count(*) FROM live_sip_channels where server_ip = '$call_server_ip' and channel='$channel';";
 #				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-#			$rslt=mysql_query($stmt, $link);
-#			$rowx=mysql_fetch_row($rslt);
+#			$rslt=mysql_to_mysqli($stmt, $link);
+#			$rowx=mysqli_fetch_row($rslt);
 #			if ($rowx[0]==0)
 #				{
 #				$channel_live=0;
@@ -595,18 +596,18 @@ if ($ACTION=="Hangup")
 			{
 			$stmt="SELECT count(*) FROM vicidial_auto_calls where channel='$channel' and callerid='$CalLCID';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02011',$user,$server_ip,$session_name,$one_mysql_log);}
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			if ($rowx[0]==0)
 				{
 				echo "Call $CalLCID $channel is not live on $call_server_ip, Checking Live Channel...\n";
 
 				$stmt="SELECT count(*) FROM live_channels where server_ip = '$call_server_ip' and channel='$channel' and extension LIKE \"%$exten\";";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02012',$user,$server_ip,$session_name,$one_mysql_log);}
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				if ($row[0]==0)
 					{
 					$channel_live=0;
@@ -622,9 +623,9 @@ if ($ACTION=="Hangup")
 			{
 			$stmt="SELECT count(*) FROM live_channels where server_ip = '$call_server_ip' and channel='$channel' and extension NOT LIKE \"%$exten%\";";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02083',$user,$server_ip,$session_name,$one_mysql_log);}
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			if ($row[0] > 0)
 				{
 				$channel_live=0;
@@ -647,23 +648,23 @@ if ($ACTION=="Hangup")
 			if ( (strlen($CalLCID)>15) and ($secondS > 0))
 				{
 				$stmt="SELECT count(*) FROM vicidial_auto_calls where callerid='$CalLCID';";
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02013',$user,$server_ip,$session_name,$one_mysql_log);}
-				$rowx=mysql_fetch_row($rslt);
+				$rowx=mysqli_fetch_row($rslt);
 				if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
 				if ($rowx[0] > 0)
 					{
 					#############################################
 					##### START QUEUEMETRICS LOGGING LOOKUP #####
 					$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append,queuemetrics_socket,queuemetrics_socket_url FROM system_settings;";
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02014',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
-					$qm_conf_ct = mysql_num_rows($rslt);
+					$qm_conf_ct = mysqli_num_rows($rslt);
 					$i=0;
 					while ($i < $qm_conf_ct)
 						{
-						$row=mysql_fetch_row($rslt);
+						$row=mysqli_fetch_row($rslt);
 						$enable_queuemetrics_logging =	$row[0];
 						$queuemetrics_server_ip	=		$row[1];
 						$queuemetrics_dbname =			$row[2];
@@ -679,16 +680,16 @@ if ($ACTION=="Hangup")
 					###########################################
 					if ($enable_queuemetrics_logging > 0)
 						{
-						$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
-						mysql_select_db("$queuemetrics_dbname", $linkB);
+						$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+						mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 						$stmt="SELECT count(*) from queue_log where call_id='$CalLCID' and verb='CONNECT';";
-						$rslt=mysql_query($stmt, $linkB);
+						$rslt=mysql_to_mysqli($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02015',$user,$server_ip,$session_name,$one_mysql_log);}
-						$VAC_cn_ct = mysql_num_rows($rslt);
+						$VAC_cn_ct = mysqli_num_rows($rslt);
 						if ($VAC_cn_ct > 0)
 							{
-							$row=mysql_fetch_row($rslt);
+							$row=mysqli_fetch_row($rslt);
 							$caller_connect	= $row[0];
 							}
 						if ($format=='debug') {echo "\n<!-- $caller_connect|$stmt -->";}
@@ -697,12 +698,12 @@ if ($ACTION=="Hangup")
 							$CLqueue_position='1';
 							### grab call lead information needed for QM logging
 							$stmt="SELECT auto_call_id,lead_id,phone_number,status,campaign_id,phone_code,alt_dial,stage,callerid,uniqueid,queue_position from vicidial_auto_calls where callerid='$CalLCID' order by call_time limit 1;";
-							$rslt=mysql_query($stmt, $link);
+							$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02016',$user,$server_ip,$session_name,$one_mysql_log);}
-							$VAC_qm_ct = mysql_num_rows($rslt);
+							$VAC_qm_ct = mysqli_num_rows($rslt);
 							if ($VAC_qm_ct > 0)
 								{
-								$row=mysql_fetch_row($rslt);
+								$row=mysqli_fetch_row($rslt);
 								$auto_call_id =			$row[0];
 								$CLlead_id =			$row[1];
 								$CLphone_number =		$row[2];
@@ -721,12 +722,12 @@ if ($ACTION=="Hangup")
 							if (strlen($CLstage) < 1) {$CLstage=0;}
 
 							$stmt="SELECT count(*) from queue_log where call_id='$CalLCID' and verb='COMPLETECALLER' and queue='$CLcampaign_id';";
-							$rslt=mysql_query($stmt, $linkB);
+							$rslt=mysql_to_mysqli($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02017',$user,$server_ip,$session_name,$one_mysql_log);}
-							$VAC_cc_ct = mysql_num_rows($rslt);
+							$VAC_cc_ct = mysqli_num_rows($rslt);
 							if ($VAC_cc_ct > 0)
 								{
-								$row=mysql_fetch_row($rslt);
+								$row=mysqli_fetch_row($rslt);
 								$caller_complete	= $row[0];
 								}
 							if ($format=='debug') {echo "\n<!-- $caller_complete|$stmt -->";}
@@ -735,12 +736,12 @@ if ($ACTION=="Hangup")
 								{
 								$time_id=0;
 								$stmt="SELECT time_id from queue_log where call_id='$CalLCID' and verb IN('ENTERQUEUE','CALLOUTBOUND') and queue='$CLcampaign_id';";
-								$rslt=mysql_query($stmt, $linkB);
+								$rslt=mysql_to_mysqli($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02018',$user,$server_ip,$session_name,$one_mysql_log);}
-								$VAC_eq_ct = mysql_num_rows($rslt);
+								$VAC_eq_ct = mysqli_num_rows($rslt);
 								if ($VAC_eq_ct > 0)
 									{
-									$row=mysql_fetch_row($rslt);
+									$row=mysqli_fetch_row($rslt);
 									$time_id	= $row[0];
 									}
 								$StarTtime = date("U");
@@ -750,13 +751,13 @@ if ($ACTION=="Hangup")
 								$data4SQL='';
 								$data4SS='';
 								$stmt="SELECT queuemetrics_phone_environment FROM vicidial_campaigns where campaign_id='$log_campaign' and queuemetrics_phone_environment!='';";
-								$rslt=mysql_query($stmt, $link);
+								$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02116',$user,$server_ip,$session_name,$one_mysql_log);}
 								if ($DB) {echo "$stmt\n";}
-								$cqpe_ct = mysql_num_rows($rslt);
+								$cqpe_ct = mysqli_num_rows($rslt);
 								if ($cqpe_ct > 0)
 									{
-									$row=mysql_fetch_row($rslt);
+									$row=mysqli_fetch_row($rslt);
 									$pe_append='';
 									if ( ($queuemetrics_pe_phone_append > 0) and (strlen($row[0])>0) )
 										{$pe_append = "-$qm_extension";}
@@ -766,9 +767,9 @@ if ($ACTION=="Hangup")
 
 								if ($format=='debug') {echo "\n<!-- $caller_complete|$stmt -->";}
 								$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$CLcampaign_id',agent='Agent/$user',verb='COMPLETEAGENT',data1='$CLstage',data2='$secondS',data3='$CLqueue_position',serverid='$queuemetrics_log_id' $data4SQL;";
-								$rslt=mysql_query($stmt, $linkB);
+								$rslt=mysql_to_mysqli($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02019',$user,$server_ip,$session_name,$one_mysql_log);}
-								$affected_rows = mysql_affected_rows($linkB);
+								$affected_rows = mysqli_affected_rows($linkB);
 								if ($format=='debug') {echo "\n<!-- $affected_rows|$stmt -->";}
 
 								if ( ($queuemetrics_socket == 'CONNECT_COMPLETE') and (strlen($queuemetrics_socket_url) > 10) )
@@ -790,7 +791,7 @@ if ($ACTION=="Hangup")
 
 			$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$call_server_ip','','Hangup','$queryCID','Channel: $channel','','','','','','','','','');";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02020',$user,$server_ip,$session_name,$one_mysql_log);}
 			echo "Hangup command sent for Channel $channel on $call_server_ip\n";
 			}
@@ -825,28 +826,28 @@ if ($ACTION=="RedirectVD")
 		if (strlen($call_server_ip)>6) {$server_ip = $call_server_ip;}
 		$stmt = "select count(*) from vicidial_campaigns where campaign_id='$campaign' and campaign_allow_inbound='Y';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02021',$user,$server_ip,$session_name,$one_mysql_log);}
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 		if ($row[0] > 0)
 			{
 			$four_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-4,date("i"),date("s"),date("m"),date("d"),date("Y")));
 			$stmt = "UPDATE vicidial_closer_log set end_epoch='$StarTtime', length_in_sec=(queue_seconds + $secondS),status='XFER' where lead_id='$lead_id' and call_date > \"$four_hours_ago\" order by start_epoch desc limit 1;";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02022',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
 
 		$stmt = "UPDATE vicidial_log set end_epoch='$StarTtime', length_in_sec='$secondS',status='XFER' where uniqueid='$uniqueid';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02023',$user,$server_ip,$session_name,$one_mysql_log);}
 
 		if ($nodeletevdac < 1)
 			{
 			$stmt = "DELETE from vicidial_auto_calls where uniqueid='$uniqueid';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02024',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
 
@@ -854,14 +855,14 @@ if ($ACTION=="RedirectVD")
 			{
 			$stmt = "INSERT INTO user_call_log (user,call_date,call_type,server_ip,phone_number,number_dialed,lead_id,preset_name,campaign_id) values('$user','$NOW_TIME','BLIND_XFER','$server_ip','$exten','$channel','$lead_id','$preset_name','$campaign')";
 			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02095',$user,$server_ip,$session_name,$one_mysql_log);}
 
 			$stmt = "SELECT count(*) from vicidial_xfer_stats where campaign_id='$campaign' and preset_name='$preset_name';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02096',$user,$server_ip,$session_name,$one_mysql_log);}
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			if ($row[0] > 0)
 				{
 				$stmt = "UPDATE vicidial_xfer_stats SET xfer_count=(xfer_count+1) where campaign_id='$campaign' and preset_name='$preset_name';";
@@ -871,7 +872,7 @@ if ($ACTION=="RedirectVD")
 				$stmt = "INSERT INTO vicidial_xfer_stats SET campaign_id='$campaign',preset_name='$preset_name',xfer_count='1';";
 				}
 			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02097',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
 
@@ -899,27 +900,27 @@ if ($ACTION=="RedirectToPark")
 		if (strlen($call_server_ip)>6) {$server_ip = $call_server_ip;}
 		$stmt = "INSERT INTO parked_channels values('$channel','$server_ip','$CalLCID','$extenName','$parkedby','$NOW_TIME');";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02025',$user,$server_ip,$session_name,$one_mysql_log);}
 		$ACTION="Redirect";
 
 		$stmt = "INSERT INTO park_log SET uniqueid='$uniqueid',status='PARKED',channel='$channel',channel_group='$campaign',server_ip='$server_ip',parked_time='$NOW_TIME',parked_sec=0,extension='$CalLCID',user='$user',lead_id='$lead_id';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02098',$user,$server_ip,$session_name,$one_mysql_log);}
 
 
 		#############################################
 		##### START QUEUEMETRICS LOGGING LOOKUP #####
 		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02099',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
-		$qm_conf_ct = mysql_num_rows($rslt);
+		$qm_conf_ct = mysqli_num_rows($rslt);
 		$i=0;
 		while ($i < $qm_conf_ct)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$enable_queuemetrics_logging =	$row[0];
 			$queuemetrics_server_ip	=		$row[1];
 			$queuemetrics_dbname =			$row[2];
@@ -932,17 +933,17 @@ if ($ACTION=="RedirectToPark")
 		###########################################
 		if ($enable_queuemetrics_logging > 0)
 			{
-			$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
-			mysql_select_db("$queuemetrics_dbname", $linkB);
+			$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+			mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 			$time_id=0;
 			$stmt="SELECT time_id,queue,agent from queue_log where call_id='$CalLCID' and verb='CONNECT' order by time_id desc limit 1;";
-			$rslt=mysql_query($stmt, $linkB);
+			$rslt=mysql_to_mysqli($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02100',$user,$server_ip,$session_name,$one_mysql_log);}
-			$VAC_eq_ct = mysql_num_rows($rslt);
+			$VAC_eq_ct = mysqli_num_rows($rslt);
 			if ($VAC_eq_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$time_id =	$row[0];
 				$queue =	$row[1];
 				$agent =	$row[2];
@@ -954,9 +955,9 @@ if ($ACTION=="RedirectToPark")
 			if ($VAC_eq_ct > 0)
 				{
 				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLERONHOLD',data1='PARK',serverid='$queuemetrics_log_id';";
-				$rslt=mysql_query($stmt, $linkB);
+				$rslt=mysql_to_mysqli($stmt, $linkB);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02101',$user,$server_ip,$session_name,$one_mysql_log);}
-				$affected_rows = mysql_affected_rows($linkB);
+				$affected_rows = mysqli_affected_rows($linkB);
 				if ($format=='debug') {echo "\n<!-- $affected_rows|$stmt -->";}
 				}
 			}
@@ -968,7 +969,7 @@ if ($ACTION=="RedirectToPark")
 
 	$stmt="UPDATE vicidial_live_agents SET external_park='' where user='$user';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02086',$user,$server_ip,$session_name,$one_mysql_log);}
 	}
 
@@ -990,36 +991,36 @@ if ($ACTION=="RedirectFromPark")
 		if (strlen($call_server_ip)>6) {$server_ip = $call_server_ip;}
 		$stmt = "DELETE FROM parked_channels where server_ip='$server_ip' and channel='$channel';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02026',$user,$server_ip,$session_name,$one_mysql_log);}
 		$ACTION="Redirect";
 
 		$parked_sec=0;
 		$stmt = "SELECT UNIX_TIMESTAMP(parked_time) FROM park_log where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' and (parked_sec < 1 or grab_time is NULL) order by parked_time desc limit 1;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02102',$user,$server_ip,$session_name,$one_mysql_log);}
-		$VAC_pl_ct = mysql_num_rows($rslt);
+		$VAC_pl_ct = mysqli_num_rows($rslt);
 		if ($VAC_pl_ct > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$parked_sec	= ($StarTtime - $row[0]);
 
 			$stmt = "UPDATE park_log SET status='GRABBED',grab_time='$NOW_TIME',parked_sec='$parked_sec' where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' order by parked_time desc limit 1;";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02103',$user,$server_ip,$session_name,$one_mysql_log);}
 
 			#############################################
 			##### START QUEUEMETRICS LOGGING LOOKUP #####
 			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02104',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
-			$qm_conf_ct = mysql_num_rows($rslt);
+			$qm_conf_ct = mysqli_num_rows($rslt);
 			$i=0;
 			while ($i < $qm_conf_ct)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$enable_queuemetrics_logging =	$row[0];
 				$queuemetrics_server_ip	=		$row[1];
 				$queuemetrics_dbname =			$row[2];
@@ -1032,17 +1033,17 @@ if ($ACTION=="RedirectFromPark")
 			###########################################
 			if ($enable_queuemetrics_logging > 0)
 				{
-				$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
-				mysql_select_db("$queuemetrics_dbname", $linkB);
+				$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+				mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 				$time_id=0;
 				$stmt="SELECT time_id,queue,agent from queue_log where call_id='$CalLCID' and verb='CONNECT' order by time_id desc limit 1;";
-				$rslt=mysql_query($stmt, $linkB);
+				$rslt=mysql_to_mysqli($stmt, $linkB);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02105',$user,$server_ip,$session_name,$one_mysql_log);}
-				$VAC_eq_ct = mysql_num_rows($rslt);
+				$VAC_eq_ct = mysqli_num_rows($rslt);
 				if ($VAC_eq_ct > 0)
 					{
-					$row=mysql_fetch_row($rslt);
+					$row=mysqli_fetch_row($rslt);
 					$time_id =	$row[0];
 					$queue =	$row[1];
 					$agent =	$row[2];
@@ -1054,9 +1055,9 @@ if ($ACTION=="RedirectFromPark")
 				if ($VAC_eq_ct > 0)
 					{
 					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLEROFFHOLD',data1='$parked_sec',data2='PARK',serverid='$queuemetrics_log_id';";
-					$rslt=mysql_query($stmt, $linkB);
+					$rslt=mysql_to_mysqli($stmt, $linkB);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02106',$user,$server_ip,$session_name,$one_mysql_log);}
-					$affected_rows = mysql_affected_rows($linkB);
+					$affected_rows = mysqli_affected_rows($linkB);
 					if ($format=='debug') {echo "\n<!-- $affected_rows|$stmt -->";}
 					}
 				}
@@ -1065,7 +1066,7 @@ if ($ACTION=="RedirectFromPark")
 
 	$stmt="UPDATE vicidial_live_agents SET external_park='' where user='$user';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02087',$user,$server_ip,$session_name,$one_mysql_log);}
 	}
 
@@ -1089,31 +1090,31 @@ if ($ACTION=="RedirectToParkIVR")
 		if (strlen($call_server_ip)>6) {$server_ip = $call_server_ip;}
 		$stmt = "INSERT INTO parked_channels values('$channel','$server_ip','$CalLCID','$extenName','$parkedby','$NOW_TIME');";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02025',$user,$server_ip,$session_name,$one_mysql_log);}
 		$ACTION="Redirect";
 
 		$stmt = "UPDATE vicidial_auto_calls SET extension='PARK_IVR' where callerid='$CalLCID' limit 1;";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02088',$user,$server_ip,$session_name,$one_mysql_log);}
 
 		$stmt = "INSERT INTO park_log SET uniqueid='$uniqueid',status='IVRPARKED',channel='$channel',channel_group='$campaign',server_ip='$server_ip',parked_time='$NOW_TIME',parked_sec=0,extension='$CalLCID',user='$user',lead_id='$lead_id';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02107',$user,$server_ip,$session_name,$one_mysql_log);}
 
 		#############################################
 		##### START QUEUEMETRICS LOGGING LOOKUP #####
 		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02108',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
-		$qm_conf_ct = mysql_num_rows($rslt);
+		$qm_conf_ct = mysqli_num_rows($rslt);
 		$i=0;
 		while ($i < $qm_conf_ct)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$enable_queuemetrics_logging =	$row[0];
 			$queuemetrics_server_ip	=		$row[1];
 			$queuemetrics_dbname =			$row[2];
@@ -1126,17 +1127,17 @@ if ($ACTION=="RedirectToParkIVR")
 		###########################################
 		if ($enable_queuemetrics_logging > 0)
 			{
-			$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
-			mysql_select_db("$queuemetrics_dbname", $linkB);
+			$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+			mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 			$time_id=0;
 			$stmt="SELECT time_id,queue,agent from queue_log where call_id='$CalLCID' and verb='CONNECT' order by time_id desc limit 1;";
-			$rslt=mysql_query($stmt, $linkB);
+			$rslt=mysql_to_mysqli($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02109',$user,$server_ip,$session_name,$one_mysql_log);}
-			$VAC_eq_ct = mysql_num_rows($rslt);
+			$VAC_eq_ct = mysqli_num_rows($rslt);
 			if ($VAC_eq_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$time_id =	$row[0];
 				$queue =	$row[1];
 				$agent =	$row[2];
@@ -1148,9 +1149,9 @@ if ($ACTION=="RedirectToParkIVR")
 			if ($VAC_eq_ct > 0)
 				{
 				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLERONHOLD',data1='IVRPARK',serverid='$queuemetrics_log_id';";
-				$rslt=mysql_query($stmt, $linkB);
+				$rslt=mysql_to_mysqli($stmt, $linkB);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02110',$user,$server_ip,$session_name,$one_mysql_log);}
-				$affected_rows = mysql_affected_rows($linkB);
+				$affected_rows = mysqli_affected_rows($linkB);
 				if ($format=='debug') {echo "\n<!-- $affected_rows|$stmt -->";}
 				}
 			}
@@ -1161,7 +1162,7 @@ if ($ACTION=="RedirectToParkIVR")
 
 	$stmt="UPDATE vicidial_live_agents SET external_park='' where user='$user';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02089',$user,$server_ip,$session_name,$one_mysql_log);}
 	}
 
@@ -1183,41 +1184,41 @@ if ($ACTION=="RedirectFromParkIVR")
 		if (strlen($call_server_ip)>6) {$server_ip = $call_server_ip;}
 		$stmt = "DELETE FROM parked_channels where server_ip='$server_ip' and channel='$channel';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02026',$user,$server_ip,$session_name,$one_mysql_log);}
 		$ACTION="Redirect";
 
 		$stmt = "UPDATE vicidial_auto_calls SET extension='' where callerid='$CalLCID' limit 1;";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02090',$user,$server_ip,$session_name,$one_mysql_log);}
 
 		$parked_sec=0;
 		$stmt = "SELECT UNIX_TIMESTAMP(parked_time) FROM park_log where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' and (parked_sec < 1 or grab_time is NULL) order by parked_time desc limit 1;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02111',$user,$server_ip,$session_name,$one_mysql_log);}
-		$VAC_pl_ct = mysql_num_rows($rslt);
+		$VAC_pl_ct = mysqli_num_rows($rslt);
 		if ($VAC_pl_ct > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$parked_sec	= ($StarTtime - $row[0]);
 
 			$stmt = "UPDATE park_log SET status='GRABBEDIVR',grab_time='$NOW_TIME',parked_sec='$parked_sec' where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' order by parked_time desc limit 1;";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02112',$user,$server_ip,$session_name,$one_mysql_log);}
 
 			#############################################
 			##### START QUEUEMETRICS LOGGING LOOKUP #####
 			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02113',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
-			$qm_conf_ct = mysql_num_rows($rslt);
+			$qm_conf_ct = mysqli_num_rows($rslt);
 			$i=0;
 			while ($i < $qm_conf_ct)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$enable_queuemetrics_logging =	$row[0];
 				$queuemetrics_server_ip	=		$row[1];
 				$queuemetrics_dbname =			$row[2];
@@ -1230,17 +1231,17 @@ if ($ACTION=="RedirectFromParkIVR")
 			###########################################
 			if ($enable_queuemetrics_logging > 0)
 				{
-				$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
-				mysql_select_db("$queuemetrics_dbname", $linkB);
+				$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+				mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 				$time_id=0;
 				$stmt="SELECT time_id,queue,agent from queue_log where call_id='$CalLCID' and verb='CONNECT' order by time_id desc limit 1;";
-				$rslt=mysql_query($stmt, $linkB);
+				$rslt=mysql_to_mysqli($stmt, $linkB);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02114',$user,$server_ip,$session_name,$one_mysql_log);}
-				$VAC_eq_ct = mysql_num_rows($rslt);
+				$VAC_eq_ct = mysqli_num_rows($rslt);
 				if ($VAC_eq_ct > 0)
 					{
-					$row=mysql_fetch_row($rslt);
+					$row=mysqli_fetch_row($rslt);
 					$time_id =	$row[0];
 					$queue =	$row[1];
 					$agent =	$row[2];
@@ -1252,9 +1253,9 @@ if ($ACTION=="RedirectFromParkIVR")
 				if ($VAC_eq_ct > 0)
 					{
 					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLEROFFHOLD',data1='$parked_sec',data2='IVRPARK',serverid='$queuemetrics_log_id';";
-					$rslt=mysql_query($stmt, $linkB);
+					$rslt=mysql_to_mysqli($stmt, $linkB);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02115',$user,$server_ip,$session_name,$one_mysql_log);}
-					$affected_rows = mysql_affected_rows($linkB);
+					$affected_rows = mysqli_affected_rows($linkB);
 					if ($format=='debug') {echo "\n<!-- $affected_rows|$stmt -->";}
 					}
 				}
@@ -1263,7 +1264,7 @@ if ($ACTION=="RedirectFromParkIVR")
 
 	$stmt="UPDATE vicidial_live_agents SET external_park='' where user='$user';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02091',$user,$server_ip,$session_name,$one_mysql_log);}
 	}
 
@@ -1285,12 +1286,12 @@ if ($ACTION=="RedirectName")
 		{
 		$stmt="SELECT dialplan_number FROM phones where server_ip = '$server_ip' and extension='$extenName';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02027',$user,$server_ip,$session_name,$one_mysql_log);}
-		$name_count = mysql_num_rows($rslt);
+		$name_count = mysqli_num_rows($rslt);
 		if ($name_count>0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$exten = $row[0];
 			$ACTION="Redirect";
 			}
@@ -1315,12 +1316,12 @@ if ($ACTION=="RedirectNameVmail")
 		{
 		$stmt="SELECT voicemail_id FROM phones where server_ip = '$server_ip' and extension='$extenName';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02028',$user,$server_ip,$session_name,$one_mysql_log);}
-		$name_count = mysql_num_rows($rslt);
+		$name_count = mysqli_num_rows($rslt);
 		if ($name_count>0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$exten = "$exten$row[0]";
 			$ACTION="Redirect";
 			}
@@ -1366,21 +1367,21 @@ if ($ACTION=="RedirectXtraCXNeW")
 			{
 			$stmtA="SELECT count(*) FROM vicidial_conferences where server_ip='$server_ip' and ((extension='') or (extension is null)) and conf_exten != '$session_id';";
 				if ($format=='debug') {echo "\n<!-- $stmtA -->";}
-			$rslt=mysql_query($stmtA, $link);
+			$rslt=mysql_to_mysqli($stmtA, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtA,'02029',$user,$server_ip,$session_name,$one_mysql_log);}
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			if ($row[0] > 1)
 				{
 				$stmtB="UPDATE vicidial_conferences set extension='$protocol/$extension$NOWnum', leave_3way='0' where server_ip='$server_ip' and ((extension='') or (extension is null)) and conf_exten != '$session_id' limit 1;";
 					if ($format=='debug') {echo "\n<!-- $stmtB -->";}
-				$rslt=mysql_query($stmtB, $link);
+				$rslt=mysql_to_mysqli($stmtB, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtB,'02030',$user,$server_ip,$session_name,$one_mysql_log);}
 
 				$stmtC="SELECT conf_exten from vicidial_conferences where server_ip='$server_ip' and extension='$protocol/$extension$NOWnum' and conf_exten != '$session_id';";
 					if ($format=='debug') {echo "\n<!-- $stmtC -->";}
-				$rslt=mysql_query($stmtC, $link);
+				$rslt=mysql_to_mysqli($stmtC, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtC,'02031',$user,$server_ip,$session_name,$one_mysql_log);}
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$exten = $row[0];
 
 				if ( (preg_match("/^8300/i",$extension)) and ($protocol == 'Local') )
@@ -1390,30 +1391,30 @@ if ($ACTION=="RedirectXtraCXNeW")
 
 				$stmtD="UPDATE vicidial_conferences set extension='$protocol/$extension' where server_ip='$server_ip' and conf_exten='$exten' limit 1;";
 					if ($format=='debug') {echo "\n<!-- $stmtD -->";}
-				$rslt=mysql_query($stmtD, $link);
+				$rslt=mysql_to_mysqli($stmtD, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtD,'02032',$user,$server_ip,$session_name,$one_mysql_log);}
 
 				$stmtE="UPDATE vicidial_conferences set leave_3way='1', leave_3way_datetime='$NOW_TIME', extension='3WAY_$user' where server_ip='$server_ip' and conf_exten='$session_id';";
 					if ($format=='debug') {echo "\n<!-- $stmtE -->";}
-				$rslt=mysql_query($stmtE, $link);
+				$rslt=mysql_to_mysqli($stmtE, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtE,'02033',$user,$server_ip,$session_name,$one_mysql_log);}
 
 				$queryCID = "CXAR24$NOWnum";
 				$stmtF="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Redirect','$queryCID','Channel: $agentchannel','Context: $ext_context','Exten: $exten','Priority: 1','CallerID: $queryCID','','','','','');";
 					if ($format=='debug') {echo "\n<!-- $stmtF -->";}
-				$rslt=mysql_query($stmtF, $link);
+				$rslt=mysql_to_mysqli($stmtF, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtF,'02034',$user,$server_ip,$session_name,$one_mysql_log);}
 
 				$stmtG="UPDATE vicidial_live_agents set conf_exten='$exten' where server_ip='$server_ip' and user='$user';";
 					if ($format=='debug') {echo "\n<!-- $stmtG -->";}
-				$rslt=mysql_query($stmtG, $link);
+				$rslt=mysql_to_mysqli($stmtG, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtG,'02035',$user,$server_ip,$session_name,$one_mysql_log);}
 
 				if ($auto_dial_level < 1)
 					{
 					$stmtH = "DELETE from vicidial_auto_calls where lead_id='$lead_id' and callerid LIKE \"M%\";";
 						if ($format=='debug') {echo "\n<!-- $stmtH -->";}
-					$rslt=mysql_query($stmtH, $link);
+					$rslt=mysql_to_mysqli($stmtH, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtH,'02036',$user,$server_ip,$session_name,$one_mysql_log);}
 					}
 
@@ -1438,16 +1439,16 @@ if ($ACTION=="RedirectXtraCXNeW")
 
 		$stmt="SELECT count(*) FROM live_channels where server_ip = '$call_server_ip' and channel='$channel';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02037',$user,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		if ($row[0]==0)
 			{
 			$stmt="SELECT count(*) FROM live_sip_channels where server_ip = '$call_server_ip' and channel='$channel';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02038',$user,$server_ip,$session_name,$one_mysql_log);}
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			if ($rowx[0]==0)
 				{
 				$channel_liveX=0;
@@ -1457,16 +1458,16 @@ if ($ACTION=="RedirectXtraCXNeW")
 			}
 		$stmt="SELECT count(*) FROM live_channels where server_ip = '$server_ip' and channel='$extrachannel';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02039',$user,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		if ($row[0]==0)
 			{
 			$stmt="SELECT count(*) FROM live_sip_channels where server_ip = '$server_ip' and channel='$extrachannel';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02040',$user,$server_ip,$session_name,$one_mysql_log);}
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			if ($rowx[0]==0)
 				{
 				$channel_liveY=0;
@@ -1478,9 +1479,9 @@ if ($ACTION=="RedirectXtraCXNeW")
 			{
 			$stmt="SELECT count(*) FROM vicidial_live_agents where lead_id='$lead_id' and user!='$user';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02041',$user,$server_ip,$session_name,$one_mysql_log);}
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			if ($rowx[0] < 1)
 				{
 				$channel_liveY=0;
@@ -1491,9 +1492,9 @@ if ($ACTION=="RedirectXtraCXNeW")
 				{
 				$stmt="SELECT server_ip,conf_exten,user FROM vicidial_live_agents where lead_id='$lead_id' and user!='$user';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02042',$user,$server_ip,$session_name,$one_mysql_log);}
-				$rowx=mysql_fetch_row($rslt);
+				$rowx=mysqli_fetch_row($rslt);
 				$dest_server_ip = $rowx[0];
 				$dest_session_id = $rowx[1];
 				$dest_user = $rowx[2];
@@ -1512,12 +1513,12 @@ if ($ACTION=="RedirectXtraCXNeW")
 
 				$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$call_server_ip','','Redirect','$queryCID','Channel: $channel','Context: $ext_context','Exten: $dest_dialstring','Priority: $ext_priority','CallerID: $queryCID','','','','','');";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02043',$user,$server_ip,$session_name,$one_mysql_log);}
 
 				$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Hangup','$queryCID','Channel: $extrachannel','','','','','','','','','');";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02044',$user,$server_ip,$session_name,$one_mysql_log);}
 
 				echo "RedirectXtraCX command sent for Channel $channel on $call_server_ip and \nHungup $extrachannel on $server_ip\n";
@@ -1592,49 +1593,49 @@ if ($ACTION=="RedirectXtraNeW")
 				{
 				$stmt="SELECT count(*) FROM vicidial_conferences where server_ip='$server_ip' and ((extension='') or (extension is null)) and conf_exten != '$session_id';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02045',$user,$server_ip,$session_name,$one_mysql_log);}
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				if ($row[0] > 1)
 					{
 					$stmt="UPDATE vicidial_conferences set extension='$protocol/$extension$NOWnum', leave_3way='0' where server_ip='$server_ip' and ((extension='') or (extension is null)) and conf_exten != '$session_id' limit 1;";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02046',$user,$server_ip,$session_name,$one_mysql_log);}
 
 					$stmt="SELECT conf_exten from vicidial_conferences where server_ip='$server_ip' and extension='$protocol/$extension$NOWnum' and conf_exten != '$session_id';";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02047',$user,$server_ip,$session_name,$one_mysql_log);}
-					$row=mysql_fetch_row($rslt);
+					$row=mysqli_fetch_row($rslt);
 					$exten = $row[0];
 
 					$stmt="UPDATE vicidial_conferences set extension='$protocol/$extension' where server_ip='$server_ip' and conf_exten='$exten' limit 1;";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02048',$user,$server_ip,$session_name,$one_mysql_log);}
 
 					$stmt="UPDATE vicidial_conferences set leave_3way='1', leave_3way_datetime='$NOW_TIME', extension='3WAY_$user' where server_ip='$server_ip' and conf_exten='$session_id';";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02049',$user,$server_ip,$session_name,$one_mysql_log);}
 
 					$queryCID = "CXAR23$NOWnum";
 					$stmtB="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Redirect','$queryCID','Channel: $agentchannel','Context: $ext_context','Exten: $exten','Priority: 1','CallerID: $queryCID','','','','','');";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
-					$rslt=mysql_query($stmtB, $link);
+					$rslt=mysql_to_mysqli($stmtB, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02050',$user,$server_ip,$session_name,$one_mysql_log);}
 
 					$stmt="UPDATE vicidial_live_agents set conf_exten='$exten' where server_ip='$server_ip' and user='$user';";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02051',$user,$server_ip,$session_name,$one_mysql_log);}
 
 					if ($auto_dial_level < 1)
 						{
 						$stmt = "DELETE from vicidial_auto_calls where lead_id='$lead_id' and callerid LIKE \"M%\";";
 							if ($format=='debug') {echo "\n<!-- $stmt -->";}
-						$rslt=mysql_query($stmt, $link);
+						$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02052',$user,$server_ip,$session_name,$one_mysql_log);}
 						}
 
@@ -1655,16 +1656,16 @@ if ($ACTION=="RedirectXtraNeW")
 
 			$stmt="SELECT count(*) FROM live_channels where server_ip = '$call_server_ip' and channel='$channel';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02053',$user,$server_ip,$session_name,$one_mysql_log);}
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			if ( ($row[0]==0) and (!preg_match("/SECOND/",$filename)) )
 				{
 				$stmt="SELECT count(*) FROM live_sip_channels where server_ip = '$call_server_ip' and channel='$channel';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02054',$user,$server_ip,$session_name,$one_mysql_log);}
-				$rowx=mysql_fetch_row($rslt);
+				$rowx=mysqli_fetch_row($rslt);
 				if ($rowx[0]==0)
 					{
 					$channel_liveX=0;
@@ -1674,16 +1675,16 @@ if ($ACTION=="RedirectXtraNeW")
 				}
 			$stmt="SELECT count(*) FROM live_channels where server_ip = '$server_ip' and channel='$extrachannel';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02055',$user,$server_ip,$session_name,$one_mysql_log);}
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			if ( ($row[0]==0) and (!preg_match("/SECOND/",$filename)) )
 				{
 				$stmt="SELECT count(*) FROM live_sip_channels where server_ip = '$server_ip' and channel='$extrachannel';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02056',$user,$server_ip,$session_name,$one_mysql_log);}
-				$rowx=mysql_fetch_row($rslt);
+				$rowx=mysqli_fetch_row($rslt);
 				if ($rowx[0]==0)
 					{
 					$channel_liveY=0;
@@ -1697,7 +1698,7 @@ if ($ACTION=="RedirectXtraNeW")
 					{
 					$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Redirect','$queryCID','Channel: $channel','ExtraChannel: $extrachannel','Context: $ext_context','Exten: $exten','Priority: $ext_priority','CallerID: $queryCID','','','','');";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02057',$user,$server_ip,$session_name,$one_mysql_log);}
 
 					echo "RedirectXtra command sent for Channel $channel and \nExtraChannel $extrachannel\n to $exten on $server_ip\n";
@@ -1719,12 +1720,12 @@ if ($ACTION=="RedirectXtraNeW")
 
 					$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$call_server_ip','','Redirect','$queryCID','Channel: $channel','Context: $ext_context','Exten: $dest_dialstring','Priority: $ext_priority','CallerID: $queryCID','','','','','');";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02058',$user,$server_ip,$session_name,$one_mysql_log);}
 
 					$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Redirect','$queryCID','Channel: $extrachannel','Context: $ext_context','Exten: $exten','Priority: $ext_priority','CallerID: $queryCID','','','','','');";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02059',$user,$server_ip,$session_name,$one_mysql_log);}
 
 					echo "RedirectXtra command sent for Channel $channel on $call_server_ip and \nExtraChannel $extrachannel\n to $exten on $server_ip\n";
@@ -1767,16 +1768,16 @@ if ($ACTION=="Redirect")
 
 		$stmt="SELECT count(*) FROM live_sip_channels where server_ip = '$server_ip' and channel LIKE \"$hangup_channel_prefix%\";";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02060',$user,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		if ($row > 0)
 			{
 			$stmt="SELECT channel FROM live_sip_channels where server_ip = '$server_ip' and channel LIKE \"$hangup_channel_prefix%\";";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02061',$user,$server_ip,$session_name,$one_mysql_log);}
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$channel=$rowx[0];
 			$channel = preg_replace("/1$/i","2",$channel);
 			$queryCID = preg_replace("/^./i","Q",$queryCID);
@@ -1801,16 +1802,16 @@ if ($ACTION=="Redirect")
 		if (strlen($call_server_ip)>6) {$server_ip = $call_server_ip;}
 		$stmt="SELECT count(*) FROM live_channels where server_ip = '$server_ip' and channel='$channel';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02062',$user,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		if ($row[0]==0)
 			{
 			$stmt="SELECT count(*) FROM live_sip_channels where server_ip = '$server_ip' and channel='$channel';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02063',$user,$server_ip,$session_name,$one_mysql_log);}
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			if ($rowx[0]==0)
 				{
 				$channel_live=0;
@@ -1821,7 +1822,7 @@ if ($ACTION=="Redirect")
 			{
 			$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Redirect','$queryCID','Channel: $channel','Context: $ext_context','Exten: $exten','Priority: $ext_priority','CallerID: $queryCID','','','','','');";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02064',$user,$server_ip,$session_name,$one_mysql_log);}
 
 			echo "Redirect command sent for Channel $channel on $server_ip\n";
@@ -1852,16 +1853,16 @@ if ( ($ACTION=="Monitor") || ($ACTION=="StopMonitor") )
 		{
 		$stmt="SELECT count(*) FROM live_channels where server_ip = '$server_ip' and channel='$channel';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02065',$user,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		if ($row[0]==0)
 			{
 			$stmt="SELECT count(*) FROM live_sip_channels where server_ip = '$server_ip' and channel='$channel';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02066',$user,$server_ip,$session_name,$one_mysql_log);}
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			if ($rowx[0]==0)
 				{
 				$channel_live=0;
@@ -1872,33 +1873,33 @@ if ( ($ACTION=="Monitor") || ($ACTION=="StopMonitor") )
 			{
 			$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','$ACTION','$queryCID','Channel: $channel','$SQLfile','','','','','','','','');";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02067',$user,$server_ip,$session_name,$one_mysql_log);}
 
 			if ($ACTION=="Monitor")
 				{
 				$stmt = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,filename,lead_id,user) values('$channel','$server_ip','$exten','$NOW_TIME','$StarTtime','$filename','$lead_id','$user')";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02068',$user,$server_ip,$session_name,$one_mysql_log);}
 
 				$stmt="SELECT recording_id FROM recording_log where filename='$filename'";
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02069',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$recording_id = $row[0];
 				}
 			else
 				{
 				$stmt="SELECT recording_id,start_epoch FROM recording_log where filename='$filename'";
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02070',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
-				$rec_count = mysql_num_rows($rslt);
+				$rec_count = mysqli_num_rows($rslt);
 					if ($rec_count>0)
 					{
-					$row=mysql_fetch_row($rslt);
+					$row=mysqli_fetch_row($rslt);
 					$recording_id = $row[0];
 					$start_time = $row[1];
 					$length_in_sec = ($StarTtime - $start_time);
@@ -1907,7 +1908,7 @@ if ( ($ACTION=="Monitor") || ($ACTION=="StopMonitor") )
 
 					$stmt = "UPDATE recording_log set end_time='$NOW_TIME',end_epoch='$StarTtime',length_in_sec=$length_in_sec,length_in_min='$length_in_min' where filename='$filename'";
 						if ($DB) {echo "$stmt\n";}
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02071',$user,$server_ip,$session_name,$one_mysql_log);}
 					}
 				}
@@ -1943,17 +1944,17 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 			{
 			$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$filename','Channel: $channel','Context: $ext_context','Exten: $exten','Priority: $ext_priority','Callerid: $filename','','','','','');";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02072',$user,$server_ip,$session_name,$one_mysql_log);}
 
 			$stmt = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,filename,lead_id,user) values('$channel','$server_ip','$exten','$NOW_TIME','$StarTtime','$filename','$lead_id','$user')";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02073',$user,$server_ip,$session_name,$one_mysql_log);}
-			$RLaffected_rows = mysql_affected_rows($link);
+			$RLaffected_rows = mysqli_affected_rows($link);
 			if ($RLaffected_rows > 0)
 				{
-				$recording_id = mysql_insert_id($link);
+				$recording_id = mysqli_insert_id($link);
 				}
 
 			if ($FROMvdc=='YES')
@@ -1961,19 +1962,19 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 				##### update vla record with recording_id
 				$stmt = "UPDATE vicidial_live_agents SET external_recording='$recording_id' where user='$user';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02117',$user,$server_ip,$session_name,$one_mysql_log);}
 
 				##### get call type from vicidial_live_agents table
 				$VLA_inOUT='NONE';
 				$stmt="SELECT comments FROM vicidial_live_agents where user='$user' order by last_update_time desc limit 1;";
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02074',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
-				$VLA_inOUT_ct = mysql_num_rows($rslt);
+				$VLA_inOUT_ct = mysqli_num_rows($rslt);
 				if ($VLA_inOUT_ct > 0)
 					{
-					$row=mysql_fetch_row($rslt);
+					$row=mysqli_fetch_row($rslt);
 					$VLA_inOUT =		$row[0];
 					}
 				if ($VLA_inOUT == 'INBOUND')
@@ -1988,18 +1989,18 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 					##### look for the vicidial ID in the vicidial_log table
 					$stmt="SELECT uniqueid FROM vicidial_log where uniqueid='$uniqueid' and lead_id='$lead_id';";
 					}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02075',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
-				$VM_mancall_ct = mysql_num_rows($rslt);
+				$VM_mancall_ct = mysqli_num_rows($rslt);
 				if ($VM_mancall_ct > 0)
 					{
-					$row=mysql_fetch_row($rslt);
+					$row=mysqli_fetch_row($rslt);
 					$VDvicidial_id =	$row[0];
 
 					$stmt = "UPDATE recording_log SET vicidial_id='$VDvicidial_id' where recording_id='$recording_id';";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02076',$user,$server_ip,$session_name,$one_mysql_log);}
 					}
 				}
@@ -2014,12 +2015,12 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 
 				### find the value to put in the vicidial_id field if this was an inbound call
 				$stmt="SELECT closecallid from vicidial_closer_log where lead_id='$lead_id' and call_date > \"$four_hours_ago\" order by call_date desc limit 1;";
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02077',$user,$server_ip,$session_name,$one_mysql_log);}
-				$VAC_qm_ct = mysql_num_rows($rslt);
+				$VAC_qm_ct = mysqli_num_rows($rslt);
 				if ($VAC_qm_ct > 0)
 					{
-					$row=mysql_fetch_row($rslt);
+					$row=mysqli_fetch_row($rslt);
 					$uniqueidSQL	= ",vicidial_id='$row[0]'";
 					}
 				}
@@ -2034,18 +2035,18 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 				##### update vla recording record to blank
 				$stmt = "UPDATE vicidial_live_agents SET external_recording='' where user='$user';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02118',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
 			
 			$stmt="SELECT recording_id,start_epoch FROM recording_log where filename='$filename'";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02078',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
-			$rec_count = mysql_num_rows($rslt);
+			$rec_count = mysqli_num_rows($rslt);
 			if ($rec_count>0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$recording_id = $row[0];
 				$start_time = $row[1];
 				$length_in_sec = ($StarTtime - $start_time);
@@ -2054,21 +2055,21 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 
 				$stmt = "UPDATE recording_log set end_time='$NOW_TIME',end_epoch='$StarTtime',length_in_sec=$length_in_sec,length_in_min='$length_in_min' $uniqueidSQL where filename='$filename'";
 					if ($DB) {echo "$stmt\n";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02079',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
 
 			# find and hang up all recordings going on in this conference # and extension = '$exten' 
 			$stmt="SELECT channel FROM live_sip_channels where server_ip = '$server_ip' and channel LIKE \"$channel%\" and (channel LIKE \"%,1\" or channel LIKE \"%;1\");";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02080',$user,$server_ip,$session_name,$one_mysql_log);}
-		#	$rec_count = intval(mysql_num_rows($rslt) / 2);
-			$rec_count = mysql_num_rows($rslt);
+		#	$rec_count = intval(mysqli_num_rows($rslt) / 2);
+			$rec_count = mysqli_num_rows($rslt);
 			$h=0;
 				while ($rec_count>$h)
 				{
-				$rowx=mysql_fetch_row($rslt);
+				$rowx=mysqli_fetch_row($rslt);
 				$HUchannel[$h] = $rowx[0];
 				$h++;
 				}
@@ -2077,7 +2078,7 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 				{
 				$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Hangup','RH12345$StarTtime$i','Channel: $HUchannel[$i]','','','','','','','','','');";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02081',$user,$server_ip,$session_name,$one_mysql_log);}
 				$i++;
 				}
@@ -2112,7 +2113,7 @@ if ($ACTION=="VolumeControl")
 
 		$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$queryCID','Channel: $volume_local_channel','Context: $ext_context','Exten: 8300','Priority: 1','Callerid: $queryCID','','','','$channel','$exten');";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02082',$user,$server_ip,$session_name,$one_mysql_log);}
 		echo "Volume command sent for Conference $exten, Stage $stage Channel $channel on $server_ip\n";
 		}

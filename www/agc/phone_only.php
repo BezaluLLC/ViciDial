@@ -11,15 +11,16 @@
 # 130328-0005 - Converted ereg to preg functions
 # 130603-2212 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130718-0946 - Fixed login bug
+# 130802-1139 - Changed to PHP mysqli functions
 #
 
-$version = '2.8-7p';
-$build = '130718-0946';
+$version = '2.8-8p';
+$build = '130802-1139';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=73;
 $one_mysql_log=0;
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 if (isset($_GET["DB"]))						    {$DB=$_GET["DB"];}
@@ -86,13 +87,13 @@ $random = (rand(1000000, 9999999) + 10000000);
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$vdc_header_date_format =		$row[1];
 	$vdc_customer_date_format =		$row[2];
@@ -175,10 +176,10 @@ echo "<!-- BROWSER: $BROWSER_WIDTH x $BROWSER_HEIGHT     $JS_browser_width x $JS
 
 
 $stmt="SELECT user_group from vicidial_users where user='$VD_login';";
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
+if ($non_latin > 0) {$rslt=mysql_to_mysqli($link, "SET NAMES 'UTF8'");}
+$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09002',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-$row=mysql_fetch_row($rslt);
+$row=mysqli_fetch_row($rslt);
 $VU_user_group=$row[0];
 
 
@@ -254,9 +255,9 @@ if ($user_login_first == 1)
 			{
 			$stmt="SELECT phone_login,phone_pass from vicidial_users where user='$VD_login';";
 			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09073',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$phone_login=$row[0];
 			$phone_pass=$row[1];
 
@@ -344,18 +345,18 @@ else
 			{
 			##### grab the full name of the agent
 			$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,agent_call_log_view_override,agent_choose_blended,agent_lead_search_override from vicidial_users where user='$VD_login';";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09004',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$LOGfullname =					$row[0];
 			$user_level =					$row[1];
 			$VU_user_group =				$row[10];
 
 			### Gather timeclock and shift enforcement restriction settings
 			$stmt="SELECT forced_timeclock_login,shift_enforcement,group_shifts,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view,agent_xfer_consultative,agent_xfer_dial_override,agent_xfer_vm_transfer,agent_xfer_blind_transfer,agent_xfer_dial_with_customer,agent_xfer_park_customer_dial,agent_fullscreen,webphone_url_override,webphone_dialpad_override,webphone_systemkey_override from vicidial_user_groups where user_group='$VU_user_group';";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09005',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$agent_fullscreen =				$row[12];
 			$webphone_url =					$row[13];
 			$webphone_dialpad_override =	$row[14];
@@ -428,23 +429,23 @@ else
 	#   login: ca101,cb101,cc101
 		$alias_found=0;
 	$stmt="select count(*) from phones_alias where alias_id = '$phone_login';";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09006',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-	$alias_ct = mysql_num_rows($rslt);
+	$alias_ct = mysqli_num_rows($rslt);
 	if ($alias_ct > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$alias_found = "$row[0]";
 		}
 	if ($alias_found > 0)
 		{
 		$stmt="select alias_name,logins_list from phones_alias where alias_id = '$phone_login' limit 1;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09007',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		$alias_ct = mysql_num_rows($rslt);
+		$alias_ct = mysqli_num_rows($rslt);
 		if ($alias_ct > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$alias_name = "$row[0]";
 			$phone_login = "$row[1]";
 			}
@@ -472,9 +473,9 @@ else
 	#$stmt="SELECT count(*) from phones where $phoneSQL and active = 'Y';";
 	$stmt="SELECT count(*) from phones,servers where $phoneSQL and phones.active = 'Y' and active_asterisk_server='Y' and phones.server_ip=servers.server_ip;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09008',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$authphone=$row[0];
 	if (!$authphone)
 		{
@@ -523,49 +524,49 @@ else
 				### find the server_ip of each phone_login
 				$stmtx="SELECT server_ip from phones where login = '$phones_auto[$pb]';";
 				if ($DB) {echo "|$stmtx|\n";}
-				if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-				$rslt=mysql_query($stmtx, $link);
+				if ($non_latin > 0) {$rslt=mysql_to_mysqli($link, "SET NAMES 'UTF8'");}
+				$rslt=mysql_to_mysqli($stmtx, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09009',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$rowx=mysql_fetch_row($rslt);
+				$rowx=mysqli_fetch_row($rslt);
 
 				### get number of agents logged in to each server
 				$stmt="SELECT count(*) from web_client_sessions where server_ip = '$rowx[0]';";
 				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09010',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				
 				### find out whether the server is set to active
 				$stmt="SELECT count(*) from servers where server_ip = '$rowx[0]' and active='Y' and active_asterisk_server='Y';";
 				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09011',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$rowy=mysql_fetch_row($rslt);
+				$rowy=mysqli_fetch_row($rslt);
 
 				### find out if this server has a twin
 				$twin_not_live=0;
 				$stmt="SELECT active_twin_server_ip from servers where server_ip = '$rowx[0]';";
 				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09012',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$rowyy=mysql_fetch_row($rslt);
+				$rowyy=mysqli_fetch_row($rslt);
 				if (strlen($rowyy[0]) > 4)
 					{
 					### find out whether the twin server_updater is running
 					$stmt="SELECT count(*) from server_updater where server_ip = '$rowyy[0]' and last_update > '$past_minutes_date';";
 					if ($DB) {echo "|$stmt|\n";}
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-					$rowyz=mysql_fetch_row($rslt);
+					$rowyz=mysqli_fetch_row($rslt);
 					if ($rowyz[0] < 1) {$twin_not_live=1;}
 					}
 
 				### find out whether the server_updater is running
 				$stmt="SELECT count(*) from server_updater where server_ip = '$rowx[0]' and last_update > '$past_minutes_date';";
 				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09014',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$rowz=mysql_fetch_row($rslt);
+				$rowz=mysqli_fetch_row($rslt);
 
 				$pb_log .= "$phones_auto[$pb]|$rowx[0]|$row[0]|$rowy[0]|$rowz[0]|$twin_not_live|   ";
 
@@ -585,9 +586,9 @@ else
 		echo "<title>Phone web client</title>\n";
 		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,is_webphone,use_external_server_ip,codecs_list,webphone_dialpad,phone_ring_timeout,on_hook_agent,webphone_auto_answer from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09015',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$extension=$row[0];
 		$dialplan_number=$row[1];
 		$voicemail_id=$row[2];
@@ -670,7 +671,7 @@ else
 				{
 				$stmt="UPDATE phones SET computer_ip='$ip' where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09016',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				}
 			}
@@ -678,7 +679,7 @@ else
 			{
 			$stmt="UPDATE phones SET computer_ip='$ip' where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09017',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			}
 		if ($clientDST)
@@ -710,12 +711,12 @@ else
 
 		$stmt="DELETE from web_client_sessions where start_time < '$past_month_date' and extension='$extension' and server_ip = '$server_ip' and program = 'phone';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09018',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 
 		$stmt="INSERT INTO web_client_sessions values('$extension','$server_ip','phone','$NOW_TIME','$session_name');";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09019',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 
 
@@ -731,13 +732,13 @@ else
 			{
 			##### find external_server_ip if enabled for this phone account
 			$stmt="SELECT external_server_ip FROM servers where server_ip='$server_ip' LIMIT 1;";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09020',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
-			$exip_ct = mysql_num_rows($rslt);
+			$exip_ct = mysqli_num_rows($rslt);
 			if ($exip_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$webphone_server_ip =$row[0];
 				}
 			}
@@ -745,13 +746,13 @@ else
 			{
 			##### find webphone_url in system_settings and generate IFRAME code for it #####
 			$stmt="SELECT webphone_url FROM system_settings LIMIT 1;";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09021',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
-			$wu_ct = mysql_num_rows($rslt);
+			$wu_ct = mysqli_num_rows($rslt);
 			if ($wu_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$webphone_url =$row[0];
 				}
 			}
@@ -759,13 +760,13 @@ else
 			{
 			##### find system_key in system_settings if populated #####
 			$stmt="SELECT webphone_systemkey FROM system_settings LIMIT 1;";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09022',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
-			$wsk_ct = mysql_num_rows($rslt);
+			$wsk_ct = mysqli_num_rows($rslt);
 			if ($wsk_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$system_key =$row[0];
 				}
 			}
