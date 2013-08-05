@@ -31,6 +31,7 @@
 # 130108-1853 - Added Asterisk 1.8 option with default conf files copy
 # 130705-1805 - Added bp.pl script to the agc web dir
 # 130716-1025 - Added mtemp sounds directory for sox concatenated temp audio
+# 130805-0818 - Added support for mysqli
 #
 
 ############################################
@@ -2635,6 +2636,7 @@ if ($PATHconf !~ /\/etc\/astguiclient.conf/)
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHhome/* `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHagi/* `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc/dbconnect.php `;
+	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc/dbconnect_mysqli.php `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc/bp.pl `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/dbconnect.php `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/listloader.pl `;
@@ -2661,6 +2663,21 @@ if ($PATHconf !~ /\/etc\/astguiclient.conf/)
 		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_se/dbconnect.php `;
 		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_sk/dbconnect.php `;
 		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_tw/dbconnect.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_br/dbconnect_mysqli.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_de/dbconnect_mysqli.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_dk/dbconnect_mysqli.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_el/dbconnect_mysqli.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_es/dbconnect_mysqli.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_fr/dbconnect_mysqli.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_it/dbconnect_mysqli.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_jp/dbconnect_mysqli.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_nl/dbconnect_mysqli.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_pl/dbconnect_mysqli.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_pt/dbconnect_mysqli.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_ru/dbconnect_mysqli.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_se/dbconnect_mysqli.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_sk/dbconnect_mysqli.php `;
+		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_tw/dbconnect_mysqli.php `;
 		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial_br/* `;
 		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial_de/* `;
 		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial_el/* `;
