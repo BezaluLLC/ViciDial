@@ -3221,12 +3221,13 @@ else
 # 130627-0745 - Added url log, lagged log and user group login reports to admin utilities page
 # 130709-1350 - Changes for encrypted password compatibility, added Dial Log Report
 # 130711-2208 - Added SYSTEM SNAPSHOT STATS as new welcome screen, and added new 
+# 130809-1410 - Small fixes for call times and holidays
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.8-408a';
-$build = '130711-2208';
+$admin_version = '2.8-409a';
+$build = '130809-1410';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -30609,7 +30610,7 @@ if ($ADD==311111111)
 		echo "<input type=hidden name=ADD value=321111111>\n";
 		echo "<input type=hidden name=stage value=\"ADD\">\n";
 		echo "<input type=hidden name=call_time_id value=\"$call_time_id\">\n";
-		echo "Add inbound holiday rule: </td><td align=left colspan=2><select size=1 name=holiday_rule>\n";
+		echo "Add inbound and outbound holiday rule: </td><td align=left colspan=2><select size=1 name=holiday_rule>\n";
 		echo "$hct_list";
 		echo "</select></td>\n";
 		echo "<td align=center colspan=4><input type=submit name=SUBMIT value=SUBMIT></FORM></td></tr>\n";
@@ -30781,7 +30782,7 @@ if ($ADD==3111111111)
 		echo "<input type=hidden name=ADD value=322111111>\n";
 		echo "<input type=hidden name=stage value=\"ADD\">\n";
 		echo "<input type=hidden name=call_time_id value=\"$call_time_id\">\n";
-		echo "Add inbound holiday rule: </td><td align=left colspan=2><select size=1 name=holiday_rule>\n";
+		echo "Add outbound holiday rule: </td><td align=left colspan=2><select size=1 name=holiday_rule>\n";
 		echo "$hct_list";
 		echo "</select></td>\n";
 		echo "<td align=center colspan=4><input type=submit name=SUBMIT value=SUBMIT></FORM></td></tr>\n";
@@ -30853,7 +30854,7 @@ if ($ADD==3211111111)
 
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		echo "<br>MODIFY A HOLIDAY<form action=$PHP_SELF method=POST>\n";
+		echo "<br>MODIFY A HOLIDAY<form action=$PHP_SELF method=POST id=vicidial_report name=vicidial_report>\n";
 		echo "<input type=hidden name=ADD value=4211111111>\n";
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
 		echo "<input type=hidden name=holiday_id value=\"$holiday_id\">\n";
@@ -30919,7 +30920,7 @@ if ($ADD==3211111111)
 
 		if ($LOGdelete_call_times > 0)
 			{
-			echo "<br><br><a href=\"$PHP_SELF?ADD=5211111111&call_time_id=$call_time_id\">DELETE THIS HOLIDAY DEFINITION</a>\n";
+			echo "<br><br><a href=\"$PHP_SELF?ADD=5211111111&holiday_id=$holiday_id\">DELETE THIS HOLIDAY DEFINITION</a>\n";
 			}
 		if ($LOGuser_level >= 9)
 			{
