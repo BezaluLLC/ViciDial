@@ -30610,7 +30610,7 @@ if ($ADD==311111111)
 		echo "<input type=hidden name=ADD value=321111111>\n";
 		echo "<input type=hidden name=stage value=\"ADD\">\n";
 		echo "<input type=hidden name=call_time_id value=\"$call_time_id\">\n";
-		echo "Add inbound and outbound holiday rule: </td><td align=left colspan=2><select size=1 name=holiday_rule>\n";
+		echo "Add inbound holiday rule: </td><td align=left colspan=2><select size=1 name=holiday_rule>\n";
 		echo "$hct_list";
 		echo "</select></td>\n";
 		echo "<td align=center colspan=4><input type=submit name=SUBMIT value=SUBMIT></FORM></td></tr>\n";
