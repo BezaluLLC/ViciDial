@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_VDsales_export.pl                version: 2.6
+# AST_VDsales_export.pl                version: 2.8
 #
 # This script is designed to gather sales for a VICIDIAL Outbound-only campaign and
 # post them to a directory
@@ -31,6 +31,7 @@
 # 120511-2029 - Added CLI options for FTP login details
 # 120705-1954 - Added --temp-dir=XXX option
 # 130406-2146 - Added --email-post-audio
+# 130811-0902 - Added wget HTTP auth options and added more debug output
 #
 
 $txt = '.txt';
@@ -60,6 +61,8 @@ $INcalls=0;
 $INtalk=0;
 $INtalkmin=0;
 $email_post_audio=0;
+$http_user='';
+$http_pass='';
 
 $secX = time();
 $time = $secX;
@@ -180,6 +183,8 @@ if (length($ARGV[0])>1)
 		print "  [--ftp-dir=XXXXXXXX] = remote FTP server directory to post files to\n";
 		print "  [--with-transfer-audio] = Different method for finding audio, also grabs transfer audio filenames\n";
 		print "  [--temp-dir=XXX] = If running more than one instance at a time, specify a unique temp directory suffix\n";
+		print "  [--http-user=XXX] = If using tranfer audio, this is the HTTP user needed to grab the recording files\n";
+		print "  [--http-pass=XXX] = If using tranfer audio, this is the HTTP password needed to grab the recording files\n";
 		print "  [--with-did-lookup] = Looks up the DID pattern and name the call came in on if possible\n";
 		print "  [--email-list=test@test.com:test2@test.com] = send email results to these addresses\n";
 		print "  [--email-sender=vicidial@localhost] = sender for the email results\n";
@@ -353,6 +358,22 @@ if (length($ARGV[0])>1)
 			}
 		else
 			{$temp_dir = '';}
+		if ($args =~ /--http-user=/i)
+			{
+			@data_in = split(/--http-user=/,$args);
+			$http_user = $data_in[1];
+			$http_user =~ s/ .*//gi;
+			$http_user =~ s/:/,/gi;
+			if ($DB > 0) {print "\n----- HTTP USER: $http_user -----\n\n";}
+			}
+		if ($args =~ /--http-pass=/i)
+			{
+			@data_in = split(/--http-pass=/,$args);
+			$http_pass = $data_in[1];
+			$http_pass =~ s/ .*//gi;
+			$http_pass =~ s/:/,/gi;
+			if ($DB > 0) {print "\n----- HTTP PASS: $http_pass -----\n\n";}
+			}
 		if ($args =~ /-ftp-transfer/i)
 			{
 			if (!$Q)
@@ -1104,7 +1125,17 @@ sub select_format_loop
 				{
 				@ivr_path = split(/\//,$ivr_location);
 				$path_file = $ivr_path[$#ivr_path];
-				`$wgetbin -q --output-document=$tempdir/$path_file $ivr_location `;
+
+				$wget_output = " -q";
+				$wget_http = "";
+				if ($DBX > 0)
+					{$wget_output='';}
+				if ( (length($http_user)>0) && (length($http_pass)>0) )
+					{$wget_http = " --http-user=$http_user --http-password=$http_pass";}
+				$wget_cmd = "$wgetbin$wget_output$wget_http --output-document=$tempdir/$path_file $ivr_location";
+				if ($DBX > 0)
+					{print "$wget_cmd\n";}
+				`$wget_cmd `;
 				}
 			}
 		##### END standard audio lookup #####
@@ -1137,7 +1168,16 @@ sub select_format_loop
 				$rec_countB++;
 				if ($ftp_audio_transfer > 0)
 					{
-					`$wgetbin -q --output-document=$tempdir/$path_file $aryB[2] `;
+					$wget_output = " -q";
+					$wget_http = "";
+					if ($DBX > 0)
+						{$wget_output='';}
+					if ( (length($http_user)>0) && (length($http_pass)>0) )
+						{$wget_http = " --http-user=$http_user --http-password=$http_pass";}
+					$wget_cmd = "$wgetbin$wget_output$wget_http --output-document=$tempdir/$path_file $aryB[2]";
+					if ($DBX > 0)
+						{print "$wget_cmd\n";}
+					`$wget_cmd `;
 					}
 				}
 			$sthB->finish();
@@ -1188,7 +1228,16 @@ sub select_format_loop
 					$rec_countBR++;
 					if ($ftp_audio_transfer > 0)
 						{
-						`$wgetbin -q --output-document=$tempdir/$path_file $aryB[2] `;
+						$wget_output = " -q";
+						$wget_http = "";
+						if ($DBX > 0)
+							{$wget_output='';}
+						if ( (length($http_user)>0) && (length($http_pass)>0) )
+							{$wget_http = " --http-user=$http_user --http-password=$http_pass";}
+						$wget_cmd = "$wgetbin$wget_output$wget_http --output-document=$tempdir/$path_file $aryB[2]";
+						if ($DBX > 0)
+							{print "$wget_cmd\n";}
+						`$wget_cmd `;
 						}
 					}
 				$sthB->finish();
