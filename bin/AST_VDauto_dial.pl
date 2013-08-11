@@ -112,6 +112,7 @@
 # 121124-2249 - Added Other Campaign DNC option
 # 121129-1840 - Fix for issue #600
 # 130706-2024 - Added disable_auto_dial system option
+# 130811-1403 - Fix for issue #690
 #
 
 
@@ -2833,7 +2834,7 @@ while($one_day_interval > 0)
 											$NCUncurl_value='';
 											$NCUcamp_match=0;
 											$NCUcamp_loop=0;
-											while ( ($NCUcamp_match < 1) && ($NCUcamp_loop <= $NCUcamp_count) )
+											while ( ($NCUcamp_match < 1) && ($NCUcamp_loop <= $ncu_total_count) )
 												{
 												if ( ($NCUcampaign[$vle_count] =~ /$NCUcamp_id[$NCUcamp_loop]/i) && (length($NCUcampaign[$vle_count]) == length($NCUcamp_id[$NCUcamp_loop])) )
 													{

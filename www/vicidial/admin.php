@@ -6339,7 +6339,7 @@ if ($ADD==99999)
 	<BR>
 	<A NAME="inbound_groups-no_agent_no_queue">
 	<BR>
-	<B>No Agents No Queueing -</B> If this field is set to Y or NO_PAUSED then no calls will be put into the queue for this in-group if there are no agents logged in and the calls will go to the No Agent No Queue Action. The NO_PAUSED option will also not send the callers into the queue if there are only paused agents in the in-group. Default is N. In an AGENTDIRECT in-group, setting this to AGENTVMAIL will select the User voicemail ID to use. You can also put AGENTEXT in this field if it is set to EXTENSION and the system will look up the user custom five field and send the call to that dialplan number.
+	<B>No Agents No Queueing -</B> If this field is set to Y or NO_PAUSED then no calls will be put into the queue for this in-group if there are no agents logged in and the calls will go to the No Agent No Queue Action. The NO_PAUSED option will also not send the callers into the queue if there are only paused agents in the in-group. Default is N. In an AGENTDIRECT in-group, setting this to AGENTVMAIL will select the User voicemail ID to use. You can also put AGENTEXT in this field if it is set to EXTENSION and the system will look up the user custom five field and send the call to that dialplan number. If set to N, the calls will queue up, even if there are no agents logged in and set to take calls from this in-group.
 
 	<BR>
 	<A NAME="inbound_groups-no_agent_action">
