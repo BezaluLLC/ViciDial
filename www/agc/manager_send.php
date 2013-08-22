@@ -125,8 +125,8 @@ $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=119;
 $one_mysql_log=0;
 
-require("dbconnect_mysqli.php");
-require("functions.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 ### These are variable assignments for PHP globals off
 if (isset($_GET["user"]))					{$user=$_GET["user"];}

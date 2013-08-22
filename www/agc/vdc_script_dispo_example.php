@@ -22,8 +22,8 @@
 $version = '2.8-5';
 $build = '130802-1036';
 
-require("dbconnect_mysqli.php");
-require("functions.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 
 # Configuration settings-

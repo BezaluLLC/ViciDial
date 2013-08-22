@@ -408,16 +408,17 @@
 # 130705-1439 - Added optional encrypted passwords compatibility
 # 130718-0745 - Added recording_filename to dispo_call_url
 # 130802-1134 - Changed to PHP mysqli functions
+# 130822-0656 - Changed all require to require_once in agc directory for PHP backward compatibility
 #
 
-$version = '2.8-377c';
-$build = '130802-1134';
+$version = '2.8-378c';
+$build = '130822-0656';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
 
-require("dbconnect_mysqli.php");
-require("functions.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 if (isset($_GET["DB"]))						    {$DB=$_GET["DB"];}
         elseif (isset($_POST["DB"]))            {$DB=$_POST["DB"];}
@@ -579,7 +580,7 @@ $SIDEBAR_COLOR			= '#F6F6F6';
 #   see the options-example.php file for more information
 if (file_exists('options.php'))
 	{
-	require('options.php');
+	require_once('options.php');
 	}
 
 ### BEGIN find any custom field labels ###

@@ -10,7 +10,7 @@
 # 130802-0957 - Changed to PHP mysqli functions
 #
 
-require("functions.php");
+require_once("functions.php");
 
 function audit_comments($lead_id,$list_id,$format,$user,$mel,$NOW_TIME,$link,$server_ip,$session_name,$one_mysql_log,$campaign) {
     $audit_comments_active=audit_comments_active($list_id,$format,$user,$mel,$NOW_TIME,$link,$server_ip,$session_name,$one_mysql_log);

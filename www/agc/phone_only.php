@@ -20,8 +20,8 @@ $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=73;
 $one_mysql_log=0;
 
-require("dbconnect_mysqli.php");
-require("functions.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 if (isset($_GET["DB"]))						    {$DB=$_GET["DB"];}
         elseif (isset($_POST["DB"]))            {$DB=$_POST["DB"];}
@@ -137,7 +137,7 @@ $SIDEBAR_COLOR			= '#F6F6F6';
 #   see the options-example.php file for more information
 if (file_exists('options.php'))
 	{
-	require('options.php');
+	require_once('options.php');
 	}
 
 $US='_';

@@ -88,8 +88,8 @@ $stage=preg_replace("/[^0-9a-zA-Z]/","",$stage);
 $commit=preg_replace("/[^0-9a-zA-Z]/","",$commit);
 $referrer=preg_replace("/[^0-9a-zA-Z]/","",$referrer);
 
-require("dbconnect_mysqli.php");
-require("functions.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####

@@ -40,8 +40,8 @@ $api_script = 'deactivate';
 
 header ("Content-type: text/html; charset=utf-8");
 
-require("dbconnect_mysqli.php");
-require("functions.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 $filedate = date("Ymd");
 $filetime = date("H:i:s");

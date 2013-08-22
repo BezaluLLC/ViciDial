@@ -20,8 +20,8 @@
 $version = '2.8-5';
 $build = '130802-1037';
 
-require("dbconnect_mysqli.php");
-require("functions.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 
 if (isset($_POST["lead_id"]))	{$lead_id=$_POST["lead_id"];}

@@ -75,8 +75,8 @@ $build = '130802-1000';
 
 $startMS = microtime();
 
-require("dbconnect_mysqli.php");
-require("functions.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 $query_string = getenv("QUERY_STRING");
 

@@ -27,7 +27,7 @@
 $version = '2.8-13';
 $build = '130802-1033';
 
-require("dbconnect_mysqli.php");
+require_once("dbconnect_mysqli.php");
 require_once("functions.php");
 
 $bcrypt=1;

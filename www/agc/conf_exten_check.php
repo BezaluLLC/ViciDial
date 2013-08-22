@@ -70,8 +70,8 @@ $mysql_log_count=39;
 $one_mysql_log=0;
 $DB=0;
 
-require("dbconnect_mysqli.php");
-require("functions.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 $bcrypt=1;
 
