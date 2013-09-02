@@ -32,6 +32,7 @@
 # 130705-1805 - Added bp.pl script to the agc web dir
 # 130716-1025 - Added mtemp sounds directory for sox concatenated temp audio
 # 130805-0818 - Added support for mysqli
+# 130902-1149 - Small fix for mysqli support
 #
 
 ############################################
@@ -2639,6 +2640,7 @@ if ($PATHconf !~ /\/etc\/astguiclient.conf/)
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc/dbconnect_mysqli.php `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc/bp.pl `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/dbconnect.php `;
+	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/dbconnect_mysqli.php `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/listloader.pl `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/listloader_super.pl `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/listloader_rowdisplay.pl `;
