@@ -10,9 +10,10 @@
 # 90508-0644 - Changed to PHP long tags
 # 130610-1132 - Finalized changing of all ereg instances to preg
 # 130621-0720 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-2010 - Changed to mysqli PHP functions
 #
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -30,12 +31,12 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	}
 ##### END SETTINGS LOOKUP #####
@@ -63,14 +64,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -116,17 +117,17 @@ if ($reset_counter > 7)
 	$reset_counter=0;
 
 	$stmt="update park_log set status='HUNGUP' where hangup_time is not null;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 
 	if ($DB)
 		{	
 		$stmt="delete from park_log where status='TALKING' and grab_time < '$timeONEhoursAGO' and (hangup_time is null or hangup_time='');";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		 echo "$stmt\n";
 
 		$stmt="delete from park_log where status='PARKED' and parked_time < '$timeHALFhoursAGO' and (hangup_time is null or hangup_time='');";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		 echo "$stmt\n";
 
 		}
@@ -160,16 +161,16 @@ echo "+------------+-----------------+---------------------+---------+\n";
 # $linkX=mysql_connect("localhost", "cron", "1234");
 #mysql_select_db("asterisk");
 
-$stmt="select extension,user,channel,channel_group,parked_time,UNIX_TIMESTAMP(parked_time) from park_log where status ='PARKED' and server_ip='" . mysql_real_escape_string($server_ip) . "' order by uniqueid;";
-$rslt=mysql_query($stmt, $link);
+$stmt="select extension,user,channel,channel_group,parked_time,UNIX_TIMESTAMP(parked_time) from park_log where status ='PARKED' and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' order by uniqueid;";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$parked_to_print = mysql_num_rows($rslt);
+$parked_to_print = mysqli_num_rows($rslt);
 	if ($parked_to_print > 0)
 	{
 	$i=0;
 	while ($i < $parked_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 
 		$channel =			sprintf("%-10s", $row[2]);
 		$number_dialed =	sprintf("%-15s", $row[3]);
@@ -222,16 +223,16 @@ echo "| STATION    | USER   | CHANNEL    | GROUP           | START TIME         
 echo "+------------|--------+------------+-----------------+---------------------+---------+\n";
 
 
-$stmt="select extension,user,channel,channel_group,grab_time,UNIX_TIMESTAMP(grab_time) from park_log where status ='TALKING' and server_ip='" . mysql_real_escape_string($server_ip) . "' order by uniqueid;";
-$rslt=mysql_query($stmt, $link);
+$stmt="select extension,user,channel,channel_group,grab_time,UNIX_TIMESTAMP(grab_time) from park_log where status ='TALKING' and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' order by uniqueid;";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$talking_to_print = mysql_num_rows($rslt);
+$talking_to_print = mysqli_num_rows($rslt);
 	if ($talking_to_print > 0)
 	{
 	$i=0;
 	while ($i < $talking_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 
 		$extension =		sprintf("%-10s", $row[0]);
 		$user =				sprintf("%-6s", $row[1]);

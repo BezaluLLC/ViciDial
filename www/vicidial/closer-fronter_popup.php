@@ -12,9 +12,10 @@
 # 120223-2124 - Removed logging of good login passwords if webroot writable is enabled
 # 130610-1115 - Finalized changing of all ereg instances to preg
 # 130620-0824 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-1933 - Changed to mysqli PHP functions
 #
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -104,12 +105,12 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$webroot_writable =				$row[1];
 	$SSoutbound_autodial_active =	$row[2];
@@ -164,8 +165,8 @@ if ($auth < 1)
 
 $stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "$stmt\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGfullname=$row[0];
 $fullname = $row[0];
 
@@ -233,9 +234,9 @@ else
 <?php 
 
 $stmt="SELECT count(*) from live_channels where server_ip='$server_ip' and channel='$customer_zap_channel'";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$row=mysql_fetch_row($rslt);
+$row=mysqli_fetch_row($rslt);
 $parked_count = $row[0];
 
 if ($parked_count > 0)
@@ -243,7 +244,7 @@ if ($parked_count > 0)
 
 #	$stmt="DELETE from parked_channels where server_ip='$server_ip' and parked_time='$parked_time' and channel='$channel' LIMIT 1";
 #	if ($DB) {echo "|$stmt|\n";}
-#	$rslt=mysql_query($stmt, $link);
+#	$rslt=mysql_to_mysqli($stmt, $link);
 
 	$DTqueryCID = "RZ$FILE_datetime$user";
 
@@ -256,30 +257,30 @@ if ($parked_count > 0)
 
 #	$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Monitor','$DTqueryCID','Channel: Zap/$channel','File: $filename','Callerid: $DTqueryCID','','','','','','','')";
 #	if ($DB) {echo "|$stmt|\n";}
-#	$rslt=mysql_query($stmt, $link);
+#	$rslt=mysql_to_mysqli($stmt, $link);
 
 	# Local/78600098@demo-6617,2
 
-	$stmt = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','" . mysql_real_escape_string($server_ip) . "','','Originate','$DTqueryCID','Channel: $local_DEF$conf_silent_prefix" . mysql_real_escape_string($session_id) . "$local_AMP$ext_context','Context: $ext_context','Exten: $recording_exten','Priority: 1','Callerid: " . mysql_real_escape_string($filename) . "','','','','','')";
+	$stmt = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','" . mysqli_real_escape_string($link, $server_ip) . "','','Originate','$DTqueryCID','Channel: $local_DEF$conf_silent_prefix" . mysqli_real_escape_string($link, $session_id) . "$local_AMP$ext_context','Context: $ext_context','Exten: $recording_exten','Priority: 1','Callerid: " . mysqli_real_escape_string($link, $filename) . "','','','','','')";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 
-	$stmt = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,filename,lead_id,user) values('Zap/" . mysql_real_escape_string($channel) . "','" . mysql_real_escape_string($server_ip) . "','SIP/" . mysql_real_escape_string($SIPexten) . "','$NOW_TIME','$STARTtime','" . mysql_real_escape_string($filename) . "','$lead_id','$user')";
+	$stmt = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,filename,lead_id,user) values('Zap/" . mysqli_real_escape_string($link, $channel) . "','" . mysqli_real_escape_string($link, $server_ip) . "','SIP/" . mysqli_real_escape_string($link, $SIPexten) . "','$NOW_TIME','$STARTtime','" . mysqli_real_escape_string($link, $filename) . "','$lead_id','$user')";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 
-	$stmt="SELECT recording_id FROM recording_log where filename='" . mysql_real_escape_string($filename) . "'";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="SELECT recording_id FROM recording_log where filename='" . mysqli_real_escape_string($link, $filename) . "'";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$recording_id = $row[0];
 
 	echo "Recording command sent for channel $channel - $filename - $recording_id &nbsp; &nbsp; &nbsp; $NOW_TIME\n<BR><BR>\n";
 
-	$stmt="SELECT full_name from vicidial_users where user='" . mysql_real_escape_string($user) . "'";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="SELECT full_name from vicidial_users where user='" . mysqli_real_escape_string($link, $user) . "'";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$full_name = $row[0];
 
 	echo "Call Referred by: $user - $full_name\n<BR><BR>\n";
@@ -295,7 +296,7 @@ if ($parked_count > 0)
 #		$fp = fopen ("./closer_SQL_updates.txt", "a");
 #		fwrite ($fp, "$date|$user|$stmt|\n");
 #		fclose($fp);
-#	$rslt=mysql_query($stmt, $link);
+#	$rslt=mysql_to_mysqli($stmt, $link);
 
 ###########################################################################################
 ####### HERE IS WHERE YOU DEFINE DIFFERENT CONTENTS DEPENDING UPON THE CHANNEL_GROUP PREFIX 
@@ -304,10 +305,10 @@ if (preg_match('/CL_TEST/i',$channel_group))
 	{
 	echo "GALLERIA TEST CLOSER GROUP: $channel_group\n";
 
-	$stmt="SELECT user,phone_number from vicidial_list where lead_id='" . mysql_real_escape_string($parked_by) . "';";
+	$stmt="SELECT user,phone_number from vicidial_list where lead_id='" . mysqli_real_escape_string($link, $parked_by) . "';";
 		if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$fronter=$row[0];
 	$search_phone=$row[1];
 
@@ -339,10 +340,10 @@ if ( (preg_match('/CL_MWCOF/i',$channel_group)) or (preg_match('/MWCOF/i',$group
 	{
 	echo "BUYERS EDGE INTERNAL CLOSER GROUP: $channel_group\n";
 
-	$stmt="SELECT user,phone_number from vicidial_list where lead_id='" . mysql_real_escape_string($parked_by) . "';";
+	$stmt="SELECT user,phone_number from vicidial_list where lead_id='" . mysqli_real_escape_string($link, $parked_by) . "';";
 		if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$fronter=$row[0];
 	$search_phone=$row[1];
 

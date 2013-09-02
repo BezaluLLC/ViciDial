@@ -16,11 +16,12 @@
 # 130414-0110 - Added report logging
 # 130610-1008 - Finalized changing of all ereg instances to preg
 # 130621-0747 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130902-0730 - Changed to mysqli PHP functions
 #
 
 $startMS = microtime();
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 if (file_exists('options.php'))
@@ -66,12 +67,12 @@ if ($ignore_afterhours=="checked") {$status_clause=" and status!='AFTHRS'";}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
@@ -102,14 +103,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -157,29 +158,29 @@ $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $file_download, $report_display_type|', url='$LOGfull_url';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=1;
 	$db_source = 'S';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {$MAIN.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGuser_group =			$row[0];
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {$MAIN.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
 $LOGallowed_reports =			$row[1];
 $LOGadmin_viewable_groups =		$row[2];
@@ -216,13 +217,13 @@ if ($IDR_calltime_available==1)
 		}
 
 	$stmt="select call_time_id,call_time_name from vicidial_call_times $whereLOGadmin_viewable_call_timesSQL order by call_time_id;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
-	$times_to_print = mysql_num_rows($rslt);
+	$times_to_print = mysqli_num_rows($rslt);
 	$i=0;
 	while ($i < $times_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$call_times[$i] =		$row[0];
 		$call_time_names[$i] =	$row[1];
 		$i++;
@@ -260,14 +261,14 @@ for ($i=0; $i<$groups_selected; $i++)
 	}
 
 $stmt="select group_id,group_name from vicidial_inbound_groups $whereLOGadmin_viewable_groupsSQL order by group_id;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$groups_to_print = mysql_num_rows($rslt);
+$groups_to_print = mysqli_num_rows($rslt);
 $i=0;
 $groups_string='|';
 while ($i < $groups_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$groups[$i] =		$row[0];
 	$group_names[$i] =	$row[1];
 	$groups_string .= "$groups[$i]|";
@@ -282,13 +283,13 @@ $groups_selected_str=preg_replace('/, $/', '', $groups_selected_str);
 $group_name_str=preg_replace('/, $/', '', $group_name_str);
 
 $stmt="select call_time_id,call_time_name from vicidial_call_times $whereLOGadmin_viewable_call_timesSQL order by call_time_id;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$times_to_print = mysql_num_rows($rslt);
+$times_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $times_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$call_times[$i] =		$row[0];
 	$call_time_names[$i] =	$row[1];
 	$i++;
@@ -406,8 +407,8 @@ else
 		# call_time_id | call_time_name              | call_time_comments | ct_default_start | ct_default_stop | ct_sunday_start | ct_sunday_stop | ct_monday_start | ct_monday_stop | ct_tuesday_start | ct_tuesday_stop | ct_wednesday_start | ct_wednesday_stop | ct_thursday_start | ct_thursday_stop | ct_friday_start | ct_friday_stop | ct_saturday_start | ct_saturday_stop
 		$big_shift_time_SQL_clause ="";
 		$shift_stmt="select * from vicidial_call_times where call_time_id='$shift'";
-		$shift_rslt=mysql_query($shift_stmt, $link);
-		$shift_row=mysql_fetch_array($shift_rslt);
+		$shift_rslt=mysql_to_mysqli($shift_stmt, $link);
+		$shift_row=mysqli_fetch_array($shift_rslt);
 		$default_start_time=substr("0000".$shift_row["ct_default_start"], -4);
 		$default_stop_time=substr("0000".$shift_row["ct_default_stop"], -4);
 		$ct_default_start=substr($default_start_time,0,2).":".substr($default_start_time,2,2).":00";
@@ -426,8 +427,8 @@ else
 			$ct_sunday_stop=1;
 		}
 		$stop_time_stmt="select TIMEDIFF('$ct_sunday_stop', 1)";  # subtract one second - don't allow the actual final time - this can cause an extra row to print
-		$stop_time_rslt=mysql_query($stop_time_stmt, $link);
-		$strow=mysql_fetch_row($stop_time_rslt);
+		$stop_time_rslt=mysql_to_mysqli($stop_time_stmt, $link);
+		$strow=mysqli_fetch_row($stop_time_rslt);
 		$ct_sunday_stop=$strow[0];
 		$start_time_ary[0]=$ct_sunday_start;
 		$stop_time_ary[0]=$ct_sunday_stop;
@@ -446,8 +447,8 @@ else
 			$ct_monday_stop=1;
 		}
 		$stop_time_stmt="select TIMEDIFF('$ct_monday_stop', 1)";  # subtract one second - don't allow the actual final time - this can cause an extra row to print
-		$stop_time_rslt=mysql_query($stop_time_stmt, $link);
-		$strow=mysql_fetch_row($stop_time_rslt);
+		$stop_time_rslt=mysql_to_mysqli($stop_time_stmt, $link);
+		$strow=mysqli_fetch_row($stop_time_rslt);
 		$ct_monday_stop=$strow[0];
 		$start_time_ary[1]=$ct_monday_start;
 		$stop_time_ary[1]=$ct_monday_stop;
@@ -466,8 +467,8 @@ else
 			$ct_tuesday_stop=1;
 		}
 		$stop_time_stmt="select TIMEDIFF('$ct_tuesday_stop', 1)";  # subtract one second - don't allow the actual final time - this can cause an extra row to print
-		$stop_time_rslt=mysql_query($stop_time_stmt, $link);
-		$strow=mysql_fetch_row($stop_time_rslt);
+		$stop_time_rslt=mysql_to_mysqli($stop_time_stmt, $link);
+		$strow=mysqli_fetch_row($stop_time_rslt);
 		$ct_tuesday_stop=$strow[0];
 		$start_time_ary[2]=$ct_tuesday_start;
 		$stop_time_ary[2]=$ct_tuesday_stop;
@@ -486,8 +487,8 @@ else
 			$ct_wednesday_stop=1;
 		}
 		$stop_time_stmt="select TIMEDIFF('$ct_wednesday_stop', 1)";  # subtract one second - don't allow the actual final time - this can cause an extra row to print
-		$stop_time_rslt=mysql_query($stop_time_stmt, $link);
-		$strow=mysql_fetch_row($stop_time_rslt);
+		$stop_time_rslt=mysql_to_mysqli($stop_time_stmt, $link);
+		$strow=mysqli_fetch_row($stop_time_rslt);
 		$ct_wednesday_stop=$strow[0];
 		$start_time_ary[3]=$ct_wednesday_start;
 		$stop_time_ary[3]=$ct_wednesday_stop;
@@ -506,8 +507,8 @@ else
 			$ct_thursday_stop=1;
 		}
 		$stop_time_stmt="select TIMEDIFF('$ct_thursday_stop', 1)";  # subtract one second - don't allow the actual final time - this can cause an extra row to print
-		$stop_time_rslt=mysql_query($stop_time_stmt, $link);
-		$strow=mysql_fetch_row($stop_time_rslt);
+		$stop_time_rslt=mysql_to_mysqli($stop_time_stmt, $link);
+		$strow=mysqli_fetch_row($stop_time_rslt);
 		$ct_thursday_stop=$strow[0];
 		$start_time_ary[4]=$ct_thursday_start;
 		$stop_time_ary[4]=$ct_thursday_stop;
@@ -526,8 +527,8 @@ else
 			$ct_friday_stop=1;
 		}
 		$stop_time_stmt="select TIMEDIFF('$ct_friday_stop', 1)";  # subtract one second - don't allow the actual final time - this can cause an extra row to print
-		$stop_time_rslt=mysql_query($stop_time_stmt, $link);
-		$strow=mysql_fetch_row($stop_time_rslt);
+		$stop_time_rslt=mysql_to_mysqli($stop_time_stmt, $link);
+		$strow=mysqli_fetch_row($stop_time_rslt);
 		$ct_friday_stop=$strow[0];
 		$start_time_ary[5]=$ct_friday_start;
 		$stop_time_ary[5]=$ct_friday_stop;
@@ -546,16 +547,16 @@ else
 			$ct_saturday_stop=1;
 		}
 		$stop_time_stmt="select TIMEDIFF('$ct_saturday_stop', 1)";  # subtract one second - don't allow the actual final time - this can cause an extra row to print
-		$stop_time_rslt=mysql_query($stop_time_stmt, $link);
-		$strow=mysql_fetch_row($stop_time_rslt);
+		$stop_time_rslt=mysql_to_mysqli($stop_time_stmt, $link);
+		$strow=mysqli_fetch_row($stop_time_rslt);
 		$ct_saturday_stop=$strow[0];
 		$start_time_ary[6]=$ct_saturday_start;
 		$stop_time_ary[6]=$ct_saturday_stop;
 		$big_shift_time_SQL_clause.="(date_format(call_date, '%w')=6 and date_format(call_date, '%H:%i:%s')>='$ct_saturday_start' and date_format(call_date, '%H:%i:%s')<='$ct_saturday_stop') or ";
 
 		$query_time_stmt="select date_format('$query_date', '%w'), date_format('$end_date', '%w')";
-		$query_time_rslt=mysql_query($query_time_stmt, $link);
-		$qrow=mysql_fetch_row($query_time_rslt);
+		$query_time_rslt=mysql_to_mysqli($query_time_stmt, $link);
+		$qrow=mysqli_fetch_row($query_time_rslt);
 		$time_BEGIN=$start_time_ary[$qrow[0]];
 		$time_END=$stop_time_ary[$qrow[0]];
 		#$time_BEGIN="00:00:00"; # Need this so the $SQepoch value can be tweaked per day (i.e. only adding the hours for the start time);
@@ -601,17 +602,17 @@ else
 	if ($show_disposition_statuses) {
 		$dispo_stmt="select distinct status from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id in (" . $groups_selected_str . ") $big_shift_time_SQL_clause order by status;";
 		#echo $dispo_stmt."<BR>";
-		$dispo_rslt=mysql_query($dispo_stmt, $link);
+		$dispo_rslt=mysql_to_mysqli($dispo_stmt, $link);
 		$dispo_str="";
 		$s=0;
-		while($dispo_row=mysql_fetch_row($dispo_rslt)) {
+		while($dispo_row=mysqli_fetch_row($dispo_rslt)) {
 			$status_array[$s][0]="$dispo_row[0]";
 			$status_array[$s][1]="";
 			$dispo_str.="'$dispo_row[0]',";
 			$stat_stmt="select distinct status, status_name from vicidial_statuses where status='$dispo_row[0]' UNION select distinct status, status_name from vicidial_campaign_statuses where status='$dispo_row[0]' order by status;";
 			#echo $stat_stmt."<BR>";
-			$stat_rslt=mysql_query($stat_stmt, $link);
-			while ($stat_row=mysql_fetch_array($stat_rslt)) {
+			$stat_rslt=mysql_to_mysqli($stat_stmt, $link);
+			while ($stat_row=mysqli_fetch_array($stat_rslt)) {
 				$status_array[$s][1]=$stat_row["status_name"];
 			}
 			$s++;
@@ -768,15 +769,15 @@ else
 
 	### GRAB ALL RECORDS WITHIN RANGE FROM THE DATABASE ###
 	$stmt="select queue_seconds,UNIX_TIMESTAMP(call_date),length_in_sec,status,term_reason,call_date,user from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id in (" . $groups_selected_str . ");";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$ASCII_text.="$stmt\n";}
-	$records_to_grab = mysql_num_rows($rslt);
+	$records_to_grab = mysqli_num_rows($rslt);
 	$i=0;
 	$fTOTAL_agents=array();
 	if($hourly_breakdown) {$epoch_interval=3600;} else {$epoch_interval=86400;}
 	while ($i < $records_to_grab)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$qs[$i] = $row[0];
 		$dt[$i] = 0;
 		$ut[$i] = ($row[1] - $SQepochDAY);
@@ -2279,10 +2280,10 @@ else
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	if ($file_download < 1) 
 		{echo "<!-- Switching back to Master server to log report run time $VARDB_server $db_source -->\n";}
 	}
@@ -2296,7 +2297,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 exit;
 

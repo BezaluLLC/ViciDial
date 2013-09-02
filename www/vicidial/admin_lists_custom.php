@@ -27,12 +27,13 @@
 # 130508-1020 - Added default field and length check validation, made errors appear in bold red text
 # 130606-0545 - Finalized changing of all ereg instances to preg
 # 130621-1736 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130902-0752 - Changed to mysqli PHP functions
 #
 
-$admin_version = '2.8-20';
-$build = '130621-1736';
+$admin_version = '2.8-21';
+$build = '130902-0752';
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -88,12 +89,12 @@ if (isset($_GET["SUBMIT"]))						{$SUBMIT=$_GET["SUBMIT"];}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,custom_fields_enabled FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$webroot_writable =				$row[1];
 	$SSoutbound_autodial_active =	$row[2];
@@ -194,8 +195,8 @@ if ($auth < 1)
 
 $rights_stmt = "SELECT modify_leads from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
-$rights_rslt=mysql_query($rights_stmt, $link);
-$rights_row=mysql_fetch_row($rights_rslt);
+$rights_rslt=mysql_to_mysqli($rights_stmt, $link);
+$rights_row=mysqli_fetch_row($rights_rslt);
 $modify_leads =		$rights_row[0];
 
 # check their permissions
@@ -207,8 +208,8 @@ if ( $modify_leads < 1 )
 	}
 
 $stmt="SELECT full_name,modify_leads,custom_fields_modify,user_level from vicidial_users where user='$PHP_AUTH_USER';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGfullname =				$row[0];
 $LOGmodify_leads =			$row[1];
 $LOGcustom_fields_modify =	$row[2];
@@ -408,13 +409,13 @@ if ($action == "COPY_FIELDS_FORM")
 	{
 	##### get lists listing for dynamic pulldown
 	$stmt="SELECT list_id,list_name from vicidial_lists order by list_id";
-	$rsltx=mysql_query($stmt, $link);
-	$lists_to_print = mysql_num_rows($rsltx);
+	$rsltx=mysql_to_mysqli($stmt, $link);
+	$lists_to_print = mysqli_num_rows($rsltx);
 	$lists_list='';
 	$o=0;
 	while ($lists_to_print > $o)
 		{
-		$rowx=mysql_fetch_row($rsltx);
+		$rowx=mysqli_fetch_row($rsltx);
 		$lists_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 		$o++;
 		}
@@ -454,33 +455,40 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 	else
 		{
 		$table_exists=0;
-		$linkCUSTOM=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
-		if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysql_error());}
-		mysql_select_db("$VARDB_database", $linkCUSTOM);
+		#$linkCUSTOM=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
+
+		$linkCUSTOM=mysqli_connect("$VARDB_server", "$VARDB_custom_user", "$VARDB_custom_pass", "$VARDB_database", "$VARDB_port");
+		if (!$linkCUSTOM) 
+			{
+			die('MySQL connect ERROR: ' . mysqli_error($linkCUSTOM));
+			}
+
+		# if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysqli_error());}
+		#mysql_select_db("$VARDB_database", $linkCUSTOM);
 
 		$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$source_list_id';";
 		if ($DB>0) {echo "$stmt";}
-		$rslt=mysql_query($stmt, $link);
-		$fieldscount_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$fieldscount_to_print = mysqli_num_rows($rslt);
 		if ($fieldscount_to_print > 0) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$source_field_exists =	$rowx[0];
 			}
 		
 		$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id';";
 		if ($DB>0) {echo "$stmt";}
-		$rslt=mysql_query($stmt, $link);
-		$fieldscount_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$fieldscount_to_print = mysqli_num_rows($rslt);
 		if ($fieldscount_to_print > 0) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$field_exists =	$rowx[0];
 			}
 		
 		$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
-		$rslt=mysql_query($stmt, $link);
-		$tablecount_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$tablecount_to_print = mysqli_num_rows($rslt);
 		if ($tablecount_to_print > 0) 
 			{$table_exists =	1;}
 		if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
@@ -496,13 +504,13 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 				if ($table_exists > 0)
 					{
 					$stmt="SELECT field_id,field_label from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
-					$rslt=mysql_query($stmt, $link);
-					$fields_to_print = mysql_num_rows($rslt);
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$fields_to_print = mysqli_num_rows($rslt);
 					$fields_list='';
 					$o=0;
 					while ($fields_to_print > $o) 
 						{
-						$rowx=mysql_fetch_row($rslt);
+						$rowx=mysqli_fetch_row($rslt);
 						$A_field_id[$o] =			$rowx[0];
 						$A_field_label[$o] =		$rowx[1];
 						$o++;
@@ -525,13 +533,13 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 				{
 				if ($DB > 0) {echo "Starting APPEND copy\n<BR>";}
 				$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$source_list_id' order by field_rank,field_order,field_label;";
-				$rslt=mysql_query($stmt, $link);
-				$fields_to_print = mysql_num_rows($rslt);
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$fields_to_print = mysqli_num_rows($rslt);
 				$fields_list='';
 				$o=0;
 				while ($fields_to_print > $o) 
 					{
-					$rowx=mysql_fetch_row($rslt);
+					$rowx=mysqli_fetch_row($rslt);
 					$A_field_id[$o] =			$rowx[0];
 					$A_field_label[$o] =		$rowx[1];
 					$A_field_name[$o] =			$rowx[2];
@@ -561,11 +569,11 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 						{
 						$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id' and field_label='$A_field_label[$o]';";
 						if ($DB>0) {echo "$stmt";}
-						$rslt=mysql_query($stmt, $link);
-						$fieldscount_to_print = mysql_num_rows($rslt);
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$fieldscount_to_print = mysqli_num_rows($rslt);
 						if ($fieldscount_to_print > 0) 
 							{
-							$rowx=mysql_fetch_row($rslt);
+							$rowx=mysqli_fetch_row($rslt);
 							$new_field_exists =	$rowx[0];
 							}
 						}
@@ -594,13 +602,13 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 				else
 					{
 					$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$source_list_id' order by field_rank,field_order,field_label;";
-					$rslt=mysql_query($stmt, $link);
-					$fields_to_print = mysql_num_rows($rslt);
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$fields_to_print = mysqli_num_rows($rslt);
 					$fields_list='';
 					$o=0;
 					while ($fields_to_print > $o) 
 						{
-						$rowx=mysql_fetch_row($rslt);
+						$rowx=mysqli_fetch_row($rslt);
 						$A_field_id[$o] =			$rowx[0];
 						$A_field_label[$o] =		$rowx[1];
 						$A_field_name[$o] =			$rowx[2];
@@ -625,11 +633,11 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 						{
 						$stmt="SELECT field_id from vicidial_lists_fields where list_id='$list_id' and field_label='$A_field_label[$o]';";
 						if ($DB>0) {echo "$stmt";}
-						$rslt=mysql_query($stmt, $link);
-						$fieldscount_to_print = mysql_num_rows($rslt);
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$fieldscount_to_print = mysqli_num_rows($rslt);
 						if ($fieldscount_to_print > 0) 
 							{
-							$rowx=mysql_fetch_row($rslt);
+							$rowx=mysqli_fetch_row($rslt);
 							$current_field_id =	$rowx[0];
 
 							### modify field function
@@ -658,17 +666,17 @@ if ( ($action == "DELETE_CUSTOM_FIELD_CONFIRMATION") and ($list_id > 99) and ($f
 	{
 	$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id' and field_label='$field_label';";
 	if ($DB>0) {echo "$stmt";}
-	$rslt=mysql_query($stmt, $link);
-	$fieldscount_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$fieldscount_to_print = mysqli_num_rows($rslt);
 	if ($fieldscount_to_print > 0) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$field_exists =	$rowx[0];
 		}
 	
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
-	$rslt=mysql_query($stmt, $link);
-	$tablecount_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$tablecount_to_print = mysqli_num_rows($rslt);
 	if ($tablecount_to_print > 0) 
 		{$table_exists =	1;}
 	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
@@ -697,23 +705,29 @@ if ( ($action == "DELETE_CUSTOM_FIELD_CONFIRMATION") and ($list_id > 99) and ($f
 if ( ($action == "DELETE_CUSTOM_FIELD") and ($list_id > 99) and ($field_id > 0) and (strlen($field_label) > 0) and ($ConFiRm=='YES') )
 	{
 	$table_exists=0;
-	$linkCUSTOM=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
-	if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysql_error());}
-	mysql_select_db("$VARDB_database", $linkCUSTOM);
+	#$linkCUSTOM=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
+	#if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysqli_error());}
+	#mysql_select_db("$VARDB_database", $linkCUSTOM);
+
+	$linkCUSTOM=mysqli_connect("$VARDB_server", "$VARDB_custom_user", "$VARDB_custom_pass", "$VARDB_database", "$VARDB_port");
+	if (!$linkCUSTOM) 
+		{
+		die('MySQL connect ERROR: ' . mysqli_error($linkCUSTOM));
+		}
 
 	$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id' and field_label='$field_label';";
 	if ($DB>0) {echo "$stmt";}
-	$rslt=mysql_query($stmt, $link);
-	$fieldscount_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$fieldscount_to_print = mysqli_num_rows($rslt);
 	if ($fieldscount_to_print > 0) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$field_exists =	$rowx[0];
 		}
 	
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
-	$rslt=mysql_query($stmt, $link);
-	$tablecount_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$tablecount_to_print = mysqli_num_rows($rslt);
 	if ($tablecount_to_print > 0) 
 		{$table_exists =	1;}
 	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
@@ -746,11 +760,11 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 	{
 	$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id' and field_label='$field_label';";
 	if ($DB>0) {echo "$stmt";}
-	$rslt=mysql_query($stmt, $link);
-	$fieldscount_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$fieldscount_to_print = mysqli_num_rows($rslt);
 	if ($fieldscount_to_print > 0) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$field_exists =	$rowx[0];
 		}
 	
@@ -794,13 +808,19 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 					else
 						{
 						$table_exists=0;
-						$linkCUSTOM=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
-						if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysql_error());}
-						mysql_select_db("$VARDB_database", $linkCUSTOM);
+						#$linkCUSTOM=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
+						#if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysqli_error());}
+						#mysql_select_db("$VARDB_database", $linkCUSTOM);
+
+						$linkCUSTOM=mysqli_connect("$VARDB_server", "$VARDB_custom_user", "$VARDB_custom_pass", "$VARDB_database", "$VARDB_port");
+						if (!$linkCUSTOM) 
+							{
+							die('MySQL connect ERROR: ' . mysqli_error($linkCUSTOM));
+							}
 
 						$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
-						$rslt=mysql_query($stmt, $link);
-						$tablecount_to_print = mysql_num_rows($rslt);
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$tablecount_to_print = mysqli_num_rows($rslt);
 						if ($tablecount_to_print > 0) 
 							{$table_exists =	1;}
 						if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
@@ -829,23 +849,30 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 if ( ($action == "MODIFY_CUSTOM_FIELD_SUBMIT") and ($list_id > 99) and ($field_id > 0) )
 	{
 	### connect to your vtiger database
-	$linkCUSTOM=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
-	if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysql_error());}
-	mysql_select_db("$VARDB_database", $linkCUSTOM);
+	#$linkCUSTOM=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
+	#if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysqli_error());}
+	#mysql_select_db("$VARDB_database", $linkCUSTOM);
+
+	$linkCUSTOM=mysqli_connect("$VARDB_server", "$VARDB_custom_user", "$VARDB_custom_pass", "$VARDB_database", "$VARDB_port");
+	if (!$linkCUSTOM) 
+		{
+		die('MySQL connect ERROR: ' . mysqli_error($linkCUSTOM));
+		}
+
 
 	$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id' and field_id='$field_id';";
 	if ($DB>0) {echo "$stmt";}
-	$rslt=mysql_query($stmt, $link);
-	$fieldscount_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$fieldscount_to_print = mysqli_num_rows($rslt);
 	if ($fieldscount_to_print > 0) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$field_exists =	$rowx[0];
 		}
 	
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
-	$rslt=mysql_query($stmt, $link);
-	$tablecount_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$tablecount_to_print = mysqli_num_rows($rslt);
 	if ($tablecount_to_print > 0) 
 		{$table_exists =	1;}
 	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
@@ -911,8 +938,8 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 
 	$custom_records_count=0;
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
-	$rslt=mysql_query($stmt, $link);
-	$tablecount_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$tablecount_to_print = mysqli_num_rows($rslt);
 	if ($tablecount_to_print > 0) 
 		{$table_exists =	1;}
 	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
@@ -921,11 +948,11 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		{
 		$stmt="SELECT count(*) from custom_$list_id;";
 		if ($DB>0) {echo "$stmt";}
-		$rslt=mysql_query($stmt, $link);
-		$fieldscount_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$fieldscount_to_print = mysqli_num_rows($rslt);
 		if ($fieldscount_to_print > 0) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$custom_records_count =	$rowx[0];
 			}
 		}
@@ -936,13 +963,13 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
 
 	$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
-	$rslt=mysql_query($stmt, $link);
-	$fields_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$fields_to_print = mysqli_num_rows($rslt);
 	$fields_list='';
 	$o=0;
 	while ($fields_to_print > $o) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$A_field_id[$o] =			$rowx[0];
 		$A_field_label[$o] =		$rowx[1];
 		$A_field_name[$o] =			$rowx[2];
@@ -1371,12 +1398,12 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 if ($action == "LIST")
 	{
 	$stmt="SELECT list_id,list_name,active,campaign_id from vicidial_lists order by list_id;";
-	$rslt=mysql_query($stmt, $link);
-	$lists_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$lists_to_print = mysqli_num_rows($rslt);
 	$o=0;
 	while ($lists_to_print > $o) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$A_list_id[$o] =		$rowx[0];
 		$A_list_name[$o] =		$rowx[1];
 		$A_active[$o] =			$rowx[2];
@@ -1401,11 +1428,11 @@ if ($action == "LIST")
 		$A_list_fields_count[$o]=0;
 		$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$A_list_id[$o]';";
 		if ($DB>0) {echo "$stmt";}
-		$rslt=mysql_query($stmt, $link);
-		$fieldscount_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$fieldscount_to_print = mysqli_num_rows($rslt);
 		if ($fieldscount_to_print > 0) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$A_list_fields_count[$o] =	$rowx[0];
 			}
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
@@ -1440,8 +1467,8 @@ if ($action == "ADMIN_LOG")
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		$stmt="SELECT admin_log_id,event_date,user,ip_address,event_section,event_type,record_id,event_code from vicidial_admin_log where event_section='CUSTOM_FIELDS' and record_id='$list_id' order by event_date desc limit 10000;";
-		$rslt=mysql_query($stmt, $link);
-		$logs_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$logs_to_print = mysqli_num_rows($rslt);
 
 		echo "<br>ADMIN CHANGE LOG: Section Records - $category - $stage\n";
 		echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
@@ -1461,7 +1488,7 @@ if ($action == "ADMIN_LOG")
 		$o=0;
 		while ($logs_to_print > $o)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 
 			if (preg_match('/USER|AGENT/i', $row[4])) {$record_link = "ADD=3&user=$row[6]";}
 			if (preg_match('/CAMPAIGN/i', $row[4])) {$record_link = "ADD=31&campaign_id=$row[6]";}
@@ -1541,8 +1568,8 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 	{
 	$table_exists=0;
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
-	$rslt=mysql_query($stmt, $link);
-	$tablecount_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$tablecount_to_print = mysqli_num_rows($rslt);
 	if ($tablecount_to_print > 0) 
 		{$table_exists =	1;}
 	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
@@ -1634,17 +1661,17 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 	else
 		{
 		$stmtCUSTOM="$field_sql";
-		$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
-		$table_update = mysql_affected_rows($linkCUSTOM);
+		$rsltCUSTOM=mysql_to_mysqli($stmtCUSTOM, $linkCUSTOM);
+		$table_update = mysqli_affected_rows($linkCUSTOM);
 		if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
-		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysql_error());}
+		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysqli_error());}
 		}
 
 	$stmt="INSERT INTO vicidial_lists_fields set field_label='$field_label',field_name='$field_name',field_description='$field_description',field_rank='$field_rank',field_help='$field_help',field_type='$field_type',field_options='$field_options',field_size='$field_size',field_max='$field_max',field_default='$field_default',field_required='$field_required',field_cost='$field_cost',list_id='$list_id',multi_position='$multi_position',name_position='$name_position',field_order='$field_order';";
-	$rslt=mysql_query($stmt, $link);
-	$field_update = mysql_affected_rows($link);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$field_update = mysqli_affected_rows($link);
 	if ($DB) {echo "$field_update|$stmt\n";}
-	if (!$rslt) {echo('Could not execute: ' . mysql_error());}
+	if (!$rslt) {echo('Could not execute: ' . mysqli_error());}
 
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|$stmtCUSTOM";
@@ -1652,7 +1679,7 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 	$SQL_log = addslashes($SQL_log);
 	$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$user', ip_address='$ip', event_section='CUSTOM_FIELDS', event_type='ADD', record_id='$list_id', event_code='ADMIN ADD CUSTOM LIST FIELD', event_sql=\"$SQL_log\", event_notes='';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	}
 ##### END add field function
 
@@ -1671,8 +1698,8 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 		{
 		$stmt="SHOW COLUMNS from custom_$list_id LIKE '$field_label';";
 		if ($DB>0) {echo "$stmt";}
-		$rslt=mysql_query($stmt, $link);
-		$field_db_exists = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$field_db_exists = mysqli_num_rows($rslt);
 		}
 	if ($field_db_exists > 0)
 		{$field_sql = "ALTER TABLE custom_$list_id MODIFY $field_label ";}
@@ -1756,17 +1783,17 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 	else
 		{
 		$stmtCUSTOM="$field_sql";
-		$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
-		$field_update = mysql_affected_rows($linkCUSTOM);
+		$rsltCUSTOM=mysql_to_mysqli($stmtCUSTOM, $linkCUSTOM);
+		$field_update = mysqli_affected_rows($linkCUSTOM);
 		if ($DB) {echo "$field_update|$stmtCUSTOM\n";}
-		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysql_error());}
+		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysqli_error());}
 		}
 
 	$stmt="UPDATE vicidial_lists_fields set field_label='$field_label',field_name='$field_name',field_description='$field_description',field_rank='$field_rank',field_help='$field_help',field_type='$field_type',field_options='$field_options',field_size='$field_size',field_max='$field_max',field_default='$field_default',field_required='$field_required',field_cost='$field_cost',multi_position='$multi_position',name_position='$name_position',field_order='$field_order' where list_id='$list_id' and field_id='$field_id';";
-	$rslt=mysql_query($stmt, $link);
-	$field_update = mysql_affected_rows($link);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$field_update = mysqli_affected_rows($link);
 	if ($DB) {echo "$field_update|$stmt\n";}
-	if (!$rslt) {echo('Could not execute: ' . mysql_error());}
+	if (!$rslt) {echo('Could not execute: ' . mysqli_error());}
 
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|$stmtCUSTOM";
@@ -1774,7 +1801,7 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 	$SQL_log = addslashes($SQL_log);
 	$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$user', ip_address='$ip', event_section='CUSTOM_FIELDS', event_type='MODIFY', record_id='$list_id', event_code='ADMIN MODIFY CUSTOM LIST FIELD', event_sql=\"$SQL_log\", event_notes='';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	}
 ##### END modify field function
 
@@ -1793,17 +1820,17 @@ function delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 	else
 		{
 		$stmtCUSTOM="ALTER TABLE custom_$list_id DROP $field_label;";
-		$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
-		$table_update = mysql_affected_rows($linkCUSTOM);
+		$rsltCUSTOM=mysql_to_mysqli($stmtCUSTOM, $linkCUSTOM);
+		$table_update = mysqli_affected_rows($linkCUSTOM);
 		if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
-		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysql_error());}
+		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysqli_error());}
 		}
 
 	$stmt="DELETE FROM vicidial_lists_fields WHERE field_label='$field_label' and field_id='$field_id' and list_id='$list_id' LIMIT 1;";
-	$rslt=mysql_query($stmt, $link);
-	$field_update = mysql_affected_rows($link);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$field_update = mysqli_affected_rows($link);
 	if ($DB) {echo "$field_update|$stmt\n";}
-	if (!$rslt) {echo('Could not execute: ' . mysql_error());}
+	if (!$rslt) {echo('Could not execute: ' . mysqli_error());}
 
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|$stmtCUSTOM";
@@ -1811,6 +1838,6 @@ function delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 	$SQL_log = addslashes($SQL_log);
 	$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$user', ip_address='$ip', event_section='CUSTOM_FIELDS', event_type='DELETE', record_id='$list_id', event_code='ADMIN DELETE CUSTOM LIST FIELD', event_sql=\"$SQL_log\", event_notes='';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	}
 ##### END delete field function

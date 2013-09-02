@@ -12,11 +12,12 @@
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 # 130610-1107 - Finalized changing of all ereg instances to preg
 # 130616-1541 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-0840 - Changed to mysqli PHP functions
 #
 
 header ("Content-type: text/html; charset=utf-8");
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -56,12 +57,12 @@ if (isset($_GET["SUBMIT"]))						{$SUBMIT=$_GET["SUBMIT"];}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$webroot_writable =				$row[1];
 	$SSoutbound_autodial_active =	$row[2];
@@ -110,8 +111,8 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -139,24 +140,24 @@ else
 	}
 
 $stmt="SELECT full_name,modify_timeclock_log from vicidial_users where user='$PHP_AUTH_USER';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGfullname =				$row[0];
 $modify_timeclock_log =		$row[1];
 
-$stmt="SELECT full_name,user_group from vicidial_users where user='" . mysql_real_escape_string($user) . "';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$stmt="SELECT full_name,user_group from vicidial_users where user='" . mysqli_real_escape_string($link, $user) . "';";
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $full_name = $row[0];
 $user_group = $row[1];
 
-$stmt="SELECT event,tcid_link from vicidial_timeclock_log where timeclock_id='" . mysql_real_escape_string($timeclock_id) . "';";
-$rslt=mysql_query($stmt, $link);
+$stmt="SELECT event,tcid_link from vicidial_timeclock_log where timeclock_id='" . mysqli_real_escape_string($link, $timeclock_id) . "';";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$tc_logs_to_print = mysql_num_rows($rslt);
+$tc_logs_to_print = mysqli_num_rows($rslt);
 if ($tc_logs_to_print > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$event =		$row[0];
 	$tcid_link =	$row[1];
 	}
@@ -170,13 +171,13 @@ if (preg_match('/LOGIN/',$event))
 if (preg_match('/LOGOUT/',$event))
 	{
 	$LOGOUTevent_id =	$timeclock_id;
-	$stmt="SELECT timeclock_id from vicidial_timeclock_log where tcid_link='" . mysql_real_escape_string($timeclock_id) . "';";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="SELECT timeclock_id from vicidial_timeclock_log where tcid_link='" . mysqli_real_escape_string($link, $timeclock_id) . "';";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$tc_logs_to_print = mysql_num_rows($rslt);
+	$tc_logs_to_print = mysqli_num_rows($rslt);
 	if ($tc_logs_to_print > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$LOGINevent_id =		$row[0];
 		}
 	if ( (preg_match('/NULL/',$LOGOUTevent_id)) or (strlen($LOGOUTevent_id)<1) )
@@ -189,12 +190,12 @@ if (strlen($LOGOUTevent_id)<1)
 if ($invalid_record < 1)
 	{
 	$stmt="SELECT event_epoch,event_date,login_sec,event,user,user_group,ip_address,shift_id,notes,manager_user,manager_ip,event_datestamp from vicidial_timeclock_log where timeclock_id='$LOGINevent_id';";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$tc_logs_to_print = mysql_num_rows($rslt);
+	$tc_logs_to_print = mysqli_num_rows($rslt);
 	if ($tc_logs_to_print > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$LOGINevent_epoch =		$row[0];
 		$LOGINevent_date =		$row[1];
 		$LOGINlogin_sec =		$row[2];
@@ -209,12 +210,12 @@ if ($invalid_record < 1)
 		$LOGINevent_datestamp =	$row[11];
 		}
 	$stmt="SELECT event_epoch,event_date,login_sec,event,user,user_group,ip_address,shift_id,notes,manager_user,manager_ip,event_datestamp from vicidial_timeclock_log where timeclock_id='$LOGOUTevent_id';";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$tc_logs_to_print = mysql_num_rows($rslt);
+	$tc_logs_to_print = mysqli_num_rows($rslt);
 	if ($tc_logs_to_print > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$LOGOUTevent_epoch =	$row[0];
 		$LOGOUTevent_date =		$row[1];
 		$LOGOUTlogin_sec =		$row[2];
@@ -287,22 +288,22 @@ if ( ($invalid_record < 1) or (strlen($timeclock_id)<1) )
 		$PREVevent_epoch = 0;
 
 		$stmt="SELECT event_epoch,timeclock_id from vicidial_timeclock_log where timeclock_id > '$LOGOUTevent_id' and user='$user' order by timeclock_id limit 1;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$tc_logs_to_print = mysql_num_rows($rslt);
+		$tc_logs_to_print = mysqli_num_rows($rslt);
 		if ($tc_logs_to_print > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$NEXTevent_epoch =	$row[0];
 			$NEXTevent_id =		$row[1];
 			}
 		$stmt="SELECT event_epoch,timeclock_id from vicidial_timeclock_log where timeclock_id < '$LOGINevent_id' and user='$user' order by timeclock_id desc limit 1;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$tc_logs_to_print = mysql_num_rows($rslt);
+		$tc_logs_to_print = mysqli_num_rows($rslt);
 		if ($tc_logs_to_print > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$PREVevent_epoch =	$row[0];
 			$PREVevent_id =		$row[1];
 			}
@@ -341,9 +342,9 @@ if ( ($invalid_record < 1) or (strlen($timeclock_id)<1) )
 			### update LOGIN record in the timeclock log
 			$stmtA="UPDATE vicidial_timeclock_log set event_epoch='$LOGINepoch', event_date='$LOGINdatetime', manager_user='$PHP_AUTH_USER', manager_ip='$ip', notes='Manager MODIFY', login_sec='$log_time' where timeclock_id='$LOGINevent_id';";
 			if ($DB) {echo "$stmtA\n";}
-			$rslt=mysql_query($stmtA, $link);
-			$affected_rows = mysql_affected_rows($link);
-			$timeclock_id = mysql_insert_id($link);
+			$rslt=mysql_to_mysqli($stmtA, $link);
+			$affected_rows = mysqli_affected_rows($link);
+			$timeclock_id = mysqli_insert_id($link);
 			print "<!-- UPDATE vicidial_timeclock_log record updated for $user:   |$affected_rows|$timeclock_id| -->\n";
 
 			### Add a record to the vicidial_admin_log
@@ -352,16 +353,16 @@ if ( ($invalid_record < 1) or (strlen($timeclock_id)<1) )
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TIMECLOCK', event_type='MODIFY', record_id='$LOGINevent_id', event_code='MANAGER MODIFY TIMECLOCK LOG', event_sql=\"$SQL_log\", event_notes='user: $user|$oldLOGINepoch|$oldLOGINdate|sec: $log_time|';";
 			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
-			$affected_rows = mysql_affected_rows($link);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$affected_rows = mysqli_affected_rows($link);
 			print "<!-- NEW vicidial_admin_log record inserted for $PHP_AUTH_USER:   |$affected_rows| -->\n";
 
 			### update LOGOUT record in the timeclock log
 			$stmtB="UPDATE vicidial_timeclock_log set event_epoch='$LOGOUTepoch', event_date='$LOGOUTdatetime', manager_user='$PHP_AUTH_USER', manager_ip='$ip', notes='Manager MODIFY', login_sec='$log_time' where timeclock_id='$LOGOUTevent_id';";
 			if ($DB) {echo "$stmtB\n";}
-			$rslt=mysql_query($stmtB, $link);
-			$affected_rows = mysql_affected_rows($link);
-			$timeclock_id = mysql_insert_id($link);
+			$rslt=mysql_to_mysqli($stmtB, $link);
+			$affected_rows = mysqli_affected_rows($link);
+			$timeclock_id = mysqli_insert_id($link);
 			print "<!-- UPDATE vicidial_timeclock_log record updated for $user:   |$affected_rows|$timeclock_id| -->\n";
 
 			### Add a record to the vicidial_admin_log
@@ -370,8 +371,8 @@ if ( ($invalid_record < 1) or (strlen($timeclock_id)<1) )
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TIMECLOCK', event_type='MODIFY', record_id='$LOGOUTevent_id', event_code='MANAGER MODIFY TIMECLOCK LOG', event_sql=\"$SQL_log\", event_notes='user: $user|$oldLOGOUTepoch|$oldLOGOUTdate|sec: $log_time|';";
 			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
-			$affected_rows = mysql_affected_rows($link);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$affected_rows = mysqli_affected_rows($link);
 			print "<!-- NEW vicidial_admin_log record inserted for $PHP_AUTH_USER:   |$affected_rows| -->\n";
 
 			echo "The timeclock session has been updated. <A HREF=\"$PHP_SELF?timeclock_id=$LOGINevent_id\">Click here to view</A>.<BR>\n";
@@ -400,8 +401,8 @@ if ( ($invalid_record < 1) or (strlen($timeclock_id)<1) )
 
 		$stmt="SELECT full_name from vicidial_users where user='$LOGINuser';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$full_name =		$row[0];
 
 		echo "<BR><BR>\n";

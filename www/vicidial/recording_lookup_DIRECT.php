@@ -34,13 +34,15 @@
 # 90508-0644 - Changed to PHP long tags
 # 130610-1132 - Finalized changing of all ereg instances to preg
 # 130616-2225 - Added filtering of input to prevent SQL injection attacks
+# 130901-0855 - Changed to mysqli PHP functions
 #
 
 $STARTtime = date("U");
 $TODAYstart = date("H/i/s 00:00:00");
 
-$linkAST=mysql_connect("1.1.1.1", "cron", "1234");
-mysql_select_db("asterisk");
+#$linkAST=mysql_connect("1.1.1.1", "cron", "1234");
+#mysql_select_db("asterisk");
+$linkAST=mysqli_connect("1.1.1.1", "cron", "1234", "asterisk");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -89,13 +91,13 @@ if ( (strlen($phone)<10) or (strlen($phone)>10) )
 else
 	{
 	$stmt="select recording_id,filename,location,start_time from recording_log where filename LIKE \"%$phone%\" order by recording_id desc LIMIT 1;";
-	$rslt=mysql_query($stmt, $linkAST);
-	$logs_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $linkAST);
+	$logs_to_print = mysqli_num_rows($rslt);
 
 	$u=0;
 	if ($logs_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$recording_id = $row[0]; 
 		$filename =		$row[1];
 		$location =		$row[2];

@@ -9,6 +9,7 @@
 # changes:
 # 121116-1323 - First build, added to vicidial codebase
 # 130621-2353 - Finalized changing of all ereg instances to preg
+# 130902-0903 - Changed to mysqli PHP functions
 #
 
 /* 
@@ -25,7 +26,7 @@ if ($ADD==241111111111111)
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	$stmt="SELECT count(*) from vicidial_qc_codes where code='$code';";
 	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	if ($row[0] > 0)
 		{echo "<br>QC STATUS CODE NOT ADDED - there is already a qc status code in the system with this name: $row[0]\n";}
 	else
@@ -82,7 +83,7 @@ if ($ADD==341111111111111)
 		##### go through each QC status code
 		$stmt="SELECT count(*) from vicidial_qc_codes;";
 		$rslt=mysql_query($stmt, $link);
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		if ($rowx[0] > 0)
 			{
 			$stmt="SELECT code,code_name,qc_result_type from vicidial_qc_codes order by code;";
@@ -91,7 +92,7 @@ if ($ADD==341111111111111)
 			$o=0;
 			while ($statuses_to_print > $o)
 				{
-				$rowx=mysql_fetch_row($rslt);
+				$rowx=mysqli_fetch_row($rslt);
 				$o++;
 
 				if (preg_match("/1$|3$|5$|7$|9$/i", $o))

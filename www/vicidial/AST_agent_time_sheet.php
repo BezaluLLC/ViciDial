@@ -19,11 +19,12 @@
 # 130414-0148 - Added report logging
 # 130610-1028 - Finalized changing of all ereg instances to preg
 # 130621-0818 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130902-0745 - Changed to mysqli PHP functions
 #
 
 $startMS = microtime();
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $report_name = 'User Time Sheet';
@@ -48,12 +49,12 @@ if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$SSoutbound_autodial_active =	$row[1];
 	$slave_db_server =				$row[2];
@@ -87,14 +88,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -142,29 +143,29 @@ $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$user, $query_date, $end_date, $shift, $file_download, $report_display_type|', url='$LOGfull_url';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=1;
 	$db_source = 'S';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {$MAIN.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGuser_group =			$row[0];
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {$MAIN.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
 $LOGallowed_reports =			$row[1];
 $LOGadmin_viewable_groups =		$row[2];
@@ -269,9 +270,9 @@ $time_BEGIN = "00:00:00";
 $time_END = "23:59:59";
 
 $stmt="select full_name from vicidial_users where user='$agent' $vuLOGadmin_viewable_groupsSQL;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$row=mysql_fetch_row($rslt);
+$row=mysqli_fetch_row($rslt);
 $full_name = $row[0];
 
 $MAIN.="Agent Time Sheet                             $NOW_TIME\n";
@@ -286,10 +287,10 @@ $CSV_text_header.="\"AGENT TIME SHEET: $agent - $full_name\"\n\n";
 
 if ($calls_summary)
 	{
-	$stmt="select count(*) as calls,sum(talk_sec) as talk,avg(talk_sec),sum(pause_sec),avg(pause_sec),sum(wait_sec),avg(wait_sec),sum(dispo_sec),avg(dispo_sec) from vicidial_agent_log where event_time <= '" . mysql_real_escape_string($query_date_END) . "' and event_time >= '" . mysql_real_escape_string($query_date_BEGIN) . "' and user='" . mysql_real_escape_string($agent) . "' and pause_sec<48800 and wait_sec<48800 and talk_sec<48800 and dispo_sec<48800 limit 1;";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="select count(*) as calls,sum(talk_sec) as talk,avg(talk_sec),sum(pause_sec),avg(pause_sec),sum(wait_sec),avg(wait_sec),sum(dispo_sec),avg(dispo_sec) from vicidial_agent_log where event_time <= '" . mysqli_real_escape_string($link, $query_date_END) . "' and event_time >= '" . mysqli_real_escape_string($link, $query_date_BEGIN) . "' and user='" . mysqli_real_escape_string($link, $agent) . "' and pause_sec<48800 and wait_sec<48800 and talk_sec<48800 and dispo_sec<48800 limit 1;";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 
 	$TOTAL_TIME = ($row[1] + $row[3] + $row[5] + $row[7]);
 
@@ -334,20 +335,20 @@ else
 
 	}
 
-$stmt="select event_time,UNIX_TIMESTAMP(event_time) from vicidial_agent_log where event_time <= '" . mysql_real_escape_string($query_date_END) . "' and event_time >= '" . mysql_real_escape_string($query_date_BEGIN) . "' and user='" . mysql_real_escape_string($agent) . "' order by event_time limit 1;";
-$rslt=mysql_query($stmt, $link);
+$stmt="select event_time,UNIX_TIMESTAMP(event_time) from vicidial_agent_log where event_time <= '" . mysqli_real_escape_string($link, $query_date_END) . "' and event_time >= '" . mysqli_real_escape_string($link, $query_date_BEGIN) . "' and user='" . mysqli_real_escape_string($link, $agent) . "' order by event_time limit 1;";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$row=mysql_fetch_row($rslt);
+$row=mysqli_fetch_row($rslt);
 
 $MAIN.="FIRST LOGIN:          $row[0]\n";
 $start = $row[1];
 
 $CSV_login.="\"\",\"FIRST LOGIN:\",\"$row[0]\"\n";
 
-$stmt="select event_time,UNIX_TIMESTAMP(event_time) from vicidial_agent_log where event_time <= '" . mysql_real_escape_string($query_date_END) . "' and event_time >= '" . mysql_real_escape_string($query_date_BEGIN) . "' and user='" . mysql_real_escape_string($agent) . "' order by event_time desc limit 1;";
-$rslt=mysql_query($stmt, $link);
+$stmt="select event_time,UNIX_TIMESTAMP(event_time) from vicidial_agent_log where event_time <= '" . mysqli_real_escape_string($link, $query_date_END) . "' and event_time >= '" . mysqli_real_escape_string($link, $query_date_BEGIN) . "' and user='" . mysqli_real_escape_string($link, $agent) . "' order by event_time desc limit 1;";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$row=mysql_fetch_row($rslt);
+$row=mysqli_fetch_row($rslt);
 
 $MAIN.="LAST LOG ACTIVITY:    $row[0]\n";
 $end = $row[1];
@@ -388,13 +389,13 @@ $CSV_text2.="\"\",\"ID\",\"EDIT\",\"EVENT\",\"DATE\",\"IP ADDRESS\",\"GROUP\",\"
 
 	$stmt="SELECT event,event_epoch,user_group,login_sec,ip_address,timeclock_id,manager_user from vicidial_timeclock_log where user='$agent' and event_epoch >= '$SQepoch'  and event_epoch <= '$EQepoch';";
 	if ($DB>0) {$MAIN.="|$stmt|";}
-	$rslt=mysql_query($stmt, $link);
-	$events_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$events_to_print = mysqli_num_rows($rslt);
 
 	$total_logs=0;
 	$o=0;
 	while ($events_to_print > $o) {
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		if ( ($row[0]=='START') or ($row[0]=='LOGIN') )
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
@@ -487,10 +488,10 @@ $MAIN.="</BODY></HTML>\n";
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -502,7 +503,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 exit;
 

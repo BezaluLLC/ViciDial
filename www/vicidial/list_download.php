@@ -25,11 +25,12 @@
 # 130414-0228 - Added report logging
 # 130610-0945 - Finalized changing of all ereg instances to preg
 # 130618-0043 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-0902 - Changed to mysqli PHP functions
 #
 
 $startMS = microtime();
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -57,12 +58,12 @@ $db_source = 'M';
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,custom_fields_enabled FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
@@ -109,8 +110,8 @@ if ($auth < 1)
 
 $stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and download_lists='1';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $download_auth=$row[0];
 
 if ($download_auth < 1)
@@ -136,29 +137,29 @@ $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$list_id, $group_id, $download_type|', url='$LOGfull_url';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=1;
 	$db_source = 'S';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 #	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGuser_group =			$row[0];
 
 $stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns = $row[0];
 $LOGallowed_reports =	$row[1];
 
@@ -198,12 +199,12 @@ if ($download_type == 'systemdnc')
 		}
 
 	$stmt="select count(*) from vicidial_dnc;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$count_to_print = mysql_num_rows($rslt);
+	$count_to_print = mysqli_num_rows($rslt);
 	if ($count_to_print > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$leads_count =$row[0];
 		$i++;
 		}
@@ -219,12 +220,12 @@ elseif ($download_type == 'dnc')
 	##### Campaign DNC list validation #####
 	$event_code_type='CAMPAIGN DNC';
 	$stmt="select count(*) from vicidial_campaigns where campaign_id='$group_id' $LOGallowed_campaignsSQL;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$count_to_print = mysql_num_rows($rslt);
+	$count_to_print = mysqli_num_rows($rslt);
 	if ($count_to_print > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$lists_allowed =$row[0];
 		$i++;
 		}
@@ -236,12 +237,12 @@ elseif ($download_type == 'dnc')
 		}
 
 	$stmt="select count(*) from vicidial_campaign_dnc where campaign_id='$group_id';";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$count_to_print = mysql_num_rows($rslt);
+	$count_to_print = mysqli_num_rows($rslt);
 	if ($count_to_print > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$leads_count =$row[0];
 		$i++;
 		}
@@ -257,12 +258,12 @@ elseif ($download_type == 'fpgn')
 	##### Filter Phone Group list validation #####
 	$event_code_type='FILTER PHONE GROUP';
 	$stmt="select count(*) from vicidial_filter_phone_groups where filter_phone_group_id='$group_id';";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$count_to_print = mysql_num_rows($rslt);
+	$count_to_print = mysqli_num_rows($rslt);
 	if ($count_to_print > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$lists_allowed =$row[0];
 		$i++;
 		}
@@ -274,12 +275,12 @@ elseif ($download_type == 'fpgn')
 		}
 
 	$stmt="select count(*) from vicidial_filter_phone_numbers where filter_phone_group_id='$group_id';";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$count_to_print = mysql_num_rows($rslt);
+	$count_to_print = mysqli_num_rows($rslt);
 	if ($count_to_print > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$leads_count =$row[0];
 		$i++;
 		}
@@ -297,12 +298,12 @@ else
 	$stmt="select count(*) from vicidial_lists where list_id='$list_id' $LOGallowed_campaignsSQL;";
 	if ($list_id=='ALL-LISTS')
 		{$stmt="select count(*) from vicidial_lists where list_id > 0 $LOGallowed_campaignsSQL;";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$count_to_print = mysql_num_rows($rslt);
+	$count_to_print = mysqli_num_rows($rslt);
 	if ($count_to_print > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$lists_allowed =$row[0];
 		$i++;
 		}
@@ -316,12 +317,12 @@ else
 	$stmt="select count(*) from vicidial_list where list_id='$list_id';";
 	if ($list_id=='ALL-LISTS')
 		{$stmt="select count(*) from vicidial_list where list_id > 0;";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$count_to_print = mysql_num_rows($rslt);
+	$count_to_print = mysqli_num_rows($rslt);
 	if ($count_to_print > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$leads_count =$row[0];
 		$i++;
 		}
@@ -394,13 +395,13 @@ flush();
 
 
 
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$leads_to_print = mysql_num_rows($rslt);
+$leads_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $leads_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 
 	if ( ($download_type == 'systemdnc') or ($download_type == 'dnc') or ($download_type == 'fpgn') )
 		{
@@ -438,13 +439,13 @@ if ( ($custom_fields_enabled > 0) and ($event_code_type=='LIST') )
 	if ($list_id=='ALL-LISTS')
 		{
 		$stmtA = "SELECT list_id from vicidial_lists;";
-		$rslt=mysql_query($stmtA, $link);
+		$rslt=mysql_to_mysqli($stmtA, $link);
 		if ($DB) {echo "$stmtA\n";}
-		$lists_ct = mysql_num_rows($rslt);
+		$lists_ct = mysqli_num_rows($rslt);
 		$u=0;
 		while ($lists_ct > $u)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$custom_list_id[$u] =	$row[0];
 			$u++;
 			}
@@ -453,8 +454,8 @@ if ( ($custom_fields_enabled > 0) and ($event_code_type=='LIST') )
 			{
 			$stmt="SHOW TABLES LIKE \"custom_$custom_list_id[$u]\";";
 			if ($DB>0) {echo "$stmt";}
-			$rslt=mysql_query($stmt, $link);
-			$tablecount_to_print = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$tablecount_to_print = mysqli_num_rows($rslt);
 			$custom_tablecount[$u] = $tablecount_to_print;
 			$u++;
 			}
@@ -465,9 +466,9 @@ if ( ($custom_fields_enabled > 0) and ($event_code_type=='LIST') )
 			if ($custom_tablecount[$u] > 0)
 				{
 				$stmtA = "describe custom_$custom_list_id[$u];";
-				$rslt=mysql_query($stmtA, $link);
+				$rslt=mysql_to_mysqli($stmtA, $link);
 				if ($DB) {echo "$stmtA\n";}
-				$columns_ct = mysql_num_rows($rslt);
+				$columns_ct = mysqli_num_rows($rslt);
 				$custom_columns[$u] = $columns_ct;
 				}
 			if ($DB) {echo "$custom_list_id[$u]|$custom_tablecount[$u]|$custom_columns[$u]\n";}
@@ -479,18 +480,18 @@ if ( ($custom_fields_enabled > 0) and ($event_code_type=='LIST') )
 		{
 		$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
 		if ($DB>0) {echo "$stmt";}
-		$rslt=mysql_query($stmt, $link);
-		$tablecount_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$tablecount_to_print = mysqli_num_rows($rslt);
 		if ($tablecount_to_print > 0) 
 			{
 			$stmtA = "describe custom_$list_id;";
-			$rslt=mysql_query($stmtA, $link);
+			$rslt=mysql_to_mysqli($stmtA, $link);
 			if ($DB) {echo "$stmtA\n";}
-			$columns_ct = mysql_num_rows($rslt);
+			$columns_ct = mysqli_num_rows($rslt);
 			$u=0;
 			while ($columns_ct > $u)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$column =	$row[0];
 				if ($u > 0)
 					{$header_columns .= "\t$column";}
@@ -524,12 +525,12 @@ if ( ($custom_fields_enabled > 0) and ($event_code_type=='LIST') )
 			if ($valid_custom_table > 0)
 				{
 				$stmtA = "SELECT * from custom_$export_list_id[$i] where lead_id='$export_lead_id[$i]' limit 1;";
-				$rslt=mysql_query($stmtA, $link);
+				$rslt=mysql_to_mysqli($stmtA, $link);
 				if ($DB) {echo "$columns_ct|$stmtA\n";}
-				$customfield_ct = mysql_num_rows($rslt);
+				$customfield_ct = mysqli_num_rows($rslt);
 				if ($customfield_ct > 0)
 					{
-					$row=mysql_fetch_row($rslt);
+					$row=mysqli_fetch_row($rslt);
 					$t=1;
 					while ($columns_ct > $t)
 						{
@@ -565,10 +566,10 @@ while ($i < $leads_to_print)
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -580,7 +581,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 ### LOG INSERTION Admin Log Table ###
 $SQL_log = "$stmt|$stmtA|";
@@ -588,7 +589,7 @@ $SQL_log = preg_replace('/;/', '', $SQL_log);
 $SQL_log = addslashes($SQL_log);
 $stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LEADS', event_type='EXPORT', record_id='$list_id', event_code='ADMIN EXPORT $event_code_type', event_sql=\"$SQL_log\", event_notes='';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 exit;
 

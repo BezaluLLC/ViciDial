@@ -12,11 +12,12 @@
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 # 130610-1106 - Finalized changing of all ereg instances to preg
 # 130616-0106 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-0837 - Changed to mysqli PHP functions
 #
 
 header ("Content-type: text/html; charset=utf-8");
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -38,12 +39,12 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$webroot_writable =				$row[1];
 	$SSoutbound_autodial_active =	$row[2];
@@ -91,8 +92,8 @@ if ($auth < 1)
 	}
 
 $stmt="SELECT full_name,change_agent_campaign,modify_timeclock_log,user_group,modify_users from vicidial_users where user='$PHP_AUTH_USER';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGfullname =				$row[0];
 $change_agent_campaign =	$row[1];
 $modify_timeclock_log =		$row[2];
@@ -109,8 +110,8 @@ if ( ($change_agent_campaign < 1 ) or ($modify_users < 1) )
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {$HTML_text.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
 $LOGallowed_reports =			$row[1];
 $LOGadmin_viewable_groups =		$row[2];
@@ -127,13 +128,13 @@ if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGa
 	}
 
 $stmt="SELECT user_group,group_name from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group desc;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$groups_to_print = mysql_num_rows($rslt);
+$groups_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $groups_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$groups[$i] =		$row[0];
 	$group_names[$i] =	$row[1];
 	$i++;
@@ -185,8 +186,8 @@ echo "<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVET
 ##### GROUP CHANGE FOR ALL USERS IN A USER GROUP #####
 if ($stage == "one_user_group_change")
 	{
-	$stmt="UPDATE vicidial_users set user_group='" . mysql_real_escape_string($group) . "' where user_group='" . mysql_real_escape_string($old_group) . "' $LOGadmin_viewable_groupsSQL;";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="UPDATE vicidial_users set user_group='" . mysqli_real_escape_string($link, $group) . "' where user_group='" . mysqli_real_escape_string($link, $old_group) . "' $LOGadmin_viewable_groupsSQL;";
+	$rslt=mysql_to_mysqli($stmt, $link);
 
 	echo "All User Group $old_group Users changed to the $group User Group<BR>\n";
 	
@@ -196,7 +197,7 @@ if ($stage == "one_user_group_change")
 	$SQL_log = addslashes($SQL_log);
 	$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERGROUPS', event_type='MODIFY', record_id='$group', event_code='ADMIN BULK USER GROUP CHANGE', event_sql=\"$SQL_log\", event_notes='Old Group: $old_group';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 
 	exit;
 	}
@@ -204,8 +205,8 @@ if ($stage == "one_user_group_change")
 ##### GROUP CHANGE FOR ALL USERS IN THE SYSTEM EXCEPT FOR LEVEL > 6 AND ADMIN GROUP #####
 if ($stage == "all_user_group_change")
 	{
-	$stmt="UPDATE vicidial_users set user_group='" . mysql_real_escape_string($group) . "' where user_group!='ADMIN' and user_group < 7 $LOGadmin_viewable_groupsSQL;";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="UPDATE vicidial_users set user_group='" . mysqli_real_escape_string($link, $group) . "' where user_group!='ADMIN' and user_group < 7 $LOGadmin_viewable_groupsSQL;";
+	$rslt=mysql_to_mysqli($stmt, $link);
 
 	echo "All non-Admin Users changed to the $group User Group<BR>\n";
 	
@@ -215,7 +216,7 @@ if ($stage == "all_user_group_change")
 	$SQL_log = addslashes($SQL_log);
 	$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERGROUPS', event_type='MODIFY', record_id='$group', event_code='ADMIN BULK USER GROUP CHANGE', event_sql=\"$SQL_log\", event_notes='ALL NON-ADMIN;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 
 	exit;
 	}

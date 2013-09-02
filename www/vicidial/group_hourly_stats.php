@@ -14,13 +14,14 @@
 # 130414-0224 - Added report logging
 # 130610-0946 - Finalized changing of all ereg instances to preg
 # 130619-2329 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-1929 - Changed to mysqli PHP functions
 #
 
 $startMS = microtime();
 
 $report_name='User Group Hourly Stats';
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -40,12 +41,12 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$webroot_writable =				$row[1];
 	$SSoutbound_autodial_active =	$row[2];
@@ -79,14 +80,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -134,8 +135,8 @@ $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group, $status|', url='$LOGfull_url';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 $STARTtime = date("U");
@@ -153,15 +154,15 @@ if (!isset($begin_date)) {$begin_date = $TODAY;}
 if (!isset($end_date)) {$end_date = $TODAY;}
 
 $stmt="SELECT full_name,user_group from vicidial_users where user='$PHP_AUTH_USER';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGfullname =		$row[0];
 $LOGuser_group =	$row[1];
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {$HTML_text.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
 $LOGallowed_reports =			$row[1];
 $LOGadmin_viewable_groups =		$row[2];
@@ -218,14 +219,14 @@ require("admin_header.php");
 
 if ( ($group) and ($status) and ($date_with_hour) )
 {
-$stmt="SELECT user,full_name from vicidial_users where user_group = '" . mysql_real_escape_string($group) . "' $LOGadmin_viewable_groupsSQL order by full_name desc;";
+$stmt="SELECT user,full_name from vicidial_users where user_group = '" . mysqli_real_escape_string($link, $group) . "' $LOGadmin_viewable_groupsSQL order by full_name desc;";
 	if ($DB) {echo "$stmt\n";}
-$rslt=mysql_query($stmt, $link);
-$tsrs_to_print = mysql_num_rows($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$tsrs_to_print = mysqli_num_rows($rslt);
 	$o=0;
 	while($o < $tsrs_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$VDuser[$o] = "$row[0]";
 		$VDname[$o] = "$row[1]";
 		$o++;
@@ -234,22 +235,22 @@ $tsrs_to_print = mysql_num_rows($rslt);
 	$o=0;
 	while($o < $tsrs_to_print)
 		{
-		$stmt="select count(*) from vicidial_log where call_date >= '" . mysql_real_escape_string($date_with_hour) . ":00:00' and  call_date <= '" . mysql_real_escape_string($date_with_hour) . ":59:59' and user='$VDuser[$o]' $LOGadmin_viewable_groupsSQL;";
+		$stmt="select count(*) from vicidial_log where call_date >= '" . mysqli_real_escape_string($link, $date_with_hour) . ":00:00' and  call_date <= '" . mysqli_real_escape_string($link, $date_with_hour) . ":59:59' and user='$VDuser[$o]' $LOGadmin_viewable_groupsSQL;";
 			if ($DB) {echo "$stmt\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$VDtotal[$o] = "$row[0]";
 
-		$stmt="select count(*) from vicidial_log where call_date >= '" . mysql_real_escape_string($date_no_hour) . " 00:00:00' and  call_date <= '" . mysql_real_escape_string($date_no_hour) . " 23:59:59' and user='$VDuser[$o]' and status='" . mysql_real_escape_string($status) . "' $LOGadmin_viewable_groupsSQL;";
+		$stmt="select count(*) from vicidial_log where call_date >= '" . mysqli_real_escape_string($link, $date_no_hour) . " 00:00:00' and  call_date <= '" . mysqli_real_escape_string($link, $date_no_hour) . " 23:59:59' and user='$VDuser[$o]' and status='" . mysqli_real_escape_string($link, $status) . "' $LOGadmin_viewable_groupsSQL;";
 			if ($DB) {echo "$stmt\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$VDday[$o] = "$row[0]";
 
-		$stmt="select count(*) from vicidial_log where call_date >= '" . mysql_real_escape_string($date_with_hour) . ":00:00' and  call_date <= '" . mysql_real_escape_string($date_with_hour) . ":59:59' and user='$VDuser[$o]' and status='" . mysql_real_escape_string($status) . "' $LOGadmin_viewable_groupsSQL;";
+		$stmt="select count(*) from vicidial_log where call_date >= '" . mysqli_real_escape_string($link, $date_with_hour) . ":00:00' and  call_date <= '" . mysqli_real_escape_string($link, $date_with_hour) . ":59:59' and user='$VDuser[$o]' and status='" . mysqli_real_escape_string($link, $status) . "' $LOGadmin_viewable_groupsSQL;";
 			if ($DB) {echo "$stmt\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$VDcount[$o] = "$row[0]";
 		$o++;
 		}
@@ -300,13 +301,13 @@ echo "<input type=hidden name=DB value=$DB>\n";
 echo "group: <select size=1 name=group>\n";
 
 $stmt="SELECT user_group,group_name from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group";
-$rslt=mysql_query($stmt, $link);
-$groups_to_print = mysql_num_rows($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$groups_to_print = mysqli_num_rows($rslt);
 $o=0;
 $groups_list='';
 while ($groups_to_print > $o) 
 	{
-	$rowx=mysql_fetch_row($rslt);
+	$rowx=mysqli_fetch_row($rslt);
 	if ($group == $group)
 		{$groups_list .= "<option selected value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";}
 	else
@@ -341,10 +342,10 @@ echo "<font size=0>\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds</font>";
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -356,7 +357,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 exit; 
 

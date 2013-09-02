@@ -15,6 +15,7 @@
 # 120621-0728 - Added commented-out debug logging
 # 130610-1100 - Finalized changing of all ereg instances to preg
 # 130615-2324 - Added filtering of input to prevent SQL injection attacks
+# 130901-0829 - Changed to mysqli PHP functions
 #
 
 // $Id: xmlrpc_audio_server.php,v 1.3 2007/11/12 17:53:09 lenz Exp $
@@ -77,18 +78,18 @@ function find_file( $ServerID, $AsteriskID, $QMUserID, $QMUserName )
 #	fwrite ($fp, date("U") . "|$ServerID|$AsteriskID|$QMUserID|$QMUserName|\n");
 #	fclose($fp);
 
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	require("functions.php");
 
 	#############################################
 	##### START QUEUEMETRICS LOGGING LOOKUP #####
 	$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id FROM system_settings;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$qm_conf_ct = mysql_num_rows($rslt);
+	$qm_conf_ct = mysqli_num_rows($rslt);
 	if ($qm_conf_ct > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$enable_queuemetrics_logging =	$row[0];
 		$queuemetrics_server_ip	=		$row[1];
 		$queuemetrics_dbname =			$row[2];
@@ -100,18 +101,19 @@ function find_file( $ServerID, $AsteriskID, $QMUserID, $QMUserName )
 	###########################################
 	if ($enable_queuemetrics_logging > 0)
 		{
-		$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
-		mysql_select_db("$queuemetrics_dbname", $linkB);
+		#$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+		#mysql_select_db("$queuemetrics_dbname", $linkB);
+		$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass", "$queuemetrics_dbname");
 
 		$AsteriskID = preg_replace('/[^\.0-9a-zA-Z]/','',$AsteriskID);
 
 		$stmt="SELECT time_id from queue_log where call_id='$AsteriskID' order by time_id limit 1;";
-		$rslt=mysql_query($stmt, $linkB);
+		$rslt=mysql_to_mysqli($stmt, $linkB);
 		if ($DB) {echo "$stmt\n";}
-		$QM_ql_ct = mysql_num_rows($rslt);
+		$QM_ql_ct = mysqli_num_rows($rslt);
 		if ($QM_ql_ct > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$time_id	= $row[0];
 			$time_id_end = ($time_id + 14400);
 
@@ -122,12 +124,12 @@ function find_file( $ServerID, $AsteriskID, $QMUserID, $QMUserName )
 				{$lead_id = substr($AsteriskID, -9);}
 			$lead_id = ($lead_id + 0);
 			$stmt = "SELECT start_epoch,length_in_sec,location from recording_log where start_epoch>=$time_id and start_epoch<=$time_id_end and lead_id='$lead_id' order by recording_id limit 1;";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
-			$rl_ct = mysql_num_rows($rslt);
+			$rl_ct = mysqli_num_rows($rslt);
 			if ($rl_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$start_epoch =		$row[0];
 				$length_in_sec =	$row[1];
 				$location =			$row[2];
@@ -143,14 +145,14 @@ function find_file( $ServerID, $AsteriskID, $QMUserID, $QMUserName )
 					$URLserver_ip = preg_replace('/https:\/\//i', '',$URLserver_ip);
 					$URLserver_ip = preg_replace('/\/.*/i', '',$URLserver_ip);
 					$stmt="select count(*) from servers where server_ip='$URLserver_ip';";
-					$rsltx=mysql_query($stmt, $link);
-					$rowx=mysql_fetch_row($rsltx);
+					$rsltx=mysql_to_mysqli($stmt, $link);
+					$rowx=mysqli_fetch_row($rsltx);
 					
 					if ($rowx[0] > 0)
 						{
 						$stmt="select recording_web_link,alt_server_ip from servers where server_ip='$URLserver_ip';";
-						$rsltx=mysql_query($stmt, $link);
-						$rowx=mysql_fetch_row($rsltx);
+						$rsltx=mysql_to_mysqli($stmt, $link);
+						$rowx=mysqli_fetch_row($rsltx);
 						
 						if (preg_match("/ALT_IP/i",$rowx[0]))
 							{
@@ -189,7 +191,7 @@ function find_file( $ServerID, $AsteriskID, $QMUserID, $QMUserName )
 			$FILE_ENCODING   = "wav";	
 			$FILE_DURATION   = "0:00"; 	
 			}
-		mysql_close($linkB);
+		mysqli_close($linkB);
 		}
 
 #	$FILE_FOUND      = true;
@@ -206,7 +208,7 @@ function listen_call( $ServerID, $AsteriskID, $Agent, $QMUserID, $QMUserName )
 	global $CALL_POPUP_WIDTH;
 	global $CALL_POPUP_HEIGHT;
 
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	require("functions.php");
 
 	$CALL_POPUP_WIDTH = "250";
@@ -215,12 +217,12 @@ function listen_call( $ServerID, $AsteriskID, $Agent, $QMUserID, $QMUserName )
 	#############################################
 	##### START QUEUEMETRICS LOGGING LOOKUP #####
 	$stmt = "SELECT enable_queuemetrics_logging FROM system_settings;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$qm_conf_ct = mysql_num_rows($rslt);
+	$qm_conf_ct = mysqli_num_rows($rslt);
 	if ($qm_conf_ct > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$enable_queuemetrics_logging =	$row[0];
 		}
 	##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -230,23 +232,23 @@ function listen_call( $ServerID, $AsteriskID, $Agent, $QMUserID, $QMUserName )
 		$AsteriskID = preg_replace('/[^0-9a-zA-Z]/','',$AsteriskID);
 
 		$stmt = "SELECT user,server_ip,conf_exten,comments FROM vicidial_live_agents where callerid='$AsteriskID';";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$vla_conf_ct = mysql_num_rows($rslt);
+		$vla_conf_ct = mysqli_num_rows($rslt);
 		if ($vla_conf_ct > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$VLAuser =			$row[0];
 			$VLAserver_ip =		$row[1];
 			$VLAconf_exten =	$row[2];
 
 			$stmt = "SELECT campaign_id,phone_number,call_type FROM vicidial_auto_calls where callerid='$AsteriskID';";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
-			$vla_conf_ct = mysql_num_rows($rslt);
+			$vla_conf_ct = mysqli_num_rows($rslt);
 			if ($vla_conf_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$VACcampaign =	$row[0];
 				$VACphone =		$row[1];
 				$VACtype =		$row[2];

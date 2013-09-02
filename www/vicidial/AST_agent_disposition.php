@@ -11,9 +11,10 @@
 # 90508-0644 - Changed to PHP long tags
 # 130610-1136 - Finalized changing of all ereg instances to preg
 # 130621-0828 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130902-0746 - Changed to mysqli PHP functions
 #
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -33,12 +34,12 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	}
 ##### END SETTINGS LOOKUP #####
@@ -67,14 +68,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -114,14 +115,14 @@ if (!isset($begin_date)) {$begin_date =  $NOW_DATE;}
 if (!isset($end_date)) {$end_date =  $NOW_DATE;}
 
 $stmt="select campaign_id from vicidial_campaigns;";
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
+if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$campaigns_to_print = mysql_num_rows($rslt);
+$campaigns_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $campaigns_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$groups[$i] =$row[0];
 	$i++;
 	}
@@ -179,15 +180,15 @@ echo "+-----------------+------------+--------+--------+--------+------+------+-
 echo "| USER NAME       | ID         | CALLS  | TALK   | TALKAVG| A    | B    |CALLBK|CBHOLD| DEC  | DC   | DNC  | DROP |INCALL| LB   | N    | NA   | NI   | NP   | NQ   |QUEUE | SALE | XFER |\n";
 echo "+-----------------+------------+--------+--------+--------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+\n";
 
-$stmt="select count(*) as calls,sum(length_in_sec) as talk,full_name,vicidial_users.user,avg(length_in_sec) from vicidial_users,vicidial_log where call_date >= '$begin_date 00:00:01' and call_date <= '$end_date 23:59:59'  and vicidial_users.user=vicidial_log.user and campaign_id='" . mysql_real_escape_string($group) . "' group by full_name order by calls desc limit 1000;";
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
+$stmt="select count(*) as calls,sum(length_in_sec) as talk,full_name,vicidial_users.user,avg(length_in_sec) from vicidial_users,vicidial_log where call_date >= '$begin_date 00:00:01' and call_date <= '$end_date 23:59:59'  and vicidial_users.user=vicidial_log.user and campaign_id='" . mysqli_real_escape_string($link, $group) . "' group by full_name order by calls desc limit 1000;";
+if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$rows_to_print = mysql_num_rows($rslt);
+$rows_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $rows_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$TOTcalls=($TOTcalls + $row[0]);
 	$TOTtotTALK=($TOTtotTALK + $row[1]);
 	$calls[$i] =	sprintf("%-6s", $row[0]);
@@ -224,15 +225,15 @@ while($k < $i)
 	
 	{
 	$ctA[$k]="0   "; $ctB[$k]="0   "; $ctDC[$k]="0   "; $ctDNC[$k]="0   "; $ctN[$k]="0   "; $ctNI[$k]="0   "; $ctSALE[$k]="0   ";  $ctINCALL[$k]="0   ";  $ctDROP[$k]="0   ";  $ctQUEUE[$k]="0   ";  $ctNP[$k]="0   ";   $ctDEC[$k]="0   ";  $ctNQ[$k]="0   ";  $ctNA[$k]="0   ";   $ctXFER[$k]="0   "; $ctLB[$k]="0   ";  $ctCALLBK[$k]="0   "; $ctCBHOLD[$k]="0   ";
-	$stmt="select count(*),status from vicidial_log where call_date >= '$begin_date 00:00:01' and call_date <= '$end_date 23:59:59'  and user='$user[$k]' and campaign_id='" . mysql_real_escape_string($group) . "' group by status;";
-	if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-	$rslt=mysql_query($stmt, $link);
+	$stmt="select count(*),status from vicidial_log where call_date >= '$begin_date 00:00:01' and call_date <= '$end_date 23:59:59'  and user='$user[$k]' and campaign_id='" . mysqli_real_escape_string($link, $group) . "' group by status;";
+	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$rows_to_print = mysql_num_rows($rslt);
+	$rows_to_print = mysqli_num_rows($rslt);
 	$m=0;
 	while ($m < $rows_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		if ($row[1] == 'A') {$ctA[$k]=sprintf("%-4s", $row[0]);		$TOT_A = ($TOT_A + $row[0]);}
 		if ($row[1] == 'B') {$ctB[$k]=sprintf("%-4s", $row[0]);		$TOT_B = ($TOT_B + $row[0]);}
 		if ($row[1] == 'DC') {$ctDC[$k]=sprintf("%-4s", $row[0]);	$TOT_DC = ($TOT_DC + $row[0]);}

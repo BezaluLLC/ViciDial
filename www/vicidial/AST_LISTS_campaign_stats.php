@@ -16,13 +16,14 @@
 # 130424-2039 - Added lines for new status categories of scheduled callbacks and completed
 # 130610-1001 - Finalized changing of all ereg instances to preg
 # 130621-0735 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-2025 - Changed to mysqli PHP functions
 #
 
 $startMS = microtime();
 
 header ("Content-type: text/html; charset=utf-8");
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -49,12 +50,12 @@ $JS_onload="onload = function() {\n";
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
@@ -85,14 +86,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -141,29 +142,29 @@ $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $file_download, $report_display_type|', url='$LOGfull_url';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=1;
 	$db_source = 'S';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {$MAIN.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGuser_group =			$row[0];
 
 $stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {$MAIN.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns = $row[0];
 $LOGallowed_reports =	$row[1];
 
@@ -201,13 +202,13 @@ if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 $regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
 
 $stmt="select campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$campaigns_to_print = mysql_num_rows($rslt);
+$campaigns_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $campaigns_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$groups[$i] =		$row[0];
 	$group_names[$i] =	$row[1];
 	if (preg_match('/\-ALL/',$group_string) )
@@ -247,28 +248,28 @@ else
 # Get lists to query to avoid using a nested query
 $lists_id_str="";
 $list_stmt="SELECT list_id from vicidial_lists where active IN('Y','N') $group_SQLand";
-$list_rslt=mysql_query($list_stmt, $link);
-while ($lrow=mysql_fetch_row($list_rslt)) {
+$list_rslt=mysql_to_mysqli($list_stmt, $link);
+while ($lrow=mysqli_fetch_row($list_rslt)) {
 	$lists_id_str.="'$lrow[0]',";
 }
 $lists_id_str=substr($lists_id_str,0,-1);
 
 $stmt="select vsc_id,vsc_name from vicidial_status_categories;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$statcats_to_print = mysql_num_rows($rslt);
+$statcats_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $statcats_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$vsc_id[$i] =	$row[0];
 	$vsc_name[$i] =	$row[1];
 
 	$category_statuses="";
 	$status_stmt="select distinct status from vicidial_statuses where category='$row[0]' UNION select distinct status from vicidial_campaign_statuses where category='$row[0]' $group_SQLand";
 	if ($DB) {echo "$status_stmt\n";}
-	$status_rslt=mysql_query($status_stmt, $link);
-	while ($status_row=mysql_fetch_row($status_rslt)) 
+	$status_rslt=mysql_to_mysqli($status_stmt, $link);
+	while ($status_row=mysqli_fetch_row($status_rslt)) 
 		{
 		$category_statuses.="'$status_row[0]',";
         }
@@ -276,8 +277,8 @@ while ($i < $statcats_to_print)
 
 	$category_stmt="select count(*) from vicidial_list where status in ($category_statuses) and list_id IN($lists_id_str)";
 	if ($DB) {echo "$category_stmt\n";}
-	$category_rslt=mysql_query($category_stmt, $link);
-	$category_row=mysql_fetch_row($category_rslt);
+	$category_rslt=mysql_to_mysqli($category_stmt, $link);
+	$category_row=mysqli_fetch_row($category_rslt);
 	$vsc_count[$i] = $category_row[0];
 	$i++;
 	}
@@ -292,13 +293,13 @@ $customer_contact_statuses='';
 $not_interested_statuses='';
 $unworkable_statuses='';
 $stmt="select status,human_answered,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,status_name from vicidial_statuses;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$statha_to_print = mysql_num_rows($rslt);
+$statha_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $statha_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$temp_status = $row[0];
 	$statname_list["$temp_status"] = "$row[9]";
 	if ($row[1]=='Y') {$human_answered_statuses .= "'$temp_status',";}
@@ -312,13 +313,13 @@ while ($i < $statha_to_print)
 	$i++;
 	}
 $stmt="select status,human_answered,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,status_name from vicidial_campaign_statuses where selectable IN('Y','N') $group_SQLand;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$statha_to_print = mysql_num_rows($rslt);
+$statha_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $statha_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$temp_status = $row[0];
 	$statname_list["$temp_status"] = "$row[9]";
 	if ( ($row[1]=='Y') and (!preg_match("/'$temp_status'/",$human_answered_statuses)) ) {$human_answered_statuses .= "'$temp_status',";}
@@ -447,20 +448,20 @@ else
 
 	$lists_id_str="";
 	$list_stmt="SELECT list_id from vicidial_lists where active IN('Y','N') $group_SQLand";
-	$list_rslt=mysql_query($list_stmt, $link);
-	while ($lrow=mysql_fetch_row($list_rslt)) {
+	$list_rslt=mysql_to_mysqli($list_stmt, $link);
+	while ($lrow=mysqli_fetch_row($list_rslt)) {
 		$lists_id_str.="'$lrow[0]',";
 	}
 	$lists_id_str=substr($lists_id_str,0,-1);
 
 	$stmt="select count(*),list_id from vicidial_list where list_id IN($lists_id_str) group by list_id;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
-	$listids_to_print = mysql_num_rows($rslt);
+	$listids_to_print = mysqli_num_rows($rslt);
 	$i=0;
 	while ($i < $listids_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$LISTIDcalls[$i] =	$row[0];
 		$LISTIDlists[$i] =	$row[1];
 		$list_id_SQL .=		"'$row[1]',";
@@ -476,12 +477,12 @@ else
 	while ($i < $listids_to_print)
 		{
 		$stmt="select list_name,active from vicidial_lists where list_id='$LISTIDlists[$i]';";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$list_name_to_print = mysql_num_rows($rslt);
+		$list_name_to_print = mysqli_num_rows($rslt);
 		if ($list_name_to_print > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$LISTIDlist_names[$i] =	$row[0];
 			$graph_stats[$i][1].=" - $row[0]";
 			if ($row[1]=='Y')
@@ -552,12 +553,12 @@ else
 	$GRAPH.="</tr>\n";
 
 	$stmt="select count(*) from vicidial_list where status IN($human_answered_statuses) and list_id IN($list_id_SQL);";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
-	$HA_results = mysql_num_rows($rslt);
+	$HA_results = mysqli_num_rows($rslt);
 	if ($HA_results > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$HA_count = $row[0];
 		$flag_count+=$row[0];
 		if ($HA_count > 0)
@@ -567,12 +568,12 @@ else
 			}
 		}
 	$stmt="select count(*) from vicidial_list where status IN($sale_statuses) and list_id IN($list_id_SQL);";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
-	$SALE_results = mysql_num_rows($rslt);
+	$SALE_results = mysqli_num_rows($rslt);
 	if ($SALE_results > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$SALE_count = $row[0];
 		$flag_count+=$row[0];
 		if ($SALE_count > 0)
@@ -582,12 +583,12 @@ else
 			}
 		}
 	$stmt="select count(*) from vicidial_list where status IN($dnc_statuses) and list_id IN($list_id_SQL);";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
-	$DNC_results = mysql_num_rows($rslt);
+	$DNC_results = mysqli_num_rows($rslt);
 	if ($DNC_results > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$DNC_count = $row[0];
 		$flag_count+=$row[0];
 		if ($DNC_count > 0)
@@ -597,12 +598,12 @@ else
 			}
 		}
 	$stmt="select count(*) from vicidial_list where status IN($customer_contact_statuses) and list_id IN($list_id_SQL);";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
-	$CC_results = mysql_num_rows($rslt);
+	$CC_results = mysqli_num_rows($rslt);
 	if ($CC_results > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$CC_count = $row[0];
 		$flag_count+=$row[0];
 		if ($CC_count > 0)
@@ -612,12 +613,12 @@ else
 			}
 		}
 	$stmt="select count(*) from vicidial_list where status IN($not_interested_statuses) and list_id IN($list_id_SQL);";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
-	$NI_results = mysql_num_rows($rslt);
+	$NI_results = mysqli_num_rows($rslt);
 	if ($NI_results > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$NI_count = $row[0];
 		$flag_count+=$row[0];
 		if ($NI_count > 0)
@@ -627,12 +628,12 @@ else
 			}
 		}
 	$stmt="select count(*) from vicidial_list where status IN($unworkable_statuses) and list_id IN($list_id_SQL);";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
-	$UW_results = mysql_num_rows($rslt);
+	$UW_results = mysqli_num_rows($rslt);
 	if ($UW_results > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$UW_count = $row[0];
 		$flag_count+=$row[0];
 		if ($UW_count > 0)
@@ -642,12 +643,12 @@ else
 			}
 		}
 	$stmt="select count(*) from vicidial_list where status IN($scheduled_callback_statuses) and list_id IN($list_id_SQL);";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
-	$SC_results = mysql_num_rows($rslt);
+	$SC_results = mysqli_num_rows($rslt);
 	if ($SC_results > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$SC_count = $row[0];
 		$flag_count+=$row[0];
 		if ($SC_count > 0)
@@ -657,12 +658,12 @@ else
 			}
 		}
 	$stmt="select count(*) from vicidial_list where status IN($completed_statuses) and list_id IN($list_id_SQL);";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
-	$COMP_results = mysql_num_rows($rslt);
+	$COMP_results = mysqli_num_rows($rslt);
 	if ($COMP_results > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$COMP_count = $row[0];
 		$flag_count+=$row[0];
 		if ($COMP_count > 0)
@@ -875,12 +876,12 @@ else
 		$COMP_percent=0;
 
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($human_answered_statuses);";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$HA_results = mysql_num_rows($rslt);
+		$HA_results = mysqli_num_rows($rslt);
 		if ($HA_results > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$HA_count = $row[0];
 			if ($HA_count > 0)
 				{
@@ -889,12 +890,12 @@ else
 			}
 		if ($HA_count>$max_flags) {$max_flags=$HA_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($sale_statuses);";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$SALE_results = mysql_num_rows($rslt);
+		$SALE_results = mysqli_num_rows($rslt);
 		if ($SALE_results > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$SALE_count = $row[0];
 			if ($SALE_count > 0)
 				{
@@ -903,12 +904,12 @@ else
 			}
 		if ($SALE_count>$max_flags) {$max_flags=$SALE_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($dnc_statuses);";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$DNC_results = mysql_num_rows($rslt);
+		$DNC_results = mysqli_num_rows($rslt);
 		if ($DNC_results > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$DNC_count = $row[0];
 			if ($DNC_count > 0)
 				{
@@ -917,12 +918,12 @@ else
 			}
 		if ($DNC_count>$max_flags) {$max_flags=$DNC_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($customer_contact_statuses);";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$CC_results = mysql_num_rows($rslt);
+		$CC_results = mysqli_num_rows($rslt);
 		if ($CC_results > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$CC_count = $row[0];
 			if ($CC_count > 0)
 				{
@@ -931,12 +932,12 @@ else
 			}
 		if ($CC_count>$max_flags) {$max_flags=$CC_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($not_interested_statuses);";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$NI_results = mysql_num_rows($rslt);
+		$NI_results = mysqli_num_rows($rslt);
 		if ($NI_results > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$NI_count = $row[0];
 			if ($NI_count > 0)
 				{
@@ -945,12 +946,12 @@ else
 			}
 		if ($NI_count>$max_flags) {$max_flags=$NI_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($unworkable_statuses);";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$UW_results = mysql_num_rows($rslt);
+		$UW_results = mysqli_num_rows($rslt);
 		if ($UW_results > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$UW_count = $row[0];
 			if ($UW_count > 0)
 				{
@@ -959,12 +960,12 @@ else
 			}
 		if ($UW_count>$max_flags) {$max_flags=$UW_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($scheduled_callback_statuses);";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$SC_results = mysql_num_rows($rslt);
+		$SC_results = mysqli_num_rows($rslt);
 		if ($SC_results > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$SC_count = $row[0];
 			if ($SC_count > 0)
 				{
@@ -973,12 +974,12 @@ else
 			}
 		if ($SC_count>$max_flags) {$max_flags=$SC_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($completed_statuses);";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$COMP_results = mysql_num_rows($rslt);
+		$COMP_results = mysqli_num_rows($rslt);
 		if ($COMP_results > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$COMP_count = $row[0];
 			if ($COMP_count > 0)
 				{
@@ -1039,13 +1040,13 @@ else
 		$CSV_text4.="\"STATUS BREAKDOWN:\",\"\",\"COUNT\"\n";
 
 		$stmt="select status,count(*) from vicidial_list where list_id='$LISTIDlists[$i]' group by status order by status;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$liststatussum_to_print = mysql_num_rows($rslt);
+		$liststatussum_to_print = mysqli_num_rows($rslt);
 		$r=0;
 		while ($r < $liststatussum_to_print)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$LISTIDstatus[$r] =	$row[0];
 			$LISTIDcounts[$r] =	$row[1];
 			$graph_stats[$r][0]=$row[0];
@@ -1160,10 +1161,10 @@ else
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -1175,7 +1176,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 exit;
 

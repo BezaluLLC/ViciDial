@@ -14,14 +14,15 @@
 # 91012-0310 - Added vicidial_list counts for territory as owner
 # 130610-1050 - Finalized changing of all ereg instances to preg
 # 130616-0010 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-0834 - Changed to mysqli PHP functions
 #
 
-$version = '2.8-6';
-$build = '130616-0010';
+$version = '2.8-7';
+$build = '130901-0834';
 
 $MT[0]='';
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_SELF=$_SERVER['PHP_SELF'];
@@ -53,12 +54,12 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,user_territories_active,enable_vtiger_integration,outbound_autodial_active,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$ss_conf_ct = mysql_num_rows($rslt);
+$ss_conf_ct = mysqli_num_rows($rslt);
 if ($ss_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =						$row[0];
 	$user_territories_active =			$row[1];
 	$enable_vtiger_integration =		$row[2];
@@ -124,8 +125,8 @@ if ($auth_message == 'GOOD')
 
 $stmt="SELECT count(*) from vicidial_users where user='$USER' and user_level > 7 and modify_users='1'";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $modify_users_auth=$row[0];
 
 if( (strlen($USER)<2) or (strlen($PASS)<2) or (!$auth) or (!$modify_users_auth))
@@ -139,9 +140,11 @@ if( (strlen($USER)<2) or (strlen($PASS)<2) or (!$auth) or (!$modify_users_auth))
 if ($enable_vtiger_integration > 0)
 	{
 	### connect to your vtiger database
-	$linkV=mysql_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass");
-	if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysql_error());}
-	mysql_select_db("$vtiger_dbname", $linkV);
+	#$linkV=mysql_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass");
+	$linkV=mysqli_connect("$vtiger_server_ip", "$vtiger_login", "$vtiger_pass", "$vtiger_dbname");
+
+	if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysqli_error());}
+	#mysql_select_db("$vtiger_dbname", $linkV);
 	}
 
 if (strlen($action) < 1)
@@ -175,14 +178,14 @@ if ( ($action == "CHANGE_TERRITORY_OWNER_ACCOUNT") and ($enable_vtiger_integrati
 	echo "<tr bgcolor=#B6D3FC><td align=right>New Owner: </td><td align=left><select size=1 name=user>\n";
 
 	$stmt="SELECT user,full_name from vicidial_users where active='Y' order by user";
-	$rslt=mysql_query($stmt, $link);
-	$users_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$users_to_print = mysqli_num_rows($rslt);
 	$users_list='';
 
 	$o=0;
 	while ($users_to_print > $o) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$users_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 		$o++;
 		}
@@ -217,22 +220,22 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER_ACCOUNT") and ($enable_vtiger_i
 		else
 			{$AID_lookupSQL = "accountid='$accountid'";}
 		$stmtV="SELECT tickersymbol,accountid from vtiger_account where $AID_lookupSQL;";
-		$rsltV=mysql_query($stmtV, $linkV);
+		$rsltV=mysql_to_mysqli($stmtV, $linkV);
 		if ($DB) {echo "$stmtV\n";}
-		$vat_ct = mysql_num_rows($rsltV);
+		$vat_ct = mysqli_num_rows($rsltV);
 		if ($vat_ct > 0)
 			{
-			$row=mysql_fetch_row($rsltV);
+			$row=mysqli_fetch_row($rsltV);
 			$territory =		$row[0];
 			$accountid =		$row[1];
 
 			$stmt="SELECT count(*) from vicidial_user_territories where territory='$territory' and user='$user';";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
 			if ($row[0] < 1)
 				{
 				$stmt="INSERT INTO vicidial_user_territories SET territory='$territory',user='$user',level='STANDARD_AGENT';";
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 
 				echo "NOTICE: Had to add user territory: $user $territory<BR>\n";
 
@@ -242,29 +245,29 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER_ACCOUNT") and ($enable_vtiger_i
 				$SQL_log = addslashes($SQL_log);
 				$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='ADD', record_id='$territory', event_code='ADMIN ADD USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				}
 
 			$stmtV="SELECT id from vtiger_users where user_name='$user';";
-			$rsltV=mysql_query($stmtV, $linkV);
+			$rsltV=mysql_to_mysqli($stmtV, $linkV);
 			if ($DB) {echo "$stmtV\n";}
-			$vtu_ct = mysql_num_rows($rsltV);
+			$vtu_ct = mysqli_num_rows($rsltV);
 			if ($vtu_ct > 0)
 				{
-				$row=mysql_fetch_row($rsltV);
+				$row=mysqli_fetch_row($rsltV);
 				$user_id =		$row[0];
 
 				$stmt="UPDATE vtiger_crmentity SET smownerid='$user_id',smcreatorid='$user_id',modifiedby='$user_id' where crmid='$accountid';";
-				$rsltV=mysql_query($stmt, $linkV);
-				$changed = mysql_affected_rows($linkV);
+				$rsltV=mysql_to_mysqli($stmt, $linkV);
+				$changed = mysqli_affected_rows($linkV);
 
 				$stmtB="UPDATE vtiger_tracker SET user_id='$user_id' where item_id='$accountid';";
-				$rsltV=mysql_query($stmtB, $linkV);
+				$rsltV=mysql_to_mysqli($stmtB, $linkV);
 
 				if ( ($vl_owner == 'YES') and ($accountid > 0) )
 					{
 					$stmtB="UPDATE vicidial_list SET owner='$user' where vendor_lead_code='$accountid';";
-					$rsltV=mysql_query($stmtB, $link);
+					$rsltV=mysql_to_mysqli($stmtB, $link);
 					}
 
 				echo "Vtiger Territory Owner Changed: $user $territory<BR>\n";
@@ -276,7 +279,7 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER_ACCOUNT") and ($enable_vtiger_i
 				$SQL_log = addslashes($SQL_log);
 				$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='VTIGER', event_type='MODIFY', record_id='$accountid', event_code='VTIGER MODIFY TERRITORY OWNER ACCOUNT', event_sql=\"$SQL_log\", event_notes='';";
 				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				}
 			}
 		}
@@ -370,14 +373,14 @@ if ( ($action == "CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integration > 0) 
 	echo "<tr bgcolor=#B6D3FC><td align=right>Territory: </td><td align=left><select size=1 name=territory>\n";
 
 	$stmt="SELECT territory,territory_description from vicidial_territories order by territory";
-	$rslt=mysql_query($stmt, $link);
-	$territories_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$territories_to_print = mysqli_num_rows($rslt);
 	$territories_list='';
 
 	$o=0;
 	while ($territories_to_print > $o) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$territories_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 		$o++;
 		}
@@ -387,14 +390,14 @@ if ( ($action == "CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integration > 0) 
 	echo "<tr bgcolor=#B6D3FC><td align=right>New Owner: </td><td align=left><select size=1 name=user>\n";
 
 	$stmt="SELECT user,full_name from vicidial_users where active='Y' order by user";
-	$rslt=mysql_query($stmt, $link);
-	$users_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$users_to_print = mysqli_num_rows($rslt);
 	$users_list='';
 
 	$o=0;
 	while ($users_to_print > $o) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$users_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 		$o++;
 		}
@@ -422,15 +425,15 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integrati
 	else
 		{
 		$stmt="SELECT count(*) from vicidial_user_territories where territory='$territory' and user='$user';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		if ($row[0] < 1)
 			{
 			$stmt="INSERT INTO vicidial_user_territories SET territory='$territory',user='$user',level='TOP_AGENT';";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 
 			$stmtB="UPDATE vicidial_user_territories SET level='STANDARD_AGENT' where territory='$territory' and user!='$user' and level='TOP_AGENT';";
-			$rslt=mysql_query($stmtB, $link);
+			$rslt=mysql_to_mysqli($stmtB, $link);
 
 			echo "NOTICE: Had to add user territory: $user $territory<BR>\n";
 
@@ -440,27 +443,27 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integrati
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='ADD', record_id='$territory', event_code='ADMIN ADD USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			}
 
 		$stmtV="SELECT id from vtiger_users where user_name='$user';";
-		$rsltV=mysql_query($stmtV, $linkV);
+		$rsltV=mysql_to_mysqli($stmtV, $linkV);
 		if ($DB) {echo "$stmtV\n";}
-		$vtu_ct = mysql_num_rows($rsltV);
+		$vtu_ct = mysqli_num_rows($rsltV);
 		if ($vtu_ct > 0)
 			{
-			$row=mysql_fetch_row($rsltV);
+			$row=mysqli_fetch_row($rsltV);
 			$user_id =		$row[0];
 
 			$stmtV="SELECT accountid from vtiger_account where tickersymbol='$territory';";
-			$rsltV=mysql_query($stmtV, $linkV);
+			$rsltV=mysql_to_mysqli($stmtV, $linkV);
 			if ($DB) {echo "$stmtV\n";}
-			$vat_ct = mysql_num_rows($rsltV);
+			$vat_ct = mysqli_num_rows($rsltV);
 			$account_ids[0]='';
 			$p=0;
 			while ($vat_ct > $p)
 				{
-				$row=mysql_fetch_row($rsltV);
+				$row=mysqli_fetch_row($rsltV);
 				$account_ids[$p] =		$row[0];
 				$p++;
 				}
@@ -469,20 +472,20 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integrati
 			while ($vat_ct > $p)
 				{
 				$stmt="UPDATE vtiger_crmentity SET smownerid='$user_id',smcreatorid='$user_id',modifiedby='$user_id' where crmid='$account_ids[$p]';";
-				$rsltV=mysql_query($stmt, $linkV);
-				$changedX = mysql_affected_rows($linkV);
+				$rsltV=mysql_to_mysqli($stmt, $linkV);
+				$changedX = mysqli_affected_rows($linkV);
 				if ($DB) {echo "$stmt|$changedX\n";}
 				$changed = ($changed + $changedX);
 
 				$stmtV="select activityid from vtiger_seactivityrel where crmid='$account_ids[$p]';";
-				$rsltV=mysql_query($stmtV, $linkV);
+				$rsltV=mysql_to_mysqli($stmtV, $linkV);
 				if ($DB) {echo "$stmtV\n";}
-				$vact_ct = mysql_num_rows($rsltV);
+				$vact_ct = mysqli_num_rows($rsltV);
 				$activity_ids[0]='';
 				$r=0;
 				while ($vact_ct > $r)
 					{
-					$row=mysql_fetch_row($rsltV);
+					$row=mysqli_fetch_row($rsltV);
 					$activity_ids[$r] =		$row[0];
 					$r++;
 					}
@@ -491,8 +494,8 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integrati
 				while ($vact_ct > $r)
 					{
 					$stmt="UPDATE vtiger_crmentity SET smownerid='$user_id' where crmid='$activity_ids[$r]';";
-					$rsltV=mysql_query($stmt, $linkV);
-					$AchangedX = mysql_affected_rows($linkV);
+					$rsltV=mysql_to_mysqli($stmt, $linkV);
+					$AchangedX = mysqli_affected_rows($linkV);
 					if ($DB) {echo "$stmt|$AchangedX\n";}
 					$Achanged = ($Achanged + $AchangedX);
 					$r++;
@@ -501,8 +504,8 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integrati
 				if ( ($vl_owner == 'YES') and ($account_ids[$p] > 0) )
 					{
 					$stmtB="UPDATE vicidial_list SET owner='$user' where vendor_lead_code='$account_ids[$p]';";
-					$rslt=mysql_query($stmtB, $link);
-					$VchangedX = mysql_affected_rows($link);
+					$rslt=mysql_to_mysqli($stmtB, $link);
+					$VchangedX = mysqli_affected_rows($link);
 					if ($DB) {echo "$stmtB|$VchangedX\n";}
 					$Vchanged = ($Vchanged + $VchangedX);
 					}
@@ -512,12 +515,12 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integrati
 
 
 			$stmt="UPDATE vtiger_crmentity SET smownerid='$user_id',smcreatorid='$user_id',modifiedby='$user_id' where crmid IN(SELECT accountid from vtiger_account where tickersymbol='$territory');";
-			$rsltV=mysql_query($stmt, $linkV);
-			$Cchanged = mysql_affected_rows($linkV);
+			$rsltV=mysql_to_mysqli($stmt, $linkV);
+			$Cchanged = mysqli_affected_rows($linkV);
 			if ($DB) {echo "$stmt|$Cchanged\n";}
 
 			$stmtB="UPDATE vtiger_tracker vt, vtiger_account va SET user_id='$user_id' where vt.item_id=va.accountid and va.tickersymbol='$territory';";
-			$rsltV=mysql_query($stmtB, $linkV);
+			$rsltV=mysql_to_mysqli($stmtB, $linkV);
 
 			echo "Vtiger Territory Owner Changed: $user $territory &nbsp; &nbsp; &nbsp; Records Changed: $changed - $Achanged - $Cchanged - $Vchanged<BR>\n";
 
@@ -527,7 +530,7 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integrati
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='VTIGER', event_type='MODIFY', record_id='$territory', event_code='VTIGER MODIFY TERRITORY OWNER', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			}
 		}
 	$action = "MODIFY_TERRITORY";
@@ -550,14 +553,14 @@ if ($action == "ADD_USER_TERRITORY")
 	echo "<tr bgcolor=#B6D3FC><td align=right>Agent: </td><td align=left><select size=1 name=user>\n";
 
 	$stmt="SELECT user,full_name from vicidial_users where active='Y' order by user";
-	$rslt=mysql_query($stmt, $link);
-	$users_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$users_to_print = mysqli_num_rows($rslt);
 	$users_list='';
 
 	$o=0;
 	while ($users_to_print > $o) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$users_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 		$o++;
 		}
@@ -567,14 +570,14 @@ if ($action == "ADD_USER_TERRITORY")
 	echo "<tr bgcolor=#B6D3FC><td align=right>Territory: </td><td align=left><select size=1 name=territory>\n";
 
 	$stmt="SELECT territory,territory_description from vicidial_territories order by territory";
-	$rslt=mysql_query($stmt, $link);
-	$territories_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$territories_to_print = mysqli_num_rows($rslt);
 	$territories_list='';
 
 	$o=0;
 	while ($territories_to_print > $o) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$territories_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 		$o++;
 		}
@@ -597,8 +600,8 @@ if ($action == "PROCESS_ADD_USER_TERRITORY")
 	else
 		{
 		$stmt="SELECT count(*) from vicidial_user_territories where territory='$territory' and user='$user';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		if ($row[0] > 0)
 			{
 			echo "ERROR: this territory user is already in the system<BR>\n";
@@ -606,12 +609,12 @@ if ($action == "PROCESS_ADD_USER_TERRITORY")
 		else
 			{
 			$stmt="INSERT INTO vicidial_user_territories SET territory='$territory',user='$user',level='$level';";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 
 			if ($level == "TOP_AGENT")
 				{
 				$stmtB="UPDATE vicidial_user_territories SET level='STANDARD_AGENT' where territory='$territory' and user!='$user' and level='TOP_AGENT';";
-				$rslt=mysql_query($stmtB, $link);
+				$rslt=mysql_to_mysqli($stmtB, $link);
 				}
 
 			echo "User Territory Added: $user $territory<BR>\n";
@@ -622,7 +625,7 @@ if ($action == "PROCESS_ADD_USER_TERRITORY")
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='ADD', record_id='$territory', event_code='ADMIN ADD USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			}
 		}
 	$action = "MODIFY_TERRITORY";
@@ -640,8 +643,8 @@ if ($action == "PROCESS_MODIFY_USER_TERRITORY")
 	else
 		{
 		$stmt="SELECT count(*) from vicidial_user_territories where territory='$territory' and user='$user';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		if ($row[0] < 0)
 			{
 			echo "ERROR: this territory user is not in the system<BR>\n";
@@ -649,12 +652,12 @@ if ($action == "PROCESS_MODIFY_USER_TERRITORY")
 		else
 			{
 			$stmt="UPDATE vicidial_user_territories SET level='$level' where territory='$territory' and user='$user';";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 
 			if ($level == "TOP_AGENT")
 				{
 				$stmtB="UPDATE vicidial_user_territories SET level='STANDARD_AGENT' where territory='$territory' and user!='$user' and level='TOP_AGENT';";
-				$rslt=mysql_query($stmtB, $link);
+				$rslt=mysql_to_mysqli($stmtB, $link);
 				}
 
 			echo "User Territory Modified: $user $territory<BR>\n";
@@ -665,7 +668,7 @@ if ($action == "PROCESS_MODIFY_USER_TERRITORY")
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='MODIFY', record_id='$territory', event_code='ADMIN MODIFY USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			}
 		}
 	$action = "MODIFY_TERRITORY";
@@ -683,8 +686,8 @@ if ($action == "DELETE_USER_TERRITORY")
 	else
 		{
 		$stmt="SELECT count(*) from vicidial_user_territories where territory='$territory' and user='$user';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		if ($row[0] < 0)
 			{
 			echo "ERROR: this territory user is not in the system<BR>\n";
@@ -692,7 +695,7 @@ if ($action == "DELETE_USER_TERRITORY")
 		else
 			{
 			$stmt="DELETE from vicidial_user_territories where territory='$territory' and user='$user';";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 
 			echo "User Territory Deleted: $user $territory<BR>\n";
 
@@ -702,7 +705,7 @@ if ($action == "DELETE_USER_TERRITORY")
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='DELETE', record_id='$territory', event_code='ADMIN DELETE USER TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			}
 		}
 	$action = "MODIFY_TERRITORY";
@@ -741,8 +744,8 @@ if ($action == "PROCESS_ADD_TERRITORY")
 	else
 		{
 		$stmt="SELECT count(*) from vicidial_territories where territory='$territory';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		if ($row[0] > 0)
 			{
 			echo "ERROR: there is already a territory in the system with this name<BR>\n";
@@ -750,7 +753,7 @@ if ($action == "PROCESS_ADD_TERRITORY")
 		else
 			{
 			$stmt="INSERT INTO vicidial_territories SET territory='$territory',territory_description='$territory_description';";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 
 			echo "Territory Added: $territory<BR>\n";
 
@@ -760,7 +763,7 @@ if ($action == "PROCESS_ADD_TERRITORY")
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='ADD', record_id='$territory', event_code='ADMIN ADD TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			}
 		}
 	$action = "LIST_ALL_TERRITORIES";
@@ -778,8 +781,8 @@ if ($action == "DELETE_TERRITORY")
 	else
 		{
 		$stmt="SELECT count(*) from vicidial_territories where territory='$territory';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		if ($row[0] < 0)
 			{
 			echo "ERROR: This territory is not in the system with this name<BR>\n";
@@ -787,7 +790,7 @@ if ($action == "DELETE_TERRITORY")
 		else
 			{
 			$stmt="DELETE from vicidial_territories where territory='$territory';";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 
 			echo "Territory Deleted: $territory<BR>\n";
 
@@ -797,7 +800,7 @@ if ($action == "DELETE_TERRITORY")
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='DELETE', record_id='$territory', event_code='ADMIN DELETE TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			}
 		}
 	$action = "LIST_ALL_TERRITORIES";
@@ -815,8 +818,8 @@ if ($action == "PROCESS_MODIFY_TERRITORY")
 	else
 		{
 		$stmt="SELECT count(*) from vicidial_territories where territory='$territory';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		if ($row[0] < 1)
 			{
 			echo "ERROR: This territory is not in the system with this name<BR>\n";
@@ -824,7 +827,7 @@ if ($action == "PROCESS_MODIFY_TERRITORY")
 		else
 			{
 			$stmt="UPDATE vicidial_territories SET territory_description='$territory_description' where territory='$territory';";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 
 			echo "Territory Modified: $territory<BR>\n";
 
@@ -834,7 +837,7 @@ if ($action == "PROCESS_MODIFY_TERRITORY")
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='TERRITORIES', event_type='MODIFY', record_id='$territory', event_code='ADMIN MODIFY TERRITORY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			}
 		}
 	$action = "MODIFY_TERRITORY";
@@ -846,11 +849,11 @@ if ($action == "PROCESS_MODIFY_TERRITORY")
 if ($action == "MODIFY_TERRITORY")
 	{
 	$stmt="SELECT territory,territory_description from vicidial_territories where territory='$territory';";
-	$rslt=mysql_query($stmt, $link);
-	$territories_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$territories_to_print = mysqli_num_rows($rslt);
 	if ($territories_to_print > 0) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
@@ -863,24 +866,24 @@ if ($action == "MODIFY_TERRITORY")
 		echo "<tr bgcolor=#B6D3FC><td align=right>Territory Description: </td><td align=left><input type=text name=territory_description size=50 maxlength=255 value=\"$rowx[1]\"></td></tr>\n";
 
 		$stmt = "SELECT count(*) FROM vicidial_user_territories where territory='$territory';";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$vut_ct = mysql_num_rows($rslt);
+		$vut_ct = mysqli_num_rows($rslt);
 		if ($vut_ct > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$user_count =			$row[0];
 			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Agents: </td><td align=left><B>$user_count</B></td></tr>";
 
 		$owner_count=0;
 		$stmt = "SELECT count(*) FROM vicidial_list where owner='$territory';";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$VLo_ct = mysql_num_rows($rslt);
+		$VLo_ct = mysqli_num_rows($rslt);
 		if ($VLo_ct > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$owner_count =			$row[0];
 			}
 		echo "<tr bgcolor=#B6D3FC><td align=right>Accounts: </td><td align=left><B>$owner_count</B></td></tr>";
@@ -888,12 +891,12 @@ if ($action == "MODIFY_TERRITORY")
 		if ($enable_vtiger_integration > 0)
 			{
 			$stmtV = "SELECT count(*) FROM vtiger_account where tickersymbol='$territory';";
-			$rsltV=mysql_query($stmtV, $linkV);
+			$rsltV=mysql_to_mysqli($stmtV, $linkV);
 			if ($DB) {echo "$stmtV\n";}
-			$vta_ct = mysql_num_rows($rsltV);
+			$vta_ct = mysqli_num_rows($rsltV);
 			if ($vta_ct > 0)
 				{
-				$row=mysql_fetch_row($rsltV);
+				$row=mysqli_fetch_row($rsltV);
 				$vtiger_count =			$row[0];
 				}
 			echo "<tr bgcolor=#B6D3FC><td align=right>Vtiger Accounts: </td><td align=left><B>$vtiger_count</B></td></tr>";
@@ -905,12 +908,12 @@ if ($action == "MODIFY_TERRITORY")
 		echo "<TABLE CELLPADDING=3 CELLSPACING=1 WIDTH=600><TR><TD COLSPAN=5><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Users in this Territory:</TD></TR>\n";
 
 		$stmt="SELECT vut.user,level,full_name from vicidial_user_territories vut,vicidial_users vu where vut.territory='$territory' and vut.user=vu.user order by vu.user;";
-		$rslt=mysql_query($stmt, $link);
-		$territories_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$territories_to_print = mysqli_num_rows($rslt);
 		$o=0;
 		while ($territories_to_print > $o) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$Tuser[$o] =		$rowx[0];
 			$Tlevel[$o] =		$rowx[1];
 			$Tfull_name[$o] =	$rowx[2];
@@ -919,7 +922,7 @@ if ($action == "MODIFY_TERRITORY")
 		$o=0;
 		while ($territories_to_print > $o) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$p++;
 
 			if (preg_match("/1$|3$|5$|7$|9$/i", $p))
@@ -932,21 +935,21 @@ if ($action == "MODIFY_TERRITORY")
 			if ($enable_vtiger_integration > 0)
 				{
 				$stmtV="SELECT id from vtiger_users where user_name='$Tuser[$o]';";
-				$rsltV=mysql_query($stmtV, $linkV);
+				$rsltV=mysql_to_mysqli($stmtV, $linkV);
 				if ($DB) {echo "$stmtV\n";}
-				$vtu_ct = mysql_num_rows($rsltV);
+				$vtu_ct = mysqli_num_rows($rsltV);
 				if ($vtu_ct > 0)
 					{
-					$row=mysql_fetch_row($rsltV);
+					$row=mysqli_fetch_row($rsltV);
 					$user_id =		$row[0];
 
 					$stmtV = "SELECT count(*) FROM vtiger_account where tickersymbol='$territory' and accountid IN(SELECT crmid from vtiger_crmentity where smownerid='$user_id');";
-					$rsltV=mysql_query($stmtV, $linkV);
+					$rsltV=mysql_to_mysqli($stmtV, $linkV);
 					if ($DB) {echo "$stmtV\n";}
-					$vca_ct = mysql_num_rows($rsltV);
+					$vca_ct = mysqli_num_rows($rsltV);
 					if ($vca_ct > 0)
 						{
-						$row=mysql_fetch_row($rsltV);
+						$row=mysqli_fetch_row($rsltV);
 						echo "<TD>VT Accounts: $row[0]</TD>";
 						}
 					}
@@ -954,12 +957,12 @@ if ($action == "MODIFY_TERRITORY")
 
 		#	$owner_count=0;
 		#	$stmt = "SELECT count(*) FROM vicidial_list where owner='$territory';";
-		#	$rslt=mysql_query($stmt, $link);
+		#	$rslt=mysql_to_mysqli($stmt, $link);
 		#	if ($DB) {echo "$stmt\n";}
-		#	$VLo_ct = mysql_num_rows($rslt);
+		#	$VLo_ct = mysqli_num_rows($rslt);
 		#	if ($VLo_ct > 0)
 		#		{
-		#		$row=mysql_fetch_row($rslt);
+		#		$row=mysqli_fetch_row($rslt);
 		#		$owner_count =			$row[0];
 		#		}
 		#	echo "<TD>Accounts: $owner_count</TD>";
@@ -1016,13 +1019,13 @@ if ($action == "LIST_ALL_TERRITORIES")
 	echo "</TR>\n";
 
 	$stmt = "SELECT territory_id,territory,territory_description FROM vicidial_territories order by territory;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$vt_ct = mysql_num_rows($rslt);
+	$vt_ct = mysqli_num_rows($rslt);
 	$i=0;
 	while ($vt_ct > $i)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$Lterritory_id[$i] =			$row[0];
 		$Lterritory[$i] =				$row[1];
 		$Lterritory_description[$i] =	$row[2];
@@ -1032,34 +1035,34 @@ if ($action == "LIST_ALL_TERRITORIES")
 	while ($vt_ct > $i)
 		{
 		$stmt = "SELECT count(*) FROM vicidial_user_territories where territory='$Lterritory[$i]';";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$vut_ct = mysql_num_rows($rslt);
+		$vut_ct = mysqli_num_rows($rslt);
 		if ($vut_ct > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$Lterritory_count[$i] =			$row[0];
 			}
 
 		$stmt = "SELECT count(*) FROM vicidial_list where owner='$Lterritory[$i]';";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$VLo_ct = mysql_num_rows($rslt);
+		$VLo_ct = mysqli_num_rows($rslt);
 		if ($VLo_ct > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$Lterritory_owner_count[$i] =	$row[0];
 			}
 
 		if ($enable_vtiger_integration > 0)
 			{
 			$stmtV = "SELECT count(*) FROM vtiger_account where tickersymbol='$Lterritory[$i]';";
-			$rsltV=mysql_query($stmtV, $linkV);
+			$rsltV=mysql_to_mysqli($stmtV, $linkV);
 			if ($DB) {echo "$stmtV\n";}
-			$va_ct = mysql_num_rows($rsltV);
+			$va_ct = mysqli_num_rows($rsltV);
 			if ($va_ct > 0)
 				{
-				$row=mysql_fetch_row($rsltV);
+				$row=mysqli_fetch_row($rsltV);
 				$Lvtiger_count[$i] =			$row[0];
 				}
 			}

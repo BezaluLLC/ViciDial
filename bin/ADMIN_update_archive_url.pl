@@ -3,15 +3,18 @@
 # ADMIN_update_archive_url.pl - updates the url for the archive server
 # in the recording_log table
 #
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 90609-1609 - mikec - created the script
+# 130902-1132 - Fix for issue #697
+#
 
 use DBI;
 
 # function to print out the help for this script
-sub print_help {
+sub print_help 
+	{
 	print "$0 - updates the url in the recording_log\n";
 	print "command-line options:\n";
 	print "  [--debug]          = shows the sql as it is being executed.\n";
@@ -23,7 +26,7 @@ sub print_help {
 	print "                       This is a required argument.\n\n";
 
 	exit;
-}
+	}
 
 # default path to astguiclient configuration file:
 $PATHconf = '/etc/astguiclient.conf';

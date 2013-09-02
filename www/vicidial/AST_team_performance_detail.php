@@ -18,11 +18,12 @@
 # 130414-0142 - Added report logging
 # 130610-0958 - Finalized changing of all ereg instances to preg
 # 130621-0723 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-2011 - Changed to mysqli PHP functions
 #
 
 $startMS = microtime();
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -60,13 +61,13 @@ $JS_onload="onload = function() {\n";
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
 if ($archive_tbl) {$agent_log_table="vicidial_agent_log_archive";} else {$agent_log_table="vicidial_agent_log";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
@@ -98,14 +99,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -153,29 +154,29 @@ $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $file_download, $report_display_type|', url='$LOGfull_url';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=1;
 	$db_source = 'S';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	$HTML_text.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {$HTML_text.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGuser_group =			$row[0];
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {$HTML_text.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
 $LOGallowed_reports =			$row[1];
 $LOGadmin_viewable_groups =		$row[2];
@@ -244,13 +245,13 @@ while($i < $group_ct)
 	}
 
 $stmt="select campaign_id from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
-$campaigns_to_print = mysql_num_rows($rslt);
+$campaigns_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $campaigns_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$groups[$i] =$row[0];
 	if (preg_match('/\-ALL/',$group_string) )
 		{$group[$i] = $groups[$i];}
@@ -274,13 +275,13 @@ if (preg_match("/--NONE--/", $call_status_string))
 	}
 
 $stmt="select distinct status, status_name from vicidial_statuses where sale!='Y' UNION select distinct status, status_name from vicidial_campaign_statuses where sale!='Y' $LOGallowed_campaignsSQL order by status, status_name;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
-$call_statuses_to_print = mysql_num_rows($rslt);
+$call_statuses_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $call_statuses_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$call_statuses[$i] =$row[0];
 	$call_statuses_names[$i] =$row[1];
 #	if (preg_match('/\-ALL/',$call_status_string) )
@@ -295,13 +296,13 @@ for ($i=0; $i<count($user_group); $i++)
 	}
 
 $stmt="select user_group from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
-$user_groups_to_print = mysql_num_rows($rslt);
+$user_groups_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $user_groups_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$user_groups[$i] =$row[0];
 	if ($all_user_groups) {$user_group[$i]=$row[0];}
 	$i++;
@@ -513,8 +514,8 @@ if ($SUBMIT=="SUBMIT")
 	# Sale counts per rep 
 	$stmt="select max(event_time), vicidial_agent_log.user, vicidial_agent_log.lead_id, vicidial_list.status as current_status from vicidial_agent_log, vicidial_list where event_time>='$query_date' and event_time<='$end_date' $group_SQL and vicidial_agent_log.status in (select status from vicidial_campaign_statuses where sale='Y' $group_SQL UNION select status from vicidial_statuses where sale='Y') and vicidial_agent_log.lead_id=vicidial_list.lead_id group by vicidial_agent_log.user, vicidial_agent_log.lead_id";
 	if ($DB) {$ASCII_text.="$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-	while ($row=mysql_fetch_array($rslt)) 
+	$rslt=mysql_to_mysqli($stmt, $link);
+	while ($row=mysqli_fetch_array($rslt)) 
 		{
 		$lead_id=$row["lead_id"];
 		$user=$row["user"];
@@ -536,8 +537,8 @@ if ($SUBMIT=="SUBMIT")
 			# sale it is.
 			$sale_time_stmt="select sum(talk_sec)-sum(dead_sec) from vicidial_agent_log where user='$user' and lead_id='$lead_id' $group_SQL";
 			if ($DB) {$ASCII_text.="$sale_time_stmt\n";}
-			$sale_time_rslt=mysql_query($sale_time_stmt, $link);
-			$sale_time_row=mysql_fetch_row($sale_time_rslt);
+			$sale_time_rslt=mysql_to_mysqli($sale_time_stmt, $link);
+			$sale_time_row=mysqli_fetch_row($sale_time_rslt);
 			$sales_talk_time_array[$row["user"]]+=$sale_time_row[0];
 			}
 		}
@@ -617,8 +618,8 @@ if ($SUBMIT=="SUBMIT")
 		$group_callbacks=0;
 		$group_stcall=0;
 		$name_stmt="select group_name from vicidial_user_groups where user_group='$user_group[$i]'";
-		$name_rslt=mysql_query($name_stmt, $link);
-		$name_row=mysql_fetch_row($name_rslt);
+		$name_rslt=mysql_to_mysqli($name_stmt, $link);
+		$name_row=mysqli_fetch_row($name_rslt);
 		$group_name=$name_row[0];
 		for ($q=0; $q<count($call_status); $q++) {
 			$call_status_group_totals[$q]=0;
@@ -631,8 +632,8 @@ if ($SUBMIT=="SUBMIT")
 		#### USER COUNTS
 		$user_stmt="select distinct vicidial_users.full_name, vicidial_users.user from vicidial_users, vicidial_agent_log where vicidial_users.user_group='$user_group[$i]' and vicidial_users.user=vicidial_agent_log.user and vicidial_agent_log.user_group='$user_group[$i]'  and vicidial_agent_log.event_time>='$query_date' and vicidial_agent_log.event_time<='$end_date' and vicidial_agent_log.campaign_id in ($group_SQL_str) order by full_name, user";
 		if ($DB) {$ASCII_text.="$user_stmt\n";}
-		$user_rslt=mysql_query($user_stmt, $link);
-		if (mysql_num_rows($user_rslt)>0) 
+		$user_rslt=mysql_to_mysqli($user_stmt, $link);
+		if (mysqli_num_rows($user_rslt)>0) 
 			{
 			$graph_stats=array();
 			$max_calls=1;
@@ -688,7 +689,7 @@ if ($SUBMIT=="SUBMIT")
 			$ASCII_text.="| Agent Name                               | Agent ID   | Calls | Leads | Contacts | Contact Ratio | Nonpause Time | System Time | Talk Time | Sales | Sales per Working Hour | Sales to Leads Ratio | Sales to Contacts Ratio | Sales Per Hour | Incomplete Sales | Cancelled Sales | Callbacks | First Call Resolution | Average Sale Time | Average Contact Time |$HTMLstatusheader\n";
 			$ASCII_text.="+------------------------------------------+------------+-------+-------+----------+---------------+---------------+-------------+-----------+-------+------------------------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+$HTMLborderheader\n";
 			$CSV_text.="\"\",\"Agent Name\",\"Agent ID\",\"Calls\",\"Leads\",\"Contacts\",\"Contact Ratio\",\"Nonpause Time\",\"System Time\",\"Talk Time\",\"Sales\",\"Sales per Working Hour\",\"Sales to Leads Ratio\",\"Sales to Contacts Ratio\",\"Sales Per Hour\",\"Incomplete Sales\",\"Cancelled Sales\",\"Callbacks\",\"First Call Resolution\",\"Average Sale Time\",\"Average Contact Time\"$CSVstatusheader\n";
-			while ($user_row=mysql_fetch_array($user_rslt)) 
+			while ($user_row=mysqli_fetch_array($user_rslt)) 
 				{
 				$j++;
 				$contacts=0;
@@ -708,21 +709,21 @@ if ($SUBMIT=="SUBMIT")
 				# Leads 
 				$lead_stmt="select count(distinct lead_id) from vicidial_agent_log where lead_id is not null and event_time>='$query_date' and event_time<='$end_date' $group_SQL and user='$user' and user_group='$user_group[$i]'";
 				if ($DB) {$ASCII_text.="$lead_stmt\n";}
-				$lead_rslt=mysql_query($lead_stmt, $link);
-				$lead_row=mysql_fetch_row($lead_rslt);
+				$lead_rslt=mysql_to_mysqli($lead_stmt, $link);
+				$lead_row=mysqli_fetch_row($lead_rslt);
 				$leads=$lead_row[0];
 
 				# Callbacks 
 				$callback_stmt="select count(*) from vicidial_callbacks where status in ('ACTIVE', 'LIVE') $group_SQL and user='$user' and user_group='$user_group[$i]'";
 				if ($DB) {$ASCII_text.="$callback_stmt\n";}
-				$callback_rslt=mysql_query($callback_stmt, $link);
-				$callback_row=mysql_fetch_row($callback_rslt);
+				$callback_rslt=mysql_to_mysqli($callback_stmt, $link);
+				$callback_row=mysqli_fetch_row($callback_rslt);
 				$callbacks=$callback_row[0];
 
 				$stat_stmt="select val.status, val.sub_status, vs.customer_contact, sum(val.talk_sec), sum(val.pause_sec), sum(val.wait_sec), sum(val.dispo_sec), sum(val.dead_sec), count(*) from vicidial_agent_log val, vicidial_statuses vs where val.user='$user' and val.user_group='$user_group[$i]' and val.event_time>='$query_date' and val.event_time<='$end_date' and val.status=vs.status and vs.status in (select status from vicidial_statuses) and val.campaign_id in ($group_SQL_str) group by status, customer_contact UNION select val.status, val.sub_status, vs.customer_contact, sum(val.talk_sec), sum(val.pause_sec), sum(val.wait_sec), sum(val.dispo_sec), sum(val.dead_sec), count(*) from vicidial_agent_log val, vicidial_campaign_statuses vs where val.campaign_id in ($group_SQL_str) and val.user='$user' and val.user_group='$user_group[$i]' and val.event_time>='$query_date' and val.event_time<='$end_date' and val.status=vs.status and val.campaign_id=vs.campaign_id and vs.status in (select distinct status from vicidial_campaign_statuses where ".substr($group_SQL, 4).") group by status, customer_contact";
 				if ($DB) {$ASCII_text.="$stat_stmt\n";}
-				$stat_rslt=mysql_query($stat_stmt, $link);
-				while ($stat_row=mysql_fetch_row($stat_rslt)) 
+				$stat_rslt=mysql_to_mysqli($stat_stmt, $link);
+				while ($stat_row=mysqli_fetch_row($stat_rslt)) 
 					{
 					if ($stat_row[2]=="Y") 
 						{
@@ -863,8 +864,8 @@ if ($SUBMIT=="SUBMIT")
 				$CSV_status_text="";
 				for ($q=0; $q<count($call_status); $q++) {
 					$stat_stmt="select sum(stat_ct) from (select count(distinct uniqueid) as stat_ct From vicidial_agent_log val, vicidial_statuses vs where val.user='$user' and val.user_group='$user_group[$i]' and val.event_time>='$query_date' and val.event_time<='$end_date' and val.status=vs.status and vs.status='$call_status[$q]' and val.campaign_id in ($group_SQL_str) UNION select count(distinct uniqueid) as stat_ct From vicidial_agent_log val, vicidial_campaign_statuses vs where val.user='$user' and val.user_group='$user_group[$i]' and val.event_time>='$query_date' and val.event_time<='$end_date' and val.status=vs.status and vs.status='$call_status[$q]' and val.campaign_id in ($group_SQL_str)) as counts";
-					$stat_rslt=mysql_query($stat_stmt, $link);
-					$stat_row=mysql_fetch_row($stat_rslt);
+					$stat_rslt=mysql_to_mysqli($stat_stmt, $link);
+					$stat_row=mysqli_fetch_row($stat_rslt);
 					$ASCII_text.=" ".sprintf("%6s", $stat_row[0])." |";
 					$CSV_status_text.=",\"$stat_row[0]\"";
 					$call_status_group_totals[$q]+=$stat_row[0];
@@ -1390,10 +1391,10 @@ else
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -1405,7 +1406,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 exit;
 

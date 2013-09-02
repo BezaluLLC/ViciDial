@@ -10,13 +10,14 @@
 # 130414-0222 - Added report logging
 # 130610-0954 - Finalized changing of all ereg instances to preg
 # 130620-2217 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-2002 - Changed to mysqli PHP functions
 #
 
 $startMS = microtime();
 
 $report_name='In-Group User List';
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -34,12 +35,12 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	}
 ##### END SETTINGS LOOKUP #####
@@ -68,14 +69,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -123,8 +124,8 @@ $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group|', url='$LOGfull_url';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 $NOW_DATE = date("Y-m-d");
@@ -135,13 +136,13 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($server_ip)) {$server_ip = '10.10.10.15';}
 
 $stmt="select group_id,group_name from vicidial_inbound_groups order by group_id;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$ingroups_to_print = mysql_num_rows($rslt);
+$ingroups_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $ingroups_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$group_id[$i] =$row[0];
 	$group_name[$i] =$row[1];
 	$i++;
@@ -204,10 +205,10 @@ else
 
 	echo "\n";
 
-	$stmt="select count(*) from vicidial_live_agents where closer_campaigns LIKE\"% " . mysql_real_escape_string($group) . " %\";";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="select count(*) from vicidial_live_agents where closer_campaigns LIKE\"% " . mysqli_real_escape_string($link, $group) . " %\";";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 
 	$TOTALagents =	sprintf("%10s", $row[0]);
 
@@ -223,14 +224,14 @@ else
 	echo "| #    | USER                           | CAMPAIGN             | STATUS | LAST ACTIVITY       |\n";
 	echo "+------+--------------------------------+----------------------+--------+---------------------+\n";
 
-	$stmt="select vla.user,vu.full_name,vla.campaign_id,vla.status,vla.last_state_change from vicidial_live_agents vla,vicidial_users vu where vla.closer_campaigns LIKE\"% " . mysql_real_escape_string($group) . " %\" and vla.user=vu.user order by vla.user limit 1000;";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="select vla.user,vu.full_name,vla.campaign_id,vla.status,vla.last_state_change from vicidial_live_agents vla,vicidial_users vu where vla.closer_campaigns LIKE\"% " . mysqli_real_escape_string($link, $group) . " %\" and vla.user=vu.user order by vla.user limit 1000;";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$users_to_print = mysql_num_rows($rslt);
+	$users_to_print = mysqli_num_rows($rslt);
 	$i=0;
 	while ($i < $users_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 
 		$i++;
 
@@ -259,14 +260,14 @@ else
 	echo "| #    | USER                           | LOGGED IN |\n";
 	echo "+------+--------------------------------+-----------+\n";
 
-	$stmt="select vu.user,vu.full_name from vicidial_users vu where vu.closer_campaigns LIKE\"% " . mysql_real_escape_string($group) . " %\" order by vu.user limit 2000;";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="select vu.user,vu.full_name from vicidial_users vu where vu.closer_campaigns LIKE\"% " . mysqli_real_escape_string($link, $group) . " %\" order by vu.user limit 2000;";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$Xusers_to_print = mysql_num_rows($rslt);
+	$Xusers_to_print = mysqli_num_rows($rslt);
 	$i=0;
 	while ($i < $Xusers_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 
 		$i++;
 
@@ -294,10 +295,10 @@ else
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -309,7 +310,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 ?>
 </PRE>

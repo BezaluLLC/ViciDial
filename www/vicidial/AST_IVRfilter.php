@@ -13,13 +13,14 @@
 # 130610-1007 - Finalized changing of all ereg instances to preg
 # 130621-0741 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130704-0939 - Fixed issue #675
+# 130901-0820 - Changed to mysqli PHP functions
 #
 
 $startMS = microtime();
 
 $report_name='IVR Filter Report';
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -68,13 +69,13 @@ else
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_header.="$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $qm_conf_ct)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$i++;
 	}
@@ -103,14 +104,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -158,8 +159,8 @@ $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$campaign[0], $query_date, $end_date|', url='$LOGfull_url';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 $NOW_DATE = date("Y-m-d");
@@ -304,9 +305,9 @@ $totalsta=0;
 $Utotalsta=0;
 
 	$stmtA="select count(*),count(distinct caller_id), substr(start_time,1,$substr_place) as stime from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a='INBOUND_IVR_FILTER' and comment_b='CLEAN' group by stime";
-	$rsltA=mysql_query($stmtA, $link);
+	$rsltA=mysql_to_mysqli($stmtA, $link);
 	if ($DB) {$HTML_text.="$stmtA\n";}
-	while ($rowA=mysql_fetch_row($rsltA)) {
+	while ($rowA=mysqli_fetch_row($rsltA)) {
 		$count_ary[$rowA[2]][0]+=$rowA[0];
 		$count_ary[$rowA[2]][1]+=$rowA[1];
 		$count_ary[$rowA[2]][14]+=$rowA[0];
@@ -318,9 +319,9 @@ $Utotalsta=0;
 	}
 
 	$stmtB="select count(*),count(distinct caller_id), substr(start_time,1,$substr_place) as stime from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a='INBOUND_IVR_FILTER' and comment_b='NOT_FOUND' group by stime;";
-	$rsltB=mysql_query($stmtB, $link);
+	$rsltB=mysql_to_mysqli($stmtB, $link);
 	if ($DB) {$HTML_text.="$stmtB\n";}
-	while ($rowB=mysql_fetch_row($rsltB)) {
+	while ($rowB=mysqli_fetch_row($rsltB)) {
 		$count_ary[$rowB[2]][2]+=$rowB[0];
 		$count_ary[$rowB[2]][3]+=$rowB[1];
 		$total+=$rowB[0];
@@ -332,9 +333,9 @@ $Utotalsta=0;
 	}
 
 	$stmtC="select count(*),count(distinct caller_id), substr(start_time,1,$substr_place) as stime from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a='INBOUND_IVR_FILTER' and comment_b='EXISTING' and comment_c='DNC' group by stime;";
-	$rsltC=mysql_query($stmtC, $link);
+	$rsltC=mysql_to_mysqli($stmtC, $link);
 	if ($DB) {$HTML_text.="$stmtC\n";}
-	while ($rowC=mysql_fetch_row($rsltC)) {
+	while ($rowC=mysqli_fetch_row($rsltC)) {
 		$count_ary[$rowC[2]][4]+=$rowC[0];
 		$count_ary[$rowC[2]][5]+=$rowC[1];
 		$total+=$rowC[0];
@@ -346,9 +347,9 @@ $Utotalsta=0;
 	}
 
 	$stmtD="select count(*),count(distinct caller_id), substr(start_time,1,$substr_place) as stime from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a='INBOUND_IVR_FILTER' and comment_b='EXISTING' and comment_c='SALE' group by stime;";
-	$rsltD=mysql_query($stmtD, $link);
+	$rsltD=mysql_to_mysqli($stmtD, $link);
 	if ($DB) {$HTML_text.="$stmtD\n";}
-	while ($rowD=mysql_fetch_row($rsltD)) {
+	while ($rowD=mysqli_fetch_row($rsltD)) {
 		$count_ary[$rowD[2]][6]+=$rowD[0];
 		$count_ary[$rowD[2]][7]+=$rowD[1];
 		$total+=$rowD[0];
@@ -360,9 +361,9 @@ $Utotalsta=0;
 	}
 
 	$stmtE="select count(*),count(distinct caller_id), substr(start_time,1,$substr_place) as stime from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a='INBOUND_IVR_FILTER' and comment_b='EXISTING' and comment_c='ARCHIVE' group by stime;";
-	$rsltE=mysql_query($stmtE, $link);
+	$rsltE=mysql_to_mysqli($stmtE, $link);
 	if ($DB) {$HTML_text.="$stmtE\n";}
-	while ($rowE=mysql_fetch_row($rsltE)) {
+	while ($rowE=mysqli_fetch_row($rsltE)) {
 		$count_ary[$rowE[2]][8]+=$rowE[0];
 		$count_ary[$rowE[2]][9]+=$rowE[1];
 		$total+=$rowE[0];
@@ -374,9 +375,9 @@ $Utotalsta=0;
 	}
 
 	$stmtF="select count(*),count(distinct caller_id), substr(start_time,1,$substr_place) as stime From vicidial_closer_log vc, live_inbound_log l where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a='INBOUND_IVR_FILTER' and comment_b='CLEAN' and (vc.xfercallid is null or vc.xfercallid='0') and vc.uniqueid=l.uniqueid group by stime;";
-	$rsltF=mysql_query($stmtF, $link);
+	$rsltF=mysql_to_mysqli($stmtF, $link);
 	if ($DB) {$HTML_text.="$stmtF\n";}
-	while ($rowF=mysql_fetch_row($rsltF)) {
+	while ($rowF=mysqli_fetch_row($rsltF)) {
 		$count_ary[$rowF[2]][10]+=$rowF[0];
 		$count_ary[$rowF[2]][11]+=$rowF[1];
 		$totaltiq+=$rowF[0];
@@ -384,9 +385,9 @@ $Utotalsta=0;
 	}
 
 	$stmtG="select count(*),count(distinct caller_id), substr(start_time,1,$substr_place) as stime From vicidial_closer_log vc, live_inbound_log l where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a='INBOUND_IVR_FILTER' and comment_b='CLEAN' and (vc.xfercallid is null or vc.xfercallid='0') and vc.uniqueid=l.uniqueid and vc.user!='VDCL' group by stime;";
-	$rsltG=mysql_query($stmtG, $link);
+	$rsltG=mysql_to_mysqli($stmtG, $link);
 	if ($DB) {$HTML_text.="$stmtG\n";}
-	while ($rowG=mysql_fetch_row($rsltG)) {
+	while ($rowG=mysqli_fetch_row($rsltG)) {
 		$count_ary[$rowG[2]][12]+=$rowG[0];
 		$count_ary[$rowG[2]][13]+=$rowG[1];
 		$totalsta+=$rowG[0];
@@ -578,10 +579,10 @@ if ($file_download == 0 || !$file_download) {
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -593,7 +594,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 exit;
 

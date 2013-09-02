@@ -11,9 +11,10 @@
 # 130619-0902 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130719-1914 - Added SQL to show template statuses to dedupe against, fixed issue where list IDs should be disabled until lead file for template is uploaded
 # 130802-0623 - Added select list query for status deduping
+# 130824-2320 - Changed to mysqli PHP functions
 #
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -44,12 +45,12 @@ if (isset($_GET["DB"]))				{$DB=$_GET["DB"];}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,admin_web_directory,custom_fields_enabled,webroot_writable FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =				$row[0];
 	$admin_web_directory =		$row[1];
 	$custom_fields_enabled =	$row[2];
@@ -92,8 +93,8 @@ if ($auth < 1)
 	}
 
 $stmt="SELECT load_leads from vicidial_users where user='$PHP_AUTH_USER';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGload_leads = $row[0];
 
 if ($LOGload_leads < 1)
@@ -116,8 +117,8 @@ if ( (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$LF_orig)) or (preg_match("/;|:|\/
 
 if ($template_id) {
 	$stmt="select * from vicidial_custom_leadloader_templates where template_id='$template_id'";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_array($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_array($rslt);
 	echo "TEMPLATE ID: $template_id\n";
 	echo "TEMPLATE INFO: $row[template_name]";
 	if (strlen($row["template_description"])>0) {echo " - $row[template_description]";}
@@ -188,18 +189,18 @@ if ($form_action=="prime_file" && $sample_template_file_name)
 else if ($list_id && $form_action=="no_template") 
 	{
 	$campaign_stmt="select campaign_id from vicidial_lists where list_id='$list_id'";
-	$campaign_rslt=mysql_query($campaign_stmt, $link);
-	if (mysql_num_rows($campaign_rslt)>0) 
+	$campaign_rslt=mysql_to_mysqli($campaign_stmt, $link);
+	if (mysqli_num_rows($campaign_rslt)>0) 
 		{
-		$campaign_row=mysql_fetch_row($campaign_rslt);
+		$campaign_row=mysqli_fetch_row($campaign_rslt);
 		$campaign_id=$campaign_row[0];
 		}
 	$stmt="select status, status_name from vicidial_statuses UNION select status, status_name from vicidial_campaign_statuses where campaign_id='$campaign_id' order by status, status_name asc";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 
 	echo "<select id='dedupe_statuses' name='dedupe_statuses[]' size=5 multiple>\n";
 	echo "\t<option value='--ALL--' selected>--ALL DISPOSITIONS--</option>\n";
-	while ($row=mysql_fetch_array($rslt)) 
+	while ($row=mysqli_fetch_array($rslt)) 
 		{
 		echo "\t<option value='$row[status]'>$row[status] - $row[status_name]</option>\n";
 		}
@@ -215,18 +216,18 @@ else
 	if ($list_id) 
 		{
 		$campaign_stmt="select campaign_id from vicidial_lists where list_id='$list_id'";
-		$campaign_rslt=mysql_query($campaign_stmt, $link);
-		if (mysql_num_rows($campaign_rslt)>0) 
+		$campaign_rslt=mysql_to_mysqli($campaign_stmt, $link);
+		if (mysqli_num_rows($campaign_rslt)>0) 
 			{
-			$campaign_row=mysql_fetch_row($campaign_rslt);
+			$campaign_row=mysqli_fetch_row($campaign_rslt);
 			$campaign_id=$campaign_row[0];
 			}
 		$stmt="select status, status_name from vicidial_statuses UNION select status, status_name from vicidial_campaign_statuses where campaign_id='$campaign_id' order by status, status_name asc";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 
 		echo "<select id='template_statuses' name='template_statuses[]' size=5 multiple>\n";
 		echo "\t<option value='--ALL--' selected>--ALL DISPOSITIONS--</option>\n";
-		while ($row=mysql_fetch_array($rslt)) 
+		while ($row=mysqli_fetch_array($rslt)) 
 			{
 			echo "\t<option value='$row[status]'>$row[status] - $row[status_name]</option>\n";
 			}
@@ -251,29 +252,29 @@ else
 		{
 		$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
 		if ($DB>0) {echo "$stmt\n";}
-		$rslt=mysql_query($stmt, $link);
-		$tablecount_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$tablecount_to_print = mysqli_num_rows($rslt);
 		if ($tablecount_to_print > 0) 
 			{
 			$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id';";
 			if ($DB>0) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
-			$fieldscount_to_print = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$fieldscount_to_print = mysqli_num_rows($rslt);
 			if ($fieldscount_to_print > 0) 
 				{
-				$rowx=mysql_fetch_row($rslt);
+				$rowx=mysqli_fetch_row($rslt);
 				$custom_records_count =	$rowx[0];
 
 				$custom_SQL='';
 				$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
 				if ($DB>0) {echo "$stmt\n";}
-				$rslt=mysql_query($stmt, $link);
-				$fields_to_print = mysql_num_rows($rslt);
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$fields_to_print = mysqli_num_rows($rslt);
 				$fields_list='';
 				$o=0;
 				while ($fields_to_print > $o) 
 					{
-					$rowx=mysql_fetch_row($rslt);
+					$rowx=mysqli_fetch_row($rslt);
 					$A_field_label[$o] =	$rowx[1];
 					$A_field_type[$o] =		$rowx[6];
 
@@ -304,17 +305,18 @@ else
 		}
 
 	echo "<table border=0 width='100%' cellpadding=0 cellspacing=0>";
-	$rslt=mysql_query("$fields_stmt", $link);
-	$custom_fields_count=mysql_num_fields($rslt)-$vl_fields_count;
-	for ($i=0; $i<mysql_num_fields($rslt); $i++) 
+	$rslt=mysql_to_mysqli("$fields_stmt", $link);
+	$custom_fields_count=mysqli_num_fields($rslt)-$vl_fields_count;
+	while ($fieldinfo=mysqli_fetch_field($rslt))
 		{
-		if (preg_match('/'.mysql_field_name($rslt, $i).'/', $vicidial_list_fields)) {$bgcolor="#D9E6FE";} else {$bgcolor="#FED9D9";}
+		$rslt_field_name=$fieldinfo->name;
+		if (preg_match("/$rslt_field_name/", $vicidial_list_fields)) {$bgcolor="#D9E6FE";} else {$bgcolor="#FED9D9";}
 
 		echo "  <tr bgcolor='$bgcolor'>\r\n";
-		echo "    <td align=right nowrap><font class=standard>".strtoupper(preg_replace('/_/i', ' ', mysql_field_name($rslt, $i))).": </font></td>\r\n";
-		if (mysql_field_name($rslt, $i)!="list_id") 
+		echo "    <td align=right nowrap><font class=standard>".strtoupper(preg_replace('/_/i', ' ', $rslt_field_name)).": </font></td>\r\n";
+		if ($rslt_field_name!="list_id") 
 			{
-			echo "    <td align=left><select name='$field_prefix".mysql_field_name($rslt, $i)."_field' onChange='DrawTemplateStrings()'>\r\n";
+			echo "    <td align=left><select name='$field_prefix".$rslt_field_name."_field' onChange='DrawTemplateStrings()'>\r\n";
 			echo "     <option value='-1'>(none)</option>\r\n";
 
 			for ($j=0; $j<count($row); $j++) 

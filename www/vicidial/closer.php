@@ -12,9 +12,10 @@
 # 120223-2249 - Removed logging of good login passwords if webroot writable is enabled
 # 130610-1116 - Finalized changing of all ereg instances to preg
 # 130620-0827 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-1934 - Changed to mysqli PHP functions
 #
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -56,12 +57,12 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$webroot_writable =				$row[1];
 	$SSoutbound_autodial_active =	$row[2];
@@ -115,8 +116,8 @@ if ($auth < 1)
 
 $stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "$stmt\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGfullname=$row[0];
 $fullname = $row[0];
 
@@ -158,28 +159,28 @@ if (!$dialplan_number)
 
 	if ($extension)
 	{
-	$stmt="SELECT count(*) from phones where extension='" . mysql_real_escape_string($extension) . "';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$stmt="SELECT count(*) from phones where extension='" . mysqli_real_escape_string($link, $extension) . "';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$ext_found=$row[0];
 		if ($ext_found > 0)
 		{
-		$stmt="SELECT dialplan_number,server_ip from phones where extension='" . mysql_real_escape_string($extension) . "';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$stmt="SELECT dialplan_number,server_ip from phones where extension='" . mysqli_real_escape_string($link, $extension) . "';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$dialplan_number=$row[0];
 		$server_ip=$row[1];
 
 		if (!$group_selected)
 			{
 			$stmt="select distinct channel_group from park_log;";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
-			$groups_to_print = mysql_num_rows($rslt);
+			$groups_to_print = mysqli_num_rows($rslt);
 			$i=0;
 			while ($i < $groups_to_print)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$groups[$i] =$row[0];
 				$i++;
 				}
@@ -211,8 +212,8 @@ if (!$dialplan_number)
 				$o++;
 			}
 
-			$stmt="INSERT INTO vicidial_user_log values('','" . mysql_real_escape_string($user) . "','LOGIN','CLOSER','$NOW_TIME','$STARTtime');";
-			$rslt=mysql_query($stmt, $link);
+			$stmt="INSERT INTO vicidial_user_log values('','" . mysqli_real_escape_string($link, $user) . "','LOGIN','CLOSER','$NOW_TIME','$STARTtime');";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
 			echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 			echo"<META HTTP-EQUIV=Refresh CONTENT=\"3; URL=$PHP_SELF?dialplan_number=$dialplan_number&server_ip=$server_ip&extension=$extension&DB=$DB$form_groups\">\n";
@@ -275,21 +276,21 @@ echo "--------------------------------------------------------------------------
 
 
 
-$stmt="SELECT count(*) from parked_channels where server_ip='" . mysql_real_escape_string($server_ip) . "'";
-$rslt=mysql_query($stmt, $link);
+$stmt="SELECT count(*) from parked_channels where server_ip='" . mysqli_real_escape_string($link, $server_ip) . "'";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$row=mysql_fetch_row($rslt);
+$row=mysqli_fetch_row($rslt);
 $parked_count = $row[0];
 	if ($parked_count > 0)
 	{
-	$stmt="SELECT channel,server_ip,channel_group,extension,parked_by,parked_time from parked_channels where server_ip='" . mysql_real_escape_string($server_ip) . "' and channel_group LIKE \"CL_%\" order by channel_group,parked_time";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="SELECT channel,server_ip,channel_group,extension,parked_by,parked_time from parked_channels where server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' and channel_group LIKE \"CL_%\" order by channel_group,parked_time";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$parked_to_print = mysql_num_rows($rslt);
+	$parked_to_print = mysqli_num_rows($rslt);
 	$i=0;
 	while ($i < $parked_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$channel =			sprintf("%-11s", $row[0]);
 		$server =			sprintf("%-14s", $row[1]);
 		$channel_group =	sprintf("%-16s", $row[2]);

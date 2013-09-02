@@ -8,9 +8,10 @@
 # 90508-0644 - Changed to PHP long tags
 # 130610-1134 - Finalized changing of all ereg instances to preg
 # 130621-0743 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-2028 - Changed to mysqli PHP functions
 #
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -32,13 +33,13 @@ if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $qm_conf_ct)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$i++;
 	}
@@ -67,14 +68,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -114,13 +115,13 @@ if (!isset($end_query_date)) {$end_query_date = $NOW_DATE;}
 if (!isset($server_ip)) {$server_ip = '10.10.11.20';}
 
 $stmt="select distinct department from inbound_numbers;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$dept_to_print = mysql_num_rows($rslt);
+$dept_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $dept_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$dept[$i] =$row[0];
 	$i++;
 	}
@@ -171,14 +172,14 @@ else
 	{
 	$extSQL='';
 	$stmt="select extension from inbound_numbers where department='$group';";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$inbound_to_print = mysql_num_rows($rslt);
+	$inbound_to_print = mysqli_num_rows($rslt);
 	$i=0;
 	while ($i < $inbound_to_print)
 		{
 		if (strlen($extSQL)> 1) {$extSQL .= ",";}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$extensions[$i] =$row[0];
 		$extSQL .= "'$extensions[$i]'";
 		$i++;
@@ -197,10 +198,10 @@ else
 	$k=0;
 	while ($k < $inbound_to_print)
 		{
-		$stmt="select count(*),sum(length_in_sec) from call_log where start_time >= '" . mysql_real_escape_string($query_date) . " 00:00:01' and start_time <= '" . mysql_real_escape_string($end_query_date) . " 23:59:59' and server_ip='" . mysql_real_escape_string($server_ip) . "' and extension='$extensions[$k]' ;";
-		$rslt=mysql_query($stmt, $link);
+		$stmt="select count(*),sum(length_in_sec) from call_log where start_time >= '" . mysqli_real_escape_string($link, $query_date) . " 00:00:01' and start_time <= '" . mysqli_real_escape_string($link, $end_query_date) . " 23:59:59' and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' and extension='$extensions[$k]' ;";
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 
 		$extensions[$k] = sprintf("%20s", $extensions[$k]);
 		$TOTALcalls =	sprintf("%10s", $row[0]);

@@ -10,9 +10,10 @@
 # 130610-1102 - Finalized changing of all ereg instances to preg
 # 130619-2044 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130719-1914 - Added ability to filter by statuses
+# 130824-2325 - Changed to mysqli PHP functions
 #
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
@@ -56,12 +57,12 @@ $US='_';
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,admin_web_directory,custom_fields_enabled,webroot_writable FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =				$row[0];
 	$admin_web_directory =		$row[1];
 	$custom_fields_enabled =	$row[2];
@@ -116,8 +117,8 @@ if ($auth < 1)
 	}
 
 $stmt="SELECT load_leads,user_group from vicidial_users where user='$PHP_AUTH_USER';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGload_leads =	$row[0];
 $LOGuser_group =	$row[1];
 
@@ -148,9 +149,9 @@ if ($submit_template=="SUBMIT TEMPLATE" && $template_id && $template_name && $te
 	
 	$custom_table="custom_".$template_list_id;
 	$ins_stmt="INSERT INTO vicidial_custom_leadloader_templates(template_id, template_name, template_description, list_id, standard_variables, custom_table, custom_variables, template_statuses) values('$template_id', '$template_name', '$template_description', '$template_list_id', '$standard_fields_layout', '$custom_table', '$custom_fields_layout', '$status_str')";
-	$ins_rslt=mysql_query($ins_stmt, $link);
+	$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
 	echo "<!-- $ins_stmt //-->";
-	if (mysql_affected_rows($link)>0) 
+	if (mysqli_affected_rows($link)>0) 
 		{
 		$success_msg="NEW TEMPLATE CREATED SUCCESSFULLY";
 		if (!$custom_fields_layout) 
@@ -160,23 +161,23 @@ if ($submit_template=="SUBMIT TEMPLATE" && $template_id && $template_name && $te
 		}
 	else 
 		{
-		$errno = mysql_errno($link);
+		$errno = mysqli_errno($link);
 		if ($errno > 0)
-			{$error = mysql_error($link);}
+			{$error = mysqli_error($link);}
 		$error_msg="TEMPLATE CREATION FAILED<br>\n$errno - $error<br>\n[$ins_stmt]";
 		}
 	}
 else if ($delete_template=="DELETE TEMPLATE" && $template_id) 
 	{
 	$delete_stmt="delete from vicidial_custom_leadloader_templates where template_id='$template_id'";
-	$delete_rslt=mysql_query($delete_stmt, $link);
+	$delete_rslt=mysql_to_mysqli($delete_stmt, $link);
 	}
 
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
 $LOGallowed_reports =			$row[1];
 $LOGadmin_viewable_groups =		$row[2];
@@ -394,10 +395,10 @@ if ($success_msg)
 		<td align="left" width='50%'><form action="<?php echo $PHP_SELF; ?>" method="post"><font class="standard">Select template to delete:</font><?php echo "$NWB#vicidial_template_maker-delete_template$NWE"; ?><BR><select name="template_id" onChange="loadIFrame('hide_new_template_form', '')">
 <?php
 $template_stmt="select template_id, template_name from vicidial_custom_leadloader_templates order by template_id asc";
-$template_rslt=mysql_query($template_stmt, $link);
-if (mysql_num_rows($template_rslt)>0) {
+$template_rslt=mysql_to_mysqli($template_stmt, $link);
+if (mysqli_num_rows($template_rslt)>0) {
 	if ($update_template) {echo "<option value='$update_template' selected>$update_template</option>\n";} else {echo "<option value='' selected>--Choose an existing template--</option>\n";}
-	while ($template_row=mysql_fetch_array($template_rslt)) {
+	while ($template_row=mysqli_fetch_array($template_rslt)) {
 		echo "<option value='$template_row[template_id]'>$template_row[template_id] - $template_row[template_name]</option>\n";
 	}
 } else {
@@ -440,13 +441,13 @@ if (mysql_num_rows($template_rslt)>0) {
 			<option value=''>--Select a list below--</option>
 			<?php
 			$stmt="SELECT list_id, list_name from vicidial_lists $whereLOGallowed_campaignsSQL order by list_id;";
-			$rslt=mysql_query($stmt, $link);
-			$num_rows = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$num_rows = mysqli_num_rows($rslt);
 
 			$count=0;
 			while ( $num_rows > $count ) 
 				{
-				$row = mysql_fetch_row($rslt);
+				$row = mysqli_fetch_row($rslt);
 				echo "\t\t\t<option value='$row[0]'>$row[0] - $row[1]</option>\n";
 				$count++;
 				}
@@ -462,13 +463,13 @@ if (mysql_num_rows($template_rslt)>0) {
 			<option value='--ALL--' selected>--ALL DISPOSITIONS--</option>
 			<?php
 			$stmt="SELECT status, status_name from vicidial_statuses order by status;";
-			$rslt=mysql_query($stmt, $link);
-			$num_rows = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$num_rows = mysqli_num_rows($rslt);
 
 			$count=0;
 			while ( $num_rows > $count ) 
 				{
-				$row = mysql_fetch_row($rslt);
+				$row = mysqli_fetch_row($rslt);
 				echo "\t\t\t<option value='$row[0]'>$row[0] - $row[1]</option>\n";
 				$count++;
 				}

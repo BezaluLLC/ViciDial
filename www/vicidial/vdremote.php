@@ -16,12 +16,13 @@
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 # 130610-1105 - Finalized changing of all ereg instances to preg
 # 130616-0005 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-0833 - Changed to mysqli PHP functions
 #
 
-$version = '2.8-9';
-$build = '130616-0005';
+$version = '2.8-10';
+$build = '130901-0833';
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -104,22 +105,22 @@ else
 	if($auth>0)
 		{
 		$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$LOGfullname=$row[0];
 
 		$stmt="SELECT count(*) from vicidial_remote_agents where user_start='$PHP_AUTH_USER';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$authx=$row[0];
 
 		if($authx>0)
 			{
 			$stmt="SELECT remote_agent_id,server_ip,number_of_lines from vicidial_remote_agents where user_start='$PHP_AUTH_USER';";
 			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
 			$remote_agent_id=$row[0];
 			$server_ip=$row[1];
 			if (!$number_of_lines) {$number_of_lines=$row[2];}
@@ -165,28 +166,28 @@ if (strlen($ADD)>4)
 	{
 	##### get server listing for dynamic pulldown
 	$stmt="SELECT server_ip,server_description from servers order by server_ip;";
-	$rslt=mysql_query($stmt, $link);
-	$servers_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$servers_to_print = mysqli_num_rows($rslt);
 	$servers_list='';
 
 	$o=0;
 	while ($servers_to_print > $o)
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$servers_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 		$o++;
 		}
 
 	##### get campaigns listing for dynamic pulldown
 	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns order by campaign_id;";
-	$rslt=mysql_query($stmt, $link);
-	$campaigns_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$campaigns_to_print = mysqli_num_rows($rslt);
 	$campaigns_list='';
 
 	$o=0;
 	while ($campaigns_to_print > $o)
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$campaigns_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 		$o++;
 		}
@@ -194,24 +195,24 @@ if (strlen($ADD)>4)
 	##### get inbound groups listing for checkboxes
 	if ( (($ADD==31111) or ($ADD==31111)) and (count($groups)<1) )
 		{
-		$stmt="SELECT closer_campaigns from vicidial_remote_agents where remote_agent_id='" . mysql_real_escape_string($remote_agent_id) . "';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$stmt="SELECT closer_campaigns from vicidial_remote_agents where remote_agent_id='" . mysqli_real_escape_string($link, $remote_agent_id) . "';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$closer_campaigns =	$row[0];
 		$closer_campaigns = preg_replace("/ -$/","",$closer_campaigns);
 		$groups = explode(" ", $closer_campaigns);
 		}
 
 	$stmt="SELECT group_id,group_name from vicidial_inbound_groups order by group_id;";
-	$rslt=mysql_query($stmt, $link);
-	$groups_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$groups_to_print = mysqli_num_rows($rslt);
 	$groups_list='';
 	$groups_value='';
 
 	$o=0;
 	while ($groups_to_print > $o)
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$group_id_value = $rowx[0];
 		$group_name_value = $rowx[1];
 		$groups_list .= "<input type=\"checkbox\" name=\"groups[]\" value=\"$group_id_value\"";
@@ -253,9 +254,9 @@ if ($ADD==31111)
 	{
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT remote_agent_id,user_start,number_of_lines,server_ip,conf_exten,status,campaign_id,closer_campaigns from vicidial_remote_agents where remote_agent_id='" . mysql_real_escape_string($remote_agent_id) . "';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$stmt="SELECT remote_agent_id,user_start,number_of_lines,server_ip,conf_exten,status,campaign_id,closer_campaigns from vicidial_remote_agents where remote_agent_id='" . mysqli_real_escape_string($link, $remote_agent_id) . "';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$remote_agent_id =	$row[0];
 	$user_start =		$row[1];
 	$number_of_lines =	$row[2];
@@ -296,8 +297,8 @@ if ($ADD==41111)
 		{echo "<br>REMOTE AGENTS NOT MODIFIED - Please go back and look at the data you entered\n";}
 	else
 		{
-		$stmt="UPDATE vicidial_remote_agents set number_of_lines='" . mysql_real_escape_string($number_of_lines) . "', conf_exten='" . mysql_real_escape_string($conf_exten) . "', status='" . mysql_real_escape_string($status) . "', closer_campaigns='" . mysql_real_escape_string($groups_value) . "' where remote_agent_id='" . mysql_real_escape_string($remote_agent_id) . "';";
-		$rslt=mysql_query($stmt, $link);
+		$stmt="UPDATE vicidial_remote_agents set number_of_lines='" . mysqli_real_escape_string($link, $number_of_lines) . "', conf_exten='" . mysqli_real_escape_string($link, $conf_exten) . "', status='" . mysqli_real_escape_string($link, $status) . "', closer_campaigns='" . mysqli_real_escape_string($link, $groups_value) . "' where remote_agent_id='" . mysqli_real_escape_string($link, $remote_agent_id) . "';";
+		$rslt=mysql_to_mysqli($stmt, $link);
 
 #		echo "$stmt\n";
 		echo "<br>REMOTE AGENTS MODIFIED\n";
@@ -308,9 +309,9 @@ if ($ADD==41111)
 	#	fclose($fp);
 		}
 
-	$stmt="SELECT remote_agent_id,user_start,number_of_lines,server_ip,conf_exten,status,campaign_id,closer_campaigns from vicidial_remote_agents where remote_agent_id='" . mysql_real_escape_string($remote_agent_id) . "';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$stmt="SELECT remote_agent_id,user_start,number_of_lines,server_ip,conf_exten,status,campaign_id,closer_campaigns from vicidial_remote_agents where remote_agent_id='" . mysqli_real_escape_string($link, $remote_agent_id) . "';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$remote_agent_id =	$row[0];
 	$user_start =		$row[1];
 	$number_of_lines =	$row[2];
@@ -356,7 +357,7 @@ if ($ADD==61111)
 		while($k < $number_of_lines)
 			{
 			$nextuser=($user + $k);
-			$users_list .= "'" . mysql_real_escape_string($nextuser) . "',";
+			$users_list .= "'" . mysqli_real_escape_string($link, $nextuser) . "',";
 			$k++;
 			}
 		$users_list = preg_replace("/.$/","",$users_list);
@@ -367,17 +368,17 @@ if ($ADD==61111)
 		echo "+------------|--------+--------------+------------+--------+---------------------+---------+\n";
 
 
-		$stmt="select extension,user,lead_id,channel,status,last_call_time,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_call_finish) from vicidial_live_agents where status NOT IN('PAUSED') and server_ip='" . mysql_real_escape_string($server_ip) . "' and user IN($users_list) order by extension;";
-		$rslt=mysql_query($stmt, $link);
+		$stmt="select extension,user,lead_id,channel,status,last_call_time,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_call_finish) from vicidial_live_agents where status NOT IN('PAUSED') and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' and user IN($users_list) order by extension;";
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$talking_to_print = mysql_num_rows($rslt);
+		$talking_to_print = mysqli_num_rows($rslt);
 		if ($talking_to_print > 0)
 			{
 			$i=0;
 			while ($i < $talking_to_print)
 				{
 				$leadlink=0;
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				if (preg_match("/READY|PAUSED/i",$row[4]))
 					{
 					$row[3]='';
@@ -471,8 +472,8 @@ if ($ADD==71111)
 		$users_list = preg_replace("/.$/","",$users_list);
 
 		$stmt="select count(*),sum(length_in_sec) from vicidial_closer_log where call_date >= '$query_date 00:00:01' and call_date <= '$query_date 23:59:59' and user IN($users_list);";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$in_calls =		$row[0];
 		$in_time =		$row[1];
 		$in_time_M = ($in_time / 60);
@@ -498,15 +499,15 @@ if ($ADD==71111)
 
 
 		$stmt="select user,lead_id,campaign_id,phone_number,status,call_date,length_in_sec from vicidial_closer_log where call_date >= '$query_date 00:00:01' and call_date <= '$query_date 23:59:59' and user IN($users_list) order by call_date;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$talking_to_print = mysql_num_rows($rslt);
+		$talking_to_print = mysqli_num_rows($rslt);
 		if ($talking_to_print > 0)
 			{
 			$i=0;
 			while ($i < $talking_to_print)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$user =				sprintf("%-8s", $row[0]);
 				$leadid =			sprintf("%-10s", $row[1]);
 				$group =			sprintf("%-14s", $row[2]);

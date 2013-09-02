@@ -15,12 +15,13 @@
 # 120223-2335 - Removed logging of good login passwords if webroot writable is enabled
 # 130610-1116 - Finalized changing of all ereg instances to preg
 # 130621-2009 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130902-0755 - Changed to mysqli PHP functions
 #
 
-$admin_version = '2.8-5';
-$build = '130621-2009';
+$admin_version = '2.8-6';
+$build = '130902-0755';
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -47,12 +48,12 @@ if (strlen($DB) < 1)
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,webroot_writable FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$ss_conf_ct = mysql_num_rows($rslt);
+$ss_conf_ct = mysqli_num_rows($rslt);
 if ($ss_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$webroot_writable =				$row[1];
 	}
@@ -103,8 +104,8 @@ if ($auth < 1)
 	}
 
 $stmt="SELECT full_name,modify_campaigns,user_level from vicidial_users where user='$PHP_AUTH_USER';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGfullname =				$row[0];
 $LOGmodify_campaigns =		$row[1];
 $LOGuser_level =			$row[2];
@@ -118,8 +119,8 @@ if ($LOGmodify_campaigns < 1)
 
 $stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' and auto_alt_dial='MULTI_LEAD';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $camp_multi=$row[0];
 
 ?>
@@ -166,12 +167,12 @@ if ($DB > 0)
 	}
 
 $stmt="SELECT list_id,active from vicidial_lists where campaign_id='$campaign_id' order by list_id;";
-$rslt=mysql_query($stmt, $link);
-$lists_to_print = mysql_num_rows($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$lists_to_print = mysqli_num_rows($rslt);
 $o=0;
 while ($lists_to_print > $o)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	if (preg_match('/Y/',$row[1]))
 		{
 		$active_lists++;
@@ -197,13 +198,13 @@ if ($action == "ALT_MULTI_SUBMIT")
 	if ( (strlen($lead_order_randomize) > 0) and (strlen($lead_order_secondary) > 0) )
 		{
 		$stmt="SELECT distinct owner from vicidial_list where list_id IN($camp_lists) limit 1000;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$do_values_ct = mysql_num_rows($rslt);
+		$do_values_ct = mysqli_num_rows($rslt);
 		$o=0;
 		while ($do_values_ct > $o)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$owners[$o] =	$row[0];
 			$o++;
 			}
@@ -226,21 +227,21 @@ if ($action == "ALT_MULTI_SUBMIT")
 				{$new_filter_sql .= "'$owner_raw',";}
 
 			$stmt = "UPDATE vicidial_list SET rank='$owner_rank' where list_id IN($camp_lists) and owner='$owner_raw';";
-			$rslt=mysql_query($stmt, $link);
-			$affected_rows = mysql_affected_rows($link);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$affected_rows = mysqli_affected_rows($link);
 			if ($DB > 0) {echo "OWNER: $o|$campaign_id|$owner|$owner_check|$owner_rank|$affected_rows\n<BR>";}
 			$update_stmts .= "|$affected_rows|$owner_check|$stmt";
 			$o++;
 			}
 
 		$filter_stmt="INSERT IGNORE INTO vicidial_lead_filters SET lead_filter_id='ML$campaign_id',lead_filter_name='DO NOT DELETE MULTI_$campaign_id',lead_filter_comments=NOW(),lead_filter_sql=\"owner IN($new_filter_sql'99827446572348452235')\" ON DUPLICATE KEY UPDATE lead_filter_comments=NOW(),lead_filter_sql=\"owner IN($new_filter_sql'99827446572348452235')\";";
-		$rslt=mysql_query($filter_stmt, $link);
-		$affected_rows = mysql_affected_rows($link);
+		$rslt=mysql_to_mysqli($filter_stmt, $link);
+		$affected_rows = mysqli_affected_rows($link);
 		if ($DB > 0) {echo "$affected_rows|$filter_stmt\n<BR>";}
 
 		$stmt = "UPDATE vicidial_campaigns SET lead_order_randomize='$lead_order_randomize',lead_order_secondary='$lead_order_secondary',lead_filter_id='ML$campaign_id',lead_order='DOWN RANK',campaign_changedate=NOW() where campaign_id='$campaign_id';";
-		$rslt=mysql_query($stmt, $link);
-		$affected_rows = mysql_affected_rows($link);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$affected_rows = mysqli_affected_rows($link);
 		if ($DB > 0) {echo "$campaign_id|$lead_order_randomize|$lead_order_secondary|ML$campaign_id|DOWN RANK|$affected_rows|$stmt\n<BR>";}
 
 		if ($affected_rows > 0)
@@ -252,7 +253,7 @@ if ($action == "ALT_MULTI_SUBMIT")
 			$SQL_log = preg_replace('/;/', '', $SQL_log);
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGNS', event_type='MODIFY', record_id='$campaign_id', event_code='MODIFY CAMPAIGN MULTI LEAD', event_sql=\"$SQL_log\", event_notes='';";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB > 0) {echo "$campaign_id|$stmt\n<BR>";}
 
 			echo "<BR><b>MULTI-LEAD ALT DIAL SETTINGS UPDATED</b><BR><BR>";
@@ -278,12 +279,12 @@ if ($action == "ALT_MULTI_SUBMIT")
 if ($action == "BLANK")
 	{
 	$stmt = "SELECT lead_order_randomize,lead_order_secondary FROM vicidial_campaigns where campaign_id='$campaign_id';";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$vc_values_ct = mysql_num_rows($rslt);
+	$vc_values_ct = mysqli_num_rows($rslt);
 	if ($vc_values_ct > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$lead_order_randomize =		$row[0];
 		$lead_order_secondary =		$row[1];
 		}
@@ -291,12 +292,12 @@ if ($action == "BLANK")
 	$lead_filter_sql='';
 	$lead_filter_comments='';
 	$stmt = "SELECT lead_filter_sql,lead_filter_comments FROM vicidial_lead_filters where lead_filter_id='ML$campaign_id' and lead_filter_name='DO NOT DELETE MULTI_$campaign_id';";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$vlf_values_ct = mysql_num_rows($rslt);
+	$vlf_values_ct = mysqli_num_rows($rslt);
 	if ($vlf_values_ct > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$lead_filter_sql =			$row[0];
 		$lead_filter_comments =		$row[1];
 		if ($DB) {echo "$lead_filter_sql|$lead_filter_comments";}
@@ -321,8 +322,8 @@ if ($action == "BLANK")
 	$leads_in_list_Y = 0;
 	$stmt="SELECT owner,called_since_last_reset,count(*),rank from vicidial_list where list_id IN($camp_lists) group by owner,rank,called_since_last_reset order by rank,owner,called_since_last_reset limit 1000;";
 	if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-	$types_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$types_to_print = mysqli_num_rows($rslt);
 
 	$o=0;
 	$lead_list['count'] = 0;
@@ -330,7 +331,7 @@ if ($action == "BLANK")
 	$lead_list['N_count'] = 0;
 	while ($types_to_print > $o) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		
 		$lead_list['count'] = ($lead_list['count'] + $rowx[2]);
 		if ($rowx[1] == 'N') 

@@ -13,11 +13,12 @@
 # 130610-0957 - Finalized changing of all ereg instances to preg
 # 130620-2248 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130627-0742 - Added new phone fields
+# 130901-2004 - Changed to mysqli PHP functions
 #
 
 $startMS = microtime();
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -42,13 +43,13 @@ $db_source = 'M';
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
 if ($archive_tbl) {$agent_log_table="vicidial_agent_log_archive";} else {$agent_log_table="vicidial_agent_log";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
@@ -81,14 +82,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -138,29 +139,29 @@ $day30range=date("Y-m-d", mktime(0,0,0,date("m"),date("d")-30,date("Y")));
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $file_download, $report_display_type|', url='$LOGfull_url';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=1;
 	$db_source = 'S';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	$HTML_text.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {$HTML_text.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGuser_group =			$row[0];
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {$HTML_text.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
 $LOGallowed_reports =			$row[1];
 $LOGadmin_viewable_groups =		$row[2];
@@ -191,13 +192,13 @@ for ($i=0; $i<count($user_group); $i++)
 	}
 
 $stmt="select user_group from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
-$user_groups_to_print = mysql_num_rows($rslt);
+$user_groups_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $user_groups_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$user_groups[$i] =$row[0];
 	if ($all_user_groups) {$user_group[$i]=$row[0];}
 	$i++;
@@ -297,16 +298,16 @@ if ($SUBMIT=="SUBMIT")
 	$CSV_text="\"User group login report\",\"User groups:\",\"$user_group_string\"\n\n";
 	$CSV_text.="\"User name\",\"User ID\",\"User group\",\"First login date\",\"Last login date\",\"Campaign ID\",\"Server IP\",\"Computer IP\",\"Extension\",\"Browser\",\"Phone login\",\"Server phone\",\"Phone IP\"\n";
 	$stmt="select distinct user, substr(full_name,1,30) as fullname, full_name from vicidial_users where user_group in ($user_group_SQL) order by user";
-	$rslt=mysql_query($stmt, $link);
-	while ($row=mysql_fetch_array($rslt)) 
+	$rslt=mysql_to_mysqli($stmt, $link);
+	while ($row=mysqli_fetch_array($rslt)) 
 		{
 		$date_stmt="select min(event_date) as min_date, max(event_date) as max_date from vicidial_user_log where user='$row[user]' and event='LOGIN' and event_date>='$day30range'";
-		$date_rslt=mysql_query($date_stmt, $link);
-		$date_row=mysql_fetch_array($date_rslt);
+		$date_rslt=mysql_to_mysqli($date_stmt, $link);
+		$date_row=mysqli_fetch_array($date_rslt);
 
 		$data_stmt="select campaign_id, server_ip, computer_ip, user_group, substring(extension,1,20) as ext, extension, browser, phone_login, server_phone, phone_ip from vicidial_user_log where user='$row[user]' and event_date='$date_row[max_date]' and event='LOGIN'";
-		$data_rslt=mysql_query($data_stmt, $link);
-		while ($data_row=mysql_fetch_array($data_rslt)) 
+		$data_rslt=mysql_to_mysqli($data_stmt, $link);
+		while ($data_row=mysqli_fetch_array($data_rslt)) 
 			{
 			preg_match('/^[^\s]+/', $data_row["browser"], $browser_ary);
 			$browser=$browser_ary[0];
@@ -363,10 +364,10 @@ else
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -378,7 +379,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 exit;
 

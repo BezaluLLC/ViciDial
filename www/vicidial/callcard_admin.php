@@ -15,14 +15,15 @@
 # 120117-1457 - Security fix, issue #544
 # 130610-1103 - Finalized changing of all ereg instances to preg
 # 130620-0839 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-1939 - Changed to mysqli PHP functions
 #
 
-$version = '2.8-7';
-$build = '130620-0839';
+$version = '2.8-8';
+$build = '130901-1939';
 
 $MT[0]='';
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_SELF=$_SERVER['PHP_SELF'];
@@ -81,12 +82,12 @@ $SEARCHONLY=0;
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,callcard_enabled FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$ss_conf_ct = mysql_num_rows($rslt);
+$ss_conf_ct = mysqli_num_rows($rslt);
 if ($ss_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =						$row[0];
 	$callcard_enabled =					$row[1];
 	}
@@ -151,14 +152,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -191,8 +192,8 @@ else
 	}
 
 $stmt="SELECT callcard_admin,user_group,full_name from vicidial_users where user='$USER';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGcallcard_admin =	$row[0];
 $LOGuser_group =		$row[1];
 $LOGfullname =			$row[2];
@@ -201,8 +202,8 @@ if($reports_only_user > 0)
 	{
 	$stmt="SELECT allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$LOGallowed_reports =	$row[0];
 
 	if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
@@ -319,8 +320,8 @@ if ($action == "CALLCARD_STATUS")
 	else
 		{
 		$stmt="SELECT count(*) from callcard_accounts_details where card_id='$card_id';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		if ($row[0] < 1)
 			{
 			echo "ERROR: This card_id is not in the system<BR>\n";
@@ -331,12 +332,12 @@ if ($action == "CALLCARD_STATUS")
 				{
 				$initial_minutes=1;
 				$stmt="SELECT initial_minutes FROM callcard_accounts_details where card_id='$card_id';";
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($DB) {echo "$stmt\n";}
-				$im_ct = mysql_num_rows($rslt);
+				$im_ct = mysqli_num_rows($rslt);
 				if ($im_ct > 0)
 					{
-					$row=mysql_fetch_row($rslt);
+					$row=mysqli_fetch_row($rslt);
 					$initial_minutes = $row[0];
 					}
 
@@ -353,8 +354,8 @@ if ($action == "CALLCARD_STATUS")
 				$stmt="UPDATE callcard_accounts_details SET status='ACTIVE',activate_time=NOW(),activate_user='$USER' where card_id='$card_id';";
 				$stmtB="UPDATE callcard_accounts SET status='ACTIVE' where card_id='$card_id';";
 				}
-			$rslt=mysql_query($stmt, $link);
-			$rslt=mysql_query($stmtB, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$rslt=mysql_to_mysqli($stmtB, $link);
 			if ($DB) {echo "|$stmt|$stmtB|\n";}
 
 			echo "Card ID Status Modified: $card_id - $status<BR>\n";
@@ -365,7 +366,7 @@ if ($action == "CALLCARD_STATUS")
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$USER', ip_address='$ip', event_section='CALLCARD', event_type='MODIFY', record_id='$card_id', event_code='ADMIN MODIFY CALLCARD', event_sql=\"$SQL_log\", event_notes='$status';";
 			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			}
 		}
 	$action = "CALLCARD_DETAIL";
@@ -378,11 +379,11 @@ if ($action == "CALLCARD_STATUS")
 if ($action == "CALLCARD_DETAIL")
 	{
 	$stmt="SELECT card_id,run,batch,pack,sequence,status,balance_minutes,initial_value,initial_minutes,note_purchase_order,note_printer,note_did,inbound_group_id,note_language,note_name,note_comments,create_user,activate_user,used_user,void_user,create_time,activate_time,used_time,void_time from callcard_accounts_details where card_id='$card_id';";
-	$rslt=mysql_query($stmt, $link);
-	$details_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$details_to_print = mysqli_num_rows($rslt);
 	if ($details_to_print > 0) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$card_id =				$rowx[0];
 		$run =					$rowx[1];
 		$batch =				$rowx[2];
@@ -409,11 +410,11 @@ if ($action == "CALLCARD_DETAIL")
 		$void_time =			$rowx[23];
 
 		$stmt="SELECT pin from callcard_accounts where card_id='$card_id';";
-		$rslt=mysql_query($stmt, $link);
-		$pin_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$pin_to_print = mysqli_num_rows($rslt);
 		if ($pin_to_print > 0) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$pin =				$rowx[0];
 			}
 
@@ -475,13 +476,13 @@ if ($action == "CALLCARD_DETAIL")
 		echo "</TR>\n";
 
 		$stmt = "SELECT call_time,phone_number,inbound_did,balance_minutes_start,agent_talk_min,agent,agent_time,agent_dispo FROM callcard_log where card_id='$card_id' order by call_time;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$vt_ct = mysql_num_rows($rslt);
+		$vt_ct = mysqli_num_rows($rslt);
 		$i=0;
 		while ($vt_ct > $i)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			if (preg_match("/1$|3$|5$|7$|9$/i", $i))
 				{$bgcolor='bgcolor="#9BB9FB"';}
 			else
@@ -529,13 +530,13 @@ if ($action == "CALLCARD_SUMMARY")
 	echo "</TR>\n";
 
 	$stmt = "SELECT count(*),status FROM callcard_accounts_details group by status order by status;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$vt_ct = mysql_num_rows($rslt);
+	$vt_ct = mysqli_num_rows($rslt);
 	$i=0;
 	while ($vt_ct > $i)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$Lcount[$i] =		$row[0];
 		$Lstatus[$i] =		$row[1];
 
@@ -553,12 +554,12 @@ if ($action == "CALLCARD_SUMMARY")
 	echo "</TABLE><BR><BR>\n";
 
 	$stmt = "SELECT count(distinct batch) FROM callcard_accounts_details;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$db_ct = mysql_num_rows($rslt);
+	$db_ct = mysqli_num_rows($rslt);
 	if ($db_ct > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$DBcount =		$row[0];
 
 		echo "<b>There are $DBcount batches in the system\n";
@@ -584,13 +585,13 @@ if ($action == "CALLCARD_SUMMARY")
 		echo "</TR>\n";
 
 		$stmt = "SELECT card_id,call_time,phone_number,inbound_did,balance_minutes_start,agent_talk_min,agent,agent_time,agent_dispo FROM callcard_log order by call_time desc limit 10;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$vt_ct = mysql_num_rows($rslt);
+		$vt_ct = mysqli_num_rows($rslt);
 		$i=0;
 		while ($vt_ct > $i)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			if (preg_match("/1$|3$|5$|7$|9$/i", $i))
 				{$bgcolor='bgcolor="#9BB9FB"';}
 			else
@@ -633,13 +634,13 @@ if ($action == "CALLCARD_RUNS")
 	echo "</TR>\n";
 
 	$stmt = "SELECT count(*),run FROM callcard_accounts_details group by run order by run;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$vt_ct = mysql_num_rows($rslt);
+	$vt_ct = mysqli_num_rows($rslt);
 	$i=0;
 	while ($vt_ct > $i)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$Lcount[$i] =		$row[0];
 		$Lrun[$i] =		$row[1];
 
@@ -678,13 +679,13 @@ if ($action == "CALLCARD_BATCHES")
 	echo "</TR>\n";
 
 	$stmt = "SELECT count(*),batch FROM callcard_accounts_details group by batch order by batch;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$vt_ct = mysql_num_rows($rslt);
+	$vt_ct = mysqli_num_rows($rslt);
 	$i=0;
 	while ($vt_ct > $i)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$Lcount[$i] =		$row[0];
 		$Lbatch[$i] =		$row[1];
 
@@ -747,12 +748,12 @@ if ($action == "GENERATE_RESULTS")
 			$Pcard_id = "$run-$Pbatch-$Psequence";
 
 			$stmt = "SELECT count(*) FROM callcard_accounts_details where card_id='$Pcard_id';";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
-			$vt_ct = mysql_num_rows($rslt);
+			$vt_ct = mysqli_num_rows($rslt);
 			if ($vt_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$duplicate_count =	$row[0];
 				if ($duplicate_count < 1)
 					{
@@ -762,12 +763,12 @@ if ($action == "GENERATE_RESULTS")
 						{
 						$Ppin = rand(10000000, 99999999);
 						$stmt = "SELECT count(*) FROM callcard_accounts where pin='$Ppin';";
-						$rslt=mysql_query($stmt, $link);
+						$rslt=mysql_to_mysqli($stmt, $link);
 						if ($DB) {echo "$stmt\n";}
-						$pin_ct = mysql_num_rows($rslt);
+						$pin_ct = mysqli_num_rows($rslt);
 						if ($pin_ct > 0)
 							{
-							$row=mysql_fetch_row($rslt);
+							$row=mysqli_fetch_row($rslt);
 							$duplicate_pin =	$row[0];
 							}
 						else
@@ -779,10 +780,10 @@ if ($action == "GENERATE_RESULTS")
 
 					### insert card_id and pin into tables
 					$stmt="INSERT INTO callcard_accounts SET card_id='$Pcard_id',pin='$Ppin',status='GENERATE',balance_minutes='$balance_minutes';";
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 
 					$stmt="INSERT INTO callcard_accounts_details SET card_id='$Pcard_id',status='GENERATE',run='$run',pack='',batch='$Pbatch',sequence='$Psequence',balance_minutes='$balance_minutes',initial_value='$initial_value',initial_minutes='$initial_minutes',note_purchase_order='$note_purchase_order',note_printer='$note_printer',note_did='$note_did',inbound_group_id='$inbound_group_id',note_language='$note_language',note_name='$note_name',note_comments='$note_comments',create_time='$NOW_TIME',create_user='$USER';";
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 
 					if (preg_match("/1$|3$|5$|7$|9$/i", $i))
 						{$bgcolor='bgcolor="#9BB9FB"';}
@@ -856,12 +857,12 @@ if ($action == "SEARCH_RESULTS")
 		$searchSQL = "pin='$pin'";
 
 		$stmt = "SELECT card_id FROM callcard_accounts where $searchSQL;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$vt_ct = mysql_num_rows($rslt);
+		$vt_ct = mysqli_num_rows($rslt);
 		if ($vt_ct > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$card_id =			$row[0];
 			}
 		}
@@ -915,13 +916,13 @@ if ($action == "SEARCH_RESULTS")
 		echo "</TR>\n";
 
 		$stmt = "SELECT card_id,status,balance_minutes,create_time,activate_time,used_time,void_time FROM callcard_accounts_details where $searchSQL;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$vt_ct = mysql_num_rows($rslt);
+		$vt_ct = mysqli_num_rows($rslt);
 		$i=0;
 		while ($vt_ct > $i)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$Lcard_id[$i] =			$row[0];
 			$Lstatus[$i] =			$row[1];
 			$Lbalance_minutes[$i] =	$row[2];

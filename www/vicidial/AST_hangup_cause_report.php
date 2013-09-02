@@ -9,13 +9,14 @@
 # 130419-2047 - Changed how menu lists are generated to speed up initial form load
 # 132305-2305 - Finalized changing of all ereg instances to preg
 # 130621-0749 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130902-0731 - Changed to mysqli PHP functions
 #
 
 $startMS = microtime();
 
 $report_name='Hangup Cause Report';
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -53,12 +54,12 @@ $START_TIME=date("U");
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
@@ -240,14 +241,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -296,16 +297,16 @@ $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name', url='$LOGfull_url';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=1;
 	$db_source = 'S';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
@@ -325,12 +326,12 @@ while($i < $server_ip_ct)
 
 $server_stmt="SELECT server_ip,server_description from servers where active_asterisk_server='Y' order by server_ip asc";
 if ($DB) {echo "|$server_stmt|\n";}
-$server_rslt=mysql_query($server_stmt, $link);
-$servers_to_print=mysql_num_rows($server_rslt);
+$server_rslt=mysql_to_mysqli($server_stmt, $link);
+$servers_to_print=mysqli_num_rows($server_rslt);
 $i=0;
 while ($i < $servers_to_print)
 	{
-	$row=mysql_fetch_row($server_rslt);
+	$row=mysqli_fetch_row($server_rslt);
 	$LISTserverIPs[$i] =		$row[0];
 	$LISTserver_names[$i] =	$row[1];
 	if (preg_match('/\-ALL/',$server_ip_string) )
@@ -630,16 +631,16 @@ $MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT><BR/><BR/>\n";
 $MAIN.="</TD></TR></TABLE>\n";
 if ($SUBMIT && $server_ip_ct>0) {
 	$stmt="SELECT hangup_cause, dialstatus, count(*) as ct From vicidial_carrier_log where call_date>='$query_date $query_date_D' and call_date<='$query_date $query_date_T' $server_ip_SQL $hangup_cause_SQL group by hangup_cause, dialstatus order by hangup_cause, dialstatus";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	$MAIN.="<PRE><font size=2>\n";
 	if ($DB) {$MAIN.=$stmt."\n";}
-	if (mysql_num_rows($rslt)>0) {
+	if (mysqli_num_rows($rslt)>0) {
 		$MAIN.="--- DIAL STATUS BREAKDOWN FOR $query_date, $query_date_D TO $query_date_T $server_rpt_string\n";
 		$MAIN.="+--------------+-------------+---------+\n";
 		$MAIN.="| HANGUP CAUSE | DIAL STATUS |  COUNT  |\n";
 		$MAIN.="+--------------+-------------+---------+\n";
 		$total_count=0;
-		while ($row=mysql_fetch_array($rslt)) {
+		while ($row=mysqli_fetch_array($rslt)) {
 			$MAIN.="| ".sprintf("%-13s", $row["hangup_cause"]);
 			$MAIN.="| ".sprintf("%-12s", $row["dialstatus"]);
 			$MAIN.="| ".sprintf("%-8s", $row["ct"]);
@@ -651,11 +652,11 @@ if ($SUBMIT && $server_ip_ct>0) {
 		$MAIN.="+--------------+-------------+---------+\n\n\n";
 
 		$rpt_stmt="SELECT vicidial_carrier_log.*, vicidial_log.phone_number from vicidial_carrier_log left join vicidial_log on vicidial_log.uniqueid=vicidial_carrier_log.uniqueid where vicidial_carrier_log.call_date>='$query_date $query_date_D' and vicidial_carrier_log.call_date<='$query_date $query_date_T' $server_ip_SQL $hangup_cause_SQL $sip_hangup_cause_SQL order by vicidial_carrier_log.call_date asc";
-		$rpt_rslt=mysql_query($rpt_stmt, $link);
+		$rpt_rslt=mysql_to_mysqli($rpt_stmt, $link);
 		if ($DB) {$MAIN.=$rpt_stmt."\n";}
 
 		if (!$lower_limit) {$lower_limit=1;}
-		if ($lower_limit+999>=mysql_num_rows($rpt_rslt)) {$upper_limit=($lower_limit+mysql_num_rows($rpt_rslt)%1000)-1;} else {$upper_limit=$lower_limit+999;}
+		if ($lower_limit+999>=mysqli_num_rows($rpt_rslt)) {$upper_limit=($lower_limit+mysqli_num_rows($rpt_rslt)%1000)-1;} else {$upper_limit=$lower_limit+999;}
 		
 		$MAIN.="--- CARRIER LOG RECORDS FOR $query_date, $query_date_D TO $query_date_T $server_rpt_string, $HC_rpt_string, $DS_rpt_string\n --- RECORDS #$lower_limit-$upper_limit               <a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">[DOWNLOAD]</a>\n";
 		$carrier_rpt.="+----------------------+---------------------+-----------------+-----------+--------------+-------------+------------------------------------------+-----------+---------------+--------------+--------------+--------------------------------+\n";
@@ -663,15 +664,15 @@ if ($SUBMIT && $server_ip_ct>0) {
 		$carrier_rpt.="+----------------------+---------------------+-----------------+-----------+--------------+-------------+------------------------------------------+-----------+---------------+--------------+--------------+--------------------------------+\n";
 		$CSV_text="\"UNIQUE ID\",\"CALL DATE\",\"SERVER IP\",\"LEAD ID\",\"HANGUP CAUSE\",\"DIAL STATUS\",\"CHANNEL\",\"DIAL TIME\",\"ANSWERED TIME\",\"PHONE NUMBER\",\"SIP RESPONSE\",\"SIP REASON\"\n";
 
-		for ($i=1; $i<=mysql_num_rows($rpt_rslt); $i++) {
-			$row=mysql_fetch_array($rpt_rslt);
+		for ($i=1; $i<=mysqli_num_rows($rpt_rslt); $i++) {
+			$row=mysqli_fetch_array($rpt_rslt);
 			$phone_number=""; $phone_note="";
 
 			if (strlen($row["phone_number"])==0) {
 				$stmt2="SELECT phone_number, alt_phone, address3 from vicidial_list where lead_id='$row[lead_id]'";
-				$rslt2=mysql_query($stmt2, $link);
+				$rslt2=mysql_to_mysqli($stmt2, $link);
 				$channel=$row["channel"];
-				while ($row2=mysql_fetch_array($rslt2)) {
+				while ($row2=mysqli_fetch_array($rslt2)) {
 					if (strlen($row2["alt_phone"])>=7 && preg_match("/$row2[alt_phone]/", $channel)) {$phone_number=$row2["alt_phone"]; $phone_note="ALT";}
 					else if (strlen($row2["address3"])>=7 && preg_match("/$row2[address3]/", $channel)) {$phone_number=$row2["address3"]; $phone_note="ADDR3";}
 					else if (strlen($row2["phone_number"])>=7 && preg_match("/$row2[phone_number]/", $channel)) {$phone_number=$row2["phone_number"]; $phone_note="*";}
@@ -707,8 +708,8 @@ if ($SUBMIT && $server_ip_ct>0) {
 			$carrier_rpt_hf.=sprintf("%-23s", " ");
 		}
 		$carrier_rpt_hf.=sprintf("%-145s", " ");
-		if (($lower_limit+1000)<mysql_num_rows($rpt_rslt)) {
-			if ($upper_limit+1000>=mysql_num_rows($rpt_rslt)) {$max_limit=mysql_num_rows($rpt_rslt)-$upper_limit;} else {$max_limit=1000;}
+		if (($lower_limit+1000)<mysqli_num_rows($rpt_rslt)) {
+			if ($upper_limit+1000>=mysqli_num_rows($rpt_rslt)) {$max_limit=mysqli_num_rows($rpt_rslt)-$upper_limit;} else {$max_limit=1000;}
 			$carrier_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS$hangup_causeQS$dial_statusQS&lower_limit=".($lower_limit+1000)."\">[NEXT $max_limit records >>>]</a>";
 		} else {
 			$carrier_rpt_hf.=sprintf("%23s", " ");
@@ -750,10 +751,10 @@ if ($SUBMIT && $server_ip_ct>0) {
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -769,7 +770,7 @@ $END_TIME=date("U");
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 exit;
 

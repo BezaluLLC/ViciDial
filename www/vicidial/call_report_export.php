@@ -36,11 +36,12 @@
 # 130414-0122 - Added report logging
 # 130610-0952 - Finalized changing of all ereg instances to preg
 # 130620-1725 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130902-0728 - Changed to mysqli PHP functions, Added fields to extended output
 #
 
 $startMS = microtime();
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -90,12 +91,12 @@ $file_exported=0;
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,custom_fields_enabled FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
@@ -126,14 +127,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -166,8 +167,8 @@ else
 	}
 
 $stmt="SELECT export_reports,user_group from vicidial_users where user='$PHP_AUTH_USER';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGexport_reports =	$row[0];
 $LOGuser_group =		$row[1];
 
@@ -194,23 +195,23 @@ $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$campaign[0], $query_date, $end_date|', url='$LOGfull_url';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=1;
 	$db_source = 'S';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 #	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
 $LOGallowed_reports =			$row[1];
 $LOGadmin_viewable_groups =		$row[2];
@@ -406,10 +407,17 @@ if ($run_export > 0)
 	$k=0;
 	if ($RUNcampaign > 0)
 		{
-		$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner,vi.lead_id,vl.uniqueid,vi.entry_list_id$export_fields_SQL from vicidial_users vu,vicidial_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
-		$rslt=mysql_query($stmt, $link);
+		if ($export_fields == 'EXTENDED')
+			{
+			$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner,vi.lead_id,vl.uniqueid,vi.entry_list_id, ifnull(val.dispo_sec+val.dead_sec,0)$export_fields_SQL from vicidial_users vu,vicidial_list vi,vicidial_log vl LEFT OUTER JOIN vicidial_agent_log val ON vl.uniqueid=val.uniqueid and vl.lead_id=val.lead_id and vl.user=val.user where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
+			}
+		else
+			{
+			$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner,vi.lead_id,vl.uniqueid,vi.entry_list_id$export_fields_SQL from vicidial_users vu,vicidial_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
+			}
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$outbound_to_print = mysql_num_rows($rslt);
+		$outbound_to_print = mysqli_num_rows($rslt);
 		if ($outbound_to_print < 1)
 			{
 			echo "There are no outbound calls during this time period for these parameters\n";
@@ -420,7 +428,7 @@ if ($run_export > 0)
 			$i=0;
 			while ($i < $outbound_to_print)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 
 				$row[29] = preg_replace("/\n|\r/",'!N',$row[29]);
 
@@ -430,6 +438,8 @@ if ($run_export > 0)
 				$export_uniqueid[$k] =		$row[36];
 				$export_vicidial_id[$k] =	$row[36];
 				$export_entry_list_id[$k] =	$row[37];
+				$export_wrapup_time[$k] =		$row[38];
+				$export_queue_time[$k] =		0;
 				$export_fieldsDATA='';
 				if ($export_fields == 'ALTERNATE_1')
 					{
@@ -443,7 +453,7 @@ if ($run_export > 0)
 				else
 					{
 					if ($export_fields == 'EXTENDED')
-						{$export_fieldsDATA = "$row[38]\t$row[39]\t$row[40]\t$row[41]\t$row[42]\t";}
+						{$export_fieldsDATA = "$row[39]\t$row[40]\t$row[41]\t$row[42]\t$row[43]\t";}
 					$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]\t$export_fieldsDATA";
 					}
 				$i++;
@@ -455,10 +465,17 @@ if ($run_export > 0)
 
 	if ($RUNgroup > 0)
 		{
-		$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id,vl.uniqueid$export_fields_SQL from vicidial_users vu,vicidial_closer_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
-		$rslt=mysql_query($stmtA, $link);
+		if ($export_fields == 'EXTENDED')
+			{
+			$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id,vl.uniqueid, ifnull(val.dispo_sec+val.dead_sec,0)$export_fields_SQL from vicidial_users vu,vicidial_list vi,vicidial_closer_log vl LEFT OUTER JOIN vicidial_agent_log val ON vl.uniqueid=val.uniqueid and vl.lead_id=val.lead_id and vl.user=val.user where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
+			}
+		else
+			{
+			$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id,vl.uniqueid$export_fields_SQL from vicidial_users vu,vicidial_closer_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
+			}
+		$rslt=mysql_to_mysqli($stmtA, $link);
 		if ($DB) {echo "$stmt\n";}
-		$inbound_to_print = mysql_num_rows($rslt);
+		$inbound_to_print = mysqli_num_rows($rslt);
 		if ( ($inbound_to_print < 1) and ($outbound_calls < 1) )
 			{
 			echo "There are no inbound calls during this time period for these parameters\n";
@@ -469,7 +486,7 @@ if ($run_export > 0)
 			$i=0;
 			while ($i < $inbound_to_print)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 
 				$row[29] = preg_replace("/\n|\r/",'!N',$row[29]);
 
@@ -479,20 +496,22 @@ if ($run_export > 0)
 				$export_vicidial_id[$k] =	$row[36];
 				$export_entry_list_id[$k] =	$row[37];
 				$export_uniqueid[$k] =		$row[38];
+				$export_wrapup_time[$k] =		$row[39];
+				$export_queue_time[$k] =		$row[32];
 				$export_fieldsDATA='';
 				if ($export_fields == 'ALTERNATE_1')
 					{
 					$ALTcall_date = $row[0];
-					$LASTcall_date = $row[40];
+					$LASTcall_date = $row[39];
 					$ALTcall_date = preg_replace("/-| |:|\d\d$/",'',$ALTcall_date);
 					$LASTcall_date = preg_replace("/-| |:|\d\d$/",'',$LASTcall_date);
-					$export_fieldsDATA = "$row[39]|$LASTcall_date|";
+					$export_fieldsDATA = "$row[38]|$LASTcall_date|";
 					$export_rows[$k] = "$ALTcall_date|$row[1]|$row[2]|$row[5]|$row[6]|$row[7]|$row[13]|$row[15]|$row[30]|$export_fieldsDATA";
 					}
 				else
 					{
 					if ($export_fields == 'EXTENDED')
-						{$export_fieldsDATA = "$row[39]\t$row[40]\t$row[41]\t$row[42]\t$row[43]\t";}
+						{$export_fieldsDATA = "$row[40]\t$row[41]\t$row[42]\t$row[43]\t$row[44]\t";}
 					$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]\t$export_fieldsDATA";
 					}
 				$i++;
@@ -533,7 +552,7 @@ if ($run_export > 0)
 			if ($rec_fields=='ALL')
 				{$RFheader = "\trecording_id\trecording_filename\trecording_location";}
 			if ($export_fields=='EXTENDED')
-				{$EXheader = "\tuniqueid\tcaller_code\tserver_ip\thangup_cause\tdialstatus\tchannel\tdial_time\tanswered_time\tcpd_result\tdid_pattern\tdid_id\tdid_description";}
+				{$EXheader = "\twrapup_time\tqueue_time\tuniqueid\tcaller_code\tserver_ip\thangup_cause\tdialstatus\tchannel\tdial_time\tanswered_time\tcpd_result\tdid_pattern\tdid_id\tdid_description";}
 			if ($export_fields == 'ALTERNATE_1')
 				{$EXheader = "|caller_code";}
 			if ($call_notes=='YES')
@@ -564,35 +583,35 @@ if ($run_export > 0)
 			$ex_list_name='';
 			$ex_list_description='';
 			$stmt = "SELECT list_name,list_description FROM vicidial_lists where list_id='$export_list_id[$i]';";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
-			$ex_list_ct = mysql_num_rows($rslt);
+			$ex_list_ct = mysqli_num_rows($rslt);
 			if ($ex_list_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$ex_list_name =			$row[0];
 				$ex_list_description =	$row[1];
 				}
 
 			$ex_status_name='';
 			$stmt = "SELECT status_name FROM vicidial_statuses where status='$export_status[$i]';";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
-			$ex_list_ct = mysql_num_rows($rslt);
+			$ex_list_ct = mysqli_num_rows($rslt);
 			if ($ex_list_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$ex_status_name =			$row[0];
 				}
 			else
 				{
 				$stmt = "SELECT status_name FROM vicidial_campaign_statuses where status='$export_status[$i]';";
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($DB) {echo "$stmt\n";}
-				$ex_list_ct = mysql_num_rows($rslt);
+				$ex_list_ct = mysqli_num_rows($rslt);
 				if ($ex_list_ct > 0)
 					{
-					$row=mysql_fetch_row($rslt);
+					$row=mysqli_fetch_row($rslt);
 					$ex_status_name =			$row[0];
 					}
 				}
@@ -604,13 +623,13 @@ if ($run_export > 0)
 				$rec_filename='';
 				$rec_location='';
 				$stmt = "SELECT recording_id,filename,location from recording_log where vicidial_id='$export_vicidial_id[$i]' order by recording_id desc LIMIT 10;";
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($DB) {echo "$stmt\n";}
-				$recordings_ct = mysql_num_rows($rslt);
+				$recordings_ct = mysqli_num_rows($rslt);
 				$u=0;
 				while ($recordings_ct > $u)
 					{
-					$row=mysql_fetch_row($rslt);
+					$row=mysqli_fetch_row($rslt);
 					$rec_id .=			"$row[0]|";
 					$rec_filename .=	"$row[1]|";
 					$rec_location .=	"$row[2]|";
@@ -642,12 +661,12 @@ if ($run_export > 0)
 					$uniqueidTEST = $export_uniqueid[$i];
 					$uniqueidTEST = preg_replace('/\..*$/','',$uniqueidTEST);
 					$stmt = "SELECT caller_code,server_ip from vicidial_log_extended where uniqueid LIKE \"$uniqueidTEST%\" and lead_id='$export_lead_id[$i]' LIMIT 1;";
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
-					$vle_ct = mysql_num_rows($rslt);
+					$vle_ct = mysqli_num_rows($rslt);
 					if ($vle_ct > 0)
 						{
-						$row=mysql_fetch_row($rslt);
+						$row=mysqli_fetch_row($rslt);
 						$extended_data_a =	"$row[0]";
 						$export_call_id[$i] = $row[0];
 						}
@@ -658,58 +677,58 @@ if ($run_export > 0)
 				}
 			if ($export_fields=='EXTENDED')
 				{
-				$extended_data = "\t$export_uniqueid[$i]";
+				$extended_data = "\t$export_wrapup_time[$i]\t$export_queue_time[$i]\t$export_uniqueid[$i]";
 				if (strlen($export_uniqueid[$i]) > 0)
 					{
 					$uniqueidTEST = $export_uniqueid[$i];
 					$uniqueidTEST = preg_replace('/\..*$/','',$uniqueidTEST);
 					$stmt = "SELECT caller_code,server_ip from vicidial_log_extended where uniqueid LIKE \"$uniqueidTEST%\" and lead_id='$export_lead_id[$i]' LIMIT 1;";
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
-					$vle_ct = mysql_num_rows($rslt);
+					$vle_ct = mysqli_num_rows($rslt);
 					if ($vle_ct > 0)
 						{
-						$row=mysql_fetch_row($rslt);
+						$row=mysqli_fetch_row($rslt);
 						$extended_data_a =	"\t$row[0]\t$row[1]";
 						$export_call_id[$i] = $row[0];
 						}
 
 					$stmt = "SELECT hangup_cause,dialstatus,channel,dial_time,answered_time from vicidial_carrier_log where uniqueid LIKE \"$uniqueidTEST%\" and lead_id='$export_lead_id[$i]' LIMIT 1;";
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
-					$vcarl_ct = mysql_num_rows($rslt);
+					$vcarl_ct = mysqli_num_rows($rslt);
 					if ($vcarl_ct > 0)
 						{
-						$row=mysql_fetch_row($rslt);
+						$row=mysqli_fetch_row($rslt);
 						$extended_data_b =	"\t$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]";
 						}
 
 					$stmt = "SELECT result from vicidial_cpd_log where callerid='$export_call_id[$i]' LIMIT 1;";
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
-					$vcpdl_ct = mysql_num_rows($rslt);
+					$vcpdl_ct = mysqli_num_rows($rslt);
 					if ($vcpdl_ct > 0)
 						{
-						$row=mysql_fetch_row($rslt);
+						$row=mysqli_fetch_row($rslt);
 						$extended_data_c =	"\t$row[0]";
 						}
 
 					$stmt = "SELECT extension,did_id from vicidial_did_log where uniqueid='$export_uniqueid[$i]' LIMIT 1;";
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
-					$vcdid_ct = mysql_num_rows($rslt);
+					$vcdid_ct = mysqli_num_rows($rslt);
 					if ($vcdid_ct > 0)
 						{
-						$row=mysql_fetch_row($rslt);
+						$row=mysqli_fetch_row($rslt);
 						$extended_data_d =	"\t$row[0]\t$row[1]";
 
 						$stmt = "SELECT did_description from vicidial_inbound_dids where did_id='$row[1]' LIMIT 1;";
-						$rslt=mysql_query($stmt, $link);
+						$rslt=mysql_to_mysqli($stmt, $link);
 						if ($DB) {echo "$stmt\n";}
-						$vcdidx_ct = mysql_num_rows($rslt);
+						$vcdidx_ct = mysqli_num_rows($rslt);
 						if ($vcdidx_ct > 0)
 							{
-							$row=mysql_fetch_row($rslt);
+							$row=mysqli_fetch_row($rslt);
 							$extended_data_d .=	"\t$row[0]";
 							}
 						else
@@ -734,12 +753,12 @@ if ($run_export > 0)
 				if (strlen($export_vicidial_id[$i]) > 0)
 					{
 					$stmt = "SELECT call_notes from vicidial_call_notes where vicidial_id='$export_vicidial_id[$i]' LIMIT 1;";
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
-					$notes_ct = mysql_num_rows($rslt);
+					$notes_ct = mysqli_num_rows($rslt);
 					if ($notes_ct > 0)
 						{
-						$row=mysql_fetch_row($rslt);
+						$row=mysqli_fetch_row($rslt);
 						$notes_data =	$row[0];
 						}
 					$notes_data = preg_replace("/\r\n/",' ',$notes_data);
@@ -758,14 +777,14 @@ if ($run_export > 0)
 					if ($export_fields=='ALTERNATE_1')
 						{$IVRdelimiter='^';}
 					$stmt="select menu_id,UNIX_TIMESTAMP(event_date) from vicidial_outbound_ivr_log where event_date >= '$query_date 00:00:00' and event_date <= '$end_date 23:59:59' and uniqueid='$export_uniqueid[$i]' order by event_date,menu_action desc;";
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 				#	$ivr_path = "$stmt|$export_uniqueid[$i]|";
 					if ($DB) {$MAIN.="$stmt\n";}
-					$logs_to_print = mysql_num_rows($rslt);
+					$logs_to_print = mysqli_num_rows($rslt);
 					$u=0;
 					while ($u < $logs_to_print)
 						{
-						$row=mysql_fetch_row($rslt);
+						$row=mysqli_fetch_row($rslt);
 						$ivr_path .= "$row[0]$IVRdelimiter";
 						$u++;
 						}
@@ -783,30 +802,30 @@ if ($run_export > 0)
 					{$CF_list_id = $export_entry_list_id[$i];}
 				$stmt="SHOW TABLES LIKE \"custom_$CF_list_id\";";
 				if ($DB>0) {echo "$stmt";}
-				$rslt=mysql_query($stmt, $link);
-				$tablecount_to_print = mysql_num_rows($rslt);
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$tablecount_to_print = mysqli_num_rows($rslt);
 				if ($tablecount_to_print > 0) 
 					{
 					$stmt = "describe custom_$CF_list_id;";
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
-					$columns_ct = mysql_num_rows($rslt);
+					$columns_ct = mysqli_num_rows($rslt);
 					$u=0;
 					while ($columns_ct > $u)
 						{
-						$row=mysql_fetch_row($rslt);
+						$row=mysqli_fetch_row($rslt);
 						$column =	$row[0];
 						$u++;
 						}
 					if ($columns_ct > 1)
 						{
 						$stmt = "SELECT * from custom_$CF_list_id where lead_id='$export_lead_id[$i]' limit 1;";
-						$rslt=mysql_query($stmt, $link);
+						$rslt=mysql_to_mysqli($stmt, $link);
 						if ($DB) {echo "$stmt\n";}
-						$customfield_ct = mysql_num_rows($rslt);
+						$customfield_ct = mysqli_num_rows($rslt);
 						if ($customfield_ct > 0)
 							{
-							$row=mysql_fetch_row($rslt);
+							$row=mysqli_fetch_row($rslt);
 							$t=1;
 							while ($columns_ct > $t) 
 								{
@@ -851,88 +870,88 @@ else
 	if (!isset($end_date)) {$end_date = $NOW_DATE;}
 
 	$stmt="select campaign_id from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$campaigns_to_print = mysql_num_rows($rslt);
+	$campaigns_to_print = mysqli_num_rows($rslt);
 	$i=0;
 		$LISTcampaigns[$i]='---NONE---';
 		$i++;
 		$campaigns_to_print++;
 	while ($i < $campaigns_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$LISTcampaigns[$i] =$row[0];
 		$i++;
 		}
 
 	$stmt="select group_id from vicidial_inbound_groups $whereLOGadmin_viewable_groupsSQL order by group_id;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$groups_to_print = mysql_num_rows($rslt);
+	$groups_to_print = mysqli_num_rows($rslt);
 	$i=0;
 		$LISTgroups[$i]='---NONE---';
 		$i++;
 		$groups_to_print++;
 	while ($i < $groups_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$LISTgroups[$i] =$row[0];
 		$i++;
 		}
 
 	$stmt="select user_group from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$user_groups_to_print = mysql_num_rows($rslt);
+	$user_groups_to_print = mysqli_num_rows($rslt);
 	$i=0;
 		$LISTuser_groups[$i]='---ALL---';
 		$i++;
 		$user_groups_to_print++;
 	while ($i < $user_groups_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$LISTuser_groups[$i] =$row[0];
 		$i++;
 		}
 
 	$stmt="select list_id from vicidial_lists $whereLOGallowed_campaignsSQL order by list_id;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$lists_to_print = mysql_num_rows($rslt);
+	$lists_to_print = mysqli_num_rows($rslt);
 	$i=0;
 		$LISTlists[$i]='---ALL---';
 		$i++;
 		$lists_to_print++;
 	while ($i < $lists_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$LISTlists[$i] =$row[0];
 		$i++;
 		}
 
 	$stmt="select status from vicidial_statuses order by status;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$statuses_to_print = mysql_num_rows($rslt);
+	$statuses_to_print = mysqli_num_rows($rslt);
 	$i=0;
 		$LISTstatus[$i]='---ALL---';
 		$i++;
 		$statuses_to_print++;
 	while ($i < $statuses_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$LISTstatus[$i] =$row[0];
 		$i++;
 		}
 
 	$stmt="select distinct status from vicidial_campaign_statuses $whereLOGallowed_campaignsSQL order by status;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$Cstatuses_to_print = mysql_num_rows($rslt);
+	$Cstatuses_to_print = mysqli_num_rows($rslt);
 	$j=0;
 	while ($j < $Cstatuses_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$LISTstatus[$i] =$row[0];
 		$i++;
 		$j++;
@@ -1133,10 +1152,10 @@ else
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -1148,7 +1167,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 if ($file_exported > 0)
 	{
@@ -1158,7 +1177,7 @@ if ($file_exported > 0)
 	$SQL_log = addslashes($SQL_log);
 	$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LEADS', event_type='EXPORT', record_id='', event_code='ADMIN EXPORT CALLS REPORT', event_sql=\"$SQL_log\", event_notes='';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	}
 
 exit;

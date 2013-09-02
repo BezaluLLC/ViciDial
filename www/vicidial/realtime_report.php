@@ -24,16 +24,17 @@
 # 130414-0247 - Added report logging
 # 130610-0944 - Finalized changing of all ereg instances to preg
 # 130616-2237 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-0858 - Changed to mysqli PHP functions
 #
 
 $startMS = microtime();
 
-$version = '2.8-13';
-$build = '130616-2237';
+$version = '2.8-14';
+$build = '130901-0858';
 
 header ("Content-type: text/html; charset=utf-8");
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -104,12 +105,12 @@ $db_source = 'M';
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
@@ -290,14 +291,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -345,24 +346,24 @@ $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$groups[0]|', url='$LOGfull_url';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=1;
 	$db_source = 'S';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 if ($auth) 
 	{
 	$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,callcard_admin,force_change_password,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,modify_contacts,modify_same_user_level from vicidial_users where user='$PHP_AUTH_USER';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$LOGfull_name				=$row[3];
 	$LOGuser_level				=$row[4];
 	$LOGuser_group				=$row[5];
@@ -411,8 +412,8 @@ if ($auth)
 	$LOGmodify_same_user_level	=$row[82];
 
 	$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$LOGallowed_campaigns =			$row[0];
 	$LOGallowed_reports =			$row[1];
 	$LOGadmin_viewable_groups =		$row[2];
@@ -439,23 +440,23 @@ if ($auth)
 if ( (!isset($monitor_phone)) or (strlen($monitor_phone)<1) )
 	{
 	$stmt="select phone_login from vicidial_users where user='$PHP_AUTH_USER';";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$monitor_phone = $row[0];
 	}
 
 $stmt="SELECT realtime_block_user_info,user_group from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $realtime_block_user_info = $row[0];
 $LOGuser_group =			$row[1];
 
 $stmt="SELECT allowed_campaigns,allowed_reports,webphone_url_override,webphone_dialpad_override,webphone_systemkey_override from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
 $LOGallowed_reports =			$row[1];
 $webphone_url =					$row[2];
@@ -483,16 +484,16 @@ $regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
 
 $allactivecampaigns='';
 $stmt="select campaign_id,campaign_name from vicidial_campaigns where active='Y' $LOGallowed_campaignsSQL order by campaign_id;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$groups_to_print = mysql_num_rows($rslt);
+$groups_to_print = mysqli_num_rows($rslt);
 $i=0;
 $LISTgroups[$i]='ALL-ACTIVE';
 $i++;
 $groups_to_print++;
 while ($i < $groups_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$LISTgroups[$i] =$row[0];
 	$LISTnames[$i] =$row[1];
 	$allactivecampaigns .= "'$LISTgroups[$i]',";
@@ -596,10 +597,10 @@ else
 	}
 
 $stmt="select user_group, group_name from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if (!isset($DB))   {$DB=0;}
 if ($DB) {echo "$stmt\n";}
-$usergroups_to_print = mysql_num_rows($rslt);
+$usergroups_to_print = mysqli_num_rows($rslt);
 $i=0;
 $usergroups[$i]='ALL-GROUPS';
 $usergroupnames[$i] = 'All user groups';
@@ -607,7 +608,7 @@ $i++;
 $usergroups_to_print++;
 while ($i < $usergroups_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$usergroups[$i] =$row[0];
 	$usergroupnames[$i] =$row[1];
 	$i++;
@@ -758,12 +759,12 @@ $select_list .= "</SELECT></TD></TR>";
 ## find if any selected campaigns have presets enabled
 $presets_enabled=0;
 $stmt="select count(*) from vicidial_campaigns where enable_xfer_presets='ENABLED' $group_SQLand;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$OUToutput .= "$stmt\n";}
-$presets_enabled_count = mysql_num_rows($rslt);
+$presets_enabled_count = mysqli_num_rows($rslt);
 if ($presets_enabled_count > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$presets_enabled = $row[0];
 	}
 if ($presets_enabled > 0)
@@ -813,11 +814,11 @@ if (strlen($monitor_phone)>1)
 	{
 	$stmt="SELECT extension,dialplan_number,server_ip,login,pass,protocol,conf_secret,is_webphone,use_external_server_ip,codecs_list,webphone_dialpad,outbound_cid,webphone_auto_answer from phones where login='$monitor_phone' and active = 'Y';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$Mph_ct = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$Mph_ct = mysqli_num_rows($rslt);
 	if ($Mph_ct > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$extension =				$row[0];
 		$dialplan_number =			$row[1];
 		$webphone_server_ip =		$row[2];
@@ -843,13 +844,13 @@ if (strlen($monitor_phone)>1)
 				{
 				##### find external_server_ip if enabled for this phone account
 				$stmt="SELECT external_server_ip FROM servers where server_ip='$webphone_server_ip' LIMIT 1;";
-				$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01065',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysqli_error_logging($NOW_TIME,$link,$mel,$stmt,'01065',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
-				$exip_ct = mysql_num_rows($rslt);
+				$exip_ct = mysqli_num_rows($rslt);
 				if ($exip_ct > 0)
 					{
-					$row=mysql_fetch_row($rslt);
+					$row=mysqli_fetch_row($rslt);
 					$webphone_server_ip =$row[0];
 					}
 				}
@@ -857,13 +858,13 @@ if (strlen($monitor_phone)>1)
 				{
 				##### find webphone_url in system_settings and generate IFRAME code for it #####
 				$stmt="SELECT webphone_url FROM system_settings LIMIT 1;";
-				$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01066',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysqli_error_logging($NOW_TIME,$link,$mel,$stmt,'01066',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
-				$wu_ct = mysql_num_rows($rslt);
+				$wu_ct = mysqli_num_rows($rslt);
 				if ($wu_ct > 0)
 					{
-					$row=mysql_fetch_row($rslt);
+					$row=mysqli_fetch_row($rslt);
 					$webphone_url =$row[0];
 					}
 				}
@@ -871,13 +872,13 @@ if (strlen($monitor_phone)>1)
 				{
 				##### find system_key in system_settings if populated #####
 				$stmt="SELECT webphone_systemkey FROM system_settings LIMIT 1;";
-				$rslt=mysql_query($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01068',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysqli_error_logging($NOW_TIME,$link,$mel,$stmt,'01068',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
-				$wsk_ct = mysql_num_rows($rslt);
+				$wsk_ct = mysqli_num_rows($rslt);
 				if ($wsk_ct > 0)
 					{
-					$row=mysql_fetch_row($rslt);
+					$row=mysqli_fetch_row($rslt);
 					$system_key =$row[0];
 					}
 				}
@@ -1468,15 +1469,15 @@ function update_variables(task_option,task_choice,force_reload)
 	.b4 {color: white; background-color: #0000FF}
 <?php
 	$stmt="select group_id,group_color from vicidial_inbound_groups;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$INgroups_to_print = mysql_num_rows($rslt);
+	$INgroups_to_print = mysqli_num_rows($rslt);
 		if ($INgroups_to_print > 0)
 		{
 		$g=0;
 		while ($g < $INgroups_to_print)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$group_id[$g] = $row[0];
 			$group_color[$g] = $row[1];
 			echo "   .csc$group_id[$g] {color: black; background-color: $group_color[$g]}\n";
@@ -1488,9 +1489,9 @@ echo "\n-->\n
 </STYLE>\n";
 
 $stmt = "select count(*) from vicidial_campaigns where active='Y' and campaign_allow_inbound='Y' $group_SQLand;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$row=mysql_fetch_row($rslt);
+$row=mysqli_fetch_row($rslt);
 $campaign_allow_inbound = $row[0];
 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
@@ -1608,10 +1609,10 @@ echo "<span id=realtime_content name=realtime_content></span>\n";
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -1623,7 +1624,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 
 ?>

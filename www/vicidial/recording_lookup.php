@@ -35,13 +35,16 @@
 # 120223-2129 - Removed logging of good login passwords if webroot writable is enabled
 # 130610-1108 - Finalized changing of all ereg instances to preg
 # 130616-2228 - Added filtering of input to prevent SQL injection attacks
+# 130901-0856 - Changed to mysqli PHP functions
 #
 
 $STARTtime = date("U");
 $TODAYstart = date("H/i/s 00:00:00");
 
-$linkAST=mysql_connect("1.1.1.1", "cron", "1234");
-mysql_select_db("asterisk");
+#$linkAST=mysql_connect("1.1.1.1", "cron", "1234");
+#mysql_select_db("asterisk");
+$linkAST=mysqli_connect("1.1.1.1", "cron", "1234", "asterisk");
+
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -100,14 +103,14 @@ else
 	echo "<PRE>\n";
 
 	$stmt="select recording_id,lead_id,user,filename,location,start_time,length_in_sec from recording_log where filename LIKE \"%$QUERY_recid%\" order by recording_id desc LIMIT 1;";
-	$rslt=mysql_query($stmt, $linkAST);
-	$logs_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $linkAST);
+	$logs_to_print = mysqli_num_rows($rslt);
 	#echo "|$stmt|";
 
 	$u=0;
 	if ($logs_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$phone = $QUERY_recid;
 		$recording_id = $row[0]; 
 		$lead_id =		$row[1]; 

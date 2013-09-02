@@ -9,9 +9,10 @@
 # 130221-2124 - First build
 # 130610-1039 - Finalized changing of all ereg instances to preg
 # 130621-0756 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130902-0733 - Changed to mysqli PHP functions
 #
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -31,12 +32,12 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,custom_fields_enabled,allow_emails FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =							$row[0];
 	$timeclock_end_of_day =					$row[1];
 	$agentonly_callback_campaign_lock =		$row[2];
@@ -74,14 +75,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -116,14 +117,14 @@ else
 
 if ($email_log_id) {
 	$stmt="select * from vicidial_email_log where email_log_id='$email_log_id'";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 } else if ($email_row_id) {
 	$stmt="select * from vicidial_email_list where email_row_id='$email_row_id'";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 }
 	
-if (mysql_num_rows($rslt)>0) {
-	$row=mysql_fetch_array($rslt);
+if (mysqli_num_rows($rslt)>0) {
+	$row=mysqli_fetch_array($rslt);
 	$row["message"]=preg_replace('/\r|\n/', "<BR/>", $row["message"]);
 	$EMAIL_form="<TABLE cellspacing=2 cellpadding=2 bgcolor='#CCCCCC' width='500'>\n";
 	$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='100'>Date sent:</td><td align='left' valign='top' width='400'>$row[email_date]</td></tr>\n";

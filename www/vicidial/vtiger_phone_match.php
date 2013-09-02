@@ -13,11 +13,12 @@
 # CHANGES
 # 100806-0653 - First Build
 # 130610-1124 - Finalized changing of all ereg instances to preg
+# 130902-0756 - Changed to mysqli PHP functions
 #
 
 header ("Content-type: text/html; charset=utf-8");
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 
 if (isset($_GET["phone"]))				{$phone=$_GET["phone"];}
 	elseif (isset($_POST["phone"]))		{$phone=$_POST["phone"];}
@@ -27,12 +28,12 @@ if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 ###############################################################
 ##### START SYSTEM_SETTINGS VTIGER CONNECTION INFO LOOKUP #####
 $stmt = "SELECT enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,use_non_latin FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$ss_conf_ct = mysql_num_rows($rslt);
+$ss_conf_ct = mysqli_num_rows($rslt);
 if ($ss_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$enable_vtiger_integration =	$row[0];
 	$vtiger_server_ip	=			$row[1];
 	$vtiger_dbname =				$row[2];
@@ -58,26 +59,28 @@ $phone_count=0;
 if ( ($enable_vtiger_integration > 0) and (strlen($vtiger_server_ip) > 5) and (strlen($phone) > 6) )
 	{
 	### connect to your vtiger database
-	$linkV=mysql_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass");
-	if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysql_error());}
+	#$linkV=mysql_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass");
+	$linkV=mysqli_connect("$vtiger_server_ip", "$vtiger_login", "$vtiger_pass", "$vtiger_dbname");
+	
+	if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysqli_error());}
 	if ($DB) {echo 'Connected successfully';}
-	mysql_select_db("$vtiger_dbname", $linkV);
+	#mysql_select_db("$vtiger_dbname", $linkV);
 
 	$stmt="SELECT count(*) from vtiger_contactdetails where phone='$phone';";
 	if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $linkV);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $linkV);
+	$row=mysqli_fetch_row($rslt);
 	$phone_count = $row[0];
-	if (!$rslt) {die("Could not execute: $stmt" . mysql_error());}
+	if (!$rslt) {die("Could not execute: $stmt" . mysqli_error());}
 
 	if ($phone_count < 1)
 		{
 		$stmt="SELECT count(*) from vtiger_contactsubdetails where homephone='$phone';";
 		if ($DB) {echo "$stmt\n";}
-		$rslt=mysql_query($stmt, $linkV);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $linkV);
+		$row=mysqli_fetch_row($rslt);
 		$phone_count = $row[0];
-		if (!$rslt) {die("Could not execute: $stmt" . mysql_error());}
+		if (!$rslt) {die("Could not execute: $stmt" . mysqli_error());}
 		}
 	}
 

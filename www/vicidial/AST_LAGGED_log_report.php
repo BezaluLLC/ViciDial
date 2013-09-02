@@ -5,11 +5,12 @@
 #
 # CHANGES
 # 130622-1026 - First build
+# 130901-2027 - Changed to mysqli PHP functions
 #
 
 $startMS = microtime();
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $report_name='LAGGED Agent Log Report';
@@ -51,12 +52,12 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
@@ -87,14 +88,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -143,17 +144,17 @@ $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$query_date, $end_date, $lower_limit, $upper_limit, $file_download|', url='$LOGfull_url';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 
 if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=1;
 	$db_source = 'S';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
@@ -210,11 +211,11 @@ $MAIN.="<TD VALIGN=TOP align=center><INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>
 $MAIN.="</TD></TR></TABLE>\n";
 if ($SUBMIT && $query_date) {
 	$stmt="select server_ip, count(*) as ct From vicidial_agent_log where event_time>='$query_date $query_date_D' and event_time<='$query_date $query_date_T' and sub_status='LAGGED' group by server_ip order by server_ip";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	$ASCII_text="<PRE><font size=2>\n";
 	$HTML_text="";
 	if ($DB) {$ASCII_text.=$stmt."\n";}
-	if (mysql_num_rows($rslt)>0) {
+	if (mysqli_num_rows($rslt)>0) {
 		$ASCII_text.="--- SERVER IP BREAKDOWN FOR LAGGED RECORDS $query_date, $query_date_D TO $query_date_T \n";
 		$ASCII_text.="+-----------------+---------+\n";
 		$ASCII_text.="| SERVER IP       |  COUNT  |\n";
@@ -224,7 +225,7 @@ if ($SUBMIT && $query_date) {
 		$HTML_text.="<TR><TH class='small_standard_bold grey_graph_cell'>SERVER IP</th><TH class='small_standard_bold grey_graph_cell'>COUNT</th></tr>";
 
 		$total_count=0;
-		while ($row=mysql_fetch_array($rslt)) {
+		while ($row=mysqli_fetch_array($rslt)) {
 			$ASCII_text.="| ".sprintf("%-16s", $row["server_ip"]);
 			$ASCII_text.="| ".sprintf("%-8s", $row["ct"]);
 			$ASCII_text.="|\n";
@@ -238,11 +239,11 @@ if ($SUBMIT && $query_date) {
 
 
 		$rpt_stmt="select * from vicidial_agent_log where sub_status='LAGGED' and event_time>='$query_date $query_date_D' and event_time<='$query_date $query_date_T' $url_type_SQL order by user, event_time asc";
-		$rpt_rslt=mysql_query($rpt_stmt, $link);
+		$rpt_rslt=mysql_to_mysqli($rpt_stmt, $link);
 		if ($DB) {$ASCII_text.=$rpt_stmt."\n";}
 
 		if (!$lower_limit) {$lower_limit=1;}
-		if ($lower_limit+999>=mysql_num_rows($rpt_rslt)) {$upper_limit=($lower_limit+mysql_num_rows($rpt_rslt)%1000)-1;} else {$upper_limit=$lower_limit+999;}
+		if ($lower_limit+999>=mysqli_num_rows($rpt_rslt)) {$upper_limit=($lower_limit+mysqli_num_rows($rpt_rslt)%1000)-1;} else {$upper_limit=$lower_limit+999;}
 
 		$ASCII_text.="--- LAGGED LOG RECORDS FOR $query_date, $query_date_D TO $query_date_T $server_rpt_string, RECORDS #$lower_limit-$upper_limit               <a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">[DOWNLOAD]</a>\n";
 		$lagged_rpt.="+--------------+------------+-----------------+---------------------+-----------+----------+--------+----------------------+----------------------+----------------------+\n";
@@ -255,8 +256,8 @@ if ($SUBMIT && $query_date) {
 
 		$CSV_text="\"AGENT LOG ID\",\"USER\",\"SERVER IP\",\"EVENT TIME\",\"LEAD ID\",\"CAMPAIGN\",\"STATUS\",\"USER GROUP\",\"COMMENTS\",\"UNIQUE ID\"\n";
 
-		for ($i=1; $i<=mysql_num_rows($rpt_rslt); $i++) {
-			$row=mysql_fetch_array($rpt_rslt);
+		for ($i=1; $i<=mysqli_num_rows($rpt_rslt); $i++) {
+			$row=mysqli_fetch_array($rpt_rslt);
 
 			$CSV_text.="\"$row[agent_log_id]\",\"$row[user]\",\"$row[server_ip]\",\"$row[event_time]\",\"$row[lead_id]\",\"$row[campaign_id]\",\"$row[status]\",\"$row[user_group]\",\"$row[comments]\",\"$row[uniqueid]\"\n";
 			if ($i>=$lower_limit && $i<=$upper_limit) {
@@ -282,7 +283,7 @@ if ($SUBMIT && $query_date) {
 		$lagged_rpt_hf="";
 		$HTML_rpt_hf="<TR>";
 		$ll=$lower_limit-1000;
-		if ($ll<1 || ($lower_limit+1000)>=mysql_num_rows($rpt_rslt)) {$HTML_colspan=6;} else {$HTML_colspan=3;}
+		if ($ll<1 || ($lower_limit+1000)>=mysqli_num_rows($rpt_rslt)) {$HTML_colspan=6;} else {$HTML_colspan=3;}
 
 		if ($ll>=1) {
 			$lagged_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&report_display_type=$report_display_type&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=$ll\">[<<< PREV 1000 records]</a>";
@@ -292,8 +293,8 @@ if ($SUBMIT && $query_date) {
 			$lagged_rpt_hf.=sprintf("%-23s", " ");
 		}
 		$lagged_rpt_hf.=sprintf("%-145s", " ");
-		if (($lower_limit+1000)<mysql_num_rows($rpt_rslt)) {
-			if ($upper_limit+1000>=mysql_num_rows($rpt_rslt)) {$max_limit=mysql_num_rows($rpt_rslt)-$upper_limit;} else {$max_limit=1000;}
+		if (($lower_limit+1000)<mysqli_num_rows($rpt_rslt)) {
+			if ($upper_limit+1000>=mysqli_num_rows($rpt_rslt)) {$max_limit=mysqli_num_rows($rpt_rslt)-$upper_limit;} else {$max_limit=1000;}
 			$lagged_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&report_display_type=$report_display_type&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=".($lower_limit+1000)."\">[NEXT $max_limit records >>>]</a>";
 			$HTML_rpt_hf.="<Td colspan='$HTML_colspan' class='small_standard_bold grey_graph_cell' align='right'><a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&report_display_type=$report_display_type&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=".($lower_limit+1000)."\">[NEXT $max_limit records >>>]</a></TH>";
 		} else {
@@ -349,10 +350,10 @@ if ($SUBMIT && $query_date) {
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -364,7 +365,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 exit;
 

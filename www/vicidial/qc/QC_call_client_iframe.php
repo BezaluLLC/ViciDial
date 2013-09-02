@@ -14,9 +14,10 @@
 # 121116-1328 - First build, added to vicidial codebase
 # 130621-2352 - Finalized changing of all ereg instances to preg
 #             - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130902-0905 - Changed to mysqli PHP functions
 #
 
-require("../dbconnect.php");
+require("../dbconnect_mysqli.php");
 require("../functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -132,12 +133,12 @@ $NOW_TIME = date("Y-m-d H:i:s");
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,custom_fields_enabled FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =				$row[0];
 	$custom_fields_enabled =	$row[1];
 	}
@@ -188,8 +189,8 @@ if ($auth < 1)
 
 $rights_stmt = "SELECT modify_leads,qc_enabled,qc_user_level from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
-$rights_rslt=mysql_query($rights_stmt, $link);
-$rights_row=mysql_fetch_row($rights_rslt);
+$rights_rslt=mysql_to_mysqli($rights_stmt, $link);
+$rights_row=mysqli_fetch_row($rights_rslt);
 $modify_leads =		$rights_row[0];
 $qc_enabled =		$rights_row[1];
 $qc_user_level =	$rights_row[2];
@@ -230,8 +231,8 @@ $label_comments =			'Comments';
 
 ### find any custom field labels
 $stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 if (strlen($row[0])>0)	{$label_title =				$row[0];}
 if (strlen($row[1])>0)	{$label_first_name =		$row[1];}
 if (strlen($row[2])>0)	{$label_middle_initial =	$row[2];}

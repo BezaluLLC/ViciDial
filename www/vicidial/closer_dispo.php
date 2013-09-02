@@ -13,9 +13,10 @@
 # 120223-2249 - Removed logging of good login passwords if webroot writable is enabled
 # 130610-1114 - Finalized changing of all ereg instances to preg
 # 130620-0817 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-1932 - Changed to mysqli PHP functions
 #
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -91,12 +92,12 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$webroot_writable =				$row[1];
 	$SSoutbound_autodial_active =	$row[2];
@@ -149,8 +150,8 @@ if ($auth < 1)
 
 $stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "$stmt\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGfullname=$row[0];
 $fullname = $row[0];
 
@@ -173,19 +174,19 @@ if ($end_call > 0)
 $call_length = ($STARTtime - $call_began);
 
 	### insert a NEW record to the vicidial_closer_log table 
-	$stmt="INSERT INTO vicidial_closer_log (lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed) values('" . mysql_real_escape_string($lead_id) . "','" . mysql_real_escape_string($list_id) . "','" . mysql_real_escape_string($campaign_id) . "','" . mysql_real_escape_string($parked_time) . "','" . mysql_real_escape_string($call_began) . "','$STARTtime','" . mysql_real_escape_string($call_length) . "','" . mysql_real_escape_string($status) . "','" . mysql_real_escape_string($phone_code) . "','" . mysql_real_escape_string($phone_number) . "','$PHP_AUTH_USER','" . mysql_real_escape_string($comments) . "','Y')";
+	$stmt="INSERT INTO vicidial_closer_log (lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed) values('" . mysqli_real_escape_string($link, $lead_id) . "','" . mysqli_real_escape_string($link, $list_id) . "','" . mysqli_real_escape_string($link, $campaign_id) . "','" . mysqli_real_escape_string($link, $parked_time) . "','" . mysqli_real_escape_string($link, $call_began) . "','$STARTtime','" . mysqli_real_escape_string($link, $call_length) . "','" . mysqli_real_escape_string($link, $status) . "','" . mysqli_real_escape_string($link, $phone_code) . "','" . mysqli_real_escape_string($link, $phone_number) . "','$PHP_AUTH_USER','" . mysqli_real_escape_string($link, $comments) . "','Y')";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 
 	### update the lead record in the vicidial_list table 
-	$stmt="UPDATE vicidial_list set status='" . mysql_real_escape_string($status) . "',first_name='" . mysql_real_escape_string($first_name) . "',last_name='" . mysql_real_escape_string($last_name) . "',address1='" . mysql_real_escape_string($address1) . "',address2='" . mysql_real_escape_string($address2) . "',address3='" . mysql_real_escape_string($address3) . "',city='" . mysql_real_escape_string($city) . "',state='" . mysql_real_escape_string($state) . "',province='" . mysql_real_escape_string($province) . "',postal_code='" . mysql_real_escape_string($postal_code) . "',country_code='" . mysql_real_escape_string($country_code) . "',alt_phone='" . mysql_real_escape_string($alt_phone) . "',email='" . mysql_real_escape_string($email) . "',security_phrase='" . mysql_real_escape_string($security) . "',comments='" . mysql_real_escape_string($comments) . "' where lead_id='" . mysql_real_escape_string($lead_id) . "'";
+	$stmt="UPDATE vicidial_list set status='" . mysqli_real_escape_string($link, $status) . "',first_name='" . mysqli_real_escape_string($link, $first_name) . "',last_name='" . mysqli_real_escape_string($link, $last_name) . "',address1='" . mysqli_real_escape_string($link, $address1) . "',address2='" . mysqli_real_escape_string($link, $address2) . "',address3='" . mysqli_real_escape_string($link, $address3) . "',city='" . mysqli_real_escape_string($link, $city) . "',state='" . mysqli_real_escape_string($link, $state) . "',province='" . mysqli_real_escape_string($link, $province) . "',postal_code='" . mysqli_real_escape_string($link, $postal_code) . "',country_code='" . mysqli_real_escape_string($link, $country_code) . "',alt_phone='" . mysqli_real_escape_string($link, $alt_phone) . "',email='" . mysqli_real_escape_string($link, $email) . "',security_phrase='" . mysqli_real_escape_string($link, $security) . "',comments='" . mysqli_real_escape_string($link, $comments) . "' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "'";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 
-	$stmt="SELECT count(*) from live_channels where server_ip='$server_ip' and channel='" . mysql_real_escape_string($channel) . "' and extension like \"%" . mysql_real_escape_string($extension) . "%\"";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="SELECT count(*) from live_channels where server_ip='$server_ip' and channel='" . mysqli_real_escape_string($link, $channel) . "' and extension like \"%" . mysqli_real_escape_string($link, $extension) . "%\"";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$parked_count = $row[0];
 
 	if ($parked_count > 0)
@@ -194,9 +195,9 @@ $call_length = ($STARTtime - $call_began);
 		$DTqueryCID = "RR$FILE_datetime$PHP_AUTH_USER";
 
 		### insert a NEW record to the vicidial_manager table to be processed
-		$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','" . mysql_real_escape_string($server_ip) . "','','Hangup','$DTqueryCID','Channel: " . mysql_real_escape_string($channel) . "','','','','','','','','','')";
+		$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','" . mysqli_real_escape_string($link, $server_ip) . "','','Hangup','$DTqueryCID','Channel: " . mysqli_real_escape_string($link, $channel) . "','','','','','','','','','')";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 
 		echo "Hangup command sent for channel $channel &nbsp; &nbsp; &nbsp; $NOW_TIME\n<BR><BR>\n";
 
@@ -210,19 +211,19 @@ $call_length = ($STARTtime - $call_began);
 }
 else
 {
-	$stmt="SELECT count(*) from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "'";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="SELECT count(*) from vicidial_list where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "'";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$lead_count = $row[0];
 
 	if ($lead_count > 0)
 	{
 
-		$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "'";
-		$rslt=mysql_query($stmt, $link);
+		$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner from vicidial_list where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "'";
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		   $lead_id			= "$row[0]";
 		   $tsr				= "$row[4]";
 		   $vendor_id		= "$row[5]";
@@ -283,13 +284,13 @@ else
 			echo "<tr bgcolor=#B6D3FC><td align=right>Disposition: </td><td align=left><select size=1 name=status>\n";
 
 				$stmt="SELECT status,status_name from vicidial_statuses where selectable='Y' order by status";
-				$rslt=mysql_query($stmt, $link);
-				$statuses_to_print = mysql_num_rows($rslt);
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$statuses_to_print = mysqli_num_rows($rslt);
 				$statuses_list='';
 
 				$o=0;
 				while ($statuses_to_print > $o) {
-					$rowx=mysql_fetch_row($rslt);
+					$rowx=mysqli_fetch_row($rslt);
 					$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 					$o++;
 				}

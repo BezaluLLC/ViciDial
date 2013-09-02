@@ -5,9 +5,10 @@
 #
 # CHANGES
 # 130711-2051 - First build
+# 130830-1800 - Changed to mysqli PHP functions
 #
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -18,12 +19,12 @@ $QUERY_STRING = getenv("QUERY_STRING");
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,auto_dial_limit,user_territories_active,allow_custom_dialplan,callcard_enabled,admin_modify_refresh,nocache_admin,webroot_writable,allow_emails,hosted_settings FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$SSauto_dial_limit =			$row[1];
 	$SSuser_territories_active =	$row[2];
@@ -67,20 +68,20 @@ if ($user_auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 1 and qc_enabled > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$qc_auth=$row[0];
 
 	$reports_only_user=0;
@@ -127,8 +128,8 @@ $admin_version = '2.8-407a';
 $build = '130709-1350';
 
 $stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,callcard_admin,force_change_password,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,modify_contacts,modify_same_user_level from vicidial_users where user='$PHP_AUTH_USER';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGfull_name				=$row[3];
 $LOGuser_level				=$row[4];
 $LOGuser_group				=$row[5];
@@ -177,8 +178,8 @@ $LOGmodify_contacts			=$row[81];
 $LOGmodify_same_user_level	=$row[82];
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
 $LOGallowed_reports =			$row[1];
 $LOGadmin_viewable_groups =		$row[2];
@@ -234,7 +235,7 @@ if ( ($LOGuser_level >= 9) and $LOGmodify_campaigns>0 and $LOGmodify_lists>0 and
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$campaign_stmt="select vl.campaign_id, vc.campaign_name, count(*) as ct from vicidial_lists vl, vicidial_campaigns vc where vc.active='Y' and vc.campaign_id=vl.campaign_id $LOGallowed_campaignsSQL group by campaign_id order by campaign_id, campaign_name asc";
-	$campaign_rslt=mysql_query($campaign_stmt, $link);
+	$campaign_rslt=mysql_to_mysqli($campaign_stmt, $link);
 
 	echo "<br><B>Reset Lead-Called-Status for Campaigns:</B><BR><BR>\n";
 	echo "<form action='$PHP_SELF?ADD=200000000000' method='post'>";
@@ -247,7 +248,7 @@ if ( ($LOGuser_level >= 9) and $LOGmodify_campaigns>0 and $LOGmodify_lists>0 and
 	echo "<tr bgcolor='#B9CBFD'>";
 	echo "<td align='left'>";
 	echo "<select name='reset_lead_called_campaigns'>\n";
-	while ($campaign_row=mysql_fetch_array($campaign_rslt)) {
+	while ($campaign_row=mysqli_fetch_array($campaign_rslt)) {
 		if ($campaign_row["ct"]>0) {
 			$selected="";
 			if ($reset_lead_called_campaigns==$campaign_row["campaign_id"]) {
@@ -269,8 +270,8 @@ if ( ($LOGuser_level >= 9) and $LOGmodify_campaigns>0 and $LOGmodify_lists>0 and
 		if ($all_or_active_only=="Y") {$list_id_clause="and active='Y'";  $verbiage="(active lists only)";}
 				
 		$list_id_stmt="select list_id from vicidial_lists where campaign_id='$reset_lead_called_campaigns' $list_id_clause order by list_id asc";
-		$list_id_rslt=mysql_query($list_id_stmt, $link);
-		if (mysql_num_rows($list_id_rslt)>0) {
+		$list_id_rslt=mysql_to_mysqli($list_id_stmt, $link);
+		if (mysqli_num_rows($list_id_rslt)>0) {
 			echo "CAMPAIGN <B>$reset_lead_called_campaigns</B> LISTS RESETTING $verbiage:<BR>\n<UL>";
 			
 			### LOG INSERTION Admin Log Table ###
@@ -280,13 +281,13 @@ if ( ($LOGuser_level >= 9) and $LOGmodify_campaigns>0 and $LOGmodify_lists>0 and
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGNS', event_type='RESET', record_id='$reset_lead_called_campaigns', event_code='ADMIN RESET CAMPAIGN LISTS', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 		}
 
-		while ($list_id_row=mysql_fetch_array($list_id_rslt)) {
+		while ($list_id_row=mysqli_fetch_array($list_id_rslt)) {
 			$list_id=$list_id_row["list_id"];
 			$upd_stmt="UPDATE vicidial_list SET called_since_last_reset='N' where list_id='$list_id';";
-			$upd_rslt=mysql_query($upd_stmt, $link);
+			$upd_rslt=mysql_to_mysqli($upd_stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
 			$SQLdate=date("Y-m-d H:i:s");
@@ -295,14 +296,14 @@ if ( ($LOGuser_level >= 9) and $LOGmodify_campaigns>0 and $LOGmodify_lists>0 and
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='RESET', record_id='$list_id', event_code='ADMIN RESET LIST', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			
 			echo "<LI>LIST ID $list_id - ";
-			if (mysql_affected_rows()>0) {echo "RESET<BR>";} else {echo "<B>NOT</B> RESET<BR>";}
+			if (mysqli_affected_rows($link)>0) {echo "RESET<BR>";} else {echo "<B>NOT</B> RESET<BR>";}
 		}
-		if (mysql_num_rows($list_id_rslt)>0) {echo "</UL>";}
-		if (mysql_num_rows($list_id_rslt)<7) {
-			for ($j=mysql_num_rows($list_id_rslt); $j<7; $j++) {echo "<BR>";}
+		if (mysqli_num_rows($list_id_rslt)>0) {echo "</UL>";}
+		if (mysqli_num_rows($list_id_rslt)<7) {
+			for ($j=mysqli_num_rows($list_id_rslt); $j<7; $j++) {echo "<BR>";}
 		}
 	} else {
 		echo "<BR><BR><BR><BR><BR><BR><BR>&nbsp;";

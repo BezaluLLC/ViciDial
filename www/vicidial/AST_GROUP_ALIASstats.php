@@ -12,13 +12,14 @@
 # 130414-0214 - Added report logging
 # 130610-1016 - Finalized changing of all ereg instances to preg
 # 130621-0751 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130902-0732 - Changed to mysqli PHP functions
 #
 
 $startMS = microtime();
 
 $report_name='Group Alias Report';
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -40,12 +41,12 @@ if (strlen($shift)<2) {$shift='ALL';}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	}
 ##### END SETTINGS LOOKUP #####
@@ -73,14 +74,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -129,8 +130,8 @@ $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$query_date, $end_date|', url='$LOGfull_url';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 $NOW_DATE = date("Y-m-d");
@@ -206,13 +207,13 @@ echo "| GROUP ALIAS                                                            |
 echo "+------------------------------------------------------------------------+------------+----------+\n";
 
 $stmt="SELECT count(*),ucl.group_alias_id,group_alias_name from user_call_log ucl,groups_alias ga where call_date >= '$query_date' and call_date <= '$end_date' and ucl.group_alias_id=ga.group_alias_id group by ucl.group_alias_id order by ucl.group_alias_id;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$records_to_grab = mysql_num_rows($rslt);
+$records_to_grab = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $records_to_grab)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$TOTcount = ($TOTcount + $row[0]);
 	$count[$i] =	sprintf("%-8s", $row[0]);
 	$group_alias_id[$i] =	$row[1];
@@ -225,13 +226,13 @@ $i=0;
 while ($i < $records_to_grab)
 	{
 	$stmt="SELECT UNIX_TIMESTAMP(call_date),call_type,phone_number,number_dialed from user_call_log where group_alias_id='$group_alias_id[$i]' and call_date >= '$query_date' and call_date <= '$end_date';";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$records_to_grabC = mysql_num_rows($rslt);
+	$records_to_grabC = mysqli_num_rows($rslt);
 	$k=0;
 	while ($k < $records_to_grabC)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$call_dateS[$k] =		($row[0] - 5);
 		$call_dateE[$k] =		($row[0] + 5);
 		$call_type[$k] =		$row[1];
@@ -266,12 +267,12 @@ while ($i < $records_to_grab)
 			{$stmt="SELECT length_in_sec from call_log where extension='$phone_number[$k]'";}
 
 		$stmt .= " and start_epoch >= $call_dateS[$k] and start_epoch <= $call_dateE[$k];";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$records_to_grabCL = mysql_num_rows($rslt);
+		$records_to_grabCL = mysqli_num_rows($rslt);
 		if ($records_to_grabCL > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$length_in_sec[$k] =		$row[0];
 			$group_sec = ($group_sec + $row[0]);
 			$total_sec = ($total_sec + $row[0]);
@@ -306,10 +307,10 @@ echo "<BR><BR>\nRun Time: $RUNtime seconds\n";
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -321,7 +322,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 }
 

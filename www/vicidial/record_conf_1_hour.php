@@ -13,9 +13,10 @@
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 # 130610-1109 - Finalized changing of all ereg instances to preg
 # 130616-2230 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-0857 - Changed to mysqli PHP functions
 #
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -37,12 +38,12 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$webroot_writable =				$row[1];
 	$SSoutbound_autodial_active =	$row[2];
@@ -53,7 +54,7 @@ if ($qm_conf_ct > 0)
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
-$MYSQL_datetime = date("Y-m-d H:i:s");
+$mysql_datetime = date("Y-m-d H:i:s");
 $FILE_datetime = date("Ymd-His_");
 $secX = $STARTtime;
 $date = date("r");
@@ -82,14 +83,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -122,13 +123,13 @@ else
 	}
 
 $stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGfullname=$row[0];
 
 $stmt="SELECT full_name from vicidial_users where user='$user';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $full_name = $row[0];
 
 
@@ -153,13 +154,13 @@ if ($NEW_RECORDING)
 		$conf_silent_prefix = '7';
 		$ext_context = 'demo';
 
-		$stmt="INSERT INTO vicidial_manager values('','','$MYSQL_datetime','NEW','N','" . mysql_real_escape_string($server_ip) . "','','Originate','RB$FILE_datetime" . mysql_real_escape_string($station) . "','Channel: $local_DEF$conf_silent_prefix" . mysql_real_escape_string($session_id) . "$local_AMP$ext_context','Context: $ext_context','Exten: 8309','Priority: 1','Callerid: $FILE_datetime" . mysql_real_escape_string($station) . "','','','','','')";
+		$stmt="INSERT INTO vicidial_manager values('','','$mysql_datetime','NEW','N','" . mysqli_real_escape_string($link, $server_ip) . "','','Originate','RB$FILE_datetime" . mysqli_real_escape_string($link, $station) . "','Channel: $local_DEF$conf_silent_prefix" . mysqli_real_escape_string($link, $session_id) . "$local_AMP$ext_context','Context: $ext_context','Exten: 8309','Priority: 1','Callerid: $FILE_datetime" . mysqli_real_escape_string($link, $station) . "','','','','','')";
 		echo "|$stmt|\n<BR><BR>\n";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmt="INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,filename) values('" . mysql_real_escape_string($session_id) . "','" . mysql_real_escape_string($server_ip) . "','" . mysql_real_escape_string($station) . "','$MYSQL_datetime','$secX','$FILE_datetime" . mysql_real_escape_string($station) . "')";
+		$stmt="INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,filename) values('" . mysqli_real_escape_string($link, $session_id) . "','" . mysqli_real_escape_string($link, $server_ip) . "','" . mysqli_real_escape_string($link, $station) . "','$mysql_datetime','$secX','$FILE_datetime" . mysqli_real_escape_string($link, $station) . "')";
 		echo "|$stmt|\n<BR><BR>\n";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 
 		echo "Recording started\n<BR><BR>\n";
 		echo "<a href=\"$PHP_SELF\">Back to main recording screen</a>\n<BR><BR>\n";

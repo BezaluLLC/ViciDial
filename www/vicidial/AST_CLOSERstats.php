@@ -7,7 +7,7 @@
 # 60619-1714 - Added variable filtering to eliminate SQL injection attack threat
 #            - Added required user/pass to gain access to this page
 # 60905-1326 - Added queue time stats
-# 71008-1436 - Added shift to be defined in dbconnect.php
+# 71008-1436 - Added shift to be defined in dbconnect_mysqli.php
 # 71025-0021 - Added status breakdown
 # 71218-1155 - Added end_date for multi-day reports
 # 80430-1920 - Added Customer hangup cause stats
@@ -40,11 +40,12 @@
 # 130610-1023 - Finalized changing of all ereg instances to preg
 # 130621-0805 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130704-0936 - Fixed issue #675
+# 130901-0816 - Changed to mysqli PHP functions
 #
 
 $startMS = microtime();
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -84,12 +85,12 @@ $db_source = 'M';
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
@@ -100,13 +101,13 @@ if ($qm_conf_ct > 0)
 
 
 $stmt = "SELECT local_gmt FROM servers where active='Y' limit 1;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$gmt_conf_ct = mysql_num_rows($rslt);
+$gmt_conf_ct = mysqli_num_rows($rslt);
 $dst = date("I");
 if ($gmt_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$local_gmt =		$row[0];
 	$epoch_offset =		(($local_gmt + $dst) * 3600);
 	}
@@ -133,14 +134,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -174,14 +175,14 @@ else
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {$MAIN.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGuser_group =			$row[0];
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {$MAIN.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
 $LOGallowed_reports =			$row[1];
 $LOGadmin_viewable_groups =		$row[2];
@@ -232,9 +233,9 @@ if ($EMAIL=='Y')
 	$stmt="select email_account_id,email_account_name,email_account_id from vicidial_email_accounts $whereLOGadmin_viewable_groupsSQL order by email_account_id;";
 	$stmt="select group_id,group_name,8 from vicidial_inbound_groups where group_handling='EMAIL' $LOGadmin_viewable_groupsSQL order by group_id;";
 	}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$groups_to_print = mysql_num_rows($rslt);
+$groups_to_print = mysqli_num_rows($rslt);
 $i=0;
 $LISTgroups[$i]='---NONE---';
 $i++;
@@ -242,7 +243,7 @@ $groups_to_print++;
 $groups_string='|';
 while ($i < $groups_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$LISTgroups[$i] =		$row[0];
 	$LISTgroup_names[$i] =	$row[1];
 	$LISTgroup_ids[$i] =	$row[2];
@@ -293,28 +294,28 @@ $AMP='&';
 $QM='?';
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $DID, $EMAIL, $file_download, $report_display_type|', url='".$LOGfull_url."?DB=".$DB."&DID=".$DID."&EMAIL=".$EMAIL."&query_date=".$query_date."&end_date=".$end_date."&shift=".$shift."&report_display_type=".$report_display_type."$groupQS';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 
 if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=1;
 	$db_source = 'S';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $stmt="select vsc_id,vsc_name from vicidial_status_categories;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$statcats_to_print = mysql_num_rows($rslt);
+$statcats_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $statcats_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$vsc_id[$i] =	$row[0];
 	$vsc_name[$i] =	$row[1];
 	$vsc_count[$i] = 0;
@@ -498,13 +499,13 @@ else
 if ($DID=='Y')
 	{
 	$stmt="select did_id from vicidial_inbound_dids where did_pattern IN($group_SQL) $LOGadmin_viewable_groupsSQL;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
-	$dids_to_print = mysql_num_rows($rslt);
+	$dids_to_print = mysqli_num_rows($rslt);
 	$i=0;
 	while ($i < $dids_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$did_id[$i] = $row[0];
 		$did_SQL .= "'$row[0]',";
 		$i++;
@@ -513,13 +514,13 @@ if ($DID=='Y')
 	if (strlen($did_SQL)<3) {$did_SQL="''";}
 
 	$stmt="select uniqueid from vicidial_did_log where did_id IN($did_SQL);";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
-	$unids_to_print = mysql_num_rows($rslt);
+	$unids_to_print = mysqli_num_rows($rslt);
 	$i=0;
 	while ($i < $unids_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$unid_SQL .= "'$row[0]',";
 		$i++;
 		}
@@ -566,23 +567,23 @@ if ($group_ct > 1)
 		$did_id[$i]='0';
 		$DIDunid_SQL='';
 		$stmt="select did_id from vicidial_inbound_dids where did_pattern='$group[$i]';";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$ASCII_text.="$stmt\n";}
-		$Sdids_to_print = mysql_num_rows($rslt);
+		$Sdids_to_print = mysqli_num_rows($rslt);
 		if ($Sdids_to_print > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$did_id[$i] = $row[0];
 			}
 
 		$stmt="select uniqueid from vicidial_did_log where did_id='$did_id[$i]';";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$ASCII_text.="$stmt\n";}
-		$DIDunids_to_print = mysql_num_rows($rslt);
+		$DIDunids_to_print = mysqli_num_rows($rslt);
 		$k=0;
 		while ($k < $DIDunids_to_print)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$DIDunid_SQL .= "'$row[0]',";
 			$k++;
 			}
@@ -594,27 +595,27 @@ if ($group_ct > 1)
 			{
 			$stmt="select count(*),sum(length_in_sec) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($DIDunid_SQL);";
 			}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$ASCII_text.="$stmt\n";}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 
 		$stmt="select count(*) from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a='$group[$i]' and comment_b='START';";
 		if ($DID=='Y')
 			{
 			$stmt="select count(*) from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and uniqueid IN($DIDunid_SQL);";
 			}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$ASCII_text.="$stmt\n";}
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 
 		$stmt="select count(*),sum(length_in_sec) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='$group[$i]' and status IN('DROP','XDROP') and (length_in_sec <= 49999 or length_in_sec is null);";
 		if ($DID=='Y')
 			{
 			$stmt="select count(*),sum(length_in_sec) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status IN('DROP','XDROP') and (length_in_sec <= 49999 or length_in_sec is null) and uniqueid IN($DIDunid_SQL);";
 			}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$ASCII_text.="$stmt\n";}
-		$rowy=mysql_fetch_row($rslt);
+		$rowy=mysqli_fetch_row($rslt);
 		if ($row[0]>$max_value) {$max_value=$row[0];}
 
 		$groupDISPLAY =	sprintf("%20s", $group[$i]);
@@ -698,27 +699,27 @@ if ($DID=='Y')
 	{
 	$stmt="select count(*),sum(length_in_sec) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL);";
 	}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$row=mysql_fetch_row($rslt);
+$row=mysqli_fetch_row($rslt);
 
 $stmt="select count(*),sum(queue_seconds) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL');";
 if ($DID=='Y')
 	{
 	$stmt="select count(*),sum(queue_seconds) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') and uniqueid IN($unid_SQL);";
 	}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$rowy=mysql_fetch_row($rslt);
+$rowy=mysqli_fetch_row($rslt);
 
 $stmt="select count(*) from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a IN($group_SQL) and comment_b='START';";
 if ($DID=='Y')
 	{
 	$stmt="select count(*) from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and uniqueid IN($unid_SQL);";
 	}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$rowx=mysql_fetch_row($rslt);
+$rowx=mysqli_fetch_row($rslt);
 
 $TOTALcalls =	sprintf("%10s", $row[0]);
 $IVRcalls =	sprintf("%10s", $rowx[0]);
@@ -787,9 +788,9 @@ if ($DID=='Y')
 	{
 	$stmt="select count(*),sum(length_in_sec) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status IN('DROP','XDROP') and (length_in_sec <= 49999 or length_in_sec is null) and uniqueid IN($unid_SQL);";
 	}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$row=mysql_fetch_row($rslt);
+$row=mysqli_fetch_row($rslt);
 
 $DROPcalls =	sprintf("%10s", $row[0]);
 if ( ($DROPcalls < 1) or ($TOTALcalls < 1) )
@@ -840,22 +841,22 @@ if (strlen($group_SQL)>3)
 	if ($DID!='Y')
 		{
 		$stmt = "SELECT answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two from vicidial_inbound_groups where group_id IN($group_SQL) order by answer_sec_pct_rt_stat_one desc limit 1;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$Sanswer_sec_pct_rt_stat_one = $row[0];
 		$Sanswer_sec_pct_rt_stat_two = $row[1];
 
 		$stmt = "SELECT count(*) from vicidial_closer_log where campaign_id IN($group_SQL) and call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and queue_seconds <= $Sanswer_sec_pct_rt_stat_one and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL');";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$answer_sec_pct_rt_stat_one = $row[0];
 
 		$stmt = "SELECT count(*) from vicidial_closer_log where campaign_id IN($group_SQL) and call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and queue_seconds <= $Sanswer_sec_pct_rt_stat_two and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL');";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$answer_sec_pct_rt_stat_two = $row[0];
 
 		if ( ($ANSWEREDcalls > 0) and ($answer_sec_pct_rt_stat_one > 0) and ($answer_sec_pct_rt_stat_two > 0) )
@@ -905,13 +906,13 @@ if ($DID!='Y')
 # GET LIST OF ALL STATUSES and create SQL from human_answered statuses
 $q=0;
 $stmt = "SELECT status,status_name,human_answered,category from vicidial_statuses;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$statuses_to_print = mysql_num_rows($rslt);
+$statuses_to_print = mysqli_num_rows($rslt);
 $p=0;
 while ($p < $statuses_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$status[$q] =			$row[0];
 	$status_name[$q] =		$row[1];
 	$human_answered[$q] =	$row[2];
@@ -922,13 +923,13 @@ while ($p < $statuses_to_print)
 	$p++;
 	}
 $stmt = "SELECT status,status_name,human_answered,category from vicidial_campaign_statuses;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$statuses_to_print = mysql_num_rows($rslt);
+$statuses_to_print = mysqli_num_rows($rslt);
 $p=0;
 while ($p < $statuses_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$status[$q] =			$row[0];
 	$status_name[$q] =		$row[1];
 	$human_answered[$q] =	$row[2];
@@ -951,9 +952,9 @@ if ($DID=='Y')
 	{
 	$stmt="select count(*),sum(queue_seconds) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and (queue_seconds > 0) and uniqueid IN($unid_SQL);";
 	}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$row=mysql_fetch_row($rslt);
+$row=mysqli_fetch_row($rslt);
 
 $QUEUEcalls =	sprintf("%10s", $row[0]);
 if ( ($QUEUEcalls < 1) or ($TOTALcalls < 1) )
@@ -1031,15 +1032,15 @@ if ($DID=='Y')
 	{
 	$stmt="select count(*),queue_seconds from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) group by queue_seconds;";
 	}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
-$reasons_to_print = mysql_num_rows($rslt);
+$reasons_to_print = mysqli_num_rows($rslt);
 $i=0;
 $hd_5=0; $hd10=0; $hd15=0; $hd20=0; $hd25=0; $hd30=0; $hd35=0; $hd40=0; $hd45=0; $hd50=0; $hd55=0; $hd60=0; $hd90=0; $hd99=0;
 
 while ($i < $reasons_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 
 	$TOTALcalls = ($TOTALcalls + $row[0]);
 
@@ -1096,16 +1097,16 @@ if ($report_display_type=="HTML") {
 		$mc_stmt="select count(*) as ct from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) group by queue_seconds order by ct desc limit 1;";
 		}
 	if ($DB) {$GRAPH_text.=$stmt."\n";}
-	$ms_rslt=mysql_query($ms_stmt, $link);
-	$ms_row=mysql_fetch_row($ms_rslt);
+	$ms_rslt=mysql_to_mysqli($ms_stmt, $link);
+	$ms_row=mysqli_fetch_row($ms_rslt);
 	$max_seconds=$ms_row[0];
 	if ($max_seconds>90) {$max_seconds=91;}
 	for ($i=0; $i<=$max_seconds; $i++) {
 		$sec_ary[$i]=0;
 	}
 
-	$mc_rslt=mysql_query($mc_stmt, $link);
-	$mc_row=mysql_fetch_row($mc_rslt);
+	$mc_rslt=mysql_to_mysqli($mc_stmt, $link);
+	$mc_row=mysqli_fetch_row($mc_rslt);
 	$max_calls=$ms_row[0];
 	if ($max_calls<=10) {
 		while ($maxcalls%5!=0) {
@@ -1124,13 +1125,13 @@ if ($report_display_type=="HTML") {
 			$maxcalls++;
 		}
 	}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	
 	$GRAPH_text="<div id=\"QueueCanvas\" style=\"overflow: auto; position:relative;height:300px;width:1000px;\"></div>\n";
 	$GRAPH_text.="<script type=\"text/javascript\">\n";
 	$GRAPH_text.="var g = new line_graph(6);\n";
 	$over90=0;
-	while ($row=mysql_fetch_row($rslt)) {
+	while ($row=mysqli_fetch_row($rslt)) {
 		if ($row[1]<=90) {
 			$sec_ary[$row[1]]=$row[0];
 		} else {
@@ -1175,15 +1176,15 @@ if ($DID=='Y')
 	{
 	$stmt="select count(*),queue_seconds from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and status IN('DROP','XDROP') group by queue_seconds;";
 	}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
-$reasons_to_print = mysql_num_rows($rslt);
+$reasons_to_print = mysqli_num_rows($rslt);
 $i=0;
 $dd_0=0; $dd_5=0; $dd10=0; $dd15=0; $dd20=0; $dd25=0; $dd30=0; $dd35=0; $dd40=0; $dd45=0; $dd50=0; $dd55=0; $dd60=0; $dd90=0; $dd99=0;
 
 while ($i < $reasons_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 
 	$BDdropCALLS = ($BDdropCALLS + $row[0]);
 
@@ -1240,16 +1241,16 @@ if ($report_display_type=="HTML") {
 		$mc_stmt="select count(*) as ct from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and status IN('DROP','XDROP') group by queue_seconds order by ct desc limit 1;";
 		}
 	if ($DB) {$GRAPH_text.=$stmt."\n";}
-	$ms_rslt=mysql_query($ms_stmt, $link);
-	$ms_row=mysql_fetch_row($ms_rslt);
+	$ms_rslt=mysql_to_mysqli($ms_stmt, $link);
+	$ms_row=mysqli_fetch_row($ms_rslt);
 	$max_seconds=$ms_row[0];
 	if ($max_seconds>90) {$max_seconds=91;}
 	for ($i=0; $i<=$max_seconds; $i++) {
 		$sec_ary[$i]=0;
 	}
 
-	$mc_rslt=mysql_query($mc_stmt, $link);
-	$mc_row=mysql_fetch_row($mc_rslt);
+	$mc_rslt=mysql_to_mysqli($mc_stmt, $link);
+	$mc_row=mysqli_fetch_row($mc_rslt);
 	$max_calls=$ms_row[0];
 	if ($max_calls<=10) {
 		while ($maxcalls%5!=0) {
@@ -1268,13 +1269,13 @@ if ($report_display_type=="HTML") {
 			$maxcalls++;
 		}
 	}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	
 	$GRAPH_text="<div id=\"DropCanvas\" style=\"overflow: auto; position:relative;height:300px;width:1000px;\"></div>\n";
 	$GRAPH_text.="<script type=\"text/javascript\">\n";
 	$GRAPH_text.="var g = new line_graph(6);\n";
 	$over90=0;
-	while ($row=mysql_fetch_row($rslt)) {
+	while ($row=mysqli_fetch_row($rslt)) {
 		if ($row[1]<=90) {
 			$sec_ary[$row[1]]=$row[0];
 		} else {
@@ -1320,13 +1321,13 @@ if ($DID=='Y')
 	{
 	$stmt="select count(*),queue_seconds from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by queue_seconds;";
 	}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
-$reasons_to_print = mysql_num_rows($rslt);
+$reasons_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $reasons_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 
 	$BDansweredCALLS = ($BDansweredCALLS + $row[0]);
 	
@@ -1530,16 +1531,16 @@ if ($report_display_type=="HTML") {
 		$mc_stmt="select count(*) as ct from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by queue_seconds order by ct desc limit 1;";
 		}
 	if ($DB) {$GRAPH_text.=$stmt."\n";}
-	$ms_rslt=mysql_query($ms_stmt, $link);
-	$ms_row=mysql_fetch_row($ms_rslt);
+	$ms_rslt=mysql_to_mysqli($ms_stmt, $link);
+	$ms_row=mysqli_fetch_row($ms_rslt);
 	$max_seconds=$ms_row[0];
 	if ($max_seconds>90) {$max_seconds=91;}
 	for ($i=0; $i<=$max_seconds; $i++) {
 		$sec_ary[$i]=0;
 	}
 
-	$mc_rslt=mysql_query($mc_stmt, $link);
-	$mc_row=mysql_fetch_row($mc_rslt);
+	$mc_rslt=mysql_to_mysqli($mc_stmt, $link);
+	$mc_row=mysqli_fetch_row($mc_rslt);
 	$max_calls=$ms_row[0];
 	if ($max_calls<=10) {
 		while ($maxcalls%5!=0) {
@@ -1558,13 +1559,13 @@ if ($report_display_type=="HTML") {
 			$maxcalls++;
 		}
 	}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	
 	$GRAPH_text="<div id=\"CallTimeCanvas\" style=\"overflow: auto; position:relative;height:300px;width:1000px;\"></div>\n";
 	$GRAPH_text.="<script type=\"text/javascript\">\n";
 	$GRAPH_text.="var g = new line_graph(6);\n";
 	$over90=0;
-	while ($row=mysql_fetch_row($rslt)) {
+	while ($row=mysqli_fetch_row($rslt)) {
 		if ($row[1]<=90) {
 			$sec_ary[$row[1]]=$row[0];
 		} else {
@@ -1608,13 +1609,13 @@ if ($DID=='Y')
 	{
 	$stmt="select count(*),term_reason from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) group by term_reason order by term_reason;";
 	}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
-$reasons_to_print = mysql_num_rows($rslt);
+$reasons_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $reasons_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 
 	$TOTALcalls = ($TOTALcalls + $row[0]);
 
@@ -1640,9 +1641,9 @@ $CSV_text3.="\"TOTAL:\",\"$TOTALcalls\"\n";
 if ($report_display_type=="HTML") 
 	{
 	$ct_ary=array();
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	$high_ct=0; $i=0;
-	while ($row=mysql_fetch_row($rslt)) {
+	while ($row=mysqli_fetch_row($rslt)) {
 		if ($row[0]>$high_ct) {$high_ct=$row[0];}
 		$ct_ary[$i][0]=$row[0];
 		$ct_ary[$i][1]=$row[1];
@@ -1701,9 +1702,9 @@ if ($DID=='Y')
 	{
 	$stmt="select count(*),status,sum(length_in_sec) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) group by status;";
 	}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
-$statuses_to_print = mysql_num_rows($rslt);
+$statuses_to_print = mysqli_num_rows($rslt);
 $i=0;
 
 ######## GRAPHING #########
@@ -1720,7 +1721,7 @@ $CALLSHOUR_graph=$graph_header."<th class='thgraph' scope='col'>CALLS/HR</th></t
 
 while ($i < $statuses_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 
 	$STATUScount =	$row[0];
 	$RAWstatus =	$row[1];
@@ -1962,13 +1963,13 @@ if ($DID=='Y')
 	{
 	$stmt="select count(*),queue_position from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) group by queue_position;";
 	}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
-$positions_to_print = mysql_num_rows($rslt);
+$positions_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $positions_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 
 	$TOTALcalls = ($TOTALcalls + $row[0]);
 
@@ -2023,16 +2024,16 @@ if ($report_display_type=="HTML")
 		$mc_stmt="select count(*) as ct from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) group by queue_position order by ct desc limit 1;";
 		}
 	if ($DB) {$GRAPH_text.=$stmt."\n";}
-	$ms_rslt=mysql_query($ms_stmt, $link);
-	$ms_row=mysql_fetch_row($ms_rslt);
+	$ms_rslt=mysql_to_mysqli($ms_stmt, $link);
+	$ms_row=mysqli_fetch_row($ms_rslt);
 	$max_position=$ms_row[0];
 	if ($max_position>25) {$max_position=26;}
 	for ($i=1; $i<=$max_position; $i++) {
 		$sec_ary[$i]=0;
 	}
 
-	$mc_rslt=mysql_query($mc_stmt, $link);
-	$mc_row=mysql_fetch_row($mc_rslt);
+	$mc_rslt=mysql_to_mysqli($mc_stmt, $link);
+	$mc_row=mysqli_fetch_row($mc_rslt);
 	$max_calls=$ms_row[0];
 	if ($max_calls<=10) {
 		while ($maxcalls%5!=0) {
@@ -2051,13 +2052,13 @@ if ($report_display_type=="HTML")
 			$maxcalls++;
 		}
 	}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	
 	$GRAPH_text="<div id=\"InitialQueueCanvas\" style=\"overflow: auto; position:relative;height:300px;width:1000px;\"></div>\n";
 	$GRAPH_text.="<script type=\"text/javascript\">\n";
 	$GRAPH_text.="var g = new line_graph(25);\n";
 	$over25=0;
-	while ($row=mysql_fetch_row($rslt)) {
+	while ($row=mysqli_fetch_row($rslt)) {
 		if ($row[1]<=25) {
 			$sec_ary[$row[1]]=$row[0];
 		} else {
@@ -2116,13 +2117,13 @@ if ($DID=='Y')
 	{
 	$stmt="select vicidial_closer_log.user,full_name,count(*),sum(length_in_sec),avg(length_in_sec) from vicidial_closer_log,vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and vicidial_closer_log.user is not null and length_in_sec is not null and length_in_sec > 0 and vicidial_closer_log.user=vicidial_users.user group by vicidial_closer_log.user;";
 	}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
-$users_to_print = mysql_num_rows($rslt);
+$users_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $users_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 
 	$TOTcalls = ($TOTcalls + $row[2]);
 	$TOTtime = ($TOTtime + $row[3]);
@@ -2241,13 +2242,13 @@ if ($DID=='Y')
 	{
 	$stmt="SELECT status,queue_seconds,UNIX_TIMESTAMP(call_date),call_date from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL);";
 	}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$calls_to_print = mysql_num_rows($rslt);
+$calls_to_print = mysqli_num_rows($rslt);
 $j=0;
 while ($j < $calls_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$Cstatus[$j] =	$row[0];
 	$Cqueue[$j] =	$row[1];
 	$Cepoch[$j] =	$row[2];
@@ -2629,10 +2630,10 @@ if ($file_download>0) {
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -2644,7 +2645,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 exit;
 

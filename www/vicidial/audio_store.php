@@ -18,14 +18,15 @@
 # 121129-1620 - Hide delete option text if not allowed
 # 130610-1052 - Finalized changing of all ereg instances to preg
 # 130620-1729 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-2001 - Changed to mysqli PHP functions
 #
 
-$version = '2.8-12';
-$build = '130620-1729';
+$version = '2.8-13';
+$build = '130901-2001';
 
 $MT[0]='';
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $server_name = getenv("SERVER_NAME");
@@ -61,12 +62,12 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory,outbound_autodial_active FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$ss_conf_ct = mysql_num_rows($rslt);
+$ss_conf_ct = mysqli_num_rows($rslt);
 if ($ss_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =						$row[0];
 	$sounds_central_control_active =	$row[1];
 	$sounds_web_server =				$row[2];
@@ -108,21 +109,21 @@ if (strlen($sounds_web_directory) < 30)
 	if ($DB > 0) {echo "$WeBServeRRooT/$sounds_web_directory\n";}
 
 	$stmt="UPDATE system_settings set sounds_web_directory='$sounds_web_directory';";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	echo "NOTICE: new web directory created\n";
 	}
 
 
 ### get list of all servers, if not one of them, then force authentication check
 $stmt = "SELECT server_ip FROM servers;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$sv_conf_ct = mysql_num_rows($rslt);
+$sv_conf_ct = mysqli_num_rows($rslt);
 $i=0;
 $server_ips ='|';
 while ($sv_conf_ct > $i)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$server_ips .=	"$row[0]|";
 	$i++;
 	}
@@ -163,8 +164,8 @@ if ( (!preg_match("/\|$ip\|/", $server_ips)) and ($formIPvalid < 1) )
 		{
 		$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and( (modify_campaigns='1') or (modify_audiostore='1') );";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$admin_auth=$row[0];
 
 		if ($admin_auth < 1)
@@ -193,8 +194,8 @@ if ( (!preg_match("/\|$ip\|/", $server_ips)) and ($formIPvalid < 1) )
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 8 and ( (ast_admin_access='1') and (modify_audiostore='1') )";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$auth_delete=$row[0];
 	}
 
@@ -211,11 +212,11 @@ if ( ($action == "DELETE") and ($auth_delete > 0) )
 
 		$stmt="UPDATE servers SET sounds_update='Y',audio_store_purge=CONCAT(audio_store_purge,\"$delete_file\\n\");";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 
 		$stmt="UPDATE system_settings SET audio_store_purge=CONCAT(audio_store_purge,\"$delete_file\\n\");";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 
 		$delete_message = "AUDIO FILE SET FOR DELETION: $delete_file\n";
 		}
@@ -407,7 +408,7 @@ if ($action == "MANUALUPLOAD")
 		echo "SUCCESS: $audiofile_name uploaded     size:" . filesize("$WeBServeRRooT/$sounds_web_directory/$audiofile_name") . "\n";
 
 		$stmt="UPDATE servers SET sounds_update='Y';";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
 		$SQL_log = "$stmt|";
@@ -415,7 +416,7 @@ if ($action == "MANUALUPLOAD")
 		$SQL_log = addslashes($SQL_log);
 		$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='AUDIOSTORE', event_type='LOAD', record_id='manualupload', event_code='$audiofile_name " . filesize("$WeBServeRRooT/$sounds_web_directory/$audiofile_name") . "', event_sql=\"$SQL_log\", event_notes='$audiofile_name $AF_path $AF_orig';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		}
 	else
 		{

@@ -9,14 +9,15 @@
 # 90529-2115 - First Build
 # 130610-1130 - Finalized changing of all ereg instances to preg
 # 130617-2128 - Added filtering of input to prevent SQL injection attacks
+# 130901-0859 - Changed to mysqli PHP functions
 #
 
-$version = '2.8-3';
-$build = '130617-2128';
+$version = '2.8-4';
+$build = '130901-0859';
 
 header ("Content-type: text/html; charset=utf-8");
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
@@ -59,12 +60,12 @@ $ERRstring='';
 #############################################
 ##### START QUEUEMETRICS LOGGING LOOKUP #####
 $stmt = "SELECT enable_queuemetrics_logging FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$enable_queuemetrics_logging =	$row[0];
 	}
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -72,23 +73,23 @@ if ($qm_conf_ct > 0)
 if ($enable_queuemetrics_logging > 0)
 	{
 	$stmt = "SELECT user,server_ip,conf_exten,comments FROM vicidial_live_agents where callerid='$call';";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$vla_conf_ct = mysql_num_rows($rslt);
+	$vla_conf_ct = mysqli_num_rows($rslt);
 	if ($vla_conf_ct > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$VLAuser =			$row[0];
 		$VLAserver_ip =		$row[1];
 		$VLAconf_exten =	$row[2];
 
 		$stmt = "SELECT campaign_id,phone_number,call_type FROM vicidial_auto_calls where callerid='$call';";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$vla_conf_ct = mysql_num_rows($rslt);
+		$vla_conf_ct = mysqli_num_rows($rslt);
 		if ($vla_conf_ct > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$VACcampaign =	$row[0];
 			$VACphone =		$row[1];
 			$VACtype =		$row[2];

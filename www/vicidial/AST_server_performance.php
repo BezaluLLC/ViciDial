@@ -19,11 +19,12 @@
 # 130414-0157 - Added report logging
 # 130610-0959 - Finalized changing of all ereg instances to preg
 # 130621-0726 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-2012 - Changed to mysqli PHP functions
 #
 
 $startMS = microtime();
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -51,12 +52,12 @@ $db_source = 'M';
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
@@ -87,14 +88,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -142,29 +143,29 @@ $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group, $query_date, $end_date, $shift, $file_download, $report_display_type|', url='$LOGfull_url';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=1;
 	$db_source = 'S';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGuser_group =			$row[0];
 
 $stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns = $row[0];
 $LOGallowed_reports =	$row[1];
 
@@ -189,13 +190,13 @@ if (!isset($end_query_time)) {$end_query_time = "$NOW_DATE 15:30:00";}
 if (!isset($group)) {$group = '';}
 
 $stmt="select server_ip from servers order by server_ip;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$servers_to_print = mysql_num_rows($rslt);
+$servers_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $servers_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$groups[$i] =$row[0];
 	$i++;
 	}
@@ -260,10 +261,10 @@ echo "Server Performance Report                            $NOW_TIME\n";
 echo "Time range: $query_date_BEGIN to $query_date_END\n\n";
 echo "---------- TOTALS, PEAKS and AVERAGES\n";
 
-$stmt="select AVG(sysload),AVG(channels_total),MAX(sysload),MAX(channels_total),MAX(processes) from server_performance where start_time <= '" . mysql_real_escape_string($query_date_END) . "' and start_time >= '" . mysql_real_escape_string($query_date_BEGIN) . "' and server_ip='" . mysql_real_escape_string($group) . "';";
-$rslt=mysql_query($stmt, $link);
+$stmt="select AVG(sysload),AVG(channels_total),MAX(sysload),MAX(channels_total),MAX(processes) from server_performance where start_time <= '" . mysqli_real_escape_string($link, $query_date_END) . "' and start_time >= '" . mysqli_real_escape_string($link, $query_date_BEGIN) . "' and server_ip='" . mysqli_real_escape_string($link, $group) . "';";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$row=mysql_fetch_row($rslt);
+$row=mysqli_fetch_row($rslt);
 $AVGload =	sprintf("%10s", $row[0]);
 $AVGchannels =	sprintf("%10s", $row[1]);
 $HIGHload =	$row[2];
@@ -274,18 +275,18 @@ if ($row[2] > $row[3]) {$HIGHlimit = $row[2];}
 else {$HIGHlimit = $row[3];}
 if ($HIGHlimit < $row[4]) {$HIGHlimit = $row[4];}
 
-$stmt="select AVG(cpu_user_percent),AVG(cpu_system_percent),AVG(cpu_idle_percent) from server_performance where start_time <= '" . mysql_real_escape_string($query_date_END) . "' and start_time >= '" . mysql_real_escape_string($query_date_BEGIN) . "' and server_ip='" . mysql_real_escape_string($group) . "';";
-$rslt=mysql_query($stmt, $link);
+$stmt="select AVG(cpu_user_percent),AVG(cpu_system_percent),AVG(cpu_idle_percent) from server_performance where start_time <= '" . mysqli_real_escape_string($link, $query_date_END) . "' and start_time >= '" . mysqli_real_escape_string($link, $query_date_BEGIN) . "' and server_ip='" . mysqli_real_escape_string($link, $group) . "';";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$row=mysql_fetch_row($rslt);
+$row=mysqli_fetch_row($rslt);
 $AVGcpuUSER =	sprintf("%10s", $row[0]);
 $AVGcpuSYSTEM =	sprintf("%10s", $row[1]);
 $AVGcpuIDLE =	sprintf("%10s", $row[2]);
 
-$stmt="select count(*),SUM(length_in_min) from call_log where extension NOT IN('8365','8366','8367') and  start_time <= '" . mysql_real_escape_string($query_date_END) . "' and start_time >= '" . mysql_real_escape_string($query_date_BEGIN) . "' and server_ip='" . mysql_real_escape_string($group) . "';";
-$rslt=mysql_query($stmt, $link);
+$stmt="select count(*),SUM(length_in_min) from call_log where extension NOT IN('8365','8366','8367') and  start_time <= '" . mysqli_real_escape_string($link, $query_date_END) . "' and start_time >= '" . mysqli_real_escape_string($link, $query_date_BEGIN) . "' and server_ip='" . mysqli_real_escape_string($link, $group) . "';";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$row=mysql_fetch_row($rslt);
+$row=mysqli_fetch_row($rslt);
 $TOTALcalls =	sprintf("%10s", $row[0]);
 $OFFHOOKtime =	sprintf("%10s", $row[1]);
 
@@ -317,14 +318,14 @@ $PNGfile = "$group$query_date$shift$filedate$PNG";
 $HTMfp = fopen ("$DOCroot/$HTMfile", "a");
 $DATfp = fopen ("$DOCroot/$DATfile", "a");
 
-$stmt="select DATE_FORMAT(start_time,'%Y-%m-%d.%H:%i:%s') as timex,sysload,processes,channels_total,live_recordings,cpu_user_percent,cpu_system_percent from server_performance where server_ip='" . mysql_real_escape_string($group) . "' and start_time <= '" . mysql_real_escape_string($query_date_END) . "' and start_time >= '" . mysql_real_escape_string($query_date_BEGIN) . "' order by timex limit 99999;";
-$rslt=mysql_query($stmt, $link);
+$stmt="select DATE_FORMAT(start_time,'%Y-%m-%d.%H:%i:%s') as timex,sysload,processes,channels_total,live_recordings,cpu_user_percent,cpu_system_percent from server_performance where server_ip='" . mysqli_real_escape_string($link, $group) . "' and start_time <= '" . mysqli_real_escape_string($link, $query_date_END) . "' and start_time >= '" . mysqli_real_escape_string($link, $query_date_BEGIN) . "' order by timex limit 99999;";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$rows_to_print = mysql_num_rows($rslt);
+$rows_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $rows_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	if ($i<1) {$time_BEGIN = $row[0];}
 	$time_END = $row[0];
 	$row[5] = intval(($row[5] + $row[6]) * $HIGHmulti);
@@ -466,10 +467,10 @@ echo "<!-- /usr/local/bin/pl -png $DOCroot/$HTMfile -o $DOCroot/$PNGfile -->";
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -481,7 +482,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 
 ?>

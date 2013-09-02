@@ -43,6 +43,7 @@
 # 130221-1830 - Added Level 8 disable add option
 # 130610-1040 - Finalized changing of all ereg instances to preg
 # 130615-2314 - Changed Reports only and QC only headers
+# 130824-2324 - Changed to mysqli PHP functions
 #
 
 
@@ -653,13 +654,13 @@ if ( ($ADD==3111) or ($ADD==4111) or ($ADD==5111) )
 
 
 $stmt="SELECT menu_id,menu_name from vicidial_call_menu $whereLOGadmin_viewable_groupsSQL order by menu_id limit 10000;";
-$rslt=mysql_query($stmt, $link);
-$menus_to_print = mysql_num_rows($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$menus_to_print = mysqli_num_rows($rslt);
 $call_menu_list='';
 $i=0;
 while ($i < $menus_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$call_menu_list .= "<option value=\"$row[0]\">$row[0] - $row[1]</option>";
 	$i++;
 	}
@@ -668,37 +669,37 @@ while ($i < $menus_to_print)
 if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511) or ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111) )
 	{
 	$stmt="SELECT did_pattern,did_description,did_route from vicidial_inbound_dids where did_active='Y' $LOGadmin_viewable_groupsSQL order by did_pattern;";
-	$rslt=mysql_query($stmt, $link);
-	$dids_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$dids_to_print = mysqli_num_rows($rslt);
 	$did_list='';
 	$i=0;
 	while ($i < $dids_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$did_list .= "<option value=\"$row[0]\">$row[0] - $row[1] - $row[2]</option>";
 		$i++;
 		}
 
 	$stmt="SELECT group_id,group_name from vicidial_inbound_groups where active='Y' and group_id NOT LIKE \"AGENTDIRECT%\" $LOGadmin_viewable_groupsSQL order by group_id;";
-	$rslt=mysql_query($stmt, $link);
-	$ingroups_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$ingroups_to_print = mysqli_num_rows($rslt);
 	$ingroup_list='';
 	$i=0;
 	while ($i < $ingroups_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$ingroup_list .= "<option value=\"$row[0]\">$row[0] - $row[1]</option>";
 		$i++;
 		}
 
 	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where active='Y' $LOGallowed_campaignsSQL order by campaign_id;";
-	$rslt=mysql_query($stmt, $link);
-	$IGcampaigns_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$IGcampaigns_to_print = mysqli_num_rows($rslt);
 	$IGcampaign_id_list='';
 	$i=0;
 	while ($i < $IGcampaigns_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$IGcampaign_id_list .= "<option value=\"$row[0]\">$row[0] - $row[1]</option>";
 		$i++;
 		}
@@ -708,13 +709,13 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 	$IGsearch_method_list = '<option value="LB">LB - Load Balanced</option><option value="LO">LO - Load Balanced Overflow</option><option value="SO">SO - Server Only</option>';
 
 	$stmt="SELECT login,server_ip,extension,dialplan_number from phones where active='Y' $LOGadmin_viewable_groupsSQL order by login,server_ip;";
-	$rslt=mysql_query($stmt, $link);
-	$phones_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$phones_to_print = mysqli_num_rows($rslt);
 	$phone_list='';
 	$i=0;
 	while ($i < $phones_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$phone_list .= "<option value=\"$row[0]\">$row[0] - $row[1] - $row[2] - $row[3]</option>";
 		$i++;
 		}
@@ -1077,8 +1078,8 @@ else
 echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 
 $stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled,allow_emails,level_8_disable_add from system_settings;";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $admin_home_url_LU =		$row[0];
 $SSenable_tts_integration = $row[1];
 $SScallcard_enabled =		$row[2];

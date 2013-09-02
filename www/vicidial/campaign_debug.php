@@ -8,13 +8,14 @@
 # 130413-2342 - Added report logging
 # 130610-0949 - Finalized changing of all ereg instances to preg
 # 130620-0829 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-1937 - Changed to mysqli PHP functions
 #
 
 $startMS = microtime();
 
 $report_name='Campaign Debug';
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -32,12 +33,12 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$webroot_writable =				$row[1];
 	$SSoutbound_autodial_active =	$row[2];
@@ -68,14 +69,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -108,8 +109,8 @@ else
 	}
 
 $stmt="SELECT modify_campaigns,user_group from vicidial_users where user='$PHP_AUTH_USER';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGmodify_campaigns =	$row[0];
 $LOGuser_group =		$row[1];
 
@@ -137,16 +138,16 @@ $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name', url='$LOGfull_url';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=1;
 	$db_source = 'S';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
@@ -158,13 +159,13 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($server_ip)) {$server_ip = '10.10.10.15';}
 
 $stmt="select campaign_id,campaign_name from vicidial_campaigns order by campaign_id;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$campaigns_to_print = mysql_num_rows($rslt);
+$campaigns_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $campaigns_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$campaign_id[$i] =$row[0];
 	$campaign_name[$i] =$row[1];
 	$i++;
@@ -216,37 +217,37 @@ if (!$group)
 
 else
 	{
-	$stmt="select count(*) from vicidial_hopper where campaign_id='" . mysql_real_escape_string($group) . "';";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="select count(*) from vicidial_hopper where campaign_id='" . mysqli_real_escape_string($link, $group) . "';";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$TOTALcalls =	sprintf("%10s", $row[0]);
 
 	echo "\n";
 	echo "---------- ADAPT DEBUG\n";
 	echo "\n";
 
-	$stmt="select campaign_name,closer_campaigns from vicidial_campaigns where campaign_id='" . mysql_real_escape_string($group) . "' limit 1;";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="select campaign_name,closer_campaigns from vicidial_campaigns where campaign_id='" . mysqli_real_escape_string($link, $group) . "' limit 1;";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$camps_to_print = mysql_num_rows($rslt);
+	$camps_to_print = mysqli_num_rows($rslt);
 	if ($camps_to_print > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$closer_campaigns = $row[1];
 
 		echo "Campaign Debug: $group - $row[0]           $NOW_TIME\n\n";
 		echo "Total leads in hopper right now:       $TOTALcalls\n\n";
 		}
 
-	$stmt="select update_time,debug_output,adapt_output from vicidial_campaign_stats_debug where campaign_id='" . mysql_real_escape_string($group) . "' and server_ip='ADAPT' limit 1;";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="select update_time,debug_output,adapt_output from vicidial_campaign_stats_debug where campaign_id='" . mysqli_real_escape_string($link, $group) . "' and server_ip='ADAPT' limit 1;";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$debugs_to_print = mysql_num_rows($rslt);
+	$debugs_to_print = mysqli_num_rows($rslt);
 	$i=0;
 	while ($debugs_to_print > $i)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 
 		echo "Adapt Debug:     $row[0]\n";
 		echo "$row[1]\n";
@@ -255,14 +256,14 @@ else
 		$i++;
 		}
 
-	$stmt="select update_time,server_ip,debug_output,adapt_output from vicidial_campaign_stats_debug where campaign_id='" . mysql_real_escape_string($group) . "' and server_ip!='ADAPT' order by server_ip limit 100;";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="select update_time,server_ip,debug_output,adapt_output from vicidial_campaign_stats_debug where campaign_id='" . mysqli_real_escape_string($link, $group) . "' and server_ip!='ADAPT' order by server_ip limit 100;";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$debugs_to_print = mysql_num_rows($rslt);
+	$debugs_to_print = mysqli_num_rows($rslt);
 	$i=0;
 	while ($debugs_to_print > $i)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 
 		echo "$row[1] Debug:     $row[0]\n";
 		echo "$row[2]\n";
@@ -275,13 +276,13 @@ else
 	$closer_groupsSQL = preg_replace("/ /","','",$closer_groupsSQL);
 
 	$stmt="select update_time,campaign_id,debug_output,adapt_output from vicidial_campaign_stats_debug where campaign_id IN('$closer_groupsSQL') and server_ip='INBOUND' order by campaign_id limit 10000;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$debugs_to_print = mysql_num_rows($rslt);
+	$debugs_to_print = mysqli_num_rows($rslt);
 	$i=0;
 	while ($debugs_to_print > $i)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 
 		echo "Inbound Debug: $row[1]    $row[0]\n";
 		echo "$row[2]\n";
@@ -294,10 +295,10 @@ else
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -309,7 +310,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 ?>
 

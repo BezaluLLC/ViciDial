@@ -10,9 +10,10 @@
 # 90508-0644 - Changed to PHP long tags
 # 130610-1133 - Finalized changing of all ereg instances to preg
 # 130621-0728 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-2012 - Changed to mysqli PHP functions
 #
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -30,12 +31,12 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	}
 ##### END SETTINGS LOOKUP #####
@@ -63,14 +64,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -109,13 +110,13 @@ if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
 $stmt="select distinct channel_group from park_log;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$groups_to_print = mysql_num_rows($rslt);
+$groups_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $groups_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$groups[$i] =$row[0];
 	$i++;
 	}
@@ -168,10 +169,10 @@ echo "VICIDIAL: Park Stats                             $NOW_TIME\n";
 echo "\n";
 echo "---------- TOTALS\n";
 
-$stmt="select count(*),sum(parked_sec) from park_log where parked_time >= '$query_date 00:00:01' and parked_time <= '$query_date 23:59:59' and status ='HUNGUP' and channel_group='" . mysql_real_escape_string($group) . "';";
-$rslt=mysql_query($stmt, $link);
+$stmt="select count(*),sum(parked_sec) from park_log where parked_time >= '$query_date 00:00:01' and parked_time <= '$query_date 23:59:59' and status ='HUNGUP' and channel_group='" . mysqli_real_escape_string($link, $group) . "';";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$row=mysql_fetch_row($rslt);
+$row=mysqli_fetch_row($rslt);
 
 $TOTALcalls =	sprintf("%10s", $row[0]);
 $average_hold_seconds = ($row[1] / $row[0]);
@@ -184,10 +185,10 @@ echo "Average Hold Time(seconds) for all Calls:     $average_hold_seconds\n";
 echo "\n";
 echo "---------- DROPS\n";
 
-$stmt="select count(*),sum(parked_sec) from park_log where parked_time >= '$query_date 00:00:01' and parked_time <= '$query_date 23:59:59' and status ='HUNGUP' and channel_group='" . mysql_real_escape_string($group) . "' and (talked_sec < 5 or talked_sec is null);";
-$rslt=mysql_query($stmt, $link);
+$stmt="select count(*),sum(parked_sec) from park_log where parked_time >= '$query_date 00:00:01' and parked_time <= '$query_date 23:59:59' and status ='HUNGUP' and channel_group='" . mysqli_real_escape_string($link, $group) . "' and (talked_sec < 5 or talked_sec is null);";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$row=mysql_fetch_row($rslt);
+$row=mysqli_fetch_row($rslt);
 
 $DROPcalls =	sprintf("%10s", $row[0]);
 $DROPpercent = (($DROPcalls / $TOTALcalls) * 100);
@@ -210,14 +211,14 @@ echo "+--------------------------+------------+--------+--------+\n";
 echo "| USER                     | CALLS      | TIME M | AVRG M |\n";
 echo "+--------------------------+------------+--------+--------+\n";
 
-$stmt="select park_log.user,full_name,count(*),sum(talked_sec),avg(talked_sec) from park_log,vicidial_users where parked_time >= '$query_date 00:00:01' and parked_time <= '$query_date 23:59:59' and status ='HUNGUP' and channel_group='" . mysql_real_escape_string($group) . "' and park_log.user is not null and talked_sec is not null and talked_sec > 4 and park_log.user=vicidial_users.user group by park_log.user;";
-$rslt=mysql_query($stmt, $link);
+$stmt="select park_log.user,full_name,count(*),sum(talked_sec),avg(talked_sec) from park_log,vicidial_users where parked_time >= '$query_date 00:00:01' and parked_time <= '$query_date 23:59:59' and status ='HUNGUP' and channel_group='" . mysqli_real_escape_string($link, $group) . "' and park_log.user is not null and talked_sec is not null and talked_sec > 4 and park_log.user=vicidial_users.user group by park_log.user;";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$users_to_print = mysql_num_rows($rslt);
+$users_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $users_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 
 	$user =			sprintf("%-6s", $row[0]);
 	$full_name =	sprintf("%-15s", $row[1]); while(strlen($full_name)>15) {$full_name = substr("$full_name", 0, -1);}
@@ -266,60 +267,60 @@ $i=0;
 $h=0;
 while ($i <= 96)
 	{
-	$stmt="select count(*) from park_log where parked_time >= '$query_date $h:00:00' and parked_time <= '$query_date $h:14:59' and status ='HUNGUP' and channel_group='" . mysql_real_escape_string($group) . "';";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="select count(*) from park_log where parked_time >= '$query_date $h:00:00' and parked_time <= '$query_date $h:14:59' and status ='HUNGUP' and channel_group='" . mysqli_real_escape_string($link, $group) . "';";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$hour_count[$i] = $row[0];
 	if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
 	if ($hour_count[$i] > 0) {$last_full_record = $i;}
-	$stmt="select count(*) from park_log where parked_time >= '$query_date $h:00:00' and parked_time <= '$query_date $h:14:59' and status ='HUNGUP' and channel_group='" . mysql_real_escape_string($group) . "' and (talked_sec < 5 or talked_sec is null);";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="select count(*) from park_log where parked_time >= '$query_date $h:00:00' and parked_time <= '$query_date $h:14:59' and status ='HUNGUP' and channel_group='" . mysqli_real_escape_string($link, $group) . "' and (talked_sec < 5 or talked_sec is null);";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$drop_count[$i] = $row[0];
 	$i++;
 
 
-	$stmt="select count(*) from park_log where parked_time >= '$query_date $h:15:00' and parked_time <= '$query_date $h:29:59' and status ='HUNGUP' and channel_group='" . mysql_real_escape_string($group) . "';";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="select count(*) from park_log where parked_time >= '$query_date $h:15:00' and parked_time <= '$query_date $h:29:59' and status ='HUNGUP' and channel_group='" . mysqli_real_escape_string($link, $group) . "';";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$hour_count[$i] = $row[0];
 	if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
 	if ($hour_count[$i] > 0) {$last_full_record = $i;}
-	$stmt="select count(*) from park_log where parked_time >= '$query_date $h:15:00' and parked_time <= '$query_date $h:29:59' and status ='HUNGUP' and channel_group='" . mysql_real_escape_string($group) . "' and (talked_sec < 5 or talked_sec is null);";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="select count(*) from park_log where parked_time >= '$query_date $h:15:00' and parked_time <= '$query_date $h:29:59' and status ='HUNGUP' and channel_group='" . mysqli_real_escape_string($link, $group) . "' and (talked_sec < 5 or talked_sec is null);";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$drop_count[$i] = $row[0];
 	$i++;
 
-	$stmt="select count(*) from park_log where parked_time >= '$query_date $h:30:00' and parked_time <= '$query_date $h:44:59' and status ='HUNGUP' and channel_group='" . mysql_real_escape_string($group) . "';";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="select count(*) from park_log where parked_time >= '$query_date $h:30:00' and parked_time <= '$query_date $h:44:59' and status ='HUNGUP' and channel_group='" . mysqli_real_escape_string($link, $group) . "';";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$hour_count[$i] = $row[0];
 	if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
 	if ($hour_count[$i] > 0) {$last_full_record = $i;}
-	$stmt="select count(*) from park_log where parked_time >= '$query_date $h:30:00' and parked_time <= '$query_date $h:44:59' and status ='HUNGUP' and channel_group='" . mysql_real_escape_string($group) . "' and (talked_sec < 5 or talked_sec is null);";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="select count(*) from park_log where parked_time >= '$query_date $h:30:00' and parked_time <= '$query_date $h:44:59' and status ='HUNGUP' and channel_group='" . mysqli_real_escape_string($link, $group) . "' and (talked_sec < 5 or talked_sec is null);";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$drop_count[$i] = $row[0];
 	$i++;
 
-	$stmt="select count(*) from park_log where parked_time >= '$query_date $h:45:00' and parked_time <= '$query_date $h:59:59' and status ='HUNGUP' and channel_group='" . mysql_real_escape_string($group) . "';";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="select count(*) from park_log where parked_time >= '$query_date $h:45:00' and parked_time <= '$query_date $h:59:59' and status ='HUNGUP' and channel_group='" . mysqli_real_escape_string($link, $group) . "';";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$hour_count[$i] = $row[0];
 	if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
 	if ($hour_count[$i] > 0) {$last_full_record = $i;}
-	$stmt="select count(*) from park_log where parked_time >= '$query_date $h:45:00' and parked_time <= '$query_date $h:59:59' and status ='HUNGUP' and channel_group='" . mysql_real_escape_string($group) . "' and (talked_sec < 5 or talked_sec is null);";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="select count(*) from park_log where parked_time >= '$query_date $h:45:00' and parked_time <= '$query_date $h:59:59' and status ='HUNGUP' and channel_group='" . mysqli_real_escape_string($link, $group) . "' and (talked_sec < 5 or talked_sec is null);";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$drop_count[$i] = $row[0];
 	$i++;
 	$h++;

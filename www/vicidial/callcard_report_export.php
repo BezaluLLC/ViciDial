@@ -12,9 +12,10 @@
 # 100312-2127 - First build
 # 130610-1125 - Finalized changing of all ereg instances to preg
 # 130620-0835 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-1938 - Changed to mysqli PHP functions
 #
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -50,12 +51,12 @@ if (strlen($shift)<2) {$shift='ALL';}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =	$row[0];
 	}
 ##### END SETTINGS LOOKUP #####
@@ -83,14 +84,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -123,8 +124,8 @@ else
 	}
 
 $stmt="SELECT callcard_admin,user_group from vicidial_users where user='$PHP_AUTH_USER';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGcallcard_admin =	$row[0];
 $LOGuser_group =		$row[1];
 
@@ -185,13 +186,13 @@ if ($run_export > 0)
 		}
 
 	$stmt = "SELECT call_time,phone_number,inbound_did,balance_minutes_start,agent_talk_min,agent_talk_sec,agent,agent_time,agent_dispo FROM callcard_log where call_time >= \"$query_date 00:00:00\" and call_time <= \"$end_date 23:59:59\" $searchSQL order by call_time;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$vt_ct = mysql_num_rows($rslt);
+	$vt_ct = mysqli_num_rows($rslt);
 	$i=0;
 	while ($vt_ct > $i)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 
 		$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]";
 		$i++;
@@ -208,7 +209,7 @@ if ($run_export > 0)
 		$SQL_log = addslashes($SQL_log);
 		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLCARD', event_type='EXPORT', record_id='', event_code='ADMIN EXPORT CALLCARD REPORT', event_sql=\"$SQL_log\", event_notes='';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 
 		$TXTfilename = "EXPORT_CALLCARD_REPORT_$FILE_TIME.txt";
 

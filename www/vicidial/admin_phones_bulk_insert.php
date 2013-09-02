@@ -14,12 +14,13 @@
 # 120820-1026 - Added webphone option Y_API_LAUNCH
 # 130610-1043 - Changed all ereg to preg
 # 130621-1724 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130902-0751 - Changed to mysqli PHP functions
 #
 
-$admin_version = '2.8-8';
-$build = '130621-1724';
+$admin_version = '2.8-9';
+$build = '130902-0751';
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -66,12 +67,12 @@ if (strlen($DB) < 1)
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,webroot_writable FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$ss_conf_ct = mysql_num_rows($rslt);
+$ss_conf_ct = mysqli_num_rows($rslt);
 if ($ss_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$webroot_writable =				$row[1];
 	}
@@ -136,8 +137,8 @@ if ($auth < 1)
 
 $rights_stmt = "SELECT ast_delete_phones from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
-$rights_rslt=mysql_query($rights_stmt, $link);
-$rights_row=mysql_fetch_row($rights_rslt);
+$rights_rslt=mysql_to_mysqli($rights_stmt, $link);
+$rights_row=mysqli_fetch_row($rights_rslt);
 $ast_delete_phones =		$rights_row[0];
 
 # check their permissions
@@ -149,8 +150,8 @@ if ( $ast_delete_phones < 1 )
 	}
 
 $stmt="SELECT full_name,ast_delete_phones,ast_admin_access,user_level from vicidial_users where user='$PHP_AUTH_USER';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGfullname =				$row[0];
 $LOGast_delete_phones =		$row[1];
 $LOGast_admin_access =		$row[2];
@@ -352,11 +353,11 @@ if ($action == "ADD_PHONES_SUBMIT")
 				$server_exists=0;
 				$stmt="SELECT count(*) from servers where server_ip='$SN[$s]';";
 				if ($DB>0) {echo "$stmt";}
-				$rslt=mysql_query($stmt, $link);
-				$servercount_to_print = mysql_num_rows($rslt);
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$servercount_to_print = mysqli_num_rows($rslt);
 				if ($servercount_to_print > 0) 
 					{
-					$rowx=mysql_fetch_row($rslt);
+					$rowx=mysqli_fetch_row($rslt);
 					$server_exists =	$rowx[0];
 					}
 				if ($server_exists > 0)
@@ -368,11 +369,11 @@ if ($action == "ADD_PHONES_SUBMIT")
 						$phone_exists=0;
 						$stmt="SELECT count(*) from phones where server_ip='$SN[$s]' and extension='$PN[$p]';";
 						if ($DB>0) {echo "$stmt";}
-						$rslt=mysql_query($stmt, $link);
-						$phonecount_to_print = mysql_num_rows($rslt);
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$phonecount_to_print = mysqli_num_rows($rslt);
 						if ($phonecount_to_print > 0) 
 							{
-							$rowx=mysql_fetch_row($rslt);
+							$rowx=mysqli_fetch_row($rslt);
 							$phone_exists =	$rowx[0];
 							}
 						if ( ($phone_exists < 1) and (strlen($PN[$p]) > 1) )
@@ -444,8 +445,8 @@ if ($action == "ADD_PHONES_SUBMIT")
 							$fullname =			"ext $PN[$p]";
 
 							$stmt = "INSERT INTO phones (extension,dialplan_number,voicemail_id,server_ip,login,pass,status,active,phone_type,fullname,protocol,local_gmt,outbound_cid,conf_secret,is_webphone,webphone_dialpad,webphone_auto_answer,use_external_server_ip,phone_context) values('$extension','$dialplan_number','$voicemail_id','$phone_server_ip','$login','$pass','ACTIVE','Y','$phone_type','$fullname','$protocol','$local_gmt','0000000000','$conf_secret','$is_webphone','$webphone_dialpad','$webphone_auto_answer','$use_external_server_ip','$phone_context');";
-							$rslt=mysql_query($stmt, $link);
-							$affected_rows = mysql_affected_rows($link);
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$affected_rows = mysqli_affected_rows($link);
 							if ($DB > 0) {echo "$s|$p|$SN[$s]|$PN[$p]|$affected_rows|$stmt\n<BR>";}
 
 							if ($affected_rows > 0)
@@ -458,7 +459,7 @@ if ($action == "ADD_PHONES_SUBMIT")
 								$SQL_log = addslashes($SQL_log);
 								$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='PHONES', event_type='ADD', record_id='$PN[$p]', event_code='ADMIN BULK ADD PHONE', event_sql=\"$SQL_log\", event_notes='$SN[$s]|$PN[$p]';";
 							#	if ($DB) {echo "|$stmt|\n";}
-								$rslt=mysql_query($stmt, $link);
+								$rslt=mysql_to_mysqli($stmt, $link);
 
 								$phones_inserted++;
 								}
@@ -485,8 +486,8 @@ if ($action == "ADD_PHONES_SUBMIT")
 						$phone_alias_entry[$p] = preg_replace('/,$/','',$phone_alias_entry[$p]);
 
 						$stmt="INSERT INTO phones_alias (alias_id,alias_name,logins_list) values('$PN[$p]$alias_suffix','$PN[$p]','$phone_alias_entry[$p]');";
-						$rslt=mysql_query($stmt, $link);
-						$affected_rows = mysql_affected_rows($link);
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$affected_rows = mysqli_affected_rows($link);
 						if ($DB > 0) {echo "$p|$phone_alias_entry[$p]|$PN[$p]|$affected_rows|$stmt\n<BR>";}
 
 						if ($affected_rows > 0)
@@ -497,7 +498,7 @@ if ($action == "ADD_PHONES_SUBMIT")
 							$SQL_log = addslashes($SQL_log);
 							$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='PHONEALIASES', event_type='ADD', record_id='$alias_id', event_code='ADMIN ADD BULK PHONE ALIAS', event_sql=\"$SQL_log\", event_notes='';";
 						#	if ($DB) {echo "|$stmt|\n";}
-							$rslt=mysql_query($stmt, $link);
+							$rslt=mysql_to_mysqli($stmt, $link);
 
 							$phone_alias_inserted++;
 							}

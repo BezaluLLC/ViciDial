@@ -10,12 +10,13 @@
 # 121116-1329 - First build, added to vicidial codebase
 # 130622-0001 - Finalized changing of all ereg instances to preg
 #             - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130902-0906 - Changed to mysqli PHP functions
 #
 
-$version = '2.8-2';
-$build = '121116-1329';
+$version = '2.8-3';
+$build = '130902-0906';
 
-require("../dbconnect.php");
+require("../dbconnect_mysqli.php");
 require("../functions.php");
 
 $query_string = getenv("QUERY_STRING");
@@ -135,12 +136,12 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	}
 ##### END SETTINGS LOOKUP #####
@@ -275,9 +276,9 @@ else
 
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1';";
 		if ($DB) {echo "|$stmt|\n";}
-		if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$auth_api=$row[0];
 
 		if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0) or ($auth_api==0))
@@ -293,8 +294,8 @@ else
 			{
 			$stmt="SELECT count(*) from system_settings where vdc_agent_api_active='1';";
 			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
 			$SNauth=$row[0];
 			if($SNauth==0)
 				{
@@ -352,14 +353,14 @@ if ($function == 'external_dial_lead')
 			{
 			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
 			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
 			if ($row[0] > 0)
 				{
 				$stmt = "select user from vicidial_users where custom_three='$alt_user' order by user;";
 				if ($DB) {echo "$stmt\n";}
-				$rslt=mysql_query($stmt, $link);
-				$row=mysql_fetch_row($rslt);
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
 				$agent_user = $row[0];
 				}
 			else
@@ -372,24 +373,24 @@ if ($function == 'external_dial_lead')
 			}
 		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
 		if ($DB) {echo "$stmt\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		if ($row[0] > 0)
 			{
 			$stmt = "SELECT campaign_id FROM vicidial_live_agents where user='$agent_user';";
-			$rslt=mysql_query($stmt, $link);
-			$vlac_conf_ct = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$vlac_conf_ct = mysqli_num_rows($rslt);
 			if ($vlac_conf_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$vac_campaign_id =	$row[0];
 				}
 			$stmt = "SELECT api_manual_dial FROM vicidial_campaigns where campaign_id='$vac_campaign_id';";
-			$rslt=mysql_query($stmt, $link);
-			$vcc_conf_ct = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$vcc_conf_ct = mysqli_num_rows($rslt);
 			if ($vcc_conf_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$api_manual_dial =	$row[0];
 				}
 
@@ -397,8 +398,8 @@ if ($function == 'external_dial_lead')
 				{
 				$stmt = "select count(*) from vicidial_live_agents where user='$agent_user' and status='PAUSED' and lead_id < 1;";
 				if ($DB) {echo "$stmt\n";}
-				$rslt=mysql_query($stmt, $link);
-				$row=mysql_fetch_row($rslt);
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
 				$agent_ready = $row[0];
 				}
 			else
@@ -409,19 +410,19 @@ if ($function == 'external_dial_lead')
 				{
 				$stmt = "select count(*) from vicidial_users where user='$agent_user' and agentcall_manual='1';";
 				if ($DB) {echo "$stmt\n";}
-				$rslt=mysql_query($stmt, $link);
-				$row=mysql_fetch_row($rslt);
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
 				if ($row[0] > 0)
 					{
 					if (strlen($group_alias)>1)
 						{
 						$stmt = "select caller_id_number from groups_alias where group_alias_id='$group_alias';";
 						if ($DB) {echo "$stmt\n";}
-						$rslt=mysql_query($stmt, $link);
-						$VDIG_cidnum_ct = mysql_num_rows($rslt);
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$VDIG_cidnum_ct = mysqli_num_rows($rslt);
 						if ($VDIG_cidnum_ct > 0)
 							{
-							$row=mysql_fetch_row($rslt);
+							$row=mysqli_fetch_row($rslt);
 							$caller_id_number	= $row[0];
 							if ($caller_id_number < 4)
 								{
@@ -452,11 +453,11 @@ if ($function == 'external_dial_lead')
 						$value = ($value + 0);
 
 						$stmt = "SELECT enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url FROM system_settings;";
-						$rslt=mysql_query($stmt, $link);
-						$ss_conf_ct = mysql_num_rows($rslt);
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$ss_conf_ct = mysqli_num_rows($rslt);
 						if ($ss_conf_ct > 0)
 							{
-							$row=mysql_fetch_row($rslt);
+							$row=mysqli_fetch_row($rslt);
 							$enable_vtiger_integration =	$row[0];
 							$vtiger_server_ip	=			$row[1];
 							$vtiger_dbname =				$row[2];
@@ -468,19 +469,19 @@ if ($function == 'external_dial_lead')
 						if ($enable_vtiger_integration > 0)
 							{
 							$stmt = "SELECT campaign_id FROM vicidial_live_agents where user='$agent_user';";
-							$rslt=mysql_query($stmt, $link);
-							$vtc_camp_ct = mysql_num_rows($rslt);
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$vtc_camp_ct = mysqli_num_rows($rslt);
 							if ($vtc_camp_ct > 0)
 								{
-								$row=mysql_fetch_row($rslt);
+								$row=mysqli_fetch_row($rslt);
 								$campaign_id =		$row[0];
 								}
 							$stmt = "SELECT vtiger_search_category,vtiger_create_call_record,vtiger_create_lead_record,vtiger_search_dead,vtiger_status_call FROM vicidial_campaigns where campaign_id='$campaign_id';";
-							$rslt=mysql_query($stmt, $link);
-							$vtc_conf_ct = mysql_num_rows($rslt);
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$vtc_conf_ct = mysqli_num_rows($rslt);
 							if ($vtc_conf_ct > 0)
 								{
-								$row=mysql_fetch_row($rslt);
+								$row=mysqli_fetch_row($rslt);
 								$vtiger_search_category =		$row[0];
 								$vtiger_create_call_record =	$row[1];
 								$vtiger_create_lead_record =	$row[2];
@@ -489,40 +490,41 @@ if ($function == 'external_dial_lead')
 								}
 
 							### connect to your vtiger database
-							$linkV=mysql_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass");
-							if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysql_error());}
-							mysql_select_db("$vtiger_dbname", $linkV);
+							$linkV=mysqli_connect("$vtiger_server_ip", "$vtiger_login", "$vtiger_pass", "$vtiger_dbname");
+
+							if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysqli_error());}
+							echo "Connected successfully\n<BR>\n";
 
 							# make sure the ID is present in Vtiger database as an account
 							$stmt="SELECT count(*) from vtiger_seactivityrel where activityid='$value';";
 							if ($DB) {echo "$stmt\n";}
-							$rslt=mysql_query($stmt, $linkV);
-							$vt_act_ct = mysql_num_rows($rslt);
+							$rslt=mysql_to_mysqli($stmt, $linkV);
+							$vt_act_ct = mysqli_num_rows($rslt);
 							if ($vt_act_ct > 0)
 								{
-								$row=mysql_fetch_row($rslt);
+								$row=mysqli_fetch_row($rslt);
 								$activity_check = $row[0];
 								}
 							if ($activity_check > 0)
 								{
 								$stmt="SELECT crmid from vtiger_seactivityrel where activityid='$value';";
 								if ($DB) {echo "$stmt\n";}
-								$rslt=mysql_query($stmt, $linkV);
-								$vt_actsel_ct = mysql_num_rows($rslt);
+								$rslt=mysql_to_mysqli($stmt, $linkV);
+								$vt_actsel_ct = mysqli_num_rows($rslt);
 								if ($vt_actsel_ct > 0)
 									{
-									$row=mysql_fetch_row($rslt);
+									$row=mysqli_fetch_row($rslt);
 									$vendor_id = $row[0];
 									}
 								if (strlen($vendor_id) > 0)
 									{
 									$stmt="SELECT phone from vtiger_account where accountid='$vendor_id';";
 									if ($DB) {echo "$stmt\n";}
-									$rslt=mysql_query($stmt, $linkV);
-									$vt_acct_ct = mysql_num_rows($rslt);
+									$rslt=mysql_to_mysqli($stmt, $linkV);
+									$vt_acct_ct = mysqli_num_rows($rslt);
 									if ($vt_acct_ct > 0)
 										{
-										$row=mysql_fetch_row($rslt);
+										$row=mysqli_fetch_row($rslt);
 										$vtiger_callback_id="$value";
 										$value = $row[0];
 										}
@@ -552,8 +554,8 @@ if ($function == 'external_dial_lead')
 						{
 						$stmt = "select count(*) from vicidial_manual_dial_queue where user='$agent_user' and phone_number='$value';";
 						if ($DB) {echo "$stmt\n";}
-						$rslt=mysql_query($stmt, $link);
-						$row=mysql_fetch_row($rslt);
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$row=mysqli_fetch_row($rslt);
 						if ($row[0] < 1)
 							{
 							$stmt="INSERT INTO vicidial_manual_dial_queue set user='$agent_user',phone_number='$value',entry_time=NOW(),status='READY',external_dial='$value!$phone_code!$search!$preview!$focus!$vendor_id!$epoch!$dial_prefix!$group_alias!$caller_id_number!$vtiger_callback_id';";
@@ -571,7 +573,7 @@ if ($function == 'external_dial_lead')
 					if ($success > 0)
 						{
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
-						$rslt=mysql_query($stmt, $link);
+						$rslt=mysql_to_mysqli($stmt, $link);
 						$result = 'SUCCESS';
 						$result_reason = "external_dial function set";
 						$data = "$phone_code|$search|$preview|$focus|$vendor_id|$epoch|$dial_prefix|$group_alias|$caller_id_number";
@@ -636,7 +638,7 @@ function api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$val
 		{
 		$NOW_TIME = date("Y-m-d H:i:s");
 		$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$agent_user',function='$function',value='$value',result='$result',result_reason='$result_reason',source='$source',data='$data',api_date='$NOW_TIME',api_script='$api_script';";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		}
 	return 1;
 	}

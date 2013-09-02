@@ -29,11 +29,12 @@
 # 130610-0849 - Finalized changing of all ereg instances to preg
 # 130621-0821 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130704-0945 - Fixed issue #675
+# 130829-2012 - Changed to mysqli PHP functions
 #
 
 $startMS = microtime();
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -90,12 +91,12 @@ if (strlen($TIME_agenttimedetail)<1)
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
@@ -126,14 +127,14 @@ if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
 	if ($reports_auth < 1)
@@ -181,29 +182,29 @@ $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $file_download, $report_display_type|', url='$LOGfull_url';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=1;
 	$db_source = 'S';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 #	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGuser_group =			$row[0];
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
 $LOGallowed_reports =			$row[1];
 $LOGadmin_viewable_groups =		$row[2];
@@ -268,13 +269,13 @@ while($i < $group_ct)
 	}
 
 $stmt="select campaign_id from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$campaigns_to_print = mysql_num_rows($rslt);
+$campaigns_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $campaigns_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$groups[$i] =$row[0];
 	if (preg_match('/\-ALL/',$group_string) )
 		{$group[$i] = $groups[$i];}
@@ -308,13 +309,13 @@ for ($i=0; $i<count($user_group); $i++)
 	if (preg_match('/\-\-ALL\-\-/', $user_group[$i])) {$all_user_groups=1; $user_group="";}
 	}
 $stmt="select user_group from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$user_groups_to_print = mysql_num_rows($rslt);
+$user_groups_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $user_groups_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$user_groups[$i] =$row[0];
 	if ($all_user_groups) {$user_group[$i]=$row[0];}
 	$i++;
@@ -343,13 +344,13 @@ else
 if ($DB) {echo "$user_group_string|$user_group_ct|$user_groupQS|$i<BR>";}
 
 $stmt="select distinct pause_code,pause_code_name from vicidial_pause_codes;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$statha_to_print = mysql_num_rows($rslt);
+$statha_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $statha_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$pause_code[$i] =		"$row[0]";
 	$pause_code_name[$i] =	"$row[1]";
 	$i++;
@@ -447,9 +448,9 @@ else
 
 	### BEGIN gather user IDs and names for matching up later
 	$stmt="select full_name,$userSQL from vicidial_users $whereLOGadmin_viewable_groupsSQL order by user limit 100000;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$users_to_print = mysql_num_rows($rslt);
+	$users_to_print = mysqli_num_rows($rslt);
 	$i=0;
 	$graph_stats=array();
 	$max_calls=1;
@@ -489,7 +490,7 @@ else
 	
 	while ($i < $users_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$ULname[$i] =	$row[0];
 		$ULuser[$i] =	$row[1];
 		$i++;
@@ -499,13 +500,13 @@ else
 
 	### BEGIN gather timeclock records per agent
 	$stmt="select $userSQL,sum(login_sec) from vicidial_timeclock_log where event IN('LOGIN','START') and event_date >= '$query_date_BEGIN' and event_date <= '$query_date_END' $TCuser_group_SQL group by user limit 10000000;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$punches_to_print = mysql_num_rows($rslt);
+	$punches_to_print = mysqli_num_rows($rslt);
 	$i=0;
 	while ($i < $punches_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$TCuser[$i] =	$row[0];
 		$TCtime[$i] =	$row[1];
 		$i++;
@@ -536,21 +537,21 @@ else
 	$park_array=array();
 	$park_stmt="select user, count(*), sum(parked_sec) From park_log where parked_time <= '$query_date_END' and parked_time >= '$query_date_BEGIN' $park_log_SQL group by user";
 	if ($DB) {$ASCII_text.= "$park_stmt\n";}
-	$park_rslt=mysql_query($park_stmt, $link);
-	while ($park_row=mysql_fetch_row($park_rslt)) {
+	$park_rslt=mysql_to_mysqli($park_stmt, $link);
+	while ($park_row=mysqli_fetch_row($park_rslt)) {
 		$park_array[$park_row[0]][0]=$park_row[1];
 		$park_array[$park_row[0]][1]=$park_row[2];
 	}
 
 	$stmt="select $userSQL,sum(pause_sec),sub_status from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 65000 $group_SQL $user_group_SQL group by user,sub_status order by user,sub_status desc limit 10000000;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	
 	if ($DB) {$ASCII_text.= "$stmt\n";}
-	$subs_to_print = mysql_num_rows($rslt);
+	$subs_to_print = mysqli_num_rows($rslt);
 	$i=0; 
 	while ($i < $subs_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$PCuser[$i] =		$row[0];
 		$PCpause_sec[$i] =	$row[1];
 		$sub_status[$i] =	$row[2];
@@ -582,16 +583,16 @@ else
 
 	##### BEGIN Gather all agent time records and parse through them in PHP to save on DB load
 	$stmt="select $userSQL,wait_sec,talk_sec,dispo_sec,pause_sec,lead_id,status,dead_sec from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' $group_SQL $user_group_SQL limit 10000000;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$ASCII_text.= "$stmt\n";}
-	$rows_to_print = mysql_num_rows($rslt);
+	$rows_to_print = mysqli_num_rows($rslt);
 	$i=0;
 	$j=0;
 	$k=0;
 	$uc=0;
 	while ($i < $rows_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$user =			$row[0];
 		$wait =			$row[1];
 		$talk =			$row[2];
@@ -813,12 +814,12 @@ else
 		### Check if the user had an AUTOLOGOUT timeclock event during the time period
 		$TCuserAUTOLOGOUT = ' ';
 		$stmt="select count(*) from vicidial_timeclock_log where event='AUTOLOGOUT' and user='$Suser[$m]' and event_date >= '$query_date_BEGIN' and event_date <= '$query_date_END';";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$autologout_results = mysql_num_rows($rslt);
+		$autologout_results = mysqli_num_rows($rslt);
 		if ($autologout_results > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			if ($row[0] > 0)
 				{
 				$TCuserAUTOLOGOUT =	'*';
@@ -1284,10 +1285,10 @@ if ($file_download > 0)
 
 	if ($db_source == 'S')
 		{
-		mysql_close($link);
+		mysqli_close($link);
 		$use_slave_server=0;
 		$db_source = 'M';
-		require("dbconnect.php");
+		require("dbconnect_mysqli.php");
 		}
 
 	$endMS = microtime();
@@ -1299,7 +1300,7 @@ if ($file_download > 0)
 
 	$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 
 	exit;
 	}
@@ -1460,10 +1461,10 @@ echo "</span>\n";
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -1475,7 +1476,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 ?>
 
