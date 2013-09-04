@@ -237,6 +237,8 @@ If set to N, the calls will queue up, even if there are no agents logged in and 
 
 ############################################################ CLIENT
 
+This agent screen was not opened properly||
+
 
 ########################## CHANGES TO EXISTING PHRASES IN AGENT TRANSLATION
 

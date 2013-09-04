@@ -1,13 +1,14 @@
 <?php
 # options.php - manually defined options for vicidial.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # rename this file to options.php for the settings here to go into effect
 #
 # CHANGELOG
 # 100306-0805 - First Build
-# 120214-1636 - Added consult_custom_delay optioin
+# 120214-1636 - Added consult_custom_delay option
+# 130903-2015 - Added window validation options
 #
 
 $conf_silent_prefix		= '5';	# vicidial_conferences prefix to enter silently and muted for recording
@@ -54,6 +55,9 @@ $webphone_location		= 'right';	# set the location on the agent screen 'right' or
 $MAIN_COLOR				= '#CCCCCC';	# old default is E0C2D6
 $SCRIPT_COLOR			= '#E6E6E6';	# old default is FFE7D0
 $SIDEBAR_COLOR			= '#F6F6F6';
+
+$window_validation		= 0;	# set to 1 to disallow direct logins to vicidial.php
+$win_valid_name			= 'subwindow_launch';	# only window name to allow if validation enabled
 
 # thin bar webphone settings:
 #	$webphone_width			= 1085;	# set the webphone frame width

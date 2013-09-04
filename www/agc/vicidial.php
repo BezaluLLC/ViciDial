@@ -409,10 +409,11 @@
 # 130718-0745 - Added recording_filename to dispo_call_url
 # 130802-1134 - Changed to PHP mysqli functions
 # 130822-0656 - Changed all require to require_once in agc directory for PHP backward compatibility
+# 130903-1920 - Added security check for browser window name, see launch.php for more information
 #
 
-$version = '2.8-378c';
-$build = '130822-0656';
+$version = '2.8-379c';
+$build = '130903-1920';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -575,6 +576,9 @@ $MAIN_COLOR				= '#CCCCCC';	# old default is E0C2D6
 $SCRIPT_COLOR			= '#E6E6E6';	# old default is FFE7D0
 $FORM_COLOR				= '#EFEFEF';
 $SIDEBAR_COLOR			= '#F6F6F6';
+
+$window_validation		= 0;	# set to 1 to disallow direct logins to vicidial.php
+$win_valid_name			= 'subwindow_launch';	# only window name to allow if validation enabled
 
 # if options file exists, use the override values for the above variables
 #   see the options-example.php file for more information
@@ -3197,7 +3201,6 @@ $CCAL_OUT .= "</table>";
 
 ?>
 	<script language="Javascript">
-	window.name='vicidial_window';
 	var MTvar;
 	var NOW_TIME = '<?php echo $NOW_TIME ?>';
 	var SQLdate = '<?php echo $NOW_TIME ?>';
@@ -3787,6 +3790,26 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		image_LB_ivrgrabparkedcall.src="./images/vdc_LB_grabivrparkcall.gif";
 	var image_LB_ivrparkcall = new Image();
 		image_LB_ivrparkcall.src="./images/vdc_LB_ivrparkcall.gif";
+<?php
+	if ($window_validation > 0)
+		{
+		echo "var win_valid_name = '$win_valid_name';\n";
+		echo "var val_win_name = window.name;\n";
+		echo "if (win_valid_name != val_win_name)\n";
+		echo "\t{\n";
+		echo "\tvar invalid_opener=1;\n";
+		echo "\t}\n";
+		echo "else\n";
+		echo "\t{\n";
+		echo "\tvar invalid_opener=0;\n";
+		echo "\t}\n";
+		}
+	else
+		{
+		echo "\tvar invalid_opener=0;\n";
+		}
+?>
+	window.name='vicidial_window';
 
 
 
@@ -13296,6 +13319,7 @@ function phone_number_format(formatphone) {
 			hideDiv('blind_monitor_notice_span');
 			hideDiv('post_phone_time_diff_span');
 			hideDiv('ivrParkControl');
+			hideDiv('InvalidOpenerSpan');
 			if (deactivated_old_session < 1)
 				{hideDiv('DeactivateDOlDSessioNSpan');}
 			if (is_webphone!='Y')
@@ -13892,6 +13916,12 @@ function phone_number_format(formatphone) {
 		if (check_n==2)
 			{
 			hideDiv('LoadingBox');
+			if (invalid_opener > 0)
+				{
+				refresh_interval = 7300000;
+				logout_stop_timeouts = 1;
+				showDiv('InvalidOpenerSpan');
+				}
 			}
 		}
 	function pause()	// Pauses the refreshing of the lists
@@ -15470,6 +15500,10 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
     </td></tr></table>
 </span>
 
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="InvalidOpenerSpan">
+    <table border="1" bgcolor="#FFFFFF" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center">This agent screen was not opened properly.<br />
+    </td></tr></table>
+</span>
 
 
 

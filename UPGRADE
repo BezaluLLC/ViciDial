@@ -136,6 +136,13 @@ OTHER CHANGES:
 15. Added AST_CRON_audio_4_ftp2_FTPSSL.pl script to allow for transmission of 
 	second archival of recordings to an FTP SSL server.
 
+16. Added settings to the agc/options.php file to allow for forced launching of
+	the agent screen from a script like the new launch.php script. The agent
+	is not allowed to login by going to the vicidial.php page directly, and
+	the launch.php page will open the agent screen with a read-only address
+	bar and several other browser options disabled. To enable this feature,
+	just set the $window_validation variable to '1' in options.php
+
 
 
 
