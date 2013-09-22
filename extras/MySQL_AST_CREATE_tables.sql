@@ -2931,6 +2931,48 @@ index (campaign_id),
 index (monitor_time)
 ) ENGINE=MyISAM;
 
+CREATE TABLE nanpa_prefix_exchanges_master (
+areacode CHAR(3) default '',
+prefix CHAR(4) default '',
+source CHAR(1) default '',
+type CHAR(1) default '',
+tier VARCHAR(20) default '',
+postal_code VARCHAR(20) default '',
+new_areacode CHAR(3) default '',
+tzcode VARCHAR(4) default '',
+region CHAR(2) default ''
+) ENGINE=MyISAM;
+
+CREATE TABLE nanpa_prefix_exchanges_fast (
+ac_prefix CHAR(7) default '',
+type CHAR(1) default ''
+) ENGINE=MyISAM;
+
+CREATE INDEX nanpaacprefix on nanpa_prefix_exchanges_fast (ac_prefix);
+
+CREATE TABLE nanpa_wired_to_wireless (
+phone CHAR(10) NOT NULL UNIQUE PRIMARY KEY
+) ENGINE=MyISAM;
+
+CREATE TABLE nanpa_wireless_to_wired (
+phone CHAR(10) NOT NULL UNIQUE PRIMARY KEY
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_nanpa_filter_log (
+output_code VARCHAR(30) PRIMARY KEY NOT NULL,
+status VARCHAR(20) default 'BEGIN',
+server_ip VARCHAR(15) default '',
+list_id TEXT,
+start_time DATETIME,
+update_time DATETIME,
+user VARCHAR(20) default '',
+leads_count BIGINT(14) default '0',
+filter_count BIGINT(14) default '0',
+status_line VARCHAR(255) default '',
+script_output TEXT,
+index (start_time)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3170,4 +3212,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1355',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1356',db_schema_update_date=NOW();

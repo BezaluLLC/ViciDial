@@ -3223,12 +3223,13 @@ else
 # 130711-2208 - Added SYSTEM SNAPSHOT STATS as new welcome screen, and added new 
 # 130809-1410 - Small fixes for call times and holidays
 # 130824-2319 - Changed to mysqli PHP functions
+# 130915-0045 - Added counts for new nanpa prefix type tables
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.8-410a';
-$build = '130824-2319';
+$admin_version = '2.8-411a';
+$build = '130915-0045';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -32572,6 +32573,26 @@ if ($ADD==311111111111111)
 		$row=mysqli_fetch_row($rslt);
 		$vicidial_nanpa_prefix_codes_count =	$row[0];
 
+		$stmt="SELECT count(*) from nanpa_prefix_exchanges_master;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$nanpa_prefix_exchanges_master_count =	$row[0];
+
+		$stmt="SELECT count(*) from nanpa_prefix_exchanges_fast;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$nanpa_prefix_exchanges_fast_count =	$row[0];
+
+		$stmt="SELECT count(*) from nanpa_wired_to_wireless;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$nanpa_wired_to_wireless_count =	$row[0];
+
+		$stmt="SELECT count(*) from nanpa_wireless_to_wired;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$nanpa_wireless_to_wired_count =	$row[0];
+
 		$stmt="SELECT sum(total_calls) from vicidial_daily_max_stats where stats_flag='OPEN' and stats_type!='TOTAL';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$stats_to_print = mysqli_num_rows($rslt);
@@ -32752,7 +32773,7 @@ if ($ADD==311111111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Install Date: </td><td align=left> $install_date</td></tr>\n";
 		$pcblinkB=''; $pcblinkE='';
 		if ($vicidial_phone_codes_count < 1000) {$pcblinkB='<b><font color=red><blink>'; $pcblinkE='</blink></font></b>';}
-		echo "<tr bgcolor=#B6D3FC><td align=right>Phone Codes: </td><td align=left> $pcblinkB$vicidial_phone_codes_count - $vicidial_postal_codes_count - $vicidial_nanpa_prefix_codes_count$pcblinkE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Phone Codes: </td><td align=left> $pcblinkB$vicidial_phone_codes_count - $vicidial_postal_codes_count - $vicidial_nanpa_prefix_codes_count$pcblinkE - $nanpa_prefix_exchanges_master_count - $nanpa_prefix_exchanges_fast_count - $nanpa_wired_to_wireless_count - $nanpa_wireless_to_wired_count</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Today System Stats: </td><td align=left> $ALLtotal_calls - $ALLmax_inbound - $ALLmax_outbound - $ALLchannels_count - $ALLcalls_count - $ALLagent_count</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Use Non-Latin: </td><td align=left><select size=1 name=use_non_latin><option>1</option><option>0</option><option selected>$use_non_latin</option></select>$NWB#settings-use_non_latin$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Webroot Writable: </td><td align=left><select size=1 name=webroot_writable><option>1</option><option>0</option><option selected>$webroot_writable</option></select>$NWB#settings-webroot_writable$NWE</td></tr>\n";
@@ -36341,6 +36362,7 @@ if ($ADD==999994)
 		echo "<LI><a href=\"send_CID_call.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Send a Call With Custom CID Page</a></FONT>\n";
 		echo "<LI><a href=\"voice_lab.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Speech Voice Lab Page</a></FONT>\n";
 		echo "<LI><a href=\"../agc/phone_only.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Webphone Only Page</a></FONT>\n";
+		echo "<LI><a href=\"admin_NANPA_updater.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>NANPA batch updater</a></FONT>\n";
 		echo "</UL>\n<BR>&nbsp;\n";
 		}
 

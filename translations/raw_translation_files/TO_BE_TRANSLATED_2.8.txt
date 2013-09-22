@@ -229,6 +229,7 @@ The duplicate options allow you to check for duplicate entries as you load the l
 Add inbound and outbound holiday rule||
 Add outbound holiday rule||
 If set to N, the calls will queue up, even if there are no agents logged in and set to take calls from this in-group||
+Active Voicemail Server is not set||
 
 
 ########################## CHANGES TO EXISTING PHRASES IN ADMIN TRANSLATION

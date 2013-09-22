@@ -143,6 +143,11 @@ OTHER CHANGES:
 	bar and several other browser options disabled. To enable this feature,
 	just set the $window_validation variable to '1' in options.php
 
+17. Added phone number type field/list_id updating scripts. Compatible with 
+	DNC.COM's daily update file services. Read the 
+	CELLPHONE_USA_TCPA_FCC_COMPLAINCE.txt file for more detailed information 
+	on this feature.
+
 
 
 

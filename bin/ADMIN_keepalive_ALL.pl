@@ -86,6 +86,7 @@
 # 130508-1009 - Small fix for INVALID_2ND and 3RD
 # 130624-0733 - Added optimize for vicidial_users due to logging IP and auth timestamp
 # 130716-1441 - Clear out vicidial_monitor_calls records older than 1 day old
+# 130921-1044 - Small change to triggers allowing for them to be launched in a screen session if SCREEN is in the name
 #
 
 $DB=0; # Debug flag
@@ -3209,16 +3210,17 @@ if ( ($active_asterisk_server =~ /Y/) && ( ($sounds_update =~ /Y/) || ($upload_a
 ################################################################################
 #####  BEGIN  process triggers
 ################################################################################
-$stmtA = "SELECT trigger_id,user,trigger_lines FROM vicidial_process_triggers where server_ip='$server_ip' and trigger_run='1' and trigger_time < NOW() order by trigger_time limit 1;";
+$stmtA = "SELECT trigger_id,user,trigger_lines,trigger_name FROM vicidial_process_triggers where server_ip='$server_ip' and trigger_run='1' and trigger_time < NOW() order by trigger_time limit 1;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthBrows=$sthA->rows;
 if ($sthBrows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$trigger_id	=		"$aryA[0]";
-	$user	=			"$aryA[1]";
-	$trigger_lines	=	"$aryA[2]";
+	$trigger_id	=		$aryA[0];
+	$user	=			$aryA[1];
+	$trigger_lines	=	$aryA[2];
+	$trigger_name =		$aryA[3];
 	}
 $sthA->finish();
 
@@ -3235,15 +3237,23 @@ if ($sthBrows > 0)
 	foreach(@triggers)
 		{
 		$trigger_results .= "$triggers[$i]\n";
-		@output=@MT;
-		@output = `$triggers[$i]`;
-		$m=0;
-		foreach(@output) 
+		if ($trigger_name =~ /SCREEN/)
 			{
-			$trigger_results .= "$output[$m]";
-			$m++;
+			if ($DB) {print "starting trigger process in a screen...\n";}
+			`/usr/bin/screen -d -m -S VT$reset_test $triggers[$i]`;
+			$trigger_results = 'launched in a screen';
 			}
-
+		else
+			{
+			@output=@MT;
+			@output = `$triggers[$i]`;
+			$m=0;
+			foreach(@output) 
+				{
+				$trigger_results .= "$output[$m]";
+				$m++;
+				}
+			}
 		$i++;
 		}
 	if ($DB) {print "DONE\n";}
@@ -3255,7 +3265,6 @@ if ($sthBrows > 0)
 	$stmtA="INSERT INTO vicidial_process_trigger_log SET trigger_id='$trigger_id',user='$user',trigger_time=NOW(),server_ip='$server_ip',trigger_lines='$trigger_lines',trigger_results='$trigger_results';";
 	$Iaffected_rows = $dbhA->do($stmtA);
 	if ($DB) {print "FINISHED:   $affected_rows|$Iaffected_rows";}
-
 	}
 ################################################################################
 #####  END  process triggers

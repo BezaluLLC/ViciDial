@@ -463,6 +463,8 @@ following modules first:   (say YES if asked to install prerequisites)
    - install MIME::Base64
    - install MIME::QuotedPrint
    - install Crypt::Eksblowfish::Bcrypt
+   - install IO::Pty
+   - install Net::SFTP::Foreign
 - then quit cpan, you are done
 5. Go to http://asterisk.gnuinter.net/ and download the asterisk-perl module
 (backup link: http://download.vicidial.com/packages/asterisk-perl-0.08.tar.gz)
