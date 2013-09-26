@@ -17,6 +17,7 @@
 # 130610-1001 - Finalized changing of all ereg instances to preg
 # 130621-0735 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-2025 - Changed to mysqli PHP functions
+# 130926-0720 - Added link to lists view of report
 #
 
 $startMS = microtime();
@@ -385,7 +386,7 @@ while ($campaigns_to_print > $o)
 	  else {$MAIN.="<option value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
 	$o++;
 	}
-$MAIN.="</SELECT>\n";
+$MAIN.="</SELECT>\n<BR>\n<a href=\"AST_LISTS_stats.php?DB=$DB\">SWITCH TO LISTS</a>";
 $MAIN.="</TD><TD VALIGN=TOP>";
 $MAIN.="Display as:<BR/>";
 $MAIN.="<select name='report_display_type'>";
