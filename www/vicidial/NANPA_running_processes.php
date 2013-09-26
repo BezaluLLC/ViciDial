@@ -21,6 +21,10 @@ $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
 if (isset($_GET["output_codes_to_display"]))			{$output_codes_to_display=$_GET["output_codes_to_display"];}
 	elseif (isset($_POST["output_codes_to_display"]))	{$output_codes_to_display=$_POST["output_codes_to_display"];}
+if (isset($_GET["show_history"]))			{$show_history=$_GET["show_history"];}
+	elseif (isset($_POST["show_history"]))	{$show_history=$_POST["show_history"];}
+if (isset($_GET["process_limit"]))			{$process_limit=$_GET["process_limit"];}
+	elseif (isset($_POST["process_limit"]))	{$process_limit=$_POST["process_limit"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -49,6 +53,8 @@ else
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	}
+
+$process_limit = preg_replace('/[^-_0-9a-zA-Z]/', '', $process_limit);
 
 $NOW_DATE = date("Y-m-d");
 
@@ -123,23 +129,36 @@ $oc_ct=count($output_codes_to_display);
 $oc_SQL="";
 $url_str="";
 
-for ($i=0; $i<$oc_ct; $i++) {
+for ($i=0; $i<$oc_ct; $i++) 
+	{
 	$oc_SQL.="'$output_codes_to_display[$i]',";
 	$url_str.="output_codes_to_display[]=".$output_codes_to_display[$i];
-}
+	}
 $oc_SQL=substr($oc_SQL, 0, -1);
 
-$process_stmt="select * from vicidial_nanpa_filter_log where output_code in ($oc_SQL) and status!='COMPLETED'";
-$process_rslt=mysqli_query($link, $process_stmt);
+if (!$show_history) {
+	$process_stmt="select * from vicidial_nanpa_filter_log where output_code in ($oc_SQL) and status!='COMPLETED'";
+	$process_rslt=mysqli_query($link, $process_stmt);
+	$report_title="Currently running NANPA scrubs";
+} else {
+	if (!$process_limit) {$process_limit=10;}
+	$process_stmt="SELECT * from vicidial_nanpa_filter_log where user='$PHP_AUTH_USER' and status='COMPLETED' order by start_time asc limit $process_limit";
+
+	$process_rslt=mysqli_query($link, $process_stmt);
+	$report_title="Past NANPA scrubs for user $PHP_AUTH_USER";
+
+	$past_process_ct=mysqli_num_rows($process_rslt);
+	if ($process_limit<=$past_process_ct) {
+		$upper_limit=$process_limit+10;
+		$more_history_link="<BR><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=1><a name='past_scrubs' href='#past_scrubs' onClick='ShowPastProcesses($upper_limit)'>Show more processes</a></font>";
+	} else {
+		$more_history_link="";
+	}
+}
 
 if (mysqli_num_rows($process_rslt)>0) {
-#	echo "<html>";
-#	echo "<head>";
-#	echo "<title>NANPA running processes</title>";
-#	echo "</head>";
-#	echo "<body marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>";
 	echo "<table width='770' cellpadding=5 cellspacing=0>";
-	echo "<tr><th colspan='7' bgcolor='#015B91'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>Currently running NANPA scrubs</th></tr>";
+	echo "<tr><th colspan='7' bgcolor='#015B91'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>$report_title</th></tr>";
 	echo "<tr>";
 	echo "<td align='left' bgcolor='#015B91' width='80'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>Start time</th>";
 	echo "<td align='left' bgcolor='#015B91' width='80'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>Status</th>";
@@ -164,7 +183,8 @@ if (mysqli_num_rows($process_rslt)>0) {
 		echo "</tr>";
 	}
 	echo "</table>";
-#	echo "</body>";
-#	echo "</html>";
+	echo $more_history_link;
+} else { 
+	echo $more_history_link;
 }
 ?>

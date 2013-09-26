@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# cm.agi   version 2.4
+# cm.agi   version 2.8
 # 
 # Used by Call Menus to log digit presses if enabled in the settings. You should
 # not need to manually use this script, it is used by the dialplan builder.
@@ -19,12 +19,13 @@
 #exten => _XXXXX,1,AGI(cm.agi,INBOUND-----${EXTEN}-----postal_code)
 #exten => _XXXXX,n,Goto(next_callmenu_here,s,1)
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 110525-2100 - First Build
 # 111003-2150 - Added field to update
 # 120730-0729 - Changed to allow inbound logging when lead is defined
+# 130925-1822 - Added variable filter to prevent DID SQL injection attack
 #
 
 $script = 'cm.agi';
@@ -174,6 +175,9 @@ while(<STDIN>)
 	if (/^agi_callerid\:\s+(.*)$/)		{$callerid = $1;}
 	if (/^agi_calleridname\:\s+(.*)$/)	{$calleridname = $1;}
 	}
+$callerid =~ s/\'|\\\\|\\\|\\|\\;|\\\;|\;|;//gi;
+$calleridname =~ s/\'|\\\\|\\\|\\|\\;|\\\;|\;|;//gi;
+$extension =~ s/\'|\"|\\\\|\\\|\\|\\;|\\\;|\;|;//gi;
 
 $outboundIVR=0;
 $fieldUPDATE=0;
@@ -220,7 +224,6 @@ else
 	$calleridname =~ s/unknown|\'//gi;
 	if ( (!$callerid) or ($callerid =~ /unknown/) )
 		{$callerid = $calleridname;}
-
 
 	if (length($callerid)>0) {$phone_number = $callerid;}
 	   else {$phone_number = '';}

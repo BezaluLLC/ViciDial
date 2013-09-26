@@ -484,6 +484,7 @@ $group_string='|';
 $group_ct = count($groups);
 while($i < $group_ct)
 	{
+	$groups[$i] = preg_replace("/'|\"|\\\\|;/","",$groups[$i]);
 	if ( (preg_match("/ $groups[$i] /",$regexLOGallowed_campaigns)) or (preg_match("/ALL-/",$LOGallowed_campaigns)) )
 		{
 		$group_string .= "$groups[$i]|";
@@ -500,13 +501,13 @@ $user_group_string='|';
 $user_group_ct = count($user_group_filter);
 while($i < $user_group_ct)
 	{
+	$user_group_filter[$i] = preg_replace("/'|\"|\\\\|;/","",$user_group_filter[$i]);
 #	if ( (preg_match("/ $user_group_filter[$i] /",$regexLOGallowed_campaigns)) or (preg_match("/ALL-/",$LOGallowed_campaigns)) )
 #		{
 		$user_group_string .= "$user_group_filter[$i]|";
 		$user_group_SQL .= "'$user_group_filter[$i]',";
 		$usergroupQS .= "&user_group_filter[]=$user_group_filter[$i]";
 #		}
-
 	$i++;
 	}
 $user_group_SQL = preg_replace('/,$/i', '',$user_group_SQL);

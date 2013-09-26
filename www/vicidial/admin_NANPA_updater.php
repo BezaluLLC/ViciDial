@@ -269,9 +269,41 @@ function RefreshNANPA(spanURL) {
 		xmlhttp.send(nanpa_URL);
 		xmlhttp.onreadystatechange = function() {
 			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-				var StatSpanText = null;
-				StatSpanText = xmlhttp.responseText;
-				document.getElementById("running_processes").innerHTML = StatSpanText;
+				var ProcessSpanText = null;
+				ProcessSpanText = xmlhttp.responseText;
+				document.getElementById("running_processes").innerHTML = ProcessSpanText;
+				delete xmlhttp;
+			}
+		}
+	}
+}
+function ShowPastProcesses(limit) {
+	if (!limit){var limitURL="";} else {var limitURL="&process_limit="+limit;}
+
+	var xmlhttp=false;
+	try {
+		xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+	} catch (e) {
+		try {
+			xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		} catch (E) {
+			xmlhttp = false;
+		}
+	}
+	if (!xmlhttp && typeof XMLHttpRequest!='undefined') {
+		xmlhttp = new XMLHttpRequest();
+	}
+	if (xmlhttp) {
+		var nanpa_URL = "&show_history=1"+limitURL;
+		// alert(nanpa_URL);
+		xmlhttp.open('POST', 'NANPA_running_processes.php');
+		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+		xmlhttp.send(nanpa_URL);
+		xmlhttp.onreadystatechange = function() {
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+				var ProcessSpanText = null;
+				ProcessSpanText = xmlhttp.responseText;
+				document.getElementById("past_NANPA_scrubs").innerHTML = ProcessSpanText;
 				delete xmlhttp;
 			}
 		}
@@ -435,6 +467,14 @@ else
 
 	echo "</td></tr>";
 	}
+echo "<tr><td>";
+echo "<table width='770' cellpadding=0 cellspacing=0 bgcolor='#FFFFFF'>";
+echo "<tr><td align='center'>";
+echo "<span id='past_NANPA_scrubs'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=1><a name='past_scrubs' href='#past_scrubs' onClick='ShowPastProcesses(10)'>View past scrubs</font></span>";
+echo "</td></tr>";
+echo "</table>";
+echo "</td></tr>";
+
 echo "</table>";
 echo "</form>";
 echo "</body>";

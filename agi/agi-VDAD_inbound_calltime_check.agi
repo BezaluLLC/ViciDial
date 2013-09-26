@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-VDAD_inbound_calltime_check.agi   version 2.6
+# agi-VDAD_inbound_calltime_check.agi   version 2.8
 # 
 # Runs when a call comes in from an inbound call. This script will check the
 # settings of the defined calltime scheme in VICIDIAL and either send the call
@@ -50,6 +50,7 @@
 # 120730-0727 - Fixed issue with non-populating phone number
 # 121124-1414 - Added call times holidays function
 # 130108-1807 - Changes for Asterisk 1.8 compatibility
+# 130925-1826 - Added variable filter to prevent DID SQL injection attack
 #
 
 $script = 'agi-VDAD_inbound_calltime_check.agi';
@@ -225,6 +226,9 @@ while(<STDIN>)
 	if (/^agi_callerid\:\s+(.*)$/)		{$callerid = $1;}
 	if (/^agi_calleridname\:\s+(.*)$/)	{$calleridname = $1;}
 	}
+$callerid =~ s/\'|\\\\|\\\|\\|\\;|\\\;|\;|;//gi;
+$calleridname =~ s/\'|\\\\|\\\|\\|\\;|\\\;|\;|;//gi;
+$extension =~ s/\'|\"|\\\\|\\\|\\|\\;|\\\;|\;|;//gi;
 
 $outboundIVR=0;
 $ingroupIVR=0;
@@ -286,7 +290,6 @@ else
 	if ( (!$callerid) or ($callerid =~ /unknown/) )
 		{$callerid = $calleridname;}
 
-
 	if (length($callerid)>0) {$phone_number = $callerid;}
 	   else {$phone_number = '';}
 	if (length($calleridname)>0) {$VLcomments = $calleridname;}
@@ -295,7 +298,6 @@ else
 
 if (length($callerid)<8) {$callerid = $parked_by;}
 if (length($pin)>0) {$callerid = $pin;}
-
 
 foreach $i (sort keys %AGI) 
 	{

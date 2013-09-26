@@ -47,7 +47,7 @@ Requires "Net::SFTP::Foreign" and "IO::Pty" CPAN modules to run. Automatically g
   NOTE: before you can run this script, you will need to sftp into the dnc.com server first on the Linux command line, (sftp XXXX@sftp.dncscrub.com)
 
 bin/nanpa_type_preload.pl - 
-This script is designed to load all of the prefixes and portability data into RAM and run against your entire database to scrub it for cellphone numbers every night after the data is refreshed. It takes several minutes to initialize, but runs very fast after that. This process should be set to run in the crontab every morning AFTER thee populate script is finished running.
+This script is designed to load all of the prefixes and portability data into RAM and run against your entire database to scrub it for cellphone numbers every night after the data is refreshed. It takes several minutes to initialize, but runs very fast after that. This process should be set to run in the crontab every morning AFTER the populate script is finished running.
 
 bin/nanpa_type_filter.pl - 
 This script is designed to do one list or a few lists at a time, or the entire database on smaller systems. It works together with a PHP script to perform lookups of cellphones and updating vicidial_list records depending on settings

@@ -410,10 +410,11 @@
 # 130802-1134 - Changed to PHP mysqli functions
 # 130822-0656 - Changed all require to require_once in agc directory for PHP backward compatibility
 # 130903-1920 - Added security check for browser window name, see launch.php for more information
+# 130925-2119 - Fixed span order issue
 #
 
-$version = '2.8-379c';
-$build = '130903-1920';
+$version = '2.8-380c';
+$build = '130925-2119';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -14842,6 +14843,34 @@ if ($agent_display_dialable_leads > 0)
 <a href="#" onclick="EmailContentsLoad()"><font class="body_small">refresh</font></a>
 </span>
 
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="HotKeyActionBox">
+    <table border="0" bgcolor="#FFDD99" width="<?php echo $HCwidth ?>px" height="70px">
+    <tr bgcolor="#FFEEBB"><td height="70px"><font class="sh_text"> Lead Dispositioned As: </font><br /><br /><center>
+    <font class="sd_text"><span id="HotKeyDispo"> - </span></font></center>
+ </td>
+    </tr></table>
+</span>
+
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="HotKeyEntriesBox">
+    <table border="0" bgcolor="#FFDD99" width="<?php echo $HCwidth ?>px" height="70px">
+    <tr bgcolor="#FFEEBB"><td width="200px"><font class="sh_text"> Disposition Hot Keys: </font></td><td colspan="2">
+	<font class="body_small">When active, simply press the keyboard key for the desired disposition for this call. The call will then be hungup and dispositioned automatically:</font></td></tr><tr>
+    <td width="200px"><font class="sk_text">
+	<span id="HotKeyBoxA"><?php echo $HKboxA ?></span>
+    </font></td>
+    <td width="200px"><font class="sk_text">
+	<span id="HotKeyBoxB"><?php echo $HKboxB ?></span>
+    </font></td>
+    <td><font class="sk_text">
+	<span id="HotKeyBoxC"><?php echo $HKboxC ?></span>
+    </font></td>
+    </tr></table>
+</span>
+
+<?php if ( ($HK_statuses_camp > 0) && ($user_level>=$HKuser_level) && ($VU_hotkeys_active > 0) ) { ?>
+<span style="position:absolute;left:<?php echo $HKwidth ?>px;top:<?php echo $HKheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="hotkeysdisplay"><a href="#" onMouseOver="HotKeys('ON')"><img src="./images/vdc_XB_hotkeysactive_OFF.gif" border="0" alt="HOT KEYS INACTIVE" /></a></span>
+<?php } ?>
+
 
 <span style="position:absolute;left:157px;top:<?php echo $HTheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="TransferMain">
     <table bgcolor="#CCCCFF" width="<?php echo $SDwidth ?>px">
@@ -14961,34 +14990,6 @@ if ($agent_display_dialable_leads > 0)
 <span style="position:absolute;left:0px;top:0px;width:<?php echo $JS_browser_width ?>px;height:<?php echo $JS_browser_height ?>px;overflow:scroll;z-index:<?php $zi++; echo $zi ?>;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentXferViewSpan"><center><font class="body_text">
 Available Agents Transfer: <span id="AgentXferViewSelect"></span></center></font></span>
 
-
-<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="HotKeyActionBox">
-    <table border="0" bgcolor="#FFDD99" width="<?php echo $HCwidth ?>px" height="70px">
-    <tr bgcolor="#FFEEBB"><td height="70px"><font class="sh_text"> Lead Dispositioned As: </font><br /><br /><center>
-    <font class="sd_text"><span id="HotKeyDispo"> - </span></font></center>
- </td>
-    </tr></table>
-</span>
-
-<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="HotKeyEntriesBox">
-    <table border="0" bgcolor="#FFDD99" width="<?php echo $HCwidth ?>px" height="70px">
-    <tr bgcolor="#FFEEBB"><td width="200px"><font class="sh_text"> Disposition Hot Keys: </font></td><td colspan="2">
-	<font class="body_small">When active, simply press the keyboard key for the desired disposition for this call. The call will then be hungup and dispositioned automatically:</font></td></tr><tr>
-    <td width="200px"><font class="sk_text">
-	<span id="HotKeyBoxA"><?php echo $HKboxA ?></span>
-    </font></td>
-    <td width="200px"><font class="sk_text">
-	<span id="HotKeyBoxB"><?php echo $HKboxB ?></span>
-    </font></td>
-    <td><font class="sk_text">
-	<span id="HotKeyBoxC"><?php echo $HKboxC ?></span>
-    </font></td>
-    </tr></table>
-</span>
-
-<?php if ( ($HK_statuses_camp > 0) && ($user_level>=$HKuser_level) && ($VU_hotkeys_active > 0) ) { ?>
-<span style="position:absolute;left:<?php echo $HKwidth ?>px;top:<?php echo $HKheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="hotkeysdisplay"><a href="#" onMouseOver="HotKeys('ON')"><img src="./images/vdc_XB_hotkeysactive_OFF.gif" border="0" alt="HOT KEYS INACTIVE" /></a></span>
-<?php } ?>
 
 <?php //AUDIT COMMENTS ADDED BY POUNDTEAM // ?>
 <span style="position:absolute;left:5px;top:350px;z-index:<?php $zi++; echo $zi ?>;" id="ViewCommentsBox">

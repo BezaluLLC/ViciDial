@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# cm_dnc.agi version 2.6
+# cm_dnc.agi version 2.8
 # 
 # Designed to work with Cell Menus to allow setting of a number as DNC or NI
 # This script is meant as a replacecment for the agi-VDADinbound_NI_DNC_CIDlookup.agi
@@ -22,6 +22,7 @@
 # changes:
 # 121109-1623 - First draft
 # 130108-1817 - Changes for Asterisk 1.8 compatibility
+# 130925-1825 - Added variable filter to prevent DID SQL injection attack
 #
 
 $script = 'cm_dnc.agi';
@@ -161,6 +162,9 @@ while(<STDIN>)
 	if (/^agi_type\:\s+(.*)$/)			{$type = $1;}
 	if (/^agi_callerid\:\s+(.*)$/)		{$callerid = $1;}
 	if (/^agi_calleridname\:\s+(.*)$/)	{$calleridname = $1;}
+	$callerid =~ s/\'|\\\\|\\\|\\|\\;|\\\;|\;|;//gi;
+	$calleridname =~ s/\'|\\\\|\\\|\\|\\;|\\\;|\;|;//gi;
+	$extension =~ s/\'|\"|\\\\|\\\|\\|\\;|\\\;|\;|;//gi;
 
 	if ( ($callerid =~ /\".*\"/) && ( (!$calleridname) or ($calleridname =~ /unknown/) ) )
 		{

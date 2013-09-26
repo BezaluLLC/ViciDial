@@ -67,6 +67,7 @@
 # 130412-1321 - Added sip_hangup_cause to carrier log
 # 130531-1619 - Fixed issue with busy agent login calls attempting to be logged
 # 130802-0739 - Added CAMPCUST dialplan variable definition for outbound calls
+# 130925-1820 - Added variable filter to prevent DID SQL injection attack
 #
 
 # defaults for PreFork
@@ -356,6 +357,9 @@ sub process_request
 			$calleridname = $callerid;
 			}
 		}
+	$callerid =~ s/\'|\\\\|\\\|\\|\\;|\\\;|\;|;//gi;
+	$calleridname =~ s/\'|\\\\|\\\|\\|\\;|\\\;|\;|;//gi;
+	$extension =~ s/\'|\"|\\\\|\\\|\\|\\;|\\\;|\;|;//gi;
 
 	if ($AGILOG) 
 		{

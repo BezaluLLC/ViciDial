@@ -29,6 +29,7 @@
 # 130401-0724 - First build
 # 130520-1013 - Added PLOGIN lookup option and no-prompt extension feature
 # 130710-1658 - Small change to allow non-hangup between agent calls
+# 130925-1824 - Added variable filter to prevent DID SQL injection attack
 #
 
 &get_time_now;
@@ -143,6 +144,9 @@ while(<STDIN>)
 	if (/^agi_callerid\:\s+(.*)$/)		{$callerid = $1;}
 	if (/^agi_calleridname\:\s+(.*)$/)	{$calleridname = $1;}
 	}
+$callerid =~ s/\'|\\\\|\\\|\\|\\;|\\\;|\;|;//gi;
+$calleridname =~ s/\'|\\\\|\\\|\\|\\;|\\\;|\;|;//gi;
+$extension =~ s/\'|\"|\\\\|\\\|\\|\\;|\\\;|\;|;//gi;
 
 if ( ($callerid =~ /\".*\"/) && ( (!$calleridname) or ($calleridname =~ /unknown/) ) )
 	{

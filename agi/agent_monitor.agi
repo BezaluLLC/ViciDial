@@ -29,6 +29,7 @@
 #
 # CHANGELOG
 # 130716-1315 - First build based upon agi-phone_monitor.agi
+# 130925-1823 - Added variable filter to prevent DID SQL injection attack
 #
 
 &get_time_now;
@@ -163,6 +164,10 @@ while(<STDIN>)
 	if (/^agi_calleridname\:\s+(.*)$/)	{$calleridname = $1;}
 	}
 
+$callerid =~ s/\'|\\\\|\\\|\\|\\;|\\\;|\;|;//gi;
+$calleridname =~ s/\'|\\\\|\\\|\\|\\;|\\\;|\;|;//gi;
+$extension =~ s/\'|\"|\\\\|\\\|\\|\\;|\\\;|\;|;//gi;
+
 if ( ($callerid =~ /\".*\"/) && ( (!$calleridname) or ($calleridname =~ /unknown/) ) )
 	{
 	$calleridname = $callerid;
@@ -174,6 +179,7 @@ $callerid =~ s/\D//gi;
 $calleridname =~ s/unknown//gi;
 if ( (!$callerid) or ($callerid =~ /unknown/) )
 	{$callerid = $calleridname;}
+
 $phone_number=$callerid;
 
 ### Grab Server values from the database

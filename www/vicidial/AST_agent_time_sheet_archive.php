@@ -111,6 +111,10 @@ else
 	exit;
 	}
 
+$agent = preg_replace('/[^-_0-9a-zA-Z]/', '', $agent);
+$query_date = preg_replace('/[^-_0-9a-zA-Z]/', '', $query_date);
+$calls_summary = preg_replace('/[^-_0-9a-zA-Z]/', '', $calls_summary);
+
 ##### BEGIN log visit to the vicidial_report_log table #####
 $LOGip = getenv("REMOTE_ADDR");
 $LOGbrowser = getenv("HTTP_USER_AGENT");

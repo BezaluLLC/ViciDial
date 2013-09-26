@@ -335,10 +335,11 @@
 # 130705-1512 - Added optional encrypted passwords compatibility
 # 130718-0737 - Added recording_filename to dispo url
 # 130802-1039 - Changed to PHP mysqli functions
-# 
+# 130925-2108 - Fixed issue with List webform overrides
+#
 
-$version = '2.8-233';
-$build = '130802-1039';
+$version = '2.8-234';
+$build = '130925-2108';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=533;
 $one_mysql_log=0;
@@ -5406,10 +5407,12 @@ if ($ACTION == 'VDADcheckINCOMING')
 					$VDCL_timer_action_destination =	$row[15];
 					}
 
+				$VDCL_group_web='';
+				$VDCL_group_name='';
 				### Check for List ID override settings
 				if (strlen($list_id)>0)
 					{
-					$stmt = "SELECT xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number from vicidial_lists where list_id='$list_id';";
+					$stmt = "SELECT xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number,web_form_address,web_form_address_two from vicidial_lists where list_id='$list_id';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00281',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -5427,10 +5430,14 @@ if ($ACTION == 'VDADcheckINCOMING')
 							{$VDCL_xferconf_d_number =	$row[3];}
 						if (strlen($row[4]) > 0)
 							{$VDCL_xferconf_e_number =	$row[4];}
+						if (strlen($row[5]) > 5)
+							{$VDCL_group_web =			$row[5];}
+						if (strlen($row[6]) > 5)
+							{$VDCL_group_web_two =		$row[6];}
 						}
 					}
 
-				echo "|||||$VDCL_campaign_script|$VDCL_get_call_launch|$VDCL_xferconf_a_dtmf|$VDCL_xferconf_a_number|$VDCL_xferconf_b_dtmf|$VDCL_xferconf_b_number|$VDCL_default_xfer_group|X|X|||||$VDCL_timer_action|$VDCL_timer_action_message|$VDCL_timer_action_seconds|$VDCL_xferconf_c_number|$VDCL_xferconf_d_number|$VDCL_xferconf_e_number||||$VDCL_timer_action_destination||||||\n|\n";
+				echo "$VDCL_group_web|$VDCL_group_name||||$VDCL_campaign_script|$VDCL_get_call_launch|$VDCL_xferconf_a_dtmf|$VDCL_xferconf_a_number|$VDCL_xferconf_b_dtmf|$VDCL_xferconf_b_number|$VDCL_default_xfer_group|X|X||||$VDCL_group_web_two|$VDCL_timer_action|$VDCL_timer_action_message|$VDCL_timer_action_seconds|$VDCL_xferconf_c_number|$VDCL_xferconf_d_number|$VDCL_xferconf_e_number||||$VDCL_timer_action_destination||||||\n|\n";
 				
 				if (preg_match('/X/',$dialed_label))
 					{
