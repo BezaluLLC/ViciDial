@@ -705,7 +705,7 @@ else
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
 	require("dbconnect.php");
@@ -720,7 +720,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 exit;
 
