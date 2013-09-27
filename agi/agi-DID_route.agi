@@ -31,6 +31,7 @@
 # 120430-2214 - Converted call to Monitor app to be asterisk 1.8 compatible
 # 130108-1810 - Changes for Asterisk 1.8 compatibility
 # 130925-1819 - Added variable filter to prevent DID SQL injection attack
+# 130926-1549 - Added new queue_log IVR entries for QM
 #
 
 $script = 'agi-DID_route.agi';
@@ -621,6 +622,18 @@ if ($did_route =~ /EXTEN/)
 ### Route call to a call menu on the system
 if ($did_route =~ /CALLMENU/)
 	{
+	if ($enable_queuemetrics_logging > 0)
+		{
+		$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+		 or die "Couldn't connect to database: " . DBI->errstr;
+
+		if ($DBX) {print "CONNECTED TO QM DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
+
+		$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$callerid',data3='$extension',serverid='$queuemetrics_log_id';";
+		$Baffected_rows = $dbhB->do($stmtB);
+		$dbhB->disconnect();
+		}
+
 	$XFERcontext = "$menu_id";
 	if ($AGILOG) {$agi_string = "exiting the DID app, transferring call to CALLMENU $XFERcontext";   &agi_output;}
 	print "SET CONTEXT $XFERcontext\n";

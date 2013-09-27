@@ -185,6 +185,7 @@
 # 121129-1618 - Small fix for estimated hold time, excluding QUEUE status
 # 130108-1804 - Changes for Asterisk 1.8 compatibility
 # 130925-1821 - Added variable filter to prevent DID SQL injection attack
+# 130926-1548 - Added new queue_log IVR entries for QM
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -310,6 +311,37 @@ while ($sthArows > $rec_count)
 	}
 $sthA->finish();
 
+#############################################
+##### START SYSTEM SETTINGS LOOKUP      #####
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,queuemetrics_pe_phone_append,did_agent_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_ra_extensions_enabled,queuemetrics_socket,queuemetrics_socket_url FROM system_settings;";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+	$dbhP=$dbhA;   $mysql_count='02026';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$enable_queuemetrics_logging =	$aryA[0];
+	$queuemetrics_server_ip	=		$aryA[1];
+	$queuemetrics_dbname =			$aryA[2];
+	$queuemetrics_login=			$aryA[3];
+	$queuemetrics_pass =			$aryA[4];
+	$queuemetrics_log_id =			$aryA[5];
+	$queuemetrics_eq_prepend =		$aryA[6];
+	$queuemetrics_pe_phone_append = $aryA[7];
+	$did_agent_log =				$aryA[8];
+	$alt_log_server_ip =			$aryA[9];
+	$alt_log_dbname =				$aryA[10];
+	$alt_log_login =				$aryA[11];
+	$alt_log_pass =					$aryA[12];
+	$tables_use_alt_log_db =		$aryA[13];
+	$did_ra_extensions_enabled =	$aryA[14];
+	$queuemetrics_socket =			$aryA[15];
+	$queuemetrics_socket_url = 		$aryA[16];
+	}
+$sthA->finish();
+##### END SYSTEM SETTINGS LOOKUP      #####
+###########################################
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -1397,6 +1429,18 @@ if ( ( ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $c
 			if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
 			$DROPexten =	's';
 			$ext_context =	$after_hours_callmenu;
+
+			if ($enable_queuemetrics_logging > 0)
+				{
+				$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+				 or die "Couldn't connect to database: " . DBI->errstr;
+
+				if ($DBX) {print "CONNECTED TO QM DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
+
+				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$phone_number',data3='$channel_group',serverid='$queuemetrics_log_id';";
+				$Baffected_rows = $dbhB->do($stmtB);
+					$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+				}
 			}
 		if ($after_hours_action =~ /EXTENSION/)
 			{
@@ -1654,6 +1698,18 @@ if ( ( ($no_agent_no_queue =~ /Y|NO_PAUSED/) || ($MCnanque_override > 0) ) && ($
 				if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
 				$DROPexten =	's';
 				$ext_context =	$no_agent_action_value;
+
+				if ($enable_queuemetrics_logging > 0)
+					{
+					$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+					 or die "Couldn't connect to database: " . DBI->errstr;
+
+					if ($DBX) {print "CONNECTED TO QM DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
+
+					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$phone_number',data3='$channel_group',serverid='$queuemetrics_log_id';";
+					$Baffected_rows = $dbhB->do($stmtB);
+						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+					}
 				}
 			if ($no_agent_action =~ /VOICEMAIL/)
 				{
@@ -1846,37 +1902,6 @@ if ($call_handle_method =~ /CLOSER|DIGITID$/)
 	if ($AGILOG) {$agi_string = "--    VDXL : |$insert_lead_id|$insert_xfer_id|insert to vicidial_xfer_log";   &agi_output;}
 	}
 
-#############################################
-##### START SYSTEM SETTINGS LOOKUP      #####
-$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,queuemetrics_pe_phone_append,did_agent_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_ra_extensions_enabled,queuemetrics_socket,queuemetrics_socket_url FROM system_settings;";
-$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-$sthArows=$sthA->rows;
-	$dbhP=$dbhA;   $mysql_count='02026';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-if ($sthArows > 0)
-	{
-	@aryA = $sthA->fetchrow_array;
-	$enable_queuemetrics_logging =	$aryA[0];
-	$queuemetrics_server_ip	=		$aryA[1];
-	$queuemetrics_dbname =			$aryA[2];
-	$queuemetrics_login=			$aryA[3];
-	$queuemetrics_pass =			$aryA[4];
-	$queuemetrics_log_id =			$aryA[5];
-	$queuemetrics_eq_prepend =		$aryA[6];
-	$queuemetrics_pe_phone_append = $aryA[7];
-	$did_agent_log =				$aryA[8];
-	$alt_log_server_ip =			$aryA[9];
-	$alt_log_dbname =				$aryA[10];
-	$alt_log_login =				$aryA[11];
-	$alt_log_pass =					$aryA[12];
-	$tables_use_alt_log_db =		$aryA[13];
-	$did_ra_extensions_enabled =	$aryA[14];
-	$queuemetrics_socket =			$aryA[15];
-	$queuemetrics_socket_url = 		$aryA[16];
-	}
-$sthA->finish();
-##### END SYSTEM SETTINGS LOOKUP      #####
-###########################################
 if ($enable_queuemetrics_logging > 0)
 	{
 	$data2 = "$phone_number";
@@ -1960,7 +1985,7 @@ if ($Uaffected_rows < 1)
 if ($enable_queuemetrics_logging > 0)
 	{
 	$QL_last_day = ($now_date_epoch - 86400);
-	$stmtB = "UPDATE queue_log SET call_id='$YqueryCID' where time_id > '$QL_last_day' and call_id='$uniqueid' and queue='NONE' and agent='NONE' and verb='INFO' and data1 IN('DID','IVR');";
+	$stmtB = "UPDATE queue_log SET call_id='$YqueryCID' where time_id > '$QL_last_day' and call_id='$uniqueid' and queue='NONE' and agent='NONE' and verb='INFO' and data1 IN('DID','IVR','IVRAPPEND','IVRSTART','IVRGOAL');";
 	$Baffected_rows = $dbhB->do($stmtB);
 	if ($AGILOG) {$agi_string = "$Baffected_rows|$stmtB|";   &agi_output;}
 		$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02115';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
@@ -4009,6 +4034,18 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 				{
 				$DROPexten = "s";
 				$ext_context = "$wait_time_option_callmenu";
+
+				if ($enable_queuemetrics_logging > 0)
+					{
+					$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+					 or die "Couldn't connect to database: " . DBI->errstr;
+
+					if ($DBX) {print "CONNECTED TO QM DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
+
+					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$phone_number',data3='$channel_group',serverid='$queuemetrics_log_id';";
+					$Baffected_rows = $dbhB->do($stmtB);
+						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+					}
 				}
 			}
 		if ($wait_time_option =~ /IN_GROUP/)
@@ -4422,6 +4459,18 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 						{
 						$DROPexten = "s";
 						$ext_context = "$hold_time_option_callmenu";
+
+						if ($enable_queuemetrics_logging > 0)
+							{
+							$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+							 or die "Couldn't connect to database: " . DBI->errstr;
+
+							if ($DBX) {print "CONNECTED TO QM DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
+
+							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$phone_number',data3='$channel_group',serverid='$queuemetrics_log_id';";
+							$Baffected_rows = $dbhB->do($stmtB);
+								$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+							}
 						}
 					}
 				if ($hold_time_option =~ /IN_GROUP/)
@@ -4817,6 +4866,18 @@ if ( ($drop_timer > $DROP_TIME) || ($MCdrop_override > 0) )
 		if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
 		$DROPexten =	's';
 		$ext_context =	$drop_callmenu;
+
+		if ($enable_queuemetrics_logging > 0)
+			{
+			$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
+			 or die "Couldn't connect to database: " . DBI->errstr;
+
+			if ($DBX) {print "CONNECTED TO QM DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
+
+			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$phone_number',data3='$channel_group',serverid='$queuemetrics_log_id';";
+			$Baffected_rows = $dbhB->do($stmtB);
+				$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+			}
 		}
 	if ($drop_action =~ /IN_GROUP/)
 		{ # 90009*CL_uk3survy_*8301*10000123*universal*7275551212*1234*"
