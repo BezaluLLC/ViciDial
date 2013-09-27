@@ -148,6 +148,10 @@ OTHER CHANGES:
 	CELLPHONE_USA_TCPA_FCC_COMPLAINCE.txt file for more detailed information 
 	on this feature.
 
+18. Added lead search of archived leads table if present.
+
+19. Added QueueMetrics 13.04 support with call hold records
+
 
 
 

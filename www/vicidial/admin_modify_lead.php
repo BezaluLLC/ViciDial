@@ -56,6 +56,7 @@
 # 130621-1731 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130705-1726 - Minor change for encrypted password compatibility
 # 130901-0816 - Changed to mysqli PHP functions
+# 130926-2053 - Added option for viewing/modifying vicidial_list_archive leads
 #
 
 require("dbconnect_mysqli.php");
@@ -166,6 +167,11 @@ if (isset($_POST["appointment_time"]))			{$appointment_time=$_POST["appointment_
 	elseif (isset($_GET["appointment_time"]))	{$appointment_time=$_GET["appointment_time"];}
 if (isset($_GET["CBstatus"]))				{$CBstatus=$_GET["CBstatus"];}
 	elseif (isset($_POST["CBstatus"]))		{$CBstatus=$_POST["CBstatus"];}
+if (isset($_GET["archive_search"]))			{$archive_search=$_GET["archive_search"];}
+	elseif (isset($_POST["archive_search"]))	{$archive_search=$_POST["archive_search"];}
+
+if ($archive_search=="Yes") {$vl_table="vicidial_list_archive";} 
+else {$vl_table="vicidial_list"; $archive_search="No";}
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
@@ -389,13 +395,13 @@ if ($lead_id == 'NEW')
 	}
 else
 	{
-	$stmt="SELECT count(*) from vicidial_list where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "'";
+	$stmt="SELECT count(*) from $vl_table where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "'";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$row=mysqli_fetch_row($rslt);
 	$lead_exists =	$row[0];
 
-	$stmt="SELECT count(*) from vicidial_list where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' $LOGallowed_listsSQL";
+	$stmt="SELECT count(*) from $vl_table where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' $LOGallowed_listsSQL";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$row=mysqli_fetch_row($rslt);
@@ -415,12 +421,12 @@ if ($end_call > 0)
 	$comments = preg_replace("/\n/",'!N',$comments);
 	$comments = preg_replace("/\r/",'',$comments);
 	### update the lead record in the vicidial_list table 
-	$stmt="UPDATE vicidial_list set status='" . mysqli_real_escape_string($link, $status) . "',title='" . mysqli_real_escape_string($link, $title) . "',first_name='" . mysqli_real_escape_string($link, $first_name) . "',middle_initial='" . mysqli_real_escape_string($link, $middle_initial) . "',last_name='" . mysqli_real_escape_string($link, $last_name) . "',address1='" . mysqli_real_escape_string($link, $address1) . "',address2='" . mysqli_real_escape_string($link, $address2) . "',address3='" . mysqli_real_escape_string($link, $address3) . "',city='" . mysqli_real_escape_string($link, $city) . "',state='" . mysqli_real_escape_string($link, $state) . "',province='" . mysqli_real_escape_string($link, $province) . "',postal_code='" . mysqli_real_escape_string($link, $postal_code) . "',country_code='" . mysqli_real_escape_string($link, $country_code) . "',alt_phone='" . mysqli_real_escape_string($link, $alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysqli_real_escape_string($link, $email) . "',security_phrase='" . mysqli_real_escape_string($link, $security) . "',comments='" . mysqli_real_escape_string($link, $comments) . "',rank='" . mysqli_real_escape_string($link, $rank) . "',owner='" . mysqli_real_escape_string($link, $owner) . "',vendor_lead_code='" . mysqli_real_escape_string($link, $vendor_id) . "' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "'";
+	$stmt="UPDATE $vl_table set status='" . mysqli_real_escape_string($link, $status) . "',title='" . mysqli_real_escape_string($link, $title) . "',first_name='" . mysqli_real_escape_string($link, $first_name) . "',middle_initial='" . mysqli_real_escape_string($link, $middle_initial) . "',last_name='" . mysqli_real_escape_string($link, $last_name) . "',address1='" . mysqli_real_escape_string($link, $address1) . "',address2='" . mysqli_real_escape_string($link, $address2) . "',address3='" . mysqli_real_escape_string($link, $address3) . "',city='" . mysqli_real_escape_string($link, $city) . "',state='" . mysqli_real_escape_string($link, $state) . "',province='" . mysqli_real_escape_string($link, $province) . "',postal_code='" . mysqli_real_escape_string($link, $postal_code) . "',country_code='" . mysqli_real_escape_string($link, $country_code) . "',alt_phone='" . mysqli_real_escape_string($link, $alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysqli_real_escape_string($link, $email) . "',security_phrase='" . mysqli_real_escape_string($link, $security) . "',comments='" . mysqli_real_escape_string($link, $comments) . "',rank='" . mysqli_real_escape_string($link, $rank) . "',owner='" . mysqli_real_escape_string($link, $owner) . "',vendor_lead_code='" . mysqli_real_escape_string($link, $vendor_id) . "' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "'";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 
 	echo "information modified<BR><BR>\n";
-	echo "<a href=\"$PHP_SELF?lead_id=$lead_id&DB=$DB\">Go back to the lead modification page</a><BR><BR>\n";
+	echo "<a href=\"$PHP_SELF?lead_id=$lead_id&DB=$DB&archive_search=$archive_search\">Go back to the lead modification page</a><BR><BR>\n";
 	echo "<form><input type=button value=\"Close This Window\" onClick=\"javascript:window.close();\"></form>\n";
 	
 	### LOG INSERTION Admin Log Table ###
@@ -564,7 +570,7 @@ else
 		}	
 
 
-	$stmt="SELECT count(*) from vicidial_list where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "'";
+	$stmt="SELECT count(*) from $vl_table where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "'";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$row=mysqli_fetch_row($rslt);
@@ -734,7 +740,7 @@ else
 		}
 
 	##### grab vicidial_list data for lead #####
-	$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id from vicidial_list where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' $LOGallowed_listsSQL";
+	$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id from $vl_table where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' $LOGallowed_listsSQL";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$row=mysqli_fetch_row($rslt);
@@ -870,6 +876,12 @@ else
 	echo "<table cellpadding=1 cellspacing=0>\n";
 	echo "<tr><td colspan=2>Lead ID: $lead_id &nbsp; &nbsp; List ID: $list_id</td></tr>\n";
 	echo "<tr><td colspan=2>Fronter: <A HREF=\"user_stats.php?user=$tsr\">$tsr</A> &nbsp; &nbsp; Called Count: $called_count</td></tr>\n";
+	if ($archive_search=="Yes") {
+		echo "<tr><td colspan=2 align='center'>";
+		echo "<B><font color='#FF0000'>*** ARCHIVED LEAD ***</font></B>";
+		echo "<input type='hidden' name='archive_search' value='Yes'>";
+		echo "</td></tr>\n";
+	}
 	if ($lead_id == 'NEW') {$list_id='';}
 
 	if ($LOGadmin_hide_lead_data != '0')

@@ -5524,42 +5524,42 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					delete xmlhttpXF;
 					}
 
-					// used to send second Redirect for manual dial calls
-					if ( (auto_dial_level == 0) && (taskvar != '3WAY') )
+				// used to send second Redirect for manual dial calls
+				if ( (auto_dial_level == 0) && (taskvar != '3WAY') )
 					{
-						RedirecTxFEr = 1;
-						var xmlhttpXF2=false;
-						/*@cc_on @*/
-						/*@if (@_jscript_version >= 5)
-						// JScript gives us Conditional compilation, we can cope with old IE versions.
-						// and security blocked creation of the objects.
-						 try {
-						  xmlhttpXF2 = new ActiveXObject("Msxml2.XMLHTTP");
-						 } catch (e) {
-						  try {
-						   xmlhttpXF2 = new ActiveXObject("Microsoft.XMLHTTP");
-						  } catch (E) {
-						   xmlhttpXF2 = false;
-						  }
-						 }
-						@end @*/
-						if (!xmlhttpXF2 && typeof XMLHttpRequest!='undefined')
+					RedirecTxFEr = 1;
+					var xmlhttpXF2=false;
+					/*@cc_on @*/
+					/*@if (@_jscript_version >= 5)
+					// JScript gives us Conditional compilation, we can cope with old IE versions.
+					// and security blocked creation of the objects.
+					 try {
+					  xmlhttpXF2 = new ActiveXObject("Msxml2.XMLHTTP");
+					 } catch (e) {
+					  try {
+					   xmlhttpXF2 = new ActiveXObject("Microsoft.XMLHTTP");
+					  } catch (E) {
+					   xmlhttpXF2 = false;
+					  }
+					 }
+					@end @*/
+					if (!xmlhttpXF2 && typeof XMLHttpRequest!='undefined')
 						{
-							xmlhttpXF2 = new XMLHttpRequest();
+						xmlhttpXF2 = new XMLHttpRequest();
 						}
-						if (xmlhttpXF2) 
+					if (xmlhttpXF2) 
 						{ 
-							xmlhttpXF2.open('POST', 'manager_send.php'); 
-							xmlhttpXF2.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
-							xmlhttpXF2.send(xferredirect_query + "&stage=2NDXfeR"); 
-							xmlhttpXF2.onreadystatechange = function() 
-								{ 
-								if (xmlhttpXF2.readyState == 4 && xmlhttpXF2.status == 200) 
-									{
-									Nactiveext = null;
-									Nactiveext = xmlhttpXF2.responseText;
-							//		alert(RedirecTxFEr + "|" + xmlhttpXF2.responseText);
-								}
+						xmlhttpXF2.open('POST', 'manager_send.php'); 
+						xmlhttpXF2.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+						xmlhttpXF2.send(xferredirect_query + "&stage=2NDXfeR"); 
+						xmlhttpXF2.onreadystatechange = function() 
+							{ 
+							if (xmlhttpXF2.readyState == 4 && xmlhttpXF2.status == 200) 
+								{
+								Nactiveext = null;
+								Nactiveext = xmlhttpXF2.responseText;
+						//		alert(RedirecTxFEr + "|" + xmlhttpXF2.responseText);
+							}
 						}
 						delete xmlhttpXF2;
 						}

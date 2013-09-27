@@ -219,28 +219,15 @@ $list_string='|';
 $list_ct = count($list);
 while($i < $list_ct)
 	{
-#	if ( (preg_match("/ $list_campaigns[$i] /",$regexLOGallowed_campaigns)) or (preg_match("/-ALL/",$LOGallowed_campaigns)) )
-#		{
-		$list_string .= "$list[$i]|";
-		$list_SQL .= "'$list[$i]',";
-		$listQS .= "&list[]=$list[$i]";
-#		}
+	$list_string .= "$list[$i]|";
+	$list_SQL .= "'$list[$i]',";
+	$listQS .= "&list[]=$list[$i]";
 	$i++;
 	}
 	$list_id_str=substr($list_SQL,0,-1);
 
-#if ( (preg_match('/\-\-ALL\-\-/',$list_string) ) or ($list_ct < 1) or (strlen($list_string) < 2) )
-#	{
 	$group_SQL = "$LOGallowed_campaignsSQL";
-#	}
-#else
-#	{
-#	$group_SQL = preg_replace('/,$/i', '',$group_SQL);
-#	$both_group_SQLand = "and ( (campaign_id IN($group_drop_SQL)) or (campaign_id IN($group_SQL)) )";
-#	$both_group_SQL = "where ( (campaign_id IN($group_drop_SQL)) or (campaign_id IN($group_SQL)) )";
-#	$group_SQLand = "and campaign_id IN($group_SQL)";
-#	$group_SQL = "where campaign_id IN($group_SQL)";
-#	}
+	$group_SQLand = "$LOGallowed_campaignsSQL";
 
 #######################
 
@@ -423,16 +410,6 @@ else
 	$OUToutput .= "List Status Stats                             $NOW_TIME\n";
 
 	$OUToutput .= "\n";
-
-	$lists_id_str="";
-	$list_stmt="SELECT list_id from vicidial_lists where active IN('Y','N') $group_SQLand $list_SQLand";
-	if ($DB) {$MAIN.="$list_stmt\n";}
-	$list_rslt=mysql_to_mysqli($list_stmt, $link);
-	while ($lrow=mysqli_fetch_row($list_rslt)) 
-		{
-		$lists_id_str.="'$lrow[0]',";
-		}
-	$lists_id_str=substr($lists_id_str,0,-1);
 
 	$list_stmt="select vicidial_list.list_id,list_name,active, count(*) from vicidial_list, vicidial_lists where vicidial_lists.list_id in ($list_id_str) and vicidial_lists.list_id=vicidial_list.list_id group by vicidial_list.list_id, list_name, active order by list_id, list_name asc;";
 	$list_rslt=mysql_to_mysqli($list_stmt, $link);

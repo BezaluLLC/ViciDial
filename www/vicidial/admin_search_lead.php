@@ -33,6 +33,7 @@
 # 130610-1054 - Finalized changing of all ereg instances to preg
 # 130621-1714 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0747 - Changed to mysqli PHP functions
+# 130926-2048 - Added option to search vicidial_list_archive table
 #
 
 require("dbconnect_mysqli.php");
@@ -71,6 +72,8 @@ if (isset($_GET["list_id"]))			{$list_id=$_GET["list_id"];}
 	elseif (isset($_POST["list_id"]))	{$list_id=$_POST["list_id"];}
 if (isset($_GET["alt_phone_search"]))			{$alt_phone_search=$_GET["alt_phone_search"];}
 	elseif (isset($_POST["alt_phone_search"]))	{$alt_phone_search=$_POST["alt_phone_search"];}
+if (isset($_GET["archive_search"]))			{$archive_search=$_GET["archive_search"];}
+	elseif (isset($_POST["archive_search"]))	{$archive_search=$_POST["archive_search"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -92,6 +95,9 @@ if ($qm_conf_ct > 0)
 ###########################################
 
 $report_name = 'Search Leads Logs';
+
+if ($archive_search=="Yes") {$vl_table="vicidial_list_archive";} 
+else {$vl_table="vicidial_list"; $archive_search="No";}
 
 $vicidial_list_fields = 'lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner';
 
@@ -285,8 +291,20 @@ if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and (!$log_phone)  and (!$log_
 	echo "<TABLE CELLPADDING=3 CELLSPACING=3>";
 	echo "<TR>";
 	echo "<TD colspan=3 align=center><b>Lead Search Options:</TD>";
-	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "</TR>";
+	
+	$archive_stmt="SHOW TABLES LIKE '%vicidial_list_archive%'";
+	$archive_rslt=mysql_to_mysqli($archive_stmt, $link);
+	if (mysqli_num_rows($archive_rslt)>0) 
+		{
+		echo "<TR bgcolor=#B9CBFD>";
+		echo "<TD ALIGN=right>Archive search: &nbsp; </TD><TD ALIGN=left><select size=1 name=archive_search><option>No</option><option>Yes</option><option	SELECTED>$archive_search</option></select></TD>";
+		echo "<TD> &nbsp; </TD>\n";
+		echo "</TR><TR>";
+		echo "<TD colspan=3 align=center> &nbsp; </TD></TR>";
+		}
 
+	echo "<TR bgcolor=#B9CBFD>";
 	echo "<TD ALIGN=right>$label_vendor_lead_code(vendor lead code): &nbsp; </TD><TD ALIGN=left><input type=text name=vendor_id size=10 maxlength=20></TD>";
 	echo "<TD><input type=submit name=submit value=SUBMIT></TD>\n";
 	echo "</TR><TR>";
@@ -297,6 +315,7 @@ if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and (!$log_phone)  and (!$log_
 	echo "<TD rowspan=2><input type=submit name=submit value=SUBMIT></TD>\n";
 	echo "</TR><TR bgcolor=#B9CBFD>";
 	echo "<TD ALIGN=right>$label_alt_phone search: &nbsp; </TD><TD ALIGN=left><select size=1 name=alt_phone_search><option>No</option><option>Yes</option><option SELECTED>$alt_phone_search</option></select></TD>";
+	
 	echo "</TR><TR>";
 	echo "<TD colspan=3 align=center> &nbsp; </TD>";
 	echo "</TR><TR bgcolor=#B9CBFD>";
@@ -430,7 +449,7 @@ else
 					{$bgcolor='bgcolor="#9BB9FB"';}
 				echo "<TR $bgcolor>\n";
 				echo "<TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$o</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><a href=\"admin_modify_lead.php?lead_id=$row[0]\" target=\"_blank\">$row[0]</a></FONT></TD>\n";
+				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><a href=\"admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search\" target=\"_blank\">$row[0]</a></FONT></TD>\n";
 				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[1]</FONT></TD>\n";
 				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[2]</FONT></TD>\n";
 				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[3]</FONT></TD>\n";
@@ -495,7 +514,7 @@ else
 					{$bgcolor='bgcolor="#9BB9FB"';}
 				echo "<TR $bgcolor>\n";
 				echo "<TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$o</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><a href=\"admin_modify_lead.php?lead_id=$row[0]\" target=\"_blank\">$row[0]</a></FONT></TD>\n";
+				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><a href=\"admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search\" target=\"_blank\">$row[0]</a></FONT></TD>\n";
 				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[1]</FONT></TD>\n";
 				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[2]</FONT></TD>\n";
 				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[3]</FONT></TD>\n";
@@ -596,7 +615,7 @@ else
 	##### BEGIN Lead search #####
 	if ($vendor_id)
 		{
-		$stmt="SELECT $vicidial_list_fields from vicidial_list where vendor_lead_code='" . mysqli_real_escape_string($link, $vendor_id) . "' $LOGallowed_listsSQL";
+		$stmt="SELECT $vicidial_list_fields from $vl_table where vendor_lead_code='" . mysqli_real_escape_string($link, $vendor_id) . "' $LOGallowed_listsSQL";
 		}
 	else
 		{
@@ -604,18 +623,18 @@ else
 			{
 			if ($alt_phone_search=="Yes")
 				{
-				$stmt="SELECT $vicidial_list_fields from vicidial_list where phone_number='" . mysqli_real_escape_string($link, $phone) . "' or alt_phone='" . mysqli_real_escape_string($link, $phone) . "' or address3='" . mysqli_real_escape_string($link, $phone) . "' $LOGallowed_listsSQL";
+				$stmt="SELECT $vicidial_list_fields from $vl_table where phone_number='" . mysqli_real_escape_string($link, $phone) . "' or alt_phone='" . mysqli_real_escape_string($link, $phone) . "' or address3='" . mysqli_real_escape_string($link, $phone) . "' $LOGallowed_listsSQL";
 				}
 			else
 				{
-				$stmt="SELECT $vicidial_list_fields from vicidial_list where phone_number='" . mysqli_real_escape_string($link, $phone) . "' $LOGallowed_listsSQL";
+				$stmt="SELECT $vicidial_list_fields from $vl_table where phone_number='" . mysqli_real_escape_string($link, $phone) . "' $LOGallowed_listsSQL";
 				}
 			}
 		else
 			{
 			if ($lead_id)
 				{
-				$stmt="SELECT $vicidial_list_fields from vicidial_list where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' $LOGallowed_listsSQL";
+				$stmt="SELECT $vicidial_list_fields from $vl_table where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' $LOGallowed_listsSQL";
 				}
 			else
 				{
@@ -644,7 +663,7 @@ else
 						if ( ($SQLctA > 0) or ($SQLctB > 0) or ($SQLctC > 0) ) {$andC = 'and';}
 						$ownerSQL = "$andC owner='" . mysqli_real_escape_string($link, $owner) . "'";
 						}
-					$stmt="SELECT $vicidial_list_fields from vicidial_list where $statusSQL $list_idSQL $userSQL $ownerSQL $LOGallowed_listsSQL";
+					$stmt="SELECT $vicidial_list_fields from $vl_table where $statusSQL $list_idSQL $userSQL $ownerSQL $LOGallowed_listsSQL";
 					}
 				else
 					{
@@ -661,7 +680,7 @@ else
 							if ($SQLctA > 0) {$andA = 'and';}
 							$last_nameSQL = "$andA last_name='" . mysqli_real_escape_string($link, $last_name) . "'";
 							}
-						$stmt="SELECT $vicidial_list_fields from vicidial_list where $first_nameSQL $last_nameSQL $LOGallowed_listsSQL";
+						$stmt="SELECT $vicidial_list_fields from $vl_table where $first_nameSQL $last_nameSQL $LOGallowed_listsSQL";
 						}
 					else
 						{
@@ -805,7 +824,7 @@ else
 				{$bgcolor='bgcolor="#9BB9FB"';}
 			echo "<TR $bgcolor>\n";
 			echo "<TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$o</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><a href=\"admin_modify_lead.php?lead_id=$row[0]\" target=\"_blank\">$row[0]</a></FONT></TD>\n";
+			echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><a href=\"admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search\" target=\"_blank\">$row[0]</a></FONT></TD>\n";
 			echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[3]</FONT></TD>\n";
 			echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[5]</FONT></TD>\n";
 			echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[4]</FONT></TD>\n";

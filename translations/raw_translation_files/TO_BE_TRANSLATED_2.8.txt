@@ -230,6 +230,8 @@ Add inbound and outbound holiday rule||
 Add outbound holiday rule||
 If set to N, the calls will queue up, even if there are no agents logged in and set to take calls from this in-group||
 Active Voicemail Server is not set||
+QueueMetrics Hold Call Log||
+This option, if enabled, will log when a customer is put on hold and taken off hold in the newer record_tags QM table. Default is 0 for disabled||
 
 
 ########################## CHANGES TO EXISTING PHRASES IN ADMIN TRANSLATION

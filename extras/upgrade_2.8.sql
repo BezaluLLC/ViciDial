@@ -110,3 +110,7 @@ index (start_time)
 ) ENGINE=MyISAM;
 
 UPDATE system_settings SET db_schema_version='1356',db_schema_update_date=NOW() where db_schema_version < 1356;
+
+ALTER TABLE system_settings ADD queuemetrics_record_hold ENUM('0','1') default '0';
+
+UPDATE system_settings SET db_schema_version='1357',db_schema_update_date=NOW() where db_schema_version < 1357;
