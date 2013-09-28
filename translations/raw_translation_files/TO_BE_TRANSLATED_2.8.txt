@@ -232,6 +232,9 @@ If set to N, the calls will queue up, even if there are no agents logged in and 
 Active Voicemail Server is not set||
 QueueMetrics Hold Call Log||
 This option, if enabled, will log when a customer is put on hold and taken off hold in the newer record_tags QM table. Default is 0 for disabled||
+Country Code List Stats||
+This setting if enabled will show a country code breakdown summary on the list modify screen. Default is 0 for disabled||
+COUNTRY CODES WITHIN THIS LIST||
 
 
 ########################## CHANGES TO EXISTING PHRASES IN ADMIN TRANSLATION
