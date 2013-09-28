@@ -398,6 +398,7 @@ while ($sthArows > $rec_count)
 			if($DBX){print STDERR "|$affected_rows records changed|\n";}
 			}
 		$type_hash{$type}="";
+		if ($DB) {print STDERR "$rec_count / $sthArows\r";}
 		}
 	##################################################
 
@@ -436,6 +437,7 @@ foreach $type (keys %type_hash)
 			if($DBX){print STDERR "|$affected_rows records changed|\n";}
 			}
 		$type_hash{$type}="";
+		if ($DB) {print STDERR "$sthArows / $sthArows\r";}
 		}
 	}
 #########################################################

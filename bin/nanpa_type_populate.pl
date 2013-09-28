@@ -12,6 +12,7 @@
 #
 # CHANGES
 # 130915-1345 - first build
+# 130928-0747 - Force overwrite of unzipped files, more standard debug output
 #
 
 $PATHconf =			'/etc/astguiclient.conf';
@@ -190,9 +191,9 @@ if ($skip_download < 1)
 		}
 
 	if ($DB > 0) {print "\n unzipping files...  PrefixMasterList.zip\n";}
-	`/usr/bin/unzip -u /tmp/PrefixMasterList.zip -d /tmp`;
+	`/usr/bin/unzip -uo /tmp/PrefixMasterList.zip -d /tmp`;
 	if ($DB > 0) {print " unzipping files...  neustar.zip\n";}
-	`/usr/bin/unzip -u /tmp/neustar.zip -d /tmp`;
+	`/usr/bin/unzip -uo /tmp/neustar.zip -d /tmp`;
 
 	##### END gather files from SFTP server and unzip #####
 	}
@@ -257,45 +258,45 @@ if ($nanpa_wireless_to_wired_count > 0)
 	{
 	$stmtN = "DELETE from nanpa_wireless_to_wired;";
 	$affected_rows = $dbhN->do($stmtN);
-	if($DBX){print STDERR "|$affected_rows records deleted| nanpa_wireless_to_wired\n";}
+	if($DB){print STDERR "|$affected_rows records deleted| nanpa_wireless_to_wired\n";}
 	}
 
 $stmtN = "LOAD DATA LOCAL INFILE '/tmp/WIRELESS-TO-WIRELINE-NORANGE.TXT' into table nanpa_wireless_to_wired LINES terminated by '\n' (phone);";
 $affected_rows = $dbhN->do($stmtN);
-if($DBX){print STDERR "|$affected_rows records inserted| nanpa_wireless_to_wired\n";}
+if($DB){print STDERR "|$affected_rows records inserted| nanpa_wireless_to_wired\n";}
 
 if ($nanpa_wired_to_wireless_count > 0)
 	{
 	$stmtN = "DELETE from nanpa_wired_to_wireless;";
 	$affected_rows = $dbhN->do($stmtN);
-	if($DBX){print STDERR "|$affected_rows records deleted| nanpa_wired_to_wireless\n";}
+	if($DB){print STDERR "|$affected_rows records deleted| nanpa_wired_to_wireless\n";}
 	}
 
 $stmtN = "LOAD DATA LOCAL INFILE '/tmp/WIRELINE-TO-WIRELESS-NORANGE.TXT' into table nanpa_wired_to_wireless LINES terminated by '\n' (phone);";
 $affected_rows = $dbhN->do($stmtN);
-if($DBX){print STDERR "|$affected_rows records inserted| nanpa_wired_to_wireless\n";}
+if($DB){print STDERR "|$affected_rows records inserted| nanpa_wired_to_wireless\n";}
 
 if ($nanpa_prefix_exchanges_master_count > 0)
 	{
 	$stmtN = "DELETE from nanpa_prefix_exchanges_master;";
 	$affected_rows = $dbhN->do($stmtN);
-	if($DBX){print STDERR "|$affected_rows records deleted| nanpa_prefix_exchanges_master\n";}
+	if($DB){print STDERR "|$affected_rows records deleted| nanpa_prefix_exchanges_master\n";}
 	}
 
 $stmtN = "LOAD DATA LOCAL INFILE '/tmp/PrefixMasterList.csv' into table nanpa_prefix_exchanges_master FIELDS TERMINATED BY ',' LINES terminated by '\r\n' (areacode,prefix,source,type,tier,postal_code,new_areacode,tzcode,region);";
 $affected_rows = $dbhN->do($stmtN);
-if($DBX){print STDERR "|$affected_rows records inserted| nanpa_prefix_exchanges_master\n";}
+if($DB){print STDERR "|$affected_rows records inserted| nanpa_prefix_exchanges_master\n";}
 
 if ($nanpa_prefix_exchanges_fast_count > 0)
 	{
 	$stmtN = "DELETE from nanpa_prefix_exchanges_fast;";
 	$affected_rows = $dbhN->do($stmtN);
-	if($DBX){print STDERR "|$affected_rows records deleted| nanpa_prefix_exchanges_fast\n";}
+	if($DB){print STDERR "|$affected_rows records deleted| nanpa_prefix_exchanges_fast\n";}
 	}
 
 $stmtN = "INSERT INTO nanpa_prefix_exchanges_fast (ac_prefix,type) SELECT CONCAT(areacode,prefix),type from nanpa_prefix_exchanges_master;";
 $affected_rows = $dbhN->do($stmtN);
-if($DBX){print STDERR "|$affected_rows records inserted| nanpa_prefix_exchanges_fast\n";}
+if($DB){print STDERR "|$affected_rows records inserted| nanpa_prefix_exchanges_fast\n";}
 
 
 if ($DB) {print "LEADS FOUND IN LIST $list_id: |$sthArows|\n";}
