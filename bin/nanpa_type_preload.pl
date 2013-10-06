@@ -12,6 +12,7 @@
 #
 # CHANGES
 # 130914-1710 - first build
+# 131003-1743 - Added exclude filter settings
 #
 
 $PATHconf =			'/etc/astguiclient.conf';
@@ -118,6 +119,8 @@ if (length($ARGV[0])>1)
 		print "  [--landline-list-id=XXX] = OPTIONAL, list that you want to move landline phones into\n";
 		print "  [--invalid-list-id=XXX] = OPTIONAL, list that you want to move invalid prefix phone numbers into\n";
 		print "  [--vl-field-update=XXX] = OPTIONAL, field that you want to update with the phone type information\n";
+		print "  [--exclude-field=XXX] = OPTIONAL, field that you want to check in vicidial_list to exclude from processing\n";
+		print "  [--exclude-value=XXX] = OPTIONAL, value of the above field that you want to check in vicidial_list to exclude from processing\n";
 		print "\n";
 		exit;
 		}
@@ -216,6 +219,20 @@ if (length($ARGV[0])>1)
 			$vl_field_update =~ s/ .*//gi;
 			if ($DB > 0) {print "\n----- VL FIELD UPDATE: $vl_field_update -----\n\n";}
 			}
+		if ($args =~ /--exclude-field=/i)
+			{
+			@data_in = split(/--exclude-field=/,$args);
+			$exclude_field = $data_in[1];
+			$exclude_field =~ s/ .*//gi;
+			if ($DB > 0) {print "\n----- EXCLUDE FIELD: $exclude_field -----\n\n";}
+			}
+		if ($args =~ /--exclude-value=/i)
+			{
+			@data_in = split(/--exclude-value=/,$args);
+			$exclude_value = $data_in[1];
+			$exclude_value =~ s/ .*//gi;
+			if ($DB > 0) {print "\n----- EXCLUDE VALUE: $exclude_value -----\n\n";}
+			}
 		}
 	}
 else
@@ -252,6 +269,20 @@ if (!%six_digit_wireless_hash) {&CompilePrefixHashes;}
 
 @lead_ids=@MT;
 @phones=@MT;
+
+$excludeSQL='';
+if ( (length($exclude_field) > 1) && (length($exclude_value) > 1) ) 
+	{
+	if (length($list_idSQL) > 5)
+		{
+		$excludeSQL = "and $exclude_field!='$exclude_value'";
+		}
+	else
+		{
+		$excludeSQL = "where $exclude_field!='$exclude_value'";
+		}
+	}
+
 $stmtA = "SELECT lead_id,phone_number from vicidial_list $list_idSQL;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;

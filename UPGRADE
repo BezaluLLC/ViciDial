@@ -125,7 +125,7 @@ OTHER CHANGES:
 	any action or changes to enable since it is a change to the code.
 	We are working on converting the administrative PHP scripts as well.
 	These require MySQL 5.0 minimum to be used, but for several years that 
-	has been the minimmum for Vicidial anyway, so that requirement shouldn't 
+	has been the minimum for Vicidial anyway, so that requirement shouldn't 
 	be a problem for existing systems running the newest code. The existing 
 	older mysql PHP functions are set to be marked as depricated in PHP for 
 	future versions. For more information on mysqli you can visit the below 

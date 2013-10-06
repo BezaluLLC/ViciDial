@@ -12,6 +12,7 @@
 #
 # CHANGES
 # 130822-1645 - first build
+# 131003-1725 - Added exclude filter settings
 #
 
 $secX = time();
@@ -53,6 +54,8 @@ if (length($ARGV[0])>1)
 		print "  [--landline-list-id=XXX] = OPTIONAL, list that you want to move landline phones into\n";
 		print "  [--invalid-list-id=XXX] = OPTIONAL, list that you want to move invalid prefix phone numbers into\n";
 		print "  [--vl-field-update=XXX] = OPTIONAL, field that you want to update with the phone type information\n";
+		print "  [--exclude-field=XXX] = OPTIONAL, field that you want to check in vicidial_list to exclude from processing\n";
+		print "  [--exclude-value=XXX] = OPTIONAL, value of the above field that you want to check in vicidial_list to exclude from processing\n";
 		print "\n";
 		exit;
 		}
@@ -151,6 +154,20 @@ if (length($ARGV[0])>1)
 			$vl_field_update = $data_in[1];
 			$vl_field_update =~ s/ .*//gi;
 			if ($DB > 0) {print "\n----- VL FIELD UPDATE: $vl_field_update -----\n\n";}
+			}
+		if ($args =~ /--exclude-field=/i)
+			{
+			@data_in = split(/--exclude-field=/,$args);
+			$exclude_field = $data_in[1];
+			$exclude_field =~ s/ .*//gi;
+			if ($DB > 0) {print "\n----- EXCLUDE FIELD: $exclude_field -----\n\n";}
+			}
+		if ($args =~ /--exclude-value=/i)
+			{
+			@data_in = split(/--exclude-value=/,$args);
+			$exclude_value = $data_in[1];
+			$exclude_value =~ s/ .*//gi;
+			if ($DB > 0) {print "\n----- EXCLUDE VALUE: $exclude_value -----\n\n";}
 			}
 		}
 	}
@@ -276,14 +293,28 @@ $dbhB = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 if ($output_to_db)
 	{
-	$stmtA = "INSERT INTO vicidial_nanpa_filter_log SET output_code='$db_output_code',user='$TRIGGER_user',status='LAUNCHED',server_ip='$VARserver_ip',list_id='$list_id',start_time=NOW(),update_time=NOW(),status_line='Starting...',script_output=\"Starting...\nCELLPHONE LIST ID: $cellphone_list_id\nLANDLINE LIST ID: $landline_list_id\nINVALID LIST ID: $invalid_list_id\nVL FIELD UPDATE: $vl_field_update\n\" ON DUPLICATE KEY UPDATE status='LAUNCHED',server_ip='$VARserver_ip',list_id='$list_id',update_time=NOW(),status_line=\"Starting...\n\",script_output=CONCAT(script_output,\"Starting...\nCELLPHONE LIST ID: $cellphone_list_id\nLANDLINE LIST ID: $landline_list_id\nINVALID LIST ID: $invalid_list_id\nVL FIELD UPDATE: $vl_field_update\n\");";
+	$stmtA = "INSERT INTO vicidial_nanpa_filter_log SET output_code='$db_output_code',user='$TRIGGER_user',status='LAUNCHED',server_ip='$VARserver_ip',list_id='$list_id',start_time=NOW(),update_time=NOW(),status_line='Starting...',script_output=\"Starting...\nCELLPHONE LIST ID: $cellphone_list_id\nLANDLINE LIST ID: $landline_list_id\nINVALID LIST ID: $invalid_list_id\nVL FIELD UPDATE: $vl_field_update\nEXCLUDE FIELD: $exclude_field\nEXCLUDE VALUE: $exclude_value\n\" ON DUPLICATE KEY UPDATE status='LAUNCHED',server_ip='$VARserver_ip',list_id='$list_id',update_time=NOW(),status_line=\"Starting...\n\",script_output=CONCAT(script_output,\"Starting...\nCELLPHONE LIST ID: $cellphone_list_id\nLANDLINE LIST ID: $landline_list_id\nINVALID LIST ID: $invalid_list_id\nVL FIELD UPDATE: $vl_field_update\nEXCLUDE FIELD: $exclude_field\nEXCLUDE VALUE: $exclude_value\n\");";
 	$affected_rows = $dbhA->do($stmtA);
 	if($DBX){print STDERR "\n|$affected_rows|$stmtA|\n";}
 	}
 
 @lead_ids=@MT;
 @phones=@MT;
-$stmtA = "SELECT lead_id,phone_number from vicidial_list $list_idSQL;";
+
+$excludeSQL='';
+if ( (length($exclude_field) > 1) && (length($exclude_value) > 1) ) 
+	{
+	if (length($list_idSQL) > 5)
+		{
+		$excludeSQL = "and $exclude_field!='$exclude_value'";
+		}
+	else
+		{
+		$excludeSQL = "where $exclude_field!='$exclude_value'";
+		}
+	}
+
+$stmtA = "SELECT lead_id,phone_number from vicidial_list $list_idSQL $excludeSQL;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;

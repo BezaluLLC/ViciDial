@@ -36,6 +36,7 @@
 # 130621-0824 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130704-0935 - Fixed issue #675
 # 130829-2012 - Changed to mysqli PHP functions
+# 131002-2015 - Added user group to report output
 #
 
 $startMS = microtime();
@@ -493,7 +494,7 @@ $statusesHEAD='';
 $CSV_header="\"Agent Performance Detail                        $NOW_TIME\"\n";
 $CSV_header.="\"Time range: $query_date_BEGIN to $query_date_END\"\n\n";
 $CSV_header.="\"---------- AGENTS Details -------------\"\n";
-$CSV_header.='"USER NAME","ID","CALLS","TIME","PAUSE","PAUSAVG","WAIT","WAITAVG","TALK","TALKAVG","DISPO","DISPAVG","DEAD","DEADAVG","CUSTOMER","CUSTAVG"';
+$CSV_header.='"USER NAME","ID","USER GROUP","CALLS","TIME","PAUSE","PAUSAVG","WAIT","WAITAVG","TALK","TALKAVG","DISPO","DISPAVG","DEAD","DEADAVG","CUSTOMER","CUSTAVG"';
 
 $statusesHTML='';
 $statusesARY[0]='';
@@ -503,7 +504,7 @@ $usersARY[0]='';
 $user_namesARY[0]='';
 $k=0;
 
-$stmt="select count(*) as calls,sum(talk_sec) as talk,full_name,vicidial_users.user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec) from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_SQL group by user,full_name,status order by full_name,user,status desc limit 500000;";
+$stmt="select count(*) as calls,sum(talk_sec) as talk,full_name,vicidial_users.user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec), vicidial_users.user_group from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_SQL group by user,full_name,user_group,status order by full_name,user,status desc limit 500000;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
 $rows_to_print = mysqli_num_rows($rslt);
@@ -556,6 +557,7 @@ while ($i < $rows_to_print)
 	$dispo_sec[$i] =	$row[6];
 	$status[$i] =		strtoupper($row[7]);
 	$dead_sec[$i] =		$row[8];
+	$user_group[$i] =	$row[9];
 	$customer_sec[$i] =	($talk_sec[$i] - $dead_sec[$i]);
 
 	$max_varname="max_".$status[$i];
@@ -580,6 +582,7 @@ while ($i < $rows_to_print)
 		$users .= "$user[$i]-";
 		$usersARY[$k] = $user[$i];
 		$user_namesARY[$k] = $full_name[$i];
+		$user_groupsARY[$k] = $user_group[$i];
 		$k++;
 		}
 
@@ -590,9 +593,9 @@ $CSV_header.="\n";
 $CSV_lines='';
 
 $ASCII_text.="CALL STATS BREAKDOWN: (Statistics related to handling of calls only)     <a href=\"$LINKbase&stage=$stage&file_download=1\">[DOWNLOAD]</a>\n";
-$ASCII_text.="+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
-$ASCII_text.="| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>  | <a href=\"$LINKbase&stage=TIME\">TIME</a>      | PAUSE    |PAUSAVG | WAIT     |WAITAVG | TALK     |TALKAVG | DISPO    |DISPAVG | DEAD     |DEADAVG | CUSTOMER |CUSTAVG |$statusesHTML\n";
-$ASCII_text.="+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+$ASCII_text.="+-----------------+----------+-----------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+$ASCII_text.="| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | USER GROUP      | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>  | <a href=\"$LINKbase&stage=TIME\">TIME</a>      | PAUSE    |PAUSAVG | WAIT     |WAITAVG | TALK     |TALKAVG | DISPO    |DISPAVG | DEAD     |DEADAVG | CUSTOMER |CUSTAVG |$statusesHTML\n";
+$ASCII_text.="+-----------------+----------+-----------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
 
 
 ### BEGIN loop through each user ###
@@ -601,6 +604,7 @@ while ($m < $k)
 	{
 	$Suser=$usersARY[$m];
 	$Sfull_name=$user_namesARY[$m];
+	$Suser_group=$user_groupsARY[$m];
 	$Stime=0;
 	$Scalls=0;
 	$Stalk_sec=0;
@@ -690,6 +694,8 @@ while ($m < $k)
 		{
 		$Sfull_name=	sprintf("%-15s", $Sfull_name); 
 		while(strlen($Sfull_name)>15) {$Sfull_name = substr("$Sfull_name", 0, -1);}
+		$Suser_group=	sprintf("%-15s", $Suser_group); 
+		while(strlen($Suser_group)>15) {$Suser_group = substr("$Suser_group", 0, -1);}
 		$Suser =		sprintf("%-8s", $Suser);
 		while(strlen($Suser)>8) {$Suser = substr("$Suser", 0, -1);}
 		}
@@ -697,6 +703,8 @@ while ($m < $k)
 		{	
 		$Sfull_name=	sprintf("%-45s", $Sfull_name); 
 		while(mb_strlen($Sfull_name,'utf-8')>15) {$Sfull_name = mb_substr("$Sfull_name", 0, -1,'utf-8');}
+		$Suser_group=	sprintf("%-45s", $Suser_group); 
+		while(mb_strlen($Suser_group,'utf-8')>15) {$Suser_group = mb_substr("$Suser_group", 0, -1,'utf-8');}
 		$Suser =	sprintf("%-24s", $Suser);
 		while(mb_strlen($Suser,'utf-8')>8) {$Suser = mb_substr("$Suser", 0, -1,'utf-8');}
 		}
@@ -760,11 +768,11 @@ while ($m < $k)
 	$pfUSERavgCUSTOMER_MS =	sprintf("%6s", $USERavgCUSTOMER_MS);
 	$PAUSEtotal[$m] = $pfUSERtotPAUSE_MS;
 
-	$Toutput = "| $Sfull_name | <a href=\"./user_stats.php?user=$RAWuser\">$Suser</a> | $Scalls | $pfUSERtime_MS | $pfUSERtotPAUSE_MS | $pfUSERavgPAUSE_MS | $pfUSERtotWAIT_MS | $pfUSERavgWAIT_MS | $pfUSERtotTALK_MS | $pfUSERavgTALK_MS | $pfUSERtotDISPO_MS | $pfUSERavgDISPO_MS | $pfUSERtotDEAD_MS | $pfUSERavgDEAD_MS | $pfUSERtotCUSTOMER_MS | $pfUSERavgCUSTOMER_MS |$SstatusesHTML\n";
+	$Toutput = "| $Sfull_name | <a href=\"./user_stats.php?user=$RAWuser\">$Suser</a> | $Suser_group | $Scalls | $pfUSERtime_MS | $pfUSERtotPAUSE_MS | $pfUSERavgPAUSE_MS | $pfUSERtotWAIT_MS | $pfUSERavgWAIT_MS | $pfUSERtotTALK_MS | $pfUSERavgTALK_MS | $pfUSERtotDISPO_MS | $pfUSERavgDISPO_MS | $pfUSERtotDEAD_MS | $pfUSERavgDEAD_MS | $pfUSERtotCUSTOMER_MS | $pfUSERavgCUSTOMER_MS |$SstatusesHTML\n";
 
 
 	$CSV_lines.="\"$Sfull_nameRAW\",";
-	$CSV_lines.=preg_replace('/\s/', '', "\"$SuserRAW\",\"$Scalls\",\"$pfUSERtime_MS\",\"$pfUSERtotPAUSE_MS\",\"$pfUSERavgPAUSE_MS\",\"$pfUSERtotWAIT_MS\",\"$pfUSERavgWAIT_MS\",\"$pfUSERtotTALK_MS\",\"$pfUSERavgTALK_MS\",\"$pfUSERtotDISPO_MS\",\"$pfUSERavgDISPO_MS\",\"$pfUSERtotDEAD_MS\",\"$pfUSERavgDEAD_MS\",\"$pfUSERtotCUSTOMER_MS\",\"$pfUSERavgCUSTOMER_MS\"$CSVstatuses");
+	$CSV_lines.=preg_replace('/\s/', '', "\"$SuserRAW\",\"$Suser_group\",\"$Scalls\",\"$pfUSERtime_MS\",\"$pfUSERtotPAUSE_MS\",\"$pfUSERavgPAUSE_MS\",\"$pfUSERtotWAIT_MS\",\"$pfUSERavgWAIT_MS\",\"$pfUSERtotTALK_MS\",\"$pfUSERavgTALK_MS\",\"$pfUSERtotDISPO_MS\",\"$pfUSERavgDISPO_MS\",\"$pfUSERtotDEAD_MS\",\"$pfUSERavgDEAD_MS\",\"$pfUSERtotCUSTOMER_MS\",\"$pfUSERavgCUSTOMER_MS\"$CSVstatuses");
 	$CSV_lines.="\n";
 
 	$TOPsorted_output[$m] = $Toutput;
@@ -904,9 +912,9 @@ while(strlen($TOTavgWAIT_MS)>6) {$TOTavgWAIT_MS = substr("$TOTavgWAIT_MS", 0, -1
 while(strlen($TOTavgCUSTOMER_MS)>6) {$TOTavgCUSTOMER_MS = substr("$TOTavgCUSTOMER_MS", 0, -1);}
 
 
-$ASCII_text.="+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
-$ASCII_text.="|  TOTALS        AGENTS:$TOT_AGENTS | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTavgDISPO_MS |$TOTtotDEAD_MS| $TOTavgDEAD_MS |$TOTtotCUSTOMER_MS| $TOTavgCUSTOMER_MS |$SUMstatusesHTML\n";
-$ASCII_text.="+-----------------+----------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+$ASCII_text.="+-----------------+----------+-----------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+$ASCII_text.="|  TOTALS                          AGENTS:$TOT_AGENTS | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTavgDISPO_MS |$TOTtotDEAD_MS| $TOTavgDEAD_MS |$TOTtotCUSTOMER_MS| $TOTavgCUSTOMER_MS |$SUMstatusesHTML\n";
+$ASCII_text.="+-----------------+----------+-----------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
 
 
 for ($e=0; $e<count($statusesARY); $e++) {
@@ -1005,7 +1013,7 @@ $GRAPH3="<tr><td colspan='".(14+count($statusesARY))."' class='graph_span_cell'>
 $GRAPH_text.=$JS_text.$GRAPH.$GRAPH2.$GRAPH3;
 
 
-$CSV_total=preg_replace('/\s/', '', "\"TOTALS\",\"AGENTS:$TOT_AGENTS\",\"$TOTcalls\",\"$TOTtime_MS\",\"$TOTtotPAUSE_MS\",\"$TOTavgPAUSE_MS\",\"$TOTtotWAIT_MS\",\"$TOTavgWAIT_MS\",\"$TOTtotTALK_MS\",\"$TOTavgTALK_MS\",\"$TOTtotDISPO_MS\",\"$TOTavgDISPO_MS\",\"$TOTtotDEAD_MS\",\"$TOTavgDEAD_MS\",\"$TOTtotCUSTOMER_MS\",\"$TOTavgCUSTOMER_MS\"$CSVSUMstatuses");
+$CSV_total=preg_replace('/\s/', '', "\"\",\"TOTALS\",\"AGENTS:$TOT_AGENTS\",\"$TOTcalls\",\"$TOTtime_MS\",\"$TOTtotPAUSE_MS\",\"$TOTavgPAUSE_MS\",\"$TOTtotWAIT_MS\",\"$TOTavgWAIT_MS\",\"$TOTtotTALK_MS\",\"$TOTavgTALK_MS\",\"$TOTtotDISPO_MS\",\"$TOTavgDISPO_MS\",\"$TOTtotDEAD_MS\",\"$TOTavgDEAD_MS\",\"$TOTtotCUSTOMER_MS\",\"$TOTavgCUSTOMER_MS\"$CSVSUMstatuses");
 
 if ($file_download == 1)
 	{
@@ -1081,7 +1089,7 @@ $TOTAL_graph=$graph_header."<th class='thgraph' scope='col'>TOTAL </th></tr>";
 $NONPAUSE_graph=$graph_header."<th class='thgraph' scope='col'>NONPAUSE</th></tr>";
 $PAUSE_graph=$graph_header."<th class='thgraph' scope='col'>PAUSE</th></tr>";
 
-$stmt="select full_name,vicidial_users.user,sum(pause_sec),sub_status,sum(wait_sec + talk_sec + dispo_sec) from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 $group_SQL $user_group_SQL group by user,full_name,sub_status order by user,full_name,sub_status desc limit 100000;";
+$stmt="select full_name,vicidial_users.user,sum(pause_sec),sub_status,sum(wait_sec + talk_sec + dispo_sec), vicidial_users.user_group from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 $group_SQL $user_group_SQL group by user,full_name,sub_status order by user,full_name,sub_status desc limit 100000;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
 $subs_to_print = mysqli_num_rows($rslt);
@@ -1094,6 +1102,7 @@ while ($i < $subs_to_print)
 	$PCpause_sec[$i] =	$row[2];
 	$sub_status[$i] =	$row[3];
 	$PCnon_pause_sec[$i] =	$row[4];
+	$PCuser_group[$i] =		$row[5];
 	$max_varname="max_".$sub_status[$i];
 	$$max_varname=1;
 
@@ -1114,6 +1123,7 @@ while ($i < $subs_to_print)
 		$PCusers .= "$PCuser[$i]-";
 		$PCusersARY[$k] = $PCuser[$i];
 		$PCuser_namesARY[$k] = $PCfull_name[$i];
+		$PCuser_groupsARY[$k] = $PCuser_group[$i];
 		$k++;
 		}
 
@@ -1121,14 +1131,14 @@ while ($i < $subs_to_print)
 	}
 
 $ASCII_text.="PAUSE CODE BREAKDOWN:     <a href=\"$LINKbase&stage=$stage&file_download=2\">[DOWNLOAD]</a>\n\n";
-$ASCII_text.="+-----------------+----------+----------+----------+----------+  +$sub_statusesHEAD\n";
-$ASCII_text.="| USER NAME       | ID       | TOTAL    | NONPAUSE | PAUSE    |  |$sub_statusesHTML\n";
-$ASCII_text.="+-----------------+----------+----------+----------+----------+  +$sub_statusesHEAD\n";
+$ASCII_text.="+-----------------+----------+-----------------+----------+----------+----------+  +$sub_statusesHEAD\n";
+$ASCII_text.="| USER NAME       | ID       | USER GROUP      | TOTAL    | NONPAUSE | PAUSE    |  |$sub_statusesHTML\n";
+$ASCII_text.="+-----------------+----------+-----------------+----------+----------+----------+  +$sub_statusesHEAD\n";
 
 $CSV_header="\"Agent Performance Detail                        $NOW_TIME\"\n";
 $CSV_header.="\"Time range: $query_date_BEGIN to $query_date_END\"\n\n";
 $CSV_header.="\"PAUSE CODE BREAKDOWN:\"\n";
-$CSV_header.="\"USER NAME\",\"ID\",\"TOTAL\",\"NONPAUSE\",\"PAUSE\",$CSV_statuses\n";
+$CSV_header.="\"USER NAME\",\"ID\",\"USER GROUP\",\"TOTAL\",\"NONPAUSE\",\"PAUSE\",$CSV_statuses\n";
 
 ### BEGIN loop through each user ###
 $m=0;
@@ -1148,6 +1158,7 @@ while ($m < $k)
 		}
 	$Suser=$PCusersARY[$m];
 	$Sfull_name=$PCuser_namesARY[$m];
+	$Suser_group=$PCuser_groupsARY[$m];
 	$Spause_sec=0;
 	$Snon_pause_sec=0;
 	$Stotal_sec=0;
@@ -1206,6 +1217,8 @@ while ($m < $k)
 		{
 		$Sfull_name=	sprintf("%-15s", $Sfull_name); 
 		while(strlen($Sfull_name)>15) {$Sfull_name = substr("$Sfull_name", 0, -1);}
+		$Suser_group=	sprintf("%-15s", $Suser_group); 
+		while(strlen($Suser_group)>15) {$Suser_group = substr("$Suser_group", 0, -1);}
 		$Suser =		sprintf("%-8s", $Suser);
 		while(strlen($Suser)>8) {$Suser = substr("$Suser", 0, -1);}
 		}
@@ -1213,6 +1226,8 @@ while ($m < $k)
 		{
 		$Sfull_name=	sprintf("%-45s", $Sfull_name); 
 		while(mb_strlen($Sfull_name,'utf-8')>15) {$Sfull_name = mb_substr("$Sfull_name", 0, -1,'utf-8');}
+		$Suser_group=	sprintf("%-45s", $Suser_group); 
+		while(mb_strlen($Suser_group,'utf-8')>15) {$Suser_group = mb_substr("$Suser_group", 0, -1,'utf-8');}
 		$Suser =	sprintf("%-24s", $Suser);
 		while(mb_strlen($Suser,'utf-8')>8) {$Suser = mb_substr("$Suser", 0, -1,'utf-8');}
 		}
@@ -1235,12 +1250,12 @@ while ($m < $k)
 	$pfUSERtotNONPAUSE_MS =		sprintf("%8s", $USERtotNONPAUSE_MS);
 	$pfUSERtotTOTAL_MS =		sprintf("%8s", $USERtotTOTAL_MS);
 
-	$BOTTOMoutput = "| $Sfull_name | $Suser | $pfUSERtotTOTAL_MS | $pfUSERtotNONPAUSE_MS | $pfUSERtotPAUSE_MS |  |$SstatusesHTML\n";
+	$BOTTOMoutput = "| $Sfull_name | $Suser | $Suser_group | $pfUSERtotTOTAL_MS | $pfUSERtotNONPAUSE_MS | $pfUSERtotPAUSE_MS |  |$SstatusesHTML\n";
 
 	$BOTTOMsorted_output[$m] = $BOTTOMoutput;
 
 	$ASCII_text.="$BOTTOMoutput";
-	$CSV_lines.="\"$Sfull_nameRAW\"".preg_replace('/\s/', '', ",\"$SuserRAW\",\"$pfUSERtotTOTAL_MS\",\"$pfUSERtotNONPAUSE_MS\",\"$pfUSERtotPAUSE_MS\",$CSV_statuses");
+	$CSV_lines.="\"$Sfull_nameRAW\"".preg_replace('/\s/', '', ",\"$SuserRAW\",\"$Suser_group\",\"$pfUSERtotTOTAL_MS\",\"$pfUSERtotNONPAUSE_MS\",\"$pfUSERtotPAUSE_MS\",$CSV_statuses");
 	$CSV_lines.="\n";
 	$m++;
 	}
@@ -1323,9 +1338,9 @@ while ($n < $j)
 	while(strlen($TOTtotTOTAL_MS)>10) {$TOTtotTOTAL_MS = substr("$TOTtotTOTAL_MS", 0, -1);}
 
 
-$ASCII_text.="+-----------------+----------+----------+----------+----------+  +$sub_statusesHEAD\n";
-$ASCII_text.="|  TOTALS        AGENTS:$TOT_AGENTS |$TOTtotTOTAL_MS|$TOTtotNONPAUSE_MS|$TOTtotPAUSE_MS|  |$SUMstatusesHTML\n";
-$ASCII_text.="+----------------------------+----------+----------+----------+  +$sub_statusesHEAD\n";
+$ASCII_text.="+-----------------+----------+-----------------+----------+----------+----------+  +$sub_statusesHEAD\n";
+$ASCII_text.="|  TOTALS                          AGENTS:$TOT_AGENTS |$TOTtotTOTAL_MS|$TOTtotNONPAUSE_MS|$TOTtotPAUSE_MS|  |$SUMstatusesHTML\n";
+$ASCII_text.="+----------------------------------------------+----------+----------+----------+  +$sub_statusesHEAD\n";
 
 for ($e=0; $e<count($sub_statusesARY); $e++) {
 	$Sstatus=$sub_statusesARY[$e];
@@ -1390,7 +1405,7 @@ $GRAPH_text.=$JS_text.$GRAPH.$GRAPH2.$GRAPH3.$max;
 
 
 
-$CSV_total=preg_replace('/\s/', '', "\"TOTALS\",\"AGENTS:$TOT_AGENTS\",\"$TOTtotTOTAL_MS\",\"$TOTtotNONPAUSE_MS\",\"$TOTtotPAUSE_MS\",$CSVSUMstatuses");
+$CSV_total=preg_replace('/\s/', '', "\"\",\"TOTALS\",\"AGENTS:$TOT_AGENTS\",\"$TOTtotTOTAL_MS\",\"$TOTtotNONPAUSE_MS\",\"$TOTtotPAUSE_MS\",$CSVSUMstatuses");
 
 if ($file_download == 2)
 	{

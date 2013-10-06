@@ -142,7 +142,7 @@ if (!$show_history) {
 	$report_title="Currently running NANPA scrubs";
 } else {
 	if (!$process_limit) {$process_limit=10;}
-	$process_stmt="SELECT * from vicidial_nanpa_filter_log where user='$PHP_AUTH_USER' and status='COMPLETED' order by start_time asc limit $process_limit";
+	$process_stmt="SELECT * from vicidial_nanpa_filter_log where user='$PHP_AUTH_USER' and status='COMPLETED' order by start_time desc limit $process_limit";
 
 	$process_rslt=mysqli_query($link, $process_stmt);
 	$report_title="Past NANPA scrubs for user $PHP_AUTH_USER";

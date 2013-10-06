@@ -8,10 +8,11 @@
 #
 # CHANGELOG:
 # 130919-1503 - First build of script
+# 131005-2035 - Added exclusion options
 #
 
-$version = '2.8-1';
-$build = '130919-1503';
+$version = '2.8-2';
+$build = '131005-2035';
 $startMS = microtime();
 
 require("dbconnect_mysqli.php");
@@ -31,6 +32,10 @@ if (isset($_GET["fields_to_update"]))			{$fields_to_update=$_GET["fields_to_upda
 	elseif (isset($_POST["fields_to_update"]))	{$fields_to_update=$_POST["fields_to_update"];}
 if (isset($_GET["vl_field_update"]))			{$vl_field_update=$_GET["vl_field_update"];}
 	elseif (isset($_POST["vl_field_update"]))	{$vl_field_update=$_POST["vl_field_update"];}
+if (isset($_GET["vl_field_exclude"]))			{$vl_field_exclude=$_GET["vl_field_exclude"];}
+	elseif (isset($_POST["vl_field_exclude"]))	{$vl_field_exclude=$_POST["vl_field_exclude"];}
+if (isset($_GET["exclusion_value"]))			{$exclusion_value=$_GET["exclusion_value"];}
+	elseif (isset($_POST["exclusion_value"]))	{$exclusion_value=$_POST["exclusion_value"];}
 if (isset($_GET["cellphone_list_id"]))			{$cellphone_list_id=$_GET["cellphone_list_id"];}
 	elseif (isset($_POST["cellphone_list_id"]))	{$cellphone_list_id=$_POST["cellphone_list_id"];}
 if (isset($_GET["landline_list_id"]))			{$landline_list_id=$_GET["landline_list_id"];}
@@ -182,6 +187,9 @@ if ($submit_form=="SUBMIT" && $list_ct>0 && (strlen($vl_field_update)>0 || strle
 	$cellphone_list_id=preg_replace('/[^0-9]/', '', $cellphone_list_id);
 	$landline_list_id=preg_replace('/[^0-9]/', '', $landline_list_id);
 	$invalid_list_id=preg_replace('/[^0-9]/', '', $invalid_list_id);
+	$exclusion_value=preg_replace('/[\'\"\\\\]/', '', $exclusion_value);
+	$exclusion_value=preg_replace('/\s/', '\\\\\ ', $exclusion_value);
+	
 
 	$options="--user=$PHP_AUTH_USER --pass=$PHP_AUTH_PW ";
 	
@@ -197,6 +205,7 @@ if ($submit_form=="SUBMIT" && $list_ct>0 && (strlen($vl_field_update)>0 || strle
 	if (strlen($landline_list_id)>0)	{$options.="--landline-list-id=$landline_list_id ";}
 	if (strlen($invalid_list_id)>0)		{$options.="--invalid-list-id=$invalid_list_id ";}
 	if (strlen($vl_field_update)>0)		{$options.="--vl-field-update=$vl_field_update ";}
+	if (strlen($vl_field_exclude)>0 && strlen($exclusion_value)>0)		{$options.="--exclude-field=$vl_field_exclude --exclude-value=$exclusion_value ";}
 	$options=trim($options);
 
 	$uniqueid=date("U").".".rand(1, 9999);
@@ -426,7 +435,7 @@ else
 
 	echo "</select></font>";
 	echo "</td>";
-	echo "<td align='left' valign='top' rowspan='4'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Field to update (optional):<BR/>\n";
+	echo "<td align='left' valign='top' rowspan='2'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Field to update (optional):<BR/>\n";
 	echo "<select name='vl_field_update'>\n";
 	$stmt="SELECT * from vicidial_list limit 1";
 	$rslt=mysqli_query($link, $stmt);
@@ -458,10 +467,29 @@ else
 	
 	echo "</tr>\n";
 	echo "<tr>";
-	echo "<td align='right'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Cellphone:</font></td><td align='left'><input type='text' name='cellphone_list_id' size='5' maxlength='10'></td></tr>";
-	echo "<td align='right'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Landline:</font></td><td align='left'><input type='text' name='landline_list_id' size='5' maxlength='10'></td></tr>";
-	echo "<td align='right'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Invalid:</font></td><td align='left'><input type='text' name='invalid_list_id' size='5' maxlength='10'></td></tr>";
+	echo "<td align='right'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Cellphone:</font></td><td align='left'><input type='text' name='cellphone_list_id' size='5' maxlength='10'></td>";
 	echo "</tr>";
+	echo "<tr>";
+
+
+	echo "<td align='left' valign='top' rowspan='2'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Exclusion field (optional):<BR/>\n";
+	echo "<select name='vl_field_exclude'>\n";
+	$stmt="SELECT * from vicidial_list limit 1";
+	$rslt=mysqli_query($link, $stmt);
+	echo "<option value=''>---NONE---</option>\n";
+	while ($fieldinfo=mysqli_fetch_field($rslt)) 
+		{
+		$fieldname=$fieldinfo->name;
+		echo "<option value='$fieldname'>$fieldname</option>\n";
+		}
+	echo "</select><BR/><BR/>Exclusion value:<BR/><input type='text' name='exclusion_value' size='20' maxlength='50'></font></td>";
+
+
+
+	echo "<td align='right'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Landline:</font></td><td align='left'><input type='text' name='landline_list_id' size='5' maxlength='10'></td>";
+	echo "</tr>";
+	echo "<tr><td align='right'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Invalid:</font></td><td align='left'><input type='text' name='invalid_list_id' size='5' maxlength='10'></td></tr>";
+	echo "";
 	echo "<tr><td align='center' colspan='5'><input type='submit' value='SUBMIT' name='submit_form'></td></tr>";
 	echo "</table>";
 
