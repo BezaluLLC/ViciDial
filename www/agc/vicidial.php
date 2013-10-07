@@ -411,10 +411,11 @@
 # 130822-0656 - Changed all require to require_once in agc directory for PHP backward compatibility
 # 130903-1920 - Added security check for browser window name, see launch.php for more information
 # 130925-2119 - Fixed span order issue
+# 131007-1348 - Added mrglock_ig_select_ct options.php setting
 #
 
-$version = '2.8-380c';
-$build = '130925-2119';
+$version = '2.8-381c';
+$build = '131007-1348';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -563,6 +564,7 @@ $hide_timeclock_link	= '0';	# set to 1 to hide the timeclock link on the agent l
 $conf_check_attempts	= '3';	# number of attempts to try before loosing webserver connection, for bad network setups
 $focus_blur_enabled		= '0';	# set to 1 to enable the focus/blur enter key blocking(some IE instances have issues)
 $consult_custom_delay	= '2';	# number of seconds to delay consultative transfers when customfields are active
+$mrglock_ig_select_ct	= '4';	# number of seconds to leave in-group select screen open if agent select is disabled
 
 $TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen, FOR DEBUG ONLY
 
@@ -3727,6 +3729,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var qc_enabled='<?php echo $qc_enabled ?>';
 	var inbound_lead_search=0;
 	var VU_agent_choose_ingroups_skip_count=0;
+	var mrglock_ig_select_ct='<?php echo $mrglock_ig_select_ct ?>';
 	var agent_select_territories_skip_count=0;
 	var last_recording_filename='';
     var DiaLControl_auto_HTML = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/vdc_LB_resume.gif\" border=\"0\" alt=\"Resume\" /></a>";
@@ -13398,7 +13401,7 @@ function phone_number_format(formatphone) {
 				var CloserSelecting = 1;
 				CloserSelectContent_create();
 				if (VU_agent_choose_ingroups_DV == "MGRLOCK")
-					{VU_agent_choose_ingroups_skip_count=4;}
+					{VU_agent_choose_ingroups_skip_count = mrglock_ig_select_ct;}
 				}
 			else
 				{

@@ -9,6 +9,7 @@
 # 100306-0805 - First Build
 # 120214-1636 - Added consult_custom_delay option
 # 130903-2015 - Added window validation options
+# 131007-1346 - Added mrglock_ig_select_ct
 #
 
 $conf_silent_prefix		= '5';	# vicidial_conferences prefix to enter silently and muted for recording
@@ -42,6 +43,7 @@ $hide_timeclock_link	= '0';	# set to 1 to hide the timeclock link on the agent l
 $conf_check_attempts	= '3';	# number of attempts to try before loosing webserver connection, for bad network setups
 $focus_blur_enabled		= '0';	# set to 1 to enable the focus/blur enter key blocking(some IE instances have issues)
 $consult_custom_delay	= '2';	# number of seconds to delay consultative transfers when custom fields are active
+$mrglock_ig_select_ct	= '4';	# number of seconds to leave in-group select screen open if agent select is disabled
 
 $TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
 
