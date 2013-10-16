@@ -113,6 +113,7 @@
 # 121129-1840 - Fix for issue #600
 # 130706-2024 - Added disable_auto_dial system option
 # 130811-1403 - Fix for issue #690
+# 131016-0659 - Fix for disable_auto_dial system option
 #
 
 
@@ -975,7 +976,7 @@ while($one_day_interval > 0)
 		foreach(@DBIPcampaign)
 			{
 			$calls_placed=0;
-			if ( ($DBIPdial_method[$user_CIPct] =~ /MANUAL|INBOUND_MAN/) || ($outbound_autodial_active < 1) || ($disable_auto_dial > 1) )
+			if ( ($DBIPdial_method[$user_CIPct] =~ /MANUAL|INBOUND_MAN/) || ($outbound_autodial_active < 1) || ($disable_auto_dial > 0) )
 				{
 				$event_string="$DBIPcampaign[$user_CIPct] $DBIPaddress[$user_CIPct]: MANUAL DIAL CAMPAIGN, NO DIALING";
 				&event_logger;

@@ -34,7 +34,8 @@
 # 110922-1203 - Added logging of last calltime to campaign
 # 120831-1502 - Added vicidial_dial_log outbound call logging
 # 130227-1604 - Cleanup of staggered code, resetting of variables and arrays
-# 130706-2024- Added disable_auto_dial system option
+# 130706-2024 - Added disable_auto_dial system option
+# 131016-0658 - Fix for disable_auto_dial system option
 #
 
 ### begin parsing run-time options ###
@@ -309,7 +310,7 @@ while($one_day_interval > 0)
 		$event_string.="CAMPAIGNS WITH TRUNK SHORTAGE: $camp_counter| TOTAL SHORTAGE: $total_shortage";
 		&event_logger;
 
-		if (($outbound_autodial_active < 1) || ($disable_auto_dial > 1) )
+		if (($outbound_autodial_active < 1) || ($disable_auto_dial > 0) )
 			{
 			$event_string="SYSTEM AUTO-DIAL DISABLED, NO DIALING: |$outbound_autodial_active|$disable_auto_dial|";
 			&event_logger;
