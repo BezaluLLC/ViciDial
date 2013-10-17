@@ -24,6 +24,7 @@
 # 130610-0937 - Finalized changing of all ereg instances to preg
 # 130616-0052 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0835 - Changed to mysqli PHP functions
+# 131016-2101 - Added checking for level 8 add-copy restriction
 #
 
 $startMS = microtime();
@@ -31,6 +32,8 @@ $startMS = microtime();
 header ("Content-type: text/html; charset=utf-8");
 
 $report_name='User Status';
+
+$add_copy_disabled=0;
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -57,7 +60,7 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,level_8_disable_add FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -68,6 +71,7 @@ if ($qm_conf_ct > 0)
 	$webroot_writable =					$row[1];
 	$SSoutbound_autodial_active =		$row[2];
 	$user_territories_active =			$row[3];
+	$SSlevel_8_disable_add =			$row[4];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -141,6 +145,16 @@ else
 	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
 	exit;
 	}
+
+
+$stmt="SELECT user_level from vicidial_users where user='$PHP_AUTH_USER';";
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
+$LOGuser_level				=$row[0];
+
+if (($LOGuser_level < 9) and ($SSlevel_8_disable_add > 0))
+	{$add_copy_disabled++;}
+
 
 ##### BEGIN log visit to the vicidial_report_log table #####
 $LOGip = getenv("REMOTE_ADDR");

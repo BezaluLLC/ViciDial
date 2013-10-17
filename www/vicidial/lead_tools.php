@@ -10,10 +10,11 @@
 # 130610-1045 - Finalized changing of all ereg instances to preg
 # 130619-2203 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-1927 - Changed to mysqli PHP functions
+# 131016-2029 - Added links to advanced lead tools
 #
 
-$version = '2.8-6';
-$build = '130901-1927';
+$version = '2.8-7';
+$build = '131016-2029';
 
 # This limit is to prevent data inconsistancies.
 # If there are too many leads in a list this
@@ -184,7 +185,7 @@ echo "<table width=$page_width bgcolor=#E6E6E6 cellpadding=2 cellspacing=0>\n";
 echo "<tr bgcolor='#E6E6E6'>\n";
 echo "<td align=left>\n";
 echo "<font face='ARIAL,HELVETICA' size=2>\n";
-echo "<b> &nbsp; Lead Tools</b>\n";
+echo "<b> &nbsp; Basic Lead Tools &nbsp; | &nbsp; <a href=\"lead_tools_advanced.php\">Advanced Lead Tools</a></b>\n";
 echo "</font>\n";
 echo "</td>\n";
 echo "<td align=right><font face='ARIAL,HELVETICA' size=2><b> &nbsp; </td>\n";

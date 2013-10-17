@@ -7,11 +7,9 @@
 # approach of allocating leads to dialers. 
 #
 # SUMMARY:
-# For VICIDIAL auto-dial outbound dialing, this program must be in the crontab
-# running every minute
+# For VICIDIAL outbound dialing, this program must be in the crontab on only one
+# server, running every minute during operating hours
 # 
-# It is recommended that you run this program on the local Asterisk machine
-#
 # hopper sources:
 #  - A = Auto-alt-dial
 #  - C = Scheduled Callbacks
@@ -76,19 +74,25 @@
 # 121223-1540 - Fix for issue #627 preventing issues when filter is deleted, DomeDan
 # 130219-1501 - Fixed issue with other campaign dnc
 # 130510-0904 - Added state call time holidays functionality
+# 131008-1518 - Changed campaign flag to allow multiple campaigns
+#               Changed and added several CLI flags, including -t to --test, added --version, --count-only
+#               Added code to restrict all functions if campaign flag is used
 #
 
 # constants
-$DB=0;  # Debug flag, set to 0 for no debug messages, On an active system this will generate lots of lines of output per minute
+$build = '131008-1518';
+$DB=0;  # Debug flag, set to 0 for no debug messages. Can be overriden with CLI --debug flag
 $US='__';
 $MT[0]='';
-#$vicidial_hopper='TEST_vicidial_hopper';	# for testing
+#$vicidial_hopper='TEST_vicidial_hopper';	# for testing only
 $vicidial_hopper='vicidial_hopper';
+$count_only=0;
 
 # options
-$insert_auto_CB_to_hopper	= 1; # set to 1 to automatically insert ANYONE callbacks into the hopper
+$insert_auto_CB_to_hopper	= 1; # set to 1 to automatically insert ANYONE callbacks into the hopper, default = 1
 
 
+### gather date and time
 $secT = time();
 $secX = time();
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -150,7 +154,7 @@ if ($Vmon < 10) {$Vmon = "0$Vmon";}
 if ($Vmday < 10) {$Vmday = "0$Vmday";}
 $VDL_tensec = "$Vyear-$Vmon-$Vmday $Vhour:$Vmin:$Vsec";
 
-### begin parsing run-time options ###
+### begin parsing CLI run-time options ###
 if (length($ARGV[0])>1)
 	{
 	$i=0;
@@ -164,26 +168,38 @@ if (length($ARGV[0])>1)
 	if ($args =~ /--help/i)
 		{
 		print "allowed run time options(must stay in this order):\n";
+		print "  [--test] = test\n";
+		print "  [--help] = this screen\n";
+		print "  [--version] = print version of this script, then exit\n";
+		print "  [--count-only] = only display the number of leads in the hopper, then exit\n";
 		print "  [--debug] = debug\n";
 		print "  [--debugX] = super debug\n";
 		print "  [--dbgmt] = show GMT offset of records as they are inserted into hopper\n";
 		print "  [--dbdetail] = additional level of logging the leads that are inserted into the hopper\n";
 		print "  [--allow-inactive-list-leads] = do not delete inactive list leads\n";
-		print "  [-t] = test\n";
 		print "  [--level=XXX] = force a hopper_level of XXX\n";
-		print "  [--campaign=XXX] = run for campaign XXX only\n";
+		print "  [--campaign=XXX] = run for campaign XXX only(or more campaigns if separated by triple dash ---)\n";
 		print "  [--wipe-hopper-clean] = deletes everything from the hopper    USE WITH CAUTION!!!\n";
 		print "\n";
 		exit;
 		}
 	else
 		{
+		if ($args =~ /--version/i)
+			{
+			print "version: $build\n";
+			exit;
+			}
 		if ($args =~ /--campaign=/i)
 			{
 			#	print "\n|$ARGS|\n\n";
 			@data_in = split(/--campaign=/,$args);
 			$CLIcampaign = $data_in[1];
 			$CLIcampaign =~ s/ .*$//gi;
+			if ($CLIcampaign =~ /---/)
+				{
+				$CLIcampaign =~ s/---/','/gi;
+				}
 			}
 		else
 			{$CLIcampaign = '';}
@@ -222,7 +238,7 @@ if (length($ARGV[0])>1)
 			$allow_inactive_list_leads=1;
 	#		print "\n-----DEBUG DETAIL -----\n\n";
 			}
-		if ($args =~ /-t/i)
+		if ($args =~ /--test/i)
 			{
 			$T=1;   $TEST=1;
 			print "\n-----TESTING -----\n\n";
@@ -230,6 +246,10 @@ if (length($ARGV[0])>1)
 		if ($args =~ /--wipe-hopper-clean/i)
 			{
 			$wipe_hopper_clean=1;
+			}
+		if ($args =~ /--count-only/i)
+			{
+			$count_only=1;
 			}
 		}
 	}
@@ -323,11 +343,12 @@ if ($sec < 10) {$sec = "0$sec";}
 
 if ($DB) {print "TIME DEBUG: $LOCAL_GMT_OFF_STD|$LOCAL_GMT_OFF|$isdst|   GMT: $hour:$min\n";}
 
+### Wipe hopper clean process
 if ($wipe_hopper_clean)
 	{
 	if (length($CLIcampaign)>0)
 		{
-		$stmtA = "DELETE from $vicidial_hopper where campaign_id = '$CLIcampaign';";
+		$stmtA = "DELETE from $vicidial_hopper where campaign_id IN('$CLIcampaign');";
 		}
 	else
 		{
@@ -340,8 +361,47 @@ if ($wipe_hopper_clean)
 
 	exit;
 	}
+
+### Count only process
+if ($count_only)
+	{
+	if (length($CLIcampaign)>0)
+		{
+		$stmtA = "SELECT count(*) from $vicidial_hopper where campaign_id IN('$CLIcampaign');";
+		}
+	else
+		{
+		$stmtA = "SELECT count(*) from $vicidial_hopper;";
+		}
+	$hopper_count_only=0;
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$hopper_count_only = $aryA[0];
+		}
+	$sthA->finish();
+	if ($DB) 
+		{print "Hopper count: $hopper_count_only|$stmtA|\n";}
+	else 
+		{print "Hopper count: $hopper_count_only\n";}
+	$event_string = "|HOPPER COUNT: $hopper_count_only|";
+	&event_logger;
+
+	exit;
+	}
+
 ### Delete leads from inactive lists if there are any
-$stmtA = "SELECT list_id FROM vicidial_lists where ( (active='N') or ( (active='Y') and (expiration_date < \"$file_date\") ) );";
+if (length($CLIcampaign)>0)
+	{
+	$stmtA = "SELECT list_id FROM vicidial_lists where ( ( (active='N') or ( (active='Y') and (expiration_date < \"$file_date\") ) ) and (campaign_id IN('$CLIcampaign') ) );";
+	}
+else
+	{
+	$stmtA = "SELECT list_id FROM vicidial_lists where ( (active='N') or ( (active='Y') and (expiration_date < \"$file_date\") ) );";
+	}
 if ($DB) {print $stmtA;}
 $inactive_lists='';
 $inactive_lists_count=0;
@@ -373,7 +433,14 @@ if ($inactive_lists_count > 0)
 
 
 ##### BEGIN Change CBHOLD status leads to CALLBK if their vicidial_callbacks time has passed
-$stmtA = "SELECT count(*) FROM vicidial_callbacks where callback_time <= '$now_date' and status='ACTIVE';";
+if (length($CLIcampaign)>0)
+	{
+	$stmtA = "SELECT count(*) FROM vicidial_callbacks where callback_time <= '$now_date' and status='ACTIVE' and campaign_id IN('$CLIcampaign');";
+	}
+else
+	{
+	$stmtA = "SELECT count(*) FROM vicidial_callbacks where callback_time <= '$now_date' and status='ACTIVE';";
+	}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 @aryA = $sthA->fetchrow_array;
@@ -386,7 +453,14 @@ if ($CBHOLD_count > 0)
 	$update_leads='';
 	$cbc=0;
 	$cba=0;
-	$stmtA = "SELECT vicidial_callbacks.lead_id,recipient,campaign_id,vicidial_callbacks.list_id,gmt_offset_now,state,vicidial_callbacks.lead_status,vendor_lead_code FROM vicidial_callbacks,vicidial_list where callback_time <= '$now_date' and vicidial_callbacks.status='ACTIVE' and vicidial_callbacks.lead_id=vicidial_list.lead_id;";
+	if (length($CLIcampaign)>0)
+		{
+		$stmtA = "SELECT vicidial_callbacks.lead_id,recipient,campaign_id,vicidial_callbacks.list_id,gmt_offset_now,state,vicidial_callbacks.lead_status,vendor_lead_code FROM vicidial_callbacks,vicidial_list where callback_time <= '$now_date' and vicidial_callbacks.status='ACTIVE' and vicidial_callbacks.lead_id=vicidial_list.lead_id and vicidial_callbacks.campaign_id IN('$CLIcampaign');";
+		}
+	else
+		{
+		$stmtA = "SELECT vicidial_callbacks.lead_id,recipient,campaign_id,vicidial_callbacks.list_id,gmt_offset_now,state,vicidial_callbacks.lead_status,vendor_lead_code FROM vicidial_callbacks,vicidial_list where callback_time <= '$now_date' and vicidial_callbacks.status='ACTIVE' and vicidial_callbacks.lead_id=vicidial_list.lead_id;";
+		}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -448,7 +522,14 @@ if ($CBHOLD_count > 0)
 ##### BEGIN Auto-Alt-Dial DNC check and update or delete
 ### Find out how many leads in the hopper are set to DNC status
 $hopper_dnc_count=0;
-$stmtA = "SELECT count(*) from $vicidial_hopper where status='DNC';";
+if (length($CLIcampaign)>0)
+	{
+	$stmtA = "SELECT count(*) from $vicidial_hopper where status='DNC' and campaign_id IN('$CLIcampaign');";
+	}
+else
+	{
+	$stmtA = "SELECT count(*) from $vicidial_hopper where status='DNC';";
+	}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -466,7 +547,14 @@ if ($hopper_dnc_count > 0)
 	&event_logger;
 
 	### Gather all DNC statused vicidial_hopper entries
-	$stmtA = "SELECT hopper_id,lead_id,alt_dial,campaign_id FROM $vicidial_hopper where status='DNC';";
+	if (length($CLIcampaign)>0)
+		{
+		$stmtA = "SELECT hopper_id,lead_id,alt_dial,campaign_id FROM $vicidial_hopper where status='DNC' and campaign_id IN('$CLIcampaign');";
+		}
+	else
+		{
+		$stmtA = "SELECT hopper_id,lead_id,alt_dial,campaign_id FROM $vicidial_hopper where status='DNC';";
+		}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArowsVHdnc=$sthA->rows;
@@ -818,9 +906,9 @@ if ($hopper_dnc_count > 0)
 @campaign_id=@MT; 
 $ANY_hopper_vlc_dup_check='N';
 
-if ($CLIcampaign)
+if (length($CLIcampaign)>1)
 	{
-	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper,lead_order_randomize,lead_order_secondary,call_count_limit,hopper_vlc_dup_check from vicidial_campaigns where campaign_id='$CLIcampaign';";
+	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper,lead_order_randomize,lead_order_secondary,call_count_limit,hopper_vlc_dup_check from vicidial_campaigns where campaign_id IN('$CLIcampaign');";
 	}
 else
 	{

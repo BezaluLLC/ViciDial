@@ -315,7 +315,7 @@ if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 echo "<HTML>\n";
 echo "<head>\n";
 echo "<!-- VERSION: $version     BUILD: $build    USER: $user   server_ip: $server_ip-->\n";
-echo "<title>ViciDial Notes";
+echo "<title>Agent Notes";
 echo "</title>\n";
 echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";

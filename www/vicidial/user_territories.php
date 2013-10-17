@@ -192,7 +192,7 @@ if ( ($action == "CHANGE_TERRITORY_OWNER_ACCOUNT") and ($enable_vtiger_integrati
 	echo "$users_list";
 	echo "</select></td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=right>Update ViciDial List Owner: </td><td align=left><select size=1 name=vl_owner>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Update List Owner: </td><td align=left><select size=1 name=vl_owner>\n";
 	echo "<option SELECTED>YES</option>\n";
 	echo "<option>NO</option>\n";
 	echo "</select></td></tr>\n";
@@ -404,7 +404,7 @@ if ( ($action == "CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integration > 0) 
 	echo "$users_list";
 	echo "</select></td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=right>Update ViciDial List Owner: </td><td align=left><select size=1 name=vl_owner>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Update List Owner: </td><td align=left><select size=1 name=vl_owner>\n";
 	echo "<option SELECTED>YES</option>\n";
 	echo "<option>NO</option>\n";
 	echo "</select></td></tr>\n";

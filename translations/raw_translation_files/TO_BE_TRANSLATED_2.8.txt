@@ -235,6 +235,14 @@ This option, if enabled, will log when a customer is put on hold and taken off h
 Country Code List Stats||
 This setting if enabled will show a country code breakdown summary on the list modify screen. Default is 0 for disabled||
 COUNTRY CODES WITHIN THIS LIST||
+Manual Dial by Lead ID||
+This allows the agent in manual dial mode to place a call by lead_id instead of a phone number. Default is N for disabled||
+The ViciDial Contact Center Suite is maintained by the||
+The ViciDial Contact Center Suite is released under the||
+This is the dial plan context that this phone will use to dial out. If you are running a call center and you do not want your agents to be able to dial out outside of the Contact Center applicaiton for example, then you would set this field to a dialplan context that does not exist, something like agent-nodial. default is default||
+Update List Owner||
+Advanced Lead Management Tools||
+Basic Lead Management Tools||
 
 
 ########################## CHANGES TO EXISTING PHRASES IN ADMIN TRANSLATION
@@ -244,6 +252,9 @@ COUNTRY CODES WITHIN THIS LIST||
 ############################################################ CLIENT
 
 This agent screen was not opened properly||
+Dial Lead ID||
+Agent Form Display Script||
+Agent Notes||
 
 
 ########################## CHANGES TO EXISTING PHRASES IN AGENT TRANSLATION

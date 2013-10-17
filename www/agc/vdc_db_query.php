@@ -1454,6 +1454,20 @@ if ($ACTION == 'manDiaLnextCaLL')
 
 			if (strlen($phone_number) > 5)
 				{$override_dial_number = $phone_number;}
+			else
+				{
+				##### gather local call time setting from campaign
+				$stmt="SELECT phone_number FROM vicidial_list where lead_id='$lead_id';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$lid_chk_ct = mysqli_num_rows($rslt);
+				if ($lid_chk_ct > 0)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$phone_number =			$row[0];
+					}
+				}
 			}
 		else
 			{

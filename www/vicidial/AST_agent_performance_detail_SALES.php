@@ -56,8 +56,6 @@ if (isset($_GET["group"]))					{$group=$_GET["group"];}
 	elseif (isset($_POST["group"]))			{$group=$_POST["group"];}
 if (isset($_GET["user_group"]))				{$user_group=$_GET["user_group"];}
 	elseif (isset($_POST["user_group"]))	{$user_group=$_POST["user_group"];}
-if (isset($_GET["users"]))					{$users=$_GET["users"];}
-	elseif (isset($_POST["users"]))			{$users=$_POST["users"];}
 if (isset($_GET["shift"]))					{$shift=$_GET["shift"];}
 	elseif (isset($_POST["shift"]))			{$shift=$_POST["shift"];}
 if (isset($_GET["stage"]))					{$stage=$_GET["stage"];}
@@ -260,15 +258,6 @@ while($i < $group_ct)
 	$i++;
 	}
 
-$i=0;
-$users_string='|';
-$users_ct = count($users);
-while($i < $users_ct)
-	{
-	$users_string .= "$users[$i]|";
-	$i++;
-	}
-
 $stmt="select campaign_id from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
@@ -299,21 +288,6 @@ while ($i < $user_groups_to_print)
 	if ($all_user_groups) {$user_group[$i]=$row[0];}
 	$i++;
 	}
-
-$stmt="select user, full_name from vicidial_users $whereLOGadmin_viewable_groupsSQL order by user";
-$rslt=mysql_to_mysqli($stmt, $link);
-if ($DB) {$HTML_text.="$stmt\n";}
-$users_to_print = mysqli_num_rows($rslt);
-$i=0;
-while ($i < $users_to_print)
-	{
-	$row=mysqli_fetch_row($rslt);
-	$users[$i]=$row[0];
-	$user_names[$i]=$row[1];
-	if ($all_users) {$user[$i]=$row[0];}
-	$i++;
-	}
-
 
 $i=0;
 $group_string='|';
@@ -354,8 +328,6 @@ else
 	$user_group_agent_log_SQL = "and vicidial_agent_log.user_group IN($user_group_SQL)";
 	$user_group_SQL = "and vicidial_users.user_group IN($user_group_SQL)";
 	}
-
-
 
 if ($DB) {$HTML_text.="$user_group_string|$user_group_ct|$user_groupQS|$i<BR>";}
 
@@ -451,21 +423,6 @@ while ($user_groups_to_print > $o)
 	$o++;
 	}
 $HTML_text.="</SELECT>\n";
-$HTML_text.="</TD><TD VALIGN=TOP>Users: <BR>";
-$HTML_text.="<SELECT SIZE=5 NAME=users[] multiple>\n";
-
-if  (preg_match('/\-\-ALL\-\-/',$users_string))
-	{$HTML_text.="<option value=\"--ALL--\" selected>-- ALL USERS --</option>\n";}
-else
-	{$HTML_text.="<option value=\"--ALL--\">-- ALL USERS --</option>\n";}
-$o=0;
-while ($users_to_print > $o)
-	{
-	if  (preg_match("/$users[$o]\|/i",$users_string)) {$HTML_text.="<option selected value=\"$users[$o]\">$users[$o] - $user_names[$o]</option>\n";}
-	  else {$HTML_text.="<option value=\"$users[$o]\">$users[$o] - $user_names[$o]</option>\n";}
-	$o++;
-	}
-$HTML_text.="</SELECT>\n";
 $HTML_text.="</TD><TD VALIGN=TOP>Shift:<BR>";
 $HTML_text.="<SELECT SIZE=1 NAME=shift>\n";
 $HTML_text.="<option selected value=\"$shift\">$shift</option>\n";
@@ -529,7 +486,23 @@ $HTML_text.="Time range: $query_date_BEGIN to $query_date_END\n\n";
 $HTML_text.="---------- AGENTS Details -------------\n\n";
 
 
-
+### BEGIN gather all statuses that are in status flags  ###
+$sale_statuses='';
+$sale_pattern_match="|";
+$stmt="select status from vicidial_statuses where sale='Y' UNION select status from vicidial_campaign_statuses where sale='Y' and selectable IN('Y','N') $group_SQLand;";
+if ($DB) {$HTML_text.="$stmt\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$statha_to_print = mysqli_num_rows($rslt);
+$i=0;
+while ($i < $statha_to_print)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$temp_status=$row[0];
+	$sale_statuses .= "'$temp_status',";
+	$sale_pattern_match .= "$temp_status|";
+	$i++;
+	}
+if ($DB) {$HTML_text.="$sale_pattern_match\n";}
 
 
 $statuses='-';
@@ -539,7 +512,7 @@ $statusesHEAD='';
 $CSV_header="\"Agent Performance Detail                        $NOW_TIME\"\n";
 $CSV_header.="\"Time range: $query_date_BEGIN to $query_date_END\"\n\n";
 $CSV_header.="\"---------- AGENTS Details -------------\"\n";
-$CSV_header.='"USER NAME","ID","CURRENT USER GROUP","MOST RECENT USER GROUP","CALLS","TIME","PAUSE","PAUSAVG","WAIT","WAITAVG","TALK","TALKAVG","DISPO","DISPAVG","DEAD","DEADAVG","CUSTOMER","CUSTAVG"';
+$CSV_header.='"USER NAME","ID","CURRENT USER GROUP","MOST RECENT USER GROUP","SALES/CALLS %","SALES PER HOUR","TOTAL SALES","CALLS","TIME","PAUSE","PAUSAVG","WAIT","WAITAVG","TALK","TALKAVG","DISPO","DISPAVG","DEAD","DEADAVG","CUSTOMER","CUSTAVG"';
 
 $statusesHTML='';
 $statusesARY[0]='';
@@ -611,6 +584,10 @@ while ($i < $rows_to_print)
 	$dead_sec[$i] =		$row[8];
 	$user_group[$i] =	$row[9];
 	$customer_sec[$i] =	($talk_sec[$i] - $dead_sec[$i]);
+	
+	if (preg_match("/\|$row[7]\|/i", $sale_pattern_match)) {
+		$sale_counts[$row[3]]+=$row[0]; 
+	}
 
 	$max_varname="max_".$status[$i];
 	$$max_varname=1;
@@ -645,9 +622,9 @@ $CSV_header.="\n";
 $CSV_lines='';
 
 $ASCII_text.="CALL STATS BREAKDOWN: (Statistics related to handling of calls only)     <a href=\"$LINKbase&stage=$stage&file_download=1\">[DOWNLOAD]</a>\n";
-$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
-$ASCII_text.="| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | CURRENT USER GROUP   | MOST RECENT USER GRP | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>  | <a href=\"$LINKbase&stage=TIME\">TIME</a>      | PAUSE    |PAUSAVG | WAIT     |WAITAVG | TALK     |TALKAVG | DISPO    |DISPAVG | DEAD     |DEADAVG | CUSTOMER |CUSTAVG |$statusesHTML\n";
-$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+$ASCII_text.="+-----------------+----------+----------------------+----------------------+---------------+----------------+-------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+$ASCII_text.="| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | CURRENT USER GROUP   | MOST RECENT USER GRP | SALES/CALLS % | SALES PER HOUR | TOTAL SALES | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>  | <a href=\"$LINKbase&stage=TIME\">TIME</a>      | PAUSE    |PAUSAVG | WAIT     |WAITAVG | TALK     |TALKAVG | DISPO    |DISPAVG | DEAD     |DEADAVG | CUSTOMER |CUSTAVG |$statusesHTML\n";
+$ASCII_text.="+-----------------+----------+----------------------+----------------------+---------------+----------------+-------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
 
 
 ### BEGIN loop through each user ###
@@ -667,6 +644,8 @@ while ($m < $k)
 
 	$Sfull_name=$user_namesARY[$m];
 	$Suser_group=$user_groupsARY[$m];
+	$Stotal_sales=$sale_counts[$Suser]+0;
+	$Sgrand_total_sales+=$Stotal_sales;
 	$Stime=0;
 	$Scalls=0;
 	$Stalk_sec=0;
@@ -832,11 +811,18 @@ while ($m < $k)
 	$pfUSERavgCUSTOMER_MS =	sprintf("%6s", $USERavgCUSTOMER_MS);
 	$PAUSEtotal[$m] = $pfUSERtotPAUSE_MS;
 
-	$Toutput = "| $Sfull_name | <a href=\"./user_stats.php?user=$RAWuser\">$Suser</a> | $Suser_group | $Slast_user_group | $Scalls | $pfUSERtime_MS | $pfUSERtotPAUSE_MS | $pfUSERavgPAUSE_MS | $pfUSERtotWAIT_MS | $pfUSERavgWAIT_MS | $pfUSERtotTALK_MS | $pfUSERavgTALK_MS | $pfUSERtotDISPO_MS | $pfUSERavgDISPO_MS | $pfUSERtotDEAD_MS | $pfUSERavgDEAD_MS | $pfUSERtotCUSTOMER_MS | $pfUSERavgCUSTOMER_MS |$SstatusesHTML\n";
+	$total_hours=($Stime/3600);
+	$Ssales_per_call=sprintf("%.2f", (100*($Stotal_sales/$Scalls)))." %";
+	$Ssales_per_hour=sprintf("%.2f", ($Stotal_sales/$total_hours));
 
+	$Ssales_per_call=sprintf("%13s", $Ssales_per_call);
+	$Ssales_per_hour=sprintf("%14s", $Ssales_per_hour);
+	$Stotal_sales=sprintf("%11s", $Stotal_sales);
+
+	$Toutput = "| $Sfull_name | <a href=\"./user_stats.php?user=$RAWuser\">$Suser</a> | $Suser_group | $Slast_user_group | $Ssales_per_call | $Ssales_per_hour | $Stotal_sales | $Scalls | $pfUSERtime_MS | $pfUSERtotPAUSE_MS | $pfUSERavgPAUSE_MS | $pfUSERtotWAIT_MS | $pfUSERavgWAIT_MS | $pfUSERtotTALK_MS | $pfUSERavgTALK_MS | $pfUSERtotDISPO_MS | $pfUSERavgDISPO_MS | $pfUSERtotDEAD_MS | $pfUSERavgDEAD_MS | $pfUSERtotCUSTOMER_MS | $pfUSERavgCUSTOMER_MS |$SstatusesHTML\n";
 
 	$CSV_lines.="\"$Sfull_nameRAW\",";
-	$CSV_lines.=preg_replace('/\s/', '', "\"$SuserRAW\",\"$Suser_group\",\"$Slast_user_group\",\"$Scalls\",\"$pfUSERtime_MS\",\"$pfUSERtotPAUSE_MS\",\"$pfUSERavgPAUSE_MS\",\"$pfUSERtotWAIT_MS\",\"$pfUSERavgWAIT_MS\",\"$pfUSERtotTALK_MS\",\"$pfUSERavgTALK_MS\",\"$pfUSERtotDISPO_MS\",\"$pfUSERavgDISPO_MS\",\"$pfUSERtotDEAD_MS\",\"$pfUSERavgDEAD_MS\",\"$pfUSERtotCUSTOMER_MS\",\"$pfUSERavgCUSTOMER_MS\"$CSVstatuses");
+	$CSV_lines.=preg_replace('/\s/', '', "\"$SuserRAW\",\"$Suser_group\",\"$Slast_user_group\",\"$Ssales_per_call\",\"$Ssales_per_hour\",\"$Stotal_sales\",\"$Scalls\",\"$pfUSERtime_MS\",\"$pfUSERtotPAUSE_MS\",\"$pfUSERavgPAUSE_MS\",\"$pfUSERtotWAIT_MS\",\"$pfUSERavgWAIT_MS\",\"$pfUSERtotTALK_MS\",\"$pfUSERavgTALK_MS\",\"$pfUSERtotDISPO_MS\",\"$pfUSERavgDISPO_MS\",\"$pfUSERtotDEAD_MS\",\"$pfUSERavgDEAD_MS\",\"$pfUSERtotCUSTOMER_MS\",\"$pfUSERavgCUSTOMER_MS\"$CSVstatuses");
 	$CSV_lines.="\n";
 
 	$TOPsorted_output[$m] = $Toutput;
@@ -975,10 +961,17 @@ while(strlen($TOTavgPAUSE_MS)>6) {$TOTavgPAUSE_MS = substr("$TOTavgPAUSE_MS", 0,
 while(strlen($TOTavgWAIT_MS)>6) {$TOTavgWAIT_MS = substr("$TOTavgWAIT_MS", 0, -1);}
 while(strlen($TOTavgCUSTOMER_MS)>6) {$TOTavgCUSTOMER_MS = substr("$TOTavgCUSTOMER_MS", 0, -1);}
 
+$grand_total_hours=($TOTtime/3600);
+$STOTsales_per_call=sprintf("%.2f", (100*($Sgrand_total_sales/$TOTcalls)))." %";
+$STOTsales_per_hour=sprintf("%.2f", ($Sgrand_total_sales/$grand_total_hours));
 
-$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
-$ASCII_text.="|  TOTALS                                                      AGENTS:$TOT_AGENTS | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTavgDISPO_MS |$TOTtotDEAD_MS| $TOTavgDEAD_MS |$TOTtotCUSTOMER_MS| $TOTavgCUSTOMER_MS |$SUMstatusesHTML\n";
-$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+$STOTsales_per_call=sprintf("%13s", $STOTsales_per_call);
+$STOTsales_per_hour=sprintf("%14s", $STOTsales_per_hour);
+$Sgrand_total_sales=sprintf("%11s", $Sgrand_total_sales);
+
+$ASCII_text.="+-----------------+----------+----------------------+----------------------+---------------+----------------+-------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+$ASCII_text.="|  TOTALS                                                      AGENTS:$TOT_AGENTS | $STOTsales_per_call | $STOTsales_per_hour | $Sgrand_total_sales | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTavgDISPO_MS |$TOTtotDEAD_MS| $TOTavgDEAD_MS |$TOTtotCUSTOMER_MS| $TOTavgCUSTOMER_MS |$SUMstatusesHTML\n";
+$ASCII_text.="+-----------------+----------+----------------------+----------------------+---------------+----------------+-------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
 
 
 for ($e=0; $e<count($statusesARY); $e++) {

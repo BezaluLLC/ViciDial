@@ -877,7 +877,8 @@ use_other_campaign_dnc VARCHAR(8) default '',
 allow_emails ENUM('Y','N') default 'N',
 amd_inbound_group VARCHAR(20) default '',
 amd_callmenu VARCHAR(50) default '',
-survey_wait_sec TINYINT(3) default '10'
+survey_wait_sec TINYINT(3) default '10',
+manual_dial_lead_id ENUM('Y','N') default 'N'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -3214,4 +3215,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1358',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1359',db_schema_update_date=NOW();

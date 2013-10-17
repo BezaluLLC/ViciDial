@@ -154,6 +154,11 @@ OTHER CHANGES:
 
 20. Added system setting to view country code breakdown in list modify screen.
 
+21. Added campaign option to allow agents to be able to place manual dial calls
+	by Lead ID.
+
+22. Added Advanced lead tools management, access from the Admin Utilities page
+
 
 
 

@@ -41,6 +41,7 @@
 # 130616-0059 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130625-1341 - Added phone login and phone_ip display to login/logout section
 # 130901-0836 - Changed to mysqli PHP functions
+# 131016-2102 - Added checking for level 8 add-copy restriction
 #
 
 $startMS = microtime();
@@ -52,6 +53,7 @@ $report_name = 'User Stats';
 $db_source = 'M';
 
 $firstlastname_display_user_stats=0;
+$add_copy_disabled=0;
 if (file_exists('options.php'))
 	{
 	require('options.php');
@@ -81,7 +83,7 @@ if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active,webroot_writable,allow_emails FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active,webroot_writable,allow_emails,level_8_disable_add FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -95,6 +97,7 @@ if ($qm_conf_ct > 0)
 	$user_territories_active =		$row[4];
 	$webroot_writable =				$row[5];
 	$allow_emails =					$row[6];
+	$SSlevel_8_disable_add =		$row[7];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -170,6 +173,16 @@ else
 	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
 	exit;
 	}
+
+
+$stmt="SELECT user_level from vicidial_users where user='$PHP_AUTH_USER';";
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
+$LOGuser_level				=$row[0];
+
+if (($LOGuser_level < 9) and ($SSlevel_8_disable_add > 0))
+	{$add_copy_disabled++;}
+
 
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");

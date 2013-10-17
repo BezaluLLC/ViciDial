@@ -412,10 +412,11 @@
 # 130903-1920 - Added security check for browser window name, see launch.php for more information
 # 130925-2119 - Fixed span order issue
 # 131007-1348 - Added mrglock_ig_select_ct options.php setting
+# 131010-2149 - Added option to allow manual dial by lead_id
 #
 
-$version = '2.8-381c';
-$build = '131007-1348';
+$version = '2.8-382c';
+$build = '131010-2149';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -1425,7 +1426,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit,in_group_dial,in_group_dial_select,pause_after_next_call,owner_populate FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit,in_group_dial,in_group_dial_select,pause_after_next_call,owner_populate,manual_dial_lead_id FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1535,6 +1536,7 @@ else
 				$in_group_dial_select =		$row[102];
 				$pause_after_next_call =	$row[103];
 				$owner_populate =			$row[104];
+				$manual_dial_lead_id =		$row[105];
 
 				if ( ($queuemetrics_pe_phone_append > 0) and (strlen($qm_phone_environment)>0) )
 					{$qm_phone_environment .= "-$qm_extension";}
@@ -6611,6 +6613,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			var MDDiaLCodEform = document.vicidial_form.MDDiaLCodE.value;
 			var MDPhonENumbeRform = document.vicidial_form.MDPhonENumbeR.value;
 			var MDLeadIDform = document.vicidial_form.MDLeadID.value;
+			var MDLeadIDEntryform = document.vicidial_form.MDLeadIDEntry.value;
 			var MDTypeform = document.vicidial_form.MDType.value;
 			var MDDiaLOverridEform = document.vicidial_form.MDDiaLOverridE.value;
 			var MDVendorLeadCode = document.vicidial_form.vendor_lead_code.value;
@@ -6623,6 +6626,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 			if (MDDiaLCodEform.length < 1)
 				{MDDiaLCodEform = document.vicidial_form.phone_code.value;}
+
+			if (MDLeadIDEntryform.length > 0)
+				{MDLeadIDform = document.vicidial_form.MDLeadIDEntry.value;}
 
 			if ( (MDDiaLOverridEform.length > 0) && (active_ingroup_dial.length < 1) )
 				{
@@ -6665,6 +6671,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			document.vicidial_form.MDPhonENumbeR.value = '';
 			document.vicidial_form.MDDiaLOverridE.value = '';
 			document.vicidial_form.MDLeadID.value = '';
+			document.vicidial_form.MDLeadIDEntry.value='';
 			document.vicidial_form.MDType.value = '';
 			document.vicidial_form.MDPhonENumbeRHiddeN.value = '';
 			}
@@ -10540,6 +10547,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				document.vicidial_form.MDPhonENumbeR.value = '';
 				document.vicidial_form.MDDiaLOverridE.value = '';
 				document.vicidial_form.MDLeadID.value = '';
+				document.vicidial_form.MDLeadIDEntry.value='';
 				document.vicidial_form.MDType.value = '';
 				document.vicidial_form.MDPhonENumbeRHiddeN.value = '';
 				inbound_lead_search=0;
@@ -12796,6 +12804,7 @@ function phone_number_format(formatphone) {
 		document.vicidial_form.MDPhonENumbeR.value = '';
 		document.vicidial_form.MDDiaLOverridE.value = '';
 		document.vicidial_form.MDLeadID.value = '';
+		document.vicidial_form.MDLeadIDEntry.value='';
 		document.vicidial_form.MDType.value = '';
 		document.vicidial_form.MDPhonENumbeRHiddeN.value = '';
 		}
@@ -15217,6 +15226,20 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 	<input type="hidden" name="MDPhonENumbeRHiddeN" id="MDPhonENumbeRHiddeN" value="" />
 	<input type="hidden" name="MDLeadID" id="MDLeadID" value="" />
 	<input type="hidden" name="MDType" id="MDType" value="" />
+	<?php 
+	if ($manual_dial_lead_id=='Y')
+		{
+        echo "	</td>";
+        echo "	</tr><tr>\n";
+        echo "	<td align=\"right\"><font class=\"body_text\"> Dial Lead ID: </font></td>\n";
+        echo "	<td align=\"left\"><font class=\"body_text\">\n";
+        echo "	<input type=\"text\" size=\"10\" maxlength=\"10\" name=\"MDLeadIDEntry\" id=\"MDLeadIDEntry\" class=\"cust_form\" value=\"\" />&nbsp; (digits only)</font>\n";
+		}
+	else
+		{
+		echo "<input type=\"hidden\" name=\"MDLeadIDEntry\" id=\"MDLeadIDEntry\" value=\"\" />\n";
+		}
+	?>
 	</td>
 	</tr><tr>
     <td align="right"><font class="body_text"> Search Existing Leads: </font></td>

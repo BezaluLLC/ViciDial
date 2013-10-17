@@ -118,3 +118,7 @@ UPDATE system_settings SET db_schema_version='1357',db_schema_update_date=NOW() 
 ALTER TABLE system_settings ADD country_code_list_stats ENUM('0','1') default '0';
 
 UPDATE system_settings SET db_schema_version='1358',db_schema_update_date=NOW() where db_schema_version < 1358;
+
+ALTER TABLE vicidial_campaigns ADD manual_dial_lead_id ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1359',db_schema_update_date=NOW() where db_schema_version < 1359;

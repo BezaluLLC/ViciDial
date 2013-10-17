@@ -221,7 +221,7 @@ if ($action == "HELP")
 
 	<A NAME="phone_context">
 	<BR>
-	<B>Phone Context -</B> This is the dial plan context that this phone will use to dial out. If you are running a call center and you do not want your agents to be able to dial out outside of the ViciDial applicaiton for example, then you would set this field to a dialplan context that does not exist, something like agent-nodial. default is default.
+	<B>Phone Context -</B> This is the dial plan context that this phone will use to dial out. If you are running a call center and you do not want your agents to be able to dial out outside of the Contact Center applicaiton for example, then you would set this field to a dialplan context that does not exist, something like agent-nodial. default is default.
 	<BR><BR>
 
 	<BR>
