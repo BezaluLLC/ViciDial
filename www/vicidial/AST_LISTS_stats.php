@@ -8,6 +8,7 @@
 #
 # CHANGES
 # 130926-0721 - First build based upon LISTS campaign report
+# 130927-2154 - Added summary and full download options
 #
 
 $startMS = microtime();
@@ -406,10 +407,10 @@ if (strlen($list[0]) < 1)
 	}
 else
 	{
-	$OUToutput = '';
-	$OUToutput .= "List Status Stats                             $NOW_TIME\n";
+	$totalOUToutput = '';
+	$totalOUToutput .= "List Status Stats                             $NOW_TIME     <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=ALL\">DOWNLOAD FULL REPORT</a>\n";
 
-	$OUToutput .= "\n";
+	$totalOUToutput .= "\n";
 
 	$list_stmt="select vicidial_list.list_id,list_name,active, count(*) from vicidial_list, vicidial_lists where vicidial_lists.list_id in ($list_id_str) and vicidial_lists.list_id=vicidial_list.list_id group by vicidial_list.list_id, list_name, active order by list_id, list_name asc;";
 	$list_rslt=mysql_to_mysqli($list_stmt, $link);
@@ -419,23 +420,51 @@ else
 	$CSV_text1.="\"LIST ID\",\"LIST NAME\",\"TOTAL LEADS\",\"ACTIVE/INACTIVE\"\n";
 	$CSV_text2="";
 	$CSV_text3="";
+	$CSV_textALL="";
 	$i=0;
+
+	$totalOUToutput .= "---------- TOTAL LIST ID SUMMARY     <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=ALL\">DOWNLOAD FULL REPORT</a>\n";
+	$totalOUToutput .= "+------------------------------------------+------------+----------+\n";
+	$totalOUToutput .= "| LIST                                     | LEADS      | ACTIVE   |\n";
+	$totalOUToutput .= "+------------------------------------------+------------+----------+\n";
+
+	$CSV_textSUMMARY.="\"LIST ID SUMMARY\"\n";
+	$CSV_textSUMMARY.="\"LIST\",\"LEADS\",\"ACTIVE\"\n";
+
+	$OUToutput='';
+	$OUToutput .= "\n";
+	$OUToutput .= "---------- INDIVIDUAL LIST ID SUMMARIES\n";
+	
 	while ($i < $listids_to_print)
 		{
 		$list_row=mysqli_fetch_row($list_rslt);
 		$LISTIDlists[$i] =	$list_row[0];
+		$LISTIDlist_names[$i] =	$list_row[1];
 		if ($list_row[2]=="Y") {$active_txt="ACTIVE";} else {$active_txt="INACTIVE";}
+		$active_txt=sprintf("%-8s", $active_txt);
 		$LISTIDcalls[$i] =	$list_row[3];
 		$TOTALleads =$list_row[3];
+		$totalTOTALleads+=$TOTALleads;
+
+		$LISTIDcount =	sprintf("%10s", $LISTIDcalls[$i]);while(strlen($LISTIDcount)>10) {$LISTIDcount = substr("$LISTIDcount", 0, -1);}
+		$LISTIDname =	sprintf("%-40s", "$LISTIDlists[$i] - $LISTIDlist_names[$i]");while(strlen($LISTIDname)>40) {$LISTIDname = substr("$LISTIDname", 0, -1);}
+		$totalOUToutput .= "| $LISTIDname | $LISTIDcount | $active_txt |\n";
+		$CSV_textSUMMARY.="\"$LISTIDname\",\"$LISTIDcount\",\"$active_txt\"\n";
+
 
 		$OUToutput .= "\n";
-		$OUToutput .= "---------- LIST ID SUMMARY     <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a>\n";
+		$OUToutput .= "---------- LIST ID SUMMARY     <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD LIST SUMMARIES</a>\n";
 		$OUToutput .= "+--------------------------------------------------------+\n";
 		$OUToutput .= "| LIST ID:       ".sprintf("%-30s", $list_row[0])." ".sprintf("%-8s", $active_txt)." |\n";
 		$OUToutput .= "| LIST NAME:     ".sprintf("%-30s", $list_row[1])." ".sprintf("%8s", "")." |\n";
 		$OUToutput .= "| TOTAL LEADS:   ".sprintf("%-30s", $list_row[3])." ".sprintf("%8s", "")." |\n";
 		$OUToutput .= "+--------------------------------------------------------+\n";
 		$CSV_text1.="\"$list_row[0]\",\"$list_row[1]\",\"$list_row[3]\",\"$active_txt\"\n";
+
+		$CSV_textALL.="\"LIST ID #$list_row[0] SUMMARY\",\"\"\n";
+		$CSV_textALL.="\"LIST NAME\",\"TOTAL LEADS\",\"ACTIVE/INACTIVE\"\n";
+		$CSV_textALL.="\"$list_row[1]\",\"$list_row[3]\",\"$active_txt\"\n";
+
 
 		# $list_id_SQL .=		"'$row[0]',";
 		# if ($row[0]>$max_calls) {$max_calls=$row[3];}
@@ -471,6 +500,7 @@ else
 			$row=mysqli_fetch_row($rslt);
 			$HA_count = $row[0];
 			$flag_count+=$row[0];
+			$category_totals["HA"]+=$HA_count;
 			if ($HA_count > 0)
 				{
 				if ($HA_count>$max_calls) {$max_calls=$HA_count;}
@@ -486,6 +516,7 @@ else
 			$row=mysqli_fetch_row($rslt);
 			$SALE_count = $row[0];
 			$flag_count+=$row[0];
+			$category_totals["SALE"]+=$SALE_count;
 			if ($SALE_count > 0)
 				{
 				if ($SALE_count>$max_calls) {$max_calls=$SALE_count;}
@@ -501,6 +532,7 @@ else
 			$row=mysqli_fetch_row($rslt);
 			$DNC_count = $row[0];
 			$flag_count+=$row[0];
+			$category_totals["DNC"]+=$DNC_count;
 			if ($DNC_count > 0)
 				{
 				if ($DNC_count>$max_calls) {$max_calls=$DNC_count;}
@@ -516,6 +548,7 @@ else
 			$row=mysqli_fetch_row($rslt);
 			$CC_count = $row[0];
 			$flag_count+=$row[0];
+			$category_totals["CC"]+=$CC_count;
 			if ($CC_count > 0)
 				{
 				if ($C_count>$max_calls) {$max_calls=$CC_count;}
@@ -531,6 +564,7 @@ else
 			$row=mysqli_fetch_row($rslt);
 			$NI_count = $row[0];
 			$flag_count+=$row[0];
+			$category_totals["NI"]+=$NI_count;
 			if ($NI_count > 0)
 				{
 				if ($NI_count>$max_calls) {$max_calls=$NI_count;}
@@ -546,6 +580,7 @@ else
 			$row=mysqli_fetch_row($rslt);
 			$UW_count = $row[0];
 			$flag_count+=$row[0];
+			$category_totals["UW"]+=$UW_count;
 			if ($UW_count > 0)
 				{
 				if ($UW_count>$max_calls) {$max_calls=$UW_count;}
@@ -561,6 +596,7 @@ else
 			$row=mysqli_fetch_row($rslt);
 			$SC_count = $row[0];
 			$flag_count+=$row[0];
+			$category_totals["SC"]+=$SC_count;
 			if ($SC_count > 0)
 				{
 				if ($SC_count>$max_calls) {$max_calls=$SC_count;}
@@ -576,6 +612,7 @@ else
 			$row=mysqli_fetch_row($rslt);
 			$COMP_count = $row[0];
 			$flag_count+=$row[0];
+			$category_totals["COMP"]+=$COMP_count;
 			if ($COMP_count > 0)
 				{
 				if ($COMP_count>$max_calls) {$max_calls=$COMP_count;}
@@ -602,7 +639,7 @@ else
 		$COMP_count =	sprintf("%10s", "$COMP_count"); while(strlen($COMP_count)>10) {$COMP_count = substr("$COMP_count", 0, -1);}
 
 		$OUToutput .= "\n";
-		$OUToutput .= "---------- STATUS FLAGS BREAKDOWN:    (and % of total leads in list)     <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=2\">DOWNLOAD</a>\n";
+		$OUToutput .= "---------- STATUS FLAGS BREAKDOWN:    (and % of total leads in list)     <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=2\">DOWNLOAD FLAG BREAKDOWNS</a>\n";
 		$OUToutput .= "+------------------+------------+----------+\n";
 		$OUToutput .= "| Human Answer     | $HA_count |  $HA_percent% |\n";
 		$OUToutput .= "| Sale             | $SALE_count |  $SALE_percent% |\n";
@@ -615,20 +652,23 @@ else
 		$OUToutput .= "+------------------+------------+----------+\n";
 		$OUToutput .= "\n";
 
-		$CSV_text2.="\"STATUS FLAGS SUMMARY FOR LIST ID #$list_id:\"\n";
-		$CSV_text2 .= "\"Human Answer\",\"$HA_count\",\"$HA_percent%\"\n";
-		$CSV_text2 .= "\"Sale\",\"$SALE_count\",\"$SALE_percent%\"\n";
-		$CSV_text2 .= "\"DNC\",\"$DNC_count\",\"$DNC_percent%\"\n";
-		$CSV_text2 .= "\"Customer Contact\",\"$CC_count\",\"$CC_percent%\"\n";
-		$CSV_text2 .= "\"Not Interested\",\"$NI_count\",\"$NI_percent%\"\n";
-		$CSV_text2 .= "\"Unworkable\",\"$UW_count\",\"$UW_percent%\"\n";
-		$CSV_text2 .= "\"Scheduled Callbacks\",\"$SC_count\",\"$SC_percent%\"\n";
-		$CSV_text2 .= "\"Completed\",\"$COMP_count\",\"$COMP_percent%\"\n\n";
+		$CSV_text_block = "\"STATUS FLAGS SUMMARY FOR LIST ID #$list_id:\"\n";
+		$CSV_text_block .= "\"Human Answer\",\"$HA_count\",\"$HA_percent%\"\n";
+		$CSV_text_block .= "\"Sale\",\"$SALE_count\",\"$SALE_percent%\"\n";
+		$CSV_text_block .= "\"DNC\",\"$DNC_count\",\"$DNC_percent%\"\n";
+		$CSV_text_block .= "\"Customer Contact\",\"$CC_count\",\"$CC_percent%\"\n";
+		$CSV_text_block .= "\"Not Interested\",\"$NI_count\",\"$NI_percent%\"\n";
+		$CSV_text_block .= "\"Unworkable\",\"$UW_count\",\"$UW_percent%\"\n";
+		$CSV_text_block .= "\"Scheduled Callbacks\",\"$SC_count\",\"$SC_percent%\"\n";
+		$CSV_text_block .= "\"Completed\",\"$COMP_count\",\"$COMP_percent%\"\n\n";
+
+		$CSV_text2.=$CSV_text_block;
+		$CSV_textALL.="\n".$CSV_text_block;
 
 		$stmt="select status, count(*) From vicidial_list where list_id='$list_id' group by status order by status asc";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$OUToutput .= "---------- STATUS BREAKDOWN:    (and % of total leads in list)     <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=3\">DOWNLOAD</a>\n";
+		$OUToutput .= "---------- STATUS BREAKDOWN:    (and % of total leads in list)     <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=3\">DOWNLOAD STAT BREAKDOWNS</a>\n";
 		$OUToutput .= "+--------+--------------------------------+----------+---------+\n";
 		$OUToutput .= "| STATUS | STATUS NAME                    | COUNT    |  LEAD % |\n";
 		$OUToutput .= "+--------+--------------------------------+----------+---------+\n";
@@ -636,19 +676,74 @@ else
 		$CSV_text3.="\"\",\"STATUS BREAKDOWN FOR LIST ID #$list_id:\"\n";
 		$CSV_text3.="\"STATUS\",\"STATUS NAME\",\"COUNT\",\"LEAD %\"\n";
 
+		$CSV_textALL.="\"STATUS BREAKDOWN FOR LIST ID #$list_id:\",\"\"\n";
+		$CSV_textALL.="\"STATUS\",\"STATUS NAME\",\"COUNT\",\"LEAD %\"\n";
+
 		while ($row=mysqli_fetch_row($rslt)) 
 			{
 			$OUToutput .= "| ".sprintf("%6s", $row[0])." | ".sprintf("%30s", $statname_list["$row[0]"])." | ".sprintf("%8s", $row[1])." | ".sprintf("%6.2f", ( ($row[1] / $TOTALleads) * 100))."% |\n";
 			$CSV_text3.="\"$row[0]\",\"".$statname_list["$row[0]"]."\",\"$row[1]\",\"".sprintf("%6.2f", ( ($row[1] / $TOTALleads) * 100))."%\"\n";
+			$CSV_textALL.="\"$row[0]\",\"".$statname_list["$row[0]"]."\",\"$row[1]\",\"".sprintf("%6.2f", ( ($row[1] / $TOTALleads) * 100))."%\"\n";
 			}
 		$OUToutput .= "+-----------------------------------------+----------+---------+\n";
 		$OUToutput .= "|                                         | ".sprintf("%8s", $TOTALleads)." | 100.00% |\n";
 		$OUToutput .= "+-----------------------------------------+----------+---------+\n";
 		$CSV_text3.="\"\",\"\",\"$TOTALleads\",\"100.00%\"\n\n\n";
+		$CSV_textALL.="\"\",\"\",\"$TOTALleads\",\"100.00%\"\n\n\n";
 		$OUToutput .= "\n";
 		$OUToutput .= "\n";
 		$OUToutput .= "\n";
 		}
+
+	$total_HA_percent =	sprintf("%6.2f", ( ($category_totals["HA"] / $totalTOTALleads) * 100)); while(strlen($total_HA_percent)>6) {$total_HA_percent = substr("$total_HA_percent", 0, -1);}
+	$total_SALE_percent =	sprintf("%6.2f", ( ($category_totals["SALE"] / $totalTOTALleads) * 100)); while(strlen($total_SALE_percent)>6) {$total_SALE_percent = substr("$total_SALE_percent", 0, -1);}
+	$total_DNC_percent =	sprintf("%6.2f", ( ($category_totals["DNC"] / $totalTOTALleads) * 100)); while(strlen($total_DNC_percent)>6) {$total_DNC_percent = substr("$total_DNC_percent", 0, -1);}
+	$total_CC_percent =	sprintf("%6.2f", ( ($category_totals["CC"] / $totalTOTALleads) * 100)); while(strlen($total_CC_percent)>6) {$total_CC_percent = substr("$total_CC_percent", 0, -1);}
+	$total_NI_percent =	sprintf("%6.2f", ( ($category_totals["NI"] / $totalTOTALleads) * 100)); while(strlen($total_NI_percent)>6) {$total_NI_percent = substr("$total_NI_percent", 0, -1);}
+	$total_UW_percent =	sprintf("%6.2f", ( ($category_totals["UW"] / $totalTOTALleads) * 100)); while(strlen($total_UW_percent)>6) {$total_UW_percent = substr("$total_UW_percent", 0, -1);}
+	$total_SC_percent =	sprintf("%6.2f", ( ($category_totals["SC"] / $totalTOTALleads) * 100)); while(strlen($total_SC_percent)>6) {$total_SC_percent = substr("$total_SC_percent", 0, -1);}
+	$total_COMP_percent =	sprintf("%6.2f", ( ($category_totals["COMP"] / $totalTOTALleads) * 100)); while(strlen($total_COMP_percent)>6) {$total_COMP_percent = substr("$total_COMP_percent", 0, -1);}
+
+	$total_HA_count =	sprintf("%10s", $category_totals["HA"]); while(strlen($total_HA_count)>10) {$total_HA_count = substr("$total_HA_count", 0, -1);}
+	$total_SALE_count =	sprintf("%10s", $category_totals["SALE"]); while(strlen($total_SALE_count)>10) {$total_SALE_count = substr("$total_SALE_count", 0, -1);}
+	$total_DNC_count =	sprintf("%10s", $category_totals["DNC"]); while(strlen($total_DNC_count)>10) {$total_DNC_count = substr("$total_DNC_count", 0, -1);}
+	$total_CC_count =	sprintf("%10s", $category_totals["CC"]); while(strlen($total_CC_count)>10) {$total_CC_count = substr("$total_CC_count", 0, -1);}
+	$total_NI_count =	sprintf("%10s", $category_totals["NI"]); while(strlen($total_NI_count)>10) {$total_NI_count = substr("$total_NI_count", 0, -1);}
+	$total_UW_count =	sprintf("%10s", $category_totals["UW"]); while(strlen($total_UW_count)>10) {$total_UW_count = substr("$total_UW_count", 0, -1);}
+	$total_SC_count =	sprintf("%10s", $category_totals["SC"]); while(strlen($total_SC_count)>10) {$total_SC_count = substr("$total_SC_count", 0, -1);}
+	$total_COMP_count =	sprintf("%10s", $category_totals["COMP"]); while(strlen($total_COMP_count)>10) {$total_COMP_count = substr("$total_COMP_count", 0, -1);}
+
+	$totalOUToutput .= "+------------------------------------------+------------+----------+\n";
+	$totalOUToutput .= "|                                    TOTAL | ".sprintf("%10s", $totalTOTALleads)." |\n";
+	$totalOUToutput .= "+------------------------------------------+------------+\n";
+	$CSV_textSUMMARY .= "\"TOTAL\",\"$totalTOTALleads\"\n";
+
+	$totalOUToutput .= "\n";
+	$totalOUToutput .= "\n";
+	$totalOUToutput .= "---------- TOTAL STATUS FLAGS SUMMARY:    (and % of leads in selected lists)     <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=ALL\">DOWNLOAD FULL REPORT</a>\n";
+	$totalOUToutput .= "+------------------+------------+----------+\n";
+	$totalOUToutput .= "| Human Answer     | $total_HA_count |  $total_HA_percent% |\n";
+	$totalOUToutput .= "| Sale             | $total_SALE_count |  $total_SALE_percent% |\n";
+	$totalOUToutput .= "| DNC              | $total_DNC_count |  $total_DNC_percent% |\n";
+	$totalOUToutput .= "| Customer Contact | $total_CC_count |  $total_CC_percent% |\n";
+	$totalOUToutput .= "| Not Interested   | $total_NI_count |  $total_NI_percent% |\n";
+	$totalOUToutput .= "| Unworkable       | $total_UW_count |  $total_UW_percent% |\n";
+	$totalOUToutput .= "| Sched Callbacks  | $total_SC_count |  $total_SC_percent% |\n";
+	$totalOUToutput .= "| Completed        | $total_COMP_count |  $total_COMP_percent% |\n";
+	$totalOUToutput .= "+------------------+------------+----------+\n";
+	$totalOUToutput .= "\n\n\n";
+
+	$CSV_textSUMMARY .= "\n\"STATUS FLAGS SUMMARY:\"\n";
+	$CSV_textSUMMARY .= "\"Human Answer\",\"$total_HA_count\",\"$total_HA_percent%\"\n";
+	$CSV_textSUMMARY .= "\"Sale\",\"$total_SALE_count\",\"$total_SALE_percent%\"\n";
+	$CSV_textSUMMARY .= "\"DNC\",\"$total_DNC_count\",\"$total_DNC_percent%\"\n";
+	$CSV_textSUMMARY .= "\"Customer Contact\",\"$total_CC_count\",\"$total_CC_percent%\"\n";
+	$CSV_textSUMMARY .= "\"Not Interested\",\"$total_NI_count\",\"$total_NI_percent%\"\n";
+	$CSV_textSUMMARY .= "\"Unworkable\",\"$total_UW_count\",\"$total_UW_percent%\"\n";
+	$CSV_textSUMMARY .= "\"Scheduled Callbacks\",\"$total_SC_count\",\"$total_SC_percent%\"\n";
+	$CSV_textSUMMARY .= "\"Completed\",\"$total_COMP_count\",\"$total_COMP_percent%\"\n\n\n\n";
+
+	$CSV_textALL=$CSV_textSUMMARY.$CSV_textALL;
 
 	if ($report_display_type=="HTML")
 		{
@@ -656,7 +751,7 @@ else
 		}
 	else
 		{
-		$MAIN.="$OUToutput";
+		$MAIN.="$totalOUToutput$OUToutput";
 		}
 
 
@@ -670,7 +765,7 @@ else
 
 	}
 
-	if ($file_download>0) {
+	if ($file_download>0 || $file_download=="ALL") {
 		$FILE_TIME = date("Ymd-His");
 		$CSVfilename = "AST_LISTS_stats_$US$FILE_TIME.csv";
 		$CSV_var="CSV_text".$file_download;
