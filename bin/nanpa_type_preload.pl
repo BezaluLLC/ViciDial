@@ -271,7 +271,7 @@ if (!%six_digit_wireless_hash) {&CompilePrefixHashes;}
 @phones=@MT;
 
 $excludeSQL='';
-if ( (length($exclude_field) > 1) && (length($exclude_value) > 1) ) 
+if ( (length($exclude_field) > 1) && (length($exclude_value) > 0) ) 
 	{
 	if (length($list_idSQL) > 5)
 		{
@@ -283,7 +283,7 @@ if ( (length($exclude_field) > 1) && (length($exclude_value) > 1) )
 		}
 	}
 
-$stmtA = "SELECT lead_id,phone_number from vicidial_list $list_idSQL;";
+$stmtA = "SELECT lead_id,phone_number from vicidial_list $list_idSQL $excludeSQL;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;

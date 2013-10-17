@@ -302,7 +302,7 @@ if ($output_to_db)
 @phones=@MT;
 
 $excludeSQL='';
-if ( (length($exclude_field) > 1) && (length($exclude_value) > 1) ) 
+if ( (length($exclude_field) > 1) && (length($exclude_value) > 0) ) 
 	{
 	if (length($list_idSQL) > 5)
 		{
