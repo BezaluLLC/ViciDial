@@ -9,10 +9,11 @@
 # CHANGELOG:
 # 130919-1503 - First build of script
 # 131005-2035 - Added exclusion options
+# 131019-1112 - Added help text and several small tweaks
 #
 
-$version = '2.8-2';
-$build = '131005-2035';
+$version = '2.8-3';
+$build = '131019-1112';
 $startMS = microtime();
 
 require("dbconnect_mysqli.php");
@@ -318,17 +319,26 @@ function ShowPastProcesses(limit) {
 		}
 	}
 }
+function openNewWindow(url) 
+	{
+	window.open (url,"",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');
+	}
+
 </script>
 <?php
 echo "</head>\n";
 $ADMIN=$PHP_SELF;
 $short_header=1;
 
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
+
 echo "\n<BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0 onLoad='RefreshNANPA(\"$iframe_url\"); StartRefresh()'>\n";
 
 require("admin_header.php");
 
 echo "<form action='$PHP_SELF' method='get' enctype='multipart/form-data'>";
+echo "<BR> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"$PHP_SELF\">CLICK HERE TO REFRESH THE PAGE</a>\n";
 echo "<BR>	<table align=left width='770' border=1 cellpadding=0 cellspacing=0 bgcolor=#D9E6FE>";
 
 if (mysqli_num_rows($schedule_rslt)>0 || (mysqli_num_rows($running_rslt)>0)) {
@@ -336,7 +346,7 @@ if (mysqli_num_rows($schedule_rslt)>0 || (mysqli_num_rows($running_rslt)>0)) {
 	if (mysqli_num_rows($schedule_rslt)>0) {
 		echo "<tr><td>";
 		echo "<table width='770' cellpadding=5 cellspacing=0>";
-		echo "<tr><th colspan='5' bgcolor='#015B91'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>Your scheduled NANPA scrubs</th></tr>";
+		echo "<tr><th colspan='5' bgcolor='#015B91'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>Your scheduled NANPA scrubs &nbsp; $NWB#nanpa-running$NWE</th></tr>";
 		echo "<tr>";
 		echo "<td align='left' bgcolor='#015B91' width='150'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>Date/time</th>";
 		echo "<td align='left' bgcolor='#015B91' width='300'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>Lists</th>";
@@ -420,7 +430,7 @@ else
 	echo "<tr><td>";
 
 	echo "<table width='770' cellpadding=5 cellspacing=0>";
-	echo "<tr><th colspan='5' bgcolor='#015B91'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>NANPA scrub scheduler</th></tr>";
+	echo "<tr><th colspan='5' bgcolor='#015B91'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>NANPA scrub scheduler &nbsp; $NWB#nanpa-settings$NWE</th></tr>";
 	echo "<tr>";
 	echo "<td align='left' valign='top' rowspan='4'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Inactive lists:<BR/>\n";
 
@@ -443,7 +453,10 @@ else
 	while ($fieldinfo=mysqli_fetch_field($rslt)) 
 		{
 		$fieldname=$fieldinfo->name;
-		echo "<option value='$fieldname'>$fieldname</option>\n";
+		if (!preg_match("/lead_id|list_id|status|gmt_offset_now|entry_date|modify_date|gender|entry_list_id|date_of_birth|called_since_last_reset|called_count/",$fieldname))
+			{
+			echo "<option value='$fieldname'>$fieldname</option>\n";
+			}
 		}
 	echo "</select></font></td>";
 
@@ -498,7 +511,7 @@ else
 echo "<tr><td>";
 echo "<table width='770' cellpadding=0 cellspacing=0 bgcolor='#FFFFFF'>";
 echo "<tr><td align='center'>";
-echo "<span id='past_NANPA_scrubs'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=1><a name='past_scrubs' href='#past_scrubs' onClick='ShowPastProcesses(10)'>View past scrubs</font></span>";
+echo "<span id='past_NANPA_scrubs'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=1><a name='past_scrubs' href='#past_scrubs' onClick='ShowPastProcesses(10)'>View past scrubs &nbsp; $NWB#nanpa-log$NWE</font></span>";
 echo "</td></tr>";
 echo "</table>";
 echo "</td></tr>";

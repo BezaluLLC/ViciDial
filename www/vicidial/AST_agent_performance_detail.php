@@ -38,6 +38,7 @@
 # 130829-2012 - Changed to mysqli PHP functions
 # 131002-2015 - Added user group to report output
 # 131010-1930 - Expanded user group column, added most recent user group
+# 131019-1111 - Added user select
 #
 
 $startMS = microtime();
@@ -308,9 +309,9 @@ $i=0;
 while ($i < $users_to_print)
 	{
 	$row=mysqli_fetch_row($rslt);
-	$users[$i]=$row[0];
+	$user_list[$i]=$row[0];
 	$user_names[$i]=$row[1];
-	if ($all_users) {$user[$i]=$row[0];}
+	if ($all_users) {$user_list[$i]=$row[0];}
 	$i++;
 	}
 
@@ -355,13 +356,31 @@ else
 	$user_group_SQL = "and vicidial_users.user_group IN($user_group_SQL)";
 	}
 
+$i=0;
+$user_string='|';
+$user_ct = count($users);
+while($i < $user_ct)
+	{
+	$user_string .= "$users[$i]|";
+	$user_SQL .= "'$users[$i]',";
+	$userQS .= "&users[]=$users[$i]";
+	$i++;
+	}
+if ( (preg_match('/\-\-ALL\-\-/',$user_string) ) or ($user_ct < 1) )
+	{$user_SQL = "";}
+else
+	{
+	$user_SQL = preg_replace('/,$/i', '',$user_SQL);
+	$user_agent_log_SQL = "and vicidial_agent_log.user IN($user_SQL)";
+	$user_SQL = "and vicidial_users.user IN($user_SQL)";
+	}
 
 
 if ($DB) {$HTML_text.="$user_group_string|$user_group_ct|$user_groupQS|$i<BR>";}
 
 $LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&DB=$DB";
 
-$NWB = " &nbsp; <a href=\"javascript:openNewWindow('/vicidial/admin.php?ADD=99999";
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
 $HTML_head.="<HTML>\n";
@@ -461,8 +480,8 @@ else
 $o=0;
 while ($users_to_print > $o)
 	{
-	if  (preg_match("/$users[$o]\|/i",$users_string)) {$HTML_text.="<option selected value=\"$users[$o]\">$users[$o] - $user_names[$o]</option>\n";}
-	  else {$HTML_text.="<option value=\"$users[$o]\">$users[$o] - $user_names[$o]</option>\n";}
+	if  (preg_match("/$user_list[$o]\|/i",$users_string)) {$HTML_text.="<option selected value=\"$user_list[$o]\">$user_list[$o] - $user_names[$o]</option>\n";}
+	  else {$HTML_text.="<option value=\"$user_list[$o]\">$user_list[$o] - $user_names[$o]</option>\n";}
 	$o++;
 	}
 $HTML_text.="</SELECT>\n";
@@ -549,14 +568,19 @@ $usersARY[0]='';
 $user_namesARY[0]='';
 $k=0;
 
-$recent_UG_stmt="select max(event_time), user, user_group from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_agent_log_SQL group by user";
+$recent_UG_stmt="select max(agent_log_id), user from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_agent_log_SQL $user_agent_log_SQL group by user";
 if ($DB) {$HTML_text.="$recent_UG_stmt\n";}
 $recent_UG_rslt=mysql_to_mysqli($recent_UG_stmt, $link);
 while ($UG_row=mysqli_fetch_row($recent_UG_rslt)) {
-	$recent_user_groups[$UG_row[1]]=$UG_row[2];
+	$agent_log_id=$UG_row[0];
+	$al_stmt="select user_group from vicidial_agent_log where agent_log_id='$agent_log_id'";
+	if ($DB) {$HTML_text.="$al_stmt\n";}
+	$al_rslt=mysql_to_mysqli($al_stmt, $link);
+	$Ugrp_row=mysqli_fetch_row($al_rslt);
+	$recent_user_groups[$UG_row[1]]=$Ugrp_row[0];
 }
 
-$stmt="select count(*) as calls,sum(talk_sec) as talk,full_name,vicidial_users.user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec), vicidial_users.user_group from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_SQL group by user,full_name,user_group,status order by full_name,user,status desc limit 500000;";
+$stmt="select count(*) as calls,sum(talk_sec) as talk,full_name,vicidial_users.user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec), vicidial_users.user_group from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_SQL $user_SQL group by user,full_name,user_group,status order by full_name,user,status desc limit 500000;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
 $rows_to_print = mysqli_num_rows($rslt);
@@ -657,13 +681,13 @@ while ($m < $k)
 	$Suser=$usersARY[$m];
 
 	$Slast_user_group=$recent_user_groups[$Suser];
-	$recent_UG_stmt="select max(event_time) as most_recent_event, user_group from vicidial_agent_log where user='$Suser' and event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_agent_log_SQL group by user_group order by most_recent_event desc limit 1";
-	if ($DB) {$HTML_text.="$recent_UG_stmt\n";}
-	$recent_UG_rslt=mysql_to_mysqli($recent_UG_stmt, $link);
-	while ($UG_row=mysqli_fetch_row($recent_UG_rslt)) {
-		$Slast_user_group=$UG_row[1];
-		$recent_user_groups[$Suser]=$UG_row[1];
-	}
+#	$recent_UG_stmt="select max(event_time) as most_recent_event, user_group from vicidial_agent_log where user='$Suser' and event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_agent_log_SQL group by user_group order by most_recent_event desc limit 1";
+#	if ($DB) {$HTML_text.="$recent_UG_stmt\n";}
+#	$recent_UG_rslt=mysql_to_mysqli($recent_UG_stmt, $link);
+#	while ($UG_row=mysqli_fetch_row($recent_UG_rslt)) {
+#		$Slast_user_group=$UG_row[1];
+#		$recent_user_groups[$Suser]=$UG_row[1];
+#	}
 
 	$Sfull_name=$user_namesARY[$m];
 	$Suser_group=$user_groupsARY[$m];
@@ -1153,7 +1177,7 @@ $TOTAL_graph=$graph_header."<th class='thgraph' scope='col'>TOTAL </th></tr>";
 $NONPAUSE_graph=$graph_header."<th class='thgraph' scope='col'>NONPAUSE</th></tr>";
 $PAUSE_graph=$graph_header."<th class='thgraph' scope='col'>PAUSE</th></tr>";
 
-$stmt="select full_name,vicidial_users.user,sum(pause_sec),sub_status,sum(wait_sec + talk_sec + dispo_sec), vicidial_users.user_group from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 $group_SQL $user_group_SQL group by user,full_name,sub_status order by user,full_name,sub_status desc limit 100000;";
+$stmt="select full_name,vicidial_users.user,sum(pause_sec),sub_status,sum(wait_sec + talk_sec + dispo_sec), vicidial_users.user_group from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 $group_SQL $user_group_SQL $user_SQL group by user,full_name,sub_status order by user,full_name,sub_status desc limit 100000;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
 $subs_to_print = mysqli_num_rows($rslt);

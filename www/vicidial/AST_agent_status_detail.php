@@ -891,7 +891,7 @@ else
 	echo $ASCII_text;
 	}
 
-$NWB = " &nbsp; <a href=\"javascript:openNewWindow('/vicidial/admin.php?ADD=99999";
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";

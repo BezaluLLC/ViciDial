@@ -192,7 +192,7 @@ if ( ($action == "CHANGE_TERRITORY_OWNER_ACCOUNT") and ($enable_vtiger_integrati
 	echo "$users_list";
 	echo "</select></td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=right>Update List Owner: </td><td align=left><select size=1 name=vl_owner>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Update ViciDial List Owner: </td><td align=left><select size=1 name=vl_owner>\n";
 	echo "<option SELECTED>YES</option>\n";
 	echo "<option>NO</option>\n";
 	echo "</select></td></tr>\n";
@@ -349,7 +349,7 @@ if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
 $admDIR = "$HTTPprotocol$server_name:$server_port$script_name";
 $admDIR = preg_replace('/user_territories\.php/i', '',$admDIR);
 $admSCR = 'admin.php';
-$NWB = " &nbsp; <a href=\"javascript:openNewWindow('$admDIR$admSCR?ADD=99999";
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
 $secX = date("U");
@@ -404,7 +404,7 @@ if ( ($action == "CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integration > 0) 
 	echo "$users_list";
 	echo "</select></td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=right>Update List Owner: </td><td align=left><select size=1 name=vl_owner>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Update ViciDial List Owner: </td><td align=left><select size=1 name=vl_owner>\n";
 	echo "<option SELECTED>YES</option>\n";
 	echo "<option>NO</option>\n";
 	echo "</select></td></tr>\n";

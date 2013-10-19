@@ -56,6 +56,8 @@ if (isset($_GET["group"]))					{$group=$_GET["group"];}
 	elseif (isset($_POST["group"]))			{$group=$_POST["group"];}
 if (isset($_GET["user_group"]))				{$user_group=$_GET["user_group"];}
 	elseif (isset($_POST["user_group"]))	{$user_group=$_POST["user_group"];}
+if (isset($_GET["users"]))					{$users=$_GET["users"];}
+	elseif (isset($_POST["users"]))			{$users=$_POST["users"];}
 if (isset($_GET["shift"]))					{$shift=$_GET["shift"];}
 	elseif (isset($_POST["shift"]))			{$shift=$_POST["shift"];}
 if (isset($_GET["stage"]))					{$stage=$_GET["stage"];}
@@ -258,6 +260,15 @@ while($i < $group_ct)
 	$i++;
 	}
 
+$i=0;
+$users_string='|';
+$users_ct = count($users);
+while($i < $users_ct)
+	{
+	$users_string .= "$users[$i]|";
+	$i++;
+	}
+
 $stmt="select campaign_id from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
@@ -288,6 +299,21 @@ while ($i < $user_groups_to_print)
 	if ($all_user_groups) {$user_group[$i]=$row[0];}
 	$i++;
 	}
+
+$stmt="select user, full_name from vicidial_users $whereLOGadmin_viewable_groupsSQL order by user";
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($DB) {$HTML_text.="$stmt\n";}
+$users_to_print = mysqli_num_rows($rslt);
+$i=0;
+while ($i < $users_to_print)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$user_list[$i]=$row[0];
+	$user_names[$i]=$row[1];
+	if ($all_users) {$user_list[$i]=$row[0];}
+	$i++;
+	}
+
 
 $i=0;
 $group_string='|';
@@ -329,11 +355,31 @@ else
 	$user_group_SQL = "and vicidial_users.user_group IN($user_group_SQL)";
 	}
 
+$i=0;
+$user_string='|';
+$user_ct = count($users);
+while($i < $user_ct)
+	{
+	$user_string .= "$users[$i]|";
+	$user_SQL .= "'$users[$i]',";
+	$userQS .= "&users[]=$users[$i]";
+	$i++;
+	}
+if ( (preg_match('/\-\-ALL\-\-/',$user_string) ) or ($user_ct < 1) )
+	{$user_SQL = "";}
+else
+	{
+	$user_SQL = preg_replace('/,$/i', '',$user_SQL);
+	$user_agent_log_SQL = "and vicidial_agent_log.user IN($user_SQL)";
+	$user_SQL = "and vicidial_users.user IN($user_SQL)";
+	}
+
+
 if ($DB) {$HTML_text.="$user_group_string|$user_group_ct|$user_groupQS|$i<BR>";}
 
 $LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&DB=$DB";
 
-$NWB = " &nbsp; <a href=\"javascript:openNewWindow('/vicidial/admin.php?ADD=99999";
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
 $HTML_head.="<HTML>\n";
@@ -420,6 +466,21 @@ while ($user_groups_to_print > $o)
 	{
 	if  (preg_match("/$user_groups[$o]\|/i",$user_group_string)) {$HTML_text.="<option selected value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
 	  else {$HTML_text.="<option value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
+	$o++;
+	}
+$HTML_text.="</SELECT>\n";
+$HTML_text.="</TD><TD VALIGN=TOP>Users: <BR>";
+$HTML_text.="<SELECT SIZE=5 NAME=users[] multiple>\n";
+
+if  (preg_match('/\-\-ALL\-\-/',$users_string))
+	{$HTML_text.="<option value=\"--ALL--\" selected>-- ALL USERS --</option>\n";}
+else
+	{$HTML_text.="<option value=\"--ALL--\">-- ALL USERS --</option>\n";}
+$o=0;
+while ($users_to_print > $o)
+	{
+	if  (preg_match("/$user_list[$o]\|/i",$users_string)) {$HTML_text.="<option selected value=\"$user_list[$o]\">$user_list[$o] - $user_names[$o]</option>\n";}
+	  else {$HTML_text.="<option value=\"$user_list[$o]\">$user_list[$o] - $user_names[$o]</option>\n";}
 	$o++;
 	}
 $HTML_text.="</SELECT>\n";
@@ -522,14 +583,19 @@ $usersARY[0]='';
 $user_namesARY[0]='';
 $k=0;
 
-$recent_UG_stmt="select max(event_time), user, user_group from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_agent_log_SQL group by user";
+$recent_UG_stmt="select max(agent_log_id), user from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_agent_log_SQL $user_agent_log_SQL group by user";
 if ($DB) {$HTML_text.="$recent_UG_stmt\n";}
 $recent_UG_rslt=mysql_to_mysqli($recent_UG_stmt, $link);
 while ($UG_row=mysqli_fetch_row($recent_UG_rslt)) {
-	$recent_user_groups[$UG_row[1]]=$UG_row[2];
+	$agent_log_id=$UG_row[0];
+	$al_stmt="select user_group from vicidial_agent_log where agent_log_id='$agent_log_id'";
+	if ($DB) {$HTML_text.="$al_stmt\n";}
+	$al_rslt=mysql_to_mysqli($al_stmt, $link);
+	$Ugrp_row=mysqli_fetch_row($al_rslt);
+	$recent_user_groups[$UG_row[1]]=$Ugrp_row[0];
 }
 
-$stmt="select count(*) as calls,sum(talk_sec) as talk,full_name,vicidial_users.user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec), vicidial_users.user_group from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_SQL group by user,full_name,user_group,status order by full_name,user,status desc limit 500000;";
+$stmt="select count(*) as calls,sum(talk_sec) as talk,full_name,vicidial_users.user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec), vicidial_users.user_group from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_SQL $user_SQL group by user,full_name,user_group,status order by full_name,user,status desc limit 500000;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
 $rows_to_print = mysqli_num_rows($rslt);
@@ -585,7 +651,7 @@ while ($i < $rows_to_print)
 	$user_group[$i] =	$row[9];
 	$customer_sec[$i] =	($talk_sec[$i] - $dead_sec[$i]);
 	
-	if (preg_match("/\|$row[7]\|/i", $sale_pattern_match)) {
+	if (preg_match("/\|$status[$i]\|/i", $sale_pattern_match)) {
 		$sale_counts[$row[3]]+=$row[0]; 
 	}
 
@@ -596,15 +662,18 @@ while ($i < $rows_to_print)
 		{$customer_sec[$i]=0;}
 	if ( (!preg_match("/\-$status[$i]\-/i", $statuses)) and (strlen($status[$i])>0) )
 		{
-		$statusesTXT = sprintf("%8s", $status[$i]);
-		$statusesHEAD .= "----------+";
-		$statusesHTML .= " $statusesTXT |";
+		if (preg_match("/\|$status[$i]\|/i", $sale_pattern_match)) 
+			{
+			$statusesTXT = sprintf("%8s", $status[$i]);
+			$statusesHEAD .= "----------+";
+			$statusesHTML .= " $statusesTXT |";
 
-		$CSV_header.=",\"$status[$i]\"";
+			$CSV_header.=",\"$status[$i]\"";
+			}
+			$statuses .= "$status[$i]-";
+			$statusesARY[$j] = $status[$i];
+			$j++;
 
-		$statuses .= "$status[$i]-";
-		$statusesARY[$j] = $status[$i];
-		$j++;
 		}
 	if (!preg_match("/\-$user[$i]\-/i", $users))
 		{
@@ -634,13 +703,13 @@ while ($m < $k)
 	$Suser=$usersARY[$m];
 
 	$Slast_user_group=$recent_user_groups[$Suser];
-	$recent_UG_stmt="select max(event_time) as most_recent_event, user_group from vicidial_agent_log where user='$Suser' and event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_agent_log_SQL group by user_group order by most_recent_event desc limit 1";
-	if ($DB) {$HTML_text.="$recent_UG_stmt\n";}
-	$recent_UG_rslt=mysql_to_mysqli($recent_UG_stmt, $link);
-	while ($UG_row=mysqli_fetch_row($recent_UG_rslt)) {
-		$Slast_user_group=$UG_row[1];
-		$recent_user_groups[$Suser]=$UG_row[1];
-	}
+#	$recent_UG_stmt="select max(event_time) as most_recent_event, user_group from vicidial_agent_log where user='$Suser' and event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_agent_log_SQL group by user_group order by most_recent_event desc limit 1";
+#	if ($DB) {$HTML_text.="$recent_UG_stmt\n";}
+#	$recent_UG_rslt=mysql_to_mysqli($recent_UG_stmt, $link);
+#	while ($UG_row=mysqli_fetch_row($recent_UG_rslt)) {
+#		$Slast_user_group=$UG_row[1];
+#		$recent_user_groups[$Suser]=$UG_row[1];
+#	}
 
 	$Sfull_name=$user_namesARY[$m];
 	$Suser_group=$user_groupsARY[$m];
@@ -680,19 +749,23 @@ while ($m < $k)
 				$Sdispo_sec =	($Sdispo_sec + $dispo_sec[$i]);
 				$Sdead_sec =	($Sdead_sec + $dead_sec[$i]);
 				$Scustomer_sec =	($Scustomer_sec + $customer_sec[$i]);
-				$SstatusTXT = sprintf("%8s", $calls[$i]);
-				$SstatusesHTML .= " $SstatusTXT |";
+
+				if (preg_match("/\|$Sstatus\|/i", $sale_pattern_match)) 
+					{
+					$SstatusTXT = sprintf("%8s", $calls[$i]);
+					$SstatusesHTML .= " $SstatusTXT |";
+					$CSVstatuses.=",\"$calls[$i]\"";
+					}
 
 				if ($calls[$i]>$$max_varname) {$$max_varname=$calls[$i];}
 				$graph_stats[$m][(15+$n)]=($calls[$i]+0);					
 				
-				$CSVstatuses.=",\"$calls[$i]\"";
 
 				$status_found++;
 				}
 			$i++;
 			}
-		if ($status_found < 1)
+		if ($status_found < 1 and preg_match("/\|$Sstatus\|/i", $sale_pattern_match))
 			{
 			$SstatusesHTML .= "        0 |";
 			$CSVstatuses.=",\"0\"";
@@ -887,17 +960,20 @@ while ($n < $j)
 		$i++;
 		}
 	### END loop through each stat line ###
-	if ($status_found < 1)
+	if (preg_match("/\|$Sstatus\|/i", $sale_pattern_match)) 
 		{
-		$SUMstatusesHTML .= "        0 |";
-		$$total_var=0;
-		}
-	else
-		{
-		$SUMstatusTXT = sprintf("%8s", $Scalls);
-		$SUMstatusesHTML .= " $SUMstatusTXT |";
-		$CSVSUMstatuses.=",\"$Scalls\"";
-		$$total_var=$Scalls;
+		if ($status_found < 1)
+			{
+			$SUMstatusesHTML .= "        0 |";
+			$$total_var=0;
+			}
+		else
+			{
+			$SUMstatusTXT = sprintf("%8s", $Scalls);
+			$SUMstatusesHTML .= " $SUMstatusTXT |";
+			$CSVSUMstatuses.=",\"$Scalls\"";
+			$$total_var=$Scalls;
+			}
 		}
 	$n++;
 	}
@@ -1070,7 +1146,7 @@ $GRAPH3="<tr><td colspan='".(14+count($statusesARY))."' class='graph_span_cell'>
 $GRAPH_text.=$JS_text.$GRAPH.$GRAPH2.$GRAPH3;
 
 
-$CSV_total=preg_replace('/\s/', '', "\"\",\"\",\"TOTALS\",\"AGENTS:$TOT_AGENTS\",\"$TOTcalls\",\"$TOTtime_MS\",\"$TOTtotPAUSE_MS\",\"$TOTavgPAUSE_MS\",\"$TOTtotWAIT_MS\",\"$TOTavgWAIT_MS\",\"$TOTtotTALK_MS\",\"$TOTavgTALK_MS\",\"$TOTtotDISPO_MS\",\"$TOTavgDISPO_MS\",\"$TOTtotDEAD_MS\",\"$TOTavgDEAD_MS\",\"$TOTtotCUSTOMER_MS\",\"$TOTavgCUSTOMER_MS\"$CSVSUMstatuses");
+$CSV_total=preg_replace('/\s/', '', "\"\",\"\",\"TOTALS\",\"AGENTS:$TOT_AGENTS\",\"$STOTsales_per_call\",\"$STOTsales_per_hour\",\"$Sgrand_total_sales\",\"$TOTcalls\",\"$TOTtime_MS\",\"$TOTtotPAUSE_MS\",\"$TOTavgPAUSE_MS\",\"$TOTtotWAIT_MS\",\"$TOTavgWAIT_MS\",\"$TOTtotTALK_MS\",\"$TOTavgTALK_MS\",\"$TOTtotDISPO_MS\",\"$TOTavgDISPO_MS\",\"$TOTtotDEAD_MS\",\"$TOTavgDEAD_MS\",\"$TOTtotCUSTOMER_MS\",\"$TOTavgCUSTOMER_MS\"$CSVSUMstatuses");
 
 if ($file_download == 1)
 	{
@@ -1146,7 +1222,7 @@ $TOTAL_graph=$graph_header."<th class='thgraph' scope='col'>TOTAL </th></tr>";
 $NONPAUSE_graph=$graph_header."<th class='thgraph' scope='col'>NONPAUSE</th></tr>";
 $PAUSE_graph=$graph_header."<th class='thgraph' scope='col'>PAUSE</th></tr>";
 
-$stmt="select full_name,vicidial_users.user,sum(pause_sec),sub_status,sum(wait_sec + talk_sec + dispo_sec), vicidial_users.user_group from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 $group_SQL $user_group_SQL group by user,full_name,sub_status order by user,full_name,sub_status desc limit 100000;";
+$stmt="select full_name,vicidial_users.user,sum(pause_sec),sub_status,sum(wait_sec + talk_sec + dispo_sec), vicidial_users.user_group from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 $group_SQL $user_group_SQL $user_SQL group by user,full_name,sub_status order by user,full_name,sub_status desc limit 100000;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
 $subs_to_print = mysqli_num_rows($rslt);

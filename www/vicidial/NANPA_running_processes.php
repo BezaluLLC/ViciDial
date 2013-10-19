@@ -137,12 +137,12 @@ for ($i=0; $i<$oc_ct; $i++)
 $oc_SQL=substr($oc_SQL, 0, -1);
 
 if (!$show_history) {
-	$process_stmt="select * from vicidial_nanpa_filter_log where output_code in ($oc_SQL) and status!='COMPLETED'";
+	$process_stmt="SELECT output_code,status,server_ip,list_id,start_time,update_time,user,leads_count,filter_count,status_line,script_output from vicidial_nanpa_filter_log where output_code in ($oc_SQL) and status!='COMPLETED'";
 	$process_rslt=mysqli_query($link, $process_stmt);
 	$report_title="Currently running NANPA scrubs";
 } else {
 	if (!$process_limit) {$process_limit=10;}
-	$process_stmt="SELECT * from vicidial_nanpa_filter_log where user='$PHP_AUTH_USER' and status='COMPLETED' order by start_time desc limit $process_limit";
+	$process_stmt="SELECT output_code,status,server_ip,list_id,start_time,update_time,user,leads_count,filter_count,status_line,script_output from vicidial_nanpa_filter_log where user='$PHP_AUTH_USER' and status='COMPLETED' order by start_time desc limit $process_limit";
 
 	$process_rslt=mysqli_query($link, $process_stmt);
 	$report_title="Past NANPA scrubs for user $PHP_AUTH_USER";
@@ -178,7 +178,7 @@ if (mysqli_num_rows($process_rslt)>0) {
 		echo "<td align='left' bgcolor='$bgcolor' width='100'><FONT FACE=\"ARIAL,HELVETICA\" COLOR='#000000' size='1'>$row[update_time]</th>";
 		echo "<td align='left' bgcolor='$bgcolor' width='80'><FONT FACE=\"ARIAL,HELVETICA\" COLOR='#000000' size='1'>$row[leads_count]</th>";
 		echo "<td align='left' bgcolor='$bgcolor' width='80'><FONT FACE=\"ARIAL,HELVETICA\" COLOR='#000000' size='1'>$row[filter_count]</th>";
-		echo "<td align='left' bgcolor='$bgcolor' width='180'><FONT FACE=\"ARIAL,HELVETICA\" COLOR='#000000' size='1'>$row[status_line]</th>";
+		echo "<td align='left' bgcolor='$bgcolor' width='180'><FONT FACE=\"ARIAL,HELVETICA\" COLOR='#000000' size='1'>List: $row[list_id]\n<BR>$row[status_line]</th>";
 		echo "<td align='left' bgcolor='$bgcolor' width='170'><FONT FACE=\"ARIAL,HELVETICA\" COLOR='#000000' size='1'>$row[script_output]</th>";
 		echo "</tr>";
 	}

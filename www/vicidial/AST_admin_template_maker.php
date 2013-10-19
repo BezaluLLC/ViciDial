@@ -206,7 +206,7 @@ $admDIR = "$HTTPprotocol$server_name$script_name";
 $admDIR = preg_replace('/AST_admin_template_maker\.php/i', '',$admDIR);
 $admDIR = "/vicidial/";
 $admSCR = 'admin.php';
-$NWB = " &nbsp; <a href=\"javascript:openNewWindow('$admDIR$admSCR?ADD=99999";
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
 ?>
@@ -389,10 +389,10 @@ if ($success_msg)
 	<tr valign="top">
 		<td align="left" width='50%'>
 		<form id="listloader_file_primer" action="leadloader_template_display.php?form_action=prime_file" method="post" enctype="multipart/form-data" target="file_holder">
-			<font class="standard">Sample file fitting template:<BR><font size="-2">(needed for field assignation)</font></font><?php echo "$NWB#vicidial_template_maker-create_template$NWE"; ?><BR><BR><input type=file name="sample_template_file" value="<?php echo $sample_template_file; ?>" onChange="loadIFrame('prime_file', this.value); this.form.submit();">
+			<font class="standard">Sample file fitting template:<BR><font size="-2">(needed for field assignation)</font></font><?php echo "$NWB#template_maker-create_template$NWE"; ?><BR><BR><input type=file name="sample_template_file" value="<?php echo $sample_template_file; ?>" onChange="loadIFrame('prime_file', this.value); this.form.submit();">
 		</form>
 		</td>
-		<td align="left" width='50%'><form action="<?php echo $PHP_SELF; ?>" method="post"><font class="standard">Select template to delete:</font><?php echo "$NWB#vicidial_template_maker-delete_template$NWE"; ?><BR><select name="template_id" onChange="loadIFrame('hide_new_template_form', '')">
+		<td align="left" width='50%'><form action="<?php echo $PHP_SELF; ?>" method="post"><font class="standard">Select template to delete:</font><?php echo "$NWB#template_maker-delete_template$NWE"; ?><BR><select name="template_id" onChange="loadIFrame('hide_new_template_form', '')">
 <?php
 $template_stmt="select template_id, template_name from vicidial_custom_leadloader_templates order by template_id asc";
 $template_rslt=mysql_to_mysqli($template_stmt, $link);
@@ -424,15 +424,15 @@ if (mysqli_num_rows($template_rslt)>0) {
 	</tr>
 	<tr bgcolor="#D9E6FE">
 		<td align="right" width='25%'><font class="standard">Template ID:</font></td>
-		<td align="left" width='75%'><input type='text' name='template_id' size='15' maxlength='20'><?php echo "$NWB#vicidial_template_maker-template_id$NWE"; ?></td>
+		<td align="left" width='75%'><input type='text' name='template_id' size='15' maxlength='20'><?php echo "$NWB#template_maker-template_id$NWE"; ?></td>
 	</tr>
 	<tr bgcolor="#D9E6FE">
 		<td align="right" width='25%'><font class="standard">Template Name:</font></td>
-		<td align="left" width='75%'><input type='text' name='template_name' size='15' maxlength='30'><?php echo "$NWB#vicidial_template_maker-template_name$NWE"; ?></td>
+		<td align="left" width='75%'><input type='text' name='template_name' size='15' maxlength='30'><?php echo "$NWB#template_maker-template_name$NWE"; ?></td>
 	</tr>
 	<tr bgcolor="#D9E6FE">
 		<td align="right" width='25%'><font class="standard">Template Description:</font></td>
-		<td align="left" width='75%'><input type='text' name='template_description' size='50' maxlength='255'><?php echo "$NWB#vicidial_template_maker-template_description$NWE"; ?></td>
+		<td align="left" width='75%'><input type='text' name='template_description' size='50' maxlength='255'><?php echo "$NWB#template_maker-template_description$NWE"; ?></td>
 	</tr>
 	<tr bgcolor="#D9E6FE">
 		<td width='25%' align="right"><font class="standard">List ID template will load into:</font></td>
@@ -452,7 +452,7 @@ if (mysqli_num_rows($template_rslt)>0) {
 				$count++;
 				}
 			?>
-			</select></font><?php echo "$NWB#vicidial_template_maker-list_id$NWE"; ?>
+			</select></font><?php echo "$NWB#template_maker-list_id$NWE"; ?>
 		</td>
 	</tr>
 	<tr bgcolor="#D9E6FE">
@@ -474,7 +474,7 @@ if (mysqli_num_rows($template_rslt)>0) {
 				$count++;
 				}
 			?>
-			</select></font><?php echo "$NWB#vicidial_template_maker-list_id$NWE"; ?>
+			</select></font><?php echo "$NWB#template_maker-list_id$NWE"; ?>
 		</span>
 		</td>
 	</tr>
@@ -484,7 +484,7 @@ if (mysqli_num_rows($template_rslt)>0) {
 <tr bgcolor="#D9E6FE"><td align="center" colspan=2>
 <table border=0 cellpadding=3 cellspacing=1 width="100%" align="center">
 	<tr>
-		<th colspan="2" bgcolor="#330099"><font class="standard" color="white">Assign columns to file fields<BR/><font size='-2'>(selecting a different list will reset columns)</font></font><?php echo "$NWB#vicidial_template_maker-assign_columns$NWE"; ?></th>
+		<th colspan="2" bgcolor="#330099"><font class="standard" color="white">Assign columns to file fields<BR/><font size='-2'>(selecting a different list will reset columns)</font></font><?php echo "$NWB#template_maker-assign_columns$NWE"; ?></th>
 	</tr>
 	<tr valign="top">
 		<td border="1" align="center" bgcolor="#D9E6FE" width="50%"><font class="standard">Standard Field</font></td>

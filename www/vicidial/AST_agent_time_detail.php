@@ -1305,7 +1305,7 @@ if ($file_download > 0)
 	exit;
 	}
 
-$NWB = " &nbsp; <a href=\"javascript:openNewWindow('/vicidial/admin.php?ADD=99999";
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
 ############################################################################

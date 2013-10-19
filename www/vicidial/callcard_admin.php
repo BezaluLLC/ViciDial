@@ -302,7 +302,7 @@ if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
 $admDIR = "$HTTPprotocol$server_name:$server_port$script_name";
 $admDIR = preg_replace('/callcard_admin\.php/i', '',$admDIR);
 $admSCR = 'admin.php';
-$NWB = " &nbsp; <a href=\"javascript:openNewWindow('$admDIR$admSCR?ADD=99999";
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
 $secX = date("U");

@@ -276,7 +276,7 @@ $admDIR = "$HTTPprotocol$server_name$script_name";
 $admDIR = preg_replace('/admin_listloader_fourth_gen\.php/i', '',$admDIR);
 $admDIR = "/vicidial/";
 $admSCR = 'admin.php';
-$NWB = " &nbsp; <a href=\"javascript:openNewWindow('$admDIR$admSCR?ADD=99999";
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
 $secX = date("U");

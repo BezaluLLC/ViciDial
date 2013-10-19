@@ -232,7 +232,7 @@ function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$met
 	$link_text='';
 	$max_count=0;
 	$i=0;
-	$NWB = "$download_link &nbsp; <a href=\"javascript:openNewWindow('$PHP_SELF?ADD=99999";
+	$NWB = "$download_link &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
 	$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
 
