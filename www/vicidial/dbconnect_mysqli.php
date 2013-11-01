@@ -9,6 +9,7 @@
 # CHANGES:
 # 130328-0022 - Converted ereg to preg functions
 # 130802-0957 - Changed to PHP mysqli functions, added 
+# 131101-0713 - Fixed slave server setting
 #
 
 if ( file_exists("/etc/astguiclient.conf") )
@@ -52,6 +53,8 @@ else
 	$WeBServeRRooT = '/usr/local/apache2/htdocs';
 	}
 
+if ( ($use_slave_server > 0) and (strlen($slave_db_server)>5) )
+	{$VARDB_server = $slave_db_server;}
 $link=mysqli_connect("$VARDB_server", "$VARDB_user", "$VARDB_pass", "$VARDB_database", $VARDB_port);
 if (!$link) 
 	{
