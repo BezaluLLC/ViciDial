@@ -83,10 +83,11 @@
 # 130610-0905 - Finalized changing of all ereg instances to preg
 # 130620-2303 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-2008 - Changed to mysqli PHP functions
+# 131120-1543 - Fixed small display bug when customer phone view is enabled
 #
 
-$version = '2.8-72';
-$build = '130901-2008';
+$version = '2.8-73';
+$build = '131120-1543';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -2065,7 +2066,7 @@ $stmt = "$stmtA $stmtB";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $parked_to_print = mysqli_num_rows($rslt);
-	if ($parked_to_print > 0)
+if ($parked_to_print > 0)
 	{
 	$i=0;
 	$out_total=0;
@@ -2580,7 +2581,7 @@ $talking_to_print = mysqli_num_rows($rslt);
 		$custphone='';
 		while ($n < $calls_to_list)
 			{
-			if ( (preg_match("/$VAClead_ids[$n]/", $Alead_id[$j])) and (strlen($VAClead_ids[$n]) == strlen($Alead_id[$j])) )
+			if ( (preg_match("/$VAClead_ids[$n]/", $Alead_id[$j])) and (strlen($VAClead_ids[$n]) == strlen($Alead_id[$j])) and (strlen($VAClead_ids[$n] > 1)) )
 				{$custphone = $VACphones[$n];}
 			$n++;
 			}
