@@ -10,11 +10,12 @@
 # 120214-1636 - Added consult_custom_delay option
 # 130903-2015 - Added window validation options
 # 131007-1346 - Added mrglock_ig_select_ct
+# 131121-1719 - Fixed defaults mismatched, HKuser_level and FORM_COLOR
 #
 
 $conf_silent_prefix		= '5';	# vicidial_conferences prefix to enter silently and muted for recording
 $dtmf_silent_prefix		= '7';	# vicidial_conferences prefix to enter silently
-$HKuser_level			= '5';	# minimum vicidial user_level for HotKeys
+$HKuser_level			= '1';	# minimum vicidial user_level for HotKeys
 $campaign_login_list	= '1';	# show drop-down list of campaigns at login	
 $manual_dial_preview	= '1';	# allow preview lead option when manual dial
 $multi_line_comments	= '1';	# set to 1 to allow multi-line comment box
@@ -56,6 +57,7 @@ $webphone_pad			= 0;	# set the table cellpadding for the webphone
 $webphone_location		= 'right';	# set the location on the agent screen 'right' or 'bar'
 $MAIN_COLOR				= '#CCCCCC';	# old default is E0C2D6
 $SCRIPT_COLOR			= '#E6E6E6';	# old default is FFE7D0
+$FORM_COLOR				= '#EFEFEF';
 $SIDEBAR_COLOR			= '#F6F6F6';
 
 $window_validation		= 0;	# set to 1 to disallow direct logins to vicidial.php

@@ -15,6 +15,7 @@
 # 130610-0945 - Finalized changing of all ereg instances to preg
 # 130619-2307 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-1928 - Changed to mysqli PHP functions
+# 131023-1959 - Fixed bug in 'NONE' conditional check
 #
 
 $startMS = microtime();
@@ -268,7 +269,7 @@ if ($run_export > 0)
 			}
 		$i++;
 		}
-	if ( (preg_match('/\s\-\-NONE\-\-\s/',$campaign_string) ) or ($campaign_ct < 1) )
+	if ( (preg_match('/\-\-NONE\-\-/',$campaign_string) ) or ($campaign_ct < 1) )
 		{
 		$campaign_SQL = "campaign_id IN('')";
 		$RUNcampaign=0;
@@ -287,7 +288,7 @@ if ($run_export > 0)
 		$group_SQL .= "'$group[$i]',";
 		$i++;
 		}
-	if ( (preg_match('/\s\-\-NONE\-\-\s/',$group_string) ) or ($group_ct < 1) )
+	if ( (preg_match('/\-\-NONE\-\-/',$group_string) ) or ($group_ct < 1) )
 		{
 		$group_SQL = "''";
 		$group_SQL = "campaign_id IN('')";
@@ -421,7 +422,7 @@ if ($run_export > 0)
 		{
 		$stmtA = "SELECT vl.call_date,vl.phone_number,vi.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id,vl.uniqueid,UNIX_TIMESTAMP(vl.call_date)$export_fields_SQL from vicidial_users vu,vicidial_closer_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by vl.call_date desc limit 500000;";
 		$rslt=mysql_to_mysqli($stmtA, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {echo "$stmtA\n";}
 		$inbound_to_print = mysqli_num_rows($rslt);
 		if ( ($inbound_to_print < 1) and ($outbound_calls < 1) )
 			{
@@ -454,7 +455,6 @@ if ($run_export > 0)
 				}
 			}
 		}
-
 
 	if ( ($outbound_to_print > 0) or ($inbound_to_print > 0) )
 		{

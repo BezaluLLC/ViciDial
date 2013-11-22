@@ -30,12 +30,19 @@
 # 130621-0821 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130704-0945 - Fixed issue #675
 # 130829-2012 - Changed to mysqli PHP functions
+# 131122-0657 - Added options.php atdr_login_logout_user_link option
 #
 
 $startMS = microtime();
 
 require("dbconnect_mysqli.php");
 require("functions.php");
+
+$atdr_login_logout_user_link=0;
+if (file_exists('options.php'))
+	{
+	require('options.php');
+	}
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -430,9 +437,11 @@ else
 
 	if ($file_download < 1)
 		{
-		echo "Agent Time Detail                     $NOW_TIME\n";
+		$ASCII_text.="\nAgent Time Detail                     $NOW_TIME\n";
+		$ASCII_text.="Time range: $query_date_BEGIN to $query_date_END\n\n";
 
-		echo "Time range: $query_date_BEGIN to $query_date_END\n\n";
+		$GRAPH.="Agent Time Detail                     $NOW_TIME\n";
+		$GRAPH.="Time range: $query_date_BEGIN to $query_date_END\n\n";
 		}
 	else
 		{
@@ -462,7 +471,7 @@ else
 	$max_pause=1;
 	$max_dead=1;
 	$max_customer=1;
-	$GRAPH="<a name='timegraph'/><table border='0' cellpadding='0' cellspacing='2' width='1000'>";
+	$GRAPH.="<a name='timegraph'/><table border='0' cellpadding='0' cellspacing='2' width='1000'>";
 	$GRAPH2="<tr><th class='column_header grey_graph_cell' id='timegraph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">CALLS</a></th><th class='column_header grey_graph_cell' id='timegraph2'><a href='#' onClick=\"DrawGraph('TIMECLOCK', '2'); return false;\">TIME CLOCK</a></th><th class='column_header grey_graph_cell' id='timegraph3'><a href='#' onClick=\"DrawGraph('AGENTTIME', '3'); return false;\">AGENT TIME</a></th>";
 	if ($show_parks) {
 		$GRAPH2.="<th class='column_header grey_graph_cell' id='timegraph15'><a href='#' onClick=\"DrawGraph('PARKS', '15'); return false;\">PARKS</a></th><th class='column_header grey_graph_cell' id='timegraph16'><a href='#' onClick=\"DrawGraph('PARKTIME', '16'); return false;\">PARKTIME</a></th><th class='column_header grey_graph_cell' id='timegraph17'><a href='#' onClick=\"DrawGraph('AVGPARK', '17'); return false;\">AVGPARK</a></th><th class='column_header grey_graph_cell' id='timegraph18'><a href='#' onClick=\"DrawGraph('PARKSCALL', '18'); return false;\">PARKS/CALL</a></th>";
@@ -938,9 +947,17 @@ else
 
 		if ($file_download < 1)
 			{
-			$Toutput = "| $Sname[$m] | <a href=\"./user_stats.php?user=$RAWuser\">$Suser[$m]</a> | $Scalls[$m] | $StimeTC[$m]$TCuserAUTOLOGOUT| $Stime[$m] |$park_AGENT_INFO $Swait[$m] | $Swaitpct[$m] | $Stalk[$m] | $Stalkpct[$m] | $Sdispo[$m] | $Sdispopct[$m] | $Spause[$m] | $Spausepct[$m] | $Sdead[$m] | $Sdeadpct[$m] | $Scustomer[$m] |   |$SstatusesHTML\n";
+			if ($atdr_login_logout_user_link > 0)
+				{
+				$Toutput = "| $Sname[$m] | <a href=\"./user_stats.php?pause_code_rpt=1&begin_date=$query_date&end_date=$end_date&user=$RAWuser\">$Suser[$m]</a> | $Scalls[$m] | $StimeTC[$m]$TCuserAUTOLOGOUT| $Stime[$m] |$park_AGENT_INFO $Swait[$m] | $Swaitpct[$m] | $Stalk[$m] | $Stalkpct[$m] | $Sdispo[$m] | $Sdispopct[$m] | $Spause[$m] | $Spausepct[$m] | $Sdead[$m] | $Sdeadpct[$m] | $Scustomer[$m] |   |$SstatusesHTML\n";
+				}
+			else
+				{
+				$Toutput = "| $Sname[$m] | <a href=\"./user_stats.php?user=$RAWuser&begin_date=$query_date&end_date\">$Suser[$m]</a> | $Scalls[$m] | $StimeTC[$m]$TCuserAUTOLOGOUT| $Stime[$m] |$park_AGENT_INFO $Swait[$m] | $Swaitpct[$m] | $Stalk[$m] | $Stalkpct[$m] | $Sdispo[$m] | $Sdispopct[$m] | $Spause[$m] | $Spausepct[$m] | $Sdead[$m] | $Sdeadpct[$m] | $Scustomer[$m] |   |$SstatusesHTML\n";
+				}
+				
 			$graph_stats[$m][0]=trim("$Suser[$m] - $Sname[$m]");
-#CALLS    | TIME CLOCK | AGENT TIME | WAIT       | TALK       | DISPO      | PAUSE      | DEAD       | CUSTOMER   |   |      LOGIN |      TRAIN |     TOILET |     PRECAL |      BREAK |            |      LUNCH |     LAGGED
+			$user_IDs[$m]=$Suser[$m];
 			}
 		else
 			{
@@ -1143,7 +1160,10 @@ else
 		$ASCII_text.="|  TOTALS        AGENTS:$hTOT_AGENTS | $hTOTcalls |$hTOTtimeTC |$hTOTALtime |$park_TOTALS$hTOTwait |$hTOTwaitpct |$hTOTtalk |$hTOTtalkpct |$hTOTdispo |$hTOTdispopct |$hTOTpause |$hTOTpausepct |$hTOTdead |$hTOTdeadpct |$hTOTcustomer |   |$SUMstatusesHTML\n";
 		$ASCII_text.="+-----------------+----------+----------+------------+------------$park_HEADER_DIV+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
 		if ($AUTOLOGOUTflag > 0)
-			{echo "     * denotes AUTOLOGOUT from timeclock\n";}
+			{
+			$ASCII_text.= "     * denotes AUTOLOGOUT from timeclock\n";
+			$HTML_text.= "     * denotes AUTOLOGOUT from timeclock\n";
+			}
 		$ASCII_text.="\n\n</PRE>";
 
 		for ($e=0; $e<count($sub_statusesARY); $e++) {
@@ -1155,7 +1175,14 @@ else
 
 		for ($d=0; $d<count($graph_stats); $d++) {
 			if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-			$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+			if ($atdr_login_logout_user_link > 0)
+				{
+				$CALLS_graph.="  <tr><td class='chart_td$class'><a href=\'./user_stats.php?pause_code_rpt=1&begin_date=$query_date&end_date=$end_date&user=".$user_IDs[$d]."\'>".$graph_stats[$d][0]."</a></td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+				}
+			else
+				{
+				$CALLS_graph.="  <tr><td class='chart_td$class'><a href=\'./user_stats.php?user=".$user_IDs[$d]."&begin_date=$query_date&end_date\'>".$graph_stats[$d][0]."</a></td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+				}
 			$TIMECLOCK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][2]/$max_timeclock)."' height='16' />".sec_convert($graph_stats[$d][2], 'HF')."</td></tr>";
 			$AGENTTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][3]/$max_agenttime)."' height='16' />".sec_convert($graph_stats[$d][3], 'HF')."</td></tr>";
 			$WAIT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][4]/$max_wait)."' height='16' />".sec_convert($graph_stats[$d][4], 'HF')."</td></tr>";
@@ -1243,7 +1270,7 @@ else
 		$JS_text.="	var cellID=\"timegraph\"+th_id;\n";
 		$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
 		$JS_text.="\n";
-		$JS_text.="	var graph_to_display=eval(\"graph_\"+graph);\n";
+		$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
 		$JS_text.="	document.getElementById('agent_time_detail_graph').innerHTML=graph_to_display;\n";
 		$JS_text.="}\n";
 
@@ -1314,16 +1341,6 @@ $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIG
 $JS_onload.="}\n";
 $JS_text.=$JS_onload;
 $JS_text.="</script>\n";
-
-if ($report_display_type=="HTML")
-	{
-	echo $JS_text;
-	echo $GRAPH.$GRAPH2.$GRAPH3.$max;
-	}
-else
-	{
-	echo $ASCII_text;
-	}
 
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> Dates:<BR>";
@@ -1419,6 +1436,16 @@ echo "</FORM>\n\n<BR>$db_source";
 ############################################################################
 ##### END HTML form section
 ############################################################################
+
+if ($report_display_type=="HTML")
+	{
+	echo $JS_text;
+	echo $GRAPH.$GRAPH2.$GRAPH3.$max;
+	}
+else
+	{
+	echo $ASCII_text;
+	}
 
 
 $ENDtime = date("U");

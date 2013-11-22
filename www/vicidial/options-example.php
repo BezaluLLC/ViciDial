@@ -75,4 +75,7 @@ $nonselectable_statuses = 0;
 # display first and last name in user stats results
 $firstlastname_display_user_stats = 0;
 
+# agent time detail report login/logout link for user
+$atdr_login_logout_user_link = 0;
+
 ?>

@@ -33,6 +33,7 @@
 # 130716-1025 - Added mtemp sounds directory for sox concatenated temp audio
 # 130805-0818 - Added support for mysqli
 # 130902-1149 - Small fix for mysqli support
+# 131121-1643 - Added robots.txt file to all web directories
 #
 
 ############################################
@@ -2523,6 +2524,11 @@ if ($NOWEB < 1)
 
 	print "Copying web files...\n";
 	`cp -f -R ./www/* $PATHweb/`;
+	`cp -f ./www/vicidial/robots.txt $PATHweb/`;
+	`cp -f ./www/vicidial/robots.txt $PATHweb/agc/`;
+	`cp -f ./www/vicidial/robots.txt $PATHweb/vicidial/ploticus/`;
+	`cp -f ./www/vicidial/robots.txt $PATHweb/vicidial/agent_reports/`;
+	`cp -f ./www/vicidial/robots.txt $PATHweb/vicidial/server_reports/`;
 
 	print "setting web scripts to executable...\n";
 	`chmod 0777 $PATHweb/`;

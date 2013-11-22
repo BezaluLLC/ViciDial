@@ -161,6 +161,8 @@ OTHER CHANGES:
 
 23. Admin HELP text moved to separate help.php script
 
+24. Added option.php option to allow user ID click to pause code report from the
+	Agent Time Detail report
 
 
 
