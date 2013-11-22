@@ -122,3 +122,9 @@ UPDATE system_settings SET db_schema_version='1358',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD manual_dial_lead_id ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1359',db_schema_update_date=NOW() where db_schema_version < 1359;
+
+ALTER TABLE servers ADD system_uptime VARCHAR(255) default '';
+ALTER TABLE servers ADD auto_restart_asterisk ENUM('Y','N') default 'N';
+ALTER TABLE servers ADD asterisk_temp_no_restart ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1360',db_schema_update_date=NOW() where db_schema_version < 1360;

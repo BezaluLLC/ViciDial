@@ -136,7 +136,10 @@ active_twin_server_ip VARCHAR(15) default '',
 user_group VARCHAR(20) default '---ALL---',
 audio_store_purge TEXT,
 svn_revision INT(9) default '0',
-svn_info TEXT
+svn_info TEXT,
+system_uptime VARCHAR(255) default '',
+auto_restart_asterisk ENUM('Y','N') default 'N',
+asterisk_temp_no_restart ENUM('Y','N') default 'N'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX server_id on servers (server_id);
@@ -3215,4 +3218,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1359',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1360',db_schema_update_date=NOW();

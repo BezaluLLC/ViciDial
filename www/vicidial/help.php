@@ -6,6 +6,7 @@
 
 # CHANGELOG:
 # 131019-0848 - Moved help from admin.php
+# 131029-2058 - Added auto-restart asterisk help
 #
 
 
@@ -3732,6 +3733,11 @@ if ($SSoutbound_autodial_active > 0)
 <B>Disk Usage -</B> This field will show the disk usage for every partition on this server. This field is updated once every minute.
 
 <BR>
+<A NAME="servers-system_uptime">
+<BR>
+<B>System Uptime -</B> This field will show the system uptime of this server. This field only updates if configured to do so by your administrator.
+
+<BR>
 <A NAME="servers-asterisk_version">
 <BR>
 <B>Asterisk Version -</B> Set the version of Asterisk that you have installed on this server. Examples: '1.2', '1.0.8', '1.0.7', 'CVS_HEAD', 'REALLY OLD', etc... This is used because versions 1.0.8 and 1.0.9 have a different method of dealing with Local/ channels, a bug that has been fixed in CVS v1.0, and need to be treated differently when handling their Local/ channels. Also, current CVS_HEAD and the 1.2 release tree uses different manager and command output so it must be treated differently as well.
@@ -3860,6 +3866,16 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="servers-active_asterisk_server">
 <BR>
 <B>Active Asterisk Server -</B> If Asterisk is not running on this server, or if the dialing processes should not be using this server, or if are only using this server for other scripts like the hopper loading script you would want to set this to N. Default is Y.
+
+<BR>
+<A NAME="servers-auto_restart_asterisk">
+<BR>
+<B>Auto-Restart Asterisk -</B> If Asterisk is running on this server and you want the system to make sure that it will be restarted in the event that it crashes, you might want to consider enabling this setting. If enabled, the system will check every minute to see if Asterisk is running, and if it is not it will attempt to restart it. This process will not run in the first 5 minutes after a system has been up. Default is N.
+
+<BR>
+<A NAME="servers-asterisk_temp_no_restart">
+<BR>
+<B>Temp No-Restart Asterisk -</B> If Auto-Restart Asterisk is enabled on this server, turning on this setting will prevent the auto-restart process from running until after the server is rebooted. Default is N.
 
 <BR>
 <A NAME="servers-active_agent_login_server">

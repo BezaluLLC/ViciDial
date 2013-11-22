@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_update.pl version 2.6
+# AST_update.pl version 2.8
 #
 # DESCRIPTION:
 # uses the Asterisk Manager interface and DBD::MySQL to update the live_channels
@@ -59,9 +59,10 @@
 # 101004-1042 - Updated parked_channels checking for changes to parked calls functions
 # 130108-1710 - Changes for Asterisk 1.8 compatibility
 # 130413-2125 - Fix for issue #664, formatting fixes and added --quiet flag
+# 131122-1317 - Small formatting fixes
 #
 
-$build = '130413-2125';
+$build = '131122-1317';
 
 # constants
 $SYSPERF=0;	# system performance logging to MySQL server_performance table every 5 seconds
@@ -149,6 +150,7 @@ if (length($ARGV[0])>1)
 	if ($args =~ /--help/i)
 		{
 		print "allowed run time options:\n";
+		print "  [--help] = this screen\n";
 		print "  [--test] = test\n";
 		print "  [--sysperf] = system performance logging\n";
 		print "  [--sysperfdebug] = system performance debug output\n";
@@ -1283,7 +1285,6 @@ sub validate_parked_channels
 			$parked_counter++;
 			$rec_count++;
 			}
-
 		$sthA->finish();
 
 		$run_validate_parked_channels_now=5;	# set to run every five times the subroutine runs

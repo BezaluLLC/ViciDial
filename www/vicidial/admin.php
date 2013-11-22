@@ -1808,6 +1808,10 @@ if (isset($_GET["country_code_list_stats"]))			{$country_code_list_stats=$_GET["
 	elseif (isset($_POST["country_code_list_stats"]))	{$country_code_list_stats=$_POST["country_code_list_stats"];}
 if (isset($_GET["manual_dial_lead_id"]))			{$manual_dial_lead_id=$_GET["manual_dial_lead_id"];}
 	elseif (isset($_POST["manual_dial_lead_id"]))	{$manual_dial_lead_id=$_POST["manual_dial_lead_id"];}
+if (isset($_GET["auto_restart_asterisk"]))			{$auto_restart_asterisk=$_GET["auto_restart_asterisk"];}
+	elseif (isset($_POST["auto_restart_asterisk"]))	{$auto_restart_asterisk=$_POST["auto_restart_asterisk"];}
+if (isset($_GET["asterisk_temp_no_restart"]))			{$asterisk_temp_no_restart=$_GET["asterisk_temp_no_restart"];}
+	elseif (isset($_POST["asterisk_temp_no_restart"]))	{$asterisk_temp_no_restart=$_POST["asterisk_temp_no_restart"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2228,6 +2232,8 @@ if ($non_latin < 1)
 	$hopper_vlc_dup_check = preg_replace('/[^NY]/','',$hopper_vlc_dup_check);
 	$inventory_report = preg_replace('/[^NY]/','',$inventory_report);
 	$manual_dial_lead_id = preg_replace('/[^NY]/','',$manual_dial_lead_id);
+	$auto_restart_asterisk = preg_replace('/[^NY]/','',$auto_restart_asterisk);
+	$asterisk_temp_no_restart = preg_replace('/[^NY]/','',$asterisk_temp_no_restart);
 
 	$qc_enabled = preg_replace('/[^0-9NY]/','',$qc_enabled);
 	$active = preg_replace('/[^0-9NY]/','',$active);
@@ -3240,12 +3246,13 @@ else
 # 131007-1234 - Fix for copy user on encrypted passwords systems
 # 131016-2112 - Added manual_dial_lead_id campaign option, fixes some small issues
 # 131019-0849 - Moved help section to help.php
+# 131029-2008 - Added Asterisk auto-restart options to servers
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.8-417a';
-$build = '131019-0849';
+$admin_version = '2.8-418a';
+$build = '131029-2008';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -13722,7 +13729,7 @@ if ($ADD==411111111111)
 					{echo "<br>SERVER NOT MODIFIED - Please go back and look at the data you entered\n";}
 				else
 					{
-					$stmt="UPDATE servers set server_id='$server_id',server_description='$server_description',server_ip='$server_ip',active='$active',asterisk_version='$asterisk_version', max_vicidial_trunks='$max_vicidial_trunks', telnet_host='$telnet_host', telnet_port='$telnet_port', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', ASTmgrUSERNAMEupdate='$ASTmgrUSERNAMEupdate', ASTmgrUSERNAMElisten='$ASTmgrUSERNAMElisten', ASTmgrUSERNAMEsend='$ASTmgrUSERNAMEsend', local_gmt='$local_gmt', voicemail_dump_exten='$voicemail_dump_exten', answer_transfer_agent='$answer_transfer_agent', ext_context='$ext_context', sys_perf_log='$sys_perf_log', vd_server_logs='$vd_server_logs', agi_output='$agi_output', vicidial_balance_active='$vicidial_balance_active',balance_trunks_offlimits='$balance_trunks_offlimits',recording_web_link='$recording_web_link',alt_server_ip='$alt_server_ip',active_asterisk_server='$active_asterisk_server',generate_vicidial_conf='$generate_vicidial_conf',rebuild_conf_files='$rebuild_conf_files',outbound_calls_per_second='$outbound_calls_per_second',sounds_update='$sounds_update',vicidial_recording_limit='$vicidial_recording_limit',carrier_logging_active='$carrier_logging_active',vicidial_balance_rank='$vicidial_balance_rank',rebuild_music_on_hold='$rebuild_music_on_hold',active_agent_login_server='$active_agent_login_server',conf_secret='$conf_secret',external_server_ip='$external_server_ip',custom_dialplan_entry='$custom_dialplan_entry',active_twin_server_ip='$active_twin_server_ip',user_group='$user_group' where server_id='$old_server_id';";
+					$stmt="UPDATE servers set server_id='$server_id',server_description='$server_description',server_ip='$server_ip',active='$active',asterisk_version='$asterisk_version', max_vicidial_trunks='$max_vicidial_trunks', telnet_host='$telnet_host', telnet_port='$telnet_port', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', ASTmgrUSERNAMEupdate='$ASTmgrUSERNAMEupdate', ASTmgrUSERNAMElisten='$ASTmgrUSERNAMElisten', ASTmgrUSERNAMEsend='$ASTmgrUSERNAMEsend', local_gmt='$local_gmt', voicemail_dump_exten='$voicemail_dump_exten', answer_transfer_agent='$answer_transfer_agent', ext_context='$ext_context', sys_perf_log='$sys_perf_log', vd_server_logs='$vd_server_logs', agi_output='$agi_output', vicidial_balance_active='$vicidial_balance_active',balance_trunks_offlimits='$balance_trunks_offlimits',recording_web_link='$recording_web_link',alt_server_ip='$alt_server_ip',active_asterisk_server='$active_asterisk_server',generate_vicidial_conf='$generate_vicidial_conf',rebuild_conf_files='$rebuild_conf_files',outbound_calls_per_second='$outbound_calls_per_second',sounds_update='$sounds_update',vicidial_recording_limit='$vicidial_recording_limit',carrier_logging_active='$carrier_logging_active',vicidial_balance_rank='$vicidial_balance_rank',rebuild_music_on_hold='$rebuild_music_on_hold',active_agent_login_server='$active_agent_login_server',conf_secret='$conf_secret',external_server_ip='$external_server_ip',custom_dialplan_entry='$custom_dialplan_entry',active_twin_server_ip='$active_twin_server_ip',user_group='$user_group',auto_restart_asterisk='$auto_restart_asterisk',asterisk_temp_no_restart='$asterisk_temp_no_restart' where server_id='$old_server_id';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 
 					$stmtA="UPDATE servers SET rebuild_conf_files='Y',rebuild_music_on_hold='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y';";
@@ -24163,7 +24170,7 @@ if ($ADD==3311)
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter User Route Settings In-Group: </td><td align=left><select size=1 name=filter_user_route_settings_ingroup>";
 		echo "$FXgroups_menu";
 		echo "</select>$NWB#inbound_dids-user_route_settings_ingroup$NWE</td></tr>\n";
-		echo "<tr bgcolor=#CCFFFF><td align=right><a href=\"$PHP_SELF?ADD=3111&group_id=$group_id\">Filter In-Group ID</a>: </td><td align=left><select size=1 name=filter_group_id>";
+		echo "<tr bgcolor=#CCFFFF><td align=right><a href=\"$PHP_SELF?ADD=3111&group_id=$filter_phone_group_id\">Filter In-Group ID</a>: </td><td align=left><select size=1 name=filter_group_id>";
 		echo "$FDgroups_menu";
 		echo "</select>$NWB#inbound_dids-group_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter In-Group Call Handle Method: </td><td align=left><select size=1 name=filter_call_handle_method><option>CID</option><option>CIDLOOKUP</option><option>CIDLOOKUPRL</option><option>CIDLOOKUPRC</option><option>CIDLOOKUPALT</option><option>CIDLOOKUPRLALT</option><option>CIDLOOKUPRCALT</option><option>CIDLOOKUPADDR3</option><option>CIDLOOKUPRLADDR3</option><option>CIDLOOKUPRCADDR3</option><option>CIDLOOKUPALTADDR3</option><option>CIDLOOKUPRLALTADDR3</option><option>CIDLOOKUPRCALTADDR3</option><option>ANI</option><option>ANILOOKUP</option><option>ANILOOKUPRL</option><option>VIDPROMPT</option><option>VIDPROMPTLOOKUP</option><option>VIDPROMPTLOOKUPRL</option><option>VIDPROMPTLOOKUPRC</option><option>CLOSER</option><option>3DIGITID</option><option>4DIGITID</option><option>5DIGITID</option><option>10DIGITID</option><option SELECTED>$filter_call_handle_method</option></select>$NWB#inbound_dids-call_handle_method$NWE</td></tr>\n";
@@ -26912,7 +26919,7 @@ if ($ADD==311111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT server_id,server_description,server_ip,active,asterisk_version,max_vicidial_trunks,telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,local_gmt,voicemail_dump_exten,answer_transfer_agent,ext_context,sys_perf_log,vd_server_logs,agi_output,vicidial_balance_active,balance_trunks_offlimits,recording_web_link,alt_server_ip,active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,outbound_calls_per_second,sysload,channels_total,cpu_idle_percent,disk_usage,sounds_update,vicidial_recording_limit,carrier_logging_active,vicidial_balance_rank,rebuild_music_on_hold,active_agent_login_server,conf_secret,external_server_ip,custom_dialplan_entry,active_twin_server_ip,user_group from servers where ( (server_id='$server_id') or (server_ip='$server_ip') ) $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT server_id,server_description,server_ip,active,asterisk_version,max_vicidial_trunks,telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,local_gmt,voicemail_dump_exten,answer_transfer_agent,ext_context,sys_perf_log,vd_server_logs,agi_output,vicidial_balance_active,balance_trunks_offlimits,recording_web_link,alt_server_ip,active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,outbound_calls_per_second,sysload,channels_total,cpu_idle_percent,disk_usage,sounds_update,vicidial_recording_limit,carrier_logging_active,vicidial_balance_rank,rebuild_music_on_hold,active_agent_login_server,conf_secret,external_server_ip,custom_dialplan_entry,active_twin_server_ip,user_group,system_uptime,auto_restart_asterisk,asterisk_temp_no_restart from servers where ( (server_id='$server_id') or (server_ip='$server_ip') ) $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 		$server_id =					$row[0];
@@ -26958,6 +26965,10 @@ if ($ADD==311111111111)
 		$custom_dialplan_entry =		$row[40];
 		$active_twin_server_ip =		$row[41];
 		$user_group =					$row[42];
+		$system_uptime =				$row[43];
+		$auto_restart_asterisk =		$row[44];
+		$asterisk_temp_no_restart =		$row[45];
+
 
 		$cpu = (100 - $cpu_idle_percent);
 		$disk_usage = preg_replace("/ /"," - ",$disk_usage);
@@ -26976,6 +26987,8 @@ if ($ADD==311111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>System Load: </td><td align=left>$sysload - $cpu% &nbsp; $NWB#servers-sysload$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Live Channels: </td><td align=left>$channels_total &nbsp; $NWB#servers-channels_total$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Disk Usage: </td><td align=left>$disk_usage &nbsp; $NWB#servers-disk_usage$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>System Uptime: </td><td align=left>$system_uptime &nbsp; $NWB#servers-system_uptime$NWE</td></tr>\n";
+
 		echo "<tr bgcolor=#B6D3FC><td align=right>Admin User Group: </td><td align=left><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
 		echo "<option SELECTED value=\"$user_group\">$user_group</option>\n";
@@ -27008,6 +27021,8 @@ if ($ADD==311111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>External Server IP: </td><td align=left><input type=text name=external_server_ip size=30 maxlength=100 value=\"$external_server_ip\">$NWB#servers-external_server_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active Twin Server IP: </td><td align=left><input type=text name=active_twin_server_ip size=16 maxlength=15 value=\"$active_twin_server_ip\">$NWB#servers-active_twin_server_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active Asterisk Server: </td><td align=left><select size=1 name=active_asterisk_server><option>Y</option><option>N</option><option selected>$active_asterisk_server</option></select>$NWB#servers-active_asterisk_server$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Auto-Restart Asterisk: </td><td align=left> &nbsp; &nbsp; <select size=1 name=auto_restart_asterisk><option>Y</option><option>N</option><option selected>$auto_restart_asterisk</option></select>$NWB#servers-auto_restart_asterisk$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>Temp No-Restart Asterisk: </td><td align=left> &nbsp; &nbsp; <select size=1 name=asterisk_temp_no_restart><option>Y</option><option>N</option><option selected>$asterisk_temp_no_restart</option></select>$NWB#servers-asterisk_temp_no_restart$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active Agent Server: </td><td align=left><select size=1 name=active_agent_login_server><option>Y</option><option>N</option><option selected>$active_agent_login_server</option></select>$NWB#servers-active_agent_login_server$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Generate conf files: </td><td align=left><select size=1 name=generate_vicidial_conf><option>Y</option><option>N</option><option selected>$generate_vicidial_conf</option></select>$NWB#servers-generate_conf$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Rebuild conf files: </td><td align=left><select size=1 name=rebuild_conf_files><option>Y</option><option>N</option><option selected>$rebuild_conf_files</option></select>$NWB#servers-rebuild_conf_files$NWE</td></tr>\n";

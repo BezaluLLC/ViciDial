@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_VDremote_agents.pl version 2.6
+# AST_VDremote_agents.pl version 2.8
 #
 # SUMMARY:
 # To use VICIDIAL with remote agents, this must always be running 
@@ -46,6 +46,7 @@
 # 120213-1701 - Added remote-agent daily stats
 # 121129-1929 - Fix for issue #601, reported by Acidshock
 # 130322-1939 - Changed to auto-terminate vars to one day so it can restart for systems that don't reboot nightly
+# 131122-1104 - Small fixes and formatting changes
 #
 
 ### begin parsing run-time options ###
@@ -60,9 +61,13 @@ if (length($ARGV[0])>1)
 	if ($args =~ /--help/i)
 		{
 		print "allowed run time options:\n";
-		print "  [-t] = test\n";
-		print "  [-v] = verbose debug messages\n";
-		print "  [--delay=XXX] = delay of XXX seconds per loop, default 2 seconds\n\n";
+		print "  [--help] = this screen\n";
+		print "  [--test] = test\n";
+		print "  [--debug] = verbose debug messages\n";
+		print "  [--debugX] = extra verbose debug messages\n";
+		print "  [--delay=XXX] = delay of XXX seconds per loop, default 2 seconds\n";
+		print "\n";
+		exit;
 		}
 	else
 		{
@@ -87,7 +92,7 @@ if (length($ARGV[0])>1)
 			$DBX=1;
 			print "\n----- SUPER-DUPER DEBUGGING -----\n\n";
 			}
-		if ($args =~ /-t/i)
+		if ($args =~ /--test/i)
 			{
 			$TEST=1;
 			$T=1;
@@ -402,6 +407,7 @@ while($one_day_interval > 0)
 					}
 				else
 					{
+					$sthA->finish();
 					$stmtA = "INSERT INTO vicidial_daily_ra_stats SET stats_date='$YMD',update_time=NOW(),max_calls='$incalls_count',user='$QHra_user[$w]',stats_flag='OPEN',total_calls=1;";
 					$affected_rows = $dbhA->do($stmtA);
 					if ($AGILOG) {$agi_string = "DAILY STATS INSERT $channel_group|$affected_rows|$stmtA|";   &agi_output;}
@@ -794,7 +800,6 @@ while($one_day_interval > 0)
 									$Baffected_rows = $dbhB->do($stmtB);
 									}
 								}
-
 							}
 						$s++;
 						}
@@ -972,7 +977,6 @@ while($one_day_interval > 0)
 
 							$dbhB->disconnect();
 							}
-
 						}
 					}
 				else
@@ -1001,9 +1005,7 @@ while($one_day_interval > 0)
 
 							$dbhB->disconnect();
 							}
-
 						}
-
 					}
 				}
 	### possible future active call checker

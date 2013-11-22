@@ -114,6 +114,7 @@
 # 130706-2024 - Added disable_auto_dial system option
 # 130811-1403 - Fix for issue #690
 # 131016-0659 - Fix for disable_auto_dial system option
+# 131122-1233 - Added several missing sthA->finish 
 #
 
 
@@ -514,6 +515,7 @@ while($one_day_interval > 0)
 							{
 							$DBIPINCALLcount[$user_CIPct]++;
 							}
+						$sthA->finish();
 						}
 					}
 				$user_counter++;
@@ -529,6 +531,7 @@ while($one_day_interval > 0)
 				@aryA = $sthA->fetchrow_array;
 				$DBIPcampaign_ready_agents[$user_CIPct] =		$aryA[0];
 				}
+			$sthA->finish();
 
 			### check for vicidial_campaign_server_stats record, if non present then create it
 			$stmtA = "SELECT local_trunk_shortage FROM vicidial_campaign_server_stats where campaign_id='$DBIPcampaign[$user_CIPct]' and server_ip='$server_ip';";
@@ -542,6 +545,8 @@ while($one_day_interval > 0)
 				$DBIPold_trunk_shortage[$user_CIPct] =		$aryA[0];
 				$rec_count++;
 				}
+			$sthA->finish();
+
 			if ($rec_count < 1)
 				{
 				$stmtA = "INSERT INTO vicidial_campaign_server_stats SET local_trunk_shortage='0', server_ip='$server_ip',campaign_id='$DBIPcampaign[$user_CIPct]';";
@@ -569,6 +574,8 @@ while($one_day_interval > 0)
 				$DBIPserver_trunks_limit[$user_CIPct] =		$aryA[0];
 				$rec_count++;
 				}
+			$sthA->finish();
+
 			$stmtA = "SELECT sum(dedicated_trunks) FROM vicidial_server_trunks where campaign_id NOT IN('$DBIPcampaign[$user_CIPct]') and server_ip='$server_ip';";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -580,6 +587,7 @@ while($one_day_interval > 0)
 				$DBIPserver_trunks_other[$user_CIPct] =		$aryA[0];
 				$rec_count++;
 				}
+			$sthA->finish();
 
 			$DBIPserver_trunks_allowed[$user_CIPct] = ($max_vicidial_trunks - $DBIPserver_trunks_other[$user_CIPct]);
 
@@ -1193,6 +1201,8 @@ while($one_day_interval > 0)
 											$stmtA="UPDATE vicidial_campaign_cid_areacodes set call_count_today=(call_count_today + 1) where campaign_id='$DBIPcampaign[$user_CIPct]' and areacode='$temp_ac' and outbound_cid='$temp_vcca';";
 											$affected_rows = $dbhA->do($stmtA);
 											}
+										else
+											{$sthA->finish();}
 										$temp_CID = $temp_vcca;
 										$temp_CID =~ s/\D//gi;
 										if (length($temp_CID) > 6) 
@@ -1390,6 +1400,7 @@ while($one_day_interval > 0)
 					$rec_count++;
 					}
 				$sthA->finish();
+
 				$stmtA = "SELECT user FROM vicidial_live_agents where callerid='$KLcallerid[$kill_vac]'";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1400,6 +1411,7 @@ while($one_day_interval > 0)
 					$CLuser	= $aryA[0];
 					}
 				$sthA->finish();
+
 				if ( (length($CLlead_id) < 1) || ($CLlead_id < 1) )
 					{
 					$CLlead_id = $KLcallerid[$kill_vac];
@@ -1498,7 +1510,6 @@ while($one_day_interval > 0)
 									{
 									@aryA = $sthA->fetchrow_array;
 									$cpd_result		= $aryA[0];
-									$sthA->finish();
 									$CPDfound=0;
 									if ($cpd_result =~ /Busy/i)					{$CLnew_status='CPDB';   $CPDfound++;}
 									if ($cpd_result =~ /Unknown/i)				{$CLnew_status='CPDUK';   $CPDfound++;}
@@ -1516,6 +1527,7 @@ while($one_day_interval > 0)
 									if ($cpd_result =~ /Fax|Modem/i)			{$CLnew_status='AFAX';   $CPDfound++;}
 									if ($cpd_result =~ /Answering-Machine/i)	{$CLnew_status='AA';   $CPDfound++;}
 									}
+								$sthA->finish();
 
 								##############################################################
 								### END - CPD Look for result for NA/B/DC calls
@@ -1862,6 +1874,7 @@ while($one_day_interval > 0)
 										$VD_list_id =			$aryA[2];
 										}
 									$sthA->finish();
+
 									$alt_dial_phones_count=0;
 									$stmtA="SELECT count(*) FROM vicidial_list_alt_phones where lead_id='$CLlead_id';";
 									$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -2442,6 +2455,7 @@ while($one_day_interval > 0)
 			@aryA = $sthA->fetchrow_array;
 			$multi_alt_count	= $aryA[0];
 			}
+		$sthA->finish();
 
 		if ($multi_alt_count > 0)
 			{
@@ -2463,6 +2477,7 @@ while($one_day_interval > 0)
 				$MLaad_statuses[$MLcamp_count]	= $aryA[1];
 				$MLcamp_count++;
 				}
+			$sthA->finish();
 
 			$MLcamp_count=0;
 			foreach(@MLcamp_id)
@@ -2479,6 +2494,7 @@ while($one_day_interval > 0)
 					$MLlists[$MLcamp_count]		.= "'$aryA[0]',";
 					$MLlist_count++;
 					}
+				$sthA->finish();
 				$MLlists[$MLcamp_count] =~ s/,$//gi;
 				if (length($MLlists[$MLcamp_count]) < 2)
 					{$MLlists[$MLcamp_count]="''";}
@@ -2537,6 +2553,7 @@ while($one_day_interval > 0)
 						@aryA = $sthA->fetchrow_array;
 						$vac_count	= $aryA[0];
 						}
+					$sthA->finish();
 
 					if ($vac_count < 1)
 						{
@@ -2549,6 +2566,7 @@ while($one_day_interval > 0)
 							@aryA = $sthA->fetchrow_array;
 							$MLcampaign[$vle_count]	= $aryA[0];
 							$MLstatus[$vle_count]	= $aryA[1];
+							$sthA->finish();
 
 							if ($MLcampaigns =~ /\|$MLcampaign[$vle_count]\|/i)
 								{
@@ -2585,6 +2603,7 @@ while($one_day_interval > 0)
 											@aryA = $sthA->fetchrow_array;
 											$MLvlc[$vle_count]	= $aryA[0];
 											}
+										$sthA->finish();
 										
 										if (length($MLvlc[$vle_count]) > 1)
 											{
@@ -2600,6 +2619,8 @@ while($one_day_interval > 0)
 												$MLnonmatch_leadids	.= "'$aryA[0]',";
 												$MLnm_count++;
 												}
+											$sthA->finish();
+
 											if ($MLnm_count > 0)
 												{
 												chop($MLnonmatch_leadids);
@@ -2661,6 +2682,7 @@ while($one_day_interval > 0)
 							}
 						else
 							{
+							$sthA->finish();
 							$event_string = "        ML no log entry, do nothing:   $MLcallerid[$vle_count]|$MLuniqueid[$vle_count]";
 							 &event_logger;
 							}
@@ -2699,6 +2721,8 @@ while($one_day_interval > 0)
 			@aryA = $sthA->fetchrow_array;
 			$ncu_count	= $aryA[0];
 			}
+		$sthA->finish();
+
 		$stmtA = "SELECT count(*) FROM vicidial_inbound_groups where na_call_url IS NOT NULL and na_call_url!='' and group_calldate > \"$RMSQLdate\";";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2708,6 +2732,7 @@ while($one_day_interval > 0)
 			@aryA = $sthA->fetchrow_array;
 			$ncu_in_count	= $aryA[0];
 			}
+		$sthA->finish();
 
 		if ( ($ncu_count > 0) || ($ncu_in_count > 0) )
 			{
@@ -2732,6 +2757,7 @@ while($one_day_interval > 0)
 					$NCUcamp_count++;
 					$ncu_total_count++;
 					}
+				$sthA->finish();
 				}
 			if ($ncu_in_count > 0)
 				{
@@ -2749,6 +2775,7 @@ while($one_day_interval > 0)
 					$NCUig_count++;
 					$ncu_total_count++;
 					}
+				$sthA->finish();
 				}
 			$event_string = "     NA-CALL-URL check:   $ncu_total_count active, checking unprocessed calls...";
 			 &event_logger;
@@ -2801,6 +2828,7 @@ while($one_day_interval > 0)
 							@aryA = $sthA->fetchrow_array;
 							$vac_count	= $aryA[0];
 							}
+						$sthA->finish();
 
 						if ($vac_count < 1)
 							{
@@ -2825,6 +2853,7 @@ while($one_day_interval > 0)
 								$NCUuser[$vle_count] =		$aryA[2];
 								$NCUphone[$vle_count] =		$aryA[3];
 								$NCUaltdial[$vle_count] =	$aryA[4];
+								$sthA->finish();
 
 								if ($NCUcampaigns =~ /\|$NCUcampaign[$vle_count]\|/i)
 									{
@@ -2905,6 +2934,7 @@ while($one_day_interval > 0)
 								}
 							else
 								{
+								$sthA->finish();
 								$event_string = "        NCU no log entry, do nothing:   $NCUcallerid[$vle_count]|$NCUuniqueid[$vle_count]";
 								 &event_logger;
 								}
@@ -2991,6 +3021,7 @@ while($one_day_interval > 0)
 						@aryA = $sthA->fetchrow_array;
 						$vac_count	= $aryA[0];
 						}
+					$sthA->finish();
 					if ($vac_count < 1)
 						{
 						$stmtA = "SELECT status FROM vicidial_log where uniqueid='$MLuniqueid[$vle_count]' and lead_id='$MLleadid[$vle_count]' and call_date > \"$RMSQLdate\";";
@@ -3001,6 +3032,7 @@ while($one_day_interval > 0)
 							{
 							@aryA = $sthA->fetchrow_array;
 							$MLstatus[$vle_count]	= $aryA[0];
+							$sthA->finish();
 
 							if ($MLincall !~ /\|$MLstatus[$vle_count]\|/i)
 								{
@@ -3031,6 +3063,7 @@ while($one_day_interval > 0)
 											$event_string = "        VNA ERROR:   $MLcallerid[$vle_count]|$MLuniqueid[$vle_count]|$MLleadid[$vle_count]";
 											 &event_logger;
 											}
+										$sthA->finish();
 										}
 									else
 										{
@@ -3064,6 +3097,7 @@ while($one_day_interval > 0)
 							}
 						else
 							{
+							$sthA->finish();
 							$event_string = "        VNA status no vicidial_log record, do nothing:   $MLcallerid[$vle_count]|$MLuniqueid[$vle_count]|$MLstatus[$vle_count]";
 							 &event_logger;
 							}

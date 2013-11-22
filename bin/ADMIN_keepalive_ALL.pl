@@ -13,6 +13,7 @@
 #  - Synchronizes the audio store files
 #  - Runs trigger processes at defined times
 #  - Auto reset lists at defined times
+#  - Auto restarts Asterisk process if enabled in servers settings
 #
 # Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -87,7 +88,10 @@
 # 130624-0733 - Added optimize for vicidial_users due to logging IP and auth timestamp
 # 130716-1441 - Clear out vicidial_monitor_calls records older than 1 day old
 # 130921-1044 - Small change to triggers allowing for them to be launched in a screen session if SCREEN is in the name
+# 131022-1746 - Added uptime gathering and asterisk auto-restart feature
 #
+
+$build = '131022-1746';
 
 $DB=0; # Debug flag
 $MT[0]='';   $MT[1]='';
@@ -124,6 +128,7 @@ if (length($ARGV[0])>1)
 		{
 		print "allowed run time options:\n";
 		print "  [-test] = test\n";
+		print "  [--version] = print version of this script, then exit\n";
 		print "  [-autodial-delay=X] = setting delay milliseconds on local auto-dial process\n";
 		print "  [-adfill-delay=X] = setting delay milliseconds on auto-dial FILL process\n";
 		print "  [-fill-staggered] = enable experimental staggered auto-dial FILL process\n";
@@ -137,6 +142,11 @@ if (length($ARGV[0])>1)
 		}
 	else
 		{
+		if ($args =~ /--version/i)
+			{
+			print "version: $build\n";
+			exit;
+			}
 		if ($args =~ /-debug/i)
 			{
 			$DB=1; # Debug flag
@@ -254,188 +264,100 @@ foreach(@conf)
 
 if ($VARactive_keepalives =~ /X/)
 	{
-	if ($DB) {print "X in active_keepalives, exiting...\n";}
-	exit;
+	if ($DB) {print "X in active_keepalives, skipping this section...\n";}
 	}
-
-$AST_update=0;
-$AST_send_listen=0;
-$AST_VDauto_dial=0;
-$AST_VDremote_agents=0;
-$AST_VDadapt=0;
-$FastAGI_log=0;
-$email_inbound=0;
-$AST_VDauto_dial_FILL=0;
-$ip_relay=0;
-$timeclock_auto_logout=0;
-$runningAST_update=0;
-$runningAST_send=0;
-$runningAST_listen=0;
-$runningAST_VDauto_dial=0;
-$runningAST_VDremote_agents=0;
-$runningAST_VDadapt=0;
-$runningFastAGI_log=0;
-$runningAST_VDauto_dial_FILL=0;
-$runningip_relay=0;
-$runningAST_conf_3way=0;
-$runningemail_inbound=0;
-$AST_conf_3way=0;
-
-if ($VARactive_keepalives =~ /1/) 
+else
 	{
-	$AST_update=1;
-	if ($DB) {print "AST_update set to keepalive\n";}
-	}
-if ($VARactive_keepalives =~ /2/) 
-	{
-	$AST_send_listen=1;
-	if ($DB) {print "AST_send_listen set to keepalive\n";}
-	}
-if ($VARactive_keepalives =~ /3/) 
-	{
-	$AST_VDauto_dial=1;
-	if ($DB) {print "AST_VDauto_dial set to keepalive\n";}
-	}
-if ($VARactive_keepalives =~ /4/) 
-	{
-	$AST_VDremote_agents=1;
-	if ($DB) {print "AST_VDremote_agents set to keepalive\n";}
-	}
-if ($VARactive_keepalives =~ /5/) 
-	{
-	$AST_VDadapt=1;
-	if ($DB) {print "AST_VDadapt set to keepalive\n";}
-	}
-if ($VARactive_keepalives =~ /6/) 
-	{
-	$FastAGI_log=1;
-	if ($DB) {print "FastAGI_log set to keepalive\n";}
-	}
-if ($VARactive_keepalives =~ /7/) 
-	{
-	$AST_VDauto_dial_FILL=1;
-	if ($DB) {print "AST_VDauto_dial_FILL set to keepalive\n";}
-	}
-if ($VARactive_keepalives =~ /8/) 
-	{
-	$ip_relay=1;
-	if ($DB) {print "ip_relay set to keepalive\n";}
-	}
-if ($VARactive_keepalives =~ /9/) 
-	{
-	$timeclock_auto_logout=1;
-	if ($DB) {print "Check to see if Timeclock auto logout should run\n";}
-	}
-if ($VARactive_keepalives =~ /E/) 
-	{
-	$email_inbound=1;
-	if ($DB) {print "Check to see if email parser should run\n";}
-	}
-if ($cu3way > 0) 
-	{
-	$AST_conf_3way=1;
-	if ($DB) {print "AST_conf_3way set to keepalive\n";}
-	}
-
-
-$REGhome = $PATHhome;
-$REGhome =~ s/\//\\\//gi;
-
-
-
-
-
-
-##### First, check and see which processes are running #####
-
-### you may have to use a different ps command if you're not using Slackware Linux
-#	@psoutput = `ps -f -C AST_update --no-headers`;
-#	@psoutput = `ps -f -C AST_updat* --no-headers`;
-#	@psoutput = `/bin/ps -f --no-headers -A`;
-#	@psoutput = `/bin/ps -o pid,args -A`; ### use this one for FreeBSD
-@psoutput = `/bin/ps -o "%p %a" --no-headers -A`;
-
-$i=0;
-foreach (@psoutput)
-	{
-	chomp($psoutput[$i]);
-	if ($DBX) {print "$i|$psoutput[$i]|     \n";}
-	@psline = split(/\/usr\/bin\/perl /,$psoutput[$i]);
-
-	if ($psline[1] =~ /$REGhome\/AST_update\.pl/) 
-		{
-		$runningAST_update++;
-		if ($DB) {print "AST_update RUNNING:              |$psline[1]|\n";}
-		}
-	if ($psline[1] =~ /AST_manager_se/) 
-		{
-		$runningAST_send++;
-		if ($DB) {print "AST_send RUNNING:                |$psline[1]|\n";}
-		}
-	if ($psline[1] =~ /AST_manager_li/) 
-		{
-		$psoutput[$i] =~ s/ .*|\n|\r|\t| //gi;
-		$listen_pid[$runningAST_listen] = $psoutput[$i];
-		$runningAST_listen++;
-		if ($DB) {print "AST_listen RUNNING:              |$psline[1]|\n";}
-		}
-	if ($psline[1] =~ /$REGhome\/AST_VDauto_dial\.pl/) 
-		{
-		$runningAST_VDauto_dial++;
-		if ($DB) {print "AST_VDauto_dial RUNNING:         |$psline[1]|\n";}
-		}
-	if ($psline[1] =~ /$REGhome\/AST_VDremote_agents\.pl/) 
-		{
-		$runningAST_VDremote_agents++;
-		if ($DB) {print "AST_VDremote_agents RUNNING:     |$psline[1]|\n";}
-		}
-	if ($psline[1] =~ /$REGhome\/AST_VDadapt\.pl/) 
-		{
-		$runningAST_VDadapt++;
-		if ($DB) {print "AST_VDadapt RUNNING:             |$psline[1]|\n";}
-		}
-	if ($psline[1] =~ /$REGhome\/FastAGI_log\.pl/) 
-		{
-		$runningFastAGI_log++;
-		if ($DB) {print "FastAGI_log RUNNING:             |$psline[1]|\n";}
-		}
-	if ($psline[1] =~ /$REGhome\/AST_VDauto_dial_FILL\.pl/) 
-		{
-		$runningAST_VDauto_dial_FILL++;
-		if ($DB) {print "AST_VDauto_dial_FILL RUNNING:    |$psline[1]|\n";}
-		}
-	if ($psline[1] =~ /$REGhome\/VD_email_inbound\.pl/) 
-		{
-		$runningemail_inbound++;
-		if ($DB) {print "VD_email_inbound RUNNING:|$psline[1]|\n";}
-		}
-	if ($psoutput[$i] =~ / ip_relay /) 
-		{
-		$runningip_relay++;
-		if ($DB) {print "ip_relay RUNNING:                |$psoutput[$i]|\n";}
-		}
-	if ($psline[1] =~ /$REGhome\/AST_conf_update_3way\.pl/) 
-		{
-		$runningAST_conf_3way++;
-		if ($DB) {print "AST_conf_3way RUNNING:           |$psline[1]|\n";}
-		}
-
-	$i++;
-	}
-
-
-
-
-
-##### Second, IF MORE THAN ONE LISTEN INSTANCE IS RUNNING, KILL THE SECOND ONE #####
-@psline=@MT;
-@psoutput=@MT;
-@listen_pid=@MT;
-if ($runningAST_listen > 1)
-	{
+	$AST_update=0;
+	$AST_send_listen=0;
+	$AST_VDauto_dial=0;
+	$AST_VDremote_agents=0;
+	$AST_VDadapt=0;
+	$FastAGI_log=0;
+	$email_inbound=0;
+	$AST_VDauto_dial_FILL=0;
+	$ip_relay=0;
+	$timeclock_auto_logout=0;
+	$runningAST_update=0;
+	$runningAST_send=0;
 	$runningAST_listen=0;
+	$runningAST_VDauto_dial=0;
+	$runningAST_VDremote_agents=0;
+	$runningAST_VDadapt=0;
+	$runningFastAGI_log=0;
+	$runningAST_VDauto_dial_FILL=0;
+	$runningip_relay=0;
+	$runningAST_conf_3way=0;
+	$runningemail_inbound=0;
+	$runningASTERISK=0;
+	$AST_conf_3way=0;
 
-		sleep(1);
+	if ($VARactive_keepalives =~ /1/) 
+		{
+		$AST_update=1;
+		if ($DB) {print "AST_update set to keepalive\n";}
+		}
+	if ($VARactive_keepalives =~ /2/) 
+		{
+		$AST_send_listen=1;
+		if ($DB) {print "AST_send_listen set to keepalive\n";}
+		}
+	if ($VARactive_keepalives =~ /3/) 
+		{
+		$AST_VDauto_dial=1;
+		if ($DB) {print "AST_VDauto_dial set to keepalive\n";}
+		}
+	if ($VARactive_keepalives =~ /4/) 
+		{
+		$AST_VDremote_agents=1;
+		if ($DB) {print "AST_VDremote_agents set to keepalive\n";}
+		}
+	if ($VARactive_keepalives =~ /5/) 
+		{
+		$AST_VDadapt=1;
+		if ($DB) {print "AST_VDadapt set to keepalive\n";}
+		}
+	if ($VARactive_keepalives =~ /6/) 
+		{
+		$FastAGI_log=1;
+		if ($DB) {print "FastAGI_log set to keepalive\n";}
+		}
+	if ($VARactive_keepalives =~ /7/) 
+		{
+		$AST_VDauto_dial_FILL=1;
+		if ($DB) {print "AST_VDauto_dial_FILL set to keepalive\n";}
+		}
+	if ($VARactive_keepalives =~ /8/) 
+		{
+		$ip_relay=1;
+		if ($DB) {print "ip_relay set to keepalive\n";}
+		}
+	if ($VARactive_keepalives =~ /9/) 
+		{
+		$timeclock_auto_logout=1;
+		if ($DB) {print "Check to see if Timeclock auto logout should run\n";}
+		}
+	if ($VARactive_keepalives =~ /E/) 
+		{
+		$email_inbound=1;
+		if ($DB) {print "Check to see if email parser should run\n";}
+		}
+	if ($cu3way > 0) 
+		{
+		$AST_conf_3way=1;
+		if ($DB) {print "AST_conf_3way set to keepalive\n";}
+		}
+
+
+	$REGhome = $PATHhome;
+	$REGhome =~ s/\//\\\//gi;
+
+
+
+
+
+
+	##### First, check and see which processes are running #####
 
 	### you may have to use a different ps command if you're not using Slackware Linux
 	#	@psoutput = `ps -f -C AST_update --no-headers`;
@@ -447,73 +369,15 @@ if ($runningAST_listen > 1)
 	$i=0;
 	foreach (@psoutput)
 		{
-			chomp($psoutput[$i]);
+		chomp($psoutput[$i]);
 		if ($DBX) {print "$i|$psoutput[$i]|     \n";}
 		@psline = split(/\/usr\/bin\/perl /,$psoutput[$i]);
-		$psoutput[$i] =~ s/^ *//gi;
-		$psoutput[$i] =~ s/ .*|\n|\r|\t| //gi;
 
-		if ($psline[1] =~ /AST_manager_li/) 
+		if ($psoutput[$i] =~ /bin\/asterisk/) 
 			{
-			$listen_pid[$runningAST_listen] = $psoutput[$i];
-			if ($DB) {print "AST_listen RUNNING:              |$psline[1]|$listen_pid[$runningAST_listen]|\n";}
-			$runningAST_listen++;
+			$runningASTERISK++;
+			if ($DB) {print "asterisk RUNNING:              |$psoutput[$i]|\n";}
 			}
-
-		$i++;
-		}
-
-	if ($runningAST_listen > 1)
-		{
-		if ($DB) {print "Killing AST_manager_listen... |$listen_pid[1]|\n";}
-		`/bin/kill -s 9 $listen_pid[1]`;
-		}
-	}
-
-
-
-
-
-
-
-##### Third, double-check that non-running scripts are not running #####
-@psline=@MT;
-@psoutput=@MT;
-
-if ( 
-	( ($AST_update > 0) && ($runningAST_update < 1) ) ||
-	( ($AST_send_listen > 0) && ($runningAST_send < 1) ) ||
-	( ($AST_send_listen > 0) && ($runningAST_listen < 1) ) ||
-	( ($AST_VDauto_dial > 0) && ($runningAST_VDauto_dial < 1) ) ||
-	( ($AST_VDremote_agents > 0) && ($runningAST_VDremote_agents < 1) ) ||
-	( ($AST_VDadapt > 0) && ($runningAST_VDadapt < 1) ) ||
-	( ($FastAGI_log > 0) && ($runningFastAGI_log < 1) ) ||
-	( ($AST_VDauto_dial_FILL > 0) && ($runningAST_VDauto_dial_FILL < 1) ) ||
-	( ($ip_relay > 0) && ($runningip_relay < 1) ) ||
-	( ($AST_conf_3way > 0) && ($runningAST_conf_3way < 1) ) || 
-	( ($email_inbound > 0) && ($runningemail_inbound < 1) )
-   )
-	{
-
-	if ($DB) {print "double check that processes are not running...\n";}
-
-		sleep(1);
-
-	#`PERL5LIB="$PATHhome/libs"; export PERL5LIB`; # issue #457
-	$ENV{'PERL5LIB'} = "$PATHhome/libs";
-	### you may have to use a different ps command if you're not using Slackware Linux
-	#	@psoutput = `ps -f -C AST_update --no-headers`;
-	#	@psoutput = `ps -f -C AST_updat* --no-headers`;
-	#	@psoutput = `/bin/ps -f --no-headers -A`;
-	#	@psoutput = `/bin/ps -o pid,args -A`; ### use this one for FreeBSD
-	@psoutput2 = `/bin/ps -o "%p %a" --no-headers -A`;
-	$i=0;
-	foreach (@psoutput2)
-		{
-		chomp($psoutput2[$i]);
-		if ($DBX) {print "$i|$psoutput2[$i]|     \n";}
-		@psline = split(/\/usr\/bin\/perl /,$psoutput2[$i]);
-
 		if ($psline[1] =~ /$REGhome\/AST_update\.pl/) 
 			{
 			$runningAST_update++;
@@ -526,6 +390,8 @@ if (
 			}
 		if ($psline[1] =~ /AST_manager_li/) 
 			{
+			$psoutput[$i] =~ s/ .*|\n|\r|\t| //gi;
+			$listen_pid[$runningAST_listen] = $psoutput[$i];
 			$runningAST_listen++;
 			if ($DB) {print "AST_listen RUNNING:              |$psline[1]|\n";}
 			}
@@ -559,88 +425,242 @@ if (
 			$runningemail_inbound++;
 			if ($DB) {print "VD_email_inbound RUNNING:|$psline[1]|\n";}
 			}
-		if ($psoutput2[$i] =~ / ip_relay /) 
+		if ($psoutput[$i] =~ / ip_relay /) 
 			{
 			$runningip_relay++;
-			if ($DB) {print "ip_relay RUNNING:                |$psoutput2[$i]|\n";}
+			if ($DB) {print "ip_relay RUNNING:                |$psoutput[$i]|\n";}
 			}
 		if ($psline[1] =~ /$REGhome\/AST_conf_update_3way\.pl/) 
 			{
 			$runningAST_conf_3way++;
 			if ($DB) {print "AST_conf_3way RUNNING:           |$psline[1]|\n";}
 			}
+
 		$i++;
 		}
 
 
-	if ( ($AST_update > 0) && ($runningAST_update < 1) )
-		{ 
-		if ($DB) {print "starting AST_update...\n";}
-		# add a '-L' to the command below to activate logging
-		`/usr/bin/screen -d -m -S ASTupdate $PATHhome/AST_update.pl`;
-		}
-	if ( ($AST_send_listen > 0) && ($runningAST_send < 1) )
-		{ 
-		if ($DB) {print "starting AST_manager_send...\n";}
-		# add a '-L' to the command below to activate logging
-		`/usr/bin/screen -d -m -S ASTsend $PATHhome/AST_manager_send.pl`;
-		}
-	if ( ($AST_send_listen > 0) && ($runningAST_listen < 1) )
-		{ 
-		if ($DB) {print "starting AST_manager_listen...\n";}
-		# add a '-L' to the command below to activate logging
-		`/usr/bin/screen -d -m -S ASTlisten $PATHhome/AST_manager_listen.pl`;
-		}
-	if ( ($AST_VDauto_dial > 0) && ($runningAST_VDauto_dial < 1) )
-		{ 
-		if ($DB) {print "starting AST_VDauto_dial...\n";}
-		# add a '-L' to the command below to activate logging
-		`/usr/bin/screen -d -m -S ASTVDauto $PATHhome/AST_VDauto_dial.pl $autodial_delay`;
-		}
-	if ( ($AST_VDremote_agents > 0) && ($runningAST_VDremote_agents < 1) )
-		{ 
-		if ($DB) {print "starting AST_VDremote_agents...\n";}
-		# add a '-L' to the command below to activate logging
-		`/usr/bin/screen -d -m -S ASTVDremote $PATHhome/AST_VDremote_agents.pl --debug`;
-		}
-	if ( ($AST_VDadapt > 0) && ($runningAST_VDadapt < 1) )
-		{ 
-		if ($DB) {print "starting AST_VDadapt...\n";}
-		# add a '-L' to the command below to activate logging
-		`/usr/bin/screen -d -m -S ASTVDadapt $PATHhome/AST_VDadapt.pl --debug`;
-		}
-	if ( ($FastAGI_log > 0) && ($runningFastAGI_log < 1) )
-		{ 
-		if ($DB) {print "starting FastAGI_log...\n";}
-		# add a '-L' to the command below to activate logging
-		`/usr/bin/screen -d -m -S ASTfastlog $PATHhome/FastAGI_log.pl --debug`;
-		}
-	if ( ($AST_VDauto_dial_FILL > 0) && ($runningAST_VDauto_dial_FILL < 1) )
-		{ 
-		if ($DB) {print "starting AST_VDauto_dial_FILL...\n";}
-		# add a '-L' to the command below to activate logging
-		`/usr/bin/screen -d -m -S ASTVDautoFILL $PATHhome/AST_VDauto_dial_FILL.pl --debug $fill_staggered $adfill_delay`;
-		}
-	if ( ($email_inbound > 0) && ($runningemail_inbound < 1) )
-		{ 
-		if ($DB) {print "starting VD_email_inbound...\n";}
-		# add a '-L' to the command below to activate logging
-		`/usr/bin/screen -d -m -S ASTemail $PATHhome/VD_email_inbound.pl`;
-		}
-	if ( ($ip_relay > 0) && ($runningip_relay < 1) )
-		{ 
-		if ($DB) {print "starting ip_relay through relay_control...\n";}
-		`$PATHhome/ip_relay/relay_control start  2>/dev/null 1>&2`;
-		}
-	if ( ($AST_conf_3way > 0) && ($runningAST_conf_3way < 1) )
-		{ 
-		if ($DB) {print "starting AST_conf_3way...\n";}
-		# add a '-L' to the command below to activate logging
-		`/usr/bin/screen -d -m -S ASTconf3way $PATHhome/AST_conf_update_3way.pl --debug $cu3way_delay`;
+
+
+
+	##### Second, IF MORE THAN ONE LISTEN INSTANCE IS RUNNING, KILL THE SECOND ONE #####
+	@psline=@MT;
+	@psoutput=@MT;
+	@listen_pid=@MT;
+	if ($runningAST_listen > 1)
+		{
+		$runningAST_listen=0;
+
+			sleep(1);
+
+		### you may have to use a different ps command if you're not using Slackware Linux
+		#	@psoutput = `ps -f -C AST_update --no-headers`;
+		#	@psoutput = `ps -f -C AST_updat* --no-headers`;
+		#	@psoutput = `/bin/ps -f --no-headers -A`;
+		#	@psoutput = `/bin/ps -o pid,args -A`; ### use this one for FreeBSD
+		@psoutput = `/bin/ps -o "%p %a" --no-headers -A`;
+
+		$i=0;
+		foreach (@psoutput)
+			{
+				chomp($psoutput[$i]);
+			if ($DBX) {print "$i|$psoutput[$i]|     \n";}
+			@psline = split(/\/usr\/bin\/perl /,$psoutput[$i]);
+			$psoutput[$i] =~ s/^ *//gi;
+			$psoutput[$i] =~ s/ .*|\n|\r|\t| //gi;
+
+			if ($psline[1] =~ /AST_manager_li/) 
+				{
+				$listen_pid[$runningAST_listen] = $psoutput[$i];
+				if ($DB) {print "AST_listen RUNNING:              |$psline[1]|$listen_pid[$runningAST_listen]|\n";}
+				$runningAST_listen++;
+				}
+
+			$i++;
+			}
+
+		if ($runningAST_listen > 1)
+			{
+			if ($DB) {print "Killing AST_manager_listen... |$listen_pid[1]|\n";}
+			`/bin/kill -s 9 $listen_pid[1]`;
+			}
 		}
 
+
+
+
+
+
+
+	##### Third, double-check that non-running scripts are not running #####
+	@psline=@MT;
+	@psoutput=@MT;
+
+	if ( 
+		( ($AST_update > 0) && ($runningAST_update < 1) ) ||
+		( ($AST_send_listen > 0) && ($runningAST_send < 1) ) ||
+		( ($AST_send_listen > 0) && ($runningAST_listen < 1) ) ||
+		( ($AST_VDauto_dial > 0) && ($runningAST_VDauto_dial < 1) ) ||
+		( ($AST_VDremote_agents > 0) && ($runningAST_VDremote_agents < 1) ) ||
+		( ($AST_VDadapt > 0) && ($runningAST_VDadapt < 1) ) ||
+		( ($FastAGI_log > 0) && ($runningFastAGI_log < 1) ) ||
+		( ($AST_VDauto_dial_FILL > 0) && ($runningAST_VDauto_dial_FILL < 1) ) ||
+		( ($ip_relay > 0) && ($runningip_relay < 1) ) ||
+		( ($AST_conf_3way > 0) && ($runningAST_conf_3way < 1) ) || 
+		( ($email_inbound > 0) && ($runningemail_inbound < 1) )
+	   )
+		{
+
+		if ($DB) {print "double check that processes are not running...\n";}
+
+			sleep(1);
+
+		#`PERL5LIB="$PATHhome/libs"; export PERL5LIB`; # issue #457
+		$ENV{'PERL5LIB'} = "$PATHhome/libs";
+		### you may have to use a different ps command if you're not using Slackware Linux
+		#	@psoutput = `ps -f -C AST_update --no-headers`;
+		#	@psoutput = `ps -f -C AST_updat* --no-headers`;
+		#	@psoutput = `/bin/ps -f --no-headers -A`;
+		#	@psoutput = `/bin/ps -o pid,args -A`; ### use this one for FreeBSD
+		@psoutput2 = `/bin/ps -o "%p %a" --no-headers -A`;
+		$i=0;
+		foreach (@psoutput2)
+			{
+			chomp($psoutput2[$i]);
+			if ($DBX) {print "$i|$psoutput2[$i]|     \n";}
+			@psline = split(/\/usr\/bin\/perl /,$psoutput2[$i]);
+
+			if ($psoutput2[$i] =~ /bin\/asterisk/) 
+				{
+				$runningASTERISK++;
+				if ($DB) {print "asterisk RUNNING:              |$psoutput2[$i]|\n";}
+				}
+			if ($psline[1] =~ /$REGhome\/AST_update\.pl/) 
+				{
+				$runningAST_update++;
+				if ($DB) {print "AST_update RUNNING:              |$psline[1]|\n";}
+				}
+			if ($psline[1] =~ /AST_manager_se/) 
+				{
+				$runningAST_send++;
+				if ($DB) {print "AST_send RUNNING:                |$psline[1]|\n";}
+				}
+			if ($psline[1] =~ /AST_manager_li/) 
+				{
+				$runningAST_listen++;
+				if ($DB) {print "AST_listen RUNNING:              |$psline[1]|\n";}
+				}
+			if ($psline[1] =~ /$REGhome\/AST_VDauto_dial\.pl/) 
+				{
+				$runningAST_VDauto_dial++;
+				if ($DB) {print "AST_VDauto_dial RUNNING:         |$psline[1]|\n";}
+				}
+			if ($psline[1] =~ /$REGhome\/AST_VDremote_agents\.pl/) 
+				{
+				$runningAST_VDremote_agents++;
+				if ($DB) {print "AST_VDremote_agents RUNNING:     |$psline[1]|\n";}
+				}
+			if ($psline[1] =~ /$REGhome\/AST_VDadapt\.pl/) 
+				{
+				$runningAST_VDadapt++;
+				if ($DB) {print "AST_VDadapt RUNNING:             |$psline[1]|\n";}
+				}
+			if ($psline[1] =~ /$REGhome\/FastAGI_log\.pl/) 
+				{
+				$runningFastAGI_log++;
+				if ($DB) {print "FastAGI_log RUNNING:             |$psline[1]|\n";}
+				}
+			if ($psline[1] =~ /$REGhome\/AST_VDauto_dial_FILL\.pl/) 
+				{
+				$runningAST_VDauto_dial_FILL++;
+				if ($DB) {print "AST_VDauto_dial_FILL RUNNING:    |$psline[1]|\n";}
+				}
+			if ($psline[1] =~ /$REGhome\/VD_email_inbound\.pl/) 
+				{
+				$runningemail_inbound++;
+				if ($DB) {print "VD_email_inbound RUNNING:|$psline[1]|\n";}
+				}
+			if ($psoutput2[$i] =~ / ip_relay /) 
+				{
+				$runningip_relay++;
+				if ($DB) {print "ip_relay RUNNING:                |$psoutput2[$i]|\n";}
+				}
+			if ($psline[1] =~ /$REGhome\/AST_conf_update_3way\.pl/) 
+				{
+				$runningAST_conf_3way++;
+				if ($DB) {print "AST_conf_3way RUNNING:           |$psline[1]|\n";}
+				}
+			$i++;
+			}
+
+
+		if ( ($AST_update > 0) && ($runningAST_update < 1) )
+			{ 
+			if ($DB) {print "starting AST_update...\n";}
+			# add a '-L' to the command below to activate logging
+			`/usr/bin/screen -d -m -S ASTupdate $PATHhome/AST_update.pl`;
+			}
+		if ( ($AST_send_listen > 0) && ($runningAST_send < 1) )
+			{ 
+			if ($DB) {print "starting AST_manager_send...\n";}
+			# add a '-L' to the command below to activate logging
+			`/usr/bin/screen -d -m -S ASTsend $PATHhome/AST_manager_send.pl`;
+			}
+		if ( ($AST_send_listen > 0) && ($runningAST_listen < 1) )
+			{ 
+			if ($DB) {print "starting AST_manager_listen...\n";}
+			# add a '-L' to the command below to activate logging
+			`/usr/bin/screen -d -m -S ASTlisten $PATHhome/AST_manager_listen.pl`;
+			}
+		if ( ($AST_VDauto_dial > 0) && ($runningAST_VDauto_dial < 1) )
+			{ 
+			if ($DB) {print "starting AST_VDauto_dial...\n";}
+			# add a '-L' to the command below to activate logging
+			`/usr/bin/screen -d -m -S ASTVDauto $PATHhome/AST_VDauto_dial.pl $autodial_delay`;
+			}
+		if ( ($AST_VDremote_agents > 0) && ($runningAST_VDremote_agents < 1) )
+			{ 
+			if ($DB) {print "starting AST_VDremote_agents...\n";}
+			# add a '-L' to the command below to activate logging
+			`/usr/bin/screen -d -m -S ASTVDremote $PATHhome/AST_VDremote_agents.pl --debug`;
+			}
+		if ( ($AST_VDadapt > 0) && ($runningAST_VDadapt < 1) )
+			{ 
+			if ($DB) {print "starting AST_VDadapt...\n";}
+			# add a '-L' to the command below to activate logging
+			`/usr/bin/screen -d -m -S ASTVDadapt $PATHhome/AST_VDadapt.pl --debug`;
+			}
+		if ( ($FastAGI_log > 0) && ($runningFastAGI_log < 1) )
+			{ 
+			if ($DB) {print "starting FastAGI_log...\n";}
+			# add a '-L' to the command below to activate logging
+			`/usr/bin/screen -d -m -S ASTfastlog $PATHhome/FastAGI_log.pl --debug`;
+			}
+		if ( ($AST_VDauto_dial_FILL > 0) && ($runningAST_VDauto_dial_FILL < 1) )
+			{ 
+			if ($DB) {print "starting AST_VDauto_dial_FILL...\n";}
+			# add a '-L' to the command below to activate logging
+			`/usr/bin/screen -d -m -S ASTVDautoFILL $PATHhome/AST_VDauto_dial_FILL.pl --debug $fill_staggered $adfill_delay`;
+			}
+		if ( ($email_inbound > 0) && ($runningemail_inbound < 1) )
+			{ 
+			if ($DB) {print "starting VD_email_inbound...\n";}
+			# add a '-L' to the command below to activate logging
+			`/usr/bin/screen -d -m -S ASTemail $PATHhome/VD_email_inbound.pl`;
+			}
+		if ( ($ip_relay > 0) && ($runningip_relay < 1) )
+			{ 
+			if ($DB) {print "starting ip_relay through relay_control...\n";}
+			`$PATHhome/ip_relay/relay_control start  2>/dev/null 1>&2`;
+			}
+		if ( ($AST_conf_3way > 0) && ($runningAST_conf_3way < 1) )
+			{ 
+			if ($DB) {print "starting AST_conf_3way...\n";}
+			# add a '-L' to the command below to activate logging
+			`/usr/bin/screen -d -m -S ASTconf3way $PATHhome/AST_conf_update_3way.pl --debug $cu3way_delay`;
+			}
+		}
 	}
-
 
 
 ### run the Timeclock auto-logout process ###
@@ -1279,7 +1299,7 @@ $sthA->finish();
 if ($DBXXX > 0) {print "SYSTEM SETTINGS:     $sounds_central_control_active|$active_voicemail_server|$SScustom_dialplan_entry|$SSdefault_codecs\n";}
 
 ##### Get the settings for this server's server_ip #####
-$stmtA = "SELECT active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,asterisk_version,sounds_update,conf_secret,custom_dialplan_entry FROM servers where server_ip='$server_ip';";
+$stmtA = "SELECT active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,asterisk_version,sounds_update,conf_secret,custom_dialplan_entry,auto_restart_asterisk,asterisk_temp_no_restart FROM servers where server_ip='$server_ip';";
 #	print "$stmtA\n";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1294,6 +1314,8 @@ if ($sthArows > 0)
 	$sounds_update =				$aryA[4];
 	$self_conf_secret =				$aryA[5];
 	$SERVERcustom_dialplan_entry =	$aryA[6];
+	$auto_restart_asterisk =		$aryA[7];
+	$asterisk_temp_no_restart =		$aryA[8];
 	}
 $sthA->finish();
 
@@ -3151,6 +3173,115 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 
+################################################################################
+#####  BEGIN Find system uptime and update server record with the data
+################################################################################
+$uptimebin = '';
+$system_uptime='';
+$recent_reboot=0;
+
+### find uptime binary
+if ( -e ('/bin/uptime')) {$uptimebin = '/bin/uptime';}
+else 
+	{
+	if ( -e ('/usr/bin/uptime')) {$uptimebin = '/usr/bin/uptime';}
+	else 
+		{
+		if ( -e ('/usr/local/bin/uptime')) {$uptimebin = '/usr/local/bin/uptime';}
+		else
+			{
+			print "Can't find uptime binary! Exiting...\n";
+			}
+		}
+	}
+
+if (length($uptimebin)>3) 
+	{
+	@sysuptime = `$uptimebin`;
+	 # 18:26:14 up 153 days, 23:59,  4 users,  load average: 0.01, 0.01, 0.00
+	 # 10:03am  up 123 days  0:10,  1 user,  load average: 0.11, 0.05, 0.01
+	 # 10:03am  up   3:17,  2 users,  load average: 0.41, 0.28, 0.21
+
+	if ($DBX) {print "Uptime debug 1: |$sysuptime[0]|\n";}
+	$sysuptime[0] =~ s/ days, / days /gi;
+	$sysuptime[0] =~ s/,.*//gi;
+	$sysuptime[0] =~ s/  / /gi;
+	$sysuptime[0] =~ s/  / /gi;
+	$sysuptime[0] =~ s/\r|\n|\t//gi;
+	@uptimedata = split(/ up /,$sysuptime[0]);
+	$system_uptime = $uptimedata[1];
+
+	# If server was just restarted, reset the temp-no-restart setting to N
+	$asterisk_temp_no_restartSQL='';
+	if ($system_uptime =~ /^0:00|^0:01|^0:02|^0:03|^0:04|^0:05/)
+		{
+		$asterisk_temp_no_restartSQL=",asterisk_temp_no_restart='N'";
+		$recent_reboot++;
+		}
+	if ($DBX) {print "Uptime debug 2: |$sysuptime[0]|$system_uptime|$recent_reboot|\n";}
+
+	$stmtA = "UPDATE servers SET system_uptime='$system_uptime' $asterisk_temp_no_restartSQL where server_ip='$server_ip';";
+	$affected_rows = $dbhA->do($stmtA) or die  "Couldn't execute query: |$stmtA|\n";
+	if ($DBX) {print "Uptime debug 3: |$affected_rows|$stmtA|\n";}
+	}
+################################################################################
+#####  END Find system uptime and update server record with the data
+################################################################################
+
+
+################################################################################
+#####  BEGIN Confirm Asterisk is running, and if not restart it from the screen
+################################################################################
+if ($DBX > 0)
+	{print "CONFIRM ASTERISK IS RUNNING: |$active_asterisk_server|$runningASTERISK|$auto_restart_asterisk|$asterisk_temp_no_restart|$recent_reboot|\n";}
+if ($active_asterisk_server =~ /Y/)
+	{
+	if ( ($runningASTERISK < 1) && ($auto_restart_asterisk =~ /Y/) && ($asterisk_temp_no_restart =~ /N/) && ($recent_reboot < 1) )
+		{
+		$asteriskSCREEN=0;
+		@screenoutput = `/usr/bin/screen -ls`;
+
+		$i=0;
+		foreach (@screenoutput)
+			{
+			chomp($screenoutput[$i]);
+			if ($DBX) {print "$i|$screenoutput[$i]|     \n";}
+			if ($screenoutput[$i] =~ /\.asterisk/) 
+				{
+				$asteriskSCREEN++;
+				if ($DB) {print "asterisk screen session open:              |$screenoutput[$i]|\n";}
+				}
+			$i++;
+			}
+		
+		if ($asteriskSCREEN > 0)
+			{
+			if ($DB) {print "restarting Asterisk process...\n";}
+			$stmtA="INSERT INTO vicidial_admin_log set event_date=NOW(), user='VDAD', ip_address='1.1.1.1', event_section='SERVERS', event_type='RESET', record_id='$server_ip', event_code='AUTO RESTART ASTERISK', event_sql='', event_notes='$system_uptime system uptime';";
+			$Iaffected_rows = $dbhA->do($stmtA);
+			if ($DBX) {print "Restart asterisk debug 1: |$Iaffected_rows|$stmtA|\n";}
+
+			`screen -XS asterisk eval 'stuff "/usr/sbin/asterisk -vvvvgcT\015"'`;
+			}
+		else
+			{
+			if ($DB) {print "starting Asterisk process...\n";}
+			$stmtA="INSERT INTO vicidial_admin_log set event_date=NOW(), user='VDAD', ip_address='1.1.1.1', event_section='SERVERS', event_type='RESET', record_id='$server_ip', event_code='AUTO START ASTERISK', event_sql='', event_notes='$system_uptime system uptime';";
+			$Iaffected_rows = $dbhA->do($stmtA);
+			if ($DBX) {print "Restart asterisk debug 1: |$Iaffected_rows|$stmtA|\n";}
+
+			`$PATHhome/start_asterisk_boot.pl`;
+			}
+		}
+	}
+################################################################################
+#####  END Confirm Asterisk is running, and if not restart it from the screen
+################################################################################
+
+
+
+
+
 
 ################################################################################
 #####  BEGIN  Audio Store sync
@@ -3330,52 +3461,52 @@ exit;
 
 
 sub leading_zero($) 
-{
+	{
     $_ = $_[0];
     s/^(\d)$/0$1/;
     s/^(\d\d)$/0$1/;
     return $_;
-} # End of the leading_zero() routine.
+	} # End of the leading_zero() routine.
 
 # subroutine to parse the asterisk version
 # and return a hash with the various part
 sub parse_asterisk_version
-{
-		# grab the arguments
-		my $ast_ver_str = $_[0];
+	{
+	# grab the arguments
+	my $ast_ver_str = $_[0];
 
-		# get everything after the - and put it in $ast_ver_postfix
-		my @hyphen_parts = split( /-/ , $ast_ver_str );
+	# get everything after the - and put it in $ast_ver_postfix
+	my @hyphen_parts = split( /-/ , $ast_ver_str );
 
-		my $ast_ver_postfix = $hyphen_parts[1];
+	my $ast_ver_postfix = $hyphen_parts[1];
 
-		# now split everything before the - up by the .
-		my @dot_parts = split( /\./ , $hyphen_parts[0] );
+	# now split everything before the - up by the .
+	my @dot_parts = split( /\./ , $hyphen_parts[0] );
 
-		my %ast_ver_hash;
+	my %ast_ver_hash;
 
-		if ( $dot_parts[0] <= 1 )
+	if ( $dot_parts[0] <= 1 )
 		{
-				%ast_ver_hash = (
-						"major" => $dot_parts[0],
-						"minor" => $dot_parts[1],
-						"build" => $dot_parts[2],
-						"revision" => $dot_parts[3],
-						"postfix" => $ast_ver_postfix
-				);
+		%ast_ver_hash = (
+				"major" => $dot_parts[0],
+				"minor" => $dot_parts[1],
+				"build" => $dot_parts[2],
+				"revision" => $dot_parts[3],
+				"postfix" => $ast_ver_postfix
+			);
 		}
 
-		# digium dropped the 1 from asterisk 10 but we still need it
-		if ( $dot_parts[0] > 1 )
+	# digium dropped the 1 from asterisk 10 but we still need it
+	if ( $dot_parts[0] > 1 )
 		{
-				%ast_ver_hash = (
-						"major" => 1,
-						"minor" => $dot_parts[0],
-						"build" => $dot_parts[1],
-						"revision" => $dot_parts[2],
-						"postfix" => $ast_ver_postfix
-				);
+		%ast_ver_hash = (
+				"major" => 1,
+				"minor" => $dot_parts[0],
+				"build" => $dot_parts[1],
+				"revision" => $dot_parts[2],
+				"postfix" => $ast_ver_postfix
+			);
 		}
 
-		return ( %ast_ver_hash );
-}
+	return ( %ast_ver_hash );
+	}

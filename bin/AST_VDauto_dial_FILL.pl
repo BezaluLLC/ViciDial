@@ -36,6 +36,7 @@
 # 130227-1604 - Cleanup of staggered code, resetting of variables and arrays
 # 130706-2024 - Added disable_auto_dial system option
 # 131016-0658 - Fix for disable_auto_dial system option
+# 131122-1237 - Formatting fixes and missing sthA->finish
 #
 
 ### begin parsing run-time options ###
@@ -51,6 +52,7 @@ if (length($ARGV[0])>1)
 	if ($args =~ /--help/i)
 		{
 		print "allowed run time options:\n";
+		print "  [--help] = this screen\n";
 		print "  [--test] = test\n";
 		print "  [--debug] = verbose debug messages\n";
 		print "  [--staggered] = experimental staggering of placing calls on large multi-server systems\n";
@@ -381,6 +383,7 @@ while($one_day_interval > 0)
 						$VAC_balance_fill =	$aryA[0];
 						}
 					$sthA->finish();
+
 					$DBfill_current_balance[$camp_CIPct] = "$VAC_balance_fill";
 
 					$event_string="               CAMPAIGN: $DBfill_campaign[$camp_CIPct]\n";
@@ -406,6 +409,7 @@ while($one_day_interval > 0)
 						$rec_count++;
 						}
 					$sthA->finish();
+
 					chop($full_serversSQL);
 					if (length($full_serversSQL)<6) {$full_serversSQL="''";}
 					$event_string.="SERVERS WITH TRUNK FULL for $DBfill_campaign[$camp_CIPct]: $full_servers |$full_serversSQL|";
@@ -560,7 +564,6 @@ while($one_day_interval > 0)
 							$event_string="     Server: $DB_camp_server_server_ip[$server_CIPct]   AVAIL: $DB_camp_server_available[$server_CIPct]   DIAL: $DB_camp_server_trunks_to_dial[$server_CIPct]";
 							$event_string.="     Campaign Dial Fill tally: $DBfill_tally[$camp_CIPct]/$DBfill_needed[$camp_CIPct]";
 							&event_logger;
-
 
 							$stmtA = "SELECT count(*) FROM vicidial_live_agents where campaign_id='$DBfill_campaign[$camp_CIPct]' and status NOT IN('PAUSED');";
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -784,6 +787,8 @@ while($one_day_interval > 0)
 															$stmtA="UPDATE vicidial_campaign_cid_areacodes set call_count_today=(call_count_today + 1) where campaign_id='$DBfill_campaign[$camp_CIPct]' and areacode='$temp_ac' and outbound_cid='$temp_vcca';";
 															$affected_rows = $dbhA->do($stmtA);
 															}
+														else
+															{$sthA->finish();}
 														$temp_CID = $temp_vcca;
 														$temp_CID =~ s/\D//gi;
 														if (length($temp_CID) > 6) 
@@ -1012,7 +1017,6 @@ while($one_day_interval > 0)
 
 					$camp_CIPct++;
 					}
-
 				}
 		##################################################################################
 		##### END LOOP IF THERE ARE BALANCE SERVERS AND THERE ARE SHORTAGES
@@ -1027,7 +1031,6 @@ while($one_day_interval > 0)
 				&event_logger;
 				}
 			}
-
 
 
 
@@ -1052,7 +1055,7 @@ while($one_day_interval > 0)
 		### sleep for 2 and a half seconds before beginning the loop again
 		usleep(1*$loop_delay*1000);
 
-	$endless_loop--;
+		$endless_loop--;
 		if($DB){print STDERR "\nloop counter: |$endless_loop|\n";}
 
 		### putting a blank file called "VDADfull.kill" in the directory will automatically safely kill this program
@@ -1066,18 +1069,18 @@ while($one_day_interval > 0)
 		if ($endless_loop =~ /0$/)	# run every ten cycles (about 25 seconds)
 			{
 			### Grab Server values from the database
-				$stmtA = "SELECT vd_server_logs FROM servers where server_ip = '$VARserver_ip';";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				$sthArows=$sthA->rows;
-				if ($sthArows > 0)
-					{
-					@aryA = $sthA->fetchrow_array;
-					$DBvd_server_logs =			$aryA[0];
-					if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
-					else {$SYSLOG = '0';}
-					}
-				$sthA->finish();
+			$stmtA = "SELECT vd_server_logs FROM servers where server_ip = '$VARserver_ip';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$DBvd_server_logs =			$aryA[0];
+				if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
+				else {$SYSLOG = '0';}
+				}
+			$sthA->finish();
 
 			### Grab Server values from the database in case they've changed
 			$stmtA = "SELECT max_vicidial_trunks,answer_transfer_agent,local_gmt,ext_context FROM servers where server_ip = '$server_ip';";
@@ -1113,7 +1116,6 @@ while($one_day_interval > 0)
 	&event_logger;
 
 	$one_day_interval--;
-
 	}
 
 $event_string='CLOSING DB CONNECTION|';
@@ -1217,9 +1219,6 @@ sub get_time_now	#get the current date and time and epoch for logging call lengt
 	if ($Tsec < 10) {$Tsec = "0$Tsec";}
 		$TDSQLdate = "$Tyear-$Tmon-$Tmday $Thour:$Tmin:$Tsec";
 	}
-
-
-
 
 
 sub event_logger

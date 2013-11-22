@@ -243,6 +243,12 @@ This is the dial plan context that this phone will use to dial out. If you are r
 Update List Owner||
 Advanced Lead Management Tools||
 Basic Lead Management Tools||
+System Uptime||
+This field will show the system uptime of this server. This field only updates if configured to do so by your administrator||
+Auto-Restart Asterisk||
+If Asterisk is running on this server and you want the system to make sure that it will be restarted in the event that it crashes, you might want to consider enabling this setting. If enabled, the system will check every minute to see if Asterisk is running, and if it is not it will attempt to restart it. This process will not run in the first 5 minutes after a system has been up. Default is N||
+Temp No-Restart Asterisk||
+If Auto-Restart Asterisk is enabled on this server, turning on this setting will prevent the auto-restart process from running until after the server is rebooted. Default is N||
 
 
 ########################## CHANGES TO EXISTING PHRASES IN ADMIN TRANSLATION

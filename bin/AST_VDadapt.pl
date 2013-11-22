@@ -1,12 +1,12 @@
 #!/usr/bin/perl
 #
-# AST_VDadapt.pl version 2.4
+# AST_VDadapt.pl version 2.8
 #
 # DESCRIPTION:
 # adjusts the auto_dial_level for vicidial adaptive-predictive campaigns. 
 # gather call stats for campaigns and in-groups
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 60823-1302 - First build from AST_VDhopper.pl
@@ -38,6 +38,7 @@
 # 111103-0626 - Added MAXCAL as a drop status
 # 111219-1420 - Added daily stats updates to new table for total, in-group and campaign
 # 111223-0924 - Added check for logged-in agents
+# 131122-1314 - Added several missing sthA->finish
 #
 
 # constants
@@ -286,10 +287,12 @@ if ($DBX) {print "CONNECTED TO DATABASE:  $VARDB_server|$VARDB_database\n";}
 $stmtA = "INSERT IGNORE into vicidial_campaign_stats (campaign_id) select campaign_id from vicidial_campaigns;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthA->finish();
 
 $stmtA = "INSERT IGNORE into vicidial_campaign_stats_debug (campaign_id,server_ip) select campaign_id,'ADAPT' from vicidial_campaigns;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthA->finish();
 
 &get_time_now;
 
@@ -467,6 +470,7 @@ while ($master_loop < $CLIloops)
 			if ($DBXXX) {print "     |$stmtA|\n";}
 			}
 		$sthA->finish();
+
 		### Find out how many agents are logged in to a specific campaign
 		$stmtA = "SELECT count(*) from vicidial_live_agents where campaign_id='$campaign_id[$i]' and last_update_time > '$VDL_one';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -481,6 +485,7 @@ while ($master_loop < $CLIloops)
 			if ($DBXXX) {print "     |$stmtA|\n";}
 			}
 		$sthA->finish();
+
 		$event_string = "|$campaign_id[$i]|$hopper_level[$i]|$hopper_ready_count|$local_call_time[$i]|$diff_ratio_updater|$drop_count_updater|";
 		if ($DBX) {print "$i     $event_string\n";}
 		$debug_camp_output .= "$i     $event_string\n";
@@ -881,6 +886,7 @@ sub calculate_drops
 		$rec_count++;
 		}
 	$sthA->finish();
+
 	chop($camp_ANS_STAT_SQL);
 
 	$debug_camp_output .= "     CAMPAIGN ANSWERED STATUSES: $campaign_id[$i]|$camp_ANS_STAT_SQL|\n";
@@ -928,6 +934,7 @@ sub calculate_drops
 		$VCScalls_one[$i] =	$aryA[0];
 		}
 	$sthA->finish();
+
 	if ($VCScalls_one[$i] > 0)
 		{
 		# LAST MINUTE ANSWERS
@@ -941,6 +948,7 @@ sub calculate_drops
 			$VCSanswers_one[$i] =	$aryA[0];
 			}
 		$sthA->finish();
+
 		# LAST MINUTE DROPS
 		$stmtA = "SELECT count(*) from $vicidial_log where campaign_id='$campaign_id[$i]' and call_date > '$VDL_one' and status IN('DROP','XDROP');";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -970,6 +978,7 @@ sub calculate_drops
 		$VCScalls_today[$i] =	$aryA[0];
 		}
 	$sthA->finish();
+
 	if ($VCScalls_today[$i] > 0)
 		{
 		# TODAY ANSWERS
@@ -983,6 +992,7 @@ sub calculate_drops
 			$VCSanswers_today[$i] =	$aryA[0];
 			}
 		$sthA->finish();
+
 		# TODAY DROPS
 		$stmtA = "SELECT count(*) from $vicidial_log where campaign_id='$campaign_id[$i]' and call_date > '$VDL_date' and status IN('DROP','XDROP');";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1016,6 +1026,7 @@ sub calculate_drops
 		$VCScalls_hour[$i] =	$aryA[0];
 		}
 	$sthA->finish();
+
 	if ($VCScalls_hour[$i] > 0)
 		{
 		# ANSWERS LAST HOUR
@@ -1029,6 +1040,7 @@ sub calculate_drops
 			$VCSanswers_hour[$i] =	$aryA[0];
 			}
 		$sthA->finish();
+
 		# DROP LAST HOUR
 		$stmtA = "SELECT count(*) from $vicidial_log where campaign_id='$campaign_id[$i]' and call_date > '$VDL_hour' and status IN('DROP','XDROP');";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1059,6 +1071,7 @@ sub calculate_drops
 		$VCScalls_halfhour[$i] =	$aryA[0];
 		}
 	$sthA->finish();
+
 	if ($VCScalls_halfhour[$i] > 0)
 		{
 		# ANSWERS HALFHOUR
@@ -1072,6 +1085,7 @@ sub calculate_drops
 			$VCSanswers_halfhour[$i] =	$aryA[0];
 			}
 		$sthA->finish();
+
 		# DROPS HALFHOUR
 		$stmtA = "SELECT count(*) from $vicidial_log where campaign_id='$campaign_id[$i]' and call_date > '$VDL_halfhour' and status IN('DROP','XDROP');";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1115,6 +1129,7 @@ sub calculate_drops
 			$VCSanswers_five[$i] =	$aryA[0];
 			}
 		$sthA->finish();
+
 		# DROPS FIVEMINUTE
 		$stmtA = "SELECT count(*) from $vicidial_log where campaign_id='$campaign_id[$i]' and call_date > '$VDL_five' and status IN('DROP','XDROP');";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1169,6 +1184,8 @@ sub calculate_drops
 			$CATstatusesSQL .=		 "'$aryA[0]',";
 			$rec_count++;
 			}
+		$sthA->finish();
+
 		# FIND CAMPAIGN_STATUSES IN STATUS CATEGORY
 		$stmtA = "SELECT status from vicidial_campaign_statuses where category='$VSCcategory' and campaign_id='$campaign_id[$i]';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1181,6 +1198,8 @@ sub calculate_drops
 			$CATstatusesSQL .=		 "'$aryA[0]',";
 			$rec_count++;
 			}
+		$sthA->finish();
+
 		chop($CATstatusesSQL);
 		if (length($CATstatusesSQL) > 2)
 			{
@@ -1195,6 +1214,7 @@ sub calculate_drops
 				@aryA = $sthA->fetchrow_array;
 				$VSCtally =		 $aryA[0];
 				}
+			$sthA->finish();
 			}
 		$g++;
 		$debug_camp_output .= "     $campaign_id[$i]|$VSCcategory|$VSCtally|$CATstatusesSQL|\n";
@@ -1271,6 +1291,7 @@ sub calculate_drops
 			$VCSagent_custtalk_today[$i] =	$aryA[2];
 			$VCSagent_acw_today[$i] =		$aryA[3];
 			}
+		$sthA->finish();
 
 		$stmtA = "SELECT count(*) from vicidial_agent_log where event_time > '$VDL_date' and campaign_id='$campaign_id[$i]' and lead_id > 0;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1283,7 +1304,6 @@ sub calculate_drops
 			if ($DBX) {print "     AGENT CALLS: $aryA[0]|$stmtA\n";}
 			$VCSagent_calls_today[$i] =		$aryA[0];
 			}
-
 		$sthA->finish();
 		}
 
@@ -1474,7 +1494,6 @@ sub launch_max_calls_gather
 			@aryA = $sthA->fetchrow_array;
 			$tcalls_count =		$aryA[0];
 			}
-
 		$sthA->finish();
 
 		$stmtA = "SELECT count(*) from vicidial_auto_calls where call_type='IN' and server_ip IN($serversSQL);";
@@ -1510,8 +1529,8 @@ sub launch_max_calls_gather
 			{
 			@aryA = $sthA->fetchrow_array;
 			$live_agents =	$aryA[0];
-			$sthA->finish();
 			}
+		$sthA->finish();
 
 		$stmtA = "SELECT count(*) from vicidial_live_agents where last_update_time > '$VDL_one' and extension LIKE \"R/%\" and server_ip IN($serversSQL);";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1522,8 +1541,8 @@ sub launch_max_calls_gather
 			{
 			@aryA = $sthA->fetchrow_array;
 			$live_remote_agents =	$aryA[0];
-			$sthA->finish();
 			}
+		$sthA->finish();
 
 		if ($DB) {print "$now_date MAX CHANNELS TOTALS:  $tc_count($lsc_count+$lc_count)|$tcalls_count|$incalls_count|$outcalls_count|$live_agents|$live_remote_agents\n";}
 
@@ -1692,8 +1711,8 @@ sub calculate_drops_inbound
 			{
 			@aryA = $sthA->fetchrow_array;
 			$iVCSlive_calls[$p] =	$aryA[0];
-			$sthA->finish();
 			}
+		$sthA->finish();
 
 		$stmtA = "SELECT count(*) from vicidial_live_agents where closer_campaigns LIKE \"% $group_id[$p] %\" and last_update_time > '$VDL_one';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1703,8 +1722,8 @@ sub calculate_drops_inbound
 			{
 			@aryA = $sthA->fetchrow_array;
 			$itotal_agents[$p] =	$aryA[0];
-			$sthA->finish();
 			}
+		$sthA->finish();
 
 		$stmtA = "SELECT count(*) from vicidial_live_agents where closer_campaigns LIKE \"% $group_id[$p] %\" and last_update_time > '$VDL_one' and extension LIKE \"R/%\";";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1714,8 +1733,8 @@ sub calculate_drops_inbound
 			{
 			@aryA = $sthA->fetchrow_array;
 			$itotal_remote_agents[$p] =	$aryA[0];
-			$sthA->finish();
 			}
+		$sthA->finish();
 		$debug_ingroup_output .= "     DAILY STATS|$iVCSlive_calls[$p]|$itotal_agents[$p]|$itotal_remote_agents[$p]|";
 		}
 
@@ -1730,6 +1749,7 @@ sub calculate_drops_inbound
 		$iVCScalls_today[$p] =	$aryA[0];
 		}
 	$sthA->finish();
+
 	if ($iVCScalls_today[$p] > 0)
 		{
 		# TODAY ANSWERS
@@ -1743,6 +1763,7 @@ sub calculate_drops_inbound
 			$iVCSanswers_today[$p] =	$aryA[0];
 			}
 		$sthA->finish();
+
 		# TODAY DROPS
 		$stmtA = "SELECT count(*) from $vicidial_closer_log where campaign_id='$group_id[$p]' and call_date > '$VDL_date' and status IN('DROP','XDROP');";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1775,6 +1796,7 @@ sub calculate_drops_inbound
 			$answer_sec_pct_rt_stat_one_PCT[$p] = $aryA[0];
 			}
 		$sthA->finish();
+
 		$stmtA = "SELECT count(*) from $vicidial_closer_log where campaign_id='$group_id[$p]' and call_date > '$VDL_date' and queue_seconds <= $answer_sec_pct_rt_stat_two and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL');";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1784,6 +1806,7 @@ sub calculate_drops_inbound
 			@aryA = $sthA->fetchrow_array;
 			$answer_sec_pct_rt_stat_two_PCT[$p] = $aryA[0];
 			}
+		$sthA->finish();
 
 		# TODAY TOTAL HOLD TIME FOR ANSWERED CALLS
 		$stmtA = "SELECT sum(queue_seconds) from $vicidial_closer_log where campaign_id='$group_id[$p]' and call_date > '$VDL_date' and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL');";
@@ -1796,6 +1819,8 @@ sub calculate_drops_inbound
 			if ($aryA[0] > 0)
 				{$hold_sec_answer_calls[$p] = $aryA[0];}
 			}
+		$sthA->finish();
+
 		# TODAY TOTAL HOLD TIME FOR DROP CALLS
 		$stmtA = "SELECT sum(queue_seconds) from $vicidial_closer_log where campaign_id='$group_id[$p]' and call_date > '$VDL_date' and status IN('DROP','XDROP');";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1807,6 +1832,8 @@ sub calculate_drops_inbound
 			if ($aryA[0] > 0)
 				{$hold_sec_drop_calls[$p] = $aryA[0];}
 			}
+		$sthA->finish();
+
 		# TODAY TOTAL QUEUE TIME FOR QUEUE CALLS
 		$stmtA = "SELECT sum(queue_seconds) from $vicidial_closer_log where campaign_id='$group_id[$p]' and call_date > '$VDL_date';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1818,6 +1845,7 @@ sub calculate_drops_inbound
 			if ($aryA[0] > 0)
 				{$hold_sec_queue_calls[$p] = $aryA[0];}
 			}
+		$sthA->finish();
 		}
 
 
@@ -1856,6 +1884,8 @@ sub calculate_drops_inbound
 			$CATstatusesSQL .=		 "'$aryA[0]',";
 			$rec_count++;
 			}
+		$sthA->finish();
+
 		# FIND CAMPAIGN_STATUSES IN STATUS CATEGORY
 		$stmtA = "SELECT status from vicidial_campaign_statuses where category='$VSCcategory';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1868,6 +1898,8 @@ sub calculate_drops_inbound
 			$CATstatusesSQL .=		 "'$aryA[0]',";
 			$rec_count++;
 			}
+		$sthA->finish();
+
 		chop($CATstatusesSQL);
 		if (length($CATstatusesSQL)>2)
 			{
@@ -1882,6 +1914,7 @@ sub calculate_drops_inbound
 				@aryA = $sthA->fetchrow_array;
 				$VSCtally =		$aryA[0];
 				}
+			$sthA->finish();
 			}
 		$g++;
 		if ($DBX) {print "     $group_id[$p]|$VSCcategory|$VSCtally|$CATstatusesSQL|\n";}
