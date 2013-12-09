@@ -249,6 +249,16 @@ Auto-Restart Asterisk||
 If Asterisk is running on this server and you want the system to make sure that it will be restarted in the event that it crashes, you might want to consider enabling this setting. If enabled, the system will check every minute to see if Asterisk is running, and if it is not it will attempt to restart it. This process will not run in the first 5 minutes after a system has been up. Default is N||
 Temp No-Restart Asterisk||
 If Auto-Restart Asterisk is enabled on this server, turning on this setting will prevent the auto-restart process from running until after the server is rebooted. Default is N||
+Dead Call Max Seconds||
+If this is set to greater than 0, after a customer hangs up and the agent has not clicked on the Hangup Customer button in this number of seconds, the call will automatically be hung up, the status below will be set and the agent will be paused. Default is 0 for disabled||
+Dead Call Max Status||
+If Dead Call Max Seconds is enabled, this is the status set for the call when the agent dead call is not hung up past the number of seconds set above. Default is DCMX||
+Dispo Call Max Seconds||
+If this is set to greater than 0, and the agent has not selected a disposition status in this number of seconds, the call will automatically be set to the status below and the agent will be paused. Default is 0 for disabled||
+Dispo Call Max Status||
+If Dispo Call Max Seconds is enabled, this is the status set for the call when the agent has not selected a status past the number of seconds set above. Default is DISMX||
+Agent Pause Max Seconds||
+If this is set to greater than 0, and the agent has not gone out of PAUSED status in this number of seconds, the agent will automatically be logged out of the agent screen. Default is 0 for disabled||
 
 
 ########################## CHANGES TO EXISTING PHRASES IN ADMIN TRANSLATION
@@ -261,6 +271,7 @@ This agent screen was not opened properly||
 Dial Lead ID||
 Agent Form Display Script||
 Agent Notes||
+You have been paused for too long, you have been logged out of your session||
 
 
 ########################## CHANGES TO EXISTING PHRASES IN AGENT TRANSLATION

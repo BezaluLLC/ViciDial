@@ -14,10 +14,11 @@
 # 130603-2211 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130705-2010 - Added optional encrypted passwords compatibility
 # 130802-1031 - Changed to PHP mysqli functions
+# 131208-2155 - Added user log TIMEOUTLOGOUT event status
 #
 
-$version = '2.8-9';
-$build = '130802-1031';
+$version = '2.8-10';
+$build = '131208-2155';
 
 $StarTtimE = date("U");
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -269,7 +270,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 		if ($commit == 'YES')
 			{
-			if ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='login') )
+			if ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') or ($status=='TIMEOUTLOGOUT') ) and ($stage=='login') )
 				{
 				$VDdisplayMESSAGE = "You have now logged-in";
 				$LOGtimeMESSAGE = "You logged in at $NOW_TIME";
@@ -339,7 +340,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				print "<!-- vicidial_timeclock_audit_log record updated for $user:   |$affected_rows| -->\n";
 				}
 
-			if ( ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage=='logout') ) or ( ($status=='LOGIN') and ($stage=='login') ) )
+			if ( ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') or ($status=='TIMEOUTLOGOUT') ) and ($stage=='logout') ) or ( ($status=='LOGIN') and ($stage=='login') ) )
 				{echo "ERROR: timeclock log entry already made: $status|$stage";  exit;}
 
 			if ($referrer=='agent') 
@@ -373,7 +374,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 
 
-		if ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') )
+		if ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') or ($status=='TIMEOUTLOGOUT') )
 			{
 			$VDdisplayMESSAGE = "Time since you were last logged-in: $totTIME_HMS";
 			$log_action = 'login';

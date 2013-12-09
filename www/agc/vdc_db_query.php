@@ -336,10 +336,11 @@
 # 130718-0737 - Added recording_filename to dispo url
 # 130802-1039 - Changed to PHP mysqli functions
 # 130925-2108 - Fixed issue with List webform overrides
+# 131208-2157 - Added user log TIMEOUTLOGOUT event status
 #
 
-$version = '2.8-234';
-$build = '130925-2108';
+$version = '2.8-235';
+$build = '131208-2157';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=533;
 $one_mysql_log=0;
@@ -7911,7 +7912,9 @@ if ($ACTION == 'userLOGout')
 			$user_group =		trim("$row[0]");
 			}
 		##### Insert a LOGOUT record into the user log
-		$stmt="INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group) values('$user','LOGOUT','$campaign','$NOW_TIME','$StarTtime','$user_group');";
+		$user_log_event = "LOGOUT";
+		if ($stage=='TIMEOUT') {$user_log_event = "TIMEOUTLOGOUT";}
+		$stmt="INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group) values('$user','$user_log_event','$campaign','$NOW_TIME','$StarTtime','$user_group');";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00128',$user,$server_ip,$session_name,$one_mysql_log);}

@@ -24,3 +24,46 @@ div.text_input { overflow: auto; font-size: 10px;  font-family: sans-serif; }
 .OFF_conf { font-size: 11px;  font-family: monospace; color: black; background: #FFCC77; }
 .cust_form { font-family: sans-serif; font-size: 10px; overflow: hidden; }
 .cust_form_text { font-family: sans-serif; font-size: 10px; overflow: auto; }
+
+.blink {
+-webkit-animation: blink .75s linear infinite;
+-moz-animation: blink .75s linear infinite;
+-ms-animation: blink .75s linear infinite;
+-o-animation: blink .75s linear infinite;
+animation: blink .75s linear infinite;
+}
+
+@-webkit-keyframes blink {
+0% { opacity: 1; }
+50% { opacity: 1; }
+50.01% { opacity: 0; }
+100% { opacity: 0; }
+}
+
+@-moz-keyframes blink {
+0% { opacity: 1; }
+50% { opacity: 1; }
+50.01% { opacity: 0; }
+100% { opacity: 0; }
+}
+
+@-ms-keyframes blink {
+0% { opacity: 1; }
+50% { opacity: 1; }
+50.01% { opacity: 0; }
+100% { opacity: 0; }
+}
+
+@-o-keyframes blink {
+0% { opacity: 1; }
+50% { opacity: 1; }
+50.01% { opacity: 0; }
+100% { opacity: 0; }
+}
+
+@keyframes blink {
+0% { opacity: 1; }
+50% { opacity: 1; }
+50.01% { opacity: 0; }
+100% { opacity: 0; }
+}

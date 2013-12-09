@@ -7,6 +7,7 @@
 # CHANGELOG:
 # 131019-0848 - Moved help from admin.php
 # 131029-2058 - Added auto-restart asterisk help
+# 131208-1635 - Added help for max dead, dispo and pause time campaign options
 #
 
 
@@ -1318,6 +1319,31 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="campaigns-disable_dispo_status">
 <BR>
 <B>Disable Dispo Status -</B> If the Disable Dispo Screen option is set to DISPO_DISABLED, then this field must be filled in. You can use any disposition you want for this field as long as it is 1 to 6 characters in length with only letters and numbers.
+
+<BR>
+<A NAME="campaigns-dead_max">
+<BR>
+<B>Dead Call Max Seconds -</B> If this is set to greater than 0, after a customer hangs up and the agent has not clicked on the Hangup Customer button in this number of seconds, the call will automatically be hung up, the status below will be set and the agent will be paused. Default is 0 for disabled.
+
+<BR>
+<A NAME="campaigns-dead_max_dispo">
+<BR>
+<B>Dead Call Max Status -</B> If Dead Call Max Seconds is enabled, this is the status set for the call when the agent dead call is not hung up past the number of seconds set above. Default is DCMX.
+
+<BR>
+<A NAME="campaigns-dispo_max">
+<BR>
+<B>Dispo Call Max Seconds -</B> If this is set to greater than 0, and the agent has not selected a disposition status in this number of seconds, the call will automatically be set to the status below and the agent will be paused. Default is 0 for disabled.
+
+<BR>
+<A NAME="campaigns-dispo_max_dispo">
+<BR>
+<B>Dispo Call Max Status -</B> If Dispo Call Max Seconds is enabled, this is the status set for the call when the agent has not selected a status past the number of seconds set above. Default is DISMX.
+
+<BR>
+<A NAME="campaigns-pause_max">
+<BR>
+<B>Agent Pause Max Seconds -</B> If this is set to greater than 0, and the agent has not gone out of PAUSED status in this number of seconds, the agent will automatically be logged out of the agent screen. Default is 0 for disabled.
 
 <BR>
 <A NAME="campaigns-screen_labels">

@@ -25,6 +25,7 @@
 # 130616-0052 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0835 - Changed to mysqli PHP functions
 # 131016-2101 - Added checking for level 8 add-copy restriction
+# 131208-2156 - Added user log TIMEOUTLOGOUT event status
 #
 
 $startMS = microtime();
@@ -640,7 +641,7 @@ if ( ( ($stage == "tc_log_user_OUT") or ($stage == "tc_log_user_IN") ) and ($mod
 
 
 	##### Run timeclock login queries #####
-	if ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage == "tc_log_user_IN") )
+	if ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') or ($status=='TIMEOUTLOGOUT') ) and ($stage == "tc_log_user_IN") )
 		{
 		### Add a record to the timeclock log
 		$stmtA="INSERT INTO vicidial_timeclock_log set event='LOGIN', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', event_date='$NOW_TIME', manager_user='$PHP_AUTH_USER', manager_ip='$ip', notes='Manager LOGIN of user from user status page';";

@@ -128,3 +128,11 @@ ALTER TABLE servers ADD auto_restart_asterisk ENUM('Y','N') default 'N';
 ALTER TABLE servers ADD asterisk_temp_no_restart ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1360',db_schema_update_date=NOW() where db_schema_version < 1360;
+
+ALTER TABLE vicidial_campaigns ADD dead_max SMALLINT(5) UNSIGNED default '0';
+ALTER TABLE vicidial_campaigns ADD dead_max_dispo VARCHAR(6) default 'DCMX';
+ALTER TABLE vicidial_campaigns ADD dispo_max SMALLINT(5) UNSIGNED default '0';
+ALTER TABLE vicidial_campaigns ADD dispo_max_dispo VARCHAR(6) default 'DISMX';
+ALTER TABLE vicidial_campaigns ADD pause_max SMALLINT(5) UNSIGNED default '0';
+
+UPDATE system_settings SET db_schema_version='1361',db_schema_update_date=NOW() where db_schema_version < 1361;

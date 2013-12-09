@@ -881,7 +881,12 @@ allow_emails ENUM('Y','N') default 'N',
 amd_inbound_group VARCHAR(20) default '',
 amd_callmenu VARCHAR(50) default '',
 survey_wait_sec TINYINT(3) default '10',
-manual_dial_lead_id ENUM('Y','N') default 'N'
+manual_dial_lead_id ENUM('Y','N') default 'N',
+dead_max SMALLINT(5) UNSIGNED default '0',
+dead_max_dispo VARCHAR(6) default 'DCMX',
+dispo_max SMALLINT(5) UNSIGNED default '0',
+dispo_max_dispo VARCHAR(6) default 'DISMX',
+pause_max SMALLINT(5) UNSIGNED default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -3218,4 +3223,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1360',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1361',db_schema_update_date=NOW();

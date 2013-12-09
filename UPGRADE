@@ -164,6 +164,10 @@ OTHER CHANGES:
 24. Added option.php option to allow user ID click to pause code report from the
 	Agent Time Detail report
 
+25. Added campaign options to limit time on Dead Calls, Disposition Screen 
+	and Pause.
+
+
 
 
 
