@@ -2692,7 +2692,7 @@ if ($non_latin < 1)
 	$label_security_phrase = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$label_security_phrase);
 	$label_email = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$label_email);
 	$label_comments = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$label_comments);
-	$slave_db_server = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$slave_db_server);
+	$slave_db_server = preg_replace('/[^- \.\,\:\_0-9a-zA-Z]/','',$slave_db_server);
 	$filter_phone_group_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$filter_phone_group_name);
 	$filter_phone_group_description = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$filter_phone_group_description);
 	$filter_clean_cid_number = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$filter_clean_cid_number);
@@ -3263,12 +3263,13 @@ else
 # 131019-0849 - Moved help section to help.php
 # 131029-2008 - Added Asterisk auto-restart options to servers
 # 131208-1626 - Added campaign options for max dead, dispo and pause time
+# 131210-1741 - Added ability to define slave server with port number, issue #687
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.8-419a';
-$build = '131208-1626';
+$admin_version = '2.8-420a';
+$build = '131210-1741';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");

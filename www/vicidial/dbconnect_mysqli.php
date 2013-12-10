@@ -10,6 +10,7 @@
 # 130328-0022 - Converted ereg to preg functions
 # 130802-0957 - Changed to PHP mysqli functions, added 
 # 131101-0713 - Fixed slave server setting
+# 131210-1746 - Added ability to define slave server with port number, issue #687
 #
 
 if ( file_exists("/etc/astguiclient.conf") )
@@ -53,12 +54,27 @@ else
 	$WeBServeRRooT = '/usr/local/apache2/htdocs';
 	}
 
-if ( ($use_slave_server > 0) and (strlen($slave_db_server)>5) )
-	{$VARDB_server = $slave_db_server;}
-$link=mysqli_connect("$VARDB_server", "$VARDB_user", "$VARDB_pass", "$VARDB_database", $VARDB_port);
+
+$server_string = $VARDB_server;
+if ( ($use_slave_server > 0) and (strlen($slave_db_server)>1) )
+	{
+	if (preg_match("/\:/", $slave_db_server)) 
+		{
+		$temp_slave_db = explode(':',$slave_db_server);
+		$server_string =	$temp_slave_db[0];
+		$VARDB_port =		$temp_slave_db[1];
+		}
+	else
+		{
+		$server_string = $slave_db_server;
+		}
+	}
+$link=mysqli_connect($server_string, "$VARDB_user", "$VARDB_pass", "$VARDB_database", $VARDB_port);
+
 if (!$link) 
 	{
-    die('MySQL connect ERROR: ' . mysqli_error($link));
+ //   die("MySQL connect ERROR: |$server_string|$VARDB_user|$VARDB_pass|$VARDB_database|$VARDB_port|$temp_slave_db[0]|$temp_slave_db[1]|$slave_db_server|$use_slave_server|" . mysqli_error('mysqli'));
+    die("MySQL connect ERROR:  " . mysqli_error('mysqli'));
 	}
 
 $local_DEF = 'Local/';

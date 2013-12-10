@@ -4,11 +4,12 @@
 #
 # database connection settings and some global web settings
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 100712-1430 - Added slave server option for connection
 # 130610-1112 - Finalized changing of all ereg instances to preg
+# 131210-1736 - Added ability to define slave server with port number, issue #687
 #
 
 if ( file_exists("/etc/astguiclient.conf") )
@@ -52,9 +53,20 @@ else
 	$WeBServeRRooT = '/usr/local/apache2/htdocs';
 	}
 
-if ( ($use_slave_server > 0) and (strlen($slave_db_server)>5) )
-	{$VARDB_server = $slave_db_server;}
-$link=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass");
+$server_string = "$VARDB_server:$VARDB_port";
+if ( ($use_slave_server > 0) and (strlen($slave_db_server)>1) )
+	{
+	if (preg_match("/\:/", $slave_db_server)) 
+		{
+		$server_string = $slave_db_server;
+		}
+	else
+		{
+		$server_string = "$slave_db_server:$VARDB_port";
+		}
+	}
+$link=mysql_connect($server_string, "$VARDB_user", "$VARDB_pass");
+
 if (!$link) 
 	{
     die('MySQL connect ERROR: ' . mysql_error());
