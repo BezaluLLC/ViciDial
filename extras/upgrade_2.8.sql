@@ -136,3 +136,10 @@ ALTER TABLE vicidial_campaigns ADD dispo_max_dispo VARCHAR(6) default 'DISMX';
 ALTER TABLE vicidial_campaigns ADD pause_max SMALLINT(5) UNSIGNED default '0';
 
 UPDATE system_settings SET db_schema_version='1361',db_schema_update_date=NOW() where db_schema_version < 1361;
+
+ALTER TABLE vicidial_closer_log ADD called_count SMALLINT(5) UNSIGNED default '0';
+ALTER TABLE vicidial_log ADD called_count SMALLINT(5) UNSIGNED default '0';
+ALTER TABLE vicidial_closer_log_archive ADD called_count SMALLINT(5) UNSIGNED default '0';
+ALTER TABLE vicidial_log_archive ADD called_count SMALLINT(5) UNSIGNED default '0';
+
+UPDATE system_settings SET db_schema_version='1362',db_schema_update_date=NOW() where db_schema_version < 1362;

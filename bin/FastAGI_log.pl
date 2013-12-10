@@ -68,6 +68,7 @@
 # 130531-1619 - Fixed issue with busy agent login calls attempting to be logged
 # 130802-0739 - Added CAMPCUST dialplan variable definition for outbound calls
 # 130925-1820 - Added variable filter to prevent DID SQL injection attack
+# 131209-1559 - Added called_count logging
 #
 
 # defaults for PreFork
@@ -957,7 +958,8 @@ sub process_request
 
 							if ($sthArows > 0)
 								{
-								$stmtA = "SELECT list_id FROM vicidial_list where lead_id='$VD_lead_id' limit 1;";
+								$called_count=0;
+								$stmtA = "SELECT list_id,called_count FROM vicidial_list where lead_id='$VD_lead_id' limit 1;";
 									if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 								$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 								$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -965,14 +967,15 @@ sub process_request
 								if ($sthArowsVLd > 0)
 									{
 									@aryA = $sthA->fetchrow_array;
-									$VD_list_id	=			$aryA[0];
+									$VD_list_id	=		$aryA[0];
+									$called_count =		$aryA[1];
 									}
 								$sthA->finish();
 
 								$vl_commentsSQL = '';
 								if ($callerid =~ /^M\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
 									{$vl_commentsSQL=",comments='MANUAL'";}
-								$stmtA = "INSERT INTO vicidial_log SET uniqueid='$uniqueid',lead_id='$VD_lead_id',list_id='$VD_list_id',status='$VDL_status',campaign_id='$VD_campaign_id',call_date='$VD_call_time',start_epoch='$VD_start_epoch',phone_code='$VD_phone_code',phone_number='$VD_phone_number',user='VDAD',processed='N',length_in_sec='0',end_epoch='$VD_start_epoch',alt_dial='$VD_alt_dial' $vl_commentsSQL;";
+								$stmtA = "INSERT INTO vicidial_log SET uniqueid='$uniqueid',lead_id='$VD_lead_id',list_id='$VD_list_id',status='$VDL_status',campaign_id='$VD_campaign_id',call_date='$VD_call_time',start_epoch='$VD_start_epoch',phone_code='$VD_phone_code',phone_number='$VD_phone_number',user='VDAD',processed='N',length_in_sec='0',end_epoch='$VD_start_epoch',alt_dial='$VD_alt_dial',called_count='$called_count' $vl_commentsSQL;";
 									if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 								$VDLIaffected_rows = $dbhA->do($stmtA);
 								if ($AGILOG) {$agi_string = "--    VDAD vicidial_log insert: |$VDLIaffected_rows|$uniqueid|$CIDlead_id|$VDL_status|";   &agi_output;}
@@ -1284,7 +1287,8 @@ sub process_request
 								### BEGIN if call answers but has not reached routing AGI, then log as a PDROP
 								if ( ($callerid =~ /^V\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/) && ($VD_status =~ /SENT/) )
 									{
-									$stmtA = "SELECT list_id FROM vicidial_list where lead_id='$VD_lead_id' limit 1;";
+									$called_count = 0;
+									$stmtA = "SELECT list_id,called_count FROM vicidial_list where lead_id='$VD_lead_id' limit 1;";
 										if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 									$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 									$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1292,7 +1296,8 @@ sub process_request
 									if ($sthArowsVLd > 0)
 										{
 										@aryA = $sthA->fetchrow_array;
-										$VD_list_id	=			$aryA[0];
+										$VD_list_id	=		$aryA[0];
+										$called_count =		$aryA[1];
 										}
 									$sthA->finish();
 
@@ -1300,7 +1305,7 @@ sub process_request
 									$VLPDaffected_rows = $dbhA->do($stmtA);
 									if ($AGILOG) {$agi_string = "--    PDROP vicidial_list update: |$VLPDaffected_rows|$uniqueid|$CIDlead_id|$VDL_status|";   &agi_output;}
 
-									$stmtA = "INSERT INTO vicidial_log SET uniqueid='$uniqueid',lead_id='$VD_lead_id',list_id='$VD_list_id',status='PDROP',campaign_id='$VD_campaign_id',call_date='$VD_call_time',start_epoch='$VD_start_epoch',phone_code='$VD_phone_code',phone_number='$VD_phone_number',user='VDAD',processed='N',length_in_sec='0',end_epoch='$VD_start_epoch',alt_dial='$VD_alt_dial';";
+									$stmtA = "INSERT INTO vicidial_log SET uniqueid='$uniqueid',lead_id='$VD_lead_id',list_id='$VD_list_id',status='PDROP',campaign_id='$VD_campaign_id',call_date='$VD_call_time',start_epoch='$VD_start_epoch',phone_code='$VD_phone_code',phone_number='$VD_phone_number',user='VDAD',processed='N',length_in_sec='0',end_epoch='$VD_start_epoch',alt_dial='$VD_alt_dial',called_count='$called_count';";
 									$VDLPDaffected_rows = $dbhA->do($stmtA);
 									if ($AGILOG) {$agi_string = "--    PDROP vicidial_log insert: |$VDLPDaffected_rows|$uniqueid|$CIDlead_id|$VDL_status|";   &agi_output;}
 

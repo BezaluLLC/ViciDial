@@ -337,10 +337,11 @@
 # 130802-1039 - Changed to PHP mysqli functions
 # 130925-2108 - Fixed issue with List webform overrides
 # 131208-2157 - Added user log TIMEOUTLOGOUT event status
+# 131209-1522 - Added called_count to log and closer log tables, fixed unanswered call logging issue
 #
 
-$version = '2.8-235';
-$build = '131208-2157';
+$version = '2.8-236';
+$build = '131209-1522';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=533;
 $one_mysql_log=0;
@@ -3803,7 +3804,7 @@ if ($stage == "start")
 
 		$manualVLexists=0;
 		$beginUNIQUEID = preg_replace("/\..*/","",$uniqueid);
-		$stmt="SELECT count(*) from vicidial_log where lead_id='$lead_id' and user='$user' and phone_number='$phone_number' and uniqueid LIKE \"$beginUNIQUEID%\";";
+		$stmt="SELECT count(*) from vicidial_log where lead_id='$lead_id' and user='$user' and phone_number='$phone_number' and uniqueid LIKE \"$beginUNIQUEID%\" and called_count='$called_count';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00223',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
@@ -3818,7 +3819,7 @@ if ($stage == "start")
 		if ($manualVLexists < 1)
 			{
 			##### insert log into vicidial_log for manual VICIDiaL call
-			$stmt="INSERT INTO vicidial_log (uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,comments,processed,user_group,alt_dial) values('$uniqueid','$lead_id','$list_id','$campaign','$NOW_TIME','$StarTtime','INCALL','$phone_code','$phone_number','$user','MANUAL','N','$user_group','$alt_dial');";
+			$stmt="INSERT INTO vicidial_log (uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,comments,processed,user_group,alt_dial,called_count) values('$uniqueid','$lead_id','$list_id','$campaign','$NOW_TIME','$StarTtime','INCALL','$phone_code','$phone_number','$user','MANUAL','N','$user_group','$alt_dial','$called_count');";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00279',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3830,7 +3831,7 @@ if ($stage == "start")
 		if ( ($manualVLexists > 0) or ($manualVLexistsDUP > 0) )
 			{
 			##### insert log into vicidial_log for manual VICIDiaL call
-			$stmt="UPDATE vicidial_log SET list_id='$list_id',comments='MANUAL',user_group='$user_group',alt_dial='$alt_dial' where lead_id='$lead_id' and user='$user' and phone_number='$phone_number' and uniqueid LIKE \"$beginUNIQUEID%\";";
+			$stmt="UPDATE vicidial_log SET list_id='$list_id',comments='MANUAL',user_group='$user_group',alt_dial='$alt_dial' where lead_id='$lead_id' and user='$user' and phone_number='$phone_number' and uniqueid LIKE \"$beginUNIQUEID%\" and called_count='$called_count';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00224',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3917,7 +3918,7 @@ if ($stage == "end")
 			else
 				{
 				##### look for the start epoch in the vicidial_log table
-				$stmt="SELECT start_epoch,term_reason,uniqueid,campaign_id,status FROM vicidial_log where uniqueid='$uniqueid' and lead_id='$lead_id' order by call_date desc limit 1;";
+				$stmt="SELECT start_epoch,term_reason,uniqueid,campaign_id,status FROM vicidial_log where uniqueid='$uniqueid' and lead_id='$lead_id' and called_count='$called_count' order by call_date desc limit 1;";
 				$VDIDselect =		"VDL_UIDLID $uniqueid $lead_id";
 				}
 			$rslt=mysql_to_mysqli($stmt, $link);
@@ -3946,7 +3947,7 @@ if ($stage == "end")
 				fclose($fp);
 
 				##### start epoch in the vicidial_log table, couldn't find one in vicidial_closer_log
-				$stmt="SELECT start_epoch,term_reason,campaign_id,status FROM vicidial_log where uniqueid='$uniqueid' and lead_id='$lead_id' order by call_date desc limit 1;";
+				$stmt="SELECT start_epoch,term_reason,campaign_id,status FROM vicidial_log where uniqueid='$uniqueid' and lead_id='$lead_id' and called_count='$called_count' order by call_date desc limit 1;";
 				$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00061',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -4587,7 +4588,7 @@ if ($stage == "end")
 			### check to see if the vicidial_log record exists, if not, insert it
 			$manualVLexists=0;
 			$beginUNIQUEID = preg_replace("/\..*/","",$uniqueid);
-			$stmt="SELECT status from vicidial_log where lead_id='$lead_id' and user='$user' and phone_number='$phone_number' and uniqueid LIKE \"$beginUNIQUEID%\";";
+			$stmt="SELECT status from vicidial_log where lead_id='$lead_id' and user='$user' and phone_number='$phone_number' and uniqueid LIKE \"$beginUNIQUEID%\" and called_count='$called_count';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00223',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -4601,7 +4602,7 @@ if ($stage == "end")
 			if ($manualVLexists < 1)
 				{
 				##### insert log into vicidial_log for manual VICIDiaL call
-				$stmt="INSERT INTO vicidial_log (uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,comments,processed,user_group,alt_dial) values('$uniqueid','$lead_id','$list_id','$campaign','$NOW_TIME','$StarTtime','DONEM','$phone_code','$phone_number','$user','MANUAL','N','$user_group','$alt_dial');";
+				$stmt="INSERT INTO vicidial_log (uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,comments,processed,user_group,alt_dial,called_count) values('$uniqueid','$lead_id','$list_id','$campaign','$NOW_TIME','$StarTtime','DONEM','$phone_code','$phone_number','$user','MANUAL','N','$user_group','$alt_dial','$called_count');";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00280',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -4619,7 +4620,7 @@ if ($stage == "end")
 				}
 			else
 				{
-				$stmt="UPDATE vicidial_log SET uniqueid='$uniqueid' where lead_id='$lead_id' and user='$user' and phone_number='$phone_number' and uniqueid LIKE \"$beginUNIQUEID%\";";
+				$stmt="UPDATE vicidial_log SET uniqueid='$uniqueid' where lead_id='$lead_id' and user='$user' and phone_number='$phone_number' and uniqueid LIKE \"$beginUNIQUEID%\" and called_count='$called_count';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00057',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -4628,7 +4629,7 @@ if ($stage == "end")
 
 			##### update the duration and end time in the vicidial_log table
 			if ($VDstatus == 'INCALL') {$vl_statusSQL = ",status='$status_dispo'";}
-			$stmt="UPDATE vicidial_log set $SQLterm end_epoch='$StarTtime', length_in_sec='$length_in_sec' $vl_statusSQL where uniqueid='$uniqueid' and lead_id='$lead_id' and user='$user' order by call_date desc limit 1;";
+			$stmt="UPDATE vicidial_log set $SQLterm end_epoch='$StarTtime', length_in_sec='$length_in_sec' $vl_statusSQL where uniqueid='$uniqueid' and lead_id='$lead_id' and user='$user' and called_count='$called_count' order by call_date desc limit 1;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00090',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -8221,12 +8222,13 @@ if ($ACTION == 'updateDISPO')
                 audit_comments($lead_id,$list_id,$format,$user,$mel,$NOW_TIME,$link,$server_ip,$session_name,$one_mysql_log,$campaign);
 
 		// JOEJ - Email feature - may not be necessary if vicidial_email_list doesn't need a status column.
-		if ($email_enabled>0) {
+		if ($email_enabled>0) 
+			{
 			$stmt="UPDATE vicidial_email_list set status='$dispo_choice', user='$user' where lead_id='$lead_id' and uniqueid='$uniqueid';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00142',$user,$server_ip,$session_name,$one_mysql_log);}
-		}
+			}
 
 	#	$fp = fopen ("./vicidial_debug.txt", "a");
 	#	fwrite ($fp, "$NOW_TIME|DISPO_CALL |$MDnextCID|$stage|$campaign|$lead_id|$dispo_choice|$user|$uniqueid|$auto_dial_level|$agent_log_id|\n");
@@ -8271,14 +8273,14 @@ if ($ACTION == 'updateDISPO')
 
 			if ( ($auto_dial_level < 1) or (preg_match('/^M/',$MDnextCID)) )
 				{
-				$stmt = "SELECT count(*) from vicidial_log where lead_id='$lead_id' and call_date > \"$four_hours_ago\" and ( (user='$user') or ( (comments='MANUAL') and status IN('AB','ADC','ADCT') ) );";
+				$stmt = "SELECT count(*) from vicidial_log where lead_id='$lead_id' and call_date > \"$four_hours_ago\" and called_count='$called_count';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00213',$user,$server_ip,$session_name,$one_mysql_log);}
 					$row=mysqli_fetch_row($rslt);
 				if ($row[0] > 0)
 					{
-					$stmt="UPDATE vicidial_log set status='$log_dispo_choice',user='$user' where lead_id='$lead_id' and call_date > \"$four_hours_ago\" and ( (user='$user') or ( (comments='MANUAL') and status IN('AB','ADC','ADCT') ) ) order by uniqueid desc limit 1;";
+					$stmt="UPDATE vicidial_log set status='$log_dispo_choice',user='$user' where lead_id='$lead_id' and call_date > \"$four_hours_ago\" and called_count='$called_count' order by uniqueid desc limit 1;";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00145',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -8305,13 +8307,13 @@ if ($ACTION == 'updateDISPO')
 					if ($VLinfo_ct > 0)
 						{
 						$row=mysqli_fetch_row($rslt);
-						$VLlist_id =		"$row[0]";
+						$VLlist_id =		$row[0];
 						if (strlen($phone_number)<6)
 							{
-							$VLphone_number =	"$row[1]";
+							$VLphone_number =	$row[1];
 							$VLalt =			'MAIN';
-							$VLalt_phone =		"$row[3]";
-							$VLaddress3 =		"$row[4]";
+							$VLalt_phone =		$row[3];
+							$VLaddress3 =		$row[4];
 							}
 						else
 							{
@@ -8369,7 +8371,7 @@ if ($ACTION == 'updateDISPO')
 					$PADlead_id = sprintf("%010s", $lead_id);
 						while (strlen($PADlead_id) > 9) {$PADlead_id = substr("$PADlead_id", 1);}
 					$FAKEcall_id = "$StarTtime.$PADlead_id";
-					$stmt = "INSERT INTO vicidial_log set uniqueid='$FAKEcall_id',lead_id='$lead_id',list_id='$VLlist_id',campaign_id='$campaign',call_date='$NOW_TIME',start_epoch='$StarTtime',end_epoch='$StarTtime',length_in_sec='0',status='$log_dispo_choice',phone_code='$VLphone_code',phone_number='$VLphone_number',user='$user',comments='MANUAL',processed='N',user_group='$user_group',term_reason='AGENT',alt_dial='$VLalt';";
+					$stmt = "INSERT INTO vicidial_log set uniqueid='$FAKEcall_id',lead_id='$lead_id',list_id='$VLlist_id',campaign_id='$campaign',call_date='$NOW_TIME',start_epoch='$StarTtime',end_epoch='$StarTtime',length_in_sec='0',status='$log_dispo_choice',phone_code='$VLphone_code',phone_number='$VLphone_number',user='$user',comments='MANUAL',processed='N',user_group='$user_group',term_reason='AGENT',alt_dial='$VLalt',called_count='$called_count';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00215',$user,$server_ip,$session_name,$one_mysql_log);}

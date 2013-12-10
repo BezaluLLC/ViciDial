@@ -460,6 +460,7 @@ processed ENUM('Y','N'),
 user_group VARCHAR(20),
 term_reason  ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','NONE') default 'NONE',
 alt_dial VARCHAR(6) default 'NONE',
+called_count SMALLINT(5) UNSIGNED default '0',
 index (lead_id),
 index (call_date)
 ) ENGINE=MyISAM;
@@ -486,6 +487,7 @@ term_reason  ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','HOLDRE
 uniqueid VARCHAR(20) NOT NULL default '',
 agent_only VARCHAR(20) default '',
 queue_position SMALLINT(4) UNSIGNED default '1',
+called_count SMALLINT(5) UNSIGNED default '0',
 index (lead_id),
 index (call_date),
 index (campaign_id),
@@ -3223,4 +3225,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1361',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1362',db_schema_update_date=NOW();

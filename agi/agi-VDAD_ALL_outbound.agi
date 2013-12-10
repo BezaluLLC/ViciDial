@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-VDAD_ALL_outbound.agi version 2.6
+# agi-VDAD_ALL_outbound.agi version 2.8
 # 
 # runs when an outbound call is answered. This script will 
 # send the calls out to the agents that are logged in.
@@ -105,6 +105,7 @@
 # 130210-1013 - Added options for CALLMENU|INGROUP cpd_amd_actions
 # 130425-0049 - Added survey_wait_sec option and pre-process time logging
 # 130425-0657 - Added survey_no_response option to drop to campaign drop action
+# 131209-1735 - Added called_count logging
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -386,7 +387,8 @@ if ( ($channel =~ /Local/i) && ($AST_ver !~ /^1\.0\.8|^1\.0\.9/) )
 		if ($AGILOG) {$agi_string = "--    LRERR vicidial_list LRERR update: |$affected_rows|$uniqueid|$CIDlead_id|";   &agi_output;}
 
 		$xCLlist_id=0;
-		$stmtA = "SELECT list_id,security_phrase from vicidial_list where lead_id='$CIDlead_id' limit 1;";
+		$called_count=0;
+		$stmtA = "SELECT list_id,security_phrase,called_count from vicidial_list where lead_id='$CIDlead_id' limit 1;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArowsLI=$sthA->rows;
@@ -396,6 +398,7 @@ if ( ($channel =~ /Local/i) && ($AST_ver !~ /^1\.0\.8|^1\.0\.9/) )
 			@aryA = $sthA->fetchrow_array;
 			$xCLlist_id =		$aryA[0];
 			$security_phrase =	$aryA[1];
+			$called_count =		$aryA[2];
 			}
 		$sthA->finish();
 
@@ -417,7 +420,7 @@ if ( ($channel =~ /Local/i) && ($AST_ver !~ /^1\.0\.8|^1\.0\.9/) )
 			}
 		$sthA->finish();
 
-		$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,alt_dial,list_id) values('$uniqueid','$CIDlead_id','$VDADcampaign','$SQLdate','$now_date_epoch','LRERR','$VDADphone_code','$VDADphone','VDAD','N','$VDADalt_dial','$xCLlist_id')";
+		$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,alt_dial,list_id,called_count) values('$uniqueid','$CIDlead_id','$VDADcampaign','$SQLdate','$now_date_epoch','LRERR','$VDADphone_code','$VDADphone','VDAD','N','$VDADalt_dial','$xCLlist_id','$called_count')";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='01103';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
@@ -967,7 +970,8 @@ if ($VDACaffected_rows > 0)
 		}
 
 	$xCLlist_id=0;
-	$stmtA = "SELECT list_id,security_phrase from vicidial_list where lead_id='$CIDlead_id' limit 1;";
+	$called_count=0;
+	$stmtA = "SELECT list_id,security_phrase,called_count from vicidial_list where lead_id='$CIDlead_id' limit 1;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArowsLI=$sthA->rows;
@@ -977,6 +981,7 @@ if ($VDACaffected_rows > 0)
 		@aryA = $sthA->fetchrow_array;
 		$xCLlist_id =		$aryA[0];
 		$security_phrase =	$aryA[1];
+		$called_count =		$aryA[2];
 		}
 	$sthA->finish();
 
@@ -987,7 +992,7 @@ if ($VDACaffected_rows > 0)
 	$RUN_time = sprintf("%.3f", $RUN_time);
 	if ($AGILOG) {$agi_string = "Preprocess time: |$RUN_time ($END_time - $START_time)|";   &agi_output;}
 
-	$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,alt_dial,list_id,comments) values('$uniqueid','$CIDlead_id','$VDADcampaign','$SQLdate','$now_date_epoch','$vdlog_status','$VDADphone_code','$VDADphone','VDAD','N','$VDADalt_dial','$xCLlist_id','$RUN_time')";
+	$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,alt_dial,list_id,comments,called_count) values('$uniqueid','$CIDlead_id','$VDADcampaign','$SQLdate','$now_date_epoch','$vdlog_status','$VDADphone_code','$VDADphone','VDAD','N','$VDADalt_dial','$xCLlist_id','$RUN_time','$called_count')";
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='01008';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;

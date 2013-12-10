@@ -115,6 +115,7 @@
 # 130811-1403 - Fix for issue #690
 # 131016-0659 - Fix for disable_auto_dial system option
 # 131122-1233 - Added several missing sthA->finish 
+# 131209-1557 - Added called_count logging
 #
 
 
@@ -1537,7 +1538,8 @@ while($one_day_interval > 0)
 								if ($insertVLcount < 1)
 									{
 									$xCLlist_id=0;
-									$stmtA="SELECT list_id from vicidial_list where lead_id='$CLlead_id' limit 1;";
+									$called_count=0;
+									$stmtA="SELECT list_id,called_count from vicidial_list where lead_id='$CLlead_id' limit 1;";
 										if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
 									$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 									$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1546,10 +1548,11 @@ while($one_day_interval > 0)
 										{
 										@aryA = $sthA->fetchrow_array;
 										$xCLlist_id = 	$aryA[0];
+										$called_count = $aryA[1];
 										}
 									$sthA->finish();
 
-									$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,length_in_sec,end_epoch,alt_dial,list_id) values('$CLuniqueid','$CLlead_id','$CLcampaign_id','$SQLdate','$now_date_epoch','$CLnew_status','$CLphone_code','$CLphone_number','$insertVLuser','N','$CLstage','$end_epoch','$CLalt_dial','$xCLlist_id')";
+									$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,length_in_sec,end_epoch,alt_dial,list_id,called_count) values('$CLuniqueid','$CLlead_id','$CLcampaign_id','$SQLdate','$now_date_epoch','$CLnew_status','$CLphone_code','$CLphone_number','$insertVLuser','N','$CLstage','$end_epoch','$CLalt_dial','$xCLlist_id','$called_count')";
 										if($M){print STDERR "\n|$stmtA|\n";}
 									$affected_rows = $dbhA->do($stmtA);
 
@@ -2329,7 +2332,8 @@ while($one_day_interval > 0)
 			if ( ($affected_rows > 0) && ($CLlead_id > 0) )
 				{
 				$xCLlist_id=0;
-				$stmtA="SELECT list_id from vicidial_list where lead_id='$CLlead_id' limit 1;";
+				$called_count=0;
+				$stmtA="SELECT list_id,called_count from vicidial_list where lead_id='$CLlead_id' limit 1;";
 					if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2338,6 +2342,7 @@ while($one_day_interval > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
 					$xCLlist_id = 	$aryA[0];
+					$called_count = $aryA[1];
 					}
 				$sthA->finish();
 
@@ -2348,7 +2353,7 @@ while($one_day_interval > 0)
 				if ($CLstage < 0.25) {$CLstage=0;}
 
 				$end_epoch = $now_date_epoch;
-				$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,length_in_sec,end_epoch,alt_dial,list_id) values('$CLuniqueid','$CLlead_id','$CLcampaign_id','$SQLdate','$now_date_epoch','DROP','$CLphone_code','$CLphone_number','VDAD','N','$CLstage','$end_epoch','$CLalt_dial','$xCLlist_id')";
+				$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,length_in_sec,end_epoch,alt_dial,list_id,called_count) values('$CLuniqueid','$CLlead_id','$CLcampaign_id','$SQLdate','$now_date_epoch','DROP','$CLphone_code','$CLphone_number','VDAD','N','$CLstage','$end_epoch','$CLalt_dial','$xCLlist_id','$called_count')";
 					if($M){print STDERR "\n|$stmtA|\n";}
 				$affected_rows = $dbhA->do($stmtA);
 
