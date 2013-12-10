@@ -10,6 +10,7 @@
 # 70521-1529 - first build
 # 100625-1220 - Added waitfors after logout to fix broken pipe errors in asterisk <MikeC>
 # 130625-0947 - Added --agent-lookup option for agent phone_ip population
+# 131210-1305 - Added Asterisk 1.8 compatibility
 #
 
 # constants
@@ -116,7 +117,7 @@ use Net::Telnet ();
  or die "Couldn't connect to database: " . DBI->errstr;
  
 ### Grab Server values from the database
-$stmtA = "SELECT telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,max_vicidial_trunks,answer_transfer_agent,local_gmt,ext_context FROM servers where server_ip = '$server_ip';";
+$stmtA = "SELECT telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,max_vicidial_trunks,answer_transfer_agent,local_gmt,ext_context,asterisk_version FROM servers where server_ip = '$server_ip';";
 
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 if ($DB) {print "|$stmtA|\n";}
@@ -137,6 +138,7 @@ if ($sthArows > 0)
 	$DBanswer_transfer_agent=	$aryA[8];
 	$DBSERVER_GMT		=		$aryA[9];
 	$DBext_context	=			$aryA[10];
+	$asterisk_version =			$aryA[11];
 	if ($DBtelnet_host)				{$telnet_host = $DBtelnet_host;}
 	if ($DBtelnet_port)				{$telnet_port = $DBtelnet_port;}
 	if ($DBASTmgrUSERNAME)			{$ASTmgrUSERNAME = $DBASTmgrUSERNAME;}
@@ -216,21 +218,29 @@ if ( ($sip_count > 0) || ($agent_lookup < 1) )
 						  Prompt => '/.*[\$%#>] $/',
 						  Output_record_separator => '',);
 	#$fh = $t->dump_log("$telnetlog");  # uncomment for telnet log
-		if (length($ASTmgrUSERNAMEsend) > 3) {$telnet_login = $ASTmgrUSERNAMEsend;}
-		else {$telnet_login = $ASTmgrUSERNAME;}
+	if (length($ASTmgrUSERNAMEsend) > 3) {$telnet_login = $ASTmgrUSERNAMEsend;}
+	else {$telnet_login = $ASTmgrUSERNAME;}
 
 	$t->open("$telnet_host"); 
 	$t->waitfor('/[01]\n$/');			# print login
 	$t->print("Action: Login\nUsername: $telnet_login\nSecret: $ASTmgrSECRET\n\n");
 	$t->waitfor('/Authentication accepted/');		# waitfor auth accepted
 
-
 	$i=0;
 	foreach(@PTextensions)
 		{
 		@list_channels=@MT;
 		$t->buffer_empty;
-		@list_channels = $t->cmd(String => "Action: Command\nCommand: sip show peer $PTextensions[$i]\n\nAction: Ping\n\n", Prompt => '/Response: Pong.*/'); 
+
+		%ast_ver_str = parse_asterisk_version($asterisk_version);
+		if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+			{
+			@list_channels = $t->cmd(String => "Action: Command\nCommand: sip show peer $PTextensions[$i]\n\nAction: Ping\n\n", Prompt => '/Response: Pong.*/'); 
+			}
+		else
+			{
+			@list_channels = $t->cmd(String => "Action: Command\nCommand: sip show peer $PTextensions[$i]\n\nAction: Ping\n\n", Prompt => '/Response: Success\nPing: Pong.*/'); 
+			}
 
 		$j=0;
 		foreach(@list_channels)
@@ -336,21 +346,28 @@ if ( ($iax_count > 0) || ($agent_lookup < 1) )
 						  Prompt => '/.*[\$%#>] $/',
 						  Output_record_separator => '',);
 	#$fh = $t->dump_log("$telnetlog");  # uncomment for telnet log
-		if (length($ASTmgrUSERNAMEsend) > 3) {$telnet_login = $ASTmgrUSERNAMEsend;}
-		else {$telnet_login = $ASTmgrUSERNAME;}
+	if (length($ASTmgrUSERNAMEsend) > 3) {$telnet_login = $ASTmgrUSERNAMEsend;}
+	else {$telnet_login = $ASTmgrUSERNAME;}
 
 	$t->open("$telnet_host"); 
 	$t->waitfor('/[01]\n$/');			# print login
 	$t->print("Action: Login\nUsername: $telnet_login\nSecret: $ASTmgrSECRET\n\n");
 	$t->waitfor('/Authentication accepted/');		# waitfor auth accepted
 
-
 	$i=0;
 	foreach(@PTextensions)
 		{
 		@list_channels=@MT;
 		$t->buffer_empty;
-		@list_channels = $t->cmd(String => "Action: Command\nCommand: iax2 show peer $PTextensions[$i]\n\nAction: Ping\n\n", Prompt => '/Response: Pong.*/'); 
+		%ast_ver_str = parse_asterisk_version($asterisk_version);
+		if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+			{
+			@list_channels = $t->cmd(String => "Action: Command\nCommand: iax2 show peer $PTextensions[$i]\n\nAction: Ping\n\n", Prompt => '/Response: Pong.*/'); 
+			}
+		else
+			{
+			@list_channels = $t->cmd(String => "Action: Command\nCommand: iax2 show peer $PTextensions[$i]\n\nAction: Ping\n\n", Prompt => '/Response: Success\nPing: Pong.*/'); 
+			}
 
 		$j=0;
 		foreach(@list_channels)
@@ -412,3 +429,46 @@ if($DB){print "DONE... Exiting...\n";}
 
 exit;
 
+
+# subroutine to parse the asterisk version
+# and return a hash with the various part
+sub parse_asterisk_version
+{
+	# grab the arguments
+	my $ast_ver_str = $_[0];
+
+	# get everything after the - and put it in $ast_ver_postfix
+	my @hyphen_parts = split( /-/ , $ast_ver_str );
+
+	my $ast_ver_postfix = $hyphen_parts[1];
+
+	# now split everything before the - up by the .
+	my @dot_parts = split( /\./ , $hyphen_parts[0] );
+
+	my %ast_ver_hash;
+
+	if ( $dot_parts[0] <= 1 )
+		{
+			%ast_ver_hash = (
+				"major" => $dot_parts[0],
+				"minor" => $dot_parts[1],
+				"build" => $dot_parts[2],
+				"revision" => $dot_parts[3],
+				"postfix" => $ast_ver_postfix
+			);
+		}
+
+	# digium dropped the 1 from asterisk 10 but we still need it
+	if ( $dot_parts[0] > 1 )
+		{
+			%ast_ver_hash = (
+				"major" => 1,
+				"minor" => $dot_parts[0],
+				"build" => $dot_parts[1],
+				"revision" => $dot_parts[2],
+				"postfix" => $ast_ver_postfix
+			);
+		}
+
+	return ( %ast_ver_hash );
+}
