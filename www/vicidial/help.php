@@ -2322,7 +2322,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_groups-uniqueid_status_display">
 <BR>
-<B>Uniqueid Status Display -</B> If enabled, when an agent receives a call through this in-group they will see the uniqueid of the call added to the status line in their agent interface. The PREFIX option will add the prefix defined blow to the beginning of the uniqueid in the display. Default is DISABLED. If there was already a Uniqueid defined on a call entering this in-group, then the original uniqueid will be displayed. If the PRESERVE option is used and the call is sent to a second agent, the uniqueid and prefix displayed to the first agent will also be displayed to the second agent.
+<B>Uniqueid Status Display -</B> If enabled, when an agent receives a call through this in-group they will see the uniqueid of the call added to the status line in their agent interface. The PREFIX option will add the prefix, defined below, to the beginning of the uniqueid in the display. Default is DISABLED. If there was already a Uniqueid defined on a call entering this in-group, then the original uniqueid will be displayed. If the PRESERVE option is used and the call is sent to a second agent, the uniqueid and prefix displayed to the first agent will also be displayed to the second agent.
 
 <BR>
 <A NAME="inbound_groups-uniqueid_status_prefix">
