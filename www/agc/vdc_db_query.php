@@ -95,6 +95,7 @@
 #  - $qm_dispo_code
 #  - $dial_ingroup
 #  - $nocall_dial_flag
+#  - $cid_lock = ('0','1')
 #
 #
 # CHANGELOG:
@@ -338,10 +339,11 @@
 # 130925-2108 - Fixed issue with List webform overrides
 # 131208-2157 - Added user log TIMEOUTLOGOUT event status
 # 131209-1522 - Added called_count to log and closer log tables, fixed unanswered call logging issue
+# 131210-1400 - Fixed manual dial CID choice issue with AC-CID settings
 #
 
-$version = '2.8-236';
-$build = '131209-1522';
+$version = '2.8-237';
+$build = '131210-1400';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=533;
 $one_mysql_log=0;
@@ -576,6 +578,8 @@ if (isset($_GET["recording_filename"]))				{$recording_filename=$_GET["recording
 	elseif (isset($_POST["recording_filename"]))	{$recording_filename=$_POST["recording_filename"];}
 if (isset($_GET["orig_pass"]))			{$orig_pass=$_GET["orig_pass"];}
 	elseif (isset($_POST["orig_pass"]))	{$orig_pass=$_POST["orig_pass"];}
+if (isset($_GET["cid_lock"]))			{$cid_lock=$_GET["cid_lock"];}
+	elseif (isset($_POST["cid_lock"]))	{$cid_lock=$_POST["cid_lock"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -2553,7 +2557,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					{
 					$row=mysqli_fetch_row($rslt);
 					$use_custom_cid =	$row[0];
-					if ($use_custom_cid == 'AREACODE')
+					if ( ($use_custom_cid == 'AREACODE') and ($cid_lock < 1) )
 						{
 						$temp_ac = substr("$agent_dialed_number", 0, 3);
 						$stmt = "SELECT outbound_cid FROM vicidial_campaign_cid_areacodes where campaign_id='$campaign' and areacode='$temp_ac' and active='Y' order by call_count_today limit 1;";
@@ -3329,7 +3333,7 @@ if ($ACTION == 'manDiaLonly')
 			{
 			$row=mysqli_fetch_row($rslt);
 			$use_custom_cid =	$row[0];
-			if ($use_custom_cid == 'AREACODE')
+			if ( ($use_custom_cid == 'AREACODE') and ($cid_lock < 1) )
 				{
 				$temp_ac = substr("$phone_number", 0, 3);
 				$stmt = "SELECT outbound_cid FROM vicidial_campaign_cid_areacodes where campaign_id='$campaign' and areacode='$temp_ac' and active='Y' order by call_count_today limit 1;";
