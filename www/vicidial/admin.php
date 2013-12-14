@@ -13662,7 +13662,7 @@ if ($ADD==42111111111)
 			{
 			echo "<br>PHONE ALIAS MODIFIED: $alias_id\n";
 
-			$stmt="UPDATE phones_alias set alias_name='$alias_name', logins_list='$logins_list' where alias_id='$alias_id' and user_group='$user_group';";
+			$stmt="UPDATE phones_alias set alias_name='$alias_name', logins_list='$logins_list', user_group='$user_group' where alias_id='$alias_id';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
