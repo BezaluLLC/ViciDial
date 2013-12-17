@@ -17,6 +17,7 @@
 # 130610-1008 - Finalized changing of all ereg instances to preg
 # 130621-0747 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0730 - Changed to mysqli PHP functions
+# 131217-1348 - Fixed several empty variable and array issues
 #
 
 $startMS = microtime();
@@ -194,6 +195,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
     exit;
 	}
 
+$ag[0]='';
 $LOGadmin_viewable_groupsSQL='';
 $whereLOGadmin_viewable_groupsSQL='';
 if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
@@ -1466,16 +1468,22 @@ else
 				}
 			}
 
+		$totAGENTSdayCOUNT=count($totAGENTSdate[$d]);
 		$totAGENTSday=sprintf("%8s", count($totAGENTSdate[$d]));
 
-		$temp_agent_array=array_keys($totAGENTSdate[$d]);
-		for ($x=0; $x<count($temp_agent_array); $x++) {
-			if ($temp_agent_array[$x]!="") {
-				array_push($AGENTS_wtd_array, $temp_agent_array[$x]);
-				array_push($AGENTS_mtd_array, $temp_agent_array[$x]);
-				array_push($AGENTS_qtd_array, $temp_agent_array[$x]);
+		if ($totAGENTSdayCOUNT > 0)
+			{
+			$temp_agent_array=array_keys($totAGENTSdate[$d]);
+			for ($x=0; $x<count($temp_agent_array); $x++) 
+				{
+				if ($temp_agent_array[$x]!="") 
+					{
+					array_push($AGENTS_wtd_array, $temp_agent_array[$x]);
+					array_push($AGENTS_mtd_array, $temp_agent_array[$x]);
+					array_push($AGENTS_qtd_array, $temp_agent_array[$x]);
+					}
+				}
 			}
-		}
 		$totCALLSwtd+=$totCALLSdate[$d];
 		$totANSWERSwtd+=$totANSWERSdate[$d];
 		$totANSWERSsecwtd+=$totANSWERSsecdate[$d];
@@ -1501,7 +1509,9 @@ else
 		if (trim($totABANDONSdate[$d])>$max_abandoned) {$max_abandoned=trim($totABANDONSdate[$d]);}
 		if (trim($totABANDONSpctDATE[$d])>$max_abandonpct) {$max_abandonpct=trim($totABANDONSpctDATE[$d]);}
 
-		if (round($totANSWERSsecdate[$d]/$totANSWERSdate[$d])>$max_avgtalktime) {$max_avgtalktime=round($totANSWERSsecdate[$d]/$totANSWERSdate[$d]);}
+		if ( ( ($totANSWERSsecdate[$d] > 0) and ($totANSWERSdate[$d] > 0) ) and (round($totANSWERSsecdate[$d]/$totANSWERSdate[$d])>$max_avgtalktime) )
+			{$max_avgtalktime=round($totANSWERSsecdate[$d]/$totANSWERSdate[$d]);}
+
 		if (trim($totANSWERSsecdate[$d])>$max_totaltalktime) {$max_totaltalktime=trim($totANSWERSsecdate[$d]);}
 		if (trim($totANSWERSsecdate[$d]+($totANSWERSdate[$d]*15))>$max_totalcalltime) {$max_totalcalltime=trim($totANSWERSsecdate[$d]+($totANSWERSdate[$d]*15));}
 		$graph_stats[$d][0]="$daySTART[$d] - $dayEND[$d]";
@@ -1789,7 +1799,9 @@ else
 			if (trim($totABANDONSmtd)>$max_mtd_abandoned) {$max_mtd_abandoned=trim($totABANDONSmtd);}
 			if (trim($totABANDONSpctmtd)>$max_mtd_abandonpct) {$max_mtd_abandonpct=trim($totABANDONSpctmtd);}
 
-			if (round($totANSWERSsecmtd/$totANSWERSmtd)>$max_mtd_avgtalktime) {$max_mtd_avgtalktime=round($totANSWERSsecmtd/$totANSWERSmtd);}
+			if ( ( ($totANSWERSsecmtd > 0) and ($totANSWERSmtd > 0) ) and (round($totANSWERSsecmtd/$totANSWERSmtd)>$max_mtd_avgtalktime) )
+				{$max_mtd_avgtalktime=round($totANSWERSsecmtd/$totANSWERSmtd);}
+
 			if (trim($totANSWERSsecmtd)>$max_mtd_totaltalktime) {$max_mtd_totaltalktime=trim($totANSWERSsecmtd);}
 			if (trim($totANSWERSsecmtd+($totANSWERSmtd*15))>$max_mtd_totalcalltime) {$max_mtd_totalcalltime=trim($totANSWERSsecmtd+($totANSWERSmtd*15));}
 
@@ -1918,7 +1930,9 @@ else
 				if (trim($totABANDONSqtd)>$max_qtd_abandoned) {$max_qtd_abandoned=trim($totABANDONSqtd);}
 				if (trim($totABANDONSpctqtd)>$max_qtd_abandonpct) {$max_qtd_abandonpct=trim($totABANDONSpctqtd);}
 
-				if (round($totANSWERSsecqtd/$totANSWERSqtd)>$max_qtd_avgtalktime) {$max_qtd_avgtalktime=round($totANSWERSsecqtd/$totANSWERSqtd);}
+				if ( ( ($totANSWERSsecqtd > 0) and ($totANSWERSqtd > 0) ) and (round($totANSWERSsecqtd/$totANSWERSqtd)>$max_qtd_avgtalktime) )
+					{$max_qtd_avgtalktime=round($totANSWERSsecqtd/$totANSWERSqtd);}
+
 				if (trim($totANSWERSsecqtd)>$max_qtd_totaltalktime) {$max_qtd_totaltalktime=trim($totANSWERSsecqtd);}
 				if (trim($totANSWERSsecqtd+($totANSWERSqtd*15))>$max_qtd_totalcalltime) {$max_qtd_totalcalltime=trim($totANSWERSsecqtd+($totANSWERSqtd*15));}
 
