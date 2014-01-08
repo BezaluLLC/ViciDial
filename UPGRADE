@@ -167,6 +167,13 @@ OTHER CHANGES:
 25. Added campaign options to limit time on Dead Calls, Disposition Screen 
 	and Pause.
 
+26. Added Servers option to have Asterisk automatically restarted if it crashes
+
+27. Added called_count logging to vicidial_log table
+
+28. Added logging of webserver and url used for all API calls, agent logins
+	and reports
+
 
 
 

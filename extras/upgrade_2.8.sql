@@ -143,3 +143,29 @@ ALTER TABLE vicidial_closer_log_archive ADD called_count SMALLINT(5) UNSIGNED de
 ALTER TABLE vicidial_log_archive ADD called_count SMALLINT(5) UNSIGNED default '0';
 
 UPDATE system_settings SET db_schema_version='1362',db_schema_update_date=NOW() where db_schema_version < 1362;
+
+CREATE TABLE vicidial_webservers (
+webserver_id SMALLINT(5) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+webserver VARCHAR(150) default '',
+hostname VARCHAR(150) default '',
+unique index vdweb (webserver, hostname)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_urls (
+url_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+url VARCHAR(333) default '',
+unique index (url)
+) ENGINE=MyISAM;
+
+ALTER TABLE vicidial_user_log ADD webserver SMALLINT(5) UNSIGNED default '0';
+ALTER TABLE vicidial_user_log ADD login_url INT(9) UNSIGNED default '0';
+
+ALTER TABLE vicidial_api_log ADD webserver SMALLINT(5) UNSIGNED default '0';
+ALTER TABLE vicidial_api_log ADD api_url INT(9) UNSIGNED default '0';
+
+CREATE TABLE vicidial_api_log_archive LIKE vicidial_api_log;
+ALTER TABLE vicidial_api_log_archive MODIFY api_id INT(9) UNSIGNED NOT NULL;
+
+ALTER TABLE vicidial_report_log ADD webserver SMALLINT(5) UNSIGNED default '0';
+
+UPDATE system_settings SET db_schema_version='1363',db_schema_update_date=NOW() where db_schema_version < 1363;

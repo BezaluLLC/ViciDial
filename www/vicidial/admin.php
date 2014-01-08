@@ -1,7 +1,7 @@
 <?php
 # admin.php - VICIDIAL administration page
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
 $startMS = microtime();
@@ -3264,12 +3264,13 @@ else
 # 131029-2008 - Added Asterisk auto-restart options to servers
 # 131208-1626 - Added campaign options for max dead, dispo and pause time
 # 131210-1741 - Added ability to define slave server with port number, issue #687
+# 140108-0752 - Added webserver and hostname to report logging
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.8-420a';
-$build = '131210-1741';
+$admin_version = '2.8-421a';
+$build = '140108-0752';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3644,7 +3645,7 @@ echo "<html>\n";
 echo "<head>\n";
 echo "<!-- VERSION: $admin_version   BUILD: $build   ADD: $ADD   PHP_SELF: $PHP_SELF-->\n";
 echo "<META NAME=\"ROBOTS\" CONTENT=\"NONE\">\n";
-echo "<META NAME=\"COPYRIGHT\" CONTENT=\"&copy; 2013 ViciDial Group\">\n";
+echo "<META NAME=\"COPYRIGHT\" CONTENT=\"&copy; 2014 ViciDial Group\">\n";
 echo "<META NAME=\"AUTHOR\" CONTENT=\"ViciDial Group\">\n";
 echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
@@ -4023,12 +4024,35 @@ if ( ($ADD==999993) or ($ADD==999992) or ($ADD==730000000000000) or ($ADD==83000
 	$LOGrequest_uri = getenv("REQUEST_URI");
 	$LOGhttp_referer = getenv("HTTP_REFERER");
 	if (preg_match("/443/i",$LOGserver_port)) {$HTTPprotocol = 'https://';}
-	  else {$HTTPprotocol = 'http://';}
+	else {$HTTPprotocol = 'http://';}
 	if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='';}
 	else {$LOGserver_port = ":$LOGserver_port";}
 	$LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
-	$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group, $query_date, $end_date, $shift, $stage, $report_display_type|', url='$LOGfull_url';";
+	$LOGhostname = php_uname('n');
+	if (strlen($LOGhostname)<1) {$LOGhostname='X';}
+	if (strlen($LOGserver_name)<1) {$LOGserver_name='X';}
+
+	$stmt="SELECT webserver_id FROM vicidial_webservers where webserver='$LOGserver_name' and hostname='$LOGhostname' LIMIT 1;";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$webserver_id_ct = mysqli_num_rows($rslt);
+	if ($webserver_id_ct > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$webserver_id = $row[0];
+		}
+	else
+		{
+		##### insert webserver entry
+		$stmt="INSERT INTO vicidial_webservers (webserver,hostname) values('$LOGserver_name','$LOGhostname');";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$affected_rows = mysqli_affected_rows($link);
+		$webserver_id = mysqli_insert_id($link);
+		}
+
+	$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group, $query_date, $end_date, $shift, $stage, $report_display_type|', url='$LOGfull_url', webserver='$webserver_id';";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$report_log_id = mysqli_insert_id($link);
@@ -31836,7 +31860,7 @@ if ($ADD==999995)
 	echo "<br><B> Welcome to ViciDial: copyright, trademark and license page</B><BR><BR>\n";
 	echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=2>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=right valign=top><B><font size=3>Copyright: </B></td><td align=left> &nbsp; The ViciDial Contact Center Suite is maintained by the <a href=\"http://www.vicidial.com/\" target=\"_blank\">ViciDial Group</a>, &copy; 2013</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right valign=top><B><font size=3>Copyright: </B></td><td align=left> &nbsp; The ViciDial Contact Center Suite is maintained by the <a href=\"http://www.vicidial.com/\" target=\"_blank\">ViciDial Group</a>, &copy; 2014</td></tr>\n";
 
 	echo "<tr bgcolor=#B6D3FC><td align=right valign=top><B><font size=3>Trademark: </B></td><td align=left> &nbsp; \"VICIDIAL\" is a registered trademark of the <a href=\"http://www.vicidial.com/\" target=\"_blank\">ViciDial Group</a>. Here is our <a href=\"http://www.vicidial.com/trademark.html\" target=\"_blank\">trademark use policy</a></td></tr>\n";
 
@@ -32419,7 +32443,7 @@ echo "<font size=0 color=white><br><br><!-- RUNTIME: $RUNtime seconds<BR> -->";
 echo "VERSION: $admin_version<BR>";
 echo "BUILD: $build\n";
 if (!preg_match("/_BUILD_/",$SShosted_settings))
-	{echo "<BR><a href=\"$PHP_SELF?ADD=999995\"><font color=white>&copy; 2013 ViciDial Group</font></a><BR><img src=\"images/pixel.gif\">";}
+	{echo "<BR><a href=\"$PHP_SELF?ADD=999995\"><font color=white>&copy; 2014 ViciDial Group</font></a><BR><img src=\"images/pixel.gif\">";}
 echo "</font>\n";
 ?>
 

@@ -5,6 +5,11 @@
 # Copyright (C) 2013  Matt Florell & Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Lead file conversion and scrubbing script.  This is the first stage in the lead loading process.
+#
+# IMPORTANT - make sure the XLSX folder that was created in your Perl directory when you installed Spreadsheet::XLSX
+# has executable privileges or the Spreadsheet::XLSX compile will fail and this script WILL NOT WORK.
+# For some reason it is installed with read privileges only, unlike other Spreadsheet modules which have
+# read and executable for all.
 # 
 # *Stage 1 - Convert file to a tab delimited format (DONE)
 #  Stage 2 - Prompt the user for the field mapping (TBD)

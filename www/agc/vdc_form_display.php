@@ -1,7 +1,7 @@
 <?php
 # vdc_form_display.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed display the contents of the FORM tab in the agent 
 # interface, as well as take submission of the form submission when the agent 
@@ -22,10 +22,11 @@
 # 130615-2155 - Allow qc_enabled user access to this page even if not logged in as an agent
 # 130705-1512 - Added optional encrypted passwords compatibility
 # 130802-1033 - Changed to PHP mysqli functions
+# 140101-2139 - Small fix for admin modify lead page on encrypted password systems
 #
 
-$version = '2.8-13';
-$build = '130802-1033';
+$version = '2.8-14';
+$build = '140101-2139';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -467,6 +468,8 @@ else
 
 	if ($submit_button=='YES')
 		{
+		if ($bcrypt=='0')
+			{echo "<input type=hidden name=bcrypt id=bcrypt value=\"OFF\">\n";}
 		echo "<input type=hidden name=admin_submit id=admin_submit value=\"YES\">\n";
 		echo "<BR><BR><input type=submit name=VCformSubmit id=VCformSubmit value=submit>\n";
 		}

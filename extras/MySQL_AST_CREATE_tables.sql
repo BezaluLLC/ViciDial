@@ -634,6 +634,8 @@ data VARCHAR(255),
 phone_login VARCHAR(15) default '',
 server_phone VARCHAR(15) default '',
 phone_ip VARCHAR(15) default '',
+webserver SMALLINT(5) UNSIGNED default '0',
+login_url INT(9) UNSIGNED default '0',
 index (user),
 index (event_date),
 index (phone_ip)
@@ -1868,6 +1870,8 @@ result_reason VARCHAR(255),
 source VARCHAR(20),
 data TEXT,
 run_time VARCHAR(20) default '0',
+webserver SMALLINT(5) UNSIGNED default '0',
+api_url INT(9) UNSIGNED default '0',
 index(api_date)
 ) ENGINE=MyISAM;
 
@@ -2908,6 +2912,7 @@ referer TEXT,
 notes TEXT,
 url TEXT,
 run_time VARCHAR(20) default '0',
+webserver SMALLINT(5) UNSIGNED default '0',
 index (user),
 index (report_name)
 ) ENGINE=MyISAM;
@@ -2984,6 +2989,19 @@ filter_count BIGINT(14) default '0',
 status_line VARCHAR(255) default '',
 script_output TEXT,
 index (start_time)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_webservers (
+webserver_id SMALLINT(5) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+webserver VARCHAR(150) default '',
+hostname VARCHAR(150) default '',
+unique index vdweb (webserver, hostname)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_urls (
+url_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+url VARCHAR(333) default '',
+unique index (url)
 ) ENGINE=MyISAM;
 
 
@@ -3151,6 +3169,9 @@ CREATE UNIQUE INDEX vdala on vicidial_did_agent_log_archive (uniqueid,call_date,
 CREATE TABLE vicidial_dial_log_archive LIKE vicidial_dial_log;
 CREATE UNIQUE INDEX vddla on vicidial_dial_log_archive (caller_code,call_date);
 
+CREATE TABLE vicidial_api_log_archive LIKE vicidial_api_log;
+ALTER TABLE vicidial_api_log_archive MODIFY api_id INT(9) UNSIGNED NOT NULL;
+
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
 
@@ -3225,4 +3246,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1362',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1363',db_schema_update_date=NOW();

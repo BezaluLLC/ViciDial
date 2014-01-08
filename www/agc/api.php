@@ -1,7 +1,7 @@
 <?php
 # api.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed as an API(Application Programming Interface) to allow
 # other programs to interact with the VICIDIAL Agent screen
@@ -68,10 +68,11 @@
 # 130603-2221 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130705-1526 - Added optional encrypted passwords compatibility
 # 130802-1000 - Changed to PHP mysqli functions
+# 140107-2140 - Added webserver and url logging
 #
 
-$version = '2.8-34';
-$build = '130802-1000';
+$version = '2.8-35';
+$build = '140107-2140';
 
 $startMS = microtime();
 
@@ -3098,6 +3099,17 @@ function api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$val
 	if ($api_logging > 0)
 		{
 		global $startMS;
+
+		$CL=':';
+		$script_name = getenv("SCRIPT_NAME");
+		$server_name = getenv("SERVER_NAME");
+		$server_port = getenv("SERVER_PORT");
+		if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
+		  else {$HTTPprotocol = 'http://';}
+		if (($server_port == '80') or ($server_port == '443') ) {$server_port='';}
+		else {$server_port = "$CL$server_port";}
+		$apiPAGE = "$HTTPprotocol$server_name$server_port$script_name";
+
 		$endMS = microtime();
 		$startMSary = explode(" ",$startMS);
 		$endMSary = explode(" ",$endMS);
@@ -3105,8 +3117,51 @@ function api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$val
 		$runM = ($endMSary[1] - $startMSary[1]);
 		$TOTALrun = ($runS + $runM);
 
+		$VULhostname = php_uname('n');
+		$VULservername = $_SERVER['SERVER_NAME'];
+		if (strlen($VULhostname)<1) {$VULhostname='X';}
+		if (strlen($VULservername)<1) {$VULservername='X';}
+
+		$stmt="SELECT webserver_id FROM vicidial_webservers where webserver='$VULservername' and hostname='$VULhostname' LIMIT 1;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$webserver_id_ct = mysqli_num_rows($rslt);
+		if ($webserver_id_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$webserver_id = $row[0];
+			}
+		else
+			{
+			##### insert webserver entry
+			$stmt="INSERT INTO vicidial_webservers (webserver,hostname) values('$VULservername','$VULhostname');";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$affected_rows = mysqli_affected_rows($link);
+			$webserver_id = mysqli_insert_id($link);
+			}
+
+		$stmt="SELECT url_id FROM vicidial_urls where url='$apiPAGE' LIMIT 1;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$url_id_ct = mysqli_num_rows($rslt);
+		if ($url_id_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$url_id = $row[0];
+			}
+		else
+			{
+			##### insert url entry
+			$stmt="INSERT INTO vicidial_urls (url) values('$apiPAGE');";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$affected_rows = mysqli_affected_rows($link);
+			$url_id = mysqli_insert_id($link);
+			}
+
 		$NOW_TIME = date("Y-m-d H:i:s");
-		$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$agent_user',function='$function',value='$value',result='$result',result_reason='$result_reason',source='$source',data='$data',api_date='$NOW_TIME',api_script='$api_script',run_time='$TOTALrun';";
+		$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$agent_user',function='$function',value='$value',result='$result',result_reason='$result_reason',source='$source',data='$data',api_date='$NOW_TIME',api_script='$api_script',run_time='$TOTALrun',webserver='$webserver_id',api_url='$url_id';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		}
 	return 1;

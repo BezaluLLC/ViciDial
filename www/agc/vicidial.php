@@ -1,7 +1,7 @@
 <?php
 # vicidial.php - the web-based version of the astVICIDIAL client application
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Other scripts that this application depends on:
 # - vdc_db_query.php: Updates information in the database
@@ -416,10 +416,11 @@
 # 131208-2331 - Added campaign options for max dead, dispo and pause time. Changed CB blink to CSS
 # 131209-1604 - Addded called_count logging
 # 131210-1354 - Fixed manual dial CID choice issue with AC-CID settings
+# 140107-2034 - Added webserver/url login logging
 #
 
-$version = '2.8-385c';
-$build = '131210-1354';
+$version = '2.8-386c';
+$build = '140107-2034';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -2541,9 +2542,58 @@ else
 			$vliaLIaffected_rows = mysqli_affected_rows($link);
 			echo "<!-- old vicidial_live_inbound_agents records cleared: |$vliaLIaffected_rows| -->\n";
 
+			$VULhostname = php_uname('n');
+			$VULservername = $_SERVER['SERVER_NAME'];
+			if (strlen($VULhostname)<1) {$VULhostname='X';}
+			if (strlen($VULservername)<1) {$VULservername='X';}
+
+			$stmt="SELECT webserver_id FROM vicidial_webservers where webserver='$VULservername' and hostname='$VULhostname' LIMIT 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01080',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$webserver_id_ct = mysqli_num_rows($rslt);
+			if ($webserver_id_ct > 0)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$webserver_id = $row[0];
+				}
+			else
+				{
+				##### insert webserver entry
+				$stmt="INSERT INTO vicidial_webservers (webserver,hostname) values('$VULservername','$VULhostname');";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01081',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$affected_rows = mysqli_affected_rows($link);
+				$webserver_id = mysqli_insert_id($link);
+				echo "<!-- vicidial_webservers record inserted: |$affected_rows|$webserver_id| -->\n";
+				}
+
+			$stmt="SELECT url_id FROM vicidial_urls where url='$agcPAGE' LIMIT 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01082',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$url_id_ct = mysqli_num_rows($rslt);
+			if ($url_id_ct > 0)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$url_id = $row[0];
+				}
+			else
+				{
+				##### insert url entry
+				$stmt="INSERT INTO vicidial_urls (url) values('$agcPAGE');";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01083',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$affected_rows = mysqli_affected_rows($link);
+				$url_id = mysqli_insert_id($link);
+				echo "<!-- vicidial_urls record inserted: |$affected_rows|$url_id| -->\n";
+				}
+
 			### insert an entry into the user log for the login event
 			$vul_data = "$vlERIaffected_rows|$vhICaffected_rows|$vlaLIaffected_rows|$vliaLIaffected_rows";
-			$stmt = "INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group,session_id,server_ip,extension,computer_ip,browser,data,phone_login,server_phone,phone_ip) values('$VD_login','LOGIN','$VD_campaign','$NOW_TIME','$StarTtimE','$VU_user_group','$session_id','$server_ip','$protocol/$extension','$ip','$browser','$vul_data','$original_phone_login','$phone_login','LOOKUP');";
+			$stmt = "INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group,session_id,server_ip,extension,computer_ip,browser,data,phone_login,server_phone,phone_ip,webserver,login_url) values('$VD_login','LOGIN','$VD_campaign','$NOW_TIME','$StarTtimE','$VU_user_group','$session_id','$server_ip','$protocol/$extension','$ip','$browser','$vul_data','$original_phone_login','$phone_login','LOOKUP','$webserver_id','$url_id');";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01031',$VD_login,$server_ip,$session_name,$one_mysql_log);}

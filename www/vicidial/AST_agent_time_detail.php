@@ -4,7 +4,7 @@
 # Pulls time stats per agent selectable by campaign or user group
 # should be most accurate agent stats of all of the reports
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 90522-0723 - First build
@@ -32,6 +32,7 @@
 # 130829-2012 - Changed to mysqli PHP functions
 # 131122-0657 - Added options.php atdr_login_logout_user_link option
 # 131129-1020 - Fixed division by zero bug in HTML mode
+# 140108-0708 - Added webserver and hostname to report logging
 #
 
 $startMS = microtime();
@@ -188,7 +189,30 @@ if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='
 else {$LOGserver_port = ":$LOGserver_port";}
 $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
-$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $file_download, $report_display_type|', url='$LOGfull_url';";
+$LOGhostname = php_uname('n');
+if (strlen($LOGhostname)<1) {$LOGhostname='X';}
+if (strlen($LOGserver_name)<1) {$LOGserver_name='X';}
+
+$stmt="SELECT webserver_id FROM vicidial_webservers where webserver='$LOGserver_name' and hostname='$LOGhostname' LIMIT 1;";
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$webserver_id_ct = mysqli_num_rows($rslt);
+if ($webserver_id_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$webserver_id = $row[0];
+	}
+else
+	{
+	##### insert webserver entry
+	$stmt="INSERT INTO vicidial_webservers (webserver,hostname) values('$LOGserver_name','$LOGhostname');";
+	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$affected_rows = mysqli_affected_rows($link);
+	$webserver_id = mysqli_insert_id($link);
+	}
+
+$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $file_download, $report_display_type|', url='$LOGfull_url', webserver='$webserver_id';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $report_log_id = mysqli_insert_id($link);
