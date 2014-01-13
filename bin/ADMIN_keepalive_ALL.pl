@@ -15,7 +15,7 @@
 #  - Auto reset lists at defined times
 #  - Auto restarts Asterisk process if enabled in servers settings
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 61011-1348 - First build
@@ -89,9 +89,10 @@
 # 130716-1441 - Clear out vicidial_monitor_calls records older than 1 day old
 # 130921-1044 - Small change to triggers allowing for them to be launched in a screen session if SCREEN is in the name
 # 131022-1746 - Added uptime gathering and asterisk auto-restart feature
+# 140112-1910 - Fixed issue with MoH in Astrisk 1.8
 #
 
-$build = '131022-1746';
+$build = '140112-1910';
 
 $DB=0; # Debug flag
 $MT[0]='';   $MT[1]='';
@@ -2861,6 +2862,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$moh  .= "directory=/var/lib/asterisk/$moh_id[$j]\n";
 		if ($random[$j] =~ /Y/) 
 			{$moh  .= "random=yes\n";}
+		else 
+			{$moh  .= "sort=alpha\n";}
 		$moh  .= "\n";
 
 		$j++;
