@@ -1930,7 +1930,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_groups-action_xfer_cid">
 <BR>
-<B>Action Transfer CID -</B> Used for Drop, After-hours and No-agent-no-queue actions. This is the caller ID number that the call uses before it is transferred to extensions, messages, voicemail or call menus. You can use CUSTOMER in this field to use the customer phone number, or CAMPAIGN to use the first allowed campaign caller id number. Default is CUSTOMER. If this is a call that will go to a Call Menu and then back to an in-group, we suggest you use CUSTOMERCLOSER in this field, and also you need to set the In-Group Search Method in the Call Menu to CLOSER.
+<B>Action Transfer CID -</B> Used for Drop, After-hours and No-agent-no-queue actions. This is the caller ID number that the call uses before it is transferred to extensions, messages, voicemail or call menus. You can use CUSTOMER in this field to use the customer phone number, or CAMPAIGN to use the first allowed campaign caller id number. Default is CUSTOMER. If this is a call that will go to a Call Menu and then back to an in-group, we suggest you use CUSTOMERCLOSER in this field, and also you need to set the In-Group Handle Method in the Call Menu to CLOSER.
 
 <BR>
 <A NAME="inbound_groups-call_time_id">
