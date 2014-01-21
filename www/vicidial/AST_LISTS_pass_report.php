@@ -8,6 +8,7 @@
 #
 # CHANGES
 # 140116-0839 - First build based upon AST_LISTS_campaign_stats.php
+# 140121-0707 - Fixed small issue in List select mode
 #
 
 $startMS = microtime();
@@ -363,7 +364,7 @@ while ($i < $statha_to_print)
 	if ($row[8]=='Y') {$completed_statuses .= "'$temp_status',";}
 	$i++;
 	}
-$stmt="select status,human_answered,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,status_name from vicidial_campaign_statuses where selectable IN('Y','N') $group_SQLand;";
+$stmt="select status,human_answered,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,status_name from vicidial_campaign_statuses where selectable IN('Y','N');";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $statha_to_print = mysqli_num_rows($rslt);
@@ -400,47 +401,7 @@ else {$scheduled_callback_statuses="''";}
 if (strlen($completed_statuses)>2)			{$completed_statuses = substr("$completed_statuses", 0, -1);}
 else {$completed_statuses="''";}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+if ($DB) {echo "<!-- SALE statuses: $sale_statuses -->";}
 
 
 
