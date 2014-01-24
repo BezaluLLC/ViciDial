@@ -1,7 +1,7 @@
 <?php
 # options.php - manually defined options for vicidial admin scripts
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # rename this file to options.php for the settings here to go into effect
 #
@@ -14,6 +14,7 @@
 # 120713-1915 - Added option for extended vicidial_list fields for long surveys
 # 130123-1950 - Added option for using non-selectable statuses in admin_modify_lead.php
 # 130124-1735 - Added option to display first and last name in user stats results
+# 140124-1003 - Removed extra newline at end of file
 #
 
 # used by the realtime_report.php script

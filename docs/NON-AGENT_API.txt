@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2013-06-17
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2014-01-24
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -34,6 +34,7 @@ add_group_alias - adds group alias to the system
 user_group_status - real-time status of one or more user groups
 in_group_status - real-time status of one or more in groups
 agent_status - real-time status of one user
+callid_info - information about a call based upon the caller_code or call ID
 
 
 New scripts:
@@ -84,6 +85,7 @@ Changes:
 130420-1938 - Added NANPA prefix validation and timezone options
 130614-0907 - Added pause code to output of agent_status function
 130617-2232 - Added real-time sub-statuses to output of agent_status function
+140124-1057 - Added callid_info function
 
 
 API Functions use the 'function' variable
@@ -425,6 +427,40 @@ status,call_id,lead_id,campaign_id,calls_today,full_name,user_group,user_level,p
 INCALL,M4050908070000012345,12345,TESTCAMP,1,Test Agent,AGENTS,3,LOGIN,
 
 NOTE: real_time_sub_status field can consist of: DEAD, DISPO, 3-WAY, PARK, RING or it can be empty
+
+
+
+
+--------------------------------------------------------------------------------
+callid_info - information about a call based upon the caller_code or call ID
+
+NOTE: api user for this function must have user_level set to 7 or higher and "view reports" enabled
+
+REQUIRED FIELDS-
+source -		description of what originated the API call (maximum 20 characters)
+call_id -		16-40 characters
+
+SETTINGS FIELDS-
+stage -			the format of the exported data: csv, tab, pipe(default)
+header -		include a header(YES) or not(NO). This is optional, default is not to include a header
+detail -		if set to YES, more call info will be output. Default is NO, only callid and customer talk time will be output
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=callid_info&call_id=M4050908070000012345&stage=csv&header=YES
+
+Example responses:
+ERROR: callid_info USER DOES NOT HAVE PERMISSION TO GET CALL INFO - 6666|0
+ERROR: callid_info INVALID SEARCH PARAMETERS - 6666||
+ERROR: callid_info CALL NOT FOUND - 6666||
+ERROR: callid_info CALL LOG NOT FOUND - 6666||
+
+A SUCCESS response will not show "SUCCESS", but instead will just print the results in the following format:
+call_id,custtime
+M4050908070000012345,725
+
+Setting "detail=YES" will result in the following output:
+call_id,custtime,call_date,campaign_id,list_id,status,user,phone
+M4050908070000012345,725,2014-01-24 09:26:09,TESTCAMP,999,A,6666,3125551212
 
 
 

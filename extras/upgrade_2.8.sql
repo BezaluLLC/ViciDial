@@ -169,3 +169,7 @@ ALTER TABLE vicidial_api_log_archive MODIFY api_id INT(9) UNSIGNED NOT NULL;
 ALTER TABLE vicidial_report_log ADD webserver SMALLINT(5) UNSIGNED default '0';
 
 UPDATE system_settings SET db_schema_version='1363',db_schema_update_date=NOW() where db_schema_version < 1363;
+
+CREATE INDEX vlecc on vicidial_log_extended (caller_code);
+
+UPDATE system_settings SET db_schema_version='1364',db_schema_update_date=NOW() where db_schema_version < 1364;

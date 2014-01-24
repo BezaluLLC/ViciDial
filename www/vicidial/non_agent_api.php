@@ -82,10 +82,11 @@
 # 130705-1725 - Changes for encrypted password compatibility
 # 130831-0825 - Changed to mysqli PHP functions
 # 140107-2143 - Added webserver and url logging
+# 140124-1057 - Added callid_info function
 #
 
-$version = '2.8-58';
-$build = '140107-2143';
+$version = '2.8-59';
+$build = '140124-1057';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -338,6 +339,8 @@ if (isset($_GET["expiration_date"]))			{$expiration_date=$_GET["expiration_date"
 	elseif (isset($_POST["expiration_date"]))	{$expiration_date=$_POST["expiration_date"];}
 if (isset($_GET["nanpa_ac_prefix_check"]))			{$nanpa_ac_prefix_check=$_GET["nanpa_ac_prefix_check"];}
 	elseif (isset($_POST["nanpa_ac_prefix_check"]))	{$nanpa_ac_prefix_check=$_POST["nanpa_ac_prefix_check"];}
+if (isset($_GET["detail"]))				{$detail=$_GET["detail"];}
+	elseif (isset($_POST["detail"]))	{$detail=$_POST["detail"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -1575,8 +1578,6 @@ if ($api_url_log > 0)
 	$rslt=mysql_to_mysqli($stmt, $link);
 	}
 ### END optional logging to vicidial_url_log for non-interface URL calls ###
-
-
 
 
 ################################################################################
@@ -4491,6 +4492,216 @@ if ($function == 'agent_status')
 ################################################################################
 ### END agent_status
 ################################################################################
+
+
+
+
+
+################################################################################
+### callid_info - outputs information about a call based upon the caller_code(or call ID)
+################################################################################
+if ($function == 'callid_info')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "callid_info USER DOES NOT HAVE PERMISSION TO GET CALL INFO";
+			echo "$result: $result_reason: |$user|$allowed_user|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			$call_search_SQL='';
+			$search_ready=0;
+			$call_id = preg_replace("/\n|\r|\t| /",'',$call_id);
+
+			if ( (strlen($call_id)>17) and (strlen($call_id)<40) and (preg_match("/^Y|^J|^V|^M|^DC|^S|^LP|^VH|^XL/",$call_id)) )
+				{
+				$call_search_SQL .= "where caller_code='$call_id'";
+				$search_ready++;
+				}
+			if ($search_ready < 1)
+				{
+				$result = 'ERROR';
+				$result_reason = "callid_info INVALID SEARCH PARAMETERS";
+				$data = "$user|$call_id";
+				echo "$result: $result_reason: $data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT user_group from vicidial_users where user='$user' and user_level > 6 and view_reports='1' and active='Y';";
+				if ($DB) {$MAIN.="|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$LOGuser_group =			$row[0];
+
+				$stmt="SELECT admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+				if ($DB) {$MAIN.="|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$LOGadmin_viewable_groups =		$row[0];
+
+				$LOGadmin_viewable_groupsSQL='';
+				$whereLOGadmin_viewable_groupsSQL='';
+				if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+					{
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+					$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					}
+
+				$k=0;
+				$output='';
+				$DLset=0;
+				if ($stage == 'csv')
+					{$DL = ',';   $DLset++;}
+				if ($stage == 'tab')
+					{$DL = "\t";   $DLset++;}
+				if ($stage == 'pipe')
+					{$DL = '|';   $DLset++;}
+				if ($DLset < 1)
+					{$DL='|';   $stage='pipe';}
+				if (strlen($time_format) < 1)
+					{$time_format = 'HF';}
+				if ($header == 'YES')
+					{
+					if ($detail == 'YES')
+						{
+						$output .= 'call_id' . $DL . 'custtime' . $DL . 'call_date' . $DL . 'phone' . $DL . 'call_type' . $DL . 'campaign_id' . $DL . 'list_id' . $DL . 'status' . $DL . 'user' . "\n";
+						}
+					else
+						{
+						$output .= 'call_id' . $DL . 'custtime' . "\n";
+						}
+					}
+
+				$stmt="SELECT uniqueid,call_date,lead_id from vicidial_log_extended $call_search_SQL;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$vle_to_list = mysqli_num_rows($rslt);
+				if ($vle_to_list > 0)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$uniqueid = 	$row[0];
+					$call_date = 	$row[1];
+					$lead_id = 		$row[2];
+
+					if (preg_match("/^Y|^J|^LP|^VH/",$call_id))
+						{
+						$stmt="SELECT phone_number,user,status,list_id,campaign_id from vicidial_closer_log where call_date='$call_date' and uniqueid='$uniqueid' and lead_id=$lead_id;";
+						$call_type = 'INBOUND';
+						}
+					else
+						{
+						if (preg_match("/^V/",$call_id))
+							{
+							$stmt="SELECT phone_number,user,status,list_id,campaign_id from vicidial_log where uniqueid='$uniqueid' and lead_id=$lead_id;";
+							$call_type = 'OUTBOUND_AUTO';
+							}
+						else
+							{
+							if (preg_match("/^M/",$call_id))
+								{
+								$stmt="SELECT phone_number,user,status,list_id,campaign_id from vicidial_log where uniqueid='$uniqueid' and lead_id=$lead_id;";
+								$call_type = 'OUTBOUND_MANUAL';
+								}
+							else
+								{
+								$stmt="SELECT phone_number,user,status,list_id,campaign_id from vicidial_log where uniqueid='$uniqueid' and lead_id=$lead_id;";
+								$call_type = 'OUTBOUND_OTHER';
+								}
+							}
+						}
+					$rslt=mysql_to_mysqli($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					$call_to_list = mysqli_num_rows($rslt);
+					if ($call_to_list > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$log_phone =		$row[0];
+						$log_user =			$row[1];
+						$log_status =		$row[2];
+						$log_list_id =		$row[3];
+						$log_campaign_id =	$row[4];
+						$cust_sec =			0;
+
+						$stmt="SELECT talk_sec,dead_sec from vicidial_agent_log where uniqueid='$uniqueid' and lead_id=$lead_id and user='$log_user';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						if ($DB) {echo "$stmt\n";}
+						$agent_to_log = mysqli_num_rows($rslt);
+						if ($agent_to_log > 0)
+							{
+							$row=mysqli_fetch_row($rslt);
+							$talk_sec =		$row[0];
+							$dead_sec =		$row[1];
+							$cust_sec = ($talk_sec - $dead_sec);
+							}
+
+						if ($detail == 'YES')
+							{
+							$output .= "$call_id$DL$cust_sec$DL$call_date$DL$log_phone$DL$call_type$DL$log_campaign_id$DL$log_list_id$DL$log_status$DL$log_user\n";
+							}
+						else
+							{
+							$output .= "$call_id$DL$cust_sec\n";
+							}
+						echo "$output";
+
+						$result = 'SUCCESS';
+						$data = "$user|$call_id|$stage";
+						$result_reason = "callid_info $output";
+
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					else
+						{
+						$result = 'ERROR';
+						$result_reason = "callid_info CALL LOG NOT FOUND";
+						$data = "$user|$agent_user";
+						echo "$result: $result_reason: $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				else
+					{
+					$result = 'ERROR';
+					$result_reason = "callid_info CALL NOT FOUND";
+					$data = "$user|$agent_user";
+					echo "$result: $result_reason: $data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### callid_info - outputs information about a call based upon the caller_code(or call ID)
+################################################################################
+
+
 
 
 
