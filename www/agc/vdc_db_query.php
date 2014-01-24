@@ -1,7 +1,7 @@
 <?php
 # vdc_db_query.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to exchange information between vicidial.php and the database server for various actions
 # 
@@ -340,10 +340,11 @@
 # 131208-2157 - Added user log TIMEOUTLOGOUT event status
 # 131209-1522 - Added called_count to log and closer log tables, fixed unanswered call logging issue
 # 131210-1400 - Fixed manual dial CID choice issue with AC-CID settings
+# 140124-1209 - Added error catching for start/dispo call URL logging
 #
 
-$version = '2.8-237';
-$build = '131210-1400';
+$version = '2.8-238';
+$build = '140124-1209';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=533;
 $one_mysql_log=0;
@@ -6145,14 +6146,30 @@ if ($ACTION == 'VDADcheckINCOMING')
 				### grab the call_start_url ###
 				if ($DB > 0) {echo "$VDCL_start_call_url<BR>\n";}
 				$SCUfile = file("$VDCL_start_call_url");
+                if ( !($SCUfile) )
+					{
+					$error_array = error_get_last();
+					$error_type = $error_array["type"];
+					$error_message = $error_array["message"];
+					$error_line = $error_array["line"];
+					$error_file = $error_array["file"];
+					}
+
 				if ($DB > 0) {echo "$SCUfile[0]<BR>\n";}
 
 				### update url log entry
 				$URLend_sec = date("U");
 				$URLdiff_sec = ($URLend_sec - $URLstart_sec);
-				$SCUfile_contents = implode("", $SCUfile);
-				$SCUfile_contents = preg_replace('/;/','',$SCUfile_contents);
-				$SCUfile_contents = addslashes($SCUfile_contents);
+                if ($SCUfile)
+					{
+					$SCUfile_contents = implode("", $SCUfile);
+					$SCUfile_contents = ereg_replace(';','',$SCUfile_contents);
+					$SCUfile_contents = addslashes($SCUfile_contents);
+					}
+                else
+					{
+					$SCUfile_contents = "PHP ERROR: Type=$error_type - Message=$error_message - Line=$error_line - File=$error_file";
+					}
 				$stmt = "UPDATE vicidial_url_log SET response_sec='$URLdiff_sec',url_response='$SCUfile_contents' where url_log_id='$url_id';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
@@ -7083,14 +7100,30 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 				### grab the call_start_url ###
 				if ($DB > 0) {echo "$VDCL_start_call_url<BR>\n";}
 				$SCUfile = file("$VDCL_start_call_url");
+                if ( !($SCUfile) )
+					{
+					$error_array = error_get_last();
+					$error_type = $error_array["type"];
+					$error_message = $error_array["message"];
+					$error_line = $error_array["line"];
+					$error_file = $error_array["file"];
+					}
+
 				if ($DB > 0) {echo "$SCUfile[0]<BR>\n";}
 
 				### update url log entry
 				$URLend_sec = date("U");
 				$URLdiff_sec = ($URLend_sec - $URLstart_sec);
-				$SCUfile_contents = implode("", $SCUfile);
-				$SCUfile_contents = preg_replace('/;/','',$SCUfile_contents);
-				$SCUfile_contents = addslashes($SCUfile_contents);
+                if ($SCUfile)
+					{
+					$SCUfile_contents = implode("", $SCUfile);
+					$SCUfile_contents = ereg_replace(';','',$SCUfile_contents);
+					$SCUfile_contents = addslashes($SCUfile_contents);
+					}
+                else
+					{
+					$SCUfile_contents = "PHP ERROR: Type=$error_type - Message=$error_message - Line=$error_line - File=$error_file";
+					}
 				$stmt = "UPDATE vicidial_url_log SET response_sec='$URLdiff_sec',url_response='$SCUfile_contents' where url_log_id='$url_id';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
@@ -9564,14 +9597,30 @@ if ($ACTION == 'updateDISPO')
 		### send dispo_call_url ###
 		if ($DB > 0) {echo "$dispo_call_url<BR>\n";}
 		$SCUfile = file("$dispo_call_url");
+		if ( !($SCUfile) )
+			{
+			$error_array = error_get_last();
+			$error_type = $error_array["type"];
+			$error_message = $error_array["message"];
+			$error_line = $error_array["line"];
+			$error_file = $error_array["file"];
+			}
+
 		if ($DB > 0) {echo "$SCUfile[0]<BR>\n";}
 
 		### update url log entry
 		$URLend_sec = date("U");
 		$URLdiff_sec = ($URLend_sec - $URLstart_sec);
-		$SCUfile_contents = implode("", $SCUfile);
-		$SCUfile_contents = preg_replace('/;/','',$SCUfile_contents);
-		$SCUfile_contents = addslashes($SCUfile_contents);
+		if ($SCUfile)
+			{
+			$SCUfile_contents = implode("", $SCUfile);
+			$SCUfile_contents = ereg_replace(';','',$SCUfile_contents);
+			$SCUfile_contents = addslashes($SCUfile_contents);
+			}
+		else
+			{
+			$SCUfile_contents = "PHP ERROR: Type=$error_type - Message=$error_message - Line=$error_line - File=$error_file";
+			}
 		$stmt = "UPDATE vicidial_url_log SET response_sec='$URLdiff_sec',url_response='$SCUfile_contents' where url_log_id='$url_id';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
