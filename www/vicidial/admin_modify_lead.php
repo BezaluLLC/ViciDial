@@ -8,7 +8,7 @@
 # just needs to enter the leadID and then they can view and modify the 
 # information in the record for that lead
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -57,6 +57,7 @@
 # 130705-1726 - Minor change for encrypted password compatibility
 # 130901-0816 - Changed to mysqli PHP functions
 # 130926-2053 - Added option for viewing/modifying vicidial_list_archive leads
+# 140125-1100 - Fixed issue with Callback records having no campaign_id
 #
 
 require("dbconnect_mysqli.php");
@@ -459,7 +460,7 @@ if ($end_call > 0)
 	if ( ($dispo != $status) and ($status == 'CBHOLD') )
 		{
 		### find any vicidial_callback records for this lead 
-		$stmt="select callback_id from vicidial_callbacks where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and status IN('ACTIVE','LIVE') order by callback_id desc LIMIT 1;";
+		$stmt="SELECT callback_id from vicidial_callbacks where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and status IN('ACTIVE','LIVE') order by callback_id desc LIMIT 1;";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$CBM_to_print = mysqli_num_rows($rslt);
@@ -471,8 +472,23 @@ if ($end_call > 0)
 		else
 			{
 			$tomorrow = date("Y-m-d", mktime(date("H"),date("i"),date("s"),date("m"),date("d")+1,date("Y")));
+			$CLEAN_campaign_id = mysqli_real_escape_string($link, $campaign_id);
+			$CLEAN_campaign_id = preg_replace("/'|\"|\\\\|;/","",$CLEAN_campaign_id);
+			$CLEAN_campaign_id = preg_replace('/[^-_0-9a-zA-Z]/','',$CLEAN_campaign_id);
 
-			$stmt="INSERT INTO vicidial_callbacks SET lead_id='" . mysqli_real_escape_string($link, $lead_id) . "',recipient='ANYONE',status='ACTIVE',user='$PHP_AUTH_USER',user_group='ADMIN',list_id='" . mysqli_real_escape_string($link, $list_id) . "',callback_time='$tomorrow 12:00:00',entry_time='$NOW_TIME',comments='',campaign_id='" . mysqli_real_escape_string($link, $campaign_id) . "';";
+			if (strlen($CLEAN_campaign_id)<1)
+				{
+				$stmt="SELECT campaign_id from vicidial_lists where list_id='" . mysqli_real_escape_string($link, $list_id) . "';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$cidvl_count_to_print = mysqli_num_rows($rslt);
+				if ($cidvl_count_to_print > 0) 
+					{
+					$row=mysqli_fetch_row($rslt);
+					if (strlen($row[0])>0)	{$CLEAN_campaign_id =	$row[0];}
+					}
+				}
+
+			$stmt="INSERT INTO vicidial_callbacks SET lead_id='" . mysqli_real_escape_string($link, $lead_id) . "',recipient='ANYONE',status='ACTIVE',user='$PHP_AUTH_USER',user_group='ADMIN',list_id='" . mysqli_real_escape_string($link, $list_id) . "',callback_time='$tomorrow 12:00:00',entry_time='$NOW_TIME',comments='',campaign_id='$CLEAN_campaign_id';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -579,7 +595,7 @@ else
 	if ($lead_count > 0)
 		{
 		##### grab vicidial_list_alt_phones records #####
-		$stmt="select phone_code,phone_number,alt_phone_note,alt_phone_count,active from vicidial_list_alt_phones where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by alt_phone_count limit 500;";
+		$stmt="SELECT phone_code,phone_number,alt_phone_note,alt_phone_count,active from vicidial_list_alt_phones where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by alt_phone_count limit 500;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$alts_to_print = mysqli_num_rows($rslt);
 
@@ -610,7 +626,7 @@ else
 		}
 
 	##### grab vicidial_log records #####
-	$stmt="select uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,user_group,term_reason,alt_dial from vicidial_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by uniqueid desc limit 500;";
+	$stmt="SELECT uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,user_group,term_reason,alt_dial from vicidial_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by uniqueid desc limit 500;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$logs_to_print = mysqli_num_rows($rslt);
 
@@ -658,7 +674,7 @@ else
 		}
 
 	##### grab vicidial_agent_log records #####
-	$stmt="select agent_log_id,user,server_ip,event_time,lead_id,campaign_id,pause_epoch,pause_sec,wait_epoch,wait_sec,talk_epoch,talk_sec,dispo_epoch,dispo_sec,status,user_group,comments,sub_status from vicidial_agent_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by agent_log_id desc limit 500;";
+	$stmt="SELECT agent_log_id,user,server_ip,event_time,lead_id,campaign_id,pause_epoch,pause_sec,wait_epoch,wait_sec,talk_epoch,talk_sec,dispo_epoch,dispo_sec,status,user_group,comments,sub_status from vicidial_agent_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by agent_log_id desc limit 500;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$Alogs_to_print = mysqli_num_rows($rslt);
 
@@ -692,7 +708,7 @@ else
 		}
 
 	##### grab vicidial_closer_log records #####
-	$stmt="select closecallid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,queue_seconds,user_group,xfercallid,term_reason,uniqueid,agent_only from vicidial_closer_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by closecallid desc limit 500;";
+	$stmt="SELECT closecallid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,queue_seconds,user_group,xfercallid,term_reason,uniqueid,agent_only from vicidial_closer_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by closecallid desc limit 500;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$Clogs_to_print = mysqli_num_rows($rslt);
 
@@ -836,7 +852,7 @@ else
 	if ($lead_id == 'NEW')
 		{
 		##### create a select list of lists if a NEW lead_id #####
-		$stmt="select list_id,campaign_id,list_name from vicidial_lists order by list_id limit 5000;";
+		$stmt="SELECT list_id,campaign_id,list_name from vicidial_lists order by list_id limit 5000;";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$lists_to_print = mysqli_num_rows($rslt);
@@ -1037,7 +1053,7 @@ else
 		if ( ($dispo == 'CALLBK') or ($dispo == 'CBHOLD') or ($scheduled_callback == 'Y') )
 			{
 			### find any vicidial_callback records for this lead 
-			$stmt="select callback_id,lead_id,list_id,campaign_id,status,entry_time,callback_time,modify_date,user,recipient,comments,user_group,lead_status from vicidial_callbacks where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and status IN('ACTIVE','LIVE') order by callback_id desc LIMIT 1;";
+			$stmt="SELECT callback_id,lead_id,list_id,campaign_id,status,entry_time,callback_time,modify_date,user,recipient,comments,user_group,lead_status from vicidial_callbacks where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and status IN('ACTIVE','LIVE') order by callback_id desc LIMIT 1;";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 			$CB_to_print = mysqli_num_rows($rslt);
@@ -1328,7 +1344,7 @@ else
 		echo "<TABLE width=750 cellspacing=1 cellpadding=1>\n";
 		echo "<tr><td><font size=1># </td><td align=left><font size=2> CAMPAIGN</td><td><font size=2>DATE/TIME </td><td align=left><font size=2>CALL MENU </td><td align=left><font size=2> &nbsp; ACTION</td></tr>\n";
 
-		$stmt="select campaign_id,event_date,menu_id,menu_action from vicidial_outbound_ivr_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by uniqueid,event_date,menu_action desc limit 500;";
+		$stmt="SELECT campaign_id,event_date,menu_id,menu_action from vicidial_outbound_ivr_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by uniqueid,event_date,menu_action desc limit 500;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$logs_to_print = mysqli_num_rows($rslt);
 		if ($DB) {echo "$logs_to_print|$stmt|\n";}
@@ -1362,7 +1378,7 @@ else
 			echo "<TABLE width=750 cellspacing=1 cellpadding=1>\n";
 			echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=right><font size=2> USER</td><td align=right><font size=2> CAMPAIGN</td><td align=left><font size=2>EMAIL TO</td><td align=left><font size=2> MESSAGE</td><td align=right><font size=2> ATTACHMENTS</td></tr>\n";
 
-			$stmt="select * from vicidial_email_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by email_date desc limit 500;";
+			$stmt="SELECT * from vicidial_email_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by email_date desc limit 500;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			$logs_to_print = mysqli_num_rows($rslt);
 
@@ -1399,7 +1415,7 @@ else
 		echo "<TABLE width=750 cellspacing=1 cellpadding=1>\n";
 		echo "<tr><td><font size=1># </td><td align=left><font size=2> LEAD</td><td><font size=2>DATE/TIME </td><td align=left><font size=2>SECONDS </td><td align=left><font size=2> &nbsp; RECID</td><td align=center><font size=2>FILENAME</td><td align=left><font size=2>LOCATION</td><td align=left><font size=2>TSR</td></tr>\n";
 
-		$stmt="select recording_id,channel,server_ip,extension,start_time,start_epoch,end_time,end_epoch,length_in_sec,length_in_min,filename,location,lead_id,user,vicidial_id from recording_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by recording_id desc limit 500;";
+		$stmt="SELECT recording_id,channel,server_ip,extension,start_time,start_epoch,end_time,end_epoch,length_in_sec,length_in_min,filename,location,lead_id,user,vicidial_id from recording_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by recording_id desc limit 500;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$logs_to_print = mysqli_num_rows($rslt);
 		if ($DB) {echo "$logs_to_print|$stmt|\n";}
@@ -1421,13 +1437,13 @@ else
 				$URLserver_ip = preg_replace('/http:\/\//i', '',$URLserver_ip);
 				$URLserver_ip = preg_replace('/https:\/\//i', '',$URLserver_ip);
 				$URLserver_ip = preg_replace('/\/.*/i', '',$URLserver_ip);
-				$stmt="select count(*) from servers where server_ip='$URLserver_ip';";
+				$stmt="SELECT count(*) from servers where server_ip='$URLserver_ip';";
 				$rsltx=mysql_to_mysqli($stmt, $link);
 				$rowx=mysqli_fetch_row($rsltx);
 				
 				if ($rowx[0] > 0)
 					{
-					$stmt="select recording_web_link,alt_server_ip,external_server_ip from servers where server_ip='$URLserver_ip';";
+					$stmt="SELECT recording_web_link,alt_server_ip,external_server_ip from servers where server_ip='$URLserver_ip';";
 					$rsltx=mysql_to_mysqli($stmt, $link);
 					$rowx=mysqli_fetch_row($rsltx);
 					
