@@ -173,3 +173,8 @@ UPDATE system_settings SET db_schema_version='1363',db_schema_update_date=NOW() 
 CREATE INDEX vlecc on vicidial_log_extended (caller_code);
 
 UPDATE system_settings SET db_schema_version='1364',db_schema_update_date=NOW() where db_schema_version < 1364;
+
+ALTER TABLE vicidial_live_agents ADD external_pause_code VARCHAR(6) default '';
+ALTER TABLE vicidial_live_agents ADD pause_code VARCHAR(6) default '';
+
+UPDATE system_settings SET db_schema_version='1365',db_schema_update_date=NOW() where db_schema_version < 1365;

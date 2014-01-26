@@ -69,10 +69,11 @@
 # 130705-1526 - Added optional encrypted passwords compatibility
 # 130802-1000 - Changed to PHP mysqli functions
 # 140107-2140 - Added webserver and url logging
+# 140126-0701 - Added pause_code function
 #
 
-$version = '2.8-35';
-$build = '140107-2140';
+$version = '2.8-36';
+$build = '140126-0701';
 
 $startMS = microtime();
 
@@ -3054,6 +3055,90 @@ if ($function == 'transfer_conference')
 	}
 ################################################################################
 ### END - transfer_conference
+################################################################################
+
+
+
+
+
+
+################################################################################
+### BEGIN - pause_code - set a pause code for an agent that is already paused
+################################################################################
+if ($function == 'pause_code')
+	{
+	if ( (strlen($value)<1) or (strlen($value)>6) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
+		{
+		$result = 'ERROR';
+		$result_reason = "pause_code not valid";
+		echo "$result: $result_reason - $value|$agent_user\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		}
+	else
+		{
+		if (strlen($alt_user)>1)
+			{
+			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "select user from vicidial_users where custom_three='$alt_user' order by user;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$agent_user = $row[0];
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "no user found";
+				echo "$result: $result_reason - $alt_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$stmt = "select status from vicidial_live_agents where user='$agent_user' and status='PAUSED';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$rl_ct = mysqli_num_rows($rslt);
+			if ($rl_ct > 0)
+				{
+				$pause_code_string = preg_replace("/\|/","','",$agent_login_call);
+				$stmt="UPDATE vicidial_live_agents SET external_pause_code='$value' where user='$agent_user';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$result = 'SUCCESS';
+				$result_reason = "pause_code function sent";
+				echo "$result: $result_reason - $agent_user\n";
+				$data = "$epoch";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "pause_code error - agent is not paused";
+				echo "$result: $result_reason - $agent_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		else
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_user is not logged in";
+			echo "$result: $result_reason - $agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		}
+	}
+################################################################################
+### END - pause_code
 ################################################################################
 
 

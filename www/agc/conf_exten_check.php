@@ -1,7 +1,7 @@
 <?php
 # conf_exten_check.php    version 2.8
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to send whether the meetme conference has live channels connected and which they are
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -61,10 +61,11 @@
 # 130603-2218 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130705-1524 - Added optional encrypted passwords compatibility
 # 130802-1015 - Changed to use PHP mysqli functions
+# 140126-0659 - Added external_pause_code function
 #
 
-$version = '2.8-36';
-$build = '130802-1015';
+$version = '2.8-37';
+$build = '140126-0659';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=39;
 $one_mysql_log=0;
@@ -449,7 +450,7 @@ if ($ACTION == 'refresh')
 				}
 
 			### grab the API hangup and API dispo fields in vicidial_live_agents
-			$stmt="SELECT external_hangup,external_status,external_pause,external_dial,external_update_fields,external_update_fields_data,external_timer_action,external_timer_action_message,external_timer_action_seconds,external_dtmf,external_transferconf,external_park,external_timer_action_destination,external_recording from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
+			$stmt="SELECT external_hangup,external_status,external_pause,external_dial,external_update_fields,external_update_fields_data,external_timer_action,external_timer_action_message,external_timer_action_seconds,external_dtmf,external_transferconf,external_park,external_timer_action_destination,external_recording,external_pause_code from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03010',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -468,6 +469,7 @@ if ($ACTION == 'refresh')
 			$external_park =				$row[11];
 			$timer_action_destination =		$row[12];
 			$external_recording =			$row[13];
+			$external_pause_code =			$row[14];
 
 			$MDQ_count=0;
 			if ( ($api_manual_dial=='QUEUE') or ($api_manual_dial=='QUEUE_AND_AUTOCALL') )
@@ -688,7 +690,7 @@ if ($ACTION == 'refresh')
 				$external_pause='';
 				}
 
-			echo 'DateTime: ' . $NOW_TIME . '|UnixTime: ' . $StarTtime . '|Logged-in: ' . $Alogin . '|CampCalls: ' . $RingCalls . '|Status: ' . $Astatus . '|DiaLCalls: ' . $DiaLCalls . '|APIHanguP: ' . $external_hangup . '|APIStatuS: ' . $external_status . '|APIPausE: ' . $external_pause . '|APIDiaL: ' . $external_dial . '|DEADcall: ' . $DEADcustomer . '|InGroupChange: ' . $InGroupChangeDetails . '|APIFields: ' . $external_update_fields . '|APIFieldsData: ' . $external_update_fields_data . '|APITimerAction: ' . $timer_action . '|APITimerMessage: ' . $timer_action_message . '|APITimerSeconds: ' . $timer_action_seconds . '|APIdtmf: ' . $external_dtmf . '|APItransferconf: ' . $external_transferconf . '|APIpark: ' . $external_park . '|APITimerDestination: ' . $timer_action_destination . '|APIManualDialQueue: ' . $MDQ_count . '|APIRecording: ' . $external_recording . "\n";
+			echo 'DateTime: ' . $NOW_TIME . '|UnixTime: ' . $StarTtime . '|Logged-in: ' . $Alogin . '|CampCalls: ' . $RingCalls . '|Status: ' . $Astatus . '|DiaLCalls: ' . $DiaLCalls . '|APIHanguP: ' . $external_hangup . '|APIStatuS: ' . $external_status . '|APIPausE: ' . $external_pause . '|APIDiaL: ' . $external_dial . '|DEADcall: ' . $DEADcustomer . '|InGroupChange: ' . $InGroupChangeDetails . '|APIFields: ' . $external_update_fields . '|APIFieldsData: ' . $external_update_fields_data . '|APITimerAction: ' . $timer_action . '|APITimerMessage: ' . $timer_action_message . '|APITimerSeconds: ' . $timer_action_seconds . '|APIdtmf: ' . $external_dtmf . '|APItransferconf: ' . $external_transferconf . '|APIpark: ' . $external_park . '|APITimerDestination: ' . $timer_action_destination . '|APIManualDialQueue: ' . $MDQ_count . '|APIRecording: ' . $external_recording . '|APIPaUseCodE: ' . $external_pause_code . "\n";
 
 			if (strlen($timer_action) > 3)
 				{

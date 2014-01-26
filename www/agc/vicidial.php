@@ -417,10 +417,11 @@
 # 131209-1604 - Addded called_count logging
 # 131210-1354 - Fixed manual dial CID choice issue with AC-CID settings
 # 140107-2034 - Added webserver/url login logging
+# 140126-0741 - Added pause code API function
 #
 
-$version = '2.8-386c';
-$build = '140107-2034';
+$version = '2.8-387c';
+$build = '140126-0741';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -2780,7 +2781,7 @@ else
 				echo "<!-- campaign is set to auto_dial_level: $auto_dial_level -->\n";
 
 				$closer_chooser_string='';
-				$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,user_level,campaign_weight,calls_today,last_state_change,outbound_autodial,manager_ingroup_set,on_hook_ring_time,on_hook_agent,last_inbound_call_time,last_inbound_call_finish,campaign_grade) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$closer_chooser_string','$user_level','$campaign_weight','$calls_today','$NOW_TIME','Y','N','$phone_ring_timeout','$on_hook_agent','$NOW_TIME','$NOW_TIME','$campaign_grade');";
+				$stmt="INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,user_level,campaign_weight,calls_today,last_state_change,outbound_autodial,manager_ingroup_set,on_hook_ring_time,on_hook_agent,last_inbound_call_time,last_inbound_call_finish,campaign_grade,pause_code) values('$VD_login','$server_ip','$session_id','$SIP_user','PAUSED','','$VD_campaign','','','','$random','$NOW_TIME','$tsNOW_TIME','$NOW_TIME','$closer_chooser_string','$user_level','$campaign_weight','$calls_today','$NOW_TIME','Y','N','$phone_ring_timeout','$on_hook_agent','$NOW_TIME','$NOW_TIME','$campaign_grade','LOGIN');";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01044',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -4681,6 +4682,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						api_timer_action_destination = APITimerDestination_array[1];
 						var APIRecording_array = check_time_array[25].split("APIRecording: ");
 						var api_recording = APIRecording_array[1];
+						var APIPauseCode_array = check_time_array[26].split("APIPaUseCodE: ");
+						var api_pause_code = APIPauseCode_array[1];
 						var APIdtmf_array = check_time_array[20].split("APIdtmf: ");
 						api_dtmf = APIdtmf_array[1];
 						var APItransfercond_array = check_time_array[21].split("APItransferconf: ");
@@ -4695,6 +4698,13 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						var APIpark_array = check_time_array[22].split("APIpark: ");
 						api_parkcustomer = APIpark_array[1];
 
+						if (api_pause_code.length > 0)
+							{
+							if (VDRP_stage == 'PAUSED')
+								{
+								PauseCodeSelect_submit(api_pause_code);
+								}
+							}
 						if (api_recording=='START')
 							{
 							conf_send_recording('MonitorConf', session_id,'','1');
