@@ -46,7 +46,7 @@
 #exten => 8366,4,AGI(agi-VDAD_ALL_outbound.agi,SURVEY-----LB-----US_pol_survey_hello-----1238-----8-----US_pol_survey_transfer-----US_thanks_no_contact-----OPTOUT-----DNC)
 #exten => 8366,5,Hangup
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 80218-2027 - First Build
@@ -106,6 +106,7 @@
 # 130425-0049 - Added survey_wait_sec option and pre-process time logging
 # 130425-0657 - Added survey_no_response option to drop to campaign drop action
 # 131209-1735 - Added called_count logging
+# 140126-1128 - Added VMAIL_NO_INST options
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -223,7 +224,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
     or die "Couldn't connect to database: " . DBI->errstr;
 
 ### Grab Server values from the database
-$stmtA = "SELECT voicemail_dump_exten,ext_context,answer_transfer_agent,local_gmt,asterisk_version,max_vicidial_trunks,agi_output FROM servers where server_ip = '$VARserver_ip';";
+$stmtA = "SELECT voicemail_dump_exten,ext_context,answer_transfer_agent,local_gmt,asterisk_version,max_vicidial_trunks,agi_output,voicemail_dump_exten_no_inst FROM servers where server_ip = '$VARserver_ip';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -232,13 +233,14 @@ $sthArows=$sthA->rows;
 while ($sthArows > $rec_count)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$DBvoicemail_dump_exten	=	$aryA[0];
-	$DBext_context =			$aryA[1];
-	$DBanswer_transfer_agent =	$aryA[2];
-	$DBSERVER_GMT =				$aryA[3];
-	$asterisk_version =			$aryA[4];
-	$DBmax_vicidial_trunks =	$aryA[5];
-	$DBagi_output =				$aryA[6];
+	$DBvoicemail_dump_exten	=			$aryA[0];
+	$DBext_context =					$aryA[1];
+	$DBanswer_transfer_agent =			$aryA[2];
+	$DBSERVER_GMT =						$aryA[3];
+	$asterisk_version =					$aryA[4];
+	$DBmax_vicidial_trunks =			$aryA[5];
+	$DBagi_output =						$aryA[6];
+	$voicemail_dump_exten_no_inst =		$aryA[7];
 	if ($DBvoicemail_dump_exten)	{$voicemail_dump_exten = $DBvoicemail_dump_exten;}
 	if ($DBext_context)				{$ext_context = $DBext_context;}
 	if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
@@ -1603,10 +1605,10 @@ if ($call_handle_method =~ /SURVEY/)
 				{$AGI->stream_file("$survey_opt_in_audio_file");}
 			}
 
-		if ($survey_method =~ /VOICEMAIL|EXTENSION|HANGUP|CALLMENU/)
+		if ($survey_method =~ /VOICEMAIL|EXTENSION|HANGUP|CALLMENU|VMAIL_NO_INST/)
 			{
 			$DROPexten='';
-			if ($survey_method =~ /VOICEMAIL/)
+			if ($survey_method =~ /VOICEMAIL|VMAIL_NO_INST/)
 				{
 				$newcallerid = "\"$callerid <$VDADphone>\"";
 				$AGI->set_callerid($newcallerid);
@@ -1614,6 +1616,8 @@ if ($call_handle_method =~ /SURVEY/)
 				checkresult($result);
 				if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
 				$survey_status='SVYVM';
+				if ($survey_method =~ /VMAIL_NO_INST/) 
+					{$voicemail_dump_exten = $voicemail_dump_exten_no_inst;}
 				if (length($VDADvoicemail_ext)>0)
 					{$DROPexten = "$voicemail_dump_exten$VDADvoicemail_ext";}
 				}
@@ -3186,13 +3190,15 @@ if ($drop_timer > $DROP_TIME)
 		if (length($safe_harbor_exten)>0)
 			{$DROPexten = "$safe_harbor_exten";}
 		}
-	if ($drop_action =~ /VOICEMAIL/)
+	if ($drop_action =~ /VOICEMAIL|VMAIL_NO_INST/)
 		{
 		$newcallerid = "\"$callerid <$VDADphone>\"";
 		$AGI->set_callerid($newcallerid);
 		print STDERR "Setting CID \"$newcallerid\"\n";
 		checkresult($result);
 		if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
+		if ($drop_action =~ /VMAIL_NO_INST/) 
+			{$voicemail_dump_exten = $voicemail_dump_exten_no_inst;}
 		if (length($VDADvoicemail_ext)>0)
 			{$DROPexten = "$voicemail_dump_exten$VDADvoicemail_ext";}
 		}

@@ -90,9 +90,10 @@
 # 130921-1044 - Small change to triggers allowing for them to be launched in a screen session if SCREEN is in the name
 # 131022-1746 - Added uptime gathering and asterisk auto-restart feature
 # 140112-1910 - Fixed issue with MoH in Astrisk 1.8
+# 140126-1153 - Added VMAIL_NO_INST option dialplan generation
 #
 
-$build = '140112-1910';
+$build = '140126-1153';
 
 $DB=0; # Debug flag
 $MT[0]='';   $MT[1]='';
@@ -1721,6 +1722,9 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$Vext .= "exten => _85026666666666.,1,Wait(1)\n";
 		$Vext .= "exten => _85026666666666.,n,Voicemail(\${EXTEN:14},u)\n";
 		$Vext .= "exten => _85026666666666.,n,Hangup()\n";
+		$Vext .= "exten => _85026666666667.,1,Wait(1)\n";
+		$Vext .= "exten => _85026666666667.,n,Voicemail(\${EXTEN:14},su)\n";
+		$Vext .= "exten => _85026666666667.,n,Hangup()\n";
 		$Vext .= "exten => 8500,1,VoicemailMain\n";
 		$Vext .= "exten => 8500,2,Goto(s,6)\n";
 		$Vext .= "exten => 8500,3,Hangup()\n";
@@ -1742,6 +1746,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		{
 		$Vext .= "; Voicemail Extensions go to main voicemail server:\n";
 		$Vext .= "exten => _85026666666666.,1,Dial(\${TRUNK$voicemail_server_id}/\${EXTEN},99,oT)\n";
+		$Vext .= "exten => _85026666666667.,1,Dial(\${TRUNK$voicemail_server_id}/\${EXTEN},99,oT)\n";
 		$Vext .= "exten => 8500,1,Dial(\${TRUNK$voicemail_server_id}/\${EXTEN},99,oT)\n";
 		$Vext .= "exten => 8500,2,Hangup()\n";
 		$Vext .= "exten => 8501,1,Dial(\${TRUNK$voicemail_server_id}/\${EXTEN},99,oT)\n";
@@ -2031,6 +2036,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$Pext .= "exten => $dialplan[$i],1,Dial(IAX2/$extension[$i],$phone_ring_timeout[$i],)\n";
 			}
 		$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
+	#	$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666667$voicemail[$i],1)\n";
 		if (!(( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6)))
 			{
 			$Pext .= "exten => $dialplan[$i],3,Hangup()\n";
@@ -2162,6 +2168,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$Pext .= "exten => $dialplan[$i],1,Dial(SIP/$extension[$i],$phone_ring_timeout[$i],)\n";
 			}
 		$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
+	#	$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666667$voicemail[$i],1)\n";
 		if (!(( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6)))
 			{
 			$Pext .= "exten => $dialplan[$i],3,Hangup()\n";
@@ -2448,11 +2455,18 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto($option_route_value_context[$j]$option_route_value[$j],1)\n";   $PRI++;
 					$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup()\n";
 					}
-				if ($option_route[$j] =~ /VOICEMAIL/)
+				if ($option_route[$j] =~ /VOICEMAIL|VMAIL_NO_INST/)
 					{
 					if ($dtmf_log[$i] > 0) 
 						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i])\n";   $PRI++;}
-					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto(default,85026666666666$option_route_value[$j],1)\n";   $PRI++;
+					if ($option_route[$j] =~ /VMAIL_NO_INST/)
+						{
+						$call_menu_line .= "exten => $option_value[$j],$PRI,Goto(default,85026666666667$option_route_value[$j],1)\n";   $PRI++;
+						}
+					else
+						{
+						$call_menu_line .= "exten => $option_value[$j],$PRI,Goto(default,85026666666666$option_route_value[$j],1)\n";   $PRI++;
+						}
 					$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup()\n";
 					}
 				if ($option_route[$j] =~ /HANGUP/)

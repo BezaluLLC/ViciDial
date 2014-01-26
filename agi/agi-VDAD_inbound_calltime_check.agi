@@ -31,7 +31,7 @@
 #exten => 1234,2,AGI(agi-VDAD_inbound_calltime_check.agi,INBOUND-----YES-----START-----24hours-----EXTENSION-----101-----default-----NO)
 #exten => 1234,3,Hangup
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 80525-0144 - First Build
@@ -51,6 +51,7 @@
 # 121124-1414 - Added call times holidays function
 # 130108-1807 - Changes for Asterisk 1.8 compatibility
 # 130925-1826 - Added variable filter to prevent DID SQL injection attack
+# 140126-1141 - Added VMAIL_NO_INST options
 #
 
 $script = 'agi-VDAD_inbound_calltime_check.agi';
@@ -324,7 +325,7 @@ if ($channel =~ /Local/i)
 
 ### Grab Server values from the database
 $cbc=0;
-$stmtA = "SELECT voicemail_dump_exten,ext_context,answer_transfer_agent,local_gmt,asterisk_version,max_vicidial_trunks FROM servers where server_ip = '$VARserver_ip';";
+$stmtA = "SELECT voicemail_dump_exten,ext_context,answer_transfer_agent,local_gmt,asterisk_version,max_vicidial_trunks,voicemail_dump_exten_no_inst FROM servers where server_ip = '$VARserver_ip';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -337,6 +338,7 @@ while ($sthArows > $cbc)
 	$DBSERVER_GMT		=			$aryA[3];
 	$DBasterisk_version	=			$aryA[4];
 	$DBmax_vicidial_trunks	=		$aryA[5];
+	$voicemail_dump_exten_no_inst = $aryA[6];
 	if ($DBvoicemail_dump_exten)	{$voicemail_dump_exten = $DBvoicemail_dump_exten;}
 	if ($DBext_context)				{$ext_context = $DBext_context;}
 	if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
@@ -573,8 +575,10 @@ if ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_st
 			{
 			$DROPexten = "$after_hours_exten";
 			}
-		if ($after_hours_action =~ /VOICEMAIL/)
+		if ($after_hours_action =~ /VOICEMAIL|VMAIL_NO_INST/)
 			{
+			if ($drop_action =~ /VMAIL_NO_INST/) 
+				{$voicemail_dump_exten = $voicemail_dump_exten_no_inst;}
 			$DROPexten = "$voicemail_dump_exten$after_hours_voicemail";
 			}
 		if ($after_hours_action =~ /IN_GROUP/)

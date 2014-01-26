@@ -474,8 +474,6 @@ if (isset($_GET["reset_list"]))	{$reset_list=$_GET["reset_list"];}
 	elseif (isset($_POST["reset_list"]))	{$reset_list=$_POST["reset_list"];}
 if (isset($_GET["safe_harbor_exten"]))	{$safe_harbor_exten=$_GET["safe_harbor_exten"];}
 	elseif (isset($_POST["safe_harbor_exten"]))	{$safe_harbor_exten=$_POST["safe_harbor_exten"];}
-if (isset($_GET["drop_action"]))	{$drop_action=$_GET["drop_action"];}
-	elseif (isset($_POST["drop_action"]))	{$drop_action=$_POST["drop_action"];}
 if (isset($_GET["scheduled_callbacks"]))	{$scheduled_callbacks=$_GET["scheduled_callbacks"];}
 	elseif (isset($_POST["scheduled_callbacks"]))	{$scheduled_callbacks=$_POST["scheduled_callbacks"];}
 if (isset($_GET["script_comments"]))	{$script_comments=$_GET["script_comments"];}
@@ -1822,6 +1820,8 @@ if (isset($_GET["dead_max_dispo"]))				{$dead_max_dispo=$_GET["dead_max_dispo"];
 	elseif (isset($_POST["dead_max_dispo"]))	{$dead_max_dispo=$_POST["dead_max_dispo"];}
 if (isset($_GET["dispo_max_dispo"]))			{$dispo_max_dispo=$_GET["dispo_max_dispo"];}
 	elseif (isset($_POST["dispo_max_dispo"]))	{$dispo_max_dispo=$_POST["dispo_max_dispo"];}
+if (isset($_GET["voicemail_dump_exten_no_inst"]))			{$voicemail_dump_exten_no_inst=$_GET["voicemail_dump_exten_no_inst"];}
+	elseif (isset($_POST["voicemail_dump_exten_no_inst"]))	{$voicemail_dump_exten_no_inst=$_POST["voicemail_dump_exten_no_inst"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2014,6 +2014,7 @@ if ($non_latin < 1)
 	$vicidial_transfers = preg_replace('/[^0-9]/','',$vicidial_transfers);
 	$voicemail_button_enabled = preg_replace('/[^0-9]/','',$voicemail_button_enabled);
 	$voicemail_dump_exten = preg_replace('/[^0-9]/','',$voicemail_dump_exten);
+	$voicemail_dump_exten_no_inst = preg_replace('/[^0-9]/','',$voicemail_dump_exten_no_inst);
 	$voicemail_exten = preg_replace('/[^0-9]/','',$voicemail_exten);
 	$wrapup_seconds = preg_replace('/[^0-9]/','',$wrapup_seconds);
 	$use_non_latin = preg_replace('/[^0-9]/','',$use_non_latin);
@@ -3266,12 +3267,13 @@ else
 # 131210-1741 - Added ability to define slave server with port number, issue #687
 # 140108-0752 - Added webserver and hostname to report logging
 # 140117-0840 - Added option for Lists Pass Report
+# 140126-0939 - Added VMAIL_NO_INST options
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.8-422a';
-$build = '140117-0840';
+$admin_version = '2.8-423a';
+$build = '140126-0939';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -13639,7 +13641,7 @@ if ($ADD==41111111111)
 					{
 					echo "<br>PHONE MODIFIED: $extension\n";
 
-					$stmt="UPDATE phones set extension='$extension', dialplan_number='$dialplan_number', voicemail_id='$voicemail_id', phone_ip='$phone_ip', computer_ip='$computer_ip', server_ip='$server_ip', login='$login', pass='$pass', status='$status', active='$active', phone_type='$phone_type', fullname='$fullname', company='$company', picture='$picture', protocol='$protocol', local_gmt='$local_gmt', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', login_user='$login_user', login_pass='$login_pass', login_campaign='$login_campaign', park_on_extension='$park_on_extension', conf_on_extension='$conf_on_extension', VICIDIAL_park_on_extension='$VICIDIAL_park_on_extension', VICIDIAL_park_on_filename='$VICIDIAL_park_on_filename', monitor_prefix='$monitor_prefix', recording_exten='$recording_exten', voicemail_exten='$voicemail_exten', voicemail_dump_exten='$voicemail_dump_exten', ext_context='$ext_context', dtmf_send_extension='$dtmf_send_extension', call_out_number_group='$call_out_number_group', client_browser='$client_browser', install_directory='$install_directory', local_web_callerID_URL='" . mysqli_real_escape_string($link, $local_web_callerID_URL) . "', VICIDIAL_web_URL='" . mysqli_real_escape_string($link, $VICIDIAL_web_URL) . "', AGI_call_logging_enabled='$AGI_call_logging_enabled', user_switching_enabled='$user_switching_enabled', conferencing_enabled='$conferencing_enabled', admin_hangup_enabled='$admin_hangup_enabled', admin_hijack_enabled='$admin_hijack_enabled', admin_monitor_enabled='$admin_monitor_enabled', call_parking_enabled='$call_parking_enabled', updater_check_enabled='$updater_check_enabled', AFLogging_enabled='$AFLogging_enabled', QUEUE_ACTION_enabled='$QUEUE_ACTION_enabled', CallerID_popup_enabled='$CallerID_popup_enabled', voicemail_button_enabled='$voicemail_button_enabled', enable_fast_refresh='$enable_fast_refresh', fast_refresh_rate='$fast_refresh_rate', enable_persistant_mysql='$enable_persistant_mysql', auto_dial_next_number='$auto_dial_next_number', VDstop_rec_after_each_call='$VDstop_rec_after_each_call', DBX_server='$DBX_server', DBX_database='$DBX_database', DBX_user='$DBX_user', DBX_pass='$DBX_pass', DBX_port='$DBX_port', DBY_server='$DBY_server', DBY_database='$DBY_database', DBY_user='$DBY_user', DBY_pass='$DBY_pass', DBY_port='$DBY_port', outbound_cid='$outbound_cid', enable_sipsak_messages='$enable_sipsak_messages', email='$email', template_id='$template_id', conf_override='$conf_override',phone_context='$phone_context',phone_ring_timeout='$phone_ring_timeout',conf_secret='$conf_secret', delete_vm_after_email='$delete_vm_after_email',is_webphone='$is_webphone',use_external_server_ip='$use_external_server_ip',codecs_list='$codecs_list',codecs_with_template='$codecs_with_template',webphone_dialpad='$webphone_dialpad',on_hook_agent='$on_hook_agent',webphone_auto_answer='$webphone_auto_answer',voicemail_timezone='$voicemail_timezone',voicemail_options='$voicemail_options',user_group='$user_group',voicemail_greeting='$voicemail_greeting' where extension='$old_extension' and server_ip='$old_server_ip';";
+					$stmt="UPDATE phones set extension='$extension', dialplan_number='$dialplan_number', voicemail_id='$voicemail_id', phone_ip='$phone_ip', computer_ip='$computer_ip', server_ip='$server_ip', login='$login', pass='$pass', status='$status', active='$active', phone_type='$phone_type', fullname='$fullname', company='$company', picture='$picture', protocol='$protocol', local_gmt='$local_gmt', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', login_user='$login_user', login_pass='$login_pass', login_campaign='$login_campaign', park_on_extension='$park_on_extension', conf_on_extension='$conf_on_extension', VICIDIAL_park_on_extension='$VICIDIAL_park_on_extension', VICIDIAL_park_on_filename='$VICIDIAL_park_on_filename', monitor_prefix='$monitor_prefix', recording_exten='$recording_exten', voicemail_exten='$voicemail_exten', voicemail_dump_exten='$voicemail_dump_exten', ext_context='$ext_context', dtmf_send_extension='$dtmf_send_extension', call_out_number_group='$call_out_number_group', client_browser='$client_browser', install_directory='$install_directory', local_web_callerID_URL='" . mysqli_real_escape_string($link, $local_web_callerID_URL) . "', VICIDIAL_web_URL='" . mysqli_real_escape_string($link, $VICIDIAL_web_URL) . "', AGI_call_logging_enabled='$AGI_call_logging_enabled', user_switching_enabled='$user_switching_enabled', conferencing_enabled='$conferencing_enabled', admin_hangup_enabled='$admin_hangup_enabled', admin_hijack_enabled='$admin_hijack_enabled', admin_monitor_enabled='$admin_monitor_enabled', call_parking_enabled='$call_parking_enabled', updater_check_enabled='$updater_check_enabled', AFLogging_enabled='$AFLogging_enabled', QUEUE_ACTION_enabled='$QUEUE_ACTION_enabled', CallerID_popup_enabled='$CallerID_popup_enabled', voicemail_button_enabled='$voicemail_button_enabled', enable_fast_refresh='$enable_fast_refresh', fast_refresh_rate='$fast_refresh_rate', enable_persistant_mysql='$enable_persistant_mysql', auto_dial_next_number='$auto_dial_next_number', VDstop_rec_after_each_call='$VDstop_rec_after_each_call', DBX_server='$DBX_server', DBX_database='$DBX_database', DBX_user='$DBX_user', DBX_pass='$DBX_pass', DBX_port='$DBX_port', DBY_server='$DBY_server', DBY_database='$DBY_database', DBY_user='$DBY_user', DBY_pass='$DBY_pass', DBY_port='$DBY_port', outbound_cid='$outbound_cid', enable_sipsak_messages='$enable_sipsak_messages', email='$email', template_id='$template_id', conf_override='$conf_override',phone_context='$phone_context',phone_ring_timeout='$phone_ring_timeout',conf_secret='$conf_secret', delete_vm_after_email='$delete_vm_after_email',is_webphone='$is_webphone',use_external_server_ip='$use_external_server_ip',codecs_list='$codecs_list',codecs_with_template='$codecs_with_template',webphone_dialpad='$webphone_dialpad',on_hook_agent='$on_hook_agent',webphone_auto_answer='$webphone_auto_answer',voicemail_timezone='$voicemail_timezone',voicemail_options='$voicemail_options',user_group='$user_group',voicemail_greeting='$voicemail_greeting',voicemail_dump_exten_no_inst='$voicemail_dump_exten_no_inst' where extension='$old_extension' and server_ip='$old_server_ip';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 
 					$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
@@ -13776,7 +13778,7 @@ if ($ADD==411111111111)
 					{echo "<br>SERVER NOT MODIFIED - Please go back and look at the data you entered\n";}
 				else
 					{
-					$stmt="UPDATE servers set server_id='$server_id',server_description='$server_description',server_ip='$server_ip',active='$active',asterisk_version='$asterisk_version', max_vicidial_trunks='$max_vicidial_trunks', telnet_host='$telnet_host', telnet_port='$telnet_port', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', ASTmgrUSERNAMEupdate='$ASTmgrUSERNAMEupdate', ASTmgrUSERNAMElisten='$ASTmgrUSERNAMElisten', ASTmgrUSERNAMEsend='$ASTmgrUSERNAMEsend', local_gmt='$local_gmt', voicemail_dump_exten='$voicemail_dump_exten', answer_transfer_agent='$answer_transfer_agent', ext_context='$ext_context', sys_perf_log='$sys_perf_log', vd_server_logs='$vd_server_logs', agi_output='$agi_output', vicidial_balance_active='$vicidial_balance_active',balance_trunks_offlimits='$balance_trunks_offlimits',recording_web_link='$recording_web_link',alt_server_ip='$alt_server_ip',active_asterisk_server='$active_asterisk_server',generate_vicidial_conf='$generate_vicidial_conf',rebuild_conf_files='$rebuild_conf_files',outbound_calls_per_second='$outbound_calls_per_second',sounds_update='$sounds_update',vicidial_recording_limit='$vicidial_recording_limit',carrier_logging_active='$carrier_logging_active',vicidial_balance_rank='$vicidial_balance_rank',rebuild_music_on_hold='$rebuild_music_on_hold',active_agent_login_server='$active_agent_login_server',conf_secret='$conf_secret',external_server_ip='$external_server_ip',custom_dialplan_entry='$custom_dialplan_entry',active_twin_server_ip='$active_twin_server_ip',user_group='$user_group',auto_restart_asterisk='$auto_restart_asterisk',asterisk_temp_no_restart='$asterisk_temp_no_restart' where server_id='$old_server_id';";
+					$stmt="UPDATE servers set server_id='$server_id',server_description='$server_description',server_ip='$server_ip',active='$active',asterisk_version='$asterisk_version', max_vicidial_trunks='$max_vicidial_trunks', telnet_host='$telnet_host', telnet_port='$telnet_port', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', ASTmgrUSERNAMEupdate='$ASTmgrUSERNAMEupdate', ASTmgrUSERNAMElisten='$ASTmgrUSERNAMElisten', ASTmgrUSERNAMEsend='$ASTmgrUSERNAMEsend', local_gmt='$local_gmt', voicemail_dump_exten='$voicemail_dump_exten', answer_transfer_agent='$answer_transfer_agent', ext_context='$ext_context', sys_perf_log='$sys_perf_log', vd_server_logs='$vd_server_logs', agi_output='$agi_output', vicidial_balance_active='$vicidial_balance_active',balance_trunks_offlimits='$balance_trunks_offlimits',recording_web_link='$recording_web_link',alt_server_ip='$alt_server_ip',active_asterisk_server='$active_asterisk_server',generate_vicidial_conf='$generate_vicidial_conf',rebuild_conf_files='$rebuild_conf_files',outbound_calls_per_second='$outbound_calls_per_second',sounds_update='$sounds_update',vicidial_recording_limit='$vicidial_recording_limit',carrier_logging_active='$carrier_logging_active',vicidial_balance_rank='$vicidial_balance_rank',rebuild_music_on_hold='$rebuild_music_on_hold',active_agent_login_server='$active_agent_login_server',conf_secret='$conf_secret',external_server_ip='$external_server_ip',custom_dialplan_entry='$custom_dialplan_entry',active_twin_server_ip='$active_twin_server_ip',user_group='$user_group',auto_restart_asterisk='$auto_restart_asterisk',asterisk_temp_no_restart='$asterisk_temp_no_restart',voicemail_dump_exten_no_inst='$voicemail_dump_exten_no_inst' where server_id='$old_server_id';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 
 					$stmtA="UPDATE servers SET rebuild_conf_files='Y',rebuild_music_on_hold='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y';";
@@ -18625,7 +18627,7 @@ if ($ADD==31)
 			{
 			echo "<tr bgcolor=#8EBCFD><td align=right>Drop Call Seconds: </td><td align=left><input type=text name=drop_call_seconds size=5 maxlength=2 value=\"$drop_call_seconds\">$NWB#campaigns-drop_call_seconds$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#8EBCFD><td align=right>Drop Action: </td><td align=left><select size=1 name=drop_action><option>AUDIO</option><option>HANGUP</option><option>MESSAGE</option><option>VOICEMAIL</option><option>IN_GROUP</option><option>CALLMENU</option><option SELECTED>$drop_action</option></select>$NWB#campaigns-drop_action$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right>Drop Action: </td><td align=left><select size=1 name=drop_action><option>AUDIO</option><option>HANGUP</option><option>MESSAGE</option><option>VOICEMAIL</option><option>VMAIL_NO_INST</option><option>IN_GROUP</option><option>CALLMENU</option><option SELECTED>$drop_action</option></select>$NWB#campaigns-drop_action$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#8EBCFD><td align=right>Safe Harbor Exten: </td><td align=left><input type=text name=safe_harbor_exten size=10 maxlength=20 value=\"$safe_harbor_exten\">$NWB#campaigns-safe_harbor_exten$NWE</td></tr>\n";
 
@@ -19698,7 +19700,7 @@ if ($ADD==31)
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Wait Seconds: </td><td><input type=text size=5 maxlength=2 name=survey_wait_sec value=\"$survey_wait_sec\"> $NWB#campaigns-survey_wait_sec$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Opt-in Audio File: </td><td><input type=text size=50 maxlength=50 name=survey_opt_in_audio_file id=survey_opt_in_audio_file value=\"$survey_opt_in_audio_file\"> <a href=\"javascript:launch_chooser('survey_opt_in_audio_file','date',30);\">audio chooser</a> $NWB#campaigns-survey_opt_in_audio_file$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Not Interested Audio File: </td><td><input type=text size=50 maxlength=50 name=survey_ni_audio_file id=survey_ni_audio_file value=\"$survey_ni_audio_file\"> <a href=\"javascript:launch_chooser('survey_ni_audio_file','date',30);\">audio chooser</a> $NWB#campaigns-survey_ni_audio_file$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Method: </td><td><select size=1 name=survey_method><option>AGENT_XFER</option><option>VOICEMAIL</option><option>EXTENSION</option><option>HANGUP</option><option>CAMPREC_60_WAV</option><option>CALLMENU</option><option SELECTED>$survey_method</option></select> $NWB#campaigns-survey_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Method: </td><td><select size=1 name=survey_method><option>AGENT_XFER</option><option>VOICEMAIL</option><option>VMAIL_NO_INST</option><option>EXTENSION</option><option>HANGUP</option><option>CAMPREC_60_WAV</option><option>CALLMENU</option><option SELECTED>$survey_method</option></select> $NWB#campaigns-survey_method$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey No-Response Action: </td><td><select size=1 name=survey_no_response_action><option>OPTIN</option><option>OPTOUT</option><option>DROP</option><option SELECTED>$survey_no_response_action</option></select> $NWB#campaigns-survey_no_response_action$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B9CBFD><td align=right>Survey Not Interested Status: </td><td><select name=survey_ni_status>$survey_ni_status_list</select> $NWB#campaigns-survey_ni_status$NWE</td></tr>\n";
 
@@ -22596,7 +22598,7 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#99FFCC><td align=right>Drop Call Seconds: </td><td align=left><input type=text name=drop_call_seconds size=5 maxlength=4 value=\"$drop_call_seconds\">$NWB#inbound_groups-drop_call_seconds$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#99FFCC><td align=right>Drop Action: </td><td align=left><select size=1 name=drop_action><option>HANGUP</option><option>MESSAGE</option><option>VOICEMAIL</option><option>IN_GROUP</option><option>CALLMENU</option><option SELECTED>$drop_action</option></select>$NWB#inbound_groups-drop_action$NWE</td></tr>\n";
+		echo "<tr bgcolor=#99FFCC><td align=right>Drop Action: </td><td align=left><select size=1 name=drop_action><option>HANGUP</option><option>MESSAGE</option><option>VOICEMAIL</option><option>VMAIL_NO_INST</option><option>IN_GROUP</option><option>CALLMENU</option><option SELECTED>$drop_action</option></select>$NWB#inbound_groups-drop_action$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#99FFCC><td align=right>Drop Exten: </td><td align=left><input type=text name=drop_exten size=10 maxlength=20 value=\"$drop_exten\">$NWB#inbound_groups-drop_exten$NWE</td></tr>\n";
 
@@ -22632,7 +22634,7 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Action Transfer CID: </td><td align=left><input type=text name=action_xfer_cid size=12 maxlength=18 value=\"$action_xfer_cid\">$NWB#inbound_groups-action_xfer_cid$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Action: </td><td align=left><select size=1 name=after_hours_action><option>HANGUP</option><option>MESSAGE</option><option>EXTENSION</option><option>VOICEMAIL</option><option>IN_GROUP</option><option>CALLMENU</option><option SELECTED>$after_hours_action</option></select>$NWB#inbound_groups-after_hours_action$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Action: </td><td align=left><select size=1 name=after_hours_action><option>HANGUP</option><option>MESSAGE</option><option>EXTENSION</option><option>VOICEMAIL</option><option>VMAIL_NO_INST</option><option>IN_GROUP</option><option>CALLMENU</option><option SELECTED>$after_hours_action</option></select>$NWB#inbound_groups-after_hours_action$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>After Hours Message Filename: </td><td align=left><input type=text name=after_hours_message_filename id=after_hours_message_filename size=50 maxlength=255 value=\"$after_hours_message_filename\"> <a href=\"javascript:launch_chooser('after_hours_message_filename','date',1000);\">audio chooser</a> $NWB#inbound_groups-after_hours_message_filename$NWE</td></tr>\n";
 
@@ -22648,7 +22650,7 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>No Agents No Queueing: </td><td align=left><select size=1 name=no_agent_no_queue><option>Y</option><option>N</option><option>NO_PAUSED</option><option SELECTED>$no_agent_no_queue</option></select>$NWB#inbound_groups-no_agent_no_queue$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>No Agent No Queue Action: </td><td align=left><select size=1 name=no_agent_action id=no_agent_action onChange=\"dynamic_call_action('no_agent_action','$no_agent_action','$no_agent_action_value','600');\"><option>CALLMENU</option><option>INGROUP</option><option>DID</option><option>MESSAGE</option><option>EXTENSION</option><option>VOICEMAIL</option><option SELECTED>$no_agent_action</option></select>$NWB#inbound_groups-no_agent_no_queue$NWE\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>No Agent No Queue Action: </td><td align=left><select size=1 name=no_agent_action id=no_agent_action onChange=\"dynamic_call_action('no_agent_action','$no_agent_action','$no_agent_action_value','600');\"><option>CALLMENU</option><option>INGROUP</option><option>DID</option><option>MESSAGE</option><option>EXTENSION</option><option>VOICEMAIL</option><option>VMAIL_NO_INST</option><option SELECTED>$no_agent_action</option></select>$NWB#inbound_groups-no_agent_no_queue$NWE\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>";
 		echo "<span id=\"no_agent_action_value_span\" name=\"no_agent_action_value_span\">\n";
@@ -22712,7 +22714,7 @@ if ($ADD==3111)
 			$EXcontext =	$EXno_agent_action_value[1];
 			echo "Extension: <input type=text name=EXextension_no_agent_action id=EXextension_no_agent_action size=20 maxlength=255 value=\"$EXextension\"> &nbsp; Context: <input type=text name=EXcontext_no_agent_action id=EXcontext_no_agent_action size=20 maxlength=255 value=\"$EXcontext\">\n";
 			}
-		if ($no_agent_action=='VOICEMAIL')
+		if ( ($no_agent_action=='VOICEMAIL') or  ($no_agent_action=='VMAIL_NO_INST') )
 			{
 			echo "Voicemail Box: <input type=text name=no_agent_action_value id=no_agent_action_value size=12 maxlength=10 value=\"$no_agent_action_value\"> <a href=\"javascript:launch_vm_chooser('no_agent_action_value','vm',1200);\">voicemail chooser</a>\n";
 			}
@@ -22752,11 +22754,11 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Estimated Hold Time Minimum Prompt Seconds: </td><td align=left><input type=text name=eht_minimum_prompt_seconds size=5 maxlength=5 value=\"$eht_minimum_prompt_seconds\">$NWB#inbound_groups-eht_minimum_prompt_seconds$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option: </td><td align=left><select size=1 name=wait_time_option><option>NONE</option><option>PRESS_STAY</option><option>PRESS_VMAIL</option><option>PRESS_EXTEN</option><option>PRESS_CALLMENU</option><option>PRESS_CID_CALLBACK</option><option>PRESS_INGROUP</option><option SELECTED>$wait_time_option</option></select>$NWB#inbound_groups-wait_time_option$NWE</td></tr>\n";
+		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option: </td><td align=left><select size=1 name=wait_time_option><option>NONE</option><option>PRESS_STAY</option><option>PRESS_VMAIL</option><option>PRESS_VMAIL_NO_INST</option><option>PRESS_EXTEN</option><option>PRESS_CALLMENU</option><option>PRESS_CID_CALLBACK</option><option>PRESS_INGROUP</option><option SELECTED>$wait_time_option</option></select>$NWB#inbound_groups-wait_time_option$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Second Option: </td><td align=left><select size=1 name=wait_time_second_option><option>NONE</option><option>PRESS_STAY</option><option>PRESS_VMAIL</option><option>PRESS_EXTEN</option><option>PRESS_CALLMENU</option><option>PRESS_CID_CALLBACK</option><option>PRESS_INGROUP</option><option SELECTED>$wait_time_second_option</option></select>$NWB#inbound_groups-wait_time_second_option$NWE</td></tr>\n";
+		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Second Option: </td><td align=left><select size=1 name=wait_time_second_option><option>NONE</option><option>PRESS_STAY</option><option>PRESS_VMAIL</option><option>PRESS_VMAIL_NO_INST</option><option>PRESS_EXTEN</option><option>PRESS_CALLMENU</option><option>PRESS_CID_CALLBACK</option><option>PRESS_INGROUP</option><option SELECTED>$wait_time_second_option</option></select>$NWB#inbound_groups-wait_time_second_option$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Third Option: </td><td align=left><select size=1 name=wait_time_third_option><option>NONE</option><option>PRESS_STAY</option><option>PRESS_VMAIL</option><option>PRESS_EXTEN</option><option>PRESS_CALLMENU</option><option>PRESS_CID_CALLBACK</option><option>PRESS_INGROUP</option><option SELECTED>$wait_time_third_option</option></select>$NWB#inbound_groups-wait_time_third_option$NWE</td></tr>\n";
+		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Third Option: </td><td align=left><select size=1 name=wait_time_third_option><option>NONE</option><option>PRESS_STAY</option><option>PRESS_VMAIL</option><option>PRESS_VMAIL_NO_INST</option><option>PRESS_EXTEN</option><option>PRESS_CALLMENU</option><option>PRESS_CID_CALLBACK</option><option>PRESS_INGROUP</option><option SELECTED>$wait_time_third_option</option></select>$NWB#inbound_groups-wait_time_third_option$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#99FFCC><td align=right>Wait Time Option Seconds: </td><td align=left><input type=text name=wait_time_option_seconds size=5 maxlength=5 value=\"$wait_time_option_seconds\">$NWB#inbound_groups-wait_time_option_seconds$NWE</td></tr>\n";
 
@@ -22784,11 +22786,11 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Wait Hold Option Priority: </td><td align=left><select size=1 name=wait_hold_option_priority><option>WAIT</option><option>BOTH</option><option SELECTED>$wait_hold_option_priority</option></select>$NWB#inbound_groups-wait_hold_option_priority$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>Estimated Hold Time Option: </td><td align=left><select size=1 name=hold_time_option><option>NONE</option><option>EXTENSION</option><option>CALL_MENU</option><option>VOICEMAIL</option><option>IN_GROUP</option><option>CALLERID_CALLBACK</option><option>DROP_ACTION</option><option>PRESS_STAY</option><option>PRESS_VMAIL</option><option>PRESS_EXTEN</option><option>PRESS_CALLMENU</option><option>PRESS_CID_CALLBACK</option><option>PRESS_INGROUP</option><option SELECTED>$hold_time_option</option></select>$NWB#inbound_groups-hold_time_option$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Estimated Hold Time Option: </td><td align=left><select size=1 name=hold_time_option><option>NONE</option><option>EXTENSION</option><option>CALL_MENU</option><option>VOICEMAIL</option><option>VMAIL_NO_INST</option><option>IN_GROUP</option><option>CALLERID_CALLBACK</option><option>DROP_ACTION</option><option>PRESS_STAY</option><option>PRESS_VMAIL</option><option>PRESS_VMAIL_NO_INST</option><option>PRESS_EXTEN</option><option>PRESS_CALLMENU</option><option>PRESS_CID_CALLBACK</option><option>PRESS_INGROUP</option><option SELECTED>$hold_time_option</option></select>$NWB#inbound_groups-hold_time_option$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Second Option: </td><td align=left><select size=1 name=hold_time_second_option><option>NONE</option><option>PRESS_STAY</option><option>PRESS_VMAIL</option><option>PRESS_EXTEN</option><option>PRESS_CALLMENU</option><option>PRESS_CID_CALLBACK</option><option>PRESS_INGROUP</option><option SELECTED>$hold_time_second_option</option></select>$NWB#inbound_groups-hold_time_second_option$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Second Option: </td><td align=left><select size=1 name=hold_time_second_option><option>NONE</option><option>PRESS_STAY</option><option>PRESS_VMAIL</option><option>PRESS_VMAIL_NO_INST</option><option>PRESS_EXTEN</option><option>PRESS_CALLMENU</option><option>PRESS_CID_CALLBACK</option><option>PRESS_INGROUP</option><option SELECTED>$hold_time_second_option</option></select>$NWB#inbound_groups-hold_time_second_option$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Third Option: </td><td align=left><select size=1 name=hold_time_third_option><option>NONE</option><option>PRESS_STAY</option><option>PRESS_VMAIL</option><option>PRESS_EXTEN</option><option>PRESS_CALLMENU</option><option>PRESS_CID_CALLBACK</option><option>PRESS_INGROUP</option><option SELECTED>$hold_time_third_option</option></select>$NWB#inbound_groups-hold_time_third_option$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Third Option: </td><td align=left><select size=1 name=hold_time_third_option><option>NONE</option><option>PRESS_STAY</option><option>PRESS_VMAIL</option><option>PRESS_VMAIL_NO_INST</option><option>PRESS_EXTEN</option><option>PRESS_CALLMENU</option><option>PRESS_CID_CALLBACK</option><option>PRESS_INGROUP</option><option SELECTED>$hold_time_third_option</option></select>$NWB#inbound_groups-hold_time_third_option$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Hold Time Option Seconds: </td><td align=left><input type=text name=hold_time_option_seconds size=5 maxlength=5 value=\"$hold_time_option_seconds\">$NWB#inbound_groups-hold_time_option_seconds$NWE</td></tr>\n";
 
@@ -24152,7 +24154,7 @@ if ($ADD==3311)
 		echo "$UUgroups_list";
 		echo "<option SELECTED value=\"$user_group\">$user_group</option>\n";
 		echo "</select>$NWB#inbound_dids-user_group$NWE</td></tr>\n";
-		echo "<tr bgcolor=#99FFCC><td align=right>DID Route: </td><td align=left><select size=1 name=did_route><option>AGENT</option><option>EXTEN</option><option>VOICEMAIL</option><option>PHONE</option><option>IN_GROUP</option><option>CALLMENU</option><option SELECTED>$did_route</option></select>$NWB#inbound_dids-did_route$NWE</td></tr>\n";
+		echo "<tr bgcolor=#99FFCC><td align=right>DID Route: </td><td align=left><select size=1 name=did_route><option>AGENT</option><option>EXTEN</option><option>VOICEMAIL</option><option>VMAIL_NO_INST</option><option>PHONE</option><option>IN_GROUP</option><option>CALLMENU</option><option SELECTED>$did_route</option></select>$NWB#inbound_dids-did_route$NWE</td></tr>\n";
 		echo "<tr bgcolor=#99FFCC><td align=right>Record Call: </td><td align=left><select size=1 name=record_call><option>N</option><option>Y_QUEUESTOP</option><option>Y</option><option SELECTED>$record_call</option></select>$NWB#inbound_dids-record_call$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Extension: </td><td align=left><input type=text name=extension size=40 maxlength=50 value=\"$extension\">$NWB#inbound_dids-extension$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Extension Context: </td><td align=left><input type=text name=exten_context size=40 maxlength=50 value=\"$exten_context\">$NWB#inbound_dids-exten_context$NWE</td></tr>\n";
@@ -24178,7 +24180,7 @@ if ($ADD==3311)
 		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=3511&menu_id=$menu_id\">Call Menu:</a> </td><td align=left><select size=1 name=menu_id>$menu_list<option SELECTED>$menu_id</option></select>$NWB#inbound_dids-menu_id$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>User Agent: </td><td align=left><input type=text name=user size=20 maxlength=20 value=\"$user\">$NWB#inbound_dids-user$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>User Unavailable Action: </td><td align=left><select size=1 name=user_unavailable_action><option>EXTEN</option><option>VOICEMAIL</option><option>PHONE</option><option>IN_GROUP</option><option SELECTED>$user_unavailable_action</option></select>$NWB#inbound_dids-user_unavailable_action$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>User Unavailable Action: </td><td align=left><select size=1 name=user_unavailable_action><option>EXTEN</option><option>VOICEMAIL</option><option>VMAIL_NO_INST</option><option>PHONE</option><option>IN_GROUP</option><option SELECTED>$user_unavailable_action</option></select>$NWB#inbound_dids-user_unavailable_action$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>User Route Settings In-Group: </td><td align=left><select size=1 name=user_route_settings_ingroup>";
 		echo "$Xgroups_menu";
 		echo "</select>$NWB#inbound_dids-user_route_settings_ingroup$NWE</td></tr>\n";
@@ -24214,7 +24216,7 @@ if ($ADD==3311)
 		echo "<tr bgcolor=#CCFFFF><td align=right><a href=\"$PHP_SELF?ADD=3711&filter_phone_group_id=$filter_phone_group_id\">Filter Phone Group ID:</a> </td><td align=left><select size=1 name=filter_phone_group_id>$Fgroups_list<option SELECTED>$filter_phone_group_id</option></select>$NWB#inbound_dids-filter_phone_group_id$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter URL: </td><td align=left><input type=text name=filter_url size=80 maxlength=1000 value=\"$filter_url\">$NWB#inbound_dids-filter_url$NWE</td></tr>\n";
-		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Action: </td><td align=left><select size=1 name=filter_action><option>AGENT</option><option>EXTEN</option><option>VOICEMAIL</option><option>PHONE</option><option>IN_GROUP</option><option>CALLMENU</option><option SELECTED>$filter_action</option></select>$NWB#inbound_dids-filter_action$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Action: </td><td align=left><select size=1 name=filter_action><option>AGENT</option><option>EXTEN</option><option>VOICEMAIL</option><option>VMAIL_NO_INST</option><option>PHONE</option><option>IN_GROUP</option><option>CALLMENU</option><option SELECTED>$filter_action</option></select>$NWB#inbound_dids-filter_action$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Extension: </td><td align=left><input type=text name=filter_extension size=40 maxlength=50 value=\"$filter_extension\">$NWB#inbound_dids-extension$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Extension Context: </td><td align=left><input type=text name=filter_exten_context size=40 maxlength=50 value=\"$filter_exten_context\">$NWB#inbound_dids-exten_context$NWE</td></tr>\n";
@@ -24228,7 +24230,7 @@ if ($ADD==3311)
 		echo "<tr bgcolor=#CCFFFF><td align=right><a href=\"$PHP_SELF?ADD=3511&menu_id=$menu_id\">Filter Call Menu:</a> </td><td align=left><select size=1 name=filter_menu_id>$menu_list<option SELECTED>$filter_menu_id</option></select>$NWB#inbound_dids-menu_id$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter User Agent: </td><td align=left><input type=text name=filter_user size=20 maxlength=20 value=\"$filter_user\">$NWB#inbound_dids-user$NWE</td></tr>\n";
-		echo "<tr bgcolor=#CCFFFF><td align=right>Filter User Unavailable Action: </td><td align=left><select size=1 name=filter_user_unavailable_action><option>EXTEN</option><option>VOICEMAIL</option><option>PHONE</option><option>IN_GROUP</option><option SELECTED>$filter_user_unavailable_action</option></select>$NWB#inbound_dids-user_unavailable_action$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter User Unavailable Action: </td><td align=left><select size=1 name=filter_user_unavailable_action><option>EXTEN</option><option>VOICEMAIL</option><option>VMAIL_NO_INST</option><option>PHONE</option><option>IN_GROUP</option><option SELECTED>$filter_user_unavailable_action</option></select>$NWB#inbound_dids-user_unavailable_action$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter User Route Settings In-Group: </td><td align=left><select size=1 name=filter_user_route_settings_ingroup>";
 		echo "$FXgroups_menu";
 		echo "</select>$NWB#inbound_dids-user_route_settings_ingroup$NWE</td></tr>\n";
@@ -24761,6 +24763,7 @@ if ($ADD==3511)
 				<option>EXTENSION</option>
 				<option>PHONE</option>
 				<option>VOICEMAIL</option>
+				<option>VMAIL_NO_INST</option>
 				<option>AGI</option>
 				<option value=\"\">* REMOVE *</option>
 				<option selected value=\"$option_route\">$option_route</option>
@@ -24833,7 +24836,7 @@ if ($ADD==3511)
 				{
 				echo "Phone: <select size=1 name=option_route_value_$j id=option_route_value_$j>$phone_list<option SELECTED>$option_route_value</option></select>\n";
 				}
-			if ($option_route=='VOICEMAIL')
+			if ( ($option_route=='VOICEMAIL') or ($option_route=='VMAIL_NO_INST') )
 				{
 				echo "Voicemail Box: <input type=text name=option_route_value_$j id=option_route_value_$j size=12 maxlength=10 value=\"$option_route_value\"> <a href=\"javascript:launch_vm_chooser('option_route_value_$j','vm',$choose_height);\">voicemail chooser</a>\n";
 				}
@@ -24875,6 +24878,7 @@ if ($ADD==3511)
 				<option>EXTENSION</option>
 				<option>PHONE</option>
 				<option>VOICEMAIL</option>
+				<option>VMAIL_NO_INST</option>
 				<option>AGI</option>
 				<option SELECTED value=\"\"> </option>
 			</select> 
@@ -26664,7 +26668,7 @@ if ($ADD==31111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,is_webphone,use_external_server_ip,codecs_list,codecs_with_template,webphone_dialpad,on_hook_agent,webphone_auto_answer,voicemail_timezone,voicemail_options,user_group,voicemail_greeting from phones where extension='$extension' and server_ip='$server_ip' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,is_webphone,use_external_server_ip,codecs_list,codecs_with_template,webphone_dialpad,on_hook_agent,webphone_auto_answer,voicemail_timezone,voicemail_options,user_group,voicemail_greeting,voicemail_dump_exten_no_inst from phones where extension='$extension' and server_ip='$server_ip' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 
@@ -26749,6 +26753,7 @@ if ($ADD==31111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Recording Exten: </td><td align=left><input type=text name=recording_exten size=10 maxlength=10 value=\"$row[28]\">$NWB#phones-recording_exten$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>VMailMain Exten: </td><td align=left><input type=text name=voicemail_exten size=10 maxlength=10 value=\"$row[29]\">$NWB#phones-voicemail_exten$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>VMailDump Exten: </td><td align=left><input type=text name=voicemail_dump_exten size=20 maxlength=20 value=\"$row[30]\">$NWB#phones-voicemail_dump_exten$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>VMailDump Exten NI: </td><td align=left><input type=text name=voicemail_dump_exten_no_inst size=20 maxlength=20 value=\"$row[85]\">$NWB#phones-voicemail_dump_exten_no_inst$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Exten Context: </td><td align=left><input type=text name=ext_context size=20 maxlength=20 value=\"$row[31]\">$NWB#phones-ext_context$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Phone Context: </td><td align=left><input type=text name=phone_context size=20 maxlength=20 value=\"$row[70]\">$NWB#phones-phone_context$NWE</td></tr>\n";
 
@@ -26981,7 +26986,7 @@ if ($ADD==311111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT server_id,server_description,server_ip,active,asterisk_version,max_vicidial_trunks,telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,local_gmt,voicemail_dump_exten,answer_transfer_agent,ext_context,sys_perf_log,vd_server_logs,agi_output,vicidial_balance_active,balance_trunks_offlimits,recording_web_link,alt_server_ip,active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,outbound_calls_per_second,sysload,channels_total,cpu_idle_percent,disk_usage,sounds_update,vicidial_recording_limit,carrier_logging_active,vicidial_balance_rank,rebuild_music_on_hold,active_agent_login_server,conf_secret,external_server_ip,custom_dialplan_entry,active_twin_server_ip,user_group,system_uptime,auto_restart_asterisk,asterisk_temp_no_restart from servers where ( (server_id='$server_id') or (server_ip='$server_ip') ) $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT server_id,server_description,server_ip,active,asterisk_version,max_vicidial_trunks,telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,local_gmt,voicemail_dump_exten,answer_transfer_agent,ext_context,sys_perf_log,vd_server_logs,agi_output,vicidial_balance_active,balance_trunks_offlimits,recording_web_link,alt_server_ip,active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,outbound_calls_per_second,sysload,channels_total,cpu_idle_percent,disk_usage,sounds_update,vicidial_recording_limit,carrier_logging_active,vicidial_balance_rank,rebuild_music_on_hold,active_agent_login_server,conf_secret,external_server_ip,custom_dialplan_entry,active_twin_server_ip,user_group,system_uptime,auto_restart_asterisk,asterisk_temp_no_restart,voicemail_dump_exten_no_inst from servers where ( (server_id='$server_id') or (server_ip='$server_ip') ) $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 		$server_id =					$row[0];
@@ -27030,6 +27035,7 @@ if ($ADD==311111111111)
 		$system_uptime =				$row[43];
 		$auto_restart_asterisk =		$row[44];
 		$asterisk_temp_no_restart =		$row[45];
+		$voicemail_dump_exten_no_inst = $row[46];
 
 
 		$cpu = (100 - $cpu_idle_percent);
@@ -27072,6 +27078,7 @@ if ($ADD==311111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>Conf File Secret: </td><td align=left style=\"display:table-cell; vertical-align:middle;\"><input type=text id=reg_pass name=conf_secret size=20 maxlength=20 value=\"$conf_secret\" onkeyup=\"return pwdChanged('reg_pass','reg_pass_img');\">$NWB#servers-conf_secret$NWE &nbsp; &nbsp; Strength: <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img');\"></td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Local GMT: </td><td align=left><select size=1 name=local_gmt><option>12.75</option><option>12.00</option><option>11.00</option><option>10.00</option><option>9.50</option><option>9.00</option><option>8.00</option><option>7.00</option><option>6.50</option><option>6.00</option><option>5.75</option><option>5.50</option><option>5.00</option><option>4.50</option><option>4.00</option><option>3.50</option><option>3.00</option><option>2.00</option><option>1.00</option><option>0.00</option><option>-1.00</option><option>-2.00</option><option>-3.00</option><option>-3.50</option><option>-4.00</option><option>-5.00</option><option>-6.00</option><option>-7.00</option><option>-8.00</option><option>-9.00</option><option>-10.00</option><option>-11.00</option><option>-12.00</option><option selected>$local_gmt</option></select> (Do NOT Adjust for DST)$NWB#servers-local_gmt$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>VMail Dump Exten: </td><td align=left><input type=text name=voicemail_dump_exten size=20 maxlength=20 value=\"$voicemail_dump_exten\">$NWB#servers-voicemail_dump_exten$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>VMail Dump Exten NI: </td><td align=left><input type=text name=voicemail_dump_exten_no_inst size=20 maxlength=20 value=\"$voicemail_dump_exten_no_inst\">$NWB#servers-voicemail_dump_exten_no_inst$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>auto dial extension: </td><td align=left><input type=text name=answer_transfer_agent size=20 maxlength=20 value=\"$answer_transfer_agent\">$NWB#servers-answer_transfer_agent$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Default Context: </td><td align=left><input type=text name=ext_context size=20 maxlength=20 value=\"$ext_context\">$NWB#servers-ext_context$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>System Performance: </td><td align=left><select size=1 name=sys_perf_log><option>Y</option><option>N</option><option selected>$sys_perf_log</option></select>$NWB#servers-sys_perf_log$NWE</td></tr>\n";

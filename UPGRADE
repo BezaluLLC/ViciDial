@@ -178,6 +178,9 @@ OTHER CHANGES:
 
 30. Added Agent API pause_code function
 
+31. Added VMAIL_NO_INST options to send calls to voicemail with no instructions
+	playing after the voicemail greeting
+
 
 
 

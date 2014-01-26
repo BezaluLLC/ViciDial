@@ -13,7 +13,7 @@
 # ;inbound DID catch-all:
 #exten => _X.,1,AGI(agi-DID_route.agi)
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 81007-0324 - First Build
@@ -32,6 +32,7 @@
 # 130108-1810 - Changes for Asterisk 1.8 compatibility
 # 130925-1819 - Added variable filter to prevent DID SQL injection attack
 # 130926-1549 - Added new queue_log IVR entries for QM
+# 140126-1138 - Added VMAIL_NO_INST options
 #
 
 $script = 'agi-DID_route.agi';
@@ -379,7 +380,7 @@ if ($record_call =~ /Y/)
 
 ### Grab Server values from the database
 $cbc=0;
-$stmtA = "SELECT voicemail_dump_exten,ext_context,answer_transfer_agent,local_gmt,asterisk_version,max_vicidial_trunks FROM servers where server_ip = '$VARserver_ip';";
+$stmtA = "SELECT voicemail_dump_exten,ext_context,answer_transfer_agent,local_gmt,asterisk_version,max_vicidial_trunks,voicemail_dump_exten_no_inst FROM servers where server_ip = '$VARserver_ip';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -393,6 +394,7 @@ while ($sthArows > $cbc)
 	$DBSERVER_GMT		=			$aryA[3];
 	$DBasterisk_version	=			$aryA[4];
 	$DBmax_vicidial_trunks	=		$aryA[5];
+	$voicemail_dump_exten_no_inst = $aryA[6];
 	if ($DBvoicemail_dump_exten)	{$voicemail_dump_exten = $DBvoicemail_dump_exten;}
 	if ($DBext_context)				{$ext_context = $DBext_context;}
 	if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
@@ -552,7 +554,7 @@ if ($did_route =~ /PHONE/)
 
 
 ### Route call to a voicemail box on the system
-if ($did_route =~ /VOICEMAIL/)
+if ($did_route =~ /VOICEMAIL|VMAIL_NO_INST/)
 	{
 	### format the remote server dialstring to get the call to the overflow agent meetme room
 	if( $did_server_ip =~ m/(\S+)\.(\S+)\.(\S+)\.(\S+)/ )
@@ -563,6 +565,8 @@ if ($did_route =~ /VOICEMAIL/)
 		$d = leading_zero($4);
 		$ServerString = "$a$S$b$S$c$S$d$S";
 		}
+	if ($did_route =~ /VMAIL_NO_INST/) 
+		{$voicemail_dump_exten = $voicemail_dump_exten_no_inst;}
 	$did_extension = "$ServerString$voicemail_dump_exten$voicemail_ext";
 	$did_route = 'EXTEN';
 	}

@@ -1,7 +1,7 @@
 <?php
 # admin_header.php - VICIDIAL administration header
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
 # CHANGES
@@ -44,6 +44,7 @@
 # 130610-1040 - Finalized changing of all ereg instances to preg
 # 130615-2314 - Changed Reports only and QC only headers
 # 130824-2324 - Changed to mysqli PHP functions
+# 140126-1022 - Added VMAIL_NO_INST option
 #
 
 
@@ -833,7 +834,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				{value='';}
 			new_content = 'Phone: <select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option + '>' + phone_list + "\n" + selected_value + '</select>';
 			}
-		if (selected_route=='VOICEMAIL')
+		if ( (selected_route=='VOICEMAIL') || (selected_route=='VMAIL_NO_INST') )
 			{
 			if (route == selected_route)
 				{
@@ -990,7 +991,7 @@ if ( ($ADD==2811) or ($ADD==3811) or ($ADD==3111) or ($ADD==2111) or ($ADD==2011
 
 			new_content = "Extension: <input type=text name=EXextension_" + option + " id=EXextension_" + option + " size=20 maxlength=255 value=\"" + EXextension + "\"> &nbsp; Context: <input type=text name=EXcontext_" + option + " id=EXcontext_" + option + " size=20 maxlength=255 value=\"" + EXcontext + "\"> ";
 			}
-		if (selected_route=='VOICEMAIL')
+		if ( (selected_route=='VOICEMAIL') || (selected_route=='VMAIL_NO_INST') )
 			{
 			if (route == selected_route)
 				{

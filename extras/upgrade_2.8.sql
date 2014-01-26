@@ -178,3 +178,21 @@ ALTER TABLE vicidial_live_agents ADD external_pause_code VARCHAR(6) default '';
 ALTER TABLE vicidial_live_agents ADD pause_code VARCHAR(6) default '';
 
 UPDATE system_settings SET db_schema_version='1365',db_schema_update_date=NOW() where db_schema_version < 1365;
+
+ALTER TABLE vicidial_campaigns MODIFY drop_action ENUM('HANGUP','MESSAGE','VOICEMAIL','IN_GROUP','AUDIO','CALLMENU','VMAIL_NO_INST') default 'AUDIO';
+ALTER TABLE vicidial_campaigns MODIFY survey_method ENUM('AGENT_XFER','VOICEMAIL','EXTENSION','HANGUP','CAMPREC_60_WAV','CALLMENU','VMAIL_NO_INST') default 'AGENT_XFER';
+
+ALTER TABLE vicidial_inbound_groups MODIFY drop_action ENUM('HANGUP','MESSAGE','VOICEMAIL','IN_GROUP','CALLMENU','VMAIL_NO_INST') default 'MESSAGE';
+ALTER TABLE vicidial_inbound_groups MODIFY after_hours_action ENUM('HANGUP','MESSAGE','EXTENSION','VOICEMAIL','IN_GROUP','CALLMENU','VMAIL_NO_INST') default 'MESSAGE';
+ALTER TABLE vicidial_inbound_groups MODIFY no_agent_action ENUM('CALLMENU','INGROUP','DID','MESSAGE','EXTENSION','VOICEMAIL','VMAIL_NO_INST') default 'MESSAGE';
+
+ALTER TABLE vicidial_inbound_dids MODIFY did_route ENUM('EXTEN','VOICEMAIL','AGENT','PHONE','IN_GROUP','CALLMENU','VMAIL_NO_INST') default 'EXTEN';
+ALTER TABLE vicidial_inbound_dids MODIFY user_unavailable_action ENUM('IN_GROUP','EXTEN','VOICEMAIL','PHONE','VMAIL_NO_INST') default 'VOICEMAIL';
+ALTER TABLE vicidial_inbound_dids MODIFY filter_action ENUM('EXTEN','VOICEMAIL','AGENT','PHONE','IN_GROUP','CALLMENU','VMAIL_NO_INST') default 'EXTEN';
+ALTER TABLE vicidial_inbound_dids MODIFY filter_user_unavailable_action ENUM('IN_GROUP','EXTEN','VOICEMAIL','PHONE','VMAIL_NO_INST') default 'VOICEMAIL';
+
+ALTER TABLE phones ADD voicemail_dump_exten_no_inst VARCHAR(20) default '85026666666667';
+
+ALTER TABLE servers ADD voicemail_dump_exten_no_inst VARCHAR(20) default '85026666666667';
+
+UPDATE system_settings SET db_schema_version='1366',db_schema_update_date=NOW() where db_schema_version < 1366;

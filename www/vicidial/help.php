@@ -1,13 +1,14 @@
 <?php
 # help.php - VICIDIAL administration page
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
 # CHANGELOG:
 # 131019-0848 - Moved help from admin.php
 # 131029-2058 - Added auto-restart asterisk help
 # 131208-1635 - Added help for max dead, dispo and pause time campaign options
+# 140126-1023 - Added VMAIL_NO_INST options
 #
 
 
@@ -914,7 +915,7 @@ if ($SSoutbound_autodial_active > 0)
 	<BR>
 	<A NAME="campaigns-drop_action">
 	<BR>
-	<B>Drop Action -</B> This menu allows you to choose what happens to a call when it has been waiting for longer than what is set in the Drop Call Seconds field. HANGUP will simply hang up the call, MESSAGE will send the call the Drop Exten that you have defined below, VOICEMAIL will send the call to the voicemail box that you have defined below and IN_GROUP will send the call to the Inbound Group that is defined below
+	<B>Drop Action -</B> This menu allows you to choose what happens to a call when it has been waiting for longer than what is set in the Drop Call Seconds field. HANGUP will simply hang up the call, MESSAGE will send the call the Drop Exten that you have defined below, VOICEMAIL will send the call to the voicemail box that you have defined below and IN_GROUP will send the call to the Inbound Group that is defined below. VMAIL_NO_INST will send the call to the voicemail box that you have defined below and will not play instructions after the voicemail message.
 
 	<BR>
 	<A NAME="campaigns-safe_harbor_exten">
@@ -1046,7 +1047,7 @@ if ($SSoutbound_autodial_active > 0)
 	<BR>
 	<A NAME="campaigns-survey_method">
 	<BR>
-	<B>Survey Method -</B> This option defines what happens to a call after the customer has opted-in. AGENT_XFER will send the call to the next available agent. VOICEMAIL will send the call to the voicemail box that is specified in the Voicemail field. EXTENSION will send the customer to the extension defined in the Survey Xfer Extension field. HANGUP will hang up the customer. CAMPREC_60_WAV will send the customer to have a recording made with their response, this recording will be placed in a folder named as the campaign inside of the Survey Campaign Recording Directory. CALLMENU will send the customer to the Call Menu defined in the select list below.
+	<B>Survey Method -</B> This option defines what happens to a call after the customer has opted-in. AGENT_XFER will send the call to the next available agent. VOICEMAIL will send the call to the voicemail box that is specified in the Voicemail field. EXTENSION will send the customer to the extension defined in the Survey Xfer Extension field. HANGUP will hang up the customer. CAMPREC_60_WAV will send the customer to have a recording made with their response, this recording will be placed in a folder named as the campaign inside of the Survey Campaign Recording Directory. CALLMENU will send the customer to the Call Menu defined in the select list below. VMAIL_NO_INST will send the call to the voicemail box that you have defined below and will not play instructions after the voicemail message.
 
 	<BR>
 	<A NAME="campaigns-survey_no_response_action">
@@ -1905,7 +1906,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_groups-drop_action">
 <BR>
-<B>Drop Action -</B> This menu allows you to choose what happens to a call when it has been waiting for longer than what is set in the Drop Call Seconds field. HANGUP will simply hang up the call, MESSAGE will send the call the Drop Exten that you have defined below, VOICEMAIL will send the call to the voicemail box that you have defined below and IN_GROUP will send the call to the Inbound Group that is defined below.
+<B>Drop Action -</B> This menu allows you to choose what happens to a call when it has been waiting for longer than what is set in the Drop Call Seconds field. HANGUP will simply hang up the call, MESSAGE will send the call the Drop Exten that you have defined below, VOICEMAIL will send the call to the voicemail box that you have defined below and IN_GROUP will send the call to the Inbound Group that is defined below. VMAIL_NO_INST will send the call to the voicemail box that you have defined below and will not play instructions after the voicemail message.
 
 <BR>
 <A NAME="inbound_groups-drop_exten">
@@ -1940,7 +1941,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_groups-after_hours_action">
 <BR>
-<B>After Hours Action -</B> The action to perform if it is after hours as defined in the call time for this inbound group. HANGUP will immediately hangup the call, MESSASGE will play the file in the After Hours Message Filenam field, EXTENSION will send the call to the After Hours Extension in the dialplan and VOICEMAIL will send the call to the voicemail box listed in the After Hours Voicemail field, IN_GROUP will send the call to the inbound group selected in the After Hours Transfer Group select list. Default is MESSAGE.
+<B>After Hours Action -</B> The action to perform if it is after hours as defined in the call time for this inbound group. HANGUP will immediately hangup the call, MESSASGE will play the file in the After Hours Message Filenam field, EXTENSION will send the call to the After Hours Extension in the dialplan and VOICEMAIL will send the call to the voicemail box listed in the After Hours Voicemail field, IN_GROUP will send the call to the inbound group selected in the After Hours Transfer Group select list. Default is MESSAGE. VMAIL_NO_INST will send the call to the voicemail box that you have defined below and will not play instructions after the voicemail message.
 
 <BR>
 <A NAME="inbound_groups-after_hours_message_filename">
@@ -2358,7 +2359,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_dids-did_route">
 <BR>
-<B>DID Route -</B> This the type of route that you set the DID to use. EXTEN will send calls to the extension entered below, VOICEMAIL will send calls directly to the voicemail box entered below, AGENT will send calls to an agent if they are logged in, PHONE will send the call to a phones entry selected below, IN_GROUP will send calls directly to the specified inbound group. Default is EXTEN. CALLMENU will send the call to the defined Call Menu.
+<B>DID Route -</B> This the type of route that you set the DID to use. EXTEN will send calls to the extension entered below, VOICEMAIL will send calls directly to the voicemail box entered below, AGENT will send calls to an agent if they are logged in, PHONE will send the call to a phones entry selected below, IN_GROUP will send calls directly to the specified inbound group. Default is EXTEN. CALLMENU will send the call to the defined Call Menu. VMAIL_NO_INST will send the call to the voicemail box that you have defined below and will not play instructions after the voicemail message.
 
 <BR>
 <A NAME="inbound_dids-record_call">
@@ -2566,7 +2567,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="call_menu-option_route">
 <BR>
-<B>Option Route -</B> This menu contains the options for where to send the call if this option is selected: CALLMENU,INGROUP,DID,HANGUP,EXTENSION,PHONE. For CALLMENU, the Route Value should be the Menu ID of the Call Menu that you want the call sent to. For INGROUP, the In-Group that you want the call to be sent to needs to be selected as well as the other 5 options that need to be set to properly route a call to an Inbound Group. For DID, the Route Value needs to be the DID pattern that you want to send the call to. For HANGUP, the Route Value can be the name of an audio file to play before hanging up the call. For EXTENSION, the Route Value needs to be the dialplan extension you want to send the call to, and the Route Value Context is the context that extension is located in, if left blank the context will default to default. For PHONE, the Route Value needs to be the phone login value for the phones entry that you want to send the call to. For VOICEMAIL, the Route Value needs to be the voicemail box number, the unavailable mesage will be played. For AGI, the Route Value needs to be the agi script and any values taht need to be passed to it.
+<B>Option Route -</B> This menu contains the options for where to send the call if this option is selected: CALLMENU,INGROUP,DID,HANGUP,EXTENSION,PHONE. For CALLMENU, the Route Value should be the Menu ID of the Call Menu that you want the call sent to. For INGROUP, the In-Group that you want the call to be sent to needs to be selected as well as the other 5 options that need to be set to properly route a call to an Inbound Group. For DID, the Route Value needs to be the DID pattern that you want to send the call to. For HANGUP, the Route Value can be the name of an audio file to play before hanging up the call. For EXTENSION, the Route Value needs to be the dialplan extension you want to send the call to, and the Route Value Context is the context that extension is located in, if left blank the context will default to default. For PHONE, the Route Value needs to be the phone login value for the phones entry that you want to send the call to. For VOICEMAIL, the Route Value needs to be the voicemail box number, the unavailable mesage will be played. For AGI, the Route Value needs to be the agi script and any values taht need to be passed to it. VMAIL_NO_INST will send the call to the voicemail box that you have defined below and will not play instructions after the voicemail message.
 
 <BR>
 <A NAME="call_menu-option_route_value">
@@ -3479,6 +3480,11 @@ if ($SSoutbound_autodial_active > 0)
 <B>VMAIL Dump Exten -</B> This is the dial plan prefix used to send calls directly to a user's voicemail from a live call in the astGUIclient app. verify with extensions.conf file before changing.
 
 <BR>
+<A NAME="phones-voicemail_dump_exten_no_inst">
+<BR>
+<B>VMAIL Dump Exten NI -</B> This is the dial plan prefix used to send calls directly to a user's voicemail from a live call in the astGUIclient app. This is the No Instructions setting.
+
+<BR>
 <A NAME="phones-ext_context">
 <BR>
 <B>Exten Context -</B> This is the dial plan context that the agent screen, primarily uses. It is assumed that all numbers dialed by the client apps are using this context so it is a good idea to make sure this is the most wide context possible. verify with extensions.conf file before changing. default is default.
@@ -3827,6 +3833,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="servers-voicemail_dump_exten">
 <BR>
 <B>VMail Dump Exten -</B> The extension prefix used on this server to send calls directly through agc to a specific voicemail box. Default is '85026666666666'
+
+<BR>
+<A NAME="servers-voicemail_dump_exten_no_inst">
+<BR>
+<B>VMAIL Dump Exten NI -</B> This is the dial plan prefix used to send calls directly to a user's voicemail from a live call in the astGUIclient app. This is the No Instructions setting.
 
 <BR>
 <A NAME="servers-answer_transfer_agent">
