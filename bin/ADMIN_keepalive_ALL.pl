@@ -91,9 +91,10 @@
 # 131022-1746 - Added uptime gathering and asterisk auto-restart feature
 # 140112-1910 - Fixed issue with MoH in Astrisk 1.8
 # 140126-1153 - Added VMAIL_NO_INST option dialplan generation
+# 140126-2252 - Added voicemail_instructions option for phones
 #
 
-$build = '140126-1153';
+$build = '140126-2252';
 
 $DB=0; # Debug flag
 $MT[0]='';   $MT[1]='';
@@ -1920,7 +1921,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### BEGIN Generate the IAX phone entries #####
-	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,codecs_list,codecs_with_template,voicemail_timezone,voicemail_options FROM phones where server_ip='$server_ip' and protocol='IAX2' and active='Y' order by extension;";
+	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,codecs_list,codecs_with_template,voicemail_timezone,voicemail_options,voicemail_instructions FROM phones where server_ip='$server_ip' and protocol='IAX2' and active='Y' order by extension;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1948,6 +1949,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$codecs_with_template[$i] =		$aryA[16];
 		$voicemail_timezone[$i] =		$aryA[17];
 		$voicemail_options[$i] =		$aryA[18];
+		$voicemail_instructions[$i] =	$aryA[19];
 		if ( (length($SSdefault_codecs) > 2) && (length($codecs_list[$i]) < 3) )
 			{$codecs_list[$i] = $SSdefault_codecs;}
 		$active_dialplan_numbers .= "'$aryA[1]',";
@@ -2035,8 +2037,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			{
 			$Pext .= "exten => $dialplan[$i],1,Dial(IAX2/$extension[$i],$phone_ring_timeout[$i],)\n";
 			}
-		$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
-	#	$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666667$voicemail[$i],1)\n";
+		if ($voicemail_instructions[$i] =~ /Y/)
+			{
+			$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
+			}
+		else
+			{
+			$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666667$voicemail[$i],1)\n";
+			}
 		if (!(( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6)))
 			{
 			$Pext .= "exten => $dialplan[$i],3,Hangup()\n";
@@ -2054,7 +2062,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### BEGIN Generate the SIP phone entries #####
-	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,codecs_list,codecs_with_template,voicemail_timezone,voicemail_options FROM phones where server_ip='$server_ip' and protocol='SIP' and active='Y' order by extension;";
+	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,codecs_list,codecs_with_template,voicemail_timezone,voicemail_options,voicemail_instructions FROM phones where server_ip='$server_ip' and protocol='SIP' and active='Y' order by extension;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2082,6 +2090,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$codecs_with_template[$i] =		$aryA[16];
 		$voicemail_timezone[$i] =		$aryA[17];
 		$voicemail_options[$i] =		$aryA[18];
+		$voicemail_instructions[$i] =	$aryA[19];
 		if ( (length($SSdefault_codecs) > 2) && (length($codecs_list[$i]) < 3) )
 			{$codecs_list[$i] = $SSdefault_codecs;}
 		$active_dialplan_numbers .= "'$aryA[1]',";
@@ -2167,8 +2176,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			{
 			$Pext .= "exten => $dialplan[$i],1,Dial(SIP/$extension[$i],$phone_ring_timeout[$i],)\n";
 			}
-		$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
-	#	$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666667$voicemail[$i],1)\n";
+		if ($voicemail_instructions[$i] =~ /Y/)
+			{
+			$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
+			}
+		else
+			{
+			$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666667$voicemail[$i],1)\n";
+			}
 		if (!(( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6)))
 			{
 			$Pext .= "exten => $dialplan[$i],3,Hangup()\n";

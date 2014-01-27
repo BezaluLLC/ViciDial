@@ -9,6 +9,7 @@
 # 131029-2058 - Added auto-restart asterisk help
 # 131208-1635 - Added help for max dead, dispo and pause time campaign options
 # 140126-1023 - Added VMAIL_NO_INST options
+# 140126-2254 - Added voicemail_instructions option for phones
 #
 
 
@@ -3378,6 +3379,10 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="phones-voicemail_greeting">
 <B>Voicemail Greeting -</B> This optional setting allows you to define a voicemail greeting audio file from the audio store. Default is blank.
+
+<BR>
+<A NAME="phones-voicemail_instructions">
+<B>Voicemail Instructions -</B> This setting allows you to define if the voicemail instructions will play after the voicemail greeting when a call rings on the agent extension and times out to voicemail. Default is Y.
 
 <BR>
 <A NAME="phones-picture">

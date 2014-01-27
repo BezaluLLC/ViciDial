@@ -196,3 +196,7 @@ ALTER TABLE phones ADD voicemail_dump_exten_no_inst VARCHAR(20) default '8502666
 ALTER TABLE servers ADD voicemail_dump_exten_no_inst VARCHAR(20) default '85026666666667';
 
 UPDATE system_settings SET db_schema_version='1366',db_schema_update_date=NOW() where db_schema_version < 1366;
+
+ALTER TABLE phones ADD voicemail_instructions ENUM('Y','N') default 'Y';
+
+UPDATE system_settings SET db_schema_version='1367',db_schema_update_date=NOW() where db_schema_version < 1367;
