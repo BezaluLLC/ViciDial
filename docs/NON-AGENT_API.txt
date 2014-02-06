@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2014-01-24
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2014-02-06
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -24,6 +24,7 @@ recording_lookup - looks up recordings based upon user and date or lead_id
 did_log_export - exports all calls inbound to a DID for one day
 agent_stats_export - exports agent statistics for set time period
 add_user - adds a user to the system
+update_user - updates some user settings in the system
 add_phone - adds a phone to the system
 update_phone - updates or deletes an existing phone record in the system
 add_phone_alias - adds a phone alias record to the system
@@ -86,6 +87,7 @@ Changes:
 130614-0907 - Added pause code to output of agent_status function
 130617-2232 - Added real-time sub-statuses to output of agent_status function
 140124-1057 - Added callid_info function
+140206-1205 - Added update_user function
 
 
 API Functions use the 'function' variable
@@ -806,6 +808,71 @@ SUCCESS: add_user USER HAS BEEN ADDED - 6666|1000|1234|8|Testing+Person|AGENTS
 
 
 
+
+--------------------------------------------------------------------------------
+update_user - updates or deletes a user entry already in the system
+
+NOTE: api user for this function must have user_level set to 8 or higher and "modify user" enabled
+
+REQUIRED FIELDS-
+agent_user -		2-20 characters
+
+OPTIONAL FIELDS-
+agent_pass -		1-20 characters
+agent_user_level -	1 through 9, one digit only
+agent_full_name -	1-50 characters
+agent_user_group -	1-20 characters, must be a valid user group
+phone_login -		1-20 characters
+phone_pass -		1-20 characters
+hotkeys_active -	0 or 1
+voicemail_id -		1-10 digits
+email -			1-100 characters
+custom_one -		1-100 characters
+custom_two -		1-100 characters
+custom_three -		1-100 characters
+custom_four -		1-100 characters
+custom_five -		1-100 characters
+active -		'Y' or 'N'
+campaign_rank -		from -9 to 9, this will change the campaign rank for this user on all campaigns
+campaign_grade -	from 1 to 10, this will change the campaign grade for this user on all campaigns
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&function=update_user&user=6666&pass=1234&agent_user=2424&agent_pass=9876
+http://server/vicidial/non_agent_api.php?source=test&function=update_user&user=6666&pass=1234&agent_user=2424&agent_user_level=3
+http://server/vicidial/non_agent_api.php?source=test&function=update_user&user=6666&pass=1234&agent_user=2424&agent_full_name=Testing&hotkeys_active=1&active=Y
+http://server/vicidial/non_agent_api.php?source=test&function=update_user&user=6666&pass=1234&agent_user=2424&campaign_rank=3&campaign_grade=4
+
+Example responses:
+ERROR: update_user USER DOES NOT HAVE PERMISSION TO UPDATE USERS - 6666|0
+ERROR: update_user USER DOES NOT HAVE PERMISSION TO DELETE USERS - 6666|7878
+ERROR: update_user YOU MUST USE ALL REQUIRED FIELDS - 6666||
+ERROR: update_user USER DOES NOT EXIST - 6666|78789
+ERROR: update_user USER DOES NOT HAVE PERMISSION TO UPDATE THIS USER - 6666|7878
+ERROR: update_user YOU MUST USE A VALID FULL NAME, THIS IS AN OPTIONAL FIELD - 6666|
+ERROR: update_user YOU MUST USE A VALID USER LEVEL, THIS IS AN OPTIONAL FIELD - 6666|0|9|1
+ERROR: update_user YOU MUST USE A VALID USER GROUP, THIS IS AN OPTIONAL FIELD - 6666|FAKEGROUP|0
+ERROR: update_user YOU MUST USE A VALID PHONE LOGIN, THIS IS AN OPTIONAL FIELD - 6666|fakephone|0|0
+ERROR: update_user YOU MUST USE A VALID PHONE PASSWORD, THIS IS AN OPTIONAL FIELD - 6666|0
+ERROR: update_user YOU MUST USE A VALID HOTKEYS SETTING, THIS IS AN OPTIONAL FIELD - 6666|2
+ERROR: update_user YOU MUST USE A VALID VOICEMAIL ID, THIS IS AN OPTIONAL FIELD - 6666
+ERROR: update_user YOU MUST USE A VALID EMAIL, THIS IS AN OPTIONAL FIELD - 6666
+ERROR: update_user YOU MUST USE A VALID CUSTOM ONE, THIS IS AN OPTIONAL FIELD - 6666
+ERROR: update_user YOU MUST USE A VALID CUSTOM TWO, THIS IS AN OPTIONAL FIELD - 6666
+ERROR: update_user YOU MUST USE A VALID CUSTOM THREE, THIS IS AN OPTIONAL FIELD - 6666
+ERROR: update_user YOU MUST USE A VALID CUSTOM FOUR, THIS IS AN OPTIONAL FIELD - 6666
+ERROR: update_user YOU MUST USE A VALID CUSTOM FIVE, THIS IS AN OPTIONAL FIELD - 6666
+ERROR: update_user ACTIVE MUST BE Y OR N, THIS IS AN OPTIONAL FIELD - 6666
+ERROR: update_user YOU MUST USE A VALID CAMPAIGN RANK, THIS IS AN OPTIONAL FIELD - 6666|0
+ERROR: update_user YOU MUST USE A VALID CAMPAIGN GRADE, THIS IS AN OPTIONAL FIELD - 6666|0
+ERROR: update_user NO UPDATES DEFINED - 6666|0
+NOTICE: update_user USER CAMPAIGN RANKS HAVE BEEN UPDATED - 6666|9|10
+SUCCESS: update_user USER HAS BEEN UPDATED - 6666|7878
+SUCCESS: update_user USER HAS BEEN DELETED - 6666|7878
+
+
+
+
+
 --------------------------------------------------------------------------------
 add_group_alias - adds group alias to the system
 
@@ -924,6 +991,7 @@ ERROR: update_phone YOU MUST USE A VALID PHONE CONTEXT - 6666|0
 ERROR: update_phone NO UPDATES DEFINED - 6666|0
 SUCCESS: update_phone PHONE HAS BEEN UPDATED - 6666|cc100|10.0.9.8|SIP|100
 SUCCESS: update_phone PHONE HAS BEEN DELETED - 6666|cc100|10.0.9.8|
+NOTICE: update_phone USER DOES NOT HAVE PERMISSION TO DELETE PHONES - 6666|7878
 
 
 

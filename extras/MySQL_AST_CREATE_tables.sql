@@ -1660,7 +1660,8 @@ calls_today SMALLINT(5) UNSIGNED default '0',
 group_web_vars VARCHAR(255) default '',
 campaign_grade TINYINT(2) UNSIGNED default '1',
 index (campaign_id),
-index (user)
+index (user),
+unique index vlca_user_campaign_id (user, campaign_id)
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_user_closer_log (
@@ -3252,4 +3253,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1367',db_schema_update_date=NOW();
+UPDATE system_settings SET db_schema_version='1368',db_schema_update_date=NOW();

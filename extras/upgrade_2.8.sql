@@ -200,3 +200,7 @@ UPDATE system_settings SET db_schema_version='1366',db_schema_update_date=NOW() 
 ALTER TABLE phones ADD voicemail_instructions ENUM('Y','N') default 'Y';
 
 UPDATE system_settings SET db_schema_version='1367',db_schema_update_date=NOW() where db_schema_version < 1367;
+
+CREATE UNIQUE INDEX vlca_user_campaign_id on vicidial_campaign_agents (user, campaign_id);
+
+UPDATE system_settings SET db_schema_version='1368',db_schema_update_date=NOW() where db_schema_version < 1368;

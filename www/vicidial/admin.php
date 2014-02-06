@@ -3272,12 +3272,13 @@ else
 # 140117-0840 - Added option for Lists Pass Report
 # 140126-0939 - Added VMAIL_NO_INST options
 # 140126-2253 - Added voicemail_instructions option for phones
+# 140206-1357 - Filter dashes from new or copied campaigns and in-groups
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.8-424a';
-$build = '140126-2253';
+$admin_version = '2.8-425a';
+$build = '140206-1357';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -7796,6 +7797,7 @@ if ($ADD=="2A")
 
 if ($ADD==21)
 	{
+	$campaign_id = preg_replace("/\-/",'',$campaign_id);
 	if ($add_copy_disabled > 0)
 		{
 		echo "<br>You do not have permission to add records on this system -system_settings-\n";
@@ -7885,6 +7887,7 @@ if ($ADD==21)
 
 if ($ADD==20)
 	{
+	$campaign_id = preg_replace("/\-/",'',$campaign_id);
 	if ($add_copy_disabled > 0)
 		{
 		echo "<br>You do not have permission to add records on this system -system_settings-\n";
@@ -8557,6 +8560,7 @@ if ($ADD==211)
 
 if ($ADD==2111)
 	{
+	$group_id = preg_replace("/\-/",'',$group_id);
 	if ($add_copy_disabled > 0)
 		{
 		echo "<br>You do not have permission to add records on this system -system_settings-\n";
@@ -8631,6 +8635,7 @@ if ($ADD==2111)
 
 if ( ($ADD==2811) and ($SSallow_emails>0) )
 	{
+	$group_id = preg_replace("/\-/",'',$group_id);
 	if ($add_copy_disabled > 0)
 		{
 		echo "<br>You do not have permission to add records on this system -system_settings-\n";
@@ -8706,6 +8711,7 @@ if ( ($ADD==2811) and ($SSallow_emails>0) )
 
 if ($ADD==2011)
 	{
+	$group_id = preg_replace("/\-/",'',$group_id);
 	if ($add_copy_disabled > 0)
 		{
 		echo "<br>You do not have permission to add records on this system -system_settings-\n";
@@ -8780,6 +8786,7 @@ if ($ADD==2011)
 
 if ( ($ADD==2911) and ($SSallow_emails>0) )
 	{
+	$group_id = preg_replace("/\-/",'',$group_id);
 	if ($add_copy_disabled > 0)
 		{
 		echo "<br>You do not have permission to add records on this system -system_settings-\n";

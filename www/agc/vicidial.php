@@ -418,10 +418,11 @@
 # 131210-1354 - Fixed manual dial CID choice issue with AC-CID settings
 # 140107-2034 - Added webserver/url login logging
 # 140126-0741 - Added pause code API function
+# 140204-1230 - Added check for valid date in call log view
 #
 
-$version = '2.8-387c';
-$build = '140126-0741';
+$version = '2.8-388c';
+$build = '140204-1230';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -12726,12 +12727,36 @@ function phone_number_format(formatphone) {
 			//	alert("debug: " + AutoDialWaiting + "|" + VD_live_customer_call + "|" + alt_dial_active + "|" + MD_channel_look + "|" + in_lead_preview_state);
 				}
 			}
+
+		if (formdate=='form')
+			{logdate = document.vicidial_form.calllogdate.value;}
+
+		if (typeof logdate != 'undefined')
+			{
+			var validformat=/^\d{4}\-\d{2}\-\d{2}$/ //Basic check for format validity YYYY-MM-DD
+			var returnval=false
+			if (!validformat.test(logdate))
+				{
+				move_on=0;
+				alert_box("Invalid Date Format. Please correct and submit again.")
+				}
+			else
+				{ //Detailed check for valid date ranges
+				var monthfield=logdate.split("-")[1]
+				var dayfield=logdate.split("-")[2]
+				var yearfield=logdate.split("-")[0]
+				var dayobj = new Date(yearfield, monthfield-1, dayfield)
+				if ((dayobj.getMonth()+1!=monthfield)||(dayobj.getDate()!=dayfield)||(dayobj.getFullYear()!=yearfield))
+					{
+					move_on=0;
+					alert_box("Invalid Day, Month, or Year range detected. Please correct and submit again.")
+					}
+				}
+			}
+
 		if (move_on == 1)
 			{
 			showDiv('CalLLoGDisplaYBox');
-
-			if (formdate=='form')
-				{logdate = document.vicidial_form.calllogdate.value;}
 
 			var xmlhttp=false;
 			/*@cc_on @*/

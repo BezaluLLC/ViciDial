@@ -183,6 +183,9 @@ OTHER CHANGES:
 	to allow no instructions to be played on direct extension calls that go
 	to voicemail.
 
+32. Added Non-Agent API function update_user to allow updating of the major
+	user fields
+
 
 
 

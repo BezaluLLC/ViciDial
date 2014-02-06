@@ -83,10 +83,11 @@
 # 130831-0825 - Changed to mysqli PHP functions
 # 140107-2143 - Added webserver and url logging
 # 140124-1057 - Added callid_info function
+# 140206-1205 - Added update_user function
 #
 
-$version = '2.8-59';
-$build = '140124-1057';
+$version = '2.8-60';
+$build = '140206-1205';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -341,6 +342,12 @@ if (isset($_GET["nanpa_ac_prefix_check"]))			{$nanpa_ac_prefix_check=$_GET["nanp
 	elseif (isset($_POST["nanpa_ac_prefix_check"]))	{$nanpa_ac_prefix_check=$_POST["nanpa_ac_prefix_check"];}
 if (isset($_GET["detail"]))				{$detail=$_GET["detail"];}
 	elseif (isset($_POST["detail"]))	{$detail=$_POST["detail"];}
+if (isset($_GET["delete_user"]))			{$delete_user=$_GET["delete_user"];}
+	elseif (isset($_POST["delete_user"]))	{$delete_user=$_POST["delete_user"];}
+if (isset($_GET["campaign_rank"]))			{$campaign_rank=$_GET["campaign_rank"];}
+	elseif (isset($_POST["campaign_rank"]))	{$campaign_rank=$_POST["campaign_rank"];}
+if (isset($_GET["campaign_grade"]))				{$campaign_grade=$_GET["campaign_grade"];}
+	elseif (isset($_POST["campaign_grade"]))	{$campaign_grade=$_POST["campaign_grade"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -497,6 +504,9 @@ if ($non_latin < 1)
 	$group = preg_replace('/[^-\|\_0-9a-zA-Z]/','',$group);
 	$expiration_date = preg_replace('/[^-_0-9a-zA-Z]/','',$expiration_date);
 	$nanpa_ac_prefix_check = preg_replace('/[^A-Z]/','',$nanpa_ac_prefix_check);
+	$delete_user = preg_replace('/[^A-Z]/','',$delete_user);
+	$campaign_rank = preg_replace('/[^-_0-9]/','',$campaign_rank);
+	$campaign_grade = preg_replace('/[^0-9]/','',$campaign_grade);
 	}
 else
 	{
@@ -1762,6 +1772,551 @@ if ($function == 'add_user')
 ################################################################################
 ### END add_user
 ################################################################################
+
+
+
+
+
+################################################################################
+### update_user - updates user entry already in the system
+################################################################################
+if ($function == 'update_user')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_users='1' and user_level >= 8 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "update_user USER DOES NOT HAVE PERMISSION TO UPDATE USERS";
+			$data = "$allowed_user";
+			echo "$result: $result_reason: |$user|$data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if ( (strlen($agent_user)<2) or (strlen($agent_user)>20) )
+				{
+				$result = 'ERROR';
+				$result_reason = "update_user YOU MUST USE ALL REQUIRED FIELDS";
+				$data = "$agent_user|";
+				echo "$result: $result_reason: |$user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT user_group from vicidial_users where user='$user' and user_level >= 8;";
+				if ($DB>0) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$LOGuser_group =			$row[0];
+
+				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+				if ($DB>0) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$LOGallowed_campaigns =			$row[0];
+				$LOGadmin_viewable_groups =		$row[1];
+
+				$LOGadmin_viewable_groupsSQL='';
+				$whereLOGadmin_viewable_groupsSQL='';
+				if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+					{
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+					$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					}
+
+				$stmt="SELECT count(*) from vicidial_users where user='$agent_user';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$user_exists=$row[0];
+				if ($user_exists < 1)
+					{
+					$result = 'ERROR';
+					$result_reason = "update_user USER DOES NOT EXIST";
+					$data = "$server_ip";
+					echo "$result: $result_reason: |$user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					$user_level_modify_gt='<=';
+					$stmt="SELECT user_level,modify_same_user_level from vicidial_users where user='$user';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
+					$api_user_level =				$row[0];
+					$api_modify_same_user_level =	$row[1];
+					if ($api_modify_same_user_level < 1)
+						{$user_level_modify_gt='<';}
+
+					$stmt="SELECT count(*) from vicidial_users where user='$agent_user' and user_level $user_level_modify_gt '$api_user_level' $LOGadmin_viewable_groupsSQL;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
+					$phone_exists=$row[0];
+					if ($phone_exists < 1)
+						{
+						$result = 'ERROR';
+						$result_reason = "update_user USER DOES NOT HAVE PERMISSION TO UPDATE THIS USER";
+						$data = "$agent_user|$user_level_modify_gt|$api_user_level\n";
+						echo "$result: $result_reason: |$user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					else
+						{
+						if ($delete_user == 'Y')
+							{
+							$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and delete_users='1' and modify_users='1' and user_level >= 8 and active='Y';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$row=mysqli_fetch_row($rslt);
+							$allowed_user=$row[0];
+							if ($allowed_user < 1)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_user USER DOES NOT HAVE PERMISSION TO DELETE USERS";
+								$data = "$allowed_user";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{
+								$stmt="DELETE FROM vicidial_users WHERE user='$agent_user';";
+								$rslt=mysql_to_mysqli($stmt, $link);
+								$affected_rows = mysqli_affected_rows($link);
+								if ($DB) {echo "|$stmt|\n";}
+
+								### LOG INSERTION Admin Log Table ###
+								$SQL_log = "$stmt|";
+								$SQL_log = preg_replace('/;/', '', $SQL_log);
+								$SQL_log = addslashes($SQL_log);
+								$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='USERS', event_type='DELETE', record_id='$agent_user', event_code='ADMIN API DELETE USER', event_sql=\"$SQL_log\", event_notes='user: $agent_user';";
+								if ($DB) {echo "|$stmt|\n";}
+								$rslt=mysql_to_mysqli($stmt, $link);
+
+								$result = 'SUCCESS';
+								$result_reason = "update_user USER HAS BEEN DELETED";
+								$data = "$agent_user|";
+								echo "$result: $result_reason - $user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								}
+							exit;
+							}
+
+						$passSQL='';
+						$pass_hashSQL='';
+						$full_nameSQL='';
+						$user_levelSQL='';
+						$user_groupSQL='';
+						$phone_loginSQL='';
+						$phone_passSQL='';
+						$hotkeys_activeSQL='';
+						$voicemail_idSQL='';
+						$emailSQL='';
+						$custom_oneSQL='';
+						$custom_twoSQL='';
+						$custom_threeSQL='';
+						$custom_fourSQL='';
+						$custom_fiveSQL='';
+						$activeSQL='';
+
+						if (strlen($agent_pass) > 0)
+							{
+							$pass_hash='';
+							if ($SSpass_hash_enabled > 0)
+								{
+								$agent_pass = preg_replace("/\'|\"|\\\\|;| /","",$agent_pass);
+								$pass_hash = exec("../agc/bp.pl --pass=$agent_pass");
+								$pass_hash = preg_replace("/PHASH: |\n|\r|\t| /",'',$pass_hash);
+								$pass_hashSQL = ",pass_hash='$pass_hash'";
+								$passSQL=",pass=''";
+								}
+							else
+								{
+								$passSQL = " ,pass='$agent_pass'";
+								}
+							}
+						if (strlen($agent_full_name) > 0)
+							{
+							if ($agent_full_name == '--BLANK--')
+								{$full_nameSQL = " ,full_name=''";}
+							else
+								{
+								if ( (strlen($agent_full_name) > 50) or (strlen($agent_full_name) < 1) )
+									{
+									$result = 'ERROR';
+									$result_reason = "update_user YOU MUST USE A VALID FULL NAME, THIS IS AN OPTIONAL FIELD";
+									$data = "$agent_full_name";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$full_nameSQL = " ,full_name='$agent_full_name'";}
+								}
+							}
+						if (strlen($agent_user_level) > 0)
+							{
+							if ( ($agent_user_level > 9) or ($agent_user_level < 1) or ($agent_user_level > $api_user_level) or ( ($agent_user_level == $api_user_level) and ($api_modify_same_user_level < 1) ) )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_user YOU MUST USE A VALID USER LEVEL, THIS IS AN OPTIONAL FIELD";
+								$data = "$agent_user_level|$api_user_level|$api_modify_same_user_level";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$user_levelSQL = " ,user_level='$agent_user_level'";}
+							}
+						if (strlen($agent_user_group) > 0)
+							{
+							$stmt="SELECT count(*) from vicidial_user_groups where user_group='$agent_user_group' $LOGadmin_viewable_groupsSQL;";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$row=mysqli_fetch_row($rslt);
+							$valid_user_group =			$row[0];
+							
+							if ( (strlen($agent_user_group) > 20) or (strlen($agent_user_group) < 1) or ($valid_user_group < 1) )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_user YOU MUST USE A VALID USER GROUP, THIS IS AN OPTIONAL FIELD";
+								$data = "$agent_user_group|$valid_user_group";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$user_groupSQL = " ,user_group='$agent_user_group'";}
+							}
+						if (strlen($phone_login) > 0)
+							{
+							if ($phone_login == '--BLANK--')
+								{$phone_loginSQL = " ,phone_login=''";}
+							else
+								{
+								$stmt="SELECT count(*) from phones where login='$phone_login';";
+								$rslt=mysql_to_mysqli($stmt, $link);
+								$row=mysqli_fetch_row($rslt);
+								$valid_phone_login =			$row[0];
+
+								$stmt="SELECT count(*) from phones_alias where alias_id='$phone_login';";
+								$rslt=mysql_to_mysqli($stmt, $link);
+								$row=mysqli_fetch_row($rslt);
+								$valid_phone_alias =			$row[0];
+
+								if ( (strlen($phone_login) > 20) or (strlen($phone_login) < 1) or ( ($valid_phone_login < 1) and ($valid_phone_alias < 1) ) )
+									{
+									$result = 'ERROR';
+									$result_reason = "update_user YOU MUST USE A VALID PHONE LOGIN, THIS IS AN OPTIONAL FIELD";
+									$data = "$phone_login|$valid_phone_login|$valid_phone_alias";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$phone_loginSQL = " ,phone_login='$phone_login'";}
+								}
+							}
+						if (strlen($phone_pass) > 0)
+							{
+							if ($phone_pass == '--BLANK--')
+								{$phone_passSQL = " ,phone_pass=''";}
+							else
+								{
+								if ( (strlen($phone_pass) > 20) or (strlen($phone_pass) < 1) )
+									{
+									$result = 'ERROR';
+									$result_reason = "update_user YOU MUST USE A VALID PHONE PASSWORD, THIS IS AN OPTIONAL FIELD";
+									$data = "$phone_pass";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$phone_passSQL = " ,phone_pass='$phone_pass'";}
+								}
+							}
+						if (strlen($hotkeys_active) > 0)
+							{
+							if ( ($hotkeys_active > 1) or ($hotkeys_active < 0) )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_user YOU MUST USE A VALID HOTKEYS SETTING, THIS IS AN OPTIONAL FIELD";
+								$data = "$hotkeys_active";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$hotkeys_activeSQL = " ,hotkeys_active='$hotkeys_active'";}
+							}
+						if (strlen($voicemail_id) > 0)
+							{
+							if ($voicemail_id == '--BLANK--')
+								{$voicemail_idSQL = " ,voicemail_id=''";}
+							else
+								{
+								if ( (strlen($voicemail_id) > 10) or (strlen($voicemail_id) < 2) )
+									{
+									$result = 'ERROR';
+									$result_reason = "update_user YOU MUST USE A VALID VOICEMAIL ID, THIS IS AN OPTIONAL FIELD";
+									$data = "$voicemail_id";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$voicemail_idSQL = " ,voicemail_id='$voicemail_id'";}
+								}
+							}
+						if (strlen($email) > 0)
+							{
+							if ($email == '--BLANK--')
+								{$emailSQL = " ,email=''";}
+							else
+								{
+								if ( (strlen($email) > 100) or (strlen($email) < 5) )
+									{
+									$result = 'ERROR';
+									$result_reason = "update_user YOU MUST USE A VALID EMAIL, THIS IS AN OPTIONAL FIELD";
+									$data = "$email";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$emailSQL = " ,email='$email'";}
+								}
+							}
+						if (strlen($custom_one) > 0)
+							{
+							if ($custom_one == '--BLANK--')
+								{$custom_oneSQL = " ,custom_one=''";}
+							else
+								{
+								if (strlen($custom_one) > 100)
+									{
+									$result = 'ERROR';
+									$result_reason = "update_user YOU MUST USE A VALID CUSTOM ONE, THIS IS AN OPTIONAL FIELD";
+									$data = "$custom_one";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$custom_oneSQL = " ,custom_one='$custom_one'";}
+								}
+							}
+						if (strlen($custom_two) > 0)
+							{
+							if ($custom_two == '--BLANK--')
+								{$custom_twoSQL = " ,custom_two=''";}
+							else
+								{
+								if (strlen($custom_two) > 100)
+									{
+									$result = 'ERROR';
+									$result_reason = "update_user YOU MUST USE A VALID CUSTOM TWO, THIS IS AN OPTIONAL FIELD";
+									$data = "$custom_two";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$custom_twoSQL = " ,custom_two='$custom_two'";}
+								}
+							}
+						if (strlen($custom_three) > 0)
+							{
+							if ($custom_three == '--BLANK--')
+								{$custom_threeSQL = " ,custom_three=''";}
+							else
+								{
+								if (strlen($custom_three) > 100)
+									{
+									$result = 'ERROR';
+									$result_reason = "update_user YOU MUST USE A VALID CUSTOM THREE, THIS IS AN OPTIONAL FIELD";
+									$data = "$custom_three";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$custom_threeSQL = " ,custom_three='$custom_three'";}
+								}
+							}
+						if (strlen($custom_four) > 0)
+							{
+							if ($custom_four == '--BLANK--')
+								{$custom_fourSQL = " ,custom_four=''";}
+							else
+								{
+								if (strlen($custom_four) > 100)
+									{
+									$result = 'ERROR';
+									$result_reason = "update_user YOU MUST USE A VALID CUSTOM FOUR, THIS IS AN OPTIONAL FIELD";
+									$data = "$custom_four";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$custom_fourSQL = " ,custom_four='$custom_four'";}
+								}
+							}
+						if (strlen($custom_five) > 0)
+							{
+							if ($custom_five == '--BLANK--')
+								{$custom_fiveSQL = " ,custom_five=''";}
+							else
+								{
+								if (strlen($custom_five) > 100)
+									{
+									$result = 'ERROR';
+									$result_reason = "update_user YOU MUST USE A VALID CUSTOM FIVE, THIS IS AN OPTIONAL FIELD";
+									$data = "$custom_five";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$custom_fiveSQL = " ,custom_five='$custom_five'";}
+								}
+							}
+						if (strlen($active) > 0)
+							{
+							if ( ($active != 'Y') and ($active != 'N') )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_user ACTIVE MUST BE Y OR N, THIS IS AN OPTIONAL FIELD";
+								$data = "$active";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$activeSQL = " ,active='$active'";}
+							}
+
+						if ( (strlen($campaign_rank) > 0) or (strlen($campaign_grade) > 0) )
+							{
+							$rank_BEGIN_SQL='';
+							$rank_MID_SQL='';
+							$rank_END_SQL='';
+							$grade_BEGIN_SQL='';
+							$grade_MID_SQL='';
+							$grade_END_SQL='';
+							if (strlen($campaign_rank) > 0)
+								{
+								if ( ($campaign_rank > 9) or ($campaign_rank < -9) )
+									{
+									$result = 'ERROR';
+									$result_reason = "update_user YOU MUST USE A VALID CAMPAIGN RANK, THIS IS AN OPTIONAL FIELD";
+									$data = "$campaign_rank";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								$rank_BEGIN_SQL=',campaign_rank,campaign_weight';
+								$rank_MID_SQL=",'$campaign_rank','$campaign_rank'";
+								$rank_END_SQL="campaign_rank='$campaign_rank',campaign_weight='$campaign_rank'";
+								}
+							if (strlen($campaign_grade) > 0)
+								{
+								if ( ($campaign_grade > 10) or ($campaign_grade < 1) )
+									{
+									$result = 'ERROR';
+									$result_reason = "update_user YOU MUST USE A VALID CAMPAIGN GRADE, THIS IS AN OPTIONAL FIELD";
+									$data = "$campaign_grade";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								if (strlen($rank_END_SQL)>0)
+									{$grade_END_SQL .= ",";}
+								$grade_BEGIN_SQL=',campaign_grade';
+								$grade_MID_SQL=",'$campaign_grade'";
+								$grade_END_SQL.="campaign_grade='$campaign_grade'";
+								}
+							$stmt="INSERT INTO vicidial_campaign_agents(user,campaign_id $rank_BEGIN_SQL $grade_BEGIN_SQL) SELECT '$agent_user',campaign_id $rank_MID_SQL $grade_MID_SQL from vicidial_campaigns ON DUPLICATE KEY UPDATE $rank_END_SQL $grade_END_SQL;";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$affected_rows = mysqli_affected_rows($linkB);
+							if ($DB) {echo "|$stmt|$affected_rows|\n";}
+
+							### LOG INSERTION Admin Log Table ###
+							$SQL_log = "$stmt|";
+							$SQL_log = preg_replace('/;/', '', $SQL_log);
+							$SQL_log = addslashes($SQL_log);
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$agent_user', event_code='ADMIN API UPDATE USER RANK', event_sql=\"$SQL_log\", event_notes='user: $agent_user|rank: $campaign_rank|grade: $campaign_grade|rows: $affected_rows';";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+
+							$result = 'NOTICE';
+							$result_reason = "update_user USER CAMPAIGN RANKS HAVE BEEN UPDATED";
+							$data = "$agent_user|$campaign_rank|$campaign_grade";
+							echo "$result: $result_reason - $user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+
+						$updateSQL = "$passSQL$pass_hashSQL$full_nameSQL$user_levelSQL$user_groupSQL$phone_loginSQL$phone_passSQL$hotkeys_activeSQL$voicemail_idSQL$emailSQL$custom_oneSQL$custom_twoSQL$custom_threeSQL$custom_fourSQL$custom_fiveSQL$activeSQL";
+
+						if (strlen($updateSQL)< 3)
+							{
+							$result = 'ERROR';
+							$result_reason = "update_user NO UPDATES DEFINED";
+							$data = "$updateSQL";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{
+							$stmt="UPDATE vicidial_users SET failed_login_count='0' $updateSQL WHERE user='$agent_user';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							if ($DB) {echo "|$stmt|\n";}
+
+							### LOG INSERTION Admin Log Table ###
+							$SQL_log = "$stmt|";
+							$SQL_log = preg_replace('/;/', '', $SQL_log);
+							$SQL_log = addslashes($SQL_log);
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$agent_user', event_code='ADMIN API UPDATE USER', event_sql=\"$SQL_log\", event_notes='user: $agent_user';";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+
+							$result = 'SUCCESS';
+							$result_reason = "update_user USER HAS BEEN UPDATED";
+							$data = "$agent_user|";
+							echo "$result: $result_reason - $user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						}
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END update_user
+################################################################################
+
 
 
 
