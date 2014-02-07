@@ -581,7 +581,7 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 			$count=0;
 			while ( $num_rows > $count ) 
 				{
-				$row = mysql_fetch_row($rslt);
+				$row = mysqli_fetch_row($rslt);
 				echo "\t\t\t<option value='$row[0]'>$row[0] - $row[1]</option>\n";
 				$count++;
 				}
