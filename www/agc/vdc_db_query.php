@@ -342,12 +342,13 @@
 # 131210-1400 - Fixed manual dial CID choice issue with AC-CID settings
 # 140124-1209 - Added error catching for start/dispo call URL logging
 # 140126-0727 - Added pause_code API code
+# 140207-0208 - Manager selected in-groups are now restricted to allowed campaign in-groups
 #
 
-$version = '2.8-239';
-$build = '140126-0727';
+$version = '2.8-240';
+$build = '140207-0208';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=535;
+$mysql_log_count=537;
 $one_mysql_log=0;
 
 require_once("dbconnect_mysqli.php");
@@ -1084,8 +1085,36 @@ if ($ACTION == 'regCLOSER')
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00007',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
+			$row=mysqli_fetch_row($rslt);
+			$user_choice =$row[0];
+			$user_choice = preg_replace("/ -$|^ /","",$user_choice);
+			$user_choice = preg_replace("/ /","','",$user_choice);
+			$user_choice = "'$user_choice'";
+
+			$stmt="SELECT closer_campaigns FROM vicidial_campaigns where campaign_id='$campaign' LIMIT 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00536',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$row=mysqli_fetch_row($rslt);
+			$camp_choice =$row[0];
+			$camp_choice = preg_replace("/ -$|^ /","",$camp_choice);
+			$camp_choice = preg_replace("/ /","','",$camp_choice);
+			$camp_choice = "'$camp_choice'";
+
+			$stmt = "SELECT group_id FROM vicidial_inbound_groups where group_id IN($user_choice) and group_id IN($camp_choice) and active='Y';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00537',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$gid_ct = mysqli_num_rows($rslt);
+			$i=0;
+			$closer_choice='';
+			while ($i < $gid_ct)
+				{
 				$row=mysqli_fetch_row($rslt);
-				$closer_choice =$row[0];
+				$closer_choice .=	" $row[0]";
+				$i++;
+				}
+			$closer_choice .=	" -";
 
 			$stmt="UPDATE vicidial_live_agents set closer_campaigns='$closer_choice',last_state_change='$NOW_TIME',outbound_autodial='$vla_autodial' where user='$user' and server_ip='$server_ip';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}

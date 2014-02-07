@@ -1,14 +1,15 @@
 <?php
 # lead_tools_advanced.php - Various tools for lead basic lead management, advanced version.
 #
-# Copyright (C) 2013  Matt Florell,Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell,Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 131016-1948 - Initial Build based upon lead_tools.php
+# 140113-0853 - Added USERONLY to ANYONE callback switcher
 #
 
 $version = '2.8-1';
-$build = '131016-1948';
+$build = '140113-0853';
 
 # This limit is to prevent data inconsistancies.
 # If there are too many leads in a list this
@@ -31,9 +32,11 @@ $DB=0;
 $move_submit="";
 $update_submit="";
 $delete_submit="";
+$callback_submit="";
 $confirm_move="";
 $confirm_update="";
 $confirm_delete="";
+$confirm_callback="";
 
 if (isset($_GET["DB"])) {$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"])) {$DB=$_POST["DB"];}
@@ -43,21 +46,33 @@ if (isset($_GET["update_submit"])) {$update_submit=$_GET["update_submit"];}
 	elseif (isset($_POST["update_submit"])) {$update_submit=$_POST["update_submit"];}
 if (isset($_GET["delete_submit"])) {$delete_submit=$_GET["delete_submit"];}
 	elseif (isset($_POST["delete_submit"])) {$delete_submit=$_POST["delete_submit"];}
+if (isset($_GET["callback_submit"])) {$callback_submit=$_GET["callback_submit"];}
+	elseif (isset($_POST["callback_submit"])) {$callback_submit=$_POST["callback_submit"];}
 if (isset($_GET["confirm_move"])) {$confirm_move=$_GET["confirm_move"];}
 	elseif (isset($_POST["confirm_move"])) {$confirm_move=$_POST["confirm_move"];}
 if (isset($_GET["confirm_update"])) {$confirm_move=$_GET["confirm_update"];}
 	elseif (isset($_POST["confirm_update"])) {$confirm_update=$_POST["confirm_update"];}
 if (isset($_GET["confirm_delete"])) {$confirm_delete=$_GET["confirm_delete"];}
 	elseif (isset($_POST["confirm_delete"])) {$confirm_delete=$_POST["confirm_delete"];}
+if (isset($_GET["confirm_callback"])) {$confirm_callback=$_GET["confirm_callback"];}
+	elseif (isset($_POST["confirm_callback"])) {$confirm_callback=$_POST["confirm_callback"];}
 
 $DB = preg_replace('/[^0-9]/','',$DB);
 $move_submit = preg_replace('/[^-_0-9a-zA-Z]/','',$move_submit);
 $update_submit = preg_replace('/[^-_0-9a-zA-Z]/','',$update_submit);
 $delete_submit = preg_replace('/[^-_0-9a-zA-Z]/','',$delete_submit);
+$callback_submit = preg_replace('/[^-_0-9a-zA-Z]/','',$callback_submit);
 $confirm_move = preg_replace('/[^-_0-9a-zA-Z]/','',$confirm_move);
 $confirm_update = preg_replace('/[^-_0-9a-zA-Z]/','',$confirm_update);
 $confirm_delete = preg_replace('/[^-_0-9a-zA-Z]/','',$confirm_delete);
+$confirm_callback = preg_replace('/[^-_0-9a-zA-Z]/','',$confirm_callback);
 $delete_status = preg_replace('/[^-_0-9a-zA-Z]/','',$delete_status);
+
+if ($DB)
+	{
+	echo "<p>DB = $DB | $move_submit = $move_submit | update_submit = $update_submit | delete_submit = $delete_submit | callback_submit = $callback_submit | confirm_move = $confirm_move | confirm_update = $confirm_update | confirm_delete = $confirm_delete | confirm_callback = $confirm_callback</p>";
+	}
+
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -115,7 +130,7 @@ if ($auth < 1)
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
-header ("Pragma: no-cache");	  // HTTP/1.0
+header ("Pragma: no-cache");      // HTTP/1.0
 
 # valid user
 $rights_stmt = "SELECT load_leads,user_group, delete_lists, modify_leads, modify_lists from vicidial_users where user='$PHP_AUTH_USER';";
@@ -187,6 +202,10 @@ window.onload = function() {
 	document.getElementById("enable_delete_modify_date").onclick = enableDeleteModifyDate;
 	document.getElementById("enable_delete_security_phrase").onclick = enableDeleteSecurityPhrase;
 	document.getElementById("enable_delete_lead_id").onclick = enableDeleteLeadId;
+
+	// callback functions initialization
+	document.getElementById("enable_callback_entry_date").onclick = enableCallbackEntryDate;
+	document.getElementById("enable_callback_callback_date").onclick = enableCallbackCallbackDate;
 }
 
 // move functions
@@ -389,14 +408,35 @@ function enableDeleteLeadId(){
 		document.getElementById("delete_lead_id").disabled = true;
 	}
 }
+
+// callback functions
+function enableCallbackEntryDate(){
+	if (document.getElementById("enable_callback_entry_date").checked)  {
+		document.getElementById("callback_entry_start_date").disabled = false;
+		document.getElementById("callback_entry_end_date").disabled = false;
+	} else {
+		document.getElementById("callback_entry_start_date").disabled = true;
+		document.getElementById("callback_entry_end_date").disabled = true;
+	}
+}
+function enableCallbackCallbackDate(){
+	if (document.getElementById("enable_callback_callback_date").checked)  {
+		document.getElementById("callback_callback_start_date").disabled = false;
+		document.getElementById("callback_callback_end_date").disabled = false;
+	} else {
+		document.getElementById("callback_callback_start_date").disabled = true;
+		document.getElementById("callback_callback_end_date").disabled = true;
+	}
+}
+
 </script>
 
 <?php
 echo "<title>ADMINISTRATION: Lead Tools</title>\n";
 
 ##### BEGIN Set variables to make header show properly #####
-$ADD =	      '999998';
-$hh =		 'admin';
+$ADD =  '999998';
+$hh =       'admin';
 $LOGast_admin_access = '1';
 $SSoutbound_autodial_active = '1';
 $ADMIN =				'admin.php';
@@ -568,7 +608,7 @@ if ($move_submit == "move" )
 		}
 	elseif ($enable_move_status == "enabled")
 		{
-		blank_field('Status');
+		blank_field('Status',true);
 		}
 	if (($enable_move_country_code == "enabled") && ($move_country_code != ''))
 		{
@@ -579,7 +619,7 @@ if ($move_submit == "move" )
 		}
 	elseif ($enable_move_country_code == "enabled")
 		{
-		blank_field('Country Code');
+		blank_field('Country Code',true);
 		}
 	if (($enable_move_vendor_lead_code == "enabled") && ($move_vendor_lead_code != ''))
 		{
@@ -590,7 +630,7 @@ if ($move_submit == "move" )
 		}
 	elseif ($enable_move_vendor_lead_code == "enabled")
 		{
-		blank_field('Vendor Lead Code');
+		blank_field('Vendor Lead Code',true);
 		}
 	if (($enable_move_source_id == "enabled") && ( $move_source_id != ''))
 		{
@@ -601,7 +641,7 @@ if ($move_submit == "move" )
 		}
 	elseif ($enable_move_source_id == "enabled")
 		{
-		blank_field('Source ID');
+		blank_field('Source ID',true);
 		}
 	if (($enable_move_owner == "enabled") && ($move_owner != ''))
 		{
@@ -612,7 +652,7 @@ if ($move_submit == "move" )
 		}
 	elseif ($enable_move_owner == "enabled")
 		{
-		blank_field('Owner');
+		blank_field('Owner',true);
 		}
 	if (($enable_move_security_phrase == "enabled") && ($move_security_phrase != ''))
 		{
@@ -623,7 +663,7 @@ if ($move_submit == "move" )
 		}
 	elseif ($enable_move_security_phrase == "enabled")
 		{
-		blank_field('Security Phrase');
+		blank_field('Security Phrase',true);
 		}
 	if (($enable_move_entry_date == "enabled") && ($move_entry_date != ''))
 		{
@@ -640,7 +680,7 @@ if ($move_submit == "move" )
 		}
 	elseif ($enable_move_entry_date == "enabled")
 		{
-		blank_field('Entry Date');
+		blank_field('Entry Date',true);
 		}
 	if (($enable_move_modify_date == "enabled") && ($move_modify_date != ''))
 		{
@@ -657,7 +697,7 @@ if ($move_submit == "move" )
 		}
 	elseif ($enable_move_modify_date == "enabled")
 		{
-		blank_field('Modify Date');
+		blank_field('Modify Date',true);
 		}
 	if (($enable_move_count == "enabled") && ($move_count_op != '') && ($move_count_num != ''))
 		{
@@ -670,7 +710,7 @@ if ($move_submit == "move" )
 		}
 	elseif ($enable_move_count == "enabled")
 		{
-		blank_field('Move Count');
+		blank_field('Move Count',true);
 		}
 
 	# get the number of leads this action will move
@@ -871,7 +911,7 @@ if ($confirm_move == "confirm")
 		}
 	elseif ($enable_move_status == "enabled")
 		{
-		blank_field('Status');
+		blank_field('Status',true);
 		}
 	if (($enable_move_country_code == "enabled") && ($move_country_code != ''))
 		{
@@ -882,7 +922,7 @@ if ($confirm_move == "confirm")
 		}
 	elseif ($enable_move_country_code == "enabled")
 		{
-		blank_field('Country Code');
+		blank_field('Country Code',true);
 		}
 	if (($enable_move_vendor_lead_code == "enabled") && ($move_vendor_lead_code != ''))
 		{
@@ -893,7 +933,7 @@ if ($confirm_move == "confirm")
 		}
 	elseif ($enable_move_vendor_lead_code == "enabled")
 		{
-		blank_field('Vendor Lead Code');
+		blank_field('Vendor Lead Code',true);
 		}
 	if (($enable_move_source_id == "enabled") && ( $move_source_id != ''))
 		{
@@ -904,7 +944,7 @@ if ($confirm_move == "confirm")
 		}
 	elseif($enable_move_source_id == "enabled")
 		{
-		blank_field('Source ID');
+		blank_field('Source ID',true);
 		}
 	if (($enable_move_owner == "enabled") && ($move_owner != ''))
 		{
@@ -915,7 +955,7 @@ if ($confirm_move == "confirm")
 		}
 	elseif ($enable_move_owner == "enabled")
 		{
-		blank_field('Owner');
+		blank_field('Owner',true);
 		}
 	if (($enable_move_security_phrase == "enabled") && ($move_security_phrase != ''))
 		{
@@ -926,7 +966,7 @@ if ($confirm_move == "confirm")
 		}
 	elseif ($enable_move_security_phrase == "enabled")
 		{
-		blank_field('Security Phrase');
+		blank_field('Security Phrase',true);
 		}
 	if (($enable_move_entry_date == "enabled") && ($move_entry_date != ''))
 		{
@@ -943,7 +983,7 @@ if ($confirm_move == "confirm")
 		}
 	elseif ($enable_move_entry_date == "enabled")
 		{
-		blank_field('Entry Date');
+		blank_field('Entry Date',true);
 		}
 	if (($enable_move_modify_date == "enabled") && ($move_modify_date != ''))
 		{
@@ -960,7 +1000,7 @@ if ($confirm_move == "confirm")
 		}
 	elseif ($enable_move_modify_date == "enabled")
 		{
-		blank_field('Modify Date');
+		blank_field('Modify Date',true);
 		}
 	if (($enable_move_count == "enabled") && ($move_count_op != '') && ($move_count_num != ''))
 		{
@@ -973,7 +1013,7 @@ if ($confirm_move == "confirm")
 		}
 	elseif ($enable_move_count == "enabled")
 		{
-		blank_field('Move Count');
+		blank_field('Move Count',true);
 		}
 
 	$move_lead_stmt = "UPDATE vicidial_list SET list_id = '$move_to_list' WHERE list_id = '$move_from_list' $sql_where";
@@ -1132,7 +1172,7 @@ if ($update_submit == "update" )
 		}
 	elseif ($enable_update_from_status == "enabled")
 		{
-		blank_field('Status');
+		blank_field('Status',true);
 		}
 	if (($enable_update_country_code == "enabled") && ($update_country_code != ''))
 		{
@@ -1143,7 +1183,7 @@ if ($update_submit == "update" )
 		}
 	elseif ($enable_update_country_code == "enabled")
 		{
-		blank_field('Country Code');
+		blank_field('Country Code',true);
 		}
 	if (($enable_update_vendor_lead_code == "enabled") && ($update_vendor_lead_code != ''))
 		{
@@ -1154,7 +1194,7 @@ if ($update_submit == "update" )
 		}
 	elseif ($enable_update_vendor_lead_code == "enabled")
 		{
-		blank_field('Vendor Lead Code');
+		blank_field('Vendor Lead Code',true);
 		}
 	if (($enable_update_source_id == "enabled") && ( $update_source_id != ''))
 		{
@@ -1165,7 +1205,7 @@ if ($update_submit == "update" )
 		}
 	elseif ($enable_update_source_id == "enabled")
 		{
-		blank_field('Source ID');
+		blank_field('Source ID',true);
 		}
 	if (($enable_update_owner == "enabled") && ($update_owner != ''))
 		{
@@ -1176,7 +1216,7 @@ if ($update_submit == "update" )
 		}
 	elseif ($enable_update_owner == "enabled")
 		{
-		blank_field('Owner');
+		blank_field('Owner',true);
 		}
 	if (($enable_update_security_phrase == "enabled") && ($update_security_phrase != ''))
 		{
@@ -1187,7 +1227,7 @@ if ($update_submit == "update" )
 		}
 	elseif ($enable_update_security_phrase == "enabled")
 		{
-		blank_field('Security Phrase');
+		blank_field('Security Phrase',true);
 		}
 	if (($enable_update_entry_date == "enabled") && ($update_entry_date != ''))
 		{
@@ -1204,7 +1244,7 @@ if ($update_submit == "update" )
 		}
 	elseif ($enable_update_entry_date == "enabled")
 		{
-		blank_field('Entry Date');
+		blank_field('Entry Date',true);
 		}
 	if (($enable_update_modify_date == "enabled") && ($update_modify_date != ''))
 		{
@@ -1221,7 +1261,7 @@ if ($update_submit == "update" )
 		}
 	elseif ($enable_update_modify_date == "enabled")
 		{
-		blank_field('Modify Date');
+		blank_field('Modify Date',true);
 		}
 	if (($enable_update_count == "enabled") && ($update_count_op != '') && ($update_count_num != ''))
 		{
@@ -1413,7 +1453,7 @@ if ($confirm_update == "confirm")
 		}
 	elseif ($enable_update_from_status == "enabled")
 		{
-		blank_field('Status');
+		blank_field('Status',true);
 		}
 	if (($enable_update_country_code == "enabled") && ($update_country_code != ''))
 		{
@@ -1424,7 +1464,7 @@ if ($confirm_update == "confirm")
 		}
 	elseif ($enable_update_country_code == "enabled")
 		{
-		blank_field('Country Code');
+		blank_field('Country Code',true);
 		}
 	if (($enable_update_vendor_lead_code == "enabled") && ($update_vendor_lead_code != ''))
 		{
@@ -1435,7 +1475,7 @@ if ($confirm_update == "confirm")
 		}
 	elseif ($enable_update_vendor_lead_code == "enabled")
 		{
-		blank_field('Vendor Lead Code');
+		blank_field('Vendor Lead Code',true);
 		}
 	if (($enable_update_source_id == "enabled") && ( $update_source_id != ''))
 		{
@@ -1446,7 +1486,7 @@ if ($confirm_update == "confirm")
 		}
 	elseif ($enable_update_source_id == "enabled")
 		{
-		blank_field('Source ID');
+		blank_field('Source ID',true);
 		}
 	if (($enable_update_owner == "enabled") && ($update_owner != ''))
 		{
@@ -1457,7 +1497,7 @@ if ($confirm_update == "confirm")
 		}
 	elseif ($enable_update_owner == "enabled")
 		{
-		blank_field('Owner');
+		blank_field('Owner',true);
 		}
 	if (($enable_update_security_phrase == "enabled") && ($update_security_phrase != ''))
 		{
@@ -1468,7 +1508,7 @@ if ($confirm_update == "confirm")
 		}
 	elseif ($enable_update_security_phrase == "enabled")
 		{
-		blank_field('Security Phrase');
+		blank_field('Security Phrase',true);
 		}
 	if (($enable_update_entry_date == "enabled") && ($update_entry_date != ''))
 		{
@@ -1485,7 +1525,7 @@ if ($confirm_update == "confirm")
 		}
 	elseif ($enable_update_entry_date == "enabled")
 		{
-		blank_field('Entry Date');
+		blank_field('Entry Date',true);
 		}
 	if (($enable_update_modify_date == "enabled") && ($update_modify_date != ''))
 		{
@@ -1502,7 +1542,7 @@ if ($confirm_update == "confirm")
 		}
 	elseif ($enable_update_modify_date == "enabled")
 		{
-		blank_field('Modify Date');
+		blank_field('Modify Date',true);
 		}
 	if (($enable_update_count == "enabled") && ($update_count_op != '') && ($update_count_num != ''))
 		{
@@ -1515,7 +1555,7 @@ if ($confirm_update == "confirm")
 		}
 	elseif ($enable_update_count == "enabled")
 		{
-		blank_field('Move Count');
+		blank_field('Move Count',true);
 		}
 
 	$update_lead_stmt = "UPDATE vicidial_list SET status = '$update_to_status' WHERE list_id = '$update_list' $sql_where";
@@ -1676,7 +1716,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		}
 	elseif ($enable_delete_lead_id == "enabled")
 		{
-		blank_field('Lead ID');
+		blank_field('Lead ID',true);
 		}
 	if (($enable_delete_country_code == "enabled") && ($delete_country_code != ''))
 		{
@@ -1687,7 +1727,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		}
 	elseif ($enable_delete_country_code == "enabled")
 		{
-		blank_field('Country Code');
+		blank_field('Country Code',true);
 		}
 	if (($enable_delete_vendor_lead_code == "enabled") && ($delete_vendor_lead_code != ''))
 		{
@@ -1698,7 +1738,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		}
 	elseif ($enable_delete_vendor_lead_code == "enabled")
 		{
-		blank_field('Vendor Lead Code');
+		blank_field('Vendor Lead Code',true);
 		}
 	if (($enable_delete_source_id == "enabled") && ($delete_source_id != ''))
 		{
@@ -1709,7 +1749,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		}
 	elseif ($enable_delete_source_id == "enabled")
 		{
-		blank_field('Source ID');
+		blank_field('Source ID',true);
 		}
 	if (($enable_delete_security_phrase == "enabled") && ($delete_security_phrase != ''))
 		{
@@ -1720,7 +1760,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		}
 	elseif ($enable_delete_security_phrase == "enabled")
 		{
-		blank_field('Security Phrase');
+		blank_field('Security Phrase',true);
 		}
 	if (($enable_delete_owner == "enabled") && ($delete_owner != ''))
 		{
@@ -1731,7 +1771,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		}
 	elseif ($enable_delete_owner == "enabled")
 		{
-		blank_field('Owner');
+		blank_field('Owner',true);
 		}
 	if (($enable_delete_entry_date == "enabled") && ($delete_entry_date != ''))
 		{
@@ -1748,7 +1788,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		}
 	elseif ($enable_delete_entry_date == "enabled")
 		{
-		blank_field('Entry Date');
+		blank_field('Entry Date',true);
 		}
 	if (($enable_delete_modify_date == "enabled") && ($delete_modify_date != ''))
 		{
@@ -1765,7 +1805,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		}
 	elseif ($enable_delete_modify_date == "enabled")
 		{
-		blank_field('Modify Date');
+		blank_field('Modify Date',true);
 		}
 	if (($enable_delete_count == "enabled") && ($delete_count_op != '') && ($delete_count_num != ''))
 		{
@@ -1778,7 +1818,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		}
 	elseif ($enable_delete_count == "enabled")
 		{
-		blank_field('Move Count');
+		blank_field('Move Count',true);
 		}
 
 	# get the number of leads this action will move
@@ -1959,7 +1999,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		}
 	elseif ($enable_delete_lead_id == "enabled")
 		{
-		blank_field('Lead ID');
+		blank_field('Lead ID',true);
 		}
 	if (($enable_delete_country_code == "enabled") && ($delete_country_code != ''))
 		{
@@ -1970,7 +2010,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		}
 	elseif ($enable_delete_country_code == "enabled")
 		{
-		blank_field('Country Code');
+		blank_field('Country Code',true);
 		}
 	if (($enable_delete_vendor_lead_code == "enabled") && ($delete_vendor_lead_code != ''))
 		{
@@ -1981,7 +2021,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		}
 	elseif ($enable_delete_vendor_lead_code == "enabled")
 		{
-		blank_field('Vendor Lead Code');
+		blank_field('Vendor Lead Code',true);
 		}
 	if (($enable_delete_source_id == "enabled") && ($delete_source_id != ''))
 		{
@@ -1992,7 +2032,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		}
 	elseif ($enable_delete_source_id == "enabled")
 		{
-		blank_field('Source ID');
+		blank_field('Source ID',true);
 		}
 	if (($enable_delete_security_phrase == "enabled") && ($delete_security_phrase != ''))
 		{
@@ -2003,7 +2043,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		}
 	elseif ($enable_delete_security_phrase == "enabled")
 		{
-		blank_field('Security Phrase');
+		blank_field('Security Phrase',true);
 		}
 	if (($enable_delete_owner == "enabled") && ($delete_owner != ''))
 		{
@@ -2014,7 +2054,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		}
 	elseif ($enable_delete_owner == "enabled")
 		{
-		blank_field('Owner');
+		blank_field('Owner',true);
 		}
 	if (($enable_delete_entry_date == "enabled") && ($delete_entry_date != ''))
 		{
@@ -2031,7 +2071,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		}
 	elseif ($enable_delete_entry_date == "enabled")
 		{
-		blank_field('Entry Date');
+		blank_field('Entry Date',true);
 		}
 	if (($enable_delete_modify_date == "enabled") && ($delete_modify_date != ''))
 		{
@@ -2048,7 +2088,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		}
 	elseif ($enable_delete_modify_date == "enabled")
 		{
-		blank_field('Modify Date');
+		blank_field('Modify Date',true);
 		}
 	if (($enable_delete_count == "enabled") && ($delete_count_op != '') && ($delete_count_num != ''))
 		{
@@ -2061,7 +2101,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		}
 	elseif ($enable_delete_count == "enabled")
 		{
-		blank_field('Move Count');
+		blank_field('Move Count',true);
 		}
 
 	$delete_lead_stmt = "DELETE FROM vicidial_list WHERE list_id = '$delete_list' $sql_where";
@@ -2082,10 +2122,251 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 	echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
 	}
 
+
+
+# callback confirmation page
+if ($callback_submit == "switchcallbacks" )
+	{
+	# get the variables
+	$enable_callback_entry_date="";
+	$enable_callback_callback_date="";
+	$callback_entry_start_date="";
+	$callback_entry_end_date="";
+	$callback_callback_start_date="";
+	$callback_callback_end_date="";
+	$callback_list="";
+
+	# check the get / post data for the variables
+	if (isset($_GET["enable_callback_entry_date"])) {$enable_callback_entry_date=$_GET["enable_callback_entry_date"];}
+		elseif (isset($_POST["enable_callback_entry_date"])) {$enable_callback_entry_date=$_POST["enable_callback_entry_date"];}
+	if (isset($_GET["enable_callback_callback_date"])) {$enable_callback_callback_date=$_GET["enable_callback_callback_date"];}
+		elseif (isset($_POST["enable_callback_callback_date"])) {$enable_callback_callback_date=$_POST["enable_callback_callback_date"];}
+	if (isset($_GET["callback_entry_start_date"])) {$callback_entry_start_date=$_GET["callback_entry_start_date"];}
+		elseif (isset($_POST["callback_entry_start_date"])) {$callback_entry_start_date=$_POST["callback_entry_start_date"];}
+	if (isset($_GET["callback_entry_end_date"])) {$callback_entry_end_date=$_GET["callback_entry_end_date"];}
+		elseif (isset($_POST["callback_entry_end_date"])) {$callback_entry_end_date=$_POST["callback_entry_end_date"];}
+	if (isset($_GET["callback_callback_start_date"])) {$callback_callback_start_date=$_GET["callback_callback_start_date"];}
+		elseif (isset($_POST["callback_callback_start_date"])) {$callback_callback_start_date=$_POST["callback_callback_start_date"];}
+	if (isset($_GET["callback_callback_end_date"])) {$callback_callback_end_date=$_GET["callback_callback_end_date"];}
+		elseif (isset($_POST["callback_callback_end_date"])) {$callback_callback_end_date=$_POST["callback_callback_end_date"];}
+	if (isset($_GET["callback_list"])) {$callback_list=$_GET["callback_list"];}
+		elseif (isset($_POST["callback_list"])) {$callback_list=$_POST["callback_list"];}
+
+	if ($DB)
+		{
+		echo "<p>enable_callback_entry_date = $enable_callback_entry_date | enable_callback_callback_date = $enable_callback_callback_date | callback_entry_start_date = $callback_entry_start_date | callback_entry_end_date = $callback_entry_end_date | callback_callback_start_date = $callback_callback_start_date | callback_callback_end_date = $callback_callback_end_date | callback_list = $callback_list</p>";
+		}
+
+	# filter out anything bad
+	$enable_callback_entry_date = preg_replace('/[^a-zA-Z]/','',$enable_callback_entry_date);
+	$enable_callback_callback_date = preg_replace('/[^a-zA-Z]/','',$enable_callback_callback_date);
+	$callback_entry_start_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$callback_entry_start_date);
+	$callback_entry_end_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$callback_entry_end_date);
+	$callback_callback_start_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$callback_callback_start_date);
+	$callback_callback_end_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$callback_callback_end_date);
+	$callback_list = preg_replace('/[^0-9]/','',$callback_list);
+
+	if ($DB)
+		{
+		echo "<p>enable_callback_entry_date = $enable_callback_entry_date | enable_callback_callback_date = $enable_callback_callback_date | callback_entry_start_date = $callback_entry_start_date | callback_entry_end_date = $callback_entry_end_date | callback_callback_start_date = $callback_callback_start_date | callback_callback_end_date = $callback_callback_end_date | callback_list = $callback_list</p>";
+		}
+
+
+	# make sure the required fields are set
+	if ($callback_list == '') { callback_list('List'); }
+
+
+	# build the sql query's where phrase and the callback phrase
+	$sql_where = "";
+	$callback_parm = "";
+
+
+
+	if (($enable_callback_entry_date == "enabled") && ($callback_entry_start_date != ''))
+		{
+		$sql_where = $sql_where . " and entry_time >= '$callback_entry_start_date 00:00:00' ";
+		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;entry time greater than $callback_entry_start_date 00:00:00<br />";
+		}
+	elseif ($enable_callback_entry_date == "enabled")
+		{
+		blank_field('Entry Start Date',false);
+		}
+	if (($enable_callback_entry_date == "enabled") && ($callback_entry_end_date != ''))
+		{
+		$sql_where = $sql_where . " and entry_time <= '$callback_entry_end_date 23:59:59' ";
+		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;entry time less than $callback_entry_end_date 23:59:59<br />";
+		}
+	elseif ($enable_callback_entry_date == "enabled")
+		{
+		blank_field('Entry End Date',false);
+		}
+
+	if (($enable_callback_callback_date == "enabled") && ($callback_callback_start_date != ''))
+		{
+		$sql_where = $sql_where . " and callback_time >= '$callback_callback_start_date 00:00:00' ";
+		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;callback time greater than $callback_callback_start_date 00:00:00<br />";
+		}
+	elseif ($enable_callback_callback_date == "enabled")
+		{
+		blank_field('Callback Start Date',false);
+		}
+	if (($enable_callback_callback_date == "enabled") && ($callback_callback_end_date != ''))
+		{
+		$sql_where = $sql_where . " and callback_time <= '$callback_callback_end_date 23:59:59' ";
+		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;callback time less than $callback_callback_end_date 23:59:59<br />";
+		}
+	elseif ($enable_callback_callback_date == "enabled")
+		{
+		blank_field('Callback End Date',false);
+		}
+
+
+	# get the number of call backs that will be switched
+	$callback_lead_count=0;
+	$callback_lead_count_stmt = "SELECT count(1) FROM vicidial_callbacks WHERE list_id = '$callback_list' and recipient = 'USERONLY' $sql_where";
+	if ($DB) { echo "|$callback_lead_count_stmt|\n"; }
+	$callback_lead_count_rslt = mysql_to_mysqli($callback_lead_count_stmt, $link);
+	$callback_lead_count_row = mysqli_fetch_row($callback_lead_count_rslt);
+	$callback_lead_count = $callback_lead_count_row[0];
+
+		echo "<p>You are about to switch $callback_lead_count call backs in list $callback_list from USERONLY callbacks to EVERYONE callbacks with these parameters:<br /><br />$callback_parm <br />Please press confirm to continue.</p>\n";
+		echo "<center><form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=enable_callback_entry_date value='$enable_callback_entry_date'>\n";
+		echo "<input type=hidden name=enable_callback_callback_date value='$enable_callback_callback_date'>\n";
+		echo "<input type=hidden name=callback_entry_start_date value='$callback_entry_start_date'>\n";
+		echo "<input type=hidden name=callback_entry_end_date value='$callback_entry_end_date'>\n";
+		echo "<input type=hidden name=callback_callback_start_date value='$callback_callback_start_date'>\n";
+		echo "<input type=hidden name=callback_callback_end_date value='$callback_callback_end_date'>\n";
+		echo "<input type=hidden name=callback_list value='$callback_list'>\n";
+		echo "<input type=hidden name=DB value='$DB'>\n";
+		echo "<input type=submit name=confirm_callback value=confirm>\n";
+		echo "</form></center>\n";
+		echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
+		echo "</body>\n</html>\n";
+	}
+
+# actually do the callback
+if ($confirm_callback == "confirm")
+	{
+	# get the variables
+	$enable_callback_entry_date="";
+	$enable_callback_callback_date="";
+	$callback_entry_start_date="";
+	$callback_entry_end_date="";
+	$callback_callback_start_date="";
+	$callback_callback_end_date="";
+	$callback_list="";
+
+	# check the get / post data for the variables
+	if (isset($_GET["enable_callback_entry_date"])) {$enable_callback_entry_date=$_GET["enable_callback_entry_date"];}
+		elseif (isset($_POST["enable_callback_entry_date"])) {$enable_callback_entry_date=$_POST["enable_callback_entry_date"];}
+	if (isset($_GET["enable_callback_callback_date"])) {$enable_callback_callback_date=$_GET["enable_callback_callback_date"];}
+		elseif (isset($_POST["enable_callback_callback_date"])) {$enable_callback_callback_date=$_POST["enable_callback_callback_date"];}
+	if (isset($_GET["callback_entry_start_date"])) {$callback_entry_start_date=$_GET["callback_entry_start_date"];}
+		elseif (isset($_POST["callback_entry_start_date"])) {$callback_entry_start_date=$_POST["callback_entry_start_date"];}
+	if (isset($_GET["callback_entry_end_date"])) {$callback_entry_end_date=$_GET["callback_entry_end_date"];}
+		elseif (isset($_POST["callback_entry_end_date"])) {$callback_entry_end_date=$_POST["callback_entry_end_date"];}
+	if (isset($_GET["callback_callback_start_date"])) {$callback_callback_start_date=$_GET["callback_callback_start_date"];}
+		elseif (isset($_POST["callback_callback_start_date"])) {$callback_callback_start_date=$_POST["callback_callback_start_date"];}
+	if (isset($_GET["callback_callback_end_date"])) {$callback_callback_end_date=$_GET["callback_callback_end_date"];}
+		elseif (isset($_POST["callback_callback_end_date"])) {$callback_callback_end_date=$_POST["callback_callback_end_date"];}
+	if (isset($_GET["callback_list"])) {$callback_list=$_GET["callback_list"];}
+		elseif (isset($_POST["callback_list"])) {$callback_list=$_POST["callback_list"];}
+
+	if ($DB)
+		{
+		echo "<p>enable_callback_entry_date = $enable_callback_entry_date | enable_callback_callback_date = $enable_callback_callback_date | callback_entry_start_date = $callback_entry_start_date | callback_entry_end_date = $callback_entry_end_date | callback_callback_start_date = $callback_callback_start_date | callback_callback_end_date = $callback_callback_end_date | callback_list = $callback_list</p>";
+		}
+
+	# filter out anything bad
+	$enable_callback_entry_date = preg_replace('/[^a-zA-Z]/','',$enable_callback_entry_date);
+	$enable_callback_callback_date = preg_replace('/[^a-zA-Z]/','',$enable_callback_callback_date);
+	$callback_entry_start_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$callback_entry_start_date);
+	$callback_entry_end_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$callback_entry_end_date);
+	$callback_callback_start_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$callback_callback_start_date);
+	$callback_callback_end_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$callback_callback_end_date);
+	$callback_list = preg_replace('/[^0-9]/','',$callback_list);
+
+	if ($DB)
+		{
+		echo "<p>enable_callback_entry_date = $enable_callback_entry_date | enable_callback_callback_date = $enable_callback_callback_date | callback_entry_start_date = $callback_entry_start_date | callback_entry_end_date = $callback_entry_end_date | callback_callback_start_date = $callback_callback_start_date | callback_callback_end_date = $callback_callback_end_date | callback_list = $callback_list</p>";
+		}
+
+
+	# make sure the required fields are set
+	if ($callback_list == '') { callback_list('List'); }
+
+
+	# build the sql query's where phrase and the callback phrase
+	$sql_where = "";
+	$callback_parm = "";
+
+
+
+	if (($enable_callback_entry_date == "enabled") && ($callback_entry_start_date != ''))
+		{
+		$sql_where = $sql_where . " and entry_time >= '$callback_entry_start_date 00:00:00' ";
+		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;entry time greater than $callback_entry_start_date 00:00:00<br />";
+		}
+	elseif ($enable_callback_entry_date == "enabled")
+		{
+		blank_field('Entry Start Date',false);
+		}
+	if (($enable_callback_entry_date == "enabled") && ($callback_entry_end_date != ''))
+		{
+		$sql_where = $sql_where . " and entry_time <= '$callback_entry_end_date 23:59:59' ";
+		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;entry time less than $callback_entry_end_date 23:59:59<br />";
+		}
+	elseif ($enable_callback_entry_date == "enabled")
+		{
+		blank_field('Entry End Date',false);
+		}
+
+	if (($enable_callback_callback_date == "enabled") && ($callback_callback_start_date != ''))
+		{
+		$sql_where = $sql_where . " and callback_time >= '$callback_callback_start_date 00:00:00' ";
+		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;callback time greater than $callback_callback_start_date 00:00:00<br />";
+		}
+	elseif ($enable_callback_callback_date == "enabled")
+		{
+		blank_field('Callback Start Date',false);
+		}
+	if (($enable_callback_callback_date == "enabled") && ($callback_callback_end_date != ''))
+		{
+		$sql_where = $sql_where . " and callback_time <= '$callback_callback_end_date 23:59:59' ";
+		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;callback time less than $callback_callback_end_date 23:59:59<br />";
+		}
+	elseif ($enable_callback_callback_date == "enabled")
+		{
+		blank_field('Callback End Date',false);
+		}
+
+	$callback_lead_stmt = "UPDATE vicidial_callbacks SET recipient = 'ANYONE' WHERE list_id = '$callback_list' and recipient = 'USERONLY' $sql_where";
+	if ($DB) { echo "|$callback_lead_stmt|\n"; }
+	$callback_lead_rslt = mysql_to_mysqli($callback_lead_stmt, $link);
+	$callback_lead_count = mysqli_affected_rows($link);
+
+	$callback_sentence = "$callback_lead_count leads have been set to ANYONE callbacks from list $callback_list with the following parameters:<br /><br />$callback_parm <br />";
+
+	$SQL_log = "$callback_lead_stmt|";
+	$SQL_log = preg_replace('/;/', '', $SQL_log);
+	$SQL_log = addslashes($SQL_log);
+	$admin_log_stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='OTHER', record_id='$callback_from_list', event_code='ADMIN SWITCH CALLBACKS', event_sql=\"$SQL_log\", event_notes='$callback_sentence';";
+	if ($DB) {echo "|$admin_log_stmt|\n";}
+	$admin_log_rslt=mysql_to_mysqli($admin_log_stmt, $link);
+
+	echo "<p>$callback_sentence</p>";
+	echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
+	}
+
+
+
+
+
 # main page display
 if (
-		($move_submit != "move" ) && ($update_submit != "update") && ($delete_submit != "delete") &&
-		($confirm_move != "confirm") && ($confirm_update != "confirm") && ($confirm_delete != "confirm")
+		($move_submit != "move" ) && ($update_submit != "update") && ($delete_submit != "delete") && ($callback_submit != "switchcallbacks") &&
+		($confirm_move != "confirm") && ($confirm_update != "confirm") && ($confirm_delete != "confirm") && ($confirm_callback != "confirm")
 	)
 	{
 	# figure out which campaigns this user is allowed to work on
@@ -2459,8 +2740,37 @@ if (
 		echo "</select></td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td colspan=2 align=center><input type=submit name=delete_submit value=delete></td></tr>\n";
 		# END Delete Leads
-
 		}
+
+	# BEGIN Callback Convert
+	echo "</table></center>\n";
+	echo "<br /><center><table width=$section_width cellspacing=3>\n";
+	echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><b>Switch Callbacks</b></font></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>List</td><td align=left>\n";
+	echo "<select size=1 name=callback_list>\n";
+	echo "<option value='-'>Select A List</option>\n";
+
+	$i = 0;
+	while ( $i < $allowed_lists_count )
+		{
+		echo "<option value='$list_ary[$i]'>$list_ary[$i] - $list_name_ary[$i] ($list_lead_count_ary[$i] leads)</option>\n";
+		$i++;
+		}
+
+	echo "</select></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Entry Date</td></td><td align=left>\n";
+	echo "<input type='checkbox' name='enable_callback_entry_date' id='enable_callback_entry_date' value='enabled'>\n";
+	echo "<input type='text' name='callback_entry_start_date' id='callback_entry_start_date' value='' disabled=true> to ";
+	echo "<input type='text' name='callback_entry_end_date' id='callback_entry_end_date' value='' disabled=true>\n";
+	echo "</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>Callback Date</td></td><td align=left>\n";
+	echo "<input type='checkbox' name='enable_callback_callback_date' id='enable_callback_callback_date' value='enabled'>\n";
+	echo "<input type='text' name='callback_callback_start_date' id='callback_callback_start_date' value='' disabled=true> to ";
+	echo "<input type='text' name='callback_callback_end_date' id='callback_callback_end_date' value='' disabled=true>\n";
+	echo "</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td colspan=2 align=center><input type=submit name=callback_submit value='switch callbacks'></td></tr>\n";
+	# END Callback Convert
+
 
 	echo "</table></center>\n";
 	echo "</form>\n";
@@ -2469,9 +2779,13 @@ if (
 
 echo "</td></tr></table>\n";
 
-function blank_field($field_name)
+function blank_field($field_name, $allow_blank)
 	{
-	echo "<p>$field_name cannot be blank. If you wish to search for an empty field use ---BLANK--- instead.</p>";
+	echo "<p>$field_name cannot be blank. ";
+	if ($allow_blank)
+		{
+		echo "If you wish to search for an empty field use ---BLANK--- instead.</p>";
+		}
 	echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
 	exit();
 	}

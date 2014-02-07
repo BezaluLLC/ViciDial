@@ -11451,7 +11451,7 @@ if ($ADD==41)
 			$alt_number_dialing =			'N';
 			$am_message_exten =				'8320';
 			$amd_send_to_vmx =				'N';
-			$auto_alt_dial =				'N';
+			$auto_alt_dial =				'NONE';
 			$auto_dial_level =				'1.0';
 			$available_only_ratio_tally =	'Y';
 			$campaign_allow_inbound =		'Y';
@@ -11629,6 +11629,10 @@ if ($ADD==41)
 					{
 					echo "<br><B>CAMPAIGN MODIFIED: $campaign_id</B>\n";
 
+					if ( ($dial_method == 'MANUAL') or ($dial_method == 'INBOUND_MAN') )
+						{
+						$auto_alt_dial = 'NONE';
+						}
 					if ( ($dial_method != 'MANUAL') and ($dial_method != 'INBOUND_MAN') )
 						{
 						$no_hopper_dialing='N';
@@ -11883,7 +11887,7 @@ if ($ADD==44)
 			$alt_number_dialing =			'N';
 			$am_message_exten =				'8320';
 			$amd_send_to_vmx =				'N';
-			$auto_alt_dial =				'N';
+			$auto_alt_dial =				'NONE';
 			$auto_dial_level =				'1.0';
 			$available_only_ratio_tally =	'Y';
 			$campaign_allow_inbound =		'Y';
@@ -11966,6 +11970,10 @@ if ($ADD==44)
 							$adlSQL = "auto_dial_level='$auto_dial_level',";
 							}
 						}
+					}
+				if ( ($dial_method == 'MANUAL') or ($dial_method == 'INBOUND_MAN') )
+					{
+					$adlSQL .= "auto_alt_dial='NONE',";
 					}
 				if ( (!preg_match('/DISABLED/', $list_order_mix)) and ($hopper_level < 100) )
 					{$hopper_level='100';}
