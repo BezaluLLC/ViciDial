@@ -58,17 +58,17 @@ if($short_header)
 	if ( ($reports_only_user < 1) and ($qc_only_user < 1) )
 		{
 	?>
-	<TD> &nbsp; <A HREF="admin.php?ADD=0A" ALT="Users"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Users</B></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=10" ALT="Campaigns"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Campaigns</B></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=0A" ALT="Users"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Users</B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=10" ALT="Campaigns"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Campaigns</B></FONT></A> &nbsp; </TD>
         <?php include 'qc/QC_header_include02.php'; ?>
-	<TD> &nbsp; <A HREF="admin.php?ADD=100" ALT="Lists"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Lists</B></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=1000000" ALT="Scripts"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Scripts</B></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=10000000" ALT="Filters"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Filters</B></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=1000" ALT="Inbound"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Inbound</B></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=100000" ALT="User Groups"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>User Groups</B></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=10000" ALT="Remote Agents"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Remote Agents</B></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=999998" ALT="Admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Admin</B></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=999999" ALT="Reports"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Reports</B></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=100" ALT="Lists"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Lists</B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=1000000" ALT="Scripts"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Scripts</B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=10000000" ALT="Filters"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Filters</B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=1000" ALT="Inbound"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Inbound</B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=100000" ALT="User Groups"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>User Groups</B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=10000" ALT="Remote Agents"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Remote Agents</B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=999998" ALT="Admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Admin</B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=999999" ALT="Reports"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Reports</B></FONT></A> &nbsp; </TD>
 	<?php 
 		} 
 	else 
