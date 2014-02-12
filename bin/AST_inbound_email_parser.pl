@@ -10,7 +10,7 @@ use Encode qw(from_to decode encode);
 use MIME::Base64;
 use MIME::QuotedPrint;
 
-# Copyright (C) 2013  Matt Florell, Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell, Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 # AST_inbound_email_parser.pl - This script is essential for periodically checking any active POP3 or IMAP 
 # email accounts set up through the Vicidial admin.
@@ -55,53 +55,100 @@ use MIME::QuotedPrint;
 # 121213-2200 - First Build
 # 130127-0025 - Added better non-latin characters support
 # 130607-0155 - Encoding fix
+# 140212-0719 - Added ignoresizeerrors option, changed debug and added --force-check option
 #
 
 # default path to astguiclient configuration file:
 $PATHconf =		'/etc/astguiclient.conf';
 $|=1;
+$force_check=0;
+$DB=0;
+$DBX=0;
+$secX = time();
 
-if ($ARGV[0]=~/--help/) {
-	print "AST_inbound_email_parser.pl - This script is essential for periodically checking any active POP3 or IMAP \n";
-	print "email accounts set up through the Vicidial admin.\n";
-	print "\n";
-	print "You cannot check an email account more often than 5 minutes at a time.  This is in place because several \n";
-	print "email providers will lock an email account if it is being checked too often; currently the most restrictive\n";
-	print "email provider encountered allows no more than three logins every 15 minutes, hence 5 minutes being the\n";
-	print "most frequent time allowed.\n";
-	print "\n";
-	print "Upon execution, this script will query the vicidial_email_accounts table in the asterisk database and \n";
-	print "gather the information for all email accounts set up through the dialer that are currently active.  It\n";
-	print "will then check the time setting on each of those accounts to see if it is time to check that particular \n";
-	print "account.  If so, the program then will attempt to access the account using the appropriate Perl module\n";
-	print "depending on the account protocol (POP3 or IMAP).  If the program successfully connects to the email \n";
-	print "account, then it will download any unread email messages, and grab any important information in the \n";
-	print "email headers, along with any attachments and the message itself.  Each bit of information will be \n";
-	print "stored in the vicidial_email_list table, and any attachments will be stored in the \n";
-	print "inbound_email_attachments table as BLOB data.\n";
-	print "\n";
-	print "Additionally, depending on the email account settings, prior to putting the email record into the \n";
-	print "vicidial_email_list table, the accounts can be set up to check if the 'from' address is already part \n";
-	print "of a lead in the vicidial_list table.  The accounts can be set up to not check at all (EMAIL), in \n";
-	print "which all email messages go in as new leads, first in the vicidial_list table and then in the \n";
-	print "vicidial_email_list table with the lead_id gleaned from the vicidial_list insert.  They can also be\n";
-	print "set up to check if the email address is already on a lead in a particular list (EMAILLOOKUPRL), or\n";
-	print "if the email address is in a lead belonging to any list in a given campaign (EMAILLOOKUPRC), or if \n";
-	print "the email address is on any lead currently in the vicidial_list table (EMAILLOOKUP).  In these \n";
-	print "cases, the script will grab the lead_id of the most recently loaded lead (i.e. highest lead_id value), \n";
-	print "and use that as the lead_id in the vicidial_email_list table without creating a new lead.\n";
-	print "\n";
-	print "After checking and downloading any unread messages, the script will then log off the email account, \n";
-	print "and when all active email accounts have been checked in this manner, the script will exit.\n";
-	print "\n";
-	print "This script should be set up in the cron to run once per minute, not continuously.\n";
-	print "* * * * * /usr/share/astguiclient/AST_inbound_email_parser.pl\n";
-	print "\n";
-	print "Use the --debug variable when executing the script to have it print out what it is attempting to do on a\n";
-	print "step-by-step basis.  Use the --debugX variable to include outputting of mail information and SQL queries the script \n";
-	print "attempts to execute.\n";
+
+### begin parsing run-time options ###
+if (length($ARGV[0])>1)
+	{
+	$i=0;
+	while ($#ARGV >= $i)
+		{
+		$args = "$args $ARGV[$i]";
+		$i++;
+		}
+
+	if ($args =~ /--help/i)
+		{
+		print "AST_inbound_email_parser.pl - This script is essential for periodically checking any active POP3 or IMAP \n";
+		print "email accounts set up through the Vicidial admin.\n";
+		print "\n";
+		print "You cannot check an email account more often than 5 minutes at a time.  This is in place because several \n";
+		print "email providers will lock an email account if it is being checked too often; currently the most restrictive\n";
+		print "email provider encountered allows no more than three logins every 15 minutes, hence 5 minutes being the\n";
+		print "most frequent time allowed.\n";
+		print "\n";
+		print "Upon execution, this script will query the vicidial_email_accounts table in the asterisk database and \n";
+		print "gather the information for all email accounts set up through the dialer that are currently active.  It\n";
+		print "will then check the time setting on each of those accounts to see if it is time to check that particular \n";
+		print "account.  If so, the program then will attempt to access the account using the appropriate Perl module\n";
+		print "depending on the account protocol (POP3 or IMAP).  If the program successfully connects to the email \n";
+		print "account, then it will download any unread email messages, and grab any important information in the \n";
+		print "email headers, along with any attachments and the message itself.  Each bit of information will be \n";
+		print "stored in the vicidial_email_list table, and any attachments will be stored in the \n";
+		print "inbound_email_attachments table as BLOB data.\n";
+		print "\n";
+		print "Additionally, depending on the email account settings, prior to putting the email record into the \n";
+		print "vicidial_email_list table, the accounts can be set up to check if the 'from' address is already part \n";
+		print "of a lead in the vicidial_list table.  The accounts can be set up to not check at all (EMAIL), in \n";
+		print "which all email messages go in as new leads, first in the vicidial_list table and then in the \n";
+		print "vicidial_email_list table with the lead_id gleaned from the vicidial_list insert.  They can also be\n";
+		print "set up to check if the email address is already on a lead in a particular list (EMAILLOOKUPRL), or\n";
+		print "if the email address is in a lead belonging to any list in a given campaign (EMAILLOOKUPRC), or if \n";
+		print "the email address is on any lead currently in the vicidial_list table (EMAILLOOKUP).  In these \n";
+		print "cases, the script will grab the lead_id of the most recently loaded lead (i.e. highest lead_id value), \n";
+		print "and use that as the lead_id in the vicidial_email_list table without creating a new lead.\n";
+		print "\n";
+		print "After checking and downloading any unread messages, the script will then log off the email account, \n";
+		print "and when all active email accounts have been checked in this manner, the script will exit.\n";
+		print "\n";
+		print "This script should be set up in the cron to run once per minute, not continuously.\n";
+		print "* * * * * /usr/share/astguiclient/AST_inbound_email_parser.pl\n";
+		print "\n";
+		print "Use the --debug variable when executing the script to have it print out what it is attempting to do on a\n";
+		print "step-by-step basis.  Use the --debugX variable to include outputting of mail information and SQL queries the script \n";
+		print "attempts to execute.\n";
+		print "\n";
+		print "other allowed run time options:\n";
+		print "  [--debug] = verbose debug messages\n";
+		print "  [--debugX] = extra verbose debug messages\n";
+		print "  [--force-check] = forces check of email\n";
+		print "\n";
+		exit;
+		}
+	else
+		{
+		if ($args =~ /--debug/i)
+			{
+			$DB=1;
+			}
+		if ($args =~ /--debugX/i)
+			{
+			$DBX=1;
+			}
+		if ($args =~ /--force-check/i)
+			{
+			$force_check=1;
+			}
+		}
+	}
+else
+	{
+#	print "no command line options set\n";
 	exit;
-}
+	}
+
+### end parsing run-time options ###
+
 
 open(conf, "$PATHconf") || die "can't open $PATHconf: $!\n";
 @conf = <conf>;
@@ -154,12 +201,13 @@ if($min==0) {$min=60;}
 $minutes=($hour*60)+$min;
 # $minutes=0; # Uncomment if you want to TEST ONLY, so you can test this at any time.
 
-$stmt="select email_account_id,email_account_name,email_account_description,user_group,protocol,email_replyto_address,email_account_server,email_account_user,email_account_pass,active,email_frequency_check_mins,group_id,default_list_id,call_handle_method,agent_search_method,campaign_id,list_id,email_account_type from vicidial_email_accounts where active='Y'";
+$stmt="SELECT email_account_id,email_account_name,email_account_description,user_group,protocol,email_replyto_address,email_account_server,email_account_user,email_account_pass,active,email_frequency_check_mins,group_id,default_list_id,call_handle_method,agent_search_method,campaign_id,list_id,email_account_type from vicidial_email_accounts where active='Y'";
 $rslt=$dbhA->prepare($stmt);
 $rslt->execute();
 
+$h=0;
 while (@row=$rslt->fetchrow_array) {
-
+	$h++;
 	$VARemail_ID=$row[0];
 	$VARemail_protocol=$row[4];
 	$VARemail_server=$row[6];
@@ -173,8 +221,11 @@ while (@row=$rslt->fetchrow_array) {
 	$campaign_id=$row[15];
 	$list_id=$row[16];
 
-	if ($minutes%$VARemail_frequency==0) {
-		if ($ARGV[0]=~/debug/i) {print "Attempting to connect to $VARemail_protocol server ($VARemail_server)\n\n";}
+	if ($DBX) {print "$h - $VARemail_ID - $VARemail_groupid\n";}
+
+	if ( ($minutes%$VARemail_frequency==0) || ($force_check > 0) ) 
+		{
+		if ($DB) {print "Attempting to connect to $VARemail_protocol server ($VARemail_server)  -  $h - $VARemail_ID - $VARemail_groupid\n\n";}
 		if ($VARemail_protocol eq "IMAP") {
 			# if (!$sleep_time || $sleep_time<10) {$sleep_time=10;} # Ten second minimum wait time for IMAP.
 
@@ -188,6 +239,7 @@ while (@row=$rslt->fetchrow_array) {
 			  Password => "$VARemail_pwd",
 			  Port     => 993,
 			  Ssl      =>  1,
+			  Ignoresizeerrors => 1,
 			  )
 			  or die "Cannot connect through IMAPClient: $!";
 
@@ -251,23 +303,23 @@ while (@row=$rslt->fetchrow_array) {
 									$min=substr("00".$time_array[1], -2);
 									$sec=substr("00".$time_array[2], -2);
 									$email_date="$day $month $year $hour:$min:$sec";
-									if ($ARGV[0]=~/debug/) {print "Time stamp on email is $email_date\n";}
-								} elsif ($ARGV[0]=~/debug/) {print "WARNING: Time stamp on email is $email_date\n";}
+									if ($DB) {print "Time stamp on email is $email_date\n";}
+								} elsif ($DB) {print "WARNING: Time stamp on email is $email_date\n";}
 
 	############# MESSAGE ACTIONS
 								if ($content_type=~/^text\/plain/i) {
 									## Do nothing - it's plain text and needs no further work on it.
-									if ($ARGV[0]=~/debug/i) {print "Email message is text/plain.  Nothing needs to be done.\n\n";}
+									if ($DB) {print "Email message is text/plain.  Nothing needs to be done.\n\n";}
 								} elsif ($content_type=~/^text\/html/i) {
 									## Message is HTML, so it needs to be stripped.
-									if ($ARGV[0]=~/debug/i) {print "Email message is text/html.  Needs to have tags stripped via HTML::Strip.\n\n";}
+									if ($DB) {print "Email message is text/html.  Needs to have tags stripped via HTML::Strip.\n\n";}
 									StripHTML();
 								} elsif ($content_type=~/^multipart\/(alternative|mixed)/i) {
 									## Message is multipart/alternative, so it needs to be read and partitioned.  The multipart/alternative subtype indicates that each part is an "alternative"
 									## version of the same (or similar) content, each in a different format denoted by its "Content-Type" header. The formats are ordered by how faithful they are to 
 									## the original, with the least faithful first and the most faithful last. Systems can then choose the "best" representation they are capable of processing; in 
 									## general, this will be the last part that the system can understand, although other factors may affect this.
-									if ($ARGV[0]=~/debug/i) {print "Email message is multipart.  Need to select the best format type and parse it.\n";}
+									if ($DB) {print "Email message is multipart.  Need to select the best format type and parse it.\n";}
 
 									## First, get the boundary from the content-type and use it to break the email into it's multiple parts
 									if ($content_type=~/boundary\=\"?[^\"]+\"?/i) {
@@ -303,21 +355,21 @@ while (@row=$rslt->fetchrow_array) {
 											$body_contents=$msg->body;
 											$attachment_filesize=$msg->size();
 											$head=$msg->head;
-											if ($ARGV[0]=~/debugX/i) {print "Part content disposition is $sub_content_disposition\n Part content type is $sub_content_type.\n";}
-											if ($ARGV[0]=~/debugX/i) {print "Part content size is $attachment_filesize\n";}
+											if ($DBX) {print "Part content disposition is $sub_content_disposition\n Part content type is $sub_content_type.\n";}
+											if ($DBX) {print "Part content size is $attachment_filesize\n";}
 
 
 											## Check if the content-type is plain or html
 											if ($alt_email_text=~/Content\-Type\:\s+text\/html/i && $text_written==0) {
 												$message=$body_contents;
 												$content_transfer_encoding=$encoding_type;
-												if ($ARGV[0]=~/debug/i) {print "First acceptable content-type match is text/html.  Stripping headers and stripping tags from the body/message...\n";}
-												if ($ARGV[0]=~/debugX/i) {print "$k)\n***Pre-HTML strip:\n$message\n***\n";}
+												if ($DB) {print "First acceptable content-type match is text/html.  Stripping headers and stripping tags from the body/message...\n";}
+												if ($DBX) {print "$k)\n***Pre-HTML strip:\n$message\n***\n";}
 												StripHTML();
-												if ($ARGV[0]=~/debugX/i) {print "$k)\n***Post-HTML strip:\n$message\n***\n";}
+												if ($DBX) {print "$k)\n***Post-HTML strip:\n$message\n***\n";}
 												$text_written=1;
 											} elsif ($alt_email_text=~/Content\-Type\:\s+text\/plain/i && $text_written==0) {
-												if ($ARGV[0]=~/debug/i) {print "First acceptable content-type match is text/plain.  Stripping headers to get text...\n";}
+												if ($DB) {print "First acceptable content-type match is text/plain.  Stripping headers to get text...\n";}
 												$text_written=1;
 												$message=$body_contents;
 												$content_transfer_encoding=$encoding_type;
@@ -361,10 +413,10 @@ while (@row=$rslt->fetchrow_array) {
 												}
 												if ($sub_content_disposition=~/filename\=\"?(.*?)\"?$/i) {$attachment_filename=$&;}
 												if (length($attachment_filename)==0) {
-													if ($ARGV[0]=~/debug/i) {print "Couldn't find file name with content-disposition.  Searching full header for 'filename' value...\n";}
+													if ($DB) {print "Couldn't find file name with content-disposition.  Searching full header for 'filename' value...\n";}
 													if ($alt_email_text=~/filename\=\"?(.*?)\"?$/i) {$attachment_filename=$&;}
 													if (length($attachment_filename)==0) {
-														if ($ARGV[0]=~/debug/i) {print "Couldn't find file name anywhere in header.  Searching Content-Type for 'name' value...\n";}
+														if ($DB) {print "Couldn't find file name anywhere in header.  Searching Content-Type for 'name' value...\n";}
 														if ($sub_content_type=~/name\=\"?(.*?)\"?$/i) {$attachment_filename=$&;}
 													}
 												}
@@ -374,21 +426,21 @@ while (@row=$rslt->fetchrow_array) {
 												# If the attachment check is good, then proceed with storing the attachment.  Otherwise continue.
 												if ($attachment_fulltype && $attachment_fulltype ne "") {
 													if ($attachment_filename && $attachment_filename ne "") {
-														if ($ARGV[0]=~/debug/i) {print "Found valid attachment, type $attachment_type \n Attachment filename is $attachment_filename ($attachment_fulltype)\nFile can be stored in database....\n";}
+														if ($DB) {print "Found valid attachment, type $attachment_type \n Attachment filename is $attachment_filename ($attachment_fulltype)\nFile can be stored in database....\n";}
 														$ins_values[$attach_ct]="'$attachment_filename','$attachment_type','$encoding_type','$attachment_filesize','$attachment_fulltype','$body_contents'";
 														$output_ins_values[$attach_ct]="'$attachment_filename','$attachment_type','$encoding_type','$attachment_filesize','$attachment_fulltype','<FILE CONTENTS>'";
 														$attach_ct++;
 													} else {
-														if ($ARGV[0]=~/debug/i) {print "!!!!WARNING - Found valid attachment, type $attachment_type \n Attachment does not have file name.  Skipping...\n";}
+														if ($DB) {print "!!!!WARNING - Found valid attachment, type $attachment_type \n Attachment does not have file name.  Skipping...\n";}
 													}
 												} else {
-													if ($ARGV[0]=~/debug/i) {print "!!!!WARNING - Found attachment $attachment_filename, but is NOT a valid file type \n Attachment type is $attachment_type.  Skipping...\n";}
+													if ($DB) {print "!!!!WARNING - Found attachment $attachment_filename, but is NOT a valid file type \n Attachment type is $attachment_type.  Skipping...\n";}
 												}
 											}
 											# print "\n";
 										}
 									} else {
-										if ($ARGV[0]=~/debug/i) {print "!!!!WARNING - Mail is multi-part, but no boundary value was found.  Email will be ignored.\n";}
+										if ($DB) {print "!!!!WARNING - Mail is multi-part, but no boundary value was found.  Email will be ignored.\n";}
 									}
 								}
 								#print "\n";
@@ -408,10 +460,13 @@ while (@row=$rslt->fetchrow_array) {
 
 									if ($charset ne "") {
 										# decode to Perl's internal format
-										$message=decode($charset, $message);
-										#encodetoUTF-8
-										$message=encode('utf-8', $message);
-										$content_type.="; charset=$charset";
+										if ($charset != 'Type: text/html')
+											{
+											$message=decode($charset, $message);
+											#encodetoUTF-8
+											$message=encode('utf-8', $message);
+											$content_type.="; charset=$charset";
+											}
 									}
 								}
 
@@ -465,7 +520,7 @@ while (@row=$rslt->fetchrow_array) {
 
 								### CHECK if lead exists in vicidial_list table via a search by email based on the email account settings
 								my $vicidial_lead_check_stmt="select lead_id, list_id from vicidial_list $call_handle_clause limit $limit";
-								if ($ARGV[0]=~/debugX/i) {print $vicidial_lead_check_stmt;}
+								if ($DBX) {print $vicidial_lead_check_stmt;}
 								my $vicidial_lead_check_rslt=$dbhA->prepare($vicidial_lead_check_stmt);
 								$vicidial_lead_check_rslt->execute();
 								if ($vicidial_lead_check_rslt->rows>0) {
@@ -473,7 +528,7 @@ while (@row=$rslt->fetchrow_array) {
 									$lead_id=$lead_id_row[0];
 								} else {
 									my $vicidial_list_stmt="insert into vicidial_list(list_id, email, comments, status) values('$default_list_id', '$email_from', '".substr($message,0,255)."', '$status')";
-									if ($ARGV[0]=~/debugX/i) {print $vicidial_list_stmt;}
+									if ($DBX) {print $vicidial_list_stmt;}
 									my $vicidial_list_rslt=$dbhA->prepare($vicidial_list_stmt);
 									if ($vicidial_list_rslt->execute()) {
 										$lead_id=$dbhA->last_insert_id(undef, undef, 'vicidial_list', 'lead_id');
@@ -485,9 +540,9 @@ while (@row=$rslt->fetchrow_array) {
 								## Insert a new record into vicidial_email_list.  This is ALWAYS done for new email messages.
 								$ins_stmt="insert into vicidial_email_list(lead_id, protocol, email_date, email_to, email_from, email_from_name, subject, mime_type, content_type, content_transfer_encoding, x_mailer, sender_ip, message, email_account_id, group_id, status, direction) values('$lead_id', 'IMAP', STR_TO_DATE('$email_date', '%d %b %Y %T'), '$email_to', '$email_from', '$email_from_name', '$subject', '$mime_type', '$content_type', '$content_transfer_encoding', '$x_mailer', '$sender_ip', trim('$message'), '$VARemail_ID', '$VARemail_groupid', '$status', 'INBOUND')";
 
-								print $ins_stmt."\n";
+								if ($DB) {print $ins_stmt."\n";}
 
-								if ($ARGV[0]=~/debugX/i) {print $ins_stmt."\n";}
+								if ($DBX) {print $ins_stmt."\n";}
 								my $ins_rslt=$dbhA->prepare($ins_stmt);
 								if ($ins_rslt->execute()) {
 									if ($attach_ct>0) {
@@ -505,9 +560,9 @@ while (@row=$rslt->fetchrow_array) {
 										$attachment_ins_rslt->execute();
 
 										$output_ins_stmt="insert into inbound_email_attachments(email_row_id, filename, file_type, file_encoding, file_size, file_extension, file_contents) VALUES ".substr($output_multistmt,0,-1);
-										if ($ARGV[0]=~/debugX/i) {print $output_ins_stmt."\n";}
+										if ($DBX) {print $output_ins_stmt."\n";}
 									}
-									if ($ARGV[0]=~/debug/i) {print "\n Found $attach_ct attachments in email\n";}
+									if ($DB) {print "\n Found $attach_ct attachments in email\n";}
 								} else {
 									die "Email insert failed.  Check SQL in:\n $ins_stmt\n";
 								}
@@ -517,8 +572,8 @@ while (@row=$rslt->fetchrow_array) {
 						close(STORAGE);
 					}
 				}
-				if ($ARGV[0]=~/debug/i) {
-					if ($ARGV[0]=~/debugX/i) {
+				if ($DB) {
+					if ($DBX) {
 						print "Iteration #$q - found ".($new_messages+0)." new messages\n";
 					} else {
 						# print ".";
@@ -529,7 +584,7 @@ while (@row=$rslt->fetchrow_array) {
 			$client->logout();
 		} elsif ($VARemail_protocol eq "POP3") {
 			# if (!$sleep_time || $sleep_time<300) {$sleep_time=300;} # Some servers don't allow multiple connections within a certain time frame.
-			# if ($ARGV[0]=~/debug/) {$mail_check_iterations=5;} else {$mail_check_iterations=1000000;}
+			# if ($DB) {$mail_check_iterations=5;} else {$mail_check_iterations=1000000;}
 			use Mail::POP3Client;
 			$pop = new Mail::POP3Client( USER     => "$VARemail_user",
 										   PASSWORD => "$VARemail_pwd",
@@ -575,17 +630,17 @@ while (@row=$rslt->fetchrow_array) {
 
 				if ($content_type=~/^text\/plain/i) {
 					## Do nothing - it's plain text and needs no further work on it.
-					if ($ARGV[0]=~/debug/i) {print "Email message is text/plain.  Nothing needs to be done.\n\n";}
+					if ($DB) {print "Email message is text/plain.  Nothing needs to be done.\n\n";}
 				} elsif ($content_type=~/^text\/html/i) {
 					## Message is HTML, so it needs to be stripped.
-					if ($ARGV[0]=~/debug/i) {print "Email message is text/html.  Needs to have tags stripped via HTML::Strip.\n\n";}
+					if ($DB) {print "Email message is text/html.  Needs to have tags stripped via HTML::Strip.\n\n";}
 					StripHTML();
 				} elsif ($content_type=~/^multipart\/(alternative|mixed)/i) {
 					## Message is multipart/alternative, so it needs to be read and partitioned.  The multipart/alternative subtype indicates that each part is an "alternative"
 					## version of the same (or similar) content, each in a different format denoted by its "Content-Type" header. The formats are ordered by how faithful they are to 
 					## the original, with the least faithful first and the most faithful last. Systems can then choose the "best" representation they are capable of processing; in 
 					## general, this will be the last part that the system can understand, although other factors may affect this.
-					if ($ARGV[0]=~/debug/i) {print "Email message is multipart.  Need to select the best format type and parse it.\n";}
+					if ($DB) {print "Email message is multipart.  Need to select the best format type and parse it.\n";}
 
 					## First, get the boundary from the content-type and use it to break the email into it's multiple parts
 					if ($content_type=~/boundary\=\"?[^\"]+\"?/i) {
@@ -625,21 +680,21 @@ while (@row=$rslt->fetchrow_array) {
 							$body_contents=$msg->body;
 							$attachment_filesize=$msg->size();
 							$head=$msg->head;
-							if ($ARGV[0]=~/debugX/i) {print "Part content disposition is $sub_content_disposition\n Part content type is $sub_content_type.\n";}
-							if ($ARGV[0]=~/debugX/i) {print "Part content size is $attachment_filesize\n";}
+							if ($DBX) {print "Part content disposition is $sub_content_disposition\n Part content type is $sub_content_type.\n";}
+							if ($DBX) {print "Part content size is $attachment_filesize\n";}
 
 
 							## Check if the content-type is plain or html
 							if ($alt_email_text=~/Content\-Type\:\s+text\/html/i && $text_written==0) {
 								$message=$body_contents;
 								$content_transfer_encoding=$encoding_type;
-								if ($ARGV[0]=~/debug/i) {print "First acceptable content-type match is text/html.  Stripping headers and stripping tags from the body/message...\n";}
-								if ($ARGV[0]=~/debugX/i) {print "$k)\n***Pre-HTML strip:\n$message\n***\n";}
+								if ($DB) {print "First acceptable content-type match is text/html.  Stripping headers and stripping tags from the body/message...\n";}
+								if ($DBX) {print "$k)\n***Pre-HTML strip:\n$message\n***\n";}
 								StripHTML();
-								if ($ARGV[0]=~/debugX/i) {print "$k)\n***Post-HTML strip:\n$message\n***\n";}
+								if ($DBX) {print "$k)\n***Post-HTML strip:\n$message\n***\n";}
 								$text_written=1;
 							} elsif ($alt_email_text=~/Content\-Type\:\s+text\/plain/i && $text_written==0) {
-								if ($ARGV[0]=~/debug/i) {print "First acceptable content-type match is text/plain.  Stripping headers to get text...\n";}
+								if ($DB) {print "First acceptable content-type match is text/plain.  Stripping headers to get text...\n";}
 								$text_written=1;
 								$message=$body_contents;
 								$content_transfer_encoding=$encoding_type;
@@ -684,10 +739,10 @@ while (@row=$rslt->fetchrow_array) {
 								}
 								if ($sub_content_disposition=~/filename\=\"?(.*?)\"?$/i) {$attachment_filename=$&;}
 								if (length($attachment_filename)==0) {
-									if ($ARGV[0]=~/debug/i) {print "Couldn't find file name with content-disposition.  Searching full header for 'filename' value...\n";}
+									if ($DB) {print "Couldn't find file name with content-disposition.  Searching full header for 'filename' value...\n";}
 									if ($alt_email_text=~/filename\=\"?(.*?)\"?$/i) {$attachment_filename=$&;}
 									if (length($attachment_filename)==0) {
-										if ($ARGV[0]=~/debug/i) {print "Couldn't find file name anywhere in header.  Searching Content-Type for 'name' value...\n";}
+										if ($DB) {print "Couldn't find file name anywhere in header.  Searching Content-Type for 'name' value...\n";}
 										if ($sub_content_type=~/name\=\"?(.*?)\"?$/i) {$attachment_filename=$&;}
 									}
 								}
@@ -698,21 +753,21 @@ while (@row=$rslt->fetchrow_array) {
 								if ($attachment_fulltype && $attachment_fulltype ne "") {
 									if ($attachment_filename && $attachment_filename ne "") {
 										$body_contents=~s/(\"|\||\'|\;)/\\$&/g;  # This is a problem for POP3 (of course) in the attachment contents.
-										if ($ARGV[0]=~/debug/i) {print "Found valid attachment, type $attachment_type \n Attachment filename is $attachment_filename ($attachment_fulltype)\nFile can be stored in database....\n";}
+										if ($DB) {print "Found valid attachment, type $attachment_type \n Attachment filename is $attachment_filename ($attachment_fulltype)\nFile can be stored in database....\n";}
 										$ins_values[$attach_ct]="'$attachment_filename','$attachment_type','$encoding_type','$attachment_filesize','$attachment_fulltype','$body_contents'";
 										$output_ins_values[$attach_ct]="'$attachment_filename','$attachment_type','$encoding_type','$attachment_filesize','$attachment_fulltype','<FILE CONTENTS>'";
 										$attach_ct++;
 									} else {
-										if ($ARGV[0]=~/debug/i) {print "!!!!WARNING - Found valid attachment, type $attachment_type \n Attachment does not have file name.  Skipping...\n";}
+										if ($DB) {print "!!!!WARNING - Found valid attachment, type $attachment_type \n Attachment does not have file name.  Skipping...\n";}
 									}
 								} else {
-									if ($ARGV[0]=~/debug/i) {print "!!!!WARNING - Found attachment $attachment_filename, but is NOT a valid file type \n Attachment type is $attachment_type.  Skipping...\n";}
+									if ($DB) {print "!!!!WARNING - Found attachment $attachment_filename, but is NOT a valid file type \n Attachment type is $attachment_type.  Skipping...\n";}
 								}
 							}
 							# print "\n";
 						}
 					} else {
-						if ($ARGV[0]=~/debug/i) {print "!!!!WARNING - Mail is multi-part, but no boundary value was found.  Email will be ignored.\n";}
+						if ($DB) {print "!!!!WARNING - Mail is multi-part, but no boundary value was found.  Email will be ignored.\n";}
 					}
 				}
 				# print "\n";
@@ -749,8 +804,8 @@ while (@row=$rslt->fetchrow_array) {
 					$min=substr("00".$time_array[1], -2);
 					$sec=substr("00".$time_array[2], -2);
 					$date="$day $month $year $hour:$min:$sec";
-					if ($ARGV[0]=~/debug/) {print "Time stamp on email is $date\n";}
-				} elsif ($ARGV[0]=~/debug/) {print "WARNING: Time stamp on email is $date\n";}
+					if ($DB) {print "Time stamp on email is $date\n";}
+				} elsif ($DB) {print "WARNING: Time stamp on email is $date\n";}
 
 				$message=~s/(\"|\||\'|\;)/\\$&/g;
 				$email_to=~s/(\"|\||\'|\;)/\\$&/g;
@@ -809,7 +864,7 @@ while (@row=$rslt->fetchrow_array) {
 					$lead_id=$lead_id_row[0];
 				} else {
 					my $vicidial_list_stmt="insert into vicidial_list(list_id, email, comments, status) values('$default_list_id', '$email_from', '".substr($message,0,255)."', '$status')";
-					if ($ARGV[0]=~/debugX/i) {print $vicidial_list_stmt."\n";}
+					if ($DBX) {print $vicidial_list_stmt."\n";}
 					my $vicidial_list_rslt=$dbhA->prepare($vicidial_list_stmt);
 					if ($vicidial_list_rslt->execute()) {
 						$lead_id=$dbhA->last_insert_id(undef, undef, 'vicidial_list', 'lead_id');
@@ -820,7 +875,7 @@ while (@row=$rslt->fetchrow_array) {
 
 				## Insert a new record into vicidial_email_list.  This is ALWAYS done for new email messages.
 				my $ins_stmt="insert into vicidial_email_list(lead_id, protocol, email_date, email_to, email_from, email_from_name, subject, mime_type, content_type, content_transfer_encoding, x_mailer, sender_ip, message, email_account_id, group_id, status, direction) values('$lead_id', 'POP3', STR_TO_DATE('$date', '%d %b %Y %T'), '$email_to', '$email_from', '$email_from_name', '$subject', '$mime_type', '$content_type', '$content_transfer_encoding', '$x_mailer', '$sender_ip', trim('$message'), '$VARemail_ID', '$VARemail_groupid', '$status', 'INBOUND')";
-				if ($ARGV[0]=~/debugX/i) {print $ins_stmt."\n";}
+				if ($DBX) {print $ins_stmt."\n";}
 				my $ins_rslt=$dbhA->prepare($ins_stmt);
 				if ($ins_rslt->execute()) {
 					$pop->Delete($i);
@@ -838,27 +893,27 @@ while (@row=$rslt->fetchrow_array) {
 						$attachment_ins_rslt=$dbhA->prepare($attachment_ins_stmt);
 						$attachment_ins_rslt->execute();
 						$output_ins_stmt="insert into inbound_email_attachments(email_row_id, filename, file_type, file_encoding, file_size, file_extension, file_contents) VALUES ".substr($output_multistmt,0,-1);
-						if ($ARGV[0]=~/debugX/i) {print $output_ins_stmt."\n";}
+						if ($DBX) {print $output_ins_stmt."\n";}
 					}
-					if ($ARGV[0]=~/debug/i) {print "\n $attach_ct attachments in email\n";}
+					if ($DB) {print "\n $attach_ct attachments in email\n";}
 				} else {
 					die "Email insert failed.  Check SQL in:\n $ins_stmt\n";
 				}
 			}
 
 			#### END CYCLING THROUGH EMAILS
-			if ($ARGV[0]=~/debug/i) {
-				if ($ARGV[0]=~/debugX/i) {
+			if ($DB) {
+				if ($DBX) {
 					print "Iteration #$q - found ".($pop->Count()+0)." new messages\n";
 				}
 			}
 
-			if ($ARGV[0]=~/debugX/i) {
+			if ($DBX) {
 				print "Closing connection to finalize deletion of emails\n";
 			}
 			$pop->Close();
 			# sleep($sleep_time);
-			if ($ARGV[0]=~/debugX/i) {
+			if ($DBX) {
 				print "Reconnecting to email account...\n";
 			}
 			$pop = new Mail::POP3Client( USER     => "$VARemail_user",
@@ -875,6 +930,14 @@ while (@row=$rslt->fetchrow_array) {
 		}
 	}
 }
+
+### calculate time to run script ###
+$secY = time();
+$secZ = ($secY - $secX);
+$secZm = ($secZ /60);
+
+if ($DBX) {print "script execution time in seconds: $secZ     minutes: $secZm\n";}
+
 
 sub StripHTML()
 {
