@@ -18676,15 +18676,15 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Wrap Up Message: </td><td align=left><input type=text name=wrapup_message size=40 maxlength=255 value=\"$wrapup_message\">$NWB#campaigns-wrapup_message$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Dead Call Max Seconds: </td><td align=left><input type=text name=dead_max size=5 maxlength=3 value=\"$dead_max\">$NWB#campaigns-dead_max$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Dead Call Max Seconds: </td><td align=left><input type=text name=dead_max size=5 maxlength=4 value=\"$dead_max\">$NWB#campaigns-dead_max$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Dead Call Max Status: </td><td align=left><input type=text name=dead_max_dispo size=7 maxlength=6 value=\"$dead_max_dispo\">$NWB#campaigns-dead_max_dispo$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Dispo Call Max Seconds: </td><td align=left><input type=text name=dispo_max size=5 maxlength=3 value=\"$dispo_max\">$NWB#campaigns-dispo_max$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Dispo Call Max Seconds: </td><td align=left><input type=text name=dispo_max size=5 maxlength=4 value=\"$dispo_max\">$NWB#campaigns-dispo_max$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Dispo Call Max Status: </td><td align=left><input type=text name=dispo_max_dispo size=7 maxlength=6 value=\"$dispo_max_dispo\">$NWB#campaigns-dispo_max_dispo$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Pause Max Seconds: </td><td align=left><input type=text name=pause_max size=5 maxlength=3 value=\"$pause_max\">$NWB#campaigns-pause_max$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Agent Pause Max Seconds: </td><td align=left><input type=text name=pause_max size=5 maxlength=4 value=\"$pause_max\">$NWB#campaigns-pause_max$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#8EBCFD><td align=right>Use Internal DNC List: </td><td align=left><select size=1 name=use_internal_dnc><option>Y</option><option>N</option><option>AREACODE</option><option SELECTED>$use_internal_dnc</option></select>$NWB#campaigns-use_internal_dnc$NWE</td></tr>\n";
 
