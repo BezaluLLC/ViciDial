@@ -2,7 +2,7 @@
 # admin_listloader_fourth_gen.php - version 2.8
 #  (based upon - new_listloader_superL.php script)
 # 
-# Copyright (C) 2013  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # ViciDial web-based lead loader from formatted file
 # 
@@ -53,10 +53,11 @@
 # 130719-1914 - Added SQL to filter by template statuses, if template has specific statuses to dedupe against
 # 130802-0619 - Added status deduping option without template
 # 130824-2322 - Changed to mysqli PHP functions
+# 140214-1022 - Fixed status dedupe bug
 #
 
-$version = '2.8-51';
-$build = '130824-2322';
+$version = '2.8-52';
+$build = '140214-1022';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -319,6 +320,18 @@ else
 $LOCAL_GMT_OFF = $SERVER_GMT;
 $LOCAL_GMT_OFF_STD = $SERVER_GMT;
 
+$dedupe_status_select='';
+$stmt="SELECT status, status_name from vicidial_statuses order by status;";
+$rslt=mysql_to_mysqli($stmt, $link);
+$stat_num_rows = mysqli_num_rows($rslt);
+$snr_count=0;
+while ($stat_num_rows > $snr_count) 
+	{
+	$row=mysqli_fetch_row($rslt);
+	$dedupe_status_select .= "\t\t\t<option value='$row[0]'>$row[0] - $row[1]</option>\n";
+	$snr_count++;
+	}
+
 #if ($DB) {print "SEED TIME  $secX      :   $year-$mon-$mday $hour:$min:$sec  LOCAL GMT OFFSET NOW: $LOCAL_GMT_OFF\n";}
 
 
@@ -573,19 +586,7 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 		<span id='statuses_display'>
 			<select id='dedupe_statuses' name='dedupe_statuses[]' size=5 multiple>
 			<option value='--ALL--' selected>--ALL DISPOSITIONS--</option>
-			<?php
-			$stmt="SELECT status, status_name from vicidial_statuses order by status;";
-			$rslt=mysql_to_mysqli($stmt, $link);
-			$num_rows = mysqli_num_rows($rslt);
-
-			$count=0;
-			while ( $num_rows > $count ) 
-				{
-				$row = mysqli_fetch_row($rslt);
-				echo "\t\t\t<option value='$row[0]'>$row[0] - $row[1]</option>\n";
-				$count++;
-				}
-			?>
+			<?php echo $dedupe_status_select ?>
 			</select></font>		
 		</span>
 		</td>

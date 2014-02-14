@@ -84,10 +84,12 @@
 # 140107-2143 - Added webserver and url logging
 # 140124-1057 - Added callid_info function
 # 140206-1205 - Added update_user function
+# 140211-1056 - Added server_refresh function
+# 140214-1540 - Added check_phone_number function
 #
 
-$version = '2.8-60';
-$build = '140206-1205';
+$version = '2.8-62';
+$build = '140214-1540';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -348,6 +350,8 @@ if (isset($_GET["campaign_rank"]))			{$campaign_rank=$_GET["campaign_rank"];}
 	elseif (isset($_POST["campaign_rank"]))	{$campaign_rank=$_POST["campaign_rank"];}
 if (isset($_GET["campaign_grade"]))				{$campaign_grade=$_GET["campaign_grade"];}
 	elseif (isset($_POST["campaign_grade"]))	{$campaign_grade=$_POST["campaign_grade"];}
+if (isset($_GET["local_call_time"]))				{$local_call_time=$_GET["local_call_time"];}
+	elseif (isset($_POST["local_call_time"]))	{$local_call_time=$_POST["local_call_time"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -507,6 +511,7 @@ if ($non_latin < 1)
 	$delete_user = preg_replace('/[^A-Z]/','',$delete_user);
 	$campaign_rank = preg_replace('/[^-_0-9]/','',$campaign_rank);
 	$campaign_grade = preg_replace('/[^0-9]/','',$campaign_grade);
+	$local_call_time = preg_replace('/[^-_0-9a-zA-Z]/','',$local_call_time);
 	}
 else
 	{
@@ -3252,6 +3257,80 @@ if ($function == 'update_phone_alias')
 ### END update_phone_alias
 ################################################################################
 
+
+
+
+################################################################################
+### server_refresh - forces a conf file refresh on all telco servers in the cluster
+################################################################################
+if ($function == 'server_refresh')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "server_refresh USER DOES NOT HAVE PERMISSION TO REFRESH SERVERS";
+			$data = "$allowed_user";
+			echo "$result: $result_reason: |$user|$data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if (!preg_match("/REFRESH/",$stage))
+				{
+				$result = 'ERROR';
+				$result_reason = "server_refresh YOU MUST USE ALL REQUIRED FIELDS";
+				$data = "$alias_id|$alias_name|$phone_logins";
+				echo "$result: $result_reason: |$user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="UPDATE system_settings set reload_timestamp=NOW();";
+				$rslt=mysql_to_mysqli($stmt, $link);
+
+				$stmt="UPDATE servers SET rebuild_conf_files='Y';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				if ($DB) {echo "|$stmt|\n";}
+				$affected_rows = mysqli_affected_rows($link);
+
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = preg_replace('/;/', '', $SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='SERVERS', event_type='OTHER', record_id='refresh', event_code='ADMIN API SERVERS REFRESH', event_sql=\"$SQL_log\", event_notes='servers: $affected_rows';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+
+				$result = 'SUCCESS';
+				$result_reason = "server_refresh SERVER REFRESH HAS BEEN TRIGGERED";
+				$data = "$affected_rows";
+				echo "$result: $result_reason - $user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END server_refresh
+################################################################################
 
 
 
@@ -6873,6 +6952,273 @@ if ($function == 'update_lead')
 	}
 ################################################################################
 ### END update_lead
+################################################################################
+
+
+
+
+
+
+
+################################################################################
+### check_phone_number - allows you to check if a phone number is valid and dialable
+################################################################################
+if ($function == 'check_phone_number')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and user_level > 7 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_check=$row[0];
+
+		if ($allowed_check < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "check_phone_number USER DOES NOT HAVE PERMISSION TO CHECK PHONE NUMBERS";
+			echo "$result: $result_reason: |$user|$modify_leads|\n";
+			$data = "$modify_leads";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			$stmt="SELECT count(*) from vicidial_call_times where call_time_id='$local_call_time';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			$valid_call_time=$row[0];
+
+			if ($valid_call_time < 1)
+				{
+				$result = 'ERROR';
+				$result_reason = "check_phone_number THIS IS NOT A VALID CALL TIME";
+				echo "$result: $result_reason: |$user|$local_call_time|\n";
+				$data = "$valid_call_time";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				if (strlen($phone_code)<1) {$phone_code='1';}
+				if (strlen($tz_method)<1) {$tz_method='AREACODE';}
+				if ( ($nanpa_ac_prefix_check == 'Y') or (preg_match("/NANPA/i",$tz_method)) )
+					{
+					$stmt="SELECT count(*) from vicidial_nanpa_prefix_codes;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
+					$vicidial_nanpa_prefix_codes_count = $row[0];
+					if ($vicidial_nanpa_prefix_codes_count < 10)
+						{
+						$nanpa_ac_prefix_check='N';
+						$tz_method = preg_replace("/NANPA/",'',$tz_method);
+
+						$result = 'ERROR';
+						$result_reason = "check_phone_number NANPA options disabled, NANPA prefix data not loaded";
+						echo "$result: $result_reason - $vicidial_nanpa_prefix_codes_count|$user\n";
+						$data = "$inserted_alt_phones|$lead_id";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+
+						exit;
+						}
+					}
+
+				$valid_number=1;
+				if ( (strlen($phone_number)<6) || (strlen($phone_number)>16) )
+					{
+					$valid_number=0;
+					$result_reason = "check_phone_number INVALID PHONE NUMBER LENGTH";
+					}
+				if ( ($usacan_prefix_check=='Y') and ($valid_number > 0) )
+					{
+					$USprefix = 	substr($phone_number, 3, 1);
+					if ($DB>0) {echo "DEBUG: check_phone_number prefix check - $USprefix|$phone_number\n";}
+					if ($USprefix < 2)
+						{
+						$valid_number=0;
+						$result_reason = "check_phone_number INVALID PHONE NUMBER PREFIX";
+						}
+					}
+				if ( ($usacan_areacode_check=='Y') and ($valid_number > 0) )
+					{
+					$phone_areacode = substr($phone_number, 0, 3);
+					$stmt = "select count(*) from vicidial_phone_codes where areacode='$phone_areacode' and country_code='1';";
+					if ($DB>0) {echo "DEBUG: check_phone_number areacode check query - $stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
+					$valid_number=$row[0];
+					if ($valid_number < 1)
+						{
+						$result_reason = "check_phone_number INVALID PHONE NUMBER AREACODE";
+						}
+					}
+				if ( ($nanpa_ac_prefix_check=='Y') and ($valid_number > 0) )
+					{
+					$phone_areacode = substr($phone_number, 0, 3);
+					$phone_prefix = substr($phone_number, 3, 3);
+					$stmt = "SELECT count(*) from vicidial_nanpa_prefix_codes where areacode='$phone_areacode' and prefix='$phone_prefix';";
+					if ($DB>0) {echo "DEBUG: check_phone_number areacode check query - $stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
+					$valid_number=$row[0];
+					if ($valid_number < 1)
+						{
+						$result_reason = "check_phone_number INVALID PHONE NUMBER NANPA AREACODE PREFIX";
+						}
+					}
+				if ($valid_number < 1)
+					{
+					$result = 'ERROR';
+					echo "$result: $result_reason - $phone_number|$user\n";
+					$data = "$phone_number";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					### START checking for DNC if defined ###
+					if ( ($dnc_check == 'Y') or ($dnc_check == 'AREACODE') )
+						{
+						if ($DB>0) {echo "DEBUG: Checking for system DNC\n";}
+						if ($dnc_check == 'AREACODE')
+							{
+							$phone_areacode = substr($phone_number, 0, 3);
+							$phone_areacode .= "XXXXXXX";
+							$stmt="SELECT count(*) from vicidial_dnc where phone_number IN('$phone_number','$phone_areacode');";
+							}
+						else
+							{$stmt="SELECT count(*) from vicidial_dnc where phone_number='$phone_number';";}
+						if ($DB>0) {echo "DEBUG: check_phone_number query - $stmt\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$row=mysqli_fetch_row($rslt);
+						$dnc_found=$row[0];
+
+						if ($dnc_found > 0) 
+							{
+							$result = 'ERROR';
+							$result_reason = "check_phone_number PHONE NUMBER IN DNC";
+							echo "$result: $result_reason - $phone_number|$user\n";
+							$data = "$phone_number";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						}
+					if ( ($campaign_dnc_check == 'Y') or ($campaign_dnc_check == 'AREACODE') )
+						{
+						if ($DB>0) {echo "DEBUG: Checking for campaign DNC\n";}
+
+						$stmt="SELECT use_other_campaign_dnc from vicidial_campaigns where campaign_id='$campaign_id';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$row=mysqli_fetch_row($rslt);
+						$use_other_campaign_dnc =	$row[0];
+						$temp_campaign_id = $campaign_id;
+						if (strlen($use_other_campaign_dnc) > 0) {$temp_campaign_id = $use_other_campaign_dnc;}
+
+						if ($campaign_dnc_check == 'AREACODE')
+							{
+							$phone_areacode = substr($phone_number, 0, 3);
+							$phone_areacode .= "XXXXXXX";
+							$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number IN('$phone_number','$phone_areacode') and campaign_id='$temp_campaign_id';";
+							}
+						else
+							{$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number='$phone_number' and campaign_id='$temp_campaign_id';";}
+						if ($DB>0) {echo "DEBUG: check_phone_number query - $stmt\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$row=mysqli_fetch_row($rslt);
+						$dnc_found=$row[0];
+
+						if ($dnc_found > 0) 
+							{
+							$result = 'ERROR';
+							$result_reason = "check_phone_number PHONE NUMBER IN CAMPAIGN DNC";
+							echo "$result: $result_reason - $phone_number|$campaign_id|$user\n";
+							$data = "$phone_number|$campaign_id";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						}
+					### END checking for DNC if defined ###
+					
+					$tz_run=0;
+					$result_reason='';
+					$gmt_offset='';   $dialable='0';
+					if (preg_match("/AREACODE/i",$tz_method))
+						{
+						$tz_run++;
+						### get current gmt_offset of the phone_number
+						$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,'',$postal_code,$owner,$USprefix);
+
+						### call function to determine if lead is dialable
+						$dialable = dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state);
+
+						$result_reason .= "AREACODE: $dialable|$gmt_offset#";
+						}
+					$gmt_offset='';   $dialable='0';
+					if (preg_match("/POSTAL/i",$tz_method))
+						{
+						$tz_run++;
+
+						if ( (strlen($postal_code)>4) and (strlen($postal_code)< 6) )
+							{
+							### get current gmt_offset of the phone_number
+							$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,'POSTAL',$postal_code,$owner,$USprefix);
+
+							### call function to determine if lead is dialable
+							$dialable = dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state);
+							}
+
+						$result_reason .= "POSTAL: $dialable|$gmt_offset#";
+						}
+					$gmt_offset='';   $dialable='0';
+					if (preg_match("/TZCODE/i",$tz_method))
+						{
+						$tz_run++;
+
+						if ( (strlen($owner)>0) and (strlen($owner)< 7) )
+							{
+							### get current gmt_offset of the phone_number
+							$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,'TZCODE',$postal_code,$owner,$USprefix);
+
+							### call function to determine if lead is dialable
+							$dialable = dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state);
+							}
+
+						$result_reason .= "TZCODE: $dialable|$gmt_offset#";
+						}
+					$gmt_offset='';   $dialable='0';
+					if (preg_match("/NANPA/i",$tz_method))
+						{
+						$tz_run++;
+						### get current gmt_offset of the phone_number
+						$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,'NANPA',$postal_code,$owner,$USprefix);
+
+						### call function to determine if lead is dialable
+						$dialable = dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state);
+
+						$result_reason .= "NANPA: $dialable|$gmt_offset#";
+						}
+
+					$result = 'NOTICE';
+					$result_reason .= "PHONE: $phone_number|$phone_code|$postal_code|$state|$owner|";
+					echo "$result_reason\n";
+					$data = "";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
+			}
+		exit;
+		}
+	}
+################################################################################
+### END check_phone_number
 ################################################################################
 
 

@@ -204,3 +204,7 @@ UPDATE system_settings SET db_schema_version='1367',db_schema_update_date=NOW() 
 CREATE UNIQUE INDEX vlca_user_campaign_id on vicidial_campaign_agents (user, campaign_id);
 
 UPDATE system_settings SET db_schema_version='1368',db_schema_update_date=NOW() where db_schema_version < 1368;
+
+ALTER TABLE system_settings ADD reload_timestamp DATETIME;
+
+UPDATE system_settings SET db_schema_version='1369',db_schema_update_date=NOW(),reload_timestamp=NOW() where db_schema_version < 1369;

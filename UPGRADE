@@ -186,6 +186,8 @@ OTHER CHANGES:
 32. Added Non-Agent API function update_user to allow updating of the major
 	user fields
 
+33. Added Non-Agent API functions for check_phone_number and server_refresh
+
 
 
 

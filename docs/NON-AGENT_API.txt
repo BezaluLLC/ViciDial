@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2014-02-06
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2014-02-14
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -36,6 +36,8 @@ user_group_status - real-time status of one or more user groups
 in_group_status - real-time status of one or more in groups
 agent_status - real-time status of one user
 callid_info - information about a call based upon the caller_code or call ID
+server_refresh - forces a conf file refresh on all telco servers in the cluster
+check_phone_number - allows you to check if a phone number is valid and dialable
 
 
 New scripts:
@@ -88,6 +90,8 @@ Changes:
 130617-2232 - Added real-time sub-statuses to output of agent_status function
 140124-1057 - Added callid_info function
 140206-1205 - Added update_user function
+140211-1056 - Added server_refresh function
+140214-1540 - Added check_phone_number function
 
 
 API Functions use the 'function' variable
@@ -1052,6 +1056,26 @@ SUCCESS: update_phone_alias PHONE ALIAS HAS BEEN DELETED - 6666|x100|
 
 
 --------------------------------------------------------------------------------
+server_refresh - forces a conf file refresh on all telco servers in the cluster
+
+NOTE: api user for this function must have user_level set to 8 or higher and "ast admin access" enabled
+
+REQUIRED FIELDS-
+stage -		"REFRESH"
+
+Example URL string for API calls:
+http://server/vicidial/non_agent_api.php?source=test&function=server_refresh&user=6666&pass=1234&stage=REFRESH
+
+Example responses:
+ERROR: server_refresh USER DOES NOT HAVE PERMISSION TO REFRESH SERVERS - 6666|0
+ERROR: server_refresh YOU MUST USE ALL REQUIRED FIELDS - 6666|
+SUCCESS: server_refresh SERVER REFRESH HAS BEEN TRIGGERED - 6666|1
+
+
+
+
+
+--------------------------------------------------------------------------------
 add_list - adds a list to the system
 
 NOTE: api user for this function must have user_level set to 8 or higher and "modify lists" enabled
@@ -1157,3 +1181,60 @@ NOTICE: update_list LEADS IN LIST HAVE BEEN DELETED - 6666|1101|324
 
 ERROR: NO FUNCTION SPECIFIED
 
+
+
+
+
+--------------------------------------------------------------------------------
+check_phone_number - allows you to check if a phone number is valid and dialable
+
+NOTE: api user for this function must have user_level set to 8 or higher
+
+REQUIRED FIELDS-
+phone_number -		must be all numbers, 6-16 digits
+phone_code -		must be all numbers, 1-4 digits, defaults to 1 if not set
+local_call_time -	must be a valid call time ID in the system
+
+OPTIONAL FIELDS-
+postal_code -		must be 5 digits. Only works for USA zipcodes, needed for POSTAL tz_method
+state -			must be 2 letters. Only needed if state call time rules enabled
+owner -			must be 2-5 letters. Only needed if using TZCODE tz_method
+
+SETTINGS FIELDS-
+dnc_check -		Y, N or AREACODE, default is N
+campaign_dnc_check -	Y, N or AREACODE, default is N
+campaign_id -		2-8 Character campaign ID, required if using campaign_dnc_check
+usacan_prefix_check -	Y or N, default is N. Check for a valid 4th digit for USA and Canada phone numbers (cannot be 0 or 1)
+usacan_areacode_check -	Y or N, default is N. Check for a valid areacode for USA and Canada phone numbers
+nanpa_ac_prefix_check -	Y or N, default is N. Check for a valid NANPA areacode and prefix, if optional NANPA data is on the system
+tz_method -		<empty>, POSTAL, TZCODE, NANPA or AREACODE, default is <empty> which will use the country code and AREACODE for time zone lookups
+				AREACODE relies on the phone number's areacode
+				POSTAL relies on the postal_code field
+				TZCODE relies on the owner field being populated with a proper time zone code
+				NANPA relies on the optional NANPA areacode prefix data being loaded on your system
+				(NOTE: you can do more than one method at once, i.e.: "POSTALTZCODE")
+
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=check_phone_number&phone_number=7275551111&call_time=9am-9pm
+
+http://server/vicidial/non_agent_api.php?DB=0&source=test&function=check_phone_number&user=6666&pass=1234&owner=GST&postal_code=81009&phone_number=3125551212&local_call_time=9am-9pm&tz_method=AREACODEPOSTALNANPATZCODE
+
+
+Example responses:
+
+ERROR: check_phone_number USER DOES NOT HAVE PERMISSION TO CHECK PHONE NUMBERS - |6666|0|
+ERROR: check_phone_number THIS IS NOT A VALID CALL TIME - |6666|badct|
+ERROR: check_phone_number NANPA options disabled, NANPA prefix data not loaded - 0|6666
+ERROR: check_phone_number INVALID PHONE NUMBER LENGTH - 72755|6666 
+ERROR: check_phone_number INVALID PHONE NUMBER PREFIX - 72755|6666 
+ERROR: check_phone_number INVALID PHONE NUMBER AREACODE - 72755|6666 
+ERROR: check_phone_number INVALID PHONE NUMBER NANPA AREACODE PREFIX - 7275551212|6666
+ERROR: check_phone_number PHONE NUMBER IN DNC - 7275551112|6666
+
+A success response will show the results for each tz_method used(with 0 or 1 for dialable and the gmt-offset) followed by a hash"#" and then the phone information after:
+AREACODE: 1|-6#PHONE: 3125551212|1||||
+AREACODE: 1|-6#POSTAL: 1|-7.0#TZCODE: 0|10#NANPA: 1|-6#PHONE: 3125551212|1|81009||GST|
+
+
+ERROR: NO FUNCTION SPECIFIED

@@ -84,10 +84,11 @@
 # 130620-2303 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-2008 - Changed to mysqli PHP functions
 # 131120-1543 - Fixed small display bug when customer phone view is enabled
+# 140213-1705 - Fixed division by zero bug
 #
 
-$version = '2.8-73';
-$build = '131120-1543';
+$version = '2.8-74';
+$build = '140213-1705';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -1458,16 +1459,34 @@ if ($CARRIERstats > 0)
 			if (strlen($FTminute_count[$print_ctp])<1) {$FTminute_count[$print_ctp]=0;}
 			if (strlen($FIVEminute_count[$print_ctp])<1) {$FIVEminute_count[$print_ctp]=0;}
 			if (strlen($ONEminute_count[$print_ctp])<1) {$ONEminute_count[$print_ctp]=0;}
+			
+			if ( ($TFhour_count[$print_ctp] < 1) or ($TFhour_total < 1) ) {$TFhour_pct=0;}
+			else {$TFhour_pct = (100*($TFhour_count[$print_ctp]/$TFhour_total));}
+
+			if ( ($SIXhour_count[$print_ctp] < 1) or ($SIXhour_total < 1) ) {$SIXhour_pct=0;}
+			else {$SIXhour_pct = (100*($SIXhour_count[$print_ctp]/$SIXhour_total));}
+
+			if ( ($ONEhour_count[$print_ctp] < 1) or ($ONEhour_total < 1) ) {$ONEhour_pct=0;}
+			else {$ONEhour_pct = (100*($ONEhour_count[$print_ctp]/$ONEhour_total));}
+
+			if ( ($FTminute_count[$print_ctp] < 1) or ($FTminute_total < 1) ) {$TFminute_pct=0;}
+			else {$TFminute_pct = (100*($FTminute_count[$print_ctp]/$FTminute_total));}
+
+			if ( ($FIVEminute_count[$print_ctp] < 1) or ($FIVEminute_total < 1) ) {$FIVEminute_pct=0;}
+			else {$FIVEminute_pct = (100*($FIVEminute_count[$print_ctp]/$FIVEminute_total));}
+
+			if ( ($ONEminute_count[$print_ctp] < 1) or ($ONEminute_total < 1) ) {$ONEminute_pct=0;}
+			else {$ONEminute_pct = (100*($ONEminute_count[$print_ctp]/$ONEminute_total));}
 
 			$CARRIERstatsHTML .= "<TR>";
 			$CARRIERstatsHTML .= "<TD BGCOLOR=white><font size=2>&nbsp;</TD>";
 			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=LEFT><font size=2>&nbsp; &nbsp; $TFhour_status[$print_ctp] </TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $TFhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", (100*($TFhour_count[$print_ctp]/$TFhour_total)))."%</font></TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $SIXhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", (100*($SIXhour_count[$print_ctp]/$SIXhour_total)))."%</font></TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $ONEhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", (100*($ONEhour_count[$print_ctp]/$ONEhour_total)))."%</font></TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $FTminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", (100*($FTminute_count[$print_ctp]/$FTminute_total)))."%</font></TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $FIVEminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", (100*($FIVEminute_count[$print_ctp]/$FIVEminute_total)))."%</font></TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $ONEminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", (100*($ONEminute_count[$print_ctp]/$ONEminute_total)))."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $TFhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $TFhour_pct)."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $SIXhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $SIXhour_pct)."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $ONEhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $ONEhour_pct)."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $FTminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $TFminute_pct)."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $FIVEminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $FIVEminute_pct)."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $ONEminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $ONEminute_pct)."%</font></TD>";
 			$CARRIERstatsHTML .= "</TR>";
 			$print_ctp++;
 			}
