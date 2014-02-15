@@ -39,6 +39,7 @@
 # 130901-0818 - Changed to mysqli PHP functions
 # 140108-0730 - Added webserver and hostname to report logging
 # 140208-2033 - Added List select option
+# 140215-0704 - Bug fixes related to Lists selection
 #
 
 $startMS = microtime();
@@ -360,10 +361,13 @@ while($i < $list_id_ct)
 
 	$i++;
 	}
+
 if ( (preg_match('/\-\-ALL\-\-/',$list_id_string) ) or ($list_id_ct < 1) or (strlen($list_id_string) < 2) )
 	{
 	$list_id_SQL = "";
 	$list_id_drop_SQL = "";
+	$VL_INC="";
+	$skip_productivity_calc=0;
 	}
 else 
 	{
@@ -372,6 +376,7 @@ else
 	$list_id_SQLandVALJOIN = "and vicidial_agent_log.lead_id=vicidial_list.lead_id and vicidial_list.list_id IN($list_id_SQL)";
 	$list_id_SQLandUCLJOIN = "and user_call_log.lead_id=vicidial_list.lead_id and vicidial_list.list_id IN($list_id_SQL)";
 	$list_id_SQL = "where list_id IN($list_id_SQL)";
+	$skip_productivity_calc=1;
 	}
 
 
@@ -927,7 +932,11 @@ else
 		{$AVG_ANSWERagent_non_pause_sec=0;}
 	$AVG_ANSWERagent_non_pause_sec = sprintf("%10s", $AVG_ANSWERagent_non_pause_sec);
 
-	$OUToutput .= "Productivity Rating:                          $AVG_ANSWERagent_non_pause_sec\n";
+	if ($skip_productivity_calc) {
+		$OUToutput .= "Productivity Rating:                                 N/A\n";
+	} else {
+		$OUToutput .= "Productivity Rating:                          $AVG_ANSWERagent_non_pause_sec\n";
+	}
 
 
 
