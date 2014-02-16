@@ -1,7 +1,7 @@
 <?php
 # manager_send.php    version 2.8
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to insert records into the vicidial_manager table to signal Actions to an asterisk server
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -118,12 +118,13 @@
 # 130705-1521 - Added optional encrypted passwords compatibility
 # 130802-1021 - Changed to PHP mysqli functions
 # 130926-1755 - Added queuemetrics_record_hold option
+# 140215-2057 - Added several variable options for QM socket URL
 #
 
-$version = '2.8-65';
-$build = '130926-1755';
+$version = '2.8-66';
+$build = '140215-2057';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=127;
+$mysql_log_count=128;
 $one_mysql_log=0;
 
 require_once("dbconnect_mysqli.php");
@@ -775,6 +776,39 @@ if ($ACTION=="Hangup")
 
 								if ( ($queuemetrics_socket == 'CONNECT_COMPLETE') and (strlen($queuemetrics_socket_url) > 10) )
 									{
+									if (preg_match("/--A--/",$queuemetrics_socket_url))
+										{
+										##### grab the data from vicidial_list for the lead_id
+										$stmt="SELECT vendor_lead_code,list_id,phone_code,phone_number,title,first_name,middle_initial,last_name,postal_code FROM vicidial_list where lead_id='$CLlead_id' LIMIT 1;";
+										$rslt=mysql_to_mysqli($stmt, $link);
+											if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02128',$user,$server_ip,$session_name,$one_mysql_log);}
+										if ($DB) {echo "$stmt\n";}
+										$list_lead_ct = mysqli_num_rows($rslt);
+										if ($list_lead_ct > 0)
+											{
+											$row=mysqli_fetch_row($rslt);
+											$vendor_id		= urlencode(trim($row[0]));
+											$list_id		= urlencode(trim($row[1]));
+											$phone_code		= urlencode(trim($row[2]));
+											$phone_number	= urlencode(trim($row[3]));
+											$title			= urlencode(trim($row[4]));
+											$first_name		= urlencode(trim($row[5]));
+											$middle_initial	= urlencode(trim($row[6]));
+											$last_name		= urlencode(trim($row[7]));
+											$postal_code	= urlencode(trim($row[8]));
+											}
+										$queuemetrics_socket_url = preg_replace('/^VAR/','',$queuemetrics_socket_url);
+										$queuemetrics_socket_url = preg_replace('/--A--lead_id--B--/i',"$lead_id",$queuemetrics_socket_url);
+										$queuemetrics_socket_url = preg_replace('/--A--vendor_id--B--/i',"$vendor_id",$queuemetrics_socket_url);
+										$queuemetrics_socket_url = preg_replace('/--A--vendor_lead_code--B--/i',"$vendor_id",$queuemetrics_socket_url);
+										$queuemetrics_socket_url = preg_replace('/--A--list_id--B--/i',"$list_id",$queuemetrics_socket_url);
+										$queuemetrics_socket_url = preg_replace('/--A--phone_number--B--/i',"$phone_number",$queuemetrics_socket_url);
+										$queuemetrics_socket_url = preg_replace('/--A--title--B--/i',"$title",$queuemetrics_socket_url);
+										$queuemetrics_socket_url = preg_replace('/--A--first_name--B--/i',"$first_name",$queuemetrics_socket_url);
+										$queuemetrics_socket_url = preg_replace('/--A--middle_initial--B--/i',"$middle_initial",$queuemetrics_socket_url);
+										$queuemetrics_socket_url = preg_replace('/--A--last_name--B--/i',"$last_name",$queuemetrics_socket_url);
+										$queuemetrics_socket_url = preg_replace('/--A--postal_code--B--/i',"$postal_code",$queuemetrics_socket_url);
+										}
 									$socket_send_data_begin='?';
 									$socket_send_data = "time_id=$StarTtime&call_id=$CalLCID&queue=$CLcampaign_id&agent=Agent/$user&verb=COMPLETEAGENT&data1=$CLstage&data2=$secondS&data3=$CLqueue_position$data4SS";
 									if (preg_match("/\?/",$queuemetrics_socket_url))

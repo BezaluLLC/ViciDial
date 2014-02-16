@@ -188,6 +188,9 @@ OTHER CHANGES:
 
 33. Added Non-Agent API functions for check_phone_number and server_refresh
 
+34. Added Agent API functions for preview_dial_action while previewing or 
+	manual alt dialing a lead
+
 
 
 

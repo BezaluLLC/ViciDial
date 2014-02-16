@@ -15,6 +15,7 @@ external_hangup - sends command to hangup the current phone call for one specifi
 external_status - sends command to set the disposition for one specific agent and move on to next call
 external_pause - sends command to pause/resume an agent now if not on a call, or pause after their next call if on call
 external_dial - sends command to manually dial a number on the agent's screen
+preview_dial_action - sends a SKIP, DIALONLY, ALTDIAL, ADR3DIAL or FINISH when a lead is being previewed or manual alt dial
 external_add_lead - Adds a lead in the manual dial list of the campaign for logged-in agent
 change_ingroups - changes the selected in-groups for a logged-in agent
 update_fields - changes values for selected data fields in the agent interface
@@ -263,6 +264,36 @@ ERROR: phone_number is already in this agents manual dial queue - 6666|727555121
 ERROR: lead_id is not valid - 6666|1234567
 ERROR: phone number is not valid - 6666||1234567|
 SUCCESS: external_dial function set - 7275551212|6666|1|YES|NO|YES|123456|1232020456|9|TESTING|7275551211|
+
+
+
+
+
+--------------------------------------------------------------------------------
+preview_dial_action - 
+
+DESCRIPTION:
+sends a SKIP, DIALONLY, ALTDIAL, ADR3DIAL or FINISH when a lead is being previewed or in Manual Alt Dial
+
+VALUES:
+agent_user -
+ REQUIRED alphanumeric string for active agent user
+
+value - 
+ One of the following actions (SKIP, DIALONLY, ALTDIAL, ADR3DIAL or FINISH)
+
+EXAMPLE URLS:
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=preview_dial_action&value=SKIP
+
+RESPONSES:
+ERROR: preview_dial_action not valid - 7275551212|1|YES|6666
+ERROR: no user found - 6666
+ERROR: agent_user is not logged in - 6666
+ERROR: agent_user is not allowed to place manual dial calls - 6666
+ERROR: preview dialing not allowed on this campaign - 6666|TESTING|DISABLED
+ERROR: preview dial skipping not allowed on this campaign - 6666|TESTING|PREVIEW_ONLY
+ERROR: alt number dialing not allowed on this campaign - 6666|TESTING|N
+SUCCESS: preview_dial_action function set - DIALONLY|6666|DIALONLY
 
 
 
@@ -641,7 +672,7 @@ ERROR: agent_user is not logged in - 6666
 ERROR: agent_user does not have a live call - 6666
 ERROR: caller_id_number from group_alias is not valid - 6666|TESTING|123
 ERROR: group_alias is not valid - 6666|TESTING
-SUCCESS: transfer_conference function set - LOCAL_CLOSER|SALESLINE||YES|6666
+SUCCESS: transfer_conference function set - LOCAL_CLOSER|SALESLINE||YES|6666|M2141842580000000044|
 
 
 

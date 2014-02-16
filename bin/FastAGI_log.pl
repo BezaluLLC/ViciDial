@@ -25,7 +25,7 @@
 # exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})
 # 
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 61010-1007 - First test build
@@ -69,6 +69,7 @@
 # 130802-0739 - Added CAMPCUST dialplan variable definition for outbound calls
 # 130925-1820 - Added variable filter to prevent DID SQL injection attack
 # 131209-1559 - Added called_count logging
+# 140215-2118 - Added several variable options for QM socket URL
 #
 
 # defaults for PreFork
@@ -1181,6 +1182,43 @@ sub process_request
 
 									if ( ($queuemetrics_socket =~ /CONNECT_COMPLETE/) and (length($queuemetrics_socket_url) > 10) )
 										{
+										if ($queuemetrics_socket_url =~ /--A--/)
+											{
+											########## vicidial_list lead data ##########
+											$stmtA = "SELECT vendor_lead_code,list_id,phone_code,phone_number,title,first_name,middle_initial,last_name,postal_code FROM vicidial_list where lead_id='$VD_lead_id' LIMIT 1;";
+												if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+											$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+											$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+											$sthArows=$sthA->rows;
+											if ($sthArows > 0)
+												{
+												@aryA = $sthA->fetchrow_array;
+												$vendor_lead_code =		$aryA[0];
+												$list_id =				$aryA[1];
+												$phone_code =			$aryA[2];
+												$phone_number =			$aryA[3];
+												$title =				$aryA[4];
+												$first_name =			$aryA[5];
+												$middle_initial =		$aryA[6];
+												$last_name =			$aryA[7];
+												$postal_code =			$aryA[8];
+												}
+											$sthA->finish();
+
+											$queuemetrics_socket_url =~ s/^VAR//gi;
+											$queuemetrics_socket_url =~ s/--A--lead_id--B--/$VD_lead_id/gi;
+											$queuemetrics_socket_url =~ s/--A--vendor_id--B--/$vendor_lead_code/gi;
+											$queuemetrics_socket_url =~ s/--A--vendor_lead_code--B--/$vendor_lead_code/gi;
+											$queuemetrics_socket_url =~ s/--A--list_id--B--/$list_id/gi;
+											$queuemetrics_socket_url =~ s/--A--phone_number--B--/$phone_number/gi;
+											$queuemetrics_socket_url =~ s/--A--title--B--/$title/gi;
+											$queuemetrics_socket_url =~ s/--A--first_name--B--/$first_name/gi;
+											$queuemetrics_socket_url =~ s/--A--middle_initial--B--/$middle_initial/gi;
+											$queuemetrics_socket_url =~ s/--A--last_name--B--/$last_name/gi;
+											$queuemetrics_socket_url =~ s/--A--postal_code--B--/$postal_code/gi;
+											$queuemetrics_socket_url =~ s/ /+/gi;
+											$queuemetrics_socket_url =~ s/&/\\&/gi;
+											}
 										$socket_send_data_begin='?';
 										$socket_send_data = "time_id=$secX&call_id=$VD_callerid&queue=$VD_campaign_id&agent=$VD_agent&verb=COMPLETECALLER&data1=$VD_stage&data2=$VD_call_length&data3=$queue_position&data4=$data_four";
 										if ($queuemetrics_socket_url =~ /\?/)

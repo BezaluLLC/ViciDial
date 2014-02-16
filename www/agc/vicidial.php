@@ -419,10 +419,11 @@
 # 140107-2034 - Added webserver/url login logging
 # 140126-0741 - Added pause code API function
 # 140204-1230 - Added check for valid date in call log view
+# 140214-1851 - Added preview_dial_action API function
 #
 
-$version = '2.8-388c';
-$build = '140204-1230';
+$version = '2.8-389c';
+$build = '140214-1851';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -4924,6 +4925,29 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									{NeWManuaLDiaLCalLSubmiT('NOW');}
 								}
 							}
+						if ( (in_lead_preview_state==1) || (alt_dial_status_display==1) )
+							{
+							if ( (in_lead_preview_state==1) && (APIDiaL == 'SKIP') )
+								{
+								ManualDialSkip();
+								}
+							if (APIDiaL == 'DIALONLY')
+								{
+								ManualDialOnly('MaiNPhonE');
+								}
+							if (APIDiaL == 'ALTDIAL')
+								{
+								ManualDialOnly('ALTPhonE');
+								}
+							if (APIDiaL == 'ADR3DIAL')
+								{
+								ManualDialOnly('AddresS3');
+								}
+							if ( (alt_dial_status_display==1) && (APIDiaL == 'FINISH') )
+								{
+								ManualDialAltDonE();
+								}
+							}
 
 						if ( (CheckDEADcall > 0) && (VD_live_customer_call==1) )
 							{
@@ -7359,10 +7383,22 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				reselect_preview_dial = 1;
 				in_lead_preview_state = 1;
 				var man_preview = 'YES';
-				var man_status = "Preview the Lead then <a href=\"#\" onclick=\"ManualDialOnly('" + manual_dial_only_type_flag + "')\"><font class=\"preview_text\"> DIAL LEAD</font></a> or <a href=\"#\" onclick=\"ManualDialSkip()\"><font class=\"preview_text\">SKIP LEAD</font></a>"; 
-				if (manual_preview_dial=='PREVIEW_ONLY')
+
+				if (alt_phone_dialing == 1)
 					{
-					var man_status = "Preview the Lead then <a href=\"#\" onclick=\"ManualDialOnly('" + manual_dial_only_type_flag + "')\"><font class=\"preview_text\"> DIAL LEAD</font></a>"; 
+					var man_status = "Preview the Lead then <a href=\"#\" onclick=\"ManualDialOnly('" + manual_dial_only_type_flag + "')\"><font class=\"preview_text\"> DIAL LEAD</font></a> or <a href=\"#\" onclick=\"ManualDialSkip()\"><font class=\"preview_text\">SKIP LEAD</font></a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"ManualDialOnly('ALTPhonE')\"><font class=\"preview_text\">ALT PHONE</font></a> or <a href=\"#\" onclick=\"ManualDialOnly('AddresS3')\"><font class=\"preview_text\">ADDRESS3</font></a>"; 
+					if (manual_preview_dial=='PREVIEW_ONLY')
+						{
+						var man_status = "Preview the Lead then <a href=\"#\" onclick=\"ManualDialOnly('" + manual_dial_only_type_flag + "')\"><font class=\"preview_text\"> DIAL LEAD</font></a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"ManualDialOnly('ALTPhonE')\"><font class=\"preview_text\">ALT PHONE</font></a> or <a href=\"#\" onclick=\"ManualDialOnly('AddresS3')\"><font class=\"preview_text\">ADDRESS3</font></a>"; 
+						}
+					}
+				else
+					{
+					var man_status = "Preview the Lead then <a href=\"#\" onclick=\"ManualDialOnly('" + manual_dial_only_type_flag + "')\"><font class=\"preview_text\"> DIAL LEAD</font></a> or <a href=\"#\" onclick=\"ManualDialSkip()\"><font class=\"preview_text\">SKIP LEAD</font></a>"; 
+					if (manual_preview_dial=='PREVIEW_ONLY')
+						{
+						var man_status = "Preview the Lead then <a href=\"#\" onclick=\"ManualDialOnly('" + manual_dial_only_type_flag + "')\"><font class=\"preview_text\"> DIAL LEAD</font></a>"; 
+						}
 					}
 				}
 			else

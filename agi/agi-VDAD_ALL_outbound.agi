@@ -107,6 +107,7 @@
 # 130425-0657 - Added survey_no_response option to drop to campaign drop action
 # 131209-1735 - Added called_count logging
 # 140126-1128 - Added VMAIL_NO_INST options
+# 140215-2121 - Added several variable options for QM socket URL
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -1713,6 +1714,44 @@ if ($call_handle_method =~ /SURVEY/)
 
 				if ( ($queuemetrics_socket =~ /CONNECT_COMPLETE/) and (length($queuemetrics_socket_url) > 10) )
 					{
+					if ($queuemetrics_socket_url =~ /--A--/)
+						{
+						########## FIND vicidial_list lead data ##########
+						$stmtA = "SELECT vendor_lead_code,list_id,phone_code,phone_number,title,first_name,middle_initial,last_name,postal_code FROM vicidial_list where lead_id='$CIDlead_id' LIMIT 1;";
+							if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='01109';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$vendor_lead_code =		$aryA[0];
+							$list_id =				$aryA[1];
+							$phone_code =			$aryA[2];
+							$phone_number =			$aryA[3];
+							$title =				$aryA[4];
+							$first_name =			$aryA[5];
+							$middle_initial =		$aryA[6];
+							$last_name =			$aryA[7];
+							$postal_code =			$aryA[8];
+							}
+						$sthA->finish();
+
+						$queuemetrics_socket_url =~ s/^VAR//gi;
+						$queuemetrics_socket_url =~ s/--A--lead_id--B--/$CIDlead_id/gi;
+						$queuemetrics_socket_url =~ s/--A--vendor_id--B--/$vendor_lead_code/gi;
+						$queuemetrics_socket_url =~ s/--A--vendor_lead_code--B--/$vendor_lead_code/gi;
+						$queuemetrics_socket_url =~ s/--A--list_id--B--/$list_id/gi;
+						$queuemetrics_socket_url =~ s/--A--phone_number--B--/$phone_number/gi;
+						$queuemetrics_socket_url =~ s/--A--title--B--/$title/gi;
+						$queuemetrics_socket_url =~ s/--A--first_name--B--/$first_name/gi;
+						$queuemetrics_socket_url =~ s/--A--middle_initial--B--/$middle_initial/gi;
+						$queuemetrics_socket_url =~ s/--A--last_name--B--/$last_name/gi;
+						$queuemetrics_socket_url =~ s/--A--postal_code--B--/$postal_code/gi;
+						$queuemetrics_socket_url =~ s/ /+/gi;
+						$queuemetrics_socket_url =~ s/&/\\&/gi;
+						}
 					#### run for CONNECT
 					$socket_send_data_begin='?';
 					$socket_send_data = "time_id=$now_date_epoch&call_id=$callerid&queue=$VDADcampaign&agent=Agent/VDAD&verb=CONNECT&data1=0&data2=&data3=&data4=";
@@ -2485,6 +2524,44 @@ while ($drop_timer <= $DROP_TIME)
 
 					if ( ($queuemetrics_socket =~ /CONNECT_COMPLETE/) and (length($queuemetrics_socket_url) > 10) )
 						{
+						if ($queuemetrics_socket_url =~ /--A--/)
+							{
+							########## FIND vicidial_list lead data ##########
+							$stmtA = "SELECT vendor_lead_code,list_id,phone_code,phone_number,title,first_name,middle_initial,last_name,postal_code FROM vicidial_list where lead_id='$CIDlead_id' LIMIT 1;";
+								if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+								$dbhP=$dbhA;   $mysql_count='01110';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+							if ($sthArows > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$vendor_lead_code =		$aryA[0];
+								$list_id =				$aryA[1];
+								$phone_code =			$aryA[2];
+								$phone_number =			$aryA[3];
+								$title =				$aryA[4];
+								$first_name =			$aryA[5];
+								$middle_initial =		$aryA[6];
+								$last_name =			$aryA[7];
+								$postal_code =			$aryA[8];
+								}
+							$sthA->finish();
+
+							$queuemetrics_socket_url =~ s/^VAR//gi;
+							$queuemetrics_socket_url =~ s/--A--lead_id--B--/$CIDlead_id/gi;
+							$queuemetrics_socket_url =~ s/--A--vendor_id--B--/$vendor_lead_code/gi;
+							$queuemetrics_socket_url =~ s/--A--vendor_lead_code--B--/$vendor_lead_code/gi;
+							$queuemetrics_socket_url =~ s/--A--list_id--B--/$list_id/gi;
+							$queuemetrics_socket_url =~ s/--A--phone_number--B--/$phone_number/gi;
+							$queuemetrics_socket_url =~ s/--A--title--B--/$title/gi;
+							$queuemetrics_socket_url =~ s/--A--first_name--B--/$first_name/gi;
+							$queuemetrics_socket_url =~ s/--A--middle_initial--B--/$middle_initial/gi;
+							$queuemetrics_socket_url =~ s/--A--last_name--B--/$last_name/gi;
+							$queuemetrics_socket_url =~ s/--A--postal_code--B--/$postal_code/gi;
+							$queuemetrics_socket_url =~ s/ /+/gi;
+							$queuemetrics_socket_url =~ s/&/\\&/gi;
+							}
 						$socket_send_data_begin='?';
 						$socket_send_data = "time_id=$now_date_epoch&call_id=$callerid&queue=$VDADcampaign&agent=Agent/$VDADuser&verb=CONNECT&data1=$drop_timer&data2=&data3=&data4=$queuemetrics_phone_environment$pe_append";
 						if ($queuemetrics_socket_url =~ /\?/)
@@ -3052,6 +3129,44 @@ while ($drop_timer <= $DROP_TIME)
 
 					if ( ($queuemetrics_socket =~ /CONNECT_COMPLETE/) and (length($queuemetrics_socket_url) > 10) )
 						{
+						if ($queuemetrics_socket_url =~ /--A--/)
+							{
+							########## FIND vicidial_list lead data ##########
+							$stmtA = "SELECT vendor_lead_code,list_id,phone_code,phone_number,title,first_name,middle_initial,last_name,postal_code FROM vicidial_list where lead_id='$CIDlead_id' LIMIT 1;";
+								if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+								$dbhP=$dbhA;   $mysql_count='01111';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+							if ($sthArows > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$vendor_lead_code =		$aryA[0];
+								$list_id =				$aryA[1];
+								$phone_code =			$aryA[2];
+								$phone_number =			$aryA[3];
+								$title =				$aryA[4];
+								$first_name =			$aryA[5];
+								$middle_initial =		$aryA[6];
+								$last_name =			$aryA[7];
+								$postal_code =			$aryA[8];
+								}
+							$sthA->finish();
+
+							$queuemetrics_socket_url =~ s/^VAR//gi;
+							$queuemetrics_socket_url =~ s/--A--lead_id--B--/$CIDlead_id/gi;
+							$queuemetrics_socket_url =~ s/--A--vendor_id--B--/$vendor_lead_code/gi;
+							$queuemetrics_socket_url =~ s/--A--vendor_lead_code--B--/$vendor_lead_code/gi;
+							$queuemetrics_socket_url =~ s/--A--list_id--B--/$list_id/gi;
+							$queuemetrics_socket_url =~ s/--A--phone_number--B--/$phone_number/gi;
+							$queuemetrics_socket_url =~ s/--A--title--B--/$title/gi;
+							$queuemetrics_socket_url =~ s/--A--first_name--B--/$first_name/gi;
+							$queuemetrics_socket_url =~ s/--A--middle_initial--B--/$middle_initial/gi;
+							$queuemetrics_socket_url =~ s/--A--last_name--B--/$last_name/gi;
+							$queuemetrics_socket_url =~ s/--A--postal_code--B--/$postal_code/gi;
+							$queuemetrics_socket_url =~ s/ /+/gi;
+							$queuemetrics_socket_url =~ s/&/\\&/gi;
+							}
 						$socket_send_data_begin='?';
 						$socket_send_data = "time_id=$now_date_epoch&call_id=$callerid&queue=$VDADcampaign&agent=Agent/$VDADuser&verb=CONNECT&data1=$drop_timer&data2=&data3=&data4=$queuemetrics_phone_environment$pe_append";
 						if ($queuemetrics_socket_url =~ /\?/)

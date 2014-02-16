@@ -343,12 +343,14 @@
 # 140124-1209 - Added error catching for start/dispo call URL logging
 # 140126-0727 - Added pause_code API code
 # 140207-0208 - Manager selected in-groups are now restricted to allowed campaign in-groups
+# 140214-1852 - Added preview_dial_action API function
+# 140215-2051 - Added several variable options for QM socket URL
 #
 
-$version = '2.8-240';
-$build = '140207-0208';
+$version = '2.8-242';
+$build = '140215-2051';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=537;
+$mysql_log_count=543;
 $one_mysql_log=0;
 
 require_once("dbconnect_mysqli.php");
@@ -2835,6 +2837,20 @@ if ($ACTION == 'manDiaLnextCaLL')
 
 						if ( ($queuemetrics_socket == 'CONNECT_COMPLETE') and (strlen($queuemetrics_socket_url) > 10) )
 							{
+							if (preg_match("/--A--/",$queuemetrics_socket_url))
+								{
+								$queuemetrics_socket_url = preg_replace('/^VAR/','',$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--lead_id--B--/i',"$lead_id",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--vendor_id--B--/i',"$vendor_id",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--vendor_lead_code--B--/i',"$vendor_id",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--list_id--B--/i',"$list_id",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--phone_number--B--/i',"$phone_number",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--title--B--/i',"$title",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--first_name--B--/i',"$first_name",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--middle_initial--B--/i',"$middle_initial",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--last_name--B--/i',"$last_name",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--postal_code--B--/i',"$postal_code",$queuemetrics_socket_url);
+								}
 							$socket_send_data_begin='?';
 							$socket_send_data = "time_id=$StarTtime&call_id=$MqueryCID&queue=$campaign&agent=Agent/$user&verb=CONNECT&data1=0$data4SS";
 							if (preg_match("/\?/",$queuemetrics_socket_url))
@@ -2845,7 +2861,6 @@ if ($ACTION == 'manDiaLnextCaLL')
 							if ($DB > 0) {echo "$SCUfile[0]<BR>\n";}
 							}
 						}
-
 					}
 
 				##### check if system is set to generate logfile for transfers
@@ -3128,6 +3143,12 @@ if ($ACTION == 'manDiaLskip')
 		}
 	else
 		{
+		### set the api dial action to blank if used
+		$stmt = "UPDATE vicidial_live_agents set external_dial='' where user='$user' and external_dial='SKIP';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00538',$user,$server_ip,$session_name,$one_mysql_log);}
+
 		$called_count = ($called_count - 1);
 		### set the lead back to previous status and called_count
 		$stmt = "UPDATE vicidial_list set status='$stage', called_count='$called_count',user='$user' where lead_id='$lead_id';";
@@ -3177,6 +3198,12 @@ if ($ACTION == 'manDiaLonly')
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00428',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
 			}
+
+		### set the api dial action to blank if used
+		$stmt = "UPDATE vicidial_live_agents set external_dial='' where user='$user' and external_dial IN('DIALONLY','ALTDIAL','ADR3DIAL');";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00539',$user,$server_ip,$session_name,$one_mysql_log);}
 
 		##### grab number of calls today in this campaign and increment
 		$stmt="SELECT calls_today,extension FROM vicidial_live_agents WHERE user='$user' and campaign_id='$campaign';";
@@ -3622,6 +3649,39 @@ if ($ACTION == 'manDiaLonly')
 
 			if ( ($queuemetrics_socket == 'CONNECT_COMPLETE') and (strlen($queuemetrics_socket_url) > 10) )
 				{
+				if (preg_match("/--A--/",$queuemetrics_socket_url))
+					{
+					##### grab the data from vicidial_list for the lead_id
+					$stmt="SELECT vendor_lead_code,list_id,phone_code,phone_number,title,first_name,middle_initial,last_name,postal_code FROM vicidial_list where lead_id='$lead_id' LIMIT 1;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00540',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$list_lead_ct = mysqli_num_rows($rslt);
+					if ($list_lead_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$vendor_id		= urlencode(trim($row[0]));
+						$list_id		= urlencode(trim($row[1]));
+						$phone_code		= urlencode(trim($row[2]));
+						$phone_number	= urlencode(trim($row[3]));
+						$title			= urlencode(trim($row[4]));
+						$first_name		= urlencode(trim($row[5]));
+						$middle_initial	= urlencode(trim($row[6]));
+						$last_name		= urlencode(trim($row[7]));
+						$postal_code	= urlencode(trim($row[8]));
+						}
+					$queuemetrics_socket_url = preg_replace('/^VAR/','',$queuemetrics_socket_url);
+					$queuemetrics_socket_url = preg_replace('/--A--lead_id--B--/i',"$lead_id",$queuemetrics_socket_url);
+					$queuemetrics_socket_url = preg_replace('/--A--vendor_id--B--/i',"$vendor_id",$queuemetrics_socket_url);
+					$queuemetrics_socket_url = preg_replace('/--A--vendor_lead_code--B--/i',"$vendor_id",$queuemetrics_socket_url);
+					$queuemetrics_socket_url = preg_replace('/--A--list_id--B--/i',"$list_id",$queuemetrics_socket_url);
+					$queuemetrics_socket_url = preg_replace('/--A--phone_number--B--/i',"$phone_number",$queuemetrics_socket_url);
+					$queuemetrics_socket_url = preg_replace('/--A--title--B--/i',"$title",$queuemetrics_socket_url);
+					$queuemetrics_socket_url = preg_replace('/--A--first_name--B--/i',"$first_name",$queuemetrics_socket_url);
+					$queuemetrics_socket_url = preg_replace('/--A--middle_initial--B--/i',"$middle_initial",$queuemetrics_socket_url);
+					$queuemetrics_socket_url = preg_replace('/--A--last_name--B--/i',"$last_name",$queuemetrics_socket_url);
+					$queuemetrics_socket_url = preg_replace('/--A--postal_code--B--/i',"$postal_code",$queuemetrics_socket_url);
+					}
 				$socket_send_data_begin='?';
 				$socket_send_data = "time_id=$StarTtime&call_id=$MqueryCID&queue=$campaign&agent=Agent/$user&verb=CONNECT&data1=0$data4SS";
 				if (preg_match("/\?/",$queuemetrics_socket_url))
@@ -4536,6 +4596,39 @@ if ($stage == "end")
 
 				if ( ($queuemetrics_socket == 'CONNECT_COMPLETE') and (strlen($queuemetrics_socket_url) > 10) )
 					{
+					if (preg_match("/--A--/",$queuemetrics_socket_url))
+						{
+						##### grab the data from vicidial_list for the lead_id
+						$stmt="SELECT vendor_lead_code,list_id,phone_code,phone_number,title,first_name,middle_initial,last_name,postal_code FROM vicidial_list where lead_id='$lead_id' LIMIT 1;";
+						$rslt=mysql_to_mysqli($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00541',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($DB) {echo "$stmt\n";}
+						$list_lead_ct = mysqli_num_rows($rslt);
+						if ($list_lead_ct > 0)
+							{
+							$row=mysqli_fetch_row($rslt);
+							$vendor_id		= urlencode(trim($row[0]));
+							$list_id		= urlencode(trim($row[1]));
+							$phone_code		= urlencode(trim($row[2]));
+							$phone_number	= urlencode(trim($row[3]));
+							$title			= urlencode(trim($row[4]));
+							$first_name		= urlencode(trim($row[5]));
+							$middle_initial	= urlencode(trim($row[6]));
+							$last_name		= urlencode(trim($row[7]));
+							$postal_code	= urlencode(trim($row[8]));
+							}
+						$queuemetrics_socket_url = preg_replace('/^VAR/','',$queuemetrics_socket_url);
+						$queuemetrics_socket_url = preg_replace('/--A--lead_id--B--/i',"$lead_id",$queuemetrics_socket_url);
+						$queuemetrics_socket_url = preg_replace('/--A--vendor_id--B--/i',"$vendor_id",$queuemetrics_socket_url);
+						$queuemetrics_socket_url = preg_replace('/--A--vendor_lead_code--B--/i',"$vendor_id",$queuemetrics_socket_url);
+						$queuemetrics_socket_url = preg_replace('/--A--list_id--B--/i',"$list_id",$queuemetrics_socket_url);
+						$queuemetrics_socket_url = preg_replace('/--A--phone_number--B--/i',"$phone_number",$queuemetrics_socket_url);
+						$queuemetrics_socket_url = preg_replace('/--A--title--B--/i',"$title",$queuemetrics_socket_url);
+						$queuemetrics_socket_url = preg_replace('/--A--first_name--B--/i',"$first_name",$queuemetrics_socket_url);
+						$queuemetrics_socket_url = preg_replace('/--A--middle_initial--B--/i',"$middle_initial",$queuemetrics_socket_url);
+						$queuemetrics_socket_url = preg_replace('/--A--last_name--B--/i',"$last_name",$queuemetrics_socket_url);
+						$queuemetrics_socket_url = preg_replace('/--A--postal_code--B--/i',"$postal_code",$queuemetrics_socket_url);
+						}
 					$socket_send_data_begin='?';
 					$socket_send_data = "time_id=$StarTtime&call_id=$MDnextCID&queue=$VDcampaign_id&agent=Agent/$user&verb=COMPLETEAGENT&data1=$CLstage&data2=$length_in_sec&data3=$CLqueue_position$data4SS";
 					if (preg_match("/\?/",$queuemetrics_socket_url))
@@ -4777,6 +4870,39 @@ if ($stage == "end")
 
 						if ( ($queuemetrics_socket == 'CONNECT_COMPLETE') and (strlen($queuemetrics_socket_url) > 10) )
 							{
+							if (preg_match("/--A--/",$queuemetrics_socket_url))
+								{
+								##### grab the data from vicidial_list for the lead_id
+								$stmt="SELECT vendor_lead_code,list_id,phone_code,phone_number,title,first_name,middle_initial,last_name,postal_code FROM vicidial_list where lead_id='$lead_id' LIMIT 1;";
+								$rslt=mysql_to_mysqli($stmt, $link);
+									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00542',$user,$server_ip,$session_name,$one_mysql_log);}
+								if ($DB) {echo "$stmt\n";}
+								$list_lead_ct = mysqli_num_rows($rslt);
+								if ($list_lead_ct > 0)
+									{
+									$row=mysqli_fetch_row($rslt);
+									$vendor_id		= urlencode(trim($row[0]));
+									$list_id		= urlencode(trim($row[1]));
+									$phone_code		= urlencode(trim($row[2]));
+									$phone_number	= urlencode(trim($row[3]));
+									$title			= urlencode(trim($row[4]));
+									$first_name		= urlencode(trim($row[5]));
+									$middle_initial	= urlencode(trim($row[6]));
+									$last_name		= urlencode(trim($row[7]));
+									$postal_code	= urlencode(trim($row[8]));
+									}
+								$queuemetrics_socket_url = preg_replace('/^VAR/','',$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--lead_id--B--/i',"$lead_id",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--vendor_id--B--/i',"$vendor_id",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--vendor_lead_code--B--/i',"$vendor_id",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--list_id--B--/i',"$list_id",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--phone_number--B--/i',"$phone_number",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--title--B--/i',"$title",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--first_name--B--/i',"$first_name",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--middle_initial--B--/i',"$middle_initial",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--last_name--B--/i',"$last_name",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--postal_code--B--/i',"$postal_code",$queuemetrics_socket_url);
+								}
 							$socket_send_data_begin='?';
 							$socket_send_data = "time_id=$StarTtime&call_id=$MDnextCID&queue=$VDcampaign_id&agent=Agent/$user&verb=COMPLETEAGENT&data1=$CLstage&data2=$length_in_sec&data3=$VDqueue_position$data4SS";
 							if (preg_match("/\?/",$queuemetrics_socket_url))
@@ -9277,6 +9403,39 @@ if ($ACTION == 'updateDISPO')
 
 			if ( ($queuemetrics_socket == 'CONNECT_COMPLETE') and (strlen($queuemetrics_socket_url) > 10) )
 				{
+				if (preg_match("/--A--/",$queuemetrics_socket_url))
+					{
+					##### grab the data from vicidial_list for the lead_id
+					$stmt="SELECT vendor_lead_code,list_id,phone_code,phone_number,title,first_name,middle_initial,last_name,postal_code FROM vicidial_list where lead_id='$lead_id' LIMIT 1;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00543',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$list_lead_ct = mysqli_num_rows($rslt);
+					if ($list_lead_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$vendor_id		= urlencode(trim($row[0]));
+						$list_id		= urlencode(trim($row[1]));
+						$phone_code		= urlencode(trim($row[2]));
+						$phone_number	= urlencode(trim($row[3]));
+						$title			= urlencode(trim($row[4]));
+						$first_name		= urlencode(trim($row[5]));
+						$middle_initial	= urlencode(trim($row[6]));
+						$last_name		= urlencode(trim($row[7]));
+						$postal_code	= urlencode(trim($row[8]));
+						}
+					$queuemetrics_socket_url = preg_replace('/^VAR/','',$queuemetrics_socket_url);
+					$queuemetrics_socket_url = preg_replace('/--A--lead_id--B--/i',"$lead_id",$queuemetrics_socket_url);
+					$queuemetrics_socket_url = preg_replace('/--A--vendor_id--B--/i',"$vendor_id",$queuemetrics_socket_url);
+					$queuemetrics_socket_url = preg_replace('/--A--vendor_lead_code--B--/i',"$vendor_id",$queuemetrics_socket_url);
+					$queuemetrics_socket_url = preg_replace('/--A--list_id--B--/i',"$list_id",$queuemetrics_socket_url);
+					$queuemetrics_socket_url = preg_replace('/--A--phone_number--B--/i',"$phone_number",$queuemetrics_socket_url);
+					$queuemetrics_socket_url = preg_replace('/--A--title--B--/i',"$title",$queuemetrics_socket_url);
+					$queuemetrics_socket_url = preg_replace('/--A--first_name--B--/i',"$first_name",$queuemetrics_socket_url);
+					$queuemetrics_socket_url = preg_replace('/--A--middle_initial--B--/i',"$middle_initial",$queuemetrics_socket_url);
+					$queuemetrics_socket_url = preg_replace('/--A--last_name--B--/i',"$last_name",$queuemetrics_socket_url);
+					$queuemetrics_socket_url = preg_replace('/--A--postal_code--B--/i',"$postal_code",$queuemetrics_socket_url);
+					}
 				$socket_send_data_begin='?';
 				$socket_send_data = "time_id=$QLcomplete_time&call_id=$MDnextCID&queue=$stage&agent=Agent/$user&verb=COMPLETEAGENT&data1=$QLconnect_one&data2=$QLcomplete_length&data3=$QLcomplete_position&data4=$QLconnect_four";
 				if (preg_match("/\?/",$queuemetrics_socket_url))

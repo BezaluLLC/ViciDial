@@ -70,10 +70,11 @@
 # 130802-1000 - Changed to PHP mysqli functions
 # 140107-2140 - Added webserver and url logging
 # 140126-0701 - Added pause_code function
+# 140214-1736 - Added preview_dial_action function
 #
 
-$version = '2.8-36';
-$build = '140126-0701';
+$version = '2.8-37';
+$build = '140214-1736';
 
 $startMS = microtime();
 
@@ -1424,6 +1425,156 @@ if ($function == 'external_dial')
 
 
 ################################################################################
+### BEGIN - preview_dial_action - sends a SKIP, DIALONLY, ALTDIAL, ADR3DIAL or FINISH when a lead is being previewed or manual alt dial
+################################################################################
+if ($function == 'preview_dial_action')
+	{
+	$value = preg_replace("/[^A-Z0-9]/","",$value);
+
+	if ( (strlen($value)<4) or ( (strlen($agent_user)<2) and (strlen($alt_user)<2) ) or ( ($value != 'SKIP') and ($value != 'DIALONLY') and ($value != 'ALTDIAL') and ($value != 'ADR3DIAL') and ($value != 'FINISH') ) )
+		{
+		$result = 'ERROR';
+		$result_reason = "preview_dial_action not valid";
+		$data = "";
+		echo "$result: $result_reason - $value|$data|$agent_user|$alt_user\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		}
+	else
+		{
+		if (strlen($alt_user)>1)
+			{
+			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "select user from vicidial_users where custom_three='$alt_user' order by user;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$agent_user = $row[0];
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "no user found";
+				echo "$result: $result_reason - $alt_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$stmt = "SELECT campaign_id,status FROM vicidial_live_agents where user='$agent_user';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$vlac_conf_ct = mysqli_num_rows($rslt);
+			if ($vlac_conf_ct > 0)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$vac_campaign_id =	$row[0];
+				$vac_status =		$row[1];
+				}
+			$stmt = "SELECT manual_preview_dial,alt_number_dialing FROM vicidial_campaigns where campaign_id='$vac_campaign_id';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$vcc_conf_ct = mysqli_num_rows($rslt);
+			if ($vcc_conf_ct > 0)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$manual_preview_dial =	$row[0];
+				$alt_number_dialing =	$row[1];
+				}
+			if ($manual_preview_dial == 'DISABLED')
+				{
+				$result = 'ERROR';
+				$result_reason = "preview dialing not allowed on this campaign";
+				$data = "$vac_campaign_id|$manual_preview_dial";
+				echo "$result: $result_reason - $agent_user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			if ( ($manual_preview_dial == 'PREVIEW_ONLY') and ($value == 'SKIP') )
+				{
+				$result = 'ERROR';
+				$result_reason = "preview dial skipping not allowed on this campaign";
+				$data = "$vac_campaign_id|$manual_preview_dial";
+				echo "$result: $result_reason - $agent_user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			if ( ($alt_number_dialing == 'N') and ( ($value == 'ALTDIAL') or ($value == 'ADR3DIAL') or ($value == 'FINISH') ) )
+				{
+				$result = 'ERROR';
+				$result_reason = "alt number dialing not allowed on this campaign";
+				$data = "$vac_campaign_id|$alt_number_dialing";
+				echo "$result: $result_reason - $agent_user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+
+			$stmt = "select count(*) from vicidial_live_agents where user='$agent_user' and status='PAUSED';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			$agent_ready = $row[0];
+
+			if ($agent_ready > 0)
+				{
+				$stmt = "select count(*) from vicidial_users where user='$agent_user' and agentcall_manual='1';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				if ($row[0] > 0)
+					{
+					$stmt="UPDATE vicidial_live_agents set external_dial='$value' where user='$agent_user';";
+						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$result = 'SUCCESS';
+					$result_reason = "preview_dial_action function set";
+					$data = "$value";
+					echo "$result: $result_reason - $value|$agent_user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				else
+					{
+					$result = 'ERROR';
+					$result_reason = "agent_user is not allowed to place manual dial calls";
+					echo "$result: $result_reason - $agent_user\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "agent_user is not paused";
+				echo "$result: $result_reason - $agent_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		else
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_user is not logged in";
+			echo "$result: $result_reason - $agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		}
+	}
+################################################################################
+### END - preview_dial_action
+################################################################################
+
+
+
+
+
+################################################################################
 ### BEGIN - external_add_lead - add lead in manual dial list of the campaign for logged-in agent
 ################################################################################
 if ($function == 'external_add_lead')
@@ -2609,6 +2760,38 @@ if ($function == 'ra_call_control')
 
 						if ( ($queuemetrics_socket == 'CONNECT_COMPLETE') and (strlen($queuemetrics_socket_url) > 10) )
 							{
+							if (preg_match("/--A--/",$queuemetrics_socket_url))
+								{
+								##### grab the data from vicidial_list for the lead_id
+								$stmt="SELECT vendor_lead_code,list_id,phone_code,phone_number,title,first_name,middle_initial,last_name,postal_code FROM vicidial_list where lead_id='$lead_id' LIMIT 1;";
+								$rslt=mysql_to_mysqli($stmt, $link);
+								if ($DB) {echo "$stmt\n";}
+								$list_lead_ct = mysqli_num_rows($rslt);
+								if ($list_lead_ct > 0)
+									{
+									$row=mysqli_fetch_row($rslt);
+									$vendor_id		= urlencode(trim($row[0]));
+									$list_id		= urlencode(trim($row[1]));
+									$phone_code		= urlencode(trim($row[2]));
+									$phone_number	= urlencode(trim($row[3]));
+									$title			= urlencode(trim($row[4]));
+									$first_name		= urlencode(trim($row[5]));
+									$middle_initial	= urlencode(trim($row[6]));
+									$last_name		= urlencode(trim($row[7]));
+									$postal_code	= urlencode(trim($row[8]));
+									}
+								$queuemetrics_socket_url = preg_replace('/^VAR/','',$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--lead_id--B--/i',"$lead_id",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--vendor_id--B--/i',"$vendor_id",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--vendor_lead_code--B--/i',"$vendor_id",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--list_id--B--/i',"$list_id",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--phone_number--B--/i',"$phone_number",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--title--B--/i',"$title",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--first_name--B--/i',"$first_name",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--middle_initial--B--/i',"$middle_initial",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--last_name--B--/i',"$last_name",$queuemetrics_socket_url);
+								$queuemetrics_socket_url = preg_replace('/--A--postal_code--B--/i',"$postal_code",$queuemetrics_socket_url);
+								}
 							$socket_send_data_begin='?';
 							$socket_send_data = "time_id=$StarTtime&call_id=$value&queue=$campaign_id&agent=Agent/$ra_user&verb=COMPLETEAGENT&data1=$ra_stage&data2=$ra_length&data3=$queue_position$data4SS";
 							if (preg_match("/\?/",$queuemetrics_socket_url))
@@ -3031,7 +3214,8 @@ if ($function == 'transfer_conference')
 						$rslt=mysql_to_mysqli($stmt, $link);
 						$result = 'SUCCESS';
 						$result_reason = "transfer_conference function set";
-						echo "$result: $result_reason - $value|$ingroup_choices|$phone_number|$consultative|$agent_user\n";
+						$data = "$callerid";
+						echo "$result: $result_reason - $value|$ingroup_choices|$phone_number|$consultative|$agent_user|$data|\n";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 						}
 					}
