@@ -345,10 +345,11 @@
 # 140207-0208 - Manager selected in-groups are now restricted to allowed campaign in-groups
 # 140214-1852 - Added preview_dial_action API function
 # 140215-2051 - Added several variable options for QM socket URL
+# 140217-0803 - Small fix for campaigns with no lists
 #
 
-$version = '2.8-242';
-$build = '140215-2051';
+$version = '2.8-243';
+$build = '140217-0803';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=543;
 $one_mysql_log=0;
@@ -1676,6 +1677,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 						$o++;
 						}
 					$camp_lists = preg_replace("/.$/i","",$camp_lists);
+					if (strlen($camp_lists)<2) {$camp_lists="''";}
 
 					$stmt="SELECT count(*) FROM vicidial_list where phone_number='$phone_number' and list_id IN($camp_lists);";
 					$rslt=mysql_to_mysqli($stmt, $link);
@@ -3316,6 +3318,7 @@ if ($ACTION == 'manDiaLonly')
 				$o++;
 				}
 			$camp_lists = preg_replace("/.$/i","",$camp_lists);
+			if (strlen($camp_lists)<2) {$camp_lists="''";}
 
 			$stmt="SELECT count(*) FROM vicidial_list where phone_number='$phone_number' and list_id IN($camp_lists);";
 			$rslt=mysql_to_mysqli($stmt, $link);
@@ -11163,6 +11166,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 				$o++;
 				}
 			$camp_lists = preg_replace("/.$/i","",$camp_lists);
+			if (strlen($camp_lists)<2) {$camp_lists="''";}
 			$searchmethodSQL=" and list_id IN($camp_lists)";
 			}
 		if (preg_match('/CAMPAIGNLISTS/',$agent_lead_search_method))
@@ -11180,6 +11184,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 				$o++;
 				}
 			$camp_lists = preg_replace("/.$/i","",$camp_lists);
+			if (strlen($camp_lists)<2) {$camp_lists="''";}
 			$searchmethodSQL=" and list_id IN($camp_lists)";
 			}
 
