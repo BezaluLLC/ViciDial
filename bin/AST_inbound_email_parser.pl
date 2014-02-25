@@ -56,12 +56,14 @@ use MIME::QuotedPrint;
 # 130127-0025 - Added better non-latin characters support
 # 130607-0155 - Encoding fix
 # 140212-0719 - Added ignoresizeerrors option, changed debug and added --force-check option
+# 140225-1241 - Added option for SSL no-cert-verify (--ssl-no-cert)
 #
 
 # default path to astguiclient configuration file:
 $PATHconf =		'/etc/astguiclient.conf';
 $|=1;
 $force_check=0;
+$ssl_no_cert=0;
 $DB=0;
 $DBX=0;
 $secX = time();
@@ -122,6 +124,7 @@ if (length($ARGV[0])>1)
 		print "  [--debug] = verbose debug messages\n";
 		print "  [--debugX] = extra verbose debug messages\n";
 		print "  [--force-check] = forces check of email\n";
+		print "  [--ssl-no-cert] = ignores ssl cert verification\n";
 		print "\n";
 		exit;
 		}
@@ -138,6 +141,10 @@ if (length($ARGV[0])>1)
 		if ($args =~ /--force-check/i)
 			{
 			$force_check=1;
+			}
+		if ($args =~ /--ssl-no-cert/i)
+			{
+			$ssl_no_cert=1;
 			}
 		}
 	}
@@ -232,17 +239,36 @@ while (@row=$rslt->fetchrow_array) {
 			# Connect to IMAP server
 			use Mail::IMAPClient;
 			use Mail::Message;
+			use IO::Socket::SSL;
 
-			my $client = Mail::IMAPClient->new(
-			  Server   => "$VARemail_server",
-			  User     => "$VARemail_user",
-			  Password => "$VARemail_pwd",
-			  Port     => 993,
-			  Ssl      =>  1,
-			  Ignoresizeerrors => 1,
-			  )
-			  or die "Cannot connect through IMAPClient: $!";
+			if ($ssl_no_cert > 0)
+				{
+				%args = (
+				  User     => "$VARemail_user",
+				  Password => "$VARemail_pwd",
+				  Ignoresizeerrors => 1,
+				  Socket   => IO::Socket::SSL->new
+					(	Proto    => 'tcp',
+						PeerAddr => "$VARemail_server",
+						PeerPort => 993, # IMAP over SSL standard port
+						SSL_verify_mode => 'SSL_VERIFY_NONE',
+					),
+				 );
+				}
+			else
+				{
+				%args = (
+				  Server   => "$VARemail_server",
+				  User     => "$VARemail_user",
+				  Password => "$VARemail_pwd",
+				  Port     => 993,
+				  Ssl      =>  1,
+				  Ignoresizeerrors => 1,
+				  );
+				}
 
+				my $client = Mail::IMAPClient->new(%args)
+				  or die "Cannot connect through IMAPClient: ($VARemail_ID|$VARemail_server|$VARemail_user|ssl-no-cert:$ssl_no_cert) $@ $!";
 			# Include options for folders in IMAP?  POP3 doesn't support this.
 
 			# List folders on remote server (see if all is ok)

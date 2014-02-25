@@ -90,6 +90,12 @@ active on ONLY ONE server on your Vicidial installation:
 
 * * * * * /usr/share/astguiclient/AST_inbound_email_parser.pl
 
+other allowed run time options for this script:
+  [--debug] = verbose debug messages
+  [--debugX] = extra verbose debug messages
+  [--force-check] = forces check of email
+  [--ssl-no-cert] = ignores ssl cert verification
+
 This script will check to see if any active email account is due to be checked 
 for new messages, per the "Email Frequency Check Rate" setting on the active 
 accounts.  If new emails are found in an active account, one of two things will 
