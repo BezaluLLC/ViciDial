@@ -3274,12 +3274,13 @@ else
 # 140126-2253 - Added voicemail_instructions option for phones
 # 140206-1357 - Filter dashes from new or copied campaigns and in-groups
 # 140214-1643 - Added system settings dialplan reload timestamp
+# 140302-0958 - Added Webserver-URL Report
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.8-426a';
-$build = '140214-1643';
+$admin_version = '2.8-427a';
+$build = '140302-0958';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -31937,6 +31938,7 @@ if ($ADD==999994)
 		echo "<LI><a href=\"AST_carrier_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Carrier Log Report</a></FONT>\n";
 		echo "<LI><a href=\"AST_hangup_cause_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Hangup Cause Report</a></FONT>\n";
 		echo "<LI><a href=\"AST_url_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>URL Log Report</a></FONT>\n";
+		echo "<LI><a href=\"AST_webserver_url_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Webserver-URL Report</a></FONT>\n";
 		echo "<LI><a href=\"AST_LAGGED_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Agent LAGGED Report</a></FONT>\n";
 		echo "<LI><a href=\"AST_usergroup_login_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>User Group Login Report</a></FONT>\n";
 		echo "<LI><a href=\"admin.php?ADD=800000000000000\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Admin Report Log Viewer</a></FONT>\n";
