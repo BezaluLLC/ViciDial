@@ -420,10 +420,11 @@
 # 140126-0741 - Added pause code API function
 # 140204-1230 - Added check for valid date in call log view
 # 140214-1851 - Added preview_dial_action API function
+# 140301-2059 - Added API functions options for SEARCH for phone within lead_id and Dial Next Number
 #
 
-$version = '2.8-389c';
-$build = '140214-1851';
+$version = '2.8-390c';
+$build = '140301-2059';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -4899,30 +4900,41 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								}
 							else
 								{
-								APIDiaL_ID = APIDiaL_array_detail[6];
-								document.vicidial_form.MDDiaLCodE.value = APIDiaL_array_detail[1];
-								document.vicidial_form.phone_code.value = APIDiaL_array_detail[1];
-								document.vicidial_form.MDPhonENumbeR.value = APIDiaL_array_detail[0];
-								document.vicidial_form.vendor_lead_code.value = APIDiaL_array_detail[5];
-								prefix_choice = APIDiaL_array_detail[7];
-								active_group_alias = APIDiaL_array_detail[8];
-								cid_choice = APIDiaL_array_detail[9];
-								vtiger_callback_id = APIDiaL_array_detail[10];
-								document.vicidial_form.MDLeadID.value = APIDiaL_array_detail[11];
-								document.vicidial_form.MDType.value = APIDiaL_array_detail[12];
-
-							//	alert(APIDiaL_array_detail[1] + "-----" + APIDiaL + "-----" + document.vicidial_form.MDDiaLCodE.value + "-----" + document.vicidial_form.phone_code.value);
-
-								if (APIDiaL_array_detail[2] == 'YES')  // lookup lead in system
-									{document.vicidial_form.LeadLookuP.checked=true;}
+								if (APIDiaL_array_detail[0] == 'MANUALNEXT')  // trigger Dial Next Number button
+									{
+									if (APIDiaL_array_detail[4] == 'YES')  // focus on vicidial agent screen
+										{window.focus();   alert_box("Placing call to next number");}
+									if (APIDiaL_array_detail[3] == 'YES')
+										{document.vicidial_form.LeadPreview.checked=true;}
+									ManualDialNext('','','','','','0');
+									}
 								else
-									{document.vicidial_form.LeadLookuP.checked=false;}
-								if (APIDiaL_array_detail[4] == 'YES')  // focus on vicidial agent screen
-									{window.focus();   alert_box("Placing call to:" + APIDiaL_array_detail[1] + " " + APIDiaL_array_detail[0]);}
-								if (APIDiaL_array_detail[3] == 'YES')  // call preview
-									{NeWManuaLDiaLCalLSubmiT('PREVIEW');}
-								else
-									{NeWManuaLDiaLCalLSubmiT('NOW');}
+									{
+									APIDiaL_ID = APIDiaL_array_detail[6];
+									document.vicidial_form.MDDiaLCodE.value = APIDiaL_array_detail[1];
+									document.vicidial_form.phone_code.value = APIDiaL_array_detail[1];
+									document.vicidial_form.MDPhonENumbeR.value = APIDiaL_array_detail[0];
+									document.vicidial_form.vendor_lead_code.value = APIDiaL_array_detail[5];
+									prefix_choice = APIDiaL_array_detail[7];
+									active_group_alias = APIDiaL_array_detail[8];
+									cid_choice = APIDiaL_array_detail[9];
+									vtiger_callback_id = APIDiaL_array_detail[10];
+									document.vicidial_form.MDLeadID.value = APIDiaL_array_detail[11];
+									document.vicidial_form.MDType.value = APIDiaL_array_detail[12];
+
+									//	alert(APIDiaL_array_detail[1] + "-----" + APIDiaL + "-----" + document.vicidial_form.MDDiaLCodE.value + "-----" + document.vicidial_form.phone_code.value);
+
+									if (APIDiaL_array_detail[2] == 'YES')  // lookup lead in system
+										{document.vicidial_form.LeadLookuP.checked=true;}
+									else
+										{document.vicidial_form.LeadLookuP.checked=false;}
+									if (APIDiaL_array_detail[4] == 'YES')  // focus on vicidial agent screen
+										{window.focus();   alert_box("Placing call to:" + APIDiaL_array_detail[1] + " " + APIDiaL_array_detail[0]);}
+									if (APIDiaL_array_detail[3] == 'YES')  // call preview
+										{NeWManuaLDiaLCalLSubmiT('PREVIEW');}
+									else
+										{NeWManuaLDiaLCalLSubmiT('NOW');}
+									}
 								}
 							}
 						if ( (in_lead_preview_state==1) || (alt_dial_status_display==1) )

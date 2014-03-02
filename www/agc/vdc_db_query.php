@@ -346,12 +346,13 @@
 # 140214-1852 - Added preview_dial_action API function
 # 140215-2051 - Added several variable options for QM socket URL
 # 140217-0803 - Small fix for campaigns with no lists
+# 140301-2348 - Small change for new API MANUALNEXT option
 #
 
-$version = '2.8-243';
-$build = '140217-0803';
+$version = '2.8-244';
+$build = '140301-2348';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=543;
+$mysql_log_count=544;
 $one_mysql_log=0;
 
 require_once("dbconnect_mysqli.php");
@@ -1447,7 +1448,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 		{
 		##### grab number of calls today in this campaign and increment
 		$eac_phone='';
-		$stmt="SELECT calls_today,extension FROM vicidial_live_agents WHERE user='$user' and campaign_id='$campaign';";
+		$stmt="SELECT calls_today,extension,external_dial FROM vicidial_live_agents WHERE user='$user' and campaign_id='$campaign';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00015',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
@@ -1457,10 +1458,20 @@ if ($ACTION == 'manDiaLnextCaLL')
 			$row=mysqli_fetch_row($rslt);
 			$calls_today =	$row[0];
 			$eac_phone =	$row[1];
+			$ed_vla =		$row[2];
 			}
 		else
 			{$calls_today ='0';}
 		$calls_today++;
+
+		if (preg_match("/^MANUALNEXT/",$ed_vla))
+			{
+			$stmt = "UPDATE vicidial_live_agents set external_dial='' where user='$user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00544',$user,$server_ip,$session_name,$one_mysql_log);}
+			$VLAEDXaffected_rows = mysqli_affected_rows($link);
+			}
 
 		$script_recording_delay=0;
 		##### find if script contains recording fields

@@ -71,10 +71,11 @@
 # 140107-2140 - Added webserver and url logging
 # 140126-0701 - Added pause_code function
 # 140214-1736 - Added preview_dial_action function
+# 140301-2046 - Added options to dial next number and search for lead phone number
 #
 
-$version = '2.8-37';
-$build = '140214-1736';
+$version = '2.8-38';
+$build = '140301-2046';
 
 $startMS = microtime();
 
@@ -1109,7 +1110,10 @@ if ($function == 'call_agent')
 ################################################################################
 if ($function == 'external_dial')
 	{
-	$value = preg_replace("/[^0-9]/","",$value);
+	if ($value == 'MANUALNEXT')
+		{$value = preg_replace("/[^0-9a-zA-Z]/","",$value);}
+	else
+		{$value = preg_replace("/[^0-9]/","",$value);}
 
 	if ( ( (strlen($value)<2) and (strlen($lead_id)<1) ) or ( (strlen($agent_user)<2) and (strlen($alt_user)<2) ) or (strlen($search)<2) or (strlen($preview)<2) or (strlen($focus)<2) )
 		{
@@ -1316,8 +1320,39 @@ if ($function == 'external_dial')
 					### If lead_id is populated, check for it and adjust variables accordingly
 					if (strlen($lead_id) > 0)
 						{
+						$phone_search = $value;
 						$value='';
 						$phone_code='';
+						if ($alt_dial=='SEARCH')
+							{
+							$alt_dial='';
+							$stmt = "SELECT phone_number,alt_phone,address3 FROM vicidial_list where lead_id='$lead_id';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$paa_ct = mysqli_num_rows($rslt);
+							if ($paa_ct > 0)
+								{
+								$row=mysqli_fetch_row($rslt);
+								$P_main =	$row[0];
+								$P_alt =	$row[1];
+								$P_adr3 =	$row[2];
+
+								if ($P_adr3 == "$phone_search")
+									{$alt_dial='ADDR3';}
+								if ($P_alt == "$phone_search")
+									{$alt_dial='ALT';}
+								if ($P_main == "$phone_search")
+									{$alt_dial='MAIN';}
+								if ($alt_dial=='')
+									{
+									$result = 'ERROR';
+									$result_reason = "phone number lead_id search not found";
+									$data = "$value|$lead_id|$alt_dial";
+									echo "$result: $result_reason - $agent_user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								}
+							}
 						if ($alt_dial=='ALT')
 							{$stmtPF = "select alt_phone,phone_code from vicidial_list where lead_id='$lead_id';";}
 						if ($alt_dial=='ADDR3')

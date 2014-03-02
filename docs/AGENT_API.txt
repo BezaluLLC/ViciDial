@@ -1,4 +1,4 @@
-AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2014-01-26
+AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2014-03-01
 
 This document describes the functions of an API(Application Programming Interface)
 for the VICIDIAL Agent screen. This functionality will be rather limited at first
@@ -221,7 +221,7 @@ Places a manual dial phone call on the agent screen, you can define whether to s
 
 VALUES:
 value - 
- Any valid phone number (7275551212)
+ Any valid phone number (7275551212), or "MANUALNEXT" to mimic the Dial Next Number button
 lead_id -
  Any valid lead_id from the system(either value or lead_id are required) if both are defined, lead_id will override value
 phone_code -
@@ -246,7 +246,9 @@ vtiger_callback -
 alt_user -
  OPTIONAL, instead of agent_user, this is to lookup the agent_user using the vicidial_users.custom_three field
 alt_dial -
- OPTIONAL, if using lead_id you can set this flag to dial the ALT number or the ADDR3 number
+ OPTIONAL, if using lead_id you can set this flag to dial the ALT number or the ADDR3 number or SEARCH a phone_number within the lead
+           if SEARCH is used and the phone_number is not matched with the lead's phone_number, alt_phone or address3 field
+	   an ERROR will be returned
 
 EXAMPLE URLS:
 http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=external_dial&value=7275551212&phone_code=1&search=YES&preview=NO&focus=YES
@@ -263,6 +265,7 @@ ERROR: vtiger callback activity does not exist in vtiger system - 12345
 ERROR: phone_number is already in this agents manual dial queue - 6666|7275551211
 ERROR: lead_id is not valid - 6666|1234567
 ERROR: phone number is not valid - 6666||1234567|
+ERROR: phone number lead_id search not found - 6666|7275551212|1234567|
 SUCCESS: external_dial function set - 7275551212|6666|1|YES|NO|YES|123456|1232020456|9|TESTING|7275551211|
 
 
