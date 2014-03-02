@@ -421,10 +421,11 @@
 # 140204-1230 - Added check for valid date in call log view
 # 140214-1851 - Added preview_dial_action API function
 # 140301-2059 - Added API functions options for SEARCH for phone within lead_id and Dial Next Number
+# 140302-1018 - Changes to allow for & and + in standard fields
 #
 
-$version = '2.8-390c';
-$build = '140301-2059';
+$version = '2.8-391c';
+$build = '140302-1018';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -10068,26 +10069,26 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				}
 
 			VLupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&campaign=" + campaign +  "&ACTION=updateLEAD&format=text&user=" + user + "&pass=" + pass + 
-			"&lead_id=" + document.vicidial_form.lead_id.value + 
-			"&vendor_lead_code=" + document.vicidial_form.vendor_lead_code.value + 
-			"&phone_number=" + document.vicidial_form.phone_number.value + 
-			"&title=" + document.vicidial_form.title.value + 
-			"&first_name=" + document.vicidial_form.first_name.value + 
-			"&middle_initial=" + document.vicidial_form.middle_initial.value + 
-			"&last_name=" + document.vicidial_form.last_name.value + 
-			"&address1=" + document.vicidial_form.address1.value + 
-			"&address2=" + document.vicidial_form.address2.value + 
-			"&address3=" + document.vicidial_form.address3.value + 
-			"&city=" + document.vicidial_form.city.value + 
-			"&state=" + document.vicidial_form.state.value + 
-			"&province=" + document.vicidial_form.province.value + 
-			"&postal_code=" + document.vicidial_form.postal_code.value + 
-			"&country_code=" + document.vicidial_form.country_code.value + 
-			"&gender=" + document.vicidial_form.gender.value + 
-			"&date_of_birth=" + document.vicidial_form.date_of_birth.value + 
-			"&alt_phone=" + document.vicidial_form.alt_phone.value + 
-			"&email=" + document.vicidial_form.email.value + 
-			"&security_phrase=" + document.vicidial_form.security_phrase.value + 
+			"&lead_id=" + encodeURIComponent(document.vicidial_form.lead_id.value) + 
+			"&vendor_lead_code=" + encodeURIComponent(document.vicidial_form.vendor_lead_code.value) + 
+			"&phone_number=" + encodeURIComponent(document.vicidial_form.phone_number.value) + 
+			"&title=" + encodeURIComponent(document.vicidial_form.title.value) + 
+			"&first_name=" + encodeURIComponent(document.vicidial_form.first_name.value) + 
+			"&middle_initial=" + encodeURIComponent(document.vicidial_form.middle_initial.value) + 
+			"&last_name=" + encodeURIComponent(document.vicidial_form.last_name.value) + 
+			"&address1=" + encodeURIComponent(document.vicidial_form.address1.value) + 
+			"&address2=" + encodeURIComponent(document.vicidial_form.address2.value) + 
+			"&address3=" + encodeURIComponent(document.vicidial_form.address3.value) + 
+			"&city=" + encodeURIComponent(document.vicidial_form.city.value) + 
+			"&state=" + encodeURIComponent(document.vicidial_form.state.value) + 
+			"&province=" + encodeURIComponent(document.vicidial_form.province.value) + 
+			"&postal_code=" + encodeURIComponent(document.vicidial_form.postal_code.value) + 
+			"&country_code=" + encodeURIComponent(document.vicidial_form.country_code.value) + 
+			"&gender=" + encodeURIComponent(document.vicidial_form.gender.value) + 
+			"&date_of_birth=" + encodeURIComponent(document.vicidial_form.date_of_birth.value) + 
+			"&alt_phone=" + encodeURIComponent(document.vicidial_form.alt_phone.value) + 
+			"&email=" + encodeURIComponent(document.vicidial_form.email.value) + 
+			"&security_phrase=" + encodeURIComponent(document.vicidial_form.security_phrase.value) + 
 			"&comments=" + REGcommentsRESULT;
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
@@ -11751,7 +11752,8 @@ else
 	var RGtab = new RegExp("\t","g");
 	var RGplus = new RegExp(" |\\t|\\n","g");
 	var RGiframe = new RegExp("iframe","gi");
-	var regWF = new RegExp("\\`|\\~|\\:|\\;|\\#|\\'|\\\"|\\{|\\}|\\(|\\)|\\*|\\^|\\%|\\$|\\!|\\%|\\r|\\t|\\n","ig");
+ // var regWF = new RegExp("\\`|\\~|\\:|\\;|\\#|\\'|\\\"|\\{|\\}|\\(|\\)|\\*|\\^|\\%|\\$|\\!|\\%|\\r|\\t|\\n|","ig");
+	var regWF = new RegExp("\\`|\\:|\\;|\\#|\\\"|\\{|\\}|\\^|\\$|\\r|\\t|\\n|","ig");
 
 	var xtest;
 	xtest=unescape(encoded);
@@ -11760,30 +11762,30 @@ else
 	if (urlschema == 'DEFAULT')
 		{
 		web_form_varsX = 
-		"&lead_id=" + document.vicidial_form.lead_id.value + 
-		"&vendor_id=" + document.vicidial_form.vendor_lead_code.value + 
-		"&list_id=" + document.vicidial_form.list_id.value + 
-		"&gmt_offset_now=" + document.vicidial_form.gmt_offset_now.value + 
-		"&phone_code=" + document.vicidial_form.phone_code.value + 
-		"&phone_number=" + document.vicidial_form.phone_number.value + 
-		"&title=" + document.vicidial_form.title.value + 
-		"&first_name=" + document.vicidial_form.first_name.value + 
-		"&middle_initial=" + document.vicidial_form.middle_initial.value + 
-		"&last_name=" + document.vicidial_form.last_name.value + 
-		"&address1=" + document.vicidial_form.address1.value + 
-		"&address2=" + document.vicidial_form.address2.value + 
-		"&address3=" + document.vicidial_form.address3.value + 
-		"&city=" + document.vicidial_form.city.value + 
-		"&state=" + document.vicidial_form.state.value + 
-		"&province=" + document.vicidial_form.province.value + 
-		"&postal_code=" + document.vicidial_form.postal_code.value + 
-		"&country_code=" + document.vicidial_form.country_code.value + 
-		"&gender=" + document.vicidial_form.gender.value + 
-		"&date_of_birth=" + document.vicidial_form.date_of_birth.value + 
-		"&alt_phone=" + document.vicidial_form.alt_phone.value + 
-		"&email=" + document.vicidial_form.email.value + 
-		"&security_phrase=" + document.vicidial_form.security_phrase.value + 
-		"&comments=" + document.vicidial_form.comments.value + 
+		"&lead_id=" + encodeURIComponent(document.vicidial_form.lead_id.value) + 
+		"&vendor_id=" + encodeURIComponent(document.vicidial_form.vendor_lead_code.value) + 
+		"&list_id=" + encodeURIComponent(document.vicidial_form.list_id.value) + 
+		"&gmt_offset_now=" + encodeURIComponent(document.vicidial_form.gmt_offset_now.value) + 
+		"&phone_code=" + encodeURIComponent(document.vicidial_form.phone_code.value) + 
+		"&phone_number=" + encodeURIComponent(document.vicidial_form.phone_number.value) + 
+		"&title=" + encodeURIComponent(document.vicidial_form.title.value) + 
+		"&first_name=" + encodeURIComponent(document.vicidial_form.first_name.value) + 
+		"&middle_initial=" + encodeURIComponent(document.vicidial_form.middle_initial.value) + 
+		"&last_name=" + encodeURIComponent(document.vicidial_form.last_name.value) + 
+		"&address1=" + encodeURIComponent(document.vicidial_form.address1.value) + 
+		"&address2=" + encodeURIComponent(document.vicidial_form.address2.value) + 
+		"&address3=" + encodeURIComponent(document.vicidial_form.address3.value) + 
+		"&city=" + encodeURIComponent(document.vicidial_form.city.value) + 
+		"&state=" + encodeURIComponent(document.vicidial_form.state.value) + 
+		"&province=" + encodeURIComponent(document.vicidial_form.province.value) + 
+		"&postal_code=" + encodeURIComponent(document.vicidial_form.postal_code.value) + 
+		"&country_code=" + encodeURIComponent(document.vicidial_form.country_code.value) + 
+		"&gender=" + encodeURIComponent(document.vicidial_form.gender.value) + 
+		"&date_of_birth=" + encodeURIComponent(document.vicidial_form.date_of_birth.value) + 
+		"&alt_phone=" + encodeURIComponent(document.vicidial_form.alt_phone.value) + 
+		"&email=" + encodeURIComponent(document.vicidial_form.email.value) + 
+		"&security_phrase=" + encodeURIComponent(document.vicidial_form.security_phrase.value) + 
+		"&comments=" + encodeURIComponent(document.vicidial_form.comments.value) + 
 		"&user=" + user + 
 		"&pass=" + pass + 
 		"&orig_pass=" + orig_pass +
@@ -11842,7 +11844,7 @@ else
 		"&user_group=" + VU_user_group + '' +
 		"&web_vars=" + LIVE_web_vars + '' +
 		webform_session;
-		
+
 		if (custom_field_names.length > 2)
 			{
 			var url_custom_field='';
@@ -11965,6 +11967,7 @@ else
 						{
 						var CFN_value = CFV_array[CFN_tick];
 						}
+					CFN_value = encodeURIComponent(CFN_value);
 					CFN_value = CFN_value.replace(RGnl,'+');
 					CFN_value = CFN_value.replace(RGtab,'+');
 					CFN_value = CFN_value.replace(RGplus,'+');
@@ -11982,31 +11985,31 @@ else
 		if (webformnumber == '2')
 			{web_form_vars_two = web_form_varsX;}
 
-		var SCvendor_lead_code = document.vicidial_form.vendor_lead_code.value;
+		var SCvendor_lead_code = encodeURIComponent(document.vicidial_form.vendor_lead_code.value);
 		var SCsource_id = source_id;
-		var SClist_id = document.vicidial_form.list_id.value;
-		var SCgmt_offset_now = document.vicidial_form.gmt_offset_now.value;
+		var SClist_id = encodeURIComponent(document.vicidial_form.list_id.value);
+		var SCgmt_offset_now = encodeURIComponent(document.vicidial_form.gmt_offset_now.value);
 		var SCcalled_since_last_reset = "";
-		var SCphone_code = document.vicidial_form.phone_code.value;
-		var SCphone_number = document.vicidial_form.phone_number.value;
-		var SCtitle = document.vicidial_form.title.value;
-		var SCfirst_name = document.vicidial_form.first_name.value;
-		var SCmiddle_initial = document.vicidial_form.middle_initial.value;
-		var SClast_name = document.vicidial_form.last_name.value;
-		var SCaddress1 = document.vicidial_form.address1.value;
-		var SCaddress2 = document.vicidial_form.address2.value;
-		var SCaddress3 = document.vicidial_form.address3.value;
-		var SCcity = document.vicidial_form.city.value;
-		var SCstate = document.vicidial_form.state.value;
-		var SCprovince = document.vicidial_form.province.value;
-		var SCpostal_code = document.vicidial_form.postal_code.value;
-		var SCcountry_code = document.vicidial_form.country_code.value;
-		var SCgender = document.vicidial_form.gender.value;
-		var SCdate_of_birth = document.vicidial_form.date_of_birth.value;
-		var SCalt_phone = document.vicidial_form.alt_phone.value;
-		var SCemail = document.vicidial_form.email.value;
-		var SCsecurity_phrase = document.vicidial_form.security_phrase.value;
-		var SCcomments = document.vicidial_form.comments.value;
+		var SCphone_code = encodeURIComponent(document.vicidial_form.phone_code.value);
+		var SCphone_number = encodeURIComponent(document.vicidial_form.phone_number.value);
+		var SCtitle = encodeURIComponent(document.vicidial_form.title.value);
+		var SCfirst_name = encodeURIComponent(document.vicidial_form.first_name.value);
+		var SCmiddle_initial = encodeURIComponent(document.vicidial_form.middle_initial.value);
+		var SClast_name = encodeURIComponent(document.vicidial_form.last_name.value);
+		var SCaddress1 = encodeURIComponent(document.vicidial_form.address1.value);
+		var SCaddress2 = encodeURIComponent(document.vicidial_form.address2.value);
+		var SCaddress3 = encodeURIComponent(document.vicidial_form.address3.value);
+		var SCcity = encodeURIComponent(document.vicidial_form.city.value);
+		var SCstate = encodeURIComponent(document.vicidial_form.state.value);
+		var SCprovince = encodeURIComponent(document.vicidial_form.province.value);
+		var SCpostal_code = encodeURIComponent(document.vicidial_form.postal_code.value);
+		var SCcountry_code = encodeURIComponent(document.vicidial_form.country_code.value);
+		var SCgender = encodeURIComponent(document.vicidial_form.gender.value);
+		var SCdate_of_birth = encodeURIComponent(document.vicidial_form.date_of_birth.value);
+		var SCalt_phone = encodeURIComponent(document.vicidial_form.alt_phone.value);
+		var SCemail = encodeURIComponent(document.vicidial_form.email.value);
+		var SCsecurity_phrase = encodeURIComponent(document.vicidial_form.security_phrase.value);
+		var SCcomments = encodeURIComponent(document.vicidial_form.comments.value);
 		var SCfullname = LOGfullname;
 		var SCfronter = fronter;
 		var SCuser = user;
@@ -12284,6 +12287,7 @@ else
 		encoded = encoded.replace(RGuser_group, SCuser_group);
 		encoded = encoded.replace(RGweb_vars, SCweb_vars);
 		}
+
 	decoded=encoded; // simple no ?
 	decoded = decoded.replace(RGnl, '+');
 	decoded = decoded.replace(RGplus,'+');
