@@ -27,6 +27,7 @@
 # 131016-2101 - Added checking for level 8 add-copy restriction
 # 131208-2156 - Added user log TIMEOUTLOGOUT event status
 # 140108-0707 - Added webserver and hostname to report logging
+# 140305-0905 - Bug fix for issue #744, emergency logout
 #
 
 $startMS = microtime();
@@ -346,7 +347,7 @@ if ($stage == "log_agent_out")
 	{
 	$now_date_epoch = date('U');
 	$inactive_epoch = ($now_date_epoch - 60);
-	$stmt = "SELECT user,campaign_id,UNIX_TIMESTAMP(last_update_time) from vicidial_live_agents where user='" . mysqli_real_escape_string($link, $user) . "';";
+	$stmt = "SELECT user,campaign_id,UNIX_TIMESTAMP(last_update_time),status from vicidial_live_agents where user='" . mysqli_real_escape_string($link, $user) . "';";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "<BR>$stmt\n";}
 	$vla_ct = mysqli_num_rows($rslt);
@@ -356,6 +357,7 @@ if ($stage == "log_agent_out")
 		$VLA_user =					$row[0];
 		$VLA_campaign_id =			$row[1];
 		$VLA_update_time =			$row[2];
+		$VLA_status =				$row[3];
 
 		if ($VLA_update_time > $inactive_epoch)
 			{
@@ -390,7 +392,7 @@ if ($stage == "log_agent_out")
 
 				if ($DB) {echo "\n<BR>VAL VALUES: $VAL_agent_log_id|$VAL_status|$VAL_lead_id\n";}
 
-				if ( ($VAL_wait_epoch < 1) or ( ($VAL_status == 'PAUSE') and ($VAL_dispo_epoch < 1) ) )
+				if ( ($VAL_wait_epoch < 1) or ( (preg_match('/PAUSE/', $VLA_status)) and ($VAL_dispo_epoch < 1) ) )
 					{
 					$VAL_pause_sec = ( ($now_date_epoch - $VAL_pause_epoch) + $VAL_pause_sec);
 					$stmt = "UPDATE vicidial_agent_log SET wait_epoch='$now_date_epoch', pause_sec='$VAL_pause_sec' where agent_log_id='$VAL_agent_log_id';";
