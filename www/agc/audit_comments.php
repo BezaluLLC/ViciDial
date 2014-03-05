@@ -1,13 +1,14 @@
 <?php
 # audit_comments.php
 # 
-# Copyright (C) 2013  poundteam.com,vicidial.org    LICENSE: AGPLv2
+# Copyright (C) 2014  poundteam.com,vicidial.org    LICENSE: AGPLv2
 #
 # This script is designed to display QC audit comments, contributed by poundteam.com
 #
 # changes:
 # 121116-1322 - First build, added to vicidial codebase
 # 130802-0957 - Changed to PHP mysqli functions
+# 140304-2154 - Enabled special characters in comments
 #
 
 require_once("functions.php");
@@ -28,7 +29,7 @@ function audit_comments($lead_id,$list_id,$format,$user,$mel,$NOW_TIME,$link,$se
         if (strlen($row[0]) > 0) {
             $comment=$row[0];
             //Put comment in comment table
-            $stmt="INSERT INTO vicidial_comments (lead_id,user_id,list_id,campaign_id,comment) VALUES ('$lead_id','$user','$list_id','$campaign','$comment');";
+            $stmt="INSERT INTO vicidial_comments (lead_id,user_id,list_id,campaign_id,comment) VALUES ('$lead_id','$user','$list_id','$campaign','".mysqli_real_escape_string($link, $comment)."');";
             if ($format=='debug') {
                 echo "\n<!-- $stmt -->";
             }

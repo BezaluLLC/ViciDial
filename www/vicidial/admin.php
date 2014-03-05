@@ -3275,12 +3275,13 @@ else
 # 140206-1357 - Filter dashes from new or copied campaigns and in-groups
 # 140214-1643 - Added system settings dialplan reload timestamp
 # 140302-0958 - Added Webserver-URL Report
+# 140305-0846 - Bug fix for list modify admin logging issue
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.8-427a';
-$build = '140302-0958';
+$admin_version = '2.8-428a';
+$build = '140305-0846';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -12567,13 +12568,13 @@ if ($ADD==411)
 				$rslt=mysql_to_mysqli($stmt, $link);
 
 ## BEGIN QC Addition for Audited Comments
-			$stmt="INSERT INTO vicidial_lists_custom (audit_comments, list_id) VALUES ('" . mysqli_real_escape_string($link, $audit_comments) . "','$list_id') ON DUPLICATE KEY UPDATE audit_comments='" . mysqli_real_escape_string($link, $audit_comments) . "';";
-			$rslt=mysql_to_mysqli($stmt, $link);
+			$stmtQC="INSERT INTO vicidial_lists_custom (audit_comments, list_id) VALUES ('" . mysqli_real_escape_string($link, $audit_comments) . "','$list_id') ON DUPLICATE KEY UPDATE audit_comments='" . mysqli_real_escape_string($link, $audit_comments) . "';";
+			$rslt=mysql_to_mysqli($stmtQC, $link);
                         if ($DB) {echo "|$stmt|\n";}
 ## END QC Addition for Audited Comments
 
 				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
+				$SQL_log = "$stmt|$stmtQC|";
 				$SQL_log = preg_replace('/;/', '', $SQL_log);
 				$SQL_log = addslashes($SQL_log);
 				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='MODIFY', record_id='$list_id', event_code='ADMIN MODIFY LIST', event_sql=\"$SQL_log\", event_notes='';";
