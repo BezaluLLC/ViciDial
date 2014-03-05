@@ -4,7 +4,7 @@
 #
 # This script is designed to put all  records from call_log, vicidial_log and 
 # vicidial_agent_log in relevant _archive tables and delete records in original
-# tables older than X months from current date. Also, deletes old
+# tables older than X days or months from current date. Also, deletes old
 # server_performance table records without archiving them as well as optimizing
 # all involved tables.
 #
@@ -37,7 +37,11 @@
 # 120402-2144 - Added "--daily" flag that will archive call_log and vicidial_log_extended logs past 24 hours
 # 120831-1536 - Added rolling of vicidial_dial_log entries
 # 140107-1508 - Added rolling of vicidial_api_log entries
+# 140305-0955 - Changed to use --days (--months is approximation[bug fix]), changed default from 2 months to 2 years
 #
+
+$CALC_TEST=0;
+$T=0;   $TEST=0;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -53,10 +57,12 @@ if (length($ARGV[0])>1)
 		{
 		print "allowed run time options:\n";
 		print "  [--daily] = only archives call_log, vicidial_log_extended and vicidial_dial_log tables, only last 24 hours kept\n";
-		print "  [--months=XX] = number of months to archive past, must be 12 or less, default is 2\n";
+		print "  [--days=XX] = number of days to archive past, default is 732(2 years)\n";
+		print "  [--months=XX] = number of months to archive past, default is 24(2 years) If 'days' used then 'months' ignored\n";
 		print "  [--closer-log] = archive vicidial_closer_log records\n";
 		print "  [--queue-log] = archive QM queue_log records\n";
 		print "  [--quiet] = quiet\n";
+		print "  [--calc-test] = date calculation test only\n";
 		print "  [-t] = test\n\n";
 		exit;
 		}
@@ -71,6 +77,11 @@ if (length($ARGV[0])>1)
 			$T=1;   $TEST=1;
 			print "\n-----TESTING-----\n\n";
 			}
+		if ($args =~ /--calc-test/i)
+			{
+			$CALC_TEST=1;
+			print "\n-----DATE CALCULATION TESTING ONLY-----\n\n";
+			}
 		if ($args =~ /--daily/i)
 			{
 			$daily=1;
@@ -83,10 +94,21 @@ if (length($ARGV[0])>1)
 			$CLImonths = $data_in[1];
 			$CLImonths =~ s/ .*$//gi;
 			$CLImonths =~ s/\D//gi;
-			if ($CLImonths > 12)
-				{$CLImonths=12;}
+			if ($CLImonths > 9999)
+				{$CLImonths=24;}
 			if ($Q < 1) 
 				{print "\n----- MONTHS OVERRIDE: $CLImonths -----\n\n";}
+			}
+		if ($args =~ /--days=/i)
+			{
+			@data_in = split(/--days=/,$args);
+			$CLIdays = $data_in[1];
+			$CLIdays =~ s/ .*$//gi;
+			$CLIdays =~ s/\D//gi;
+			if ($CLIdays > 999999)
+				{$CLIdays=730;}
+			if ($Q < 1) 
+				{print "\n----- DAYS OVERRIDE: $CLIdays -----\n\n";}
 			}
 		if ($args =~ /--closer-log/i)
 			{
@@ -107,32 +129,34 @@ else
 	print "no command line options set\n";
 	}
 ### end parsing run-time options ###
-if ( ($CLImonths > 12) || ($CLImonths < 1) )
-	{$CLImonths=2;}
+if ( ($CLImonths > 9999) || ($CLImonths < 1) || (length($CLImonths)<1) )
+	{$CLImonths=24;}
+if ( (length($CLIdays)<1) || ($CLIdays < 1) )
+	{
+	$CLIdays = ($CLImonths * 30.5);
+	$CLIdays = sprintf("%.0f",$CLIdays);
+	}
 
 $secX = time();
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
-$year = ($year + 1900);
-$mon = ($mon - $CLImonths);
-if ($mon < 0) 		
-	{		
-	$mon = ($mon + 12);
-	$year = ($year - 1);		
-	}
-
-use Time::Local;
-$del_epoch = timelocal(0,0,2,$mday,$mon,$year);
-
-$mon++;	
-if ($mon < 10) {$mon = "0$mon";}	
-if ($mday < 10) {$mday = "0$mday";}	
-
-$del_time = "$year-$mon-$mday 01:00:00";
 
 if ($daily > 0)
 	{
-	$CLImonths = '*** DAILY MODE ***';
+	$CLIdays = '*** DAILY MODE ***';
 	$del_epoch = ($secX - 86400);   # 24 hours ago
+	($RMsec,$RMmin,$RMhour,$RMmday,$RMmon,$RMyear,$RMwday,$RMyday,$RMisdst) = localtime($del_epoch);
+	$RMyear = ($RMyear + 1900);
+	$RMmon++;
+	if ($RMmon < 10) {$RMmon = "0$RMmon";}
+	if ($RMmday < 10) {$RMmday = "0$RMmday";}
+	if ($RMhour < 10) {$RMhour = "0$RMhour";}
+	if ($RMmin < 10) {$RMmin = "0$RMmin";}
+	if ($RMsec < 10) {$RMsec = "0$RMsec";}
+	$del_time = "$RMyear-$RMmon-$RMmday $RMhour:$RMmin:$RMsec";
+	}
+else
+	{
+	$del_epoch = ($secX - (86400 * $CLIdays));   # X days ago
 	($RMsec,$RMmin,$RMhour,$RMmday,$RMmon,$RMyear,$RMwday,$RMyday,$RMisdst) = localtime($del_epoch);
 	$RMyear = ($RMyear + 1900);
 	$RMmon++;
@@ -147,10 +171,14 @@ if ($daily > 0)
 if (!$Q) {print "\n\n-- ADMIN_archive_log_tables.pl --\n\n";}
 if (!$Q) {print "This program is designed to put all records from  call_log, vicidial_log,\n";}
 if (!$Q) {print "server_performance, vicidial_agent_log, vicidial_carrier_log, \n";}
-if (!$Q) {print "vicidial_call_notes and vicidial_lead_search_log in relevant\n";}
+if (!$Q) {print "vicidial_call_notes, vicidial_lead_search_log and others into relevant\n";}
 if (!$Q) {print "_archive tables and delete records in original tables older than\n";}
-if (!$Q) {print "$CLImonths months ( $del_time|$del_epoch ) from current date \n\n";}
+if (!$Q) {print "$CLIdays days ( $del_time|$del_epoch ) from current date \n\n";}
 
+if ($CALC_TEST > 0)
+	{
+	exit;
+	}
 
 # default path to astguiclient configuration file:
 $PATHconf =		'/etc/astguiclient.conf';
@@ -202,7 +230,7 @@ if (!$T)
 	{
 	if ($daily > 0)
 		{
-		# The --daily option was added because these two tables(call_log, vicidial_dial_log and  
+		# The --daily option was added because these tables(call_log, vicidial_dial_log and  
 		# vicidial_log_extended) are not used for any processes or reports past
 		# 24 hours, and on systems dialing 500,000 calls per day or more, this
 		# can lead to system delay issues even if the 1-month archive process is
