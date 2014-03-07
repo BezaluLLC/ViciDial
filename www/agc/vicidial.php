@@ -14577,6 +14577,7 @@ function phone_number_format(formatphone) {
 <!--
 	div.scroll_calllog {height: <?php echo $CQheight ?>px; width: <?php echo $MNwidth ?>px; overflow: scroll;}
 	div.scroll_callback {height: 300px; width: <?php echo $MNwidth ?>px; overflow: scroll;}
+	div.scroll_callback_auto {height: 300px; width: <?php echo $MNwidth ?>px; overflow: auto;}
 	div.scroll_script {height: <?php echo $SSheight ?>px; width: <?php echo $SDwidth ?>px; background: #FFF5EC; overflow: auto; font-size: 12px;  font-family: sans-serif;}
 	div.noscroll_script {height: <?php echo $SSheight ?>px; width: <?php echo $SDwidth ?>px; background: #FFF5EC; overflow: hidden; font-size: 12px;  font-family: sans-serif;}
 -->
@@ -15080,7 +15081,7 @@ if ($agent_display_dialable_leads > 0)
 	if ($webphone_location == 'bar')
         {echo "<img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
-    <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_script" id="FormContents"><iframe src="./vdc_form_display.php?lead_id=&list_id=&stage=WELCOME" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="vcFormIFrame" name="vcFormIFrame" width="<?php echo $SDwidth ?>px" height="<?php echo $SSheight ?>px" STYLE="z-index:18"> </iframe></div></font></td></tr></table>
+    <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_script" id="FormContents"><iframe src="./vdc_form_display.php?lead_id=&list_id=&stage=WELCOME" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="vcFormIFrame" name="vcFormIFrame" width="<?php echo $SDwidth ?>px" height="<?php echo $SSheight ?>px" STYLE="z-index:<?php $zi++; echo $zi ?>"> </iframe></div></font></td></tr></table>
 </span>
 
 <span style="position:absolute;left:154px;top:<?php echo $SFheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="EmailPanel">
@@ -15088,7 +15089,7 @@ if ($agent_display_dialable_leads > 0)
 	if ($webphone_location == 'bar')
         {echo "<img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
-    <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_script" id="EmailContents"><iframe src="./vdc_email_display.php?lead_id=&list_id=&stage=WELCOME" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="vcEmailIFrame" name="vcEmailIFrame" width="<?php echo $SDwidth ?>px" height="<?php echo $SSheight ?>px" STYLE="z-index:19"> </iframe></div></font></td></tr></table>
+    <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_script" id="EmailContents"><iframe src="./vdc_email_display.php?lead_id=&list_id=&stage=WELCOME" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="vcEmailIFrame" name="vcEmailIFrame" width="<?php echo $SDwidth ?>px" height="<?php echo $SSheight ?>px" STYLE="z-index:<?php $zi++; echo $zi ?>"> </iframe></div></font></td></tr></table>
 </span>
 
 <span style="position:absolute;left:<?php $tempAMwidth = ($AMwidth - 15); echo $tempAMwidth ?>px;top:<?php echo $SRheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="FormRefresH">
@@ -15442,7 +15443,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 	if ($webphone_location == 'bar')
         {echo "<br /><img src=\"./images/pixel.gif\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
-	<div class="scroll_callback" id="CallBacKsLisT"></div>
+	<div class="scroll_callback_auto" id="CallBacKsLisT"></div>
     <br /> &nbsp;
 	<a href="#" onclick="CalLBacKsLisTCheck();return false;">Refresh</a>
 	 &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp; 
