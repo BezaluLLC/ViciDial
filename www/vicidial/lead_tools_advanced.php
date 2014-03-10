@@ -2539,11 +2539,11 @@ if (
 	echo "</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Entry Date</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_move_entry_date' id='enable_move_entry_date' value='enabled'>\n";
-	echo "<input type='text' name='move_entry_date' id='move_entry_date' value='' disabled=true>\n";
+	echo "<input type='text' name='move_entry_date' id='move_entry_date' value='' disabled=true> (YYYY-MM-DD)\n";
 	echo "</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Modify Date</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_move_modify_date' id='enable_move_modify_date' value='enabled'>\n";
-	echo "<input type='text' name='move_modify_date' id='move_modify_date' value='' disabled=true>\n";
+	echo "<input type='text' name='move_modify_date' id='move_modify_date' value='' disabled=true> (YYYY-MM-DD)\n";
 	echo "</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Security Phrase</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_move_security_phrase' id='enable_move_security_phrase' value='enabled'>\n";
@@ -2628,11 +2628,11 @@ if (
 	echo "</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Entry Date</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_update_entry_date' id='enable_update_entry_date' value='enabled'>\n";
-	echo "<input type='text' name='update_entry_date' id='update_entry_date' value='' disabled=true>\n";
+	echo "<input type='text' name='update_entry_date' id='update_entry_date' value='' disabled=true> (YYYY-MM-DD)\n";
 	echo "</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Modify Date</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_update_modify_date' id='enable_update_modify_date' value='enabled'>\n";
-	echo "<input type='text' name='update_modify_date' id='update_modify_date' value='' disabled=true>\n";
+	echo "<input type='text' name='update_modify_date' id='update_modify_date' value='' disabled=true> (YYYY-MM-DD)\n";
 	echo "</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Security Phrase</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_update_security_phrase' id='enable_update_security_phrase' value='enabled'>\n";
@@ -2706,11 +2706,11 @@ if (
 		echo "</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Entry Date</td></td><td align=left>\n";
 		echo "<input type='checkbox' name='enable_delete_entry_date' id='enable_delete_entry_date' value='enabled'>\n";
-		echo "<input type='text' name='delete_entry_date' id='delete_entry_date' value='' disabled=true>\n";
+		echo "<input type='text' name='delete_entry_date' id='delete_entry_date' value='' disabled=true> (YYYY-MM-DD)\n";
 		echo "</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Modify Date</td></td><td align=left>\n";
 		echo "<input type='checkbox' name='enable_delete_modify_date' id='enable_delete_modify_date' value='enabled'>\n";
-		echo "<input type='text' name='delete_modify_date' id='delete_modify_date' value='' disabled=true>\n";
+		echo "<input type='text' name='delete_modify_date' id='delete_modify_date' value='' disabled=true> (YYYY-MM-DD)\n";
 		echo "</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Security Phrase</td></td><td align=left>\n";
 		echo "<input type='checkbox' name='enable_delete_security_phrase' id='enable_delete_security_phrase' value='enabled'>\n";
@@ -2761,12 +2761,12 @@ if (
 	echo "<tr bgcolor=#B6D3FC><td align=right>Entry Date</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_callback_entry_date' id='enable_callback_entry_date' value='enabled'>\n";
 	echo "<input type='text' name='callback_entry_start_date' id='callback_entry_start_date' value='' disabled=true> to ";
-	echo "<input type='text' name='callback_entry_end_date' id='callback_entry_end_date' value='' disabled=true>\n";
+	echo "<input type='text' name='callback_entry_end_date' id='callback_entry_end_date' value='' disabled=true> (YYYY-MM-DD)\n";
 	echo "</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Callback Date</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_callback_callback_date' id='enable_callback_callback_date' value='enabled'>\n";
 	echo "<input type='text' name='callback_callback_start_date' id='callback_callback_start_date' value='' disabled=true> to ";
-	echo "<input type='text' name='callback_callback_end_date' id='callback_callback_end_date' value='' disabled=true>\n";
+	echo "<input type='text' name='callback_callback_end_date' id='callback_callback_end_date' value='' disabled=true> (YYYY-MM-DD)\n";
 	echo "</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td colspan=2 align=center><input type=submit name=callback_submit value='switch callbacks'></td></tr>\n";
 	# END Callback Convert
