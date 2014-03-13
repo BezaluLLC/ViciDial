@@ -1170,7 +1170,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="campaigns-campaign_rec_filename">
 <BR>
-<B>Campaign Rec Filename -</B> This field allows you to customize the name of the recording when Campaign recording is ONDEMAND or ALLCALLS. The allowed variables are CAMPAIGN INGROUP CUSTPHONE FULLDATE TINYDATE EPOCH AGENT VENDORLEADCODE LEADID. The default is FULLDATE_AGENT and would look like this 20051020-103108_6666. Another example is CAMPAIGN_TINYDATE_CUSTPHONE which would look like this TESTCAMP_51020103108_3125551212. Te resulting filename must be less than 90 characters in length.
+<B>Campaign Rec Filename -</B> This field allows you to customize the name of the recording when Campaign recording is ONDEMAND or ALLCALLS. The allowed variables are CAMPAIGN INGROUP CUSTPHONE FULLDATE TINYDATE EPOCH AGENT VENDORLEADCODE LEADID CALLID. The default is FULLDATE_AGENT and would look like this 20051020-103108_6666. Another example is CAMPAIGN_TINYDATE_CUSTPHONE which would look like this TESTCAMP_51020103108_3125551212. Te resulting filename must be less than 90 characters in length.
 
 <BR>
 <A NAME="campaigns-allcalls_delay">
@@ -2227,7 +2227,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_groups-ingroup_rec_filename">
 <BR>
-<B>In-Group Recording Filename -</B> This field will override the Campaign Recording Filenaming Scheme unless it is set to NONE. The allowed variables are CAMPAIGN INGROUP CUSTPHONE FULLDATE TINYDATE EPOCH AGENT VENDORLEADCODE LEADID. The default is FULLDATE_AGENT and would look like this 20051020-103108_6666. Another example is CAMPAIGN_TINYDATE_CUSTPHONE which would look like this TESTCAMP_51020103108_3125551212. Te resulting filename must be less than 90 characters in length. Default is NONE.
+<B>In-Group Recording Filename -</B> This field will override the Campaign Recording Filenaming Scheme unless it is set to NONE. The allowed variables are CAMPAIGN INGROUP CUSTPHONE FULLDATE TINYDATE EPOCH AGENT VENDORLEADCODE LEADID CALLID. The default is FULLDATE_AGENT and would look like this 20051020-103108_6666. Another example is CAMPAIGN_TINYDATE_CUSTPHONE which would look like this TESTCAMP_51020103108_3125551212. Te resulting filename must be less than 90 characters in length. Default is NONE.
 
 <?php
 if ($SSqc_features_active > 0)

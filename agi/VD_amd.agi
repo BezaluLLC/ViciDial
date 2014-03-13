@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# VD_amd.agi version 2.6
+# VD_amd.agi version 2.8
 #
 # runs after a call goes through AMD in extensions.conf to send the call on to
 # it's proper destination, or when agent sends to VM message
@@ -21,7 +21,7 @@
 # exten => _8320*.,1,AGI(VD_amd.agi,${EXTEN}-----YES)
 # exten => _8320*.,2,Hangup
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 60206-1434 - first build
@@ -45,6 +45,7 @@
 # 120430-2214 - Converted call to Monitor app to be asterisk 1.8 compatible
 # 130108-1808 - Changes for Asterisk 1.8 compatibility
 # 130210-1113 - Added options for CALLMENU|INGROUP cpd_amd_actions
+# 140312-2110 - Added CALLID as recording filename variable
 #
 
 $script = 'VD_amd.agi';
@@ -507,6 +508,7 @@ else
 			$campaign_rec_filename =~ s/AGENT/VDAD/gi;
 			$campaign_rec_filename =~ s/VENDORLEADCODE/$vendor_lead_code/gi;
 			$campaign_rec_filename =~ s/LEADID/$VD_lead_id/gi;
+			$campaign_rec_filename =~ s/CALLID/$callerid/gi;
 			$campaign_rec_filename =~ s/\"|\'//gi;
 			$campaign_rec_filename =~ s/ //gi;
 

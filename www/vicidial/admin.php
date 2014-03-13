@@ -109,9 +109,9 @@ $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
 $QUERY_STRING = getenv("QUERY_STRING");
 
-$Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report, Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Single Agent Daily, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report, Carrier Log Report, Campaign Debug, Hangup Cause Report, Lists Pass Report';
+$Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report, Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Single Agent Daily, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report, Carrier Log Report, Campaign Debug, Hangup Cause Report, Lists Pass Report, Called Counts List IDs Report';
 
-$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound Email Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report , Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Single Agent Daily, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Custom Reports Links, CallCard Search, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report, Lists Pass Report';
+$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound Email Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report , Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Single Agent Daily, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Custom Reports Links, CallCard Search, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report, Lists Pass Report, Called Counts List IDs Report';
 
 $Vtables = 'NONE,log_noanswer,did_agent_log,contact_information';
 
@@ -3276,12 +3276,13 @@ else
 # 140214-1643 - Added system settings dialplan reload timestamp
 # 140302-0958 - Added Webserver-URL Report
 # 140305-0846 - Bug fix for list modify admin logging issue
+# 140313-0727 - Added links to Called Counts List IDs Report
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.8-428a';
-$build = '140305-0846';
+$admin_version = '2.8-429a';
+$build = '140313-0727';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -31413,7 +31414,10 @@ if ($ADD==999999)
 		if ( (preg_match("/Lists Pass Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 			{echo "<LI><a href=\"AST_LISTS_pass_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Lists Pass Report</a></FONT>\n";}
 		if ( (preg_match("/Lists Campaign Statuses Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
-			{echo "<LI><a href=\"AST_LISTS_campaign_stats.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Lists Campaign Statuses Report</a></FONT>\n";}		
+			{echo "<LI><a href=\"AST_LISTS_campaign_stats.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Lists Campaign Statuses Report</a></FONT>\n";}
+		if ( (preg_match("/Called Counts List IDs Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+			{echo "<LI><a href=\"called_counts_multilist_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Called Counts List IDs Report</a></FONT>\n";}
+
 		if ( (preg_match("/Campaign Status List Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 			{echo "<LI><a href=\"AST_campaign_status_list_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Campaign Status List Report</a></FONT>\n";}
 				# echo "<LI><a href=\"vicidial_sales_viewer.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>AGENT SPREADSHEET PERFORMANCE</a></FONT>\n";

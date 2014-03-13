@@ -422,10 +422,11 @@
 # 140214-1851 - Added preview_dial_action API function
 # 140301-2059 - Added API functions options for SEARCH for phone within lead_id and Dial Next Number
 # 140302-1018 - Changes to allow for & and + in standard fields
+# 140312-2109 - Added CALLID as recording filename variable
 #
 
-$version = '2.8-391c';
-$build = '140302-1018';
+$version = '2.8-392c';
+$build = '140312-2109';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -5250,6 +5251,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				var REGrecAGENT = new RegExp("AGENT","g");
 				var REGrecVENDORLEADCODE = new RegExp("VENDORLEADCODE","g");
 				var REGrecLEADID = new RegExp("LEADID","g");
+				var REGrecCALLID = new RegExp("CALLID","g");
 				filename = LIVE_campaign_rec_filename;
 				filename = filename.replace(REGrecCAMPAIGN, campaign);
 				filename = filename.replace(REGrecINGROUP, VDCL_group_id);
@@ -5260,6 +5262,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				filename = filename.replace(REGrecAGENT, user);
 				filename = filename.replace(REGrecVENDORLEADCODE, recVendorLeadCode);
 				filename = filename.replace(REGrecLEADID, recLeadID);
+				filename = filename.replace(REGrecCALLID, LasTCID);
 			//	filename = filedate + "_" + user_abb;
 				var query_recording_exten = recording_exten;
 				var channelrec = "Local/" + conf_silent_prefix + '' + taskconfrec + "@" + ext_context;

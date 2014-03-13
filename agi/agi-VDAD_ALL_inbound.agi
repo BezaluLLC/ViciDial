@@ -189,6 +189,7 @@
 # 131209-1539 - Added called_count logging
 # 140126-1129 - Added VMAIL_NO_INST options
 # 140215-2133 - Added several variable options for QM socket URL
+# 140312-2111 - Added CALLID as recording filename variable
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -3299,6 +3300,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 						$campaign_rec_filename =~ s/AGENT/$VDADuser/gi;
 						$campaign_rec_filename =~ s/VENDORLEADCODE/$vendor_lead_code/gi;
 						$campaign_rec_filename =~ s/LEADID/$insert_lead_id/gi;
+						$campaign_rec_filename =~ s/CALLID/$callerid/gi;
 						$campaign_rec_filename =~ s/\"|\'//gi;
 
 						%ast_ver_str = parse_asterisk_version($asterisk_version);

@@ -57,6 +57,7 @@ use MIME::QuotedPrint;
 # 130607-0155 - Encoding fix
 # 140212-0719 - Added ignoresizeerrors option, changed debug and added --force-check option
 # 140225-1241 - Added option for SSL no-cert-verify (--ssl-no-cert)
+# 140313-0905 - Added Debug options when --debugX for both IMAP and POP3
 #
 
 # default path to astguiclient configuration file:
@@ -247,6 +248,7 @@ while (@row=$rslt->fetchrow_array) {
 				  User     => "$VARemail_user",
 				  Password => "$VARemail_pwd",
 				  Ignoresizeerrors => 1,
+				  Debug => "$DBX",
 				  Socket   => IO::Socket::SSL->new
 					(	Proto    => 'tcp',
 						PeerAddr => "$VARemail_server",
@@ -264,6 +266,7 @@ while (@row=$rslt->fetchrow_array) {
 				  Port     => 993,
 				  Ssl      =>  1,
 				  Ignoresizeerrors => 1,
+				  Debug => "$DBX",
 				  );
 				}
 
@@ -617,6 +620,7 @@ while (@row=$rslt->fetchrow_array) {
 										   HOST     => "$VARemail_server",
 										   PORT		=> 995,
 										   USESSL   => true,
+										   DEBUG => "$DBX",
 										 )
 			  or die "Cannot connect through POP3Client: $!";
 
@@ -947,7 +951,7 @@ while (@row=$rslt->fetchrow_array) {
 										   HOST     => "$VARemail_server",
 										   PORT		=> 995,
 										   USESSL   => true,
-										   #DEBUG => true,
+										   DEBUG => "$DBX",
 										 )
 			or die "Cannot connect through POP3Client: $!";
 			$pop->Close();
