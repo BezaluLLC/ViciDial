@@ -108,6 +108,7 @@
 # 131209-1735 - Added called_count logging
 # 140126-1128 - Added VMAIL_NO_INST options
 # 140215-2121 - Added several variable options for QM socket URL
+# 140312-2112 - Added CALLID as recording filename variable
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -716,6 +717,7 @@ if ($VDACaffected_rows > 0)
 		$campaign_rec_filename =~ s/AGENT/VDAD/gi;
 		$campaign_rec_filename =~ s/VENDORLEADCODE/$vendor_lead_code/gi;
 		$campaign_rec_filename =~ s/LEADID/$CIDlead_id/gi;
+		$campaign_rec_filename =~ s/CALLID/$callerid/gi;
 		$campaign_rec_filename =~ s/\"|\'//gi;
 		$campaign_rec_filename =~ s/ //gi;
 
@@ -2446,6 +2448,7 @@ while ($drop_timer <= $DROP_TIME)
 						$campaign_rec_filename =~ s/AGENT/$VDADuser/gi;
 						$campaign_rec_filename =~ s/VENDORLEADCODE/$vendor_lead_code/gi;
 						$campaign_rec_filename =~ s/LEADID/$CIDlead_id/gi;
+						$campaign_rec_filename =~ s/CALLID/$callerid/gi;
 						$campaign_rec_filename =~ s/\"|\'//gi;
 
 						%ast_ver_str = parse_asterisk_version($asterisk_version);
@@ -3049,6 +3052,7 @@ while ($drop_timer <= $DROP_TIME)
 						$campaign_rec_filename =~ s/AGENT/$VDADuser/gi;
 						$campaign_rec_filename =~ s/VENDORLEADCODE/$vendor_lead_code/gi;
 						$campaign_rec_filename =~ s/LEADID/$CIDlead_id/gi;
+						$campaign_rec_filename =~ s/CALLID/$callerid/gi;
 						$campaign_rec_filename =~ s/\"|\'//gi;
 
 						%ast_ver_str = parse_asterisk_version($asterisk_version);
