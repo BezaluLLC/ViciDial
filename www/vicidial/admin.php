@@ -3277,12 +3277,13 @@ else
 # 140302-0958 - Added Webserver-URL Report
 # 140305-0846 - Bug fix for list modify admin logging issue
 # 140313-0727 - Added links to Called Counts List IDs Report
+# 140313-1014 - Added warning to in-groups if they are not set as allowed in any campaigns
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.8-429a';
-$build = '140313-0727';
+$admin_version = '2.8-430a';
+$build = '140313-1014';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -22299,6 +22300,7 @@ if ($ADD==3111)
 
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
+		$query_group_id =			$row[0];
 		$group_name =				$row[1];
 		$group_color =				$row[2];
 		$active =					$row[3];
@@ -22537,16 +22539,30 @@ if ($ADD==3111)
 		else 
 			{$Hgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
 
+		$allowed_campaigns_count=0;
+		$allowed_campaigns_warning='';
+		$stmt="SELECT count(*) from vicidial_campaigns where closer_campaigns LIKE \"% $query_group_id %\" $LOGallowed_campaignsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$campin_to_print = mysqli_num_rows($rslt);
+		$vc_allowed_ct=0;
+		if ($campin_to_print > $vc_allowed_ct) 
+			{
+			$rowc=mysqli_fetch_row($rslt);
+			$allowed_campaigns_count = $rowc[0];
+			$vc_allowed_ct++;
+			}
+		if ($allowed_campaigns_count < 1)
+			{$allowed_campaigns_warning='<font color=red><b><br> &nbsp; Not set as allowed in any campaigns!</b></font>';}
 
-		echo "<br>MODIFY A GROUPS RECORD: $row[0]<form action=$PHP_SELF method=POST name=admin_form id=admin_form>\n";
+		echo "<br>MODIFY A GROUPS RECORD: $query_group_id<form action=$PHP_SELF method=POST name=admin_form id=admin_form>\n";
 		echo "<input type=hidden name=ADD value=4111>\n";
-		echo "<input type=hidden name=group_id value=\"$row[0]\">\n";
+		echo "<input type=hidden name=group_id value=\"$query_group_id\">\n";
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
 		echo "<input type=hidden name=stage value=\"SUBMIT\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Group ID: </td><td align=left><b>$row[0]</b>$NWB#inbound_groups-group_id$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Group Name: </td><td align=left><input type=text name=group_name size=30 maxlength=30 value=\"$row[1]\">$NWB#inbound_groups-group_name$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Group Color: </td><td align=left bgcolor=\"$row[2]\" id=\"group_color_td\"><input type=text name=group_color size=7 maxlength=7 value=\"$row[2]\">$NWB#inbound_groups-group_color$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Group ID: </td><td align=left><b>$query_group_id</b>$NWB#inbound_groups-group_id$NWE $allowed_campaigns_warning</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Group Name: </td><td align=left><input type=text name=group_name size=30 maxlength=30 value=\"$group_name\">$NWB#inbound_groups-group_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Group Color: </td><td align=left bgcolor=\"$group_color\" id=\"group_color_td\"><input type=text name=group_color size=7 maxlength=7 value=\"$group_color\">$NWB#inbound_groups-group_color$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option>N</option><option SELECTED>$active</option></select>$NWB#inbound_groups-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Calldate: </td><td align=left>$group_calldate$NWB#inbound_groups-group_calldate$NWE</td></tr>\n";
 
@@ -23325,6 +23341,7 @@ if ($ADD==3811)
 
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
+		$query_group_id =			$row[0];
 		$group_name =				$row[1];
 		$group_color =				$row[2];
 		$active =					$row[3];
@@ -23554,16 +23571,30 @@ if ($ADD==3811)
 		else 
 			{$Hgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
 
+		$allowed_campaigns_count=0;
+		$allowed_campaigns_warning='';
+		$stmt="SELECT count(*) from vicidial_campaigns where closer_campaigns LIKE \"% $query_group_id %\" $LOGallowed_campaignsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$campin_to_print = mysqli_num_rows($rslt);
+		$vc_allowed_ct=0;
+		if ($campin_to_print > $vc_allowed_ct) 
+			{
+			$rowc=mysqli_fetch_row($rslt);
+			$allowed_campaigns_count = $rowc[0];
+			$vc_allowed_ct++;
+			}
+		if ($allowed_campaigns_count < 1)
+			{$allowed_campaigns_warning='<font color=red><b><br> &nbsp; Not set as allowed in any campaigns!</b></font>';}
 
-		echo "<br>MODIFY AN EMAIL GROUPS RECORD: $row[0]<form action=$PHP_SELF method=POST name=admin_form id=admin_form>\n";
+		echo "<br>MODIFY AN EMAIL GROUPS RECORD: $query_group_id<form action=$PHP_SELF method=POST name=admin_form id=admin_form>\n";
 		echo "<input type=hidden name=ADD value=4811>\n";
-		echo "<input type=hidden name=group_id value=\"$row[0]\">\n";
+		echo "<input type=hidden name=group_id value=\"$query_group_id\">\n";
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
 		echo "<input type=hidden name=stage value=\"SUBMIT\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Group ID: </td><td align=left><b>$row[0]</b>$NWB#inbound_groups-group_id$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Group Name: </td><td align=left><input type=text name=group_name size=30 maxlength=30 value=\"$row[1]\">$NWB#inbound_groups-group_name$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Group Color: </td><td align=left bgcolor=\"$row[2]\" id=\"group_color_td\"><input type=text name=group_color size=7 maxlength=7 value=\"$row[2]\">$NWB#inbound_groups-group_color$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Group ID: </td><td align=left><b>$query_group_id</b>$NWB#inbound_groups-group_id$NWE $allowed_campaigns_warning</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Group Name: </td><td align=left><input type=text name=group_name size=30 maxlength=30 value=\"$group_name\">$NWB#inbound_groups-group_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Group Color: </td><td align=left bgcolor=\"$group_color\" id=\"group_color_td\"><input type=text name=group_color size=7 maxlength=7 value=\"$group_color\">$NWB#inbound_groups-group_color$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option>N</option><option SELECTED>$active</option></select>$NWB#inbound_groups-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Email Date: </td><td align=left>$group_calldate$NWB#inbound_groups-group_emaildate$NWE</td></tr>\n";
 
@@ -29492,18 +29523,46 @@ if ($ADD==1000)
 	while ($ingroups_to_print > $o) 
 		{
 		$row=mysqli_fetch_row($rslt);
+		$group_id_ary[$o] =			$row[0];
+		$group_name_ary[$o] =		$row[1];
+		$group_priority_ary[$o] =	$row[2];
+		$group_active_ary[$o] =		$row[3];
+		$group_time_ary[$o] =		$row[4];
+		$group_color_ary[$o] =		$row[5];
+		$group_group_ary[$o] =		$row[6];
+		$o++;
+		}
+
+	$o=0;
+	while ($ingroups_to_print > $o) 
+		{
+		$allowed_campaigns_count=0;
+		$allowed_campaigns_warning='';
+		$stmt="SELECT count(*) from vicidial_campaigns where closer_campaigns LIKE \"% $group_id_ary[$o] %\" $LOGallowed_campaignsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$campin_to_print = mysqli_num_rows($rslt);
+		$vc_allowed_ct=0;
+		if ($campin_to_print > $vc_allowed_ct) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			$allowed_campaigns_count = $row[0];
+			$vc_allowed_ct++;
+			}
+		if ($allowed_campaigns_count < 1)
+			{$allowed_campaigns_warning='<font color=red><b> &nbsp; NA</b></font>';}
+
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3111&group_id=$row[0]\">$row[0]</a></td>";
-		echo "<td><font size=1> $row[1]</td>";
-		echo "<td><font size=1> $row[2]</td>";
-		echo "<td><font size=1> $row[3]</td>";
-		echo "<td><font size=1> $row[6]</td>";
-		echo "<td><font size=1> $row[4]</td>";
-		echo "<td bgcolor=\"$row[5]\"><font size=1> &nbsp;</td>";
-		echo "<td><font size=1><a href=\"$PHP_SELF?ADD=3111&group_id=$row[0]\">MODIFY</a></td></tr>\n";
+		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3111&group_id=$group_id_ary[$o]\">$group_id_ary[$o]</a></td>";
+		echo "<td><font size=1> $group_name_ary[$o]</td>";
+		echo "<td><font size=1> $group_priority_ary[$o]</td>";
+		echo "<td><font size=1> $group_active_ary[$o] $allowed_campaigns_warning</td>";
+		echo "<td><font size=1> $group_group_ary[$o]</td>";
+		echo "<td><font size=1> $group_time_ary[$o]</td>";
+		echo "<td bgcolor=\"$group_color_ary[$o]\"><font size=1> &nbsp;</td>";
+		echo "<td><font size=1><a href=\"$PHP_SELF?ADD=3111&group_id=$group_id_ary[$o]\">MODIFY</a></td></tr>\n";
 		$o++;
 		}
 
@@ -29542,10 +29601,19 @@ if ( ($ADD==1800) and ($SSallow_emails>0) )
 		$row=mysqli_fetch_row($rslt);
 
 		## Get unhandled count
-		$ct_stmt="select count(*) From vicidial_email_list where status='NEW' and group_id='$row[0]'";
+		$ct_stmt="SELECT count(*) From vicidial_email_list where status='NEW' and group_id='$row[0]'";
 		$ct_rslt=mysql_to_mysqli($ct_stmt, $link);
 		$ct_row=mysqli_fetch_row($ct_rslt);
 		$unhandled_emails=$ct_row[0];
+		
+		$allowed_campaigns_warning='';
+		## Get campaign allowed count
+		$ct_stmt="SELECT count(*) from vicidial_campaigns where closer_campaigns LIKE \"% $row[0] %\" $LOGallowed_campaignsSQL;";
+		$ct_rslt=mysql_to_mysqli($ct_stmt, $link);
+		$ct_row=mysqli_fetch_row($ct_rslt);
+		$email_allowed_campaigns_count=$ct_row[0];
+		if ($email_allowed_campaigns_count < 1)
+			{$allowed_campaigns_warning='<font color=red><b> &nbsp; NA</b></font>';}
 		
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
@@ -29554,7 +29622,7 @@ if ( ($ADD==1800) and ($SSallow_emails>0) )
 		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3811&group_id=$row[0]\">$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
-		echo "<td><font size=1> $row[3]</td>";
+		echo "<td><font size=1> $row[3] $allowed_campaigns_warning</td>";
 		echo "<td><font size=1> $unhandled_emails</td>";
 		echo "<td><font size=1> $row[6]</td>";
 		echo "<td><font size=1> $row[4]</td>";
