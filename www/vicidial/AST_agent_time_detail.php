@@ -33,6 +33,7 @@
 # 131122-0657 - Added options.php atdr_login_logout_user_link option
 # 131129-1020 - Fixed division by zero bug in HTML mode
 # 140108-0708 - Added webserver and hostname to report logging
+# 140314-0852 - Fixed several division by zero bugs
 #
 
 $startMS = microtime();
@@ -561,21 +562,23 @@ else
 	$PCuser_namesARY=$MT;
 	$user_count=0;
 
-	if ($show_parks) {
+	if ($show_parks) 
+		{
 		$park_HEADER=" PARKS    | PARK TIME  | AVG PARK   | PARKS/CALL |";
 		$park_HEADER_DIV="+----------+------------+------------+------------";
 		$park_HEADER_CSV=",PARKS,PARK TIME,AVG PARK,PARKS/CALL";
-	}
+		}
 
 	# Displays park info - need to run regardless so HTML view will populate
 	$park_array=array();
 	$park_stmt="select user, count(*), sum(parked_sec) From park_log where parked_time <= '$query_date_END' and parked_time >= '$query_date_BEGIN' $park_log_SQL group by user";
 	if ($DB) {$ASCII_text.= "$park_stmt\n";}
 	$park_rslt=mysql_to_mysqli($park_stmt, $link);
-	while ($park_row=mysqli_fetch_row($park_rslt)) {
+	while ($park_row=mysqli_fetch_row($park_rslt)) 
+		{
 		$park_array[$park_row[0]][0]=$park_row[1];
 		$park_array[$park_row[0]][1]=$park_row[2];
-	}
+		}
 
 	$stmt="select $userSQL,sum(pause_sec),sub_status from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 65000 $group_SQL $user_group_SQL group by user,sub_status order by user,sub_status desc limit 10000000;";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -609,7 +612,6 @@ else
 			$PCusersARY[$user_count] = $PCuser[$i];
 			$user_count++;
 			}
-
 		$i++;
 		}
 	### END gather pause code information by user IDs
@@ -708,8 +710,6 @@ else
 		$ASCII_text.="+-----------------+----------+----------+------------+------------$park_HEADER_DIV+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
 		$ASCII_text.="| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>    | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | <a href=\"$LINKbase&stage=TIME\">AGENT TIME</a> |$park_HEADER WAIT       | WAIT %     | TALK       | TALK TIME %| DISPO      | DISPOTIME %| PAUSE      | PAUSETIME %| DEAD       | DEAD TIME %| CUSTOMER   |   |$sub_statusesHTML\n";
 		$ASCII_text.="+-----------------+----------+----------+------------+------------$park_HEADER_DIV+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
-
-		
 		}
 	else
 		{
@@ -733,11 +733,22 @@ else
 		$SstatusesHTML='';
 		$SstatusesFILE='';
 		$Stime[$m] = ($Swait[$m] + $Stalk[$m] + $Sdispo[$m] + $Spause[$m]);
-		$Swaitpct[$m]=(100*$Swait[$m]/$Stime[$m]);
-		$Stalkpct[$m]=(100*$Stalk[$m]/$Stime[$m]);
-		$Sdispopct[$m]=(100*$Sdispo[$m]/$Stime[$m]);
-		$Spausepct[$m]=(100*$Spause[$m]/$Stime[$m]);
-		$Sdeadpct[$m]=(100*$Sdead[$m]/$Stime[$m]);
+		if ($Stime[$m] > 0)
+			{
+			$Swaitpct[$m]=(100*$Swait[$m]/$Stime[$m]);
+			$Stalkpct[$m]=(100*$Stalk[$m]/$Stime[$m]);
+			$Sdispopct[$m]=(100*$Sdispo[$m]/$Stime[$m]);
+			$Spausepct[$m]=(100*$Spause[$m]/$Stime[$m]);
+			$Sdeadpct[$m]=(100*$Sdead[$m]/$Stime[$m]);
+			}
+		else
+			{
+			$Swaitpct[$m]=0;
+			$Stalkpct[$m]=0;
+			$Sdispopct[$m]=0;
+			$Spausepct[$m]=0;
+			$Sdeadpct[$m]=0;
+			}
 		$RAWuser = $Suser[$m];
 		$RAWcalls = $Scalls[$m];
 		$RAWtimeSEC = $Stime[$m];
@@ -924,14 +935,26 @@ else
 		$Stime[$m]=		sprintf("%10s", $Stime[$m]); 
 
 		# PARK INFO
-		if ($show_parks) {
+		if ($show_parks) 
+			{
 			$user_holds=$park_array[$Suser[$m]][0]+0;
 			$total_hold_time=$park_array[$Suser[$m]][1]+0;
 			$TOTuser_holds+=$park_array[$Suser[$m]][0];
 			$TOTtotal_hold_time+=$park_array[$Suser[$m]][1];
 
-			$avg_hold_time=round($total_hold_time/$user_holds);
-			$user_hpc=sprintf("%.2f", ($user_holds/$Scalls[$m]));
+			if ($user_holds > 0)
+				{
+				$avg_hold_time=round($total_hold_time/$user_holds);
+				if ($Scalls[$m] > 0)
+					{$user_hpc=sprintf("%.2f", ($user_holds/$Scalls[$m]));}
+				else
+					{$user_hpc=0;}
+				}
+			else
+				{
+				$avg_hold_time=0;
+				$user_hpc=0;
+				}
 
 			$total_hold_time=sec_convert($total_hold_time,$TIME_agenttimedetail);
 			$avg_hold_time=sec_convert($avg_hold_time,$TIME_agenttimedetail);
@@ -942,21 +965,30 @@ else
 			$user_hpc=	sprintf("%10s", $user_hpc); 
 			$park_AGENT_INFO=" $user_holds | $total_hold_time | $avg_hold_time | $user_hpc |";
 			$park_AGENT_INFO_CSV="$user_holds,$total_hold_time,$avg_hold_time,$user_hpc,";
-		}
+			}
 
 		if (trim($user_holds)>$max_user_holds) {$max_user_holds=trim($user_holds);}
 		if (trim($park_array[$Suser[$m]][1]+0)>$max_total_hold_time) {$max_total_hold_time=trim($park_array[$Suser[$m]][1]+0);}
-		if ($user_holds>0) {
-			if (trim(round(($park_array[$Suser[$m]][1]+0)/$user_holds))>$max_avg_hold_time) {$max_avg_hold_time=trim(round(($park_array[$Suser[$m]][1]+0)/$user_holds));}
-		}
+		if ($user_holds>0) 
+			{
+			if (trim(round(($park_array[$Suser[$m]][1]+0)/$user_holds))>$max_avg_hold_time) 
+				{$max_avg_hold_time=trim(round(($park_array[$Suser[$m]][1]+0)/$user_holds));}
+			}
+		else
+			{
+			$max_avg_hold_time=0;
+			}
 		if (trim($user_hpc)>$max_user_hpc) {$max_user_hpc=trim($user_hpc);}
 		$graph_stats[$m][15]=trim($user_holds);
 		$graph_stats[$m][16]=trim($park_array[$Suser[$m]][1]+0);
-		if ($user_holds>0) {
+		if ($user_holds>0) 
+			{
 			$graph_stats[$m][17]=trim(round(($park_array[$Suser[$m]][1]+0)/$user_holds));
-		} else {
+			}
+		else 
+			{
 			$graph_stats[$m][17]=0;
-		}
+			}
 		$graph_stats[$m][18]=trim($user_hpc);
 
 
@@ -1166,17 +1198,24 @@ else
 	$TOTALtime = sec_convert($TOTALtime,$TIME_agenttimedetail);
 	$TOTtimeTC = sec_convert($TOTtimeTC,$TIME_agenttimedetail);
 
-	if ($show_parks) {
-		if ($TOTuser_holds>0) {
+	if ($show_parks) 
+		{
+		if ($TOTuser_holds>0) 
+			{
 			$TOTavg_hold_time=round($TOTtotal_hold_time/$TOTuser_holds);
-		} else {
+			}
+		else 
+			{
 			$TOTavg_hold_time=0;
-		}
-		if ($TOTcalls>0) {
+			}
+		if ($TOTcalls>0) 
+			{
 			$TOTuser_hpc=sprintf("%.2f", ($TOTuser_holds/$TOTcalls));
-		} else {
+			}
+		else 
+			{
 			$TOTuser_hpc=0;
-		}
+			}
 		$TOTtotal_hold_time=sec_convert($TOTtotal_hold_time,$TIME_agenttimedetail);
 		$TOTavg_hold_time=sec_convert($TOTavg_hold_time,$TIME_agenttimedetail);
 		$hTOTuser_holds=	sprintf("%8s", $TOTuser_holds); 
@@ -1185,7 +1224,7 @@ else
 		$hTOTuser_hpc=	sprintf("%10s", $TOTuser_hpc); 
 		$park_TOTALS=" $hTOTuser_holds | $hTOTtotal_hold_time | $hTOTavg_hold_time | $hTOTuser_hpc |";
 		$park_TOTALS_CSV="$TOTuser_holds,$TOTtotal_hold_time,$TOTavg_hold_time,$TOTuser_hpc,";
-	}
+		}
 
 	$hTOTwaitpct =	sprintf("%10s", $TOTwaitpct)."%";
 	$hTOTtalkpct =	sprintf("%10s", $TOTtalkpct)."%";
@@ -1217,22 +1256,24 @@ else
 			}
 		$ASCII_text.="\n\n</PRE>";
 
-		for ($e=0; $e<count($sub_statusesARY); $e++) {
+		for ($e=0; $e<count($sub_statusesARY); $e++) 
+			{
 			$Sstatus=$sub_statusesARY[$e];
 			$SstatusTXT=$Sstatus;
 			if ($Sstatus=="") {$SstatusTXT="(blank)";}
 			$GRAPH2.="<th class='column_header grey_graph_cell' id='timegraph".(15+$e)."'><a href='#' onClick=\"DrawGraph('$Sstatus', '".(15+$e)."'); return false;\">$SstatusTXT</a></th>";
-		}
+			}
 
-		for ($d=0; $d<count($graph_stats); $d++) {
+		for ($d=0; $d<count($graph_stats); $d++) 
+			{
 			if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
 			if ($atdr_login_logout_user_link > 0)
 				{
-				$CALLS_graph.="  <tr><td class='chart_td$class'><a href=\'./user_stats.php?pause_code_rpt=1&begin_date=$query_date&end_date=$end_date&user=".$user_IDs[$d]."\'>".$graph_stats[$d][0]."</a></td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+				$CALLS_graph.="  <tr><td class='chart_td$class'><a href=\'./user_stats.php?pause_code_rpt=1&begin_date=$query_date&end_date=$end_date&user=".$user_IDs[$d]."\'>".$graph_stats[$d][0]."</a></td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_calls>0 ? round(1000*$graph_stats[$d][1]/$max_calls) : 0)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
 				}
 			else
 				{
-				$CALLS_graph.="  <tr><td class='chart_td$class'><a href=\'./user_stats.php?user=".$user_IDs[$d]."&begin_date=$query_date&end_date\'>".$graph_stats[$d][0]."</a></td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+				$CALLS_graph.="  <tr><td class='chart_td$class'><a href=\'./user_stats.php?user=".$user_IDs[$d]."&begin_date=$query_date&end_date\'>".$graph_stats[$d][0]."</a></td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_calls>0 ? round(1000*$graph_stats[$d][1]/$max_calls) : 0)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
 				}
 			$TIMECLOCK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_timeclock>0 ? round(1000*$graph_stats[$d][2]/$max_timeclock) : 0)."' height='16' />".sec_convert($graph_stats[$d][2], 'HF')."</td></tr>";
 			$AGENTTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_agenttime>0 ? round(1000*$graph_stats[$d][3]/$max_agenttime) : 0)."' height='16' />".sec_convert($graph_stats[$d][3], 'HF')."</td></tr>";
@@ -1252,15 +1293,23 @@ else
 			$AVGPARK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_avg_hold_time>0 ? round(1000*$graph_stats[$d][17]/$max_avg_hold_time) : 0)."' height='17' />".sec_convert($graph_stats[$d][17],'HF')."</td></tr>";
 			$PARKSCALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_user_hpc>0 ? round(1000*$graph_stats[$d][18]/$max_user_hpc) : 0)."' height='16' />".$graph_stats[$d][18]."</td></tr>";
 
-			for ($e=0; $e<count($sub_statusesARY); $e++) {
+			for ($e=0; $e<count($sub_statusesARY); $e++) 
+				{
 				$Sstatus=$sub_statusesARY[$e];
 				$varname=$Sstatus."_graph";
 				$max_varname="max_".$Sstatus;
 				#$max.= "<!-- $max_varname => ".$$max_varname." //-->\n";
 			
-				$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats_sub[$d][$e]/$$max_varname)."' height='16' />".sec_convert($graph_stats_sub[$d][$e], 'HF')."</td></tr>";
+				if ($$max_varname > 0)
+					{
+					$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats_sub[$d][$e]/$$max_varname)."' height='16' />".sec_convert($graph_stats_sub[$d][$e], 'HF')."</td></tr>";
+					}
+				else
+					{
+					$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='1' height='16' />".sec_convert($graph_stats_sub[$d][$e], 'HF')."</td></tr>";
+					}
+				}
 			}
-		}
 		$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTcalls)."</th></tr></table>";
 		$TIMECLOCK_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTtimeTC)."</th></tr></table>";
 		$AGENTTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTALtime)."</th></tr></table>";
@@ -1280,13 +1329,14 @@ else
 		$AVGPARK_graph.="<tr><th class='thgraph' scope='col'>AVERAGE:</th><th class='thgraph' scope='col'>".trim($hTOTavg_hold_time)."</th></tr></table>";
 		$PARKSCALL_graph.="<tr><th class='thgraph' scope='col'>AVERAGE:</th><th class='thgraph' scope='col'>".trim($hTOTuser_hpc)."</th></tr></table>";
 
-		for ($e=0; $e<count($sub_statusesARY); $e++) {
+		for ($e=0; $e<count($sub_statusesARY); $e++) 
+			{
 			$Sstatus=$sub_statusesARY[$e];
 			$total_var=$Sstatus."_total";
 			$graph_var=$Sstatus."_graph";
 			$$graph_var.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($$total_var)."</th></tr></table>";
 #			$JS_text.="var ".$Sstatus."_graph=\"".$$graph_var."\";\n";
-		}
+			}
 		$JS_onload.="\tDrawGraph('CALLS', '1');\n"; 
 		$JS_text.="function DrawGraph(graph, th_id) {\n";
 		$JS_text.="	var CALLS_graph=\"$CALLS_graph\";\n";
@@ -1308,11 +1358,12 @@ else
 		$JS_text.="	var AVGPARK_graph=\"$AVGPARK_graph\";\n";
 		$JS_text.="	var PARKSCALL_graph=\"$PARKSCALL_graph\";\n";
 
-		for ($e=0; $e<count($sub_statusesARY); $e++) {
+		for ($e=0; $e<count($sub_statusesARY); $e++) 
+			{
 			$Sstatus=$sub_statusesARY[$e];
 			$graph_var=$Sstatus."_graph";
 			$JS_text.="	var graph_".$Sstatus."=\"".$$graph_var."\";\n";
-		}
+			}
 
 		$JS_text.="	for (var i=1; i<=".(14+count($sub_statusesARY))."; i++) {\n";
 		$JS_text.="		var cellID=\"timegraph\"+i;\n";
@@ -1440,11 +1491,11 @@ else
 	{echo "<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
 $o=0;
 while ($campaigns_to_print > $o)
-{
+	{
 	if (preg_match("/$groups[$o]\|/i",$group_string)) {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
 	  else {echo "<option value=\"$groups[$o]\">$groups[$o]</option>\n";}
 	$o++;
-}
+	}
 echo "</SELECT>\n";
 echo "</TD><TD VALIGN=TOP>User Groups:<BR>";
 echo "<SELECT SIZE=5 NAME=user_group[] multiple>\n";
