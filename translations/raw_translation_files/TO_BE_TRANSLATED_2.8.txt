@@ -267,7 +267,7 @@ This is the dial plan prefix used to send calls directly to a user's voicemail f
 Voicemail Instructions||
 This setting allows you to define if the voicemail instructions will play after the voicemail greeting when a call rings on the agent extension and times out to voicemail. Default is Y||
 optional, possibly slow||
-
+Not set as allowed in any campaigns||
 
 ########################## CHANGES TO EXISTING PHRASES IN ADMIN TRANSLATION
 

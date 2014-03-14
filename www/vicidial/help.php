@@ -4769,8 +4769,8 @@ The custom template maker allows you to define your own file layouts for use wit
 
 <BR><BR><BR><BR>
 
-<B><FONT SIZE=3>Maximum System Stats Reports</FONT></B><BR><BR>
 <A NAME="max_stats">
+<B><FONT SIZE=3>Maximum System Stats Reports</FONT></B><BR><BR>
 <BR>
 <B>These statistics are cached totals that are stored throughout each day in real-time through back-end processes. For inbound calls, the total calls per in-group are calculated for each call that enters the process that calculates. For the whole system counts, the totals are generated from log entries as well as other in-group and campaign totals. These totals may not add up due to the settings that you have in your system as well as when the call is hung up.</B>
 

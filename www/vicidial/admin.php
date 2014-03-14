@@ -1824,6 +1824,8 @@ if (isset($_GET["voicemail_dump_exten_no_inst"]))			{$voicemail_dump_exten_no_in
 	elseif (isset($_POST["voicemail_dump_exten_no_inst"]))	{$voicemail_dump_exten_no_inst=$_POST["voicemail_dump_exten_no_inst"];}
 if (isset($_GET["voicemail_instructions"]))				{$voicemail_instructions=$_GET["voicemail_instructions"];}
 	elseif (isset($_POST["voicemail_instructions"]))	{$voicemail_instructions=$_POST["voicemail_instructions"];}
+if (isset($_GET["alter_admin_interface_options"]))			{$alter_admin_interface_options=$_GET["alter_admin_interface_options"];}
+	elseif (isset($_POST["alter_admin_interface_options"]))	{$alter_admin_interface_options=$_POST["alter_admin_interface_options"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2151,6 +2153,7 @@ if ($non_latin < 1)
 	$dead_max = preg_replace('/[^0-9]/','',$dead_max);
 	$dispo_max = preg_replace('/[^0-9]/','',$dispo_max);
 	$pause_max = preg_replace('/[^0-9]/','',$pause_max);
+	$alter_admin_interface_options = preg_replace('/[^0-9]/','',$alter_admin_interface_options);
 
 	$drop_call_seconds = preg_replace('/[^-0-9]/','',$drop_call_seconds);
 
@@ -3278,12 +3281,13 @@ else
 # 140305-0846 - Bug fix for list modify admin logging issue
 # 140313-0727 - Added links to Called Counts List IDs Report
 # 140313-1014 - Added warning to in-groups if they are not set as allowed in any campaigns
+# 140314-1134 - Added more strict enforcement of level 9 report and user permissions and definable max stats days
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.8-430a';
-$build = '140313-1014';
+$admin_version = '2.8-431a';
+$build = '140314-1134';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3438,7 +3442,7 @@ else
 ##############################################
 require_once('qc/QC_admin_include02.php');
 
-$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,callcard_admin,force_change_password,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,modify_contacts,modify_same_user_level from vicidial_users where user='$PHP_AUTH_USER';";
+$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,callcard_admin,force_change_password,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,modify_contacts,modify_same_user_level,alter_admin_interface_options from vicidial_users where user='$PHP_AUTH_USER';";
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $LOGfull_name				=$row[3];
@@ -3487,6 +3491,7 @@ $LOGmodify_moh				=$row[79];
 $LOGmodify_tts				=$row[80];
 $LOGmodify_contacts			=$row[81];
 $LOGmodify_same_user_level	=$row[82];
+$LOGalter_admin_interface	=$row[83];
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -5535,7 +5540,7 @@ if ($ADD==121)
 	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
 	echo "</FORM></TABLE></center>\n";
 
-	if ($LOGuser_level >= 9)
+	if ( ($LOGuser_level >= 9) and ( (preg_match("/Download List/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 		{
 		echo "<br>Download numbers in this list to a file: <form action=\"list_download.php\" method=POST>\n";
 		echo "<input type=hidden name=download_type value=dnc>\n";
@@ -5644,7 +5649,7 @@ if ($ADD==171)
 	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
 	echo "</FORM></TABLE></center>\n";
 
-	if ($LOGuser_level >= 9)
+	if ( ($LOGuser_level >= 9) and ( (preg_match("/Download List/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 		{
 		echo "<br>Download numbers in this list to a file: <form action=\"list_download.php\" method=POST>\n";
 		echo "<input type=hidden name=download_type value=fpgn>\n";
@@ -7566,7 +7571,7 @@ if ($ADD=="2A")
 					$pass='';
 					}
 
-				$stmt="INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data,agentcall_email,modify_email_accounts,pass_hash) SELECT \"$user\",\"$pass\",\"$full_name\",user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data,agentcall_email,modify_email_accounts,\"$pass_hash\" from vicidial_users where user=\"$source_user_id\";";
+				$stmt="INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data,agentcall_email,modify_email_accounts,pass_hash,alter_admin_interface_options) SELECT \"$user\",\"$pass\",\"$full_name\",user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data,agentcall_email,modify_email_accounts,\"$pass_hash\",alter_admin_interface_options from vicidial_users where user=\"$source_user_id\";";
 				$rslt=mysql_to_mysqli($stmt, $link);
 
 				$stmtA="INSERT INTO vicidial_inbound_group_agents (user,group_id,group_rank,group_weight,calls_today) SELECT \"$user\",group_id,group_rank,group_weight,\"0\" from vicidial_inbound_group_agents where user=\"$source_user_id\";";
@@ -10693,7 +10698,7 @@ if ($ADD=="4A")
 
 			echo "<br><B>USER MODIFIED - ADMIN: $user</B>\n";
 
-			$stmt="UPDATE vicidial_users set pass='$pass',full_name='$full_name',user_level='$user_level',user_group='$user_group',phone_login='$phone_login',phone_pass='$phone_pass',delete_users='$delete_users',delete_user_groups='$delete_user_groups',delete_lists='$delete_lists',delete_campaigns='$delete_campaigns',delete_ingroups='$delete_ingroups',delete_remote_agents='$delete_remote_agents',load_leads='$load_leads',campaign_detail='$campaign_detail',ast_admin_access='$ast_admin_access',ast_delete_phones='$ast_delete_phones',delete_scripts='$delete_scripts',modify_leads='$modify_leads',hotkeys_active='$hotkeys_active',change_agent_campaign='$change_agent_campaign',agent_choose_ingroups='$agent_choose_ingroups',closer_campaigns='$groups_value',scheduled_callbacks='$scheduled_callbacks',agentonly_callbacks='$agentonly_callbacks',agentcall_manual='$agentcall_manual',vicidial_recording='$vicidial_recording',vicidial_transfers='$vicidial_transfers',delete_filters='$delete_filters',alter_agent_interface_options='$alter_agent_interface_options',closer_default_blended='$closer_default_blended',delete_call_times='$delete_call_times',modify_call_times='$modify_call_times',modify_users='$modify_users',modify_campaigns='$modify_campaigns',modify_lists='$modify_lists',modify_scripts='$modify_scripts',modify_filters='$modify_filters',modify_ingroups='$modify_ingroups',modify_usergroups='$modify_usergroups',modify_remoteagents='$modify_remoteagents',modify_servers='$modify_servers',view_reports='$view_reports',vicidial_recording_override='$vicidial_recording_override',alter_custdata_override='$alter_custdata_override',qc_enabled='$qc_enabled',qc_user_level='$qc_user_level',qc_pass='$qc_pass',qc_finish='$qc_finish',qc_commit='$qc_commit',add_timeclock_log='$add_timeclock_log',modify_timeclock_log='$modify_timeclock_log',delete_timeclock_log='$delete_timeclock_log',alter_custphone_override='$alter_custphone_override',vdc_agent_api_access='$vdc_agent_api_access',modify_inbound_dids='$modify_inbound_dids',delete_inbound_dids='$delete_inbound_dids',active='$active',download_lists='$download_lists',agent_shift_enforcement_override='$agent_shift_enforcement_override',manager_shift_enforcement_override='$manager_shift_enforcement_override',export_reports='$export_reports',delete_from_dnc='$delete_from_dnc',email='$email',user_code='$user_code',territory='$territory',allow_alerts='$allow_alerts',agent_choose_territories='$agent_choose_territories',custom_one='$custom_one',custom_two='$custom_two',custom_three='$custom_three',custom_four='$custom_four',custom_five='$custom_five',voicemail_id='$voicemail_id',agent_call_log_view_override='$agent_call_log_view_override',callcard_admin='$callcard_admin',agent_choose_blended='$agent_choose_blended',realtime_block_user_info='$realtime_block_user_info',custom_fields_modify='$custom_fields_modify',force_change_password='$force_change_password',agent_lead_search_override='$agent_lead_search',modify_shifts='$modify_shifts',modify_phones='$modify_phones',modify_carriers='$modify_carriers',modify_labels='$modify_labels',modify_statuses='$modify_statuses',modify_voicemail='$modify_voicemail',modify_audiostore='$modify_audiostore',modify_moh='$modify_moh',modify_tts='$modify_tts',preset_contact_search='$preset_contact_search',modify_contacts='$modify_contacts',modify_same_user_level='$modify_same_user_level',admin_hide_lead_data='$admin_hide_lead_data',admin_hide_phone_data='$admin_hide_phone_data',agentcall_email='$agentcall_email',modify_email_accounts='$modify_email_accounts',failed_login_count=0 $pass_hashSQL where user='$user' $LOGadmin_viewable_groupsSQL;";
+			$stmt="UPDATE vicidial_users set pass='$pass',full_name='$full_name',user_level='$user_level',user_group='$user_group',phone_login='$phone_login',phone_pass='$phone_pass',delete_users='$delete_users',delete_user_groups='$delete_user_groups',delete_lists='$delete_lists',delete_campaigns='$delete_campaigns',delete_ingroups='$delete_ingroups',delete_remote_agents='$delete_remote_agents',load_leads='$load_leads',campaign_detail='$campaign_detail',ast_admin_access='$ast_admin_access',ast_delete_phones='$ast_delete_phones',delete_scripts='$delete_scripts',modify_leads='$modify_leads',hotkeys_active='$hotkeys_active',change_agent_campaign='$change_agent_campaign',agent_choose_ingroups='$agent_choose_ingroups',closer_campaigns='$groups_value',scheduled_callbacks='$scheduled_callbacks',agentonly_callbacks='$agentonly_callbacks',agentcall_manual='$agentcall_manual',vicidial_recording='$vicidial_recording',vicidial_transfers='$vicidial_transfers',delete_filters='$delete_filters',alter_agent_interface_options='$alter_agent_interface_options',closer_default_blended='$closer_default_blended',delete_call_times='$delete_call_times',modify_call_times='$modify_call_times',modify_users='$modify_users',modify_campaigns='$modify_campaigns',modify_lists='$modify_lists',modify_scripts='$modify_scripts',modify_filters='$modify_filters',modify_ingroups='$modify_ingroups',modify_usergroups='$modify_usergroups',modify_remoteagents='$modify_remoteagents',modify_servers='$modify_servers',view_reports='$view_reports',vicidial_recording_override='$vicidial_recording_override',alter_custdata_override='$alter_custdata_override',qc_enabled='$qc_enabled',qc_user_level='$qc_user_level',qc_pass='$qc_pass',qc_finish='$qc_finish',qc_commit='$qc_commit',add_timeclock_log='$add_timeclock_log',modify_timeclock_log='$modify_timeclock_log',delete_timeclock_log='$delete_timeclock_log',alter_custphone_override='$alter_custphone_override',vdc_agent_api_access='$vdc_agent_api_access',modify_inbound_dids='$modify_inbound_dids',delete_inbound_dids='$delete_inbound_dids',active='$active',download_lists='$download_lists',agent_shift_enforcement_override='$agent_shift_enforcement_override',manager_shift_enforcement_override='$manager_shift_enforcement_override',export_reports='$export_reports',delete_from_dnc='$delete_from_dnc',email='$email',user_code='$user_code',territory='$territory',allow_alerts='$allow_alerts',agent_choose_territories='$agent_choose_territories',custom_one='$custom_one',custom_two='$custom_two',custom_three='$custom_three',custom_four='$custom_four',custom_five='$custom_five',voicemail_id='$voicemail_id',agent_call_log_view_override='$agent_call_log_view_override',callcard_admin='$callcard_admin',agent_choose_blended='$agent_choose_blended',realtime_block_user_info='$realtime_block_user_info',custom_fields_modify='$custom_fields_modify',force_change_password='$force_change_password',agent_lead_search_override='$agent_lead_search',modify_shifts='$modify_shifts',modify_phones='$modify_phones',modify_carriers='$modify_carriers',modify_labels='$modify_labels',modify_statuses='$modify_statuses',modify_voicemail='$modify_voicemail',modify_audiostore='$modify_audiostore',modify_moh='$modify_moh',modify_tts='$modify_tts',preset_contact_search='$preset_contact_search',modify_contacts='$modify_contacts',modify_same_user_level='$modify_same_user_level',admin_hide_lead_data='$admin_hide_lead_data',admin_hide_phone_data='$admin_hide_phone_data',agentcall_email='$agentcall_email',modify_email_accounts='$modify_email_accounts',failed_login_count=0,alter_admin_interface_options='$alter_admin_interface_options' $pass_hashSQL where user='$user' $LOGadmin_viewable_groupsSQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -17087,7 +17092,7 @@ if ($ADD==3)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data,agentcall_email,modify_email_accounts,failed_login_count,last_login_date,last_ip from vicidial_users where user='$user' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data,agentcall_email,modify_email_accounts,failed_login_count,last_login_date,last_ip,alter_admin_interface_options from vicidial_users where user='$user' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 		$user_id =				$row[0];
@@ -17191,6 +17196,7 @@ if ($ADD==3)
 		$failed_login_count =	$row[100];
 		$last_login_date =		$row[101];
 		$last_ip =				$row[102];
+		$alter_admin_interface_options = $row[103];
 
 		if ( ( ($user_level >= $LOGuser_level) and ($LOGuser_level < 9) ) or ( ($LOGmodify_same_user_level < 1) and ($LOGuser_level > 8) and ($user_level > 8) ) )
 			{
@@ -17199,7 +17205,7 @@ if ($ADD==3)
 		else
 			{
 			echo "<br>MODIFY A USERS RECORD: $user<form action=$PHP_SELF method=POST>\n";
-			if ($LOGuser_level > 8)
+			if ( ($LOGuser_level > 8) and ($LOGalter_admin_interface > 0) )
 				{echo "<input type=hidden name=ADD value=4A>\n";}
 			else
 				{
@@ -17279,7 +17285,7 @@ if ($ADD==3)
 				echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"user_territories.php\">User Territories</a>: </td><td align=left>$Uterrs_list</tr>\n";
 				}
 
-			if ( ($LOGuser_level > 8) or ($LOGalter_agent_interface == "1") )
+			if ( ($LOGuser_level > 7) and ($LOGalter_agent_interface == "1") )
 				{
 				echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><B>AGENT INTERFACE OPTIONS:</td></tr>\n";
 				echo "<tr bgcolor=#B6D3FC><td align=right>Agent Choose Ingroups: </td><td align=left><select size=1 name=agent_choose_ingroups><option>0</option><option>1</option><option SELECTED>$agent_choose_ingroups</option></select>$NWB#users-agent_choose_ingroups$NWE</td></tr>\n";
@@ -17345,7 +17351,7 @@ if ($ADD==3)
 					echo "<tr bgcolor=#9BB9FB><td align=right>QC Commit: </td><td align=left><select size=1 name=qc_commit><option>0</option><option>1</option><option SELECTED>$qc_commit</option></select>$NWB#users-qc_commit$NWE</td></tr>\n";
 					}
 				}
-			if ($LOGuser_level > 8)
+			if ( ($LOGuser_level > 8) and ($LOGalter_admin_interface > 0) )
 				{
 				echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><B>ADMIN REPORT OPTIONS:</td></tr>\n";
 
@@ -17433,6 +17439,11 @@ if ($ADD==3)
 
 				echo "<tr bgcolor=#B9CBFD><td align=right>Manager Shift Enforcement Override: </td><td align=left><select size=1 name=manager_shift_enforcement_override><option>0</option><option>1</option><option SELECTED>$manager_shift_enforcement_override</option></select>$NWB#users-manager_shift_enforcement_override$NWE</td></tr>\n";
 
+				if ( ( ($LOGmodify_same_user_level > 0) or ($LOGalter_admin_interface > 0) ) and ($LOGuser_level > 8) )
+					{
+					echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><B>LEVEL 9 ADMIN OPTIONS:</td></tr>\n";
+					}
+
 				if ( ($LOGmodify_same_user_level < 1) or ($LOGuser_level < 9) )
 					{
 					echo "<input type=hidden name=modify_same_user_level id=modify_same_user_level value=\"0\">\n";
@@ -17440,6 +17451,16 @@ if ($ADD==3)
 				else
 					{
 					echo "<tr bgcolor=#9BB9FB><td align=right>Modify Same User Level: </td><td align=left><select size=1 name=modify_same_user_level><option>0</option><option>1</option><option SELECTED>$modify_same_user_level</option></select>$NWB#users-modify_same_user_level$NWE</td></tr>\n";
+					}
+
+
+				if ( ($LOGalter_admin_interface < 1) or ($LOGuser_level < 9) )
+					{
+					echo "<input type=hidden name=alter_admin_interface_options id=alter_admin_interface_options value=\"0\">\n";
+					}
+				else
+					{
+					echo "<tr bgcolor=#9BB9FB><td align=right>Alter Admin Interface Options: </td><td align=left><select size=1 name=alter_admin_interface_options><option>0</option><option>1</option><option SELECTED>$alter_admin_interface_options</option></select>$NWB#users-alter_admin_interface_options$NWE</td></tr>\n";
 					}
 				}
 			echo "<tr bgcolor=#9BB9FB><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
@@ -17454,7 +17475,7 @@ if ($ADD==3)
 			echo "<br><br><a href=\"./user_stats.php?user=$user\">Click here for user stats</a>\n";
 			echo "<br><br><a href=\"./AST_agent_days_detail.php?user=$user&query_date=$REPORTdate&end_date=$REPORTdate&group[]=--ALL--&shift=ALL\">Click here for user multiple day status detail report</a>\n";
 			echo "<br><br><a href=\"$PHP_SELF?ADD=8&user=$user\">Click here for user CallBack Holds</a>\n";
-			if ($LOGuser_level >= 9)
+			if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 				{
 				echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=USERS&stage=$user\">Click here to see Admin changes to this record</FONT>\n";
 				}
@@ -19259,7 +19280,7 @@ if ($ADD==31)
 				}
 			}
 
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=CAMPAIGNS&stage=$campaign_id\">Click here to see Admin changes to this campaign</a></FONT>\n";
 			}
@@ -20624,7 +20645,7 @@ if ($ADD==34)
 		echo "<a href=\"./AST_VDADstats.php?group=$campaign_id\">Click here to see a VDAD report for this campaign</a><BR><BR>\n";
 		}
 		echo "<a href=\"$PHP_SELF?ADD=81&campaign_id=$campaign_id\">Click here to see all CallBack Holds in this campaign</a><BR><BR>\n";
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=CAMPAIGNS&stage=$campaign_id\">Click here to see Admin changes to this campaign</a></FONT>\n";
 			}
@@ -22266,7 +22287,7 @@ if ($ADD==311)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=511&list_id=$list_id\">DELETE THIS LIST</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=LISTS&stage=$list_id\">Click here to see Admin changes to this list</FONT>\n";
 			}
@@ -23306,7 +23327,7 @@ if ($ADD==3111)
 		#	echo "<br><br><a href=\"$PHP_SELF?ADD=53&campaign_id=$group_id&stage=IN\">EMERGENCY VDAC CLEAR FOR THIS IN-GROUP</a><BR><BR>\n";
 			echo "<br><br><a href=\"$PHP_SELF?ADD=5111&group_id=$group_id\">DELETE THIS IN-GROUP</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=INGROUPS&stage=$group_id\">Click here to see Admin changes to this In-Group</FONT>\n";
 			}
@@ -24023,7 +24044,7 @@ if ($ADD==3811)
 		#	echo "<br><br><a href=\"$PHP_SELF?ADD=53&campaign_id=$group_id&stage=IN\">EMERGENCY VDAC CLEAR FOR THIS IN-GROUP</a><BR><BR>\n";
 			echo "<br><br><a href=\"$PHP_SELF?ADD=5111&group_id=$group_id\">DELETE THIS IN-GROUP</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=INGROUPS&stage=$group_id\">Click here to see Admin changes to this In-Group</FONT>\n";
 			}
@@ -24324,7 +24345,7 @@ if ($ADD==3311)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=5311&did_id=$did_id\">DELETE THIS DID</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=DIDS&stage=$did_id\">Click here to see Admin changes to this DID</FONT>\n";
 			}
@@ -24629,7 +24650,7 @@ if ($ADD==3321)
 
 		echo "<br><br><a href=\"$PHP_SELF?ADD=3311&did_id=$did_id\">MODIFY THIS DID</a>\n";
 
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=DIDS&stage=$did_id\">Click here to see Admin changes to this DID</FONT>\n";
 			}
@@ -25004,7 +25025,7 @@ if ($ADD==3511)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=5511&menu_id=$menu_id\">DELETE THIS CALL MENU</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=CALLMENUS&stage=$menu_id\">Click here to see Admin changes to this CALL MENU</FONT>\n";
 			}
@@ -25124,7 +25145,7 @@ if ($ADD==31111)
 				{
 				echo "<br><br><a href=\"$PHP_SELF?ADD=51111&remote_agent_id=$remote_agent_id\">DELETE THIS REMOTE AGENT</a>\n";
 				}
-			if ($LOGuser_level >= 9)
+			if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 				{
 				echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=REMOTEAGENTS&stage=$remote_agent_id\">Click here to see Admin changes to this remote agent</FONT>\n";
 				}
@@ -25190,10 +25211,12 @@ if ($ADD==3711)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=5711&filter_phone_group_id=$filter_phone_group_id\">DELETE THIS FILTER PHONE GROUP</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Download List/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"./list_download.php?group_id=$filter_phone_group_id&download_type=fpgn\">Click here to download the numbers in this filter phone group</FONT>\n";
-
+			}
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
+			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=FILTERPHONEGROUPS&stage=$filter_phone_group_id\">Click here to see Admin changes to this filter phone group</FONT>\n";
 			}
 		}
@@ -25267,7 +25290,7 @@ if ($ADD==32111)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=52111&extension_id=$extension_id\">DELETE THIS EXTENSION GROUP ENTRY</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=EXTENGROUP&stage=$extension_id\">Click here to see Admin changes to this extension group entry</FONT>\n";
 			}
@@ -25608,7 +25631,7 @@ if ($ADD==311111)
 				{
 				echo "<br><br><a href=\"$PHP_SELF?ADD=511111&user_group=$user_group\">DELETE THIS USER GROUP</a>\n";
 				}
-			if ($LOGuser_level >= 9)
+			if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 				{
 				echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=USERGROUPS&stage=$user_group\">Click here to see Admin changes to this user group</FONT>\n";
 				}
@@ -25796,7 +25819,7 @@ if ($ADD==3111111)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=5111111&script_id=$script_id\">DELETE THIS SCRIPT</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=SCRIPTS&stage=$script_id\">Click here to see Admin changes to this script</FONT>\n";
 			}
@@ -25880,7 +25903,7 @@ if ($ADD==31111111)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=51111111&lead_filter_id=$lead_filter_id\">DELETE THIS FILTER</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=FILTERS&stage=$lead_filter_id\">Click here to see Admin changes to this filter</FONT>\n";
 			}
@@ -26293,7 +26316,7 @@ if ($ADD==311111111)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=511111111&call_time_id=$call_time_id\">DELETE THIS CALL TIME DEFINITION</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=CALLTIMES&stage=$call_time_id\">Click here to see Admin changes to this call time</FONT>\n";
 			}
@@ -26452,7 +26475,7 @@ if ($ADD==3111111111)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=5111111111&call_time_id=$call_time_id\">DELETE THIS STATE CALL TIME DEFINITION</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=CALLTIMES_STATE&stage=$call_time_id\">Click here to see Admin changes to this call time</FONT>\n";
 			}
@@ -26562,7 +26585,7 @@ if ($ADD==3211111111)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=5211111111&holiday_id=$holiday_id\">DELETE THIS HOLIDAY DEFINITION</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=HOLIDAYS&stage=$holiday_id\">Click here to see Admin changes to this holiday</FONT>\n";
 			}
@@ -26696,7 +26719,7 @@ if ($ADD==331111111)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=531111111&shift_id=$shift_id\">DELETE THIS SHIFT DEFINITION</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=SHIFTS&stage=$shift_id\">Click here to see Admin changes to this shift</FONT>\n";
 			}
@@ -26882,7 +26905,7 @@ if ($ADD==31111111111)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=51111111111&extension=$extension&server_ip=$server_ip\">DELETE THIS PHONE</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=PHONES&stage=$extension\">Click here to see Admin changes to this phone</FONT>\n";
 			}
@@ -26963,7 +26986,7 @@ if ($ADD==32111111111)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=52111111111&alias_id=$row[0]\">DELETE THIS PHONE ALIAS</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=PHONEALIASES&stage=$alias_id\">Click here to see Admin changes to this phone alias</FONT>\n";
 			}
@@ -27017,7 +27040,7 @@ if ($ADD==33111111111)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=53111111111&group_alias_id=$row[0]\">DELETE THIS GROUP ALIAS</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=GROUPALIASES&stage=$group_alias_id\">Click here to see Admin changes to this group alias</FONT>\n";
 			}
@@ -27354,7 +27377,7 @@ if ($ADD==311111111111)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=511111111111&server_id=$server_id&server_ip=$server_ip\">DELETE THIS SERVER</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=SERVERS&stage=$server_id\">Click here to see Admin changes to this server</FONT>\n";
 			}
@@ -27476,7 +27499,7 @@ if ($ADD==331111111111)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=531111111111&template_id=$template_id&template_name=$template_name\">DELETE THIS CONF TEMPLATE</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=CONFTEMPLATES&stage=$template_id\">Click here to see Admin changes to this conf template</FONT>\n";
 			}
@@ -27570,7 +27593,7 @@ if ($ADD==341111111111)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=541111111111&carrier_id=$carrier_id&carrier_name=$carrier_name\">DELETE THIS CARRIER</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=CARRIERS&stage=$carrier_id\">Click here to see Admin changes to this carrier</FONT>\n";
 			}
@@ -27634,7 +27657,7 @@ if ($ADD==351111111111)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=551111111111&tts_id=$tts_id&tts_name=$tts_name\">DELETE THIS TTS ENTRY</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=TTS&stage=$tts_id\">Click here to see Admin changes to this TTS entry</FONT>\n";
 			}
@@ -27724,7 +27747,7 @@ if ($ADD==361111111111)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=561111111111&moh_id=$moh_id&moh_name=$moh_name\">DELETE MUSIC ON HOLD ENTRY</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=MOH&stage=$moh_id\">Click here to see Admin changes to this Music On Hold entry</FONT>\n";
 			}
@@ -27821,7 +27844,7 @@ if ($ADD==371111111111)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=571111111111&voicemail_id=$voicemail_id&fullname=$fullname\">DELETE THIS VOICEMAIL BOX</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=VOICEMAIL&stage=$voicemail_id\">Click here to see Admin changes to this voicemail box</FONT>\n";
 			}
@@ -27960,7 +27983,7 @@ if ($ADD==381111111111)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=581111111111&label_id=$label_id&label_name=$label_name\">DELETE THIS SCREEN LABEL</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=LABEL&stage=$label_id\">Click here to see Admin changes to this screen label</FONT>\n";
 			}
@@ -28036,7 +28059,7 @@ if ($ADD==391111111111)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=591111111111&contact_id=$contact_id&first_name=$first_name&last_name=$last_name\">DELETE THIS CONTACT</a>\n";
 			}
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=CONTACTS&stage=$contact_id\">Click here to see Admin changes to this contact</FONT>\n";
 			}
@@ -28729,7 +28752,7 @@ if ($ADD==311111111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit VALUE=SUBMIT></td></tr>\n";
 		echo "</TABLE></center>\n";
 		echo "</form>\n";
-		if ($LOGuser_level >= 9)
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=SYSTEMSETTINGS&stage=system_settings\">Click here to see Admin changes to the system settings</FONT>\n";
 			}
@@ -31011,7 +31034,7 @@ if ($ADD==710000000000000)
 
 if ($ADD==720000000000000)
 	{
-	if ($LOGuser_level >= 9)
+	if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 		{
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
@@ -31107,7 +31130,7 @@ if ($ADD==720000000000000)
 
 if ($ADD==730000000000000)
 	{
-	if ($LOGuser_level >= 9)
+	if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 		{
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
@@ -32042,6 +32065,9 @@ if ($ADD==999993)
 
 	if ( (preg_match("/Maximum Stats Detail/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 		{
+		$day_count=30;
+		if (strlen($SUB) > 0)
+			{$day_count = $SUB;}
 		if ($stage == 'in-group')
 			{
 			$in_out = 'in-group';
@@ -32091,31 +32117,40 @@ if ($ADD==999993)
 				{echo "Not found";   exit;}
 			}
 
-		echo "<br><B> Administration: Maximum Stats Detail for $stage $modify_link$campaign_id</a> - $campaign_name</B> &nbsp; $NWB#max_stats$NWE<BR><BR>\n";
+		echo "<br><B> Administration: Maximum Stats Detail for $stage $modify_link$campaign_id</a> - $campaign_name</B> &nbsp; $NWB#max_stats$NWE<BR>\n";
+
+		echo "<form action=$PHP_SELF method=GET>\n";
+		echo "<input type=hidden name=ADD value=999993>\n";
+		echo "<input type=hidden name=DB value=\"$DB\">\n";
+		echo "<input type=hidden name=stage value=\"$stage\">\n";
+		echo "<input type=hidden name=campaign_id value=\"$campaign_id\">\n";
+		echo "Days: <input type=text id=SUB name=SUB size=5 maxlength=4 value=\"$day_count\"> &nbsp; &nbsp;<input type=submit name=SUBMIT value=SUBMIT>\n";
+		echo "</form>\n";
+		
 		echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=2>\n";
 
 		if ($stage == 'remote-agent')
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-				horizontal_bar_chart($campaign_id,'30',$stage,$link,'ra_total_calls','call count',0,'','');
+				horizontal_bar_chart($campaign_id,$day_count,$stage,$link,'ra_total_calls','call count',0,'','');
 			echo "</td></tr>\n";
 
 			echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-				horizontal_bar_chart($campaign_id,'30',$stage,$link,'ra_concurrent_calls','most concurrent calls',0,'','');
+				horizontal_bar_chart($campaign_id,$day_count,$stage,$link,'ra_concurrent_calls','most concurrent calls',0,'','');
 			echo "</td></tr>\n";
 			}
 		else
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-				horizontal_bar_chart($campaign_id,'30',$in_out,$link,'total_calls','call count',0,'','');
+				horizontal_bar_chart($campaign_id,$day_count,$in_out,$link,'total_calls','call count',0,'','');
 			echo "</td></tr>\n";
 
 			echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-				horizontal_bar_chart($campaign_id,'30',$in_out,$link,$max_type,'most concurrent calls',0,'','');
+				horizontal_bar_chart($campaign_id,$day_count,$in_out,$link,$max_type,'most concurrent calls',0,'','');
 			echo "</td></tr>\n";
 
 			echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>\n";
-				horizontal_bar_chart($campaign_id,'30',$in_out,$link,'max_agents','most concurrent agents',0,'','');
+				horizontal_bar_chart($campaign_id,$day_count,$in_out,$link,'max_agents','most concurrent agents',0,'','');
 			echo "</td></tr>\n";
 			}
 		}

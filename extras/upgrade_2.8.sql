@@ -208,3 +208,7 @@ UPDATE system_settings SET db_schema_version='1368',db_schema_update_date=NOW() 
 ALTER TABLE system_settings ADD reload_timestamp DATETIME;
 
 UPDATE system_settings SET db_schema_version='1369',db_schema_update_date=NOW(),reload_timestamp=NOW() where db_schema_version < 1369;
+
+ALTER TABLE vicidial_users ADD alter_admin_interface_options ENUM('0','1') default '1';
+
+UPDATE system_settings SET db_schema_version='1370',db_schema_update_date=NOW() where db_schema_version < 1370;
