@@ -40,6 +40,7 @@
 # 131010-1930 - Expanded user group column, added most recent user group
 # 131019-1111 - Added user select
 # 140108-0713 - Added webserver and hostname to report logging
+# 140319-1913 - Added option to show percentages for various fields
 #
 
 $startMS = microtime();
@@ -74,7 +75,8 @@ if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
-
+if (isset($_GET["show_percentages"]))				{$show_percentages=$_GET["show_percentages"];}
+	elseif (isset($_POST["show_percentages"]))	{$show_percentages=$_POST["show_percentages"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
 
@@ -517,10 +519,12 @@ $HTML_text.="<option value=\"AM\">AM</option>\n";
 $HTML_text.="<option value=\"PM\">PM</option>\n";
 $HTML_text.="<option value=\"ALL\">ALL</option>\n";
 $HTML_text.="</SELECT><BR><BR>\n";
+$HTML_text.="<input type='checkbox' name='show_percentages' value='checked' $show_percentages>Show %'s\n";
+$HTML_text.="</TD><TD VALIGN=TOP>";
 $HTML_text.="Display as:<BR>";
 $HTML_text.="<select name='report_display_type'>";
 if ($report_display_type) {$HTML_text.="<option value='$report_display_type' selected>$report_display_type</option>";}
-$HTML_text.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR><BR>";
+$HTML_text.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select><BR><BR>\n";
 $HTML_text.="<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>$NWB#agent_performance_detail$NWE\n";
 $HTML_text.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
@@ -582,7 +586,13 @@ $statusesHEAD='';
 $CSV_header="\"Agent Performance Detail                        $NOW_TIME\"\n";
 $CSV_header.="\"Time range: $query_date_BEGIN to $query_date_END\"\n\n";
 $CSV_header.="\"---------- AGENTS Details -------------\"\n";
-$CSV_header.='"USER NAME","ID","CURRENT USER GROUP","MOST RECENT USER GROUP","CALLS","TIME","PAUSE","PAUSAVG","WAIT","WAITAVG","TALK","TALKAVG","DISPO","DISPAVG","DEAD","DEADAVG","CUSTOMER","CUSTAVG"';
+
+if ($show_percentages) {
+	$CSV_header.='"USER NAME","ID","CURRENT USER GROUP","MOST RECENT USER GROUP","CALLS","TIME","PAUSE","PAUSE %","PAUSAVG","WAIT","WAIT %","WAITAVG","TALK","TALK %","TALKAVG","DISPO","DISPO %","DISPAVG","DEAD","DEAD %","DEADAVG","CUSTOMER","CUSTOMER %","CUSTAVG"';
+} else {
+	$CSV_header.='"USER NAME","ID","CURRENT USER GROUP","MOST RECENT USER GROUP","CALLS","TIME","PAUSE","PAUSAVG","WAIT","WAITAVG","TALK","TALKAVG","DISPO","DISPAVG","DEAD","DEADAVG","CUSTOMER","CUSTAVG"';
+}
+
 
 $statusesHTML='';
 $statusesARY[0]='';
@@ -643,6 +653,7 @@ $CUST_graph=$graph_header."<th class='thgraph' scope='col'>CUST</th></tr>";
 $CUSTAVG_graph=$graph_header."<th class='thgraph' scope='col'>CUST AVG</th></tr>";
 
 $i=0;
+$userTOTcalls=array();
 while ($i < $rows_to_print)
 	{
 	$row=mysqli_fetch_row($rslt);
@@ -660,6 +671,8 @@ while ($i < $rows_to_print)
 	$user_group[$i] =	$row[9];
 	$customer_sec[$i] =	($talk_sec[$i] - $dead_sec[$i]);
 
+	if (strlen($status[$i])>0) {$userTOTcalls[$row[3]]+=$row[0];}
+
 	$max_varname="max_".$status[$i];
 	$$max_varname=1;
 	
@@ -668,10 +681,16 @@ while ($i < $rows_to_print)
 	if ( (!preg_match("/\-$status[$i]\-/i", $statuses)) and (strlen($status[$i])>0) )
 		{
 		$statusesTXT = sprintf("%8s", $status[$i]);
+
 		$statusesHEAD .= "----------+";
 		$statusesHTML .= " $statusesTXT |";
-
 		$CSV_header.=",\"$status[$i]\"";
+
+		if($show_percentages) {
+			$statusesHEAD .= "------------+";
+			$statusesHTML .= " $statusesTXT % |";
+			$CSV_header.=",\"$status[$i] %\"";
+		}
 
 		$statuses .= "$status[$i]-";
 		$statusesARY[$j] = $status[$i];
@@ -693,9 +712,16 @@ $CSV_header.="\n";
 $CSV_lines='';
 
 $ASCII_text.="CALL STATS BREAKDOWN: (Statistics related to handling of calls only)     <a href=\"$LINKbase&stage=$stage&file_download=1\">[DOWNLOAD]</a>\n";
-$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
-$ASCII_text.="| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | CURRENT USER GROUP   | MOST RECENT USER GRP | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>  | <a href=\"$LINKbase&stage=TIME\">TIME</a>      | PAUSE    |PAUSAVG | WAIT     |WAITAVG | TALK     |TALKAVG | DISPO    |DISPAVG | DEAD     |DEADAVG | CUSTOMER |CUSTAVG |$statusesHTML\n";
-$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+
+if ($show_percentages) {
+	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+$statusesHEAD\n";
+	$ASCII_text.="| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | CURRENT USER GROUP   | MOST RECENT USER GRP | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>  | <a href=\"$LINKbase&stage=TIME\">TIME</a>      | PAUSE    | PAUSE %    |PAUSAVG | WAIT     | WAIT %     |WAITAVG | TALK     | TALK %     |TALKAVG | DISPO    | DISPO %    |DISPAVG | DEAD     | DEAD %     |DEADAVG | CUSTOMER | CUSTOMER % |CUSTAVG |$statusesHTML\n";
+	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+$statusesHEAD\n";
+} else {
+	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+	$ASCII_text.="| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | CURRENT USER GROUP   | MOST RECENT USER GRP | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>  | <a href=\"$LINKbase&stage=TIME\">TIME</a>      | PAUSE    |PAUSAVG | WAIT     |WAITAVG | TALK     |TALKAVG | DISPO    |DISPAVG | DEAD     |DEADAVG | CUSTOMER |CUSTAVG |$statusesHTML\n";
+	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+}
 
 
 ### BEGIN loop through each user ###
@@ -725,6 +751,12 @@ while ($m < $k)
 	$Scustomer_sec=0;
 	$SstatusesHTML='';
 	$CSVstatuses='';
+
+	$Stalk_sec_pct=0;
+	$Spause_sec_pct=0;
+	$Swait_sec_pct=0;
+	$Sdispo_sec_pct=0;
+	$Sdead_sec_pct=0;
 
 	### BEGIN loop through each status ###
 	$n=0;
@@ -757,6 +789,12 @@ while ($m < $k)
 				
 				$CSVstatuses.=",\"$calls[$i]\"";
 
+				if ($show_percentages) {
+					$SstatusTXT_pct=sprintf("%8s", sprintf("%0.2f", ZeroDivisionCheck(100*$calls[$i], $userTOTcalls[$Suser])));
+					$SstatusesHTML .= " $SstatusTXT_pct % |";
+					$CSVstatuses.=",\"$SstatusTXT_pct %\"";
+				}
+
 				$status_found++;
 				}
 			$i++;
@@ -765,6 +803,10 @@ while ($m < $k)
 			{
 			$SstatusesHTML .= "        0 |";
 			$CSVstatuses.=",\"0\"";
+			if ($show_percentages) {
+				$SstatusesHTML .= "     0.00 % |";
+				$CSVstatuses.=",\"0.00 %\"";
+			}
 			$graph_stats[$m][(15+$n)]=0;					
 			}
 		### END loop through each stat line ###
@@ -781,18 +823,13 @@ while ($m < $k)
 	$TOTtotDEAD=($TOTtotDEAD + $Sdead_sec);
 	$TOTtotCUSTOMER=($TOTtotCUSTOMER + $Scustomer_sec);
 	$Stime = ($Stalk_sec + $Spause_sec + $Swait_sec + $Sdispo_sec);
-	if ( ($Scalls > 0) and ($Stalk_sec > 0) ) {$Stalk_avg = ($Stalk_sec/$Scalls);}
-		else {$Stalk_avg=0;}
-	if ( ($Scalls > 0) and ($Spause_sec > 0) ) {$Spause_avg = ($Spause_sec/$Scalls);}
-		else {$Spause_avg=0;}
-	if ( ($Scalls > 0) and ($Swait_sec > 0) ) {$Swait_avg = ($Swait_sec/$Scalls);}
-		else {$Swait_avg=0;}
-	if ( ($Scalls > 0) and ($Sdispo_sec > 0) ) {$Sdispo_avg = ($Sdispo_sec/$Scalls);}
-		else {$Sdispo_avg=0;}
-	if ( ($Scalls > 0) and ($Sdead_sec > 0) ) {$Sdead_avg = ($Sdead_sec/$Scalls);}
-		else {$Sdead_avg=0;}
-	if ( ($Scalls > 0) and ($Scustomer_sec > 0) ) {$Scustomer_avg = ($Scustomer_sec/$Scalls);}
-		else {$Scustomer_avg=0;}
+	
+	$Stalk_avg = ZeroDivisionCheck($Stalk_sec, $Scalls);
+	$Spause_avg = ZeroDivisionCheck($Spause_sec, $Scalls);
+	$Swait_avg = ZeroDivisionCheck($Swait_sec, $Scalls);
+	$Sdispo_avg = ZeroDivisionCheck($Sdispo_sec, $Scalls);
+	$Sdead_avg = ZeroDivisionCheck($Sdead_sec, $Scalls);
+	$Scustomer_avg = ZeroDivisionCheck($Scustomer_sec, $Scalls);
 
 	$RAWuser = $Suser;
 	$RAWcalls = $Scalls;
@@ -850,41 +887,62 @@ while ($m < $k)
 	$graph_stats[$m][12]=trim($Sdead_avg);
 	$graph_stats[$m][13]=trim($Scustomer_sec);
 	$graph_stats[$m][14]=trim($Scustomer_avg);
-			
-	$pfUSERtime_MS =		sec_convert($Stime,'H'); 
-	$pfUSERtotTALK_MS =		sec_convert($Stalk_sec,'H'); 
-	$pfUSERavgTALK_MS =		sec_convert($Stalk_avg,'M'); 
-	$USERtotPAUSE_MS =		sec_convert($Spause_sec,'H'); 
-	$USERavgPAUSE_MS =		sec_convert($Spause_avg,'M'); 
-	$USERtotWAIT_MS =		sec_convert($Swait_sec,'H'); 
-	$USERavgWAIT_MS =		sec_convert($Swait_avg,'M'); 
-	$USERtotDISPO_MS =		sec_convert($Sdispo_sec,'H'); 
-	$USERavgDISPO_MS =		sec_convert($Sdispo_avg,'M'); 
-	$USERtotDEAD_MS =		sec_convert($Sdead_sec,'H'); 
-	$USERavgDEAD_MS =		sec_convert($Sdead_avg,'M'); 
-	$USERtotCUSTOMER_MS =	sec_convert($Scustomer_sec,'H'); 
-	$USERavgCUSTOMER_MS =	sec_convert($Scustomer_avg,'M'); 
+	
 
-	$pfUSERtime_MS =		sprintf("%9s", $pfUSERtime_MS);
-	$pfUSERtotTALK_MS =		sprintf("%8s", $pfUSERtotTALK_MS);
-	$pfUSERavgTALK_MS =		sprintf("%6s", $pfUSERavgTALK_MS);
-	$pfUSERtotPAUSE_MS =	sprintf("%8s", $USERtotPAUSE_MS);
-	$pfUSERavgPAUSE_MS =	sprintf("%6s", $USERavgPAUSE_MS);
-	$pfUSERtotWAIT_MS =		sprintf("%8s", $USERtotWAIT_MS);
-	$pfUSERavgWAIT_MS =		sprintf("%6s", $USERavgWAIT_MS);
-	$pfUSERtotDISPO_MS =	sprintf("%8s", $USERtotDISPO_MS);
-	$pfUSERavgDISPO_MS =	sprintf("%6s", $USERavgDISPO_MS);
-	$pfUSERtotDEAD_MS =		sprintf("%8s", $USERtotDEAD_MS);
-	$pfUSERavgDEAD_MS =		sprintf("%6s", $USERavgDEAD_MS);
-	$pfUSERtotCUSTOMER_MS =	sprintf("%8s", $USERtotCUSTOMER_MS);
-	$pfUSERavgCUSTOMER_MS =	sprintf("%6s", $USERavgCUSTOMER_MS);
+	$pfUSERtime_MS =			sec_convert($Stime,'H'); 
+	$pfUSERtotTALK_MS =			sec_convert($Stalk_sec,'H'); 
+	$pfUSERtotTALK_MS_pct =		sprintf("%0.2f", ZeroDivisionCheck(100*$Stalk_sec, $Stime));
+	$pfUSERavgTALK_MS =			sec_convert($Stalk_avg,'M'); 
+	$USERtotPAUSE_MS =			sec_convert($Spause_sec,'H'); 
+	$pfUSERtotPAUSE_MS_pct =	sprintf("%0.2f", ZeroDivisionCheck(100*$Spause_sec, $Stime));
+	$USERavgPAUSE_MS =			sec_convert($Spause_avg,'M'); 
+	$USERtotWAIT_MS =			sec_convert($Swait_sec,'H'); 
+	$pfUSERtotWAIT_MS_pct =		sprintf("%0.2f", ZeroDivisionCheck(100*$Swait_sec, $Stime));
+	$USERavgWAIT_MS =			sec_convert($Swait_avg,'M'); 
+	$USERtotDISPO_MS =			sec_convert($Sdispo_sec,'H'); 
+	$pfUSERtotDISPO_MS_pct =	sprintf("%0.2f", ZeroDivisionCheck(100*$Sdispo_sec, $Stime));
+	$USERavgDISPO_MS =			sec_convert($Sdispo_avg,'M'); 
+	$USERtotDEAD_MS =			sec_convert($Sdead_sec,'H'); 
+	$pfUSERtotDEAD_MS_pct =		sprintf("%0.2f", ZeroDivisionCheck(100*$Sdead_sec, $Stime));
+	$USERavgDEAD_MS =			sec_convert($Sdead_avg,'M'); 
+	$USERtotCUSTOMER_MS	=		sec_convert($Scustomer_sec,'H');
+	$pfUSERtotCUSTOMER_MS_pct =	sprintf("%0.2f", ZeroDivisionCheck(100*$Scustomer_sec, $Stime));
+	$USERavgCUSTOMER_MS =		sec_convert($Scustomer_avg,'M'); 
+
+	$pfUSERtime_MS =			sprintf("%9s", $pfUSERtime_MS);
+	$pfUSERtotTALK_MS =			sprintf("%8s", $pfUSERtotTALK_MS);
+	$pfUSERtotTALK_MS_pct =		sprintf("%8s", $pfUSERtotTALK_MS_pct);
+	$pfUSERavgTALK_MS =			sprintf("%6s", $pfUSERavgTALK_MS);
+	$pfUSERtotPAUSE_MS =		sprintf("%8s", $USERtotPAUSE_MS);
+	$pfUSERtotPAUSE_MS_pct =	sprintf("%8s", $pfUSERtotPAUSE_MS_pct);
+	$pfUSERavgPAUSE_MS =		sprintf("%6s", $USERavgPAUSE_MS);
+	$pfUSERtotWAIT_MS =			sprintf("%8s", $USERtotWAIT_MS);
+	$pfUSERtotWAIT_MS_pct =		sprintf("%8s", $pfUSERtotWAIT_MS_pct);
+	$pfUSERavgWAIT_MS =			sprintf("%6s", $USERavgWAIT_MS);
+	$pfUSERtotDISPO_MS =		sprintf("%8s", $USERtotDISPO_MS);
+	$pfUSERtotDISPO_MS_pct =	sprintf("%8s", $pfUSERtotDISPO_MS_pct);
+	$pfUSERavgDISPO_MS =		sprintf("%6s", $USERavgDISPO_MS);
+	$pfUSERtotDEAD_MS =			sprintf("%8s", $USERtotDEAD_MS);
+	$pfUSERtotDEAD_MS_pct =		sprintf("%8s", $pfUSERtotDEAD_MS_pct);
+	$pfUSERavgDEAD_MS =			sprintf("%6s", $USERavgDEAD_MS);
+	$pfUSERtotCUSTOMER_MS =		sprintf("%8s", $USERtotCUSTOMER_MS);
+	$pfUSERtotCUSTOMER_MS_pct =	sprintf("%8s", $pfUSERtotCUSTOMER_MS_pct);
+	$pfUSERavgCUSTOMER_MS =		sprintf("%6s", $USERavgCUSTOMER_MS);
 	$PAUSEtotal[$m] = $pfUSERtotPAUSE_MS;
 
-	$Toutput = "| $Sfull_name | <a href=\"./user_stats.php?user=$RAWuser\">$Suser</a> | $Suser_group | $Slast_user_group | $Scalls | $pfUSERtime_MS | $pfUSERtotPAUSE_MS | $pfUSERavgPAUSE_MS | $pfUSERtotWAIT_MS | $pfUSERavgWAIT_MS | $pfUSERtotTALK_MS | $pfUSERavgTALK_MS | $pfUSERtotDISPO_MS | $pfUSERavgDISPO_MS | $pfUSERtotDEAD_MS | $pfUSERavgDEAD_MS | $pfUSERtotCUSTOMER_MS | $pfUSERavgCUSTOMER_MS |$SstatusesHTML\n";
+	if ($show_percentages) {
+		$Toutput = "| $Sfull_name | <a href=\"./user_stats.php?user=$RAWuser\">$Suser</a> | $Suser_group | $Slast_user_group | $Scalls | $pfUSERtime_MS | $pfUSERtotPAUSE_MS | $pfUSERtotPAUSE_MS_pct % | $pfUSERavgPAUSE_MS | $pfUSERtotWAIT_MS | $pfUSERtotWAIT_MS_pct % | $pfUSERavgWAIT_MS | $pfUSERtotTALK_MS | $pfUSERtotTALK_MS_pct % | $pfUSERavgTALK_MS | $pfUSERtotDISPO_MS | $pfUSERtotDISPO_MS_pct % | $pfUSERavgDISPO_MS | $pfUSERtotDEAD_MS | $pfUSERtotDEAD_MS_pct % | $pfUSERavgDEAD_MS | $pfUSERtotCUSTOMER_MS | $pfUSERtotCUSTOMER_MS_pct % | $pfUSERavgCUSTOMER_MS |$SstatusesHTML\n";
+	} else {
+		$Toutput = "| $Sfull_name | <a href=\"./user_stats.php?user=$RAWuser\">$Suser</a> | $Suser_group | $Slast_user_group | $Scalls | $pfUSERtime_MS | $pfUSERtotPAUSE_MS | $pfUSERavgPAUSE_MS | $pfUSERtotWAIT_MS | $pfUSERavgWAIT_MS | $pfUSERtotTALK_MS | $pfUSERavgTALK_MS | $pfUSERtotDISPO_MS | $pfUSERavgDISPO_MS | $pfUSERtotDEAD_MS | $pfUSERavgDEAD_MS | $pfUSERtotCUSTOMER_MS | $pfUSERavgCUSTOMER_MS |$SstatusesHTML\n";
+	}
 
 
 	$CSV_lines.="\"$Sfull_nameRAW\",";
-	$CSV_lines.=preg_replace('/\s/', '', "\"$SuserRAW\",\"$Suser_group\",\"$Slast_user_group\",\"$Scalls\",\"$pfUSERtime_MS\",\"$pfUSERtotPAUSE_MS\",\"$pfUSERavgPAUSE_MS\",\"$pfUSERtotWAIT_MS\",\"$pfUSERavgWAIT_MS\",\"$pfUSERtotTALK_MS\",\"$pfUSERavgTALK_MS\",\"$pfUSERtotDISPO_MS\",\"$pfUSERavgDISPO_MS\",\"$pfUSERtotDEAD_MS\",\"$pfUSERavgDEAD_MS\",\"$pfUSERtotCUSTOMER_MS\",\"$pfUSERavgCUSTOMER_MS\"$CSVstatuses");
+	if ($show_percentages) {
+		$CSV_lines.=preg_replace('/\s/', '', "\"$SuserRAW\",\"$Suser_group\",\"$Slast_user_group\",\"$Scalls\",\"$pfUSERtime_MS\",\"$pfUSERtotPAUSE_MS\",\"$pfUSERtotPAUSE_MS_pct\",\"$pfUSERavgPAUSE_MS\",\"$pfUSERtotWAIT_MS\",\"$pfUSERtotWAIT_MS_pct\",\"$pfUSERavgWAIT_MS\",\"$pfUSERtotTALK_MS\",\"$pfUSERtotTALK_MS_pct\",\"$pfUSERavgTALK_MS\",\"$pfUSERtotDISPO_MS\",\"$pfUSERtotDISPO_MS_pct\",\"$pfUSERavgDISPO_MS\",\"$pfUSERtotDEAD_MS\",\"$pfUSERtotDEAD_MS_pct\",\"$pfUSERavgDEAD_MS\",\"$pfUSERtotCUSTOMER_MS\",\"$pfUSERtotCUSTOMER_MS_pct\",\"$pfUSERavgCUSTOMER_MS\"$CSVstatuses");
+	} else {
+		$CSV_lines.=preg_replace('/\s/', '', "\"$SuserRAW\",\"$Suser_group\",\"$Slast_user_group\",\"$Scalls\",\"$pfUSERtime_MS\",\"$pfUSERtotPAUSE_MS\",\"$pfUSERavgPAUSE_MS\",\"$pfUSERtotWAIT_MS\",\"$pfUSERavgWAIT_MS\",\"$pfUSERtotTALK_MS\",\"$pfUSERavgTALK_MS\",\"$pfUSERtotDISPO_MS\",\"$pfUSERavgDISPO_MS\",\"$pfUSERtotDEAD_MS\",\"$pfUSERavgDEAD_MS\",\"$pfUSERtotCUSTOMER_MS\",\"$pfUSERavgCUSTOMER_MS\"$CSVstatuses");
+	}
 	$CSV_lines.="\n";
 
 	$TOPsorted_output[$m] = $Toutput;
@@ -952,6 +1010,10 @@ while ($n < $j)
 	if ($status_found < 1)
 		{
 		$SUMstatusesHTML .= "        0 |";
+		if ($show_percentages) {
+			$SUMstatusesHTML .= "     0.00 % |";
+			$CSVSUMstatuses.=",\"0.00 %\"";
+		}
 		$$total_var=0;
 		}
 	else
@@ -959,6 +1021,11 @@ while ($n < $j)
 		$SUMstatusTXT = sprintf("%8s", $Scalls);
 		$SUMstatusesHTML .= " $SUMstatusTXT |";
 		$CSVSUMstatuses.=",\"$Scalls\"";
+		if ($show_percentages) {
+			$SstatusTXT_pct=sprintf("%8s", sprintf("%0.2f", ZeroDivisionCheck(100*$Scalls,$TOTcalls)));
+			$SUMstatusesHTML .= " $SstatusTXT_pct % |";
+			$CSVSUMstatuses.=",\"$SstatusTXT_pct %\"";
+		}
 		$$total_var=$Scalls;
 		}
 	$n++;
@@ -988,6 +1055,12 @@ $TOTtotDEAD_MS =	sec_convert($TOTtotDEAD,'H');
 $TOTtotPAUSE_MS =	sec_convert($TOTtotPAUSE,'H'); 
 $TOTtotWAIT_MS =	sec_convert($TOTtotWAIT,'H'); 
 $TOTtotCUSTOMER_MS =	sec_convert($TOTtotCUSTOMER,'H'); 
+$TOTtotTALK_MS_pct =	sprintf("%0.2f", ZeroDivisionCheck(100*$TOTtotTALK, $TOTtime));
+$TOTtotDISPO_MS_pct =	sprintf("%0.2f", ZeroDivisionCheck(100*$TOTtotDISPO, $TOTtime));
+$TOTtotDEAD_MS_pct =	sprintf("%0.2f", ZeroDivisionCheck(100*$TOTtotDEAD, $TOTtime));
+$TOTtotPAUSE_MS_pct =	sprintf("%0.2f", ZeroDivisionCheck(100*$TOTtotPAUSE, $TOTtime));
+$TOTtotWAIT_MS_pct =	sprintf("%0.2f", ZeroDivisionCheck(100*$TOTtotWAIT, $TOTtime));
+$TOTtotCUSTOMER_MS_pct =sprintf("%0.2f", ZeroDivisionCheck(100*$TOTtotCUSTOMER, $TOTtime));
 $TOTavgTALK_MS =	sec_convert($TOTavgTALK,'M'); 
 $TOTavgDISPO_MS =	sec_convert($TOTavgDISPO,'H'); 
 $TOTavgDEAD_MS =	sec_convert($TOTavgDEAD,'H'); 
@@ -1002,6 +1075,12 @@ $TOTtotDEAD_MS =	sprintf("%10s", $TOTtotDEAD_MS);
 $TOTtotPAUSE_MS =	sprintf("%10s", $TOTtotPAUSE_MS);
 $TOTtotWAIT_MS =	sprintf("%10s", $TOTtotWAIT_MS);
 $TOTtotCUSTOMER_MS =	sprintf("%10s", $TOTtotCUSTOMER_MS);
+$TOTtotTALK_MS_pct =	sprintf("%8s", $TOTtotTALK_MS_pct);
+$TOTtotDISPO_MS_pct =	sprintf("%8s", $TOTtotDISPO_MS_pct);
+$TOTtotDEAD_MS_pct =	sprintf("%8s", $TOTtotDEAD_MS_pct);
+$TOTtotPAUSE_MS_pct =	sprintf("%8s", $TOTtotPAUSE_MS_pct);
+$TOTtotWAIT_MS_pct =	sprintf("%8s", $TOTtotWAIT_MS_pct);
+$TOTtotCUSTOMER_MS_pct =	sprintf("%8s", $TOTtotCUSTOMER_MS_pct);
 $TOTavgTALK_MS =	sprintf("%6s", $TOTavgTALK_MS);
 $TOTavgDISPO_MS =	sprintf("%6s", $TOTavgDISPO_MS);
 $TOTavgDEAD_MS =	sprintf("%6s", $TOTavgDEAD_MS);
@@ -1023,11 +1102,15 @@ while(strlen($TOTavgPAUSE_MS)>6) {$TOTavgPAUSE_MS = substr("$TOTavgPAUSE_MS", 0,
 while(strlen($TOTavgWAIT_MS)>6) {$TOTavgWAIT_MS = substr("$TOTavgWAIT_MS", 0, -1);}
 while(strlen($TOTavgCUSTOMER_MS)>6) {$TOTavgCUSTOMER_MS = substr("$TOTavgCUSTOMER_MS", 0, -1);}
 
-
-$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
-$ASCII_text.="|  TOTALS                                                      AGENTS:$TOT_AGENTS | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTavgDISPO_MS |$TOTtotDEAD_MS| $TOTavgDEAD_MS |$TOTtotCUSTOMER_MS| $TOTavgCUSTOMER_MS |$SUMstatusesHTML\n";
-$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
-
+if ($show_percentages) {
+	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+$statusesHEAD\n";
+	$ASCII_text.="|  TOTALS                                                      AGENTS:$TOT_AGENTS | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTtotPAUSE_MS_pct % | $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTtotWAIT_MS_pct % | $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTtotTALK_MS_pct % | $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTtotDISPO_MS_pct % | $TOTavgDISPO_MS |$TOTtotDEAD_MS| $TOTtotDEAD_MS_pct % | $TOTavgDEAD_MS |$TOTtotCUSTOMER_MS| $TOTtotCUSTOMER_MS_pct % | $TOTavgCUSTOMER_MS |$SUMstatusesHTML\n";
+	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+$statusesHEAD\n";
+} else {
+	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+	$ASCII_text.="|  TOTALS                                                      AGENTS:$TOT_AGENTS | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTavgDISPO_MS |$TOTtotDEAD_MS| $TOTavgDEAD_MS |$TOTtotCUSTOMER_MS| $TOTavgCUSTOMER_MS |$SUMstatusesHTML\n";
+	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+}
 
 for ($e=0; $e<count($statusesARY); $e++) {
 	$Sstatus=$statusesARY[$e];
@@ -1038,20 +1121,20 @@ for ($e=0; $e<count($statusesARY); $e++) {
 
 for ($d=0; $d<count($graph_stats); $d++) {
 	if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-	$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
-	$TIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][2]/$max_time)."' height='16' />".sec_convert($graph_stats[$d][2], 'HF')."</td></tr>";
-	$PAUSE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][3]/$max_pause)."' height='16' />".sec_convert($graph_stats[$d][3], 'HF')."</td></tr>";
-	$PAUSEAVG_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][4]/$max_pauseavg)."' height='16' />".sec_convert($graph_stats[$d][4], 'HF')."</td></tr>";
-	$WAIT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][5]/$max_wait)."' height='16' />".sec_convert($graph_stats[$d][5], 'HF')."</td></tr>";
-	$WAITAVG_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][6]/$max_waitavg)."' height='16' />".sec_convert($graph_stats[$d][6], 'HF')."</td></tr>";
-	$TALK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][7]/$max_talk)."' height='16' />".sec_convert($graph_stats[$d][7], 'HF')."</td></tr>";
-	$TALKAVG_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][8]/$max_talkavg)."' height='16' />".sec_convert($graph_stats[$d][8], 'HF')."</td></tr>";
-	$DISPO_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][9]/$max_dispo)."' height='16' />".sec_convert($graph_stats[$d][9], 'HF')."</td></tr>";
-	$DISPOAVG_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][10]/$max_dispoavg)."' height='16' />".sec_convert($graph_stats[$d][10], 'HF')."</td></tr>";
-	$DEAD_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][11]/$max_dead)."' height='16' />".sec_convert($graph_stats[$d][11], 'HF')."</td></tr>";
-	$DEADAVG_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][12]/$max_deadavg)."' height='16' />".sec_convert($graph_stats[$d][12], 'HF')."</td></tr>";
-	$CUST_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][13]/$max_customer)."' height='16' />".sec_convert($graph_stats[$d][13], 'HF')."</td></tr>";
-	$CUSTAVG_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][14]/$max_customeravg)."' height='16' />".sec_convert($graph_stats[$d][14], 'HF')."</td></tr>";
+	$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(ZeroDivisionCheck(400*$graph_stats[$d][1], $max_calls))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+	$TIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(ZeroDivisionCheck(400*$graph_stats[$d][2], $max_time))."' height='16' />".sec_convert($graph_stats[$d][2], 'HF')."</td></tr>";
+	$PAUSE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(ZeroDivisionCheck(400*$graph_stats[$d][3], $max_pause))."' height='16' />".sec_convert($graph_stats[$d][3], 'HF')."</td></tr>";
+	$PAUSEAVG_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(ZeroDivisionCheck(400*$graph_stats[$d][4], $max_pauseavg))."' height='16' />".sec_convert($graph_stats[$d][4], 'HF')."</td></tr>";
+	$WAIT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(ZeroDivisionCheck(400*$graph_stats[$d][5], $max_wait))."' height='16' />".sec_convert($graph_stats[$d][5], 'HF')."</td></tr>";
+	$WAITAVG_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(ZeroDivisionCheck(400*$graph_stats[$d][6], $max_waitavg))."' height='16' />".sec_convert($graph_stats[$d][6], 'HF')."</td></tr>";
+	$TALK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(ZeroDivisionCheck(400*$graph_stats[$d][7], $max_talk))."' height='16' />".sec_convert($graph_stats[$d][7], 'HF')."</td></tr>";
+	$TALKAVG_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(ZeroDivisionCheck(400*$graph_stats[$d][8], $max_talkavg))."' height='16' />".sec_convert($graph_stats[$d][8], 'HF')."</td></tr>";
+	$DISPO_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(ZeroDivisionCheck(400*$graph_stats[$d][9], $max_dispo))."' height='16' />".sec_convert($graph_stats[$d][9], 'HF')."</td></tr>";
+	$DISPOAVG_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(ZeroDivisionCheck(400*$graph_stats[$d][10], $max_dispoavg))."' height='16' />".sec_convert($graph_stats[$d][10], 'HF')."</td></tr>";
+	$DEAD_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(ZeroDivisionCheck(400*$graph_stats[$d][11], $max_dead))."' height='16' />".sec_convert($graph_stats[$d][11], 'HF')."</td></tr>";
+	$DEADAVG_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(ZeroDivisionCheck(400*$graph_stats[$d][12], $max_deadavg))."' height='16' />".sec_convert($graph_stats[$d][12], 'HF')."</td></tr>";
+	$CUST_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(ZeroDivisionCheck(400*$graph_stats[$d][13], $max_customer))."' height='16' />".sec_convert($graph_stats[$d][13], 'HF')."</td></tr>";
+	$CUSTAVG_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(ZeroDivisionCheck(400*$graph_stats[$d][14], $max_customeravg))."' height='16' />".sec_convert($graph_stats[$d][14], 'HF')."</td></tr>";
 
 	for ($e=0; $e<count($statusesARY); $e++) {
 		$Sstatus=$statusesARY[$e];
@@ -1059,7 +1142,7 @@ for ($d=0; $d<count($graph_stats); $d++) {
 		$max_varname="max_".$Sstatus;
 #		$max.= "<!-- $max_varname => ".$$max_varname." //-->\n";
 			
-		$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][($e+15)]/$$max_varname)."' height='16' />".$graph_stats[$d][($e+15)]."</td></tr>";
+		$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(ZeroDivisionCheck(400*$graph_stats[$d][($e+15)], $$max_varname))."' height='16' />".$graph_stats[$d][($e+15)]."</td></tr>";
 	}
 }
 		
@@ -1124,8 +1207,11 @@ $GRAPH3="<tr><td colspan='".(14+count($statusesARY))."' class='graph_span_cell'>
 
 $GRAPH_text.=$JS_text.$GRAPH.$GRAPH2.$GRAPH3;
 
-
-$CSV_total=preg_replace('/\s/', '', "\"\",\"\",\"TOTALS\",\"AGENTS:$TOT_AGENTS\",\"$TOTcalls\",\"$TOTtime_MS\",\"$TOTtotPAUSE_MS\",\"$TOTavgPAUSE_MS\",\"$TOTtotWAIT_MS\",\"$TOTavgWAIT_MS\",\"$TOTtotTALK_MS\",\"$TOTavgTALK_MS\",\"$TOTtotDISPO_MS\",\"$TOTavgDISPO_MS\",\"$TOTtotDEAD_MS\",\"$TOTavgDEAD_MS\",\"$TOTtotCUSTOMER_MS\",\"$TOTavgCUSTOMER_MS\"$CSVSUMstatuses");
+if ($show_percentages) {
+	$CSV_total=preg_replace('/\s/', '', "\"\",\"\",\"TOTALS\",\"AGENTS:$TOT_AGENTS\",\"$TOTcalls\",\"$TOTtime_MS\",\"$TOTtotPAUSE_MS\",\"$TOTtotPAUSE_MS_pct %\",\"$TOTavgPAUSE_MS\",\"$TOTtotWAIT_MS\",\"$TOTtotWAIT_MS_pct %\",\"$TOTavgWAIT_MS\",\"$TOTtotTALK_MS\",\"$TOTtotTALK_MS_pct %\",\"$TOTavgTALK_MS\",\"$TOTtotDISPO_MS\",\"$TOTtotDISPO_MS_pct %\",\"$TOTavgDISPO_MS\",\"$TOTtotDEAD_MS\",\"$TOTtotDEAD_MS_pct %\",\"$TOTavgDEAD_MS\",\"$TOTtotCUSTOMER_MS\",\"$TOTtotCUSTOMER_MS_pct %\",\"$TOTavgCUSTOMER_MS\"$CSVSUMstatuses\n\n");
+} else {
+	$CSV_total=preg_replace('/\s/', '', "\"\",\"\",\"TOTALS\",\"AGENTS:$TOT_AGENTS\",\"$TOTcalls\",\"$TOTtime_MS\",\"$TOTtotPAUSE_MS\",\"$TOTavgPAUSE_MS\",\"$TOTtotWAIT_MS\",\"$TOTavgWAIT_MS\",\"$TOTtotTALK_MS\",\"$TOTavgTALK_MS\",\"$TOTtotDISPO_MS\",\"$TOTavgDISPO_MS\",\"$TOTtotDEAD_MS\",\"$TOTavgDEAD_MS\",\"$TOTtotCUSTOMER_MS\",\"$TOTavgCUSTOMER_MS\"$CSVSUMstatuses\n\n");
+}
 
 if ($file_download == 1)
 	{
@@ -1466,16 +1552,16 @@ for ($e=0; $e<count($sub_statusesARY); $e++) {
 
 for ($d=0; $d<count($graph_stats); $d++) {
 	if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-	$TOTAL_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_total)."' height='16' />".sec_convert($graph_stats[$d][1], 'H')."</td></tr>";
-	$NONPAUSE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][2]/$max_nonpause)."' height='16' />".sec_convert($graph_stats[$d][2], 'H')."</td></tr>";
-	$PAUSE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][3]/$max_pause)."' height='16' />".sec_convert($graph_stats[$d][3], 'H')."</td></tr>";
+	$TOTAL_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(ZeroDivisionCheck(400*$graph_stats[$d][1], $max_total))."' height='16' />".sec_convert($graph_stats[$d][1], 'H')."</td></tr>";
+	$NONPAUSE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(ZeroDivisionCheck(400*$graph_stats[$d][2], $max_nonpause))."' height='16' />".sec_convert($graph_stats[$d][2], 'H')."</td></tr>";
+	$PAUSE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(ZeroDivisionCheck(400*$graph_stats[$d][3], $max_pause))."' height='16' />".sec_convert($graph_stats[$d][3], 'H')."</td></tr>";
 
 	for ($e=0; $e<count($sub_statusesARY); $e++) {
 		$Sstatus=$sub_statusesARY[$e];
 		$varname=$Sstatus."_graph";
 		$max_varname="max_".$Sstatus;
 	
-		$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][($e+4)]/$$max_varname)."' height='16' />".sec_convert($graph_stats[$d][($e+4)], 'H')."</td></tr>";
+		$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(ZeroDivisionCheck(400*$graph_stats[$d][($e+4)], $$max_varname))."' height='16' />".sec_convert($graph_stats[$d][($e+4)], 'H')."</td></tr>";
 	}
 }
 

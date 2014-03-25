@@ -17,6 +17,7 @@
 # 130615-2111 - Added user authentication function and login lockout for 15 minutes after 10 failed login
 # 130705-1957 - Added password encryption compatibility
 # 130831-0919 - Changed to mysqli PHP functions
+# 140319-1924 - Added ZeroDivisionCheck function
 #
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
@@ -406,4 +407,11 @@ function mysql_to_mysqli($stmt, $link) {
 	return $rslt;
 }
 
+function ZeroDivisionCheck($dividend, $divisor) {
+	if ($divisor>0) {
+		return ($dividend/$divisor);
+	} else {
+		return 0;
+	}
+}
 ?>
