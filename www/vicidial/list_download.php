@@ -27,6 +27,7 @@
 # 130618-0043 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0902 - Changed to mysqli PHP functions
 # 140108-0723 - Added webserver and hostname to report logging
+# 140326-2235 - Changed to allow for custom fields with a different entry_list_id
 #
 
 $startMS = microtime();
@@ -396,13 +397,13 @@ else
 	{
 	$TXTfilename = "LIST_$list_id$US$FILE_TIME.txt";
 	$list_id_header='';
-	$stmt="select lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner $extended_vl_fields_SQL from vicidial_list where list_id='$list_id';";
+	$stmt="select lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id $extended_vl_fields_SQL from vicidial_list where list_id='$list_id';";
 	if ($list_id=='ALL-LISTS')
 		{
 		$list_id_header="list_id\t";   
-		$stmt="select list_id,lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner $extended_vl_fields_SQL from vicidial_list where list_id > 0;";
+		$stmt="select list_id,lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id $extended_vl_fields_SQL from vicidial_list where list_id > 0;";
 		}
-	$header_row = $list_id_header . "lead_id\tentry_date\tmodify_date\tstatus\tuser\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tcalled_since_last_reset\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tcalled_count\tlast_local_call_time\trank\towner$extended_vl_fields_HEADER";
+	$header_row = $list_id_header . "lead_id\tentry_date\tmodify_date\tstatus\tuser\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tcalled_since_last_reset\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tcalled_count\tlast_local_call_time\trank\towner\tentry_list_id$extended_vl_fields_HEADER";
 	$header_columns='';
 	}
 
@@ -439,17 +440,21 @@ while ($i < $leads_to_print)
 		if ($list_id=='ALL-LISTS')
 			{
 			if ($extended_vl_fields > 0)
-				{$extended_vl_fields_DATA = "\t$row[33]\t$row[34]\t$row[35]\t$row[36]\t$row[37]\t$row[38]\t$row[39]\t$row[40]\t$row[41]\t$row[42]\t$row[43]\t$row[44]\t$row[45]\t$row[46]\t$row[47]\t$row[48]\t$row[49]\t$row[50]\t$row[51]\t$row[52]\t$row[53]\t$row[54]\t$row[55]\t$row[56]\t$row[57]\t$row[58]\t$row[59]\t$row[60]\t$row[61]\t$row[62]\t$row[63]\t$row[64]\t$row[65]\t$row[66]\t$row[67]\t$row[68]\t$row[69]\t$row[70]\t$row[71]\t$row[72]\t$row[73]\t$row[74]\t$row[75]\t$row[76]\t$row[77]\t$row[78]\t$row[79]\t$row[80]\t$row[81]\t$row[82]\t$row[83]\t$row[84]\t$row[85]\t$row[86]\t$row[87]\t$row[88]\t$row[89]\t$row[90]\t$row[91]\t$row[92]\t$row[93]\t$row[94]\t$row[95]\t$row[96]\t$row[97]\t$row[98]\t$row[99]\t$row[100]\t$row[101]\t$row[102]\t$row[103]\t$row[104]\t$row[105]\t$row[106]\t$row[107]\t$row[108]\t$row[109]\t$row[110]\t$row[111]\t$row[112]\t$row[113]\t$row[114]\t$row[115]\t$row[116]\t$row[117]\t$row[118]\t$row[119]\t$row[120]\t$row[121]\t$row[122]\t$row[123]\t$row[124]\t$row[125]\t$row[126]\t$row[127]\t$row[128]\t$row[129]\t$row[130]\t$row[131]";}
-			$row_data[$i] .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]$extended_vl_fields_DATA";
+				{$extended_vl_fields_DATA = "\t$row[36]\t$row[37]\t$row[38]\t$row[39]\t$row[40]\t$row[41]\t$row[42]\t$row[43]\t$row[44]\t$row[45]\t$row[46]\t$row[47]\t$row[48]\t$row[49]\t$row[50]\t$row[51]\t$row[52]\t$row[53]\t$row[54]\t$row[55]\t$row[56]\t$row[57]\t$row[58]\t$row[59]\t$row[60]\t$row[61]\t$row[62]\t$row[63]\t$row[64]\t$row[65]\t$row[66]\t$row[67]\t$row[68]\t$row[69]\t$row[70]\t$row[71]\t$row[72]\t$row[73]\t$row[74]\t$row[75]\t$row[76]\t$row[77]\t$row[78]\t$row[79]\t$row[80]\t$row[81]\t$row[82]\t$row[83]\t$row[84]\t$row[85]\t$row[86]\t$row[87]\t$row[88]\t$row[89]\t$row[90]\t$row[91]\t$row[92]\t$row[93]\t$row[94]\t$row[95]\t$row[96]\t$row[97]\t$row[98]\t$row[99]\t$row[100]\t$row[101]\t$row[102]\t$row[103]\t$row[104]\t$row[105]\t$row[106]\t$row[107]\t$row[108]\t$row[109]\t$row[110]\t$row[111]\t$row[112]\t$row[113]\t$row[114]\t$row[115]\t$row[116]\t$row[117]\t$row[118]\t$row[119]\t$row[120]\t$row[121]\t$row[122]\t$row[123]\t$row[124]\t$row[125]\t$row[126]\t$row[127]\t$row[128]\t$row[129]\t$row[130]\t$row[131]\t$row[132]\t$row[133]\t$row[134]";}
+			$row_data[$i] .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]$extended_vl_fields_DATA";
 			$export_list_id[$i] = $row[0];
+			if ( ($row[35] > 99) and (strlen($row[35]) > 2) )
+				{$export_list_id[$i] = $row[35];}
 			$export_lead_id[$i] = $row[1];
 			}
 		else
 			{
 			if ($extended_vl_fields > 0)
-				{$extended_vl_fields_DATA = "\t$row[34]\t$row[35]\t$row[36]\t$row[37]\t$row[38]\t$row[39]\t$row[40]\t$row[41]\t$row[42]\t$row[43]\t$row[44]\t$row[45]\t$row[46]\t$row[47]\t$row[48]\t$row[49]\t$row[50]\t$row[51]\t$row[52]\t$row[53]\t$row[54]\t$row[55]\t$row[56]\t$row[57]\t$row[58]\t$row[59]\t$row[60]\t$row[61]\t$row[62]\t$row[63]\t$row[64]\t$row[65]\t$row[66]\t$row[67]\t$row[68]\t$row[69]\t$row[70]\t$row[71]\t$row[72]\t$row[73]\t$row[74]\t$row[75]\t$row[76]\t$row[77]\t$row[78]\t$row[79]\t$row[80]\t$row[81]\t$row[82]\t$row[83]\t$row[84]\t$row[85]\t$row[86]\t$row[87]\t$row[88]\t$row[89]\t$row[90]\t$row[91]\t$row[92]\t$row[93]\t$row[94]\t$row[95]\t$row[96]\t$row[97]\t$row[98]\t$row[99]\t$row[100]\t$row[101]\t$row[102]\t$row[103]\t$row[104]\t$row[105]\t$row[106]\t$row[107]\t$row[108]\t$row[109]\t$row[110]\t$row[111]\t$row[112]\t$row[113]\t$row[114]\t$row[115]\t$row[116]\t$row[117]\t$row[118]\t$row[119]\t$row[120]\t$row[121]\t$row[122]\t$row[123]\t$row[124]\t$row[125]\t$row[126]\t$row[127]\t$row[128]\t$row[129]\t$row[130]\t$row[131]\t$row[132]";}
-			$row_data[$i] .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]$extended_vl_fields_DATA";
+				{$extended_vl_fields_DATA = "\t$row[35]\t$row[36]\t$row[37]\t$row[38]\t$row[39]\t$row[40]\t$row[41]\t$row[42]\t$row[43]\t$row[44]\t$row[45]\t$row[46]\t$row[47]\t$row[48]\t$row[49]\t$row[50]\t$row[51]\t$row[52]\t$row[53]\t$row[54]\t$row[55]\t$row[56]\t$row[57]\t$row[58]\t$row[59]\t$row[60]\t$row[61]\t$row[62]\t$row[63]\t$row[64]\t$row[65]\t$row[66]\t$row[67]\t$row[68]\t$row[69]\t$row[70]\t$row[71]\t$row[72]\t$row[73]\t$row[74]\t$row[75]\t$row[76]\t$row[77]\t$row[78]\t$row[79]\t$row[80]\t$row[81]\t$row[82]\t$row[83]\t$row[84]\t$row[85]\t$row[86]\t$row[87]\t$row[88]\t$row[89]\t$row[90]\t$row[91]\t$row[92]\t$row[93]\t$row[94]\t$row[95]\t$row[96]\t$row[97]\t$row[98]\t$row[99]\t$row[100]\t$row[101]\t$row[102]\t$row[103]\t$row[104]\t$row[105]\t$row[106]\t$row[107]\t$row[108]\t$row[109]\t$row[110]\t$row[111]\t$row[112]\t$row[113]\t$row[114]\t$row[115]\t$row[116]\t$row[117]\t$row[118]\t$row[119]\t$row[120]\t$row[121]\t$row[122]\t$row[123]\t$row[124]\t$row[125]\t$row[126]\t$row[127]\t$row[128]\t$row[129]\t$row[130]\t$row[131]\t$row[132]\t$row[133]";}
+			$row_data[$i] .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]$extended_vl_fields_DATA";
 			$export_list_id[$i] = $list_id;
+			if ( ($row[34] > 99) and (strlen($row[34]) > 2) )
+				{$export_list_id[$i] = $row[34];}
 			$export_lead_id[$i] = $row[0];
 			}
 		}
@@ -618,4 +623,3 @@ $rslt=mysql_to_mysqli($stmt, $link);
 exit;
 
 ?>
-
