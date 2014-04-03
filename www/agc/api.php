@@ -72,10 +72,11 @@
 # 140126-0701 - Added pause_code function
 # 140214-1736 - Added preview_dial_action function
 # 140301-2046 - Added options to dial next number and search for lead phone number
+# 140403-1738 - Added option to append filename on recording start
 #
 
-$version = '2.8-38';
-$build = '140301-2046';
+$version = '2.8-39';
+$build = '140403-1738';
 
 $startMS = microtime();
 
@@ -788,7 +789,7 @@ if ($function == 'logout')
 ################################################################################
 if ($function == 'recording')
 	{
-	if ( ( ($value!='START') and ($value!='STOP') and ($value!='STATUS') ) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
+	if ( ( (!preg_match("/START/",$value)) and (!preg_match("/STOP/",$value)) and (!preg_match("/STATUS/",$value)) ) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
 		{
 		$result = 'ERROR';
 		$result_reason = "recording not valid";
@@ -867,7 +868,7 @@ if ($function == 'recording')
 				}
 			else
 				{
-				if ( ($value=='STOP') and ( ($recording_id=='STOP') or ($recording_id < 1) ) )
+				if ( (preg_match("/STOP/",$value)) and ( ($recording_id=='STOP') or ($recording_id < 1) ) )
 					{
 					$result = 'ERROR';
 					$result_reason = "stop recording error";
@@ -876,7 +877,11 @@ if ($function == 'recording')
 
 					exit;
 					}
-
+				if ( (strlen($stage)>0) and (preg_match("/START/",$value)) )
+					{
+					while (strlen($stage)>14) {$stage = preg_replace("/.$/",'',$stage);}
+					$value = "$value$stage";
+					}
 				$stmt="UPDATE vicidial_live_agents set external_recording='$value' where user='$agent_user';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_to_mysqli($stmt, $link);

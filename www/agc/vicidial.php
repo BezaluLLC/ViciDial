@@ -423,10 +423,11 @@
 # 140301-2059 - Added API functions options for SEARCH for phone within lead_id and Dial Next Number
 # 140302-1018 - Changes to allow for & and + in standard fields
 # 140312-2109 - Added CALLID as recording filename variable
+# 140403-1731 - Added recording filename API append option
 #
 
-$version = '2.8-392c';
-$build = '140312-2109';
+$version = '2.8-393c';
+$build = '140403-1731';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=79;
 $one_mysql_log=0;
@@ -4710,9 +4711,16 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								PauseCodeSelect_submit(api_pause_code);
 								}
 							}
-						if (api_recording=='START')
+						var regAPIrec = new RegExp("START","g");
+						if (api_recording.match(regAPIrec))
 							{
-							conf_send_recording('MonitorConf', session_id,'','1');
+							var APIrec_append = api_recording;
+							if (APIrec_append.length > 5)
+								{APIrec_append = APIrec_append.replace(regAPIrec, '');}
+							else
+								{APIrec_append='';}
+
+							conf_send_recording('MonitorConf', session_id,'','1', APIrec_append);
 							}
 						if (api_recording=='STOP')
 							{
@@ -5201,7 +5209,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 // ################################################################################
 // Send MonitorConf/StopMonitorConf command for recording of conferences
-	function conf_send_recording(taskconfrectype,taskconfrec,taskconffile,taskfromapi) 
+	function conf_send_recording(taskconfrectype,taskconfrec,taskconffile,taskfromapi,taskapiappend) 
 		{
 		if (inOUT == 'OUT')
 			{
@@ -5252,7 +5260,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				var REGrecVENDORLEADCODE = new RegExp("VENDORLEADCODE","g");
 				var REGrecLEADID = new RegExp("LEADID","g");
 				var REGrecCALLID = new RegExp("CALLID","g");
-				filename = LIVE_campaign_rec_filename;
+				filename = LIVE_campaign_rec_filename + '' + taskapiappend;
 				filename = filename.replace(REGrecCAMPAIGN, campaign);
 				filename = filename.replace(REGrecINGROUP, VDCL_group_id);
 				filename = filename.replace(REGrecCUSTPHONE, lead_dial_number);
@@ -5276,13 +5284,13 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					{
 					document.getElementById("RecorDControl").innerHTML = conf_rec_start_html;
 					}
-			}
+				}
 			if (taskconfrectype == 'StopMonitorConf')
 				{
 				filename = taskconffile;
 				var query_recording_exten = session_id;
 				var channelrec = "Local/" + conf_silent_prefix + '' + taskconfrec + "@" + ext_context;
-                var conf_rec_start_html = "<a href=\"#\" onclick=\"conf_send_recording('MonitorConf','" + taskconfrec + "','');return false;\"><img src=\"./images/vdc_LB_startrecording.gif\" border=\"0\" alt=\"Start Recording\" /></a>";
+                var conf_rec_start_html = "<a href=\"#\" onclick=\"conf_send_recording('MonitorConf','" + taskconfrec + "','','','');return false;\"><img src=\"./images/vdc_LB_startrecording.gif\" border=\"0\" alt=\"Start Recording\" /></a>";
 				if (LIVE_campaign_recording == 'ALLFORCE')
 					{
                     document.getElementById("RecorDControl").innerHTML = "<img src=\"./images/vdc_LB_startrecording_OFF.gif\" border=\"0\" alt=\"Start Recording\" />";
@@ -5896,7 +5904,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				//		alert("VICIDIAL Call log entered:\n" + document.vicidial_form.uniqueid.value);
 						if ( (taskMDstage != "start") && (VDstop_rec_after_each_call == 1) )
 							{
-                            var conf_rec_start_html = "<a href=\"#\" onclick=\"conf_send_recording('MonitorConf','" + session_id + "','');return false;\"><img src=\"./images/vdc_LB_startrecording.gif\" border=\"0\" alt=\"Start Recording\" /></a>";
+                            var conf_rec_start_html = "<a href=\"#\" onclick=\"conf_send_recording('MonitorConf','" + session_id + "','','','');return false;\"><img src=\"./images/vdc_LB_startrecording.gif\" border=\"0\" alt=\"Start Recording\" /></a>";
 							if ( (LIVE_campaign_recording == 'NEVER') || (LIVE_campaign_recording == 'ALLFORCE') )
 								{
                                 document.getElementById("RecorDControl").innerHTML = "<img src=\"./images/vdc_LB_startrecording_OFF.gif\" border=\"0\" alt=\"Start Recording\" />";
@@ -13922,7 +13930,7 @@ function phone_number_format(formatphone) {
 						{all_record_count++;}
 					else
 						{
-						conf_send_recording('MonitorConf',session_id ,'');
+						conf_send_recording('MonitorConf',session_id ,'','','');
 						all_record = 'NO';
 						all_record_count=0;
 						}
@@ -14689,8 +14697,8 @@ $zi=2;
     <font class="body_tiny"><span id="RecorDingFilename"></span></font><br />
     RECORD ID: <font class="body_small"><span id="RecorDID"></span></font><br />
 	<center>
-	<!-- <a href=\"#\" onclick=\"conf_send_recording('MonitorConf','" + head_conf + "','');return false;\">Record</a> -->
-    <span style="background-color: <?php echo $MAIN_COLOR ?>" id="RecorDControl"><a href="#" onclick="conf_send_recording('MonitorConf',session_id,'');return false;"><img src="./images/vdc_LB_startrecording.gif" border="0" alt="Start Recording" /></a></span><br />
+	<!-- <a href=\"#\" onclick=\"conf_send_recording('MonitorConf','" + head_conf + "','','','');return false;\">Record</a> -->
+    <span style="background-color: <?php echo $MAIN_COLOR ?>" id="RecorDControl"><a href="#" onclick="conf_send_recording('MonitorConf',session_id,'','','');return false;"><img src="./images/vdc_LB_startrecording.gif" border="0" alt="Start Recording" /></a></span><br />
     <span id="SpacerSpanA"><img src="./images/blank.gif" width="145px" height="16px" border="0" /></span><br />
     <span style="background-color: #FFFFFF" id="WebFormSpan"><img src="./images/vdc_LB_webform_OFF.gif" border="0" alt="Web Form" /></span><br />
 	<?php

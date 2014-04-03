@@ -1,4 +1,4 @@
-AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2014-03-01
+AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2014-04-03
 
 This document describes the functions of an API(Application Programming Interface)
 for the VICIDIAL Agent screen. This functionality will be rather limited at first
@@ -696,11 +696,14 @@ VALUES:
             (this will stop all active recordings onthe agent screen)
    STATUS - displays results of active recording and agent session information
             (returns: user|recording_id|filename|server|start_time|agent_server|session|agent_status)
+  stage - 
+    OPTIONAL, value to append to the recording filename, limited to 14 characters, if more it will truncate. Only works with START value
 
 EXAMPLE URLS:
 http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=recording&value=START
 http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=recording&value=STOP
 http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=recording&value=STATUS
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=recording&value=START&stage=_MIDCALL
 
 RESPONSES:
 ERROR: no user found - 6666
@@ -708,6 +711,7 @@ ERROR: agent_user is not logged in - 6666
 ERROR: stop recording error - 6666|||||192.168.1.5|8600051|PAUSED 
 SUCCESS: recording function sent - 6666|STOP||||192.168.1.5|8600051|PAUSED
 SUCCESS: recording function sent - 6666|START||||192.168.1.5|8600051|PAUSED 
+SUCCESS: recording function sent - 6666|START_MIDCALL||||192.168.1.5|8600051|PAUSED 
 NOTICE: not recording - 6666|||||192.168.1.5|8600051|PAUSED
 NOTICE: recording active - 6666|121242|20120810-012008__6666_|192.168.1.5|2012-08-10 01:20:10|192.168.1.5|8600051|PAUSED
 
