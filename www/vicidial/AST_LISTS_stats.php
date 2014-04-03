@@ -10,6 +10,7 @@
 # 130926-0721 - First build based upon LISTS campaign report
 # 130927-2154 - Added summary and full download options
 # 140108-0714 - Added webserver and hostname to report logging
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
@@ -525,11 +526,8 @@ else
 			$HA_count = $row[0];
 			$flag_count+=$row[0];
 			$category_totals["HA"]+=$HA_count;
-			if ($HA_count > 0)
-				{
-				if ($HA_count>$max_calls) {$max_calls=$HA_count;}
-				$HA_percent = ( ($HA_count / $TOTALleads) * 100);
-				}
+			if ($HA_count>$max_calls) {$max_calls=$HA_count;}
+			$HA_percent = ( MathZDC($HA_count, $TOTALleads) * 100);
 			}
 		$stmt="select count(*) from vicidial_list where status IN($sale_statuses) and list_id='$list_id';";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -541,11 +539,8 @@ else
 			$SALE_count = $row[0];
 			$flag_count+=$row[0];
 			$category_totals["SALE"]+=$SALE_count;
-			if ($SALE_count > 0)
-				{
-				if ($SALE_count>$max_calls) {$max_calls=$SALE_count;}
-				$SALE_percent = ( ($SALE_count / $TOTALleads) * 100);
-				}
+			if ($SALE_count>$max_calls) {$max_calls=$SALE_count;}
+			$SALE_percent = ( MathZDC($SALE_count, $TOTALleads) * 100);
 			}
 		$stmt="select count(*) from vicidial_list where status IN($dnc_statuses) and list_id='$list_id';";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -557,11 +552,8 @@ else
 			$DNC_count = $row[0];
 			$flag_count+=$row[0];
 			$category_totals["DNC"]+=$DNC_count;
-			if ($DNC_count > 0)
-				{
-				if ($DNC_count>$max_calls) {$max_calls=$DNC_count;}
-				$DNC_percent = ( ($DNC_count / $TOTALleads) * 100);
-				}
+			if ($DNC_count>$max_calls) {$max_calls=$DNC_count;}
+			$DNC_percent = ( MathZDC($DNC_count, $TOTALleads) * 100);
 			}
 		$stmt="select count(*) from vicidial_list where status IN($customer_contact_statuses) and list_id='$list_id';";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -573,11 +565,8 @@ else
 			$CC_count = $row[0];
 			$flag_count+=$row[0];
 			$category_totals["CC"]+=$CC_count;
-			if ($CC_count > 0)
-				{
-				if ($C_count>$max_calls) {$max_calls=$CC_count;}
-				$CC_percent = ( ($CC_count / $TOTALleads) * 100);
-				}
+			if ($C_count>$max_calls) {$max_calls=$CC_count;}
+			$CC_percent = ( MathZDC($CC_count, $TOTALleads) * 100);
 			}
 		$stmt="select count(*) from vicidial_list where status IN($not_interested_statuses) and list_id='$list_id';";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -589,11 +578,8 @@ else
 			$NI_count = $row[0];
 			$flag_count+=$row[0];
 			$category_totals["NI"]+=$NI_count;
-			if ($NI_count > 0)
-				{
-				if ($NI_count>$max_calls) {$max_calls=$NI_count;}
-				$NI_percent = ( ($NI_count / $TOTALleads) * 100);
-				}
+			if ($NI_count>$max_calls) {$max_calls=$NI_count;}
+			$NI_percent = ( MathZDC($NI_count, $TOTALleads) * 100);
 			}
 		$stmt="select count(*) from vicidial_list where status IN($unworkable_statuses) and list_id='$list_id';";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -605,11 +591,8 @@ else
 			$UW_count = $row[0];
 			$flag_count+=$row[0];
 			$category_totals["UW"]+=$UW_count;
-			if ($UW_count > 0)
-				{
-				if ($UW_count>$max_calls) {$max_calls=$UW_count;}
-				$UW_percent = ( ($UW_count / $TOTALleads) * 100);
-				}
+			if ($UW_count>$max_calls) {$max_calls=$UW_count;}
+			$UW_percent = ( MathZDC($UW_count, $TOTALleads) * 100);
 			}
 		$stmt="select count(*) from vicidial_list where status IN($scheduled_callback_statuses) and list_id='$list_id';";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -621,11 +604,8 @@ else
 			$SC_count = $row[0];
 			$flag_count+=$row[0];
 			$category_totals["SC"]+=$SC_count;
-			if ($SC_count > 0)
-				{
-				if ($SC_count>$max_calls) {$max_calls=$SC_count;}
-				$SC_percent = ( ($SC_count / $TOTALleads) * 100);
-				}
+			if ($SC_count>$max_calls) {$max_calls=$SC_count;}
+			$SC_percent = ( MathZDC($SC_count, $TOTALleads) * 100);
 			}
 		$stmt="select count(*) from vicidial_list where status IN($completed_statuses) and list_id='$list_id';";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -637,11 +617,8 @@ else
 			$COMP_count = $row[0];
 			$flag_count+=$row[0];
 			$category_totals["COMP"]+=$COMP_count;
-			if ($COMP_count > 0)
-				{
-				if ($COMP_count>$max_calls) {$max_calls=$COMP_count;}
-				$COMP_percent = ( ($COMP_count / $TOTALleads) * 100);
-				}
+			if ($COMP_count>$max_calls) {$max_calls=$COMP_count;}
+			$COMP_percent = ( MathZDC($COMP_count, $TOTALleads) * 100);
 			}
 
 		$HA_percent =	sprintf("%6.2f", "$HA_percent"); while(strlen($HA_percent)>6) {$HA_percent = substr("$HA_percent", 0, -1);}
@@ -705,9 +682,9 @@ else
 
 		while ($row=mysqli_fetch_row($rslt)) 
 			{
-			$OUToutput .= "| ".sprintf("%6s", $row[0])." | ".sprintf("%30s", $statname_list["$row[0]"])." | ".sprintf("%8s", $row[1])." | ".sprintf("%6.2f", ( ($row[1] / $TOTALleads) * 100))."% |\n";
-			$CSV_text3.="\"$row[0]\",\"".$statname_list["$row[0]"]."\",\"$row[1]\",\"".sprintf("%6.2f", ( ($row[1] / $TOTALleads) * 100))."%\"\n";
-			$CSV_textALL.="\"$row[0]\",\"".$statname_list["$row[0]"]."\",\"$row[1]\",\"".sprintf("%6.2f", ( ($row[1] / $TOTALleads) * 100))."%\"\n";
+			$OUToutput .= "| ".sprintf("%6s", $row[0])." | ".sprintf("%30s", $statname_list["$row[0]"])." | ".sprintf("%8s", $row[1])." | ".sprintf("%6.2f", ( MathZDC($row[1], $TOTALleads) * 100))."% |\n";
+			$CSV_text3.="\"$row[0]\",\"".$statname_list["$row[0]"]."\",\"$row[1]\",\"".sprintf("%6.2f", ( MathZDC($row[1], $TOTALleads) * 100))."%\"\n";
+			$CSV_textALL.="\"$row[0]\",\"".$statname_list["$row[0]"]."\",\"$row[1]\",\"".sprintf("%6.2f", ( MathZDC($row[1], $TOTALleads) * 100))."%\"\n";
 			}
 		$OUToutput .= "+-----------------------------------------+----------+---------+\n";
 		$OUToutput .= "|                                         | ".sprintf("%8s", $TOTALleads)." | 100.00% |\n";
@@ -719,14 +696,14 @@ else
 		$OUToutput .= "\n";
 		}
 
-	$total_HA_percent =	sprintf("%6.2f", ( ($category_totals["HA"] / $totalTOTALleads) * 100)); while(strlen($total_HA_percent)>6) {$total_HA_percent = substr("$total_HA_percent", 0, -1);}
-	$total_SALE_percent =	sprintf("%6.2f", ( ($category_totals["SALE"] / $totalTOTALleads) * 100)); while(strlen($total_SALE_percent)>6) {$total_SALE_percent = substr("$total_SALE_percent", 0, -1);}
-	$total_DNC_percent =	sprintf("%6.2f", ( ($category_totals["DNC"] / $totalTOTALleads) * 100)); while(strlen($total_DNC_percent)>6) {$total_DNC_percent = substr("$total_DNC_percent", 0, -1);}
-	$total_CC_percent =	sprintf("%6.2f", ( ($category_totals["CC"] / $totalTOTALleads) * 100)); while(strlen($total_CC_percent)>6) {$total_CC_percent = substr("$total_CC_percent", 0, -1);}
-	$total_NI_percent =	sprintf("%6.2f", ( ($category_totals["NI"] / $totalTOTALleads) * 100)); while(strlen($total_NI_percent)>6) {$total_NI_percent = substr("$total_NI_percent", 0, -1);}
-	$total_UW_percent =	sprintf("%6.2f", ( ($category_totals["UW"] / $totalTOTALleads) * 100)); while(strlen($total_UW_percent)>6) {$total_UW_percent = substr("$total_UW_percent", 0, -1);}
-	$total_SC_percent =	sprintf("%6.2f", ( ($category_totals["SC"] / $totalTOTALleads) * 100)); while(strlen($total_SC_percent)>6) {$total_SC_percent = substr("$total_SC_percent", 0, -1);}
-	$total_COMP_percent =	sprintf("%6.2f", ( ($category_totals["COMP"] / $totalTOTALleads) * 100)); while(strlen($total_COMP_percent)>6) {$total_COMP_percent = substr("$total_COMP_percent", 0, -1);}
+	$total_HA_percent =	sprintf("%6.2f", ( MathZDC($category_totals["HA"], $totalTOTALleads) * 100)); while(strlen($total_HA_percent)>6) {$total_HA_percent = substr("$total_HA_percent", 0, -1);}
+	$total_SALE_percent =	sprintf("%6.2f", ( MathZDC($category_totals["SALE"], $totalTOTALleads) * 100)); while(strlen($total_SALE_percent)>6) {$total_SALE_percent = substr("$total_SALE_percent", 0, -1);}
+	$total_DNC_percent =	sprintf("%6.2f", ( MathZDC($category_totals["DNC"], $totalTOTALleads) * 100)); while(strlen($total_DNC_percent)>6) {$total_DNC_percent = substr("$total_DNC_percent", 0, -1);}
+	$total_CC_percent =	sprintf("%6.2f", ( MathZDC($category_totals["CC"], $totalTOTALleads) * 100)); while(strlen($total_CC_percent)>6) {$total_CC_percent = substr("$total_CC_percent", 0, -1);}
+	$total_NI_percent =	sprintf("%6.2f", ( MathZDC($category_totals["NI"], $totalTOTALleads) * 100)); while(strlen($total_NI_percent)>6) {$total_NI_percent = substr("$total_NI_percent", 0, -1);}
+	$total_UW_percent =	sprintf("%6.2f", ( MathZDC($category_totals["UW"], $totalTOTALleads) * 100)); while(strlen($total_UW_percent)>6) {$total_UW_percent = substr("$total_UW_percent", 0, -1);}
+	$total_SC_percent =	sprintf("%6.2f", ( MathZDC($category_totals["SC"], $totalTOTALleads) * 100)); while(strlen($total_SC_percent)>6) {$total_SC_percent = substr("$total_SC_percent", 0, -1);}
+	$total_COMP_percent =	sprintf("%6.2f", ( MathZDC($category_totals["COMP"], $totalTOTALleads) * 100)); while(strlen($total_COMP_percent)>6) {$total_COMP_percent = substr("$total_COMP_percent", 0, -1);}
 
 	$total_HA_count =	sprintf("%10s", $category_totals["HA"]); while(strlen($total_HA_count)>10) {$total_HA_count = substr("$total_HA_count", 0, -1);}
 	$total_SALE_count =	sprintf("%10s", $category_totals["SALE"]); while(strlen($total_SALE_count)>10) {$total_SALE_count = substr("$total_SALE_count", 0, -1);}

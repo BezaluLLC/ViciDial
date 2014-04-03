@@ -19,6 +19,7 @@
 # 130902-0730 - Changed to mysqli PHP functions
 # 131217-1348 - Fixed several empty variable and array issues
 # 140108-0706 - Added webserver and hostname to report logging
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
@@ -644,7 +645,7 @@ else
 			$s++;
 		}
 		$dispo_str=substr($dispo_str,0,-1);
-		asort($status_array);
+		if ($status_array) {asort($status_array);}
 		#print_r($status_array);
 #		if (strlen($dispo_str)>0) {
 #		}
@@ -1104,139 +1105,69 @@ else
 		if ($totQUEUEdate[$d] < 1) {$totQUEUEdate[$d]=0;}
 		if ($totCALLSdate[$d] < 1) {$totCALLSdate[$d]=0;}
 
-		if ($totDROPSdate[$d] > 0)
-			{$totDROPSpctDATE[$d] = ( ($totDROPSdate[$d] / $totCALLSdate[$d]) * 100);}
-		else {$totDROPSpctDATE[$d] = 0;}
+		$totDROPSpctDATE[$d] = ( MathZDC($totDROPSdate[$d], $totCALLSdate[$d]) * 100);
 		$totDROPSpctDATE[$d] = round($totDROPSpctDATE[$d], 2);
-		if ($totQUEUEdate[$d] > 0)
-			{$totQUEUEpctDATE[$d] = ( ($totQUEUEdate[$d] / $totCALLSdate[$d]) * 100);}
-		else {$totQUEUEpctDATE[$d] = 0;}
+		$totQUEUEpctDATE[$d] = ( MathZDC($totQUEUEdate[$d], $totCALLSdate[$d]) * 100);
 		$totQUEUEpctDATE[$d] = round($totQUEUEpctDATE[$d], 2);
 
-		if ($totDROPSsecDATE[$d] > 0)
-			{$totDROPSavgDATE[$d] = ($totDROPSsecDATE[$d] / $totDROPSdate[$d]);}
-		else {$totDROPSavgDATE[$d] = 0;}
-		if ($totQUEUEsecDATE[$d] > 0)
-			{$totQUEUEavgDATE[$d] = ($totQUEUEsecDATE[$d] / $totQUEUEdate[$d]);}
-		else {$totQUEUEavgDATE[$d] = 0;}
-		if ($totQUEUEsecDATE[$d] > 0)
-			{$totQUEUEtotDATE[$d] = ($totQUEUEsecDATE[$d] / $totCALLSdate[$d]);}
-		else {$totQUEUEtotDATE[$d] = 0;}
+		$totDROPSavgDATE[$d] = MathZDC($totDROPSsecDATE[$d], $totDROPSdate[$d]);
+		$totQUEUEavgDATE[$d] = MathZDC($totQUEUEsecDATE[$d], $totQUEUEdate[$d]);
+		$totQUEUEtotDATE[$d] = MathZDC($totQUEUEsecDATE[$d], $totCALLSdate[$d]);
 
-		if ($totCALLSsecDATE[$d] > 0)
-			{
-			$totCALLSavgDATE[$d] = ($totCALLSsecDATE[$d] / $totCALLSdate[$d]);
-
-			$totTIME_M = ($totCALLSsecDATE[$d] / 60);
-			$totTIME_M_int = round($totTIME_M, 2);
-			$totTIME_M_int = intval("$totTIME_M");
-			$totTIME_S = ($totTIME_M - $totTIME_M_int);
-			$totTIME_S = ($totTIME_S * 60);
-			$totTIME_S = round($totTIME_S, 0);
-			if ($totTIME_S < 10) {$totTIME_S = "0$totTIME_S";}
-			$totTIME_MS = "$totTIME_M_int:$totTIME_S";
-			$totTIME_MS =		sprintf("%8s", $totTIME_MS);
-			}
-		else 
-			{
-			$totCALLSavgDATE[$d] = 0;
-			$totTIME_MS='        ';
-			}
+		$totCALLSavgDATE[$d] = MathZDC($totCALLSsecDATE[$d], $totCALLSdate[$d]);
+		$totTIME_M = MathZDC($totCALLSsecDATE[$d], 60);
+		$totTIME_M_int = round($totTIME_M, 2);
+		$totTIME_M_int = intval("$totTIME_M");
+		$totTIME_S = ($totTIME_M - $totTIME_M_int);
+		$totTIME_S = ($totTIME_S * 60);
+		$totTIME_S = round($totTIME_S, 0);
+		if ($totTIME_S < 10) {$totTIME_S = "0$totTIME_S";}
+		$totTIME_MS = "$totTIME_M_int:$totTIME_S";
+		$totTIME_MS =		sprintf("%8s", $totTIME_MS);
 		$totCALLSdate[$d] =	sprintf("%7s", $totCALLSdate[$d]);
 
 
-		if ($totCALLSdate[$d]>0)
-			{
-			$totABANDONSpctDATE[$d] =	sprintf("%7.2f", (100*$totABANDONSdate[$d]/$totCALLSdate[$d]));
-			}
-		else
-			{
-			$totCALLSdate[$d]="      0";
-			$totABANDONSpctDATE[$d] = "    0.0";
-			}
-		if ($totABANDONSdate[$d]>0)
-			{
-			$totABANDONSavgTIME[$d] =	sprintf("%7s", date("i:s", mktime(0, 0, round($totABANDONSsecdate[$d]/$totABANDONSdate[$d]))));
-			if (round($totABANDONSsecdate[$d]/$totABANDONSdate[$d])>$max_avgabandontime) {$max_avgabandontime=round($totABANDONSsecdate[$d]/$totABANDONSdate[$d]);}
-			$graph_stats[$d][11]=round($totABANDONSsecdate[$d]/$totABANDONSdate[$d]);
-			}
-		else
-			{
-			$totABANDONSdate[$d]="0";
-			$totABANDONSavgTIME[$d] = "  00:00";
-			$graph_stats[$d][11]=0;
-			}
-		if ($totANSWERSdate[$d]>0)
-			{
-			$totANSWERSavgspeedTIME[$d] =	sprintf("%6s", date("i:s", mktime(0, 0, round($totANSWERSspeeddate[$d]/$totANSWERSdate[$d]))));
-			$totANSWERSavgTIME[$d] =	sprintf("%6s", date("i:s", mktime(0, 0, round($totANSWERSsecdate[$d]/$totANSWERSdate[$d]))));
-			if (round($totANSWERSspeeddate[$d]/$totANSWERSdate[$d])>$max_avganswerspeed) {$max_avganswerspeed=round($totANSWERSspeeddate[$d]/$totANSWERSdate[$d]);}
-			$graph_stats[$d][12]=round($totANSWERSspeeddate[$d]/$totANSWERSdate[$d]);
-			$graph_stats[$d][16]=round($totANSWERSsecdate[$d]/$totANSWERSdate[$d]);
-			}
-		else
-			{
-			$totANSWERSdate[$d]="0";
-			$totANSWERSavgspeedTIME[$d] = " 00:00";
-			$totANSWERSavgTIME[$d] = " 00:00";
-			$graph_stats[$d][12]=0;
-			$graph_stats[$d][16]=0;
-			}
-		$totANSWERStalkTIME[$d] =	sprintf("%10s", floor($totANSWERSsecdate[$d]/3600).date(":i:s", mktime(0, 0, $totANSWERSsecdate[$d])));
-		$totANSWERSwrapTIME[$d] =	sprintf("%10s", floor(($totANSWERSdate[$d]*15)/3600).date(":i:s", mktime(0, 0, ($totANSWERSdate[$d]*15))));
+		$totABANDONSpctDATE[$d] =	sprintf("%7.2f", (MathZDC(100*$totABANDONSdate[$d], $totCALLSdate[$d])));
+		$totABANDONSavgTIME[$d] =	sprintf("%7s", date("i:s", mktime(0, 0, round(MathZDC($totABANDONSsecdate[$d], $totABANDONSdate[$d])))));
+		if (round(MathZDC($totABANDONSsecdate[$d], $totABANDONSdate[$d]))>$max_avgabandontime) {$max_avgabandontime=round(MathZDC($totABANDONSsecdate[$d], $totABANDONSdate[$d]));}
+		$graph_stats[$d][11]=round(MathZDC($totABANDONSsecdate[$d], $totABANDONSdate[$d]));
+
+		$totANSWERSavgspeedTIME[$d] =	sprintf("%6s", date("i:s", mktime(0, 0, round(MathZDC($totANSWERSspeeddate[$d], $totANSWERSdate[$d])))));
+		$totANSWERSavgTIME[$d] =	sprintf("%6s", date("i:s", mktime(0, 0, round(MathZDC($totANSWERSsecdate[$d], $totANSWERSdate[$d])))));
+		if (round(MathZDC($totANSWERSspeeddate[$d], $totANSWERSdate[$d]))>$max_avganswerspeed) {$max_avganswerspeed=round(MathZDC($totANSWERSspeeddate[$d], $totANSWERSdate[$d]));}
+		$graph_stats[$d][12]=round(MathZDC($totANSWERSspeeddate[$d], $totANSWERSdate[$d]));
+		$graph_stats[$d][16]=round(MathZDC($totANSWERSsecdate[$d], $totANSWERSdate[$d]));
+
+		$totANSWERStalkTIME[$d] =	sprintf("%10s", floor(MathZDC($totANSWERSsecdate[$d], 3600)).date(":i:s", mktime(0, 0, $totANSWERSsecdate[$d])));
+		$totANSWERSwrapTIME[$d] =	sprintf("%10s", floor(MathZDC(($totANSWERSdate[$d]*15), 3600)).date(":i:s", mktime(0, 0, ($totANSWERSdate[$d]*15))));
 		if (($totANSWERSdate[$d]*15)>$max_totalwraptime) {$max_totalwraptime=($totANSWERSdate[$d]*15);}
 		$graph_stats[$d][13]=($totANSWERSdate[$d]*15);
 		$graph_stats[$d][14]=($totANSWERSsecdate[$d]+($totANSWERSdate[$d]*15));
 		$graph_stats[$d][15]=$totANSWERSsecdate[$d];
 
-		$totANSWERStotTIME[$d] =	sprintf("%10s", floor(($totANSWERSsecdate[$d]+($totANSWERSdate[$d]*15))/3600).date(":i:s", mktime(0, 0, ($totANSWERSsecdate[$d]+($totANSWERSdate[$d]*15)))));
+		$totANSWERStotTIME[$d] =	sprintf("%10s", floor(MathZDC(($totANSWERSsecdate[$d]+($totANSWERSdate[$d]*15)), 3600)).date(":i:s", mktime(0, 0, ($totANSWERSsecdate[$d]+($totANSWERSdate[$d]*15)))));
 		$totANSWERSdate[$d] =	sprintf("%8s", $totANSWERSdate[$d]);
 		$totABANDONSdate[$d] =	sprintf("%9s", $totABANDONSdate[$d]);
 
 		if (date("w", strtotime($daySTART[$d]))==0 && date("w", strtotime($daySTART[$d-1]))!=0 && $d>0) 
 			{  # 2nd date/"w" check is for DST
 			$totAGENTSwtd=count(array_count_values($AGENTS_wtd_array));
-			if ($totCALLSwtd>0)
-				{
-				$totABANDONSpctwtd =	sprintf("%7.2f", (100*$totABANDONSwtd/$totCALLSwtd));
-				}
-			else
-				{
-				$totABANDONSpctwtd = "    0.0";
-				}
-			if ($totABANDONSwtd>0)
-				{
-				$totABANDONSavgTIMEwtd =	sprintf("%7s", date("i:s", mktime(0, 0, round($totABANDONSsecwtd/$totABANDONSwtd))));
-				if (round($totABANDONSsecwtd/$totABANDONSwtd)>$max_wtd_avgabandontime) {$max_wtd_avgabandontime=round($totABANDONSsecwtd/$totABANDONSwtd);}
-				$wtd_graph_stats[$wa][11]=round($totABANDONSsecwtd/$totABANDONSwtd);
-				}
-			else
-				{
-				$totABANDONSavgTIMEwtd = "  00:00";
-				$wtd_graph_stats[$wa][11]=0;
-				}
-			if ($totANSWERSwtd>0)
-				{
-				$totANSWERSavgspeedTIMEwtd =	sprintf("%6s", date("i:s", mktime(0, 0, round($totANSWERSspeedwtd/$totANSWERSwtd))));
-				$totANSWERSavgTIMEwtd =	sprintf("%6s", date("i:s", mktime(0, 0, round($totANSWERSsecwtd/$totANSWERSwtd))));
-				if (round($totANSWERSspeedwtd/$totANSWERSwtd)>$max_wtd_avganswerspeed) {$max_wtd_avganswerspeed=round($totANSWERSspeedwtd/$totANSWERSwtd);}
-				$wtd_graph_stats[$wa][12]=round($totANSWERSspeedwtd/$totANSWERSwtd);
-				$wtd_graph_stats[$wa][16]=round($totANSWERSsecwtd/$totANSWERSwtd);
-				}
-			else
-				{
-				$totANSWERSavgspeedTIMEwtd = " 00:00";
-				$totANSWERSavgTIMEwtd = " 00:00";
-				$wtd_graph_stats[$wa][12]=0;
-				$wtd_graph_stats[$wa][16]=0;
-				}
-			$totANSWERStalkTIMEwtd =	sprintf("%10s", floor($totANSWERSsecwtd/3600).date(":i:s", mktime(0, 0, $totANSWERSsecwtd)));
-			$totANSWERSwrapTIMEwtd =	sprintf("%10s", floor(($totANSWERSwtd*15)/3600).date(":i:s", mktime(0, 0, ($totANSWERSwtd*15))));
+			$totABANDONSpctwtd =	sprintf("%7.2f", (MathZDC(100*$totABANDONSwtd, $totCALLSwtd)));
+			$totABANDONSavgTIMEwtd =	sprintf("%7s", date("i:s", mktime(0, 0, round(MathZDC($totABANDONSsecwtd, $totABANDONSwtd)))));
+			if (round(MathZDC($totABANDONSsecwtd, $totABANDONSwtd))>$max_wtd_avgabandontime) {$max_wtd_avgabandontime=round(MathZDC($totABANDONSsecwtd, $totABANDONSwtd));}
+			$wtd_graph_stats[$wa][11]=round(MathZDC($totABANDONSsecwtd, $totABANDONSwtd));
+			$totANSWERSavgspeedTIMEwtd =	sprintf("%6s", date("i:s", mktime(0, 0, round(MathZDC($totANSWERSspeedwtd, $totANSWERSwtd)))));
+			$totANSWERSavgTIMEwtd =	sprintf("%6s", date("i:s", mktime(0, 0, round(MathZDC($totANSWERSsecwtd, $totANSWERSwtd)))));
+			if (round(MathZDC($totANSWERSspeedwtd, $totANSWERSwtd))>$max_wtd_avganswerspeed) {$max_wtd_avganswerspeed=round(MathZDC($totANSWERSspeedwtd, $totANSWERSwtd));}
+			$wtd_graph_stats[$wa][12]=round(MathZDC($totANSWERSspeedwtd, $totANSWERSwtd));
+			$wtd_graph_stats[$wa][16]=round(MathZDC($totANSWERSsecwtd, $totANSWERSwtd));
+			$totANSWERStalkTIMEwtd =	sprintf("%10s", floor(MathZDC($totANSWERSsecwtd, 3600)).date(":i:s", mktime(0, 0, $totANSWERSsecwtd)));
+			$totANSWERSwrapTIMEwtd =	sprintf("%10s", floor(MathZDC(($totANSWERSwtd*15), 3600)).date(":i:s", mktime(0, 0, ($totANSWERSwtd*15))));
 			if (($totANSWERSwtd*15)>$max_wtd_totalwraptime) {$max_wtd_totalwraptime=($totANSWERSwtd*15);}
 			$wtd_graph_stats[$wa][13]=($totANSWERSwtd*15);
 			$wtd_graph_stats[$wa][14]=($totANSWERSsecwtd+($totANSWERSwtd*15));
 			$wtd_graph_stats[$wa][15]=$totANSWERSsecwtd;
-			$totANSWERStotTIMEwtd =	sprintf("%10s", floor(($totANSWERSsecwtd+($totANSWERSwtd*15))/3600).date(":i:s", mktime(0, 0, ($totANSWERSsecwtd+($totANSWERSwtd*15)))));
+			$totANSWERStotTIMEwtd =	sprintf("%10s", floor(MathZDC(($totANSWERSsecwtd+($totANSWERSwtd*15)), 3600)).date(":i:s", mktime(0, 0, ($totANSWERSsecwtd+($totANSWERSwtd*15)))));
 			# $totAGENTSwtd =	sprintf("%8s", $totAGENTSwtd);
 			$totAGENTSwtd=count(array_count_values($AGENTS_wtd_array));
 			$totAGENTSwtd =	sprintf("%8s", $totAGENTSwtd);
@@ -1250,7 +1181,7 @@ else
 			if (trim($totABANDONSwtd)>$max_wtd_abandoned) {$max_wtd_abandoned=trim($totABANDONSwtd);}
 			if (trim($totABANDONSpctwtd)>$max_wtd_abandonpct) {$max_wtd_abandonpct=trim($totABANDONSpctwtd);}
 
-			if (round($totANSWERSsecwtd/$totANSWERSwtd)>$max_wtd_avgtalktime) {$max_wtd_avgtalktime=round($totANSWERSsecwtd/$totANSWERSwtd);}
+			if (round(MathZDC($totANSWERSsecwtd, $totANSWERSwtd))>$max_wtd_avgtalktime) {$max_wtd_avgtalktime=round(MathZDC($totANSWERSsecwtd, $totANSWERSwtd));}
 			if (trim($totANSWERSsecwtd)>$max_wtd_totaltalktime) {$max_wtd_totaltalktime=trim($totANSWERSsecwtd);}
 			if (trim($totANSWERSsecwtd+($totANSWERSwtd*15))>$max_wtd_totalcalltime) {$max_wtd_totalcalltime=trim($totANSWERSsecwtd+($totANSWERSwtd*15));}
 			$week=date("W", strtotime($dayEND[$d-1]));
@@ -1293,47 +1224,22 @@ else
 		if (date("d", strtotime($daySTART[$d]))==1 && $d>0 && date("d", strtotime($daySTART[$d-1]))!=1) 
 			{
 			$totAGENTSmtd=count(array_count_values($AGENTS_mtd_array));
-			if ($totCALLSmtd>0)
-				{
-				$totABANDONSpctmtd =	sprintf("%7.2f", (100*$totABANDONSmtd/$totCALLSmtd));
-				}
-			else
-				{
-				$totABANDONSpctmtd = "    0.0";
-				}
-			if ($totABANDONSmtd>0)
-				{
-				$totABANDONSavgTIMEmtd =	sprintf("%7s", date("i:s", mktime(0, 0, round($totABANDONSsecmtd/$totABANDONSmtd))));
-				if (round($totABANDONSsecmtd/$totABANDONSmtd)>$max_mtd_avgabandontime) {$max_mtd_avgabandontime=round($totABANDONSsecmtd/$totABANDONSmtd);}
-				$mtd_graph_stats[$ma][11]=round($totABANDONSsecmtd/$totABANDONSmtd);
-				}
-			else
-				{
-				$totABANDONSavgTIMEmtd = "  00:00";
-				$mtd_graph_stats[$ma][11]=0;
-				}
-			if ($totANSWERSmtd>0)
-				{
-				$totANSWERSavgspeedTIMEmtd =	sprintf("%6s", date("i:s", mktime(0, 0, round($totANSWERSspeedmtd/$totANSWERSmtd))));
-				$totANSWERSavgTIMEmtd =	sprintf("%6s", date("i:s", mktime(0, 0, round($totANSWERSsecmtd/$totANSWERSmtd))));
-				if (round($totANSWERSspeedmtd/$totANSWERSmtd)>$max_mtd_avganswerspeed) {$max_mtd_avganswerspeed=round($totANSWERSspeedmtd/$totANSWERSmtd);}
-				$mtd_graph_stats[$ma][12]=round($totANSWERSspeedmtd/$totANSWERSmtd);
-				$mtd_graph_stats[$ma][16]=round($totANSWERSsecmtd/$totANSWERSmtd);
-				}
-			else
-				{
-				$totANSWERSavgspeedTIMEmtd = " 00:00";
-				$totANSWERSavgTIMEmtd = " 00:00";
-				$mtd_graph_stats[$ma][12]=0;
-				$mtd_graph_stats[$ma][16]=0;
-				}
-			$totANSWERStalkTIMEmtd =	sprintf("%10s", floor($totANSWERSsecmtd/3600).date(":i:s", mktime(0, 0, $totANSWERSsecmtd)));
-			$totANSWERSwrapTIMEmtd =	sprintf("%10s", floor(($totANSWERSmtd*15)/3600).date(":i:s", mktime(0, 0, ($totANSWERSmtd*15))));
+			$totABANDONSpctmtd =	sprintf("%7.2f", (MathZDC(100*$totABANDONSmtd, $totCALLSmtd)));
+			$totABANDONSavgTIMEmtd =	sprintf("%7s", date("i:s", mktime(0, 0, round(MathZDC($totABANDONSsecmtd, $totABANDONSmtd)))));
+			if (round(MathZDC($totABANDONSsecmtd, $totABANDONSmtd))>$max_mtd_avgabandontime) {$max_mtd_avgabandontime=round(MathZDC($totABANDONSsecmtd, $totABANDONSmtd));}
+			$mtd_graph_stats[$ma][11]=round(MathZDC($totABANDONSsecmtd, $totABANDONSmtd));
+			$totANSWERSavgspeedTIMEmtd =	sprintf("%6s", date("i:s", mktime(0, 0, round(MathZDC($totANSWERSspeedmtd, $totANSWERSmtd)))));
+			$totANSWERSavgTIMEmtd =	sprintf("%6s", date("i:s", mktime(0, 0, round(MathZDC($totANSWERSsecmtd, $totANSWERSmtd)))));
+			if (round(MathZDC($totANSWERSspeedmtd, $totANSWERSmtd))>$max_mtd_avganswerspeed) {$max_mtd_avganswerspeed=round(MathZDC($totANSWERSspeedmtd, $totANSWERSmtd));}
+			$mtd_graph_stats[$ma][12]=round(MathZDC($totANSWERSspeedmtd, $totANSWERSmtd));
+			$mtd_graph_stats[$ma][16]=round(MathZDC($totANSWERSsecmtd, $totANSWERSmtd));
+			$totANSWERStalkTIMEmtd =	sprintf("%10s", floor(MathZDC($totANSWERSsecmtd, 3600)).date(":i:s", mktime(0, 0, $totANSWERSsecmtd)));
+			$totANSWERSwrapTIMEmtd =	sprintf("%10s", floor(MathZDC(($totANSWERSmtd*15), 3600)).date(":i:s", mktime(0, 0, ($totANSWERSmtd*15))));
 			if (($totANSWERSmtd*15)>$max_mtd_totalwraptime) {$max_mtd_totalwraptime=($totANSWERSmtd*15);}
 			$mtd_graph_stats[$ma][13]=($totANSWERSmtd*15);
 			$mtd_graph_stats[$ma][14]=($totANSWERSsecmtd+($totANSWERSmtd*15));
 			$mtd_graph_stats[$ma][15]=$totANSWERSsecmtd;
-			$totANSWERStotTIMEmtd =	sprintf("%10s", floor(($totANSWERSsecmtd+($totANSWERSmtd*15))/3600).date(":i:s", mktime(0, 0, ($totANSWERSsecmtd+($totANSWERSmtd*15)))));
+			$totANSWERStotTIMEmtd =	sprintf("%10s", floor(MathZDC(($totANSWERSsecmtd+($totANSWERSmtd*15)), 3600)).date(":i:s", mktime(0, 0, ($totANSWERSsecmtd+($totANSWERSmtd*15)))));
 			$totAGENTSmtd=count(array_count_values($AGENTS_mtd_array));
 			$totAGENTSmtd =	sprintf("%8s", $totAGENTSmtd);
 			$totANSWERSmtd =	sprintf("%8s", $totANSWERSmtd);
@@ -1345,7 +1251,7 @@ else
 			if (trim($totABANDONSmtd)>$max_mtd_abandoned) {$max_mtd_abandoned=trim($totABANDONSmtd);}
 			if (trim($totAGENTSmtd)>$max_mtd_agents) {$max_mtd_agents=trim($totAGENTSmtd);}
 			if (trim($totABANDONSpctmtd)>$max_mtd_abandonpct) {$max_mtd_abandonpct=trim($totABANDONSpctmtd);}
-			if (round($totANSWERSsecmtd/$totANSWERSmtd)>$max_mtd_avgtalktime) {$max_mtd_avgtalktime=round($totANSWERSsecmtd/$totANSWERSmtd);}
+			if (round(MathZDC($totANSWERSsecmtd, $totANSWERSmtd))>$max_mtd_avgtalktime) {$max_mtd_avgtalktime=round(MathZDC($totANSWERSsecmtd, $totANSWERSmtd));}
 			if (trim($totANSWERSsecmtd)>$max_mtd_totaltalktime) {$max_mtd_totaltalktime=trim($totANSWERSsecmtd);}
 			if (trim($totANSWERSsecmtd+($totANSWERSmtd*15))>$max_mtd_totalcalltime) {$max_mtd_totalcalltime=trim($totANSWERSsecmtd+($totANSWERSmtd*15));}
 			$month=date("F", strtotime($dayEND[$d-1]));
@@ -1387,47 +1293,22 @@ else
 			if (date("m", strtotime($daySTART[$d]))==1 || date("m", strtotime($daySTART[$d]))==4 || date("m", strtotime($daySTART[$d]))==7 || date("m", strtotime($daySTART[$d]))==10) # Quarterly line
 				{
 				$totAGENTSqtd=count(array_count_values($AGENTS_qtd_array));
-				if ($totCALLSqtd>0)
-					{
-					$totABANDONSpctqtd =	sprintf("%7.2f", (100*$totABANDONSqtd/$totCALLSqtd));
-					}
-				else
-					{
-					$totABANDONSpctqtd = "    0.0";
-					}
-				if ($totABANDONSqtd>0)
-					{
-					$totABANDONSavgTIMEqtd =	sprintf("%7s", date("i:s", mktime(0, 0, round($totABANDONSsecqtd/$totABANDONSqtd))));
-					if (round($totABANDONSsecqtd/$totABANDONSqtd)>$max_qtd_avgabandontime) {$max_qtd_avgabandontime=round($totABANDONSsecqtd/$totABANDONSqtd);}
-					$qtd_graph_stats[$qa][11]=round($totABANDONSsecqtd/$totABANDONSqtd);
-					}
-				else
-					{
-					$totABANDONSavgTIMEqtd = "  00:00";
-					$qtd_graph_stats[$qa][11]=0;
-					}
-				if ($totANSWERSqtd>0)
-					{
-					$totANSWERSavgspeedTIMEqtd =	sprintf("%6s", date("i:s", mktime(0, 0, round($totANSWERSspeedqtd/$totANSWERSqtd))));
-					$totANSWERSavgTIMEqtd =	sprintf("%6s", date("i:s", mktime(0, 0, round($totANSWERSsecqtd/$totANSWERSqtd))));
-					if (round($totANSWERSspeedqtd/$totANSWERSqtd)>$max_qtd_avganswerspeed) {$max_qtd_avganswerspeed=round($totANSWERSspeedqtd/$totANSWERSqtd);}
-					$qtd_graph_stats[$qa][12]=round($totANSWERSspeedqtd/$totANSWERSqtd);
-					$qtd_graph_stats[$qa][16]=round($totANSWERSsecqtd/$totANSWERSqtd);
-					}
-				else
-					{
-					$totANSWERSavgspeedTIMEqtd = " 00:00";
-					$totANSWERSavgTIMEqtd = " 00:00";
-					$qtd_graph_stats[$qa][12]=0;
-					$qtd_graph_stats[$qa][16]=0;
-					}
-				$totANSWERStalkTIMEqtd =	sprintf("%10s", floor($totANSWERSsecqtd/3600).date(":i:s", mktime(0, 0, $totANSWERSsecqtd)));
-				$totANSWERSwrapTIMEqtd =	sprintf("%10s", floor(($totANSWERSqtd*15)/3600).date(":i:s", mktime(0, 0, ($totANSWERSqtd*15))));
+				$totABANDONSpctqtd =	sprintf("%7.2f", (MathZDC(100*$totABANDONSqtd, $totCALLSqtd)));
+				$totABANDONSavgTIMEqtd =	sprintf("%7s", date("i:s", mktime(0, 0, round(MathZDC($totABANDONSsecqtd, $totABANDONSqtd)))));
+				if (round(MathZDC($totABANDONSsecqtd, $totABANDONSqtd))>$max_qtd_avgabandontime) {$max_qtd_avgabandontime=round(MathZDC($totABANDONSsecqtd, $totABANDONSqtd));}
+				$qtd_graph_stats[$qa][11]=round(MathZDC($totABANDONSsecqtd, $totABANDONSqtd));
+				$totANSWERSavgspeedTIMEqtd =	sprintf("%6s", date("i:s", mktime(0, 0, round(MathZDC($totANSWERSspeedqtd, $totANSWERSqtd)))));
+				$totANSWERSavgTIMEqtd =	sprintf("%6s", date("i:s", mktime(0, 0, round(MathZDC($totANSWERSsecqtd, $totANSWERSqtd)))));
+				if (round(MathZDC($totANSWERSspeedqtd, $totANSWERSqtd))>$max_qtd_avganswerspeed) {$max_qtd_avganswerspeed=round(MathZDC($totANSWERSspeedqtd, $totANSWERSqtd));}
+				$qtd_graph_stats[$qa][12]=round(MathZDC($totANSWERSspeedqtd, $totANSWERSqtd));
+				$qtd_graph_stats[$qa][16]=round(MathZDC($totANSWERSsecqtd, $totANSWERSqtd));
+				$totANSWERStalkTIMEqtd =	sprintf("%10s", floor(MathZDC($totANSWERSsecqtd, 3600)).date(":i:s", mktime(0, 0, $totANSWERSsecqtd)));
+				$totANSWERSwrapTIMEqtd =	sprintf("%10s", floor(MathZDC(($totANSWERSqtd*15), 3600)).date(":i:s", mktime(0, 0, ($totANSWERSqtd*15))));
 				if (($totANSWERSqtd*15)>$max_qtd_totalwraptime) {$max_qtd_totalwraptime=($totANSWERSqtd*15);}
 				$qtd_graph_stats[$qa][13]=($totANSWERSqtd*15);
 				$qtd_graph_stats[$qa][14]=($totANSWERSsecqtd+($totANSWERSqtd*15));
 				$qtd_graph_stats[$qa][15]=$totANSWERSsecqtd;
-				$totANSWERStotTIMEqtd =	sprintf("%10s", floor(($totANSWERSsecqtd+($totANSWERSqtd*15))/3600).date(":i:s", mktime(0, 0, ($totANSWERSsecqtd+($totANSWERSqtd*15)))));
+				$totANSWERStotTIMEqtd =	sprintf("%10s", floor(MathZDC(($totANSWERSsecqtd+($totANSWERSqtd*15)), 3600)).date(":i:s", mktime(0, 0, ($totANSWERSsecqtd+($totANSWERSqtd*15)))));
 				$totAGENTSqtd=count(array_count_values($AGENTS_qtd_array));
 				$totAGENTSqtd =	sprintf("%8s", $totAGENTSqtd);
 				$totANSWERSqtd =	sprintf("%8s", $totANSWERSqtd);
@@ -1439,7 +1320,7 @@ else
 				if (trim($totABANDONSqtd)>$max_qtd_abandoned) {$max_qtd_abandoned=trim($totABANDONSqtd);}
 				if (trim($totAGENTSqtd)>$max_qtd_answers) {$max_qtd_answered=trim($totAGENTSqtd);}
 				if (trim($totABANDONSpctqtd)>$max_qtd_abandonpct) {$max_qtd_abandonpct=trim($totABANDONSpctqtd);}
-				if (round($totANSWERSsecqtd/$totANSWERSqtd)>$max_qtd_avgtalktime) {$max_qtd_avgtalktime=round($totANSWERSsecqtd/$totANSWERSqtd);}
+				if (round(MathZDC($totANSWERSsecqtd, $totANSWERSqtd))>$max_qtd_avgtalktime) {$max_qtd_avgtalktime=round(MathZDC($totANSWERSsecqtd, $totANSWERSqtd));}
 				if (trim($totANSWERSsecqtd)>$max_qtd_totaltalktime) {$max_qtd_totaltalktime=trim($totANSWERSsecqtd);}
 				if (trim($totANSWERSsecqtd+($totANSWERSqtd*15))>$max_qtd_totalcalltime) {$max_qtd_totalcalltime=trim($totANSWERSsecqtd+($totANSWERSqtd*15));}
 				$month=date("m", strtotime($dayEND[$d]));
@@ -1533,8 +1414,8 @@ else
 		if (trim($totABANDONSdate[$d])>$max_abandoned) {$max_abandoned=trim($totABANDONSdate[$d]);}
 		if (trim($totABANDONSpctDATE[$d])>$max_abandonpct) {$max_abandonpct=trim($totABANDONSpctDATE[$d]);}
 
-		if ( ( ($totANSWERSsecdate[$d] > 0) and ($totANSWERSdate[$d] > 0) ) and (round($totANSWERSsecdate[$d]/$totANSWERSdate[$d])>$max_avgtalktime) )
-			{$max_avgtalktime=round($totANSWERSsecdate[$d]/$totANSWERSdate[$d]);}
+		if (round(MathZDC($totANSWERSsecdate[$d], $totANSWERSdate[$d]))>$max_avgtalktime) 
+			{$max_avgtalktime=round(MathZDC($totANSWERSsecdate[$d], $totANSWERSdate[$d]));}
 
 		if (trim($totANSWERSsecdate[$d])>$max_totaltalktime) {$max_totaltalktime=trim($totANSWERSsecdate[$d]);}
 		if (trim($totANSWERSsecdate[$d]+($totANSWERSdate[$d]*15))>$max_totalcalltime) {$max_totalcalltime=trim($totANSWERSsecdate[$d]+($totANSWERSdate[$d]*15));}
@@ -1566,44 +1447,26 @@ else
 		$d++;
 		}
 
-	if ($totDROPS > 0)
-		{$totDROPSpct = ( ($totDROPS / $totCALLS) * 100);}
-	else {$totDROPSpct = 0;}
+	$totDROPSpct = ( MathZDC($totDROPS, $totCALLS) * 100);
 	$totDROPSpct = round($totDROPSpct, 2);
-	if ($totQUEUE > 0)
-		{$totQUEUEpct = ( ($totQUEUE / $totCALLS) * 100);}
-	else {$totQUEUEpct = 0;}
+	$totQUEUEpct = ( MathZDC($totQUEUE, $totCALLS) * 100);
 	$totQUEUEpct = round($totQUEUEpct, 2);
 
-	if ($totDROPSsec > 0)
-		{$totDROPSavg = ($totDROPSsec / $totDROPS);}
-	else {$totDROPSavg = 0;}
-	if ($totQUEUEsec > 0)
-		{$totQUEUEavg = ($totQUEUEsec / $totQUEUE);}
-	else {$totQUEUEavg = 0;}
-	if ($totQUEUEsec > 0)
-		{$totQUEUEtot = ($totQUEUEsec / $totCALLS);}
-	else {$totQUEUEtot = 0;}
+	$totDROPSavg = MathZDC($totDROPSsec, $totDROPS);
+	$totQUEUEavg = MathZDC($totQUEUEsec, $totQUEUE);
+	$totQUEUEtot = MathZDC($totQUEUEsec, $totCALLS);
 
-	if ($totCALLSsec > 0)
-		{
-		$totCALLSavg = ($totCALLSsec / $totCALLS);
+	$totCALLSavg = MathZDC($totCALLSsec, $totCALLS);
+	$totTIME_M = MathZDC($totCALLSsec, 60);
+	$totTIME_M_int = round($totTIME_M, 2);
+	$totTIME_M_int = intval("$totTIME_M");
+	$totTIME_S = ($totTIME_M - $totTIME_M_int);
+	$totTIME_S = ($totTIME_S * 60);
+	$totTIME_S = round($totTIME_S, 0);
+	if ($totTIME_S < 10) {$totTIME_S = "0$totTIME_S";}
+	$totTIME_MS = "$totTIME_M_int:$totTIME_S";
+	$totTIME_MS =		sprintf("%9s", $totTIME_MS);
 
-		$totTIME_M = ($totCALLSsec / 60);
-		$totTIME_M_int = round($totTIME_M, 2);
-		$totTIME_M_int = intval("$totTIME_M");
-		$totTIME_S = ($totTIME_M - $totTIME_M_int);
-		$totTIME_S = ($totTIME_S * 60);
-		$totTIME_S = round($totTIME_S, 0);
-		if ($totTIME_S < 10) {$totTIME_S = "0$totTIME_S";}
-		$totTIME_MS = "$totTIME_M_int:$totTIME_S";
-		$totTIME_MS =		sprintf("%9s", $totTIME_MS);
-		}
-	else 
-		{
-		$totCALLSavg = 0;
-		$totTIME_MS='         ';
-		}
 
 
 		$FtotCALLSavg =	sprintf("%6.0f", $totCALLSavg);
@@ -1616,82 +1479,34 @@ else
 		$FtotQUEUE =	sprintf("%6s", $totQUEUE);
 		$FtotCALLS =	sprintf("%7s", $totCALLS);
 
-		if ($FtotCALLS>0) 
-			{
-			$FtotABANDONSpct =	sprintf("%7.2f", (100*$FtotABANDONS/$FtotCALLS));
-			}
-		else
-			{
-			$FtotABANDONSpct =	"    0.0";
-			}
-		if ($FtotABANDONS>0) 
-			{
-			$FtotABANDONSavgTIME =	sprintf("%7s", date("i:s", mktime(0, 0, round($FtotABANDONSsec/$FtotABANDONS))));
-			}
-		else 
-			{
-			$FtotABANDONSavgTIME =	sprintf("%7s", "00:00");
-			}
-		if ($FtotANSWERS>0) 
-			{
-			$FtotANSWERSavgspeedTIME =	sprintf("%6s", date("i:s", mktime(0, 0, round($FtotANSWERSspeed/$FtotANSWERS))));
-			$FtotANSWERSavgTIME =	sprintf("%6s", date("i:s", mktime(0, 0, round($FtotANSWERSsec/$FtotANSWERS))));
-			}
-		else 
-			{
-			$FtotANSWERSavgspeedTIME =	sprintf("%6s", "00:00");
-			$FtotANSWERSavgTIME =	sprintf("%6s", "00:00");
-			}
-		$FtotANSWERStalkTIME =	sprintf("%10s", floor($FtotANSWERSsec/3600).date(":i:s", mktime(0, 0, $FtotANSWERSsec)));
-		$FtotANSWERSwrapTIME =	sprintf("%10s", floor(($FtotANSWERS*15)/3600).date(":i:s", mktime(0, 0, ($FtotANSWERS*15))));
-		$FtotANSWERStotTIME =	sprintf("%10s", floor(($FtotANSWERSsec+($FtotANSWERS*15))/3600).date(":i:s", mktime(0, 0, ($FtotANSWERSsec+($FtotANSWERS*15)))));
+		$FtotABANDONSpct =	sprintf("%7.2f", (MathZDC(100*$FtotABANDONS, $FtotCALLS)));
+		$FtotABANDONSavgTIME =	sprintf("%7s", date("i:s", mktime(0, 0, round(MathZDC($FtotABANDONSsec, $FtotABANDONS)))));
+		$FtotANSWERSavgspeedTIME =	sprintf("%6s", date("i:s", mktime(0, 0, round(MathZDC($FtotANSWERSspeed, $FtotANSWERS)))));
+		$FtotANSWERSavgTIME =	sprintf("%6s", date("i:s", mktime(0, 0, round(MathZDC($FtotANSWERSsec, $FtotANSWERS)))));
+		$FtotANSWERStalkTIME =	sprintf("%10s", floor(MathZDC($FtotANSWERSsec, 3600)).date(":i:s", mktime(0, 0, $FtotANSWERSsec)));
+		$FtotANSWERSwrapTIME =	sprintf("%10s", floor(MathZDC(($FtotANSWERS*15), 3600)).date(":i:s", mktime(0, 0, ($FtotANSWERS*15))));
+		$FtotANSWERStotTIME =	sprintf("%10s", floor(MathZDC(($FtotANSWERSsec+($FtotANSWERS*15)), 3600)).date(":i:s", mktime(0, 0, ($FtotANSWERSsec+($FtotANSWERS*15)))));
 		$FtotANSWERS =	sprintf("%8s", $FtotANSWERS);
 		$FtotABANDONS =	sprintf("%9s", $FtotABANDONS);
 
 		if (date("w", strtotime($daySTART[$d]))>0) 
 			{
-			$totAGENTSwtd=count(array_count_values($AGENTS_wtd_array));
-				if ($totCALLSwtd>0)
-				{
-				$totABANDONSpctwtd =	sprintf("%7.2f", (100*$totABANDONSwtd/$totCALLSwtd));
-				}
-			else
-				{
-				$totABANDONSpctwtd = "    0.0";
-				}
-			if ($totABANDONSwtd>0)
-				{
-				$totABANDONSavgTIMEwtd =	sprintf("%7s", date("i:s", mktime(0, 0, round($totABANDONSsecwtd/$totABANDONSwtd))));
-				if (round($totABANDONSsecwtd/$totABANDONSwtd)>$max_wtd_avgabandontime) {$max_wtd_avgabandontime=round($totABANDONSsecwtd/$totABANDONSwtd);}
-				$wtd_graph_stats[$wa][11]=round($totABANDONSsecwtd/$totABANDONSwtd);
-				}
-			else
-				{
-				$totABANDONSavgTIMEwtd = "  00:00";
-				$wtd_graph_stats[$wa][11]=0;
-				}
-			if ($totANSWERSwtd>0)
-				{
-				$totANSWERSavgspeedTIMEwtd =	sprintf("%6s", date("i:s", mktime(0, 0, round($totANSWERSspeedwtd/$totANSWERSwtd))));
-				$totANSWERSavgTIMEwtd =	sprintf("%6s", date("i:s", mktime(0, 0, round($totANSWERSsecwtd/$totANSWERSwtd))));
-				if (round($totANSWERSspeedwtd/$totANSWERSwtd)>$max_wtd_avganswerspeed) {$max_wtd_avganswerspeed=round($totANSWERSspeedwtd/$totANSWERSwtd);}
-				$wtd_graph_stats[$wa][12]=round($totANSWERSspeedwtd/$totANSWERSwtd);
-				$wtd_graph_stats[$wa][16]=round($totANSWERSsecwtd/$totANSWERSwtd);
-				}
-			else
-				{
-				$totANSWERSavgspeedTIMEwtd = " 00:00";
-				$totANSWERSavgTIMEwtd = " 00:00";
-				$wtd_graph_stats[$wa][12]=0;
-				$wtd_graph_stats[$wa][16]=0;
-				}
-			$totANSWERStalkTIMEwtd =	sprintf("%10s", floor($totANSWERSsecwtd/3600).date(":i:s", mktime(0, 0, $totANSWERSsecwtd)));
-			$totANSWERSwrapTIMEwtd =	sprintf("%10s", floor(($totANSWERSwtd*15)/3600).date(":i:s", mktime(0, 0, ($totANSWERSwtd*15))));
+			$totABANDONSpctwtd =	sprintf("%7.2f", (MathZDC(100*$totABANDONSwtd, $totCALLSwtd)));
+			$totABANDONSavgTIMEwtd =	sprintf("%7s", date("i:s", mktime(0, 0, round(MathZDC($totABANDONSsecwtd, $totABANDONSwtd)))));
+			if (round(MathZDC($totABANDONSsecwtd, $totABANDONSwtd))>$max_wtd_avgabandontime) {$max_wtd_avgabandontime=round(MathZDC($totABANDONSsecwtd, $totABANDONSwtd));}
+			$wtd_graph_stats[$wa][11]=round(MathZDC($totABANDONSsecwtd, $totABANDONSwtd));
+			$totANSWERSavgspeedTIMEwtd =	sprintf("%6s", date("i:s", mktime(0, 0, round(MathZDC($totANSWERSspeedwtd, $totANSWERSwtd)))));
+			$totANSWERSavgTIMEwtd =	sprintf("%6s", date("i:s", mktime(0, 0, round(MathZDC($totANSWERSsecwtd, $totANSWERSwtd)))));
+			if (round(MathZDC($totANSWERSspeedwtd, $totANSWERSwtd))>$max_wtd_avganswerspeed) {$max_wtd_avganswerspeed=round(MathZDC($totANSWERSspeedwtd, $totANSWERSwtd));}
+			$wtd_graph_stats[$wa][12]=round(MathZDC($totANSWERSspeedwtd, $totANSWERSwtd));
+			$wtd_graph_stats[$wa][16]=round(MathZDC($totANSWERSsecwtd, $totANSWERSwtd));
+			$totANSWERStalkTIMEwtd =	sprintf("%10s", floor(MathZDC($totANSWERSsecwtd, 3600)).date(":i:s", mktime(0, 0, $totANSWERSsecwtd)));
+			$totANSWERSwrapTIMEwtd =	sprintf("%10s", floor(MathZDC(($totANSWERSwtd*15), 3600)).date(":i:s", mktime(0, 0, ($totANSWERSwtd*15))));
 			if (($totANSWERSwtd*15)>$max_wtd_totalwraptime) {$max_wtd_totalwraptime=($totANSWERSwtd*15);}
 			$wtd_graph_stats[$wa][13]=($totANSWERSwtd*15);
 			$wtd_graph_stats[$wa][14]=($totANSWERSsecwtd+($totANSWERSwtd*15));
 			$wtd_graph_stats[$wa][15]=$totANSWERSsecwtd;
-			$totANSWERStotTIMEwtd =	sprintf("%10s", floor(($totANSWERSsecwtd+($totANSWERSwtd*15))/3600).date(":i:s", mktime(0, 0, ($totANSWERSsecwtd+($totANSWERSwtd*15)))));
+			$totANSWERStotTIMEwtd =	sprintf("%10s", floor(MathZDC(($totANSWERSsecwtd+($totANSWERSwtd*15)), 3600)).date(":i:s", mktime(0, 0, ($totANSWERSsecwtd+($totANSWERSwtd*15)))));
 			$totAGENTSwtd=count(array_count_values($AGENTS_wtd_array));
 			$totAGENTSwtd =	sprintf("%8s", $totAGENTSwtd);
 			$totANSWERSwtd =	sprintf("%8s", $totANSWERSwtd);
@@ -1735,17 +1550,17 @@ else
 			$wtd_TOTALCALLTIME_graph=preg_replace('/DAILY/', 'WEEK-TO-DATE',$TOTALCALLTIME_graph);
 			for ($q=0; $q<count($wtd_graph_stats); $q++) {
 				if ($q==0) {$class=" first";} else if (($q+1)==count($wtd_graph_stats)) {$class=" last";} else {$class="";}
-				$wtd_OFFERED_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$wtd_graph_stats[$q][1]/$max_wtd_offered)."' height='16' />".$wtd_graph_stats[$q][1]."</td></tr>";
-				$wtd_ANSWERED_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$wtd_graph_stats[$q][2]/$max_wtd_answered)."' height='16' />".$wtd_graph_stats[$q][2]."</td></tr>";
-				$wtd_AGENTS_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$wtd_graph_stats[$q][17]/$max_wtd_agents)."' height='16' />".$wtd_graph_stats[$q][17]."</td></tr>";
-				$wtd_ABANDONED_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$wtd_graph_stats[$q][3]/$max_wtd_abandoned)."' height='16' />".$wtd_graph_stats[$q][3]."</td></tr>";
-				$wtd_ABANDONPCT_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$wtd_graph_stats[$q][4]/$max_wtd_abandonpct)."' height='16' />".$wtd_graph_stats[$q][4]."% </td></tr>";
-				$wtd_AVGABANDONTIME_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$wtd_graph_stats[$q][11]/$max_wtd_avgabandontime)."' height='16' />".$wtd_graph_stats[$q][5]."</td></tr>";
-				$wtd_AVGANSWERSPEED_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$wtd_graph_stats[$q][12]/$max_wtd_avganswerspeed)."' height='16' />".$wtd_graph_stats[$q][6]."</td></tr>";
-				$wtd_AVGTALKTIME_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$wtd_graph_stats[$q][16]/$max_wtd_avgtalktime)."' height='16' />".$wtd_graph_stats[$q][7]."</td></tr>";
-				$wtd_TOTALTALKTIME_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$wtd_graph_stats[$q][15]/$max_wtd_totaltalktime)."' height='16' />".$wtd_graph_stats[$q][8]."</td></tr>";
-				$wtd_TOTALWRAPTIME_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$wtd_graph_stats[$q][13]/$max_wtd_totalwraptime)."' height='16' />".$wtd_graph_stats[$q][9]."</td></tr>";
-				$wtd_TOTALCALLTIME_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$wtd_graph_stats[$q][14]/$max_wtd_totalcalltime)."' height='16' />".$wtd_graph_stats[$q][10]."</td></tr>";
+				$wtd_OFFERED_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][1], $max_wtd_offered))."' height='16' />".$wtd_graph_stats[$q][1]."</td></tr>";
+				$wtd_ANSWERED_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][2], $max_wtd_answered))."' height='16' />".$wtd_graph_stats[$q][2]."</td></tr>";
+				$wtd_AGENTS_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][17], $max_wtd_agents))."' height='16' />".$wtd_graph_stats[$q][17]."</td></tr>";
+				$wtd_ABANDONED_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][3], $max_wtd_abandoned))."' height='16' />".$wtd_graph_stats[$q][3]."</td></tr>";
+				$wtd_ABANDONPCT_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][4], $max_wtd_abandonpct))."' height='16' />".$wtd_graph_stats[$q][4]."% </td></tr>";
+				$wtd_AVGABANDONTIME_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][11], $max_wtd_avgabandontime))."' height='16' />".$wtd_graph_stats[$q][5]."</td></tr>";
+				$wtd_AVGANSWERSPEED_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][12], $max_wtd_avganswerspeed))."' height='16' />".$wtd_graph_stats[$q][6]."</td></tr>";
+				$wtd_AVGTALKTIME_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][16], $max_wtd_avgtalktime))."' height='16' />".$wtd_graph_stats[$q][7]."</td></tr>";
+				$wtd_TOTALTALKTIME_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][15], $max_wtd_totaltalktime))."' height='16' />".$wtd_graph_stats[$q][8]."</td></tr>";
+				$wtd_TOTALWRAPTIME_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][13], $max_wtd_totalwraptime))."' height='16' />".$wtd_graph_stats[$q][9]."</td></tr>";
+				$wtd_TOTALCALLTIME_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][14], $max_wtd_totalcalltime))."' height='16' />".$wtd_graph_stats[$q][10]."</td></tr>";
 			}
 
 			$ASCII_text.="$MAINH\n";
@@ -1770,47 +1585,22 @@ else
 		if (date("d", strtotime($daySTART[$d]))!=1) 
 			{
 			$totAGENTSmtd=count(array_count_values($AGENTS_mtd_array));
-			if ($totCALLSmtd>0)
-				{
-				$totABANDONSpctmtd =	sprintf("%7.2f", (100*$totABANDONSmtd/$totCALLSmtd));
-				}
-			else
-				{
-				$totABANDONSpctmtd = "    0.0";
-				}
-			if ($totABANDONSmtd>0)
-				{
-				$totABANDONSavgTIMEmtd =	sprintf("%7s", date("i:s", mktime(0, 0, round($totABANDONSsecmtd/$totABANDONSmtd))));
-				if (round($totABANDONSsecmtd/$totABANDONSmtd)>$max_mtd_avgabandontime) {$max_mtd_avgabandontime=round($totABANDONSsecmtd/$totABANDONSmtd);}
-				$mtd_graph_stats[$ma][11]=round($totABANDONSsecmtd/$totABANDONSmtd);
-				}
-			else
-				{
-				$totABANDONSavgTIMEmtd = "  00:00";
-				$mtd_graph_stats[$ma][11]=0;
-				}
-			if ($totANSWERSmtd>0)
-				{
-				$totANSWERSavgspeedTIMEmtd =	sprintf("%6s", date("i:s", mktime(0, 0, round($totANSWERSspeedmtd/$totANSWERSmtd))));
-				$totANSWERSavgTIMEmtd =	sprintf("%6s", date("i:s", mktime(0, 0, round($totANSWERSsecmtd/$totANSWERSmtd))));
-				if (round($totANSWERSspeedmtd/$totANSWERSmtd)>$max_mtd_avganswerspeed) {$max_mtd_avganswerspeed=round($totANSWERSspeedmtd/$totANSWERSmtd);}
-				$mtd_graph_stats[$ma][12]=round($totANSWERSspeedmtd/$totANSWERSmtd);
-				$mtd_graph_stats[$ma][16]=round($totANSWERSsecmtd/$totANSWERSmtd);
-				}
-			else
-				{
-				$totANSWERSavgspeedTIMEmtd = " 00:00";
-				$totANSWERSavgTIMEmtd = " 00:00";
-				$mtd_graph_stats[$ma][12]=0;
-				$mtd_graph_stats[$ma][16]=0;
-				}
-			$totANSWERStalkTIMEmtd =	sprintf("%10s", floor($totANSWERSsecmtd/3600).date(":i:s", mktime(0, 0, $totANSWERSsecmtd)));
-			$totANSWERSwrapTIMEmtd =	sprintf("%10s", floor(($totANSWERSmtd*15)/3600).date(":i:s", mktime(0, 0, ($totANSWERSmtd*15))));
+			$totABANDONSpctmtd =	sprintf("%7.2f", (MathZDC(100*$totABANDONSmtd, $totCALLSmtd)));
+			$totABANDONSavgTIMEmtd =	sprintf("%7s", date("i:s", mktime(0, 0, round(MathZDC($totABANDONSsecmtd, $totABANDONSmtd)))));
+			if (round(MathZDC($totABANDONSsecmtd, $totABANDONSmtd))>$max_mtd_avgabandontime) {$max_mtd_avgabandontime=round(MathZDC($totABANDONSsecmtd, $totABANDONSmtd));}
+			$mtd_graph_stats[$ma][11]=round(MathZDC($totABANDONSsecmtd, $totABANDONSmtd));
+			$totANSWERSavgspeedTIMEmtd =	sprintf("%6s", date("i:s", mktime(0, 0, round(MathZDC($totANSWERSspeedmtd, $totANSWERSmtd)))));
+			$totANSWERSavgTIMEmtd =	sprintf("%6s", date("i:s", mktime(0, 0, round(MathZDC($totANSWERSsecmtd, $totANSWERSmtd)))));
+			if (round(MathZDC($totANSWERSspeedmtd, $totANSWERSmtd))>$max_mtd_avganswerspeed) {$max_mtd_avganswerspeed=round(MathZDC($totANSWERSspeedmtd, $totANSWERSmtd));}
+			$mtd_graph_stats[$ma][12]=round(MathZDC($totANSWERSspeedmtd, $totANSWERSmtd));
+			$mtd_graph_stats[$ma][16]=round(MathZDC($totANSWERSsecmtd, $totANSWERSmtd));
+			$totANSWERStalkTIMEmtd =	sprintf("%10s", floor(MathZDC($totANSWERSsecmtd, 3600)).date(":i:s", mktime(0, 0, $totANSWERSsecmtd)));
+			$totANSWERSwrapTIMEmtd =	sprintf("%10s", floor(MathZDC(($totANSWERSmtd*15), 3600)).date(":i:s", mktime(0, 0, ($totANSWERSmtd*15))));
 			if (($totANSWERSmtd*15)>$max_mtd_totalwraptime) {$max_mtd_totalwraptime=($totANSWERSmtd*15);}
 			$mtd_graph_stats[$ma][13]=($totANSWERSmtd*15);
 			$mtd_graph_stats[$ma][14]=($totANSWERSsecmtd+($totANSWERSmtd*15));
 			$mtd_graph_stats[$ma][15]=$totANSWERSsecmtd;
-			$totANSWERStotTIMEmtd =	sprintf("%10s", floor(($totANSWERSsecmtd+($totANSWERSmtd*15))/3600).date(":i:s", mktime(0, 0, ($totANSWERSsecmtd+($totANSWERSmtd*15)))));
+			$totANSWERStotTIMEmtd =	sprintf("%10s", floor(MathZDC(($totANSWERSsecmtd+($totANSWERSmtd*15)), 3600)).date(":i:s", mktime(0, 0, ($totANSWERSsecmtd+($totANSWERSmtd*15)))));
 			$totAGENTSmtd=count(array_count_values($AGENTS_mtd_array));
 			$totAGENTSmtd =	sprintf("%8s", $totAGENTSmtd);
 			$totANSWERSmtd =	sprintf("%8s", $totANSWERSmtd);
@@ -1823,8 +1613,8 @@ else
 			if (trim($totABANDONSmtd)>$max_mtd_abandoned) {$max_mtd_abandoned=trim($totABANDONSmtd);}
 			if (trim($totABANDONSpctmtd)>$max_mtd_abandonpct) {$max_mtd_abandonpct=trim($totABANDONSpctmtd);}
 
-			if ( ( ($totANSWERSsecmtd > 0) and ($totANSWERSmtd > 0) ) and (round($totANSWERSsecmtd/$totANSWERSmtd)>$max_mtd_avgtalktime) )
-				{$max_mtd_avgtalktime=round($totANSWERSsecmtd/$totANSWERSmtd);}
+			if (round(MathZDC($totANSWERSsecmtd, $totANSWERSmtd))>$max_mtd_avgtalktime)
+				{$max_mtd_avgtalktime=round(MathZDC($totANSWERSsecmtd, $totANSWERSmtd));}
 
 			if (trim($totANSWERSsecmtd)>$max_mtd_totaltalktime) {$max_mtd_totaltalktime=trim($totANSWERSsecmtd);}
 			if (trim($totANSWERSsecmtd+($totANSWERSmtd*15))>$max_mtd_totalcalltime) {$max_mtd_totalcalltime=trim($totANSWERSsecmtd+($totANSWERSmtd*15));}
@@ -1856,17 +1646,17 @@ else
 			$mtd_TOTALCALLTIME_graph=preg_replace('/DAILY/', 'MONTH-TO-DATE',$TOTALCALLTIME_graph);
 			for ($q=0; $q<count($mtd_graph_stats); $q++) {
 				if ($q==0) {$class=" first";} else if (($q+1)==count($mtd_graph_stats)) {$class=" last";} else {$class="";}
-				$mtd_OFFERED_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$mtd_graph_stats[$q][1]/$max_mtd_offered)."' height='16' />".$mtd_graph_stats[$q][1]."</td></tr>";
-				$mtd_ANSWERED_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$mtd_graph_stats[$q][2]/$max_mtd_answered)."' height='16' />".$mtd_graph_stats[$q][2]."</td></tr>";
-				$mtd_AGENTS_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$mtd_graph_stats[$q][17]/$max_mtd_agents)."' height='16' />".$mtd_graph_stats[$q][17]."</td></tr>";
-				$mtd_ABANDONED_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$mtd_graph_stats[$q][3]/$max_mtd_abandoned)."' height='16' />".$mtd_graph_stats[$q][3]."</td></tr>";
-				$mtd_ABANDONPCT_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$mtd_graph_stats[$q][4]/$max_mtd_abandonpct)."' height='16' />".$mtd_graph_stats[$q][4]."%</td></tr>";
-				$mtd_AVGABANDONTIME_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$mtd_graph_stats[$q][11]/$max_mtd_avgabandontime)."' height='16' />".$mtd_graph_stats[$q][5]."</td></tr>";
-				$mtd_AVGANSWERSPEED_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$mtd_graph_stats[$q][12]/$max_mtd_avganswerspeed)."' height='16' />".$mtd_graph_stats[$q][6]."</td></tr>";
-				$mtd_AVGTALKTIME_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$mtd_graph_stats[$q][16]/$max_mtd_avgtalktime)."' height='16' />".$mtd_graph_stats[$q][7]."</td></tr>";
-				$mtd_TOTALTALKTIME_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$mtd_graph_stats[$q][15]/$max_mtd_totaltalktime)."' height='16' />".$mtd_graph_stats[$q][8]."</td></tr>";
-				$mtd_TOTALWRAPTIME_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$mtd_graph_stats[$q][13]/$max_mtd_totalwraptime)."' height='16' />".$mtd_graph_stats[$q][9]."</td></tr>";
-				$mtd_TOTALCALLTIME_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$mtd_graph_stats[$q][14]/$max_mtd_totalcalltime)."' height='16' />".$mtd_graph_stats[$q][10]."</td></tr>";
+				$mtd_OFFERED_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][1], $max_mtd_offered))."' height='16' />".$mtd_graph_stats[$q][1]."</td></tr>";
+				$mtd_ANSWERED_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][2], $max_mtd_answered))."' height='16' />".$mtd_graph_stats[$q][2]."</td></tr>";
+				$mtd_AGENTS_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][17], $max_mtd_agents))."' height='16' />".$mtd_graph_stats[$q][17]."</td></tr>";
+				$mtd_ABANDONED_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][3], $max_mtd_abandoned))."' height='16' />".$mtd_graph_stats[$q][3]."</td></tr>";
+				$mtd_ABANDONPCT_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][4], $max_mtd_abandonpct))."' height='16' />".$mtd_graph_stats[$q][4]."%</td></tr>";
+				$mtd_AVGABANDONTIME_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][11], $max_mtd_avgabandontime))."' height='16' />".$mtd_graph_stats[$q][5]."</td></tr>";
+				$mtd_AVGANSWERSPEED_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][12], $max_mtd_avganswerspeed))."' height='16' />".$mtd_graph_stats[$q][6]."</td></tr>";
+				$mtd_AVGTALKTIME_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][16], $max_mtd_avgtalktime))."' height='16' />".$mtd_graph_stats[$q][7]."</td></tr>";
+				$mtd_TOTALTALKTIME_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][15], $max_mtd_totaltalktime))."' height='16' />".$mtd_graph_stats[$q][8]."</td></tr>";
+				$mtd_TOTALWRAPTIME_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][13], $max_mtd_totalwraptime))."' height='16' />".$mtd_graph_stats[$q][9]."</td></tr>";
+				$mtd_TOTALCALLTIME_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][14], $max_mtd_totalcalltime))."' height='16' />".$mtd_graph_stats[$q][10]."</td></tr>";
 				$graph_totCALLSmtd+=$mtd_graph_stats[$q][1];
 				$graph_totANSWERSmtd+=$mtd_graph_stats[$q][2];
 				$graph_totAGENTSmtd+=$mtd_graph_stats[$q][17];
@@ -1901,162 +1691,137 @@ else
 	#		if (date("m", strtotime($daySTART[$d]))==1 || date("m", strtotime($daySTART[$d]))==4 || date("m", strtotime($daySTART[$d]))==7 || date("m", strtotime($daySTART[$d]))==10) # Quarterly line
 	#			{
 			$totAGENTSqtd=count(array_count_values($AGENTS_qtd_array));
-				if ($totCALLSqtd>0)
-					{
-					$totABANDONSpctqtd =	sprintf("%7.2f", (100*$totABANDONSqtd/$totCALLSqtd));
-					}
-				else
-					{
-					$totABANDONSpctqtd = "    0.0";
-					}
-				if ($totABANDONSqtd>0)
-					{
-					$totABANDONSavgTIMEqtd =	sprintf("%7s", date("i:s", mktime(0, 0, round($totABANDONSsecqtd/$totABANDONSqtd))));
-					if (round($totABANDONSsecqtd/$totABANDONSqtd)>$max_qtd_avgabandontime) {$max_qtd_avgabandontime=round($totABANDONSsecqtd/$totABANDONSqtd);}
-					$qtd_graph_stats[$qa][11]=round($totABANDONSsecqtd/$totABANDONSqtd);
-					}
-				else
-					{
-					$totABANDONSavgTIMEqtd = "  00:00";
-					$qtd_graph_stats[$qa][11]=0;
-					}
-				if ($totANSWERSqtd>0)
-					{
-					$totANSWERSavgspeedTIMEqtd =	sprintf("%6s", date("i:s", mktime(0, 0, round($totANSWERSspeedqtd/$totANSWERSqtd))));
-					$totANSWERSavgTIMEqtd =	sprintf("%6s", date("i:s", mktime(0, 0, round($totANSWERSsecqtd/$totANSWERSqtd))));
-					if (round($totANSWERSspeedqtd/$totANSWERSqtd)>$max_qtd_avganswerspeed) {$max_qtd_avganswerspeed=round($totANSWERSspeedqtd/$totANSWERSqtd);}
-					$qtd_graph_stats[$qa][12]=round($totANSWERSspeedqtd/$totANSWERSqtd);
-					$qtd_graph_stats[$qa][16]=round($totANSWERSsecqtd/$totANSWERSqtd);
-				}
-				else
-					{
-					$totANSWERSavgspeedTIMEqtd = " 00:00";
-					$totANSWERSavgTIMEqtd = " 00:00";
-					$qtd_graph_stats[$qa][12]=0;
-					$qtd_graph_stats[$qa][16]=0;
-					}
-				$totANSWERStalkTIMEqtd =	sprintf("%10s", floor($totANSWERSsecqtd/3600).date(":i:s", mktime(0, 0, $totANSWERSsecqtd)));
-				$totANSWERSwrapTIMEqtd =	sprintf("%10s", floor(($totANSWERSqtd*15)/3600).date(":i:s", mktime(0, 0, ($totANSWERSqtd*15))));
-				if (($totANSWERSqtd*15)>$max_qtd_totalwraptime) {$max_qtd_totalwraptime=($totANSWERSqtd*15);}
-				$qtd_graph_stats[$qa][13]=($totANSWERSqtd*15);
-				$qtd_graph_stats[$qa][14]=($totANSWERSsecqtd+($totANSWERSqtd*15));
-				$qtd_graph_stats[$qa][15]=$totANSWERSsecqtd;
-				$totANSWERStotTIMEqtd =	sprintf("%10s", floor(($totANSWERSsecqtd+($totANSWERSqtd*15))/3600).date(":i:s", mktime(0, 0, ($totANSWERSsecqtd+($totANSWERSqtd*15)))));
-				$totAGENTSqtd=count(array_count_values($AGENTS_qtd_array));
-				$totAGENTSqtd =	sprintf("%8s", $totAGENTSqtd);
-				$totANSWERSqtd =	sprintf("%8s", $totANSWERSqtd);
-				$totABANDONSqtd =	sprintf("%9s", $totABANDONSqtd);
-				$totCALLSqtd =	sprintf("%7s", $totCALLSqtd);		
+			$totABANDONSpctqtd =	sprintf("%7.2f", (MathZDC(100*$totABANDONSqtd, $totCALLSqtd)));
+			$totABANDONSavgTIMEqtd =	sprintf("%7s", date("i:s", mktime(0, 0, round(MathZDC($totABANDONSsecqtd, $totABANDONSqtd)))));
+			if (round(MathZDC($totABANDONSsecqtd, $totABANDONSqtd))>$max_qtd_avgabandontime) {$max_qtd_avgabandontime=round(MathZDC($totABANDONSsecqtd, $totABANDONSqtd));}
+			$qtd_graph_stats[$qa][11]=round(MathZDC($totABANDONSsecqtd, $totABANDONSqtd));
+			$totANSWERSavgspeedTIMEqtd =	sprintf("%6s", date("i:s", mktime(0, 0, round(MathZDC($totANSWERSspeedqtd, $totANSWERSqtd)))));
+			$totANSWERSavgTIMEqtd =	sprintf("%6s", date("i:s", mktime(0, 0, round(MathZDC($totANSWERSsecqtd, $totANSWERSqtd)))));
+			if (round(MathZDC($totANSWERSspeedqtd, $totANSWERSqtd))>$max_qtd_avganswerspeed) {$max_qtd_avganswerspeed=round(MathZDC($totANSWERSspeedqtd, $totANSWERSqtd));}
+			$qtd_graph_stats[$qa][12]=round(MathZDC($totANSWERSspeedqtd, $totANSWERSqtd));
+			$qtd_graph_stats[$qa][16]=round(MathZDC($totANSWERSsecqtd, $totANSWERSqtd));
+			$totANSWERStalkTIMEqtd =	sprintf("%10s", floor(MathZDC($totANSWERSsecqtd, 3600)).date(":i:s", mktime(0, 0, $totANSWERSsecqtd)));
+			$totANSWERSwrapTIMEqtd =	sprintf("%10s", floor(MathZDC(($totANSWERSqtd*15), 3600)).date(":i:s", mktime(0, 0, ($totANSWERSqtd*15))));
+			if (($totANSWERSqtd*15)>$max_qtd_totalwraptime) {$max_qtd_totalwraptime=($totANSWERSqtd*15);}
+			$qtd_graph_stats[$qa][13]=($totANSWERSqtd*15);
+			$qtd_graph_stats[$qa][14]=($totANSWERSsecqtd+($totANSWERSqtd*15));
+			$qtd_graph_stats[$qa][15]=$totANSWERSsecqtd;
+			$totANSWERStotTIMEqtd =	sprintf("%10s", floor(MathZDC(($totANSWERSsecqtd+($totANSWERSqtd*15)), 3600)).date(":i:s", mktime(0, 0, ($totANSWERSsecqtd+($totANSWERSqtd*15)))));
+			$totAGENTSqtd=count(array_count_values($AGENTS_qtd_array));
+			$totAGENTSqtd =	sprintf("%8s", $totAGENTSqtd);
+			$totANSWERSqtd =	sprintf("%8s", $totANSWERSqtd);
+			$totABANDONSqtd =	sprintf("%9s", $totABANDONSqtd);
+			$totCALLSqtd =	sprintf("%7s", $totCALLSqtd);		
 
-				if (trim($totCALLSqtd)>$max_qtd_offered) {$max_qtd_offered=trim($totCALLSqtd);}
-				if (trim($totANSWERSqtd)>$max_qtd_answered) {$max_qtd_answered=trim($totANSWERSqtd);}
-				if (trim($totAGENTSqtd)>$max_qtd_agents) {$max_qtd_agents=trim($totAGENTSqtd);}
-				if (trim($totABANDONSqtd)>$max_qtd_abandoned) {$max_qtd_abandoned=trim($totABANDONSqtd);}
-				if (trim($totABANDONSpctqtd)>$max_qtd_abandonpct) {$max_qtd_abandonpct=trim($totABANDONSpctqtd);}
+			if (trim($totCALLSqtd)>$max_qtd_offered) {$max_qtd_offered=trim($totCALLSqtd);}
+			if (trim($totANSWERSqtd)>$max_qtd_answered) {$max_qtd_answered=trim($totANSWERSqtd);}
+			if (trim($totAGENTSqtd)>$max_qtd_agents) {$max_qtd_agents=trim($totAGENTSqtd);}
+			if (trim($totABANDONSqtd)>$max_qtd_abandoned) {$max_qtd_abandoned=trim($totABANDONSqtd);}
+			if (trim($totABANDONSpctqtd)>$max_qtd_abandonpct) {$max_qtd_abandonpct=trim($totABANDONSpctqtd);}
 
-				if ( ( ($totANSWERSsecqtd > 0) and ($totANSWERSqtd > 0) ) and (round($totANSWERSsecqtd/$totANSWERSqtd)>$max_qtd_avgtalktime) )
-					{$max_qtd_avgtalktime=round($totANSWERSsecqtd/$totANSWERSqtd);}
+			if ( (round(MathZDC($totANSWERSsecqtd, $totANSWERSqtd))>$max_qtd_avgtalktime) )
+				{$max_qtd_avgtalktime=round(MathZDC($totANSWERSsecqtd, $totANSWERSqtd));}
 
-				if (trim($totANSWERSsecqtd)>$max_qtd_totaltalktime) {$max_qtd_totaltalktime=trim($totANSWERSsecqtd);}
-				if (trim($totANSWERSsecqtd+($totANSWERSqtd*15))>$max_qtd_totalcalltime) {$max_qtd_totalcalltime=trim($totANSWERSsecqtd+($totANSWERSqtd*15));}
+			if (trim($totANSWERSsecqtd)>$max_qtd_totaltalktime) {$max_qtd_totaltalktime=trim($totANSWERSsecqtd);}
+			if (trim($totANSWERSsecqtd+($totANSWERSqtd*15))>$max_qtd_totalcalltime) {$max_qtd_totalcalltime=trim($totANSWERSsecqtd+($totANSWERSqtd*15));}
 
-				$month=date("m", strtotime($dayEND[$d-1]));
-				$year=substr($dayEND[$d-1], 0, 4);
-				$qtr1=array(01,02,03);
-				$qtr2=array(04,05,06);
-				$qtr3=array(07,08,09);
-				$qtr4=array(10,11,12);
-				if(in_array($month,$qtr1)) {
-					$qtr="1st";
-				} else if(in_array($month,$qtr2)) {
-					$qtr="2nd";
-				}  else if(in_array($month,$qtr3)) {
-					$qtr="3rd";
-				}  else if(in_array($month,$qtr4)) {
-					$qtr="4th";
-				}
-				$qtd_graph_stats[$qa][0]="$qtr quarter, $year";
-				$qtd_graph_stats[$qa][1]=trim($totCALLSqtd);
-				$qtd_graph_stats[$qa][2]=trim($totANSWERSqtd);
-				$qtd_graph_stats[$qa][3]=trim($totABANDONSqtd);
-				$qtd_graph_stats[$qa][4]=trim($totABANDONSpctqtd);
-				$qtd_graph_stats[$qa][5]=trim($totABANDONSavgTIMEqtd);
-				$qtd_graph_stats[$qa][6]=trim($totANSWERSavgspeedTIMEqtd);
-				$qtd_graph_stats[$qa][7]=trim($totANSWERSavgTIMEqtd);
-				$qtd_graph_stats[$qa][8]=trim($totANSWERStalkTIMEqtd);
-				$qtd_graph_stats[$qa][9]=trim($totANSWERSwrapTIMEqtd);
-				$qtd_graph_stats[$qa][10]=trim($totANSWERStotTIMEqtd);
-				$qtd_graph_stats[$qa][17]=trim($totAGENTSqtd);
-				$qtd_OFFERED_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$OFFERED_graph);
-				$qtd_ANSWERED_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$ANSWERED_graph);
-				$qtd_AGENTS_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$AGENTS_graph);
-				$qtd_ABANDONED_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$ABANDONED_graph);
-				$qtd_ABANDONPCT_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$ABANDONPCT_graph);
-				$qtd_AVGABANDONTIME_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$AVGABANDONTIME_graph);
-				$qtd_AVGANSWERSPEED_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$AVGANSWERSPEED_graph);
-				$qtd_AVGTALKTIME_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$AVGTALKTIME_graph);
-				$qtd_TOTALTALKTIME_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$TOTALTALKTIME_graph);
-				$qtd_TOTALWRAPTIME_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$TOTALWRAPTIME_graph);
-				$qtd_TOTALCALLTIME_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$TOTALCALLTIME_graph);
-				for ($q=0; $q<count($qtd_graph_stats); $q++) {
-					if ($q==0) {$class=" first";} else if (($q+1)==count($qtd_graph_stats)) {$class=" last";} else {$class="";}
-					$qtd_OFFERED_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$qtd_graph_stats[$q][1]/$max_qtd_offered)."' height='16' />".$qtd_graph_stats[$q][1]."</td></tr>";
-					$qtd_ANSWERED_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$qtd_graph_stats[$q][2]/$max_qtd_answered)."' height='16' />".$qtd_graph_stats[$q][2]."</td></tr>";
-					$qtd_AGENTS_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$qtd_graph_stats[$q][17]/$max_qtd_agents)."' height='16' />".$qtd_graph_stats[$q][17]."</td></tr>";
-					$qtd_ABANDONED_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$qtd_graph_stats[$q][3]/$max_qtd_abandoned)."' height='16' />".$qtd_graph_stats[$q][3]."</td></tr>";
-					$qtd_ABANDONPCT_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$qtd_graph_stats[$q][4]/$max_qtd_abandonpct)."' height='16' />".$qtd_graph_stats[$q][4]."%</td></tr>";
-					$qtd_AVGABANDONTIME_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$qtd_graph_stats[$q][11]/$max_qtd_avgabandontime)."' height='16' />".$qtd_graph_stats[$q][5]."</td></tr>";
-					$qtd_AVGANSWERSPEED_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$qtd_graph_stats[$q][12]/$max_qtd_avganswerspeed)."' height='16' />".$qtd_graph_stats[$q][6]."</td></tr>";
-					$qtd_AVGTALKTIME_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$qtd_graph_stats[$q][16]/$max_qtd_avgtalktime)."' height='16' />".$qtd_graph_stats[$q][7]."</td></tr>";
-					$qtd_TOTALTALKTIME_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$qtd_graph_stats[$q][15]/$max_qtd_totaltalktime)."' height='16' />".$qtd_graph_stats[$q][8]."</td></tr>";
-					$qtd_TOTALWRAPTIME_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$qtd_graph_stats[$q][13]/$max_qtd_totalwraptime)."' height='16' />".$qtd_graph_stats[$q][9]."</td></tr>";
-					$qtd_TOTALCALLTIME_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$qtd_graph_stats[$q][14]/$max_qtd_totalcalltime)."' height='16' />".$qtd_graph_stats[$q][10]."</td></tr>";
-					$graph_totCALLSqtd+=$qtd_graph_stats[$q][1];
-					$graph_totANSWERSqtd+=$qtd_graph_stats[$q][2];
-					$graph_totAGENTSqtd+=$qtd_graph_stats[$q][17];
-					$graph_totABANDONSqtd+=$qtd_graph_stats[$q][3];
-					$graph_totABANDONSpctqtd+=$qtd_graph_stats[$q][4];
-					$graph_totABANDONSavgTIMEqtd+=$qtd_graph_stats[$q][5];
-					$graph_totANSWERSavgspeedTIMEqtd+=$qtd_graph_stats[$q][6];
-					$graph_totANSWERSavgTIMEqtd+=$qtd_graph_stats[$q][7];
-					$graph_totANSWERStalkTIMEqtd+=$qtd_graph_stats[$q][8];
-					$graph_totANSWERSwrapTIMEqtd+=$qtd_graph_stats[$q][9];
-					$graph_totANSWERStotTIMEqtd+=$qtd_graph_stats[$q][10];
-				}
+			$month=date("m", strtotime($dayEND[$d-1]));
+			$year=substr($dayEND[$d-1], 0, 4);
+			$qtr1=array(01,02,03);
+			$qtr2=array(04,05,06);
+			$qtr3=array(07,08,09);
+			$qtr4=array(10,11,12);
+			if(in_array($month,$qtr1)) {
+				$qtr="1st";
+			} else if(in_array($month,$qtr2)) {
+				$qtr="2nd";
+			}  else if(in_array($month,$qtr3)) {
+				$qtr="3rd";
+			}  else if(in_array($month,$qtr4)) {
+				$qtr="4th";
+			}
+			$qtd_graph_stats[$qa][0]="$qtr quarter, $year";
+			$qtd_graph_stats[$qa][1]=trim($totCALLSqtd);
+			$qtd_graph_stats[$qa][2]=trim($totANSWERSqtd);
+			$qtd_graph_stats[$qa][3]=trim($totABANDONSqtd);
+			$qtd_graph_stats[$qa][4]=trim($totABANDONSpctqtd);
+			$qtd_graph_stats[$qa][5]=trim($totABANDONSavgTIMEqtd);
+			$qtd_graph_stats[$qa][6]=trim($totANSWERSavgspeedTIMEqtd);
+			$qtd_graph_stats[$qa][7]=trim($totANSWERSavgTIMEqtd);
+			$qtd_graph_stats[$qa][8]=trim($totANSWERStalkTIMEqtd);
+			$qtd_graph_stats[$qa][9]=trim($totANSWERSwrapTIMEqtd);
+			$qtd_graph_stats[$qa][10]=trim($totANSWERStotTIMEqtd);
+			$qtd_graph_stats[$qa][17]=trim($totAGENTSqtd);
+			$qtd_OFFERED_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$OFFERED_graph);
+			$qtd_ANSWERED_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$ANSWERED_graph);
+			$qtd_AGENTS_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$AGENTS_graph);
+			$qtd_ABANDONED_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$ABANDONED_graph);
+			$qtd_ABANDONPCT_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$ABANDONPCT_graph);
+			$qtd_AVGABANDONTIME_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$AVGABANDONTIME_graph);
+			$qtd_AVGANSWERSPEED_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$AVGANSWERSPEED_graph);
+			$qtd_AVGTALKTIME_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$AVGTALKTIME_graph);
+			$qtd_TOTALTALKTIME_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$TOTALTALKTIME_graph);
+			$qtd_TOTALWRAPTIME_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$TOTALWRAPTIME_graph);
+			$qtd_TOTALCALLTIME_graph=preg_replace('/DAILY/', 'QUARTER-TO-DATE',$TOTALCALLTIME_graph);
+			for ($q=0; $q<count($qtd_graph_stats); $q++) {
+				if ($q==0) {$class=" first";} else if (($q+1)==count($qtd_graph_stats)) {$class=" last";} else {$class="";}
+				$qtd_OFFERED_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][1], $max_qtd_offered))."' height='16' />".$qtd_graph_stats[$q][1]."</td></tr>";
+				$qtd_ANSWERED_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][2], $max_qtd_answered))."' height='16' />".$qtd_graph_stats[$q][2]."</td></tr>";
+				$qtd_AGENTS_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][17], $max_qtd_agents))."' height='16' />".$qtd_graph_stats[$q][17]."</td></tr>";
+				$qtd_ABANDONED_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][3], $max_qtd_abandoned))."' height='16' />".$qtd_graph_stats[$q][3]."</td></tr>";
+				$qtd_ABANDONPCT_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][4], $max_qtd_abandonpct))."' height='16' />".$qtd_graph_stats[$q][4]."%</td></tr>";
+				$qtd_AVGABANDONTIME_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][11], $max_qtd_avgabandontime))."' height='16' />".$qtd_graph_stats[$q][5]."</td></tr>";
+				$qtd_AVGANSWERSPEED_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][12], $max_qtd_avganswerspeed))."' height='16' />".$qtd_graph_stats[$q][6]."</td></tr>";
+				$qtd_AVGTALKTIME_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][16], $max_qtd_avgtalktime))."' height='16' />".$qtd_graph_stats[$q][7]."</td></tr>";
+				$qtd_TOTALTALKTIME_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][15], $max_qtd_totaltalktime))."' height='16' />".$qtd_graph_stats[$q][8]."</td></tr>";
+				$qtd_TOTALWRAPTIME_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][13], $max_qtd_totalwraptime))."' height='16' />".$qtd_graph_stats[$q][9]."</td></tr>";
+				$qtd_TOTALCALLTIME_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][14], $max_qtd_totalcalltime))."' height='16' />".$qtd_graph_stats[$q][10]."</td></tr>";
+				$graph_totCALLSqtd+=$qtd_graph_stats[$q][1];
+				$graph_totANSWERSqtd+=$qtd_graph_stats[$q][2];
+				$graph_totAGENTSqtd+=$qtd_graph_stats[$q][17];
+				$graph_totABANDONSqtd+=$qtd_graph_stats[$q][3];
+				$graph_totABANDONSpctqtd+=$qtd_graph_stats[$q][4];
+				$graph_totABANDONSavgTIMEqtd+=$qtd_graph_stats[$q][5];
+				$graph_totANSWERSavgspeedTIMEqtd+=$qtd_graph_stats[$q][6];
+				$graph_totANSWERSavgTIMEqtd+=$qtd_graph_stats[$q][7];
+				$graph_totANSWERStalkTIMEqtd+=$qtd_graph_stats[$q][8];
+				$graph_totANSWERSwrapTIMEqtd+=$qtd_graph_stats[$q][9];
+				$graph_totANSWERStotTIMEqtd+=$qtd_graph_stats[$q][10];
+			}
 
-				$ASCII_text.="$MAINH\n";
-				$ASCII_text.="|                                       QTD | $totCALLSqtd | $totANSWERSqtd | $totAGENTSqtd | $totABANDONSqtd | $totABANDONSpctqtd%| $totABANDONSavgTIMEqtd | $totANSWERSavgspeedTIMEqtd | $totANSWERSavgTIMEqtd | $totANSWERStalkTIMEqtd | $totANSWERSwrapTIMEqtd | $totANSWERStotTIMEqtd |";
-				$CSV_text.="\"QTD\",\"$totCALLSqtd\",\"$totANSWERSqtd\",\"$totAGENTSqtd\",\"$totABANDONSqtd\",\"$totABANDONSpctqtd%\",\"$totABANDONSavgTIMEqtd\",\"$totANSWERSavgspeedTIMEqtd\",\"$totANSWERSavgTIMEqtd\",\"$totANSWERStalkTIMEqtd\",\"$totANSWERSwrapTIMEqtd\",\"$totANSWERStotTIMEqtd\"";
-				for ($s=0; $s<count($status_array); $s++) {
-					$ASCII_text.=" ".sprintf("%10s", ($totSTATUSESqtd[$status_array[$s][0]]+0))." |";
-					$CSV_text.=",\"".sprintf("%10s", ($totSTATUSESqtd[$status_array[$s][0]]+0))."\"";
-				}
-				$ASCII_text.="\n";
-				$CSV_text.="\n";
+			$ASCII_text.="$MAINH\n";
+			$ASCII_text.="|                                       QTD | $totCALLSqtd | $totANSWERSqtd | $totAGENTSqtd | $totABANDONSqtd | $totABANDONSpctqtd%| $totABANDONSavgTIMEqtd | $totANSWERSavgspeedTIMEqtd | $totANSWERSavgTIMEqtd | $totANSWERStalkTIMEqtd | $totANSWERSwrapTIMEqtd | $totANSWERStotTIMEqtd |";
+			$CSV_text.="\"QTD\",\"$totCALLSqtd\",\"$totANSWERSqtd\",\"$totAGENTSqtd\",\"$totABANDONSqtd\",\"$totABANDONSpctqtd%\",\"$totABANDONSavgTIMEqtd\",\"$totANSWERSavgspeedTIMEqtd\",\"$totANSWERSavgTIMEqtd\",\"$totANSWERStalkTIMEqtd\",\"$totANSWERSwrapTIMEqtd\",\"$totANSWERStotTIMEqtd\"";
+			for ($s=0; $s<count($status_array); $s++) {
+				$ASCII_text.=" ".sprintf("%10s", ($totSTATUSESqtd[$status_array[$s][0]]+0))." |";
+				$CSV_text.=",\"".sprintf("%10s", ($totSTATUSESqtd[$status_array[$s][0]]+0))."\"";
+			}
+			$ASCII_text.="\n";
+			$CSV_text.="\n";
 
-				$totCALLSqtd=0;
-				$totANSWERSqtd=0;
-				$AGENTS_qtd_array=array();
-				$totANSWERSsecqtd=0;
-				$totANSWERSspeedqtd=0;
-				$totABANDONSqtd=0;
-				$totABANDONSsecqtd=0;
+			$totCALLSqtd=0;
+			$totANSWERSqtd=0;
+			$AGENTS_qtd_array=array();
+			$totANSWERSsecqtd=0;
+			$totANSWERSspeedqtd=0;
+			$totABANDONSqtd=0;
+			$totABANDONSsecqtd=0;
 	#			}
 		}
 
 			for ($q=0; $q<count($graph_stats); $q++) {
 				if ($q==0) {$class=" first";} else if (($q+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-				$OFFERED_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][1]/$max_offered)."' height='16' />".$graph_stats[$q][1]."</td></tr>";
-				$ANSWERED_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][2]/$max_answered)."' height='16' />".$graph_stats[$q][2]."</td></tr>";
-				$AGENTS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][17]/$max_agents)."' height='16' />".$graph_stats[$q][17]."</td></tr>";
-				$ABANDONED_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][3]/$max_abandoned)."' height='16' />".$graph_stats[$q][3]."</td></tr>";
-				$ABANDONPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][4]/$max_abandonpct)."' height='16' />".$graph_stats[$q][4]."%</td></tr>";
-				$AVGABANDONTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][11]/$max_avgabandontime)."' height='16' />".$graph_stats[$q][5]."</td></tr>";
-				$AVGANSWERSPEED_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][12]/$max_avganswerspeed)."' height='16' />".$graph_stats[$q][6]."</td></tr>";
-				$AVGTALKTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][16]/$max_avgtalktime)."' height='16' />".$graph_stats[$q][7]."</td></tr>";
-				$TOTALTALKTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][15]/$max_totaltalktime)."' height='16' />".$graph_stats[$q][8]."</td></tr>";
-				$TOTALWRAPTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][13]/$max_totalwraptime)."' height='16' />".$graph_stats[$q][9]."</td></tr>";
-				$TOTALCALLTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][14]/$max_totalcalltime)."' height='16' />".$graph_stats[$q][10]."</td></tr>";
+				$OFFERED_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][1], $max_offered))."' height='16' />".$graph_stats[$q][1]."</td></tr>";
+				$ANSWERED_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][2], $max_answered))."' height='16' />".$graph_stats[$q][2]."</td></tr>";
+				$AGENTS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][17], $max_agents))."' height='16' />".$graph_stats[$q][17]."</td></tr>";
+				$ABANDONED_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][3], $max_abandoned))."' height='16' />".$graph_stats[$q][3]."</td></tr>";
+				$ABANDONPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][4], $max_abandonpct))."' height='16' />".$graph_stats[$q][4]."%</td></tr>";
+				$AVGABANDONTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][11], $max_avgabandontime))."' height='16' />".$graph_stats[$q][5]."</td></tr>";
+				$AVGANSWERSPEED_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][12], $max_avganswerspeed))."' height='16' />".$graph_stats[$q][6]."</td></tr>";
+				$AVGTALKTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][16], $max_avgtalktime))."' height='16' />".$graph_stats[$q][7]."</td></tr>";
+				$TOTALTALKTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][15], $max_totaltalktime))."' height='16' />".$graph_stats[$q][8]."</td></tr>";
+				$TOTALWRAPTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][13], $max_totalwraptime))."' height='16' />".$graph_stats[$q][9]."</td></tr>";
+				$TOTALCALLTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][14], $max_totalcalltime))."' height='16' />".$graph_stats[$q][10]."</td></tr>";
 			}
 			$OFFERED_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($FtotCALLS)."</th></tr></table>";
 			$ANSWERED_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($FtotANSWERS)."</th></tr></table>";
@@ -2237,15 +2002,9 @@ else
 
 	while ($i < $TOTintervals)
 		{
-		if ($qrtCALLS[$i] > 0)
-			{$qrtCALLSavg[$i] = ($qrtCALLSsec[$i] / $qrtCALLS[$i]);}
-		else {$qrtCALLSavg[$i] = 0;}
-		if ($qrtDROPS[$i] > 0)
-			{$qrtDROPSavg[$i] = ($qrtDROPSsec[$i] / $qrtDROPS[$i]);}
-		else {$qrtDROPSavg[$i] = 0;}
-		if ($qrtQUEUE[$i] > 0)
-			{$qrtQUEUEavg[$i] = ($qrtQUEUEsec[$i] / $qrtQUEUE[$i]);}
-		else {$qrtQUEUEavg[$i] = 0;}
+		$qrtCALLSavg[$i] = MathZDC($qrtCALLSsec[$i], $qrtCALLS[$i]);
+		$qrtDROPSavg[$i] = MathZDC($qrtDROPSsec[$i], $qrtDROPS[$i]);
+		$qrtQUEUEavg[$i] = MathZDC($qrtQUEUEsec[$i], $qrtQUEUE[$i]);
 
 		if ($qrtCALLS[$i] > $hi_hour_count) {$hi_hour_count = $qrtCALLS[$i];}
 		if ($qrtQUEUEavg[$i] > $hi_hold_count) {$hi_hold_count = $qrtQUEUEavg[$i];}
@@ -2271,14 +2030,8 @@ else
 		$MAIN.=$ASCII_text;
 		}
 
-	if ($hi_hour_count < 1)
-		{$hour_multiplier = 0;}
-	else
-		{$hour_multiplier = (20 / $hi_hour_count);}
-	if ($hi_hold_count < 1)
-		{$hold_multiplier = 0;}
-	else
-		{$hold_multiplier = (20 / $hi_hold_count);}
+	$hour_multiplier = MathZDC(20, $hi_hour_count);
+	$hold_multiplier = MathZDC(20, $hi_hold_count);
 
 
 	$ENDtime = date("U");
@@ -2366,7 +2119,7 @@ function HourDifference($time_BEGIN, $time_END) {
 	}
 	$time1 = strtotime($time_BEGIN)+$TBoffset;
 	$time2 = strtotime($time_END)+1+$TEoffset;
-	$hpd = ceil(($time2 - $time1) / 3600);
+	$hpd = ceil(MathZDC(($time2 - $time1), 3600));
 	if ($hpd<0) {$hpd+=24;}
 }
 
@@ -2412,7 +2165,7 @@ function RecalculateHPD($query_date_BEGIN, $query_date_END, $time_BEGIN, $time_E
 	}
 	$time1 = strtotime($time_BEGIN)+$TBoffset;
 	$time2 = strtotime($time_END)+1+$TEoffset;
-	$hpd = ceil(($time2 - $time1) / 3600);
+	$hpd = ceil(MathZDC(($time2 - $time1), 3600));
 	if ($hpd<0) {$hpd+=24;}
 
 	$SQdate_ARY =	explode(' ',$query_date_BEGIN);
@@ -2432,7 +2185,7 @@ function RecalculateHPD($query_date_BEGIN, $query_date_END, $time_BEGIN, $time_E
 	if (!$DURATIONday) 
 		{
 		$DURATIONsec = ($EQepoch - $SQepoch);
-		$DURATIONday = intval( ($DURATIONsec / 86400) + 1 );
+		$DURATIONday = intval( MathZDC($DURATIONsec, 86400) + 1 );
 
 		if ( ($EQsec < $SQsec) and ($DURATIONday < 1) )
 			{

@@ -20,6 +20,7 @@
 # 130621-0801 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0736 - Changed to mysqli PHP functions
 # 140108-0745 - Added webserver and hostname to report logging
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
@@ -580,7 +581,7 @@ else
 			if ($DB) {$ASCII_text.="$stmt\n";}
 			$row=mysqli_fetch_row($rslt);
 			$group_name[$i] =			$row[0];
-			$agent_alert_delay[$i] =	round($row[1] / 1000);
+			$agent_alert_delay[$i] =	round(MathZDC($row[1], 1000));
 
 			$out_of_call_time=0;
 			$length_in_sec[$i]=0;
@@ -687,18 +688,12 @@ else
 					{$ASCII_text.="$call_time > $CTstart | $call_time < $CTstop | $Cwday | $Chour | $Hcalltime[$Chour] | $talk_sec[$i]\n";}
 				$p++;
 				}
-			if ( ($answer_count[$i] > 0) and ($talk_sec[$i] > 0) )
-				{$talk_avg[$i] = ($talk_sec[$i] / $answer_count[$i]);}
-			else
-				{$talk_avg[$i] = 0;}
-			if ( ($calls_count[$i] > 0) and ($queue_seconds[$i] > 0) )
-				{$queue_avg[$i] = ($queue_seconds[$i] / $calls_count[$i]);}
-			else
-				{$queue_avg[$i] = 0;}
+			$talk_avg[$i] = MathZDC($talk_sec[$i], $answer_count[$i]);
+			$queue_avg[$i] = MathZDC($queue_seconds[$i], $calls_count[$i]);
 
 			if ($print_calls > 0)
 				{
-				$PCtemptalkmin = ($PCtemptalk  / 60);
+				$PCtemptalkmin = MathZDC($PCtemptalk, 60);
 				$ASCII_text.="$q\t$PCtemptalk\t$PCtemptalkmin\n";
 				}
 
@@ -804,14 +799,8 @@ else
 					if ($Hmax_queue_seconds[$h] > $hTOTmax_queue_seconds)
 						{$hTOTmax_queue_seconds = $Hmax_queue_seconds[$h];}
 
-					if ( ($Hanswer_count[$h] > 0) and ($Htalk_sec[$h] > 0) )
-						{$Htalk_avg[$h] = ($Htalk_sec[$h] / $Hanswer_count[$h]);}
-					else
-						{$Htalk_avg[$h] = 0;}
-					if ( ($Hcalls_count[$h] > 0) and ($Hqueue_seconds[$h] > 0) )
-						{$Hqueue_avg[$h] = ($Hqueue_seconds[$h] / $Hcalls_count[$h]);}
-					else
-						{$Hqueue_avg[$h] = 0;}
+					$Htalk_avg[$h] = MathZDC($Htalk_sec[$h], $Hanswer_count[$h]);
+					$Hqueue_avg[$h] = MathZDC($Hqueue_seconds[$h], $Hcalls_count[$h]);
 
 					$sub_graph_stats[$q][0]=sprintf("%2s", $h);
 					$sub_graph_stats[$q][1]=$Hcalls_count[$h];
@@ -856,14 +845,8 @@ else
 				$h++;
 				}			
 
-			if ( ($hTOTanswer_count > 0) and ($hTOTtalk_sec > 0) )
-				{$hTOTtalk_avg = ($hTOTtalk_sec / $hTOTanswer_count);}
-			else
-				{$hTOTtalk_avg = 0;}
-			if ( ($hTOTcalls_count > 0) and ($hTOTqueue_seconds > 0) )
-				{$hTOTqueue_avg = ($hTOTqueue_seconds / $hTOTcalls_count);}
-			else
-				{$hTOTqueue_avg = 0;}
+			$hTOTtalk_avg = MathZDC($hTOTtalk_sec, $hTOTanswer_count);
+			$hTOTqueue_avg = MathZDC($hTOTqueue_seconds, $hTOTcalls_count);
 
 			$gTOTcalls_count+=$hTOTcalls_count;
 			$gTOTanswer_count+=$hTOTanswer_count;
@@ -892,14 +875,14 @@ else
 
 			for ($q=0; $q<count($sub_graph_stats); $q++) {
 				if ($q==0) {$class=" first";} else if (($q+1)==count($sub_graph_stats)) {$class=" last";} else {$class="";}
-				$sub_CALLS_graph.="  <tr><td class='chart_td$class'>".$sub_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$sub_graph_stats[$q][1]/$sub_max_calls)."' height='16' />".$sub_graph_stats[$q][1]."</td></tr>";
-				$sub_ANSWER_graph.="  <tr><td class='chart_td$class'>".$sub_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$sub_graph_stats[$q][2]/$sub_max_answer)."' height='16' />".$sub_graph_stats[$q][2]."</td></tr>";
-				$sub_TALK_graph.="  <tr><td class='chart_td$class'>".$sub_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$sub_graph_stats[$q][3]/$sub_max_talk)."' height='16' />".sec_convert($sub_graph_stats[$q][3],'H')."</td></tr>";
-				$sub_AVGTALK_graph.="  <tr><td class='chart_td$class'>".$sub_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$sub_graph_stats[$q][4]/$sub_max_avgtalk)."' height='16' />".sec_convert($sub_graph_stats[$q][4],'H')."</td></tr>";
-				$sub_QUEUE_graph.="  <tr><td class='chart_td$class'>".$sub_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$sub_graph_stats[$q][5]/$sub_max_queue)."' height='16' />".sec_convert($sub_graph_stats[$q][5],'H')."</td></tr>";
-				$sub_AVGQUEUE_graph.="  <tr><td class='chart_td$class'>".$sub_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$sub_graph_stats[$q][6]/$sub_max_avgqueue)."' height='16' />".sec_convert($sub_graph_stats[$q][6],'H')."</td></tr>";
-				$sub_MAXQUEUE_graph.="  <tr><td class='chart_td$class'>".$sub_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$sub_graph_stats[$q][7]/$sub_max_maxqueue)."' height='16' />".sec_convert($sub_graph_stats[$q][7],'H')."</td></tr>";
-				$sub_TOTALABANDONS_graph.="  <tr><td class='chart_td$class'>".$sub_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$sub_graph_stats[$q][8]/$sub_max_totalabandons)."' height='16' />".$sub_graph_stats[$q][8]."</td></tr>";
+				$sub_CALLS_graph.="  <tr><td class='chart_td$class'>".$sub_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$sub_graph_stats[$q][1], $sub_max_calls))."' height='16' />".$sub_graph_stats[$q][1]."</td></tr>";
+				$sub_ANSWER_graph.="  <tr><td class='chart_td$class'>".$sub_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$sub_graph_stats[$q][2], $sub_max_answer))."' height='16' />".$sub_graph_stats[$q][2]."</td></tr>";
+				$sub_TALK_graph.="  <tr><td class='chart_td$class'>".$sub_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$sub_graph_stats[$q][3], $sub_max_talk))."' height='16' />".sec_convert($sub_graph_stats[$q][3],'H')."</td></tr>";
+				$sub_AVGTALK_graph.="  <tr><td class='chart_td$class'>".$sub_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$sub_graph_stats[$q][4], $sub_max_avgtalk))."' height='16' />".sec_convert($sub_graph_stats[$q][4],'H')."</td></tr>";
+				$sub_QUEUE_graph.="  <tr><td class='chart_td$class'>".$sub_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$sub_graph_stats[$q][5], $sub_max_queue))."' height='16' />".sec_convert($sub_graph_stats[$q][5],'H')."</td></tr>";
+				$sub_AVGQUEUE_graph.="  <tr><td class='chart_td$class'>".$sub_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$sub_graph_stats[$q][6], $sub_max_avgqueue))."' height='16' />".sec_convert($sub_graph_stats[$q][6],'H')."</td></tr>";
+				$sub_MAXQUEUE_graph.="  <tr><td class='chart_td$class'>".$sub_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$sub_graph_stats[$q][7], $sub_max_maxqueue))."' height='16' />".sec_convert($sub_graph_stats[$q][7],'H')."</td></tr>";
+				$sub_TOTALABANDONS_graph.="  <tr><td class='chart_td$class'>".$sub_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$sub_graph_stats[$q][8], $sub_max_totalabandons))."' height='16' />".$sub_graph_stats[$q][8]."</td></tr>";
 			}
 			$sub_CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTcalls_count)."</th></tr></table>";
 			$sub_ANSWER_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTanswer_count)."</th></tr></table>";
@@ -941,37 +924,26 @@ else
 			$i++;
 			}
 		$rawTOTtalk_sec = $TOTtalk_sec;
-		$rawTOTtalk_min = round($rawTOTtalk_sec / 60);
+		$rawTOTtalk_min = round(MathZDC($rawTOTtalk_sec, 60));
 
-		if ( ($TOTanswer_count > 0) and ($TOTtalk_sec > 0) )
-			{$TOTtalk_avg = ($TOTtalk_sec / $TOTanswer_count);}
-		else
-			{$TOTtalk_avg = 0;}
-		if ( ($TOTcalls_count > 0) and ($TOTqueue_seconds > 0) )
-			{$TOTqueue_avg = ($TOTqueue_seconds / $TOTcalls_count);}
-		else
-			{$TOTqueue_avg = 0;}
+		$TOTtalk_avg = MathZDC($TOTtalk_sec, $TOTanswer_count);
+		$TOTqueue_avg = MathZDC($TOTqueue_seconds, $TOTcalls_count);
 
 		for ($q=0; $q<count($graph_stats); $q++) {
 			if ($q==0) {$class=" first";} else if (($q+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-			$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][1]/$max_calls)."' height='16' />".$graph_stats[$q][1]."</td></tr>";
-			$ANSWER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][2]/$max_answer)."' height='16' />".$graph_stats[$q][2]."</td></tr>";
-			$TALK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][3]/$max_talk)."' height='16' />".sec_convert($graph_stats[$q][3],'H')."</td></tr>";
-			$AVGTALK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][4]/$max_avgtalk)."' height='16' />".sec_convert($graph_stats[$q][4],'H')."</td></tr>";
-			$QUEUE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][5]/$max_queue)."' height='16' />".sec_convert($graph_stats[$q][5],'H')."</td></tr>";
-			$AVGQUEUE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][6]/$max_avgqueue)."' height='16' />".sec_convert($graph_stats[$q][6],'H')."</td></tr>";
-			$MAXQUEUE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][7]/$max_maxqueue)."' height='16' />".sec_convert($graph_stats[$q][7],'H')."</td></tr>";
-			$TOTALABANDONS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$q][8]/$max_totalabandons)."' height='16' />".$graph_stats[$q][8]."</td></tr>";
+			$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][1], $max_calls))."' height='16' />".$graph_stats[$q][1]."</td></tr>";
+			$ANSWER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][2], $max_answer))."' height='16' />".$graph_stats[$q][2]."</td></tr>";
+			$TALK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][3], $max_talk))."' height='16' />".sec_convert($graph_stats[$q][3],'H')."</td></tr>";
+			$AVGTALK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][4], $max_avgtalk))."' height='16' />".sec_convert($graph_stats[$q][4],'H')."</td></tr>";
+			$QUEUE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][5], $max_queue))."' height='16' />".sec_convert($graph_stats[$q][5],'H')."</td></tr>";
+			$AVGQUEUE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][6], $max_avgqueue))."' height='16' />".sec_convert($graph_stats[$q][6],'H')."</td></tr>";
+			$MAXQUEUE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][7], $max_maxqueue))."' height='16' />".sec_convert($graph_stats[$q][7],'H')."</td></tr>";
+			$TOTALABANDONS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][8], $max_totalabandons))."' height='16' />".$graph_stats[$q][8]."</td></tr>";
 		}
 
-		if ( ($gTOTanswer_count > 0) and ($gTOTtalk_sec > 0) )
-			{$gTOTtalk_avg = round($gTOTtalk_sec / $gTOTanswer_count);}
-		else
-			{$gTOTtalk_avg = 0;}
-		if ( ($gTOTcalls_count > 0) and ($gTOTqueue_seconds > 0) )
-			{$gTOTqueue_avg = round($gTOTqueue_seconds / $gTOTcalls_count);}
-		else
-			{$gTOTqueue_avg = 0;}
+		$gTOTtalk_avg = round(MathZDC($gTOTtalk_sec, $gTOTanswer_count));
+		$gTOTqueue_avg = round(MathZDC($gTOTqueue_seconds, $gTOTcalls_count));
+
 		$gTOTtalk_sec =			sec_convert($gTOTtalk_sec,'H'); 
 		$gTOTtalk_avg =			sec_convert($gTOTtalk_avg,'H'); 
 		$gTOTqueue_seconds =		sec_convert($gTOTqueue_seconds,'H'); 

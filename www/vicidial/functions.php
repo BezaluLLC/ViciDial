@@ -4,7 +4,7 @@
 #
 # functions for administrative scripts and reports
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES:
@@ -17,7 +17,7 @@
 # 130615-2111 - Added user authentication function and login lockout for 15 minutes after 10 failed login
 # 130705-1957 - Added password encryption compatibility
 # 130831-0919 - Changed to mysqli PHP functions
-# 140319-1924 - Added ZeroDivisionCheck function
+# 140319-1924 - Added MathZDC function
 #
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
@@ -152,7 +152,7 @@ function sec_convert($sec,$precision)
 
 		if ($precision == 'H')
 			{
-			$Fhours_H =	($sec / 3600);
+			$Fhours_H =	MathZDC($sec, 3600);
 			$Fhours_H_int = floor($Fhours_H);
 			$Fhours_H_int = intval("$Fhours_H_int");
 			$Fhours_M = ($Fhours_H - $Fhours_H_int);
@@ -168,7 +168,7 @@ function sec_convert($sec,$precision)
 			}
 		if ($precision == 'M')
 			{
-			$Fminutes_M = ($sec / 60);
+			$Fminutes_M = MathZDC($sec, 60);
 			$Fminutes_M_int = floor($Fminutes_M);
 			$Fminutes_M_int = intval("$Fminutes_M_int");
 			$Fminutes_S = ($Fminutes_M - $Fminutes_M_int);
@@ -297,7 +297,7 @@ function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$met
 		echo "<th scope=\"col\" style=\"text-align: left; vertical-align:top;\"><span class=\"auraltext\">$metric_name</span> </th>\n";
 		echo "</tr>\n";
 
-		$max_multi = (400 / $max_count);
+		$max_multi = MathZDC(400, $max_count);
 		$i=0;
 		while($i < $days_graph)
 			{
@@ -407,11 +407,13 @@ function mysql_to_mysqli($stmt, $link) {
 	return $rslt;
 }
 
-function ZeroDivisionCheck($dividend, $divisor) {
-	if ($divisor>0) {
-		return ($dividend/$divisor);
-	} else {
+function MathZDC($dividend, $divisor, $quotient=0) {
+	if ($divisor==0) {
+		return $quotient;
+	} else if ($dividend==0) {
 		return 0;
+	} else {
+		return ($dividend/$divisor);
 	}
 }
 ?>

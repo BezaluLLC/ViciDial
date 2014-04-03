@@ -19,6 +19,7 @@
 # 130621-0800 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0735 - Changed to mysqli PHP functions
 # 140108-0743 - Added webserver and hostname to report logging
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
@@ -574,7 +575,7 @@ if ($SUBMIT)
 
 					$list_start_inv=0;
 					GetListCount($list_id, $inventory_ptnstr);
-					if ($list_start_inv>0) {$average_calls=sprintf("%.1f", $total_calls/$list_start_inv);} else {$average_calls="0.0";}
+					$average_calls=sprintf("%.1f", MathZDC($total_calls, $list_start_inv));
 					$Xdialable_count_nofilter = dialable_leads($DB,$link,$local_call_time,"$dial_statuses",$list_id,$drop_lockout_time,$call_count_limit,$single_status,"");
 					if (strlen($inactive_dial_statuses)>1) 
 						{
@@ -591,7 +592,7 @@ if ($SUBMIT)
 					$full_dialable_SQL="";
 					$Xdialable_count = dialable_leads($DB,$link,$local_call_time,"$dial_statuses",$list_id,$drop_lockout_time,$call_count_limit,$single_status,"$filter_SQL");
 
-					if ($list_start_inv>0) {$penetration=sprintf("%.2f", (100*($list_start_inv-$Xdialable_count)/$list_start_inv));} else {$penetration="0.00";}
+					$penetration=sprintf("%.2f", (MathZDC(100*($list_start_inv-$Xdialable_count), $list_start_inv)));
 
 					$rpt_body.="| ".sprintf("%9s", $list_id)." | ".sprintf("%-30s", $list_info)." | ".sprintf("%8s", $group[$i])." | ".$last_calldate." | ".sprintf("%9s", $list_start_inv)." | ".sprintf("%8s", $Xdialable_count)." | ".sprintf("%8s", $Xdialable_count_nofilter)." | ".sprintf("%8s", $oneoff_count)." | ".sprintf("%8s", $Xdialable_inactive_count)." | ".sprintf("%8s", $average_calls)." | ".sprintf("%6s", $penetration)."% |";
 					$CSV_body.="\"$list_id\",\"$list_info\",\"$last_calldate\",\"$group[$i]\",\"$list_start_inv\",\"$Xdialable_count\",\"$Xdialable_count_nofilter\",\"$oneoff_count\",\"$Xdialable_inactive_count\",\"$average_calls\",\"$penetration %\"";
@@ -735,7 +736,7 @@ if ($SUBMIT)
 				if (strlen($list_description)>0) {$list_info=$list_description;} else {$list_info=$list_name;}
 				$list_call_inv=0;
 				GetListCount($list_id, $inventory_ptnstr);
-				if ($list_start_inv>0) {$average_calls=sprintf("%.1f", $total_calls/$list_start_inv);} else {$average_calls="0.0";}
+				$average_calls=sprintf("%.1f", MathZDC($total_calls, $list_start_inv));
 
 				### For TOTAL counts, needs to be here instead of with other "total" variables further down in this particular report
 				$total_total_calls+=$total_calls;
@@ -758,7 +759,7 @@ if ($SUBMIT)
 				if ($DB > 0) {echo "FULL DIALABLE SQL: |$full_dialable_SQL|";}
 				}
 
-			if ($list_start_inv>0) {$penetration=sprintf("%.2f", (100*($list_start_inv-$Xdialable_count)/$list_start_inv));} else {$penetration="0.00";}
+			$penetration=sprintf("%.2f", (MathZDC(100*($list_start_inv-$Xdialable_count), $list_start_inv)));
 
 			$rpt_body.="| ".sprintf("%9s", $list_id)." | ".sprintf("%-30s", $list_info)." | ".sprintf("%8s", $campaign_id)." | ".$last_calldate." | ".sprintf("%9s", $list_start_inv)." | ".sprintf("%8s", $Xdialable_count)." | ".sprintf("%8s", $Xdialable_count_nofilter)." | ".sprintf("%8s", $oneoff_count)." | ".sprintf("%8s", $Xdialable_inactive_count)." | ".sprintf("%8s", $average_calls)." | ".sprintf("%6s", $penetration)."% |";
 			$CSV_body.="\"$list_id\",\"$list_info\",\"$last_calldate\",\"$campaign_id\",\"$list_start_inv\",\"$Xdialable_count\",\"$Xdialable_count_nofilter\",\"$oneoff_count\",\"$Xdialable_inactive_count\",\"$average_calls\",\"$penetration %\"";
@@ -864,8 +865,8 @@ if ($SUBMIT)
 	$rpt_footer ="+-----------+--------------------------------+----------+---------------------+-----------+----------+----------+----------+----------+----------+---------+$rpt_header_BORDER\n";
 
 	#### PRINT TOTALS ####
-	if ($total_list_start_inv>0) {$total_average_call_count=sprintf("%.1f", $total_total_calls/$total_list_start_inv);} else {$average_calls="0.0";}
-	if ($total_list_start_inv>0) {$total_penetration=sprintf("%.2f", (100*($total_list_start_inv-$total_dialable_count)/$total_list_start_inv));} else {$total_penetration="0.00";}
+	$total_average_call_count=sprintf("%.1f", MathZDC($total_total_calls, $total_list_start_inv));
+	$total_penetration=sprintf("%.2f", (MathZDC(100*($total_list_start_inv-$total_dialable_count), $total_list_start_inv)));
 	$rpt_footer.="|".sprintf("%76s", "TOTALS")." | ".sprintf("%9s", $total_list_start_inv)." | ".sprintf("%8s", $total_dialable_count)." | ".sprintf("%8s", $total_dialable_count_nofilter)." | ".sprintf("%8s", $total_dialable_count_oneoff)." | ".sprintf("%8s", $total_dialable_count_inactive)." | ".sprintf("%8s", $total_average_call_count)." | ".sprintf("%6s", $total_penetration)."% |";
 	$CSV_body.="\"\",\"\",\"\",\"TOTALS\",\"$total_list_start_inv\",\"$total_dialable_count\",\"$total_dialable_count_nofilter\",\"$total_dialable_count_oneoff\",\"$total_dialable_count_inactive\",\"$total_average_call_count\",\"$total_penetration\"";
 	$b=0;

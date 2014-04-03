@@ -85,10 +85,11 @@
 # 130901-2008 - Changed to mysqli PHP functions
 # 131120-1543 - Fixed small display bug when customer phone view is enabled
 # 140213-1705 - Fixed division by zero bug
+# 140328-0006 - Converted division calculations to use MathZDC function
 #
 
-$version = '2.8-74';
-$build = '140213-1705';
+$version = '2.8-75';
+$build = '140328-0006';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -254,7 +255,7 @@ function get_server_load($windows = false)
 				$i++;
 				}
 
-			$cpuload = round($cpuload / $i, 2);
+			$cpuload = round(MathZDC($cpuload, $i), 2);
 			return "$cpuload%";
 			}
 		else 
@@ -1192,57 +1193,27 @@ if ( ($ALLINGROUPstats > 0) or ( (preg_match('/O/',$with_inbound)) and ($adastat
 		$hold_sec_drop_calls =		$row[14];
 		$hold_sec_queue_calls =		$row[15];
 		$ingroupdetail =			$row[16];
-		if ( ($dropsTODAY > 0) and ($answersTODAY > 0) )
-			{
-			$drpctTODAY = ( ($dropsTODAY / $answersTODAY) * 100);
-			$drpctTODAY = round($drpctTODAY, 2);
-			$drpctTODAY = sprintf("%01.2f", $drpctTODAY);
-			}
-		else
-			{$drpctTODAY=0;}
+		$drpctTODAY = ( MathZDC($dropsTODAY, $answersTODAY) * 100);
+		$drpctTODAY = round($drpctTODAY, 2);
+		$drpctTODAY = sprintf("%01.2f", $drpctTODAY);
 
-		if ($callsTODAY > 0)
-			{
-			$AVGhold_sec_queue_calls = ($hold_sec_queue_calls / $callsTODAY);
-			$AVGhold_sec_queue_calls = round($AVGhold_sec_queue_calls, 0);
-			}
-		else
-			{$AVGhold_sec_queue_calls=0;}
+		$AVGhold_sec_queue_calls = MathZDC($hold_sec_queue_calls, $callsTODAY);
+		$AVGhold_sec_queue_calls = round($AVGhold_sec_queue_calls, 0);
 
-		if ($dropsTODAY > 0)
-			{
-			$AVGhold_sec_drop_calls = ($hold_sec_drop_calls / $dropsTODAY);
-			$AVGhold_sec_drop_calls = round($AVGhold_sec_drop_calls, 0);
-			}
-		else
-			{$AVGhold_sec_drop_calls=0;}
+		$AVGhold_sec_drop_calls = MathZDC($hold_sec_drop_calls, $dropsTODAY);
+		$AVGhold_sec_drop_calls = round($AVGhold_sec_drop_calls, 0);
 
-		if ($answersTODAY > 0)
-			{
-			$PCThold_sec_stat_one = ( ($hold_sec_stat_one / $answersTODAY) * 100);
-			$PCThold_sec_stat_one = round($PCThold_sec_stat_one, 2);
-			$PCThold_sec_stat_one = sprintf("%01.2f", $PCThold_sec_stat_one);
-			$PCThold_sec_stat_two = ( ($hold_sec_stat_two / $answersTODAY) * 100);
-			$PCThold_sec_stat_two = round($PCThold_sec_stat_two, 2);
-			$PCThold_sec_stat_two = sprintf("%01.2f", $PCThold_sec_stat_two);
-			$AVGhold_sec_answer_calls = ($hold_sec_answer_calls / $answersTODAY);
-			$AVGhold_sec_answer_calls = round($AVGhold_sec_answer_calls, 0);
-			if ($agent_non_pause_sec > 0)
-				{
-				$AVG_ANSWERagent_non_pause_sec = (($answersTODAY / $agent_non_pause_sec) * 60);
-				$AVG_ANSWERagent_non_pause_sec = round($AVG_ANSWERagent_non_pause_sec, 2);
-				$AVG_ANSWERagent_non_pause_sec = sprintf("%01.2f", $AVG_ANSWERagent_non_pause_sec);
-				}
-			else
-				{$AVG_ANSWERagent_non_pause_sec=0;}
-			}
-		else
-			{
-			$PCThold_sec_stat_one=0;
-			$PCThold_sec_stat_two=0;
-			$AVGhold_sec_answer_calls=0;
-			$AVG_ANSWERagent_non_pause_sec=0;
-			}
+		$PCThold_sec_stat_one = ( MathZDC($hold_sec_stat_one, $answersTODAY) * 100);
+		$PCThold_sec_stat_one = round($PCThold_sec_stat_one, 2);
+		$PCThold_sec_stat_one = sprintf("%01.2f", $PCThold_sec_stat_one);
+		$PCThold_sec_stat_two = ( MathZDC($hold_sec_stat_two, $answersTODAY) * 100);
+		$PCThold_sec_stat_two = round($PCThold_sec_stat_two, 2);
+		$PCThold_sec_stat_two = sprintf("%01.2f", $PCThold_sec_stat_two);
+		$AVGhold_sec_answer_calls = MathZDC($hold_sec_answer_calls, $answersTODAY);
+		$AVGhold_sec_answer_calls = round($AVGhold_sec_answer_calls, 0);
+		$AVG_ANSWERagent_non_pause_sec = (MathZDC($answersTODAY, $agent_non_pause_sec) * 60);
+		$AVG_ANSWERagent_non_pause_sec = round($AVG_ANSWERagent_non_pause_sec, 2);
+		$AVG_ANSWERagent_non_pause_sec = sprintf("%01.2f", $AVG_ANSWERagent_non_pause_sec);
 
 		if (preg_match('/0$|2$|4$|6$|8$/',$r)) {$bgcolor='#E6E6E6';}
 		else {$bgcolor='white';}
@@ -1301,14 +1272,9 @@ if ( ($DROPINGROUPstats > 0) and (!preg_match("/ALL-ACTIVE/",$group_string)) )
 	$callsTODAY =				$row[0];
 	$dropsTODAY =				$row[1];
 	$answersTODAY =				$row[2];
-	if ( ($dropsTODAY > 0) and ($callsTODAY > 0) )
-		{
-		$drpctTODAY = ( ($dropsTODAY / $callsTODAY) * 100);
-		$drpctTODAY = round($drpctTODAY, 2);
-		$drpctTODAY = sprintf("%01.2f", $drpctTODAY);
-		}
-	else
-		{$drpctTODAY=0;}
+	$drpctTODAY = ( MathZDC($dropsTODAY, $callsTODAY) * 100);
+	$drpctTODAY = round($drpctTODAY, 2);
+	$drpctTODAY = sprintf("%01.2f", $drpctTODAY);
 
 	$DROPINGROUPstatsHTML .= "<TR BGCOLOR=\"#E6E6E6\">";
 	$DROPINGROUPstatsHTML .= "<TD ALIGN=RIGHT COLSPAN=2><font size=2><B>DROP IN-GROUP STATS -</B></TD>";
@@ -1460,23 +1426,12 @@ if ($CARRIERstats > 0)
 			if (strlen($FIVEminute_count[$print_ctp])<1) {$FIVEminute_count[$print_ctp]=0;}
 			if (strlen($ONEminute_count[$print_ctp])<1) {$ONEminute_count[$print_ctp]=0;}
 			
-			if ( ($TFhour_count[$print_ctp] < 1) or ($TFhour_total < 1) ) {$TFhour_pct=0;}
-			else {$TFhour_pct = (100*($TFhour_count[$print_ctp]/$TFhour_total));}
-
-			if ( ($SIXhour_count[$print_ctp] < 1) or ($SIXhour_total < 1) ) {$SIXhour_pct=0;}
-			else {$SIXhour_pct = (100*($SIXhour_count[$print_ctp]/$SIXhour_total));}
-
-			if ( ($ONEhour_count[$print_ctp] < 1) or ($ONEhour_total < 1) ) {$ONEhour_pct=0;}
-			else {$ONEhour_pct = (100*($ONEhour_count[$print_ctp]/$ONEhour_total));}
-
-			if ( ($FTminute_count[$print_ctp] < 1) or ($FTminute_total < 1) ) {$TFminute_pct=0;}
-			else {$TFminute_pct = (100*($FTminute_count[$print_ctp]/$FTminute_total));}
-
-			if ( ($FIVEminute_count[$print_ctp] < 1) or ($FIVEminute_total < 1) ) {$FIVEminute_pct=0;}
-			else {$FIVEminute_pct = (100*($FIVEminute_count[$print_ctp]/$FIVEminute_total));}
-
-			if ( ($ONEminute_count[$print_ctp] < 1) or ($ONEminute_total < 1) ) {$ONEminute_pct=0;}
-			else {$ONEminute_pct = (100*($ONEminute_count[$print_ctp]/$ONEminute_total));}
+			$TFhour_pct = (100*MathZDC($TFhour_count[$print_ctp], $TFhour_total));
+			$SIXhour_pct = (100*MathZDC($SIXhour_count[$print_ctp], $SIXhour_total));
+			$ONEhour_pct = (100*MathZDC($ONEhour_count[$print_ctp], $ONEhour_total));
+			$TFminute_pct = (100*MathZDC($FTminute_count[$print_ctp], $FTminute_total));
+			$FIVEminute_pct = (100*MathZDC($FIVEminute_count[$print_ctp], $FIVEminute_total));
+			$ONEminute_pct = (100*MathZDC($ONEminute_count[$print_ctp], $ONEminute_total));
 
 			$CARRIERstatsHTML .= "<TR>";
 			$CARRIERstatsHTML .= "<TD BGCOLOR=white><font size=2>&nbsp;</TD>";
@@ -1594,57 +1549,27 @@ if (preg_match('/O/',$with_inbound))
 	$hold_sec_answer_calls =	$row[13];
 	$hold_sec_drop_calls =		$row[14];
 	$hold_sec_queue_calls =		$row[15];
-	if ( ($dropsTODAY > 0) and ($answersTODAY > 0) )
-		{
-		$drpctTODAY = ( ($dropsTODAY / $answersTODAY) * 100);
-		$drpctTODAY = round($drpctTODAY, 2);
-		$drpctTODAY = sprintf("%01.2f", $drpctTODAY);
-		}
-	else
-		{$drpctTODAY=0;}
+	$drpctTODAY = ( MathZDC($dropsTODAY, $answersTODAY) * 100);
+	$drpctTODAY = round($drpctTODAY, 2);
+	$drpctTODAY = sprintf("%01.2f", $drpctTODAY);
 
-	if ($callsTODAY > 0)
-		{
-		$AVGhold_sec_queue_calls = ($hold_sec_queue_calls / $callsTODAY);
-		$AVGhold_sec_queue_calls = round($AVGhold_sec_queue_calls, 0);
-		}
-	else
-		{$AVGhold_sec_queue_calls=0;}
+	$AVGhold_sec_queue_calls = MathZDC($hold_sec_queue_calls, $callsTODAY);
+	$AVGhold_sec_queue_calls = round($AVGhold_sec_queue_calls, 0);
 
-	if ($dropsTODAY > 0)
-		{
-		$AVGhold_sec_drop_calls = ($hold_sec_drop_calls / $dropsTODAY);
-		$AVGhold_sec_drop_calls = round($AVGhold_sec_drop_calls, 0);
-		}
-	else
-		{$AVGhold_sec_drop_calls=0;}
+	$AVGhold_sec_drop_calls = MathZDC($hold_sec_drop_calls, $dropsTODAY);
+	$AVGhold_sec_drop_calls = round($AVGhold_sec_drop_calls, 0);
 
-	if ($answersTODAY > 0)
-		{
-		$PCThold_sec_stat_one = ( ($hold_sec_stat_one / $answersTODAY) * 100);
-		$PCThold_sec_stat_one = round($PCThold_sec_stat_one, 2);
-		$PCThold_sec_stat_one = sprintf("%01.2f", $PCThold_sec_stat_one);
-		$PCThold_sec_stat_two = ( ($hold_sec_stat_two / $answersTODAY) * 100);
-		$PCThold_sec_stat_two = round($PCThold_sec_stat_two, 2);
-		$PCThold_sec_stat_two = sprintf("%01.2f", $PCThold_sec_stat_two);
-		$AVGhold_sec_answer_calls = ($hold_sec_answer_calls / $answersTODAY);
-		$AVGhold_sec_answer_calls = round($AVGhold_sec_answer_calls, 0);
-		if ($agent_non_pause_sec > 0)
-			{
-			$AVG_ANSWERagent_non_pause_sec = (($answersTODAY / $agent_non_pause_sec) * 60);
-			$AVG_ANSWERagent_non_pause_sec = round($AVG_ANSWERagent_non_pause_sec, 2);
-			$AVG_ANSWERagent_non_pause_sec = sprintf("%01.2f", $AVG_ANSWERagent_non_pause_sec);
-			}
-		else
-			{$AVG_ANSWERagent_non_pause_sec=0;}
-		}
-	else
-		{
-		$PCThold_sec_stat_one=0;
-		$PCThold_sec_stat_two=0;
-		$AVGhold_sec_answer_calls=0;
-		$AVG_ANSWERagent_non_pause_sec=0;
-		}
+	$PCThold_sec_stat_one = ( MathZDC($hold_sec_stat_one, $answersTODAY) * 100);
+	$PCThold_sec_stat_one = round($PCThold_sec_stat_one, 2);
+	$PCThold_sec_stat_one = sprintf("%01.2f", $PCThold_sec_stat_one);
+	$PCThold_sec_stat_two = ( MathZDC($hold_sec_stat_two, $answersTODAY) * 100);
+	$PCThold_sec_stat_two = round($PCThold_sec_stat_two, 2);
+	$PCThold_sec_stat_two = sprintf("%01.2f", $PCThold_sec_stat_two);
+	$AVGhold_sec_answer_calls = MathZDC($hold_sec_answer_calls, $answersTODAY);
+	$AVGhold_sec_answer_calls = round($AVGhold_sec_answer_calls, 0);
+	$AVG_ANSWERagent_non_pause_sec = (MathZDC($answersTODAY, $agent_non_pause_sec) * 60);
+	$AVG_ANSWERagent_non_pause_sec = round($AVG_ANSWERagent_non_pause_sec, 2);
+	$AVG_ANSWERagent_non_pause_sec = sprintf("%01.2f", $AVG_ANSWERagent_non_pause_sec);
 
 	echo "<BR><table cellpadding=0 cellspacing=0><TR>";
 	echo "<TD ALIGN=RIGHT><font size=2><B>CALLS TODAY:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $callsTODAY&nbsp; &nbsp; </TD>";
@@ -1764,14 +1689,9 @@ else
 	$answersTODAY = $row[7];
 	if ($multi_drop > 0)
 		{
-		if ( ($dropsTODAY > 0) and ($answersTODAY > 0) )
-			{
-			$drpctTODAY = ( ($dropsTODAY / $answersTODAY) * 100);
-			$drpctTODAY = round($drpctTODAY, 2);
-			$drpctTODAY = sprintf("%01.2f", $drpctTODAY);
-			}
-		else
-			{$drpctTODAY=0;}
+		$drpctTODAY = ( MathZDC($dropsTODAY, $answersTODAY) * 100);
+		$drpctTODAY = round($drpctTODAY, 2);
+		$drpctTODAY = sprintf("%01.2f", $drpctTODAY);
 		}
 	$VSCcat1 =		$row[8];
 	$VSCcat1tally = $row[9];
@@ -1787,12 +1707,8 @@ else
 	$VSCagentacw =		$row[19];
 	$VSCagentpause =	$row[20];
 
-	if ( ($diffONEMIN != 0) and ($agentsONEMIN > 0) )
-		{
-		$diffpctONEMIN = ( ($diffONEMIN / $agentsONEMIN) * 100);
-		$diffpctONEMIN = sprintf("%01.2f", $diffpctONEMIN);
-		}
-	else {$diffpctONEMIN = '0.00';}
+	$diffpctONEMIN = ( MathZDC($diffONEMIN, $agentsONEMIN) * 100);
+	$diffpctONEMIN = sprintf("%01.2f", $diffpctONEMIN);
 
 	$stmt="select sum(local_trunk_shortage) from vicidial_campaign_server_stats $group_SQLwhere;";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -1880,41 +1796,21 @@ else
 
 	if ($AGENTtimeSTATS>0)
 		{
-		if ( ($VSCagentcalls > 0) and ($VSCagentpause > 0) )
-			{
-			$avgpauseTODAY = ($VSCagentpause / $VSCagentcalls);
-			$avgpauseTODAY = round($avgpauseTODAY, 0);
-			$avgpauseTODAY = sprintf("%01.0f", $avgpauseTODAY);
-			}
-		else
-			{$avgpauseTODAY=0;}
+		$avgpauseTODAY = MathZDC($VSCagentpause, $VSCagentcalls);
+		$avgpauseTODAY = round($avgpauseTODAY, 0);
+		$avgpauseTODAY = sprintf("%01.0f", $avgpauseTODAY);
 
-		if ( ($VSCagentcalls > 0) and ($VSCagentwait > 0) )
-			{
-			$avgwaitTODAY = ($VSCagentwait / $VSCagentcalls);
-			$avgwaitTODAY = round($avgwaitTODAY, 0);
-			$avgwaitTODAY = sprintf("%01.0f", $avgwaitTODAY);
-			}
-		else
-			{$avgwaitTODAY=0;}
+		$avgwaitTODAY = MathZDC($VSCagentwait, $VSCagentcalls);
+		$avgwaitTODAY = round($avgwaitTODAY, 0);
+		$avgwaitTODAY = sprintf("%01.0f", $avgwaitTODAY);
 
-		if ( ($VSCagentcalls > 0) and ($VSCagentcust > 0) )
-			{
-			$avgcustTODAY = ($VSCagentcust / $VSCagentcalls);
-			$avgcustTODAY = round($avgcustTODAY, 0);
-			$avgcustTODAY = sprintf("%01.0f", $avgcustTODAY);
-			}
-		else
-			{$avgcustTODAY=0;}
+		$avgcustTODAY = MathZDC($VSCagentcust, $VSCagentcalls);
+		$avgcustTODAY = round($avgcustTODAY, 0);
+		$avgcustTODAY = sprintf("%01.0f", $avgcustTODAY);
 
-		if ( ($VSCagentcalls > 0) and ($VSCagentacw > 0) )
-			{
-			$avgacwTODAY = ($VSCagentacw / $VSCagentcalls);
-			$avgacwTODAY = round($avgacwTODAY, 0);
-			$avgacwTODAY = sprintf("%01.0f", $avgacwTODAY);
-			}
-		else
-			{$avgacwTODAY=0;}
+		$avgacwTODAY = MathZDC($VSCagentacw, $VSCagentcalls);
+		$avgacwTODAY = round($avgacwTODAY, 0);
+		$avgacwTODAY = sprintf("%01.0f", $avgacwTODAY);
 
 		echo "<TR>";
 		echo "<TD ALIGN=RIGHT><font size=2><B>AGENT AVG WAIT:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgwaitTODAY &nbsp;</TD>";

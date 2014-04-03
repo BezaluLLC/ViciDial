@@ -26,6 +26,7 @@
 # 130704-0940 - Fixed issue #675
 # 130901-0819 - Changed to mysqli PHP functions
 # 140108-0737 - Added webserver and hostname to report logging
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
@@ -758,11 +759,9 @@ else
 				$w++;
 				}
 			}
-		if ( ($FLOWtotal[$s] > 0) and ($FLOWdrop[$s] > 0) )
-			{
-			$FLOWdropPCT[$s] = ( ($FLOWdrop[$s] / $FLOWtotal[$s]) * 100);
-			$FLOWdropPCT[$s] = round($FLOWdropPCT[$s], 2);
-			}
+		
+		$FLOWdropPCT[$s] = (MathZDC($FLOWdrop[$s], $FLOWtotal[$s]) * 100);
+		$FLOWdropPCT[$s] = round($FLOWdropPCT[$s], 2);
 
 		if ($FLOWsummary[0]>$max_ivr_calls) {$max_ivr_calls=$FLOWsummary[0];}
 		if ($FLOWtotal[$s]>$max_queue_calls) {$max_queue_calls=$FLOWtotal[$s];}
@@ -780,10 +779,10 @@ else
 		$FLOWsummary[1] = preg_replace('/\-\-\-\-\-\-\-\-\-\-/', ' / ', $FLOWsummary[1]);
 		$FLOWtotal_time[$s] = ($FLOWivr_time[$s] + $FLOWclose_time[$s]);
 
-		$avgFLOWivr_time[$s] = ($FLOWivr_time[$s] / $FLOWsummary[0]);
+		$avgFLOWivr_time[$s] = MathZDC($FLOWivr_time[$s], $FLOWsummary[0]);
 		$avgFLOWivr_time[$s] = round($avgFLOWivr_time[$s], 0);
 		$avgFLOWivr_time[$s] = sprintf("%4s", $avgFLOWivr_time[$s]);
-		$avgFLOWtotal_time[$s] = ($FLOWtotal_time[$s] / $FLOWsummary[0]);
+		$avgFLOWtotal_time[$s] = MathZDC($FLOWtotal_time[$s], $FLOWsummary[0]);
 		$avgFLOWtotal_time[$s] = round($avgFLOWtotal_time[$s], 0);
 		$avgFLOWtotal_time[$s] = sprintf("%4s", $avgFLOWtotal_time[$s]);
 
@@ -807,21 +806,14 @@ else
 	$TOTALcalls = sprintf("%6s", $TOTALcalls);
 	$totFLOWtotal = sprintf("%6s", $totFLOWtotal);
 	$totFLOWdrop = sprintf("%6s", $totFLOWdrop);
-	if ( ($totFLOWivr_time > 0) and ($TOTALcalls > 0) )
-		{$TavgFLOWivr_time = ($totFLOWivr_time / $TOTALcalls);}
+	$TavgFLOWivr_time = MathZDC($totFLOWivr_time, $TOTALcalls);
 	$TavgFLOWivr_time = round($TavgFLOWivr_time, 0);
 	$TavgFLOWivr_time = sprintf("%4s", $TavgFLOWivr_time);
-	if ( ($totFLOWtotal_time > 0) and ($TOTALcalls > 0) )
-		{$TavgFLOWtotal_time = ($totFLOWtotal_time / $TOTALcalls);}
+	$TavgFLOWtotal_time = MathZDC($totFLOWtotal_time, $TOTALcalls);
 	$TavgFLOWtotal_time = round($TavgFLOWtotal_time, 0);
 	$TavgFLOWtotal_time = sprintf("%4s", $TavgFLOWtotal_time);
-	if ( ($totFLOWtotal < 1) or ($totFLOWdrop < 1) )
-		{$totFLOWdropPCT = '0';}
-	else
-		{
-		$totFLOWdropPCT = (($totFLOWdrop / $totFLOWtotal) * 100);
-		$totFLOWdropPCT = round($totFLOWdropPCT, 0);
-		}
+	$totFLOWdropPCT = (MathZDC($totFLOWdrop, $totFLOWtotal) * 100);
+	$totFLOWdropPCT = round($totFLOWdropPCT, 0);
 	$totFLOWdropPCT = sprintf("%5s", $totFLOWdropPCT);
 
 	$ASCII_text.="+--------+--------+--------+--------+------+------+------------\n";
@@ -832,12 +824,12 @@ else
 
 	for ($d=0; $d<count($graph_stats); $d++) {
 		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-		$IVRCALLS_graph.="  <tr><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_ivr_calls)."' height='16' />".$graph_stats[$d][1]."</td><td class='chart_td$class'>".$graph_stats[$d][0]."</td></tr>";
-		$QUEUECALLS_graph.="  <tr><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][2]/$max_queue_calls)."' height='16' />".$graph_stats[$d][2]."</td><td class='chart_td$class'>".$graph_stats[$d][0]."</td></tr>";
-		$QUEUEDROPCALLS_graph.="  <tr><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][3]/$max_queue_drops)."' height='16' />".$graph_stats[$d][3]."</td><td class='chart_td$class'>".$graph_stats[$d][0]."</td></tr>";
-		$QUEUEDROPPERCENT_graph.="  <tr><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][4]/$max_queue_drops_percent)."' height='16' />".$graph_stats[$d][4]."%</td><td class='chart_td$class'>".$graph_stats[$d][0]."</td></tr>";
-		$IVRAVGTIME_graph.="  <tr><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][5]/$max_ivr_avg)."' height='16' />".$graph_stats[$d][5]."</td><td class='chart_td$class'>".$graph_stats[$d][0]."</td></tr>";
-		$TOTALAVGTIME_graph.="  <tr><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][6]/$max_total_avg)."' height='16' />".$graph_stats[$d][6]."</td><td class='chart_td$class'>".$graph_stats[$d][0]."</td></tr>";
+		$IVRCALLS_graph.="  <tr><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][1], $max_ivr_calls))."' height='16' />".$graph_stats[$d][1]."</td><td class='chart_td$class'>".$graph_stats[$d][0]."</td></tr>";
+		$QUEUECALLS_graph.="  <tr><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][2], $max_queue_calls))."' height='16' />".$graph_stats[$d][2]."</td><td class='chart_td$class'>".$graph_stats[$d][0]."</td></tr>";
+		$QUEUEDROPCALLS_graph.="  <tr><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][3], $max_queue_drops))."' height='16' />".$graph_stats[$d][3]."</td><td class='chart_td$class'>".$graph_stats[$d][0]."</td></tr>";
+		$QUEUEDROPPERCENT_graph.="  <tr><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][4], $max_queue_drops_percent))."' height='16' />".$graph_stats[$d][4]."%</td><td class='chart_td$class'>".$graph_stats[$d][0]."</td></tr>";
+		$IVRAVGTIME_graph.="  <tr><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][5], $max_ivr_avg))."' height='16' />".$graph_stats[$d][5]."</td><td class='chart_td$class'>".$graph_stats[$d][0]."</td></tr>";
+		$TOTALAVGTIME_graph.="  <tr><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][6], $max_total_avg))."' height='16' />".$graph_stats[$d][6]."</td><td class='chart_td$class'>".$graph_stats[$d][0]."</td></tr>";
 	}
 	$IVRCALLS_graph.="<tr><th class='thgraph' scope='col'>".trim($TOTALcalls)."</th><th class='thgraph' scope='col'>TOTAL</th></tr></table>";
 	$QUEUECALLS_graph.="<tr><th class='thgraph' scope='col'>".trim($totFLOWtotal)."</th><th class='thgraph' scope='col'>TOTAL</th></tr></table>";
@@ -955,13 +947,8 @@ else
 		$h++;
 		}
 
-	if ($hi_hour_count < 1)
-		{$hour_multiplier = 0;}
-	else
-		{
-		$hour_multiplier = (100 / $hi_hour_count);
-		#$hour_multiplier = round($hour_multiplier, 0);
-		}
+	
+	$hour_multiplier = MathZDC(100, $hi_hour_count);
 
 	$MAIN.="<!-- HICOUNT: $hi_hour_count|$hour_multiplier -->\n";
 	$MAIN.="GRAPH IN 15 MINUTE INCREMENTS OF TOTAL CALLS TAKEN INTO THIS IVR\n";
@@ -975,13 +962,8 @@ else
 		if ($Mk >= 5) 
 			{
 			$Mk=0;
-			if ( ($k < 1) or ($hour_multiplier <= 0) )
-				{$scale_num = 100;}
-			else
-				{
-				$scale_num=($k / $hour_multiplier);
-				$scale_num = round($scale_num, 0);
-				}
+			$scale_num=MathZDC($k, $hour_multiplier);
+			$scale_num = round($scale_num, 0);
 			$LENscale_num = (strlen($scale_num));
 			$k = ($k + $LENscale_num);
 			$call_scale .= "$scale_num";

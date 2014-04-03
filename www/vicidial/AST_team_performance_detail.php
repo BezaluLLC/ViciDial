@@ -20,6 +20,7 @@
 # 130621-0723 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-2011 - Changed to mysqli PHP functions
 # 140108-0733 - Added webserver and hostname to report logging
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
@@ -769,79 +770,37 @@ if ($SUBMIT=="SUBMIT")
 				$user_talk_time =		sec_convert($talk_time,'H'); 
 				$group_talk_time+=$talk_time;
 				$user_system_time =		sec_convert($system_time,'H'); 
-				$talk_hours=$talk_time/3600;
+				$talk_hours=MathZDC($talk_time, 3600);
 				$group_system_time+=$system_time;
 				$user_nonpause_time =		sec_convert($nonpause_time,'H'); 
 				$group_nonpause_time+=$nonpause_time;
 
-				if ($sale_array[$user]>0) {$average_sale_time=sec_convert(round($sales_talk_time_array[$user]/$sale_array[$user]), 'H');} else {$average_sale_time="00:00";}
+				if ($sale_array[$user]>0) {$average_sale_time=sec_convert(round(MathZDC($sales_talk_time_array[$user], $sale_array[$user])), 'H');} else {$average_sale_time="00:00";}
 				$group_sales_talk_time+=$sales_talk_time_array[$user];
-				if ($contacts>0) {$average_contact_time=sec_convert(round($contact_talk_time/$contacts), 'H');} else {$average_contact_time="00:00";}
+				if ($contacts>0) {$average_contact_time=sec_convert(round(MathZDC($contact_talk_time, $contacts)), 'H');} else {$average_contact_time="00:00";}
 
 				$ASCII_text.="| ".sprintf("%-40s", $user_row["full_name"]);
 				$ASCII_text.=" | <a href='user_stats.php?user=$user&begin_date=$query_date_D&end_date=$end_date_D'>".sprintf("%10s", "$user")."</a>";
 				$ASCII_text.=" | ".sprintf("%5s", $calls);	$group_calls+=$calls;
 				$ASCII_text.=" | ".sprintf("%5s", $leads);	$group_leads+=$leads;
 				$ASCII_text.=" | ".sprintf("%8s", $contacts);  $group_contacts+=$contacts;
-				if ($leads>0) 
-					{
-					$contact_ratio=sprintf("%.2f", (100*$contacts/$leads));
-					}
-				else 
-					{
-					$contact_ratio="0.00";
-					}
+				$contact_ratio=sprintf("%.2f", MathZDC(100*$contacts,$leads));
 				$ASCII_text.=" | ".sprintf("%12s", $contact_ratio)."%";
 				$ASCII_text.=" | ".sprintf("%13s", $user_nonpause_time);
 				$ASCII_text.=" | ".sprintf("%11s", $user_system_time);
 				$ASCII_text.=" | ".sprintf("%9s", $user_talk_time);
 				$ASCII_text.=" | ".sprintf("%5s", $sale_array[$user]);	$group_sales+=$sale_array[$user];
-				if ($nonpause_time>0) 
-					{
-					$sales_per_working_hours=sprintf("%.2f", ($sale_array[$user]/($nonpause_time/3600)));
-					}
-				else
-					{
-					$sales_per_working_hours="0.00";
-					}
+				$sales_per_working_hours=sprintf("%.2f", (MathZDC($sale_array[$user], MathZDC($nonpause_time, 3600))));
 				$ASCII_text.=" | ".sprintf("%22s", $sales_per_working_hours);
-				if ($leads>0) 
-					{
-					$sales_ratio=sprintf("%.2f", (100*$sale_array[$user]/$leads));
-					}
-				else 
-					{
-					$sales_ratio="0.00";
-					}
+				$sales_ratio=sprintf("%.2f", MathZDC(100*$sale_array[$user], $leads));
 				$ASCII_text.=" | ".sprintf("%19s", $sales_ratio)."%";
-				if ($contacts>0) 
-					{
-					$sale_contact_ratio=sprintf("%.2f", (100*$sale_array[$user]/$contacts));
-					}
-				else 
-					{
-					$sale_contact_ratio=0;
-					}
+				$sale_contact_ratio=sprintf("%.2f", MathZDC(100*$sale_array[$user], $contacts));
 				$ASCII_text.=" | ".sprintf("%22s", $sale_contact_ratio)."%";
-				if ($talk_hours>0) 
-					{
-					$sales_per_hour=sprintf("%.2f", ($sale_array[$user]/$talk_hours));
-					}
-				else 
-					{
-					$sales_per_hour="0.00";
-					}
-				if ( ($calls>0) and ($leads>0) )
-					{
-					$stcall=sprintf("%.2f", ($calls/$leads));
-					}
-				else 
-					{
-					$stcall="0.00";
-					}
+				$sales_per_hour=sprintf("%.2f", MathZDC($sale_array[$user], $talk_hours));
+				$stcall=sprintf("%.2f", MathZDC($calls, $leads));
 
-				if ($sale_array[$user]>0) {$avg_sale_time=round($sales_talk_time_array[$user]/$sale_array[$user]);} else {$avg_sale_time=0;}
-				if ($contacts>0) {$avg_contact_time=round($contact_talk_time/$contacts);} else {$avg_contact_time=0;}
+				$avg_sale_time=round(MathZDC($sales_talk_time_array[$user], $sale_array[$user]));
+				$avg_contact_time=round(MathZDC($contact_talk_time, $contacts));
 				$graph_stats[$j][0]=$user_row["full_name"]." - $user";
 				$graph_stats[$j][1]=trim($calls);
 				$graph_stats[$j][2]=trim($leads);
@@ -907,23 +866,9 @@ if ($SUBMIT=="SUBMIT")
 				}
 
 			##### GROUP TOTALS #############
-			if ($group_sales>0) 
-				{
-				$group_average_sale_time=sec_convert(round($group_sales_talk_time/$group_sales), 'H');
-				} 
-			else 
-				{
-				$group_average_sale_time="00:00:00";
-				}
-			if ($group_contacts>0) 
-				{
-				$group_average_contact_time=sec_convert(round($group_contact_talk_time/$group_contacts), 'H');
-				} 
-			else 
-				{
-				$group_average_contact_time="00:00:00";
-				}
-			$group_talk_hours=$group_talk_time/3600;
+			$group_average_sale_time=sec_convert(round(MathZDC($group_sales_talk_time, $group_sales)), 'H');
+			$group_average_contact_time=sec_convert(round(MathZDC($group_contact_talk_time, $group_contacts)), 'H');
+			$group_talk_hours=MathZDC($group_talk_time, 3600);
 
 			$GROUP_text.="| ".sprintf("%40s", "$group_name");
 			$GROUP_text.=" | ".sprintf("%10s", "$user_group[$i]");
@@ -936,62 +881,20 @@ if ($SUBMIT=="SUBMIT")
 			$TOTAL_text=" | ".sprintf("%5s", $group_calls);	
 			$TOTAL_text.=" | ".sprintf("%5s", $group_leads);
 			$TOTAL_text.=" | ".sprintf("%8s", $group_contacts);
-			if ($group_leads>0) 
-				{
-				$group_contact_ratio=sprintf("%.2f", (100*$group_contacts/$group_leads));
-				} 
-			else 
-				{
-				$group_contact_ratio="0.00";
-				}
+			$group_contact_ratio=sprintf("%.2f", MathZDC(100*$group_contacts, $group_leads));
 			$TOTAL_text.=" | ".sprintf("%12s", $group_contact_ratio)."%";
 			$TOTAL_text.=" | ".sprintf("%13s", sec_convert($group_nonpause_time,'H'));
 			$TOTAL_text.=" | ".sprintf("%11s", sec_convert($group_system_time,'H'));
 			$TOTAL_text.=" | ".sprintf("%9s", sec_convert($group_talk_time,'H'));
 			$TOTAL_text.=" | ".sprintf("%5s", $group_sales);
-			if ($group_nonpause_time>0) 
-				{
-				$sales_per_working_hours=sprintf("%.2f", ($group_sales/($group_nonpause_time/3600)));
-				}
-			else
-				{
-				$sales_per_working_hours="0.00";
-				}
+			$sales_per_working_hours=sprintf("%.2f", (MathZDC($group_sales, MathZDC($group_nonpause_time, 3600))));
 			$TOTAL_text.=" | ".sprintf("%22s", $sales_per_working_hours);
-			if ($group_leads>0) 
-				{
-				$group_sales_ratio=sprintf("%.2f", (100*$group_sales/$group_leads));
-				} 
-			else 
-				{
-				$group_sales_ratio="0.00";
-				}	
+			$group_sales_ratio=sprintf("%.2f", MathZDC(100*$group_sales, $group_leads));
 			$TOTAL_text.=" | ".sprintf("%19s", $group_sales_ratio)."%";
-			if ($group_contacts>0) 
-				{
-				$group_sale_contact_ratio=sprintf("%.2f", (100*$group_sales/$group_contacts));
-				} 
-			else 
-				{
-				$group_sale_contact_ratio=0;
-				}
+			$group_sale_contact_ratio=sprintf("%.2f", MathZDC(100*$group_sales, $group_contacts));
 			$TOTAL_text.=" | ".sprintf("%22s", $group_sale_contact_ratio)."%";
-			if ($group_talk_hours>0) 
-				{
-				$group_sales_per_hour=sprintf("%.2f", ($group_sales/$group_talk_hours));
-				} 
-			else 
-				{
-				$group_sales_per_hour="0.00";
-				}
-			if ( ($group_calls>0) and ($group_leads>0) )
-				{
-				$group_stcall=sprintf("%.2f", ($group_calls/$group_leads));
-				} 
-			else 
-				{
-				$group_stcall="0.00";
-				}
+			$group_sales_per_hour=sprintf("%.2f", MathZDC($group_sales, $group_talk_hours));
+			$group_stcall=sprintf("%.2f", MathZDC($group_calls, $group_leads));
 			$TOTAL_text.=" | ".sprintf("%14s", $group_sales_per_hour);
 			$TOTAL_text.=" | ".sprintf("%16s", $group_inc_sales);
 			$TOTAL_text.=" | ".sprintf("%15s", $group_cnc_sales);
@@ -1072,29 +975,29 @@ if ($SUBMIT=="SUBMIT")
 
 			for ($d=1; $d<=count($graph_stats); $d++) {
 				if ($d==1) {$class=" first";} else if ($d==count($graph_stats)) {$class=" last";} else {$class="";}
-				$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
-				$LEADS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][2]/$max_leads)."' height='16' />".$graph_stats[$d][2]."</td></tr>";
-				$CONTACTS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][3]/$max_contacts)."' height='16' />".$graph_stats[$d][3]."</td></tr>";
-				$CONTACTRATIO_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][4]/$max_contactratio)."' height='16' />".$graph_stats[$d][4]."%</td></tr>";
-				$SYSTEMTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][5]/$max_systemtime)."' height='16' />".sec_convert($graph_stats[$d][5], 'H')."</td></tr>";
-				$TALKTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][6]/$max_talktime)."' height='16' />".sec_convert($graph_stats[$d][6], 'H')."</td></tr>";
-				$SALES_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][7]/$max_sales)."' height='16' />".$graph_stats[$d][7]."</td></tr>";
-				$SALESLEADSRATIO_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][8]/$max_salesleadsratio)."' height='16' />".$graph_stats[$d][8]."%</td></tr>";
-				$SALESCONTACTSRATIO_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][9]/$max_salescontactsratio)."' height='16' />".$graph_stats[$d][9]."%</td></tr>";
-				$SALESPERHOUR_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][10]/$max_salesperhour)."' height='16' />".$graph_stats[$d][10]."</td></tr>";
-				$INCSALES_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][11]/$max_incsales)."' height='16' />".$graph_stats[$d][11]."</td></tr>";
-				$CANCELLEDSALES_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][12]/$max_cancelledsales)."' height='16' />".$graph_stats[$d][12]."</td></tr>";
-				$CALLBACKS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][13]/$max_callbacks)."' height='16' />".$graph_stats[$d][13]."</td></tr>";
-				$FIRSTCALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][14]/$max_firstcall)."' height='16' />".$graph_stats[$d][14]."</td></tr>";
-				$AVGSALETIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][15]/$max_avgsaletime)."' height='16' />".sec_convert($graph_stats[$d][15], 'H')."</td></tr>";
-				$AVGCONTACTTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][16]/$max_avgcontacttime)."' height='16' />".sec_convert($graph_stats[$d][16], 'H')."</td></tr>";			
+				$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][1], $max_calls))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+				$LEADS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][2], $max_leads))."' height='16' />".$graph_stats[$d][2]."</td></tr>";
+				$CONTACTS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][3], $max_contacts))."' height='16' />".$graph_stats[$d][3]."</td></tr>";
+				$CONTACTRATIO_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][4], $max_contactratio))."' height='16' />".$graph_stats[$d][4]."%</td></tr>";
+				$SYSTEMTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][5], $max_systemtime))."' height='16' />".sec_convert($graph_stats[$d][5], 'H')."</td></tr>";
+				$TALKTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][6], $max_talktime))."' height='16' />".sec_convert($graph_stats[$d][6], 'H')."</td></tr>";
+				$SALES_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][7], $max_sales))."' height='16' />".$graph_stats[$d][7]."</td></tr>";
+				$SALESLEADSRATIO_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][8], $max_salesleadsratio))."' height='16' />".$graph_stats[$d][8]."%</td></tr>";
+				$SALESCONTACTSRATIO_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][9], $max_salescontactsratio))."' height='16' />".$graph_stats[$d][9]."%</td></tr>";
+				$SALESPERHOUR_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][10], $max_salesperhour))."' height='16' />".$graph_stats[$d][10]."</td></tr>";
+				$INCSALES_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][11], $max_incsales))."' height='16' />".$graph_stats[$d][11]."</td></tr>";
+				$CANCELLEDSALES_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][12], $max_cancelledsales))."' height='16' />".$graph_stats[$d][12]."</td></tr>";
+				$CALLBACKS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][13], $max_callbacks))."' height='16' />".$graph_stats[$d][13]."</td></tr>";
+				$FIRSTCALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][14], $max_firstcall))."' height='16' />".$graph_stats[$d][14]."</td></tr>";
+				$AVGSALETIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][15], $max_avgsaletime))."' height='16' />".sec_convert($graph_stats[$d][15], 'H')."</td></tr>";
+				$AVGCONTACTTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][16], $max_avgcontacttime))."' height='16' />".sec_convert($graph_stats[$d][16], 'H')."</td></tr>";			
 				for ($e=0; $e<count($call_status); $e++) {
 					$Sstatus=$call_status[$e];
 					$varname=$Sstatus."_graph";
 					$max_varname="max_".$Sstatus;
 					# $max.= "<!-- $max_varname => ".$$max_varname." //-->\n";
 					
-					$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][($e+17)]/$$max_varname)."' height='16' />".$graph_stats[$d][($e+17)]."</td></tr>";
+					$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][($e+17)], $$max_varname))."' height='16' />".$graph_stats[$d][($e+17)]."</td></tr>";
 				}
 			}
 
@@ -1172,85 +1075,29 @@ if ($SUBMIT=="SUBMIT")
 	$ASCII_text.=$GROUP_text;
 	$ASCII_text.="+------------------------------------------+------------+-------+-------+----------+---------------+---------------+-------------+-----------+-------+------------------------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+$HTMLborderheader\n";
 
-	if ($total_sales>0) 
-		{
-		$total_average_sale_time=sec_convert(round($total_sales_talk_time/$total_sales), 'H');
-		} 
-	else 
-		{
-		$total_average_sale_time="00:00:00";
-		}
-	if ($total_contacts>0) 
-		{
-		$total_average_contact_time=sec_convert(round($total_contact_talk_time/$total_contacts), 'H');
-		} 
-	else 
-		{
-		$total_average_contact_time="00:00:00";
-		}
-	$total_talk_hours=$total_talk_time/3600;
+		$total_average_sale_time=sec_convert(round(MathZDC($total_sales_talk_time,$total_sales)), 'H');
+		$total_average_contact_time=sec_convert(round(MathZDC($total_contact_talk_time,$total_contacts)), 'H');
+	$total_talk_hours=MathZDC($total_talk_time, 3600);
 
 	$ASCII_text.="| ".sprintf("%40s", "");
 	$ASCII_text.=" | ".sprintf("%10s", "TOTALS:");
 	$ASCII_text.=" | ".sprintf("%5s", $total_calls);	
 	$ASCII_text.=" | ".sprintf("%5s", $total_leads);
 	$ASCII_text.=" | ".sprintf("%8s", $total_contacts);
-	if ($total_leads>0) 
-		{
-		$total_contact_ratio=sprintf("%.2f", (100*$total_contacts/$total_leads));
-		} 
-	else 
-		{
-		$total_contact_ratio="0.00";
-		}
+	$total_contact_ratio=sprintf("%.2f", MathZDC(100*$total_contacts, $total_leads));
 	$ASCII_text.=" | ".sprintf("%12s", $total_contact_ratio)."%";
 	$ASCII_text.=" | ".sprintf("%13s", sec_convert($total_nonpause_time,'H'));
 	$ASCII_text.=" | ".sprintf("%11s", sec_convert($total_system_time,'H'));
 	$ASCII_text.=" | ".sprintf("%9s", sec_convert($total_talk_time,'H'));
 	$ASCII_text.=" | ".sprintf("%5s", $total_sales);
-	if ($total_nonpause_time>0) 
-		{
-		$sales_per_working_hours=sprintf("%.2f", ($total_sales/($total_nonpause_time/3600)));
-		}
-	else
-		{
-		$sales_per_working_hours="0.00";
-		}
+	$sales_per_working_hours=sprintf("%.2f", MathZDC($total_sales, MathZDC($total_nonpause_time, 3600)));
 	$ASCII_text.=" | ".sprintf("%22s", $sales_per_working_hours);
-	if ($total_leads>0) 
-		{
-		$total_sales_ratio=sprintf("%.2f", (100*$total_sales/$total_leads));
-		} 
-	else 
-		{
-		$total_sales_ratio="0.00";
-		}	
+	$total_sales_ratio=sprintf("%.2f", MathZDC(100*$total_sales, $total_leads));
 	$ASCII_text.=" | ".sprintf("%19s", $total_sales_ratio)."%";
-	if ($total_contacts>0) 
-		{
-		$total_sale_contact_ratio=sprintf("%.2f", (100*$total_sales/$total_contacts));
-		} 
-	else 
-		{
-		$total_sale_contact_ratio=0;
-		}
+	$total_sale_contact_ratio=sprintf("%.2f", MathZDC(100*$total_sales, $total_contacts));
 	$ASCII_text.=" | ".sprintf("%22s", $total_sale_contact_ratio)."%";
-	if ($total_talk_hours>0) 
-		{
-		$total_sales_per_hour=sprintf("%.2f", ($total_sales/$total_talk_hours));
-		} 
-	else 
-		{
-		$total_sales_per_hour="0.00";
-		}
-	if ( ($total_calls>0) and ($total_leads>0) )
-		{
-		$total_stcall=sprintf("%.2f", ($total_calls/$total_leads));
-		} 
-	else 
-		{
-		$total_stcall="0.00";
-		}
+	$total_sales_per_hour=sprintf("%.2f", MathZDC($total_sales, $total_talk_hours));
+	$total_stcall=sprintf("%.2f", MathZDC($total_calls, $total_leads));
 	$ASCII_text.=" | ".sprintf("%14s", $total_sales_per_hour);
 	$ASCII_text.=" | ".sprintf("%16s", $total_inc_sales);
 	$ASCII_text.=" | ".sprintf("%15s", $total_cnc_sales);
@@ -1278,22 +1125,22 @@ if ($SUBMIT=="SUBMIT")
 	$CSV_text.="\"\",\"\",\"TOTALS:\",\"$total_calls\",\"$total_leads\",\"$total_contacts\",\"$total_contact_ratio %\",\"".sec_convert($total_nonpause_time,'H')."\",\"".sec_convert($total_system_time,'H')."\",\"".sec_convert($total_talk_time,'H')."\",\"$total_sales\",\"$sales_per_working_hours\",\"$total_sales_ratio\",\"$total_sale_contact_ratio\",\"$total_sales_per_hour\",\"$total_inc_sales\",\"$total_cnc_sales\",\"$total_callbacks\",\"$total_stcall\",\"$total_average_sale_time\",\"$total_average_contact_time\"$CSV_status_text\n";
 	for ($d=0; $d<count($total_graph_stats); $d++) {
 		if ($d==0) {$class=" first";} else if (($d+1)==count($total_graph_stats)) {$class=" last";} else {$class="";}
-		$TOTALCALLS_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$total_graph_stats[$d][1]/$max_totalcalls)."' height='16' />".$total_graph_stats[$d][1]."</td></tr>";
-		$TOTALLEADS_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$total_graph_stats[$d][2]/$max_totalleads)."' height='16' />".$total_graph_stats[$d][2]."</td></tr>";
-		$TOTALCONTACTS_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$total_graph_stats[$d][3]/$max_totalcontacts)."' height='16' />".$total_graph_stats[$d][3]."</td></tr>";
-		$TOTALCONTACTRATIO_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$total_graph_stats[$d][4]/$max_totalcontactratio)."' height='16' />".$total_graph_stats[$d][4]."%</td></tr>";
-		$TOTALSYSTEMTIME_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$total_graph_stats[$d][5]/$max_totalsystemtime)."' height='16' />".sec_convert($total_graph_stats[$d][5], 'H')."</td></tr>";
-		$TOTALTALKTIME_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$total_graph_stats[$d][6]/$max_totaltalktime)."' height='16' />".sec_convert($total_graph_stats[$d][6], 'H')."</td></tr>";
-		$TOTALSALES_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$total_graph_stats[$d][7]/$max_totalsales)."' height='16' />".$total_graph_stats[$d][7]."</td></tr>";
-		$TOTALSALESLEADSRATIO_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$total_graph_stats[$d][8]/$max_totalsalesleadsratio)."' height='16' />".$total_graph_stats[$d][8]."%</td></tr>";
-		$TOTALSALESCONTACTSRATIO_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$total_graph_stats[$d][9]/$max_totalsalescontactsratio)."' height='16' />".$total_graph_stats[$d][9]."%</td></tr>";
-		$TOTALSALESPERHOUR_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$total_graph_stats[$d][10]/$max_totalsalesperhour)."' height='16' />".$total_graph_stats[$d][10]."</td></tr>";
-		$TOTALINCSALES_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$total_graph_stats[$d][11]/$max_totalincsales)."' height='16' />".$total_graph_stats[$d][11]."</td></tr>";
-		$TOTALCANCELLEDSALES_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$total_graph_stats[$d][12]/$max_totalcancelledsales)."' height='16' />".$total_graph_stats[$d][12]."</td></tr>";
-		$TOTALCALLBACKS_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$total_graph_stats[$d][13]/$max_totalcallbacks)."' height='16' />".$total_graph_stats[$d][13]."</td></tr>";
-		$TOTALFIRSTCALLS_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$total_graph_stats[$d][14]/$max_totalfirstcall)."' height='16' />".$total_graph_stats[$d][14]."</td></tr>";
-		$TOTALAVGSALETIME_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$total_graph_stats[$d][15]/$max_totalavgsaletime)."' height='16' />".sec_convert($total_graph_stats[$d][15], 'H')."</td></tr>";
-		$TOTALAVGCONTACTTIME_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$total_graph_stats[$d][16]/$max_totalavgcontacttime)."' height='16' />".sec_convert($total_graph_stats[$d][16], 'H')."</td></tr>";			
+		$TOTALCALLS_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$total_graph_stats[$d][1], $max_totalcalls))."' height='16' />".$total_graph_stats[$d][1]."</td></tr>";
+		$TOTALLEADS_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$total_graph_stats[$d][2], $max_totalleads))."' height='16' />".$total_graph_stats[$d][2]."</td></tr>";
+		$TOTALCONTACTS_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$total_graph_stats[$d][3], $max_totalcontacts))."' height='16' />".$total_graph_stats[$d][3]."</td></tr>";
+		$TOTALCONTACTRATIO_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$total_graph_stats[$d][4], $max_totalcontactratio))."' height='16' />".$total_graph_stats[$d][4]."%</td></tr>";
+		$TOTALSYSTEMTIME_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$total_graph_stats[$d][5], $max_totalsystemtime))."' height='16' />".sec_convert($total_graph_stats[$d][5], 'H')."</td></tr>";
+		$TOTALTALKTIME_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$total_graph_stats[$d][6], $max_totaltalktime))."' height='16' />".sec_convert($total_graph_stats[$d][6], 'H')."</td></tr>";
+		$TOTALSALES_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$total_graph_stats[$d][7], $max_totalsales))."' height='16' />".$total_graph_stats[$d][7]."</td></tr>";
+		$TOTALSALESLEADSRATIO_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$total_graph_stats[$d][8], $max_totalsalesleadsratio))."' height='16' />".$total_graph_stats[$d][8]."%</td></tr>";
+		$TOTALSALESCONTACTSRATIO_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$total_graph_stats[$d][9], $max_totalsalescontactsratio))."' height='16' />".$total_graph_stats[$d][9]."%</td></tr>";
+		$TOTALSALESPERHOUR_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$total_graph_stats[$d][10], $max_totalsalesperhour))."' height='16' />".$total_graph_stats[$d][10]."</td></tr>";
+		$TOTALINCSALES_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$total_graph_stats[$d][11], $max_totalincsales))."' height='16' />".$total_graph_stats[$d][11]."</td></tr>";
+		$TOTALCANCELLEDSALES_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$total_graph_stats[$d][12], $max_totalcancelledsales))."' height='16' />".$total_graph_stats[$d][12]."</td></tr>";
+		$TOTALCALLBACKS_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$total_graph_stats[$d][13], $max_totalcallbacks))."' height='16' />".$total_graph_stats[$d][13]."</td></tr>";
+		$TOTALFIRSTCALLS_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$total_graph_stats[$d][14], $max_totalfirstcall))."' height='16' />".$total_graph_stats[$d][14]."</td></tr>";
+		$TOTALAVGSALETIME_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$total_graph_stats[$d][15], $max_totalavgsaletime))."' height='16' />".sec_convert($total_graph_stats[$d][15], 'H')."</td></tr>";
+		$TOTALAVGCONTACTTIME_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$total_graph_stats[$d][16], $max_totalavgcontacttime))."' height='16' />".sec_convert($total_graph_stats[$d][16], 'H')."</td></tr>";			
 
 		for ($e=0; $e<count($call_status); $e++) {
 			$Sstatus=$call_status[$e];
@@ -1301,7 +1148,7 @@ if ($SUBMIT=="SUBMIT")
 			$max_varname="max_total".$Sstatus;
 			# $max.= "<!-- $max_varname => ".$$max_varname." //-->\n";
 			
-			$$varname.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$total_graph_stats[$d][($e+17)]/$$max_varname)."' height='16' />".$total_graph_stats[$d][($e+17)]."</td></tr>";
+			$$varname.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$total_graph_stats[$d][($e+17)], $$max_varname))."' height='16' />".$total_graph_stats[$d][($e+17)]."</td></tr>";
 		}
 
 	}

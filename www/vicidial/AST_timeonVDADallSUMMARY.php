@@ -1,7 +1,7 @@
 <?php 
 # AST_timeonVDADallSUMMARY.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Summary for all campaigns live real-time stats for the VICIDIAL Auto-Dialer all servers
 #
@@ -26,6 +26,7 @@
 # 130610-1120 - Finalized changing of all ereg instances to preg
 # 130620-2256 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-2006 - Changed to mysqli PHP functions
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 require("dbconnect_mysqli.php");
@@ -341,12 +342,8 @@ $VSCagentcust =		$row[18];
 $VSCagentacw =		$row[19];
 $VSCagentpause =	$row[20];
 
-if ( ($diffONEMIN != 0) and ($agentsONEMIN > 0) )
-	{
-	$diffpctONEMIN = ( ($diffONEMIN / $agentsONEMIN) * 100);
-	$diffpctONEMIN = sprintf("%01.2f", $diffpctONEMIN);
-	}
-else {$diffpctONEMIN = '0.00';}
+$diffpctONEMIN = ( MathZDC($diffONEMIN, $agentsONEMIN) * 100);
+$diffpctONEMIN = sprintf("%01.2f", $diffpctONEMIN);
 
 $stmt="select sum(local_trunk_shortage) from vicidial_campaign_server_stats where campaign_id='" . mysqli_real_escape_string($link, $group) . "';";
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -426,41 +423,21 @@ $CSV_text.="\"$VSCcat1:\",\"$VSCcat1tally\",\"$VSCcat2:\",\"$VSCcat2tally\",\"$V
 
 if ($VSCagentcalls > 0)
 	{
-	if ( ($VSCagentcalls > 0) and ($VSCagentpause > 0) )
-		{
-		$avgpauseTODAY = ($VSCagentpause / $VSCagentcalls);
-		$avgpauseTODAY = round($avgpauseTODAY, 0);
-		$avgpauseTODAY = sprintf("%01.0f", $avgpauseTODAY);
-		}
-	else
-		{$avgpauseTODAY=0;}
+	$avgpauseTODAY = MathZDC($VSCagentpause, $VSCagentcalls);
+	$avgpauseTODAY = round($avgpauseTODAY, 0);
+	$avgpauseTODAY = sprintf("%01.0f", $avgpauseTODAY);
 
-	if ( ($VSCagentcalls > 0) and ($VSCagentwait > 0) )
-		{
-		$avgwaitTODAY = ($VSCagentwait / $VSCagentcalls);
-		$avgwaitTODAY = round($avgwaitTODAY, 0);
-		$avgwaitTODAY = sprintf("%01.0f", $avgwaitTODAY);
-		}
-	else
-		{$avgwaitTODAY=0;}
+	$avgwaitTODAY = MathZDC($VSCagentwait, $VSCagentcalls);
+	$avgwaitTODAY = round($avgwaitTODAY, 0);
+	$avgwaitTODAY = sprintf("%01.0f", $avgwaitTODAY);
 
-	if ( ($VSCagentcalls > 0) and ($VSCagentcust > 0) )
-		{
-		$avgcustTODAY = ($VSCagentcust / $VSCagentcalls);
-		$avgcustTODAY = round($avgcustTODAY, 0);
-		$avgcustTODAY = sprintf("%01.0f", $avgcustTODAY);
-		}
-	else
-		{$avgcustTODAY=0;}
+	$avgcustTODAY = MathZDC($VSCagentcust, $VSCagentcalls);
+	$avgcustTODAY = round($avgcustTODAY, 0);
+	$avgcustTODAY = sprintf("%01.0f", $avgcustTODAY);
 
-	if ( ($VSCagentcalls > 0) and ($VSCagentacw > 0) )
-		{
-		$avgacwTODAY = ($VSCagentacw / $VSCagentcalls);
-		$avgacwTODAY = round($avgacwTODAY, 0);
-		$avgacwTODAY = sprintf("%01.0f", $avgacwTODAY);
-		}
-	else
-		{$avgacwTODAY=0;}
+	$avgacwTODAY = MathZDC($VSCagentacw, $VSCagentcalls);
+	$avgacwTODAY = round($avgacwTODAY, 0);
+	$avgacwTODAY = sprintf("%01.0f", $avgacwTODAY);
 
 	$MAIN.="<TR>";
 	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>AGENT AVG WAIT:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgwaitTODAY &nbsp;</TD>";
@@ -593,7 +570,7 @@ $talking_to_print = mysqli_num_rows($rslt);
 		else
 			{$call_time_S = ($STARTtime - $row[5]);}
 
-		$call_time_M = ($call_time_S / 60);
+		$call_time_M = MathZDC($call_time_S, 60);
 		$call_time_M = round($call_time_M, 2);
 		$call_time_M_int = intval("$call_time_M");
 		$call_time_SEC = ($call_time_M - $call_time_M_int);

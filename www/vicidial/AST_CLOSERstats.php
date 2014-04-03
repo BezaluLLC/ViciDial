@@ -42,6 +42,7 @@
 # 130704-0936 - Fixed issue #675
 # 130901-0816 - Changed to mysqli PHP functions
 # 140108-0746 - Added webserver and hostname to report logging
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
@@ -646,13 +647,8 @@ if ($group_ct > 1)
 		$gTOTALcalls =	sprintf("%7s", $row[0]);
 		$gIVRcalls =	sprintf("%7s", $rowx[0]);
 		$gDROPcalls =	sprintf("%7s", $rowy[0]);
-		if ( ($gDROPcalls < 1) or ($gTOTALcalls < 1) )
-			{$gDROPpercent = '0';}
-		else
-			{
-			$gDROPpercent = (($gDROPcalls / $gTOTALcalls) * 100);
-			$gDROPpercent = round($gDROPpercent, 2);
-			}
+		$gDROPpercent = (MathZDC($gDROPcalls, $gTOTALcalls) * 100);
+		$gDROPpercent = round($gDROPpercent, 2);
 		$gDROPpercent =	sprintf("%6s", $gDROPpercent);
 
 		$ASCII_text.="| $groupDISPLAY | $gTOTALcalls | $gDROPcalls | $gDROPpercent% | $gIVRcalls |\n";
@@ -679,7 +675,7 @@ if ($group_ct > 1)
 			if ($graph_data_ary[$i][1]>$max_value) {$max_value=$graph_data_ary[$i][1];}
 			if ($graph_data_ary[$i][1]>0) {$w++;}
 		}
-		$scale = $graph_height / $max_value;
+		$scale = MathZDC($graph_height, $max_value);
 
 
 		$GRAPH_text.="<table cellspacing='0' cellpadding='0'><caption align='top'>MULTI-GROUP BREAKDOWN</caption><tr height='25' valign='top'><th class='thgraph' scope='col'>GROUP</th><th class='thgraph' scope='col'>IVRS <img src='./images/bar_green.png' width='10' height='10'> / DROPS <img src='./images/bar_blue.png' width='10' height='10'> / CALLS <img src='./images/bar.png' width='10' height='10'></th></tr>";
@@ -688,12 +684,12 @@ if ($group_ct > 1)
 				$graph_data_ary[$d][0]=preg_replace('/\s/', "", $graph_data_ary[$d][0]); 
 				$GRAPH_text.="  <tr><td class='chart_td' width='50'>".$graph_data_ary[$d][0]."<BR>".$graph_data_ary[$d][3]."% drops<BR>&nbsp;</td><td nowrap class='chart_td value' width='600' valign='top'>\n";
 				if ($graph_data_ary[$d][1]>0) {
-					$GRAPH_text.="<ul class='overlap_barGraph'><li class=\"p1\" style=\"height: 12px; left: 0px; width: ".round(600*$graph_data_ary[$d][1]/$max_value)."px\"><font style='background-color: #900'>".$graph_data_ary[$d][1]."</font></li>";
+					$GRAPH_text.="<ul class='overlap_barGraph'><li class=\"p1\" style=\"height: 12px; left: 0px; width: ".round(MathZDC(600*$graph_data_ary[$d][1], $max_value))."px\"><font style='background-color: #900'>".$graph_data_ary[$d][1]."</font></li>";
 					if ($graph_data_ary[$d][2]>0) {
-						$GRAPH_text.="<li class=\"p2\" style=\"height: 12px; left: 0px; width: ".round(600*$graph_data_ary[$d][2]/$max_value)."px\"><font style='background-color: #009'>".$graph_data_ary[$d][2]."</font></li>";
+						$GRAPH_text.="<li class=\"p2\" style=\"height: 12px; left: 0px; width: ".round(MathZDC(600*$graph_data_ary[$d][2], $max_value))."px\"><font style='background-color: #009'>".$graph_data_ary[$d][2]."</font></li>";
 					}
 					if ($graph_data_ary[$d][4]>0) {
-						$GRAPH_text.="<li class=\"p3\" style=\"height: 12px; left: 0px; width: ".round(600*$graph_data_ary[$d][4]/$max_value)."px\"><font style='background-color: #090'>".$graph_data_ary[$d][4]."</font></li>";
+						$GRAPH_text.="<li class=\"p3\" style=\"height: 12px; left: 0px; width: ".round(MathZDC(600*$graph_data_ary[$d][4], $max_value))."px\"><font style='background-color: #090'>".$graph_data_ary[$d][4]."</font></li>";
 					}
 					$GRAPH_text.="</ul>\n";
 				} else {
@@ -748,30 +744,19 @@ $rowx=mysqli_fetch_row($rslt);
 $TOTALcalls =	sprintf("%10s", $row[0]);
 $IVRcalls =	sprintf("%10s", $rowx[0]);
 $TOTALsec =		$row[1];
-if ( ($row[0] < 1) or ($TOTALsec < 1) )
-	{$average_call_seconds = '         0';}
-else
-	{
-	$average_call_seconds = ($TOTALsec / $row[0]);
-	$average_call_seconds = round($average_call_seconds, 0);
-	$average_call_seconds =	sprintf("%10s", $average_call_seconds);
-	}
+
+$average_call_seconds = MathZDC($TOTALsec, $row[0]);
+$average_call_seconds = round($average_call_seconds, 0);
+$average_call_seconds =	sprintf("%10s", $average_call_seconds);
+
 $ANSWEREDcalls  =	sprintf("%10s", $rowy[0]);
-if ( ($ANSWEREDcalls < 1) or ($TOTALcalls < 1) )
-	{$ANSWEREDpercent = '0';}
-else
-	{
-	$ANSWEREDpercent = (($ANSWEREDcalls / $TOTALcalls) * 100);
-	$ANSWEREDpercent = round($ANSWEREDpercent, 0);
-	}
-if ( ($rowy[0] < 1) or ($ANSWEREDcalls < 1) )
-	{$average_answer_seconds = '         0';}
-else
-	{
-	$average_answer_seconds = ($rowy[1] / $rowy[0]);
-	$average_answer_seconds = round($average_answer_seconds, 2);
-	$average_answer_seconds =	sprintf("%10s", $average_answer_seconds);
-	}
+
+$ANSWEREDpercent = (MathZDC($ANSWEREDcalls, $TOTALcalls) * 100);
+$ANSWEREDpercent = round($ANSWEREDpercent, 0);
+
+$average_answer_seconds = MathZDC($rowy[1], $rowy[0]);
+$average_answer_seconds = round($average_answer_seconds, 2);
+$average_answer_seconds =	sprintf("%10s", $average_answer_seconds);
 
 if ($EMAIL=='Y')
 	{
@@ -817,31 +802,15 @@ if ($DB) {$MAIN.="$stmt\n";}
 $row=mysqli_fetch_row($rslt);
 
 $DROPcalls =	sprintf("%10s", $row[0]);
-if ( ($DROPcalls < 1) or ($TOTALcalls < 1) )
-	{$DROPpercent = '0';}
-else
-	{
-	$DROPpercent = (($DROPcalls / $TOTALcalls) * 100);
-	$DROPpercent = round($DROPpercent, 0);
-	}
+$DROPpercent = (MathZDC($DROPcalls, $TOTALcalls) * 100);
+$DROPpercent = round($DROPpercent, 0);
 
-if ( ($row[0] < 1) or ($row[1] < 1) )
-	{
-	$average_hold_seconds = '         0';
-	}
-else
-	{
-	$average_hold_seconds = ($row[1] / $row[0]);
-	$average_hold_seconds = round($average_hold_seconds, 0);
-	$average_hold_seconds =	sprintf("%10s", $average_hold_seconds);
-	}
-if ( ($ANSWEREDcalls < 1) or ($DROPcalls < 1) )
-	{$DROP_ANSWEREDpercent = '0';}
-else
-	{
-	$DROP_ANSWEREDpercent = (($DROPcalls / $ANSWEREDcalls) * 100);
-	$DROP_ANSWEREDpercent = round($DROP_ANSWEREDpercent, 0);
-	}
+$average_hold_seconds = MathZDC($row[1], $row[0]);
+$average_hold_seconds = round($average_hold_seconds, 0);
+$average_hold_seconds =	sprintf("%10s", $average_hold_seconds);
+
+$DROP_ANSWEREDpercent = (MathZDC($DROPcalls, $ANSWEREDcalls) * 100);
+$DROP_ANSWEREDpercent = round($DROP_ANSWEREDpercent, 0);
 
 if ($EMAIL=='Y')
 	{
@@ -883,15 +852,12 @@ if (strlen($group_SQL)>3)
 		$row=mysqli_fetch_row($rslt);
 		$answer_sec_pct_rt_stat_two = $row[0];
 
-		if ( ($ANSWEREDcalls > 0) and ($answer_sec_pct_rt_stat_one > 0) and ($answer_sec_pct_rt_stat_two > 0) )
-			{
-			$PCTanswer_sec_pct_rt_stat_one = (($answer_sec_pct_rt_stat_one / $ANSWEREDcalls) * 100);
-			$PCTanswer_sec_pct_rt_stat_one = round($PCTanswer_sec_pct_rt_stat_one, 0);
-			#$PCTanswer_sec_pct_rt_stat_one = sprintf("%10s", $PCTanswer_sec_pct_rt_stat_one);
-			$PCTanswer_sec_pct_rt_stat_two = (($answer_sec_pct_rt_stat_two / $ANSWEREDcalls) * 100);
-			$PCTanswer_sec_pct_rt_stat_two = round($PCTanswer_sec_pct_rt_stat_two, 0);
-			#$PCTanswer_sec_pct_rt_stat_two = sprintf("%10s", $PCTanswer_sec_pct_rt_stat_two);
-			}
+		$PCTanswer_sec_pct_rt_stat_one = (MathZDC($answer_sec_pct_rt_stat_one, $ANSWEREDcalls) * 100);
+		$PCTanswer_sec_pct_rt_stat_one = round($PCTanswer_sec_pct_rt_stat_one, 0);
+		#$PCTanswer_sec_pct_rt_stat_one = sprintf("%10s", $PCTanswer_sec_pct_rt_stat_one);
+		$PCTanswer_sec_pct_rt_stat_two = (MathZDC($answer_sec_pct_rt_stat_two, $ANSWEREDcalls) * 100);
+		$PCTanswer_sec_pct_rt_stat_two = round($PCTanswer_sec_pct_rt_stat_two, 0);
+		#$PCTanswer_sec_pct_rt_stat_two = sprintf("%10s", $PCTanswer_sec_pct_rt_stat_two);
 		}
 	}
 
@@ -981,31 +947,16 @@ if ($DB) {$MAIN.="$stmt\n";}
 $row=mysqli_fetch_row($rslt);
 
 $QUEUEcalls =	sprintf("%10s", $row[0]);
-if ( ($QUEUEcalls < 1) or ($TOTALcalls < 1) )
-	{$QUEUEpercent = '0';}
-else
-	{
-	$QUEUEpercent = (($QUEUEcalls / $TOTALcalls) * 100);
-	$QUEUEpercent = round($QUEUEpercent, 0);
-	}
+$QUEUEpercent = (MathZDC($QUEUEcalls, $TOTALcalls) * 100);
+$QUEUEpercent = round($QUEUEpercent, 0);
 
-if ( ($row[0] < 1) or ($row[1] < 1) )
-	{$average_queue_seconds = '         0';}
-else
-	{
-	$average_queue_seconds = ($row[1] / $row[0]);
-	$average_queue_seconds = round($average_queue_seconds, 2);
-	$average_queue_seconds = sprintf("%10.2f", $average_queue_seconds);
-	}
+$average_queue_seconds = MathZDC($row[1], $row[0]);
+$average_queue_seconds = round($average_queue_seconds, 2);
+$average_queue_seconds = sprintf("%10.2f", $average_queue_seconds);
 
-if ( ($TOTALcalls < 1) or ($row[1] < 1) )
-	{$average_total_queue_seconds = '         0';}
-else
-	{
-	$average_total_queue_seconds = ($row[1] / $TOTALcalls);
-	$average_total_queue_seconds = round($average_total_queue_seconds, 2);
-	$average_total_queue_seconds = sprintf("%10.2f", $average_total_queue_seconds);
-	}
+$average_total_queue_seconds = MathZDC($row[1], $TOTALcalls);
+$average_total_queue_seconds = round($average_total_queue_seconds, 2);
+$average_total_queue_seconds = sprintf("%10.2f", $average_total_queue_seconds);
 
 if ($EMAIL=='Y')
 	{
@@ -1396,53 +1347,53 @@ $pad_0=0; $pad_5=0; $pad10=0; $pad15=0; $pad20=0; $pad25=0; $pad30=0; $pad35=0; 
 $pCad_0=0; $pCad_5=0; $pCad10=0; $pCad15=0; $pCad20=0; $pCad25=0; $pCad30=0; $pCad35=0; $pCad40=0; $pCad45=0; $pCad50=0; $pCad55=0; $pCad60=0; $pCad90=0; $pCad99=0; 
 if ( ($BDansweredCALLS > 0) and ($TOTALcalls > 0) )
 	{
-	if ($ad_0 > 0) {$pad_0 = (($ad_0 / $TOTALcalls) * 100);	$pad_0 = round($pad_0, 0);}
-	if ($ad_5 > 0) {$pad_5 = (($ad_5 / $TOTALcalls) * 100);	$pad_5 = round($pad_5, 0);}
-	if ($ad10 > 0) {$pad10 = (($ad10 / $TOTALcalls) * 100);	$pad10 = round($pad10, 0);}
-	if ($ad15 > 0) {$pad15 = (($ad15 / $TOTALcalls) * 100);	$pad15 = round($pad15, 0);}
-	if ($ad20 > 0) {$pad20 = (($ad20 / $TOTALcalls) * 100);	$pad20 = round($pad20, 0);}
-	if ($ad25 > 0) {$pad25 = (($ad25 / $TOTALcalls) * 100);	$pad25 = round($pad25, 0);}
-	if ($ad30 > 0) {$pad30 = (($ad30 / $TOTALcalls) * 100);	$pad30 = round($pad30, 0);}
-	if ($ad35 > 0) {$pad35 = (($ad35 / $TOTALcalls) * 100);	$pad35 = round($pad35, 0);}
-	if ($ad40 > 0) {$pad40 = (($ad40 / $TOTALcalls) * 100);	$pad40 = round($pad40, 0);}
-	if ($ad45 > 0) {$pad45 = (($ad45 / $TOTALcalls) * 100);	$pad45 = round($pad45, 0);}
-	if ($ad50 > 0) {$pad50 = (($ad50 / $TOTALcalls) * 100);	$pad50 = round($pad50, 0);}
-	if ($ad55 > 0) {$pad55 = (($ad55 / $TOTALcalls) * 100);	$pad55 = round($pad55, 0);}
-	if ($ad60 > 0) {$pad60 = (($ad60 / $TOTALcalls) * 100);	$pad60 = round($pad60, 0);}
-	if ($ad90 > 0) {$pad90 = (($ad90 / $TOTALcalls) * 100);	$pad90 = round($pad90, 0);}
-	if ($ad99 > 0) {$pad99 = (($ad99 / $TOTALcalls) * 100);	$pad99 = round($pad99, 0);}
+	$pad_0 = (MathZDC($ad_0, $TOTALcalls) * 100);	$pad_0 = round($pad_0, 0);
+	$pad_5 = (MathZDC($ad_5, $TOTALcalls) * 100);	$pad_5 = round($pad_5, 0);
+	$pad10 = (MathZDC($ad10, $TOTALcalls) * 100);	$pad10 = round($pad10, 0);
+	$pad15 = (MathZDC($ad15, $TOTALcalls) * 100);	$pad15 = round($pad15, 0);
+	$pad20 = (MathZDC($ad20, $TOTALcalls) * 100);	$pad20 = round($pad20, 0);
+	$pad25 = (MathZDC($ad25, $TOTALcalls) * 100);	$pad25 = round($pad25, 0);
+	$pad30 = (MathZDC($ad30, $TOTALcalls) * 100);	$pad30 = round($pad30, 0);
+	$pad35 = (MathZDC($ad35, $TOTALcalls) * 100);	$pad35 = round($pad35, 0);
+	$pad40 = (MathZDC($ad40, $TOTALcalls) * 100);	$pad40 = round($pad40, 0);
+	$pad45 = (MathZDC($ad45, $TOTALcalls) * 100);	$pad45 = round($pad45, 0);
+	$pad50 = (MathZDC($ad50, $TOTALcalls) * 100);	$pad50 = round($pad50, 0);
+	$pad55 = (MathZDC($ad55, $TOTALcalls) * 100);	$pad55 = round($pad55, 0);
+	$pad60 = (MathZDC($ad60, $TOTALcalls) * 100);	$pad60 = round($pad60, 0);
+	$pad90 = (MathZDC($ad90, $TOTALcalls) * 100);	$pad90 = round($pad90, 0);
+	$pad99 = (MathZDC($ad99, $TOTALcalls) * 100);	$pad99 = round($pad99, 0);
 
-	if ($Cad_0 > 0) {$pCad_0 = (($Cad_0 / $TOTALcalls) * 100);	$pCad_0 = round($pCad_0, 0);}
-	if ($Cad_5 > 0) {$pCad_5 = (($Cad_5 / $TOTALcalls) * 100);	$pCad_5 = round($pCad_5, 0);}
-	if ($Cad10 > 0) {$pCad10 = (($Cad10 / $TOTALcalls) * 100);	$pCad10 = round($pCad10, 0);}
-	if ($Cad15 > 0) {$pCad15 = (($Cad15 / $TOTALcalls) * 100);	$pCad15 = round($pCad15, 0);}
-	if ($Cad20 > 0) {$pCad20 = (($Cad20 / $TOTALcalls) * 100);	$pCad20 = round($pCad20, 0);}
-	if ($Cad25 > 0) {$pCad25 = (($Cad25 / $TOTALcalls) * 100);	$pCad25 = round($pCad25, 0);}
-	if ($Cad30 > 0) {$pCad30 = (($Cad30 / $TOTALcalls) * 100);	$pCad30 = round($pCad30, 0);}
-	if ($Cad35 > 0) {$pCad35 = (($Cad35 / $TOTALcalls) * 100);	$pCad35 = round($pCad35, 0);}
-	if ($Cad40 > 0) {$pCad40 = (($Cad40 / $TOTALcalls) * 100);	$pCad40 = round($pCad40, 0);}
-	if ($Cad45 > 0) {$pCad45 = (($Cad45 / $TOTALcalls) * 100);	$pCad45 = round($pCad45, 0);}
-	if ($Cad50 > 0) {$pCad50 = (($Cad50 / $TOTALcalls) * 100);	$pCad50 = round($pCad50, 0);}
-	if ($Cad55 > 0) {$pCad55 = (($Cad55 / $TOTALcalls) * 100);	$pCad55 = round($pCad55, 0);}
-	if ($Cad60 > 0) {$pCad60 = (($Cad60 / $TOTALcalls) * 100);	$pCad60 = round($pCad60, 0);}
-	if ($Cad90 > 0) {$pCad90 = (($Cad90 / $TOTALcalls) * 100);	$pCad90 = round($pCad90, 0);}
-	if ($Cad99 > 0) {$pCad99 = (($Cad99 / $TOTALcalls) * 100);	$pCad99 = round($pCad99, 0);}
+	$pCad_0 = (MathZDC($Cad_0, $TOTALcalls) * 100);	$pCad_0 = round($pCad_0, 0);
+	$pCad_5 = (MathZDC($Cad_5, $TOTALcalls) * 100);	$pCad_5 = round($pCad_5, 0);
+	$pCad10 = (MathZDC($Cad10, $TOTALcalls) * 100);	$pCad10 = round($pCad10, 0);
+	$pCad15 = (MathZDC($Cad15, $TOTALcalls) * 100);	$pCad15 = round($pCad15, 0);
+	$pCad20 = (MathZDC($Cad20, $TOTALcalls) * 100);	$pCad20 = round($pCad20, 0);
+	$pCad25 = (MathZDC($Cad25, $TOTALcalls) * 100);	$pCad25 = round($pCad25, 0);
+	$pCad30 = (MathZDC($Cad30, $TOTALcalls) * 100);	$pCad30 = round($pCad30, 0);
+	$pCad35 = (MathZDC($Cad35, $TOTALcalls) * 100);	$pCad35 = round($pCad35, 0);
+	$pCad40 = (MathZDC($Cad40, $TOTALcalls) * 100);	$pCad40 = round($pCad40, 0);
+	$pCad45 = (MathZDC($Cad45, $TOTALcalls) * 100);	$pCad45 = round($pCad45, 0);
+	$pCad50 = (MathZDC($Cad50, $TOTALcalls) * 100);	$pCad50 = round($pCad50, 0);
+	$pCad55 = (MathZDC($Cad55, $TOTALcalls) * 100);	$pCad55 = round($pCad55, 0);
+	$pCad60 = (MathZDC($Cad60, $TOTALcalls) * 100);	$pCad60 = round($pCad60, 0);
+	$pCad90 = (MathZDC($Cad90, $TOTALcalls) * 100);	$pCad90 = round($pCad90, 0);
+	$pCad99 = (MathZDC($Cad99, $TOTALcalls) * 100);	$pCad99 = round($pCad99, 0);
 
-	if ($Cad_0 > 0) {$ApCad_0 = (($Cad_0 / $BDansweredCALLS) * 100);	$ApCad_0 = round($ApCad_0, 0);}
-	if ($Cad_5 > 0) {$ApCad_5 = (($Cad_5 / $BDansweredCALLS) * 100);	$ApCad_5 = round($ApCad_5, 0);}
-	if ($Cad10 > 0) {$ApCad10 = (($Cad10 / $BDansweredCALLS) * 100);	$ApCad10 = round($ApCad10, 0);}
-	if ($Cad15 > 0) {$ApCad15 = (($Cad15 / $BDansweredCALLS) * 100);	$ApCad15 = round($ApCad15, 0);}
-	if ($Cad20 > 0) {$ApCad20 = (($Cad20 / $BDansweredCALLS) * 100);	$ApCad20 = round($ApCad20, 0);}
-	if ($Cad25 > 0) {$ApCad25 = (($Cad25 / $BDansweredCALLS) * 100);	$ApCad25 = round($ApCad25, 0);}
-	if ($Cad30 > 0) {$ApCad30 = (($Cad30 / $BDansweredCALLS) * 100);	$ApCad30 = round($ApCad30, 0);}
-	if ($Cad35 > 0) {$ApCad35 = (($Cad35 / $BDansweredCALLS) * 100);	$ApCad35 = round($ApCad35, 0);}
-	if ($Cad40 > 0) {$ApCad40 = (($Cad40 / $BDansweredCALLS) * 100);	$ApCad40 = round($ApCad40, 0);}
-	if ($Cad45 > 0) {$ApCad45 = (($Cad45 / $BDansweredCALLS) * 100);	$ApCad45 = round($ApCad45, 0);}
-	if ($Cad50 > 0) {$ApCad50 = (($Cad50 / $BDansweredCALLS) * 100);	$ApCad50 = round($ApCad50, 0);}
-	if ($Cad55 > 0) {$ApCad55 = (($Cad55 / $BDansweredCALLS) * 100);	$ApCad55 = round($ApCad55, 0);}
-	if ($Cad60 > 0) {$ApCad60 = (($Cad60 / $BDansweredCALLS) * 100);	$ApCad60 = round($ApCad60, 0);}
-	if ($Cad90 > 0) {$ApCad90 = (($Cad90 / $BDansweredCALLS) * 100);	$ApCad90 = round($ApCad90, 0);}
-	if ($Cad99 > 0) {$ApCad99 = (($Cad99 / $BDansweredCALLS) * 100);	$ApCad99 = round($ApCad99, 0);}
+	$ApCad_0 = (MathZDC($Cad_0, $BDansweredCALLS) * 100);	$ApCad_0 = round($ApCad_0, 0);
+	$ApCad_5 = (MathZDC($Cad_5, $BDansweredCALLS) * 100);	$ApCad_5 = round($ApCad_5, 0);
+	$ApCad10 = (MathZDC($Cad10, $BDansweredCALLS) * 100);	$ApCad10 = round($ApCad10, 0);
+	$ApCad15 = (MathZDC($Cad15, $BDansweredCALLS) * 100);	$ApCad15 = round($ApCad15, 0);
+	$ApCad20 = (MathZDC($Cad20, $BDansweredCALLS) * 100);	$ApCad20 = round($ApCad20, 0);
+	$ApCad25 = (MathZDC($Cad25, $BDansweredCALLS) * 100);	$ApCad25 = round($ApCad25, 0);
+	$ApCad30 = (MathZDC($Cad30, $BDansweredCALLS) * 100);	$ApCad30 = round($ApCad30, 0);
+	$ApCad35 = (MathZDC($Cad35, $BDansweredCALLS) * 100);	$ApCad35 = round($ApCad35, 0);
+	$ApCad40 = (MathZDC($Cad40, $BDansweredCALLS) * 100);	$ApCad40 = round($ApCad40, 0);
+	$ApCad45 = (MathZDC($Cad45, $BDansweredCALLS) * 100);	$ApCad45 = round($ApCad45, 0);
+	$ApCad50 = (MathZDC($Cad50, $BDansweredCALLS) * 100);	$ApCad50 = round($ApCad50, 0);
+	$ApCad55 = (MathZDC($Cad55, $BDansweredCALLS) * 100);	$ApCad55 = round($ApCad55, 0);
+	$ApCad60 = (MathZDC($Cad60, $BDansweredCALLS) * 100);	$ApCad60 = round($ApCad60, 0);
+	$ApCad90 = (MathZDC($Cad90, $BDansweredCALLS) * 100);	$ApCad90 = round($ApCad90, 0);
+	$ApCad99 = (MathZDC($Cad99, $BDansweredCALLS) * 100);	$ApCad99 = round($ApCad99, 0);
 	}
 
 ### Format variables
@@ -1684,7 +1635,7 @@ if ($report_display_type=="HTML")
 		if ($i==0) {$class=" first";} else if (($i+1)==count($ct_ary)) {$class=" last";} else {$class="";}
 		$GRAPH_text.="  <tr>\n";
 		$GRAPH_text.="	<td class=\"chart_td$class\">".$ct_ary[$i][1]."</td>\n";
-		$GRAPH_text.="	<td class=\"chart_td value$class\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(200*$ct_ary[$i][0]/$high_ct)."\" height=\"16\" />".$ct_ary[$i][0]."</td>\n";
+		$GRAPH_text.="	<td class=\"chart_td value$class\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(200*$ct_ary[$i][0], $high_ct))."\" height=\"16\" />".$ct_ary[$i][0]."</td>\n";
 		$GRAPH_text.="  </tr>\n";
 	}
 	$GRAPH_text.="  <tr>\n";
@@ -1760,14 +1711,11 @@ while ($i < $statuses_to_print)
 		}
 
 	$TOTALcalls =	($TOTALcalls + $row[0]);
-	if ( ($STATUScount < 1) or ($TOTALsec < 1) )
-		{$STATUSrate = 0;}
-	else
-		{$STATUSrate =	($STATUScount / ($TOTALsec / 3600) );}
+	$STATUSrate =	(MathZDC($STATUScount, MathZDC($TOTALsec, 3600)) );
 	$STATUSrate =	sprintf("%.2f", $STATUSrate);
 
 	$STATUShours =		sec_convert($row[2],'H'); 
-	$STATUSavg_sec =	($row[2] / $STATUScount); 
+	$STATUSavg_sec =	MathZDC($row[2], $STATUScount); 
 	$STATUSavg =		sec_convert($STATUSavg_sec,'H'); 
 
 	if ($row[0]>$max_calls) {$max_calls=$row[0];}
@@ -1817,14 +1765,11 @@ if ($TOTALcalls < 1)
 	}
 else
 	{
-	if ( ($TOTALcalls < 1) or ($TOTALsec < 1) )
-		{$TOTALrate = 0;}
-	else
-		{$TOTALrate =	($TOTALcalls / ($TOTALsec / 3600) );}
+	$TOTALrate =	MathZDC($TOTALcalls, MathZDC($TOTALsec, 3600) );
 	$TOTALrate =	sprintf("%.2f", $TOTALrate);
 
 	$TOTALhours =		sec_convert($TOTALsec,'H'); 
-	$TOTALavg_sec =		($TOTALsec / $TOTALcalls);
+	$TOTALavg_sec =		MathZDC($TOTALsec, $TOTALcalls);
 	$TOTALavg =			sec_convert($TOTALavg_sec,'H'); 
 	}
 $TOTALcalls =	sprintf("%10s", $TOTALcalls);
@@ -1843,10 +1788,10 @@ $ASCII_text.="+------------------------------------------------------+----------
 
 	for ($d=0; $d<count($graph_stats); $d++) {
 		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-		$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
-		$TOTALTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][2]/$max_total_time)."' height='16' />".sec_convert($graph_stats[$d][2], 'H')."</td></tr>";
-		$AVGTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][3]/$max_avg_time)."' height='16' />".sec_convert($graph_stats[$d][3], 'H')."</td></tr>";
-		$CALLSHOUR_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][4]/$max_callshr)."' height='16' />".$graph_stats[$d][4]."</td></tr>";
+		$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][1], $max_calls))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+		$TOTALTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][2], $max_total_time))."' height='16' />".sec_convert($graph_stats[$d][2], 'H')."</td></tr>";
+		$AVGTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][3], $max_avg_time))."' height='16' />".sec_convert($graph_stats[$d][3], 'H')."</td></tr>";
+		$CALLSHOUR_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][4] ,$max_callshr))."' height='16' />".$graph_stats[$d][4]."</td></tr>";
 	}
 	$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTALcalls)."</th></tr></table>";
 	$TOTALTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTALhours)."</th></tr></table>";
@@ -1947,7 +1892,7 @@ if ($report_display_type=="HTML")
 	$GRAPH_text.="  </tr>\n";
 	for ($i=0; $i<count($ct_ary); $i++) {
 		if ($i==0) {$class=" first";} else if (($i+1)==count($ct_ary)) {$class=" last";} else {$class="";}
-		if ($high_ct>0) {$bar_width=round((300*$ct_ary[$i][0])/$high_ct);} else {$bar_width=0;}
+		$bar_width=round(MathZDC((300*$ct_ary[$i][0]), $high_ct));
 		$GRAPH_text.="  <tr>\n";
 		$GRAPH_text.="	<td class=\"chart_td$class\">".$ct_ary[$i][1]."</td>\n";
 		$GRAPH_text.="	<td class=\"chart_td value$class\"><img src=\"images/bar.png\" alt=\"\" width=\"".$bar_width."\" height=\"16\" />".$ct_ary[$i][0]."</td>\n";
@@ -2185,13 +2130,9 @@ while ($i < $users_to_print)
 	$i++;
 	}
 
-if ($TOTcalls < 1) {$TOTcalls = 0; $TOTavg=0;}
-else
-	{
-	$TOTavg = ($TOTtime / $TOTcalls);
-	$TOTavg_MS =	sec_convert($TOTavg,'H'); 
-	$TOTavg =		sprintf("%6s", $TOTavg_MS);
-	}
+$TOTavg = MathZDC($TOTtime, $TOTcalls);
+$TOTavg_MS =	sec_convert($TOTavg,'H'); 
+$TOTavg =		sprintf("%6s", $TOTavg_MS);
 
 $TOTtime_MS =	sec_convert($TOTtime,'H'); 
 $TOTtime =		sprintf("%10s", $TOTtime_MS);
@@ -2207,9 +2148,9 @@ $ASCII_text.="+--------------------------+------------+------------+--------+\n"
 
 for ($d=0; $d<count($graph_stats); $d++) {
 	if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-	$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
-	$TIMEHMS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][2]/$max_timehms)."' height='16' />".sec_convert($graph_stats[$d][2], 'H')."</td></tr>";
-	$AVERAGE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][3]/$max_average)."' height='16' />".sec_convert($graph_stats[$d][3], 'H')."</td></tr>";
+	$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][1], $max_calls))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+	$TIMEHMS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][2], $max_timehms))."' height='16' />".sec_convert($graph_stats[$d][2], 'H')."</td></tr>";
+	$AVERAGE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][3], $max_average))."' height='16' />".sec_convert($graph_stats[$d][3], 'H')."</td></tr>";
 }
 $CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTALcalls)."</th></tr></table>";
 $TIMEHMS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTtime)."</th></tr></table>";
@@ -2343,13 +2284,7 @@ while ($i <= 96)
 	$i++;
 	}
 
-if ($hi_hour_count < 1)
-	{$hour_multiplier = 0;}
-else
-	{
-	$hour_multiplier = (100 / $hi_hour_count);
-	#$hour_multiplier = round($hour_multiplier, 0);
-	}
+$hour_multiplier = MathZDC(100, $hi_hour_count);
 
 $ASCII_text.="<!-- HICOUNT: $hi_hour_count|$hour_multiplier -->\n";
 $ASCII_text.="GRAPH IN 15 MINUTE INCREMENTS OF TOTAL $rpt_type_verbiages TAKEN INTO THIS IN-GROUP\n";
@@ -2363,13 +2298,8 @@ while ($k <= 102)
 	if ($Mk >= 5) 
 		{
 		$Mk=0;
-		if ( ($k < 1) or ($hour_multiplier <= 0) )
-			{$scale_num = 100;}
-		else
-			{
-			$scale_num=($k / $hour_multiplier);
-			$scale_num = round($scale_num, 0);
-			}
+		$scale_num=MathZDC($k, $hour_multiplier);
+		$scale_num = round($scale_num, 0);
 		$LENscale_num = (strlen($scale_num));
 		$k = ($k + $LENscale_num);
 		$call_scale .= "$scale_num";
@@ -2469,7 +2399,7 @@ while ($i <= 96)
 			$drop_count[$i] =	sprintf("%-5s", $drop_count[$i]);
 
 			$ASCII_text.="|$time|<SPAN class=\"red\">";
-			$CSV_text9.="\"$time\",\"\"";
+			$CSV_text9.="\"$time\",";
 			$k=0;   while ($k <= $Xdrop_count) {$ASCII_text.=">";   $k++;   $char_counter++;}
 			$ASCII_text.="D</SPAN><SPAN class=\"green\">";   $char_counter++;
 			$k=0;   while ($k <= $XXhour_count) {$ASCII_text.="*";   $k++;   $char_counter++;}
@@ -2498,9 +2428,9 @@ for ($d=0; $d<count($graph_stats); $d++) {
 		$graph_stats[$d][0]=preg_replace('/\s/', "", $graph_stats[$d][0]); 
 		$GRAPH_text.="  <tr><td class='chart_td' width='50'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value' width='600' valign='bottom'>\n";
 		if ($graph_stats[$d][1]>0) {
-			$GRAPH_text.="<ul class='overlap_barGraph'><li class=\"p1\" style=\"height: 12px; left: 0px; width: ".round(600*$graph_stats[$d][1]/$max_calls)."px\"><font style='background-color: #900'>".$graph_stats[$d][1]."</font></li>";
+			$GRAPH_text.="<ul class='overlap_barGraph'><li class=\"p1\" style=\"height: 12px; left: 0px; width: ".round(MathZDC(600*$graph_stats[$d][1], $max_calls))."px\"><font style='background-color: #900'>".$graph_stats[$d][1]."</font></li>";
 			if ($graph_stats[$d][2]>0) {
-				$GRAPH_text.="<li class=\"p2\" style=\"height: 12px; left: 0px; width: ".round(600*$graph_stats[$d][2]/$max_calls)."px\"><font style='background-color: #009'>".$graph_stats[$d][2]."</font></li>";
+				$GRAPH_text.="<li class=\"p2\" style=\"height: 12px; left: 0px; width: ".round(MathZDC(600*$graph_stats[$d][2], $max_calls))."px\"><font style='background-color: #009'>".$graph_stats[$d][2]."</font></li>";
 			}
 			$GRAPH_text.="</ul>\n";
 		} else {

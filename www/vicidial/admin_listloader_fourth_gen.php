@@ -54,10 +54,11 @@
 # 130802-0619 - Added status deduping option without template
 # 130824-2322 - Changed to mysqli PHP functions
 # 140214-1022 - Fixed status dedupe bug
+# 140328-0007 - Converted division calculations to use MathZDC function
 #
 
-$version = '2.8-52';
-$build = '140214-1022';
+$version = '2.8-53';
+$build = '140328-0007';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -314,7 +315,7 @@ else
 	$SERVER_GMT = date("O");
 	$SERVER_GMT = preg_replace('/\+/i', '',$SERVER_GMT);
 	$SERVER_GMT = ($SERVER_GMT + 0);
-	$SERVER_GMT = ($SERVER_GMT / 100);
+	$SERVER_GMT = MathZDC($SERVER_GMT, 100);
 	}
 
 $LOCAL_GMT_OFF = $SERVER_GMT;

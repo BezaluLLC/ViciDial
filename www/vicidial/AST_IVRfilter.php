@@ -15,6 +15,7 @@
 # 130704-0939 - Fixed issue #675
 # 130901-0820 - Changed to mysqli PHP functions
 # 140108-0738 - Added webserver and hostname to report logging
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
@@ -443,46 +444,36 @@ $Utotalsta=0;
 
 		$HTML_text.=sprintf("%20s", $queue_str)." | ";
 		$HTML_text.=sprintf("%20s", $Uqueue_str)." |";
-		if ( ($count_ary[$key][15] < 1) or ($count_ary[$key][1] < 1) )
-			{$UtotalPERCENT = '0';}
-		else
-			{$UtotalPERCENT = (($count_ary[$key][1] / $count_ary[$key][15]) * 100);   $UtotalPERCENT = round($UtotalPERCENT, 2);}
+		$UtotalPERCENT = (MathZDC($count_ary[$key][1], $count_ary[$key][15]) * 100);
+		$UtotalPERCENT = round($UtotalPERCENT, 2);
 		$UtotalPERCENT =	sprintf("%6s", $UtotalPERCENT);
 		$HTML_text.=$UtotalPERCENT." | ";
 
 		$HTML_text.=sprintf("%6s", $count_ary[$key][2])." | ";
 		$HTML_text.=sprintf("%6s", $count_ary[$key][3])." |";
-		if ( ($count_ary[$key][15] < 1) or ($count_ary[$key][3] < 1) )
-			{$UagentPERCENT = '0';}
-		else
-			{$UagentPERCENT = (($count_ary[$key][3] / $count_ary[$key][15]) * 100);   $UagentPERCENT = round($UagentPERCENT, 2);}
+		$UagentPERCENT = (MathZDC($count_ary[$key][3], $count_ary[$key][15]) * 100);
+		$UagentPERCENT = round($UagentPERCENT, 2);
 		$UagentPERCENT =	sprintf("%6s", $UagentPERCENT);
 		$HTML_text.=$UagentPERCENT." | ";
 
 		$HTML_text.=sprintf("%6s", $count_ary[$key][4])." | ";
 		$HTML_text.=sprintf("%6s", $count_ary[$key][5])." |";
-		if ( ($count_ary[$key][15] < 1) or ($count_ary[$key][5] < 1) )
-			{$UntfndPERCENT = '0';}
-		else
-			{$UntfndPERCENT = (($count_ary[$key][5] / $count_ary[$key][15]) * 100);   $UntfndPERCENT = round($UntfndPERCENT, 2);}
+		$UntfndPERCENT = (MathZDC($count_ary[$key][5], $count_ary[$key][15]) * 100);
+		$UntfndPERCENT = round($UntfndPERCENT, 2);
 		$UntfndPERCENT =	sprintf("%6s", $UntfndPERCENT);
 		$HTML_text.=$UntfndPERCENT." | ";
 
 		$HTML_text.=sprintf("%6s", $count_ary[$key][6])." | ";
 		$HTML_text.=sprintf("%6s", $count_ary[$key][7])." |";
-		if ( ($count_ary[$key][15] < 1) or ($count_ary[$key][7] < 1) )
-			{$UprdncPERCENT = '0';}
-		else
-			{$UprdncPERCENT = (($count_ary[$key][7] / $count_ary[$key][15]) * 100);   $UprdncPERCENT = round($UprdncPERCENT, 2);}
+		$UprdncPERCENT = (MathZDC($count_ary[$key][7], $count_ary[$key][15]) * 100);
+		$UprdncPERCENT = round($UprdncPERCENT, 2);
 		$UprdncPERCENT =	sprintf("%6s", $UprdncPERCENT);
 		$HTML_text.=$UprdncPERCENT." | ";
 
 		$HTML_text.=sprintf("%6s", $count_ary[$key][8])." | ";
 		$HTML_text.=sprintf("%6s", $count_ary[$key][9])." |";
-		if ( ($count_ary[$key][15] < 1) or ($count_ary[$key][9] < 1) )
-			{$UpsalePERCENT = '0';}
-		else
-			{$UpsalePERCENT = (($count_ary[$key][9] / $count_ary[$key][15]) * 100);   $UpsalePERCENT = round($UpsalePERCENT, 2);}
+		$UpsalePERCENT = (MathZDC($count_ary[$key][9], $count_ary[$key][15]) * 100);
+		$UpsalePERCENT = round($UpsalePERCENT, 2);
 		$UpsalePERCENT =	sprintf("%6s", $UpsalePERCENT);
 		$HTML_text.=$UpsalePERCENT." |\n";
 
@@ -507,46 +498,36 @@ $Utotalsta=0;
 
 	$HTML_text.=sprintf("%20s", $queue_str)." | ";
 	$HTML_text.=sprintf("%20s", $Uqueue_str)." |";
-	if ( ($Utotal < 1) or ($Utotalstq < 1) )
-		{$UtotalPERCENT = '0';}
-	else
-		{$UtotalPERCENT = (($Utotalstq / $Utotal) * 100);   $UtotalPERCENT = round($UtotalPERCENT, 2);}
+	$UtotalPERCENT = (MathZDC($Utotalstq, $Utotal) * 100);
+	$UtotalPERCENT = round($UtotalPERCENT, 2);
 	$UtotalPERCENT =	sprintf("%6s", $UtotalPERCENT);
 	$HTML_text.=$UtotalPERCENT." | ";
 
 	$HTML_text.=sprintf("%6s", $totalnocid)." | ";
 	$HTML_text.=sprintf("%6s", $Utotalnocid)." |";
-	if ( ($Utotal < 1) or ($Utotalnocid < 1) )
-		{$UnocidPERCENT = '0';}
-	else
-		{$UnocidPERCENT = (($Utotalnocid / $Utotal) * 100);   $UnocidPERCENT = round($UnocidPERCENT, 2);}
+	$UnocidPERCENT = (MathZDC($Utotalnocid, $Utotal) * 100);
+	$UnocidPERCENT = round($UnocidPERCENT, 2);
 	$UnocidPERCENT =	sprintf("%6s", $UnocidPERCENT);
 	$HTML_text.=$UnocidPERCENT." | ";
 
 	$HTML_text.=sprintf("%6s", $totaldnc)." | ";
 	$HTML_text.=sprintf("%6s", $Utotaldnc)." |";
-	if ( ($Utotal < 1) or ($Utotaldnc < 1) )
-		{$UprdncPERCENT = '0';}
-	else
-		{$UprdncPERCENT = (($Utotaldnc / $Utotal) * 100);   $UprdncPERCENT = round($UprdncPERCENT, 2);}
+	$UprdncPERCENT = (MathZDC($Utotaldnc, $Utotal) * 100);
+	$UprdncPERCENT = round($UprdncPERCENT, 2);
 	$UprdncPERCENT =	sprintf("%6s", $UprdncPERCENT);
 	$HTML_text.=$UprdncPERCENT." | ";
 
 	$HTML_text.=sprintf("%6s", $totalsale)." | ";
 	$HTML_text.=sprintf("%6s", $Utotalsale)." |";
-	if ( ($Utotal < 1) or ($Utotalsale < 1) )
-		{$UpsalePERCENT = '0';}
-	else
-		{$UpsalePERCENT = (($Utotalsale / $Utotal) * 100);   $UpsalePERCENT = round($UpsalePERCENT, 2);}
+	$UpsalePERCENT = (MathZDC($Utotalsale, $Utotal) * 100);
+	$UpsalePERCENT = round($UpsalePERCENT, 2);
 	$UpsalePERCENT =	sprintf("%6s", $UpsalePERCENT);
 	$HTML_text.=$UpsalePERCENT." | ";
 
 	$HTML_text.=sprintf("%6s", $totalarch)." | ";
 	$HTML_text.=sprintf("%6s", $Utotalarch)." |";
-	if ( ($Utotal < 1) or ($Utotalarch < 1) )
-		{$UarchPERCENT = '0';}
-	else
-		{$UarchPERCENT = (($Utotalarch / $Utotal) * 100);   $UarchPERCENT = round($UarchPERCENT, 2);}
+	$UarchPERCENT = (MathZDC($Utotalarch, $Utotal) * 100);
+	$UarchPERCENT = round($UarchPERCENT, 2);
 	$UarchPERCENT =	sprintf("%6s", $UarchPERCENT);
 	$HTML_text.=$UarchPERCENT." |\n";
 

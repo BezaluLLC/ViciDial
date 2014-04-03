@@ -1,7 +1,7 @@
 <?php 
 # AST_parkstats.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -11,6 +11,7 @@
 # 130610-1133 - Finalized changing of all ereg instances to preg
 # 130621-0728 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-2012 - Changed to mysqli PHP functions
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 require("dbconnect_mysqli.php");
@@ -175,7 +176,7 @@ if ($DB) {echo "$stmt\n";}
 $row=mysqli_fetch_row($rslt);
 
 $TOTALcalls =	sprintf("%10s", $row[0]);
-$average_hold_seconds = ($row[1] / $row[0]);
+$average_hold_seconds = MathZDC($row[1], $row[0]);
 $average_hold_seconds = round($average_hold_seconds, 0);
 $average_hold_seconds =	sprintf("%10s", $average_hold_seconds);
 
@@ -191,10 +192,10 @@ if ($DB) {echo "$stmt\n";}
 $row=mysqli_fetch_row($rslt);
 
 $DROPcalls =	sprintf("%10s", $row[0]);
-$DROPpercent = (($DROPcalls / $TOTALcalls) * 100);
+$DROPpercent = (MathZDC($DROPcalls, $TOTALcalls) * 100);
 $DROPpercent = round($DROPpercent, 0);
 
-$average_hold_seconds = ($row[1] / $row[0]);
+$average_hold_seconds = MathZDC($row[1], $row[0]);
 $average_hold_seconds = round($average_hold_seconds, 0);
 $average_hold_seconds =	sprintf("%10s", $average_hold_seconds);
 
@@ -226,7 +227,7 @@ while ($i < $users_to_print)
 	$USERtotTALK =	$row[3];
 	$USERavgTALK =	$row[4];
 
-	$USERtotTALK_M = ($USERtotTALK / 60);
+	$USERtotTALK_M = MathZDC($USERtotTALK, 60);
 	$USERtotTALK_M = round($USERtotTALK_M, 2);
 	$USERtotTALK_M_int = intval("$USERtotTALK_M");
 	$USERtotTALK_S = ($USERtotTALK_M - $USERtotTALK_M_int);
@@ -236,7 +237,7 @@ while ($i < $users_to_print)
 	$USERtotTALK_MS = "$USERtotTALK_M_int:$USERtotTALK_S";
 	$USERtotTALK_MS =		sprintf("%6s", $USERtotTALK_MS);
 
-	$USERavgTALK_M = ($USERavgTALK / 60);
+	$USERavgTALK_M = MathZDC($USERavgTALK, 60);
 	$USERavgTALK_M = round($USERavgTALK_M, 2);
 	$USERavgTALK_M_int = intval("$USERavgTALK_M");
 	$USERavgTALK_S = ($USERavgTALK_M - $USERavgTALK_M_int);
@@ -326,7 +327,7 @@ while ($i <= 96)
 	$h++;
 	}
 
-$hour_multiplier = (100 / $hi_hour_count);
+$hour_multiplier = MathZDC(100, $hi_hour_count);
 #$hour_multiplier = round($hour_multiplier, 0);
 
 echo "<!-- HICOUNT: $hi_hour_count|$hour_multiplier -->\n";
@@ -340,7 +341,7 @@ while ($k <= 102)
 	if ($Mk >= 5) 
 		{
 		$Mk=0;
-		$scale_num=($k / $hour_multiplier);
+		$scale_num=MathZDC($k, $hour_multiplier);
 		$scale_num = round($scale_num, 0);
 		$LENscale_num = (strlen($scale_num));
 		$k = ($k + $LENscale_num);

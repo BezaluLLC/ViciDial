@@ -34,6 +34,7 @@
 # 131129-1020 - Fixed division by zero bug in HTML mode
 # 140108-0708 - Added webserver and hostname to report logging
 # 140314-0852 - Fixed several division by zero bugs
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
@@ -733,22 +734,11 @@ else
 		$SstatusesHTML='';
 		$SstatusesFILE='';
 		$Stime[$m] = ($Swait[$m] + $Stalk[$m] + $Sdispo[$m] + $Spause[$m]);
-		if ($Stime[$m] > 0)
-			{
-			$Swaitpct[$m]=(100*$Swait[$m]/$Stime[$m]);
-			$Stalkpct[$m]=(100*$Stalk[$m]/$Stime[$m]);
-			$Sdispopct[$m]=(100*$Sdispo[$m]/$Stime[$m]);
-			$Spausepct[$m]=(100*$Spause[$m]/$Stime[$m]);
-			$Sdeadpct[$m]=(100*$Sdead[$m]/$Stime[$m]);
-			}
-		else
-			{
-			$Swaitpct[$m]=0;
-			$Stalkpct[$m]=0;
-			$Sdispopct[$m]=0;
-			$Spausepct[$m]=0;
-			$Sdeadpct[$m]=0;
-			}
+		$Swaitpct[$m]=MathZDC(100*$Swait[$m], $Stime[$m]);
+		$Stalkpct[$m]=MathZDC(100*$Stalk[$m], $Stime[$m]);
+		$Sdispopct[$m]=MathZDC(100*$Sdispo[$m], $Stime[$m]);
+		$Spausepct[$m]=MathZDC(100*$Spause[$m], $Stime[$m]);
+		$Sdeadpct[$m]=MathZDC(100*$Sdead[$m], $Stime[$m]);
 		$RAWuser = $Suser[$m];
 		$RAWcalls = $Scalls[$m];
 		$RAWtimeSEC = $Stime[$m];
@@ -942,19 +932,8 @@ else
 			$TOTuser_holds+=$park_array[$Suser[$m]][0];
 			$TOTtotal_hold_time+=$park_array[$Suser[$m]][1];
 
-			if ($user_holds > 0)
-				{
-				$avg_hold_time=round($total_hold_time/$user_holds);
-				if ($Scalls[$m] > 0)
-					{$user_hpc=sprintf("%.2f", ($user_holds/$Scalls[$m]));}
-				else
-					{$user_hpc=0;}
-				}
-			else
-				{
-				$avg_hold_time=0;
-				$user_hpc=0;
-				}
+			$avg_hold_time=round(MathZDC($total_hold_time, $user_holds));
+			$user_hpc=sprintf("%.2f", MathZDC($user_holds, $Scalls[$m]));
 
 			$total_hold_time=sec_convert($total_hold_time,$TIME_agenttimedetail);
 			$avg_hold_time=sec_convert($avg_hold_time,$TIME_agenttimedetail);
@@ -969,26 +948,11 @@ else
 
 		if (trim($user_holds)>$max_user_holds) {$max_user_holds=trim($user_holds);}
 		if (trim($park_array[$Suser[$m]][1]+0)>$max_total_hold_time) {$max_total_hold_time=trim($park_array[$Suser[$m]][1]+0);}
-		if ($user_holds>0) 
-			{
-			if (trim(round(($park_array[$Suser[$m]][1]+0)/$user_holds))>$max_avg_hold_time) 
-				{$max_avg_hold_time=trim(round(($park_array[$Suser[$m]][1]+0)/$user_holds));}
-			}
-		else
-			{
-			$max_avg_hold_time=0;
-			}
+		if (trim(round(MathZDC(($park_array[$Suser[$m]][1]+0), $user_holds)))>$max_avg_hold_time) {$max_avg_hold_time=trim(round(MathZDC(($park_array[$Suser[$m]][1]+0), $user_holds)));}
 		if (trim($user_hpc)>$max_user_hpc) {$max_user_hpc=trim($user_hpc);}
 		$graph_stats[$m][15]=trim($user_holds);
 		$graph_stats[$m][16]=trim($park_array[$Suser[$m]][1]+0);
-		if ($user_holds>0) 
-			{
-			$graph_stats[$m][17]=trim(round(($park_array[$Suser[$m]][1]+0)/$user_holds));
-			}
-		else 
-			{
-			$graph_stats[$m][17]=0;
-			}
+		$graph_stats[$m][17]=trim(round(MathZDC(($park_array[$Suser[$m]][1]+0), $user_holds)));
 		$graph_stats[$m][18]=trim($user_hpc);
 
 
@@ -1172,22 +1136,11 @@ else
 	### END loop through each status ###
 
 	### call function to calculate and print dialable leads
-	if ($TOTALtime>0) 
-		{
-		$TOTwaitpct=sprintf("%01.2f", (100*$TOTwait/$TOTALtime));
-		$TOTtalkpct=sprintf("%01.2f", (100*$TOTtalk/$TOTALtime));
-		$TOTdispopct=sprintf("%01.2f", (100*$TOTdispo/$TOTALtime));
-		$TOTpausepct=sprintf("%01.2f", (100*$TOTpause/$TOTALtime));
-		$TOTdeadpct=sprintf("%01.2f", (100*$TOTdead/$TOTALtime));
-		}
-	else
-		{
-		$TOTwaitpct=sprintf("%01.2f", 0);
-		$TOTtalkpct=sprintf("%01.2f", 0);
-		$TOTdispopct=sprintf("%01.2f", 0);
-		$TOTpausepct=sprintf("%01.2f", 0);
-		$TOTdeadpct=sprintf("%01.2f", 0);
-		}
+	$TOTwaitpct=sprintf("%01.2f", MathZDC(100*$TOTwait, $TOTALtime));
+	$TOTtalkpct=sprintf("%01.2f", MathZDC(100*$TOTtalk, $TOTALtime));
+	$TOTdispopct=sprintf("%01.2f", MathZDC(100*$TOTdispo, $TOTALtime));
+	$TOTpausepct=sprintf("%01.2f", MathZDC(100*$TOTpause, $TOTALtime));
+	$TOTdeadpct=sprintf("%01.2f", MathZDC(100*$TOTdead, $TOTALtime));
 
 	$TOTwait = sec_convert($TOTwait,$TIME_agenttimedetail);
 	$TOTtalk = sec_convert($TOTtalk,$TIME_agenttimedetail);
@@ -1200,22 +1153,8 @@ else
 
 	if ($show_parks) 
 		{
-		if ($TOTuser_holds>0) 
-			{
-			$TOTavg_hold_time=round($TOTtotal_hold_time/$TOTuser_holds);
-			}
-		else 
-			{
-			$TOTavg_hold_time=0;
-			}
-		if ($TOTcalls>0) 
-			{
-			$TOTuser_hpc=sprintf("%.2f", ($TOTuser_holds/$TOTcalls));
-			}
-		else 
-			{
-			$TOTuser_hpc=0;
-			}
+		$TOTavg_hold_time=round(MathZDC($TOTtotal_hold_time, $TOTuser_holds));
+		$TOTuser_hpc=sprintf("%.2f", MathZDC($TOTuser_holds, $TOTcalls));
 		$TOTtotal_hold_time=sec_convert($TOTtotal_hold_time,$TIME_agenttimedetail);
 		$TOTavg_hold_time=sec_convert($TOTavg_hold_time,$TIME_agenttimedetail);
 		$hTOTuser_holds=	sprintf("%8s", $TOTuser_holds); 
@@ -1269,30 +1208,29 @@ else
 			if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
 			if ($atdr_login_logout_user_link > 0)
 				{
-				$CALLS_graph.="  <tr><td class='chart_td$class'><a href=\'./user_stats.php?pause_code_rpt=1&begin_date=$query_date&end_date=$end_date&user=".$user_IDs[$d]."\'>".$graph_stats[$d][0]."</a></td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_calls>0 ? round(1000*$graph_stats[$d][1]/$max_calls) : 0)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+				$CALLS_graph.="  <tr><td class='chart_td$class'><a href=\'./user_stats.php?pause_code_rpt=1&begin_date=$query_date&end_date=$end_date&user=".$user_IDs[$d]."\'>".$graph_stats[$d][0]."</a></td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][1], $max_calls))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
 				}
 			else
 				{
-				$CALLS_graph.="  <tr><td class='chart_td$class'><a href=\'./user_stats.php?user=".$user_IDs[$d]."&begin_date=$query_date&end_date\'>".$graph_stats[$d][0]."</a></td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_calls>0 ? round(1000*$graph_stats[$d][1]/$max_calls) : 0)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+				$CALLS_graph.="  <tr><td class='chart_td$class'><a href=\'./user_stats.php?user=".$user_IDs[$d]."&begin_date=$query_date&end_date\'>".$graph_stats[$d][0]."</a></td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][1], $max_calls))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
 				}
-			$TIMECLOCK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_timeclock>0 ? round(1000*$graph_stats[$d][2]/$max_timeclock) : 0)."' height='16' />".sec_convert($graph_stats[$d][2], 'HF')."</td></tr>";
-			$AGENTTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_agenttime>0 ? round(1000*$graph_stats[$d][3]/$max_agenttime) : 0)."' height='16' />".sec_convert($graph_stats[$d][3], 'HF')."</td></tr>";
-			$WAIT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_wait>0 ? round(1000*$graph_stats[$d][4]/$max_wait) : 0)."' height='16' />".sec_convert($graph_stats[$d][4], 'HF')."</td></tr>";
-			$TALK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_talk>0 ? round(1000*$graph_stats[$d][5]/$max_talk) : 0)."' height='16' />".sec_convert($graph_stats[$d][5], 'HF')."</td></tr>";
-			$DISPO_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_dispo>0 ? round(1000*$graph_stats[$d][6]/$max_dispo) : 0)."' height='16' />".sec_convert($graph_stats[$d][6], 'HF')."</td></tr>";
-			$PAUSE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_pause>0 ? round(1000*$graph_stats[$d][7]/$max_pause) : 0)."' height='16' />".sec_convert($graph_stats[$d][7], 'HF')."</td></tr>";
-			$DEAD_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_dead>0 ? round(1000*$graph_stats[$d][8]/$max_dead) : 0)."' height='16' />".sec_convert($graph_stats[$d][8], 'HF')."</td></tr>";
-			$CUSTOMER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_customer>0 ? round(1000*$graph_stats[$d][9]/$max_customer) : 0)."' height='16' />".sec_convert($graph_stats[$d][9], 'HF')."</td></tr>";
-			$TALKPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_talkpct>0 ? round(1000*$graph_stats[$d][10]/$max_talkpct) : 0)."' height='16' />".$graph_stats[$d][10]." %</td></tr>";
-			$DISPOPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_dispopct>0 ? round(1000*$graph_stats[$d][11]/$max_dispopct) : 0)."' height='16' />".$graph_stats[$d][11]." %</td></tr>";
-			$PAUSEPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_pausepct>0 ? round(1000*$graph_stats[$d][12]/$max_pausepct) : 0)."' height='16' />".$graph_stats[$d][12]." %</td></tr>";
-			$DEADPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_deadpct>0 ? round(1000*$graph_stats[$d][13]/$max_deadpct) : 0)."' height='16' />".$graph_stats[$d][13]." %</td></tr>";
-			$WAITPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_waitpct>0 ? round(1000*$graph_stats[$d][14]/$max_waitpct) : 0)."' height='16' />".$graph_stats[$d][14]." %</td></tr>";
-			$PARKS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_user_holds>0 ? round(1000*$graph_stats[$d][15]/$max_user_holds) : 0)."' height='16' />".$graph_stats[$d][15]."</td></tr>";
-			$PARKTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_total_hold_time>0 ? round(1000*$graph_stats[$d][16]/$max_total_hold_time) : 0)."' height='16' />".sec_convert($graph_stats[$d][16],'HF')."</td></tr>";
-			$AVGPARK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_avg_hold_time>0 ? round(1000*$graph_stats[$d][17]/$max_avg_hold_time) : 0)."' height='17' />".sec_convert($graph_stats[$d][17],'HF')."</td></tr>";
-			$PARKSCALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".($max_user_hpc>0 ? round(1000*$graph_stats[$d][18]/$max_user_hpc) : 0)."' height='16' />".$graph_stats[$d][18]."</td></tr>";
-
+			$TIMECLOCK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][2], $max_timeclock))."' height='16' />".sec_convert($graph_stats[$d][2], 'HF')."</td></tr>";
+			$AGENTTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][3], $max_agenttime))."' height='16' />".sec_convert($graph_stats[$d][3], 'HF')."</td></tr>";
+			$WAIT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][4], $max_wait))."' height='16' />".sec_convert($graph_stats[$d][4], 'HF')."</td></tr>";
+			$TALK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][5], $max_talk))."' height='16' />".sec_convert($graph_stats[$d][5], 'HF')."</td></tr>";
+			$DISPO_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][6], $max_dispo))."' height='16' />".sec_convert($graph_stats[$d][6], 'HF')."</td></tr>";
+			$PAUSE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][7], $max_pause))."' height='16' />".sec_convert($graph_stats[$d][7], 'HF')."</td></tr>";
+			$DEAD_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][8], $max_dead))."' height='16' />".sec_convert($graph_stats[$d][8], 'HF')."</td></tr>";
+			$CUSTOMER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][9], $max_customer))."' height='16' />".sec_convert($graph_stats[$d][9], 'HF')."</td></tr>";
+			$TALKPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][10], $max_talkpct))."' height='16' />".$graph_stats[$d][10]." %</td></tr>";
+			$DISPOPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][11], $max_dispopct))."' height='16' />".$graph_stats[$d][11]." %</td></tr>";
+			$PAUSEPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][12], $max_pausepct))."' height='16' />".$graph_stats[$d][12]." %</td></tr>";
+			$DEADPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][13], $max_deadpct))."' height='16' />".$graph_stats[$d][13]." %</td></tr>";
+			$WAITPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][14], $max_waitpct))."' height='16' />".$graph_stats[$d][14]." %</td></tr>";
+			$PARKS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][15], $max_user_holds))."' height='16' />".$graph_stats[$d][15]."</td></tr>";
+			$PARKTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][16], $max_total_hold_time))."' height='16' />".sec_convert($graph_stats[$d][16],'HF')."</td></tr>";
+			$AVGPARK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][17], $max_avg_hold_time))."' height='17' />".sec_convert($graph_stats[$d][17],'HF')."</td></tr>";
+			$PARKSCALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][18], $max_user_hpc))."' height='16' />".$graph_stats[$d][18]."</td></tr>";
 			for ($e=0; $e<count($sub_statusesARY); $e++) 
 				{
 				$Sstatus=$sub_statusesARY[$e];
@@ -1300,14 +1238,7 @@ else
 				$max_varname="max_".$Sstatus;
 				#$max.= "<!-- $max_varname => ".$$max_varname." //-->\n";
 			
-				if ($$max_varname > 0)
-					{
-					$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(1000*$graph_stats_sub[$d][$e]/$$max_varname)."' height='16' />".sec_convert($graph_stats_sub[$d][$e], 'HF')."</td></tr>";
-					}
-				else
-					{
-					$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='1' height='16' />".sec_convert($graph_stats_sub[$d][$e], 'HF')."</td></tr>";
-					}
+				$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats_sub[$d][$e], $$max_varname))."' height='16' />".sec_convert($graph_stats_sub[$d][$e], 'HF')."</td></tr>";
 				}
 			}
 		$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTcalls)."</th></tr></table>";
@@ -1573,7 +1504,7 @@ while ($m < $k)
 	else
 		{
 		echo "                              <SPAN class=\"yellow\">";
-		$TOPsortPLOT = ( ($TOPsortTALLY[$i] / $TOPsortMAX) * 110 );
+		$TOPsortPLOT = ( MathZDC($TOPsortTALLY[$i], $TOPsortMAX) * 110 );
 		$h=0;
 		while ($h <= $TOPsortPLOT)
 			{

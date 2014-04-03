@@ -26,6 +26,7 @@
 # 130619-2339 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-1930 - Changed to mysqli PHP functions
 # 140108-0725 - Added webserver and hostname to report logging
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
@@ -328,7 +329,7 @@ $HTML_text.="<option value=\"ALL\">ALL</option>\n";
 $HTML_text.="</SELECT>\n";
 $HTML_text.="<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
 $HTML_text.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
-$HTML_text.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  <a href=\"$PHP_SELF?query_date=$query_date&group=$group&shift=$shift&file_download=1\">DOWNLOAD</a> | <a href=\"./admin.php?ADD=3111&group_id=$group\">MODIFY</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a><BR/>Display as:<BR><input type='radio' name='report_display_type' value='ASCII' checked>ASCII<BR/><input type='radio' name='report_display_type' value='HTML' >HTML<BR/></FONT>\n";
+$HTML_text.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  <a href=\"$PHP_SELF?query_date=$query_date&group=$group&shift=$shift&file_download=1\">DOWNLOAD</a> | <a href=\"./admin.php?ADD=3111&group_id=$group\">MODIFY</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a><BR/></FONT>\n";
 $HTML_text.="</FORM>\n\n";
 
 $HTML_text.="<PRE><FONT SIZE=2>\n\n";
@@ -541,8 +542,7 @@ while ($i < $users_to_print)
 	$totOTHER = ($totOTHER + $OTHER);
 	$TOTsales = ($TOTsales + $sales);
 
-	if ( ($USERcallsRAW[$i] > 0) and ($sales > 0) ) {$Spct = ( ($sales / $USERcallsRAW[$i]) * 100);}
-		else {$Spct=0;}
+	$Spct = MathZDC($sales, $USERcallsRAW[$i])*100;
 	$Spct = round($Spct, 2);
 	$Spct =	sprintf("%01.2f", $Spct);
 	
@@ -581,8 +581,7 @@ while ($i < $users_to_print)
 	}
 
 
-if ( ($TOTcalls > 0) and ($TOTsales > 0) ) {$totSpct = ( ($TOTsales / $TOTcalls) * 100);}
-	else {$totSpct=0;}
+$totSpct = MathZDC($TOTsales, $TOTcalls)*100;
 $totSpct = round($totSpct, 2);
 $totSpct =	sprintf("%01.2f", $totSpct);
 $totSpct =	sprintf("%6s", $totSpct);
@@ -609,7 +608,7 @@ if ($DB) {$ASCII_text.="$stmt\n";}
 $row=mysqli_fetch_row($rslt);
 
 $AVGwait = $row[0];
-$AVGwait_M = ($AVGwait / 60);
+$AVGwait_M = MathZDC($AVGwait, 60);
 $AVGwait_M = round($AVGwait_M, 2);
 $AVGwait_M_int = intval("$AVGwait_M");
 $AVGwait_S = ($AVGwait_M - $AVGwait_M_int);
@@ -631,12 +630,12 @@ $CSV_fronter_footer.="\"Average time in Queue for customers:    $AVGwait\"\n\n\n
 
 	for ($d=0; $d<count($graph_stats); $d++) {
 		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-		$SUCCESS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_success)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
-		$XFERS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][2]/$max_xfers)."' height='16' />".$graph_stats[$d][2]."</td></tr>";
-		$SUCCESSPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][3]/$max_success_pct)."' height='16' />".$graph_stats[$d][3]."</td></tr>";
-		$SALE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][4]/$max_sales)."' height='16' />".$graph_stats[$d][4]."</td></tr>";
-		$DROP_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][5]/$max_drops)."' height='16' />".$graph_stats[$d][5]."</td></tr>";
-		$OTHER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][5]/$max_other)."' height='16' />".$graph_stats[$d][5]."</td></tr>";
+		$SUCCESS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][1], $max_success))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+		$XFERS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][2], $max_xfers))."' height='16' />".$graph_stats[$d][2]."</td></tr>";
+		$SUCCESSPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][3], $max_success_pct))."' height='16' />".$graph_stats[$d][3]."</td></tr>";
+		$SALE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][4], $max_sales))."' height='16' />".$graph_stats[$d][4]."</td></tr>";
+		$DROP_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][5], $max_drops))."' height='16' />".$graph_stats[$d][5]."</td></tr>";
+		$OTHER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][5] ,$max_other))."' height='16' />".$graph_stats[$d][5]."</td></tr>";
 	}
 	$SUCCESS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTsales)."</th></tr></table>";
 	$XFERS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTcalls)."</th></tr></table>";
@@ -821,26 +820,22 @@ while ($i < $users_to_print)
 	$totOTHER = ($totOTHER + $OTHER);
 	$totPOINTS = ($totPOINTS + $points);
 
-	if ( ($USERcallsRAW[$i] > 0) and ($sales > 0) ) {$Cpct = ( ($sales / ( ($USERcallsRAW[$i] - 0) - $DROP) ) * 100);}
-		else {$Cpct=0;}
+	$Cpct = MathZDC($sales, ( ($USERcallsRAW[$i] - 0) - $DROP) )*100;
 	$Cpct = round($Cpct, 2);
 	$Cpct =	sprintf("%01.2f", $Cpct);
 	$Cpct =	sprintf("%6s", $Cpct);
 
-	if ( ($sales > 0) and ($uTOP > 0) ) {$TOP = ( ($uTOP / $sales) * 100);}
-		else {$TOP=0;}
+	$TOP = MathZDC($uTOP, $sales)*100;
 	$TOP = round($TOP, 0);
 	$TOP =	sprintf("%01.0f", $TOP);
 	$TOP =	sprintf("%3s", $TOP);
 
-	if ( ($sales > 0) and ($uBOT > 0) ) {$BOT = ( ($uBOT / $sales) * 100);}
-		else {$BOT=0;}
+	$BOT = MathZDC($uBOT, $sales)*100;
 	$BOT = round($BOT, 0);
 	$BOT =	sprintf("%01.0f", $BOT);
 	$BOT =	sprintf("%3s", $BOT);
 
-	if ( ($USERcallsRAW[$i] > 0) and ($points > 0) ) {$ppc = ($points / ( ($USERcallsRAW[$i] - 0) - $DROP) );}
-		else {$ppc=0;}
+	$ppc = MathZDC($points, ( ($USERcallsRAW[$i] - 0) - $DROP) );
 	$ppc = round($ppc, 2);
 	$ppc =	sprintf("%01.2f", $ppc);
 	$ppc =	sprintf("%4s", $ppc);
@@ -879,26 +874,22 @@ while ($i < $users_to_print)
 	}
 
 
-if ( ($TOTcalls > 0) and ($TOTsales > 0) ) {$totCpct = ( ($TOTsales / ( ($TOTcalls - 0) - $totDROP) ) * 100);}
-	else {$totCpct=0;}
+$totCpct = MathZDC($TOTsales, ( ($TOTcalls - 0) - $totDROP) )*100;
 $totCpct = round($totCpct, 2);
 $totCpct =	sprintf("%01.2f", $totCpct);
 $totCpct =	sprintf("%6s", $totCpct);
 		
-if ( ($TOTcalls > 0) and ($totPOINTS > 0) ) {$ppc = ($totPOINTS / ( ($TOTcalls - $totOTHER) - $totDROP) );}
-	else {$ppc=0;}
+$ppc = MathZDC($totPOINTS, ( ($TOTcalls - $totOTHER) - $totDROP) );
 $ppc = round($ppc, 2);
 $ppc =	sprintf("%01.2f", $ppc);
 $ppc =	sprintf("%4s", $ppc);
 		
-if ( ($TOTsales > 0) and ($totTOP > 0) ) {$TOP = ( ($totTOP / $TOTsales) * 100);}
-	else {$TOP=0;}
+$TOP = MathZDC($totTOP, $TOTsales)*100;
 $TOP = round($TOP, 0);
 $TOP =	sprintf("%01.0f", $TOP);
 $TOP =	sprintf("%3s", $TOP);
 
-if ( ($TOTsales > 0) and ($totBOT > 0) ) {$BOT = ( ($totBOT / $TOTsales) * 100);}
-	else {$BOT=0;}
+$BOT = MathZDC($totBOT, $TOTsales)*100;
 $BOT = round($BOT, 0);
 $BOT =	sprintf("%01.0f", $BOT);
 $BOT =	sprintf("%3s", $BOT);
@@ -926,12 +917,12 @@ $CSV_closer_footer.="\"TOTAL CLOSERS:  $TOTagents\",\"$TOTcalls\",\"$totA1\",\"$
 
 	for ($d=0; $d<count($graph_stats); $d++) {
 		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-		$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
-		$SALES_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][2]/$max_sales)."' height='16' />".$graph_stats[$d][2]."</td></tr>";
-		$DROP_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][3]/$max_drops)."' height='16' />".$graph_stats[$d][3]."</td></tr>";
-		$OTHER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][4]/$max_other)."' height='16' />".$graph_stats[$d][4]."</td></tr>";
-		$SALES2_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][5]/$max_sales2)."' height='16' />".$graph_stats[$d][5]."</td></tr>";
-		$CONVPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][6]/$max_conv_pct)."' height='16' />".$graph_stats[$d][6]."%</td></tr>";
+		$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][1], $max_calls))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+		$SALES_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][2], $max_sales))."' height='16' />".$graph_stats[$d][2]."</td></tr>";
+		$DROP_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][3], $max_drops))."' height='16' />".$graph_stats[$d][3]."</td></tr>";
+		$OTHER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][4], $max_other))."' height='16' />".$graph_stats[$d][4]."</td></tr>";
+		$SALES2_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][5], $max_sales2))."' height='16' />".$graph_stats[$d][5]."</td></tr>";
+		$CONVPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][6], $max_conv_pct))."' height='16' />".$graph_stats[$d][6]."%</td></tr>";
 	}
 	$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTcalls)."</th></tr></table>";
 	$SALES_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($totA1)."</th></tr></table>";

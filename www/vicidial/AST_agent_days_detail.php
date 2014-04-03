@@ -22,6 +22,7 @@
 # 130704-0942 - Fixed issue #675
 # 130831-0928 - Changed to mysqli PHP functions
 # 140108-0751 - Added webserver and hostname to report logging
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
@@ -560,12 +561,7 @@ else
 		$Sdate =		sprintf("%-10s", $Sdate);
 			while(strlen($Suser)>10) {$Suser = substr("$Sdate", 0, -1);}
 
-		if ( ($DNCcount < 1) or ($CIScount < 1) )
-			{$DNCcountPCTs=0;}
-		else
-			{
-			$DNCcountPCTs = ( ($DNCcount / $CIScount) * 100);
-			}
+		$DNCcountPCTs = ( MathZDC($DNCcount, $CIScount) * 100);
 		$RAWdncPCT = $DNCcountPCTs;
 	#	$DNCcountPCTs = round($DNCcountPCTs,2);
 		$DNCcountPCTs = round($DNCcountPCTs);
@@ -700,12 +696,7 @@ else
 
 	$TOTcalls = sprintf("%7s", $TOTcalls);
 	$CIScountTOT = sprintf("%7s", $CIScountTOT);
-	if ( ($DNCcountTOT < 1) or ($CIScountTOT < 1) )
-		{$DNCcountPCT=0;}
-	else
-		{
-		$DNCcountPCT = ( ($DNCcountTOT / $CIScountTOT) * 100);
-		}
+	$DNCcountPCT = ( MathZDC($DNCcountTOT, $CIScountTOT) * 100);
 	#$DNCcountPCT = round($DNCcountPCT,2);
 	$DNCcountPCT = round($DNCcountPCT);
 	#$DNCcountPCT = sprintf("%3.2f", $DNCcountPCT);
@@ -730,16 +721,16 @@ else
 		
 		for ($d=0; $d<count($graph_stats); $d++) {
 			if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-			$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
-			$CICALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][2]/$max_cicalls)."' height='16' />".$graph_stats[$d][2]."</td></tr>";
-			$DNCCI_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][3]/$max_dncci)."' height='16' />".$graph_stats[$d][3]."%</td></tr>";
+			$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][1], $max_calls))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+			$CICALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][2], $max_cicalls))."' height='16' />".$graph_stats[$d][2]."</td></tr>";
+			$DNCCI_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][3], $max_dncci))."' height='16' />".$graph_stats[$d][3]."%</td></tr>";
 
 			for ($e=0; $e<count($statusesARY); $e++) {
 				$Sstatus=$statusesARY[$e];
 				$varname=$Sstatus."_graph";
 				$max_varname="max_".$Sstatus;
 			
-				$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][($e+4)]/$$max_varname)."' height='16' />".$graph_stats[$d][($e+4)]."</td></tr>";
+				$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][($e+4)], $$max_varname))."' height='16' />".$graph_stats[$d][($e+4)]."</td></tr>";
 			}
 		}
 		
@@ -939,7 +930,7 @@ if ($report_display_type=="TEXT" || !$report_display_type)
 		else
 			{
 			echo "              <SPAN class=\"yellow\">";
-			$TOPsortPLOT = ( ($TOPsortTALLY[$i] / $TOPsortMAX) * 120 );
+			$TOPsortPLOT = ( MathZDC($TOPsortTALLY[$i], $TOPsortMAX) * 120 );
 			$h=0;
 			while ($h <= $TOPsortPLOT)
 				{

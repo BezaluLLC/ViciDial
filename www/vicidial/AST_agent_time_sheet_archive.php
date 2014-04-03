@@ -13,6 +13,7 @@
 # 130621-0812 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0744 - Changed to mysqli PHP functions
 # 140108-0717 - Added webserver and hostname to report logging
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
@@ -228,7 +229,7 @@ if ($calls_summary)
 
 	$TOTAL_TIME = ($row[1] + $row[3] + $row[5] + $row[7]);
 
-		$TOTAL_TIME_H = ($TOTAL_TIME / 3600);
+		$TOTAL_TIME_H = MathZDC($TOTAL_TIME, 3600);
 		$TOTAL_TIME_H = round($TOTAL_TIME_H, 2);
 		$TOTAL_TIME_H_int = intval("$TOTAL_TIME_H");
 		$TOTAL_TIME_M = ($TOTAL_TIME_H - $TOTAL_TIME_H_int);
@@ -243,7 +244,7 @@ if ($calls_summary)
 		$TOTAL_TIME_HMS = "$TOTAL_TIME_H_int:$TOTAL_TIME_M_int:$TOTAL_TIME_S";
 		$pfTOTAL_TIME_HMS =		sprintf("%8s", $TOTAL_TIME_HMS);
 
-		$TALK_TIME_H = ($row[1] / 3600);
+		$TALK_TIME_H = MathZDC($row[1], 3600);
 		$TALK_TIME_H = round($TALK_TIME_H, 2);
 		$TALK_TIME_H_int = intval("$TALK_TIME_H");
 		$TALK_TIME_M = ($TALK_TIME_H - $TALK_TIME_H_int);
@@ -258,7 +259,7 @@ if ($calls_summary)
 		$TALK_TIME_HMS = "$TALK_TIME_H_int:$TALK_TIME_M_int:$TALK_TIME_S";
 		$pfTALK_TIME_HMS =		sprintf("%8s", $TALK_TIME_HMS);
 
-		$PAUSE_TIME_H = ($row[3] / 3600);
+		$PAUSE_TIME_H = MathZDC($row[3], 3600);
 		$PAUSE_TIME_H = round($PAUSE_TIME_H, 2);
 		$PAUSE_TIME_H_int = intval("$PAUSE_TIME_H");
 		$PAUSE_TIME_M = ($PAUSE_TIME_H - $PAUSE_TIME_H_int);
@@ -273,7 +274,7 @@ if ($calls_summary)
 		$PAUSE_TIME_HMS = "$PAUSE_TIME_H_int:$PAUSE_TIME_M_int:$PAUSE_TIME_S";
 		$pfPAUSE_TIME_HMS =		sprintf("%8s", $PAUSE_TIME_HMS);
 
-		$WAIT_TIME_H = ($row[5] / 3600);
+		$WAIT_TIME_H = MathZDC($row[5], 3600);
 		$WAIT_TIME_H = round($WAIT_TIME_H, 2);
 		$WAIT_TIME_H_int = intval("$WAIT_TIME_H");
 		$WAIT_TIME_M = ($WAIT_TIME_H - $WAIT_TIME_H_int);
@@ -288,7 +289,7 @@ if ($calls_summary)
 		$WAIT_TIME_HMS = "$WAIT_TIME_H_int:$WAIT_TIME_M_int:$WAIT_TIME_S";
 		$pfWAIT_TIME_HMS =		sprintf("%8s", $WAIT_TIME_HMS);
 
-		$WRAPUP_TIME_H = ($row[7] / 3600);
+		$WRAPUP_TIME_H = MathZDC($row[7], 3600);
 		$WRAPUP_TIME_H = round($WRAPUP_TIME_H, 2);
 		$WRAPUP_TIME_H_int = intval("$WRAPUP_TIME_H");
 		$WRAPUP_TIME_M = ($WRAPUP_TIME_H - $WRAPUP_TIME_H_int);
@@ -303,7 +304,7 @@ if ($calls_summary)
 		$WRAPUP_TIME_HMS = "$WRAPUP_TIME_H_int:$WRAPUP_TIME_M_int:$WRAPUP_TIME_S";
 		$pfWRAPUP_TIME_HMS =		sprintf("%8s", $WRAPUP_TIME_HMS);
 
-		$TALK_AVG_M = ($row[2] / 60);
+		$TALK_AVG_M = MathZDC($row[2], 60);
 		$TALK_AVG_M = round($TALK_AVG_M, 2);
 		$TALK_AVG_M_int = intval("$TALK_AVG_M");
 		$TALK_AVG_S = ($TALK_AVG_M - $TALK_AVG_M_int);
@@ -313,7 +314,7 @@ if ($calls_summary)
 		$TALK_AVG_MS = "$TALK_AVG_M_int:$TALK_AVG_S";
 		$pfTALK_AVG_MS =		sprintf("%6s", $TALK_AVG_MS);
 
-		$PAUSE_AVG_M = ($row[4] / 60);
+		$PAUSE_AVG_M = MathZDC($row[4], 60);
 		$PAUSE_AVG_M = round($PAUSE_AVG_M, 2);
 		$PAUSE_AVG_M_int = intval("$PAUSE_AVG_M");
 		$PAUSE_AVG_S = ($PAUSE_AVG_M - $PAUSE_AVG_M_int);
@@ -323,7 +324,7 @@ if ($calls_summary)
 		$PAUSE_AVG_MS = "$PAUSE_AVG_M_int:$PAUSE_AVG_S";
 		$pfPAUSE_AVG_MS =		sprintf("%6s", $PAUSE_AVG_MS);
 
-		$WAIT_AVG_M = ($row[6] / 60);
+		$WAIT_AVG_M = MathZDC($row[6], 60);
 		$WAIT_AVG_M = round($WAIT_AVG_M, 2);
 		$WAIT_AVG_M_int = intval("$WAIT_AVG_M");
 		$WAIT_AVG_S = ($WAIT_AVG_M - $WAIT_AVG_M_int);
@@ -333,7 +334,7 @@ if ($calls_summary)
 		$WAIT_AVG_MS = "$WAIT_AVG_M_int:$WAIT_AVG_S";
 		$pfWAIT_AVG_MS =		sprintf("%6s", $WAIT_AVG_MS);
 
-		$WRAPUP_AVG_M = ($row[8] / 60);
+		$WRAPUP_AVG_M = MathZDC($row[8], 60);
 		$WRAPUP_AVG_M = round($WRAPUP_AVG_M, 2);
 		$WRAPUP_AVG_M_int = intval("$WRAPUP_AVG_M");
 		$WRAPUP_AVG_S = ($WRAPUP_AVG_M - $WRAPUP_AVG_M_int);
@@ -376,7 +377,7 @@ echo "LAST LOG ACTIVITY:    $row[0]\n";
 $end = $row[1];
 
 $login_time = ($end - $start);
-	$LOGIN_TIME_H = ($login_time / 3600);
+	$LOGIN_TIME_H = MathZDC($login_time, 3600);
 	$LOGIN_TIME_H = round($LOGIN_TIME_H, 2);
 	$LOGIN_TIME_H_int = intval("$LOGIN_TIME_H");
 	$LOGIN_TIME_M = ($LOGIN_TIME_H - $LOGIN_TIME_H_int);

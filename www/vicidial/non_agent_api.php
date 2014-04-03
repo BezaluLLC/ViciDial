@@ -86,10 +86,11 @@
 # 140206-1205 - Added update_user function
 # 140211-1056 - Added server_refresh function
 # 140214-1540 - Added check_phone_number function
+# 140331-2119 - Converted division calculations to use MathZDC function
 #
 
-$version = '2.8-62';
-$build = '140214-1540';
+$version = '2.8-63';
+$build = '140331-2119';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -4427,34 +4428,29 @@ if ($function == 'agent_stats_export')
 						$login_start_end_check = ( ($ASend_epoch[$k] - $ASstart_epoch[$k]) + $ASend_sec[$k]);
 						if ($login_sec > $login_start_end_check) {$login_sec = $login_start_end_check;}
 						if ($ASsessions[$k] < 1) {$ASsessions[$k] = 1;}
-						$avg_session_sec = ($login_sec / $ASsessions[$k]);
+						$avg_session_sec = MathZDC($login_sec, $ASsessions[$k]);
+						$avg_pause_sec = MathZDC($ASpause_sec[$k], $ASpauses[$k]);
+						$avg_pause_session = MathZDC($ASpauses[$k], $ASsessions[$k]);
 						if ( ($ASpauses[$k] < 1) or ($login_sec < 1) )
 							{
-							$avg_pause_sec = 0;
-							$avg_pause_session = 0;
 							$pct_pause = 100;
 							}
 						else
 							{
-							$avg_pause_sec = ($ASpause_sec[$k] / $ASpauses[$k]);
-							$avg_pause_session = ($ASpauses[$k] / $ASsessions[$k]);
-							$pct_pause = ( ($ASpause_sec[$k] / $login_sec) * 100);
+							$pct_pause = ( MathZDC($ASpause_sec[$k], $login_sec) * 100);
 							}
+						$avg_cust_sec = MathZDC($cust_sec, $AScalls[$k]);
+						$avg_wait_sec = MathZDC($ASwait_sec[$k], $AScalls[$k]);
+						$pct_of_queue = ( MathZDC($AScalls[$k], $total_calls) * 100);
 						if ($AScalls[$k] < 1)
 							{
 							$cust_sec = 0;
 							$wait_sec = 0;
-							$avg_cust_sec = 0;
-							$avg_wait_sec = 0;
-							$pct_of_queue = 0;
 							}
 						else
 							{
 							$cust_sec = ($AStalk_sec[$k] - $ASdead_sec[$k]);
 							$wait_sec = $ASwait_sec[$k];
-							$avg_cust_sec = ($cust_sec / $AScalls[$k]);
-							$avg_wait_sec = ($ASwait_sec[$k] / $AScalls[$k]);
-							$pct_of_queue = ( ($AScalls[$k] / $total_calls) * 100);
 							}
 						$avg_session_sec = round($avg_session_sec);
 						$avg_pause_sec = round($avg_pause_sec);

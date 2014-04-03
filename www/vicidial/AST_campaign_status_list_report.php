@@ -16,6 +16,7 @@
 # 130621-2016 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0743 - Changed to mysqli PHP functions
 # 140108-0749 - Added webserver and hostname to report logging
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
@@ -496,14 +497,14 @@ while($i < $group_ct)
 			$CSV_text.="\"TOTALS:\",\"$total_calls\",\"".sec_convert($total_duration, 'H')."\",\"".sec_convert($total_handle_time, 'H')."\"\n\n";
 
 
-			$HA_percent =	sprintf("%6.2f", 100*($HA_count/$total_calls)); while(strlen($HA_percent)>6) {$HA_percent = substr("$HA_percent", 0, -1);}
-			$SALE_percent =	sprintf("%6.2f", 100*($SALE_count/$total_calls)); while(strlen($SALE_percent)>6) {$SALE_percent = substr("$SALE_percent", 0, -1);}
-			$DNC_percent =	sprintf("%6.2f", 100*($DNC_count/$total_calls)); while(strlen($DNC_percent)>6) {$DNC_percent = substr("$DNC_percent", 0, -1);}
-			$CC_percent =	sprintf("%6.2f", 100*($CC_count/$total_calls)); while(strlen($CC_percent)>6) {$CC_percent = substr("$CC_percent", 0, -1);}
-			$NI_percent =	sprintf("%6.2f", 100*($NI_count/$total_calls)); while(strlen($NI_percent)>6) {$NI_percent = substr("$NI_percent", 0, -1);}
-			$UW_percent =	sprintf("%6.2f", 100*($UW_count/$total_calls)); while(strlen($UW_percent)>6) {$UW_percent = substr("$UW_percent", 0, -1);}
-			$SC_percent =	sprintf("%6.2f", 100*($SC_count/$total_calls)); while(strlen($SC_percent)>6) {$SC_percent = substr("$SC_percent", 0, -1);}
-			$COMP_percent =	sprintf("%6.2f", 100*($COMP_count/$total_calls)); while(strlen($COMP_percent)>6) {$COMP_percent = substr("$COMP_percent", 0, -1);}
+			$HA_percent =	sprintf("%6.2f", MathZDC(100*$HA_count, $total_calls)); while(strlen($HA_percent)>6) {$HA_percent = substr("$HA_percent", 0, -1);}
+			$SALE_percent =	sprintf("%6.2f", MathZDC(100*$SALE_count, $total_calls)); while(strlen($SALE_percent)>6) {$SALE_percent = substr("$SALE_percent", 0, -1);}
+			$DNC_percent =	sprintf("%6.2f", MathZDC(100*$DNC_count, $total_calls)); while(strlen($DNC_percent)>6) {$DNC_percent = substr("$DNC_percent", 0, -1);}
+			$CC_percent =	sprintf("%6.2f", MathZDC(100*$CC_count, $total_calls)); while(strlen($CC_percent)>6) {$CC_percent = substr("$CC_percent", 0, -1);}
+			$NI_percent =	sprintf("%6.2f", MathZDC(100*$NI_count, $total_calls)); while(strlen($NI_percent)>6) {$NI_percent = substr("$NI_percent", 0, -1);}
+			$UW_percent =	sprintf("%6.2f", MathZDC(100*$UW_count, $total_calls)); while(strlen($UW_percent)>6) {$UW_percent = substr("$UW_percent", 0, -1);}
+			$SC_percent =	sprintf("%6.2f", MathZDC(100*$SC_count, $total_calls)); while(strlen($SC_percent)>6) {$SC_percent = substr("$SC_percent", 0, -1);}
+			$COMP_percent =	sprintf("%6.2f", MathZDC(100*$COMP_count, $total_calls)); while(strlen($COMP_percent)>6) {$COMP_percent = substr("$COMP_percent", 0, -1);}
 
 			$HA_count =	sprintf("%9s", "$HA_count"); while(strlen($HA_count)>9) {$HA_count = substr("$HA_count", 0, -1);}
 			$SALE_count =	sprintf("%9s", "$SALE_count"); while(strlen($SALE_count)>9) {$SALE_count = substr("$SALE_count", 0, -1);}
@@ -538,9 +539,9 @@ while($i < $group_ct)
 			for ($d=0; $d<count($graph_stats); $d++) 
 				{
 				if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-				$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
-				$DURATION_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][2]/$max_duration)."' height='16' />".sec_convert($graph_stats[$d][2], 'H')."</td></tr>";
-				$HANDLETIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][3]/$max_handletime)."' height='16' />".sec_convert($graph_stats[$d][3], 'H')."</td></tr>";
+				$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][1], $max_calls))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+				$DURATION_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][2], $max_duration))."' height='16' />".sec_convert($graph_stats[$d][2], 'H')."</td></tr>";
+				$HANDLETIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][3], $max_handletime))."' height='16' />".sec_convert($graph_stats[$d][3], 'H')."</td></tr>";
 				}
 			$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($total_calls)."</th></tr></table>";
 			$DURATION_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".sec_convert($total_duration, 'H')."</th></tr></table>";

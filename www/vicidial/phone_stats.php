@@ -1,7 +1,7 @@
 <?php
 # phone_stats.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 
 # changes:
@@ -13,6 +13,7 @@
 # 130610-1110 - Finalized changing of all ereg instances to preg
 # 130617-2156 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0900 - Changed to mysqli PHP functions
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 require("dbconnect_mysqli.php");
@@ -198,7 +199,7 @@ while ($statuses_to_print > $o)
 		{$bgcolor='bgcolor="#9BB9FB"';}
 
 	$call_seconds = $row[2];
-	$call_hours = ($call_seconds / 3600);
+	$call_hours = MathZDC($call_seconds, 3600);
 	$call_hours = round($call_hours, 2);
 	$call_hours_int = intval("$call_hours");
 	$call_minutes = ($call_hours - $call_hours_int);
@@ -220,7 +221,7 @@ while ($statuses_to_print > $o)
 	$counts_to_print = mysqli_num_rows($rslt);
 		$row=mysqli_fetch_row($rslt);
 	$call_seconds = $row[0];
-	$call_hours = ($call_seconds / 3600);
+	$call_hours = MathZDC($call_seconds, 3600);
 	$call_hours = round($call_hours, 2);
 	$call_hours_int = intval("$call_hours");
 	$call_minutes = ($call_hours - $call_hours_int);

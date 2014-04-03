@@ -4,7 +4,7 @@
 # make sure you have added a user to the vicidial_users MySQL table with at 
 # least user_level 4 to access this page the first time
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Changes
 # 50307-1721 - First version
@@ -17,6 +17,7 @@
 # 130610-1105 - Finalized changing of all ereg instances to preg
 # 130616-0005 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0833 - Changed to mysqli PHP functions
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $version = '2.8-10';
@@ -407,7 +408,7 @@ if ($ADD==61111)
 				$start_time =		sprintf("%-19s", $row[5]);
 				$call_time_S = ($STARTtime - $row[6]);
 
-				$call_time_M = ($call_time_S / 60);
+				$call_time_M = MathZDC($call_time_S, 60);
 				$call_time_M = round($call_time_M, 2);
 				$call_time_M_int = intval("$call_time_M");
 				$call_time_SEC = ($call_time_M - $call_time_M_int);
@@ -476,7 +477,7 @@ if ($ADD==71111)
 		$row=mysqli_fetch_row($rslt);
 		$in_calls =		$row[0];
 		$in_time =		$row[1];
-		$in_time_M = ($in_time / 60);
+		$in_time_M = MathZDC($in_time, 60);
 		$in_time_M = round($in_time_M, 2);
 		$in_time_M_int = intval("$in_time_M");
 		$in_time_SEC = ($in_time_M - $in_time_M_int);
@@ -516,7 +517,7 @@ if ($ADD==71111)
 				$start_time =		sprintf("%-19s", $row[5]);
 				$call_time_S =		$row[6];
 
-				$call_time_M = ($call_time_S / 60);
+				$call_time_M = MathZDC($call_time_S, 60);
 				$call_time_M = round($call_time_M, 2);
 				$call_time_M_int = intval("$call_time_M");
 				$call_time_SEC = ($call_time_M - $call_time_M_int);

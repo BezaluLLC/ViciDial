@@ -20,6 +20,7 @@
 # 130621-0730 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-2024 - Changed to mysqli PHP functions
 # 140108-0734 - Added webserver and hostname to report logging
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
@@ -841,7 +842,7 @@ else
 						$queue_secondsZ = $row[2];
 						$agent_alert_delayZ = $row[3];
 
-						$TOTALdelay =		round($agent_alert_delayZ / 1000);
+						$TOTALdelay =		round(MathZDC($agent_alert_delayZ, 1000));
 						$thiscallsec = (($length_in_secZ - $queue_secondsZ) - $TOTALdelay);
 						if ($thiscallsec < 0)
 							{$thiscallsec = 0;}
@@ -1131,18 +1132,12 @@ else
 				}
 
 
-			if ( ($answer_count[$i] > 0) and ($talk_sec[$i] > 0) )
-				{$talk_avg[$i] = ($talk_sec[$i] / $answer_count[$i]);}
-			else
-				{$talk_avg[$i] = 0;}
-			if ( ($calls_count[$i] > 0) and ($queue_seconds[$i] > 0) )
-				{$queue_avg[$i] = ($queue_seconds[$i] / $calls_count[$i]);}
-			else
-				{$queue_avg[$i] = 0;}
+			$talk_avg[$i] = MathZDC($talk_sec[$i], $answer_count[$i]);
+			$queue_avg[$i] = MathZDC($queue_seconds[$i], $calls_count[$i]);
 
 			if ($print_calls > 0)
 				{
-				$PCtemptalkmin = ($PCtemptalk  / 60);
+				$PCtemptalkmin = MathZDC($PCtemptalk, 60);
 				$ASCII_text.="$q\t$PCtemptalk\t$PCtemptalkmin\n";
 				}
 
@@ -1200,10 +1195,7 @@ else
 			$gAGENTcalls =	sprintf("%6s", $agent_count[$i]);
 			$gPTPcalls =	sprintf("%6s", $ptp_count[$i]);
 			$gRTPcalls =	sprintf("%6s", $rtp_count[$i]);
-			if ( ($calls_count[$i] < 1) or ($na_count[$i] < 1) )
-				{$gNApercent=0;}
-			else
-				{$gNApercent = ( ($na_count[$i] / $calls_count[$i]) * 100);}
+			$gNApercent = ( MathZDC($na_count[$i], $calls_count[$i]) * 100);
 			$gNApercent =	sprintf("%6.2f",$gNApercent);
 			$gNAcalls =		sprintf("%6s", $na_count[$i]);
 			$gANSWERcalls =	sprintf("%6s", $answer_count[$i]);
@@ -1214,10 +1206,7 @@ else
 			$gSUMqueue =	sprintf("%9s", $queue_seconds[$i]);
 			$gAVGqueue =	sprintf("%7s", $queue_avg[$i]);
 			$gMAXqueue =	sprintf("%7s", $max_queue_seconds[$i]);
-			if ( ($calls_count[$i] < 1) or ($drop_count[$i] < 1) )
-				{$gDROPpercent=0;}
-			else
-				{$gDROPpercent = ( ($drop_count[$i] / $calls_count[$i]) * 100);}
+			$gDROPpercent = ( MathZDC($drop_count[$i], $calls_count[$i]) * 100);
 			$gDROPpercent =		sprintf("%6.2f",$gDROPpercent);
 			$gDROPcalls =	sprintf("%6s", $drop_count[$i]);
 
@@ -1315,14 +1304,8 @@ else
 					if ($Hmax_queue_seconds[$h] > $hTOTmax_queue_seconds)
 						{$hTOTmax_queue_seconds = $Hmax_queue_seconds[$h];}
 
-					if ( ($Hanswer_count[$h] > 0) and ($Htalk_sec[$h] > 0) )
-						{$Htalk_avg[$h] = ($Htalk_sec[$h] / $Hanswer_count[$h]);}
-					else
-						{$Htalk_avg[$h] = 0;}
-					if ( ($Hcalls_count[$h] > 0) and ($Hqueue_seconds[$h] > 0) )
-						{$Hqueue_avg[$h] = ($Hqueue_seconds[$h] / $Hcalls_count[$h]);}
-					else
-						{$Hqueue_avg[$h] = 0;}
+					$Htalk_avg[$h] = MathZDC($Htalk_sec[$h], $Hanswer_count[$h]);
+					$Hqueue_avg[$h] = MathZDC($Hqueue_seconds[$h], $Hcalls_count[$h]);
 
 					if ($Hcalls_count[$h]>$SUBmax_calls) {$SUBmax_calls=$Hcalls_count[$h];}
 					if ($Hsystem_count[$h]>$SUBmax_system_release) {$SUBmax_system_release=$Hsystem_count[$h];}
@@ -1355,10 +1338,7 @@ else
 					$hAGENTcalls =	sprintf("%6s", $Hagent_count[$h]);
 					$hPTPcalls =	sprintf("%6s", $Hptp_count[$h]);
 					$hRTPcalls =	sprintf("%6s", $Hrtp_count[$h]);
-					if ( ($Hcalls_count[$h] < 1) or ($Hna_count[$h] < 1) )
-						{$hNApercent=0;}
-					else
-						{$hNApercent = ( ($Hna_count[$h] / $Hcalls_count[$h]) * 100);}
+					$hNApercent = ( MathZDC($Hna_count[$h], $Hcalls_count[$h]) * 100);
 					$hNApercent =		sprintf("%6.2f",$hNApercent);
 					$hNAcalls =		sprintf("%6s", $Hna_count[$h]);
 					$hANSWERcalls =	sprintf("%6s", $Hanswer_count[$h]);
@@ -1369,10 +1349,7 @@ else
 					$hSUMqueue =	sprintf("%9s", $Hqueue_seconds[$h]);
 					$hAVGqueue =	sprintf("%7s", $Hqueue_avg[$h]);
 					$hMAXqueue =	sprintf("%7s", $Hmax_queue_seconds[$h]);
-					if ( ($Hcalls_count[$h] < 1) or ($Hdrop_count[$h] < 1) )
-						{$hDROPpercent=0;}
-					else
-						{$hDROPpercent = ( ($Hdrop_count[$h] / $Hcalls_count[$h]) * 100);}
+					$hDROPpercent = ( MathZDC($Hdrop_count[$h], $Hcalls_count[$h]) * 100);
 					$hDROPpercent =		sprintf("%6.2f",$hDROPpercent);
 					$hDROPcalls =	sprintf("%6s", $Hdrop_count[$h]);
 					$hPRINT =		sprintf("%19s", $Hcalltime_HHMM[$h]);
@@ -1389,14 +1366,8 @@ else
 				$h++;
 				}
 
-			if ( ($hTOTanswer_count > 0) and ($hTOTtalk_sec > 0) )
-				{$hTOTtalk_avg = ($hTOTtalk_sec / $hTOTanswer_count);}
-			else
-				{$hTOTtalk_avg = 0;}
-			if ( ($hTOTcalls_count > 0) and ($hTOTqueue_seconds > 0) )
-				{$hTOTqueue_avg = ($hTOTqueue_seconds / $hTOTcalls_count);}
-			else
-				{$hTOTqueue_avg = 0;}
+			$hTOTtalk_avg = MathZDC($hTOTtalk_sec, $hTOTanswer_count);
+			$hTOTqueue_avg = MathZDC($hTOTqueue_seconds, $hTOTcalls_count);
 
 			$hTOTagent_sec =			sec_convert($hTOTagent_sec,'H'); 
 			$hTOTpause_sec =			sec_convert($hTOTpause_sec,'H'); 
@@ -1411,10 +1382,7 @@ else
 			$hTOTagent_count =			sprintf("%6s", $hTOTagent_count);
 			$hTOTptp_count =			sprintf("%6s", $hTOTptp_count);
 			$hTOTrtp_count =			sprintf("%6s", $hTOTrtp_count);
-			if ( ($hTOTcalls_count < 1) or ($hTOTna_count < 1) )
-				{$hTOTna_percent=0;}
-			else
-				{$hTOTna_percent = ( ($hTOTna_count / $hTOTcalls_count) * 100);}
+			$hTOTna_percent = ( MathZDC($hTOTna_count, $hTOTcalls_count) * 100);
 			$hTOTna_percent =			sprintf("%6.2f",$hTOTna_percent);
 			$hTOTna_count =				sprintf("%6s", $hTOTna_count);
 			$hTOTanswer_count =			sprintf("%6s", $hTOTanswer_count);
@@ -1425,10 +1393,7 @@ else
 			$hTOTqueue_seconds =		sprintf("%9s", $hTOTqueue_seconds);
 			$hTOTqueue_avg =			sprintf("%7s", $hTOTqueue_avg);
 			$hTOTmax_queue_seconds =	sprintf("%7s", $hTOTmax_queue_seconds);
-			if ( ($hTOTcalls_count < 1) or ($hTOTdrop_count < 1) )
-				{$hTOTdrop_percent=0;}
-			else
-				{$hTOTdrop_percent = ( ($hTOTdrop_count / $hTOTcalls_count) * 100);}
+			$hTOTdrop_percent = ( MathZDC($hTOTdrop_count, $hTOTcalls_count) * 100);
 			$hTOTdrop_percent =			sprintf("%6.2f",$hTOTdrop_percent);
 			$hTOTdrop_count =			sprintf("%6s", $hTOTdrop_count);
 
@@ -1440,15 +1405,15 @@ else
 
 			for ($d=0; $d<count($SUBgraph_stats); $d++) {
 				if ($d==0) {$class=" first";} else if (($d+1)==count($SUBgraph_stats)) {$class=" last";} else {$class="";}
-				$SUBCALLS_graph.="  <tr><td class='chart_td$class'>".$SUBgraph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$SUBgraph_stats[$d][1]/$SUBmax_calls)."' height='16' />".$SUBgraph_stats[$d][1]."</td></tr>";
-				$SUBSYSTEMRELEASE_graph.="  <tr><td class='chart_td$class'>".$SUBgraph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$SUBgraph_stats[$d][2]/$SUBmax_system_release)."' height='16' />".$SUBgraph_stats[$d][2]."</td></tr>";
-				$SUBAGENTRELEASE_graph.="  <tr><td class='chart_td$class'>".$SUBgraph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$SUBgraph_stats[$d][3]/$SUBmax_agent_release)."' height='16' />".$SUBgraph_stats[$d][3]."</td></tr>";
-				$SUBSALES_graph.="  <tr><td class='chart_td$class'>".$SUBgraph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$SUBgraph_stats[$d][4]/$SUBmax_sales)."' height='16' />".$SUBgraph_stats[$d][4]."</td></tr>";
-				$SUBDNCS_graph.="  <tr><td class='chart_td$class'>".$SUBgraph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$SUBgraph_stats[$d][5]/$SUBmax_dncs)."' height='16' />".$SUBgraph_stats[$d][5]."</td></tr>";
-				$SUBNAS_graph.="  <tr><td class='chart_td$class'>".$SUBgraph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$SUBgraph_stats[$d][6]/$SUBmax_nas)."' height='16' />".$SUBgraph_stats[$d][6]."%</td></tr>";
-				$SUBDROPS_graph.="  <tr><td class='chart_td$class'>".$SUBgraph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$SUBgraph_stats[$d][7]/$SUBmax_drops)."' height='16' />".$SUBgraph_stats[$d][7]."%</td></tr>";
-				$SUBLOGINTIME_graph.="  <tr><td class='chart_td$class'>".$SUBgraph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$SUBgraph_stats[$d][8]/$SUBmax_login_time)."' height='16' />".sec_convert($SUBgraph_stats[$d][8], 'H')."</td></tr>";
-				$SUBPAUSETIME_graph.="  <tr><td class='chart_td$class'>".$SUBgraph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$SUBgraph_stats[$d][9]/$SUBmax_pause_time)."' height='16' />".sec_convert($SUBgraph_stats[$d][9], 'H')."</td></tr>";
+				$SUBCALLS_graph.="  <tr><td class='chart_td$class'>".$SUBgraph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$SUBgraph_stats[$d][1], $SUBmax_calls))."' height='16' />".$SUBgraph_stats[$d][1]."</td></tr>";
+				$SUBSYSTEMRELEASE_graph.="  <tr><td class='chart_td$class'>".$SUBgraph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$SUBgraph_stats[$d][2], $SUBmax_system_release))."' height='16' />".$SUBgraph_stats[$d][2]."</td></tr>";
+				$SUBAGENTRELEASE_graph.="  <tr><td class='chart_td$class'>".$SUBgraph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$SUBgraph_stats[$d][3], $SUBmax_agent_release))."' height='16' />".$SUBgraph_stats[$d][3]."</td></tr>";
+				$SUBSALES_graph.="  <tr><td class='chart_td$class'>".$SUBgraph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$SUBgraph_stats[$d][4], $SUBmax_sales))."' height='16' />".$SUBgraph_stats[$d][4]."</td></tr>";
+				$SUBDNCS_graph.="  <tr><td class='chart_td$class'>".$SUBgraph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$SUBgraph_stats[$d][5], $SUBmax_dncs))."' height='16' />".$SUBgraph_stats[$d][5]."</td></tr>";
+				$SUBNAS_graph.="  <tr><td class='chart_td$class'>".$SUBgraph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$SUBgraph_stats[$d][6], $SUBmax_nas))."' height='16' />".$SUBgraph_stats[$d][6]."%</td></tr>";
+				$SUBDROPS_graph.="  <tr><td class='chart_td$class'>".$SUBgraph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$SUBgraph_stats[$d][7], $SUBmax_drops))."' height='16' />".$SUBgraph_stats[$d][7]."%</td></tr>";
+				$SUBLOGINTIME_graph.="  <tr><td class='chart_td$class'>".$SUBgraph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$SUBgraph_stats[$d][8], $SUBmax_login_time))."' height='16' />".sec_convert($SUBgraph_stats[$d][8], 'H')."</td></tr>";
+				$SUBPAUSETIME_graph.="  <tr><td class='chart_td$class'>".$SUBgraph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$SUBgraph_stats[$d][9], $SUBmax_pause_time))."' height='16' />".sec_convert($SUBgraph_stats[$d][9], 'H')."</td></tr>";
 			}
 			$SUBCALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTcalls_count)."</th></tr></table>";
 			$SUBSYSTEMRELEASE_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTsystem_count)."</th></tr></table>";
@@ -1484,16 +1449,10 @@ else
 			}
 
 		$rawTOTtalk_sec = $TOTtalk_sec;
-		$rawTOTtalk_min = round($rawTOTtalk_sec / 60);
+		$rawTOTtalk_min = round(MathZDC($rawTOTtalk_sec, 60));
 
-		if ( ($TOTanswer_count > 0) and ($TOTtalk_sec > 0) )
-			{$TOTtalk_avg = ($TOTtalk_sec / $TOTanswer_count);}
-		else
-			{$TOTtalk_avg = 0;}
-		if ( ($TOTcalls_count > 0) and ($TOTqueue_seconds > 0) )
-			{$TOTqueue_avg = ($TOTqueue_seconds / $TOTcalls_count);}
-		else
-			{$TOTqueue_avg = 0;}
+		$TOTtalk_avg = MathZDC($TOTtalk_sec, $TOTanswer_count);
+		$TOTqueue_avg = MathZDC($TOTqueue_seconds, $TOTcalls_count);
 
 		$TOTagent_sec =			sec_convert($TOTagent_sec,'H'); 
 		$TOTpause_sec =			sec_convert($TOTpause_sec,'H'); 
@@ -1509,10 +1468,7 @@ else
 		$TOTagent_count =		sprintf("%6s", $TOTagent_count);
 		$TOTptp_count =			sprintf("%6s", $TOTptp_count);
 		$TOTrtp_count =			sprintf("%6s", $TOTrtp_count);
-		if ( ($TOTcalls_count < 1) or ($TOTna_count < 1) )
-			{$TOTna_percent=0;}
-		else
-			{$TOTna_percent = ( ($TOTna_count / $TOTcalls_count) * 100);}
+		$TOTna_percent = ( MathZDC($TOTna_count, $TOTcalls_count) * 100);
 		$TOTna_percent =		sprintf("%6.2f",$TOTna_percent);
 		$TOTna_count =			sprintf("%6s", $TOTna_count);
 		$TOTanswer_count =		sprintf("%6s", $TOTanswer_count);
@@ -1523,10 +1479,7 @@ else
 		$TOTqueue_seconds =		sprintf("%9s", $TOTqueue_seconds);
 		$TOTqueue_avg =			sprintf("%7s", $TOTqueue_avg);
 		$TOTmax_queue_seconds =	sprintf("%7s", $TOTmax_queue_seconds);
-		if ( ($TOTcalls_count < 1) or ($TOTdrop_count < 1) )
-			{$TOTdrop_percent=0;}
-		else
-			{$TOTdrop_percent = ( ($TOTdrop_count / $TOTcalls_count) * 100);}
+		$TOTdrop_percent = ( MathZDC($TOTdrop_count, $TOTcalls_count) * 100);
 		$TOTdrop_percent =		sprintf("%6.2f",$TOTdrop_percent);
 		$TOTdrop_count =		sprintf("%6s", $TOTdrop_count);
 
@@ -1568,15 +1521,15 @@ else
 
 	for ($d=0; $d<count($graph_stats); $d++) {
 		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-		$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
-		$SYSTEMRELEASE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][2]/$max_system_release)."' height='16' />".$graph_stats[$d][2]."</td></tr>";
-		$AGENTRELEASE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][3]/$max_agent_release)."' height='16' />".$graph_stats[$d][3]."</td></tr>";
-		$SALES_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][4]/$max_sales)."' height='16' />".$graph_stats[$d][4]."</td></tr>";
-		$DNCS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][5]/$max_dncs)."' height='16' />".$graph_stats[$d][5]."</td></tr>";
-		$NAS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][6]/$max_nas)."' height='16' />".$graph_stats[$d][6]."%</td></tr>";
-		$DROPS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][7]/$max_drops)."' height='16' />".$graph_stats[$d][7]."%</td></tr>";
-		$LOGINTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][8]/$max_login_time)."' height='16' />".sec_convert($graph_stats[$d][8], 'H')."</td></tr>";
-		$PAUSETIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][9]/$max_pause_time)."' height='16' />".sec_convert($graph_stats[$d][9], 'H')."</td></tr>";
+		$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][1], $max_calls))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+		$SYSTEMRELEASE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][2], $max_system_release))."' height='16' />".$graph_stats[$d][2]."</td></tr>";
+		$AGENTRELEASE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][3], $max_agent_release))."' height='16' />".$graph_stats[$d][3]."</td></tr>";
+		$SALES_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][4], $max_sales))."' height='16' />".$graph_stats[$d][4]."</td></tr>";
+		$DNCS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][5], $max_dncs))."' height='16' />".$graph_stats[$d][5]."</td></tr>";
+		$NAS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][6], $max_nas))."' height='16' />".$graph_stats[$d][6]."%</td></tr>";
+		$DROPS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][7], $max_drops))."' height='16' />".$graph_stats[$d][7]."%</td></tr>";
+		$LOGINTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][8], $max_login_time))."' height='16' />".sec_convert($graph_stats[$d][8], 'H')."</td></tr>";
+		$PAUSETIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][9], $max_pause_time))."' height='16' />".sec_convert($graph_stats[$d][9], 'H')."</td></tr>";
 	}
 	$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTcalls_count)."</th></tr></table>";
 	$SYSTEMRELEASE_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTsystem_count)."</th></tr></table>";

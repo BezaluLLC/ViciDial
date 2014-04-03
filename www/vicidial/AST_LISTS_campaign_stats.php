@@ -19,6 +19,7 @@
 # 130901-2025 - Changed to mysqli PHP functions
 # 130926-0720 - Added link to lists view of report
 # 140108-0715 - Added webserver and hostname to report logging
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
@@ -273,7 +274,9 @@ else
 # Get lists to query to avoid using a nested query
 $lists_id_str="";
 $list_stmt="SELECT list_id from vicidial_lists where active IN('Y','N') $group_SQLand";
+if ($DB) {echo "$list_stmt\n";}
 $list_rslt=mysql_to_mysqli($list_stmt, $link);
+$lists_id_str="'',";
 while ($lrow=mysqli_fetch_row($list_rslt)) {
 	$lists_id_str.="'$lrow[0]',";
 }
@@ -290,7 +293,7 @@ while ($i < $statcats_to_print)
 	$vsc_id[$i] =	$row[0];
 	$vsc_name[$i] =	$row[1];
 
-	$category_statuses="";
+	$category_statuses="'',";
 	$status_stmt="select distinct status from vicidial_statuses where category='$row[0]' UNION select distinct status from vicidial_campaign_statuses where category='$row[0]' $group_SQLand";
 	if ($DB) {echo "$status_stmt\n";}
 	$status_rslt=mysql_to_mysqli($status_stmt, $link);
@@ -538,7 +541,7 @@ else
 		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
 		$GRAPH.="  <tr>\n";
 		$GRAPH.="	<td class=\"chart_td$class\">".$graph_stats[$d][1]."</td>\n";
-		$GRAPH.="	<td nowrap class=\"chart_td value$class\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$graph_stats[$d][0]/$max_calls)."\" height=\"16\" />".$graph_stats[$d][0]."</td>\n";
+		$GRAPH.="	<td nowrap class=\"chart_td value$class\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$graph_stats[$d][0], $max_calls))."\" height=\"16\" />".$graph_stats[$d][0]."</td>\n";
 		$GRAPH.="  </tr>\n";
 	}
 	$GRAPH.="  <tr>\n";
@@ -586,11 +589,8 @@ else
 		$row=mysqli_fetch_row($rslt);
 		$HA_count = $row[0];
 		$flag_count+=$row[0];
-		if ($HA_count > 0)
-			{
-			if ($HA_count>$max_calls) {$max_calls=$HA_count;}
-			$HA_percent = ( ($HA_count / $TOTALleads) * 100);
-			}
+		if ($HA_count>$max_calls) {$max_calls=$HA_count;}
+		$HA_percent = ( MathZDC($HA_count, $TOTALleads) * 100);
 		}
 	$stmt="select count(*) from vicidial_list where status IN($sale_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -601,11 +601,8 @@ else
 		$row=mysqli_fetch_row($rslt);
 		$SALE_count = $row[0];
 		$flag_count+=$row[0];
-		if ($SALE_count > 0)
-			{
-			if ($SALE_count>$max_calls) {$max_calls=$SALE_count;}
-			$SALE_percent = ( ($SALE_count / $TOTALleads) * 100);
-			}
+		if ($SALE_count>$max_calls) {$max_calls=$SALE_count;}
+		$SALE_percent = ( MathZDC($SALE_count, $TOTALleads) * 100);
 		}
 	$stmt="select count(*) from vicidial_list where status IN($dnc_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -616,11 +613,8 @@ else
 		$row=mysqli_fetch_row($rslt);
 		$DNC_count = $row[0];
 		$flag_count+=$row[0];
-		if ($DNC_count > 0)
-			{
-			if ($DNC_count>$max_calls) {$max_calls=$DNC_count;}
-			$DNC_percent = ( ($DNC_count / $TOTALleads) * 100);
-			}
+		if ($DNC_count>$max_calls) {$max_calls=$DNC_count;}
+		$DNC_percent = ( MathZDC($DNC_count, $TOTALleads) * 100);
 		}
 	$stmt="select count(*) from vicidial_list where status IN($customer_contact_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -631,11 +625,8 @@ else
 		$row=mysqli_fetch_row($rslt);
 		$CC_count = $row[0];
 		$flag_count+=$row[0];
-		if ($CC_count > 0)
-			{
-			if ($C_count>$max_calls) {$max_calls=$CC_count;}
-			$CC_percent = ( ($CC_count / $TOTALleads) * 100);
-			}
+		if ($C_count>$max_calls) {$max_calls=$CC_count;}
+		$CC_percent = ( MathZDC($CC_count, $TOTALleads) * 100);
 		}
 	$stmt="select count(*) from vicidial_list where status IN($not_interested_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -646,11 +637,8 @@ else
 		$row=mysqli_fetch_row($rslt);
 		$NI_count = $row[0];
 		$flag_count+=$row[0];
-		if ($NI_count > 0)
-			{
-			if ($NI_count>$max_calls) {$max_calls=$NI_count;}
-			$NI_percent = ( ($NI_count / $TOTALleads) * 100);
-			}
+		if ($NI_count>$max_calls) {$max_calls=$NI_count;}
+		$NI_percent = ( MathZDC($NI_count, $TOTALleads) * 100);
 		}
 	$stmt="select count(*) from vicidial_list where status IN($unworkable_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -661,11 +649,8 @@ else
 		$row=mysqli_fetch_row($rslt);
 		$UW_count = $row[0];
 		$flag_count+=$row[0];
-		if ($UW_count > 0)
-			{
-			if ($UW_count>$max_calls) {$max_calls=$UW_count;}
-			$UW_percent = ( ($UW_count / $TOTALleads) * 100);
-			}
+		if ($UW_count>$max_calls) {$max_calls=$UW_count;}
+		$UW_percent = ( MathZDC($UW_count, $TOTALleads) * 100);
 		}
 	$stmt="select count(*) from vicidial_list where status IN($scheduled_callback_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -676,11 +661,8 @@ else
 		$row=mysqli_fetch_row($rslt);
 		$SC_count = $row[0];
 		$flag_count+=$row[0];
-		if ($SC_count > 0)
-			{
-			if ($SC_count>$max_calls) {$max_calls=$SC_count;}
-			$SC_percent = ( ($SC_count / $TOTALleads) * 100);
-			}
+		if ($SC_count>$max_calls) {$max_calls=$SC_count;}
+		$SC_percent = ( MathZDC($SC_count, $TOTALleads) * 100);
 		}
 	$stmt="select count(*) from vicidial_list where status IN($completed_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -691,11 +673,8 @@ else
 		$row=mysqli_fetch_row($rslt);
 		$COMP_count = $row[0];
 		$flag_count+=$row[0];
-		if ($COMP_count > 0)
-			{
-			if ($COMP_count>$max_calls) {$max_calls=$COMP_count;}
-			$COMP_percent = ( ($COMP_count / $TOTALleads) * 100);
-			}
+		if ($COMP_count>$max_calls) {$max_calls=$COMP_count;}
+		$COMP_percent = ( MathZDC($COMP_count, $TOTALleads) * 100);
 		}
 
 	$HA_percent =	sprintf("%6.2f", "$HA_percent"); while(strlen($HA_percent)>6) {$HA_percent = substr("$HA_percent", 0, -1);}
@@ -743,35 +722,35 @@ else
 
 	$GRAPH.="  <tr>\n";
 	$GRAPH.="	<td class=\"chart_td first\">Human Answer</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value first\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$HA_count/$max_calls)."\" height=\"16\"/>".$HA_count." ($HA_percent%)</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value first\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$HA_count, $max_calls))."\" height=\"16\"/>".$HA_count." ($HA_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
 	$GRAPH.="	<td class=\"chart_td\">Sale</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$SALE_count/$max_calls)."\" height=\"16\" />".$SALE_count." ($SALE_percent%)</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$SALE_count, $max_calls))."\" height=\"16\" />".$SALE_count." ($SALE_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
 	$GRAPH.="	<td class=\"chart_td\">DNC</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$DNC_count/$max_calls)."\" height=\"16\" />".$DNC_count." ($DNC_percent%)</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$DNC_count, $max_calls))."\" height=\"16\" />".$DNC_count." ($DNC_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
 	$GRAPH.="	<td class=\"chart_td\">Customer Contact</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$CC_count/$max_calls)."\" height=\"16\" />".$CC_count." ($CC_percent%)</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$CC_count, $max_calls))."\" height=\"16\" />".$CC_count." ($CC_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
 	$GRAPH.="	<td class=\"chart_td\">Not Interested</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$NI_count/$max_calls)."\" height=\"16\" />".$NI_count." ($NI_percent%)</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$NI_count, $max_calls))."\" height=\"16\" />".$NI_count." ($NI_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
 	$GRAPH.="	<td class=\"chart_td\">Unworkable</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$UW_count/$max_calls)."\" height=\"16\" />".$UW_count." ($UW_percent%)</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$UW_count, $max_calls))."\" height=\"16\" />".$UW_count." ($UW_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
 	$GRAPH.="	<td class=\"chart_td\">Scheduled Callbacks</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$SC_count/$max_calls)."\" height=\"16\" />".$SC_count." ($SC_percent%)</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$SC_count, $max_calls))."\" height=\"16\" />".$SC_count." ($SC_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
 	$GRAPH.="	<td class=\"chart_td last\">Completed</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value last\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$COMP_count/$max_calls)."\" height=\"16\" />".$COMP_count." ($COMP_percent%)</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value last\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$COMP_count, $max_calls))."\" height=\"16\" />".$COMP_count." ($COMP_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
 	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">TOTAL:</th>\n";
@@ -833,7 +812,7 @@ else
 		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
 		$GRAPH.="  <tr>\n";
 		$GRAPH.="	<td class=\"chart_td$class\">".$graph_stats[$d][1]."</td>\n";
-		$GRAPH.="	<td nowrap class=\"chart_td value$class\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$graph_stats[$d][0]/$max_calls)."\" height=\"16\" />".$graph_stats[$d][0]."</td>\n";
+		$GRAPH.="	<td nowrap class=\"chart_td value$class\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$graph_stats[$d][0], $max_calls))."\" height=\"16\" />".$graph_stats[$d][0]."</td>\n";
 		$GRAPH.="  </tr>\n";
 	}
 	$GRAPH.="  <tr>\n";
@@ -908,10 +887,7 @@ else
 			{
 			$row=mysqli_fetch_row($rslt);
 			$HA_count = $row[0];
-			if ($HA_count > 0)
-				{
-				$HA_percent = ( ($HA_count / $LISTIDcalls[$i]) * 100);
-				}
+			$HA_percent = ( MathZDC($HA_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($HA_count>$max_flags) {$max_flags=$HA_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($sale_statuses);";
@@ -922,10 +898,7 @@ else
 			{
 			$row=mysqli_fetch_row($rslt);
 			$SALE_count = $row[0];
-			if ($SALE_count > 0)
-				{
-				$SALE_percent = ( ($SALE_count / $LISTIDcalls[$i]) * 100);
-				}
+			$SALE_percent = ( MathZDC($SALE_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($SALE_count>$max_flags) {$max_flags=$SALE_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($dnc_statuses);";
@@ -936,10 +909,7 @@ else
 			{
 			$row=mysqli_fetch_row($rslt);
 			$DNC_count = $row[0];
-			if ($DNC_count > 0)
-				{
-				$DNC_percent = ( ($DNC_count / $LISTIDcalls[$i]) * 100);
-				}
+			$DNC_percent = ( MathZDC($DNC_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($DNC_count>$max_flags) {$max_flags=$DNC_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($customer_contact_statuses);";
@@ -950,10 +920,7 @@ else
 			{
 			$row=mysqli_fetch_row($rslt);
 			$CC_count = $row[0];
-			if ($CC_count > 0)
-				{
-				$CC_percent = ( ($CC_count / $LISTIDcalls[$i]) * 100);
-				}
+			$CC_percent = ( MathZDC($CC_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($CC_count>$max_flags) {$max_flags=$CC_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($not_interested_statuses);";
@@ -964,10 +931,7 @@ else
 			{
 			$row=mysqli_fetch_row($rslt);
 			$NI_count = $row[0];
-			if ($NI_count > 0)
-				{
-				$NI_percent = ( ($NI_count / $LISTIDcalls[$i]) * 100);
-				}
+			$NI_percent = ( MathZDC($NI_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($NI_count>$max_flags) {$max_flags=$NI_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($unworkable_statuses);";
@@ -978,10 +942,7 @@ else
 			{
 			$row=mysqli_fetch_row($rslt);
 			$UW_count = $row[0];
-			if ($UW_count > 0)
-				{
-				$UW_percent = ( ($UW_count / $LISTIDcalls[$i]) * 100);
-				}
+			$UW_percent = ( MathZDC($UW_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($UW_count>$max_flags) {$max_flags=$UW_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($scheduled_callback_statuses);";
@@ -992,10 +953,7 @@ else
 			{
 			$row=mysqli_fetch_row($rslt);
 			$SC_count = $row[0];
-			if ($SC_count > 0)
-				{
-				$SC_percent = ( ($SC_count / $LISTIDcalls[$i]) * 100);
-				}
+			$SC_percent = ( MathZDC($SC_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($SC_count>$max_flags) {$max_flags=$SC_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($completed_statuses);";
@@ -1006,10 +964,7 @@ else
 			{
 			$row=mysqli_fetch_row($rslt);
 			$COMP_count = $row[0];
-			if ($COMP_count > 0)
-				{
-				$COMP_percent = ( ($COMP_count / $LISTIDcalls[$i]) * 100);
-				}
+			$COMP_percent = ( MathZDC($COMP_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($COMP_count>$max_flags) {$max_flags=$COMP_count;}
 
@@ -1044,14 +999,14 @@ else
 		$OUToutput .= "     |    STATUS BREAKDOWN:                       |    COUNT   |\n";
 		$OUToutput .= "     +--------+-----------------------------------+------------+\n";
 
-		$FLAGS_graph.="  <tr><td class='chart_td first'>HUMAN ANSWER</td><td nowrap class='chart_td value first'><img src='images/bar.png' alt='' width='".round(400*$HA_count/$max_flags)."' height='16' />$HA_count ($HA_percent%)</td></tr>";
-		$FLAGS_graph.="  <tr><td class='chart_td'>SALE</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(400*$SALE_count/$max_flags)."' height='16' />$SALE_count ($SALE_percent%)</td></tr>";
-		$FLAGS_graph.="  <tr><td class='chart_td'>DNC</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(400*$DNC_count/$max_flags)."' height='16' />$DNC_count ($DNC_percent%)</td></tr>";
-		$FLAGS_graph.="  <tr><td class='chart_td'>CUSTOMER CONTACT</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(400*$CC_count/$max_flags)."' height='16' />$CC_count ($CC_percent%)</td></tr>";
-		$FLAGS_graph.="  <tr><td class='chart_td'>NOT INTERESTED</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(400*$NI_count/$max_flags)."' height='16' />$NI_count ($NI_percent%)</td></tr>";
-		$FLAGS_graph.="  <tr><td class='chart_td'>UNWORKABLE</td><td nowrap class='chart_td value last><img src='images/bar.png' alt='' width='".round(400*$UW_count/$max_flags)."' height='16' />$UW_count ($UW_percent%)</td></tr>";
-		$FLAGS_graph.="  <tr><td class='chart_td'>SCHEDULED CALLBACKS</td><td nowrap class='chart_td value last><img src='images/bar.png' alt='' width='".round(400*$SC_count/$max_flags)."' height='16' />$SC_count ($SC_percent%)</td></tr>";
-		$FLAGS_graph.="  <tr><td class='chart_td last'>COMPLETED</td><td nowrap class='chart_td value last><img src='images/bar.png' alt='' width='".round(400*$COMP_count/$max_flags)."' height='16' />$COMP_count ($COMP_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td first'>HUMAN ANSWER</td><td nowrap class='chart_td value first'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$HA_count, $max_flags))."' height='16' />$HA_count ($HA_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>SALE</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$SALE_count, $max_flags))."' height='16' />$SALE_count ($SALE_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>DNC</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$DNC_count, $max_flags))."' height='16' />$DNC_count ($DNC_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>CUSTOMER CONTACT</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$CC_count, $max_flags))."' height='16' />$CC_count ($CC_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>NOT INTERESTED</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$NI_count, $max_flags))."' height='16' />$NI_count ($NI_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>UNWORKABLE</td><td nowrap class='chart_td value last><img src='images/bar.png' alt='' width='".round(MathZDC(400*$UW_count, $max_flags))."' height='16' />$UW_count ($UW_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>SCHEDULED CALLBACKS</td><td nowrap class='chart_td value last><img src='images/bar.png' alt='' width='".round(MathZDC(400*$SC_count, $max_flags))."' height='16' />$SC_count ($SC_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td last'>COMPLETED</td><td nowrap class='chart_td value last><img src='images/bar.png' alt='' width='".round(MathZDC(400*$COMP_count, $max_flags))."' height='16' />$COMP_count ($COMP_percent%)</td></tr>";
 
 		$CSV_text4.="\"STATUS FLAGS BREAKDOWN:\",\"(and % of total leads in the list)\"\n";
 		$CSV_text4.="\"Human Answer:\",\"$HA_count\",\"$HA_percent%\"\n";
@@ -1106,7 +1061,7 @@ else
 
 		for ($d=0; $d<count($graph_stats); $d++) {
 			if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-			$STATUS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_status)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+			$STATUS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][1], $max_status))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
 		}
 		$STATUS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTALleads)."</th></tr></table>";
 		$JS_onload.="\tDraw".$LISTIDlists[$i]."Graph('FLAGS', '1');\n"; 

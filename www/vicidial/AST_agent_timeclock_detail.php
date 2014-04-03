@@ -19,6 +19,7 @@
 # 130704-0946 - Fixed issue #675
 # 130901-0826 - Changed to mysqli PHP functions
 # 140108-0750 - Added webserver and hostname to report logging
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
@@ -661,7 +662,7 @@ else
 			if ($i==0) {$class=" first";} else if (($i+1)==count($graph_stats)) {$class=" last";} else {$class="";}
 			$GRAPH.="  <tr>\n";
 			$GRAPH.="	<th class=\"thgraph$class\" scope=\"col\">".$graph_stats[$i][0]."</th>\n";
-			$GRAPH.="	<th class=\"thgraph value$class\" scope=\"col\" nowrap><img src=\"images/bar.png\" alt=\"\" width=\"".round(200*$graph_stats[$i][1]/$max_time)."\" height=\"16\" />".sec_convert($graph_stats[$i][1], 'H').$graph_stats[$i][2]."</th>\n";
+			$GRAPH.="	<th class=\"thgraph value$class\" scope=\"col\" nowrap><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(200*$graph_stats[$i][1], $max_time))."\" height=\"16\" />".sec_convert($graph_stats[$i][1], 'H').$graph_stats[$i][2]."</th>\n";
 			$GRAPH.="	<th class=\"thgraph$class\" scope=\"col\">".$graph_stats[$i][3]."</th>\n";
 			$GRAPH.="  </tr>\n";
 		}

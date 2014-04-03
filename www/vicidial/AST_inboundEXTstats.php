@@ -1,7 +1,7 @@
 <?php 
 # AST_inboundEXTstats.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 60421-1450 - check GET/POST vars lines with isset to not trigger PHP NOTICES
@@ -11,6 +11,7 @@
 # 130610-1134 - Finalized changing of all ereg instances to preg
 # 130621-0745 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0729 - Changed to mysqli PHP functions
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 require("dbconnect_mysqli.php");
@@ -184,7 +185,7 @@ if ($DB) {echo "$stmt\n";}
 $row=mysqli_fetch_row($rslt);
 
 $TOTALcalls =	sprintf("%10s", $row[0]);
-$average_hold_seconds = ($row[1] / $row[0]);
+$average_hold_seconds = MathZDC($row[1], $row[0]);
 $average_hold_seconds = round($average_hold_seconds, 0);
 $average_hold_seconds =	sprintf("%10s", $average_hold_seconds);
 
@@ -200,12 +201,12 @@ if ($DB) {echo "$stmt\n";}
 $row=mysqli_fetch_row($rslt);
 
 $DROPcalls =	sprintf("%10s", $row[0]);
-$DROPpercent = (($DROPcalls / $TOTALcalls) * 100);
+$DROPpercent = (MathZDC($DROPcalls, $TOTALcalls) * 100);
 $DROPpercent = round($DROPpercent, 0);
 
 if ($row[0])
 	{
-	$average_hold_seconds = ($row[1] / $row[0]);
+	$average_hold_seconds = MathZDC($row[1], $row[0]);
 	$average_hold_seconds = round($average_hold_seconds, 0);
 	$average_hold_seconds =	sprintf("%10s", $average_hold_seconds);
 	}
@@ -237,7 +238,7 @@ while ($i < $users_to_print)
 	$datetime =		sprintf("%-19s", $row[3]);
 	$USERavgTALK =	$row[2];
 
-	$USERavgTALK_M = ($USERavgTALK / 60);
+	$USERavgTALK_M = MathZDC($USERavgTALK, 60);
 	$USERavgTALK_M = round($USERavgTALK_M, 2);
 	$USERavgTALK_M_int = intval("$USERavgTALK_M");
 	$USERavgTALK_S = ($USERavgTALK_M - $USERavgTALK_M_int);
@@ -330,7 +331,7 @@ if ($output == 'FULL')
 		$h++;
 		}
 
-	$hour_multiplier = (100 / $hi_hour_count);
+	$hour_multiplier = MathZDC(100, $hi_hour_count);
 	#$hour_multiplier = round($hour_multiplier, 0);
 
 	echo "<!-- HICOUNT: $hi_hour_count|$hour_multiplier -->\n";
@@ -344,7 +345,7 @@ if ($output == 'FULL')
 		if ($Mk >= 5) 
 			{
 			$Mk=0;
-			$scale_num=($k / $hour_multiplier);
+			$scale_num=MathZDC($k, $hour_multiplier);
 			$scale_num = round($scale_num, 0);
 			$LENscale_num = (strlen($scale_num));
 			$k = ($k + $LENscale_num);

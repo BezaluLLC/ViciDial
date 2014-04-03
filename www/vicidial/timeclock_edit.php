@@ -1,7 +1,7 @@
 <?php
 # timeclock_edit.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -13,6 +13,7 @@
 # 130610-1107 - Finalized changing of all ereg instances to preg
 # 130616-1541 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0840 - Changed to mysqli PHP functions
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -391,7 +392,7 @@ if ( ($invalid_record < 1) or (strlen($timeclock_id)<1) )
 	#	$LOGINevent_id =	$timeclock_id;
 	#	$LOGOUTevent_id =	$tcid_link;
 
-		$event_hours = ($LOGINlogin_sec / 3600);
+		$event_hours = MathZDC($LOGINlogin_sec, 3600);
 		$event_hours_int = round($event_hours, 2);
 		$event_hours_int = intval("$event_hours_int");
 		$event_minutes = ($event_hours - $event_hours_int);

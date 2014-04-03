@@ -98,10 +98,17 @@
 $build = '140214-1519';
 
 $DB=0; # Debug flag
+
+# define blank variables
 $MT[0]='';   $MT[1]='';
 @psline=@MT;
 $cu3way=0;
+$cu3way_delay='';
+$autodial_delay='';
+$adfill_delay='';
+$fill_staggered='';
 
+# time variable definitions
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 $year = ($year + 1900);
 $mon++;
@@ -113,10 +120,35 @@ if ($min < 10) {$min = "0$min";}
 if ($sec < 10) {$sec = "0$sec";}
 $now_date = "$year-$mon-$mday $hour:$min:$sec";
 $reset_test = "$hour$min";
-$cu3way_delay='';
-$autodial_delay='';
-$adfill_delay='';
-$fill_staggered='';
+
+### calculate the date and time for slightly less than 24 hours ago
+$secX = time();
+$TDtarget = ($secX - 86000);	# almost one day old
+($Tsec,$Tmin,$Thour,$Tmday,$Tmon,$Tyear,$Twday,$Tyday,$Tisdst) = localtime($TDtarget);
+$Tyear = ($Tyear + 1900);
+$Tmon++;
+if ($Tmon < 10) {$Tmon = "0$Tmon";}
+if ($Tmday < 10) {$Tmday = "0$Tmday";}
+if ($Thour < 10) {$Thour = "0$Thour";}
+if ($Tmin < 10) {$Tmin = "0$Tmin";}
+if ($Tsec < 10) {$Tsec = "0$Tsec";}
+$TDSQLdate = "$Tyear-$Tmon-$Tmday $Thour:$Tmin:$Tsec";
+
+### calculate the date and time for 24 hours ago
+$secX = time();
+$RMtarget = ($secX - 86400);	# 24 hours ago
+($RMsec,$RMmin,$RMhour,$RMmday,$RMmon,$RMyear,$RMwday,$RMyday,$RMisdst) = localtime($RMtarget);
+$RMyear = ($RMyear + 1900);
+$RMmon++;
+if ($RMmon < 10) {$RMmon = "0$RMmon";}
+if ($RMmday < 10) {$RMmday = "0$RMmday";}
+if ($RMhour < 10) {$RMhour = "0$RMhour";}
+if ($RMmin < 10) {$RMmin = "0$RMmin";}
+if ($RMsec < 10) {$RMsec = "0$RMsec";}
+$RMSQLdate = "$RMyear-$RMmon-$RMmday $RMhour:$RMmin:$RMsec";
+$RMdate = "$RMyear-$RMmon-$RMmday";
+
+
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -803,18 +835,6 @@ if ($timeclock_end_of_day_NOW > 0)
 
 	if ($DB) {print "Starting clear out daily reset tables...\n";}
 
-	$secX = time();
-	$TDtarget = ($secX - 86000);	# almost one day old
-	($Tsec,$Tmin,$Thour,$Tmday,$Tmon,$Tyear,$Twday,$Tyday,$Tisdst) = localtime($TDtarget);
-	$Tyear = ($Tyear + 1900);
-	$Tmon++;
-	if ($Tmon < 10) {$Tmon = "0$Tmon";}
-	if ($Tmday < 10) {$Tmday = "0$Tmday";}
-	if ($Thour < 10) {$Thour = "0$Thour";}
-	if ($Tmin < 10) {$Tmin = "0$Tmin";}
-	if ($Tsec < 10) {$Tsec = "0$Tsec";}
-	$TDSQLdate = "$Tyear-$Tmon-$Tmday $Thour:$Tmin:$Tsec";
-
 	$stmtA = "UPDATE vicidial_xfer_stats SET xfer_count='0';";
 	if($DBX){print STDERR "\n|$stmtA|\n";}
 	$affected_rows = $dbhA->do($stmtA);
@@ -1059,20 +1079,6 @@ if ($timeclock_end_of_day_NOW > 0)
 	@aryA = $sthA->fetchrow_array;
 	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
 	$sthA->finish();
-
-	### calculate the date and time for 24 hours ago
-	$secX = time();
-	$RMtarget = ($secX - 86400);	# 24 hours ago
-	($RMsec,$RMmin,$RMhour,$RMmday,$RMmon,$RMyear,$RMwday,$RMyday,$RMisdst) = localtime($RMtarget);
-	$RMyear = ($RMyear + 1900);
-	$RMmon++;
-	if ($RMmon < 10) {$RMmon = "0$RMmon";}
-	if ($RMmday < 10) {$RMmday = "0$RMmday";}
-	if ($RMhour < 10) {$RMhour = "0$RMhour";}
-	if ($RMmin < 10) {$RMmin = "0$RMmin";}
-	if ($RMsec < 10) {$RMsec = "0$RMsec";}
-	$RMSQLdate = "$RMyear-$RMmon-$RMmday $RMhour:$RMmin:$RMsec";
-	$RMdate = "$RMyear-$RMmon-$RMmday";
 
 	# set past holidays to EXPIRED status
 	$stmtA = "UPDATE vicidial_call_time_holidays SET holiday_status='EXPIRED' where holiday_date < \"$RMdate\" and holiday_status!='EXPIRED';";

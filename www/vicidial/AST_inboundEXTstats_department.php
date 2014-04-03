@@ -1,7 +1,7 @@
 <?php 
 # AST_inboundEXTstats_department.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 70201-1710 - First Build
@@ -9,6 +9,7 @@
 # 130610-1134 - Finalized changing of all ereg instances to preg
 # 130621-0743 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-2028 - Changed to mysqli PHP functions
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 require("dbconnect_mysqli.php");
@@ -211,7 +212,7 @@ else
 			}
 		else
 			{
-			$average_hold_seconds = ($row[1] / $row[0]);
+			$average_hold_seconds = MathZDC($row[1], $row[0]);
 			$average_hold_seconds = round($average_hold_seconds, 0);
 			$average_hold_seconds =	sprintf("%10s", $average_hold_seconds);
 			}
@@ -224,7 +225,7 @@ else
 		}
 
 	$calls =	sprintf("%10s", $calls);
-	$seconds = ($seconds / $calls);
+	$seconds = MathZDC($seconds, $calls);
 	$seconds = round($seconds, 0);
 	$seconds =	sprintf("%5s", $seconds);
 	echo "+----------------------+------------+------------+\n";

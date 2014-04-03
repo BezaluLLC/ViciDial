@@ -23,6 +23,7 @@
 # 130616-1026 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0839 - Changed to mysqli PHP functions
 # 140108-0720 - Added webserver and hostname to report logging
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
@@ -344,6 +345,7 @@ while($i < $user_group_ct)
 	{
 	$user_group_string .= "$user_group[$i]|";
 	$user_group_SQL .= "'$user_group[$i]',";
+	$user_groupQS .= "&user_group[]=$user_group[$i]";
 	$i++;
 	}
 if ( (preg_match('/\-\-ALL\-\-/',$user_group_string) ) or ($user_group_ct < 1) )
@@ -438,8 +440,8 @@ $MAIN.="<INPUT TYPE=text NAME=user SIZE=7 MAXLENGTH=20 VALUE=\"$user\">\n";
 
 $MAIN.="<BR><BR><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
 $MAIN.="</TD></TD><TD ALIGN=LEFT VALIGN=TOP>\n";
-$MAIN.="</TD><TD ALIGN=CENTER VALIGN=TOP ROWSPAN=3>\n";
-$MAIN.="<FONT class=\"select_bold\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; <a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&order=$order&user=$user&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a><FONT class=\"select_bold\" COLOR=BLACK SIZE=2> &nbsp; | &nbsp; <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+$MAIN.="</TD><TD ALIGN=CENTER VALIGN=TOP ROWSPAN=3>\n";	
+$MAIN.="<FONT class=\"select_bold\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; <a href=\"$PHP_SELF?DB=$DB$user_groupQS&query_date=$query_date&end_date=$end_date&order=$order&user=$user&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a><FONT class=\"select_bold\" COLOR=BLACK SIZE=2> &nbsp; | &nbsp; <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
 
 $MAIN.="</TD></TR></TABLE>\n";
 $MAIN.="</FORM>\n\n";
@@ -502,7 +504,7 @@ if (!$report_display_type || $report_display_type=="TEXT")
 
 		if ($login_sec[$i] > 0)
 			{
-			$dbHOURS = ($login_sec[$i] / 3600);
+			$dbHOURS = MathZDC($login_sec[$i], 3600);
 			$dbHOURS = round($dbHOURS, 2);
 			$dbHOURS = sprintf("%01.2f", $dbHOURS);
 			}
@@ -535,7 +537,7 @@ if (!$report_display_type || $report_display_type=="TEXT")
 		$MAIN.="<TD><FONT class=\"data_records\">$u_group[$i] </TD>\n";
 		$MAIN.="<TD ALIGN=RIGHT><FONT class=\"data_records_fix\"> $hours[$i]</TD>\n";
 		$MAIN.="</TR>\n";
-		$CSV_text.="\"\",\"$j\",\"$user_id[$i]\",\"$full_name[$i]\",\"$u_group[$i]\",\"$hours[$i]\"\n";
+		$CSV_text.="\"\",\"".($j+1)."\",\"$user_id[$i]\",\"$full_name[$i]\",\"$u_group[$i]\",\"$hours[$i]\"\n";
 
 		$j++;
 		}
@@ -543,7 +545,7 @@ if (!$report_display_type || $report_display_type=="TEXT")
 
 	if ($TOTlogin_sec > 0)
 		{
-		$TOTdbHOURS = ($TOTlogin_sec / 3600);
+		$TOTdbHOURS = MathZDC($TOTlogin_sec, 3600);
 		$TOTdbHOURS = round($TOTdbHOURS, 0);
 		$TOTdbHOURS = sprintf("%01.0f", $TOTdbHOURS);
 		}
@@ -571,7 +573,7 @@ else
 
 		if ($row[2] > 0)
 			{
-			$dbHOURS = ($row[2] / 3600);
+			$dbHOURS = MathZDC($row[2], 3600);
 			$dbHOURS = round($dbHOURS, 2);
 			$dbHOURS = sprintf("%01.2f", $dbHOURS);
 			}
@@ -595,7 +597,7 @@ else
 		if ($i==0) {$class=" first";} else if (($i+1)==count($ct_ary)) {$class=" last";} else {$class="";}
 		$MAIN.="  <tr>\n";
 		$MAIN.="	<td class=\"chart_td$class\">".$ct_ary[$i][0]."</td>\n";
-		$MAIN.="	<td class=\"chart_td value$class\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$ct_ary[$i][1]/$high_ct)."\" height=\"16\" />".$ct_ary[$i][1]."</td>\n";
+		$MAIN.="	<td class=\"chart_td value$class\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$ct_ary[$i][1], $high_ct))."\" height=\"16\" />".$ct_ary[$i][1]."</td>\n";
 		$MAIN.="  </tr>\n";
 	}
 	$MAIN.="  <tr>\n";

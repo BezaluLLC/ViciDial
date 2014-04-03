@@ -22,6 +22,7 @@
 # 130901-2012 - Changed to mysqli PHP functions
 # 130926-0658 - Added check for several different ploticus bin paths
 # 140108-0716 - Added webserver and hostname to report logging
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
@@ -298,7 +299,7 @@ else
 	$AVGload =	sprintf("%10s", $row[0]);
 	$AVGchannels =	sprintf("%10s", $row[1]);
 	$HIGHload =	$row[2];
-		$HIGHmulti = intval($HIGHload / 100);
+		$HIGHmulti = intval(MathZDC($HIGHload, 100));
 	$HIGHchannels =	$row[3];
 	$HIGHprocesses =$row[4];
 	if ($row[2] > $row[3]) {$HIGHlimit = $row[2];}

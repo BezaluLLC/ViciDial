@@ -1,7 +1,7 @@
 <?php 
 # AST_timeonVDADallREC.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # live real-time stats for the VICIDIAL Auto-Dialer all servers
 #
@@ -30,6 +30,7 @@
 # 130610-1126 - Finalized changing of all ereg instances to preg
 # 130620-2300 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-2007 - Changed to mysqli PHP functions
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -108,7 +109,7 @@ $cpuload += $cpu->LoadPercentage;
 $i++;
 }
 
-$cpuload = round($cpuload / $i, 2);
+$cpuload = round(MathZDC($cpuload, $i), 2);
 return "$cpuload%";
 }
 else {
@@ -468,12 +469,8 @@ $diffONEMIN = $row[4];
 $agentsONEMIN = $row[5];
 $balanceFILL = $row[6];
 $answersTODAY = $row[7];
-if ( ($diffONEMIN != 0) and ($agentsONEMIN > 0) )
-	{
-	$diffpctONEMIN = ( ($diffONEMIN / $agentsONEMIN) * 100);
-	$diffpctONEMIN = sprintf("%01.2f", $diffpctONEMIN);
-	}
-else {$diffpctONEMIN = '0.00';}
+$diffpctONEMIN = (MathZDC($diffONEMIN, $agentsONEMIN) * 100);
+$diffpctONEMIN = sprintf("%01.2f", $diffpctONEMIN);
 
 $stmt="select sum(local_trunk_shortage) from vicidial_campaign_server_stats where campaign_id='" . mysqli_real_escape_string($link, $group) . "';";
 if ($group=='XXXX-ALL-ACTIVE-XXXX') 
@@ -839,7 +836,7 @@ $talking_to_print = mysqli_num_rows($rslt);
 		else
 			{$call_time_S = ($STARTtime - $row[5]);}
 
-		$call_time_M = ($call_time_S / 60);
+		$call_time_M = MathZDC($call_time_S, 60);
 		$call_time_M = round($call_time_M, 2);
 		$call_time_M_int = intval("$call_time_M");
 		$call_time_SEC = ($call_time_M - $call_time_M_int);

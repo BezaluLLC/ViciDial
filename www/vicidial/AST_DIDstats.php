@@ -20,6 +20,7 @@
 # 130621-0758 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0734 - Changed to mysqli PHP functions
 # 140108-0742 - Added webserver and hostname to report logging
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
@@ -469,7 +470,7 @@ else
 	$EQsec = ( ($EQtime_ARY[0] * 3600) + ($EQtime_ARY[1] * 60) + ($EQtime_ARY[2] * 1) );
 
 	$DURATIONsec = ($EQepoch - $SQepoch);
-	$DURATIONday = intval( ($DURATIONsec / 86400) + 1 );
+	$DURATIONday = intval( MathZDC($DURATIONsec, 86400) + 1 );
 
 	if ( ($EQsec < $SQsec) and ($DURATIONday < 1) )
 		{
@@ -691,7 +692,7 @@ else
 				if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
 				$GRAPH_text.="  <tr>\n";
 				$GRAPH_text.="	<td class=\"chart_td$class\">".$graph_stats[$d][1]."</td>\n";
-				$GRAPH_text.="	<td nowrap class=\"chart_td value$class\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$graph_stats[$d][0]/$max_calls)."\" height=\"16\" />".$graph_stats[$d][0]."</td>\n";
+				$GRAPH_text.="	<td nowrap class=\"chart_td value$class\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$graph_stats[$d][0], $max_calls))."\" height=\"16\" />".$graph_stats[$d][0]."</td>\n";
 				$GRAPH_text.="  </tr>\n";
 			}
 			$GRAPH_text.="  <tr>\n";
@@ -782,25 +783,17 @@ else
 		{
 		if ($totCALLSdate[$d] < 1) {$totCALLSdate[$d]=0;}
 		
-		if ($totCALLSsecDATE[$d] > 0)
-			{
-			$totCALLSavgDATE[$d] = ($totCALLSsecDATE[$d] / $totCALLSdate[$d]);
+		$totCALLSavgDATE[$d] = MathZDC($totCALLSsecDATE[$d], $totCALLSdate[$d]);
 
-			$totTIME_M = ($totCALLSsecDATE[$d] / 60);
-			$totTIME_M_int = round($totTIME_M, 2);
-			$totTIME_M_int = intval("$totTIME_M");
-			$totTIME_S = ($totTIME_M - $totTIME_M_int);
-			$totTIME_S = ($totTIME_S * 60);
-			$totTIME_S = round($totTIME_S, 0);
-			if ($totTIME_S < 10) {$totTIME_S = "0$totTIME_S";}
-			$totTIME_MS = "$totTIME_M_int:$totTIME_S";
-			$totTIME_MS =		sprintf("%8s", $totTIME_MS);
-			}
-		else 
-			{
-			$totCALLSavgDATE[$d] = 0;
-			$totTIME_MS='        ';
-			}
+		$totTIME_M = MathZDC($totCALLSsecDATE[$d], 60);
+		$totTIME_M_int = round($totTIME_M, 2);
+		$totTIME_M_int = intval("$totTIME_M");
+		$totTIME_S = ($totTIME_M - $totTIME_M_int);
+		$totTIME_S = ($totTIME_S * 60);
+		$totTIME_S = round($totTIME_S, 0);
+		if ($totTIME_S < 10) {$totTIME_S = "0$totTIME_S";}
+		$totTIME_MS = "$totTIME_M_int:$totTIME_S";
+		$totTIME_MS =		sprintf("%8s", $totTIME_MS);
 
 		if ($totCALLSdate[$d] < 1) 
 			{$totCALLSdate[$d]='';}
@@ -819,7 +812,7 @@ else
 		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
 		$GRAPH_text.="  <tr>\n";
 		$GRAPH_text.="	<td class=\"chart_td$class\">".$graph_stats[$d][1]."</td>\n";
-		$GRAPH_text.="	<td nowrap class=\"chart_td value$class\" nowrap><img src=\"images/bar.png\" alt=\"\" width=\"".round(400*$graph_stats[$d][0]/$max_calls)."\" height=\"16\" />".$graph_stats[$d][0]."</td>\n";
+		$GRAPH_text.="	<td nowrap class=\"chart_td value$class\" nowrap><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$graph_stats[$d][0], $max_calls))."\" height=\"16\" />".$graph_stats[$d][0]."</td>\n";
 		$GRAPH_text.="  </tr>\n";
 	}
 	$GRAPH_text.="  <tr>\n";
@@ -854,8 +847,7 @@ else
 
 	while ($i < $TOTintervals)
 		{
-		if ($qrtCALLS[$i] > 0)
-			{$qrtCALLSavg[$i] = ($qrtCALLSsec[$i] / $qrtCALLS[$i]);}
+		$qrtCALLSavg[$i] = MathZDC($qrtCALLSsec[$i], $qrtCALLS[$i]);
 
 		if ($qrtCALLS[$i] > $hi_hour_count) 
 			{$hi_hour_count = $qrtCALLS[$i];}
@@ -863,14 +855,8 @@ else
 		$i++;
 		}
 
-	if ($hi_hour_count < 1)
-		{$hour_multiplier = 0;}
-	else
-		{$hour_multiplier = (70 / $hi_hour_count);}
-	if ($hi_hold_count < 1)
-		{$hold_multiplier = 0;}
-	else
-		{$hold_multiplier = (70 / $hi_hold_count);}
+	$hour_multiplier = MathZDC(70, $hi_hour_count);
+	$hold_multiplier = MathZDC(70, $hi_hold_count);
 
 
 
@@ -894,15 +880,10 @@ else
 	$call_scale = '0';
 	while ($k <= 72) 
 		{
-		if ( ($k < 1) or ($hour_multiplier <= 0) )
-			{$scale_num = 70;}
-		else
-			{
-			$TMPscale_num=(73 / $hour_multiplier);
-			$TMPscale_num = round($TMPscale_num, 0);
-			$scale_num=($k / $hour_multiplier);
-			$scale_num = round($scale_num, 0);
-			}
+		$TMPscale_num=MathZDC(73, $hour_multiplier);
+		$TMPscale_num = round($TMPscale_num, 0);
+		$scale_num=MathZDC($k, $hour_multiplier);
+		$scale_num = round($scale_num, 0);
 		$tmpscl = "$call_scale$TMPscale_num";
 
 		if ( ($Mk >= 4) or (strlen($tmpscl)==73) )
@@ -923,15 +904,10 @@ else
 	$hold_scale = '0';
 	while ($k <= 72) 
 		{
-		if ( ($k < 1) or ($hold_multiplier <= 0) )
-			{$scale_num = 70;}
-		else
-			{
-			$TMPscale_num=(73 / $hold_multiplier);
-			$TMPscale_num = round($TMPscale_num, 0);
-			$scale_num=($k / $hold_multiplier);
-			$scale_num = round($scale_num, 0);
-			}
+		$TMPscale_num=MathZDC(73, $hold_multiplier);
+		$TMPscale_num = round($TMPscale_num, 0);
+		$scale_num=MathZDC($k, $hold_multiplier);
+		$scale_num = round($scale_num, 0);
 		$tmpscl = "$hold_scale$TMPscale_num";
 
 		if ( ($Mk >= 4) or (strlen($tmpscl)==73) )
@@ -1084,10 +1060,7 @@ else
 		}
 
 
-	if ($totQUEUEsec > 0)
-		{$totQUEUEavgRAW = ($totCALLS / $totQUEUEsec);}
-	else
-		{$totQUEUEavgRAW = 0;}
+	$totQUEUEavgRAW = MathZDC($totCALLS, $totQUEUEsec);
 	$totQUEUEavg =	sprintf("%5s", $totQUEUEavg); 
 	while (strlen($totQUEUEavg)>5) {$totQUEUEavg = preg_replace('/.$/', '', $totQUEUEavg);}
 	$totQUEUEmax =	sprintf("%5s", $totQUEUEmax);
@@ -1105,9 +1078,9 @@ else
 		$graph_stats[$d][0]=preg_replace('/\s/', "", $graph_stats[$d][0]); 
 		$GRAPH_text.="  <tr><td class='chart_td' width='50'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value' width='600' valign='bottom'>\n";
 		if ($graph_stats[$d][1]>0) {
-			$GRAPH_text.="<ul class='overlap_barGraph'><li class=\"p1\" style=\"height: 12px; left: 0px; width: ".round(600*$graph_stats[$d][1]/$max_calls)."px\">".$graph_stats[$d][1]."</li>";
+			$GRAPH_text.="<ul class='overlap_barGraph'><li class=\"p1\" style=\"height: 12px; left: 0px; width: ".round(MathZDC(600*$graph_stats[$d][1], $max_calls))."px\">".$graph_stats[$d][1]."</li>";
 			if ($graph_stats[$d][2]>0) {
-				$GRAPH_text.="<li class=\"p2\" style=\"height: 12px; left: 0px; width: ".round(600*$graph_stats[$d][2]/$max_calls)."px\">".$graph_stats[$d][2]."</li>";
+				$GRAPH_text.="<li class=\"p2\" style=\"height: 12px; left: 0px; width: ".round(MathZDC(600*$graph_stats[$d][2], $max_calls))."px\">".$graph_stats[$d][2]."</li>";
 			}
 			$GRAPH_text.="</ul>\n";
 		} else {

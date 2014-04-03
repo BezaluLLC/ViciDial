@@ -193,6 +193,9 @@ OTHER CHANGES:
 
 35. Added Called Counts List IDs Report
 
+36. Added MathZDC function to prevent division math with zero as one of the 
+	numbers.
+
 
 
 
