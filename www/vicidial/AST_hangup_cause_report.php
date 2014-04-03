@@ -11,6 +11,7 @@
 # 130621-0749 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0731 - Changed to mysqli PHP functions
 # 140108-0739 - Added webserver and hostname to report logging
+# 140403-1830 - Fixed SIP hangup bug
 #
 
 $startMS = microtime();
@@ -124,6 +125,7 @@ $hangup_cause_dictionary = array(
 
 #### SIP response code directory
 $sip_response_directory = array(
+	0 => "",
 	100 => "Trying",
 	180 => "Ringing",
 	181 => "Call is Being Forwarded",
@@ -727,14 +729,14 @@ if ($SUBMIT && $server_ip_ct>0) {
 		$carrier_rpt_hf="";
 		$ll=$lower_limit-1000;
 		if ($ll>=1) {
-			$carrier_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$hangup_causeQS$dial_statusQS$server_ipQS&lower_limit=$ll\">[<<< PREV 1000 records]</a>";
+			$carrier_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS$hangup_causeQS$sip_hangup_causeQS$dial_statusQS&lower_limit=$ll\">[<<< PREV 1000 records]</a>";
 		} else {
 			$carrier_rpt_hf.=sprintf("%-23s", " ");
 		}
 		$carrier_rpt_hf.=sprintf("%-145s", " ");
 		if (($lower_limit+1000)<mysqli_num_rows($rpt_rslt)) {
 			if ($upper_limit+1000>=mysqli_num_rows($rpt_rslt)) {$max_limit=mysqli_num_rows($rpt_rslt)-$upper_limit;} else {$max_limit=1000;}
-			$carrier_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS$hangup_causeQS$dial_statusQS&lower_limit=".($lower_limit+1000)."\">[NEXT $max_limit records >>>]</a>";
+			$carrier_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS$hangup_causeQS$sip_hangup_causeQS$dial_statusQS&lower_limit=".($lower_limit+1000)."\">[NEXT $max_limit records >>>]</a>";
 		} else {
 			$carrier_rpt_hf.=sprintf("%23s", " ");
 		}
