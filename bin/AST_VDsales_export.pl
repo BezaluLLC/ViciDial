@@ -7,7 +7,7 @@
 #
 # /usr/share/astguiclient/AST_VDsales_export.pl --campaign=GOODB-GROUP1-GROUP3-GROUP4-SPECIALS-DNC_BEDS --output-format=fixed-as400 --sale-statuses=SALE --debug --filename=BEDSsaleMMDD.txt --date=yesterday --email-list=test@gmail.com --email-sender=test@test.com
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 61219-1118 - First version
@@ -32,6 +32,7 @@
 # 120705-1954 - Added --temp-dir=XXX option
 # 130406-2146 - Added --email-post-audio
 # 130811-0902 - Added wget HTTP auth options and added more debug output
+# 140403-1603 - Added --skip-rec-xtra option to not perform additional recording lookups beyond vicidial_id
 #
 
 $txt = '.txt';
@@ -182,6 +183,7 @@ if (length($ARGV[0])>1)
 		print "  [--ftp-pass=XXXXXXXX] = FTP pass\n";
 		print "  [--ftp-dir=XXXXXXXX] = remote FTP server directory to post files to\n";
 		print "  [--with-transfer-audio] = Different method for finding audio, also grabs transfer audio filenames\n";
+		print "  [--skip-rec-xtra] = Do not perform additional recording lookups beyond vicidial_id\n";
 		print "  [--temp-dir=XXX] = If running more than one instance at a time, specify a unique temp directory suffix\n";
 		print "  [--http-user=XXX] = If using tranfer audio, this is the HTTP user needed to grab the recording files\n";
 		print "  [--http-pass=XXX] = If using tranfer audio, this is the HTTP password needed to grab the recording files\n";
@@ -435,6 +437,12 @@ if (length($ARGV[0])>1)
 			if (!$Q)
 				{print "\n----- AUDIO TRANSFER LOOKUP MODE -----\n\n";}
 			$with_transfer_audio=1;
+			}
+		if ($args =~ /-skip-rec-xtra/i)
+			{
+			if (!$Q)
+				{print "\n----- SKIP RECORDING EXTRA LOOKUPS MODE -----\n\n";}
+			$skip_rec_extra=1;
 			}
 		if ($args =~ /-with-did-lookup/i)
 			{
@@ -1067,7 +1075,7 @@ sub select_format_loop
 				}
 			$sthB->finish();
 
-			if ($sthBrows < 1)
+			if ( ($sthBrows < 1) && ($skip_rec_extra < 1) )
 				{
 				$stmtB = "select recording_id,filename,location from recording_log where lead_id='$lead_id' and start_time > '$shipdate 00:00:01' and start_time < '$shipdate 23:59:59' order by length_in_sec desc limit 1;";
 				$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
@@ -1085,7 +1093,7 @@ sub select_format_loop
 				$sthB->finish();
 				}
 
-			if (length($ivr_id)<3) 
+			if ( (length($ivr_id)<3) && ($skip_rec_extra < 1) )
 				{
 				$stmtB = "select recording_id,filename,location from recording_log where lead_id='$lead_id' order by length_in_sec desc limit 1;";
 				$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
@@ -1182,67 +1190,70 @@ sub select_format_loop
 				}
 			$sthB->finish();
 
-			### Look for other closer calls after this call
-			$more_calls[0]='';
-			$stmtB = "select closecallid,length_in_sec,queue_seconds,agent_alert_delay from vicidial_closer_log,vicidial_inbound_groups where lead_id='$lead_id' and call_date > '$call_date' and call_date < '$shipdate 23:59:59' and campaign_id=group_id order by call_date limit 10;";
-			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
-			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
-			$sthBrows=$sthB->rows;
-			if ($DBX > 0) {print "$sthBrows|$stmtB\n";}
-			$rec_countB=0;
-			while ($sthBrows > $rec_countB)
+			if ($skip_rec_extra < 1) 
 				{
-				@aryB = $sthB->fetchrow_array;
-				$more_calls[$rec_countB] =	"$aryB[0]";
-				$Xagent_alert_delay = int($aryB[3] / 1000);
-				$length_in_sec = (($length_in_sec + $aryB[1]) - $Xagent_alert_delay);
-				$queue_seconds = ($queue_seconds + $aryB[2]);
-				$rec_countB++;
-				}
-			$sthB->finish();
-
-			$u=0;
-			while ($sthBrows > $u)
-				{
-				$closecallid = $more_calls[$u];
-
-				$stmtB = "select recording_id,filename,location from recording_log where vicidial_id='$closecallid' and start_time > '$shipdate 00:00:01' and start_time < '$shipdate 23:59:59' order by start_time limit 10;";
+				### Look for other closer calls after this call
+				$more_calls[0]='';
+				$stmtB = "select closecallid,length_in_sec,queue_seconds,agent_alert_delay from vicidial_closer_log,vicidial_inbound_groups where lead_id='$lead_id' and call_date > '$call_date' and call_date < '$shipdate 23:59:59' and campaign_id=group_id order by call_date limit 10;";
 				$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 				$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
-				$sthBrowsR=$sthB->rows;
-				if ($DBX > 0) {print "$sthBrowsR|$stmtB\n";}
-				$rec_countBR=0;
-				while ($sthBrowsR > $rec_countBR)
+				$sthBrows=$sthB->rows;
+				if ($DBX > 0) {print "$sthBrows|$stmtB\n";}
+				$rec_countB=0;
+				while ($sthBrows > $rec_countB)
 					{
 					@aryB = $sthB->fetchrow_array;
-					if (length($ivr_id) > 1)
-						{
-						$ivr_id .=			"|";
-						$ivr_filename .=	"|";
-						}
-					$ivr_id .=			"$aryB[0]";
-					$ivr_location =		"$aryB[2]";
-					@ivr_path = split(/\//,$ivr_location);
-					$path_file = $ivr_path[$#ivr_path];
-					$ivr_filename .=	"$path_file";
-					$rec_countBR++;
-					if ($ftp_audio_transfer > 0)
-						{
-						$wget_output = " -q";
-						$wget_http = "";
-						if ($DBX > 0)
-							{$wget_output='';}
-						if ( (length($http_user)>0) && (length($http_pass)>0) )
-							{$wget_http = " --http-user=$http_user --http-password=$http_pass";}
-						$wget_cmd = "$wgetbin$wget_output$wget_http --output-document=$tempdir/$path_file $aryB[2]";
-						if ($DBX > 0)
-							{print "$wget_cmd\n";}
-						`$wget_cmd `;
-						}
+					$more_calls[$rec_countB] =	"$aryB[0]";
+					$Xagent_alert_delay = int($aryB[3] / 1000);
+					$length_in_sec = (($length_in_sec + $aryB[1]) - $Xagent_alert_delay);
+					$queue_seconds = ($queue_seconds + $aryB[2]);
+					$rec_countB++;
 					}
 				$sthB->finish();
 
-				$u++;
+				$u=0;
+				while ($sthBrows > $u)
+					{
+					$closecallid = $more_calls[$u];
+
+					$stmtB = "select recording_id,filename,location from recording_log where vicidial_id='$closecallid' and start_time > '$shipdate 00:00:01' and start_time < '$shipdate 23:59:59' order by start_time limit 10;";
+					$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+					$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+					$sthBrowsR=$sthB->rows;
+					if ($DBX > 0) {print "$sthBrowsR|$stmtB\n";}
+					$rec_countBR=0;
+					while ($sthBrowsR > $rec_countBR)
+						{
+						@aryB = $sthB->fetchrow_array;
+						if (length($ivr_id) > 1)
+							{
+							$ivr_id .=			"|";
+							$ivr_filename .=	"|";
+							}
+						$ivr_id .=			"$aryB[0]";
+						$ivr_location =		"$aryB[2]";
+						@ivr_path = split(/\//,$ivr_location);
+						$path_file = $ivr_path[$#ivr_path];
+						$ivr_filename .=	"$path_file";
+						$rec_countBR++;
+						if ($ftp_audio_transfer > 0)
+							{
+							$wget_output = " -q";
+							$wget_http = "";
+							if ($DBX > 0)
+								{$wget_output='';}
+							if ( (length($http_user)>0) && (length($http_pass)>0) )
+								{$wget_http = " --http-user=$http_user --http-password=$http_pass";}
+							$wget_cmd = "$wgetbin$wget_output$wget_http --output-document=$tempdir/$path_file $aryB[2]";
+							if ($DBX > 0)
+								{print "$wget_cmd\n";}
+							`$wget_cmd `;
+							}
+						}
+					$sthB->finish();
+
+					$u++;
+					}
 				}
 			}
 		##### END transfer audio lookup #####
