@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2014-02-14
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2014-04-03
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -92,6 +92,8 @@ Changes:
 140206-1205 - Added update_user function
 140211-1056 - Added server_refresh function
 140214-1540 - Added check_phone_number function
+140331-2119 - Converted division calculations to use MathZDC function
+140403-2024 - Added camp_rg_only option to update_user function
 
 
 API Functions use the 'function' variable
@@ -839,6 +841,8 @@ custom_five -		1-100 characters
 active -		'Y' or 'N'
 campaign_rank -		from -9 to 9, this will change the campaign rank for this user on all campaigns
 campaign_grade -	from 1 to 10, this will change the campaign grade for this user on all campaigns
+camp_rg_only -		0 or 1, this will set only one campaign rank/grade for this user, requires campaign_id to be set
+campaign_id -		only required for use with camp_rg_only
 
 Example URL strings for API calls:
 http://server/vicidial/non_agent_api.php?source=test&function=update_user&user=6666&pass=1234&agent_user=2424&agent_pass=9876
@@ -870,6 +874,7 @@ ERROR: update_user YOU MUST USE A VALID CAMPAIGN RANK, THIS IS AN OPTIONAL FIELD
 ERROR: update_user YOU MUST USE A VALID CAMPAIGN GRADE, THIS IS AN OPTIONAL FIELD - 6666|0
 ERROR: update_user NO UPDATES DEFINED - 6666|0
 NOTICE: update_user USER CAMPAIGN RANKS HAVE BEEN UPDATED - 6666|9|10
+NOTICE: update_user USER CAMPAIGN RANKS HAVE BEEN UPDATED - 6666|9|10|TESTCAMP|1
 SUCCESS: update_user USER HAS BEEN UPDATED - 6666|7878
 SUCCESS: update_user USER HAS BEEN DELETED - 6666|7878
 

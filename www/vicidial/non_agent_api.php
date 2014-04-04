@@ -87,10 +87,11 @@
 # 140211-1056 - Added server_refresh function
 # 140214-1540 - Added check_phone_number function
 # 140331-2119 - Converted division calculations to use MathZDC function
+# 140403-2024 - Added camp_rg_only option to update_user function
 #
 
-$version = '2.8-63';
-$build = '140331-2119';
+$version = '2.8-64';
+$build = '140403-2024';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -353,6 +354,8 @@ if (isset($_GET["campaign_grade"]))				{$campaign_grade=$_GET["campaign_grade"];
 	elseif (isset($_POST["campaign_grade"]))	{$campaign_grade=$_POST["campaign_grade"];}
 if (isset($_GET["local_call_time"]))				{$local_call_time=$_GET["local_call_time"];}
 	elseif (isset($_POST["local_call_time"]))	{$local_call_time=$_POST["local_call_time"];}
+if (isset($_GET["camp_rg_only"]))				{$camp_rg_only=$_GET["camp_rg_only"];}
+	elseif (isset($_POST["camp_rg_only"]))		{$camp_rg_only=$_POST["camp_rg_only"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -513,6 +516,7 @@ if ($non_latin < 1)
 	$campaign_rank = preg_replace('/[^-_0-9]/','',$campaign_rank);
 	$campaign_grade = preg_replace('/[^0-9]/','',$campaign_grade);
 	$local_call_time = preg_replace('/[^-_0-9a-zA-Z]/','',$local_call_time);
+	$camp_rg_only = preg_replace('/[^0-9]/','',$camp_rg_only);
 	}
 else
 	{
@@ -2261,7 +2265,14 @@ if ($function == 'update_user')
 								$grade_MID_SQL=",'$campaign_grade'";
 								$grade_END_SQL.="campaign_grade='$campaign_grade'";
 								}
-							$stmt="INSERT INTO vicidial_campaign_agents(user,campaign_id $rank_BEGIN_SQL $grade_BEGIN_SQL) SELECT '$agent_user',campaign_id $rank_MID_SQL $grade_MID_SQL from vicidial_campaigns ON DUPLICATE KEY UPDATE $rank_END_SQL $grade_END_SQL;";
+							$camp_rg_onlySQL='';
+							$camp_rg_onlyNOTE='';
+							if ($camp_rg_only=='1')
+								{
+								$camp_rg_onlySQL = "where campaign_id='$campaign_id'";
+								$camp_rg_onlyNOTE = "|$campaign_id|$camp_rg_only";
+								}
+							$stmt="INSERT INTO vicidial_campaign_agents(user,campaign_id $rank_BEGIN_SQL $grade_BEGIN_SQL) SELECT '$agent_user',campaign_id $rank_MID_SQL $grade_MID_SQL from vicidial_campaigns $camp_rg_onlySQL ON DUPLICATE KEY UPDATE $rank_END_SQL $grade_END_SQL;";
 							$rslt=mysql_to_mysqli($stmt, $link);
 							$affected_rows = mysqli_affected_rows($linkB);
 							if ($DB) {echo "|$stmt|$affected_rows|\n";}
@@ -2270,13 +2281,13 @@ if ($function == 'update_user')
 							$SQL_log = "$stmt|";
 							$SQL_log = preg_replace('/;/', '', $SQL_log);
 							$SQL_log = addslashes($SQL_log);
-							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$agent_user', event_code='ADMIN API UPDATE USER RANK', event_sql=\"$SQL_log\", event_notes='user: $agent_user|rank: $campaign_rank|grade: $campaign_grade|rows: $affected_rows';";
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$agent_user', event_code='ADMIN API UPDATE USER RANK', event_sql=\"$SQL_log\", event_notes='user: $agent_user|rank: $campaign_rank|grade: $campaign_grade|rows: $affected_rows$camp_rg_onlyNOTE';";
 							if ($DB) {echo "|$stmt|\n";}
 							$rslt=mysql_to_mysqli($stmt, $link);
 
 							$result = 'NOTICE';
 							$result_reason = "update_user USER CAMPAIGN RANKS HAVE BEEN UPDATED";
-							$data = "$agent_user|$campaign_rank|$campaign_grade";
+							$data = "$agent_user|$campaign_rank|$campaign_grade$camp_rg_onlyNOTE";
 							echo "$result: $result_reason - $user|$data\n";
 							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 							}
