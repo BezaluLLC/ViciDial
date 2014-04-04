@@ -212,3 +212,13 @@ UPDATE system_settings SET db_schema_version='1369',db_schema_update_date=NOW(),
 ALTER TABLE vicidial_users ADD alter_admin_interface_options ENUM('0','1') default '1';
 
 UPDATE system_settings SET db_schema_version='1370',db_schema_update_date=NOW() where db_schema_version < 1370;
+
+ALTER TABLE vicidial_inbound_dids MODIFY filter_inbound_number ENUM('DISABLED','GROUP','URL','DNC_INTERNAL','DNC_CAMPAIGN') default 'DISABLED';
+ALTER TABLE vicidial_inbound_dids ADD filter_dnc_campaign VARCHAR(8) default '';
+ALTER TABLE vicidial_inbound_dids ADD filter_url_did_redirect ENUM('Y','N') default 'N';
+
+ALTER TABLE vicidial_did_log MODIFY did_route VARCHAR(20) default '';
+
+ALTER TABLE vicidial_did_agent_log MODIFY did_route VARCHAR(20) default '';
+
+UPDATE system_settings SET db_schema_version='1371',db_schema_update_date=NOW() where db_schema_version < 1371;

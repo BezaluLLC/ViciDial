@@ -10,6 +10,7 @@
 # 131208-1635 - Added help for max dead, dispo and pause time campaign options
 # 140126-1023 - Added VMAIL_NO_INST options
 # 140126-2254 - Added voicemail_instructions option for phones
+# 140404-1104 - Added new DID filter options
 #
 
 
@@ -2450,7 +2451,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_dids-filter_inbound_number">
 <BR>
-<B>Filter Inbound Number -</B> This option if enabled allows you to filter calls coming into this DID and send them to an alternative action if they match a phone number that is in the filter phone group or a URL response if you have configured one. Default is DISABLED. GROUP will search in a Filter Phone Group. URL will send a URL and will match if a 1 is sent back.
+<B>Filter Inbound Number -</B> This option if enabled allows you to filter calls coming into this DID and send them to an alternative action if they match a phone number that is in the filter phone group or a URL response if you have configured one. Default is DISABLED. GROUP will search in a Filter Phone Group. URL will send a URL and will match if a 1 is sent back. DNC_INTERNAL will search by the internal DNC list. DNC_CAMPAIGN will search by one specific campaign DNC list.
 
 <BR>
 <A NAME="inbound_dids-filter_phone_group_id">
@@ -2461,6 +2462,18 @@ if ($SSqc_features_active > 0)
 <A NAME="inbound_dids-filter_url">
 <BR>
 <B>Filter URL -</B> If the Filter Inbound Number field is set to URL then this is the web address of a script that will search a remote system and return a 1 for a match and a 0 for no match. Only two variables are available in the address if you use the VAR prefix like with webform addresses in campaigns, --A--phone_number--B-- and --A--did_pattern--B-- can be used in the URL to indicate the caller ID of the caller and the DID that the customer called in on.
+
+<BR>
+<A NAME="inbound_dids-filter_url_did_redirect">
+<BR>
+<B>Filter URL DID Redirect -</B> If the Filter Inbound Number field is set to URL then this setting allows the URL response to specify a system DID to redirect the call to insead of using the default action. If a 0 is returned then the default action is used. If anything other than a 0 is returned then the call will be redirected to the resulting URL response value.
+
+<BR>
+<A NAME="inbound_dids-filter_dnc_campaign">
+<BR>
+<B>Filter DNC Campaign -</B> If the Filter Inbound Number field is set to DNC_CAMPAIGN then this is the specific campaign ID that the campaign DNC list belongs to.
+
+
 
 <BR>
 <A NAME="inbound_dids-filter_action">

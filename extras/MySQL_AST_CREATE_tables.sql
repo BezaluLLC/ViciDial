@@ -1819,7 +1819,7 @@ campaign_id VARCHAR(8),
 phone_code VARCHAR(10) default '1',
 menu_id VARCHAR(50) default '',
 record_call ENUM('Y','N','Y_QUEUESTOP') default 'N',
-filter_inbound_number ENUM('DISABLED','GROUP','URL') default 'DISABLED',
+filter_inbound_number ENUM('DISABLED','GROUP','URL','DNC_INTERNAL','DNC_CAMPAIGN') default 'DISABLED',
 filter_phone_group_id VARCHAR(20) default '',
 filter_url VARCHAR(1000) default '',
 filter_action ENUM('EXTEN','VOICEMAIL','AGENT','PHONE','IN_GROUP','CALLMENU','VMAIL_NO_INST') default 'EXTEN',
@@ -1845,6 +1845,8 @@ custom_three VARCHAR(100) default '',
 custom_four VARCHAR(100) default '',
 custom_five VARCHAR(100) default '',
 user_group VARCHAR(20) default '---ALL---',
+filter_dnc_campaign VARCHAR(8) default '',
+filter_url_did_redirect ENUM('Y','N') default 'N',
 unique index (did_pattern),
 index (group_id)
 ) ENGINE=MyISAM;
@@ -1858,7 +1860,7 @@ caller_id_name VARCHAR(20),
 extension VARCHAR(100),
 call_date DATETIME,
 did_id VARCHAR(9) default '',
-did_route VARCHAR(9) default '',
+did_route VARCHAR(20) default '',
 index (uniqueid),
 index (caller_id_number),
 index (extension),
@@ -2615,7 +2617,7 @@ extension VARCHAR(100),
 call_date DATETIME,
 did_id VARCHAR(9) default '',
 did_description VARCHAR(50) default '',
-did_route VARCHAR(9) default '',
+did_route VARCHAR(20) default '',
 group_id VARCHAR(20) default '',
 user VARCHAR(20) default 'VDCL',
 index (uniqueid),
@@ -3255,4 +3257,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1370',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1371',db_schema_update_date=NOW(),reload_timestamp=NOW();

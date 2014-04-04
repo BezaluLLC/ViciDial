@@ -33,6 +33,7 @@
 # 130925-1819 - Added variable filter to prevent DID SQL injection attack
 # 130926-1549 - Added new queue_log IVR entries for QM
 # 140126-1138 - Added VMAIL_NO_INST options
+# 140404-0738 - Added DNC filter options and URL filter DID redirect option
 #
 
 $script = 'agi-DID_route.agi';
@@ -199,7 +200,7 @@ $extension =~ s/\'|\"|\\\\|\\\|\\|\\;|\\\;|\;|;//gi;
 
 ### Grab DID values from the database
 $DIDs_in_system=0;
-$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,group_id FROM vicidial_inbound_dids where did_pattern = '$extension' and did_active='Y';";
+$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,group_id,filter_dnc_campaign,filter_url_did_redirect FROM vicidial_inbound_dids where did_pattern = '$extension' and did_active='Y';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -242,6 +243,8 @@ if ($sthArows > 0)
 	$filter_menu_id =				$aryA[33];
 	$filter_clean_cid_number =		$aryA[34];
 	$group_id =						$aryA[35];
+	$filter_dnc_campaign =			$aryA[36];
+	$filter_url_did_redirect =		$aryA[37];
 
 	$DIDs_in_system++;
 	}
@@ -250,7 +253,7 @@ $sthA->finish();
 if ($sthArows < 1)
 	{
 	### Grab DID values from the database for a default DID pattern if there is one
-	$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,group_id FROM vicidial_inbound_dids where did_pattern = 'default' and did_active='Y';";
+	$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,group_id,filter_dnc_campaign,filter_url_did_redirect FROM vicidial_inbound_dids where did_pattern = 'default' and did_active='Y';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$DIDs_in_system=$sthA->rows;
@@ -293,6 +296,8 @@ if ($sthArows < 1)
 		$filter_menu_id =				$aryA[33];
 		$filter_clean_cid_number =		$aryA[34];
 		$group_id =						$aryA[35];
+		$filter_dnc_campaign =			$aryA[36];
+		$filter_url_did_redirect =		$aryA[37];
 		}
 	$sthA->finish();
 	}
@@ -440,13 +445,39 @@ if (length($filter_clean_cid_number) > 1)
 
 
 ##### BEGIN filtering process #####
-if ($filter_inbound_number =~ /GROUP|URL/)
+if ($filter_inbound_number =~ /GROUP|URL|DNC_INTERNAL|DNC_CAMPAIGN/)
 	{
 	$filter_match_found=0;
 	if ($AGILOG) {$agi_string = "filtering active: |$extension|$filter_inbound_number|$filter_phone_group_id|$filter_url|$filter_action|$filter_clean_cid_number|";   &agi_output;}
 	if ($filter_inbound_number =~ /GROUP/)
 		{
 		$stmtA = "SELECT count(*) FROM vicidial_filter_phone_numbers where filter_phone_group_id='$filter_phone_group_id' and phone_number='$callerid';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$filter_match_found =	$aryA[0];
+			}
+		$sthA->finish();
+		}
+	elsif ($filter_inbound_number =~ /DNC_INTERNAL/)
+		{
+		$stmtA = "SELECT count(*) FROM vicidial_dnc where phone_number='$callerid';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$filter_match_found =	$aryA[0];
+			}
+		$sthA->finish();
+		}
+	elsif ($filter_inbound_number =~ /DNC_CAMPAIGN/)
+		{
+		$stmtA = "SELECT count(*) FROM vicidial_campaign_dnc where campaign_id='$filter_dnc_campaign' and phone_number='$callerid';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -495,13 +526,19 @@ if ($filter_inbound_number =~ /GROUP|URL/)
 			if ($full_output > 0) 
 				{
 				$filter_match_found = $full_output;
+				if ($filter_url_did_redirect =~ /Y/) 
+					{
+					$did_route='DID';
+					if ($AGILOG) {$agi_string = "Filter URL DID Redirect found: |$filter_match_found|$filter_url_did_redirect|$did_route|";   &agi_output;}
+					}
 				}
 			if ($AGILOG) {$agi_string = "URL filter search response: |$filter_match_found|$full_output|$filter_url|";   &agi_output;}
 			}
 		}
 	if ($filter_match_found > 0)
 		{
-		$did_route =					$filter_action;
+		if ($did_route !~ /DID/)
+			{$did_route =				$filter_action;}
 		$did_extension =				$filter_extension;
 		$exten_context =				$filter_exten_context;
 		$voicemail_ext =				$filter_voicemail_ext;
@@ -513,7 +550,13 @@ if ($filter_inbound_number =~ /GROUP|URL/)
 		$menu_id =						$filter_menu_id;
 		$route_type =					'FILTER';
 
-		if ($AGILOG) {$agi_string = "Filter match found: |$filter_match_found|$filter_action|$did_route|";   &agi_output;}
+		if ($AGILOG) {$agi_string = "Filter match found: |$filter_match_found|$filter_inbound_number|$filter_action|$did_route|";   &agi_output;}
+
+		### Update the call in vicidial_did_log
+		$stmtA = "UPDATE vicidial_did_log SET did_route='F_$did_route' where uniqueid='$uniqueid' and channel='$channel' and server_ip='$VARserver_ip' and caller_id_number='$callerid' and call_date='$SQLdate';";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$affected_rowsL = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    DID UPDATE LOG : |$affected_rowsL|$stmtA|";   &agi_output;}
 		}
 	}
 ##### END filtering process #####
@@ -613,6 +656,24 @@ if ($did_route =~ /EXTEN/)
 		$result = <STDIN>;
 		checkresult($result);
 	print "SET EXTENSION $XFERexten\n";
+		$result = <STDIN>;
+		checkresult($result);
+	print "SET PRIORITY 1\n";
+		$result = <STDIN>;
+		checkresult($result);
+	
+	exit;
+	}
+
+
+### Route call to a DID in the trunkinbound context on the system
+if ($did_route =~ /DID/)
+	{
+	if ($AGILOG) {$agi_string = "exiting the DID app, transferring call to $filter_match_found @ trunkinbound";   &agi_output;}
+	print "SET CONTEXT trunkinbound\n";
+		$result = <STDIN>;
+		checkresult($result);
+	print "SET EXTENSION $filter_match_found\n";
 		$result = <STDIN>;
 		checkresult($result);
 	print "SET PRIORITY 1\n";

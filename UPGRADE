@@ -196,6 +196,11 @@ OTHER CHANGES:
 36. Added MathZDC function to prevent division math with zero as one of the 
 	numbers.
 
+37. Added DID Filter options to allow for filtering by the INTERNAL DNC list or
+	a Campaign DNC list. Also added a method to allow for URL filtering to
+	direct a call to a specific system DID instead of only going to the
+	Filter Action.
+
 
 
 
