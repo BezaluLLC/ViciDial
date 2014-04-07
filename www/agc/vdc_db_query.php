@@ -348,10 +348,11 @@
 # 140217-0803 - Small fix for campaigns with no lists
 # 140301-2348 - Small change for new API MANUALNEXT option
 # 140402-1750 - Formatting cleanup and MySQL logging cleanup
+# 140407-1923 - Fixed call notes logging bug when call is not answered
 #
 
-$version = '2.8-245';
-$build = '140402-1750';
+$version = '2.8-246';
+$build = '140407-1923';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=586;
 $one_mysql_log=0;
@@ -8795,7 +8796,8 @@ if ($ACTION == 'updateDISPO')
 			}
 		else
 			{$vicidial_id = $uniqueid;}
-
+		if ( (strlen($vicidial_id)<6) and (strlen($FAKEcall_id)>6) )
+			{$vicidial_id = $FAKEcall_id;}
 		# Insert into vicidial_call_notes
 		$stmt="INSERT INTO vicidial_call_notes set lead_id='$lead_id',vicidial_id='$vicidial_id',call_date='$NOW_TIME',call_notes='" . mysqli_real_escape_string($link, $call_notes) . "';";
 		if ($DB) {echo "$stmt\n";}
