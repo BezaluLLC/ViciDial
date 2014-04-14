@@ -6,6 +6,7 @@
 # CHANGES
 #
 # 140408-1813 - First build
+# 140414-1712 - Sales ccount bug fix
 #
 
 $startMS = microtime();
@@ -575,7 +576,7 @@ else
 		}
 
 	# Get full list of sale dispositions for selected campaigns/system
-	$sale_stmt="select distinct status from vicidial_campaign_statuses where sale='Y' $group_SQL UNION select distinct status from vicidial_statuses order by status asc";
+	$sale_stmt="select distinct status from vicidial_campaign_statuses where sale='Y' $group_SQL UNION select distinct status from vicidial_statuses where sale='Y' order by status asc";
 	$sale_rslt=mysql_to_mysqli($sale_stmt, $link);
 	$sale_status_str="|";
 	while ($sale_row=mysqli_fetch_row($sale_rslt)) 
@@ -924,4 +925,3 @@ $rslt=mysql_to_mysqli($stmt, $link);
 
 exit;
 ?>
-
