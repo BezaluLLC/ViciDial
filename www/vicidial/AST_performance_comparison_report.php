@@ -776,7 +776,7 @@ else
 			$TOTALS_array[$x]+=$val[$x];
 
 			$x++;
-			$CSV_text.="\"$val[$x]\",";
+			$CSV_text.="\"$val[$x] %\",";
 			$ASCII_text.=" ".sprintf("%10s", $val[$x])."% |";
 			$TOTALS_array[$x]=sprintf("%0.2f", MathZDC(100*$TOTALS_array[($x-1)], $TOTALS_array[($x-2)]));
 
@@ -785,7 +785,7 @@ else
 			$ASCII_text.=" ".sprintf("%12s", $val[$x])." |";
 
 			$x++;
-			$CSV_text.="\"$val[$x]\",";
+			$CSV_text.="\"".sec_convert($val[$x], 'H')."\",";
 			$ASCII_text.=" ".sprintf("%9s", sec_convert($val[$x], 'H'))." ||";
 			$TOTALS_array[$x]+=$val[$x];
 
