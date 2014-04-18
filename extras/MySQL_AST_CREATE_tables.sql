@@ -618,7 +618,8 @@ failed_login_count TINYINT(3) UNSIGNED default '0',
 last_login_date DATETIME default '2001-01-01 00:00:01',
 last_ip VARCHAR(15) default '',
 pass_hash VARCHAR(100) default '',
-alter_admin_interface_options ENUM('0','1') default '1'
+alter_admin_interface_options ENUM('0','1') default '1',
+max_inbound_calls SMALLINT(5) UNSIGNED default '0'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -896,7 +897,8 @@ dead_max SMALLINT(5) UNSIGNED default '0',
 dead_max_dispo VARCHAR(6) default 'DCMX',
 dispo_max SMALLINT(5) UNSIGNED default '0',
 dispo_max_dispo VARCHAR(6) default 'DISMX',
-pause_max SMALLINT(5) UNSIGNED default '0'
+pause_max SMALLINT(5) UNSIGNED default '0',
+max_inbound_calls SMALLINT(5) UNSIGNED default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -1635,6 +1637,7 @@ group_weight TINYINT(1) default '0',
 calls_today SMALLINT(5) UNSIGNED default '0',
 group_web_vars VARCHAR(255) default '',
 group_grade TINYINT(2) UNSIGNED default '1',
+group_type VARCHAR(1) default 'C',
 index (group_id),
 index (user),
 unique index viga_user_group_id (user, group_id)
@@ -3257,4 +3260,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1371',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1372',db_schema_update_date=NOW(),reload_timestamp=NOW();

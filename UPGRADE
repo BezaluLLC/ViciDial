@@ -203,6 +203,9 @@ OTHER CHANGES:
 
 38. Added Performance Comparison Report
 
+39. Added Max Inbound Calls options to Campaigns and Users to enforce a maximum
+	number of inbound calls received per day per agent.
+
 
 
 

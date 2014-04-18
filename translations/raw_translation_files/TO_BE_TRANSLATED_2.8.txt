@@ -273,6 +273,9 @@ Filter DNC Campaign||
 If the Filter Inbound Number field is set to DNC_CAMPAIGN then this is the specific campaign ID that the campaign DNC list belongs to||
 Filter URL DID Redirect||
 If the Filter Inbound Number field is set to URL then this setting allows the URL response to specify a system DID to redirect the call to insead of using the default action. If a 0 is returned then the default action is used. If anything other than a 0 is returned then the call will be redirected to the resulting URL response value||
+Max Inbound Calls||
+If this setting is set to a number greater than 0, then it will be the maximum number of inbound calls that an agent can handle across all inbound groups in one day. If the agent reaches their maximum number of inbound calls, then they will not be able to select inbound groups to take calls from until the next day. This setting will override the Campaign setting of the same name. Default is 0 for disabled||
+If this setting is set to a number greater than 0, then it will be the maximum number of inbound calls that an agent can handle across all inbound groups in one day. If the agent reaches their maximum number of inbound calls, then they will not be able to select inbound groups to take calls from until the next day. This setting can be overridden by the User setting of the same name. Default is 0 for disabled||
 
 
 ########################## CHANGES TO EXISTING PHRASES IN ADMIN TRANSLATION

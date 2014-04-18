@@ -11,7 +11,7 @@
 # agents that should appear to be logged in so that the calls can be transferred 
 # out to them properly.
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 50215-0954 - First version of script
@@ -47,6 +47,7 @@
 # 121129-1929 - Fix for issue #601, reported by Acidshock
 # 130322-1939 - Changed to auto-terminate vars to one day so it can restart for systems that don't reboot nightly
 # 131122-1104 - Small fixes and formatting changes
+# 140417-0934 - Added max inbound calls feature
 #
 
 ### begin parsing run-time options ###
@@ -341,8 +342,65 @@ while($one_day_interval > 0)
 					$stmtD = "INSERT IGNORE INTO vicidial_live_inbound_agents SET calls_today='1',last_call_time='$SQLdate',user='$QHuser[$w]', group_id='$QHcampaign_id[$w]' ON DUPLICATE KEY UPDATE calls_today=(calls_today + 1),last_call_time='$SQLdate';";
 					$Daffected_rows = $dbhA->do($stmtD);
 
-					$stmtE = "INSERT IGNORE INTO vicidial_inbound_group_agents set calls_today=1,user='$QHuser[$w]',group_id='$QHcampaign_id[$w]' ON DUPLICATE KEY UPDATE calls_today=(calls_today + 1);";
+				#	$stmtE = "INSERT IGNORE INTO vicidial_inbound_group_agents set calls_today=1,user='$QHuser[$w]',group_id='$QHcampaign_id[$w]' ON DUPLICATE KEY UPDATE calls_today=(calls_today + 1);";
+					$stmtE = "INSERT IGNORE INTO vicidial_inbound_group_agents set calls_today=1,user='$QHuser[$w]',group_id='$QHcampaign_id[$w]';";
 					$Eaffected_rows = $dbhA->do($stmtE);
+
+				##### BEGIN check for user max inbound calls #####
+				$max_inbound_calls=0;
+				$stmtJ = "SELECT max_inbound_calls FROM vicidial_users where user='$QHuser[$w]';";
+				$sthA = $dbhA->prepare($stmtJ) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtJ ", $dbhA->errstr;
+				$sthArowsMIC=$sthA->rows;
+				if ($sthArowsMIC > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$VU_max_inbound_calls = $aryA[0];
+					}
+				$stmtJ = "SELECT max_inbound_calls FROM vicidial_campaigns where campaign_id='$QHcampaign_id[$w]';";
+				$sthA = $dbhA->prepare($stmtJ) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtJ ", $dbhA->errstr;
+				$sthArowsMIC=$sthA->rows;
+				if ($sthArowsMIC > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$CP_max_inbound_calls = $aryA[0];
+					}
+
+				if ( ($VU_max_inbound_calls > 0) || ($CP_max_inbound_calls > 0) )
+					{
+					$max_inbound_calls = $CP_max_inbound_calls;
+					if ($VU_max_inbound_calls > 0)
+						{$max_inbound_calls = $VU_max_inbound_calls;}
+					$max_inbound_count=0;
+					$stmtJ = "SELECT sum(calls_today) FROM vicidial_inbound_group_agents where user='$QHuser[$w]' and group_type='C';";
+					$sthA = $dbhA->prepare($stmtJ) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtJ ", $dbhA->errstr;
+					$sthArowsVIGA=$sthA->rows;
+					if ($sthArowsVIGA > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$max_inbound_count = $aryA[0];
+						}
+					if ($max_inbound_count >= $max_inbound_calls)
+						{
+						$stmtJ = "UPDATE vicidial_live_agents set closer_campaigns='' where user='$QHuser[$w]';";
+						$affected_rows = $dbhA->do($stmtJ);
+
+						$stmtJ = "DELETE FROM vicidial_live_inbound_agents where user='$QHuser[$w]';";
+						$affected_rows = $dbhA->do($stmtJ);
+
+						$stmtJ = "UPDATE vicidial_remote_agents set closer_campaigns='' where user_start='$QHuser[$w]';";
+						$affected_rows = $dbhA->do($stmtJ);
+
+						$stmtJ = "INSERT INTO vicidial_admin_log set event_date=NOW(), user='$QHuser[$w]', ip_address='$VARserver_ip', event_section='USERS', event_type='MODIFY', record_id='$QHuser[$w]', event_code='MAX IN CALLS MODIFY REMOTE AGENT', event_sql='DELETE FROM vicidial_live_inbound_agents where user=$QHuser[$w]', event_notes='|$max_inbound_count|$max_inbound_calls|$QHuser[$w]|$QHcall_id[$w]|RA|';";
+						$affected_rows = $dbhA->do($stmtJ);
+
+						if ($AGILOG) {$agi_string = "--    MAX INBOUND AGENT CALLS TRIGGER: |$max_inbound_count|$max_inbound_calls|$QHuser[$w]|$QHcall_id[$w]|";   &agi_output;}
+						}
+					}
+				##### END check for user max inbound calls #####
+
 
 					$stmtG = "SELECT start_call_url FROM vicidial_inbound_groups where group_id='$QHcampaign_id[$w]';";
 					}

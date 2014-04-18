@@ -11,6 +11,7 @@
 # 140126-1023 - Added VMAIL_NO_INST options
 # 140126-2254 - Added voicemail_instructions option for phones
 # 140404-1104 - Added new DID filter options
+# 140418-0915 - Added users and campaigns max_inbound_calls
 #
 
 
@@ -313,6 +314,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="users-preset_contact_search">
 <BR>
 <B>Preset Contact Search -</B> If the user is logged into a campaign that has Transfer Presets set to CONTACTS, then this setting can disable contact searching for this user only. Default is NOT_ACTIVE which will use whatever the campaign setting is.
+
+<BR>
+<A NAME="users-max_inbound_calls">
+<BR>
+<B>Max Inbound Calls -</B> If this setting is set to a number greater than 0, then it will be the maximum number of inbound calls that an agent can handle across all inbound groups in one day. If the agent reaches their maximum number of inbound calls, then they will not be able to select inbound groups to take calls from until the next day. This setting will override the Campaign setting of the same name. Default is 0 for disabled.
 
 <BR>
 <A NAME="users-campaign_ranks">
@@ -1674,6 +1680,12 @@ if ($SSqc_features_active > 0)
 <A NAME="campaigns-blind_monitor_filename">
 <BR>
 <B>Blind Monitor Filename -</B> This is the audio file that will play in the agents session at the start of someone blind monitoring them. This prompt will be played for everyone in the session including the customer if any is present. Default is empty.
+
+<BR>
+<A NAME="campaigns-max_inbound_calls">
+<BR>
+<B>Max Inbound Calls -</B> If this setting is set to a number greater than 0, then it will be the maximum number of inbound calls that an agent can handle across all inbound groups in one day. If the agent reaches their maximum number of inbound calls, then they will not be able to select inbound groups to take calls from until the next day. This setting can be overridden by the User setting of the same name. Default is 0 for disabled.
+
 
 
 

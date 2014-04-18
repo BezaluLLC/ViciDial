@@ -222,3 +222,11 @@ ALTER TABLE vicidial_did_log MODIFY did_route VARCHAR(20) default '';
 ALTER TABLE vicidial_did_agent_log MODIFY did_route VARCHAR(20) default '';
 
 UPDATE system_settings SET db_schema_version='1371',db_schema_update_date=NOW() where db_schema_version < 1371;
+
+ALTER TABLE vicidial_users ADD max_inbound_calls SMALLINT(5) UNSIGNED default '0';
+
+ALTER TABLE vicidial_campaigns ADD max_inbound_calls SMALLINT(5) UNSIGNED default '0';
+
+ALTER TABLE vicidial_inbound_group_agents ADD group_type VARCHAR(1) default 'C';
+
+UPDATE system_settings SET db_schema_version='1372',db_schema_update_date=NOW() where db_schema_version < 1372;

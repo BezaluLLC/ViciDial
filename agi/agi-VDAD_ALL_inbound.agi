@@ -190,6 +190,7 @@
 # 140126-1129 - Added VMAIL_NO_INST options
 # 140215-2133 - Added several variable options for QM socket URL
 # 140312-2111 - Added CALLID as recording filename variable
+# 140417-0932 - Added max inbound calls feature
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -201,7 +202,7 @@ $wait_prompt_runs=0;
 $at='@';
 $S='*';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=196;
+$mysql_log_count=208;
 $one_mysql_log=0;
 $dial_ingroup_flag=0;
 $called_count=1;
@@ -1450,7 +1451,7 @@ if ( ( ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $c
 
 				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$phone_number',data3='$channel_group',serverid='$queuemetrics_log_id';";
 				$Baffected_rows = $dbhB->do($stmtB);
-					$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+					$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02197';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 				}
 			}
 		if ($after_hours_action =~ /EXTENSION/)
@@ -1721,7 +1722,7 @@ if ( ( ($no_agent_no_queue =~ /Y|NO_PAUSED/) || ($MCnanque_override > 0) ) && ($
 
 					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$phone_number',data3='$channel_group',serverid='$queuemetrics_log_id';";
 					$Baffected_rows = $dbhB->do($stmtB);
-						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02198';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 					}
 				}
 			if ($no_agent_action =~ /VOICEMAIL|VMAIL_NO_INST/)
@@ -3090,6 +3091,77 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 					if ($AGILOG) {$agi_string = "--    VDLIA agent calls: |$calls_today|$VDADuser|$channel_group|";   &agi_output;}
 					}
 
+				##### BEGIN check for user max inbound calls #####
+				$max_inbound_calls=0;
+				$stmtA = "SELECT max_inbound_calls FROM vicidial_users where user='$VDADuser';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArowsMIC=$sthA->rows;
+					$dbhP=$dbhA;   $mysql_count='02199';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+				if ($sthArowsMIC > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$VU_max_inbound_calls = $aryA[0];
+					}
+				$stmtA = "SELECT max_inbound_calls FROM vicidial_campaigns where campaign_id='$log_campaign';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArowsMIC=$sthA->rows;
+					$dbhP=$dbhA;   $mysql_count='02208';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+				if ($sthArowsMIC > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$CP_max_inbound_calls = $aryA[0];
+					}
+
+				if ( ($VU_max_inbound_calls > 0) || ($CP_max_inbound_calls > 0) )
+					{
+					$max_inbound_calls = $CP_max_inbound_calls;
+					if ($VU_max_inbound_calls > 0)
+						{$max_inbound_calls = $VU_max_inbound_calls;}
+					$max_inbound_count=0;
+					$stmtA = "SELECT sum(calls_today) FROM vicidial_inbound_group_agents where user='$VDADuser' and group_type='C';";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArowsVIGA=$sthA->rows;
+						$dbhP=$dbhA;   $mysql_count='02200';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+					if ($sthArowsVIGA > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$max_inbound_count = $aryA[0];
+						}
+					if ($max_inbound_count >= $max_inbound_calls)
+						{
+						$outbound_autodial='0';
+						$stmtA = "SELECT outbound_autodial FROM vicidial_live_agents where user='$VDADuser';";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArowsVLA=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='02201';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						if ($sthArowsVLA > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							if ($aryA[0] =~ /Y/)
+								{$outbound_autodial = '1';}
+							}
+
+						$stmtA = "UPDATE vicidial_live_agents set external_ingroups=' -',external_blended='$outbound_autodial',external_igb_set_user='VDIC',manager_ingroup_set='SET' where user='$VDADuser'";
+						$affected_rows = $dbhA->do($stmtA);
+							$dbhP=$dbhA;   $mysql_count='02202';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+
+						$stmtA = "DELETE FROM vicidial_live_inbound_agents where user='$VDADuser';";
+						$affected_rows = $dbhA->do($stmtA);
+							$dbhP=$dbhA;   $mysql_count='02203';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+
+						$stmtA = "INSERT INTO vicidial_admin_log set event_date=NOW(), user='$VDADuser', ip_address='$VARserver_ip', event_section='USERS', event_type='MODIFY', record_id='$VDADuser', event_code='MAX IN CALLS MODIFY USER', event_sql='DELETE FROM vicidial_live_inbound_agents where user=$VDADuser', event_notes='|$max_inbound_count|$max_inbound_calls|$VDADuser|$callerid|IC|';";
+						$affected_rows = $dbhA->do($stmtA);
+							$dbhP=$dbhA;   $mysql_count='02204';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+						if ($AGILOG) {$agi_string = "--    MAX INBOUND AGENT CALLS TRIGGER: |$max_inbound_count|$max_inbound_calls|$VDADuser|$callerid|";   &agi_output;}
+						}
+					}
+				##### END check for user max inbound calls #####
+
+
 				&trigger_transfer_process;
 
 				if ($no_delay_call_route !~ /Y/i)
@@ -4103,7 +4175,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 
 					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$phone_number',data3='$channel_group',serverid='$queuemetrics_log_id';";
 					$Baffected_rows = $dbhB->do($stmtB);
-						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02205';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 					}
 				}
 			}
@@ -4533,7 +4605,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 
 							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$phone_number',data3='$channel_group',serverid='$queuemetrics_log_id';";
 							$Baffected_rows = $dbhB->do($stmtB);
-								$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+								$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02206';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 							}
 						}
 					}
@@ -4942,7 +5014,7 @@ if ( ($drop_timer > $DROP_TIME) || ($MCdrop_override > 0) )
 
 			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$phone_number',data3='$channel_group',serverid='$queuemetrics_log_id';";
 			$Baffected_rows = $dbhB->do($stmtB);
-				$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02XXX';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
+				$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02207';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 			}
 		}
 	if ($drop_action =~ /IN_GROUP/)
