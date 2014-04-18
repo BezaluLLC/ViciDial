@@ -230,3 +230,7 @@ ALTER TABLE vicidial_campaigns ADD max_inbound_calls SMALLINT(5) UNSIGNED defaul
 ALTER TABLE vicidial_inbound_group_agents ADD group_type VARCHAR(1) default 'C';
 
 UPDATE system_settings SET db_schema_version='1372',db_schema_update_date=NOW() where db_schema_version < 1372;
+
+ALTER TABLE vicidial_live_agents ADD preview_lead_id INT(9) UNSIGNED default '0';
+
+UPDATE system_settings SET db_schema_version='1373',db_schema_update_date=NOW() where db_schema_version < 1373;

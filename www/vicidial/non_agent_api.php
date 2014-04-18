@@ -88,10 +88,11 @@
 # 140214-1540 - Added check_phone_number function
 # 140331-2119 - Converted division calculations to use MathZDC function
 # 140403-2024 - Added camp_rg_only option to update_user function
+# 140418-1553 - Added preview_lead_id for agent_status
 #
 
-$version = '2.8-64';
-$build = '140403-2024';
+$version = '2.8-65';
+$build = '140418-1553';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -5035,7 +5036,7 @@ if ($function == 'agent_status')
 					$user_group = 	$row[1];
 					$user_level = 	$row[2];
 
-					$stmt="SELECT status,callerid,lead_id,campaign_id,calls_today,agent_log_id,on_hook_agent,ring_callerid from vicidial_live_agents $agent_search_SQL;";
+					$stmt="SELECT status,callerid,lead_id,campaign_id,calls_today,agent_log_id,on_hook_agent,ring_callerid,preview_lead_id from vicidial_live_agents $agent_search_SQL;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
 					$agent_to_list = mysqli_num_rows($rslt);
@@ -5050,6 +5051,7 @@ if ($function == 'agent_status')
 						$agent_log_id =		$row[5];
 						$on_hook_agent =	$row[6];
 						$ring_callerid =	$row[7];
+						$preview_lead_id =	$row[8];
 						$pause_code =		'';
 						$rtr_status =		'';
 
@@ -5068,6 +5070,12 @@ if ($function == 'agent_status')
 
 						if ( ($status == 'PAUSED') and ($lead_id > 0) )
 							{$rtr_status = 'DISPO';}
+
+						if ( ($status == 'PAUSED') and ($preview_lead_id > 0) )
+							{
+							$rtr_status = 'PREVIEW';
+							$lead_id = $preview_lead_id;
+							}
 
 						if ($status == 'INCALL')
 							{

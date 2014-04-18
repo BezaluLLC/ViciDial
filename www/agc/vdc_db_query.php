@@ -350,12 +350,13 @@
 # 140402-1750 - Formatting cleanup and MySQL logging cleanup
 # 140407-1923 - Fixed call notes logging bug when call is not answered
 # 140417-0931 - Added max inbound calls feature
+# 140418-1536 - Added flagging of preview dialing in vicidial_live_agents
 #
 
-$version = '2.8-247';
-$build = '140417-0931';
+$version = '2.8-248';
+$build = '140418-1536';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=589;
+$mysql_log_count=591;
 $one_mysql_log=0;
 
 require_once("dbconnect_mysqli.php");
@@ -2630,6 +2631,15 @@ if ($ACTION == 'manDiaLnextCaLL')
 				}
 
 			##### BEGIN if preview dialing, do not send the call #####
+			if ($preview == 'YES')
+				{
+				### update the agent record with the preview_lead_id in vicidial_live_agents
+				$stmt = "UPDATE vicidial_live_agents set preview_lead_id='$lead_id' where user='$user' and server_ip='$server_ip';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00590',$user,$server_ip,$session_name,$one_mysql_log);}
+				}
+			##### BEGIN if NOT preview dialing, do not send the call #####
 			if ( (strlen($preview)<1) or ($preview == 'NO') or (strlen($dial_ingroup) > 1) )
 				{
 				### prepare variables to place manual call from VICIDiaL
@@ -2949,7 +2959,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					fclose($fp);
 					}
 				}
-			##### END if preview dialing, do not send the call #####
+			##### END if NOT preview dialing, send the call #####
 
 
 			##### find if script contains recording fields
@@ -3215,6 +3225,12 @@ if ($ACTION == 'manDiaLskip')
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00538',$user,$server_ip,$session_name,$one_mysql_log);}
 
+		### clear the preview dial flag of the lead_id being previewed
+		$stmt = "UPDATE vicidial_live_agents set preview_lead_id='0' where user='$user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00591',$user,$server_ip,$session_name,$one_mysql_log);}
+
 		$called_count = ($called_count - 1);
 		### set the lead back to previous status and called_count
 		$stmt = "UPDATE vicidial_list set status='$stage', called_count='$called_count',user='$user' where lead_id='$lead_id';";
@@ -3266,7 +3282,7 @@ if ($ACTION == 'manDiaLonly')
 			}
 
 		### set the api dial action to blank if used
-		$stmt = "UPDATE vicidial_live_agents set external_dial='' where user='$user' and external_dial IN('DIALONLY','ALTDIAL','ADR3DIAL');";
+		$stmt = "UPDATE vicidial_live_agents set external_dial='',preview_lead_id='0' where user='$user' and external_dial IN('DIALONLY','ALTDIAL','ADR3DIAL');";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00539',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3531,7 +3547,7 @@ if ($ACTION == 'manDiaLonly')
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00045',$user,$server_ip,$session_name,$one_mysql_log);}
 
 		### update the agent status to INCALL in vicidial_live_agents
-		$stmt = "UPDATE vicidial_live_agents set status='INCALL',last_call_time='$NOW_TIME',callerid='$MqueryCID',lead_id='$lead_id',comments='MANUAL',calls_today='$calls_today',external_hangup=0,external_status='',external_pause='',external_dial='',last_state_change='$NOW_TIME',pause_code='' where user='$user' and server_ip='$server_ip';";
+		$stmt = "UPDATE vicidial_live_agents set status='INCALL',last_call_time='$NOW_TIME',callerid='$MqueryCID',lead_id='$lead_id',comments='MANUAL',calls_today='$calls_today',external_hangup=0,external_status='',external_pause='',external_dial='',last_state_change='$NOW_TIME',pause_code='',preview_lead_id='0' where user='$user' and server_ip='$server_ip';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00046',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -4566,7 +4582,7 @@ if ($stage == "end")
 			$licf_SQL = '';
 			if ($VLA_inOUT == 'INBOUND')
 				{$licf_SQL = ",last_inbound_call_finish='$NOW_TIME'";}
-			$stmt = "UPDATE vicidial_live_agents set status='PAUSED',uniqueid=0,callerid='',channel='',call_server_ip='',last_call_finish='$NOW_TIME',comments='',last_state_change='$NOW_TIME' $licf_SQL where user='$user' and server_ip='$server_ip';";
+			$stmt = "UPDATE vicidial_live_agents set status='PAUSED',uniqueid=0,callerid='',channel='',call_server_ip='',last_call_finish='$NOW_TIME',comments='',last_state_change='$NOW_TIME',preview_lead_id='0' $licf_SQL where user='$user' and server_ip='$server_ip';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00082',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -4716,7 +4732,7 @@ if ($stage == "end")
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00086',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
 
-			$stmt = "UPDATE vicidial_live_agents set status='PAUSED',uniqueid=0,callerid='',channel='',call_server_ip='',last_call_finish='$NOW_TIME',comments='',last_state_change='$NOW_TIME' where user='$user' and server_ip='$server_ip';";
+			$stmt = "UPDATE vicidial_live_agents set status='PAUSED',uniqueid=0,callerid='',channel='',call_server_ip='',last_call_finish='$NOW_TIME',comments='',last_state_change='$NOW_TIME',preview_lead_id='0' where user='$user' and server_ip='$server_ip';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00087',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -5342,7 +5358,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 			$calls_today++;
 
 			### update the agent status to INCALL in vicidial_live_agents
-			$stmt = "UPDATE vicidial_live_agents set status='INCALL',last_call_time='$NOW_TIME',calls_today='$calls_today',external_hangup=0,external_status='',external_pause='',external_dial='',last_state_change='$NOW_TIME',pause_code='' where user='$user' and server_ip='$server_ip';";
+			$stmt = "UPDATE vicidial_live_agents set status='INCALL',last_call_time='$NOW_TIME',calls_today='$calls_today',external_hangup=0,external_status='',external_pause='',external_dial='',last_state_change='$NOW_TIME',pause_code='',preview_lead_id='0' where user='$user' and server_ip='$server_ip';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00106',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -8453,7 +8469,7 @@ if ($ACTION == 'updateDISPO')
 			}
 
 		### reset the API fields in vicidial_live_agents record
-		$stmt = "UPDATE vicidial_live_agents set lead_id=0,external_hangup=0,external_status='',external_update_fields='0',external_update_fields_data='',external_timer_action_seconds='-1',external_dtmf='',external_transferconf='',external_park='',external_recording='',last_state_change='$NOW_TIME' where user='$user' and server_ip='$server_ip';";
+		$stmt = "UPDATE vicidial_live_agents set lead_id=0,external_hangup=0,external_status='',external_update_fields='0',external_update_fields_data='',external_timer_action_seconds='-1',external_dtmf='',external_transferconf='',external_park='',external_recording='',last_state_change='$NOW_TIME',preview_lead_id='0' where user='$user' and server_ip='$server_ip';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00141',$user,$server_ip,$session_name,$one_mysql_log);}
