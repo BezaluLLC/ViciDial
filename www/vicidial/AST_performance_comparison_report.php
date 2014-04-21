@@ -6,7 +6,8 @@
 # CHANGES
 #
 # 140408-1813 - First build
-# 140414-1712 - Sales ccount bug fix
+# 140414-1712 - Sales count bug fix
+# 140418-1830 - Call count bug fix
 #
 
 $startMS = microtime();
@@ -646,6 +647,7 @@ else
 		#########
 
 		$stmt="select count(*) as calls,sum(talk_sec) as talk,full_name,vicidial_users.user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec), vicidial_users.user_group from vicidial_users,vicidial_agent_log where event_time <= '$query_date $time_END' and event_time >= '$rpt_date $time_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_SQL $user_SQL group by user,full_name,user_group,status order by full_name,user,status desc limit 500000;";
+		if ($DB) {print "<!-- $stmt //-->\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$rows_to_print = mysqli_num_rows($rslt);
 		$i=0;
@@ -653,7 +655,7 @@ else
 		while ($i < $rows_to_print)
 			{
 			$row=mysqli_fetch_row($rslt);
-			$agent_performance_array[$row[3]][$array_offset]+=$row[0]; # CALLS FOR TIME RANGE
+			if ($row[7]!="") {$agent_performance_array[$row[3]][$array_offset]+=$row[0];} # CALLS FOR TIME RANGE, MUST HAVE DISPO TO COUNT AS A CALL
 			if(preg_match("/\|$row[7]\|/", $sale_status_str)) 
 				{
 				$agent_performance_array[$row[3]][($array_offset+1)]+=$row[0]; # SALES FOR TIME RANGE
