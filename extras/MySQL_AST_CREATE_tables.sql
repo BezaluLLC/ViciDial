@@ -899,7 +899,9 @@ dead_max_dispo VARCHAR(6) default 'DCMX',
 dispo_max SMALLINT(5) UNSIGNED default '0',
 dispo_max_dispo VARCHAR(6) default 'DISMX',
 pause_max SMALLINT(5) UNSIGNED default '0',
-max_inbound_calls SMALLINT(5) UNSIGNED default '0'
+max_inbound_calls SMALLINT(5) UNSIGNED default '0',
+manual_dial_search_checkbox ENUM('SELECTED','SELECTED_RESET','UNSELECTED','UNSELECTED_RESET') default 'SELECTED',
+hide_call_log_info ENUM('Y','N') default 'N'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -3261,4 +3263,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1373',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1374',db_schema_update_date=NOW(),reload_timestamp=NOW();

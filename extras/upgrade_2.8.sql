@@ -234,3 +234,8 @@ UPDATE system_settings SET db_schema_version='1372',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_live_agents ADD preview_lead_id INT(9) UNSIGNED default '0';
 
 UPDATE system_settings SET db_schema_version='1373',db_schema_update_date=NOW() where db_schema_version < 1373;
+
+ALTER TABLE vicidial_campaigns ADD manual_dial_search_checkbox ENUM('SELECTED','SELECTED_RESET','UNSELECTED','UNSELECTED_RESET') default 'SELECTED';
+ALTER TABLE vicidial_campaigns ADD hide_call_log_info ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1374',db_schema_update_date=NOW() where db_schema_version < 1374;

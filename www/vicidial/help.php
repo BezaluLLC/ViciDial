@@ -12,6 +12,7 @@
 # 140126-2254 - Added voicemail_instructions option for phones
 # 140404-1104 - Added new DID filter options
 # 140418-0915 - Added users and campaigns max_inbound_calls
+# 140423-1637 - Added manual_dial_search_checkbox and hide_call_log_info
 #
 
 
@@ -1190,6 +1191,11 @@ if ($SSoutbound_autodial_active > 0)
 <B>Call Notes Per Call -</B> Setting this option to ENABLED will allow agents to enter in notes for every call they handle in the agent interface. The notes entry field will appear below the Comments field in the agent interface. Also, if the Agent User Group is allowed to view Call Logs then the agent will be able to view past call notes for a lead at any time. Default is DISABLED.
 
 <BR>
+<A NAME="campaigns-hide_call_log_info">
+<BR>
+<B>Hide Call Log Info -</B> Enabling this option will hide any call log or call count information when lead information is displayed on the agent screen. Default is N.
+
+<BR>
 <A NAME="campaigns-agent_lead_search">
 <BR>
 <B>Agent Lead Search -</B> Setting this option to ENABLED will allow agents to search for leads and view lead information while paused in the agent interface. Also, if the Agent User Group is allowed to view Call Logs then the agent will be able to view past call notes for any lead that they are viewing information on. Default is DISABLED. LIVE_CALL_INBOUND will allow search for a lead while on an inbound call only. LIVE_CALL_INBOUND_AND_MANUAL will allow search for a lead while on an inbound call or while paused. When Lead Search is used on a live inbound call, the lead of the call when it went to the agent will be changed to a status of LSMERG, and the logs for the call will be modified to link to the agent selected lead instead.
@@ -1433,6 +1439,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="campaigns-manual_dial_filter">
 <BR>
 <B>Manual Dial Filter -</B> This allows you to filter the calls that agents make in manual dial mode for this campaign by any combination of the following: DNC - to kick out, CAMPAIGNLISTS - the number must be within the lists for the campaign, NONE - no filter on manual dial or fast dial lists. CAMPLISTS_ALL - will include inactive lists in the search for the number.
+
+<BR>
+<A NAME="campaigns-manual_dial_search_checkbox">
+<BR>
+<B>Manual Dial Search Checkbox -</B> This allows you to define if you want the manual dial search checkbox to be selected by default or not. If an option with RESET is chosen, then the checkbox will be reset after every call. Default is SELECTED.
 
 <BR>
 <A NAME="campaigns-manual_preview_dial">

@@ -3789,6 +3789,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 			$r++;
 			}
 		$sthA->finish();
+		if ($r < 1) {$r=1;}
 		$holdtime_estimate_sec = int( ($holdtime_estimate_sec / $r) + 1);
 		
 		$stmtA = "SELECT stage FROM vicidial_auto_calls where status = 'LIVE' and campaign_id = '$channel_group' and call_time <= \"$SQLdateBEGIN\";";

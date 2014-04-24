@@ -206,6 +206,13 @@ OTHER CHANGES:
 39. Added Max Inbound Calls options to Campaigns and Users to enforce a maximum
 	number of inbound calls received per day per agent.
 
+40. Added campaign option to default the search existing leads checkbox on the
+	manual dial screen of the agent interface, as well as reset it after
+	every call
+
+41. Added campaign option to hide call log and call count data on the agent 
+	screen when viewing lead information
+
 
 
 
