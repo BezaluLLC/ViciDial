@@ -239,3 +239,9 @@ ALTER TABLE vicidial_campaigns ADD manual_dial_search_checkbox ENUM('SELECTED','
 ALTER TABLE vicidial_campaigns ADD hide_call_log_info ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1374',db_schema_update_date=NOW() where db_schema_version < 1374;
+
+ALTER TABLE vicidial_users ADD modify_custom_dialplans ENUM('1','0') default '0';
+
+UPDATE system_settings,vicidial_users SET modify_custom_dialplans='1' where modify_ingroups='1' and db_schema_version < 1375;
+
+UPDATE system_settings SET db_schema_version='1375',db_schema_update_date=NOW() where db_schema_version < 1375;

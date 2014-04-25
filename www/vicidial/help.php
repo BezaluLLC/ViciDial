@@ -13,6 +13,7 @@
 # 140404-1104 - Added new DID filter options
 # 140418-0915 - Added users and campaigns max_inbound_calls
 # 140423-1637 - Added manual_dial_search_checkbox and hide_call_log_info
+# 140425-0912 - Added modify_custom_dialplans
 #
 
 
@@ -375,6 +376,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="users-delete_ingroups">
 <BR>
 <B>Delete In-Groups -</B> This option if set to 1 allows the user to delete Inbound Groups from the system.
+
+<BR>
+<A NAME="users-modify_custom_dialplans">
+<BR>
+<B>Modify Custom Dialplans -</B> This option if set to 1 allows the user to view and modify custom dialplan entries that are available in the Call Menu, System Settings and Servers modification screens.
 
 <BR>
 <A NAME="users-delete_remote_agents">

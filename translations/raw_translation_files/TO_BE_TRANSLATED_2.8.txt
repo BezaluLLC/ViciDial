@@ -280,6 +280,8 @@ Manual Dial Search Checkbox||
 This allows you to define if you want the manual dial search checkbox to be selected by default or not. If an option with RESET is chosen, then the checkbox will be reset after every call. Default is SELECTED||
 Hide Call Log Info||
 Enabling this option will hide any call log or call count information when lead information is displayed on the agent screen. Default is N||
+Modify Custom Dialplans||
+This option if set to 1 allows the user to view and modify custom dialplan entries that are available in the Call Menu, System Settings and Servers modification screens||
 
 
 ########################## CHANGES TO EXISTING PHRASES IN ADMIN TRANSLATION
