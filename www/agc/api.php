@@ -73,10 +73,11 @@
 # 140214-1736 - Added preview_dial_action function
 # 140301-2046 - Added options to dial next number and search for lead phone number
 # 140403-1738 - Added option to append filename on recording start
+# 140428-1656 - Added pause_type logging to queue_log pause/unpause entries for ra_call_control function
 #
 
-$version = '2.8-39';
-$build = '140403-1738';
+$version = '2.8-40';
+$build = '140428-1656';
 
 $startMS = microtime();
 
@@ -2725,7 +2726,7 @@ if ($function == 'ra_call_control')
 
 					#############################################
 					##### START QUEUEMETRICS LOGGING LOOKUP #####
-					$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append,queuemetrics_socket,queuemetrics_socket_url FROM system_settings;";
+					$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append,queuemetrics_socket,queuemetrics_socket_url,queuemetrics_pause_type FROM system_settings;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
 					$qm_conf_ct = mysqli_num_rows($rslt);
@@ -2741,6 +2742,7 @@ if ($function == 'ra_call_control')
 						$queuemetrics_pe_phone_append =	$row[6];
 						$queuemetrics_socket =			$row[7];
 						$queuemetrics_socket_url =		$row[8];
+						$queuemetrics_pause_type =		$row[9];
 						}
 					##### END QUEUEMETRICS LOGGING LOOKUP #####
 					###########################################
@@ -2790,11 +2792,14 @@ if ($function == 'ra_call_control')
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_to_mysqli($stmt, $linkB);
 
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$ra_user',verb='PAUSEALL',serverid='$queuemetrics_log_id' $data4SQL;";
+						$pause_typeSQL='';
+						if ($queuemetrics_pause_type > 0)
+							{$pause_typeSQL=",data5='API'";}
+						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$ra_user',verb='PAUSEALL',serverid='$queuemetrics_log_id' $data4SQL $pause_typeSQL;";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_to_mysqli($stmt, $linkB);
 
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$ra_user',verb='UNPAUSEALL',serverid='$queuemetrics_log_id' $data4SQL;";
+						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$ra_user',verb='UNPAUSEALL',serverid='$queuemetrics_log_id' $data4SQL  $pause_typeSQL;";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_to_mysqli($stmt, $linkB);
 

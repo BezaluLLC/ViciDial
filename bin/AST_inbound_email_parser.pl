@@ -58,6 +58,7 @@ use MIME::QuotedPrint;
 # 140212-0719 - Added ignoresizeerrors option, changed debug and added --force-check option
 # 140225-1241 - Added option for SSL no-cert-verify (--ssl-no-cert)
 # 140313-0905 - Added Debug options when --debugX for both IMAP and POP3
+# 140422-1912 - Added 'related' content type
 #
 
 # default path to astguiclient configuration file:
@@ -343,7 +344,7 @@ while (@row=$rslt->fetchrow_array) {
 									## Message is HTML, so it needs to be stripped.
 									if ($DB) {print "Email message is text/html.  Needs to have tags stripped via HTML::Strip.\n\n";}
 									StripHTML();
-								} elsif ($content_type=~/^multipart\/(alternative|mixed)/i) {
+								} elsif ($content_type=~/^multipart\/(alternative|mixed|related)/i) {
 									## Message is multipart/alternative, so it needs to be read and partitioned.  The multipart/alternative subtype indicates that each part is an "alternative"
 									## version of the same (or similar) content, each in a different format denoted by its "Content-Type" header. The formats are ordered by how faithful they are to 
 									## the original, with the least faithful first and the most faithful last. Systems can then choose the "best" representation they are capable of processing; in 
@@ -665,7 +666,7 @@ while (@row=$rslt->fetchrow_array) {
 					## Message is HTML, so it needs to be stripped.
 					if ($DB) {print "Email message is text/html.  Needs to have tags stripped via HTML::Strip.\n\n";}
 					StripHTML();
-				} elsif ($content_type=~/^multipart\/(alternative|mixed)/i) {
+				} elsif ($content_type=~/^multipart\/(alternative|mixed|related)/i) {
 					## Message is multipart/alternative, so it needs to be read and partitioned.  The multipart/alternative subtype indicates that each part is an "alternative"
 					## version of the same (or similar) content, each in a different format denoted by its "Content-Type" header. The formats are ordered by how faithful they are to 
 					## the original, with the least faithful first and the most faithful last. Systems can then choose the "best" representation they are capable of processing; in 

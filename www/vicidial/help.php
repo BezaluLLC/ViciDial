@@ -14,6 +14,7 @@
 # 140418-0915 - Added users and campaigns max_inbound_calls
 # 140423-1637 - Added manual_dial_search_checkbox and hide_call_log_info
 # 140425-0912 - Added modify_custom_dialplans
+# 140425-1306 - Added queuemetrics_pause_type
 #
 
 
@@ -4560,6 +4561,11 @@ FR_SPAC 00 00 00 00 00 - France space separated phone number<BR>
 <A NAME="settings-queuemetrics_dispo_pause">
 <BR>
 <B>QueueMetrics Dispo Pause Code -</B> This option, if populated, allows you to define whether a dispo pause code is entered into queue_log when an agent is in dispo status. Default is empty for disabled.
+
+<BR>
+<A NAME="settings-queuemetrics_pause_type">
+<BR>
+<B>QueueMetrics Pause Type Logging -</B> If enabled, this option will log the type of pause in the queue_log table data5 field. You must make sure that you have a data5 field or enabling this feature will break QM compatibility. Default is 0 for disabled.
 
 <BR>
 <A NAME="settings-queuemetrics_pe_phone_append">

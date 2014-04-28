@@ -282,6 +282,8 @@ Hide Call Log Info||
 Enabling this option will hide any call log or call count information when lead information is displayed on the agent screen. Default is N||
 Modify Custom Dialplans||
 This option if set to 1 allows the user to view and modify custom dialplan entries that are available in the Call Menu, System Settings and Servers modification screens||
+QueueMetrics Pause Type Logging||
+If enabled, this option will log the type of pause in the queue_log table data5 field. You must make sure that you have a data5 field or enabling this feature will break QM compatibility. Default is 0 for disabled||
 
 
 ########################## CHANGES TO EXISTING PHRASES IN ADMIN TRANSLATION

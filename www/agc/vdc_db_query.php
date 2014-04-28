@@ -352,6 +352,7 @@
 # 140417-0931 - Added max inbound calls feature
 # 140418-1536 - Added flagging of preview dialing in vicidial_live_agents
 # 140423-2055 - Added hide_call_log_info campaign option
+# 140427-1058 - Added pause_type
 #
 
 $version = '2.8-249';
@@ -1205,7 +1206,7 @@ if ($ACTION == 'regCLOSER')
 
 		#############################################
 		##### START QUEUEMETRICS LOGGING LOOKUP #####
-		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,queuemetrics_pe_phone_append FROM system_settings;";
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,queuemetrics_pe_phone_append,queuemetrics_pause_type FROM system_settings;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00349',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
@@ -1223,6 +1224,7 @@ if ($ACTION == 'regCLOSER')
 			$queuemetrics_addmember_enabled =	$row[6];
 			$queuemetrics_dispo_pause =			$row[7];
 			$queuemetrics_pe_phone_append =		$row[8];
+			$queuemetrics_pause_type =			$row[9];
 			$i++;
 			}
 		##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -2846,7 +2848,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 
 					#############################################
 					##### START QUEUEMETRICS LOGGING LOOKUP #####
-					$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append,queuemetrics_socket,queuemetrics_socket_url FROM system_settings;";
+					$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append,queuemetrics_socket,queuemetrics_socket_url,queuemetrics_pause_type FROM system_settings;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00037',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
@@ -2863,6 +2865,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 						$queuemetrics_pe_phone_append = $row[6];
 						$queuemetrics_socket =			$row[7];
 						$queuemetrics_socket_url =		$row[8];
+						$queuemetrics_pause_type =		$row[9];
 						}
 					##### END QUEUEMETRICS LOGGING LOOKUP #####
 					###########################################
@@ -2890,7 +2893,10 @@ if ($ACTION == 'manDiaLnextCaLL')
 						mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 						# UNPAUSEALL
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='UNPAUSEALL',serverid='$queuemetrics_log_id' $data4SQL;";
+						$pause_typeSQL='';
+						if ($queuemetrics_pause_type > 0)
+							{$pause_typeSQL=",data5='AGENT'";}
+						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='UNPAUSEALL',serverid='$queuemetrics_log_id' $data4SQL $pause_typeSQL;";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_to_mysqli($stmt, $linkB);
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00038',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3631,7 +3637,7 @@ if ($ACTION == 'manDiaLonly')
 				$user_group =		trim("$row[0]");
 				}
 
-			$stmt="INSERT INTO vicidial_agent_log (user,server_ip,event_time,campaign_id,pause_epoch,pause_sec,wait_epoch,user_group,sub_status) values('$user','$server_ip','$NOW_TIME','$campaign','$StarTtime','0','$StarTtime','$user_group','ANDIAL');";
+			$stmt="INSERT INTO vicidial_agent_log (user,server_ip,event_time,campaign_id,pause_epoch,pause_sec,wait_epoch,user_group,sub_status,pause_type) values('$user','$server_ip','$NOW_TIME','$campaign','$StarTtime','0','$StarTtime','$user_group','ANDIAL','AGENT');";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00329',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3666,7 +3672,7 @@ if ($ACTION == 'manDiaLonly')
 
 		#############################################
 		##### START QUEUEMETRICS LOGGING LOOKUP #####
-		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append,queuemetrics_socket,queuemetrics_socket_url FROM system_settings;";
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append,queuemetrics_socket,queuemetrics_socket_url,queuemetrics_pause_type FROM system_settings;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00048',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
@@ -3683,6 +3689,7 @@ if ($ACTION == 'manDiaLonly')
 			$queuemetrics_pe_phone_append = $row[6];
 			$queuemetrics_socket =			$row[7];
 			$queuemetrics_socket_url =		$row[8];
+			$queuemetrics_pause_type =		$row[9];
 			}
 		##### END QUEUEMETRICS LOGGING LOOKUP #####
 		###########################################
@@ -3709,7 +3716,10 @@ if ($ACTION == 'manDiaLonly')
 			mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 			# UNPAUSEALL
-			$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='UNPAUSEALL',serverid='$queuemetrics_log_id' $data4SQL;";
+			$pause_typeSQL='';
+			if ($queuemetrics_pause_type > 0)
+				{$pause_typeSQL=",data5='AGENT'";}
+			$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='UNPAUSEALL',serverid='$queuemetrics_log_id' $data4SQL $pause_typeSQL;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $linkB);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00049',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -4179,7 +4189,7 @@ if ($stage == "end")
 
 		#############################################
 		##### START QUEUEMETRICS LOGGING LOOKUP #####
-		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_dispo_pause,queuemetrics_pe_phone_append,queuemetrics_socket,queuemetrics_socket_url FROM system_settings;";
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_dispo_pause,queuemetrics_pe_phone_append,queuemetrics_socket,queuemetrics_socket_url,queuemetrics_pause_type FROM system_settings;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00063',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
@@ -4198,6 +4208,7 @@ if ($stage == "end")
 			$queuemetrics_pe_phone_append = $row[7];
 			$queuemetrics_socket =			$row[8];
 			$queuemetrics_socket_url =		$row[9];
+			$queuemetrics_pause_type =		$row[10];
 
 			if ($enable_queuemetrics_logging > 0)
 				{
@@ -4617,7 +4628,10 @@ if ($stage == "end")
 						$data4SQL = ",data4='$row[0]$pe_append'";
 						}
 
-					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='PAUSEALL',serverid='$queuemetrics_log_id' $data4SQL;";
+					$pause_typeSQL='';
+					if ($queuemetrics_pause_type > 0)
+						{$pause_typeSQL=",data5='AGENT'";}
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='PAUSEALL',serverid='$queuemetrics_log_id' $data4SQL $pause_typeSQL;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $linkB);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00083',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -4752,7 +4766,10 @@ if ($stage == "end")
 				{
 				if ($enable_queuemetrics_logging > 0)
 					{
-					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='PAUSEALL',serverid='$queuemetrics_log_id' $data4SQL;";
+					$pause_typeSQL='';
+					if ($queuemetrics_pause_type > 0)
+						{$pause_typeSQL=",data5='AGENT'";}
+					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='PAUSEALL',serverid='$queuemetrics_log_id' $data4SQL $pause_typeSQL;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $linkB);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00088',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -5242,7 +5259,11 @@ if ($stage == "end")
 	### if queuemetrics_dispo_pause dispo tag is enabled, log it here
 	if (strlen($queuemetrics_dispo_pause) > 0)
 		{
-		$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$MDnextCID',queue='NONE',agent='Agent/$user',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='$queuemetrics_dispo_pause';";
+		$pause_typeSQL='';
+		if ($queuemetrics_pause_type > 0)
+			{$pause_typeSQL=",data5='AGENT'";}
+
+		$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$MDnextCID',queue='NONE',agent='Agent/$user',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='$queuemetrics_dispo_pause'$pause_typeSQL;";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00364',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -8293,7 +8314,7 @@ if ($ACTION == 'userLOGout')
 			{
 			#############################################
 			##### START QUEUEMETRICS LOGGING LOOKUP #####
-			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,allow_sipsak_messages,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,queuemetrics_pe_phone_append FROM system_settings;";
+			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,allow_sipsak_messages,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,queuemetrics_pe_phone_append,queuemetrics_pause_type FROM system_settings;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00138',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -8312,6 +8333,7 @@ if ($ACTION == 'userLOGout')
 				$queuemetrics_addmember_enabled =	$row[8];
 				$queuemetrics_dispo_pause =			$row[9];
 				$queuemetrics_pe_phone_append =		$row[10];
+				$queuemetrics_pause_type =			$row[11];
 				}
 			##### END QUEUEMETRICS LOGGING LOOKUP #####
 			###########################################
@@ -8384,7 +8406,10 @@ if ($ACTION == 'userLOGout')
 					{
 					if ($queuemetrics_loginout == 'NONE')
 						{
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LOGOFF';";
+						$pause_typeSQL='';
+						if ($queuemetrics_pause_type > 0)
+							{$pause_typeSQL=",data5='AGENT'";}
+						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LOGOFF'$pause_typeSQL;";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_to_mysqli($stmt, $linkB);
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00396',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -8819,7 +8844,7 @@ if ($ACTION == 'updateDISPO')
 		$MAN_insert_leadIDsql='';
 		if ($MAN_vl_insert > 0)
 			{$MAN_insert_leadIDsql = ",lead_id='$lead_id'";}
-		$stmt="INSERT INTO vicidial_agent_log SET user='$user',server_ip='$server_ip',event_time='$NOW_TIME',campaign_id='$campaign',pause_epoch='$StarTtime',pause_sec='0',wait_epoch='$StarTtime',user_group='$user_group'$MAN_insert_leadIDsql;";
+		$stmt="INSERT INTO vicidial_agent_log SET user='$user',server_ip='$server_ip',event_time='$NOW_TIME',campaign_id='$campaign',pause_epoch='$StarTtime',pause_sec='0',wait_epoch='$StarTtime',user_group='$user_group',pause_type='AGENT'$MAN_insert_leadIDsql;";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00153',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -10178,7 +10203,7 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 			{
 			#############################################
 			##### START QUEUEMETRICS LOGGING LOOKUP #####
-			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append FROM system_settings;";
+			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append,queuemetrics_pause_type FROM system_settings;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00167',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -10194,6 +10219,7 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 				$queuemetrics_pass =			$row[4];
 				$queuemetrics_log_id =			$row[5];
 				$queuemetrics_pe_phone_append =	$row[6];
+				$queuemetrics_pause_type =		$row[7];
 				$i++;
 				}
 			##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -10232,7 +10258,10 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 					$data4SQL = ",data4='$row[0]$pe_append'";
 					}
 
-				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='$QMstatus',serverid='$queuemetrics_log_id' $data4SQL;";
+				$pause_typeSQL='';
+				if ($queuemetrics_pause_type > 0)
+					{$pause_typeSQL=",data5='AGENT'";}
+				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$user',verb='$QMstatus',serverid='$queuemetrics_log_id' $data4SQL $pause_typeSQL;";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $linkB);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00168',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -10317,7 +10346,7 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 				$user_group =		trim("$row[0]");
 				}
 
-			$stmt="INSERT INTO vicidial_agent_log (user,server_ip,event_time,campaign_id,pause_epoch,pause_sec,wait_epoch,user_group) values('$user','$server_ip','$NOW_TIME','$campaign','$StarTtime','0','$StarTtime','$user_group');";
+			$stmt="INSERT INTO vicidial_agent_log (user,server_ip,event_time,campaign_id,pause_epoch,pause_sec,wait_epoch,user_group,pause_type) values('$user','$server_ip','$NOW_TIME','$campaign','$StarTtime','0','$StarTtime','$user_group','AGENT');";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00571',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -10406,7 +10435,7 @@ if ($ACTION == 'PauseCodeSubmit')
 		### if this is the first pause code entry in a pause session, simply update and log to queue_log
 		if ($stage < 1)
 			{
-			$stmt="UPDATE vicidial_agent_log set sub_status=\"$status\" where agent_log_id >= '$agent_log_id' and user='$user' and ( (sub_status is NULL) or (sub_status='') )order by agent_log_id limit 2;";
+			$stmt="UPDATE vicidial_agent_log set sub_status=\"$status\",pause_type='AGENT' where agent_log_id >= '$agent_log_id' and user='$user' and ( (sub_status is NULL) or (sub_status='') )order by agent_log_id limit 2;";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00175',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -10443,7 +10472,7 @@ if ($ACTION == 'PauseCodeSubmit')
 				$user_group =		trim("$row[0]");
 				}
 
-			$stmt="INSERT INTO vicidial_agent_log (user,server_ip,event_time,campaign_id,pause_epoch,pause_sec,wait_epoch,user_group,sub_status) values('$user','$server_ip','$NOW_TIME','$campaign','$StarTtime','0','$StarTtime','$user_group','$status');";
+			$stmt="INSERT INTO vicidial_agent_log (user,server_ip,event_time,campaign_id,pause_epoch,pause_sec,wait_epoch,user_group,sub_status,pause_type) values('$user','$server_ip','$NOW_TIME','$campaign','$StarTtime','0','$StarTtime','$user_group','$status','AGENT');";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00309',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -10462,7 +10491,7 @@ if ($ACTION == 'PauseCodeSubmit')
 			{
 			#############################################
 			##### START QUEUEMETRICS LOGGING LOOKUP #####
-			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,allow_sipsak_messages,queuemetrics_pe_phone_append FROM system_settings;";
+			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,allow_sipsak_messages,queuemetrics_pe_phone_append,queuemetrics_pause_type FROM system_settings;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00176',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -10479,6 +10508,7 @@ if ($ACTION == 'PauseCodeSubmit')
 				$queuemetrics_log_id =			$row[5];
 				$allow_sipsak_messages =		$row[6];
 				$queuemetrics_pe_phone_append = $row[7];
+				$queuemetrics_pause_type =		$row[8];
 				$i++;
 				}
 			##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -10497,7 +10527,11 @@ if ($ACTION == 'PauseCodeSubmit')
 				$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
 				mysqli_select_db($linkB, "$queuemetrics_dbname");
 
-				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$pause_call_id',queue='NONE',agent='Agent/$user',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='$status';";
+				$pause_typeSQL='';
+				if ($queuemetrics_pause_type > 0)
+					{$pause_typeSQL=",data5='AGENT'";}
+
+				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$pause_call_id',queue='NONE',agent='Agent/$user',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='$status'$pause_typeSQL;";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $linkB);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00177',$user,$server_ip,$session_name,$one_mysql_log);}

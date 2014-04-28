@@ -28,6 +28,7 @@
 # 131208-2156 - Added user log TIMEOUTLOGOUT event status
 # 140108-0707 - Added webserver and hostname to report logging
 # 140305-0905 - Bug fix for issue #744, emergency logout
+# 140425-1314 - Added pause_type field to logout
 #
 
 $startMS = microtime();
@@ -395,7 +396,7 @@ if ($stage == "log_agent_out")
 				if ( ($VAL_wait_epoch < 1) or ( (preg_match('/PAUSE/', $VLA_status)) and ($VAL_dispo_epoch < 1) ) )
 					{
 					$VAL_pause_sec = ( ($now_date_epoch - $VAL_pause_epoch) + $VAL_pause_sec);
-					$stmt = "UPDATE vicidial_agent_log SET wait_epoch='$now_date_epoch', pause_sec='$VAL_pause_sec' where agent_log_id='$VAL_agent_log_id';";
+					$stmt = "UPDATE vicidial_agent_log SET wait_epoch='$now_date_epoch', pause_sec='$VAL_pause_sec', pause_type='ADMIN' where agent_log_id='$VAL_agent_log_id';";
 					}
 				else
 					{
@@ -460,7 +461,7 @@ if ($stage == "log_agent_out")
 
 		#############################################
 		##### START QUEUEMETRICS LOGGING LOOKUP #####
-		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_pe_phone_append FROM system_settings;";
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_pe_phone_append,queuemetrics_pause_type FROM system_settings;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "<BR>$stmt\n";}
 		$qm_conf_ct = mysqli_num_rows($rslt);
@@ -476,6 +477,7 @@ if ($stage == "log_agent_out")
 			$queuemetrics_loginout =			$row[6];
 			$queuemetrics_addmember_enabled =	$row[7];
 			$queuemetrics_pe_phone_append =		$row[8];
+			$queuemetrics_pause_type =			$row[9];
 			}
 		##### END QUEUEMETRICS LOGGING LOOKUP #####
 		###########################################
@@ -496,7 +498,10 @@ if ($stage == "log_agent_out")
 
 			if ($queuemetrics_loginout == 'NONE')
 				{
-				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='Agent/" . mysqli_real_escape_string($link, $user) . "',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LOGOFF';";
+				$pause_typeSQL='';
+				if ($queuemetrics_pause_type > 0)
+					{$pause_typeSQL=",data5='ADMIN'";}
+				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='Agent/" . mysqli_real_escape_string($link, $user) . "',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LOGOFF'$pause_typeSQL;";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $linkB);
 				$affected_rows = mysqli_affected_rows($linkB);

@@ -215,6 +215,8 @@ OTHER CHANGES:
 
 42. Added User permission option for editing Custom Dialplan Entries
 
+43. Added logging of pause type(ADMIN, AGENT, SYSTEM, API,...)
+
 
 
 

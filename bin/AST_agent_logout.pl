@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_agent_logout.pl version 2.2.0
+# AST_agent_logout.pl version 2.8
 #
 # DESCRIPTION:
 # forces logout of agents in a specified campaign or all campaigns
@@ -21,11 +21,12 @@
 #	15 16 * * 6 /usr/share/astguiclient/AST_agent_logout.pl --debugX
 #
 #
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 80112-0330 - First Build
 # 91129-2138 - Replace SELECT STAR in SQL statement, fixed other formatting
+# 140426-1950 - Added pause_type
 #
 
 # constants
@@ -227,7 +228,7 @@ foreach(@user)
 		if ( ($wait_epoch[$i] < 1) || ( ($status[$i] =~ /PAUSE/) && ($dispo_epoch[$i] < 1) ) )
 			{
 			$pause_sec = ( ($now_date_epoch - $pause_epoch[$i]) + $pause_sec[$i]);
-			$stmtA = "UPDATE vicidial_agent_log SET wait_epoch='$now_date_epoch', pause_sec='$pause_sec' where agent_log_id='$agent_log_id[$i]';";
+			$stmtA = "UPDATE vicidial_agent_log SET wait_epoch='$now_date_epoch', pause_sec='$pause_sec' where agent_log_id='$agent_log_id[$i]',pause_type='SYSTEM';";
 			}
 		else
 			{

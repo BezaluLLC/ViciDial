@@ -25,7 +25,7 @@
 # It is good practice to keep this program running by placing the associated 
 # KEEPALIVE script running every minute to ensure this program is always running
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 50125-1201 - Changed dial timeout to 120 seconds from 180 seconds
@@ -116,6 +116,7 @@
 # 131016-0659 - Fix for disable_auto_dial system option
 # 131122-1233 - Added several missing sthA->finish 
 # 131209-1557 - Added called_count logging
+# 140426-1941 - Added pause_type to vicidial_agent_log
 #
 
 
@@ -276,7 +277,7 @@ $event_string='LOGGED INTO MYSQL SERVER ON 1 CONNECTION|';
 
 #############################################
 ##### START QUEUEMETRICS LOGGING LOOKUP #####
-$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,outbound_autodial_active,queuemetrics_loginout,queuemetrics_addmember_enabled FROM system_settings;";
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,outbound_autodial_active,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_pause_type FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -292,6 +293,7 @@ if ($sthArows > 0)
 	$outbound_autodial_active =			$aryA[6];
 	$queuemetrics_loginout =			$aryA[7];
 	$queuemetrics_addmember_enabled =	$aryA[8];
+	$queuemetrics_pause_type =			$aryA[9];
 	}
 $sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -2064,10 +2066,10 @@ while($one_day_interval > 0)
 			while ($sthArowsL > $lagged_ids)
 				{
 				$secX = time();
-				$stmtA = "UPDATE vicidial_agent_log set sub_status='LAGGED' where agent_log_id='$LAGagent_log_id[$lagged_ids]';";
+				$stmtA = "UPDATE vicidial_agent_log set sub_status='LAGGED',pause_type='SYSTEM' where agent_log_id='$LAGagent_log_id[$lagged_ids]';";
 				$VLaffected_rows = $dbhA->do($stmtA);
 
-				$stmtA = "SELECT user_group from vicidial_users where user='$server_ip' limit 1;";
+				$stmtA = "SELECT user_group from vicidial_users where user='$LAGuser[$lagged_ids]' limit 1;";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArowsLU=$sthA->rows;
@@ -2078,17 +2080,20 @@ while($one_day_interval > 0)
 					}
 				$sthA->finish();
 
-				$stmtA = "INSERT INTO vicidial_agent_log set event_time='$now_date',server_ip='$LAGserver_ip[$lagged_ids]',campaign_id='$LAGcampaign_id[$lagged_ids]',user_group='$LAGuser_group[$lagged_ids]',user='$LAGuser[$lagged_ids]',pause_epoch='$secX',pause_sec='0',wait_epoch='$secX';";
+				$stmtA = "INSERT INTO vicidial_agent_log set event_time='$now_date',server_ip='$LAGserver_ip[$lagged_ids]',campaign_id='$LAGcampaign_id[$lagged_ids]',user_group='$LAGuser_group[$lagged_ids]',user='$LAGuser[$lagged_ids]',pause_epoch='$secX',pause_sec='0',wait_epoch='$secX',pause_type='SYSTEM';";
 				$VLaffected_rows = $dbhA->do($stmtA);
 
 				if ($enable_queuemetrics_logging > 0)
 					{
+					$pause_typeSQL='';
+					if ($queuemetrics_pause_type > 0)
+						{$pause_typeSQL=",data5='SYSTEM'";}
 					$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
 					 or die "Couldn't connect to database: " . DBI->errstr;
 
 					if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='NONE',agent='Agent/$LAGuser[$lagged_ids]',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LAGGED';";
+					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='NONE',agent='Agent/$LAGuser[$lagged_ids]',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LAGGED'$pause_typeSQL;";
 					$Baffected_rows = $dbhB->do($stmtB);
 
 					$dbhB->disconnect();
@@ -2207,7 +2212,10 @@ while($one_day_interval > 0)
 								}
 							if ($queuemetrics_loginout =~ /NONE/)
 								{
-								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$LOGOFFtime',call_id='NONE',queue='NONE',agent='Agent/$VALOuser[$logrun]',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LOGOFF';";
+								$pause_typeSQL='';
+								if ($queuemetrics_pause_type > 0)
+									{$pause_typeSQL=",data5='SYSTEM'";}
+								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$LOGOFFtime',call_id='NONE',queue='NONE',agent='Agent/$VALOuser[$logrun]',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LOGOFF'$pause_typeSQL;";
 								$Baffected_rows = $dbhB->do($stmtB);
 								}
 							$stmtB = "SELECT distinct queue FROM queue_log where time_id >= $RAWtime_logged_in and agent='Agent/$VALOuser[$logrun]' and verb IN('ADDMEMBER','ADDMEMBER2') and queue != '$VALOcampaign[$logrun]' order by time_id desc;";

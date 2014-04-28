@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_cleanup_agent_log.pl version 2.6
+# AST_cleanup_agent_log.pl version 2.8
 #
 # DESCRIPTION:
 # to be run frequently to clean up the vicidial_agent_log to fix erroneous time 
@@ -10,7 +10,7 @@
 #
 # This program only needs to be run by one server
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 60711-0945 - Changed to DBI by Marin Blu
@@ -38,6 +38,7 @@
 # 120123-0925 - Added vicidial_log duplicate check
 # 120426-1622 - Added agent log park fix
 # 121115-0624 - Added buffer time for agent log validation of LOGIN between record and next record
+# 140426-2000 - Added pause_type
 #
 
 # constants
@@ -416,7 +417,7 @@ or die "Couldn't connect to database: " . DBI->errstr;
 
 #############################################
 ##### START QUEUEMETRICS LOGGING LOOKUP #####
-$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,queuemetrics_loginout,queuemetrics_dispo_pause FROM system_settings;";
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,queuemetrics_loginout,queuemetrics_dispo_pause,queuemetrics_pause_type FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -432,6 +433,7 @@ if ($sthArows > 0)
 	$queuemetrics_eq_prepend =	$aryA[6];
 	$queuemetrics_loginout =	$aryA[7];
 	$queuemetrics_dispo_pause = $aryA[8];
+	$queuemetrics_pause_type =	$aryA[9];
 	}
 $sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -633,7 +635,7 @@ if ($fix_old_lagged_entries > 0)
 		if ($aryA[0] < 1)
 			{
 			##### insert vicidial_agent_log record
-			$stmtAX = "INSERT INTO vicidial_agent_log SET user='$Vuser[$i]',event_time='$Vlast_date[$i]',pause_epoch='$Vlast_epoch[$i]',wait_epoch='$Vlast_epoch[$i]',pause_sec='0',user_group='$Vuser_group[$i]',campaign_id='$Vcampaign_id[$i]',server_ip='$Vserver_ip[$i]',sub_status='LOGOUT';";
+			$stmtAX = "INSERT INTO vicidial_agent_log SET user='$Vuser[$i]',event_time='$Vlast_date[$i]',pause_epoch='$Vlast_epoch[$i]',wait_epoch='$Vlast_epoch[$i]',pause_sec='0',user_group='$Vuser_group[$i]',campaign_id='$Vcampaign_id[$i]',server_ip='$Vserver_ip[$i]',sub_status='LOGOUT',pause_type='SYSTEM';";
 			if ($TEST < 1)
 				{$VALaffected_rows = $dbhA->do($stmtAX);}
 			if ($DB) {print "     VAL record inserted: $VALaffected_rows|$stmtAX|\n";}
@@ -1030,7 +1032,10 @@ if ( ($enable_queuemetrics_logging > 0) && ($login_lagged_check > 0) )
 		if ($PRtimecheckCOUNT < 1)
 			{
 			##### insert a PAUSEREASON record for this call into the queue_log
-			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$PRtimecheck',call_id='NONE',queue='NONE',agent='$agent[$h]',verb='PAUSEREASON',data1='LOGIN',serverid='$serverid[$h]';";
+			$pause_typeSQL='';
+			if ($queuemetrics_pause_type > 0)
+				{$pause_typeSQL=",data5='SYSTEM'";}
+			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$PRtimecheck',call_id='NONE',queue='NONE',agent='$agent[$h]',verb='PAUSEREASON',data1='LOGIN',serverid='$serverid[$h]'$pause_typeSQL;";
 			if ($TEST < 1)
 				{
 				$Baffected_rows = $dbhB->do($stmtB);
@@ -2097,8 +2102,11 @@ if ($enable_queuemetrics_logging > 0)
 
 			if ($pausereason_count[$h] < 1)
 				{
+				$pause_typeSQL='';
+				if ($queuemetrics_pause_type > 0)
+					{$pause_typeSQL=",data5='SYSTEM'";}
 				##### add new PAUSEREASON record
-				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$time_id[$h]',call_id='$call_id[$h]',queue='NONE',agent='$agent[$h]',verb='PAUSEREASON',data1='$queuemetrics_dispo_pause',serverid='$Cserverid[$h]';";
+				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$time_id[$h]',call_id='$call_id[$h]',queue='NONE',agent='$agent[$h]',verb='PAUSEREASON',data1='$queuemetrics_dispo_pause',serverid='$Cserverid[$h]'$pause_typeSQL;";
 				if ($TEST < 1)	
 					{
 					$Baffected_rows = $dbhB->do($stmtB);
