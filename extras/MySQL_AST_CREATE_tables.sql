@@ -3197,7 +3197,7 @@ GRANT RELOAD ON *.* TO cron@localhost;
 
 flush privileges;
 
-INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,load_leads,campaign_detail,ast_admin_access,modify_users) values('6666','1234','Admin','9','ADMIN','1','1','1','1');
+INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,load_leads,campaign_detail,ast_admin_access,modify_users,alter_agent_interface_options) values('6666','1234','Admin','9','ADMIN','1','1','1','1','1');
 INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,active) values('VDAD','donotedit','Outbound Auto Dial','1','ADMIN','N');
 INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,active) values('VDCL','donotedit','Inbound No Agent','1','ADMIN','N');
 
