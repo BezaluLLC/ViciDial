@@ -23,10 +23,11 @@
 # 130705-1512 - Added optional encrypted passwords compatibility
 # 130802-1033 - Changed to PHP mysqli functions
 # 140101-2139 - Small fix for admin modify lead page on encrypted password systems
+# 140429-2042 - Added TABLEper_call_notes display script variable for form display
 #
 
-$version = '2.8-14';
-$build = '140101-2139';
+$version = '2.8-15';
+$build = '140429-2042';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -158,6 +159,8 @@ if (isset($_GET["web_vars"]))			{$web_vars=$_GET["web_vars"];}
 	elseif (isset($_POST["web_vars"]))	{$web_vars=$_POST["web_vars"];}
 if (isset($_GET["bcrypt"]))				{$bcrypt=$_GET["bcrypt"];}
 	elseif (isset($_POST["bcrypt"]))	{$bcrypt=$_POST["bcrypt"];}
+if (isset($_GET["called_count"]))			{$called_count=$_GET["called_count"];}
+	elseif (isset($_POST["called_count"]))	{$called_count=$_POST["called_count"];}
 
 if ($bcrypt == 'OFF')
 	{$bcrypt=0;}

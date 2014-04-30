@@ -29,6 +29,7 @@
 # 140108-0707 - Added webserver and hostname to report logging
 # 140305-0905 - Bug fix for issue #744, emergency logout
 # 140425-1314 - Added pause_type field to logout
+# 140429-0750 - Fixed issue with queue_log if login/out logging is disabled
 #
 
 $startMS = microtime();
@@ -496,6 +497,8 @@ if ($stage == "log_agent_out")
 			$agent_logged_in='';
 			$time_logged_in='0';
 
+			$stmtB = "SELECT agent,time_id,data1 FROM queue_log where agent='Agent/" . mysqli_real_escape_string($link, $user) . "' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') and time_id > $check_time order by time_id desc limit 1;";
+
 			if ($queuemetrics_loginout == 'NONE')
 				{
 				$pause_typeSQL='';
@@ -505,9 +508,10 @@ if ($stage == "log_agent_out")
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $linkB);
 				$affected_rows = mysqli_affected_rows($linkB);
+
+				$stmtB = "SELECT agent,time_id,data1 FROM queue_log where agent='Agent/" . mysqli_real_escape_string($link, $user) . "' and verb IN('ADDMEMBER','ADDMEMBER2') and time_id > $check_time order by time_id desc limit 1;";
 				}
 
-			$stmtB = "SELECT agent,time_id,data1 FROM queue_log where agent='Agent/" . mysqli_real_escape_string($link, $user) . "' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') and time_id > $check_time order by time_id desc limit 1;";
 			$rsltB=mysql_to_mysqli($stmtB, $linkB);
 			if ($DB) {echo "<BR>$stmtB\n";}
 			$qml_ct = mysqli_num_rows($rsltB);

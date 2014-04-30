@@ -4833,6 +4833,7 @@ if ($ADD==7111111)
 	$entry_list_id = 'entry_list_id';
 	$call_id = 'call_id';
 	$user_group = 'user_group';
+	$called_count = '2';
 
 	echo "</title>\n";
 	echo "</head>\n";
@@ -4985,6 +4986,7 @@ if ($ADD==7111111)
 	$script_text = preg_replace('/\-\-A\-\-entry_list_id\-\-B\-\-/i', "$entry_list_id",$script_text);
 	$script_text = preg_replace('/\-\-A\-\-call_id\-\-B\-\-/i', "$call_id",$script_text);
 	$script_text = preg_replace('/\-\-A\-\-user_group\-\-B\-\-/i', "$user_group",$script_text);
+	$script_text = preg_replace('/\-\-A\-\-called_count\-\-B\-\-/i', "$called_count",$script_text);
 	$script_text = preg_replace('/\n/i', "<BR>",$script_text);
 
 
@@ -6409,6 +6411,8 @@ if ($ADD==1111111)
 		echo "<option>entry_list_id</option>";
 		echo "<option>call_id</option>";
 		echo "<option>user_group</option>";
+		echo "<option>called_count</option>";
+		echo "<option>TABLEper_call_notes</option>";
 		echo "</select>";
 		echo "<input type=\"button\" name=\"insertField\" value=\"Insert\" onClick=\"scriptInsertField();\"><BR>";
 		# END Insert Field
@@ -25829,6 +25833,8 @@ if ($ADD==3111111)
 		echo "<option>entry_list_id</option>";
 		echo "<option>call_id</option>";
 		echo "<option>user_group</option>";
+		echo "<option>called_count</option>";
+		echo "<option>TABLEper_call_notes</option>";
 		echo "</select>";
 		echo "<input type=\"button\" name=\"insertField\" value=\"Insert\" onClick=\"scriptInsertField();\"><BR>";
 		# END Insert Field
