@@ -8,11 +8,12 @@
 #
 # It is recommended that you run this program on the local Asterisk machine
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 130822-1645 - first build
 # 131003-1725 - Added exclude filter settings
+# 140501-0709 - Added include filter settings
 #
 
 $secX = time();
@@ -56,6 +57,9 @@ if (length($ARGV[0])>1)
 		print "  [--vl-field-update=XXX] = OPTIONAL, field that you want to update with the phone type information\n";
 		print "  [--exclude-field=XXX] = OPTIONAL, field that you want to check in vicidial_list to exclude from processing\n";
 		print "  [--exclude-value=XXX] = OPTIONAL, value of the above field that you want to check in vicidial_list to exclude from processing\n";
+		print "  [--include-field=XXX] = OPTIONAL, field that you want to check in vicidial_list to include only for processing\n";
+		print "  [--include-value=XXX] = OPTIONAL, value of the above field that you want to check in vicidial_list to include only for processing\n";
+		print "                                    you can use EMPTY to stand for an empty string\n";
 		print "\n";
 		exit;
 		}
@@ -168,6 +172,20 @@ if (length($ARGV[0])>1)
 			$exclude_value = $data_in[1];
 			$exclude_value =~ s/ .*//gi;
 			if ($DB > 0) {print "\n----- EXCLUDE VALUE: $exclude_value -----\n\n";}
+			}
+		if ($args =~ /--include-field=/i)
+			{
+			@data_in = split(/--include-field=/,$args);
+			$include_field = $data_in[1];
+			$include_field =~ s/ .*//gi;
+			if ($DB > 0) {print "\n----- include FIELD: $include_field -----\n\n";}
+			}
+		if ($args =~ /--include-value=/i)
+			{
+			@data_in = split(/--include-value=/,$args);
+			$include_value = $data_in[1];
+			$include_value =~ s/ .*//gi;
+			if ($DB > 0) {print "\n----- include VALUE: $include_value -----\n\n";}
 			}
 		}
 	}
@@ -293,7 +311,7 @@ $dbhB = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 if ($output_to_db)
 	{
-	$stmtA = "INSERT INTO vicidial_nanpa_filter_log SET output_code='$db_output_code',user='$TRIGGER_user',status='LAUNCHED',server_ip='$VARserver_ip',list_id='$list_id',start_time=NOW(),update_time=NOW(),status_line='Starting...',script_output=\"Starting...\nCELLPHONE LIST ID: $cellphone_list_id\nLANDLINE LIST ID: $landline_list_id\nINVALID LIST ID: $invalid_list_id\nVL FIELD UPDATE: $vl_field_update\nEXCLUDE FIELD: $exclude_field\nEXCLUDE VALUE: $exclude_value\n\" ON DUPLICATE KEY UPDATE status='LAUNCHED',server_ip='$VARserver_ip',list_id='$list_id',update_time=NOW(),status_line=\"Starting...\n\",script_output=CONCAT(script_output,\"Starting...\nCELLPHONE LIST ID: $cellphone_list_id\nLANDLINE LIST ID: $landline_list_id\nINVALID LIST ID: $invalid_list_id\nVL FIELD UPDATE: $vl_field_update\nEXCLUDE FIELD: $exclude_field\nEXCLUDE VALUE: $exclude_value\n\");";
+	$stmtA = "INSERT INTO vicidial_nanpa_filter_log SET output_code='$db_output_code',user='$TRIGGER_user',status='LAUNCHED',server_ip='$VARserver_ip',list_id='$list_id',start_time=NOW(),update_time=NOW(),status_line='Starting...',script_output=\"Starting...\nCELLPHONE LIST ID: $cellphone_list_id\nLANDLINE LIST ID: $landline_list_id\nINVALID LIST ID: $invalid_list_id\nVL FIELD UPDATE: $vl_field_update\nEXCLUDE FIELD: $exclude_field\nEXCLUDE VALUE: $exclude_value\nINCLUDE FIELD: $include_field\nINCLUDE VALUE: $include_value\n\" ON DUPLICATE KEY UPDATE status='LAUNCHED',server_ip='$VARserver_ip',list_id='$list_id',update_time=NOW(),status_line=\"Starting...\n\",script_output=CONCAT(script_output,\"Starting...\nCELLPHONE LIST ID: $cellphone_list_id\nLANDLINE LIST ID: $landline_list_id\nINVALID LIST ID: $invalid_list_id\nVL FIELD UPDATE: $vl_field_update\nEXCLUDE FIELD: $exclude_field\nEXCLUDE VALUE: $exclude_value\nINCLUDE FIELD: $include_field\nINCLUDE VALUE: $include_value\n\");";
 	$affected_rows = $dbhA->do($stmtA);
 	if($DBX){print STDERR "\n|$affected_rows|$stmtA|\n";}
 	}
@@ -314,7 +332,21 @@ if ( (length($exclude_field) > 1) && (length($exclude_value) > 0) )
 		}
 	}
 
-$stmtA = "SELECT lead_id,phone_number from vicidial_list $list_idSQL $excludeSQL;";
+$includeSQL='';
+if ( (length($include_field) > 1) && (length($include_value) > 0) ) 
+	{
+	$include_value =~ s/EMPTY//gi;
+	if ( (length($list_idSQL) > 5) || (length($excludeSQL) > 5) )
+		{
+		$includeSQL = "and $include_field='$include_value'";
+		}
+	else
+		{
+		$includeSQL = "where $include_field='$include_value'";
+		}
+	}
+
+$stmtA = "SELECT lead_id,phone_number from vicidial_list $list_idSQL $excludeSQL $includeSQL;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
