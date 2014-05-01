@@ -923,7 +923,8 @@ else
 					}
 					$totANSWERSspeeddate[$j]+=$qs[$i];
 					$FtotANSWERS++;
-					$FtotANSWERSspeeddate+=$qs[$i];
+					print "<!-- $FtotANSWERSspeed+=$qs[$i] //-->\n";
+					$FtotANSWERSspeed+=$qs[$i];
 					}
 				if (preg_match('/DROP/',$st[$i])) 
 					{
