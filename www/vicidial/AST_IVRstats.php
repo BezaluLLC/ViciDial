@@ -27,6 +27,7 @@
 # 130901-0819 - Changed to mysqli PHP functions
 # 140108-0737 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 140501-1900 - Fixed 15-min graph for inbound and outbound
 #
 
 $startMS = microtime();
@@ -874,73 +875,60 @@ else
 
 	$MAIN.="<FONT SIZE=0>\n";
 
+	if ($type == 'inbound')
+		{
+		$inb_15min_array=array();
+		$stmt="select uniqueid, SEC_TO_TIME((TIME_TO_SEC(min(start_time)) DIV 900) * 900) as stime from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a IN($group_SQL) group by uniqueid";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		while ($row=mysqli_fetch_row($rslt)) 
+			{
+			$time_index=substr($row[1], 0, -2);
+			$time_index=preg_replace('/[^0-9]/', '', $time_index);
+			$inb_15min_array["$time_index"]++;
+			}
+		}
+	else 
+		{
+		$inb_15min_array=array();
+		$stmt="select uniqueid, SEC_TO_TIME((TIME_TO_SEC(min(event_date)) DIV 900) * 900) as stime from vicidial_outbound_ivr_log where event_date >= '$query_date_BEGIN' and event_date <= '$query_date_END' and campaign_id IN($group_SQL) and menu_action='' group by uniqueid";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		while ($row=mysqli_fetch_row($rslt)) 
+			{
+			$time_index=substr($row[1], 0, -2);
+			$time_index=preg_replace('/[^0-9]/', '', $time_index);
+			$inb_15min_array["$time_index"]++;
+			}
+		}
+			if ($DB) {$MAIN.="$stmt\n";}
+
 	$hi_hour_count=0;
 	$last_full_record=0;
 	$i=0;
 	$h=0;
+	$total_calls=0;
 	while ($i <= 96)
 		{
-		if ($type == 'inbound')
-			{
-			$stmt="select count(*) from live_inbound_log where start_time >= '$query_date $h:00:00' and start_time <= '$query_date $h:14:59' and comment_a IN($group_SQL) and comment_b='START';";
-			}
-		else
-			{
-			$stmt="select count(*) from vicidial_outbound_ivr_log where event_date >= '$query_date $h:00:00' and event_date <= '$query_date $h:14:59' and campaign_id IN($group_SQL) and menu_action='';";
-			}
-		$rslt=mysql_to_mysqli($stmt, $link);
-		if ($DB) {$MAIN.="$stmt\n";}
-		$row=mysqli_fetch_row($rslt);
-		$hour_count[$i] = $row[0];
+		$time_index=substr("0$h", -2)."00";
+		$hour_count[$i]=$inb_15min_array["$time_index"]+0;
 		if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
 		if ($hour_count[$i] > 0) {$last_full_record = $i;}
 		$i++;
 
 
-		if ($type == 'inbound')
-			{
-			$stmt="select count(*) from live_inbound_log where start_time >= '$query_date $h:15:00' and start_time <= '$query_date $h:29:59' and comment_a IN($group_SQL) and comment_b='START';";
-			}
-		else
-			{
-			$stmt="select count(*) from vicidial_outbound_ivr_log where event_date >= '$query_date $h:15:00' and event_date <= '$query_date $h:29:59' and campaign_id IN($group_SQL) and menu_action='';";
-			}
-		$rslt=mysql_to_mysqli($stmt, $link);
-		if ($DB) {$MAIN.="$stmt\n";}
-		$row=mysqli_fetch_row($rslt);
-		$hour_count[$i] = $row[0];
+		$time_index=substr("0$h", -2)."15";
+		$hour_count[$i]=$inb_15min_array["$time_index"]+0;
 		if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
 		if ($hour_count[$i] > 0) {$last_full_record = $i;}
 		$i++;
 
-		if ($type == 'inbound')
-			{
-			$stmt="select count(*) from live_inbound_log where start_time >= '$query_date $h:30:00' and start_time <= '$query_date $h:44:59' and comment_a IN($group_SQL) and comment_b='START';";
-			}
-		else
-			{
-			$stmt="select count(*) from vicidial_outbound_ivr_log where event_date >= '$query_date $h:30:00' and event_date <= '$query_date $h:44:59' and campaign_id IN($group_SQL) and menu_action='';";
-			}
-		$rslt=mysql_to_mysqli($stmt, $link);
-		if ($DB) {$MAIN.="$stmt\n";}
-		$row=mysqli_fetch_row($rslt);
-		$hour_count[$i] = $row[0];
+		$time_index=substr("0$h", -2)."30";
+		$hour_count[$i]=$inb_15min_array["$time_index"]+0;
 		if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
 		if ($hour_count[$i] > 0) {$last_full_record = $i;}
 		$i++;
 
-		if ($type == 'inbound')
-			{
-			$stmt="select count(*) from live_inbound_log where start_time >= '$query_date $h:45:00' and start_time <= '$query_date $h:59:59' and comment_a IN($group_SQL) and comment_b='START';";
-			}
-		else
-			{
-			$stmt="select count(*) from vicidial_outbound_ivr_log where event_date >= '$query_date $h:45:00' and event_date <= '$query_date $h:59:59' and campaign_id IN($group_SQL) and menu_action='';";
-			}
-		$rslt=mysql_to_mysqli($stmt, $link);
-		if ($DB) {$MAIN.="$stmt\n";}
-		$row=mysqli_fetch_row($rslt);
-		$hour_count[$i] = $row[0];
+		$time_index=substr("0$h", -2)."45";
+		$hour_count[$i]=$inb_15min_array["$time_index"]+0;
 		if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
 		if ($hour_count[$i] > 0) {$last_full_record = $i;}
 		$i++;
@@ -1011,6 +999,7 @@ else
 				}
 			else
 				{
+				$total_calls+=$hour_count[$i];
 				$hour_count[$i] =	sprintf("%-5s", $hour_count[$i]);
 				$MAIN.="|$time|";
 				$k=0;   while ($k <= 102) {$MAIN.=" ";   $k++;}
@@ -1023,6 +1012,7 @@ else
 			$no_lines_yet=0;
 			$Xhour_count = ($Ghour_count * $hour_multiplier);
 			$Yhour_count = (99 - $Xhour_count);
+			$total_calls+=$hour_count[$i];
 
 			$hour_count[$i] =	sprintf("%-5s", $hour_count[$i]);
 
@@ -1042,6 +1032,8 @@ else
 		}
 
 
+	$MAIN.="+------+-------------------------------------------------------------------------------------------------------+-------+\n";
+	$MAIN.="|                                                                                                              + ".sprintf("%-5s", $total_calls)." +\n";
 	$MAIN.="+------+-------------------------------------------------------------------------------------------------------+-------+\n\n";
 
 
