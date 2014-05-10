@@ -1,15 +1,16 @@
 #!/usr/bin/perl
 #
-# AST_timecheck.pl             version: 2.6
+# AST_timecheck.pl             version: 2.8
 #
 # This script is designed to send an email when an asterisk server is out of sync
 #
-# /usr/share/astguiclient/AST_VDsales_export.pl --campaign=GOODB-GROUP1-GROUP3-GROUP4-SPECIALS-DNC_BEDS --output-format=fixed-as400 --sale-statuses=SALE --debug --filename=BEDSsaleMMDD.txt --date=yesterday --email-list=test@gmail.com --email-sender=test@test.com
+# /usr/share/astguiclient/AST_timecheck.pl --quiet --seconds=5 --email-list=test@gmail.com --email-sender=test@test.com
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 130503-1515 - First version
+# 140509-2214 - Added frozen_server_call_clear system setting
 #
 
 $txt = '.txt';
@@ -193,26 +194,82 @@ use DBI;
 $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
  or die "Couldn't connect to database: " . DBI->errstr;
 
-$stmtA = "SELECT su.server_ip,last_update,UNIX_TIMESTAMP(last_update),server_description FROM server_updater su,servers s where s.server_ip=su.server_ip;";
+$SSfrozen_server_call_clear=0;
+### Grab system settings values from the database
+$stmtA = "SELECT frozen_server_call_clear FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$SSfrozen_server_call_clear =		$aryA[0];
+	}
+$sthA->finish();
+
+$stmtA = "SELECT su.server_ip,last_update,UNIX_TIMESTAMP(last_update),server_description,UNIX_TIMESTAMP(db_time),server_id FROM server_updater su,servers s where s.server_ip=su.server_ip;";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArowsSERVERS=$sthA->rows;
 	if ($DBX) {print "   $sthArows|$stmtA|\n";}
 $i=0;
-while ($sthArows > $i)
+while ($sthArowsSERVERS > $i)
 	{
 	@aryA = $sthA->fetchrow_array;
 	$server_ip =	$aryA[0];
 	$s_time =		$aryA[1];
 	$u_time =		($aryA[2] + $seconds);
+	$reset_time =	($aryA[2] + 90);
 	$server_name =	$aryA[3];
-	if ($DBX) {print "Server time: $server_ip($server_name)   Last time: $s_time($u_time|$aryA[2])\n";}
+	$Sdb_time =		($aryA[4] + 10);
+	$server_id =	$aryA[5];
+
+	if ($DBX) {print "Server time: $i - $server_ip($server_id - $server_name)   Last time: $s_time($u_time|$aryA[2])\n";}
 
 	if ($web_u_time > $u_time)
 		{
-		if ($DBX) {print "Time sync issue - SERVER: $server_ip($server_name)\n   LAST TIME: $s_time($u_time)\n   TIME NOW:  $timestamp($web_u_time)\n\n";}
+		if ($DBX) {print "Time sync issue - SERVER: $server_ip($server_name)\n   LAST TIME: $s_time($u_time)\n   TIME NOW:  $timestamp($web_u_time)\n";}
 		$Ealert .= "SERVER: $server_ip($server_name)\n   LAST TIME: $s_time($u_time)\n   TIME NOW:  $timestamp($web_u_time)\n\n";
 		$servers++;
+
+		if ($DBX) {print "     DEBUG: ($web_u_time > $reset_time)|($web_u_time > $Sdb_time)|     |$SSfrozen_server_call_clear|\n";}
+
+		if ( ($web_u_time > $reset_time) && ($web_u_time > $Sdb_time) && ($SSfrozen_server_call_clear > 0) )
+			{
+			$dbhB = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
+			 or die "Couldn't connect to database: " . DBI->errstr;
+
+			$servercalls_count=0;
+			### Grab number of calls on frozen server
+			$stmtB = "SELECT count(*) from vicidial_auto_calls where server_ip='$server_ip';";
+			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+			$sthBrows=$sthB->rows;
+			if ($sthBrows > 0)
+				{
+				@aryB = $sthB->fetchrow_array;
+				$servercalls_count =		$aryB[0];
+				}
+			$sthB->finish();
+
+			if ($DBX) {print "     ServerCalls: $servercalls_count\n";}
+
+			if ($servercalls_count > 0)
+				{
+				$stmt="DELETE FROM vicidial_auto_calls where server_ip='$server_ip';";
+				$FCaffected_rows = $dbhB->do($stmt);
+					if($DB){print STDERR "\n$FCaffected_rows|$stmt|\n";}
+
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log =~ s/;|\\|\'|\"//gi;
+				$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='VDAD', ip_address='$server_ip', event_section='SERVERS', event_type='CLEAR', record_id='$server_id', event_code='FROZEN SERVER CALL CLEAR', event_sql=\"$SQL_log\", event_notes='$servercalls_count|$FCaffected_rows|$s_time($u_time|$aryA[2])';";
+				$BLaffected_rows = $dbhB->do($stmt);
+					if($DB){print STDERR "\n$BLaffected_rows|$stmt|\n";}
+
+				$Ealert .= "     FROZEN CALLS CLEARED: $servercalls_count|$FCaffected_rows\n\n";
+				}
+			}
 		}
 	$i++;
 	}

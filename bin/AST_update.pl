@@ -27,7 +27,7 @@
 # 
 # It is recommended that you run this program on each local Asterisk machine
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # version changes:
 # 41228-1659 - modified to compensate for manager output response hiccups
@@ -60,9 +60,10 @@
 # 130108-1710 - Changes for Asterisk 1.8 compatibility
 # 130413-2125 - Fix for issue #664, formatting fixes and added --quiet flag
 # 131122-1317 - Small formatting fixes
+# 140510-0119 - Small formatting and asterisk version changes
 #
 
-$build = '131122-1317';
+$build = '140510-0119';
 
 # constants
 $SYSPERF=0;	# system performance logging to MySQL server_performance table every 5 seconds
@@ -302,6 +303,9 @@ if ($AST_ver =~ /^1\.0/i) {$show_channels_format = 0;}
 if ($AST_ver =~ /^1\.4/i) {$show_channels_format = 2;}
 if ($AST_ver =~ /^1\.6/i) {$show_channels_format = 3;}
 if ($AST_ver =~ /^1\.8/i) {$show_channels_format = 4;}
+if ($AST_ver =~ /^10\./i) {$show_channels_format = 4;}
+if ($AST_ver =~ /^11\./i) {$show_channels_format = 4;}
+if ($AST_ver =~ /^12\./i) {$show_channels_format = 4;}
 if ($Q < 1)
 	{print STDERR "SHOW CHANNELS format: $show_channels_format\n";}
 
@@ -320,8 +324,8 @@ if ($SUrec < 1)
 	{
 	&get_time_now;
 
-	$stmtU = "INSERT INTO $server_updater set  server_ip='$server_ip', last_update='$now_date';";
-		if($DB){print STDERR "\n|$stmtU|\n";}
+	$stmtU = "INSERT INTO $server_updater set server_ip='$server_ip', last_update='$now_date';";
+	if($DB){print STDERR "\n|$stmtU|\n";}
 	$affected_rows = $dbhA->do($stmtU);
 	}
 
@@ -1200,9 +1204,9 @@ sub validate_parked_channels
 					{
 					if (@ARparked_time_UNIX[$AR] > $PQparked_time_UNIX)
 						{
-						if($DBX){print "Duplicate parked channel delete: |$PQchannel|$PQparked_time|\n";}
+						if ($DBX) {print "Duplicate parked channel delete: |$PQchannel|$PQparked_time|\n";}
 						$stmtPQ = "DELETE FROM $parked_channels where server_ip='$server_ip' and channel='$PQchannel' and extension='$PQextension' and parked_time='$PQparked_time' limit 1";
-						if($DB){print STDERR "\n|$stmtPQ|$$DEL_chan_park_counter|$DEL_chan_park_counter|\n\n";}
+						if ($DB) {print STDERR "\n|$stmtPQ|$$DEL_chan_park_counter|$DEL_chan_park_counter|\n\n";}
 						$affected_rows = $dbhC->do($stmtPQ);
 							
 						$DEL_chan_park_counter = "DEL$PQchannel$PQextension";

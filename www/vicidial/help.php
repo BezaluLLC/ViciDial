@@ -15,6 +15,7 @@
 # 140423-1637 - Added manual_dial_search_checkbox and hide_call_log_info
 # 140425-0912 - Added modify_custom_dialplans
 # 140425-1306 - Added queuemetrics_pause_type
+# 140509-2211 - Added frozen_server_call_clear
 #
 
 
@@ -4147,6 +4148,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="settings-agent_disable">
 <BR>
 <B>Agent Disable Display -</B> This field is used to select when to show an agent notices when their session has been disabled by the system, a manager action or by an external measure. The NOT_ACTIVE setting will disable the message on the agents screen. The LIVE_AGENT setting will only display the disabled message when the agents auto_calls record has been removed, such as during a force logout or emergency logout. Default is ALL.
+
+<BR>
+<A NAME="settings-frozen_server_call_clear">
+<BR>
+<B>Clear Frozen Calls -</B> This option can enable the ability for the general Reports page and the optional AST_timecheck.pl script to clear out the auto_calls entries for a frozen server so they do not affect call routing. Default is 0 for disabled.
 
 <BR>
 <A NAME="settings-allow_sipsak_messages">

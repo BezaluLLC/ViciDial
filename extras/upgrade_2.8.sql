@@ -252,3 +252,7 @@ ALTER TABLE vicidial_agent_log_archive ADD pause_type ENUM('UNDEFINED','SYSTEM',
 ALTER TABLE system_settings ADD queuemetrics_pause_type ENUM('0','1') default '0';
 
 UPDATE system_settings SET db_schema_version='1376',db_schema_update_date=NOW() where db_schema_version < 1376;
+
+ALTER TABLE system_settings ADD frozen_server_call_clear ENUM('0','1') default '0';
+
+UPDATE system_settings SET db_schema_version='1377',db_schema_update_date=NOW() where db_schema_version < 1377;

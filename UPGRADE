@@ -217,6 +217,9 @@ OTHER CHANGES:
 
 43. Added logging of pause type(ADMIN, AGENT, SYSTEM, API,...)
 
+44. Added frozen call clearing system setting, used in admin.php(Reports page)
+	and optional AST_timecheck.pl script
+
 
 
 
