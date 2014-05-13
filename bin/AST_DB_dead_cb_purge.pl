@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_DB_dead_cb_purge.pl version 2.6
+# AST_DB_dead_cb_purge.pl version 2.8
 #
 # DESCRIPTION:
 # OPTIONAL!!!
@@ -9,12 +9,13 @@
 #
 # It is recommended that you run this program on the local Asterisk machine
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 101128-0149 - first build
 # 110212-2343 - added scheduled callback custom statuses capacity
 # 130414-2145 - added option to remove duplicate callback entries, keeping the newest
+# 140512-2036 - Fixed typos, issue #760
 #
 
 ### begin parsing run-time options ###
@@ -40,11 +41,11 @@ if (length($ARGV[0])>1)
 		}
 	else
 		{
-		if ($args =~ /-quiet/i)
+		if ($args =~ /--quiet/i)
 			{
 			$Q=1;
 			}
-		if ($args =~ /-purge-non-cb/i)
+		if ($args =~ /--purge-non-cb/i)
 			{
 			$purge_non_cb=1;
 			}
@@ -52,15 +53,15 @@ if (length($ARGV[0])>1)
 			{
 			$remove_dup_cb=1;
 			}
-		if ($args =~ /-debug/i)
+		if ($args =~ /--debug/i)
 			{
 			$DB=1; # Debug flag, set to 0 for no debug messages, On an active system this will generate hundreds of lines of output per minute
 			}
-		if ($args =~ /-debugX/i)
+		if ($args =~ /--debugX/i)
 			{
 			$DBX=1; # Debug flag, set to 0 for no debug messages, On an active system this will generate hundreds of lines of output per minute
 			}
-		if ($args =~ /-test/i)
+		if ($args =~ /--test/i)
 			{
 			$TEST=1;
 			$T=1;
