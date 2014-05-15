@@ -3314,12 +3314,13 @@ else
 # 140425-0906 - Added user permission for editing custom dialplan entries
 # 140425-1257 - Added queuemetrics_pause_type system settings option, and added pause_type to agent logout
 # 140509-2201 - Added frozen_server_call_clear system setting, used in admin.php and AST_timecheck.pl
+# 140515-1610 - Added clear list option, Issue #763
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.8-438a';
-$build = '140509-2201';
+$admin_version = '2.8-439a';
+$build = '140515-1610';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3491,6 +3492,7 @@ $LOGcampaign_detail			=$row[15];
 $LOGast_admin_access		=$row[16];
 $LOGast_delete_phones		=$row[17];
 $LOGdelete_scripts			=$row[18];
+$LOGmodify_leads			=$row[19];
 $LOGdelete_filters			=$row[29];
 $LOGalter_agent_interface	=$row[30];
 $LOGdelete_call_times		=$row[32];
@@ -3933,6 +3935,7 @@ if ($ADD==51)			{$hh='campaigns';	$sh='detail';	echo "Delete Campaign";}
 if ($ADD==52)			{$hh='campaigns';	$sh='detail';	echo "Logout Agents";}
 if ($ADD==53)			{$hh='campaigns';	$sh='detail';	echo "Emergency VDAC Jam Clear";}
 if ($ADD==511)			{$hh='lists';		echo "Delete List";}
+if ($ADD==512)			{$hh='lists';		echo "Clear List";}
 if ($ADD==5111)			{$hh='ingroups';	echo "Delete In-Group";}
 if ($ADD==5311)			{$hh='ingroups';	echo "Delete DID";}
 if ($ADD==5511)			{$hh='ingroups';	echo "Delete Call Menu";}
@@ -3970,6 +3973,7 @@ if ($ADD==68)			{$hh='campaigns';	$sh='dialstat';	echo "Campaign Dial Status Rem
 if ($ADD==69)			{$hh='campaigns';	$sh='listmix';	echo "Campaign List Mix Removed";}
 if ($ADD==601)			{$hh='campaigns';	$sh='preset';	echo "Campaign Preset Removed";}
 if ($ADD==611)			{$hh='lists';		echo "Delete List";}
+if ($ADD==612)			{$hh='lists';		echo "Clear List";}
 if ($ADD==6111)			{$hh='ingroups';	echo "Delete In-Group";}
 if ($ADD==6311)			{$hh='ingroups';	echo "Delete DID";}
 if ($ADD==6511)			{$hh='ingroups';	echo "Delete Call Menu";}
@@ -14753,7 +14757,27 @@ if ($ADD==511)
 		echo "<br><br><a href=\"$PHP_SELF?ADD=611&list_id=$list_id&CoNfIrM=YES\">Click here to delete list and all of its leads $list_id</a><br><br><br>\n";
 		}
 
-	$ADD='311';		# go to campaign modification below
+	$ADD='311';		# go to list modification below
+	}
+
+######################
+# ADD=512 confirmation before clearing of list
+######################
+
+if ($ADD==512)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	if ( (strlen($list_id) < 2) or ($LOGuser_level < 9) or ($LOGdelete_lists < 1) or ($LOGmodify_lists < 1) or ($LOGmodify_leads < 1) )
+		{
+		echo "<br>LIST NOT CLEARED - Please go back and look at the data you entered\n";
+		echo "<br>List_id must be at least 2 characters in length\n";
+		}
+	else
+		{
+		echo "<br><B>LIST CLEAR CONFIRMATION: $list_id</B>\n";
+		echo "<br><br><a href=\"$PHP_SELF?ADD=612&list_id=$list_id&CoNfIrM=YES\">Click here to clear list and all of its leads $list_id</a><br><br><br>\n";
+		}
+	$ADD='311';		# go to list modification below
 	}
 
 ######################
@@ -16087,6 +16111,58 @@ if ($ADD==611)
 		}
 
 	$ADD='100';		# go to lists list
+	}
+
+######################
+# ADD=612 clear list record and all leads within it
+######################
+
+if ($ADD==612)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if ( ( strlen($list_id) < 2) or ($CoNfIrM != 'YES') or ($LOGuser_level < 9) or ($LOGdelete_lists < 1) or ($LOGmodify_lists < 1) or ($LOGmodify_leads < 1) )
+		{
+		echo "<br>LIST NOT Cleared - Please go back and look at the data you entered\n";
+		echo "<br>List_id be at least 2 characters in length\n";
+		}
+	else
+		{
+		
+		echo "<br>REMOVING LIST HOPPER LEADS FROM OLD CAMPAIGN HOPPER ($list_id)\n";
+		$stmt="DELETE from vicidial_hopper where list_id='$list_id' $LOGallowed_campaignsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		
+		echo "<br>REMOVING LEADS FROM LIST TABLE\n";
+		$stmt="DELETE from vicidial_list where list_id='$list_id';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+
+	# Decided not to activate this in case a lead was moved to another list but still had data in this list.
+	#	$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id';";
+	#	$rslt=mysql_to_mysqli($stmt, $link);
+	#	$rowx=mysqli_fetch_row($rslt);
+	#	$custom_fields_count = $rowx[0];
+	#
+	#	if ($custom_fields_count > 0)
+	#		{
+	#		echo "<br>REMOVING CUSTOM FIELDS DATA\n";
+	#		$stmt="DELETE from custom_$list_id;";
+	#		$rslt=mysql_to_mysqli($stmt, $link);
+	#		}
+
+		### LOG INSERTION Admin Log Table ###
+		$SQL_log = "$stmt|";
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
+		$SQL_log = addslashes($SQL_log);
+		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='CLEAR', record_id='$list_id', event_code='ADMIN CLEARED LIST', event_sql=\"$SQL_log\", event_notes='';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+
+		echo "<br><B>LIST CLEARING COMPLETED: $list_id</B>\n";
+		echo "<br><br>\n";
+		}
+
+	$ADD='311';		# go to list modify page
 	}
 
 ######################
@@ -22356,6 +22432,10 @@ if ($ADD==311)
 		if ($LOGdelete_lists > 0)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=511&list_id=$list_id\">DELETE THIS LIST</a>\n";
+			}
+		if ( ($LOGuser_level >= 9) and ($LOGdelete_lists > 0) and ($LOGmodify_lists > 0) and ($LOGmodify_leads > 0) )
+			{
+			echo "<br><br><a href=\"$PHP_SELF?ADD=512&list_id=$list_id\">CLEAR THIS LIST</a>\n";
 			}
 		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
