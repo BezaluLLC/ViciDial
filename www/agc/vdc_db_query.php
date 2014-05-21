@@ -353,10 +353,11 @@
 # 140418-1536 - Added flagging of preview dialing in vicidial_live_agents
 # 140423-2055 - Added hide_call_log_info campaign option
 # 140427-1058 - Added pause_type
+# 140520-1957 - Fixed security_phrase variable label issues, fixed owner only dialing SQL inefficiency
 #
 
-$version = '2.8-249';
-$build = '140423-2055';
+$version = '2.8-250';
+$build = '140520-1957';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=591;
 $one_mysql_log=0;
@@ -1431,7 +1432,7 @@ if ($ACTION == 'UpdateFields')
 			$date_of_birth	= trim("$row[18]");
 			$alt_phone		= trim("$row[19]");
 			$email			= trim("$row[20]");
-			$security		= trim("$row[21]");
+			$security_phrase	= trim("$row[21]");
 			$comments		= stripslashes(trim("$row[22]"));
 			$rank			= trim("$row[23]");
 			$owner			= trim("$row[24]");
@@ -1461,7 +1462,7 @@ if ($ACTION == 'UpdateFields')
 			$LeaD_InfO .=	$date_of_birth . "\n";
 			$LeaD_InfO .=	$alt_phone . "\n";
 			$LeaD_InfO .=	$email . "\n";
-			$LeaD_InfO .=	$security . "\n";
+			$LeaD_InfO .=	$security_phrase . "\n";
 			$LeaD_InfO .=	$comments . "\n";
 			$LeaD_InfO .=	$rank . "\n";
 			$LeaD_InfO .=	$owner . "\n";
@@ -2323,11 +2324,11 @@ if ($ACTION == 'manDiaLnextCaLL')
 
 					#	$fp = fopen ("./DNNdebug_log.txt", "a");
 					#	fwrite ($fp, "$NOW_TIME|$campaign|$lead_id|$agent_dialed_number|$user|M|$MqueryCID||$province|$affected_rows|$stmt|\n");
-					#	fclose($fp);
+					#	fclose($fp);  
 
 						if ($affected_rows > 0)
 							{
-							$stmt="SELECT lead_id,list_id,gmt_offset_now,state,entry_list_id,vendor_lead_code FROM vicidial_list where user='QUEUE$user' order by modify_date desc LIMIT 1;";
+							$stmt="SELECT lead_id,list_id,gmt_offset_now,state,entry_list_id,vendor_lead_code FROM vicidial_list where user='QUEUE$user' and called_since_last_reset='N' and status IN($Dsql) and list_id IN($camp_lists) and ($all_gmtSQL) and (modify_date > CONCAT(DATE_ADD(CURDATE(), INTERVAL -1 HOUR),' ',CURTIME()) ) $CCLsql $DLTsql $fSQL $adooSQL order by modify_date desc LIMIT 1;";
 							$rslt=mysql_to_mysqli($stmt, $link);
 								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00243',$user,$server_ip,$session_name,$one_mysql_log);}
 							if ($DB) {echo "$stmt\n";}
@@ -2410,7 +2411,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$date_of_birth	= trim("$row[25]");
 				$alt_phone		= trim("$row[26]");
 				$email			= trim("$row[27]");
-				$security		= trim("$row[28]");
+				$security_phrase		= trim("$row[28]");
 				$comments		= stripslashes(trim("$row[29]"));
 				$called_count	= trim("$row[30]");
 				$rank			= trim("$row[32]");
@@ -2690,7 +2691,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 						$temp_CID = preg_replace("/\D/",'',$temp_vcca);
 						}
 					if ($use_custom_cid == 'Y')
-						{$temp_CID = preg_replace("/\D/",'',$security);}
+						{$temp_CID = preg_replace("/\D/",'',$security_phrase);}
 					if (strlen($temp_CID) > 6) 
 						{$CCID = "$temp_CID";   $CCID_on++;}
 					}
@@ -3113,7 +3114,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 			$LeaD_InfO .=	$date_of_birth . "\n";
 			$LeaD_InfO .=	$alt_phone . "\n";
 			$LeaD_InfO .=	$email . "\n";
-			$LeaD_InfO .=	$security . "\n";
+			$LeaD_InfO .=	$security_phrase . "\n";
 			$LeaD_InfO .=	$comments . "\n";
 			$LeaD_InfO .=	$called_count . "\n";
 			$LeaD_InfO .=	$CBentry_time . "\n";
@@ -3502,7 +3503,7 @@ if ($ACTION == 'manDiaLonly')
 				$temp_CID = preg_replace("/\D/",'',$temp_vcca);
 				}
 			if ($use_custom_cid == 'Y')
-				{$temp_CID = preg_replace("/\D/",'',$security);}
+				{$temp_CID = preg_replace("/\D/",'',$security_phrase);}
 			if (strlen($temp_CID) > 6) 
 				{$CCID = "$temp_CID";   $CCID_on++;}
 			}
@@ -5433,7 +5434,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$date_of_birth	= trim("$row[25]");
 				$alt_phone		= trim("$row[26]");
 				$email			= trim("$row[27]");
-				$security		= trim("$row[28]");
+				$security_phrase	= trim("$row[28]");
 				$comments		= stripslashes(trim("$row[29]"));
 				$called_count	= trim("$row[30]");
 				$rank			= trim("$row[32]");
@@ -6160,7 +6161,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 			$LeaD_InfO .=	$date_of_birth . "\n";
 			$LeaD_InfO .=	$alt_phone . "\n";
 			$LeaD_InfO .=	$email . "\n";
-			$LeaD_InfO .=	$security . "\n";
+			$LeaD_InfO .=	$security_phrase . "\n";
 			$LeaD_InfO .=	$comments . "\n";
 			$LeaD_InfO .=	$called_count . "\n";
 			$LeaD_InfO .=	$CBentry_time . "\n";
@@ -6717,7 +6718,7 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 				$date_of_birth	= trim("$row[25]");
 				$alt_phone		= trim("$row[26]");
 				$email			= trim("$row[27]");
-				$security		= trim("$row[28]");
+				$security_phrase	= trim("$row[28]");
 				$comments		= stripslashes(trim("$row[29]"));
 				$called_count	= trim("$row[30]");
 				$rank			= trim("$row[32]");
@@ -7117,7 +7118,7 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 			$LeaD_InfO .=	$date_of_birth . "\n";
 			$LeaD_InfO .=	$alt_phone . "\n";
 			$LeaD_InfO .=	$email . "\n";
-			$LeaD_InfO .=	$security . "\n";
+			$LeaD_InfO .=	$security_phrase . "\n";
 			$LeaD_InfO .=	$comments . "\n";
 			$LeaD_InfO .=	$called_count . "\n";
 			$LeaD_InfO .=	$CBentry_time . "\n";
@@ -7613,7 +7614,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 				$date_of_birth	= trim("$row[25]");
 				$alt_phone		= trim("$row[26]");
 				$email			= trim("$row[27]");
-				$security		= trim("$row[28]");
+				$security_phrase	= trim("$row[28]");
 				$comments		= stripslashes(trim("$row[29]"));
 				$called_count	= trim("$row[30]");
 				$rank			= trim("$row[32]");
@@ -8106,7 +8107,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 			$LeaD_InfO .=	$date_of_birth . "\n";
 			$LeaD_InfO .=	$alt_phone . "\n";
 			$LeaD_InfO .=	$email . "\n";
-			$LeaD_InfO .=	$security . "\n";
+			$LeaD_InfO .=	$security_phrase . "\n";
 			$LeaD_InfO .=	$comments . "\n";
 			$LeaD_InfO .=	$called_count . "\n";
 			$LeaD_InfO .=	$CBentry_time . "\n";
@@ -9761,7 +9762,7 @@ if ($ACTION == 'updateDISPO')
 			$date_of_birth	= urlencode(trim($row[25]));
 			$alt_phone		= urlencode(trim($row[26]));
 			$email			= urlencode(trim($row[27]));
-			$security		= urlencode(trim($row[28]));
+			$security_phrase	= urlencode(trim($row[28]));
 			$comments		= urlencode(trim($row[29]));
 			$called_count	= urlencode(trim($row[30]));
 			$rank			= urlencode(trim($row[32]));
