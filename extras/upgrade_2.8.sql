@@ -256,3 +256,8 @@ UPDATE system_settings SET db_schema_version='1376',db_schema_update_date=NOW() 
 ALTER TABLE system_settings ADD frozen_server_call_clear ENUM('0','1') default '0';
 
 UPDATE system_settings SET db_schema_version='1377',db_schema_update_date=NOW() where db_schema_version < 1377;
+
+ALTER TABLE vicidial_campaigns MODIFY alt_number_dialing ENUM('N','Y','SELECTED','SELECTED_TIMER_ALT','SELECTED_TIMER_ADDR3') default 'N';
+ALTER TABLE vicidial_campaigns ADD timer_alt_seconds SMALLINT(5) default '0';
+
+UPDATE system_settings SET db_schema_version='1378',db_schema_update_date=NOW() where db_schema_version < 1378;

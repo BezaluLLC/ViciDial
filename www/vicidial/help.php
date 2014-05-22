@@ -16,6 +16,7 @@
 # 140425-0912 - Added modify_custom_dialplans
 # 140425-1306 - Added queuemetrics_pause_type
 # 140509-2211 - Added frozen_server_call_clear
+# 140521-2020 - Changed alt_number_dialing and added timer_alt_seconds
 #
 
 
@@ -922,7 +923,12 @@ if ($SSoutbound_autodial_active > 0)
 	<BR>
 	<A NAME="campaigns-alt_number_dialing">
 	<BR>
-	<B>Agent Alt Num Dialing -</B> This option allows an agent to manually dial the alternate phone number or address3 field after the main number has been called.
+	<B>Manual Alt Num Dialing -</B> This option allows an agent to manually dial the alternate phone number or address3 field after the main number has been called. If the option has SELECTED in it then the Alt Dial checkbox will be automatically checked for each call. If the option has TIMER in it then the Alt Phone or Address3 field will be automatically be dialed after Timer Alt Seconds. Default is N for disabled.
+
+	<BR>
+	<A NAME="campaigns-timer_alt_seconds">
+	<BR>
+	<B>Timer Alt Seconds -</B> If the Manual Alt Num Dialing setting has TIMER in it then the Alt Phone or Address3 field will be automatically be dialed after this number of seconds. Default is 0 for disabled.
 
 	<BR>
 	<A NAME="campaigns-drop_call_seconds">

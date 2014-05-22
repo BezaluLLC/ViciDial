@@ -19,6 +19,7 @@
 # 130705-2004 - Added optional encrypted passwords compatibility
 # 130802-1004 - Changed to PHP mysqli functions
 # 140429-2035 - Added TABLEper_call_notes display script variable for form display
+# 140521-1314 - Added more agent login error messages
 #
 
 # $mysql_queries = 19
@@ -30,7 +31,7 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 
 	#############################################
 	##### START SYSTEM_SETTINGS LOOKUP #####
-	$stmt = "SELECT use_non_latin,webroot_writable,pass_hash_enabled,pass_key,pass_cost FROM system_settings;";
+	$stmt = "SELECT use_non_latin,webroot_writable,pass_hash_enabled,pass_key,pass_cost,hosted_settings FROM system_settings;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$qm_conf_ct = mysqli_num_rows($rslt);
@@ -42,6 +43,7 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 		$SSpass_hash_enabled =			$row[2];
 		$SSpass_key =					$row[3];
 		$SSpass_cost =					$row[4];
+		$SShosted_settings =			$row[5];
 		}
 	##### END SETTINGS LOOKUP #####
 	###########################################
@@ -123,15 +125,91 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 		}
 	else
 		{
-		if ($user_update > 0)
+		$login_problem=0;
+		$aas_total=0;
+		$ap_total=0;
+		$vla_total=0;
+		$mvla_total=0;
+		$vla_set=0;
+		$vla_on=0;
+
+		$stmt = "SELECT count(*) FROM servers where active='Y' and active_asterisk_server='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$aas_ct = mysqli_num_rows($rslt);
+		if ($aas_ct > 0)
 			{
-			$stmt="UPDATE vicidial_users set last_login_date=NOW(),last_ip='$ip',failed_login_count=0 where user='$user';";
-			$rslt=mysql_to_mysqli($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05013',$user,$server_ip,$session_name,$one_mysql_log);}
+			$row=mysqli_fetch_row($rslt);
+			$aas_total =				$row[0];
 			}
-		$auth_key='GOOD';
-		if ( ($return_hash == '1') and ($SSpass_hash_enabled > 0) and (strlen($pass_hash) > 12) )
-			{$auth_key .= "|$pass_hash";}
+
+		$stmt = "SELECT count(*) FROM phones where active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$ap_ct = mysqli_num_rows($rslt);
+		if ($ap_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$ap_total =					$row[0];
+			}
+		
+		$stmt = "SELECT count(*) FROM vicidial_live_agents where user!='$user';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$vla_ct = mysqli_num_rows($rslt);
+		if ($vla_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$vla_total =				$row[0];
+			}
+
+		$stmt = "SELECT count(*) FROM vicidial_live_agents where user='$user';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$mvla_ct = mysqli_num_rows($rslt);
+		if ($mvla_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$mvla_total =				$row[0];
+			}
+
+		if ( (preg_match("/MXAG/",$SShosted_settings)) and ($mvla_total < 1) )
+			{
+			$vla_set = $SShosted_settings;
+			$vla_set = preg_replace("/.*MXAG|_BUILD_|DRA| /",'',$vla_set);
+			$vla_set = preg_replace('/[^0-9]/','',$vla_set);
+			if (strlen($vla_set)>0)
+				{$vla_on++;}
+			}
+
+		if ($aas_total < 1)
+			{
+			$auth_key='ERRSERVERS';
+			$login_problem++;
+			}
+		if ($ap_total < 1)
+			{
+			$auth_key='ERRPHONES';
+			$login_problem++;
+			}
+		if ( ($vla_total >= $vla_set) and ($vla_on > 0) )
+			{
+			$auth_key='ERRAGENTS';
+			$login_problem++;
+			}
+
+		if ($login_problem < 1)
+			{
+			if ($user_update > 0)
+				{
+				$stmt="UPDATE vicidial_users set last_login_date=NOW(),last_ip='$ip',failed_login_count=0 where user='$user';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05013',$user,$server_ip,$session_name,$one_mysql_log);}
+				}
+			$auth_key='GOOD';
+			if ( ($return_hash == '1') and ($SSpass_hash_enabled > 0) and (strlen($pass_hash) > 12) )
+				{$auth_key .= "|$pass_hash";}
+			}
 		}
 	return $auth_key;
 	}

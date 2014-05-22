@@ -220,6 +220,10 @@ OTHER CHANGES:
 44. Added frozen call clearing system setting, used in admin.php(Reports page)
 	and optional AST_timecheck.pl script
 
+45. Added campaign options to auto-select the ALT DIAL checkbox, and to 
+	automatically dial the Alt Phone or Address3 field after a set number
+	of seconds
+
 
 
 

@@ -286,6 +286,14 @@ QueueMetrics Pause Type Logging||
 If enabled, this option will log the type of pause in the queue_log table data5 field. You must make sure that you have a data5 field or enabling this feature will break QM compatibility. Default is 0 for disabled||
 Clear Frozen Calls||
 This option can enable the ability for the general Reports page and the optional AST_timecheck.pl script to clear out the auto_calls entries for a frozen server so they do not affect call routing. Default is 0 for disabled||
+Clear List||
+LIST NOT CLEARED||
+LIST CLEAR CONFIRMATION||
+Click here to clear list and all of its leads||
+Manual Alt Num Dialing||
+This option allows an agent to manually dial the alternate phone number or address3 field after the main number has been called. If the option has SELECTED in it then the Alt Dial checkbox will be automatically checked for each call. If the option has TIMER in it then the Alt Phone or Address3 field will be automatically be dialed after Timer Alt Seconds. Default is N for disabled||
+Timer Alt Seconds||
+If the Manual Alt Num Dialing setting has TIMER in it then the Alt Phone or Address3 field will be automatically be dialed after this number of seconds. Default is 0 for disabled||
 
 
 ########################## CHANGES TO EXISTING PHRASES IN ADMIN TRANSLATION
@@ -299,6 +307,12 @@ Dial Lead ID||
 Agent Form Display Script||
 Agent Notes||
 You have been paused for too long, you have been logged out of your session||
+Too many network errors, please contact your administrator||
+No available servers, please contact your administrator||
+No available phones, please contact your administrator||
+You are already logged in, please log out of your other session first||
+Too many agents logged in, please contact your administrator||
+Dial Countdown||
 
 
 ########################## CHANGES TO EXISTING PHRASES IN AGENT TRANSLATION
