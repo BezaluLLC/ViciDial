@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_manager_listen.pl version 2.6
+# AST_manager_listen.pl version 2.8
 #
 # Part of the Asterisk Central Queue System (ACQS)
 #
@@ -17,7 +17,7 @@
 # the ADMIN_keepalive_ALL.pl script, which makes sure it is always running in a
 # screen, provided that the astguiclient.conf keepalive setting "2" is set.
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 50322-1300 - changed callerid parsing to remove quotes and number
@@ -40,6 +40,7 @@
 # 130108-1705 - Changes for Asterisk 1.8 compatibility
 # 130412-1216 - Added sip hangup cause logging from new patch AMI event
 # 130418-1946 - Changed asterisk 1.8 compatibility for CPD and SIP Hangup
+# 140524-0900 - Fixed issue with consultative agent transfers in Asterisk 1.8
 #
 
 # constants
@@ -357,7 +358,8 @@ while($one_day_interval > 0)
 
 						if ($input_lines[$ILcount] =~ /Event: Hangup/)
 							{
-							if ( ($command_line[2] =~ /^Channel: /i) && ($command_line[3] =~ /^Uniqueid: /i) ) ### post 2005-08-07 CVS -- added Privilege line
+							### post 2005-08-07 CVS and Asterisk 1.8 -- added Privilege line
+							if ( ($command_line[2] =~ /^Channel: /i) && ($command_line[3] =~ /^Uniqueid: /i) ) 
 								{
 								$channel = $command_line[2];
 								$channel =~ s/Channel: |\s*$//gi;
@@ -365,10 +367,16 @@ while($one_day_interval > 0)
 								$uniqueid =~ s/Uniqueid: |\s*$//gi;
 								$stmtA = "UPDATE vicidial_manager set status='DEAD', channel='$channel' where server_ip = '$server_ip' and uniqueid = '$uniqueid' and callerid NOT LIKE \"DCagcW%\";";
 
-								print STDERR "|$stmtA|\n";
-								my $affected_rows = $dbhA->do($stmtA);
-							   
-								if($DB){print "|$affected_rows HANGUPS updated|\n";}
+								if ( ($channel !~ /local/i) && ($channel !~ /CXFER/i) )
+									{
+									print STDERR "|$stmtA|\n";
+									my $affected_rows = $dbhA->do($stmtA);
+									if($DB){print "|$affected_rows HANGUPS updated|\n";}
+									}
+								else
+									{
+									print STDERR "Ignoring CXFER Local Hangup: |$channel|$server_ip|$uniqueid|$command_line[5]|\n";
+									}
 								}
 							else
 								{
@@ -576,6 +584,26 @@ while($one_day_interval > 0)
 									print STDERR "|$stmtA|\n";
 									my $affected_rows = $dbhA->do($stmtA);
 									if($DB){print "|$affected_rows RINGINGs updated|\n";}
+									}
+								} 
+							### post Asterisk 1.8 - Consultative XFER - Added 2014-05-24
+							if ( ($command_line[2] =~ /^Channel: /i) && ($command_line[5] =~ /^Uniqueid: /i) && ($command_line[4] =~ /^CallerIDName: DC/i) )
+								{
+								$channel = $command_line[2];
+								$channel =~ s/Channel: |\s*$//gi;
+								$callid = $command_line[4];
+						#		$callid =~ s/Callerid: |\s*$//gi;
+								$callid =~ s/CallerIDName: |\s*$//gi;
+								   $callid =~ s/^\"//gi;   $callid =~ s/\".*$//gi;
+								   if ($callid =~ /\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S\S/) {$callid =~ s/ .*//gi;}
+								$uniqueid = $command_line[5];
+								$uniqueid =~ s/Uniqueid: |\s*$//gi;
+								$stmtA = "UPDATE vicidial_manager set status='UPDATED', channel='$channel', uniqueid = '$uniqueid' where server_ip = '$server_ip' and callerid = '$callid'";
+								if ($channel =~ /local/i)
+									{
+									print STDERR "|$stmtA|\n";
+									my $affected_rows = $dbhA->do($stmtA);
+									if($DB){print "|$affected_rows Consultative XFERs updated|\n";}
 									}
 								}
 						#	if ( ($command_line[2] =~ /^Channel: /i) && ($command_line[5] =~ /^Uniqueid: /i) ) ### post 2006-06-21 SVN -- Changed from CallerID to CallerIDName
@@ -924,10 +952,16 @@ while($one_day_interval > 0)
 								$uniqueid = $command_line[3];
 								$uniqueid =~ s/Uniqueid: |\s*$//gi;
 								$stmtA = "UPDATE vicidial_manager set status='DEAD', channel='$channel' where server_ip = '$server_ip' and uniqueid = '$uniqueid' and callerid NOT LIKE \"DCagcW%\";";
-
-								print STDERR "|$stmtA|\n";
-								my $affected_rows = $dbhA->do($stmtA);
-								if($DB){print "|$affected_rows HANGUPS updated|\n";}
+								if ( ($channel !~ /local/i) && ($channel !~ /CXFER/i) )
+									{
+									print STDERR "|$stmtA|\n";
+									my $affected_rows = $dbhA->do($stmtA);
+									if($DB){print "|$affected_rows HANGUPS updated|\n";}
+									}
+								else
+									{
+									print STDERR "Ignoring CXFER Local Hangup: |$channel|$server_ip|$uniqueid|$command_line[5]|\n";
+									}
 								}
 							}
 							
