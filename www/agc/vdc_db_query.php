@@ -354,10 +354,11 @@
 # 140423-2055 - Added hide_call_log_info campaign option
 # 140427-1058 - Added pause_type
 # 140520-1957 - Fixed security_phrase variable label issues, fixed owner only dialing SQL inefficiency
+# 140610-1519 - Fixed issue with manual dial wait_sec being inflated in Asterisk 1.8
 #
 
-$version = '2.8-250';
-$build = '140520-1957';
+$version = '2.8-251';
+$build = '140610-1519';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=591;
 $one_mysql_log=0;
@@ -3838,8 +3839,13 @@ if ($ACTION == 'manDiaLlookCaLL')
 			$row=mysqli_fetch_row($rslt);
 			$uniqueid =$row[0];
 			$channel =$row[1];
-			$call_output = "$uniqueid\n$channel\n";
-			$call_good++;
+			if (preg_match("/^Local/",$channel))
+				{}# Local channel not answered or resolved
+			else
+				{
+				$call_output = "$uniqueid\n$channel\n";
+				$call_good++;
+				}
 			}
 		else
 			{
