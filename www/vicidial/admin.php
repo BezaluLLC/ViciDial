@@ -2695,7 +2695,6 @@ if ($non_latin < 1)
 	$alias_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$alias_name);
 	$shift_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$shift_name);
 	$did_description = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$did_description);
-	$alt_server_ip = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$alt_server_ip);
 	$template_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$template_name);
 	$carrier_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$carrier_name);
 	$group_alias_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$group_alias_name);
@@ -2705,7 +2704,6 @@ if ($non_latin < 1)
 	$tts_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$tts_name);
 	$moh_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$moh_name);
 	$timer_action_message = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$timer_action_message);
-	$external_server_ip = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$external_server_ip);
 	$default_codecs = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$default_codecs);
 	$codecs_list = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$codecs_list);
 	$label_title = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$label_title);
@@ -2766,6 +2764,8 @@ if ($non_latin < 1)
 	$custom_three = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$custom_three);
 	$custom_four = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$custom_four);
 	$custom_five = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$custom_five);
+	$external_server_ip = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$external_server_ip);
+	$alt_server_ip = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$alt_server_ip);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot and pound and star
 	$extension = preg_replace('/[^-\*\#\.\:\/\@\_0-9a-zA-Z]/','',$extension);
@@ -11571,7 +11571,7 @@ if ($ADD==41)
 				else
 					{
 					### insert a new lead in the system with this phone number
-					$stmtA = "INSERT INTO vicidial_list SET phone_code='$phone_code',phone_number='$phone_number',list_id='$manual_dial_list_id',status='CTCALL',user='VDAD',called_since_last_reset='Y',entry_date='$SQLdate',last_local_call_time='$SQLdate',called_count='1',first_name='Test',last_name='Call',address1='Test Call',city='Springfield',state='IL',vendor_lead_code='999999',comments='$campaign_id test call placed $SQLdate',rank='99',owner='Test Outbound Call';";
+					$stmtA = "INSERT INTO vicidial_list SET phone_code='$phone_code',phone_number='$phone_number',list_id='$manual_dial_list_id',status='CTCALL',user='VDAD',called_since_last_reset='Y',entry_date='$SQLdate',last_local_call_time='$SQLdate',called_count='1',first_name='Test',last_name='Call',address1='Test Call',address2='2',address3='3',city='Springfield',state='IL',vendor_lead_code='999999',comments='$campaign_id test call placed $SQLdate',rank='99',owner='Test Outbound Call';";
 					if ($DB) {echo "$stmtA\n";}
 					$rslt=mysql_to_mysqli($stmtA, $link);
 					$affected_rows = mysqli_affected_rows($link);

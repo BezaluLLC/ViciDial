@@ -16,6 +16,7 @@ B - Busy - Agent-defined Busy signal
 AB - Busy Auto - Carrier-received Busy signal
 DC - Disconnected Number - Agent-Defined Disconnected number
 ADC - Disconnected Number Auto - Carrier-received Disconnected number
+ADCT - Congested Number Auto - Carrier-received Congestion(19,21,34,38)
 DEC - Declined Sale - Agent-defined status
 DNC - DO NOT CALL - If defined, lead will also go in the VICIDIAL DNC list
 DNCL - DO NOT CALL Hopper Match - status of a lead that matches the phone number of a lead that has been placed in the VICIDIAL DNC list
@@ -66,3 +67,4 @@ LRERR - Outbound Local Channel Resolution Error
 QCFAIL - QC_FAIL_CALLBK
 LSMERG - Agent lead search old lead merge
 DISMX - Dispo Call Max Status
+INBND - first status of a newly created lead going into the inbound queueing process

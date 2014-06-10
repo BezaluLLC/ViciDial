@@ -430,10 +430,11 @@
 # 140429-2040 - Added called_count and  call notes display option as script and form variables
 # 140519-1011 - Fixed calls in this session to not count monitoring channels
 # 140521-2147 - Added manual alt dial options and more agent login error messages
+# 140609-2246 - Fixed issue with webform2 button after manual alt-dial
 #
 
-$version = '2.8-399c';
-$build = '140521-2147';
+$version = '2.8-400c';
+$build = '140609-2246';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=80;
 $one_mysql_log=0;
@@ -8029,6 +8030,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			dialed_number = lead_dial_number;
 			dialed_label = 'ALT';
 			WebFormRefresH('');
+			WebFormTwoRefresH('');
 			}
 		else
 			{
@@ -8039,6 +8041,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				dialed_number = lead_dial_number;
 				dialed_label = 'ADDR3';
 				WebFormRefresH('');
+				WebFormTwoRefresH('');
 				}
 			else
 				{
@@ -8047,6 +8050,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				dialed_number = lead_dial_number;
 				dialed_label = 'MAIN';
 				WebFormRefresH('');
+				WebFormTwoRefresH('');
 				}
 			}
 		if (dialed_label == 'ALT')
@@ -9566,6 +9570,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			{
 			document.getElementById("ScriptContents").innerHTML = '';
 			WebFormRefresH('','','1');
+			WebFormTwoRefresH('','','1');
 			load_script_contents();
 			}
 		}
