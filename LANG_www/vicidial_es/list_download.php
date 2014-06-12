@@ -4,7 +4,7 @@
 # downloads the entire contents of a vicidial list ID to a flat text file
 # that is tab delimited
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -23,11 +23,17 @@
 # 120713-2110 - Added extended_vl_fields option
 # 120907-1217 - Raised extended fields up to 99
 # 130414-0228 - Added report logging
+# 130610-0945 - Finalized changing of all ereg instances to preg
+# 130618-0043 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-0902 - Changed to mysqli PHP functions
+# 140108-0723 - Added webserver and hostname to report logging
+# 140326-2235 - Changed to allow for custom fields with a different entry_list_id
 #
 
 $startMS = microtime();
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -38,8 +44,8 @@ if (isset($_GET["DB"]))						{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))			{$DB=$_POST["DB"];}
 if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
-if (isset($_GET["ENVIAR"]))					{$ENVIAR=$_GET["ENVIAR"];}
-	elseif (isset($_POST["ENVIAR"]))		{$ENVIAR=$_POST["ENVIAR"];}
+if (isset($_GET["REMITIR"]))					{$REMITIR=$_GET["REMITIR"];}
+	elseif (isset($_POST["REMITIR"]))		{$REMITIR=$_POST["REMITIR"];}
 if (isset($_GET["group_id"]))				{$group_id=$_GET["group_id"];}
 	elseif (isset($_POST["group_id"]))		{$group_id=$_POST["group_id"];}
 if (isset($_GET["download_type"]))			{$download_type=$_GET["download_type"];}
@@ -54,12 +60,12 @@ $db_source = 'M';
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,custom_fields_enabled FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
@@ -69,21 +75,51 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and download_lists='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
-if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if ($non_latin < 1)
 	{
-#	Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-#	Header("HTTP/1.0 401 Unauthorized");
-    echo "Nombre y contraseña inválidos del usuario or no list download permission: |$PHP_AUTH_USER|\n";
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	}
+else
+	{
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+$list_id = preg_replace('/[^-_0-9a-zA-Z]/','',$list_id);
+$group_id = preg_replace('/[^-_0-9a-zA-Z]/','',$group_id);
+$download_type = preg_replace('/[^-_0-9a-zA-Z]/','',$download_type);
+
+$auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth < 1)
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
+
+$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and download_lists='1';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
+$download_auth=$row[0];
+
+if ($download_auth < 1)
+	{
+	Header ("Content-type: text/html; charset=utf-8");
+    echo "No list download permission: |$PHP_AUTH_USER|\n";
     exit;
 	}
 
@@ -101,38 +137,60 @@ if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='
 else {$LOGserver_port = ":$LOGserver_port";}
 $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
-$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$list_id, $group_id, $download_type|', url='$LOGfull_url';";
+$LOGhostname = php_uname('n');
+if (strlen($LOGhostname)<1) {$LOGhostname='X';}
+if (strlen($LOGserver_name)<1) {$LOGserver_name='X';}
+
+$stmt="SELECT webserver_id FROM vicidial_webservers where webserver='$LOGserver_name' and hostname='$LOGhostname' LIMIT 1;";
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$webserver_id_ct = mysqli_num_rows($rslt);
+if ($webserver_id_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$webserver_id = $row[0];
+	}
+else
+	{
+	##### insert webserver entry
+	$stmt="INSERT INTO vicidial_webservers (webserver,hostname) values('$LOGserver_name','$LOGhostname');";
+	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$affected_rows = mysqli_affected_rows($link);
+	$webserver_id = mysqli_insert_id($link);
+	}
+
+$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$list_id, $group_id, $download_type|', url='$LOGfull_url', webserver='$webserver_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=1;
 	$db_source = 'S';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 #	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
-$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGuser_group =			$row[0];
 
 $stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns = $row[0];
 $LOGallowed_reports =	$row[1];
 
 if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL INFORMES/",$LOGallowed_reports)) )
 	{
- #   Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
- #   Header("HTTP/1.0 401 Unauthorized");
+	Header ("Content-type: text/html; charset=utf-8");
     echo "No tienes permiso para ver este informe: |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
@@ -148,7 +206,7 @@ if ($extended_vl_fields > 0)
 	}
 
 $LOGallowed_campaignsSQL='';
-if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 	{
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
@@ -166,12 +224,12 @@ if ($download_type == 'systemdnc')
 		}
 
 	$stmt="select count(*) from vicidial_dnc;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$count_to_print = mysql_num_rows($rslt);
+	$count_to_print = mysqli_num_rows($rslt);
 	if ($count_to_print > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$leads_count =$row[0];
 		$i++;
 		}
@@ -187,12 +245,12 @@ elseif ($download_type == 'dnc')
 	##### Campaña DNC list validation #####
 	$event_code_type='CAMPAIGN DNC';
 	$stmt="select count(*) from vicidial_campaigns where campaign_id='$group_id' $LOGallowed_campaignsSQL;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$count_to_print = mysql_num_rows($rslt);
+	$count_to_print = mysqli_num_rows($rslt);
 	if ($count_to_print > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$lists_allowed =$row[0];
 		$i++;
 		}
@@ -204,19 +262,19 @@ elseif ($download_type == 'dnc')
 		}
 
 	$stmt="select count(*) from vicidial_campaign_dnc where campaign_id='$group_id';";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$count_to_print = mysql_num_rows($rslt);
+	$count_to_print = mysqli_num_rows($rslt);
 	if ($count_to_print > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$leads_count =$row[0];
 		$i++;
 		}
 
 	if ($leads_count < 1)
 		{
-		echo "No hay pistas en la lista de Campaña DNC: $group_id\n";
+		echo "Sin contactos en lista DNC de Campaña: $group_id\n";
 		exit;
 		}
 	}
@@ -225,12 +283,12 @@ elseif ($download_type == 'fpgn')
 	##### Filter Phone Group list validation #####
 	$event_code_type='FILTER PHONE GROUP';
 	$stmt="select count(*) from vicidial_filter_phone_groups where filter_phone_group_id='$group_id';";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$count_to_print = mysql_num_rows($rslt);
+	$count_to_print = mysqli_num_rows($rslt);
 	if ($count_to_print > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$lists_allowed =$row[0];
 		$i++;
 		}
@@ -242,19 +300,19 @@ elseif ($download_type == 'fpgn')
 		}
 
 	$stmt="select count(*) from vicidial_filter_phone_numbers where filter_phone_group_id='$group_id';";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$count_to_print = mysql_num_rows($rslt);
+	$count_to_print = mysqli_num_rows($rslt);
 	if ($count_to_print > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$leads_count =$row[0];
 		$i++;
 		}
 
 	if ($leads_count < 1)
 		{
-		echo "No hay pistas de este grupo de teléfono del filtro: $group_id\n";
+		echo "Sin contactos de este grupo filtro de Telefonos: $group_id\n";
 		exit;
 		}
 	}
@@ -265,12 +323,12 @@ else
 	$stmt="select count(*) from vicidial_lists where list_id='$list_id' $LOGallowed_campaignsSQL;";
 	if ($list_id=='ALL-LISTS')
 		{$stmt="select count(*) from vicidial_lists where list_id > 0 $LOGallowed_campaignsSQL;";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$count_to_print = mysql_num_rows($rslt);
+	$count_to_print = mysqli_num_rows($rslt);
 	if ($count_to_print > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$lists_allowed =$row[0];
 		$i++;
 		}
@@ -284,19 +342,19 @@ else
 	$stmt="select count(*) from vicidial_list where list_id='$list_id';";
 	if ($list_id=='ALL-LISTS')
 		{$stmt="select count(*) from vicidial_list where list_id > 0;";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$count_to_print = mysql_num_rows($rslt);
+	$count_to_print = mysqli_num_rows($rslt);
 	if ($count_to_print > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$leads_count =$row[0];
 		$i++;
 		}
 
 	if ($leads_count < 1)
 		{
-		echo "Hay no leads in list_id: $list_id\n";
+		echo "Hay  no leads in list_id: $list_id\n";
 		exit;
 		}
 	}
@@ -339,13 +397,13 @@ else
 	{
 	$TXTfilename = "LIST_$list_id$US$FILE_TIME.txt";
 	$list_id_header='';
-	$stmt="select lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner $extended_vl_fields_SQL from vicidial_list where list_id='$list_id';";
+	$stmt="select lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id $extended_vl_fields_SQL from vicidial_list where list_id='$list_id';";
 	if ($list_id=='ALL-LISTS')
 		{
 		$list_id_header="list_id\t";   
-		$stmt="select list_id,lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner $extended_vl_fields_SQL from vicidial_list where list_id > 0;";
+		$stmt="select list_id,lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id $extended_vl_fields_SQL from vicidial_list where list_id > 0;";
 		}
-	$header_row = $list_id_header . "lead_id\tentry_date\tmodify_date\tstatus\tuser\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tcalled_since_last_reset\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tcalled_count\tlast_local_call_time\trank\towner$extended_vl_fields_HEADER";
+	$header_row = $list_id_header . "lead_id\tentry_date\tmodify_date\tstatus\tuser\tvendor_lead_code\tsource_id\tlist_id\tgmt_offset_now\tcalled_since_last_reset\tphone_code\tphone_number\ttitle\tfirst_name\tmiddle_initial\tlast_name\taddress1\taddress2\taddress3\tcity\tstate\tprovince\tpostal_code\tcountry_code\tgender\tdate_of_birth\talt_phone\temail\tsecurity_phrase\tcomments\tcalled_count\tlast_local_call_time\trank\towner\tentry_list_id$extended_vl_fields_HEADER";
 	$header_columns='';
 	}
 
@@ -362,13 +420,13 @@ flush();
 
 
 
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$leads_to_print = mysql_num_rows($rslt);
+$leads_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $leads_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 
 	if ( ($download_type == 'systemdnc') or ($download_type == 'dnc') or ($download_type == 'fpgn') )
 		{
@@ -382,17 +440,21 @@ while ($i < $leads_to_print)
 		if ($list_id=='ALL-LISTS')
 			{
 			if ($extended_vl_fields > 0)
-				{$extended_vl_fields_DATA = "\t$row[33]\t$row[34]\t$row[35]\t$row[36]\t$row[37]\t$row[38]\t$row[39]\t$row[40]\t$row[41]\t$row[42]\t$row[43]\t$row[44]\t$row[45]\t$row[46]\t$row[47]\t$row[48]\t$row[49]\t$row[50]\t$row[51]\t$row[52]\t$row[53]\t$row[54]\t$row[55]\t$row[56]\t$row[57]\t$row[58]\t$row[59]\t$row[60]\t$row[61]\t$row[62]\t$row[63]\t$row[64]\t$row[65]\t$row[66]\t$row[67]\t$row[68]\t$row[69]\t$row[70]\t$row[71]\t$row[72]\t$row[73]\t$row[74]\t$row[75]\t$row[76]\t$row[77]\t$row[78]\t$row[79]\t$row[80]\t$row[81]\t$row[82]\t$row[83]\t$row[84]\t$row[85]\t$row[86]\t$row[87]\t$row[88]\t$row[89]\t$row[90]\t$row[91]\t$row[92]\t$row[93]\t$row[94]\t$row[95]\t$row[96]\t$row[97]\t$row[98]\t$row[99]\t$row[100]\t$row[101]\t$row[102]\t$row[103]\t$row[104]\t$row[105]\t$row[106]\t$row[107]\t$row[108]\t$row[109]\t$row[110]\t$row[111]\t$row[112]\t$row[113]\t$row[114]\t$row[115]\t$row[116]\t$row[117]\t$row[118]\t$row[119]\t$row[120]\t$row[121]\t$row[122]\t$row[123]\t$row[124]\t$row[125]\t$row[126]\t$row[127]\t$row[128]\t$row[129]\t$row[130]\t$row[131]";}
-			$row_data[$i] .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]$extended_vl_fields_DATA";
+				{$extended_vl_fields_DATA = "\t$row[36]\t$row[37]\t$row[38]\t$row[39]\t$row[40]\t$row[41]\t$row[42]\t$row[43]\t$row[44]\t$row[45]\t$row[46]\t$row[47]\t$row[48]\t$row[49]\t$row[50]\t$row[51]\t$row[52]\t$row[53]\t$row[54]\t$row[55]\t$row[56]\t$row[57]\t$row[58]\t$row[59]\t$row[60]\t$row[61]\t$row[62]\t$row[63]\t$row[64]\t$row[65]\t$row[66]\t$row[67]\t$row[68]\t$row[69]\t$row[70]\t$row[71]\t$row[72]\t$row[73]\t$row[74]\t$row[75]\t$row[76]\t$row[77]\t$row[78]\t$row[79]\t$row[80]\t$row[81]\t$row[82]\t$row[83]\t$row[84]\t$row[85]\t$row[86]\t$row[87]\t$row[88]\t$row[89]\t$row[90]\t$row[91]\t$row[92]\t$row[93]\t$row[94]\t$row[95]\t$row[96]\t$row[97]\t$row[98]\t$row[99]\t$row[100]\t$row[101]\t$row[102]\t$row[103]\t$row[104]\t$row[105]\t$row[106]\t$row[107]\t$row[108]\t$row[109]\t$row[110]\t$row[111]\t$row[112]\t$row[113]\t$row[114]\t$row[115]\t$row[116]\t$row[117]\t$row[118]\t$row[119]\t$row[120]\t$row[121]\t$row[122]\t$row[123]\t$row[124]\t$row[125]\t$row[126]\t$row[127]\t$row[128]\t$row[129]\t$row[130]\t$row[131]\t$row[132]\t$row[133]\t$row[134]";}
+			$row_data[$i] .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]$extended_vl_fields_DATA";
 			$export_list_id[$i] = $row[0];
+			if ( ($row[35] > 99) and (strlen($row[35]) > 2) )
+				{$export_list_id[$i] = $row[35];}
 			$export_lead_id[$i] = $row[1];
 			}
 		else
 			{
 			if ($extended_vl_fields > 0)
-				{$extended_vl_fields_DATA = "\t$row[34]\t$row[35]\t$row[36]\t$row[37]\t$row[38]\t$row[39]\t$row[40]\t$row[41]\t$row[42]\t$row[43]\t$row[44]\t$row[45]\t$row[46]\t$row[47]\t$row[48]\t$row[49]\t$row[50]\t$row[51]\t$row[52]\t$row[53]\t$row[54]\t$row[55]\t$row[56]\t$row[57]\t$row[58]\t$row[59]\t$row[60]\t$row[61]\t$row[62]\t$row[63]\t$row[64]\t$row[65]\t$row[66]\t$row[67]\t$row[68]\t$row[69]\t$row[70]\t$row[71]\t$row[72]\t$row[73]\t$row[74]\t$row[75]\t$row[76]\t$row[77]\t$row[78]\t$row[79]\t$row[80]\t$row[81]\t$row[82]\t$row[83]\t$row[84]\t$row[85]\t$row[86]\t$row[87]\t$row[88]\t$row[89]\t$row[90]\t$row[91]\t$row[92]\t$row[93]\t$row[94]\t$row[95]\t$row[96]\t$row[97]\t$row[98]\t$row[99]\t$row[100]\t$row[101]\t$row[102]\t$row[103]\t$row[104]\t$row[105]\t$row[106]\t$row[107]\t$row[108]\t$row[109]\t$row[110]\t$row[111]\t$row[112]\t$row[113]\t$row[114]\t$row[115]\t$row[116]\t$row[117]\t$row[118]\t$row[119]\t$row[120]\t$row[121]\t$row[122]\t$row[123]\t$row[124]\t$row[125]\t$row[126]\t$row[127]\t$row[128]\t$row[129]\t$row[130]\t$row[131]\t$row[132]";}
-			$row_data[$i] .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]$extended_vl_fields_DATA";
+				{$extended_vl_fields_DATA = "\t$row[35]\t$row[36]\t$row[37]\t$row[38]\t$row[39]\t$row[40]\t$row[41]\t$row[42]\t$row[43]\t$row[44]\t$row[45]\t$row[46]\t$row[47]\t$row[48]\t$row[49]\t$row[50]\t$row[51]\t$row[52]\t$row[53]\t$row[54]\t$row[55]\t$row[56]\t$row[57]\t$row[58]\t$row[59]\t$row[60]\t$row[61]\t$row[62]\t$row[63]\t$row[64]\t$row[65]\t$row[66]\t$row[67]\t$row[68]\t$row[69]\t$row[70]\t$row[71]\t$row[72]\t$row[73]\t$row[74]\t$row[75]\t$row[76]\t$row[77]\t$row[78]\t$row[79]\t$row[80]\t$row[81]\t$row[82]\t$row[83]\t$row[84]\t$row[85]\t$row[86]\t$row[87]\t$row[88]\t$row[89]\t$row[90]\t$row[91]\t$row[92]\t$row[93]\t$row[94]\t$row[95]\t$row[96]\t$row[97]\t$row[98]\t$row[99]\t$row[100]\t$row[101]\t$row[102]\t$row[103]\t$row[104]\t$row[105]\t$row[106]\t$row[107]\t$row[108]\t$row[109]\t$row[110]\t$row[111]\t$row[112]\t$row[113]\t$row[114]\t$row[115]\t$row[116]\t$row[117]\t$row[118]\t$row[119]\t$row[120]\t$row[121]\t$row[122]\t$row[123]\t$row[124]\t$row[125]\t$row[126]\t$row[127]\t$row[128]\t$row[129]\t$row[130]\t$row[131]\t$row[132]\t$row[133]";}
+			$row_data[$i] .= "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]$extended_vl_fields_DATA";
 			$export_list_id[$i] = $list_id;
+			if ( ($row[34] > 99) and (strlen($row[34]) > 2) )
+				{$export_list_id[$i] = $row[34];}
 			$export_lead_id[$i] = $row[0];
 			}
 		}
@@ -406,23 +468,23 @@ if ( ($custom_fields_enabled > 0) and ($event_code_type=='LIST') )
 	if ($list_id=='ALL-LISTS')
 		{
 		$stmtA = "SELECT list_id from vicidial_lists;";
-		$rslt=mysql_query($stmtA, $link);
+		$rslt=mysql_to_mysqli($stmtA, $link);
 		if ($DB) {echo "$stmtA\n";}
-		$lists_ct = mysql_num_rows($rslt);
+		$lists_ct = mysqli_num_rows($rslt);
 		$u=0;
 		while ($lists_ct > $u)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$custom_list_id[$u] =	$row[0];
 			$u++;
 			}
 		$u=0;
 		while ($lists_ct > $u)
 			{
-			$stmt="DEMOSTRACIÓN TABLAS LIKE \"custom_$custom_list_id[$u]\";";
+			$stmt="MOSTRAR TABLAS LIKE \"custom_$custom_list_id[$u]\";";
 			if ($DB>0) {echo "$stmt";}
-			$rslt=mysql_query($stmt, $link);
-			$tablecount_to_print = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$tablecount_to_print = mysqli_num_rows($rslt);
 			$custom_tablecount[$u] = $tablecount_to_print;
 			$u++;
 			}
@@ -433,9 +495,9 @@ if ( ($custom_fields_enabled > 0) and ($event_code_type=='LIST') )
 			if ($custom_tablecount[$u] > 0)
 				{
 				$stmtA = "describe custom_$custom_list_id[$u];";
-				$rslt=mysql_query($stmtA, $link);
+				$rslt=mysql_to_mysqli($stmtA, $link);
 				if ($DB) {echo "$stmtA\n";}
-				$columns_ct = mysql_num_rows($rslt);
+				$columns_ct = mysqli_num_rows($rslt);
 				$custom_columns[$u] = $columns_ct;
 				}
 			if ($DB) {echo "$custom_list_id[$u]|$custom_tablecount[$u]|$custom_columns[$u]\n";}
@@ -445,20 +507,20 @@ if ( ($custom_fields_enabled > 0) and ($event_code_type=='LIST') )
 		}
 	else
 		{
-		$stmt="DEMOSTRACIÓN TABLAS LIKE \"custom_$list_id\";";
+		$stmt="MOSTRAR TABLAS LIKE \"custom_$list_id\";";
 		if ($DB>0) {echo "$stmt";}
-		$rslt=mysql_query($stmt, $link);
-		$tablecount_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$tablecount_to_print = mysqli_num_rows($rslt);
 		if ($tablecount_to_print > 0) 
 			{
 			$stmtA = "describe custom_$list_id;";
-			$rslt=mysql_query($stmtA, $link);
+			$rslt=mysql_to_mysqli($stmtA, $link);
 			if ($DB) {echo "$stmtA\n";}
-			$columns_ct = mysql_num_rows($rslt);
+			$columns_ct = mysqli_num_rows($rslt);
 			$u=0;
 			while ($columns_ct > $u)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$column =	$row[0];
 				if ($u > 0)
 					{$header_columns .= "\t$column";}
@@ -492,12 +554,12 @@ if ( ($custom_fields_enabled > 0) and ($event_code_type=='LIST') )
 			if ($valid_custom_table > 0)
 				{
 				$stmtA = "SELECT * from custom_$export_list_id[$i] where lead_id='$export_lead_id[$i]' limit 1;";
-				$rslt=mysql_query($stmtA, $link);
+				$rslt=mysql_to_mysqli($stmtA, $link);
 				if ($DB) {echo "$columns_ct|$stmtA\n";}
-				$customfield_ct = mysql_num_rows($rslt);
+				$customfield_ct = mysqli_num_rows($rslt);
 				if ($customfield_ct > 0)
 					{
-					$row=mysql_fetch_row($rslt);
+					$row=mysqli_fetch_row($rslt);
 					$t=1;
 					while ($columns_ct > $t)
 						{
@@ -533,10 +595,10 @@ while ($i < $leads_to_print)
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -548,15 +610,15 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 ### LOG INSERTION Admin Log Table ###
 $SQL_log = "$stmt|$stmtA|";
-$SQL_log = ereg_replace(';','',$SQL_log);
+$SQL_log = preg_replace('/;/', '', $SQL_log);
 $SQL_log = addslashes($SQL_log);
 $stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LEADS', event_type='EXPORT', record_id='$list_id', event_code='ADMIN EXPORT $event_code_type', event_sql=\"$SQL_log\", event_notes='';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 exit;
 

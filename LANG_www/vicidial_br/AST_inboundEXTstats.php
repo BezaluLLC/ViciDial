@@ -1,16 +1,21 @@
 <?php 
 # AST_inboundEXTstats.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 60421-1450 - check GET/POST vars lines with isset to not trigger PHP NOTICES
 # 60620-1322 - Added variable filtering to eliminate SQL injection attack threat
 #            - Added required user/pass to gain access to this page
 # 90508-0644 - Changed to PHP long tags
+# 130610-1134 - Finalized changing of all ereg instances to preg
+# 130621-0745 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130902-0729 - Changed to mysqli PHP functions
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -26,23 +31,81 @@ if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 if (isset($_GET["ENVIAR"]))					{$ENVIAR=$_GET["ENVIAR"];}
 	elseif (isset($_POST["ENVIAR"]))		{$ENVIAR=$_POST["ENVIAR"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
-
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
-
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$stmt = "SELECT use_non_latin FROM system_settings;";
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$qm_conf_ct = mysqli_num_rows($rslt);
+if ($qm_conf_ct > 0)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Nome ou Senha inválidos: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	$row=mysqli_fetch_row($rslt);
+	$non_latin =					$row[0];
 	}
+##### END SETTINGS LOOKUP #####
+###########################################
 
+if ($non_latin < 1)
+	{
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	}
+else
+	{
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+$group = preg_replace("/'|\"|\\\\|;/","",$group);
+
+$auth=0;
+$reports_auth=0;
+$admin_auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'RELATÓRIOS',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth > 0)
+	{
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$admin_auth=$row[0];
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	if ($reports_auth < 1)
+		{
+		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ( ($reports_auth > 0) and ($admin_auth < 1) )
+		{
+		$ADD=999999;
+		$reports_only_user=1;
+		}
+	}
+else
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
 
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -50,14 +113,14 @@ $STARTtime = date("U");
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($server_ip)) {$server_ip = '10.10.11.20';}
 
-$stmt="select extension,full_number,inbound_name from inbound_numbers where server_ip='" . mysql_real_escape_string($server_ip) . "';";
-$rslt=mysql_query($stmt, $link);
+$stmt="select extension,full_number,inbound_name from inbound_numbers where server_ip='" . mysqli_real_escape_string($link, $server_ip) . "';";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$inbound_to_print = mysql_num_rows($rslt);
+$inbound_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $inbound_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$inbound[$i] =$row[0];
 	$fullnum[$i] =$row[1];
 	$inbname[$i] =$row[2];
@@ -113,16 +176,16 @@ echo "ASTERISK: Estatística das chamadas entrantes                      $NOW_TI
 echo "\n";
 echo "---------- TOTALS\n";
 
-$extenSQL = "and extension='" . mysql_real_escape_string($group) . "'";
-if (eregi("\*",$group))
+$extenSQL = "and extension='" . mysqli_real_escape_string($link, $group) . "'";
+if (preg_match("/\*/i",$group))
 	{$extenSQL = "and extension LIKE \"%$group\"";}
-$stmt="select count(*),sum(length_in_sec) from call_log where start_time >= '" . mysql_real_escape_string($query_date) . " 00:00:01' and start_time <= '" . mysql_real_escape_string($query_date) . " 23:59:59' and server_ip='" . mysql_real_escape_string($server_ip) . "' $extenSQL ;";
-$rslt=mysql_query($stmt, $link);
+$stmt="select count(*),sum(length_in_sec) from call_log where start_time >= '" . mysqli_real_escape_string($link, $query_date) . " 00:00:01' and start_time <= '" . mysqli_real_escape_string($link, $query_date) . " 23:59:59' and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' $extenSQL ;";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$row=mysql_fetch_row($rslt);
+$row=mysqli_fetch_row($rslt);
 
 $TOTALcalls =	sprintf("%10s", $row[0]);
-$average_hold_seconds = ($row[1] / $row[0]);
+$average_hold_seconds = MathZDC($row[1], $row[0]);
 $average_hold_seconds = round($average_hold_seconds, 0);
 $average_hold_seconds =	sprintf("%10s", $average_hold_seconds);
 
@@ -132,18 +195,18 @@ echo "Average Call Length(seconds) for all Calls:   $average_hold_seconds\n";
 echo "\n";
 echo "---------- DERRUBADAS\n";
 
-$stmt="select count(*),sum(length_in_sec) from call_log where start_time >= '" . mysql_real_escape_string($query_date) . " 00:00:01' and start_time <= '" . mysql_real_escape_string($query_date) . " 23:59:59' and server_ip='" . mysql_real_escape_string($server_ip) . "' $extenSQL and (length_in_sec <= 10 or length_in_sec is null);";
-$rslt=mysql_query($stmt, $link);
+$stmt="select count(*),sum(length_in_sec) from call_log where start_time >= '" . mysqli_real_escape_string($link, $query_date) . " 00:00:01' and start_time <= '" . mysqli_real_escape_string($link, $query_date) . " 23:59:59' and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' $extenSQL and (length_in_sec <= 10 or length_in_sec is null);";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$row=mysql_fetch_row($rslt);
+$row=mysqli_fetch_row($rslt);
 
 $DROPcalls =	sprintf("%10s", $row[0]);
-$DROPpercent = (($DROPcalls / $TOTALcalls) * 100);
+$DROPpercent = (MathZDC($DROPcalls, $TOTALcalls) * 100);
 $DROPpercent = round($DROPpercent, 0);
 
 if ($row[0])
 	{
-	$average_hold_seconds = ($row[1] / $row[0]);
+	$average_hold_seconds = MathZDC($row[1], $row[0]);
 	$average_hold_seconds = round($average_hold_seconds, 0);
 	$average_hold_seconds =	sprintf("%10s", $average_hold_seconds);
 	}
@@ -161,21 +224,21 @@ echo "+----------------------+----------------------+--------+------------------
 echo "| CALLERID             | CALLERIDNAME         | LENGTH | DATE TIME           |\n";
 echo "+----------------------+----------------------+--------+---------------------+\n";
 
-$stmt="select number_dialed,caller_code,length_in_sec,start_time from call_log where start_time >= '" . mysql_real_escape_string($query_date) . " 00:00:01' and start_time <= '" . mysql_real_escape_string($query_date) . " 23:59:59' and server_ip='" . mysql_real_escape_string($server_ip) . "' $extenSQL ;";
-$rslt=mysql_query($stmt, $link);
+$stmt="select number_dialed,caller_code,length_in_sec,start_time from call_log where start_time >= '" . mysqli_real_escape_string($link, $query_date) . " 00:00:01' and start_time <= '" . mysqli_real_escape_string($link, $query_date) . " 23:59:59' and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' $extenSQL ;";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$users_to_print = mysql_num_rows($rslt);
+$users_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $users_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 
 	$CID =			sprintf("%-20s", $row[0]);
 	$CIDname =		sprintf("%-20s", $row[1]); while(strlen($full_name)>15) {$full_name = substr("$full_name", 0, -1);}
 	$datetime =		sprintf("%-19s", $row[3]);
 	$USERavgTALK =	$row[2];
 
-	$USERavgTALK_M = ($USERavgTALK / 60);
+	$USERavgTALK_M = MathZDC($USERavgTALK, 60);
 	$USERavgTALK_M = round($USERavgTALK_M, 2);
 	$USERavgTALK_M_int = intval("$USERavgTALK_M");
 	$USERavgTALK_S = ($USERavgTALK_M - $USERavgTALK_M_int);
@@ -209,66 +272,66 @@ if ($output == 'FULL')
 	$h=0;
 	while ($i <= 96)
 		{
-		$stmt="select count(*) from call_log where start_time >= '" . mysql_real_escape_string($query_date) . " $h:00:00' and start_time <= '" . mysql_real_escape_string($query_date) . " $h:14:59' and server_ip='" . mysql_real_escape_string($server_ip) . "' $extenSQL ;";
-		$rslt=mysql_query($stmt, $link);
+		$stmt="select count(*) from call_log where start_time >= '" . mysqli_real_escape_string($link, $query_date) . " $h:00:00' and start_time <= '" . mysqli_real_escape_string($link, $query_date) . " $h:14:59' and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' $extenSQL ;";
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$hour_count[$i] = $row[0];
 		if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
 		if ($hour_count[$i] > 0) {$last_full_record = $i;}
-		$stmt="select count(*) from call_log where start_time >= '" . mysql_real_escape_string($query_date) . " $h:00:00' and start_time <= '" . mysql_real_escape_string($query_date) . " $h:14:59' and server_ip='" . mysql_real_escape_string($server_ip) . "' $extenSQL and (length_in_sec <= 10 or length_in_sec is null);";
-		$rslt=mysql_query($stmt, $link);
+		$stmt="select count(*) from call_log where start_time >= '" . mysqli_real_escape_string($link, $query_date) . " $h:00:00' and start_time <= '" . mysqli_real_escape_string($link, $query_date) . " $h:14:59' and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' $extenSQL and (length_in_sec <= 10 or length_in_sec is null);";
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$drop_count[$i] = $row[0];
 		$i++;
 
 
-		$stmt="select count(*) from call_log where start_time >= '" . mysql_real_escape_string($query_date) . " $h:15:00' and start_time <= '" . mysql_real_escape_string($query_date) . " $h:29:59' and server_ip='" . mysql_real_escape_string($server_ip) . "' $extenSQL ;";
-		$rslt=mysql_query($stmt, $link);
+		$stmt="select count(*) from call_log where start_time >= '" . mysqli_real_escape_string($link, $query_date) . " $h:15:00' and start_time <= '" . mysqli_real_escape_string($link, $query_date) . " $h:29:59' and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' $extenSQL ;";
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$hour_count[$i] = $row[0];
 		if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
 		if ($hour_count[$i] > 0) {$last_full_record = $i;}
-		$stmt="select count(*) from call_log where start_time >= '" . mysql_real_escape_string($query_date) . " $h:15:00' and start_time <= '" . mysql_real_escape_string($query_date) . " $h:29:59' and server_ip='" . mysql_real_escape_string($server_ip) . "' $extenSQL and (length_in_sec <= 10 or length_in_sec is null);";
-		$rslt=mysql_query($stmt, $link);
+		$stmt="select count(*) from call_log where start_time >= '" . mysqli_real_escape_string($link, $query_date) . " $h:15:00' and start_time <= '" . mysqli_real_escape_string($link, $query_date) . " $h:29:59' and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' $extenSQL and (length_in_sec <= 10 or length_in_sec is null);";
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$drop_count[$i] = $row[0];
 		$i++;
 
-		$stmt="select count(*) from call_log where start_time >= '" . mysql_real_escape_string($query_date) . " $h:30:00' and start_time <= '" . mysql_real_escape_string($query_date) . " $h:44:59' and server_ip='" . mysql_real_escape_string($server_ip) . "' $extenSQL ;";
-		$rslt=mysql_query($stmt, $link);
+		$stmt="select count(*) from call_log where start_time >= '" . mysqli_real_escape_string($link, $query_date) . " $h:30:00' and start_time <= '" . mysqli_real_escape_string($link, $query_date) . " $h:44:59' and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' $extenSQL ;";
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$hour_count[$i] = $row[0];
 		if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
 		if ($hour_count[$i] > 0) {$last_full_record = $i;}
-		$stmt="select count(*) from call_log where start_time >= '" . mysql_real_escape_string($query_date) . " $h:30:00' and start_time <= '" . mysql_real_escape_string($query_date) . " $h:44:59' and server_ip='" . mysql_real_escape_string($server_ip) . "' $extenSQL and (length_in_sec <= 10 or length_in_sec is null);";
-		$rslt=mysql_query($stmt, $link);
+		$stmt="select count(*) from call_log where start_time >= '" . mysqli_real_escape_string($link, $query_date) . " $h:30:00' and start_time <= '" . mysqli_real_escape_string($link, $query_date) . " $h:44:59' and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' $extenSQL and (length_in_sec <= 10 or length_in_sec is null);";
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$drop_count[$i] = $row[0];
 		$i++;
 
-		$stmt="select count(*) from call_log where start_time >= '" . mysql_real_escape_string($query_date) . " $h:45:00' and start_time <= '" . mysql_real_escape_string($query_date) . " $h:59:59' and server_ip='" . mysql_real_escape_string($server_ip) . "' $extenSQL ;";
-		$rslt=mysql_query($stmt, $link);
+		$stmt="select count(*) from call_log where start_time >= '" . mysqli_real_escape_string($link, $query_date) . " $h:45:00' and start_time <= '" . mysqli_real_escape_string($link, $query_date) . " $h:59:59' and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' $extenSQL ;";
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$hour_count[$i] = $row[0];
 		if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
 		if ($hour_count[$i] > 0) {$last_full_record = $i;}
-		$stmt="select count(*) from call_log where start_time >= '" . mysql_real_escape_string($query_date) . " $h:45:00' and start_time <= '" . mysql_real_escape_string($query_date) . " $h:59:59' and server_ip='" . mysql_real_escape_string($server_ip) . "' $extenSQL and (length_in_sec <= 10 or length_in_sec is null);";
-		$rslt=mysql_query($stmt, $link);
+		$stmt="select count(*) from call_log where start_time >= '" . mysqli_real_escape_string($link, $query_date) . " $h:45:00' and start_time <= '" . mysqli_real_escape_string($link, $query_date) . " $h:59:59' and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' $extenSQL and (length_in_sec <= 10 or length_in_sec is null);";
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$drop_count[$i] = $row[0];
 		$i++;
 		$h++;
 		}
 
-	$hour_multiplier = (100 / $hi_hour_count);
+	$hour_multiplier = MathZDC(100, $hi_hour_count);
 	#$hour_multiplier = round($hour_multiplier, 0);
 
 	echo "<!-- HICOUNT: $hi_hour_count|$hour_multiplier -->\n";
@@ -282,7 +345,7 @@ if ($output == 'FULL')
 		if ($Mk >= 5) 
 			{
 			$Mk=0;
-			$scale_num=($k / $hour_multiplier);
+			$scale_num=MathZDC($k, $hour_multiplier);
 			$scale_num = round($scale_num, 0);
 			$LENscale_num = (strlen($scale_num));
 			$k = ($k + $LENscale_num);

@@ -1,7 +1,7 @@
 <?php
 # remote_dispo.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this is the remote agent disposition screen for calls sent to remote agents. 
 # This allows the remote agent to modify customer information and disposition 
@@ -12,10 +12,13 @@
 # 60619-1626 - Added variable filtering to eliminate SQL injection attack threat
 # 90508-0644 - Changed to PHP long tags
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
+# 130610-1108 - Finalized changing of all ereg instances to preg
+# 130616-2149 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-0854 - Changed to mysqli PHP functions
 #
 
-
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -104,18 +107,16 @@ if (isset($_GET["VALIDER"]))				{$VALIDER=$_GET["VALIDER"];}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+$qm_conf_ct = mysqli_num_rows($rslt);
+if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$webroot_writable =				$row[1];
 	$SSoutbound_autodial_active =	$row[2];
 	$user_territories_active =		$row[3];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -124,66 +125,51 @@ $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $FILE_datetime = $STARTtime;
-
-$ext_context = 'demo';
-if (!isset($begin_date)) {$begin_date = $TODAY;}
-if (!isset($end_date)) {$end_date = $TODAY;}
-
-
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
-
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 2;";
-if ($DB) {echo "$stmt\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-$fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
+$ext_context = 'demo';
+
+if ($non_latin < 1)
+	{
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	}
+else
+	{
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+
+$auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REMOTE',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
 if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICIDIAL-CLOSER\"");
+    Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "Login ou mot de passe invalide: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
+    echo "Login ou mot de passe invalide: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
     exit;
 	}
 else
 	{
-	if($auth>0)
-		{
-		$office_no=strtoupper($PHP_AUTH_USER);
-		$password=strtoupper($PHP_AUTH_PW);
-		$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-		if ($DB) {echo "$stmt\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGfullname=$row[0];
-		$fullname = $row[0];
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VD_CLOSER|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
-			}
-		}
-	else
-		{
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VD_CLOSER|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
-			fclose($fp);
-			}
-		}
+	header ("Content-type: text/html; charset=utf-8");
+
+	$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$LOGfullname=$row[0];
+	$fullname = $row[0];
 	}
+
 
 ?>
 <html>
 <head>
-<title>VICIDIAL DISTANT: Disposition des appels</title>
+<title>REMOTE: Call Disposition</title>
 <?php
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 ?>
@@ -196,65 +182,62 @@ echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n"
 echo "<!-- $call_began $lead_id -->";
 
 if ($end_call > 0)
-{
-
-$call_length = ($STARTtime - $call_began);
+	{
+	$call_length = ($STARTtime - $call_began);
 
 	### insert a NEW record to the vicidial_closer_log table 
-	$stmt="UPDATE vicidial_closer_log set end_epoch='$STARTtime', length_in_sec='" . mysql_real_escape_string($call_length) . "', status='" . mysql_real_escape_string($status) . "', user='$PHP_AUTH_USER' where lead_id='" . mysql_real_escape_string($lead_id) . "' order by start_epoch desc limit 1;";
+	$stmt="UPDATE vicidial_closer_log set end_epoch='$STARTtime', length_in_sec='" . mysqli_real_escape_string($link, $call_length) . "', status='" . mysqli_real_escape_string($link, $status) . "', user='$PHP_AUTH_USER' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by start_epoch desc limit 1;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 
 	### update the lead record in the vicidial_list table 
-	$stmt="UPDATE vicidial_list set status='" . mysql_real_escape_string($status) . "',first_name='" . mysql_real_escape_string($first_name) . "',last_name='" . mysql_real_escape_string($last_name) . "',address1='" . mysql_real_escape_string($address1) . "',address2='" . mysql_real_escape_string($address2) . "',address3='" . mysql_real_escape_string($address3) . "',city='" . mysql_real_escape_string($city) . "',state='" . mysql_real_escape_string($state) . "',province='" . mysql_real_escape_string($province) . "',postal_code='" . mysql_real_escape_string($postal_code) . "',country_code='" . mysql_real_escape_string($country_code) . "',alt_phone='" . mysql_real_escape_string($alt_phone) . "',email='" . mysql_real_escape_string($email) . "',security_phrase='" . mysql_real_escape_string($security) . "',comments='" . mysql_real_escape_string($comments) . "',user='$PHP_AUTH_USER' where lead_id='" . mysql_real_escape_string($lead_id) . "'";
+	$stmt="UPDATE vicidial_list set status='" . mysqli_real_escape_string($link, $status) . "',first_name='" . mysqli_real_escape_string($link, $first_name) . "',last_name='" . mysqli_real_escape_string($link, $last_name) . "',address1='" . mysqli_real_escape_string($link, $address1) . "',address2='" . mysqli_real_escape_string($link, $address2) . "',address3='" . mysqli_real_escape_string($link, $address3) . "',city='" . mysqli_real_escape_string($link, $city) . "',state='" . mysqli_real_escape_string($link, $state) . "',province='" . mysqli_real_escape_string($link, $province) . "',postal_code='" . mysqli_real_escape_string($link, $postal_code) . "',country_code='" . mysqli_real_escape_string($link, $country_code) . "',alt_phone='" . mysqli_real_escape_string($link, $alt_phone) . "',email='" . mysqli_real_escape_string($link, $email) . "',security_phrase='" . mysqli_real_escape_string($link, $security) . "',comments='" . mysqli_real_escape_string($link, $comments) . "',user='$PHP_AUTH_USER' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "'";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 
 	echo "L'appel a été dispositionné &nbsp; &nbsp; &nbsp; $NOW_TIME\n<BR><BR>\n";
 
 	echo "<form><input type=button value=\"Fermer cette fenêtre\" onClick=\"javascript:window.close();\"></form>\n";
-
-}
+	}
 else
-{
-	$stmt="SELECT count(*) from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "'";
-	$rslt=mysql_query($stmt, $link);
+	{
+	$stmt="SELECT count(*) from vicidial_list where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "'";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$lead_count = $row[0];
 
 	if ($lead_count > 0)
-	{
-
-		$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner from vicidial_list where lead_id='" . mysql_real_escape_string($lead_id) . "'";
-		$rslt=mysql_query($stmt, $link);
+		{
+		$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner from vicidial_list where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "'";
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$row=mysql_fetch_row($rslt);
-		   $lead_id			= "$row[0]";
-		   $tsr				= "$row[4]";
-		   $vendor_id		= "$row[5]";
-		   $list_id			= "$row[7]";
-		   $campaign_id		= "$row[8]";
-		   $phone_code		= "$row[10]";
-		   $phone_number	= "$row[11]";
-		   $title			= "$row[12]";
-		   $first_name		= "$row[13]";	#
-		   $middle_initial	= "$row[14]";
-		   $last_name		= "$row[15]";	#
-		   $address1		= "$row[16]";	#
-		   $address2		= "$row[17]";	#
-		   $address3		= "$row[18]";	#
-		   $city			= "$row[19]";	#
-		   $state			= "$row[20]";	#
-		   $province		= "$row[21]";	#
-		   $postal_code		= "$row[22]";	#
-		   $country_code	= "$row[23]";	#
-		   $gender			= "$row[24]";
-		   $date_of_birth	= "$row[25]";
-		   $alt_phone		= "$row[26]";	#
-		   $email			= "$row[27]";	#
-		   $security		= "$row[28]";	#
-		   $comments		= "$row[29]";	#
+		$row=mysqli_fetch_row($rslt);
+		$lead_id		= $row[0];
+		$tsr			= $row[4];
+		$vendor_id		= $row[5];
+		$list_id		= $row[7];
+		$campaign_id	= $row[8];
+		$phone_code		= $row[10];
+		$phone_number	= $row[11];
+		$title			= $row[12];
+		$first_name		= $row[13];	#
+		$middle_initial	= $row[14];
+		$last_name		= $row[15];	#
+		$address1		= $row[16];	#
+		$address2		= $row[17];	#
+		$address3		= $row[18];	#
+		$city			= $row[19];	#
+		$state			= $row[20];	#
+		$province		= $row[21];	#
+		$postal_code	= $row[22];	#
+		$country_code	= $row[23];	#
+		$gender			= $row[24];
+		$date_of_birth	= $row[25];
+		$alt_phone		= $row[26];	#
+		$email			= $row[27];	#
+		$security		= $row[28];	#
+		$comments		= $row[29];	#
 
 		echo "<br>Informations sur l'appel: $first_name $last_name - $phone_number<br><br><form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=end_call value=1>\n";
@@ -287,40 +270,34 @@ else
 		echo "<tr><td align=right>Email : </td><td align=left><input type=text name=email size=30 maxlength=50 value=\"$email\"></td></tr>\n";
 		echo "<tr><td align=right>Sécurité: </td><td align=left><input type=text name=security size=30 maxlength=100 value=\"$security\"></td></tr>\n";
 		echo "<tr><td align=right>Commentaires : </td><td align=left><input type=text name=comments size=30 maxlength=255 value=\"$comments\"></td></tr>\n";
-			echo "<tr bgcolor=#B6D3FC><td align=right>Disposition: </td><td align=left><select size=1 name=status>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Disposition: </td><td align=left><select size=1 name=status>\n";
 
-				$stmt="SELECT status,status_name from vicidial_statuses where selectable='Y' order by status";
-				$rslt=mysql_query($stmt, $link);
-				$statuses_to_print = mysql_num_rows($rslt);
-				$statuses_list='';
+		$stmt="SELECT status,status_name from vicidial_statuses where selectable='Y' order by status";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$statuses_to_print = mysqli_num_rows($rslt);
+		$statuses_list='';
 
-				$o=0;
-				while ($statuses_to_print > $o) {
-					$rowx=mysql_fetch_row($rslt);
-					$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
-					$o++;
-				}
-			echo "$statuses_list";
-			echo "</select></td></tr>\n";
+		$o=0;
+		while ($statuses_to_print > $o) 
+			{
+			$rowx=mysqli_fetch_row($rslt);
+			$statuses_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+			$o++;
+			}
+		echo "$statuses_list";
+		echo "</select></td></tr>\n";
 
 
 		echo "<tr><td colspan=2><input type=submit name=submit value=\"APPEL DISPO\"></td></tr>\n";
 		echo "</table></form>\n";
 		echo "<BR><BR><BR>\n";
-
-	}
+		}
 	else
-	{
+		{
 		echo "ECHEC de la vérification de la fiche pour l'id $lead_id &nbsp; &nbsp; &nbsp; $NOW_TIME\n<BR><BR>\n";
 #		echo "<a href=\"$PHP_SELF\">Close this window</a>\n<BR><BR>\n";
+		}
 	}
-
-
-
-
-
-
-}
 
 
 $ENDtime = date("U");
@@ -329,12 +306,9 @@ $RUNtime = ($ENDtime - $STARTtime);
 
 echo "\n\n\n<br><br><br>\n\n";
 
-
 echo "<font size=0>\n\n\n<br><br><br>\ntemps d'exécution du script: $RUNtime seconds</font>";
 
-
 ?>
-
 
 </body>
 </html>
@@ -343,11 +317,5 @@ echo "<font size=0>\n\n\n<br><br><br>\ntemps d'exécution du script: $RUNtime se
 	
 exit; 
 
-
-
 ?>
-
-
-
-
 

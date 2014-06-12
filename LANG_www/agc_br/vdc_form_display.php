@@ -1,7 +1,7 @@
 <?php
 # vdc_form_display.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed display the contents of the FORM tab in the agent 
 # interface, as well as take submission of the form submission when the agent 
@@ -18,14 +18,21 @@
 # 120315-1729 - Filtere out single quotes and backslashes from custom fields
 # 130328-0012 - Converted ereg to preg functions
 # 130402-2256 - Added user_group variable
+# 130603-2204 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130615-2155 - Allow qc_enabled user access to this page even if not logged in as an agent
+# 130705-1512 - Added optional encrypted passwords compatibility
+# 130802-1033 - Changed to PHP mysqli functions
+# 140101-2139 - Small fix for admin modify lead page on encrypted password systems
+# 140429-2042 - Added TABLEper_call_notes display script variable for form display
 #
 
-$version = '2.6-10';
-$build = '130402-2256';
+$version = '2.8-15';
+$build = '140429-2042';
 
-require("dbconnect.php");
+require_once("dbconnect_mysqli.php");
 require_once("functions.php");
 
+$bcrypt=1;
 
 if (isset($_GET["lead_id"]))			{$lead_id=$_GET["lead_id"];}
 	elseif (isset($_POST["lead_id"]))	{$lead_id=$_POST["lead_id"];}
@@ -150,7 +157,13 @@ if (isset($_GET["user_group"]))				{$user_group=$_GET["user_group"];}
 	elseif (isset($_POST["user_group"]))	{$user_group=$_POST["user_group"];}
 if (isset($_GET["web_vars"]))			{$web_vars=$_GET["web_vars"];}
 	elseif (isset($_POST["web_vars"]))	{$web_vars=$_POST["web_vars"];}
+if (isset($_GET["bcrypt"]))				{$bcrypt=$_GET["bcrypt"];}
+	elseif (isset($_POST["bcrypt"]))	{$bcrypt=$_POST["bcrypt"];}
+if (isset($_GET["called_count"]))			{$called_count=$_GET["called_count"];}
+	elseif (isset($_POST["called_count"]))	{$called_count=$_POST["called_count"];}
 
+if ($bcrypt == 'OFF')
+	{$bcrypt=0;}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -177,12 +190,12 @@ $IFRAME=0;
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,custom_fields_enabled FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =							$row[0];
 	$timeclock_end_of_day =					$row[1];
 	$agentonly_callback_campaign_lock =		$row[2];
@@ -194,15 +207,15 @@ if ($qm_conf_ct > 0)
 if ($non_latin < 1)
 	{
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
-	$pass=preg_replace("/[^-_0-9a-zA-Z]/","",$pass);
+	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 	$length_in_sec = preg_replace("/[^0-9]/","",$length_in_sec);
 	$phone_code = preg_replace("/[^0-9]/","",$phone_code);
 	$phone_number = preg_replace("/[^0-9]/","",$phone_number);
 	}
 else
 	{
-	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
-	$pass = preg_replace("/\'|\"|\\\\|;/","",$pass);
+	$user = preg_replace("/\'|\"|\\\\|;| /","",$user);
+	$pass = preg_replace("/\'|\"|\\\\|;| /","",$pass);
 	}
 
 
@@ -212,23 +225,21 @@ if (!isset($format))   {$format="text";}
 if (!isset($ACTION))   {$ACTION="refresh";}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
-$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-if ($DB) {echo "|$stmt|\n";}
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',0,$bcrypt,0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
-$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and modify_leads='1';";
+$stmt="SELECT count(*) from vicidial_users where user='$user' and ( (modify_leads='1') or (qc_enabled='1') );";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $VUmodify=$row[0];
 
 $stmt="SELECT count(*) from vicidial_live_agents where user='$user';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LVAactive=$row[0];
 
 if ($custom_fields_enabled < 1)
@@ -242,7 +253,7 @@ if ($custom_fields_enabled < 1)
 
 if ( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0) or ( ($LVAactive < 1) and ($VUmodify < 1) ) )
 	{
-	echo "Invalid Username/Password: |$user|$pass|\n";
+	echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
 	echo "<form action=./vdc_form_display.php method=POST name=form_custom_fields id=form_custom_fields>\n";
 	echo "<input type=hidden name=user id=user value=\"$user\">\n";
 	echo "</form>\n";
@@ -261,24 +272,24 @@ if ($stage=='SUBMIT')
 	$CFoutput='';
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
 	if ($DB>0) {echo "$stmt";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'06001',$user,$server_ip,$session_name,$one_mysql_log);}
-	$tablecount_to_print = mysql_num_rows($rslt);
+	$tablecount_to_print = mysqli_num_rows($rslt);
 	if ($tablecount_to_print > 0) 
 		{
 		$update_SQL='';
 		$VL_update_SQL='';
 		$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'06003',$user,$server_ip,$session_name,$one_mysql_log);}
-		$fields_to_print = mysql_num_rows($rslt);
+		$fields_to_print = mysqli_num_rows($rslt);
 		$fields_list='';
 		$o=0;
 		while ($fields_to_print > $o) 
 			{
 			$new_field_value='';
 			$form_field_value='';
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$A_field_id[$o] =			$rowx[0];
 			$A_field_label[$o] =		$rowx[1];
 			$A_field_name[$o] =			$rowx[2];
@@ -344,12 +355,12 @@ if ($stage=='SUBMIT')
 			$custom_record_lead_count=0;
 			$stmt="SELECT count(*) from custom_$list_id where lead_id='$lead_id';";
 			if ($DB>0) {echo "$stmt";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'06004',$user,$server_ip,$session_name,$one_mysql_log);}
-			$fieldleadcount_to_print = mysql_num_rows($rslt);
+			$fieldleadcount_to_print = mysqli_num_rows($rslt);
 			if ($fieldleadcount_to_print > 0) 
 				{
-				$rowx=mysql_fetch_row($rslt);
+				$rowx=mysqli_fetch_row($rslt);
 				$custom_record_lead_count =	$rowx[0];
 				}
 			$update_SQL = preg_replace("/,$/","",$update_SQL);
@@ -357,10 +368,10 @@ if ($stage=='SUBMIT')
 			if ($custom_record_lead_count > 0)
 				{$custom_table_update_SQL = "UPDATE custom_$list_id SET $update_SQL where lead_id='$lead_id';";}
 
-			$rslt=mysql_query($custom_table_update_SQL, $link);
-			$custom_update_count = mysql_affected_rows($link);
+			$rslt=mysql_to_mysqli($custom_table_update_SQL, $link);
+			$custom_update_count = mysqli_affected_rows($link);
 			if ($DB) {echo "$custom_update_count|$custom_table_update_SQL\n";}
-			if (!$rslt) {die('Could not execute: ' . mysql_error());}
+			if (!$rslt) {die('Could not execute: ' . mysqli_error($link));}
 
 			$update_sent++;
 			}
@@ -373,10 +384,10 @@ if ($stage=='SUBMIT')
 			$VL_update_SQL = preg_replace("/,$/","",$VL_update_SQL);
 			$list_table_update_SQL = "UPDATE vicidial_list SET $custom_update_vl_SQL $VL_update_SQL where lead_id='$lead_id';";
 
-			$rslt=mysql_query($list_table_update_SQL, $link);
-			$list_update_count = mysql_affected_rows($link);
+			$rslt=mysql_to_mysqli($list_table_update_SQL, $link);
+			$list_update_count = mysqli_affected_rows($link);
 			if ($DB) {echo "$list_update_count|$list_table_update_SQL\n";}
-			if (!$rslt) {die('Could not execute: ' . mysql_error());}
+			if (!$rslt) {die('Could not execute: ' . mysqli_error($link));}
 
 			$update_sent++;
 			}
@@ -385,10 +396,10 @@ if ($stage=='SUBMIT')
 			if ($custom_update_count > 0)
 				{
 				$list_table_update_SQL = "UPDATE vicidial_list SET entry_list_id='$list_id' where lead_id='$lead_id';";
-				$rslt=mysql_query($list_table_update_SQL, $link);
-				$list_update_count = mysql_affected_rows($link);
+				$rslt=mysql_to_mysqli($list_table_update_SQL, $link);
+				$list_update_count = mysqli_affected_rows($link);
 				if ($DB) {echo "$list_update_count|$list_table_update_SQL\n";}
-				if (!$rslt) {die('Could not execute: ' . mysql_error());}
+				if (!$rslt) {die('Could not execute: ' . mysqli_error($link));}
 				}
 			}
 
@@ -401,7 +412,7 @@ if ($stage=='SUBMIT')
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='LEADS', event_type='MODIFY', record_id='$lead_id', event_code='ADMIN MODIFY CUSTOM LEAD', event_sql=\"$SQL_log\", event_notes='$custom_update_count|$list_update_count';";
 			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			}
 		}
 	else
@@ -421,7 +432,7 @@ else
 	echo "<html>\n";
 	echo "<head>\n";
 	echo "<!-- VERSION: $version     BUILD: $build    USER: $user   server_ip: $server_ip-->\n";
-	echo "<title>ViciDial Form Display Script";
+	echo "<title>Agent Form Display Script";
 	echo "</title>\n";
 
 	echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
@@ -460,6 +471,8 @@ else
 
 	if ($submit_button=='YES')
 		{
+		if ($bcrypt=='0')
+			{echo "<input type=hidden name=bcrypt id=bcrypt value=\"OFF\">\n";}
 		echo "<input type=hidden name=admin_submit id=admin_submit value=\"YES\">\n";
 		echo "<BR><BR><input type=submit name=VCformSubmit id=VCformSubmit value=submit>\n";
 		}

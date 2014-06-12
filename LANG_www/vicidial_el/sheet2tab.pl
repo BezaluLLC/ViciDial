@@ -2,9 +2,14 @@
 #
 # sheet2tab.pl - Convert spreadsheet to tab-delimited text file   version 2.4
 #
-# Copyright (C) 2011  Matt Florell & Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell & Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Lead file conversion and scrubbing script.  This is the first stage in the lead loading process.
+#
+# IMPORTANT - make sure the XLSX folder that was created in your Perl directory when you installed Spreadsheet::XLSX
+# has executable privileges or the Spreadsheet::XLSX compile will fail and this script WILL NOT WORK.
+# For some reason it is installed with read privileges only, unlike other Spreadsheet modules which have
+# read and executable for all.
 # 
 # *Stage 1 - Convert file to a tab delimited format (DONE)
 #  Stage 2 - Prompt the user for the field mapping (TBD)
@@ -27,6 +32,7 @@
 # 100706-0833 - Initial build <mikec>
 # 100706-1244 - Reformat and add comments
 # 110927-1750 - Fixed issue with improperly CSV files locking up servers <mikec>
+# 130619-2310 - Fixed missing XLSX perl module declaration
 #
 
 # disable when not debugging
@@ -34,6 +40,7 @@
 #use warnings;
 
 use Spreadsheet::Read;
+use Spreadsheet::XLSX;
 use File::Basename;
 
 

@@ -27,22 +27,22 @@ if (isset($camp_lists))
 
 			$complete_statuses='';
 			$stmt="SELECT status from vicidial_statuses where completed='Y';";
-			$rslt=mysql_query($stmt, $link);
-			$statuses_to_print = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$statuses_to_print = mysqli_num_rows($rslt);
 			$q=0;
 			while ($statuses_to_print > $q) 
 				{
-				$rowx=mysql_fetch_row($rslt);
+				$rowx=mysqli_fetch_row($rslt);
 				$complete_statuses.="'$rowx[0]',";
 				$q++;
 				}
 			$stmt="SELECT status from vicidial_campaign_statuses where completed='Y';";
-			$rslt=mysql_query($stmt, $link);
-			$statuses_to_print = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$statuses_to_print = mysqli_num_rows($rslt);
 			$q=0;
 			while ($statuses_to_print > $q) 
 				{
-				$rowx=mysql_fetch_row($rslt);
+				$rowx=mysqli_fetch_row($rslt);
 				$complete_statuses.="'$rowx[0]',";
 				$q++;
 				}
@@ -53,11 +53,11 @@ if (isset($camp_lists))
 			$stmt="SELECT count(*) FROM vicidial_list where ( (status IN($Dsql)) and (list_id IN($camp_lists)) and ( $CCLsql ($CSsql) ) );";
 			#$DB=1;
 			if ($DB) {$HTML_header.="$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
-			$rslt_rows = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$rslt_rows = mysqli_num_rows($rslt);
 			if ($rslt_rows)
 				{
-				$rowx=mysql_fetch_row($rslt);
+				$rowx=mysqli_fetch_row($rslt);
 				$complete_leads = $rowx[0];
 				}
 			else {$complete_leads = '0';}
@@ -119,8 +119,8 @@ if (isset($camp_lists))
 
 			$stmt="SELECT call_time_id,call_time_name,call_time_comments,ct_default_start,ct_default_stop,ct_sunday_start,ct_sunday_stop,ct_monday_start,ct_monday_stop,ct_tuesday_start,ct_tuesday_stop,ct_wednesday_start,ct_wednesday_stop,ct_thursday_start,ct_thursday_stop,ct_friday_start,ct_friday_stop,ct_saturday_start,ct_saturday_stop,ct_state_call_times FROM vicidial_call_times where call_time_id='$local_call_time';";
 			if ($DB) {$HTML_header.="$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
-			$rowx=mysql_fetch_row($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$rowx=mysqli_fetch_row($rslt);
 			$Gct_default_start =	$rowx[3];
 			$Gct_default_stop =	$rowx[4];
 			$Gct_sunday_start =	$rowx[5];
@@ -153,8 +153,8 @@ if (isset($camp_lists))
 				if (strlen($state_rules[$b])>1)
 					{
 					$stmt="SELECT state_call_time_id,state_call_time_state,state_call_time_name,state_call_time_comments,sct_default_start,sct_default_stop,sct_sunday_start,sct_sunday_stop,sct_monday_start,sct_monday_stop,sct_tuesday_start,sct_tuesday_stop,sct_wednesday_start,sct_wednesday_stop,sct_thursday_start,sct_thursday_stop,sct_friday_start,sct_friday_stop,sct_saturday_start,sct_saturday_stop from vicidial_state_call_times where state_call_time_id='$state_rules[$b]';";
-					$rslt=mysql_query($stmt, $link);
-					$row=mysql_fetch_row($rslt);
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
 					$Gstate_call_time_id =		$row[0];
 					$Gstate_call_time_state =	$row[1];
 					$Gsct_default_start =		$row[4];
@@ -422,11 +422,11 @@ if (isset($camp_lists))
 			$full_dialable_SQL="status IN($Dsql) and list_id IN($camp_lists) and ($all_gmtSQL) $CCLsql $DLTsql $fSQL";
 			#$DB=1;
 			if ($DB) {$HTML_header.="$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
-			$rslt_rows = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$rslt_rows = mysqli_num_rows($rslt);
 			if ($rslt_rows)
 				{
-				$rowx=mysql_fetch_row($rslt);
+				$rowx=mysqli_fetch_row($rslt);
 				$active_leads = "$rowx[0]";
 				}
 			else {$active_leads = '0';}

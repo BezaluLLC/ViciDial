@@ -60,9 +60,12 @@
 # 91129-2211 - Replaced SELECT STAR in SQL query
 # 120223-2124 - Removed logging of good login passwords if webroot writable is enabled
 # 130328-0017 - Converted ereg to preg functions
+# 130603-2220 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130802-1002 - Changed to PHP mysqli functions
 # 
 
-require("dbconnect.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 ### If you have globals turned off uncomment these lines
 if (isset($_GET["user"]))					{$user=$_GET["user"];}
@@ -92,7 +95,7 @@ while ( (strlen($user_abb) > 4) and ($forever_stop < 200) )
 	{$user_abb = preg_replace("/^./","",$user_abb);   $forever_stop++;}
 
 $version = '2.2.6-1';
-$build = '130328-0017';
+$build = '130802-1002';
 
 ### security strip all non-alphanumeric characters out of the variables ###
 	$DB=preg_replace("/[^0-9a-z]/","",$DB);
@@ -109,21 +112,20 @@ if ($force_logout)
 		Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
 		Header("HTTP/1.0 401 Unauthorized");
 		}
-    echo "Je ben nu uitgelogd. Bedankt\n";
+    echo "Je bent nu uitgelogd.\n";
     exit;
 	}
 
 $StarTtime = date("U");
 $NOW_TIME = date("Y-m-d H:i:s");
 $FILE_TIME = date("Ymd-His");
-	$month_old = mktime(0, 0, 0, date("m"), date("d")-7,  date("Y"));
-	$past_month_date = date("Y-m-d H:i:s",$month_old);
+$month_old = mktime(0, 0, 0, date("m"), date("d")-7,  date("Y"));
+$past_month_date = date("Y-m-d H:i:s",$month_old);
 
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',1,0,0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
 $US='_';
 $CL=':';
@@ -162,11 +164,11 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/astguicli
 	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>Gebruikersnaam:  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=user SIZE=10 maxlength=20 VALUE=\"$user\"></TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Gebruikerswachtwoord:  </TD>";
+	echo "<TR><TD ALIGN=RIGHT>Gebruikers Wachtwoord:  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 maxlength=20 VALUE=\"$pass\"></TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Telefoon login\/nummer: </TD>";
+	echo "<TR><TD ALIGN=RIGHT>Werkplek Code: </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 maxlength=20 VALUE=\"$phone_login\"></TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Telefoon Wachtwoord:  </TD>";
+	echo "<TR><TD ALIGN=RIGHT>Werkplek Wachtwoord:  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=phone_pass SIZE=10 maxlength=20 VALUE=\"$phone_pass\"></TD></TR>\n";
 	echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=OPSLAAN VALUE=OPSLAAN></TD></TR>\n";
 	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSIE: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
@@ -178,15 +180,12 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/astguicli
 	}
 else
 	{
-
 	if($auth>0)
 		{
-		$office_no=strtoupper($user);
-		$password=strtoupper($pass);
-			$stmt="SELECT full_name,user_level from vicidial_users where user='$user' and pass='$pass'";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$LOGfullname=$row[0];
+		$stmt="SELECT full_name,user_level from vicidial_users where user='$user' and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$LOGfullname=$row[0];
 		if ($WeBRooTWritablE > 0)
 			{
 			fwrite ($fp, "VICIDIAL|GOOD|$date|$user|XXXX|$ip|$browser|$LOGfullname|\n");
@@ -212,7 +211,7 @@ echo "<!-- VERSIE: $version     BUILD: $build      ADD: $ADD-->\n";
 
 if ( (strlen($phone_login)<2) or (strlen($phone_pass)<2) )
 {
-echo "<title>astGUIclient web client: Telefoon login\/nummer</title>\n";
+echo "<title>astGUIclient web client: Werkplek Code</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 echo "<TABLE><TR><TD></TD>\n";
@@ -224,12 +223,12 @@ echo "<INPUT TYPE=HIDDEN NAME=user VALUE=\"$user\">\n";
 echo "<INPUT TYPE=HIDDEN NAME=pass VALUE=\"$pass\">\n";
 echo "<BR><BR><BR><CENTER><TABLE WIDTH=360 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCC2E0\"><TR BGCOLOR=WHITE>";
 echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/agc_tab_astguiclient.gif\" Border=0></TD>";
-echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Telefoon login\/nummer </TD>";
+echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Werkplek Code </TD>";
 echo "</TR>\n";
 echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-echo "<TR><TD ALIGN=RIGHT>Telefoon login\/nummer: </TD>";
+echo "<TR><TD ALIGN=RIGHT>Werkplek Code: </TD>";
 echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 maxlength=20 VALUE=\"$phone_login\"></TD></TR>\n";
-echo "<TR><TD ALIGN=RIGHT>Telefoon Wachtwoord:  </TD>";
+echo "<TR><TD ALIGN=RIGHT>Werkplek Wachtwoord:  </TD>";
 echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=phone_pass SIZE=10 maxlength=20 VALUE=\"$phone_pass\"></TD></TR>\n";
 echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=OPSLAAN VALUE=OPSLAAN></TD></TR>\n";
 echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSIE: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
@@ -244,12 +243,12 @@ else
 $authphone=0;
 $stmt="SELECT count(*) from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $authphone=$row[0];
 if (!$authphone)
 	{
-	echo "<title>astGUIclient web client: Telefoon login\/nummer</title>\n";
+	echo "<title>astGUIclient web client: Werkplek Code</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 	echo "<TABLE><TR><TD></TD>\n";
@@ -261,12 +260,12 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/astguicli
 	echo "<INPUT TYPE=HIDDEN NAME=pass VALUE=\"$pass\">\n";
 	echo "<BR><BR><BR><CENTER><TABLE WIDTH=360 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCC2E0\"><TR BGCOLOR=WHITE>";
 	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/agc_tab_astguiclient.gif\" Border=0></TD>";
-	echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Telefoon login\/nummer </TD>";
+	echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Werkplek Code </TD>";
 	echo "</TR>\n";
-	echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=1> &nbsp; <BR><FONT SIZE=3>Sorry, de opgegeven telefoon login en wachtwoord zijn niet acitef in dit systeem, probeer het nogmaals: <BR> &nbsp; </TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Telefoon login\/nummer: </TD>";
+	echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=1> &nbsp; <BR><FONT SIZE=3>Sorry, de opgegeven Werkplek Code en/of Wachtwoord zijn niet herkend, probeer het nogmaals: <BR> &nbsp; </TD></TR>\n";
+	echo "<TR><TD ALIGN=RIGHT>Werkplek Code: </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 maxlength=20 VALUE=\"$phone_login\"></TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Telefoon Wachtwoord:  </TD>";
+	echo "<TR><TD ALIGN=RIGHT>Werkplek Wachtwoord:  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=phone_pass SIZE=10 maxlength=20 VALUE=\"$phone_pass\"></TD></TR>\n";
 	echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=Submit NAME=OPSLAAN VALUE=OPSLAAN></TD></TR>\n";
 	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSIE: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
@@ -281,8 +280,8 @@ else
 	echo "<title>astGUIclient web client</title>\n";
 	$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$extension=$row[0];
 	$dialplan_number=$row[1];
 	$voicemail_id=$row[2];
@@ -354,23 +353,23 @@ else
 
 	$stmt="DELETE from web_client_sessions where start_time < '$past_month_date' and extension='$extension' and server_ip = '$server_ip' and program = 'agc';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 
 	$stmt="INSERT INTO web_client_sessions values('$extension','$server_ip','agc','$NOW_TIME','$session_name');";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 
 	$stmt="SELECT count(*) from phone_favorites where extension='$extension' and server_ip = '$server_ip';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$favorites_present=$row[0];
 	if ($favorites_present > 0)
 		{
 		$stmt="SELECT extensions_list from phone_favorites where extension='$extension' and server_ip = '$server_ip';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$favorites_list=$row[0];
 		$h=0;
 		$favorites_listX = preg_replace("/\'/i",'',$favorites_list);
@@ -382,8 +381,8 @@ else
 		while ($favorites_count > $o) 
 			{
 			$stmt="SELECT fullname,protocol from phones where extension = '$favorites[$o]' and server_ip='$server_ip';";
-			$rslt=mysql_query($stmt, $link);
-			$rowx=mysql_fetch_row($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$rowx=mysqli_fetch_row($rslt);
 			$favorites_names[$o] =	$rowx[0];
 			$favorites_listX .= "$rowx[1]/$favorites[$o],";
 			$o++;
@@ -400,13 +399,13 @@ else
 ### gather phone extensions and fullnames for favorites editor ###
 	$stmt="SELECT extension,fullname from phones where server_ip = '$server_ip';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$exten_ct = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$exten_ct = mysqli_num_rows($rslt);
 	$favlistCT=0;
 	$nofavlistCT=0;
 	while ($favlistCT < $exten_ct)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$favlist[$favlistCT]= "$row[0] - $row[1]";
 		$favlistCT++;
 		}
@@ -494,15 +493,15 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 	var phone_pass = '<?php echo $phone_pass ?>';
 	var session_name = '<?php echo $session_name ?>';
 	var image_livecall_OFF = new Image();
-	image_livecall_OFF.src="../agc/images/agc_live_call_OFF.gif";
+	image_livecall_OFF.src="../agc/images/agc_live_call_OFF_nl.gif";
 	var image_livecall_ON = new Image();
-	image_livecall_ON.src="../agc/images/agc_live_call_ON.gif";
+	image_livecall_ON.src="../agc/images/agc_live_call_ON_nl.gif";
 	var image_voicemail_OFF = new Image();
-	image_voicemail_OFF.src="../agc/images/agc_check_voicemail_OFF.gif";
+	image_voicemail_OFF.src="../agc/images/agc_check_voicemail_OFF_nl.gif";
 	var image_voicemail_ON = new Image();
-	image_voicemail_ON.src="../agc/images/agc_check_voicemail_ON.gif";
+	image_voicemail_ON.src="../agc/images/agc_check_voicemail_ON_nl.gif";
 	var image_voicemail_BLINK = new Image();
-	image_voicemail_BLINK.src="../agc/images/agc_check_voicemail_BLINK.gif";
+	image_voicemail_BLINK.src="../agc/images/agc_check_voicemail_BLINK_nl.gif";
 	var favorites = new Array();
 	var favorites_names = new Array();
 	var favorites_busy = new Array();
@@ -1199,7 +1198,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 				{
 				recLIST = recLIST + "|" + monitorchannelvalue;
 				filename = filedate + "_" + user_abb;
-				var rec_start_html = "<a href=\"#\" onclick=\"liverecording_send_recording('StopMonitor','" + monitorchannelvalue + "','" + taskspan + "','" + filename + "');return false;\">Stop opnemen";
+				var rec_start_html = "<a href=\"#\" onclick=\"liverecording_send_recording('StopMonitor','" + monitorchannelvalue + "','" + taskspan + "','" + filename + "');return false;\">Stop Opname";
 				document.getElementById(taskspan).innerHTML = rec_start_html;
 
 			}
@@ -1261,7 +1260,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 				recLIST = recLIST + "|" + taskconfrec;
 				filename = filedate + "_" + user_abb;
 				var channelrec = "Local/" + taskconfrec + "@" + ext_context;
-				var conf_rec_start_html = "<a href=\"#\" onclick=\"conf_send_recording('StopMonitorConf','" + taskconfspan + "','" + taskconfrec + "','" + filename + "');return false;\">Stop opnemen</a>";
+				var conf_rec_start_html = "<a href=\"#\" onclick=\"conf_send_recording('StopMonitorConf','" + taskconfspan + "','" + taskconfrec + "','" + filename + "');return false;\">Stop Opname</a>";
 				document.getElementById(taskconfspan).innerHTML = conf_rec_start_html;
 
 			}
@@ -1333,7 +1332,6 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 				//	alert(xmlhttp.responseText);
 				//	document.getElementById("busycallsdebug").innerHTML = checklive_query + "<BR>" + xmlhttp.responseText;
 				//	pause();
-
 					var check_live_line=check_live.split("\n");
 					var check_live_array=check_live_line[0].split("|");
 					var inbound_call_array=check_live_line[1].split("|");
@@ -1414,7 +1412,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 
 							var regx = new RegExp("\\|"+channelfieldBtrunk_array[1],"ig");
 							if (recLIST.match(regx)) 
-								{live_calls_HTML = live_calls_HTML + "<span id=\"recordlive" + loop_ct + "\"><a href=\"#\" onclick=\"liverecording_send_recording('StopMonitor','" + channelfieldBtrunk_array[1] + "','recordlive" + loop_ct + "');return false;\">Stop opnemen</span>";}
+								{live_calls_HTML = live_calls_HTML + "<span id=\"recordlive" + loop_ct + "\"><a href=\"#\" onclick=\"liverecording_send_recording('StopMonitor','" + channelfieldBtrunk_array[1] + "','recordlive" + loop_ct + "');return false;\">Stop Opname</span>";}
 							else 
 								{live_calls_HTML = live_calls_HTML + "<span id=\"recordlive" + loop_ct + "\"><a href=\"#\" onclick=\"liverecording_send_recording('Monitor','" + channelfieldBtrunk_array[1] + "','recordlive" + loop_ct + "');return false;\">Record</span>";}
 
@@ -1535,7 +1533,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=0;
 					if (out_calls > 0)
 						{
-						var out_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> DATUM\/TIJD GESPREK</td><td><font class=\"log_title\">NUMMER</td><td align=right><font class=\"log_title\">LENGTH (M:SS)</td><td><font class=\"log_title\"> </td></tr>"
+						var out_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> Terugbel Datum\/Tijd</td><td><font class=\"log_title\">NUMMER</td><td align=right><font class=\"log_title\">LENGTH (M:SS)</td><td><font class=\"log_title\"> </td></tr>"
 						while (loop_ct < out_calls)
 							{
 							loop_ct++;
@@ -1563,7 +1561,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=0;
 					if (in_calls > 0)
 						{
-						var in_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> DATUM\/TIJD GESPREK</td><td><font class=\"log_title\">INKOMEND-NUMMER</td><td COLSPAN=2><font class=\"log_title\">CALLERID</td><td align=right><font class=\"log_title\">LENGTH</td><td><font class=\"log_title\"> </td></tr>"
+						var in_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> Terugbel Datum\/Tijd</td><td><font class=\"log_title\">INKOMEND-NUMMER</td><td COLSPAN=2><font class=\"log_title\">CALLERID</td><td align=right><font class=\"log_title\">LENGTH</td><td><font class=\"log_title\"> </td></tr>"
 						while (loop_ct < in_calls)
 							{
 							loop_ct++;
@@ -1638,7 +1636,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=-1;
 					if (parked_count > 0)
 						{
-						var park_HTML = "<table width=600><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">CHANNEL<BR>&nbsp; BEL ID</td><td><font class=\"log_title\">GEPARKEERD DOOR<BR>&nbsp; PARKEERTIJD</td><td><font class=\"log_title\">OPHANGEN</td><td><font class=\"log_title\">XFER</td><td><font class=\"log_title\">OPPAKKEN</td></tr>"
+						var park_HTML = "<table width=600><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">CHANNEL<BR>&nbsp; BEL ID</td><td><font class=\"log_title\">Geparkeerd door<BR>&nbsp; Parkeertijd</td><td><font class=\"log_title\">OPHANGEN</td><td><font class=\"log_title\">XFER</td><td><font class=\"log_title\">OPPAKKEN</td></tr>"
 						while (loop_ct < parked_count)
 							{
 							loop_ct++;
@@ -1766,7 +1764,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 			show_reglink=1;
 			reglink = "<a href=\"#\" onclick=\"conf_register_room('" + head_conf + "');return false;\">Register</a>";
 			}
-		var conf_head_HTML = "<font class=\"sh_text\">CONFERENTIE " + head_conf + "</b></font><font class=\"sb_text\">&nbsp; &nbsp; Geregistreerd op: " + head_reg + " &nbsp; " + reglink + " &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"basic_originate_call('" + head_conf + "','NO','NO');return false;\">Ga naar conferentie </a><BR><a href=\"#\" onclick=\"check_for_conf_calls('" + head_conf + "','1');return false;\">Ververs </a> &nbsp; &nbsp; <span id=\"conf_rec_link\"><a href=\"#\" onclick=\"conf_send_recording('MonitorConf','conf_rec_link','" + head_conf + "');return false;\">Record</a></span> &nbsp; &nbsp; &nbsp; &nbsp; <input TYPE=TEXT SIZE=15 NAME=conf_dtmf STYLE=\"font-family : sans-serif; font-size : 10px\"> <A HREF=\"#\" onclick=\"SendConfDTMF(" + head_conf + ");\">Stuur DTMF</A> &nbsp; &nbsp; &nbsp; &nbsp; <input TYPE=TEXT SIZE=15 NAME=conf_dial STYLE=\"font-family : sans-serif; font-size : 10px\"> <A HREF=\"#\" onclick=\"SendManualDial('YES'," + head_conf + ");\">Bel van conf</A><BR></font>";
+		var conf_head_HTML = "<font class=\"sh_text\">CONFERENTIE " + head_conf + "</b></font><font class=\"sb_text\">&nbsp; &nbsp; Geregistreerd op naam van: " + head_reg + " &nbsp; " + reglink + " &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"basic_originate_call('" + head_conf + "','NO','NO');return false;\">Start conferentie </a><BR><a href=\"#\" onclick=\"check_for_conf_calls('" + head_conf + "','1');return false;\">Ververs </a> &nbsp; &nbsp; <span id=\"conf_rec_link\"><a href=\"#\" onclick=\"conf_send_recording('MonitorConf','conf_rec_link','" + head_conf + "');return false;\">Record</a></span> &nbsp; &nbsp; &nbsp; &nbsp; <input TYPE=TEXT SIZE=15 NAME=conf_dtmf STYLE=\"font-family : sans-serif; font-size : 10px\"> <A HREF=\"#\" onclick=\"SendConfDTMF(" + head_conf + ");\">Stuur Toetscombinatie</A> &nbsp; &nbsp; &nbsp; &nbsp; <input TYPE=TEXT SIZE=15 NAME=conf_dial STYLE=\"font-family : sans-serif; font-size : 10px\"> <A HREF=\"#\" onclick=\"SendManualDial('YES'," + head_conf + ");\">Bel via Conferentie</A><BR></font>";
 	
 		document.getElementById("ConfereNceHeaderContent").innerHTML = conf_head_HTML;
 		check_for_conf_calls(head_conf,taskrefresh);
@@ -1803,7 +1801,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 			}
 		if (xmlhttp) 
 			{ 
-			checkconf_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&conf_exten=" + taskconfnum;
+			checkconf_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&conf_exten=" + taskconfnum + "&bcrypt=OFF";
 			xmlhttp.open('POST', 'conf_exten_check.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(checkconf_query); 
@@ -1911,7 +1909,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 			}
 		if (xmlhttp) 
 			{ 
-			reg_conf_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&conf_exten=" + taskconfreg + "&exten=" + extension + "&ACTION=register";
+			reg_conf_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&conf_exten=" + taskconfreg + "&exten=" + extension + "&ACTION=register&bcrypt=OFF";
 			xmlhttp.open('POST', 'conf_exten_check.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(reg_conf_query); 
@@ -2720,14 +2718,14 @@ echo "</head>\n";
 <TR VALIGN=TOP ALIGN=LEFT><TD COLSPAN=5 VALIGN=TOP ALIGN=LEFT>
 <INPUT TYPE=HIDDEN NAME=extension>
 <font class="body_text">
-<?php	echo "Welkom $LOGfullname, je ben ingelogd in deze telefoon: $fullname - $protocol/$extension op $server_ip &nbsp; <a href=\"#\" onclick=\"LogouT();return false;\">UITLOGGEN</a><BR>\n"; ?>
+<?php	echo "Welkom $LOGfullname, Je ben ingelogd met deze telefoon Extentie: $fullname - $protocol/$extension op $server_ip &nbsp; <a href=\"#\" onclick=\"LogouT();return false;\">UITLOGGEN</a><BR>\n"; ?>
 </TD></TR>
 <TR VALIGN=TOP ALIGN=LEFT>
-<TD><A HREF="#" onclick="MainPanelToFront();"><IMG SRC="../agc/images/agc_tab_main.gif" ALT="Hoofd Paneel" WIDTH=83 HEIGHT=30 Border=0></A></TD>
-<TD><A HREF="#" onclick="ActiveLinesPanelToFront();"><IMG SRC="../agc/images/agc_tab_active_lines.gif" ALT="Actieve lijnen paneel" WIDTH=139 HEIGHT=30 Border=0></A></TD>
-<TD><A HREF="#" onclick="ConfereNcesPanelToFront();"><IMG SRC="../agc/images/agc_tab_conferences.gif" ALT="Conferentie paneel" WIDTH=139 HEIGHT=30 Border=0></A></TD>
-<TD><A HREF="#" onclick="SendCheckVoiceMail();"><IMG SRC="../agc/images/agc_check_voicemail_ON.gif" NAME=voicemail ALT="Controleer voicemail" WIDTH=170 HEIGHT=30 Border=0></A></TD>
-<TD><IMG SRC="../agc/images/agc_live_call_OFF.gif" NAME=livecall ALT="Live Gesprek" WIDTH=109 HEIGHT=30 Border=0></TD>
+<TD><A HREF="#" onclick="MainPanelToFront();"><IMG SRC="../agc/images/agc_tab_main_nl.gif" ALT="Hoofdmenu" WIDTH=83 HEIGHT=30 Border=0></A></TD>
+<TD><A HREF="#" onclick="ActiveLinesPanelToFront();"><IMG SRC="../agc/images/agc_tab_active_lines_nl.gif" ALT="Actieve Lijnen Menu" WIDTH=139 HEIGHT=30 Border=0></A></TD>
+<TD><A HREF="#" onclick="ConfereNcesPanelToFront();"><IMG SRC="../agc/images/agc_tab_conferences_nl.gif" ALT="Conferentie Menu" WIDTH=139 HEIGHT=30 Border=0></A></TD>
+<TD><A HREF="#" onclick="SendCheckVoiceMail();"><IMG SRC="../agc/images/agc_check_voicemail_ON_nl.gif" NAME=voicemail ALT="Controleer voicemail" WIDTH=170 HEIGHT=30 Border=0></A></TD>
+<TD><IMG SRC="../agc/images/agc_live_call_OFF_nl.gif" NAME=livecall ALT="Live Gesprek" WIDTH=109 HEIGHT=30 Border=0></TD>
 </TR></TABLE>
 </SPAN>
 
@@ -2742,18 +2740,18 @@ echo "</head>\n";
 	<span id="TrunkHangup_HJlink"><a href="#" onclick="busyhangup_send_redirect('Trunk','HIJACK');return false;">Trunk Kapen</a> &nbsp; | &nbsp; </span>
 	<span id="TrunkHangup_ZMlink"><a href="#" onclick="busyhangup_send_redirect('Trunk','LISTEN');return false;">Trunk Beluisteren</a> &nbsp; | &nbsp; </span>
 	<a href="#" onclick="busytrunkhangup_force_refresh();return false;">Ververs</a> &nbsp; | &nbsp; 
-	<a href="#" onclick="hideTrunkHangup('TrunkHangupBox');">Terug naar hoofdscherm</a>
+	<a href="#" onclick="hideTrunkHangup('TrunkHangupBox');">Terug naar het Hoofdmenu</a>
 	</TD></TR></TABLE>
 </span>
 
 <span style="position:absolute;left:0px;top:12px;z-index:28;" id="LocalHangupBox">
-    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> LOKAAL OPHANGEN <BR><BR>
+    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> Lokaal Ophangen <BR><BR>
 	<span id="LocalHangupContent"> Aktief Lokaal Menu </span><BR>
 	<span id="LocalHangup_HUlink"><a href="#" onclick="busyhangup_send_hangup('Local');return false;">Lokaal Ophangen</a> &nbsp; | &nbsp; </span>
 	<span id="LocalHangup_HJlink"><a href="#" onclick="busyhangup_send_redirect('Local');return false;">Lokaal Kapen</a> &nbsp; | &nbsp; </span>
 	<span id="LocalHangup_ZMlink"><a href="#" onclick="busyhangup_send_redirect('Local','LISTEN');return false;">Lokaal Beluisteren</a> &nbsp; | &nbsp; </span>
 	<a href="#" onclick="busylocalhangup_force_refresh();return false;">Ververs</a> &nbsp; | &nbsp; 
-	<a href="#" onclick="hideLocalHangup('LocalHangupBox');">Terug naar hoofdscherm</a>
+	<a href="#" onclick="hideLocalHangup('LocalHangupBox');">Terug naar het Hoofdmenu</a>
 	</TD></TR></TABLE>
 </span>
 
@@ -2764,31 +2762,31 @@ echo "</head>\n";
 	<tr><td>Extenties:<BR><span id="MainXfeRContent"> Extentie Menu </span></td>
 	<td>
 	<BR>
-	<a href="#" onclick="mainxfer_send_redirect('XfeR');return false;">Stuur naar geselecteerde extentie</a> <BR><BR>
-	<a href="#" onclick="mainxfer_send_redirect('VMAIL');return false;">Stuur naar geselecteerde vmail box</a> <BR><BR>
+	<a href="#" onclick="mainxfer_send_redirect('XfeR');return false;">Stuur naar geselecteerde Extentie</a> <BR><BR>
+	<a href="#" onclick="mainxfer_send_redirect('VMAIL');return false;">Stuur naar geselecteerde Voicemailbox</a> <BR><BR>
 	<a href="#" onclick="mainxfer_send_redirect('ENTRY');return false;">Stuur naar dit nummer</a>:<BR><input type=text name=extension_xfer_entry size=20 maxlength=50> <BR><BR>
 	<a href="#" onclick="getactiveext('MainXfeRBox');return false;">Ververs</a> <BR><BR><BR>
-	<a href="#" onclick="hideMainXfeR('MainXfeRBox');">Terug naar hoofdscherm</a> <BR><BR>
+	<a href="#" onclick="hideMainXfeR('MainXfeRBox');">Terug naar het Hoofdmenu</a> <BR><BR>
 	</TD>
-	<TD>Conferenties:<BR><font size=1>(klik op een onderstaand nummer om naar een conferentie te sturen)<BR><input type=checkbox name=MainXfeRconfXTRA size=1 value="1"> Verstuur mijn kanaal ook<div class="scroll_list" id="MainXfeRconfContent"> Conferenties Menu </div></td></TR></TABLE>
+	<TD>Conferenties:<BR><font size=1>(klik op een onderstaand nummer om naar een conferentie door te schakelen)<BR><input type=checkbox name=MainXfeRconfXTRA size=1 value="1"> Verstuur mijn kanaal ook<div class="scroll_list" id="MainXfeRconfContent"> Conferentie Menu </div></td></TR></TABLE>
 </span>
 
 <span style="position:absolute;left:80px;top:12px;z-index:43;" id="LocalDialBox">
-    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> Bel Lokale Extenties</b> <BR>Telefoon belt vanaf: <span id="LocalDialChanneL">Channel</span><BR></tr>
+    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> Bel Lokale Extenties</b> <BR>Telefoon belt vanuit: <span id="LocalDialChanneL">Channel</span><BR></tr>
 	<tr><td>Extenties:<BR><span id="LocalDialContent"> Extentie Menu </span></td>
 	<td>
 	<BR>
 	<a href="#" onclick="mainxfer_send_originate('DiaL','','');return false;">Bel geselecteerde extentie</a> <BR><BR>
 	<a href="#" onclick="mainxfer_send_originate('VMAIL');return false;">Bel geselcteerde voicemail</a> <BR><BR>
 	<a href="#" onclick="getactiveext('LocalDialBox');return false;">Ververs</a> <BR><BR><BR>
-	<a href="#" onclick="hideLocalDial('LocalDialBox');">Terug naar hoofdscherm</a> <BR><BR>
+	<a href="#" onclick="hideLocalDial('LocalDialBox');">Terug naar het Hoofdmenu</a> <BR><BR>
 	</TD>
 	<TD></td></TR></TABLE>
 </span>
 
 <span style="position:absolute;left:40px;top:12px;z-index:41;" id="ParkDisplayBox">
-    <table border=0 bgcolor="#FFFFCC" width=640 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> PARKEER GESPREKKEN:</b> <div class="scroll_park" id="ParkDisplayContents"></div>
-	<a href="#" onclick="hideParkDisplay('ParkDisplayBox');">Terug naar hoofdscherm</a> <BR><BR>
+    <table border=0 bgcolor="#FFFFCC" width=640 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> Geparkeerde Gesprekken:</b> <div class="scroll_park" id="ParkDisplayContents"></div>
+	<a href="#" onclick="hideParkDisplay('ParkDisplayBox');">Terug naar het Hoofdmenu</a> <BR><BR>
 	</td></TR></TABLE>
 </span>
 
@@ -2798,15 +2796,15 @@ echo "</head>\n";
 </TD></TR>
 <tr><td><span id="busycallsspan"></span></td></tr>
 <tr><td><span id="busycallsdebug"></span></td></tr>
-<tr><td align=center><font face="Arial,Helvetica"><B>VOICEMAIL &nbsp; &nbsp; </B></font> NIEUW: <span id="new_vmail_span"></span> &nbsp; &nbsp; OUD: <span id="old_vmail_span"></span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <font face="Arial,Helvetica"><B>HANDMATIG BELLEN &nbsp; &nbsp; &nbsp; </B></font><input TYPE=TEXT SIZE=20 NAME=manual_dial STYLE="font-family : sans-serif; font-size : 10px"> <A HREF="#" onclick="SendManualDial();">DIAL</A></td></tr>
+<tr><td align=center><font face="Arial,Helvetica"><B>VOICEMAIL &nbsp; &nbsp; </B></font> NIEUW: <span id="new_vmail_span"></span> &nbsp; &nbsp; OUD: <span id="old_vmail_span"></span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <font face="Arial,Helvetica"><B>Bel Handmatig &nbsp; &nbsp; &nbsp; </B></font><input TYPE=TEXT SIZE=20 NAME=manual_dial STYLE="font-family : sans-serif; font-size : 10px"> <A HREF="#" onclick="SendManualDial();">DIAL</A></td></tr>
 
-<tr><td align=center><a href="#" onclick="showParkDisplay('ParkDisplayBox');return false;"><font face="Arial,Helvetica"><B>PARKEER GESPREKKEN</B></a>:  <span id="parked_calls_count">0</span> &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<a href="#" onclick="showLocalDial('LocalDialBox');return false;"><font face="Arial,Helvetica"><B>LOKALE BEL EXTENTIES</a></td></tr>
+<tr><td align=center><a href="#" onclick="showParkDisplay('ParkDisplayBox');return false;"><font face="Arial,Helvetica"><B>Geparkeerde Gesprekken</B></a>:  <span id="parked_calls_count">0</span> &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<a href="#" onclick="showLocalDial('LocalDialBox');return false;"><font face="Arial,Helvetica"><B>LOKALE TELEFOON EXTENTIES</a></td></tr>
 
-<tr><td align=center><font face="Arial,Helvetica"><B>UITGAANDE GESPREKKEN:</B></font></td></tr>
+<tr><td align=center><font face="Arial,Helvetica"><B>OUTBOUND GESPREKKEN:</B></font></td></tr>
 <tr><td align=center><div class="scroll_log" id="outboundcallsspan"></div></td></tr>
-<tr><td align=center><font face="Arial,Helvetica"><B>INKOMENDE GESPREKKEN:</B></font></td></tr>
+<tr><td align=center><font face="Arial,Helvetica"><B>INBOUND GESPREKKEN:</B></font></td></tr>
 <tr><td align=center><div class="scroll_log" id="inboundcallsspan"></div></td></tr>
-<tr><td align=left><font face="Arial,Helvetica" size=1>astGUIclient web-client VERSIE:<?php echo $version ?> BUILD:<?php echo $build ?></font></td></tr>
+<tr><td align=left><font face="Arial,Helvetica" size=1>astGUIclient Versie:<?php echo $version ?> BUILD:<?php echo $build ?></font></td></tr>
 </TABLE>
 
 <span style="position:absolute;left:640px;top:0px;z-index:33;" id="FavoriteSBox">
@@ -2841,7 +2839,7 @@ echo "</head>\n";
 <span style="position:absolute;left:0px;top:46px;z-index:20;" id="ActiveLinesPanel">
 <table border=0 BGCOLOR="#CDE0C2" width=640>
 <tr><td colspan=3>
-<a href="#" onclick="pause();return false;">STOP</a> | <a href="#" onclick="start();return false;">START</a> &nbsp; &nbsp; Ververs ratio: <span id="refresh_rate">1000 ms</span> <a href="#" onclick="faster();return false;">Sneller</a> | <a href="#" onclick="slower();return false;">Langzamer</a></p>
+<a href="#" onclick="pause();return false;">STOP</a> | <a href="#" onclick="start();return false;">START</a> &nbsp; &nbsp; Ververs Snelheid: <span id="refresh_rate">1000 ms</span> <a href="#" onclick="faster();return false;">Sneller</a> | <a href="#" onclick="slower();return false;">Langzamer</a></p>
 	<div id="status"><em>Initialiseren..</em></div>
 </td></tr>
 <tr><td>Aktieve Extenties <BR> 
@@ -2860,11 +2858,11 @@ echo "</head>\n";
 </td></tr>
 
 <tr><td VALIGN=TOP>
-	<span id="activeext"><em>Data Hier Invullen</em></span><BR><BR>
+	<span id="activeext"><em>Gegevens Hier Invullen</em></span><BR><BR>
 </td><td VALIGN=TOP>
-	<span id="busytrunk"><em>Data Hier Invullen</em></span><BR><BR><span id="TrunkHangupLink"><a href="#" onclick="showTrunkHangup('TrunkHangupBox');return false;">Trunk Actie</a></span>
+	<span id="busytrunk"><em>Gegevens Hier Invullen</em></span><BR><BR><span id="TrunkHangupLink"><a href="#" onclick="showTrunkHangup('TrunkHangupBox');return false;">Trunk Actie</a></span>
 </td><td VALIGN=TOP>
-	<span id="busyext"><em>Data Hier Invullen</em></span><BR><BR><span id="LocalHangupLink"><a href="#" onclick="showLocalHangup('LocalHangupBox');return false;">Lokale Actie</a></span>
+	<span id="busyext"><em>Gegevens Hier Invullen</em></span><BR><BR><span id="LocalHangupLink"><a href="#" onclick="showLocalHangup('LocalHangupBox');return false;">Lokale Actie</a></span>
 </td></tr>
 
 </table>
@@ -2881,7 +2879,7 @@ echo "</head>\n";
 
 <span style="position:absolute;left:140px;top:0px;z-index:32;color:black;width:500;" id="ConfereNceHeaderSpan">
 <span id="ConfereNceHeaderContent"> </span><BR>
-<span style="width:540;height:400;" id="ConfereNceDetailContent">Klik op een conferentie nummer aan de linkerkant voor informatie over die conferentie </span>
+<span style="width:540;height:400;" id="ConfereNceDetailContent">Klik op een Conferentienummer aan de linkerkant voor informatie over die Conferentie </span>
 </span>
 
 

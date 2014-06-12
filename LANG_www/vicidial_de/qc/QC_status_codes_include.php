@@ -2,11 +2,14 @@
 # QC_status_codes_include.php
 # 
 # Copyright (C) 2012  poundteam.com    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to display admin sections for QC functions, contributed by poundteam.com
 #
 # changes:
 # 121116-1323 - First build, added to vicidial codebase
+# 130621-2353 - Finalized changing of all ereg instances to preg
+# 130902-0903 - Changed to mysqli PHP functions
 #
 
 /* 
@@ -23,7 +26,7 @@ if ($ADD==241111111111111)
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	$stmt="SELECT count(*) from vicidial_qc_codes where code='$code';";
 	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	if ($row[0] > 0)
 		{echo "<br>QK-Status-Code nicht ADDED- Es gibt bereits eine qc Status Code in das System mit diesem Namen: $row[0]\n";}
 	else
@@ -44,7 +47,7 @@ if ($ADD==241111111111111)
 
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='QCSTATUSES', event_type='ADD', record_id='$code', event_code='ADMIN ADD QC STATUS', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
@@ -64,23 +67,23 @@ if ($ADD==341111111111111)
 	{
 	if ( ($LOGmodify_servers==1) and ($SSqc_features_active > 0) )
 		{
-		if ( ($SSadmin_modify_erfrischen > 1) and ($modify_erfrischen_set < 1) )
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
 			{
 			$modify_url = "$PHP_SELF?ADD=341111111111111";
-			$modify_footer_erfrischen=1;
+			$modify_footer_refresh=1;
 			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br><center>\n";
-		echo "<b>VICIDIAL QC-Status-Codes mit Hilfe dieses Systems:&nbsp; $NWB#vicidial_qc_status_codes$NWE</b><br>\n";
+		echo "<b>QC STATUS CODES WITHIN THIS SYSTEM: &nbsp; $NWB#vicidial_qc_status_codes$NWE</b><br>\n";
 		echo "<TABLE width=600 cellspacing=3>\n";
 		echo "<tr><td>STATUS CODE</td><td>BESCHREIBUNG</td><td>QC KATEGORIE</td><td>MODIFY/DELETE</td></tr>\n";
 
 		##### go through each QC status code
 		$stmt="SELECT count(*) from vicidial_qc_codes;";
 		$rslt=mysql_query($stmt, $link);
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		if ($rowx[0] > 0)
 			{
 			$stmt="SELECT code,code_name,qc_result_type from vicidial_qc_codes order by code;";
@@ -89,10 +92,10 @@ if ($ADD==341111111111111)
 			$o=0;
 			while ($statuses_to_print > $o)
 				{
-				$rowx=mysql_fetch_row($rslt);
+				$rowx=mysqli_fetch_row($rslt);
 				$o++;
 
-				if (eregi("1$|3$|5$|7$|9$", $o))
+				if (preg_match("/1$|3$|5$|7$|9$/i", $o))
 					{$bgcolor='bgcolor="#B9CBFD"';}
 				else
 					{$bgcolor='bgcolor="#9BB9FB"';}

@@ -1,7 +1,7 @@
 <?php
 # vdc_script_display.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed display the contents of the SCRIPT tab in the agent interface
 #
@@ -19,13 +19,17 @@
 # 120227-2017 - Added parsing of IGNORENOSCROLL option in script to force scroll
 # 130328-0013 - Converted ereg to preg functions
 # 130402-2255 - Added user_group variable
+# 130603-2206 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130705-1513 - Added optional encrypted passwords compatibility
+# 130802-1035 - Changed to PHP mysqli functions
+# 140429-2034 - Added TABLEper_call_notes display script variable
 #
 
-$version = '2.6-13';
-$build = '130402-2255';
+$version = '2.8-17';
+$build = '140429-2034';
 
-require("dbconnect.php");
-
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 if (isset($_GET["lead_id"]))	{$lead_id=$_GET["lead_id"];}
 	elseif (isset($_POST["lead_id"]))	{$lead_id=$_POST["lead_id"];}
@@ -196,6 +200,10 @@ if (isset($_GET["user_group"]))				{$user_group=$_GET["user_group"];}
 	elseif (isset($_POST["user_group"]))	{$user_group=$_POST["user_group"];}
 if (isset($_GET["web_vars"]))			{$web_vars=$_GET["web_vars"];}
 	elseif (isset($_POST["web_vars"]))	{$web_vars=$_POST["web_vars"];}
+if (isset($_GET["orig_pass"]))			{$orig_pass=$_GET["orig_pass"];}
+	elseif (isset($_POST["orig_pass"]))	{$orig_pass=$_POST["orig_pass"];}
+if (isset($_GET["called_count"]))			{$called_count=$_GET["called_count"];}
+	elseif (isset($_POST["called_count"]))	{$called_count=$_POST["called_count"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -217,12 +225,12 @@ $IFRAME=0;
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =							$row[0];
 	$timeclock_end_of_day =					$row[1];
 	$agentonly_callback_campaign_lock =		$row[2];
@@ -233,7 +241,8 @@ if ($qm_conf_ct > 0)
 if ($non_latin < 1)
 	{
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
-	$pass=preg_replace("/[^-_0-9a-zA-Z]/","",$pass);
+	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
+	$orig_pass=preg_replace("/[^-_0-9a-zA-Z]/","",$orig_pass);
 	$length_in_sec = preg_replace("/[^0-9]/","",$length_in_sec);
 	$phone_code = preg_replace("/[^0-9]/","",$phone_code);
 	$phone_number = preg_replace("/[^0-9]/","",$phone_number);
@@ -241,7 +250,8 @@ if ($non_latin < 1)
 else
 	{
 	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
-	$pass = preg_replace("/\'|\"|\\\\|;/","",$pass);
+	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
+	$orig_pass = preg_replace("/\'|\"|\\\\|;/","",$orig_pass);
 	}
 
 
@@ -251,21 +261,15 @@ if (!isset($format))   {$format="text";}
 if (!isset($ACTION))   {$ACTION="refresh";}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
-$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-if ($DB) {echo "|$stmt|\n";}
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',0,1,0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-	echo "Invalid Username/Password: |$user|$pass|\n";
+	echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
 	exit;
-	}
-else
-	{
-	# do nothing for now
 	}
 
 if ($format=='debug')
@@ -286,12 +290,12 @@ else
 
 $ignore_list_script_override='N';
 $stmt = "SELECT ignore_list_script_override FROM vicidial_inbound_groups where group_id='$group';";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$ilso_ct = mysql_num_rows($rslt);
+$ilso_ct = mysqli_num_rows($rslt);
 if ($ilso_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$ignore_list_script_override =		$row[0];
 	}
 if ($ignore_list_script_override=='Y')
@@ -300,22 +304,22 @@ if ($ignore_list_script_override=='Y')
 if ($ignore_list_script < 1)
 	{
 	$stmt="SELECT agent_script_override from vicidial_lists where list_id='$list_id';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$agent_script_override =		$row[0];
 	if (strlen($agent_script_override) > 0)
 		{$call_script = $agent_script_override;}
 	}
 
 $stmt="SELECT list_name,list_description from vicidial_lists where list_id='$list_id';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $list_name =			$row[0];
 $list_description =		$row[1];
 
 $stmt="SELECT script_name,script_text from vicidial_scripts where script_id='$call_script';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $script_name =		$row[0];
 $script_text =		stripslashes($row[1]);
 
@@ -350,7 +354,7 @@ if (preg_match("/iframe\ssrc/i",$script_text))
 	$security_phrase = preg_replace('/\s/i','+',$security_phrase);
 	$comments = preg_replace('/\s/i','+',$comments);
 	$user = preg_replace('/\s/i','+',$user);
-	$pass = preg_replace('/\s/i','+',$pass);
+	$pass = preg_replace('/\s/i','+',$orig_pass);
 	$campaign = preg_replace('/\s/i','+',$campaign);
 	$phone_login = preg_replace('/\s/i','+',$phone_login);
 	$original_phone_login = preg_replace('/\s/i','+',$original_phone_login);
@@ -399,6 +403,7 @@ if (preg_match("/iframe\ssrc/i",$script_text))
 	$did_extension = preg_replace('/\s/i','+',$did_extension);
 	$did_pattern = preg_replace('/\s/i','+',$did_pattern);
 	$did_description = preg_replace('/\s/i','+',$did_description);
+	$called_count = preg_replace('/\s/i','+',$called_count);
 	$web_vars = preg_replace('/\s/i','+',$web_vars);
 	}
 
@@ -485,19 +490,20 @@ $script_text = preg_replace('/--A--agent_log_id--B--/i',"$agent_log_id",$script_
 $script_text = preg_replace('/--A--entry_list_id--B--/i',"$entry_list_id",$script_text);
 $script_text = preg_replace('/--A--call_id--B--/i',"$call_id",$script_text);
 $script_text = preg_replace('/--A--user_group--B--/i',"$user_group",$script_text);
+$script_text = preg_replace('/--A--called_count--B--/i',"$called_count",$script_text);
 $script_text = preg_replace('/--A--web_vars--B--/i',"$web_vars",$script_text);
 
 if ($CF_uses_custom_fields=='Y')
 	{
 	### find the names of all custom fields, if any
 	$stmt = "SELECT field_label,field_type FROM vicidial_lists_fields where list_id='$entry_list_id' and field_type NOT IN('SCRIPT','DISPLAY') and field_label NOT IN('vendor_lead_code','source_id','list_id','gmt_offset_now','called_since_last_reset','phone_code','phone_number','title','first_name','middle_initial','last_name','address1','address2','address3','city','state','province','postal_code','country_code','gender','date_of_birth','alt_phone','email','security_phrase','comments','called_count','last_local_call_time','rank','owner');";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$cffn_ct = mysql_num_rows($rslt);
+	$cffn_ct = mysqli_num_rows($rslt);
 	$d=0;
 	while ($cffn_ct > $d)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$field_name_id = $row[0];
 		$field_name_tag = "--A--" . $field_name_id . "--B--";
 		if (isset($_GET["$field_name_id"]))				{$form_field_value=$_GET["$field_name_id"];}
@@ -508,7 +514,178 @@ if ($CF_uses_custom_fields=='Y')
 		}
 	}
 
+$NOTESout='';
+if (preg_match('/--A--TABLEper_call_notes--B--/i',$script_text))
+	{
+	### BEGIN Gather Call Log and notes ###
+	if ($hide_call_log_info!='Y')
+		{
+		if ($search != 'logfirst')
+			{$NOTESout .= "CALL LOG FOR THIS LEAD:<br>\n";}
+		$NOTESout .= "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0>";
+		$NOTESout .= "<TR>";
+		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:10px;font-family:sans-serif;\"><B> &nbsp; # &nbsp; </font></TD>";
+		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; DATE/TIME &nbsp; </font></TD>";
+		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; AGENT &nbsp; </font></TD>";
+		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; LENGTH &nbsp; </font></TD>";
+		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; STATUS &nbsp; </font></TD>";
+		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; PHONE &nbsp; </font></TD>";
+		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; CAMPAIGN &nbsp; </font></TD>";
+		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; IN/OUT &nbsp; </font></TD>";
+		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; ALT &nbsp; </font></TD>";
+		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; HANGUP &nbsp; </font></TD>";
+	#	$NOTESout .= "</TR><TR>";
+	#	$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\" COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; FULL NAME &nbsp; </font></TD>";
+		$NOTESout .= "</TR>";
+
+
+		$stmt="SELECT start_epoch,call_date,campaign_id,length_in_sec,status,phone_code,phone_number,lead_id,term_reason,alt_dial,comments,uniqueid,user from vicidial_log where lead_id='$lead_id' order by call_date desc limit 10000;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$out_logs_to_print = mysqli_num_rows($rslt);
+		if ($format=='debug') {$NOTESout .= "|$out_logs_to_print|$stmt|";}
+
+		$g=0;
+		$u=0;
+		while ($out_logs_to_print > $u) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			$ALLsort[$g] =			"$row[0]-----$g";
+			$ALLstart_epoch[$g] =	$row[0];
+			$ALLcall_date[$g] =		$row[1];
+			$ALLcampaign_id[$g] =	$row[2];
+			$ALLlength_in_sec[$g] =	$row[3];
+			$ALLstatus[$g] =		$row[4];
+			$ALLphone_code[$g] =	$row[5];
+			$ALLphone_number[$g] =	$row[6];
+			$ALLlead_id[$g] =		$row[7];
+			$ALLhangup_reason[$g] =	$row[8];
+			$ALLalt_dial[$g] =		$row[9];
+			$ALLuniqueid[$g] =		$row[11];
+			$ALLuser[$g] =			$row[12];
+			$ALLin_out[$g] =		"OUT-AUTO";
+			if ($row[10] == 'MANUAL') {$ALLin_out[$g] = "OUT-MANUAL";}
+
+			$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='$ALLlead_id[$g]' and vicidial_id='$ALLuniqueid[$g]';";
+			$rsltA=mysql_to_mysqli($stmtA, $link);
+			$out_notes_to_print = mysqli_num_rows($rslt);
+			if ($out_notes_to_print > 0)
+				{
+				$rowA=mysqli_fetch_row($rsltA);
+				$Allcall_notes[$g] =	$rowA[0];
+				if (strlen($Allcall_notes[$g]) > 0)
+					{$Allcall_notes[$g] =	"<b>NOTES: </b> $Allcall_notes[$g]";}
+				}
+			$stmtA="SELECT full_name FROM vicidial_users WHERE user='$ALLuser[$g]';";
+			$rsltA=mysql_to_mysqli($stmtA, $link);
+			$users_to_print = mysqli_num_rows($rslt);
+			if ($users_to_print > 0)
+				{
+				$rowA=mysqli_fetch_row($rsltA);
+				$ALLuser[$g] .=	" - $rowA[0]";
+				}
+
+			$Allcounter[$g] =		$g;
+			$g++;
+			$u++;
+			}
+
+		$stmt="SELECT start_epoch,call_date,campaign_id,length_in_sec,status,phone_code,phone_number,lead_id,term_reason,queue_seconds,uniqueid,closecallid,user from vicidial_closer_log where lead_id='$lead_id' order by call_date desc limit 10000;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$in_logs_to_print = mysqli_num_rows($rslt);
+		if ($format=='debug') {$NOTESout .= "|$in_logs_to_print|$stmt|";}
+
+		$u=0;
+		while ($in_logs_to_print > $u) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			$ALLsort[$g] =			"$row[0]-----$g";
+			$ALLstart_epoch[$g] =	$row[0];
+			$ALLcall_date[$g] =		$row[1];
+			$ALLcampaign_id[$g] =	$row[2];
+			$ALLlength_in_sec[$g] =	($row[3] - $row[9]);
+			if ($ALLlength_in_sec[$g] < 0) {$ALLlength_in_sec[$g]=0;}
+			$ALLstatus[$g] =		$row[4];
+			$ALLphone_code[$g] =	$row[5];
+			$ALLphone_number[$g] =	$row[6];
+			$ALLlead_id[$g] =		$row[7];
+			$ALLhangup_reason[$g] =	$row[8];
+			$ALLuniqueid[$g] =		$row[10];
+			$ALLclosecallid[$g] =	$row[11];
+			$ALLuser[$g] =			$row[12];
+			$ALLalt_dial[$g] =		"MAIN";
+			$ALLin_out[$g] =		"IN";
+
+			$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='$ALLlead_id[$g]' and vicidial_id='$ALLclosecallid[$g]';";
+			$rsltA=mysql_to_mysqli($stmtA, $link);
+			$in_notes_to_print = mysqli_num_rows($rslt);
+			if ($in_notes_to_print > 0)
+				{
+				$rowA=mysqli_fetch_row($rsltA);
+				$Allcall_notes[$g] =	$rowA[0];
+				if (strlen($Allcall_notes[$g]) > 0)
+					{$Allcall_notes[$g] =	"<b>NOTES: </b> $Allcall_notes[$g]";}
+				}
+			$stmtA="SELECT full_name FROM vicidial_users WHERE user='$ALLuser[$g]';";
+			$rsltA=mysql_to_mysqli($stmtA, $link);
+			$users_to_print = mysqli_num_rows($rslt);
+			if ($users_to_print > 0)
+				{
+				$rowA=mysqli_fetch_row($rsltA);
+				$ALLuser[$g] .=	" - $rowA[0]";
+				}
+
+			$Allcounter[$g] =		$g;
+
+			$g++;
+			$u++;
+			}
+
+		if ($g > 0)
+			{sort($ALLsort, SORT_NUMERIC);}
+		else
+			{$NOTESout .= "<tr bgcolor=white><td colspan=11 align=center>No calls found</td></tr>";}
+
+		$u=0;
+		while ($g > $u) 
+			{
+			$sort_split = explode("-----",$ALLsort[$u]);
+			$i = $sort_split[1];
+
+			if (preg_match("/1$|3$|5$|7$|9$/i", $u))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+
+			$phone_number_display = $ALLphone_number[$i];
+			if ($disable_alter_custphone == 'HIDE')
+				{$phone_number_display = 'XXXXXXXXXX';}
+
+			$u++;
+			$NOTESout .= "<tr $bgcolor>";
+			$NOTESout .= "<td><font size=1>$u</td>";
+			$NOTESout .= "<td align=right><font size=2>$ALLcall_date[$i]</td>";
+			$NOTESout .= "<td align=right><font size=2> $ALLuser[$i]</td>\n";
+			$NOTESout .= "<td align=right><font size=2> $ALLlength_in_sec[$i]</td>\n";
+			$NOTESout .= "<td align=right><font size=2> $ALLstatus[$i]</td>\n";
+			$NOTESout .= "<td align=right><font size=2> $ALLphone_code[$i] $phone_number_display </td>\n";
+			$NOTESout .= "<td align=right><font size=2> $ALLcampaign_id[$i] </td>\n";
+			$NOTESout .= "<td align=right><font size=2> $ALLin_out[$i] </td>\n";
+			$NOTESout .= "<td align=right><font size=2> $ALLalt_dial[$i] </td>\n";
+			$NOTESout .= "<td align=right><font size=2> $ALLhangup_reason[$i] </td>\n";
+			$NOTESout .= "</TR><TR>";
+			$NOTESout .= "<td></td>";
+			$NOTESout .= "<TD $bgcolor COLSPAN=9 align=left><font style=\"font-size:11px;font-family:sans-serif;\"> $Allcall_notes[$i] </font></TD>";
+			$NOTESout .= "</tr>\n";
+			}
+
+		$NOTESout .= "</TABLE>";
+		$NOTESout .= "<BR>";
+		}
+	### END Gather Call Log and notes ###
+	}
+
 $script_text = preg_replace("/\n/i","<BR>",$script_text);
+$script_text = preg_replace('/--A--TABLEper_call_notes--B--/i',"$NOTESout",$script_text);
 $script_text = stripslashes($script_text);
 
 

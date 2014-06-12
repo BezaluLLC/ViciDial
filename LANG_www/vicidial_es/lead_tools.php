@@ -7,10 +7,14 @@
 # 121110-1446 - Initial Build
 # 121114-0956 - Added input filtering and vicidial_admin_log logging
 # 130124-1129 - Added new options, from issue #632<noah>
+# 130610-1045 - Finalized changing of all ereg instances to preg
+# 130619-2203 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-1927 - Changed to mysqli PHP functions
+# 131016-2029 - Added links to advanced lead tools
 #
 
-$version = '2.6-3a';
-$build = '130124-1129';
+$version = '2.8-7';
+$build = '131016-2029';
 
 # This limit is to prevent data inconsistancies.
 # If there are too many leads in a list this
@@ -20,7 +24,8 @@ $list_lead_limit = 100000;
 # maximum call count the script will work with
 $max_count = 20;
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -51,25 +56,24 @@ if (isset($_GET["confirm_update"])) {$confirm_move=$_GET["confirm_update"];}
 if (isset($_GET["confirm_delete"])) {$confirm_delete=$_GET["confirm_delete"];}
 	elseif (isset($_POST["confirm_delete"])) {$confirm_delete=$_POST["confirm_delete"];}
 	
-$DB = ereg_replace("[^0-9]","",$DB);
-$move_submit = ereg_replace("[^-_0-9a-zA-Z]","",$move_submit);
-$update_submit = ereg_replace("[^-_0-9a-zA-Z]","",$update_submit);
-$delete_submit = ereg_replace("[^-_0-9a-zA-Z]","",$delete_submit);
-$confirm_move = ereg_replace("[^-_0-9a-zA-Z]","",$confirm_move);
-$confirm_update = ereg_replace("[^-_0-9a-zA-Z]","",$confirm_update);
-$confirm_delete = ereg_replace("[^-_0-9a-zA-Z]","",$confirm_delete);
-$delete_status = ereg_replace("[^-_0-9a-zA-Z]","",$delete_status);
-
+$DB = preg_replace('/[^0-9]/','',$DB);
+$move_submit = preg_replace('/[^-_0-9a-zA-Z]/','',$move_submit);
+$update_submit = preg_replace('/[^-_0-9a-zA-Z]/','',$update_submit);
+$delete_submit = preg_replace('/[^-_0-9a-zA-Z]/','',$delete_submit);
+$confirm_move = preg_replace('/[^-_0-9a-zA-Z]/','',$confirm_move);
+$confirm_update = preg_replace('/[^-_0-9a-zA-Z]/','',$confirm_update);
+$confirm_delete = preg_replace('/[^-_0-9a-zA-Z]/','',$confirm_delete);
+$delete_status = preg_replace('/[^-_0-9a-zA-Z]/','',$delete_status);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $sys_settings_stmt = "SELECT use_non_latin, outbound_autodial_active, sounds_central_control_active FROM system_settings;";
-$sys_settings_rslt=mysql_query($sys_settings_stmt, $link);
+$sys_settings_rslt=mysql_to_mysqli($sys_settings_stmt, $link);
 if ($DB) {echo "$sys_settings_stmt\n";}
-$num_rows = mysql_num_rows($sys_settings_rslt);
+$num_rows = mysqli_num_rows($sys_settings_rslt);
 if ($num_rows > 0)
 	{
-	$sys_settings_row=mysql_fetch_row($sys_settings_rslt);
+	$sys_settings_row=mysqli_fetch_row($sys_settings_rslt);
 	$non_latin = $sys_settings_row[0];
 	$SSoutbound_autodial_active = $sys_settings_row[1];
 	$sounds_central_control_active = $sys_settings_row[2];
@@ -84,67 +88,70 @@ else
 
 if ($non_latin < 1)
 	{
-	$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
-	$list_id_override = ereg_replace("[^0-9]","",$list_id_override);
+	$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 	}
 else
 	{
-	$PHP_AUTH_PW = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_PW);
-	$PHP_AUTH_USER = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	}
+$list_id_override = preg_replace('/[^0-9]/','',$list_id_override);
 
-$valid_user_stmt = "SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7;";
-if ($DB) {echo "|$valid_user_stmt|\n";}
-if ($non_latin > 0) {$valid_user_rslt=mysql_query("SET NAMES 'UTF8'");}
-$valid_user_rslt = mysql_query($valid_user_stmt, $link);
-$valid_user_row = mysql_fetch_row($valid_user_rslt);
-$auth = $valid_user_row[0];
+$auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
-if ( ( strlen($PHP_AUTH_USER) < 2 ) or ( strlen($PHP_AUTH_PW) < 2 ) or ( !$auth ) )
+if ($auth < 1)
 	{
-	# Invalid user
-	Header("WWW-Authenticate: Basic realm=\"VICIDIAL-LEAD-LOADER\"");
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
 	Header("HTTP/1.0 401 Unauthorized");
-	echo "Nombre y contraseña inválidos del usuario: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
 	exit;
 	}
-else
+
+header ("Content-type: text/html; charset=utf-8");
+header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
+header ("Pragma: no-cache");			  // HTTP/1.0
+
+# valid user
+$rights_stmt = "SELECT load_leads,user_group, delete_lists, modify_leads, modify_lists from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rights_rslt=mysql_to_mysqli($rights_stmt, $link);
+$rights_row=mysqli_fetch_row($rights_rslt);
+$load_leads =		$rights_row[0];
+$user_group =		$rights_row[1];
+$delete_lists =		$rights_row[2];
+$modify_leads =		$rights_row[3];
+$modify_lists =		$rights_row[4];
+
+# check their permissions
+if ( $load_leads < 1 )
 	{
 	header ("Content-type: text/html; charset=utf-8");
-	header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
-	header ("Pragma: no-cache");			  // HTTP/1.0
-
-	if ( $auth > 0 )
-		{
-		# valid user
-		$rights_stmt = "SELECT load_leads,user_group, delete_lists, modify_leads, modify_lists from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-		if ($DB) {echo "|$stmt|\n";}
-		$rights_rslt=mysql_query($rights_stmt, $link);
-		$rights_row=mysql_fetch_row($rights_rslt);
-		$load_leads =	   $rights_row[0];
-		$user_group =	   $rights_row[1];
-		$delete_lists =	 $rights_row[2];
-		$modify_leads =	 $rights_row[3];
-		$modify_lists =	 $rights_row[4];
-
-		# check their permissions
-		if ( $load_leads < 1 )
-			{
-			echo "You do not have permissions to load leads\n";
-			exit;
-			}
-		if ( $modify_leads < 1 )
-			{
-			echo "You do not have permissions to modify leads\n";
-			exit;
-			}
-		if ( $modify_lists < 1 )
-			{
-			echo "You do not have permissions to modify lists\n";
-			exit;
-			}
-		}
+	echo "You do not have permissions to load leads\n";
+	exit;
+	}
+if ( $modify_leads < 1 )
+	{
+	header ("Content-type: text/html; charset=utf-8");
+	echo "You do not have permissions to modify leads\n";
+	exit;
+	}
+if ( $modify_lists < 1 )
+	{
+	header ("Content-type: text/html; charset=utf-8");
+	echo "You do not have permissions to modify lists\n";
+	exit;
 	}
 
 echo "<html>\n";
@@ -154,11 +161,11 @@ echo "<!-- VERSIÓN: <?php echo $version ?>     CONSTRUCCION: <?php echo $build 
 echo "<title>ADMINISTRATION: Lead Tools</title>\n";
 
 ##### BEGIN Set variables to make header show properly #####
-$ADD =                                  '999998';
-$hh =                                   'admin';
+$ADD =                               '999998';
+$hh =                                'admin';
 $LOGast_admin_access =  '1';
 $SSoutbound_autodial_active = '1';
-$ADMIN =                                'admin.php';
+$ADMIN =                             'admin.php';
 $page_width='770';
 $section_width='750';
 $header_font_size='3';
@@ -178,7 +185,7 @@ echo "<table width=$page_width bgcolor=#E6E6E6 cellpadding=2 cellspacing=0>\n";
 echo "<tr bgcolor='#E6E6E6'>\n";
 echo "<td align=left>\n";
 echo "<font face='ARIAL,HELVETICA' size=2>\n";
-echo "<b> &nbsp; Lead Tools</b>\n";
+echo "<b> &nbsp; Básico Lead Tools &nbsp; | &nbsp; <a href=\"lead_tools_advanced.php\">Advanced Lead Tools</a></b>\n";
 echo "</font>\n";
 echo "</td>\n";
 echo "<td align=right><font face='ARIAL,HELVETICA' size=2><b> &nbsp; </td>\n";
@@ -210,11 +217,11 @@ if ($move_submit == "move" )
 	if (isset($_GET["move_count_num"])) {$move_count_num=$_GET["move_count_num"];}
 		elseif (isset($_POST["move_count_num"])) {$move_count_num=$_POST["move_count_num"];}
 	
-	#$move_status = ereg_replace("[^-_0-9a-zA-Z]","",$move_status);
-	$move_from_list = ereg_replace("[^0-9]","",$move_from_list);
-	$move_to_list = ereg_replace("[^0-9]","",$move_to_list);
-	$move_count_num = ereg_replace("[^0-9]","",$move_count_num);
-	$move_count_op = ereg_replace("[^<>=]","",$move_count_op);
+	#$move_status = preg_replace('/[^-_0-9a-zA-Z]/','',$move_status);
+	$move_from_list = preg_replace('/[^0-9]/','',$move_from_list);
+	$move_to_list = preg_replace('/[^0-9]/','',$move_to_list);
+	$move_count_num = preg_replace('/[^0-9]/','',$move_count_num);
+	$move_count_op = preg_replace('/[^<>=]/','',$move_count_op);
 
 
 	$move_count_op_phrase="";
@@ -239,16 +246,16 @@ if ($move_submit == "move" )
 	$move_lead_count=0;
 	$move_lead_count_stmt = "SELECT count(1) FROM vicidial_list WHERE list_id = '$move_from_list' and status like '$move_status' and called_count $move_count_op $move_count_num";
 	if ($DB) { echo "|$move_lead_count_stmt|\n"; }
-	$move_lead_count_rslt = mysql_query($move_lead_count_stmt, $link);
-	$move_lead_count_row = mysql_fetch_row($move_lead_count_rslt);
+	$move_lead_count_rslt = mysql_to_mysqli($move_lead_count_stmt, $link);
+	$move_lead_count_row = mysqli_fetch_row($move_lead_count_rslt);
 	$move_lead_count = $move_lead_count_row[0];
 
 	# get the number of leads in the list this action will move to
 	$to_list_lead_count=0;
 	$to_list_lead_stmt = "SELECT count(1) FROM vicidial_list WHERE list_id = '$move_to_list'";
 	if ($DB) { echo "|$to_list_lead_stmt|\n"; }
-	$to_list_lead_rslt = mysql_query($to_list_lead_stmt, $link);
-	$to_list_lead_row = mysql_fetch_row($to_list_lead_rslt);
+	$to_list_lead_rslt = mysql_to_mysqli($to_list_lead_stmt, $link);
+	$to_list_lead_row = mysqli_fetch_row($to_list_lead_rslt);
 	$to_list_lead_count = $to_list_lead_row[0];
 
 	# check to see if we will exceed list_lead_limit in the move to list
@@ -300,11 +307,11 @@ if ($confirm_move == "confirm")
 	if (isset($_GET["move_count_num"])) {$move_count_num=$_GET["move_count_num"];}
 		elseif (isset($_POST["move_count_num"])) {$move_count_num=$_POST["move_count_num"];}
 			
-	#$move_status = ereg_replace("[^-_0-9a-zA-Z]","",$move_status);
-	$move_from_list = ereg_replace("[^0-9]","",$move_from_list);
-	$move_to_list = ereg_replace("[^0-9]","",$move_to_list);
-	$move_count_num = ereg_replace("[^0-9]","",$move_count_num);
-	$move_count_op = ereg_replace("[^<>=]","",$move_count_op);
+	#$move_status = preg_replace('/[^-_0-9a-zA-Z]/','',$move_status);
+	$move_from_list = preg_replace('/[^0-9]/','',$move_from_list);
+	$move_to_list = preg_replace('/[^0-9]/','',$move_to_list);
+	$move_count_num = preg_replace('/[^0-9]/','',$move_count_num);
+	$move_count_op = preg_replace('/[^<>=]/','',$move_count_op);
 
 	$move_count_op_phrase="";
 	if ( $move_count_op == "<" )
@@ -326,18 +333,17 @@ if ($confirm_move == "confirm")
 
 	$move_lead_stmt = "UPDATE vicidial_list SET list_id = '$move_to_list' WHERE list_id = '$move_from_list' and status like '$move_status' and called_count $move_count_op $move_count_num";
 	if ($DB) { echo "|$move_lead_stmt|\n"; }
-	$move_lead_rslt = mysql_query($move_lead_stmt, $link);
-	$move_lead_count = mysql_affected_rows( $link );
+	$move_lead_rslt = mysql_to_mysqli($move_lead_stmt, $link);
+	$move_lead_count = mysqli_affected_rows($link);
 		
-		$move_sentence = "$move_lead_count leads have been moved from list $move_from_list to $move_to_list with the status $move_status and that were called $move_count_op_phrase$move_count_num times.";
-		
-		$SQL_log = "$move_lead_stmt|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$admin_log_stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='OTHER', record_id='$move_from_list', event_code='ADMIN MOVE LEADS', event_sql=\"$SQL_log\", event_notes='$move_sentence';";
-		if ($DB) {echo "|$admin_log_stmt|\n";}
-		$admin_log_rslt=mysql_query($admin_log_stmt, $link);
-
+	$move_sentence = "$move_lead_count leads have been moved from list $move_from_list to $move_to_list with the status $move_status and that were called $move_count_op_phrase$move_count_num times.";
+	
+	$SQL_log = "$move_lead_stmt|";
+	$SQL_log = preg_replace('/;/', '', $SQL_log);
+	$SQL_log = addslashes($SQL_log);
+	$admin_log_stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='OTHER', record_id='$move_from_list', event_code='ADMIN MOVE LEADS', event_sql=\"$SQL_log\", event_notes='$move_sentence';";
+	if ($DB) {echo "|$admin_log_stmt|\n";}
+	$admin_log_rslt=mysql_to_mysqli($admin_log_stmt, $link);
 
 	echo "<p>$move_sentence</p>";
 	echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
@@ -365,11 +371,11 @@ if ($update_submit == "update" )
 	if (isset($_GET["update_count_num"])) {$update_count_num=$_GET["update_count_num"];}
 		elseif (isset($_POST["update_count_num"])) {$update_count_num=$_POST["update_count_num"];}
 			
-	$update_from_status = ereg_replace("[^-_0-9a-zA-Z]","",$update_from_status);
-	$update_to_status = ereg_replace("[^-_0-9a-zA-Z]","",$update_to_status);
-	$update_list = ereg_replace("[^0-9]","",$update_list);
-	$update_count_num = ereg_replace("[^0-9]","",$update_count_num);
-	$update_count_op = ereg_replace("[^<>=]","",$update_count_op);
+	$update_from_status = preg_replace('/[^-_0-9a-zA-Z]/','',$update_from_status);
+	$update_to_status = preg_replace('/[^-_0-9a-zA-Z]/','',$update_to_status);
+	$update_list = preg_replace('/[^0-9]/','',$update_list);
+	$update_count_num = preg_replace('/[^0-9]/','',$update_count_num);
+	$update_count_op = preg_replace('/[^<>=]/','',$update_count_op);
 
 	$update_count_op_phrase="";
 	if ( $update_count_op == "<" )
@@ -393,8 +399,8 @@ if ($update_submit == "update" )
 	$update_lead_count=0;
 	$update_lead_count_stmt = "SELECT count(1) FROM vicidial_list WHERE list_id = '$update_list' and status = '$update_from_status' and called_count $update_count_op $update_count_num";
 	if ($DB) { echo "|$update_lead_count_stmt|\n"; }
-	$update_lead_count_rslt = mysql_query($update_lead_count_stmt, $link);
-	$update_lead_count_row = mysql_fetch_row($update_lead_count_rslt);
+	$update_lead_count_rslt = mysql_to_mysqli($update_lead_count_stmt, $link);
+	$update_lead_count_row = mysqli_fetch_row($update_lead_count_rslt);
 	$update_lead_count = $update_lead_count_row[0];
 
 	echo "<p>You are about to update $update_lead_count leads in list $update_list from the status $update_from_status to the status $update_to_status that were called $update_count_op_phrase$update_count_num times. Please press confirm to continue.</p>\n";
@@ -432,11 +438,11 @@ if ($confirm_update == "confirm")
 	if (isset($_GET["update_count_num"])) {$update_count_num=$_GET["update_count_num"];}
 		elseif (isset($_POST["update_count_num"])) {$update_count_num=$_POST["update_count_num"];}
 
-	$update_from_status = ereg_replace("[^-_0-9a-zA-Z]","",$update_from_status);
-	$update_to_status = ereg_replace("[^-_0-9a-zA-Z]","",$update_to_status);
-	$update_list = ereg_replace("[^0-9]","",$update_list);
-	$update_count_num = ereg_replace("[^0-9]","",$update_count_num);
-	$update_count_op = ereg_replace("[^<>=]","",$update_count_op);
+	$update_from_status = preg_replace('/[^-_0-9a-zA-Z]/','',$update_from_status);
+	$update_to_status = preg_replace('/[^-_0-9a-zA-Z]/','',$update_to_status);
+	$update_list = preg_replace('/[^0-9]/','',$update_list);
+	$update_count_num = preg_replace('/[^0-9]/','',$update_count_num);
+	$update_count_op = preg_replace('/[^<>=]/','',$update_count_op);
 		
 	$update_count_op_phrase="";
 	if ( $update_count_op == "<" )
@@ -458,17 +464,17 @@ if ($confirm_update == "confirm")
 
 	$update_lead_stmt = "UPDATE vicidial_list SET status = '$update_to_status' WHERE list_id = '$update_list' and status = '$update_from_status' and called_count $update_count_op $update_count_num";
 	if ($DB) { echo "|$delete_lead_stmt|\n"; }
-	$update_lead_rslt = mysql_query($update_lead_stmt, $link);
-	$update_lead_count = mysql_affected_rows( $link );
+	$update_lead_rslt = mysql_to_mysqli($update_lead_stmt, $link);
+	$update_lead_count = mysqli_affected_rows($link);
 		
 		$update_sentence = "$update_lead_count leads had their status changed from $update_from_status to $update_to_status in list $update_list that were called $update_count_op_phrase$update_count_num times.";
 		
 		$SQL_log = "$update_lead_stmt|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
 		$SQL_log = addslashes($SQL_log);
 		$admin_log_stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='MODIFY', record_id='$update_list', event_code='ADMIN UPDATE LEADS', event_sql=\"$SQL_log\", event_notes='$update_sentence';";
 		if ($DB) {echo "|$admin_log_stmt|\n";}
-		$admin_log_rslt=mysql_query($admin_log_stmt, $link);
+		$admin_log_rslt=mysql_to_mysqli($admin_log_stmt, $link);
 
 	echo "<p>$update_sentence</p>";
 	echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
@@ -493,10 +499,10 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	if (isset($_GET["delete_count_num"])) {$delete_count_num=$_GET["delete_count_num"];}
 		elseif (isset($_POST["delete_count_num"])) {$delete_count_num=$_POST["delete_count_num"];}
 	
-	$delete_status = ereg_replace("[^-_0-9a-zA-Z]","",$delete_status);
-	$delete_list = ereg_replace("[^0-9]","",$delete_list);
-	$delete_count_num = ereg_replace("[^0-9]","",$delete_count_num);
-	$delete_count_op = ereg_replace("[^<>=]","",$delete_count_op);
+	$delete_status = preg_replace('/[^-_0-9a-zA-Z]/','',$delete_status);
+	$delete_list = preg_replace('/[^0-9]/','',$delete_list);
+	$delete_count_num = preg_replace('/[^0-9]/','',$delete_count_num);
+	$delete_count_op = preg_replace('/[^<>=]/','',$delete_count_op);
 
 	$delete_count_op_phrase="";
 		if ( $delete_count_op == "<" )
@@ -520,8 +526,8 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	$delete_lead_count=0;
 	$delete_lead_count_stmt = "SELECT count(1) FROM vicidial_list WHERE list_id = '$delete_list' and status = '$delete_status' and called_count $delete_count_op $delete_count_num";
 	if ($DB) { echo "|$delete_lead_count_stmt|\n"; }
-	$delete_lead_count_rslt = mysql_query($delete_lead_count_stmt, $link);
-	$delete_lead_count_row = mysql_fetch_row($delete_lead_count_rslt);
+	$delete_lead_count_rslt = mysql_to_mysqli($delete_lead_count_stmt, $link);
+	$delete_lead_count_row = mysqli_fetch_row($delete_lead_count_rslt);
 	$delete_lead_count = $delete_lead_count_row[0];
 
 	echo "<p>You are about to delete $delete_lead_count leads in list $delete_list with the status $delete_status that were called $delete_count_op_phrase$delete_count_num times. Please press confirm to continue.</p>\n";
@@ -555,10 +561,10 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 	if (isset($_GET["delete_count_num"])) {$delete_count_num=$_GET["delete_count_num"];}
 		elseif (isset($_POST["delete_count_num"])) {$delete_count_num=$_POST["delete_count_num"];}
 
-	$delete_status = ereg_replace("[^-_0-9a-zA-Z]","",$delete_status);
-	$delete_list = ereg_replace("[^0-9]","",$delete_list);
-	$delete_count_num = ereg_replace("[^0-9]","",$delete_count_num);
-	$delete_count_op = ereg_replace("[^<>=]","",$delete_count_op);
+	$delete_status = preg_replace('/[^-_0-9a-zA-Z]/','',$delete_status);
+	$delete_list = preg_replace('/[^0-9]/','',$delete_list);
+	$delete_count_num = preg_replace('/[^0-9]/','',$delete_count_num);
+	$delete_count_op = preg_replace('/[^<>=]/','',$delete_count_op);
 		
 	$delete_count_op_phrase="";
 	if ( $delete_count_op == "<" )
@@ -580,17 +586,17 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 
 	$delete_lead_stmt = "DELETE FROM vicidial_list WHERE list_id = '$delete_list' and status = '$delete_status' and called_count $delete_count_op $delete_count_num";
 	if ($DB) { echo "|$delete_lead_stmt|\n"; }
-	$delete_lead_rslt = mysql_query($delete_lead_stmt, $link);
-	$delete_lead_count = mysql_affected_rows( $link );
+	$delete_lead_rslt = mysql_to_mysqli($delete_lead_stmt, $link);
+	$delete_lead_count = mysqli_affected_rows($link);
 
 		$delete_sentence = "$delete_lead_count leads delete from list $delete_list with the status $delete_status that were called $delete_count_op_phrase$delete_count_num times.";
 		
 		$SQL_log = "$update_lead_stmt|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
 		$SQL_log = addslashes($SQL_log);
 		$admin_log_stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='DELETE', record_id='$delete_list', event_code='ADMIN DELETE LEADS', event_sql=\"$SQL_log\", event_notes='$delete_sentence';";
 		if ($DB) {echo "|$admin_log_stmt|\n";}
-		$admin_log_rslt=mysql_query($admin_log_stmt, $link);
+		$admin_log_rslt=mysql_to_mysqli($admin_log_stmt, $link);
 		
 	echo "<p>$delete_sentence</p>";
 	echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
@@ -605,24 +611,24 @@ if (
 	# figure out which campaigns this user is allowed to work on
 	$allowed_campaigns_stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$user_group';";
 	if ($DB) { echo "|$allowed_campaigns_stmt|\n"; }
-	$rslt = mysql_query($allowed_campaigns_stmt, $link);
-	$allowed_campaigns_row = mysql_fetch_row($rslt);
+	$rslt = mysql_to_mysqli($allowed_campaigns_stmt, $link);
+	$allowed_campaigns_row = mysqli_fetch_row($rslt);
 	$allowed_campaigns = $allowed_campaigns_row[0];
 	if ($DB) { echo "|$allowed_campaigns|\n"; }
 	$allowed_campaigns_sql = "";
-	if ( eregi("ALL-CAMPAIGNS",$allowed_campaigns) )
+	if ( preg_match("/ALL\-CAMPAIGNS/i",$allowed_campaigns) )
 		{
-		if ($DB) { echo "|ProcesandoAll Campañas|\n"; }
+		if ($DB) { echo "|Procesando All Campañas|\n"; }
 		$campaign_id_stmt = "SELECT campaign_id FROM vicidial_campaigns";
-		$campaign_id_rslt = mysql_query($campaign_id_stmt, $link);
-		$campaign_id_num_rows = mysql_num_rows($campaign_id_rslt);
+		$campaign_id_rslt = mysql_to_mysqli($campaign_id_stmt, $link);
+		$campaign_id_num_rows = mysqli_num_rows($campaign_id_rslt);
 		if ($DB) { echo "|campaign_id_num_rows = $campaign_id_num_rows|\n"; }
 		if ($campaign_id_num_rows > 0)
 			{
 			$i = 0;
 			while ( $i < $campaign_id_num_rows )
 				{
-				$campaign_id_row = mysql_fetch_row($campaign_id_rslt);
+				$campaign_id_row = mysqli_fetch_row($campaign_id_rslt);
 				if ( $i == 0 )
 					{
 					$allowed_campaigns_sql = "'$campaign_id_row[0]'";
@@ -647,19 +653,19 @@ if (
 	# figure out which lists they are allowed to see
 	$lists_stmt = "SELECT list_id, list_name FROM vicidial_lists WHERE campaign_id IN ($allowed_campaigns_sql) and active = 'N' ORDER BY list_id";
 	if ($DB) { echo "|$lists_stmt|\n"; }
-	$lists_rslt = mysql_query($lists_stmt, $link);
-	$num_rows = mysql_num_rows($lists_rslt);
+	$lists_rslt = mysql_to_mysqli($lists_stmt, $link);
+	$num_rows = mysqli_num_rows($lists_rslt);
 	$i = 0;
 	$allowed_lists_count = 0;
 	while ( $i < $num_rows )
 		{
-		$lists_row = mysql_fetch_row($lists_rslt);
+		$lists_row = mysqli_fetch_row($lists_rslt);
 
 		# check how many leads are in the list
 		$lead_count_stmt = "SELECT count(1)  FROM vicidial_list WHERE list_id = '$lists_row[0]'";
 		if ($DB) { echo "|$lead_count_stmt|\n"; }
-		$lead_count_rslt = mysql_query($lead_count_stmt, $link);
-		$lead_count_row = mysql_fetch_row($lead_count_rslt);
+		$lead_count_rslt = mysql_to_mysqli($lead_count_stmt, $link);
+		$lead_count_row = mysqli_fetch_row($lead_count_rslt);
 		$lead_count = $lead_count_row[0];
 
 		# only show lists that are under the list_lead_limit
@@ -686,12 +692,12 @@ if (
 	# figure out which statuses are in the lists they are allowed to look at
 	$status_stmt = "SELECT DISTINCT status FROM vicidial_list WHERE list_id IN ( $allowed_lists_sql ) ORDER BY status";
 	if ($DB) { echo "|$status_stmt|\n"; }
-	$status_rslt = mysql_query($status_stmt, $link);
-	$status_count=mysql_num_rows($status_rslt);
+	$status_rslt = mysql_to_mysqli($status_stmt, $link);
+	$status_count=mysqli_num_rows($status_rslt);
 	$i = 0;
 	while ( $i < $status_count )
 		{
-		$status_row = mysql_fetch_row($status_rslt);
+		$status_row = mysqli_fetch_row($status_rslt);
 		$statuses[$i] = $status_row[0];
 		$i++;
 		}
@@ -699,12 +705,12 @@ if (
 	# figure out which statuses are in the lists they are allowed to look at
 	$sys_status_stmt = "SELECT status FROM vicidial_statuses ORDER BY status";
 	if ($DB) { echo "|$sys_status_stmt|\n"; }
-	$sys_status_rslt = mysql_query($sys_status_stmt, $link);
-	$sys_status_count=mysql_num_rows($sys_status_rslt);
+	$sys_status_rslt = mysql_to_mysqli($sys_status_stmt, $link);
+	$sys_status_count=mysqli_num_rows($sys_status_rslt);
 	$i = 0;
 	while ( $i < $sys_status_count )
 		{
-		$sys_status_row = mysql_fetch_row($sys_status_rslt);
+		$sys_status_row = mysqli_fetch_row($sys_status_rslt);
 		$sys_statuses[$i] = $sys_status_row[0];
 		$i++;
 		}

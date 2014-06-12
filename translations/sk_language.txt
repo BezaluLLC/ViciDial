@@ -23,13 +23,14 @@ agc|dbconnect.php|1
 agc|timeclock.php|0
 agc|vdc_script_display.php|1
 agc|vdc_script_notes.php|0
-agc|functions.php|1
+agc|functions.php|0
 agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
 agc|phone_only.php|0
 agc|vdc_email_display.php|0
 agc|audit_comments.php|0
+agc|dbconnect_mysqli.php|1
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"JAN"|
@@ -44,6 +45,7 @@ agc|audit_comments.php|0
 "OCT"|"OCT"|
 "NOV"|"NOV"|
 "DEC"|"DEC"|
+\./bp.pl|../agc/bp.pl|
 \./images/|../agc/images/|
 css/|../agc/css/|
 BORDER|Border|
@@ -305,7 +307,7 @@ YOU CANNOT SKIP A CALLBACK OR MANUAL DIAL, YOU MUST DIAL THE LEAD|Nemôžete pre
 YOU MUST BE PAUSED TO MANUAL DIAL A NEW LEAD IN AUTO-DIAL MODE|Musíte byť pozastavený do manuálneho vytáčania v novom zozname kontaktov v móde AUTOMATICKÉHO vytáčania|
 Enter information below for the new lead you wish to call|Zadajte nižšie uvedené informácie pre nový zoznam kontaktov, ktorý chcete volať|
 YOU MUST BE PAUSED TO CHECK CALLBACKS IN AUTO-DIAL MODE|Musíte byť pozastavený na kontrolu preplánovaných hovorov v móde AUTOMATICKÉHO volania|
-Note: all new manual dial leads will go into list 999|Poznámka: všetky nové manuálne voľby zoznamov kontaktov pôjdu do zoznamu 999|
+Note: all new manual dial leads will go into list|Poznámka: všetky nové manuálne voľby zoznamov kontaktov pôjdu do zoznamu|
 YOU DO NOT HAVE PERMISSIONS TO TRANSFER CALLS|Nemáte oprávnenie k prepojeniu hovorov|
 will be added to the beginning of this number|budú pridané na začiatok tohto čísla|
 This is usually a 1 in the USA-Canada|To je obvykle 1 v USA-Kanada|
@@ -644,3 +646,15 @@ Department:|oddelenie:|
 Group Name|Názov skupiny|
 Job Title|názov práce|
 Location:|umiestnenie:|
+### START translations for 2.8 release ###
+This agent screen was not opened properly|Táto obrazovka agent bol riadne otvorený|
+Dial Lead ID|Vytáčanie Lead ID|
+Agent Form Display Script|Agenta formulár Displej Script|
+Agent Notes|Agenta Poznámky|
+You have been paused for too long, you have been logged out of your session|Tie boli pozastavené príliš dlho, už ste boli odhlásený zo svojho zasadania|
+Too many network errors, please contact your administrator|Príliš veľa chýb v sieti, obráťte sa na správcu|
+No available servers, please contact your administrator|Nie sú dostupné žiadne servery, obráťte sa na správcu|
+No available phones, please contact your administrator|Nie sú dostupné žiadne telefóny, obráťte sa na správcu|
+You are already logged in, please log out of your other session first|Ste už prihlásení, prihláste sa prosím z druhého zasadnutia prvý|
+Too many agents logged in, please contact your administrator|Príliš veľa agentov prihlásený, obráťte sa na správcu|
+Dial Countdown|Vytáčanie Odpočítavanie|

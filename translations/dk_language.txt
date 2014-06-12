@@ -1,5 +1,5 @@
-﻿# dk_language.txt - this file is for the internationalization of the astGUIclient 
-# client web pages. The associated install.pl file will take the language as an 
+﻿# dk_language.txt - this file is for the internationalization of the astGUIclient
+# client web pages. The associated install.pl file will take the language as an
 # argument and alter the php scripts to the language typed in the command line:
 # example: ./config.pl --language=dk
 # current languages in the file:
@@ -23,13 +23,14 @@ agc|dbconnect.php|1
 agc|timeclock.php|0
 agc|vdc_script_display.php|1
 agc|vdc_script_notes.php|0
-agc|functions.php|1
+agc|functions.php|0
 agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
 agc|phone_only.php|0
 agc|vdc_email_display.php|0
 agc|audit_comments.php|0
+agc|dbconnect_mysqli.php|1
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"JAN"|
@@ -44,6 +45,7 @@ agc|audit_comments.php|0
 "OCT"|"OKT"|
 "NOV"|"NOV"|
 "DEC"|"DEC"|
+\./bp.pl|../agc/bp.pl|
 \./images/|../agc/images/|
 css/|../agc/css/|
 BORDER|Border|
@@ -249,7 +251,7 @@ YOU CANNOT SKIP A CALLBACK OR MANUAL DIAL, YOU MUST DIAL THE LEAD|DU KAN IKKE FO
 YOU MUST BE PAUSED TO MANUAL DIAL A NEW LEAD IN AUTO-DIAL MODE|DU SKAL VÆRE I PAUSE FOR AT LAVE ET MANUELT OPKALD AF ET NYT LEAD I AUTODIAL-MODE|
 Enter information below for the new lead you wish to call|Angiv information forneden vdr det nye lead du ønsker at ringe|
 YOU MUST BE PAUSED TO CHECK CALLBACKS IN AUTO-DIAL MODE|DU SKAL VÆRE I PAUSE FOR AT CHECKE GENKALD I AUTODIAL MODE|
-Note: all new manual dial leads will go into list 999|OBS: alle nye manuelle opkalds leads kommer i liste 999|
+Note: all new manual dial leads will go into list|OBS: alle nye manuelle opkalds leads kommer i liste|
 YOU DO NOT HAVE PERMISSIONS TO TRANSFER CALLS|DU HAR IKKE TILLADELSE TIL AT VIDERESTILLE OPKALD|
 will be added to the beginning of this number|tillagt i starten af numret|
 This is usually a 1 in the USA-Canada|Dette plejer at være 45 i Danmark|
@@ -589,3 +591,15 @@ Department:|afdeling:|
 Group Name|gruppenavn|
 Job Title|stillingsbetegnelse|
 Location:|location:|
+### START translations for 2.8 release ###
+This agent screen was not opened properly|Dette middel skærm blev ikke åbnet korrekt|
+Dial Lead ID|Dial Lead id|
+Agent Form Display Script|Agent Form Display Script|
+Agent Notes|Agent Notes|
+You have been paused for too long, you have been logged out of your session|Du er blevet sat på pause for længe, har du været logget ud af din session|
+Too many network errors, please contact your administrator|Alt for mange netværk fejl, skal du kontakte din administrator|
+No available servers, please contact your administrator|Ingen tilgængelige servere, skal du kontakte din administrator|
+No available phones, please contact your administrator|Ingen tilgængelige telefoner, skal du kontakte din administrator|
+You are already logged in, please log out of your other session first|Du er allerede logget ind, skal du logge ud af din anden session først|
+Too many agents logged in, please contact your administrator|Alt for mange agenter logget ind, skal du kontakte din administrator|
+Dial Countdown|Dial Nedtælling|

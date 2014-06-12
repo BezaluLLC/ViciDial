@@ -4,7 +4,7 @@
 # Pulls time stats per agent selectable by campaign or user group
 # should be most accurate agent stats of all of the reports
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 90522-0723 - First build
@@ -26,12 +26,27 @@
 # 121130-0957 - Fix for user group permissions issue #588
 # 130414-0137 - Added report logging
 # 220414-2111 - Added counts on parked(hold) calls
+# 130610-0849 - Finalized changing of all ereg instances to preg
+# 130621-0821 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130704-0945 - Fixed issue #675
+# 130829-2012 - Changed to mysqli PHP functions
+# 131122-0657 - Added options.php atdr_login_logout_user_link option
+# 131129-1020 - Fixed division by zero bug in HTML mode
+# 140108-0708 - Added webserver and hostname to report logging
+# 140314-0852 - Fixed several division by zero bugs
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
+
+$atdr_login_logout_user_link=0;
+if (file_exists('options.php'))
+	{
+	require('options.php');
+	}
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -87,12 +102,12 @@ if (strlen($TIME_agenttimedetail)<1)
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
@@ -101,28 +116,65 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
-if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
-if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$reports_only_user=$row[0];
-
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if ($non_latin < 1)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Unzulässiges Username/Kennwort:|$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	}
+else
+	{
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+
+$auth=0;
+$reports_auth=0;
+$admin_auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth > 0)
+	{
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$admin_auth=$row[0];
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	if ($reports_auth < 1)
+		{
+		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ( ($reports_auth > 0) and ($admin_auth < 1) )
+		{
+		$ADD=999999;
+		$reports_only_user=1;
+		}
+	}
+else
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
 	}
 
 ##### BEGIN log visit to the vicidial_report_log table #####
@@ -139,31 +191,54 @@ if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='
 else {$LOGserver_port = ":$LOGserver_port";}
 $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
-$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $file_download, $report_display_type|', url='$LOGfull_url';";
+$LOGhostname = php_uname('n');
+if (strlen($LOGhostname)<1) {$LOGhostname='X';}
+if (strlen($LOGserver_name)<1) {$LOGserver_name='X';}
+
+$stmt="SELECT webserver_id FROM vicidial_webservers where webserver='$LOGserver_name' and hostname='$LOGhostname' LIMIT 1;";
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$webserver_id_ct = mysqli_num_rows($rslt);
+if ($webserver_id_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$webserver_id = $row[0];
+	}
+else
+	{
+	##### insert webserver entry
+	$stmt="INSERT INTO vicidial_webservers (webserver,hostname) values('$LOGserver_name','$LOGhostname');";
+	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$affected_rows = mysqli_affected_rows($link);
+	$webserver_id = mysqli_insert_id($link);
+	}
+
+$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $file_download, $report_display_type|', url='$LOGfull_url', webserver='$webserver_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=1;
 	$db_source = 'S';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 #	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
-$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGuser_group =			$row[0];
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
 $LOGallowed_reports =			$row[1];
 $LOGadmin_viewable_groups =		$row[2];
@@ -171,7 +246,7 @@ $LOGadmin_viewable_call_times =	$row[3];
 
 if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
     echo "Sie sind nicht berechtigt, diesen Bericht zu sehen: |$PHP_AUTH_USER|$report_name|\n";
     exit;
@@ -179,7 +254,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 
 $LOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
-if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 	{
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
@@ -190,7 +265,7 @@ $regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
 
 $LOGadmin_viewable_groupsSQL='';
 $whereLOGadmin_viewable_groupsSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
 	{
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
 	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
@@ -200,7 +275,7 @@ if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewabl
 
 $LOGadmin_viewable_call_timesSQL='';
 $whereLOGadmin_viewable_call_timesSQL='';
-if ( (!eregi("--ALL--",$LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
+if ( (!preg_match('/\-\-ALL\-\-/i', $LOGadmin_viewable_call_times)) and (strlen($LOGadmin_viewable_call_times) > 3) )
 	{
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ -/",'',$LOGadmin_viewable_call_times);
 	$rawLOGadmin_viewable_call_timesSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_call_timesSQL);
@@ -228,15 +303,15 @@ while($i < $group_ct)
 	}
 
 $stmt="select campaign_id from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$campaigns_to_print = mysql_num_rows($rslt);
+$campaigns_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $campaigns_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$groups[$i] =$row[0];
-	if (ereg("-ALL",$group_string) )
+	if (preg_match('/\-ALL/',$group_string) )
 		{$group[$i] = $groups[$i];}
 	$i++;
 	}
@@ -254,27 +329,27 @@ while($i < $group_ct)
 		}
 	$i++;
 	}
-if ( (ereg("--ALL--",$group_string) ) or ($group_ct < 1) )
+if ( (preg_match('/\-\-ALL\-\-/',$group_string) ) or ($group_ct < 1) )
 	{$group_SQL = ""; $park_log_SQL = "";}
 else
 	{
-	$group_SQL = eregi_replace(",$",'',$group_SQL);
+	$group_SQL = preg_replace('/,$/i', '',$group_SQL);
 	$park_log_SQL = "and channel_group in ($group_SQL)";
 	$group_SQL = "and campaign_id IN($group_SQL)";
 	}
 
 for ($i=0; $i<count($user_group); $i++)
 	{
-	if (eregi("--ALL--", $user_group[$i])) {$all_user_groups=1; $user_group="";}
+	if (preg_match('/\-\-ALL\-\-/', $user_group[$i])) {$all_user_groups=1; $user_group="";}
 	}
 $stmt="select user_group from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$user_groups_to_print = mysql_num_rows($rslt);
+$user_groups_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $user_groups_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$user_groups[$i] =$row[0];
 	if ($all_user_groups) {$user_group[$i]=$row[0];}
 	$i++;
@@ -290,11 +365,11 @@ while($i < $user_group_ct)
 	$user_groupQS .= "&user_group[]=$user_group[$i]";
 	$i++;
 	}
-if ( (ereg("--ALL--",$user_group_string) ) or ($user_group_ct < 1) )
+if ( (preg_match('/\-\-ALL\-\-/',$user_group_string) ) or ($user_group_ct < 1) )
 	{$user_group_SQL = "";}
 else
 	{
-	$user_group_SQL = eregi_replace(",$",'',$user_group_SQL);
+	$user_group_SQL = preg_replace('/,$/i', '',$user_group_SQL);
 	$TCuser_group_SQL = $user_group_SQL;
 	$user_group_SQL = "and vicidial_agent_log.user_group IN($user_group_SQL)";
 	$TCuser_group_SQL = "and user_group IN($TCuser_group_SQL)";
@@ -303,13 +378,13 @@ else
 if ($DB) {echo "$user_group_string|$user_group_ct|$user_groupQS|$i<BR>";}
 
 $stmt="select distinct pause_code,pause_code_name from vicidial_pause_codes;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$statha_to_print = mysql_num_rows($rslt);
+$statha_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $statha_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$pause_code[$i] =		"$row[0]";
 	$pause_code_name[$i] =	"$row[1]";
 	$i++;
@@ -370,7 +445,7 @@ else
 		$time_BEGIN=$AM_shift_BEGIN;
 		$time_END=$AM_shift_END;
 		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "03:45:00";}   
-		if (strlen($time_END) < 6) {$time_END = "15:15:00";}
+		if (strlen($time_END) < 6) {$time_END = "15:14:59";}
 		}
 	if ($shift == 'PM') 
 		{
@@ -389,9 +464,11 @@ else
 
 	if ($file_download < 1)
 		{
-		echo "Agent Time Detail                     $NOW_TIME\n";
+		$ASCII_text.="\nAgent Time Detail                     $NOW_TIME\n";
+		$ASCII_text.="Time range: $query_date_BEGIN to $query_date_END\n\n";
 
-		echo "Time range: $query_date_BEGIN to $query_date_END\n\n";
+		$GRAPH.="Agent Time Detail                     $NOW_TIME\n";
+		$GRAPH.="Time range: $query_date_BEGIN to $query_date_END\n\n";
 		}
 	else
 		{
@@ -407,9 +484,9 @@ else
 
 	### BEGIN gather user IDs and names for matching up later
 	$stmt="select full_name,$userSQL from vicidial_users $whereLOGadmin_viewable_groupsSQL order by user limit 100000;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$users_to_print = mysql_num_rows($rslt);
+	$users_to_print = mysqli_num_rows($rslt);
 	$i=0;
 	$graph_stats=array();
 	$max_calls=1;
@@ -421,7 +498,7 @@ else
 	$max_pause=1;
 	$max_dead=1;
 	$max_customer=1;
-	$GRAPH="<a name='timegraph'/><table border='0' cellpadding='0' cellspacing='2' width='1000'>";
+	$GRAPH.="<a name='timegraph'/><table border='0' cellpadding='0' cellspacing='2' width='1000'>";
 	$GRAPH2="<tr><th class='column_header grey_graph_cell' id='timegraph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">CALLS</a></th><th class='column_header grey_graph_cell' id='timegraph2'><a href='#' onClick=\"DrawGraph('TIMECLOCK', '2'); return false;\">TIME CLOCK</a></th><th class='column_header grey_graph_cell' id='timegraph3'><a href='#' onClick=\"DrawGraph('AGENTTIME', '3'); return false;\">MITTELTIME</a></th>";
 	if ($show_parks) {
 		$GRAPH2.="<th class='column_header grey_graph_cell' id='timegraph15'><a href='#' onClick=\"DrawGraph('PARKS', '15'); return false;\">PARKS</a></th><th class='column_header grey_graph_cell' id='timegraph16'><a href='#' onClick=\"DrawGraph('PARKTIME', '16'); return false;\">PARKTIME</a></th><th class='column_header grey_graph_cell' id='timegraph17'><a href='#' onClick=\"DrawGraph('AVGPARK', '17'); return false;\">AVGPARK</a></th><th class='column_header grey_graph_cell' id='timegraph18'><a href='#' onClick=\"DrawGraph('PARKSCALL', '18'); return false;\">PARKS/CALL</a></th>";
@@ -449,7 +526,7 @@ else
 	
 	while ($i < $users_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$ULname[$i] =	$row[0];
 		$ULuser[$i] =	$row[1];
 		$i++;
@@ -459,13 +536,13 @@ else
 
 	### BEGIN gather timeclock records per agent
 	$stmt="select $userSQL,sum(login_sec) from vicidial_timeclock_log where event IN('LOGIN','START') and event_date >= '$query_date_BEGIN' and event_date <= '$query_date_END' $TCuser_group_SQL group by user limit 10000000;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$punches_to_print = mysql_num_rows($rslt);
+	$punches_to_print = mysqli_num_rows($rslt);
 	$i=0;
 	while ($i < $punches_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$TCuser[$i] =	$row[0];
 		$TCtime[$i] =	$row[1];
 		$i++;
@@ -486,36 +563,38 @@ else
 	$PCuser_namesARY=$MT;
 	$user_count=0;
 
-	if ($show_parks) {
+	if ($show_parks) 
+		{
 		$park_HEADER=" PARKS    | PARK TIME  | AVG PARK   | PARKS/CALL |";
 		$park_HEADER_DIV="+----------+------------+------------+------------";
 		$park_HEADER_CSV=",PARKS,PARK TIME,AVG PARK,PARKS/CALL";
-	}
+		}
 
 	# Anzeiges park info - need to run regardless so HTML view will populate
 	$park_array=array();
-	$park_stmt="select user, count(*), sum(parked_sec) From park_log where parked_time <= '$query_date_END' and parked_time >= '$query_date_BEGIN' $park_log_SQL";
+	$park_stmt="select user, count(*), sum(parked_sec) From park_log where parked_time <= '$query_date_END' and parked_time >= '$query_date_BEGIN' $park_log_SQL group by user";
 	if ($DB) {$ASCII_text.= "$park_stmt\n";}
-	$park_rslt=mysql_query($park_stmt, $link);
-	while ($park_row=mysql_fetch_row($park_rslt)) {
+	$park_rslt=mysql_to_mysqli($park_stmt, $link);
+	while ($park_row=mysqli_fetch_row($park_rslt)) 
+		{
 		$park_array[$park_row[0]][0]=$park_row[1];
 		$park_array[$park_row[0]][1]=$park_row[2];
-	}
+		}
 
 	$stmt="select $userSQL,sum(pause_sec),sub_status from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 65000 $group_SQL $user_group_SQL group by user,sub_status order by user,sub_status desc limit 10000000;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	
 	if ($DB) {$ASCII_text.= "$stmt\n";}
-	$subs_to_print = mysql_num_rows($rslt);
+	$subs_to_print = mysqli_num_rows($rslt);
 	$i=0; 
 	while ($i < $subs_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$PCuser[$i] =		$row[0];
 		$PCpause_sec[$i] =	$row[1];
 		$sub_status[$i] =	$row[2];
 
-		if (!eregi("-$sub_status[$i]-", $sub_statuses))
+		if (!preg_match("/\-$sub_status[$i]\-/i", $sub_statuses))
 			{
 			$sub_statusesTXT = sprintf("%10s", $sub_status[$i]);
 			$sub_statusesHEAD .= "------------+";
@@ -528,13 +607,12 @@ else
 			$max_varname="max_".$sub_status[$i];
 			$$max_varname=1;
 			}
-		if (!eregi("-$PCuser[$i]-", $PCusers))
+		if (!preg_match("/\-$PCuser[$i]\-/i", $PCusers))
 			{
 			$PCusers .= "$PCuser[$i]-";
 			$PCusersARY[$user_count] = $PCuser[$i];
 			$user_count++;
 			}
-
 		$i++;
 		}
 	### END gather pause code information by user IDs
@@ -542,16 +620,16 @@ else
 
 	##### BEGIN Gather all agent time records and parse through them in PHP to save on DB load
 	$stmt="select $userSQL,wait_sec,talk_sec,dispo_sec,pause_sec,lead_id,status,dead_sec from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' $group_SQL $user_group_SQL limit 10000000;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$ASCII_text.= "$stmt\n";}
-	$rows_to_print = mysql_num_rows($rslt);
+	$rows_to_print = mysqli_num_rows($rslt);
 	$i=0;
 	$j=0;
 	$k=0;
 	$uc=0;
 	while ($i < $rows_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$user =			$row[0];
 		$wait =			$row[1];
 		$talk =			$row[2];
@@ -575,7 +653,7 @@ else
 		$TOTdead =	($TOTdead + $dead);
 		$TOTcustomer =	($TOTcustomer + $customer);
 		$TOTALtime = ($TOTALtime + $pause + $dispo + $talk + $wait);
-		if ( ($lead > 0) and ((!eregi("NULL",$status)) and (strlen($status) > 0)) ) {$TOTcalls++;}
+		if ( ($lead > 0) and ((!preg_match("/NULL/i",$status)) and (strlen($status) > 0)) ) {$TOTcalls++;}
 		
 		$user_found=0;
 		if ($uc < 1) 
@@ -596,7 +674,7 @@ else
 				$Spause[$m] =	($Spause[$m] + $pause);
 				$Sdead[$m] =	($Sdead[$m] + $dead);
 				$Scustomer[$m] =	($Scustomer[$m] + $customer);
-				if ( ($lead > 0) and ((!eregi("NULL",$status)) and (strlen($status) > 0)) ) {$Scalls[$m]++;}
+				if ( ($lead > 0) and ((!preg_match("/NULL/i",$status)) and (strlen($status) > 0)) ) {$Scalls[$m]++;}
 				}
 			$m++;
 			}
@@ -633,8 +711,6 @@ else
 		$ASCII_text.="+-----------------+----------+----------+------------+------------$park_HEADER_DIV+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
 		$ASCII_text.="| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>    | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | <a href=\"$LINKbase&stage=TIME\">MITTELTIME</a> |$park_HEADER WAIT       | WAIT %     | TALK       | TALK TIME %| DISPO      | DISPOTIME %| PAUSE      | PAUSETIME %| DEAD       | DEAD TIME %| CUSTOMER   |   |$sub_statusesHTML\n";
 		$ASCII_text.="+-----------------+----------+----------+------------+------------$park_HEADER_DIV+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
-
-		
 		}
 	else
 		{
@@ -658,11 +734,11 @@ else
 		$SstatusesHTML='';
 		$SstatusesFILE='';
 		$Stime[$m] = ($Swait[$m] + $Stalk[$m] + $Sdispo[$m] + $Spause[$m]);
-		$Swaitpct[$m]=(100*$Swait[$m]/$Stime[$m]);
-		$Stalkpct[$m]=(100*$Stalk[$m]/$Stime[$m]);
-		$Sdispopct[$m]=(100*$Sdispo[$m]/$Stime[$m]);
-		$Spausepct[$m]=(100*$Spause[$m]/$Stime[$m]);
-		$Sdeadpct[$m]=(100*$Sdead[$m]/$Stime[$m]);
+		$Swaitpct[$m]=MathZDC(100*$Swait[$m], $Stime[$m]);
+		$Stalkpct[$m]=MathZDC(100*$Stalk[$m], $Stime[$m]);
+		$Sdispopct[$m]=MathZDC(100*$Sdispo[$m], $Stime[$m]);
+		$Spausepct[$m]=MathZDC(100*$Spause[$m], $Stime[$m]);
+		$Sdeadpct[$m]=MathZDC(100*$Sdead[$m], $Stime[$m]);
 		$RAWuser = $Suser[$m];
 		$RAWcalls = $Scalls[$m];
 		$RAWtimeSEC = $Stime[$m];
@@ -773,12 +849,12 @@ else
 		### Check if the user had an AUTOLOGOUT timeclock event during the time period
 		$TCuserAUTOLOGOUT = ' ';
 		$stmt="select count(*) from vicidial_timeclock_log where event='AUTOLOGOUT' and user='$Suser[$m]' and event_date >= '$query_date_BEGIN' and event_date <= '$query_date_END';";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$autologout_results = mysql_num_rows($rslt);
+		$autologout_results = mysqli_num_rows($rslt);
 		if ($autologout_results > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			if ($row[0] > 0)
 				{
 				$TCuserAUTOLOGOUT =	'*';
@@ -849,14 +925,15 @@ else
 		$Stime[$m]=		sprintf("%10s", $Stime[$m]); 
 
 		# PARK INFO
-		if ($show_parks) {
+		if ($show_parks) 
+			{
 			$user_holds=$park_array[$Suser[$m]][0]+0;
 			$total_hold_time=$park_array[$Suser[$m]][1]+0;
 			$TOTuser_holds+=$park_array[$Suser[$m]][0];
 			$TOTtotal_hold_time+=$park_array[$Suser[$m]][1];
 
-			$avg_hold_time=round($total_hold_time/$user_holds);
-			$user_hpc=sprintf("%.2f", ($user_holds/$Scalls[$m]));
+			$avg_hold_time=round(MathZDC($total_hold_time, $user_holds));
+			$user_hpc=sprintf("%.2f", MathZDC($user_holds, $Scalls[$m]));
 
 			$total_hold_time=sec_convert($total_hold_time,$TIME_agenttimedetail);
 			$avg_hold_time=sec_convert($avg_hold_time,$TIME_agenttimedetail);
@@ -867,15 +944,15 @@ else
 			$user_hpc=	sprintf("%10s", $user_hpc); 
 			$park_AGENT_INFO=" $user_holds | $total_hold_time | $avg_hold_time | $user_hpc |";
 			$park_AGENT_INFO_CSV="$user_holds,$total_hold_time,$avg_hold_time,$user_hpc,";
-		}
+			}
 
 		if (trim($user_holds)>$max_user_holds) {$max_user_holds=trim($user_holds);}
 		if (trim($park_array[$Suser[$m]][1]+0)>$max_total_hold_time) {$max_total_hold_time=trim($park_array[$Suser[$m]][1]+0);}
-		if (trim(round(($park_array[$Suser[$m]][1]+0)/$user_holds))>$max_avg_hold_time) {$max_avg_hold_time=trim(round(($park_array[$Suser[$m]][1]+0)/$user_holds));}
+		if (trim(round(MathZDC(($park_array[$Suser[$m]][1]+0), $user_holds)))>$max_avg_hold_time) {$max_avg_hold_time=trim(round(MathZDC(($park_array[$Suser[$m]][1]+0), $user_holds)));}
 		if (trim($user_hpc)>$max_user_hpc) {$max_user_hpc=trim($user_hpc);}
 		$graph_stats[$m][15]=trim($user_holds);
 		$graph_stats[$m][16]=trim($park_array[$Suser[$m]][1]+0);
-		$graph_stats[$m][17]=trim(round(($park_array[$Suser[$m]][1]+0)/$user_holds));
+		$graph_stats[$m][17]=trim(round(MathZDC(($park_array[$Suser[$m]][1]+0), $user_holds)));
 		$graph_stats[$m][18]=trim($user_hpc);
 
 
@@ -897,9 +974,17 @@ else
 
 		if ($file_download < 1)
 			{
-			$Toutput = "| $Sname[$m] | <a href=\"./user_stats.php?user=$RAWuser\">$Suser[$m]</a> | $Scalls[$m] | $StimeTC[$m]$TCuserAUTOLOGOUT| $Stime[$m] |$park_AGENT_INFO $Swait[$m] | $Swaitpct[$m] | $Stalk[$m] | $Stalkpct[$m] | $Sdispo[$m] | $Sdispopct[$m] | $Spause[$m] | $Spausepct[$m] | $Sdead[$m] | $Sdeadpct[$m] | $Scustomer[$m] |   |$SstatusesHTML\n";
+			if ($atdr_login_logout_user_link > 0)
+				{
+				$Toutput = "| $Sname[$m] | <a href=\"./user_stats.php?pause_code_rpt=1&begin_date=$query_date&end_date=$end_date&user=$RAWuser\">$Suser[$m]</a> | $Scalls[$m] | $StimeTC[$m]$TCuserAUTOLOGOUT| $Stime[$m] |$park_AGENT_INFO $Swait[$m] | $Swaitpct[$m] | $Stalk[$m] | $Stalkpct[$m] | $Sdispo[$m] | $Sdispopct[$m] | $Spause[$m] | $Spausepct[$m] | $Sdead[$m] | $Sdeadpct[$m] | $Scustomer[$m] |   |$SstatusesHTML\n";
+				}
+			else
+				{
+				$Toutput = "| $Sname[$m] | <a href=\"./user_stats.php?user=$RAWuser&begin_date=$query_date&end_date\">$Suser[$m]</a> | $Scalls[$m] | $StimeTC[$m]$TCuserAUTOLOGOUT| $Stime[$m] |$park_AGENT_INFO $Swait[$m] | $Swaitpct[$m] | $Stalk[$m] | $Stalkpct[$m] | $Sdispo[$m] | $Sdispopct[$m] | $Spause[$m] | $Spausepct[$m] | $Sdead[$m] | $Sdeadpct[$m] | $Scustomer[$m] |   |$SstatusesHTML\n";
+				}
+				
 			$graph_stats[$m][0]=trim("$Suser[$m] - $Sname[$m]");
-#CALLS    | TIME CLOCK | AGENT TIME | WAIT       | TALK       | DISPO      | PAUSE      | DEAD       | CUSTOMER   |   |      LOGIN |      TRAIN |     TOILET |     PRECAL |      BREAK |            |      LUNCH |     LAGGED
+			$user_IDs[$m]=$Suser[$m];
 			}
 		else
 			{
@@ -951,7 +1036,7 @@ else
 			$TOPsort[$m] =	'' . sprintf("%010s", $RAWtimeTCsec) . '-----' . $m . '-----' . sprintf("%020s", $RAWuser);
 			$TOPsortTALLY[$m]=$RAWtimeTCsec;
 			}
-		if (!ereg("NAME|ID|TIME|LEADS|TCLOCK",$stage))
+		if (!preg_match('/NAME|ID|TIME|LEADS|TCLOCK/',$stage))
 			if ($file_download < 1)
 				{$ASCII_text.="$Toutput";}
 			else
@@ -973,13 +1058,13 @@ else
 
 
 	### BEGIN sort through output to display properly ###
-	if ( ($TOT_AGENTS > 0) and (ereg("NAME|ID|TIME|LEADS|TCLOCK",$stage)) )
+	if ( ($TOT_AGENTS > 0) and (preg_match('/NAME|ID|TIME|LEADS|TCLOCK/',$stage)) )
 		{
-		if (ereg("ID",$stage))
+		if (preg_match('/ID/',$stage))
 			{sort($TOPsort, SORT_NUMERIC);}
-		if (ereg("TIME|LEADS|TCLOCK",$stage))
+		if (preg_match('/TIME|LEADS|TCLOCK/',$stage))
 			{rsort($TOPsort, SORT_NUMERIC);}
-		if (ereg("NAME",$stage))
+		if (preg_match('/NAME/',$stage))
 			{rsort($TOPsort, SORT_STRING);}
 
 		$m=0;
@@ -1051,11 +1136,12 @@ else
 	### END loop through each status ###
 
 	### call function to calculate and print dialable leads
-	$TOTwaitpct=sprintf("%01.2f", (100*$TOTwait/$TOTALtime));
-	$TOTtalkpct=sprintf("%01.2f", (100*$TOTtalk/$TOTALtime));
-	$TOTdispopct=sprintf("%01.2f", (100*$TOTdispo/$TOTALtime));
-	$TOTpausepct=sprintf("%01.2f", (100*$TOTpause/$TOTALtime));
-	$TOTdeadpct=sprintf("%01.2f", (100*$TOTdead/$TOTALtime));
+	$TOTwaitpct=sprintf("%01.2f", MathZDC(100*$TOTwait, $TOTALtime));
+	$TOTtalkpct=sprintf("%01.2f", MathZDC(100*$TOTtalk, $TOTALtime));
+	$TOTdispopct=sprintf("%01.2f", MathZDC(100*$TOTdispo, $TOTALtime));
+	$TOTpausepct=sprintf("%01.2f", MathZDC(100*$TOTpause, $TOTALtime));
+	$TOTdeadpct=sprintf("%01.2f", MathZDC(100*$TOTdead, $TOTALtime));
+
 	$TOTwait = sec_convert($TOTwait,$TIME_agenttimedetail);
 	$TOTtalk = sec_convert($TOTtalk,$TIME_agenttimedetail);
 	$TOTdispo = sec_convert($TOTdispo,$TIME_agenttimedetail);
@@ -1065,9 +1151,10 @@ else
 	$TOTALtime = sec_convert($TOTALtime,$TIME_agenttimedetail);
 	$TOTtimeTC = sec_convert($TOTtimeTC,$TIME_agenttimedetail);
 
-	if ($show_parks) {
-		$TOTavg_hold_time=round($TOTtotal_hold_time/$TOTuser_holds);
-		$TOTuser_hpc=sprintf("%.2f", ($TOTuser_holds/$TOTcalls));
+	if ($show_parks) 
+		{
+		$TOTavg_hold_time=round(MathZDC($TOTtotal_hold_time, $TOTuser_holds));
+		$TOTuser_hpc=sprintf("%.2f", MathZDC($TOTuser_holds, $TOTcalls));
 		$TOTtotal_hold_time=sec_convert($TOTtotal_hold_time,$TIME_agenttimedetail);
 		$TOTavg_hold_time=sec_convert($TOTavg_hold_time,$TIME_agenttimedetail);
 		$hTOTuser_holds=	sprintf("%8s", $TOTuser_holds); 
@@ -1076,7 +1163,7 @@ else
 		$hTOTuser_hpc=	sprintf("%10s", $TOTuser_hpc); 
 		$park_TOTALS=" $hTOTuser_holds | $hTOTtotal_hold_time | $hTOTavg_hold_time | $hTOTuser_hpc |";
 		$park_TOTALS_CSV="$TOTuser_holds,$TOTtotal_hold_time,$TOTavg_hold_time,$TOTuser_hpc,";
-	}
+		}
 
 	$hTOTwaitpct =	sprintf("%10s", $TOTwaitpct)."%";
 	$hTOTtalkpct =	sprintf("%10s", $TOTtalkpct)."%";
@@ -1102,46 +1189,58 @@ else
 		$ASCII_text.="|  TOTALS        AGENTS:$hTOT_AGENTS | $hTOTcalls |$hTOTtimeTC |$hTOTALtime |$park_TOTALS$hTOTwait |$hTOTwaitpct |$hTOTtalk |$hTOTtalkpct |$hTOTdispo |$hTOTdispopct |$hTOTpause |$hTOTpausepct |$hTOTdead |$hTOTdeadpct |$hTOTcustomer |   |$SUMstatusesHTML\n";
 		$ASCII_text.="+-----------------+----------+----------+------------+------------$park_HEADER_DIV+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
 		if ($AUTOLOGOUTflag > 0)
-			{echo "     * denotes AUTOLOGOUT from timeclock\n";}
+			{
+			$ASCII_text.= "     * denotes AUTOLOGOUT from timeclock\n";
+			$HTML_text.= "     * denotes AUTOLOGOUT from timeclock\n";
+			}
 		$ASCII_text.="\n\n</PRE>";
 
-		for ($e=0; $e<count($sub_statusesARY); $e++) {
+		for ($e=0; $e<count($sub_statusesARY); $e++) 
+			{
 			$Sstatus=$sub_statusesARY[$e];
 			$SstatusTXT=$Sstatus;
 			if ($Sstatus=="") {$SstatusTXT="(blank)";}
 			$GRAPH2.="<th class='column_header grey_graph_cell' id='timegraph".(15+$e)."'><a href='#' onClick=\"DrawGraph('$Sstatus', '".(15+$e)."'); return false;\">$SstatusTXT</a></th>";
-		}
+			}
 
-		for ($d=0; $d<count($graph_stats); $d++) {
+		for ($d=0; $d<count($graph_stats); $d++) 
+			{
 			if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-			$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(1000*$graph_stats[$d][1]/$max_calls)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
-			$TIMECLOCK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(1000*$graph_stats[$d][2]/$max_timeclock)."' height='16' />".sec_convert($graph_stats[$d][2], 'HF')."</td></tr>";
-			$AGENTTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(1000*$graph_stats[$d][3]/$max_agenttime)."' height='16' />".sec_convert($graph_stats[$d][3], 'HF')."</td></tr>";
-			$WAIT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(1000*$graph_stats[$d][4]/$max_wait)."' height='16' />".sec_convert($graph_stats[$d][4], 'HF')."</td></tr>";
-			$TALK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(1000*$graph_stats[$d][5]/$max_talk)."' height='16' />".sec_convert($graph_stats[$d][5], 'HF')."</td></tr>";
-			$DISPO_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(1000*$graph_stats[$d][6]/$max_dispo)."' height='16' />".sec_convert($graph_stats[$d][6], 'HF')."</td></tr>";
-			$PAUSE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(1000*$graph_stats[$d][7]/$max_pause)."' height='16' />".sec_convert($graph_stats[$d][7], 'HF')."</td></tr>";
-			$DEAD_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(1000*$graph_stats[$d][8]/$max_dead)."' height='16' />".sec_convert($graph_stats[$d][8], 'HF')."</td></tr>";
-			$CUSTOMER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(1000*$graph_stats[$d][9]/$max_customer)."' height='16' />".sec_convert($graph_stats[$d][9], 'HF')."</td></tr>";
-			$TALKPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(1000*$graph_stats[$d][10]/$max_talkpct)."' height='16' />".$graph_stats[$d][10]." %</td></tr>";
-			$DISPOPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(1000*$graph_stats[$d][11]/$max_dispopct)."' height='16' />".$graph_stats[$d][11]." %</td></tr>";
-			$PAUSEPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(1000*$graph_stats[$d][12]/$max_pausepct)."' height='16' />".$graph_stats[$d][12]." %</td></tr>";
-			$DEADPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(1000*$graph_stats[$d][13]/$max_deadpct)."' height='16' />".$graph_stats[$d][13]." %</td></tr>";
-			$WAITPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(1000*$graph_stats[$d][14]/$max_waitpct)."' height='16' />".$graph_stats[$d][14]." %</td></tr>";
-			$PARKS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(1000*$graph_stats[$d][15]/$max_user_holds)."' height='16' />".$graph_stats[$d][15]."</td></tr>";
-			$PARKTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(1000*$graph_stats[$d][16]/$max_total_hold_time)."' height='16' />".sec_convert($graph_stats[$d][16],'HF')."</td></tr>";
-			$AVGPARK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(1000*$graph_stats[$d][17]/$max_avg_hold_time)."' height='17' />".sec_convert($graph_stats[$d][17],'HF')."</td></tr>";
-			$PARKSCALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(1000*$graph_stats[$d][18]/$max_user_hpc)."' height='16' />".$graph_stats[$d][18]."</td></tr>";
-
-			for ($e=0; $e<count($sub_statusesARY); $e++) {
+			if ($atdr_login_logout_user_link > 0)
+				{
+				$CALLS_graph.="  <tr><td class='chart_td$class'><a href=\'./user_stats.php?pause_code_rpt=1&begin_date=$query_date&end_date=$end_date&user=".$user_IDs[$d]."\'>".$graph_stats[$d][0]."</a></td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][1], $max_calls))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+				}
+			else
+				{
+				$CALLS_graph.="  <tr><td class='chart_td$class'><a href=\'./user_stats.php?user=".$user_IDs[$d]."&begin_date=$query_date&end_date\'>".$graph_stats[$d][0]."</a></td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][1], $max_calls))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+				}
+			$TIMECLOCK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][2], $max_timeclock))."' height='16' />".sec_convert($graph_stats[$d][2], 'HF')."</td></tr>";
+			$AGENTTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][3], $max_agenttime))."' height='16' />".sec_convert($graph_stats[$d][3], 'HF')."</td></tr>";
+			$WAIT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][4], $max_wait))."' height='16' />".sec_convert($graph_stats[$d][4], 'HF')."</td></tr>";
+			$TALK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][5], $max_talk))."' height='16' />".sec_convert($graph_stats[$d][5], 'HF')."</td></tr>";
+			$DISPO_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][6], $max_dispo))."' height='16' />".sec_convert($graph_stats[$d][6], 'HF')."</td></tr>";
+			$PAUSE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][7], $max_pause))."' height='16' />".sec_convert($graph_stats[$d][7], 'HF')."</td></tr>";
+			$DEAD_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][8], $max_dead))."' height='16' />".sec_convert($graph_stats[$d][8], 'HF')."</td></tr>";
+			$CUSTOMER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][9], $max_customer))."' height='16' />".sec_convert($graph_stats[$d][9], 'HF')."</td></tr>";
+			$TALKPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][10], $max_talkpct))."' height='16' />".$graph_stats[$d][10]." %</td></tr>";
+			$DISPOPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][11], $max_dispopct))."' height='16' />".$graph_stats[$d][11]." %</td></tr>";
+			$PAUSEPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][12], $max_pausepct))."' height='16' />".$graph_stats[$d][12]." %</td></tr>";
+			$DEADPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][13], $max_deadpct))."' height='16' />".$graph_stats[$d][13]." %</td></tr>";
+			$WAITPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][14], $max_waitpct))."' height='16' />".$graph_stats[$d][14]." %</td></tr>";
+			$PARKS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][15], $max_user_holds))."' height='16' />".$graph_stats[$d][15]."</td></tr>";
+			$PARKTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][16], $max_total_hold_time))."' height='16' />".sec_convert($graph_stats[$d][16],'HF')."</td></tr>";
+			$AVGPARK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][17], $max_avg_hold_time))."' height='17' />".sec_convert($graph_stats[$d][17],'HF')."</td></tr>";
+			$PARKSCALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][18], $max_user_hpc))."' height='16' />".$graph_stats[$d][18]."</td></tr>";
+			for ($e=0; $e<count($sub_statusesARY); $e++) 
+				{
 				$Sstatus=$sub_statusesARY[$e];
 				$varname=$Sstatus."_graph";
 				$max_varname="max_".$Sstatus;
 				#$max.= "<!-- $max_varname => ".$$max_varname." //-->\n";
 			
-				$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(1000*$graph_stats_sub[$d][$e]/$$max_varname)."' height='16' />".sec_convert($graph_stats_sub[$d][$e], 'HF')."</td></tr>";
+				$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats_sub[$d][$e], $$max_varname))."' height='16' />".sec_convert($graph_stats_sub[$d][$e], 'HF')."</td></tr>";
+				}
 			}
-		}
 		$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTcalls)."</th></tr></table>";
 		$TIMECLOCK_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTtimeTC)."</th></tr></table>";
 		$AGENTTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTALtime)."</th></tr></table>";
@@ -1161,13 +1260,14 @@ else
 		$AVGPARK_graph.="<tr><th class='thgraph' scope='col'>AVERAGE:</th><th class='thgraph' scope='col'>".trim($hTOTavg_hold_time)."</th></tr></table>";
 		$PARKSCALL_graph.="<tr><th class='thgraph' scope='col'>AVERAGE:</th><th class='thgraph' scope='col'>".trim($hTOTuser_hpc)."</th></tr></table>";
 
-		for ($e=0; $e<count($sub_statusesARY); $e++) {
+		for ($e=0; $e<count($sub_statusesARY); $e++) 
+			{
 			$Sstatus=$sub_statusesARY[$e];
 			$total_var=$Sstatus."_total";
 			$graph_var=$Sstatus."_graph";
 			$$graph_var.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($$total_var)."</th></tr></table>";
 #			$JS_text.="var ".$Sstatus."_graph=\"".$$graph_var."\";\n";
-		}
+			}
 		$JS_onload.="\tDrawGraph('CALLS', '1');\n"; 
 		$JS_text.="function DrawGraph(graph, th_id) {\n";
 		$JS_text.="	var CALLS_graph=\"$CALLS_graph\";\n";
@@ -1189,11 +1289,12 @@ else
 		$JS_text.="	var AVGPARK_graph=\"$AVGPARK_graph\";\n";
 		$JS_text.="	var PARKSCALL_graph=\"$PARKSCALL_graph\";\n";
 
-		for ($e=0; $e<count($sub_statusesARY); $e++) {
+		for ($e=0; $e<count($sub_statusesARY); $e++) 
+			{
 			$Sstatus=$sub_statusesARY[$e];
 			$graph_var=$Sstatus."_graph";
-			$JS_text.="	var ".$Sstatus."_graph=\"".$$graph_var."\";\n";
-		}
+			$JS_text.="	var graph_".$Sstatus."=\"".$$graph_var."\";\n";
+			}
 
 		$JS_text.="	for (var i=1; i<=".(14+count($sub_statusesARY))."; i++) {\n";
 		$JS_text.="		var cellID=\"timegraph\"+i;\n";
@@ -1244,10 +1345,10 @@ if ($file_download > 0)
 
 	if ($db_source == 'S')
 		{
-		mysql_close($link);
+		mysqli_close($link);
 		$use_slave_server=0;
 		$db_source = 'M';
-		require("dbconnect.php");
+		require("dbconnect_mysqli.php");
 		}
 
 	$endMS = microtime();
@@ -1259,12 +1360,12 @@ if ($file_download > 0)
 
 	$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 
 	exit;
 	}
 
-$NWB = " &nbsp; <a href=\"javascript:openNewWindow('/vicidial/admin.php?ADD=99999";
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 Border=0 ALT=\"HILFE\" ALIGN=TOP></A>";
 
 ############################################################################
@@ -1273,16 +1374,6 @@ $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 Border=0 ALT=\"HILFE\" ALI
 $JS_onload.="}\n";
 $JS_text.=$JS_onload;
 $JS_text.="</script>\n";
-
-if ($report_display_type=="HTML")
-	{
-	echo $JS_text;
-	echo $GRAPH.$GRAPH2.$GRAPH3.$max;
-	}
-else
-	{
-	echo $ASCII_text;
-	}
 
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> Termine:<BR>";
@@ -1325,29 +1416,29 @@ o_cal.a_tpl.yearscroll = false;
 
 echo "</TD><TD VALIGN=TOP> Kampagnen:<BR>";
 echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
-if  (eregi("--ALL--",$group_string))
+if  (preg_match('/--ALL--/',$group_string))
 	{echo "<option value=\"--ALL--\" selected>-- ALL KAMPAGNEN --</option>\n";}
 else
 	{echo "<option value=\"--ALL--\">-- ALL KAMPAGNEN --</option>\n";}
 $o=0;
 while ($campaigns_to_print > $o)
-{
-	if (eregi("$groups[$o]\|",$group_string)) {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
+	{
+	if (preg_match("/$groups[$o]\|/i",$group_string)) {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
 	  else {echo "<option value=\"$groups[$o]\">$groups[$o]</option>\n";}
 	$o++;
-}
+	}
 echo "</SELECT>\n";
 echo "</TD><TD VALIGN=TOP>Benutzer-Gruppen:<BR>";
 echo "<SELECT SIZE=5 NAME=user_group[] multiple>\n";
 
-if  (eregi("--ALL--",$user_group_string))
+if  (preg_match('/\-\-ALL\-\-/',$user_group_string))
 	{echo "<option value=\"--ALL--\" selected>-- ALL BENUTZER-GRUPPEN --</option>\n";}
 else
 	{echo "<option value=\"--ALL--\">-- ALL BENUTZER-GRUPPEN --</option>\n";}
 $o=0;
 while ($user_groups_to_print > $o)
 	{
-	if  (eregi("$user_groups[$o]\|",$user_group_string)) {echo "<option selected value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
+	if  (preg_match("/$user_groups[$o]\|/i",$user_group_string)) {echo "<option selected value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
 	  else {echo "<option value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
 	$o++;
 	}
@@ -1379,6 +1470,16 @@ echo "</FORM>\n\n<BR>$db_source";
 ##### END HTML form section
 ############################################################################
 
+if ($report_display_type=="HTML")
+	{
+	echo $JS_text;
+	echo $GRAPH.$GRAPH2.$GRAPH3.$max;
+	}
+else
+	{
+	echo $ASCII_text;
+	}
+
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $STARTtime);
@@ -1403,7 +1504,7 @@ while ($m < $k)
 	else
 		{
 		echo "                              <SPAN class=\"yellow\">";
-		$TOPsortPLOT = ( ($TOPsortTALLY[$i] / $TOPsortMAX) * 110 );
+		$TOPsortPLOT = ( MathZDC($TOPsortTALLY[$i], $TOPsortMAX) * 110 );
 		$h=0;
 		while ($h <= $TOPsortPLOT)
 			{
@@ -1420,10 +1521,10 @@ echo "</span>\n";
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -1435,7 +1536,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 ?>
 

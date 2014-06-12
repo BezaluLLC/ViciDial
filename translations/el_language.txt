@@ -1,5 +1,5 @@
-﻿# el_language.txt - this file is for the internationalization of the astGUIclient 
-# client web pages. The associated install.pl file will take the language as an 
+﻿# el_language.txt - this file is for the internationalization of the astGUIclient
+# client web pages. The associated install.pl file will take the language as an
 # argument and alter the php scripts to the language typed in the command line:
 # example: ./install.pl --language=el
 # current languages in the file:
@@ -23,13 +23,14 @@ agc|dbconnect.php|1
 agc|timeclock.php|0
 agc|vdc_script_display.php|1
 agc|vdc_script_notes.php|0
-agc|functions.php|1
+agc|functions.php|0
 agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
 agc|phone_only.php|0
 agc|vdc_email_display.php|0
 agc|audit_comments.php|0
+agc|dbconnect_mysqli.php|1
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"ΙΑΝ"|
@@ -44,6 +45,7 @@ agc|audit_comments.php|0
 "OCT"|"ΟΚΤ"|
 "NOV"|"ΝΟΕ"|
 "DEC"|"ΔΕΚ"|
+\./bp.pl|../agc/bp.pl|
 \./images/|../agc/images/|
 css/|../agc/css/|
 BORDER|Border|
@@ -305,7 +307,7 @@ YOU CANNOT SKIP A CALLBACK OR MANUAL DIAL, YOU MUST DIAL THE LEAD|ΔΕΝ ΜΠΟ�
 YOU MUST BE PAUSED TO MANUAL DIAL A NEW LEAD IN AUTO-DIAL MODE|ΘΑ ΠΡΕΠΕΙ ΝΑ ΕΙΣΑΣΤΕ ΣΕ ΠΑΥΣΗ ΓΙΑ ΧΕΙΡΟΚΙΝΗΤΗ ΚΛΗΣΗ ΣΕ ΑΥΤΟΜΑΤΗ ΜΕΘΟΔΟ|
 Enter information below for the new lead you wish to call|Καταχωρήστε τις πληροφορίες παρακάτω για τον νέο οδηγό που επιθυμήτε να καλέσετε|
 YOU MUST BE PAUSED TO CHECK CALLBACKS IN AUTO-DIAL MODE|ΘΑ ΠΡΕΠΕΙ ΝΑ ΕΙΣΑΣΤΕ ΣΕ ΠΑΥΣΗ ΓΙΑ ΝΑ ΕΛΕΓΞΕΤΕ ΤΙΣ ΕΠΑΝΑΚΛΗΣΕΙΣ ΣΕ ΑΥΤΟΜΑΤΗ ΜΕΘΟΔΟ|
-Note: all new manual dial leads will go into list 999|Σημείωση: όλες οι νέες χειροκίνητες κλήσεις θα πάνε στην λίστα 999|
+Note: all new manual dial leads will go into list|Σημείωση: όλες οι νέες χειροκίνητες κλήσεις θα πάνε στην λίστα|
 YOU DO NOT HAVE PERMISSIONS TO TRANSFER CALLS|ΔΕΝ ΕΧΕΤΕ ΔΙΚΑΙΩΜΑΤΑ ΓΙΑ ΜΕΤΑΦΟΡΑ ΚΛΗΣΕΩΝ|
 will be added to the beginning of this number|θα προστεθεί στην αρχή του αριθμού|
 This is usually a 1 in the USA-Canada|Αυτό είναι συνήθως ένα 1 στις ΗΠΑ|
@@ -638,3 +640,15 @@ Department:|Τμήμα:|
 Group Name|το όνομα της ομάδας|
 Job Title|τίτλος θέσης εργασίας|
 Location:|τοποθεσία:|
+### START translations for 2.8 release ###
+This agent screen was not opened properly|Αυτή η οθόνη πράκτορας δεν άνοιξε σωστά|
+Dial Lead ID|Κλήση Μόλυβδος Ιϋ|
+Agent Form Display Script|Έντυπο συνεργάτη Εμφάνιση Σενάριο|
+Agent Notes|Πράκτορας Σημειώσεις|
+You have been paused for too long, you have been logged out of your session|Θα έχουν διακοπεί εδώ και πολύ καιρό, έχετε αποσυνδεθεί από τη συνεδρία σας|
+Too many network errors, please contact your administrator|Πάρα πολλά σφάλματα του δικτύου, επικοινωνήστε με το διαχειριστή σας|
+No available servers, please contact your administrator|Δεν υπάρχουν διαθέσιμα servers, παρακαλούμε επικοινωνήστε με το διαχειριστή σας|
+No available phones, please contact your administrator|Δεν υπάρχουν διαθέσιμα τηλέφωνα, επικοινωνήστε με το διαχειριστή σας|
+You are already logged in, please log out of your other session first|Είστε ήδη συνδεδεμένοι, συνδεθείτε από άλλη συνεδρία σας πρώτα|
+Too many agents logged in, please contact your administrator|Πάρα πολλοί παράγοντες συνδεδεμένοι, επικοινωνήστε με το διαχειριστή σας|
+Dial Countdown|Κλήση Αντίστροφη μέτρηση|

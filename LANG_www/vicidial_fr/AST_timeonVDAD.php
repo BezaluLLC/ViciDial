@@ -1,7 +1,7 @@
 <?php 
 # AST_timeonVDAD.php
 # 
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # live real-time stats for the VICIDIAL Auto-Dialer
 #
@@ -14,11 +14,15 @@
 # 81013-2227 - Fixed Remote Agent display bug
 # 90310-1945 - Admin header
 # 90508-0644 - Changed to PHP long tags
+# 130610-1128 - Finalized changing of all ereg instances to preg
+# 130620-2317 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-2009 - Changed to mysqli PHP functions
 #
 
 header ("Content-type: text/html; charset=utf-8");
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -34,21 +38,80 @@ if (isset($_GET["VALIDER"]))					{$VALIDER=$_GET["VALIDER"];}
 if (isset($_GET["closer_display"]))				{$closer_display=$_GET["closer_display"];}
 	elseif (isset($_POST["closer_display"]))	{$closer_display=$_POST["closer_display"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
-
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
-
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$stmt = "SELECT use_non_latin FROM system_settings;";
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$qm_conf_ct = mysqli_num_rows($rslt);
+if ($qm_conf_ct > 0)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Login ou mot de passe invalide: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	$row=mysqli_fetch_row($rslt);
+	$non_latin =					$row[0];
+	}
+##### END SETTINGS LOOKUP #####
+###########################################
+
+if ($non_latin < 1)
+	{
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	}
+else
+	{
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+$group = preg_replace("/'|\"|\\\\|;/","",$group);
+
+$auth=0;
+$reports_auth=0;
+$admin_auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'RAPPORTS',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth > 0)
+	{
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$admin_auth=$row[0];
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	if ($reports_auth < 1)
+		{
+		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ( ($reports_auth > 0) and ($admin_auth < 1) )
+		{
+		$ADD=999999;
+		$reports_only_user=1;
+		}
+	}
+else
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
 	}
 
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -63,13 +126,13 @@ if ($reset_counter > 7)
 	$reset_counter=0;
 
 	$stmt="update park_log set status='HUNGUP' where hangup_time is not null;";
-#	$rslt=mysql_query($stmt, $link);
+#	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 
 	if ($DB)
 		{	
 		$stmt="delete from park_log where grab_time < '$timeSIXhoursAGO' and (hangup_time is null or hangup_time='');";
-#		$rslt=mysql_query($stmt, $link);
+#		$rslt=mysql_to_mysqli($stmt, $link);
 		 echo "$stmt\n";
 		}
 	}
@@ -85,15 +148,15 @@ echo "<!--\n";
 if ($closer_display>0)
 {
 	$stmt="select group_id,group_color from vicidial_inbound_groups;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
-	$groups_to_print = mysql_num_rows($rslt);
+	$groups_to_print = mysqli_num_rows($rslt);
 		if ($groups_to_print > 0)
 		{
 		$g=0;
 		while ($g < $groups_to_print)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$group_id[$g] = $row[0];
 			$group_color[$g] = $row[1];
 			echo "   .$group_id[$g] {color: black; background-color: $group_color[$g]}\n";
@@ -128,9 +191,9 @@ echo "<PRE><FONT SIZE=2>";
 ###### SERVER INFORMATION
 ###################################################################################
 
-$stmt="select sum(local_trunk_shortage) from vicidial_campaign_server_stats where server_ip='" . mysql_real_escape_string($server_ip) . "';";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$stmt="select sum(local_trunk_shortage) from vicidial_campaign_server_stats where server_ip='" . mysqli_real_escape_string($link, $server_ip) . "';";
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $balanceSHORT = $row[0];
 
 echo "SERVER: $server_ip\n";
@@ -159,16 +222,16 @@ echo "| STATION    | PHONE      | USER   | SESSIONID | CHANNEL             | STA
 echo "+------------+------------+--------+-----------+---------------------+--------+----------+---------+\n";
 }
 
-$stmt="select extension,user,conf_exten,channel,status,last_call_time,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_call_finish),uniqueid,lead_id from vicidial_live_agents where status NOT IN('PAUSED') and server_ip='" . mysql_real_escape_string($server_ip) . "' order by extension;";
-$rslt=mysql_query($stmt, $link);
+$stmt="select extension,user,conf_exten,channel,status,last_call_time,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_call_finish),uniqueid,lead_id from vicidial_live_agents where status NOT IN('PAUSED') and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' order by extension;";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$talking_to_print = mysql_num_rows($rslt);
+$talking_to_print = mysqli_num_rows($rslt);
 	if ($talking_to_print > 0)
 	{
 	$i=0;
 	while ($i < $talking_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$Sextension[$i] =		$row[0];
 		$Suser[$i] =			$row[1];
 		$Ssessionid[$i] =		$row[2];
@@ -186,55 +249,55 @@ $talking_to_print = mysql_num_rows($rslt);
 	while ($i < $talking_to_print)
 		{
 		$phone[$i]='          ';
-		if (eregi("R/",$Sextension[$i])) 
+		if (preg_match("/R\//i",$Sextension[$i])) 
 			{
 			$protocol = 'EXTERNAL';
-			$dialplan = eregi_replace('R/',"",$Sextension[$i]);
-			$dialplan = eregi_replace("\@.*",'',$dialplan);
+			$dialplan = preg_replace('/R\//i', '',$Sextension[$i]);
+			$dialplan = preg_replace('/\@.*/i', '',$dialplan);
 			$exten = "dialplan_number='$dialplan'";
 			}
-		if (eregi("Local/",$Sextension[$i])) 
+		if (preg_match("/Local\//i",$Sextension[$i])) 
 			{
 			$protocol = 'EXTERNAL';
-			$dialplan = eregi_replace('Local/',"",$Sextension[$i]);
-			$dialplan = eregi_replace("\@.*",'',$dialplan);
+			$dialplan = preg_replace('/Local\//i', '',$Sextension[$i]);
+			$dialplan = preg_replace('/\@.*/i', '',$dialplan);
 			$exten = "dialplan_number='$dialplan'";
 			}
-		if (eregi('SIP/',$Sextension[$i])) 
+		if (preg_match('/SIP\//i',$Sextension[$i])) 
 			{
 			$protocol = 'SIP';
-			$dialplan = eregi_replace('SIP/',"",$Sextension[$i]);
-			$dialplan = eregi_replace("-.*",'',$dialplan);
+			$dialplan = preg_replace('/SIP\//i', '',$Sextension[$i]);
+			$dialplan = preg_replace('/\-.*/i', '',$dialplan);
 			$exten = "extension='$dialplan'";
 			}
-		if (eregi('IAX2/',$Sextension[$i])) 
+		if (preg_match('/IAX2\//i',$Sextension[$i])) 
 			{
 			$protocol = 'IAX2';
-			$dialplan = eregi_replace('IAX2/',"",$Sextension[$i]);
-			$dialplan = eregi_replace("-.*",'',$dialplan);
+			$dialplan = preg_replace('/IAX2\//i', '',$Sextension[$i]);
+			$dialplan = preg_replace('/\-.*/i', '',$dialplan);
 			$exten = "extension='$dialplan'";
 			}
-		if (eregi('Zap/',$Sextension[$i])) 
+		if (preg_match('/Zap\//i',$Sextension[$i])) 
 			{
 			$protocol = 'Zap';
-			$dialplan = eregi_replace('Zap/',"",$Sextension[$i]);
+			$dialplan = preg_replace('/Zap\/|DAHDI\//i', '',$Sextension[$i]);
 			$exten = "extension='$dialplan'";
 			}
 
-		$stmt="select login from phones where server_ip='" . mysql_real_escape_string($server_ip) . "' and $exten and protocol='$protocol';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$stmt="select login from phones where server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' and $exten and protocol='$protocol';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$login = $row[0];
 
 		$phone[$i] =			sprintf("%-10s", $login);
 
-		if (eregi("READY|PAUSED|CLOSER",$Sstatus[$i]))
+		if (preg_match("/READY|PAUSED|CLOSER/i",$Sstatus[$i]))
 			{
 			$Schannel[$i]='';
 			$Sstart_time[$i]='- WAIT -';
 			$Scall_time[$i]=$Sfinish_time[$i];
 			}
-		$extension[$i] = eregi_replace('Local/',"",$Sextension[$i]);
+		$extension[$i] = preg_replace('/Local\//i', '',$Sextension[$i]);
 		$extension[$i] =		sprintf("%-10s", $extension[$i]);
 			while(strlen($extension[$i])>10) {$extension[$i] = substr("$extension[$i]", 0, -1);}
 		$user[$i] =				sprintf("%-6s", $Suser[$i]);
@@ -243,7 +306,7 @@ $talking_to_print = mysql_num_rows($rslt);
 			$cc[$i]=0;
 		while ( (strlen($channel[$i]) > 19) and ($cc[$i] < 100) )
 			{
-			$channel[$i] = eregi_replace(".$","",$channel[$i]);   
+			$channel[$i] = preg_replace('/.$/i', '',$channel[$i]);   
 			$cc[$i]++;
 			if (strlen($channel[$i]) <= 19) {$cc[$i]=101;}
 			}
@@ -252,7 +315,7 @@ $talking_to_print = mysql_num_rows($rslt);
 			$cd[$i]=0;
 		while ( (strlen($start_time[$i]) > 8) and ($cd[$i] < 100) )
 			{
-			$start_time[$i] = eregi_replace("^.","",$start_time[$i]);   
+			$start_time[$i] = preg_replace('/^./i', '',$start_time[$i]);   
 			$cd[$i]++;
 			if (strlen($start_time[$i]) <= 8) {$cd[$i]=101;}
 			}
@@ -276,7 +339,7 @@ $talking_to_print = mysql_num_rows($rslt);
 			$G = '';		$EG = '';
 			if ($call_time_M_int[$i] >= 5) {$G='<SPAN class="blue"><B>'; $EG='</B></SPAN>';}
 			if ($call_time_M_int[$i] >= 10) {$G='<SPAN class="purple"><B>'; $EG='</B></SPAN>';}
-			if (eregi("PAUSED",$Sstatus[$i])) 
+			if (preg_match("/PAUSED/i",$Sstatus[$i])) 
 				{
 				if ($call_time_M_int >= 1) 
 					{$i++; continue;} 
@@ -297,28 +360,28 @@ $talking_to_print = mysql_num_rows($rslt);
 		while ($i < $ext_count)
 			{
 
-			$stmt="select campaign_id from vicidial_auto_calls where lead_id='$lead_id[$i]' and server_ip='" . mysql_real_escape_string($server_ip) . "';";
-			$rslt=mysql_query($stmt, $link);
+			$stmt="select campaign_id from vicidial_auto_calls where lead_id='$lead_id[$i]' and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "';";
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
-			$camp_to_print = mysql_num_rows($rslt);
+			$camp_to_print = mysqli_num_rows($rslt);
 			if ($camp_to_print > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$campaign = sprintf("%-12s", $row[0]);
 				$camp_color = $row[0];
 				}
 			else
 				{$campaign = 'DEAD        ';   	$camp_color = 'DEAD';}
-			if (eregi("READY|PAUSED|CLOSER",$status[$i]))
+			if (preg_match("/READY|PAUSED|CLOSER/i",$status[$i]))
 				{$campaign = '            ';   	$camp_color = '';}
 
 			$stmt="select user from vicidial_xfer_log where lead_id='$lead_id[$i]' and closer='$closer[$i]' order by call_date desc limit 1;";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
-			$xfer_to_print = mysql_num_rows($rslt);
+			$xfer_to_print = mysqli_num_rows($rslt);
 			if ($xfer_to_print > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$fronter = sprintf("%-6s", $row[0]);
 				}
 			else
@@ -370,22 +433,22 @@ echo "+---------------------+--------+--------------+--------------------+------
 echo "| CHANNEL             | STATUS | CAMPAIGN     | PHONE NUMBER       | CALLTIME | MINUTES |\n";
 echo "+---------------------+--------+--------------+--------------------+----------+---------+\n";
 
-$stmt="select channel,status,campaign_id,phone_code,phone_number,call_time,UNIX_TIMESTAMP(call_time) from vicidial_auto_calls where status NOT IN('XFER') and server_ip='" . mysql_real_escape_string($server_ip) . "' order by auto_call_id desc;";
-$rslt=mysql_query($stmt, $link);
+$stmt="select channel,status,campaign_id,phone_code,phone_number,call_time,UNIX_TIMESTAMP(call_time) from vicidial_auto_calls where status NOT IN('XFER') and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' order by auto_call_id desc;";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$parked_to_print = mysql_num_rows($rslt);
+$parked_to_print = mysqli_num_rows($rslt);
 	if ($parked_to_print > 0)
 	{
 	$i=0;
 	while ($i < $parked_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 
 		$channel =			sprintf("%-19s", $row[0]);
 			$cc=0;
 		while ( (strlen($channel) > 19) and ($cc < 100) )
 			{
-			$channel = eregi_replace(".$","",$channel);   
+			$channel = preg_replace('/.$/i', '',$channel);   
 			$cc++;
 			if (strlen($channel) <= 19) {$cc=101;}
 			}
@@ -393,7 +456,7 @@ $parked_to_print = mysql_num_rows($rslt);
 			$cd=0;
 		while ( (strlen($start_time) > 8) and ($cd < 100) )
 			{
-			$start_time = eregi_replace("^.","",$start_time);   
+			$start_time = preg_replace('/^./i', '',$start_time);   
 			$cd++;
 			if (strlen($start_time) <= 8) {$cd=101;}
 			}
@@ -413,7 +476,7 @@ $parked_to_print = mysql_num_rows($rslt);
 		$call_time_MS = "$call_time_M_int:$call_time_SEC";
 		$call_time_MS =		sprintf("%7s", $call_time_MS);
 		$G = '';		$EG = '';
-		if (eregi("LIVE",$status)) {$G='<SPAN class="green"><B>'; $EG='</B></SPAN>';}
+		if (preg_match("/LIVE/i",$status)) {$G='<SPAN class="green"><B>'; $EG='</B></SPAN>';}
 	#	if ($call_time_M_int >= 6) {$G='<SPAN class="red"><B>'; $EG='</B></SPAN>';}
 
 		echo "| $G$channel$EG | $G$status$EG | $G$campaign$EG | $G$number_dialed$EG | $G$start_time$EG | $G$call_time_MS$EG |\n";

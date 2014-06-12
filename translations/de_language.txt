@@ -1,5 +1,5 @@
-# de_language.txt - this file is for the internationalization of the astGUIclient 
-# client web pages. The associated install.pl file will take the language as an 
+# de_language.txt - this file is for the internationalization of the astGUIclient
+# client web pages. The associated install.pl file will take the language as an
 # argument and alter the php scripts to the language typed in the command line:
 # example: ./install.pl --language=de
 # current languages in the file:
@@ -23,13 +23,14 @@ agc|dbconnect.php|1
 agc|timeclock.php|0
 agc|vdc_script_display.php|1
 agc|vdc_script_notes.php|0
-agc|functions.php|1
+agc|functions.php|0
 agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
 agc|phone_only.php|0
 agc|vdc_email_display.php|0
 agc|audit_comments.php|0
+agc|dbconnect_mysqli.php|1
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"JAN"|
@@ -44,6 +45,7 @@ agc|audit_comments.php|0
 "OCT"|"OKT"|
 "NOV"|"NOV"|
 "DEC"|"DEZ"|
+\./bp.pl|../agc/bp.pl|
 \./images/|../agc/images/|
 css/|../agc/css/|
 BORDER|Border|
@@ -276,7 +278,7 @@ YOU CANNOT SKIP A CALLBACK OR MANUAL DIAL, YOU MUST DIAL THE LEAD|SIE KÖNNEN EI
 YOU MUST BE PAUSED TO MANUAL DIAL A NEW LEAD IN AUTO-DIAL MODE|SIE MÜSSEN PAUSIERT SEIN, UM EINE NEUE ADRESSE IM AUTOMATISCHEM WÄHLMODUS MANUELL ZU WÄHLEN|
 Enter information below for the new lead you wish to call|Tragen Sie unten die Informationen zu der neuen Adresse ein, die SIE wählen möchten|
 YOU MUST BE PAUSED TO CHECK CALLBACKS IN AUTO-DIAL MODE|SIE MÜSSEN PAUSIERT SEIN, UM DIE WIEDERVORLAGEN IM AUTOMATISCHEM WÄHLMODUS EINZUSEHEN|
-Note: all new manual dial leads will go into list 999|Anmerkung: alle neuen manuellen Adressen werden einer Liste hinzugefügt|
+Note: all new manual dial leads will go into list|Anmerkung: alle neuen manuellen Adressen werden einer Liste hinzugefügt|
 YOU DO NOT HAVE PERMISSIONS TO TRANSFER CALLS|SIE HABEN KEINE BERECHTIGUNG, UM ANRUFE WEITERZULEITEN|
 will be added to the beginning of this number|wird dem Anfang dieser Telefonnummer hinzugefügt|
 This is usually a 1 in the USA-Canada|Dieses ist normalerweise 49 in Deutschland|
@@ -646,3 +648,15 @@ Department:|Abteilung:|
 Group Name|Gruppennamen|
 Job Title|Job-Titel|
 Location:|Ort:|
+### START translations for 2.8 release ###
+This agent screen was not opened properly|Dieser Agent-Bildschirm nicht richtig geöffnet|
+Dial Lead ID|Dial Blei ID|
+Agent Form Display Script|Agent-Formular Anzeige Script|
+Agent Notes|Agent-Hinweise|
+You have been paused for too long, you have been logged out of your session|| Sie haben zu lange angehalten wurde, können Sie sich von der Sitzung protokolliert wurden |
+Too many network errors, please contact your administrator|Zu viele Netzwerkfehler, kontaktieren Sie bitte Ihren Administrator|
+No available servers, please contact your administrator|Keine verfügbaren Servern, kontaktieren Sie bitte Ihren Administrator|
+No available phones, please contact your administrator|Keine verfügbaren Telefone, wenden Sie sich bitte an Ihren Administrator|
+You are already logged in, please log out of your other session first|Sie sind bereits erste in loggt, bitte aus Ihrem anderen Sitzung anmelden|
+Too many agents logged in, please contact your administrator|Zu viele Agenten angemeldet sind, kontaktieren Sie bitte Ihren Administrator|
+Dial Countdown|Dial Countdown|

@@ -1,5 +1,5 @@
 <?php
-# call_log_display.php    version 2.6
+# call_log_display.php    version 2.8
 # 
 # Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -30,9 +30,13 @@
 # 60619-1202 - Added variable filters to close security holes for login form
 # 90508-0727 - Changed to PHP long tags
 # 130328-0028 - Converted ereg to preg functions
+# 130603-2219 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130705-1524 - Added optional encrypted passwords compatibility
+# 130802-1005 - Changed to PHP mysqli functions
 # 
 
-require("dbconnect.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 ### If you have globals turned off uncomment these lines
 if (isset($_GET["user"]))				{$user=$_GET["user"];}
@@ -52,6 +56,8 @@ if (isset($_GET["protocol"]))				{$protocol=$_GET["protocol"];}
 
 $user=preg_replace("/[^0-9a-zA-Z]/","",$user);
 $pass=preg_replace("/[^0-9a-zA-Z]/","",$pass);
+$session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
+$server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
 
 # default optional vars if not set
 if (!isset($format))   {$format="text";}
@@ -67,16 +73,15 @@ $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',0,0,0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Ikke gyldigt Brugernavn/Password: |$user|$pass|\n";
-    exit;
+	echo "Ikke gyldigt Brugernavn/Password: |$user|$pass|$auth_message|\n";
+	exit;
 	}
 else
 	{
@@ -89,8 +94,8 @@ else
 		{
 		$stmt="SELECT count(*) from web_client_sessions where session_name='$session_name' and server_ip='$server_ip';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$SNauth=$row[0];
 		if($SNauth==0)
 			{
@@ -129,14 +134,14 @@ else
 	##### print outbound calls from the call_log table
 	$stmt="SELECT uniqueid,start_time,$number_dialed,length_in_sec FROM call_log where server_ip = '$server_ip' and channel LIKE \"$protocol/$exten%\" order by start_time desc limit $out_limit;";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-	if ($rslt) {$out_calls_count = mysql_num_rows($rslt);}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($rslt) {$out_calls_count = mysqli_num_rows($rslt);}
 	echo "$out_calls_count|";
 	$loop_count=0;
 	while ($out_calls_count>$loop_count)
 		{
 		$loop_count++;
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 
 		$call_time_M = ($row[3] / 60);
 		$call_time_M = round($call_time_M, 2);
@@ -155,14 +160,14 @@ else
 	##### print inbound calls from the live_inbound_log table
 	$stmt="SELECT call_log.uniqueid,live_inbound_log.start_time,live_inbound_log.extension,caller_id,length_in_sec from live_inbound_log,call_log where phone_ext='$exten' and live_inbound_log.server_ip = '$server_ip' and call_log.uniqueid=live_inbound_log.uniqueid order by start_time desc limit $in_limit;";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-	if ($rslt) {$in_calls_count = mysql_num_rows($rslt);}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($rslt) {$in_calls_count = mysqli_num_rows($rslt);}
 	echo "$in_calls_count|";
 	$loop_count=0;
 	while ($in_calls_count>$loop_count)
 		{
 		$loop_count++;
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 
 		$call_time_M = ($row[4] / 60);
 		$call_time_M = round($call_time_M, 2);

@@ -23,13 +23,14 @@ agc|dbconnect.php|1
 agc|timeclock.php|0
 agc|vdc_script_display.php|1
 agc|vdc_script_notes.php|0
-agc|functions.php|1
+agc|functions.php|0
 agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
 agc|phone_only.php|0
 agc|vdc_email_display.php|0
 agc|audit_comments.php|0
+agc|dbconnect_mysqli.php|1
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"一月"|
@@ -44,6 +45,7 @@ agc|audit_comments.php|0
 "OCT"|"十月"|
 "NOV"|"十一月"|
 "DEC"|"十二月"|
+\./bp.pl|../agc/bp.pl|
 \./images/|../agc/images/|
 css/|../agc/css/|
 BORDER|邊界|
@@ -304,7 +306,7 @@ YOU CANNOT SKIP A CALLBACK OR MANUAL DIAL, YOU MUST DIAL THE LEAD|您不能跳�
 YOU MUST BE PAUSED TO MANUAL DIAL A NEW LEAD IN AUTO-DIAL MODE|在自動外撥模式下您必須暫停才可以人工外撥一個新的紀錄|
 Enter information below for the new lead you wish to call|請輸入下面的資訊給您想要外撥的新紀錄|
 YOU MUST BE PAUSED TO CHECK CALLBACKS IN AUTO-DIAL MODE|在自動外撥模式下您必須暫停才可以檢查回撥|
-Note: all new manual dial leads will go into list 999|注意: 所有新的人工外撥紀錄將會進入名單 999|
+Note: all new manual dial leads will go into list|注意: 所有新的人工外撥紀錄將會進入名單|
 YOU DO NOT HAVE PERMISSIONS TO TRANSFER CALLS|您沒有轉接電話的權限|
 will be added to the beginning of this number|將會加在此號碼之前|
 This is usually a 1 in the USA-Canada|This is usually a 1 in the USA-Canada|
@@ -674,3 +676,15 @@ Department:|部門：|
 Group Name|組名|
 Job Title|職稱|
 Location:|位置：|
+### START translations for 2.8 release ###
+This agent screen was not opened properly|這個代理的屏幕沒有被正確打開|
+Dial Lead ID|撥號鉛ID|
+Agent Form Display Script|代理形式顯示腳本|
+Agent Notes|代理注意事項|
+You have been paused for too long, you have been logged out of your session|你已經暫停的時間太長，你已經登出你的會話|
+Too many network errors, please contact your administrator|太多的網絡錯誤，請與您的系統管理員|
+No available servers, please contact your administrator|沒有可用的服務器，請與您的系統管理員|
+No available phones, please contact your administrator|沒有可用的電話，請聯繫您的系統管理員|
+You are already logged in, please log out of your other session first|您已登錄，請登錄你的其他會議的第一|
+Too many agents logged in, please contact your administrator|太多的代理商登錄，請聯繫您的系統管理員|
+Dial Countdown|撥號倒計時|

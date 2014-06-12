@@ -1,10 +1,10 @@
 <?php
 # 
-# functions.php    version 2.4
+# functions.php    version 2.8
 #
 # functions for administrative scripts and reports
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES:
@@ -14,9 +14,122 @@
 # 120125-1235 - Small changes to max stats function to allow for total system stats
 # 120213-1417 - Changes to allow for ra stats
 # 120713-2137 - Added download function for max stats
+# 130615-2111 - Added user authentication function and login lockout for 15 minutes after 10 failed login
+# 130705-1957 - Added password encryption compatibility
+# 130831-0919 - Changed to mysqli PHP functions
+# 140319-1924 - Added MathZDC function
 #
 
-##### reformat seconds into HH:MM:SS or MM:SS #####
+##### BEGIN validate user login credentials, check for failed lock out #####
+function user_authorization($user,$pass,$user_option,$user_update)
+	{
+	require("dbconnect_mysqli.php");
+
+	#############################################
+	##### START SYSTEM_SETTINGS LOOKUP #####
+	$stmt = "SELECT use_non_latin,webroot_writable,pass_hash_enabled,pass_key,pass_cost FROM system_settings;";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$qm_conf_ct = mysqli_num_rows($rslt);
+	if ($qm_conf_ct > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$non_latin =					$row[0];
+		$SSwebroot_writable =			$row[1];
+		$SSpass_hash_enabled =			$row[2];
+		$SSpass_key =					$row[3];
+		$SSpass_cost =					$row[4];
+		}
+	##### END SETTINGS LOOKUP #####
+	###########################################
+
+	$STARTtime = date("U");
+	$TODAY = date("Y-m-d");
+	$NOW_TIME = date("Y-m-d H:i:s");
+	$ip = getenv("REMOTE_ADDR");
+	$browser = getenv("HTTP_USER_AGENT");
+	$LOCK_over = ($STARTtime - 900); # failed login lockout time is 15 minutes(900 seconds)
+	$LOCK_trigger_attempts = 10;
+
+	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
+	$pass = preg_replace("/\'|\"|\\\\|;/","",$pass);
+
+	$passSQL = "pass='$pass'";
+
+	if ($SSpass_hash_enabled > 0)
+		{
+		if (file_exists("../agc/bp.pl"))
+			{$pass_hash = exec("../agc/bp.pl --pass=$pass");}
+		else
+			{$pass_hash = exec("../../agc/bp.pl --pass=$pass");}
+		$pass_hash = preg_replace("/PHASH: |\n|\r|\t| /",'',$pass_hash);
+		$passSQL = "pass_hash='$pass_hash'";
+		}
+
+	$stmt="SELECT count(*) from vicidial_users where user='$user' and $passSQL and user_level > 7 and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";
+	if ($user_option == 'REPORTS')
+		{$stmt="SELECT count(*) from vicidial_users where user='$user' and $passSQL and user_level > 6 and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";}
+	if ($user_option == 'REMOTE')
+		{$stmt="SELECT count(*) from vicidial_users where user='$user' and $passSQL and user_level > 3 and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";}
+	if ($user_option == 'QC')
+		{$stmt="SELECT count(*) from vicidial_users where user='$user' and $passSQL and user_level > 1 and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";}
+	if ($DB) {echo "|$stmt|\n";}
+	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$auth=$row[0];
+
+	if ($auth < 1)
+		{
+		$auth_key='BAD';
+		$stmt="SELECT failed_login_count,UNIX_TIMESTAMP(last_login_date) from vicidial_users where user='$user';";
+		if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$cl_user_ct = mysqli_num_rows($rslt);
+		if ($cl_user_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$failed_login_count =	$row[0];
+			$last_login_date =		$row[1];
+
+			if ($failed_login_count < $LOCK_trigger_attempts)
+				{
+				$stmt="UPDATE vicidial_users set failed_login_count=(failed_login_count+1),last_ip='$ip' where user='$user';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				}
+			else
+				{
+				if ($LOCK_over > $last_login_date)
+					{
+					$stmt="UPDATE vicidial_users set last_login_date=NOW(),failed_login_count=1,last_ip='$ip' where user='$user';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					}
+				else
+					{$auth_key='LOCK';}
+				}
+			}
+		if ($SSwebroot_writable > 0)
+			{
+			$fp = fopen ("./project_auth_entries.txt", "a");
+			fwrite ($fp, "ADMIN|FAIL|$NOW_TIME|$user|$auth_key|$ip|$browser|\n");
+			fclose($fp);
+			}
+		}
+	else
+		{
+		if ($user_update > 0)
+			{
+			$stmt="UPDATE vicidial_users set last_login_date=NOW(),last_ip='$ip',failed_login_count=0 where user='$user';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			}
+		$auth_key='GOOD';
+		}
+	return $auth_key;
+	}
+##### END validate user login credentials, check for failed lock out #####
+
+
+##### BEGIN reformat seconds into HH:MM:SS or MM:SS #####
 function sec_convert($sec,$precision)
 	{
 	$sec = round($sec,0);
@@ -39,7 +152,7 @@ function sec_convert($sec,$precision)
 
 		if ($precision == 'H')
 			{
-			$Fhours_H =	($sec / 3600);
+			$Fhours_H =	MathZDC($sec, 3600);
 			$Fhours_H_int = floor($Fhours_H);
 			$Fhours_H_int = intval("$Fhours_H_int");
 			$Fhours_M = ($Fhours_H - $Fhours_H_int);
@@ -55,7 +168,7 @@ function sec_convert($sec,$precision)
 			}
 		if ($precision == 'M')
 			{
-			$Fminutes_M = ($sec / 60);
+			$Fminutes_M = MathZDC($sec, 60);
 			$Fminutes_M_int = floor($Fminutes_M);
 			$Fminutes_M_int = intval("$Fminutes_M_int");
 			$Fminutes_S = ($Fminutes_M - $Fminutes_M_int);
@@ -71,9 +184,10 @@ function sec_convert($sec,$precision)
 		return "$Ftime";
 		}
 	}
+##### END reformat seconds into HH:MM:SS or MM:SS #####
 
 
-##### counts like elements in an array, optional sort asc desc #####
+##### BEGIN counts like elements in an array, optional sort asc desc #####
 function array_group_count($array, $sort = false) 
 	{
 	$tally_array = array();
@@ -100,9 +214,10 @@ function array_group_count($array, $sort = false)
 
 	return $tally_array;
 	}
+##### END counts like elements in an array, optional sort asc desc #####
 
 
-##### bar chart using max stats data #####
+##### BEGIN bar chart using max stats data #####
 function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$metric_name,$more_link,$END_DATE,$download_link)
 	{
 	$stats_start_time = time();
@@ -118,7 +233,7 @@ function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$met
 	$link_text='';
 	$max_count=0;
 	$i=0;
-	$NWB = "$download_link &nbsp; <a href=\"javascript:openNewWindow('$PHP_SELF?ADD=99999";
+	$NWB = "$download_link &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
 	$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 Border=0 ALT=\"HILFE\" ALIGN=TOP></A>";
 
 
@@ -132,11 +247,11 @@ function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$met
 		{$stmt="SELECT stats_date,total_calls from vicidial_daily_ra_stats where stats_flag='OPEN' and stats_date<='$Bstats_date[0]' and user='$campaign_id';";}
 	if ($metric=='ra_concurrent_calls')
 		{$stmt="SELECT stats_date,max_calls from vicidial_daily_ra_stats where stats_flag='OPEN' and stats_date<='$Bstats_date[0]' and user='$campaign_id';";}
-	$rslt=mysql_query($stmt, $link);
-	$Xstats_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$Xstats_to_print = mysqli_num_rows($rslt);
 	if ($Xstats_to_print > 0) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$Bstats_date[0] =  $rowx[0];
 		$Btotal_calls[0] = $rowx[1];
 		if ($max_count < $Btotal_calls[0]) {$max_count = $Btotal_calls[0];}
@@ -157,11 +272,11 @@ function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$met
 		if ($metric=='ra_concurrent_calls')
 			{$stmt="SELECT stats_date,max_calls from vicidial_daily_ra_stats where stats_date='$Bstats_date[$i]' and user='$campaign_id';";}
 		echo "<!-- $i) $stmt \\-->\n";
-		$rslt=mysql_query($stmt, $link);
-		$Ystats_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$Ystats_to_print = mysqli_num_rows($rslt);
 		if ($Ystats_to_print > 0) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$Btotal_calls[$i] =		$rowx[1];
 			if ($max_count < $Btotal_calls[$i]) {$max_count = $Btotal_calls[$i];}
 			}
@@ -176,13 +291,13 @@ function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$met
 		if ($title=='in-group') {$out_in_type=' inbound';}
 		if ($more_link > 0) {$link_text = "<a href=\"$PHP_SELF?ADD=999993&campaign_id=$campaign_id&stage=$title\"><font size=1>more summary stats...</font></a>";}
 		echo "<table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"Multiple day $metric_name.\" style=\"background-image:url(../vicidial/images/bg_fade.png); background-repeat:repeat-x; background-position:left top; width: 33em;\">\n";
-		echo "<caption align=\"top\">$days_graph Day $out_in_type $metric_name for this $title &nbsp; $link_text  &nbsp; $NWB#vicidial_campaigns-max_stats$NWE<br /></caption>\n";
+		echo "<caption align=\"top\">$days_graph Day $out_in_type $metric_name for this $title &nbsp; $link_text  &nbsp; $NWB#max_stats$NWE<br /></caption>\n";
 		echo "<tr>\n";
 		echo "<th scope=\"col\" style=\"text-align: left; vertical-align:top;\"><span class=\"auraltext\">date</span> </th>\n";
 		echo "<th scope=\"col\" style=\"text-align: left; vertical-align:top;\"><span class=\"auraltext\">$metric_name</span> </th>\n";
 		echo "</tr>\n";
 
-		$max_multi = (400 / $max_count);
+		$max_multi = MathZDC(400, $max_count);
 		$i=0;
 		while($i < $days_graph)
 			{
@@ -197,8 +312,10 @@ function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$met
 		echo "</table>\n";
 		}
 	}
+##### END bar chart using max stats data #####
 
-##### bar chart using max stats data #####
+
+##### BEGIN download max stats data #####
 function download_max_system_stats($campaign_id,$days_graph,$title,$metric,$metric_name,$END_DATE)
 	{
 	global $CSV_text, $link;
@@ -225,11 +342,11 @@ function download_max_system_stats($campaign_id,$days_graph,$title,$metric,$metr
 		{$stmt="SELECT stats_date,total_calls from vicidial_daily_ra_stats where stats_flag='OPEN' and stats_date<='$Bstats_date[0]' and user='$campaign_id';";}
 	if ($metric=='ra_concurrent_calls')
 		{$stmt="SELECT stats_date,max_calls from vicidial_daily_ra_stats where stats_flag='OPEN' and stats_date<='$Bstats_date[0]' and user='$campaign_id';";}
-	$rslt=mysql_query($stmt, $link);
-	$Xstats_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$Xstats_to_print = mysqli_num_rows($rslt);
 	if ($Xstats_to_print > 0) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$Bstats_date[0] =  $rowx[0];
 		$Btotal_calls[0] = $rowx[1];
 		if ($max_count < $Btotal_calls[0]) {$max_count = $Btotal_calls[0];}
@@ -249,11 +366,11 @@ function download_max_system_stats($campaign_id,$days_graph,$title,$metric,$metr
 			{$stmt="SELECT stats_date,total_calls from vicidial_daily_ra_stats where stats_date='$Bstats_date[$i]' and user='$campaign_id';";}
 		if ($metric=='ra_concurrent_calls')
 			{$stmt="SELECT stats_date,max_calls from vicidial_daily_ra_stats where stats_date='$Bstats_date[$i]' and user='$campaign_id';";}
-		$rslt=mysql_query($stmt, $link);
-		$Ystats_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$Ystats_to_print = mysqli_num_rows($rslt);
 		if ($Ystats_to_print > 0) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$Btotal_calls[$i] =		$rowx[1];
 			if ($max_count < $Btotal_calls[$i]) {$max_count = $Btotal_calls[$i];}
 			}
@@ -283,4 +400,20 @@ function download_max_system_stats($campaign_id,$days_graph,$title,$metric,$metr
 		$CSV_text.="\n\n";
 		}
 	}
+##### BEGIN download max stats data #####
+
+function mysql_to_mysqli($stmt, $link) {
+	$rslt=mysqli_query($link, $stmt);
+	return $rslt;
+}
+
+function MathZDC($dividend, $divisor, $quotient=0) {
+	if ($divisor==0) {
+		return $quotient;
+	} else if ($dividend==0) {
+		return 0;
+	} else {
+		return ($dividend/$divisor);
+	}
+}
 ?>

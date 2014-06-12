@@ -1,16 +1,20 @@
 <?php 
 # AST_timeonpark.php
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
 # 60620-1042 - Added variable filtering to eliminate SQL injection attack threat
 #            - Added required user/pass to gain access to this page
 # 90508-0644 - Changed to PHP long tags
+# 130610-1132 - Finalized changing of all ereg instances to preg
+# 130621-0720 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-2010 - Changed to mysqli PHP functions
 #
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -21,24 +25,82 @@ if (isset($_GET["reset_counter"]))				{$reset_counter=$_GET["reset_counter"];}
 	elseif (isset($_POST["reset_counter"]))		{$reset_counter=$_POST["reset_counter"];}
 if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
-if (isset($_GET["ENVIAR"]))				{$ENVIAR=$_GET["ENVIAR"];}
-	elseif (isset($_POST["ENVIAR"]))		{$ENVIAR=$_POST["ENVIAR"];}
+if (isset($_GET["REMITIR"]))				{$REMITIR=$_GET["REMITIR"];}
+	elseif (isset($_POST["REMITIR"]))		{$REMITIR=$_POST["REMITIR"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
-
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1';";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
-
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$stmt = "SELECT use_non_latin FROM system_settings;";
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$qm_conf_ct = mysqli_num_rows($rslt);
+if ($qm_conf_ct > 0)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Nombre y contraseña inválidos del usuario: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	$row=mysqli_fetch_row($rslt);
+	$non_latin =					$row[0];
+	}
+##### END SETTINGS LOOKUP #####
+###########################################
+
+if ($non_latin < 1)
+	{
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	}
+else
+	{
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+
+$auth=0;
+$reports_auth=0;
+$admin_auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'INFORMES',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth > 0)
+	{
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$admin_auth=$row[0];
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	if ($reports_auth < 1)
+		{
+		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ( ($reports_auth > 0) and ($admin_auth < 1) )
+		{
+		$ADD=999999;
+		$reports_only_user=1;
+		}
+	}
+else
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
 	}
 
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -55,17 +117,17 @@ if ($reset_counter > 7)
 	$reset_counter=0;
 
 	$stmt="update park_log set status='HUNGUP' where hangup_time is not null;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 
 	if ($DB)
 		{	
 		$stmt="delete from park_log where status='TALKING' and grab_time < '$timeONEhoursAGO' and (hangup_time is null or hangup_time='');";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		 echo "$stmt\n";
 
 		$stmt="delete from park_log where status='PARKED' and parked_time < '$timeHALFhoursAGO' and (hangup_time is null or hangup_time='');";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		 echo "$stmt\n";
 
 		}
@@ -99,16 +161,16 @@ echo "+------------+-----------------+---------------------+---------+\n";
 # $linkX=mysql_connect("localhost", "cron", "1234");
 #mysql_select_db("asterisk");
 
-$stmt="select extension,user,channel,channel_group,parked_time,UNIX_TIMESTAMP(parked_time) from park_log where status ='PARKED' and server_ip='" . mysql_real_escape_string($server_ip) . "' order by uniqueid;";
-$rslt=mysql_query($stmt, $link);
+$stmt="select extension,user,channel,channel_group,parked_time,UNIX_TIMESTAMP(parked_time) from park_log where status ='PARKED' and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' order by uniqueid;";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$parked_to_print = mysql_num_rows($rslt);
+$parked_to_print = mysqli_num_rows($rslt);
 	if ($parked_to_print > 0)
 	{
 	$i=0;
 	while ($i < $parked_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 
 		$channel =			sprintf("%-10s", $row[2]);
 		$number_dialed =	sprintf("%-15s", $row[3]);
@@ -144,7 +206,7 @@ $parked_to_print = mysql_num_rows($rslt);
 	{
 	echo "****************************************************************\n";
 	echo "****************************************************************\n";
-	echo "********************LLAMADAS EN ESPERA*********************\n";
+	echo "******************** LLAMADAS EN ESPERA NO ACTIVAS *********************\n";
 	echo "****************************************************************\n";
 	echo "****************************************************************\n";
 	}
@@ -155,22 +217,22 @@ $parked_to_print = mysql_num_rows($rslt);
 echo "\n\n";
 echo "----------------------------------------------------------------------------------------";
 echo "\n\n";
-echo "VICIDIAL: Agentes Time On Entrante Calls                             $NOW_TIME\n\n";
+echo "VICIDIAL: Agentes Time On Entrante Calls                             $NOW_TIME\n\n";
 echo "+------------|--------+------------+-----------------+---------------------+---------+\n";
 echo "| STATION    | USER   | CHANNEL    | GROUP           | START TIME          | MINUTES |\n";
 echo "+------------|--------+------------+-----------------+---------------------+---------+\n";
 
 
-$stmt="select extension,user,channel,channel_group,grab_time,UNIX_TIMESTAMP(grab_time) from park_log where status ='TALKING' and server_ip='" . mysql_real_escape_string($server_ip) . "' order by uniqueid;";
-$rslt=mysql_query($stmt, $link);
+$stmt="select extension,user,channel,channel_group,grab_time,UNIX_TIMESTAMP(grab_time) from park_log where status ='TALKING' and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' order by uniqueid;";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$talking_to_print = mysql_num_rows($rslt);
+$talking_to_print = mysqli_num_rows($rslt);
 	if ($talking_to_print > 0)
 	{
 	$i=0;
 	while ($i < $talking_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 
 		$extension =		sprintf("%-10s", $row[0]);
 		$user =				sprintf("%-6s", $row[1]);
@@ -208,7 +270,7 @@ $talking_to_print = mysql_num_rows($rslt);
 	{
 	echo "**************************************************************************************\n";
 	echo "**************************************************************************************\n";
-	echo "*********************************AGENTES SIN LLAMADAS*********************************\n";
+	echo "********************************* AGENTES SIN LLAMADAS *********************************\n";
 	echo "**************************************************************************************\n";
 	echo "**************************************************************************************\n";
 	}

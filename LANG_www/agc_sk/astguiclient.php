@@ -60,9 +60,12 @@
 # 91129-2211 - Replaced SELECT STAR in SQL query
 # 120223-2124 - Removed logging of good login passwords if webroot writable is enabled
 # 130328-0017 - Converted ereg to preg functions
+# 130603-2220 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130802-1002 - Changed to PHP mysqli functions
 # 
 
-require("dbconnect.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 ### If you have globals turned off uncomment these lines
 if (isset($_GET["user"]))					{$user=$_GET["user"];}
@@ -92,7 +95,7 @@ while ( (strlen($user_abb) > 4) and ($forever_stop < 200) )
 	{$user_abb = preg_replace("/^./","",$user_abb);   $forever_stop++;}
 
 $version = '2.2.6-1';
-$build = '130328-0017';
+$build = '130802-1002';
 
 ### security strip all non-alphanumeric characters out of the variables ###
 	$DB=preg_replace("/[^0-9a-z]/","",$DB);
@@ -116,14 +119,13 @@ if ($force_logout)
 $StarTtime = date("U");
 $NOW_TIME = date("Y-m-d H:i:s");
 $FILE_TIME = date("Ymd-His");
-	$month_old = mktime(0, 0, 0, date("m"), date("d")-7,  date("Y"));
-	$past_month_date = date("Y-m-d H:i:s",$month_old);
+$month_old = mktime(0, 0, 0, date("m"), date("d")-7,  date("Y"));
+$past_month_date = date("Y-m-d H:i:s",$month_old);
 
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',1,0,0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
 $US='_';
 $CL=':';
@@ -178,15 +180,12 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/astguicli
 	}
 else
 	{
-
 	if($auth>0)
 		{
-		$office_no=strtoupper($user);
-		$password=strtoupper($pass);
-			$stmt="SELECT full_name,user_level from vicidial_users where user='$user' and pass='$pass'";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$LOGfullname=$row[0];
+		$stmt="SELECT full_name,user_level from vicidial_users where user='$user' and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$LOGfullname=$row[0];
 		if ($WeBRooTWritablE > 0)
 			{
 			fwrite ($fp, "VICIDIAL|GOOD|$date|$user|XXXX|$ip|$browser|$LOGfullname|\n");
@@ -244,8 +243,8 @@ else
 $authphone=0;
 $stmt="SELECT count(*) from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $authphone=$row[0];
 if (!$authphone)
 	{
@@ -281,8 +280,8 @@ else
 	echo "<title>web klient astGUIclient</title>\n";
 	$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$extension=$row[0];
 	$dialplan_number=$row[1];
 	$voicemail_id=$row[2];
@@ -354,23 +353,23 @@ else
 
 	$stmt="DELETE from web_client_sessions where start_time < '$past_month_date' and extension='$extension' and server_ip = '$server_ip' and program = 'agc';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 
 	$stmt="INSERT INTO web_client_sessions values('$extension','$server_ip','agc','$NOW_TIME','$session_name');";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 
 	$stmt="SELECT count(*) from phone_favorites where extension='$extension' and server_ip = '$server_ip';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$favorites_present=$row[0];
 	if ($favorites_present > 0)
 		{
 		$stmt="SELECT extensions_list from phone_favorites where extension='$extension' and server_ip = '$server_ip';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$favorites_list=$row[0];
 		$h=0;
 		$favorites_listX = preg_replace("/\'/i",'',$favorites_list);
@@ -382,8 +381,8 @@ else
 		while ($favorites_count > $o) 
 			{
 			$stmt="SELECT fullname,protocol from phones where extension = '$favorites[$o]' and server_ip='$server_ip';";
-			$rslt=mysql_query($stmt, $link);
-			$rowx=mysql_fetch_row($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$rowx=mysqli_fetch_row($rslt);
 			$favorites_names[$o] =	$rowx[0];
 			$favorites_listX .= "$rowx[1]/$favorites[$o],";
 			$o++;
@@ -400,13 +399,13 @@ else
 ### gather phone extensions and fullnames for favorites editor ###
 	$stmt="SELECT extension,fullname from phones where server_ip = '$server_ip';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$exten_ct = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$exten_ct = mysqli_num_rows($rslt);
 	$favlistCT=0;
 	$nofavlistCT=0;
 	while ($favlistCT < $exten_ct)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$favlist[$favlistCT]= "$row[0] - $row[1]";
 		$favlistCT++;
 		}
@@ -1333,7 +1332,6 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 				//	alert(xmlhttp.responseText);
 				//	document.getElementById("busycallsdebug").innerHTML = checklive_query + "<BR>" + xmlhttp.responseText;
 				//	pause();
-
 					var check_live_line=check_live.split("\n");
 					var check_live_array=check_live_line[0].split("|");
 					var inbound_call_array=check_live_line[1].split("|");
@@ -1803,7 +1801,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 			}
 		if (xmlhttp) 
 			{ 
-			checkconf_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&conf_exten=" + taskconfnum;
+			checkconf_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&conf_exten=" + taskconfnum + "&bcrypt=OFF";
 			xmlhttp.open('POST', 'conf_exten_check.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(checkconf_query); 
@@ -1911,7 +1909,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 			}
 		if (xmlhttp) 
 			{ 
-			reg_conf_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&conf_exten=" + taskconfreg + "&exten=" + extension + "&ACTION=register";
+			reg_conf_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&conf_exten=" + taskconfreg + "&exten=" + extension + "&ACTION=register&bcrypt=OFF";
 			xmlhttp.open('POST', 'conf_exten_check.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(reg_conf_query); 

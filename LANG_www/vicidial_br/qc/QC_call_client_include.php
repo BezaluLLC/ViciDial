@@ -3,6 +3,7 @@
 #
 # changes:
 # 121116-1328 - First build, added to vicidial codebase
+# 130902-0909 - Changed to mysqli PHP functions
 #
 /* QC_call_client_include.php
  * Part of QC system by Poundteam.
@@ -23,8 +24,8 @@ function is_user_logged_in($user){
     global $link;
     $stmt="select status from vicidial_live_agents where user='$user'";
     if ($DB) {echo "|$stmt|\n";}
-    $rslt=mysql_query($stmt, $link);
-    $live_agent_count = mysql_num_rows($rslt);
+    $rslt=mysql_to_mysqli($stmt, $link);
+    $live_agent_count = mysqli_num_rows($rslt);
     if($live_agent_count != '1'){
         if($live_agent_count == '0'){
             return "Cannot call prospect. You are not logged in as $user.";
@@ -32,7 +33,7 @@ function is_user_logged_in($user){
             return "Cannot call prospect. $live_agent_count agents logged in as $user.";
         }
     }
-    $row=mysql_fetch_row($rslt);
+    $row=mysqli_fetch_row($rslt);
     $status = $row[0];
     if($status!='PAUSED'){
         return "Status must be paused to call lead. $user is presently in $status status.";

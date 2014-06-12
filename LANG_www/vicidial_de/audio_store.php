@@ -1,7 +1,7 @@
 <?php
 # audio_store.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Central Audio Storage script
 # 
@@ -16,14 +16,18 @@
 # 120531-1747 - Another filtering fix
 # 121019-0816 - Added audio file delete process
 # 121129-1620 - Hide delete option text if not allowed
+# 130610-1052 - Finalized changing of all ereg instances to preg
+# 130620-1729 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-2001 - Changed to mysqli PHP functions
 #
 
-$version = '2.6-10';
-$build = '121129-1620';
+$version = '2.8-13';
+$build = '130901-2001';
 
 $MT[0]='';
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
+require("functions.php");
 
 $server_name = getenv("SERVER_NAME");
 $PHP_SELF=$_SERVER['PHP_SELF'];
@@ -58,12 +62,12 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory,outbound_autodial_active FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$ss_conf_ct = mysql_num_rows($rslt);
+$ss_conf_ct = mysqli_num_rows($rslt);
 if ($ss_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =						$row[0];
 	$sounds_central_control_active =	$row[1];
 	$sounds_web_server =				$row[2];
@@ -75,7 +79,7 @@ if ($ss_conf_ct > 0)
 
 
 ### check if sounds server matches this server IP, if not then exit with an error
-if ( ( (strlen($sounds_web_server)) != (strlen($server_name)) ) or (!eregi("$sounds_web_server",$server_name) ) )
+if ( ( (strlen($sounds_web_server)) != (strlen($server_name)) ) or (!preg_match("/$sounds_web_server/i",$server_name) ) )
 	{
 	echo "ERROR: server($server_name) does not match sounds web server ip($sounds_web_server)\n";
 	exit;
@@ -105,21 +109,21 @@ if (strlen($sounds_web_directory) < 30)
 	if ($DB > 0) {echo "$WeBServeRRooT/$sounds_web_directory\n";}
 
 	$stmt="UPDATE system_settings set sounds_web_directory='$sounds_web_directory';";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	echo "NOTICE: new web directory created\n";
 	}
 
 
 ### get list of all servers, if not one of them, then force authentication check
 $stmt = "SELECT server_ip FROM servers;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$sv_conf_ct = mysql_num_rows($rslt);
+$sv_conf_ct = mysqli_num_rows($rslt);
 $i=0;
 $server_ips ='|';
 while ($sv_conf_ct > $i)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$server_ips .=	"$row[0]|";
 	$i++;
 	}
@@ -137,32 +141,63 @@ if ( (!preg_match("/\|$ip\|/", $server_ips)) and ($formIPvalid < 1) )
 	$user_set=1;
 	$PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 	$PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
-	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
-	$delete_file = ereg_replace("[^-\._0-9a-zA-Z]","",$delete_file);
-
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and ( (modify_campaigns='1') or (modify_audiostore='1') )";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
-
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 8 and ( (ast_admin_access='1') and (modify_audiostore='1') )";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth_delete=$row[0];
-
-	if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+	if ($non_latin < 1)
 		{
-		Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+		$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+		$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+		}
+	else
+		{
+		$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+		$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+		}
+	$delete_file = preg_replace('/[^-\._0-9a-zA-Z]/','',$delete_file);
+
+	$auth=0;
+	$reports_auth=0;
+	$admin_auth=0;
+	$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1);
+	if ($auth_message == 'GOOD')
+		{$auth=1;}
+
+	if ($auth > 0)
+		{
+		$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and( (modify_campaigns='1') or (modify_audiostore='1') );";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$admin_auth=$row[0];
+
+		if ($admin_auth < 1)
+			{
+			$VDdisplayMESSAGE = "You are not allowed to upload audio files";
+			Header ("Content-type: text/html; charset=utf-8");
+			echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+			exit;
+			}
+		}
+	else
+		{
+		$VDdisplayMESSAGE = "Login incorrect, please try again";
+		if ($auth_message == 'LOCK')
+			{
+			$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+			Header ("Content-type: text/html; charset=utf-8");
+			echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+			exit;
+			}
+		Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
 		Header("HTTP/1.0 401 Unauthorized");
-		echo "Unzulässiges Username/Kennwort:|$PHP_AUTH_USER|$PHP_AUTH_PW|$ip|\n";
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
 		exit;
 		}
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 8 and ( (ast_admin_access='1') and (modify_audiostore='1') )";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$auth_delete=$row[0];
 	}
-
-
 
 $delete_message='';
 ### delete a file from the audio store
@@ -177,11 +212,11 @@ if ( ($action == "DELETE") and ($auth_delete > 0) )
 
 		$stmt="UPDATE servers SET sounds_update='Y',audio_store_purge=CONCAT(audio_store_purge,\"$delete_file\\n\");";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 
 		$stmt="UPDATE system_settings SET audio_store_purge=CONCAT(audio_store_purge,\"$delete_file\\n\");";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 
 		$delete_message = "AUDIO FILE SET FOR DELETION: $delete_file\n";
 		}
@@ -290,8 +325,8 @@ if ($user_set < 1)
 	{
 	$PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 	$PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
-	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_PW);
 	}
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'311111111111111';
@@ -330,12 +365,12 @@ $browser = getenv("HTTP_USER_AGENT");
 $script_name = getenv("SCRIPT_NAME");
 $server_name = getenv("SERVER_NAME");
 $server_port = getenv("SERVER_PORT");
-if (eregi("443",$server_port)) {$HTTPprotocol = 'https://';}
+if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
   else {$HTTPprotocol = 'http://';}
 $admDIR = "$HTTPprotocol$server_name:$server_port$script_name";
-$admDIR = eregi_replace('audio_store.php','',$admDIR);
+$admDIR = preg_replace('/audio_store\.php/i', '',$admDIR);
 $admSCR = 'admin.php';
-$NWB = " &nbsp; <a href=\"javascript:openNewWindow('$admDIR$admSCR?ADD=99999";
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 Border=0 ALT=\"HILFE\" ALIGN=TOP></A>";
 
 $secX = date("U");
@@ -373,15 +408,15 @@ if ($action == "MANUALUPLOAD")
 		echo "SUCCESS: $audiofile_name uploaded     size:" . filesize("$WeBServeRRooT/$sounds_web_directory/$audiofile_name") . "\n";
 
 		$stmt="UPDATE servers SET sounds_update='Y';";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
 		$SQL_log = "$stmt|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
 		$SQL_log = addslashes($SQL_log);
 		$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='AUDIOSTORE', event_type='LOAD', record_id='manualupload', event_code='$audiofile_name " . filesize("$WeBServeRRooT/$sounds_web_directory/$audiofile_name") . "', event_sql=\"$SQL_log\", event_notes='$audiofile_name $AF_path $AF_orig';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		}
 	else
 		{

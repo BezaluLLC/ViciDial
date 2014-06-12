@@ -1,7 +1,7 @@
 <?php
 # admin_header.php - VICIDIAL administration header
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
 # CHANGES
@@ -41,6 +41,10 @@
 # 121123-0911 - Added Call Times Holidays Inbound functionality
 # 121214-2238 - Added email menus
 # 130221-1830 - Added Level 8 disable add option
+# 130610-1040 - Finalized changing of all ereg instances to preg
+# 130615-2314 - Changed Reports only and QC only headers
+# 130824-2324 - Changed to mysqli PHP functions
+# 140126-1022 - Added VMAIL_NO_INST option
 #
 
 
@@ -49,26 +53,41 @@ if($short_header)
 	{
 	?>
 	<TABLE CELLPADDING=0 CELLSPACING=0 BGCOLOR="#015B91"><TR>
-	<TD><IMG SRC="vicidial_admin_web_logo_small.gif" WIDTH=71 HEIGHT=22> &nbsp; </TD>
-	<?php if ($reports_only_user < 1) {
-		?>
-	<TD> &nbsp; <A HREF="admin.php" ALT="Utenti"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Utenti</B></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=10" ALT="Campagnas"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Campagnas</B></A> &nbsp; </TD>
+	<TD><A HREF="./admin.php"><IMG SRC="vicidial_admin_web_logo_small.gif" WIDTH=71 HEIGHT=22 Border=0 ALT="System logo"></A> &nbsp; </TD>
+	<?php 
+	if ( ($reports_only_user < 1) and ($qc_only_user < 1) )
+		{
+	?>
+	<TD> &nbsp; <A HREF="admin.php?ADD=0A" ALT="Utenti"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Utenti</B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=10" ALT="Campagnas"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Campagnas</B></FONT></A> &nbsp; </TD>
         <?php include 'qc/QC_header_include02.php'; ?>
-	<TD> &nbsp; <A HREF="admin.php?ADD=100" ALT="Liste"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Liste</B></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=1000000" ALT="Script"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Script</B></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=10000000" ALT="Filtri"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Filtri</B></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=1000" ALT="Inbound"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Inbound</B></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=100000" ALT="Gruppi Utenti"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Gruppi Utenti</B></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=10000" ALT="Operatori Remoti"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Operatori Remoti</B></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=999998" ALT="Admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> Admin </B></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=100" ALT="Liste"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Liste</B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=1000000" ALT="Script"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Script</B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=10000000" ALT="Filtri"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Filtri</B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=1000" ALT="Inbound"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Inbound</B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=100000" ALT="Gruppi Utenti"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Gruppi Utenti</B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=10000" ALT="Operatori Remoti"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Operatori Remoti</B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=999998" ALT="Admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> Admin </B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=999999" ALT="Rapporti"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Rapporti</B></FONT></A> &nbsp; </TD>
 	<?php 
 		} 
 	else 
-		{ ?>
-	<TD width=600> &nbsp; &nbsp; </TD>
-	<?php } ?>
-	<TD> &nbsp; <A HREF="admin.php?ADD=999999" ALT="Rapporti"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Rapporti</B></A> &nbsp; </TD>
+		{ 
+		?>
+		<TD width=600> &nbsp; &nbsp; </TD>
+		<?php
+		if ($reports_only_user > 0)
+			{
+			?>
+			<TD> &nbsp; <A HREF="admin.php?ADD=999999" ALT="Rapporti"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Rapporti</B></A> &nbsp; </TD>
+			<?php
+			}
+		else
+			{
+			include 'qc/QC_header_include02.php';
+			}
+		}
+	?>
 	</TR>
 	</TABLE>
 	<?php
@@ -206,7 +225,7 @@ if ($TCedit_javascript > 0)
 ######################
 # ADD=31 or 34 and SUB=29 for list mixes
 ######################
-if ( ( ($ADD==34) or ($ADD==31) or ($ADD==49) ) and ($SUB==29) and ($LOGmodify_campaigns==1) and ( (eregi("$campaign_id",$LOGallowed_campaigns)) or (eregi("ALL-CAMPAIGNS",$LOGallowed_campaigns)) ) ) 
+if ( ( ($ADD==34) or ($ADD==31) or ($ADD==49) ) and ($SUB==29) and ($LOGmodify_campaigns==1) and ( (preg_match("/$campaign_id/i", $LOGallowed_campaigns)) or (preg_match("/ALL\-CAMPAIGNS/i",$LOGallowed_campaigns)) ) ) 
 	{
 
 	?>
@@ -422,18 +441,18 @@ if ( ( ($ADD==34) or ($ADD==31) or ($ADD==49) ) and ($SUB==29) and ($LOGmodify_c
 	<?php
 
 #### Javascript for auto-generate of user ID Button
-if ( ($SSadmin_modify_rinfrescare > 1) and (preg_match("/^3|^4/",$ADD)) )
+if ( ($SSadmin_modify_refresh > 1) and (preg_match("/^3|^4/",$ADD)) )
 	{
 	?>
-	var ar_seconds=<?php echo "$SSadmin_modify_rinfrescare;"; ?>
+	var ar_seconds=<?php echo "$SSadmin_modify_refresh;"; ?>
 
 	function modify_refresh_display()
 		{
 		if (ar_seconds > 0)
 			{
 			ar_seconds = (ar_seconds - 1);
-			document.getElementById("rinfrescare_countdown").innerHTML = "<font color=black> screen rinfrescare in: " + ar_seconds + " seconds</font>";
-			setTimeout("modify_rinfrescare_display()",1000);
+			document.getElementById("refresh_countdown").innerHTML = "<font color=black> screen rinfrescare in: " + ar_seconds + " seconds</font>";
+			setTimeout("modify_refresh_display()",1000);
 			}
 		}
 
@@ -636,13 +655,13 @@ if ( ($ADD==3111) or ($ADD==4111) or ($ADD==5111) )
 
 
 $stmt="SELECT menu_id,menu_name from vicidial_call_menu $whereLOGadmin_viewable_groupsSQL order by menu_id limit 10000;";
-$rslt=mysql_query($stmt, $link);
-$menus_to_print = mysql_num_rows($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$menus_to_print = mysqli_num_rows($rslt);
 $call_menu_list='';
 $i=0;
 while ($i < $menus_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$call_menu_list .= "<option value=\"$row[0]\">$row[0] - $row[1]</option>";
 	$i++;
 	}
@@ -651,37 +670,37 @@ while ($i < $menus_to_print)
 if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511) or ($ADD==3111) or ($ADD==2111) or ($ADD==2011) or ($ADD==4111) or ($ADD==5111) )
 	{
 	$stmt="SELECT did_pattern,did_description,did_route from vicidial_inbound_dids where did_active='Y' $LOGadmin_viewable_groupsSQL order by did_pattern;";
-	$rslt=mysql_query($stmt, $link);
-	$dids_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$dids_to_print = mysqli_num_rows($rslt);
 	$did_list='';
 	$i=0;
 	while ($i < $dids_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$did_list .= "<option value=\"$row[0]\">$row[0] - $row[1] - $row[2]</option>";
 		$i++;
 		}
 
 	$stmt="SELECT group_id,group_name from vicidial_inbound_groups where active='Y' and group_id NOT LIKE \"AGENTDIRECT%\" $LOGadmin_viewable_groupsSQL order by group_id;";
-	$rslt=mysql_query($stmt, $link);
-	$ingroups_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$ingroups_to_print = mysqli_num_rows($rslt);
 	$ingroup_list='';
 	$i=0;
 	while ($i < $ingroups_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$ingroup_list .= "<option value=\"$row[0]\">$row[0] - $row[1]</option>";
 		$i++;
 		}
 
 	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where active='Y' $LOGallowed_campaignsSQL order by campaign_id;";
-	$rslt=mysql_query($stmt, $link);
-	$IGcampaigns_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$IGcampaigns_to_print = mysqli_num_rows($rslt);
 	$IGcampaign_id_list='';
 	$i=0;
 	while ($i < $IGcampaigns_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$IGcampaign_id_list .= "<option value=\"$row[0]\">$row[0] - $row[1]</option>";
 		$i++;
 		}
@@ -691,13 +710,13 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 	$IGsearch_method_list = '<option value="LB">LB - Load Balanced</option><option value="LO">LO - Load Balanced Overflow</option><option value="SO">SO - Server Only</option>';
 
 	$stmt="SELECT login,server_ip,extension,dialplan_number from phones where active='Y' $LOGadmin_viewable_groupsSQL order by login,server_ip;";
-	$rslt=mysql_query($stmt, $link);
-	$phones_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$phones_to_print = mysqli_num_rows($rslt);
 	$phone_list='';
 	$i=0;
 	while ($i < $phones_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$phone_list .= "<option value=\"$row[0]\">$row[0] - $row[1] - $row[2] - $row[3]</option>";
 		$i++;
 		}
@@ -815,7 +834,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				{value='';}
 			new_content = 'Phone: <select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option + '>' + phone_list + "\n" + selected_value + '</select>';
 			}
-		if (selected_route=='VOICEMAIL')
+		if ( (selected_route=='VOICEMAIL') || (selected_route=='VMAIL_NO_INST') )
 			{
 			if (route == selected_route)
 				{
@@ -972,7 +991,7 @@ if ( ($ADD==2811) or ($ADD==3811) or ($ADD==3111) or ($ADD==2111) or ($ADD==2011
 
 			new_content = "Estensione:<input type=text name=EXextension_" + option + " id=EXextension_" + option + " size=20 maxlength=255 value=\"" + EXextension + "\"> &nbsp; Context: <input type=text name=EXcontext_" + option + " id=EXcontext_" + option + " size=20 maxlength=255 value=\"" + EXcontext + "\"> ";
 			}
-		if (selected_route=='VOICEMAIL')
+		if ( (selected_route=='VOICEMAIL') || (selected_route=='VMAIL_NO_INST') )
 			{
 			if (route == selected_route)
 				{
@@ -1048,9 +1067,9 @@ echo "</script>\n";
 ##### END - bar chart CSS style #####
 
 echo "</head>\n";
-if ( ($SSadmin_modify_rinfrescare > 1) and (preg_match("/^3|^4/",$ADD)) )
+if ( ($SSadmin_modify_refresh > 1) and (preg_match("/^3|^4/",$ADD)) )
 	{
-	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0 onLoad=\"modify_rinfrescare_display();\">\n";
+	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0 onLoad=\"modify_refresh_display();\">\n";
 	}
 else
 	{
@@ -1060,8 +1079,8 @@ else
 echo "<!-- ILPV -->\n";
 echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../vicidial_en/admin.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">English <img src=\"../agc/images/en.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  BGCOLOR=\"#CCFFCC\" NOWRAP><a href=\"../vicidial_it/admin.php?relogin=YES&VD_login=$VD_login&VD_campaign=$VD_campaign&phone_login=$phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Italiano <img src=\"../agc/images/it.gif\" BORDER=0 HEIGHT=14 WIDTH=20></a></TD>\n";
 $stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled,allow_emails,level_8_disable_add from system_settings;";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $admin_home_url_LU =		$row[0];
 $SSenable_tts_integration = $row[1];
 $SScallcard_enabled =		$row[2];
@@ -1076,19 +1095,21 @@ $SSlevel_8_disable_add =	$row[5];
 <TABLE BGCOLOR=white cellpadding=0 cellspacing=0>
 <!-- BEGIN SIDEBAR NAVIGATION -->
 <TR><TD VALIGN=TOP WIDTH=170 BGCOLOR=#015B91 ALIGN=CENTER>
-<IMG SRC="./vicidial_admin_web_logo.gif" WIDTH=170 HEIGHT=45 ALT="VICIDIAL logo">
+<A HREF="./admin.php"><IMG SRC="./vicidial_admin_web_logo.gif" WIDTH=170 HEIGHT=45 Border=0 ALT="System logo"></A>
 <B><FONT FACE="ARIAL,HELVETICA" COLOR=white>ADMINISTRATION</FONT></B><BR>
 	<TABLE CELLPADDING=2 CELLSPACING=0 BGCOLOR=#015B91 WIDTH=160>
-	<?php if ($reports_only_user < 1) {
-		?>
+	<?php
+	if ( ($reports_only_user < 1) and ($qc_only_user < 1) )
+		{
+	?>
 	<!-- USERS NAVIGATION -->
 	<TR WIDTH=160><TD <?php echo $users_hh ?> WIDTH=160>
-	<a href="<?php echo $ADMIN ?>?ADD=0"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $users_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $users_bold ?>Utenti</a>
+	<a href="<?php echo $ADMIN ?>?ADD=0A"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $users_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $users_bold ?>Utenti</a>
 	</TD></TR>
 	<?php if (strlen($users_hh) > 1) { 
 		?>
 	<TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
-	 &nbsp; <a href="<?php echo $ADMIN ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Inserisci Utenti </a>
+	 &nbsp; <a href="<?php echo $ADMIN ?>?ADD=0A"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Inserisci Utenti </a>
 	</TR><TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
 	<?php if ($add_copy_disabled < 1) { ?>
 	 &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Aggiungere un nuovo utente </a>
@@ -1482,12 +1503,30 @@ $SSlevel_8_disable_add =	$row[5];
 		<?php }
 
 			}
+		?>
+		<!-- REPORT NAVIGATION -->
+		<TR><TD <?php echo $reports_hh ?>>
+		<a href="<?php echo $ADMIN ?>?ADD=999999"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $reports_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $reports_bold ?> Report </a>
+		</TD></TR>
+		<?php
+		}
+	else
+		{
+		if ($reports_only_user > 0)
+			{
+			?>
+			<!-- REPORT NAVIGATION -->
+			<TR><TD <?php echo $reports_hh ?>>
+			<a href="<?php echo $ADMIN ?>?ADD=999999"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $reports_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $reports_bold ?> Report </a>
+			</TD></TR>
+			<?php
+			}
+		else
+			{
+			include 'qc/QC_header_include.php';
+			}
 		}
 	?>
-	<!-- REPORT NAVIGATION -->
-	<TR><TD <?php echo $reports_hh ?>>
-	<a href="<?php echo $ADMIN ?>?ADD=999999"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $reports_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $reports_bold ?> Report </a>
-	</TD></TR>
 	<TR><TD> &nbsp; </TD></TR>
 	</TABLE>
 </TD><TD VALIGN=TOP WIDTH=<?php echo $page_width ?> BGCOLOR=#D9E6FE>
@@ -1577,7 +1616,7 @@ $SSlevel_8_disable_add =	$row[5];
 		?>
 	<TR BGCOLOR=<?php echo $cts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=190000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Contatti </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=191111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Aggiungere un contatto </a><?php } ?></TD></TR>
 	<?php }
-	if ( (strlen($status_sh) > 1) and (!eregi('campaign',$hh) ) ) { 
+	if ( (strlen($status_sh) > 1) and (!preg_match('/campaign/i',$hh) ) ) { 
 		?>
 	<TR BGCOLOR=<?php echo $status_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=321111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Esiti di Default</a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=331111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Categorie di esiti</a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=341111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Codici di stato, QC</a></TD></TR>
 	<?php }

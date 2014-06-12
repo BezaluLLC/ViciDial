@@ -23,13 +23,14 @@ agc|dbconnect.php|1
 agc|timeclock.php|0
 agc|vdc_script_display.php|1
 agc|vdc_script_notes.php|0
-agc|functions.php|1
+agc|functions.php|0
 agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
 agc|phone_only.php|0
 agc|vdc_email_display.php|0
 agc|audit_comments.php|0
+agc|dbconnect_mysqli.php|1
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"GEN"|
@@ -44,6 +45,7 @@ agc|audit_comments.php|0
 "OCT"|"OTT"|
 "NOV"|"NOV"|
 "DEC"|"DIC"|
+\./bp.pl|../agc/bp.pl|
 \./images/|../agc/images/|
 css/|../agc/css/|
 BORDER|Border|
@@ -593,14 +595,14 @@ Dial In-Group|Cassaforte in gruppo|
 Click Here to Activate|Clicca qui per attivare|
 Click Here to Deactivate|clicca qui per disattivare|
 ERROR: You must enter in search terms, one of these must be populated: lead ID, vendor ID, phone number, last name|Errore: è necessario inserire in termini di ricerca, uno di questi deve essere popolata: id piombo, Vendor ID, numero di telefono, cognome|
-ERROR: You must enter in search terms, one of these must be populated: office number, last name, first name|Errore: è necessario inserire in termini di ricerca, uno di questi deve essere compilato: numero dell'ufficio, il cognome, il nome|
-ERROR: There was a problem with your search terms|errore: c'è stato un problema con i termini di ricerca|
+ERROR: You must enter in search terms, one of these must be populated: office number, last name, first name|Errore: è necessario inserire in termini di ricerca, uno di questi deve essere compilato: numero dell ufficio, il cognome, il nome|
+ERROR: There was a problem with your search terms|errore: c è stato un problema con i termini di ricerca|
 Phone and Post Code Time Zone Mismatch|telefono cellulare e il codice postale di zona non corrispondente tempo|
 Last Local Call Time|ultima volta chiamata locale|
 Called Count|numero di chiamate|
 Unidentified Hangup Cause Code|identificato codice di causa riaggancio|
 YOU MUST SELECT AN AGENT TO TRANSFER TO WHEN USING AGENTDIRECT|è necessario selezionare un agente di trasferire a quando si utilizza agentdirect|
-Another live agent session was open using your user ID. It has been disabled. Click OK to continue to the agent screen|un'altra sessione di agente di vivere è stato aperto utilizzando l'ID utente. è stato disattivato. Cliccare su OK per passare alla schermata agente|
+Another live agent session was open using your user ID. It has been disabled. Click OK to continue to the agent screen|un altra sessione di agente di vivere è stato aperto utilizzando l ID utente. è stato disattivato. Cliccare su OK per passare alla schermata agente|
 View Comment History|visualizzare la cronologia commento|
 reset form|forma reimpostare|
 SELECT THIS LEAD|selezionare questo cavo|
@@ -646,14 +648,14 @@ Alert is OFF|avviso è spento|
 EMAIL LOG FOR THIS LEAD|log e-mail per questo cavo|
 EMAIL TO|e-mail a|
  ATTACHMENTS | allegati |
-Called Since Last Reset|chiamato dall'ultimo azzeramento|
+Called Since Last Reset|chiamato dall ultimo azzeramento|
 Timezone:|fuso orario:|
 Dial Link|comporre il collegamento|
  LAST | ultimo |
 SEARCH FOR A CONTACT|cercare un contatto|
 Notes: when doing a search for a contact, wildcard or partial search terms are not allowed|Note: quando si fa una ricerca di un contatto, termini di ricerca con caratteri jolly o parziali non sono ammessi|
 Contact search requests are all logged in the system|richieste di ricerca di contatto sono tutti registrati nel sistema|
-Office Number|numero dell'ufficio|
+Office Number|numero dell ufficio|
 First Name|nome|
 Last Name|cognome|
 BU Name|ragione sociale|
@@ -661,3 +663,15 @@ Department:|Dipartimento:|
 Group Name|il nome del gruppo|
 Job Title|titolo di lavoro|
 Location:|posizione:|
+### START translations for 2.8 release ###
+This agent screen was not opened properly|Questa schermata agente non è stato aperto correttamente|
+Dial Lead ID|Comporre ID Piombo|
+Agent Form Display Script|Agente Modulo Script di visualizzazione|
+Agent Notes|Agente Note|
+You have been paused for too long, you have been logged out of your session|Sei stato messo in pausa per troppo tempo, è stato disconnesso dalla sessione|
+Too many network errors, please contact your administrator|Troppi errori di rete, contattare l amministratore|
+No available servers, please contact your administrator|Nessun server disponibili, contattare l amministratore|
+No available phones, please contact your administrator|Nessun telefoni disponibili, contattare l amministratore|
+You are already logged in, please log out of your other session first|Si sono già connessi, si prega di accedere dal tuo altre sessioni prima|
+Too many agents logged in, please contact your administrator|Troppi agenti effettuato il login, si prega di contattare l amministratore|
+Dial Countdown|Comporre Countdown|

@@ -1,10 +1,10 @@
 <?php
 # 
-# functions.php    version 2.6
+# functions.php    version 2.8
 #
 # functions for agent scripts
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES:
@@ -15,7 +15,205 @@
 # 110730-2336 - Added call_id variable
 # 120213-1709 - Commented out default of READONLY fields since they cannot change
 # 130328-0018 - Converted ereg to preg functions
+# 130603-2208 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130705-2004 - Added optional encrypted passwords compatibility
+# 130802-1004 - Changed to PHP mysqli functions
+# 140429-2035 - Added TABLEper_call_notes display script variable for form display
+# 140521-1314 - Added more agent login error messages
 #
+
+# $mysql_queries = 19
+
+##### BEGIN validate user login credentials, check for failed lock out #####
+function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$return_hash)
+	{
+	require("dbconnect_mysqli.php");
+
+	#############################################
+	##### START SYSTEM_SETTINGS LOOKUP #####
+	$stmt = "SELECT use_non_latin,webroot_writable,pass_hash_enabled,pass_key,pass_cost,hosted_settings FROM system_settings;";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$qm_conf_ct = mysqli_num_rows($rslt);
+	if ($qm_conf_ct > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$non_latin =					$row[0];
+		$SSwebroot_writable =			$row[1];
+		$SSpass_hash_enabled =			$row[2];
+		$SSpass_key =					$row[3];
+		$SSpass_cost =					$row[4];
+		$SShosted_settings =			$row[5];
+		}
+	##### END SETTINGS LOOKUP #####
+	###########################################
+
+	$STARTtime = date("U");
+	$TODAY = date("Y-m-d");
+	$NOW_TIME = date("Y-m-d H:i:s");
+	$ip = getenv("REMOTE_ADDR");
+	$browser = getenv("HTTP_USER_AGENT");
+	$LOCK_over = ($STARTtime - 900); # failed login lockout time is 15 minutes(900 секунд)
+	$LOCK_trigger_attempts = 10;
+	$pass_hash='';
+
+	$user = preg_replace("/\'|\"|\\\\|;| /","",$user);
+	$pass = preg_replace("/\'|\"|\\\\|;| /","",$pass);
+
+	$passSQL = "pass='$pass'";
+
+	if ($SSpass_hash_enabled > 0)
+		{
+		if ($bcrypt < 1)
+			{
+			$pass_hash = exec("../agc/bp.pl --pass=$pass");
+			$pass_hash = preg_replace("/PHASH: |\n|\r|\t| /",'',$pass_hash);
+			}
+		else
+			{$pass_hash = $pass;}
+		$passSQL = "pass_hash='$pass_hash'";
+		}
+
+	$stmt="SELECT count(*) from vicidial_users where user='$user' and $passSQL and user_level > 0 and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";
+	if ($user_option == 'MGR')
+		{$stmt="SELECT count(*) from vicidial_users where user='$user' and $passSQL and manager_shift_enforcement_override='1' and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";}
+	if ($DB) {echo "|$stmt|\n";}
+	if ($non_latin > 0) {$rslt=mysql_to_mysqli($link, "SET NAMES 'UTF8'");}
+	$rslt=mysql_to_mysqli($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05009',$user,$server_ip,$session_name,$one_mysql_log);}
+	$row=mysqli_fetch_row($rslt);
+	$auth=$row[0];
+
+	if ($auth < 1)
+		{
+		$auth_key='BAD'."|$stmt";
+		$stmt="SELECT failed_login_count,UNIX_TIMESTAMP(last_login_date) from vicidial_users where user='$user';";
+		if ($non_latin > 0) {$rslt=mysql_to_mysqli($link, "SET NAMES 'UTF8'");}
+		$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05010',$user,$server_ip,$session_name,$one_mysql_log);}
+		$cl_user_ct = mysqli_num_rows($rslt);
+		if ($cl_user_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$failed_login_count =	$row[0];
+			$last_login_date =		$row[1];
+
+			if ($failed_login_count < $LOCK_trigger_attempts)
+				{
+				$stmt="UPDATE vicidial_users set failed_login_count=(failed_login_count+1),last_ip='$ip' where user='$user';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05011',$user,$server_ip,$session_name,$one_mysql_log);}
+				}
+			else
+				{
+				if ($LOCK_over > $last_login_date)
+					{
+					$stmt="UPDATE vicidial_users set last_login_date=NOW(),failed_login_count=1,last_ip='$ip' where user='$user';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05012',$user,$server_ip,$session_name,$one_mysql_log);}
+					}
+				else
+					{$auth_key='LOCK';}
+				}
+			}
+		if ($SSwebroot_writable > 0)
+			{
+			$fp = fopen ("./project_auth_entries.txt", "a");
+			fwrite ($fp, "AGENT|FAIL|$NOW_TIME|$user|$auth_key|$ip|$browser|\n");
+			fclose($fp);
+			}
+		}
+	else
+		{
+		$login_problem=0;
+		$aas_total=0;
+		$ap_total=0;
+		$vla_total=0;
+		$mvla_total=0;
+		$vla_set=0;
+		$vla_on=0;
+
+		$stmt = "SELECT count(*) FROM servers where active='Y' and active_asterisk_server='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$aas_ct = mysqli_num_rows($rslt);
+		if ($aas_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$aas_total =				$row[0];
+			}
+
+		$stmt = "SELECT count(*) FROM phones where active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$ap_ct = mysqli_num_rows($rslt);
+		if ($ap_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$ap_total =					$row[0];
+			}
+		
+		$stmt = "SELECT count(*) FROM vicidial_live_agents where user!='$user';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$vla_ct = mysqli_num_rows($rslt);
+		if ($vla_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$vla_total =				$row[0];
+			}
+
+		$stmt = "SELECT count(*) FROM vicidial_live_agents where user='$user';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$mvla_ct = mysqli_num_rows($rslt);
+		if ($mvla_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$mvla_total =				$row[0];
+			}
+
+		if ( (preg_match("/MXAG/",$SShosted_settings)) and ($mvla_total < 1) )
+			{
+			$vla_set = $SShosted_settings;
+			$vla_set = preg_replace("/.*MXAG|_СБОРКА_|DRA| /",'',$vla_set);
+			$vla_set = preg_replace('/[^0-9]/','',$vla_set);
+			if (strlen($vla_set)>0)
+				{$vla_on++;}
+			}
+
+		if ($aas_total < 1)
+			{
+			$auth_key='ERRSERVERS';
+			$login_problem++;
+			}
+		if ($ap_total < 1)
+			{
+			$auth_key='ERRPHONES';
+			$login_problem++;
+			}
+		if ( ($vla_total >= $vla_set) and ($vla_on > 0) )
+			{
+			$auth_key='ERRAGENTS';
+			$login_problem++;
+			}
+
+		if ($login_problem < 1)
+			{
+			if ($user_update > 0)
+				{
+				$stmt="UPDATE vicidial_users set last_login_date=NOW(),last_ip='$ip',failed_login_count=0 where user='$user';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05013',$user,$server_ip,$session_name,$one_mysql_log);}
+				}
+			$auth_key='GOOD';
+			if ( ($return_hash == '1') and ($SSpass_hash_enabled > 0) and (strlen($pass_hash) > 12) )
+				{$auth_key .= "|$pass_hash";}
+			}
+		}
+	return $auth_key;
+	}
+##### END validate user login credentials, check for failed lock out #####
 
 
 ##### BEGIN gather values for display of custom list fields for a lead #####
@@ -27,36 +225,36 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 
 	$vicidial_list_fields = '|lead_id|vendor_lead_code|source_id|list_id|gmt_offset_now|called_since_last_reset|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|called_count|last_local_call_time|rank|owner|';
 
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 
 	$CFoutput='';
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
 	if ($DB>0) {echo "$stmt";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05002',$user,$server_ip,$session_name,$one_mysql_log);}
-	$tablecount_to_print = mysql_num_rows($rslt);
+	$tablecount_to_print = mysqli_num_rows($rslt);
 	if ($tablecount_to_print > 0) 
 		{
 		$stmt="SELECT count(*) from custom_$list_id;";
 		if ($DB>0) {echo "$stmt";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05003',$user,$server_ip,$session_name,$one_mysql_log);}
-		$fieldscount_to_print = mysql_num_rows($rslt);
+		$fieldscount_to_print = mysqli_num_rows($rslt);
 		if ($fieldscount_to_print > 0) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$custom_records_count =	$rowx[0];
 
 			$select_SQL='';
 			$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05004',$user,$server_ip,$session_name,$one_mysql_log);}
-			$fields_to_print = mysql_num_rows($rslt);
+			$fields_to_print = mysqli_num_rows($rslt);
 			$fields_list='';
 			$o=0;
 			while ($fields_to_print > $o) 
 				{
-				$rowx=mysql_fetch_row($rslt);
+				$rowx=mysqli_fetch_row($rslt);
 				$A_field_id[$o] =			$rowx[0];
 				$A_field_label[$o] =		$rowx[1];
 				$A_field_name[$o] =			$rowx[2];
@@ -106,14 +304,14 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 				{
 				##### BEGIN grab the data from custom table for the lead_id
 				$stmt="SELECT $select_SQL FROM custom_$list_id where lead_id='$lead_id' LIMIT 1;";
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05005',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
-				$list_lead_ct = mysql_num_rows($rslt);
+				$list_lead_ct = mysqli_num_rows($rslt);
 				}
 			if ($list_lead_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$o=0;
 				while ($fields_to_print >= $o) 
 					{
@@ -132,7 +330,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 			##### END grab the data from custom table for the lead_id
 
 
-			$CFoutput .= "<input type=hidden name=stage id=stage value=\"SUBMIT\">\n";
+			$CFoutput .= "<input type=hidden name=stage id=stage value=\"ВВОД\">\n";
 			$CFoutput .= "<center><TABLE cellspacing=2 cellpadding=2>\n";
 			if ($fields_to_print < 1) 
 				{$CFoutput .= "<tr bgcolor=white align=center><td colspan=4><font size=1>There are no custom fields for this list</td></tr>";}
@@ -355,18 +553,19 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 
 
 	##### BEGIN parsing for vicidial variables #####
+	$NOTESout='';
 	if (preg_match("/--A--/",$CFoutput))
 		{
 		if ( (preg_match('/--A--user_custom_/i',$CFoutput)) or (preg_match('/--A--fullname/i',$CFoutput)) )
 			{
 			$stmt = "select custom_one,custom_two,custom_three,custom_four,custom_five,full_name from vicidial_users where user='$user';";
 			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05006',$user,$server_ip,$session_name,$one_mysql_log);}
-			$VUC_ct = mysql_num_rows($rslt);
+			$VUC_ct = mysqli_num_rows($rslt);
 			if ($VUC_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$user_custom_one	=		trim($row[0]);
 				$user_custom_two	=		trim($row[1]);
 				$user_custom_three	=		trim($row[2]);
@@ -384,26 +583,201 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 			### find the dialed number and label for this call
 			$stmt = "SELECT phone_number,alt_dial from vicidial_log where uniqueid='$uniqueid';";
 			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05008',$user,$server_ip,$session_name,$one_mysql_log);}
-			$vl_dialed_ct = mysql_num_rows($rslt);
+			$vl_dialed_ct = mysqli_num_rows($rslt);
 			if ($vl_dialed_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$dialed_number =	$row[0];
 				$dialed_label =		$row[1];
 				}
 			}
 
+		if (preg_match('/--A--TABLEper_call_notes--B--/i',$CFoutput))
+			{
+			### BEGIN Gather Call Log and notes ###
+			if ($hide_call_log_info!='Y')
+				{
+				if ($search != 'logfirst')
+					{$NOTESout .= "Журнал вызовов У объявления:<br>\n";}
+				$NOTESout .= "<TABLE CELLPADDING=0 CELLSPACING=1 Border=0 WIDTH=$stage>";
+				$NOTESout .= "<TR>";
+				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:10px;font-family:sans-serif;\"><B> &nbsp; # &nbsp; </font></TD>";
+				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; дата\/время &nbsp; </font></TD>";
+				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; агент &nbsp; </font></TD>";
+				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; длина &nbsp; </font></TD>";
+				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; СОСТОЯНИЕ &nbsp; </font></TD>";
+				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; телефон &nbsp; </font></TD>";
+				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; кампания &nbsp; </font></TD>";
+				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; в и &nbsp; </font></TD>";
+				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; заместитель &nbsp; </font></TD>";
+				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; зависание &nbsp; </font></TD>";
+			#	$NOTESout .= "</TR><TR>";
+			#	$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\" COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; полное имя &nbsp; </font></TD>";
+				$NOTESout .= "</TR>";
+
+
+				$stmt="SELECT start_epoch,call_date,campaign_id,length_in_sec,status,phone_code,phone_number,lead_id,term_reason,alt_dial,comments,uniqueid,user from vicidial_log where lead_id='$lead_id' order by call_date desc limit 10000;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05014',$user,$server_ip,$session_name,$one_mysql_log);}
+				$out_logs_to_print = mysqli_num_rows($rslt);
+				if ($format=='debug') {$NOTESout .= "|$out_logs_to_print|$stmt|";}
+
+				$g=0;
+				$u=0;
+				while ($out_logs_to_print > $u) 
+					{
+					$row=mysqli_fetch_row($rslt);
+					$ALLsort[$g] =			"$row[0]-----$g";
+					$ALLstart_epoch[$g] =	$row[0];
+					$ALLcall_date[$g] =		$row[1];
+					$ALLcampaign_id[$g] =	$row[2];
+					$ALLlength_in_sec[$g] =	$row[3];
+					$ALLstatus[$g] =		$row[4];
+					$ALLphone_code[$g] =	$row[5];
+					$ALLphone_number[$g] =	$row[6];
+					$ALLlead_id[$g] =		$row[7];
+					$ALLhangup_reason[$g] =	$row[8];
+					$ALLalt_dial[$g] =		$row[9];
+					$ALLuniqueid[$g] =		$row[11];
+					$ALLuser[$g] =			$row[12];
+					$ALLin_out[$g] =		"OUT-AUTO";
+					if ($row[10] == 'MANUAL') {$ALLin_out[$g] = "OUT-MANUAL";}
+
+					$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='$ALLlead_id[$g]' and vicidial_id='$ALLuniqueid[$g]';";
+					$rsltA=mysql_to_mysqli($stmtA, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05015',$user,$server_ip,$session_name,$one_mysql_log);}
+					$out_notes_to_print = mysqli_num_rows($rslt);
+					if ($out_notes_to_print > 0)
+						{
+						$rowA=mysqli_fetch_row($rsltA);
+						$Allcall_notes[$g] =	$rowA[0];
+						if (strlen($Allcall_notes[$g]) > 0)
+							{$Allcall_notes[$g] =	"<b>NOTES: </b> $Allcall_notes[$g]";}
+						}
+					$stmtA="SELECT full_name FROM vicidial_users WHERE user='$ALLuser[$g]';";
+					$rsltA=mysql_to_mysqli($stmtA, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05016',$user,$server_ip,$session_name,$one_mysql_log);}
+					$users_to_print = mysqli_num_rows($rslt);
+					if ($users_to_print > 0)
+						{
+						$rowA=mysqli_fetch_row($rsltA);
+						$ALLuser[$g] .=	" - $rowA[0]";
+						}
+
+					$Allcounter[$g] =		$g;
+					$g++;
+					$u++;
+					}
+
+				$stmt="SELECT start_epoch,call_date,campaign_id,length_in_sec,status,phone_code,phone_number,lead_id,term_reason,queue_seconds,uniqueid,closecallid,user from vicidial_closer_log where lead_id='$lead_id' order by call_date desc limit 10000;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05017',$user,$server_ip,$session_name,$one_mysql_log);}
+				$in_logs_to_print = mysqli_num_rows($rslt);
+				if ($format=='debug') {$NOTESout .= "|$in_logs_to_print|$stmt|";}
+
+				$u=0;
+				while ($in_logs_to_print > $u) 
+					{
+					$row=mysqli_fetch_row($rslt);
+					$ALLsort[$g] =			"$row[0]-----$g";
+					$ALLstart_epoch[$g] =	$row[0];
+					$ALLcall_date[$g] =		$row[1];
+					$ALLcampaign_id[$g] =	$row[2];
+					$ALLlength_in_sec[$g] =	($row[3] - $row[9]);
+					if ($ALLlength_in_sec[$g] < 0) {$ALLlength_in_sec[$g]=0;}
+					$ALLstatus[$g] =		$row[4];
+					$ALLphone_code[$g] =	$row[5];
+					$ALLphone_number[$g] =	$row[6];
+					$ALLlead_id[$g] =		$row[7];
+					$ALLhangup_reason[$g] =	$row[8];
+					$ALLuniqueid[$g] =		$row[10];
+					$ALLclosecallid[$g] =	$row[11];
+					$ALLuser[$g] =			$row[12];
+					$ALLalt_dial[$g] =		"MAIN";
+					$ALLin_out[$g] =		"IN";
+
+					$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='$ALLlead_id[$g]' and vicidial_id='$ALLclosecallid[$g]';";
+					$rsltA=mysql_to_mysqli($stmtA, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05018',$user,$server_ip,$session_name,$one_mysql_log);}
+					$in_notes_to_print = mysqli_num_rows($rslt);
+					if ($in_notes_to_print > 0)
+						{
+						$rowA=mysqli_fetch_row($rsltA);
+						$Allcall_notes[$g] =	$rowA[0];
+						if (strlen($Allcall_notes[$g]) > 0)
+							{$Allcall_notes[$g] =	"<b>NOTES: </b> $Allcall_notes[$g]";}
+						}
+					$stmtA="SELECT full_name FROM vicidial_users WHERE user='$ALLuser[$g]';";
+					$rsltA=mysql_to_mysqli($stmtA, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05019',$user,$server_ip,$session_name,$one_mysql_log);}
+					$users_to_print = mysqli_num_rows($rslt);
+					if ($users_to_print > 0)
+						{
+						$rowA=mysqli_fetch_row($rsltA);
+						$ALLuser[$g] .=	" - $rowA[0]";
+						}
+
+					$Allcounter[$g] =		$g;
+
+					$g++;
+					$u++;
+					}
+
+				if ($g > 0)
+					{sort($ALLsort, SORT_NUMERIC);}
+				else
+					{$NOTESout .= "<tr bgcolor=white><td colspan=11 align=center>Нет звонков найден</td></tr>";}
+
+				$u=0;
+				while ($g > $u) 
+					{
+					$sort_split = explode("-----",$ALLsort[$u]);
+					$i = $sort_split[1];
+
+					if (preg_match("/1$|3$|5$|7$|9$/i", $u))
+						{$bgcolor='bgcolor="#B9CBFD"';} 
+					else
+						{$bgcolor='bgcolor="#9BB9FB"';}
+
+					$phone_number_display = $ALLphone_number[$i];
+					if ($disable_alter_custphone == 'HIDE')
+						{$phone_number_display = 'XXXXXXXXXX';}
+
+					$u++;
+					$NOTESout .= "<tr $bgcolor>";
+					$NOTESout .= "<td><font size=1>$u</td>";
+					$NOTESout .= "<td align=right><font size=2>$ALLcall_date[$i]</td>";
+					$NOTESout .= "<td align=right><font size=2> $ALLuser[$i]</td>\n";
+					$NOTESout .= "<td align=right><font size=2> $ALLlength_in_sec[$i]</td>\n";
+					$NOTESout .= "<td align=right><font size=2> $ALLstatus[$i]</td>\n";
+					$NOTESout .= "<td align=right><font size=2> $ALLphone_code[$i] $phone_number_display </td>\n";
+					$NOTESout .= "<td align=right><font size=2> $ALLcampaign_id[$i] </td>\n";
+					$NOTESout .= "<td align=right><font size=2> $ALLin_out[$i] </td>\n";
+					$NOTESout .= "<td align=right><font size=2> $ALLalt_dial[$i] </td>\n";
+					$NOTESout .= "<td align=right><font size=2> $ALLhangup_reason[$i] </td>\n";
+					$NOTESout .= "</TR><TR>";
+					$NOTESout .= "<td></td>";
+					$NOTESout .= "<TD $bgcolor COLSPAN=9 align=left><font style=\"font-size:11px;font-family:sans-serif;\"> $Allcall_notes[$i] </font></TD>";
+					$NOTESout .= "</tr>\n";
+					}
+
+				$NOTESout .= "</TABLE>";
+				$NOTESout .= "<BR>";
+				}
+			### END Gather Call Log and notes ###
+			}
+
 		##### grab the data from vicidial_list for the lead_id
 		$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner FROM vicidial_list where lead_id='$lead_id' LIMIT 1;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05007',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
-		$list_lead_ct = mysql_num_rows($rslt);
+		$list_lead_ct = mysqli_num_rows($rslt);
 		if ($list_lead_ct > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$dispo				= trim($row[3]);
 			$tsr				= trim($row[4]);
 			$vendor_id			= trim($row[5]);
@@ -493,6 +867,8 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 		$CFoutput = preg_replace('/--A--xfercallid--B--/i',"$xfercallid",$CFoutput);
 		$CFoutput = preg_replace('/--A--agent_log_id--B--/i',"$agent_log_id",$CFoutput);
 		$CFoutput = preg_replace('/--A--call_id--B--/i',"$call_id",$CFoutput);
+		$CFoutput = preg_replace('/--A--called_count--B--/i',"$called_count",$CFoutput);
+		$CFoutput = preg_replace('/--A--TABLEper_call_notes--B--/i',"$NOTESout",$CFoutput);
 
 		# custom fields replacement
 		$o=0;
@@ -518,7 +894,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 
 function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code)
 	{
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 
 	$postalgmt_found=0;
 	if ( (preg_match("/POSTAL/i",$postalgmt)) && (strlen($postal_code)>4) )
@@ -526,11 +902,11 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 		if (preg_match('/^1$/', $phone_code))
 			{
 			$stmt="select postal_code,state,GMT_offset,DST,DST_range,country,country_code from vicidial_postal_codes where country_code='$phone_code' and postal_code LIKE \"$postal_code%\";";
-			$rslt=mysql_query($stmt, $link);
-			$pc_recs = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$pc_recs = mysqli_num_rows($rslt);
 			if ($pc_recs > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$gmt_offset =	$row[2];	 $gmt_offset = preg_replace("/\+/i","",$gmt_offset);
 				$dst =			$row[3];
 				$dst_range =	$row[4];
@@ -547,11 +923,11 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 		if ($phone_code =='1')
 			{
 			$stmt="select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
-			$rslt=mysql_query($stmt, $link);
-			$pc_recs = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$pc_recs = mysqli_num_rows($rslt);
 			if ($pc_recs > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$gmt_offset =	$row[4];	 $gmt_offset = preg_replace("/\+/i","",$gmt_offset);
 				$dst =			$row[5];
 				$dst_range =	$row[6];
@@ -562,11 +938,11 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 		if ($phone_code =='52')
 			{
 			$stmt="select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and areacode='$USarea';";
-			$rslt=mysql_query($stmt, $link);
-			$pc_recs = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$pc_recs = mysqli_num_rows($rslt);
 			if ($pc_recs > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$gmt_offset =	$row[4];	 $gmt_offset = preg_replace("/\+/i","",$gmt_offset);
 				$dst =			$row[5];
 				$dst_range =	$row[6];
@@ -577,11 +953,11 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 		if ($phone_code =='61')
 			{
 			$stmt="select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code' and state='$state';";
-			$rslt=mysql_query($stmt, $link);
-			$pc_recs = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$pc_recs = mysqli_num_rows($rslt);
 			if ($pc_recs > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$gmt_offset =	$row[4];	 $gmt_offset = preg_replace("/\+/i","",$gmt_offset);
 				$dst =			$row[5];
 				$dst_range =	$row[6];
@@ -593,11 +969,11 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 			{
 			$PC_processed++;
 			$stmt="select country_code,country,areacode,state,GMT_offset,DST,DST_range,geographic_description from vicidial_phone_codes where country_code='$phone_code';";
-			$rslt=mysql_query($stmt, $link);
-			$pc_recs = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$pc_recs = mysqli_num_rows($rslt);
 			if ($pc_recs > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$gmt_offset =	$row[4];	 $gmt_offset = preg_replace("/\+/i","",$gmt_offset);
 				$dst =			$row[5];
 				$dst_range =	$row[6];
@@ -621,12 +997,12 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 	$AC_processed=0;
 	if ( (!$AC_processed) and ($dst_range == 'SSM-FSN') )
 		{
-		if ($DBX) {print "     Second Sunday March to First Sunday November\n";}
+		if ($DBX) {print "     Second Sunday Март to Имя Sunday Ноябрь\n";}
 		#**********************************************************************
 		# SSM-FSN
 		#     This is returns 1 if Daylight Savings Time is in effect and 0 if 
 		#       Standard time is in effect.
-		#     Based on Second Sunday March to First Sunday November at 2 am.
+		#     Based на Second Sunday Март to Имя Sunday Ноябрь at 2 am.
 		#     INPUTS:
 		#       mm              INTEGER       Month.
 		#       dd              INTEGER       Day of the month.
@@ -635,9 +1011,9 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 		#     OPTIONAL INPUT:
 		#       timezone        INTEGER       hour difference UTC - local standard time
 		#                                      (DEFAULT is blank)
-		#                                     make calculations based on UTC time, 
-		#                                     which means shift at 10:00 UTC in April
-		#                                     and 9:00 UTC in October
+		#                                     make calculations based на UTC time, 
+		#                                     which means shift at 10:00 UTC in Апрель
+		#                                     and 9:00 UTC in Октябрь
 		#     OUTPUT: 
 		#                       INTEGER       1 = DST, 0 = not DST
 		#
@@ -717,12 +1093,12 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 
 	if ( (!$AC_processed) and ($dst_range == 'FSA-LSO') )
 		{
-		if ($DBX) {print "     First Sunday April to Last Sunday October\n";}
+		if ($DBX) {print "     Имя Sunday Апрель to Фамилия Sunday Октябрь\n";}
 		#**********************************************************************
 		# FSA-LSO
 		#     This is returns 1 if Daylight Savings Time is in effect and 0 if 
 		#       Standard time is in effect.
-		#     Based on first Sunday in April and last Sunday in October at 2 am.
+		#     Based на first Sunday in Апрель and last Sunday in Октябрь at 2 am.
 		#**********************************************************************
 			
 			$USA_DST=0;
@@ -786,11 +1162,11 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 
 	if ( (!$AC_processed) and ($dst_range == 'LSM-LSO') )
 		{
-		if ($DBX) {print "     Last Sunday March to Last Sunday October\n";}
+		if ($DBX) {print "     Фамилия Sunday Март to Фамилия Sunday Октябрь\n";}
 		#**********************************************************************
 		#     This is s 1 if Daylight Savings Time is in effect and 0 if 
 		#       Standard time is in effect.
-		#     Based on last Sunday in March and last Sunday in October at 1 am.
+		#     Based на last Sunday in Март and last Sunday in Октябрь at 1 am.
 		#**********************************************************************
 			
 			$GBR_DST=0;
@@ -854,11 +1230,11 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 		}
 	if ( (!$AC_processed) and ($dst_range == 'LSO-LSM') )
 		{
-		if ($DBX) {print "     Last Sunday October to Last Sunday March\n";}
+		if ($DBX) {print "     Фамилия Sunday Октябрь to Фамилия Sunday Март\n";}
 		#**********************************************************************
 		#     This is s 1 if Daylight Savings Time is in effect and 0 if 
 		#       Standard time is in effect.
-		#     Based on last Sunday in October and last Sunday in March at 1 am.
+		#     Based на last Sunday in Октябрь and last Sunday in Март at 1 am.
 		#**********************************************************************
 			
 			$AUS_DST=0;
@@ -923,12 +1299,12 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 
 	if ( (!$AC_processed) and ($dst_range == 'FSO-LSM') )
 		{
-		if ($DBX) {print "     First Sunday October to Last Sunday March\n";}
+		if ($DBX) {print "     Имя Sunday Октябрь to Фамилия Sunday Март\n";}
 		#**********************************************************************
 		#   TASMANIA ONLY
 		#     This is s 1 if Daylight Savings Time is in effect and 0 if 
 		#       Standard time is in effect.
-		#     Based on first Sunday in October and last Sunday in March at 1 am.
+		#     Based на first Sunday in Октябрь and last Sunday in Март at 1 am.
 		#**********************************************************************
 			
 			$AUST_DST=0;
@@ -991,13 +1367,13 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 
 	if ( (!$AC_processed) and ($dst_range == 'FSO-FSA') )
 		{
-		if ($DBX) {print "     Sunday in October to First Sunday in April\n";}
+		if ($DBX) {print "     Sunday in Октябрь to Имя Sunday in Апрель\n";}
 		#**********************************************************************
 		# FSO-FSA
 		#   2008+ AUSTRALIA ONLY (country code 61)
 		#     This is returns 1 if Daylight Savings Time is in effect and 0 if 
 		#       Standard time is in effect.
-		#     Based on first Sunday in October and first Sunday in April at 1 am.
+		#     Based на first Sunday in Октябрь and first Sunday in Апрель at 1 am.
 		#**********************************************************************
 		
 		$AUSE_DST=0;
@@ -1058,11 +1434,11 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 
 	if ( (!$AC_processed) and ($dst_range == 'FSO-TSM') )
 		{
-		if ($DBX) {print "     First Sunday October to Third Sunday March\n";}
+		if ($DBX) {print "     Имя Sunday Октябрь to Third Sunday Март\n";}
 		#**********************************************************************
 		#     This is s 1 if Daylight Savings Time is in effect and 0 if 
 		#       Standard time is in effect.
-		#     Based on first Sunday in October and third Sunday in March at 1 am.
+		#     Based на first Sunday in Октябрь and third Sunday in Март at 1 am.
 		#**********************************************************************
 			
 			$NZL_DST=0;
@@ -1125,13 +1501,13 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 
 	if ( (!$AC_processed) and ($dst_range == 'LSS-FSA') )
 		{
-		if ($DBX) {print "     Last Sunday in September to First Sunday in April\n";}
+		if ($DBX) {print "     Фамилия Sunday in Сентябрь to Имя Sunday in Апрель\n";}
 		#**********************************************************************
 		# LSS-FSA
-		#   2007+ NEW ZEALAND (country code 64)
+		#   2007+ НОВЫЙ ZEALAND (country code 64)
 		#     This is returns 1 if Daylight Savings Time is in effect and 0 if 
 		#       Standard time is in effect.
-		#     Based on last Sunday in September and first Sunday in April at 1 am.
+		#     Based на last Sunday in Сентябрь and first Sunday in Апрель at 1 am.
 		#**********************************************************************
 		
 		$NZLN_DST=0;
@@ -1194,12 +1570,12 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 
 	if ( (!$AC_processed) and ($dst_range == 'TSO-LSF') )
 		{
-		if ($DBX) {print "     Third Sunday October to Last Sunday February\n";}
+		if ($DBX) {print "     Third Sunday Октябрь to Фамилия Sunday February\n";}
 		#**********************************************************************
 		# TSO-LSF
 		#     This is returns 1 if Daylight Savings Time is in effect and 0 if 
 		#       Standard time is in effect. Brazil
-		#     Based on Third Sunday October to Last Sunday February at 1 am.
+		#     Based на Third Sunday Октябрь to Фамилия Sunday February at 1 am.
 		#**********************************************************************
 			
 			$BZL_DST=0;
@@ -1279,7 +1655,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 ##### DETERMINE IF LEAD IS DIALABLE #####
 function dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state)
 	{
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 
 	$dialable=0;
 
@@ -1294,8 +1670,8 @@ function dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state)
 
 	$stmt="SELECT call_time_id,call_time_name,call_time_comments,ct_default_start,ct_default_stop,ct_sunday_start,ct_sunday_stop,ct_monday_start,ct_monday_stop,ct_tuesday_start,ct_tuesday_stop,ct_wednesday_start,ct_wednesday_stop,ct_thursday_start,ct_thursday_stop,ct_friday_start,ct_friday_stop,ct_saturday_start,ct_saturday_stop,ct_state_call_times FROM vicidial_call_times where call_time_id='$local_call_time';";
 	if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-	$rowx=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$rowx=mysqli_fetch_row($rslt);
 	$Gct_default_start =	$rowx[3];
 	$Gct_default_stop =		$rowx[4];
 	$Gct_sunday_start =		$rowx[5];
@@ -1419,11 +1795,11 @@ function mysql_error_logging($NOW_TIME,$link,$mel,$stmt,$query_id,$user,$server_
 	$errno='';   $error='';
 	if ( ($mel > 0) or ($one_mysql_log > 0) )
 		{
-		$errno = mysql_errno($link);
+		$errno = mysqli_errno($link);
 		if ( ($errno > 0) or ($mel > 1) or ($one_mysql_log > 0) )
 			{
-			$error = mysql_error($link);
-			$efp = fopen ("./vicidial_mysql_errors.txt", "a");
+			$error = mysqli_error($link);
+			$efp = fopen ("./vicidial_mysqli_errors.txt", "a");
 			fwrite ($efp, "$NOW_TIME|vdc_db_query|$query_id|$errno|$error|$stmt|$user|$server_ip|$session_name|\n");
 			fclose($efp);
 			}
@@ -1432,5 +1808,9 @@ function mysql_error_logging($NOW_TIME,$link,$mel,$stmt,$query_id,$user,$server_
 	return $errno;
 	}
 
+function mysql_to_mysqli($stmt, $link) {
+	$rslt=mysqli_query($link, $stmt);
+	return $rslt;
+}
 
 ?>

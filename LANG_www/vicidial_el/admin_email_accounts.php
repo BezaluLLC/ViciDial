@@ -9,14 +9,18 @@
 # 121214-2245 - First Build
 # 130102-1131 - Small admin log change
 # 130221-1754 - Added level 8 disable add feature
+# 130610-1041 - Changed all ereg to preg
+# 130621-2001 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130902-0754 - Changed to mysqli PHP functions
 #
 
-$admin_version = '2.6-3';
-$build = '130221-1754';
+$admin_version = '2.8-6';
+$build = '1300902-0754';
 
 $sh="emails"; 
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -77,12 +81,12 @@ if (isset($_GET["agent_search_method"]))					{$agent_search_method=$_GET["agent_
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,allow_emails,allow_emails,level_8_disable_add FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =							$row[0];
 	$SSenable_queuemetrics_logging =		$row[1];
 	$SSenable_vtiger_integration =			$row[2];
@@ -123,148 +127,135 @@ if ($qm_conf_ct > 0)
 
 if ($non_latin < 1)
 	{
-	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/[^-_0-9a-zA-Z]/", "",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace("/[^-_0-9a-zA-Z]/", "",$PHP_AUTH_PW);
 
-	$email_account_id = ereg_replace("[^_0-9a-zA-Z]","",$email_account_id);
-	$email_account_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$email_account_name);
-	$email_account_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$email_account_description);
-	$user_group = ereg_replace("[^_0-9a-zA-Z]","",$user_group);
-	$protocol = ereg_replace("[^_0-9a-zA-Z]","",$protocol);
-	$email_account_server = ereg_replace("[^\.\-\_0-9a-zA-Z]","",$email_account_server);
-	$active = ereg_replace("[^_0-9a-zA-Z]","",$active);
-	$email_frequency_check_mins = preg_replace("/^0-9/","",$email_frequency_check_mins);
-	$list_id = ereg_replace("[^0-9]","",$list_id);
-
+	$email_account_id = preg_replace("/[^_0-9a-zA-Z]/","",$email_account_id);
+	$email_account_name = preg_replace("/[^ \.\,-\_0-9a-zA-Z]/","",$email_account_name);
+	$email_account_description = preg_replace("/[^ \.\,-\_0-9a-zA-Z]/","",$email_account_description);
+	$user_group = preg_replace("/[^_0-9a-zA-Z]/","",$user_group);
+	$protocol = preg_replace("/[^_0-9a-zA-Z]/","",$protocol);
+	$email_account_server = preg_replace("/[^\.\-\_0-9a-zA-Z]/","",$email_account_server);
+	$active = preg_replace("/[^_0-9a-zA-Z]/","",$active);
+	$email_frequency_check_mins = preg_replace("/[^0-9]/","",$email_frequency_check_mins);
 	}	# end of non_latin
 else
 	{
-	$PHP_AUTH_USER = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	}
+$list_id = preg_replace("/[^0-9]/","",$list_id);
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
-$add_copy_disabled=0;
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and modify_email_accounts='1';";
-if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-if ($webroot_writable > 0)
-	{$fp = fopen ("./project_auth_entries.txt", "a");}
-
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 $user = $PHP_AUTH_USER;
+$add_copy_disabled=0;
 
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+$auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth < 1)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Ακυρο Ονομα Χρήστη/Κωδικός Πρόσβασης: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
 	}
-else
+
+$stmt="SELECT full_name,user_level,user_group,modify_email_accounts from vicidial_users where user='$PHP_AUTH_USER';";
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
+$LOGfullname =				$row[0];
+$LOGuser_level =			$row[1];
+$LOGuser_group =			$row[2];
+$LOGemails_modify =			$row[3];
+
+if ($LOGemails_modify < 1)
 	{
-	if ($auth>0)
-		{
-		$office_no=strtoupper($PHP_AUTH_USER);
-		$password=strtoupper($PHP_AUTH_PW);
-		$stmt="SELECT full_name,user_level,user_group,modify_email_accounts from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGfullname =				$row[0];
-		$LOGuser_level =			$row[1];
-		$LOGuser_group =			$row[2];
-		$LOGemails_modify =			$row[3];
-
-		if (($LOGuser_level < 9) and ($SSlevel_8_disable_add > 0))
-			{$add_copy_disabled++;}
-
-		$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGallowed_campaigns =			$row[0];
-		$LOGallowed_reports =			$row[1];
-		$LOGadmin_viewable_groups =		$row[2];
-		$LOGadmin_viewable_call_times =	$row[3];
-		$admin_viewable_groupsALL=0;
-		$LOGadmin_viewable_groupsSQL='';
-		$whereLOGadmin_viewable_groupsSQL='';
-		$valLOGadmin_viewable_groupsSQL='';
-		$vmLOGadmin_viewable_groupsSQL='';
-		if ( (!eregi("--ALL--",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
-			{
-			$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
-			$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
-			$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
-			$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
-			$valLOGadmin_viewable_groupsSQL = "and val.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
-			$vmLOGadmin_viewable_groupsSQL = "and vm.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
-			}
-		else 
-			{$admin_viewable_groupsALL=1;}
-		$regexLOGadmin_viewable_groups = " $LOGadmin_viewable_groups ";
-		
-		$UUgroups_list='';
-		if ($admin_viewable_groupsALL > 0)
-			{$UUgroups_list .= "<option value=\"---ALL---\">Όλες οι Ομάδες Χρηστών Διαχειριστής</option>\n";}
-		$stmt="SELECT user_group,group_name from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
-		$rslt=mysql_query($stmt, $link);
-		$UUgroups_to_print = mysql_num_rows($rslt);
-		$o=0;
-		while ($UUgroups_to_print > $o) 
-			{
-			$rowx=mysql_fetch_row($rslt);
-			$UUgroups_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
-			$o++;
-			}
-
-		$stmt="SELECT group_id,group_name from vicidial_inbound_groups where group_handling='EMAIL' $LOGadmin_viewable_groupsSQL order by group_id;";
-	#	$stmt="SELECT group_id,group_name from vicidial_inbound_groups where group_id NOT IN('AGENTDIRECT') order by group_id";
-		$rslt=mysql_query($stmt, $link);
-		$Dgroups_to_print = mysql_num_rows($rslt);
-		$Dgroups_menu='';
-		$Dgroups_selected=0;
-		$o=0;
-		while ($Dgroups_to_print > $o) 
-			{
-			$rowx=mysql_fetch_row($rslt);
-			$Dgroups_menu .= "<option ";
-			if ($drop_inbound_group == "$rowx[0]") 
-				{
-				$Dgroups_menu .= "SELECTED ";
-				$Dgroups_selected++;
-				}
-			$Dgroups_menu .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
-			$o++;
-			}
-		if ($Dgroups_selected < 1) 
-			{$Dgroups_menu .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
-		else 
-			{$Dgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
-
-
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
-			}
-		}
-	else
-		{
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
-			fclose($fp);
-			}
-		}
+	Header ("Content-type: text/html; charset=utf-8");
+	echo "You do not have permissions to modify email accounts\n";
+	exit;
 	}
+
+if (($LOGuser_level < 9) and ($SSlevel_8_disable_add > 0))
+	{$add_copy_disabled++;}
+
+$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
+$LOGallowed_campaigns =			$row[0];
+$LOGallowed_reports =			$row[1];
+$LOGadmin_viewable_groups =		$row[2];
+$LOGadmin_viewable_call_times =	$row[3];
+$admin_viewable_groupsALL=0;
+$LOGadmin_viewable_groupsSQL='';
+$whereLOGadmin_viewable_groupsSQL='';
+$valLOGadmin_viewable_groupsSQL='';
+$vmLOGadmin_viewable_groupsSQL='';
+if ( (!preg_match("/\-\-ALL\-\-/i",$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+	{
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+	$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$valLOGadmin_viewable_groupsSQL = "and val.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$vmLOGadmin_viewable_groupsSQL = "and vm.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	}
+else 
+	{$admin_viewable_groupsALL=1;}
+$regexLOGadmin_viewable_groups = " $LOGadmin_viewable_groups ";
+
+$UUgroups_list='';
+if ($admin_viewable_groupsALL > 0)
+	{$UUgroups_list .= "<option value=\"---ALL---\">Όλες οι Ομάδες Χρηστών Διαχειριστής</option>\n";}
+$stmt="SELECT user_group,group_name from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
+$rslt=mysql_to_mysqli($stmt, $link);
+$UUgroups_to_print = mysqli_num_rows($rslt);
+$o=0;
+while ($UUgroups_to_print > $o) 
+	{
+	$rowx=mysqli_fetch_row($rslt);
+	$UUgroups_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+	$o++;
+	}
+
+$stmt="SELECT group_id,group_name from vicidial_inbound_groups where group_handling='EMAIL' $LOGadmin_viewable_groupsSQL order by group_id;";
+#	$stmt="SELECT group_id,group_name from vicidial_inbound_groups where group_id NOT IN('AGENTDIRECT') order by group_id";
+$rslt=mysql_to_mysqli($stmt, $link);
+$Dgroups_to_print = mysqli_num_rows($rslt);
+$Dgroups_menu='';
+$Dgroups_selected=0;
+$o=0;
+while ($Dgroups_to_print > $o) 
+	{
+	$rowx=mysqli_fetch_row($rslt);
+	$Dgroups_menu .= "<option ";
+	if ($drop_inbound_group == "$rowx[0]") 
+		{
+		$Dgroups_menu .= "SELECTED ";
+		$Dgroups_selected++;
+		}
+	$Dgroups_menu .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+	$o++;
+	}
+if ($Dgroups_selected < 1) 
+	{$Dgroups_menu .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
+else 
+	{$Dgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
 
 ?>
 <html>
@@ -297,12 +288,6 @@ $subcamp_color =	'#C6C6C6';
 
 require("admin_header.php");
 
-if ( ($LOGemails_modify < 1) or ($LOGuser_level < 8) )
-	{
-	echo "You are not authorized to view this section\n";
-	exit;
-	}
-
 if ($SSemail_enabled < 1)
 	{
 	echo "ΣΦΑΛΜΑ:  εισερχόμενοςemails δεν δραστηριοποιούνται σε αυτό το σύστημα\n";
@@ -310,7 +295,7 @@ if ($SSemail_enabled < 1)
 	}
 
 
-$NWB = " &nbsp; <a href=\"javascript:openNewWindow('admin.php?ADD=99999";
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 Border=0 ALT=\"ΒΟΗΘΕΙΑ\" ALIGN=TOP></A>";
 
 
@@ -322,7 +307,7 @@ echo "$DB,$action,$ip,$user,$copy_option,$field_id,$list_id,$source_email_accoun
 if ($eact=="DELETE" && $confirm_deletion=="yes" && $email_account_id) 
 	{
 	$del_stmt="delete from vicidial_email_accounts where email_account_id='$email_account_id'";
-	$del_rslt=mysql_query($del_stmt, $link);
+	$del_rslt=mysql_to_mysqli($del_stmt, $link);
 	$message="ACCOUNT $email_account_id DELETED<BR/>";
 	$eact="";
 	}
@@ -351,8 +336,8 @@ if (($ΕΠΙΒΕΒΑΙΩΣΗ=="ΕΠΙΒΕΒΑΙΩΣΗ" || $ΕΠΙΒΕΒΑΙΩΣ�
 			else
 				{
 				$ins_stmt="INSERT INTO vicidial_email_accounts(email_account_id, email_account_name, email_account_description, user_group, email_replyto_address, protocol, email_account_server, email_account_user, email_account_pass, active, email_frequency_check_mins, group_id, default_list_id, email_account_type, call_handle_method, agent_search_method, list_id, campaign_id) VALUES('$email_account_id', '$email_account_name', '$email_account_description', '$user_group', '$email_replyto_address', '$protocol', '$email_account_server', '$email_account_user', '$email_account_pass', '$active', '$email_frequency_check_mins', '$group_id', '$default_list_id', '$email_account_type', '$call_handle_method', '$agent_search_method', '$list_id', '$campaign_id')";
-				$ins_rslt=mysql_query($ins_stmt, $link);
-				if (mysql_affected_rows($link)==0) 
+				$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
+				if (mysqli_affected_rows($link)==0) 
 					{
 					$error_msg.="- There was an unknown error when attempting to create the new account<BR/>";
 					if($DB>0) {$error_msg.="<B>$ins_stmt</B><BR>";}
@@ -364,19 +349,19 @@ if (($ΕΠΙΒΕΒΑΙΩΣΗ=="ΕΠΙΒΕΒΑΙΩΣΗ" || $ΕΠΙΒΕΒΑΙΩΣ�
 
 					### LOG INSERTION Admin Log Table ###
 					$SQL_log = "$ins_stmt|";
-					$SQL_log = ereg_replace(';','',$SQL_log);
+					$SQL_log = preg_replace('/;/','',$SQL_log);
 					$SQL_log = addslashes($SQL_log);
 					$stmt="INSERT INTO vicidial_admin_log set event_date=now(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='EMAIL', event_type='ADD', record_id='$user', event_code='NEW EMAIL ACCOUNT ADDED', event_sql=\"$SQL_log\", event_notes='';";
 					if ($DB) {echo "|$stmt|\n";}
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 					}
 				}
 			}
 		else
 			{
 			$upd_stmt="update vicidial_email_accounts set email_account_name='$email_account_name', email_account_description='$email_account_description', user_group='$user_group', protocol='$protocol', email_replyto_address='$email_replyto_address', email_account_server='$email_account_server', email_account_user='$email_account_user', email_account_pass='$email_account_pass', active='$active', email_frequency_check_mins='$email_frequency_check_mins', group_id='$group_id', default_list_id='$default_list_id', email_account_type='$email_account_type', call_handle_method='$call_handle_method', agent_search_method='$agent_search_method', campaign_id='$campaign_id', list_id='$list_id' WHERE email_account_id='$email_account_id'";
-			$upd_rslt=mysql_query($upd_stmt, $link);
-			if (mysql_affected_rows($link)==0) 
+			$upd_rslt=mysql_to_mysqli($upd_stmt, $link);
+			if (mysqli_affected_rows($link)==0) 
 				{
 				$error_msg.="- There was an unknown error when attempting to update account $email_account_id<BR/>";
 				if($DB>0) {$error_msg.="<B>$upd_stmt</B><BR>";}
@@ -388,11 +373,11 @@ if (($ΕΠΙΒΕΒΑΙΩΣΗ=="ΕΠΙΒΕΒΑΙΩΣΗ" || $ΕΠΙΒΕΒΑΙΩΣ�
 
 				### LOG INSERTION Admin Log Table ###
 				$SQL_log = "$upd_stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = preg_replace('/;/','',$SQL_log);
 				$SQL_log = addslashes($SQL_log);
 				$stmt="INSERT INTO vicidial_admin_log set event_date=now(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='EMAIL', event_type='MODIFY', record_id='$email_account_id', event_code='EMAIL ACCOUNT MODIFIED', event_sql=\"$SQL_log\", event_notes='';";
 				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				}
 			}
 		}
@@ -400,8 +385,8 @@ if (($ΕΠΙΒΕΒΑΙΩΣΗ=="ΕΠΙΒΕΒΑΙΩΣΗ" || $ΕΠΙΒΕΒΑΙΩΣ�
 else if ($ΕΠΙΒΕΒΑΙΩΣΗ=="COPY") 
 	{
 	$stmt="select * from vicidial_email_accounts where email_account_id='$source_email_account'";
-	$rslt=mysql_query($stmt, $link);
-	if (mysql_num_rows($rslt)>0) 
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if (mysqli_num_rows($rslt)>0) 
 		{
 		if ($add_copy_disabled > 0)
 			{
@@ -409,10 +394,10 @@ else if ($ΕΠΙΒΕΒΑΙΩΣΗ=="COPY")
 			}
 		else
 			{
-			$row=mysql_fetch_array($rslt);
+			$row=mysqli_fetch_array($rslt);
 			$ins_stmt="insert into vicidial_email_accounts(email_account_id, email_account_name, email_account_description, user_group, protocol, email_replyto_address, email_account_server, email_account_user, email_account_pass, active, email_frequency_check_mins, group_id, default_list_id, email_account_type, call_handle_method, agent_search_method, list_id, campaign_id) VALUES('$new_account_id', '$email_account_name', '$row[email_account_description]', '$row[user_group]', '$row[protocol]', '$row[email_replyto_address]', '$row[email_account_server]', '$row[email_account_user]', '$row[email_account_pass]', '$row[active]', '$row[email_frequency_check_mins]', '$row[group_id]','$row[default_list_id]', '$row[email_account_type]', '$row[call_handle_method]','$row[agent_search_method]', '$row[list_id]', '$row[campaign_id]')";
-			$ins_rslt=mysql_query($ins_stmt, $link);
-			if (mysql_affected_rows($link)==0) 
+			$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
+			if (mysqli_affected_rows($link)==0) 
 				{
 				$error_msg.="- Υπήρξε ένα άγνωστο σφάλμα όταν προσπαθείτε να αντιγράψετε το νέο λογαριασμό<BR/>";
 				if($DB>0) {$error_msg.="<B>$ins_stmt</B><BR>";}
@@ -424,11 +409,11 @@ else if ($ΕΠΙΒΕΒΑΙΩΣΗ=="COPY")
 
 				### LOG INSERTION Admin Log Table ###
 				$SQL_log = "$ins_stmt|";
-				$SQL_log = ereg_replace(';','',$SQL_log);
+				$SQL_log = preg_replace('/;/','',$SQL_log);
 				$SQL_log = addslashes($SQL_log);
 				$stmt="INSERT INTO vicidial_admin_log set event_date=now(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='EMAIL', event_type='ADD', record_id='$user', event_code='NEW EMAIL ACCOUNT ADDED', event_sql=\"$SQL_log\", event_notes='';";
 				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				}
 			}
 		}
@@ -446,15 +431,15 @@ if ($eact == "COPY")
 	{
 	##### get lists listing for dynamic pulldown
 	$stmt="SELECT email_account_id, email_account_name from vicidial_email_accounts order by email_account_id";
-	$rsltx=mysql_query($stmt, $link);
-	$accounts_to_print = mysql_num_rows($rsltx);
+	$rsltx=mysql_to_mysqli($stmt, $link);
+	$accounts_to_print = mysqli_num_rows($rsltx);
 	$accounts_list='';
 	$o=0;
 	if ($accounts_to_print>0) 
 		{
 		while ($accounts_to_print > $o)
 			{
-			$rowx=mysql_fetch_row($rsltx);
+			$rowx=mysqli_fetch_row($rsltx);
 			$accounts_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 			$o++;
 			}
@@ -470,7 +455,7 @@ if ($eact == "COPY")
 		echo "$accounts_list";
 		echo "</select></td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Νέα αναγνωριστικό λογαριασμού: </td><td align=left><input type=text name=new_account_id value='$new_account_id' size=10 maxlength=20></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Νέο Όνομα λογαριασμού: </td><td align=left><input type=text name=email_account_name size=40 maxlength=100>$NWB#vicidial_email_accounts-carrier_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Νέο Όνομα λογαριασμού: </td><td align=left><input type=text name=email_account_name size=40 maxlength=100>$NWB#email_accounts-carrier_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=ΕΠΙΒΕΒΑΙΩΣΗ value='COPY'></td></tr>\n";
 		echo "</TABLE></center>\n";
 		echo "</TD></TR></TABLE>\n";
@@ -489,21 +474,21 @@ else if ($eact == "ADD")
 	if ( ($LOGemails_modify==1) )
 		{
 		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
-		$rslt=mysql_query($stmt, $link);
-		$campaigns_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$campaigns_to_print = mysqli_num_rows($rslt);
 		$campaigns_list='';
 		$o=0;
 		while ($campaigns_to_print > $o) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$campaigns_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 			$o++;
 			}
 
 		##### get in-groups listings for dynamic pulldown
 		$stmt="SELECT group_id,group_name from vicidial_inbound_groups $whereLOGadmin_viewable_groupsSQL order by group_id;";
-		$rslt=mysql_query($stmt, $link);
-		$Xgroups_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$Xgroups_to_print = mysqli_num_rows($rslt);
 		$Xgroups_menu='';
 		$Xgroups_selected=0;
 		$FXgroups_menu='';
@@ -511,7 +496,7 @@ else if ($eact == "ADD")
 		$o=0;
 		while ($Xgroups_to_print > $o) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$Xgroups_menu .= "<option ";
 			$FXgroups_menu .= "<option ";
 			if ($user_route_settings_ingroup == "$rowx[0]") 
@@ -540,8 +525,8 @@ else if ($eact == "ADD")
 
 		##### get in-groups listings for dynamic pulldown
 		$stmt="SELECT group_id,group_name from vicidial_inbound_groups where group_id NOT IN('AGENTDIRECT') $LOGadmin_viewable_groupsSQL order by group_id;";
-		$rslt=mysql_query($stmt, $link);
-		$Dgroups_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$Dgroups_to_print = mysqli_num_rows($rslt);
 		$Dgroups_menu='';
 		$Dgroups_selected=0;
 		$FDgroups_menu='';
@@ -549,7 +534,7 @@ else if ($eact == "ADD")
 		$o=0;
 		while ($Dgroups_to_print > $o) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$Dgroups_menu .= "<option ";
 			$FDgroups_menu .= "<option ";
 			if ($group_id == "$rowx[0]") 
@@ -583,20 +568,20 @@ else if ($eact == "ADD")
 		echo "<br>Προσθήκη νέων ΕΙΣΕΡΧΟΜΕΝΟ λογαριασμό email<form action='$PHP_SELF' method='GET'>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοID λογαριασμού: </td><td align=left><input type=text name=email_account_id size=15 maxlength=20 value='$email_account_id'>$NWB#vicidial_email_accounts-email_account_id$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Το όνομα του λογαριασμού: </td><td align=left><input type=text name=email_account_name size=40 maxlength=100 value='$email_account_name'>$NWB#vicidial_email_accounts-email_account_name$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Ενεργή:</td><td align=left><select size=1 name=active><option>Y</option><option SELECTED>N</option></select>$NWB#vicidial_email_accounts-email_account_active$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοΠεριγραφή λογαριασμού: </td><td align=left><input type=text name=email_account_description size=70 maxlength=255 value='$email_account_description'>$NWB#vicidial_email_accounts-email_account_description$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Τύπο του λογαριασμού email: </td><td align=left><select size=1 name=email_account_type><option>INBOUND</option></select>$NWB#vicidial_email_accounts-email_account_type$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοID λογαριασμού: </td><td align=left><input type=text name=email_account_id size=15 maxlength=20 value='$email_account_id'>$NWB#email_accounts-email_account_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Το όνομα του λογαριασμού: </td><td align=left><input type=text name=email_account_name size=40 maxlength=100 value='$email_account_name'>$NWB#email_accounts-email_account_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Ενεργή:</td><td align=left><select size=1 name=active><option>Y</option><option SELECTED>N</option></select>$NWB#email_accounts-email_account_active$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοΠεριγραφή λογαριασμού: </td><td align=left><input type=text name=email_account_description size=70 maxlength=255 value='$email_account_description'>$NWB#email_accounts-email_account_description$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Τύπο του λογαριασμού email: </td><td align=left><select size=1 name=email_account_type><option>INBOUND</option></select>$NWB#email_accounts-email_account_type$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Διαχειριστής Ομάδα Χρηστών: </td><td align=left><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
 		echo "<option SELECTED value=\"---ALL---\">Όλες οι Ομάδες Χρηστών Διαχειριστής</option>\n";
-		echo "</select>$NWB#vicidial_email_accounts-admin_user_group$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοΠρωτόκολλο λογαριασμού: </td><td align=left><select size=1 name=protocol><option SELECTED>IMAP</option><option>POP3</option></select>$NWB#vicidial_email_accounts-protocol$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοΑπάντηση στη διεύθυνση: </td><td align=left><input type=text name=email_replyto_address size=70 maxlength=255 value='$email_replyto_address'>$NWB#vicidial_email_accounts-email_replyto_address$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοδιακομιστή λογαριασμού: </td><td align=left><input type=text name=email_account_server size=70 maxlength=255 value='$email_account_server'>$NWB#vicidial_email_accounts-email_account_server$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείολογαριασμού χρήστη: </td><td align=left><input type=text name=email_account_user size=30 maxlength=255 value='$email_account_user'>$NWB#vicidial_email_accounts-email_account_user$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοΚωδικός Λογαριασμού: </td><td align=left><input type=text name=email_account_pass size=30 maxlength=100 value='$email_account_pass'>$NWB#vicidial_email_accounts-email_account_pass$NWE</td></tr>\n";
+		echo "</select>$NWB#email_accounts-admin_user_group$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοΠρωτόκολλο λογαριασμού: </td><td align=left><select size=1 name=protocol><option SELECTED>IMAP</option><option>POP3</option></select>$NWB#email_accounts-protocol$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοΑπάντηση στη διεύθυνση: </td><td align=left><input type=text name=email_replyto_address size=70 maxlength=255 value='$email_replyto_address'>$NWB#email_accounts-email_replyto_address$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοδιακομιστή λογαριασμού: </td><td align=left><input type=text name=email_account_server size=70 maxlength=255 value='$email_account_server'>$NWB#email_accounts-email_account_server$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείολογαριασμού χρήστη: </td><td align=left><input type=text name=email_account_user size=30 maxlength=255 value='$email_account_user'>$NWB#email_accounts-email_account_user$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοΚωδικός Λογαριασμού: </td><td align=left><input type=text name=email_account_pass size=30 maxlength=100 value='$email_account_pass'>$NWB#email_accounts-email_account_pass$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοFrequency Check Rate (mins): </td><td align=left><select name='email_frequency_check_mins'>";
 		$i=5;
 		while ($i<=60) 
@@ -604,20 +589,20 @@ else if ($eact == "ADD")
 			echo "<option value='$i'>$i</option>";
 			$i+=5;
 			}
-		echo "</select>$NWB#vicidial_email_accounts-email_frequency_check_mins$NWE</td></tr>\n";
+		echo "</select>$NWB#email_accounts-email_frequency_check_mins$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=1000\">In-ID Ομάδας</a>: </td><td align=left><select size=1 name=group_id>";
 		echo "$Dgroups_menu";
-		echo "</select>$NWB#vicidial_email_accounts-in_group$NWE</td></tr>\n";
+		echo "</select>$NWB#email_accounts-in_group$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=1000\">Προεπιλογή ID Κατάλογος</a>: </td><td align=left><input type=text name=default_list_id size=20 maxlength=255 value='$default_list_id'>$NWB#vicidial_email_accounts-default_list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=1000\">Προεπιλογή ID Κατάλογος</a>: </td><td align=left><input type=text name=default_list_id size=20 maxlength=255 value='$default_list_id'>$NWB#email_accounts-default_list_id$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Στην Ομάδα-Call Χειροκίνητος Τρόπος:</td><td align=left><select size=1 name=call_handle_method><option>EMAIL</option><option>EMAILLOOKUP</option><option>EMAILLOOKUPRL</option><option>EMAILLOOKUPRC</option><option SELECTED>$call_handle_method</option></select>$NWB#vicidial_email_accounts-call_handle_method$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Στην Ομάδα-Agent Search Μέθοδος:</td><td align=left><select size=1 name=agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$agent_search_method</option></select>$NWB#vicidial_email_accounts-agent_search_method$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Στην ομάδα Κατάλογος-ID:</td><td align=left><input type=text name=list_id size=14 maxlength=14 value=\"$list_id\">$NWB#vicidial_email_accounts-ingroup_list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Στην Ομάδα-Call Χειροκίνητος Τρόπος:</td><td align=left><select size=1 name=call_handle_method><option>EMAIL</option><option>EMAILLOOKUP</option><option>EMAILLOOKUPRL</option><option>EMAILLOOKUPRC</option><option SELECTED>$call_handle_method</option></select>$NWB#email_accounts-call_handle_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Στην Ομάδα-Agent Search Μέθοδος:</td><td align=left><select size=1 name=agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$agent_search_method</option></select>$NWB#email_accounts-agent_search_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Στην ομάδα Κατάλογος-ID:</td><td align=left><input type=text name=list_id size=14 maxlength=14 value=\"$list_id\">$NWB#email_accounts-ingroup_list_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Στην ομάδα της εκστρατείας-ID:</td><td align=left><select size=1 name=campaign_id>\n";
 		echo "$campaigns_list";
 		echo "<option SELECTED>$campaign_id</option>\n";
-		echo "</select>$NWB#vicidial_email_accounts-ingroup_campaign_id$NWE</td></tr>\n";
+		echo "</select>$NWB#email_accounts-ingroup_campaign_id$NWE</td></tr>\n";
 		
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=ΕΠΙΒΕΒΑΙΩΣΗ VALUE=ΥΠΟΒΑΛΛΩ><input type=hidden name='eact' value='ADD'></td></tr>\n";
 		echo "</TABLE></center></form>\n";
@@ -633,8 +618,8 @@ else if (($eact=="DELETE" || $eact=="UPDATE") && $email_account_id)
 	if ( ($LOGemails_modify==1) )
 		{
 		$stmt="SELECT * from vicidial_email_accounts where email_account_id='$email_account_id'";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_array($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_array($rslt);
 
 		$email_account_id=$row["email_account_id"];
 		$email_account_name=$row["email_account_name"];
@@ -663,21 +648,21 @@ else if (($eact=="DELETE" || $eact=="UPDATE") && $email_account_id)
 			echo "</font>";
 			}
 		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
-		$rslt=mysql_query($stmt, $link);
-		$campaigns_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$campaigns_to_print = mysqli_num_rows($rslt);
 		$campaigns_list='';
 		$o=0;
 		while ($campaigns_to_print > $o) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$campaigns_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 			$o++;
 			}
 
 		##### get in-groups listings for dynamic pulldown
 		$stmt="SELECT group_id,group_name from vicidial_inbound_groups $whereLOGadmin_viewable_groupsSQL order by group_id;";
-		$rslt=mysql_query($stmt, $link);
-		$Xgroups_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$Xgroups_to_print = mysqli_num_rows($rslt);
 		$Xgroups_menu='';
 		$Xgroups_selected=0;
 		$FXgroups_menu='';
@@ -685,7 +670,7 @@ else if (($eact=="DELETE" || $eact=="UPDATE") && $email_account_id)
 		$o=0;
 		while ($Xgroups_to_print > $o) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$Xgroups_menu .= "<option ";
 			$FXgroups_menu .= "<option ";
 			if ($user_route_settings_ingroup == "$rowx[0]") 
@@ -714,8 +699,8 @@ else if (($eact=="DELETE" || $eact=="UPDATE") && $email_account_id)
 
 		##### get in-groups listings for dynamic pulldown
 		$stmt="SELECT group_id,group_name from vicidial_inbound_groups where group_id NOT IN('AGENTDIRECT') $LOGadmin_viewable_groupsSQL order by group_id;";
-		$rslt=mysql_query($stmt, $link);
-		$Dgroups_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$Dgroups_to_print = mysqli_num_rows($rslt);
 		$Dgroups_menu='';
 		$Dgroups_selected=0;
 		$FDgroups_menu='';
@@ -723,7 +708,7 @@ else if (($eact=="DELETE" || $eact=="UPDATE") && $email_account_id)
 		$o=0;
 		while ($Dgroups_to_print > $o) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$Dgroups_menu .= "<option ";
 			$FDgroups_menu .= "<option ";
 			if ($group_id == "$rowx[0]") 
@@ -751,8 +736,8 @@ else if (($eact=="DELETE" || $eact=="UPDATE") && $email_account_id)
 
 		## Get unhandled count
 		$stmt="select count(*) From vicidial_email_list where status='NEW' and email_account_id='$email_account_id'";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$unhandled_emails=$row[0];
 		
 		echo "<TABLE>\n";
@@ -763,23 +748,23 @@ else if (($eact=="DELETE" || $eact=="UPDATE") && $email_account_id)
 		echo "<br>Ενημερώσετε μια υπάρχουσα INBOUND λογαριασμό email<form action='$PHP_SELF' method='GET'>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοID λογαριασμού: </td><td align=left><input type=hidden name=email_account_id value='$email_account_id'><B>$email_account_id$NWB#vicidial_email_accounts-email_account_id$NWE</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Το όνομα του λογαριασμού: </td><td align=left><input type=text name=email_account_name size=40 maxlength=100 value='$email_account_name'>$NWB#vicidial_email_accounts-email_account_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοID λογαριασμού: </td><td align=left><input type=hidden name=email_account_id value='$email_account_id'><B>$email_account_id$NWB#email_accounts-email_account_id$NWE</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Το όνομα του λογαριασμού: </td><td align=left><input type=text name=email_account_name size=40 maxlength=100 value='$email_account_name'>$NWB#email_accounts-email_account_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Ενεργή:</td><td align=left><select size=1 name=active>";
 		echo "<option value='$active' selected>$active</option>";
-		echo "<option>Y</option><option>N</option></select>$NWB#vicidial_email_accounts-email_account_active$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοΠεριγραφή λογαριασμού: </td><td align=left><input type=text name=email_account_description size=70 maxlength=255 value='$email_account_description'>$NWB#vicidial_email_accounts-email_account_description$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Τύπο του λογαριασμού email: </td><td align=left><select size=1 name=email_account_type><option value='$email_account_type' selected>$email_account_type</option><option>INBOUND</option></select>$NWB#vicidial_email_accounts-email_account_type$NWE</td></tr>\n";
+		echo "<option>Y</option><option>N</option></select>$NWB#email_accounts-email_account_active$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοΠεριγραφή λογαριασμού: </td><td align=left><input type=text name=email_account_description size=70 maxlength=255 value='$email_account_description'>$NWB#email_accounts-email_account_description$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Τύπο του λογαριασμού email: </td><td align=left><select size=1 name=email_account_type><option value='$email_account_type' selected>$email_account_type</option><option>INBOUND</option></select>$NWB#email_accounts-email_account_type$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Διαχειριστής Ομάδα Χρηστών: </td><td align=left><select size=1 name=user_group>\n";
 		echo "<option value='$user_group' selected>$user_group</option>";
 		echo "$UUgroups_list";
 		echo "<option SELECTED value=\"---ALL---\">Όλες οι Ομάδες Χρηστών Διαχειριστής</option>\n";
-		echo "</select>$NWB#vicidial_email_accounts-admin_user_group$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοΠρωτόκολλο λογαριασμού: </td><td align=left><select size=1 name=protocol><option>IMAP</option><option>POP3</option><option SELECTED>$protocol</option></select>$NWB#vicidial_email_accounts-protocol$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοΑπάντηση στη διεύθυνση: </td><td align=left><input type=text name=email_replyto_address size=70 maxlength=255 value='$email_replyto_address'>$NWB#vicidial_email_accounts-email_replyto_address$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοδιακομιστή λογαριασμού: </td><td align=left><input type=text name=email_account_server size=70 maxlength=255 value='$email_account_server'>$NWB#vicidial_email_accounts-email_account_server$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείολογαριασμού χρήστη: </td><td align=left><input type=text name=email_account_user size=30 maxlength=255 value='$email_account_user'>$NWB#vicidial_email_accounts-email_account_user$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοΚωδικός Λογαριασμού: </td><td align=left><input type=text name=email_account_pass size=30 maxlength=100 value='$email_account_pass'>$NWB#vicidial_email_accounts-email_account_pass$NWE</td></tr>\n";
+		echo "</select>$NWB#email_accounts-admin_user_group$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοΠρωτόκολλο λογαριασμού: </td><td align=left><select size=1 name=protocol><option>IMAP</option><option>POP3</option><option SELECTED>$protocol</option></select>$NWB#email_accounts-protocol$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοΑπάντηση στη διεύθυνση: </td><td align=left><input type=text name=email_replyto_address size=70 maxlength=255 value='$email_replyto_address'>$NWB#email_accounts-email_replyto_address$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοδιακομιστή λογαριασμού: </td><td align=left><input type=text name=email_account_server size=70 maxlength=255 value='$email_account_server'>$NWB#email_accounts-email_account_server$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείολογαριασμού χρήστη: </td><td align=left><input type=text name=email_account_user size=30 maxlength=255 value='$email_account_user'>$NWB#email_accounts-email_account_user$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοΚωδικός Λογαριασμού: </td><td align=left><input type=text name=email_account_pass size=30 maxlength=100 value='$email_account_pass'>$NWB#email_accounts-email_account_pass$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=rightΗλεκτρονικό ταχυδρομείοFrequency Check Rate (mins): </td><td align=left><select name='email_frequency_check_mins'>";
 		echo "<option value='$email_frequency_check_mins' selected>$email_frequency_check_mins</option>";
 		$i=5;
@@ -788,21 +773,21 @@ else if (($eact=="DELETE" || $eact=="UPDATE") && $email_account_id)
 			echo "<option value='$i'>$i</option>";
 			$i+=5;
 			}
-		echo "</select>$NWB#vicidial_email_accounts-email_frequency_check_mins$NWE</td></tr>\n";
+		echo "</select>$NWB#email_accounts-email_frequency_check_mins$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=3811&group_id=$group_id\">In-ID Ομάδας</a>: </td><td align=left><select size=1 name=group_id>";
 		echo "$Dgroups_menu";
-		echo "<option value='$group_id' selected>$group_id</option></select>$NWB#vicidial_email_accounts-in_group$NWE</td></tr>\n";
+		echo "<option value='$group_id' selected>$group_id</option></select>$NWB#email_accounts-in_group$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=1000\">Προεπιλογή ID Κατάλογος</a>: </td><td align=left><input type=text name=default_list_id size=20 maxlength=255 value='$default_list_id'>$NWB#vicidial_email_accounts-default_list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=1000\">Προεπιλογή ID Κατάλογος</a>: </td><td align=left><input type=text name=default_list_id size=20 maxlength=255 value='$default_list_id'>$NWB#email_accounts-default_list_id$NWE</td></tr>\n";
 
 ###############
-		echo "<tr bgcolor=#B6D3FC><td align=right>Στην Ομάδα-Call Χειροκίνητος Τρόπος:</td><td align=left><select size=1 name=call_handle_method><option>EMAIL</option><option>EMAILLOOKUP</option><option>EMAILLOOKUPRL</option><option>EMAILLOOKUPRC</option><option SELECTED>$call_handle_method</option></select>$NWB#vicidial_email_accounts-call_handle_method$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Στην Ομάδα-Agent Search Μέθοδος:</td><td align=left><select size=1 name=agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$agent_search_method</option></select>$NWB#vicidial_email_accounts-agent_search_method$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Στην ομάδα Κατάλογος-ID:</td><td align=left><input type=text name=list_id size=14 maxlength=14 value=\"$list_id\">$NWB#vicidial_email_accounts-ingroup_list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Στην Ομάδα-Call Χειροκίνητος Τρόπος:</td><td align=left><select size=1 name=call_handle_method><option>EMAIL</option><option>EMAILLOOKUP</option><option>EMAILLOOKUPRL</option><option>EMAILLOOKUPRC</option><option SELECTED>$call_handle_method</option></select>$NWB#email_accounts-call_handle_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Στην Ομάδα-Agent Search Μέθοδος:</td><td align=left><select size=1 name=agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$agent_search_method</option></select>$NWB#email_accounts-agent_search_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Στην ομάδα Κατάλογος-ID:</td><td align=left><input type=text name=list_id size=14 maxlength=14 value=\"$list_id\">$NWB#email_accounts-ingroup_list_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Στην ομάδα της εκστρατείας-ID:</td><td align=left><select size=1 name=campaign_id>\n";
 		echo "$campaigns_list";
 		echo "<option SELECTED>$campaign_id</option>\n";
-		echo "</select>$NWB#vicidial_email_accounts-ingroup_campaign_id$NWE</td></tr>\n";
+		echo "</select>$NWB#email_accounts-ingroup_campaign_id$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>Un-χειρισμός Emails: </td><td align=left><B>$unhandled_emails</B></td></tr>\n";
 ################
@@ -840,20 +825,20 @@ else
 	echo "<TD><font size=1 color=white>ΤΡΟΠΟΠΟΙΗΣΗ</TD></tr>\n";
 
 	$stmt="SELECT email_account_id, email_account_name, email_account_description, email_replyto_address, protocol, email_account_server, email_frequency_check_mins, active from vicidial_email_accounts $whereLOGadmin_viewable_groupsSQL order by email_account_id;";
-	$rslt=mysql_query($stmt, $link);
-	$accounts_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$accounts_to_print = mysqli_num_rows($rslt);
 	$o=0;
 	while ($accounts_to_print > $o) 
 		{
-		$row=mysql_fetch_array($rslt);
+		$row=mysqli_fetch_array($rslt);
 
 		## Get unhandled count
 		$ct_stmt="select count(*) From vicidial_email_list where status='NEW' and email_account_id='$row[email_account_id]'";
-		$ct_rslt=mysql_query($ct_stmt, $link);
-		$ct_row=mysql_fetch_row($ct_rslt);
+		$ct_rslt=mysql_to_mysqli($ct_stmt, $link);
+		$ct_row=mysqli_fetch_row($ct_rslt);
 		$unhandled_emails=$ct_row[0];
 		
-		if (eregi("1$|3$|5$|7$|9$", $o))
+		if (preg_match("/1$|3$|5$|7$|9$/i", $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}

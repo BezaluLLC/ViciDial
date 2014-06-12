@@ -1,5 +1,5 @@
 <?php
-# park_calls_display.php    version 2.6
+# park_calls_display.php    version 2.8
 # 
 # Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -24,9 +24,12 @@
 # 60619-1205 - Added variable filters to close security holes for login form
 # 90508-0727 - Changed to PHP long tags
 # 130328-0024 - Converted ereg to preg functions
+# 130603-2213 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130802-1024 - Changed to PHP mysqli functions
 # 
 
-require("dbconnect.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 ### If you have globals turned off uncomment these lines
 if (isset($_GET["user"]))					{$user=$_GET["user"];}
@@ -46,6 +49,8 @@ if (isset($_GET["protocol"]))				{$protocol=$_GET["protocol"];}
 
 $user=preg_replace("/[^0-9a-zA-Z]/","",$user);
 $pass=preg_replace("/[^0-9a-zA-Z]/","",$pass);
+$session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
+$server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
 
 # default optional vars if not set
 if (!isset($format))		{$format="text";}
@@ -58,21 +63,20 @@ $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',0,0,0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
-  if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0) )
+if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Felaktig Användarnamn/Lösenord: |$user|$pass|\n";
-    exit;
+	echo "Felaktig Användarnamn/Lösenord: |$user|$pass|$auth_message|\n";
+	exit;
 	}
-  else
+else
 	{
-
-	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) ) 		{
+	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) ) 		
+		{
 		echo "Felaktig server_ip: |$server_ip|  or  Felaktig session_name: |$session_name|\n";
 		exit;
 		}
@@ -80,8 +84,8 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 		{
 		$stmt="SELECT count(*) from web_client_sessions where session_name='$session_name' and server_ip='$server_ip';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$SNauth=$row[0];
 		  if($SNauth==0)
 			{
@@ -96,38 +100,38 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 	}
 
 if ($format=='debug')
-{
-echo "<html>\n";
-echo "<head>\n";
-echo "<!-- VERSION: $version     BUILD: $build    EXTEN: $exten   server_ip: $server_ip-->\n";
-echo "<title>visa parkerade samtal";
-echo "</title>\n";
-echo "</head>\n";
-echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
-}
+	{
+	echo "<html>\n";
+	echo "<head>\n";
+	echo "<!-- VERSION: $version     BUILD: $build    EXTEN: $exten   server_ip: $server_ip-->\n";
+	echo "<title>visa parkerade samtal";
+	echo "</title>\n";
+	echo "</head>\n";
+	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+	}
 
 
-	$row='';   $rowx='';
-	$channel_live=1;
-	if ( (strlen($exten)<1) or (strlen($protocol)<3) )
+$row='';   $rowx='';
+$channel_live=1;
+if ( (strlen($exten)<1) or (strlen($protocol)<3) )
 	{
 	$channel_live=0;
 	echo "Exten $exten är ej giltig eller protokoll $protocol är ej giltig\n";
 	exit;
 	}
-	else
+else
 	{
 	##### print parked calls from the parked_channels table
 	$stmt="SELECT channel,server_ip,channel_group,extension,parked_by,parked_time from parked_channels where server_ip = '$server_ip' order by parked_time limit $park_limit;";
-		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-	$park_calls_count = mysql_num_rows($rslt);
+	if ($format=='debug') {echo "\n<!-- $stmt -->";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$park_calls_count = mysqli_num_rows($rslt);
 	echo "$park_calls_count\n";
 	$loop_count=0;
 		while ($park_calls_count>$loop_count)
 		{
 		$loop_count++;
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		echo "$row[0] ~$row[2] ~$row[3] ~$row[4] ~$row[5]|";
 		}
 	echo "\n";

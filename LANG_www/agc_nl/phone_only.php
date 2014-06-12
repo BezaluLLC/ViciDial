@@ -9,16 +9,19 @@
 # 120223-2124 - Removed logging of good login passwords if webroot writable is enabled
 # 130123-1923 - Added ability to use user-login-first options.php option
 # 130328-0005 - Converted ereg to preg functions
+# 130603-2212 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130718-0946 - Fixed login bug
+# 130802-1139 - Changed to PHP mysqli functions
 #
 
-$version = '2.6-5p';
-$build = '130328-0005';
+$version = '2.8-8p';
+$build = '130802-1139';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=73;
 $one_mysql_log=0;
 
-require("dbconnect.php");
-require("functions.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 if (isset($_GET["DB"]))						    {$DB=$_GET["DB"];}
         elseif (isset($_POST["DB"]))            {$DB=$_POST["DB"];}
@@ -60,7 +63,7 @@ $forever_stop=0;
 
 if ($force_logout)
 	{
-    echo "Je ben nu uitgelogd. Bedankt\n";
+    echo "Je bent nu uitgelogd.\n";
     exit;
 	}
 
@@ -84,13 +87,13 @@ $random = (rand(1000000, 9999999) + 10000000);
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$vdc_header_date_format =		$row[1];
 	$vdc_customer_date_format =		$row[2];
@@ -134,7 +137,7 @@ $SIDEBAR_COLOR			= '#F6F6F6';
 #   see the options-example.php file for more information
 if (file_exists('options.php'))
 	{
-	require('options.php');
+	require_once('options.php');
 	}
 
 $US='_';
@@ -172,17 +175,17 @@ echo "<!-- VERSIE: $version     BUILD: $build -->\n";
 echo "<!-- BROWSER: $BROWSER_WIDTH x $BROWSER_HEIGHT     $JS_browser_width x $JS_browser_height -->\n";
 
 
-$stmt="SELECT user_group from vicidial_users where user='$VD_login' and pass='$VD_pass';";
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
+$stmt="SELECT user_group from vicidial_users where user='$VD_login';";
+if ($non_latin > 0) {$rslt=mysql_to_mysqli($link, "SET NAMES 'UTF8'");}
+$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09002',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-$row=mysql_fetch_row($rslt);
+$row=mysqli_fetch_row($rslt);
 $VU_user_group=$row[0];
 
 
 if ($relogin == 'YES')
 	{
-	echo "<title>Telefoon web client: Login</title>\n";
+	echo "<title>Telefoon1 web client: Login</title>\n";
 	echo "</head>\n";
     echo "<body bgcolor=\"white\">\n";
 	if ($hide_timeclock_link < 1)
@@ -194,16 +197,16 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/phone_onl
     echo "<input type=\"hidden\" name=\"DB\" id=\"DB\" value=\"$DB\" />\n";
     echo "<br /><br /><br /><center><table width=\"460px\" cellpadding=\"0\" cellspacing=\"0\" bgcolor=\"$MAIN_COLOR\"><tr bgcolor=\"white\">";
     echo "<td align=\"left\" valign=\"bottom\"><img src=\"../agc/images/vdc_tab_vicidial.gif\" border=\"0\" alt=\"VICIdial\" /></td>";
-    echo "<td align=\"center\" valign=\"middle\"> Telefoon-Only Inloggen </td>";
+    echo "<td align=\"center\" valign=\"middle\"> Telefoon1-Only Inloggen </td>";
     echo "</tr>\n";
     echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"> &nbsp; </font></td></tr>\n";
-    echo "<tr><td align=\"right\">Telefoon login\/nummer: </td>";
+    echo "<tr><td align=\"right\">Werkplek Code: </td>";
     echo "<td align=\"left\"><input type=\"text\" name=\"phone_login\" size=\"10\" maxlength=\"20\" value=\"$phone_login\" /></td></tr>\n";
-    echo "<tr><td align=\"right\">Telefoon Wachtwoord:  </td>";
+    echo "<tr><td align=\"right\">Werkplek Wachtwoord:  </td>";
     echo "<td align=\"left\"><input type=\"password\" name=\"phone_pass\" size=\"10\" maxlength=\"20\" value=\"$phone_pass\" /></td></tr>\n";
     echo "<tr><td align=\"right\">Gebruikersnaam:  </td>";
     echo "<td align=\"left\"><input type=\"text\" name=\"VD_login\" size=\"10\" maxlength=\"20\" value=\"$VD_login\" /></td></tr>\n";
-    echo "<tr><td align=\"right\">Gebruikerswachtwoord:  </td>";
+    echo "<tr><td align=\"right\">Gebruikers Wachtwoord:  </td>";
     echo "<td align=\"left\"><input type=\"password\" name=\"VD_pass\" size=\"10\" maxlength=\"20\" value=\"$VD_pass\" /></td></tr>\n";
     echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"OPSLAAN\" value=\"Submit\" /> &nbsp; \n";
     echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />VERSIE: $version &nbsp; &nbsp; &nbsp; BUILD: $build</font></td></tr>\n";
@@ -219,7 +222,7 @@ if ($user_login_first == 1)
 	{
 	if ( (strlen($VD_login)<1) or (strlen($VD_pass)<1) )
 		{
-		echo "<title>Telefoon web client: Login</title>\n";
+		echo "<title>Telefoon1 web client: Login</title>\n";
 		echo "</head>\n";
 		echo "<body bgcolor=\"white\">\n";
 		if ($hide_timeclock_link < 1)
@@ -231,12 +234,12 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/phone_onl
 		echo "<input type=\"hidden\" name=\"DB\" id=\"DB\" value=\"$DB\" />\n";
 		echo "<br /><br /><br /><center><table width=\"460px\" cellpadding=\"0\" cellspacing=\"0\" bgcolor=\"$MAIN_COLOR\"><tr bgcolor=\"white\">";
 		echo "<td align=\"left\" valign=\"bottom\"><img src=\"../agc/images/vdc_tab_vicidial.gif\" border=\"0\" alt=\"VICIdial\" /></td>";
-		echo "<td align=\"center\" valign=\"middle\"> Telefoon-Only Inloggen </td>";
+		echo "<td align=\"center\" valign=\"middle\"> Telefoon1-Only Inloggen </td>";
 		echo "</tr>\n";
 		echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"> &nbsp; </font></td></tr>\n";
 		echo "<tr><td align=\"right\">Gebruikersnaam:  </td>";
 		echo "<td align=\"left\"><input type=\"text\" name=\"VD_login\" size=\"10\" maxlength=\"20\" value=\"$VD_login\" /></td></tr>\n";
-		echo "<tr><td align=\"right\">Gebruikerswachtwoord:  </td>";
+		echo "<tr><td align=\"right\">Gebruikers Wachtwoord:  </td>";
 		echo "<td align=\"left\"><input type=\"password\" name=\"VD_pass\" size=\"10\" maxlength=\"20\" value=\"$VD_pass\" /></td></tr>\n";
 		echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"OPSLAAN\" value=\"Submit\" /> &nbsp; \n";
 		echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />VERSIE: $version &nbsp; &nbsp; &nbsp; BUILD: $build</font></td></tr>\n";
@@ -250,17 +253,17 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/phone_onl
 		{
 		if ( (strlen($phone_login)<2) or (strlen($phone_pass)<2) )
 			{
-			$stmt="SELECT phone_login,phone_pass from vicidial_users where user='$VD_login' and pass='$VD_pass' and user_level > 0 and active='Y';";
+			$stmt="SELECT phone_login,phone_pass from vicidial_users where user='$VD_login';";
 			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09073',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$phone_login=$row[0];
 			$phone_pass=$row[1];
 
 			if ( (strlen($phone_login) < 1) or (strlen($phone_pass) < 1) )
 				{
-				echo "<title>Telefoon web client: Telefoon login\/nummer</title>\n";
+				echo "<title>Telefoon1 web client: Werkplek Code</title>\n";
 				echo "</head>\n";
 				echo "<body bgcolor=\"white\">\n";
 				if ($hide_timeclock_link < 1)
@@ -272,12 +275,12 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/phone_onl
 				echo "<input type=\"hidden\" name=\"DB\" value=\"$DB\" />\n";
 				echo "<br /><br /><br /><center><table width=\"460px\" cellpadding=\"0\" cellspacing=\"0\" bgcolor=\"$MAIN_COLOR\"><tr bgcolor=\"white\">";
 				echo "<td align=\"left\" valign=\"bottom\"><img src=\"../agc/images/vdc_tab_vicidial.gif\" border=\"0\" alt=\"VICIdial\" /></td>";
-				echo "<td align=\"center\" valign=\"middle\"> Telefoon-Only Inloggen </td>";
+				echo "<td align=\"center\" valign=\"middle\"> Telefoon1-Only Inloggen </td>";
 				echo "</tr>\n";
 				echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"> &nbsp; </font></td></tr>\n";
-				echo "<tr><td align=\"right\">Telefoon login\/nummer: </td>";
+				echo "<tr><td align=\"right\">Werkplek Code: </td>";
 				echo "<td align=\"left\"><input type=\"text\" name=\"phone_login\" size=\"10\" maxlength=\"20\" value=\"\" /></td></tr>\n";
-				echo "<tr><td align=\"right\">Telefoon Wachtwoord:  </td>";
+				echo "<tr><td align=\"right\">Werkplek Wachtwoord:  </td>";
 				echo "<td align=\"left\"><input type=\"password\" name=\"phone_pass\" size=\"10\" maxlength=\"20\" value=\"\" /></td></tr>\n";
 				echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"OPSLAAN\" value=\"Submit\" /> &nbsp; \n";
 				echo "<span id=\"LogiNReseT\"></span></td></tr>\n";
@@ -293,7 +296,7 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/phone_onl
 	}
 if ( (strlen($phone_login) < 1) or (strlen($phone_pass) < 1) )
 	{
-	echo "<title>Telefoon web client: Telefoon login\/nummer</title>\n";
+	echo "<title>Telefoon1 web client: Werkplek Code</title>\n";
 	echo "</head>\n";
 	echo "<body bgcolor=\"white\">\n";
 	if ($hide_timeclock_link < 1)
@@ -305,12 +308,12 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/phone_onl
 	echo "<input type=\"hidden\" name=\"DB\" value=\"$DB\" />\n";
 	echo "<br /><br /><br /><center><table width=\"460px\" cellpadding=\"0\" cellspacing=\"0\" bgcolor=\"$MAIN_COLOR\"><tr bgcolor=\"white\">";
 	echo "<td align=\"left\" valign=\"bottom\"><img src=\"../agc/images/vdc_tab_vicidial.gif\" border=\"0\" alt=\"VICIdial\" /></td>";
-	echo "<td align=\"center\" valign=\"middle\"> Telefoon-Only Inloggen </td>";
+	echo "<td align=\"center\" valign=\"middle\"> Telefoon1-Only Inloggen </td>";
 	echo "</tr>\n";
 	echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"> &nbsp; </font></td></tr>\n";
-	echo "<tr><td align=\"right\">Telefoon login\/nummer: </td>";
+	echo "<tr><td align=\"right\">Werkplek Code: </td>";
 	echo "<td align=\"left\"><input type=\"text\" name=\"phone_login\" size=\"10\" maxlength=\"20\" value=\"\" /></td></tr>\n";
-	echo "<tr><td align=\"right\">Telefoon Wachtwoord:  </td>";
+	echo "<tr><td align=\"right\">Werkplek Wachtwoord:  </td>";
 	echo "<td align=\"left\"><input type=\"password\" name=\"phone_pass\" size=\"10\" maxlength=\"20\" value=\"\" /></td></tr>\n";
 	echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"OPSLAAN\" value=\"Submit\" /> &nbsp; \n";
 	echo "<span id=\"LogiNReseT\"></span></td></tr>\n";
@@ -333,31 +336,27 @@ else
 		}
 	else
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$VD_login' and pass='$VD_pass' and user_level > 0 and active='Y';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09003',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
-		$auth=$row[0];
+		$auth=0;
+		$auth_message = user_authorization($VD_login,$VD_pass,'',1,0,0);
+		if ($auth_message == 'GOOD')
+			{$auth=1;}
 
 		if($auth>0)
 			{
-			$login=strtoupper($VD_login);
-			$password=strtoupper($VD_pass);
 			##### grab the full name of the agent
-			$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,agent_call_log_view_override,agent_choose_blended,agent_lead_search_override from vicidial_users where user='$VD_login' and pass='$VD_pass'";
-			$rslt=mysql_query($stmt, $link);
+			$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,agent_call_log_view_override,agent_choose_blended,agent_lead_search_override from vicidial_users where user='$VD_login';";
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09004',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$LOGfullname =					$row[0];
 			$user_level =					$row[1];
 			$VU_user_group =				$row[10];
 
 			### Gather timeclock and shift enforcement restriction settings
 			$stmt="SELECT forced_timeclock_login,shift_enforcement,group_shifts,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view,agent_xfer_consultative,agent_xfer_dial_override,agent_xfer_vm_transfer,agent_xfer_blind_transfer,agent_xfer_dial_with_customer,agent_xfer_park_customer_dial,agent_fullscreen,webphone_url_override,webphone_dialpad_override,webphone_systemkey_override from vicidial_user_groups where user_group='$VU_user_group';";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09005',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$agent_fullscreen =				$row[12];
 			$webphone_url =					$row[13];
 			$webphone_dialpad_override =	$row[14];
@@ -383,12 +382,14 @@ else
 				fclose($fp);
 				}
 			$VDloginDISPLAY=1;
-            $VDdisplayMESSAGE = "Ongeldige login, probeer het nogmaals<br />";
+            $VDdisplayMESSAGE = "Ongeldige gegevens, probeer het nogmaals<br />";
+			if ($auth_message == 'LOCK')
+				{$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes<br />";}
 			}
 		}
 	if ($VDloginDISPLAY)
 		{
-		echo "<title>Telefoon web client: Login</title>\n";
+		echo "<title>Telefoon1 web client: Login</title>\n";
 		echo "</head>\n";
         echo "<body bgcolor=\"white\">\n";
 		if ($hide_timeclock_link < 1)
@@ -403,12 +404,12 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/phone_onl
         echo "<center><br /><b>$VDdisplayMESSAGE</b><br /><br />";
         echo "<table width=\"460px\" cellpadding=\"0\" cellspacing=\"0\" bgcolor=\"$MAIN_COLOR\"><tr bgcolor=\"white\">";
         echo "<td align=\"left\" valign=\"bottom\"><img src=\"../agc/images/vdc_tab_vicidial.gif\" border=\"0\" alt=\"VICIdial\" /></td>";
-        echo "<td align=\"center\" valign=\"middle\"> Telefoon-Only Inloggen </td>";
+        echo "<td align=\"center\" valign=\"middle\"> Telefoon1-Only Inloggen </td>";
         echo "</tr>\n";
         echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"> &nbsp; </font></td></tr>\n";
         echo "<tr><td align=\"right\">Gebruikersnaam:  </td>";
         echo "<td align=\"left\"><input type=\"text\" name=\"VD_login\" size=\"10\" maxlength=\"20\" value=\"$VD_login\" /></td></tr>\n";
-        echo "<tr><td align=\"right\">Gebruikerswachtwoord:  </td>";
+        echo "<tr><td align=\"right\">Gebruikers Wachtwoord:  </td>";
         echo "<td align=\"left\"><input type=\"password\" name=\"VD_pass\" size=\"10\" maxlength=\"20\" value=\"$VD_pass\" /></td></tr>\n";
         echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"OPSLAAN\" value=\"Submit\" /> &nbsp; \n";
         echo "<span id=\"LogiNReseT\"></span></td></tr>\n";
@@ -428,23 +429,23 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/phone_onl
 	#   login: ca101,cb101,cc101
 		$alias_found=0;
 	$stmt="select count(*) from phones_alias where alias_id = '$phone_login';";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09006',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-	$alias_ct = mysql_num_rows($rslt);
+	$alias_ct = mysqli_num_rows($rslt);
 	if ($alias_ct > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$alias_found = "$row[0]";
 		}
 	if ($alias_found > 0)
 		{
 		$stmt="select alias_name,logins_list from phones_alias where alias_id = '$phone_login' limit 1;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09007',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		$alias_ct = mysql_num_rows($rslt);
+		$alias_ct = mysqli_num_rows($rslt);
 		if ($alias_ct > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$alias_name = "$row[0]";
 			$phone_login = "$row[1]";
 			}
@@ -472,13 +473,13 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/phone_onl
 	#$stmt="SELECT count(*) from phones where $phoneSQL and active = 'Y';";
 	$stmt="SELECT count(*) from phones,servers where $phoneSQL and phones.active = 'Y' and active_asterisk_server='Y' and phones.server_ip=servers.server_ip;";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09008',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$authphone=$row[0];
 	if (!$authphone)
 		{
-		echo "<title>Telefoon web client: Telefoon login\/nummer Error</title>\n";
+		echo "<title>Telefoon1 web client: Werkplek Code Error</title>\n";
 		echo "</head>\n";
         echo "<body bgcolor=\"white\">\n";
 		if ($hide_timeclock_link < 1)
@@ -492,12 +493,12 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/phone_onl
         echo "<input type=\"hidden\" name=\"VD_pass\" value=\"$VD_pass\" />\n";
         echo "<br /><br /><br /><center><table width=\"460px\" cellpadding=\"0\" cellspacing=\"0\" bgcolor=\"$MAIN_COLOR\"><tr bgcolor=\"white\">";
         echo "<td align=\"left\" valign=\"bottom\"><img src=\"../agc/images/vdc_tab_vicidial.gif\" border=\"0\" alt=\"VICIdial\" /></td>";
-        echo "<td align=\"center\" valign=\"middle\"> Telefoon-Only Inloggen Error</td>";
+        echo "<td align=\"center\" valign=\"middle\"> Telefoon1-Only Inloggen Error</td>";
         echo "</tr>\n";
-        echo "<tr><td align=\"center\" colspan=\"2\"><font size=\"1\"> &nbsp; <br /><font size=\"3\">Sorry, de opgegeven telefoon login en wachtwoord zijn niet acitef in dit systeem, probeer het nogmaals: <br /> &nbsp;</font></td></tr>\n";
-        echo "<tr><td align=\"right\">Telefoon login\/nummer: </td>";
+        echo "<tr><td align=\"center\" colspan=\"2\"><font size=\"1\"> &nbsp; <br /><font size=\"3\">Sorry, de opgegeven Werkplek Code en/of Wachtwoord zijn niet herkend, probeer het nogmaals: <br /> &nbsp;</font></td></tr>\n";
+        echo "<tr><td align=\"right\">Werkplek Code: </td>";
         echo "<td align=\"left\"><input type=\"text\" name=\"phone_login\" size=\"10\" maxlength=\"20\" value=\"$phone_login\"></td></tr>\n";
-        echo "<tr><td align=\"right\">Telefoon Wachtwoord:  </td>";
+        echo "<tr><td align=\"right\">Werkplek Wachtwoord:  </td>";
         echo "<td align=\"left\"><input type=\"password\" name=\"phone_pass\" size=10 maxlength=20 value=\"$phone_pass\"></td></tr>\n";
         echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"OPSLAAN\" value=\"Submit\" /></td></tr>\n";
         echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />VERSIE: $version &nbsp; &nbsp; &nbsp; BUILD: $build</font></td></tr>\n";
@@ -523,49 +524,49 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/phone_onl
 				### find the server_ip of each phone_login
 				$stmtx="SELECT server_ip from phones where login = '$phones_auto[$pb]';";
 				if ($DB) {echo "|$stmtx|\n";}
-				if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-				$rslt=mysql_query($stmtx, $link);
+				if ($non_latin > 0) {$rslt=mysql_to_mysqli($link, "SET NAMES 'UTF8'");}
+				$rslt=mysql_to_mysqli($stmtx, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09009',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$rowx=mysql_fetch_row($rslt);
+				$rowx=mysqli_fetch_row($rslt);
 
 				### get number of agents logged in to each server
 				$stmt="SELECT count(*) from web_client_sessions where server_ip = '$rowx[0]';";
 				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09010',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				
 				### find out whether the server is set to active
 				$stmt="SELECT count(*) from servers where server_ip = '$rowx[0]' and active='Y' and active_asterisk_server='Y';";
 				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09011',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$rowy=mysql_fetch_row($rslt);
+				$rowy=mysqli_fetch_row($rslt);
 
 				### find out if this server has a twin
 				$twin_not_live=0;
 				$stmt="SELECT active_twin_server_ip from servers where server_ip = '$rowx[0]';";
 				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09012',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$rowyy=mysql_fetch_row($rslt);
+				$rowyy=mysqli_fetch_row($rslt);
 				if (strlen($rowyy[0]) > 4)
 					{
 					### find out whether the twin server_updater is running
 					$stmt="SELECT count(*) from server_updater where server_ip = '$rowyy[0]' and last_update > '$past_minutes_date';";
 					if ($DB) {echo "|$stmt|\n";}
-					$rslt=mysql_query($stmt, $link);
+					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-					$rowyz=mysql_fetch_row($rslt);
+					$rowyz=mysqli_fetch_row($rslt);
 					if ($rowyz[0] < 1) {$twin_not_live=1;}
 					}
 
 				### find out whether the server_updater is running
 				$stmt="SELECT count(*) from server_updater where server_ip = '$rowx[0]' and last_update > '$past_minutes_date';";
 				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09014',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$rowz=mysql_fetch_row($rslt);
+				$rowz=mysqli_fetch_row($rslt);
 
 				$pb_log .= "$phones_auto[$pb]|$rowx[0]|$row[0]|$rowy[0]|$rowz[0]|$twin_not_live|   ";
 
@@ -580,14 +581,14 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/phone_onl
 					}
 				$pb++;
 				}
-			echo "<!-- Telefoons balance selection: $phone_login|$pb_server_ip|$past_minutes_date|     |$pb_log -->\n";
+			echo "<!-- Telefoon1s balance selection: $phone_login|$pb_server_ip|$past_minutes_date|     |$pb_log -->\n";
 			}
-		echo "<title>Telefoon web client</title>\n";
+		echo "<title>Telefoon1 web client</title>\n";
 		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,is_webphone,use_external_server_ip,codecs_list,webphone_dialpad,phone_ring_timeout,on_hook_agent,webphone_auto_answer from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09015',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$extension=$row[0];
 		$dialplan_number=$row[1];
 		$voicemail_id=$row[2];
@@ -670,7 +671,7 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/phone_onl
 				{
 				$stmt="UPDATE phones SET computer_ip='$ip' where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09016',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				}
 			}
@@ -678,7 +679,7 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/phone_onl
 			{
 			$stmt="UPDATE phones SET computer_ip='$ip' where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09017',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			}
 		if ($clientDST)
@@ -710,12 +711,12 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/phone_onl
 
 		$stmt="DELETE from web_client_sessions where start_time < '$past_month_date' and extension='$extension' and server_ip = '$server_ip' and program = 'phone';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09018',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 
 		$stmt="INSERT INTO web_client_sessions values('$extension','$server_ip','phone','$NOW_TIME','$session_name');";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09019',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 
 
@@ -731,13 +732,13 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/phone_onl
 			{
 			##### find external_server_ip if enabled for this phone account
 			$stmt="SELECT external_server_ip FROM servers where server_ip='$server_ip' LIMIT 1;";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09020',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
-			$exip_ct = mysql_num_rows($rslt);
+			$exip_ct = mysqli_num_rows($rslt);
 			if ($exip_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$webphone_server_ip =$row[0];
 				}
 			}
@@ -745,13 +746,13 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/phone_onl
 			{
 			##### find webphone_url in system_settings and generate IFRAME code for it #####
 			$stmt="SELECT webphone_url FROM system_settings LIMIT 1;";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09021',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
-			$wu_ct = mysql_num_rows($rslt);
+			$wu_ct = mysqli_num_rows($rslt);
 			if ($wu_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$webphone_url =$row[0];
 				}
 			}
@@ -759,13 +760,13 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/phone_onl
 			{
 			##### find system_key in system_settings if populated #####
 			$stmt="SELECT webphone_systemkey FROM system_settings LIMIT 1;";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09022',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
-			$wsk_ct = mysql_num_rows($rslt);
+			$wsk_ct = mysqli_num_rows($rslt);
 			if ($wsk_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$system_key =$row[0];
 				}
 			}
@@ -894,7 +895,7 @@ $zi=2;
 
 echo "<body bgcolor=\"white\">\n";
 
-echo " Telefoon: $original_phone_login - $server_ip &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"$PHP_SELF?relogin=YES&session_epoch=1234567890&session_id=&session_name=$session_name&VD_login=$VD_login&phone_login=$original_phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Logout</a><BR>\n";
+echo " Telefoon1: $original_phone_login - $server_ip &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"$PHP_SELF?relogin=YES&session_epoch=1234567890&session_id=&session_name=$session_name&VD_login=$VD_login&phone_login=$original_phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Logout</a><BR>\n";
 
 if ($webphone_location == 'bar')
 	{
@@ -903,7 +904,7 @@ if ($webphone_location == 'bar')
 else
 	{
     echo "<span style=\"position:absolute;left:0px;top:30px;height:500px;overflow:scroll;z-index:$zi;background-color:$SIDEBAR_COLOR;\" id=\"webphoneSpanDEFAULT\"><table cellpadding=\"$webphone_pad\" cellspacing=\"0\" border=\"0\"><tr><td width=\"5px\" rowspan=\"2\">&nbsp;</td><td align=\"center\"><font class=\"body_text\">
-    Web Telefoon: &nbsp; </font></td></tr><tr><td align=\"center\"><span id=\"webphonecontent\">$webphone_content</span></td></tr></table></span>\n";
+    Web Telefoon1: &nbsp; </font></td></tr><tr><td align=\"center\"><span id=\"webphonecontent\">$webphone_content</span></td></tr></table></span>\n";
 	}
 ?>
 

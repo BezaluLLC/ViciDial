@@ -156,6 +156,7 @@ else
 # display the HELP SCREENS
 ######################
 
+header ("Content-type: text/html; charset=utf-8");
 echo "</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -3281,7 +3282,7 @@ if ($SSoutbound_autodial_active > 0)
 		<LI>Owner
 		</OL>
 
-	<BR>NOTES: The Excel Lead loader functionality is enabled by a series of perl scripts and needs to have a properly configured /etc/astguiclient.conf file in place on the web server. Also, a couple perl modules must be loaded for it to work as well - OLE-Storage_Lite and Spreadsheet-ParseExcel. You can check for runtime errors in these by looking at your apache error_log file. Also, for duplication checks against gampaign lists, the list that has new leads going into it does need to be created in the system before you start to load the leads.
+	<BR>NOTES: The Excel Lead loader functionality is enabled by a series of perl scripts and needs to have a properly configured /etc/astguiclient.conf file in place on the web server. Also, a couple perl modules must be loaded for it to work as well - OLE-Storage_Lite and Spreadsheet-ParseExcel. You can check for runtime errors in these by looking at your apache error_log file. Also, for duplication checks against campaign lists, the list that has new leads going into it does need to be created in the system before you start to load the leads.
 
 	<BR>
 	<A NAME="list_loader-duplicate_check">

@@ -1,5 +1,5 @@
 <?php
-# live_exten_check.php    version 2.6
+# live_exten_check.php    version 2.8
 # 
 # Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -31,9 +31,13 @@
 # 60825-1029 - Fixed translation variable issue ChannelA
 # 90508-0727 - Changed to PHP long tags
 # 130328-0027 - Converted ereg to preg functions
+# 130603-2214 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130705-1522 - Added optional encrypted passwords compatibility
+# 130802-1009 - Changed to PHP mysqli functions
 #
 
-require("dbconnect.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 ### If you have globals turned off uncomment these lines
 if (isset($_GET["user"]))				{$user=$_GET["user"];}
@@ -56,7 +60,9 @@ if (isset($_GET["favorites_list"]))				{$favorites_list=$_GET["favorites_list"];
 	elseif (isset($_POST["favorites_list"]))		{$favorites_list=$_POST["favorites_list"];}
 
 $user=preg_replace("/[^0-9a-zA-Z]/","",$user);
-$pass=preg_replace("/[^0-9a-zA-Z]/","",$pass);
+$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
+$session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
+$server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
 
 # default optional vars if not set
 if (!isset($format))   {$format="text";}
@@ -68,16 +74,15 @@ $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',0,0,0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Ongeldig Gebruikersnaam/Wachtwoord: |$user|$pass|\n";
-    exit;
+	echo "Ongeldig Gebruikersnaam/Wachtwoord: |$user|$pass|$auth_message|\n";
+	exit;
 	}
 else
 	{
@@ -90,8 +95,8 @@ else
 		{
 		$stmt="SELECT count(*) from web_client_sessions where session_name='$session_name' and server_ip='$server_ip';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$SNauth=$row[0];
 		if($SNauth==0)
 			{
@@ -122,8 +127,8 @@ echo "UnixTime: $StarTtime|";
 
 $stmt="SELECT count(*) FROM parked_channels where server_ip = '$server_ip';";
 	if ($format=='debug') {echo "\n<!-- $stmt -->";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 echo "$row[0]|";
 
 $MT[0]='';
@@ -139,14 +144,14 @@ else
 	{
 	$stmt="SELECT channel,extension FROM live_sip_channels where server_ip = '$server_ip' and channel LIKE \"$protocol/$exten%\";";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-	if ($rslt) {$channels_list = mysql_num_rows($rslt);}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($rslt) {$channels_list = mysqli_num_rows($rslt);}
 	echo "$channels_list|";
 	$loop_count=0;
 	while ($channels_list>$loop_count)
 		{
 		$loop_count++;
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$ChanneLA[$loop_count] = "$row[0]";
 		$ChanneLB[$loop_count] = "$row[1]";
 		if ($format=='debug') {echo "\n<!-- $row[0]     $row[1] -->";}
@@ -159,11 +164,11 @@ while($loop_count > $counter)
 		$counter++;
 	$stmt="SELECT channel FROM live_channels where server_ip = '$server_ip' and channel_data = '$ChanneLA[$counter]';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-	if ($rslt) {$trunk_count = mysql_num_rows($rslt);}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($rslt) {$trunk_count = mysqli_num_rows($rslt);}
 	if ($trunk_count>0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		echo "Conversation: $counter ~";
 		echo "ChannelA: $ChanneLA[$counter] ~";
 		echo "ChannelB: $ChanneLB[$counter] ~";
@@ -173,11 +178,11 @@ while($loop_count > $counter)
 		{
 		$stmt="SELECT channel FROM live_sip_channels where server_ip = '$server_ip' and channel_data = '$ChanneLA[$counter]';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
-		if ($rslt) {$trunk_count = mysql_num_rows($rslt);}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($rslt) {$trunk_count = mysqli_num_rows($rslt);}
 		if ($trunk_count>0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			echo "Conversation: $counter ~";
 			echo "ChannelA: $ChanneLA[$counter] ~";
 			echo "ChannelB: $ChanneLB[$counter] ~";
@@ -187,11 +192,11 @@ while($loop_count > $counter)
 			{
 			$stmt="SELECT channel FROM live_sip_channels where server_ip = '$server_ip' and channel LIKE \"$ChanneLB[$counter]%\";";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
-			$rslt=mysql_query($stmt, $link);
-			if ($rslt) {$trunk_count = mysql_num_rows($rslt);}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			if ($rslt) {$trunk_count = mysqli_num_rows($rslt);}
 			if ($trunk_count>0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				echo "Conversation: $counter ~";
 				echo "ChannelA: $ChanneLA[$counter] ~";
 				echo "ChannelB: $ChanneLB[$counter] ~";
@@ -201,11 +206,11 @@ while($loop_count > $counter)
 				{
 				$stmt="SELECT channel FROM live_channels where server_ip = '$server_ip' and channel LIKE \"$ChanneLB[$counter]%\";";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_query($stmt, $link);
-				if ($rslt) {$trunk_count = mysql_num_rows($rslt);}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				if ($rslt) {$trunk_count = mysqli_num_rows($rslt);}
 				if ($trunk_count>0)
 					{
-					$row=mysql_fetch_row($rslt);
+					$row=mysqli_fetch_row($rslt);
 					echo "Conversation: $counter ~";
 					echo "ChannelA: $ChanneLA[$counter] ~";
 					echo "ChannelB: $ChanneLB[$counter] ~";
@@ -228,11 +233,11 @@ echo "\n";
 ### check for live_inbound entry
 $stmt="select * from live_inbound where server_ip = '$server_ip' and phone_ext = '$exten' and acknowledged='N';";
 	if ($format=='debug') {echo "\n<!-- $stmt -->";}
-$rslt=mysql_query($stmt, $link);
-if ($rslt) {$channels_list = mysql_num_rows($rslt);}
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($rslt) {$channels_list = mysqli_num_rows($rslt);}
 if ($channels_list>0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$LIuniqueid = "$row[0]";
 	$LIchannel = "$row[1]";
 	$LIcallerid = "$row[3]";
@@ -255,8 +260,8 @@ if ($favorites_count > 0)
 		$fav_extension = explode('/',$favorites[$h]);
 		$stmt="SELECT count(*) FROM live_sip_channels where server_ip = '$server_ip' and channel LIKE \"$favorites[$h]%\";";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$favs_print .= "$fav_extension[1]: $row[0] ~";
 		$h++;
 		}
@@ -270,7 +275,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- script looptijd: $RUNtime seconden -->";
+	echo "\n<!-- Script Looptijd: $RUNtime seconden -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

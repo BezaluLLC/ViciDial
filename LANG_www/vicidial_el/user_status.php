@@ -1,7 +1,7 @@
 <?php
 # user_status.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -21,6 +21,15 @@
 # 110420-0344 - Added DEAD/PARK agent statuses
 # 120223-2135 - Removed logging of good login passwords if webroot writable is enabled
 # 130414-0252 - Added report logging
+# 130610-0937 - Finalized changing of all ereg instances to preg
+# 130616-0052 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-0835 - Changed to mysqli PHP functions
+# 131016-2101 - Added checking for level 8 add-copy restriction
+# 131208-2156 - Added user log TIMEOUTLOGOUT event status
+# 140108-0707 - Added webserver and hostname to report logging
+# 140305-0905 - Bug fix for issue #744, emergency logout
+# 140425-1314 - Added pause_type field to logout
+# 140429-0750 - Fixed issue with queue_log if login/out logging is disabled
 #
 
 $startMS = microtime();
@@ -29,7 +38,10 @@ header ("Content-type: text/html; charset=utf-8");
 
 $report_name='Κατάσταση χρήστη';
 
-require("dbconnect.php");
+$add_copy_disabled=0;
+
+require("dbconnect_mysqli.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -53,174 +65,228 @@ if (isset($_GET["ΕΠΙΒΕΒΑΙΩΣΗ"]))				{$ΕΠΙΒΕΒΑΙΩΣΗ=$_GET["�
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,level_8_disable_add FROM system_settings;";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =						$row[0];
 	$webroot_writable =					$row[1];
 	$SSoutbound_autodial_active =		$row[2];
 	$user_territories_active =			$row[3];
+	$SSlevel_8_disable_add =			$row[4];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+if (!isset($begin_date)) {$begin_date = $TODAY;}
+if (!isset($end_date)) {$end_date = $TODAY;}
+
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+$user = preg_replace("/'|\"|\\\\|;/","",$user);
+$group = preg_replace("/'|\"|\\\\|;/","",$group);
+$stage = preg_replace("/'|\"|\\\\|;/","",$stage);
+$begin_date = preg_replace("/'|\"|\\\\|;/","",$begin_date);
+$end_date = preg_replace("/'|\"|\\\\|;/","",$end_date);
 
 $StarTtimE = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $ip = getenv("REMOTE_ADDR");
 $check_time = ($StarTtimE - 86400);
-
-if (!isset($begin_date)) {$begin_date = $TODAY;}
-if (!isset($end_date)) {$end_date = $TODAY;}
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
-if ($non_latin > 0) { $rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-$fp = fopen ("./project_auth_entries.txt", "a");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+$auth=0;
+$reports_auth=0;
+$admin_auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'ΑΝΑΦΟΡΕΣ',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth > 0)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Ακυρο Ονομα Χρήστη/Κωδικός Πρόσβασης: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$admin_auth=$row[0];
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	if ($reports_auth < 1)
+		{
+		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ( ($reports_auth > 0) and ($admin_auth < 1) )
+		{
+		$ADD=999999;
+		$reports_only_user=1;
+		}
 	}
 else
 	{
-	##### BEGIN log visit to the vicidial_report_log table #####
-	$LOGip = getenv("REMOTE_ADDR");
-	$LOGbrowser = getenv("HTTP_USER_AGENT");
-	$LOGscript_name = getenv("SCRIPT_NAME");
-	$LOGserver_name = getenv("SERVER_NAME");
-	$LOGserver_port = getenv("SERVER_PORT");
-	$LOGrequest_uri = getenv("REQUEST_URI");
-	$LOGhttp_referer = getenv("HTTP_REFERER");
-	if (preg_match("/443/i",$LOGserver_port)) {$HTTPprotocol = 'https://';}
-	  else {$HTTPprotocol = 'http://';}
-	if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='';}
-	else {$LOGserver_port = ":$LOGserver_port";}
-	$LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
-
-	$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$user, $stage, $group|', url='$LOGfull_url';";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$report_log_id = mysql_insert_id($link);
-	##### END log visit to the vicidial_report_log table #####
-
-	if($auth>0)
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
 		{
-		$stmt="SELECT full_name,change_agent_campaign,modify_timeclock_log from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGfullname =				$row[0];
-		$change_agent_campaign =	$row[1];
-		$modify_timeclock_log =		$row[2];
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
-			}
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
+
+
+$stmt="SELECT user_level from vicidial_users where user='$PHP_AUTH_USER';";
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
+$LOGuser_level				=$row[0];
+
+if (($LOGuser_level < 9) and ($SSlevel_8_disable_add > 0))
+	{$add_copy_disabled++;}
+
+
+##### BEGIN log visit to the vicidial_report_log table #####
+$LOGip = getenv("REMOTE_ADDR");
+$LOGbrowser = getenv("HTTP_USER_AGENT");
+$LOGscript_name = getenv("SCRIPT_NAME");
+$LOGserver_name = getenv("SERVER_NAME");
+$LOGserver_port = getenv("SERVER_PORT");
+$LOGrequest_uri = getenv("REQUEST_URI");
+$LOGhttp_referer = getenv("HTTP_REFERER");
+if (preg_match("/443/i",$LOGserver_port)) {$HTTPprotocol = 'https://';}
+  else {$HTTPprotocol = 'http://';}
+if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='';}
+else {$LOGserver_port = ":$LOGserver_port";}
+$LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
+
+$LOGhostname = php_uname('n');
+if (strlen($LOGhostname)<1) {$LOGhostname='X';}
+if (strlen($LOGserver_name)<1) {$LOGserver_name='X';}
+
+$stmt="SELECT webserver_id FROM vicidial_webservers where webserver='$LOGserver_name' and hostname='$LOGhostname' LIMIT 1;";
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$webserver_id_ct = mysqli_num_rows($rslt);
+if ($webserver_id_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$webserver_id = $row[0];
+	}
+else
+	{
+	##### insert webserver entry
+	$stmt="INSERT INTO vicidial_webservers (webserver,hostname) values('$LOGserver_name','$LOGhostname');";
+	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$affected_rows = mysqli_affected_rows($link);
+	$webserver_id = mysqli_insert_id($link);
+	}
+
+$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$user, $stage, $group|', url='$LOGfull_url', webserver='$webserver_id';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
+##### END log visit to the vicidial_report_log table #####
+
+$stmt="SELECT full_name,change_agent_campaign,modify_timeclock_log from vicidial_users where user='$PHP_AUTH_USER';";
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
+$LOGfullname =				$row[0];
+$change_agent_campaign =	$row[1];
+$modify_timeclock_log =		$row[2];
+
+$stmt="SELECT full_name,user_group from vicidial_users where user='" . mysqli_real_escape_string($link, $user) . "';";
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
+$full_name = $row[0];
+$user_group = $row[1];
+
+$stmt="SELECT live_agent_id,user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,call_server_ip,user_level,comments,campaign_weight,calls_today,external_hangup,external_status,external_pause,external_dial,agent_log_id,last_state_change,agent_territories,outbound_autodial,manager_ingroup_set,external_igb_set_user from vicidial_live_agents where user='" . mysqli_real_escape_string($link, $user) . "';";
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$agents_to_print = mysqli_num_rows($rslt);
+$i=0;
+while ($i < $agents_to_print)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$Aserver_ip =				$row[2];
+	$Asession_id =				$row[3];
+	$Aextension =				$row[4];
+	$Astatus =					$row[5];
+	$Acampaign =				$row[7];
+	$Acallerid =				$row[9];
+	$Alast_call =				$row[14];
+	$Acl_campaigns =			$row[15];
+	$agent_territories = 		$row[27];
+	$outbound_autodial = 		$row[28];
+	$manager_ingroup_set =		$row[29];
+	$external_igb_set_user =	$row[30];
+	$i++;
+	}
+
+$stmt="SELECT event_date,status,ip_address from vicidial_timeclock_status where user='" . mysqli_real_escape_string($link, $user) . "';";
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$tc_logs_to_print = mysqli_num_rows($rslt);
+if ($tc_logs_to_print > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$Tevent_date =		$row[0];
+	$Tstatus =			$row[1];
+	$Tip_address =		$row[2];
+	$i++;
+	}
+
+if ($Astatus == 'INCALL')
+	{
+	$stmtP="select count(*) from parked_channels where channel_group='$Acallerid';";
+	$rsltP=mysql_to_mysqli($stmtP,$link);
+	$rowP=mysqli_fetch_row($rsltP);
+	$parked_channel = $rowP[0];
+
+	if ($parked_channel > 0)
+		{
+		$Astatus =	'PARK';
 		}
 	else
 		{
-		if ($webroot_writable > 0)
+		$stmtP="select count(*) from vicidial_auto_calls where callerid='$Acallerid';";
+		$rsltP=mysql_to_mysqli($stmtP,$link);
+		$rowP=mysqli_fetch_row($rsltP);
+		$live_channel = $rowP[0];
+
+		if ($live_channel < 1)
 			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
-			fclose($fp);
-			echo "Ακυρο Ονομα Χρήστη/Κωδικός Πρόσβασης: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-			exit;
-			}
-		}
-
-	$stmt="SELECT full_name,user_group from vicidial_users where user='" . mysql_real_escape_string($user) . "';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$full_name = $row[0];
-	$user_group = $row[1];
-
-	$stmt="SELECT live_agent_id,user,server_ip,conf_exten,extension,status,lead_id,campaign_id,uniqueid,callerid,channel,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,call_server_ip,user_level,comments,campaign_weight,calls_today,external_hangup,external_status,external_pause,external_dial,agent_log_id,last_state_change,agent_territories,outbound_autodial,manager_ingroup_set,external_igb_set_user from vicidial_live_agents where user='" . mysql_real_escape_string($user) . "';";
-	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
-	$agents_to_print = mysql_num_rows($rslt);
-	$i=0;
-	while ($i < $agents_to_print)
-		{
-		$row=mysql_fetch_row($rslt);
-		$Aserver_ip =				$row[2];
-		$Asession_id =				$row[3];
-		$Aextension =				$row[4];
-		$Astatus =					$row[5];
-		$Acampaign =				$row[7];
-		$Acallerid =				$row[9];
-		$Alast_call =				$row[14];
-		$Acl_campaigns =			$row[15];
-		$agent_territories = 		$row[27];
-		$outbound_autodial = 		$row[28];
-		$manager_ingroup_set =		$row[29];
-		$external_igb_set_user =	$row[30];
-		$i++;
-		}
-
-	$stmt="SELECT event_date,status,ip_address from vicidial_timeclock_status where user='" . mysql_real_escape_string($user) . "';";
-	$rslt=mysql_query($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
-	$tc_logs_to_print = mysql_num_rows($rslt);
-	if ($tc_logs_to_print > 0)
-		{
-		$row=mysql_fetch_row($rslt);
-		$Tevent_date =		$row[0];
-		$Tstatus =			$row[1];
-		$Tip_address =		$row[2];
-		$i++;
-		}
-
-	if ($Astatus == 'INCALL')
-		{
-		$stmtP="select count(*) from parked_channels where channel_group='$Acallerid';";
-		$rsltP=mysql_query($stmtP,$link);
-		$rowP=mysql_fetch_row($rsltP);
-		$parked_channel = $rowP[0];
-
-		if ($parked_channel > 0)
-			{
-			$Astatus =	'PARK';
-			}
-		else
-			{
-			$stmtP="select count(*) from vicidial_auto_calls where callerid='$Acallerid';";
-			$rsltP=mysql_query($stmtP,$link);
-			$rowP=mysql_fetch_row($rsltP);
-			$live_channel = $rowP[0];
-
-			if ($live_channel < 1)
-				{
-				$Astatus =	'DEAD';
-				}
+			$Astatus =	'DEAD';
 			}
 		}
 	}
 
+
 $stmt="select campaign_id from vicidial_campaigns;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$groups_to_print = mysql_num_rows($rslt);
+$groups_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $groups_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$groups[$i] =$row[0];
 	$i++;
 	}
@@ -270,8 +336,8 @@ echo "<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVET
 ##### EMERGENCY CAMPAIGN CHANGE FOR AN AGENT #####
 if ($stage == "live_campaign_change")
 	{
-	$stmt="UPDATE vicidial_live_agents set campaign_id='" . mysql_real_escape_string($group) . "' where user='" . mysql_real_escape_string($user) . "';";
-	$rslt=mysql_query($stmt, $link);
+	$stmt="UPDATE vicidial_live_agents set campaign_id='" . mysqli_real_escape_string($link, $group) . "' where user='" . mysqli_real_escape_string($link, $user) . "';";
+	$rslt=mysql_to_mysqli($stmt, $link);
 
 	echo "Agent $user - $full_name changed to $group campaign<BR>\n";
 	
@@ -283,27 +349,28 @@ if ($stage == "log_agent_out")
 	{
 	$now_date_epoch = date('U');
 	$inactive_epoch = ($now_date_epoch - 60);
-	$stmt = "SELECT user,campaign_id,UNIX_TIMESTAMP(last_update_time) from vicidial_live_agents where user='" . mysql_real_escape_string($user) . "';";
-	$rslt=mysql_query($stmt, $link);
+	$stmt = "SELECT user,campaign_id,UNIX_TIMESTAMP(last_update_time),status from vicidial_live_agents where user='" . mysqli_real_escape_string($link, $user) . "';";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "<BR>$stmt\n";}
-	$vla_ct = mysql_num_rows($rslt);
+	$vla_ct = mysqli_num_rows($rslt);
 	if ($vla_ct > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$VLA_user =					$row[0];
 		$VLA_campaign_id =			$row[1];
 		$VLA_update_time =			$row[2];
+		$VLA_status =				$row[3];
 
 		if ($VLA_update_time > $inactive_epoch)
 			{
 			$lead_active=0;
 			$stmt = "SELECT agent_log_id,user,server_ip,event_time,lead_id,campaign_id,pause_epoch,pause_sec,wait_epoch,wait_sec,talk_epoch,talk_sec,dispo_epoch,dispo_sec,status,user_group,comments,sub_status,dead_epoch,dead_sec from vicidial_agent_log where user='$VLA_user' order by agent_log_id desc LIMIT 1;";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "<BR>$stmt\n";}
-			$val_ct = mysql_num_rows($rslt);
+			$val_ct = mysqli_num_rows($rslt);
 			if ($val_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$VAL_agent_log_id =		$row[0];
 				$VAL_user =				$row[1];
 				$VAL_server_ip =		$row[2];
@@ -327,10 +394,10 @@ if ($stage == "log_agent_out")
 
 				if ($DB) {echo "\n<BR>VAL VALUES: $VAL_agent_log_id|$VAL_status|$VAL_lead_id\n";}
 
-				if ( ($VAL_wait_epoch < 1) or ( ($VAL_status == 'PAUSE') and ($VAL_dispo_epoch < 1) ) )
+				if ( ($VAL_wait_epoch < 1) or ( (preg_match('/PAUSE/', $VLA_status)) and ($VAL_dispo_epoch < 1) ) )
 					{
 					$VAL_pause_sec = ( ($now_date_epoch - $VAL_pause_epoch) + $VAL_pause_sec);
-					$stmt = "UPDATE vicidial_agent_log SET wait_epoch='$now_date_epoch', pause_sec='$VAL_pause_sec' where agent_log_id='$VAL_agent_log_id';";
+					$stmt = "UPDATE vicidial_agent_log SET wait_epoch='$now_date_epoch', pause_sec='$VAL_pause_sec', pause_type='ADMIN' where agent_log_id='$VAL_agent_log_id';";
 					}
 				else
 					{
@@ -348,7 +415,7 @@ if ($stage == "log_agent_out")
 							$status_update_SQL = ", status='PU'";
 							$stmt="UPDATE vicidial_list SET status='PU' where lead_id='$VAL_lead_id';";
 							if ($DB) {echo "<BR>$stmt\n";}
-							$rslt=mysql_query($stmt, $link);
+							$rslt=mysql_to_mysqli($stmt, $link);
 							}
 						if ($VAL_dispo_epoch < 1)
 							{
@@ -367,41 +434,41 @@ if ($stage == "log_agent_out")
 					}
 
 				if ($DB) {echo "<BR>$stmt\n";}
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				}
 			}
 
-		$stmt="DELETE from vicidial_live_agents where user='" . mysql_real_escape_string($user) . "';";
+		$stmt="DELETE from vicidial_live_agents where user='" . mysqli_real_escape_string($link, $user) . "';";
 		if ($DB) {echo "<BR>$stmt\n";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 
 		if (strlen($VAL_user_group) < 1)
 			{
 			$stmt = "SELECT user_group FROM vicidial_users where user='$VLA_user';";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "<BR>$stmt\n";}
-			$val_ct = mysql_num_rows($rslt);
+			$val_ct = mysqli_num_rows($rslt);
 			if ($val_ct > 0)
 				{
-				$row=mysql_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);
 				$VAL_user_group =		$row[0];
 				}
 			}
 
 		$stmt = "INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group) values('$VLA_user','LOGOUT','$VLA_campaign_id','$NOW_TIME','$now_date_epoch','$VAL_user_group');";
 		if ($DB) {echo "<BR>$stmt\n";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 
 
 		#############################################
 		##### START QUEUEMETRICS LOGGING LOOKUP #####
-		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_pe_phone_append FROM system_settings;";
-		$rslt=mysql_query($stmt, $link);
+		$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_pe_phone_append,queuemetrics_pause_type FROM system_settings;";
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "<BR>$stmt\n";}
-		$qm_conf_ct = mysql_num_rows($rslt);
+		$qm_conf_ct = mysqli_num_rows($rslt);
 		if ($qm_conf_ct > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$enable_queuemetrics_logging =		$row[0];
 			$queuemetrics_server_ip	=			$row[1];
 			$queuemetrics_dbname =				$row[2];
@@ -411,6 +478,7 @@ if ($stage == "log_agent_out")
 			$queuemetrics_loginout =			$row[6];
 			$queuemetrics_addmember_enabled =	$row[7];
 			$queuemetrics_pe_phone_append =		$row[8];
+			$queuemetrics_pause_type =			$row[9];
 			}
 		##### END QUEUEMETRICS LOGGING LOOKUP #####
 		###########################################
@@ -420,28 +488,36 @@ if ($stage == "log_agent_out")
 			if ($queuemetrics_loginout=='CALLBACK')
 				{$QM_LOGOFF = 'AGENTCALLBACKLOGOFF';}
 
-			$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
-			mysql_select_db("$queuemetrics_dbname", $linkB);
+			#$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+			#mysql_select_db("$queuemetrics_dbname", $linkB);
+			$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass", "$queuemetrics_dbname");
+
 
 			$agents='@agents';
 			$agent_logged_in='';
 			$time_logged_in='0';
 
+			$stmtB = "SELECT agent,time_id,data1 FROM queue_log where agent='Agent/" . mysqli_real_escape_string($link, $user) . "' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') and time_id > $check_time order by time_id desc limit 1;";
+
 			if ($queuemetrics_loginout == 'NONE')
 				{
-				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='Agent/" . mysql_real_escape_string($user) . "',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LOGOFF';";
+				$pause_typeSQL='';
+				if ($queuemetrics_pause_type > 0)
+					{$pause_typeSQL=",data5='ADMIN'";}
+				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='Agent/" . mysqli_real_escape_string($link, $user) . "',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LOGOFF'$pause_typeSQL;";
 				if ($DB) {echo "$stmt\n";}
-				$rslt=mysql_query($stmt, $linkB);
-				$affected_rows = mysql_affected_rows($linkB);
+				$rslt=mysql_to_mysqli($stmt, $linkB);
+				$affected_rows = mysqli_affected_rows($linkB);
+
+				$stmtB = "SELECT agent,time_id,data1 FROM queue_log where agent='Agent/" . mysqli_real_escape_string($link, $user) . "' and verb IN('ADDMEMBER','ADDMEMBER2') and time_id > $check_time order by time_id desc limit 1;";
 				}
 
-			$stmtB = "SELECT agent,time_id,data1 FROM queue_log where agent='Agent/" . mysql_real_escape_string($user) . "' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') and time_id > $check_time order by time_id desc limit 1;";
-			$rsltB=mysql_query($stmtB, $linkB);
+			$rsltB=mysql_to_mysqli($stmtB, $linkB);
 			if ($DB) {echo "<BR>$stmtB\n";}
-			$qml_ct = mysql_num_rows($rsltB);
+			$qml_ct = mysqli_num_rows($rsltB);
 			if ($qml_ct > 0)
 				{
-				$row=mysql_fetch_row($rsltB);
+				$row=mysqli_fetch_row($rsltB);
 				$agent_logged_in =		$row[0];
 				$time_logged_in =		$row[1];
 				$RAWtime_logged_in =	$row[1];
@@ -455,23 +531,23 @@ if ($stage == "log_agent_out")
 				{
 				$queuemetrics_phone_environment='';
 				$stmt = "SELECT queuemetrics_phone_environment FROM vicidial_campaigns where campaign_id='$VLA_campaign_id';";
-				$rslt=mysql_query($stmt, $link);
+				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($DB) {echo "<BR>$stmt\n";}
-				$cqpe_ct = mysql_num_rows($rslt);
+				$cqpe_ct = mysqli_num_rows($rslt);
 				if ($cqpe_ct > 0)
 					{
-					$row=mysql_fetch_row($rslt);
+					$row=mysqli_fetch_row($rslt);
 					$queuemetrics_phone_environment =	$row[0];
 					}
 
 				$stmt = "SELECT distinct queue FROM queue_log where time_id >= $RAWtime_logged_in and agent='$agent_logged_in' and verb IN('ADDMEMBER','ADDMEMBER2') and queue != '$VLA_campaign_id' order by time_id desc;";
-				$rslt=mysql_query($stmt, $linkB);
+				$rslt=mysql_to_mysqli($stmt, $linkB);
 				if ($DB) {echo "$stmt\n";}
-				$amq_conf_ct = mysql_num_rows($rslt);
+				$amq_conf_ct = mysqli_num_rows($rslt);
 				$i=0;
 				while ($i < $amq_conf_ct)
 					{
-					$row=mysql_fetch_row($rslt);
+					$row=mysqli_fetch_row($rslt);
 					$AMqueue[$i] =	$row[0];
 					$i++;
 					}
@@ -491,8 +567,8 @@ if ($stage == "log_agent_out")
 						$pe_append = "-$qm_extension[1]";
 						}
 					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='$AMqueue[$i]',agent='$agent_logged_in',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id',data4='$queuemetrics_phone_environment$pe_append';";
-					$rslt=mysql_query($stmt, $linkB);
-					$affected_rows = mysql_affected_rows($linkB);
+					$rslt=mysql_to_mysqli($stmt, $linkB);
+					$affected_rows = mysqli_affected_rows($linkB);
 					$i++;
 					}
 				}
@@ -501,7 +577,7 @@ if ($stage == "log_agent_out")
 				{
 				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='$agent_logged_in',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in';";
 				if ($DB) {echo "<BR>$stmtB\n";}
-				$rsltB=mysql_query($stmtB, $linkB);
+				$rsltB=mysql_to_mysqli($stmtB, $linkB);
 				}
 			}
 
@@ -514,10 +590,10 @@ if ($stage == "log_agent_out")
 
 	if ($db_source == 'S')
 		{
-		mysql_close($link);
+		mysqli_close($link);
 		$use_slave_server=0;
 		$db_source = 'M';
-		require("dbconnect.php");
+		require("dbconnect_mysqli.php");
 		}
 
 	$endMS = microtime();
@@ -529,7 +605,7 @@ if ($stage == "log_agent_out")
 
 	$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 
 	exit;
 	}
@@ -544,8 +620,8 @@ if ( ( ($stage == "tc_log_user_OUT") or ($stage == "tc_log_user_IN") ) and ($mod
 	### get vicidial_timeclock_status record count for this user
 	$stmt="SELECT count(*) from vicidial_timeclock_status where user='$user';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$vts_count =	$row[0];
 
 	$LOG_run=0;
@@ -556,8 +632,8 @@ if ( ( ($stage == "tc_log_user_OUT") or ($stage == "tc_log_user_IN") ) and ($mod
 		### vicidial_timeclock_status record found, grab status and date of last activity
 		$stmt="SELECT status,event_epoch from vicidial_timeclock_status where user='$user';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$status =		$row[0];
 		$event_epoch =	$row[1];
 		$last_action_date = date("Y-m-d H:i:s", $event_epoch);
@@ -591,47 +667,47 @@ if ( ( ($stage == "tc_log_user_OUT") or ($stage == "tc_log_user_IN") ) and ($mod
 		### No vicidial_timeclock_status record found, insert one
 		$stmt="INSERT INTO vicidial_timeclock_status set status='START', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip';";
 		if ($DB) {echo "$stmt\n";}
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		$status='START';
 		$totTIME_HMS='0:00:00';
-		$affected_rows = mysql_affected_rows($link);
+		$affected_rows = mysqli_affected_rows($link);
 		print "<!-- NEW vicidial_timeclock_status record inserted for $user:   |$affected_rows| -->\n";
 		}
 
 
 	##### Run timeclock login queries #####
-	if ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') ) and ($stage == "tc_log_user_IN") )
+	if ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') or ($status=='TIMEOUTLOGOUT') ) and ($stage == "tc_log_user_IN") )
 		{
 		### Add a record to the timeclock log
 		$stmtA="INSERT INTO vicidial_timeclock_log set event='LOGIN', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', event_date='$NOW_TIME', manager_user='$PHP_AUTH_USER', manager_ip='$ip', notes='Manager LOGIN of user from user status page';";
 		if ($DB) {echo "$stmtA\n";}
-		$rslt=mysql_query($stmtA, $link);
-		$affected_rows = mysql_affected_rows($link);
-		$timeclock_id = mysql_insert_id($link);
+		$rslt=mysql_to_mysqli($stmtA, $link);
+		$affected_rows = mysqli_affected_rows($link);
+		$timeclock_id = mysqli_insert_id($link);
 		print "<!-- NEW vicidial_timeclock_log record inserted for $user:   |$affected_rows|$timeclock_id| -->\n";
 
 		### Update the user's timeclock status record
 		$stmtB="UPDATE vicidial_timeclock_status set status='LOGIN', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip' where user='$user';";
 		if ($DB) {echo "$stmtB\n";}
-		$rslt=mysql_query($stmtB, $link);
-		$affected_rows = mysql_affected_rows($link);
+		$rslt=mysql_to_mysqli($stmtB, $link);
+		$affected_rows = mysqli_affected_rows($link);
 		print "<!-- vicidial_timeclock_status record updated for $user:   |$affected_rows| -->\n";
 
 		### Add a record to the timeclock audit log
 		$stmtC="INSERT INTO vicidial_timeclock_audit_log set timeclock_id='$timeclock_id', event='LOGIN', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', event_date='$NOW_TIME';";
 		if ($DB) {echo "$stmtC\n";}
-		$rslt=mysql_query($stmtC, $link);
-		$affected_rows = mysql_affected_rows($link);
+		$rslt=mysql_to_mysqli($stmtC, $link);
+		$affected_rows = mysqli_affected_rows($link);
 		print "<!-- NEW vicidial_timeclock_audit_log record inserted for $user:   |$affected_rows| -->\n";
 
 		### Add a record to the vicidial_admin_log
 		$SQL_log = "$stmtA|$stmtB|$stmtC|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
 		$SQL_log = addslashes($SQL_log);
 		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TIMECLOCK', event_type='LOGIN', record_id='$user', event_code='USER FORCED LOGIN FROM STATUS PAGE', event_sql=\"$SQL_log\", event_notes='Ώρα ρολόι ID: $timeclock_id|';";
 		if ($DB) {echo "$stmt\n";}
-		$rslt=mysql_query($stmt, $link);
-		$affected_rows = mysql_affected_rows($link);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$affected_rows = mysqli_affected_rows($link);
 		print "<!-- NEW vicidial_admin_log record inserted for $PHP_AUTH_USER:   |$affected_rows| -->\n";
 
 		$LOG_run++;
@@ -644,47 +720,47 @@ if ( ( ($stage == "tc_log_user_OUT") or ($stage == "tc_log_user_IN") ) and ($mod
 		### Add a record to the timeclock log
 		$stmtA="INSERT INTO vicidial_timeclock_log set event='LOGOUT', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME', manager_user='$PHP_AUTH_USER', manager_ip='$ip', notes='Manager LOGOUT of user from user status page';";
 		if ($DB) {echo "$stmtA\n";}
-		$rslt=mysql_query($stmtA, $link);
-		$affected_rows = mysql_affected_rows($link);
-		$timeclock_id = mysql_insert_id($link);
+		$rslt=mysql_to_mysqli($stmtA, $link);
+		$affected_rows = mysqli_affected_rows($link);
+		$timeclock_id = mysqli_insert_id($link);
 		print "<!-- NEW vicidial_timeclock_log record inserted for $user:   |$affected_rows|$timeclock_id| -->\n";
 
 		### Update last login record in the timeclock log
 		$stmtB="UPDATE vicidial_timeclock_log set login_sec='$last_action_sec',tcid_link='$timeclock_id' where event='LOGIN' and user='$user' order by timeclock_id desc limit 1;";
 		if ($DB) {echo "$stmtB\n";}
-		$rslt=mysql_query($stmtB, $link);
-		$affected_rows = mysql_affected_rows($link);
+		$rslt=mysql_to_mysqli($stmtB, $link);
+		$affected_rows = mysqli_affected_rows($link);
 		print "<!-- vicidial_timeclock_log record updated for $user:   |$affected_rows| -->\n";
 
 		### Update the user's timeclock status record
 		$stmtC="UPDATE vicidial_timeclock_status set status='LOGOUT', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip' where user='$user';";
 		if ($DB) {echo "$stmtC\n";}
-		$rslt=mysql_query($stmtC, $link);
-		$affected_rows = mysql_affected_rows($link);
+		$rslt=mysql_to_mysqli($stmtC, $link);
+		$affected_rows = mysqli_affected_rows($link);
 		print "<!-- vicidial_timeclock_status record updated for $user:   |$affected_rows| -->\n";
 
 		### Add a record to the timeclock audit log
 		$stmtD="INSERT INTO vicidial_timeclock_audit_log set timeclock_id='$timeclock_id', event='LOGOUT', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
 		if ($DB) {echo "$stmtD\n";}
-		$rslt=mysql_query($stmtD, $link);
-		$affected_rows = mysql_affected_rows($link);
+		$rslt=mysql_to_mysqli($stmtD, $link);
+		$affected_rows = mysqli_affected_rows($link);
 		print "<!-- NEW vicidial_timeclock_audit_log record inserted for $user:   |$affected_rows| -->\n";
 
 		### Update last login record in the timeclock audit log
 		$stmtE="UPDATE vicidial_timeclock_audit_log set login_sec='$last_action_sec',tcid_link='$timeclock_id' where event='LOGIN' and user='$user' order by timeclock_id desc limit 1;";
 		if ($DB) {echo "$stmtE\n";}
-		$rslt=mysql_query($stmtE, $link);
-		$affected_rows = mysql_affected_rows($link);
+		$rslt=mysql_to_mysqli($stmtE, $link);
+		$affected_rows = mysqli_affected_rows($link);
 		print "<!-- vicidial_timeclock_audit_log record updated for $user:   |$affected_rows| -->\n";
 
 		### Add a record to the vicidial_admin_log
 		$SQL_log = "$stmtA|$stmtB|$stmtC|$stmtD|$stmtE|";
-		$SQL_log = ereg_replace(';','',$SQL_log);
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
 		$SQL_log = addslashes($SQL_log);
 		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TIMECLOCK', event_type='LOGOUT', record_id='$user', event_code='USER FORCED LOGOUT FROM STATUS PAGE', event_sql=\"$SQL_log\", event_notes='Χρήστης login time: $last_action_sec|Ώρα ρολόι ID: $timeclock_id|';";
 		if ($DB) {echo "$stmt\n";}
-		$rslt=mysql_query($stmt, $link);
-		$affected_rows = mysql_affected_rows($link);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$affected_rows = mysqli_affected_rows($link);
 		print "<!-- NEW vicidial_admin_log record inserted for $PHP_AUTH_USER:   |$affected_rows| -->\n";
 
 		$LOG_run++;
@@ -698,10 +774,10 @@ if ( ( ($stage == "tc_log_user_OUT") or ($stage == "tc_log_user_IN") ) and ($mod
 	
 	if ($db_source == 'S')
 		{
-		mysql_close($link);
+		mysqli_close($link);
 		$use_slave_server=0;
 		$db_source = 'M';
-		require("dbconnect.php");
+		require("dbconnect_mysqli.php");
 		}
 
 	$endMS = microtime();
@@ -713,7 +789,7 @@ if ( ( ($stage == "tc_log_user_OUT") or ($stage == "tc_log_user_IN") ) and ($mod
 
 	$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 
 	exit;
 	}
@@ -834,10 +910,10 @@ echo "|$stage|$group|";
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -849,10 +925,8 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 exit; 
-
-
 
 ?>

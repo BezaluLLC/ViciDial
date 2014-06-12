@@ -23,13 +23,14 @@ agc|dbconnect.php|1
 agc|timeclock.php|0
 agc|vdc_script_display.php|1
 agc|vdc_script_notes.php|0
-agc|functions.php|1
+agc|functions.php|0
 agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
 agc|phone_only.php|0
 agc|vdc_email_display.php|0
 agc|audit_comments.php|0
+agc|dbconnect_mysqli.php|1
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"ЯНВ"|
@@ -44,6 +45,7 @@ agc|audit_comments.php|0
 "OCT"|"ОКТ"|
 "NOV"|"НОЯ"|
 "DEC"|"ДЕК"|
+\./bp.pl|../agc/bp.pl|
 \./images/|../agc/images/|
 css/|../agc/css/|
 BORDER|Border|
@@ -307,7 +309,7 @@ YOU CANNOT SKIP A CALLBACK OR MANUAL DIAL, YOU MUST DIAL THE LEAD|ОБРАТНЫ
 YOU MUST BE PAUSED TO MANUAL DIAL A NEW LEAD IN AUTO-DIAL MODE|ЧТОБЫ ПРОИЗВЕСТИ РУЧНОЙ НАБОР В РЕЖИМЕ АВТОДОЗВОНА ВАМ НУЖНО БЫТЬ В СОСТОЯНИИ ПАУЗЫ|
 Enter information below for the new lead you wish to call|Введите сведения о номере, который Вы хотите вызвать|
 YOU MUST BE PAUSED TO CHECK CALLBACKS IN AUTO-DIAL MODE|ДЛЯ ПРОВЕРКИ ОБРАТНЫХ ВЫЗОВОВ В РЕЖИМЕ АВТОДОЗВОНА ВЫ ДОЛЖНЫ БЫТЬ В СОСТОЯНИИ ПАУЗЫ|
-Note: all new manual dial leads will go into list 999|Примечание: вре новые номера для ручного набора сохраняются в списке 999|
+Note: all new manual dial leads will go into list|Примечание: вре новые номера для ручного набора сохраняются в списке|
 YOU DO NOT HAVE PERMISSIONS TO TRANSFER CALLS|ВАМ НЕ РАЗРЕШЕНО ПЕРЕВОДИТЬ ВЫЗОВЫ|
 will be added to the beginning of this number|будет добавлено в начало этого номера|
 This is usually a 1 in the USA-Canada|В США и Канаде это обычно единица|
@@ -649,3 +651,15 @@ Department:|отдел:|
 Group Name|название группы|
 Job Title|Должность|
 Location:|Расположение:|
+### START translations for 2.8 release ###
+This agent screen was not opened properly|Этот экран агент не открывается,|
+Dial Lead ID|Наберите Свинец ID|
+Agent Form Display Script|Форма Агент Показать скрипта|
+Agent Notes|Агент Примечание|
+You have been paused for too long, you have been logged out of your session|Вы были паузы слишком долго, вы были отключены от вашей сессии|
+Too many network errors, please contact your administrator|Слишком много ошибок сети, обратитесь к администратору|
+No available servers, please contact your administrator|Нет доступных серверов, пожалуйста, обратитесь к администратору|
+No available phones, please contact your administrator|Нет доступных телефонов, пожалуйста, обратитесь к администратору|
+You are already logged in, please log out of your other session first|Вы уже вошли в систему, пожалуйста выйдите из другой сессии первый|
+Too many agents logged in, please contact your administrator|Слишком многие агенты вошли в систему, пожалуйста, обратитесь к администратору|
+Dial Countdown|Наберите Обратный отсчет|

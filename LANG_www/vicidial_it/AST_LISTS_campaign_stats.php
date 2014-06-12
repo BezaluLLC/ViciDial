@@ -1,7 +1,7 @@
 <?php 
 # AST_LISTS_campaign_stats.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This is a list inventory report, not a calling report. This report will show
 # statistics for all of the lists in the selected campaigns
@@ -13,13 +13,20 @@
 # 120524-1754 - Fixed status categories issue
 # 130221-1928 - small change to remove nested SQL query
 # 130414-0127 - Added report logging
+# 130424-2039 - Added lines for new status categories of scheduled callbacks and completed
+# 130610-1001 - Finalized changing of all ereg instances to preg
+# 130621-0735 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-2025 - Changed to mysqli PHP functions
+# 130926-0720 - Added link to lists view of report
+# 140108-0715 - Added webserver and hostname to report logging
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
 
 header ("Content-type: text/html; charset=utf-8");
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
 require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -38,9 +45,6 @@ if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
-
 $report_name = 'Liste Esiti Campagna Report';
 $db_source = 'M';
 $JS_text="<script language='Javascript'>\n";
@@ -49,12 +53,12 @@ $JS_onload="onload = function() {\n";
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
@@ -63,26 +67,67 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 7 and view_reports='1' and active='Y';";
-if ($DB) {$MAIN.="|$stmt|\n";}
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level='7' and view_reports='1' and active='Y';";
-if ($DB) {$MAIN.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$reports_only_user=$row[0];
-
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if ($non_latin < 1)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Utentename/Password non validi: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 	}
+else
+	{
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+
+$auth=0;
+$reports_auth=0;
+$admin_auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORT',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth > 0)
+	{
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$admin_auth=$row[0];
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	if ($reports_auth < 1)
+		{
+		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ( ($reports_auth > 0) and ($admin_auth < 1) )
+		{
+		$ADD=999999;
+		$reports_only_user=1;
+		}
+	}
+else
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
+
 
 ##### BEGIN log visit to the vicidial_report_log table #####
 $LOGip = getenv("REMOTE_ADDR");
@@ -98,37 +143,60 @@ if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='
 else {$LOGserver_port = ":$LOGserver_port";}
 $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
-$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $file_download, $report_display_type|', url='$LOGfull_url';";
+$LOGhostname = php_uname('n');
+if (strlen($LOGhostname)<1) {$LOGhostname='X';}
+if (strlen($LOGserver_name)<1) {$LOGserver_name='X';}
+
+$stmt="SELECT webserver_id FROM vicidial_webservers where webserver='$LOGserver_name' and hostname='$LOGhostname' LIMIT 1;";
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$webserver_id_ct = mysqli_num_rows($rslt);
+if ($webserver_id_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$webserver_id = $row[0];
+	}
+else
+	{
+	##### insert webserver entry
+	$stmt="INSERT INTO vicidial_webservers (webserver,hostname) values('$LOGserver_name','$LOGhostname');";
+	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$affected_rows = mysqli_affected_rows($link);
+	$webserver_id = mysqli_insert_id($link);
+	}
+
+$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $file_download, $report_display_type|', url='$LOGfull_url', webserver='$webserver_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=1;
 	$db_source = 'S';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
-$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 6 and view_reports='1' and active='Y';";
+$stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {$MAIN.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGuser_group =			$row[0];
 
 $stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {$MAIN.="|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns = $row[0];
 $LOGallowed_reports =	$row[1];
 
 if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORT/",$LOGallowed_reports)) )
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
     echo "Non sei autorizzato a visualizzare questa relazione: |$PHP_AUTH_USER|$report_name|\n";
     exit;
@@ -150,7 +218,7 @@ while($i < $group_ct)
 
 $LOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
-if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
+if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 	{
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
@@ -160,16 +228,16 @@ if ( (!eregi("-ALL",$LOGallowed_campaigns)) )
 $regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
 
 $stmt="select campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$campaigns_to_print = mysql_num_rows($rslt);
+$campaigns_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $campaigns_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$groups[$i] =		$row[0];
 	$group_names[$i] =	$row[1];
-	if (ereg("-ALL",$group_string) )
+	if (preg_match('/\-ALL/',$group_string) )
 		{$group[$i] = $groups[$i];}
 	$i++;
 	}
@@ -190,13 +258,13 @@ while($i < $group_ct)
 	}
 if (strlen($group_drop_SQL) < 2)
 	{$group_drop_SQL = "''";}
-if ( (ereg("--ALL--",$group_string) ) or ($group_ct < 1) or (strlen($group_string) < 2) )
+if ( (preg_match('/\-\-ALL\-\-/',$group_string) ) or ($group_ct < 1) or (strlen($group_string) < 2) )
 	{
 	$group_SQL = "$LOGallowed_campaignsSQL";
 	}
 else
 	{
-	$group_SQL = eregi_replace(",$",'',$group_SQL);
+	$group_SQL = preg_replace('/,$/i', '',$group_SQL);
 	$both_group_SQLand = "and ( (campaign_id IN($group_drop_SQL)) or (campaign_id IN($group_SQL)) )";
 	$both_group_SQL = "where ( (campaign_id IN($group_drop_SQL)) or (campaign_id IN($group_SQL)) )";
 	$group_SQLand = "and campaign_id IN($group_SQL)";
@@ -206,28 +274,30 @@ else
 # Get lists to query to avoid using a nested query
 $lists_id_str="";
 $list_stmt="SELECT list_id from vicidial_lists where active IN('Y','N') $group_SQLand";
-$list_rslt=mysql_query($list_stmt, $link);
-while ($lrow=mysql_fetch_row($list_rslt)) {
+if ($DB) {echo "$list_stmt\n";}
+$list_rslt=mysql_to_mysqli($list_stmt, $link);
+$lists_id_str="'',";
+while ($lrow=mysqli_fetch_row($list_rslt)) {
 	$lists_id_str.="'$lrow[0]',";
 }
 $lists_id_str=substr($lists_id_str,0,-1);
 
 $stmt="select vsc_id,vsc_name from vicidial_status_categories;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$statcats_to_print = mysql_num_rows($rslt);
+$statcats_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $statcats_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$vsc_id[$i] =	$row[0];
 	$vsc_name[$i] =	$row[1];
 
-	$category_statuses="";
+	$category_statuses="'',";
 	$status_stmt="select distinct status from vicidial_statuses where category='$row[0]' UNION select distinct status from vicidial_campaign_statuses where category='$row[0]' $group_SQLand";
 	if ($DB) {echo "$status_stmt\n";}
-	$status_rslt=mysql_query($status_stmt, $link);
-	while ($status_row=mysql_fetch_row($status_rslt)) 
+	$status_rslt=mysql_to_mysqli($status_stmt, $link);
+	while ($status_row=mysqli_fetch_row($status_rslt)) 
 		{
 		$category_statuses.="'$status_row[0]',";
         }
@@ -235,8 +305,8 @@ while ($i < $statcats_to_print)
 
 	$category_stmt="select count(*) from vicidial_list where status in ($category_statuses) and list_id IN($lists_id_str)";
 	if ($DB) {echo "$category_stmt\n";}
-	$category_rslt=mysql_query($category_stmt, $link);
-	$category_row=mysql_fetch_row($category_rslt);
+	$category_rslt=mysql_to_mysqli($category_stmt, $link);
+	$category_row=mysqli_fetch_row($category_rslt);
 	$vsc_count[$i] = $category_row[0];
 	$i++;
 	}
@@ -250,40 +320,44 @@ $dnc_statuses='';
 $customer_contact_statuses='';
 $not_interested_statuses='';
 $unworkable_statuses='';
-$stmt="select status,human_answered,sale,dnc,customer_contact,not_interested,unworkable,status_name from vicidial_statuses;";
-$rslt=mysql_query($stmt, $link);
+$stmt="select status,human_answered,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,status_name from vicidial_statuses;";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$statha_to_print = mysql_num_rows($rslt);
+$statha_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $statha_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$temp_status = $row[0];
-	$statname_list["$temp_status"] = "$row[7]";
+	$statname_list["$temp_status"] = "$row[9]";
 	if ($row[1]=='Y') {$human_answered_statuses .= "'$temp_status',";}
 	if ($row[2]=='Y') {$sale_statuses .= "'$temp_status',";}
 	if ($row[3]=='Y') {$dnc_statuses .= "'$temp_status',";}
 	if ($row[4]=='Y') {$customer_contact_statuses .= "'$temp_status',";}
 	if ($row[5]=='Y') {$not_interested_statuses .= "'$temp_status',";}
 	if ($row[6]=='Y') {$unworkable_statuses .= "'$temp_status',";}
+	if ($row[7]=='Y') {$scheduled_callback_statuses .= "'$temp_status',";}
+	if ($row[8]=='Y') {$completed_statuses .= "'$temp_status',";}
 	$i++;
 	}
-$stmt="select status,human_answered,sale,dnc,customer_contact,not_interested,unworkable,status_name from vicidial_campaign_statuses where selectable IN('Y','N') $group_SQLand;";
-$rslt=mysql_query($stmt, $link);
+$stmt="select status,human_answered,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,status_name from vicidial_campaign_statuses where selectable IN('Y','N') $group_SQLand;";
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
-$statha_to_print = mysql_num_rows($rslt);
+$statha_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $statha_to_print)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$temp_status = $row[0];
-	$statname_list["$temp_status"] = "$row[7]";
+	$statname_list["$temp_status"] = "$row[9]";
 	if ( ($row[1]=='Y') and (!preg_match("/'$temp_status'/",$human_answered_statuses)) ) {$human_answered_statuses .= "'$temp_status',";}
 	if ($row[2]=='Y') {$sale_statuses .= "'$temp_status',";}
 	if ($row[3]=='Y') {$dnc_statuses .= "'$temp_status',";}
 	if ($row[4]=='Y') {$customer_contact_statuses .= "'$temp_status',";}
 	if ($row[5]=='Y') {$not_interested_statuses .= "'$temp_status',";}
 	if ($row[6]=='Y') {$unworkable_statuses .= "'$temp_status',";}
+	if ($row[7]=='Y') {$scheduled_callback_statuses .= "'$temp_status',";}
+	if ($row[8]=='Y') {$completed_statuses .= "'$temp_status',";}
 	$i++;
 	}
 if (strlen($human_answered_statuses)>2)		{$human_answered_statuses = substr("$human_answered_statuses", 0, -1);}
@@ -298,6 +372,10 @@ if (strlen($not_interested_statuses)>2)		{$not_interested_statuses = substr("$no
 else {$not_interested_statuses="''";}
 if (strlen($unworkable_statuses)>2)			{$unworkable_statuses = substr("$unworkable_statuses", 0, -1);}
 else {$unworkable_statuses="''";}
+if (strlen($scheduled_callback_statuses)>2)			{$scheduled_callback_statuses = substr("$scheduled_callback_statuses", 0, -1);}
+else {$scheduled_callback_statuses="''";}
+if (strlen($completed_statuses)>2)			{$completed_statuses = substr("$completed_statuses", 0, -1);}
+else {$completed_statuses="''";}
 
 $HEADER.="<HTML>\n";
 $HEADER.="<HEAD>\n";
@@ -324,18 +402,18 @@ $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 
 $MAIN.="</TD><TD VALIGN=TOP> Campagnas:<BR>";
 $MAIN.="<SELECT SIZE=5 NAME=group[] multiple>\n";
-if  (eregi("--ALL--",$group_string))
+if  (preg_match('/\-\-ALL\-\-/',$group_string))
 	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL CAMPAGNE --</option>\n";}
 else
 	{$MAIN.="<option value=\"--ALL--\">-- ALL CAMPAGNE --</option>\n";}
 $o=0;
 while ($campaigns_to_print > $o)
 	{
-	if (eregi("$groups[$o]\|",$group_string)) {$MAIN.="<option selected value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
+	if (preg_match("/$groups[$o]\|/i",$group_string)) {$MAIN.="<option selected value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
 	  else {$MAIN.="<option value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
 	$o++;
 	}
-$MAIN.="</SELECT>\n";
+$MAIN.="</SELECT>\n<BR>\n<a href=\"AST_LISTS_stats.php?DB=$DB\">SWITCH TO LISTS</a>";
 $MAIN.="</TD><TD VALIGN=TOP>";
 $MAIN.="Visualizzare as:<BR/>";
 $MAIN.="<select name='report_display_type'>";
@@ -398,20 +476,20 @@ else
 
 	$lists_id_str="";
 	$list_stmt="SELECT list_id from vicidial_lists where active IN('Y','N') $group_SQLand";
-	$list_rslt=mysql_query($list_stmt, $link);
-	while ($lrow=mysql_fetch_row($list_rslt)) {
+	$list_rslt=mysql_to_mysqli($list_stmt, $link);
+	while ($lrow=mysqli_fetch_row($list_rslt)) {
 		$lists_id_str.="'$lrow[0]',";
 	}
 	$lists_id_str=substr($lists_id_str,0,-1);
 
 	$stmt="select count(*),list_id from vicidial_list where list_id IN($lists_id_str) group by list_id;";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
-	$listids_to_print = mysql_num_rows($rslt);
+	$listids_to_print = mysqli_num_rows($rslt);
 	$i=0;
 	while ($i < $listids_to_print)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$LISTIDcalls[$i] =	$row[0];
 		$LISTIDlists[$i] =	$row[1];
 		$list_id_SQL .=		"'$row[1]',";
@@ -427,12 +505,12 @@ else
 	while ($i < $listids_to_print)
 		{
 		$stmt="select list_name,active from vicidial_lists where list_id='$LISTIDlists[$i]';";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$list_name_to_print = mysql_num_rows($rslt);
+		$list_name_to_print = mysqli_num_rows($rslt);
 		if ($list_name_to_print > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$LISTIDlist_names[$i] =	$row[0];
 			$graph_stats[$i][1].=" - $row[0]";
 			if ($row[1]=='Y')
@@ -463,7 +541,7 @@ else
 		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
 		$GRAPH.="  <tr>\n";
 		$GRAPH.="	<td class=\"chart_td$class\">".$graph_stats[$d][1]."</td>\n";
-		$GRAPH.="	<td nowrap class=\"chart_td value$class\"><img src=\"../vicidial/images/bar.png\" alt=\"\" width=\"".round(400*$graph_stats[$d][0]/$max_calls)."\" height=\"16\" />".$graph_stats[$d][0]."</td>\n";
+		$GRAPH.="	<td nowrap class=\"chart_td value$class\"><img src=\"../vicidial/images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$graph_stats[$d][0], $max_calls))."\" height=\"16\" />".$graph_stats[$d][0]."</td>\n";
 		$GRAPH.="  </tr>\n";
 	}
 	$GRAPH.="  <tr>\n";
@@ -489,6 +567,10 @@ else
 	$NI_percent=0;
 	$UW_count=0;
 	$UW_percent=0;
+	$SC_count=0;
+	$SC_percent=0;
+	$COMP_count=0;
+	$COMP_percent=0;
 
 	$max_calls=1; $graph_stats=array();
 	$GRAPH.="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
@@ -499,94 +581,100 @@ else
 	$GRAPH.="</tr>\n";
 
 	$stmt="select count(*) from vicidial_list where status IN($human_answered_statuses) and list_id IN($list_id_SQL);";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
-	$HA_results = mysql_num_rows($rslt);
+	$HA_results = mysqli_num_rows($rslt);
 	if ($HA_results > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$HA_count = $row[0];
 		$flag_count+=$row[0];
-		if ($HA_count > 0)
-			{
-			if ($HA_count>$max_calls) {$max_calls=$HA_count;}
-			$HA_percent = ( ($HA_count / $TOTALleads) * 100);
-			}
+		if ($HA_count>$max_calls) {$max_calls=$HA_count;}
+		$HA_percent = ( MathZDC($HA_count, $TOTALleads) * 100);
 		}
 	$stmt="select count(*) from vicidial_list where status IN($sale_statuses) and list_id IN($list_id_SQL);";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
-	$SALE_results = mysql_num_rows($rslt);
+	$SALE_results = mysqli_num_rows($rslt);
 	if ($SALE_results > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$SALE_count = $row[0];
 		$flag_count+=$row[0];
-		if ($SALE_count > 0)
-			{
-			if ($SALE_count>$max_calls) {$max_calls=$SALE_count;}
-			$SALE_percent = ( ($SALE_count / $TOTALleads) * 100);
-			}
+		if ($SALE_count>$max_calls) {$max_calls=$SALE_count;}
+		$SALE_percent = ( MathZDC($SALE_count, $TOTALleads) * 100);
 		}
 	$stmt="select count(*) from vicidial_list where status IN($dnc_statuses) and list_id IN($list_id_SQL);";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
-	$DNC_results = mysql_num_rows($rslt);
+	$DNC_results = mysqli_num_rows($rslt);
 	if ($DNC_results > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$DNC_count = $row[0];
 		$flag_count+=$row[0];
-		if ($DNC_count > 0)
-			{
-			if ($DNC_count>$max_calls) {$max_calls=$DNC_count;}
-			$DNC_percent = ( ($DNC_count / $TOTALleads) * 100);
-			}
+		if ($DNC_count>$max_calls) {$max_calls=$DNC_count;}
+		$DNC_percent = ( MathZDC($DNC_count, $TOTALleads) * 100);
 		}
 	$stmt="select count(*) from vicidial_list where status IN($customer_contact_statuses) and list_id IN($list_id_SQL);";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
-	$CC_results = mysql_num_rows($rslt);
+	$CC_results = mysqli_num_rows($rslt);
 	if ($CC_results > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$CC_count = $row[0];
 		$flag_count+=$row[0];
-		if ($CC_count > 0)
-			{
-			if ($C_count>$max_calls) {$max_calls=$CC_count;}
-			$CC_percent = ( ($CC_count / $TOTALleads) * 100);
-			}
+		if ($C_count>$max_calls) {$max_calls=$CC_count;}
+		$CC_percent = ( MathZDC($CC_count, $TOTALleads) * 100);
 		}
 	$stmt="select count(*) from vicidial_list where status IN($not_interested_statuses) and list_id IN($list_id_SQL);";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
-	$NI_results = mysql_num_rows($rslt);
+	$NI_results = mysqli_num_rows($rslt);
 	if ($NI_results > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$NI_count = $row[0];
 		$flag_count+=$row[0];
-		if ($NI_count > 0)
-			{
-			if ($NI_count>$max_calls) {$max_calls=$NI_count;}
-			$NI_percent = ( ($NI_count / $TOTALleads) * 100);
-			}
+		if ($NI_count>$max_calls) {$max_calls=$NI_count;}
+		$NI_percent = ( MathZDC($NI_count, $TOTALleads) * 100);
 		}
 	$stmt="select count(*) from vicidial_list where status IN($unworkable_statuses) and list_id IN($list_id_SQL);";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
-	$UW_results = mysql_num_rows($rslt);
+	$UW_results = mysqli_num_rows($rslt);
 	if ($UW_results > 0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$UW_count = $row[0];
 		$flag_count+=$row[0];
-		if ($UW_count > 0)
-			{
-			if ($UW_count>$max_calls) {$max_calls=$UW_count;}
-			$UW_percent = ( ($UW_count / $TOTALleads) * 100);
-			}
+		if ($UW_count>$max_calls) {$max_calls=$UW_count;}
+		$UW_percent = ( MathZDC($UW_count, $TOTALleads) * 100);
+		}
+	$stmt="select count(*) from vicidial_list where status IN($scheduled_callback_statuses) and list_id IN($list_id_SQL);";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($DB) {$MAIN.="$stmt\n";}
+	$SC_results = mysqli_num_rows($rslt);
+	if ($SC_results > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$SC_count = $row[0];
+		$flag_count+=$row[0];
+		if ($SC_count>$max_calls) {$max_calls=$SC_count;}
+		$SC_percent = ( MathZDC($SC_count, $TOTALleads) * 100);
+		}
+	$stmt="select count(*) from vicidial_list where status IN($completed_statuses) and list_id IN($list_id_SQL);";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($DB) {$MAIN.="$stmt\n";}
+	$COMP_results = mysqli_num_rows($rslt);
+	if ($COMP_results > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$COMP_count = $row[0];
+		$flag_count+=$row[0];
+		if ($COMP_count>$max_calls) {$max_calls=$COMP_count;}
+		$COMP_percent = ( MathZDC($COMP_count, $TOTALleads) * 100);
 		}
 
 	$HA_percent =	sprintf("%6.2f", "$HA_percent"); while(strlen($HA_percent)>6) {$HA_percent = substr("$HA_percent", 0, -1);}
@@ -595,6 +683,8 @@ else
 	$CC_percent =	sprintf("%6.2f", "$CC_percent"); while(strlen($CC_percent)>6) {$CC_percent = substr("$CC_percent", 0, -1);}
 	$NI_percent =	sprintf("%6.2f", "$NI_percent"); while(strlen($NI_percent)>6) {$NI_percent = substr("$NI_percent", 0, -1);}
 	$UW_percent =	sprintf("%6.2f", "$UW_percent"); while(strlen($UW_percent)>6) {$UW_percent = substr("$UW_percent", 0, -1);}
+	$SC_percent =	sprintf("%6.2f", "$SC_percent"); while(strlen($SC_percent)>6) {$SC_percent = substr("$SC_percent", 0, -1);}
+	$COMP_percent =	sprintf("%6.2f", "$COMP_percent"); while(strlen($COMP_percent)>6) {$COMP_percent = substr("$COMP_percent", 0, -1);}
 
 	$HA_count =	sprintf("%10s", "$HA_count"); while(strlen($HA_count)>10) {$HA_count = substr("$HA_count", 0, -1);}
 	$SALE_count =	sprintf("%10s", "$SALE_count"); while(strlen($SALE_count)>10) {$SALE_count = substr("$SALE_count", 0, -1);}
@@ -602,6 +692,8 @@ else
 	$CC_count =	sprintf("%10s", "$CC_count"); while(strlen($CC_count)>10) {$CC_count = substr("$CC_count", 0, -1);}
 	$NI_count =	sprintf("%10s", "$NI_count"); while(strlen($NI_count)>10) {$NI_count = substr("$NI_count", 0, -1);}
 	$UW_count =	sprintf("%10s", "$UW_count"); while(strlen($UW_count)>10) {$UW_count = substr("$UW_count", 0, -1);}
+	$SC_count =	sprintf("%10s", "$SC_count"); while(strlen($SC_count)>10) {$SC_count = substr("$SC_count", 0, -1);}
+	$COMP_count =	sprintf("%10s", "$COMP_count"); while(strlen($COMP_count)>10) {$COMP_count = substr("$COMP_count", 0, -1);}
 
 	$OUToutput .= "\n";
 	$OUToutput .= "\n";
@@ -613,6 +705,8 @@ else
 	$OUToutput .= "| Customer Contact | $CC_count |  $CC_percent% |\n";
 	$OUToutput .= "| Not Interested   | $NI_count |  $NI_percent% |\n";
 	$OUToutput .= "| Unworkable       | $UW_count |  $UW_percent% |\n";
+	$OUToutput .= "| Sched Callbacks  | $SC_count |  $SC_percent% |\n";
+	$OUToutput .= "| Completed        | $COMP_count |  $COMP_percent% |\n";
 	$OUToutput .= "+------------------+------------+----------+\n";
 	$OUToutput .= "\n";
 
@@ -623,30 +717,40 @@ else
 	$CSV_text2 .= "\"Customer Contact\",\"$CC_count\",\"$CC_percent%\"\n";
 	$CSV_text2 .= "\"Not Interested\",\"$NI_count\",\"$NI_percent%\"\n";
 	$CSV_text2 .= "\"Unworkable\",\"$UW_count\",\"$UW_percent%\"\n";
+	$CSV_text2 .= "\"Scheduled Callbacks\",\"$SC_count\",\"$SC_percent%\"\n";
+	$CSV_text2 .= "\"Completed\",\"$COMP_count\",\"$COMP_percent%\"\n";
 
 	$GRAPH.="  <tr>\n";
 	$GRAPH.="	<td class=\"chart_td first\">Umani Risposta</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value first\"><img src=\"../vicidial/images/bar.png\" alt=\"\" width=\"".round(400*$HA_count/$max_calls)."\" height=\"16\"/>".$HA_count." ($HA_percent%)</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value first\"><img src=\"../vicidial/images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$HA_count, $max_calls))."\" height=\"16\"/>".$HA_count." ($HA_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
 	$GRAPH.="	<td class=\"chart_td\">Sale</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"../vicidial/images/bar.png\" alt=\"\" width=\"".round(400*$SALE_count/$max_calls)."\" height=\"16\" />".$SALE_count." ($SALE_percent%)</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"../vicidial/images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$SALE_count, $max_calls))."\" height=\"16\" />".$SALE_count." ($SALE_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
 	$GRAPH.="	<td class=\"chart_td\">DNC</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"../vicidial/images/bar.png\" alt=\"\" width=\"".round(400*$DNC_count/$max_calls)."\" height=\"16\" />".$DNC_count." ($DNC_percent%)</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"../vicidial/images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$DNC_count, $max_calls))."\" height=\"16\" />".$DNC_count." ($DNC_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
 	$GRAPH.="	<td class=\"chart_td\">Customer Contact</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"../vicidial/images/bar.png\" alt=\"\" width=\"".round(400*$CC_count/$max_calls)."\" height=\"16\" />".$CC_count." ($CC_percent%)</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"../vicidial/images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$CC_count, $max_calls))."\" height=\"16\" />".$CC_count." ($CC_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
 	$GRAPH.="	<td class=\"chart_td\">Not Interested</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"../vicidial/images/bar.png\" alt=\"\" width=\"".round(400*$NI_count/$max_calls)."\" height=\"16\" />".$NI_count." ($NI_percent%)</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"../vicidial/images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$NI_count, $max_calls))."\" height=\"16\" />".$NI_count." ($NI_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<td class=\"chart_td last\">Unworkable</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value last\"><img src=\"../vicidial/images/bar.png\" alt=\"\" width=\"".round(400*$UW_count/$max_calls)."\" height=\"16\" />".$UW_count." ($UW_percent%)</td>\n";
+	$GRAPH.="	<td class=\"chart_td\">Unworkable</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"../vicidial/images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$UW_count, $max_calls))."\" height=\"16\" />".$UW_count." ($UW_percent%)</td>\n";
+	$GRAPH.="  </tr>\n";
+	$GRAPH.="  <tr>\n";
+	$GRAPH.="	<td class=\"chart_td\">Scheduled Callbacks</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"../vicidial/images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$SC_count, $max_calls))."\" height=\"16\" />".$SC_count." ($SC_percent%)</td>\n";
+	$GRAPH.="  </tr>\n";
+	$GRAPH.="  <tr>\n";
+	$GRAPH.="	<td class=\"chart_td last\">Completed</td>\n";
+	$GRAPH.="	<td nowrap class=\"chart_td value last\"><img src=\"../vicidial/images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$COMP_count, $max_calls))."\" height=\"16\" />".$COMP_count." ($COMP_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
 	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">TOTAL:</th>\n";
@@ -708,7 +812,7 @@ else
 		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
 		$GRAPH.="  <tr>\n";
 		$GRAPH.="	<td class=\"chart_td$class\">".$graph_stats[$d][1]."</td>\n";
-		$GRAPH.="	<td nowrap class=\"chart_td value$class\"><img src=\"../vicidial/images/bar.png\" alt=\"\" width=\"".round(400*$graph_stats[$d][0]/$max_calls)."\" height=\"16\" />".$graph_stats[$d][0]."</td>\n";
+		$GRAPH.="	<td nowrap class=\"chart_td value$class\"><img src=\"../vicidial/images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$graph_stats[$d][0], $max_calls))."\" height=\"16\" />".$graph_stats[$d][0]."</td>\n";
 		$GRAPH.="  </tr>\n";
 	}
 	$GRAPH.="  <tr>\n";
@@ -770,91 +874,99 @@ else
 		$NI_percent=0;
 		$UW_count=0;
 		$UW_percent=0;
+		$SC_count=0;
+		$SC_percent=0;
+		$COMP_count=0;
+		$COMP_percent=0;
 
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($human_answered_statuses);";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$HA_results = mysql_num_rows($rslt);
+		$HA_results = mysqli_num_rows($rslt);
 		if ($HA_results > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$HA_count = $row[0];
-			if ($HA_count > 0)
-				{
-				$HA_percent = ( ($HA_count / $LISTIDcalls[$i]) * 100);
-				}
+			$HA_percent = ( MathZDC($HA_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($HA_count>$max_flags) {$max_flags=$HA_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($sale_statuses);";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$SALE_results = mysql_num_rows($rslt);
+		$SALE_results = mysqli_num_rows($rslt);
 		if ($SALE_results > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$SALE_count = $row[0];
-			if ($SALE_count > 0)
-				{
-				$SALE_percent = ( ($SALE_count / $LISTIDcalls[$i]) * 100);
-				}
+			$SALE_percent = ( MathZDC($SALE_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($SALE_count>$max_flags) {$max_flags=$SALE_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($dnc_statuses);";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$DNC_results = mysql_num_rows($rslt);
+		$DNC_results = mysqli_num_rows($rslt);
 		if ($DNC_results > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$DNC_count = $row[0];
-			if ($DNC_count > 0)
-				{
-				$DNC_percent = ( ($DNC_count / $LISTIDcalls[$i]) * 100);
-				}
+			$DNC_percent = ( MathZDC($DNC_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($DNC_count>$max_flags) {$max_flags=$DNC_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($customer_contact_statuses);";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$CC_results = mysql_num_rows($rslt);
+		$CC_results = mysqli_num_rows($rslt);
 		if ($CC_results > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$CC_count = $row[0];
-			if ($CC_count > 0)
-				{
-				$CC_percent = ( ($CC_count / $LISTIDcalls[$i]) * 100);
-				}
+			$CC_percent = ( MathZDC($CC_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($CC_count>$max_flags) {$max_flags=$CC_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($not_interested_statuses);";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$NI_results = mysql_num_rows($rslt);
+		$NI_results = mysqli_num_rows($rslt);
 		if ($NI_results > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$NI_count = $row[0];
-			if ($NI_count > 0)
-				{
-				$NI_percent = ( ($NI_count / $LISTIDcalls[$i]) * 100);
-				}
+			$NI_percent = ( MathZDC($NI_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($NI_count>$max_flags) {$max_flags=$NI_count;}
 		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($unworkable_statuses);";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$UW_results = mysql_num_rows($rslt);
+		$UW_results = mysqli_num_rows($rslt);
 		if ($UW_results > 0)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$UW_count = $row[0];
-			if ($UW_count > 0)
-				{
-				$UW_percent = ( ($UW_count / $LISTIDcalls[$i]) * 100);
-				}
+			$UW_percent = ( MathZDC($UW_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($UW_count>$max_flags) {$max_flags=$UW_count;}
+		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($scheduled_callback_statuses);";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {$MAIN.="$stmt\n";}
+		$SC_results = mysqli_num_rows($rslt);
+		if ($SC_results > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$SC_count = $row[0];
+			$SC_percent = ( MathZDC($SC_count, $LISTIDcalls[$i]) * 100);
+			}
+		if ($SC_count>$max_flags) {$max_flags=$SC_count;}
+		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($completed_statuses);";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {$MAIN.="$stmt\n";}
+		$COMP_results = mysqli_num_rows($rslt);
+		if ($COMP_results > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$COMP_count = $row[0];
+			$COMP_percent = ( MathZDC($COMP_count, $LISTIDcalls[$i]) * 100);
+			}
+		if ($COMP_count>$max_flags) {$max_flags=$COMP_count;}
 
 		$HA_percent =	sprintf("%6.2f", "$HA_percent"); while(strlen($HA_percent)>6) {$HA_percent = substr("$HA_percent", 0, -1);}
 		$SALE_percent =	sprintf("%6.2f", "$SALE_percent"); while(strlen($SALE_percent)>6) {$SALE_percent = substr("$SALE_percent", 0, -1);}
@@ -862,6 +974,8 @@ else
 		$CC_percent =	sprintf("%6.2f", "$CC_percent"); while(strlen($CC_percent)>6) {$CC_percent = substr("$CC_percent", 0, -1);}
 		$NI_percent =	sprintf("%6.2f", "$NI_percent"); while(strlen($NI_percent)>6) {$NI_percent = substr("$NI_percent", 0, -1);}
 		$UW_percent =	sprintf("%6.2f", "$UW_percent"); while(strlen($UW_percent)>6) {$UW_percent = substr("$UW_percent", 0, -1);}
+		$SC_percent =	sprintf("%6.2f", "$SC_percent"); while(strlen($SC_percent)>6) {$SC_percent = substr("$SC_percent", 0, -1);}
+		$COMP_percent =	sprintf("%6.2f", "$COMP_percent"); while(strlen($COMP_percent)>6) {$COMP_percent = substr("$COMP_percent", 0, -1);}
 
 		$HA_count =	sprintf("%9s", "$HA_count"); while(strlen($HA_count)>9) {$HA_count = substr("$HA_count", 0, -1);}
 		$SALE_count =	sprintf("%9s", "$SALE_count"); while(strlen($SALE_count)>9) {$SALE_count = substr("$SALE_count", 0, -1);}
@@ -869,6 +983,8 @@ else
 		$CC_count =	sprintf("%9s", "$CC_count"); while(strlen($CC_count)>9) {$CC_count = substr("$CC_count", 0, -1);}
 		$NI_count =	sprintf("%9s", "$NI_count"); while(strlen($NI_count)>9) {$NI_count = substr("$NI_count", 0, -1);}
 		$UW_count =	sprintf("%9s", "$UW_count"); while(strlen($UW_count)>9) {$UW_count = substr("$UW_count", 0, -1);}
+		$SC_count =	sprintf("%9s", "$SC_count"); while(strlen($SC_count)>9) {$SC_count = substr("$SC_count", 0, -1);}
+		$COMP_count =	sprintf("%9s", "$COMP_count"); while(strlen($COMP_count)>9) {$COMP_count = substr("$COMP_count", 0, -1);}
 
 		$OUToutput .= "| STATUS FLAGS BREAKDOWN:  (and % of total leads in the list)  |\n";
 		$OUToutput .= "|   Risposta Umana:       $HA_count    $HA_percent%                   |\n";
@@ -877,16 +993,20 @@ else
 		$OUToutput .= "|   Customer Contact:   $CC_count    $CC_percent%                   |\n";
 		$OUToutput .= "|   Not Interested:     $NI_count    $NI_percent%                   |\n";
 		$OUToutput .= "|   Unworkable:         $UW_count    $UW_percent%                   |\n";
+		$OUToutput .= "|   Sched Callbacks:    $SC_count    $SC_percent%                   |\n";
+		$OUToutput .= "|   Completed:          $COMP_count    $COMP_percent%                   |\n";
 		$OUToutput .= "+----+--------------------------------------------+------------+\n";
 		$OUToutput .= "     |    STATUS BREAKDOWN:                       |    COUNT   |\n";
 		$OUToutput .= "     +--------+-----------------------------------+------------+\n";
 
-		$FLAGS_graph.="  <tr><td class='chart_td first'>RISPOSTA UMANA</td><td nowrap class='chart_td value first'><img src='../vicidial/images/bar.png' alt='' width='".round(400*$HA_count/$max_flags)."' height='16' />$HA_count ($HA_percent%)</td></tr>";
-		$FLAGS_graph.="  <tr><td class='chart_td'>SALE</td><td nowrap class='chart_td value'><img src='../vicidial/images/bar.png' alt='' width='".round(400*$SALE_count/$max_flags)."' height='16' />$SALE_count ($SALE_percent%)</td></tr>";
-		$FLAGS_graph.="  <tr><td class='chart_td'>DNC</td><td nowrap class='chart_td value'><img src='../vicidial/images/bar.png' alt='' width='".round(400*$DNC_count/$max_flags)."' height='16' />$DNC_count ($DNC_percent%)</td></tr>";
-		$FLAGS_graph.="  <tr><td class='chart_td'>CUSTOMER CONTACT</td><td nowrap class='chart_td value'><img src='../vicidial/images/bar.png' alt='' width='".round(400*$CC_count/$max_flags)."' height='16' />$CC_count ($CC_percent%)</td></tr>";
-		$FLAGS_graph.="  <tr><td class='chart_td'>NOT INTERESTED</td><td nowrap class='chart_td value'><img src='../vicidial/images/bar.png' alt='' width='".round(400*$NI_count/$max_flags)."' height='16' />$NI_count ($NI_percent%)</td></tr>";
-		$FLAGS_graph.="  <tr><td class='chart_td last'>UNWORKABLE</td><td nowrap class='chart_td value last><img src='../vicidial/images/bar.png' alt='' width='".round(400*$UW_count/$max_flags)."' height='16' />$UW_count ($UW_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td first'>RISPOSTA UMANA</td><td nowrap class='chart_td value first'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(400*$HA_count, $max_flags))."' height='16' />$HA_count ($HA_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>SALE</td><td nowrap class='chart_td value'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(400*$SALE_count, $max_flags))."' height='16' />$SALE_count ($SALE_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>DNC</td><td nowrap class='chart_td value'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(400*$DNC_count, $max_flags))."' height='16' />$DNC_count ($DNC_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>CUSTOMER CONTACT</td><td nowrap class='chart_td value'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(400*$CC_count, $max_flags))."' height='16' />$CC_count ($CC_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>NOT INTERESTED</td><td nowrap class='chart_td value'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(400*$NI_count, $max_flags))."' height='16' />$NI_count ($NI_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>UNWORKABLE</td><td nowrap class='chart_td value last><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(400*$UW_count, $max_flags))."' height='16' />$UW_count ($UW_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>SCHEDULED CALLBACKS</td><td nowrap class='chart_td value last><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(400*$SC_count, $max_flags))."' height='16' />$SC_count ($SC_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td last'>COMPLETED</td><td nowrap class='chart_td value last><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(400*$COMP_count, $max_flags))."' height='16' />$COMP_count ($COMP_percent%)</td></tr>";
 
 		$CSV_text4.="\"STATUS FLAGS BREAKDOWN:\",\"(and % of total leads in the list)\"\n";
 		$CSV_text4.="\"Risposta Umana:\",\"$HA_count\",\"$HA_percent%\"\n";
@@ -895,16 +1015,18 @@ else
 		$CSV_text4.="\"Customer Contact:\",\"$CC_count\",\"$CC_percent%\"\n";
 		$CSV_text4.="\"Not Interested:\",\"$NI_count\",\"$NI_percent%\"\n";
 		$CSV_text4.="\"Unworkable:\",\"$UW_count\",\"$UW_percent%\"\n\n";
+		$CSV_text4.="\"Servicios repetidos Programar:\",\"$SC_count\",\"$SC_percent%\"\n\n";
+		$CSV_text4.="\"Completed:\",\"$COMP_count\",\"$COMP_percent%\"\n\n";
 		$CSV_text4.="\"STATUS BREAKDOWN:\",\"\",\"COUNT\"\n";
 
 		$stmt="select status,count(*) from vicidial_list where list_id='$LISTIDlists[$i]' group by status order by status;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$liststatussum_to_print = mysql_num_rows($rslt);
+		$liststatussum_to_print = mysqli_num_rows($rslt);
 		$r=0;
 		while ($r < $liststatussum_to_print)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 			$LISTIDstatus[$r] =	$row[0];
 			$LISTIDcounts[$r] =	$row[1];
 			$graph_stats[$r][0]=$row[0];
@@ -939,7 +1061,7 @@ else
 
 		for ($d=0; $d<count($graph_stats); $d++) {
 			if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-			$STATUS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(400*$graph_stats[$d][1]/$max_status)."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+			$STATUS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='../vicidial/images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][1], $max_status))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
 		}
 		$STATUS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTALleads)."</th></tr></table>";
 		$JS_onload.="\tDraw".$LISTIDlists[$i]."Graph('FLAGS', '1');\n"; 
@@ -1019,10 +1141,10 @@ else
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -1034,7 +1156,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 exit;
 

@@ -1,5 +1,5 @@
 <?php
-# inbound_popup.php    version 2.6
+# inbound_popup.php    version 2.8
 # 
 # Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -32,9 +32,12 @@
 # 60619-1205 - Added variable filters to close security holes for login form
 # 90508-0727 - Changed to PHP long tags
 # 130328-0025 - Converted ereg to preg functions
+# 130603-2215 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130802-1008 - Changed to PHP mysqli functions
 #
 
-require("dbconnect.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 ### If you have globals turned off uncomment these lines
 if (isset($_GET["user"]))					{$user=$_GET["user"];}
@@ -66,6 +69,8 @@ if (isset($_GET["local_web_callerID_URL_enc"]))			{$local_web_callerID_URL = raw
 
 $user=preg_replace("/[^0-9a-zA-Z]/","",$user);
 $pass=preg_replace("/[^0-9a-zA-Z]/","",$pass);
+$session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
+$server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
 
 # default optional vars if not set
 if (!isset($format))   {$format="text";}
@@ -79,20 +84,18 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 $DO = '-1';
 if ( (preg_match("/^Zap/i",$channel)) and (!preg_match("/-/i",$channel)) ) {$channel = "$channel$DO";}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',0,0,0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
-  if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
+if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Ongeldig Gebruikersnaam/Wachtwoord: |$user|$pass|\n";
-    exit;
+	echo "Ongeldig Gebruikersnaam/Wachtwoord: |$user|$pass|$auth_message|\n";
+	exit;
 	}
-  else
+else
 	{
-
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
 		echo "Ongeldig server_ip: |$server_ip|  or  Ongeldig session_name: |$session_name|\n";
@@ -102,8 +105,8 @@ if ( (preg_match("/^Zap/i",$channel)) and (!preg_match("/-/i",$channel)) ) {$cha
 		{
 		$stmt="SELECT count(*) from web_client_sessions where session_name='$session_name' and server_ip='$server_ip';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$SNauth=$row[0];
 		  if($SNauth==0)
 			{
@@ -274,11 +277,11 @@ else
 	{
 	$stmt="SELECT uniqueid,channel,server_ip,caller_id,extension,phone_ext,start_time,acknowledged,inbound_number,comment_a,comment_b,comment_c,comment_d,comment_e FROM live_inbound where server_ip = '$server_ip' and uniqueid = '$uniqueid';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-	$channels_list = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$channels_list = mysqli_num_rows($rslt);
 	if ($channels_list>0)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 #		echo "$LIuniqueid|$LIchannel|$LIcallerid|$LIdatetime|$row[8]|$row[9]|$row[10]|$row[11]|$row[12]|$row[13]|";
 #		Zap/73|"V.I.C.I. MARKET" <7275338730>|2005-04-28 14:01:21|7274514936|Inbound direct to Matt|||||
 		if ($format=='debug') {echo "\n<!-- $row[0]|$row[1]|$row[2]|$row[3]|$row[4]|$row[5]|$row[6]|$row[7]|$row[8]|$row[9]|$row[10]|$row[11]|$row[12]|$row[13]| -->";}
@@ -297,9 +300,9 @@ else
 		echo "<a href=\"http://www.anywho.com/qry/wp_rl?npa=$NPA&telephone=$NXX$XXXX\" target=\"_blank\">ANYWHO</a> - \n";
 		echo "<a href=\"http://www.switchboard.com/bin/cgirlookup.dll?SR=&MEM=1&LNK=32%3A36&type=BOTH&at=$NPA&e=$NXX&n=$XXXX&search.x=55&search.y=20\" target=\"_blank\">SWITCHBOARD</a> - \n";
 		echo "<a href=\"http://yellowpages.superpages.com/listings.jsp?SRC=&STYPE=&PG=L&CB=&C=&N=&E=&T=&S=&Z=&A=727&X=533&P=8730&AXP=$NPA$NXX$XXXX&R=N&PS=15&search=Find+It\" target=\"_blank\">VERIZON</a> - \n";
-		echo "<a href=\"http://www.whitepages.com/1014/log_click/search/Reverse_Telefoon?npa=$NPA&phone=$NXX$XXXX\" target=\"_blank\">WHITEPAGES</a> - \n";
-		echo "<a href=\"http://www.411.com/10742/search/Reverse_Telefoon?phone=%28$NPA%29+$NXX$D$XXXX\" target=\"_blank\">411.COM</a> - \n";
-		echo "<a href=\"http://www.phonenumber.com/10006/search/Reverse_Telefoon?npa=$NPA&phone=$NXX$XXXX\" target=\"_blank\">411.COM</a> - \n";
+		echo "<a href=\"http://www.whitepages.com/1014/log_click/search/Reverse_Telefoon1?npa=$NPA&phone=$NXX$XXXX\" target=\"_blank\">WHITEPAGES</a> - \n";
+		echo "<a href=\"http://www.411.com/10742/search/Reverse_Telefoon1?phone=%28$NPA%29+$NXX$D$XXXX\" target=\"_blank\">411.COM</a> - \n";
+		echo "<a href=\"http://www.phonenumber.com/10006/search/Reverse_Telefoon1?npa=$NPA&phone=$NXX$XXXX\" target=\"_blank\">411.COM</a> - \n";
 
 			$local_web_callerID_QUERY_STRING ='';
 			$local_web_callerID_QUERY_STRING.="?callerID_areacode=$NPA";
@@ -331,11 +334,8 @@ else
 
 		$stmt="UPDATE live_inbound set acknowledged='Y' where server_ip = '$server_ip' and uniqueid = '$uniqueid';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_query($stmt, $link);
-
-
+		$rslt=mysql_to_mysqli($stmt, $link);
 		}
-
 	
 	}
 
@@ -344,7 +344,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- script looptijd: $RUNtime seconden -->";
+	echo "\n<!-- Script Looptijd: $RUNtime seconden -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

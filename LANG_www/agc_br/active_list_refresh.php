@@ -1,5 +1,5 @@
 <?php
-# active_list_refresh.php    version 2.6
+# active_list_refresh.php    version 2.8
 # 
 # Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -40,9 +40,12 @@
 # 60619-1118 - Added variable filters to close security holes for login form
 # 90508-0727 - Changed to PHP long tags
 # 130328-0029 - Converted ereg to preg functions
-#
+# 130603-2222 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130802-0957 - Changed to PHP mysqli functions
+# 
 
-require("dbconnect.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 ### If you have globals turned off uncomment these lines
 if (isset($_GET["user"]))					{$user=$_GET["user"];}
@@ -83,22 +86,24 @@ if (isset($_GET["field_name"]))				{$field_name=$_GET["field_name"];}
 	elseif (isset($_POST["field_name"]))	{$field_name=$_POST["field_name"];}
 
 ### security strip all non-alphanumeric characters out of the variables ###
-	$user=preg_replace("/[^0-9a-zA-Z]/","",$user);
-	$pass=preg_replace("/[^0-9a-zA-Z]/","",$pass);
-	$ADD=preg_replace("/[^0-9]/","",$ADD);
-	$order=preg_replace("/[^0-9a-zA-Z]/","",$order);
-	$format=preg_replace("/[^0-9a-zA-Z]/","",$format);
-	$bgcolor=preg_replace("/[^\#0-9a-zA-Z]/","",$bgcolor);
-	$txtcolor=preg_replace("/[^\#0-9a-zA-Z]/","",$txtcolor);
-	$txtsize=preg_replace("/[^0-9a-zA-Z]/","",$txtsize);
-	$selectsize=preg_replace("/[^0-9a-zA-Z]/","",$selectsize);
-	$selectfontsize=preg_replace("/[^0-9a-zA-Z]/","",$selectfontsize);
-	$selectedext=preg_replace("/[^ \#\*\:\/\@\.\-\_0-9a-zA-Z]/","",$selectedext);
-	$selectedtrunk=preg_replace("/[^ \#\*\:\/\@\.\-\_0-9a-zA-Z]/","",$selectedtrunk);
-	$selectedlocal=preg_replace("/[^ \#\*\:\/\@\.\-\_0-9a-zA-Z]/","",$selectedlocal);
-	$textareaheight=preg_replace("/[^0-9a-zA-Z]/","",$textareaheight);
-	$textareawidth=preg_replace("/[^0-9a-zA-Z]/","",$textareawidth);
-	$field_name=preg_replace("/[^ \#\*\:\/\@\.\-\_0-9a-zA-Z]/","",$field_name);
+$user=preg_replace("/[^0-9a-zA-Z]/","",$user);
+$pass=preg_replace("/[^0-9a-zA-Z]/","",$pass);
+$ADD=preg_replace("/[^0-9]/","",$ADD);
+$order=preg_replace("/[^0-9a-zA-Z]/","",$order);
+$format=preg_replace("/[^0-9a-zA-Z]/","",$format);
+$bgcolor=preg_replace("/[^\#0-9a-zA-Z]/","",$bgcolor);
+$txtcolor=preg_replace("/[^\#0-9a-zA-Z]/","",$txtcolor);
+$txtsize=preg_replace("/[^0-9a-zA-Z]/","",$txtsize);
+$selectsize=preg_replace("/[^0-9a-zA-Z]/","",$selectsize);
+$selectfontsize=preg_replace("/[^0-9a-zA-Z]/","",$selectfontsize);
+$selectedext=preg_replace("/[^ \#\*\:\/\@\.\-\_0-9a-zA-Z]/","",$selectedext);
+$selectedtrunk=preg_replace("/[^ \#\*\:\/\@\.\-\_0-9a-zA-Z]/","",$selectedtrunk);
+$selectedlocal=preg_replace("/[^ \#\*\:\/\@\.\-\_0-9a-zA-Z]/","",$selectedlocal);
+$textareaheight=preg_replace("/[^0-9a-zA-Z]/","",$textareaheight);
+$textareawidth=preg_replace("/[^0-9a-zA-Z]/","",$textareawidth);
+$field_name=preg_replace("/[^ \#\*\:\/\@\.\-\_0-9a-zA-Z]/","",$field_name);
+$session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
+$server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
 
 # default optional vars if not set
 if (!isset($ADD))				{$ADD="1";}
@@ -119,16 +124,15 @@ $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',0,0,0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-    echo "Inválido Usuário/Senha: |$user|$pass|\n";
-    exit;
+	echo "Inválido Usuário/Senha: |$user|$pass|$auth_message|\n";
+	exit;
 	}
 else
 	{
@@ -141,8 +145,8 @@ else
 		{
 		$stmt="SELECT count(*) from web_client_sessions where session_name='$session_name' and server_ip='$server_ip';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$SNauth=$row[0];
 		if($SNauth==0)
 			{
@@ -197,12 +201,12 @@ if ($ADD==1)
 
 	$stmt="SELECT extension,fullname FROM phones where server_ip = '$server_ip' order by extension $order";
 		if ($format=='table') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-	if ($rslt) {$phones_to_print = mysql_num_rows($rslt);}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($rslt) {$phones_to_print = mysqli_num_rows($rslt);}
 	$o=0;
 	while ($phones_to_print > $o) 
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		if ($format=='table')
 			{
 			echo "<TR><TD ALIGN=LEFT NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=$txtcolor SIZE=$txtsize>";
@@ -255,12 +259,12 @@ if ($ADD==2)
 
 	$stmt="SELECT extension FROM live_channels where server_ip = '$server_ip' order by extension $order";
 		if ($format=='table') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-	if ($rslt) {$busys_to_print = mysql_num_rows($rslt);}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($rslt) {$busys_to_print = mysqli_num_rows($rslt);}
 	$o=0;
 	while ($busys_to_print > $o) 
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		if ($format=='table')
 			{
 			echo "<TR><TD ALIGN=LEFT NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=$txtcolor SIZE=$txtsize>";
@@ -312,12 +316,12 @@ if ($ADD==3)
 
 	$stmt="SELECT channel, extension FROM live_channels where server_ip = '$server_ip' order by channel $order";
 		if ($format=='table') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-	if ($rslt) {$busys_to_print = mysql_num_rows($rslt);}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($rslt) {$busys_to_print = mysqli_num_rows($rslt);}
 	$o=0;
 	while ($busys_to_print > $o) 
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		if ($format=='table')
 			{
 			echo "<TR><TD ALIGN=LEFT NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=$txtcolor SIZE=$txtsize>";
@@ -369,12 +373,12 @@ if ($ADD==4)
 
 	$stmt="SELECT channel, extension FROM live_sip_channels where server_ip = '$server_ip' order by channel $order";
 		if ($format=='table') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-	if ($rslt) {$busys_to_print = mysql_num_rows($rslt);}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($rslt) {$busys_to_print = mysqli_num_rows($rslt);}
 	$o=0;
 	while ($busys_to_print > $o) 
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		if ($format=='table')
 			{
 			echo "<TR><TD ALIGN=LEFT NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=$txtcolor SIZE=$txtsize>";
@@ -427,12 +431,12 @@ if ($ADD==5)
 
 	$stmt="SELECT conf_exten,extension FROM conferences where server_ip = '$server_ip' order by conf_exten $order";
 		if ($format=='table') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-	if ($rslt) {$phones_to_print = mysql_num_rows($rslt);}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($rslt) {$phones_to_print = mysqli_num_rows($rslt);}
 	$o=0;
 	while ($phones_to_print > $o) 
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		if ($format=='table')
 			{
 			echo "<TR><TD ALIGN=LEFT NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=$txtcolor SIZE=$txtsize>";

@@ -14,13 +14,17 @@
 # 90508-0644 - Changed to PHP long tags
 # 120223-2124 - Removed logging of good login passwords if webroot writable is enabled
 # 130414-0045 - Added report logging
+# 130610-0937 - Finalized changing of all ereg instances to preg
+# 130615-2342 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-0831 - Changed to mysqli PHP functions
 #
 
 $startMS = microtime();
 
 $report_name='Voice Lab';
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -44,45 +48,45 @@ if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
 
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+$campaign_id = preg_replace('/[^0-9a-zA-Z]/', '', $campaign_id);
+$server_ip = preg_replace('/[^\.0-9a-zA-Z]/', '', $server_ip);
+$session_id = preg_replace('/[^0-9a-zA-Z]/', '', $session_id);
+$message = preg_replace('/[^0-9a-zA-Z]/', '', $message);
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
-$MYSQL_datetime = date("Y-m-d H:i:s");
+$mysql_datetime = date("Y-m-d H:i:s");
 $FILE_datetime = date("Ymd-His_");
 $secX = $STARTtime;
+$date = date("r");
+$ip = getenv("REMOTE_ADDR");
+$browser = getenv("HTTP_USER_AGENT");
 
 $local_DEF = 'Local/';
 $local_AMP = '@';
 $ext_context = 'demo';
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7;";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-$fp = fopen ("./project_auth_entries.txt", "a");
-$date = date("r");
-$ip = getenv("REMOTE_ADDR");
-$browser = getenv("HTTP_USER_AGENT");
+$auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
 if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
+    Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
+    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
     exit;
 	}
 else
 	{
 	if($auth>0)
 		{
-		$office_no=strtoupper($PHP_AUTH_USER);
-		$password=strtoupper($PHP_AUTH_PW);
-		$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$LOGfullname=$row[0];
 		fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
 		fclose($fp);
@@ -93,9 +97,9 @@ else
 		fclose($fp);
 		}
 
-	$stmt="SELECT full_name from vicidial_users where user='$user';";
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$stmt="SELECT full_name from vicidial_users where user='$PHP_AUTH_USER';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$full_name = $row[0];
 	}
 
@@ -115,35 +119,35 @@ $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name', url='$LOGfull_url';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 
 ##### get server listing for dynamic pulldown
 $stmt="SELECT server_ip,server_description from servers order by server_ip";
-$rslt=mysql_query($stmt, $link);
-$servers_to_print = mysql_num_rows($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$servers_to_print = mysqli_num_rows($rslt);
 $servers_list='';
 
 $o=0;
 while ($servers_to_print > $o)
 	{
-	$rowx=mysql_fetch_row($rslt);
+	$rowx=mysqli_fetch_row($rslt);
 	$servers_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 	$o++;
 	}
 
 ##### get campaigns listing for dynamic pulldown
 $stmt="SELECT campaign_id,campaign_name from vicidial_campaigns order by campaign_id";
-$rslt=mysql_query($stmt, $link);
-$campaigns_to_print = mysql_num_rows($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$campaigns_to_print = mysqli_num_rows($rslt);
 $campaigns_list='';
 
 $o=0;
 while ($campaigns_to_print > $o)
 	{
-	$rowx=mysql_fetch_row($rslt);
+	$rowx=mysqli_fetch_row($rslt);
 	$campaigns_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 	$o++;
 	}
@@ -154,7 +158,7 @@ while ($campaigns_to_print > $o)
 ?>
 <html>
 <head>
-<title>VICIDIAL VOICE LAB: Admin</title>
+<title>VOICE LAB: Admin</title>
 <?php
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 ?>
@@ -194,8 +198,8 @@ if ($NEW_VOICE_LAB > 0)
 		$past_thirty = date("Y-m-d H:i:s",$thirty_minutes_old);
 
 		$stmt="SELECT conf_exten,server_ip,user from vicidial_live_agents where last_update_time > '$past_thirty' and campaign_id='$campaign_id';";
-		$rslt=mysql_query($stmt, $link);
-		$agents_to_loop = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$agents_to_loop = mysqli_num_rows($rslt);
 		$agents_sessions[0]='';
 		$agents_servers[0]='';
 		$agents_users[0]='';
@@ -203,7 +207,7 @@ if ($NEW_VOICE_LAB > 0)
 		$o=0;
 		while ($agents_to_loop > $o)
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$agents_sessions[$o] = "$rowx[0]";
 			$agents_servers[$o] = "$rowx[1]";
 			$agents_users[$o] = "$rowx[2]";
@@ -218,9 +222,9 @@ if ($NEW_VOICE_LAB > 0)
 			else
 				{$dial_string = $remote_dialstring;}
 
-			$stmt="INSERT INTO vicidial_manager values('','','$MYSQL_datetime','NEW','N','$agents_servers[$o]','','Originate','VL$FILE_datetime$o','Channel: $local_DEF$dial_string$local_AMP$ext_context','Context: $ext_context','Exten: $agents_sessions[$o]','Priority: 1','Callerid: VL$FILE_datetime$o','','','','','')";
+			$stmt="INSERT INTO vicidial_manager values('','','$mysql_datetime','NEW','N','$agents_servers[$o]','','Originate','VL$FILE_datetime$o','Channel: $local_DEF$dial_string$local_AMP$ext_context','Context: $ext_context','Exten: $agents_sessions[$o]','Priority: 1','Callerid: VL$FILE_datetime$o','','','','','')";
 			echo "|$stmt|\n<BR><BR>\n";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 
 			echo "LOGGED IN USER $agents_users[$o] at session $agents_sessions[$o] on server $agents_servers[$o]\n";
 
@@ -264,9 +268,9 @@ else
 			$nn='99';
 			$n='9';
 
-			$stmt="INSERT INTO vicidial_manager values('','','$MYSQL_datetime','NEW','N','$server_ip','','Originate','VL$FILE_datetime$nn','Channel: $local_DEF$n$session_id$local_AMP$ext_context','Context: $ext_context','Exten: $message','Priority: 1','Callerid: VL$FILE_datetime$nn','','','','','')";
+			$stmt="INSERT INTO vicidial_manager values('','','$mysql_datetime','NEW','N','$server_ip','','Originate','VL$FILE_datetime$nn','Channel: $local_DEF$n$session_id$local_AMP$ext_context','Context: $ext_context','Exten: $message','Priority: 1','Callerid: VL$FILE_datetime$nn','','','','','')";
 			echo "|$stmt|\n<BR><BR>\n";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 
 			echo "MESSAGE $message played at session $session_id on server $server_ip\n";
 
@@ -317,9 +321,9 @@ if ($KILL_VOICE_LAB > 1)
 		{
 		$kill_dial_string = "5555$session_id";
 		$hangup_exten='8300';
-		$stmt="INSERT INTO vicidial_manager values('','','$MYSQL_datetime','NEW','N','$server_ip','','Originate','VLK$FILE_datetime','Channel: $local_DEF$kill_dial_string$local_AMP$ext_context','Context: $ext_context','Exten: $hangup_exten','Priority: 1','Callerid: VLK$FILE_datetime','','','','','')";
+		$stmt="INSERT INTO vicidial_manager values('','','$mysql_datetime','NEW','N','$server_ip','','Originate','VLK$FILE_datetime','Channel: $local_DEF$kill_dial_string$local_AMP$ext_context','Context: $ext_context','Exten: $hangup_exten','Priority: 1','Callerid: VLK$FILE_datetime','','','','','')";
 		echo "|$stmt|\n<BR><BR>\n";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 
 		echo "VOICELAB SESSION KILLED: $session_id at $server_ip | $KILL_VOICE_LAB\n";
 		}
@@ -334,10 +338,10 @@ if ($KILL_VOICE_LAB > 1)
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -349,7 +353,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 ?>
 

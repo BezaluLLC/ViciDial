@@ -1,7 +1,7 @@
 <?php 
 # AST_IVRfilter.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -10,13 +10,20 @@
 # 90508-0644 - Changed to PHP long tags
 # 120113-2022 - Added new columns for sent to queue and agent
 # 130414-0257 - Added report logging
+# 130610-1007 - Finalized changing of all ereg instances to preg
+# 130621-0741 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130704-0939 - Fixed issue #675
+# 130901-0820 - Changed to mysqli PHP functions
+# 140108-0738 - Added webserver and hostname to report logging
+# 140328-0005 - Converted division calculations to use MathZDC function
 #
 
 $startMS = microtime();
 
 $report_name='IVR Filter Report';
 
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -48,49 +55,94 @@ if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 
-if ($hourly_breakdown) {
+if ($hourly_breakdown) 
+	{
 	$date_int=3600;
 	$substr_place=13;
 	$checked="checked";
-} else {
+	} 
+else 
+	{
 	$date_int=86400;
 	$substr_place=10;
 	$checked="";
-}
-
-$PHP_AUTH_USER = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_USER);
-$PHP_AUTH_PW = ereg_replace("[^0-9a-zA-Z]","",$PHP_AUTH_PW);
+	}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_header.="$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $qm_conf_ct)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level >= 7 and view_reports='1';";
-if ($DB) {$HTML_header.="|$stmt|\n";}
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if ($non_latin < 1)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Ακυρο Ονομα Χρήστη/Κωδικός Πρόσβασης: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	}
+else
+	{
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+
+$auth=0;
+$reports_auth=0;
+$admin_auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'ΑΝΑΦΟΡΕΣ',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth > 0)
+	{
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$admin_auth=$row[0];
+
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	if ($reports_auth < 1)
+		{
+		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ( ($reports_auth > 0) and ($admin_auth < 1) )
+		{
+		$ADD=999999;
+		$reports_only_user=1;
+		}
+	}
+else
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
 	}
 
 ##### BEGIN log visit to the vicidial_report_log table #####
@@ -107,10 +159,33 @@ if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='
 else {$LOGserver_port = ":$LOGserver_port";}
 $LOGfull_url = "$HTTPprotocol$LOGserver_name$LOGserver_port$LOGrequest_uri";
 
-$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$campaign[0], $query_date, $end_date|', url='$LOGfull_url';";
+$LOGhostname = php_uname('n');
+if (strlen($LOGhostname)<1) {$LOGhostname='X';}
+if (strlen($LOGserver_name)<1) {$LOGserver_name='X';}
+
+$stmt="SELECT webserver_id FROM vicidial_webservers where webserver='$LOGserver_name' and hostname='$LOGhostname' LIMIT 1;";
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$webserver_id_ct = mysqli_num_rows($rslt);
+if ($webserver_id_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$webserver_id = $row[0];
+	}
+else
+	{
+	##### insert webserver entry
+	$stmt="INSERT INTO vicidial_webservers (webserver,hostname) values('$LOGserver_name','$LOGhostname');";
+	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$affected_rows = mysqli_affected_rows($link);
+	$webserver_id = mysqli_insert_id($link);
+	}
+
+$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$campaign[0], $query_date, $end_date|', url='$LOGfull_url', webserver='$webserver_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$report_log_id = mysql_insert_id($link);
+$rslt=mysql_to_mysqli($stmt, $link);
+$report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
 
 $NOW_DATE = date("Y-m-d");
@@ -199,7 +274,7 @@ if ($shift == 'AM')
 	$time_BEGIN=$AM_shift_BEGIN;
 	$time_END=$AM_shift_END;
 	if (strlen($time_BEGIN) < 6) {$time_BEGIN = "03:45:00";}   
-	if (strlen($time_END) < 6) {$time_END = "15:15:00";}
+	if (strlen($time_END) < 6) {$time_END = "15:14:59";}
 	}
 if ($shift == 'PM') 
 	{
@@ -255,9 +330,9 @@ $totalsta=0;
 $Utotalsta=0;
 
 	$stmtA="select count(*),count(distinct caller_id), substr(start_time,1,$substr_place) as stime from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a='INBOUND_IVR_FILTER' and comment_b='CLEAN' group by stime";
-	$rsltA=mysql_query($stmtA, $link);
+	$rsltA=mysql_to_mysqli($stmtA, $link);
 	if ($DB) {$HTML_text.="$stmtA\n";}
-	while ($rowA=mysql_fetch_row($rsltA)) {
+	while ($rowA=mysqli_fetch_row($rsltA)) {
 		$count_ary[$rowA[2]][0]+=$rowA[0];
 		$count_ary[$rowA[2]][1]+=$rowA[1];
 		$count_ary[$rowA[2]][14]+=$rowA[0];
@@ -269,9 +344,9 @@ $Utotalsta=0;
 	}
 
 	$stmtB="select count(*),count(distinct caller_id), substr(start_time,1,$substr_place) as stime from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a='INBOUND_IVR_FILTER' and comment_b='NOT_FOUND' group by stime;";
-	$rsltB=mysql_query($stmtB, $link);
+	$rsltB=mysql_to_mysqli($stmtB, $link);
 	if ($DB) {$HTML_text.="$stmtB\n";}
-	while ($rowB=mysql_fetch_row($rsltB)) {
+	while ($rowB=mysqli_fetch_row($rsltB)) {
 		$count_ary[$rowB[2]][2]+=$rowB[0];
 		$count_ary[$rowB[2]][3]+=$rowB[1];
 		$total+=$rowB[0];
@@ -283,9 +358,9 @@ $Utotalsta=0;
 	}
 
 	$stmtC="select count(*),count(distinct caller_id), substr(start_time,1,$substr_place) as stime from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a='INBOUND_IVR_FILTER' and comment_b='EXISTING' and comment_c='DNC' group by stime;";
-	$rsltC=mysql_query($stmtC, $link);
+	$rsltC=mysql_to_mysqli($stmtC, $link);
 	if ($DB) {$HTML_text.="$stmtC\n";}
-	while ($rowC=mysql_fetch_row($rsltC)) {
+	while ($rowC=mysqli_fetch_row($rsltC)) {
 		$count_ary[$rowC[2]][4]+=$rowC[0];
 		$count_ary[$rowC[2]][5]+=$rowC[1];
 		$total+=$rowC[0];
@@ -297,9 +372,9 @@ $Utotalsta=0;
 	}
 
 	$stmtD="select count(*),count(distinct caller_id), substr(start_time,1,$substr_place) as stime from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a='INBOUND_IVR_FILTER' and comment_b='EXISTING' and comment_c='SALE' group by stime;";
-	$rsltD=mysql_query($stmtD, $link);
+	$rsltD=mysql_to_mysqli($stmtD, $link);
 	if ($DB) {$HTML_text.="$stmtD\n";}
-	while ($rowD=mysql_fetch_row($rsltD)) {
+	while ($rowD=mysqli_fetch_row($rsltD)) {
 		$count_ary[$rowD[2]][6]+=$rowD[0];
 		$count_ary[$rowD[2]][7]+=$rowD[1];
 		$total+=$rowD[0];
@@ -311,9 +386,9 @@ $Utotalsta=0;
 	}
 
 	$stmtE="select count(*),count(distinct caller_id), substr(start_time,1,$substr_place) as stime from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a='INBOUND_IVR_FILTER' and comment_b='EXISTING' and comment_c='ARCHIVE' group by stime;";
-	$rsltE=mysql_query($stmtE, $link);
+	$rsltE=mysql_to_mysqli($stmtE, $link);
 	if ($DB) {$HTML_text.="$stmtE\n";}
-	while ($rowE=mysql_fetch_row($rsltE)) {
+	while ($rowE=mysqli_fetch_row($rsltE)) {
 		$count_ary[$rowE[2]][8]+=$rowE[0];
 		$count_ary[$rowE[2]][9]+=$rowE[1];
 		$total+=$rowE[0];
@@ -325,9 +400,9 @@ $Utotalsta=0;
 	}
 
 	$stmtF="select count(*),count(distinct caller_id), substr(start_time,1,$substr_place) as stime From vicidial_closer_log vc, live_inbound_log l where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a='INBOUND_IVR_FILTER' and comment_b='CLEAN' and (vc.xfercallid is null or vc.xfercallid='0') and vc.uniqueid=l.uniqueid group by stime;";
-	$rsltF=mysql_query($stmtF, $link);
+	$rsltF=mysql_to_mysqli($stmtF, $link);
 	if ($DB) {$HTML_text.="$stmtF\n";}
-	while ($rowF=mysql_fetch_row($rsltF)) {
+	while ($rowF=mysqli_fetch_row($rsltF)) {
 		$count_ary[$rowF[2]][10]+=$rowF[0];
 		$count_ary[$rowF[2]][11]+=$rowF[1];
 		$totaltiq+=$rowF[0];
@@ -335,9 +410,9 @@ $Utotalsta=0;
 	}
 
 	$stmtG="select count(*),count(distinct caller_id), substr(start_time,1,$substr_place) as stime From vicidial_closer_log vc, live_inbound_log l where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a='INBOUND_IVR_FILTER' and comment_b='CLEAN' and (vc.xfercallid is null or vc.xfercallid='0') and vc.uniqueid=l.uniqueid and vc.user!='VDCL' group by stime;";
-	$rsltG=mysql_query($stmtG, $link);
+	$rsltG=mysql_to_mysqli($stmtG, $link);
 	if ($DB) {$HTML_text.="$stmtG\n";}
-	while ($rowG=mysql_fetch_row($rsltG)) {
+	while ($rowG=mysqli_fetch_row($rsltG)) {
 		$count_ary[$rowG[2]][12]+=$rowG[0];
 		$count_ary[$rowG[2]][13]+=$rowG[1];
 		$totalsta+=$rowG[0];
@@ -369,46 +444,36 @@ $Utotalsta=0;
 
 		$HTML_text.=sprintf("%20s", $queue_str)." | ";
 		$HTML_text.=sprintf("%20s", $Uqueue_str)." |";
-		if ( ($count_ary[$key][15] < 1) or ($count_ary[$key][1] < 1) )
-			{$UtotalPERCENT = '0';}
-		else
-			{$UtotalPERCENT = (($count_ary[$key][1] / $count_ary[$key][15]) * 100);   $UtotalPERCENT = round($UtotalPERCENT, 2);}
+		$UtotalPERCENT = (MathZDC($count_ary[$key][1], $count_ary[$key][15]) * 100);
+		$UtotalPERCENT = round($UtotalPERCENT, 2);
 		$UtotalPERCENT =	sprintf("%6s", $UtotalPERCENT);
 		$HTML_text.=$UtotalPERCENT." | ";
 
 		$HTML_text.=sprintf("%6s", $count_ary[$key][2])." | ";
 		$HTML_text.=sprintf("%6s", $count_ary[$key][3])." |";
-		if ( ($count_ary[$key][15] < 1) or ($count_ary[$key][3] < 1) )
-			{$UagentPERCENT = '0';}
-		else
-			{$UagentPERCENT = (($count_ary[$key][3] / $count_ary[$key][15]) * 100);   $UagentPERCENT = round($UagentPERCENT, 2);}
+		$UagentPERCENT = (MathZDC($count_ary[$key][3], $count_ary[$key][15]) * 100);
+		$UagentPERCENT = round($UagentPERCENT, 2);
 		$UagentPERCENT =	sprintf("%6s", $UagentPERCENT);
 		$HTML_text.=$UagentPERCENT." | ";
 
 		$HTML_text.=sprintf("%6s", $count_ary[$key][4])." | ";
 		$HTML_text.=sprintf("%6s", $count_ary[$key][5])." |";
-		if ( ($count_ary[$key][15] < 1) or ($count_ary[$key][5] < 1) )
-			{$UntfndPERCENT = '0';}
-		else
-			{$UntfndPERCENT = (($count_ary[$key][5] / $count_ary[$key][15]) * 100);   $UntfndPERCENT = round($UntfndPERCENT, 2);}
+		$UntfndPERCENT = (MathZDC($count_ary[$key][5], $count_ary[$key][15]) * 100);
+		$UntfndPERCENT = round($UntfndPERCENT, 2);
 		$UntfndPERCENT =	sprintf("%6s", $UntfndPERCENT);
 		$HTML_text.=$UntfndPERCENT." | ";
 
 		$HTML_text.=sprintf("%6s", $count_ary[$key][6])." | ";
 		$HTML_text.=sprintf("%6s", $count_ary[$key][7])." |";
-		if ( ($count_ary[$key][15] < 1) or ($count_ary[$key][7] < 1) )
-			{$UprdncPERCENT = '0';}
-		else
-			{$UprdncPERCENT = (($count_ary[$key][7] / $count_ary[$key][15]) * 100);   $UprdncPERCENT = round($UprdncPERCENT, 2);}
+		$UprdncPERCENT = (MathZDC($count_ary[$key][7], $count_ary[$key][15]) * 100);
+		$UprdncPERCENT = round($UprdncPERCENT, 2);
 		$UprdncPERCENT =	sprintf("%6s", $UprdncPERCENT);
 		$HTML_text.=$UprdncPERCENT." | ";
 
 		$HTML_text.=sprintf("%6s", $count_ary[$key][8])." | ";
 		$HTML_text.=sprintf("%6s", $count_ary[$key][9])." |";
-		if ( ($count_ary[$key][15] < 1) or ($count_ary[$key][9] < 1) )
-			{$UpsalePERCENT = '0';}
-		else
-			{$UpsalePERCENT = (($count_ary[$key][9] / $count_ary[$key][15]) * 100);   $UpsalePERCENT = round($UpsalePERCENT, 2);}
+		$UpsalePERCENT = (MathZDC($count_ary[$key][9], $count_ary[$key][15]) * 100);
+		$UpsalePERCENT = round($UpsalePERCENT, 2);
 		$UpsalePERCENT =	sprintf("%6s", $UpsalePERCENT);
 		$HTML_text.=$UpsalePERCENT." |\n";
 
@@ -433,46 +498,36 @@ $Utotalsta=0;
 
 	$HTML_text.=sprintf("%20s", $queue_str)." | ";
 	$HTML_text.=sprintf("%20s", $Uqueue_str)." |";
-	if ( ($Utotal < 1) or ($Utotalstq < 1) )
-		{$UtotalPERCENT = '0';}
-	else
-		{$UtotalPERCENT = (($Utotalstq / $Utotal) * 100);   $UtotalPERCENT = round($UtotalPERCENT, 2);}
+	$UtotalPERCENT = (MathZDC($Utotalstq, $Utotal) * 100);
+	$UtotalPERCENT = round($UtotalPERCENT, 2);
 	$UtotalPERCENT =	sprintf("%6s", $UtotalPERCENT);
 	$HTML_text.=$UtotalPERCENT." | ";
 
 	$HTML_text.=sprintf("%6s", $totalnocid)." | ";
 	$HTML_text.=sprintf("%6s", $Utotalnocid)." |";
-	if ( ($Utotal < 1) or ($Utotalnocid < 1) )
-		{$UnocidPERCENT = '0';}
-	else
-		{$UnocidPERCENT = (($Utotalnocid / $Utotal) * 100);   $UnocidPERCENT = round($UnocidPERCENT, 2);}
+	$UnocidPERCENT = (MathZDC($Utotalnocid, $Utotal) * 100);
+	$UnocidPERCENT = round($UnocidPERCENT, 2);
 	$UnocidPERCENT =	sprintf("%6s", $UnocidPERCENT);
 	$HTML_text.=$UnocidPERCENT." | ";
 
 	$HTML_text.=sprintf("%6s", $totaldnc)." | ";
 	$HTML_text.=sprintf("%6s", $Utotaldnc)." |";
-	if ( ($Utotal < 1) or ($Utotaldnc < 1) )
-		{$UprdncPERCENT = '0';}
-	else
-		{$UprdncPERCENT = (($Utotaldnc / $Utotal) * 100);   $UprdncPERCENT = round($UprdncPERCENT, 2);}
+	$UprdncPERCENT = (MathZDC($Utotaldnc, $Utotal) * 100);
+	$UprdncPERCENT = round($UprdncPERCENT, 2);
 	$UprdncPERCENT =	sprintf("%6s", $UprdncPERCENT);
 	$HTML_text.=$UprdncPERCENT." | ";
 
 	$HTML_text.=sprintf("%6s", $totalsale)." | ";
 	$HTML_text.=sprintf("%6s", $Utotalsale)." |";
-	if ( ($Utotal < 1) or ($Utotalsale < 1) )
-		{$UpsalePERCENT = '0';}
-	else
-		{$UpsalePERCENT = (($Utotalsale / $Utotal) * 100);   $UpsalePERCENT = round($UpsalePERCENT, 2);}
+	$UpsalePERCENT = (MathZDC($Utotalsale, $Utotal) * 100);
+	$UpsalePERCENT = round($UpsalePERCENT, 2);
 	$UpsalePERCENT =	sprintf("%6s", $UpsalePERCENT);
 	$HTML_text.=$UpsalePERCENT." | ";
 
 	$HTML_text.=sprintf("%6s", $totalarch)." | ";
 	$HTML_text.=sprintf("%6s", $Utotalarch)." |";
-	if ( ($Utotal < 1) or ($Utotalarch < 1) )
-		{$UarchPERCENT = '0';}
-	else
-		{$UarchPERCENT = (($Utotalarch / $Utotal) * 100);   $UarchPERCENT = round($UarchPERCENT, 2);}
+	$UarchPERCENT = (MathZDC($Utotalarch, $Utotal) * 100);
+	$UarchPERCENT = round($UarchPERCENT, 2);
 	$UarchPERCENT =	sprintf("%6s", $UarchPERCENT);
 	$HTML_text.=$UarchPERCENT." |\n";
 
@@ -529,10 +584,10 @@ if ($file_download == 0 || !$file_download) {
 
 if ($db_source == 'S')
 	{
-	mysql_close($link);
+	mysqli_close($link);
 	$use_slave_server=0;
 	$db_source = 'M';
-	require("dbconnect.php");
+	require("dbconnect_mysqli.php");
 	}
 
 $endMS = microtime();
@@ -544,7 +599,7 @@ $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 exit;
 

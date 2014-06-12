@@ -25,13 +25,16 @@
 # 120713-2101 - Added extended_vl_fields option
 # 120907-1209 - Raised extended fields up to 99
 # 130508-1020 - Added default field and length check validation, made errors appear in bold red text
+# 130606-0545 - Finalized changing of all ereg instances to preg
+# 130621-1736 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130902-0752 - Changed to mysqli PHP functions
 #
 
-$admin_version = '2.6-19';
-$build = '130508-1020';
+$admin_version = '2.8-21';
+$build = '130902-0752';
 
-
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -86,23 +89,20 @@ if (isset($_GET["VALIDER"]))						{$VALIDER=$_GET["VALIDER"];}
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,custom_fields_enabled FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+$qm_conf_ct = mysqli_num_rows($rslt);
+if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$webroot_writable =				$row[1];
 	$SSoutbound_autodial_active =	$row[2];
 	$user_territories_active =		$row[3];
 	$SScustom_fields_enabled =		$row[4];
-	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
-
 
 if ( (strlen($action) < 2) and ($list_id > 99) )
 	{$action = 'MODIFY_CUSTOM_FIELDS';}
@@ -117,44 +117,47 @@ if ( (strlen($field_size) < 1) or ($field_size < 1) )
 if ( (strlen($field_max) < 1) or ($field_max < 1) )
 	{$field_max = 1;}
 
-
 if ($non_latin < 1)
 	{
-	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_PW);
 
-	$list_id = ereg_replace("[^0-9]","",$list_id);
-	$field_id = ereg_replace("[^0-9]","",$field_id);
-	$field_rank = ereg_replace("[^0-9]","",$field_rank);
-	$field_size = ereg_replace("[^0-9]","",$field_size);
-	$field_max = ereg_replace("[^0-9]","",$field_max);
-	$field_order = ereg_replace("[^0-9]","",$field_order);
-	$source_list_id = ereg_replace("[^0-9]","",$source_list_id);
+	$list_id = preg_replace('/[^0-9]/','',$list_id);
+	$field_id = preg_replace('/[^0-9]/','',$field_id);
+	$field_rank = preg_replace('/[^0-9]/','',$field_rank);
+	$field_size = preg_replace('/[^0-9]/','',$field_size);
+	$field_max = preg_replace('/[^0-9]/','',$field_max);
+	$field_order = preg_replace('/[^0-9]/','',$field_order);
+	$source_list_id = preg_replace('/[^0-9]/','',$source_list_id);
 
-	$field_required = ereg_replace("[^NY]","",$field_required);
+	$field_required = preg_replace('/[^NY]/','',$field_required);
 
-	$field_type = ereg_replace("[^0-9a-zA-Z]","",$field_type);
-	$ConFiRm = ereg_replace("[^0-9a-zA-Z]","",$ConFiRm);
-	$name_position = ereg_replace("[^0-9a-zA-Z]","",$name_position);
-	$multi_position = ereg_replace("[^0-9a-zA-Z]","",$multi_position);
+	$field_type = preg_replace('/[^0-9a-zA-Z]/','',$field_type);
+	$ConFiRm = preg_replace('/[^0-9a-zA-Z]/','',$ConFiRm);
+	$name_position = preg_replace('/[^0-9a-zA-Z]/','',$name_position);
+	$multi_position = preg_replace('/[^0-9a-zA-Z]/','',$multi_position);
 
-	$field_label = ereg_replace("[^_0-9a-zA-Z]","",$field_label);
-	$copy_option = ereg_replace("[^_0-9a-zA-Z]","",$copy_option);
+	$field_label = preg_replace('/[^_0-9a-zA-Z]/','',$field_label);
+	$copy_option = preg_replace('/[^_0-9a-zA-Z]/','',$copy_option);
 
-	$field_name = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$field_name);
-	$field_description = ereg_replace("[^ \.\,-\_0-9a-zA-Z]","",$field_description);
-	$field_options = ereg_replace("[^ \.\n\,-\_0-9a-zA-Z]","",$field_options);
-	$field_default = ereg_replace("[^ \.\n\,-\_0-9a-zA-Z]","",$field_default);
+	$field_name = preg_replace('/[^ \.\,-\_0-9a-zA-Z]/','',$field_name);
+	$field_description = preg_replace('/[^ \.\,-\_0-9a-zA-Z]/','',$field_description);
+	$field_options = preg_replace('/[^ \.\n\,-\_0-9a-zA-Z]/', '',$field_options);
+	$field_default = preg_replace('/[^ \.\n\,-\_0-9a-zA-Z]/', '',$field_default);
 	}	# end of non_latin
 else
 	{
-	$PHP_AUTH_USER = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	}
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
+$date = date("r");
+$ip = getenv("REMOTE_ADDR");
+$browser = getenv("HTTP_USER_AGENT");
+$user = $PHP_AUTH_USER;
 
 if (file_exists('options.php'))
 	{require('options.php');}
@@ -167,59 +170,50 @@ if ($extended_vl_fields > 0)
 	}
 
 $mysql_reserved_words =
-'|accessible|action|add|all|alter|analyze|and|as|asc|asensitive|before|between|bigint|binary|bit|blob|both|by|call|cascade|case|change|char|character|check|collate|column|condition|constraint|continue|convert|create|cross|current_date|current_time|current_timestamp|current_user|cursor|database|databases|date|day_hour|day_microsecond|day_minute|day_second|dec|decimal|declare|default|delayed|delete|desc|describe|deterministic|distinct|distinctrow|div|double|drop|dual|each|else|elseif|enclosed|enum|escaped|exists|exit|explain|false|fetch|float|float4|float8|for|force|foreign|from|fulltext|grant|group|having|high_priority|hour_microsecond|hour_minute|hour_second|if|ignore|in|index|infile|inner|inout|insensitive|insert|int|int1|int2|int3|int4|int8|integer|interval|into|is|iterate|join|key|keys|kill|leading|leave|left|like|limit|linear|lines|load|localtime|localtimestamp|lock|long|longblob|longtext|loop|low_priority|master_ssl_verify_server_cert|match|mediumblob|mediumint|mediumtext|middleint|minute_microsecond|minute_second|mod|modifies|mysql|natural|no|no_write_to_binlog|not|null|numeric|on|optimize|option|optionally|or|order|out|outer|outfile|precision|primary|procedure|purge|range|read|read_only|read_write|reads|real|references|regexp|release|remove|rename|repeat|replace|require|restrict|return|revoke|right|rlike|schema|schemas|second_microsecond|select|sensitive|separator|set|show|smallint|spatial|specific|sql|sql_big_result|sql_calc_found_rows|sql_small_result|sqlexception|sqlstate|sqlwarning|ssl|starting|straight_join|table|terminated|text|then|time|timestamp|tinyblob|tinyint|tinytext|to|trailing|trigger|true|undo|union|unique|unlock|unsigned|update|usage|use|using|utc_date|utc_time|utc_timestamp|values|varbinary|varchar|varcharacter|varying|when|where|while|with|write|xor|year_month|zerofill|';
+'|accessible|action|add|all|alter|analyze|and|as|asc|asensitive|before|between|bigint|binary|bit|blob|both|by|call|cascade|case|change|char|character|check|collate|column|condition|constraint|continue|convert|create|cross|current_date|current_time|current_timestamp|current_user|cursor|database|databases|date|day_hour|day_microsecond|day_minute|day_second|dec|decimal|declare|default|delayed|delete|desc|describe|deterministic|distinct|distinctrow|div|double|drop|dual|each|else|elseif|enclosed|enum|escaped|exists|exit|explain|false|fetch|float|float4|float8|for|force|foreign|from|fulltext|grant|group|having|high_priority|hour_microsecond|hour_minute|hour_second|if|ignore|in|index|infile|inner|inout|insensitive|insert|int|int1|int2|int3|int4|int8|integer|interval|into|is|iterate|join|key|keys|kill|leading|leave|left|like|limit|linear|lines|load|localtime|localtimestamp|lock|long|longblob|longtext|loop|low_priority|master_ssl_verify_server_cert|match|mediumblob|mediumint|mediumtext|middleint|minute_microsecond|minute_second|mod|modifies|mysql|natural|no|no_write_to_binlog|not|null|numeric|on|optimize|option|optionally|or|order|out|outer|outfile|precision|primary|procedure|purge|range|read|read_only|read_write|reads|real|references|regexp|release|remove|rename|repeat|replace|require|restrict|return|revoke|right|rlike|schema|schemas|second_microsecond|select|sensitive|separator|set|show|smallint|spatial|specific|sql|sql_big_result|sql_calc_found_rows|sql_small_result|sqlexception|sqlstate|sqlwarning|ssl|starting|straight_join|table|terminated|text|then|time|timestamp|tinyblob|tinyint|tinytext|to|trailing|trigger|true|undo|union|unique|unlock|unsigned|update|usage|use|using|utc_date|utc_time|utc_timestamp|values|varbinary|varchar|varcharacter|varying|when|where|while|with|write|xor|year_month|zerofill|lead_id|';
 
+$auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and modify_leads='1';";
+if ($auth < 1)
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
+
+$rights_stmt = "SELECT modify_leads from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
+$rights_rslt=mysql_to_mysqli($rights_stmt, $link);
+$rights_row=mysqli_fetch_row($rights_rslt);
+$modify_leads =		$rights_row[0];
 
-if ($webroot_writable > 0)
-	{$fp = fopen ("./project_auth_entries.txt", "a");}
-
-$date = date("r");
-$ip = getenv("REMOTE_ADDR");
-$browser = getenv("HTTP_USER_AGENT");
-$user = $PHP_AUTH_USER;
-
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+# check their permissions
+if ( $modify_leads < 1 )
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Login ou mot de passe invalide: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
+	header ("Content-type: text/html; charset=utf-8");
+	echo "You do not have permissions to modify leads\n";
+	exit;
 	}
-else
-	{
-	if ($auth>0)
-		{
-		$office_no=strtoupper($PHP_AUTH_USER);
-		$password=strtoupper($PHP_AUTH_PW);
-		$stmt="SELECT full_name,modify_leads,custom_fields_modify,user_level from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGfullname =				$row[0];
-		$LOGmodify_leads =			$row[1];
-		$LOGcustom_fields_modify =	$row[2];
-		$LOGuser_level =			$row[3];
 
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
-			}
-		}
-	else
-		{
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
-			fclose($fp);
-			}
-		}
-	}
+$stmt="SELECT full_name,modify_leads,custom_fields_modify,user_level from vicidial_users where user='$PHP_AUTH_USER';";
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
+$LOGfullname =				$row[0];
+$LOGmodify_leads =			$row[1];
+$LOGcustom_fields_modify =	$row[2];
+$LOGuser_level =			$row[3];
 
 ?>
 <html>
@@ -266,86 +260,85 @@ if ($action == "AIDE")
 	<center>
 	<TABLE WIDTH=98% BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=4><TR><TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>
 	<BR>
-	<B>ViciDial Listes de champ personnalisés Help</B>
+	<B>Listes de champ personnalisés Help</B>
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_label">
+	<A NAME="lists_fields-field_label">
 	<BR>
-	 <B>Étiquette de zone -</B> C'est l'identificateur de champ de base de données pour ce champ. Ce doit être un identifiant unique dans les champs personnalisés pour cette liste. Ne pas utiliser les espaces ou la ponctuation pour ce domaine. max 50 caractères, un minimum de 2 caractères. Vous pouvez également inclure les champs par défaut Vicidial dans une configuration de champ personnalisé, et vous les voir en rouge dans la liste. Ces champs ne seront pas ajoutés à la table de la base liste personnalisée, l'interface agent au lieu référence à la table vicidial_list directement. Les étiquettes que vous pouvez utiliser afin d'inclure les fieds par défaut sont - 
-	lead_id, vendor_lead_code, source_id, list_id, gmt_offset_now, called_since_last_reset, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, called_count, last_local_call_time, rank, owner
+	 <B>Étiquette de zone -</B> C'est l'identificateur de champ de base de données pour ce champ. Ce doit être un identifiant unique dans les champs personnalisés pour cette liste. Ne pas utiliser les espaces ou la ponctuation pour ce domaine. max 50 caractères, un minimum de 2 caractères. You can also include the default fields in a custom field setup, and you will see them in red in the list. These fields will not be added to the custom list database table, the agent interface will instead reference the list table directly. The labels that you can use to include the default fieds are -  vendor_lead_code, source_id, list_id, gmt_offset_now, called_since_last_reset, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, called_count, last_local_call_time, rank, owner
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_name">
+	<A NAME="lists_fields-field_name">
 	<BR>
 	 <B>Nom du champ -</B> C'est le nom du champ tel qu'il apparaîtra à un agent par le biais de leur interface. Vous pouvez utiliser des espaces dans ce domaine, mais aucun signe de ponctuation caractères, maximum de 50 caractères et un minimum de 2 caractères.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_description">
+	<A NAME="lists_fields-field_description">
 	<BR>
 	 <B>Description du champ -</B> La description de ce champ tel qu'il apparaîtra dans l'interface d'administration. Ce champ est facultatif avec un maximum de 100 caractères.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_rank">
+	<A NAME="lists_fields-field_rank">
 	<BR>
 	 <B>Rang de terrain -</B> L'ordre dans lequel ces champs est affiché à l'agent le plus faible d'en haut vers le plus haut sur le fond.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_order">
+	<A NAME="lists_fields-field_order">
 	<BR>
 	 <B>Field Order -</B> If more than one field has the same rank, they will be placed on the same line and they will be placed in order by this value from lowest to highest, left to right.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_help">
+	<A NAME="lists_fields-field_help">
 	<BR>
 	 <B>Aide de terrain -</B> Champ optionnel, si vous le remplir, l'agent sera en mesure de voir ce texte quand ils cliquent sur un lien d'aide à côté du champ dans leur interface de l'agent.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_type">
+	<A NAME="lists_fields-field_type">
 	<BR>
 	 <B>Type de champ -</B> Cette option définit le type de champ qui sera affiché. TEXTE est un formulaire d'inscription standard unique en ligne, AREA est une zone de texte multi-lignes, SELECT est une sélection unique menu déroulant, MULTI est une boîte multi-sélection, la radio est une liste de boutons radio, où une seule option peut être sélectionné, CHECKBOX est une liste de cases à cocher où plusieurs options peuvent être sélectionnées, DATE est un calendrier jour mois année popup où l'agent peut sélectionner la date et l'heure est une boîte de sélection du temps. La valeur par défaut est TEXT. Pour les options SELECT, MULTI, RADIO et CHECKBOX vous devez définir les valeurs des options ci-dessous dans le champ Options de la boîte. AFFICHAGE affiche uniquement et ne pas permettre la modification par l'agent. SCRIPT également afficher uniquement, mais vous êtes en mesure d'utiliser des variables de script comme dans la fonction de scripts. Champs script va aussi afficher uniquement le contenu dans les options, et non pas le nom du champ comme le type d'affichage ne. HIDDEN ne sera pas affiché l'agent sur le terrain, mais permettra le terrain pour avoir des données importées en elle et exportées hors de l', ainsi que le rendre disponible à l'onglet script et l'adresse de formulaire Web. READONLY affichera la valeur des données dans le domaine, mais ne permettra pas à l'agent de modifier les données. CACHERBLOB est similaire à l'exception du type HIDDEN stockage de données sur la base de données est un type BLOB, approprié pour des données binaires ou des données qui doit être garanti.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_options">
+	<A NAME="lists_fields-field_options">
 	<BR>
 	 <B>Options pour les champs -</B> Pour la touche SELECT, MULTI, RADIO et les types de champs case, vous devez définir les valeurs des options dans cette boîte. Vous devez mettre une liste de l'étiquette possibilité séparées par des virgules et texte de l'option ici à chaque option un sa propre ligne. La première valeur ne devrait pas avoir des espaces, et ni les valeurs devraient avoir aucun signe de ponctuation. Par exemple - electric_meter, compteur électrique
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-multi_position">
+	<A NAME="lists_fields-multi_position">
 	<BR>
 	 <B>Position Option -</B> Pour les types de terrain CheckBox et RADIO seulement, s'il est réglé sur HORIZONTAL les options apparaissent sur la même ligne éventuellement retour à la ligne ci-dessous si il ya beaucoup d'options. Si la valeur Vertical, il y aura seulement une option par ligne. Par défaut est HORIZONTAL.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_size">
+	<A NAME="lists_fields-field_size">
 	<BR>
 	 <B>Taille du champ -</B> Ce réglage signifie des choses différentes en fonction de ce que le type de champ est. Pour les champs texte, la taille est le nombre de caractères qui apparaîtra dans le domaine. Pour les champs ZONE, la taille est la largeur de la zone de texte en caractères. Pour les champs MULTI, ce paramètre définit le nombre d'options à afficher dans la liste sélection multiple. Pour SELECT, RADIO, CHECKBOX, DATE et HEURE ce paramètre est ignoré.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_max">
+	<A NAME="lists_fields-field_max">
 	<BR>
 	 <B>Champ Max -</B> Ce réglage signifie des choses différentes en fonction de ce que le type de champ est. Pour le texte, les champs cachés et READONLY, la taille est le nombre maximum de caractères autorisés dans le domaine. Pour les champs AREA, ce champ définit le nombre de lignes de texte visible dans la zone de texte. Pour MULTI, SELECT, RADIO, CHECKBOX, DATE et HEURE ce paramètre est ignoré.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_default">
+	<A NAME="lists_fields-field_default">
 	<BR>
 	 <B>Par défaut le terrain -</B> Ce champ optionnel vous permet de définir quelle est la valeur à attribuer à un champ si rien n'est chargé dans ce domaine. Par défaut est NULL, qui désactive la fonction par défaut. Pour les types de champ DATE, la valeur par défaut est toujours mis à jour à moins qu'un nombre est mis en auquel cas la date sera celle de nombreux jours, plus ou moins aujourd'hui. Pour les types de champ Heure, la valeur par défaut est toujours mis à l'heure actuelle du serveur sauf si un nombre est mis en auquel cas le temps sera que plusieurs minutes plus ou moins de temps en cours.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_cost">
+	<A NAME="lists_fields-field_cost">
 	<BR>
 	 <B>Coût de terrain -</B> Ce champ en lecture seule vous indique quel est le coût de ce champ est dans le tableau champ personnalisé pour cette liste. Il n'y a pas de limite pour le nombre de champs personnalisés que vous pouvez avoir dans une liste, mais le total du coût de tous les champs de la liste doit être inférieure à 65000. Cela permet généralement pour des centaines de champs, mais si vous spécifiez plusieurs champs de texte qui sont des centaines ou des milliers de caractères de longueur, vous pouvez atteindre cette limite rapidement. Si vous avez besoin que beaucoup de texte dans un champ, vous devez choisir un type de région, qui sont stockés différemment et ne pas utiliser l'espace de table autant.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-field_required">
+	<A NAME="lists_fields-field_required">
 	<BR>
 	 <B>Champ obligatoire -</B> Si réglé sur Y, ce champ forcer l'agent à entrer du texte ou sélectionner une option pour ce domaine. Par défaut est N.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-name_position">
+	<A NAME="lists_fields-name_position">
 	<BR>
 	 <B>Position Nom du champ -</B> S'il est défini à GAUCHE, ce nom de champ apparaît à gauche du champ, si elle est définie de la page le nom du champ prendra toute la ligne et apparaissent au-dessus du champ. Par défaut est laissé.
 	<BR><BR>
 
-	<A NAME="vicidial_lists_fields-copy_option">
+	<A NAME="lists_fields-copy_option">
 	<BR>
 	 <B>Option de copie -</B> Lors de la copie des définitions de champs d'une liste à l'autre, vous avez quelques options pour le fonctionnement du processus de copie. APPEND ajoute les champs qui ne sont pas présents dans la liste de destination, si il ya des étiquettes sur le terrain correspondant à ceux volonté est resté inchangé, pas de données de champs personnalisés seront supprimés ou modifiés en utilisant cette option. UPDATE met à jour les champs communs field_label dans la liste de destination pour les définitions des champs de la liste source. des données de champs personnalisés peuvent être modifiées ou perdues en utilisant cette option. REMPLACER va supprimer tous les champs personnalisés existants dans la liste de destination et de les remplacer par des champs personnalisés à partir de la liste des sources, toutes les données de champs personnalisés seront supprimés à l'aide de cette option.
 	<BR><BR>
@@ -415,13 +408,13 @@ if ($action == "COPY_FIELDS_FORM")
 	{
 	##### get lists listing for dynamic pulldown
 	$stmt="SELECT list_id,list_name from vicidial_lists order by list_id";
-	$rsltx=mysql_query($stmt, $link);
-	$lists_to_print = mysql_num_rows($rsltx);
+	$rsltx=mysql_to_mysqli($stmt, $link);
+	$lists_to_print = mysqli_num_rows($rsltx);
 	$lists_list='';
 	$o=0;
 	while ($lists_to_print > $o)
 		{
-		$rowx=mysql_fetch_row($rsltx);
+		$rowx=mysqli_fetch_row($rsltx);
 		$lists_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 		$o++;
 		}
@@ -442,7 +435,7 @@ if ($action == "COPY_FIELDS_FORM")
 	echo "<option selected>APPEND</option>";
 	echo "<option>UPDATE</option>";
 	echo "<option>REPLACE</option>";
-	echo "</select> $NWB#vicidial_lists_fields-copy_option$NWE</td></tr>\n";
+	echo "</select> $NWB#lists_fields-copy_option$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=VALIDER value=VALIDER></td></tr>\n";
 	echo "</TABLE></center>\n";
 	echo "</TD></TR></TABLE>\n";
@@ -461,33 +454,40 @@ if ( ($action == "COPY_FIELDS_VALIDER") and ($list_id > 99) and ($source_list_id
 	else
 		{
 		$table_exists=0;
-		$linkCUSTOM=mysql_connect("$VARDB_serveur:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
-		if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysql_error());}
-		mysql_select_db("$VARDB_database", $linkCUSTOM);
+		#$linkCUSTOM=mysql_connect("$VARDB_serveur:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
+
+		$linkCUSTOM=mysqli_connect("$VARDB_server", "$VARDB_custom_user", "$VARDB_custom_pass", "$VARDB_database", "$VARDB_port");
+		if (!$linkCUSTOM) 
+			{
+			die('MySQL connect ERROR: ' . mysqli_error($linkCUSTOM));
+			}
+
+		# if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysqli_error());}
+		#mysql_select_db("$VARDB_database", $linkCUSTOM);
 
 		$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$source_list_id';";
 		if ($DB>0) {echo "$stmt";}
-		$rslt=mysql_query($stmt, $link);
-		$fieldscount_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$fieldscount_to_print = mysqli_num_rows($rslt);
 		if ($fieldscount_to_print > 0) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$source_field_exists =	$rowx[0];
 			}
 		
 		$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id';";
 		if ($DB>0) {echo "$stmt";}
-		$rslt=mysql_query($stmt, $link);
-		$fieldscount_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$fieldscount_to_print = mysqli_num_rows($rslt);
 		if ($fieldscount_to_print > 0) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$field_exists =	$rowx[0];
 			}
 		
 		$stmt="MONTRER TABLES LIKE \"custom_$list_id\";";
-		$rslt=mysql_query($stmt, $link);
-		$tablecount_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$tablecount_to_print = mysqli_num_rows($rslt);
 		if ($tablecount_to_print > 0) 
 			{$table_exists =	1;}
 		if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
@@ -503,13 +503,13 @@ if ( ($action == "COPY_FIELDS_VALIDER") and ($list_id > 99) and ($source_list_id
 				if ($table_exists > 0)
 					{
 					$stmt="SELECT field_id,field_label from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
-					$rslt=mysql_query($stmt, $link);
-					$fields_to_print = mysql_num_rows($rslt);
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$fields_to_print = mysqli_num_rows($rslt);
 					$fields_list='';
 					$o=0;
 					while ($fields_to_print > $o) 
 						{
-						$rowx=mysql_fetch_row($rslt);
+						$rowx=mysqli_fetch_row($rslt);
 						$A_field_id[$o] =			$rowx[0];
 						$A_field_label[$o] =		$rowx[1];
 						$o++;
@@ -532,13 +532,13 @@ if ( ($action == "COPY_FIELDS_VALIDER") and ($list_id > 99) and ($source_list_id
 				{
 				if ($DB > 0) {echo "Starting APPEND copy\n<BR>";}
 				$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$source_list_id' order by field_rank,field_order,field_label;";
-				$rslt=mysql_query($stmt, $link);
-				$fields_to_print = mysql_num_rows($rslt);
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$fields_to_print = mysqli_num_rows($rslt);
 				$fields_list='';
 				$o=0;
 				while ($fields_to_print > $o) 
 					{
-					$rowx=mysql_fetch_row($rslt);
+					$rowx=mysqli_fetch_row($rslt);
 					$A_field_id[$o] =			$rowx[0];
 					$A_field_label[$o] =		$rowx[1];
 					$A_field_name[$o] =			$rowx[2];
@@ -568,11 +568,11 @@ if ( ($action == "COPY_FIELDS_VALIDER") and ($list_id > 99) and ($source_list_id
 						{
 						$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id' and field_label='$A_field_label[$o]';";
 						if ($DB>0) {echo "$stmt";}
-						$rslt=mysql_query($stmt, $link);
-						$fieldscount_to_print = mysql_num_rows($rslt);
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$fieldscount_to_print = mysqli_num_rows($rslt);
 						if ($fieldscount_to_print > 0) 
 							{
-							$rowx=mysql_fetch_row($rslt);
+							$rowx=mysqli_fetch_row($rslt);
 							$new_field_exists =	$rowx[0];
 							}
 						}
@@ -601,13 +601,13 @@ if ( ($action == "COPY_FIELDS_VALIDER") and ($list_id > 99) and ($source_list_id
 				else
 					{
 					$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$source_list_id' order by field_rank,field_order,field_label;";
-					$rslt=mysql_query($stmt, $link);
-					$fields_to_print = mysql_num_rows($rslt);
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$fields_to_print = mysqli_num_rows($rslt);
 					$fields_list='';
 					$o=0;
 					while ($fields_to_print > $o) 
 						{
-						$rowx=mysql_fetch_row($rslt);
+						$rowx=mysqli_fetch_row($rslt);
 						$A_field_id[$o] =			$rowx[0];
 						$A_field_label[$o] =		$rowx[1];
 						$A_field_name[$o] =			$rowx[2];
@@ -632,11 +632,11 @@ if ( ($action == "COPY_FIELDS_VALIDER") and ($list_id > 99) and ($source_list_id
 						{
 						$stmt="SELECT field_id from vicidial_lists_fields where list_id='$list_id' and field_label='$A_field_label[$o]';";
 						if ($DB>0) {echo "$stmt";}
-						$rslt=mysql_query($stmt, $link);
-						$fieldscount_to_print = mysql_num_rows($rslt);
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$fieldscount_to_print = mysqli_num_rows($rslt);
 						if ($fieldscount_to_print > 0) 
 							{
-							$rowx=mysql_fetch_row($rslt);
+							$rowx=mysqli_fetch_row($rslt);
 							$current_field_id =	$rowx[0];
 
 							### modify field function
@@ -665,17 +665,17 @@ if ( ($action == "DELETE_CUSTOM_FIELD_CONFIRMATION") and ($list_id > 99) and ($f
 	{
 	$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id' and field_label='$field_label';";
 	if ($DB>0) {echo "$stmt";}
-	$rslt=mysql_query($stmt, $link);
-	$fieldscount_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$fieldscount_to_print = mysqli_num_rows($rslt);
 	if ($fieldscount_to_print > 0) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$field_exists =	$rowx[0];
 		}
 	
 	$stmt="MONTRER TABLES LIKE \"custom_$list_id\";";
-	$rslt=mysql_query($stmt, $link);
-	$tablecount_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$tablecount_to_print = mysqli_num_rows($rslt);
 	if ($tablecount_to_print > 0) 
 		{$table_exists =	1;}
 	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
@@ -704,23 +704,29 @@ if ( ($action == "DELETE_CUSTOM_FIELD_CONFIRMATION") and ($list_id > 99) and ($f
 if ( ($action == "DELETE_CUSTOM_FIELD") and ($list_id > 99) and ($field_id > 0) and (strlen($field_label) > 0) and ($ConFiRm=='YES') )
 	{
 	$table_exists=0;
-	$linkCUSTOM=mysql_connect("$VARDB_serveur:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
-	if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysql_error());}
-	mysql_select_db("$VARDB_database", $linkCUSTOM);
+	#$linkCUSTOM=mysql_connect("$VARDB_serveur:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
+	#if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysqli_error());}
+	#mysql_select_db("$VARDB_database", $linkCUSTOM);
+
+	$linkCUSTOM=mysqli_connect("$VARDB_server", "$VARDB_custom_user", "$VARDB_custom_pass", "$VARDB_database", "$VARDB_port");
+	if (!$linkCUSTOM) 
+		{
+		die('MySQL connect ERROR: ' . mysqli_error($linkCUSTOM));
+		}
 
 	$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id' and field_label='$field_label';";
 	if ($DB>0) {echo "$stmt";}
-	$rslt=mysql_query($stmt, $link);
-	$fieldscount_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$fieldscount_to_print = mysqli_num_rows($rslt);
 	if ($fieldscount_to_print > 0) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$field_exists =	$rowx[0];
 		}
 	
 	$stmt="MONTRER TABLES LIKE \"custom_$list_id\";";
-	$rslt=mysql_query($stmt, $link);
-	$tablecount_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$tablecount_to_print = mysqli_num_rows($rslt);
 	if ($tablecount_to_print > 0) 
 		{$table_exists =	1;}
 	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
@@ -753,11 +759,11 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 	{
 	$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id' and field_label='$field_label';";
 	if ($DB>0) {echo "$stmt";}
-	$rslt=mysql_query($stmt, $link);
-	$fieldscount_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$fieldscount_to_print = mysqli_num_rows($rslt);
 	if ($fieldscount_to_print > 0) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$field_exists =	$rowx[0];
 		}
 	
@@ -801,13 +807,19 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 					else
 						{
 						$table_exists=0;
-						$linkCUSTOM=mysql_connect("$VARDB_serveur:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
-						if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysql_error());}
-						mysql_select_db("$VARDB_database", $linkCUSTOM);
+						#$linkCUSTOM=mysql_connect("$VARDB_serveur:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
+						#if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysqli_error());}
+						#mysql_select_db("$VARDB_database", $linkCUSTOM);
+
+						$linkCUSTOM=mysqli_connect("$VARDB_server", "$VARDB_custom_user", "$VARDB_custom_pass", "$VARDB_database", "$VARDB_port");
+						if (!$linkCUSTOM) 
+							{
+							die('MySQL connect ERROR: ' . mysqli_error($linkCUSTOM));
+							}
 
 						$stmt="MONTRER TABLES LIKE \"custom_$list_id\";";
-						$rslt=mysql_query($stmt, $link);
-						$tablecount_to_print = mysql_num_rows($rslt);
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$tablecount_to_print = mysqli_num_rows($rslt);
 						if ($tablecount_to_print > 0) 
 							{$table_exists =	1;}
 						if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
@@ -836,23 +848,30 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 if ( ($action == "MODIFY_CUSTOM_FIELD_VALIDER") and ($list_id > 99) and ($field_id > 0) )
 	{
 	### connect to your vtiger database
-	$linkCUSTOM=mysql_connect("$VARDB_serveur:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
-	if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysql_error());}
-	mysql_select_db("$VARDB_database", $linkCUSTOM);
+	#$linkCUSTOM=mysql_connect("$VARDB_serveur:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
+	#if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysqli_error());}
+	#mysql_select_db("$VARDB_database", $linkCUSTOM);
+
+	$linkCUSTOM=mysqli_connect("$VARDB_server", "$VARDB_custom_user", "$VARDB_custom_pass", "$VARDB_database", "$VARDB_port");
+	if (!$linkCUSTOM) 
+		{
+		die('MySQL connect ERROR: ' . mysqli_error($linkCUSTOM));
+		}
+
 
 	$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id' and field_id='$field_id';";
 	if ($DB>0) {echo "$stmt";}
-	$rslt=mysql_query($stmt, $link);
-	$fieldscount_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$fieldscount_to_print = mysqli_num_rows($rslt);
 	if ($fieldscount_to_print > 0) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$field_exists =	$rowx[0];
 		}
 	
 	$stmt="MONTRER TABLES LIKE \"custom_$list_id\";";
-	$rslt=mysql_query($stmt, $link);
-	$tablecount_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$tablecount_to_print = mysqli_num_rows($rslt);
 	if ($tablecount_to_print > 0) 
 		{$table_exists =	1;}
 	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
@@ -918,8 +937,8 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 
 	$custom_records_count=0;
 	$stmt="MONTRER TABLES LIKE \"custom_$list_id\";";
-	$rslt=mysql_query($stmt, $link);
-	$tablecount_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$tablecount_to_print = mysqli_num_rows($rslt);
 	if ($tablecount_to_print > 0) 
 		{$table_exists =	1;}
 	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
@@ -928,11 +947,11 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		{
 		$stmt="SELECT count(*) from custom_$list_id;";
 		if ($DB>0) {echo "$stmt";}
-		$rslt=mysql_query($stmt, $link);
-		$fieldscount_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$fieldscount_to_print = mysqli_num_rows($rslt);
 		if ($fieldscount_to_print > 0) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$custom_records_count =	$rowx[0];
 			}
 		}
@@ -943,13 +962,13 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
 
 	$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
-	$rslt=mysql_query($stmt, $link);
-	$fields_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$fields_to_print = mysqli_num_rows($rslt);
 	$fields_list='';
 	$o=0;
 	while ($fields_to_print > $o) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$A_field_id[$o] =			$rowx[0];
 		$A_field_label[$o] =		$rowx[1];
 		$A_field_name[$o] =			$rowx[2];
@@ -995,7 +1014,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 			$LcolorB='<font color=red>';
 			$LcolorE='</font>';
 			}
-		if (eregi("1$|3$|5$|7$|9$", $o))
+		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -1232,7 +1251,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 			$LcolorB='<font color=red>';
 			$LcolorE='</font>';
 			}
-		if (eregi("1$|3$|5$|7$|9$", $o))
+		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -1244,11 +1263,11 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		echo "<input type=hidden name=field_label value=\"$A_field_label[$o]\">\n";
 		echo "<a name=\"ANCHOR_$A_field_label[$o]\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3 cellpadding=1>\n";
-		echo "<tr $bgcolor><td align=right>Étiquette de zone $A_field_rank[$o]: </td><td align=left> $LcolorB<B>$A_field_label[$o]</B>$LcolorE $NWB#vicidial_lists_fields-field_label$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Étiquette de zone $A_field_rank[$o]: </td><td align=left> $LcolorB<B>$A_field_label[$o]</B>$LcolorE $NWB#lists_fields-field_label$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Rang de terrain $A_field_rank[$o]: </td><td align=left><select size=1 name=field_rank>\n";
 		echo "$rank_select\n";
 		echo "<option selected>$A_field_rank[$o]</option>\n";
-		echo "</select> &nbsp; $NWB#vicidial_lists_fields-field_rank$NWE \n";
+		echo "</select> &nbsp; $NWB#lists_fields-field_rank$NWE \n";
 		echo " &nbsp; &nbsp; &nbsp; &nbsp; Field Order: <select size=1 name=field_order>\n";
 		echo "<option>1</option>\n";
 		echo "<option>2</option>\n";
@@ -1256,15 +1275,15 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		echo "<option>4</option>\n";
 		echo "<option>5</option>\n";
 		echo "<option selected>$A_field_order[$o]</option>\n";
-		echo "</select> &nbsp; $NWB#vicidial_lists_fields-field_order$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Nom du champ $A_field_rank[$o]: </td><td align=left><textarea name=field_name rows=2 cols=60>$A_field_name[$o]</textarea> $NWB#vicidial_lists_fields-field_name$NWE </td></tr>\n";
+		echo "</select> &nbsp; $NWB#lists_fields-field_order$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Nom du champ $A_field_rank[$o]: </td><td align=left><textarea name=field_name rows=2 cols=60>$A_field_name[$o]</textarea> $NWB#lists_fields-field_name$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Position Nom du champ $A_field_rank[$o]: </td><td align=left><select size=1 name=name_position>\n";
 		echo "<option value=\"LEFT\">LEFT</option>\n";
 		echo "<option value=\"TOP\">TOP</option>\n";
 		echo "<option selected>$A_name_position[$o]</option>\n";
-		echo "</select>  $NWB#vicidial_lists_fields-name_position$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Description du champ $A_field_rank[$o]: </td><td align=left><input type=text name=field_description size=70 maxlength=100 value=\"$A_field_description[$o]\"> $NWB#vicidial_lists_fields-field_description$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Aide de terrain $A_field_rank[$o]: </td><td align=left><textarea name=field_help rows=2 cols=60>$A_field_help[$o]</textarea> $NWB#vicidial_lists_fields-field_help$NWE </td></tr>\n";
+		echo "</select>  $NWB#lists_fields-name_position$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Description du champ $A_field_rank[$o]: </td><td align=left><input type=text name=field_description size=70 maxlength=100 value=\"$A_field_description[$o]\"> $NWB#lists_fields-field_description$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Aide de terrain $A_field_rank[$o]: </td><td align=left><textarea name=field_help rows=2 cols=60>$A_field_help[$o]</textarea> $NWB#lists_fields-field_help$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Type de champ $A_field_rank[$o]: </td><td align=left><select size=1 name=field_type>\n";
 		echo "<option>TEXT</option>\n";
 		echo "<option>AREA</option>\n";
@@ -1280,21 +1299,21 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		echo "<option>CACHERBLOB</option>\n";
 		echo "<option>READONLY</option>\n";
 		echo "<option selected>$A_field_type[$o]</option>\n";
-		echo "</select>  $NWB#vicidial_lists_fields-field_type$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Options pour les champs $A_field_rank[$o]: </td><td align=left><textarea name=field_options ROWS=5 COLS=60>$A_field_options[$o]</textarea>  $NWB#vicidial_lists_fields-field_options$NWE </td></tr>\n";
+		echo "</select>  $NWB#lists_fields-field_type$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Options pour les champs $A_field_rank[$o]: </td><td align=left><textarea name=field_options ROWS=5 COLS=60>$A_field_options[$o]</textarea>  $NWB#lists_fields-field_options$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Position Option $A_field_rank[$o]: </td><td align=left><select size=1 name=multi_position>\n";
 		echo "<option value=\"HORIZONTAL\">HORIZONTAL</option>\n";
 		echo "<option value=\"VERTICAL\">VERTICAL</option>\n";
 		echo "<option selected>$A_multi_position[$o]</option>\n";
-		echo "</select>  $NWB#vicidial_lists_fields-multi_position$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Taille du champ $A_field_rank[$o]: </td><td align=left><input type=text name=field_size size=5 maxlength=3 value=\"$A_field_size[$o]\">  $NWB#vicidial_lists_fields-field_size$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Champ Max $A_field_rank[$o]: </td><td align=left><input type=text name=field_max size=5 maxlength=3 value=\"$A_field_max[$o]\">  $NWB#vicidial_lists_fields-field_max$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Par défaut le terrain $A_field_rank[$o]: </td><td align=left><input type=text name=field_default size=50 maxlength=255 value=\"$A_field_default[$o]\">  $NWB#vicidial_lists_fields-field_default$NWE </td></tr>\n";
+		echo "</select>  $NWB#lists_fields-multi_position$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Taille du champ $A_field_rank[$o]: </td><td align=left><input type=text name=field_size size=5 maxlength=3 value=\"$A_field_size[$o]\">  $NWB#lists_fields-field_size$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Champ Max $A_field_rank[$o]: </td><td align=left><input type=text name=field_max size=5 maxlength=3 value=\"$A_field_max[$o]\">  $NWB#lists_fields-field_max$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>Par défaut le terrain $A_field_rank[$o]: </td><td align=left><input type=text name=field_default size=50 maxlength=255 value=\"$A_field_default[$o]\">  $NWB#lists_fields-field_default$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>Champ obligatoire $A_field_rank[$o]: </td><td align=left><select size=1 name=field_required>\n";
 		echo "<option value=\"Y\">YES</option>\n";
 		echo "<option value=\"N\">NO</option>\n";
 		echo "<option selected>$A_field_required[$o]</option>\n";
-		echo "</select>  $NWB#vicidial_lists_fields-field_required$NWE </td></tr>\n";
+		echo "</select>  $NWB#lists_fields-field_required$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=center colspan=2><input type=submit name=submit value=\"VALIDER\"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
 		echo "<B><a href=\"$PHP_SELF?action=DELETE_CUSTOM_FIELD_CONFIRMATION&list_id=$list_id&field_id=$A_field_id[$o]&field_label=$A_field_label[$o]&DB=$DB\">DELETE THIS CUSTOM FIELD</a></B>";
 		echo "</td></tr>\n";
@@ -1315,22 +1334,22 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "<tr $bgcolor><td align=right>New Rang de terrain: </td><td align=left><select size=1 name=field_rank>\n";
 	echo "$rank_select\n";
 	echo "<option selected>$last_rank</option>\n";
-	echo "</select> &nbsp; $NWB#vicidial_lists_fields-field_rank$NWE \n";
+	echo "</select> &nbsp; $NWB#lists_fields-field_rank$NWE \n";
 	echo " &nbsp; &nbsp; &nbsp; &nbsp; Field Order: <select size=1 name=field_order>\n";
 	echo "<option selected>1</option>\n";
 	echo "<option>2</option>\n";
 	echo "<option>3</option>\n";
 	echo "<option>4</option>\n";
 	echo "<option>5</option>\n";
-	echo "</select> &nbsp; $NWB#vicidial_lists_fields-field_order$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Étiquette de zone: </td><td align=left><input type=text name=field_label size=20 maxlength=50> $NWB#vicidial_lists_fields-field_label$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Nom du champ: </td><td align=left><textarea name=field_name rows=2 cols=60></textarea> $NWB#vicidial_lists_fields-field_name$NWE </td></tr>\n";
+	echo "</select> &nbsp; $NWB#lists_fields-field_order$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Étiquette de zone: </td><td align=left><input type=text name=field_label size=20 maxlength=50> $NWB#lists_fields-field_label$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Nom du champ: </td><td align=left><textarea name=field_name rows=2 cols=60></textarea> $NWB#lists_fields-field_name$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>Position Nom du champ: </td><td align=left><select size=1 name=name_position>\n";
 	echo "<option value=\"LEFT\">LEFT</option>\n";
 	echo "<option value=\"TOP\">TOP</option>\n";
-	echo "</select>  $NWB#vicidial_lists_fields-name_position$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Description du champ: </td><td align=left><input name=field_description type=text size=70 maxlength=100> $NWB#vicidial_lists_fields-field_description$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Aide de terrain: </td><td align=left><textarea name=field_help rows=2 cols=60></textarea> $NWB#vicidial_lists_fields-field_help$NWE </td></tr>\n";
+	echo "</select>  $NWB#lists_fields-name_position$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Description du champ: </td><td align=left><input name=field_description type=text size=70 maxlength=100> $NWB#lists_fields-field_description$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Aide de terrain: </td><td align=left><textarea name=field_help rows=2 cols=60></textarea> $NWB#lists_fields-field_help$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>Type de champ: </td><td align=left><select size=1 name=field_type>\n";
 	echo "<option>TEXT</option>\n";
 	echo "<option>AREA</option>\n";
@@ -1346,19 +1365,19 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "<option>CACHERBLOB</option>\n";
 	echo "<option>READONLY</option>\n";
 	echo "<option selected>TEXT</option>\n";
-	echo "</select>  $NWB#vicidial_lists_fields-field_type$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Options pour les champs: </td><td align=left><textarea name=field_options ROWS=5 COLS=60></textarea>  $NWB#vicidial_lists_fields-field_options$NWE </td></tr>\n";
+	echo "</select>  $NWB#lists_fields-field_type$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Options pour les champs: </td><td align=left><textarea name=field_options ROWS=5 COLS=60></textarea>  $NWB#lists_fields-field_options$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>Position Option: </td><td align=left><select size=1 name=multi_position>\n";
 	echo "<option selected value=\"HORIZONTAL\">HORIZONTAL</option>\n";
 	echo "<option value=\"VERTICAL\">VERTICAL</option>\n";
-	echo "</select>  $NWB#vicidial_lists_fields-multi_position$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Taille du champ: </td><td align=left><input type=text name=field_size size=5 maxlength=3>  $NWB#vicidial_lists_fields-field_size$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Champ Max: </td><td align=left><input type=text name=field_max size=5 maxlength=3>  $NWB#vicidial_lists_fields-field_max$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Par défaut le terrain: </td><td align=left><input type=text name=field_default size=50 maxlength=255 value=\"NULL\">  $NWB#vicidial_lists_fields-field_default$NWE </td></tr>\n";
+	echo "</select>  $NWB#lists_fields-multi_position$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Taille du champ: </td><td align=left><input type=text name=field_size size=5 maxlength=3>  $NWB#lists_fields-field_size$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Champ Max: </td><td align=left><input type=text name=field_max size=5 maxlength=3>  $NWB#lists_fields-field_max$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>Par défaut le terrain: </td><td align=left><input type=text name=field_default size=50 maxlength=255 value=\"NULL\">  $NWB#lists_fields-field_default$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>Champ obligatoire: </td><td align=left><select size=1 name=field_required>\n";
 	echo "<option value=\"Y\">YES</option>\n";
 	echo "<option value=\"N\" SELECTED>NO</option>\n";
-	echo "</select>  $NWB#vicidial_lists_fields-field_required$NWE </td></tr>\n";
+	echo "</select>  $NWB#lists_fields-field_required$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=center colspan=2><input type=submit name=submit value=\"Submit\"></td></tr>\n";
 	echo "</table></center></form><BR><BR>\n";
 	echo "</table></center><BR><BR>\n";
@@ -1378,12 +1397,12 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 if ($action == "LIST")
 	{
 	$stmt="SELECT list_id,list_name,active,campaign_id from vicidial_lists order by list_id;";
-	$rslt=mysql_query($stmt, $link);
-	$lists_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$lists_to_print = mysqli_num_rows($rslt);
 	$o=0;
 	while ($lists_to_print > $o) 
 		{
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		$A_list_id[$o] =		$rowx[0];
 		$A_list_name[$o] =		$rowx[1];
 		$A_active[$o] =			$rowx[2];
@@ -1408,14 +1427,14 @@ if ($action == "LIST")
 		$A_list_fields_count[$o]=0;
 		$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$A_list_id[$o]';";
 		if ($DB>0) {echo "$stmt";}
-		$rslt=mysql_query($stmt, $link);
-		$fieldscount_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$fieldscount_to_print = mysqli_num_rows($rslt);
 		if ($fieldscount_to_print > 0) 
 			{
-			$rowx=mysql_fetch_row($rslt);
+			$rowx=mysqli_fetch_row($rslt);
 			$A_list_fields_count[$o] =	$rowx[0];
 			}
-		if (eregi("1$|3$|5$|7$|9$", $o))
+		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
@@ -1447,10 +1466,10 @@ if ($action == "ADMIN_LOG")
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		$stmt="SELECT admin_log_id,event_date,user,ip_address,event_section,event_type,record_id,event_code from vicidial_admin_log where event_section='CUSTOM_FIELDS' and record_id='$list_id' order by event_date desc limit 10000;";
-		$rslt=mysql_query($stmt, $link);
-		$logs_to_print = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$logs_to_print = mysqli_num_rows($rslt);
 
-		echo "<br>ADMIN CHANGE LOG: Section Records - $category - $stage\n";
+		echo "<br>CHANGEMENT ADMIN LOG: Section Archives- $category - $stage\n";
 		echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 		echo "<TR BGCOLOR=BLACK>";
 		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>ID</B></TD>";
@@ -1468,29 +1487,29 @@ if ($action == "ADMIN_LOG")
 		$o=0;
 		while ($logs_to_print > $o)
 			{
-			$row=mysql_fetch_row($rslt);
+			$row=mysqli_fetch_row($rslt);
 
-			if (eregi("USER|AGENT",$row[4])) {$record_link = "ADD=3&user=$row[6]";}
-			if (eregi('CAMPAIGN',$row[4])) {$record_link = "ADD=31&campaign_id=$row[6]";}
-			if (eregi('LIST',$row[4])) {$record_link = "ADD=311&list_id=$row[6]";}
-			if (eregi('SCRIPT',$row[4])) {$record_link = "ADD=3111111&script_id=$row[6]";}
-			if (eregi('FILTER',$row[4])) {$record_link = "ADD=31111111&lead_filter_id=$row[6]";}
-			if (eregi('INGROUP',$row[4])) {$record_link = "ADD=3111&group_id=$row[6]";}
-			if (eregi('DID',$row[4])) {$record_link = "ADD=3311&did_id=$row[6]";}
-			if (eregi('USERGROUP',$row[4])) {$record_link = "ADD=311111&user_group=$row[6]";}
-			if (eregi('REMOTEAGENT',$row[4])) {$record_link = "ADD=31111&remote_agent_id=$row[6]";}
-			if (eregi('PHONE',$row[4])) {$record_link = "ADD=10000000000";}
-			if (eregi('CALLTIME',$row[4])) {$record_link = "ADD=311111111&call_time_id=$row[6]";}
-			if (eregi('SHIFT',$row[4])) {$record_link = "ADD=331111111&shift_id=$row[6]";}
-			if (eregi('CONFTEMPLATE',$row[4])) {$record_link = "ADD=331111111111&template_id=$row[6]";}
-			if (eregi('CARRIER',$row[4])) {$record_link = "ADD=341111111111&carrier_id=$row[6]";}
-			if (eregi('SERVER',$row[4])) {$record_link = "ADD=311111111111&server_id=$row[6]";}
-			if (eregi('CONFERENCE',$row[4])) {$record_link = "ADD=1000000000000";}
-			if (eregi('SYSTEM',$row[4])) {$record_link = "ADD=311111111111111";}
-			if (eregi('CATEGOR',$row[4])) {$record_link = "ADD=331111111111111";}
-			if (eregi('GROUPALIAS',$row[4])) {$record_link = "ADD=33111111111&group_alias_id=$row[6]";}
+			if (preg_match('/USER|AGENT/i', $row[4])) {$record_link = "ADD=3&user=$row[6]";}
+			if (preg_match('/CAMPAIGN/i', $row[4])) {$record_link = "ADD=31&campaign_id=$row[6]";}
+			if (preg_match('/LIST/i', $row[4])) {$record_link = "ADD=311&list_id=$row[6]";}
+			if (preg_match('/SCRIPT/i', $row[4])) {$record_link = "ADD=3111111&script_id=$row[6]";}
+			if (preg_match('/FILTER/i', $row[4])) {$record_link = "ADD=31111111&lead_filter_id=$row[6]";}
+			if (preg_match('/INGROUP/i', $row[4])) {$record_link = "ADD=3111&group_id=$row[6]";}
+			if (preg_match('/DID/i', $row[4])) {$record_link = "ADD=3311&did_id=$row[6]";}
+			if (preg_match('/USERGROUP/i', $row[4])) {$record_link = "ADD=311111&user_group=$row[6]";}
+			if (preg_match('/REMOTEAGENT/i', $row[4])) {$record_link = "ADD=31111&remote_agent_id=$row[6]";}
+			if (preg_match('/PHONE/i', $row[4])) {$record_link = "ADD=10000000000";}
+			if (preg_match('/CALLTIME/i', $row[4])) {$record_link = "ADD=311111111&call_time_id=$row[6]";}
+			if (preg_match('/SHIFT/i', $row[4])) {$record_link = "ADD=331111111&shift_id=$row[6]";}
+			if (preg_match('/CONFTEMPLATE/i', $row[4])) {$record_link = "ADD=331111111111&template_id=$row[6]";}
+			if (preg_match('/CARRIER/i', $row[4])) {$record_link = "ADD=341111111111&carrier_id=$row[6]";}
+			if (preg_match('/SERVER/i', $row[4])) {$record_link = "ADD=311111111111&server_id=$row[6]";}
+			if (preg_match('/CONFERENCE/i', $row[4])) {$record_link = "ADD=1000000000000";}
+			if (preg_match('/SYSTEM/i', $row[4])) {$record_link = "ADD=311111111111111";}
+			if (preg_match('/CATEGOR/i', $row[4])) {$record_link = "ADD=331111111111111";}
+			if (preg_match('/GROUPALIAS/i', $row[4])) {$record_link = "ADD=33111111111&group_alias_id=$row[6]";}
 
-			if (eregi("1$|3$|5$|7$|9$", $o))
+			if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 				{$bgcolor='bgcolor="#B9CBFD"';} 
 			else
 				{$bgcolor='bgcolor="#9BB9FB"';}
@@ -1548,8 +1567,8 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 	{
 	$table_exists=0;
 	$stmt="MONTRER TABLES LIKE \"custom_$list_id\";";
-	$rslt=mysql_query($stmt, $link);
-	$tablecount_to_print = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$tablecount_to_print = mysqli_num_rows($rslt);
 	if ($tablecount_to_print > 0) 
 		{$table_exists =	1;}
 	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
@@ -1641,25 +1660,25 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 	else
 		{
 		$stmtCUSTOM="$field_sql";
-		$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
-		$table_update = mysql_affected_rows($linkCUSTOM);
+		$rsltCUSTOM=mysql_to_mysqli($stmtCUSTOM, $linkCUSTOM);
+		$table_update = mysqli_affected_rows($linkCUSTOM);
 		if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
-		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysql_error());}
+		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysqli_error());}
 		}
 
 	$stmt="INSERT INTO vicidial_lists_fields set field_label='$field_label',field_name='$field_name',field_description='$field_description',field_rank='$field_rank',field_help='$field_help',field_type='$field_type',field_options='$field_options',field_size='$field_size',field_max='$field_max',field_default='$field_default',field_required='$field_required',field_cost='$field_cost',list_id='$list_id',multi_position='$multi_position',name_position='$name_position',field_order='$field_order';";
-	$rslt=mysql_query($stmt, $link);
-	$field_update = mysql_affected_rows($link);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$field_update = mysqli_affected_rows($link);
 	if ($DB) {echo "$field_update|$stmt\n";}
-	if (!$rslt) {echo('Could not execute: ' . mysql_error());}
+	if (!$rslt) {echo('Could not execute: ' . mysqli_error());}
 
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|$stmtCUSTOM";
-	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = preg_replace('/;/', '', $SQL_log);
 	$SQL_log = addslashes($SQL_log);
 	$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$user', ip_address='$ip', event_section='CUSTOM_FIELDS', event_type='ADD', record_id='$list_id', event_code='ADMIN ADD CUSTOM LIST FIELD', event_sql=\"$SQL_log\", event_notes='';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	}
 ##### END add field function
 
@@ -1678,8 +1697,8 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 		{
 		$stmt="MONTRER COLUMNS from custom_$list_id LIKE '$field_label';";
 		if ($DB>0) {echo "$stmt";}
-		$rslt=mysql_query($stmt, $link);
-		$field_db_exists = mysql_num_rows($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$field_db_exists = mysqli_num_rows($rslt);
 		}
 	if ($field_db_exists > 0)
 		{$field_sql = "ALTER TABLE custom_$list_id MODIFY $field_label ";}
@@ -1763,25 +1782,25 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 	else
 		{
 		$stmtCUSTOM="$field_sql";
-		$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
-		$field_update = mysql_affected_rows($linkCUSTOM);
+		$rsltCUSTOM=mysql_to_mysqli($stmtCUSTOM, $linkCUSTOM);
+		$field_update = mysqli_affected_rows($linkCUSTOM);
 		if ($DB) {echo "$field_update|$stmtCUSTOM\n";}
-		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysql_error());}
+		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysqli_error());}
 		}
 
 	$stmt="UPDATE vicidial_lists_fields set field_label='$field_label',field_name='$field_name',field_description='$field_description',field_rank='$field_rank',field_help='$field_help',field_type='$field_type',field_options='$field_options',field_size='$field_size',field_max='$field_max',field_default='$field_default',field_required='$field_required',field_cost='$field_cost',multi_position='$multi_position',name_position='$name_position',field_order='$field_order' where list_id='$list_id' and field_id='$field_id';";
-	$rslt=mysql_query($stmt, $link);
-	$field_update = mysql_affected_rows($link);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$field_update = mysqli_affected_rows($link);
 	if ($DB) {echo "$field_update|$stmt\n";}
-	if (!$rslt) {echo('Could not execute: ' . mysql_error());}
+	if (!$rslt) {echo('Could not execute: ' . mysqli_error());}
 
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|$stmtCUSTOM";
-	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = preg_replace('/;/', '', $SQL_log);
 	$SQL_log = addslashes($SQL_log);
 	$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$user', ip_address='$ip', event_section='CUSTOM_FIELDS', event_type='MODIFY', record_id='$list_id', event_code='ADMIN MODIFY CUSTOM LIST FIELD', event_sql=\"$SQL_log\", event_notes='';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	}
 ##### END modify field function
 
@@ -1800,24 +1819,24 @@ function delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 	else
 		{
 		$stmtCUSTOM="ALTER TABLE custom_$list_id DROP $field_label;";
-		$rsltCUSTOM=mysql_query($stmtCUSTOM, $linkCUSTOM);
-		$table_update = mysql_affected_rows($linkCUSTOM);
+		$rsltCUSTOM=mysql_to_mysqli($stmtCUSTOM, $linkCUSTOM);
+		$table_update = mysqli_affected_rows($linkCUSTOM);
 		if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
-		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysql_error());}
+		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysqli_error());}
 		}
 
 	$stmt="DELETE FROM vicidial_lists_fields WHERE field_label='$field_label' and field_id='$field_id' and list_id='$list_id' LIMIT 1;";
-	$rslt=mysql_query($stmt, $link);
-	$field_update = mysql_affected_rows($link);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$field_update = mysqli_affected_rows($link);
 	if ($DB) {echo "$field_update|$stmt\n";}
-	if (!$rslt) {echo('Could not execute: ' . mysql_error());}
+	if (!$rslt) {echo('Could not execute: ' . mysqli_error());}
 
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|$stmtCUSTOM";
-	$SQL_log = ereg_replace(';','',$SQL_log);
+	$SQL_log = preg_replace('/;/', '', $SQL_log);
 	$SQL_log = addslashes($SQL_log);
 	$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$user', ip_address='$ip', event_section='CUSTOM_FIELDS', event_type='DELETE', record_id='$list_id', event_code='ADMIN DELETE CUSTOM LIST FIELD', event_sql=\"$SQL_log\", event_notes='';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	}
 ##### END delete field function

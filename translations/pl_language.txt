@@ -23,13 +23,14 @@ agc|dbconnect.php|1
 agc|timeclock.php|0
 agc|vdc_script_display.php|1
 agc|vdc_script_notes.php|0
-agc|functions.php|1
+agc|functions.php|0
 agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
 agc|phone_only.php|0
 agc|vdc_email_display.php|0
 agc|audit_comments.php|0
+agc|dbconnect_mysqli.php|1
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"STY"|
@@ -44,6 +45,7 @@ agc|audit_comments.php|0
 "OCT"|"PAŹ"|
 "NOV"|"LIS"|
 "DEC"|"GRU"|
+\./bp.pl|../agc/bp.pl|
 \./images/|../agc/images/|
 css/|../agc/css/|
 BORDER|Border|
@@ -305,7 +307,7 @@ YOU CANNOT SKIP A CALLBACK OR MANUAL DIAL, YOU MUST DIAL THE LEAD|NIE MOŻESZ PO
 YOU MUST BE PAUSED TO MANUAL DIAL A NEW LEAD IN AUTO-DIAL MODE|MUSISZ WSTRZYMAC AUTOMATYCZNE WYBIERANIE NUMERU BY DOKONAĆ RĘCZNEGO WYBIERANIA|
 Enter information below for the new lead you wish to call|Wpisz poniżej informacje o kontakcie do którego chcesz wykonać połączenie|
 YOU MUST BE PAUSED TO CHECK CALLBACKS IN AUTO-DIAL MODE|MUSISZ WSTRZYMAC AUTOMATYCZNE WYBIERANIE NUMERU BY SPRAWDZAĆ INNE TERMINY|
-Note: all new manual dial leads will go into list 999|Ważne: nowe kontakty z ręcznym wybieraniem zostaną zapisane na liście 999|
+Note: all new manual dial leads will go into list|Ważne: nowe kontakty z ręcznym wybieraniem zostaną zapisane na liście|
 YOU DO NOT HAVE PERMISSIONS TO TRANSFER CALLS|NIE MASZ UPRAWNIEŃ DO PRZENOSZENIA ROZMÓW|
 will be added to the beginning of this number|będzie dodane na początku tego numeru|
 This is usually a 1 in the USA-Canada|dla polski będzie to 48|
@@ -644,3 +646,15 @@ Department:|dział:|
 Group Name|Nazwa grupy|
 Job Title|tytuł pracy|
 Location:|lokalizacja:|
+### START translations for 2.8 release ###
+This agent screen was not opened properly|Ekran ten środek nie został poprawnie otwarty|
+Dial Lead ID|Dial Lead ID|
+Agent Form Display Script|Środek Wyświetlanie formularza Script|
+Agent Notes|Agenta Uwagi|
+You have been paused for too long, you have been logged out of your session|Ty zostały wstrzymane zbyt długo, zostałeś wylogowany z sesji|
+Too many network errors, please contact your administrator|Zbyt wiele błędów w sieci, skontaktuj się z administratorem|
+No available servers, please contact your administrator|Brak dostępnych serwerów, skontaktuj się z administratorem|
+No available phones, please contact your administrator|Brak dostępnych komórkowych, skontaktuj się z administratorem|
+You are already logged in, please log out of your other session first|Jesteś zalogowany, zaloguj się na swojej drugiej sesji pierwszy|
+Too many agents logged in, please contact your administrator|Zbyt wiele środków zalogowany, skontaktuj się z administratorem|
+Dial Countdown|Dial Odliczanie|

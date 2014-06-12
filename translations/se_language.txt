@@ -23,13 +23,14 @@ agc|dbconnect.php|1
 agc|timeclock.php|0
 agc|vdc_script_display.php|1
 agc|vdc_script_notes.php|0
-agc|functions.php|1
+agc|functions.php|0
 agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
 agc|phone_only.php|0
 agc|vdc_email_display.php|0
 agc|audit_comments.php|0
+agc|dbconnect_mysqli.php|1
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"Jan"|
@@ -44,6 +45,7 @@ agc|audit_comments.php|0
 "OCT"|"OKT"|
 "NOV"|"NOV"|
 "DEC"|"DEC"|
+\./bp.pl|../agc/bp.pl|
 \./images/|../agc/images/|
 css/|../agc/css/|
 BORDER|Border|
@@ -305,7 +307,7 @@ YOU CANNOT SKIP A CALLBACK OR MANUAL DIAL, YOU MUST DIAL THE LEAD|DU KAN INTE SK
 YOU MUST BE PAUSED TO MANUAL DIAL A NEW LEAD IN AUTO-DIAL MODE|DU MÅSTE VARA I PAUSLÄGE FÖR ATT RINGA ETT NUMMER MANUELLT NÄR DIALERN ÄR I AUTODIAL|
 Enter information below for the new lead you wish to call|Skriv in informationen för det nya leadet du vill ringa|
 YOU MUST BE PAUSED TO CHECK CALLBACKS IN AUTO-DIAL MODE|DU MÅSTE VARA I PAUSLÄGE FÖR ATT KOLLA ÅTERUPPRINGNINGAR NÄR DIALERN ÄR I AUTODIAL|
-Note: all new manual dial leads will go into list 999|Notera: alla nya manuellt uppringda leads hamnar i lista 999|
+Note: all new manual dial leads will go into list|Notera: alla nya manuellt uppringda leads hamnar i lista|
 YOU DO NOT HAVE PERMISSIONS TO TRANSFER CALLS|DU HAR EJ BEHÖRIGHET ATT VIDAREKOPPLA SAMTAL|
 will be added to the beginning of this number|kommer att läggas till i början av numret|
 This is usually a 1 in the USA-Canada|Detta är 46 för Sverige|
@@ -645,3 +647,15 @@ Department:|avdelning:|
 Group Name|gruppnamn|
 Job Title|jobbtitel|
 Location:|plats:|
+### START translations for 2.8 release ###
+This agent screen was not opened properly|Denna agent skärmen öppnades inte korrekt|
+Dial Lead ID|Slå Lead ID|
+Agent Form Display Script|Agent Form Visnings skrivar|
+Agent Notes|Agent Anteckningar|
+You have been paused for too long, you have been logged out of your session|Du har pausats för länge, du har loggat ut från sessionen|
+Too many network errors, please contact your administrator|Alltför många nätverk fel, kontakta administratören|
+No available servers, please contact your administrator|Inga tillgängliga servrar, kontakta administratören|
+No available phones, please contact your administrator|Inga tillgängliga telefoner, kontakta administratören|
+You are already logged in, please log out of your other session first|Du är redan inloggad, logga ut från ditt andra session först|
+Too many agents logged in, please contact your administrator|Alltför många agenter inloggad, kontakta administratören|
+Dial Countdown|Slå Nedräkning|

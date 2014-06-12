@@ -13,10 +13,13 @@
 # 121214-2300 - First Build
 # 130127-0027 - Better non-latin characters support
 # 130328-0007 - Converted ereg to preg functions
+# 130603-2210 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130705-1515 - Added optional encrypted passwords compatibility
+# 130802-1032 - Changed to PHP mysqli functions
 #
 
-require("dbconnect.php");
-require("functions.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 if (isset($_GET["DB"]))				{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))	{$DB=$_POST["DB"];}
@@ -91,12 +94,12 @@ $IFRAME=0;
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,custom_fields_enabled,allow_emails FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =							$row[0];
 	$timeclock_end_of_day =					$row[1];
 	$agentonly_callback_campaign_lock =		$row[2];
@@ -115,12 +118,12 @@ if ($allow_emails<1)
 if ($non_latin < 1)
 	{
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
-	$pass=preg_replace("/[^-_0-9a-zA-Z]/","",$pass);
+	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 	}
 else
 	{
 	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
-	$pass = preg_replace("/\'|\"|\\\\|;/","",$pass);
+	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 	}
 
 
@@ -130,28 +133,26 @@ if (!isset($format))   {$format="text";}
 if (!isset($ACTION))   {$ACTION="refresh";}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
-$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-if ($DB) {echo "|$stmt|\n";}
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',0,0,0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
-$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and modify_leads='1';";
+$stmt="SELECT count(*) from vicidial_users where user='$user' and modify_leads='1';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $VUmodify=$row[0];
 
 $stmt="SELECT count(*) from vicidial_live_agents where user='$user';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $LVAactive=$row[0];
 $LVAactive=9;
 if ( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0) or ( ($LVAactive < 1) ) )
 	{
-	echo "Ikke gyldigt Brugernavn/Password: |$user|$pass|\n";
+	echo "Ikke gyldigt Brugernavn/Password: |$user|$pass|$auth_message|\n";
 	echo "<form action=./vdc_email_display.php method=POST name=email_display_form id=email_display_form>\n";
 	echo "<input type=hidden name=user id=user value=\"$user\">\n";
 	echo "</form>\n";
@@ -212,14 +213,14 @@ if ($REPLY)
 		{
 		$reply_message=preg_replace('/(\"|\||\'|\;)/', '\\\$1', $reply_message); 
 		$log_stmt="INSERT INTO vicidial_email_log(email_row_id, lead_id, email_date, user, email_to, message, campaign_id, attachments) VALUES('$email_row_id', '$lead_id', now(), '$user', '$reply_to_address', '$reply_message', '$campaign', '$attachment_str')";
-		$log_rslt=mysql_query($log_stmt, $link);
+		$log_rslt=mysql_to_mysqli($log_stmt, $link);
 		echo "<p>mail sent to $to!</p>";
 
 		# Hangup the "call" på the agent screen
 		$stmt="UPDATE vicidial_live_agents set external_hangup='1' where user='$user';";
 		if ($DB) {echo "$stmt\n";}
-		$rslt=mysql_query($stmt, $link);
-		$affected_rows = mysql_affected_rows($link);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$affected_rows = mysqli_affected_rows($link);
 		}
 	else 
 		{
@@ -231,9 +232,9 @@ if ($REPLY)
 
 if ($lead_id) {
 	$stmt="select * from vicidial_email_list where lead_id='$lead_id' and direction='INBOUND' and status IN('NEW','INCALL') order by email_date asc";
-	$rslt=mysql_query($stmt, $link);
-	if (mysql_num_rows($rslt)>0) {
-		$row=mysql_fetch_array($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if (mysqli_num_rows($rslt)>0) {
+		$row=mysqli_fetch_array($rslt);
 		$email_row_id=$row["email_row_id"];
 		preg_match('/\<[^\>\@]+\@[^\>\@]+\>/', $row["email_from"], $matches);
 		if (strlen($matches[0])>0) {
@@ -257,10 +258,10 @@ if ($lead_id) {
 		$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='150'>Message:</td><td align='left' valign='top' width='*'><pre>$row[message]</pre></td></tr>\n";
 
 		$att_stmt="select * from inbound_email_attachments where email_row_id='$email_row_id'";
-		$att_rslt=mysql_query($att_stmt, $link);
-		if (mysql_num_rows($att_rslt)>0) {
+		$att_rslt=mysql_to_mysqli($att_stmt, $link);
+		if (mysqli_num_rows($att_rslt)>0) {
 			$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='150'>vedhæftede filer:</td><td align='left' valign='top' width='*'><pre>";
-			while($att_row=mysql_fetch_array($att_rslt)) {
+			while($att_row=mysqli_fetch_array($att_rslt)) {
 				$EMAIL_form.="<LI><a href='$_SERVER[PHP_SELF]?attachment_id=$att_row[attachment_id]&lead_id=$lead_id'>$att_row[filename]</a>\n";
 			}
 			$EMAIL_form.="</pre></td></tr>";
@@ -288,9 +289,9 @@ if ($lead_id) {
 
 	if ($attachment_id) {
 		$stmt="select * from inbound_email_attachments where attachment_id='$attachment_id'";
-		$rslt=mysql_query($stmt, $link);
-		if (mysql_num_rows($rslt)>0) {
-			$row=mysql_fetch_array($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if (mysqli_num_rows($rslt)>0) {
+			$row=mysqli_fetch_array($rslt);
 			$filename=$row["filename"];
 			$encoding=$row["file_encoding"];
 			$file_size=$row["file_size"];
@@ -309,7 +310,7 @@ if ($lead_id) {
 ?>
 	<html>
 	<head>
-	<title>VICIDIAL email frame</title>
+	<title>AGENT email frame</title>
 	</head>
 	<script language="Javascript">
 	function ParseFileName() 

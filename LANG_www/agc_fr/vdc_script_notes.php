@@ -13,12 +13,15 @@
 # 100215-0744 - First build of script
 # 100622-2230 - Added field labels
 # 130328-0020 - Converted ereg to preg functions
+# 130603-2203 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130802-1037 - Changed to PHP mysqli functions
 #
 
-$version = '2.6-3';
-$build = '130328-0020';
+$version = '2.8-5';
+$build = '130802-1037';
 
-require("dbconnect.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 
 if (isset($_POST["lead_id"]))	{$lead_id=$_POST["lead_id"];}
@@ -215,12 +218,12 @@ if (strlen($call_date) < 1)
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysql_num_rows($rslt);
+$qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =							$row[0];
 	$timeclock_end_of_day =					$row[1];
 	$agentonly_callback_campaign_lock =		$row[2];
@@ -269,8 +272,8 @@ $label_email =				'Email';
 $label_comments =			'Comments';
 
 $stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 if (strlen($row[0])>0)	{$label_title =				$row[0];}
 if (strlen($row[1])>0)	{$label_first_name =		$row[1];}
 if (strlen($row[2])>0)	{$label_middle_initial =	$row[2];}
@@ -298,27 +301,21 @@ if (!isset($format))   {$format="text";}
 if (!isset($ACTION))   {$ACTION="refresh";}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
-$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-if ($DB) {echo "|$stmt|\n";}
-if ($non_latin > 0) {$rslt=mysql_query("SET NAMES 'UTF8'");}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',0,0,0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-	echo "Invalide Username/Mot de passe: |$user|$pass|\n";
+	echo "Invalide Username/Mot de passe: |$user|$pass|$auth_message|\n";
 	exit;
-	}
-else
-	{
-	# do nothing for now
 	}
 
 echo "<HTML>\n";
 echo "<head>\n";
 echo "<!-- VERSION: $version     BUILD: $build    USER: $user   server_ip: $server_ip-->\n";
-echo "<title>ViciDial Notes";
+echo "<title>Remarques sur l agent";
 echo "</title>\n";
 echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
@@ -333,31 +330,31 @@ if ($process > 0)
 	#Update vicidial_list record
 	$stmt="UPDATE vicidial_list SET vendor_lead_code='$vendor_lead_code',title='$title',first_name='$first_name',middle_initial='$middle_initial',last_name='$last_name',address1='$address1',address2='$address2',address3='$address3',city='$city',state='$state',province='$province',postal_code='$postal_code',phone_code='$phone_code',phone_number='$phone_number',gender='$gender',date_of_birth='$date_of_birth',alt_phone='$alt_phone',email='$email',security_phrase='$security_phrase',comments='$comments',rank='$rank',owner='$owner' where lead_id='$lead_id';";
 	if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-	$affected_rows = mysql_affected_rows($link);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$affected_rows = mysqli_affected_rows($link);
 
 	#Update the agent screen with new data
 	$stmt="UPDATE vicidial_live_agents set external_update_fields='1',external_update_fields_data='vendor_lead_code,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,phone_code,phone_number,gender,date_of_birth,alt_phone,email,security_phrase,comments,rank,owner' where user='$user';";
 	if ($DB) {echo "$stmt\n";}
-	$rslt=mysql_query($stmt, $link);
-	$affected_rows = mysql_affected_rows($link);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$affected_rows = mysqli_affected_rows($link);
 
 	if ($notesid < 100)
 		{
 		# Insert into vicidial_call_notes
 		$stmt="INSERT INTO vicidial_call_notes set lead_id='$lead_id',vicidial_id='$vicidial_id',call_date='$call_date',order_id='$order_id',appointment_date='$appointment_date',appointment_time='$appointment_time',call_notes='$call_notes';";
 		if ($DB) {echo "$stmt\n";}
-		$rslt=mysql_query($stmt, $link);
-		$affected_rows = mysql_affected_rows($link);
-		$notesid = mysql_insert_id($link);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$affected_rows = mysqli_affected_rows($link);
+		$notesid = mysqli_insert_id($link);
 		}
 	else
 		{
 		# update vicidial_call_notes record
 		$stmt="UPDATE vicidial_call_notes set order_id='$order_id',appointment_date='$appointment_date',appointment_time='$appointment_time',call_notes='$call_notes' where notesid='$notesid';";
 		if ($DB) {echo "$stmt\n";}
-		$rslt=mysql_query($stmt, $link);
-		$affected_rows = mysql_affected_rows($link);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$affected_rows = mysqli_affected_rows($link);
 		}
 
 	echo "<BR><b>Data Changes Accepted</b><BR><BR>";

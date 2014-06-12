@@ -23,13 +23,14 @@ agc|dbconnect.php|1
 agc|timeclock.php|0
 agc|vdc_script_display.php|1
 agc|vdc_script_notes.php|0
-agc|functions.php|1
+agc|functions.php|0
 agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
 agc|phone_only.php|0
 agc|vdc_email_display.php|0
 agc|audit_comments.php|0
+agc|dbconnect_mysqli.php|1
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"ENE"|
@@ -44,6 +45,7 @@ agc|audit_comments.php|0
 "OCT"|"OCT"|
 "NOV"|"NOV"|
 "DEC"|"DIC"|
+\./bp.pl|../agc/bp.pl|
 \./images/|../agc/images/|
 css/|../agc/css/|
 BORDER|Border|
@@ -133,13 +135,13 @@ Active Lines Panel|Panel de líneas activas|
 Conferences Panel|Panel de conferencias|
 Check Voicemail|Revisar el buzón de voz|
 Live Call|Llamada activa|
-Hangup Trunk|Colgar la troncal|
-Hijack Trunk|Apoderarse de la troncal|
-Listen Trunk|Escuchar la troncal|
-Active Local Menu|Menú local activo|
-Hangup Local|Colgar la local|
-Hijack Local|Apoderarse de la local|
-Listen Local|Escuchar la local|
+Hangup Trunk|Colgar troncal|
+Hijack Trunk|Apoderarse de troncal|
+Listen Trunk|Escuchar troncal|
+Active Local Menu|Menu local activo|
+Hangup Local|Colgar local|
+Hijack Local|Apoderarse de local|
+Listen Local|Escuchar local|
 Channel to be transferred|Canal que va a ser transferido|
 Extensions Menu|Menú de las extensiones|
 Send to selected extension|Enviar a la extensión seleccionada|
@@ -149,19 +151,19 @@ click on a number below to send to a conference|Haga click en el número siguien
 Send my channel too|Enviar también a mi canal|
 Conferences Menu|Menú de conferencias|
 LOCAL Extensions Dial|Marcar a extensiones LOCALES|
-Phone calling from|Llamada telefónica de|
+Phone calling from|Llamada telefónica desde|
 Call selected extension|Llamar a la extensión seleccionada|
 Call selected vmail box|Llamar al buzón de voz seleccionado|
-LOCAL DIAL EXTENSIONS|EXTENSIONES DE MARCACIÓN LOCALES|
+LOCAL DIAL EXTENSIONS|EXTENSIONES DE MARCACIÓN LOCAL|
 OUTBOUND CALLS|LLAMADAS SALIENTES|
 INBOUND CALLS|LLAMADAS ENTRANTES|
 Refresh rate|Actualizar la tarifa|
 MANUAL DIAL|MARCACIÓN MANUAL|
 CALL DATE\/TIME|FECHA/HORA DE LA LLAMADA|
-LOCAL HANGUP|Colgar la local|
+LOCAL HANGUP|Colgar localmente|
 PARKED CALLS|LLAMADAS RETENIDAS|
 PARKED BY|RETENIDA POR|
-PARKED TIME|TIEMPO DE HABER SIDO RETENIDA|
+PARKED TIME|TIEMPO DE RETENCION|
 Registered to|Registrado a|
 Enter Conference|Entrar a la conferencia|
 Dial From Conf|Marcar desde la conferencia|
@@ -169,16 +171,16 @@ Active Extensions|Extensiones activas|
 Outside Lines|Líneas de salida|
 Local Extensions|Extensiones Locales|
 Data Goes Here|Los datos van aquí|
-Trunk Action|Acción de la troncal|
-Local Action|Acción de la local|
+Trunk Action|Acción troncal|
+Local Action|Acción local|
 Conferences List|Lista de las conferencias|
-Click on a conference room number on the left for info on that conference|Hacer click en el número de la sala de conferencias de la izquierda para obtener más información de la misma|
+Click on a conference room number on the left for info on that conference|Hacer click en el número de la sala de conferencias al lado izquierdo para obtener más información de la misma|
 List Display|Despliegue de listas|
 Live Extensions|Extensiones activas|
 Busy Extensions|Extensiones ocupadas|
 Outside Lines|Líneas salientes|
-script runtime|tiempo de ejecución del guión|
-Call Log Display|Desplegar el registro de llamadas|
+script runtime|tiempo de ejecución del script|
+Call Log Display|Desplegar registro de llamadas|
 is not valid|No es válido|
 or protocol|o protocolo|
 Conf Extension Check|Revisar la extensión de configuración|
@@ -194,15 +196,15 @@ One of these variables|Una de estas variables|
 must be greater than 2 characters|debe ser mayor a 2 caracteres|
 must be greater than 14 characters|debe ser mayor a 14 caracteres|
 must be set|debe ser fijo|
-not sent|no se envió|
-Cannot find empty conference|No puede encontrar una conferencia vacía|
+not sent|no enviado|
+Cannot find empty conference|No se encuentra una conferencia vacía|
 is not live|no está activo|
 RECORDING WILL LAST UP TO 60 MINUTES|LA GRABACIÓN DURARÁ HASTA 60 MINUTOS|
-Parked Calls Display|Despliegue de las llamadas retenidas|
+Parked Calls Display|Despliegue de llamadas retenidas|
 Database Query Script|Guión de las consultas de la base de datos|
 Group Choice|Opción de Grupo|
 has been registered to user|se ha registrado al usuario|
-HOPPER EMPTY|FILA DE MARCACIÓN VACÍO|
+HOPPER EMPTY|FILA DE MARCACIÓN VACÍA|
 LOG NOT ENTERED|NO SE INGRESÓ EL REGISTRO|
 has been changed to|se ha cambiado a|
 information has been updated|La información ha sido actualizada|
@@ -218,26 +220,26 @@ Campaign not active, please try again|La campaña no está activa, por favor, in
 Login incorrect, please try again|No se inició sesión correctamente, por favor, inténtelo de nuevo|
 Campaign Login|Inicio de sesión de la campaña|
 Sorry, your phone login and password are not active in this system, please try again|Lo sentimos, el inicio de sesión y la contraseña del teléfono no están activos en este sistema, por favor, inténtelo de nuevo|
-leads left to call in hopper|Los contactos del lado izquierdo son para llamar en la fila de marcación|
+leads left to call in hopper|Contactos pendientes por llamar en fila de marcación|
 CAMPAIGN CUSTOM PARKING|RETENCIÓN PERSONALIZADA DE LA CAMPAÑA|
 CAMPAIGN DEFAULT PARKING|RETENCIÓN PREDETERMINADA DE LA CAMPAÑA|
 CAMPAIGN CUSTOM WEB FORM|FORMULARIO WEB PERSONALIZADO DE LA CAMPAÑA|
 CAMPAIGN DEFAULT WEB FORM|FORMULARIO WEB PREDETERMINADO DE LA CAMPAÑA|
 CAMPAIGN ALLOWS CLOSERS|LA CAMPAÑA PERMITE TENER VERIFICADORES|
-CAMPAIGN ALLOWS NO CLOSERS|LA CAMPAÑA NO PERMITE TENER VERIFICADORES|
-USING PREVIOUS MEETME ROOM|UTILIZAR EL CUARTO DE CONFERENCIAS ANTERIOR|
-USING NEW MEETME ROOM|UTILIZAR UN NUEVO CUARTO DE CONFERENCIAS|
-old QUEUE and INCALL reverted list|lista invertida de QUEUE e INCALL anterior|
-old QUEUE and INCALL reverted hopper|fila de marcación invertida de QUEUE e INCALL anterior|
-old vicidial_live_agents records cleared|expedientes vicidial_live_agents anteriores eliminados|
-campaign is set to auto_dial_level|la campaña se establece en auto_dial_level|
-new vicidial_live_agents record inserted| se insertó la nueva grabación de vicidial_live_agents|
+CAMPAIGN ALLOWS NO CLOSERS|LA CAMPAÑA NO PERMITE TENER PERSONAL DE VALIDACION|
+USING PREVIOUS MEETME ROOM|UTILIZAR SALA DE CONFERENCIAS ANTERIOR|
+USING NEW MEETME ROOM|UTILIZAR NUEVA SALA DE CONFERENCIAS|
+old QUEUE and INCALL reverted list|lista de llamadas entrantes invertida y antiguos en la cola|
+old QUEUE and INCALL reverted hopper|Fila de llamadas entrantes invertida y antiguos en la cola|
+old vicidial_live_agents records cleared|Registros antiguos de  agentes activos Vicidial eliminados|
+campaign is set to auto_dial_level|la campaña se establece en nivel de automarcación|
+new vicidial_live_agents record inserted| Se insertó nueva grabación de agentes activos vicidial|
 campaign is set to manual dial|la campaña está configurada con marcación manual|
 Sorry, there are no leads in the hopper for this campaign|Lo sentimos, no hay contactos en la fila de marcación de esta campaña|
 Dial Next Number|Marcar al siguiente número|
 LIVE CALLS IN YOUR SESSION|LLAMADAS ACTIVAS EN SU SESIÓN|
-Stop Recording|Detener la Grabación|
-Start Recording|Comenzar la Grabación|
+Stop Recording|Detener Grabación|
+Start Recording|Comenzar Grabación|
 Transfer number must have more than 1 digit|El número de la transferencia debe tener más de 1 dígito|
 Grab Parked Call|Capturar la llamada retenida|
 Park Call|Retener la llamada|
@@ -250,47 +252,47 @@ Hangup Xfer Line|Colgar la línea en transferencia|
 Hangup Both Lines|Colgar ambas líneas|
 Hangup Customer|Colgar al cliente|
 Transfer - Conference|Transferir - Conferencia|
-LOCAL CLOSER|VERIFICADOR LOCAL|
-INTERNAL CLOSER|VERIFICADOR INTERNO|
-Dial Blind Transfer|Enviar una transferencia desatendida|
+LOCAL CLOSER|AGENTE VALIDADOR LOCAL|
+INTERNAL CLOSER|AGENTE VALIDADOR INTERNO|
+Dial Blind Transfer|Transferir llamada ciega (sin verificación de tono de marcación)|
 Dial timed out, contact your system administrator|Tiempo de espera superado, contacte al administrador del sistema|
-No more leads in the hopper for campaign|No hay más contactos en la fila de marcación de la campaña|
+No more leads in the hopper for campaign|No hay más contactos en la fila de marcación para la campaña|
 Web Form|Formulario Web|
-You Must Select a Disposition|Usted debe seleccionar una disposición|
+You Must Select a Disposition|Usted debe seleccionar un proceso de destino|
 GROUPS NOT SELECTED|GRUPOS NO SELECCIONADOS|
 SELECTED GROUPS|GRUPOS SELECCIONADOS|
 You cannot log out during a Dial attempt|Usted no puede cerrar sesión durante un intento de marcación|
-Wait 50 seconds for the dial to fail out if it is not answered|Esperar 50 segundos a que la marcación falle, si no se contesta|
-STILL A LIVE CALL! Hang it up then you can log out|¡TODAVÍA TIENE UNA LLAMADA ACTIVA! Cuelgue y luego podrá cerrar sesión|
-Hide conference call channel information|Ocultar la información del canal de conferencia|
-Show conference call channel information|Mostrar la información del canal de conferencia|
-Logged in as User|Inició sesión como usuario|
+Wait 50 seconds for the dial to fail out if it is not answered|Esperar 50 segundos a que la marcación falle, si no es respondida|
+STILL A LIVE CALL! Hang it up then you can log out|¡AÚN TIENE UNA LLAMADA ACTIVA! Cuelgue y luego podrá cerrar sesión|
+Hide conference call channel information|Ocultar información del canal de conferencia|
+Show conference call channel information|Mostrar información del canal de conferencia|
+Logged in as User|Inició de sesión como usuario|
 No one is in your session|Nadie está en su sesión|
 Customer has hung up|El cliente ha colgado|
-End-of-call Disposition Selection|Selección de la disposición de fin de llamada|
-CLOSER INBOUND GROUP SELECTION|SELECCIÓN DEL GRUPO DE VERIFICADORES ENTRANTES|
-Closer Inbound Group Selection|Selección del grupo de verificadores entrantes|
+End-of-call Disposition Selection|Selección de proceso de fin de llamada|
+CLOSER INBOUND GROUP SELECTION|SELECCIÓN DE GRUPO DE AGENTE VALIDADOR DE LLAMADAS ENTRANTES|
+Closer Inbound Group Selection|Selección de grupo de Agente Validador de llamadas entrantes|
 BLENDED CALLING|MEZCLA DE LLAMADAS ENTRANTES Y SALIENTES|
-outbound activated|Salientes activdas|
-Preview the Lead then|Visualizar el contacto, después|
+outbound activated|Salientes activadas|
+Preview the Lead then|Previsualizar depués el contacto|
 Lead was not reverted, there was an error|El contacto no se invirtió, hubo un error|
 call was not placed, there was an error|la llamada no fue atendida, hubo un error|
-Number to call|Número a llamar|
+Number to call|Número a marcar|
 Customer Information|Información del cliente|
-Lead Dispositioned As|El contacto se dispuso como|
-Any changes made to the customer information below at this time will not be comitted, You must change customer information before you Hangup the call|Cualquier cambio que se realice a la siguiente información del cliente no se aplicará, debe cambiar la información del cliente antes de colgar la llamada|
-When active, simply press the keyboard key for the desired disposition for this call. The call will then be hungup and dispositioned automatically|Cuando esté activa, tan sólo presione una tecla del teclado para la disposición deseada para esta llamada. Entonces, se colgará y se dispondrá la llamada de manera automática|
-Disposition Hot Keys|Teclas de acceso rápido para la disposición|
-Cust Time|Tiempo del cliente|
+Lead Dispositioned As|El contacto se procesó como|
+Any changes made to the customer information below at this time will not be comitted, You must change customer information before you Hangup the call|Cualquier cambio hecho a la siguiente información del cliente no se aplicará, debe cambiar la información del cliente antes de colgar la llamada|
+When active, simply press the keyboard key for the desired disposition for this call. The call will then be hungup and dispositioned automatically|Cuando esté activa, simplemente presione una tecla para el proceso destino deseado para esta llamada. Entonces, se colgará y se procesará la llamada de manera automática|
+Disposition Hot Keys|Teclas rápidas de atención|
+Cust Time|Horario del cliente|
 RECORD ID|GRABAR ID|
-RECORDING FILE|ARCHIVO DE GRABACIÓN|
+RECORDING FILE|GRABANDO ARCHIVO|
 HOT KEYS ACTIVE|TECLAS ACCESO RÁPIDO ACTIVAS|
 HOT KEYS INACTIVE|TECLAS ACCESO RÁPIDO INACTIVAS|
 DIAL OVERRIDE|INVALIDAR Y SOBREESCRIBIR LA MARCACIÓN|
-SKIP LEAD|SALTARSE EL CONTACTO|
+SKIP LEAD|SALTAR EL CONTACTO|
 DIAL LEAD|MARCAR AL CONTACTO|
 LEAD PREVIEW|VISUALIZAR EL CONTACTO|
-PAUSE AGENT DIALING|PAUSAR LA MARCACIÓN DEL AGENTE|
+PAUSE AGENT DIALING|PAUSAR MARCACIÓN DEL AGENTE|
 DISPOSITION CALL|DISPOSICIÓN DEL ESTADO DE LA LLAMADA|
  session ID| ID de sesión|
  to campaign| a la campaña|
@@ -299,37 +301,37 @@ Select a CallBack Date|Seleccione una fecha para devolver la llamada|
  minimize | minimizar |
 You must choose a date|Usted debe elegir una fecha|
 Select a Date Below|Seleccione una fecha a continuación|
-Click on a callback below to call the customer back now. If you click on a record below to call it, it will be removed from the list|Haga click en regresar la llamada a continuación para volver a llamar al cliente. Si usted hace click en uno de los expedientes siguientes para llamarlo, se retirará de la lista|
-If you want to dial a number and have it NOT be added as a new lead, enter in the exact dialstring that you want to call in the Dial Override field below. To hangup this call you will have to open the CALLS IN THIS SESSION link at the bottom of the screen and hang it up by clicking on its channel link there|Si usted desea marcar un número y NO desea agregarlo como nuevo contacto, captúrelo en la cadena de marcación a la que desea llamar del campo de invalidación de marcación siguiente. Para colgar esta llamada, tendrá que abrir el enlace de LLAMADAS EN ESTA SESIÓN en la parte inferior de la pantalla y colgarla al hacer click en el enlace del canal que se encuentra ahí|
-YOU CANNOT SKIP A CALLBACK OR MANUAL DIAL, YOU MUST DIAL THE LEAD|USTED NO PUEDE SALTARSE EL DEVOLVER UNA LLAMADA O UNA MARCACIÓN MANUAL, DEBE MARCAR AL CONTACTO|
+Click on a callback below to call the customer back now. If you click on a record below to call it, it will be removed from the list|Haga click en regresar la llamada a continuación para volver a llamar al cliente. Si usted hace click en uno de los registros siguientes para marcar, se retirará de la lista|
+If you want to dial a number and have it NOT be added as a new lead, enter in the exact dialstring that you want to call in the Dial Override field below. To hangup this call you will have to open the CALLS IN THIS SESSION link at the bottom of the screen and hang it up by clicking on its channel link there|Si usted desea marcar un número y NO desea agregarlo como nuevo contacto, captúrelo en la cadena de marcación a la que desea llamar del campo de invalidación de marcación que aparece a continuación. Para colgar esta llamada, tendrá que abrir el enlace de LLAMADAS EN ESTA SESIÓN en la parte inferior de la pantalla y colgarla haciendo click en el enlace del canal|
+YOU CANNOT SKIP A CALLBACK OR MANUAL DIAL, YOU MUST DIAL THE LEAD|USTED NO PUEDE EVADIR EL DEVOLVER UNA LLAMADA O UNA MARCACIÓN MANUAL, DEBE MARCAR AL CONTACTO|
 YOU MUST BE PAUSED TO MANUAL DIAL A NEW LEAD IN AUTO-DIAL MODE|USTED DEBE PAUSAR EL SISTEMA PARA MARCAR DE FORMA MANUAL UN NUEVO CONTACTO EN EL MODO DE MARCACIÓN AUTOMÁTICA|
 Enter information below for the new lead you wish to call|Ingrese la información del nuevo contacto al que desea llamar a continuación|
 YOU MUST BE PAUSED TO CHECK CALLBACKS IN AUTO-DIAL MODE|USTED DEBE PAUSAR EL SISTEMA PARA REVISAR LA DEVOLUCIÓN DE LLAMADAS EN EL MODO DE MARCACIÓN AUTOMÁTICA|
-Note: all new manual dial leads will go into list 999|Nota: todos los contactos de marcación manual nuevos se agregarán a la lista 999|
+Note: all new manual dial leads will go into list|Nota: todos los contactos de marcación manual nuevos se agregarán a la lista|
 YOU DO NOT HAVE PERMISSIONS TO TRANSFER CALLS|USTED NO CUENTA CON EL PERMISO DE TRANSFERIR LLAMADAS|
 will be added to the beginning of this number|será agregado al inicio de este número|
 This is usually a 1 in the USA-Canada|Éste, por lo general, es un 1 en EE.UU. y Canadá|
 NEW MANUAL DIAL LEAD FOR|NUEVO CONTACTO DE MARCACIÓN MANUAL PARA|
-Finish and Disposition Call|Terminar y disponer de la llamada|
+Finish and Disposition Call|Terminar y procesar final de la llamada|
 10 digits max - digits only|máximo 10 dígitos - sólo dígitos|
 Note: a dial prefix of|Nota: un prefijo de marcación de|
 Hangup Again|Colgar de nuevo|
 Go Back|Regresar|
 Call Agent Again|Llamar de nuevo al agente|
-MY CALLBACK ONLY|SÓLO MI SERVICIO DE DEVOLVER LLAMADAS|
-NO ACTIVE CALLBACKS|NO HAY SERVICIOS DE DEVOLVER LLAMADAS ACTIVOS|
-ACTIVE CALLBACKS|SERVICIOS DE DEVOLVER LLAMADAS ACTIVOS|
-CALLBACKS FOR AGENT|SERVICIOS DE DEVOLVER LLAMADAS PARA AGENTES|
+MY CALLBACK ONLY|SÓLO MI SERVICIO DE DEVOLVOLUCION DE LLAMADAS|
+NO ACTIVE CALLBACKS|NO HAY SERVICIOS DE DEVOLVOLUCION DE LLAMADAS ACTIVAS|
+ACTIVE CALLBACKS|DEVOLUCIÓN DE LLAMADAS ACTIVAS|
+CALLBACKS FOR AGENT|DEVOLUCIÓN DE LLAMADAS PARA AGENTES|
 Dial Code:|Código de marcación:|
 Dial Override|Invalidar y sobreescribir la marcación|
 digits only please|sólo dígitos por favor|
 Dial Now|Marcar ahora|
-CB Comments|Comentarios de los CB|
+CB Comments|Comentarios de CB|
  Title| Título|
 Your Status|Su Estado|
  STATUS| ESTADO|
  RESET| REINICIAR|
-CLEAR FORM|ELIMINAR EL FORMULARIO|
+CLEAR FORM|ELIMINAR FORMULARIO|
 SUBMIT|INGRESAR|
 Incoming|Entrante|
 Calling|Llamando|
@@ -407,9 +409,9 @@ AVAILABLE EXTENSIONS|EXTENSIONES DISPONIBLES|
 ### END translation phrases through 1.1.11 release ###
 Search Existing Leads|Buscar en los contactos existentes|
 This option if checked will attempt to find the phone number in the system before inserting it as a new lead|Si se selecciona esta opción, ésta intentará encontrar el número telefónico en el sistema antes de ingresarlo como un nuevo contacto|
-Finish Wrapup and Move On|Terminar con la conclusión y proseguir|
-seconds remaining in wrapup|segundos restantes de la conclusión|
-Call Wrapup:|Conclusión de la llamada:|
+Finish Wrapup and Move On|Terminar cierre y seguir|
+seconds remaining in wrapup|segundos restantes para cerrar|
+Call Wrapup:|Cierre de llamada:|
 ### months of the year for CallBack date select screen ###
 January|Enero|
 Frebruary|Febrero|
@@ -424,7 +426,7 @@ October|Octubre|
 November|Noviembre|
 December|Diciembre|
 ### BEGIN translation phrases for 2.0.1 release ###
-Previous Callback Information|Información del servicio de devolución de llamada anterior|
+Previous Callback Information|Información de devolución de llamada anterior|
 Last Call: |Última llamada:|
 CallBack: |Servicio de devolución de llamada:|
 Agent: |Agente:|
@@ -437,63 +439,63 @@ YOU MUST ENTER A PHONE NUMBER AND DIAL CODE TO USE FAST DIAL|USTED DEBE INGRESAR
  SELECT A PAUSE CODE :| SELECCIONE UN CÓDIGO DE PAUSA :|
 ENTER A PAUSE CODE|INTRODUZCA UN CÓDIGO DE PAUSA|
 YOU MUST BE PAUSED TO ENTER A PAUSE CODE IN AUTO-DIAL MODE|USTED DEBE PAUSAR EL SISTEMA PARA INGRESAR UN CÓDIGO DE PAUSA EN EL MODO DE MARCACIÓN AUTOMÁTICA|
-Your session has been disabled|Se ha inhabilitado su sesión|
+Your session has been disabled|Se ha desactivado su sesión|
 ### BEGIN translation phrases for 2.0.5 release ###
 Gender: |Género:|
 Date of Birth: |Fecha de nacimiento:|
 YOU MUST BE PAUSED TO CHANGE GROUPS|USTED DEBE PAUSAR EL SISTEMA PARA CAMBIAR LOS GRUPOS|
 Calls in Queue:|Llamadas en cola:|
- Timeclock| Reloj checador|
+ Timeclock| Reloj de Control de Asistencia|
 The user and password you entered are not active in the system|El usuario y la contraseña que ha introducido no están activos en el sistema|
 Please try again|Por favor, inténtelo de nuevo|
 You cannot log in or out within 30 seconds of your last login or logout|No puede iniciar o cerrar sesión en un plazo de 30 segundos después su último inicio o cierre de sesión|
-You have now logged-out|Usted ha cerrado su sesión|
-You logged out at |Usted cerró su sesión en|
+You have now logged-out|Ahora ha cerrado su sesión|
+You logged out at |Cerró su sesión en|
 Amount of time you were logged-in: |El tiempo durante el cual tuvo su sesión abierta:|
-ERROR: timeclock log entry already made: |ERROR: ya se había ingresado el registro en el reloj checador:|
+ERROR: timeclock log entry already made: |ERROR: ya se ha registrado en el Reloj de Control de Asistencia:|
 BACK to Agent Login Screen|REGRESAR a la pantalla de inicio de sesión del agente|
 BACK to Administration|REGRESAR a Administración|
 BACK to Welcome Screen|REGRESAR a la pantalla de bienvenida|
 Time since you were last logged-in: |Tiempo transcurrido desde la última vez que inició sesión:|
-You last logged-out at: |Usted cerró sesión por última vez el:|
-Click LOGIN below to log-in|Haga click en INICIAR SESIÓN a continuación para acceder al sistema|
+You last logged-out at: |Usted cerró sesión por última vez en:|
+Click LOGIN below to log-in|Click en INICIAR SESIÓN para acceder al sistema|
 Amount of time you have been logged-in: |Tiempo transcurrido desde que inició sesión:|
 You logged-in at:|Inició sesión en:|
-Click LOGOUT below to log-out|Haga click en CERRAR SESIÓN a continuación para salir del sistema|
+Click LOGOUT below to log-out|Haga click abajo en CERRAR SESIÓN para salir del sistema|
 Undefined|Indefinido|
 This phone number is not in the campaign lists|Este número telefónico no está en las listas de la campaña|
 Unspecified error|Error no especificado|
-Extended Alt Phone Information: |Información extendida del teléfono alternativo:|
+Extended Alt Phone Information: |Información ampliada del teléfono alternativo:|
 ALT DIAL NUMBER:|NÚMERO DE MARCACIÓN ALTERNATIVA:|
-Phone Code and Number:|Código y número telefónicos:|
+Phone Code and Number:|Código y número telefónico:|
 Notes: |Notas:|
 Active: |Activo:|
 Alt Count: |Cuenta alternativa: |
-Change this phone number to INACTIVE|Cambiar este número telefónico a INACTIVOS|
-Change this phone number to ACTIVE|Cambiar este número telefónico a ACTIVOS|
-YOU MUST LOG IN TO THE TIMECLOCK FIRST|USTED DEBE INGRESAR PRIMERO AL RELOJ CHECADOR|
-There is a time synchronization problem with your system, please tell your system administrator|Hay un problema de sincronización de horario en su sistema, por favor, infórmeselo al administrador de su sistema|
+Change this phone number to INACTIVE|Cambiar este número telefónico a INACTIVO|
+Change this phone number to ACTIVE|Cambiar este número telefónico a ACTIVO|
+YOU MUST LOG IN TO THE TIMECLOCK FIRST|DEBE REGISTRARSE PRIMERO EN EL RELOJ DE CONTROL DE ASISTENCIA|
+There is a time synchronization problem with your system, please tell your system administrator|Hay un problema de sincronización en el sistema, por favor infórme al administrador de su sistema|
 Preview Call|Vista previa de la llamada|
 SELECT A GROUP ALIAS|SELECCIONAR UN ALIAS DE GRUPO|
-Group Alias Selection|Selección del alias de grupo|
+Group Alias Selection|Selección de Alias de Grupo|
 Click Here to Choose a Group Alias|Haga click aquí para escoger un alias de grupo|
 Group Alias|Alias de grupo|
-ERROR: There are no Shifts enabled for your user group|ERROR: No hay cambios habilitados para su grupo de usuarios|
+ERROR: There are no Shifts enabled for your user group|ERROR: No hay turnos habilitados para su grupo de usuarios|
 ERROR: You are not allowed to log in outside of your shift|ERROR: No se le permite acceder fuera de su turno|
-MANAGER OVERRIDE|TRANSFERENCIA DEL GERENTE|
-Your Shift is over or has changed, you have been logged out of your session|Su turno se terminó o cambió, se ha cerrado su sesión|
+MANAGER OVERRIDE|INVALIDAR DIRECTOR|
+Your Shift is over or has changed, you have been logged out of your session|Su turno ha terminado o ha cambiado, se ha cerrado su sesión|
 ### START translations for 2.2.0 release ###
 You are not allowed to dial into other agent sessions|No está autorizado para marcar en sesiones de otro agente|
 QUICK TRANSFER|TRANSFERENCIA RÁPIDA|
 Other Agents Status|Estado de otros agentes|
-Available Agents Transfer|Transferencia a los agentes disponibles|
-Show Calls In Queue|Mostrar las llamadas en la cola|
+Available Agents Transfer|Transferencia a agentes disponibles|
+Show Calls In Queue|Mostrar las llamadas en cola|
 Calls In Queue|Llamadas en cola|
 Hide Calls In Queue|Ocultar las llamadas en cola|
 Calls in Queue View Disabled for this campaign|La vista de llamadas en cola se desactivó para esta campaña|
-YOU MUST BE PAUSED TO GRAB CALLS IN QUEUE|USTED DEBE PAUSAR EL SISTEMA PARA CAPTURAR LAS LLAMADAS EN LA COLA|
+YOU MUST BE PAUSED TO GRAB CALLS IN QUEUE|DEBE PAUSAR EL SISTEMA PARA CAPTURAR LAS LLAMADAS EN COLA|
 Manager |Director|
-has selected your in-group choices|ha seleccionado las opciones de su grupo|
+has selected your in-group choices|ha seleccionado sus opciones de grupo de entrada|
 CONSULTATIVE|CONSULTIVO|
 Close Message|Cerrar el mensaje|
 TIMER NOTIFICATION|NOTIFICACIÓN DEL TEMPORIZADOR|
@@ -501,106 +503,106 @@ login_language=en_us|login_language=es_es|
 >AGENTS<|>AGENTES<|
 ### START translations for 2.4 release ###
 VIEW CALL LOG|VER REGISTRO DE LLAMADAS|
-click to dial|haga clic para marcar|
-Close Call Log|Cerca de registro de llamadas|
-YOU MUST BE PAUSED TO VIEW YOUR CALL LOG|USTED DEBE SER se detuvo para ver el registro de llamadas|
+click to dial|Clic para marcar|
+Close Call Log|Registro de llamadas cerradas|
+YOU MUST BE PAUSED TO VIEW YOUR CALL LOG|DEBE PAUSAR PARA VER SU REGISTRO DE LLAMADAS|
 Close Info Box|Cerrar cuadro de información|
-No calls on this day|No hay llamadas en este día|
-You are in ALT dial mode, you must finish the lead before logging out|Usted está en el modo de marcación ALT, debe terminar el cable antes de salir|
-Presets Button|Presets Button|
+No calls on this day|No hay llamadas este día|
+You are in ALT dial mode, you must finish the lead before logging out|Usted está en el modo de marcación Alternativa, debe terminar el contacto antes de salir|
+Presets Button|Boton de Presets|
 SELECT A PRESET|Elija un preset|
-Customer Hung-up, 3-way Call Ended Automatically|Cliente Hung-up, de 3 vías llamadas terminaron automáticamente|
-Manual Dial Queue Calls Waiting|Cola de llamadas en espera Marcación manual|
-Manual Queue|Manual de la cola|
-This phone number is outside of the local call time|Este número de teléfono se encuentra fuera del tiempo de las llamadas locales|
-Manual Queue is Off|Manual de la cola está Desactivado|
-Manual Queue is On|El manual de la cola es|
-Call Notes:|Notas de la llamada:|
-Call Notes List|Lista de llamadas Notas|
-view notes|ver las notas|
-CALL NOTES LOG|Notas de la llamada LOG|
-Close Call Notes|Cerca de las notas de llamadas|
-CALL LOG FOR THIS LEAD|REGISTRO DE LLAMADAS PARA ESTE CABLE|
-SEARCH FOR A LEAD|BUSCAR UN PLOMO|
+Customer Hung-up, 3-way Call Ended Automatically|El Cliente cuelga,llamada tripartita terminada automáticamente|
+Manual Dial Queue Calls Waiting|Cola de llamadas en espera de Marcación manual|
+Manual Queue|Cola Manual|
+This phone number is outside of the local call time|Este número de teléfono se encuentra fuera de los horarios de marcación local|
+Manual Queue is Off|Cola manual está inactiva|
+Manual Queue is On|Cola Manual está activa|
+Call Notes:|Notas de llamada:|
+Call Notes List|Lista de Anotaciones en llamadas|
+view notes|Ver notas|
+CALL NOTES LOG|Registro de Notas de llamada|
+Close Call Notes|Notas de llamada cerrada|
+CALL LOG FOR THIS LEAD|REGISTRO DE LLAMADAS PARA ESTE CONTACTO|
+SEARCH FOR A LEAD|BUSCAR UN CONTACTO|
 SEARCH RESULTS|RESULTADOS DE LA BÚSQUEDA|
-YOU MUST BE PAUSED TO SEARCH FOR A LEAD|USTED DEBE SER DETENIDO PARA BUSCAR A PLOMO|
-Notes: when doing a search for a lead, the phone number, lead ID or|Notas: cuando se hace una búsqueda de una ventaja, el número de teléfono, llevar DNI o|
-are the best fields to use|son los mejores campos de usar|
-Using the other fields may be slower. Lead searching does not allow for wildcard or partial search terms|Utilizando los otros campos puede ser más lenta. La búsqueda de plomo no permite términos de búsqueda comodín o parcial|
-Lead search requests are all logged in the system|Las solicitudes de búsqueda de plomo están registra en el sistema de|
+YOU MUST BE PAUSED TO SEARCH FOR A LEAD|USTED DEBE SER DETENIDO PARA BUSCAR UN CONTACTO|
+Notes: when doing a search for a lead, the phone number, lead ID or|Notas: cuando se hace una búsqueda de contactos, el número de teléfono o el ID de CONTACTO |
+are the best fields to use|son los mejores campos para usar|
+Using the other fields may be slower. Lead searching does not allow for wildcard or partial search terms|Utilizando otros campos puede ser más lenta. La búsqueda de contactos no permite términos de búsqueda comodín o parcial|
+Lead search requests are all logged in the system|Las solicitudes de búsqueda de contacto están registradas en el sistema|
 Main Phone Number|Número de teléfono Principal|
 Alternate Phone Number|Número de teléfono alternativo|
 Address3 Phone Number|Dirección3 Teléfono|
 No results found|No se encontraron resultados|
-Results Found:|Los resultados encontrados:|
-No calls found|No hay llamadas encontrado|
+Results Found:|Resultados encontrados:|
+No calls found|No se encontraron llamadas|
 reset form|Nueva búsqueda|
-Callback Status|Devolución de llamada de estado|
-Callback Lead Status|Devolución de llamada Estado de plomo|
-Callback Entry Time|Devolución de llamada Hora de entrada|
-Callback Trigger Time|Devolución de llamada Trigger Time|
+Callback Status|Estado de Devolución de llamada|
+Callback Lead Status|Estado de contacto de devolución de llamada|
+Callback Entry Time|Hora de entrada de Devolución de llamada|
+Callback Trigger Time|Hora de activación de Devolución de llamada|
 Callback Comments|Comentarios de devolución de llamada|
-To see information on one of the callbacks below, click on the INFO link. To call the customer back now, click on the DIAL link. If you click on a record below to dial it, it will be removed from the list|Para ver la información en una de las devoluciones de llamada a continuación, haga clic en el enlace INFORMACIÓN. Para llamar al cliente hacia atrás ahora, haga clic en el vínculo de acceso telefónico. Si hace clic en un registro de abajo para marcar, éste será removido de la lista|
-rings all available agents until one picks up the phone|anillos de todos los agentes disponibles hasta que uno coge el teléfono|
-No calls for this lead|No hay convocatorias de este cable|
-Time Zone Warning|El tiempo de alerta Zona|
-Phone Area Code Outside Dialable Zone|Teléfono código de área fuera de la zona pueda marcar|
-Postal Code Outside Dialable Zone|Código Postal Fuera de la Zona pueda marcar|
-Custom Transfer|Custom Transferencia|
-System Delay, Please try again|Retraso en el sistema, por favor intente de nuevo|
-Disposition Status List Hidden|Lista de Disposición estado oculto|
-The system has received a command to log you out, you have been logged out of your session|El sistema ha recibido una orden para cerrar la sesión, se le ha cerrado la sesión de su período de sesiones|
-Notes: when doing a search for a contact, wildcard or partial search terms are not allowed|Notas: al hacer una búsqueda de un contacto, los términos de búsqueda comodín o parcial no se les permite|
-Contact search requests are all logged in the system|Solicitudes de contacto de búsqueda están registra en el sistema de|
+To see information on one of the callbacks below, click on the INFO link. To call the customer back now, click on the DIAL link. If you click on a record below to dial it, it will be removed from the list|Para ver información en una de las llamadas devueltas listadas a continuación, haga clic en el enlace INFORMACIÓN. Si hace click en un registro listado con el objeto de marcar, este será removido de la lista|
+rings all available agents until one picks up the phone|Marca a todos los agentes disponibles hasta que uno tome la llamada|
+No calls for this lead|No hay llamadas para este contacto|
+Time Zone Warning|Alerta de Zona Horaria|
+Phone Area Code Outside Dialable Zone|Código de Area teléfonica fuera de la zona de marcación|
+Postal Code Outside Dialable Zone|Código Postal Fuera de la Zona de marcación|
+Custom Transfer|Transferencia Habitual|
+System Delay, Please try again|Retardo del sistema, por favor intente de nuevo|
+Disposition Status List Hidden|Lista oculta de estado de finalización|
+The system has received a command to log you out, you have been logged out of your session|El sistema ha recibido una orden para cerrar su sesión, se ha cerrado su sesión|
+Notes: when doing a search for a contact, wildcard or partial search terms are not allowed|Notas: al hacer una búsqueda de un contacto, los términos de búsqueda comodín o parcial no son permitidos|
+Contact search requests are all logged in the system|Solicitudes de búsqueda de contacto están registradas en el sistema|
 SEARCH FOR A CONTACT|Buscar un contacto|
-CONTACTS SEARCH RESULTS|CONTACTOS RESULTADOS DE LA BÚSQUEDA|
-LEAD SEARCH|PERSPECTIVA BUSCAR|
-Customer Time|Tiempo al Cliente|
+CONTACTS SEARCH RESULTS|RESULTADOS DE BÚSQUEDA DE CONTACTOS|
+LEAD SEARCH|BUSCAR CONTACTO|
+Customer Time|Horario del Cliente|
 TERRITORY SELECTION|TERRITORIO DE SELECCIÓN|
-TERRITORIES NOT SELECTED|TERRITORIOS NO SELECCIONADO|
+TERRITORIES NOT SELECTED|TERRITORIOS NO SELECCIONADOS|
 SELECTED TERRITORIES|TERRITORIOS SELECCIONADOS|
-Dialable Leads|Pueda Marcar Perspectiva|
-You have now logged-in|Usted ahora tiene registrados|
-You logged in at|Está conectado a una|
+Dialable Leads|contactos marcables|
+You have now logged-in|Usted ahora tiene registros|
+You logged in at|Está conectado a|
 Refresh Campaign List|Actualizar lista de la campaña|
 PLEASE SELECT A CAMPAIGN|POR FAVOR SELECCIONE UNA CAMPAÑA|
 Agents View|Ver Agentes|
 -READY|-LISTO|
--INCALL|-INCALL|
--PAUSED|-PAUSA|
-CALL DISPOSITION|LLAME AL DESTINO|
+-INCALL|-LLAMADAENTRANTE|
+-PAUSED|-PAUSADO|
+CALL DISPOSITION| PROCESO FINAL DE LLAMADA|
 ### START translations for 2.6 release ###
-Click Here to Choose a Dial In-Group|Pinchar aquí para elejir una llamada en-Group|
-SELECT A DIAL IN-GROUP|SELECCIONAR UN DIAL EN GRUPO|
-DIAL IN-GROUP|DIAL EN GRUPO|
-Dial In-Group|Marque En-Group|
-Click Here to Activate|Haga clic aquí para activar|
-Click Here to Deactivate|Haga clic aquí para desactivar|
-ERROR: You must enter in search terms, one of these must be populated: lead ID, vendor ID, phone number, last name|ERROR: Debe introducir los términos de búsqueda, una de ellas debe ser poblada: ID plomo, ID de proveedor, número de teléfono, el apellido|
-ERROR: You must enter in search terms, one of these must be populated: office number, last name, first name|ERROR: Debe introducir los términos de búsqueda, uno de ellos deben estar siempre ocupados: número de oficina, apellido, nombre|
+Click Here to Choose a Dial In-Group|Click aquí para elegir un grupo de marcación entrante|
+SELECT A DIAL IN-GROUP|SELECCIONAR UN GRUPO DE MARCACION ENTRANTE|
+DIAL IN-GROUP|GRUPO DE MARCACION ENTRANTE|
+Dial In-Group|Grupo de Marcación Entrante|
+Click Here to Activate|Clic aquí para activar|
+Click Here to Deactivate|Clic aquí para desactivar|
+ERROR: You must enter in search terms, one of these must be populated: lead ID, vendor ID, phone number, last name|ERROR: Debe introducir los términos de búsqueda, una de ellas debe tener información: ID de CONTACTO, ID de vendedor, número de teléfono, apellido|
+ERROR: You must enter in search terms, one of these must be populated: office number, last name, first name|ERROR: Debe introducir los términos de búsqueda, uno de ellos debe tener información: número de oficina, apellido, nombre|
 ERROR: There was a problem with your search terms|ERROR: Hubo un problema con los términos de búsqueda|
-Phone and Post Code Time Zone Mismatch|Teléfono y código de tiempo del anuncio coinciden Zone|
-Last Local Call Time|Última Hora local llamada|
-Called Count|Llamado conde|
-Unidentified Hangup Cause Code|Unidentified Colgar Código Causa|
-YOU MUST SELECT AN AGENT TO TRANSFER TO WHEN USING AGENTDIRECT|Debe seleccionar un AGENTE PARA TRANSFERIR A AL USAR AGENTDIRECT|
-Another live agent session was open using your user ID. It has been disabled. Click OK to continue to the agent screen|Otra sesión de agente en vivo fue abierta con su nombre de usuario. Se ha desactivado. Haga clic en Aceptar para continuar con la pantalla de agente|
-View Comment History|Ver comentario Historia|
+Phone and Post Code Time Zone Mismatch|Error en Teléfono y zona horaria de código postal|
+Last Local Call Time|Última Hora de llamada local|
+Called Count|Contador de llamadas|
+Unidentified Hangup Cause Code|Código de motivo para colgar no identificado|
+YOU MUST SELECT AN AGENT TO TRANSFER TO WHEN USING AGENTDIRECT|Debe seleccionar un AGENTE para transferir al usar AGENTDIRECT|
+Another live agent session was open using your user ID. It has been disabled. Click OK to continue to the agent screen|Otra sesión de agente fue activada con su nombre de usuario. Esta ha sido desactivada. Haga clic en Aceptar para continuar con la pantalla de agente|
+View Comment History|Ver Historial de comentarios|
 reset form|Nueva búsqueda|
-SELECT THIS LEAD|Seleccione esta LEAD|
-YOU MUST BE ON AN ACTIVE INBOUND CALL TO SEARCH FOR A LEAD|Usted debe estar en una llamada entrante ACTIVO PARA BUSCAR A PLOMO|
+SELECT THIS LEAD|SELECCIONE ESTE CONTACTO|
+YOU MUST BE ON AN ACTIVE INBOUND CALL TO SEARCH FOR A LEAD|DEBE ESTAR EN UNA LLAMADA ENTRANTE ACTIVA PARA BUSCAR UN CONTACTO|
 Attachments|Adjuntos|
-Next Call Pause|Siguiente llamada Pausa|
+Next Call Pause|Pausa a Siguiente llamada|
 -History-|Historia|
 SUBMIT SEARCH|Enviar búsqueda|
 close |cerrar |
-AGENT CALL LOG|Registro de llamada de agente|
- LENGTH | LARGO |
+AGENT CALL LOG|REGISTRO DE LLAMADA DE AGENTE|
+ LENGTH | LONGITUD |
  PHONE | TELÉFONO |
- FULL NAME | NOMBRE |
+ FULL NAME | NOMBRE COMPLETO |
  CAMPAIGN | CAMPAÑA |
  ALT | ALT |
- HANGUP | HANGUP |
+ HANGUP | COLGAR |
  INFO | INFO |
 phone login|Iniciar sesión telefónica|
 LAST CALL|ÚLTIMA LLAMADA|
@@ -609,39 +611,51 @@ LAST CALL|ÚLTIMA LLAMADA|
  STATE | ESTADO |
  ZIP | CÓDIGO POSTAL |
 Phone Number|Número de Teléfono|
-Phone Number Fields|Los campos de número de teléfono|
-Lead ID|Número de registro(Lead ID)|
- WAIT | EL TIEMPO DE ESPERA |
+Phone Number Fields|Campos de número teléfonico|
+Lead ID|ID de CONTACTO|
+ WAIT | ESPERA |
  AGENT | AGENTE |
- CALL GROUP | LLAME GRUPO |
- TYPE | EL TIPO DE LLAMADA |
+ CALL GROUP | GRUPO DE MARCACION |
+ TYPE | TIPO DE LLAMADA |
 digits only|sólo dígitos|
 DIAL ALERT|MARCAR ALERTA|
-WEB FORM SUBMIT|PÁGINA DEL PRESENTE|
-in campaign|en la campaña|
+WEB FORM SUBMIT|ENVIAR FORMULARIO WEB|
+in campaign|en campaña|
  DATE\/TIME | FECHA \/ HORA |
  IN\/OUT | IN\/OUT |
 >GROUPS<|>GRUPOS<|
 >GO<|>IR<|
->recording<|>grabación<|
+>recording<|>grabando<|
 >SELECT<|>SELECCIONAR<|
-Alert is ON|Alerta está activado|
-Alert is OFF|Alerta está apagado|
-EMAIL LOG FOR THIS LEAD|EMAIL REGISTRO PARA ESTE CABLE|
-EMAIL TO|correo electrónico a|
- ATTACHMENTS | ACCESORIOS |
-Called Since Last Reset|Llamado desde el último reinicio|
+Alert is ON|Alerta está activo|
+Alert is OFF|Alerta está inactivo|
+EMAIL LOG FOR THIS LEAD|REGISTROS DE EMAIL PARA ESTE CONTACTO|
+EMAIL TO|EMAIL PARA|
+ ATTACHMENTS | ADJUNTOS |
+Called Since Last Reset|Llamadas desde el último reinicio|
 Timezone:|Zona Horaria:|
 Dial Link|Marque Enlace|
  LAST | ÚLTIMO |
-SEARCH FOR A CONTACT|Búsqueda de un contacto|
-Notes: when doing a search for a contact, wildcard or partial search terms are not allowed|Nota: cuando se hace una búsqueda de contacto, los términos de búsqueda comodín o parciales no se permiten|
-Contact search requests are all logged in the system|Contacto solicitudes de búsqueda están registrados en el sistema|
+SEARCH FOR A CONTACT|BUSCAR UN CONTACTO|
+Notes: when doing a search for a contact, wildcard or partial search terms are not allowed|Nota: cuando se hace una búsqueda de contacto, los términos de búsqueda comodín o parciales no son permitidos|
+Contact search requests are all logged in the system|Solicitudes de búsqueda de contacto están registradas en el sistema|
 Office Number|Número de la oficina|
 First Name|Nombre|
 Last Name|Apellido|
 BU Name|BU Nombre|
 Department:|Departamento:|
 Group Name|Nombre del grupo|
-Job Title|Título del trabajo|
+Job Title|Título Laboral|
 Location:|Ubicación:|
+### START translations for 2.8 release ###
+This agent screen was not opened properly|Esta pantalla agente no se abrió correctamente|
+Dial Lead ID|Dial ID plomo|
+Agent Form Display Script|Formulario Mostrar agente Script|
+Agent Notes|Notas Agente|
+You have been paused for too long, you have been logged out of your session|Usted ha estado en pausa durante demasiado tiempo, se ha cerrado la sesión de su sesión|
+Too many network errors, please contact your administrator|Demasiados errores de la red, póngase en contacto con el administrador|
+No available servers, please contact your administrator|No hay servidores disponibles, por favor póngase en contacto con el administrador|
+No available phones, please contact your administrator|No hay teléfonos disponibles, por favor póngase en contacto con el administrador|
+You are already logged in, please log out of your other session first|Usted ya está registrado, por favor cierre la sesión de su otra sesión primero|
+Too many agents logged in, please contact your administrator|Demasiados agentes conectados, por favor póngase en contacto con el administrador|
+Dial Countdown|Dial Cuenta atrás|

@@ -1,5 +1,5 @@
 <?php
-# voicemail_check.php    version 2.6
+# voicemail_check.php    version 2.8
 # 
 # Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -24,9 +24,12 @@
 # 60619-1204 - Added variable filters to close security holes for login form
 # 90508-0727 - Changed to PHP long tags
 # 130328-0025 - Converted ereg to preg functions
+# 130603-2202 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130802-1038 - Changed to PHP mysqli functions
 #
 
-require("dbconnect.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 ### If you have globals turned off uncomment these lines
 if (isset($_GET["user"]))					{$user=$_GET["user"];}
@@ -44,6 +47,8 @@ if (isset($_GET["vmail_box"]))				{$vmail_box=$_GET["vmail_box"];}
 
 $user=preg_replace("/[^0-9a-zA-Z]/","",$user);
 $pass=preg_replace("/[^0-9a-zA-Z]/","",$pass);
+$session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
+$server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
 
 # default optional vars if not set
 if (!isset($format))   {$format="text";}
@@ -55,15 +60,14 @@ $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
-$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',0,0,0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-	echo "Inválido Nombre del usuario/Contraseña: |$user|$pass|\n";
+	echo "Inválido Nombre del usuario/Contraseña: |$user|$pass|$auth_message|\n";
 	exit;
 	}
 else
@@ -77,8 +81,8 @@ else
 		{
 		$stmt="SELECT count(*) from web_client_sessions where session_name='$session_name' and server_ip='$server_ip';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$SNauth=$row[0];
 		  if($SNauth==0)
 			{
@@ -115,13 +119,13 @@ else
 	{
 	$stmt="SELECT messages,old_messages FROM phones where server_ip='$server_ip' and voicemail_id='$vmail_box' limit 1;";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
-	$rslt=mysql_query($stmt, $link);
-	$vmails_list = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$vmails_list = mysqli_num_rows($rslt);
 	$loop_count=0;
 		while ($vmails_list>$loop_count)
 		{
 		$loop_count++;
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		echo "$row[0]|$row[1]";
 		if ($format=='debug') {echo "\n<!-- $row[0]     $row[1] -->";}
 		}
@@ -132,7 +136,7 @@ if ($format=='debug')
 	{
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $StarTtime);
-	echo "\n<!-- tiempo de ejecución del guión: $RUNtime segundos -->";
+	echo "\n<!-- tiempo de ejecución del script: $RUNtime segundos -->";
 	echo "\n</body>\n</html>\n";
 	}
 	

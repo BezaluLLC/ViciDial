@@ -28,6 +28,10 @@ th.thgraph {
 .grey_graph_cell {
 	background-color:#ddd;
 }
+.white_graph_cell {
+	background-color:#FFF;
+}
+
 .graph_span_cell {
 	background-color:#eee;
 	text-align: center;
@@ -56,6 +60,13 @@ td.first {
 	position: absolute;
 	font-size: 0;
 	left: -1000px;
+}
+.wordwrap { 
+   white-space: pre-wrap;      /* CSS3 */   
+   white-space: -moz-pre-wrap; /* Firefox */    
+   white-space: -pre-wrap;     /* Opera <7 */   
+   white-space: -o-pre-wrap;   /* Opera 7 */    
+   word-wrap: break-word;      /* IE */
 }
 table.horizontalgraph {
 	font-family: Verdana, Arial, Helvetica, sans-serif;

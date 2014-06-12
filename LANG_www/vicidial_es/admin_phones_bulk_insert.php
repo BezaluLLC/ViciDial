@@ -1,7 +1,7 @@
 <?php
 # admin_phones_bulk_insert.php
 # 
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen will insert phones into your multi-server system with aliases
 #
@@ -12,13 +12,16 @@
 # 120209-1545 - Added phone context option
 # 120223-2249 - Removed logging of good login passwords if webroot writable is enabled
 # 120820-1026 - Added webphone option Y_API_LAUNCH
+# 130610-1043 - Changed all ereg to preg
+# 130621-1724 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130902-0751 - Changed to mysqli PHP functions
 #
 
-$admin_version = '2.6-6';
-$build = '120820-1026';
+$admin_version = '2.8-9';
+$build = '130902-0751';
 
-
-require("dbconnect.php");
+require("dbconnect_mysqli.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -56,109 +59,103 @@ if (isset($_GET["use_external_server_ip"]))			{$use_external_server_ip=$_GET["us
 if (isset($_GET["phone_context"]))				{$phone_context=$_GET["phone_context"];}
 	elseif (isset($_POST["phone_context"]))		{$phone_context=$_POST["phone_context"];}
 
-
 if (strlen($action) < 2)
 	{$action = 'BLANK';}
 if (strlen($DB) < 1)
 	{$DB=0;}
 
-
-if ($non_latin < 1)
-	{
-	$PHP_AUTH_USER = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("[^-_0-9a-zA-Z]","",$PHP_AUTH_PW);
-
-	$servers = ereg_replace("'|\"|\\\\|;","",$servers);
-	$phones = ereg_replace("'|\"|\\\\|;","",$phones);
-	$action = ereg_replace("[^-_0-9a-zA-Z]","",$action);
-	$conf_secret = ereg_replace("[^-_0-9a-zA-Z]","",$conf_secret);
-	$pass = ereg_replace("[^-_0-9a-zA-Z]","",$pass);
-	$alias_option = ereg_replace("[^-_0-9a-zA-Z]","",$alias_option);
-	$alias_suffix = ereg_replace("[^0-9a-zA-Z]","",$alias_suffix);
-	$protocol = ereg_replace("[^-_0-9a-zA-Z]","",$protocol);
-	$local_gmt = ereg_replace("[^- \.\,\_0-9a-zA-Z]","",$local_gmt);
-	$is_webphone = ereg_replace("[^-_0-9a-zA-Z]","",$is_webphone);
-	$webphone_dialpad = ereg_replace("[^-_0-9a-zA-Z]","",$webphone_dialpad);
-	$webphone_auto_answer = ereg_replace("[^NY]","",$webphone_auto_answer);
-	$use_external_server_ip = ereg_replace("[^NY]","",$use_external_server_ip);
-	$phone_context = ereg_replace("[^-\_0-9a-zA-Z]","",$phone_context);
-	}	# end of non_latin
-else
-	{
-	$PHP_AUTH_USER = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_PW);
-	}
-
-$STARTtime = date("U");
-$TODAY = date("Y-m-d");
-$NOW_TIME = date("Y-m-d H:i:s");
-
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,webroot_writable FROM system_settings;";
-$rslt=mysql_query($stmt, $link);
+$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
-$ss_conf_ct = mysql_num_rows($rslt);
+$ss_conf_ct = mysqli_num_rows($rslt);
 if ($ss_conf_ct > 0)
 	{
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
 	$webroot_writable =				$row[1];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and ast_delete_phones='1';";
-if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
-
-if ($webroot_writable > 0)
-	{$fp = fopen ("./project_auth_entries.txt", "a");}
-
+$STARTtime = date("U");
+$TODAY = date("Y-m-d");
+$NOW_TIME = date("Y-m-d H:i:s");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
-$user = $PHP_AUTH_USER;
 
-if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if ($non_latin < 1)
 	{
-    Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-    Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|\n";
-    exit;
-	}
+	$PHP_AUTH_USER = preg_replace("/[^-_0-9a-zA-Z]/", "",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace("/[^-_0-9a-zA-Z]/", "",$PHP_AUTH_PW);
+
+	$servers = preg_replace("/'|\"|\\\\|;/","",$servers);
+	$phones = preg_replace("/'|\"|\\\\|;/","",$phones);
+	$action = preg_replace("/[^-_0-9a-zA-Z]/", "",$action);
+	$conf_secret = preg_replace("/[^-_0-9a-zA-Z]/", "",$conf_secret);
+	$pass = preg_replace("/[^-_0-9a-zA-Z]/", "",$pass);
+	$alias_option = preg_replace("/[^-_0-9a-zA-Z]/", "",$alias_option);
+	$alias_suffix = preg_replace("/[^0-9a-zA-Z]/","",$alias_suffix);
+	$protocol = preg_replace("/[^-_0-9a-zA-Z]/", "",$protocol);
+	$local_gmt = preg_replace("/[^- \.\,\_0-9a-zA-Z]/","",$local_gmt);
+	$is_webphone = preg_replace("/[^-_0-9a-zA-Z]/", "",$is_webphone);
+	$webphone_dialpad = preg_replace("/[^-_0-9a-zA-Z]/", "",$webphone_dialpad);
+	$webphone_auto_answer = preg_replace("/[^NY]/","",$webphone_auto_answer);
+	$use_external_server_ip = preg_replace("/[^NY]/","",$use_external_server_ip);
+	$phone_context = preg_replace("/[^-\_0-9a-zA-Z]/","",$phone_context);
+	}	# end of non_latin
 else
 	{
-	if ($auth>0)
-		{
-		$office_no=strtoupper($PHP_AUTH_USER);
-		$password=strtoupper($PHP_AUTH_PW);
-		$stmt="SELECT full_name,ast_delete_phones,ast_admin_access,user_level from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW'";
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
-		$LOGfullname =				$row[0];
-		$LOGast_delete_phones =		$row[1];
-		$LOGast_admin_access =		$row[2];
-		$LOGuser_level =			$row[3];
-
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|GOOD|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|$LOGfullname|\n");
-			fclose($fp);
-			}
-		}
-	else
-		{
-		if ($webroot_writable > 0)
-			{
-			fwrite ($fp, "VICIDIAL|FAIL|$date|$PHP_AUTH_USER|XXXX|$ip|$browser|\n");
-			fclose($fp);
-			}
-		}
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	}
+
+$user = $PHP_AUTH_USER;
+
+$auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if ($auth < 1)
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
+
+$rights_stmt = "SELECT ast_delete_phones from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rights_rslt=mysql_to_mysqli($rights_stmt, $link);
+$rights_row=mysqli_fetch_row($rights_rslt);
+$ast_delete_phones =		$rights_row[0];
+
+# check their permissions
+if ( $ast_delete_phones < 1 )
+	{
+	header ("Content-type: text/html; charset=utf-8");
+	echo "You do not have permissions to manage phones\n";
+	exit;
+	}
+
+$stmt="SELECT full_name,ast_delete_phones,ast_admin_access,user_level from vicidial_users where user='$PHP_AUTH_USER';";
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
+$LOGfullname =				$row[0];
+$LOGast_delete_phones =		$row[1];
+$LOGast_admin_access =		$row[2];
+$LOGuser_level =			$row[3];
 
 ?>
 <html>
@@ -224,7 +221,7 @@ if ($action == "HELP")
 
 	<A NAME="phone_context">
 	<BR>
-	<B>Phone Context -</B> This is the dial plan context that this phone will use to dial out. If you are running a call center and you do not want your agents to be able to dial out outside of the ViciDial applicaiton for example, then you would set this field to a dialplan context that does not exist, something like agent-nodial. default is default.
+	<B>Phone Context -</B> This is the dial plan context that this phone will use to dial out. If you are running a call center and you do not want your agents to be able to dial out outside of the Contact Center applicaiton for example, then you would set this field to a dialplan context that does not exist, something like agent-nodial. default is default.
 	<BR><BR>
 
 	<BR>
@@ -356,11 +353,11 @@ if ($action == "ADD_PHONES_SUBMIT")
 				$server_exists=0;
 				$stmt="SELECT count(*) from servers where server_ip='$SN[$s]';";
 				if ($DB>0) {echo "$stmt";}
-				$rslt=mysql_query($stmt, $link);
-				$servercount_to_print = mysql_num_rows($rslt);
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$servercount_to_print = mysqli_num_rows($rslt);
 				if ($servercount_to_print > 0) 
 					{
-					$rowx=mysql_fetch_row($rslt);
+					$rowx=mysqli_fetch_row($rslt);
 					$server_exists =	$rowx[0];
 					}
 				if ($server_exists > 0)
@@ -372,11 +369,11 @@ if ($action == "ADD_PHONES_SUBMIT")
 						$phone_exists=0;
 						$stmt="SELECT count(*) from phones where server_ip='$SN[$s]' and extension='$PN[$p]';";
 						if ($DB>0) {echo "$stmt";}
-						$rslt=mysql_query($stmt, $link);
-						$phonecount_to_print = mysql_num_rows($rslt);
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$phonecount_to_print = mysqli_num_rows($rslt);
 						if ($phonecount_to_print > 0) 
 							{
-							$rowx=mysql_fetch_row($rslt);
+							$rowx=mysqli_fetch_row($rslt);
 							$phone_exists =	$rowx[0];
 							}
 						if ( ($phone_exists < 1) and (strlen($PN[$p]) > 1) )
@@ -448,8 +445,8 @@ if ($action == "ADD_PHONES_SUBMIT")
 							$fullname =			"ext $PN[$p]";
 
 							$stmt = "INSERT INTO phones (extension,dialplan_number,voicemail_id,server_ip,login,pass,status,active,phone_type,fullname,protocol,local_gmt,outbound_cid,conf_secret,is_webphone,webphone_dialpad,webphone_auto_answer,use_external_server_ip,phone_context) values('$extension','$dialplan_number','$voicemail_id','$phone_server_ip','$login','$pass','ACTIVE','Y','$phone_type','$fullname','$protocol','$local_gmt','0000000000','$conf_secret','$is_webphone','$webphone_dialpad','$webphone_auto_answer','$use_external_server_ip','$phone_context');";
-							$rslt=mysql_query($stmt, $link);
-							$affected_rows = mysql_affected_rows($link);
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$affected_rows = mysqli_affected_rows($link);
 							if ($DB > 0) {echo "$s|$p|$SN[$s]|$PN[$p]|$affected_rows|$stmt\n<BR>";}
 
 							if ($affected_rows > 0)
@@ -458,11 +455,11 @@ if ($action == "ADD_PHONES_SUBMIT")
 
 								### LOG INSERTION Admin Log Table ###
 								$SQL_log = "$stmt|";
-								$SQL_log = ereg_replace(';','',$SQL_log);
+								$SQL_log = preg_replace('/;/','',$SQL_log);
 								$SQL_log = addslashes($SQL_log);
 								$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='PHONES', event_type='ADD', record_id='$PN[$p]', event_code='ADMIN BULK ADD PHONE', event_sql=\"$SQL_log\", event_notes='$SN[$s]|$PN[$p]';";
 							#	if ($DB) {echo "|$stmt|\n";}
-								$rslt=mysql_query($stmt, $link);
+								$rslt=mysql_to_mysqli($stmt, $link);
 
 								$phones_inserted++;
 								}
@@ -489,19 +486,19 @@ if ($action == "ADD_PHONES_SUBMIT")
 						$phone_alias_entry[$p] = preg_replace('/,$/','',$phone_alias_entry[$p]);
 
 						$stmt="INSERT INTO phones_alias (alias_id,alias_name,logins_list) values('$PN[$p]$alias_suffix','$PN[$p]','$phone_alias_entry[$p]');";
-						$rslt=mysql_query($stmt, $link);
-						$affected_rows = mysql_affected_rows($link);
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$affected_rows = mysqli_affected_rows($link);
 						if ($DB > 0) {echo "$p|$phone_alias_entry[$p]|$PN[$p]|$affected_rows|$stmt\n<BR>";}
 
 						if ($affected_rows > 0)
 							{
 							### LOG INSERTION Admin Log Table ###
 							$SQL_log = "$stmt|";
-							$SQL_log = ereg_replace(';','',$SQL_log);
+							$SQL_log = preg_replace('/;/','',$SQL_log);
 							$SQL_log = addslashes($SQL_log);
 							$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='PHONEALIASES', event_type='ADD', record_id='$alias_id', event_code='ADMIN ADD BULK PHONE ALIAS', event_sql=\"$SQL_log\", event_notes='';";
 						#	if ($DB) {echo "|$stmt|\n";}
-							$rslt=mysql_query($stmt, $link);
+							$rslt=mysql_to_mysqli($stmt, $link);
 
 							$phone_alias_inserted++;
 							}

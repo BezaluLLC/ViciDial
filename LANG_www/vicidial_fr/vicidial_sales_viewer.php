@@ -3,12 +3,15 @@
 # vicidial_sales_viewer.php - VICIDIAL administration page
 # 
 # 
-# Copyright (C) 2009  Joe Johnson,Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Joe Johnson,Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 80310-1500 - first build
 # 90310-2135 - Added admin header
 # 90508-0644 - Changed to PHP long tags
+# 130610-1127 - Finalized changing of all ereg instances to preg
+# 130615-2357 - Added filtering of input to prevent SQL injection attacks and new user auth
+# 130901-0832 - Changed to mysqli PHP functions
 #
 
 if (isset($_GET["dcampaign"]))					{$dcampaign=$_GET["dcampaign"];}
@@ -24,26 +27,65 @@ if (isset($_GET["sales_time_frame"]))			{$sales_time_frame=$_GET["sales_time_fra
 if (isset($_GET["forc"]))						{$forc=$_GET["forc"];}
 	elseif (isset($_POST["forc"]))				{$forc=$_POST["forc"];}
 
+include("dbconnect_mysqli.php");
+include("functions.php");
+
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 
-$PHP_AUTH_PW = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_PW);
-$PHP_AUTH_USER = ereg_replace("'|\"|\\\\|;","",$PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+$dcampaign = preg_replace('/[^0-9a-zA-Z]/', '', $dcampaign);
 
-$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and pass='$PHP_AUTH_PW' and user_level > 7 and view_reports='1';";
-if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
-$auth=$row[0];
+$auth=0;
+$reports_auth=0;
+$admin_auth=0;
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'RAPPORTS',1);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
-  if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
+if ($auth > 0)
 	{
-#	Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
-#	Header("HTTP/1.0 401 Unauthorized");
-    echo "Login ou mot de passe invalide or no export report permission: |$PHP_AUTH_USER|\n";
-    exit;
-	}
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$admin_auth=$row[0];
 
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$reports_auth=$row[0];
+
+	if ($reports_auth < 1)
+		{
+		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ( ($reports_auth > 0) and ($admin_auth < 1) )
+		{
+		$ADD=999999;
+		$reports_only_user=1;
+		}
+	}
+else
+	{
+	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	if ($auth_message == 'LOCK')
+		{
+		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
+	Header("HTTP/1.0 401 Unauthorized");
+	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
 
 ?>
 <html>
@@ -51,7 +93,7 @@ $auth=$row[0];
 <title>Recent Sales Lookup</title>
 </head>
 <?php
-include("dbconnect.php");
+#include("dbconnect_mysqli.php");
 #include("/home/www/phpsubs/stylesheet.inc");
 ?>
 <script language="JavaScript1.2">
@@ -88,7 +130,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 <input type="hidden" name="list_ids">
 <table border=0 cellpadding=5 cellspacing=0 align=center width=600>
 <tr>
-	<th colspan=3><font class="standard_bold">Vicidial OUTBOUND recent sales report &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </font><font class="standard"><a href="admin.php?ADD=999999">Back to Admin</a></font>
+	<th colspan=3><font class="standard_bold">OUTBOUND recent sales report &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </font><font class="standard"><a href="admin.php?ADD=999999">Back to Admin</a></font>
 	<BR></th>
 </tr>
 <tr bgcolor='#CCCCCC'>
@@ -99,8 +141,8 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 			<?php 
 			if ($dcampaign) {
 				$stmt="select campaign_id, campaign_name from vicidial_campaigns where campaign_id='$dcampaign'";
-				$rslt=mysql_query($stmt, $link);
-				while ($row=mysql_fetch_array($rslt)) {
+				$rslt=mysql_to_mysqli($stmt, $link);
+				while ($row=mysqli_fetch_array($rslt)) {
 					print "\t\t<option value='$row[campaign_id]' selected>$row[campaign_id] - $row[campaign_name]</option>\n";
 				}
 			} 
@@ -108,8 +150,8 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 			<option value=''>---------------------------------</option>
 			<?php
 				$stmt="select distinct vc.campaign_id, vc.campaign_name from vicidial_campaigns vc, vicidial_lists vl where vc.campaign_id=vl.campaign_id order by vc.campaign_name asc";
-				$rslt=mysql_query($stmt, $link);
-				while ($row=mysql_fetch_array($rslt)) {
+				$rslt=mysql_to_mysqli($stmt, $link);
+				while ($row=mysqli_fetch_array($rslt)) {
 					print "\t\t<option value='$row[campaign_id]'>$row[campaign_id] - $row[campaign_name]</option>\n";
 				}
 			?>
@@ -123,8 +165,8 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 				<td align=left><select name="list_id" multiple size="4">
 				<?php
 					$stmt="select list_id, list_name from vicidial_lists where campaign_id='$dcampaign' order by list_id asc";
-					$rslt=mysql_query($stmt, $link);
-					while ($row=mysql_fetch_array($rslt)) {
+					$rslt=mysql_to_mysqli($stmt, $link);
+					while ($row=mysqli_fetch_array($rslt)) {
 						print "\t\t<option value='$row[list_id]'>$row[list_id] - $row[list_name]</option>\n";
 					}
 				?>
@@ -175,7 +217,7 @@ if ($submit_report && $list_ids) {
 	$list_id_clause.=")";
 
 	if ($sales_number && $sales_number>0) {
-		$sales_number=eregi_replace("[^0-9]", "", $sales_number);
+		$sales_number=preg_replace('/[^0-9]/i', '', $sales_number);
 		$limit_clause="limit $sales_number";
 	} else {
 		$sales_number=0;
@@ -199,9 +241,9 @@ if ($submit_report && $list_ids) {
 		$stmt="select v.first_name, v.last_name, v.phone_number, vl.call_date, v.lead_id, vl.user, vl.closer from vicidial_list v, vicidial_xfer_log vl where vl.call_date>='$timestamp' and vl.lead_id=v.lead_id and v.status='SALE' $list_id_clause order by call_date desc $limit_clause";
 	}
 	fwrite($dfile, "$stmt\n");
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	$q=0;
-	print "<tr bgcolor='#000000'><th colspan=8><font class='standard_bold' color='white'>Last ".mysql_num_rows($rslt)." sales made</font></th></tr>\n";
+	print "<tr bgcolor='#000000'><th colspan=8><font class='standard_bold' color='white'>Last ".mysqli_num_rows($rslt)." sales made</font></th></tr>\n";
 	print "<tr bgcolor='#000000'>\n";
 	print "\t<th><font class='standard_bold' color='white'>Sales Rep(s)</font></th>\n";
 	print "\t<th><font class='standard_bold' color='white'>Customer Name</font></th>\n";
@@ -209,19 +251,19 @@ if ($submit_report && $list_ids) {
 	print "\t<th><font class='standard_bold' color='white'>Recording ID</font></th>\n";
 	print "\t<th><font class='standard_bold' color='white'>Timestamp</font></th>\n";
 	print "</tr>\n";
-	while ($row=mysql_fetch_row($rslt)) {
+	while ($row=mysqli_fetch_row($rslt)) {
 		$rec_stmt="select max(recording_id) from recording_log where lead_id='$row[4]'";
-		$rec_rslt=mysql_query($rec_stmt, $link);
-		$rec_row=mysql_fetch_row($rec_rslt);
+		$rec_rslt=mysql_to_mysqli($rec_stmt, $link);
+		$rec_row=mysqli_fetch_row($rec_rslt);
 
 		if ($forc=="F") {
 			$rep_stmt="select full_name from vicidial_users where user='$row[5]'";
-			$rep_rslt=mysql_query($rep_stmt, $link);
-			$fr_row=mysql_fetch_array($rep_rslt);
+			$rep_rslt=mysql_to_mysqli($rep_stmt, $link);
+			$fr_row=mysqli_fetch_array($rep_rslt);
 
 			$rep_stmt="select full_name from vicidial_users where user='$row[6]'";
-			$rep_rslt=mysql_query($rep_stmt, $link);
-			$cl_row=mysql_fetch_array($rep_rslt);
+			$rep_rslt=mysql_to_mysqli($rep_stmt, $link);
+			$cl_row=mysqli_fetch_array($rep_rslt);
 
 			$rep_name="$fr_row[full_name]/$cl_row[full_name]";
 		} else {

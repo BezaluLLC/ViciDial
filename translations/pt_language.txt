@@ -23,13 +23,14 @@ agc|dbconnect.php|1
 agc|timeclock.php|0
 agc|vdc_script_display.php|1
 agc|vdc_script_notes.php|0
-agc|functions.php|1
+agc|functions.php|0
 agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
 agc|phone_only.php|0
 agc|vdc_email_display.php|0
 agc|audit_comments.php|0
+agc|dbconnect_mysqli.php|1
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"JAN"|
@@ -44,6 +45,7 @@ agc|audit_comments.php|0
 "OCT"|"OUT"|
 "NOV"|"NOV"|
 "DEC"|"DEZ"|
+\./bp.pl|../agc/bp.pl|
 \./images/|../agc/images/|
 css/|../agc/css/|
 BORDER|Border|
@@ -305,7 +307,7 @@ YOU CANNOT SKIP A CALLBACK OR MANUAL DIAL, YOU MUST DIAL THE LEAD|VOCÊ NÃO POD
 YOU MUST BE PAUSED TO MANUAL DIAL A NEW LEAD IN AUTO-DIAL MODE|VOCÊ DEVE SER PAUSADO Ao SELETOR MANUAL Uma LIGAÇÃO NOVA Na MODALIDADE De AUTO-DIAL|
 Enter information below for the new lead you wish to call|Incorpore a informação abaixo para a ligação que nova você deseja se chamar|
 YOU MUST BE PAUSED TO CHECK CALLBACKS IN AUTO-DIAL MODE|VOCÊ DEVE SER PAUSADO PARA VERIFICAR RECHAMADAS NA MODALIDADE DE AUTO-DIAL|
-Note: all new manual dial leads will go into list 999|Nota: todas as ligações manuais novas do seletor entrarão na lista 999|
+Note: all new manual dial leads will go into list|Nota: todas as ligações manuais novas do seletor entrarão na lista|
 YOU DO NOT HAVE PERMISSIONS TO TRANSFER CALLS|VOCÊ NÃO TEM PERMISSÕES TRANSFERIR CHAMADAS|
 will be added to the beginning of this number|será adicionado ao começo deste número|
 This is usually a 1 in the USA-Canada|Este é geralmente um 1 nos EUA e no Canadá|
@@ -644,3 +646,15 @@ Department:|departamento:|
 Group Name|nome do grupo|
 Job Title|cargo|
 Location:|localização:|
+### START translations for 2.8 release ###
+This agent screen was not opened properly|Esta tela do agente não foi aberto corretamente|
+Dial Lead ID|Disque chumbo ID|
+Agent Form Display Script|Formulário agente de script exibição|
+Agent Notes|Notas Agente|
+You have been paused for too long, you have been logged out of your session|Você foi pausada por muito tempo, você foi desconectado da sua sessão|
+Too many network errors, please contact your administrator|Muitos erros de rede, entre em contato com o administrador|
+No available servers, please contact your administrator|Não há servidores disponíveis, por favor, contate o administrador|
+No available phones, please contact your administrator|Não há telefones disponíveis, por favor, contate o administrador|
+You are already logged in, please log out of your other session first|Você já está logado, faça o login de sua outra sessão primeiro|
+Too many agents logged in, please contact your administrator|Muitos agentes conectados, por favor, contate o administrador|
+Dial Countdown|Disque Contagem Regressiva|

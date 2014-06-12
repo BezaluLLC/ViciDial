@@ -314,7 +314,6 @@ You are already logged in, please log out of your other session first||
 Too many agents logged in, please contact your administrator||
 Dial Countdown||
 
-
 ########################## CHANGES TO EXISTING PHRASES IN AGENT TRANSLATION
 
 

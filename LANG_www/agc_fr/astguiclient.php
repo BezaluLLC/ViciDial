@@ -60,9 +60,12 @@
 # 91129-2211 - Replaced SELECT STAR in SQL query
 # 120223-2124 - Removed logging of good login passwords if webroot writable is enabled
 # 130328-0017 - Converted ereg to preg functions
+# 130603-2220 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
+# 130802-1002 - Changed to PHP mysqli functions
 # 
 
-require("dbconnect.php");
+require_once("dbconnect_mysqli.php");
+require_once("functions.php");
 
 ### If you have globals turned off uncomment these lines
 if (isset($_GET["user"]))					{$user=$_GET["user"];}
@@ -92,7 +95,7 @@ while ( (strlen($user_abb) > 4) and ($forever_stop < 200) )
 	{$user_abb = preg_replace("/^./","",$user_abb);   $forever_stop++;}
 
 $version = '2.2.6-1';
-$build = '130328-0017';
+$build = '130802-1002';
 
 ### security strip all non-alphanumeric characters out of the variables ###
 	$DB=preg_replace("/[^0-9a-z]/","",$DB);
@@ -116,14 +119,13 @@ if ($force_logout)
 $StarTtime = date("U");
 $NOW_TIME = date("Y-m-d H:i:s");
 $FILE_TIME = date("Ymd-His");
-	$month_old = mktime(0, 0, 0, date("m"), date("d")-7,  date("Y"));
-	$past_month_date = date("Y-m-d H:i:s",$month_old);
+$month_old = mktime(0, 0, 0, date("m"), date("d")-7,  date("Y"));
+$past_month_date = date("Y-m-d H:i:s",$month_old);
 
-	$stmt="SELECT count(*) from vicidial_users where user='$user' and pass='$pass' and user_level > 0;";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
-	$auth=$row[0];
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',1,0,0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
 
 $US='_';
 $CL=':';
@@ -178,15 +180,12 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/astguicli
 	}
 else
 	{
-
 	if($auth>0)
 		{
-		$office_no=strtoupper($user);
-		$password=strtoupper($pass);
-			$stmt="SELECT full_name,user_level from vicidial_users where user='$user' and pass='$pass'";
-			$rslt=mysql_query($stmt, $link);
-			$row=mysql_fetch_row($rslt);
-			$LOGfullname=$row[0];
+		$stmt="SELECT full_name,user_level from vicidial_users where user='$user' and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$LOGfullname=$row[0];
 		if ($WeBRooTWritablE > 0)
 			{
 			fwrite ($fp, "VICIDIAL|GOOD|$date|$user|XXXX|$ip|$browser|$LOGfullname|\n");
@@ -244,8 +243,8 @@ else
 $authphone=0;
 $stmt="SELECT count(*) from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_query($stmt, $link);
-$row=mysql_fetch_row($rslt);
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
 $authphone=$row[0];
 if (!$authphone)
 	{
@@ -263,7 +262,7 @@ echo "<TD WIDTH=100 ALIGN=RIGHT VALIGN=TOP  NOWRAP><a href=\"../agc_en/astguicli
 	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"../agc/images/agc_tab_astguiclient.gif\" Border=0></TD>";
 	echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Ouverture de Session téléphonique </TD>";
 	echo "</TR>\n";
-	echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=1> &nbsp; <BR><FONT SIZE=3>L'ouverture de la session Téléphonique à échoué, réessayez: <BR> &nbsp; </TD></TR>\n";
+	echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=1> &nbsp; <BR><FONT SIZE=3>L ouverture de la session Téléphonique à échoué, réessayez: <BR> &nbsp; </TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>Ouverture de Session téléphonique: </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 maxlength=20 VALUE=\"$phone_login\"></TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>Mot de passe du Téléphone:  </TD>";
@@ -281,8 +280,8 @@ else
 	echo "<title>astGUIclient Client Web</title>\n";
 	$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$extension=$row[0];
 	$dialplan_number=$row[1];
 	$voicemail_id=$row[2];
@@ -354,23 +353,23 @@ else
 
 	$stmt="DELETE from web_client_sessions where start_time < '$past_month_date' and extension='$extension' and server_ip = '$server_ip' and program = 'agc';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 
 	$stmt="INSERT INTO web_client_sessions values('$extension','$server_ip','agc','$NOW_TIME','$session_name');";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 
 	$stmt="SELECT count(*) from phone_favorites where extension='$extension' and server_ip = '$server_ip';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
 	$favorites_present=$row[0];
 	if ($favorites_present > 0)
 		{
 		$stmt="SELECT extensions_list from phone_favorites where extension='$extension' and server_ip = '$server_ip';";
 		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_query($stmt, $link);
-		$row=mysql_fetch_row($rslt);
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
 		$favorites_list=$row[0];
 		$h=0;
 		$favorites_listX = preg_replace("/\'/i",'',$favorites_list);
@@ -382,8 +381,8 @@ else
 		while ($favorites_count > $o) 
 			{
 			$stmt="SELECT fullname,protocol from phones where extension = '$favorites[$o]' and server_ip='$server_ip';";
-			$rslt=mysql_query($stmt, $link);
-			$rowx=mysql_fetch_row($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$rowx=mysqli_fetch_row($rslt);
 			$favorites_names[$o] =	$rowx[0];
 			$favorites_listX .= "$rowx[1]/$favorites[$o],";
 			$o++;
@@ -400,13 +399,13 @@ else
 ### gather phone extensions and fullnames for favorites editor ###
 	$stmt="SELECT extension,fullname from phones where server_ip = '$server_ip';";
 	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_query($stmt, $link);
-	$exten_ct = mysql_num_rows($rslt);
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$exten_ct = mysqli_num_rows($rslt);
 	$favlistCT=0;
 	$nofavlistCT=0;
 	while ($favlistCT < $exten_ct)
 		{
-		$row=mysql_fetch_row($rslt);
+		$row=mysqli_fetch_row($rslt);
 		$favlist[$favlistCT]= "$row[0] - $row[1]";
 		$favlistCT++;
 		}
@@ -1199,7 +1198,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 				{
 				recLIST = recLIST + "|" + monitorchannelvalue;
 				filename = filedate + "_" + user_abb;
-				var rec_start_html = "<a href=\"#\" onclick=\"liverecording_send_recording('StopMonitor','" + monitorchannelvalue + "','" + taskspan + "','" + filename + "');return false;\">Arrêter l'Enregistrement";
+				var rec_start_html = "<a href=\"#\" onclick=\"liverecording_send_recording('StopMonitor','" + monitorchannelvalue + "','" + taskspan + "','" + filename + "');return false;\">Arrêter l Enregistrement";
 				document.getElementById(taskspan).innerHTML = rec_start_html;
 
 			}
@@ -1261,7 +1260,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 				recLIST = recLIST + "|" + taskconfrec;
 				filename = filedate + "_" + user_abb;
 				var channelrec = "Local/" + taskconfrec + "@" + ext_context;
-				var conf_rec_start_html = "<a href=\"#\" onclick=\"conf_send_recording('StopMonitorConf','" + taskconfspan + "','" + taskconfrec + "','" + filename + "');return false;\">Arrêter l'Enregistrement</a>";
+				var conf_rec_start_html = "<a href=\"#\" onclick=\"conf_send_recording('StopMonitorConf','" + taskconfspan + "','" + taskconfrec + "','" + filename + "');return false;\">Arrêter l Enregistrement</a>";
 				document.getElementById(taskconfspan).innerHTML = conf_rec_start_html;
 
 			}
@@ -1333,7 +1332,6 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 				//	alert(xmlhttp.responseText);
 				//	document.getElementById("busycallsdebug").innerHTML = checklive_query + "<BR>" + xmlhttp.responseText;
 				//	pause();
-
 					var check_live_line=check_live.split("\n");
 					var check_live_array=check_live_line[0].split("|");
 					var inbound_call_array=check_live_line[1].split("|");
@@ -1414,7 +1412,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 
 							var regx = new RegExp("\\|"+channelfieldBtrunk_array[1],"ig");
 							if (recLIST.match(regx)) 
-								{live_calls_HTML = live_calls_HTML + "<span id=\"recordlive" + loop_ct + "\"><a href=\"#\" onclick=\"liverecording_send_recording('StopMonitor','" + channelfieldBtrunk_array[1] + "','recordlive" + loop_ct + "');return false;\">Arrêter l'Enregistrement</span>";}
+								{live_calls_HTML = live_calls_HTML + "<span id=\"recordlive" + loop_ct + "\"><a href=\"#\" onclick=\"liverecording_send_recording('StopMonitor','" + channelfieldBtrunk_array[1] + "','recordlive" + loop_ct + "');return false;\">Arrêter l Enregistrement</span>";}
 							else 
 								{live_calls_HTML = live_calls_HTML + "<span id=\"recordlive" + loop_ct + "\"><a href=\"#\" onclick=\"liverecording_send_recording('Monitor','" + channelfieldBtrunk_array[1] + "','recordlive" + loop_ct + "');return false;\">Record</span>";}
 
@@ -1638,7 +1636,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=-1;
 					if (parked_count > 0)
 						{
-						var park_HTML = "<table width=600><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">CHANNEL<BR>&nbsp; APPEL ID</td><td><font class=\"log_title\">MIS EN ATTENTE PAR<BR>&nbsp; DURREE D'ATTENTE</td><td><font class=\"log_title\">RACCROCHER</td><td><font class=\"log_title\">TRANSFERT</td><td><font class=\"log_title\">INTERCEPTER</td></tr>"
+						var park_HTML = "<table width=600><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">CHANNEL<BR>&nbsp; APPEL ID</td><td><font class=\"log_title\">MIS EN ATTENTE PAR<BR>&nbsp; DURREE D ATTENTE</td><td><font class=\"log_title\">RACCROCHER</td><td><font class=\"log_title\">TRANSFERT</td><td><font class=\"log_title\">INTERCEPTER</td></tr>"
 						while (loop_ct < parked_count)
 							{
 							loop_ct++;
@@ -1766,7 +1764,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 			show_reglink=1;
 			reglink = "<a href=\"#\" onclick=\"conf_register_room('" + head_conf + "');return false;\">Register</a>";
 			}
-		var conf_head_HTML = "<font class=\"sh_text\">CONFÉRENCE " + head_conf + "</b></font><font class=\"sb_text\">&nbsp; &nbsp; Enregistré à: " + head_reg + " &nbsp; " + reglink + " &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"basic_originate_call('" + head_conf + "','NO','NO');return false;\">Rejoindre la Conférence </a><BR><a href=\"#\" onclick=\"check_for_conf_calls('" + head_conf + "','1');return false;\">Rafraichir </a> &nbsp; &nbsp; <span id=\"conf_rec_link\"><a href=\"#\" onclick=\"conf_send_recording('MonitorConf','conf_rec_link','" + head_conf + "');return false;\">Record</a></span> &nbsp; &nbsp; &nbsp; &nbsp; <input TYPE=TEXT SIZE=15 NAME=conf_dtmf STYLE=\"font-family : sans-serif; font-size : 10px\"> <A HREF=\"#\" onclick=\"SendConfDTMF(" + head_conf + ");\">Envoyez DTMF</A> &nbsp; &nbsp; &nbsp; &nbsp; <input TYPE=TEXT SIZE=15 NAME=conf_dial STYLE=\"font-family : sans-serif; font-size : 10px\"> <A HREF=\"#\" onclick=\"SendManualDial('YES'," + head_conf + ");\">Appels a pertir d'une Conférence </A><BR></font>";
+		var conf_head_HTML = "<font class=\"sh_text\">CONFÉRENCE " + head_conf + "</b></font><font class=\"sb_text\">&nbsp; &nbsp; Enregistré à: " + head_reg + " &nbsp; " + reglink + " &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"basic_originate_call('" + head_conf + "','NO','NO');return false;\">Rejoindre la Conférence </a><BR><a href=\"#\" onclick=\"check_for_conf_calls('" + head_conf + "','1');return false;\">Rafraichir </a> &nbsp; &nbsp; <span id=\"conf_rec_link\"><a href=\"#\" onclick=\"conf_send_recording('MonitorConf','conf_rec_link','" + head_conf + "');return false;\">Record</a></span> &nbsp; &nbsp; &nbsp; &nbsp; <input TYPE=TEXT SIZE=15 NAME=conf_dtmf STYLE=\"font-family : sans-serif; font-size : 10px\"> <A HREF=\"#\" onclick=\"SendConfDTMF(" + head_conf + ");\">Envoyez DTMF</A> &nbsp; &nbsp; &nbsp; &nbsp; <input TYPE=TEXT SIZE=15 NAME=conf_dial STYLE=\"font-family : sans-serif; font-size : 10px\"> <A HREF=\"#\" onclick=\"SendManualDial('YES'," + head_conf + ");\">Appels a pertir d une Conférence </A><BR></font>";
 	
 		document.getElementById("ConfereNceHeaderContent").innerHTML = conf_head_HTML;
 		check_for_conf_calls(head_conf,taskrefresh);
@@ -1803,7 +1801,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 			}
 		if (xmlhttp) 
 			{ 
-			checkconf_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&conf_exten=" + taskconfnum;
+			checkconf_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&conf_exten=" + taskconfnum + "&bcrypt=OFF";
 			xmlhttp.open('POST', 'conf_exten_check.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(checkconf_query); 
@@ -1911,7 +1909,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 			}
 		if (xmlhttp) 
 			{ 
-			reg_conf_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&conf_exten=" + taskconfreg + "&exten=" + extension + "&ACTION=register";
+			reg_conf_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&conf_exten=" + taskconfreg + "&exten=" + extension + "&ACTION=register&bcrypt=OFF";
 			xmlhttp.open('POST', 'conf_exten_check.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(reg_conf_query); 
@@ -2760,11 +2758,11 @@ echo "</head>\n";
 <span style="position:absolute;left:80px;top:12px;z-index:42;" id="MainXfeRBox">
 	<input type=hidden name=H_XfeR_channel>
 	<input type=hidden name=M_XfeR_channel>
-    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> TRANSFERT D'APPEL EN COURS</b> <BR>Canal à transférer: <span id="MainXfeRChanneL">Channel</span><BR></tr>
+    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> TRANSFERT D APPEL EN COURS</b> <BR>Canal à transférer: <span id="MainXfeRChanneL">Channel</span><BR></tr>
 	<tr><td>Extensions:<BR><span id="MainXfeRContent"> Extensions </span></td>
 	<td>
 	<BR>
-	<a href="#" onclick="mainxfer_send_redirect('XfeR');return false;">Renvoyer l'Appel</a> <BR><BR>
+	<a href="#" onclick="mainxfer_send_redirect('XfeR');return false;">Renvoyer l Appel</a> <BR><BR>
 	<a href="#" onclick="mainxfer_send_redirect('VMAIL');return false;">Renvoyer vers la Boite Vocale</a> <BR><BR>
 	<a href="#" onclick="mainxfer_send_redirect('ENTRY');return false;">Renvoyer vers ce Numéro</a>:<BR><input type=text name=extension_xfer_entry size=20 maxlength=50> <BR><BR>
 	<a href="#" onclick="getactiveext('MainXfeRBox');return false;">Rafraichir</a> <BR><BR><BR>
@@ -2778,7 +2776,7 @@ echo "</head>\n";
 	<tr><td>Extensions:<BR><span id="LocalDialContent"> Extensions </span></td>
 	<td>
 	<BR>
-	<a href="#" onclick="mainxfer_send_originate('DiaL','','');return false;">Appeler l'extension séléctionnée</a> <BR><BR>
+	<a href="#" onclick="mainxfer_send_originate('DiaL','','');return false;">Appeler l extension séléctionnée</a> <BR><BR>
 	<a href="#" onclick="mainxfer_send_originate('VMAIL');return false;">Appeler la boite vocale séléctionnée</a> <BR><BR>
 	<a href="#" onclick="getactiveext('LocalDialBox');return false;">Rafraichir</a> <BR><BR><BR>
 	<a href="#" onclick="hideLocalDial('LocalDialBox');">Retour à la Fenêtre Principale</a> <BR><BR>

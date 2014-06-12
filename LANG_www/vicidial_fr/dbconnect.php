@@ -1,13 +1,15 @@
 <?php
 # 
-# dbconnect.php    version 2.4
+# dbconnect.php    version 2.8
 #
 # database connection settings and some global web settings
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 100712-1430 - Added slave server option for connection
+# 130610-1112 - Finalized changing of all ereg instances to preg
+# 131210-1736 - Added ability to define slave server with port number, issue #687
 #
 
 if ( file_exists("/etc/astguiclient.conf") )
@@ -16,25 +18,25 @@ if ( file_exists("/etc/astguiclient.conf") )
 	foreach ($DBCagc as $DBCline) 
 		{
 		$DBCline = preg_replace("/ |>|\n|\r|\t|\#.*|;.*/","",$DBCline);
-		if (ereg("^PATHlogs", $DBCline))
+		if (preg_match('/^PATHlogs/', $DBCline))
 			{$PATHlogs = $DBCline;   $PATHlogs = preg_replace("/.*=/","",$PATHlogs);}
-		if (ereg("^PATHweb", $DBCline))
+		if (preg_match('/^PATHweb/', $DBCline))
 			{$WeBServeRRooT = $DBCline;   $WeBServeRRooT = preg_replace("/.*=/","",$WeBServeRRooT);}
-		if (ereg("^VARserver_ip", $DBCline))
+		if (preg_match('/^VARserver_ip/', $DBCline))
 			{$WEBserver_ip = $DBCline;   $WEBserver_ip = preg_replace("/.*=/","",$WEBserver_ip);}
-		if (ereg("^VARDB_server", $DBCline))
+		if (preg_match('/^VARDB_server/', $DBCline))
 			{$VARDB_server = $DBCline;   $VARDB_server = preg_replace("/.*=/","",$VARDB_server);}
-		if (ereg("^VARDB_database", $DBCline))
+		if (preg_match('/^VARDB_database/', $DBCline))
 			{$VARDB_database = $DBCline;   $VARDB_database = preg_replace("/.*=/","",$VARDB_database);}
-		if (ereg("^VARDB_user", $DBCline))
+		if (preg_match('/^VARDB_user/', $DBCline))
 			{$VARDB_user = $DBCline;   $VARDB_user = preg_replace("/.*=/","",$VARDB_user);}
-		if (ereg("^VARDB_pass", $DBCline))
+		if (preg_match('/^VARDB_pass/', $DBCline))
 			{$VARDB_pass = $DBCline;   $VARDB_pass = preg_replace("/.*=/","",$VARDB_pass);}
-		if (ereg("^VARDB_custom_user", $DBCline))
+		if (preg_match('/^VARDB_custom_user/', $DBCline))
 			{$VARDB_custom_user = $DBCline;   $VARDB_custom_user = preg_replace("/.*=/","",$VARDB_custom_user);}
-		if (ereg("^VARDB_custom_pass", $DBCline))
+		if (preg_match('/^VARDB_custom_pass/', $DBCline))
 			{$VARDB_custom_pass = $DBCline;   $VARDB_custom_pass = preg_replace("/.*=/","",$VARDB_custom_pass);}
-		if (ereg("^VARDB_port", $DBCline))
+		if (preg_match('/^VARDB_port/', $DBCline))
 			{$VARDB_port = $DBCline;   $VARDB_port = preg_replace("/.*=/","",$VARDB_port);}
 		}
 	}
@@ -51,9 +53,20 @@ else
 	$WeBServeRRooT = '/usr/local/apache2/htdocs';
 	}
 
-if ( ($use_slave_server > 0) and (strlen($slave_db_server)>5) )
-	{$VARDB_server = $slave_db_server;}
-$link=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass");
+$server_string = "$VARDB_server:$VARDB_port";
+if ( ($use_slave_server > 0) and (strlen($slave_db_server)>1) )
+	{
+	if (preg_match("/\:/", $slave_db_server)) 
+		{
+		$server_string = $slave_db_server;
+		}
+	else
+		{
+		$server_string = "$slave_db_server:$VARDB_port";
+		}
+	}
+$link=mysql_connect($server_string, "$VARDB_user", "$VARDB_pass");
+
 if (!$link) 
 	{
     die('MySQL connect ERROR: ' . mysql_error());

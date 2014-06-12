@@ -23,13 +23,14 @@ agc|dbconnect.php|1
 agc|timeclock.php|0
 agc|vdc_script_display.php|1
 agc|vdc_script_notes.php|0
-agc|functions.php|1
+agc|functions.php|0
 agc|vdc_form_display.php|1
 agc|calendar.css|1
 agc|calendar_db.js|0
 agc|phone_only.php|0
 agc|vdc_email_display.php|0
 agc|audit_comments.php|0
+agc|dbconnect_mysqli.php|1
 ***TRANSLATIONS***
 ### special translations that should stay at the top of the file ###
 "JAN"|"1月"|
@@ -44,6 +45,7 @@ agc|audit_comments.php|0
 "OCT"|"10月"|
 "NOV"|"11月"|
 "DEC"|"12月"|
+\./bp.pl|../agc/bp.pl|
 \./images/|../agc/images/|
 css/|../agc/css/|
 BORDER|Border|
@@ -643,3 +645,15 @@ Department:|部門：|
 Group Name|グループ名|
 Job Title|職名|
 Location:|場所：|
+### START translations for 2.8 release ###
+This agent screen was not opened properly|このエージェントの画面が正常に開かれていない|
+Dial Lead ID|鉛のIDをダイヤル|
+Agent Form Display Script|エージェントフォームの表示スクリプト|
+Agent Notes|エージェントメモ|
+You have been paused for too long, you have been logged out of your session||あなたが長すぎるために一時停止されてきた、あなたのセッションからログアウトされました|
+Too many network errors, please contact your administrator|あまりにも多くのネットワークエラーは、管理者に連絡してください|
+No available servers, please contact your administrator|使用可能なサーバは、管理者に連絡していないしてください|
+No available phones, please contact your administrator|使用可能な携帯電話は、管理者に連絡していないしてください|
+You are already logged in, please log out of your other session first|あなたはすでにログインしている、あなたの他のセッションからログアウトしてください最初に|
+Too many agents logged in, please contact your administrator|あまりにも多くのエージェントがログインし、管理者に連絡してください|
+Dial Countdown|カウントダウンをダイヤル|

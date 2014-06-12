@@ -2,11 +2,14 @@
 # QC_status_codes_include.php
 # 
 # Copyright (C) 2012  poundteam.com    LICENSE: AGPLv2
+# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to display admin sections for QC functions, contributed by poundteam.com
 #
 # changes:
 # 121116-1323 - First build, added to vicidial codebase
+# 130621-2353 - Finalized changing of all ereg instances to preg
+# 130902-0903 - Changed to mysqli PHP functions
 #
 
 /* 
@@ -23,20 +26,20 @@ if ($ADD==241111111111111)
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	$stmt="SELECT count(*) from vicidial_qc_codes where code='$code';";
 	$rslt=mysql_query($stmt, $link);
-	$row=mysql_fetch_row($rslt);
+	$row=mysqli_fetch_row($rslt);
 	if ($row[0] > 0)
-		{echo "<br>CC Código de estado no se añade- ya hay una qc código de estado en el sistema con el nombre: $row[0]\n";}
+		{echo "<br>CC CÓDIGO DE ESTADO NO AGREGADO- Ya existe un código de estado de CC en el sistema con este nombre: $row[0]\n";}
 	else
 		{
 		if ( (strlen($code) < 1) or (strlen($code_name) < 2) )
 			{
-			echo "<br>CC Código de estado no se añade- Vaya por favor detrás y mire los datos que usted incorporó\n";
-			echo "<br>código debe estar entre 1 y 8 caracteres de longitud\n";
-			echo "<br>nombre de código debe estar entre 2 y 30 caracteres de longitud\n";
+			echo "<br>CC CÓDIGO DE ESTADO NO AGREGADO- Por favor vuelva atrás y revise los datos que ha incorporado\n";
+			echo "<br>código debe tener entre 1 y 8 caracteres\n";
+			echo "<br>nombre de código debe tener entre 2 y 30 caracteres\n";
 			}
 		else
 			{
-			echo "<br><B>CC Código AÑADIDO:$code_name - $code</B>\n";
+			echo "<br><B>CC CÓDIGO DE ESTADO AGREGADO:$code_name - $code</B>\n";
                         if (isset($_POST["qc_category"]))                    {$qc_category=$_POST["qc_category"];}
 
 			$stmt="INSERT INTO vicidial_qc_codes (code,code_name,qc_result_type) values('$code','$code_name','$qc_category');";
@@ -44,7 +47,7 @@ if ($ADD==241111111111111)
 
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|";
-			$SQL_log = ereg_replace(';','',$SQL_log);
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='QCSTATUSES', event_type='ADD', record_id='$code', event_code='ADMIN ADD QC STATUS', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
@@ -64,23 +67,23 @@ if ($ADD==341111111111111)
 	{
 	if ( ($LOGmodify_servers==1) and ($SSqc_features_active > 0) )
 		{
-		if ( ($SSadmin_modify_refrescar > 1) and ($modify_refrescar_set < 1) )
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
 			{
 			$modify_url = "$PHP_SELF?ADD=341111111111111";
-			$modify_footer_refrescar=1;
+			$modify_footer_refresh=1;
 			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br><center>\n";
-		echo "<b>CC CÓDIGOS VICIDIAL ESTADO DENTRO DE ESTE SISTEMA:&nbsp; $NWB#vicidial_qc_status_codes$NWE</b><br>\n";
+		echo "<b>QC STATUS CODES WITHIN THIS SYSTEM: &nbsp; $NWB#vicidial_qc_status_codes$NWE</b><br>\n";
 		echo "<TABLE width=600 cellspacing=3>\n";
 		echo "<tr><td>STATUS CODE</td><td>DESCRIPCIÓN</td><td>QC CATEGORÍA</td><td>MODIFY/DELETE</td></tr>\n";
 
 		##### go through each QC status code
 		$stmt="SELECT count(*) from vicidial_qc_codes;";
 		$rslt=mysql_query($stmt, $link);
-		$rowx=mysql_fetch_row($rslt);
+		$rowx=mysqli_fetch_row($rslt);
 		if ($rowx[0] > 0)
 			{
 			$stmt="SELECT code,code_name,qc_result_type from vicidial_qc_codes order by code;";
@@ -89,10 +92,10 @@ if ($ADD==341111111111111)
 			$o=0;
 			while ($statuses_to_print > $o)
 				{
-				$rowx=mysql_fetch_row($rslt);
+				$rowx=mysqli_fetch_row($rslt);
 				$o++;
 
-				if (eregi("1$|3$|5$|7$|9$", $o))
+				if (preg_match("/1$|3$|5$|7$|9$/i", $o))
 					{$bgcolor='bgcolor="#B9CBFD"';}
 				else
 					{$bgcolor='bgcolor="#9BB9FB"';}
@@ -120,7 +123,7 @@ if ($ADD==341111111111111)
 			}
 		echo "</table>\n";
 
-		echo "<br>Añadir CC NUEVO CÓDIGO ESTADO<BR><form action=$PHP_SELF method=POST>\n";
+		echo "<br>AGREGAR CÓDIGO ESTADO CC<BR><form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=241111111111111>\n";
 		echo "Estado: <input type=text name=code size=9 maxlength=8> &nbsp; \n";
 		echo "Descripción: <input type=text name=code_name size=25 maxlength=30> \n";
@@ -132,7 +135,7 @@ if ($ADD==341111111111111)
 		}
 	else
 		{
-		echo "Usted no tiene permiso de visión esta página\n";
+		echo "Usted no tiene autorización para ver esta página\n";
 		exit;
 		}
 	}
