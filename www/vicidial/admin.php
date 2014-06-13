@@ -3319,12 +3319,13 @@ else
 # 140509-2201 - Added frozen_server_call_clear system setting, used in admin.php and AST_timecheck.pl
 # 140515-1610 - Added clear list option, Issue #763
 # 140521-2101 - Added timer_alt_seconds and more Manual Auto Dial options
+# 140612-2153 - branched 2.9 version, raised trunk to 2.10
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.8-440a';
-$build = '140521-2101';
+$admin_version = '2.10-442a';
+$build = '140612-2153';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");

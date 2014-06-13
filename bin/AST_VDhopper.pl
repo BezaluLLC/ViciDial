@@ -77,10 +77,11 @@
 # 131008-1518 - Changed campaign flag to allow multiple campaigns
 #               Changed and added several CLI flags, including -t to --test, added --version, --count-only
 #               Added code to restrict all functions if campaign flag is used
+# 140612-2124 - Fixed date issue with wrong variable #772
 #
 
 # constants
-$build = '131008-1518';
+$build = '140612-2124';
 $DB=0;  # Debug flag, set to 0 for no debug messages. Can be overriden with CLI --debug flag
 $US='__';
 $MT[0]='';
@@ -147,7 +148,7 @@ $VDL_one = "$Vyear-$Vmon-$Vmday $Vhour:$Vmin:$Vsec";
 
 ### get date-time of 10 seconds ago ###
 $VDL_tensec = ($secX - 10);
-($Vsec,$Vmin,$Vhour,$Vmday,$Vmon,$Vyear,$Vwday,$Vyday,$Visdst) = localtime($VDL_one);
+($Vsec,$Vmin,$Vhour,$Vmday,$Vmon,$Vyear,$Vwday,$Vyday,$Visdst) = localtime($VDL_tensec);
 $Vyear = ($Vyear + 1900);
 $Vmon++;
 if ($Vmon < 10) {$Vmon = "0$Vmon";}

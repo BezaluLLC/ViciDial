@@ -3059,7 +3059,7 @@ INSERT INTO vicidial_inbound_groups(group_id,group_name,group_color,active,queue
 INSERT INTO vicidial_lists SET list_id='999',list_name='Default inbound list',campaign_id='TESTCAMP',active='N';
 INSERT INTO vicidial_lists SET list_id='998',list_name='Default Manual list',campaign_id='TESTCAMP',active='N';
 
-INSERT INTO system_settings (version,install_date,first_login_trigger) values('2.8b0.5', CURDATE(), 'Y');
+INSERT INTO system_settings (version,install_date,first_login_trigger) values('2.10b0.5', CURDATE(), 'Y');
 
 INSERT INTO vicidial_status_categories (vsc_id,vsc_name) values('UNDEFINED','Default Category');
 
@@ -3268,4 +3268,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1378',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1380',db_schema_update_date=NOW(),reload_timestamp=NOW();

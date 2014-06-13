@@ -431,10 +431,11 @@
 # 140519-1011 - Fixed calls in this session to not count monitoring channels
 # 140521-2147 - Added manual alt dial options and more agent login error messages
 # 140609-2246 - Fixed issue with webform2 button after manual alt-dial
+# 140612-2152 - branched 2.9 version, raised trunk to 2.10
 #
 
-$version = '2.8-400c';
-$build = '140609-2246';
+$version = '2.10-402c';
+$build = '140612-2152';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=80;
 $one_mysql_log=0;
