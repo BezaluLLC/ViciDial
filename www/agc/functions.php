@@ -78,7 +78,7 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 	if ($user_option == 'MGR')
 		{$stmt="SELECT count(*) from vicidial_users where user='$user' and $passSQL and manager_shift_enforcement_override='1' and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";}
 	if ($DB) {echo "|$stmt|\n";}
-	if ($non_latin > 0) {$rslt=mysql_to_mysqli($link, "SET NAMES 'UTF8'");}
+	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05009',$user,$server_ip,$session_name,$one_mysql_log);}
 	$row=mysqli_fetch_row($rslt);
@@ -88,7 +88,7 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 		{
 		$auth_key='BAD'."|$stmt";
 		$stmt="SELECT failed_login_count,UNIX_TIMESTAMP(last_login_date) from vicidial_users where user='$user';";
-		if ($non_latin > 0) {$rslt=mysql_to_mysqli($link, "SET NAMES 'UTF8'");}
+		if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05010',$user,$server_ip,$session_name,$one_mysql_log);}
 		$cl_user_ct = mysqli_num_rows($rslt);

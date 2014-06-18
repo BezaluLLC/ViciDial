@@ -355,10 +355,11 @@
 # 140427-1058 - Added pause_type
 # 140520-1957 - Fixed security_phrase variable label issues, fixed owner only dialing SQL inefficiency
 # 140610-1519 - Fixed issue with manual dial wait_sec being inflated in Asterisk 1.8
+# 140617-1044 - Fixed issue with non-latin, issue #773
 #
 
-$version = '2.8-251';
-$build = '140610-1519';
+$version = '2.8-252';
+$build = '140617-1044';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=591;
 $one_mysql_log=0;
@@ -889,7 +890,7 @@ if ($ACTION == 'LogiNCamPaigns')
 	else
 		{
 		$stmt="SELECT user_group,user_level,agent_shift_enforcement_override,shift_override_flag from vicidial_users where user='$user';";
-		if ($non_latin > 0) {$rslt=mysql_to_mysqli($link, "SET NAMES 'UTF8'");}
+		if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00004',$user,$server_ip,$session_name,$one_mysql_log);}
 		$cl_user_ct = mysqli_num_rows($rslt);
@@ -10558,7 +10559,7 @@ if ($ACTION == 'PauseCodeSubmit')
 if ($ACTION == 'AGENTSview')
 	{
 	$stmt="SELECT user_group from vicidial_users where user='$user';";
-	if ($non_latin > 0) {$rslt=mysql_to_mysqli($link, "SET NAMES 'UTF8'");}
+	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00573',$user,$server_ip,$session_name,$one_mysql_log);}
 	$row=mysqli_fetch_row($rslt);
@@ -10760,7 +10761,7 @@ if ($ACTION == 'AGENTSview')
 if ($ACTION == 'CALLSINQUEUEview')
 	{
 	$stmt="SELECT view_calls_in_queue,grab_calls_in_queue from vicidial_campaigns where campaign_id='$campaign'";
-	if ($non_latin > 0) {$rslt=mysql_to_mysqli($link, "SET NAMES 'UTF8'");}
+	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00228',$user,$server_ip,$session_name,$one_mysql_log);}
 	$row=mysqli_fetch_row($rslt);
@@ -12402,7 +12403,7 @@ if ($ACTION == 'LEADINFOview')
 if ($ACTION == 'CALLSINQUEUEgrab')
 	{
 	$stmt="SELECT view_calls_in_queue,grab_calls_in_queue from vicidial_campaigns where campaign_id='$campaign'";
-	if ($non_latin > 0) {$rslt=mysql_to_mysqli($link, "SET NAMES 'UTF8'");}
+	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00233',$user,$server_ip,$session_name,$one_mysql_log);}
 	$row=mysqli_fetch_row($rslt);

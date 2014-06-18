@@ -176,7 +176,7 @@ echo "<!-- BROWSER: $BROWSER_WIDTH x $BROWSER_HEIGHT     $JS_browser_width x $JS
 
 
 $stmt="SELECT user_group from vicidial_users where user='$VD_login';";
-if ($non_latin > 0) {$rslt=mysql_to_mysqli($link, "SET NAMES 'UTF8'");}
+if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 $rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09002',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 $row=mysqli_fetch_row($rslt);
@@ -524,7 +524,7 @@ else
 				### find the server_ip of each phone_login
 				$stmtx="SELECT server_ip from phones where login = '$phones_auto[$pb]';";
 				if ($DB) {echo "|$stmtx|\n";}
-				if ($non_latin > 0) {$rslt=mysql_to_mysqli($link, "SET NAMES 'UTF8'");}
+				if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 				$rslt=mysql_to_mysqli($stmtx, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09009',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$rowx=mysqli_fetch_row($rslt);

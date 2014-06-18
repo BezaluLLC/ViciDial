@@ -109,6 +109,7 @@
 # 140126-1128 - Added VMAIL_NO_INST options
 # 140215-2121 - Added several variable options for QM socket URL
 # 140312-2112 - Added CALLID as recording filename variable
+# 140617-1946 - Added single-digit change to text for TTS
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -792,37 +793,37 @@ if ($VDACaffected_rows > 0)
 			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$TTS_lead_id =			$aryA[0];
-				$TTS_entry_date =		$aryA[1];
-				$TTS_modify_date =		$aryA[2];
-				$TTS_status =			$aryA[3];
-				$TTS_user =				$aryA[4];
-				$TTS_vendor_lead_code =	$aryA[5];
-				$TTS_source_id =		$aryA[6];
-				$TTS_list_id =			$aryA[7];
-				$TTS_phone_number =		$aryA[8];
-				$TTS_title =			$aryA[9];
-				$TTS_first_name =		$aryA[10];
-				$TTS_middle_initial =	$aryA[11];
-				$TTS_last_name =		$aryA[12];
-				$TTS_address1 =			$aryA[13];
-				$TTS_address2 =			$aryA[14];
-				$TTS_address3 =			$aryA[15];
-				$TTS_city =				$aryA[16];
-				$TTS_state =			$aryA[17];
-				$TTS_province =			$aryA[18];
-				$TTS_postal_code =		$aryA[19];
-				$TTS_country_code =		$aryA[20];
-				$TTS_gender =			$aryA[21];
-				$TTS_date_of_birth =	$aryA[22];
-				$TTS_alt_phone =		$aryA[23];
-				$TTS_email =			$aryA[24];
-				$TTS_security_phrase =	$aryA[25];
-				$TTS_comments =			$aryA[26];
-				$TTS_called_count =		$aryA[27];
-				$TTS_last_local_call_time = $aryA[28];
-				$TTS_rank =				$aryA[29];
-				$TTS_owner =			$aryA[30];
+				$TTS_lead_id =				tts_num_var_test($aryA[0]);
+				$TTS_entry_date =			tts_num_var_test($aryA[1]);
+				$TTS_modify_date =			tts_num_var_test($aryA[2]);
+				$TTS_status =				tts_num_var_test($aryA[3]);
+				$TTS_user =					tts_num_var_test($aryA[4]);
+				$TTS_vendor_lead_code =		tts_num_var_test($aryA[5]);
+				$TTS_source_id =			tts_num_var_test($aryA[6]);
+				$TTS_list_id =				tts_num_var_test($aryA[7]);
+				$TTS_phone_number =			tts_num_var_test($aryA[8]);
+				$TTS_title =				tts_num_var_test($aryA[9]);
+				$TTS_first_name =			tts_num_var_test($aryA[10]);
+				$TTS_middle_initial =		tts_num_var_test($aryA[11]);
+				$TTS_last_name =			tts_num_var_test($aryA[12]);
+				$TTS_address1 =				tts_num_var_test($aryA[13]);
+				$TTS_address2 =				tts_num_var_test($aryA[14]);
+				$TTS_address3 =				tts_num_var_test($aryA[15]);
+				$TTS_city =					tts_num_var_test($aryA[16]);
+				$TTS_state =				tts_num_var_test($aryA[17]);
+				$TTS_province =				tts_num_var_test($aryA[18]);
+				$TTS_postal_code =			tts_num_var_test($aryA[19]);
+				$TTS_country_code =			tts_num_var_test($aryA[20]);
+				$TTS_gender =				tts_num_var_test($aryA[21]);
+				$TTS_date_of_birth =		tts_num_var_test($aryA[22]);
+				$TTS_alt_phone =			tts_num_var_test($aryA[23]);
+				$TTS_email =				tts_num_var_test($aryA[24]);
+				$TTS_security_phrase =		tts_num_var_test($aryA[25]);
+				$TTS_comments =				tts_num_var_test($aryA[26]);
+				$TTS_called_count =			tts_num_var_test($aryA[27]);
+				$TTS_last_local_call_time = tts_num_var_test($aryA[28]);
+				$TTS_rank =					tts_num_var_test($aryA[29]);
+				$TTS_owner =				tts_num_var_test($aryA[30]);
 				}
 			$sthA->finish();
 
@@ -940,6 +941,11 @@ if ($VDACaffected_rows > 0)
 					$TTS_text[$s] =~ s/\'/\\'/gi;
 					#	$voice = 'Allison-8kHz';	# override the voice to Allison-8k
 					print STDERR "\nGenerating: $TTS_text[$s] - $TTS_voice\n";
+
+					open(CEPout, ">>$CEPLOGfile")
+							|| die "Can't open $CEPLOGfile: $!\n";
+					print CEPout "$PATHagi/cepstral_generate.pl --debug --voice=$TTS_voice --dialog=$TTS_text[$s]\n";
+					close(CEPout);
 
 					### send command to generate cepstral TTS audio file
 					`$PATHagi/cepstral_generate.pl --debug --voice=$TTS_voice --dialog=$TTS_text[$s] >> $CEPLOGfile $hideCLI`;
@@ -3843,6 +3849,28 @@ sub parse_asterisk_version
 		}
 
 	return ( %ast_ver_hash );
+	}
+
+
+##### TTS test variables for single digits, convert to text if true #####
+sub tts_num_var_test
+	{
+	$_ = $_[0];
+	$var_test = $_;
+	if ( (length($var_test) > 0) && (length($var_test) < 2) ) 
+		{
+		$var_test =~ s/0/zero /gi;
+		$var_test =~ s/1/one /gi;
+		$var_test =~ s/2/two /gi;
+		$var_test =~ s/3/three /gi;
+		$var_test =~ s/4/four /gi;
+		$var_test =~ s/5/five /gi;
+		$var_test =~ s/6/six /gi;
+		$var_test =~ s/7/seven /gi;
+		$var_test =~ s/8/eight /gi;
+		$var_test =~ s/9/nine /gi;
+		}
+	return $var_test;
 	}
 
 

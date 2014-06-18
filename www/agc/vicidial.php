@@ -432,10 +432,11 @@
 # 140521-2147 - Added manual alt dial options and more agent login error messages
 # 140609-2246 - Fixed issue with webform2 button after manual alt-dial
 # 140612-2152 - branched 2.9 version, raised trunk to 2.10
+# 140617-1041 - Fixed issue with non-latin, issue #773
 #
 
-$version = '2.10-402c';
-$build = '140612-2152';
+$version = '2.10-403c';
+$build = '140617-1041';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=80;
 $one_mysql_log=0;
@@ -702,7 +703,7 @@ if ($campaign_login_list > 0)
 	if ($relogin == 'YES')
 		{
 		$stmt="SELECT user_group from vicidial_users where user='$VD_login' and active='Y';";
-		if ($non_latin > 0) {$rslt=mysql_to_mysqli($link, "SET NAMES 'UTF8'");}
+		if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01002',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$cl_user_ct = mysqli_num_rows($rslt);
@@ -767,7 +768,7 @@ if ($campaign_login_list > 0)
 
 
 	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where active='Y' $LOGallowed_campaignsSQL order by campaign_id;";
-	if ($non_latin > 0) {$rslt=mysql_to_mysqli($link, "SET NAMES 'UTF8'");}
+	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01004',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 	$camps_to_print = mysqli_num_rows($rslt);
@@ -2206,7 +2207,7 @@ else
 				### find the server_ip of each phone_login
 				$stmtx="SELECT server_ip from phones where login = '$phones_auto[$pb]';";
 				if ($DB) {echo "|$stmtx|\n";}
-				if ($non_latin > 0) {$rslt=mysql_to_mysqli($link, "SET NAMES 'UTF8'");}
+				if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 				$rslt=mysql_to_mysqli($stmtx, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01021',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$rowx=mysqli_fetch_row($rslt);

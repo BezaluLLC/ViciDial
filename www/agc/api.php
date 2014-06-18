@@ -352,7 +352,7 @@ else
 
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1';";
 		if ($DB) {echo "|$stmt|\n";}
-		if ($non_latin > 0) {$rslt=mysql_to_mysqli($link, "SET NAMES 'UTF8'");}
+		if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 		$auth_api=$row[0];
