@@ -17,6 +17,7 @@
 # 140425-1306 - Added queuemetrics_pause_type
 # 140509-2211 - Added frozen_server_call_clear
 # 140521-2020 - Changed alt_number_dialing and added timer_alt_seconds
+# 140617-2021 - Added vicidial_users wrapup_seconds_override option
 #
 
 
@@ -325,6 +326,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="users-max_inbound_calls">
 <BR>
 <B>Max Inbound Calls -</B> If this setting is set to a number greater than 0, then it will be the maximum number of inbound calls that an agent can handle across all inbound groups in one day. If the agent reaches their maximum number of inbound calls, then they will not be able to select inbound groups to take calls from until the next day. This setting will override the Campaign setting of the same name. Default is 0 for disabled.
+
+<BR>
+<A NAME="users-wrapup_seconds_override">
+<BR>
+<B>Wrap Seconds Override -</B> If this setting is set to a number 0 or greater, then it will override the Campaign setting for Wrapup Seconds. This is a setting that is only refreshed in the agent interface at agent login time. Default is -1 for disabled.
 
 <BR>
 <A NAME="users-campaign_ranks">

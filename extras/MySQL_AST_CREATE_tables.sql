@@ -621,7 +621,8 @@ last_ip VARCHAR(15) default '',
 pass_hash VARCHAR(100) default '',
 alter_admin_interface_options ENUM('0','1') default '1',
 max_inbound_calls SMALLINT(5) UNSIGNED default '0',
-modify_custom_dialplans ENUM('1','0') default '0'
+modify_custom_dialplans ENUM('1','0') default '0',
+wrapup_seconds_override SMALLINT(4) default '-1'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -3268,4 +3269,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1380',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1381',db_schema_update_date=NOW(),reload_timestamp=NOW();

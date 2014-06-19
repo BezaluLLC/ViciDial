@@ -433,10 +433,11 @@
 # 140609-2246 - Fixed issue with webform2 button after manual alt-dial
 # 140612-2152 - branched 2.9 version, raised trunk to 2.10
 # 140617-1041 - Fixed issue with non-latin, issue #773
+# 140617-2015 - Added vicidial_users wrapup_seconds_override option
 #
 
-$version = '2.10-403c';
-$build = '140617-1041';
+$version = '2.10-404c';
+$build = '140617-2015';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=80;
 $one_mysql_log=0;
@@ -1098,7 +1099,7 @@ else
 		if($auth>0)
 			{
 			##### grab the full name and other settings of the agent
-			$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,agent_call_log_view_override,agent_choose_blended,agent_lead_search_override,preset_contact_search,max_inbound_calls from vicidial_users where user='$VD_login' and active='Y';";
+			$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,agent_call_log_view_override,agent_choose_blended,agent_lead_search_override,preset_contact_search,max_inbound_calls,wrapup_seconds_override from vicidial_users where user='$VD_login' and active='Y';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01007',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysqli_fetch_row($rslt);
@@ -1131,6 +1132,7 @@ else
 			$VU_agent_lead_search_override =		$row[26];
 			$VU_preset_contact_search =				$row[27];
 			$VU_max_inbound_calls =					$row[28];
+			$VU_wrapup_seconds_override =			$row[29];
 
 
 			if ( ($VU_alert_enabled > 0) and ($VU_allow_alerts > 0) ) {$VU_alert_enabled = 'ON';}
@@ -1568,6 +1570,8 @@ else
 				$hide_call_log_info =		$row[113];
 				$timer_alt_seconds =		$row[114];
 
+				if ($VU_wrapup_seconds_override >= 0)
+					{$wrapup_seconds = $VU_wrapup_seconds_override;}
 				if ( ($pause_max < 10) or (strlen($pause_max)<2) )
 					{$pause_max=0;}
 				if ( ($pause_max > 9) and ($pause_max <= $dial_timeout) )

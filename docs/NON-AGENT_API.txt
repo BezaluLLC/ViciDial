@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2014-04-18
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2014-06-17
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -95,6 +95,7 @@ Changes:
 140331-2119 - Converted division calculations to use MathZDC function
 140403-2024 - Added camp_rg_only option to update_user function
 140418-1553 - Added preview_lead_id for agent_status
+140617-2029 - Added vicidial_users wrapup_seconds_override option
 
 
 API Functions use the 'function' variable
@@ -798,6 +799,7 @@ custom_two -		1-100 characters
 custom_three -		1-100 characters
 custom_four -		1-100 characters
 custom_five -		1-100 characters
+wrapup_seconds_override - number from -1 to 9999
 
 NOTE: This function does not work with Vtiger integration
 
@@ -842,6 +844,7 @@ custom_three -		1-100 characters
 custom_four -		1-100 characters
 custom_five -		1-100 characters
 active -		'Y' or 'N'
+wrapup_seconds_override - number from -1 to 9999
 campaign_rank -		from -9 to 9, this will change the campaign rank for this user on all campaigns
 campaign_grade -	from 1 to 10, this will change the campaign grade for this user on all campaigns
 camp_rg_only -		0 or 1, this will set only one campaign rank/grade for this user, requires campaign_id to be set
@@ -873,6 +876,7 @@ ERROR: update_user YOU MUST USE A VALID CUSTOM THREE, THIS IS AN OPTIONAL FIELD 
 ERROR: update_user YOU MUST USE A VALID CUSTOM FOUR, THIS IS AN OPTIONAL FIELD - 6666
 ERROR: update_user YOU MUST USE A VALID CUSTOM FIVE, THIS IS AN OPTIONAL FIELD - 6666
 ERROR: update_user ACTIVE MUST BE Y OR N, THIS IS AN OPTIONAL FIELD - 6666
+ERROR: update_user wrapup_seconds_override MUST BE A VALID DIGIT BETWEEN -1 AND 9999, THIS IS AN OPTIONAL FIELD - 6666|-2
 ERROR: update_user YOU MUST USE A VALID CAMPAIGN RANK, THIS IS AN OPTIONAL FIELD - 6666|0
 ERROR: update_user YOU MUST USE A VALID CAMPAIGN GRADE, THIS IS AN OPTIONAL FIELD - 6666|0
 ERROR: update_user NO UPDATES DEFINED - 6666|0

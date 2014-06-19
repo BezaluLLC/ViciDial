@@ -89,10 +89,11 @@
 # 140331-2119 - Converted division calculations to use MathZDC function
 # 140403-2024 - Added camp_rg_only option to update_user function
 # 140418-1553 - Added preview_lead_id for agent_status
+# 140617-2029 - Added vicidial_users wrapup_seconds_override option
 #
 
-$version = '2.8-65';
-$build = '140418-1553';
+$version = '2.10-66';
+$build = '140617-2029';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -357,6 +358,8 @@ if (isset($_GET["local_call_time"]))				{$local_call_time=$_GET["local_call_time
 	elseif (isset($_POST["local_call_time"]))	{$local_call_time=$_POST["local_call_time"];}
 if (isset($_GET["camp_rg_only"]))				{$camp_rg_only=$_GET["camp_rg_only"];}
 	elseif (isset($_POST["camp_rg_only"]))		{$camp_rg_only=$_POST["camp_rg_only"];}
+if (isset($_GET["wrapup_seconds_override"]))			{$wrapup_seconds_override=$_GET["wrapup_seconds_override"];}
+	elseif (isset($_POST["wrapup_seconds_override"]))	{$wrapup_seconds_override=$_POST["wrapup_seconds_override"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -518,6 +521,7 @@ if ($non_latin < 1)
 	$campaign_grade = preg_replace('/[^0-9]/','',$campaign_grade);
 	$local_call_time = preg_replace('/[^-_0-9a-zA-Z]/','',$local_call_time);
 	$camp_rg_only = preg_replace('/[^0-9]/','',$camp_rg_only);
+	$wrapup_seconds_override = preg_replace('/[^-0-9]/','',$wrapup_seconds_override);
 	}
 else
 	{
@@ -1746,6 +1750,7 @@ if ($function == 'add_user')
 								}
 
 							if (strlen($hotkeys_active)<1) {$hotkeys_active='0';}
+							if (strlen($wrapup_seconds_override)<1) {$wrapup_seconds_override='-1';}
 
 							$pass_hash='';
 							if ( ($SSpass_hash_enabled > 0) and (strlen($agent_pass) > 1) )
@@ -1756,7 +1761,7 @@ if ($function == 'add_user')
 								$agent_pass='';
 								}
 
-							$stmt="INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass,hotkeys_active,voicemail_id,email,custom_one,custom_two,custom_three,custom_four,custom_five,pass_hash) values('$agent_user','$agent_pass','$agent_full_name','$agent_user_level','$agent_user_group','$phone_login','$phone_pass','$hotkeys_active','$voicemail_id','$email','$custom_one','$custom_two','$custom_three','$custom_four','$custom_five','$pass_hash');";
+							$stmt="INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass,hotkeys_active,voicemail_id,email,custom_one,custom_two,custom_three,custom_four,custom_five,pass_hash,wrapup_seconds_override) values('$agent_user','$agent_pass','$agent_full_name','$agent_user_level','$agent_user_group','$phone_login','$phone_pass','$hotkeys_active','$voicemail_id','$email','$custom_one','$custom_two','$custom_three','$custom_four','$custom_five','$pass_hash','$wrapup_seconds_override');";
 							$rslt=mysql_to_mysqli($stmt, $link);
 
 							### LOG INSERTION Admin Log Table ###
@@ -1947,6 +1952,7 @@ if ($function == 'update_user')
 						$custom_fourSQL='';
 						$custom_fiveSQL='';
 						$activeSQL='';
+						$wrapup_seconds_overrideSQL='';
 
 						if (strlen($agent_pass) > 0)
 							{
@@ -2225,6 +2231,20 @@ if ($function == 'update_user')
 							else
 								{$activeSQL = " ,active='$active'";}
 							}
+						if (strlen($wrapup_seconds_override) > 0)
+							{
+							if ( ($wrapup_seconds_override < -1) or ($wrapup_seconds_override > 9999) )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_user wrapup_seconds_override MUST BE A VALID DIGIT BETWEEN -1 AND 9999, THIS IS AN OPTIONAL FIELD";
+								$data = "$wrapup_seconds_override";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$wrapup_seconds_overrideSQL = " ,wrapup_seconds_override='$wrapup_seconds_override'";}
+							}
 
 						if ( (strlen($campaign_rank) > 0) or (strlen($campaign_grade) > 0) )
 							{
@@ -2293,7 +2313,7 @@ if ($function == 'update_user')
 							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 							}
 
-						$updateSQL = "$passSQL$pass_hashSQL$full_nameSQL$user_levelSQL$user_groupSQL$phone_loginSQL$phone_passSQL$hotkeys_activeSQL$voicemail_idSQL$emailSQL$custom_oneSQL$custom_twoSQL$custom_threeSQL$custom_fourSQL$custom_fiveSQL$activeSQL";
+						$updateSQL = "$passSQL$pass_hashSQL$full_nameSQL$user_levelSQL$user_groupSQL$phone_loginSQL$phone_passSQL$hotkeys_activeSQL$voicemail_idSQL$emailSQL$custom_oneSQL$custom_twoSQL$custom_threeSQL$custom_fourSQL$custom_fiveSQL$activeSQL$wrapup_seconds_overrideSQL";
 
 						if (strlen($updateSQL)< 3)
 							{
