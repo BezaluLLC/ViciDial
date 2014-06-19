@@ -1,6 +1,7 @@
 ############################################################  ADMIN
 Wrap Seconds Override||
 If this setting is set to a number 0 or greater, then it will override the Campaign setting for Wrapup Seconds. This is a setting that is only refreshed in the agent interface at agent login time. Default is -1 for disabled||
+This setting also limits the amount of time a 3-way call that has been left by an agent will stay up before it is terminated||
 
 
 ########################## CHANGES TO EXISTING PHRASES IN ADMIN TRANSLATION

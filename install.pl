@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 
-# install.pl version 2.8
+# install.pl version 2.10
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 
 # CHANGES
@@ -34,6 +34,7 @@
 # 130805-0818 - Added support for mysqli
 # 130902-1149 - Small fix for mysqli support
 # 131121-1643 - Added robots.txt file to all web directories
+# 140619-0958 - Added instructions for new ASTplay IAX loop trunk
 #
 
 ############################################
@@ -752,10 +753,12 @@ if (length($ARGV[0])>1)
 			$ext  = "\nAdd the following lines to your extensions.conf file:\n";
 			$ext  .= "TRUNKloop = IAX2/ASTloop:test\@127.0.0.1:40569\n";
 			$ext  .= "TRUNKblind = IAX2/ASTblind:test\@127.0.0.1:41569\n";
+			$ext  .= "TRUNKplay = IAX2/ASTblind:test\@127.0.0.1:42569\n";
 
 			$iax  = "\nAdd the following lines to your iax.conf file:\n";
 			$iax  .= "register => ASTloop:test\@127.0.0.1:40569\n";
 			$iax  .= "register => ASTblind:test\@127.0.0.1:41569\n";
+			$iax  .= "register => ASTplay:test\@127.0.0.1:42569\n";
 
 			$Lext  = "\n";
 			$Lext .= "; Local Server: $server_ip\n";
@@ -2509,7 +2512,7 @@ if ($WEBONLY < 1)
 	`ln -s $PATHhome/ip_relay/ip_relay_linux_i386 /usr/bin/ip_relay`;
 	`ln -s $PATHhome/ip_relay/ip_relay_linux_i386 /usr/local/bin/ip_relay`;
 
-	print "Starting ip_relay port forwarding for IAX on 40569 and 41569\n";
+	print "Starting ip_relay port forwarding for IAX on 40569, 41569 and 42569\n";
 	`$PATHhome/ip_relay/relay_control start  2>/dev/null 1>&2`;
 	}
 if ($NOWEB < 1)

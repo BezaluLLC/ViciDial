@@ -1,4 +1,4 @@
-AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2014-04-03
+AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2014-06-19
 
 This document describes the functions of an API(Application Programming Interface)
 for the VICIDIAL Agent screen. This functionality will be rather limited at first
@@ -32,6 +32,7 @@ webserver - display webserver information, very useful for load balanced setups
 webphone_url - display the webphone url for the current agent's session
 call_agent - send a call to connect the agent to their session
 pause_code - set a pause code if the agent is paused
+audio_playback - basic play/pause/resume/stop/restart audio in agent session
 
 
 New scripts:
@@ -771,6 +772,52 @@ ERROR: call_agent not valid - 6666|CALL
 ERROR: call_agent error - entry is empty - 6666
 ERROR: call_agent error - no session data - 6666
 SUCCESS: call_agent function sent - 6666
+
+
+
+
+
+--------------------------------------------------------------------------------
+audio_playback - 
+
+DESCRIPTION:
+Basic play/stop/pause/resume/restart audio in agent session
+
+NOTE: PAUSE/RESUME/RESTART features only work with Asterisk 1.8 and higher
+       (In Asterisk versions earlier than 1.8 you can replicate RESTART using PLAY and dial_override=Y)
+
+VALUES:
+ stage - 
+  REQUIRED, choices are below:
+   PLAY - starts playing of new audio file in agent session
+   STOP - kills playback of audio in agent session
+   PAUSE - pauses playing of audio
+   RESUME - resumes playing of audio after pause
+   RESTART - restarts playback at beginning of audio
+ value - 
+  REQUIRED for stage of 'PLAY', name of audio file in audio store to play, must NOT have extension
+ dial_override - 
+  OPTIONAL, (Y or N), default is N. Allows you to PLAY without issuing a STOP to a currently playing audio file
+
+
+EXAMPLE URLS:
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=audio_playback&value=ss-noservice&stage=PLAY
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=audio_playback&stage=STOP
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=audio_playback&stage=PAUSE
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=audio_playback&stage=RESUME
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=audio_playback&stage=RESTART
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=audio_playback&value=ss-noservice&stage=PLAY&dial_override=Y
+
+RESPONSES:
+ERROR: no user found - 6666
+ERROR: agent_user is not logged in - PLAY|6666 
+ERROR: audio_playback not valid - ss-noservice|PLAY|6666
+ERROR: audio_playback error - entry is empty - PLAY|6666
+ERROR: audio_playback error - no session data - PLAY|6666
+ERROR: audio_playback error - no audio playing in agent session - 8600051|10.10.10.15|PAUSE|6666
+ERROR: audio_playback error - audio already playing in agent session - 8600051|10.10.10.15|PLAY|6666
+NOTICE: audio_playback previous playback stopped - PLAY|Y|6666
+SUCCESS: audio_playback function sent - ss-noservice|PLAY|6666
 
 
 

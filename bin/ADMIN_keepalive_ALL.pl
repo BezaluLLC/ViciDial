@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# ADMIN_keepalive_ALL.pl   version  2.8
+# ADMIN_keepalive_ALL.pl   version  2.10
 #
 # Designed to keep the astGUIclient processes alive and check every minute
 # Replaces all other ADMIN_keepalive scripts
@@ -93,9 +93,10 @@
 # 140126-1153 - Added VMAIL_NO_INST option dialplan generation
 # 140126-2252 - Added voicemail_instructions option for phones
 # 140214-1519 - Added reload_timestamp value to conf files
+# 140619-1001 - Added new ASTplay loop IAX trunk
 #
 
-$build = '140214-1519';
+$build = '140619-1001';
 
 $DB=0; # Debug flag
 
@@ -1609,9 +1610,11 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 	$ext  .= "TRUNKloop = IAX2/ASTloop:$self_conf_secret\@127.0.0.1:40569\n";
 	$ext  .= "TRUNKblind = IAX2/ASTblind:$self_conf_secret\@127.0.0.1:41569\n";
+	$ext  .= "TRUNKplay = IAX2/ASTplay:$self_conf_secret\@127.0.0.1:42569\n";
 
 	$iax  .= "register => ASTloop:$self_conf_secret\@127.0.0.1:40569\n";
 	$iax  .= "register => ASTblind:$self_conf_secret\@127.0.0.1:41569\n";
+	$iax  .= "register => ASTplay:$self_conf_secret\@127.0.0.1:42569\n";
 
 	$Lext  = "\n";
 	$Lext .= "; Local Server: $server_ip\n";
@@ -1619,6 +1622,51 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	$Lext .= "exten => _$VARremDIALstr*.,2,Hangup()\n";
 	$Lext .= "exten => _**$VARremDIALstr*.,1,Goto(default,\${EXTEN:18},1)\n";
 	$Lext .= "exten => _**$VARremDIALstr*.,2,Hangup()\n";
+	$Lext  = "\n";
+	%ast_ver_str = parse_asterisk_version($asterisk_version);
+	if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+		{
+		$Lext .= "; Agent session audio playback meetme entry\n";
+		$Lext .= "exten => _473782178600XXX,1,Answer\n";
+		$Lext .= "exten => _473782178600XXX,n,Meetme(\${EXTEN:8},Fq)\n";
+		$Lext .= "exten => _473782178600XXX,n,Hangup()\n";
+		$Lext .= "; Agent session audio playback loop\n";
+		$Lext .= "exten => _473782168600XXX,1,Dial(\${TRUNKplay}/47378217\${EXTEN:8},5,To)\n";
+		$Lext .= "exten => _473782168600XXX,n,Hangup()\n";
+		$Lext .= "; Agent session audio playback extension\n";
+		$Lext .= "exten => 473782158521111,1,Answer\n";
+		$Lext .= "exten => 473782158521111,n,ControlPlayback(\${CALLERID(name)}|99999|0|1|2|3|4)\n";
+		$Lext .= "exten => 473782158521111,n,Hangup()\n";
+		$Lext .= "; SendDTMF to playback channel to control it\n";
+		$Lext .= "exten => _473782148521111.,1,Answer\n";
+		$Lext .= "exten => _473782148521111.,n,SendDTMF(\${CALLERID(num)}|250|250|IAX2/ASTplay-\${EXTEN:15})\n";
+		$Lext .= "exten => _473782148521111.,n,Hangup()\n";
+		$Lext .= "; Silent wait channel for DTMFsend\n";
+		$Lext .= "exten => 473782138521111,1,Answer\n";
+		$Lext .= "exten => 473782138521111,n,Wait(5)\n";
+		$Lext .= "exten => 473782138521111,n,Hangup()\n";
+		}
+	else
+		{
+		$Lext .= "; Agent session audio playback meetme entry\n";
+		$Lext .= "exten => _473782178600XXX,1,Meetme(\${EXTEN:8},q)\n";
+		$Lext .= "exten => _473782178600XXX,n,Hangup()\n";
+		$Lext .= "; Agent session audio playback loop\n";
+		$Lext .= "exten => _473782168600XXX,1,Dial(\${TRUNKplay}/47378217\${EXTEN:8},5,To)\n";
+		$Lext .= "exten => _473782168600XXX,n,Hangup()\n";
+		$Lext .= "; Agent session audio playback extension\n";
+		$Lext .= "exten => 473782158521111,1,Answer\n";
+		$Lext .= "exten => 473782158521111,n,ControlPlayback(\${CALLERID(name)},99999,0,1,2,3,4)\n";
+		$Lext .= "exten => 473782158521111,n,Hangup()\n";
+		$Lext .= "; SendDTMF to playback channel to control it\n";
+		$Lext .= "exten => _473782148521111.,1,Answer\n";
+		$Lext .= "exten => _473782148521111.,n,SendDTMF(\${CALLERID(num)},250,250,IAX2/ASTplay-\${EXTEN:15})\n";
+		$Lext .= "exten => _473782148521111.,n,Hangup()\n";
+		$Lext .= "; Silent wait channel for DTMFsend\n";
+		$Lext .= "exten => 473782138521111,1,Answer\n";
+		$Lext .= "exten => 473782138521111,n,Wait(5)\n";
+		$Lext .= "exten => 473782138521111,n,Hangup()\n";
+		}
 
 	$Liax .= "\n";
 	$Liax .= "[ASTloop]\n";
@@ -1637,6 +1685,20 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	$Liax .= "\n";
 	$Liax .= "[ASTblind]\n";
 	$Liax .= "accountcode=ASTblind\n";
+	$Liax .= "secret=$self_conf_secret\n";
+	$Liax .= "type=friend\n";
+	$Liax .= "requirecalltoken=no\n";
+	$Liax .= "context=default\n";
+	$Liax .= "auth=plaintext\n";
+	$Liax .= "host=dynamic\n";
+	$Liax .= "permit=0.0.0.0/0.0.0.0\n";
+	$Liax .= "disallow=all\n";
+	$Liax .= "allow=ulaw\n";
+	$Liax .= "qualify=yes\n";
+
+	$Liax .= "\n";
+	$Liax .= "[ASTplay]\n";
+	$Liax .= "accountcode=ASTplay\n";
 	$Liax .= "secret=$self_conf_secret\n";
 	$Liax .= "type=friend\n";
 	$Liax .= "requirecalltoken=no\n";

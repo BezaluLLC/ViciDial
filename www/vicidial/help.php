@@ -4004,7 +4004,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="servers-recording_limit">
 <BR>
-<B>Recording Limit -</B> This field is where you set the maximum number of minutes that a call recording initiated by the system can be. Default is 60 minutes.
+<B>Recording Limit -</B> This field is where you set the maximum number of minutes that a call recording initiated by the system can be. Default is 60 minutes. This setting also limits the amount of time a 3-way call that has been left by an agent will stay up before it is terminated.
 
 <BR>
 <A NAME="servers-carrier_logging_active">

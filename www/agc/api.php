@@ -74,10 +74,11 @@
 # 140301-2046 - Added options to dial next number and search for lead phone number
 # 140403-1738 - Added option to append filename on recording start
 # 140428-1656 - Added pause_type logging to queue_log pause/unpause entries for ra_call_control function
+# 140619-1006 - Added basic audio_playback function
 #
 
-$version = '2.8-40';
-$build = '140428-1656';
+$version = '2.10-41';
+$build = '140619-1006';
 
 $startMS = microtime();
 
@@ -1105,6 +1106,188 @@ if ($function == 'call_agent')
 	}
 ################################################################################
 ### END - call_agent
+################################################################################
+
+
+
+
+
+################################################################################
+### BEGIN - audio_playback - play/pause/resume/stop/restart audio in agent session
+################################################################################
+if ($function == 'audio_playback')
+	{
+	if ( ( (strlen($value)<1) and ($stage=='PLAY') ) or (strlen($stage)<4) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
+		{
+		$result = 'ERROR';
+		$result_reason = "audio_playback not valid";
+		$data = "$stage";
+		echo "$result: $result_reason - $value|$data|$agent_user\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		}
+	else
+		{
+		if (strlen($alt_user)>1)
+			{
+			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "select user from vicidial_users where custom_three='$alt_user' order by user;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$agent_user = $row[0];
+				}
+			else
+				{
+				$result = 'ERROR';
+				$result_reason = "no user found";
+				$data = "$stage|$alt_user";
+				echo "$result: $result_reason - $data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$stmt = "select conf_exten,server_ip from vicidial_live_agents where user='$agent_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$rl_ct = mysqli_num_rows($rslt);
+			if ($rl_ct > 0)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$VLAconf_exten =	$row[0];
+				$VLAserver_ip =		$row[1];
+
+				if ( (strlen($VLAconf_exten) > 5) and (strlen($VLAserver_ip) > 5) )
+					{
+					$stmt = "select ext_context from servers where server_ip='$VLAserver_ip';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
+					$ext_context =		$row[0];
+
+					$stmt = "select channel from live_channels where extension='$VLAconf_exten' and server_ip='$VLAserver_ip' and channel LIKE \"IAX2/ASTplay%\";";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$rl_ct = mysqli_num_rows($rslt);
+
+					if ($stage == 'PLAY')
+						{
+						if ($rl_ct > 0)
+							{
+							if ($dial_override == 'Y')
+								{
+								$row=mysqli_fetch_row($rslt);
+								$VLAchannel =	$row[0];
+								$VLAchannel_inc =	$VLAchannel;
+								$VLAchannel_inc = preg_replace("/IAX2\/ASTplay-/",'',$VLAchannel_inc);
+
+								$stmtX="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$VLAserver_ip','','Hangup','PLAYHU$ENTRYdate','Channel: $VLAchannel','','','','','','','','','');";
+								if ($format=='debug') {echo "\n<!-- $stmtX -->";}
+								$rslt=mysql_to_mysqli($stmtX, $link);
+								$result = 'NOTICE';
+								$data = "$stage|$dial_override";
+								$result_reason = "audio_playback previous playback stopped";
+								echo "$result: $result_reason - $data|$agent_user\n";
+								$data = "$epoch";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+
+								$stmtX="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$VLAserver_ip','','Originate','$value','Channel: Local\/47378216$VLAconf_exten@$ext_context','Context: $ext_context','Exten: 473782158521111','Priority: 1','CallerID: $value','','','','','');";
+								}
+							else
+								{
+								$result = 'ERROR';
+								$data = "$VLAconf_exten|$VLAserver_ip|$stage|$dial_override";
+								$result_reason = "audio_playback error - audio already playing in agent session";
+								echo "$result: $result_reason - $data|$agent_user\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							}
+						else
+							{
+							$stmtX="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$VLAserver_ip','','Originate','$value','Channel: Local\/47378216$VLAconf_exten@$ext_context','Context: $ext_context','Exten: 473782158521111','Priority: 1','CallerID: $value','','','','','');";
+							}
+						}
+					else
+						{
+						if ($rl_ct > 0)
+							{
+							$row=mysqli_fetch_row($rslt);
+							$VLAchannel =	$row[0];
+							$VLAchannel_inc =	$VLAchannel;
+							$VLAchannel_inc = preg_replace("/IAX2\/ASTplay-/",'',$VLAchannel_inc);
+
+							if ($stage == 'STOP')
+								{
+								$stmtX="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$VLAserver_ip','','Hangup','PLAYHU$ENTRYdate','Channel: $VLAchannel','','','','','','','','','');";
+								}
+							if ($stage == 'RESTART')
+								{
+								$stmtX="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$VLAserver_ip','','Originate','PLAYRS$ENTRYdate','Channel: Local\/473782148521111$VLAchannel_inc@$ext_context','Context: $ext_context','Exten: 473782138521111','Priority: 1','CallerID: 4','','','','','');";
+								}
+							if ( ($stage == 'PAUSE') or ($stage == 'RESUME') )
+								{
+								$stmtX="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$VLAserver_ip','','Originate','PLAYPA$ENTRYdate','Channel: Local\/473782148521111$VLAchannel_inc@$ext_context','Context: $ext_context','Exten: 473782138521111','Priority: 1','CallerID: 3','','','','','');";
+								}
+							}
+						else
+							{
+							$result = 'ERROR';
+							$data = "$VLAconf_exten|$VLAserver_ip|$stage";
+							$result_reason = "audio_playback error - no audio playing in agent session";
+							echo "$result: $result_reason - $data|$agent_user\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						}
+					if ($format=='debug') {echo "\n<!-- $stmtX -->";}
+					$rslt=mysql_to_mysqli($stmtX, $link);
+					$result = 'SUCCESS';
+					$data = "$value|$stage";
+					$result_reason = "audio_playback function sent";
+					echo "$result: $result_reason - $data|$agent_user\n";
+					$data = "$epoch";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				else
+					{
+					$result = 'ERROR';
+					$data = "$stage";
+					$result_reason = "audio_playback error - entry is empty";
+					echo "$result: $result_reason - $data|$agent_user\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
+			else
+				{
+				$result = 'ERROR';
+				$data = "$stage";
+				$result_reason = "audio_playback error - no session data";
+				echo "$result: $result_reason - $data|$agent_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		else
+			{
+			$result = 'ERROR';
+			$data = "$stage";
+			$result_reason = "agent_user is not logged in";
+			echo "$result: $result_reason - $data|$agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		}
+	}
+################################################################################
+### END - audio_playback
 ################################################################################
 
 

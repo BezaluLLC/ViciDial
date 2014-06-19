@@ -56,7 +56,8 @@ OTHER CHANGES:
 
 1. Added User setting for Wrapup Seconds Override
 
-
+2. Added new Agent API function audio_playback to play audio files from the audio
+	store in an active agent session. See AGENT_API.txt doc for more info.
 
 
 

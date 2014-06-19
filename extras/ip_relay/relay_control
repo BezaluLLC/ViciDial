@@ -12,6 +12,9 @@
 #
 # Thanks to Rachad ALAO (ralao@venus.org) for writing ip_relay
 #
+# Changes:
+# 140619-0954 - Added new port 42569 for playback loops
+#
 
 
 case "$1" in
@@ -21,6 +24,7 @@ case "$1" in
 
         ip_relay 40569 127.0.0.1    4569 9999999 &
         ip_relay 41569 127.0.0.1    4569 9999999 &
+        ip_relay 42569 127.0.0.1    4569 9999999 &
 
         echo "done "
         echo
