@@ -1622,7 +1622,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	$Lext .= "exten => _$VARremDIALstr*.,2,Hangup()\n";
 	$Lext .= "exten => _**$VARremDIALstr*.,1,Goto(default,\${EXTEN:18},1)\n";
 	$Lext .= "exten => _**$VARremDIALstr*.,2,Hangup()\n";
-	$Lext  = "\n";
+	$Lext .= "\n";
 	%ast_ver_str = parse_asterisk_version($asterisk_version);
 	if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
 		{
