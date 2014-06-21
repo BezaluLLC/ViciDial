@@ -434,10 +434,11 @@
 # 140612-2152 - branched 2.9 version, raised trunk to 2.10
 # 140617-1041 - Fixed issue with non-latin, issue #773
 # 140617-2015 - Added vicidial_users wrapup_seconds_override option
+# 140621-1557 - Added update_settings call to grab selected user and campaign settings more frequently
 #
 
-$version = '2.10-404c';
-$build = '140617-2015';
+$version = '2.10-405c';
+$build = '140621-1557';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=80;
 $one_mysql_log=0;
@@ -3879,6 +3880,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var dead_auto_dispo_count=0;
 	var dead_auto_dispo_finish=0;
 	var cid_lock=0;
+	var UpdatESettingSChecK=0;
 	var manual_dial_search_checkbox='<?php echo $manual_dial_search_checkbox ?>';
 	var hide_call_log_info='<?php echo $hide_call_log_info ?>';
     var DiaLControl_auto_HTML = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/vdc_LB_resume.gif\" border=\"0\" alt=\"Resume\" /></a>";
@@ -7442,6 +7444,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 // Send the Manual Dial Next Number request
 	function ManualDialNext(mdnCBid,mdnBDleadid,mdnDiaLCodE,mdnPhonENumbeR,mdnStagE,mdVendorid,mdgroupalias,mdtype)
 		{
+		UpdatESettingS();
 		if (waiting_on_dispo > 0)
 			{
 			alert_box("System Delay, Please try again<BR><font size=1>code:" + agent_log_id + " - " + waiting_on_dispo + "</font>");
@@ -8023,6 +8026,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 // Send the Manual Dial Only - dial the previewed lead
 	function ManualDialOnly(taskaltnum)
 		{
+		UpdatESettingS();
 		in_lead_preview_state=0;
 		inOUT = 'OUT';
 		alt_dial_status_display = 0;
@@ -8534,6 +8538,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						//	alert(xmlhttprequestcheckauto.responseText);
 							AutoDialWaiting = 0;
 							QUEUEpadding = 0;
+							UpdatESettingSChecK = 1;
 
 							var VDIC_data_VDAC=check_VDIC_array[1].split("|");
 							VDIC_web_form_address = VICIDiaL_web_form_address
@@ -9079,7 +9084,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							{
 						//	alert(xmlhttprequestcheckemail.responseText);
 							AutoDialWaiting = 0;
-	
+							UpdatESettingSChecK = 1;
+
 							var VDIC_data_VDAC=check_VDIC_array[1].split("|");
 							VDIC_web_form_address = VICIDiaL_web_form_address
 							VDIC_web_form_address_two = VICIDiaL_web_form_address_two
@@ -11005,6 +11011,71 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
             document.getElementById("ManuaLDiaLInGrouPSelecteD").innerHTML = "<font size=\"2\" face=\"Arial,Helvetica\">Dial In-Group: " + active_ingroup_dial + "</font>";
 			}
 		scroll(0,0);
+		}
+
+
+// ################################################################################
+// Update selected user and campaign settings
+	function UpdatESettingS()
+		{
+		var xmlhttp=false;
+		/*@cc_on @*/
+		/*@if (@_jscript_version >= 5)
+		// JScript gives us Conditional compilation, we can cope with old IE versions.
+		// and security blocked creation of the objects.
+		 try {
+		  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+		 } catch (e) {
+		  try {
+		   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		  } catch (E) {
+		   xmlhttp = false;
+		  }
+		 }
+		@end @*/
+		if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+			{
+			xmlhttp = new XMLHttpRequest();
+			}
+		if (xmlhttp) 
+			{ 
+			VUVCsettings_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass  + "&ACTION=update_settings&format=text&agent_log_id=" + agent_log_id + "&campaign=" + campaign;
+			xmlhttp.open('POST', 'vdc_db_query.php'); 
+			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+			xmlhttp.send(VUVCsettings_query); 
+			xmlhttp.onreadystatechange = function() 
+				{ 
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+					{
+					var update_settings_content = null;
+					var update_settings_content = xmlhttp.responseText;
+					var settings_array=update_settings_content.split("\n");
+					if (settings_array[0] == 'Agent Session: 1')
+						{
+						if (settings_array[1] == 'SETTINGS GATHERED')
+							{
+							var wrapup_seconds_array=settings_array[2].split("wrapup_seconds: ");
+								wrapup_seconds=wrapup_seconds_array[1];
+							var dead_max_array=settings_array[3].split("dead_max: ");
+								dead_max=dead_max_array[1];
+							var dispo_max_array=settings_array[4].split("dispo_max: ");
+								dispo_max=dispo_max_array[1];
+							var pause_max_array=settings_array[5].split("pause_max: ");
+								pause_max=pause_max_array[1];
+							var dead_max_dispo_array=settings_array[6].split("dead_max_dispo: ");
+								dead_max_dispo=dead_max_dispo_array[1];
+							var dispo_max_dispo_array=settings_array[7].split("dispo_max_dispo: ");
+								dispo_max_dispo=dispo_max_dispo_array[1];
+							var dial_timeout_array=settings_array[8].split("dial_timeout: ");
+								dial_timeout=dial_timeout_array[1];
+							}
+						}
+				//	alert(VUVCsettings_query);
+				//	alert(xmlhttp.responseText + "\n|" + settings_array[1] + "\n|" + settings_array[2] + "|" + wrapup_seconds + "|" + pause_max + "|" + dial_timeout);
+					}
+				}
+			delete xmlhttp;
+			}
 		}
 
 
@@ -13843,6 +13914,11 @@ function phone_number_format(formatphone) {
 				//	alert("IFRAME submitting!");
 					vcFormIFrame.document.form_custom_fields.submit();
 					}
+				}
+			if (UpdatESettingSChecK > 0)
+				{
+				UpdatESettingSChecK=0;
+				UpdatESettingS();
 				}
 			if (AgentDispoing > 0)	
 				{

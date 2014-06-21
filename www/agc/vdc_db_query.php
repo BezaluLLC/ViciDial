@@ -356,12 +356,13 @@
 # 140520-1957 - Fixed security_phrase variable label issues, fixed owner only dialing SQL inefficiency
 # 140610-1519 - Fixed issue with manual dial wait_sec being inflated in Asterisk 1.8
 # 140617-1044 - Fixed issue with non-latin, issue #773
+# 140621-1544 - Added update_settings function
 #
 
-$version = '2.8-252';
-$build = '140617-1044';
+$version = '2.10-253';
+$build = '140621-1544';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=591;
+$mysql_log_count=594;
 $one_mysql_log=0;
 
 require_once("dbconnect_mysqli.php");
@@ -1481,6 +1482,78 @@ if ($ACTION == 'UpdateFields')
 	else
 		{
 		echo "ERROR: no lead active for this agent\n";
+		}
+	}
+
+
+################################################################################
+### update_settings - sends current vicidial_user and vicidial_campaigns settings
+################################################################################
+if ($ACTION == 'update_settings')
+	{
+	$SettingS_InfO='';
+	$stmt="SELECT count(*) from vicidial_live_agents where user='$user';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00592',$user,$server_ip,$session_name,$one_mysql_log);}
+	$vla_records = mysqli_num_rows($rslt);
+	if ($vla_records > 0) 
+		{
+		$rowx=mysqli_fetch_row($rslt);
+		$agent_count = $rowx[0];
+		$SettingS_InfO .=	"Agent Session: $agent_count\n";
+
+		##### grab the data from vicidial_users for the user
+		$stmt="SELECT wrapup_seconds_override FROM vicidial_users where user='$user' LIMIT 1;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00593',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($DB) {echo "$stmt\n";}
+		$user_set_ct = mysqli_num_rows($rslt);
+		if ($user_set_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$wrapup_seconds_override =		trim("$row[0]");
+
+
+			##### grab the data from vicidial_users for the user
+			$stmt="SELECT wrapup_seconds,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,dial_timeout FROM vicidial_campaigns where campaign_id='$campaign' LIMIT 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00594',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$camp_set_ct = mysqli_num_rows($rslt);
+			if ($camp_set_ct > 0)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$wrapup_seconds =		trim("$row[0]");
+				$dead_max =				trim("$row[1]");
+				$dispo_max =			trim("$row[2]");
+				$pause_max =			trim("$row[3]");
+				$dead_max_dispo =		trim("$row[4]");
+				$dispo_max_dispo =		trim("$row[5]");
+				$dial_timeout =			trim("$row[6]");
+				}
+
+			if ($wrapup_seconds_override >= 0)
+				{$wrapup_seconds = $wrapup_seconds_override;}
+			if ( ($pause_max < 10) or (strlen($pause_max)<2) )
+				{$pause_max=0;}
+			if ( ($pause_max > 9) and ($pause_max <= $dial_timeout) )
+				{$pause_max = ($dial_timeout + 10);}
+
+			$SettingS_InfO .=	"SETTINGS GATHERED\n";
+			$SettingS_InfO .=	"wrapup_seconds: " . $wrapup_seconds . "\n";
+			$SettingS_InfO .=	"dead_max: " . $dead_max . "\n";
+			$SettingS_InfO .=	"dispo_max: " . $dispo_max . "\n";
+			$SettingS_InfO .=	"pause_max: " . $pause_max . "\n";
+			$SettingS_InfO .=	"dead_max_dispo: " . $dead_max_dispo . "\n";
+			$SettingS_InfO .=	"dispo_max_dispo: " . $dispo_max_dispo . "\n";
+			$SettingS_InfO .=	"dial_timeout: " . $dial_timeout . "\n";
+			$SettingS_InfO .=	"\n";
+			}
+		echo $SettingS_InfO;
+		}
+	else
+		{
+		echo "ERROR: no agent session\n";
 		}
 	}
 
