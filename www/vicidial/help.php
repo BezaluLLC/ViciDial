@@ -18,6 +18,7 @@
 # 140509-2211 - Added frozen_server_call_clear
 # 140521-2020 - Changed alt_number_dialing and added timer_alt_seconds
 # 140617-2021 - Added vicidial_users wrapup_seconds_override option
+# 140621-2151 - Added inbound did new filtering options
 #
 
 
@@ -2491,6 +2492,36 @@ if ($SSqc_features_active > 0)
 <A NAME="inbound_dids-filter_clean_cid_number">
 <BR>
 <B>Clean CID Number -</B> This field allows you to specify a number of digits to restrict the incoming caller ID number to by putting an R in front of the number of digits, for example to restrict to the right 10 digits you would enter in R10. You can also use this feature to remove only a leading digit or digits by putting an L in front of the specific digits that you want to remove, for example to remove a 1 as the first digit you would enter in L1. Default is empty. If more than one rule is specified make sure you separate them with a space and the R will run before the L.
+
+<BR>
+<A NAME="inbound_dids-no_agent_ingroup_redirect">
+<BR>
+<B>No-Agent In-Group Redirect -</B> This setting allows you to redirect calls on this DID if there are no logged-in agents set to take calls from a specific In-Group. If this field is set to Y or NO_PAUSED and there are no agents logged in to take calls from the specific In-Group the calls will go to the No Agent In-Group Extension set below. The NO_PAUSED option will only send the call to the defined Extension if there are only paused agents in the in-group. The READY_ONLY option will send the call to the defined Extension if there are no agents waiting for calls right now in the in-group. Default is DISABLED. See the No Agent In-Group Extension setting below for more information.
+
+<BR>
+<A NAME="inbound_dids-no_agent_ingroup_id">
+<BR>
+<B>No-Agent In-Group ID -</B> For the No-Agent In-Group Redirect feature above to work properly, an in-Group must be selected from this menu. Default is blank.
+
+<BR>
+<A NAME="inbound_dids-no_agent_ingroup_extension">
+<BR>
+<B>No-Agent In-Group Extension -</B> For the No-Agent In-Group Redirect feature above to work properly, an Extension must be set in this field. Default is 9998811112. Below you will see some examples of default extensions that you can use in the system to terminate calls to,<BR>
+ - 9998811112 - ANSWERED, This number is not in service<BR>
+ - 9993333333 - UNANSWERED, signal 1, unallocated number, immediate hangup<BR>
+ - 9998888888 - UNANSWERED, signal 17, busy signal, immediate hangup<BR>
+ - 9994444444 - UNANSWERED, signal 27, out of order, immediate hangup<BR>
+ - 9995555555 - UNANSWERED, ring for 120 seconds then hangup<BR>
+
+<BR>
+<A NAME="inbound_dids-pre_filter_phone_group_id">
+<BR>
+<B>Pre-Filter Phone Group ID -</B> This option allows you to filter calls through a Filter Phone Group before going through the standard filtering process below. If a match is found then the call is redirected to the Pre-Filter Phone Group DID as defined below. Default is blank for disabled.
+
+<BR>
+<A NAME="inbound_dids-pre_filter_extension">
+<BR>
+<B>Pre-Filter Phone Group DID -</B> For the Pre-Filter Phone Group ID feature above to work properly, a DID Pattern must be set in this field. Default is blank for disabled. It is recommended that you confirm the DID you enter here is properly set in the system before assigning it.
 
 <BR>
 <A NAME="inbound_dids-filter_inbound_number">

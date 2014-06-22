@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-DID_route.agi version 2.8
+# agi-DID_route.agi version 2.10
 # 
 # runs when a call comes into an inbound context on a trunk. This script will 
 # send the calls to various places depending on the settings for each DID.
@@ -34,6 +34,7 @@
 # 130926-1549 - Added new queue_log IVR entries for QM
 # 140126-1138 - Added VMAIL_NO_INST options
 # 140404-0738 - Added DNC filter options and URL filter DID redirect option
+# 140622-0240 - Added no-agent in-group redirect and pre-filter phone group redirect features
 #
 
 $script = 'agi-DID_route.agi';
@@ -200,7 +201,7 @@ $extension =~ s/\'|\"|\\\\|\\\|\\|\\;|\\\;|\;|;//gi;
 
 ### Grab DID values from the database
 $DIDs_in_system=0;
-$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,group_id,filter_dnc_campaign,filter_url_did_redirect FROM vicidial_inbound_dids where did_pattern = '$extension' and did_active='Y';";
+$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,group_id,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension FROM vicidial_inbound_dids where did_pattern = '$extension' and did_active='Y';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -245,6 +246,11 @@ if ($sthArows > 0)
 	$group_id =						$aryA[35];
 	$filter_dnc_campaign =			$aryA[36];
 	$filter_url_did_redirect =		$aryA[37];
+	$no_agent_ingroup_redirect =	$aryA[38];
+	$no_agent_ingroup_id =			$aryA[39];
+	$no_agent_ingroup_extension =	$aryA[40];
+	$pre_filter_phone_group_id =	$aryA[41];
+	$pre_filter_extension =			$aryA[42];
 
 	$DIDs_in_system++;
 	}
@@ -253,7 +259,7 @@ $sthA->finish();
 if ($sthArows < 1)
 	{
 	### Grab DID values from the database for a default DID pattern if there is one
-	$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,group_id,filter_dnc_campaign,filter_url_did_redirect FROM vicidial_inbound_dids where did_pattern = 'default' and did_active='Y';";
+	$stmtA = "SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,group_id,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension FROM vicidial_inbound_dids where did_pattern = 'default' and did_active='Y';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$DIDs_in_system=$sthA->rows;
@@ -298,6 +304,11 @@ if ($sthArows < 1)
 		$group_id =						$aryA[35];
 		$filter_dnc_campaign =			$aryA[36];
 		$filter_url_did_redirect =		$aryA[37];
+		$no_agent_ingroup_redirect =	$aryA[38];
+		$no_agent_ingroup_id =			$aryA[39];
+		$no_agent_ingroup_extension =	$aryA[40];
+		$pre_filter_phone_group_id =	$aryA[41];
+		$pre_filter_extension =			$aryA[42];
 		}
 	$sthA->finish();
 	}
@@ -444,6 +455,42 @@ if (length($filter_clean_cid_number) > 1)
 ### END clean caller id number ###
 
 
+##### BEGIN pre-filtering process #####
+if ( (length($pre_filter_phone_group_id)>0) && (length($pre_filter_extension)>0) )
+	{
+	$pre_filter_match_found=0;
+	if ($AGILOG) {$agi_string = "pre-filtering active: |$extension|$pre_filter_phone_group_id|$pre_filter_extension|$filter_clean_cid_number|$callerid";   &agi_output;}
+
+	$stmtA = "SELECT count(*) FROM vicidial_filter_phone_numbers where filter_phone_group_id='$pre_filter_phone_group_id' and phone_number='$callerid';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$pre_filter_match_found =	$aryA[0];
+		}
+	$sthA->finish();
+	if ($pre_filter_match_found > 0)
+		{
+		$did_route='DID';
+		$did_extension =				$pre_filter_extension;
+		$filter_match_found =			$pre_filter_extension;
+		$exten_context =				'trunkinbound';
+		$route_type =					'PREFILTER';
+
+		if ($AGILOG) {$agi_string = "PRE-Filter match found: |$pre_filter_match_found|$pre_filter_phone_group_id|$pre_filter_extension|$did_route|";   &agi_output;}
+
+		### Update the call in vicidial_did_log
+		$stmtA = "UPDATE vicidial_did_log SET did_route='PF_$did_route' where uniqueid='$uniqueid' and channel='$channel' and server_ip='$VARserver_ip' and caller_id_number='$callerid' and call_date='$SQLdate';";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$affected_rowsL = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    DID UPDATE LOG : |$affected_rowsL|$stmtA|";   &agi_output;}
+		}
+	}
+##### END pre-filtering process #####
+
+
 ##### BEGIN filtering process #####
 if ($filter_inbound_number =~ /GROUP|URL|DNC_INTERNAL|DNC_CAMPAIGN/)
 	{
@@ -562,6 +609,45 @@ if ($filter_inbound_number =~ /GROUP|URL|DNC_INTERNAL|DNC_CAMPAIGN/)
 ##### END filtering process #####
 
 
+##### BEGIN no-agent redirect process #####
+if ($no_agent_ingroup_redirect =~ /Y|NO_PAUSED|READY_ONLY/)
+	{
+	$no_agent_redirect_bypass=1;
+	if ($AGILOG) {$agi_string = "filtering active: |$extension|$no_agent_ingroup_redirect|$no_agent_ingroup_id|$no_agent_ingroup_extension|$filter_clean_cid_number|";   &agi_output;}
+
+	$NPsql='';
+	if ($no_agent_ingroup_redirect =~ /NO_PAUSED/) 
+		{$NPsql = "and status NOT IN('PAUSED')";}
+	if ($no_agent_ingroup_redirect =~ /READY_ONLY/) 
+		{$NPsql = "and status IN('READY','CLOSER')";}
+	$stmtA = "SELECT count(*) FROM vicidial_live_agents where closer_campaigns LIKE \"% $no_agent_ingroup_id %\" $NPsql;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$no_agent_redirect_bypass =	$aryA[0];
+		}
+	$sthA->finish();
+
+	if ($no_agent_redirect_bypass < 1)
+		{
+		$did_route =					'EXTEN';
+		$did_extension =				$no_agent_ingroup_extension;
+		$exten_context =				'default';
+		$route_type =					'NOAGENT';
+
+		if ($AGILOG) {$agi_string = "No-Agent Redirect: |$no_agent_redirect_bypass|$no_agent_ingroup_redirect|$did_extension|$no_agent_ingroup_id|";   &agi_output;}
+
+		### Update the call in vicidial_did_log
+		$stmtA = "UPDATE vicidial_did_log SET did_route='NA_$did_route' where uniqueid='$uniqueid' and channel='$channel' and server_ip='$VARserver_ip' and caller_id_number='$callerid' and call_date='$SQLdate';";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$affected_rowsL = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    DID UPDATE LOG : |$affected_rowsL|$stmtA|";   &agi_output;}
+		}
+	}
+##### END no-agent redirect process #####
 
 
 ### Route call to a VICIDIAL-defined phone

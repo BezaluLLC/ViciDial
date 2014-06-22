@@ -59,7 +59,12 @@ OTHER CHANGES:
 2. Added new Agent API function audio_playback to play audio files from the audio
 	store in an active agent session. See AGENT_API.txt doc for more info.
 
+3. Added option to DIDs to allow routing of calls to a redirect extension if
+	there are no agents available in a specific in-group
 
+4. Added option to DIDs to allow pre-filtering by a specific filter phone group
+	before the stardard filtering process. The call can be redirected to a
+	specific DID entry if there is a match.
 
 
 

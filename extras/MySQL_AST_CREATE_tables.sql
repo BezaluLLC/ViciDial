@@ -1859,6 +1859,11 @@ custom_five VARCHAR(100) default '',
 user_group VARCHAR(20) default '---ALL---',
 filter_dnc_campaign VARCHAR(8) default '',
 filter_url_did_redirect ENUM('Y','N') default 'N',
+no_agent_ingroup_redirect ENUM('DISABLED','Y','NO_PAUSED','READY_ONLY') default 'DISABLED',
+no_agent_ingroup_id VARCHAR(20) default '',
+no_agent_ingroup_extension VARCHAR(50) default '9998811112',
+pre_filter_phone_group_id VARCHAR(20) default '',
+pre_filter_extension VARCHAR(50) default '',
 unique index (did_pattern),
 index (group_id)
 ) ENGINE=MyISAM;
@@ -3269,4 +3274,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1381',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1382',db_schema_update_date=NOW(),reload_timestamp=NOW();
