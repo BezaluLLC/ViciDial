@@ -683,59 +683,59 @@ else
 		$CSV_text3.="\"TIMECLOCK LOGIN/LOGOUT TIME\"\n";
 		$CSV_text3.="\"\",\"ID\",\"EDIT\",\"EVENT\",\"DATE\",\"IPADDRESS\",\"GROUP\",\"HOURS:MM:SS\"\n";
 
-			$stmt="SELECT event,event_epoch,user_group,login_sec,ip_address,timeclock_id,manager_user from vicidial_timeclock_log where user='" . mysqli_real_escape_string($link, $user) . "' and event_epoch >= '$SQepoch'  and event_epoch <= '$EQepoch';";
-			if ($DB>0) {$MAIN.="|$stmt|";}
-			$rslt=mysql_to_mysqli($stmt, $link);
-			$events_to_print = mysqli_num_rows($rslt);
+		$stmt="SELECT event,event_epoch,user_group,login_sec,ip_address,timeclock_id,manager_user from vicidial_timeclock_log where user='" . mysqli_real_escape_string($link, $user) . "' and event_epoch >= '$SQepoch'  and event_epoch <= '$EQepoch';";
+		if ($DB>0) {$MAIN.="|$stmt|";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$events_to_print = mysqli_num_rows($rslt);
 
-			$total_logs=0;
-			$o=0;
-			while ($events_to_print > $o) {
-				$row=mysqli_fetch_row($rslt);
-				if ( ($row[0]=='START') or ($row[0]=='LOGIN') )
-					{$bgcolor='bgcolor="#B9CBFD"';} 
-				else
-					{$bgcolor='bgcolor="#9BB9FB"';}
+		$total_logs=0;
+		$o=0;
+		while ($events_to_print > $o) {
+			$row=mysqli_fetch_row($rslt);
+			if ( ($row[0]=='START') or ($row[0]=='LOGIN') )
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
 
-				$TC_log_date = date("Y-m-d H:i:s", $row[1]);
+			$TC_log_date = date("Y-m-d H:i:s", $row[1]);
 
-				$manager_edit='';
-				if (strlen($row[6])>0) {$manager_edit = ' * ';}
+			$manager_edit='';
+			if (strlen($row[6])>0) {$manager_edit = ' * ';}
 
-				if (preg_match('/LOGIN/', $row[0]))
-					{
-					$login_sec='';
-					$MAIN.="<tr $bgcolor><td><font size=2><A HREF=\"./timeclock_edit.php?timeclock_id=$row[5]\">$row[5]</A></td>";
-					$MAIN.="<td align=right><font size=2>$manager_edit</td>";
-					$MAIN.="<td align=right><font size=2>$row[0]</td>";
-					$MAIN.="<td align=right><font size=2> $TC_log_date</td>\n";
-					$MAIN.="<td align=right><font size=2> $row[4]</td>\n";
-					$MAIN.="<td align=right><font size=2> $row[2]</td>\n";
-					$MAIN.="<td align=right><font size=2> </td></tr>\n";
-					$CSV_text3.="\"\",\"$row[5]\",\"$manager_edit\",\"$row[0]\",\"$TC_log_date\",\"$row[4]\",\"$row[2]\"\n";
-					}
-				if (preg_match('/LOGOUT/', $row[0]))
-					{
-					$login_sec = $row[3];
-					$total_login_time = ($total_login_time + $login_sec);
-					$event_hours_minutes =		sec_convert($login_sec,'H'); 
+			if (preg_match('/LOGIN/', $row[0]))
+				{
+				$login_sec='';
+				$MAIN.="<tr $bgcolor><td><font size=2><A HREF=\"./timeclock_edit.php?timeclock_id=$row[5]\">$row[5]</A></td>";
+				$MAIN.="<td align=right><font size=2>$manager_edit</td>";
+				$MAIN.="<td align=right><font size=2>$row[0]</td>";
+				$MAIN.="<td align=right><font size=2> $TC_log_date</td>\n";
+				$MAIN.="<td align=right><font size=2> $row[4]</td>\n";
+				$MAIN.="<td align=right><font size=2> $row[2]</td>\n";
+				$MAIN.="<td align=right><font size=2> </td></tr>\n";
+				$CSV_text3.="\"\",\"$row[5]\",\"$manager_edit\",\"$row[0]\",\"$TC_log_date\",\"$row[4]\",\"$row[2]\"\n";
+				}
+			if (preg_match('/LOGOUT/', $row[0]))
+				{
+				$login_sec = $row[3];
+				$total_login_time = ($total_login_time + $login_sec);
+				$event_hours_minutes =		sec_convert($login_sec,'H'); 
 
-					$MAIN.="<tr $bgcolor><td><font size=2><A HREF=\"./timeclock_edit.php?timeclock_id=$row[5]\">$row[5]</A></td>";
-					$MAIN.="<td align=right><font size=2>$manager_edit</td>";
-					$MAIN.="<td align=right><font size=2>$row[0]</td>";
-					$MAIN.="<td align=right><font size=2> $TC_log_date</td>\n";
-					$MAIN.="<td align=right><font size=2> $row[4]</td>\n";
-					$MAIN.="<td align=right><font size=2> $row[2]</td>\n";
-					$MAIN.="<td align=right><font size=2> $event_hours_minutes";
-					if ($DB) {$MAIN.=" - $total_login_time - $login_sec";}
-					$MAIN.="</td></tr>\n";
-					$CSV_text3.="\"\",\"$row[5]\",\"$manager_edit\",\"$row[0]\",\"$TC_log_date\",\"$row[4]\",\"$row[2]\",\"$event_hours_minutes\"\n";
-					}
-				$o++;
+				$MAIN.="<tr $bgcolor><td><font size=2><A HREF=\"./timeclock_edit.php?timeclock_id=$row[5]\">$row[5]</A></td>";
+				$MAIN.="<td align=right><font size=2>$manager_edit</td>";
+				$MAIN.="<td align=right><font size=2>$row[0]</td>";
+				$MAIN.="<td align=right><font size=2> $TC_log_date</td>\n";
+				$MAIN.="<td align=right><font size=2> $row[4]</td>\n";
+				$MAIN.="<td align=right><font size=2> $row[2]</td>\n";
+				$MAIN.="<td align=right><font size=2> $event_hours_minutes";
+				if ($DB) {$MAIN.=" - $total_login_time - $login_sec";}
+				$MAIN.="</td></tr>\n";
+				$CSV_text3.="\"\",\"$row[5]\",\"$manager_edit\",\"$row[0]\",\"$TC_log_date\",\"$row[4]\",\"$row[2]\",\"$event_hours_minutes\"\n";
+				}
+			$o++;
 			}
 		if (strlen($login_sec)<1)
 			{
-			$login_sec = ($STARTtime - $row[1]);
+			$login_sec = ($EQepoch - $row[1]);
 			$total_login_time = ($total_login_time + $login_sec);
 				if ($DB) {$MAIN.="LOGIN ONLY - $total_login_time - $login_sec";}
 			}
