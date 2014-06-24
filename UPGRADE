@@ -66,6 +66,10 @@ OTHER CHANGES:
 	before the stardard filtering process. The call can be redirected to a
 	specific DID entry if there is a match.
 
+5. Added Wrapup Bypass option to allow or disallow agents to skip the wrapup
+	screen before the timer is finished. Also added the option to use a 
+	system Script as the Wrap Up Message
+
 
 
 

@@ -17,6 +17,8 @@ Pre-Filter Phone Group ID||
 This option allows you to filter calls through a Filter Phone Group before going through the standard filtering process below. If a match is found then the call is redirected to the Pre-Filter Phone Group DID as defined below. Default is blank for disabled||
 Pre-Filter Phone Group DID||
 For the Pre-Filter Phone Group ID feature above to work properly, a DID Pattern must be set in this field. Default is blank for disabled. It is recommended that you confirm the DID you enter here is properly set in the system before assigning it||
+If set to ENABLED then the agent will be able to click a link to stop the Wrap Up timer before the time is completed. Default is ENABLED||
+You can use a Script in the system if you use the script id with WUSCRIPT in front of it, so if you wanted to use a script called agent_script, then you would put WUSCRIPTagent_script in this field||
 
 
 ########################## CHANGES TO EXISTING PHRASES IN ADMIN TRANSLATION

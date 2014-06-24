@@ -13,3 +13,7 @@ ALTER TABLE vicidial_inbound_dids ADD pre_filter_phone_group_id VARCHAR(20) defa
 ALTER TABLE vicidial_inbound_dids ADD pre_filter_extension VARCHAR(50) default '';
 
 UPDATE system_settings SET db_schema_version='1382',db_schema_update_date=NOW() where db_schema_version < 1382;
+
+ALTER TABLE vicidial_campaigns ADD wrapup_bypass ENUM('DISABLED','ENABLED') default 'ENABLED';
+
+UPDATE system_settings SET db_schema_version='1383',db_schema_update_date=NOW() where db_schema_version < 1383;

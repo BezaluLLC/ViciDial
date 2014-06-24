@@ -23,10 +23,11 @@
 # 130705-1513 - Added optional encrypted passwords compatibility
 # 130802-1035 - Changed to PHP mysqli functions
 # 140429-2034 - Added TABLEper_call_notes display script variable
+# 140623-2114 - Added script_override variable
 #
 
-$version = '2.8-17';
-$build = '140429-2034';
+$version = '2.10-18';
+$build = '140623-2114';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -204,6 +205,8 @@ if (isset($_GET["orig_pass"]))			{$orig_pass=$_GET["orig_pass"];}
 	elseif (isset($_POST["orig_pass"]))	{$orig_pass=$_POST["orig_pass"];}
 if (isset($_GET["called_count"]))			{$called_count=$_GET["called_count"];}
 	elseif (isset($_POST["called_count"]))	{$called_count=$_POST["called_count"];}
+if (isset($_GET["script_override"]))			{$script_override=$_GET["script_override"];}
+	elseif (isset($_POST["script_override"]))	{$script_override=$_POST["script_override"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -316,6 +319,9 @@ $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $list_name =			$row[0];
 $list_description =		$row[1];
+
+if (strlen($script_override)>1)
+	{$call_script = $script_override;}
 
 $stmt="SELECT script_name,script_text from vicidial_scripts where script_id='$call_script';";
 $rslt=mysql_to_mysqli($stmt, $link);

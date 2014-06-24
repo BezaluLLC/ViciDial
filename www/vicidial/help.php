@@ -19,6 +19,7 @@
 # 140521-2020 - Changed alt_number_dialing and added timer_alt_seconds
 # 140617-2021 - Added vicidial_users wrapup_seconds_override option
 # 140621-2151 - Added inbound did new filtering options
+# 140623-2220 - Added wrapup_bypass and wrapup_message change to allow script use
 #
 
 
@@ -1345,7 +1346,12 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="campaigns-wrapup_message">
 <BR>
-<B>Wrap Up Message -</B> This is a campaign-specific message to be displayed on the wrap up screen if wrap up seconds is set.
+<B>Wrap Up Message -</B> This is a campaign-specific message to be displayed on the wrap up screen if wrap up seconds is set. You can use a Script in the system if you use the script id with WUSCRIPT in front of it, so if you wanted to use a script called agent_script, then you would put WUSCRIPTagent_script in this field.
+
+<BR>
+<A NAME="campaigns-wrapup_bypass">
+<BR>
+<B>Wrap Up Bypass -</B> If set to ENABLED then the agent will be able to click a link to stop the Wrap Up timer before the time is completed. Default is ENABLED.
 
 <BR>
 <A NAME="campaigns-disable_dispo_screen">
