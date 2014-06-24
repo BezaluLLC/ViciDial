@@ -26,12 +26,13 @@
 # 130616-2237 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0858 - Changed to mysqli PHP functions
 # 140108-0722 - Added webserver and hostname to report logging
+# 140624-1423 - Added droppedOFtotal options.php option
 #
 
 $startMS = microtime();
 
-$version = '2.8-14';
-$build = '130901-0858';
+$version = '2.10-15';
+$build = '140624-1423';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -99,6 +100,8 @@ if (isset($_GET["PRESETstats"]))			{$PRESETstats=$_GET["PRESETstats"];}
 	elseif (isset($_POST["PRESETstats"]))	{$PRESETstats=$_POST["PRESETstats"];}
 if (isset($_GET["AGENTtimeSTATS"]))				{$AGENTtimeSTATS=$_GET["AGENTtimeSTATS"];}
 	elseif (isset($_POST["AGENTtimeSTATS"]))	{$AGENTtimeSTATS=$_POST["AGENTtimeSTATS"];}
+if (isset($_GET["droppedOFtotal"]))				{$droppedOFtotal=$_GET["droppedOFtotal"];}
+	elseif (isset($_POST["droppedOFtotal"]))	{$droppedOFtotal=$_POST["droppedOFtotal"];}
 
 $report_name = 'Real-Time Main Report';
 $db_source = 'M';
@@ -220,6 +223,11 @@ if (!isset($AGENTtimeSTATS))
 	if (!isset($RS_AGENTtimeSTATS)) {$AGENTtimeSTATS='0';}
 	else {$AGENTtimeSTATS = $RS_AGENTtimeSTATS;}
 	}
+if (!isset($droppedOFtotal)) 
+	{
+	if (!isset($RS_droppedOFtotal)) {$droppedOFtotal='0';}
+	else {$droppedOFtotal = $RS_droppedOFtotal;}
+	}
 
 $ingroup_detail='';
 
@@ -279,6 +287,7 @@ $monitor_phone = preg_replace('/[^-_0-9a-zA-Z]/', '', $monitor_phone);
 $CARRIERstats = preg_replace('/[^-_0-9a-zA-Z]/', '', $CARRIERstats);
 $PRESETstats = preg_replace('/[^-_0-9a-zA-Z]/', '', $PRESETstats);
 $AGENTtimeSTATS = preg_replace('/[^-_0-9a-zA-Z]/', '', $AGENTtimeSTATS);
+$droppedOFtotal = preg_replace('/[^-_0-9a-zA-Z]/', '', $droppedOFtotal);
 
 
 $auth=0;
@@ -819,6 +828,7 @@ $select_list .= ">YES</option>";
 $select_list .= "</SELECT></TD></TR>";
 
 $select_list .= "</TABLE><BR>";
+$select_list .= "<INPUT type=hidden name=droppedOFtotal value=\"$droppedOFtotal\">";
 $select_list .= "<INPUT type=button VALUE=SUBMIT onclick=\"update_variables(\'form_submit\',\'\');\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; ";
 $select_list .= "</TD></TR>";
 $select_list .= "<TR><TD ALIGN=CENTER>";
@@ -999,6 +1009,7 @@ var NOLEADSalert = '<?php echo $NOLEADSalert ?>';
 var CARRIERstats = '<?php echo $CARRIERstats ?>';
 var PRESETstats = '<?php echo $PRESETstats ?>';
 var AGENTtimeSTATS = '<?php echo $AGENTtimeSTATS ?>';
+var droppedOFtotal = '<?php echo $droppedOFtotal ?>';
 
 // functions to hide and show different DIVs
 function showDiv(divvar) 
@@ -1282,7 +1293,7 @@ function gather_realtime_content()
 		}
 	if (xmlhttp) 
 		{
-		RTupdate_query = "RTajax=1&DB=" + DB + "" + groupQS + usergroupQS + "&adastats=" + adastats + "&SIPmonitorLINK=" + SIPmonitorLINK + "&IAXmonitorLINK=" + IAXmonitorLINK + "&usergroup=" + usergroup + "&UGdisplay=" + UGdisplay + "&UidORname=" + UidORname + "&orderby=" + orderby + "&SERVdisplay=" + SERVdisplay + "&CALLSdisplay=" + CALLSdisplay + "&PHONEdisplay=" + PHONEdisplay + "&CUSTPHONEdisplay=" + CUSTPHONEdisplay + "&with_inbound=" + with_inbound + "&monitor_active=" + monitor_active + "&monitor_phone=" + monitor_phone + "&ALLINGROUPstats=" + ALLINGROUPstats + "&DROPINGROUPstats=" + DROPINGROUPstats + "&NOLEADSalert=" + NOLEADSalert + "&CARRIERstats=" + CARRIERstats + "&PRESETstats=" + PRESETstats + "&AGENTtimeSTATS=" + AGENTtimeSTATS + "";
+		RTupdate_query = "RTajax=1&DB=" + DB + "" + groupQS + usergroupQS + "&adastats=" + adastats + "&SIPmonitorLINK=" + SIPmonitorLINK + "&IAXmonitorLINK=" + IAXmonitorLINK + "&usergroup=" + usergroup + "&UGdisplay=" + UGdisplay + "&UidORname=" + UidORname + "&orderby=" + orderby + "&SERVdisplay=" + SERVdisplay + "&CALLSdisplay=" + CALLSdisplay + "&PHONEdisplay=" + PHONEdisplay + "&CUSTPHONEdisplay=" + CUSTPHONEdisplay + "&with_inbound=" + with_inbound + "&monitor_active=" + monitor_active + "&monitor_phone=" + monitor_phone + "&ALLINGROUPstats=" + ALLINGROUPstats + "&DROPINGROUPstats=" + DROPINGROUPstats + "&NOLEADSalert=" + NOLEADSalert + "&CARRIERstats=" + CARRIERstats + "&PRESETstats=" + PRESETstats + "&AGENTtimeSTATS=" + AGENTtimeSTATS + "&droppedOFtotal=" + droppedOFtotal + "";
 
 		xmlhttp.open('POST', 'AST_timeonVDADall.php'); 
 		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
@@ -1411,6 +1422,7 @@ function update_variables(task_option,task_choice,force_reload)
 		var AGENTtimeSTATSFORM = document.getElementById('AGENTtimeSTATS');
 		AGENTtimeSTATS = AGENTtimeSTATSFORM[AGENTtimeSTATSFORM.selectedIndex].value;
 		var temp_monitor_phone = document.REALTIMEform.monitor_phone.value;
+		var droppedOFtotal = document.REALTIMEform.droppedOFtotal.value;
 
 		var temp_camp_choices = '';
 		var selCampObj = document.getElementById('groups[]');
@@ -1451,7 +1463,7 @@ function update_variables(task_option,task_choice,force_reload)
 		// force a reload if the phone is changed
 		if ( (temp_monitor_phone != monitor_phone) || (force_reload=='YES') )
 			{
-			reload_url = PHP_SELF + "?RR=" + RR + "&DB=" + DB + "" + groupQS + usergroupQS + "&adastats=" + adastats + "&SIPmonitorLINK=" + SIPmonitorLINK + "&IAXmonitorLINK=" + IAXmonitorLINK + "&usergroup=" + usergroup + "&UGdisplay=" + UGdisplay + "&UidORname=" + UidORname + "&orderby=" + orderby + "&SERVdisplay=" + SERVdisplay + "&CALLSdisplay=" + CALLSdisplay + "&PHONEdisplay=" + PHONEdisplay + "&CUSTPHONEdisplay=" + CUSTPHONEdisplay + "&with_inbound=" + with_inbound + "&monitor_active=" + monitor_active + "&monitor_phone=" + temp_monitor_phone + "&ALLINGROUPstats=" + ALLINGROUPstats + "&DROPINGROUPstats=" + DROPINGROUPstats + "&NOLEADSalert=" + NOLEADSalert + "&CARRIERstats=" + CARRIERstats + "&PRESETstats=" + PRESETstats + "&AGENTtimeSTATS=" + AGENTtimeSTATS + "";
+			reload_url = PHP_SELF + "?RR=" + RR + "&DB=" + DB + "" + groupQS + usergroupQS + "&adastats=" + adastats + "&SIPmonitorLINK=" + SIPmonitorLINK + "&IAXmonitorLINK=" + IAXmonitorLINK + "&usergroup=" + usergroup + "&UGdisplay=" + UGdisplay + "&UidORname=" + UidORname + "&orderby=" + orderby + "&SERVdisplay=" + SERVdisplay + "&CALLSdisplay=" + CALLSdisplay + "&PHONEdisplay=" + PHONEdisplay + "&CUSTPHONEdisplay=" + CUSTPHONEdisplay + "&with_inbound=" + with_inbound + "&monitor_active=" + monitor_active + "&monitor_phone=" + temp_monitor_phone + "&ALLINGROUPstats=" + ALLINGROUPstats + "&DROPINGROUPstats=" + DROPINGROUPstats + "&NOLEADSalert=" + NOLEADSalert + "&CARRIERstats=" + CARRIERstats + "&PRESETstats=" + PRESETstats + "&AGENTtimeSTATS=" + AGENTtimeSTATS + "&droppedOFtotal=" + droppedOFtotal + "";
 
 		//	alert('|' + temp_monitor_phone + '|' + monitor_phone + '|\n' + reload_url);
 			window.location.href = reload_url;

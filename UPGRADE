@@ -70,6 +70,9 @@ OTHER CHANGES:
 	screen before the timer is finished. Also added the option to use a 
 	system Script as the Wrap Up Message
 
+6. Added $RS_droppedOFtotal options.php option for the realtime report to allow
+	the drops to be calculated out of Total calls instead of just Answers
+
 
 
 

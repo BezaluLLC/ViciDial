@@ -15,6 +15,7 @@
 # 130123-1950 - Added option for using non-selectable statuses in admin_modify_lead.php
 # 130124-1735 - Added option to display first and last name in user stats results
 # 140124-1003 - Removed extra newline at end of file
+# 140624-1422 - Added droppedOFtotal options.php option
 #
 
 # used by the realtime_report.php script
@@ -54,6 +55,7 @@ $RS_with_inbound =		'Y';
 $RS_CARRIERstats =		0;	# 0=no, 1=yes
 $RS_PRESETstats =		0;	# 0=no, 1=yes
 $RS_AGENTtimeSTATS =	0;	# 0=no, 1=yes
+$RS_droppedOFtotal =	0;	# 0=no, 1=yes
 
 # used by agent reports
 $user_case =			0;		# 1=upper-case, 2-lower-case, 0-no-case-change

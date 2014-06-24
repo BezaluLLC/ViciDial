@@ -588,7 +588,8 @@ exten => _999XXXXXX3,n,Hangup()
 exten => _999XXXXXX4,1,Set(PRI_CAUSE=27)
 exten => _999XXXXXX4,n,Hangup()
 
-exten => _999XXXXXX5,1,Wait(120)
+exten => _999XXXXXX5,1,Ringing
+exten => _999XXXXXX5,n,Wait(120)
 exten => _999XXXXXX5,n,Hangup()
 
 exten => _999XXXXXX6,1,Wait(10)
