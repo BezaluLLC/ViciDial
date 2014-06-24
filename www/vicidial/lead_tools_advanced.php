@@ -6,10 +6,11 @@
 # CHANGES
 # 131016-1948 - Initial Build based upon lead_tools.php
 # 140113-0853 - Added USERONLY to ANYONE callback switcher
+# 140606-1242 - Added the state field as an option to Move, Update, and Delete
 #
 
-$version = '2.8-1';
-$build = '140113-0853';
+$version = '2.10-3';
+$build = '140606-1242';
 
 # This limit is to prevent data inconsistancies.
 # If there are too many leads in a list this
@@ -70,7 +71,7 @@ $delete_status = preg_replace('/[^-_0-9a-zA-Z]/','',$delete_status);
 
 if ($DB)
 	{
-	echo "<p>DB = $DB | $move_submit = $move_submit | update_submit = $update_submit | delete_submit = $delete_submit | callback_submit = $callback_submit | confirm_move = $confirm_move | confirm_update = $confirm_update | confirm_delete = $confirm_delete | confirm_callback = $confirm_callback</p>";
+	echo "<p>DB = $DB | move_submit = $move_submit | update_submit = $update_submit | delete_submit = $delete_submit | callback_submit = $callback_submit | confirm_move = $confirm_move | confirm_update = $confirm_update | confirm_delete = $confirm_delete | confirm_callback = $confirm_callback</p>";
 	}
 
 
@@ -177,6 +178,7 @@ window.onload = function() {
 	document.getElementById("enable_move_vendor_lead_code").onclick = enableMoveVendorLeadCode;
 	document.getElementById("enable_move_source_id").onclick = enableMoveCountrySourceId;
 	document.getElementById("enable_move_owner").onclick = enableMoveOwner;
+	document.getElementById("enable_move_state").onclick = enableMoveState;
 	document.getElementById("enable_move_entry_date").onclick = enableMoveEntryDate;
 	document.getElementById("enable_move_modify_date").onclick = enableMoveModifyDate;
 	document.getElementById("enable_move_security_phrase").onclick = enableMoveSecurityPhrase;
@@ -188,6 +190,7 @@ window.onload = function() {
 	document.getElementById("enable_update_vendor_lead_code").onclick = enableUpdateVendorLeadCode;
 	document.getElementById("enable_update_source_id").onclick = enableUpdateCountrySourceId;
 	document.getElementById("enable_update_owner").onclick = enableUpdateOwner;
+	document.getElementById("enable_update_state").onclick = enableUpdateState;
 	document.getElementById("enable_update_entry_date").onclick = enableUpdateEntryDate;
 	document.getElementById("enable_update_modify_date").onclick = enableUpdateModifyDate;
 	document.getElementById("enable_update_security_phrase").onclick = enableUpdateSecurityPhrase;
@@ -198,6 +201,7 @@ window.onload = function() {
 	document.getElementById("enable_delete_vendor_lead_code").onclick = enableDeleteVendorLeadCode;
 	document.getElementById("enable_delete_source_id").onclick = enableDeleteCountrySourceId;
 	document.getElementById("enable_delete_owner").onclick = enableDeleteOwner;
+	document.getElementById("enable_delete_state").onclick = enableDeleteState;
 	document.getElementById("enable_delete_entry_date").onclick = enableDeleteEntryDate;
 	document.getElementById("enable_delete_modify_date").onclick = enableDeleteModifyDate;
 	document.getElementById("enable_delete_security_phrase").onclick = enableDeleteSecurityPhrase;
@@ -242,6 +246,13 @@ function enableMoveOwner(){
 		document.getElementById("move_owner").disabled = false;
 	} else {
 		document.getElementById("move_owner").disabled = true;
+	}
+}
+function enableMoveState(){
+	if (document.getElementById("enable_move_state").checked)  {
+		document.getElementById("move_state").disabled = false;
+	} else {
+		document.getElementById("move_state").disabled = true;
 	}
 }
 function enableMoveEntryDate(){
@@ -311,6 +322,13 @@ function enableUpdateOwner(){
 		document.getElementById("update_owner").disabled = true;
 	}
 }
+function enableUpdateState(){
+	if (document.getElementById("enable_update_state").checked)  {
+		document.getElementById("update_state").disabled = false;
+	} else {
+		document.getElementById("update_state").disabled = true;
+	}
+}
 function enableUpdateEntryDate(){
 	if (document.getElementById("enable_update_entry_date").checked)  {
 		document.getElementById("update_entry_date").disabled = false;
@@ -378,6 +396,13 @@ function enableDeleteOwner(){
 		document.getElementById("delete_owner").disabled = false;
 	} else {
 		document.getElementById("delete_owner").disabled = true;
+	}
+}
+function enableDeleteState(){
+	if (document.getElementById("enable_delete_state").checked)  {
+		document.getElementById("delete_state").disabled = false;
+	} else {
+		document.getElementById("delete_state").disabled = true;
 	}
 }
 function enableDeleteEntryDate(){
@@ -478,6 +503,7 @@ if ($move_submit == "move" )
 	$enable_move_vendor_lead_code="";
 	$enable_move_source_id="";
 	$enable_move_owner="";
+	$enable_move_state="";
 	$enable_move_entry_date="";
 	$enable_move_modify_date="";
 	$enable_move_security_phrase="";
@@ -486,6 +512,7 @@ if ($move_submit == "move" )
 	$move_vendor_lead_code="";
 	$move_source_id="";
 	$move_owner="";
+	$move_state="";
 	$move_entry_date="";
 	$move_modify_date="";
 	$move_security_phrase="";
@@ -506,6 +533,8 @@ if ($move_submit == "move" )
 		elseif (isset($_POST["enable_move_source_id"])) {$enable_move_source_id=$_POST["enable_move_source_id"];}
 	if (isset($_GET["enable_move_owner"])) {$enable_move_owner=$_GET["enable_move_owner"];}
 		elseif (isset($_POST["enable_move_owner"])) {$enable_move_owner=$_POST["enable_move_owner"];}
+	if (isset($_GET["enable_move_state"])) {$enable_move_state=$_GET["enable_move_state"];}
+		elseif (isset($_POST["enable_move_state"])) {$enable_move_state=$_POST["enable_move_state"];}
 	if (isset($_GET["enable_move_entry_date"])) {$enable_move_entry_date=$_GET["enable_move_entry_date"];}
 		elseif (isset($_POST["enable_move_entry_date"])) {$enable_move_entry_date=$_POST["enable_move_entry_date"];}
 	if (isset($_GET["enable_move_modify_date"])) {$enable_move_modify_date=$_GET["enable_move_modify_date"];}
@@ -522,6 +551,8 @@ if ($move_submit == "move" )
 		elseif (isset($_POST["move_source_id"])) {$move_source_id=$_POST["move_source_id"];}
 	if (isset($_GET["move_owner"])) {$move_owner=$_GET["move_owner"];}
 		elseif (isset($_POST["move_owner"])) {$move_owner=$_POST["move_owner"];}
+	if (isset($_GET["move_state"])) {$move_state=$_GET["move_state"];}
+		elseif (isset($_POST["move_state"])) {$move_state=$_POST["move_state"];}
 	if (isset($_GET["move_entry_date"])) {$move_entry_date=$_GET["move_entry_date"];}
 		elseif (isset($_POST["move_entry_date"])) {$move_entry_date=$_POST["move_entry_date"];}
 	if (isset($_GET["move_modify_date"])) {$move_modify_date=$_GET["move_modify_date"];}
@@ -541,7 +572,7 @@ if ($move_submit == "move" )
 
 	if ($DB)
 		{
-		echo "<p>enable_move_status = $enable_move_status | enable_move_country_code = $enable_move_country_code | enable_move_vendor_lead_code = $enable_move_vendor_lead_code | enable_move_source_id = $enable_move_source_id | enable_move_owner = $enable_move_owner | enable_move_entry_date = $enable_move_entry_date | enable_move_modify_date = $enable_move_modify_date | enable_move_security_phrase = $enable_move_security_phrase | enable_move_count = $enable_move_count | move_country_code = $move_country_code | move_vendor_lead_code = $move_vendor_lead_code | move_source_id = $move_source_id | move_owner = $move_owner | move_owner = $move_entry_date | move_modify_date = $move_modify_date | move_security_phrase = $move_security_phrase | move_from_list = $move_from_list | move_to_list = $move_to_list | move_status = $move_status | move_count_op = $move_count_op | move_count_num = $move_count_num</p>";
+		echo "<p>enable_move_status = $enable_move_status | enable_move_country_code = $enable_move_country_code | enable_move_vendor_lead_code = $enable_move_vendor_lead_code | enable_move_source_id = $enable_move_source_id | enable_move_owner = $enable_move_owner | enable_move_state = $enable_move_state | enable_move_entry_date = $enable_move_entry_date | enable_move_modify_date = $enable_move_modify_date | enable_move_security_phrase = $enable_move_security_phrase | enable_move_count = $enable_move_count | move_country_code = $move_country_code | move_vendor_lead_code = $move_vendor_lead_code | move_source_id = $move_source_id | move_owner = $move_owner | move_state = $move_state | move_entry_date = $move_entry_date | move_modify_date = $move_modify_date | move_security_phrase = $move_security_phrase | move_from_list = $move_from_list | move_to_list = $move_to_list | move_status = $move_status | move_count_op = $move_count_op | move_count_num = $move_count_num</p>";
 		}
 
 	# filter out anything bad
@@ -550,6 +581,7 @@ if ($move_submit == "move" )
 	$enable_move_vendor_lead_code = preg_replace('/[^a-zA-Z]/','',$enable_move_vendor_lead_code);
 	$enable_move_source_id = preg_replace('/[^a-zA-Z]/','',$enable_move_source_id);
 	$enable_move_owner = preg_replace('/[^a-zA-Z]/','',$enable_move_owner);
+	$enable_move_state = preg_replace('/[^a-zA-Z]/','',$enable_move_state);
 	$enable_move_entry_date = preg_replace('/[^a-zA-Z]/','',$enable_move_entry_date);
 	$enable_move_modify_date = preg_replace('/[^a-zA-Z]/','',$enable_move_modify_date);
 	$enable_move_security_phrase = preg_replace('/[^a-zA-Z]/','',$enable_move_security_phrase);
@@ -558,6 +590,7 @@ if ($move_submit == "move" )
 	$move_vendor_lead_code = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_vendor_lead_code);
 	$move_source_id = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_source_id);
 	$move_owner = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_owner);
+	$move_state = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_state);
 	$move_entry_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_entry_date);
 	$move_modify_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_modify_date);
 	$move_security_phrase = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_security_phrase);
@@ -569,7 +602,7 @@ if ($move_submit == "move" )
 
 	if ($DB)
 		{
-		echo "<p>enable_move_status = $enable_move_status | enable_move_country_code = $enable_move_country_code | enable_move_vendor_lead_code = $enable_move_vendor_lead_code | enable_move_source_id = $enable_move_source_id | enable_move_owner = $enable_move_owner | enable_move_entry_date = $enable_move_entry_date | enable_move_modify_date = $enable_move_modify_date | enable_move_security_phrase = $enable_move_security_phrase | enable_move_count = $enable_move_count | move_country_code = $move_country_code | move_vendor_lead_code = $move_vendor_lead_code | move_source_id = $move_source_id | move_owner = $move_owner | move_owner = $move_entry_date | move_modify_date = $move_modify_date | move_security_phrase = $move_security_phrase | move_from_list = $move_from_list | move_to_list = $move_to_list | move_status = $move_status | move_count_op = $move_count_op | move_count_num = $move_count_num</p>";
+		echo "<p>enable_move_status = $enable_move_status | enable_move_country_code = $enable_move_country_code | enable_move_vendor_lead_code = $enable_move_vendor_lead_code | enable_move_source_id = $enable_move_source_id | enable_move_owner = $enable_move_owner | enable_move_state = $enable_move_state| enable_move_entry_date = $enable_move_entry_date | enable_move_modify_date = $enable_move_modify_date | enable_move_security_phrase = $enable_move_security_phrase | enable_move_count = $enable_move_count | move_country_code = $move_country_code | move_vendor_lead_code = $move_vendor_lead_code | move_source_id = $move_source_id | move_owner = $move_owner | move_state = $move_state | move_entry_date = $move_entry_date | move_modify_date = $move_modify_date | move_security_phrase = $move_security_phrase | move_from_list = $move_from_list | move_to_list = $move_to_list | move_status = $move_status | move_count_op = $move_count_op | move_count_num = $move_count_num</p>";
 		}
 
 	# build the count operation phrase
@@ -653,6 +686,17 @@ if ($move_submit == "move" )
 	elseif ($enable_move_owner == "enabled")
 		{
 		blank_field('Owner',true);
+		}
+	if (($enable_move_state == "enabled") && ($move_state != ''))
+		{
+		if ($move_state == '---BLANK---') {$move_state = '';}
+		$sql_where = $sql_where . " and state like '$move_state' ";
+		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;state is like $move_state<br />";
+		if ($move_state == '') {$move_state = '---BLANK---';}
+		}
+	elseif ($enable_move_state == "enabled")
+		{
+		blank_field('State',true);
 		}
 	if (($enable_move_security_phrase == "enabled") && ($move_security_phrase != ''))
 		{
@@ -750,6 +794,7 @@ if ($move_submit == "move" )
 		echo "<input type=hidden name=enable_move_vendor_lead_code value='$enable_move_vendor_lead_code'>\n";
 		echo "<input type=hidden name=enable_move_source_id value='$enable_move_source_id'>\n";
 		echo "<input type=hidden name=enable_move_owner value='$enable_move_owner'>\n";
+		echo "<input type=hidden name=enable_move_state value='$enable_move_state'>\n";
 		echo "<input type=hidden name=enable_move_entry_date value='$enable_move_entry_date'>\n";
 		echo "<input type=hidden name=enable_move_modify_date value='$enable_move_modify_date'>\n";
 		echo "<input type=hidden name=enable_move_security_phrase value='$enable_move_security_phrase'>\n";
@@ -758,6 +803,7 @@ if ($move_submit == "move" )
 		echo "<input type=hidden name=move_vendor_lead_code value='$move_vendor_lead_code'>\n";
 		echo "<input type=hidden name=move_source_id value='$move_source_id'>\n";
 		echo "<input type=hidden name=move_owner value='$move_owner'>\n";
+		echo "<input type=hidden name=move_state value='$move_state'>\n";
 		echo "<input type=hidden name=move_entry_date value='$move_entry_date'>\n";
 		echo "<input type=hidden name=move_modify_date value='$move_modify_date'>\n";
 		echo "<input type=hidden name=move_security_phrase value='$move_security_phrase'>\n";
@@ -783,6 +829,7 @@ if ($confirm_move == "confirm")
 	$enable_move_vendor_lead_code="";
 	$enable_move_source_id="";
 	$enable_move_owner="";
+	$enable_move_state="";
 	$enable_move_entry_date="";
 	$enable_move_modify_date="";
 	$enable_move_security_phrase="";
@@ -791,6 +838,7 @@ if ($confirm_move == "confirm")
 	$move_vendor_lead_code="";
 	$move_source_id="";
 	$move_owner="";
+	$move_state="";
 	$move_entry_date="";
 	$move_modify_date="";
 	$move_security_phrase="";
@@ -811,6 +859,8 @@ if ($confirm_move == "confirm")
 		elseif (isset($_POST["enable_move_source_id"])) {$enable_move_source_id=$_POST["enable_move_source_id"];}
 	if (isset($_GET["enable_move_owner"])) {$enable_move_owner=$_GET["enable_move_owner"];}
 		elseif (isset($_POST["enable_move_owner"])) {$enable_move_owner=$_POST["enable_move_owner"];}
+	if (isset($_GET["enable_move_state"])) {$enable_move_state=$_GET["enable_move_state"];}
+		elseif (isset($_POST["enable_move_state"])) {$enable_move_state=$_POST["enable_move_state"];}
 	if (isset($_GET["enable_move_entry_date"])) {$enable_move_entry_date=$_GET["enable_move_entry_date"];}
 		elseif (isset($_POST["enable_move_entry_date"])) {$enable_move_entry_date=$_POST["enable_move_entry_date"];}
 	if (isset($_GET["enable_move_modify_date"])) {$enable_move_modify_date=$_GET["enable_move_modify_date"];}
@@ -827,6 +877,8 @@ if ($confirm_move == "confirm")
 		elseif (isset($_POST["move_source_id"])) {$move_source_id=$_POST["move_source_id"];}
 	if (isset($_GET["move_owner"])) {$move_owner=$_GET["move_owner"];}
 		elseif (isset($_POST["move_owner"])) {$move_owner=$_POST["move_owner"];}
+	if (isset($_GET["move_state"])) {$move_state=$_GET["move_state"];}
+		elseif (isset($_POST["move_state"])) {$move_state=$_POST["move_state"];}
 	if (isset($_GET["move_entry_date"])) {$move_entry_date=$_GET["move_entry_date"];}
 		elseif (isset($_POST["move_entry_date"])) {$move_entry_date=$_POST["move_entry_date"];}
 	if (isset($_GET["move_modify_date"])) {$move_modify_date=$_GET["move_modify_date"];}
@@ -846,7 +898,7 @@ if ($confirm_move == "confirm")
 
 	if ($DB)
 		{
-		echo "<p>enable_move_status = $enable_move_status | enable_move_country_code = $enable_move_country_code | enable_move_vendor_lead_code = $enable_move_vendor_lead_code | enable_move_source_id = $enable_move_source_id | enable_move_owner = $enable_move_owner | enable_move_entry_date = $enable_move_entry_date | enable_move_modify_date = $enable_move_modify_date | enable_move_security_phrase = $enable_move_security_phrase | enable_move_count = $enable_move_count | move_country_code = $move_country_code | move_vendor_lead_code = $move_vendor_lead_code | move_source_id = $move_source_id | move_owner = $move_owner | move_owner = $move_entry_date | move_modify_date = $move_modify_date | move_security_phrase = $move_security_phrase | move_from_list = $move_from_list | move_to_list = $move_to_list | move_status = $move_status | move_count_op = $move_count_op | move_count_num = $move_count_num</p>";
+		echo "<p>enable_move_status = $enable_move_status | enable_move_country_code = $enable_move_country_code | enable_move_vendor_lead_code = $enable_move_vendor_lead_code | enable_move_source_id = $enable_move_source_id | enable_move_owner = $enable_move_owner | enable_move_state = $enable_move_state | enable_move_entry_date = $enable_move_entry_date | enable_move_modify_date = $enable_move_modify_date | enable_move_security_phrase = $enable_move_security_phrase | enable_move_count = $enable_move_count | move_country_code = $move_country_code | move_vendor_lead_code = $move_vendor_lead_code | move_source_id = $move_source_id | move_owner = $move_owner | move_state = $move_state | move_entry_date = $move_entry_date | move_modify_date = $move_modify_date | move_security_phrase = $move_security_phrase | move_from_list = $move_from_list | move_to_list = $move_to_list | move_status = $move_status | move_count_op = $move_count_op | move_count_num = $move_count_num</p>";
 		}
 
 	# filter out anything bad
@@ -855,6 +907,7 @@ if ($confirm_move == "confirm")
 	$enable_move_vendor_lead_code = preg_replace('/[^a-zA-Z]/','',$enable_move_vendor_lead_code);
 	$enable_move_source_id = preg_replace('/[^a-zA-Z]/','',$enable_move_source_id);
 	$enable_move_owner = preg_replace('/[^a-zA-Z]/','',$enable_move_owner);
+	$enable_move_state = preg_replace('/[^a-zA-Z]/','',$enable_move_state);
 	$enable_move_entry_date = preg_replace('/[^a-zA-Z]/','',$enable_move_entry_date);
 	$enable_move_modify_date = preg_replace('/[^a-zA-Z]/','',$enable_move_modify_date);
 	$enable_move_security_phrase = preg_replace('/[^a-zA-Z]/','',$enable_move_security_phrase);
@@ -863,6 +916,7 @@ if ($confirm_move == "confirm")
 	$move_vendor_lead_code = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_vendor_lead_code);
 	$move_source_id = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_source_id);
 	$move_owner = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_owner);
+	$move_state = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_state);
 	$move_entry_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_entry_date);
 	$move_modify_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_modify_date);
 	$move_security_phrase = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_security_phrase);
@@ -874,7 +928,7 @@ if ($confirm_move == "confirm")
 
 	if ($DB)
 		{
-		echo "<p>enable_move_status = $enable_move_status | enable_move_country_code = $enable_move_country_code | enable_move_vendor_lead_code = $enable_move_vendor_lead_code | enable_move_source_id = $enable_move_source_id | enable_move_owner = $enable_move_owner | enable_move_entry_date = $enable_move_entry_date | enable_move_modify_date = $enable_move_modify_date | enable_move_security_phrase = $enable_move_security_phrase | enable_move_count = $enable_move_count | move_country_code = $move_country_code | move_vendor_lead_code = $move_vendor_lead_code | move_source_id = $move_source_id | move_owner = $move_owner | move_owner = $move_entry_date | move_modify_date = $move_modify_date | move_security_phrase = $move_security_phrase | move_from_list = $move_from_list | move_to_list = $move_to_list | move_status = $move_status | move_count_op = $move_count_op | move_count_num = $move_count_num</p>";
+		echo "<p>enable_move_status = $enable_move_status | enable_move_country_code = $enable_move_country_code | enable_move_vendor_lead_code = $enable_move_vendor_lead_code | enable_move_source_id = $enable_move_source_id | enable_move_owner = $enable_move_owner | enable_move_state = $enable_move_state | enable_move_entry_date = $enable_move_entry_date | enable_move_modify_date = $enable_move_modify_date | enable_move_security_phrase = $enable_move_security_phrase | enable_move_count = $enable_move_count | move_country_code = $move_country_code | move_vendor_lead_code = $move_vendor_lead_code | move_source_id = $move_source_id | move_owner = $move_owner | move_state = $move_state | move_entry_date = $move_entry_date | move_modify_date = $move_modify_date | move_security_phrase = $move_security_phrase | move_from_list = $move_from_list | move_to_list = $move_to_list | move_status = $move_status | move_count_op = $move_count_op | move_count_num = $move_count_num</p>";
 		}
 
 	$move_count_op_phrase="";
@@ -956,6 +1010,17 @@ if ($confirm_move == "confirm")
 	elseif ($enable_move_owner == "enabled")
 		{
 		blank_field('Owner',true);
+		}
+	if (($enable_move_state == "enabled") && ($move_state != ''))
+		{
+		if ($move_state == '---BLANK---') {$move_state = '';}
+		$sql_where = $sql_where . " and state like '$move_state' ";
+		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;state is like $move_state<br />";
+		if ($move_state == '') {$move_state = '---BLANK---';}
+		}
+	elseif ($enable_move_state == "enabled")
+		{
+		blank_field('State',true);
 		}
 	if (($enable_move_security_phrase == "enabled") && ($move_security_phrase != ''))
 		{
@@ -1044,6 +1109,7 @@ if ($update_submit == "update" )
 	$enable_update_vendor_lead_code="";
 	$enable_update_source_id="";
 	$enable_update_owner="";
+	$enable_update_state="";
 	$enable_update_entry_date="";
 	$enable_update_modify_date="";
 	$enable_update_security_phrase="";
@@ -1052,6 +1118,7 @@ if ($update_submit == "update" )
 	$update_vendor_lead_code="";
 	$update_source_id="";
 	$update_owner="";
+	$update_state="";
 	$update_entry_date="";
 	$update_modify_date="";
 	$update_security_phrase="";
@@ -1072,6 +1139,8 @@ if ($update_submit == "update" )
 		elseif (isset($_POST["enable_update_source_id"])) {$enable_update_source_id=$_POST["enable_update_source_id"];}
 	if (isset($_GET["enable_update_owner"])) {$enable_update_owner=$_GET["enable_update_owner"];}
 		elseif (isset($_POST["enable_update_owner"])) {$enable_update_owner=$_POST["enable_update_owner"];}
+	if (isset($_GET["enable_update_state"])) {$enable_update_state=$_GET["enable_update_state"];}
+		elseif (isset($_POST["enable_update_state"])) {$enable_update_state=$_POST["enable_update_state"];}
 	if (isset($_GET["enable_update_entry_date"])) {$enable_update_entry_date=$_GET["enable_update_entry_date"];}
 		elseif (isset($_POST["enable_update_entry_date"])) {$enable_update_entry_date=$_POST["enable_update_entry_date"];}
 	if (isset($_GET["enable_update_modify_date"])) {$enable_update_modify_date=$_GET["enable_update_modify_date"];}
@@ -1088,6 +1157,8 @@ if ($update_submit == "update" )
 		elseif (isset($_POST["update_source_id"])) {$update_source_id=$_POST["update_source_id"];}
 	if (isset($_GET["update_owner"])) {$update_owner=$_GET["update_owner"];}
 		elseif (isset($_POST["update_owner"])) {$update_owner=$_POST["update_owner"];}
+	if (isset($_GET["update_state"])) {$update_state=$_GET["update_state"];}
+		elseif (isset($_POST["update_state"])) {$update_state=$_POST["update_state"];}
 	if (isset($_GET["update_entry_date"])) {$update_entry_date=$_GET["update_entry_date"];}
 		elseif (isset($_POST["update_entry_date"])) {$update_entry_date=$_POST["update_entry_date"];}
 	if (isset($_GET["update_modify_date"])) {$update_modify_date=$_GET["update_modify_date"];}
@@ -1107,7 +1178,7 @@ if ($update_submit == "update" )
 
 	if ($DB)
 		{
-		echo "<p>enable_update_from_status = $enable_update_from_status | enable_update_country_code = $enable_update_country_code | enable_update_vendor_lead_code = $enable_update_vendor_lead_code | enable_update_source_id = $enable_update_source_id | enable_update_owner = $enable_update_owner | enable_update_entry_date = $enable_update_entry_date | enable_update_modify_date = $enable_update_modify_date | enable_update_security_phrase = $enable_update_security_phrase | enable_update_count = $enable_update_count | update_country_code = $update_country_code | update_vendor_lead_code = $update_vendor_lead_code | update_source_id = $update_source_id | update_owner = $update_owner | update_owner = $update_entry_date | update_modify_date = $update_modify_date | update_security_phrase = $update_security_phrase | update_list = $update_list | update_to_status = $ update_to_status | update_from_status = $update_from_status | update_count_op = $update_count_op | update_count_num = $update_count_num</p>";
+		echo "<p>enable_update_from_status = $enable_update_from_status | enable_update_country_code = $enable_update_country_code | enable_update_vendor_lead_code = $enable_update_vendor_lead_code | enable_update_source_id = $enable_update_source_id | enable_update_owner = $enable_update_owner | enable_update_state = $enable_update_state | enable_update_entry_date = $enable_update_entry_date | enable_update_modify_date = $enable_update_modify_date | enable_update_security_phrase = $enable_update_security_phrase | enable_update_count = $enable_update_count | update_country_code = $update_country_code | update_vendor_lead_code = $update_vendor_lead_code | update_source_id = $update_source_id | update_owner = $update_owner | update_state = $update_state | update_entry_date = $update_entry_date | update_modify_date = $update_modify_date | update_security_phrase = $update_security_phrase | update_list = $update_list | update_to_status = $ update_to_status | update_from_status = $update_from_status | update_count_op = $update_count_op | update_count_num = $update_count_num</p>";
 		}
 
 	# filter out anything bad
@@ -1116,6 +1187,7 @@ if ($update_submit == "update" )
 	$enable_update_vendor_lead_code = preg_replace('/[^a-zA-Z]/','',$enable_update_vendor_lead_code);
 	$enable_update_source_id = preg_replace('/[^a-zA-Z]/','',$enable_update_source_id);
 	$enable_update_owner = preg_replace('/[^a-zA-Z]/','',$enable_update_owner);
+	$enable_update_state = preg_replace('/[^a-zA-Z]/','',$enable_update_state);
 	$enable_update_entry_date = preg_replace('/[^a-zA-Z]/','',$enable_update_entry_date);
 	$enable_update_modify_date = preg_replace('/[^a-zA-Z]/','',$enable_update_modify_date);
 	$enable_update_security_phrase = preg_replace('/[^a-zA-Z]/','',$enable_update_security_phrase);
@@ -1124,6 +1196,7 @@ if ($update_submit == "update" )
 	$update_vendor_lead_code = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_vendor_lead_code);
 	$update_source_id = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_source_id);
 	$update_owner = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_owner);
+	$update_state = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_state);
 	$update_entry_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_entry_date);
 	$update_modify_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_modify_date);
 	$update_security_phrase = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_security_phrase);
@@ -1135,7 +1208,7 @@ if ($update_submit == "update" )
 
 	if ($DB)
 		{
-		echo "<p>enable_update_from_status = $enable_update_from_status | enable_update_country_code = $enable_update_country_code | enable_update_vendor_lead_code = $enable_update_vendor_lead_code | enable_update_source_id = $enable_update_source_id | enable_update_owner = $enable_update_owner | enable_update_entry_date = $enable_update_entry_date | enable_update_modify_date = $enable_update_modify_date | enable_update_security_phrase = $enable_update_security_phrase | enable_update_count = $enable_update_count | update_country_code = $update_country_code | update_vendor_lead_code = $update_vendor_lead_code | update_source_id = $update_source_id | update_owner = $update_owner | update_owner = $update_entry_date | update_modify_date = $update_modify_date | update_security_phrase = $update_security_phrase | update_list = $update_list | update_to_status = $ update_to_status | update_from_status = $update_from_status | update_count_op = $update_count_op | update_count_num = $update_count_num</p>";
+		echo "<p>enable_update_from_status = $enable_update_from_status | enable_update_country_code = $enable_update_country_code | enable_update_vendor_lead_code = $enable_update_vendor_lead_code | enable_update_source_id = $enable_update_source_id | enable_update_owner = $enable_update_owner | enable_update_state = $enable_update_state| enable_update_entry_date = $enable_update_entry_date | enable_update_modify_date = $enable_update_modify_date | enable_update_security_phrase = $enable_update_security_phrase | enable_update_count = $enable_update_count | update_country_code = $update_country_code | update_vendor_lead_code = $update_vendor_lead_code | update_source_id = $update_source_id | update_owner = $update_owner | update_state = $update_state | update_state = $update_entry_date | update_modify_date = $update_modify_date | update_security_phrase = $update_security_phrase | update_list = $update_list | update_to_status = $ update_to_status | update_from_status = $update_from_status | update_count_op = $update_count_op | update_count_num = $update_count_num</p>";
 		}
 
 	$update_count_op_phrase="";
@@ -1218,6 +1291,17 @@ if ($update_submit == "update" )
 		{
 		blank_field('Owner',true);
 		}
+	if (($enable_update_state == "enabled") && ($update_state != ''))
+		{
+		if ($update_state == '---BLANK---') {$update_state = '';}
+		$sql_where = $sql_where . " and state like '$update_state' ";
+		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;state is like $update_state<br />";
+		if ($update_state == '') {$update_state = '---BLANK---';}
+		}
+	elseif ($enable_update_state == "enabled")
+		{
+		blank_field('State',true);
+		}
 	if (($enable_update_security_phrase == "enabled") && ($update_security_phrase != ''))
 		{
 		if ($update_security_phrase == '---BLANK---') {$update_security_phrase = '';}
@@ -1292,6 +1376,7 @@ if ($update_submit == "update" )
 	echo "<input type=hidden name=enable_update_vendor_lead_code value='$enable_update_vendor_lead_code'>\n";
 	echo "<input type=hidden name=enable_update_source_id value='$enable_update_source_id'>\n";
 	echo "<input type=hidden name=enable_update_owner value='$enable_update_owner'>\n";
+	echo "<input type=hidden name=enable_update_state value='$enable_update_state'>\n";
 	echo "<input type=hidden name=enable_update_entry_date value='$enable_update_entry_date'>\n";
 	echo "<input type=hidden name=enable_update_modify_date value='$enable_update_modify_date'>\n";
 	echo "<input type=hidden name=enable_update_security_phrase value='$enable_update_security_phrase'>\n";
@@ -1300,6 +1385,7 @@ if ($update_submit == "update" )
 	echo "<input type=hidden name=update_vendor_lead_code value='$update_vendor_lead_code'>\n";
 	echo "<input type=hidden name=update_source_id value='$update_source_id'>\n";
 	echo "<input type=hidden name=update_owner value='$update_owner'>\n";
+	echo "<input type=hidden name=update_state value='$update_state'>\n";
 	echo "<input type=hidden name=update_entry_date value='$update_entry_date'>\n";
 	echo "<input type=hidden name=update_modify_date value='$update_modify_date'>\n";
 	echo "<input type=hidden name=update_security_phrase value='$update_security_phrase'>\n";
@@ -1325,6 +1411,7 @@ if ($confirm_update == "confirm")
 	$enable_update_vendor_lead_code="";
 	$enable_update_source_id="";
 	$enable_update_owner="";
+	$enable_update_state="";
 	$enable_update_entry_date="";
 	$enable_update_modify_date="";
 	$enable_update_security_phrase="";
@@ -1333,6 +1420,7 @@ if ($confirm_update == "confirm")
 	$update_vendor_lead_code="";
 	$update_source_id="";
 	$update_owner="";
+	$update_state="";
 	$update_entry_date="";
 	$update_modify_date="";
 	$update_security_phrase="";
@@ -1353,6 +1441,8 @@ if ($confirm_update == "confirm")
 		elseif (isset($_POST["enable_update_source_id"])) {$enable_update_source_id=$_POST["enable_update_source_id"];}
 	if (isset($_GET["enable_update_owner"])) {$enable_update_owner=$_GET["enable_update_owner"];}
 		elseif (isset($_POST["enable_update_owner"])) {$enable_update_owner=$_POST["enable_update_owner"];}
+	if (isset($_GET["enable_update_state"])) {$enable_update_state=$_GET["enable_update_state"];}
+		elseif (isset($_POST["enable_update_state"])) {$enable_update_state=$_POST["enable_update_state"];}
 	if (isset($_GET["enable_update_entry_date"])) {$enable_update_entry_date=$_GET["enable_update_entry_date"];}
 		elseif (isset($_POST["enable_update_entry_date"])) {$enable_update_entry_date=$_POST["enable_update_entry_date"];}
 	if (isset($_GET["enable_update_modify_date"])) {$enable_update_modify_date=$_GET["enable_update_modify_date"];}
@@ -1369,6 +1459,8 @@ if ($confirm_update == "confirm")
 		elseif (isset($_POST["update_source_id"])) {$update_source_id=$_POST["update_source_id"];}
 	if (isset($_GET["update_owner"])) {$update_owner=$_GET["update_owner"];}
 		elseif (isset($_POST["update_owner"])) {$update_owner=$_POST["update_owner"];}
+	if (isset($_GET["update_state"])) {$update_state=$_GET["update_state"];}
+		elseif (isset($_POST["update_state"])) {$update_state=$_POST["update_state"];}
 	if (isset($_GET["update_entry_date"])) {$update_entry_date=$_GET["update_entry_date"];}
 		elseif (isset($_POST["update_entry_date"])) {$update_entry_date=$_POST["update_entry_date"];}
 	if (isset($_GET["update_modify_date"])) {$update_modify_date=$_GET["update_modify_date"];}
@@ -1388,7 +1480,7 @@ if ($confirm_update == "confirm")
 
 	if ($DB)
 		{
-		echo "<p>enable_update_from_status = $enable_update_from_status | enable_update_country_code = $enable_update_country_code | enable_update_vendor_lead_code = $enable_update_vendor_lead_code | enable_update_source_id = $enable_update_source_id | enable_update_owner = $enable_update_owner | enable_update_entry_date = $enable_update_entry_date | enable_update_modify_date = $enable_update_modify_date | enable_update_security_phrase = $enable_update_security_phrase | enable_update_count = $enable_update_count | update_country_code = $update_country_code | update_vendor_lead_code = $update_vendor_lead_code | update_source_id = $update_source_id | update_owner = $update_owner | update_owner = $update_entry_date | update_modify_date = $update_modify_date | update_security_phrase = $update_security_phrase | update_list = $update_list | update_to_status = $ update_to_status | update_from_status = $update_from_status | update_count_op = $update_count_op | update_count_num = $update_count_num</p>";
+		echo "<p>enable_update_from_status = $enable_update_from_status | enable_update_country_code = $enable_update_country_code | enable_update_vendor_lead_code = $enable_update_vendor_lead_code | enable_update_source_id = $enable_update_source_id | enable_update_owner = $enable_update_owner | enable_update_state = $enable_update_state | enable_update_entry_date = $enable_update_entry_date | enable_update_modify_date = $enable_update_modify_date | enable_update_security_phrase = $enable_update_security_phrase | enable_update_count = $enable_update_count | update_country_code = $update_country_code | update_vendor_lead_code = $update_vendor_lead_code | update_source_id = $update_source_id | update_owner = $update_owner | update_state = $update_state | update_entry_date = $update_entry_date | update_modify_date = $update_modify_date | update_security_phrase = $update_security_phrase | update_list = $update_list | update_to_status = $ update_to_status | update_from_status = $update_from_status | update_count_op = $update_count_op | update_count_num = $update_count_num</p>";
 		}
 
 	# filter out anything bad
@@ -1397,6 +1489,7 @@ if ($confirm_update == "confirm")
 	$enable_update_vendor_lead_code = preg_replace('/[^a-zA-Z]/','',$enable_update_vendor_lead_code);
 	$enable_update_source_id = preg_replace('/[^a-zA-Z]/','',$enable_update_source_id);
 	$enable_update_owner = preg_replace('/[^a-zA-Z]/','',$enable_update_owner);
+	$enable_update_state = preg_replace('/[^a-zA-Z]/','',$enable_update_state);
 	$enable_update_entry_date = preg_replace('/[^a-zA-Z]/','',$enable_update_entry_date);
 	$enable_update_modify_date = preg_replace('/[^a-zA-Z]/','',$enable_update_modify_date);
 	$enable_update_security_phrase = preg_replace('/[^a-zA-Z]/','',$enable_update_security_phrase);
@@ -1405,6 +1498,7 @@ if ($confirm_update == "confirm")
 	$update_vendor_lead_code = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_vendor_lead_code);
 	$update_source_id = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_source_id);
 	$update_owner = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_owner);
+	$update_state = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_state);
 	$update_entry_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_entry_date);
 	$update_modify_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_modify_date);
 	$update_security_phrase = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_security_phrase);
@@ -1416,7 +1510,7 @@ if ($confirm_update == "confirm")
 
 	if ($DB)
 		{
-		echo "<p>enable_update_from_status = $enable_update_from_status | enable_update_country_code = $enable_update_country_code | enable_update_vendor_lead_code = $enable_update_vendor_lead_code | enable_update_source_id = $enable_update_source_id | enable_update_owner = $enable_update_owner | enable_update_entry_date = $enable_update_entry_date | enable_update_modify_date = $enable_update_modify_date | enable_update_security_phrase = $enable_update_security_phrase | enable_update_count = $enable_update_count | update_country_code = $update_country_code | update_vendor_lead_code = $update_vendor_lead_code | update_source_id = $update_source_id | update_owner = $update_owner | update_owner = $update_entry_date | update_modify_date = $update_modify_date | update_security_phrase = $update_security_phrase | update_list = $update_list | update_to_status = $ update_to_status | update_from_status = $update_from_status | update_count_op = $update_count_op | update_count_num = $update_count_num</p>";
+		echo "<p>enable_update_from_status = $enable_update_from_status | enable_update_country_code = $enable_update_country_code | enable_update_vendor_lead_code = $enable_update_vendor_lead_code | enable_update_source_id = $enable_update_source_id | enable_update_owner = $enable_update_owner | enable_update_state = $enable_update_state | enable_update_entry_date = $enable_update_entry_date | enable_update_modify_date = $enable_update_modify_date | enable_update_security_phrase = $enable_update_security_phrase | enable_update_count = $enable_update_count | update_country_code = $update_country_code | update_vendor_lead_code = $update_vendor_lead_code | update_source_id = $update_source_id | update_owner = $update_owner | update_owner = $update_entry_date | update_modify_date = $update_modify_date | update_security_phrase = $update_security_phrase | update_list = $update_list | update_to_status = $ update_to_status | update_from_status = $update_from_status | update_count_op = $update_count_op | update_count_num = $update_count_num</p>";
 		}
 
 	$update_count_op_phrase="";
@@ -1498,6 +1592,17 @@ if ($confirm_update == "confirm")
 	elseif ($enable_update_owner == "enabled")
 		{
 		blank_field('Owner',true);
+		}
+	if (($enable_update_state == "enabled") && ($update_state != ''))
+		{
+		if ($update_state == '---BLANK---') {$update_state = '';}
+		$sql_where = $sql_where . " and state like '$update_state' ";
+		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;state is like $update_state<br />";
+		if ($update_state == '') {$update_state = '---BLANK---';}
+		}
+	elseif ($enable_update_state == "enabled")
+		{
+		blank_field('State',true);
 		}
 	if (($enable_update_security_phrase == "enabled") && ($update_security_phrase != ''))
 		{
@@ -1586,6 +1691,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	$enable_delete_vendor_lead_code="";
 	$enable_delete_source_id="";
 	$enable_delete_owner="";
+	$enable_delete_state="";
 	$enable_delete_entry_date="";
 	$enable_delete_modify_date="";
 	$enable_delete_security_phrase="";
@@ -1594,6 +1700,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	$delete_vendor_lead_code="";
 	$delete_source_id="";
 	$delete_owner="";
+	$delete_state="";
 	$delete_entry_date="";
 	$delete_modify_date="";
 	$delete_security_phrase="";
@@ -1614,6 +1721,8 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		elseif (isset($_POST["enable_delete_source_id"])) {$enable_delete_source_id=$_POST["enable_delete_source_id"];}
 	if (isset($_GET["enable_delete_owner"])) {$enable_delete_owner=$_GET["enable_delete_owner"];}
 		elseif (isset($_POST["enable_delete_owner"])) {$enable_delete_owner=$_POST["enable_delete_owner"];}
+	if (isset($_GET["enable_delete_state"])) {$enable_delete_state=$_GET["enable_delete_state"];}
+		elseif (isset($_POST["enable_delete_state"])) {$enable_delete_state=$_POST["enable_delete_state"];}
 	if (isset($_GET["enable_delete_entry_date"])) {$enable_delete_entry_date=$_GET["enable_delete_entry_date"];}
 		elseif (isset($_POST["enable_delete_entry_date"])) {$enable_delete_entry_date=$_POST["enable_delete_entry_date"];}
 	if (isset($_GET["enable_delete_modify_date"])) {$enable_delete_modify_date=$_GET["enable_delete_modify_date"];}
@@ -1630,6 +1739,8 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		elseif (isset($_POST["delete_source_id"])) {$delete_source_id=$_POST["delete_source_id"];}
 	if (isset($_GET["delete_owner"])) {$delete_owner=$_GET["delete_owner"];}
 		elseif (isset($_POST["delete_owner"])) {$delete_owner=$_POST["delete_owner"];}
+	if (isset($_GET["delete_state"])) {$delete_state=$_GET["delete_state"];}
+		elseif (isset($_POST["delete_state"])) {$delete_state=$_POST["delete_state"];}
 	if (isset($_GET["delete_entry_date"])) {$delete_entry_date=$_GET["delete_entry_date"];}
 		elseif (isset($_POST["delete_entry_date"])) {$delete_entry_date=$_POST["delete_entry_date"];}
 	if (isset($_GET["delete_modify_date"])) {$delete_modify_date=$_GET["delete_modify_date"];}
@@ -1649,7 +1760,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 
 	if ($DB)
 		{
-		echo "<p>enable_delete_country_code = $enable_delete_country_code | enable_delete_vendor_lead_code = $enable_delete_vendor_lead_code | enable_delete_source_id = $enable_delete_source_id | enable_delete_owner = $enable_delete_owner | enable_delete_entry_date = $enable_delete_entry_date | enable_delete_modify_date = $enable_delete_modify_date | enable_delete_security_phrase = $enable_delete_security_phrase | enable_delete_count = $enable_delete_count | delete_country_code = $delete_country_code | delete_vendor_lead_code = $delete_vendor_lead_code | delete_source_id = $delete_source_id | delete_owner = $delete_owner | delete_owner = $delete_entry_date | delete_modify_date = $delete_modify_date | delete_security_phrase = $delete_security_phrase | delete_list = $delete_list | delete_status = $delete_status | delete_count_op = $delete_count_op | delete_count_num = $delete_count_num | delete_lead_id = $delete_lead_id</p>";
+		echo "<p>enable_delete_country_code = $enable_delete_country_code | enable_delete_vendor_lead_code = $enable_delete_vendor_lead_code | enable_delete_source_id = $enable_delete_source_id | enable_delete_owner = $enable_delete_owner | enable_delete_state = $enable_delete_state | enable_delete_entry_date = $enable_delete_entry_date | enable_delete_modify_date = $enable_delete_modify_date | enable_delete_security_phrase = $enable_delete_security_phrase | enable_delete_count = $enable_delete_count | delete_country_code = $delete_country_code | delete_vendor_lead_code = $delete_vendor_lead_code | delete_source_id = $delete_source_id | delete_owner = $delete_owner | delete_state = $delete_state | delete_entry_date = $delete_entry_date | delete_modify_date = $delete_modify_date | delete_security_phrase = $delete_security_phrase | delete_list = $delete_list | delete_status = $delete_status | delete_count_op = $delete_count_op | delete_count_num = $delete_count_num | delete_lead_id = $delete_lead_id</p>";
 		}
 
 	# filter out anything bad
@@ -1658,6 +1769,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	$enable_delete_vendor_lead_code = preg_replace('/[^a-zA-Z]/','',$enable_delete_vendor_lead_code);
 	$enable_delete_source_id = preg_replace('/[^a-zA-Z]/','',$enable_delete_source_id);
 	$enable_delete_owner = preg_replace('/[^a-zA-Z]/','',$enable_delete_owner);
+	$enable_delete_state = preg_replace('/[^a-zA-Z]/','',$enable_delete_state);
 	$enable_delete_entry_date = preg_replace('/[^a-zA-Z]/','',$enable_delete_entry_date);
 	$enable_delete_modify_date = preg_replace('/[^a-zA-Z]/','',$enable_delete_modify_date);
 	$enable_delete_security_phrase = preg_replace('/[^a-zA-Z]/','',$enable_delete_security_phrase);
@@ -1666,6 +1778,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	$delete_vendor_lead_code = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_vendor_lead_code);
 	$delete_source_id = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_source_id);
 	$delete_owner = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_owner);
+	$delete_state = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_state);
 	$delete_entry_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_entry_date);
 	$delete_modify_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_modify_date);
 	$delete_security_phrase = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_security_phrase);
@@ -1677,7 +1790,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 
 	if ($DB)
 		{
-		echo "<p>enable_delete_country_code = $enable_delete_country_code | enable_delete_vendor_lead_code = $enable_delete_vendor_lead_code | enable_delete_source_id = $enable_delete_source_id | enable_delete_owner = $enable_delete_owner | enable_delete_entry_date = $enable_delete_entry_date | enable_delete_modify_date = $enable_delete_modify_date | enable_delete_security_phrase = $enable_delete_security_phrase | enable_delete_count = $enable_delete_count | delete_country_code = $delete_country_code | delete_vendor_lead_code = $delete_vendor_lead_code | delete_source_id = $delete_source_id | delete_owner = $delete_owner | delete_owner = $delete_entry_date | delete_modify_date = $delete_modify_date | delete_security_phrase = $delete_security_phrase | delete_list = $delete_list | delete_status = $delete_status | delete_count_op = $delete_count_op | delete_count_num = $delete_count_num | delete_lead_id = $delete_lead_id</p>";
+		echo "<p>enable_delete_country_code = $enable_delete_country_code | enable_delete_vendor_lead_code = $enable_delete_vendor_lead_code | enable_delete_source_id = $enable_delete_source_id | enable_delete_owner = $enable_delete_owner | enable_delete_state = $enable_delete_state | enable_delete_entry_date = $enable_delete_entry_date | enable_delete_modify_date = $enable_delete_modify_date | enable_delete_security_phrase = $enable_delete_security_phrase | enable_delete_count = $enable_delete_count | delete_country_code = $delete_country_code | delete_vendor_lead_code = $delete_vendor_lead_code | delete_source_id = $delete_source_id | delete_owner = $delete_owner | delete_state = $delete_state | delete_entry_date = $delete_entry_date | delete_modify_date = $delete_modify_date | delete_security_phrase = $delete_security_phrase | delete_list = $delete_list | delete_status = $delete_status | delete_count_op = $delete_count_op | delete_count_num = $delete_count_num | delete_lead_id = $delete_lead_id</p>";
 		}
 
 	$delete_count_op_phrase="";
@@ -1722,7 +1835,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_country_code == '---BLANK---') {$delete_country_code = '';}
 		$sql_where = $sql_where . " and country_code like '$delete_country_code' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;;country code is like $delete_country_code<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;country code is like $delete_country_code<br />";
 		if ($delete_country_code == '') {$delete_country_code = '---BLANK---';}
 		}
 	elseif ($enable_delete_country_code == "enabled")
@@ -1733,7 +1846,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_vendor_lead_code == '---BLANK---') {$delete_vendor_lead_code = '';}
 		$sql_where = $sql_where . " and vendor_lead_code like '$delete_vendor_lead_code' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;;vendor lead code is like $delete_vendor_lead_code<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;vendor lead code is like $delete_vendor_lead_code<br />";
 		if ($delete_vendor_lead_code == '') {$delete_vendor_lead_code = '---BLANK---';}
 		}
 	elseif ($enable_delete_vendor_lead_code == "enabled")
@@ -1744,7 +1857,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_source_id == '---BLANK---') {$delete_source_id = '';}
 		$sql_where = $sql_where . " and source_id like '$delete_source_id' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;;source id code is like $delete_source_id<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;source id code is like $delete_source_id<br />";
 		if ($delete_source_id == '') {$delete_source_id = '---BLANK---';}
 		}
 	elseif ($enable_delete_source_id == "enabled")
@@ -1755,7 +1868,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_security_phrase == '---BLANK---') {$delete_security_phrase = '';}
 		$sql_where = $sql_where . " and security_phrase like '$delete_security_phrase' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;;secuirty phrase is like $delete_security_phrase<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;secuirty phrase is like $delete_security_phrase<br />";
 		if ($delete_security_phrase == '') {$delete_security_phrase = '---BLANK---';}
 		}
 	elseif ($enable_delete_security_phrase == "enabled")
@@ -1766,12 +1879,23 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_owner == '---BLANK---') {$delete_owner = '';}
 		$sql_where = $sql_where . " and owner like '$delete_owner' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;;owner is like $delete_owner<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;owner is like $delete_owner<br />";
 		if ($delete_owner == '') {$delete_owner = '---BLANK---';}
 		}
 	elseif ($enable_delete_owner == "enabled")
 		{
 		blank_field('Owner',true);
+		}
+	if (($enable_delete_state == "enabled") && ($delete_state != ''))
+		{
+		if ($delete_state == '---BLANK---') {$delete_state = '';}
+		$sql_where = $sql_where . " and state like '$delete_state' ";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;state is like $delete_state<br />";
+		if ($delete_state == '') {$delete_state = '---BLANK---';}
+		}
+	elseif ($enable_delete_state == "enabled")
+		{
+		blank_field('State',true);
 		}
 	if (($enable_delete_entry_date == "enabled") && ($delete_entry_date != ''))
 		{
@@ -1836,6 +1960,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	echo "<input type=hidden name=enable_delete_vendor_lead_code value='$enable_delete_vendor_lead_code'>\n";
 	echo "<input type=hidden name=enable_delete_source_id value='$enable_delete_source_id'>\n";
 	echo "<input type=hidden name=enable_delete_owner value='$enable_delete_owner'>\n";
+	echo "<input type=hidden name=enable_delete_state value='$enable_delete_state'>\n";
 	echo "<input type=hidden name=enable_delete_entry_date value='$enable_delete_entry_date'>\n";
 	echo "<input type=hidden name=enable_delete_modify_date value='$enable_delete_modify_date'>\n";
 	echo "<input type=hidden name=enable_delete_security_phrase value='$enable_delete_security_phrase'>\n";
@@ -1844,6 +1969,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	echo "<input type=hidden name=delete_vendor_lead_code value='$delete_vendor_lead_code'>\n";
 	echo "<input type=hidden name=delete_source_id value='$delete_source_id'>\n";
 	echo "<input type=hidden name=delete_owner value='$delete_owner'>\n";
+	echo "<input type=hidden name=delete_state value='$delete_state'>\n";
 	echo "<input type=hidden name=delete_entry_date value='$delete_entry_date'>\n";
 	echo "<input type=hidden name=delete_modify_date value='$delete_modify_date'>\n";
 	echo "<input type=hidden name=delete_security_phrase value='$delete_security_phrase'>\n";
@@ -1869,6 +1995,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 	$enable_delete_vendor_lead_code="";
 	$enable_delete_source_id="";
 	$enable_delete_owner="";
+	$enable_delete_state="";
 	$enable_delete_entry_date="";
 	$enable_delete_modify_date="";
 	$enable_delete_security_phrase="";
@@ -1877,6 +2004,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 	$delete_vendor_lead_code="";
 	$delete_source_id="";
 	$delete_owner="";
+	$delete_state="";
 	$delete_entry_date="";
 	$delete_modify_date="";
 	$delete_security_phrase="";
@@ -1897,6 +2025,8 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		elseif (isset($_POST["enable_delete_source_id"])) {$enable_delete_source_id=$_POST["enable_delete_source_id"];}
 	if (isset($_GET["enable_delete_owner"])) {$enable_delete_owner=$_GET["enable_delete_owner"];}
 		elseif (isset($_POST["enable_delete_owner"])) {$enable_delete_owner=$_POST["enable_delete_owner"];}
+	if (isset($_GET["enable_delete_state"])) {$enable_delete_state=$_GET["enable_delete_state"];}
+		elseif (isset($_POST["enable_delete_state"])) {$enable_delete_state=$_POST["enable_delete_state"];}
 	if (isset($_GET["enable_delete_entry_date"])) {$enable_delete_entry_date=$_GET["enable_delete_entry_date"];}
 		elseif (isset($_POST["enable_delete_entry_date"])) {$enable_delete_entry_date=$_POST["enable_delete_entry_date"];}
 	if (isset($_GET["enable_delete_modify_date"])) {$enable_delete_modify_date=$_GET["enable_delete_modify_date"];}
@@ -1913,6 +2043,8 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		elseif (isset($_POST["delete_source_id"])) {$delete_source_id=$_POST["delete_source_id"];}
 	if (isset($_GET["delete_owner"])) {$delete_owner=$_GET["delete_owner"];}
 		elseif (isset($_POST["delete_owner"])) {$delete_owner=$_POST["delete_owner"];}
+	if (isset($_GET["delete_state"])) {$delete_state=$_GET["delete_state"];}
+		elseif (isset($_POST["delete_state"])) {$delete_state=$_POST["delete_state"];}
 	if (isset($_GET["delete_entry_date"])) {$delete_entry_date=$_GET["delete_entry_date"];}
 		elseif (isset($_POST["delete_entry_date"])) {$delete_entry_date=$_POST["delete_entry_date"];}
 	if (isset($_GET["delete_modify_date"])) {$delete_modify_date=$_GET["delete_modify_date"];}
@@ -1932,7 +2064,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 
 	if ($DB)
 		{
-		echo "<p>enable_delete_country_code = $enable_delete_country_code | enable_delete_vendor_lead_code = $enable_delete_vendor_lead_code | enable_delete_source_id = $enable_delete_source_id | enable_delete_owner = $enable_delete_owner | enable_delete_entry_date = $enable_delete_entry_date | enable_delete_modify_date = $enable_delete_modify_date | enable_delete_security_phrase = $enable_delete_security_phrase | enable_delete_count = $enable_delete_count | delete_country_code = $delete_country_code | delete_vendor_lead_code = $delete_vendor_lead_code | delete_source_id = $delete_source_id | delete_owner = $delete_owner | delete_owner = $delete_entry_date | delete_modify_date = $delete_modify_date | delete_security_phrase = $delete_security_phrase | delete_list = $delete_list | delete_status = $delete_status | delete_count_op = $delete_count_op | delete_count_num = $delete_count_num | delete_lead_id = $delete_lead_id</p>";
+		echo "<p>enable_delete_country_code = $enable_delete_country_code | enable_delete_vendor_lead_code = $enable_delete_vendor_lead_code | enable_delete_source_id = $enable_delete_source_id | enable_delete_owner = $enable_delete_owner | enable_delete_state = $enable_delete_state | enable_delete_entry_date = $enable_delete_entry_date | enable_delete_modify_date = $enable_delete_modify_date | enable_delete_security_phrase = $enable_delete_security_phrase | enable_delete_count = $enable_delete_count | delete_country_code = $delete_country_code | delete_vendor_lead_code = $delete_vendor_lead_code | delete_source_id = $delete_source_id | delete_owner = $delete_owner | delete_state = $delete_state | delete_entry_date = $delete_entry_date | delete_modify_date = $delete_modify_date | delete_security_phrase = $delete_security_phrase | delete_list = $delete_list | delete_status = $delete_status | delete_count_op = $delete_count_op | delete_count_num = $delete_count_num | delete_lead_id = $delete_lead_id</p>";
 		}
 
 	# filter out anything bad
@@ -1941,6 +2073,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 	$enable_delete_vendor_lead_code = preg_replace('/[^a-zA-Z]/','',$enable_delete_vendor_lead_code);
 	$enable_delete_source_id = preg_replace('/[^a-zA-Z]/','',$enable_delete_source_id);
 	$enable_delete_owner = preg_replace('/[^a-zA-Z]/','',$enable_delete_owner);
+	$enable_delete_state = preg_replace('/[^a-zA-Z]/','',$enable_delete_state);
 	$enable_delete_entry_date = preg_replace('/[^a-zA-Z]/','',$enable_delete_entry_date);
 	$enable_delete_modify_date = preg_replace('/[^a-zA-Z]/','',$enable_delete_modify_date);
 	$enable_delete_security_phrase = preg_replace('/[^a-zA-Z]/','',$enable_delete_security_phrase);
@@ -1949,6 +2082,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 	$delete_vendor_lead_code = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_vendor_lead_code);
 	$delete_source_id = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_source_id);
 	$delete_owner = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_owner);
+	$delete_state = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_state);
 	$delete_entry_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_entry_date);
 	$delete_modify_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_modify_date);
 	$delete_security_phrase = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_security_phrase);
@@ -1960,7 +2094,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 
 	if ($DB)
 		{
-		echo "<p>enable_delete_country_code = $enable_delete_country_code | enable_delete_vendor_lead_code = $enable_delete_vendor_lead_code | enable_delete_source_id = $enable_delete_source_id | enable_delete_owner = $enable_delete_owner | enable_delete_entry_date = $enable_delete_entry_date | enable_delete_modify_date = $enable_delete_modify_date | enable_delete_security_phrase = $enable_delete_security_phrase | enable_delete_count = $enable_delete_count | delete_country_code = $delete_country_code | delete_vendor_lead_code = $delete_vendor_lead_code | delete_source_id = $delete_source_id | delete_owner = $delete_owner | delete_owner = $delete_entry_date | delete_modify_date = $delete_modify_date | delete_security_phrase = $delete_security_phrase | delete_list = $delete_list | delete_status = $delete_status | delete_count_op = $delete_count_op | delete_count_num = $delete_count_num | delete_lead_id = $delete_lead_id</p>";
+		echo "<p>enable_delete_country_code = $enable_delete_country_code | enable_delete_vendor_lead_code = $enable_delete_vendor_lead_code | enable_delete_source_id = $enable_delete_source_id | enable_delete_owner = $enable_delete_owner | enable_delete_state = $enable_delete_state | enable_delete_entry_date = $enable_delete_entry_date | enable_delete_modify_date = $enable_delete_modify_date | enable_delete_security_phrase = $enable_delete_security_phrase | enable_delete_count = $enable_delete_count | delete_country_code = $delete_country_code | delete_vendor_lead_code = $delete_vendor_lead_code | delete_source_id = $delete_source_id | delete_owner = $delete_owner | delete_state = $delete_state | delete_entry_date = $delete_entry_date | delete_modify_date = $delete_modify_date | delete_security_phrase = $delete_security_phrase | delete_list = $delete_list | delete_status = $delete_status | delete_count_op = $delete_count_op | delete_count_num = $delete_count_num | delete_lead_id = $delete_lead_id</p>";
 		}
 
 	$delete_count_op_phrase="";
@@ -2005,7 +2139,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_country_code == '---BLANK---') {$delete_country_code = '';}
 		$sql_where = $sql_where . " and country_code like '$delete_country_code' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;;country code is like $delete_country_code<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;country code is like $delete_country_code<br />";
 		if ($delete_country_code == '') {$delete_country_code = '---BLANK---';}
 		}
 	elseif ($enable_delete_country_code == "enabled")
@@ -2016,7 +2150,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_vendor_lead_code == '---BLANK---') {$delete_vendor_lead_code = '';}
 		$sql_where = $sql_where . " and vendor_lead_code like '$delete_vendor_lead_code' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;;vendor lead code is like $delete_vendor_lead_code<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;vendor lead code is like $delete_vendor_lead_code<br />";
 		if ($delete_vendor_lead_code == '') {$delete_vendor_lead_code = '---BLANK---';}
 		}
 	elseif ($enable_delete_vendor_lead_code == "enabled")
@@ -2027,7 +2161,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_source_id == '---BLANK---') {$delete_source_id = '';}
 		$sql_where = $sql_where . " and source_id like '$delete_source_id' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;;source id code is like $delete_source_id<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;source id code is like $delete_source_id<br />";
 		if ($delete_source_id == '') {$delete_source_id = '---BLANK---';}
 		}
 	elseif ($enable_delete_source_id == "enabled")
@@ -2038,7 +2172,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_security_phrase == '---BLANK---') {$delete_security_phrase = '';}
 		$sql_where = $sql_where . " and security_phrase like '$delete_security_phrase' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;;secuirty phrase is like $delete_security_phrase<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;secuirty phrase is like $delete_security_phrase<br />";
 		if ($delete_security_phrase == '') {$delete_security_phrase = '---BLANK---';}
 		}
 	elseif ($enable_delete_security_phrase == "enabled")
@@ -2049,12 +2183,23 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_owner == '---BLANK---') {$delete_owner = '';}
 		$sql_where = $sql_where . " and owner like '$delete_owner' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;;owner is like $delete_owner<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;owner is like $delete_owner<br />";
 		if ($delete_owner == '') {$delete_owner = '---BLANK---';}
 		}
 	elseif ($enable_delete_owner == "enabled")
 		{
 		blank_field('Owner',true);
+		}
+	if (($enable_delete_state == "enabled") && ($delete_state != ''))
+		{
+		if ($delete_state == '---BLANK---') {$delete_state = '';}
+		$sql_where = $sql_where . " and state like '$delete_state' ";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;state is like $delete_state<br />";
+		if ($delete_state == '') {$delete_state = '---BLANK---';}
+		}
+	elseif ($enable_delete_state == "enabled")
+		{
+		blank_field('State',true);
 		}
 	if (($enable_delete_entry_date == "enabled") && ($delete_entry_date != ''))
 		{
@@ -2537,6 +2682,10 @@ if (
 	echo "<input type='checkbox' name='enable_move_owner' id='enable_move_owner' value='enabled'>\n";
 	echo "<input type='text' name='move_owner' id='move_owner' value='' disabled=true>\n";
 	echo "</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>State</td></td><td align=left>\n";
+	echo "<input type='checkbox' name='enable_move_state' id='enable_move_state' value='enabled'>\n";
+	echo "<input type='text' name='move_state' id='move_state' value='' disabled=true>\n";
+	echo "</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Entry Date</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_move_entry_date' id='enable_move_entry_date' value='enabled'>\n";
 	echo "<input type='text' name='move_entry_date' id='move_entry_date' value='' disabled=true> (YYYY-MM-DD)\n";
@@ -2626,6 +2775,10 @@ if (
 	echo "<input type='checkbox' name='enable_update_owner' id='enable_update_owner' value='enabled'>\n";
 	echo "<input type='text' name='update_owner' id='update_owner' value='' disabled=true>\n";
 	echo "</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>State</td></td><td align=left>\n";
+	echo "<input type='checkbox' name='enable_update_state' id='enable_update_state' value='enabled'>\n";
+	echo "<input type='text' name='update_state' id='update_state' value='' disabled=true>\n";
+	echo "</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>Entry Date</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_update_entry_date' id='enable_update_entry_date' value='enabled'>\n";
 	echo "<input type='text' name='update_entry_date' id='update_entry_date' value='' disabled=true> (YYYY-MM-DD)\n";
@@ -2703,6 +2856,10 @@ if (
 		echo "<tr bgcolor=#B6D3FC><td align=right>Owner</td></td><td align=left>\n";
 		echo "<input type='checkbox' name='enable_delete_owner' id='enable_delete_owner' value='enabled'>\n";
 		echo "<input type='text' name='delete_owner' id='delete_owner' value='' disabled=true>\n";
+		echo "</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>State</td></td><td align=left>\n";
+		echo "<input type='checkbox' name='enable_delete_state' id='enable_delete_state' value='enabled'>\n";
+		echo "<input type='text' name='delete_state' id='delete_state' value='' disabled=true>\n";
 		echo "</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>Entry Date</td></td><td align=left>\n";
 		echo "<input type='checkbox' name='enable_delete_entry_date' id='enable_delete_entry_date' value='enabled'>\n";
