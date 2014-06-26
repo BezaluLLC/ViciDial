@@ -73,6 +73,8 @@ OTHER CHANGES:
 6. Added $RS_droppedOFtotal options.php option for the realtime report to allow
 	the drops to be calculated out of Total calls instead of just Answers
 
+7. Added ability to use Wrap-Up messages with calls terminated through Hotkeys
+
 
 
 

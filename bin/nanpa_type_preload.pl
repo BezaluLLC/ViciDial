@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# nanpa_type_preload.pl version 2.8
+# nanpa_type_preload.pl version 2.10
 #
 # DESCRIPTION:
 # This script is designed to filter the leads in a list by phone number and 
@@ -13,6 +13,7 @@
 # CHANGES
 # 130914-1710 - first build
 # 131003-1743 - Added exclude filter settings
+# 140624-1551 - Added more options to segment leads
 #
 
 $PATHconf =			'/etc/astguiclient.conf';
@@ -121,6 +122,9 @@ if (length($ARGV[0])>1)
 		print "  [--vl-field-update=XXX] = OPTIONAL, field that you want to update with the phone type information\n";
 		print "  [--exclude-field=XXX] = OPTIONAL, field that you want to check in vicidial_list to exclude from processing\n";
 		print "  [--exclude-value=XXX] = OPTIONAL, value of the above field that you want to check in vicidial_list to exclude from processing\n";
+		print "  [--batch-flag-vl-field] = OPTIONAL, before processing, append F to all vl-field values of S, C, I\n";
+		print "  [--batch-quantity=XXX] = OPTIONAL, process only XXX number of vicidial_list records, must run with --batch-flag-vl-field first time\n";
+		print "                           This option will only process records that have blank, NULL, SF, CF or IF as vl-field values\n";
 		print "\n";
 		exit;
 		}
@@ -233,6 +237,18 @@ if (length($ARGV[0])>1)
 			$exclude_value =~ s/ .*//gi;
 			if ($DB > 0) {print "\n----- EXCLUDE VALUE: $exclude_value -----\n\n";}
 			}
+		if ( ($args =~ /--batch-quantity=/i) && (length($vl_field_update)>2) )
+			{
+			@data_in = split(/--batch-quantity=/,$args);
+			$batch_quantity = $data_in[1];
+			$batch_quantity =~ s/ .*//gi;
+			if ($DB > 0) {print "\n----- BATCH QUANTITY VALUE: $batch_quantity -----\n\n";}
+			}
+		if ( ($args =~ /--batch-flag-vl-field/i) && (length($vl_field_update)>2) )
+			{
+			$batch_flag_vl_field=1;
+			if ($DB > 0) {print "\n----- BATCH VL FIELD FLAG VALUE: $batch_flag_vl_field -----\n\n";}
+			}
 		}
 	}
 else
@@ -283,7 +299,43 @@ if ( (length($exclude_field) > 1) && (length($exclude_value) > 0) )
 		}
 	}
 
-$stmtA = "SELECT lead_id,phone_number from vicidial_list $list_idSQL $excludeSQL;";
+$limitSQL='';
+if ( (length($batch_quantity) > 1) && (length($vl_field_update) > 2) ) 
+	{
+	if ( (length($list_idSQL) > 5) || (length($excludeSQL) > 5) )
+		{
+		$limitSQL = "and ( ($vl_field_update is NULL) or ($vl_field_update IN('','SF','CF','IF')) ) limit $batch_quantity";
+		}
+	else
+		{
+		$limitSQL = "where ( ($vl_field_update is NULL) or ($vl_field_update IN('','SF','CF','IF')) ) limit $batch_quantity";
+		}
+	}
+
+if ($batch_flag_vl_field > 0)
+	{
+	if ($DB) {print "FLAGGING PREVIOUSLY TAGGED LEADS...\n";}
+
+	$clausesSQL = "$list_idSQL $excludeSQL";
+	$clausesSQL =~ s/^where/and/gi;
+
+	$stmtA = "UPDATE vicidial_list SET $vl_field_update='SF' where $vl_field_update='S' $clausesSQL;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print "|$affected_rows records changed from S to SF|\n";}
+
+	$stmtA = "UPDATE vicidial_list SET $vl_field_update='CF' where $vl_field_update='C' $clausesSQL;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print "|$affected_rows records changed from C to CF|\n";}
+
+	$stmtA = "UPDATE vicidial_list SET $vl_field_update='IF' where $vl_field_update='I' $clausesSQL;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print "|$affected_rows records changed from I to IF|\n";}
+	}
+
+$stmtA = "SELECT lead_id,phone_number from vicidial_list $list_idSQL $excludeSQL $limitSQL;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;

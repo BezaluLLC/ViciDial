@@ -17,3 +17,7 @@ UPDATE system_settings SET db_schema_version='1382',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD wrapup_bypass ENUM('DISABLED','ENABLED') default 'ENABLED';
 
 UPDATE system_settings SET db_schema_version='1383',db_schema_update_date=NOW() where db_schema_version < 1383;
+
+ALTER TABLE vicidial_campaigns ADD wrapup_after_hotkey ENUM('DISABLED','ENABLED') default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1384',db_schema_update_date=NOW() where db_schema_version < 1384;

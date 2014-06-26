@@ -20,6 +20,7 @@
 # 140617-2021 - Added vicidial_users wrapup_seconds_override option
 # 140621-2151 - Added inbound did new filtering options
 # 140623-2220 - Added wrapup_bypass and wrapup_message change to allow script use
+# 140625-1934 - Added wrapup_after_hotkey
 #
 
 
@@ -1352,6 +1353,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="campaigns-wrapup_bypass">
 <BR>
 <B>Wrap Up Bypass -</B> If set to ENABLED then the agent will be able to click a link to stop the Wrap Up timer before the time is completed. Default is ENABLED.
+
+<BR>
+<A NAME="campaigns-wrapup_after_hotkey">
+<BR>
+<B>Wrap Up After Hotkey -</B> If set to ENABLED and the campaign has hotkeys configured and the agent terminates a call with a hotkey, then the wrap up settings will be used after that call. Default is DISABLED.
 
 <BR>
 <A NAME="campaigns-disable_dispo_screen">

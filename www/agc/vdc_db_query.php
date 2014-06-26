@@ -1515,7 +1515,7 @@ if ($ACTION == 'update_settings')
 
 
 			##### grab the data from vicidial_users for the user
-			$stmt="SELECT wrapup_seconds,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,dial_timeout,wrapup_bypass,wrapup_message FROM vicidial_campaigns where campaign_id='$campaign' LIMIT 1;";
+			$stmt="SELECT wrapup_seconds,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,dial_timeout,wrapup_bypass,wrapup_message,wrapup_after_hotkey FROM vicidial_campaigns where campaign_id='$campaign' LIMIT 1;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00594',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -1532,6 +1532,7 @@ if ($ACTION == 'update_settings')
 				$dial_timeout =			trim("$row[6]");
 				$wrapup_bypass =		trim("$row[7]");
 				$wrapup_message =		trim("$row[8]");
+				$wrapup_after_hotkey =	trim("$row[9]");
 				}
 
 			if ($wrapup_seconds_override >= 0)
@@ -1551,6 +1552,7 @@ if ($ACTION == 'update_settings')
 			$SettingS_InfO .=	"dial_timeout: " . $dial_timeout . "\n";
 			$SettingS_InfO .=	"wrapup_bypass: " . $wrapup_bypass . "\n";
 			$SettingS_InfO .=	"wrapup_message: " . $wrapup_message . "\n";
+			$SettingS_InfO .=	"wrapup_after_hotkey: " . $wrapup_after_hotkey . "\n";
 			$SettingS_InfO .=	"\n";
 			}
 		echo $SettingS_InfO;
