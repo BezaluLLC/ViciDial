@@ -11858,7 +11858,12 @@ if ($useIE > 0)
 							document.getElementById("HotKeyActionBox").style.left = '1px';
 							document.getElementById("HKWrapupTimer").innerHTML = "<br />Call Wrapup: " + HKdispo_display + " seconds remaining in wrapup";
 							document.getElementById("HKWrapupMessage").innerHTML = "<br /><br /><center><table width=" + CAwidth + "><tr><td height=" + WRheight + " align=center>" + document.getElementById("WrapupMessage").innerHTML + "<br /> &nbsp; </td></tr></table></center>";
-							document.getElementById("HKWrapupBypass").innerHTML = " &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"HKWrapupFinish();return false;\">Finish Wrapup and Move On</a>";
+							if (wrapup_bypass == 'ENABLED')
+								{
+								document.getElementById("HKWrapupBypass").innerHTML = " &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"HKWrapupFinish();return false;\">Finish Wrapup and Move On</a>";
+								}
+							else
+								{document.getElementById("HKWrapupBypass").innerHTML = '';}
 							}
 						else
 							{
@@ -11944,7 +11949,12 @@ else
 							document.getElementById("HotKeyActionBox").style.left = '1px';
 							document.getElementById("HKWrapupTimer").innerHTML = "<br />Call Wrapup: " + HKdispo_display + " seconds remaining in wrapup";
 							document.getElementById("HKWrapupMessage").innerHTML = "<br /><br /><center><table width=" + CAwidth + "><tr><td height=" + WRheight + " align=center>" + document.getElementById("WrapupMessage").innerHTML + "<br /> &nbsp; </td></tr></table></center>";
-							document.getElementById("HKWrapupBypass").innerHTML = " &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"HKWrapupFinish();return false;\">Finish Wrapup and Move On</a>";
+							if (wrapup_bypass == 'ENABLED')
+								{
+								document.getElementById("HKWrapupBypass").innerHTML = " &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"HKWrapupFinish();return false;\">Finish Wrapup and Move On</a>";
+								}
+							else
+								{document.getElementById("HKWrapupBypass").innerHTML = '';}
 							}
 						else
 							{
