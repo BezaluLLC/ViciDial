@@ -24,10 +24,11 @@
 # 130802-1035 - Changed to PHP mysqli functions
 # 140429-2034 - Added TABLEper_call_notes display script variable
 # 140623-2114 - Added script_override variable
+# 140630-1023 - Added full_script_height script variable
 #
 
-$version = '2.10-18';
-$build = '140623-2114';
+$version = '2.10-19';
+$build = '140630-1023';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -222,6 +223,7 @@ $ENTRYdate = date("YmdHis");
 $MT[0]='';
 $agents='@agents';
 $script_height = ($script_height - 20);
+$full_script_height = ($script_height + 200);
 
 $IFRAME=0;
 
@@ -470,6 +472,7 @@ $script_text = preg_replace('/--A--camp_script--B--/i',"$camp_script",$script_te
 $script_text = preg_replace('/--A--in_script--B--/i',"$in_script",$script_text);
 $script_text = preg_replace('/--A--script_width--B--/i',"$script_width",$script_text);
 $script_text = preg_replace('/--A--script_height--B--/i',"$script_height",$script_text);
+$script_text = preg_replace('/--A--full_script_height--B--/i',"$full_script_height",$script_text);
 $script_text = preg_replace('/--A--fullname--B--/i',"$fullname",$script_text);
 $script_text = preg_replace('/--A--recording_filename--B--/i',"$recording_filename",$script_text);
 $script_text = preg_replace('/--A--recording_id--B--/i',"$recording_id",$script_text);
@@ -697,10 +700,18 @@ $script_text = stripslashes($script_text);
 
 echo "<!-- IFRAME$IFRAME -->\n";
 echo "<!-- $script_id -->\n";
-echo "<TABLE WIDTH=$script_width><TR><TD>\n";
 if ( ( ($IFRAME < 1) and ($ScrollDIV > 0) ) or (preg_match("/IGNORENOSCROLL/i",$script_text)) )
-	{echo "<div class=\"scroll_script\" id=\"NewScriptContents\">";}
-echo "<center><B>$script_name</B><BR></center>\n";
+	{
+	echo "<TABLE WIDTH=$script_width border=0><TR><TD>";
+	echo "<div class=\"scroll_script\" id=\"NewScriptContents\">";
+	}
+else
+	{
+	echo "<TABLE WIDTH=$script_width border=0 cellpadding=0 cellspacing=0><TR><TD>";
+	}
+
+if (strlen($script_override)< 1)
+	{echo "<center><B>$script_name</B><BR></center>\n";}
 echo "$script_text\n";
 if ( ( ($IFRAME < 1) and ($ScrollDIV > 0) ) or (preg_match("/IGNORENOSCROLL/i",$script_text)) )
 	{echo "</div>";}

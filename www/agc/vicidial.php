@@ -437,10 +437,11 @@
 # 140621-1557 - Added update_settings call to grab selected user and campaign settings more frequently
 # 140623-1710 - Added wrapup_bypass setting
 # 140626-0757 - Added wrapup_after_hotkey setting
+# 140630-0921 - Added the FSCREEN option to Wrapup message to allow for message only display
 #
 
-$version = '2.10-408c';
-$build = '140626-0757';
+$version = '2.10-409c';
+$build = '140630-0921';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=80;
 $one_mysql_log=0;
@@ -3167,7 +3168,7 @@ $CLwidth =  ($MASTERwidth - 120);	# 310 - Calls in queue link
 
 $GHheight =  ($MASTERheight + 1260);# 1560 - Gender Hide span
 $DBheight =  ($MASTERheight + 260);	# 560 - Debug span
-$WRheight =  ($MASTERheight + 160);	# 460 - Warning boxes
+$WRheight =  ($MASTERheight + 210);	# 510 - Warning boxes
 $CQheight =  ($MASTERheight + 140);	# 440 - Calls in queue section
 $SLheight =  ($MASTERheight + 122);	# 422 - SideBar link, Agents view link
 $QLheight =  ($MASTERheight + 112);	# 412 - Calls in queue link
@@ -3893,6 +3894,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var UpdatESettingSChecK=0;
 	var manual_dial_search_checkbox='<?php echo $manual_dial_search_checkbox ?>';
 	var hide_call_log_info='<?php echo $hide_call_log_info ?>';
+	var regWFS = new RegExp("FSCREEN","g");
+	var regWMS = new RegExp("WUSCRIPT","g");
+	var FSCREENup=0;
+	var HKFSCREENup=0;
     var DiaLControl_auto_HTML = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/vdc_LB_resume.gif\" border=\"0\" alt=\"Resume\" /></a>";
     var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/vdc_LB_pause.gif\" border=\"0\" alt=\" Pause \" /></a><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
     var DiaLControl_auto_HTML_OFF = "<img src=\"./images/vdc_LB_pause_OFF.gif\" border=\"0\" alt=\" Pause \" /><img src=\"./images/vdc_LB_resume_OFF.gif\" border=\"0\" alt=\"Resume\" />";
@@ -11091,15 +11096,21 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								else
 									{document.getElementById("WrapupBypass").innerHTML = '';}
 
-								var regWMS = new RegExp("WUSCRIPT","g");
+								var wrapup_message_script = wrapup_message.replace(regWFS, '');
+								wrapup_message_script = wrapup_message_script.replace(regWMS, '');
 								if (wrapup_message.match(regWMS))
 									{
-									var wrapup_message_script = wrapup_message.replace(regWMS, '');
-									load_script_contents('WrapupMessage',wrapup_message_script)
+									if (wrapup_message.match(regWFS))
+										{load_script_contents('FSCREENWrapupMessage',wrapup_message_script);}
+									else
+										{load_script_contents('WrapupMessage',wrapup_message_script);}
 									}
 								else
 									{
-									document.getElementById("WrapupMessage").innerHTML = wrapup_message;
+									if (wrapup_message.match(regWFS))
+										{document.getElementById("FSCREENWrapupMessage").innerHTML = "<center>" + wrapup_message_script + "</center>";}
+									else
+										{document.getElementById("WrapupMessage").innerHTML = wrapup_message_script;}
 									}
 								}
 							}
@@ -11857,7 +11868,15 @@ if ($useIE > 0)
 							document.getElementById("HotKeyActionBox").style.top = '1px';
 							document.getElementById("HotKeyActionBox").style.left = '1px';
 							document.getElementById("HKWrapupTimer").innerHTML = "<br />Call Wrapup: " + HKdispo_display + " seconds remaining in wrapup";
-							document.getElementById("HKWrapupMessage").innerHTML = "<br /><br /><center><table width=" + CAwidth + "><tr><td height=" + WRheight + " align=center>" + document.getElementById("WrapupMessage").innerHTML + "<br /> &nbsp; </td></tr></table></center>";
+							if (wrapup_message.match(regWFS))
+								{
+							//	document.getElementById("FSCREENWrapupMessage").innerHTML = document.getElementById("WrapupMessage").innerHTML;
+								}
+							else
+								{
+								document.getElementById("HKWrapupMessage").innerHTML = "<br /><br /><center><table width=" + CAwidth + "><tr><td height=" + WRheight + " align=center>" + document.getElementById("WrapupMessage").innerHTML + "<br /> &nbsp; </td></tr></table></center>";
+								}
+
 							if (wrapup_bypass == 'ENABLED')
 								{
 								document.getElementById("HKWrapupBypass").innerHTML = " &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"HKWrapupFinish();return false;\">Finish Wrapup and Move On</a>";
@@ -11879,7 +11898,10 @@ if ($useIE > 0)
 						alt_dial_active = 0;
 						alt_dial_status_display = 0;
 						document.getElementById("HotKeyDispo").innerHTML = HKdispo_ary[0] + " - " + HKdispo_ary[1];
-						showDiv('HotKeyActionBox');
+						if ( ( (wrapup_after_hotkey == 'ENABLED') && (wrapup_seconds > 0) ) && (wrapup_message.match(regWFS)) )
+							{showDiv('FSCREENWrapupBox');  HKFSCREENup=1;}
+						else
+							{showDiv('HotKeyActionBox');}
 						hideDiv('HotKeyEntriesBox');
 						document.vicidial_form.DispoSelection.value = HKdispo_ary[0];
 						dialedcall_send_hangup('NO', 'YES', HKdispo_ary[0]);
@@ -11948,7 +11970,15 @@ else
 							document.getElementById("HotKeyActionBox").style.top = '1px';
 							document.getElementById("HotKeyActionBox").style.left = '1px';
 							document.getElementById("HKWrapupTimer").innerHTML = "<br />Call Wrapup: " + HKdispo_display + " seconds remaining in wrapup";
-							document.getElementById("HKWrapupMessage").innerHTML = "<br /><br /><center><table width=" + CAwidth + "><tr><td height=" + WRheight + " align=center>" + document.getElementById("WrapupMessage").innerHTML + "<br /> &nbsp; </td></tr></table></center>";
+							if (wrapup_message.match(regWFS))
+								{
+							//	document.getElementById("FSCREENWrapupMessage").innerHTML = document.getElementById("WrapupMessage").innerHTML;
+								}
+							else
+								{
+								document.getElementById("HKWrapupMessage").innerHTML = "<br /><br /><center><table width=" + CAwidth + "><tr><td height=" + WRheight + " align=center>" + document.getElementById("WrapupMessage").innerHTML + "<br /> &nbsp; </td></tr></table></center>";
+								}
+
 							if (wrapup_bypass == 'ENABLED')
 								{
 								document.getElementById("HKWrapupBypass").innerHTML = " &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"HKWrapupFinish();return false;\">Finish Wrapup and Move On</a>";
@@ -11967,7 +11997,10 @@ else
 						HKdispo_submit = HKdispo_display;
 						HKfinish=1;
 						document.getElementById("HotKeyDispo").innerHTML = HKdispo_ary[0] + " - " + HKdispo_ary[1];
-						showDiv('HotKeyActionBox');
+						if ( ( (wrapup_after_hotkey == 'ENABLED') && (wrapup_seconds > 0) ) && (wrapup_message.match(regWFS)) )
+							{showDiv('FSCREENWrapupBox');  HKFSCREENup=1;}
+						else
+							{showDiv('HotKeyActionBox');}
 						hideDiv('HotKeyEntriesBox');
 						document.vicidial_form.DispoSelection.value = HKdispo_ary[0];
 						alt_phone_dialing=starting_alt_phone_dialing;
@@ -13777,6 +13810,7 @@ function phone_number_format(formatphone) {
 			hideDiv('CustomerGoneBox');
 			hideDiv('NoneInSessionBox');
 			hideDiv('WrapupBox');
+			hideDiv('FSCREENWrapupBox');
 			hideDiv('TransferMain');
 			hideDiv('WelcomeBoxA');
 			hideDiv('CallBackSelectBox');
@@ -13968,7 +14002,10 @@ function phone_number_format(formatphone) {
 				wrapup_counter=0;
 				if (wrapup_seconds > 0)	
 					{
-					showDiv('WrapupBox');
+					if (wrapup_message.match(regWFS))
+						{showDiv('FSCREENWrapupBox');  FSCREENup=1;}
+					else
+						{showDiv('WrapupBox');}
 					document.getElementById("WrapupTimer").innerHTML = wrapup_seconds;
 					wrapup_waiting=1;
 					}
@@ -14201,7 +14238,10 @@ function phone_number_format(formatphone) {
 						{
 						if (hot_keys_active==1)
 							{showDiv('HotKeyEntriesBox');}
-						hideDiv('HotKeyActionBox');
+						if (HKFSCREENup > 0)
+							{hideDiv('FSCREENWrapupBox');   HKFSCREENup=0;}
+						else
+							{hideDiv('HotKeyActionBox');}
 						}
 					HKdispo_display--;
 					if ( (wrapup_after_hotkey == 'ENABLED') && (wrapup_seconds > 0) )
@@ -14279,10 +14319,13 @@ function phone_number_format(formatphone) {
 					{
 					document.getElementById("WrapupTimer").innerHTML = (wrapup_seconds - wrapup_counter);
 					wrapup_counter++;
-					if ( (wrapup_counter > wrapup_seconds) && (document.getElementById("WrapupBox").style.visibility == 'visible') )
+					if ( (wrapup_counter > wrapup_seconds) && ( (document.getElementById("WrapupBox").style.visibility == 'visible') || (FSCREENup > 0) ) )
 						{
 						wrapup_waiting=0;
-						hideDiv('WrapupBox');
+						if (FSCREENup > 0)
+							{hideDiv('FSCREENWrapupBox');   FSCREENup=0;}
+						else
+							{hideDiv('WrapupBox');}
 						if (document.vicidial_form.DispoSelectStop.checked==true)
 							{
 							if (auto_dial_level != '0')
@@ -15644,6 +15687,8 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 	<span id="WrapupBypass"><a href="#" onclick="WrapupFinish();return false;">Finish Wrapup and Move On</a></span>
     </td></tr></table>
 </span>
+
+<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="FSCREENWrapupBox"><table border="0" bgcolor="#FFFFFF" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px" cellpadding="0" cellspacing="0"><tr><td><span id="FSCREENWrapupMessage"><?php echo $wrapup_message ?></span></td></tr></table></span>
 
 <span style="position:absolute;left:200px;top:150px;z-index:<?php $zi++; echo $zi ?>;" id="TimerSpan">
     <table border="1" bgcolor="#CCFFCC" width="400px" height="200px"><tr><td align="center">
