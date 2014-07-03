@@ -1,4 +1,4 @@
-CELLPHONE FILTERING DOC	  Started: 2013-09-20	Updated: 2014-05-30
+CELLPHONE FILTERING DOC	  Started: 2013-09-20	Updated: 2014-07-03
 
 On October 16th, 2013 the FCC issued a rule change to not allow auto-dialing cellphones in the USA unless you have "express consent" from the person you are calling. This document is a summary of what this rule change means to businesses and organizations, and goes over how they can make sure they are in compliance with the TCPA(Telephone Consumer Protection Act of 1991) depending on their interpretation of the regulatory language. 
 
@@ -43,7 +43,7 @@ The next question we usually get after explaining all of this is, "How do I filt
 
 We recently added several software components to the Vicidial codebase that allows for integration with DNC.COM's on-site cellphone filtering database service. If you subscribe to this service then you can set the system to automatically download the data files nightly and have Vicidial scrub for cellphones on the entire system and/or manually scrub inactive lists through an administrative web page. More details on these processes are included below.
 
-Our NANPA list that is available for clients to purchase on vicidial.org also has the "Lata Type" definition for all North American phone number prefixes which will show phone prefix blocks that are land lines(S), cell phones(C), pagers(P) and mixed use(M). There is currently no filtering script included with Vicidial that uses this data, but it could be used with a custom script as a pre-filter before sending a list to an outside filtering company. It is important to mention that this IS NOT a compliance solution and IS NOT considered a best effort option to filter your number. Also, in our extensive testing, it is only 93% accurate at best in determining whether a phone number is really a cell phone.
+Our NANPA list that is available for clients to purchase on vicidial.org also has the "Lata Type" definition for all North American phone number prefixes which will show phone prefix blocks that are land lines(S), cell phones(C), pagers(P) and mixed use(M). There is currently no filtering script included with Vicidial that uses this data, but it could be used with a custom script as a pre-filter before sending a list to an outside filtering company. It is important to mention that this IS NOT a compliance solution and IS NOT considered a best effort option to filter your numbers. Also, in our extensive testing, it is only 93% accurate at best in determining whether a phone number is really a cell phone.
 
 
 
@@ -57,17 +57,17 @@ DNC.COM INTEGRATION FEATURES IN VICIDIAL
 
 Here is a list of scripts that we have added in order to integrate with DNC.COM's cellphone filtering database service.
 
-bin/nanpa_type_populate.pl - 
-Requires "Net::SFTP::Foreign" and "IO::Pty" CPAN modules to run. Automatically goes to DNC.COM SFTP server and downloads the 3 required data files(Prefixes, Wired-to-wireless, Wireless-to-wired), then loads that data into database tables on the vicidial system to be used by the other scripts. This process should be set to run in the crontab every morning.
+   bin/nanpa_type_populate.pl - 
+Requires "Net::SFTP::Foreign" and "IO::Pty" CPAN modules to run. Automatically goes to DNC.COM SFTP server and downloads the 3 required data files(Prefixes, Wired-to-wireless, Wireless-to-wired), then loads that data into database tables on the vicidial system to be used by the other scripts. This process should be set to run in the crontab every morning. There is an "--adminlog" run time option you can use to log the results of this process to the admin log under the server that it is run on, these log entries are viewable in the Administration web interface.
   NOTE: before you can run this script, you will need to sftp into the dnc.com server first on the Linux command line, (sftp XXXX@sftp.dncscrub.com)
 
-bin/nanpa_type_preload.pl - 
-This script is designed to load all of the prefixes and portability data into RAM and run against your entire database to scrub it for cellphone numbers every night after the data is refreshed. It takes several minutes to initialize, but runs very fast after that. This process should be set to run in the crontab every morning AFTER the populate script is finished running.
+   bin/nanpa_type_preload.pl - 
+This script is designed to load all of the prefixes and portability data into RAM and run against your entire database to scrub it for cellphone numbers every night after the data is refreshed. It takes several minutes to initialize, but runs very fast after that. This process should be set to run in the crontab every morning AFTER the populate script is finished running. The results of this process log to the admin log under the server that it is run on, these log entries are viewable in the Administration web interface.
 
-bin/nanpa_type_filter.pl - 
+   bin/nanpa_type_filter.pl - 
 This script is designed to do one list or a few lists at a time, or the entire database on smaller systems. It works together with a PHP script to perform lookups of cellphones and updating vicidial_list records depending on settings
 
-www/vicidial/nanpa_type.php - 
+   www/vicidial/nanpa_type.php - 
 PHP script designed to return S = Land line, C = Cellphone, I = Invalid for one to hundreds of numbers passed in either an HTTP GET or POST form submission to it. Also requires valid manager user credentials on the host system for it to work.
 
 NOTE: To find the command line options for the Perl scripts above, just run them with the "--help" flag
@@ -92,4 +92,3 @@ PREFIX_SFTP_server => sftp.dncscrub.com
 PREFIX_SFTP_user => DEMOVICIDIAL
 PREFIX_SFTP_pass => sampLepass
 PREFIX_SFTP_port => 22
-

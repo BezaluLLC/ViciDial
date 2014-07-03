@@ -13,7 +13,7 @@
 # CHANGES
 # 130915-1345 - first build
 # 130928-0747 - Force overwrite of unzipped files, more standard debug output
-# 140702-2319 - Added additional logging to admin log --admin-log
+# 140702-2319 - Added additional logging to admin log --adminlog
 #
 
 $PATHconf =			'/etc/astguiclient.conf';
@@ -123,7 +123,7 @@ if (length($ARGV[0])>1)
 		print "  [--quiet] = supress all normal output\n";
 		print "  [--debug] = verbose debug messages\n";
 		print "  [--debugX] = extra verbose debug messages\n";
-		print "  [--admin-log] = log to vicidial_admin_log\n";
+		print "  [--adminlog] = log to vicidial_admin_log\n";
 		print "\n";
 		exit;
 		}
@@ -149,9 +149,10 @@ if (length($ARGV[0])>1)
 			{
 			$skip_download=1;
 			}
-		if ($args =~ /--admin-log/i)
+		if ($args =~ /--adminlog/i)
 			{
 			$admin_log=1;
+			if ($DB) {print "ADMIN LOG ENABLED\n"}
 			}
 		}
 	}
@@ -310,9 +311,9 @@ $end_time=time();
 
 if ($admin_log > 0)
 	{
-	$stmtA="INSERT INTO vicidial_admin_log set event_date=NOW(), user='VDAD', ip_address='1.1.1.1', event_section='SERVERS', event_type='OTHER', record_id='$server_ip', event_code='NANPA populate data', event_sql='', event_notes='WIRED2WIRELESS($nanpa_wired_to_wireless_count / $affected_rowsWIREWRLS / $affected_rowsINwirewrls)  WIRELESS2WIRED($nanpa_wireless_to_wired_count / $affected_rowsWRLSWIRE / $affected_rowsINwrlswire)   PREFIX($nanpa_prefix_exchanges_master_count / $nanpa_prefix_exchanges_fast_count / $affected_rowsPRFXMSTR / $affected_rowsINprfxmstr / $affected_rowsPRFXFAST / $affected_rowsINprfxfast)   |$args| TOTAL Elapsed time: ".($end_time-$start_time)." sec';";
+	$stmtA="INSERT INTO vicidial_admin_log set event_date=NOW(), user='VDAD', ip_address='1.1.1.1', event_section='SERVERS', event_type='OTHER', record_id='$VARserver_ip', event_code='NANPA populate data', event_sql='', event_notes='WIRED2WIRELESS($nanpa_wired_to_wireless_count / $affected_rowsWIREWRLS / $affected_rowsINwirewrls)  WIRELESS2WIRED($nanpa_wireless_to_wired_count / $affected_rowsWRLSWIRE / $affected_rowsINwrlswire)   PREFIX($nanpa_prefix_exchanges_master_count / $nanpa_prefix_exchanges_fast_count / $affected_rowsPRFXMSTR / $affected_rowsINprfxmstr / $affected_rowsPRFXFAST / $affected_rowsINprfxfast)   |$args| TOTAL Elapsed time: ".($end_time-$start_time)." sec';";
 	$Iaffected_rows = $dbhN->do($stmtA);
-	if ($DBX) {print "Admin logged: |$Iaffected_rows|$stmtA|\n";}
+	if ($DB) {print "Admin logged: |$Iaffected_rows|$stmtA|\n";}
 	}
 
 if (!$Q) {print "TOTAL Elapsed time: ".($end_time-$start_time)." sec\n\n";}
