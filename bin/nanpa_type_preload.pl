@@ -486,9 +486,9 @@ while ($sthArows > $rec_count)
 		}
 	##################################################
 
-	if ($type=='S') {$landline++;}
-	if ($type=='C') {$cellphone++;}
-	if ($type=='I') {$invalid++;}
+	if ($type =~ /S|V/) {$landline++;}
+	if ($type =~ /C/) {$cellphone++;}
+	if ($type =~ /I/) {$invalid++;}
 	$rec_count++;
 	if ( ($rec_count =~ /00000$/i) && ($DB) ) {print STDERR "$rec_count / $sthArows (S:$landline | C:$cellphone | I:$invalid)\n";}
 	}
