@@ -1,7 +1,7 @@
 <?php
 # nanpa_type.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to work with the NANPA exchange(NPA-NXX-X) data and
 # the wireless-to-wired and wired-to-wireless number portability data from
@@ -28,10 +28,11 @@
 #
 # CHANGELOG:
 # 130822-1433 - First build of script
+# 140702-2251 - Added prefix phone type of V as landline
 #
 
-$version = '2.8-1';
-$build = '130822-1433';
+$version = '2.10-2';
+$build = '140702-2251';
 
 $startMS = microtime();
 
@@ -205,26 +206,37 @@ else
 				{
 				$row=mysqli_fetch_row($rslt);
 				$type = $row[0];
+				if ($type == 'V') 
+					{
+					$type='S';
+					if ($DB>0) {echo "DEBUG: prefix match type V changing to type S landline |$numbers[$i]| - $stmt\n";}
+					}
 				if ($type != 'S')
 					{
-					$type='C';
 					$stmt="SELECT count(*) from nanpa_wireless_to_wired where phone='$numbers[$i]';";
-					if ($DB>0) {echo "DEBUG: wireless_to_wired lookup query |$numbers[$i]| - $stmt\n";}
+					if ($DB>0) {echo "DEBUG: wireless_to_wired lookup query |$numbers[$i]|$type| - $stmt\n";}
 					$rslt=mysqli_query($link, $stmt);
 					$row=mysqli_fetch_row($rslt);
+					$type='C';
 
 					if ($row[0] > 0)
-						{$type='S';}
+						{
+						$type='S';
+						if ($DB>0) {echo "DEBUG: wireless_to_wired lookup match |$numbers[$i]|$type| - $stmt\n";}
+						}
 					}
 				else
 					{
 					$stmt="SELECT count(*) from nanpa_wired_to_wireless where phone='$numbers[$i]';";
-					if ($DB>0) {echo "DEBUG: wired_to_wireless lookup query |$numbers[$i]| - $stmt\n";}
+					if ($DB>0) {echo "DEBUG: wired_to_wireless lookup query |$numbers[$i]|$type| - $stmt\n";}
 					$rslt=mysqli_query($link, $stmt);
 					$row=mysqli_fetch_row($rslt);
 
 					if ($row[0] > 0)
-						{$type='C';}
+						{
+						$type='C';
+						if ($DB>0) {echo "DEBUG: wired_to_wireless lookup match |$numbers[$i]|$type| - $stmt\n";}
+						}
 					}
 				}
 			else

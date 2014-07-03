@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# nanpa_type_filter.pl version 2.8
+# nanpa_type_filter.pl version 2.10
 #
 # DESCRIPTION:
 # This script is designed to filter the leads in a list by phone number and 
@@ -14,6 +14,7 @@
 # 130822-1645 - first build
 # 131003-1725 - Added exclude filter settings
 # 140501-0709 - Added include filter settings
+# 140702-2252 - Added prefix phone type of V as landline
 #
 
 $secX = time();
@@ -426,12 +427,12 @@ while ($sthArows > $rec_count)
 				$stmtA='';
 				if ($result_split[0] =~ /I/) {$invalid++;}
 				if ($result_split[0] =~ /C/) {$cellphone++;}
-				if ($result_split[0] =~ /S/) {$landline++;}
+				if ($result_split[0] =~ /S|V/) {$landline++;}
 				if ( ($result_split[0] =~ /I/) && (length($invalid_list_id) > 1) )
 					{$stmtA = "UPDATE vicidial_list SET list_id=$invalid_list_id where lead_id=$lead_ids[$temp_rec];";}
 				if ( ($result_split[0] =~ /C/) && (length($cellphone_list_id) > 1) )
 					{$stmtA = "UPDATE vicidial_list SET list_id=$cellphone_list_id where lead_id=$lead_ids[$temp_rec];";}
-				if ( ($result_split[0] =~ /S/) && (length($landline_list_id) > 1) )
+				if ( ($result_split[0] =~ /S|V/) && (length($landline_list_id) > 1) )
 					{$stmtA = "UPDATE vicidial_list SET list_id=$landline_list_id where lead_id=$lead_ids[$temp_rec];";}
 				if ( (length($stmtA) > 10) && ($TEST < 1) )
 					{

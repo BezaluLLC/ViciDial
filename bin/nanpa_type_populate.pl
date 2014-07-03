@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# nanpa_type_populate.pl version 2.8
+# nanpa_type_populate.pl version 2.10
 #
 # DESCRIPTION:
 # This script is designed to filter the leads in a list by phone number and 
@@ -8,11 +8,12 @@
 #
 # It is recommended that you run this program on the local Asterisk machine
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 130915-1345 - first build
 # 130928-0747 - Force overwrite of unzipped files, more standard debug output
+# 140702-2319 - Added additional logging to admin log --admin-log
 #
 
 $PATHconf =			'/etc/astguiclient.conf';
@@ -102,6 +103,7 @@ $invalid_list_id='';
 $invalid=0;
 $cellphone=0;
 $landline=0;
+$admin_log=0;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -121,6 +123,7 @@ if (length($ARGV[0])>1)
 		print "  [--quiet] = supress all normal output\n";
 		print "  [--debug] = verbose debug messages\n";
 		print "  [--debugX] = extra verbose debug messages\n";
+		print "  [--admin-log] = log to vicidial_admin_log\n";
 		print "\n";
 		exit;
 		}
@@ -145,6 +148,10 @@ if (length($ARGV[0])>1)
 		if ($args =~ /--skip-download/i)
 			{
 			$skip_download=1;
+			}
+		if ($args =~ /--admin-log/i)
+			{
+			$admin_log=1;
 			}
 		}
 	}
@@ -257,58 +264,57 @@ if ($sthNrows > 0)
 if ($nanpa_wireless_to_wired_count > 0)
 	{
 	$stmtN = "DELETE from nanpa_wireless_to_wired;";
-	$affected_rows = $dbhN->do($stmtN);
-	if($DB){print STDERR "|$affected_rows records deleted| nanpa_wireless_to_wired\n";}
+	$affected_rowsWRLSWIRE = $dbhN->do($stmtN);
+	if($DB){print STDERR "|$affected_rowsWRLSWIRE records deleted| nanpa_wireless_to_wired\n";}
 	}
 
 $stmtN = "LOAD DATA LOCAL INFILE '/tmp/WIRELESS-TO-WIRELINE-NORANGE.TXT' into table nanpa_wireless_to_wired LINES terminated by '\n' (phone);";
-$affected_rows = $dbhN->do($stmtN);
-if($DB){print STDERR "|$affected_rows records inserted| nanpa_wireless_to_wired\n";}
+$affected_rowsINwrlswire = $dbhN->do($stmtN);
+if($DB){print STDERR "|$affected_rowsINwrlswire records inserted| nanpa_wireless_to_wired\n";}
 
 if ($nanpa_wired_to_wireless_count > 0)
 	{
 	$stmtN = "DELETE from nanpa_wired_to_wireless;";
-	$affected_rows = $dbhN->do($stmtN);
-	if($DB){print STDERR "|$affected_rows records deleted| nanpa_wired_to_wireless\n";}
+	$affected_rowsWIREWRLS = $dbhN->do($stmtN);
+	if($DB){print STDERR "|$affected_rowsWIREWRLS records deleted| nanpa_wired_to_wireless\n";}
 	}
 
 $stmtN = "LOAD DATA LOCAL INFILE '/tmp/WIRELINE-TO-WIRELESS-NORANGE.TXT' into table nanpa_wired_to_wireless LINES terminated by '\n' (phone);";
-$affected_rows = $dbhN->do($stmtN);
-if($DB){print STDERR "|$affected_rows records inserted| nanpa_wired_to_wireless\n";}
+$affected_rowsINwirewrls = $dbhN->do($stmtN);
+if($DB){print STDERR "|$affected_rowsINwirewrls records inserted| nanpa_wired_to_wireless\n";}
 
 if ($nanpa_prefix_exchanges_master_count > 0)
 	{
 	$stmtN = "DELETE from nanpa_prefix_exchanges_master;";
-	$affected_rows = $dbhN->do($stmtN);
-	if($DB){print STDERR "|$affected_rows records deleted| nanpa_prefix_exchanges_master\n";}
+	$affected_rowsPRFXMSTR = $dbhN->do($stmtN);
+	if($DB){print STDERR "|$affected_rowsPRFXMSTR records deleted| nanpa_prefix_exchanges_master\n";}
 	}
 
 $stmtN = "LOAD DATA LOCAL INFILE '/tmp/PrefixMasterList.csv' into table nanpa_prefix_exchanges_master FIELDS TERMINATED BY ',' LINES terminated by '\r\n' (areacode,prefix,source,type,tier,postal_code,new_areacode,tzcode,region);";
-$affected_rows = $dbhN->do($stmtN);
-if($DB){print STDERR "|$affected_rows records inserted| nanpa_prefix_exchanges_master\n";}
+$affected_rowsINprfxmstr = $dbhN->do($stmtN);
+if($DB){print STDERR "|$affected_rowsINprfxmstr records inserted| nanpa_prefix_exchanges_master\n";}
 
 if ($nanpa_prefix_exchanges_fast_count > 0)
 	{
 	$stmtN = "DELETE from nanpa_prefix_exchanges_fast;";
-	$affected_rows = $dbhN->do($stmtN);
-	if($DB){print STDERR "|$affected_rows records deleted| nanpa_prefix_exchanges_fast\n";}
+	$affected_rowsPRFXFAST = $dbhN->do($stmtN);
+	if($DB){print STDERR "|$affected_rowsPRFXFAST records deleted| nanpa_prefix_exchanges_fast\n";}
 	}
 
 $stmtN = "INSERT INTO nanpa_prefix_exchanges_fast (ac_prefix,type) SELECT CONCAT(areacode,prefix),type from nanpa_prefix_exchanges_master;";
-$affected_rows = $dbhN->do($stmtN);
-if($DB){print STDERR "|$affected_rows records inserted| nanpa_prefix_exchanges_fast\n";}
-
-
-if ($DB) {print "LEADS FOUND IN LIST $list_id: |$sthArows|\n";}
-if ($DBX) {print "|$stmtA|\n";}
-
-if ($DB) {print "STARTING LOOKUP OF NANPA PHONE TYPE, ($rec_count records)\n";}
-$end_time=time;
-if (!$Q) {print "Pre-scrub Elapsed time: ".($end_time-$start_time)." sec\n\n\n";}
-
+$affected_rowsINprfxfast = $dbhN->do($stmtN);
+if($DB){print STDERR "|$affected_rowsINprfxfast records inserted| nanpa_prefix_exchanges_fast\n";}
 
 
 $end_time=time();
+
+if ($admin_log > 0)
+	{
+	$stmtA="INSERT INTO vicidial_admin_log set event_date=NOW(), user='VDAD', ip_address='1.1.1.1', event_section='SERVERS', event_type='OTHER', record_id='$server_ip', event_code='NANPA populate data', event_sql='', event_notes='WIRED2WIRELESS($nanpa_wired_to_wireless_count / $affected_rowsWIREWRLS / $affected_rowsINwirewrls)  WIRELESS2WIRED($nanpa_wireless_to_wired_count / $affected_rowsWRLSWIRE / $affected_rowsINwrlswire)   PREFIX($nanpa_prefix_exchanges_master_count / $nanpa_prefix_exchanges_fast_count / $affected_rowsPRFXMSTR / $affected_rowsINprfxmstr / $affected_rowsPRFXFAST / $affected_rowsINprfxfast)   |$args| TOTAL Elapsed time: ".($end_time-$start_time)." sec';";
+	$Iaffected_rows = $dbhN->do($stmtA);
+	if ($DBX) {print "Admin logged: |$Iaffected_rows|$stmtA|\n";}
+	}
+
 if (!$Q) {print "TOTAL Elapsed time: ".($end_time-$start_time)." sec\n\n";}
 
 

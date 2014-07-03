@@ -8,12 +8,13 @@
 #
 # It is recommended that you run this program on the local Asterisk machine
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 130914-1710 - first build
 # 131003-1743 - Added exclude filter settings
 # 140624-1551 - Added more options to segment leads
+# 140702-2242 - Added prefix phone type of V as landline(S)
 #
 
 $PATHconf =			'/etc/astguiclient.conf';
@@ -398,7 +399,7 @@ while ($sthArows > $rec_count)
 		$pre7=substr($phones[$rec_count],0,7);
 		if ($four_digit_prefix_hash{$pre4}) 
 			{
-			if ($four_digit_prefix_hash{$pre4} ne "S") 
+			if ( ($four_digit_prefix_hash{$pre4} ne "S") && ($four_digit_prefix_hash{$pre4} ne "V") )
 				{
 				$type="C";
 				Wireless_to_Wired($phones[$rec_count]);
@@ -411,7 +412,7 @@ while ($sthArows > $rec_count)
 			} 
 		elsif ($five_digit_prefix_hash{$pre5}) 
 			{
-			if ($five_digit_prefix_hash{$pre5} ne "S") 
+			if ( ($five_digit_prefix_hash{$pre5} ne "S") && ($five_digit_prefix_hash{$pre5} ne "V") )
 				{
 				$type="C";
 				Wireless_to_Wired($phones[$rec_count]);
@@ -424,7 +425,7 @@ while ($sthArows > $rec_count)
 			} 
 		elsif ($six_digit_prefix_hash{$pre6}) 
 			{
-			if ($six_digit_prefix_hash{$pre6} ne "S") 
+			if ( ($six_digit_prefix_hash{$pre6} ne "S") && ($six_digit_prefix_hash{$pre6} ne "V") )
 				{
 				$type="C";
 				Wireless_to_Wired($phones[$rec_count]);
@@ -437,7 +438,7 @@ while ($sthArows > $rec_count)
 			} 
 		elsif ($seven_digit_prefix_hash{$pre7}) 
 			{
-			if ($seven_digit_prefix_hash{$pre7} ne "S") 
+			if ( ($seven_digit_prefix_hash{$pre7} ne "S") && ($seven_digit_prefix_hash{$pre7} ne "V") )
 				{
 				$type="C";
 				Wireless_to_Wired($phones[$rec_count]);
@@ -462,7 +463,7 @@ while ($sthArows > $rec_count)
 			{$stmtA = "UPDATE vicidial_list SET list_id=$invalid_list_id where lead_id in ($type_hash{$type});";}
 		if ( ($type =~ /C/) && (length($cellphone_list_id) > 1) )
 			{$stmtA = "UPDATE vicidial_list SET list_id=$cellphone_list_id where lead_id in ($type_hash{$type});";}
-		if ( ($type =~ /S/) && (length($landline_list_id) > 1) )
+		if ( ($type =~ /S|V/) && (length($landline_list_id) > 1) )
 			{$stmtA = "UPDATE vicidial_list SET list_id=$landline_list_id where lead_id in ($type_hash{$type});";}
 		if (length($stmtA)>0) 
 			{
@@ -485,7 +486,11 @@ while ($sthArows > $rec_count)
 		}
 	##################################################
 
+	if ($type='S') {$landline++;}
+	if ($type='C') {$cellphone++;}
+	if ($type='I') {$invalid++;}
 	$rec_count++;
+	if ( ($rec_count =~ /00000$/i) && ($DB) ) {print STDERR "$rec_count / $sthArows (S:$landline | C:$cellphone | I:$invalid)\n";}
 	}
 
 #### Update remaining leads to the appropriate type #####
@@ -501,7 +506,7 @@ foreach $type (keys %type_hash)
 			{$stmtA = "UPDATE vicidial_list SET list_id=$invalid_list_id where lead_id in ($type_hash{$type});";}
 		if ( ($type =~ /C/) && (length($cellphone_list_id) > 1) )
 			{$stmtA = "UPDATE vicidial_list SET list_id=$cellphone_list_id where lead_id in ($type_hash{$type});";}
-		if ( ($type =~ /S/) && (length($landline_list_id) > 1) )
+		if ( ($type =~ /S|V/) && (length($landline_list_id) > 1) )
 			{$stmtA = "UPDATE vicidial_list SET list_id=$landline_list_id where lead_id in ($type_hash{$type});";}
 		if (length($stmtA)>0) 
 			{
@@ -526,7 +531,14 @@ foreach $type (keys %type_hash)
 #########################################################
 
 $end_time=time;
+
+$stmtA="INSERT INTO vicidial_admin_log set event_date=NOW(), user='VDAD', ip_address='1.1.1.1', event_section='SERVERS', event_type='OTHER', record_id='$server_ip', event_code='NANPA preload filter run', event_sql='', event_notes='$rec_count / $sthArows (S:$landline | C:$cellphone | I:$invalid) TOTAL Elapsed time: ".($end_time-$start_time)." sec  |$args|';";
+$Iaffected_rows = $dbhA->do($stmtA);
+if ($DBX) {print "Admin logged: |$Iaffected_rows|$stmtA|\n";}
+
+if (!$Q) {print STDERR "$rec_count / $sthArows (S:$landline | C:$cellphone | I:$invalid)\n";}
 if (!$Q) {print "TOTAL Elapsed time: ".($end_time-$start_time)." sec\n\n";}
+
 
 ### 
 sub Wired_to_Wireless {
