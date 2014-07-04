@@ -357,12 +357,13 @@
 # 140610-1519 - Fixed issue with manual dial wait_sec being inflated in Asterisk 1.8
 # 140617-1044 - Fixed issue with non-latin, issue #773
 # 140621-1544 - Added update_settings function
+# 140703-1659 - Several logging fixes, mostly related to manual dial calls
 #
 
-$version = '2.10-253';
-$build = '140621-1544';
+$version = '2.10-254';
+$build = '140703-1659';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=594;
+$mysql_log_count=595;
 $one_mysql_log=0;
 
 require_once("dbconnect_mysqli.php");
@@ -597,6 +598,8 @@ if (isset($_GET["orig_pass"]))			{$orig_pass=$_GET["orig_pass"];}
 	elseif (isset($_POST["orig_pass"]))	{$orig_pass=$_POST["orig_pass"];}
 if (isset($_GET["cid_lock"]))			{$cid_lock=$_GET["cid_lock"];}
 	elseif (isset($_POST["cid_lock"]))	{$cid_lock=$_POST["cid_lock"];}
+if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
+	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -3900,6 +3903,7 @@ if ($ACTION == 'manDiaLlookCaLL')
 	$MT[0]='';
 	$row='';   $rowx='';
 	$call_good=0;
+	$local_update=0;
 	if (strlen($MDnextCID)<18)
 		{
 		echo "NO\n";
@@ -3917,17 +3921,17 @@ if ($ACTION == 'manDiaLlookCaLL')
 		if ($VM_mancall_ct > 0)
 			{
 			$row=mysqli_fetch_row($rslt);
-			$uniqueid =$row[0];
-			$channel =$row[1];
+			$uniqueid =		$row[0];
+			$channel =		$row[1];
 			if (preg_match("/^Local/",$channel))
-				{}# Local channel not answered or resolved
+				{$local_update++;}# Local channel not answered or resolved
 			else
 				{
 				$call_output = "$uniqueid\n$channel\n";
 				$call_good++;
 				}
 			}
-		else
+		if ( ($VM_mancall_ct < 1) or ($local_update > 0) )
 			{
 			### after 10 seconds, start checking for call termination in the carrier log
 			if ( ($DiaL_SecondS > 0) and (preg_match("/0$/",$DiaL_SecondS)) )
@@ -4121,7 +4125,7 @@ if ($stage == "start")
 			}
 		else
 			{
-			echo "LOG NOT ENTERED\n";
+			echo "LOG NOT ENTERED\n\n";
 			}
 
 		$stmt = "UPDATE vicidial_auto_calls SET uniqueid='$uniqueid' where lead_id='$lead_id';";
@@ -4152,6 +4156,7 @@ if ($stage == "end")
 	$log_no_enter=0;
 	if ($alt_num_status > 0)
 		{$status_dispo = 'ALTNUM';}
+	$number_dialed = $phone_number;
 	##### get call type from vicidial_live_agents table
 	$VLA_inOUT='NONE';
 	$stmt="SELECT comments FROM vicidial_live_agents where user='$user' order by last_update_time desc limit 1;";
@@ -4172,6 +4177,28 @@ if ($stage == "end")
 		fclose($fp);
 		$uniqueid='6666.1';
 		}
+
+	if ( (strlen($uniqueid)<1) and ($VLA_inOUT == 'MANUAL') )
+		{
+		$stmt="SELECT uniqueid FROM vicidial_log_extended where caller_code='$MDnextCID' order by call_date desc limit 1;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00595',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($DB) {echo "$stmt\n";}
+		$VLE_unid_ct = mysqli_num_rows($rslt);
+		if ($VLE_unid_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$uniqueid =		$row[0];
+			}
+		else
+			{
+			$PADlead_id = sprintf("%010s", $lead_id);
+				while (strlen($PADlead_id) > 9) {$PADlead_id = substr("$PADlead_id", 1);}
+			$uniqueid = "$StarTtime.$PADlead_id";
+			}
+		$VDvicidial_id = $uniqueid;
+		}
+
 	if ( (strlen($uniqueid)<1) or (strlen($lead_id)<1) )
 		{
 		echo "LOG NOT ENTERED\n";
@@ -4894,20 +4921,14 @@ if ($stage == "end")
 					}
 				}
 
-			##### insert log into vicidial_log_extended for manual VICIDiaL call
-			$stmt="INSERT IGNORE INTO vicidial_log_extended SET uniqueid='$uniqueid',server_ip='$server_ip',call_date='$NOW_TIME',lead_id='$lead_id',caller_code='$MDnextCID',custom_call_id='' ON DUPLICATE KEY UPDATE server_ip='$server_ip',call_date='$NOW_TIME',lead_id='$lead_id',caller_code='$MDnextCID';";
-			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_to_mysqli($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00401',$user,$server_ip,$session_name,$one_mysql_log);}
-			$affected_rowsX = mysqli_affected_rows($link);
-
 			### check to see if the vicidial_log record exists, if not, insert it
 			$manualVLexists=0;
 			$beginUNIQUEID = preg_replace("/\..*/","",$uniqueid);
-			$stmt="SELECT status from vicidial_log where lead_id='$lead_id' and user='$user' and phone_number='$phone_number' and uniqueid LIKE \"$beginUNIQUEID%\" and called_count='$called_count';";
+			$stmt="SELECT status from vicidial_log where lead_id='$lead_id' and user IN('$user','VDAD') and phone_number='$number_dialed' and uniqueid LIKE \"$beginUNIQUEID%\" and called_count='$called_count';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00547',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
+			$stmtVQ = $stmt;
 			$manualVLexists = mysqli_num_rows($rslt);
 			if ($manualVLexists > 0)
 				{
@@ -4918,34 +4939,41 @@ if ($stage == "end")
 			if ($manualVLexists < 1)
 				{
 				##### insert log into vicidial_log for manual VICIDiaL call
-				$stmt="INSERT INTO vicidial_log (uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,comments,processed,user_group,alt_dial,called_count) values('$uniqueid','$lead_id','$list_id','$campaign','$NOW_TIME','$StarTtime','DONEM','$phone_code','$phone_number','$user','MANUAL','N','$user_group','$alt_dial','$called_count');";
-				if ($DB) {echo "$stmt\n";}
-				$rslt=mysql_to_mysqli($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00280',$user,$server_ip,$session_name,$one_mysql_log);}
-				$affected_rows = mysqli_affected_rows($link);
+				$stmtVL="INSERT INTO vicidial_log (uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,comments,processed,user_group,alt_dial,called_count) values('$uniqueid','$lead_id','$list_id','$campaign','$NOW_TIME','$StarTtime','DONEM','$phone_code','$number_dialed','$user','MANUAL','N','$user_group','$alt_dial','$called_count');";
+				if ($DB) {echo "$stmtVL\n";}
+				$rslt=mysql_to_mysqli($stmtVL, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtVL,'00280',$user,$server_ip,$session_name,$one_mysql_log);}
+				$affected_rowsVL = mysqli_affected_rows($link);
 
-				if ($affected_rows > 0)
+				if ($affected_rowsVL > 0)
 					{
 					echo "VICIDiaL_LOG Inserted: $uniqueid|$channel|$NOW_TIME\n";
 					echo "$StarTtime\n";
 					}
 				else
 					{
-					echo "LOG NOT ENTERED\n";
+					echo "LOG NOT ENTERED\n\n";
 					}
 				}
 			else
 				{
-				$stmt="UPDATE vicidial_log SET uniqueid='$uniqueid' where lead_id='$lead_id' and user='$user' and phone_number='$phone_number' and uniqueid LIKE \"$beginUNIQUEID%\" and called_count='$called_count';";
+				$stmtVL="UPDATE vicidial_log SET uniqueid='$uniqueid',alt_dial='$alt_dial',user='$user' where lead_id='$lead_id' and user IN('$user','VDAD') and phone_number='$number_dialed' and uniqueid LIKE \"$beginUNIQUEID%\" and called_count='$called_count';";
 				if ($DB) {echo "$stmt\n";}
-				$rslt=mysql_to_mysqli($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00057',$user,$server_ip,$session_name,$one_mysql_log);}
-				$affected_rows = mysqli_affected_rows($link);
+				$rslt=mysql_to_mysqli($stmtVL, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtVL,'00057',$user,$server_ip,$session_name,$one_mysql_log);}
+				$affected_rowsVL = mysqli_affected_rows($link);
 				}
+
+			##### insert log into vicidial_log_extended for manual VICIDiaL call
+			$stmt="INSERT IGNORE INTO vicidial_log_extended SET uniqueid='$uniqueid',server_ip='$server_ip',call_date='$NOW_TIME',lead_id='$lead_id',caller_code='$MDnextCID',custom_call_id='' ON DUPLICATE KEY UPDATE server_ip='$server_ip',call_date='$NOW_TIME',lead_id='$lead_id',caller_code='$MDnextCID';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00401',$user,$server_ip,$session_name,$one_mysql_log);}
+			$affected_rowsX = mysqli_affected_rows($link);
 
 			##### update the duration and end time in the vicidial_log table
 			if ($VDstatus == 'INCALL') {$vl_statusSQL = ",status='$status_dispo'";}
-			$stmt="UPDATE vicidial_log set $SQLterm end_epoch='$StarTtime', length_in_sec='$length_in_sec' $vl_statusSQL where uniqueid='$uniqueid' and lead_id='$lead_id' and user='$user' and called_count='$called_count' order by call_date desc limit 1;";
+			$stmt="UPDATE vicidial_log set $SQLterm end_epoch='$StarTtime', length_in_sec='$length_in_sec',alt_dial='$alt_dial' $vl_statusSQL where uniqueid='$uniqueid' and lead_id='$lead_id' and user='$user' and called_count='$called_count' order by call_date desc limit 1;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00090',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -4993,7 +5021,7 @@ if ($stage == "end")
 
 			if (strlen($SQLterm) > 0)
 				{
-				##### update the duration and end time in the vicidial_log table
+				##### update the duration and end time in the vicidial_closer_log table
 				$stmt="UPDATE vicidial_closer_log set $SQLterm where lead_id='$lead_id' and call_date > \"$four_hours_ago\" order by call_date desc limit 1;";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
@@ -5106,6 +5134,7 @@ if ($stage == "end")
 			}
 		}
 
+	#  . '|' . $lead_id . '|' . $agent_log_id . '|' . $alt_dial . '|' . $affected_rowsVL . '|' . $stmtVQ
 	echo $VDstop_rec_after_each_call . '|' . $extension . '|' . $conf_silent_prefix . '|' . $conf_exten . '|' . $user_abb . "|\n";
 
 	##### if VICIDiaL call and hangup_after_each_call activated, find all recording 
@@ -5319,7 +5348,7 @@ if ($stage == "end")
 			$dead_secSQL=",dead_sec='$dead_sec'";
 			}
 		$talk_sec = (($StarTtime - $row[0]) + $row[1]);
-		if ( ( ($auto_dial_level < 1) or (preg_match('/^M/',$MDnextCID)) ) and (preg_match('/INBOUND_MAN/',$dial_method)) )
+		if ( ( ($auto_dial_level < 1) or (preg_match('/INBOUND_MAN/',$dial_method)) ) and (preg_match('/^M/',$MDnextCID)) )
 			{
 			if ( (preg_match("/NULL/i",$row[5])) or (strlen($row[5]) < 1) )
 				{

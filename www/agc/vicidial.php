@@ -438,10 +438,11 @@
 # 140623-1710 - Added wrapup_bypass setting
 # 140626-0757 - Added wrapup_after_hotkey setting
 # 140630-0921 - Added the FSCREEN option to Wrapup message to allow for message only display
+# 140703-1658 - Several logging fixes, mostly related to manual dial calls
 #
 
-$version = '2.10-409c';
-$build = '140630-0921';
+$version = '2.10-410c';
+$build = '140703-1658';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=80;
 $one_mysql_log=0;
@@ -5981,7 +5982,14 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
 					{
 					var MDlogResponse = null;
-			//		alert(xmlhttp.responseText);
+				//	alert(manDiaLlog_query);
+				//	alert(xmlhttp.responseText);
+
+				//	var debug_response = xmlhttp.responseText;
+				//	var REGcommentsDBNL = new RegExp("\n","g");
+				//	debug_response = debug_response.replace(REGcommentsDBNL, "<br>");
+				//	document.getElementById("debugbottomspan").innerHTML = debug_response;
+
 					MDlogResponse = xmlhttp.responseText;
 					var MDlogResponse_array=MDlogResponse.split("\n");
 					MDlogLINE = MDlogResponse_array[0];
@@ -7019,6 +7027,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					{
 					var MDlookResponse = null;
 				//	alert(xmlhttp.responseText);
+
+				//	var debug_response = xmlhttp.responseText;
+				//	var REGcommentsDBNL = new RegExp("\n","g");
+				//	debug_response = debug_response.replace(REGcommentsDBNL, "<br>");
+				//	document.getElementById("debugbottomspan").innerHTML = "<br>|" + manDiaLlook_query + "|<br>\n" + debug_response;
+
 					MDlookResponse = xmlhttp.responseText;
 					var MDlookResponse_array=MDlookResponse.split("\n");
 					var MDlookCID = MDlookResponse_array[0];
@@ -8046,6 +8060,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		alt_dial_status_display = 0;
 		all_record = 'NO';
 		all_record_count=0;
+		document.vicidial_form.uniqueid.value='';
 		var usegroupalias=0;
 		if (taskaltnum == 'ALTPhonE')
 			{
@@ -10823,6 +10838,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				timer_alt_trigger=0;
 				last_mdtype='';
 				document.getElementById("timer_alt_display").innerHTML = '';
+				document.getElementById("RecorDID").innerHTML = '';
 
 				if (manual_dial_search_checkbox == 'SELECTED_RESET')
 					{document.vicidial_form.LeadLookuP.checked=true;}
