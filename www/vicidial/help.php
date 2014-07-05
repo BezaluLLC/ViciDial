@@ -21,6 +21,7 @@
 # 140621-2151 - Added inbound did new filtering options
 # 140623-2220 - Added wrapup_bypass and wrapup_message change to allow script use
 # 140625-1934 - Added wrapup_after_hotkey
+# 140705-0928 - Added custom list fields help section
 #
 
 
@@ -1837,6 +1838,95 @@ if ($SSqc_features_active > 0)
 <A NAME="internal_list-dnc">
 <BR>
 <B>Internal DNC List -</B> This Do Not Call list contains every lead that has been set to a status of DNC in the system. Through the LISTS - ADD NUMBER TO DNC page you are able to manually add numbers to this list so that they will not be called by campaigns that use the internal DNC list. There is also the option to add leads to the campaign-specific DNC lists for those campaigns that have them. If you have the active DNC option set to AREACODE then you can also use area code wildcard entries like this 201XXXXXXX to block all calls to the 201 areacode when enabled.
+
+
+
+
+
+<BR><BR><BR><BR>
+
+<B><FONT SIZE=3>Lists Custom Fields Help</FONT></B><BR><BR>
+
+<A NAME="lists_fields-field_label">
+<BR>
+ <B>Field Label -</B> This is the database field identifier for this field. This needs to be a unique identifier within the custom fields for this list. Do not use any spaces or punctuation for this field. max 50 characters, minimum of 2 characters. You can also include the default fields in a custom field setup, and you will see them in red in the list. These fields will not be added to the custom list database table, the agent interface will instead reference the list table directly. The labels that you can use to include the default fieds are -  vendor_lead_code, source_id, list_id, gmt_offset_now, called_since_last_reset, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, called_count, last_local_call_time, rank, owner
+<BR><BR>
+
+<A NAME="lists_fields-field_name">
+<BR>
+ <B>Field Name -</B> This is the name of the field as it will appear to an agent through their interface. You can use spaces in this field, but no punctuation characters, maximum of 50 characters and minimum of 2 characters.
+<BR><BR>
+
+<A NAME="lists_fields-field_description">
+<BR>
+ <B>Field Description -</B> The description of this field as it will appear in the administration interface. This is an optional field with a maximum of 100 characters.
+<BR><BR>
+
+<A NAME="lists_fields-field_rank">
+<BR>
+ <B>Field Rank -</B> The order in which these fields is displayed to the agent from lowest on top to highest on the bottom.
+<BR><BR>
+
+<A NAME="lists_fields-field_order">
+<BR>
+ <B>Field Order -</B> If more than one field has the same rank, they will be placed on the same line and they will be placed in order by this value from lowest to highest, left to right.
+<BR><BR>
+
+<A NAME="lists_fields-field_help">
+<BR>
+ <B>Field Help -</B> Optional field, if you fill it in, the agent will be able to see this text when they click on a help link next to the field in their agent interface.
+<BR><BR>
+
+<A NAME="lists_fields-field_type">
+<BR>
+ <B>Field Type -</B> This option defines the type of field that will be displayed. TEXT is a standard single-line entry form, AREA is a multi-line text box, SELECT is a single-selection pull-down menu, MULTI is a multiple-select box, RADIO is a list of radio buttons where only one option can be selected, CHECKBOX is a list of checkboxes where multiple options can be selected, DATE is a year month day calendar popup where the agent can select the date and TIME is a time selection box. The default is TEXT. For the SELECT, MULTI, RADIO and CHECKBOX options you must define the option values below in the Field Options box. DISPLAY will display only and not allow for modification by the agent. SCRIPT will also display only, but you are able to use script variables just like in the Scripts feature. SCRIPT fields will also only display the content in the Options, and not the field name like the DISPLAY type does. HIDDEN will not show the agent the field, but will allow the field to have data imported into it and exported from it, as well as have it available to the script tab and web form address. READONLY will display the value of the data in the field, but will not allow the agent to alter the data. HIDEBLOB is similar to HIDDEN except the data storage type on the database is a BLOB type, suitable for binary data or data that needs to be secured.
+<BR><BR>
+
+<A NAME="lists_fields-field_options">
+<BR>
+ <B>Field Options -</B> For the SELECT, MULTI, RADIO and CHECKBOX field types, you must define the option values in this box. You must put a list of comma separated option label and option text here with each option one its own line. The first value should have no spaces in it, and neither values should have any punctuation. For example - electric_meter, Electric Meter
+<BR><BR>
+
+<A NAME="lists_fields-multi_position">
+<BR>
+ <B>Option Position -</B> For CHECKBOX and RADIO field types only, if set to HORIZONTAL the options will appear on the same line possibly wrapping to the line below if there are many options. If set to VERTICAL there will be only one option per line. Default is HORIZONTAL.
+<BR><BR>
+
+<A NAME="lists_fields-field_size">
+<BR>
+ <B>Field Size -</B> This setting will mean different things depending on what the field type is. For TEXT fields, the size is the number of characters that will show in the field. For AREA fields, the size is the width of the text box in characters. For MULTI fields, this setting defines the number of options to be shown in the multi select list. For SELECT, RADIO, CHECKBOX, DATE and TIME this setting is ignored.
+<BR><BR>
+
+<A NAME="lists_fields-field_max">
+<BR>
+ <B>Field Max -</B> This setting will mean different things depending on what the field type is. For TEXT, HIDDEN and READONLY fields, the size is the maximum number of characters that are allowed in the field. For AREA fields, this field defines the number of rows of text visible in the text box. For MULTI, SELECT, RADIO, CHECKBOX, DATE and TIME this setting is ignored.
+<BR><BR>
+
+<A NAME="lists_fields-field_default">
+<BR>
+ <B>Field Default -</B> This optional field lets you define what value to assign to a field if nothing is loaded into that field. Default is NULL which disables the default function. For DATE field types, the default is always set to today unless a number is put in in which case the date will be that many days plus or minus today. For TIME field types, the default is always set to the current server time unless a number is put in in which case the time will be that many minutes plus or minus current time. For RADIO and SELECT field types, the default must be one of the options defined for the field or NULL.
+<BR><BR>
+
+<A NAME="lists_fields-field_cost">
+<BR>
+ <B>Field Cost -</B> This read only field tells you what the cost of this field is in the custom field table for this list. There is no hard limit for the number of custom fields you can have in a list, but the total of the cost of all fields for the list must be below 65000. This typically allows for hundreds of fields, but if you specify several TEXT fields that are hundreds or thousands of characters in length then you may hit this limit quickly. If you need that much text in a field you should choose an AREA type, which are stored differently and do not use as much table space.
+<BR><BR>
+
+<A NAME="lists_fields-field_required">
+<BR>
+ <B>Field Required -</B> If set to Y, this field will force the agent to enter text or select an option for this field. Default is N.
+<BR><BR>
+
+<A NAME="lists_fields-name_position">
+<BR>
+ <B>Field Name Position -</B> If set to LEFT, this field name will appear to the left of the field, if set to TOP the field name will take up the entire line and appear above the field. Default is LEFT.
+<BR><BR>
+
+<A NAME="lists_fields-copy_option">
+<BR>
+ <B>Copy Option -</B> When copying field definitions from one list to another, you have a few options for how the copying process works. APPEND will add the fields that are not present in the destination list, if there are matching field labels those will remained untouched, no custom field data will be deleted or modified using this option. UPDATE will update the common field_label fields in the destination list to the field definitions from the source list. custom field data may be modified or lost using this option. REPLACE will remove all existing custom fields in the destination list and replace them with the custom fields from the source list, all custom field data will be deleted using this option.
+
+
 
 
 

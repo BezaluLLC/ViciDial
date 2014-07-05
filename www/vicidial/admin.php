@@ -31139,25 +31139,26 @@ if ($ADD==700000000000000)
 	while ($logs_to_print > $o)
 		{
 		$row=mysqli_fetch_row($rslt);
-		if (preg_match('/USER|AGENT/i', $row[4])) {$record_link = "ADD=3&user=$row[6]";}
-		if (preg_match('/CAMPAIGN/i', $row[4])) {$record_link = "ADD=31&campaign_id=$row[6]";}
-		if (preg_match('/LIST/i', $row[4])) {$record_link = "ADD=311&list_id=$row[6]";}
-		if (preg_match('/SCRIPT/i', $row[4])) {$record_link = "ADD=3111111&script_id=$row[6]";}
-		if (preg_match('/FILTER/i', $row[4])) {$record_link = "ADD=31111111&lead_filter_id=$row[6]";}
-		if (preg_match('/INGROUP/i', $row[4])) {$record_link = "ADD=3111&group_id=$row[6]";}
-		if (preg_match('/DID/i', $row[4])) {$record_link = "ADD=3311&did_id=$row[6]";}
-		if (preg_match('/USERGROUP/i', $row[4])) {$record_link = "ADD=311111&user_group=$row[6]";}
-		if (preg_match('/REMOTEAGENT/i', $row[4])) {$record_link = "ADD=31111&remote_agent_id=$row[6]";}
-		if (preg_match('/PHONE/i', $row[4])) {$record_link = "ADD=10000000000";}
-		if (preg_match('/CALLTIME/i', $row[4])) {$record_link = "ADD=311111111&call_time_id=$row[6]";}
-		if (preg_match('/SHIFT/i', $row[4])) {$record_link = "ADD=331111111&shift_id=$row[6]";}
-		if (preg_match('/CONFTEMPLATE/i', $row[4])) {$record_link = "ADD=331111111111&template_id=$row[6]";}
-		if (preg_match('/CARRIER/i', $row[4])) {$record_link = "ADD=341111111111&carrier_id=$row[6]";}
-		if (preg_match('/SERVER/i', $row[4])) {$record_link = "ADD=311111111111&server_id=$row[6]";}
-		if (preg_match('/CONFERENCE/i', $row[4])) {$record_link = "ADD=1000000000000";}
-		if (preg_match('/SYSTEM/i', $row[4])) {$record_link = "ADD=311111111111111";}
-		if (preg_match('/CATEGOR/i', $row[4])) {$record_link = "ADD=331111111111111";}
-		if (preg_match('/GROUPALIAS/i', $row[4])) {$record_link = "ADD=33111111111&group_alias_id=$row[6]";}
+		if (preg_match('/USER|AGENT/i', $row[4])) {$record_link = "$PHP_SELF?ADD=3&user=$row[6]";}
+		if (preg_match('/CAMPAIGN/i', $row[4])) {$record_link = "$PHP_SELF?ADD=31&campaign_id=$row[6]";}
+		if (preg_match('/LIST/i', $row[4])) {$record_link = "$PHP_SELF?ADD=311&list_id=$row[6]";}
+		if (preg_match('/CUSTOM_FIELDS/i', $row[4])) {$record_link = "./admin_lists_custom.php?action=MODIFY_CUSTOM_FIELDS&list_id=$row[6]";}
+		if (preg_match('/SCRIPT/i', $row[4])) {$record_link = "$PHP_SELF?ADD=3111111&script_id=$row[6]";}
+		if (preg_match('/FILTER/i', $row[4])) {$record_link = "$PHP_SELF?ADD=31111111&lead_filter_id=$row[6]";}
+		if (preg_match('/INGROUP/i', $row[4])) {$record_link = "$PHP_SELF?ADD=3111&group_id=$row[6]";}
+		if (preg_match('/DID/i', $row[4])) {$record_link = "$PHP_SELF?ADD=3311&did_id=$row[6]";}
+		if (preg_match('/USERGROUP/i', $row[4])) {$record_link = "$PHP_SELF?ADD=311111&user_group=$row[6]";}
+		if (preg_match('/REMOTEAGENT/i', $row[4])) {$record_link = "$PHP_SELF?ADD=31111&remote_agent_id=$row[6]";}
+		if (preg_match('/PHONE/i', $row[4])) {$record_link = "$PHP_SELF?ADD=10000000000";}
+		if (preg_match('/CALLTIME/i', $row[4])) {$record_link = "$PHP_SELF?ADD=311111111&call_time_id=$row[6]";}
+		if (preg_match('/SHIFT/i', $row[4])) {$record_link = "$PHP_SELF?ADD=331111111&shift_id=$row[6]";}
+		if (preg_match('/CONFTEMPLATE/i', $row[4])) {$record_link = "$PHP_SELF?ADD=331111111111&template_id=$row[6]";}
+		if (preg_match('/CARRIER/i', $row[4])) {$record_link = "$PHP_SELF?ADD=341111111111&carrier_id=$row[6]";}
+		if (preg_match('/SERVER/i', $row[4])) {$record_link = "$PHP_SELF?ADD=311111111111&server_id=$row[6]";}
+		if (preg_match('/CONFERENCE/i', $row[4])) {$record_link = "$PHP_SELF?ADD=1000000000000";}
+		if (preg_match('/SYSTEM/i', $row[4])) {$record_link = "$PHP_SELF?ADD=311111111111111";}
+		if (preg_match('/CATEGOR/i', $row[4])) {$record_link = "$PHP_SELF?ADD=331111111111111";}
+		if (preg_match('/GROUPALIAS/i', $row[4])) {$record_link = "$PHP_SELF?ADD=33111111111&group_alias_id=$row[6]";}
 
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
@@ -31172,7 +31173,7 @@ if ($ADD==700000000000000)
 		echo "<td><font size=1> <a href=\"$PHP_SELF?ADD=720000000000000&category=$row[4]&stage=$row[6]\">$row[6]</a></td>";
 		echo "<td><font size=1> $row[8]</td>";
 		echo "<td><font size=1> $row[7]</td>";
-		echo "<td><font size=1> <a href=\"$PHP_SELF?$record_link\">GOTO</a></td>";
+		echo "<td><font size=1> <a href=\"$record_link\">GOTO</a></td>";
 		echo "</tr>\n";
 		$logs_printed .= "'$row[0]',";
 		$o++;
@@ -31226,25 +31227,26 @@ if ($ADD==710000000000000)
 		{
 		$row=mysqli_fetch_row($rslt);
 
-		if (preg_match('/USER|AGENT/i', $row[4])) {$record_link = "ADD=3&user=$row[6]";}
-		if (preg_match('/CAMPAIGN/i', $row[4])) {$record_link = "ADD=31&campaign_id=$row[6]";}
-		if (preg_match('/LIST/i', $row[4])) {$record_link = "ADD=311&list_id=$row[6]";}
-		if (preg_match('/SCRIPT/i', $row[4])) {$record_link = "ADD=3111111&script_id=$row[6]";}
-		if (preg_match('/FILTER/i', $row[4])) {$record_link = "ADD=31111111&lead_filter_id=$row[6]";}
-		if (preg_match('/INGROUP/i', $row[4])) {$record_link = "ADD=3111&group_id=$row[6]";}
-		if (preg_match('/DID/i', $row[4])) {$record_link = "ADD=3311&did_id=$row[6]";}
-		if (preg_match('/USERGROUP/i', $row[4])) {$record_link = "ADD=311111&user_group=$row[6]";}
-		if (preg_match('/REMOTEAGENT/i', $row[4])) {$record_link = "ADD=31111&remote_agent_id=$row[6]";}
-		if (preg_match('/PHONE/i', $row[4])) {$record_link = "ADD=10000000000";}
-		if (preg_match('/CALLTIME/i', $row[4])) {$record_link = "ADD=311111111&call_time_id=$row[6]";}
-		if (preg_match('/SHIFT/i', $row[4])) {$record_link = "ADD=331111111&shift_id=$row[6]";}
-		if (preg_match('/CONFTEMPLATE/i', $row[4])) {$record_link = "ADD=331111111111&template_id=$row[6]";}
-		if (preg_match('/CARRIER/i', $row[4])) {$record_link = "ADD=341111111111&carrier_id=$row[6]";}
-		if (preg_match('/SERVER/i', $row[4])) {$record_link = "ADD=311111111111&server_id=$row[6]";}
-		if (preg_match('/CONFERENCE/i', $row[4])) {$record_link = "ADD=1000000000000";}
-		if (preg_match('/SYSTEM/i', $row[4])) {$record_link = "ADD=311111111111111";}
-		if (preg_match('/CATEGOR/i', $row[4])) {$record_link = "ADD=331111111111111";}
-		if (preg_match('/GROUPALIAS/i', $row[4])) {$record_link = "ADD=33111111111&group_alias_id=$row[6]";}
+		if (preg_match('/USER|AGENT/i', $row[4])) {$record_link = "$PHP_SELF?ADD=3&user=$row[6]";}
+		if (preg_match('/CAMPAIGN/i', $row[4])) {$record_link = "$PHP_SELF?ADD=31&campaign_id=$row[6]";}
+		if (preg_match('/LIST/i', $row[4])) {$record_link = "$PHP_SELF?ADD=311&list_id=$row[6]";}
+		if (preg_match('/CUSTOM_FIELDS/i', $row[4])) {$record_link = "./admin_lists_custom.php?action=MODIFY_CUSTOM_FIELDS&list_id=$row[6]";}
+		if (preg_match('/SCRIPT/i', $row[4])) {$record_link = "$PHP_SELF?ADD=3111111&script_id=$row[6]";}
+		if (preg_match('/FILTER/i', $row[4])) {$record_link = "$PHP_SELF?ADD=31111111&lead_filter_id=$row[6]";}
+		if (preg_match('/INGROUP/i', $row[4])) {$record_link = "$PHP_SELF?ADD=3111&group_id=$row[6]";}
+		if (preg_match('/DID/i', $row[4])) {$record_link = "$PHP_SELF?ADD=3311&did_id=$row[6]";}
+		if (preg_match('/USERGROUP/i', $row[4])) {$record_link = "$PHP_SELF?ADD=311111&user_group=$row[6]";}
+		if (preg_match('/REMOTEAGENT/i', $row[4])) {$record_link = "$PHP_SELF?ADD=31111&remote_agent_id=$row[6]";}
+		if (preg_match('/PHONE/i', $row[4])) {$record_link = "$PHP_SELF?ADD=10000000000";}
+		if (preg_match('/CALLTIME/i', $row[4])) {$record_link = "$PHP_SELF?ADD=311111111&call_time_id=$row[6]";}
+		if (preg_match('/SHIFT/i', $row[4])) {$record_link = "$PHP_SELF?ADD=331111111&shift_id=$row[6]";}
+		if (preg_match('/CONFTEMPLATE/i', $row[4])) {$record_link = "$PHP_SELF?ADD=331111111111&template_id=$row[6]";}
+		if (preg_match('/CARRIER/i', $row[4])) {$record_link = "$PHP_SELF?ADD=341111111111&carrier_id=$row[6]";}
+		if (preg_match('/SERVER/i', $row[4])) {$record_link = "$PHP_SELF?ADD=311111111111&server_id=$row[6]";}
+		if (preg_match('/CONFERENCE/i', $row[4])) {$record_link = "$PHP_SELF?ADD=1000000000000";}
+		if (preg_match('/SYSTEM/i', $row[4])) {$record_link = "$PHP_SELF?ADD=311111111111111";}
+		if (preg_match('/CATEGOR/i', $row[4])) {$record_link = "$PHP_SELF?ADD=331111111111111";}
+		if (preg_match('/GROUPALIAS/i', $row[4])) {$record_link = "$PHP_SELF?ADD=33111111111&group_alias_id=$row[6]";}
 
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
@@ -31259,7 +31261,7 @@ if ($ADD==710000000000000)
 		echo "<td><font size=1> <a href=\"$PHP_SELF?ADD=720000000000000&category=$row[4]&stage=$row[6]\">$row[6]</a></td>";
 		echo "<td><font size=1> $row[8]</td>";
 		echo "<td><font size=1> $row[7]</td>";
-		echo "<td><font size=1> <a href=\"$PHP_SELF?$record_link\">GOTO</a></td>";
+		echo "<td><font size=1> <a href=\"$record_link\">GOTO</a></td>";
 		echo "</tr>\n";
 		$logs_printed .= "'$row[0]',";
 		$o++;
@@ -31315,6 +31317,7 @@ if ($ADD==720000000000000)
 			if (preg_match('/USER|AGENT/i', $row[4])) {$record_link = "$PHP_SELF?ADD=3&user=$row[6]";}
 			if (preg_match('/CAMPAIGN/i', $row[4])) {$record_link = "$PHP_SELF?ADD=31&campaign_id=$row[6]";}
 			if (preg_match('/LIST/i', $row[4])) {$record_link = "$PHP_SELF?ADD=311&list_id=$row[6]";}
+			if (preg_match('/CUSTOM_FIELDS/i', $row[4])) {$record_link = "./admin_lists_custom.php?action=MODIFY_CUSTOM_FIELDS&list_id=$row[6]";}
 			if (preg_match('/SCRIPT/i', $row[4])) {$record_link = "$PHP_SELF?ADD=3111111&script_id=$row[6]";}
 			if (preg_match('/FILTER/i', $row[4])) {$record_link = "$PHP_SELF?ADD=31111111&lead_filter_id=$row[6]";}
 			if (preg_match('/INGROUP/i', $row[4])) {$record_link = "$PHP_SELF?ADD=3111&group_id=$row[6]";}

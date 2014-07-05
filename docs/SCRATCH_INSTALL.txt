@@ -853,7 +853,7 @@ are running in it.
  13. Go to http://mtop.sourceforge.net to download the most recent version
    - to install this directly on the command line type:
 	- cd /usr/local
-	- wget http://superb-east.dl.sourceforge.net/sourceforge/mtop/mtop-0.6.6.tar.gz
+	- wget ftp://ftp.debian.nl/pub/freebsd/ports/distfiles/mtop-0.6.6.tar.gz
 	- gunzip mtop-0.6.6.tar.gz
 	- tar xvf mtop-0.6.6.tar
 	- cd mtop-0.6.6

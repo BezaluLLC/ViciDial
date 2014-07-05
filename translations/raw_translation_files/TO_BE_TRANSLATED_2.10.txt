@@ -21,6 +21,11 @@ If set to ENABLED then the agent will be able to click a link to stop the Wrap U
 You can use a Script in the system if you use the script id with WUSCRIPT in front of it, so if you wanted to use a script called agent_script, then you would put WUSCRIPTagent_script in this field||
 Wrap Up After Hotkey||
 If set to ENABLED and the campaign has hotkeys configured and the agent terminates a call with a hotkey, then the wrap up settings will be used after that call. Default is DISABLED||
+FIELD NOT ADDED||
+FIELD NOT MODIFIED||
+FIELD NOT DELETED||
+PLEASE GO BACK AND TRY AGAIN||
+For RADIO and SELECT field types, the default must be one of the options defined for the field or NULL||
 
 
 ########################## CHANGES TO EXISTING PHRASES IN ADMIN TRANSLATION
