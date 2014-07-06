@@ -57,6 +57,7 @@ $usergroups_font =	'BLACK';
 $scripts_font =		'BLACK';
 $filters_font =		'BLACK';
 $admin_font =		'BLACK';
+$qc_font =			'BLACK';
 $reports_font =		'BLACK';
 	$times_font =		'BLACK';
 	$phones_font =		'BLACK';
@@ -72,8 +73,6 @@ $reports_font =		'BLACK';
 	$cts_font = 	'BLACK';
 $subcamp_font =		'BLACK';
 
-### QC font and color variables
-require_once('qc/QC_admin_variables.php');
 ### comment this section out for colorful section headings
 $users_color =		'#E6E6E6';
 $campaigns_color =	'#E6E6E6';
@@ -84,6 +83,7 @@ $usergroups_color =	'#E6E6E6';
 $scripts_color =	'#E6E6E6';
 $filters_color =	'#E6E6E6';
 $admin_color =		'#E6E6E6';
+$qc_color =			'#E6E6E6';
 $reports_color =	'#E6E6E6';
 	$times_color =		'#C6C6C6';
 	$shifts_color =		'#C6C6C6';
@@ -3347,12 +3347,13 @@ else
 # 140621-2136 - Added DID pre-filter phone-group redirection and no-agent-ingroup redirection options
 # 140623-2147 - Added wrapup_bypass and script_message changes
 # 140625-1931 - Added wrapup_after_hotkey campaign option
+# 140706-0829 - Incorporated QC includes into code
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 8 to access this page the first time
 
-$admin_version = '2.10-446a';
-$build = '140625-1931';
+$admin_version = '2.10-447a';
+$build = '140706-0829';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3505,7 +3506,31 @@ else
 ##############################################
 # Include QC Agents with no other permission #
 ##############################################
-require_once('qc/QC_admin_include02.php');
+//Get QC User permissions
+$stmt="SELECT qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit from vicidial_users where user='$PHP_AUTH_USER' and user_level > 1 and active='Y' and qc_enabled='1';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
+$qc_auth=$row[0];
+//Not "qc_" as it will interfere with ADD=4A storage of modified user.
+if ($qc_auth=='1') 
+	{
+    $qcuser_level=$row[1];
+    $qcpass=$row[2];
+    $qcfinish=$row[3];
+    $qccommit=$row[4];
+	}
+//Modify menuing to allow qc users into the system (if they have no permission otherwise)
+//Copied Reports-Only user setup for QC-Only user (Poundteam QC setup)
+$qc_only_user=0;
+if ( ($qc_auth > 0) and ($auth < 1) )
+        {
+        if ($ADD != '881')
+			{
+			$ADD=100000000000000;
+		   }
+        $qc_only_user=1;
+        }
 
 $stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,callcard_admin,force_change_password,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,modify_contacts,modify_same_user_level,alter_admin_interface_options,modify_custom_dialplans from vicidial_users where user='$PHP_AUTH_USER';";
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -4080,8 +4105,8 @@ if ($ADD==180000000000)	{$hh='admin';	$sh='label';	echo "SCREEN LABELS LIST";}
 if ($ADD==190000000000)	{$hh='admin';	$sh='cts';	echo "CONTACTS LIST";}
 if ($ADD==1000000000000)	{$hh='admin';	$sh='conference';	echo "CONFERENCE LIST";}
 if ($ADD==10000000000000)	{$hh='admin';	$sh='conference';	echo "AGENT CONFERENCE LIST";}
-##QC
-require_once('qc/QC_admin_variables01.php');
+if ($ADD==100000000000000)	{$hh='qc';		echo "Quality Control";}
+if ($ADD==881)          {$hh='qc';			echo "Quality Control Campaign $campaign_id";}
 if ($ADD==550)			{$hh='users';		echo "Search Form";}
 if ($ADD==551)			{$hh='users';		echo "SEARCH PHONES";}
 if ($ADD==660)			{$hh='users';		echo "Search Results";}
@@ -10721,11 +10746,6 @@ if ($ADD==231111111111111)
 	}
 
 
-
-######################
-# ADD=241111111111111 adds the new qc status code to the system
-######################
-//Moved to qc/QC_status_codes_include.php include file
 
 
 
@@ -29253,15 +29273,126 @@ if ($ADD==331111111111111)
 	}
 
 
+######################
+# ADD=241111111111111 adds the new qc status code to the system
+######################
+if ($ADD==241111111111111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	$stmt="SELECT count(*) from vicidial_qc_codes where code='$code';";
+	$rslt=mysql_query($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	if ($row[0] > 0)
+		{echo "<br>QC STATUS CODE NOT ADDED - there is already a qc status code in the system with this name: $row[0]\n";}
+	else
+		{
+		if ( (strlen($code) < 1) or (strlen($code_name) < 2) )
+			{
+			echo "<br>QC STATUS CODE NOT ADDED - Please go back and look at the data you entered\n";
+			echo "<br>code must be between 1 and 8 characters in length\n";
+			echo "<br>code name must be between 2 and 30 characters in length\n";
+			}
+		else
+			{
+			echo "<br><B>QC STATUS CODE ADDED: $code_name - $code</B>\n";
+			if (isset($_POST["qc_category"])) {$qc_category=$_POST["qc_category"];}
+
+			$stmt="INSERT INTO vicidial_qc_codes (code,code_name,qc_result_type) values('$code','$code_name','$qc_category');";
+			$rslt=mysql_query($stmt, $link);
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='QCSTATUSES', event_type='ADD', record_id='$code', event_code='ADMIN ADD QC STATUS', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_query($stmt, $link);
+			}
+		}
+	$ADD=341111111111111;
+	}
 
 
-
-##QC
-require_once('qc/QC_status_codes_include.php');
 ######################
 # ADD=341111111111111 modify vicidial QC status code
 ######################
-//This section moved to include file as part of QC
+
+if ($ADD==341111111111111)
+	{
+	if ( ($LOGmodify_servers==1) and ($SSqc_features_active > 0) )
+		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=341111111111111";
+			$modify_footer_refresh=1;
+			}
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		echo "<br><center>\n";
+		echo "<b>QC STATUS CODES WITHIN THIS SYSTEM: &nbsp; $NWB#vicidial_qc_status_codes$NWE</b><br>\n";
+		echo "<TABLE width=600 cellspacing=3>\n";
+		echo "<tr><td>STATUS CODE</td><td>DESCRIPTION</td><td>QC CATEGORY</td><td>MODIFY/DELETE</td></tr>\n";
+
+		##### go through each QC status code
+		$stmt="SELECT count(*) from vicidial_qc_codes;";
+		$rslt=mysql_query($stmt, $link);
+		$rowx=mysqli_fetch_row($rslt);
+		if ($rowx[0] > 0)
+			{
+			$stmt="SELECT code,code_name,qc_result_type from vicidial_qc_codes order by code;";
+			$rslt=mysql_query($stmt, $link);
+			$statuses_to_print = mysql_num_rows($rslt);
+			$o=0;
+			while ($statuses_to_print > $o)
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$o++;
+
+				if (preg_match("/1$|3$|5$|7$|9$/i", $o))
+					{$bgcolor='bgcolor="#B9CBFD"';}
+				else
+					{$bgcolor='bgcolor="#9BB9FB"';}
+
+				echo "<tr $bgcolor><td><form action=$PHP_SELF method=POST>\n";
+				echo "<input type=hidden name=ADD value=441111111111111>\n";
+				echo "<input type=hidden name=stage value=modify>\n";
+				echo "<input type=hidden name=code value=\"$rowx[0]\">\n";
+				echo "<font size=2><B>$rowx[0]</B></td>\n";
+				echo "<td><input type=text name=code_name size=20 maxlength=30 value=\"$rowx[1]\"></td>\n";
+				echo "<td><font size=2><B>$rowx[2]</B></td>\n";
+				echo "<td align=center nowrap><font size=1><input type=submit name=submit value=MODIFY> &nbsp; &nbsp; &nbsp; &nbsp; \n";
+				echo " &nbsp; \n";
+
+				if (preg_match("/^B$|^NA$|^DNC$|^NA$|^DROP$|^INCALL$|^QUEUE$|^NEW$/i",$rowx[0]))
+					{
+					echo "<DEL>DELETE</DEL>\n";
+					}
+				else
+					{
+					echo "<a href=\"$PHP_SELF?ADD=441111111111111&code=$rowx[0]&stage=delete\">DELETE</a>\n";
+					}
+				echo "</form></td></tr>\n";
+				}
+			}
+		echo "</table>\n";
+
+		echo "<br>ADD NEW QC STATUS CODE<BR><form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=241111111111111>\n";
+		echo "Status: <input type=text name=code size=9 maxlength=8> &nbsp; \n";
+		echo "Description: <input type=text name=code_name size=25 maxlength=30> \n";
+		echo "QC Category: <select name=qc_category><option selected value=''>-Choose-</option><option value='PASS'>PASS</option><option value='FAIL'>FAIL</option><option value='CANCEL'>CANCEL</option><option value='COMMIT'>COMMIT</option><BR>\n";
+		echo "<input type=submit name=submit value=ADD><BR>\n";
+
+		echo "</FORM><br>\n";
+		}
+	else
+		{
+		echo "You do not have permission to view this page\n";
+		exit;
+		}
+	}
+
 
 ######################
 # ADD=550 user search form
@@ -31092,7 +31223,107 @@ if ($ADD==10000000000000)
 ######################
 # ADD=100000000000000 display all qc campaigns
 ######################
-require_once('qc/QC_admin_include01.php');
+if (($ADD==100000000000000) && ($qc_auth=='1')) 
+	{
+    echo "<TABLE><TR><TD>\n";
+    echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+//SELECT campaign_id,campaign_name  from vicidial_campaigns where active = 'Y' and qc_enabled='Y' order by campaign_name
+    $stmt="SELECT campaign_id,campaign_name, qc_statuses from vicidial_campaigns where active = 'Y' and qc_enabled='Y' order by campaign_name";
+//	echo $stmt="SELECT conf_exten,server_ip,extension from vicidial_conferences order by conf_exten";
+    $rslt=mysql_to_mysqli($stmt, $link);
+    $vicidialconf_to_print = mysqli_num_rows($rslt);
+
+    echo "<br>VICIDIAL QUALITY LISTINGS:\n";
+    echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+    echo "<tr bgcolor=black>";
+    echo "<td><font size=1 color=white align=left><B>CAMPAIGN ID</B></td>";
+    echo "<td><font size=1 color=white><B>CAMPAIGN NAME</B></td>";
+    echo "<td><font size=1 color=white><B>QC STATUSES</B></td>";
+    echo "<td align=center><font size=1 color=white><B>MODIFY</B></td></tr>\n";
+
+    $o=0;
+    while ($vicidialconf_to_print > $o) 
+		{
+        $row=mysqli_fetch_row($rslt);
+		if (preg_match("/1$|3$|5$|7$|9$/i", $o))
+			{
+            $bgcolor='bgcolor="#B9CBFD"';
+			}
+        else 
+			{
+            $bgcolor='bgcolor="#9BB9FB"';
+			}
+        echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=881&campaign_id=$row[0]\">$row[0]</a></td>";
+        echo "<td><font size=1> $row[1]</td>";
+        echo "<td><font size=1> $row[2]</td>";
+        echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=31&campaign_id=$row[0]\">MODIFY</a></td></tr>\n";
+        $o++;
+		}
+    echo "</TABLE></center>\n";
+	}
+
+
+######################
+# ADD=881 VIEW one qc campaign
+######################
+if (($ADD==881) && ($qc_auth=='1')) 
+	{
+    echo "<TABLE><TR><TD>\n";
+    echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+    $stmt="SELECT campaign_id,campaign_name, qc_statuses from vicidial_campaigns where active = 'Y' and qc_enabled='Y' and campaign_id='$campaign_id' limit 1";
+    $rslt=mysql_to_mysqli($stmt, $link);
+    $vicidialconf_to_print = mysqli_num_rows($rslt);
+    $o=0;
+    while ($vicidialconf_to_print > $o) 
+		{
+        $row=mysqli_fetch_row($rslt);
+		$o++;
+		}
+    $qc_status_list=substr($row[2],0,strlen($row[2])-2);
+
+    echo "<br>$campaign_id - {$row[1]} - Quality Control Queue<br>QC statuses: $qc_status_list\n";
+
+    $qc_statuses=explode(' ',$qc_status_list);
+        echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+    foreach ( $qc_statuses as $qc_status ) 
+		{
+        $stmt="SELECT lead_id,first_name,last_name,modify_date,user from vicidial_list inner join vicidial_lists on vicidial_list.list_id=vicidial_lists.list_id where campaign_id='$campaign_id' and status='$qc_status' order by status, modify_date";
+        $rslt=mysql_to_mysqli($stmt, $link);
+        $vicidialconf_to_print = mysqli_num_rows($rslt);
+        $o=0;
+        while ($vicidialconf_to_print > $o) 
+			{
+            if($o==0)
+				{
+                echo "<tr bgcolor=black>";
+                echo "<td><font size=1 color=white align=left><B>$qc_status ($vicidialconf_to_print)</B></td>";
+                echo "<td><font size=1 color=white align=left><B>LEAD ID</B></td>";
+                echo "<td><font size=1 color=white><B>NAME</B></td>";
+                echo "<td><font size=1 color=white><B>Last Modified</B></td>";
+                echo "<td align=center><font size=1 color=white><B>UserID</B></td></tr>\n";
+				}
+            $row=mysqli_fetch_row($rslt);
+			if (preg_match("/1$|3$|5$|7$|9$/i", $o))
+				{
+                $bgcolor='bgcolor="#B9CBFD"';
+			    }
+            else
+				{
+                $bgcolor='bgcolor="#9BB9FB"';
+				}
+            echo "<tr $bgcolor><td><font size=1>&nbsp;</td>";
+            echo "<td><font size=1> $row[0]</td>";
+            $lead_name=trim($row[1].' '.$row[2]);
+            $lead_nameENC=urlencode($lead_name);
+            if (strlen($lead_name)<1) $lead_name='No Name';
+            echo "<td><font size=1><a href=\"qc_modify_lead.php?lead_id=$row[0]&campaign_id=$campaign_id&lead_name=$lead_nameENC\">$lead_name</a></td>";
+            echo "<td><font size=1> $row[3]</td>";
+            echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=3&user=$row[4]\">$row[4]</a></td></tr>\n";
+            $o++;
+			}
+		}
+	echo "</TABLE></center>\n";
+	}
 
 
 ######################

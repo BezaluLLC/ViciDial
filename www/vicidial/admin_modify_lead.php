@@ -1,5 +1,5 @@
 <?php
-# admin_modify_lead.php   version 2.8
+# admin_modify_lead.php   version 2.10
 # 
 # ViciDial database administration modify lead in vicidial_list
 # admin_modify_lead.php
@@ -59,6 +59,7 @@
 # 130926-2053 - Added option for viewing/modifying vicidial_list_archive leads
 # 140125-1100 - Fixed issue with Callback records having no campaign_id
 # 140304-2034 - Fixed issue with special characters in standard data fields
+# 140706-0827 - Incorporated QC includes into code
 #
 
 require("dbconnect_mysqli.php");
@@ -1494,8 +1495,37 @@ else
 			{
 			echo "<a href=\"./admin.php?ADD=720000000000000&stage=$lead_id&category=LEADS\">Click here to see Lead Modify changes to this lead</a>\n";
 			}
-                //Display link to QC if user has QC permissions
-                require('./qc/QC_admin_modify_lead_include.php');
+		//Display link to QC if user has QC permissions
+		//Get QC User permissions
+		$stmt="SELECT qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit from vicidial_users where user='$PHP_AUTH_USER' and user_level > 1 and active='Y' and qc_enabled='1';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$qc_auth=$row[0];
+		//Not "qc_" as it will interfere with ADD=4A storage of modified user.
+		if ($qc_auth=='1') 
+			{
+			$qcuser_level=$row[1];
+			$qcpass=$row[2];
+			$qcfinish=$row[3];
+			$qccommit=$row[4];
+			}
+		//Modify menuing to allow qc users into the system (if they have no permission otherwise)
+		//Copied Reports-Only user setup for QC-Only user (Poundteam QC setup)
+		$qc_only_user=0;
+		if ( ($qc_auth > 0) and ($auth < 1) )
+			{
+			if ($ADD != '881')
+				{
+				$ADD=100000000000000;
+				}
+			$qc_only_user=1;
+			}
+
+		if ($qcuser_level > 0)
+			{
+			echo "<br><br><a href=\"qc_modify_lead.php?lead_id=$lead_id\">Click here to QC Modify this lead</a>\n";
+			}
 		echo "</center>\n";
 		}
 	}

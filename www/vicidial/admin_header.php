@@ -45,6 +45,7 @@
 # 130615-2314 - Changed Reports only and QC only headers
 # 130824-2324 - Changed to mysqli PHP functions
 # 140126-1022 - Added VMAIL_NO_INST option
+# 140706-0828 - Incorporated QC includes into code
 #
 
 
@@ -60,7 +61,14 @@ if($short_header)
 	?>
 	<TD> &nbsp; <A HREF="admin.php?ADD=0A" ALT="Users"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Users</B></FONT></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=10" ALT="Campaigns"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Campaigns</B></FONT></A> &nbsp; </TD>
-        <?php include 'qc/QC_header_include02.php'; ?>
+	<?php
+	if (($SSqc_features_active=='1') && ($qc_auth=='1')) 
+		{
+		?>
+		<TD> &nbsp; <A HREF="admin.php?ADD=100000000000000" ALT="Quality Control"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Quality Control</B></FONT></A> &nbsp; </TD>
+		<?php
+		}
+	?>
 	<TD> &nbsp; <A HREF="admin.php?ADD=100" ALT="Lists"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Lists</B></FONT></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=1000000" ALT="Scripts"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Scripts</B></FONT></A> &nbsp; </TD>
 	<TD> &nbsp; <A HREF="admin.php?ADD=10000000" ALT="Filters"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Filters</B></FONT></A> &nbsp; </TD>
@@ -84,7 +92,12 @@ if($short_header)
 			}
 		else
 			{
-			include 'qc/QC_header_include02.php';
+			if (($SSqc_features_active=='1') && ($qc_auth=='1')) 
+				{
+				?>
+				<TD> &nbsp; <A HREF="admin.php?ADD=100000000000000" ALT="Quality Control"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Quality Control</B></FONT></A> &nbsp; </TD>
+				<?php
+				}
 			}
 		}
 	?>
@@ -134,7 +147,9 @@ if ($hh=='admin')
 if ($hh=='reports') 
 	{$reports_hh="bgcolor=\"$reports_color\""; $reports_fc="$reports_font"; $reports_bold="$header_selected_bold";}
 	else {$reports_hh=''; $reports_fc='WHITE'; $reports_bold="$header_nonselected_bold";}
-include('qc/QC_header_include01.php');
+if ($hh=='qc')
+	{$qc_hh="bgcolor=\"$qc_color\""; $qc_fc="$qc_font"; $qc_bold="$header_selected_bold";}
+	else {$qc_hh=''; $qc_fc='WHITE'; $qc_bold="$header_nonselected_bold";}
 
 echo "</title>\n";
 echo "<script language=\"Javascript\">\n";
@@ -1239,8 +1254,37 @@ $SSlevel_8_disable_add =	$row[5];
 			<?php
 			}
 		}
+
+	if (($SSqc_features_active=='1') && ($qc_auth=='1')) 
+		{ ?>
+
+	<TR>
+		<TD <?php echo $qc_hh ?>>
+			<a href="<?php echo $ADMIN ?>?ADD=100000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $qc_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $qc_bold ?> Quality Control </FONT></a>
+		</TD>
+	</TR>
+	<?php
+	if (strlen($qc_hh) > 1) 
+			{
+		?>
+	<TR BGCOLOR=<?php echo $qc_color ?>>
+		<TD ALIGN=LEFT> &nbsp;
+			<a href="<?php echo $ADMIN ?>?ADD=100000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show QC Campaigns </FONT></a>
+		</TD>
+	</TR>
+	<TR BGCOLOR=<?php echo $qc_color ?>>
+		<TD ALIGN=LEFT> &nbsp;
+			<a href="<?php echo $ADMIN ?>?ADD=100000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Enter QC Queue </FONT></a>
+		</TD>
+	</TR>
+	<TR BGCOLOR=<?php echo $qc_color ?>>
+		<TD ALIGN=LEFT> &nbsp;
+			<a href="<?php echo $ADMIN ?>?ADD=341111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Modify QC Codes </FONT></a>
+		</TD>
+	</TR>
+		<?php }
+		}
 	?>
-        <?php include 'qc/QC_header_include.php'; ?>
 	<!-- SCRIPTS NAVIGATION -->
 	<TR><TD <?php echo $scripts_hh ?>>
 	<a href="<?php echo $ADMIN ?>?ADD=1000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $scripts_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $scripts_bold ?> Scripts </a>
@@ -1523,7 +1567,35 @@ $SSlevel_8_disable_add =	$row[5];
 			}
 		else
 			{
-			include 'qc/QC_header_include.php';
+			if (($SSqc_features_active=='1') && ($qc_auth=='1')) 
+				{ ?>
+
+			<TR>
+				<TD <?php echo $qc_hh ?>>
+					<a href="<?php echo $ADMIN ?>?ADD=100000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $qc_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $qc_bold ?> Quality Control </FONT></a>
+				</TD>
+			</TR>
+			<?php
+			if (strlen($qc_hh) > 1) 
+					{
+				?>
+			<TR BGCOLOR=<?php echo $qc_color ?>>
+				<TD ALIGN=LEFT> &nbsp;
+					<a href="<?php echo $ADMIN ?>?ADD=100000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show QC Campaigns </FONT></a>
+				</TD>
+			</TR>
+			<TR BGCOLOR=<?php echo $qc_color ?>>
+				<TD ALIGN=LEFT> &nbsp;
+					<a href="<?php echo $ADMIN ?>?ADD=100000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Enter QC Queue </FONT></a>
+				</TD>
+			</TR>
+			<TR BGCOLOR=<?php echo $qc_color ?>>
+				<TD ALIGN=LEFT> &nbsp;
+					<a href="<?php echo $ADMIN ?>?ADD=341111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Modify QC Codes </FONT></a>
+				</TD>
+			</TR>
+				<?php }
+				}
 			}
 		}
 	?>

@@ -75,6 +75,8 @@ OTHER CHANGES:
 
 7. Added ability to use Wrap-Up messages with calls terminated through Hotkeys
 
+8. Integrated all QC code into standard admin code, removing includes as well
+
 
 
 
