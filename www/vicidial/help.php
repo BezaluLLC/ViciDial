@@ -22,6 +22,7 @@
 # 140623-2220 - Added wrapup_bypass and wrapup_message change to allow script use
 # 140625-1934 - Added wrapup_after_hotkey
 # 140705-0928 - Added custom list fields help section
+# 140706-0935 - Added callback_time_24hour
 #
 
 
@@ -4407,6 +4408,11 @@ FR_SPAC 00 00 00 00 00 - France space separated phone number<BR>
 <A NAME="settings-agentonly_callback_campaign_lock">
 <BR>
 <B>Agent Only Callback Campaign Lock -</B> This option defines whether AGENTONLY callbacks are locked to the campaign that the agent originally created them under. Setting this to 1 means that the agent can only dial them from the campaign they were set under, 0 means that the agent can access them no matter what campaign they are logged into. Default is 1.
+
+<BR>
+<A NAME="settings-callback_time_24hour">
+<BR>
+<B>Callback Time 24 Hours -</B> This option defines whether the agent sees 12 hour time with AM PM options or 24 hour time on the Callback setting screen in the agent interface. Default is 0 for disabled.
 
 <BR>
 <A NAME="settings-sounds_central_control_active">

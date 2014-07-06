@@ -21,3 +21,7 @@ UPDATE system_settings SET db_schema_version='1383',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD wrapup_after_hotkey ENUM('DISABLED','ENABLED') default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1384',db_schema_update_date=NOW() where db_schema_version < 1384;
+
+ALTER TABLE system_settings ADD callback_time_24hour ENUM('0','1') default '0';
+
+UPDATE system_settings SET db_schema_version='1385',db_schema_update_date=NOW() where db_schema_version < 1385;

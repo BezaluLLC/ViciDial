@@ -26,6 +26,8 @@ FIELD NOT MODIFIED||
 FIELD NOT DELETED||
 PLEASE GO BACK AND TRY AGAIN||
 For RADIO and SELECT field types, the default must be one of the options defined for the field or NULL||
+Callback Time 24 Hours||
+This option defines whether the agent sees 12 hour time with AM PM options or 24 hour time on the Callback setting screen in the agent interface. Default is 0 for disabled||
 
 
 ########################## CHANGES TO EXISTING PHRASES IN ADMIN TRANSLATION

@@ -439,10 +439,11 @@
 # 140626-0757 - Added wrapup_after_hotkey setting
 # 140630-0921 - Added the FSCREEN option to Wrapup message to allow for message only display
 # 140703-1658 - Several logging fixes, mostly related to manual dial calls
+# 140706-0932 - Added callback_time_24hour for callback setting screen
 #
 
-$version = '2.10-410c';
-$build = '140703-1658';
+$version = '2.10-411c';
+$build = '140706-0932';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=80;
 $one_mysql_log=0;
@@ -527,7 +528,7 @@ $random = (rand(1000000, 9999999) + 10000000);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -551,6 +552,7 @@ if ($qm_conf_ct > 0)
 	$SSpllb_grouping_limit =		$row[13];
 	$qc_enabled =					$row[14];
 	$email_enabled =				$row[15];
+	$callback_time_24hour =			$row[16];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -13595,35 +13597,66 @@ function phone_number_format(formatphone) {
 			var CallBackTimEMinuteS = CallBackTimEMinuteSFORM[CallBackTimEMinuteSFORM.selectedIndex].text;
 		//	var CallBackTimEMinuteSIDX = CallBackTimEMinuteSFORM.value;
 
+		<?php
+		if ($callback_time_24hour < 1)
+		{
+		?>
 			var CallBackTimEAmpMFORM = document.getElementById('CBT_ampm');
 			var CallBackTimEAmpM = CallBackTimEAmpMFORM[CallBackTimEAmpMFORM.selectedIndex].text;
 		//	var CallBackTimEAmpMIDX = CallBackTimEAmpMFORM.value;
-
+		<?php
+		}
+		?>
 			CallBackLeadStatus = document.vicidial_form.DispoSelection.value;
 
 		//	alert (CallBackTimEHouR + "|" + CallBackTimEHouRFORM + "|" + CallBackTimEHouRIDX + "|");
 		//	alert (CallBackTimEMinuteS + "|" + CallBackTimEMinuteSFORM + "|" + CallBackTimEMinuteSIDX + "|");
 		//	alert (CallBackTimEAmpM + "|" + CallBackTimEAmpMFORM + "|" + CallBackTimEAmpMIDX + "|");
 
-			CallBackTimEHouRFORM.selectedIndex = '0';
 			CallBackTimEMinuteSFORM.selectedIndex = '0';
+		<?php
+		if ($callback_time_24hour < 1)
+		{
+		?>
+			CallBackTimEHouRFORM.selectedIndex = '0';
 			CallBackTimEAmpMFORM.selectedIndex = '1';
-	<?php
+		<?php
+		}
+		else
+		{
+		?>
+			CallBackTimEHouRFORM.selectedIndex = '11';
+		<?php
+		}
 	}
 	else
 	{
 	?>
 			CallBackTimEHouR = document.vicidial_form.CBT_hour.value;
 			CallBackTimEMinuteS = document.vicidial_form.CBT_minute.value;
+		<?php
+		if ($callback_time_24hour < 1)
+		{
+		?>
 			CallBackTimEAmpM = document.vicidial_form.CBT_ampm.value;
-			CallBackLeadStatus = document.vicidial_form.DispoSelection.value;
-
-			document.vicidial_form.CBT_hour.value = '01';
-			document.vicidial_form.CBT_minute.value = '00';
 			document.vicidial_form.CBT_ampm.value = 'PM';
+			document.vicidial_form.CBT_hour.value = '01';
+		<?php
+		}
+		else
+		{
+		?>
+			document.vicidial_form.CBT_hour.value = '12';
+		<?php
+		}
+		?>
+			CallBackLeadStatus = document.vicidial_form.DispoSelection.value;
+			document.vicidial_form.CBT_minute.value = '00';
 
 	<?php
 	}
+	if ($callback_time_24hour < 1)
+		{
 	?>
 			if (CallBackTimEHouR == '12')
 				{
@@ -13640,6 +13673,9 @@ function phone_number_format(formatphone) {
 					CallBackTimEHouR = (CallBackTimEHouR + 12);
 					}
 				}
+		<?php
+		}
+		?>
 			CallBackDatETimE = CallBackDatEForM + " " + CallBackTimEHouR + ":" + CallBackTimEMinuteS + ":00";
 
 			if (document.vicidial_form.CallBackOnlyMe.checked==true)
@@ -15771,6 +15807,14 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 	<span id="CallBackTimEPrinT"></span> &nbsp; &nbsp;
 	Hour: 
     <select size="1" name="CBT_hour" id="CBT_hour">
+	<?php
+	if ($callback_time_24hour > 0)
+	{
+	?>
+	<option>00</option>
+	<?php
+	}
+	?>
 	<option>01</option>
 	<option>02</option>
 	<option>03</option>
@@ -15783,6 +15827,24 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 	<option>10</option>
 	<option>11</option>
 	<option>12</option>
+	<?php
+	if ($callback_time_24hour > 0)
+	{
+	?>
+	<option>13</option>
+	<option>14</option>
+	<option>15</option>
+	<option>16</option>
+	<option>17</option>
+	<option>18</option>
+	<option>19</option>
+	<option>20</option>
+	<option>21</option>
+	<option>22</option>
+	<option>23</option>
+	<?php
+	}
+	?>
 	</select> &nbsp;
 	Minutes: 
     <select size="1" name="CBT_minute" id="CBT_minute">
@@ -15800,10 +15862,18 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 	<option>55</option>
 	</select> &nbsp;
 
+	<?php
+	if ($callback_time_24hour < 1)
+	{
+	?>
     <select size="1" name="CBT_ampm" id="CBT_ampm">
 	<option>AM</option>
 	<option selected>PM</option>
-    </select> &nbsp;<br />
+    </select>
+	<?php
+	}
+	?>
+	&nbsp;<br />
 	<?php
 	if ($agentonly_callbacks)
         {echo "<input type=\"checkbox\" name=\"CallBackOnlyMe\" id=\"CallBackOnlyMe\" size=\"1\" value=\"0\" /> MY CALLBACK ONLY <br />";}
