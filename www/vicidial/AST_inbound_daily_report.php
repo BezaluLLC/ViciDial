@@ -380,14 +380,16 @@ $MAIN.="</script>\n";
 
 $MAIN.="<SELECT SIZE=5 NAME=group[] multiple>\n";
 $MAIN.="<option $all_selected value=\"--ALL--\">--ALL INGROUPS--</option>\n";
-	$o=0;
+
+$o=0;
 while ($groups_to_print > $o)
 	{
 	$selected="";
-	for ($i=0; $i<$groups_selected; $i++) {
-		echo "<!-- $groups[$o] == $group[$i] //-->\n";
+	for ($i=0; $i<$groups_selected; $i++) 
+		{
+		if ($file_download < 1) {echo "<!-- $groups[$o] == $group[$i] //-->\n";}
 		if ($groups[$o] == $group[$i]) {$selected="selected";}
-	}
+		}
 	$MAIN.="<option $selected value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";
 	$o++;
 	}
