@@ -17049,10 +17049,10 @@ if ($ADD==661111111111)
 		}
 	else
 		{
-		$stmt="UPDATE vicidial_music_on_hold SET remove='Y' where moh_id='$moh_id';";
+		$stmt="UPDATE vicidial_music_on_hold SET remove='Y' where moh_id='$moh_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmtA="DELETE from vicidial_music_on_hold_files where moh_id='$moh_id' $LOGadmin_viewable_groupsSQL;";
+		$stmtA="DELETE from vicidial_music_on_hold_files where moh_id='$moh_id';";
 		$rslt=mysql_to_mysqli($stmtA, $link);
 
 		### LOG INSERTION Admin Log Table ###

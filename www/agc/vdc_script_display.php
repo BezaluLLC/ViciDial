@@ -25,10 +25,11 @@
 # 140429-2034 - Added TABLEper_call_notes display script variable
 # 140623-2114 - Added script_override variable
 # 140630-1023 - Added full_script_height script variable
+# 140710-2143 - Added session_name variable
 #
 
-$version = '2.10-19';
-$build = '140630-1023';
+$version = '2.10-20';
+$build = '140710-2143';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -208,6 +209,8 @@ if (isset($_GET["called_count"]))			{$called_count=$_GET["called_count"];}
 	elseif (isset($_POST["called_count"]))	{$called_count=$_POST["called_count"];}
 if (isset($_GET["script_override"]))			{$script_override=$_GET["script_override"];}
 	elseif (isset($_POST["script_override"]))	{$script_override=$_POST["script_override"];}
+if (isset($_GET["session_name"]))			{$session_name=$_GET["session_name"];}
+	elseif (isset($_POST["session_name"]))	{$session_name=$_POST["session_name"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -251,6 +254,7 @@ if ($non_latin < 1)
 	$length_in_sec = preg_replace("/[^0-9]/","",$length_in_sec);
 	$phone_code = preg_replace("/[^0-9]/","",$phone_code);
 	$phone_number = preg_replace("/[^0-9]/","",$phone_number);
+	$session_name=preg_replace("/[^-_0-9a-zA-Z]/","",$session_name);
 	}
 else
 	{
@@ -412,6 +416,7 @@ if (preg_match("/iframe\ssrc/i",$script_text))
 	$did_pattern = preg_replace('/\s/i','+',$did_pattern);
 	$did_description = preg_replace('/\s/i','+',$did_description);
 	$called_count = preg_replace('/\s/i','+',$called_count);
+	$session_name = preg_replace('/\s/i','+',$session_name);
 	$web_vars = preg_replace('/\s/i','+',$web_vars);
 	}
 
@@ -500,6 +505,7 @@ $script_text = preg_replace('/--A--entry_list_id--B--/i',"$entry_list_id",$scrip
 $script_text = preg_replace('/--A--call_id--B--/i',"$call_id",$script_text);
 $script_text = preg_replace('/--A--user_group--B--/i',"$user_group",$script_text);
 $script_text = preg_replace('/--A--called_count--B--/i',"$called_count",$script_text);
+$script_text = preg_replace('/--A--session_name--B--/i',"$session_name",$script_text);
 $script_text = preg_replace('/--A--web_vars--B--/i',"$web_vars",$script_text);
 
 if ($CF_uses_custom_fields=='Y')
