@@ -721,7 +721,7 @@ safe_harbor_exten VARCHAR(20)  default '8307',
 display_dialable_count ENUM('Y','N') default 'Y',
 wrapup_seconds SMALLINT(3) UNSIGNED default '0',
 wrapup_message VARCHAR(255) default 'Wrapup Call',
-closer_campaigns TEXT default '',
+closer_campaigns TEXT,
 use_internal_dnc ENUM('Y','N','AREACODE') default 'N',
 allcalls_delay SMALLINT(3) UNSIGNED default '0',
 omit_phone_code ENUM('Y','N') default 'N',
@@ -747,7 +747,7 @@ list_order_mix VARCHAR(20) default 'DISABLED',
 campaign_allow_inbound ENUM('Y','N') default 'N',
 manual_dial_list_id BIGINT(14) UNSIGNED default '998',
 default_xfer_group VARCHAR(20) default '---NONE---',
-xfer_groups  TEXT default '',
+xfer_groups TEXT,
 queue_priority TINYINT(2) default '50',
 drop_inbound_group VARCHAR(20) default '---NONE---',
 qc_enabled ENUM('Y','N') default 'N',
@@ -1293,7 +1293,7 @@ ct_friday_start SMALLINT(4) unsigned default '0',
 ct_friday_stop SMALLINT(4) unsigned default '0',
 ct_saturday_start SMALLINT(4) unsigned default '0',
 ct_saturday_stop SMALLINT(4) unsigned default '0',
-ct_state_call_times TEXT default '',
+ct_state_call_times TEXT,
 default_afterhours_filename_override VARCHAR(255) default '',
 sunday_afterhours_filename_override VARCHAR(255) default '',
 monday_afterhours_filename_override VARCHAR(255) default '',
@@ -1303,7 +1303,7 @@ thursday_afterhours_filename_override VARCHAR(255) default '',
 friday_afterhours_filename_override VARCHAR(255) default '',
 saturday_afterhours_filename_override VARCHAR(255) default '',
 user_group VARCHAR(20) default '---ALL---',
-ct_holidays TEXT default ''
+ct_holidays TEXT
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_state_call_times (
@@ -1328,7 +1328,7 @@ sct_friday_stop SMALLINT(4) unsigned default '0',
 sct_saturday_start SMALLINT(4) unsigned default '0',
 sct_saturday_stop SMALLINT(4) unsigned default '0',
 user_group VARCHAR(20) default '---ALL---',
-ct_holidays TEXT default ''
+ct_holidays TEXT
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaign_stats (
