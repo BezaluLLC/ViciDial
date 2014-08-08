@@ -22,6 +22,7 @@
 # 140108-0742 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 140502-1208 - Added 9am-11pm option
+# 140808-1036 - Added server breakdown section
 #
 
 $startMS = microtime();
@@ -46,9 +47,9 @@ if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 if (isset($_GET["DB"]))						{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))			{$DB=$_POST["DB"];}
-if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
+if (isset($_GET["file_download"]))			{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
-if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
+if (isset($_GET["report_display_type"]))			{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
@@ -596,18 +597,20 @@ else
 
 
 	### GRAB ALL RECORDS WITHIN RANGE FROM THE DATABASE ###
-	$stmt="select UNIX_TIMESTAMP(call_date),extension from vicidial_did_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  did_id IN($group_SQL);";
+	$stmt="select UNIX_TIMESTAMP(call_date),extension,server_ip from vicidial_did_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and did_id IN($group_SQL);";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
 	$records_to_grab = mysqli_num_rows($rslt);
 	$i=0;
 	$extension[0]='';
+	$did_server_ip[0]='';
 	while ($i < $records_to_grab)
 		{
 		$row=mysqli_fetch_row($rslt);
 		$dt[$i] =			0;
 		$ut[$i] =			($row[0] - $SQepochDAY);
 		$extension[$i] =	$row[1];
+		$did_server_ip[$i] =$row[2];
 		while($ut[$i] >= 86400) 
 			{
 			$ut[$i] = ($ut[$i] - 86400);
@@ -715,7 +718,6 @@ else
 		$ASCII_text.="+------------------------------------------------------------------+------------+\n";
 		$CSV_text1.="\"\",\"\",\"TOTALS\",\"$FtotCALLS\"\n";
 		#$MAIN.=$GRAPH;
-
 		}
 
 
@@ -762,6 +764,85 @@ else
 		$j++;
 		}
 
+
+
+	###################################################
+	### TOTALS SERVER IP SUMMARY SECTION ###
+	if (strlen($did_server_ip[0]) > 0)
+		{
+		$ASCII_text.="Server Summary:\n";
+		$ASCII_text.="+----------------------------+------------+\n";
+		$ASCII_text.="| SERVER                     | CALLS      |\n";
+		$ASCII_text.="+----------------------------+------------+\n";
+
+		$CSV_text1.="\"Server Summary:\"\n";
+		$CSV_text1.="\"Server\",\"CALLS\"\n";
+
+		$GRAPH_text.="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"Server Summary\" class=\"horizontalgraph\">\n";
+		$GRAPH_text.="  <caption align=\"top\">Server Summary:</caption>\n";
+		$GRAPH_text.="<tr>\n";
+		$GRAPH_text.="<th class=\"thgraph\" scope=\"col\">SERVER</th>\n";
+		$GRAPH_text.="<th class=\"thgraph\" scope=\"col\">CALLS</th>\n";
+		$GRAPH_text.="</tr>\n";
+
+
+		$SVstats_array = array_group_count($did_server_ip, 'desc');
+		$SVstats_array_ct = count($SVstats_array);
+
+		$d=0;
+		$max_calls=1;
+		while ($d < $SVstats_array_ct)
+			{
+			$stat_description =		' *** default *** ';
+			$stat_route =			$default_route;
+
+			$stat_record_array = explode(' ',$SVstats_array[$d]);
+			$stat_count = ($stat_record_array[0] + 0);
+			$stat_pattern = $stat_record_array[1];
+			if ($stat_count>$max_calls) {$max_calls=$stat_count;}
+			$SVgraph_stats[$d][0]=$stat_count;
+			$SVgraph_stats[$d][1]=$stat_pattern;
+
+			$stmt="select server_id from servers where server_ip='$stat_pattern';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$details_to_grab = mysqli_num_rows($rslt);
+			if ($details_to_grab > 0)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$server_id =		$row[0];
+				}
+
+			$SVtotCALLS =		($SVtotCALLS + $stat_count);
+			$stat_pattern =		sprintf("%-26s", "$stat_pattern $server_id");
+			$stat_count =		sprintf("%10s", $stat_count);
+
+			$CSV_text1.="\"$stat_pattern\",\"$stat_count\"\n";
+			$ASCII_text.="| $stat_pattern | $stat_count |\n";
+			$d++;
+			}
+
+			for ($d=0; $d<count($SVgraph_stats); $d++) 
+				{
+				if ($d==0) {$class=" first";} else if (($d+1)==count($SVgraph_stats)) {$class=" last";} else {$class="";}
+				$GRAPH_text.="  <tr>\n";
+				$GRAPH_text.="	<td class=\"chart_td$class\">".$SVgraph_stats[$d][1]."</td>\n";
+				$GRAPH_text.="	<td nowrap class=\"chart_td value$class\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$SVgraph_stats[$d][0], $max_calls))."\" height=\"16\" />".$SVgraph_stats[$d][0]."</td>\n";
+				$GRAPH_text.="  </tr>\n";
+				}
+			$GRAPH_text.="  <tr>\n";
+			$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">TOTAL CALLS:</th>\n";
+			$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">".trim($SVtotCALLS)."</th>\n";
+			$GRAPH_text.="  </tr>\n";
+			$GRAPH_text.="</table><PRE>\n";
+
+			$FtotCALLS =	sprintf("%10s", $SVtotCALLS);
+
+		$ASCII_text.="+----------------------------+------------+\n";
+		$ASCII_text.="|                     TOTALS | $FtotCALLS |\n";
+		$ASCII_text.="+----------------------------+------------+\n";
+		$CSV_text1.="TOTALS\",\"$FtotCALLS\"\n";
+		#$MAIN.=$GRAPH;
+		}
 
 
 
@@ -1188,4 +1269,3 @@ $rslt=mysql_to_mysqli($stmt, $link);
 
 
 ?>
-
