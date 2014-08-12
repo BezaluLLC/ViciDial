@@ -35,6 +35,7 @@
 # 140126-1138 - Added VMAIL_NO_INST options
 # 140404-0738 - Added DNC filter options and URL filter DID redirect option
 # 140622-0240 - Added no-agent in-group redirect and pre-filter phone group redirect features
+# 140811-2151 - Added ability to filter by DNC areacodes if filter_inbound_number set to a DNC option
 #
 
 $script = 'agi-DID_route.agi';
@@ -508,10 +509,13 @@ if ($filter_inbound_number =~ /GROUP|URL|DNC_INTERNAL|DNC_CAMPAIGN/)
 			$filter_match_found =	$aryA[0];
 			}
 		$sthA->finish();
+		if ($AGILOG) {$agi_string = "GROUP: |$filter_match_found|$stmtA|";	&agi_output;}
 		}
 	elsif ($filter_inbound_number =~ /DNC_INTERNAL/)
 		{
-		$stmtA = "SELECT count(*) FROM vicidial_dnc where phone_number='$callerid';";
+		$alt_areacode = substr($callerid, 0, 3);
+		$alt_areacode .= "XXXXXXX";
+		$stmtA = "SELECT count(*) FROM vicidial_dnc where phone_number IN('$callerid','$alt_areacode');";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -521,10 +525,13 @@ if ($filter_inbound_number =~ /GROUP|URL|DNC_INTERNAL|DNC_CAMPAIGN/)
 			$filter_match_found =	$aryA[0];
 			}
 		$sthA->finish();
+		if ($AGILOG) {$agi_string = "DNC_INTERNAL: |$filter_match_found|$stmtA|";	&agi_output;}
 		}
 	elsif ($filter_inbound_number =~ /DNC_CAMPAIGN/)
 		{
-		$stmtA = "SELECT count(*) FROM vicidial_campaign_dnc where campaign_id='$filter_dnc_campaign' and phone_number='$callerid';";
+		$alt_areacode = substr($callerid, 0, 3);
+		$alt_areacode .= "XXXXXXX";
+		$stmtA = "SELECT count(*) FROM vicidial_campaign_dnc where campaign_id='$filter_dnc_campaign' and phone_number IN('$callerid','$alt_areacode');";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -534,6 +541,7 @@ if ($filter_inbound_number =~ /GROUP|URL|DNC_INTERNAL|DNC_CAMPAIGN/)
 			$filter_match_found =	$aryA[0];
 			}
 		$sthA->finish();
+		if ($AGILOG) {$agi_string = "DNC_CAMPAIGN: |$filter_match_found|$stmtA|";	&agi_output;}
 		}
 	else
 		{
