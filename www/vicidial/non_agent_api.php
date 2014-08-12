@@ -90,10 +90,11 @@
 # 140403-2024 - Added camp_rg_only option to update_user function
 # 140418-1553 - Added preview_lead_id for agent_status
 # 140617-2029 - Added vicidial_users wrapup_seconds_override option
+# 140812-0939 - Added phone_number and vendor_lead_code to agent_status function output
 #
 
-$version = '2.10-66';
-$build = '140617-2029';
+$version = '2.10-67';
+$build = '140812-0939';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -5124,7 +5125,36 @@ if ($function == 'agent_status')
 								}
 							}
 
-						$output .= "$status$DL$callerid$DL$lead_id$DL$campaign_id$DL$calls_today$DL$full_name$DL$user_group$DL$user_level$DL$pause_code$DL$rtr_status\n";
+						$vendor_lead_code='';
+						$phone_number='';
+						if ($lead_id > 0)
+							{
+							$stmt="SELECT vendor_lead_code,phone_number from vicidial_list where lead_id='$lead_id';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							if ($DB) {echo "$stmt\n";}
+							$leadinfo_ct = mysqli_num_rows($rslt);
+							if ($leadinfo_ct > 0)
+								{
+								$row=mysqli_fetch_row($rslt);
+								$vendor_lead_code =		$row[0];
+								$phone_number =			$row[1];
+								}
+							}
+						if (strlen($callerid) > 0)
+							{
+							$stmt="SELECT phone_number from vicidial_auto_calls where callerid='$callerid';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							if ($DB) {echo "$stmt\n";}
+							$phoneinfo_ct = mysqli_num_rows($rslt);
+							if ($phoneinfo_ct > 0)
+								{
+								$row=mysqli_fetch_row($rslt);
+								if (strlen($row[0])>3)
+									{$phone_number = $row[0];}
+								}
+							}
+
+						$output .= "$status$DL$callerid$DL$lead_id$DL$campaign_id$DL$calls_today$DL$full_name$DL$user_group$DL$user_level$DL$pause_code$DL$rtr_status$DL$phone_number$DL$vendor_lead_code\n";
 
 						echo "$output";
 

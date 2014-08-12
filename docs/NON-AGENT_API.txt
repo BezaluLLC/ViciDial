@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2014-06-17
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2014-08-12
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -96,6 +96,7 @@ Changes:
 140403-2024 - Added camp_rg_only option to update_user function
 140418-1553 - Added preview_lead_id for agent_status
 140617-2029 - Added vicidial_users wrapup_seconds_override option
+140812-0939 - Added phone_number and vendor_lead_code to agent_status function output
 
 
 API Functions use the 'function' variable
@@ -433,10 +434,10 @@ ERROR: agent_status AGENT NOT FOUND - 6666||
 ERROR: agent_status AGENT NOT LOGGED IN - 6666||
 
 A SUCCESS response will not show "SUCCESS", but instead will just print the results in the following format:
-status,call_id,lead_id,campaign_id,calls_today,full_name,user_group,user_level,pause_code,real_time_sub_status
-INCALL,M4050908070000012345,12345,TESTCAMP,1,Test Agent,AGENTS,3,LOGIN,
-INCALL|M4181606420000000104|104|TESTBLND|1|Admin|ADMIN|9|BRK2|DEAD
-PAUSED||105|TESTBLND|1|Admin|ADMIN|9||PREVIEW
+status,call_id,lead_id,campaign_id,calls_today,full_name,user_group,user_level,pause_code,real_time_sub_status,phone_number,vendor_lead_code
+INCALL,M4050908070000012345,12345,TESTCAMP,1,Test Agent,AGENTS,3,LOGIN,,7275551212,123456
+INCALL|M4181606420000000104|104|TESTBLND|1|Admin|ADMIN|9|BRK2|DEAD|3125551212|123457
+PAUSED||105|TESTBLND|1|Admin|ADMIN|9||PREVIEW|9545551212|123458
 
 NOTE: real_time_sub_status field can consist of: DEAD, DISPO, 3-WAY, PARK, RING, PREVIEW or it can be empty
 
