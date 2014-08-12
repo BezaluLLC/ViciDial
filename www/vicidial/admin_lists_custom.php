@@ -29,10 +29,11 @@
 # 130621-1736 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0752 - Changed to mysqli PHP functions
 # 140705-0811 - Added better error handling, hid field_required field since it is non-functional
+# 140811-2110 - Fixes for issues with default fields
 #
 
-$admin_version = '2.10-22';
-$build = '140705-0811';
+$admin_version = '2.10-23';
+$build = '140811-2110';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -484,7 +485,8 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 				while ($fields_to_print > $o) 
 					{
 					$new_field_exists=0;
-					if ($table_exists > 0)
+					$temp_field_label = $A_field_label[$o];
+					if ( ($table_exists > 0) or (preg_match("/\|$temp_field_label\|/i",$vicidial_list_fields)) )
 						{
 						$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id' and field_label='$A_field_label[$o]';";
 						if ($DB>0) {echo "$stmt";}
@@ -498,7 +500,6 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 						}
 					if ($new_field_exists < 1)
 						{
-						$temp_field_label = $A_field_label[$o];
 						if (preg_match("/\|$temp_field_label\|/i",$vicidial_list_fields))
 							{$A_field_label[$o] = strtolower($A_field_label[$o]);}
 
@@ -510,6 +511,10 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 
 						if ($table_exists < 1) {$table_exists=1;}
 						}
+					else
+						{
+						if ($DB>0) {echo "FIELD EXISTS: |$list_id|$A_field_label[$o]|";}
+						}
 					$o++;
 					}
 				}
@@ -517,7 +522,7 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 			if ($copy_option=='UPDATE')
 				{
 				if ($DB > 0) {echo "Starting UPDATE copy\n<BR>";}
-				if ($table_exists < 1)
+				if ( ($table_exists < 1) and (!preg_match("/\|$field_label\|/i",$vicidial_list_fields)) )
 					{echo "<B><font color=red>ERROR: Table does not exist custom_$list_id</B></font>\n<BR>";}
 				else
 					{
@@ -606,7 +611,7 @@ if ( ($action == "DELETE_CUSTOM_FIELD_CONFIRMATION") and ($list_id > 99) and ($f
 		{echo "<B><font color=red>ERROR: Field does not exist</B></font>\n<BR>";}
 	else
 		{
-		if ($table_exists < 1)
+		if ( ($table_exists < 1) and (!preg_match("/\|$field_label\|/i",$vicidial_list_fields)) )
 			{echo "<B><font color=red>ERROR: Table does not exist custom_$list_id</B></font>\n<BR>";}
 		else
 			{
@@ -657,7 +662,7 @@ if ( ($action == "DELETE_CUSTOM_FIELD") and ($list_id > 99) and ($field_id > 0) 
 		{echo "<B><font color=red>ERROR: Field does not exist</B></font>\n<BR>";}
 	else
 		{
-		if ($table_exists < 1)
+		if ( ($table_exists < 1) and (!preg_match("/\|$field_label\|/i",$vicidial_list_fields)) )
 			{echo "<B><font color=red>ERROR: Table does not exist custom_$list_id</B></font>\n<BR>";}
 		else
 			{
@@ -804,7 +809,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELD_SUBMIT") and ($list_id > 99) and ($field_i
 		{echo "<B><font color=red>ERROR: Field does not exist</B></font>\n<BR>";}
 	else
 		{
-		if ($table_exists < 1)
+		if ( ($table_exists < 1) and (!preg_match("/\|$field_label\|/i",$vicidial_list_fields)) )
 			{echo "<B><font color=red>ERROR: Table does not exist</B></font>\n<BR>";}
 		else
 			{
@@ -1497,7 +1502,7 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$tablecount_to_print = mysqli_num_rows($rslt);
-	if ($tablecount_to_print > 0) 
+	if ($tablecount_to_print > 0)
 		{$table_exists =	1;}
 	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
 
@@ -1596,7 +1601,7 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 		if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
 		if (!$rsltCUSTOM) 
 			{
-			echo('Could not execute: ' . mysqli_error()) . "<BR><B>FIELD NOT ADDED, PLEASE GO BACK AND TRY AGAIN</b>";
+			echo('Could not execute: ' . mysqli_error()) . "|$stmtCUSTOM|<BR><B>FIELD NOT ADDED, PLEASE GO BACK AND TRY AGAIN</b>";
 			
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|$stmtCUSTOM";
@@ -1616,7 +1621,7 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$field_update = mysqli_affected_rows($link);
 		if ($DB) {echo "$field_update|$stmt\n";}
-		if (!$rslt) {echo('Could not execute: ' . mysqli_error());}
+		if (!$rslt) {echo('Could not execute: ' . mysqli_error()) . "|$stmt|";}
 
 		### LOG INSERTION Admin Log Table ###
 		$SQL_log = "$stmt|$stmtCUSTOM";
@@ -1737,7 +1742,7 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 		$rsltCUSTOM=mysql_to_mysqli($stmtCUSTOM, $linkCUSTOM);
 		$field_update = mysqli_affected_rows($linkCUSTOM);
 		if ($DB) {echo "$field_update|$stmtCUSTOM\n";}
-		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysqli_error()) . "<BR><B>FIELD NOT MODIFIED, PLEASE GO BACK AND TRY AGAIN</b>";
+		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysqli_error()) . "|$stmtCUSTOM|<BR><B>FIELD NOT MODIFIED, PLEASE GO BACK AND TRY AGAIN</b>";
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|$stmtCUSTOM";
 			$SQL_log = preg_replace('/;/', '', $SQL_log);
@@ -1756,7 +1761,7 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$field_update = mysqli_affected_rows($link);
 		if ($DB) {echo "$field_update|$stmt\n";}
-		if (!$rslt) {echo('Could not execute: ' . mysqli_error());}
+		if (!$rslt) {echo('Could not execute: ' . mysqli_error()) . "|$stmt|";}
 
 		### LOG INSERTION Admin Log Table ###
 		$SQL_log = "$stmt|$stmtCUSTOM";
@@ -1792,7 +1797,7 @@ function delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 		$rsltCUSTOM=mysql_to_mysqli($stmtCUSTOM, $linkCUSTOM);
 		$table_update = mysqli_affected_rows($linkCUSTOM);
 		if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
-		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysqli_error()) . "<BR><B>FIELD NOT DELETED, PLEASE GO BACK AND TRY AGAIN</b>";
+		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysqli_error()) . "|$stmtCUSTOM|<BR><B>FIELD NOT DELETED, PLEASE GO BACK AND TRY AGAIN</b>";
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|$stmtCUSTOM";
 			$SQL_log = preg_replace('/;/', '', $SQL_log);
@@ -1811,7 +1816,7 @@ function delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$field_update = mysqli_affected_rows($link);
 		if ($DB) {echo "$field_update|$stmt\n";}
-		if (!$rslt) {echo('Could not execute: ' . mysqli_error());}
+		if (!$rslt) {echo('Could not execute: ' . mysqli_error() . "|$stmt|");}
 
 		### LOG INSERTION Admin Log Table ###
 		$SQL_log = "$stmt|$stmtCUSTOM";
