@@ -1,18 +1,19 @@
 <?php
 # launch.php - launches vicidial.php in restricted window
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # For launch validation to work, the options.php file must have
 # window_validation = 1 and win_valid_name set to window_name below
 #
 # CHANGELOG
 # 130903-2055 - First Build
+# 140811-0800 - Changed to use QXZ function for echoing text
 #
 
 $window_name = 'subwindow_launch';
 
-
+require_once("functions.php");
 
 ### do not edit below this line ###
 
@@ -104,7 +105,7 @@ if (strlen($static_agent_url) > 5)
 
 <html>
 <head>
-<title>Agent Screen Opener</title>
+<title><?php echo _QXZ("Agent Screen Opener"); ?></title>
 <script type="text/javascript">
 
 <!-- 
@@ -141,7 +142,7 @@ function browser_dimensions()
 </script>
 </head>
 <body bgcolor=white onload="browser_dimensions();">
-Agent Screen Opener
+<?php echo _QXZ("Agent Screen Opener"); ?>
 <span id=dimensions></span>
 </body>
 </html>

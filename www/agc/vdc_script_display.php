@@ -26,10 +26,11 @@
 # 140623-2114 - Added script_override variable
 # 140630-1023 - Added full_script_height script variable
 # 140710-2143 - Added session_name variable
+# 140810-1857 - Changed to use QXZ function for echoing text
 #
 
-$version = '2.10-20';
-$build = '140710-2143';
+$version = '2.10-21';
+$build = '140810-1857';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -277,7 +278,7 @@ if ($auth_message == 'GOOD')
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-	echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
+	echo  _QXZ("Invalid Username/Password:")." |$user|$pass|$auth_message|\n";
 	exit;
 	}
 
@@ -286,7 +287,7 @@ if ($format=='debug')
 	echo "<html>\n";
 	echo "<head>\n";
 	echo "<!-- VERSION: $version     BUILD: $build    USER: $user   server_ip: $server_ip-->\n";
-	echo "<title>VICIDiaL Script Display Script";
+	echo "<title>"._QXZ("VICIDiaL Script Display Script");
 	echo "</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -536,21 +537,21 @@ if (preg_match('/--A--TABLEper_call_notes--B--/i',$script_text))
 	if ($hide_call_log_info!='Y')
 		{
 		if ($search != 'logfirst')
-			{$NOTESout .= "CALL LOG FOR THIS LEAD:<br>\n";}
+			{$NOTESout .= _QXZ("CALL LOG FOR THIS LEAD:")."<br>\n";}
 		$NOTESout .= "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0>";
 		$NOTESout .= "<TR>";
 		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:10px;font-family:sans-serif;\"><B> &nbsp; # &nbsp; </font></TD>";
-		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; DATE/TIME &nbsp; </font></TD>";
-		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; AGENT &nbsp; </font></TD>";
-		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; LENGTH &nbsp; </font></TD>";
-		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; STATUS &nbsp; </font></TD>";
-		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; PHONE &nbsp; </font></TD>";
-		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; CAMPAIGN &nbsp; </font></TD>";
-		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; IN/OUT &nbsp; </font></TD>";
-		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; ALT &nbsp; </font></TD>";
-		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; HANGUP &nbsp; </font></TD>";
+		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("DATE/TIME")." &nbsp; </font></TD>";
+		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("AGENT")." &nbsp; </font></TD>";
+		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("LENGTH")." &nbsp; </font></TD>";
+		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("STATUS")." &nbsp; </font></TD>";
+		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("PHONE")." &nbsp; </font></TD>";
+		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("CAMPAIGN")." &nbsp; </font></TD>";
+		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("IN/OUT")." &nbsp; </font></TD>";
+		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("ALT")." &nbsp; </font></TD>";
+		$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("HANGUP")." &nbsp; </font></TD>";
 	#	$NOTESout .= "</TR><TR>";
-	#	$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\" COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; FULL NAME &nbsp; </font></TD>";
+	#	$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\" COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("FULL NAME")." &nbsp; </font></TD>";
 		$NOTESout .= "</TR>";
 
 
@@ -638,7 +639,7 @@ if (preg_match('/--A--TABLEper_call_notes--B--/i',$script_text))
 				$rowA=mysqli_fetch_row($rsltA);
 				$Allcall_notes[$g] =	$rowA[0];
 				if (strlen($Allcall_notes[$g]) > 0)
-					{$Allcall_notes[$g] =	"<b>NOTES: </b> $Allcall_notes[$g]";}
+					{$Allcall_notes[$g] =	"<b>"._QXZ("NOTES:")." </b> $Allcall_notes[$g]";}
 				}
 			$stmtA="SELECT full_name FROM vicidial_users WHERE user='$ALLuser[$g]';";
 			$rsltA=mysql_to_mysqli($stmtA, $link);
@@ -658,7 +659,7 @@ if (preg_match('/--A--TABLEper_call_notes--B--/i',$script_text))
 		if ($g > 0)
 			{sort($ALLsort, SORT_NUMERIC);}
 		else
-			{$NOTESout .= "<tr bgcolor=white><td colspan=11 align=center>No calls found</td></tr>";}
+			{$NOTESout .= "<tr bgcolor=white><td colspan=11 align=center>"._QXZ("No calls found")."</td></tr>";}
 
 		$u=0;
 		while ($g > $u) 

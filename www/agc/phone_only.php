@@ -1,7 +1,7 @@
 <?php
 # phone_only.php - the web-based web-phone-only client application
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 110511-1336 - First Build
@@ -12,10 +12,11 @@
 # 130603-2212 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130718-0946 - Fixed login bug
 # 130802-1139 - Changed to PHP mysqli functions
+# 140810-2113 - Changed to use QXZ function for echoing text
 #
 
-$version = '2.8-8p';
-$build = '130802-1139';
+$version = '2.10-9p';
+$build = '140810-2113';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=73;
 $one_mysql_log=0;
@@ -63,7 +64,7 @@ $forever_stop=0;
 
 if ($force_logout)
 	{
-    echo "You have now logged out. Thank you\n";
+    echo _QXZ("You have now logged out. Thank you\n");
     exit;
 	}
 
@@ -185,31 +186,31 @@ $VU_user_group=$row[0];
 
 if ($relogin == 'YES')
 	{
-	echo "<title>Phone web client: Login</title>\n";
+	echo "<title>"._QXZ("Phone web client: Login")."</title>\n";
 	echo "</head>\n";
     echo "<body bgcolor=\"white\">\n";
 	if ($hide_timeclock_link < 1)
-        {echo "<a href=\"./timeclock.php?referrer=agent&amp;pl=$phone_login&amp;pp=$phone_pass&amp;VD_login=$VD_login&amp;VD_pass=$VD_pass\"> Timeclock</a><br />\n";}
+        {echo "<a href=\"./timeclock.php?referrer=agent&amp;pl=$phone_login&amp;pp=$phone_pass&amp;VD_login=$VD_login&amp;VD_pass=$VD_pass\"> "._QXZ("Timeclock")."</a><br />\n";}
     echo "<table width=\"100%\"><tr><td></td>\n";
 	echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
     echo "</tr></table>\n";
     echo "<form name=\"vicidial_form\" id=\"vicidial_form\" action=\"$agcPAGE\" method=\"post\">\n";
     echo "<input type=\"hidden\" name=\"DB\" id=\"DB\" value=\"$DB\" />\n";
     echo "<br /><br /><br /><center><table width=\"460px\" cellpadding=\"0\" cellspacing=\"0\" bgcolor=\"$MAIN_COLOR\"><tr bgcolor=\"white\">";
-    echo "<td align=\"left\" valign=\"bottom\"><img src=\"./images/vdc_tab_vicidial.gif\" border=\"0\" alt=\"VICIdial\" /></td>";
-    echo "<td align=\"center\" valign=\"middle\"> Phone-Only Login </td>";
+    echo "<td align=\"left\" valign=\"bottom\"><img src=\"./images/"._QXZ("vdc_tab_vicidial.gif")."\" border=\"0\" alt=\"VICIdial\" /></td>";
+    echo "<td align=\"center\" valign=\"middle\"> "._QXZ("Phone-Only Login")." </td>";
     echo "</tr>\n";
     echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"> &nbsp; </font></td></tr>\n";
-    echo "<tr><td align=\"right\">Phone Login: </td>";
+    echo "<tr><td align=\"right\">"._QXZ("Phone Login:")." </td>";
     echo "<td align=\"left\"><input type=\"text\" name=\"phone_login\" size=\"10\" maxlength=\"20\" value=\"$phone_login\" /></td></tr>\n";
-    echo "<tr><td align=\"right\">Phone Password:  </td>";
+    echo "<tr><td align=\"right\">"._QXZ("Phone Password:")."  </td>";
     echo "<td align=\"left\"><input type=\"password\" name=\"phone_pass\" size=\"10\" maxlength=\"20\" value=\"$phone_pass\" /></td></tr>\n";
-    echo "<tr><td align=\"right\">User Login:  </td>";
+    echo "<tr><td align=\"right\">"._QXZ("User Login:")."  </td>";
     echo "<td align=\"left\"><input type=\"text\" name=\"VD_login\" size=\"10\" maxlength=\"20\" value=\"$VD_login\" /></td></tr>\n";
-    echo "<tr><td align=\"right\">User Password:  </td>";
+    echo "<tr><td align=\"right\">"._QXZ("User Password:")."  </td>";
     echo "<td align=\"left\"><input type=\"password\" name=\"VD_pass\" size=\"10\" maxlength=\"20\" value=\"$VD_pass\" /></td></tr>\n";
-    echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\"Submit\" /> &nbsp; \n";
-    echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</font></td></tr>\n";
+    echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\""._QXZ("Submit")."\" /> &nbsp; \n";
+    echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</font></td></tr>\n";
     echo "</table></center>\n";
     echo "</form>\n\n";
 	echo "</body>\n\n";
@@ -222,27 +223,27 @@ if ($user_login_first == 1)
 	{
 	if ( (strlen($VD_login)<1) or (strlen($VD_pass)<1) )
 		{
-		echo "<title>Phone web client: Login</title>\n";
+		echo "<title>"._QXZ("Phone web client: Login")."</title>\n";
 		echo "</head>\n";
 		echo "<body bgcolor=\"white\">\n";
 		if ($hide_timeclock_link < 1)
-			{echo "<a href=\"./timeclock.php?referrer=agent&amp;pl=$phone_login&amp;pp=$phone_pass&amp;VD_login=$VD_login&amp;VD_pass=$VD_pass\"> Timeclock</a><br />\n";}
+			{echo "<a href=\"./timeclock.php?referrer=agent&amp;pl=$phone_login&amp;pp=$phone_pass&amp;VD_login=$VD_login&amp;VD_pass=$VD_pass\"> "._QXZ("Timeclock")."</a><br />\n";}
 		echo "<table width=\"100%\"><tr><td></td>\n";
 		echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 		echo "</tr></table>\n";
 		echo "<form name=\"vicidial_form\" id=\"vicidial_form\" action=\"$agcPAGE\" method=\"post\">\n";
 		echo "<input type=\"hidden\" name=\"DB\" id=\"DB\" value=\"$DB\" />\n";
 		echo "<br /><br /><br /><center><table width=\"460px\" cellpadding=\"0\" cellspacing=\"0\" bgcolor=\"$MAIN_COLOR\"><tr bgcolor=\"white\">";
-		echo "<td align=\"left\" valign=\"bottom\"><img src=\"./images/vdc_tab_vicidial.gif\" border=\"0\" alt=\"VICIdial\" /></td>";
-		echo "<td align=\"center\" valign=\"middle\"> Phone-Only Login </td>";
+		echo "<td align=\"left\" valign=\"bottom\"><img src=\"./images/"._QXZ("vdc_tab_vicidial.gif")."\" border=\"0\" alt=\"VICIdial\" /></td>";
+		echo "<td align=\"center\" valign=\"middle\"> "._QXZ("Phone-Only Login")." </td>";
 		echo "</tr>\n";
 		echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"> &nbsp; </font></td></tr>\n";
-		echo "<tr><td align=\"right\">User Login:  </td>";
+		echo "<tr><td align=\"right\">"._QXZ("User Login:")."  </td>";
 		echo "<td align=\"left\"><input type=\"text\" name=\"VD_login\" size=\"10\" maxlength=\"20\" value=\"$VD_login\" /></td></tr>\n";
-		echo "<tr><td align=\"right\">User Password:  </td>";
+		echo "<tr><td align=\"right\">"._QXZ("User Password:")."  </td>";
 		echo "<td align=\"left\"><input type=\"password\" name=\"VD_pass\" size=\"10\" maxlength=\"20\" value=\"$VD_pass\" /></td></tr>\n";
-		echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\"Submit\" /> &nbsp; \n";
-		echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</font></td></tr>\n";
+		echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\""._QXZ("Submit")."\" /> &nbsp; \n";
+		echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</font></td></tr>\n";
 		echo "</table></center>\n";
 		echo "</form>\n\n";
 		echo "</body>\n\n";
@@ -263,7 +264,7 @@ if ($user_login_first == 1)
 
 			if ( (strlen($phone_login) < 1) or (strlen($phone_pass) < 1) )
 				{
-				echo "<title>Phone web client: Phone Login</title>\n";
+				echo "<title>"._QXZ("Phone web client: Phone Login")."</title>\n";
 				echo "</head>\n";
 				echo "<body bgcolor=\"white\">\n";
 				if ($hide_timeclock_link < 1)
@@ -274,17 +275,17 @@ if ($user_login_first == 1)
 				echo "<form name=\"vicidial_form\" id=\"vicidial_form\" action=\"$agcPAGE\" method=\"post\">\n";
 				echo "<input type=\"hidden\" name=\"DB\" value=\"$DB\" />\n";
 				echo "<br /><br /><br /><center><table width=\"460px\" cellpadding=\"0\" cellspacing=\"0\" bgcolor=\"$MAIN_COLOR\"><tr bgcolor=\"white\">";
-				echo "<td align=\"left\" valign=\"bottom\"><img src=\"./images/vdc_tab_vicidial.gif\" border=\"0\" alt=\"VICIdial\" /></td>";
+				echo "<td align=\"left\" valign=\"bottom\"><img src=\"./images/"._QXZ("vdc_tab_vicidial.gif")."\" border=\"0\" alt=\"VICIdial\" /></td>";
 				echo "<td align=\"center\" valign=\"middle\"> Phone-Only Login </td>";
 				echo "</tr>\n";
 				echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"> &nbsp; </font></td></tr>\n";
-				echo "<tr><td align=\"right\">Phone Login: </td>";
+				echo "<tr><td align=\"right\">"._QXZ("Phone Login:")." </td>";
 				echo "<td align=\"left\"><input type=\"text\" name=\"phone_login\" size=\"10\" maxlength=\"20\" value=\"\" /></td></tr>\n";
-				echo "<tr><td align=\"right\">Phone Password:  </td>";
+				echo "<tr><td align=\"right\">"._QXZ("Phone Password:")."  </td>";
 				echo "<td align=\"left\"><input type=\"password\" name=\"phone_pass\" size=\"10\" maxlength=\"20\" value=\"\" /></td></tr>\n";
-				echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\"Submit\" /> &nbsp; \n";
+				echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\""._QXZ("Submit")."\" /> &nbsp; \n";
 				echo "<span id=\"LogiNReseT\"></span></td></tr>\n";
-				echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</font></td></tr>\n";
+				echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</font></td></tr>\n";
 				echo "</table></center>\n";
 				echo "</form>\n\n";
 				echo "</body>\n\n";
@@ -296,7 +297,7 @@ if ($user_login_first == 1)
 	}
 if ( (strlen($phone_login) < 1) or (strlen($phone_pass) < 1) )
 	{
-	echo "<title>Phone web client: Phone Login</title>\n";
+	echo "<title>"._QXZ("Phone web client: Phone Login")."</title>\n";
 	echo "</head>\n";
 	echo "<body bgcolor=\"white\">\n";
 	if ($hide_timeclock_link < 1)
@@ -307,17 +308,17 @@ if ( (strlen($phone_login) < 1) or (strlen($phone_pass) < 1) )
 	echo "<form name=\"vicidial_form\" id=\"vicidial_form\" action=\"$agcPAGE\" method=\"post\">\n";
 	echo "<input type=\"hidden\" name=\"DB\" value=\"$DB\" />\n";
 	echo "<br /><br /><br /><center><table width=\"460px\" cellpadding=\"0\" cellspacing=\"0\" bgcolor=\"$MAIN_COLOR\"><tr bgcolor=\"white\">";
-	echo "<td align=\"left\" valign=\"bottom\"><img src=\"./images/vdc_tab_vicidial.gif\" border=\"0\" alt=\"VICIdial\" /></td>";
+	echo "<td align=\"left\" valign=\"bottom\"><img src=\"./images/"._QXZ("vdc_tab_vicidial.gif")."\" border=\"0\" alt=\"VICIdial\" /></td>";
 	echo "<td align=\"center\" valign=\"middle\"> Phone-Only Login </td>";
 	echo "</tr>\n";
 	echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"> &nbsp; </font></td></tr>\n";
-	echo "<tr><td align=\"right\">Phone Login: </td>";
+	echo "<tr><td align=\"right\">"._QXZ("Phone Login:")." </td>";
 	echo "<td align=\"left\"><input type=\"text\" name=\"phone_login\" size=\"10\" maxlength=\"20\" value=\"\" /></td></tr>\n";
 	echo "<tr><td align=\"right\">Phone Password:  </td>";
 	echo "<td align=\"left\"><input type=\"password\" name=\"phone_pass\" size=\"10\" maxlength=\"20\" value=\"\" /></td></tr>\n";
-	echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\"Submit\" /> &nbsp; \n";
+	echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\""._QXZ("Submit")."\" /> &nbsp; \n";
 	echo "<span id=\"LogiNReseT\"></span></td></tr>\n";
-	echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</font></td></tr>\n";
+	echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</font></td></tr>\n";
 	echo "</table></center>\n";
 	echo "</form>\n\n";
 	echo "</body>\n\n";
@@ -403,7 +404,7 @@ else
         echo "<input type=\"hidden\" name=\"phone_pass\" value=\"$phone_pass\" />\n";
         echo "<center><br /><b>$VDdisplayMESSAGE</b><br /><br />";
         echo "<table width=\"460px\" cellpadding=\"0\" cellspacing=\"0\" bgcolor=\"$MAIN_COLOR\"><tr bgcolor=\"white\">";
-        echo "<td align=\"left\" valign=\"bottom\"><img src=\"./images/vdc_tab_vicidial.gif\" border=\"0\" alt=\"VICIdial\" /></td>";
+        echo "<td align=\"left\" valign=\"bottom\"><img src=\"./images/"._QXZ("vdc_tab_vicidial.gif")."\" border=\"0\" alt=\"VICIdial\" /></td>";
         echo "<td align=\"center\" valign=\"middle\"> Phone-Only Login </td>";
         echo "</tr>\n";
         echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"> &nbsp; </font></td></tr>\n";
@@ -411,9 +412,9 @@ else
         echo "<td align=\"left\"><input type=\"text\" name=\"VD_login\" size=\"10\" maxlength=\"20\" value=\"$VD_login\" /></td></tr>\n";
         echo "<tr><td align=\"right\">User Password:  </td>";
         echo "<td align=\"left\"><input type=\"password\" name=\"VD_pass\" size=\"10\" maxlength=\"20\" value=\"$VD_pass\" /></td></tr>\n";
-        echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\"Submit\" /> &nbsp; \n";
+        echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\""._QXZ("Submit")."\" /> &nbsp; \n";
         echo "<span id=\"LogiNReseT\"></span></td></tr>\n";
-        echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</font></td></tr>\n";
+        echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</font></td></tr>\n";
         echo "</table>\n";
         echo "</form>\n\n";
 		echo "</body>\n\n";
@@ -492,16 +493,16 @@ else
         echo "<input type=\"hidden\" name=\"VD_login\" value=\"$VD_login\" />\n";
         echo "<input type=\"hidden\" name=\"VD_pass\" value=\"$VD_pass\" />\n";
         echo "<br /><br /><br /><center><table width=\"460px\" cellpadding=\"0\" cellspacing=\"0\" bgcolor=\"$MAIN_COLOR\"><tr bgcolor=\"white\">";
-        echo "<td align=\"left\" valign=\"bottom\"><img src=\"./images/vdc_tab_vicidial.gif\" border=\"0\" alt=\"VICIdial\" /></td>";
+        echo "<td align=\"left\" valign=\"bottom\"><img src=\"./images/"._QXZ("vdc_tab_vicidial.gif")."\" border=\"0\" alt=\"VICIdial\" /></td>";
         echo "<td align=\"center\" valign=\"middle\"> Phone-Only Login Error</td>";
         echo "</tr>\n";
         echo "<tr><td align=\"center\" colspan=\"2\"><font size=\"1\"> &nbsp; <br /><font size=\"3\">Sorry, your phone login and password are not active in this system, please try again: <br /> &nbsp;</font></td></tr>\n";
-        echo "<tr><td align=\"right\">Phone Login: </td>";
+        echo "<tr><td align=\"right\">"._QXZ("Phone Login:")." </td>";
         echo "<td align=\"left\"><input type=\"text\" name=\"phone_login\" size=\"10\" maxlength=\"20\" value=\"$phone_login\"></td></tr>\n";
-        echo "<tr><td align=\"right\">Phone Password:  </td>";
+        echo "<tr><td align=\"right\">"._QXZ("Phone Password:")."  </td>";
         echo "<td align=\"left\"><input type=\"password\" name=\"phone_pass\" size=10 maxlength=20 value=\"$phone_pass\"></td></tr>\n";
-        echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\"Submit\" /></td></tr>\n";
-        echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</font></td></tr>\n";
+        echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\""._QXZ("Submit")."\" /></td></tr>\n";
+        echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</font></td></tr>\n";
         echo "</table></center>\n";
         echo "</form>\n\n";
 		echo "</body>\n\n";
@@ -583,7 +584,7 @@ else
 				}
 			echo "<!-- Phones balance selection: $phone_login|$pb_server_ip|$past_minutes_date|     |$pb_log -->\n";
 			}
-		echo "<title>Phone web client</title>\n";
+		echo "<title>"._QXZ("Phone web client")."</title>\n";
 		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,is_webphone,use_external_server_ip,codecs_list,webphone_dialpad,phone_ring_timeout,on_hook_agent,webphone_auto_answer from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -895,7 +896,7 @@ $zi=2;
 
 echo "<body bgcolor=\"white\">\n";
 
-echo " Phone: $original_phone_login - $server_ip &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"$PHP_SELF?relogin=YES&session_epoch=1234567890&session_id=&session_name=$session_name&VD_login=$VD_login&phone_login=$original_phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">Logout</a><BR>\n";
+echo _QXZ(" Phone: $original_phone_login - $server_ip")." &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"$PHP_SELF?relogin=YES&session_epoch=1234567890&session_id=&session_name=$session_name&VD_login=$VD_login&phone_login=$original_phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">"._QXZ("Logout")."</a><BR>\n";
 
 if ($webphone_location == 'bar')
 	{

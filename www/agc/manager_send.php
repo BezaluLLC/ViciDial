@@ -1,5 +1,5 @@
 <?php
-# manager_send.php    version 2.8
+# manager_send.php    version 2.10
 # 
 # Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -119,10 +119,11 @@
 # 130802-1021 - Changed to PHP mysqli functions
 # 130926-1755 - Added queuemetrics_record_hold option
 # 140215-2057 - Added several variable options for QM socket URL
+# 140810-2125 - Changed to use QXZ function for echoing text
 #
 
-$version = '2.8-66';
-$build = '140215-2057';
+$version = '2.10-67';
+$build = '140810-2125';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=128;
 $one_mysql_log=0;
@@ -276,14 +277,14 @@ if ($auth_message == 'GOOD')
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-	echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
+	echo _QXZ("Invalid Username/Password:")." |$user|$pass|$auth_message|\n";
 	exit;
 	}
 else
 	{
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
-		echo "Invalid server_ip: |$server_ip|  or  Invalid session_name: |$session_name|\n";
+		echo _QXZ("Invalid server_ip:")." |$server_ip|  or  Invalid session_name: |$session_name|\n";
 		exit;
 		}
 	else
@@ -296,7 +297,7 @@ else
 		$SNauth=$row[0];
 		  if($SNauth==0)
 			{
-			echo "Invalid session_name: |$session_name|$server_ip|\n";
+			echo _QXZ("Invalid session_name:")." |$session_name|$server_ip|\n";
 			exit;
 			}
 		  else
@@ -311,13 +312,13 @@ if ($format=='debug')
 	echo "<html>\n";
 	echo "<head>\n";
 	echo "<!-- VERSION: $version     BUILD: $build    ACTION: $ACTION   server_ip: $server_ip-->\n";
-	echo "<title>Manager Send: ";
-	if ($ACTION=="Originate")		{echo "Originate";}
-	if ($ACTION=="Redirect")		{echo "Redirect";}
-	if ($ACTION=="RedirectName")	{echo "RedirectName";}
-	if ($ACTION=="Hangup")			{echo "Hangup";}
-	if ($ACTION=="Command")			{echo "Command";}
-	if ($ACTION==99999)	{echo "HELP";}
+	echo "<title>"._QXZ("Manager Send: ");
+	if ($ACTION=="Originate")		{echo _QXZ("Originate");}
+	if ($ACTION=="Redirect")		{echo _QXZ("Redirect");}
+	if ($ACTION=="RedirectName")	{echo _QXZ("RedirectName");}
+	if ($ACTION=="Hangup")			{echo _QXZ("Hangup");}
+	if ($ACTION=="Command")			{echo _QXZ("Command");}
+	if ($ACTION==99999)	{echo _QXZ("HELP");}
 	echo "</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -348,7 +349,7 @@ if ($ACTION=="SysCIDOriginate")
 	{
 	if ( (strlen($exten)<1) or (strlen($channel)<1) or (strlen($ext_context)<1) or (strlen($queryCID)<1) )
 		{
-		echo "Exten $exten is not valid or queryCID $queryCID is not valid, Originate command not inserted\n";
+		echo _QXZ("Exten $exten is not valid or queryCID $queryCID is not valid, Originate command not inserted\n");
 		}
 	else
 		{
@@ -356,7 +357,7 @@ if ($ACTION=="SysCIDOriginate")
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02004',$user,$server_ip,$session_name,$one_mysql_log);}
-		echo "Originate command sent for Exten $exten Channel $channel on $server_ip\n";
+		echo _QXZ("Originate command sent for Exten $exten Channel $channel on $server_ip\n");
 		}
 	}
 
@@ -370,13 +371,13 @@ if ($ACTION=="OriginateName")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15)  or (strlen($extenName)<1)  or (strlen($ext_context)<1)  or (strlen($ext_priority)<1) )
 		{
 		$channel_live=0;
-		echo "One of these variables is not valid:\n";
-		echo "Channel $channel must be greater than 2 characters\n";
-		echo "queryCID $queryCID must be greater than 14 characters\n";
-		echo "extenName $extenName must be set\n";
-		echo "ext_context $ext_context must be set\n";
-		echo "ext_priority $ext_priority must be set\n";
-		echo "\nOriginateName Action not sent\n";
+		echo _QXZ("One of these variables is not valid:\n");
+		echo _QXZ("Channel $channel must be greater than 2 characters\n");
+		echo _QXZ("queryCID $queryCID must be greater than 14 characters\n");
+		echo _QXZ("extenName $extenName must be set\n");
+		echo _QXZ("ext_context $ext_context must be set\n");
+		echo _QXZ("ext_priority $ext_priority must be set\n");
+		echo _QXZ("\nOriginateName Action not sent\n");
 		}
 	else
 		{
@@ -399,14 +400,14 @@ if ($ACTION=="OriginateNameVmail")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15)  or (strlen($extenName)<1)  or (strlen($exten)<1)  or (strlen($ext_context)<1)  or (strlen($ext_priority)<1) )
 		{
 		$channel_live=0;
-		echo "One of these variables is not valid:\n";
-		echo "Channel $channel must be greater than 2 characters\n";
-		echo "queryCID $queryCID must be greater than 14 characters\n";
-		echo "extenName $extenName must be set\n";
-		echo "exten $exten must be set\n";
-		echo "ext_context $ext_context must be set\n";
-		echo "ext_priority $ext_priority must be set\n";
-		echo "\nOriginateNameVmail Action not sent\n";
+		echo _QXZ("One of these variables is not valid:\n");
+		echo _QXZ("Channel $channel must be greater than 2 characters\n");
+		echo _QXZ("queryCID $queryCID must be greater than 14 characters\n");
+		echo _QXZ("extenName $extenName must be set\n");
+		echo _QXZ("exten $exten must be set\n");
+		echo _QXZ("ext_context $ext_context must be set\n");
+		echo _QXZ("ext_priority $ext_priority must be set\n");
+		echo _QXZ("\nOriginateNameVmail Action not sent\n");
 		}
 	else
 		{
@@ -446,13 +447,13 @@ if ($ACTION=="Originate")
 	{
 	if ( (strlen($exten)<1) or (strlen($channel)<1) or (strlen($ext_context)<1) or ( (strlen($queryCID)<10) and ($alertCID < 1) ) )
 		{
-		echo "ERROR Exten $exten is not valid or queryCID $queryCID is not valid, Originate command not inserted\n";
+		echo _QXZ("ERROR Exten $exten is not valid or queryCID $queryCID is not valid, Originate command not inserted\n");
 		}
 	else
 		{
 		if ( (preg_match('/MANUAL/i',$agent_dialed_type)) and ( (preg_match("/^\d860\d\d\d\d$/i",$exten)) or (preg_match("/^860\d\d\d\d$/i",$exten)) ) )
 			{
-			echo "ERROR You are not allowed to dial into other agent sessions $exten\n";
+			echo _QXZ("ERROR You are not allowed to dial into other agent sessions $exten\n");
 			exit;
 			}
 
@@ -474,7 +475,7 @@ if ($ACTION=="Originate")
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02007',$user,$server_ip,$session_name,$one_mysql_log);}
-		echo "Originate command sent for Exten $exten Channel $channel on $server_ip |$account|$variable|\n";
+		echo _QXZ("Originate command sent for Exten $exten Channel $channel on $server_ip |$account|$variable|\n");
 
 		### log outbound call in the dial log
 		$stmt = "INSERT INTO vicidial_dial_log SET caller_code='$queryCID',lead_id='$lead_id',server_ip='$server_ip',call_date='$NOW_TIME',extension='$exten',channel='$channel',timeout='0',outbound_cid='$outCID',context='$ext_context';";
@@ -528,7 +529,7 @@ if ($ACTION=="HangupConfDial")
 	if ( (strlen($exten)<3) or (strlen($queryCID)<15) or (strlen($ext_context)<1) )
 		{
 		$channel_live=0;
-		echo "conference $exten is not valid or ext_context $ext_context or queryCID $queryCID is not valid, Hangup command not inserted\n";
+		echo _QXZ("conference $exten is not valid or ext_context $ext_context or queryCID $queryCID is not valid, Hangup command not inserted\n");
 		}
 	else
 		{
@@ -572,7 +573,7 @@ if ($ACTION=="Hangup")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) )
 		{
 		$channel_live=0;
-		echo "Channel $channel is not valid or queryCID $queryCID is not valid, Hangup command not inserted\n";
+		echo _QXZ("Channel $channel is not valid or queryCID $queryCID is not valid, Hangup command not inserted\n");
 		}
 	else
 		{
@@ -603,7 +604,7 @@ if ($ACTION=="Hangup")
 			$rowx=mysqli_fetch_row($rslt);
 			if ($rowx[0]==0)
 				{
-				echo "Call $CalLCID $channel is not live on $call_server_ip, Checking Live Channel...\n";
+				echo _QXZ("Call $CalLCID $channel is not live on $call_server_ip, Checking Live Channel...\n");
 
 				$stmt="SELECT count(*) FROM live_channels where server_ip = '$call_server_ip' and channel='$channel' and extension LIKE \"%$exten\";";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
@@ -613,7 +614,7 @@ if ($ACTION=="Hangup")
 				if ($row[0]==0)
 					{
 					$channel_live=0;
-					echo "Channel $channel is not live on $call_server_ip, Hangup command not inserted $rowx[0]\n$stmt\n";
+					echo _QXZ("Channel $channel is not live on $call_server_ip, Hangup command not inserted $rowx[0]\n$stmt\n");
 					}
 				else
 					{
@@ -631,7 +632,7 @@ if ($ACTION=="Hangup")
 			if ($row[0] > 0)
 				{
 				$channel_live=0;
-				echo "Channel $channel in use by another agent on $call_server_ip, Hangup command not inserted $rowx[0]\n$stmt\n";
+				echo _QXZ("Channel $channel in use by another agent on $call_server_ip, Hangup command not inserted $rowx[0]\n$stmt\n");
 				if ($WeBRooTWritablE > 0)
 					{
 					$fp = fopen ("./vicidial_debug.txt", "a");
@@ -828,7 +829,7 @@ if ($ACTION=="Hangup")
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02020',$user,$server_ip,$session_name,$one_mysql_log);}
-			echo "Hangup command sent for Channel $channel on $call_server_ip\n";
+			echo _QXZ("Hangup command sent for Channel $channel on $call_server_ip\n");
 			}
 		}
 	}
@@ -844,17 +845,17 @@ if ($ACTION=="RedirectVD")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($campaign)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) or (strlen($uniqueid)<2) or (strlen($lead_id)<1) )
 		{
 		$channel_live=0;
-		echo "One of these variables is not valid:\n";
-		echo "Channel $channel must be greater than 2 characters\n";
-		echo "queryCID $queryCID must be greater than 14 characters\n";
-		echo "exten $exten must be set\n";
-		echo "ext_context $ext_context must be set\n";
-		echo "ext_priority $ext_priority must be set\n";
-		echo "auto_dial_level $auto_dial_level must be set\n";
-		echo "campaign $campaign must be set\n";
-		echo "uniqueid $uniqueid must be set\n";
-		echo "lead_id $lead_id must be set\n";
-		echo "\nRedirectVD Action not sent\n";
+		echo _QXZ("One of these variables is not valid:\n");
+		echo _QXZ("Channel $channel must be greater than 2 characters\n");
+		echo _QXZ("queryCID $queryCID must be greater than 14 characters\n");
+		echo _QXZ("exten $exten must be set\n");
+		echo _QXZ("ext_context $ext_context must be set\n");
+		echo _QXZ("ext_priority $ext_priority must be set\n");
+		echo _QXZ("auto_dial_level $auto_dial_level must be set\n");
+		echo _QXZ("campaign $campaign must be set\n");
+		echo _QXZ("uniqueid $uniqueid must be set\n");
+		echo _QXZ("lead_id $lead_id must be set\n");
+		echo _QXZ("\nRedirectVD Action not sent\n");
 		}
 	else
 		{
@@ -920,15 +921,15 @@ if ($ACTION=="RedirectToPark")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($extenName)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) or (strlen($parkedby)<1) )
 		{
 		$channel_live=0;
-		echo "One of these variables is not valid:\n";
-		echo "Channel $channel must be greater than 2 characters\n";
-		echo "queryCID $queryCID must be greater than 14 characters\n";
-		echo "exten $exten must be set\n";
-		echo "extenName $extenName must be set\n";
-		echo "ext_context $ext_context must be set\n";
-		echo "ext_priority $ext_priority must be set\n";
-		echo "parkedby $parkedby must be set\n";
-		echo "\nRedirectToPark Action not sent\n";
+		echo _QXZ("One of these variables is not valid:\n");
+		echo _QXZ("Channel $channel must be greater than 2 characters\n");
+		echo _QXZ("queryCID $queryCID must be greater than 14 characters\n");
+		echo _QXZ("exten $exten must be set\n");
+		echo _QXZ("extenName $extenName must be set\n");
+		echo _QXZ("ext_context $ext_context must be set\n");
+		echo _QXZ("ext_priority $ext_priority must be set\n");
+		echo _QXZ("parkedby $parkedby must be set\n");
+		echo _QXZ("\nRedirectToPark Action not sent\n");
 		}
 	else
 		{
@@ -1026,13 +1027,13 @@ if ($ACTION=="RedirectFromPark")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) )
 		{
 		$channel_live=0;
-		echo "One of these variables is not valid:\n";
-		echo "Channel $channel must be greater than 2 characters\n";
-		echo "queryCID $queryCID must be greater than 14 characters\n";
-		echo "exten $exten must be set\n";
-		echo "ext_context $ext_context must be set\n";
-		echo "ext_priority $ext_priority must be set\n";
-		echo "\nRedirectFromPark Action not sent\n";
+		echo _QXZ("One of these variables is not valid:\n");
+		echo _QXZ("Channel $channel must be greater than 2 characters\n");
+		echo _QXZ("queryCID $queryCID must be greater than 14 characters\n");
+		echo _QXZ("exten $exten must be set\n");
+		echo _QXZ("ext_context $ext_context must be set\n");
+		echo _QXZ("ext_priority $ext_priority must be set\n");
+		echo _QXZ("\nRedirectFromPark Action not sent\n");
 		}
 	else
 		{
@@ -1155,15 +1156,15 @@ if ($ACTION=="RedirectToParkIVR")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($extenName)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) or (strlen($parkedby)<1) )
 		{
 		$channel_live=0;
-		echo "One of these variables is not valid:\n";
-		echo "Channel $channel must be greater than 2 characters\n";
-		echo "queryCID $queryCID must be greater than 14 characters\n";
-		echo "exten $exten must be set\n";
-		echo "extenName $extenName must be set\n";
-		echo "ext_context $ext_context must be set\n";
-		echo "ext_priority $ext_priority must be set\n";
-		echo "parkedby $parkedby must be set\n";
-		echo "\nRedirectToPark Action not sent\n";
+		echo _QXZ("One of these variables is not valid:\n");
+		echo _QXZ("Channel $channel must be greater than 2 characters\n");
+		echo _QXZ("queryCID $queryCID must be greater than 14 characters\n");
+		echo _QXZ("exten $exten must be set\n");
+		echo _QXZ("extenName $extenName must be set\n");
+		echo _QXZ("ext_context $ext_context must be set\n");
+		echo _QXZ("ext_priority $ext_priority must be set\n");
+		echo _QXZ("parkedby $parkedby must be set\n");
+		echo _QXZ("\nRedirectToPark Action not sent\n");
 		}
 	else
 		{
@@ -1265,13 +1266,13 @@ if ($ACTION=="RedirectFromParkIVR")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) )
 		{
 		$channel_live=0;
-		echo "One of these variables is not valid:\n";
-		echo "Channel $channel must be greater than 2 characters\n";
-		echo "queryCID $queryCID must be greater than 14 characters\n";
-		echo "exten $exten must be set\n";
-		echo "ext_context $ext_context must be set\n";
-		echo "ext_priority $ext_priority must be set\n";
-		echo "\nRedirectFromPark Action not sent\n";
+		echo _QXZ("One of these variables is not valid:\n");
+		echo _QXZ("Channel $channel must be greater than 2 characters\n");
+		echo _QXZ("queryCID $queryCID must be greater than 14 characters\n");
+		echo _QXZ("exten $exten must be set\n");
+		echo _QXZ("ext_context $ext_context must be set\n");
+		echo _QXZ("ext_priority $ext_priority must be set\n");
+		echo _QXZ("\nRedirectFromPark Action not sent\n");
 		}
 	else
 		{
@@ -1400,13 +1401,13 @@ if ($ACTION=="RedirectName")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15)  or (strlen($extenName)<1)  or (strlen($ext_context)<1)  or (strlen($ext_priority)<1) )
 		{
 		$channel_live=0;
-		echo "One of these variables is not valid:\n";
-		echo "Channel $channel must be greater than 2 characters\n";
-		echo "queryCID $queryCID must be greater than 14 characters\n";
-		echo "extenName $extenName must be set\n";
-		echo "ext_context $ext_context must be set\n";
-		echo "ext_priority $ext_priority must be set\n";
-		echo "\nRedirectName Action not sent\n";
+		echo _QXZ("One of these variables is not valid:\n");
+		echo _QXZ("Channel $channel must be greater than 2 characters\n");
+		echo _QXZ("queryCID $queryCID must be greater than 14 characters\n");
+		echo _QXZ("extenName $extenName must be set\n");
+		echo _QXZ("ext_context $ext_context must be set\n");
+		echo _QXZ("ext_priority $ext_priority must be set\n");
+		echo _QXZ("\nRedirectName Action not sent\n");
 		}
 	else
 		{
@@ -1429,14 +1430,14 @@ if ($ACTION=="RedirectNameVmail")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15)  or (strlen($extenName)<1)  or (strlen($exten)<1)  or (strlen($ext_context)<1)  or (strlen($ext_priority)<1) )
 		{
 		$channel_live=0;
-		echo "One of these variables is not valid:\n";
-		echo "Channel $channel must be greater than 2 characters\n";
-		echo "queryCID $queryCID must be greater than 14 characters\n";
-		echo "extenName $extenName must be set\n";
-		echo "exten $exten must be set\n";
-		echo "ext_context $ext_context must be set\n";
-		echo "ext_priority $ext_priority must be set\n";
-		echo "\nRedirectNameVmail Action not sent\n";
+		echo _QXZ("One of these variables is not valid:\n");
+		echo _QXZ("Channel $channel must be greater than 2 characters\n");
+		echo _QXZ("queryCID $queryCID must be greater than 14 characters\n");
+		echo _QXZ("extenName $extenName must be set\n");
+		echo _QXZ("exten $exten must be set\n");
+		echo _QXZ("ext_context $ext_context must be set\n");
+		echo _QXZ("ext_priority $ext_priority must be set\n");
+		echo _QXZ("\nRedirectNameVmail Action not sent\n");
 		}
 	else
 		{
@@ -1469,14 +1470,14 @@ if ($ACTION=="RedirectXtraCXNeW")
 		{
 		$channel_liveX=0;
 		$channel_liveY=0;
-		echo "One of these variables is not valid:\n";
-		echo "Channel $channel must be greater than 2 characters\n";
-		echo "ExtraChannel $extrachannel must be greater than 2 characters\n";
-		echo "queryCID $queryCID must be greater than 14 characters\n";
-		echo "exten $exten must be set\n";
-		echo "ext_context $ext_context must be set\n";
-		echo "ext_priority $ext_priority must be set\n";
-		echo "\nRedirect Action not sent\n";
+		echo _QXZ("One of these variables is not valid:\n");
+		echo _QXZ("Channel $channel must be greater than 2 characters\n");
+		echo _QXZ("ExtraChannel $extrachannel must be greater than 2 characters\n");
+		echo _QXZ("queryCID $queryCID must be greater than 14 characters\n");
+		echo _QXZ("exten $exten must be set\n");
+		echo _QXZ("ext_context $ext_context must be set\n");
+		echo _QXZ("ext_priority $ext_priority must be set\n");
+		echo _QXZ("\nRedirect Action not sent\n");
 		if (preg_match("/SECOND|FIRST|DEBUG/",$filename))
 			{
 			if ($WeBRooTWritablE > 0)
@@ -1556,7 +1557,7 @@ if ($ACTION=="RedirectXtraCXNeW")
 			else
 				{
 				$channel_liveX=0;
-				echo "Cannot find empty vicidial_conference on $server_ip, Redirect command not inserted\n|$stmt|";
+				echo _QXZ("Cannot find empty vicidial_conference on $server_ip, Redirect command not inserted\n|$stmt|");
 				if (preg_match("/SECOND|FIRST|DEBUG/",$filename)) {$DBout .= "Cannot find empty conference on $server_ip";}
 				}
 			}
@@ -1578,7 +1579,7 @@ if ($ACTION=="RedirectXtraCXNeW")
 			if ($rowx[0]==0)
 				{
 				$channel_liveX=0;
-				echo "Channel $channel is not live on $call_server_ip, Redirect command not inserted\n";
+				echo _QXZ("Channel $channel is not live on $call_server_ip, Redirect command not inserted\n");
 				if (preg_match("/SECOND|FIRST|DEBUG/",$filename)) {$DBout .= "$channel is not live on $call_server_ip";}
 				}	
 			}
@@ -1597,7 +1598,7 @@ if ($ACTION=="RedirectXtraCXNeW")
 			if ($rowx[0]==0)
 				{
 				$channel_liveY=0;
-				echo "Channel $channel is not live on $server_ip, Redirect command not inserted\n";
+				echo _QXZ("Channel $channel is not live on $server_ip, Redirect command not inserted\n");
 				if (preg_match("/SECOND|FIRST|DEBUG/",$filename)) {$DBout .= "$channel is not live on $server_ip";}
 				}	
 			}
@@ -1611,7 +1612,7 @@ if ($ACTION=="RedirectXtraCXNeW")
 			if ($rowx[0] < 1)
 				{
 				$channel_liveY=0;
-				echo "No Local agent to send call to, Redirect command not inserted\n";
+				echo _QXZ("No Local agent to send call to, Redirect command not inserted\n");
 				if (preg_match("/SECOND|FIRST|DEBUG/",$filename)) {$DBout .= "No Local agent to send call to";}
 				}	
 			else
@@ -1647,7 +1648,7 @@ if ($ACTION=="RedirectXtraCXNeW")
 				$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02044',$user,$server_ip,$session_name,$one_mysql_log);}
 
-				echo "RedirectXtraCX command sent for Channel $channel on $call_server_ip and \nHungup $extrachannel on $server_ip\n";
+				echo _QXZ("RedirectXtraCX command sent for Channel $channel on $call_server_ip and \nHungup $extrachannel on $server_ip\n");
 				if (preg_match("/SECOND|FIRST|DEBUG/",$filename)) {$DBout .= "$channel on $call_server_ip, Hungup $extrachannel on $server_ip";}
 				}
 			}
@@ -1694,15 +1695,15 @@ if ($ACTION=="RedirectXtraNeW")
 			{
 			$channel_liveX=0;
 			$channel_liveY=0;
-			echo "One of these variables is not valid:\n";
-			echo "Channel $channel must be greater than 2 characters\n";
-			echo "ExtraChannel $extrachannel must be greater than 2 characters\n";
-			echo "queryCID $queryCID must be greater than 14 characters\n";
-			echo "exten $exten must be set\n";
-			echo "ext_context $ext_context must be set\n";
-			echo "ext_priority $ext_priority must be set\n";
-			echo "session_id $session_id must be set\n";
-			echo "\nRedirect Action not sent\n";
+			echo _QXZ("One of these variables is not valid:\n");
+			echo _QXZ("Channel $channel must be greater than 2 characters\n");
+			echo _QXZ("ExtraChannel $extrachannel must be greater than 2 characters\n");
+			echo _QXZ("queryCID $queryCID must be greater than 14 characters\n");
+			echo _QXZ("exten $exten must be set\n");
+			echo _QXZ("ext_context $ext_context must be set\n");
+			echo _QXZ("ext_priority $ext_priority must be set\n");
+			echo _QXZ("session_id $session_id must be set\n");
+			echo _QXZ("\nRedirect Action not sent\n");
 			if (preg_match("/SECOND|FIRST|DEBUG/",$filename))
 				{
 				if ($WeBRooTWritablE > 0)
@@ -1795,7 +1796,7 @@ if ($ACTION=="RedirectXtraNeW")
 				if ($rowx[0]==0)
 					{
 					$channel_liveX=0;
-					echo "Channel $channel is not live on $call_server_ip, Redirect command not inserted\n";
+					echo _QXZ("Channel $channel is not live on $call_server_ip, Redirect command not inserted\n");
 					if (preg_match("/SECOND|FIRST|DEBUG/",$filename)) {$DBout .= "$channel is not live on $call_server_ip";}
 					}	
 				}
@@ -1814,7 +1815,7 @@ if ($ACTION=="RedirectXtraNeW")
 				if ($rowx[0]==0)
 					{
 					$channel_liveY=0;
-					echo "Channel $channel is not live on $server_ip, Redirect command not inserted\n";
+					echo _QXZ("Channel $channel is not live on $server_ip, Redirect command not inserted\n");
 					if (preg_match("/SECOND|FIRST|DEBUG/",$filename)) {$DBout .= "$channel is not live on $server_ip";}
 					}	
 				}
@@ -1827,7 +1828,7 @@ if ($ACTION=="RedirectXtraNeW")
 					$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02057',$user,$server_ip,$session_name,$one_mysql_log);}
 
-					echo "RedirectXtra command sent for Channel $channel and \nExtraChannel $extrachannel\n to $exten on $server_ip\n";
+					echo _QXZ("RedirectXtra command sent for Channel $channel and \nExtraChannel $extrachannel\n to $exten on $server_ip\n");
 					if (preg_match("/SECOND|FIRST|DEBUG/",$filename)) {$DBout .= "$channel and $extrachannel to $exten on $server_ip";}
 					}
 				else
@@ -1854,7 +1855,7 @@ if ($ACTION=="RedirectXtraNeW")
 					$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02059',$user,$server_ip,$session_name,$one_mysql_log);}
 
-					echo "RedirectXtra command sent for Channel $channel on $call_server_ip and \nExtraChannel $extrachannel\n to $exten on $server_ip\n";
+					echo _QXZ("RedirectXtra command sent for Channel $channel on $call_server_ip and \nExtraChannel $extrachannel\n to $exten on $server_ip\n");
 					if (preg_match("/SECOND|FIRST|DEBUG/",$filename)) {$DBout .= "$channel/$call_server_ip and $extrachannel/$server_ip to $exten";}
 					}
 				}
@@ -1915,13 +1916,13 @@ if ($ACTION=="Redirect")
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15)  or (strlen($exten)<1)  or (strlen($ext_context)<1)  or (strlen($ext_priority)<1) )
 		{
 		$channel_live=0;
-		echo "One of these variables is not valid:\n";
-		echo "Channel $channel must be greater than 2 characters\n";
-		echo "queryCID $queryCID must be greater than 14 characters\n";
-		echo "exten $exten must be set\n";
-		echo "ext_context $ext_context must be set\n";
-		echo "ext_priority $ext_priority must be set\n";
-		echo "\nRedirect Action not sent\n";
+		echo _QXZ("One of these variables is not valid:\n");
+		echo _QXZ("Channel $channel must be greater than 2 characters\n");
+		echo _QXZ("queryCID $queryCID must be greater than 14 characters\n");
+		echo _QXZ("exten $exten must be set\n");
+		echo _QXZ("ext_context $ext_context must be set\n");
+		echo _QXZ("ext_priority $ext_priority must be set\n");
+		echo _QXZ("\nRedirect Action not sent\n");
 		}
 	else
 		{
@@ -1941,7 +1942,7 @@ if ($ACTION=="Redirect")
 			if ($rowx[0]==0)
 				{
 				$channel_live=0;
-				echo "Channel $channel is not live on $server_ip, Redirect command not inserted\n";
+				echo _QXZ("Channel $channel is not live on $server_ip, Redirect command not inserted\n");
 				}	
 			}
 		if ($channel_live==1)
@@ -1951,7 +1952,7 @@ if ($ACTION=="Redirect")
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02064',$user,$server_ip,$session_name,$one_mysql_log);}
 
-			echo "Redirect command sent for Channel $channel on $server_ip\n";
+			echo _QXZ("Redirect command sent for Channel $channel on $server_ip\n");
 			}
 		}
 	}
@@ -1973,7 +1974,7 @@ if ( ($ACTION=="Monitor") || ($ACTION=="StopMonitor") )
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($filename)<8) )
 		{
 		$channel_live=0;
-		echo "Channel $channel is not valid or queryCID $queryCID is not valid or filename: $filename is not valid, $ACTION command not inserted\n";
+		echo _QXZ("Channel $channel is not valid or queryCID $queryCID is not valid or filename: $filename is not valid, $ACTION command not inserted\n");
 		}
 	else
 		{
@@ -1992,7 +1993,7 @@ if ( ($ACTION=="Monitor") || ($ACTION=="StopMonitor") )
 			if ($rowx[0]==0)
 				{
 				$channel_live=0;
-				echo "Channel $channel is not live on $server_ip, $ACTION command not inserted\n";
+				echo _QXZ("Channel $channel is not live on $server_ip, $ACTION command not inserted\n");
 				}	
 			}
 		if ($channel_live==1)
@@ -2038,7 +2039,7 @@ if ( ($ACTION=="Monitor") || ($ACTION=="StopMonitor") )
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02071',$user,$server_ip,$session_name,$one_mysql_log);}
 					}
 				}
-			echo "$ACTION command sent for Channel $channel on $server_ip\nFilename: $filename\nRecorDing_ID: $recording_id\n";
+			echo _QXZ("$ACTION command sent for Channel $channel on $server_ip\nFilename: $filename\nRecorDing_ID: $recording_id\n");
 			}
 		}
 	}
@@ -2060,7 +2061,7 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 	if ( (strlen($exten)<3) or (strlen($channel)<4) or (strlen($filename)<8) )
 		{
 		$channel_live=0;
-		echo "Channel $channel is not valid or exten $exten is not valid or filename: $filename is not valid, $ACTION command not inserted\n";
+		echo _QXZ("Channel $channel is not valid or exten $exten is not valid or filename: $filename is not valid, $ACTION command not inserted\n");
 		}
 	else
 		{
@@ -2209,7 +2210,7 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 				$i++;
 				}
 			}
-			echo "$ACTION command sent for Channel $channel on $server_ip\nFilename: $filename\nRecorDing_ID: $recording_id\n RECORDING WILL LAST UP TO 60 MINUTES\n";
+			echo _QXZ("$ACTION command sent for Channel $channel on $server_ip\nFilename: $filename\nRecorDing_ID: $recording_id\n RECORDING WILL LAST UP TO 60 MINUTES\n");
 		}
 	}
 
@@ -2224,7 +2225,7 @@ if ($ACTION=="VolumeControl")
 	{
 	if ( (strlen($exten)<1) or (strlen($channel)<1) or (strlen($stage)<1) or (strlen($queryCID)<1) )
 		{
-		echo "Conference $exten, Stage $stage is not valid or queryCID $queryCID is not valid, Originate command not inserted\n";
+		echo _QXZ("Conference $exten, Stage $stage is not valid or queryCID $queryCID is not valid, Originate command not inserted\n");
 		}
 	else
 		{
@@ -2241,7 +2242,7 @@ if ($ACTION=="VolumeControl")
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02082',$user,$server_ip,$session_name,$one_mysql_log);}
-		echo "Volume command sent for Conference $exten, Stage $stage Channel $channel on $server_ip\n";
+		echo _QXZ("Volume command sent for Conference $exten, Stage $stage Channel $channel on $server_ip\n");
 		}
 	}
 

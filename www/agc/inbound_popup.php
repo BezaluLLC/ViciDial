@@ -1,7 +1,7 @@
 <?php
-# inbound_popup.php    version 2.8
+# inbound_popup.php    version 2.10
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to open up when a live_inbound call comes in giving the user
 #   options of what to do with the call or options to lookup the callerID on various web sites
@@ -34,6 +34,7 @@
 # 130328-0025 - Converted ereg to preg functions
 # 130603-2215 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130802-1008 - Changed to PHP mysqli functions
+# 140811-0843 - Changed to use QXZ function for echoing text
 #
 
 require_once("dbconnect_mysqli.php");
@@ -91,14 +92,14 @@ if ($auth_message == 'GOOD')
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-	echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
+	echo _QXZ("Invalid Username/Password:")." |$user|$pass|$auth_message|\n";
 	exit;
 	}
 else
 	{
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
-		echo "Invalid server_ip: |$server_ip|  or  Invalid session_name: |$session_name|\n";
+		echo _QXZ("Invalid server_ip:")." |$server_ip|  or  Invalid session_name: |$session_name|\n";
 		exit;
 		}
 	else
@@ -110,7 +111,7 @@ else
 		$SNauth=$row[0];
 		  if($SNauth==0)
 			{
-			echo "Invalid session_name: |$session_name|$server_ip|\n";
+			echo _QXZ("Invalid session_name:")." |$session_name|$server_ip|\n";
 			exit;
 			}
 		  else
@@ -255,11 +256,11 @@ echo "<!-- VERSION: $version     BUILD: $build    UNIQUEID: $uniqueid   server_i
 	</script>
 
 <?php
-echo "<title>LIVE INBOUND CALL";
+echo "<title>"._QXZ("LIVE INBOUND CALL");
 echo "</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=\"#CCC2E0\" marginheight=0 marginwidth=0 leftmargin=0 topmargin=0 onload=\"link_timeout();\">\n";
-echo "<CENTER><H2>LIVE INBOUND CALL</H2>\n";
+echo "<CENTER><H2>"._QXZ("LIVE INBOUND CALL")."</H2>\n";
 echo "<B>$NOW_TIME</B><BR><BR>\n";
 }
 
@@ -270,7 +271,7 @@ $channel_live=1;
 if (strlen($uniqueid)<9)
 	{
 	$channel_live=0;
-	echo "Uniqueid $uniqueid is not valid\n";
+	echo QXZ("Uniqueid $uniqueid is not valid\n");
 	exit;
 	}
 else
@@ -286,8 +287,8 @@ else
 #		Zap/73|"V.I.C.I. MARKET" <7275338730>|2005-04-28 14:01:21|7274514936|Inbound direct to Matt|||||
 		if ($format=='debug') {echo "\n<!-- $row[0]|$row[1]|$row[2]|$row[3]|$row[4]|$row[5]|$row[6]|$row[7]|$row[8]|$row[9]|$row[10]|$row[11]|$row[12]|$row[13]| -->";}
 		echo "<table width=95% cellpadding=1 cellspacing=3>\n";
-		echo "<tr bgcolor=\"#DDDDFF\"><td>Channel: </td><td align=left>$row[1]</td></tr>\n";
-		echo "<tr bgcolor=\"#DDDDFF\"><td>CallerID: </td><td align=left>$row[3]</td></tr>\n";
+		echo "<tr bgcolor=\"#DDDDFF\"><td>"._QXZ("Channel").": </td><td align=left>$row[1]</td></tr>\n";
+		echo "<tr bgcolor=\"#DDDDFF\"><td>"._QXZ("CallerID").": </td><td align=left>$row[3]</td></tr>\n";
 		echo "<tr bgcolor=\"#DDDDFF\"><td colspan=2 align=center>\n";
 
 		$phone = preg_replace("/.*\</i","",$row[3]);
@@ -323,11 +324,11 @@ else
 		echo "<a href=\"$local_web_callerID_URL$local_web_callerID_QUERY_STRING\" target=\"_blank\">CUSTOM</a> - \n";
 
 		echo "</td></tr>\n";
-		echo "<tr bgcolor=\"#DDDDFF\"><td>Number Dialed: </td><td align=left>$row[8]</td></tr>\n";
-		echo "<tr bgcolor=\"#DDDDFF\"><td>Notes: </td><td align=left>$row[9]|$row[10]|$row[11]|$row[12]|$row[13]|</td></tr>\n";
+		echo "<tr bgcolor=\"#DDDDFF\"><td>"._QXZ("Number Dialed:")." </td><td align=left>$row[8]</td></tr>\n";
+		echo "<tr bgcolor=\"#DDDDFF\"><td>"._QXZ("Notes:")." </td><td align=left>$row[9]|$row[10]|$row[11]|$row[12]|$row[13]|</td></tr>\n";
 		echo "<tr bgcolor=\"#DDDDFF\"><td colspan=2 align=center>\n<span id=\"callactions\">";
-		echo "<a href=\"#\" onclick=\"livehangup_send_hangup('$row[1]');return false;\">HANGUP</a> - \n";
-		echo "<a href=\"#\" onclick=\"liveredirect_send_vmail('$row[1]','$vmail_box');return false;\">SEND TO MY VOICEMAIL</a>\n";
+		echo "<a href=\"#\" onclick=\"livehangup_send_hangup('$row[1]');return false;\">"._QXZ("HANGUP")."</a> - \n";
+		echo "<a href=\"#\" onclick=\"liveredirect_send_vmail('$row[1]','$vmail_box');return false;\">"._QXZ("SEND TO MY VOICEMAIL")."</a>\n";
 		echo "</span></td></tr>\n";
 		echo "</table>\n";
 

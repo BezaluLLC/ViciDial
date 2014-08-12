@@ -1,6 +1,6 @@
 <?php
 # 
-# functions.php    version 2.8
+# functions.php    version 2.10
 #
 # functions for agent scripts
 #
@@ -20,6 +20,7 @@
 # 130802-1004 - Changed to PHP mysqli functions
 # 140429-2035 - Added TABLEper_call_notes display script variable for form display
 # 140521-1314 - Added more agent login error messages
+# 140811-2024 - Changed to use QXZ function for echoing text, for use in future translations
 #
 
 # $mysql_queries = 19
@@ -325,7 +326,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 				}
 			else
 				{
-				if ($DB) {echo "ERROR: no custom data for this lead: $lead_id\n";}
+				if ($DB) {echo _QXZ("ERROR: no custom data for this lead: $lead_id\n");}
 				}
 			##### END grab the data from custom table for the lead_id
 
@@ -333,7 +334,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 			$CFoutput .= "<input type=hidden name=stage id=stage value=\"SUBMIT\">\n";
 			$CFoutput .= "<center><TABLE cellspacing=2 cellpadding=2>\n";
 			if ($fields_to_print < 1) 
-				{$CFoutput .= "<tr bgcolor=white align=center><td colspan=4><font size=1>There are no custom fields for this list</td></tr>";}
+				{$CFoutput .= "<tr bgcolor=white align=center><td colspan=4><font size=1>"._QXZ("There are no custom fields for this list")."</td></tr>";}
 
 			$o=0;
 			$last_field_rank=0;
@@ -341,7 +342,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 				{
 				$helpHTML='';
 				if (strlen($A_field_help[$o])>0)
-					{$helpHTML="&nbsp; <a href=\"javascript:open_help('HELP_$A_field_label[$o]','$A_field_help[$o]');\">help+</a>";}
+					{$helpHTML="&nbsp; <a href=\"javascript:open_help('HELP_$A_field_label[$o]','$A_field_help[$o]');\">"._QXZ("help")."+</a>";}
 				if ($last_field_rank=="$A_field_rank[$o]")
 					{$CFoutput .= " &nbsp; &nbsp; &nbsp; &nbsp; ";}
 				else
@@ -397,7 +398,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 									{
 									if ($A_field_default[$o] == "$field_options_value_array[0]") {$field_selected = 'SELECTED';}
 									}
-								$field_HTML .= "<option value=\"$field_options_value_array[0]\" $field_selected>$field_options_value_array[1]</option>\n";
+								$field_HTML .= "<option value=\"$field_options_value_array[0]\" $field_selected>"._QXZ("$field_options_value_array[1]")."</option>\n";
 								}
 							if ( ($A_field_type[$o]=='RADIO') or ($A_field_type[$o]=='CHECKBOX') )
 								{
@@ -412,7 +413,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 									{
 									if ($A_field_default[$o] == "$field_options_value_array[0]") {$field_selected = 'CHECKED';}
 									}
-								$field_HTML .= "<input type=$A_field_type[$o] name=$A_field_label[$o][] id=$A_field_label[$o][] value=\"$field_options_value_array[0]\" $field_selected> $field_options_value_array[1]\n";
+								$field_HTML .= "<input type=$A_field_type[$o] name=$A_field_label[$o][] id=$A_field_label[$o][] value=\"$field_options_value_array[0]\" $field_selected> "._QXZ("$field_options_value_array[1]")."\n";
 								if ($A_multi_position[$o]=='VERTICAL') 
 									{$field_HTML .= "<BR>\n";}
 								}
@@ -428,7 +429,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 					{
 					if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
 					if (strlen($A_field_value[$o]) < 1) {$A_field_value[$o] = $A_field_default[$o];}
-					$field_HTML .= "<input type=text size=$A_field_size[$o] maxlength=$A_field_max[$o] name=$A_field_label[$o] id=$A_field_label[$o] value=\"$A_field_value[$o]\">\n";
+					$field_HTML .= "<input type=text size=$A_field_size[$o] maxlength=$A_field_max[$o] name=$A_field_label[$o] id=$A_field_label[$o] value=\""._QXZ("$A_field_value[$o]")."\">\n";
 					}
 				if ($A_field_type[$o]=='AREA') 
 					{
@@ -439,13 +440,13 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 				if ($A_field_type[$o]=='DISPLAY')
 					{
 					if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
-					$field_HTML .= "$A_field_default[$o]\n";
+					$field_HTML .= _QXZ("$A_field_default[$o]\n");
 					}
 				if ($A_field_type[$o]=='READONLY')
 					{
 					if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
 				#	if (strlen($A_field_value[$o]) < 1) {$A_field_value[$o] = $A_field_default[$o];}
-					$field_HTML .= "<input type=hidden name=$A_field_label[$o] id=$A_field_label[$o] value=\"$A_field_value[$o]\"> $A_field_value[$o]\n";
+					$field_HTML .= "<input type=hidden name=$A_field_label[$o] id=$A_field_label[$o] value=\"$A_field_value[$o]\"> "._QXZ("$A_field_value[$o]")."\n";
 					}
 				if ( ($A_field_type[$o]=='HIDDEN') or ($A_field_type[$o]=='HIDEBLOB') )
 					{
@@ -546,10 +547,10 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 			$CFoutput .= "</td></tr></table>\n";
 			}
 		else
-			{$CFoutput .= "ERROR: no custom list fields\n";}
+			{$CFoutput .= _QXZ("ERROR: no custom list fields\n");}
 		}
 	else
-		{$CFoutput .= "ERROR: no custom list fields table\n";}
+		{$CFoutput .= _QXZ("ERROR: no custom list fields table\n");}
 
 
 	##### BEGIN parsing for vicidial variables #####
@@ -578,7 +579,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 		if (preg_match('/--A--dialed_/i',$CFoutput))
 			{
 			$dialed_number =	$phone_number;
-			$dialed_label =		'NONE';
+			$dialed_label =		_QXZ("NONE");
 
 			### find the dialed number and label for this call
 			$stmt = "SELECT phone_number,alt_dial from vicidial_log where uniqueid='$uniqueid';";
@@ -600,19 +601,19 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 			if ($hide_call_log_info!='Y')
 				{
 				if ($search != 'logfirst')
-					{$NOTESout .= "CALL LOG FOR THIS LEAD:<br>\n";}
+					{$NOTESout .= _QXZ("CALL LOG FOR THIS LEAD:")."<br>\n";}
 				$NOTESout .= "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=$stage>";
 				$NOTESout .= "<TR>";
 				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:10px;font-family:sans-serif;\"><B> &nbsp; # &nbsp; </font></TD>";
-				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; DATE/TIME &nbsp; </font></TD>";
-				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; AGENT &nbsp; </font></TD>";
-				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; LENGTH &nbsp; </font></TD>";
-				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; STATUS &nbsp; </font></TD>";
-				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; PHONE &nbsp; </font></TD>";
-				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; CAMPAIGN &nbsp; </font></TD>";
-				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; IN/OUT &nbsp; </font></TD>";
-				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; ALT &nbsp; </font></TD>";
-				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; HANGUP &nbsp; </font></TD>";
+				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("DATE/TIME")." &nbsp; </font></TD>";
+				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("AGENT")." &nbsp; </font></TD>";
+				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("LENGTH")." &nbsp; </font></TD>";
+				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("STATUS")." &nbsp; </font></TD>";
+				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("PHONE")." &nbsp; </font></TD>";
+				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("CAMPAIGN")." &nbsp; </font></TD>";
+				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("IN/OUT")." &nbsp; </font></TD>";
+				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("ALT")." &nbsp; </font></TD>";
+				$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("HANGUP")." &nbsp; </font></TD>";
 			#	$NOTESout .= "</TR><TR>";
 			#	$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\" COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; FULL NAME &nbsp; </font></TD>";
 				$NOTESout .= "</TR>";
@@ -654,7 +655,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 						$rowA=mysqli_fetch_row($rsltA);
 						$Allcall_notes[$g] =	$rowA[0];
 						if (strlen($Allcall_notes[$g]) > 0)
-							{$Allcall_notes[$g] =	"<b>NOTES: </b> $Allcall_notes[$g]";}
+							{$Allcall_notes[$g] =	"<b>"._QXZ("NOTES:")." </b> "._QXZ("$Allcall_notes[$g]");}
 						}
 					$stmtA="SELECT full_name FROM vicidial_users WHERE user='$ALLuser[$g]';";
 					$rsltA=mysql_to_mysqli($stmtA, $link);
@@ -707,7 +708,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 						$rowA=mysqli_fetch_row($rsltA);
 						$Allcall_notes[$g] =	$rowA[0];
 						if (strlen($Allcall_notes[$g]) > 0)
-							{$Allcall_notes[$g] =	"<b>NOTES: </b> $Allcall_notes[$g]";}
+							{$Allcall_notes[$g] =	"<b>"._QXZ("NOTES").": </b> "._QXZ("$Allcall_notes[$g]");}
 						}
 					$stmtA="SELECT full_name FROM vicidial_users WHERE user='$ALLuser[$g]';";
 					$rsltA=mysql_to_mysqli($stmtA, $link);
@@ -728,7 +729,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 				if ($g > 0)
 					{sort($ALLsort, SORT_NUMERIC);}
 				else
-					{$NOTESout .= "<tr bgcolor=white><td colspan=11 align=center>No calls found</td></tr>";}
+					{$NOTESout .= "<tr bgcolor=white><td colspan=11 align=center>"._QXZ("No calls found")."</td></tr>";}
 
 				$u=0;
 				while ($g > $u) 
@@ -759,7 +760,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 					$NOTESout .= "<td align=right><font size=2> $ALLhangup_reason[$i] </td>\n";
 					$NOTESout .= "</TR><TR>";
 					$NOTESout .= "<td></td>";
-					$NOTESout .= "<TD $bgcolor COLSPAN=9 align=left><font style=\"font-size:11px;font-family:sans-serif;\"> $Allcall_notes[$i] </font></TD>";
+					$NOTESout .= "<TD $bgcolor COLSPAN=9 align=left><font style=\"font-size:11px;font-family:sans-serif;\"> "._QXZ("$Allcall_notes[$i]")." </font></TD>";
 					$NOTESout .= "</tr>\n";
 					}
 
@@ -997,7 +998,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 	$AC_processed=0;
 	if ( (!$AC_processed) and ($dst_range == 'SSM-FSN') )
 		{
-		if ($DBX) {print "     Second Sunday March to First Sunday November\n";}
+		if ($DBX) {print "     "._QXZ("Second Sunday March to First Sunday November")."\n";}
 		#**********************************************************************
 		# SSM-FSN
 		#     This is returns 1 if Daylight Savings Time is in effect and 0 if 
@@ -1093,7 +1094,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 
 	if ( (!$AC_processed) and ($dst_range == 'FSA-LSO') )
 		{
-		if ($DBX) {print "     First Sunday April to Last Sunday October\n";}
+		if ($DBX) {print "     "._QXZ("First Sunday April to Last Sunday October")."\n";}
 		#**********************************************************************
 		# FSA-LSO
 		#     This is returns 1 if Daylight Savings Time is in effect and 0 if 
@@ -1162,7 +1163,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 
 	if ( (!$AC_processed) and ($dst_range == 'LSM-LSO') )
 		{
-		if ($DBX) {print "     Last Sunday March to Last Sunday October\n";}
+		if ($DBX) {print "     "._QXZ("Last Sunday March to Last Sunday October")."\n";}
 		#**********************************************************************
 		#     This is s 1 if Daylight Savings Time is in effect and 0 if 
 		#       Standard time is in effect.
@@ -1230,7 +1231,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 		}
 	if ( (!$AC_processed) and ($dst_range == 'LSO-LSM') )
 		{
-		if ($DBX) {print "     Last Sunday October to Last Sunday March\n";}
+		if ($DBX) {print "     "._QXZ("Last Sunday October to Last Sunday March")."\n";}
 		#**********************************************************************
 		#     This is s 1 if Daylight Savings Time is in effect and 0 if 
 		#       Standard time is in effect.
@@ -1299,7 +1300,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 
 	if ( (!$AC_processed) and ($dst_range == 'FSO-LSM') )
 		{
-		if ($DBX) {print "     First Sunday October to Last Sunday March\n";}
+		if ($DBX) {print "     "._QXZ("First Sunday October to Last Sunday March")."\n";}
 		#**********************************************************************
 		#   TASMANIA ONLY
 		#     This is s 1 if Daylight Savings Time is in effect and 0 if 
@@ -1367,7 +1368,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 
 	if ( (!$AC_processed) and ($dst_range == 'FSO-FSA') )
 		{
-		if ($DBX) {print "     Sunday in October to First Sunday in April\n";}
+		if ($DBX) {print "     "._QXZ("Sunday in October to First Sunday in April")."\n";}
 		#**********************************************************************
 		# FSO-FSA
 		#   2008+ AUSTRALIA ONLY (country code 61)
@@ -1434,7 +1435,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 
 	if ( (!$AC_processed) and ($dst_range == 'FSO-TSM') )
 		{
-		if ($DBX) {print "     First Sunday October to Third Sunday March\n";}
+		if ($DBX) {print "     "._QXZ("First Sunday October to Third Sunday March")."\n";}
 		#**********************************************************************
 		#     This is s 1 if Daylight Savings Time is in effect and 0 if 
 		#       Standard time is in effect.
@@ -1501,7 +1502,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 
 	if ( (!$AC_processed) and ($dst_range == 'LSS-FSA') )
 		{
-		if ($DBX) {print "     Last Sunday in September to First Sunday in April\n";}
+		if ($DBX) {print "     "._QXZ("Last Sunday in September to First Sunday in April")."\n";}
 		#**********************************************************************
 		# LSS-FSA
 		#   2007+ NEW ZEALAND (country code 64)
@@ -1570,7 +1571,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 
 	if ( (!$AC_processed) and ($dst_range == 'TSO-LSF') )
 		{
-		if ($DBX) {print "     Third Sunday October to Last Sunday February\n";}
+		if ($DBX) {print "     "._QXZ("Third Sunday October to Last Sunday February")."\n";}
 		#**********************************************************************
 		# TSO-LSF
 		#     This is returns 1 if Daylight Savings Time is in effect and 0 if 
@@ -1640,7 +1641,7 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 
 	if (!$AC_processed)
 		{
-		if ($DBX) {print "     No DST Method Found\n";}
+		if ($DBX) {print "     "._QXZ("No DST Method Found")."\n";}
 		if ($DBX) {print "     DST: 0\n";}
 		$AC_processed++;
 		}
@@ -1812,5 +1813,16 @@ function mysql_to_mysqli($stmt, $link) {
 	$rslt=mysqli_query($link, $stmt);
 	return $rslt;
 }
+
+
+function _QXZ($English_text) 
+	{
+#	$English_text = str_repeat('*', strlen($English_text));
+#	$fp = fopen ("./QXZdebug.txt", "a");
+#	fwrite ($fp, "|$English_text\n");
+#	fclose($fp);
+
+	return $English_text;
+	}
 
 ?>

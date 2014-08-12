@@ -1,7 +1,7 @@
 <?php
 # vdc_email_display.php - VICIDIAL administration page
 #
-# Copyright (C) 2013  Matt Florell, Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell, Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This page displays any incoming emails in the Vicidial user interface.  It 
 # also allows the user to download and view any attachments sent in the email,
@@ -16,6 +16,7 @@
 # 130603-2210 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130705-1515 - Added optional encrypted passwords compatibility
 # 130802-1032 - Changed to PHP mysqli functions
+# 140811-0834 - Changed to use QXZ function for echoing text
 #
 
 require_once("dbconnect_mysqli.php");
@@ -111,7 +112,7 @@ if ($qm_conf_ct > 0)
 
 if ($allow_emails<1) 
 	{
-	echo "Your system does not have the email setting enabled\n";
+	echo _QXZ("Your system does not have the email setting enabled\n");
 	exit;
 	}
 
@@ -152,7 +153,7 @@ $LVAactive=$row[0];
 $LVAactive=9;
 if ( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0) or ( ($LVAactive < 1) ) )
 	{
-	echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
+	echo _QXZ("Invalid Username/Password:")." |$user|$pass|$auth_message|\n";
 	echo "<form action=./vdc_email_display.php method=POST name=email_display_form id=email_display_form>\n";
 	echo "<input type=hidden name=user id=user value=\"$user\">\n";
 	echo "</form>\n";
@@ -189,7 +190,7 @@ if ($REPLY)
 			{
 			if (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$LF_orig))
 				{
-				echo "ERROR: Invalid File Name: $LF_orig\n";
+				echo _QXZ("ERROR: Invalid File Name:")." $LF_orig\n";
 				exit;
 				}
 			else 
@@ -224,7 +225,7 @@ if ($REPLY)
 		}
 	else 
 		{
-		echo "<p>mail could not be sent!</p>"; 
+		echo "<p>"._QXZ("mail could not be sent!")."</p>"; 
 		} 
 	exit;
 	}
@@ -252,23 +253,23 @@ if ($lead_id) {
 			$email_to = $row["email_to"];
 		}
 		$EMAIL_form="<center><TABLE cellspacing=2 cellpadding=2 bgcolor='#CCCCCC' width='500'>\n";
-		$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='150'>Date received:</td><td align='left' valign='top' width='*'>$row[email_date]</td></tr>\n";
-		$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='150'>From:</td><td align='left' valign='top' width='*'>$row[email_from]</td></tr>\n";
-		$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='150'>Subject:</td><td align='left' valign='top' width='*'>$row[subject]</td></tr>\n";
-		$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='150'>Message:</td><td align='left' valign='top' width='*'><pre>$row[message]</pre></td></tr>\n";
+		$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='150'>"._QXZ("Date received:")."</td><td align='left' valign='top' width='*'>$row[email_date]</td></tr>\n";
+		$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='150'>"._QXZ("From:")."</td><td align='left' valign='top' width='*'>$row[email_from]</td></tr>\n";
+		$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='150'>"._QXZ("Subject:")."</td><td align='left' valign='top' width='*'>$row[subject]</td></tr>\n";
+		$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='150'>"._QXZ("Message:")."</td><td align='left' valign='top' width='*'><pre>$row[message]</pre></td></tr>\n";
 
 		$att_stmt="select * from inbound_email_attachments where email_row_id='$email_row_id'";
 		$att_rslt=mysql_to_mysqli($att_stmt, $link);
 		if (mysqli_num_rows($att_rslt)>0) {
-			$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='150'>Attachments:</td><td align='left' valign='top' width='*'><pre>";
+			$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='150'>"._QXZ("Attachments:")."</td><td align='left' valign='top' width='*'><pre>";
 			while($att_row=mysqli_fetch_array($att_rslt)) {
 				$EMAIL_form.="<LI><a href='$_SERVER[PHP_SELF]?attachment_id=$att_row[attachment_id]&lead_id=$lead_id'>$att_row[filename]</a>\n";
 			}
 			$EMAIL_form.="</pre></td></tr>";
 		}
 		$EMAIL_form.="<tr><td colspan='2'><HR></td></tr>";
-		$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='150'>Response:</td><td align='left' valign='top' width='*'>RE: $row[subject]<input type='hidden' name='reply_subject' value='RE: $row[subject]'></td></tr>\n";
-		$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='150'>Reply:<BR><BR><input type='button' name='copy' value='COPY MESSAGE >>>' onClick='CopyMessage($row[email_row_id])'></td><td align='left' valign='top' width='*'><textarea rows='8' cols='50' name='reply_message' id='reply_message'>$reply_message</textarea></td></tr>\n";
+		$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='150'>"._QXZ("Response:")."</td><td align='left' valign='top' width='*'>RE: $row[subject]<input type='hidden' name='reply_subject' value='RE: $row[subject]'></td></tr>\n";
+		$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='150'>"._QXZ("Reply:")."<BR><BR><input type='button' name='copy' value='"._QXZ("COPY MESSAGE")." >>>' onClick='CopyMessage($row[email_row_id])'></td><td align='left' valign='top' width='*'><textarea rows='8' cols='50' name='reply_message' id='reply_message'>$reply_message</textarea></td></tr>\n";
 		$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='150'>Attachments:</td><td align='left' valign='top' width='*'>";
 		$EMAIL_form.="<span id='attachment_span1'><input type=file name='attachment1' value='$attachment1'></span><BR/>";
 		$EMAIL_form.="<span id='attachment_span2'><input type=file name='attachment2'></span><BR/>";
@@ -276,7 +277,7 @@ if ($lead_id) {
 		$EMAIL_form.="<span id='attachment_span4'><input type=file name='attachment4'></span><BR/>";
 		$EMAIL_form.="<span id='attachment_span5'><input type=file name='attachment5'></span>";
 		$EMAIL_form.="</td></tr>\n";
-		$EMAIL_form.="<tr><td colspan='2' align='center'><input type='submit' name='REPLY' value='REPLY'></td></tr>";
+		$EMAIL_form.="<tr><td colspan='2' align='center'><input type='submit' name='REPLY' value='"._QXZ("REPLY")."'></td></tr>";
 		$EMAIL_form.="</table></center>\n";
 		$EMAIL_form.="<input type='hidden' name='reply_to_address' value='$email_from'>\n";
 		$EMAIL_form.="<input type='hidden' name='reply_from_address' value='$email_to'>\n";
@@ -310,7 +311,7 @@ if ($lead_id) {
 ?>
 	<html>
 	<head>
-	<title>AGENT email frame</title>
+	<title><?php echo _QXZ("AGENT email frame"); ?></title>
 	</head>
 	<script language="Javascript">
 	function ParseFileName() 
@@ -370,6 +371,6 @@ if ($lead_id) {
 <?php
 	}
 } else {
-	echo "ERROR - ID variable missing";
+	echo _QXZ("ERROR - ID variable missing");
 }
 ?>

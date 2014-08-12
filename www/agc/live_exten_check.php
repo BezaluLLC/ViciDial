@@ -1,7 +1,7 @@
 <?php
-# live_exten_check.php    version 2.8
+# live_exten_check.php    version 2.10
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to send whether the client channel is live and to what channel it is connected
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -34,6 +34,7 @@
 # 130603-2214 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130705-1522 - Added optional encrypted passwords compatibility
 # 130802-1009 - Changed to PHP mysqli functions
+# 140811-0841 - Changed to use QXZ function for echoing text
 #
 
 require_once("dbconnect_mysqli.php");
@@ -81,14 +82,14 @@ if ($auth_message == 'GOOD')
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-	echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
+	echo _QXZ("Invalid Username/Password:")." |$user|$pass|$auth_message|\n";
 	exit;
 	}
 else
 	{
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
-		echo "Invalid server_ip: |$server_ip|  or  Invalid session_name: |$session_name|\n";
+		echo _QXZ("Invalid server_ip:")." |$server_ip|  or  Invalid session_name: |$session_name|\n";
 		exit;
 		}
 	else
@@ -100,7 +101,7 @@ else
 		$SNauth=$row[0];
 		if($SNauth==0)
 			{
-			echo "Invalid session_name: |$session_name|$server_ip|\n";
+			echo _QXZ("Invalid session_name:")." |$session_name|$server_ip|\n";
 			exit;
 			}
 		else
@@ -115,7 +116,7 @@ if ($format=='debug')
 	echo "<html>\n";
 	echo "<head>\n";
 	echo "<!-- VERSION: $version     BUILD: $build    EXTEN: $exten   server_ip: $server_ip-->\n";
-	echo "<title>Live Extension Check";
+	echo "<title>"._QXZ("Live Extension Check");
 	echo "</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -137,7 +138,7 @@ $channel_live=1;
 if ( (strlen($exten)<1) or (strlen($protocol)<3) )
 	{
 	$channel_live=0;
-	echo "Exten $exten is not valid or protocol $protocol is not valid\n";
+	echo _QXZ("Exten $exten is not valid or protocol $protocol is not valid\n");
 	exit;
 	}
 else
@@ -169,10 +170,10 @@ while($loop_count > $counter)
 	if ($trunk_count>0)
 		{
 		$row=mysqli_fetch_row($rslt);
-		echo "Conversation: $counter ~";
-		echo "ChannelA: $ChanneLA[$counter] ~";
-		echo "ChannelB: $ChanneLB[$counter] ~";
-		echo "ChannelBtrunk: $row[0]|";
+		echo _QXZ("Conversation: $counter ~");
+		echo _QXZ("ChannelA: $ChanneLA[$counter] ~");
+		echo _QXZ("ChannelB: $ChanneLB[$counter] ~");
+		echo _QXZ("ChannelBtrunk: $row[0]|");
 		}
 	else
 		{
@@ -183,10 +184,10 @@ while($loop_count > $counter)
 		if ($trunk_count>0)
 			{
 			$row=mysqli_fetch_row($rslt);
-			echo "Conversation: $counter ~";
-			echo "ChannelA: $ChanneLA[$counter] ~";
-			echo "ChannelB: $ChanneLB[$counter] ~";
-			echo "ChannelBtrunk: $row[0]|";
+			echo _QXZ("Conversation: $counter ~");
+			echo _QXZ("ChannelA: $ChanneLA[$counter] ~");
+			echo _QXZ("ChannelB: $ChanneLB[$counter] ~");
+			echo _QXZ("ChannelBtrunk: $row[0]|");
 			}
 		else
 			{
@@ -197,10 +198,10 @@ while($loop_count > $counter)
 			if ($trunk_count>0)
 				{
 				$row=mysqli_fetch_row($rslt);
-				echo "Conversation: $counter ~";
-				echo "ChannelA: $ChanneLA[$counter] ~";
-				echo "ChannelB: $ChanneLB[$counter] ~";
-				echo "ChannelBtrunk: $row[0]|";
+				echo _QXZ("Conversation: $counter ~");
+				echo _QXZ("ChannelA: $ChanneLA[$counter] ~");
+				echo _QXZ("ChannelB: $ChanneLB[$counter] ~");
+				echo _QXZ("ChannelBtrunk: $row[0]|");
 				}
 			else
 				{
@@ -211,17 +212,17 @@ while($loop_count > $counter)
 				if ($trunk_count>0)
 					{
 					$row=mysqli_fetch_row($rslt);
-					echo "Conversation: $counter ~";
-					echo "ChannelA: $ChanneLA[$counter] ~";
-					echo "ChannelB: $ChanneLB[$counter] ~";
-					echo "ChannelBtrunk: $row[0]|";
+					echo _QXZ("Conversation: $counter ~");
+					echo _QXZ("ChannelA: $ChanneLA[$counter] ~");
+					echo _QXZ("ChannelB: $ChanneLB[$counter] ~");
+					echo _QXZ("ChannelBtrunk: $row[0]|");
 					}
 				else
 					{
-					echo "Conversation: $counter ~";
-					echo "ChannelA: $ChanneLA[$counter] ~";
-					echo "ChannelB: $ChanneLB[$counter] ~";
-					echo "ChannelBtrunk: $ChanneLA[$counter]|";
+					echo _QXZ("Conversation: $counter ~");
+					echo _QXZ("ChannelA: $ChanneLA[$counter] ~");
+					echo _QXZ("ChannelB: $ChanneLB[$counter] ~");
+					echo _QXZ("ChannelBtrunk: $ChanneLA[$counter]|");
 					}
 				}
 			}

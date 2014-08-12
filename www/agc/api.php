@@ -75,10 +75,11 @@
 # 140403-1738 - Added option to append filename on recording start
 # 140428-1656 - Added pause_type logging to queue_log pause/unpause entries for ra_call_control function
 # 140619-1006 - Added basic audio_playback function
+# 140811-1243 - Changed to use QXZ function for echoing text
 #
 
-$version = '2.10-41';
-$build = '140619-1006';
+$version = '2.10-42';
+$build = '140811-1243';
 
 $startMS = microtime();
 
@@ -312,8 +313,8 @@ if ($consultative != 'YES') {$consultative='NO';}
 ################################################################################
 if ($function == 'version')
 	{
-	$data = "VERSION: $version|BUILD: $build|DATE: $NOW_TIME|EPOCH: $StarTtime";
-	$result = 'SUCCESS';
+	$data = _QXZ("VERSION:")." $version|"._QXZ("BUILD:")." $build|"._QXZ("DATE:")." $NOW_TIME|"._QXZ("EPOCH:")." $StarTtime";
+	$result = _QXZ("SUCCESS");
 	echo "$data\n";
 	api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 	exit;
@@ -338,8 +339,8 @@ else
 	{
 	if(strlen($source)<2)
 		{
-		$result = 'ERROR';
-		$result_reason = "Invalid Source";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("Invalid Source");
 		echo "$result: $result_reason - $source\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 		exit;
@@ -360,8 +361,8 @@ else
 
 		if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0) or ($auth_api==0))
 			{
-			$result = 'ERROR';
-			$result_reason = "Invalid Username/Password";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("Invalid Username/Password");
 			echo "$result: $result_reason: |$user|$pass|$auth|$auth_api|$auth_message|\n";
 			$data = "$user|$pass|$auth";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -376,8 +377,8 @@ else
 			$SNauth=$row[0];
 			if($SNauth==0)
 				{
-				$result = 'ERROR';
-				$result_reason = "System API NOT ACTIVE";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("System API NOT ACTIVE");
 				echo "$result: $result_reason\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				exit;
@@ -396,7 +397,7 @@ if ($format=='debug')
 	echo "<html>\n";
 	echo "<head>\n";
 	echo "<!-- VERSION: $version     BUILD: $build    USER: $user\n";
-	echo "<title>VICIDiaL Agent API";
+	echo "<title>"._QXZ("VICIDiaL Agent API");
 	echo "</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -423,27 +424,27 @@ if ($function == 'webserver')
 	$data .= "abbr.timezone: " . date('T') . "\n";
 	$data .= "dst.timezone: " . date('I') . "\n";
 	$data .= "uname: " . php_uname('e') . "\n";
-	$data .= "host name: " . php_uname('n') . "\n";
-	$data .= "server name: " . $_SERVER['SERVER_NAME'] . "\n";
-	$data .= "php version: " . phpversion() . "\n";
-	$data .= "apache version: " . apache_get_version() . "\n";
-	$data .= "apache processes: " . $processes . "\n";
-	$data .= "system loadavg: " . $load[0] . "\n";
-	$data .= "disk_free_space: " . disk_free_space('/') . "\n";
+	$data .= _QXZ("host name: ") . php_uname('n') . "\n";
+	$data .= _QXZ("server name: ") . $_SERVER['SERVER_NAME'] . "\n";
+	$data .= _QXZ("php version: ") . phpversion() . "\n";
+	$data .= _QXZ("apache version: ") . apache_get_version() . "\n";
+	$data .= _QXZ("apache processes: ") . $processes . "\n";
+	$data .= _QXZ("system load average: ") . $load[0] . "\n";
+	$data .= _QXZ("disk free space: ") . disk_free_space('/') . "\n";
 
 	if (ini_get('date.timezone')) 
 		{
 		$data .= "date.timezone: " . ini_get('date.timezone') . "\n";
-		$data .= "max_execution_time: " . ini_get('max_execution_time') . "\n";
-		$data .= "max_input_time: " . ini_get('max_input_time') . "\n";
-		$data .= "memory_limit: " . ini_get('memory_limit') . "\n";
-		$data .= "post_max_size: " . ini_get('post_max_size') . "\n";
-		$data .= "upload_max_filesize: " . ini_get('upload_max_filesize') . "\n";
-		$data .= "default_socket_timeout: " . ini_get('default_socket_timeout') . "\n";
+		$data .= _QXZ("maximum execution time: ") . ini_get('max_execution_time') . "\n";
+		$data .= _QXZ("maximum input time: ") . ini_get('max_input_time') . "\n";
+		$data .= _QXZ("memory limit: ") . ini_get('memory_limit') . "\n";
+		$data .= _QXZ("post maximum size: ") . ini_get('post_max_size') . "\n";
+		$data .= _QXZ("upload maximum filesize: ") . ini_get('upload_max_filesize') . "\n";
+		$data .= _QXZ("default socket timeout: ") . ini_get('default_socket_timeout') . "\n";
 		}
-	else {$data .= "ini_get not allowed: \n";}
+	else {$data .= _QXZ("ini_get not allowed: ")."\n";}
 
-	$result = 'SUCCESS';
+	$result = _QXZ("SUCCESS");
 	echo "<PRE>$data</PRE>\n";
 	$data = preg_replace("/\n/",'|',$data);
 	api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -464,8 +465,8 @@ if ($function == 'external_hangup')
 	{
 	if ( (strlen($value)<1) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
 		{
-		$result = 'ERROR';
-		$result_reason = "external_hangup not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("external_hangup not valid");
 		echo "$result: $result_reason - $value|$agent_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 		}
@@ -487,8 +488,8 @@ if ($function == 'external_hangup')
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "no user found";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("no user found");
 				echo "$result: $result_reason - $alt_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
@@ -502,15 +503,15 @@ if ($function == 'external_hangup')
 			$stmt="UPDATE vicidial_live_agents set external_hangup='$value' where user='$agent_user';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_to_mysqli($stmt, $link);
-			$result = 'SUCCESS';
-			$result_reason = "external_hangup function set";
+			$result = _QXZ("SUCCESS");
+			$result_reason = _QXZ("external_hangup function set");
 			echo "$result: $result_reason - $value|$agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
 		else
 			{
-			$result = 'ERROR';
-			$result_reason = "agent_user is not logged in";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
@@ -531,8 +532,8 @@ if ($function == 'external_status')
 	{
 	if ( (strlen($value)<1) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
 		{
-		$result = 'ERROR';
-		$result_reason = "external_status not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("external_status not valid");
 		echo "$result: $result_reason - $value|$agent_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 		}
@@ -554,8 +555,8 @@ if ($function == 'external_status')
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "no user found";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("no user found");
 				echo "$result: $result_reason - $alt_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
@@ -612,15 +613,15 @@ if ($function == 'external_status')
 			$stmt="UPDATE vicidial_live_agents set external_status='$value' where user='$agent_user';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_to_mysqli($stmt, $link);
-			$result = 'SUCCESS';
-			$result_reason = "external_status function set";
+			$result = _QXZ("SUCCESS");
+			$result_reason = _QXZ("external_status function set");
 			echo "$result: $result_reason - $value|$agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
 		else
 			{
-			$result = 'ERROR';
-			$result_reason = "agent_user is not logged in";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
@@ -641,8 +642,8 @@ if ($function == 'external_pause')
 	{
 	if ( (strlen($value)<1) or ( (strlen($agent_user)<1) and (strlen($alt_user)<1) ) or (!preg_match("/PAUSE|RESUME/",$value)) )
 		{
-		$result = 'ERROR';
-		$result_reason = "external_pause not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("external_pause not valid");
 		echo "$result: $result_reason - $value|$agent_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 		}
@@ -664,8 +665,8 @@ if ($function == 'external_pause')
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "no user found";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("no user found");
 				echo "$result: $result_reason - $alt_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
@@ -684,8 +685,8 @@ if ($function == 'external_pause')
 				$row=mysqli_fetch_row($rslt);
 				if ($row[0] > 0)
 					{
-					$result = 'ERROR';
-					$result_reason = "external_pause agent is not paused";
+					$result = _QXZ("ERROR");
+					$result_reason = _QXZ("external_pause agent is not paused");
 					echo "$result: $result_reason - $value|$agent_user\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					exit;
@@ -694,16 +695,16 @@ if ($function == 'external_pause')
 			$stmt="UPDATE vicidial_live_agents set external_pause='$value!$epoch' where user='$agent_user';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_to_mysqli($stmt, $link);
-			$result = 'SUCCESS';
-			$result_reason = "external_pause function set";
+			$result = _QXZ("SUCCESS");
+			$result_reason = _QXZ("external_pause function set");
 			echo "$result: $result_reason - $value|$epoch|$agent_user\n";
 			$data = "$epoch";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
 		else
 			{
-			$result = 'ERROR';
-			$result_reason = "agent_user is not logged in";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
@@ -724,8 +725,8 @@ if ($function == 'logout')
 	{
 	if ( (strlen($value)<1) or ( (strlen($agent_user)<1) and (strlen($alt_user)<1) ) or (!preg_match("/LOGOUT/",$value)) )
 		{
-		$result = 'ERROR';
-		$result_reason = "logout not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("logout not valid");
 		echo "$result: $result_reason - $value|$agent_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 		}
@@ -747,8 +748,8 @@ if ($function == 'logout')
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "no user found";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("no user found");
 				echo "$result: $result_reason - $alt_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
@@ -762,16 +763,16 @@ if ($function == 'logout')
 			$stmt="UPDATE vicidial_live_agents set external_pause='$value' where user='$agent_user';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_to_mysqli($stmt, $link);
-			$result = 'SUCCESS';
-			$result_reason = "logout function set";
+			$result = _QXZ("SUCCESS");
+			$result_reason = _QXZ("logout function set");
 			echo "$result: $result_reason - $value|$epoch|$agent_user\n";
 			$data = "$epoch";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
 		else
 			{
-			$result = 'ERROR';
-			$result_reason = "agent_user is not logged in";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
@@ -793,8 +794,8 @@ if ($function == 'recording')
 	{
 	if ( ( (!preg_match("/START/",$value)) and (!preg_match("/STOP/",$value)) and (!preg_match("/STATUS/",$value)) ) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
 		{
-		$result = 'ERROR';
-		$result_reason = "recording not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("recording not valid");
 		echo "$result: $result_reason - $value|$agent_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 		}
@@ -816,8 +817,8 @@ if ($function == 'recording')
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "no user found";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("no user found");
 				echo "$result: $result_reason - $alt_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
@@ -855,15 +856,15 @@ if ($function == 'recording')
 						$RECstart_time =	$row[2];
 						}
 
-					$result = 'NOTICE';
-					$result_reason = "recording active";
+					$result = _QXZ("NOTICE");
+					$result_reason = _QXZ("recording active");
 					echo "$result: $result_reason - $agent_user|$recording_id|$RECfilename|$RECserver_ip|$RECstart_time|$AGENTserver_ip|$AGENTconf_exten|$AGENTstatus\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					}
 				else
 					{
-					$result = 'NOTICE';
-					$result_reason = "not recording";
+					$result = _QXZ("NOTICE");
+					$result_reason = _QXZ("not recording");
 					echo "$result: $result_reason - $agent_user|||||$AGENTserver_ip|$AGENTconf_exten|$AGENTstatus\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					}
@@ -872,8 +873,8 @@ if ($function == 'recording')
 				{
 				if ( (preg_match("/STOP/",$value)) and ( ($recording_id=='STOP') or ($recording_id < 1) ) )
 					{
-					$result = 'ERROR';
-					$result_reason = "stop recording error";
+					$result = _QXZ("ERROR");
+					$result_reason = _QXZ("stop recording error");
 					echo "$result: $result_reason - $agent_user|$recording_id||||$AGENTserver_ip|$AGENTconf_exten|$AGENTstatus\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 
@@ -887,16 +888,16 @@ if ($function == 'recording')
 				$stmt="UPDATE vicidial_live_agents set external_recording='$value' where user='$agent_user';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_to_mysqli($stmt, $link);
-				$result = 'SUCCESS';
-				$result_reason = "recording function sent";
+				$result = _QXZ("SUCCESS");
+				$result_reason = _QXZ("recording function sent");
 				echo "$result: $result_reason - $agent_user|$value||||$AGENTserver_ip|$AGENTconf_exten|$AGENTstatus\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
 			}
 		else
 			{
-			$result = 'ERROR';
-			$result_reason = "agent_user is not logged in";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
@@ -918,8 +919,8 @@ if ($function == 'webphone_url')
 	{
 	if ( ( ($value!='DISPLAY') and ($value!='LAUNCH') ) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
 		{
-		$result = 'ERROR';
-		$result_reason = "webphone_url not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("webphone_url not valid");
 		echo "$result: $result_reason - $value|$agent_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 		}
@@ -941,8 +942,8 @@ if ($function == 'webphone_url')
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "no user found";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("no user found");
 				echo "$result: $result_reason - $alt_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
@@ -966,43 +967,43 @@ if ($function == 'webphone_url')
 					{
 					if ($value=='DISPLAY')
 						{
-						$result = 'NOTICE';
-						$result_reason = "webphone_url active and displayed";
+						$result = _QXZ("NOTICE");
+						$result_reason = _QXZ("webphone_url active and displayed");
 						echo "$webphone_url";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 						}
 					else
 						{
-						$result = 'NOTICE';
-						$result_reason = "webphone_url active and launched";
+						$result = _QXZ("NOTICE");
+						$result_reason = _QXZ("webphone_url active and launched");
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 						echo"<META HTTP-EQUIV=Refresh CONTENT=\"0; URL=$webphone_url\">\n";
 						echo"</HEAD>\n";
 						echo"<BODY BGCOLOR=#FFFFFF marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
-						echo"<a href=\"$webphone_url\">click here to continue. . .</a>\n";
+						echo"<a href=\"$webphone_url\">"._QXZ("click here to continue. . .")."</a>\n";
 						echo"</BODY>\n";
 						}
 					}
 				else
 					{
-					$result = 'ERROR';
-					$result_reason = "webphone_url error - webphone url is empty";
+					$result = _QXZ("ERROR");
+					$result_reason = _QXZ("webphone_url error - webphone url is empty");
 					echo "$result: $result_reason - $agent_user\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					}
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "webphone_url error - no session data";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("webphone_url error - no session data");
 				echo "$result: $result_reason - $agent_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
 			}
 		else
 			{
-			$result = 'ERROR';
-			$result_reason = "agent_user is not logged in";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
@@ -1023,8 +1024,8 @@ if ($function == 'call_agent')
 	{
 	if ( ($value!='CALL') or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
 		{
-		$result = 'ERROR';
-		$result_reason = "call_agent not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("call_agent not valid");
 		echo "$result: $result_reason - $value|$agent_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 		}
@@ -1046,8 +1047,8 @@ if ($function == 'call_agent')
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "no user found";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("no user found");
 				echo "$result: $result_reason - $alt_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
@@ -1073,32 +1074,32 @@ if ($function == 'call_agent')
 					$stmt="INSERT INTO vicidial_manager values('$call_agent_string');";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 					$rslt=mysql_to_mysqli($stmt, $link);
-					$result = 'SUCCESS';
-					$result_reason = "call_agent function sent";
+					$result = _QXZ("SUCCESS");
+					$result_reason = _QXZ("call_agent function sent");
 					echo "$result: $result_reason - $agent_user\n";
 					$data = "$epoch";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					}
 				else
 					{
-					$result = 'ERROR';
-					$result_reason = "call_agent error - entry is empty";
+					$result = _QXZ("ERROR");
+					$result_reason = _QXZ("call_agent error - entry is empty");
 					echo "$result: $result_reason - $agent_user\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					}
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "call_agent error - no session data";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("call_agent error - no session data");
 				echo "$result: $result_reason - $agent_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
 			}
 		else
 			{
-			$result = 'ERROR';
-			$result_reason = "agent_user is not logged in";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
@@ -1119,8 +1120,8 @@ if ($function == 'audio_playback')
 	{
 	if ( ( (strlen($value)<1) and ($stage=='PLAY') ) or (strlen($stage)<4) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
 		{
-		$result = 'ERROR';
-		$result_reason = "audio_playback not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("audio_playback not valid");
 		$data = "$stage";
 		echo "$result: $result_reason - $value|$data|$agent_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -1143,8 +1144,8 @@ if ($function == 'audio_playback')
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "no user found";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("no user found");
 				$data = "$stage|$alt_user";
 				echo "$result: $result_reason - $data\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -1193,9 +1194,9 @@ if ($function == 'audio_playback')
 								$stmtX="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$VLAserver_ip','','Hangup','PLAYHU$ENTRYdate','Channel: $VLAchannel','','','','','','','','','');";
 								if ($format=='debug') {echo "\n<!-- $stmtX -->";}
 								$rslt=mysql_to_mysqli($stmtX, $link);
-								$result = 'NOTICE';
+								$result = _QXZ("NOTICE");
 								$data = "$stage|$dial_override";
-								$result_reason = "audio_playback previous playback stopped";
+								$result_reason = _QXZ("audio_playback previous playback stopped");
 								echo "$result: $result_reason - $data|$agent_user\n";
 								$data = "$epoch";
 								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -1204,9 +1205,9 @@ if ($function == 'audio_playback')
 								}
 							else
 								{
-								$result = 'ERROR';
+								$result = _QXZ("ERROR");
 								$data = "$VLAconf_exten|$VLAserver_ip|$stage|$dial_override";
-								$result_reason = "audio_playback error - audio already playing in agent session";
+								$result_reason = _QXZ("audio_playback error - audio already playing in agent session");
 								echo "$result: $result_reason - $data|$agent_user\n";
 								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 								exit;
@@ -1241,9 +1242,9 @@ if ($function == 'audio_playback')
 							}
 						else
 							{
-							$result = 'ERROR';
+							$result = _QXZ("ERROR");
 							$data = "$VLAconf_exten|$VLAserver_ip|$stage";
-							$result_reason = "audio_playback error - no audio playing in agent session";
+							$result_reason = _QXZ("audio_playback error - no audio playing in agent session");
 							echo "$result: $result_reason - $data|$agent_user\n";
 							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 							exit;
@@ -1251,36 +1252,36 @@ if ($function == 'audio_playback')
 						}
 					if ($format=='debug') {echo "\n<!-- $stmtX -->";}
 					$rslt=mysql_to_mysqli($stmtX, $link);
-					$result = 'SUCCESS';
+					$result = _QXZ("SUCCESS");
 					$data = "$value|$stage";
-					$result_reason = "audio_playback function sent";
+					$result_reason = _QXZ("audio_playback function sent");
 					echo "$result: $result_reason - $data|$agent_user\n";
 					$data = "$epoch";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					}
 				else
 					{
-					$result = 'ERROR';
+					$result = _QXZ("ERROR");
 					$data = "$stage";
-					$result_reason = "audio_playback error - entry is empty";
+					$result_reason = _QXZ("audio_playback error - entry is empty");
 					echo "$result: $result_reason - $data|$agent_user\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					}
 				}
 			else
 				{
-				$result = 'ERROR';
+				$result = _QXZ("ERROR");
 				$data = "$stage";
-				$result_reason = "audio_playback error - no session data";
+				$result_reason = _QXZ("audio_playback error - no session data");
 				echo "$result: $result_reason - $data|$agent_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
 			}
 		else
 			{
-			$result = 'ERROR';
+			$result = _QXZ("ERROR");
 			$data = "$stage";
-			$result_reason = "agent_user is not logged in";
+			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $data|$agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
@@ -1306,8 +1307,8 @@ if ($function == 'external_dial')
 
 	if ( ( (strlen($value)<2) and (strlen($lead_id)<1) ) or ( (strlen($agent_user)<2) and (strlen($alt_user)<2) ) or (strlen($search)<2) or (strlen($preview)<2) or (strlen($focus)<2) )
 		{
-		$result = 'ERROR';
-		$result_reason = "external_dial not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("external_dial not valid");
 		$data = "$phone_code|$search|$preview|$focus|$lead_id";
 		echo "$result: $result_reason - $value|$data|$agent_user|$alt_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -1330,8 +1331,8 @@ if ($function == 'external_dial')
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "no user found";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("no user found");
 				echo "$result: $result_reason - $alt_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
@@ -1391,8 +1392,8 @@ if ($function == 'external_dial')
 							$caller_id_number	= $row[0];
 							if ($caller_id_number < 4)
 								{
-								$result = 'ERROR';
-								$result_reason = "caller_id_number from group_alias is not valid";
+								$result = _QXZ("ERROR");
+								$result_reason = _QXZ("caller_id_number from group_alias is not valid");
 								$data = "$group_alias|$caller_id_number";
 								echo "$result: $result_reason - $agent_user|$data\n";
 								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -1401,8 +1402,8 @@ if ($function == 'external_dial')
 							}
 						else
 							{
-							$result = 'ERROR';
-							$result_reason = "group_alias is not valid";
+							$result = _QXZ("ERROR");
+							$result_reason = _QXZ("group_alias is not valid");
 							$data = "$group_alias";
 							echo "$result: $result_reason - $agent_user|$data\n";
 							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -1456,7 +1457,7 @@ if ($function == 'external_dial')
 
 							### connect to your vtiger database
 							$linkV=mysqli_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass");
-							if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysqli_error($linkV));}
+							if (!$linkV) {die(_QXZ("Could not connect: ")."$vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysqli_error($linkV));}
 							mysqli_select_db($linkV, "$vtiger_dbname");
 
 							# make sure the ID is present in Vtiger database as an account
@@ -1496,8 +1497,8 @@ if ($function == 'external_dial')
 								}
 							else
 								{
-								$result = 'ERROR';
-								$result_reason = "vtiger callback activity does not exist in vtiger system";
+								$result = _QXZ("ERROR");
+								$result_reason = _QXZ("vtiger callback activity does not exist in vtiger system");
 								echo "$result: $result_reason - $value\n";
 								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 								exit;
@@ -1533,8 +1534,8 @@ if ($function == 'external_dial')
 									{$alt_dial='MAIN';}
 								if ($alt_dial=='')
 									{
-									$result = 'ERROR';
-									$result_reason = "phone number lead_id search not found";
+									$result = _QXZ("ERROR");
+									$result_reason = _QXZ("phone number lead_id search not found");
 									$data = "$value|$lead_id|$alt_dial";
 									echo "$result: $result_reason - $agent_user|$data\n";
 									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -1559,8 +1560,8 @@ if ($function == 'external_dial')
 							$value = preg_replace("/[^0-9]/","",$value);
 							if (strlen($value)<2)
 								{
-								$result = 'ERROR';
-								$result_reason = "phone number is not valid";
+								$result = _QXZ("ERROR");
+								$result_reason = _QXZ("phone number is not valid");
 								$data = "$value|$lead_id|$alt_dial";
 								echo "$result: $result_reason - $agent_user|$data\n";
 								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -1569,8 +1570,8 @@ if ($function == 'external_dial')
 							}
 						else
 							{
-							$result = 'ERROR';
-							$result_reason = "lead_id is not valid";
+							$result = _QXZ("ERROR");
+							$result_reason = _QXZ("lead_id is not valid");
 							$data = "$lead_id";
 							echo "$result: $result_reason - $agent_user|$data\n";
 							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -1598,8 +1599,8 @@ if ($function == 'external_dial')
 							}
 						else
 							{
-							$result = 'ERROR';
-							$result_reason = "phone_number is already in this agents manual dial queue";
+							$result = _QXZ("ERROR");
+							$result_reason = _QXZ("phone_number is already in this agents manual dial queue");
 							echo "$result: $result_reason - $agent_user|$value\n";
 							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 							}
@@ -1608,8 +1609,8 @@ if ($function == 'external_dial')
 						{
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_to_mysqli($stmt, $link);
-						$result = 'SUCCESS';
-						$result_reason = "external_dial function set";
+						$result = _QXZ("SUCCESS");
+						$result_reason = _QXZ("external_dial function set");
 						$data = "$phone_code|$search|$preview|$focus|$vendor_id|$epoch|$dial_prefix|$group_alias|$caller_id_number|$alt_dial";
 						echo "$result: $result_reason - $value|$agent_user|$data\n";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -1617,24 +1618,24 @@ if ($function == 'external_dial')
 					}
 				else
 					{
-					$result = 'ERROR';
-					$result_reason = "agent_user is not allowed to place manual dial calls";
+					$result = _QXZ("ERROR");
+					$result_reason = _QXZ("agent_user is not allowed to place manual dial calls");
 					echo "$result: $result_reason - $agent_user\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					}
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "agent_user is not paused";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("agent_user is not paused");
 				echo "$result: $result_reason - $agent_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
 			}
 		else
 			{
-			$result = 'ERROR';
-			$result_reason = "agent_user is not logged in";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
@@ -1657,8 +1658,8 @@ if ($function == 'preview_dial_action')
 
 	if ( (strlen($value)<4) or ( (strlen($agent_user)<2) and (strlen($alt_user)<2) ) or ( ($value != 'SKIP') and ($value != 'DIALONLY') and ($value != 'ALTDIAL') and ($value != 'ADR3DIAL') and ($value != 'FINISH') ) )
 		{
-		$result = 'ERROR';
-		$result_reason = "preview_dial_action not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("preview_dial_action not valid");
 		$data = "";
 		echo "$result: $result_reason - $value|$data|$agent_user|$alt_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -1681,8 +1682,8 @@ if ($function == 'preview_dial_action')
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "no user found";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("no user found");
 				echo "$result: $result_reason - $alt_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
@@ -1713,8 +1714,8 @@ if ($function == 'preview_dial_action')
 				}
 			if ($manual_preview_dial == 'DISABLED')
 				{
-				$result = 'ERROR';
-				$result_reason = "preview dialing not allowed on this campaign";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("preview dialing not allowed on this campaign");
 				$data = "$vac_campaign_id|$manual_preview_dial";
 				echo "$result: $result_reason - $agent_user|$data\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -1722,8 +1723,8 @@ if ($function == 'preview_dial_action')
 				}
 			if ( ($manual_preview_dial == 'PREVIEW_ONLY') and ($value == 'SKIP') )
 				{
-				$result = 'ERROR';
-				$result_reason = "preview dial skipping not allowed on this campaign";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("preview dial skipping not allowed on this campaign");
 				$data = "$vac_campaign_id|$manual_preview_dial";
 				echo "$result: $result_reason - $agent_user|$data\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -1731,8 +1732,8 @@ if ($function == 'preview_dial_action')
 				}
 			if ( ($alt_number_dialing == 'N') and ( ($value == 'ALTDIAL') or ($value == 'ADR3DIAL') or ($value == 'FINISH') ) )
 				{
-				$result = 'ERROR';
-				$result_reason = "alt number dialing not allowed on this campaign";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("alt number dialing not allowed on this campaign");
 				$data = "$vac_campaign_id|$alt_number_dialing";
 				echo "$result: $result_reason - $agent_user|$data\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -1759,32 +1760,32 @@ if ($function == 'preview_dial_action')
 
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 					$rslt=mysql_to_mysqli($stmt, $link);
-					$result = 'SUCCESS';
-					$result_reason = "preview_dial_action function set";
+					$result = _QXZ("SUCCESS");
+					$result_reason = _QXZ("preview_dial_action function set");
 					$data = "$value";
 					echo "$result: $result_reason - $value|$agent_user|$data\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					}
 				else
 					{
-					$result = 'ERROR';
-					$result_reason = "agent_user is not allowed to place manual dial calls";
+					$result = _QXZ("ERROR");
+					$result_reason = _QXZ("agent_user is not allowed to place manual dial calls");
 					echo "$result: $result_reason - $agent_user\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					}
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "agent_user is not paused";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("agent_user is not paused");
 				echo "$result: $result_reason - $agent_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
 			}
 		else
 			{
-			$result = 'ERROR';
-			$result_reason = "agent_user is not logged in";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
@@ -1807,8 +1808,8 @@ if ($function == 'external_add_lead')
 		{$value = $phone_number;}
 	if ( ( (strlen($agent_user)<2) and (strlen($alt_user)<2) ) or (strlen($phone_code)<1) or (strlen($value)<2) )
 		{
-		$result = 'ERROR';
-		$result_reason = "external_add_lead not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("external_add_lead not valid");
 		$data = "$value|$phone_code";
 		echo "$result: $result_reason - $data|$agent_user|$alt_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -1836,8 +1837,8 @@ if ($function == 'external_add_lead')
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "no user found";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("no user found");
 				echo "$result: $result_reason - $alt_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
@@ -1903,16 +1904,16 @@ if ($function == 'external_add_lead')
 					if ($affected_rows > 0)
 						{
 						$lead_id = mysqli_insert_id($link);
-						$result = 'SUCCESS';
-						$result_reason = "lead added";
+						$result = _QXZ("SUCCESS");
+						$result_reason = _QXZ("lead added");
 						echo "$result: $result_reason - $value|$campaign_id|$list_id|$lead_id|$agent_user\n";
 						$data = "$value|$list_id|$lead_id";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 						}
 					else
 						{
-						$result = 'ERROR';
-						$result_reason = "lead insertion failed";
+						$result = _QXZ("ERROR");
+						$result_reason = _QXZ("lead insertion failed");
 						echo "$result: $result_reason - $value|$campaign_id|$list_id|$agent_user\n";
 						$data = "$value|$list_id|$stmt";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -1922,16 +1923,16 @@ if ($function == 'external_add_lead')
 					{
 					if ($dnc_found>0)
 						{
-						$result = 'ERROR';
-						$result_reason = "add_lead PHONE NUMBER IN DNC";
+						$result = _QXZ("ERROR");
+						$result_reason = _QXZ("add_lead PHONE NUMBER IN DNC");
 						echo "$result: $result_reason - $value|$agent_user\n";
 						$data = "$value";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 						}
 					if ($camp_dnc_found>0)
 						{
-						$result = 'ERROR';
-						$result_reason = "add_lead PHONE NUMBER IN CAMPAIGN DNC";
+						$result = _QXZ("ERROR");
+						$result_reason = _QXZ("add_lead PHONE NUMBER IN CAMPAIGN DNC");
 						echo "$result: $result_reason - $value|$campaign_id|$agent_user\n";
 						$data = "$value|$campaign_id";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -1940,16 +1941,16 @@ if ($function == 'external_add_lead')
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "campaign manual dial list undefined";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("campaign manual dial list undefined");
 				echo "$result: $result_reason - $value|$campaign_id|$agent_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
 			}
 		else
 			{
-			$result = 'ERROR';
-			$result_reason = "agent_user is not logged in";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}		
@@ -1971,8 +1972,8 @@ if ($function == 'change_ingroups')
 
 	if ( (strlen($blended)<2) or (strlen($agent_user)<2) or (strlen($value)<3) )
 		{
-		$result = 'ERROR';
-		$result_reason = "change_ingroups not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("change_ingroups not valid");
 		$data = "$value|$blended|$ingroup_choices";
 		echo "$result: $result_reason - $data|$agent_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -2005,8 +2006,8 @@ if ($function == 'change_ingroups')
 						$row=mysqli_fetch_row($rslt);
 						if ($row[0] > 0)
 							{
-							$result = 'ERROR';
-							$result_reason = "campaign dial_method does not allow outbound autodial";
+							$result = _QXZ("ERROR");
+							$result_reason = _QXZ("campaign dial_method does not allow outbound autodial");
 							$data = "$blended";
 							echo "$result: $result_reason - $agent_user|$data\n";
 							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -2029,8 +2030,8 @@ if ($function == 'change_ingroups')
 								$row=mysqli_fetch_row($rslt);
 								if ($row[0] < 1)
 									{
-									$result = 'ERROR';
-									$result_reason = "ingroup does not exist";
+									$result = _QXZ("ERROR");
+									$result_reason = _QXZ("ingroup does not exist");
 									$data = "$in_groups[$k]|$ingroup_choices";
 									echo "$result: $result_reason - $agent_user|$data\n";
 									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -2042,8 +2043,8 @@ if ($function == 'change_ingroups')
 						}
 					if ( (strlen($ingroup_choices) < 1) and ( ($value == 'ADD') or ($value == 'REMOVE') ) )
 						{
-						$result = 'ERROR';
-						$result_reason = "ingroup_choices are required for ADD and REMOVE values";
+						$result = _QXZ("ERROR");
+						$result_reason = _QXZ("ingroup_choices are required for ADD and REMOVE values");
 						$data = "$value|$ingroup_choices";
 						echo "$result: $result_reason - $agent_user|$data\n";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -2193,7 +2194,7 @@ if ($function == 'change_ingroups')
 						$stmt="UPDATE vicidial_users set closer_campaigns='$ingroup_choices',closer_default_blended='$external_blended' where user='$agent_user';";
 							if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_to_mysqli($stmt, $link);
-						$default_data = "User settings set as default";
+						$default_data = _QXZ("User settings set as default");
 
 						### LOG INSERTION Admin Log Table ###
 						$ip = getenv("REMOTE_ADDR");
@@ -2205,32 +2206,32 @@ if ($function == 'change_ingroups')
 						$rslt=mysql_to_mysqli($stmt, $link);
 						}
 
-					$result = 'SUCCESS';
-					$result_reason = "change_ingroups function set";
+					$result = _QXZ("SUCCESS");
+					$result_reason = _QXZ("change_ingroups function set");
 					$data = "$ingroup_choices|$blended|$default_data";
 					echo "$result: $result_reason - $user|$agent_user|$data\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					}
 				else
 					{
-					$result = 'ERROR';
-					$result_reason = "user is not allowed to change agent in-groups";
+					$result = _QXZ("ERROR");
+					$result_reason = _QXZ("user is not allowed to change agent in-groups");
 					echo "$result: $result_reason - $user\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					}
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "campaign does not allow inbound calls";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("campaign does not allow inbound calls");
 				echo "$result: $result_reason - $agent_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
 			}
 		else
 			{
-			$result = 'ERROR';
-			$result_reason = "agent_user is not logged in";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
@@ -2251,8 +2252,8 @@ if ($function == 'update_fields')
 	{
 	if (strlen($agent_user)<1)
 		{
-		$result = 'ERROR';
-		$result_reason = "st_login_log not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("st_login_log not valid");
 		$data = "$agent_user";
 		echo "$result: $result_reason - $data\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -2283,175 +2284,175 @@ if ($function == 'update_fields')
 					$field_set=0;
 					if (preg_match('/phone_code/',$query_string))
 						{
-						if ($DB) {echo "phone_code set to $phone_code\n";}
+						if ($DB) {echo _QXZ("phone_code set to $phone_code\n");}
 						$fieldsSQL .= "phone_code='$phone_code',";
 						$fieldsLIST .= "phone_code,";
 						$field_set++;
 						}
 					if (preg_match('/address1/',$query_string))
 						{
-						if ($DB) {echo "address1 set to $address1\n";}
+						if ($DB) {echo _QXZ("address1 set to $address1\n");}
 						$fieldsSQL .= "address1='$address1',";
 						$fieldsLIST .= "address1,";
 						$field_set++;
 						}
 					if (preg_match('/address2/',$query_string))
 						{
-						if ($DB) {echo "address2 set to $address2\n";}
+						if ($DB) {echo _QXZ("address2 set to $address2\n");}
 						$fieldsSQL .= "address2='$address2',";
 						$fieldsLIST .= "address2,";
 						$field_set++;
 						}
 					if (preg_match('/address3/',$query_string))
 						{
-						if ($DB) {echo "address3 set to $address3\n";}
+						if ($DB) {echo _QXZ("address3 set to $address3\n");}
 						$fieldsSQL .= "address3='$address3',";
 						$fieldsLIST .= "address3,";
 						$field_set++;
 						}
 					if (preg_match('/alt_phone/',$query_string))
 						{
-						if ($DB) {echo "alt_phone set to $alt_phone\n";}
+						if ($DB) {echo _QXZ("alt_phone set to $alt_phone\n");}
 						$fieldsSQL .= "alt_phone='$alt_phone',";
 						$fieldsLIST .= "alt_phone,";
 						$field_set++;
 						}
 					if (preg_match('/city/',$query_string))
 						{
-						if ($DB) {echo "city set to $city\n";}
+						if ($DB) {echo _QXZ("city set to $city\n");}
 						$fieldsSQL .= "city='$city',";
 						$fieldsLIST .= "city,";
 						$field_set++;
 						}
 					if (preg_match('/comments/',$query_string))
 						{
-						if ($DB) {echo "comments set to $comments\n";}
+						if ($DB) {echo _QXZ("comments set to $comments\n");}
 						$fieldsSQL .= "comments='$comments',";
 						$fieldsLIST .= "comments,";
 						$field_set++;
 						}
 					if (preg_match('/country_code/',$query_string))
 						{
-						if ($DB) {echo "country_code set to $country_code\n";}
+						if ($DB) {echo _QXZ("country_code set to $country_code\n");}
 						$fieldsSQL .= "country_code='$country_code',";
 						$fieldsLIST .= "country_code,";
 						$field_set++;
 						}
 					if (preg_match('/date_of_birth/',$query_string))
 						{
-						if ($DB) {echo "date_of_birth set to $date_of_birth\n";}
+						if ($DB) {echo _QXZ("date_of_birth set to $date_of_birth\n");}
 						$fieldsSQL .= "date_of_birth='$date_of_birth',";
 						$fieldsLIST .= "date_of_birth,";
 						$field_set++;
 						}
 					if (preg_match('/email/',$query_string))
 						{
-						if ($DB) {echo "email set to $email\n";}
+						if ($DB) {echo _QXZ("email set to $email\n");}
 						$fieldsSQL .= "email='$email',";
 						$fieldsLIST .= "email,";
 						$field_set++;
 						}
 					if (preg_match('/first_name/',$query_string))
 						{
-						if ($DB) {echo "first_name set to $first_name\n";}
+						if ($DB) {echo _QXZ("first_name set to $first_name\n");}
 						$fieldsSQL .= "first_name='$first_name',";
 						$fieldsLIST .= "first_name,";
 						$field_set++;
 						}
 					if (preg_match('/gender/',$query_string))
 						{
-						if ($DB) {echo "gender set to $gender\n";}
+						if ($DB) {echo _QXZ("gender set to $gender\n");}
 						$fieldsSQL .= "gender='$gender',";
 						$fieldsLIST .= "gender,";
 						$field_set++;
 						}
 					if (preg_match('/gmt_offset_now/',$query_string))
 						{
-						if ($DB) {echo "gmt_offset_now set to $gmt_offset_now\n";}
+						if ($DB) {echo _QXZ("gmt_offset_now set to $gmt_offset_now\n");}
 						$fieldsSQL .= "gmt_offset_now='$gmt_offset_now',";
 						$fieldsLIST .= "gmt_offset_now,";
 						$field_set++;
 						}
 					if (preg_match('/last_name/',$query_string))
 						{
-						if ($DB) {echo "last_name set to $last_name\n";}
+						if ($DB) {echo _QXZ("last_name set to $last_name\n");}
 						$fieldsSQL .= "last_name='$last_name',";
 						$fieldsLIST .= "last_name,";
 						$field_set++;
 						}
 					if (preg_match('/middle_initial/',$query_string))
 						{
-						if ($DB) {echo "middle_initial set to $middle_initial\n";}
+						if ($DB) {echo _QXZ("middle_initial set to $middle_initial\n");}
 						$fieldsSQL .= "middle_initial='$middle_initial',";
 						$fieldsLIST .= "middle_initial,";
 						$field_set++;
 						}
 					if (preg_match('/phone_number/',$query_string))
 						{
-						if ($DB) {echo "phone_number set to $phone_number\n";}
+						if ($DB) {echo _QXZ("phone_number set to $phone_number\n");}
 						$fieldsSQL .= "phone_number='$phone_number',";
 						$fieldsLIST .= "phone_number,";
 						$field_set++;
 						}
 					if (preg_match('/postal_code/i',$query_string))
 						{
-						if ($DB) {echo "postal_code set to $postal_code\n";}
+						if ($DB) {echo _QXZ("postal_code set to $postal_code\n");}
 						$fieldsSQL .= "postal_code='$postal_code',";
 						$fieldsLIST .= "postal_code,";
 						$field_set++;
 						}
 					if (preg_match('/province/i',$query_string))
 						{
-						if ($DB) {echo "province set to $province\n";}
+						if ($DB) {echo _QXZ("province set to $province\n");}
 						$fieldsSQL .= "province='$province',";
 						$fieldsLIST .= "province,";
 						$field_set++;
 						}
 					if (preg_match('/security_phrase/i',$query_string))
 						{
-						if ($DB) {echo "security_phrase set to $security_phrase\n";}
+						if ($DB) {echo _QXZ("security_phrase set to $security_phrase\n");}
 						$fieldsSQL .= "security_phrase='$security_phrase',";
 						$fieldsLIST .= "security_phrase,";
 						$field_set++;
 						}
 					if (preg_match('/source_id/i',$query_string))
 						{
-						if ($DB) {echo "source_id set to $source_id\n";}
+						if ($DB) {echo _QXZ("source_id set to $source_id\n");}
 						$fieldsSQL .= "source_id='$source_id',";
 						$fieldsLIST .= "source_id,";
 						$field_set++;
 						}
 					if (preg_match('/state/i',$query_string))
 						{
-						if ($DB) {echo "state set to $state\n";}
+						if ($DB) {echo _QXZ("state set to $state\n");}
 						$fieldsSQL .= "state='$state',";
 						$fieldsLIST .= "state,";
 						$field_set++;
 						}
 					if (preg_match('/title/i',$query_string))
 						{
-						if ($DB) {echo "title set to $title\n";}
+						if ($DB) {echo _QXZ("title set to $title\n");}
 						$fieldsSQL .= "title='$title',";
 						$fieldsLIST .= "title,";
 						$field_set++;
 						}
 					if (preg_match('/vendor_lead_code/i',$query_string))
 						{
-						if ($DB) {echo "vendor_lead_code set to $vendor_lead_code\n";}
+						if ($DB) {echo _QXZ("vendor_lead_code set to $vendor_lead_code\n");}
 						$fieldsSQL .= "vendor_lead_code='$vendor_lead_code',";
 						$fieldsLIST .= "vendor_lead_code,";
 						$field_set++;
 						}
 					if (preg_match('/rank/i',$query_string))
 						{
-						if ($DB) {echo "rank set to $rank\n";}
+						if ($DB) {echo _QXZ("rank set to $rank\n");}
 						$fieldsSQL .= "rank='$rank',";
 						$fieldsLIST .= "rank,";
 						$field_set++;
 						}
 					if (preg_match('/owner/i',$query_string))
 						{
-						if ($DB) {echo "owner set to $owner\n";}
+						if ($DB) {echo _QXZ("owner set to $owner\n");}
 						$fieldsSQL .= "owner='$owner',";
 						$fieldsLIST .= "owner,";
 						$field_set++;
@@ -2469,40 +2470,40 @@ if ($function == 'update_fields')
 							if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_to_mysqli($stmt, $link);
 
-						$result = 'SUCCESS';
-						$result_reason = "update_fields lead updated";
+						$result = _QXZ("SUCCESS");
+						$result_reason = _QXZ("update_fields lead updated");
 						$data = "$user|$agent_user|$lead_id|$fieldsSQL";
 						echo "$result: $result_reason - $data\n";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 						}
 					else
 						{
-						$result = 'ERROR';
-						$result_reason = "no fields have been defined";
+						$result = _QXZ("ERROR");
+						$result_reason = _QXZ("no fields have been defined");
 						echo "$result: $result_reason - $agent_user\n";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 						}
 					}
 				else
 					{
-					$result = 'ERROR';
-					$result_reason = "agent_user does not have a lead on their screen";
+					$result = _QXZ("ERROR");
+					$result_reason = _QXZ("agent_user does not have a lead on their screen");
 					echo "$result: $result_reason - $agent_user\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					}
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "user is not allowed to modify lead information";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("user is not allowed to modify lead information");
 				echo "$result: $result_reason - $agent_user|$user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
 			}
 		else
 			{
-			$result = 'ERROR';
-			$result_reason = "agent_user is not logged in";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
@@ -2523,8 +2524,8 @@ if ($function == 'set_timer_action')
 	{
 	if ( (strlen($agent_user)<1) or (strlen($value)<2) )
 		{
-		$result = 'ERROR';
-		$result_reason = "set_timer_action not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("set_timer_action not valid");
 		$data = "$agent_user|$value";
 		echo "$result: $result_reason - $data\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -2547,24 +2548,24 @@ if ($function == 'set_timer_action')
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 
-				$result = 'SUCCESS';
-				$result_reason = "set_timer_action lead updated";
+				$result = _QXZ("SUCCESS");
+				$result_reason = _QXZ("set_timer_action lead updated");
 				$data = "$user|$agent_user|$value|$notes|$rank";
 				echo "$result: $result_reason - $data\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "user is not allowed to modify campaign settings";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("user is not allowed to modify campaign settings");
 				echo "$result: $result_reason - $agent_user|$user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
 			}
 		else
 			{
-			$result = 'ERROR';
-			$result_reason = "agent_user is not logged in";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
@@ -2585,8 +2586,8 @@ if ($function == 'st_login_log')
 	{
 	if ( (strlen($value)<1) or (strlen($vendor_id)<1) )
 		{
-		$result = 'ERROR';
-		$result_reason = "st_login_log not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("st_login_log not valid");
 		$data = "$value|$vendor_id";
 		echo "$result: $result_reason - $data\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -2608,8 +2609,8 @@ if ($function == 'st_login_log')
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 
-			$result = 'SUCCESS';
-			$result_reason = "st_login_log user found";
+			$result = _QXZ("SUCCESS");
+			$result_reason = _QXZ("st_login_log user found");
 			$data = "$row[0]";
 			echo "$result: $result_reason - $row[0]\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -2617,8 +2618,8 @@ if ($function == 'st_login_log')
 			}
 		else
 			{
-			$result = 'ERROR';
-			$result_reason = "no user found";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("no user found");
 			echo "$result: $result_reason - $value\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
@@ -2638,8 +2639,8 @@ if ($function == 'st_get_agent_active_lead')
 	{
 	if ( (strlen($value)<1) or (strlen($vendor_id)<1) )
 		{
-		$result = 'ERROR';
-		$result_reason = "st_get_agent_active_lead not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("st_get_agent_active_lead not valid");
 		$data = "$value|$vendor_id";
 		echo "$result: $result_reason - $data\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -2682,32 +2683,32 @@ if ($function == 'st_get_agent_active_lead')
 					$security_phrase =	$row[3];
 					$source_id =		$row[4];
 
-					$result = 'SUCCESS';
-					$result_reason = "st_get_agent_active_lead lead found";
+					$result = _QXZ("SUCCESS");
+					$result_reason = _QXZ("st_get_agent_active_lead lead found");
 					$data = "$VC_user|$phone_number|$lead_id|$vendor_lead_code|$province|$security_phrase|$source_id";
 					echo "$result: $result_reason - $data\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					}
 				else
 					{
-					$result = 'ERROR';
-					$result_reason = "no active lead found";
+					$result = _QXZ("ERROR");
+					$result_reason = _QXZ("no active lead found");
 					echo "$result: $result_reason - $VC_user\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					}
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "user not logged in";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("user not logged in");
 				echo "$result: $result_reason - $VC_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
 			}
 		else
 			{
-			$result = 'ERROR';
-			$result_reason = "no user found";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("no user found");
 			echo "$result: $result_reason - $value\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
@@ -2727,8 +2728,8 @@ if ($function == 'ra_call_control')
 	{
 	if ( (strlen($value)<1) or (strlen($agent_user)<1) or (strlen($stage)<1) )
 		{
-		$result = 'ERROR';
-		$result_reason = "ra_call_control not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("ra_call_control not valid");
 		echo "$result: $result_reason - $value|$agent_user|$stage\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 		}
@@ -2778,8 +2779,8 @@ if ($function == 'ra_call_control')
 					$stmtX="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Hangup','$HANGUPcid','Channel: $channel','','','','','','','','','');";
 				#		if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				#	$rslt=mysql_to_mysqli($stmt, $link);
-					$result = 'SUCCESS';
-					$result_reason = "ra_call_control hungup";
+					$result = _QXZ("SUCCESS");
+					$result_reason = _QXZ("ra_call_control hungup");
 					echo "$result: $result_reason - $agent_user|$value|HANGUP\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					}
@@ -2788,8 +2789,8 @@ if ($function == 'ra_call_control')
 					$processed++;
 					if (strlen($phone_number) < 2)
 						{
-						$result = 'ERROR';
-						$result_reason = "phone_number is not valid";
+						$result = _QXZ("ERROR");
+						$result_reason = _QXZ("phone_number is not valid");
 						echo "$result: $result_reason - $phone_number\n";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 						}
@@ -2807,8 +2808,8 @@ if ($function == 'ra_call_control')
 						$stmtX="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Redirect','$TRANSFERcid','Channel: $channel','Context: $ext_context','Exten: $phone_number','Priority: 1','CallerID: $TRANSFERcid','','','','','');";
 					#		if ($format=='debug') {echo "\n<!-- $stmt -->";}
 					#	$rslt=mysql_to_mysqli($stmt, $link);
-						$result = 'SUCCESS';
-						$result_reason = "ra_call_control transfer";
+						$result = _QXZ("SUCCESS");
+						$result_reason = _QXZ("ra_call_control transfer");
 						echo "$result: $result_reason - $agent_user|$value|$phone_number\n";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 						}
@@ -2818,8 +2819,8 @@ if ($function == 'ra_call_control')
 					$processed++;
 					if (strlen($ingroup_choices) < 2)
 						{
-						$result = 'ERROR';
-						$result_reason = "ingroup is not valid";
+						$result = _QXZ("ERROR");
+						$result_reason = _QXZ("ingroup is not valid");
 						echo "$result: $result_reason - $ingroup_choices\n";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 						}
@@ -2855,8 +2856,8 @@ if ($function == 'ra_call_control')
 
 						if ($ingroupactive < 1)
 							{
-							$result = 'ERROR';
-							$result_reason = "ingroup is not valid";
+							$result = _QXZ("ERROR");
+							$result_reason = _QXZ("ingroup is not valid");
 							echo "$result: $result_reason - $ingroup_choices\n";
 							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 							}
@@ -2870,8 +2871,8 @@ if ($function == 'ra_call_control')
 							$stmtX="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Redirect','$TRANSFERcid','Channel: $channel','Context: $ext_context','Exten: $TRANSFERexten','Priority: 1','CallerID: $TRANSFERcid','','','','','');";
 						#		if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						#	$rslt=mysql_to_mysqli($stmt, $link);
-							$result = 'SUCCESS';
-							$result_reason = "ra_call_control transfer";
+							$result = _QXZ("SUCCESS");
+							$result_reason = _QXZ("ra_call_control transfer");
 							echo "$result: $result_reason - $agent_user|$value|$phone_number\n";
 							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 							}
@@ -2879,8 +2880,8 @@ if ($function == 'ra_call_control')
 					}
 				if ($processed < 1)
 					{
-					$result = 'ERROR';
-					$result_reason = "stage is not valid";
+					$result = _QXZ("ERROR");
+					$result_reason = _QXZ("stage is not valid");
 					echo "$result: $result_reason - $stage\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					}
@@ -3054,16 +3055,16 @@ if ($function == 'ra_call_control')
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "no active call found";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("no active call found");
 				echo "$result: $result_reason - $value\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
 			}
 		else
 			{
-			$result = 'ERROR';
-			$result_reason = "agent_user is not logged in";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
@@ -3085,8 +3086,8 @@ if ($function == 'send_dtmf')
 	{
 	if ( (strlen($value)<1) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
 		{
-		$result = 'ERROR';
-		$result_reason = "send_dtmf not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("send_dtmf not valid");
 		echo "$result: $result_reason - $value|$agent_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 		}
@@ -3108,8 +3109,8 @@ if ($function == 'send_dtmf')
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "no user found";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("no user found");
 				echo "$result: $result_reason - $alt_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
@@ -3123,15 +3124,15 @@ if ($function == 'send_dtmf')
 			$stmt="UPDATE vicidial_live_agents set external_dtmf='$value' where user='$agent_user';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_to_mysqli($stmt, $link);
-			$result = 'SUCCESS';
+			$result = _QXZ("SUCCESS");
 			$result_reason = "send_dtmf function set";
 			echo "$result: $result_reason - $value|$agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
 		else
 			{
-			$result = 'ERROR';
-			$result_reason = "agent_user is not logged in";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
@@ -3152,8 +3153,8 @@ if ($function == 'park_call')
 	{
 	if ( (strlen($value)<10) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
 		{
-		$result = 'ERROR';
-		$result_reason = "park_call not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("park_call not valid");
 		echo "$result: $result_reason - $value|$agent_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 		}
@@ -3175,8 +3176,8 @@ if ($function == 'park_call')
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "no user found";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("no user found");
 				echo "$result: $result_reason - $alt_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
@@ -3197,23 +3198,23 @@ if ($function == 'park_call')
 				$stmt="UPDATE vicidial_live_agents set external_park='$value' where user='$agent_user';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_to_mysqli($stmt, $link);
-				$result = 'SUCCESS';
-				$result_reason = "park_call function set";
+				$result = _QXZ("SUCCESS");
+				$result_reason = _QXZ("park_call function set");
 				echo "$result: $result_reason - $value|$agent_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "agent_user does not have a lead on their screen";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("agent_user does not have a lead on their screen");
 				echo "$result: $result_reason - $agent_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
 			}
 		else
 			{
-			$result = 'ERROR';
-			$result_reason = "agent_user is not logged in";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
@@ -3234,8 +3235,8 @@ if ($function == 'transfer_conference')
 	{
 	if ( (strlen($value)<8) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
 		{
-		$result = 'ERROR';
-		$result_reason = "transfer_conference not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("transfer_conference not valid");
 		echo "$result: $result_reason - $value|$agent_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 		}
@@ -3259,8 +3260,8 @@ if ($function == 'transfer_conference')
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "no user found";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("no user found");
 				echo "$result: $result_reason - $alt_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
@@ -3285,8 +3286,8 @@ if ($function == 'transfer_conference')
 					$processed++;
 					if (strlen($ingroup_choices) < 2)
 						{
-						$result = 'ERROR';
-						$result_reason = "ingroup is not valid";
+						$result = _QXZ("ERROR");
+						$result_reason = _QXZ("ingroup is not valid");
 						echo "$result: $result_reason - $ingroup_choices\n";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 						}
@@ -3323,8 +3324,8 @@ if ($function == 'transfer_conference')
 
 						if ($ingroupactive < 1)
 							{
-							$result = 'ERROR';
-							$result_reason = "ingroup is not valid";
+							$result = _QXZ("ERROR");
+							$result_reason = _QXZ("ingroup is not valid");
 							echo "$result: $result_reason - $ingroup_choices\n";
 							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 							}
@@ -3345,8 +3346,8 @@ if ($function == 'transfer_conference')
 									$caller_id_number	= $row[0];
 									if ($caller_id_number < 4)
 										{
-										$result = 'ERROR';
-										$result_reason = "caller_id_number from group_alias is not valid";
+										$result = _QXZ("ERROR");
+										$result_reason = _QXZ("caller_id_number from group_alias is not valid");
 										$data = "$group_alias|$caller_id_number";
 										echo "$result: $result_reason - $agent_user|$data\n";
 										api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -3355,8 +3356,8 @@ if ($function == 'transfer_conference')
 									}
 								else
 									{
-									$result = 'ERROR';
-									$result_reason = "group_alias is not valid";
+									$result = _QXZ("ERROR");
+									$result_reason = _QXZ("group_alias is not valid");
 									$data = "$group_alias";
 									echo "$result: $result_reason - $agent_user|$data\n";
 									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -3386,8 +3387,8 @@ if ($function == 'transfer_conference')
 							$caller_id_number	= $row[0];
 							if ($caller_id_number < 4)
 								{
-								$result = 'ERROR';
-								$result_reason = "caller_id_number from group_alias is not valid";
+								$result = _QXZ("ERROR");
+								$result_reason = _QXZ("caller_id_number from group_alias is not valid");
 								$data = "$group_alias|$caller_id_number";
 								echo "$result: $result_reason - $agent_user|$data\n";
 								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -3396,8 +3397,8 @@ if ($function == 'transfer_conference')
 							}
 						else
 							{
-							$result = 'ERROR';
-							$result_reason = "group_alias is not valid";
+							$result = _QXZ("ERROR");
+							$result_reason = _QXZ("group_alias is not valid");
 							$data = "$group_alias";
 							echo "$result: $result_reason - $agent_user|$data\n";
 							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -3428,8 +3429,8 @@ if ($function == 'transfer_conference')
 
 				if ($processed < 1)
 					{
-					$result = 'ERROR';
-					$result_reason = "value is not valid";
+					$result = _QXZ("ERROR");
+					$result_reason = _QXZ("value is not valid");
 					echo "$result: $result_reason - $value|$user\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					}
@@ -3440,8 +3441,8 @@ if ($function == 'transfer_conference')
 						$stmt="UPDATE vicidial_live_agents set external_transferconf='$external_transferconf' where user='$agent_user';";
 							if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_to_mysqli($stmt, $link);
-						$result = 'SUCCESS';
-						$result_reason = "transfer_conference function set";
+						$result = _QXZ("SUCCESS");
+						$result_reason = _QXZ("transfer_conference function set");
 						$data = "$callerid";
 						echo "$result: $result_reason - $value|$ingroup_choices|$phone_number|$consultative|$agent_user|$data|\n";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -3450,16 +3451,16 @@ if ($function == 'transfer_conference')
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "agent_user does not have a live call";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("agent_user does not have a live call");
 				echo "$result: $result_reason - $agent_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
 			}
 		else
 			{
-			$result = 'ERROR';
-			$result_reason = "agent_user is not logged in";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}
@@ -3481,8 +3482,8 @@ if ($function == 'pause_code')
 	{
 	if ( (strlen($value)<1) or (strlen($value)>6) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
 		{
-		$result = 'ERROR';
-		$result_reason = "pause_code not valid";
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("pause_code not valid");
 		echo "$result: $result_reason - $value|$agent_user\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 		}
@@ -3504,8 +3505,8 @@ if ($function == 'pause_code')
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "no user found";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("no user found");
 				echo "$result: $result_reason - $alt_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
@@ -3526,24 +3527,24 @@ if ($function == 'pause_code')
 				$stmt="UPDATE vicidial_live_agents SET external_pause_code='$value' where user='$agent_user';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_to_mysqli($stmt, $link);
-				$result = 'SUCCESS';
-				$result_reason = "pause_code function sent";
+				$result = _QXZ("SUCCESS");
+				$result_reason = _QXZ("pause_code function sent");
 				echo "$result: $result_reason - $agent_user\n";
 				$data = "$epoch";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
 			else
 				{
-				$result = 'ERROR';
-				$result_reason = "pause_code error - agent is not paused";
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("pause_code error - agent is not paused");
 				echo "$result: $result_reason - $agent_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				}
 			}
 		else
 			{
-			$result = 'ERROR';
-			$result_reason = "agent_user is not logged in";
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			}

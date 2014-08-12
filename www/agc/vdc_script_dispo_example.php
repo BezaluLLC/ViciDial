@@ -17,10 +17,11 @@
 # 130328-0019 - Converted ereg to preg functions
 # 130603-2201 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130802-1036 - Changed to PHP mysqli functions
+# 140811-0832 - Changed to use QXZ function for echoing text
 #
 
-$version = '2.8-5';
-$build = '130802-1036';
+$version = '2.10-6';
+$build = '140811-0832';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -283,25 +284,25 @@ if ($DB > 0)
 	}
 
 ### BEGIN find any custom field labels ###
-$label_title =				'Title';
-$label_first_name =			'First';
-$label_middle_initial =		'MI';
-$label_last_name =			'Last';
-$label_address1 =			'Address1';
-$label_address2 =			'Address2';
-$label_address3 =			'Address3';
-$label_city =				'City';
-$label_state =				'State';
-$label_province =			'Province';
-$label_postal_code =		'PostCode';
-$label_vendor_lead_code =	'Vendor ID';
-$label_gender =				'Gender';
-$label_phone_number =		'Phone';
-$label_phone_code =			'DialCode';
-$label_alt_phone =			'Alt. Phone';
-$label_security_phrase =	'Show';
-$label_email =				'Email';
-$label_comments =			'Comments';
+$label_title =				_QXZ('Title');
+$label_first_name =			_QXZ('First');
+$label_middle_initial =		_QXZ('MI');
+$label_last_name =			_QXZ('Last');
+$label_address1 =			_QXZ('Address1');
+$label_address2 =			_QXZ('Address2');
+$label_address3 =			_QXZ('Address3');
+$label_city =				_QXZ('City');
+$label_state =				_QXZ('State');
+$label_province =			_QXZ('Province');
+$label_postal_code =		_QXZ('PostCode');
+$label_vendor_lead_code =	_QXZ('Vendor ID');
+$label_gender =				_QXZ('Gender');
+$label_phone_number =		_QXZ('Phone');
+$label_phone_code =			_QXZ('DialCode');
+$label_alt_phone =			_QXZ('Alt. Phone');
+$label_security_phrase =	_QXZ('Show');
+$label_email =				_QXZ('Email');
+$label_comments =			_QXZ('Comments');
 
 $stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -340,7 +341,7 @@ if ($auth_message == 'GOOD')
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-	echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
+	echo _QXZ("Invalid Username/Password:")." |$user|$pass|$auth_message|\n";
 	exit;
 	}
 
@@ -352,7 +353,7 @@ echo "var required_statuses='$required_statuses';\n";
 echo "var extra_statuses=\"$extra_statuses\";\n";
 echo "</script>\n";
 echo "<!-- VERSION: $version     BUILD: $build    USER: $user   server_ip: $server_ip-->\n";
-echo "<title>ViciDial Script";
+echo "<title>"._QXZ("ViciDial Script");
 echo "</title>\n";
 ?>
 
@@ -414,7 +415,7 @@ if ($process > 0)
 		$affected_rows = mysqli_affected_rows($link);
 		}
 
-	echo "<BR><b>Data Updated, Hanging up call, please wait</b><BR><BR>\n";
+	echo "<BR><b>"._QXZ("Data Updated, Hanging up call, please wait")."</b><BR><BR>\n";
 
 	sleep(3);
 
@@ -457,19 +458,19 @@ $URLsubmit = $URLarray[0];
 </TD></TR>
 
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Vendor ID: </TD><TD ALIGN=LEFT><input type=text name=vendor_id id=vendor_id size=20 maxlength=20 value="<?php echo $vendor_id ?>"></TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo _QXZ("Vendor ID:"); ?> </TD><TD ALIGN=LEFT><input type=text name=vendor_id id=vendor_id size=20 maxlength=20 value="<?php echo $vendor_id ?>"></TD>
 </TR>
 <!-- <TR BGCOLOR="#E6E6E6">
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Source ID: </TD><TD ALIGN=LEFT>$source_id<input type=hidden name=source_id id=source_id value="<?php echo $source_id ?>"></TD>
 </TR> -->
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Title: </TD><TD ALIGN=LEFT><input type=text name=title id=title size=5 maxlength=4 value="<?php echo $title ?>"></TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo _QXZ("Title:"); ?> </TD><TD ALIGN=LEFT><input type=text name=title id=title size=5 maxlength=4 value="<?php echo $title ?>"></TD>
 </TR>
 <TR BGCOLOR="#E6E6E6">
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo $label_first_name ?>: </TD><TD ALIGN=LEFT><input type=text name=first_name id=first_name size=30 maxlength=30 value="<?php echo $first_name ?>"> *</TD>
 </TR>
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Middle Initial: </TD><TD ALIGN=LEFT><input type=text name=middle_initial id=middle_initial size=2 maxlength=1 value="<?php echo $middle_initial ?>"></TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo _QXZ("Middle Initial:"); ?> </TD><TD ALIGN=LEFT><input type=text name=middle_initial id=middle_initial size=2 maxlength=1 value="<?php echo $middle_initial ?>"></TD>
 </TR>
 <TR BGCOLOR="#E6E6E6">
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo $label_last_name ?>: </TD><TD ALIGN=LEFT><input type=text name=last_name id=last_name size=30 maxlength=30 value="<?php echo $last_name ?>"> *</TD>
@@ -563,7 +564,7 @@ $URLsubmit = $URLarray[0];
 </SELECT> *</TD>
 </TR>
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Province: </TD><TD ALIGN=LEFT><input type=text name=province id=province size=20 maxlength=50 value="<?php echo $province ?>"></TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo _QXZ("Province:"); ?> </TD><TD ALIGN=LEFT><input type=text name=province id=province size=20 maxlength=50 value="<?php echo $province ?>"></TD>
 </TR>
 <TR BGCOLOR="#E6E6E6">
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo $label_postal_code ?>: </TD><TD ALIGN=LEFT><input type=text name=postal_code id=postal_code size=6 maxlength=5 value="<?php echo $postal_code ?>"> *</TD>
@@ -581,13 +582,13 @@ $URLsubmit = $URLarray[0];
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Date of Birth: </TD><TD ALIGN=LEFT><input type=text name=date_if_birth id=date_if_birth size=12 maxlength=12 value="<?php echo $date_of_birth ?>"></TD>
 </TR> -->
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Alt. Phone: </TD><TD ALIGN=LEFT><input type=text name=alt_phone id=alt_phone size=12 maxlength=12 value="<?php echo $alt_phone ?>"> *</TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo _QXZ("Alt. Phone:"); ?> </TD><TD ALIGN=LEFT><input type=text name=alt_phone id=alt_phone size=12 maxlength=12 value="<?php echo $alt_phone ?>"> *</TD>
 </TR>
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Email: </TD><TD ALIGN=LEFT><input type=text name=email id=email size=30 maxlength=70 value="<?php echo $email ?>"> *</TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo _QXZ("Email:"); ?> </TD><TD ALIGN=LEFT><input type=text name=email id=email size=30 maxlength=70 value="<?php echo $email ?>"> *</TD>
 </TR>
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Show: </TD><TD ALIGN=LEFT><input type=text name=security_phrase id=security_phrase size=30 maxlength=100 value="<?php echo $security_phrase ?>"> *</TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo _QXZ("Show:"); ?> </TD><TD ALIGN=LEFT><input type=text name=security_phrase id=security_phrase size=30 maxlength=100 value="<?php echo $security_phrase ?>"> *</TD>
 </TR>
 <!-- <TR BGCOLOR="#E6E6E6">
 <TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Comments: </TD><TD ALIGN=LEFT><input type=text name=comments id=comments size=40 maxlength=255 value="<?php echo $comments ?>"> *</TD>
@@ -663,7 +664,7 @@ o_cal.a_tpl.yearscroll = false;
 -->
 
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=CENTER COLSPAN=2><FONT FACE="ARIAL,HELVETICA" size=2>Comments:<BR><TEXTAREA NAME=comments ID=comments ROWS=5 COLS=50><?php echo $comments ?></TEXTAREA></font><br>
+<TD ALIGN=CENTER COLSPAN=2><FONT FACE="ARIAL,HELVETICA" size=2><?php echo _QXZ("Comments:"); ?><BR><TEXTAREA NAME=comments ID=comments ROWS=5 COLS=50><?php echo $comments ?></TEXTAREA></font><br>
 </TD>
 </TR>
 
@@ -680,16 +681,16 @@ o_cal.a_tpl.yearscroll = false;
 commented END put custom fields here -->
 
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Question: </TD><TD ALIGN=LEFT><input type=text name=question id=question size=30 maxlength=50 value="<?php echo $question ?>"></TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo _QXZ("Question:"); ?> </TD><TD ALIGN=LEFT><input type=text name=question id=question size=30 maxlength=50 value="<?php echo $question ?>"></TD>
 </TR>
 
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Answer: </TD><TD ALIGN=LEFT><input type=text name=answer id=answer size=30 maxlength=50 value="<?php echo $answer ?>"></TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo _QXZ("Answer:"); ?> </TD><TD ALIGN=LEFT><input type=text name=answer id=answer size=30 maxlength=50 value="<?php echo $answer ?>"></TD>
 </TR>
 
 
 <?php
-echo "<tr bgcolor=#E6E6E6><td align=right>Disposition: </td><td align=left><select size=1 name=status id=status>\n";
+echo "<tr bgcolor=#E6E6E6><td align=right>"._QXZ("Disposition:")." </td><td align=left><select size=1 name=status id=status>\n";
 
 
 $stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable from vicidial_statuses where selectable='Y' or status IN($extra_statuses) order by status";
@@ -777,19 +778,19 @@ function submit_form()
 		{
 		document.vsn.submit();
 		document.vsn.smt.disabled = true;
-		document.vsn.smt.value = "Processing...";
+		document.vsn.smt.value = <?php echo _QXZ("Processing..."); ?>;
 		}
 	}
 
 </SCRIPT>
 
 <input type=button value="SUBMIT and HANGUP CALL" name=smt id=smt onClick="submit_form()">
- &nbsp; &nbsp; &nbsp; &nbsp; <input type=checkbox name=pause id=pause size="1" value="1" /> PAUSE AGENT DIALING 
+ &nbsp; &nbsp; &nbsp; &nbsp; <input type=checkbox name=pause id=pause size="1" value="1" /> <?php echo _QXZ("PAUSE AGENT DIALING"); ?> 
 </TD>
 </TR>
 
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=CENTER COLSPAN=2><FONT FACE="ARIAL,HELVETICA" size=1>Please click SUBMIT to hangup and disposition the call, &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; * denotes required fields</font><br>
+<TD ALIGN=CENTER COLSPAN=2><FONT FACE="ARIAL,HELVETICA" size=1><?php echo _QXZ("Please click SUBMIT to hangup and disposition the call"); ?>, &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; * <?php echo _QXZ("denotes required fields"); ?></font><br>
 </TD>
 </TR>
 

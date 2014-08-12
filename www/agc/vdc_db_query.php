@@ -358,10 +358,11 @@
 # 140617-1044 - Fixed issue with non-latin, issue #773
 # 140621-1544 - Added update_settings function
 # 140703-1659 - Several logging fixes, mostly related to manual dial calls
+# 140810-2046 - Changed to use QXZ function for echoing text
 #
 
-$version = '2.10-254';
-$build = '140703-1659';
+$version = '2.10-255';
+$build = '140810-2046';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=595;
 $one_mysql_log=0;
@@ -835,14 +836,14 @@ else
 
 	if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 		{
-		echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
+		echo _QXZ("Invalid Username/Password:")." |$user|$pass|$auth_message|\n";
 		exit;
 		}
 	else
 		{
 		if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 			{
-			echo "Invalid server_ip: |$server_ip|  or  Invalid session_name: |$session_name|\n";
+			echo _QXZ("Invalid server_ip:")." |$server_ip|  or  Invalid session_name: |$session_name|\n";
 			exit;
 			}
 		else
@@ -855,7 +856,7 @@ else
 			$SNauth=$row[0];
 			  if($SNauth==0)
 				{
-				echo "Invalid session_name: |$session_name|$server_ip|\n";
+				echo _QXZ("Invalid session_name:")." |$session_name|$server_ip|\n";
 				exit;
 				}
 			  else
@@ -871,7 +872,7 @@ if ($format=='debug')
 	echo "<html>\n";
 	echo "<head>\n";
 	echo "<!-- VERSION: $version     BUILD: $build    USER: $user   server_ip: $server_ip-->\n";
-	echo "<title>VICIDiaL Database Query Script";
+	echo "<title>"._QXZ("VICIDiaL Database Query Script");
 	echo "</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -888,7 +889,7 @@ if ($ACTION == 'LogiNCamPaigns')
 	if ( (strlen($user)<1) )
 		{
 		echo "<select size=1 name=VD_campaign id=VD_campaign onFocus=\"login_allowable_campaigns()\">\n";
-		echo "<option value=\"\">-- ERROR --</option>\n";
+		echo "<option value=\"\">-- "._QXZ("ERROR")." --</option>\n";
 		echo "</select>\n";
 		exit;
 		}
@@ -959,7 +960,7 @@ if ($ACTION == 'LogiNCamPaigns')
 		else
 			{
 			echo "<select size=1 name=VD_campaign id=VD_campaign onFocus=\"login_allowable_campaigns()\">\n";
-			echo "<option value=\"\">-- USER LOGIN ERROR --</option>\n";
+			echo "<option value=\"\">-- "._QXZ("USER LOGIN ERROR")." --</option>\n";
 			echo "</select>\n";
 			exit;
 			}
@@ -971,7 +972,7 @@ if ($ACTION == 'LogiNCamPaigns')
 		$shift_ok=0;
 		if ( (strlen($LOGgroup_shiftsSQL) < 3) and ($VU_shift_override_flag < 1) )
 			{
-			$VDdisplayMESSAGE = "<B>ERROR: There are no Shifts enabled for your user group</B>\n";
+			$VDdisplayMESSAGE = "<B>"._QXZ("ERROR: There are no Shifts enabled for your user group")."</B>\n";
 			$VDloginDISPLAY=1;
 			}
 		else
@@ -1024,22 +1025,22 @@ if ($ACTION == 'LogiNCamPaigns')
 
 			if ( ($shift_ok < 1) and ($VU_shift_override_flag < 1) )
 				{
-				$VDdisplayMESSAGE = "<B>ERROR: You are not allowed to log in outside of your shift</B>\n";
+				$VDdisplayMESSAGE = "<B>"._QXZ("ERROR: You are not allowed to log in outside of your shift")."</B>\n";
 				$VDloginDISPLAY=1;
 				}
 			}
 		if ($VDloginDISPLAY > 0)
 			{
 			$loginDATE = date("Ymd");
-			$VDdisplayMESSAGE.= "<BR><BR>MANAGER OVERRIDE:<BR>\n";
+			$VDdisplayMESSAGE.= "<BR><BR>"._QXZ("MANAGER OVERRIDE:")."<BR>\n";
 			$VDdisplayMESSAGE.= "<FORM ACTION=\"$PHP_SELF\" METHOD=POST>\n";
 			$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=MGR_override VALUE=\"1\">\n";
 			$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=relogin VALUE=\"YES\">\n";
 			$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=VD_login VALUE=\"$user\">\n";
 			$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=VD_pass VALUE=\"$pass\">\n";
-			$VDdisplayMESSAGE.= "Manager Login: <INPUT TYPE=TEXT NAME=\"MGR_login$loginDATE\" SIZE=10 MAXLENGTH=20><br>\n";
-			$VDdisplayMESSAGE.= "Manager Password: <INPUT TYPE=PASSWORD NAME=\"MGR_pass$loginDATE\" SIZE=10 MAXLENGTH=20><br>\n";
-			$VDdisplayMESSAGE.= "<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT></FORM><BR><BR><BR><BR>\n";
+			$VDdisplayMESSAGE.= _QXZ("Manager Login:")." <INPUT TYPE=TEXT NAME=\"MGR_login$loginDATE\" SIZE=10 MAXLENGTH=20><br>\n";
+			$VDdisplayMESSAGE.= _QXZ("Manager Password:")." <INPUT TYPE=PASSWORD NAME=\"MGR_pass$loginDATE\" SIZE=10 MAXLENGTH=20><br>\n";
+			$VDdisplayMESSAGE.= "<INPUT TYPE=submit NAME=SUBMIT VALUE="._QXZ("SUBMIT")."></FORM><BR><BR><BR><BR>\n";
 			echo "$VDdisplayMESSAGE";
 			exit;
 			}
@@ -1053,7 +1054,7 @@ if ($ACTION == 'LogiNCamPaigns')
 		$camps_to_print = mysqli_num_rows($rslt);
 
 		echo "<select size=1 name=VD_campaign id=VD_campaign>\n";
-		echo "<option value=\"\">-- PLEASE SELECT A CAMPAIGN --</option>\n";
+		echo "<option value=\"\">-- "._QXZ("PLEASE SELECT A CAMPAIGN")." --</option>\n";
 
 		$o=0;
 		while ($camps_to_print > $o) 
@@ -1067,7 +1068,7 @@ if ($ACTION == 'LogiNCamPaigns')
 	else
 		{
 		echo "<select size=1 name=VD_campaign id=VD_campaign onFocus=\"login_allowable_campaigns()\">\n";
-		echo "<option value=\"\">-- YOU MUST LOG IN TO THE TIMECLOCK FIRST --</option>\n";
+		echo "<option value=\"\">-- "._QXZ("YOU MUST LOG IN TO THE TIMECLOCK FIRST")." --</option>\n";
 		echo "</select>\n";
 		}
 	exit;
@@ -1086,7 +1087,7 @@ if ($ACTION == 'regCLOSER')
 	if ( (strlen($closer_choice)<1) || (strlen($user)<1) )
 		{
 		$channel_live=0;
-		echo "Group Choice $closer_choice is not valid\n";
+		echo _QXZ("Group Choice $closer_choice is not valid\n");
 		exit;
 		}
 	else
@@ -1303,7 +1304,7 @@ if ($ACTION == 'regCLOSER')
 			}
 
 		}
-	echo "Closer In Group Choice $closer_choice has been registered to user $user\n";
+	echo _QXZ("Closer In Group Choice $closer_choice has been registered to user $user\n");
 	}
 
 
@@ -1321,7 +1322,7 @@ if ($ACTION == 'regTERRITORY')
 	if ( (strlen($agent_territories)<1) || (strlen($user)<1) )
 		{
 		$channel_live=0;
-		echo "Territory Choice $agent_territories is not valid\n";
+		echo _QXZ("Territory Choice $agent_territories is not valid\n");
 		exit;
 		}
 	else
@@ -1361,7 +1362,7 @@ if ($ACTION == 'regTERRITORY')
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00256',$user,$server_ip,$session_name,$one_mysql_log);}
 		}
-	echo "Territory Choice $agent_territories has been registered to user $user\n";
+	echo _QXZ("Territory Choice $agent_territories has been registered to user $user\n");
 	}
 
 
@@ -1480,12 +1481,12 @@ if ($ACTION == 'UpdateFields')
 			}
 		else
 			{
-			echo "ERROR: no lead info in system: $lead_id\n";
+			echo _QXZ("ERROR: no lead info in system: $lead_id\n");
 			}
 		}
 	else
 		{
-		echo "ERROR: no lead active for this agent\n";
+		echo _QXZ("ERROR: no lead active for this agent\n");
 		}
 	}
 
@@ -1504,7 +1505,7 @@ if ($ACTION == 'update_settings')
 		{
 		$rowx=mysqli_fetch_row($rslt);
 		$agent_count = $rowx[0];
-		$SettingS_InfO .=	"Agent Session: $agent_count\n";
+		$SettingS_InfO .=	_QXZ("Agent Session: $agent_count\n");
 
 		##### grab the data from vicidial_users for the user
 		$stmt="SELECT wrapup_seconds_override FROM vicidial_users where user='$user' LIMIT 1;";
@@ -1563,7 +1564,7 @@ if ($ACTION == 'update_settings')
 		}
 	else
 		{
-		echo "ERROR: no agent session\n";
+		echo _QXZ("ERROR: no agent session\n");
 		}
 	}
 
@@ -1583,8 +1584,8 @@ if ($ACTION == 'manDiaLnextCaLL')
 	if ( (strlen($conf_exten)<1) || (strlen($campaign)<1)  || (strlen($ext_context)<1) )
 		{
 		$channel_live=0;
-		echo "HOPPER EMPTY\n";
-		echo "Conf Exten $conf_exten or campaign $campaign or ext_context $ext_context is not valid\n";
+		echo _QXZ("HOPPER EMPTY\n");
+		echo _QXZ("Conf Exten $conf_exten or campaign $campaign or ext_context $ext_context is not valid\n");
 		exit;
 		}
 	else
@@ -1727,7 +1728,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00355',$user,$server_ip,$session_name,$one_mysql_log);}
 						$VLAEDaffected_rows = mysqli_affected_rows($link);
 
-						echo "OUTSIDE OF LOCAL CALL TIME   $VMDQaffected_rows|$VLAEDaffected_rows\n";
+						echo _QXZ("OUTSIDE OF LOCAL CALL TIME   $VMDQaffected_rows|$VLAEDaffected_rows\n");
 						exit;
 						}
 					}
@@ -1761,7 +1762,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00357',$user,$server_ip,$session_name,$one_mysql_log);}
 						$VLAEDaffected_rows = mysqli_affected_rows($link);
 
-						echo "DNC NUMBER\n";
+						echo _QXZ("DNC NUMBER\n");
 						exit;
 						}
 					if ( (preg_match("/Y/",$use_campaign_dnc)) or (preg_match("/AREACODE/",$use_campaign_dnc)) )
@@ -1801,7 +1802,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00359',$user,$server_ip,$session_name,$one_mysql_log);}
 							$VLAEDaffected_rows = mysqli_affected_rows($link);
 
-							echo "DNC NUMBER\n";
+							echo _QXZ("DNC NUMBER\n");
 							exit;
 							}
 						}
@@ -1854,7 +1855,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00361',$user,$server_ip,$session_name,$one_mysql_log);}
 						$VLAEDaffected_rows = mysqli_affected_rows($link);
 
-						echo "NUMBER NOT IN CAMPLISTS\n";
+						echo _QXZ("NUMBER NOT IN CAMPLISTS\n");
 						exit;
 						}
 					}
@@ -2570,15 +2571,15 @@ if ($ACTION == 'manDiaLnextCaLL')
 
 				if ($PHONEgmt_offset != $POSTgmt_offset)
 					{
-					$post_phone_time_diff_alert_message .= "Phone and Post Code Time Zone Mismatch! ";
+					$post_phone_time_diff_alert_message .= _QXZ("Phone and Post Code Time Zone Mismatch! ");
 
 					if ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_ONLY')
 						{
 						$post_phone_time_diff_alert_message='';
 						if ($PHONEdialable < 1)
-							{$post_phone_time_diff_alert_message .= " Phone Area Code Outside Dialable Zone $PHONEgmt_offset ";}
+							{$post_phone_time_diff_alert_message .= _QXZ(" Phone Area Code Outside Dialable Zone $PHONEgmt_offset ");}
 						if ($POSTdialable < 1)
-							{$post_phone_time_diff_alert_message .= " Postal Code Outside Dialable Zone $POSTgmt_offset";}
+							{$post_phone_time_diff_alert_message .= _QXZ(" Postal Code Outside Dialable Zone $POSTgmt_offset");}
 						}
 					}
 				if ( ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_PHONE') or ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_POSTAL') or ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_BOTH') )
@@ -2587,12 +2588,12 @@ if ($ACTION == 'manDiaLnextCaLL')
 				if ( ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_PHONE') or ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_BOTH') )
 					{
 					if ($PHONEdialable < 1)
-						{$post_phone_time_diff_alert_message .= " Phone Area Code Outside Dialable Zone $PHONEgmt_offset ";}
+						{$post_phone_time_diff_alert_message .= _QXZ(" Phone Area Code Outside Dialable Zone $PHONEgmt_offset ");}
 					}
 				if ( ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_POSTAL') or ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_BOTH') )
 					{
 					if ($POSTdialable < 1)
-						{$post_phone_time_diff_alert_message .= " Postal Code Outside Dialable Zone $POSTgmt_offset ";}
+						{$post_phone_time_diff_alert_message .= _QXZ(" Postal Code Outside Dialable Zone $POSTgmt_offset ");}
 					}
 				}
 			##### END check for postal_code and phone time zones if alert enabled
@@ -3232,7 +3233,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 			}
 		else
 			{
-			echo "HOPPER EMPTY\n";
+			echo _QXZ("HOPPER EMPTY\n");
 			}
 		}
 	}
@@ -3250,8 +3251,8 @@ if ($ACTION == 'alt_phone_change')
 	if ( (strlen($stage)<1) || (strlen($called_count)<1) || (strlen($lead_id)<1)  || (strlen($phone_number)<1) )
 		{
 		$channel_live=0;
-		echo "ALT PHONE NUMBER STATUS NOT CHANGED\n";
-		echo "$phone_number $stage $lead_id or $called_count is not valid\n";
+		echo _QXZ("ALT PHONE NUMBER STATUS NOT CHANGED\n");
+		echo _QXZ("$phone_number $stage $lead_id or $called_count is not valid\n");
 		exit;
 		}
 	else
@@ -3261,7 +3262,7 @@ if ($ACTION == 'alt_phone_change')
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00041',$user,$server_ip,$session_name,$one_mysql_log);}
 
-		echo "ALT PHONE NUMBER STATUS CHANGED\n";
+		echo _QXZ("ALT PHONE NUMBER STATUS CHANGED\n");
 		}
 }
 
@@ -3275,8 +3276,8 @@ if ($ACTION == 'AlertControl')
 	if (strlen($stage)<1)
 		{
 		$channel_live=0;
-		echo "AGENT ALERT SETTING NOT CHANGED\n";
-		echo "$stage is not valid\n";
+		echo _QXZ("AGENT ALERT SETTING NOT CHANGED\n");
+		echo _QXZ("$stage is not valid\n");
 		exit;
 		}
 	else
@@ -3289,7 +3290,7 @@ if ($ACTION == 'AlertControl')
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00185',$user,$server_ip,$session_name,$one_mysql_log);}
 
-		echo "AGENT ALERT SETTING CHANGED $stage\n";
+		echo _QXZ("AGENT ALERT SETTING CHANGED $stage\n");
 		}
 }
 
@@ -3306,8 +3307,8 @@ if ($ACTION == 'manDiaLskip')
 	if ( (strlen($stage)<1) || (strlen($called_count)<1) || (strlen($lead_id)<1) )
 		{
 		$channel_live=0;
-		echo "LEAD NOT REVERTED\n";
-		echo "Conf Exten $conf_exten or campaign $campaign or ext_context $ext_context is not valid\n";
+		echo _QXZ("LEAD NOT REVERTED\n");
+		echo _QXZ("Conf Exten $conf_exten or campaign $campaign or ext_context $ext_context is not valid\n");
 		exit;
 		}
 	else
@@ -3337,7 +3338,7 @@ if ($ACTION == 'manDiaLskip')
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00419',$user,$server_ip,$session_name,$one_mysql_log);}
 
-		echo "LEAD REVERTED\n";
+		echo _QXZ("LEAD REVERTED\n");
 		}
 	}
 
@@ -3354,8 +3355,8 @@ if ($ACTION == 'manDiaLonly')
 	if ( (strlen($conf_exten)<1) || (strlen($campaign)<1) || (strlen($ext_context)<1) || (strlen($phone_number)<1) || (strlen($lead_id)<1) )
 		{
 		$channel_live=0;
-		echo " CALL NOT PLACED\n";
-		echo "Conf Exten $conf_exten or campaign $campaign or ext_context $ext_context is not valid\n";
+		echo _QXZ(" CALL NOT PLACED\n");
+		echo _QXZ("Conf Exten $conf_exten or campaign $campaign or ext_context $ext_context is not valid\n");
 		exit;
 		}
 	else
@@ -3434,7 +3435,7 @@ if ($ACTION == 'manDiaLonly')
 			$row=mysqli_fetch_row($rslt);
 			if ($row[0] > 0)
 				{
-				echo " CALL NOT PLACED\nDNC NUMBER\n";
+				echo _QXZ(" CALL NOT PLACED\nDNC NUMBER\n");
 				exit;
 				}
 			if ( (preg_match("/Y/",$use_campaign_dnc)) or (preg_match("/AREACODE/",$use_campaign_dnc)) )
@@ -3461,7 +3462,7 @@ if ($ACTION == 'manDiaLonly')
 				$row=mysqli_fetch_row($rslt);
 				if ($row[0] > 0)
 					{
-					echo " CALL NOT PLACED\nDNC NUMBER\n";
+					echo _QXZ(" CALL NOT PLACED\nDNC NUMBER\n");
 					exit;
 					}
 				}
@@ -3501,7 +3502,7 @@ if ($ACTION == 'manDiaLonly')
 			
 			if ($row[0] < 1)
 				{
-				echo " CALL NOT PLACED\nNUMBER NOT IN CAMPLISTS\n";
+				echo _QXZ(" CALL NOT PLACED\nNUMBER NOT IN CAMPLISTS\n");
 				exit;
 				}
 			}
@@ -4058,8 +4059,8 @@ if ($stage == "start")
 			fclose($fp);
 			}
 
-		echo "LOG NOT ENTERED\n";
-		echo "uniqueid $uniqueid or lead_id: $lead_id or list_id: $list_id or phone_number: $phone_number or campaign: $campaign is not valid\n";
+		echo _QXZ("LOG NOT ENTERED\n");
+		echo _QXZ("uniqueid $uniqueid or lead_id: $lead_id or list_id: $list_id or phone_number: $phone_number or campaign: $campaign is not valid\n");
 		exit;
 		}
 	else
@@ -4121,12 +4122,12 @@ if ($stage == "start")
 
 		if ($affected_rows > 0)
 			{
-			echo "VICIDiaL_LOG Inserted: $uniqueid|$channel|$NOW_TIME\n";
+			echo _QXZ("VICIDiaL_LOG Inserted:")." $uniqueid|$channel|$NOW_TIME\n";
 			echo "$StarTtime\n";
 			}
 		else
 			{
-			echo "LOG NOT ENTERED\n\n";
+			echo _QXZ("LOG NOT ENTERED\n");
 			}
 
 		$stmt = "UPDATE vicidial_auto_calls SET uniqueid='$uniqueid' where lead_id='$lead_id';";
@@ -4202,8 +4203,8 @@ if ($stage == "end")
 
 	if ( (strlen($uniqueid)<1) or (strlen($lead_id)<1) )
 		{
-		echo "LOG NOT ENTERED\n";
-		echo "uniqueid $uniqueid or lead_id: $lead_id is not valid\n";
+		echo _QXZ("LOG NOT ENTERED\n");
+		echo _QXZ("uniqueid $uniqueid or lead_id: $lead_id is not valid\n");
 		$log_no_enter=1;
 		}
 	else
@@ -4948,12 +4949,12 @@ if ($stage == "end")
 
 				if ($affected_rowsVL > 0)
 					{
-					echo "VICIDiaL_LOG Inserted: $uniqueid|$channel|$NOW_TIME\n";
+					echo _QXZ("VICIDiaL_LOG Inserted:")." $uniqueid|$channel|$NOW_TIME\n";
 					echo "$StarTtime\n";
 					}
 				else
 					{
-					echo "LOG NOT ENTERED\n\n";
+					echo _QXZ("LOG NOT ENTERED\n\n");
 					}
 				}
 			else
@@ -4986,7 +4987,7 @@ if ($stage == "end")
 				}
 			else
 				{
-				echo "LOG NOT ENTERED\n\n";
+				echo _QXZ("LOG NOT ENTERED\n\n");
 				}
 			}
 		else
@@ -5403,8 +5404,8 @@ if ($ACTION == 'VDADREcheckINCOMING')
 		{
 		$channel_live=0;
 		echo "0\n";
-		echo "Campaign $campaign is not valid\n";
-		echo "lead_id $lead_id is not valid\n";
+		echo _QXZ("Campaign $campaign is not valid\n");
+		echo _QXZ("lead_id $lead_id is not valid\n");
 		exit;
 		}
 	else
@@ -5456,7 +5457,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 		{
 		$channel_live=0;
 		echo "0\n";
-		echo "Campaign $campaign is not valid\n";
+		echo _QXZ("Campaign $campaign is not valid\n");
 		exit;
 		}
 	else
@@ -6699,7 +6700,7 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 		{
 		$channel_live=0;
 		echo "0\n";
-		echo "Campaign $campaign is not valid\n";
+		echo _QXZ("Campaign $campaign is not valid\n");
 		exit;
 		}
 	else
@@ -7625,7 +7626,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 		{
 		$channel_live=0;
 		echo "0\n";
-		echo "Campaign $campaign is not valid or lead_id $lead_id is not valid\n";
+		echo _QXZ("Campaign $campaign is not valid or lead_id $lead_id is not valid\n");
 		exit;
 		}
 	else
@@ -8312,8 +8313,8 @@ if ($ACTION == 'userLOGout')
 	$row='';   $rowx='';
 	if ( (strlen($campaign)<1) || (strlen($conf_exten)<1) )
 		{
-		echo "NO\n";
-		echo "campaign $campaign or conf_exten $conf_exten is not valid\n";
+		echo _QXZ("NO\n");
+		echo _QXZ("campaign $campaign or conf_exten $conf_exten is not valid\n");
 		exit;
 		}
 	else
@@ -8594,7 +8595,7 @@ if ($ACTION == 'updateDISPO')
 	$MAN_vl_insert=0;
 	if ( (strlen($dispo_choice)<1) || (strlen($lead_id)<1) )
 		{
-		echo "Dispo Choice $dispo or lead_id $lead_id is not valid\n";
+		echo _QXZ("Dispo Choice $dispo or lead_id $lead_id is not valid\n");
 		exit;
 		}
 	else
@@ -10152,7 +10153,7 @@ if ($ACTION == 'updateDISPO')
 	# debug testing sleep
 	# sleep(5);
 
-	echo 'Lead ' . $lead_id . ' has been changed to ' . $dispo_choice . " Status\nNext agent_log_id:\n" . $agent_log_id . "\n";
+	echo _QXZ('Lead ') . $lead_id . _QXZ(' has been changed to ') . $dispo_choice . _QXZ(" Status\nNext agent_log_id:\n") . $agent_log_id . "\n";
 	}
 
 ################################################################################
@@ -10167,7 +10168,7 @@ if ($ACTION == 'updateLEAD')
 	$DO_NOT_UPDATE_text='';
 	if ( (strlen($phone_number)<1) || (strlen($lead_id)<1) )
 		{
-		echo "phone_number $phone_number or lead_id $lead_id is not valid\n";
+		echo _QXZ("phone_number $phone_number or lead_id $lead_id is not valid\n");
 		exit;
 		}
 	else
@@ -10254,7 +10255,7 @@ if ($ACTION == 'updateLEAD')
 			}
 
 		}
-		echo "Lead $lead_id information has$DO_NOT_UPDATE_text been updated\n";
+		echo _QXZ("Lead $lead_id information has$DO_NOT_UPDATE_text been updated\n");
 	}
 
 
@@ -10268,7 +10269,7 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 	$row='';   $rowx='';
 	if ( (strlen($stage)<2) || (strlen($server_ip)<1) )
 		{
-		echo "stage $stage is not valid\n";
+		echo _QXZ("stage $stage is not valid\n");
 		exit;
 		}
 	else
@@ -10486,7 +10487,7 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 		}
 	else
 		{
-		echo 'Agent ' . $user . ' is now in status ' . $stage . "\nNext agent_log_id:\n$agent_log_id\n";
+		echo _QXZ('Agent ') . $user . _QXZ(' is now in status ') . $stage . _QXZ("\nNext agent_log_id:\n$agent_log_id\n");
 		}
 	}
 
@@ -10500,7 +10501,7 @@ if ($ACTION == 'UpdatEFavoritEs')
 	$channel_live=1;
 	if ( (strlen($favorites_list)<1) || (strlen($user)<1) || (strlen($exten)<1) )
 		{
-		echo "favorites list $favorites_list is not valid\n";
+		echo _QXZ("favorites list $favorites_list is not valid\n");
 		exit;
 		}
 	else
@@ -10526,7 +10527,7 @@ if ($ACTION == 'UpdatEFavoritEs')
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00174',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
 		}
-		echo "Favorites list has been updated to $favorites_list for $exten\n";
+		echo _QXZ("Favorites list has been updated to $favorites_list for $exten\n");
 	}
 
 
@@ -10538,7 +10539,7 @@ if ($ACTION == 'PauseCodeSubmit')
 	$row='';   $rowx='';
 	if ( (strlen($status)<1) || (strlen($agent_log_id)<1) )
 		{
-		echo "agent_log_id $agent_log_id or pause_code $status is not valid\n";
+		echo _QXZ("agent_log_id $agent_log_id or pause_code $status is not valid\n");
 		exit;
 		}
 	else
@@ -10658,7 +10659,7 @@ if ($ACTION == 'PauseCodeSubmit')
 				}
 			}
 		}
-	echo ' Pause Code ' . $status . " has been recorded\nNext agent_log_id:\n" . $agent_log_id . "\n";
+	echo _QXZ(' Pause Code ') . $status . _QXZ(" has been recorded\nNext agent_log_id:\n") . $agent_log_id . "\n";
 	}
 
 
@@ -10856,9 +10857,9 @@ if ($ACTION == 'AGENTSview')
 		}
 
 	echo "</TABLE><BR>\n";
-	echo "<font style=\"font-size:10px;font-family:sans-serif;\"><font style=\"background-color:#ADD8E6;\"> &nbsp; &nbsp;</font>-READY &nbsp; <font style=\"background-color:#D8BFD8;\">&nbsp; &nbsp;</font>-INCALL &nbsp; <font style=\"background-color:#F0E68C;\"> &nbsp; &nbsp;</font>-PAUSED &nbsp;\n";
+	echo "<font style=\"font-size:10px;font-family:sans-serif;\"><font style=\"background-color:#ADD8E6;\"> &nbsp; &nbsp;</font>-"._QXZ("READY")." &nbsp; <font style=\"background-color:#D8BFD8;\">&nbsp; &nbsp;</font>-"._QXZ("INCALL")." &nbsp; <font style=\"background-color:#F0E68C;\"> &nbsp; &nbsp;</font>-"._QXZ("PAUSED")." &nbsp;\n";
 	if (preg_match("/NOT-LOGGED-IN-AGENTS/",$agent_status_viewable_groups))
-		{echo "<font style=\"background-color:#FFFFFF;\"> &nbsp; &nbsp;</font>-LOGGED-OUT &nbsp;\n";}
+		{echo "<font style=\"background-color:#FFFFFF;\"> &nbsp; &nbsp;</font>"._QXZ("-LOGGED-OUT")." &nbsp;\n";}
 
 	echo "</font>\n";
 	}
@@ -10879,7 +10880,7 @@ if ($ACTION == 'CALLSINQUEUEview')
 
 	if (preg_match('/NONE/i',$view_calls_in_queue))
 		{
-		echo "Calls in Queue View Disabled for this campaign\n";
+		echo _QXZ("Calls in Queue View Disabled for this campaign\n");
 		exit;
 		}
 	else
@@ -10962,13 +10963,13 @@ if ($ACTION == 'CALLSINQUEUEview')
 		echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=$stage>";
 		echo "<TR>";
 		echo "<TD> &nbsp; </TD>";
-		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; PHONE &nbsp; </font></TD>";
-		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; FULL NAME &nbsp; </font></TD>";
-		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; WAIT &nbsp; </font></TD>";
-		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; AGENT &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("PHONE")." &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("FULL NAME")." &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("WAIT")." &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("AGENT")." &nbsp; </font></TD>";
 		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"> &nbsp; &nbsp; &nbsp; </font></TD>";
-		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; CALL GROUP &nbsp; </font></TD>";
-		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; TYPE &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("CALL GROUP")." &nbsp; </font></TD>";
+		echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("TYPE")." &nbsp; </font></TD>";
 		echo "</TR>";
 
 		### Print call information and gather more info on the calls as they are printed
@@ -11026,7 +11027,7 @@ if ($ACTION == 'CALLSINQUEUEview')
 			if ( (preg_match('/Y/i',$grab_calls_in_queue)) and ($OQcall_type[$loop_count]=='IN') )
 				{
 				echo "<TR $Qcolor>";
-				echo "<TD> <a href=\"#\" onclick=\"callinqueuegrab('$OQauto_call_id[$loop_count]');return false;\"><font style=\"font-size: 11px; font-family: sans-serif;\">TAKE CALL</a> &nbsp; </TD>";
+				echo "<TD> <a href=\"#\" onclick=\"callinqueuegrab('$OQauto_call_id[$loop_count]');return false;\"><font style=\"font-size: 11px; font-family: sans-serif;\">"._QXZ("TAKE CALL")."</a> &nbsp; </TD>";
 				echo "<TD><font style=\"font-size: 11px; font-family: sans-serif;\"> &nbsp; $OQphone_number[$loop_count] &nbsp; </font></TD>";
 				echo "<TD><font style=\"font-size: 11px; font-family: sans-serif;\"> &nbsp; $caller_name &nbsp; </font></TD>";
 				echo "<TD><font style=\"font-size: 11px; font-family: sans-serif;\"> &nbsp; $call_time &nbsp; </font></TD>";
@@ -11081,24 +11082,24 @@ if ($ACTION == 'CALLLOGview')
 	if ($NOW_DATE != $date)
 		{echo "<a href=\"#\" onclick=\"VieWCalLLoG('$next_day_date','');return false;\"> $next_day_date > </a> &nbsp; &nbsp; ";}
 	echo "<input type=text name=calllogdate id=calllogdate value=\"$date\" size=12 maxlength=10> ";
-	echo "<a href=\"#\" onclick=\"VieWCalLLoG('','form');return false;\">GO</a> &nbsp;  &nbsp; &nbsp; ";
-	echo "<a href=\"#\" onclick=\"hideDiv('CalLLoGDisplaYBox');return false;\"> close </a>";
+	echo "<a href=\"#\" onclick=\"VieWCalLLoG('','form');return false;\">"._QXZ("GO")."</a> &nbsp;  &nbsp; &nbsp; ";
+	echo "<a href=\"#\" onclick=\"hideDiv('CalLLoGDisplaYBox');return false;\"> "._QXZ("close")." </a>";
 	echo "</B></font>\n";
 	echo "<BR>\n";
 	echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=$stage>";
 	echo "<TR>";
 	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:10px;font-family:sans-serif;\"><B> &nbsp; # &nbsp; </font></TD>";
-	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; DATE/TIME &nbsp; </font></TD>";
-	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; LENGTH &nbsp; </font></TD>";
-	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; STATUS &nbsp; </font></TD>";
-	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; PHONE &nbsp; </font></TD>";
-	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; FULL NAME &nbsp; </font></TD>";
-	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; CAMPAIGN &nbsp; </font></TD>";
-	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; IN/OUT &nbsp; </font></TD>";
-	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; ALT &nbsp; </font></TD>";
-	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; HANGUP &nbsp; </font></TD>";
-	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; INFO &nbsp; </font></TD>";
-	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; DIAL &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("DATE/TIME")." &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("LENGTH")." &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("STATUS")." &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("PHONE")." &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("FULL NAME")." &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("CAMPAIGN")." &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("IN/OUT")." &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("ALT")." &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("HANGUP")." &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("INFO")." &nbsp; </font></TD>";
+	echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("DIAL")." &nbsp; </font></TD>";
 	echo "</TR>";
 
 
@@ -11176,7 +11177,7 @@ if ($ACTION == 'CALLLOGview')
 	if ($g > 0)
 		{sort($ALLsort, SORT_NUMERIC);}
 	else
-		{echo "<tr bgcolor=white><td colspan=11 align=center>No calls on this day</td></tr>";}
+		{echo "<tr bgcolor=white><td colspan=11 align=center>"._QXZ("No calls on this day")."</td></tr>";}
 
 	$u=0;
 	while ($g > $u) 
@@ -11204,17 +11205,17 @@ if ($ACTION == 'CALLLOGview')
 		echo "<td align=right><font size=2> $ALLin_out[$i] </td>\n";
 		echo "<td align=right><font size=2> $ALLalt_dial[$i] </td>\n";
 		echo "<td align=right><font size=2> $ALLhangup_reason[$i] </td>\n";
-		echo "<td align=right><font size=2> <a href=\"#\" onclick=\"VieWLeaDInfO($ALLlead_id[$i]);return false;\"> INFO </A> </td>\n";
+		echo "<td align=right><font size=2> <a href=\"#\" onclick=\"VieWLeaDInfO($ALLlead_id[$i]);return false;\"> "._QXZ("INFO")."</A> </td>\n";
 		if ($manual_dial_filter > 0)
-			{echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG','$ALLphone_code[$i]','$ALLphone_number[$i]','$ALLlead_id[$i]');return false;\"> DIAL </A> </td>\n";}
+			{echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG','$ALLphone_code[$i]','$ALLphone_number[$i]','$ALLlead_id[$i]');return false;\"> "._QXZ("DIAL")." </A> </td>\n";}
 		else
-			{echo "<td align=right><font size=2> DIAL </td>\n";}
+			{echo "<td align=right><font size=2> "._QXZ("DIAL")." </td>\n";}
 		echo "</tr>\n";
 		}
 
 	echo "</TABLE>";
 	echo "<BR>";
-	echo "<a href=\"#\" onclick=\"CalLLoGVieWClose();return false;\">Close Call Log</a>";
+	echo "<a href=\"#\" onclick=\"CalLLoGVieWClose();return false;\">"._QXZ("Close Call Log")."</a>";
 	echo "</CENTER>";
 	}
 
@@ -11311,9 +11312,9 @@ if ($ACTION == 'SEARCHRESULTSview')
 			}
 		else
 			{
-			echo "ERROR: You must enter in search terms, one of these must be populated: lead ID, vendor ID, phone number, last name\n";
+			echo _QXZ("ERROR: You must enter in search terms, one of these must be populated: lead ID, vendor ID, phone number, last name\n");
 			echo "<BR><BR>";
-			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">Go Back</a>";
+			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
 			exit;
 			}
@@ -11460,21 +11461,21 @@ if ($ACTION == 'SEARCHRESULTSview')
 
 			echo "<CENTER>\n";
 			echo "<font style=\"font-size:14px;font-family:sans-serif;\"><B>";
-			echo "Results Found: $search_result_count";
+			echo _QXZ("Results Found: $search_result_count");
 			echo "</B></font>\n";
 			echo "<BR>\n";
 			echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=$stage>";
 			echo "<TR>";
 			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:10px;font-family:sans-serif;\"><B> &nbsp; # &nbsp; </font></TD>";
-			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; FULL NAME &nbsp; </font></TD>";
-			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; PHONE &nbsp; </font></TD>";
-			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; STATUS &nbsp; </font></TD>";
-			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; LAST CALL &nbsp; </font></TD>";
-			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; CITY &nbsp; </font></TD>";
-			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; STATE &nbsp; </font></TD>";
-			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; ZIP &nbsp; </font></TD>";
-			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; INFO &nbsp; </font></TD>";
-			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; DIAL &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("FULL NAME")." &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("PHONE")." &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("STATUS")." &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("LAST CALL")." &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("CITY")." &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("STATE")." &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("ZIP")." &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("INFO")." &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("DIAL")." &nbsp; </font></TD>";
 			echo "</TR>";
 
 			if ($search_result_count)
@@ -11506,7 +11507,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 					}
 
 				if ($g < 1)
-					{echo "<tr bgcolor=white><td colspan=10 align=center>No results found</td></tr>";}
+					{echo "<tr bgcolor=white><td colspan=10 align=center>"._QXZ("No results found")."</td></tr>";}
 
 				$u=0;
 				while ($g > $u) 
@@ -11529,17 +11530,17 @@ if ($ACTION == 'SEARCHRESULTSview')
 					echo "<td align=right><font size=2> $ALLcity[$i] </td>\n";
 					echo "<td align=right><font size=2> $ALLstate[$i]</td>\n";
 					echo "<td align=right><font size=2> $ALLpostal_code[$i] </td>\n";
-					echo "<td align=right><font size=2> <a href=\"#\" onclick=\"VieWLeaDInfO($ALLlead_id[$i],'','$inbound_lead_search');return false;\"> INFO </A> </td>\n";
+					echo "<td align=right><font size=2> <a href=\"#\" onclick=\"VieWLeaDInfO($ALLlead_id[$i],'','$inbound_lead_search');return false;\"> "._QXZ("INFO")." </A> </td>\n";
 					if ($inbound_lead_search < 1)
 						{
 						if ($manual_dial_filter > 0)
-							{echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('LEADSEARCH','$ALLphone_code[$i]','$ALLphone_number[$i]','$ALLlead_id[$i]');return false;\"> DIAL </A> </td>\n";}
+							{echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('LEADSEARCH','$ALLphone_code[$i]','$ALLphone_number[$i]','$ALLlead_id[$i]');return false;\"> "._QXZ("DIAL")." </A> </td>\n";}
 						else
-							{echo "<td align=right><font size=2> DIAL </td>\n";}
+							{echo "<td align=right><font size=2> "._QXZ("DIAL")." </td>\n";}
 						}
 					else
 						{
-						echo "<td align=right><font size=2> <a href=\"#\" onclick=\"LeaDSearcHSelecT('$ALLlead_id[$i]');return false;\">SELECT</A> </td>\n";
+						echo "<td align=right><font size=2> <a href=\"#\" onclick=\"LeaDSearcHSelecT('$ALLlead_id[$i]');return false;\">"._QXZ("SELECT")."</A> </td>\n";
 						}
 					echo "</tr>\n";
 					}
@@ -11553,18 +11554,18 @@ if ($ACTION == 'SEARCHRESULTSview')
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtL,'00381',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
 			else
-				{echo "<tr bgcolor=white><td colspan=10 align=center>No results found</td></tr>";}
+				{echo "<tr bgcolor=white><td colspan=10 align=center>"._QXZ("No results found")."</td></tr>";}
 
 			echo "</TABLE>";
 			echo "<BR>";
-			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">Go Back</a>";
+			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
 			}
 		else
 			{
 			echo "ERROR: There was a problem with your search terms\n";
 			echo "<BR><BR>";
-			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">Go Back</a>";
+			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
 			exit;
 			}
@@ -11572,9 +11573,9 @@ if ($ACTION == 'SEARCHRESULTSview')
 		}
 	else
 		{
-		echo "ERROR: Campaign not found\n";
+		echo _QXZ("ERROR: Campaign not found\n");
 		echo "<BR><BR>";
-		echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">Go Back</a>";
+		echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">"._QXZ("Go Back")."</a>";
 		echo "</CENTER>";
 		exit;
 		}
@@ -11751,9 +11752,9 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 			}
 		else
 			{
-			echo "ERROR: You must enter in search terms, one of these must be populated: office number, last name, first name\n";
+			echo _QXZ("ERROR: You must enter in search terms, one of these must be populated: office number, last name, first name\n");
 			echo "<BR><BR>";
-			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">Go Back</a>";
+			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
 			exit;
 			}
@@ -11797,19 +11798,19 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 
 			echo "<CENTER>\n";
 			echo "<font style=\"font-size:14px;font-family:sans-serif;\"><B>";
-			echo "Results Found: $search_result_count";
+			echo _QXZ("Results Found: $search_result_count");
 			echo "</B></font>\n";
 			echo "<BR>\n";
 			echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=$stage>";
 			echo "<TR>";
 			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:10px;font-family:sans-serif;\"><B> &nbsp; # &nbsp; </font></TD>";
-			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; FIRST NAME &nbsp; </font></TD>";
-			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; LAST NAME &nbsp; </font></TD>";
-			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; OFFICE &nbsp; </font></TD>";
-			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; MOBILE &nbsp; </font></TD>";
-			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; OTHER 1 &nbsp; </font></TD>";
-			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; OTHER 2 &nbsp; </font></TD>";
-			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; BU NAME &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("FIRST NAME")." &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("LAST NAME")." &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("OFFICE")." &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("MOBILE")." &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("OTHER 1")." &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("OTHER 2")." &nbsp; </font></TD>";
+			echo "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("BU NAME")." &nbsp; </font></TD>";
 			echo "</TR>";
 
 			if ($search_result_count)
@@ -11843,7 +11844,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 					}
 
 				if ($g < 1)
-					{echo "<tr bgcolor=white><td colspan=10 align=center>No results found</td></tr>";}
+					{echo "<tr bgcolor=white><td colspan=10 align=center>"._QXZ("No results found")."</td></tr>";}
 
 				$u=0;
 				while ($g > $u) 
@@ -11868,7 +11869,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 					echo "<td align=left> <font size=3>$ALLbu_name[$i] </td>\n";
 					echo "</tr>\n";
 					echo "<tr $bgcolor>";
-					echo "<td colspan=8><font size=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <B>Dept:</B> $ALLdepartment[$i] &nbsp; &nbsp; &nbsp; <B>Group:</B> $ALLgroup_name[$i] &nbsp; &nbsp; &nbsp; <B>Job:</B> $ALLjob_title[$i] &nbsp; &nbsp; &nbsp; <B>Location:</B> $ALLlocation[$i]</td>";
+					echo "<td colspan=8><font size=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <B>"._QXZ("Dept:")."</B> $ALLdepartment[$i] &nbsp; &nbsp; &nbsp; <B>"._QXZ("Group").":</B> $ALLgroup_name[$i] &nbsp; &nbsp; &nbsp; <B>"._QXZ("Job:")."</B> $ALLjob_title[$i] &nbsp; &nbsp; &nbsp; <B>"._QXZ("Location:")."</B> $ALLlocation[$i]</td>";
 					echo "</tr>\n";
 					}
 
@@ -11881,18 +11882,18 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtL,'00436',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
 			else
-				{echo "<tr bgcolor=white><td colspan=10 align=center>No results found</td></tr>";}
+				{echo "<tr bgcolor=white><td colspan=10 align=center>"._QXZ("No results found")."</td></tr>";}
 
 			echo "</TABLE>";
 			echo "<BR>";
-			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">Go Back</a>";
+			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
 			}
 		else
 			{
-			echo "ERROR: There was a problem with your search terms\n";
+			echo _QXZ("ERROR: There was a problem with your search terms\n");
 			echo "<BR><BR>";
-			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">Go Back</a>";
+			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
 			exit;
 			}
@@ -11900,9 +11901,9 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 		}
 	else
 		{
-		echo "ERROR: Campaign not found\n";
+		echo _QXZ("ERROR: Campaign not found\n");
 		echo "<BR><BR>";
-		echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">Go Back</a>";
+		echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">"._QXZ("Go Back")."</a>";
 		echo "</CENTER>";
 		exit;
 		}
@@ -11916,7 +11917,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 if ($ACTION == 'LEADINFOview')
 	{
 	if (strlen($lead_id) < 1)
-		{echo "ERROR: no Lead ID";}
+		{echo _QXZ("ERROR: no Lead ID");}
 	else
 		{
 		$hide_dial_links=0;
@@ -11941,11 +11942,11 @@ if ($ACTION == 'LEADINFOview')
 				{
 				$row=mysqli_fetch_row($rslt);
 				echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=500>";
-				echo "<tr bgcolor=white><td ALIGN=right><font size=2>Callback Status: &nbsp; </td><td ALIGN=left><font size=2>$row[0]</td></tr>";
-				echo "<tr bgcolor=white><td ALIGN=right><font size=2>Callback Lead Status: &nbsp; </td><td ALIGN=left><font size=2>$row[7]</td></tr>";
-				echo "<tr bgcolor=white><td ALIGN=right><font size=2>Callback Entry Time: &nbsp; </td><td ALIGN=left><font size=2>$row[1]</td></tr>";
-				echo "<tr bgcolor=white><td ALIGN=right><font size=2>Callback Trigger Time: &nbsp; </td><td ALIGN=left><font size=2>$row[2]</td></tr>";
-				echo "<tr bgcolor=white><td ALIGN=right><font size=2>Callback Comments: &nbsp; </td><td ALIGN=left><font size=2>$row[6]</td></tr>";
+				echo "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Callback Status:")." &nbsp; </td><td ALIGN=left><font size=2>$row[0]</td></tr>";
+				echo "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Callback Lead Status:")." &nbsp; </td><td ALIGN=left><font size=2>$row[7]</td></tr>";
+				echo "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Callback Entry Time:")." &nbsp; </td><td ALIGN=left><font size=2>$row[1]</td></tr>";
+				echo "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Callback Trigger Time:")." &nbsp; </td><td ALIGN=left><font size=2>$row[2]</td></tr>";
+				echo "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Callback Comments:")." &nbsp; </td><td ALIGN=left><font size=2>$row[6]</td></tr>";
 				echo "</TABLE>";
 				echo "<BR>";
 				$hide_dial_links++;
@@ -11969,25 +11970,25 @@ if ($ACTION == 'LEADINFOview')
 		### BEGIN Display lead info and custom fields ###
 		### BEGIN find any custom field labels ###
 		$INFOout='';
-		$label_title =				' Title';
-		$label_first_name =			'First';
-		$label_middle_initial =		'MI';
-		$label_last_name =			'Last ';
-		$label_address1 =			'Address1';
-		$label_address2 =			'Address2';
-		$label_address3 =			'Address3';
-		$label_city =				'City';
-		$label_state =				' State';
-		$label_province =			'Province';
-		$label_postal_code =		'PostCode';
-		$label_vendor_lead_code =	'Vendor ID';
-		$label_gender =				' Gender';
-		$label_phone_number =		'Phone';
-		$label_phone_code =			'DialCode';
-		$label_alt_phone =			'Alt. Phone';
-		$label_security_phrase =	'Show';
-		$label_email =				' Email';
-		$label_comments =			' Comments';
+		$label_title =				_QXZ(' Title');
+		$label_first_name =			_QXZ('First');
+		$label_middle_initial =		_QXZ('MI');
+		$label_last_name =			_QXZ('Last ');
+		$label_address1 =			_QXZ('Address1');
+		$label_address2 =			_QXZ('Address2');
+		$label_address3 =			_QXZ('Address3');
+		$label_city =				_QXZ('City');
+		$label_state =				_QXZ(' State');
+		$label_province =			_QXZ('Province');
+		$label_postal_code =		_QXZ('PostCode');
+		$label_vendor_lead_code =	_QXZ('Vendor ID');
+		$label_gender =				_QXZ(' Gender');
+		$label_phone_number =		_QXZ('Phone');
+		$label_phone_code =			_QXZ('DialCode');
+		$label_alt_phone =			_QXZ('Alt. Phone');
+		$label_security_phrase =	_QXZ('Show');
+		$label_email =				_QXZ(' Email');
+		$label_comments =			_QXZ(' Comments');
 
 		$stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,label_hide_field_logs from system_settings;";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -12097,15 +12098,15 @@ if ($ACTION == 'LEADINFOview')
 
 				if ($PHONEgmt_offset != $POSTgmt_offset)
 					{
-					$post_phone_time_diff_alert_message .= "Phone and Post Code Time Zone Mismatch! ";
+					$post_phone_time_diff_alert_message .= _QXZ("Phone and Post Code Time Zone Mismatch! ");
 
 					if ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_ONLY')
 						{
 						$post_phone_time_diff_alert_message='';
 						if ($PHONEdialable < 1)
-							{$post_phone_time_diff_alert_message .= " Phone Area Code Outside Dialable Zone $PHONEgmt_offset &nbsp; &nbsp; &nbsp; ";}
+							{$post_phone_time_diff_alert_message .= _QXZ(" Phone Area Code Outside Dialable Zone")." $PHONEgmt_offset &nbsp; &nbsp; &nbsp; ";}
 						if ($POSTdialable < 1)
-							{$post_phone_time_diff_alert_message .= " Postal Code Outside Dialable Zone $POSTgmt_offset";}
+							{$post_phone_time_diff_alert_message .= _QXZ(" Postal Code Outside Dialable Zone")." $POSTgmt_offset";}
 						}
 					}
 				if ( ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_PHONE') or ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_POSTAL') or ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_BOTH') )
@@ -12114,12 +12115,12 @@ if ($ACTION == 'LEADINFOview')
 				if ( ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_PHONE') or ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_BOTH') )
 					{
 					if ($PHONEdialable < 1)
-						{$post_phone_time_diff_alert_message .= " Phone Area Code Outside Dialable Zone $PHONEgmt_offset &nbsp; &nbsp; &nbsp; ";}
+						{$post_phone_time_diff_alert_message .= _QXZ(" Phone Area Code Outside Dialable Zone")." $PHONEgmt_offset &nbsp; &nbsp; &nbsp; ";}
 					}
 				if ( ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_POSTAL') or ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_BOTH') )
 					{
 					if ($POSTdialable < 1)
-						{$post_phone_time_diff_alert_message .= " Postal Code Outside Dialable Zone $POSTgmt_offset ";}
+						{$post_phone_time_diff_alert_message .= _QXZ(" Postal Code Outside Dialable Zone ")."$POSTgmt_offset ";}
 					}
 
 				if (strlen($post_phone_time_diff_alert_message)>5)
@@ -12127,12 +12128,12 @@ if ($ACTION == 'LEADINFOview')
 				}
 			##### END check for postal_code and phone time zones if alert enabled
 
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Status: &nbsp; </td><td ALIGN=left><font size=2>$row[0]</td></tr>";
+			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Status:")." &nbsp; </td><td ALIGN=left><font size=2>$row[0]</td></tr>";
 			if ( ($label_vendor_lead_code!='---HIDE---') or ($label_hide_field_logs=='N') )
 				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_vendor_lead_code: &nbsp; </td><td ALIGN=left><font size=2>$row[1]</td></tr>";}
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>List ID: &nbsp; </td><td ALIGN=left><font size=2>$row[2]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Timezone: &nbsp; </td><td ALIGN=left><font size=2>$row[3]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Called Since Last Reset: &nbsp; </td><td ALIGN=left><font size=2>$row[4]</td></tr>";
+			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("List ID:")." &nbsp; </td><td ALIGN=left><font size=2>$row[2]</td></tr>";
+			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Timezone:")." &nbsp; </td><td ALIGN=left><font size=2>$row[3]</td></tr>";
+			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Called Since Last Reset:")." &nbsp; </td><td ALIGN=left><font size=2>$row[4]</td></tr>";
 			if ( ($label_phone_code!='---HIDE---') or ($label_hide_field_logs=='N') )
 				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_phone_code: &nbsp; </td><td ALIGN=left><font size=2>$row[5]</td></tr>";}
 			if ( ($label_phone_number!='---HIDE---') or ($label_hide_field_logs=='N') )
@@ -12141,21 +12142,21 @@ if ($ACTION == 'LEADINFOview')
 				if ($hide_dial_links < 1)
 					{
 					if ($manual_dial_filter > 0)
-						{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\"> DIAL </a>";}
+						{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\"> "._QXZ("DIAL")." </a>";}
 					else
-						{$INFOout .= " DIAL ";}
+						{$INFOout .= _QXZ(" DIAL ");}
 					}
 				}
 			if ( ($label_phone_number=='---HIDE---') and ($hide_dial_links < 1) )
 				{
 				if ($manual_dial_filter > 0)
-					{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Dial Link: &nbsp; </td><td ALIGN=left><font size=2><a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\"> DIAL </a>";}
+					{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Dial Link:")." &nbsp; </td><td ALIGN=left><font size=2><a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\"> "._QXZ("DIAL")." </a>";}
 				else
-					{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Dial Link: &nbsp; </td><td ALIGN=left><font size=2> DIAL ";}
+					{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Dial Link:")." &nbsp; </td><td ALIGN=left><font size=2>"._QXZ(" DIAL ");}
 				}
 			$INFOout .= "</td></tr>";
 			if ($inbound_lead_search > 0)
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right colspan=2><font size=2><a href=\"#\" onclick=\"LeaDSearcHSelecT('$lead_id');return false;\">SELECT THIS LEAD</a></td></tr>";}
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right colspan=2><font size=2><a href=\"#\" onclick=\"LeaDSearcHSelecT('$lead_id');return false;\">"._QXZ("SELECT THIS LEAD")."</a></td></tr>";}
 			if ( ($label_title!='---HIDE---') or ($label_hide_field_logs=='N') )
 				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_title: &nbsp; </td><td ALIGN=left><font size=2>$row[7]</td></tr>";}
 			if ( ($label_first_name!='---HIDE---') or ($label_hide_field_logs=='N') )
@@ -12187,7 +12188,7 @@ if ($ACTION == 'LEADINFOview')
 				if ($hide_dial_links < 1)
 					{
 					if ($manual_dial_filter > 0)
-						{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[20], $lead_id, 'ALT');return false;\"> DIAL </a>";}
+						{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[20], $lead_id, 'ALT');return false;\"> "._QXZ("DIAL")." </a>";}
 					else
 						{$INFOout .= " DIAL ";}
 					}
@@ -12200,8 +12201,8 @@ if ($ACTION == 'LEADINFOview')
 			if ( ($label_comments!='---HIDE---') or ($label_hide_field_logs=='N') )
 				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_comments: &nbsp; </td><td ALIGN=left><font size=2>$row[23]</td></tr>";}
 			if ($hide_call_log_info=='N')
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Called Count: &nbsp; </td><td ALIGN=left><font size=2>$row[24]</td></tr>";}
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Last Local Call Time: &nbsp; </td><td ALIGN=left><font size=2>$row[25]</td></tr>";
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Called Count:")." &nbsp; </td><td ALIGN=left><font size=2>$row[24]</td></tr>";}
+			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Last Local Call Time:")." &nbsp; </td><td ALIGN=left><font size=2>$row[25]</td></tr>";
 	#		$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Rank: &nbsp; </td><td ALIGN=left><font size=2>$row[26]</td></tr>";
 	#		$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Owner: &nbsp; </td><td ALIGN=left><font size=2>$row[27]</td></tr>";
 	#		$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Entry List ID: &nbsp; </td><td ALIGN=left><font size=2>$row[28]</td></tr>";
@@ -12275,19 +12276,19 @@ if ($ACTION == 'LEADINFOview')
 		if ($hide_call_log_info=='N')
 			{
 			if ($search != 'logfirst')
-				{$NOTESout .= "<CENTER>CALL LOG FOR THIS LEAD:<br>\n";}
+				{$NOTESout .= "<CENTER>"._QXZ("CALL LOG FOR THIS LEAD:")."<br>\n";}
 			$NOTESout .= "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=$stage>";
 			$NOTESout .= "<TR>";
 			$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:10px;font-family:sans-serif;\"><B> &nbsp; # &nbsp; </font></TD>";
-			$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; DATE/TIME &nbsp; </font></TD>";
-			$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; AGENT &nbsp; </font></TD>";
-			$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; LENGTH &nbsp; </font></TD>";
-			$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; STATUS &nbsp; </font></TD>";
-			$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; PHONE &nbsp; </font></TD>";
-			$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; CAMPAIGN &nbsp; </font></TD>";
-			$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; IN/OUT &nbsp; </font></TD>";
-			$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; ALT &nbsp; </font></TD>";
-			$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; HANGUP &nbsp; </font></TD>";
+			$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("DATE/TIME")." &nbsp; </font></TD>";
+			$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("AGENT")." &nbsp; </font></TD>";
+			$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("LENGTH")." &nbsp; </font></TD>";
+			$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("STATUS")." &nbsp; </font></TD>";
+			$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("PHONE")." &nbsp; </font></TD>";
+			$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("CAMPAIGN")." &nbsp; </font></TD>";
+			$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("IN/OUT")." &nbsp; </font></TD>";
+			$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("ALT")." &nbsp; </font></TD>";
+			$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\"><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("HANGUP")." &nbsp; </font></TD>";
 		#	$NOTESout .= "</TR><TR>";
 		#	$NOTESout .= "<TD BGCOLOR=\"#CCCCCC\" COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; FULL NAME &nbsp; </font></TD>";
 			$NOTESout .= "</TR>";
@@ -12382,7 +12383,7 @@ if ($ACTION == 'LEADINFOview')
 					$rowA=mysqli_fetch_row($rsltA);
 					$Allcall_notes[$g] =	$rowA[0];
 					if (strlen($Allcall_notes[$g]) > 0)
-						{$Allcall_notes[$g] =	"<b>NOTES: </b> $Allcall_notes[$g]";}
+						{$Allcall_notes[$g] =	"<b>"._QXZ("NOTES:")." </b> $Allcall_notes[$g]";}
 					}
 				$stmtA="SELECT full_name FROM vicidial_users WHERE user='$ALLuser[$g]';";
 				$rsltA=mysql_to_mysqli($stmtA, $link);
@@ -12403,7 +12404,7 @@ if ($ACTION == 'LEADINFOview')
 			if ($g > 0)
 				{sort($ALLsort, SORT_NUMERIC);}
 			else
-				{$NOTESout .= "<tr bgcolor=white><td colspan=11 align=center>No calls found</td></tr>";}
+				{$NOTESout .= "<tr bgcolor=white><td colspan=11 align=center>"._QXZ("No calls found")."</td></tr>";}
 
 			$u=0;
 			while ($g > $u) 
@@ -12447,15 +12448,15 @@ if ($ACTION == 'LEADINFOview')
 		### BEGIN Email log
 		if ($allow_emails>0)
 			{
-			$NOTESout .= "<CENTER>EMAIL LOG FOR THIS LEAD:<br>\n";
+			$NOTESout .= "<CENTER>"._QXZ("EMAIL LOG FOR THIS LEAD:")."<br>\n";
 			$NOTESout .= "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=$stage>";
 			$NOTESout .= "<TR>";
 			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\"><font style=\"font-size:10px;font-family:sans-serif;\"><B> # </B></font></td>";
-			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; DATE/TIME </B></font></td>";
-			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; AGENT </B></font></td>";
-			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; CAMPAIGN </B></font></td>";
-			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; EMAIL TO </B></font></td>";
-			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; ATTACHMENTS </B></font></td>";
+			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("DATE/TIME")." </B></font></td>";
+			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("AGENT")." </B></font></td>";
+			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("CAMPAIGN")." </B></font></td>";
+			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("EMAIL TO")." </B></font></td>";
+			$NOTESout .= "<td BGCOLOR=\"#CCCCCC\" align=left><font style=\"font-size:11px;font-family:sans-serif;\"><B> &nbsp; "._QXZ("ATTACHMENTS")." </B></font></td>";
 			$NOTESout .= "</tr>\n";
 
 
@@ -12487,7 +12488,7 @@ if ($ACTION == 'LEADINFOview')
 				$NOTESout .= "</tr>\n";
 				$NOTESout .= "<tr>";
 				$NOTESout .= "<td><font size=1> &nbsp; </td>\n";
-				$NOTESout .= "<td align=left colspan=5 $bgcolor><font size=1> MESSAGE: $row[6] </td>\n";
+				$NOTESout .= "<td align=left colspan=5 $bgcolor><font size=1> "._QXZ("MESSAGE:")." $row[6] </td>\n";
 				$NOTESout .= "</tr>\n";
 				}
 
@@ -12521,7 +12522,7 @@ if ($ACTION == 'CALLSINQUEUEgrab')
 
 	if ( (preg_match('/NONE/i',$view_calls_in_queue)) or (preg_match('/N/i',$grab_calls_in_queue)) )
 		{
-		echo "ERROR: Calls in Queue View Disabled for this campaign\n";
+		echo _QXZ("ERROR: Calls in Queue View Disabled for this campaign\n");
 		exit;
 		}
 	else
@@ -12555,11 +12556,11 @@ if ($ACTION == 'CALLSINQUEUEgrab')
 				$affected_rows = mysqli_affected_rows($link);
 				}
 
-			echo "SUCCESS: Call $stage grabbed for $user";
+			echo _QXZ("SUCCESS: Call $stage grabbed for $user");
 			}
 		else
 			{
-			echo "ERROR: Call $stage could not be grabbed for $user\n";
+			echo _QXZ("ERROR: Call $stage could not be grabbed for $user\n");
 			}
 
 		$stmtD="SELECT * from vicidial_auto_calls where auto_call_id='$stage';";
@@ -12701,7 +12702,7 @@ if ($ACTION == 'customer_3way_hangup_process')
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00342',$user,$server_ip,$session_name,$one_mysql_log);}
 
-	echo "DONE: $stage|$lead_id|$status";
+	echo _QXZ("DONE:")." $stage|$lead_id|$status";
 	}
 
 
@@ -12737,7 +12738,7 @@ if ($ACTION == 'Clear_API_Field')
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00343',$user,$server_ip,$session_name,$one_mysql_log);}
 
-	echo "DONE: $comments";
+	echo _QXZ("DONE:")." $comments";
 	}
 
 
@@ -12760,7 +12761,7 @@ function hangup_cause_description($code)
 	{
 	global $hangup_cause_dictionary;
 	if ( array_key_exists($code,$hangup_cause_dictionary)  ) { return $hangup_cause_dictionary[$code]; }
-	else { return "Unidentified Hangup Cause Code."; }
+	else { return _QXZ("Unidentified Hangup Cause Code."); }
 	}
 
 ##### SIP Hangup Cause Description Map  #####
@@ -12768,7 +12769,7 @@ function sip_hangup_cause_description($sip_code)
 	{
 	global $sip_hangup_cause_dictionary;
 	if ( array_key_exists($sip_code,$sip_hangup_cause_dictionary)  ) { return $sip_hangup_cause_dictionary[$sip_code]; }
-	else { return "Unidentified SIP Hangup Cause Code."; }
+	else { return _QXZ("Unidentified SIP Hangup Cause Code."); }
 	}
 
 ?>

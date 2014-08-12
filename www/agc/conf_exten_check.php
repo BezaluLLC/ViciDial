@@ -1,5 +1,5 @@
 <?php
-# conf_exten_check.php    version 2.8
+# conf_exten_check.php    version 2.10
 # 
 # Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -62,10 +62,11 @@
 # 130705-1524 - Added optional encrypted passwords compatibility
 # 130802-1015 - Changed to use PHP mysqli functions
 # 140126-0659 - Added external_pause_code function
+# 140810-2136 - Changed to use QXZ function for echoing text
 #
 
-$version = '2.8-37';
-$build = '140126-0659';
+$version = '2.10-38';
+$build = '140810-2136';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=39;
 $one_mysql_log=0;
@@ -165,14 +166,14 @@ if ($auth_message == 'GOOD')
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-	echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
+	echo _QXZ("Invalid Username/Password:")." |$user|$pass|$auth_message|\n";
 	exit;
 	}
 else
 	{
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
-		echo "Invalid server_ip: |$server_ip|  or  Invalid session_name: |$session_name|\n";
+		echo _QXZ("Invalid server_ip:")." |$server_ip|  or  Invalid session_name: |$session_name|\n";
 		exit;
 		}
 	else
@@ -185,7 +186,7 @@ else
 		$SNauth=$row[0];
 		  if($SNauth==0)
 			{
-			echo "Invalid session_name: |$session_name|$server_ip|\n";
+			echo _QXZ("Invalid session_name:")." |$session_name|$server_ip|\n";
 			exit;
 			}
 		  else
@@ -200,7 +201,7 @@ if ($format=='debug')
 	echo "<html>\n";
 	echo "<head>\n";
 	echo "<!-- VERSION: $version     BUILD: $build    MEETME: $conf_exten   server_ip: $server_ip-->\n";
-	echo "<title>Conf Extension Check";
+	echo "<title>"._QXZ("Conf Extension Check");
 	echo "</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -214,7 +215,7 @@ if ($ACTION == 'refresh')
 	if (strlen($conf_exten)<1)
 		{
 		$channel_live=0;
-		echo "Conf Exten $conf_exten is not valid\n";
+		echo _QXZ("Conf Exten $conf_exten is not valid\n");
 		exit;
 		}
 	else
@@ -754,7 +755,7 @@ if ($ACTION == 'register')
 	if ( (strlen($conf_exten)<1) || (strlen($exten)<1) )
 		{
 		$channel_live=0;
-		echo "Conf Exten $conf_exten is not valid or Exten $exten is not valid\n";
+		echo _QXZ("Conf Exten $conf_exten is not valid or Exten $exten is not valid\n");
 		exit;
 		}
 	else
@@ -764,7 +765,7 @@ if ($ACTION == 'register')
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03013',$user,$server_ip,$session_name,$one_mysql_log);}
 		}
-	echo "Conference $conf_exten has been registered to $exten\n";
+	echo _QXZ("Conference $conf_exten has been registered to $exten\n");
 	}
 
 

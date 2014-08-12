@@ -1,7 +1,7 @@
 <?php
 # vdc_script_notes.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed open in the SCRIPT tab in the agent interface through
 # an IFRAME. It will create a new record for every SUBMIT
@@ -15,10 +15,11 @@
 # 130328-0020 - Converted ereg to preg functions
 # 130603-2203 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130802-1037 - Changed to PHP mysqli functions
+# 140810-2113 - Changed to use QXZ function for echoing text
 #
 
-$version = '2.8-5';
-$build = '130802-1037';
+$version = '2.10-6';
+$build = '140810-2113';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -251,25 +252,25 @@ if ($DB > 0)
 	}
 
 ### BEGIN find any custom field labels ###
-$label_title =				'Title';
-$label_first_name =			'First';
-$label_middle_initial =		'MI';
-$label_last_name =			'Last';
-$label_address1 =			'Address1';
-$label_address2 =			'Address2';
-$label_address3 =			'Address3';
-$label_city =				'City';
-$label_state =				'State';
-$label_province =			'Province';
-$label_postal_code =		'PostCode';
-$label_vendor_lead_code =	'Vendor ID';
-$label_gender =				'Gender';
-$label_phone_number =		'Phone';
-$label_phone_code =			'DialCode';
-$label_alt_phone =			'Alt. Phone';
-$label_security_phrase =	'Show';
-$label_email =				'Email';
-$label_comments =			'Comments';
+$label_title =				_QXZ('Title');
+$label_first_name =			_QXZ('First');
+$label_middle_initial =		_QXZ('MI');
+$label_last_name =			_QXZ('Last');
+$label_address1 =			_QXZ('Address1');
+$label_address2 =			_QXZ('Address2');
+$label_address3 =			_QXZ('Address3');
+$label_city =				_QXZ('City');
+$label_state =				_QXZ('State');
+$label_province =			_QXZ('Province');
+$label_postal_code =		_QXZ('PostCode');
+$label_vendor_lead_code =	_QXZ('Vendor ID');
+$label_gender =				_QXZ('Gender');
+$label_phone_number =		_QXZ('Phone');
+$label_phone_code =			_QXZ('DialCode');
+$label_alt_phone =			_QXZ('Alt. Phone');
+$label_security_phrase =	_QXZ('Show');
+$label_email =				_QXZ('Email');
+$label_comments =			_QXZ('Comments');
 
 $stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -308,14 +309,14 @@ if ($auth_message == 'GOOD')
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-	echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
+	echo _QXZ("Invalid Username/Password:")." |$user|$pass|$auth_message|\n";
 	exit;
 	}
 
 echo "<HTML>\n";
 echo "<head>\n";
 echo "<!-- VERSION: $version     BUILD: $build    USER: $user   server_ip: $server_ip-->\n";
-echo "<title>Agent Notes";
+echo "<title>"._QXZ("ViciDial Notes");
 echo "</title>\n";
 echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
@@ -532,11 +533,11 @@ $URLsubmit = $URLarray[0];
 </TR> -->
 
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Order ID: </TD><TD ALIGN=LEFT><input type=text name=order_id id=order_id size=20 maxlength=20 value="<?php echo $order_id ?>"></TD>
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo _QXZ("Order ID:"); ?> </TD><TD ALIGN=LEFT><input type=text name=order_id id=order_id size=20 maxlength=20 value="<?php echo $order_id ?>"></TD>
 </TR>
 
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">Appointment Date/Time: </TD><TD ALIGN=LEFT><input type=text name=appointment_date id=appointment_date size=10 maxlength=10 value="<?php echo $appointment_date ?>">
+<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo _QXZ("Appointment Date/Time:"); ?> </TD><TD ALIGN=LEFT><input type=text name=appointment_date id=appointment_date size=10 maxlength=10 value="<?php echo $appointment_date ?>">
 
 <script language="JavaScript">
 var o_cal = new tcal ({
@@ -598,12 +599,12 @@ o_cal.a_tpl.yearscroll = false;
 
 
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=CENTER COLSPAN=2><FONT FACE="ARIAL,HELVETICA" size=2>Appointment Notes:<BR><TEXTAREA NAME=call_notes ID=call_notes ROWS=5 COLS=50><?php echo $call_notes ?></TEXTAREA></font><br>
+<TD ALIGN=CENTER COLSPAN=2><FONT FACE="ARIAL,HELVETICA" size=2><?php echo _QXZ("Appointment Notes:"); ?><BR><TEXTAREA NAME=call_notes ID=call_notes ROWS=5 COLS=50><?php echo $call_notes ?></TEXTAREA></font><br>
 </TD>
 </TR>
 
 <TR BGCOLOR="#E6E6E6">
-<TD ALIGN=CENTER COLSPAN=2><FONT FACE="ARIAL,HELVETICA" size=1>Please click SUBMIT to commit the changes, &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; * denotes required fields</font><br>
+<TD ALIGN=CENTER COLSPAN=2><FONT FACE="ARIAL,HELVETICA" size=1><?php echo _QXZ("Please click SUBMIT to commit the changes"); ?>, &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; * <?php echo _QXZ("denotes required fields"); ?></font><br>
 </TD>
 </TR>
 
@@ -626,7 +627,7 @@ function submit_form()
 
 </SCRIPT>
 
-<input type=button value="SUBMIT" name=smt id=smt onClick="submit_form()">
+<input type=button value="<?php echo _QXZ("SUBMIT"); ?>" name=smt id=smt onClick="submit_form()">
 </TD>
 </TR>
 

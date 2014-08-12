@@ -1,7 +1,7 @@
 <?php
-# active_list_refresh.php    version 2.8
+# active_list_refresh.php    version 2.10
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to serve updates of the live data to the display scripts
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -42,6 +42,7 @@
 # 130328-0029 - Converted ereg to preg functions
 # 130603-2222 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130802-0957 - Changed to PHP mysqli functions
+# 140811-0850 - Changed to use QXZ function for echoing text
 # 
 
 require_once("dbconnect_mysqli.php");
@@ -131,14 +132,14 @@ if ($auth_message == 'GOOD')
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-	echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
+	echo _QXZ("Invalid Username/Password").": |$user|$pass|$auth_message|\n";
 	exit;
 	}
 else
 	{
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
-		echo "Invalid server_ip: |$server_ip|  or  Invalid session_name: |$session_name|\n";
+		echo _QXZ("Invalid server_ip").": |$server_ip|  or  Invalid session_name: |$session_name|\n"; #underscore
 		exit;
 		}
 	else
@@ -150,7 +151,7 @@ else
 		$SNauth=$row[0];
 		if($SNauth==0)
 			{
-			echo "Invalid session_name: |$session_name|$server_ip|\n";
+			echo _QXZ("Invalid session_name").": |$session_name|$server_ip|\n"; #underscore
 			exit;
 			}
 		else
@@ -166,12 +167,12 @@ if ($format=='table')
 	echo "<head>\n";
 	echo "<!-- VERSION: $version     BUILD: $build    ADD: $ADD   server_ip: $server_ip-->\n";
 	echo "<title>List Display: ";
-	if ($ADD==1)		{echo "Live Extensions";}
-	if ($ADD==2)		{echo "Busy Extensions";}
-	if ($ADD==3)		{echo "Outside Lines";}
-	if ($ADD==4)		{echo "Local Extensions";}
-	if ($ADD==5)		{echo "Conferences";}
-	if ($ADD==99999)	{echo "HELP";}
+	if ($ADD==1)		{echo _QXZ("Live Extensions");}
+	if ($ADD==2)		{echo _QXZ("Busy Extensions");}
+	if ($ADD==3)		{echo _QXZ("Outside Lines");}
+	if ($ADD==4)		{echo _QXZ("Local Extensions");}
+	if ($ADD==5)		{echo _QXZ("Conferences");}
+	if ($ADD==99999)	{echo _QXZ( "HELP");}
 	echo "</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";

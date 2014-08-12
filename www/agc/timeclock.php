@@ -1,7 +1,7 @@
 <?php
 # timeclock.php - VICIDIAL system user timeclock
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 80523-0134 - First Build 
@@ -15,10 +15,11 @@
 # 130705-2010 - Added optional encrypted passwords compatibility
 # 130802-1031 - Changed to PHP mysqli functions
 # 131208-2155 - Added user log TIMEOUTLOGOUT event status
+# 140810-2138 - Changed to use QXZ function for echoing text
 #
 
-$version = '2.8-10';
-$build = '131208-2155';
+$version = '2.10-11';
+$build = '140810-2138';
 
 $StarTtimE = date("U");
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -128,10 +129,10 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 	if ($valid_user < 1)
 		{
 		### NOT A VALID USER/PASS
-		$VDdisplayMESSAGE = "The user and password you entered are not active in the system<BR>Please try again:";
+		$VDdisplayMESSAGE = _QXZ("The user and password you entered are not active in the system<BR>Please try again:");
 
 		echo"<HTML><HEAD>\n";
-		echo"<TITLE>Agent Timeclock</TITLE>\n";
+		echo"<TITLE>"._QXZ("Agent Timeclock")."</TITLE>\n";
 		echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 		echo"</HEAD>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -145,16 +146,16 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		echo "<INPUT TYPE=HIDDEN NAME=VD_pass VALUE=\"$VD_pass\">\n";
 		echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 		echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
-		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/vtc_tab_vicidial.gif\" BORDER=0></TD>";
-		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Timeclock </B></TD>";
+		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/"._QXZ("vtc_tab_vicidial.gif")."\" BORDER=0></TD>";
+		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> "._QXZ("Timeclock")." </B></TD>";
 		echo "</TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>User Login:  </TD>";
+		echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Login:")."  </TD>";
 		echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=user SIZE=10 MAXLENGTH=20 VALUE=\"$VD_login\"></TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>User Password:  </TD>";
+		echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Password:")."  </TD>";
 		echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 MAXLENGTH=20 VALUE=''></TD></TR>\n";
-		echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT> &nbsp; </TD></TR>\n";
-		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
+		echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE="._QXZ("SUBMIT")."> &nbsp; </TD></TR>\n";
+		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</TD></TR>\n";
 		echo "</TABLE>\n";
 		echo "</FORM>\n\n";
 		echo "</body>\n\n";
@@ -233,7 +234,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		if ( ($last_action_sec < 30) and ($status != 'START') )
 			{
 			### You cannot log in or out within 30 seconds of your last login/logout
-			$VDdisplayMESSAGE = "You cannot log in or out within 30 seconds of your last login or logout";
+			$VDdisplayMESSAGE = _QXZ("You cannot log in or out within 30 seconds of your last login or logout");
 
 			echo"<HTML><HEAD>\n";
 			echo"<TITLE>Agent Timeclock</TITLE>\n";
@@ -250,16 +251,16 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			echo "<INPUT TYPE=HIDDEN NAME=VD_pass VALUE=\"$VD_pass\">\n";
 			echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 			echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
-			echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/vtc_tab_vicidial.gif\" BORDER=0></TD>";
-			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Timeclock </B></TD>";
+			echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/"._QXZ("vtc_tab_vicidial.gif")."\" BORDER=0></TD>";
+			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> "._QXZ("Timeclock")." </B></TD>";
 			echo "</TR>\n";
 			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-			echo "<TR><TD ALIGN=RIGHT>User Login:  </TD>";
+			echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Login:")."  </TD>";
 			echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=user SIZE=10 MAXLENGTH=20 VALUE=\"$VD_login\"></TD></TR>\n";
-			echo "<TR><TD ALIGN=RIGHT>User Password:  </TD>";
+			echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Password:")."  </TD>";
 			echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 MAXLENGTH=20 VALUE=''></TD></TR>\n";
-			echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT> &nbsp; </TD></TR>\n";
-			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
+			echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE="._QXZ("SUBMIT")."> &nbsp; </TD></TR>\n";
+			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</TD></TR>\n";
 			echo "</TABLE>\n";
 			echo "</FORM>\n\n";
 			echo "</body>\n\n";
@@ -272,8 +273,8 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			{
 			if ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') or ($status=='TIMEOUTLOGOUT') ) and ($stage=='login') )
 				{
-				$VDdisplayMESSAGE = "You have now logged-in";
-				$LOGtimeMESSAGE = "You logged in at $NOW_TIME";
+				$VDdisplayMESSAGE = _QXZ("You have now logged-in");
+				$LOGtimeMESSAGE = _QXZ("You logged in at $NOW_TIME");
 
 				### Add a record to the timeclock log
 				$stmt="INSERT INTO vicidial_timeclock_log set event='LOGIN', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', event_date='$NOW_TIME';";
@@ -300,8 +301,8 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 			if ( ($status=='LOGIN') and ($stage=='logout') )
 				{
-				$VDdisplayMESSAGE = "You have now logged-out";
-				$LOGtimeMESSAGE = "You logged out at $NOW_TIME<BR>Amount of time you were logged-in: $totTIME_HMS";
+				$VDdisplayMESSAGE = _QXZ("You have now logged-out");
+				$LOGtimeMESSAGE = _QXZ("You logged out at $NOW_TIME")."<BR>"._QXZ("Amount of time you were logged-in: $totTIME_HMS");
 
 				### Add a record to the timeclock log
 				$stmt="INSERT INTO vicidial_timeclock_log set event='LOGOUT', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
@@ -341,14 +342,14 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 				}
 
 			if ( ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') or ($status=='TIMEOUTLOGOUT') ) and ($stage=='logout') ) or ( ($status=='LOGIN') and ($stage=='login') ) )
-				{echo "ERROR: timeclock log entry already made: $status|$stage";  exit;}
+				{echo _QXZ("ERROR: timeclock log entry already made:")." $status|$stage";  exit;}
 
 			if ($referrer=='agent') 
-				{$BACKlink = "<A HREF=\"./vicidial.php?pl=$phone_login&pp=$phone_pass&VD_login=$user\"><font color=\"#003333\">BACK to Agent Login Screen</font></A>";}
+				{$BACKlink = "<A HREF=\"./vicidial.php?pl=$phone_login&pp=$phone_pass&VD_login=$user\"><font color=\"#003333\">"._QXZ("BACK to Agent Login Screen")."</font></A>";}
 			if ($referrer=='admin') 
-				{$BACKlink = "<A HREF=\"/$admin_web_directory/admin.php\"><font color=\"#003333\">BACK to Administration</font></A>";}
+				{$BACKlink = "<A HREF=\"/$admin_web_directory/admin.php\"><font color=\"#003333\">"._QXZ("BACK to Administration")."</font></A>";}
 			if ($referrer=='welcome') 
-				{$BACKlink = "<A HREF=\"$welcomeURL\"><font color=\"#003333\">BACK to Welcome Screen</font></A>";}
+				{$BACKlink = "<A HREF=\"$welcomeURL\"><font color=\"#003333\">"._QXZ("BACK to Welcome Screen")."</font></A>";}
 
 			echo"<HTML><HEAD>\n";
 			echo"<TITLE>Agent Timeclock</TITLE>\n";
@@ -357,13 +358,13 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 			echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 			echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
-			echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/vtc_tab_vicidial.gif\" BORDER=0></TD>";
-			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Timeclock </B></TD>";
+			echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/"._QXZ("vtc_tab_vicidial.gif")."\" BORDER=0></TD>";
+			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> "._QXZ("Timeclock")." </B></TD>";
 			echo "</TR>\n";
 			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 			echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=3><B> $LOGtimeMESSAGE<BR>&nbsp; </B></TD></TR>\n";
 			echo "<TR><TD ALIGN=CENTER COLSPAN=2><B> $BACKlink <BR>&nbsp; </B></TD></TR>\n";
-			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
+			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</TD></TR>\n";
 			echo "</TABLE>\n";
 			echo "</body>\n\n";
 			echo "</html>\n\n";
@@ -376,21 +377,21 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 		if ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') or ($status=='TIMEOUTLOGOUT') )
 			{
-			$VDdisplayMESSAGE = "Time since you were last logged-in: $totTIME_HMS";
+			$VDdisplayMESSAGE = _QXZ("Time since you were last logged-in: $totTIME_HMS");
 			$log_action = 'login';
 			$button_name = 'LOGIN';
-			$LOGtimeMESSAGE = "You last logged-out at: $last_action_date<BR><BR>Click LOGIN below to log-in";
+			$LOGtimeMESSAGE = _QXZ("You last logged-out at: $last_action_date")."<BR><BR>"._QXZ("Click LOGIN below to log-in");
 			}
 		if ($status=='LOGIN')
 			{
-			$VDdisplayMESSAGE = "Amount of time you have been logged-in: $totTIME_HMS";
+			$VDdisplayMESSAGE = _QXZ("Amount of time you have been logged-in: $totTIME_HMS");
 			$log_action = 'logout';
 			$button_name = 'LOGOUT';
-			$LOGtimeMESSAGE = "You logged-in at: $last_action_date<BR>Amount of time you have been logged-in: $totTIME_HMS<BR><BR>Click LOGOUT below to log-out";
+			$LOGtimeMESSAGE = _QXZ("You logged-in at: $last_action_date")."<BR>"._QXZ("Amount of time you have been logged-in: $totTIME_HMS")."<BR><BR>"._QXZ("Click LOGOUT below to log-out");
 			}
 
 		echo"<HTML><HEAD>\n";
-		echo"<TITLE>Agent Timeclock</TITLE>\n";
+		echo"<TITLE>"._QXZ("Agent Timeclock")."</TITLE>\n";
 		echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 		echo"</HEAD>\n";
 		echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -407,13 +408,13 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		echo "<INPUT TYPE=HIDDEN NAME=pass VALUE=\"$pass\">\n";
 		echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 		echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
-		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/vtc_tab_vicidial.gif\" BORDER=0></TD>";
-		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Timeclock </B></TD>";
+		echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/"._QXZ("vtc_tab_vicidial.gif")."\" BORDER=0></TD>";
+		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> "._QXZ("Timeclock")." </B></TD>";
 		echo "</TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 		echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=3><B> $LOGtimeMESSAGE<BR>&nbsp; </B></TD></TR>\n";
 		echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=SUBMIT NAME=$button_name VALUE=$button_name> &nbsp; </TD></TR>\n";
-		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
+		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</TD></TR>\n";
 		echo "</TABLE>\n";
 		echo "</FORM>\n\n";
 		echo "</body>\n\n";
@@ -429,7 +430,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 else
 	{
 	echo"<HTML><HEAD>\n";
-	echo"<TITLE>Agent Timeclock</TITLE>\n";
+	echo"<TITLE>"._QXZ("Agent Timeclock")."</TITLE>\n";
 	echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 	echo"</HEAD>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
@@ -443,16 +444,16 @@ else
 	echo "<INPUT TYPE=HIDDEN NAME=VD_pass VALUE=\"$VD_pass\">\n";
 	echo "<CENTER><BR><B>$VDdisplayMESSAGE</B><BR><BR>";
 	echo "<TABLE WIDTH=460 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCFFCC\"><TR BGCOLOR=WHITE>";
-	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/vtc_tab_vicidial.gif\" BORDER=0></TD>";
-	echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> Timeclock </B></TD>";
+	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/"._QXZ("vtc_tab_vicidial.gif")."\" BORDER=0></TD>";
+	echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> "._QXZ("Timeclock")." </B></TD>";
 	echo "</TR>\n";
 	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>User Login:  </TD>";
+	echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Login:")."  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=user SIZE=10 MAXLENGTH=20 VALUE=\"$VD_login\"></TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>User Password:  </TD>";
+	echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Password:")."  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 MAXLENGTH=20 VALUE=''></TD></TR>\n";
-	echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT> &nbsp; </TD></TR>\n";
-	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
+	echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE="._QXZ("SUBMIT")."> &nbsp; </TD></TR>\n";
+	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</TD></TR>\n";
 	echo "</TABLE>\n";
 	echo "</FORM>\n\n";
 	echo "</body>\n\n";

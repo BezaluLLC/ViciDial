@@ -24,10 +24,11 @@
 # 130802-1033 - Changed to PHP mysqli functions
 # 140101-2139 - Small fix for admin modify lead page on encrypted password systems
 # 140429-2042 - Added TABLEper_call_notes display script variable for form display
+# 140810-2119 - Changed to use QXZ function for echoing text
 #
 
-$version = '2.8-15';
-$build = '140429-2042';
+$version = '2.10-16';
+$build = '140810-2119';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -244,7 +245,7 @@ $LVAactive=$row[0];
 
 if ($custom_fields_enabled < 1)
 	{
-	echo "Custom Fields Disabled: |$custom_fields_enabled|\n";
+	echo _QXZ("Custom Fields Disabled:")." |$custom_fields_enabled|\n";
 	echo "<form action=./vdc_form_display.php method=POST name=form_custom_fields id=form_custom_fields>\n";
 	echo "<input type=hidden name=user id=user value=\"$user\">\n";
 	echo "</form>\n";
@@ -253,7 +254,7 @@ if ($custom_fields_enabled < 1)
 
 if ( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0) or ( ($LVAactive < 1) and ($VUmodify < 1) ) )
 	{
-	echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
+	echo _QXZ("Invalid Username/Password:")." |$user|$pass|$auth_message|\n";
 	echo "<form action=./vdc_form_display.php method=POST name=form_custom_fields id=form_custom_fields>\n";
 	echo "<input type=hidden name=user id=user value=\"$user\">\n";
 	echo "</form>\n";
@@ -416,9 +417,9 @@ if ($stage=='SUBMIT')
 			}
 		}
 	else
-		{$CFoutput .= "ERROR: no custom list fields table\n";}
+		{$CFoutput .= _QXZ("ERROR: no custom list fields table\n");}
 
-	echo "Custom Form Output:\n<BR>\n";
+	echo  _QXZ("Custom Form Output:")."\n<BR>\n";
 
 	echo "$SUBMIT_output";
 
@@ -432,7 +433,7 @@ else
 	echo "<html>\n";
 	echo "<head>\n";
 	echo "<!-- VERSION: $version     BUILD: $build    USER: $user   server_ip: $server_ip-->\n";
-	echo "<title>Agent Form Display Script";
+	echo "<title>". _QXZ("Agent Form Display Script");
 	echo "</title>\n";
 
 	echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
@@ -472,8 +473,8 @@ else
 	if ($submit_button=='YES')
 		{
 		if ($bcrypt=='0')
-			{echo "<input type=hidden name=bcrypt id=bcrypt value=\"OFF\">\n";}
-		echo "<input type=hidden name=admin_submit id=admin_submit value=\"YES\">\n";
+			{echo "<input type=hidden name=bcrypt id=bcrypt value=\"". _QXZ("OFF")."\">\n";}
+		echo "<input type=hidden name=admin_submit id=admin_submit value=\"". _QXZ("YES")."\">\n";
 		echo "<BR><BR><input type=submit name=VCformSubmit id=VCformSubmit value=submit>\n";
 		}
 	echo "</form></center><BR><BR>\n";

@@ -1,7 +1,7 @@
 <?php
-# call_log_display.php    version 2.8
+# call_log_display.php    version 2.10
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to send the inbound and outbound calls for a specific phone
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -33,6 +33,7 @@
 # 130603-2219 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130705-1524 - Added optional encrypted passwords compatibility
 # 130802-1005 - Changed to PHP mysqli functions
+# 140811-0847 - Changed to use QXZ function for echoing text
 # 
 
 require_once("dbconnect_mysqli.php");
@@ -80,14 +81,14 @@ if ($auth_message == 'GOOD')
 
 if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	{
-	echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
+	echo _QXZ("Invalid Username/Password:")." |$user|$pass|$auth_message|\n";
 	exit;
 	}
 else
 	{
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
-		echo "Invalid server_ip: |$server_ip|  or  Invalid session_name: |$session_name|\n";
+		echo _QXZ("Invalid server_ip:")." |$server_ip|  or  Invalid session_name: |$session_name|\n";
 		exit;
 		}
 	else
@@ -99,7 +100,7 @@ else
 		$SNauth=$row[0];
 		if($SNauth==0)
 			{
-			echo "Invalid session_name: |$session_name|$server_ip|\n";
+			echo _QXZ("Invalid session_name:")." |$session_name|$server_ip|\n";
 			exit;
 			}
 		else
@@ -114,7 +115,7 @@ if ($format=='debug')
 	echo "<html>\n";
 	echo "<head>\n";
 	echo "<!-- VERSION: $version     BUILD: $build    EXTEN: $exten   server_ip: $server_ip-->\n";
-	echo "<title>Call Log Display";
+	echo "<title>".QXZ("Call Log Display");
 	echo "</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -126,7 +127,7 @@ if ($format=='debug')
 if ( (strlen($exten)<1) or (strlen($protocol)<3) )
 	{
 	$channel_live=0;
-	echo "Exten $exten is not valid or protocol $protocol is not valid\n";
+	echo _QXZ("Exten $exten is not valid or protocol $protocol is not valid\n");
 	exit;
 	}
 else

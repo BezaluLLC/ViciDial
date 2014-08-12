@@ -1,7 +1,7 @@
 <?php
 # deactivate_lead.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to be used in the "Dispo URL" field of a campaign
 # or in-group. It should take in the campaign_id to check for the same source_id
@@ -27,6 +27,7 @@
 # 130328-0016 - Converted ereg to preg functions
 # 130603-2217 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130802-1006 - Changed to PHP mysqli functions
+# 140811-0845 - Changed to use QXZ function for echoing text
 #
 
 $api_script = 'deactivate';
@@ -110,7 +111,7 @@ if (preg_match("/$TD$dispo$TD/",$sale_status))
 
 	if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 		{
-		echo "Invalid Username/Password: |$user|$pass|$auth_message|\n";
+		echo _QXZ("Invalid Username/Password:")." |$user|$pass|$auth_message|\n";
 		exit;
 		}
 
@@ -168,30 +169,30 @@ if (preg_match("/$TD$dispo$TD/",$sale_status))
 				$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$user',function='deactivate_lead',value='$lead_id',result='$affected_rows',result_reason='$search_field',source='vdc',data='$SQL_log',api_date='$NOW_TIME',api_script='$api_script';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 
-				$MESSAGE = "DONE: $search_count duplicates found, $affected_rows updated to $new_status from $dispo";
+				$MESSAGE = _QXZ("DONE: $search_count duplicates found,")." $affected_rows updated to $new_status from $dispo";
 				echo "$MESSAGE\n";
 				}
 			else
 				{
-				$MESSAGE = "DONE: no duplicates found within $campaign_check     |$duplicate_lists|";
+				$MESSAGE = _QXZ("DONE: no duplicates found within")." $campaign_check     |$duplicate_lists|";
 				echo "$MESSAGE\n";
 				}
 			}
 		else
 			{
-			$MESSAGE = "DONE: no lists in campaign_check $campaign_check";
+			$MESSAGE = _QXZ("DONE: no lists in campaign_check")." $campaign_check";
 			echo "$MESSAGE\n";
 			}
 		}
 	else
 		{
-		$MESSAGE = "DONE: $search_field is empty for lead $lead_id";
+		$MESSAGE = _QXZ("DONE: $search_field is empty for lead")." $lead_id");
 		echo "$MESSAGE\n";
 		}
 	}
 else
 	{
-	$MESSAGE = "DONE: dispo is not a sale status: $dispo";
+	$MESSAGE = _QXZ("DONE: dispo is not a sale status:")." $dispo");
 	echo "$MESSAGE\n";
 	}
 

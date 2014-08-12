@@ -1,7 +1,7 @@
 <?php
 # dispo_move_list.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to be used in the "Dispo URL" field of a campaign
 # or in-group. It should take in the lead_id to check for the same lead_id
@@ -34,6 +34,7 @@
 # 130328-0015 - Converted ereg to preg functions
 # 130603-2216 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130802-1007 - Changed to PHP mysqli functions
+# 140811-0844 - Changed to use QXZ function for echoing text
 #
 
 $api_script = 'deactivate';
@@ -99,7 +100,7 @@ else
 			elseif (isset($_POST["$statusfield"]))	{$sale_status=$_POST["$statusfield"];}
 		$sale_status = "$TD$sale_status$TD";
 
-		if ($DB) {echo "MULTI_MATCH CHECK: $k|$sale_status|$statusfield|\n";}
+		if ($DB) {echo _QXZ("MULTI_MATCH CHECK:")." $k|$sale_status|$statusfield|\n";}
 
 		if (strlen($sale_status)>0)
 			{
@@ -112,7 +113,7 @@ else
 					elseif (isset($_POST["$newlistfield"]))	{$new_list_id=$_POST["$newlistfield"];}
 				if (isset($_GET["$resetfield"]))			{$reset_dialed=$_GET["$resetfield"];}
 					elseif (isset($_POST["$resetfield"]))	{$reset_dialed=$_POST["$resetfield"];}
-				if ($DB) {echo "MULTI_MATCH: $k|$sale_status|$new_list_id|$reset_dialed\n";}
+				if ($DB) {echo _QXZ("MULTI_MATCH:")." $k|$sale_status|$new_list_id|$reset_dialed\n";}
 				}
 			}
 		}
@@ -160,7 +161,7 @@ if ($match_found > 0)
 
 	if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0) or ($authlive==0))
 		{
-		echo "Invalid Username/Password: |$user|$pass|$auth|$authlive|$auth_message|\n";
+		echo _QXZ("Invalid Username/Password:")." |$user|$pass|$auth|$authlive|$auth_message|\n";
 		exit;
 		}
 
@@ -208,24 +209,24 @@ if ($match_found > 0)
 			$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$user',function='deactivate_lead',value='$lead_id',result='$affected_rows',result_reason='$lead_id',source='vdc',data='$SQL_log',api_date='$NOW_TIME',api_script='$api_script';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 
-			$MESSAGE = "DONE: $search_count match found, $affected_rows updated to $new_list_id with $dispo status";
+			$MESSAGE = _QXZ("DONE: $search_count match found, $affected_rows updated to $new_list_id with $dispo status");
 			echo "$MESSAGE\n";
 			}
 		else
 			{
-			$MESSAGE = "DONE: no match found within $lead_id     |$new_list_id|";
+			$MESSAGE = _QXZ("DONE: no match found within $lead_id     |$new_list_id|");
 			echo "$MESSAGE\n";
 			}
 		}
 	else
 		{
-		$MESSAGE = "DONE: $search_field is empty for lead $lead_id";
+		$MESSAGE = _QXZ("DONE: $search_field is empty for lead $lead_id");
 		echo "$MESSAGE\n";
 		}
 	}
 else
 	{
-	$MESSAGE = "DONE: dispo is not a sale status: $dispo";
+	$MESSAGE = _QXZ("DONE: dispo is not a sale status: $dispo");
 	echo "$MESSAGE\n";
 	}
 

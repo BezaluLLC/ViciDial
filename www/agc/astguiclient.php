@@ -1,7 +1,7 @@
 <?php
 # astguiclient.php - the web-based version of the astGUIclient client application
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least
 # user_level 1 or greater to access this page. Also you need to have the login
@@ -62,6 +62,7 @@
 # 130328-0017 - Converted ereg to preg functions
 # 130603-2220 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130802-1002 - Changed to PHP mysqli functions
+# 140811-0848 - Changed to use QXZ function for echoing text
 # 
 
 require_once("dbconnect_mysqli.php");
@@ -112,7 +113,7 @@ if ($force_logout)
 		Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
 		Header("HTTP/1.0 401 Unauthorized");
 		}
-    echo "You have now logged out. Thank you\n";
+    echo _QXZ("You have now logged out. Thank you\n");
     exit;
 	}
 
@@ -149,7 +150,7 @@ if( (strlen($user)<2) or (strlen($pass)<2) or (!$auth) or ($relogin == 'YES') )
 	{
 	header ("Content-type: text/html; charset=utf-8");
 
-	echo "<title>astGUIclient web client: Login</title>\n";
+	echo "<title>"._QXZ("astGUIclient web client: Login")."</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 	echo "<TABLE><TR><TD></TD>\n";
@@ -158,20 +159,20 @@ if( (strlen($user)<2) or (strlen($pass)<2) or (!$auth) or ($relogin == 'YES') )
 	echo "<FORM ACTION=\"$agcPAGE\" METHOD=POST>\n";
 	echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 	echo "<BR><BR><BR><CENTER><TABLE WIDTH=360 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCC2E0\"><TR BGCOLOR=WHITE>";
-	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/agc_tab_astguiclient.gif\" BORDER=0></TD>";
-	echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Login </TD>";
+	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/"._QXZ("agc_tab_astguiclient.gif")."\" BORDER=0></TD>";
+	echo "<TD ALIGN=CENTER VALIGN=MIDDLE> "._QXZ("Login")." </TD>";
 	echo "</TR>\n";
 	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>User Login:  </TD>";
+	echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Login:")."  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=user SIZE=10 MAXLENGTH=20 VALUE=\"$user\"></TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>User Password:  </TD>";
+	echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Password:")."  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 MAXLENGTH=20 VALUE=\"$pass\"></TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Phone Login: </TD>";
+	echo "<TR><TD ALIGN=RIGHT>"._QXZ("Phone Login:")." </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 MAXLENGTH=20 VALUE=\"$phone_login\"></TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Phone Password:  </TD>";
+	echo "<TR><TD ALIGN=RIGHT>"._QXZ("Phone Password:")."  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=phone_pass SIZE=10 MAXLENGTH=20 VALUE=\"$phone_pass\"></TD></TR>\n";
-	echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT></TD></TR>\n";
-	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
+	echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE="._QXZ("SUBMIT")."></TD></TR>\n";
+	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</TD></TR>\n";
 	echo "</TABLE>\n";
 	echo "</FORM>\n\n";
 	echo "</body>\n\n";
@@ -211,7 +212,7 @@ echo "<!-- VERSION: $version     BUILD: $build      ADD: $ADD-->\n";
 
 if ( (strlen($phone_login)<2) or (strlen($phone_pass)<2) )
 {
-echo "<title>astGUIclient web client: Phone Login</title>\n";
+echo "<title>"._QXZ("astGUIclient web client: Phone Login")."</title>\n";
 echo "</head>\n";
 echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 echo "<TABLE><TR><TD></TD>\n";
@@ -222,16 +223,16 @@ echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 echo "<INPUT TYPE=HIDDEN NAME=user VALUE=\"$user\">\n";
 echo "<INPUT TYPE=HIDDEN NAME=pass VALUE=\"$pass\">\n";
 echo "<BR><BR><BR><CENTER><TABLE WIDTH=360 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCC2E0\"><TR BGCOLOR=WHITE>";
-echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/agc_tab_astguiclient.gif\" BORDER=0></TD>";
-echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Phone Login </TD>";
+echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/"._QXZ("agc_tab_astguiclient.gif")."\" BORDER=0></TD>";
+echo "<TD ALIGN=CENTER VALIGN=MIDDLE> "._QXZ("Phone Login")." </TD>";
 echo "</TR>\n";
 echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-echo "<TR><TD ALIGN=RIGHT>Phone Login: </TD>";
+echo "<TR><TD ALIGN=RIGHT>"._QXZ("Phone Login:")." </TD>";
 echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 MAXLENGTH=20 VALUE=\"$phone_login\"></TD></TR>\n";
-echo "<TR><TD ALIGN=RIGHT>Phone Password:  </TD>";
+echo "<TR><TD ALIGN=RIGHT>"._QXZ("Phone Password:")."  </TD>";
 echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=phone_pass SIZE=10 MAXLENGTH=20 VALUE=\"$phone_pass\"></TD></TR>\n";
-echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT></TD></TR>\n";
-echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
+echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE="._QXZ("SUBMIT")."></TD></TR>\n";
+echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</TD></TR>\n";
 echo "</TABLE>\n";
 echo "</FORM>\n\n";
 echo "</body>\n\n";
@@ -248,7 +249,7 @@ $row=mysqli_fetch_row($rslt);
 $authphone=$row[0];
 if (!$authphone)
 	{
-	echo "<title>astGUIclient web client: Phone Login</title>\n";
+	echo "<title>"._QXZ("astGUIclient web client: Phone Login")."</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 	echo "<TABLE><TR><TD></TD>\n";
@@ -259,16 +260,16 @@ if (!$authphone)
 	echo "<INPUT TYPE=HIDDEN NAME=user VALUE=\"$user\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=pass VALUE=\"$pass\">\n";
 	echo "<BR><BR><BR><CENTER><TABLE WIDTH=360 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#CCC2E0\"><TR BGCOLOR=WHITE>";
-	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/agc_tab_astguiclient.gif\" BORDER=0></TD>";
-	echo "<TD ALIGN=CENTER VALIGN=MIDDLE> Phone Login </TD>";
+	echo "<TD ALIGN=LEFT VALIGN=BOTTOM><IMG SRC=\"./images/"._QXZ("agc_tab_astguiclient.gif")."\" BORDER=0></TD>";
+	echo "<TD ALIGN=CENTER VALIGN=MIDDLE> "._QXZ("Phone Login")." </TD>";
 	echo "</TR>\n";
-	echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=1> &nbsp; <BR><FONT SIZE=3>Sorry, your phone login and password are not active in this system, please try again: <BR> &nbsp; </TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Phone Login: </TD>";
+	echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=1> &nbsp; <BR><FONT SIZE=3>"._QXZ("Sorry, your phone login and password are not active in this system, please try again:")." <BR> &nbsp; </TD></TR>\n";
+	echo "<TR><TD ALIGN=RIGHT>"._QXZ("Phone Login:")."</TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=phone_login SIZE=10 MAXLENGTH=20 VALUE=\"$phone_login\"></TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Phone Password:  </TD>";
+	echo "<TR><TD ALIGN=RIGHT>"._QXZ("Phone Password:")."  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=phone_pass SIZE=10 MAXLENGTH=20 VALUE=\"$phone_pass\"></TD></TR>\n";
-	echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT></TD></TR>\n";
-	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build</TD></TR>\n";
+	echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE="._QXZ("SUBMIT")."></TD></TR>\n";
+	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>"._QXZ("VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build:")."</TD></TR>\n";
 	echo "</TABLE>\n";
 	echo "</FORM>\n\n";
 	echo "</body>\n\n";
@@ -277,7 +278,7 @@ if (!$authphone)
 	}
 else
 	{
-	echo "<title>astGUIclient web client</title>\n";
+	echo "<title>"._QXZ("astGUIclient web client")."</title>\n";
 	$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -493,15 +494,15 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 	var phone_pass = '<?php echo $phone_pass ?>';
 	var session_name = '<?php echo $session_name ?>';
 	var image_livecall_OFF = new Image();
-	image_livecall_OFF.src="./images/agc_live_call_OFF.gif";
+	image_livecall_OFF.src="./images/<?php echo _QXZ("agc_live_call_OFF.gif") ?>";
 	var image_livecall_ON = new Image();
-	image_livecall_ON.src="./images/agc_live_call_ON.gif";
+	image_livecall_ON.src="./images/<?php echo _QXZ("agc_live_call_ON.gif") ?>";
 	var image_voicemail_OFF = new Image();
-	image_voicemail_OFF.src="./images/agc_check_voicemail_OFF.gif";
+	image_voicemail_OFF.src="./images/<?php echo _QXZ("agc_check_voicemail_OFF.gif") ?>";
 	var image_voicemail_ON = new Image();
-	image_voicemail_ON.src="./images/agc_check_voicemail_ON.gif";
+	image_voicemail_ON.src="./images/<?php echo _QXZ("agc_check_voicemail_ON.gif") ?>";
 	var image_voicemail_BLINK = new Image();
-	image_voicemail_BLINK.src="./images/agc_check_voicemail_BLINK.gif";
+	image_voicemail_BLINK.src="./images/<?php echo _QXZ("agc_check_voicemail_BLINK.gif") ?>";
 	var favorites = new Array();
 	var favorites_names = new Array();
 	var favorites_busy = new Array();
@@ -888,7 +889,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 			else
 				{
 				bsr_continue=0;
-				alert("You can only monitor Zap channels:\n" + listenvalue);
+				alert("<?php echo _QXZ("You can only monitor Zap channels"); ?>:\n" + listenvalue);
 				}
 			}
 		if (bsr_continue == '1')
@@ -1386,7 +1387,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=3;
 					if (live_calls > 0)
 						{
-						var live_calls_HTML = "<font face=\"Arial,Helvetica\"><B>LIVE CALLS ON THIS PHONE:</B></font><BR><table width=100%><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">CLIENT CHANNEL</td><td><font class=\"log_title\">REMOTE CHANNEL</td><td><font class=\"log_title\">RECORD</td><td><font class=\"log_title\">HANGUP</td><td><font class=\"log_title\">XFER</td><td><font class=\"log_title\">PARK</td></tr>";
+						var live_calls_HTML = "<font face=\"Arial,Helvetica\"><B><?php echo _QXZ("LIVE CALLS ON THIS PHONE"); ?>:</B></font><BR><table width=100%><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"><?php echo _QXZ("CLIENT CHANNEL"); ?></td><td><font class=\"log_title\"><?php echo _QXZ("REMOTE CHANNEL"); ?></td><td><font class=\"log_title\"><?php echo _QXZ("RECORD"); ?></td><td><font class=\"log_title\"><?php echo _QXZ("HANGUP"); ?></td><td><font class=\"log_title\"><?php echo _QXZ("XFER"); ?></td><td><font class=\"log_title\"><?php echo _QXZ("PARK"); ?></td></tr>";
 						if ( (LCAcount > live_calls)  || (LCAcount < live_calls) )
 							{
 							LCAe[0]=''; LCAe[1]=''; LCAe[2]=''; LCAe[3]=''; LCAe[4]=''; LCAe[5]=''; 
@@ -1416,7 +1417,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 							else 
 								{live_calls_HTML = live_calls_HTML + "<span id=\"recordlive" + loop_ct + "\"><a href=\"#\" onclick=\"liverecording_send_recording('Monitor','" + channelfieldBtrunk_array[1] + "','recordlive" + loop_ct + "');return false;\">Record</span>";}
 
-							live_calls_HTML = live_calls_HTML + "</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"livehangup_send_hangup('" + channelfieldBtrunk_array[1] + "');return false;\">HANGUP</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"showMainXfeR('MainXfeRBox','" + channelfieldBtrunk_array[1] + "','" + channelfieldA_array[1] + "');return false;\">XFER</a></td><td><font class=\"log_text\"><a href=\"#\" onclick=\"mainxfer_send_redirect('ParK','" + channelfieldBtrunk_array[1] + "');return false;\">PARK</td></tr>";
+							live_calls_HTML = live_calls_HTML + "</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"livehangup_send_hangup('" + channelfieldBtrunk_array[1] + "');return false;\"><?php echo _QXZ("HANGUP"); ?></td><td><font class=\"log_text\"><a href=\"#\" onclick=\"showMainXfeR('MainXfeRBox','" + channelfieldBtrunk_array[1] + "','" + channelfieldA_array[1] + "');return false;\"><?php echo _QXZ("XFER"); ?></a></td><td><font class=\"log_text\"><a href=\"#\" onclick=\"mainxfer_send_redirect('ParK','" + channelfieldBtrunk_array[1] + "');return false;\">PARK</td></tr>";
 
 							if (LCAe[ARY_ct].length < 1) 
 								{LCAe[ARY_ct] = channelfieldA_array[1];   LCAcontent_change++;  LCAalter++;}
@@ -1533,7 +1534,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=0;
 					if (out_calls > 0)
 						{
-						var out_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> CALL DATE/TIME</td><td><font class=\"log_title\">NUMBER</td><td align=right><font class=\"log_title\">LENGTH (M:SS)</td><td><font class=\"log_title\"> </td></tr>"
+						var out_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"><?php echo _QXZ("CALL DATE/TIME"); ?></td><td><font class=\"log_title\"><?php echo _QXZ("NUMBER"); ?></td><td align=right><font class=\"log_title\"><?php echo _QXZ("LENGTH"); ?> (M:SS)</td><td><font class=\"log_title\"> </td></tr>"
 						while (loop_ct < out_calls)
 							{
 							loop_ct++;
@@ -1561,7 +1562,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=0;
 					if (in_calls > 0)
 						{
-						var in_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> CALL DATE/TIME</td><td><font class=\"log_title\">IN-NUMBER</td><td COLSPAN=2><font class=\"log_title\">CALLERID</td><td align=right><font class=\"log_title\">LENGTH</td><td><font class=\"log_title\"> </td></tr>"
+						var in_log_HTML = "<table width=580><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"> <?php echo _QXZ("CALL DATE/TIME"); ?></td><td><font class=\"log_title\"><?php echo _QXZ("IN-NUMBER"); ?></td><td COLSPAN=2><font class=\"log_title\"><?php echo _QXZ("CALLER ID"); ?></td><td align=right><font class=\"log_title\"><?php echo _QXZ("LENGTH"); ?></td><td><font class=\"log_title\"> </td></tr>"
 						while (loop_ct < in_calls)
 							{
 							loop_ct++;
@@ -1636,7 +1637,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 					var conv_start=-1;
 					if (parked_count > 0)
 						{
-						var park_HTML = "<table width=600><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\">CHANNEL<BR>&nbsp; CALL ID</td><td><font class=\"log_title\">PARKED BY<BR>&nbsp; PARKED TIME</td><td><font class=\"log_title\">HANGUP</td><td><font class=\"log_title\">XFER</td><td><font class=\"log_title\">PICKUP</td></tr>"
+						var park_HTML = "<table width=600><tr bgcolor=#E6E6E6><td><font class=\"log_title\">#</td><td><font class=\"log_title\"><?php echo _QXZ("CHANNEL"); ?><BR>&nbsp; <?php echo _QXZ("CALL ID"); ?></td><td><font class=\"log_title\"><?php echo _QXZ("PARKED BY"); ?><BR>&nbsp; <?php echo _QXZ("PARKED TIME"); ?></td><td><font class=\"log_title\"><?php echo _QXZ("HANGUP"); ?></td><td><font class=\"log_title\"><?php echo _QXZ("XFER"); ?></td><td><font class=\"log_title\"><?php echo _QXZ("PICKUP"); ?></td></tr>"
 						while (loop_ct < parked_count)
 							{
 							loop_ct++;
@@ -1652,7 +1653,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 							var park_call_id = park_array[1];
 							var parked_by = park_array[3];
 							var parked_time = park_array[4];
-							park_HTML = park_HTML + "<tr bgcolor=\"" + row_color + "\"><td><font class=\"log_text\">" + loop_ct + "</td><td><font class=\"log_text\">" + park_channel + "<BR>&nbsp; " + park_call_id + "</td><td><font class=\"log_text\">" + parked_by + "<BR>&nbsp; " + parked_time + "</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"livehangup_send_hangup('" + park_channel + "');return false;\">HANGUP</a></td><td><font class=\"log_text\"><a href=\"#\" onclick=\"showMainXfeR('MainXfeRBox','" + park_channel + "');return false;\">XFER</a></td><td><font class=\"log_text\"><a href=\"#\" onclick=\"mainxfer_send_redirect('FROMParK','" + park_channel + "');return false;\">PICKUP</a></td></tr>";
+							park_HTML = park_HTML + "<tr bgcolor=\"" + row_color + "\"><td><font class=\"log_text\">" + loop_ct + "</td><td><font class=\"log_text\">" + park_channel + "<BR>&nbsp; " + park_call_id + "</td><td><font class=\"log_text\">" + parked_by + "<BR>&nbsp; " + parked_time + "</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"livehangup_send_hangup('" + park_channel + "');return false;\"><?php echo _QXZ("HANGUP"); ?></a></td><td><font class=\"log_text\"><a href=\"#\" onclick=\"showMainXfeR('MainXfeRBox','" + park_channel + "');return false;\"><?php echo _QXZ("XFER"); ?></a></td><td><font class=\"log_text\"><a href=\"#\" onclick=\"mainxfer_send_redirect('FROMParK','" + park_channel + "');return false;\"><?php echo _QXZ("PICKUP"); ?></a></td></tr>";
 					
 							}
 						park_HTML = park_HTML + "</table>";
@@ -1760,11 +1761,11 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 		var reglink='';
 		if (taskreg.length<1) 
 			{
-			head_reg = 'NO ONE';
+			head_reg = <?php echo _QXZ("'NO ONE'"); ?>;
 			show_reglink=1;
 			reglink = "<a href=\"#\" onclick=\"conf_register_room('" + head_conf + "');return false;\">Register</a>";
 			}
-		var conf_head_HTML = "<font class=\"sh_text\">CONFERENCE " + head_conf + "</b></font><font class=\"sb_text\">&nbsp; &nbsp; Registered to: " + head_reg + " &nbsp; " + reglink + " &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"basic_originate_call('" + head_conf + "','NO','NO');return false;\">Enter Conference </a><BR><a href=\"#\" onclick=\"check_for_conf_calls('" + head_conf + "','1');return false;\">Refresh </a> &nbsp; &nbsp; <span id=\"conf_rec_link\"><a href=\"#\" onclick=\"conf_send_recording('MonitorConf','conf_rec_link','" + head_conf + "');return false;\">Record</a></span> &nbsp; &nbsp; &nbsp; &nbsp; <input TYPE=TEXT SIZE=15 NAME=conf_dtmf STYLE=\"font-family : sans-serif; font-size : 10px\"> <A HREF=\"#\" onclick=\"SendConfDTMF(" + head_conf + ");\">Send DTMF</A> &nbsp; &nbsp; &nbsp; &nbsp; <input TYPE=TEXT SIZE=15 NAME=conf_dial STYLE=\"font-family : sans-serif; font-size : 10px\"> <A HREF=\"#\" onclick=\"SendManualDial('YES'," + head_conf + ");\">Dial From Conf</A><BR></font>";
+		var conf_head_HTML = "<font class=\"sh_text\"><?php echo _QXZ("CONFERENCE"); ?> " + head_conf + "</b></font><font class=\"sb_text\">&nbsp; &nbsp; <?php echo _QXZ("Registered to"); ?>: " + head_reg + " &nbsp; " + reglink + " &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"basic_originate_call('" + head_conf + "','NO','NO');return false;\"><?php echo _QXZ("Enter Conference"); ?> </a><BR><a href=\"#\" onclick=\"check_for_conf_calls('" + head_conf + "','1');return false;\"><?php echo _QXZ("Refresh"); ?> </a> &nbsp; &nbsp; <span id=\"conf_rec_link\"><a href=\"#\" onclick=\"conf_send_recording('MonitorConf','conf_rec_link','" + head_conf + "');return false;\"><?php echo _QXZ("Record"); ?></a></span> &nbsp; &nbsp; &nbsp; &nbsp; <input TYPE=TEXT SIZE=15 NAME=conf_dtmf STYLE=\"font-family : sans-serif; font-size : 10px\"> <A HREF=\"#\" onclick=\"SendConfDTMF(" + head_conf + ");\"><?php echo _QXZ("Send DTMF"); ?></A> &nbsp; &nbsp; &nbsp; &nbsp; <input TYPE=TEXT SIZE=15 NAME=conf_dial STYLE=\"font-family : sans-serif; font-size : 10px\"> <A HREF=\"#\" onclick=\"SendManualDial('YES'," + head_conf + ");\"><?php echo _QXZ("Dial From Conf"); ?></A><BR></font>";
 	
 		document.getElementById("ConfereNceHeaderContent").innerHTML = conf_head_HTML;
 		check_for_conf_calls(head_conf,taskrefresh);
@@ -1825,7 +1826,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 						var LMAcontent_change=0;
 						var LMAcontent_match=0;
 						var conv_start=-1;
-						var live_conf_HTML = "<font face=\"Arial,Helvetica\"><B>LIVE CALLS IN THIS CONFERENCE:</B></font><BR><TABLE WIDTH=500><TR BGCOLOR=#E6E6E6><TD><font class=\"log_title\">#</TD><TD><font class=\"log_title\">REMOTE CHANNEL</TD><TD><font class=\"log_title\">HANGUP</TD><TD><font class=\"log_title\">XFER</TD></TR>";
+						var live_conf_HTML = "<font face=\"Arial,Helvetica\"><B><?php echo _QXZ("LIVE CALLS IN THIS CONFERENCE"); ?>:</B></font><BR><TABLE WIDTH=500><TR BGCOLOR=#E6E6E6><TD><font class=\"log_title\">#</TD><TD><font class=\"log_title\"><?php echo _QXZ("REMOTE CHANNEL"); ?></TD><TD><font class=\"log_title\"><?php echo _QXZ("HANGUP"); ?></TD><TD><font class=\"log_title\">XFER</TD></TR>";
 						if ( (LMAcount > live_conf_calls)  || (LMAcount < live_conf_calls) || (LMAforce > 0))
 							{
 							LMAe[0]=''; LMAe[1]=''; LMAe[2]=''; LMAe[3]=''; LMAe[4]=''; LMAe[5]=''; 
@@ -1841,7 +1842,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 								{var row_color = '#CCCCFF';}
 							var conv_ct = (loop_ct + conv_start);
 							var channelfieldA = conf_chan_array[conv_ct];
-							live_conf_HTML = live_conf_HTML + "<tr bgcolor=\"" + row_color + "\"><td><font class=\"log_text\">" + loop_ct + "</td><td><font class=\"log_text\">" + channelfieldA + "</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"livehangup_send_hangup('" + channelfieldA + "');return false;\">HANGUP</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"showMainXfeR('MainXfeRBox','" + channelfieldA + "');return false;\">XFER</td></tr>";
+							live_conf_HTML = live_conf_HTML + "<tr bgcolor=\"" + row_color + "\"><td><font class=\"log_text\">" + loop_ct + "</td><td><font class=\"log_text\">" + channelfieldA + "</td><td><font class=\"log_text\"><a href=\"#\" onclick=\"livehangup_send_hangup('" + channelfieldA + "');return false;\"><?php echo _QXZ("HANGUP"); ?></td><td><font class=\"log_text\"><a href=\"#\" onclick=\"showMainXfeR('MainXfeRBox','" + channelfieldA + "');return false;\"><?php echo _QXZ("XFER"); ?></td></tr>";
 
 							if (!LMAe[ARY_ct]) 
 								{LMAe[ARY_ct] = channelfieldA;   LMAcontent_change++;  LMAalter++;}
@@ -2290,7 +2291,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 		var VD_favlist_ct_half = parseInt(favlistCT / 2);
 		if (VD_favlist_ct_half < 30) {VD_favlist_ct_half = 30;}
 		var favlist_sec_col = 0;
-		var favedit_HTML = "<center><table cellpadding=5 cellspacing=5 width=750><tr><td colspan=2 align=center bgcolor=\"#DDDD99\"><B>AVAILABLE EXTENSIONS</B></td><td align=center bgcolor=\"#CCCC99\"><B> FAVORITES</B></td></tr><tr><td bgcolor=\"#DDDD99\" height=380 width=200 valign=top><font class=\"ss_text\"><span id=FavSelectA>";
+		var favedit_HTML = "<center><table cellpadding=5 cellspacing=5 width=750><tr><td colspan=2 align=center bgcolor=\"#DDDD99\"><B><?php echo _QXZ("AVAILABLE EXTENSIONS"); ?></B></td><td align=center bgcolor=\"#CCCC99\"><B> <?php echo _QXZ("FAVORITES"); ?></B></td></tr><tr><td bgcolor=\"#DDDD99\" height=380 width=200 valign=top><font class=\"ss_text\"><span id=FavSelectA>";
 		loop_ct = 0;
 		while (loop_ct < favlistCT)
 			{
@@ -2325,7 +2326,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 			{
 			if (loop_ct > 0)
 				{
-				favedit_HTML = favedit_HTML + "<font class=\"sb_text\"><b><a href=\"#" + favoritesEDIT[loop_ct] + " - " + favorites_namesEDIT[loop_ct] + " - " + loop_ct + "\" onclick=\"favorites_editor('UP','" + favoritesEDIT[loop_ct] + " - " + favorites_namesEDIT[loop_ct] + "','" + loop_ct + "');return false;\"><img src=\"./images/up.gif\" BORDER=0></a>  <a href=\"#" + favoritesEDIT[loop_ct] + " - " + favorites_namesEDIT[loop_ct] + " - " + loop_ct + "\" onclick=\"favorites_editor('DOWN','" + favoritesEDIT[loop_ct] + " - " + favorites_namesEDIT[loop_ct] + "','" + loop_ct + "');return false;\"><img src=\"./images/down.gif\" BORDER=0></a>  " + favoritesEDIT[loop_ct] + " - " + favorites_namesEDIT[loop_ct] + " &nbsp; <a href=\"#" + favoritesEDIT[loop_ct] + " - " + favorites_namesEDIT[loop_ct] + "\" onclick=\"favorites_editor('REMOVE','" + favoritesEDIT[loop_ct] + " - " + favorites_namesEDIT[loop_ct] + "','" + loop_ct + "');return false;\"><img src=\"./images/remove.gif\" BORDER=0></a></b></font><BR>";
+				favedit_HTML = favedit_HTML + "<font class=\"sb_text\"><b><a href=\"#" + favoritesEDIT[loop_ct] + " - " + favorites_namesEDIT[loop_ct] + " - " + loop_ct + "\" onclick=\"favorites_editor('UP','" + favoritesEDIT[loop_ct] + " - " + favorites_namesEDIT[loop_ct] + "','" + loop_ct + "');return false;\"><img src=\"./images/<?php echo _QXZ("up.gif") ?>\" BORDER=0></a>  <a href=\"#" + favoritesEDIT[loop_ct] + " - " + favorites_namesEDIT[loop_ct] + " - " + loop_ct + "\" onclick=\"favorites_editor('DOWN','" + favoritesEDIT[loop_ct] + " - " + favorites_namesEDIT[loop_ct] + "','" + loop_ct + "');return false;\"><img src=\"./images/<?php echo _QXZ("down.gif") ?>\" BORDER=0></a>  " + favoritesEDIT[loop_ct] + " - " + favorites_namesEDIT[loop_ct] + " &nbsp; <a href=\"#" + favoritesEDIT[loop_ct] + " - " + favorites_namesEDIT[loop_ct] + "\" onclick=\"favorites_editor('REMOVE','" + favoritesEDIT[loop_ct] + " - " + favorites_namesEDIT[loop_ct] + "','" + loop_ct + "');return false;\"><img src=\"./images/<?php echo _QXZ("remove.gif") ?>\" BORDER=0></a></b></font><BR>";
 				}
 			loop_ct++;
 			}
@@ -2387,7 +2388,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 			hideDiv('MainPanel');
 			showDiv('LogouTBox');
 
-		document.getElementById("LogouTBoxLink").innerHTML = "<a href=\"" + agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&user=" + user + "&phone_login=" + phone_login + "&phone_pass=" + phone_pass + "\">CLICK HERE TO LOG IN AGAIN</a>\n";
+		document.getElementById("LogouTBoxLink").innerHTML = "<a href=\"" + agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&user=" + user + "&phone_login=" + phone_login + "&phone_pass=" + phone_pass + "\"><?php echo _QXZ("CLICK HERE TO LOG IN AGAIN"); ?></a>\n";
 
 		logout_stop_timeouts = 1;
 
@@ -2468,7 +2469,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 		start_all_refresh();
 		}
 	function pause()	// Pauses the refreshing of the lists
-		{active_display=2;  display_message="  - ACTIVE DISPLAY PAUSED -";}
+		{active_display=2;  display_message="<?php echo _QXZ("  - ACTIVE DISPLAY PAUSED -"); ?>";}
 	function start()	// resumes the refreshing of the lists
 		{active_display=1;  display_message='';}
 	function faster()	// lowers by 1000 milliseconds the time until the next refresh
@@ -2489,13 +2490,13 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 	function activeext_order_asc()	// changes order of activeext list to ascending
 		{
 		activeext_order="asc";   getactiveext();
-		desc_order_HTML ='<a href="#" onclick="activeext_order_desc();return false;">ORDER</a>';
+		desc_order_HTML ='<a href="#" onclick="activeext_order_desc();return false;"><?php echo _QXZ("ORDER"); ?></a>';
 		document.getElementById("activeext_order").innerHTML = desc_order_HTML;
 		}
 	function activeext_order_desc()	// changes order of activeext list to descending
 		{
 		activeext_order="desc";   getactiveext();
-		asc_order_HTML ='<a href="#" onclick="activeext_order_asc();return false;">ORDER</a>';
+		asc_order_HTML ='<a href="#" onclick="activeext_order_asc();return false;"><?php echo _QXZ("ORDER"); ?></a>';
 		document.getElementById("activeext_order").innerHTML = asc_order_HTML;
 		}
 
@@ -2505,13 +2506,13 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 	function busytrunk_order_asc()	// changes order of busytrunk list to ascending
 		{
 		busytrunk_order="asc";   getbusytrunk();
-		desc_order_HTML ='<a href="#" onclick="busytrunk_order_desc();return false;">ORDER</a>';
+		desc_order_HTML ='<a href="#" onclick="busytrunk_order_desc();return false;"><?php echo _QXZ("ORDER"); ?></a>';
 		document.getElementById("busytrunk_order").innerHTML = desc_order_HTML;
 		}
 	function busytrunk_order_desc()	// changes order of busytrunk list to descending
 		{
 		busytrunk_order="desc";   getbusytrunk();
-		asc_order_HTML ='<a href="#" onclick="busytrunk_order_asc();return false;">ORDER</a>';
+		asc_order_HTML ='<a href="#" onclick="busytrunk_order_asc();return false;"><?php echo _QXZ("ORDER"); ?></a>';
 		document.getElementById("busytrunk_order").innerHTML = asc_order_HTML;
 		}
 	function busytrunkhangup_force_refresh()	// forces immediate refresh of list content
@@ -2523,13 +2524,13 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 	function busyext_order_asc()	// changes order of busyext list to ascending
 		{
 		busyext_order="asc";   getbusyext();
-		desc_order_HTML ='<a href="#" onclick="busyext_order_desc();return false;">ORDER</a>';
+		desc_order_HTML ='<a href="#" onclick="busyext_order_desc();return false;"><?php echo _QXZ("ORDER"); ?></a>';
 		document.getElementById("busyext_order").innerHTML = desc_order_HTML;
 		}
 	function busyext_order_desc()	// changes order of busyext list to descending
 		{
 		busyext_order="desc";   getbusyext();
-		asc_order_HTML ='<a href="#" onclick="busyext_order_asc();return false;">ORDER</a>';
+		asc_order_HTML ='<a href="#" onclick="busyext_order_asc();return false;"><?php echo _QXZ("ORDER"); ?></a>';
 		document.getElementById("busyext_order").innerHTML = asc_order_HTML;
 		}
 	function busylocalhangup_force_refresh()	// forces immediate refresh of list content
@@ -2718,75 +2719,75 @@ echo "</head>\n";
 <TR VALIGN=TOP ALIGN=LEFT><TD COLSPAN=5 VALIGN=TOP ALIGN=LEFT>
 <INPUT TYPE=HIDDEN NAME=extension>
 <font class="body_text">
-<?php	echo "Welcome $LOGfullname, you are logged into this phone: $fullname - $protocol/$extension on $server_ip &nbsp; <a href=\"#\" onclick=\"LogouT();return false;\">LOGOUT</a><BR>\n"; ?>
+<?php	echo _QXZ("Welcome $LOGfullname, you are logged into this phone: $fullname - $protocol/$extension on $server_ip")." &nbsp; <a href=\"#\" onclick=\"LogouT();return false;\">"._QXZ("LOGOUT")."</a><BR>\n"; ?>
 </TD></TR>
 <TR VALIGN=TOP ALIGN=LEFT>
-<TD><A HREF="#" onclick="MainPanelToFront();"><IMG SRC="./images/agc_tab_main.gif" ALT="Main Panel" WIDTH=83 HEIGHT=30 BORDER=0></A></TD>
-<TD><A HREF="#" onclick="ActiveLinesPanelToFront();"><IMG SRC="./images/agc_tab_active_lines.gif" ALT="Active Lines Panel" WIDTH=139 HEIGHT=30 BORDER=0></A></TD>
-<TD><A HREF="#" onclick="ConfereNcesPanelToFront();"><IMG SRC="./images/agc_tab_conferences.gif" ALT="Conferences Panel" WIDTH=139 HEIGHT=30 BORDER=0></A></TD>
-<TD><A HREF="#" onclick="SendCheckVoiceMail();"><IMG SRC="./images/agc_check_voicemail_ON.gif" NAME=voicemail ALT="Check Voicemail" WIDTH=170 HEIGHT=30 BORDER=0></A></TD>
-<TD><IMG SRC="./images/agc_live_call_OFF.gif" NAME=livecall ALT="Live Call" WIDTH=109 HEIGHT=30 BORDER=0></TD>
+<TD><A HREF="#" onclick="MainPanelToFront();"><IMG SRC="./images/<?php echo _QXZ("agc_tab_main.gif") ?>" ALT="Main Panel" WIDTH=83 HEIGHT=30 BORDER=0></A></TD>
+<TD><A HREF="#" onclick="ActiveLinesPanelToFront();"><IMG SRC="./images/<?php echo _QXZ("agc_tab_active_lines.gif") ?>" ALT="Active Lines Panel" WIDTH=139 HEIGHT=30 BORDER=0></A></TD>
+<TD><A HREF="#" onclick="ConfereNcesPanelToFront();"><IMG SRC="./images/<?php echo _QXZ("agc_tab_conferences.gif") ?>" ALT="Conferences Panel" WIDTH=139 HEIGHT=30 BORDER=0></A></TD>
+<TD><A HREF="#" onclick="SendCheckVoiceMail();"><IMG SRC="./images/<?php echo _QXZ("agc_check_voicemail_ON.gif") ?>" NAME=voicemail ALT="Check Voicemail" WIDTH=170 HEIGHT=30 BORDER=0></A></TD>
+<TD><IMG SRC="./images/<?php echo _QXZ("agc_live_call_OFF.gif") ?>" NAME=livecall ALT="Live Call" WIDTH=109 HEIGHT=30 BORDER=0></TD>
 </TR></TABLE>
 </SPAN>
 
 <span style="position:absolute;left:0px;top:0px;z-index:26;" id="LogouTBox">
-    <table border=1 bgcolor="#FFFFFF" width=750 height=500><TR><TD align=center><BR><span id="LogouTBoxLink">Logout</span></TD></TR></TABLE>
+    <table border=1 bgcolor="#FFFFFF" width=750 height=500><TR><TD align=center><BR><span id="LogouTBoxLink"><?php echo _QXZ("Logout"); ?></span></TD></TR></TABLE>
 </span>
 
 <span style="position:absolute;left:0px;top:12px;z-index:29;" id="TrunkHangupBox">
-    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> TRUNK HANGUP <BR><BR>
-	<span id="TrunkHangupContent"> Active Trunks Menu </span><BR>
-	<span id="TrunkHangup_HUlink"><a href="#" onclick="busyhangup_send_hangup('Trunk');return false;">Hangup Trunk</a> &nbsp; | &nbsp; </span>
-	<span id="TrunkHangup_HJlink"><a href="#" onclick="busyhangup_send_redirect('Trunk','HIJACK');return false;">Hijack Trunk</a> &nbsp; | &nbsp; </span>
-	<span id="TrunkHangup_ZMlink"><a href="#" onclick="busyhangup_send_redirect('Trunk','LISTEN');return false;">Listen Trunk</a> &nbsp; | &nbsp; </span>
-	<a href="#" onclick="busytrunkhangup_force_refresh();return false;">Refresh</a> &nbsp; | &nbsp; 
-	<a href="#" onclick="hideTrunkHangup('TrunkHangupBox');">Back to Main Window</a>
+    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> <?php echo _QXZ("TRUNK HANGUP"); ?> <BR><BR>
+	<span id="TrunkHangupContent"> <?php echo _QXZ("Active Trunks Menu"); ?> </span><BR>
+	<span id="TrunkHangup_HUlink"><a href="#" onclick="busyhangup_send_hangup('Trunk');return false;"><?php echo _QXZ("Hangup Trunk"); ?></a> &nbsp; | &nbsp; </span>
+	<span id="TrunkHangup_HJlink"><a href="#" onclick="busyhangup_send_redirect('Trunk','HIJACK');return false;"><?php echo _QXZ("Hijack Trunk"); ?></a> &nbsp; | &nbsp; </span>
+	<span id="TrunkHangup_ZMlink"><a href="#" onclick="busyhangup_send_redirect('Trunk','LISTEN');return false;"><?php echo _QXZ("Listen Trunk"); ?></a> &nbsp; | &nbsp; </span>
+	<a href="#" onclick="busytrunkhangup_force_refresh();return false;"><?php echo _QXZ("Refresh"); ?></a> &nbsp; | &nbsp; 
+	<a href="#" onclick="hideTrunkHangup('TrunkHangupBox');"><?php echo _QXZ("Back to Main Window"); ?></a>
 	</TD></TR></TABLE>
 </span>
 
 <span style="position:absolute;left:0px;top:12px;z-index:28;" id="LocalHangupBox">
-    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> LOCAL HANGUP <BR><BR>
-	<span id="LocalHangupContent"> Active Local Menu </span><BR>
-	<span id="LocalHangup_HUlink"><a href="#" onclick="busyhangup_send_hangup('Local');return false;">Hangup Local</a> &nbsp; | &nbsp; </span>
-	<span id="LocalHangup_HJlink"><a href="#" onclick="busyhangup_send_redirect('Local');return false;">Hijack Local</a> &nbsp; | &nbsp; </span>
-	<span id="LocalHangup_ZMlink"><a href="#" onclick="busyhangup_send_redirect('Local','LISTEN');return false;">Listen Local</a> &nbsp; | &nbsp; </span>
-	<a href="#" onclick="busylocalhangup_force_refresh();return false;">Refresh</a> &nbsp; | &nbsp; 
-	<a href="#" onclick="hideLocalHangup('LocalHangupBox');">Back to Main Window</a>
+    <table border=1 bgcolor="#CDE0C2" width=600 height=500><TR><TD> <?php echo _QXZ("LOCAL HANGUP"); ?> <BR><BR>
+	<span id="LocalHangupContent"> <?php echo _QXZ("Active Local Menu"); ?> </span><BR>
+	<span id="LocalHangup_HUlink"><a href="#" onclick="busyhangup_send_hangup('Local');return false;"><?php echo _QXZ("Hangup Local"); ?></a> &nbsp; | &nbsp; </span>
+	<span id="LocalHangup_HJlink"><a href="#" onclick="busyhangup_send_redirect('Local');return false;"><?php echo _QXZ("Hijack Local"); ?></a> &nbsp; | &nbsp; </span>
+	<span id="LocalHangup_ZMlink"><a href="#" onclick="busyhangup_send_redirect('Local','LISTEN');return false;"><?php echo _QXZ("Listen Local"); ?></a> &nbsp; | &nbsp; </span>
+	<a href="#" onclick="busylocalhangup_force_refresh();return false;"><?php echo _QXZ("Refresh"); ?></a> &nbsp; | &nbsp; 
+	<a href="#" onclick="hideLocalHangup('LocalHangupBox');"><?php echo _QXZ("Back to Main Window"); ?></a>
 	</TD></TR></TABLE>
 </span>
 
 <span style="position:absolute;left:80px;top:12px;z-index:42;" id="MainXfeRBox">
 	<input type=hidden name=H_XfeR_channel>
 	<input type=hidden name=M_XfeR_channel>
-    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> LIVE CALL TRANSFER</b> <BR>Channel to be transferred: <span id="MainXfeRChanneL">Channel</span><BR></tr>
-	<tr><td>Extensions:<BR><span id="MainXfeRContent"> Extensions Menu </span></td>
+    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> <?php echo _QXZ("LIVE CALL TRANSFER"); ?></b> <BR><?php echo _QXZ("Channel to be transferred:"); ?> <span id="MainXfeRChanneL"><?php echo _QXZ("Channel"); ?></span><BR></tr>
+	<tr><td><?php echo _QXZ("Extensions:"); ?><BR><span id="MainXfeRContent"> <?php echo _QXZ("Extensions Menu"); ?> </span></td>
 	<td>
 	<BR>
-	<a href="#" onclick="mainxfer_send_redirect('XfeR');return false;">Send to selected extension</a> <BR><BR>
-	<a href="#" onclick="mainxfer_send_redirect('VMAIL');return false;">Send to selected vmail box</a> <BR><BR>
-	<a href="#" onclick="mainxfer_send_redirect('ENTRY');return false;">Send to this number</a>:<BR><input type=text name=extension_xfer_entry size=20 maxlength=50> <BR><BR>
-	<a href="#" onclick="getactiveext('MainXfeRBox');return false;">Refresh</a> <BR><BR><BR>
-	<a href="#" onclick="hideMainXfeR('MainXfeRBox');">Back to Main Window</a> <BR><BR>
+	<a href="#" onclick="mainxfer_send_redirect('XfeR');return false;"><?php echo _QXZ("Send to selected extension"); ?></a> <BR><BR>
+	<a href="#" onclick="mainxfer_send_redirect('VMAIL');return false;"><?php echo _QXZ("Send to selected vmail box"); ?></a> <BR><BR>
+	<a href="#" onclick="mainxfer_send_redirect('ENTRY');return false;"><?php echo _QXZ("Send to this number"); ?></a>:<BR><input type=text name=extension_xfer_entry size=20 maxlength=50> <BR><BR>
+	<a href="#" onclick="getactiveext('MainXfeRBox');return false;"><?php echo _QXZ("Refresh"); ?></a> <BR><BR><BR>
+	<a href="#" onclick="hideMainXfeR('MainXfeRBox');"><?php echo _QXZ("Back to Main Window"); ?></a> <BR><BR>
 	</TD>
-	<TD>Conferences:<BR><font size=1>(click on a number below to send to a conference)<BR><input type=checkbox name=MainXfeRconfXTRA size=1 value="1"> Send my channel too<div class="scroll_list" id="MainXfeRconfContent"> Conferences Menu </div></td></TR></TABLE>
+	<TD><?php echo _QXZ("Conferences:"); ?><BR><font size=1><?php echo _QXZ("(click on a number below to send to a conference)"); ?><BR><input type=checkbox name=MainXfeRconfXTRA size=1 value="1"> <?php echo _QXZ("Send my channel too"); ?><div class="scroll_list" id="MainXfeRconfContent"> <?php echo _QXZ("Conferences Menu"); ?> </div></td></TR></TABLE>
 </span>
 
 <span style="position:absolute;left:80px;top:12px;z-index:43;" id="LocalDialBox">
-    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> LOCAL Extensions Dial</b> <BR>Phone calling from: <span id="LocalDialChanneL">Channel</span><BR></tr>
-	<tr><td>Extensions:<BR><span id="LocalDialContent"> Extensions Menu </span></td>
+    <table border=0 bgcolor="#FFFFCC" width=600 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> <?php echo _QXZ("LOCAL Extensions Dial"); ?></b> <BR><?php echo _QXZ("Phone calling from:"); ?> <span id="LocalDialChanneL"><?php echo _QXZ("Channel"); ?></span><BR></tr>
+	<tr><td><?php echo _QXZ("Extensions:"); ?><BR><span id="LocalDialContent"> <?php echo _QXZ("Extensions Menu"); ?> </span></td>
 	<td>
 	<BR>
-	<a href="#" onclick="mainxfer_send_originate('DiaL','','');return false;">Call selected extension</a> <BR><BR>
-	<a href="#" onclick="mainxfer_send_originate('VMAIL');return false;">Call selected vmail box</a> <BR><BR>
-	<a href="#" onclick="getactiveext('LocalDialBox');return false;">Refresh</a> <BR><BR><BR>
-	<a href="#" onclick="hideLocalDial('LocalDialBox');">Back to Main Window</a> <BR><BR>
+	<a href="#" onclick="mainxfer_send_originate('DiaL','','');return false;"><?php echo _QXZ("Call selected extension"); ?></a> <BR><BR>
+	<a href="#" onclick="mainxfer_send_originate('VMAIL');return false;"><?php echo _QXZ("Call selected vmail box"); ?></a> <BR><BR>
+	<a href="#" onclick="getactiveext('LocalDialBox');return false;"><?php echo _QXZ("Refresh"); ?></a> <BR><BR><BR>
+	<a href="#" onclick="hideLocalDial('LocalDialBox');"><?php echo _QXZ("Back to Main Window"); ?></a> <BR><BR>
 	</TD>
 	<TD></td></TR></TABLE>
 </span>
 
 <span style="position:absolute;left:40px;top:12px;z-index:41;" id="ParkDisplayBox">
-    <table border=0 bgcolor="#FFFFCC" width=640 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> PARKED CALLS:</b> <div class="scroll_park" id="ParkDisplayContents"></div>
-	<a href="#" onclick="hideParkDisplay('ParkDisplayBox');">Back to Main Window</a> <BR><BR>
+    <table border=0 bgcolor="#FFFFCC" width=640 height=500 cellpadding=3><TR><TD COLSPAN=3 ALIGN=CENTER><b> <?php echo _QXZ("PARKED CALLS:"); ?></b> <div class="scroll_park" id="ParkDisplayContents"></div>
+	<a href="#" onclick="hideParkDisplay('ParkDisplayBox');"><?php echo _QXZ("Back to Main Window"); ?></a> <BR><BR>
 	</td></TR></TABLE>
 </span>
 
@@ -2796,26 +2797,26 @@ echo "</head>\n";
 </TD></TR>
 <tr><td><span id="busycallsspan"></span></td></tr>
 <tr><td><span id="busycallsdebug"></span></td></tr>
-<tr><td align=center><font face="Arial,Helvetica"><B>VOICEMAIL &nbsp; &nbsp; </B></font> NEW: <span id="new_vmail_span"></span> &nbsp; &nbsp; OLD: <span id="old_vmail_span"></span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <font face="Arial,Helvetica"><B>MANUAL DIAL &nbsp; &nbsp; &nbsp; </B></font><input TYPE=TEXT SIZE=20 NAME=manual_dial STYLE="font-family : sans-serif; font-size : 10px"> <A HREF="#" onclick="SendManualDial();">DIAL</A></td></tr>
+<tr><td align=center><font face="Arial,Helvetica"><B><?php echo _QXZ("VOICEMAIL"); ?> &nbsp; &nbsp; </B></font> <?php echo _QXZ("NEW:"); ?> <span id="new_vmail_span"></span> &nbsp; &nbsp; <?php echo _QXZ("OLD:"); ?> <span id="old_vmail_span"></span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <font face="Arial,Helvetica"><B><?php echo _QXZ("MANUAL DIAL"); ?> &nbsp; &nbsp; &nbsp; </B></font><input TYPE=TEXT SIZE=20 NAME=manual_dial STYLE="font-family : sans-serif; font-size : 10px"> <A HREF="#" onclick="SendManualDial();"><?php echo _QXZ("DIAL"); ?></A></td></tr>
 
-<tr><td align=center><a href="#" onclick="showParkDisplay('ParkDisplayBox');return false;"><font face="Arial,Helvetica"><B>PARKED CALLS</B></a>:  <span id="parked_calls_count">0</span> &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<a href="#" onclick="showLocalDial('LocalDialBox');return false;"><font face="Arial,Helvetica"><B>LOCAL DIAL EXTENSIONS</a></td></tr>
+<tr><td align=center><a href="#" onclick="showParkDisplay('ParkDisplayBox');return false;"><font face="Arial,Helvetica"><B><?php echo _QXZ("PARKED CALLS"); ?></B></a>:  <span id="parked_calls_count">0</span> &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<a href="#" onclick="showLocalDial('LocalDialBox');return false;"><font face="Arial,Helvetica"><B><?php echo _QXZ("LOCAL DIAL EXTENSIONS"); ?></a></td></tr>
 
-<tr><td align=center><font face="Arial,Helvetica"><B>OUTBOUND CALLS:</B></font></td></tr>
+<tr><td align=center><font face="Arial,Helvetica"><B><?php echo _QXZ("OUTBOUND CALLS:"); ?></B></font></td></tr>
 <tr><td align=center><div class="scroll_log" id="outboundcallsspan"></div></td></tr>
-<tr><td align=center><font face="Arial,Helvetica"><B>INBOUND CALLS:</B></font></td></tr>
+<tr><td align=center><font face="Arial,Helvetica"><B><?php echo _QXZ("INBOUND CALLS:"); ?></B></font></td></tr>
 <tr><td align=center><div class="scroll_log" id="inboundcallsspan"></div></td></tr>
-<tr><td align=left><font face="Arial,Helvetica" size=1>astGUIclient web-client VERSION:<?php echo $version ?> BUILD:<?php echo $build ?></font></td></tr>
+<tr><td align=left><font face="Arial,Helvetica" size=1><?php echo _QXZ("astGUIclient web-client VERSION: $version BUILD: $build"); ?></font></td></tr>
 </TABLE>
 
 <span style="position:absolute;left:640px;top:0px;z-index:33;" id="FavoriteSBox">
-    <table border=0 bgcolor="#DDDDFF" width=200 height=400 cellpadding=2 ALIGN=TOP><TR><TD align=center><span id="FavoriteSContent"><font class="sh_text"> FAVORITES</font><font class="sb_text"> &nbsp; &nbsp; &nbsp; <a href="#" onclick="favorites_editor('BuilD');return false;"> edit</a></span></TD></TR>
+    <table border=0 bgcolor="#DDDDFF" width=200 height=400 cellpadding=2 ALIGN=TOP><TR><TD align=center><span id="FavoriteSContent"><font class="sh_text"> <?php echo _QXZ("FAVORITES"); ?></font><font class="sb_text"> &nbsp; &nbsp; &nbsp; <a href="#" onclick="favorites_editor('BuilD');return false;"> <?php echo _QXZ("edit"); ?></a></span></TD></TR>
 <?php
 	$h=0;
 	while ($favorites_count > $h)
 	{
 		if (strlen($favorites[$h])>1)
 		{
-		echo "<TR id=\"$favorites[$h]\" bgcolor=\"#90EE90\"><TD> <A HREF=\"#\" onclick=\"mainxfer_send_originate('DiaL','','$favorites[$h]');return false;\"><font class=\"sb_text\">$favorites[$h] - $favorites_names[$h]</font></A> </TD></TR>\n";
+		echo "<TR id=\"$favorites[$h]\" bgcolor=\"#90EE90\"><TD> <A HREF=\"#\" onclick=\"mainxfer_send_originate('DiaL','','$favorites[$h]');return false;\"><font class=\"sb_text\">"._QXZ("$favorites[$h] - $favorites_names[$h]")."</font></A> </TD></TR>\n";
 		}
 	$h++;
 	}
@@ -2826,10 +2827,10 @@ echo "</head>\n";
 
 
 <span style="position:absolute;left:5px;top:5px;z-index:34;" id="FavoriteSEdiT">
-    <table border=0 bgcolor="#DDDDFF" width=800 height=450 cellpadding=2 ALIGN=TOP><TR HEIGHT=95%><TD align=center HEIGHT=95%><span id="FavoriteSEditContent"> FAVORITES</span></TD></TR>
+    <table border=0 bgcolor="#DDDDFF" width=800 height=450 cellpadding=2 ALIGN=TOP><TR HEIGHT=95%><TD align=center HEIGHT=95%><span id="FavoriteSEditContent"> <?php echo _QXZ("FAVORITES"); ?></span></TD></TR>
 	<TR><TD ALIGN=CENTER><BR> &nbsp; </TD></TR>
-	<TR VALIGN=BOTTOM><TD VALIGN=BOTTOM ALIGN=CENTER BGCOLOR="#FFFFCC"><a href="#" onclick="SubmiT_FavoritE_ChangEs();return false;">SUBMIT FAVORITES CHANGES - requires logout</a></TD></TR>
-	<TR VALIGN=BOTTOM><TD VALIGN=BOTTOM ALIGN=CENTER BGCOLOR="#FFFFCC"><a href="#" onclick="hideDiv('FavoriteSEdiT');return false;">BACK TO MAIN WINDOW - ignore changes made</a></TD></TR>
+	<TR VALIGN=BOTTOM><TD VALIGN=BOTTOM ALIGN=CENTER BGCOLOR="#FFFFCC"><a href="#" onclick="SubmiT_FavoritE_ChangEs();return false;"><?php echo _QXZ("SUBMIT FAVORITES CHANGES - requires logout"); ?></a></TD></TR>
+	<TR VALIGN=BOTTOM><TD VALIGN=BOTTOM ALIGN=CENTER BGCOLOR="#FFFFCC"><a href="#" onclick="hideDiv('FavoriteSEdiT');return false;"><?php echo _QXZ("BACK TO MAIN WINDOW - ignore changes made"); ?></a></TD></TR>
 	</TABLE>
 </span>
 
@@ -2839,30 +2840,30 @@ echo "</head>\n";
 <span style="position:absolute;left:0px;top:46px;z-index:20;" id="ActiveLinesPanel">
 <table border=0 BGCOLOR="#CDE0C2" width=640>
 <tr><td colspan=3>
-<a href="#" onclick="pause();return false;">STOP</a> | <a href="#" onclick="start();return false;">START</a> &nbsp; &nbsp; Refresh rate: <span id="refresh_rate">1000 ms</span> <a href="#" onclick="faster();return false;">Faster</a> | <a href="#" onclick="slower();return false;">Slower</a></p>
-	<div id="status"><em>Initializing..</em></div>
+<a href="#" onclick="pause();return false;"><?php echo _QXZ("STOP"); ?></a> | <a href="#" onclick="start();return false;"><?php echo _QXZ("START"); ?></a> &nbsp; &nbsp; <?php echo _QXZ("Refresh rate:"); ?> <span id="refresh_rate">1000 ms</span> <a href="#" onclick="faster();return false;"><?php echo _QXZ("Faster"); ?></a> | <a href="#" onclick="slower();return false;"><?php echo _QXZ("Slower"); ?></a></p>
+	<div id="status"><em><?php echo _QXZ("Initializing.."); ?></em></div>
 </td></tr>
-<tr><td>Active Extensions <BR> 
-<a href="#" onclick="activeext_force_refresh();return false;">REFRESH</a> | 
-<span id="activeext_order"><a href="#" onclick="activeext_order_desc();return false;">ORDER</a> | </span>
+<tr><td><?php echo _QXZ("Active Extensions"); ?> <BR> 
+<a href="#" onclick="activeext_force_refresh();return false;"><?php echo _QXZ("Refresh"); ?></a> | 
+<span id="activeext_order"><a href="#" onclick="activeext_order_desc();return false;"><?php echo _QXZ("ORDER"); ?></a> | </span>
 </td>
 
-<td>Outside Lines <BR>
-<a href="#" onclick="busytrunk_force_refresh();return false;">REFRESH</a> | 
-<span id="busytrunk_order"><a href="#" onclick="busytrunk_order_desc();return false;">ORDER</a> | </span>
+<td><?php echo _QXZ("Outside Lines"); ?> <BR>
+<a href="#" onclick="busytrunk_force_refresh();return false;"><?php echo _QXZ("Refresh"); ?></a> | 
+<span id="busytrunk_order"><a href="#" onclick="busytrunk_order_desc();return false;"><?php echo _QXZ("ORDER"); ?></a> | </span>
 </td>
 
-<td>Local Extensions <BR>
-<a href="#" onclick="busyext_force_refresh();return false;">REFRESH</a> | 
-<span id="busyext_order"><a href="#" onclick="busyext_order_desc();return false;">ORDER</a> | </span>
+<td><?php echo _QXZ("Local Extensions"); ?> <BR>
+<a href="#" onclick="busyext_force_refresh();return false;"><?php echo _QXZ("Refresh"); ?></a> | 
+<span id="busyext_order"><a href="#" onclick="busyext_order_desc();return false;"><?php echo _QXZ("ORDER"); ?></a> | </span>
 </td></tr>
 
 <tr><td VALIGN=TOP>
-	<span id="activeext"><em>Data Goes Here</em></span><BR><BR>
+	<span id="activeext"><em><?php echo _QXZ("Data Goes Here"); ?></em></span><BR><BR>
 </td><td VALIGN=TOP>
-	<span id="busytrunk"><em>Data Goes Here</em></span><BR><BR><span id="TrunkHangupLink"><a href="#" onclick="showTrunkHangup('TrunkHangupBox');return false;">Trunk Action</a></span>
+	<span id="busytrunk"><em><?php echo _QXZ("Data Goes Here"); ?></em></span><BR><BR><span id="TrunkHangupLink"><a href="#" onclick="showTrunkHangup('TrunkHangupBox');return false;"><?php echo _QXZ("Trunk Action"); ?></a></span>
 </td><td VALIGN=TOP>
-	<span id="busyext"><em>Data Goes Here</em></span><BR><BR><span id="LocalHangupLink"><a href="#" onclick="showLocalHangup('LocalHangupBox');return false;">Local Action</a></span>
+	<span id="busyext"><em><?php echo _QXZ("Data Goes Here"); ?></em></span><BR><BR><span id="LocalHangupLink"><a href="#" onclick="showLocalHangup('LocalHangupBox');return false;"><?php echo _QXZ("Local Action"); ?></a></span>
 </td></tr>
 
 </table>
@@ -2874,12 +2875,12 @@ echo "</head>\n";
 <TR><TD></TD></TR></TABLE>
 
 <span style="position:absolute;left:0px;top:0px;z-index:31;color:black;" id="ConfereNcesListSpan">
-<span id="ConfereNcesListContent">Conferences List </span>
+<span id="ConfereNcesListContent"><?php echo _QXZ("Conferences List"); ?> </span>
 </span>
 
 <span style="position:absolute;left:140px;top:0px;z-index:32;color:black;width:500;" id="ConfereNceHeaderSpan">
 <span id="ConfereNceHeaderContent"> </span><BR>
-<span style="width:540;height:400;" id="ConfereNceDetailContent">Click on a conference room number on the left for info on that conference </span>
+<span style="width:540;height:400;" id="ConfereNceDetailContent"><?php echo _QXZ("Click on a conference room number on the left for info on that conference"); ?> </span>
 </span>
 
 
