@@ -36,6 +36,7 @@
 # 130926-2048 - Added option to search vicidial_list_archive table
 # 140724-1240 - Added the abilty to search the log archive tables
 # 140808-1117 - Added more admin logging
+# 140817-0941 - Added archive_log variable to modify page link
 #
 
 require("dbconnect_mysqli.php");
@@ -113,6 +114,7 @@ $NOW_TIME = date("Y-m-d H:i:s");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
+$log_archive_link=0;
 
 if (strlen($alt_phone_search) < 2) {$alt_phone_search='No';}
 
@@ -637,12 +639,14 @@ else
 			{
 			$stmtA="SELECT lead_id,phone_number,campaign_id,call_date,status,user,list_id,length_in_sec,alt_dial from vicidial_log_archive where lead_id='" . mysqli_real_escape_string($link, $log_lead_id_archive) . "' $LOGallowed_listsSQL";
 			$stmtB="SELECT lead_id,phone_number,campaign_id,call_date,status,user,list_id,length_in_sec from vicidial_closer_log_archive where lead_id='" . mysqli_real_escape_string($link, $log_lead_id_archive) . "' $LOGallowed_listsSQL";
+			$log_archive_link='Yes';
 			}
 		if (strlen($log_phone_archive)>0)
 			{
 			$stmtA="SELECT lead_id,phone_number,campaign_id,call_date,status,user,list_id,length_in_sec,alt_dial from vicidial_log_archive where phone_number='" . mysqli_real_escape_string($link, $log_phone_archive) . "' $LOGallowed_listsSQL";
 			$stmtB="SELECT lead_id,phone_number,campaign_id,call_date,status,user,list_id,length_in_sec from vicidial_closer_log_archive where phone_number='" . mysqli_real_escape_string($link, $log_phone_archive) . "' $LOGallowed_listsSQL";
 			$stmtC="SELECT extension,caller_id_number,did_id,call_date from vicidial_did_log where caller_id_number='" . mysqli_real_escape_string($link, $log_phone_archive) . "'";
+			$log_archive_link='Yes';
 			}
 
 		if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
@@ -706,7 +710,7 @@ else
 					{$bgcolor='bgcolor="#9BB9FB"';}
 				echo "<TR $bgcolor>\n";
 				echo "<TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$o</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><a href=\"admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search\" target=\"_blank\">$row[0]</a></FONT></TD>\n";
+				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><a href=\"admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search&archive_log=$log_archive_link\" target=\"_blank\">$row[0]</a></FONT></TD>\n";
 				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[1]</FONT></TD>\n";
 				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[2]</FONT></TD>\n";
 				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[3]</FONT></TD>\n";
@@ -771,7 +775,7 @@ else
 					{$bgcolor='bgcolor="#9BB9FB"';}
 				echo "<TR $bgcolor>\n";
 				echo "<TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$o</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><a href=\"admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search\" target=\"_blank\">$row[0]</a></FONT></TD>\n";
+				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><a href=\"admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search&archive_log=$log_archive_link\" target=\"_blank\">$row[0]</a></FONT></TD>\n";
 				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[1]</FONT></TD>\n";
 				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[2]</FONT></TD>\n";
 				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[3]</FONT></TD>\n";
@@ -1078,7 +1082,7 @@ else
 				{$bgcolor='bgcolor="#9BB9FB"';}
 			echo "<TR $bgcolor>\n";
 			echo "<TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$o</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><a href=\"admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search\" target=\"_blank\">$row[0]</a></FONT></TD>\n";
+			echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><a href=\"admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search&archive_log=$log_archive_link\" target=\"_blank\">$row[0]</a></FONT></TD>\n";
 			echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[3]</FONT></TD>\n";
 			echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[5]</FONT></TD>\n";
 			echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[4]</FONT></TD>\n";

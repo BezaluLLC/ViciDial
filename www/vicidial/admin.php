@@ -111,7 +111,7 @@ $QUERY_STRING = getenv("QUERY_STRING");
 
 $Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report, Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Performance Comparison Report, Single Agent Daily, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report, Carrier Log Report, Campaign Debug, Hangup Cause Report, Lists Pass Report, Called Counts List IDs Report';
 
-$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound Email Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report , Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Performance Comparison Report, Single Agent Daily, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Custom Reports Links, CallCard Search, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report, Lists Pass Report, Called Counts List IDs Report';
+$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound Email Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Campaign Status List Report, Export Calls Report , Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Performance Comparison Report, Single Agent Daily, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Custom Reports Links, CallCard Search, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report, Lists Pass Report, Called Counts List IDs Report, Front Page System Summary';
 
 $Vtables = 'NONE,log_noanswer,did_agent_log,contact_information';
 
@@ -3352,12 +3352,13 @@ else
 # 140625-1931 - Added wrapup_after_hotkey campaign option
 # 140706-0829 - Incorporated QC includes into code
 # 140706-0927 - Added callback_time_24hour system setting
+# 140817-0928 - Added User Group report permission for the Front Page System Summary report
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.10-448a';
-$build = '140706-0927';
+$admin_version = '2.10-449a';
+$build = '140817-0928';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -32789,203 +32790,228 @@ if ($ADD==999992)
 ######################
 if ($ADD==999990)
 	{
-	$section_width=640;
-	echo "<BR><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	echo "<center><TABLE width=$section_width cellspacing=2>\n";
-	echo "<tr>";
-	echo "<td align='left' colspan='4'>System Summary:</td>";
-	echo "</tr>";
-
-	$stmt="select closer_campaigns from vicidial_campaigns;";
-	$rslt=mysql_to_mysqli($stmt, $link);
-	$row=mysqli_fetch_row($rslt);
-	$closer_campaigns = preg_replace("/^ | -$/","",$row[0]);
-	$closer_campaigns = preg_replace("/ /","','",$closer_campaigns);
-	$closer_campaigns = "'$closer_campaigns'";
-
-	$stmt="select status from vicidial_auto_calls where status NOT IN('XFER') and ( (call_type='IN' and campaign_id IN($closer_campaigns)) or (call_type='OUT') );";
-	$rslt=mysql_to_mysqli($stmt, $link);
-	$active_calls=mysqli_num_rows($rslt);
-	$ringing_calls=0;
-	if ($active_calls>0) {
-		while ($row=mysqli_fetch_row($rslt)) {
-			if (!preg_match("/LIVE|CLOSER/i",$row[0])) 
-				{$ringing_calls++;}
-		}
-	}
-
-
-	$active_stmt="select active from vicidial_users";
-	$active_rslt=mysql_to_mysqli($active_stmt, $link);
-	while ($active_row=mysqli_fetch_array($active_rslt)) {
-		$users[$active_row["active"]]++;
-	}
-
-	$active_stmt="select active from vicidial_campaigns";
-	$active_rslt=mysql_to_mysqli($active_stmt, $link);
-	while ($active_row=mysqli_fetch_array($active_rslt)) {
-		$campaigns[$active_row["active"]]++;
-	}
-
-	$active_stmt="select active from vicidial_lists";
-	$active_rslt=mysql_to_mysqli($active_stmt, $link);
-	while ($active_row=mysqli_fetch_array($active_rslt)) {
-		$lists[$active_row["active"]]++;
-	}
-
-	$active_stmt="select did_active from vicidial_inbound_dids";
-	$active_rslt=mysql_to_mysqli($active_stmt, $link);
-	while ($active_row=mysqli_fetch_array($active_rslt)) {
-		$dids[$active_row["did_active"]]++;
-	}
-
-	$active_stmt="select active from vicidial_inbound_groups";
-	$active_rslt=mysql_to_mysqli($active_stmt, $link);
-	while ($active_row=mysqli_fetch_array($active_rslt)) {
-		$ingroups[$active_row["active"]]++;
-	}
-
-	$stmt="select extension,user,conf_exten,status,server_ip,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_call_finish),call_server_ip,campaign_id from vicidial_live_agents";
-	$rslt=mysql_to_mysqli($stmt, $link);
-	$agent_incall=0; $agent_total=0;
-	while($row=mysqli_fetch_array($rslt)) 
+	if ( (preg_match("/Front Page System Summary/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 		{
-		$status=$row[3];
-		$agent_total++;
-		if ( (preg_match("/INCALL/i",$status)) or (preg_match("/QUEUE/i",$status)) ) {$agent_incall++; }
-		}
-		if (preg_match("/MXAG/",$SShosted_settings))
+		$section_width=640;
+		echo "<BR><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<center><TABLE width=$section_width cellspacing=2>\n";
+		echo "<tr>";
+		echo "<td align='left' colspan='4'>System Summary:</td>";
+		echo "</tr>";
+
+		$stmt="SELECT closer_campaigns from vicidial_campaigns;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$closer_campaigns = preg_replace("/^ | -$/","",$row[0]);
+		$closer_campaigns = preg_replace("/ /","','",$closer_campaigns);
+		$closer_campaigns = "'$closer_campaigns'";
+
+		$stmt="SELECT status from vicidial_auto_calls where status NOT IN('XFER') and ( (call_type='IN' and campaign_id IN($closer_campaigns)) or (call_type='OUT') );";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$active_calls=mysqli_num_rows($rslt);
+		$ringing_calls=0;
+		if ($active_calls>0) 
 			{
-			$vla_set = $SShosted_settings;
-			$vla_set = preg_replace("/.*MXAG|_BUILD_|DRA| /",'',$vla_set);
-			$vla_set = preg_replace('/[^0-9]/','',$vla_set);
-			if (strlen($vla_set)>0)
+			while ($row=mysqli_fetch_row($rslt)) 
 				{
-				$AAf=''; $AAb='';
-				if ($agent_total >= $vla_set)
-					{$AAf='<font color=red>'; $AAb='<font>';}
-				$agent_total = "$AAf$agent_total / $vla_set$AAb";
+				if (!preg_match("/LIVE|CLOSER/i",$row[0])) 
+					{$ringing_calls++;}
 				}
 			}
 
-	echo "<tr bgcolor=black>";
-	echo "<td nowrap><font size='+1' color=white><B>&nbsp; Agents Logged In &nbsp;</B></font></td>";
-	echo "<td nowrap><font size='+1' color=white><B>&nbsp; Agents In Calls &nbsp;</B></font></td>";
-	echo "<td nowrap><font size='+1' color=white><B>&nbsp; Active Calls &nbsp;</B></font></td>";
-	echo "<td nowrap><font size='+1' color=white><B>&nbsp; Calls Ringing &nbsp;</B></font></td>";
-	echo "</tr>";
-	echo "<tr bgcolor='#B9CBFD'>";
-	echo "<td align='center'><font size='+1'>&nbsp; $agent_total &nbsp;</font></td>";
-	echo "<td align='center'><font size='+1'>&nbsp; $agent_incall &nbsp;</font></td>";
-	echo "<td align='center'><font size='+1'>&nbsp; $active_calls &nbsp;</font></td>";
-	echo "<td align='center'><font size='+1'>&nbsp; $ringing_calls &nbsp;</font></td>";
-	echo "</tr>";
-
-	echo "<tr>";
-	echo "<td align='left' colspan='4'>&nbsp;</td>";  # Padding
-	echo "</tr>";
-
-	echo "<tr bgcolor=black>";
-	echo "<td align='center'><font color=white><B>&nbsp; &nbsp; Records &nbsp;</B></font></td>";
-	echo "<td align='center'><font color=white><B>&nbsp; Active &nbsp;</B></font></td>";
-	echo "<td align='center'><font color=white><B>&nbsp; Inactive &nbsp;</B></font></td>";
-	echo "<td align='center'><font color=white><B>&nbsp; Total &nbsp;</B></font></td>";
-	echo "</tr>";
-	echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=0A'>Users: </a></td><td align=center><b>".($users["Y"]+0)."</b></td><td align=center><b>".($users["N"]+0)."</b></td><td align=center><b>".($users["Y"]+$users["N"]+0)."</b></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=10'>Campaigns: </a></td><td align=center><b>".($campaigns["Y"]+0)."</b></td><td align=center><b>".($campaigns["N"]+0)."</b></td><td align=center><b>".($campaigns["Y"]+$campaigns["N"]+0)."</b></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=100'>Lists: </a></td><td align=center><b>".($lists["Y"]+0)."</b></td><td align=center><b>".($lists["N"]+0)."</b></td><td align=center><b>".($lists["Y"]+$lists["N"]+0)."</b></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=1000'>In-Groups: </a></td><td align=center><b>".($ingroups["Y"]+0)."</b></td><td align=center><b>".($ingroups["N"]+0)."</b></td><td align=center><b>".($ingroups["Y"]+$ingroups["N"]+0)."</b></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=1300'>DIDs: </a></td><td align=center><b>".($dids["Y"]+0)."</b></td><td align=center><b>".($dids["N"]+0)."</b></td><td align=center><b>".($dids["Y"]+$dids["N"]+0)."</b></td></tr>\n";
-	
-	echo "</TABLE></center>\n";
-
-	echo "<BR>\n";
-
-
-	$today=date("Y-m-d");
-	$yesterday=date("Y-m-d", mktime(0,0,0,date("m"),date("d")-1,date("Y")));
-	$thirtydays=date("Y-m-d", mktime(0,0,0,date("m"),date("d")-29,date("Y")));
-
-	$total_calls=0;
-	$total_inbound=0;
-	$total_outbound=0;
-	$stmt="SELECT stats_type,sum(total_calls) from vicidial_daily_max_stats where campaign_id!='' and stats_flag='OPEN' and stats_date='$today' group by stats_type;";
-	$rslt=mysql_to_mysqli($stmt, $link);
-	$rows_to_print = mysqli_num_rows($rslt);
-	if ($rows_to_print > 0) 
-		{
-		while ($rowx=mysqli_fetch_row($rslt)) 
+		$active_stmt="select active from vicidial_users";
+		$active_rslt=mysql_to_mysqli($active_stmt, $link);
+		while ($active_row=mysqli_fetch_array($active_rslt)) 
 			{
-			$total_calls += $rowx[1];
-			if (preg_match('/INGROUP/', $rowx[0])) {$total_inbound+=$rowx[1];}
-			if (preg_match('/CAMPAIGN/', $rowx[0])) {$total_outbound+=$rowx[1];}
+			$users[$active_row["active"]]++;
 			}
-		}
 
+		$active_stmt="select active from vicidial_campaigns";
+		$active_rslt=mysql_to_mysqli($active_stmt, $link);
+		while ($active_row=mysqli_fetch_array($active_rslt)) 
+			{
+			$campaigns[$active_row["active"]]++;
+			}
 
-	$stmt="select * from vicidial_daily_max_stats where stats_date='$today' and stats_flag='OPEN' and stats_type='TOTAL' order by stats_date, campaign_id asc";
-	$rslt=mysql_to_mysqli($stmt, $link);
-	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
-	echo "<tr>";
-	echo "<td align='left' colspan='3'>Total Stats for Today:</td>";
-	echo "<td align='right'><font size=1><a href='$PHP_SELF?query_date=$thirtydays&end_date=$today&max_system_stats_submit=ADJUST+DATE+RANGE&ADD=999992&stage=TOTAL'>[view max stats]</a></font></td>";
-	echo "</tr>";
-	echo "<tr bgcolor=black>";
-	# echo "<td><font size=1 color=white align=left><B>CAMPAIGN ID</B></font></td>";
-	echo "<td><font size=1 color=white><B>&nbsp; Total Calls &nbsp;</B></font></td>";
-	echo "<td><font size=1 color=white><B>&nbsp; Total Inbound Calls &nbsp;</B></font></td>";
-	echo "<td><font size=1 color=white><B>&nbsp; Total Outbound Calls &nbsp;</B></font></td>";
-	echo "<td><font size=1 color=white><B>&nbsp; Maximum Agents &nbsp;</B></font></td>";
+		$active_stmt="select active from vicidial_lists";
+		$active_rslt=mysql_to_mysqli($active_stmt, $link);
+		while ($active_row=mysqli_fetch_array($active_rslt)) 
+			{
+			$lists[$active_row["active"]]++;
+			}
 
-	if (mysqli_num_rows($rslt)>0) {
-		while ($row=mysqli_fetch_array($rslt)) {
-			echo "<tr bgcolor='#B9CBFD'>";
-		#	echo "<td align='left'><font size=1>".$row["campaign_id"]."</font></td>";
-			echo "<td align='center'><font size=1>".($total_calls+0)."</font></td>";
-			echo "<td align='center'><font size=1>".($total_inbound+0)."</font></td>";
-			echo "<td align='center'><font size=1>".($total_outbound+0)."</font></td>";
-			echo "<td align='center'><font size=1>".($row["max_agents"]+0)."</font></td>";
-			echo "</tr>";
-		}
-	} else {
-		echo "<tr bgcolor='#B9CBFD'>";
-		echo "<td align='center' colspan='4'><font size=1>*** NO ACTIVITY FOR $today ***</font></td>";
+		$active_stmt="select did_active from vicidial_inbound_dids";
+		$active_rslt=mysql_to_mysqli($active_stmt, $link);
+		while ($active_row=mysqli_fetch_array($active_rslt)) 
+			{
+			$dids[$active_row["did_active"]]++;
+			}
+
+		$active_stmt="select active from vicidial_inbound_groups";
+		$active_rslt=mysql_to_mysqli($active_stmt, $link);
+		while ($active_row=mysqli_fetch_array($active_rslt)) 
+			{
+			$ingroups[$active_row["active"]]++;
+			}
+
+		$stmt="SELECT extension,user,conf_exten,status,server_ip,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_call_finish),call_server_ip,campaign_id from vicidial_live_agents";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$agent_incall=0; $agent_total=0;
+		while($row=mysqli_fetch_array($rslt)) 
+			{
+			$status=$row[3];
+			$agent_total++;
+			if ( (preg_match("/INCALL/i",$status)) or (preg_match("/QUEUE/i",$status)) ) {$agent_incall++; }
+			}
+			if (preg_match("/MXAG/",$SShosted_settings))
+				{
+				$vla_set = $SShosted_settings;
+				$vla_set = preg_replace("/.*MXAG|_BUILD_|DRA| /",'',$vla_set);
+				$vla_set = preg_replace('/[^0-9]/','',$vla_set);
+				if (strlen($vla_set)>0)
+					{
+					$AAf=''; $AAb='';
+					if ($agent_total >= $vla_set)
+						{$AAf='<font color=red>'; $AAb='<font>';}
+					$agent_total = "$AAf$agent_total / $vla_set$AAb";
+					}
+				}
+
+		echo "<tr bgcolor=black>";
+		echo "<td nowrap><font size='+1' color=white><B>&nbsp; Agents Logged In &nbsp;</B></font></td>";
+		echo "<td nowrap><font size='+1' color=white><B>&nbsp; Agents In Calls &nbsp;</B></font></td>";
+		echo "<td nowrap><font size='+1' color=white><B>&nbsp; Active Calls &nbsp;</B></font></td>";
+		echo "<td nowrap><font size='+1' color=white><B>&nbsp; Calls Ringing &nbsp;</B></font></td>";
 		echo "</tr>";
-	}
-	echo "</TABLE></center>\n";
-
-	$stmt="select * from vicidial_daily_max_stats where stats_date='$yesterday' and stats_type='TOTAL' order by stats_date, campaign_id asc";
-	$rslt=mysql_to_mysqli($stmt, $link);
-	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
-	echo "<tr>";
-	echo "<td align='left' colspan='3'>Total Stats for Yesterday:</td>";
-	echo "<td align='right'><font size=1><a href='$PHP_SELF?query_date=$thirtydays&end_date=$today&max_system_stats_submit=ADJUST+DATE+RANGE&ADD=999992&stage=TOTAL'>[view max stats]</a></font></td>";
-	echo "</tr>";
-	echo "<tr bgcolor=black>";
-#	echo "<td><font size=1 color=white align=left><B>CAMPAIGN ID</B></font></td>";
-	echo "<td><font size=1 color=white><B>&nbsp; Total Calls &nbsp;</B></font></td>";
-	echo "<td><font size=1 color=white><B>&nbsp; Total Inbound Calls &nbsp;</B></font></td>";
-	echo "<td><font size=1 color=white><B>&nbsp; Total Outbound Calls &nbsp;</B></font></td>";
-	echo "<td><font size=1 color=white><B>&nbsp; Maximum Agents &nbsp;</B></font></td>";
-
-	if (mysqli_num_rows($rslt)>0) {
-		while ($row=mysqli_fetch_array($rslt)) {
-			echo "<tr bgcolor='#B9CBFD'>";
-			#echo "<td align='left'><font size=1>".$row["campaign_id"]."</font></td>";
-			echo "<td align='center'><font size=1>".($row["total_calls"]+0)."</font></td>";
-			echo "<td align='center'><font size=1>".($row["max_inbound"]+0)."</font></td>";
-			echo "<td align='center'><font size=1>".($row["max_outbound"]+0)."</font></td>";
-			echo "<td align='center'><font size=1>".($row["max_agents"]+0)."</font></td>";
-			echo "</tr>";
-		}
-	} else {
 		echo "<tr bgcolor='#B9CBFD'>";
-		echo "<td align='center' colspan='4'><font size=1>*** NO ACTIVITY FOR $today ***</font></td>";
+		echo "<td align='center'><font size='+1'>&nbsp; $agent_total &nbsp;</font></td>";
+		echo "<td align='center'><font size='+1'>&nbsp; $agent_incall &nbsp;</font></td>";
+		echo "<td align='center'><font size='+1'>&nbsp; $active_calls &nbsp;</font></td>";
+		echo "<td align='center'><font size='+1'>&nbsp; $ringing_calls &nbsp;</font></td>";
 		echo "</tr>";
-	}
 
-	echo "</FONT><BR><BR>";
+		echo "<tr>";
+		echo "<td align='left' colspan='4'>&nbsp;</td>";  # Padding
+		echo "</tr>";
 
+		echo "<tr bgcolor=black>";
+		echo "<td align='center'><font color=white><B>&nbsp; &nbsp; Records &nbsp;</B></font></td>";
+		echo "<td align='center'><font color=white><B>&nbsp; Active &nbsp;</B></font></td>";
+		echo "<td align='center'><font color=white><B>&nbsp; Inactive &nbsp;</B></font></td>";
+		echo "<td align='center'><font color=white><B>&nbsp; Total &nbsp;</B></font></td>";
+		echo "</tr>";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=0A'>Users: </a></td><td align=center><b>".($users["Y"]+0)."</b></td><td align=center><b>".($users["N"]+0)."</b></td><td align=center><b>".($users["Y"]+$users["N"]+0)."</b></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=10'>Campaigns: </a></td><td align=center><b>".($campaigns["Y"]+0)."</b></td><td align=center><b>".($campaigns["N"]+0)."</b></td><td align=center><b>".($campaigns["Y"]+$campaigns["N"]+0)."</b></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=100'>Lists: </a></td><td align=center><b>".($lists["Y"]+0)."</b></td><td align=center><b>".($lists["N"]+0)."</b></td><td align=center><b>".($lists["Y"]+$lists["N"]+0)."</b></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=1000'>In-Groups: </a></td><td align=center><b>".($ingroups["Y"]+0)."</b></td><td align=center><b>".($ingroups["N"]+0)."</b></td><td align=center><b>".($ingroups["Y"]+$ingroups["N"]+0)."</b></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=1300'>DIDs: </a></td><td align=center><b>".($dids["Y"]+0)."</b></td><td align=center><b>".($dids["N"]+0)."</b></td><td align=center><b>".($dids["Y"]+$dids["N"]+0)."</b></td></tr>\n";
+		
+		echo "</TABLE></center>\n";
+
+		echo "<BR>\n";
+
+		$today=date("Y-m-d");
+		$yesterday=date("Y-m-d", mktime(0,0,0,date("m"),date("d")-1,date("Y")));
+		$thirtydays=date("Y-m-d", mktime(0,0,0,date("m"),date("d")-29,date("Y")));
+
+		$total_calls=0;
+		$total_inbound=0;
+		$total_outbound=0;
+		$stmt="SELECT stats_type,sum(total_calls) from vicidial_daily_max_stats where campaign_id!='' and stats_flag='OPEN' and stats_date='$today' group by stats_type;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$rows_to_print = mysqli_num_rows($rslt);
+		if ($rows_to_print > 0) 
+			{
+			while ($rowx=mysqli_fetch_row($rslt)) 
+				{
+				$total_calls += $rowx[1];
+				if (preg_match('/INGROUP/', $rowx[0])) {$total_inbound+=$rowx[1];}
+				if (preg_match('/CAMPAIGN/', $rowx[0])) {$total_outbound+=$rowx[1];}
+				}
+			}
+
+		$stmt="SELECT * from vicidial_daily_max_stats where stats_date='$today' and stats_flag='OPEN' and stats_type='TOTAL' order by stats_date, campaign_id asc";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+		echo "<tr>";
+		echo "<td align='left' colspan='3'>Total Stats for Today:</td>";
+		echo "<td align='right'><font size=1><a href='$PHP_SELF?query_date=$thirtydays&end_date=$today&max_system_stats_submit=ADJUST+DATE+RANGE&ADD=999992&stage=TOTAL'>[view max stats]</a></font></td>";
+		echo "</tr>";
+		echo "<tr bgcolor=black>";
+		# echo "<td><font size=1 color=white align=left><B>CAMPAIGN ID</B></font></td>";
+		echo "<td><font size=1 color=white><B>&nbsp; Total Calls &nbsp;</B></font></td>";
+		echo "<td><font size=1 color=white><B>&nbsp; Total Inbound Calls &nbsp;</B></font></td>";
+		echo "<td><font size=1 color=white><B>&nbsp; Total Outbound Calls &nbsp;</B></font></td>";
+		echo "<td><font size=1 color=white><B>&nbsp; Maximum Agents &nbsp;</B></font></td>";
+
+		if (mysqli_num_rows($rslt)>0) 
+			{
+			while ($row=mysqli_fetch_array($rslt)) 
+				{
+				echo "<tr bgcolor='#B9CBFD'>";
+			#	echo "<td align='left'><font size=1>".$row["campaign_id"]."</font></td>";
+				echo "<td align='center'><font size=1>".($total_calls+0)."</font></td>";
+				echo "<td align='center'><font size=1>".($total_inbound+0)."</font></td>";
+				echo "<td align='center'><font size=1>".($total_outbound+0)."</font></td>";
+				echo "<td align='center'><font size=1>".($row["max_agents"]+0)."</font></td>";
+				echo "</tr>";
+				}
+			} 
+		else 
+			{
+			echo "<tr bgcolor='#B9CBFD'>";
+			echo "<td align='center' colspan='4'><font size=1>*** NO ACTIVITY FOR $today ***</font></td>";
+			echo "</tr>";
+			}
+		echo "</TABLE></center>\n";
+
+		$stmt="SELECT * from vicidial_daily_max_stats where stats_date='$yesterday' and stats_type='TOTAL' order by stats_date, campaign_id asc";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+		echo "<tr>";
+		echo "<td align='left' colspan='3'>Total Stats for Yesterday:</td>";
+		echo "<td align='right'><font size=1><a href='$PHP_SELF?query_date=$thirtydays&end_date=$today&max_system_stats_submit=ADJUST+DATE+RANGE&ADD=999992&stage=TOTAL'>[view max stats]</a></font></td>";
+		echo "</tr>";
+		echo "<tr bgcolor=black>";
+	#	echo "<td><font size=1 color=white align=left><B>CAMPAIGN ID</B></font></td>";
+		echo "<td><font size=1 color=white><B>&nbsp; Total Calls &nbsp;</B></font></td>";
+		echo "<td><font size=1 color=white><B>&nbsp; Total Inbound Calls &nbsp;</B></font></td>";
+		echo "<td><font size=1 color=white><B>&nbsp; Total Outbound Calls &nbsp;</B></font></td>";
+		echo "<td><font size=1 color=white><B>&nbsp; Maximum Agents &nbsp;</B></font></td>";
+
+		if (mysqli_num_rows($rslt)>0) 
+			{
+			while ($row=mysqli_fetch_array($rslt)) 
+				{
+				echo "<tr bgcolor='#B9CBFD'>";
+				#echo "<td align='left'><font size=1>".$row["campaign_id"]."</font></td>";
+				echo "<td align='center'><font size=1>".($row["total_calls"]+0)."</font></td>";
+				echo "<td align='center'><font size=1>".($row["max_inbound"]+0)."</font></td>";
+				echo "<td align='center'><font size=1>".($row["max_outbound"]+0)."</font></td>";
+				echo "<td align='center'><font size=1>".($row["max_agents"]+0)."</font></td>";
+				echo "</tr>";
+				}
+			} 
+		else 
+			{
+			echo "<tr bgcolor='#B9CBFD'>";
+			echo "<td align='center' colspan='4'><font size=1>*** NO ACTIVITY FOR $today ***</font></td>";
+			echo "</tr>";
+			}
+
+		echo "</FONT><BR><BR>";
+		}
+	else
+		{
+		$section_width=640;
+		echo "<BR><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<center><TABLE width=$section_width cellspacing=2>\n";
+		echo "<tr>";
+		echo "<td align='left' colspan='4'>Welcome</td>";
+		echo "</tr>";
+
+		echo "</FONT><BR><BR>";
+		}
 	}
 
 ##### If report run, update the time in the vicidial_report_log table #####

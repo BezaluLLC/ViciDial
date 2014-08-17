@@ -60,6 +60,7 @@
 # 140125-1100 - Fixed issue with Callback records having no campaign_id
 # 140304-2034 - Fixed issue with special characters in standard data fields
 # 140706-0827 - Incorporated QC includes into code
+# 140817-0937 - Added Archive Log search option
 #
 
 require("dbconnect_mysqli.php");
@@ -172,6 +173,8 @@ if (isset($_GET["CBstatus"]))				{$CBstatus=$_GET["CBstatus"];}
 	elseif (isset($_POST["CBstatus"]))		{$CBstatus=$_POST["CBstatus"];}
 if (isset($_GET["archive_search"]))			{$archive_search=$_GET["archive_search"];}
 	elseif (isset($_POST["archive_search"]))	{$archive_search=$_POST["archive_search"];}
+if (isset($_GET["archive_log"]))			{$archive_log=$_GET["archive_log"];}
+	elseif (isset($_POST["archive_log"]))	{$archive_log=$_POST["archive_log"];}
 
 if ($archive_search=="Yes") {$vl_table="vicidial_list_archive";} 
 else {$vl_table="vicidial_list"; $archive_search="No";}
@@ -429,7 +432,7 @@ if ($end_call > 0)
 	$rslt=mysql_to_mysqli($stmt, $link);
 
 	echo "information modified<BR><BR>\n";
-	echo "<a href=\"$PHP_SELF?lead_id=$lead_id&DB=$DB&archive_search=$archive_search\">Go back to the lead modification page</a><BR><BR>\n";
+	echo "<a href=\"$PHP_SELF?lead_id=$lead_id&DB=$DB&archive_search=$archive_search&archive_log=$archive_log\">Go back to the lead modification page</a><BR><BR>\n";
 	echo "<form><input type=button value=\"Close This Window\" onClick=\"javascript:window.close();\"></form>\n";
 	
 	### LOG INSERTION Admin Log Table ###
@@ -599,6 +602,7 @@ else
 		##### grab vicidial_list_alt_phones records #####
 		$stmt="SELECT phone_code,phone_number,alt_phone_note,alt_phone_count,active from vicidial_list_alt_phones where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by alt_phone_count limit 500;";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
 		$alts_to_print = mysqli_num_rows($rslt);
 
 		$c=0;
@@ -631,6 +635,7 @@ else
 	$stmt="SELECT uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,user_group,term_reason,alt_dial from vicidial_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by uniqueid desc limit 500;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$logs_to_print = mysqli_num_rows($rslt);
+	if ($DB) {echo "$logs_to_print|$stmt\n";}
 
 	$u=0;
 	$call_log = '';
@@ -679,6 +684,7 @@ else
 	$stmt="SELECT agent_log_id,user,server_ip,event_time,lead_id,campaign_id,pause_epoch,pause_sec,wait_epoch,wait_sec,talk_epoch,talk_sec,dispo_epoch,dispo_sec,status,user_group,comments,sub_status from vicidial_agent_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by agent_log_id desc limit 500;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$Alogs_to_print = mysqli_num_rows($rslt);
+	if ($DB) {echo "$Alogs_to_print|$stmt\n";}
 
 	$y=0;
 	$agent_log = '';
@@ -713,6 +719,7 @@ else
 	$stmt="SELECT closecallid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,queue_seconds,user_group,xfercallid,term_reason,uniqueid,agent_only from vicidial_closer_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by closecallid desc limit 500;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$Clogs_to_print = mysqli_num_rows($rslt);
+	if ($DB) {echo "$Clogs_to_print|$stmt\n";}
 
 	$y=0;
 	$closer_log = '';
@@ -756,6 +763,146 @@ else
 
 		$campaign_id = $row[3];
 		}
+
+
+	########## BEGIN ARCHIVE LOG SEARCH ##########
+	if ($archive_log == 'Yes')
+		{
+		##### grab vicidial_log_archive records #####
+		$stmt="SELECT uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,user_group,term_reason,alt_dial from vicidial_log_archive where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by uniqueid desc limit 500;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$logs_to_print = mysqli_num_rows($rslt);
+		if ($DB) {echo "$logs_to_print|$stmt\n";}
+
+		$u=0;
+	#	$call_log = '';
+	#	$log_campaign = '';
+		while ($logs_to_print > $u) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			if (strlen($log_campaign)<1) {$log_campaign = $row[3];}
+			if (preg_match("/1$|3$|5$|7$|9$/i", $u))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+
+			$u++;
+			$call_log .= "<tr $bgcolor>";
+			$call_log .= "<td><font size=1>$u</td>";
+			$call_log .= "<td><font size=2><font color='#FF0000'>$row[4]</font></td>";
+			$call_log .= "<td align=left><font size=2> $row[7]</td>\n";
+			$call_log .= "<td align=left><font size=2> $row[8]</td>\n";
+			$call_log .= "<td align=left><font size=2> <A HREF=\"user_stats.php?user=$row[11]\" target=\"_blank\">$row[11]</A> </td>\n";
+			$call_log .= "<td align=right><font size=2> $row[3] </td>\n";
+			$call_log .= "<td align=right><font size=2> $row[2] </td>\n";
+			$call_log .= "<td align=right><font size=2> $row[1] </td>\n";
+			$call_log .= "<td align=right><font size=2> $row[15] </td>\n";
+			$call_log .= "<td align=right><font size=2>&nbsp; $row[10] </td></tr>\n";
+
+			$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and vicidial_id='$row[0]';";
+			$rsltA=mysql_to_mysqli($stmtA, $link);
+			$out_notes_to_print = mysqli_num_rows($rslt);
+			if ($out_notes_to_print > 0)
+				{
+				$rowA=mysqli_fetch_row($rsltA);
+				if (strlen($rowA[0]) > 0)
+					{
+					$call_log .= "<TR>";
+					$call_log .= "<td></td>";
+					$call_log .= "<TD $bgcolor COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"> NOTES: &nbsp; $rowA[0] </font></TD>";
+					$call_log .= "</TR>";
+					}
+				}
+
+			$campaign_id = $row[3];
+			}
+
+		##### grab vicidial_agent_log_archive records #####
+		$stmt="SELECT agent_log_id,user,server_ip,event_time,lead_id,campaign_id,pause_epoch,pause_sec,wait_epoch,wait_sec,talk_epoch,talk_sec,dispo_epoch,dispo_sec,status,user_group,comments,sub_status from vicidial_agent_log_archive where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by agent_log_id desc limit 500;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$Alogs_to_print = mysqli_num_rows($rslt);
+		if ($DB) {echo "$Alogs_to_print|$stmt\n";}
+
+		$y=0;
+	#	$agent_log = '';
+	#	$Alog_campaign = '';
+		while ($Alogs_to_print > $y) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			if (strlen($Alog_campaign)<1) {$Alog_campaign = $row[5];}
+			if (preg_match("/1$|3$|5$|7$|9$/i", $y))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+
+			$y++;
+			$agent_log .= "<tr $bgcolor>";
+			$agent_log .= "<td><font size=1>$y</td>";
+			$agent_log .= "<td><font size=2><font color='#FF0000'>$row[3]</font></td>";
+			$agent_log .= "<td align=left><font size=2> $row[5]</td>\n";
+			$agent_log .= "<td align=left><font size=2> <A HREF=\"user_stats.php?user=$row[1]\" target=\"_blank\">$row[1]</A> </td>\n";
+			$agent_log .= "<td align=right><font size=2> $row[7]</td>\n";
+			$agent_log .= "<td align=right><font size=2> $row[9] </td>\n";
+			$agent_log .= "<td align=right><font size=2> $row[11] </td>\n";
+			$agent_log .= "<td align=right><font size=2> $row[13] </td>\n";
+			$agent_log .= "<td align=right><font size=2> &nbsp; $row[14] </td>\n";
+			$agent_log .= "<td align=right><font size=2> &nbsp; $row[15] </td>\n";
+			$agent_log .= "<td align=right><font size=2> &nbsp; $row[17] </td></tr>\n";
+
+			$campaign_id = $row[5];
+			}
+
+		##### grab vicidial_closer_log_archive records #####
+		$stmt="SELECT closecallid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,queue_seconds,user_group,xfercallid,term_reason,uniqueid,agent_only from vicidial_closer_log_archive where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by closecallid desc limit 500;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$Clogs_to_print = mysqli_num_rows($rslt);
+		if ($DB) {echo "$Clogs_to_print|$stmt\n";}
+
+		$y=0;
+	#	$closer_log = '';
+	#	$Clog_campaign = '';
+		while ($Clogs_to_print > $y) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			if (strlen($Clog_campaign)<1) {$Clog_campaign = $row[3];}
+			if (preg_match("/1$|3$|5$|7$|9$/i", $y))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+
+			$y++;
+			$closer_log .= "<tr $bgcolor>";
+			$closer_log .= "<td><font size=1>$y</td>";
+			$closer_log .= "<td><font size=2><font color='#FF0000'>$row[4]</font></td>";
+			$closer_log .= "<td align=left><font size=2> $row[7]</td>\n";
+			$closer_log .= "<td align=left><font size=2> $row[8]</td>\n";
+			$closer_log .= "<td align=left><font size=2> <A HREF=\"user_stats.php?user=$row[11]\" target=\"_blank\">$row[11]</A> </td>\n";
+			$closer_log .= "<td align=right><font size=2> $row[3] </td>\n";
+			$closer_log .= "<td align=right><font size=2> $row[2] </td>\n";
+			$closer_log .= "<td align=right><font size=2> $row[1] </td>\n";
+			$closer_log .= "<td align=right><font size=2> &nbsp; $row[14] </td>\n";
+			$closer_log .= "<td align=right><font size=2> &nbsp; $row[17] </td></tr>\n";
+
+			$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and vicidial_id='$row[0]';";
+			$rsltA=mysql_to_mysqli($stmtA, $link);
+			$in_notes_to_print = mysqli_num_rows($rslt);
+			if ($in_notes_to_print > 0)
+				{
+				$rowA=mysqli_fetch_row($rsltA);
+				if (strlen($rowA[0]) > 0)
+					{
+					$closer_log .= "<TR>";
+					$closer_log .= "<td></td>";
+					$closer_log .= "<TD $bgcolor COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"> NOTES: &nbsp; $rowA[0] </font></TD>";
+					$closer_log .= "</TR>";
+					}
+				}
+
+			$campaign_id = $row[3];
+			}
+		}
+	########## END ARCHIVE LOG SEARCH ##########
+
 
 	##### grab vicidial_list data for lead #####
 	$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id from $vl_table where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' $LOGallowed_listsSQL";
@@ -894,12 +1041,22 @@ else
 	echo "<table cellpadding=1 cellspacing=0>\n";
 	echo "<tr><td colspan=2>Lead ID: $lead_id &nbsp; &nbsp; List ID: $list_id</td></tr>\n";
 	echo "<tr><td colspan=2>Fronter: <A HREF=\"user_stats.php?user=$tsr\">$tsr</A> &nbsp; &nbsp; Called Count: $called_count</td></tr>\n";
-	if ($archive_search=="Yes") {
+	if ($archive_search=="Yes") 
+		{
 		echo "<tr><td colspan=2 align='center'>";
 		echo "<B><font color='#FF0000'>*** ARCHIVED LEAD ***</font></B>";
 		echo "<input type='hidden' name='archive_search' value='Yes'>";
 		echo "</td></tr>\n";
-	}
+		}
+	if ($archive_log=="Yes") 
+		{
+		echo "<tr><td colspan=2 align='center'>";
+		echo "<B><font color='#FF0000'>*** ARCHIVED LOG SEARCH ENABLED ***</font></B><BR>";
+		echo "<B><font color='#FF0000'>*** ARCHIVED LOGS SHOWN IN RED, THERE MAY BE DUPLICATES WITH NON-ARCHIVED LOG ENTRIES ***</font></B>";
+		echo "<input type='hidden' name='archive_log' value='Yes'>";
+		echo "</td></tr>\n";
+		}
+
 	if ($lead_id == 'NEW') {$list_id='';}
 
 	if ($LOGadmin_hide_lead_data != '0')
