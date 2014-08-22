@@ -441,10 +441,11 @@
 # 140703-1658 - Several logging fixes, mostly related to manual dial calls
 # 140706-0932 - Added callback_time_24hour for callback setting screen
 # 140811-1219 - Changed to use QXZ function for echoing text
+# 140822-0900 - Fixed issue with phone alias login
 #
 
-$version = '2.10-412c';
-$build = '140811-1219';
+$version = '2.10-413c';
+$build = '140822-0900';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=80;
 $one_mysql_log=0;
@@ -2152,7 +2153,7 @@ else
 			{
 			if ($pa > 0)
 				{$phoneSQL .= " or ";}
-			$desc = ($phones_auto_ct - $pa); # traverse in reverse order
+			$desc = ($phones_auto_ct - $pa - 1); # traverse in reverse order
 			$phoneSQL .= "(login='$phones_auto[$desc]' and pass='$phone_pass')";
 			$pa++;
 			}
