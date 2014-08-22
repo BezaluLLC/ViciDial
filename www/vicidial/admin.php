@@ -3353,12 +3353,13 @@ else
 # 140706-0829 - Incorporated QC includes into code
 # 140706-0927 - Added callback_time_24hour system setting
 # 140817-0928 - Added User Group report permission for the Front Page System Summary report
+# 140822-1034 - Fixed minor voicemail chooser bug on DID modify page
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.10-449a';
-$build = '140817-0928';
+$admin_version = '2.10-450a';
+$build = '140822-1034';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -24559,7 +24560,7 @@ if ($ADD==3311)
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Extension: </td><td align=left><input type=text name=filter_extension size=40 maxlength=50 value=\"$filter_extension\">$NWB#inbound_dids-extension$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Extension Context: </td><td align=left><input type=text name=filter_exten_context size=40 maxlength=50 value=\"$filter_exten_context\">$NWB#inbound_dids-exten_context$NWE</td></tr>\n";
-		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Voicemail Box: </td><td align=left><input type=text name=filter_voicemail_ext id=voicemail_ext size=12 maxlength=10 value=\"$filter_voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',1400);\">voicemail chooser</a>$NWB#inbound_dids-voicemail_ext$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Voicemail Box: </td><td align=left><input type=text name=filter_voicemail_ext id=filter_voicemail_ext size=12 maxlength=10 value=\"$filter_voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('filter_voicemail_ext','vm',1400);\">voicemail chooser</a>$NWB#inbound_dids-voicemail_ext$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Phone Extension: </td><td align=left><input type=text name=filter_phone size=20 maxlength=100 value=\"$filter_phone\">$NWB#inbound_dids-phone$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>Filter Server IP: </td><td align=left><select size=1 name=filter_server_ip>\n";
 		echo "$servers_list";
