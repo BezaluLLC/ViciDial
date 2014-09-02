@@ -25,3 +25,9 @@ UPDATE system_settings SET db_schema_version='1384',db_schema_update_date=NOW() 
 ALTER TABLE system_settings ADD callback_time_24hour ENUM('0','1') default '0';
 
 UPDATE system_settings SET db_schema_version='1385',db_schema_update_date=NOW() where db_schema_version < 1385;
+
+ALTER TABLE vicidial_campaigns ADD callback_active_limit SMALLINT(5) UNSIGNED default '0';
+ALTER TABLE vicidial_campaigns ADD callback_active_limit_override ENUM('N','Y') default 'N';
+
+UPDATE system_settings SET db_schema_version='1386',db_schema_update_date=NOW() where db_schema_version < 1386;
+

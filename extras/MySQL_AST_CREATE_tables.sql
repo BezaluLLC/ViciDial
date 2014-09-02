@@ -906,7 +906,9 @@ manual_dial_search_checkbox ENUM('SELECTED','SELECTED_RESET','UNSELECTED','UNSEL
 hide_call_log_info ENUM('Y','N') default 'N',
 timer_alt_seconds SMALLINT(5) default '0',
 wrapup_bypass ENUM('DISABLED','ENABLED') default 'ENABLED',
-wrapup_after_hotkey ENUM('DISABLED','ENABLED') default 'DISABLED'
+wrapup_after_hotkey ENUM('DISABLED','ENABLED') default 'DISABLED',
+callback_active_limit SMALLINT(5) UNSIGNED default '0',
+callback_active_limit_override ENUM('N','Y') default 'N'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -3277,4 +3279,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1385',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1386',db_schema_update_date=NOW(),reload_timestamp=NOW();

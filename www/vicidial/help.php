@@ -23,6 +23,7 @@
 # 140625-1934 - Added wrapup_after_hotkey
 # 140705-0928 - Added custom list fields help section
 # 140706-0935 - Added callback_time_24hour
+# 140902-0815 - Added callback_active_limit and callback_active_limit_override
 #
 
 
@@ -1335,6 +1336,16 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="campaigns-callback_list_calltime">
 <BR>
 <B>Scheduled Callbacks Calltime Block -</B> This option if enabled will prevent the scheduled callback in the agent callback list from being dialed if it is outside of the scheduled calltime for the campaign. Default is DISABLED.
+
+<BR>
+<A NAME="campaigns-callback_active_limit">
+<BR>
+<B>Scheduled Callbacks Active Limit -</B> This option if enabled will limit an agent to this number of active or live user-only callbacks. If the limit is reached, the agent will not be able to select the My Callback checkbox when setting a callback for a lead. Default is 0 for disabled.
+
+<BR>
+<A NAME="campaigns-callback_active_limit_override">
+<BR>
+<B>Scheduled Callbacks Active Limit Override-</B> Enabling this option will allow the Custom User 3 field to override the Scheduled Callbacks Active Limit. Default is N for disabled.
 
 <BR>
 <A NAME="campaigns-my_callback_option">
