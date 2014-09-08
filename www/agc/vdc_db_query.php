@@ -359,12 +359,13 @@
 # 140621-1544 - Added update_settings function
 # 140703-1659 - Several logging fixes, mostly related to manual dial calls
 # 140810-2046 - Changed to use QXZ function for echoing text
+# 140908-1031 - Fixed issues with logging of non-answered calls, user_group and call notes
 #
 
-$version = '2.10-255';
-$build = '140810-2046';
+$version = '2.10-256';
+$build = '140908-1031';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=595;
+$mysql_log_count=597;
 $one_mysql_log=0;
 
 require_once("dbconnect_mysqli.php");
@@ -4170,6 +4171,20 @@ if ($stage == "end")
 		{
 		$row=mysqli_fetch_row($rslt);
 		$VLA_inOUT =		$row[0];
+		}
+
+	if (strlen($user_group) < 1)
+		{
+		$stmt="SELECT user_group FROM vicidial_users where user='$user' LIMIT 1;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00596',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($DB) {echo "$stmt\n";}
+		$ug_record_ct = mysqli_num_rows($rslt);
+		if ($ug_record_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$user_group =		trim("$row[0]");
+			}
 		}
 
 	if ( (strlen($uniqueid)<1) and ($VLA_inOUT == 'INBOUND') )
@@ -9006,8 +9021,24 @@ if ($ACTION == 'updateDISPO')
 			}
 		else
 			{$vicidial_id = $uniqueid;}
-		if ( (strlen($vicidial_id)<6) and (strlen($FAKEcall_id)>6) )
-			{$vicidial_id = $FAKEcall_id;}
+		if (strlen($vicidial_id)<6)
+			{
+			if (strlen($FAKEcall_id)<7)
+				{
+				$stmt = "SELECT uniqueid from vicidial_log_extended where caller_code='$MDnextCID' order by call_date desc limit 1;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00597',$user,$server_ip,$session_name,$one_mysql_log);}
+				$VDCL_cn_ct = mysqli_num_rows($rslt);
+				if ($VDCL_cn_ct > 0)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$FAKEcall_id =	$row[0];
+					}
+				}
+			if (strlen($FAKEcall_id)>6)
+				{$vicidial_id = $FAKEcall_id;}
+			}
 		# Insert into vicidial_call_notes
 		$stmt="INSERT INTO vicidial_call_notes set lead_id='$lead_id',vicidial_id='$vicidial_id',call_date='$NOW_TIME',call_notes='" . mysqli_real_escape_string($link, $call_notes) . "';";
 		if ($DB) {echo "$stmt\n";}
