@@ -13,12 +13,13 @@
 # 130704-0947 - Fixed issue #675
 # 130901-0823 - Changed to mysqli PHP functions
 # 140108-0741 - Added webserver and hostname to report logging
+# 140918-0615 - Fixed bug #789
 #
 
 $startMS = microtime();
 
-$version = '2.8-4';
-$build = '130621-0753';
+$version = '2.8-5';
+$build = '140918-0615';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -65,7 +66,7 @@ $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,email_enabled FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,allow_emails FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
