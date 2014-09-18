@@ -443,10 +443,11 @@
 # 140811-1219 - Changed to use QXZ function for echoing text
 # 140822-0900 - Fixed issue with phone alias login
 # 140902-0826 - Added callback_active_limit and callback_active_limit_override
+# 140918-1606 - Fixed manual dial pause warning issue
 #
 
-$version = '2.10-414c';
-$build = '140902-0826';
+$version = '2.10-415c';
+$build = '140918-1606';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=80;
 $one_mysql_log=0;
@@ -3912,6 +3913,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var regWMS = new RegExp("WUSCRIPT","g");
 	var FSCREENup=0;
 	var HKFSCREENup=0;
+	var dial_next_failed=0;
     var DiaLControl_auto_HTML = "<img src=\"./images/<?php echo _QXZ("vdc_LB_pause_OFF.gif") ?>\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_resume.gif") ?>\" border=\"0\" alt=\"Resume\" /></a>";
     var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_pause.gif") ?>\" border=\"0\" alt=\" Pause \" /></a><img src=\"./images/<?php echo _QXZ("vdc_LB_resume_OFF.gif") ?>\" border=\"0\" alt=\"Resume\" />";
     var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_pause_OFF.gif") ?>\" border=\"0\" alt=\" Pause \" /><img src=\"./images/<?php echo _QXZ("vdc_LB_resume_OFF.gif") ?>\" border=\"0\" alt=\"Resume\" />";
@@ -6391,7 +6393,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 	function NeWManuaLDiaLCalL(TVfast,TVphone_code,TVphone_number,TVlead_id,TVtype)
 		{
 		var move_on=1;
-		if ( (starting_dial_level != 0) && ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) || (in_lead_preview_state==1) ) )
+		if ( (starting_dial_level != 0) && (dial_next_failed < 1) && ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) || (in_lead_preview_state==1) ) )
 			{
 			if ((auto_pause_precall == 'Y') && ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') ) && (AutoDialWaiting == 1) && (VD_live_customer_call!=1) && (alt_dial_active!=1) && (MD_channel_look!=1) && (in_lead_preview_state!=1) )
 				{
@@ -7626,6 +7628,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							var regMDFvarTIME = new RegExp("OUTSIDE","ig");
 							if ( (MDnextCID.match(regMNCvar)) || (MDnextCID.match(regMDFvarDNC)) || (MDnextCID.match(regMDFvarCAMP)) || (MDnextCID.match(regMDFvarTIME)) )
 								{
+								dial_next_failed=1;
 								var alert_displayed=0;
 								trigger_ready=1;
 								alt_phone_dialing=starting_alt_phone_dialing;
@@ -8056,6 +8059,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				agent_dialed_number='';
 				agent_dialed_type='';
 				CalL_ScripT_id='';
+				dial_next_failed=0;
 				RefresHScript('CLEAR');
 			//	document.getElementById('vcFormIFrame').src='./vdc_form_display.php?lead_id=&list_id=&stage=WELCOME';
 				}
@@ -8312,6 +8316,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			AutoDialReady = 0;
 			AutoDialWaiting = 0;
 			pause_code_counter = 0;
+			dial_next_failed=0;
 			if (dial_method == "INBOUND_MAN")
 				{
 				auto_dial_level=starting_dial_level;
@@ -9787,6 +9792,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		AgaiNHanguPServeR = lastcustserverip;
 		AgainCalLSecondS = VD_live_call_secondS;
 		AgaiNCalLCID = CalLCID;
+		dial_next_failed=0;
 		var process_post_hangup=0;
 		if ( (RedirecTxFEr < 1) && ( (MD_channel_look==1) || (auto_dial_level == 0) ) )
 			{
@@ -10866,6 +10872,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				last_mdtype='';
 				document.getElementById("timer_alt_display").innerHTML = '';
 				document.getElementById("RecorDID").innerHTML = '';
+				dial_next_failed=0;
 
 				if (manual_dial_search_checkbox == 'SELECTED_RESET')
 					{document.vicidial_form.LeadLookuP.checked=true;}
