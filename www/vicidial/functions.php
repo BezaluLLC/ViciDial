@@ -1,6 +1,6 @@
 <?php
 # 
-# functions.php    version 2.8
+# functions.php    version 2.10
 #
 # functions for administrative scripts and reports
 #
@@ -18,6 +18,7 @@
 # 130705-1957 - Added password encryption compatibility
 # 130831-0919 - Changed to mysqli PHP functions
 # 140319-1924 - Added MathZDC function
+# 140918-1609 - Added admin QXZ print/echo function with length padding
 #
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
@@ -416,4 +417,24 @@ function MathZDC($dividend, $divisor, $quotient=0) {
 		return ($dividend/$divisor);
 	}
 }
+
+# function to print/echo content, options for length included
+function _QXZ($English_text, $sprintf=0, $align="l") 
+	{
+#	$English_text = str_repeat('*', strlen($English_text));
+	if ($sprintf>0) 
+		{
+		if ($align=="r") 
+			{
+			$fmt="%".$sprintf."s";
+			} 
+		else 
+			{
+			$fmt="%-".$sprintf."s";
+			}
+		$English_text=sprintf($fmt, $English_text);
+		}
+	return $English_text;
+	}
+
 ?>
