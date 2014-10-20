@@ -23,6 +23,7 @@
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 140502-1208 - Added 9am-11pm option
 # 140808-1036 - Added server breakdown section
+# 141020-0848 - Added 9am-10pm and 10am-6pm options
 #
 
 $startMS = microtime();
@@ -374,7 +375,9 @@ $MAIN.="<option value=\"AM\">AM</option>\n";
 $MAIN.="<option value=\"PM\">PM</option>\n";
 $MAIN.="<option value=\"ALL\">ALL</option>\n";
 $MAIN.="<option value=\"DAYTIME\">DAYTIME</option>\n";
+$MAIN.="<option value=\"10AM-5PM\">10AM-5PM</option>\n";
 $MAIN.="<option value=\"10AM-6PM\">10AM-6PM</option>\n";
+$MAIN.="<option value=\"9AM-10PM\">9AM-10PM</option>\n";
 $MAIN.="<option value=\"9AM-11PM\">9AM-11PM</option>\n";
 $MAIN.="<option value=\"9AM-1AM\">9AM-1AM</option>\n";
 $MAIN.="<option value=\"845-1745\">845-1745</option>\n";
@@ -434,6 +437,11 @@ else
 		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "08:45:00";}
 		if (strlen($time_END) < 6) {$time_END = "00:59:59";}
 		}
+	if ($shift == '10AM-5PM') 
+		{
+		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "10:00:00";}
+		if (strlen($time_END) < 6) {$time_END = "16:59:59";}
+		}
 	if ($shift == '10AM-6PM') 
 		{
 		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "10:00:00";}
@@ -443,6 +451,11 @@ else
 		{
 		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "09:00:00";}
 		if (strlen($time_END) < 6) {$time_END = "22:59:59";}
+		}
+	if ($shift == '9AM-10PM') 
+		{
+		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "09:00:00";}
+		if (strlen($time_END) < 6) {$time_END = "21:59:59";}
 		}
 	if ($shift == '9AM-1AM') 
 		{
