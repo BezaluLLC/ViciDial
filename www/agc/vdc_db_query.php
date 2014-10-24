@@ -360,10 +360,11 @@
 # 140703-1659 - Several logging fixes, mostly related to manual dial calls
 # 140810-2046 - Changed to use QXZ function for echoing text
 # 140908-1031 - Fixed issues with logging of non-answered calls, user_group and call notes
+# 141024-0851 - Fixed issues with filtering of manual dial calls from call log or callbacks
 #
 
-$version = '2.10-256';
-$build = '140908-1031';
+$version = '2.10-257';
+$build = '141024-0851';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=597;
 $one_mysql_log=0;
@@ -1631,6 +1632,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 			$script_recording_delay = $row[0];
 			}
 
+		$lead_id_defined=0;
 		### check if this is a callback, if it is, skip the grabbing of a new lead and mark the callback as INACTIVE
 		if ( (strlen($callback_id)>0) and (strlen($lead_id)>0) )
 			{
@@ -1641,6 +1643,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00016',$user,$server_ip,$session_name,$one_mysql_log);}
+			$lead_id_defined++;
 			}
 		### check if this is a specific lead call, if it is, skip the grabbing of a new lead
 		elseif (strlen($lead_id)>0)
@@ -1652,7 +1655,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				{$override_dial_number = $phone_number;}
 			else
 				{
-				##### gather local call time setting from campaign
+				##### gather phone number from the lead to be called if not supplied
 				$stmt="SELECT phone_number FROM vicidial_list where lead_id='$lead_id';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00534',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -1664,88 +1667,129 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$phone_number =			$row[0];
 					}
 				}
+			$lead_id_defined++;
 			}
-		else
+
+		### BEGIN check for manual dial filtering ###
+		if (strlen($phone_number)>3)
 			{
-			if (strlen($phone_number)>3)
+			if (preg_match("/ENABLED/",$manual_dial_call_time_check))
 				{
-				if (preg_match("/ENABLED/",$manual_dial_call_time_check))
+				$secX = date("U");
+				$hour = date("H");
+				$min = date("i");
+				$sec = date("s");
+				$mon = date("m");
+				$mday = date("d");
+				$year = date("Y");
+				$isdst = date("I");
+				$Shour = date("H");
+				$Smin = date("i");
+				$Ssec = date("s");
+				$Smon = date("m");
+				$Smday = date("d");
+				$Syear = date("Y");
+				$pulldate0 = "$year-$mon-$mday $hour:$min:$sec";
+				$inSD = $pulldate0;
+				$dsec = ( ( ($hour * 3600) + ($min * 60) ) + $sec );
+
+				$postalgmt='';
+				$postal_code='';
+				$state='';
+				if (strlen($phone_code)<1)
+					{$phone_code='1';}
+
+				$local_call_time='24hours';
+				##### gather local call time setting from campaign
+				$stmt="SELECT local_call_time FROM vicidial_campaigns where campaign_id='$campaign';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00353',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$camp_lct_ct = mysqli_num_rows($rslt);
+				if ($camp_lct_ct > 0)
 					{
-					$secX = date("U");
-					$hour = date("H");
-					$min = date("i");
-					$sec = date("s");
-					$mon = date("m");
-					$mday = date("d");
-					$year = date("Y");
-					$isdst = date("I");
-					$Shour = date("H");
-					$Smin = date("i");
-					$Ssec = date("s");
-					$Smon = date("m");
-					$Smday = date("d");
-					$Syear = date("Y");
-					$pulldate0 = "$year-$mon-$mday $hour:$min:$sec";
-					$inSD = $pulldate0;
-					$dsec = ( ( ($hour * 3600) + ($min * 60) ) + $sec );
-
-					$postalgmt='';
-					$postal_code='';
-					$state='';
-					if (strlen($phone_code)<1)
-						{$phone_code='1';}
-
-					$local_call_time='24hours';
-					##### gather local call time setting from campaign
-					$stmt="SELECT local_call_time FROM vicidial_campaigns where campaign_id='$campaign';";
-					$rslt=mysql_to_mysqli($stmt, $link);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00353',$user,$server_ip,$session_name,$one_mysql_log);}
-					if ($DB) {echo "$stmt\n";}
-					$camp_lct_ct = mysqli_num_rows($rslt);
-					if ($camp_lct_ct > 0)
-						{
-						$row=mysqli_fetch_row($rslt);
-						$local_call_time =			$row[0];
-						}
-
-					### get current gmt_offset of the phone_number
-					$USarea = substr($phone_number, 0, 3);
-					$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code);
-
-					$dialable = dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state);
-					
-					if ($dialable < 1)
-						{
-						### purge from the dial queue and api
-						$stmt = "DELETE from vicidial_manual_dial_queue where phone_number='$phone_number' and user='$user';";
-						if ($DB) {echo "$stmt\n";}
-						$rslt=mysql_to_mysqli($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00354',$user,$server_ip,$session_name,$one_mysql_log);}
-						$VMDQaffected_rows = mysqli_affected_rows($link);
-
-						$stmt = "UPDATE vicidial_live_agents set external_dial='' where user='$user';";
-						if ($DB) {echo "$stmt\n";}
-						$rslt=mysql_to_mysqli($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00355',$user,$server_ip,$session_name,$one_mysql_log);}
-						$VLAEDaffected_rows = mysqli_affected_rows($link);
-
-						echo _QXZ("OUTSIDE OF LOCAL CALL TIME   $VMDQaffected_rows|$VLAEDaffected_rows\n");
-						exit;
-						}
+					$row=mysqli_fetch_row($rslt);
+					$local_call_time =			$row[0];
 					}
 
-				if (preg_match("/DNC/",$manual_dial_filter))
+				### get current gmt_offset of the phone_number
+				$USarea = substr($phone_number, 0, 3);
+				$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code);
+
+				$dialable = dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state);
+				
+				if ($dialable < 1)
 					{
-					if (preg_match("/AREACODE/",$use_internal_dnc))
+					### purge from the dial queue and api
+					$stmt = "DELETE from vicidial_manual_dial_queue where phone_number='$phone_number' and user='$user';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00354',$user,$server_ip,$session_name,$one_mysql_log);}
+					$VMDQaffected_rows = mysqli_affected_rows($link);
+
+					$stmt = "UPDATE vicidial_live_agents set external_dial='' where user='$user';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00355',$user,$server_ip,$session_name,$one_mysql_log);}
+					$VLAEDaffected_rows = mysqli_affected_rows($link);
+
+					echo _QXZ("OUTSIDE OF LOCAL CALL TIME   $VMDQaffected_rows|$VLAEDaffected_rows\n");
+					exit;
+					}
+				}
+
+			if (preg_match("/DNC/",$manual_dial_filter))
+				{
+				if (preg_match("/AREACODE/",$use_internal_dnc))
+					{
+					$phone_number_areacode = substr($phone_number, 0, 3);
+					$phone_number_areacode .= "XXXXXXX";
+					$stmt="SELECT count(*) from vicidial_dnc where phone_number IN('$phone_number','$phone_number_areacode');";
+					}
+				else
+					{$stmt="SELECT count(*) FROM vicidial_dnc where phone_number='$phone_number';";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00017',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$row=mysqli_fetch_row($rslt);
+				if ($row[0] > 0)
+					{
+					### purge from the dial queue and api
+					$stmt = "DELETE from vicidial_manual_dial_queue where phone_number='$phone_number' and user='$user';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00356',$user,$server_ip,$session_name,$one_mysql_log);}
+					$VMDQaffected_rows = mysqli_affected_rows($link);
+
+					$stmt = "UPDATE vicidial_live_agents set external_dial='' where user='$user';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00357',$user,$server_ip,$session_name,$one_mysql_log);}
+					$VLAEDaffected_rows = mysqli_affected_rows($link);
+
+					echo _QXZ("DNC NUMBER\n");
+					exit;
+					}
+				if ( (preg_match("/Y/",$use_campaign_dnc)) or (preg_match("/AREACODE/",$use_campaign_dnc)) )
+					{
+					$stmt="SELECT use_other_campaign_dnc from vicidial_campaigns where campaign_id='$campaign';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00445',$user,$server_ip,$session_name,$one_mysql_log);}
+					$row=mysqli_fetch_row($rslt);
+					$use_other_campaign_dnc =	$row[0];
+					$temp_campaign_id = $campaign;
+					if (strlen($use_other_campaign_dnc) > 0) {$temp_campaign_id = $use_other_campaign_dnc;}
+
+					if (preg_match("/AREACODE/",$use_campaign_dnc))
 						{
 						$phone_number_areacode = substr($phone_number, 0, 3);
 						$phone_number_areacode .= "XXXXXXX";
-						$stmt="SELECT count(*) from vicidial_dnc where phone_number IN('$phone_number','$phone_number_areacode');";
+						$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number IN('$phone_number','$phone_number_areacode') and campaign_id='$temp_campaign_id';";
 						}
 					else
-						{$stmt="SELECT count(*) FROM vicidial_dnc where phone_number='$phone_number';";}
+						{$stmt="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$phone_number' and campaign_id='$temp_campaign_id';";}
 					$rslt=mysql_to_mysqli($stmt, $link);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00017',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00018',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
 					$row=mysqli_fetch_row($rslt);
 					if ($row[0] > 0)
@@ -1754,112 +1798,81 @@ if ($ACTION == 'manDiaLnextCaLL')
 						$stmt = "DELETE from vicidial_manual_dial_queue where phone_number='$phone_number' and user='$user';";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_to_mysqli($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00356',$user,$server_ip,$session_name,$one_mysql_log);}
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00358',$user,$server_ip,$session_name,$one_mysql_log);}
 						$VMDQaffected_rows = mysqli_affected_rows($link);
 
 						$stmt = "UPDATE vicidial_live_agents set external_dial='' where user='$user';";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_to_mysqli($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00357',$user,$server_ip,$session_name,$one_mysql_log);}
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00359',$user,$server_ip,$session_name,$one_mysql_log);}
 						$VLAEDaffected_rows = mysqli_affected_rows($link);
 
 						echo _QXZ("DNC NUMBER\n");
 						exit;
 						}
-					if ( (preg_match("/Y/",$use_campaign_dnc)) or (preg_match("/AREACODE/",$use_campaign_dnc)) )
-						{
-						$stmt="SELECT use_other_campaign_dnc from vicidial_campaigns where campaign_id='$campaign';";
-						$rslt=mysql_to_mysqli($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00445',$user,$server_ip,$session_name,$one_mysql_log);}
-						$row=mysqli_fetch_row($rslt);
-						$use_other_campaign_dnc =	$row[0];
-						$temp_campaign_id = $campaign;
-						if (strlen($use_other_campaign_dnc) > 0) {$temp_campaign_id = $use_other_campaign_dnc;}
-
-						if (preg_match("/AREACODE/",$use_campaign_dnc))
-							{
-							$phone_number_areacode = substr($phone_number, 0, 3);
-							$phone_number_areacode .= "XXXXXXX";
-							$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number IN('$phone_number','$phone_number_areacode') and campaign_id='$temp_campaign_id';";
-							}
-						else
-							{$stmt="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$phone_number' and campaign_id='$temp_campaign_id';";}
-						$rslt=mysql_to_mysqli($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00018',$user,$server_ip,$session_name,$one_mysql_log);}
-						if ($DB) {echo "$stmt\n";}
-						$row=mysqli_fetch_row($rslt);
-						if ($row[0] > 0)
-							{
-							### purge from the dial queue and api
-							$stmt = "DELETE from vicidial_manual_dial_queue where phone_number='$phone_number' and user='$user';";
-							if ($DB) {echo "$stmt\n";}
-							$rslt=mysql_to_mysqli($stmt, $link);
-								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00358',$user,$server_ip,$session_name,$one_mysql_log);}
-							$VMDQaffected_rows = mysqli_affected_rows($link);
-
-							$stmt = "UPDATE vicidial_live_agents set external_dial='' where user='$user';";
-							if ($DB) {echo "$stmt\n";}
-							$rslt=mysql_to_mysqli($stmt, $link);
-								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00359',$user,$server_ip,$session_name,$one_mysql_log);}
-							$VLAEDaffected_rows = mysqli_affected_rows($link);
-
-							echo _QXZ("DNC NUMBER\n");
-							exit;
-							}
-						}
 					}
-				if (preg_match("/CAMPLISTS/",$manual_dial_filter))
+				}
+			if (preg_match("/CAMPLISTS/",$manual_dial_filter))
+				{
+				$stmt="SELECT list_id,active from vicidial_lists where campaign_id='$campaign'";
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00019',$user,$server_ip,$session_name,$one_mysql_log);}
+				$lists_to_parse = mysqli_num_rows($rslt);
+				$camp_lists='';
+				$o=0;
+				while ($lists_to_parse > $o) 
 					{
-					$stmt="SELECT list_id,active from vicidial_lists where campaign_id='$campaign'";
-					$rslt=mysql_to_mysqli($stmt, $link);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00019',$user,$server_ip,$session_name,$one_mysql_log);}
-					$lists_to_parse = mysqli_num_rows($rslt);
-					$camp_lists='';
-					$o=0;
-					while ($lists_to_parse > $o) 
+					$rowx=mysqli_fetch_row($rslt);
+					if (preg_match("/Y/", $rowx[1])) {$active_lists++;   $camp_lists .= "'$rowx[0]',";}
+					if (preg_match("/ALL/",$manual_dial_filter))
 						{
-						$rowx=mysqli_fetch_row($rslt);
-						if (preg_match("/Y/", $rowx[1])) {$active_lists++;   $camp_lists .= "'$rowx[0]',";}
-						if (preg_match("/ALL/",$manual_dial_filter))
-							{
-							if (preg_match("/N/", $rowx[1])) 
-								{$inactive_lists++; $camp_lists .= "'$rowx[0]',";}
-							}
-						else
-							{
-							if (preg_match("/N/", $rowx[1])) 
-								{$inactive_lists++;}
-							}
-						$o++;
+						if (preg_match("/N/", $rowx[1])) 
+							{$inactive_lists++; $camp_lists .= "'$rowx[0]',";}
 						}
-					$camp_lists = preg_replace("/.$/i","",$camp_lists);
-					if (strlen($camp_lists)<2) {$camp_lists="''";}
-
-					$stmt="SELECT count(*) FROM vicidial_list where phone_number='$phone_number' and list_id IN($camp_lists);";
-					$rslt=mysql_to_mysqli($stmt, $link);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00020',$user,$server_ip,$session_name,$one_mysql_log);}
-					if ($DB) {echo "$stmt\n";}
-					$row=mysqli_fetch_row($rslt);
-					
-					if ($row[0] < 1)
+					else
 						{
-						### purge from the dial queue and api
-						$stmt = "DELETE from vicidial_manual_dial_queue where phone_number='$phone_number' and user='$user';";
-						if ($DB) {echo "$stmt\n";}
-						$rslt=mysql_to_mysqli($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00360',$user,$server_ip,$session_name,$one_mysql_log);}
-						$VMDQaffected_rows = mysqli_affected_rows($link);
-
-						$stmt = "UPDATE vicidial_live_agents set external_dial='' where user='$user';";
-						if ($DB) {echo "$stmt\n";}
-						$rslt=mysql_to_mysqli($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00361',$user,$server_ip,$session_name,$one_mysql_log);}
-						$VLAEDaffected_rows = mysqli_affected_rows($link);
-
-						echo _QXZ("NUMBER NOT IN CAMPLISTS\n");
-						exit;
+						if (preg_match("/N/", $rowx[1])) 
+							{$inactive_lists++;}
 						}
+					$o++;
 					}
+				$camp_lists = preg_replace("/.$/i","",$camp_lists);
+				if (strlen($camp_lists)<2) {$camp_lists="''";}
+
+				$stmt="SELECT count(*) FROM vicidial_list where phone_number='$phone_number' and list_id IN($camp_lists);";
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00020',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$row=mysqli_fetch_row($rslt);
+				
+				if ($row[0] < 1)
+					{
+					### purge from the dial queue and api
+					$stmt = "DELETE from vicidial_manual_dial_queue where phone_number='$phone_number' and user='$user';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00360',$user,$server_ip,$session_name,$one_mysql_log);}
+					$VMDQaffected_rows = mysqli_affected_rows($link);
+
+					$stmt = "UPDATE vicidial_live_agents set external_dial='' where user='$user';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00361',$user,$server_ip,$session_name,$one_mysql_log);}
+					$VLAEDaffected_rows = mysqli_affected_rows($link);
+
+					echo _QXZ("NUMBER NOT IN CAMPLISTS\n");
+					exit;
+					}
+				}
+			}
+
+		### END check for manual dial filtering ###
+
+
+		if ($lead_id_defined < 1)
+			{
+			if (strlen($phone_number)>3)
+				{
 				if ($stage=='lookup')
 					{
 					if (strlen($vendor_lead_code)>0)
