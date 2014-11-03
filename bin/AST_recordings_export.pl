@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_recordings_export.pl                version: 2.8
+# AST_recordings_export.pl                version: 2.10
 #
 # This script is designed to gather recordings into a temp directory from
 # set in-groups and campaigns and then FTP transfer them out
@@ -12,10 +12,11 @@
 #
 # /usr/share/astguiclient/AST_recordings_export.pl --campaign=GOODB-GROUP1-GROUP3-GROUP4-SPECIALS-DNC_BEDS --output-format=fixed-as400 --sale-statuses=SALE --debug --filename=BEDSsaleMMDD.txt --date=yesterday --email-list=test@gmail.com --email-sender=test@test.com
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 130623-1739 - First version based upon AST_VDsales_export.pl
+# 141020-0612 - Added --did-only option
 #
 
 $txt = '.txt';
@@ -47,6 +48,7 @@ $INcalls=0;
 $INtalk=0;
 $INtalkmin=0;
 $email_post_audio=0;
+$did_only=0;
 
 $secX = time();
 $time = $secX;
@@ -157,6 +159,7 @@ if (length($ARGV[0])>1)
 		print "  [--calltime=XXX] = filter results to only include those calls during this call time\n";
 		print "  [--outbound-calltime-ignore] = for outbound calls ignores call time\n";
 		print "  [--totals-only] = print totals of time and calls only\n";
+		print "  [--did-only] = run for DID recordings only(defined in with-inbound flag)\n";
 		print "  [--ftp-norun] = Stop program when you get to the FTP transfer\n";
 		print "  [--ftp-temp-only] = Do not look up sales, only FTP transfer what is already in temp directory\n";
 		print "  [--ftp-server=XXXXXXXX] = FTP server to send file to\n";
@@ -194,6 +197,8 @@ if (length($ARGV[0])>1)
 			}
 		if ($args =~ /-totals-only/i)
 			{$totals_only=1;}
+		if ($args =~ /-did-only/i)
+			{$did_only=1;}
 
 		if ($args =~ /--date=/i)
 			{
@@ -564,7 +569,14 @@ else
 	{
 	$with_inboundSQL = $with_inbound;
 	$with_inboundSQL =~ s/-/','/gi;
-	$with_inboundSQL = "vicidial_closer_log.campaign_id IN('$with_inboundSQL')";
+	if ($did_only > 0)
+		{
+		$with_inboundSQL = "recording_log.user IN('$with_inboundSQL')";
+		}
+	else
+		{
+		$with_inboundSQL = "vicidial_closer_log.campaign_id IN('$with_inboundSQL')";
+		}
 	}
 
 if (length($campaignSQL) < 2)
@@ -585,6 +597,7 @@ if (!$Q)
 	print "Campaign:      $campaign    $campaignSQL\n";
 	print "Sale Statuses: $sale_statuses     $sale_statusesSQL\n";
 	print "With Inbound:  $with_inbound     $with_inboundSQL\n";
+	print "DID:  $did_only\n";
 	print "\n";
 	}
 
@@ -663,41 +676,12 @@ else
 	}
 
 
-###########################################################################
-########### CURRENT DAY SALES GATHERING outbound-only: vicidial_log  ######
-###########################################################################
-$stmtA = "select vicidial_list.lead_id,uniqueid,length_in_sec,UNIX_TIMESTAMP(vicidial_log.call_date) from vicidial_list,vicidial_log where $campaignSQL $sale_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate_end 23:59:59' and vicidial_log.lead_id=vicidial_list.lead_id order by call_date;";
-$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-$sthArows=$sthA->rows;
-$rec_count=0;
-	if ($DB) {print "$sthArows|$stmtA|\n";}
-while ($sthArows > $rec_count)
-	{
-	@aryA = $sthA->fetchrow_array;
-	$lead_id =		$aryA[0];
-	$vicidial_id =	$aryA[1];
-	$uniqueid =		$aryA[1];
-	$length_in_sec = $aryA[2];
-	$epoch =		$aryA[3];
-
-	$outbound = 'Y';
-	$domestic = 'Y';
-	$queue_seconds = '0';
-	$closer='';
-
-	&select_format_loop;
-
-	$TOTAL_SALES++;
-	}
-$sthA->finish();
-
-if (length($with_inboundSQL)>3)
+if ($did_only > 0)
 	{
 	#################################################################################
-	########### CURRENT DAY SALES GATHERING inbound-only: vicidial_closer_log  ######
+	########### CURRENT DAY DID RECCORDINGS GATHERING did-only: recording_log  ######
 	#################################################################################
-	$stmtA = "select vicidial_list.lead_id,xfercallid,closecallid,uniqueid,length_in_sec,UNIX_TIMESTAMP(vicidial_closer_log.call_date) from vicidial_list,vicidial_closer_log where $with_inboundSQL $close_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate_end 23:59:59' and vicidial_closer_log.lead_id=vicidial_list.lead_id order by call_date;";
+	$stmtA = "select lead_id,user,vicidial_id,vicidial_id,length_in_sec,UNIX_TIMESTAMP(start_time) from recording_log where $with_inboundSQL and start_time > '$shipdate 00:00:01' and start_time < '$shipdate_end 23:59:59' order by start_time;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -724,7 +708,70 @@ if (length($with_inboundSQL)>3)
 		}
 	$sthA->finish();
 	}
+else
+	{
+	###########################################################################
+	########### CURRENT DAY SALES GATHERING outbound-only: vicidial_log  ######
+	###########################################################################
+	$stmtA = "select vicidial_list.lead_id,uniqueid,length_in_sec,UNIX_TIMESTAMP(vicidial_log.call_date) from vicidial_list,vicidial_log where $campaignSQL $sale_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate_end 23:59:59' and vicidial_log.lead_id=vicidial_list.lead_id order by call_date;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	$rec_count=0;
+		if ($DB) {print "$sthArows|$stmtA|\n";}
+	while ($sthArows > $rec_count)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$lead_id =		$aryA[0];
+		$vicidial_id =	$aryA[1];
+		$uniqueid =		$aryA[1];
+		$length_in_sec = $aryA[2];
+		$epoch =		$aryA[3];
 
+		$outbound = 'Y';
+		$domestic = 'Y';
+		$queue_seconds = '0';
+		$closer='';
+
+		&select_format_loop;
+
+		$TOTAL_SALES++;
+		}
+	$sthA->finish();
+
+	if (length($with_inboundSQL)>3)
+		{
+		#################################################################################
+		########### CURRENT DAY SALES GATHERING inbound-only: vicidial_closer_log  ######
+		#################################################################################
+		$stmtA = "select vicidial_list.lead_id,xfercallid,closecallid,uniqueid,length_in_sec,UNIX_TIMESTAMP(vicidial_closer_log.call_date) from vicidial_list,vicidial_closer_log where $with_inboundSQL $close_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate_end 23:59:59' and vicidial_closer_log.lead_id=vicidial_list.lead_id order by call_date;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($DB) {print "$sthArows|$stmtA|\n";}
+		$rec_count=0;
+		while ($sthArows > $rec_count)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$lead_id =		$aryA[0];
+			$xfercallid =	$aryA[1];
+			$vicidial_id =	$aryA[2];
+			$uniqueid =		$aryA[3];
+			$length_in_sec = $aryA[4];
+			$epoch =		$aryA[5];
+
+			$outbound = 'N';
+			$domestic = 'Y';
+			$user = '';
+			$agent_name='';
+
+			&select_format_loop;
+
+			$TOTAL_SALES++;
+			}
+		$sthA->finish();
+		}
+	}
 
 ###### EMAIL SECTION
 
