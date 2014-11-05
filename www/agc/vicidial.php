@@ -444,10 +444,11 @@
 # 140822-0900 - Fixed issue with phone alias login
 # 140902-0826 - Added callback_active_limit and callback_active_limit_override
 # 140918-1606 - Fixed manual dial pause warning issue
+# 141105-1153 - Fixed issue with AGENTDIRECT transfers to agents with IDs over 7 characters long
 #
 
-$version = '2.10-415c';
-$build = '140918-1606';
+$version = '2.10-416c';
+$build = '141105-1153';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=80;
 $one_mysql_log=0;
@@ -3914,6 +3915,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var FSCREENup=0;
 	var HKFSCREENup=0;
 	var dial_next_failed=0;
+	var xfer_agent_selected=0;
     var DiaLControl_auto_HTML = "<img src=\"./images/<?php echo _QXZ("vdc_LB_pause_OFF.gif") ?>\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_resume.gif") ?>\" border=\"0\" alt=\"Resume\" /></a>";
     var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_pause.gif") ?>\" border=\"0\" alt=\" Pause \" /></a><img src=\"./images/<?php echo _QXZ("vdc_LB_resume_OFF.gif") ?>\" border=\"0\" alt=\"Resume\" />";
     var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_pause_OFF.gif") ?>\" border=\"0\" alt=\" Pause \" /><img src=\"./images/<?php echo _QXZ("vdc_LB_resume_OFF.gif") ?>\" border=\"0\" alt=\"Resume\" />";
@@ -4328,7 +4330,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				if (omit_phone_code == 'Y') {var temp_phone_code = '';}
 				else {var temp_phone_code = document.vicidial_form.phone_code.value;}
 
-				if (manual_string.length > 7)
+				// append dial prefix if phone number is greater than 7 digits on non-AGENTDIRECT calls
+				if ( (manual_string.length > 7) && (xfer_agent_selected < 1) )
 					{manual_string = temp_dial_prefix + "" + temp_phone_code + "" + manual_string;}
 				}
 			else
@@ -4552,6 +4555,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			agent_dialed_type='';
 			CalL_ScripT_id='';
 			call_variables='';
+			xfer_agent_selected=0;
 			}
 		}
 
@@ -7918,6 +7922,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					agent_dialed_number='';
 					agent_dialed_type='';
 					CalL_ScripT_id='';
+					xfer_agent_selected=0;
 					}
 				}
 			}
@@ -8032,6 +8037,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							previous_called_count = '';
 							previous_dispo = '';
 							custchannellive=1;
+							xfer_agent_selected=0;
 
 							if (post_phone_time_diff_alert_message.length > 10)
 								{
@@ -8060,6 +8066,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				agent_dialed_type='';
 				CalL_ScripT_id='';
 				dial_next_failed=0;
+				xfer_agent_selected=0;
 				RefresHScript('CLEAR');
 			//	document.getElementById('vcFormIFrame').src='./vdc_form_display.php?lead_id=&list_id=&stage=WELCOME';
 				}
@@ -8276,6 +8283,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			agent_dialed_number='';
 			agent_dialed_type='';
 			CalL_ScripT_id='';
+			xfer_agent_selected=0;
 			}
 		}
 
@@ -9770,6 +9778,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 // Start Hangup Functions for both 
 	function bothcall_send_hangup() 
 		{
+		xfer_agent_selected=0;
 		if (lastcustchannel.length > 3)
 			{dialedcall_send_hangup();}
 		if (lastxferchannel.length > 3)
@@ -10113,6 +10122,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			consult_custom_wait=0;
 			consult_custom_go=0;
 			consult_custom_sent=0;
+			xfer_agent_selected=0;
 
 
 		//  DEACTIVATE CHANNEL-DEPENDANT BUTTONS AND VARIABLES
@@ -10873,6 +10883,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				document.getElementById("timer_alt_display").innerHTML = '';
 				document.getElementById("RecorDID").innerHTML = '';
 				dial_next_failed=0;
+				xfer_agent_selected=0;
 
 				if (manual_dial_search_checkbox == 'SELECTED_RESET')
 					{document.vicidial_form.LeadLookuP.checked=true;}
@@ -12999,6 +13010,7 @@ function phone_number_format(formatphone) {
 		document.getElementById('AgentXferViewSelect').innerHTML = '';
 		hideDiv('AgentXferViewSpan');
 		hideDiv(AXlocation);
+		xfer_agent_selected=1;
 		document.vicidial_form.xfernumber.value = AXuser;
 		}
 
