@@ -460,6 +460,7 @@ if (length($filter_clean_cid_number) > 1)
 
 ##### BEGIN pre-filtering process #####
 $pre_filter_match_found=0;
+$filter_match_found=0;
 if ( (length($pre_filter_phone_group_id)>0) && (length($pre_filter_extension)>0) )
 	{
 	if ($AGILOG) {$agi_string = "pre-filtering active: |$extension|$pre_filter_phone_group_id|$pre_filter_extension|$filter_clean_cid_number|$callerid";   &agi_output;}
@@ -495,7 +496,6 @@ if ( (length($pre_filter_phone_group_id)>0) && (length($pre_filter_extension)>0)
 
 
 ##### BEGIN filtering process #####
-$filter_match_found=0;
 if ( ($filter_inbound_number =~ /GROUP|URL|DNC_INTERNAL|DNC_CAMPAIGN/) && ($pre_filter_match_found < 1) )
 	{
 	if ($AGILOG) {$agi_string = "filtering active: |$extension|$filter_inbound_number|$filter_phone_group_id|$filter_url|$filter_action|$filter_clean_cid_number|";   &agi_output;}
