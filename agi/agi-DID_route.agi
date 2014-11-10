@@ -36,7 +36,9 @@
 # 140404-0738 - Added DNC filter options and URL filter DID redirect option
 # 140622-0240 - Added no-agent in-group redirect and pre-filter phone group redirect features
 # 140811-2151 - Added ability to filter by DNC areacodes if filter_inbound_number set to a DNC option
+# 141110-1417 - Fixed issue with multiple filtering options enabled
 #
+
 
 $script = 'agi-DID_route.agi';
 $dtmf_silent_prefix = '7';
@@ -457,9 +459,9 @@ if (length($filter_clean_cid_number) > 1)
 
 
 ##### BEGIN pre-filtering process #####
+$pre_filter_match_found=0;
 if ( (length($pre_filter_phone_group_id)>0) && (length($pre_filter_extension)>0) )
 	{
-	$pre_filter_match_found=0;
 	if ($AGILOG) {$agi_string = "pre-filtering active: |$extension|$pre_filter_phone_group_id|$pre_filter_extension|$filter_clean_cid_number|$callerid";   &agi_output;}
 
 	$stmtA = "SELECT count(*) FROM vicidial_filter_phone_numbers where filter_phone_group_id='$pre_filter_phone_group_id' and phone_number='$callerid';";
@@ -493,9 +495,9 @@ if ( (length($pre_filter_phone_group_id)>0) && (length($pre_filter_extension)>0)
 
 
 ##### BEGIN filtering process #####
-if ($filter_inbound_number =~ /GROUP|URL|DNC_INTERNAL|DNC_CAMPAIGN/)
+$filter_match_found=0;
+if ( ($filter_inbound_number =~ /GROUP|URL|DNC_INTERNAL|DNC_CAMPAIGN/) && ($pre_filter_match_found < 1) )
 	{
-	$filter_match_found=0;
 	if ($AGILOG) {$agi_string = "filtering active: |$extension|$filter_inbound_number|$filter_phone_group_id|$filter_url|$filter_action|$filter_clean_cid_number|";   &agi_output;}
 	if ($filter_inbound_number =~ /GROUP/)
 		{
@@ -618,7 +620,7 @@ if ($filter_inbound_number =~ /GROUP|URL|DNC_INTERNAL|DNC_CAMPAIGN/)
 
 
 ##### BEGIN no-agent redirect process #####
-if ($no_agent_ingroup_redirect =~ /Y|NO_PAUSED|READY_ONLY/)
+if ( ($no_agent_ingroup_redirect =~ /Y|NO_PAUSED|READY_ONLY/) && ($pre_filter_match_found < 1) && ($filter_match_found < 1) )
 	{
 	$no_agent_redirect_bypass=1;
 	if ($AGILOG) {$agi_string = "filtering active: |$extension|$no_agent_ingroup_redirect|$no_agent_ingroup_id|$no_agent_ingroup_extension|$filter_clean_cid_number|";   &agi_output;}
@@ -646,7 +648,7 @@ if ($no_agent_ingroup_redirect =~ /Y|NO_PAUSED|READY_ONLY/)
 		$exten_context =				'default';
 		$route_type =					'NOAGENT';
 
-		if ($AGILOG) {$agi_string = "No-Agent Redirect: |$no_agent_redirect_bypass|$no_agent_ingroup_redirect|$did_extension|$no_agent_ingroup_id|";   &agi_output;}
+		if ($AGILOG) {$agi_string = "No-Agent Redirect: |$no_agent_redirect_bypass|$no_agent_ingroup_redirect|$did_extension|$no_agent_ingroup_id|$stmtA|";   &agi_output;}
 
 		### Update the call in vicidial_did_log
 		$stmtA = "UPDATE vicidial_did_log SET did_route='NA_$did_route' where uniqueid='$uniqueid' and channel='$channel' and server_ip='$VARserver_ip' and caller_id_number='$callerid' and call_date='$SQLdate';";
