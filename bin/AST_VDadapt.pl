@@ -1,12 +1,12 @@
 #!/usr/bin/perl
 #
-# AST_VDadapt.pl version 2.8
+# AST_VDadapt.pl version 2.10
 #
 # DESCRIPTION:
 # adjusts the auto_dial_level for vicidial adaptive-predictive campaigns. 
 # gather call stats for campaigns and in-groups
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 60823-1302 - First build from AST_VDhopper.pl
@@ -39,6 +39,7 @@
 # 111219-1420 - Added daily stats updates to new table for total, in-group and campaign
 # 111223-0924 - Added check for logged-in agents
 # 131122-1314 - Added several missing sthA->finish
+# 141109-1957 - Fixed issue #793
 #
 
 # constants
@@ -888,6 +889,8 @@ sub calculate_drops
 	$sthA->finish();
 
 	chop($camp_ANS_STAT_SQL);
+	if (length($camp_ANS_STAT_SQL)<2) 
+		{$camp_ANS_STAT_SQL="'-NONE-'";}
 
 	$debug_camp_output .= "     CAMPAIGN ANSWERED STATUSES: $campaign_id[$i]|$camp_ANS_STAT_SQL|\n";
 	if ($DBX) {print "     CAMPAIGN ANSWERED STATUSES: $campaign_id[$i]|$camp_ANS_STAT_SQL|\n";}
@@ -1681,6 +1684,8 @@ sub calculate_drops_inbound
 		}
 	$sthA->finish();
 	chop($camp_ANS_STAT_SQL);
+	if (length($camp_ANS_STAT_SQL)<2) 
+		{$camp_ANS_STAT_SQL="'-NONE-'";}
 
 	if ($DBX) {print "     ANSWERED STATUSES: $group_id[$p]|$camp_ANS_STAT_SQL|\n";}
 	$debug_ingroup_output .= "     ANSWERED STATUSES: $group_id[$p]|$camp_ANS_STAT_SQL|\n";

@@ -320,7 +320,7 @@ if ( ($without_db < 1) && ($conf_only < 1) )
 			while ($sthArows > $rec_count)
 				{
 				@aryA = $sthA->fetchrow_array;
-				if ($aryA[0] =~ /_log|server_performance|vicidial_ivr|vicidial_hopper|vicidial_manager|web_client_sessions|imm_outcomes|server|^phones|stats|vicidial_list$/) 
+				if ($aryA[0] =~ /_log|server_performance|vicidial_ivr|vicidial_hopper|vicidial_manager|web_client_sessions|imm_outcomes|server|^phones|conferences|stats|vicidial_list$/) 
 					{
 					$log_tables .= " $aryA[0]";
 					}

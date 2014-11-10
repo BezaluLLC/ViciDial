@@ -2047,7 +2047,7 @@ while($one_day_interval > 0)
 
 		if ($toPAUSEcount > 0)
 			{
-			$stmtA = "SELECT agent_log_id,user,server_ip,campaign_id from vicidial_live_agents where server_ip='$server_ip' and last_update_time < '$PDtsSQLdate' and status NOT IN('PAUSED');";
+			$stmtA = "SELECT agent_log_id,user,server_ip,campaign_id,last_update_time from vicidial_live_agents where server_ip='$server_ip' and last_update_time < '$PDtsSQLdate' and status NOT IN('PAUSED');";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArowsL=$sthA->rows;
@@ -2059,6 +2059,8 @@ while($one_day_interval > 0)
 				$LAGuser[$lagged_ids] =			$aryA[1];
 				$LAGserver_ip[$lagged_ids] =	$aryA[2];
 				$LAGcampaign_id[$lagged_ids] =	$aryA[3];
+				$LAGlast_update_time[$lagged_ids] =	$aryA[4];
+				if ($DB > 0) {print "LAGGED DEBUG: $lagged_ids|$PDtsSQLdate|$aryA[4]|$aryA[3]|$aryA[2]|$aryA[1]|$aryA[0]|$stmtA|\n";}
 				$lagged_ids++;
 				}
 			$sthA->finish();
