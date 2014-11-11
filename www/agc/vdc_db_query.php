@@ -361,10 +361,11 @@
 # 140810-2046 - Changed to use QXZ function for echoing text
 # 140908-1031 - Fixed issues with logging of non-answered calls, user_group and call notes
 # 141024-0851 - Fixed issues with filtering of manual dial calls from call log or callbacks
+# 141111-0658 - Removed several AJAX text outputs from QXZ output
 #
 
-$version = '2.10-257';
-$build = '141024-0851';
+$version = '2.10-258';
+$build = '141111-0658';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=597;
 $one_mysql_log=0;
@@ -891,7 +892,7 @@ if ($ACTION == 'LogiNCamPaigns')
 	if ( (strlen($user)<1) )
 		{
 		echo "<select size=1 name=VD_campaign id=VD_campaign onFocus=\"login_allowable_campaigns()\">\n";
-		echo "<option value=\"\">-- "._QXZ("ERROR")." --</option>\n";
+		echo "<option value=\"\">-- ERROR --</option>\n";
 		echo "</select>\n";
 		exit;
 		}
@@ -974,7 +975,7 @@ if ($ACTION == 'LogiNCamPaigns')
 		$shift_ok=0;
 		if ( (strlen($LOGgroup_shiftsSQL) < 3) and ($VU_shift_override_flag < 1) )
 			{
-			$VDdisplayMESSAGE = "<B>"._QXZ("ERROR: There are no Shifts enabled for your user group")."</B>\n";
+			$VDdisplayMESSAGE = "<B>ERROR: "._QXZ("There are no Shifts enabled for your user group")."</B>\n";
 			$VDloginDISPLAY=1;
 			}
 		else
@@ -1027,7 +1028,7 @@ if ($ACTION == 'LogiNCamPaigns')
 
 			if ( ($shift_ok < 1) and ($VU_shift_override_flag < 1) )
 				{
-				$VDdisplayMESSAGE = "<B>"._QXZ("ERROR: You are not allowed to log in outside of your shift")."</B>\n";
+				$VDdisplayMESSAGE = "<B>ERROR: "._QXZ("You are not allowed to log in outside of your shift")."</B>\n";
 				$VDloginDISPLAY=1;
 				}
 			}
@@ -1483,12 +1484,12 @@ if ($ACTION == 'UpdateFields')
 			}
 		else
 			{
-			echo _QXZ("ERROR: no lead info in system: $lead_id\n");
+			echo "ERROR: "._QXZ("no lead info in system: $lead_id\n");
 			}
 		}
 	else
 		{
-		echo _QXZ("ERROR: no lead active for this agent\n");
+		echo "ERROR: "._QXZ("no lead active for this agent\n");
 		}
 	}
 
@@ -1507,7 +1508,7 @@ if ($ACTION == 'update_settings')
 		{
 		$rowx=mysqli_fetch_row($rslt);
 		$agent_count = $rowx[0];
-		$SettingS_InfO .=	_QXZ("Agent Session: $agent_count\n");
+		$SettingS_InfO .=	"Agent Session: $agent_count\n";
 
 		##### grab the data from vicidial_users for the user
 		$stmt="SELECT wrapup_seconds_override FROM vicidial_users where user='$user' LIMIT 1;";
@@ -1566,7 +1567,7 @@ if ($ACTION == 'update_settings')
 		}
 	else
 		{
-		echo _QXZ("ERROR: no agent session\n");
+		echo "ERROR: "._QXZ("no agent session\n");
 		}
 	}
 
@@ -3321,7 +3322,7 @@ if ($ACTION == 'manDiaLskip')
 	if ( (strlen($stage)<1) || (strlen($called_count)<1) || (strlen($lead_id)<1) )
 		{
 		$channel_live=0;
-		echo _QXZ("LEAD NOT REVERTED\n");
+		echo "LEAD NOT REVERTED\n";
 		echo _QXZ("Conf Exten $conf_exten or campaign $campaign or ext_context $ext_context is not valid\n");
 		exit;
 		}
@@ -3352,7 +3353,7 @@ if ($ACTION == 'manDiaLskip')
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00419',$user,$server_ip,$session_name,$one_mysql_log);}
 
-		echo _QXZ("LEAD REVERTED\n");
+		echo "LEAD REVERTED\n";
 		}
 	}
 
@@ -3369,7 +3370,7 @@ if ($ACTION == 'manDiaLonly')
 	if ( (strlen($conf_exten)<1) || (strlen($campaign)<1) || (strlen($ext_context)<1) || (strlen($phone_number)<1) || (strlen($lead_id)<1) )
 		{
 		$channel_live=0;
-		echo _QXZ(" CALL NOT PLACED\n");
+		echo " CALL NOT PLACED\n";
 		echo _QXZ("Conf Exten $conf_exten or campaign $campaign or ext_context $ext_context is not valid\n");
 		exit;
 		}
@@ -3449,7 +3450,7 @@ if ($ACTION == 'manDiaLonly')
 			$row=mysqli_fetch_row($rslt);
 			if ($row[0] > 0)
 				{
-				echo _QXZ(" CALL NOT PLACED\nDNC NUMBER\n");
+				echo " CALL NOT PLACED\nDNC NUMBER\n";
 				exit;
 				}
 			if ( (preg_match("/Y/",$use_campaign_dnc)) or (preg_match("/AREACODE/",$use_campaign_dnc)) )
@@ -3476,7 +3477,7 @@ if ($ACTION == 'manDiaLonly')
 				$row=mysqli_fetch_row($rslt);
 				if ($row[0] > 0)
 					{
-					echo _QXZ(" CALL NOT PLACED\nDNC NUMBER\n");
+					echo " CALL NOT PLACED\nDNC NUMBER\n";
 					exit;
 					}
 				}
@@ -3516,7 +3517,7 @@ if ($ACTION == 'manDiaLonly')
 			
 			if ($row[0] < 1)
 				{
-				echo _QXZ(" CALL NOT PLACED\nNUMBER NOT IN CAMPLISTS\n");
+				echo " CALL NOT PLACED\nNUMBER NOT IN CAMPLISTS\n";
 				exit;
 				}
 			}
@@ -4073,7 +4074,7 @@ if ($stage == "start")
 			fclose($fp);
 			}
 
-		echo _QXZ("LOG NOT ENTERED\n");
+		echo "LOG NOT ENTERED\n";
 		echo _QXZ("uniqueid $uniqueid or lead_id: $lead_id or list_id: $list_id or phone_number: $phone_number or campaign: $campaign is not valid\n");
 		exit;
 		}
@@ -4141,7 +4142,7 @@ if ($stage == "start")
 			}
 		else
 			{
-			echo _QXZ("LOG NOT ENTERED\n");
+			echo "LOG NOT ENTERED\n";
 			}
 
 		$stmt = "UPDATE vicidial_auto_calls SET uniqueid='$uniqueid' where lead_id='$lead_id';";
@@ -4231,7 +4232,7 @@ if ($stage == "end")
 
 	if ( (strlen($uniqueid)<1) or (strlen($lead_id)<1) )
 		{
-		echo _QXZ("LOG NOT ENTERED\n");
+		echo "LOG NOT ENTERED\n";
 		echo _QXZ("uniqueid $uniqueid or lead_id: $lead_id is not valid\n");
 		$log_no_enter=1;
 		}
@@ -4982,7 +4983,7 @@ if ($stage == "end")
 					}
 				else
 					{
-					echo _QXZ("LOG NOT ENTERED\n\n");
+					echo "LOG NOT ENTERED\n\n";
 					}
 				}
 			else
@@ -5015,7 +5016,7 @@ if ($stage == "end")
 				}
 			else
 				{
-				echo _QXZ("LOG NOT ENTERED\n\n");
+				echo "LOG NOT ENTERED\n\n";
 				}
 			}
 		else
@@ -8341,7 +8342,7 @@ if ($ACTION == 'userLOGout')
 	$row='';   $rowx='';
 	if ( (strlen($campaign)<1) || (strlen($conf_exten)<1) )
 		{
-		echo _QXZ("NO\n");
+		echo "NO\n";
 		echo _QXZ("campaign $campaign or conf_exten $conf_exten is not valid\n");
 		exit;
 		}
@@ -10197,7 +10198,7 @@ if ($ACTION == 'updateDISPO')
 	# debug testing sleep
 	# sleep(5);
 
-	echo _QXZ('Lead ') . $lead_id . _QXZ(' has been changed to ') . $dispo_choice . _QXZ(" Status\nNext agent_log_id:\n") . $agent_log_id . "\n";
+	echo _QXZ('Lead ') . $lead_id . _QXZ(' has been changed to ') . $dispo_choice . _QXZ(" Status\n")."Next agent_log_id:\n" . $agent_log_id . "\n";
 	}
 
 ################################################################################
@@ -10531,7 +10532,7 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 		}
 	else
 		{
-		echo _QXZ('Agent ') . $user . _QXZ(' is now in status ') . $stage . _QXZ("\nNext agent_log_id:\n$agent_log_id\n");
+		echo _QXZ('Agent ') . $user . _QXZ(' is now in status ') . $stage . "\nNext agent_log_id:\n$agent_log_id\n";
 		}
 	}
 
@@ -10703,7 +10704,7 @@ if ($ACTION == 'PauseCodeSubmit')
 				}
 			}
 		}
-	echo _QXZ(' Pause Code ') . $status . _QXZ(" has been recorded\nNext agent_log_id:\n") . $agent_log_id . "\n";
+	echo _QXZ(' Pause Code ') . $status . _QXZ(" has been recorded\n")."Next agent_log_id:\n" . $agent_log_id . "\n";
 	}
 
 
@@ -11356,7 +11357,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 			}
 		else
 			{
-			echo _QXZ("ERROR: You must enter in search terms, one of these must be populated: lead ID, vendor ID, phone number, last name\n");
+			echo "ERROR: "._QXZ("You must enter in search terms, one of these must be populated: lead ID, vendor ID, phone number, last name\n");
 			echo "<BR><BR>";
 			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
@@ -11607,7 +11608,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 			}
 		else
 			{
-			echo "ERROR: There was a problem with your search terms\n";
+			echo "ERROR: "._QXZ("There was a problem with your search terms\n");
 			echo "<BR><BR>";
 			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
@@ -11617,7 +11618,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 		}
 	else
 		{
-		echo _QXZ("ERROR: Campaign not found\n");
+		echo "ERROR: "._QXZ("Campaign not found\n");
 		echo "<BR><BR>";
 		echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">"._QXZ("Go Back")."</a>";
 		echo "</CENTER>";
@@ -11796,7 +11797,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 			}
 		else
 			{
-			echo _QXZ("ERROR: You must enter in search terms, one of these must be populated: office number, last name, first name\n");
+			echo "ERROR: "._QXZ("You must enter in search terms, one of these must be populated: office number, last name, first name\n");
 			echo "<BR><BR>";
 			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
@@ -11935,7 +11936,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 			}
 		else
 			{
-			echo _QXZ("ERROR: There was a problem with your search terms\n");
+			echo "ERROR: "._QXZ("There was a problem with your search terms\n");
 			echo "<BR><BR>";
 			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
@@ -11945,7 +11946,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 		}
 	else
 		{
-		echo _QXZ("ERROR: Campaign not found\n");
+		echo "ERROR: "._QXZ("Campaign not found\n");
 		echo "<BR><BR>";
 		echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">"._QXZ("Go Back")."</a>";
 		echo "</CENTER>";
@@ -11961,7 +11962,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 if ($ACTION == 'LEADINFOview')
 	{
 	if (strlen($lead_id) < 1)
-		{echo _QXZ("ERROR: no Lead ID");}
+		{echo "ERROR: "._QXZ("no Lead ID");}
 	else
 		{
 		$hide_dial_links=0;
@@ -12566,7 +12567,7 @@ if ($ACTION == 'CALLSINQUEUEgrab')
 
 	if ( (preg_match('/NONE/i',$view_calls_in_queue)) or (preg_match('/N/i',$grab_calls_in_queue)) )
 		{
-		echo _QXZ("ERROR: Calls in Queue View Disabled for this campaign\n");
+		echo "ERROR: "._QXZ("Calls in Queue View Disabled for this campaign\n");
 		exit;
 		}
 	else
@@ -12600,11 +12601,11 @@ if ($ACTION == 'CALLSINQUEUEgrab')
 				$affected_rows = mysqli_affected_rows($link);
 				}
 
-			echo _QXZ("SUCCESS: Call $stage grabbed for $user");
+			echo "SUCCESS: "._QXZ("Call $stage grabbed for $user");
 			}
 		else
 			{
-			echo _QXZ("ERROR: Call $stage could not be grabbed for $user\n");
+			echo "ERROR: "._QXZ("Call $stage could not be grabbed for $user\n");
 			}
 
 		$stmtD="SELECT * from vicidial_auto_calls where auto_call_id='$stage';";
