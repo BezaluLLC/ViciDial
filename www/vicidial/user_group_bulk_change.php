@@ -1,7 +1,7 @@
 <?php
 # user_group_bulk_change.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 81119-0918 - First build
@@ -13,6 +13,7 @@
 # 130610-1106 - Finalized changing of all ereg instances to preg
 # 130616-0106 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0837 - Changed to mysqli PHP functions
+# 141007-2112 - Finalized adding QXZ translation to all admin files
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -77,10 +78,10 @@ if ($auth_message == 'GOOD')
 
 if ($auth < 1)
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -104,7 +105,7 @@ $modify_users =				$row[4];
 if ( ($change_agent_campaign < 1 ) or ($modify_users < 1) )
 	{
 	header ("Content-type: text/html; charset=utf-8");
-	echo "You do not have permissions to modify users\n";
+	echo _QXZ("You do not have permissions to modify users")."\n";
 	exit;
 	}
 
@@ -174,7 +175,8 @@ require("admin_header.php");
 ?>
 
 <CENTER>
-<TABLE WIDTH=620 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; User Group Bulk Change</TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; </TD></TR>
+<TABLE WIDTH=620 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; .<?php echo
+_QXZ("User Group Bulk Change"); ?></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; </TD></TR>
 
 
 
@@ -189,7 +191,7 @@ if ($stage == "one_user_group_change")
 	$stmt="UPDATE vicidial_users set user_group='" . mysqli_real_escape_string($link, $group) . "' where user_group='" . mysqli_real_escape_string($link, $old_group) . "' $LOGadmin_viewable_groupsSQL;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 
-	echo "All User Group $old_group Users changed to the $group User Group<BR>\n";
+	echo _QXZ("All User Group $old_group Users changed to the")." $group "._QXZ("User Group")."<BR>\n";
 	
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|";
@@ -208,7 +210,7 @@ if ($stage == "all_user_group_change")
 	$stmt="UPDATE vicidial_users set user_group='" . mysqli_real_escape_string($link, $group) . "' where user_group!='ADMIN' and user_group < 7 $LOGadmin_viewable_groupsSQL;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 
-	echo "All non-Admin Users changed to the $group User Group<BR>\n";
+	echo _QXZ("All non-Admin Users changed to the")." $group "._QXZ("User Group")."<BR>\n";
 	
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|";
@@ -225,7 +227,7 @@ if ($stage == "all_user_group_change")
 echo "<form action=$PHP_SELF method=POST>\n";
 echo "<input type=hidden name=DB value=\"$DB\">\n";
 echo "<input type=hidden name=stage value=\"one_user_group_change\">\n";
-echo "Change Users in this group: <SELECT SIZE=1 NAME=old_group>\n";
+echo _QXZ("Change Users in this group").": <SELECT SIZE=1 NAME=old_group>\n";
 $o=0;
 while ($groups_to_print > $o)
 	{
@@ -233,7 +235,7 @@ while ($groups_to_print > $o)
 	$o++;
 	}
 echo "</SELECT>\n";
-echo "<BR> &nbsp; to this group: <SELECT SIZE=1 NAME=group>\n";
+echo "<BR> &nbsp; "._QXZ("to this group").": <SELECT SIZE=1 NAME=group>\n";
 $o=0;
 while ($groups_to_print > $o)
 	{
@@ -241,7 +243,7 @@ while ($groups_to_print > $o)
 	$o++;
 	}
 echo "</SELECT>\n";
-echo "<BR><CENTER><input type=submit name=submit value=SUBMIT></CENTER><BR></form>\n";
+echo "<BR><CENTER><input type=submit name=submit value='"._QXZ("SUBMIT")."'></CENTER><BR></form>\n";
 
 echo "\n<BR><BR><BR>";
 
@@ -251,7 +253,7 @@ echo "\n<BR><BR><BR>";
 echo "<form action=$PHP_SELF method=POST>\n";
 echo "<input type=hidden name=DB value=\"$DB\">\n";
 echo "<input type=hidden name=stage value=\"all_user_group_change\">\n";
-echo "Change ALL non-Admin Users to this group: <BR><SELECT SIZE=1 NAME=group>\n";
+echo _QXZ("Change ALL non-Admin Users to this group").": <BR><SELECT SIZE=1 NAME=group>\n";
 $o=0;
 while ($groups_to_print > $o)
 	{
@@ -259,7 +261,7 @@ while ($groups_to_print > $o)
 	$o++;
 	}
 echo "</SELECT>\n";
-echo "<BR><CENTER><input type=submit name=submit value=SUBMIT></CENTER><BR></form>\n";
+echo "<BR><CENTER><input type=submit name=submit value='"._QXZ("SUBMIT")."'></CENTER><BR></form>\n";
 
 echo "\n<BR>";
 
@@ -272,7 +274,7 @@ $RUNtime = ($ENDtime - $StarTtimE);
 echo "\n\n\n<br><br><br>\n\n";
 
 
-echo "<font size=0>\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds</font>";
+echo "<font size=0>\n\n\n<br><br><br>\n"._QXZ("script runtime").": $RUNtime "._QXZ("seconds")."</font>";
 
 echo "|$stage|$group|";
 

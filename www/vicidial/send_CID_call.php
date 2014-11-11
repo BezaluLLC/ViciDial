@@ -3,7 +3,7 @@
 #
 # Send calls with custom callerID numbers from web form
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: GPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: GPLv2
 #
 # CHANGES
 #
@@ -13,6 +13,7 @@
 # 130610-0943 - Finalized changing of all ereg instances to preg
 # 130616-2144 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0853 - Changed to mysqli PHP functions
+# 141007-2151 - Finalized adding QXZ translation to all admin files
 #
 
 require("dbconnect_mysqli.php");
@@ -77,10 +78,10 @@ if ($auth_message == 'GOOD')
 
 if ($auth < 1)
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -119,12 +120,12 @@ while ($i < $servers_to_print)
 	}
 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>VICIDIAL: Manual CID call</TITLE></HEAD><BODY BGCOLOR=WHITE>\n";
+echo "<TITLE>"._QXZ("VICIDIAL: Manual CID call")."</TITLE></HEAD><BODY BGCOLOR=WHITE>\n";
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
-echo "Sender: <INPUT TYPE=TEXT NAME=sender SIZE=12 MAXLENGTH=10 VALUE=\"$sender\"> &nbsp; &nbsp; \n";
-echo "Receiver: <INPUT TYPE=TEXT NAME=receiver SIZE=12 MAXLENGTH=10 VALUE=\"$receiver\"> &nbsp; &nbsp; \n";
-echo "CID Number: <INPUT TYPE=TEXT NAME=cid_number SIZE=12 MAXLENGTH=10 VALUE=\"$cid_number\"> &nbsp; &nbsp; \n";
-echo "Server: <SELECT SIZE=1 NAME=server_ip>\n";
+echo _QXZ("Sender").": <INPUT TYPE=TEXT NAME=sender SIZE=12 MAXLENGTH=10 VALUE=\"$sender\"> &nbsp; &nbsp; \n";
+echo _QXZ("Receiver").": <INPUT TYPE=TEXT NAME=receiver SIZE=12 MAXLENGTH=10 VALUE=\"$receiver\"> &nbsp; &nbsp; \n";
+echo _QXZ("CID Number").": <INPUT TYPE=TEXT NAME=cid_number SIZE=12 MAXLENGTH=10 VALUE=\"$cid_number\"> &nbsp; &nbsp; \n";
+echo _QXZ("Server").": <SELECT SIZE=1 NAME=server_ip>\n";
 $o=0;
 while ($servers_to_print > $o)
 	{
@@ -134,15 +135,15 @@ while ($servers_to_print > $o)
 	}
 echo "</SELECT> &nbsp; \n";
 echo "<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
-echo "<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
-echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+echo "<INPUT TYPE=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
+echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 echo "</FORM><BR>\n\n";
 
 
 if ( (strlen($sender) < 6) or (strlen($receiver) < 6) or (strlen($cid_number) < 6) or (strlen($server_ip) < 7) )
 	{
 	echo "\n\n";
-	echo "PLEASE ENTER A CALLER, RECEIVER AND CALLERID NUMBER ABOVE AND CLICK SUBMIT\n";
+	echo _QXZ("PLEASE ENTER A CALLER, RECEIVER AND CALLERID NUMBER ABOVE AND CLICK SUBMIT")."\n";
 	}
 
 else

@@ -1,7 +1,7 @@
 <?php
 # admin_NANPA_updater.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to launch NANPA filter batch proccesses through the
 # triggering process
@@ -10,10 +10,11 @@
 # 130919-1503 - First build of script
 # 131005-2035 - Added exclusion options
 # 131019-1112 - Added help text and several small tweaks
+# 141007-1123 - Finalized adding QXZ translation to all admin files
 #
 
-$version = '2.8-3';
-$build = '131019-1112';
+$version = '2.8-4';
+$build = '141007-1123';
 $startMS = microtime();
 
 require("dbconnect_mysqli.php");
@@ -126,7 +127,7 @@ if ($user_auth > 0)
 		}
 	if ( ($qc_auth < 1) and ($reports_auth < 1) and ($auth < 1) )
 		{
-		$VDdisplayMESSAGE = "You do not have permission to be here";
+		$VDdisplayMESSAGE = _QXZ("You do not have permission to be here");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -134,10 +135,10 @@ if ($user_auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -150,7 +151,7 @@ else
 
 if (strlen($active_voicemail_server)<7)
 	{
-	echo "ERROR: Admin -> System Settings -> Active Voicemail Server is not set\n";
+	echo _QXZ("ERROR: Admin -> System Settings -> Active Voicemail Server is not set")."\n";
 	exit;
 	}
 
@@ -237,7 +238,7 @@ echo "<html>\n";
 echo "<head>\n";
 echo "<!-- VERSION: $admin_version   BUILD: $build   ADD: $ADD   PHP_SELF: $PHP_SELF-->\n";
 echo "<META NAME=\"ROBOTS\" CONTENT=\"NONE\">\n";
-echo "<META NAME=\"COPYRIGHT\" CONTENT=\"&copy; 2013 ViciDial Group\">\n";
+echo "<META NAME=\"COPYRIGHT\" CONTENT=\"&copy; 2014 ViciDial Group\">\n";
 echo "<META NAME=\"AUTHOR\" CONTENT=\"ViciDial Group\">\n";
 if ($SSnocache_admin=='1')
 	{
@@ -251,7 +252,7 @@ if ( ($SSadmin_modify_refresh > 1) and (preg_match("/^3/",$ADD)) )
 	if (preg_match("/^3/",$ADD)) {$modify_url = "$PHP_SELF?$QUERY_STRING";}
 	echo "<META HTTP-EQUIV=\"REFRESH\" CONTENT=\"$SSadmin_modify_refresh;URL=$modify_url\">\n";
 	}
-echo "<title>ADMIN NANPA UPDATER</title>";
+echo "<title>"._QXZ("ADMIN NANPA UPDATER")."</title>";
 ?>
 <script language="Javascript">
 function StartRefresh() {
@@ -338,7 +339,7 @@ echo "\n<BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=
 require("admin_header.php");
 
 echo "<form action='$PHP_SELF' method='get' enctype='multipart/form-data'>";
-echo "<BR> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"$PHP_SELF\">CLICK HERE TO REFRESH THE PAGE</a>\n";
+echo "<BR> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"$PHP_SELF\">"._QXZ("CLICK HERE TO REFRESH THE PAGE")."</a>\n";
 echo "<BR>	<table align=left width='770' border=1 cellpadding=0 cellspacing=0 bgcolor=#D9E6FE>";
 
 if (mysqli_num_rows($schedule_rslt)>0 || (mysqli_num_rows($running_rslt)>0)) {
@@ -346,12 +347,12 @@ if (mysqli_num_rows($schedule_rslt)>0 || (mysqli_num_rows($running_rslt)>0)) {
 	if (mysqli_num_rows($schedule_rslt)>0) {
 		echo "<tr><td>";
 		echo "<table width='770' cellpadding=5 cellspacing=0>";
-		echo "<tr><th colspan='5' bgcolor='#015B91'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>Your scheduled NANPA scrubs &nbsp; $NWB#nanpa-running$NWE</th></tr>";
+		echo "<tr><th colspan='5' bgcolor='#015B91'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>"._QXZ("Your scheduled NANPA scrubs")." &nbsp; $NWB#nanpa-running$NWE</th></tr>";
 		echo "<tr>";
-		echo "<td align='left' bgcolor='#015B91' width='150'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>Date/time</th>";
-		echo "<td align='left' bgcolor='#015B91' width='300'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>Lists</th>";
-		echo "<td align='left' bgcolor='#015B91' width='100'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>Update field</th>";
-		echo "<td align='left' bgcolor='#015B91' width='150'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>Conversion lists</th>";
+		echo "<td align='left' bgcolor='#015B91' width='150'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>"._QXZ("Date/time")."</th>";
+		echo "<td align='left' bgcolor='#015B91' width='300'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>"._QXZ("Lists")."</th>";
+		echo "<td align='left' bgcolor='#015B91' width='100'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>"._QXZ("Update field")."</th>";
+		echo "<td align='left' bgcolor='#015B91' width='150'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>"._QXZ("Conversion lists")."</th>";
 		echo "<td align='left' bgcolor='#015B91' width='70'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>&nbsp;</th>";
 		echo "</tr>";
 		while ($row=mysqli_fetch_array($schedule_rslt)) {
@@ -394,11 +395,11 @@ if (mysqli_num_rows($schedule_rslt)>0 || (mysqli_num_rows($running_rslt)>0)) {
 			if (strlen($vl_update_field)==0) {$vl_update_field="**NONE**";}
 			if (strlen($conversion_lists)==0) {$conversion_lists="**NONE**";}
 			echo "<tr>";
-			echo "<td align='left'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>$row[trigger_time]</font><BR><FONT FACE=\"ARIAL,HELVETICA\" size='1' color='red'>($row[time_until_execution] until run time)</font></td>";
+			echo "<td align='left'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>$row[trigger_time]</font><BR><FONT FACE=\"ARIAL,HELVETICA\" size='1' color='red'>($row[time_until_execution] "._QXZ("until run time").")</font></td>";
 			echo "<td align='left'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>$lists</font></td>";
 			echo "<td align='left'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>$vl_update_field</font></td>";
 			echo "<td align='left'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>$conversion_lists</font></td>";
-			echo "<td align='center'><FONT FACE=\"ARIAL,HELVETICA\" size='1'><a href='$PHP_SELF?delete_trigger_id=$row[trigger_id]'>DELETE</a></font></td>";
+			echo "<td align='center'><FONT FACE=\"ARIAL,HELVETICA\" size='1'><a href='$PHP_SELF?delete_trigger_id=$row[trigger_id]'>"._QXZ("DELETE")."</a></font></td>";
 			echo "</tr>";
 		}
 		echo "</table>";
@@ -430,14 +431,14 @@ else
 	echo "<tr><td>";
 
 	echo "<table width='770' cellpadding=5 cellspacing=0>";
-	echo "<tr><th colspan='5' bgcolor='#015B91'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>NANPA scrub scheduler &nbsp; $NWB#nanpa-settings$NWE</th></tr>";
+	echo "<tr><th colspan='5' bgcolor='#015B91'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>"._QXZ("NANPA scrub scheduler")." &nbsp; $NWB#nanpa-settings$NWE</th></tr>";
 	echo "<tr>";
-	echo "<td align='left' valign='top' rowspan='4'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Inactive lists:<BR/>\n";
+	echo "<td align='left' valign='top' rowspan='4'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Inactive lists").":<BR/>\n";
 
 	$stmt="SELECT list_id, list_name from vicidial_lists where active='N' order by list_id asc";
 	$rslt=mysqli_query($link, $stmt);
 	echo "<select name='lists[]' multiple size='5'>\n";
-	echo "<option value='---ALL---'>---ALL LISTS---</option>\n";
+	echo "<option value='---ALL---'>---"._QXZ("ALL LISTS")."---</option>\n";
 	while ($row=mysqli_fetch_array($rslt)) 
 		{
 		echo "<option value='$row[0]'>$row[0] - $row[1]</option>\n";
@@ -445,11 +446,11 @@ else
 
 	echo "</select></font>";
 	echo "</td>";
-	echo "<td align='left' valign='top' rowspan='2'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Field to update (optional):<BR/>\n";
+	echo "<td align='left' valign='top' rowspan='2'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Field to update (optional)").":<BR/>\n";
 	echo "<select name='vl_field_update'>\n";
 	$stmt="SELECT * from vicidial_list limit 1";
 	$rslt=mysqli_query($link, $stmt);
-	echo "<option value=''>---NONE---</option>\n";
+	echo "<option value=''>---"._QXZ("NONE")."---</option>\n";
 	while ($fieldinfo=mysqli_fetch_field($rslt)) 
 		{
 		$fieldname=$fieldinfo->name;
@@ -460,50 +461,50 @@ else
 		}
 	echo "</select></font></td>";
 
-	echo "<td align='left' valign='top' colspan='2'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>List conversions (optional):</font></td>\n";
+	echo "<td align='left' valign='top' colspan='2'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("List conversions (optional)").":</font></td>\n";
 
-	echo "<td align='left' valign='top' rowspan='4'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Time until activation:<BR/>\n";
+	echo "<td align='left' valign='top' rowspan='4'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Time until activation").":<BR/>\n";
 	echo "<select name='activation_delay'>\n";
-	echo "<option value='1'>1 mins</option>\n";
-	echo "<option SELECTED value='5'>5 mins</option>\n";
-	echo "<option value='10'>10 mins</option>\n";
-	echo "<option value='15'>15 mins</option>\n";
-	echo "<option value='20'>20 mins</option>\n";
-	echo "<option value='30'>30 mins</option>\n";
-	echo "<option value='45'>45 mins</option>\n";
-	echo "<option value='60'>1 hour</option>\n";
-	echo "<option value='120'>2 hours</option>\n";
-	echo "<option value='180'>3 hours</option>\n";
-	echo "<option value='240'>4 hours</option>\n";
-	echo "<option value='480'>8 hours</option>\n";
+	echo "<option value='1'>1 "._QXZ("mins")."</option>\n";
+	echo "<option SELECTED value='5'>5 "._QXZ("mins")."</option>\n";
+	echo "<option value='10'>10 "._QXZ("mins")."</option>\n";
+	echo "<option value='15'>15 "._QXZ("mins")."</option>\n";
+	echo "<option value='20'>20 "._QXZ("mins")."</option>\n";
+	echo "<option value='30'>30 "._QXZ("mins")."</option>\n";
+	echo "<option value='45'>45 "._QXZ("mins")."</option>\n";
+	echo "<option value='60'>1 "._QXZ("hour")."</option>\n";
+	echo "<option value='120'>2 "._QXZ("hours")."</option>\n";
+	echo "<option value='180'>3 "._QXZ("hours")."</option>\n";
+	echo "<option value='240'>4 "._QXZ("hours")."</option>\n";
+	echo "<option value='480'>8 "._QXZ("hours")."</option>\n";
 	echo "</select></font></td>";
 	
 	echo "</tr>\n";
 	echo "<tr>";
-	echo "<td align='right'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Cellphone:</font></td><td align='left'><input type='text' name='cellphone_list_id' size='5' maxlength='10'></td>";
+	echo "<td align='right'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Cellphone").":</font></td><td align='left'><input type='text' name='cellphone_list_id' size='5' maxlength='10'></td>";
 	echo "</tr>";
 	echo "<tr>";
 
 
-	echo "<td align='left' valign='top' rowspan='2'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Exclusion field (optional):<BR/>\n";
+	echo "<td align='left' valign='top' rowspan='2'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Exclusion field (optional)").":<BR/>\n";
 	echo "<select name='vl_field_exclude'>\n";
 	$stmt="SELECT * from vicidial_list limit 1";
 	$rslt=mysqli_query($link, $stmt);
-	echo "<option value=''>---NONE---</option>\n";
+	echo "<option value=''>---"._QXZ("NONE")."---</option>\n";
 	while ($fieldinfo=mysqli_fetch_field($rslt)) 
 		{
 		$fieldname=$fieldinfo->name;
 		echo "<option value='$fieldname'>$fieldname</option>\n";
 		}
-	echo "</select><BR/><BR/>Exclusion value:<BR/><input type='text' name='exclusion_value' size='20' maxlength='50'></font></td>";
+	echo "</select><BR/><BR/>"._QXZ("Exclusion value").":<BR/><input type='text' name='exclusion_value' size='20' maxlength='50'></font></td>";
 
 
 
-	echo "<td align='right'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Landline:</font></td><td align='left'><input type='text' name='landline_list_id' size='5' maxlength='10'></td>";
+	echo "<td align='right'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Landline").":</font></td><td align='left'><input type='text' name='landline_list_id' size='5' maxlength='10'></td>";
 	echo "</tr>";
-	echo "<tr><td align='right'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Invalid:</font></td><td align='left'><input type='text' name='invalid_list_id' size='5' maxlength='10'></td></tr>";
+	echo "<tr><td align='right'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Invalid").":</font></td><td align='left'><input type='text' name='invalid_list_id' size='5' maxlength='10'></td></tr>";
 	echo "";
-	echo "<tr><td align='center' colspan='5'><input type='submit' value='SUBMIT' name='submit_form'></td></tr>";
+	echo "<tr><td align='center' colspan='5'><input type='submit' value='"._QXZ("SUBMIT")."' name='submit_form'></td></tr>";
 	echo "</table>";
 
 	echo "</td></tr>";
@@ -511,7 +512,7 @@ else
 echo "<tr><td>";
 echo "<table width='770' cellpadding=0 cellspacing=0 bgcolor='#FFFFFF'>";
 echo "<tr><td align='center'>";
-echo "<span id='past_NANPA_scrubs'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=1><a name='past_scrubs' href='#past_scrubs' onClick='ShowPastProcesses(10)'>View past scrubs &nbsp; $NWB#nanpa-log$NWE</font></span>";
+echo "<span id='past_NANPA_scrubs'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=1><a name='past_scrubs' href='#past_scrubs' onClick='ShowPastProcesses(10)'>"._QXZ("View past scrubs")." &nbsp; $NWB#nanpa-log$NWE</font></span>";
 echo "</td></tr>";
 echo "</table>";
 echo "</td></tr>";

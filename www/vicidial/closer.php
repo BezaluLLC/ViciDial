@@ -1,7 +1,7 @@
 <?php
 # closer.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # the purpose of this script and webpage is to allow for remote or local users of the system to log in and grab phone calls that are coming inbound into the Asterisk server and being put in the parked_channels table while they hear a soundfile for a limited amount of time before being forwarded on to either a set extension or a voicemail box. This gives remote or local agents a way to grab calls without tying up their phone lines all day. The agent sees the refreshing screen of calls on park and when they want to take one they just click on it, and a small window opens that will allow them to grab the call and/or look up more information on the caller through the callerID that is given(if available)
 # CHANGES
@@ -13,6 +13,7 @@
 # 130610-1116 - Finalized changing of all ereg instances to preg
 # 130620-0827 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-1934 - Changed to mysqli PHP functions
+# 141007-2212 - Finalized adding QXZ translation to all admin files
 #
 
 require("dbconnect_mysqli.php");
@@ -100,10 +101,10 @@ if ($auth_message == 'GOOD')
 
 if ($auth < 1)
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -146,7 +147,7 @@ $color_class[9] = 'orange';
 -->
  </STYLE>
 
-<TITLE>CLOSER: Main</TITLE></HEAD>
+<TITLE><?php echo _QXZ("CLOSER: Main"); ?></TITLE></HEAD>
 </HEAD>
 <BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 <CENTER><FONT FACE="Courier" COLOR=BLACK SIZE=3>
@@ -184,14 +185,14 @@ if (!$dialplan_number)
 				$groups[$i] =$row[0];
 				$i++;
 				}
-			echo "<br>Please select the groups you want to pick calls up from: <form action=$PHP_SELF method=GET>\n";
+			echo "<br>"._QXZ("Please select the groups you want to pick calls up from").": <form action=$PHP_SELF method=GET>\n";
 			echo "<table border=0><tr><td align=left>\n";
 			echo "<input type=hidden name=PHONE_LOGIN value=1>\n";
 			echo "<input type=hidden name=dialplan_number value=\"$dialplan_number\">\n";
 			echo "<input type=hidden name=extension value=\"$extension\">\n";
 			echo "<input type=hidden name=server_ip value=\"$server_ip\">\n";
 			echo "<input type=hidden name=DB value=\"$DB\">\n";
-			echo "Inbound Call Groups: <br>\n";
+			echo _QXZ("Inbound Call Groups").": <br>\n";
 				$o=0;
 				while ($groups_to_print > $o)
 				{
@@ -200,7 +201,7 @@ if (!$dialplan_number)
 					$o++;
 				}
 			echo "</td></tr></table>\n";
-			echo "<input type=submit name=submit value=submit>\n";
+			echo "<input type=submit name=submit value='"._QXZ("submit")."'>\n";
 			echo "<BR><BR><BR>\n";
 			}
 		else
@@ -218,27 +219,27 @@ if (!$dialplan_number)
 			echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 			echo"<META HTTP-EQUIV=Refresh CONTENT=\"3; URL=$PHP_SELF?dialplan_number=$dialplan_number&server_ip=$server_ip&extension=$extension&DB=$DB$form_groups\">\n";
 
-			echo "<font=green><b>extension found, forwarding you to closer page, please wait 3 seconds...</b></font>\n";
+			echo "<font=green><b>"._QXZ("extension found, forwarding you to closer page, please wait 3 seconds")."...</b></font>\n";
 			}
 
 		}
 		else
 		{
-		echo "<font=red><b>The extension you entered does not exist, please try again</b></font>\n";
-		echo "<br>Please enter your phone_ID: <form action=$PHP_SELF method=POST>\n";
+		echo "<font=red><b>"._QXZ("The extension you entered does not exist, please try again")."</b></font>\n";
+		echo "<br>"._QXZ("Please enter your phone_ID").": <form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=PHONE_LOGIN value=1>\n";
-		echo "phone station ID: <input type=text name=extension size=10 maxlength=10 value=\"$extension\"> &nbsp; \n";
-		echo "<input type=submit name=submit value=submit>\n";
+		echo _QXZ("phone station ID").": <input type=text name=extension size=10 maxlength=10 value=\"$extension\"> &nbsp; \n";
+		echo "<input type=submit name=submit value='"._QXZ("submit")."'>\n";
 		echo "<BR><BR><BR>\n";
 		}
 
 	}
 	else
 	{
-	echo "<br>Please enter your phone_ID: <form action=$PHP_SELF method=POST>\n";
+	echo "<br>"._QXZ("Please enter your phone_ID").": <form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=PHONE_LOGIN value=1>\n";
-	echo "phone station ID: <input type=text name=extension size=10 maxlength=10> &nbsp; \n";
-	echo "<input type=submit name=submit value=submit>\n";
+	echo _QXZ("phone station ID").": <input type=text name=extension size=10 maxlength=10> &nbsp; \n";
+	echo "<input type=submit name=submit value='"._QXZ("submit")."'>\n";
 	echo "<BR><BR><BR>\n";
 	}
 
@@ -264,12 +265,12 @@ echo"<META HTTP-EQUIV=Refresh CONTENT=\"5; URL=$PHP_SELF?dialplan_number=$dialpl
 
 
 
-echo "$NOW_TIME &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; $PHP_AUTH_USER - $fullname -  CALLS SENT TO: $dialplan_number<BR><BR>\n";
+echo "$NOW_TIME &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; $PHP_AUTH_USER - $fullname -  "._QXZ("CALLS SENT TO").": $dialplan_number<BR><BR>\n";
 
-echo "Click on the channel below that you would like to have directed to your phone<BR>\n";
+echo _QXZ("Click on the channel below that you would like to have directed to your phone")."<BR>\n";
 
 echo "<PRE>\n";
-echo "CHANNEL    SERVER        CHANNEL_GROUP   EXTENSION    PARKED_BY            PARKED_TIME         \n";
+echo _QXZ("CHANNEL",10)." "._QXZ("SERVER",13)." "._QXZ("CHANNEL_GROUP",15)." "._QXZ("EXTENSION",12)." "._QXZ("PARKED_BY",20)." "._QXZ("PARKED_TIME",20)."\n";
 echo "---------------------------------------------------------------------------------------------- \n";
 
 
@@ -330,7 +331,7 @@ $parked_count = $row[0];
 	{
 	echo "********************************************************************************************** \n";
 	echo "********************************************************************************************** \n";
-	echo "*************************************** NO PARKED CALLS ************************************** \n";
+	echo "*************************************** "._QXZ("NO PARKED CALLS",15)." ************************************** \n";
 	echo "********************************************************************************************** \n";
 	echo "********************************************************************************************** \n";
 	}
@@ -353,7 +354,7 @@ $RUNtime = ($ENDtime - $STARTtime);
 echo "</PRE>\n\n\n<br><br><br>\n\n";
 
 
-echo "<font size=0>\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds</font>";
+echo "<font size=0>\n\n\n<br><br><br>\n"._QXZ("script runtime").": $RUNtime "._QXZ("seconds")."</font>";
 
 
 ?>

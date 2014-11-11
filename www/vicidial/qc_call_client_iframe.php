@@ -14,6 +14,7 @@
 #             - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0905 - Changed to mysqli PHP functions
 # 140706-0826 - Incorporated includes into code
+# 141007-2156 - Finalized adding QXZ translation to all admin files
 #
 
 require("dbconnect_mysqli.php");
@@ -172,10 +173,10 @@ if ($auth_message == 'GOOD')
 
 if ($auth < 1)
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -197,35 +198,35 @@ $qc_user_level =	$rights_row[2];
 if ( $qc_enabled < 1 )
 	{
 	header ("Content-type: text/html; charset=utf-8");
-	echo "QC is not enabled for your user account\n";
+	echo _QXZ("QC is not enabled for your user account")."\n";
 	exit;
 	}
 if ( $qc_user_level < 1 )
 	{
 	header ("Content-type: text/html; charset=utf-8");
-	echo "QC user level is too low\n";
+	echo _QXZ("QC user level is too low")."\n";
 	exit;
 	}
 
-$label_title =				'Title';
-$label_first_name =			'First';
-$label_middle_initial =		'MI';
-$label_last_name =			'Last';
-$label_address1 =			'Address1';
-$label_address2 =			'Address2';
-$label_address3 =			'Address3';
-$label_city =				'City';
-$label_state =				'State';
-$label_province =			'Province';
-$label_postal_code =		'Postal Code';
-$label_vendor_lead_code =	'Vendor ID';
-$label_gender =				'Gender';
-$label_phone_number =		'Phone';
-$label_phone_code =			'DialCode';
-$label_alt_phone =			'Alt. Phone';
-$label_security_phrase =	'Show';
-$label_email =				'Email';
-$label_comments =			'Comments';
+$label_title =				_QXZ('Title');
+$label_first_name =			_QXZ('First');
+$label_middle_initial =		_QXZ('MI');
+$label_last_name =			_QXZ('Last');
+$label_address1 =			_QXZ('Address1');
+$label_address2 =			_QXZ('Address2');
+$label_address3 =			_QXZ('Address3');
+$label_city =				_QXZ('City');
+$label_state =				_QXZ('State');
+$label_province =			_QXZ('Province');
+$label_postal_code =		_QXZ('Postal Code');
+$label_vendor_lead_code =	_QXZ('Vendor ID');
+$label_gender =				_QXZ('Gender');
+$label_phone_number =		_QXZ('Phone');
+$label_phone_code =			_QXZ('DialCode');
+$label_alt_phone =			_QXZ('Alt. Phone');
+$label_security_phrase =	_QXZ('Show');
+$label_email =				_QXZ('Email');
+$label_comments =			_QXZ('Comments');
 
 ### find any custom field labels
 $stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
@@ -263,18 +264,18 @@ function is_user_logged_in($user)
 		{
         if($live_agent_count == '0')
 			{
-            return "Cannot call prospect. You are not logged in as $user.";
+            return _QXZ("Cannot call prospect. You are not logged in as")." $user.";
 			} 
 		else 
 			{
-            return "Cannot call prospect. $live_agent_count agents logged in as $user.";
+            return _QXZ("Cannot call prospect").". $live_agent_count "._QXZ("agents logged in as")." $user.";
 			}
 		}
     $row=mysqli_fetch_row($rslt);
     $status = $row[0];
     if($status!='PAUSED')
 		{
-        return "Status must be paused to call lead. $user is presently in $status status.";
+        return _QXZ("Status must be paused to call lead").". $user "._QXZ("is presently in")." $status "._QXZ("status").".";
 		}
 //@TODO: check user is in the correct CAMPAIGN for this lead.
     return true;
@@ -283,12 +284,12 @@ function is_user_logged_in($user)
 $qc_user_logged_in=is_user_logged_in($PHP_AUTH_USER);
 if ($qc_user_logged_in===true)
 	{
-    echo "<A HREF=qc_api.php?source=test&user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&agent_user=$PHP_AUTH_USER&function=external_dial_lead&value=$phone_number&phone_code=$phone_code&search=YES&preview=NO&focus=YES target='_SELF'>Call Lead</A>";
+    echo "<A HREF=qc_api.php?source=test&user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&agent_user=$PHP_AUTH_USER&function=external_dial_lead&value=$phone_number&phone_code=$phone_code&search=YES&preview=NO&focus=YES target='_SELF'>"._QXZ("Call Lead")."</A>";
 	} 
 else 
 	{
     echo "$qc_user_logged_in";
 	}
-echo "&nbsp;<A HREF=$PHP_SELF?lead_id=$lead_id&list_id=$CLlist_id&stage=DISPLAY&submit_button=YES&user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&bgcolor=E6E6E6>Refresh</A>";
+echo "&nbsp;<A HREF=$PHP_SELF?lead_id=$lead_id&list_id=$CLlist_id&stage=DISPLAY&submit_button=YES&user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&bgcolor=E6E6E6>"._QXZ("Refresh")."</A>";
 
 ?>

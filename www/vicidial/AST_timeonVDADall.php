@@ -453,7 +453,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo _QXZ("You are not allowed to view this report:")." |$PHP_AUTH_USER|$report_name|"._QXZ("$report_name")."|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|"._QXZ("$report_name")."|\n";
     exit;
 	}
 
@@ -603,7 +603,7 @@ $NFB = '<b><font size=6 face="courier">';
 $NFE = '</font></b>';
 $F=''; $FG=''; $B=''; $BG='';
 
-$select_list = "<TABLE WIDTH=700 CELLPADDING=5 BGCOLOR=\"#D9E6FE\"><TR><TD VALIGN=TOP>"._QXZ("Select Campaigns:")." <BR>";
+$select_list = "<TABLE WIDTH=700 CELLPADDING=5 BGCOLOR=\"#D9E6FE\"><TR><TD VALIGN=TOP>"._QXZ("Select Campaigns").": <BR>";
 $select_list .= "<SELECT SIZE=15 NAME=groups[] multiple>";
 $o=0;
 while ($groups_to_print > $o)
@@ -617,7 +617,7 @@ while ($groups_to_print > $o)
 $select_list .= "</SELECT>";
 $select_list .= "<BR><font size=1>"._QXZ("(To select more than 1 campaign, hold down the Ctrl key and click)")."<font>";
 
-$select_list .= "<BR><BR>"._QXZ("Select User Groups:")." <BR>";
+$select_list .= "<BR><BR>"._QXZ("Select User Groups").": <BR>";
 $select_list .= "<SELECT SIZE=8 NAME=user_group_filter[] ID=user_group_filter[] multiple>";
 $o=0;
 while ($o < $usergroups_to_print)
@@ -635,7 +635,7 @@ $select_list .= "<a href=\"#\" onclick=\"closeDiv(\'campaign_select_list\');\">"
 $select_list .= "<TABLE CELLPADDING=2 CELLSPACING=2 BORDER=0>";
 
 $select_list .= "<TR><TD align=right>";
-$select_list .= _QXZ("Inbound:")."  </TD><TD align=left><SELECT SIZE=1 NAME=with_inbound>";
+$select_list .= _QXZ("Inbound").":  </TD><TD align=left><SELECT SIZE=1 NAME=with_inbound>";
 $select_list .= "<option value=\"N\"";
 	if ($with_inbound=='N') {$select_list .= " selected";} 
 $select_list .= ">"._QXZ("No")."</option>";
@@ -648,7 +648,7 @@ $select_list .= ">"._QXZ("Only")."</option>";
 $select_list .= "</SELECT></TD></TR>";
 
 $select_list .= "<TR><TD align=right>";
-$select_list .= _QXZ("Monitor:")."  </TD><TD align=left><SELECT SIZE=1 NAME=monitor_active>";
+$select_list .= _QXZ("Monitor").":  </TD><TD align=left><SELECT SIZE=1 NAME=monitor_active>";
 $select_list .= "<option value=\"\"";
 	if (strlen($monitor_active) < 2) {$select_list .= " selected";} 
 $select_list .= ">"._QXZ("NONE")."</option>";
@@ -664,7 +664,7 @@ $select_list .= ">"._QXZ("BARGE")."</option>";
 $select_list .= "</SELECT></TD></TR>";
 
 $select_list .= "<TR><TD align=right>";
-$select_list .= _QXZ("Phone:")."  </TD><TD align=left>";
+$select_list .= _QXZ("Phone").":  </TD><TD align=left>";
 $select_list .= "<INPUT type=text size=10 maxlength=20 NAME=monitor_phone VALUE=\"$monitor_phone\">";
 $select_list .= "</TD></TR>";
 $select_list .= "<TR><TD align=center COLSPAN=2> &nbsp; </TD></TR>";
@@ -672,7 +672,7 @@ $select_list .= "<TR><TD align=center COLSPAN=2> &nbsp; </TD></TR>";
 if ($UGdisplay > 0)
 	{
 	$select_list .= "<TR><TD align=right>";
-	$select_list .= _QXZ("Select User Group:")."  </TD><TD align=left>";
+	$select_list .= _QXZ("Select User Group").":  </TD><TD align=left>";
 	$select_list .= "<SELECT SIZE=1 NAME=usergroup>";
 	$select_list .= "<option value=\"\">"._QXZ("ALL USER GROUPS")."</option>";
 	$o=0;
@@ -686,7 +686,7 @@ if ($UGdisplay > 0)
 	}
 
 $select_list .= "<TR><TD align=right>";
-$select_list .= _QXZ("Dialable Leads Alert:")."  </TD><TD align=left><SELECT SIZE=1 NAME=NOLEADSalert>";
+$select_list .= _QXZ("Dialable Leads Alert").":  </TD><TD align=left><SELECT SIZE=1 NAME=NOLEADSalert>";
 $select_list .= "<option value=\"\"";
 	if (strlen($NOLEADSalert) < 2) {$select_list .= " selected";} 
 $select_list .= ">"._QXZ("NO")."</option>";
@@ -696,7 +696,7 @@ $select_list .= ">"._QXZ("YES")."</option>";
 $select_list .= "</SELECT></TD></TR>";
 
 $select_list .= "<TR><TD align=right>";
-$select_list .= _QXZ("Show Drop In-Group Row:")."  </TD><TD align=left><SELECT SIZE=1 NAME=DROPINGROUPstats>";
+$select_list .= _QXZ("Show Drop In-Group Row").":  </TD><TD align=left><SELECT SIZE=1 NAME=DROPINGROUPstats>";
 $select_list .= "<option value=\"0\"";
 	if ($DROPINGROUPstats < 1) {$select_list .= " selected";} 
 $select_list .= ">"._QXZ("NO")."</option>";
@@ -706,7 +706,7 @@ $select_list .= ">"._QXZ("YES")."</option>";
 $select_list .= "</SELECT></TD></TR>";
 
 $select_list .= "<TR><TD align=right>";
-$select_list .= _QXZ("Show Carrier Stats:")."  </TD><TD align=left><SELECT SIZE=1 NAME=CARRIERstats>";
+$select_list .= _QXZ("Show Carrier Stats").":  </TD><TD align=left><SELECT SIZE=1 NAME=CARRIERstats>";
 $select_list .= "<option value=\"0\"";
 	if ($CARRIERstats < 1) {$select_list .= " selected";} 
 $select_list .= ">"._QXZ("NO")."</option>";
@@ -729,7 +729,7 @@ if ($presets_enabled_count > 0)
 if ($presets_enabled > 0)
 	{
 	$select_list .= "<TR><TD align=right>";
-	$select_list .= _QXZ("Show Presets Stats:")."  </TD><TD align=left><SELECT SIZE=1 NAME=PRESETstats>";
+	$select_list .= _QXZ("Show Presets Stats").":  </TD><TD align=left><SELECT SIZE=1 NAME=PRESETstats>";
 	$select_list .= "<option value=\"0\"";
 		if ($PRESETstats < 1) {$select_list .= " selected";} 
 	$select_list .= ">"._QXZ("NO")."</option>";
@@ -740,7 +740,7 @@ if ($presets_enabled > 0)
 	}
 
 $select_list .= "<TR><TD align=right>";
-$select_list .= _QXZ("Agent Time Stats:")."  </TD><TD align=left><SELECT SIZE=1 NAME=AGENTtimeSTATS>";
+$select_list .= _QXZ("Agent Time Stats").":  </TD><TD align=left><SELECT SIZE=1 NAME=AGENTtimeSTATS>";
 $select_list .= "<option value=\"0\"";
 	if ($AGENTtimeSTATS < 1) {$select_list .= " selected";} 
 $select_list .= ">"._QXZ("NO")."</option>";
@@ -757,7 +757,7 @@ $select_list .= "<TR><TD ALIGN=CENTER>";
 $select_list .= "<font size=1> &nbsp; </font>";
 $select_list .= "</TD>";
 $select_list .= "<TD NOWRAP align=right>";
-$select_list .= "<font size=1>"._QXZ("VERSION:")." $version &nbsp; "._QXZ("BUILD:")." $build</font>";
+$select_list .= "<font size=1>"._QXZ("VERSION").": $version &nbsp; "._QXZ("BUILD").": $build</font>";
 $select_list .= "</TD></TR></TABLE>";
 
 $open_list = "<TABLE WIDTH=250 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#D9E6FE\"><TR><TD ALIGN=CENTER><a href=\"#\" onclick=\"openDiv(\'campaign_select_list\');\"><font size=2>"._QXZ("Choose Report Display Options")."</a></TD></TR></TABLE>";
@@ -1236,21 +1236,21 @@ if ( ($ALLINGROUPstats > 0) or ( (preg_match('/O/',$with_inbound)) and ($adastat
 		$ingroup_detail .= "<TR bgcolor=\"$bgcolor\">";
 		$ingroup_detail .= "<TD ALIGN=RIGHT bgcolor=white><font size=2> &nbsp; &nbsp; &nbsp; &nbsp; </TD>";
 		$ingroup_detail .= "<TD ALIGN=RIGHT><font size=2><B>$ingroupdetail &nbsp; </B></TD>";
-		$ingroup_detail .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("CALLS TODAY:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $callsTODAY&nbsp; &nbsp; </TD>";
-		$ingroup_detail .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("TMA 1")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $PCThold_sec_stat_one% &nbsp; &nbsp; </TD>";
-		$ingroup_detail .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("Average Hold time for Answered Calls:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $AVGhold_sec_answer_calls &nbsp; </TD>";
+		$ingroup_detail .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("CALLS TODAY").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $callsTODAY&nbsp; &nbsp; </TD>";
+		$ingroup_detail .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("TMA")." 1</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $PCThold_sec_stat_one% &nbsp; &nbsp; </TD>";
+		$ingroup_detail .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("Average Hold time for Answered Calls").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $AVGhold_sec_answer_calls &nbsp; </TD>";
 		$ingroup_detail .= "</TR>";
 		$ingroup_detail .= "<TR bgcolor=\"$bgcolor\">";
 		$ingroup_detail .= "<TD ALIGN=RIGHT bgcolor=white><font size=2></TD><TD ALIGN=LEFT><font size=2></TD>";
-		$ingroup_detail .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROPS TODAY:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $dropsTODAY&nbsp; &nbsp; </TD>";
-		$ingroup_detail .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("TMA 2:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $PCThold_sec_stat_two% &nbsp; &nbsp; </TD>";
-		$ingroup_detail .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("Average Hold time for Dropped Calls:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $AVGhold_sec_drop_calls &nbsp; </TD>";
+		$ingroup_detail .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROPS TODAY").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $dropsTODAY&nbsp; &nbsp; </TD>";
+		$ingroup_detail .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("TMA")." 2:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $PCThold_sec_stat_two% &nbsp; &nbsp; </TD>";
+		$ingroup_detail .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("Average Hold time for Dropped Calls").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $AVGhold_sec_drop_calls &nbsp; </TD>";
 		$ingroup_detail .= "</TR>";
 		$ingroup_detail .= "<TR bgcolor=\"$bgcolor\">";
 		$ingroup_detail .= "<TD ALIGN=RIGHT bgcolor=white><font size=2></TD><TD ALIGN=LEFT><font size=2></TD>";
-		$ingroup_detail .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("ANSWERS TODAY:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $answersTODAY&nbsp; &nbsp; </TD>";
-		$ingroup_detail .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROP PERCENT:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $drpctTODAY%&nbsp; &nbsp; </TD>";
-		$ingroup_detail .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("Average Hold time for All Calls:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $AVGhold_sec_queue_calls &nbsp; </TD>";
+		$ingroup_detail .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("ANSWERS TODAY").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $answersTODAY&nbsp; &nbsp; </TD>";
+		$ingroup_detail .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROP PERCENT").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $drpctTODAY%&nbsp; &nbsp; </TD>";
+		$ingroup_detail .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("Average Hold time for All Calls").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $AVGhold_sec_queue_calls &nbsp; </TD>";
 		$ingroup_detail .= "</TR>";
 
 		$r++;
@@ -1294,9 +1294,9 @@ if ( ($DROPINGROUPstats > 0) and (!preg_match("/ALL-ACTIVE/",$group_string)) )
 
 	$DROPINGROUPstatsHTML .= "<TR BGCOLOR=\"#E6E6E6\">";
 	$DROPINGROUPstatsHTML .= "<TD ALIGN=RIGHT COLSPAN=2><font size=2><B>"._QXZ("DROP IN-GROUP STATS")." -</B></TD>";
-	$DROPINGROUPstatsHTML .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROP PERCENT:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $drpctTODAY% &nbsp; &nbsp; </TD>";
-	$DROPINGROUPstatsHTML .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("CALLS:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $callsTODAY &nbsp; &nbsp; </TD>";
-	$DROPINGROUPstatsHTML .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROPS/ANSWERS:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $dropsTODAY / $answersTODAY &nbsp; &nbsp; </TD>";
+	$DROPINGROUPstatsHTML .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROP PERCENT").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $drpctTODAY% &nbsp; &nbsp; </TD>";
+	$DROPINGROUPstatsHTML .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("CALLS").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $callsTODAY &nbsp; &nbsp; </TD>";
+	$DROPINGROUPstatsHTML .= "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROPS/ANSWERS").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $dropsTODAY / $answersTODAY &nbsp; &nbsp; </TD>";
 	$DROPINGROUPstatsHTML .= "</TR>";
 	}
 
@@ -1324,7 +1324,7 @@ if ($CARRIERstats > 0)
 	$CARRIERstatsHTML .= "<TR BGCOLOR=white><TD ALIGN=left COLSPAN=8>";
 	$CARRIERstatsHTML .= "<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0 BGCOLOR=white>";
 	$CARRIERstatsHTML .= "<TR BGCOLOR=\"#E6E6E6\">";
-	$CARRIERstatsHTML .= "<TD ALIGN=LEFT><font size=2><B>"._QXZ("CARRIER STATS:")." &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </B></TD>";
+	$CARRIERstatsHTML .= "<TD ALIGN=LEFT><font size=2><B>"._QXZ("CARRIER STATS").": &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </B></TD>";
 	$CARRIERstatsHTML .= "<TD ALIGN=LEFT><font size=2><B>&nbsp; "._QXZ("HANGUP STATUS")." &nbsp; </B></TD>";
 	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; "._QXZ("24 HOURS")." &nbsp; </B></TD>";
 	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; "._QXZ("6 HOURS")." &nbsp; </B></TD>";
@@ -1489,7 +1489,7 @@ if ($PRESETstats > 0)
 	$PRESETstatsHTML .= "<TR BGCOLOR=white><TD ALIGN=left COLSPAN=8>";
 	$PRESETstatsHTML .= "<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0 BGCOLOR=white>";
 	$PRESETstatsHTML .= "<TR BGCOLOR=\"#E6E6E6\">";
-	$PRESETstatsHTML .= "<TD ALIGN=LEFT><font size=2><B> &nbsp; "._QXZ("AGENT DIAL PRESETS:")." &nbsp; </B></TD>";
+	$PRESETstatsHTML .= "<TD ALIGN=LEFT><font size=2><B> &nbsp; "._QXZ("AGENT DIAL PRESETS").": &nbsp; </B></TD>";
 	$PRESETstatsHTML .= "<TD ALIGN=LEFT><font size=2><B> &nbsp; "._QXZ("PRESET NAMES")." &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </B></TD>";
 	$PRESETstatsHTML .= "<TD ALIGN=LEFT><font size=2><B> &nbsp; "._QXZ("CALLS")." &nbsp; </B></TD>";
 	$PRESETstatsHTML .= "</TR>";
@@ -1587,29 +1587,29 @@ if (preg_match('/O/',$with_inbound))
 	$AVG_ANSWERagent_non_pause_sec = sprintf("%01.2f", $AVG_ANSWERagent_non_pause_sec);
 
 	echo "<BR><table cellpadding=0 cellspacing=0><TR>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("CALLS TODAY:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $callsTODAY&nbsp; &nbsp; </TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("TMA 1:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $PCThold_sec_stat_one% &nbsp; &nbsp; </TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("Average Hold time for Answered Calls:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $AVGhold_sec_answer_calls &nbsp; </TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B> "._QXZ("TIME:")."</B> &nbsp; </TD><TD ALIGN=LEFT><font size=2> $NOW_TIME </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("CALLS TODAY").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $callsTODAY&nbsp; &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("TMA")." 1:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $PCThold_sec_stat_one% &nbsp; &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("Average Hold time for Answered Calls").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $AVGhold_sec_answer_calls &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B> "._QXZ("TIME").":</B> &nbsp; </TD><TD ALIGN=LEFT><font size=2> $NOW_TIME </TD>";
 	echo "";
 	echo "</TR>";
 	echo "<TR>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROPS TODAY:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $dropsTODAY&nbsp; &nbsp; </TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("TMA 2:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $PCThold_sec_stat_two% &nbsp; &nbsp; </TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("Average Hold time for Dropped Calls:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $AVGhold_sec_drop_calls &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROPS TODAY").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $dropsTODAY&nbsp; &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("TMA")." 2:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $PCThold_sec_stat_two% &nbsp; &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("Average Hold time for Dropped Calls").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $AVGhold_sec_drop_calls &nbsp; </TD>";
 	echo "<TD ALIGN=RIGHT><font size=2> </TD><TD ALIGN=LEFT><font size=2> </TD>";
 	echo "";
 	echo "</TR>";
 	echo "<TR>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("ANSWERS TODAY:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $answersTODAY&nbsp; &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("ANSWERS TODAY").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $answersTODAY&nbsp; &nbsp; </TD>";
 	echo "<TD ALIGN=RIGHT COLSPAN=2><font size=2><B>("._QXZ("Agent non-pause time / Answers").")</B></TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("Average Hold time for All Calls:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $AVGhold_sec_queue_calls &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("Average Hold time for All Calls").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $AVGhold_sec_queue_calls &nbsp; </TD>";
 	echo "<TD ALIGN=RIGHT><font size=2> </TD><TD ALIGN=LEFT><font size=2> </TD>";
 	echo "";
 	echo "</TR>";
 	echo "<TR>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROP PERCENT:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $drpctTODAY%&nbsp; &nbsp; </TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("PRODUCTIVITY:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $AVG_ANSWERagent_non_pause_sec &nbsp; &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROP PERCENT").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $drpctTODAY%&nbsp; &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("PRODUCTIVITY").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $AVG_ANSWERagent_non_pause_sec &nbsp; &nbsp; </TD>";
 	echo "<TD ALIGN=RIGHT><font size=2></TD><TD ALIGN=LEFT><font size=2></TD>";
 	echo "<TD ALIGN=RIGHT><font size=2></TD><TD ALIGN=LEFT><font size=2></TD>";
 	echo "";
@@ -1743,8 +1743,8 @@ else
 		if ($Lmix_to_print > 0)
 			{
 			$row=mysqli_fetch_row($rslt);
-			$DIALstatuses = _QXZ("List Mix:")." $row[0]";
-			$DIALorder =	_QXZ("List Mix:")." $row[0]";
+			$DIALstatuses = _QXZ("List Mix").": $row[0]";
+			$DIALorder =	_QXZ("List Mix").": $row[0]";
 			}
 		}
 	$DIALlev = sprintf("%01.3f", $DIALlev);
@@ -1753,10 +1753,10 @@ else
 
 
 	echo "<BR><table cellpadding=0 cellspacing=0><TR>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DIAL LEVEL:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALlev&nbsp; &nbsp; </TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("TRUNK SHORT/FILL:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $balanceSHORT / $balanceFILL &nbsp; &nbsp; </TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("FILTER:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALfilter &nbsp; </TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B> "._QXZ("TIME:")."</B> &nbsp; </TD><TD ALIGN=LEFT><font size=2> $NOW_TIME </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DIAL LEVEL").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALlev&nbsp; &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("TRUNK SHORT/FILL").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $balanceSHORT / $balanceFILL &nbsp; &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("FILTER").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALfilter &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B> "._QXZ("TIME").":</B> &nbsp; </TD><TD ALIGN=LEFT><font size=2> $NOW_TIME </TD>";
 	echo "";
 	echo "</TR>";
 
@@ -1767,37 +1767,37 @@ else
 			{$min_link='';}
 
 		echo "<TR BGCOLOR=\"#CCCCCC\">";
-		echo "<TD ALIGN=RIGHT>$min_link<font size=2>&nbsp; <B>"._QXZ("MAX LEVEL:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $maxDIALlev &nbsp; </TD>";
-		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROPPED MAX:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DROPmax% &nbsp; &nbsp;</TD>";
-		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("TARGET DIFF:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $targetDIFF &nbsp; &nbsp; </TD>";
-		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("INTENSITY:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $ADAintense &nbsp; &nbsp; </TD>";
+		echo "<TD ALIGN=RIGHT>$min_link<font size=2>&nbsp; <B>"._QXZ("MAX LEVEL").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $maxDIALlev &nbsp; </TD>";
+		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROPPED MAX").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DROPmax% &nbsp; &nbsp;</TD>";
+		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("TARGET DIFF").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $targetDIFF &nbsp; &nbsp; </TD>";
+		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("INTENSITY").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $ADAintense &nbsp; &nbsp; </TD>";
 		echo "</TR>";
 
 		echo "<TR BGCOLOR=\"#CCCCCC\">";
-		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DIAL TIMEOUT:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALtimeout &nbsp;</TD>";
-		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("TAPER TIME:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $TAPERtime &nbsp;</TD>";
-		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("LOCAL TIME:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $CALLtime &nbsp;</TD>";
-		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AVAIL ONLY:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $ADAavailonly &nbsp;</TD>";
+		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DIAL TIMEOUT").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALtimeout &nbsp;</TD>";
+		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("TAPER TIME").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $TAPERtime &nbsp;</TD>";
+		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("LOCAL TIME").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $CALLtime &nbsp;</TD>";
+		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AVAIL ONLY").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $ADAavailonly &nbsp;</TD>";
 		echo "</TR>";
 		}
 
 	echo "<TR>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DIALABLE LEADS:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DAleads &nbsp; &nbsp; </TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("CALLS TODAY:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $callsTODAY &nbsp; &nbsp; </TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AVG AGENTS:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $agentsONEMIN &nbsp; &nbsp; </TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DIAL METHOD:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALmethod &nbsp; &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DIALABLE LEADS").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DAleads &nbsp; &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("CALLS TODAY").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $callsTODAY &nbsp; &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AVG AGENTS").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $agentsONEMIN &nbsp; &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DIAL METHOD").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALmethod &nbsp; &nbsp; </TD>";
 	echo "</TR>";
 
 	echo "<TR>";
 	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("HOPPER")." <font size=1>( "._QXZ("min/auto")." )</font>:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $HOPlev / $AHOPlev &nbsp; &nbsp; </TD>";
 	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROPPED")." / $answers_text:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $dropsTODAY / $answersTODAY &nbsp; </TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DL DIFF:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $diffONEMIN &nbsp; &nbsp; </TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("STATUSES:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALstatuses &nbsp; &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DL DIFF").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $diffONEMIN &nbsp; &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("STATUSES").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALstatuses &nbsp; &nbsp; </TD>";
 	echo "</TR>";
 
 	echo "<TR>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("LEADS IN HOPPER:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $VDhop &nbsp; &nbsp; </TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROPPED PERCENT:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; ";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("LEADS IN HOPPER").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $VDhop &nbsp; &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROPPED PERCENT").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; ";
 	if ($drpctTODAY >= $DROPmax)
 		{echo "<font color=red><B>$drpctTODAY%</B></font>";}
 	else
@@ -1805,8 +1805,8 @@ else
 	echo " &nbsp; &nbsp;</TD>";
 
 
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DIFF:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $diffpctONEMIN% &nbsp; &nbsp; </TD>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("ORDER:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALorder &nbsp; &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DIFF").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $diffpctONEMIN% &nbsp; &nbsp; </TD>";
+	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("ORDER").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALorder &nbsp; &nbsp; </TD>";
 	echo "</TR>";
 
 	if ($AGENTtimeSTATS>0)
@@ -1828,10 +1828,10 @@ else
 		$avgacwTODAY = sprintf("%01.0f", $avgacwTODAY);
 
 		echo "<TR>";
-		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AGENT AVG WAIT:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgwaitTODAY &nbsp;</TD>";
-		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AVG CUSTTIME:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgcustTODAY &nbsp;</TD>";
-		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AVG ACW:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgacwTODAY &nbsp;</TD>";
-		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AVG PAUSE:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgpauseTODAY &nbsp;</TD>";
+		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AGENT AVG WAIT").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgwaitTODAY &nbsp;</TD>";
+		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AVG CUSTTIME").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgcustTODAY &nbsp;</TD>";
+		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AVG ACW").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgacwTODAY &nbsp;</TD>";
+		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AVG PAUSE").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgpauseTODAY &nbsp;</TD>";
 		echo "</TR>";
 		}
 
@@ -1945,7 +1945,7 @@ if ( ($with_inbound != 'O') and ($NOLEADSalert == 'YES') )
 		echo "<span style=\"position:absolute;left:0px;top:47px;z-index:15;\" id=no_dialable_leads_span>\n";
 		echo "<TABLE WIDTH=700 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#E9E6EE\"><TR><TD ALIGN=CENTER>\n";
 		echo "<BR><BR><BR><BR><a href=\"#\" onclick=\"closeAlert('no_dialable_leads_span');\">"._QXZ("Close Alert")."</a>";
-		echo "<BR><BR><BR><BR><BR><b>"._QXZ("Campaigns with no dialable leads:")."<BR><BR>$NDLcampaigns<b><BR>";
+		echo "<BR><BR><BR><BR><BR><b>"._QXZ("Campaigns with no dialable leads").":<BR><BR>$NDLcampaigns<b><BR>";
 		echo "<BR><BR><BR><BR><BR><BR><BR><BR><BR><BR><BR> &nbsp; ";
 		echo "</TD></TR></TABLE>\n";
 		echo "</span>\n";
@@ -2183,7 +2183,7 @@ if ($campaignord=='campaignup') {$campaignord='campaigndown';}
   else {$campaignord='campaignup';}
 
 $Aecho = '';
-$Aecho .= "VICIDIAL: "._QXZ("Agents Time On Calls Campaign:")." $group_string            $NOW_TIME\n";
+$Aecho .= "VICIDIAL: "._QXZ("Agents Time On Calls Campaign").": $group_string            $NOW_TIME\n";
 
 
 $HDbegin =			"+";
@@ -2776,7 +2776,7 @@ $talking_to_print = mysqli_num_rows($rslt);
 
 		$Aecho .= "$Aline";
 		$Aecho .= "  $agentcount "._QXZ("agents logged in on all servers\n");
-		$Aecho .= "  "._QXZ("System Load Average:")." $load_ave  &nbsp; $db_source\n\n";
+		$Aecho .= "  "._QXZ("System Load Average").": $load_ave  &nbsp; $db_source\n\n";
 
 	#	$Aecho .= "  <SPAN class=\"orange\"><B>          </SPAN> - "._QXZ("Balanced call")."</B>\n";
 		$Aecho .= "  <SPAN class=\"lightblue\"><B>          </SPAN> - "._QXZ("Agent waiting for call")."</B>\n";

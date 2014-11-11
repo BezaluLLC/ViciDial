@@ -1,7 +1,7 @@
 <?php
 # lead_tools.php - Various tools for lead basic lead management.
 #
-# Copyright (C) 2013  Matt Florell,Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell,Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 121110-1446 - Initial Build
@@ -11,10 +11,11 @@
 # 130619-2203 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-1927 - Changed to mysqli PHP functions
 # 131016-2029 - Added links to advanced lead tools
+# 141007-2039 - Finalized adding QXZ translation to all admin files
 #
 
-$version = '2.8-7';
-$build = '131016-2029';
+$version = '2.8-8';
+$build = '141007-2039';
 
 # This limit is to prevent data inconsistancies.
 # If there are too many leads in a list this
@@ -105,10 +106,10 @@ if ($auth_message == 'GOOD')
 
 if ($auth < 1)
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -138,19 +139,19 @@ $modify_lists =		$rights_row[4];
 if ( $load_leads < 1 )
 	{
 	header ("Content-type: text/html; charset=utf-8");
-	echo "You do not have permissions to load leads\n";
+	echo _QXZ("You do not have permissions to load leads")."\n";
 	exit;
 	}
 if ( $modify_leads < 1 )
 	{
 	header ("Content-type: text/html; charset=utf-8");
-	echo "You do not have permissions to modify leads\n";
+	echo _QXZ("You do not have permissions to modify leads")."\n";
 	exit;
 	}
 if ( $modify_lists < 1 )
 	{
 	header ("Content-type: text/html; charset=utf-8");
-	echo "You do not have permissions to modify lists\n";
+	echo _QXZ("You do not have permissions to modify lists")."\n";
 	exit;
 	}
 
@@ -158,7 +159,7 @@ echo "<html>\n";
 echo "<head>\n";
 echo "<META HTTP-EQUIV='Content-Type' CONTENT='text/html; charset=utf-8'>\n";
 echo "<!-- VERSION: <?php echo $version ?>     BUILD: <?php echo $build ?> -->\n";
-echo "<title>ADMINISTRATION: Lead Tools</title>\n";
+echo "<title>"._QXZ("ADMINISTRATION: Lead Tools")."</title>\n";
 
 ##### BEGIN Set variables to make header show properly #####
 $ADD =                               '999998';
@@ -185,7 +186,7 @@ echo "<table width=$page_width bgcolor=#E6E6E6 cellpadding=2 cellspacing=0>\n";
 echo "<tr bgcolor='#E6E6E6'>\n";
 echo "<td align=left>\n";
 echo "<font face='ARIAL,HELVETICA' size=2>\n";
-echo "<b> &nbsp; Basic Lead Tools &nbsp; | &nbsp; <a href=\"lead_tools_advanced.php\">Advanced Lead Tools</a></b>\n";
+echo "<b> &nbsp; "._QXZ("Basic Lead Tools")." &nbsp; | &nbsp; <a href=\"lead_tools_advanced.php\">"._QXZ("Advanced Lead Tools")."</a></b>\n";
 echo "</font>\n";
 echo "</td>\n";
 echo "<td align=right><font face='ARIAL,HELVETICA' size=2><b> &nbsp; </td>\n";
@@ -227,19 +228,19 @@ if ($move_submit == "move" )
 	$move_count_op_phrase="";
 	if ( $move_count_op == "<" )
 		{
-		$move_count_op_phrase= "less than ";
+		$move_count_op_phrase= _QXZ("less than")." ";
 		}
 	elseif ( $move_count_op == "<=" )
 		{
-		$move_count_op_phrase= "less than or equal to ";
+		$move_count_op_phrase= _QXZ("less than or equal to")." ";
 		}
 	elseif ( $move_count_op == ">" )
 		{
-		$move_count_op_phrase= "greater than ";
+		$move_count_op_phrase= _QXZ("greater than")." ";
 		}
 	elseif ( $move_count_op == ">=" )
 		{
-		$move_count_op_phrase= "greater than or equal to ";
+		$move_count_op_phrase= _QXZ("greater than or equal to")." ";
 		}
 
 	# get the number of leads this action will move
@@ -266,13 +267,13 @@ if ($move_submit == "move" )
 		echo "<!-- VERSION: $version     BUILD: $build -->\n";
 		echo "</head>\n";
 		echo "<body>\n";
-		echo "<p>Sorry. This operation will cause list $move_to_list to exceed $list_lead_limit leads which is not allowed.</p>\n";
-		echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
+		echo "<p>"._QXZ("Sorry. This operation will cause list")." $move_to_list "._QXZ("to exceed")." $list_lead_limit "._QXZ("leads which is not allowed").".</p>\n";
+		echo "<p><a href='$PHP_SELF'>"._QXZ("Click here to start over").".</a></p>\n";
 		echo "</body>\n</html>\n";
 		}
 	else
 		{
-		echo "<p>You are about to move $move_lead_count leads from list $move_from_list to $move_to_list with the status $move_status and that were called $move_count_op_phrase$move_count_num times. Please press confirm to continue.</p>\n";
+		echo "<p>"._QXZ("You are about to move")." $move_lead_count "._QXZ("leads from list")." $move_from_list "._QXZ("to")." $move_to_list "._QXZ("with the status")." $move_status "._QXZ("and that were called")." $move_count_op_phrase$move_count_num "._QXZ("times").". "._QXZ("Please press confirm to continue").".</p>\n";
 		echo "<center><form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=move_from_list value='$move_from_list'>\n";
 		echo "<input type=hidden name=move_to_list value='$move_to_list'>\n";
@@ -281,7 +282,7 @@ if ($move_submit == "move" )
 		echo "<input type=hidden name=move_count_num value='$move_count_num'>\n";
 		echo "<input type=submit name=confirm_move value=confirm>\n";
 		echo "</form></center>\n";
-				echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
+				echo "<p><a href='$PHP_SELF'>"._QXZ("Click here to start over").".</a></p>\n";
 		echo "</body>\n</html>\n";
 		}
 	}
@@ -316,19 +317,19 @@ if ($confirm_move == "confirm")
 	$move_count_op_phrase="";
 	if ( $move_count_op == "<" )
 		{
-		$move_count_op_phrase= "less than ";
+		$move_count_op_phrase= _QXZ("less than")." ";
 		}
 	elseif ( $move_count_op == "<=" )
 		{
-		$move_count_op_phrase= "less than or equal to ";
+		$move_count_op_phrase= _QXZ("less than or equal to")." ";
 		}
 	elseif ( $move_count_op == ">" )
 		{
-		$move_count_op_phrase= "greater than ";
+		$move_count_op_phrase= _QXZ("greater than")." ";
 		}
 	elseif ( $move_count_op == ">=" )
 		{
-		$move_count_op_phrase= "greater than or equal to ";
+		$move_count_op_phrase= _QXZ("greater than or equal to")." ";
 		}
 
 	$move_lead_stmt = "UPDATE vicidial_list SET list_id = '$move_to_list' WHERE list_id = '$move_from_list' and status like '$move_status' and called_count $move_count_op $move_count_num";
@@ -346,7 +347,7 @@ if ($confirm_move == "confirm")
 	$admin_log_rslt=mysql_to_mysqli($admin_log_stmt, $link);
 
 	echo "<p>$move_sentence</p>";
-	echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
+	echo "<p><a href='$PHP_SELF'>"._QXZ("Click here to start over").".</a></p>\n";
 	}
 
 
@@ -380,19 +381,19 @@ if ($update_submit == "update" )
 	$update_count_op_phrase="";
 	if ( $update_count_op == "<" )
 		{
-		$update_count_op_phrase= "less than ";
+		$update_count_op_phrase= _QXZ("less than")." ";
 		}
 	elseif ( $update_count_op == "<=" )
 		{
-		$update_count_op_phrase= "less than or equal to ";
+		$update_count_op_phrase= _QXZ("less than or equal to")." ";
 		}
 	elseif ( $update_count_op == ">" )
 		{
-		$update_count_op_phrase= "greater than ";
+		$update_count_op_phrase= _QXZ("greater than")." ";
 		}
 	elseif ( $update_count_op == ">=" )
 		{
-		$update_count_op_phrase= "greater than or equal to ";
+		$update_count_op_phrase= _QXZ("greater than or equal to")." ";
 		}
 
 	# get the number of leads this action will move
@@ -403,7 +404,7 @@ if ($update_submit == "update" )
 	$update_lead_count_row = mysqli_fetch_row($update_lead_count_rslt);
 	$update_lead_count = $update_lead_count_row[0];
 
-	echo "<p>You are about to update $update_lead_count leads in list $update_list from the status $update_from_status to the status $update_to_status that were called $update_count_op_phrase$update_count_num times. Please press confirm to continue.</p>\n";
+	echo "<p>"._QXZ("You are about to update")." $update_lead_count "._QXZ("leads in list")." $update_list "._QXZ("from the status")." $update_from_status "._QXZ("to the status")." $update_to_status "._QXZ("that were called")." $update_count_op_phrase$update_count_num "._QXZ("times").". "._QXZ("Please press confirm to continue").".</p>\n";
 	echo "<center><form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=update_list value='$update_list'>\n";
 	echo "<input type=hidden name=update_from_status value='$update_from_status'>\n";
@@ -412,7 +413,7 @@ if ($update_submit == "update" )
 	echo "<input type=hidden name=update_count_num value='$update_count_num'>\n";
 	echo "<input type=submit name=confirm_update value=confirm>\n";
 	echo "</form></center>\n";
-	echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
+	echo "<p><a href='$PHP_SELF'>"._QXZ("Click here to start over").".</a></p>\n";
 	echo "</body>\n</html>\n";
 
 	}
@@ -447,19 +448,19 @@ if ($confirm_update == "confirm")
 	$update_count_op_phrase="";
 	if ( $update_count_op == "<" )
 		{
-		$update_count_op_phrase= "less than ";
+		$update_count_op_phrase= _QXZ("less than")." ";
 		}
 	elseif ( $update_count_op == "<=" )
 		{
-		$update_count_op_phrase= "less than or equal to ";
+		$update_count_op_phrase= _QXZ("less than or equal to")." ";
 		}
 	elseif ( $update_count_op == ">" )
 		{
-		$update_count_op_phrase= "greater than ";
+		$update_count_op_phrase= _QXZ("greater than")." ";
 		}
 	elseif ( $update_count_op == ">=" )
 		{
-		$update_count_op_phrase= "greater than or equal to ";
+		$update_count_op_phrase= _QXZ("greater than or equal to")." ";
 		}
 
 	$update_lead_stmt = "UPDATE vicidial_list SET status = '$update_to_status' WHERE list_id = '$update_list' and status = '$update_from_status' and called_count $update_count_op $update_count_num";
@@ -477,7 +478,7 @@ if ($confirm_update == "confirm")
 		$admin_log_rslt=mysql_to_mysqli($admin_log_stmt, $link);
 
 	echo "<p>$update_sentence</p>";
-	echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
+	echo "<p><a href='$PHP_SELF'>"._QXZ("Click here to start over").".</a></p>\n";
 	}
 
 
@@ -507,19 +508,19 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	$delete_count_op_phrase="";
 		if ( $delete_count_op == "<" )
 		{
-		$delete_count_op_phrase= "less than ";
+		$delete_count_op_phrase= _QXZ("less than")." ";
 		}
 	elseif ( $delete_count_op == "<=" )
 		{
-		$delete_count_op_phrase= "less than or equal to ";
+		$delete_count_op_phrase= _QXZ("less than or equal to")." ";
 		}
 	elseif ( $delete_count_op == ">" )
 		{
-		$delete_count_op_phrase= "greater than ";
+		$delete_count_op_phrase= _QXZ("greater than")." ";
 		}
 	elseif ( $delete_count_op == ">=" )
 		{
-		$delete_count_op_phrase= "greater than or equal to ";
+		$delete_count_op_phrase= _QXZ("greater than or equal to")." ";
 		}
 
 	# get the number of leads this action will move
@@ -530,7 +531,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	$delete_lead_count_row = mysqli_fetch_row($delete_lead_count_rslt);
 	$delete_lead_count = $delete_lead_count_row[0];
 
-	echo "<p>You are about to delete $delete_lead_count leads in list $delete_list with the status $delete_status that were called $delete_count_op_phrase$delete_count_num times. Please press confirm to continue.</p>\n";
+	echo "<p>"._QXZ("You are about to delete")." $delete_lead_count "._QXZ("leads in list")." $delete_list "._QXZ("with the status")." $delete_status "._QXZ("that were called")." $delete_count_op_phrase$delete_count_num "._QXZ("times").". "._QXZ("Please press confirm to continue").".</p>\n";
 	echo "<center><form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=delete_list value='$delete_list'>\n";
 	echo "<input type=hidden name=delete_status value='$delete_status'>\n";
@@ -538,7 +539,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	echo "<input type=hidden name=delete_count_num value='$delete_count_num'>\n";
 	echo "<input type=submit name=confirm_delete value=confirm>\n";
 	echo "</form></center>\n";
-	echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
+	echo "<p><a href='$PHP_SELF'>"._QXZ("Click here to start over").".</a></p>\n";
 	echo "</body>\n</html>\n";
 
 	}
@@ -569,19 +570,19 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 	$delete_count_op_phrase="";
 	if ( $delete_count_op == "<" )
 		{
-		$delete_count_op_phrase= "less than ";
+		$delete_count_op_phrase= _QXZ("less than")." ";
 		}
 	elseif ( $delete_count_op == "<=" )
 		{
-		$delete_count_op_phrase= "less than or equal to ";
+		$delete_count_op_phrase= _QXZ("less than or equal to")." ";
 		}
 	elseif ( $delete_count_op == ">" )
 		{
-		$delete_count_op_phrase= "greater than ";
+		$delete_count_op_phrase= _QXZ("greater than")." ";
 		}
 	elseif ( $delete_count_op == ">=" )
 		{
-		$delete_count_op_phrase= "greater than or equal to ";
+		$delete_count_op_phrase= _QXZ("greater than or equal to")." ";
 		}
 
 	$delete_lead_stmt = "DELETE FROM vicidial_list WHERE list_id = '$delete_list' and status = '$delete_status' and called_count $delete_count_op $delete_count_num";
@@ -589,7 +590,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 	$delete_lead_rslt = mysql_to_mysqli($delete_lead_stmt, $link);
 	$delete_lead_count = mysqli_affected_rows($link);
 
-		$delete_sentence = "$delete_lead_count leads delete from list $delete_list with the status $delete_status that were called $delete_count_op_phrase$delete_count_num times.";
+		$delete_sentence = "$delete_lead_count "._QXZ("leads delete from list")." $delete_list "._QXZ("with the status")." $delete_status "._QXZ("that were called")." $delete_count_op_phrase$delete_count_num "._QXZ("times").".";
 		
 		$SQL_log = "$update_lead_stmt|";
 		$SQL_log = preg_replace('/;/', '', $SQL_log);
@@ -599,7 +600,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		$admin_log_rslt=mysql_to_mysqli($admin_log_stmt, $link);
 		
 	echo "<p>$delete_sentence</p>";
-	echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
+	echo "<p><a href='$PHP_SELF'>"._QXZ("Click here to start over").".</a></p>\n";
 	}
 
 # main page display
@@ -618,7 +619,7 @@ if (
 	$allowed_campaigns_sql = "";
 	if ( preg_match("/ALL\-CAMPAIGNS/i",$allowed_campaigns) )
 		{
-		if ($DB) { echo "|Processing All Campaigns|\n"; }
+		if ($DB) { echo "|"._QXZ("Processing All Campaigns")."|\n"; }
 		$campaign_id_stmt = "SELECT campaign_id FROM vicidial_campaigns";
 		$campaign_id_rslt = mysql_to_mysqli($campaign_id_stmt, $link);
 		$campaign_id_num_rows = mysqli_num_rows($campaign_id_rslt);
@@ -716,15 +717,15 @@ if (
 		}
 
 
-	echo "<p>The following are basic lead management tools.  They will only work on inactive lists with less than $list_lead_limit leads in them. This is to avoid data inconsistencies.</p>";
+	echo "<p>"._QXZ("The following are basic lead management tools.  They will only work on inactive lists with less than")." $list_lead_limit "._QXZ("leads in them").". "._QXZ("This is to avoid data inconsistencies").".</p>";
 	echo "<form action=$PHP_SELF method=POST>\n";
 	echo "<center><table width=$section_width cellspacing=3>\n";
 
 	# BEGIN lead move
-	echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><b>Move Leads</b></font></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>From List</td><td align=left>\n";
+	echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><b>"._QXZ("Move Leads")."</b></font></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("From List")."</td><td align=left>\n";
 	echo "<select size=1 name=move_from_list>\n";
-	echo "<option value='-'>Select A List</option>\n";
+	echo "<option value='-'>"._QXZ("Select A List")."</option>\n";
 
 	$i = 0;
 	while ( $i < $allowed_lists_count )
@@ -734,9 +735,9 @@ if (
 		}
 
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>To List</td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("To List")."</td><td align=left>\n";
 	echo "<select size=1 name=move_to_list>\n";
-	echo "<option value='-'>Select A List</option>\n";
+	echo "<option value='-'>"._QXZ("Select A List")."</option>\n";
 
 	$i = 0;
 	while ( $i < $allowed_lists_count )
@@ -746,10 +747,10 @@ if (
 		}
 
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Status</td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Status")."</td><td align=left>\n";
 	echo "<select size=1 name=move_status>\n";
-	echo "<option value='-'>Select A Status</option>\n";
-	echo "<option value='%'>All Statuses</option>\n";
+	echo "<option value='-'>"._QXZ("Select A Status")."</option>\n";
+	echo "<option value='%'>"._QXZ("All Statuses")."</option>\n";
 
 	$i = 0;
 	while ( $i < $status_count )
@@ -759,7 +760,7 @@ if (
 		}
 		
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Called Count</td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Called Count")."</td><td align=left>\n";
 	echo "<select size=1 name=move_count_op>\n";
 	echo "<option value='<'><</option>\n";
 	echo "<option value='<='><=</option>\n";
@@ -775,28 +776,28 @@ if (
 		$i++;
 		}
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td colspan=2 align=center><input type=submit name=move_submit value=move></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td colspan=2 align=center><input type=submit name=move_submit value='"._QXZ("move")."'></td></tr>\n";
 	echo "</table></center>\n";
 	# END lead move
 
 	# BEGIN Status Update
 	echo "<br /><center><table width=$section_width cellspacing=3>\n";
-	echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><b>Update Lead Statuses</b></font></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>List</td><td align=left>\n";
+	echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><b>"._QXZ("Update Lead Statuses")."</b></font></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List")."</td><td align=left>\n";
 	echo "<select size=1 name=update_list>\n";
-	echo "<option value='-'>Select A List</option>\n";
+	echo "<option value='-'>"._QXZ("Select A List")."</option>\n";
 
 	$i = 0;
 	while ( $i < $allowed_lists_count )
 		{
-		echo "<option value='$list_ary[$i]'>$list_ary[$i] - $list_name_ary[$i] ($list_lead_count_ary[$i] leads)</option>\n";
+		echo "<option value='$list_ary[$i]'>$list_ary[$i] - $list_name_ary[$i] ($list_lead_count_ary[$i] "._QXZ("leads").")</option>\n";
 		$i++;
 		}
 
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>From Status</td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("From Status")."</td><td align=left>\n";
 	echo "<select size=1 name=update_from_status>\n";
-	echo "<option value='-'>Select A Status</option>\n";
+	echo "<option value='-'>"._QXZ("Select A Status")."</option>\n";
 
 	$i = 0;
 	while ( $i < $status_count )
@@ -806,9 +807,9 @@ if (
 		}
 
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>To Status</td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("To Status")."</td><td align=left>\n";
 	echo "<select size=1 name=update_to_status>\n";
-	echo "<option value='-'>Select A Status</option>\n";
+	echo "<option value='-'>"._QXZ("Select A Status")."</option>\n";
 
 	$i = 0;
 	while ( $i < $sys_status_count )
@@ -818,7 +819,7 @@ if (
 		}
 
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Called Count</td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Called Count")."</td><td align=left>\n";
 	echo "<select size=1 name=update_count_op>\n";
 	echo "<option value='<'><</option>\n";
 	echo "<option value='<='><=</option>\n";
@@ -834,7 +835,7 @@ if (
 		$i++;
 		}
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td colspan=2 align=center><input type=submit name=update_submit value=update></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td colspan=2 align=center><input type=submit name=update_submit value='"._QXZ("update")."'></td></tr>\n";
 	# END Status Update
 
 	if ( $delete_lists > 0 )
@@ -842,22 +843,22 @@ if (
 		# BEGIN Delete Leads
 		echo "</table></center>\n";
 		echo "<br /><center><table width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><b>Delete Leads</b></font></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>List</td><td align=left>\n";
+		echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><b>"._QXZ("Delete Leads")."</b></font></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List")."</td><td align=left>\n";
 		echo "<select size=1 name=delete_list>\n";
-		echo "<option value='-'>Select A List</option>\n";
+		echo "<option value='-'>"._QXZ("Select A List")."</option>\n";
 
 		$i = 0;
 		while ( $i < $allowed_lists_count )
 			{
-			echo "<option value='$list_ary[$i]'>$list_ary[$i] - $list_name_ary[$i] ($list_lead_count_ary[$i] leads)</option>\n";
+			echo "<option value='$list_ary[$i]'>$list_ary[$i] - $list_name_ary[$i] ($list_lead_count_ary[$i] "._QXZ("leads").")</option>\n";
 			$i++;
 			}
 
 		echo "</select></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Status</td><td align=left>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Status")."</td><td align=left>\n";
 		echo "<select size=1 name=delete_status>\n";
-		echo "<option value='-'>Select A Status</option>\n";
+		echo "<option value='-'>"._QXZ("Select A Status")."</option>\n";
 
 		$i = 0;
 		while ( $i < $status_count )
@@ -867,7 +868,7 @@ if (
 			}
 
 		echo "</select></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Called Count</td><td align=left>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Called Count")."</td><td align=left>\n";
 		echo "<select size=1 name=delete_count_op>\n";
 				echo "<option value='<'><</option>\n";
 				echo "<option value='<='><=</option>\n";
@@ -883,7 +884,7 @@ if (
 			$i++;
 			}
 		echo "</select></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td colspan=2 align=center><input type=submit name=delete_submit value=delete></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td colspan=2 align=center><input type=submit name=delete_submit value='"._QXZ("delete")."'></td></tr>\n";
 		# END Delete Leads
 
 		}

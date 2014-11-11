@@ -46,6 +46,7 @@
 # 130824-2324 - Changed to mysqli PHP functions
 # 140126-1022 - Added VMAIL_NO_INST option
 # 140706-0828 - Incorporated QC includes into code
+# 141001-2200 - Finalized adding QXZ translation to all admin files
 #
 
 
@@ -59,24 +60,24 @@ if($short_header)
 	if ( ($reports_only_user < 1) and ($qc_only_user < 1) )
 		{
 	?>
-	<TD> &nbsp; <A HREF="admin.php?ADD=0A" ALT="Users"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Users</B></FONT></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=10" ALT="Campaigns"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Campaigns</B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=0A" ALT="Users"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo _QXZ("Users"); ?></B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=10" ALT="Campaigns"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo _QXZ("Campaigns"); ?></B></FONT></A> &nbsp; </TD>
 	<?php
 	if (($SSqc_features_active=='1') && ($qc_auth=='1')) 
 		{
 		?>
-		<TD> &nbsp; <A HREF="admin.php?ADD=100000000000000" ALT="Quality Control"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Quality Control</B></FONT></A> &nbsp; </TD>
+		<TD> &nbsp; <A HREF="admin.php?ADD=100000000000000" ALT="Quality Control"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo _QXZ("Quality Control"); ?></B></FONT></A> &nbsp; </TD>
 		<?php
 		}
 	?>
-	<TD> &nbsp; <A HREF="admin.php?ADD=100" ALT="Lists"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Lists</B></FONT></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=1000000" ALT="Scripts"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Scripts</B></FONT></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=10000000" ALT="Filters"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Filters</B></FONT></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=1000" ALT="Inbound"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Inbound</B></FONT></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=100000" ALT="User Groups"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>User Groups</B></FONT></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=10000" ALT="Remote Agents"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Remote Agents</B></FONT></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=999998" ALT="Admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Admin</B></FONT></A> &nbsp; </TD>
-	<TD> &nbsp; <A HREF="admin.php?ADD=999999" ALT="Reports"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Reports</B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=100" ALT="Lists"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo _QXZ("Lists"); ?></B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=1000000" ALT="Scripts"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo _QXZ("Scripts"); ?></B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=10000000" ALT="Filters"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo _QXZ("Filters"); ?></B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=1000" ALT="Inbound"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo _QXZ("Inbound"); ?></B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=100000" ALT="User Groups"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo _QXZ("User Groups"); ?></B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=10000" ALT="Remote Agents"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo _QXZ("Remote Agents"); ?></B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=999998" ALT="Admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo _QXZ("Admin"); ?></B></FONT></A> &nbsp; </TD>
+	<TD> &nbsp; <A HREF="admin.php?ADD=999999" ALT="Reports"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo _QXZ("Reports"); ?></B></FONT></A> &nbsp; </TD>
 	<?php 
 		} 
 	else 
@@ -87,7 +88,7 @@ if($short_header)
 		if ($reports_only_user > 0)
 			{
 			?>
-			<TD> &nbsp; <A HREF="admin.php?ADD=999999" ALT="Reports"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Reports</B></A> &nbsp; </TD>
+			<TD> &nbsp; <A HREF="admin.php?ADD=999999" ALT="Reports"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo _QXZ("Reports"); ?></B></A> &nbsp; </TD>
 			<?php
 			}
 		else
@@ -95,7 +96,7 @@ if($short_header)
 			if (($SSqc_features_active=='1') && ($qc_auth=='1')) 
 				{
 				?>
-				<TD> &nbsp; <A HREF="admin.php?ADD=100000000000000" ALT="Quality Control"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Quality Control</B></FONT></A> &nbsp; </TD>
+				<TD> &nbsp; <A HREF="admin.php?ADD=100000000000000" ALT="Quality Control"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo _QXZ("Quality Control"); ?></B></FONT></A> &nbsp; </TD>
 				<?php
 				}
 			}
@@ -647,7 +648,7 @@ if ( ($ADD==131111111) or ($ADD==331111111) or ($ADD==431111111) )
 
 
 ### Javascript for shift end-time calculation and display
-if ( ($ADD==3111) or ($ADD==4111) or ($ADD==5111) )
+if ( ($ADD==3111) or ($ADD==4111) or ($ADD==5111) or ($ADD==3811) or ($ADD==4811) or ($ADD==5811) )
 	{
 	?>
 	function IGU_selectall(temp_count,temp_fields)
@@ -722,7 +723,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 
 	$IGhandle_method_list = '<option>CID</option><option>CIDLOOKUP</option><option>CIDLOOKUPRL</option><option>CIDLOOKUPRC</option><option>CIDLOOKUPALT</option><option>CIDLOOKUPRLALT</option><option>CIDLOOKUPRCALT</option><option>CIDLOOKUPADDR3</option><option>CIDLOOKUPRLADDR3</option><option>CIDLOOKUPRCADDR3</option><option>CIDLOOKUPALTADDR3</option><option>CIDLOOKUPRLALTADDR3</option><option>CIDLOOKUPRCALTADDR3</option><option>ANI</option><option>ANILOOKUP</option><option>ANILOOKUPRL</option><option>VIDPROMPT</option><option>VIDPROMPTLOOKUP</option><option>VIDPROMPTLOOKUPRL</option><option>VIDPROMPTLOOKUPRC</option><option>CLOSER</option><option>3DIGITID</option><option>4DIGITID</option><option>5DIGITID</option><option>10DIGITID</option>';
 
-	$IGsearch_method_list = '<option value="LB">LB - Load Balanced</option><option value="LO">LO - Load Balanced Overflow</option><option value="SO">SO - Server Only</option>';
+	$IGsearch_method_list = '<option value="LB">LB - '._QXZ('Load Balanced').'</option><option value="LO">LO - '._QXZ('Load Balanced Overflow').'</option><option value="SO">SO - '._QXZ('Server Only').'</option>';
 
 	$stmt="SELECT login,server_ip,extension,dialplan_number from phones where active='Y' $LOGadmin_viewable_groupsSQL order by login,server_ip;";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -767,7 +768,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				}
 			else
 				{value='';}
-			new_content = '<span name=option_route_link_' + option + ' id=option_route_link_' + option + "><a href=\"./admin.php?ADD=3511&menu_id=" + value + "\">Call Menu: </a></span><select size=1 name=option_route_value_" + option + " id=option_route_value_" + option + " onChange=\"call_menu_link('" + option + "','CALLMENU');\">" + call_menu_list + "\n" + selected_value + '</select>';
+			new_content = '<span name=option_route_link_' + option + ' id=option_route_link_' + option + "><a href=\"./admin.php?ADD=3511&menu_id=" + value + "\"><?php echo _QXZ("Call Menu"); ?>: </a></span><select size=1 name=option_route_value_" + option + " id=option_route_value_" + option + " onChange=\"call_menu_link('" + option + "','CALLMENU');\">" + call_menu_list + "\n" + selected_value + '</select>';
 			}
 		if (selected_route=='INGROUP')
 			{
@@ -791,22 +792,22 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 
 			new_content = '<input type=hidden name=option_route_value_context_' + option + ' id=option_route_value_context_' + option + ' value="' + selected_value + '">';
 			new_content = new_content + '<span name=option_route_link_' + option + 'id=option_route_link_' + option + '>';
-			new_content = new_content + '<a href="admin.php?ADD=3111&group_id=' + value + '">In-Group:</a> </span>';
+			new_content = new_content + '<a href="admin.php?ADD=3111&group_id=' + value + '"><?php echo _QXZ("In-Group"); ?>:</a> </span>';
 			new_content = new_content + '<select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option + ' onChange="call_menu_link("' + option + '","INGROUP");">';
 			new_content = new_content + '' + ingroup_list + "\n" + selected_value + '</select>';
-			new_content = new_content + ' &nbsp; Handle Method: <select size=1 name=IGhandle_method_' + option + ' id=IGhandle_method_' + option + '>';
+			new_content = new_content + ' &nbsp; <?php echo _QXZ("Handle Method"); ?>: <select size=1 name=IGhandle_method_' + option + ' id=IGhandle_method_' + option + '>';
 			new_content = new_content + '' + IGhandle_method_list + "\n" + '<option SELECTED>' + IGhandle_method + '</select>';
 			new_content = new_content + ' &nbsp; <a href="javascript:openNewWindow(\'admin.php?ADD=99999#vicidial_call_menu-ingroup_settings\')"><IMG SRC="help.gif" WIDTH=20 HEIGHT=20 BORDER=0 ALT="HELP" ALIGN=TOP></a>';
-			new_content = new_content + '<BR>Search Method: <select size=1 name=IGsearch_method_' + option + ' id=IGsearch_method_' + option + '>';
+			new_content = new_content + '<BR><?php echo _QXZ("Search Method"); ?>: <select size=1 name=IGsearch_method_' + option + ' id=IGsearch_method_' + option + '>';
 			new_content = new_content + '' + IGsearch_method_list + "\n" + '<option SELECTED>' + IGsearch_method + '</select>';
-			new_content = new_content + ' &nbsp; List ID: <input type=text size=5 maxlength=14 name=IGlist_id_' + option + ' id=IGlist_id_' + option + ' value="' + IGlist_id + '">';
-			new_content = new_content + '<BR>Campaign ID: <select size=1 name=IGcampaign_id_' + option + ' id=IGcampaign_id_' + option + '>';
+			new_content = new_content + ' &nbsp; <?php echo _QXZ("List ID"); ?>: <input type=text size=5 maxlength=14 name=IGlist_id_' + option + ' id=IGlist_id_' + option + ' value="' + IGlist_id + '">';
+			new_content = new_content + '<BR><?php echo _QXZ("Campaign ID"); ?>: <select size=1 name=IGcampaign_id_' + option + ' id=IGcampaign_id_' + option + '>';
 			new_content = new_content + '' + IGcampaign_id_list + "\n" + '<option SELECTED>' + IGcampaign_id + '</select>';
-			new_content = new_content + ' &nbsp; Phone Code: <input type=text size=5 maxlength=14 name=IGphone_code_' + option + ' id=IGphone_code_' + option + ' value="' + IGphone_code + '">';
-			new_content = new_content + "<BR> &nbsp; VID Enter Filename: <input type=text name=IGvid_enter_filename_" + option + " id=IGvid_enter_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_enter_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_enter_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
-			new_content = new_content + "<BR> &nbsp; VID ID Number Filename: <input type=text name=IGvid_id_number_filename_" + option + " id=IGvid_id_number_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_id_number_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_id_number_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
-			new_content = new_content + "<BR> &nbsp; VID Confirm Filename: <input type=text name=IGvid_confirm_filename_" + option + " id=IGvid_confirm_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_confirm_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_confirm_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
-			new_content = new_content + ' &nbsp; VID Digits: <input type=text size=3 maxlength=3 name=IGvid_validate_digits_' + option + ' id=IGvid_validate_digits_' + option + ' value="' + IGvid_validate_digits + '">';
+			new_content = new_content + ' &nbsp; <?php echo _QXZ("Phone Code"); ?>: <input type=text size=5 maxlength=14 name=IGphone_code_' + option + ' id=IGphone_code_' + option + ' value="' + IGphone_code + '">';
+			new_content = new_content + "<BR> &nbsp; <?php echo _QXZ("VID Enter Filename"); ?>: <input type=text name=IGvid_enter_filename_" + option + " id=IGvid_enter_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_enter_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_enter_filename_" + option + "','date'," + chooser_height + ");\"><?php echo _QXZ("audio chooser"); ?></a>";
+			new_content = new_content + "<BR> &nbsp; <?php echo _QXZ("VID ID Number Filename"); ?>: <input type=text name=IGvid_id_number_filename_" + option + " id=IGvid_id_number_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_id_number_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_id_number_filename_" + option + "','date'," + chooser_height + ");\"><?php echo _QXZ("audio chooser"); ?></a>";
+			new_content = new_content + "<BR> &nbsp; <?php echo _QXZ("VID Confirm Filename"); ?>: <input type=text name=IGvid_confirm_filename_" + option + " id=IGvid_confirm_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_confirm_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_confirm_filename_" + option + "','date'," + chooser_height + ");\"><?php echo _QXZ("audio chooser"); ?></a>";
+			new_content = new_content + ' &nbsp; <?php echo _QXZ("VID Digits"); ?>: <input type=text size=3 maxlength=3 name=IGvid_validate_digits_' + option + ' id=IGvid_validate_digits_' + option + ' value="' + IGvid_validate_digits + '">';
 			}
 		if (selected_route=='DID')
 			{
@@ -816,7 +817,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				}
 			else
 				{value='';}
-			new_content = '<span name=option_route_link_' + option + ' id=option_route_link_' + option + '><a href="admin.php?ADD=3311&did_pattern=' + value + '">DID:</a> </span><select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option + " onChange=\"call_menu_link('" + option + "','DID');\">" + did_list + "\n" + selected_value + '</select>';
+			new_content = '<span name=option_route_link_' + option + ' id=option_route_link_' + option + '><a href="admin.php?ADD=3311&did_pattern=' + value + '"><?php echo _QXZ("DID"); ?>:</a> </span><select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option + " onChange=\"call_menu_link('" + option + "','DID');\">" + did_list + "\n" + selected_value + '</select>';
 			}
 		if (selected_route=='HANGUP')
 			{
@@ -826,7 +827,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				}
 			else
 				{value='vm-goodbye';}
-			new_content = "Audio File: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=40 maxlength=255 value=\"" + selected_value + "\"> <a href=\"javascript:launch_chooser('option_route_value_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
+			new_content = "<?php echo _QXZ("Audio File"); ?>: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=40 maxlength=255 value=\"" + selected_value + "\"> <a href=\"javascript:launch_chooser('option_route_value_" + option + "','date'," + chooser_height + ");\"><?php echo _QXZ("audio chooser"); ?></a>";
 			}
 		if (selected_route=='EXTENSION')
 			{
@@ -837,7 +838,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				}
 			else
 				{value='8304';}
-			new_content = "Extension: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=20 maxlength=255 value=\"" + selected_value + "\"> &nbsp; Context: <input type=text name=option_route_value_context_" + option + " id=option_route_value_context_" + option + " size=20 maxlength=255 value=\"" + selected_context + "\"> ";
+			new_content = "<?php echo _QXZ("Extension"); ?>: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=20 maxlength=255 value=\"" + selected_value + "\"> &nbsp; <?php echo _QXZ("Context"); ?>: <input type=text name=option_route_value_context_" + option + " id=option_route_value_context_" + option + " size=20 maxlength=255 value=\"" + selected_context + "\"> ";
 			}
 		if (selected_route=='PHONE')
 			{
@@ -847,7 +848,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				}
 			else
 				{value='';}
-			new_content = 'Phone: <select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option + '>' + phone_list + "\n" + selected_value + '</select>';
+			new_content = '<?php echo _QXZ("Phone"); ?>: <select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option + '>' + phone_list + "\n" + selected_value + '</select>';
 			}
 		if ( (selected_route=='VOICEMAIL') || (selected_route=='VMAIL_NO_INST') )
 			{
@@ -857,7 +858,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				}
 			else
 				{value='';}
-			new_content = "Voicemail Box: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=12 maxlength=10 value=\"" + selected_value + "\"> <a href=\"javascript:launch_vm_chooser('option_route_value_" + option + "','date'," + chooser_height + ");\">voicemail chooser</a>";
+			new_content = "<?php echo _QXZ("Voicemail Box"); ?>: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=12 maxlength=10 value=\"" + selected_value + "\"> <a href=\"javascript:launch_vm_chooser('option_route_value_" + option + "','date'," + chooser_height + ");\"><?php echo _QXZ("voicemail chooser"); ?></a>";
 			}
 		if (selected_route=='AGI')
 			{
@@ -867,7 +868,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 				}
 			else
 				{value='';}
-			new_content = "AGI: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=80 maxlength=255 value=\"" + selected_value + "\"> ";
+			new_content = "<?php echo _QXZ("AGI"); ?>: <input type=text name=option_route_value_" + option + " id=option_route_value_" + option + " size=80 maxlength=255 value=\"" + selected_value + "\"> ";
 			}
 
 		if (new_content.length < 1)
@@ -887,15 +888,15 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 
 		if (route=='CALLMENU')
 			{
-			new_content = "<a href=\"admin.php?ADD=3511&menu_id=" + selected_value + "\">Call Menu:</a>";
+			new_content = "<a href=\"admin.php?ADD=3511&menu_id=" + selected_value + "\"><?php echo _QXZ("Call Menu"); ?>:</a>";
 			}
 		if (route=='INGROUP')
 			{
-			new_content = "<a href=\"admin.php?ADD=3111&group_id=" + selected_value + "\">In-Group:</a>";
+			new_content = "<a href=\"admin.php?ADD=3111&group_id=" + selected_value + "\"><?php echo _QXZ("In-Group"); ?>:</a>";
 			}
 		if (route=='DID')
 			{
-			new_content = "<a href=\"admin.php?ADD=3311&did_pattern=" + selected_value + "\">DID:</a>";
+			new_content = "<a href=\"admin.php?ADD=3311&did_pattern=" + selected_value + "\"><?php echo _QXZ("DID"); ?>:</a>";
 			}
 
 		if (new_content.length < 1)
@@ -936,7 +937,7 @@ if ( ($ADD==2811) or ($ADD==3811) or ($ADD==3111) or ($ADD==2111) or ($ADD==2011
 				}
 			else
 				{value = '';}
-			new_content = '<span name=' + option + '_value_link id=' + option + '_value_link><a href="./admin.php?ADD=3511&menu_id=' + value + '">Call Menu: </a></span><select size=1 name=' + option + '_value id=' + option + "_value onChange=\"dynamic_call_action_link('" + option + "','CALLMENU');\">" + call_menu_list + "\n" + selected_value + '</select>';
+			new_content = '<span name=' + option + '_value_link id=' + option + '_value_link><a href="./admin.php?ADD=3511&menu_id=' + value + '"><?php echo _QXZ("Call Menu"); ?>: </a></span><select size=1 name=' + option + '_value id=' + option + "_value onChange=\"dynamic_call_action_link('" + option + "','CALLMENU');\">" + call_menu_list + "\n" + selected_value + '</select>';
 			}
 		if (selected_route=='INGROUP')
 			{
@@ -959,21 +960,21 @@ if ( ($ADD==2811) or ($ADD==3811) or ($ADD==3111) or ($ADD==2111) or ($ADD==2011
 				selected_value = '<option SELECTED>' + IGgroup_id + '</option>';
 				}
 
-			new_content = new_content + '<span name=' + option + '_value_link id=' + option + '_value_link><a href="admin.php?ADD=3111&group_id=' + IGgroup_id + '">In-Group:</a> </span> ';
+			new_content = new_content + '<span name=' + option + '_value_link id=' + option + '_value_link><a href="admin.php?ADD=3111&group_id=' + IGgroup_id + '"><?php echo _QXZ("In-Group"); ?>:</a> </span> ';
 			new_content = new_content + '<select size=1 name=IGgroup_id_' + option + ' id=IGgroup_id_' + option + " onChange=\"dynamic_call_action_link('IGgroup_id_" + option + "','INGROUP');\">";
 			new_content = new_content + '' + ingroup_list + "\n" + selected_value + '</select>';
-			new_content = new_content + ' &nbsp; Handle Method: <select size=1 name=IGhandle_method_' + option + ' id=IGhandle_method_' + option + '>';
+			new_content = new_content + ' &nbsp; <?php echo _QXZ("Handle Method"); ?>: <select size=1 name=IGhandle_method_' + option + ' id=IGhandle_method_' + option + '>';
 			new_content = new_content + '' + IGhandle_method_list + "\n" + '<option SELECTED>' + IGhandle_method + '</select>';
-			new_content = new_content + '<BR>Search Method: <select size=1 name=IGsearch_method_' + option + ' id=IGsearch_method_' + option + '>';
+			new_content = new_content + '<BR><?php echo _QXZ("Search Method"); ?>: <select size=1 name=IGsearch_method_' + option + ' id=IGsearch_method_' + option + '>';
 			new_content = new_content + '' + IGsearch_method_list + "\n" + '<option SELECTED>' + IGsearch_method + '</select>';
-			new_content = new_content + ' &nbsp; List ID: <input type=text size=5 maxlength=14 name=IGlist_id_' + option + ' id=IGlist_id_' + option + ' value="' + IGlist_id + '">';
-			new_content = new_content + '<BR>Campaign ID: <select size=1 name=IGcampaign_id_' + option + ' id=IGcampaign_id_' + option + '>';
+			new_content = new_content + ' &nbsp; <?php echo _QXZ("List ID"); ?>: <input type=text size=5 maxlength=14 name=IGlist_id_' + option + ' id=IGlist_id_' + option + ' value="' + IGlist_id + '">';
+			new_content = new_content + '<BR><?php echo _QXZ("Campaign ID"); ?>: <select size=1 name=IGcampaign_id_' + option + ' id=IGcampaign_id_' + option + '>';
 			new_content = new_content + '' + IGcampaign_id_list + "\n" + '<option SELECTED>' + IGcampaign_id + '</select>';
-			new_content = new_content + ' &nbsp; Phone Code: <input type=text size=5 maxlength=14 name=IGphone_code_' + option + ' id=IGphone_code_' + option + ' value="' + IGphone_code + '">';
-		//	new_content = new_content + "<BR> &nbsp; VID Enter Filename: <input type=text name=IGvid_enter_filename_" + option + " id=IGvid_enter_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_enter_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_enter_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
-		//	new_content = new_content + "<BR> &nbsp; VID ID Number Filename: <input type=text name=IGvid_id_number_filename_" + option + " id=IGvid_id_number_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_id_number_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_id_number_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
-		//	new_content = new_content + "<BR> &nbsp; VID Confirm Filename: <input type=text name=IGvid_confirm_filename_" + option + " id=IGvid_confirm_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_confirm_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_confirm_filename_" + option + "','date'," + chooser_height + ");\">audio chooser</a>";
-		//	new_content = new_content + ' &nbsp; VID Digits: <input type=text size=3 maxlength=3 name=IGvid_validate_digits_' + option + ' id=IGvid_validate_digits_' + option + ' value="' + IGvid_validate_digits + '">';
+			new_content = new_content + ' &nbsp; <?php echo _QXZ("Phone Code"); ?>: <input type=text size=5 maxlength=14 name=IGphone_code_' + option + ' id=IGphone_code_' + option + ' value="' + IGphone_code + '">';
+		//	new_content = new_content + "<BR> &nbsp; <?php echo _QXZ("VID Enter Filename"); ?>: <input type=text name=IGvid_enter_filename_" + option + " id=IGvid_enter_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_enter_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_enter_filename_" + option + "','date'," + chooser_height + ");\"><?php echo _QXZ("audio chooser"); ?></a>";
+		//	new_content = new_content + "<BR> &nbsp; <?php echo _QXZ("VID ID Number Filename"); ?>: <input type=text name=IGvid_id_number_filename_" + option + " id=IGvid_id_number_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_id_number_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_id_number_filename_" + option + "','date'," + chooser_height + ");\"><?php echo _QXZ("audio chooser"); ?></a>";
+		//	new_content = new_content + "<BR> &nbsp; <?php echo _QXZ("VID Confirm Filename"); ?>: <input type=text name=IGvid_confirm_filename_" + option + " id=IGvid_confirm_filename_" + option + " size=40 maxlength=255 value=\"" + IGvid_confirm_filename + "\"> <a href=\"javascript:launch_chooser('IGvid_confirm_filename_" + option + "','date'," + chooser_height + ");\"><?php echo _QXZ("audio chooser"); ?></a>";
+		//	new_content = new_content + ' &nbsp; <?php echo _QXZ("VID Digits"); ?>: <input type=text size=3 maxlength=3 name=IGvid_validate_digits_' + option + ' id=IGvid_validate_digits_' + option + ' value="' + IGvid_validate_digits + '">';
 
 			}
 		if (selected_route=='DID')
@@ -984,7 +985,7 @@ if ( ($ADD==2811) or ($ADD==3811) or ($ADD==3111) or ($ADD==2111) or ($ADD==2011
 				}
 			else
 				{value = '';}
-			new_content = '<span name=' + option + '_value_link id=' + option + '_value_link><a href="admin.php?ADD=3311&did_pattern=' + value + '">DID:</a> </span><select size=1 name=' + option + '_value id=' + option + "_value onChange=\"dynamic_call_action_link('" + option + "','DID');\">" + did_list + "\n" + selected_value + '</select>';
+			new_content = '<span name=' + option + '_value_link id=' + option + '_value_link><a href="admin.php?ADD=3311&did_pattern=' + value + '"><?php echo _QXZ("DID"); ?>:</a> </span><select size=1 name=' + option + '_value id=' + option + "_value onChange=\"dynamic_call_action_link('" + option + "','DID');\">" + did_list + "\n" + selected_value + '</select>';
 			}
 		if (selected_route=='MESSAGE')
 			{
@@ -994,7 +995,7 @@ if ( ($ADD==2811) or ($ADD==3811) or ($ADD==3111) or ($ADD==2111) or ($ADD==2011
 				}
 			else
 				{value = 'nbdy-avail-to-take-call|vm-goodbye';}
-			new_content = "Audio File: <input type=text name=" + option + "_value id=" + option + "_value size=40 maxlength=255 value=\"" + value + "\"> <a href=\"javascript:launch_chooser('" + option + "_value','date'," + chooser_height + ");\">audio chooser</a>";
+			new_content = "<?php echo _QXZ("Audio File"); ?>: <input type=text name=" + option + "_value id=" + option + "_value size=40 maxlength=255 value=\"" + value + "\"> <a href=\"javascript:launch_chooser('" + option + "_value','date'," + chooser_height + ");\"><?php echo _QXZ("audio chooser"); ?></a>";
 			}
 		if (selected_route=='EXTENSION')
 			{
@@ -1004,7 +1005,7 @@ if ( ($ADD==2811) or ($ADD==3811) or ($ADD==3111) or ($ADD==2111) or ($ADD==2011
 			var EXextension =	value_split[0];
 			var EXcontext =		value_split[1];
 
-			new_content = "Extension: <input type=text name=EXextension_" + option + " id=EXextension_" + option + " size=20 maxlength=255 value=\"" + EXextension + "\"> &nbsp; Context: <input type=text name=EXcontext_" + option + " id=EXcontext_" + option + " size=20 maxlength=255 value=\"" + EXcontext + "\"> ";
+			new_content = "<?php echo _QXZ("Extension"); ?>: <input type=text name=EXextension_" + option + " id=EXextension_" + option + " size=20 maxlength=255 value=\"" + EXextension + "\"> &nbsp; <?php echo _QXZ("Context"); ?>: <input type=text name=EXcontext_" + option + " id=EXcontext_" + option + " size=20 maxlength=255 value=\"" + EXcontext + "\"> ";
 			}
 		if ( (selected_route=='VOICEMAIL') || (selected_route=='VMAIL_NO_INST') )
 			{
@@ -1014,7 +1015,7 @@ if ( ($ADD==2811) or ($ADD==3811) or ($ADD==3111) or ($ADD==2111) or ($ADD==2011
 				}
 			else
 				{value = '101';}
-			new_content = "Voicemail Box: <input type=text name=" + option + "_value id=" + option + "_value size=12 maxlength=10 value=\"" + value + "\"> <a href=\"javascript:launch_vm_chooser('" + option + "_value','date'," + chooser_height + ");\">voicemail chooser</a>";
+			new_content = "<?php echo _QXZ("Voicemail Box"); ?>: <input type=text name=" + option + "_value id=" + option + "_value size=12 maxlength=10 value=\"" + value + "\"> <a href=\"javascript:launch_vm_chooser('" + option + "_value','date'," + chooser_height + ");\"><?php echo _QXZ("voicemail chooser"); ?></a>";
 			}
 
 		if (new_content.length < 1)
@@ -1040,15 +1041,15 @@ if ( ($ADD==2811) or ($ADD==3811) or ($ADD==3111) or ($ADD==2111) or ($ADD==2011
 
 		if (route=='CALLMENU')
 			{
-			new_content = '<a href="admin.php?ADD=3511&menu_id=' + selected_value + '">Call Menu:</a>';
+			new_content = '<a href="admin.php?ADD=3511&menu_id=' + selected_value + '"><?php echo _QXZ("Call Menu"); ?>:</a>';
 			}
 		if (route=='INGROUP')
 			{
-			new_content = '<a href="admin.php?ADD=3111&group_id=' + selected_value + '">In-Group:</a>';
+			new_content = '<a href="admin.php?ADD=3111&group_id=' + selected_value + '"><?php echo _QXZ("In-Group"); ?>:</a>';
 			}
 		if (route=='DID')
 			{
-			new_content = '<a href="admin.php?ADD=3311&did_pattern=' + selected_value + '">DID:</a>';
+			new_content = '<a href="admin.php?ADD=3311&did_pattern=' + selected_value + '"><?php echo _QXZ("DID"); ?>:</a>';
 			}
 
 		if (new_content.length < 1)
@@ -1093,7 +1094,7 @@ else
 	
 echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 
-$stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled,allow_emails,level_8_disable_add from system_settings;";
+$stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled,allow_emails,level_8_disable_add,allow_chats from system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $admin_home_url_LU =		$row[0];
@@ -1102,6 +1103,7 @@ $SScallcard_enabled =		$row[2];
 $SScustom_fields_enabled =	$row[3];
 $SSemail_enabled =			$row[4];
 $SSlevel_8_disable_add =	$row[5];
+$SSchat_enabled =			$row[6];
 
 
 ?>
@@ -1111,7 +1113,7 @@ $SSlevel_8_disable_add =	$row[5];
 <!-- BEGIN SIDEBAR NAVIGATION -->
 <TR><TD VALIGN=TOP WIDTH=170 BGCOLOR=#015B91 ALIGN=CENTER>
 <A HREF="./admin.php"><IMG SRC="./vicidial_admin_web_logo.gif" WIDTH=170 HEIGHT=45 BORDER=0 ALT="System logo"></A>
-<B><FONT FACE="ARIAL,HELVETICA" COLOR=white>ADMINISTRATION</FONT></B><BR>
+<B><FONT FACE="ARIAL,HELVETICA" COLOR=white><?php echo _QXZ("ADMINISTRATION"); ?></FONT></B><BR>
 	<TABLE CELLPADDING=2 CELLSPACING=0 BGCOLOR=#015B91 WIDTH=160>
 	<?php
 	if ( ($reports_only_user < 1) and ($qc_only_user < 1) )
@@ -1119,39 +1121,39 @@ $SSlevel_8_disable_add =	$row[5];
 	?>
 	<!-- USERS NAVIGATION -->
 	<TR WIDTH=160><TD <?php echo $users_hh ?> WIDTH=160>
-	<a href="<?php echo $ADMIN ?>?ADD=0A"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $users_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $users_bold ?>Users</a>
+	<a href="<?php echo $ADMIN ?>?ADD=0A"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $users_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $users_bold ?><?php echo _QXZ("Users"); ?></a>
 	</TD></TR>
 	<?php if (strlen($users_hh) > 1) { 
 		?>
 	<TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
-	 &nbsp; <a href="<?php echo $ADMIN ?>?ADD=0A"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Show Users </a>
+	 &nbsp; <a href="<?php echo $ADMIN ?>?ADD=0A"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>><?php echo _QXZ("Show Users"); ?> </a>
 	</TR><TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
 	<?php if ($add_copy_disabled < 1) { ?>
-	 &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Add A New User </a>
+	 &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>><?php echo _QXZ("Add A New User"); ?> </a>
 	</TR><TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
-	 &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1A"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Copy User </a>
+	 &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1A"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>><?php echo _QXZ("Copy User"); ?> </a>
 	</TR><TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
 	<?php } ?>
-	 &nbsp; <a href="<?php echo $ADMIN ?>?ADD=550"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Search For A User </a>
+	 &nbsp; <a href="<?php echo $ADMIN ?>?ADD=550"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>><?php echo _QXZ("Search For A User"); ?> </a>
 	</TR><TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
-	 &nbsp; <a href="./user_stats.php?user=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>User Stats </a>
+	 &nbsp; <a href="./user_stats.php?user=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>><?php echo _QXZ("User Stats"); ?> </a>
 	</TR><TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
-	 &nbsp; <a href="./user_status.php?user=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>User Status </a>
+	 &nbsp; <a href="./user_status.php?user=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>><?php echo _QXZ("User Status"); ?> </a>
 	</TR><TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
-	 &nbsp; <a href="./AST_agent_time_sheet.php?agent=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Time Sheet </a> </TD></TR>
+	 &nbsp; <a href="./AST_agent_time_sheet.php?agent=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>><?php echo _QXZ("Time Sheet"); ?> </a> </TD></TR>
 	 <?php
 	if ( ($SSuser_territories_active > 0) or ($user_territories_active > 0) )
 		{ ?>
 
 	</TR><TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT>
-	 &nbsp; <a href="./user_territories.php?agent=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>User Territories </a> </TD></TR>
+	 &nbsp; <a href="./user_territories.php?agent=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>><?php echo _QXZ("User Territories"); ?> </a> </TD></TR>
 
 	<?php } 
 	  } 
 	?>
 	<!-- CAMPAIGNS NAVIGATION -->
 	<TR><TD <?php echo $campaigns_hh ?>>
-	<a href="<?php echo $ADMIN ?>?ADD=10"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $campaigns_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $campaigns_bold ?>Campaigns</a>
+	<a href="<?php echo $ADMIN ?>?ADD=10"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $campaigns_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $campaigns_bold ?><?php echo _QXZ("Campaigns"); ?></a>
 	</TD></TR>
 	<?php
 	if (strlen($campaigns_hh) > 1) 
@@ -1181,34 +1183,34 @@ $SSlevel_8_disable_add =	$row[5];
 
 		?>
 		<TR BGCOLOR=<?php echo $campaigns_color ?>>
-		<TD ALIGN=LEFT <?php echo $list_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $list_fc ?> SIZE=<?php echo $subcamp_font_size ?>>Campaigns Main</a></TD>
+		<TD ALIGN=LEFT <?php echo $list_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $list_fc ?> SIZE=<?php echo $subcamp_font_size ?>><?php echo _QXZ("Campaigns Main"); ?></a></TD>
 		</TR><TR BGCOLOR=<?php echo $campaigns_color ?>>
-		<TD ALIGN=LEFT <?php echo $status_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=32"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $status_fc ?> SIZE=<?php echo $subcamp_font_size ?>>Statuses</a></TD>
+		<TD ALIGN=LEFT <?php echo $status_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=32"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $status_fc ?> SIZE=<?php echo $subcamp_font_size ?>><?php echo _QXZ("Statuses"); ?></a></TD>
 		</TR><TR BGCOLOR=<?php echo $campaigns_color ?>>
-		<TD ALIGN=LEFT <?php echo $hotkey_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=33"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $hotkey_fc ?> SIZE=<?php echo $subcamp_font_size ?>>HotKeys</a></TD>
+		<TD ALIGN=LEFT <?php echo $hotkey_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=33"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $hotkey_fc ?> SIZE=<?php echo $subcamp_font_size ?>><?php echo _QXZ("HotKeys"); ?></a></TD>
 		<?php
 		if ($SSoutbound_autodial_active > 0)
 			{
 			?>
 			</TR><TR BGCOLOR=<?php echo $campaigns_color ?>>
-			<TD ALIGN=LEFT <?php echo $recycle_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=35"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $recycle_fc ?> SIZE=<?php echo $subcamp_font_size ?>>Lead Recycle</a></TD>
+			<TD ALIGN=LEFT <?php echo $recycle_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=35"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $recycle_fc ?> SIZE=<?php echo $subcamp_font_size ?>><?php echo _QXZ("Lead Recycle"); ?></a></TD>
 			</TR><TR BGCOLOR=<?php echo $campaigns_color ?>>
-			<TD ALIGN=LEFT <?php echo $autoalt_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=36"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $autoalt_fc ?> SIZE=<?php echo $subcamp_font_size ?>>Auto-Alt Dial</a></TD>
+			<TD ALIGN=LEFT <?php echo $autoalt_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=36"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $autoalt_fc ?> SIZE=<?php echo $subcamp_font_size ?>><?php echo _QXZ("Auto-Alt Dial"); ?></a></TD>
 			</TR><TR BGCOLOR=<?php echo $campaigns_color ?>>
-			<TD ALIGN=LEFT <?php echo $listmix_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=39"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $listmix_fc ?> SIZE=<?php echo $subcamp_font_size ?>>List Mix</a></TD>
+			<TD ALIGN=LEFT <?php echo $listmix_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=39"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $listmix_fc ?> SIZE=<?php echo $subcamp_font_size ?>><?php echo _QXZ("List Mix"); ?></a></TD>
 			<?php
 			}
 		?>
 		</TR><TR BGCOLOR=<?php echo $campaigns_color ?>>
-		<TD ALIGN=LEFT <?php echo $pause_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=37"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $pause_fc ?> SIZE=<?php echo $subcamp_font_size ?>>Pause Codes</a></TD>
+		<TD ALIGN=LEFT <?php echo $pause_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=37"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $pause_fc ?> SIZE=<?php echo $subcamp_font_size ?>><?php echo _QXZ("Pause Codes"); ?></a></TD>
 		</TR><TR BGCOLOR=<?php echo $campaigns_color ?>>
-		<TD ALIGN=LEFT <?php echo $preset_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=301"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $preset_fc ?> SIZE=<?php echo $subcamp_font_size ?>>Presets</a></TD>
+		<TD ALIGN=LEFT <?php echo $preset_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=301"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $preset_fc ?> SIZE=<?php echo $subcamp_font_size ?>><?php echo _QXZ("Presets"); ?></a></TD>
 		<?php
 		if ($SScampaign_cid_areacodes_enabled > 0)
 			{
 			?>
 			</TR><TR BGCOLOR=<?php echo $campaigns_color ?>>
-			<TD ALIGN=LEFT <?php echo $accid_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=302"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $accid_fc ?> SIZE=<?php echo $subcamp_font_size ?>>AC-CID</a></TD>
+			<TD ALIGN=LEFT <?php echo $accid_sh ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=302"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $accid_fc ?> SIZE=<?php echo $subcamp_font_size ?>><?php echo _QXZ("AC-CID"); ?></a></TD>
 			<?php
 			}
 		 } 
@@ -1218,35 +1220,35 @@ $SSlevel_8_disable_add =	$row[5];
 	if ($SSoutbound_autodial_active > 0)
 		{
 		?>
-		<TR><TD ALIGN=LEFT <?php echo $lists_hh ?>><a href="<?php echo $ADMIN ?>?ADD=100"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $lists_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $lists_bold ?>Lists</a></TD></TR>
+		<TR><TD ALIGN=LEFT <?php echo $lists_hh ?>><a href="<?php echo $ADMIN ?>?ADD=100"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $lists_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $lists_bold ?><?php echo _QXZ("Lists"); ?></a></TD></TR>
 		<?php
 		if (strlen($lists_hh) > 1) 
 			{ 
-			if ($LOGdelete_from_dnc > 0) {$DNClink = 'Add-Delete DNC Number';}
-			else {$DNClink = 'Add DNC Number';}
+			if ($LOGdelete_from_dnc > 0) {$DNClink = _QXZ('Add-Delete DNC Number');}
+			else {$DNClink = _QXZ('Add DNC Number');}
 			?>
 			<TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
-			<a href="<?php echo $ADMIN ?>?ADD=100"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Lists </a>
+			<a href="<?php echo $ADMIN ?>?ADD=100"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show Lists"); ?> </a>
 			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
 			<?php if ($add_copy_disabled < 1) { ?>
-			<a href="<?php echo $ADMIN ?>?ADD=111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New List </a>
+			<a href="<?php echo $ADMIN ?>?ADD=111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New List"); ?> </a>
 			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
 			<?php } ?>
-			<a href="admin_search_lead.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Search For A Lead </a>
+			<a href="admin_search_lead.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Search For A Lead"); ?> </a>
 			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
-			<a href="admin_modify_lead.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Lead </a>
+			<a href="admin_modify_lead.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New Lead"); ?> </a>
 			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
 			<a href="<?php echo $ADMIN ?>?ADD=121"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo $DNClink ?> </a>
 			</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
-			<a href="./admin_listloader_fourth_gen.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Load New Leads </a>
+			<a href="./admin_listloader_fourth_gen.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Load New Leads"); ?> </a>
 			<?php
 			if ($SScustom_fields_enabled > 0)
 				{
 				?>
 				</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
-				<a href="./admin_lists_custom.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> List Custom Fields </a>
+				<a href="./admin_lists_custom.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("List Custom Fields"); ?> </a>
 				</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
-				<a href="./admin_lists_custom.php?action=COPY_FIELDS_FORM"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy Custom Fields </a>
+				<a href="./admin_lists_custom.php?action=COPY_FIELDS_FORM"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Copy Custom Fields"); ?> </a>
 				<?php
 				}
 			?>
@@ -1260,7 +1262,7 @@ $SSlevel_8_disable_add =	$row[5];
 
 	<TR>
 		<TD <?php echo $qc_hh ?>>
-			<a href="<?php echo $ADMIN ?>?ADD=100000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $qc_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $qc_bold ?> Quality Control </FONT></a>
+			<a href="<?php echo $ADMIN ?>?ADD=100000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $qc_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $qc_bold ?> <?php echo _QXZ("Quality Control"); ?> </FONT></a>
 		</TD>
 	</TR>
 	<?php
@@ -1269,17 +1271,17 @@ $SSlevel_8_disable_add =	$row[5];
 		?>
 	<TR BGCOLOR=<?php echo $qc_color ?>>
 		<TD ALIGN=LEFT> &nbsp;
-			<a href="<?php echo $ADMIN ?>?ADD=100000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show QC Campaigns </FONT></a>
+			<a href="<?php echo $ADMIN ?>?ADD=100000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show QC Campaigns"); ?> </FONT></a>
 		</TD>
 	</TR>
 	<TR BGCOLOR=<?php echo $qc_color ?>>
 		<TD ALIGN=LEFT> &nbsp;
-			<a href="<?php echo $ADMIN ?>?ADD=100000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Enter QC Queue </FONT></a>
+			<a href="<?php echo $ADMIN ?>?ADD=100000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Enter QC Queue"); ?> </FONT></a>
 		</TD>
 	</TR>
 	<TR BGCOLOR=<?php echo $qc_color ?>>
 		<TD ALIGN=LEFT> &nbsp;
-			<a href="<?php echo $ADMIN ?>?ADD=341111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Modify QC Codes </FONT></a>
+			<a href="<?php echo $ADMIN ?>?ADD=341111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Modify QC Codes"); ?> </FONT></a>
 		</TD>
 	</TR>
 		<?php }
@@ -1287,17 +1289,17 @@ $SSlevel_8_disable_add =	$row[5];
 	?>
 	<!-- SCRIPTS NAVIGATION -->
 	<TR><TD <?php echo $scripts_hh ?>>
-	<a href="<?php echo $ADMIN ?>?ADD=1000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $scripts_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $scripts_bold ?> Scripts </a>
+	<a href="<?php echo $ADMIN ?>?ADD=1000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $scripts_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $scripts_bold ?> <?php echo _QXZ("Scripts"); ?> </a>
 	</TD></TR>
 	<?php
 	if (strlen($scripts_hh) > 1) 
 		{ 
 		?>
 		<TR BGCOLOR=<?php echo $scripts_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=1000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Scripts </a>
+		<a href="<?php echo $ADMIN ?>?ADD=1000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show Scripts"); ?> </a>
 		</TR><TR BGCOLOR=<?php echo $scripts_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<?php if ($add_copy_disabled < 1) { ?>
-		<a href="<?php echo $ADMIN ?>?ADD=1111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Script </a>
+		<a href="<?php echo $ADMIN ?>?ADD=1111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New Script"); ?> </a>
 		<?php } ?>
 		</TD></TR>
 		<?php } 
@@ -1307,16 +1309,16 @@ $SSlevel_8_disable_add =	$row[5];
 	if ($SSoutbound_autodial_active > 0)
 		{
 		?>
-		<TR><TD ALIGN=LEFT <?php echo $filters_hh ?>><a href="<?php echo $ADMIN ?>?ADD=10000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $filters_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $filters_bold ?> Filters </a></TD></TR>
+		<TR><TD ALIGN=LEFT <?php echo $filters_hh ?>><a href="<?php echo $ADMIN ?>?ADD=10000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $filters_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $filters_bold ?> <?php echo _QXZ("Filters"); ?> </a></TD></TR>
 		<?php
 		if (strlen($filters_hh) > 1) 
 			{ 
 			?>
 		<TR BGCOLOR=<?php echo $filters_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=10000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Filters </a>
+		<a href="<?php echo $ADMIN ?>?ADD=10000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show Filters"); ?> </a>
 		</TR><TR BGCOLOR=<?php echo $filters_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<?php if ($add_copy_disabled < 1) { ?>
-		<a href="<?php echo $ADMIN ?>?ADD=11111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Filter </a>
+		<a href="<?php echo $ADMIN ?>?ADD=11111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New Filter"); ?> </a>
 		<?php } ?>
 		</TD></TR>
 		<?php } 
@@ -1324,21 +1326,21 @@ $SSlevel_8_disable_add =	$row[5];
 	?>
 	<!-- INGROUPS NAVIGATION -->
 	<TR><TD <?php echo $ingroups_hh ?>>
-	<a href="<?php echo $ADMIN ?>?ADD=1000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $ingroups_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $ingroups_bold ?> Inbound </a>
+	<a href="<?php echo $ADMIN ?>?ADD=1000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $ingroups_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $ingroups_bold ?> <?php echo _QXZ("Inbound"); ?> </a>
 	</TD></TR>
 	<?php
 	if (strlen($ingroups_hh) > 1) 
 		{
-		if ($LOGdelete_from_dnc > 0) {$FPGlink = 'Add-Delete FPG Number';}
-		else {$FPGlink = 'Add FPG Number';}
+		if ($LOGdelete_from_dnc > 0) {$FPGlink = _QXZ('Add-Delete FPG Number');}
+		else {$FPGlink = _QXZ('Add FPG Number');}
 		?>
 		<TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=1000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show In-Groups </a>
+		<a href="<?php echo $ADMIN ?>?ADD=1000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show In-Groups"); ?> </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<?php if ($add_copy_disabled < 1) { ?>
-		<a href="<?php echo $ADMIN ?>?ADD=1111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New In-Group </a>
+		<a href="<?php echo $ADMIN ?>?ADD=1111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New In-Group"); ?> </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=1211"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy In-Group </a>
+		<a href="<?php echo $ADMIN ?>?ADD=1211"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Copy In-Group"); ?> </a>
 		<?php } ?>
 		<HR>
 		<?php
@@ -1346,49 +1348,65 @@ $SSlevel_8_disable_add =	$row[5];
 			{
 		?>
 		<TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=1800"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Email Groups </a>
+		<a href="<?php echo $ADMIN ?>?ADD=1800"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show Email Groups"); ?> </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<?php if ($add_copy_disabled < 1) { ?>
-		<a href="<?php echo $ADMIN ?>?ADD=1811"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add New Email Group </a>
+		<a href="<?php echo $ADMIN ?>?ADD=1811"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add New Email Group"); ?> </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=1911"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy Email Group </a>
+		<a href="<?php echo $ADMIN ?>?ADD=1911"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Copy Email Group"); ?> </a>
+		<?php } ?>
+		<HR>
+		<?php
+			}
+		?>
+		<?php
+		if ($SSchat_enabled>0) 
+			{
+		?>
+		<TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<a href="<?php echo $ADMIN ?>?ADD=1900"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Chat Groups </a>
+		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<?php if ($add_copy_disabled < 1) { ?>
+		<a href="<?php echo $ADMIN ?>?ADD=18111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add New Chat Group </a>
+		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
+		<a href="<?php echo $ADMIN ?>?ADD=19111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy Chat Group </a>
 		<?php } ?>
 		<HR>
 		<?php
 			}
 		?>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=1300"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show DIDs </a>
+		<a href="<?php echo $ADMIN ?>?ADD=1300"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show DIDs"); ?> </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<?php if ($add_copy_disabled < 1) { ?>
-		<a href="<?php echo $ADMIN ?>?ADD=1311"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New DID </a>
+		<a href="<?php echo $ADMIN ?>?ADD=1311"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New DID"); ?> </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=1411"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy DID </a>
+		<a href="<?php echo $ADMIN ?>?ADD=1411"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Copy DID"); ?> </a>
 		<?php
 			}
 		if ($SSdid_ra_extensions_enabled > 0)
 			{
 			?>
 			</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
-			<a href="<?php echo $ADMIN ?>?ADD=1320"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>RA Extensions</a>
+			<a href="<?php echo $ADMIN ?>?ADD=1320"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>><?php echo _QXZ("RA Extensions"); ?></a>
 			<?php
 			}
 		?>
 		<HR>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=1500"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Call Menus </a>
+		<a href="<?php echo $ADMIN ?>?ADD=1500"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show Call Menus"); ?> </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<?php if ($add_copy_disabled < 1) { ?>
-		<a href="<?php echo $ADMIN ?>?ADD=1511"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Call Menu </a>
+		<a href="<?php echo $ADMIN ?>?ADD=1511"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New Call Menu"); ?> </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=1611"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy Call Menu </a>
+		<a href="<?php echo $ADMIN ?>?ADD=1611"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Copy Call Menu"); ?> </a>
 		<?php } ?>
 		<HR>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=1700"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Filter Phone Groups </a>
+		<a href="<?php echo $ADMIN ?>?ADD=1700"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Filter Phone Groups"); ?> </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<?php if ($add_copy_disabled < 1) { ?>
-		<a href="<?php echo $ADMIN ?>?ADD=1711"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add Filter Phone Group </a>
+		<a href="<?php echo $ADMIN ?>?ADD=1711"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add Filter Phone Group"); ?> </a>
 		</TD></TR><TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<?php } ?>
 		<a href="<?php echo $ADMIN ?>?ADD=171"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo $FPGlink ?> </a>
@@ -1397,51 +1415,51 @@ $SSlevel_8_disable_add =	$row[5];
 		?>
 	<!-- USERGROUPS NAVIGATION -->
 	<TR><TD <?php echo $usergroups_hh ?>>
-	<a href="<?php echo $ADMIN ?>?ADD=100000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $usergroups_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $usergroups_bold ?> User Groups </a>
+	<a href="<?php echo $ADMIN ?>?ADD=100000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $usergroups_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $usergroups_bold ?> <?php echo _QXZ("User Groups"); ?> </a>
 	</TD></TR>
 	<?php
 	if (strlen($usergroups_hh) > 1)
 		{ 
 		?>
 		<TR BGCOLOR=<?php echo $usergroups_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=100000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show User Groups </a>
+		<a href="<?php echo $ADMIN ?>?ADD=100000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show User Groups"); ?> </a>
 		</TR><TR BGCOLOR=<?php echo $usergroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<?php if ($add_copy_disabled < 1) { ?>
-		<a href="<?php echo $ADMIN ?>?ADD=111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New User Group </a>
+		<a href="<?php echo $ADMIN ?>?ADD=111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New User Group"); ?> </a>
 		</TR><TR BGCOLOR=<?php echo $usergroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<?php } ?>
-		<a href="group_hourly_stats.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Group Hourly Report </a>
+		<a href="group_hourly_stats.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Group Hourly Report"); ?> </a>
 		</TR><TR BGCOLOR=<?php echo $usergroups_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="user_group_bulk_change.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Bulk Group Change </a>
+		<a href="user_group_bulk_change.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Bulk Group Change"); ?> </a>
 		</TD></TR>
 		<?php } 
 	?>
 	<!-- REMOTEAGENTS NAVIGATION -->
 	<TR><TD <?php echo $remoteagent_hh ?>>
-	<a href="<?php echo $ADMIN ?>?ADD=10000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $remoteagent_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $remoteagent_bold ?> Remote Agents </a>
+	<a href="<?php echo $ADMIN ?>?ADD=10000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $remoteagent_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $remoteagent_bold ?> <?php echo _QXZ("Remote Agents"); ?> </a>
 	</TD></TR>
 	<?php
 	if (strlen($remoteagent_hh) > 1) 
 		{ 
 		?>
 		<TR BGCOLOR=<?php echo $remoteagent_color ?>><TD ALIGN=LEFT> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=10000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Remote Agents </a>
+		<a href="<?php echo $ADMIN ?>?ADD=10000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show Remote Agents"); ?> </a>
 		</TR><TR BGCOLOR=<?php echo $remoteagent_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<?php if ($add_copy_disabled < 1) { ?>
-		<a href="<?php echo $ADMIN ?>?ADD=11111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add New Remote Agents </a>
+		<a href="<?php echo $ADMIN ?>?ADD=11111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add New Remote Agents"); ?> </a>
 		</TR><TR BGCOLOR=<?php echo $remoteagent_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<?php } ?>
-		<a href="<?php echo $ADMIN ?>?ADD=12000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Extension Groups </a>
+		<a href="<?php echo $ADMIN ?>?ADD=12000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show Extension Groups"); ?> </a>
 		</TR><TR BGCOLOR=<?php echo $remoteagent_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<?php if ($add_copy_disabled < 1) { ?>
-		<a href="<?php echo $ADMIN ?>?ADD=12111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add Extension Group </a>
+		<a href="<?php echo $ADMIN ?>?ADD=12111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add Extension Group"); ?> </a>
 		<?php } ?>
 		</TD></TR>
 	<?php } 
 	?>
 	<!-- ADMIN NAVIGATION -->
 	<TR><TD <?php echo $admin_hh ?>>
-	<a href="<?php echo $ADMIN ?>?ADD=999998"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $admin_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $admin_bold ?> Admin </a>
+	<a href="<?php echo $ADMIN ?>?ADD=999998"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $admin_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $admin_bold ?> <?php echo _QXZ("Admin"); ?> </a>
 	</TD></TR>
 	<?php
 	if (strlen($admin_hh) > 1) 
@@ -1470,6 +1488,11 @@ $SSlevel_8_disable_add =	$row[5];
 			else {$audio_sh=''; $audio_fc='BLACK';}
 		if ($sh=='moh') {$moh_sh="bgcolor=\"$moh_color\""; $moh_fc="$moh_font";}
 			else {$moh_sh=''; $moh_fc='BLACK';}
+		if ( preg_match("/avatar/",$SSactive_modules) )
+			{
+			if ($sh=='avatar') {$avatar_sh="bgcolor=\"$avatar_color\""; $avatar_fc="$avatar_font";}
+				else {$avatar_sh=''; $avatar_fc='BLACK';}
+			}
 		if ($sh=='vm') {$vm_sh="bgcolor=\"$vm_color\""; $vm_fc="$vm_font";}
 			else {$vm_sh=''; $vm_fc='BLACK';}
 		if ($sh=='tts') {$tts_sh="bgcolor=\"$tts_color\""; $tts_fc="$tts_font";}
@@ -1485,63 +1508,72 @@ $SSlevel_8_disable_add =	$row[5];
 		?>
 		<TR BGCOLOR=<?php echo $admin_color ?>>
 		<TD ALIGN=LEFT <?php echo $times_sh ?> COLSPAN=2> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=100000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $times_fc ?> SIZE=<?php echo $header_font_size ?>> Call Times </a></TD>
+		<a href="<?php echo $ADMIN ?>?ADD=100000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $times_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Call Times"); ?> </a></TD>
 		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $shifts_sh ?>> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=130000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $shifts_fc ?> SIZE=<?php echo $header_font_size ?>> Shifts </a></TD>
+		<a href="<?php echo $ADMIN ?>?ADD=130000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $shifts_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Shifts"); ?> </a></TD>
 		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $phones_sh ?>> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=10000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $phones_fc ?> SIZE=<?php echo $header_font_size ?>> Phones </a></TD>
+		<a href="<?php echo $ADMIN ?>?ADD=10000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $phones_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Phones"); ?> </a></TD>
 		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $templates_sh ?>> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=130000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $templates_fc ?> SIZE=<?php echo $header_font_size ?>> Templates </a></TD>
+		<a href="<?php echo $ADMIN ?>?ADD=130000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $templates_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Templates"); ?> </a></TD>
 		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $carriers_sh ?>> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=140000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $carriers_fc ?> SIZE=<?php echo $header_font_size ?>> Carriers </a></TD>
+		<a href="<?php echo $ADMIN ?>?ADD=140000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $carriers_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Carriers"); ?> </a></TD>
 		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $server_sh ?>> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=100000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $server_fc ?> SIZE=<?php echo $header_font_size ?>> Servers </a></TD>
+		<a href="<?php echo $ADMIN ?>?ADD=100000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $server_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Servers"); ?> </a></TD>
 		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $conference_sh ?>> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=1000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $conference_fc ?> SIZE=<?php echo $header_font_size ?>> Conferences </a></TD>
+		<a href="<?php echo $ADMIN ?>?ADD=1000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $conference_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Conferences"); ?> </a></TD>
 		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $settings_sh ?>> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=311111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $settings_fc ?> SIZE=<?php echo $header_font_size ?>> System Settings </a></TD>
+		<a href="<?php echo $ADMIN ?>?ADD=311111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $settings_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("System Settings"); ?> </a></TD>
 		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $label_sh ?>> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=180000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $label_fc ?> SIZE=<?php echo $header_font_size ?>> Screen Labels </a></TD>
+		<a href="<?php echo $ADMIN ?>?ADD=180000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $label_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Screen Labels"); ?> </a></TD>
 		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $status_sh ?>> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=321111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $status_fc ?> SIZE=<?php echo $header_font_size ?>> System Statuses </a></TD>
+		<a href="<?php echo $ADMIN ?>?ADD=321111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $status_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("System Statuses"); ?> </a></TD>
 		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $vm_sh ?>> &nbsp; 
-		<a href="<?php echo $ADMIN ?>?ADD=170000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $vm_fc ?> SIZE=<?php echo $header_font_size ?>> Voicemail </a></TD>
+		<a href="<?php echo $ADMIN ?>?ADD=170000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $vm_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Voicemail"); ?> </a></TD>
 		</TR>
 		<?php
 		if ($SSemail_enabled > 0)
 			{ ?>
 			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $emails_sh ?>> &nbsp; 
-			<a href="admin_email_accounts.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $emails_fc ?> SIZE=<?php echo $header_font_size ?>> Email Accounts </a></TD>
+			<a href="admin_email_accounts.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $emails_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Email Accounts"); ?> </a></TD>
 			</TR>
 		<?php }
 		if ( ($sounds_central_control_active > 0) or ($SSsounds_central_control_active > 0) )
 			{ ?>
 			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $audio_sh ?>> &nbsp; 
-			<a href="audio_store.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $audio_fc ?> SIZE=<?php echo $header_font_size ?>> Audio Store </a></TD>
+			<a href="audio_store.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $audio_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Audio Store"); ?> </a></TD>
 			</TR>
 			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $moh_sh ?>> &nbsp; 
-			<a href="<?php echo $ADMIN ?>?ADD=160000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $moh_fc ?> SIZE=<?php echo $header_font_size ?>> Music On Hold </a></TD>
+			<a href="<?php echo $ADMIN ?>?ADD=160000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $moh_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Music On Hold"); ?> </a></TD>
+			</TR>
+			<?php
+			if (preg_match("/avatar/",$SSactive_modules) )
+				{
+			?>
+			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $avatar_sh ?>> &nbsp; 
+			<a href="admin_avatar.php?ADD=162000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $avatar_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Audio Avatars"); ?> </a></TD>
 			</TR>
 
-		<?php }
+		<?php 
+				}
+			}
 		if ($SSenable_tts_integration > 0)
 			{ ?>
 			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $tts_sh ?>> &nbsp; 
-			<a href="<?php echo $ADMIN ?>?ADD=150000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $tts_fc ?> SIZE=<?php echo $header_font_size ?>> Text To Speech </a></TD>
+			<a href="<?php echo $ADMIN ?>?ADD=150000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $tts_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Text To Speech"); ?> </a></TD>
 			</TR>
 
 		<?php }
 		if ($SScallcard_enabled > 0)
 			{ ?>
 			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $cc_sh ?>> &nbsp; 
-			<a href="callcard_admin.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $cc_fc ?> SIZE=<?php echo $header_font_size ?>> CallCard Admin </a></TD>
+			<a href="callcard_admin.php"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $cc_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("CallCard Admin"); ?> </a></TD>
 			</TR>
 
 		<?php }
 		if ($SScontacts_enabled > 0)
 			{ ?>
 			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $cts_sh ?>> &nbsp; 
-			<a href="<?php echo $ADMIN ?>?ADD=190000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $cts_fc ?> SIZE=<?php echo $header_font_size ?>> Contacts </a></TD>
+			<a href="<?php echo $ADMIN ?>?ADD=190000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $cts_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Contacts"); ?> </a></TD>
 			</TR>
 
 		<?php }
@@ -1550,7 +1582,7 @@ $SSlevel_8_disable_add =	$row[5];
 		?>
 		<!-- REPORTS NAVIGATION -->
 		<TR><TD <?php echo $reports_hh ?>>
-		<a href="<?php echo $ADMIN ?>?ADD=999999"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $reports_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $reports_bold ?> Reports </a>
+		<a href="<?php echo $ADMIN ?>?ADD=999999"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $reports_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $reports_bold ?> <?php echo _QXZ("Reports"); ?> </a>
 		</TD></TR>
 		<?php
 		}
@@ -1561,7 +1593,7 @@ $SSlevel_8_disable_add =	$row[5];
 			?>
 			<!-- REPORTS NAVIGATION -->
 			<TR><TD <?php echo $reports_hh ?>>
-			<a href="<?php echo $ADMIN ?>?ADD=999999"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $reports_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $reports_bold ?> Reports </a>
+			<a href="<?php echo $ADMIN ?>?ADD=999999"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $reports_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $reports_bold ?> <?php echo _QXZ("Reports"); ?> </a>
 			</TD></TR>
 			<?php
 			}
@@ -1572,7 +1604,7 @@ $SSlevel_8_disable_add =	$row[5];
 
 			<TR>
 				<TD <?php echo $qc_hh ?>>
-					<a href="<?php echo $ADMIN ?>?ADD=100000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $qc_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $qc_bold ?> Quality Control </FONT></a>
+					<a href="<?php echo $ADMIN ?>?ADD=100000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $qc_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $qc_bold ?> <?php echo _QXZ("Quality Control"); ?> </FONT></a>
 				</TD>
 			</TR>
 			<?php
@@ -1581,17 +1613,17 @@ $SSlevel_8_disable_add =	$row[5];
 				?>
 			<TR BGCOLOR=<?php echo $qc_color ?>>
 				<TD ALIGN=LEFT> &nbsp;
-					<a href="<?php echo $ADMIN ?>?ADD=100000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show QC Campaigns </FONT></a>
+					<a href="<?php echo $ADMIN ?>?ADD=100000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show QC Campaigns"); ?> </FONT></a>
 				</TD>
 			</TR>
 			<TR BGCOLOR=<?php echo $qc_color ?>>
 				<TD ALIGN=LEFT> &nbsp;
-					<a href="<?php echo $ADMIN ?>?ADD=100000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Enter QC Queue </FONT></a>
+					<a href="<?php echo $ADMIN ?>?ADD=100000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Enter QC Queue"); ?> </FONT></a>
 				</TD>
 			</TR>
 			<TR BGCOLOR=<?php echo $qc_color ?>>
 				<TD ALIGN=LEFT> &nbsp;
-					<a href="<?php echo $ADMIN ?>?ADD=341111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Modify QC Codes </FONT></a>
+					<a href="<?php echo $ADMIN ?>?ADD=341111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Modify QC Codes"); ?> </FONT></a>
 				</TD>
 			</TR>
 				<?php }
@@ -1609,7 +1641,7 @@ $SSlevel_8_disable_add =	$row[5];
 </span>
 
 <TABLE BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0 WIDTH=<?php echo $page_width ?> HEIGHT=15>
-<TR BGCOLOR=#015B91><TD ALIGN=LEFT BGCOLOR=#015B91><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><a href="<?php echo $admin_home_url_LU ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1>HOME</a> | <A HREF="../agc/timeclock.php?referrer=admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1> Timeclock</A> | <a href="<?php echo $ADMIN ?>?force_logout=1"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1>Logout</a> <FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1>(<?php echo $PHP_AUTH_USER ?>)</FONT></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo date("l F j, Y G:i:s A") ?> &nbsp; </B></TD></TR>
+<TR BGCOLOR=#015B91><TD ALIGN=LEFT BGCOLOR=#015B91><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><a href="<?php echo $admin_home_url_LU ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1><?php echo _QXZ("HOME"); ?></a> | <A HREF="../agc/timeclock.php?referrer=admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1> <?php echo _QXZ("Timeclock"); ?></A> | <a href="<?php echo $ADMIN ?>?force_logout=1"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1><?php echo _QXZ("Logout"); ?></a> <FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1>(<?php echo $PHP_AUTH_USER ?>)</FONT></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo date("l F j, Y G:i:s A") ?> &nbsp; </B></TD></TR>
 
 <TR BGCOLOR=#015B91>
 
@@ -1623,79 +1655,87 @@ $SSlevel_8_disable_add =	$row[5];
 	<?php
 	if (strlen($list_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $subcamp_color ?>><TD ALIGN=LEFT COLSPAN=2><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> Show Campaigns </a> &nbsp; &nbsp; |<?php if ($add_copy_disabled < 1) { ?>
-&nbsp; &nbsp; <a href="<?php echo $ADMIN ?>?ADD=11"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> Add A New Campaign </a> &nbsp; &nbsp; | &nbsp; &nbsp; <a href="<?php echo $ADMIN ?>?ADD=12"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> Copy Campaign </a> &nbsp; &nbsp; |<?php } ?> &nbsp; &nbsp; <a href="./AST_timeonVDADallSUMMARY.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> Real-Time Campaigns Summary </a></TD></TR>
+	<TR BGCOLOR=<?php echo $subcamp_color ?>><TD ALIGN=LEFT COLSPAN=2><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> <?php echo _QXZ("Show Campaigns"); ?> </a> &nbsp; &nbsp; |<?php if ($add_copy_disabled < 1) { ?>
+&nbsp; &nbsp; <a href="<?php echo $ADMIN ?>?ADD=11"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> <?php echo _QXZ("Add A New Campaign"); ?> </a> &nbsp; &nbsp; | &nbsp; &nbsp; <a href="<?php echo $ADMIN ?>?ADD=12"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> <?php echo _QXZ("Copy Campaign"); ?> </a> &nbsp; &nbsp; |<?php } ?> &nbsp; &nbsp; <a href="./AST_timeonVDADallSUMMARY.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subcamp_font_size ?>> <?php echo _QXZ("Real-Time Campaigns Summary"); ?> </a></TD></TR>
 		<?php } 
 
 	if (strlen($times_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $times_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=100000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Call Times </a> &nbsp;|<?php if ($add_copy_disabled < 1) { ?>
- <a href="<?php echo $ADMIN ?>?ADD=111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Call Time </a> &nbsp;|<?php } ?> <a href="<?php echo $ADMIN ?>?ADD=1000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show State Call Times </a> &nbsp;|<?php if ($add_copy_disabled < 1) { ?> <a href="<?php echo $ADMIN ?>?ADD=1111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New State Call Time </a> &nbsp;|<?php } ?> <a href="<?php echo $ADMIN ?>?ADD=1200000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Holidays </a> &nbsp;|<?php if ($add_copy_disabled < 1) { ?> <a href="<?php echo $ADMIN ?>?ADD=1211111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add Holiday </a><?php } ?></TD></TR>
+	<TR BGCOLOR=<?php echo $times_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=100000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show Call Times"); ?> </a> &nbsp;|<?php if ($add_copy_disabled < 1) { ?>
+ <a href="<?php echo $ADMIN ?>?ADD=111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New Call Time"); ?> </a> &nbsp;|<?php } ?> <a href="<?php echo $ADMIN ?>?ADD=1000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show State Call Times"); ?> </a> &nbsp;|<?php if ($add_copy_disabled < 1) { ?> <a href="<?php echo $ADMIN ?>?ADD=1111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New State Call Time"); ?> </a> &nbsp;|<?php } ?> <a href="<?php echo $ADMIN ?>?ADD=1200000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Holidays"); ?> </a> &nbsp;|<?php if ($add_copy_disabled < 1) { ?> <a href="<?php echo $ADMIN ?>?ADD=1211111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add Holiday"); ?> </a><?php } ?></TD></TR>
 		<?php } 
 	if (strlen($shifts_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $shifts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=130000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Shifts </a> &nbsp;|<?php if ($add_copy_disabled < 1) { ?> <a href="<?php echo $ADMIN ?>?ADD=131111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Shift </a><?php } ?></TD></TR>
+	<TR BGCOLOR=<?php echo $shifts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=130000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show Shifts"); ?> </a> &nbsp;|<?php if ($add_copy_disabled < 1) { ?> <a href="<?php echo $ADMIN ?>?ADD=131111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New Shift"); ?> </a><?php } ?></TD></TR>
 		<?php } 
 	if (strlen($phones_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $phones_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Phones </a>&nbsp;|<?php if ($add_copy_disabled < 1) { ?>&nbsp;<a href="<?php echo $ADMIN ?>?ADD=11111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Phone </a>&nbsp;|<?php } ?>&nbsp;<a href="<?php echo $ADMIN ?>?ADD=12000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Phone Alias List </a>&nbsp;|<?php if ($add_copy_disabled < 1) { ?>&nbsp;<a href="<?php echo $ADMIN ?>?ADD=12111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Phone Alias </a>&nbsp;|<?php } ?>&nbsp;<a href="<?php echo $ADMIN ?>?ADD=13000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Group Alias List </a>&nbsp;|<?php if ($add_copy_disabled < 1) { ?>&nbsp;<a href="<?php echo $ADMIN ?>?ADD=13111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Group Alias </a><?php } ?></TD></TR>
+	<TR BGCOLOR=<?php echo $phones_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show Phones"); ?> </a>&nbsp;|<?php if ($add_copy_disabled < 1) { ?>&nbsp;<a href="<?php echo $ADMIN ?>?ADD=11111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New Phone"); ?> </a>&nbsp;|<?php } ?>&nbsp;<a href="<?php echo $ADMIN ?>?ADD=12000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Phone Alias List"); ?> </a>&nbsp;|<?php if ($add_copy_disabled < 1) { ?>&nbsp;<a href="<?php echo $ADMIN ?>?ADD=12111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New Phone Alias"); ?> </a>&nbsp;|<?php } ?>&nbsp;<a href="<?php echo $ADMIN ?>?ADD=13000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Group Alias List"); ?> </a>&nbsp;|<?php if ($add_copy_disabled < 1) { ?>&nbsp;<a href="<?php echo $ADMIN ?>?ADD=13111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New Group Alias"); ?> </a><?php } ?></TD></TR>
 		<?php }
 	if (strlen($conference_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $conference_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Conferences </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Conference </a> &nbsp; |<?php } ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show VICIDIAL Conferences </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=11111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New VICIDIAL Conference </a><?php } ?></TD></TR>
+	<TR BGCOLOR=<?php echo $conference_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show Conferences"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New Conference"); ?> </a> &nbsp; |<?php } ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show VICIDIAL Conferences"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=11111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New VICIDIAL Conference"); ?> </a><?php } ?></TD></TR>
 		<?php }
 	if ( (strlen($server_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $server_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=100000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Servers </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Server </a><?php } ?></TD></TR>
+	<TR BGCOLOR=<?php echo $server_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=100000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show Servers"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New Server"); ?> </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($templates_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $templates_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=130000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Templates </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=131111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Template </a><?php } ?></TD></TR>
+	<TR BGCOLOR=<?php echo $templates_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=130000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show Templates"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=131111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New Template"); ?> </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($carriers_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $carriers_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=140000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Carriers </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=141111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Carrier </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=140111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy A Carrier </a><?php } ?></TD></TR>
+	<TR BGCOLOR=<?php echo $carriers_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=140000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show Carriers"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=141111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New Carrier"); ?> </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=140111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Copy A Carrier"); ?> </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($emails_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $emails_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="admin_email_accounts.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Email Accounts </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="admin_email_accounts.php?eact=ADD"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2> Add A New Account </a> &nbsp; | &nbsp; <a href="admin_email_accounts.php?eact=COPY"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Copy An Account </a><?php } ?></TD></TR>
+	<TR BGCOLOR=<?php echo $emails_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="admin_email_accounts.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show Email Accounts"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="admin_email_accounts.php?eact=ADD"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2> <?php echo _QXZ("Add A New Account"); ?> </a> &nbsp; | &nbsp; <a href="admin_email_accounts.php?eact=COPY"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Copy An Account"); ?> </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($tts_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $tts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=150000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show TTS Entries </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=151111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New TTS Entry </a><?php } ?></TD></TR>
+	<TR BGCOLOR=<?php echo $tts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=150000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show TTS Entries"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=151111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New TTS Entry"); ?> </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($cc_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $cc_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="callcard_admin.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> CallCard Summary </a> &nbsp; | &nbsp; <a href="callcard_admin.php?action=CALLCARD_RUNS"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Runs </a> &nbsp; | &nbsp; <a href="callcard_admin.php?action=CALLCARD_BATCHES"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Batches </a> &nbsp; | &nbsp; <a href="callcard_admin.php?action=SEARCH"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> CallCard Search </a> &nbsp; | &nbsp; <a href="callcard_report_export.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> CallCard Log Export </a> &nbsp; | &nbsp; <a href="callcard_admin.php?action=GENERATE"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> CallCard Generate New Numbers </a></TD></TR>
+	<TR BGCOLOR=<?php echo $cc_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="callcard_admin.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("CallCard Summary"); ?> </a> &nbsp; | &nbsp; <a href="callcard_admin.php?action=CALLCARD_RUNS"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Runs"); ?> </a> &nbsp; | &nbsp; <a href="callcard_admin.php?action=CALLCARD_BATCHES"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Batches"); ?> </a> &nbsp; | &nbsp; <a href="callcard_admin.php?action=SEARCH"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("CallCard Search"); ?> </a> &nbsp; | &nbsp; <a href="callcard_report_export.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("CallCard Log Export"); ?> </a> &nbsp; | &nbsp; <a href="callcard_admin.php?action=GENERATE"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("CallCard Generate New Numbers"); ?> </a></TD></TR>
 	<?php }
 	if ( (strlen($moh_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $moh_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=160000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show MOH Entries </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=161111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New MOH Entry </a><?php } ?></TD></TR>
+	<TR BGCOLOR=<?php echo $moh_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=160000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show MOH Entries"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=161111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New MOH Entry"); ?> </a><?php } ?></TD></TR>
 	<?php }
+	if (preg_match("/avatar/",$SSactive_modules) )
+		{
+	if ( (strlen($avatar_sh) > 1) and (strlen($admin_hh) > 1) ) { 
+		?>
+	<TR BGCOLOR=<?php echo $avatar_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="admin_avatar.php?ADD=162000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show Avatar Entries"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="admin_avatar.php?ADD=162111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New Avatar Entry"); ?></FONT></a> &nbsp; | &nbsp; <a href="admin_avatar.php?ADD=162211111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Copy An Avatar Entry"); ?></FONT></a> &nbsp; <?php } ?></TD></TR>
+	<?php
+		}
+	}
 	if ( (strlen($vm_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $vm_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=170000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Show Voicemail Entries </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=171111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A New Voicemail Entry </a><?php } ?></TD></TR>
+	<TR BGCOLOR=<?php echo $vm_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=170000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show Voicemail Entries"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=171111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New Voicemail Entry"); ?> </a><?php } ?></TD></TR>
 	<?php }
 	if (strlen($settings_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $settings_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=311111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> System Settings </a></TD></TR>
+	<TR BGCOLOR=<?php echo $settings_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=311111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("System Settings"); ?> </a></TD></TR>
 	<?php }
 	if (strlen($label_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $label_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=180000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Screen Labels </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=181111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A Screen Label </a><?php } ?></TD></TR>
+	<TR BGCOLOR=<?php echo $label_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=180000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Screen Labels"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=181111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A Screen Label"); ?> </a><?php } ?></TD></TR>
 	<?php }
 	if (strlen($cts_sh) > 1) { 
 		?>
-	<TR BGCOLOR=<?php echo $cts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=190000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Contacts </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=191111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Add A Contact </a><?php } ?></TD></TR>
+	<TR BGCOLOR=<?php echo $cts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=190000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Contacts"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=191111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A Contact"); ?> </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($status_sh) > 1) and (!preg_match('/campaign/i',$hh) ) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $status_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=321111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> System Statuses </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=331111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> Status Categories </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=341111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> QC Status Codes </a></TD></TR>
+	<TR BGCOLOR=<?php echo $status_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=321111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("System Statuses"); ?> </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=331111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Status Categories"); ?> </a> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=341111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("QC Status Codes"); ?> </a></TD></TR>
 	<?php }
 
 	if ( ($ADD=='3') or ($ADD=='3') ) { 
 		?>
-	<TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="./user_stats.php?user=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>User Stats </a> &nbsp; | &nbsp; <a href="./user_status.php?user=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>User Status </a> &nbsp; | &nbsp; <a href="./AST_agent_time_sheet.php?agent=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Time Sheet </a> &nbsp; | &nbsp; <a href="./AST_agent_days_detail.php?user=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>>Days Status </a></TD></TR>
+	<TR BGCOLOR=<?php echo $users_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="./user_stats.php?user=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>><?php echo _QXZ("User Stats"); ?> </a> &nbsp; | &nbsp; <a href="./user_status.php?user=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>><?php echo _QXZ("User Status"); ?> </a> &nbsp; | &nbsp; <a href="./AST_agent_time_sheet.php?agent=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>><?php echo _QXZ("Time Sheet"); ?> </a> &nbsp; | &nbsp; <a href="./AST_agent_days_detail.php?user=<?php echo $user ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>><?php echo _QXZ("Days Status"); ?> </a></TD></TR>
 	<?php }
 
 	

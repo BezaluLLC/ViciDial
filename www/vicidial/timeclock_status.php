@@ -20,6 +20,7 @@
 # 130616-0114 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0838 - Changed to mysqli PHP functions
 # 140108-0719 - Added webserver and hostname to report logging
+# 141007-2216 - Finalized adding QXZ translation to all admin files
 #
 
 #header ("Content-type: text/html; charset=utf-8");
@@ -49,7 +50,7 @@ if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 if (isset($_GET["file_download"]))					{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))		{$file_download=$_POST["file_download"];}
 
-$report_name = 'User Group Timeclock Status Report';
+$report_name = _QXZ('User Group Timeclock Status Report');
 $db_source = 'M';
 
 #############################################
@@ -125,7 +126,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -138,10 +139,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -224,7 +225,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -313,7 +314,7 @@ $MAIN.="<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELV
 $MAIN.="<form action=$PHP_SELF method=GET>\n";
 $MAIN.="<input type=hidden name=DB value=\"$DB\">\n";
 $MAIN.="<select size=1 name=user_group>$FORMuser_groups</select>";
-$MAIN.="<input type=submit name=submit value=submit>\n";
+$MAIN.="<input type=submit name=submit VALUE='"._QXZ("SUBMIT")."'\n";
 
 $MAIN.="</B></TD></TR>\n";
 $MAIN.="<TR><TD ALIGN=LEFT COLSPAN=2>\n";
@@ -467,21 +468,21 @@ $MAIN.="<center>\n";
 
 $MAIN.="<TABLE width=720 cellspacing=0 cellpadding=1>\n";
 $MAIN.="<TR>\n";
-$MAIN.="<TD bgcolor=\"#99FF33\"> &nbsp; &nbsp; </TD><TD align=left> TC Logged in and VICI active</TD>\n"; # bright green
-$MAIN.="<TD bgcolor=\"#FFFF33\"> &nbsp; &nbsp; </TD><TD align=left> TC Logged in only</TD>\n"; # bright yellow
-$MAIN.="<TD bgcolor=\"#FF6666\"> &nbsp; &nbsp; </TD><TD align=left> VICI active only</TD>\n"; # bright red
+$MAIN.="<TD bgcolor=\"#99FF33\"> &nbsp; &nbsp; </TD><TD align=left> "._QXZ("TC Logged in and VICI active")."</TD>\n"; # bright green
+$MAIN.="<TD bgcolor=\"#FFFF33\"> &nbsp; &nbsp; </TD><TD align=left> "._QXZ("TC Logged in only")."</TD>\n"; # bright yellow
+$MAIN.="<TD bgcolor=\"#FF6666\"> &nbsp; &nbsp; </TD><TD align=left> "._QXZ("VICI active only")."</TD>\n"; # bright red
 $MAIN.="</TR><TR>\n";
-$MAIN.="<TD bgcolor=\"#66CC66\"> &nbsp; &nbsp; </TD><TD align=left> TC Logged out and VICI active</TD>\n"; # dull green
-$MAIN.="<TD bgcolor=\"#CCCC00\"> &nbsp; &nbsp; </TD><TD align=left> TC Logged out only</TD>\n"; # dull yellow
+$MAIN.="<TD bgcolor=\"#66CC66\"> &nbsp; &nbsp; </TD><TD align=left> "._QXZ("TC Logged out and VICI active")."</TD>\n"; # dull green
+$MAIN.="<TD bgcolor=\"#CCCC00\"> &nbsp; &nbsp; </TD><TD align=left> "._QXZ("TC Logged out only")."</TD>\n"; # dull yellow
 $MAIN.="<TD> &nbsp; &nbsp; </TD><TD align=left> &nbsp; </TD>\n";
 $MAIN.="</TR></TABLE><BR>\n";
 
-$MAIN.="<B>USER STATUS FOR USER GROUP: $user_group &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$PHP_SELF?DB=$DB&user_group=$user_group&submit=$submit&file_download=1'>[DOWNLOAD]</a></B>\n";
+$MAIN.="<B>"._QXZ("USER STATUS FOR USER GROUP").": $user_group &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$PHP_SELF?DB=$DB&user_group=$user_group&submit=$submit&file_download=1'>["._QXZ("DOWNLOAD")."]</a></B>\n";
 $MAIN.="<TABLE width=700 cellspacing=0 cellpadding=1>\n";
-$MAIN.="<tr><td><font size=2># </td><td><font size=2>USER </td><td align=left><font size=2>NAME </td><td align=right><font size=2> IP ADDRESS</td><td align=right><font size=2> TC TIME</td><td align=right><font size=2>TC LOGIN</td><td align=right><font size=2> VICI LAST LOG</td><td align=right><font size=2> VICI CAMPAIGN</td></tr>\n";
+$MAIN.="<tr><td><font size=2># </td><td><font size=2>"._QXZ("USER")." </td><td align=left><font size=2>"._QXZ("NAME")." </td><td align=right><font size=2> "._QXZ("IP ADDRESS")."</td><td align=right><font size=2> "._QXZ("TC TIME")."</td><td align=right><font size=2>"._QXZ("TC LOGIN")."</td><td align=right><font size=2> "._QXZ("VICI LAST LOG")."</td><td align=right><font size=2> "._QXZ("VICI CAMPAIGN")."</td></tr>\n";
 
-$CSV_text.="\"USER STATUS FOR USER GROUP: $user_group\"\n";
-$CSV_text.="\"\",\"#\",\"USER\",\"NAME\",\"STATUS\",\"IP ADDRESS\",\"TC TIME\",\"TC LOGIN\",\"VICI LAST LOG\",\"VICI CAMPAIGN\"\n";
+$CSV_text.="\""._QXZ("USER STATUS FOR USER GROUP").": $user_group\"\n";
+$CSV_text.="\"\",\"#\",\""._QXZ("USER")."\",\""._QXZ("NAME")."\",\""._QXZ("STATUS")."\",\""._QXZ("IP ADDRESS")."\",\""._QXZ("TC TIME")."\",\""._QXZ("TC LOGIN")."\",\""._QXZ("VICI LAST LOG")."\",\""._QXZ("VICI CAMPAIGN")."\"\n";
 
 $o=0;
 $s=0;
@@ -492,18 +493,18 @@ while ($users_to_print > $o)
 		if ( ($Tstatus[$o]=='START') or ($Tstatus[$o]=='LOGIN') )
 			{
 			if ($Tlogin_sec[$o] > 0)
-				{$bgcolor[$o]='bgcolor="#FFFF33"'; $CSV_status="TC Logged in only";} # yellow
+				{$bgcolor[$o]='bgcolor="#FFFF33"'; $CSV_status=_QXZ("TC Logged in only");} # yellow
 			if ( ($Tlogin_sec[$o] > 0) and (strlen($Vevent_time[$o]) > 0) )
-				{$bgcolor[$o]='bgcolor="#99FF33"'; $CSV_status="TC Logged in and VICI active";} # green
+				{$bgcolor[$o]='bgcolor="#99FF33"'; $CSV_status=_QXZ("TC Logged in and VICI active");} # green
 			}
 		else
 			{
 			if ($Tlogin_sec[$o] > 0)
-				{$bgcolor[$o]='bgcolor="#CCCC00"'; $CSV_status="TC Logged out only";} # yellow
+				{$bgcolor[$o]='bgcolor="#CCCC00"'; $CSV_status=_QXZ("TC Logged out only");} # yellow
 			if (strlen($Vevent_time[$o]) > 0)
-				{$bgcolor[$o]='bgcolor="#FF6666"'; $CSV_status="VICI active only";} # red
+				{$bgcolor[$o]='bgcolor="#FF6666"'; $CSV_status=_QXZ("VICI active only");} # red
 			if ( ($Tlogin_sec[$o] > 0) and (strlen($Vevent_time[$o]) > 0) )
-				{$bgcolor[$o]='bgcolor="#66CC66"'; $CSV_status="TC Logged out and VICI active";} # green
+				{$bgcolor[$o]='bgcolor="#66CC66"'; $CSV_status=_QXZ("TC Logged out and VICI active");} # green
 			}
 
 		$s++;
@@ -537,7 +538,7 @@ $total_login_minutes_int = round($total_login_minutes, 0);
 if ($total_login_minutes_int < 10) {$total_login_minutes_int = "0$total_login_minutes_int";}
 
 $MAIN.="<tr bgcolor=white>";
-$MAIN.="<td colspan=4><font size=2>TOTALS</td>";
+$MAIN.="<td colspan=4><font size=2>"._QXZ("TOTALS")."</td>";
 $MAIN.="<td align=right><font size=2>$total_login_hours_int:$total_login_minutes_int</td>";
 $MAIN.="<td align=right><font size=2></td>";
 $MAIN.="<td align=right><font size=2></td>";
@@ -545,7 +546,7 @@ $MAIN.="<td align=right><font size=2></td>";
 $MAIN.="</tr>";
 $MAIN.="</table>";
 
-$CSV_text.="\"\",\"TOTALS\",\"\",\"\",\"\",\"\",\"$total_login_hours_int:$total_login_minutes_int\"\n";
+$CSV_text.="\"\",\""._QXZ("TOTALS")."\",\"\",\"\",\"\",\"\",\"$total_login_hours_int:$total_login_minutes_int\"\n";
 
 
 $ENDtime = date("U");
@@ -555,7 +556,7 @@ $RUNtime = ($ENDtime - $STARTtime);
 $MAIN.="\n\n\n<br><br><br>\n\n";
 
 
-$MAIN.="<font size=0>\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds|$db_source</font>";
+$MAIN.="<font size=0>\n\n\n<br><br><br>\n"._QXZ("script runtime").": $RUNtime "._QXZ("seconds")."|$db_source</font>";
 
 $MAIN.="</TD></TR><TABLE>\n";
 $MAIN.="</body>\n";
@@ -630,9 +631,9 @@ $MAIN.="<br><br>\n";
 
 $MAIN.="<center>\n";
 
-$MAIN.="<B>TIMECLOCK LOGIN/LOGOUT TIME:</B>\n";
+$MAIN.="<B>"._QXZ("TIMECLOCK LOGIN/LOGOUT TIME").":</B>\n";
 $MAIN.="<TABLE width=550 cellspacing=0 cellpadding=1>\n";
-$MAIN.="<tr><td><font size=2>ID </td><td><font size=2>EDIT </td><td align=right><font size=2>EVENT </td><td align=right><font size=2> DATE</td><td align=right><font size=2> IP ADDRESS</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HOURS:MINUTES</td></tr>\n";
+$MAIN.="<tr><td><font size=2>"._QXZ("ID")." </td><td><font size=2>"._QXZ("EDIT")." </td><td align=right><font size=2>"._QXZ("EVENT")." </td><td align=right><font size=2> "._QXZ("DATE")."</td><td align=right><font size=2> "._QXZ("IP ADDRESS")."</td><td align=right><font size=2> "._QXZ("GROUP")."</td><td align=right><font size=2>"._QXZ("HOURS:MINUTES")."</td></tr>\n";
 
 	$stmt="SELECT event,event_epoch,user_group,login_sec,ip_address,timeclock_id,manager_user from vicidial_timeclock_log where user='" . mysqli_real_escape_string($link, $user) . "' and event_epoch >= '$SQepoch'  and event_epoch <= '$EQepoch';";
 	if ($DB>0) {$MAIN.="|$stmt|";}
@@ -702,7 +703,7 @@ $MAIN.="<tr><td align=right><font size=2> </td>";
 $MAIN.="<td align=right><font size=2> </td>\n";
 $MAIN.="<td align=right><font size=2> </td>\n";
 $MAIN.="<td align=right><font size=2> </td>\n";
-$MAIN.="<td align=right><font size=2><font size=2>TOTAL </td>\n";
+$MAIN.="<td align=right><font size=2><font size=2>"._QXZ("TOTAL")." </td>\n";
 $MAIN.="<td align=right><font size=2> $total_login_hours_int:$total_login_minutes_int  </td></tr>\n";
 
 $MAIN.="</TABLE></center>\n";
@@ -720,7 +721,7 @@ $RUNtime = ($ENDtime - $STARTtime);
 $MAIN.="\n\n\n<br><br><br>\n\n";
 
 
-$MAIN.="<font size=0>\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds|$db_source</font>";
+$MAIN.="<font size=0>\n\n\n<br><br><br>\n"._QXZ("script runtime").": $RUNtime "._QXZ("seconds")."|$db_source</font>";
 
 $MAIN.="</TD></TR><TABLE>\n";
 $MAIN.="</body>\n";

@@ -1,7 +1,7 @@
 <?php
 # remote_dispo.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this is the remote agent disposition screen for calls sent to remote agents. 
 # This allows the remote agent to modify customer information and disposition 
@@ -15,6 +15,7 @@
 # 130610-1108 - Finalized changing of all ereg instances to preg
 # 130616-2149 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0854 - Changed to mysqli PHP functions
+# 141007-2137 - Finalized adding QXZ translation to all admin files
 #
 
 require("dbconnect_mysqli.php");
@@ -151,7 +152,7 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+    echo _QXZ("Invalid Username/Password").": |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
     exit;
 	}
 else
@@ -169,7 +170,7 @@ else
 ?>
 <html>
 <head>
-<title>REMOTE: Call Disposition</title>
+<title><?php echo _QXZ("REMOTE: Call Disposition"); ?></title>
 <?php
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 ?>
@@ -195,9 +196,9 @@ if ($end_call > 0)
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 
-	echo "Call has been dispositioned &nbsp; &nbsp; &nbsp; $NOW_TIME\n<BR><BR>\n";
+	echo _QXZ("Call has been dispositioned")." &nbsp; &nbsp; &nbsp; $NOW_TIME\n<BR><BR>\n";
 
-	echo "<form><input type=button value=\"Close This Window\" onClick=\"javascript:window.close();\"></form>\n";
+	echo "<form><input type=button value=\""._QXZ("Close This Window")."\" onClick=\"javascript:window.close();\"></form>\n";
 	}
 else
 	{
@@ -239,7 +240,7 @@ else
 		$security		= $row[28];	#
 		$comments		= $row[29];	#
 
-		echo "<br>Call information: $first_name $last_name - $phone_number<br><br><form action=$PHP_SELF method=POST>\n";
+		echo "<br>"._QXZ("Call information").": $first_name $last_name - $phone_number<br><br><form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=end_call value=1>\n";
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
 		echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
@@ -253,24 +254,24 @@ else
 		echo "<input type=hidden name=call_began value=\"$call_began\">\n";
 		echo "<input type=hidden name=parked_time value=\"$parked_time\">\n";
 		echo "<table cellpadding=1 cellspacing=0>\n";
-		echo "<tr><td colspan=2>Vendor ID: $vendor_id &nbsp; &nbsp; Campaign ID: $campaign_id</td></tr>\n";
-		echo "<tr><td colspan=2>Fronter: $tsr &nbsp; &nbsp; List ID: $list_id</td></tr>\n";
-		echo "<tr><td align=right>First Name: </td><td align=left><input type=text name=first_name size=15 maxlength=30 value=\"$first_name\"> &nbsp; \n";
-		echo " Last Name: <input type=text name=last_name size=15 maxlength=30 value=\"$last_name\"> </td></tr>\n";
-		echo "<tr><td align=right>Address 1 : </td><td align=left><input type=text name=address1 size=30 maxlength=30 value=\"$address1\"></td></tr>\n";
-		echo "<tr><td align=right>Address 2 : </td><td align=left><input type=text name=address2 size=30 maxlength=30 value=\"$address2\"></td></tr>\n";
-		echo "<tr><td align=right>Address 3 : </td><td align=left><input type=text name=address3 size=30 maxlength=30 value=\"$address3\"></td></tr>\n";
-		echo "<tr><td align=right>City : </td><td align=left><input type=text name=city size=30 maxlength=30 value=\"$city\"></td></tr>\n";
-		echo "<tr><td align=right>State: </td><td align=left><input type=text name=state size=2 maxlength=2 value=\"$state\"> &nbsp; \n";
-		echo " Postal Code: <input type=text name=postal_code size=10 maxlength=10 value=\"$postal_code\"> </td></tr>\n";
+		echo "<tr><td colspan=2>"._QXZ("Vendor ID").": $vendor_id &nbsp; &nbsp; "._QXZ("Campaign ID").": $campaign_id</td></tr>\n";
+		echo "<tr><td colspan=2>"._QXZ("Fronter").": $tsr &nbsp; &nbsp; List ID: $list_id</td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("First Name").": </td><td align=left><input type=text name=first_name size=15 maxlength=30 value=\"$first_name\"> &nbsp; \n";
+		echo " "._QXZ("Last Name").": <input type=text name=last_name size=15 maxlength=30 value=\"$last_name\"> </td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("Address 1")." : </td><td align=left><input type=text name=address1 size=30 maxlength=30 value=\"$address1\"></td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("Address 2")." : </td><td align=left><input type=text name=address2 size=30 maxlength=30 value=\"$address2\"></td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("Address 3")." : </td><td align=left><input type=text name=address3 size=30 maxlength=30 value=\"$address3\"></td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("City")." : </td><td align=left><input type=text name=city size=30 maxlength=30 value=\"$city\"></td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("State").": </td><td align=left><input type=text name=state size=2 maxlength=2 value=\"$state\"> &nbsp; \n";
+		echo " "._QXZ("Postal Code").": <input type=text name=postal_code size=10 maxlength=10 value=\"$postal_code\"> </td></tr>\n";
 
-		echo "<tr><td align=right>Province : </td><td align=left><input type=text name=province size=30 maxlength=30 value=\"$province\"></td></tr>\n";
-		echo "<tr><td align=right>Country : </td><td align=left><input type=text name=country_code size=3 maxlength=3 value=\"$country_code\"></td></tr>\n";
-		echo "<tr><td align=right>Alt Phone : </td><td align=left><input type=text name=alt_phone size=10 maxlength=10 value=\"$alt_phone\"></td></tr>\n";
-		echo "<tr><td align=right>Email : </td><td align=left><input type=text name=email size=30 maxlength=50 value=\"$email\"></td></tr>\n";
-		echo "<tr><td align=right>Security : </td><td align=left><input type=text name=security size=30 maxlength=100 value=\"$security\"></td></tr>\n";
-		echo "<tr><td align=right>Comments : </td><td align=left><input type=text name=comments size=30 maxlength=255 value=\"$comments\"></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Disposition: </td><td align=left><select size=1 name=status>\n";
+		echo "<tr><td align=right>"._QXZ("Province")." : </td><td align=left><input type=text name=province size=30 maxlength=30 value=\"$province\"></td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("Country")." : </td><td align=left><input type=text name=country_code size=3 maxlength=3 value=\"$country_code\"></td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("Alt Phone")." : </td><td align=left><input type=text name=alt_phone size=10 maxlength=10 value=\"$alt_phone\"></td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("Email")." : </td><td align=left><input type=text name=email size=30 maxlength=50 value=\"$email\"></td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("Security")." : </td><td align=left><input type=text name=security size=30 maxlength=100 value=\"$security\"></td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("Comments")." : </td><td align=left><input type=text name=comments size=30 maxlength=255 value=\"$comments\"></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Disposition").": </td><td align=left><select size=1 name=status>\n";
 
 		$stmt="SELECT status,status_name from vicidial_statuses where selectable='Y' order by status";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -288,13 +289,13 @@ else
 		echo "</select></td></tr>\n";
 
 
-		echo "<tr><td colspan=2><input type=submit name=submit value=\"DISPO CALL\"></td></tr>\n";
+		echo "<tr><td colspan=2><input type=submit name=submit value=\""._QXZ("DISPO CALL")."\"></td></tr>\n";
 		echo "</table></form>\n";
 		echo "<BR><BR><BR>\n";
 		}
 	else
 		{
-		echo "lead lookup FAILED for lead_id $lead_id &nbsp; &nbsp; &nbsp; $NOW_TIME\n<BR><BR>\n";
+		echo _QXZ("lead lookup FAILED for lead_id")." $lead_id &nbsp; &nbsp; &nbsp; $NOW_TIME\n<BR><BR>\n";
 #		echo "<a href=\"$PHP_SELF\">Close this window</a>\n<BR><BR>\n";
 		}
 	}
@@ -306,7 +307,7 @@ $RUNtime = ($ENDtime - $STARTtime);
 
 echo "\n\n\n<br><br><br>\n\n";
 
-echo "<font size=0>\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds</font>";
+echo "<font size=0>\n\n\n<br><br><br>\n"._QXZ("script runtime").": $RUNtime "._QXZ("seconds")."</font>";
 
 ?>
 

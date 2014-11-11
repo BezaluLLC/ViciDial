@@ -1,7 +1,7 @@
 <?php
 # admin_phones_bulk_insert.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen will insert phones into your multi-server system with aliases
 #
@@ -15,10 +15,11 @@
 # 130610-1043 - Changed all ereg to preg
 # 130621-1724 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0751 - Changed to mysqli PHP functions
+# 141007-1145 - Finalized adding QXZ translation to all admin files
 #
 
-$admin_version = '2.8-9';
-$build = '130902-0751';
+$admin_version = '2.8-10';
+$build = '141007-1145';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -121,10 +122,10 @@ if ($auth_message == 'GOOD')
 
 if ($auth < 1)
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -145,7 +146,7 @@ $ast_delete_phones =		$rights_row[0];
 if ( $ast_delete_phones < 1 )
 	{
 	header ("Content-type: text/html; charset=utf-8");
-	echo "You do not have permissions to manage phones\n";
+	echo _QXZ("You do not have permissions to manage phones")."\n";
 	exit;
 	}
 
@@ -162,7 +163,7 @@ $LOGuser_level =			$row[3];
 <head>
 
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>ADMINISTRATION: Phones Bulk Insert
+<title><?php echo _QXZ("ADMINISTRATION: Phones Bulk Insert"); ?>
 <?php 
 
 ################################################################################
@@ -176,73 +177,73 @@ if ($action == "HELP")
 	<center>
 	<TABLE WIDTH=98% BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=4><TR><TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>
 	<BR>
-	<B>Bulk Phones Insert Help</B>
+	<B><?php echo _QXZ("Bulk Phones Insert Help"); ?></B>
 	<BR><BR>
 
 	<A NAME="servers">
 	<BR>
-	 <B>Servers -</B> This is a list of the server IP addresses of existing servers in the system that you want the phone entries to be populated across. These must be valid IP addresses, they must be active in the system and you must put one per line in this text area input box.
+	 <B><?php echo _QXZ("Servers"); ?> -</B> <?php echo _QXZ("This is a list of the server IP addresses of existing servers in the system that you want the phone entries to be populated across. These must be valid IP addresses, they must be active in the system and you must put one per line in this text area input box."); ?>
 	<BR><BR>
 
 	<A NAME="phones">
 	<BR>
-	 <B>Phones -</B> This is a list of the phone extensions that you want to be created on all of the servers listed above. The phone extensions should be letters and numbers only, with no special characters and you must put one per line in this text area box.
+	 <B><?php echo _QXZ("Phones"); ?> -</B> <?php echo _QXZ("This is a list of the phone extensions that you want to be created on all of the servers listed above. The phone extensions should be letters and numbers only, with no special characters and you must put one per line in this text area box."); ?>
 	<BR><BR>
 
 	<A NAME="registration_password">
 	<BR>
-	 <B>Registration Password -</B> This is the registration password that will be used for all of the phones that are created. For SIP and IAX2 protocol you should use a complex password for secutiry reasons.
+	 <B><?php echo _QXZ("Registration Password"); ?> -</B> <?php echo _QXZ("This is the registration password that will be used for all of the phones that are created. For SIP and IAX2 protocol you should use a complex password for secutiry reasons."); ?>
 	<BR><BR>
 
 	<A NAME="login_password">
 	<BR>
-	 <B>Login Password -</B> This is the agent screen login password that will be used for all of the phones that are created.
+	 <B><?php echo _QXZ("Login Password"); ?> -</B> <?php echo _QXZ("This is the agent screen login password that will be used for all of the phones that are created."); ?>
 	<BR><BR>
 
 	<A NAME="create_alias">
 	<BR>
-	 <B>Create Alias Entries -</B> Setting this option to YES will create a phones alias entry for each of the extensions listed above that will tie all of the same extension entries on each server together allowing phone login load balancing to work in the agent interface.
+	 <B><?php echo _QXZ("Create Alias Entries"); ?> -</B> <?php echo _QXZ("Setting this option to YES will create a phones alias entry for each of the extensions listed above that will tie all of the same extension entries on each server together allowing phone login load balancing to work in the agent interface."); ?>
 	<BR><BR>
 
 	<A NAME="alias_suffix">
 	<BR>
-	 <B>Alias Suffix -</B> This is the suffix that will be added to the extension to form the phone alias id. For example, if the extension is cc100 and the alias suffix is x, then the phone alias id used for that would be cc100x.
+	 <B><?php echo _QXZ("Alias Suffix"); ?> -</B> <?php echo _QXZ("This is the suffix that will be added to the extension to form the phone alias id. For example, if the extension is cc100 and the alias suffix is x, then the phone alias id used for that would be cc100x."); ?>
 	<BR><BR>
 
 	<A NAME="protocol">
 	<BR>
-	 <B>Client Protocol -</B> This is the phone protocol that will be used for all phones created when submitted. SIP and IAX2 are VOIP protocols that will create conf file entries to allow those phoens to register on the servers.
+	 <B><?php echo _QXZ("Client Protocol"); ?> -</B> <?php echo _QXZ("This is the phone protocol that will be used for all phones created when submitted. SIP and IAX2 are VOIP protocols that will create conf file entries to allow those phoens to register on the servers."); ?>
 	<BR><BR>
 
 	<A NAME="gmt">
 	<BR>
-	 <B>Local GMT -</B> This is the time zone that all of the phones will be created with.
+	 <B><?php echo _QXZ("Local GMT"); ?> -</B> <?php echo _QXZ("This is the time zone that all of the phones will be created with."); ?>
 	<BR><BR>
 
 	<A NAME="phone_context">
 	<BR>
-	<B>Phone Context -</B> This is the dial plan context that this phone will use to dial out. If you are running a call center and you do not want your agents to be able to dial out outside of the Contact Center applicaiton for example, then you would set this field to a dialplan context that does not exist, something like agent-nodial. default is default.
+	<B><?php echo _QXZ("Phone Context"); ?> -</B> <?php echo _QXZ("This is the dial plan context that this phone will use to dial out. If you are running a call center and you do not want your agents to be able to dial out outside of the ViciDial applicaiton for example, then you would set this field to a dialplan context that does not exist, something like agent-nodial. default is default."); ?>
 	<BR><BR>
 
 	<BR>
 	<A NAME="is_webphone">
 	<BR>
-	<B>Set As Webphone -</B>  Setting this option to Y will attempt to load a web-based phone when the agent logs into their agent screen. Default is N. The Y_API_LAUNCH option can be used with the agent API to launch the webphone in a separate Iframe or window.
+	<B><?php echo _QXZ("Set As Webphone"); ?> -</B>  <?php echo _QXZ("Setting this option to Y will attempt to load a web-based phone when the agent logs into their agent screen. Default is N. The Y_API_LAUNCH option can be used with the agent API to launch the webphone in a separate Iframe or window."); ?>
 
 	<BR>
 	<A NAME="webphone_dialpad">
 	<BR>
-	<B>Webphone Dialpad -</B>  This setting allows you to activate or deactivate the dialpad for this webphone. Default is Y for enabled. TOGGLE will allow the user to view and hide the dialpad by clicking a link. This feature is not available on all webphone versions. TOGGLE_OFF will default to not show the dialpad on first load, but will allow the user to show the dialpad by clicking on the dialpad link.
+	<B><?php echo _QXZ("Webphone Dialpad"); ?> -</B>  <?php echo _QXZ("This setting allows you to activate or deactivate the dialpad for this webphone. Default is Y for enabled. TOGGLE will allow the user to view and hide the dialpad by clicking a link. This feature is not available on all webphone versions. TOGGLE_OFF will default to not show the dialpad on first load, but will allow the user to show the dialpad by clicking on the dialpad link."); ?>
 
 	<BR>
 	<A NAME="webphone_auto_answer">
 	<BR>
-	<B>Webphone Auto-Answer -</B>  This setting allows the web phone to be set to automatically answer calls that come in by setting it to Y, or to have calls ring by setting it to N. Default is Y.
+	<B><?php echo _QXZ("Webphone Auto-Answer"); ?> -</B>  <?php echo _QXZ("This setting allows the web phone to be set to automatically answer calls that come in by setting it to Y, or to have calls ring by setting it to N. Default is Y."); ?>
 
 	<BR>
 	<A NAME="use_external_server_ip">
 	<BR>
-	<B>Use External Server IP -</B>  If using as a web phone, you can set this to Y to use the servers External IP to register to instead of the Server IP. Default is empty.
+	<B><?php echo _QXZ("Use External Server IP"); ?> -</B>  <?php echo _QXZ("If using as a web phone, you can set this to Y to use the servers External IP to register to instead of the Server IP. Default is empty."); ?>
 
 
 	</TD></TR></TABLE>
@@ -278,7 +279,7 @@ require("admin_header.php");
 
 if ( ($LOGast_admin_access < 1) or ($LOGuser_level < 8) )
 	{
-	echo "You are not authorized to view this section\n";
+	echo _QXZ("You are not authorized to view this section")."\n";
 	exit;
 	}
 
@@ -300,28 +301,28 @@ if ($action == "BLANK")
 	{
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	echo "<br>Add Multi-Server Phones Form<form action=$PHP_SELF method=POST>\n";
+	echo "<br>"._QXZ("Add Multi-Server Phones Form")."<form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=DB value=\"$DB\">\n";
 	echo "<input type=hidden name=action value=ADD_PHONES_SUBMIT>\n";
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Servers: <BR><BR> (one server_ip per line only)<BR></td><td align=left><TEXTAREA name=servers ROWS=10 COLS=20></TEXTAREA> $NWB#servers$NWE </td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Phones: <BR><BR> (one extension per line only)<BR></td><td align=left><TEXTAREA name=phones ROWS=20 COLS=20></TEXTAREA> $NWB#phones$NWE </td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Registration Password: </td><td align=left><input type=text name=conf_secret size=20 maxlength=20> $NWB#registration_password$NWE </td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Login Password: </td><td align=left><input type=text name=pass size=20 maxlength=20> $NWB#login_password$NWE </td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Create Alias Entries: </td><td align=left><select size=1 name=alias_option>\n";
-	echo "<option selected>YES</option>";
-	echo "<option>NO</option>";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Servers").": <BR><BR> ("._QXZ("one server_ip per line only").")<BR></td><td align=left><TEXTAREA name=servers ROWS=10 COLS=20></TEXTAREA> $NWB#servers$NWE </td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Phones").": <BR><BR> ("._QXZ("one extension per line only").")<BR></td><td align=left><TEXTAREA name=phones ROWS=20 COLS=20></TEXTAREA> $NWB#phones$NWE </td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Registration Password").": </td><td align=left><input type=text name=conf_secret size=20 maxlength=20> $NWB#registration_password$NWE </td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Login Password").": </td><td align=left><input type=text name=pass size=20 maxlength=20> $NWB#login_password$NWE </td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Create Alias Entries").": </td><td align=left><select size=1 name=alias_option>\n";
+	echo "<option selected>"._QXZ("YES")."</option>";
+	echo "<option>"._QXZ("NO")."</option>";
 	echo "</select> $NWB#create_alias$NWE </td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Alias Suffix: </td><td align=left><input type=text name=alias_suffix size=2 maxlength=4> $NWB#alias_suffix$NWE </td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Client Protocol: </td><td align=left><select size=1 name=protocol><option>SIP</option><option>Zap</option><option>IAX2</option><option>EXTERNAL</option></select> $NWB#protocol$NWE </td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Local GMT: </td><td align=left><select size=1 name=local_gmt><option>12.75</option><option>12.00</option><option>11.00</option><option>10.00</option><option>9.50</option><option>9.00</option><option>8.00</option><option>7.00</option><option>6.50</option><option>6.00</option><option>5.75</option><option>5.50</option><option>5.00</option><option>4.50</option><option>4.00</option><option>3.50</option><option>3.00</option><option>2.00</option><option>1.00</option><option>0.00</option><option>-1.00</option><option>-2.00</option><option>-3.00</option><option>-3.50</option><option>-4.00</option><option selected>-5.00</option><option>-6.00</option><option>-7.00</option><option>-8.00</option><option>-9.00</option><option>-10.00</option><option>-11.00</option><option>-12.00</option></select> (Do NOT Adjust for DST) $NWB#gmt$NWE </td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Phone Context: </td><td align=left><input type=text name=phone_context size=20 maxlength=20> $NWB#phone_context$NWE </td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Set As Webphone: </td><td align=left><select size=1 name=is_webphone><option>Y</option><option selected>N</option><option>Y_API_LAUNCH</option></select>$NWB#is_webphone$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Webphone Dialpad: </td><td align=left><select size=1 name=webphone_dialpad><option selected>Y</option><option>N</option><option>TOGGLE</option><option>TOGGLE_OFF</option></select>$NWB#webphone_dialpad$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Webphone Auto-Answer: </td><td align=left><select size=1 name=webphone_auto_answer><option selected>Y</option><option>N</option></select>$NWB#webphone_auto_answer$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Use External Server IP: </td><td align=left><select size=1 name=use_external_server_ip><option>Y</option><option selected>N</option></select>$NWB#use_external_server_ip$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>NOTE: Submitting this form will NOT trigger a conf file rebuild</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Alias Suffix").": </td><td align=left><input type=text name=alias_suffix size=2 maxlength=4> $NWB#alias_suffix$NWE </td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Client Protocol").": </td><td align=left><select size=1 name=protocol><option>SIP</option><option>Zap</option><option>IAX2</option><option>EXTERNAL</option></select> $NWB#protocol$NWE </td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Local GMT").": </td><td align=left><select size=1 name=local_gmt><option>12.75</option><option>12.00</option><option>11.00</option><option>10.00</option><option>9.50</option><option>9.00</option><option>8.00</option><option>7.00</option><option>6.50</option><option>6.00</option><option>5.75</option><option>5.50</option><option>5.00</option><option>4.50</option><option>4.00</option><option>3.50</option><option>3.00</option><option>2.00</option><option>1.00</option><option>0.00</option><option>-1.00</option><option>-2.00</option><option>-3.00</option><option>-3.50</option><option>-4.00</option><option selected>-5.00</option><option>-6.00</option><option>-7.00</option><option>-8.00</option><option>-9.00</option><option>-10.00</option><option>-11.00</option><option>-12.00</option></select> ("._QXZ("Do NOT Adjust for DST").") $NWB#gmt$NWE </td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Phone Context").": </td><td align=left><input type=text name=phone_context size=20 maxlength=20> $NWB#phone_context$NWE </td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Set As Webphone").": </td><td align=left><select size=1 name=is_webphone><option>Y</option><option selected>N</option><option>Y_API_LAUNCH</option></select>$NWB#is_webphone$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Webphone Dialpad").": </td><td align=left><select size=1 name=webphone_dialpad><option selected>Y</option><option>N</option><option>TOGGLE</option><option>TOGGLE_OFF</option></select>$NWB#webphone_dialpad$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Webphone Auto-Answer").": </td><td align=left><select size=1 name=webphone_auto_answer><option selected>Y</option><option>N</option></select>$NWB#webphone_auto_answer$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Use External Server IP").": </td><td align=left><select size=1 name=use_external_server_ip><option>Y</option><option selected>N</option></select>$NWB#use_external_server_ip$NWE</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>"._QXZ("NOTE: Submitting this form will NOT trigger a conf file rebuild")."</td></tr>\n";
 	echo "</TABLE></center>\n";
 	echo "</TD></TR></TABLE>\n";
 	}
@@ -464,15 +465,15 @@ if ($action == "ADD_PHONES_SUBMIT")
 								$phones_inserted++;
 								}
 							else
-								{echo "ERROR: Problem inserting phone:  $affected_rows|$stmt\n<BR>";}
+								{echo _QXZ("ERROR: Problem inserting phone").":  $affected_rows|$stmt\n<BR>";}
 							}
 						else
-							{echo "ERROR: Phone already exists:  $SN[$s]|$PN[$p]|$phone_exists\n<BR>";}
+							{echo _QXZ("ERROR: Phone already exists").":  $SN[$s]|$PN[$p]|$phone_exists\n<BR>";}
 						$p++;
 						}
 					}
 				else
-					{echo "ERROR: Server does not exist: $SN[$s]|$server_exists\n<BR>";}
+					{echo _QXZ("ERROR: Server does not exist").": $SN[$s]|$server_exists\n<BR>";}
 				$s++;
 				}
 
@@ -503,22 +504,22 @@ if ($action == "ADD_PHONES_SUBMIT")
 							$phone_alias_inserted++;
 							}
 						else
-							{echo "ERROR: Problem inserting phone alias:  $affected_rows|$stmt\n<BR>";}
+							{echo _QXZ("ERROR: Problem inserting phone alias").":  $affected_rows|$stmt\n<BR>";}
 						}
 					$p++;
 					}
 				}
 			
-			echo "Phones Inserted: $phones_inserted\n<BR>";
-			echo "Phones Aliases Inserted: $phone_alias_inserted\n<BR>";
-			echo "You now need to manually trigger a conf file rebuild from the System Settings screen\n<BR>";
+			echo _QXZ("Phones Inserted").":: $phones_inserted\n<BR>";
+			echo _QXZ("Phones Aliases Inserted").":: $phone_alias_inserted\n<BR>";
+			echo _QXZ("You now need to manually trigger a conf file rebuild from the System Settings screen").":\n<BR>";
 			echo "<BR><a href=\"$PHP_SELF\">Start Over</a><BR>\n";
 			}
 		else
-			{echo "ERROR: You must enter servers: $servers\n<BR>";}
+			{echo _QXZ("ERROR: You must enter servers").":: $servers\n<BR>";}
 		}
 	else
-		{echo "ERROR: You must enter extensions: $phones\n<BR>";}
+		{echo _QXZ("ERROR: You must enter extensions").":: $phones\n<BR>";}
 	}
 ### END add phones submit
 
@@ -530,7 +531,7 @@ if ($action == "ADD_PHONES_SUBMIT")
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $STARTtime);
-echo "\n\n\n<br><br><br>\n<font size=1> runtime: $RUNtime seconds &nbsp; &nbsp; &nbsp; &nbsp; Version: $admin_version &nbsp; &nbsp; Build: $build</font>";
+echo "\n\n\n<br><br><br>\n<font size=1> "._QXZ("runtime").":: $RUNtime "._QXZ("seconds").": &nbsp; &nbsp; &nbsp; &nbsp; "._QXZ("Version").": $admin_version &nbsp; &nbsp; "._QXZ("Build").": $build</font>";
 
 ?>
 

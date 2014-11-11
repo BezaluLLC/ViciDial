@@ -1,7 +1,7 @@
 <?php
 # callbacks_bulk_change.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 120819-0119 - First build
@@ -9,6 +9,7 @@
 # 130610-0951 - Finalized changing of all ereg instances to preg
 # 130620-0902 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-1940 - Changed to mysqli PHP functions
+# 141007-2207 - Finalized adding QXZ translation to all admin files
 #
 
 require("dbconnect_mysqli.php");
@@ -76,10 +77,10 @@ if ($auth_message == 'GOOD')
 
 if ($auth < 1)
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -111,7 +112,7 @@ else
 if ($LOGmodify_leads < 1)
 	{
 	Header ("Content-type: text/html; charset=utf-8");
-	echo "You do not have permissions to modify leads: |$PHP_AUTH_USER|\n";
+	echo _QXZ("You do not have permissions to modify leads").": |$PHP_AUTH_USER|\n";
 	exit;
 	}
 
@@ -164,7 +165,7 @@ if ($SUBMIT && $old_user && $new_user && $confirm_transfer) {
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>ADMINISTRATION: USERONLY Callbacks Transfer
+<title><?php echo _QXZ("ADMINISTRATION: USERONLY Callbacks Transfer"); ?>
 <?php
 
 ##### BEGIN Set variables to make header show properly #####
@@ -190,7 +191,7 @@ require("admin_header.php");
 ?>
 
 <CENTER>
-<TABLE WIDTH=620 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; USERONLY Callback Transfer</TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; </TD></TR>
+<TABLE WIDTH=620 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; <?php echo _QXZ("USERONLY Callback Transfer"); ?></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; </TD></TR>
 
 
 
@@ -221,11 +222,11 @@ if ($SUBMIT && $old_user && $new_user && !$confirm_transfer)
 
 	echo "<input type=hidden name=old_user value=\"$old_user\">\n";
 	echo "<input type=hidden name=new_user value=\"$new_user\">\n";
-	echo "You are about to transfer $callback_ct callbacks<BR>\n";
-	echo "from user $old_user - $old_user_name<BR>\n";
-	echo "to user $new_user - $new_user_name<BR><BR><BR>\n";
-	echo "<a href='$PHP_SELF?DB=$DB&old_user=$old_user&new_user=$new_user&confirm_transfer=1&SUBMIT=1'>CLICK TO CONFIRM</a><BR><BR>";
-	echo "<a href='$PHP_SELF?DB=$DB'>CLICK TO CANCEL</a><BR><BR>";
+	echo _QXZ("You are about to transfer")." $callback_ct "._QXZ("callbacks")."<BR>\n";
+	echo _QXZ("from user")." $old_user - $old_user_name<BR>\n";
+	echo _QXZ("to user")." $new_user - $new_user_name<BR><BR><BR>\n";
+	echo "<a href='$PHP_SELF?DB=$DB&old_user=$old_user&new_user=$new_user&confirm_transfer=1&SUBMIT=1'>"._QXZ("CLICK TO CONFIRM")."</a><BR><BR>";
+	echo "<a href='$PHP_SELF?DB=$DB'>"._QXZ("CLICK TO CANCEL")."</a><BR><BR>";
 	} 
 else 
 	{
@@ -233,7 +234,7 @@ else
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	# <tr><td align='right'>
-	echo "Agents with callbacks:<BR><select name='old_user' size=5>\n";
+	echo _QXZ("Agents with callbacks").":<BR><select name='old_user' size=5>\n";
 	if (mysqli_num_rows($rslt)>0) 
 		{
 		while ($row=mysqli_fetch_array($rslt)) 
@@ -249,10 +250,10 @@ else
 		} 
 	else 
 		{
-		echo "\t<option value=''>**NO CALLBACKS**</option>\n";
+		echo "\t<option value=''>**"._QXZ("NO CALLBACKS")."**</option>\n";
 		}
 	echo "</select>";
-	echo "<BR/><BR/><input type='submit' name='SUBMIT' value='  TRANSFER TO '><BR/><BR/>";
+	echo "<BR/><BR/><input type='submit' name='SUBMIT' value='  "._QXZ("TRANSFER TO")." '><BR/><BR/>";
 
 	$stmt="select user, full_name from vicidial_users $ul_clause $LOGadmin_viewable_groupsSQL order by user asc";
 	if ($DB) {echo "$stmt\n";}
@@ -276,7 +277,7 @@ $RUNtime = ($ENDtime - $StarTtimE);
 echo "\n\n\n<br><br><br>\n\n";
 
 
-echo "<font size=0>\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds</font>";
+echo "<font size=0>\n\n\n<br><br><br>\n"._QXZ("script runtime").": $RUNtime "._QXZ("seconds")."</font>";
 
 echo "|$stage|$group|";
 

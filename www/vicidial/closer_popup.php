@@ -1,7 +1,7 @@
 <?php
 # closer_popup.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this is the closer popup of a specific call that grabs the call and allows you
 # to go and fetch info on that caller in the local CRM system.
@@ -14,6 +14,7 @@
 # 130610-1113 - Finalized changing of all ereg instances to preg
 # 130620-0010 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-1931 - Changed to mysqli PHP functions
+# 141007-2213 - Finalized adding QXZ translation to all admin files
 #
 
 require("dbconnect_mysqli.php");
@@ -101,10 +102,10 @@ if ($auth_message == 'GOOD')
 
 if ($auth < 1)
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -124,7 +125,7 @@ $fullname = $row[0];
 
 echo "<html>\n";
 echo "<head>\n";
-echo "<title>VICIDIAL CLOSER: Popup</title>\n";
+echo "<title>"._QXZ("VICIDIAL CLOSER: Popup")."</title>\n";
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 
 if (preg_match('/CL_UNIV/i',$channel_group))
@@ -145,10 +146,10 @@ if (preg_match('/CL_UNIV/i',$channel_group))
 	function CheckForm() {
 		if (btn_name=="update") {
 			if (document.forms[0].phone.value.length!=10) {
-				alert("The phone number you entered does not have 10 digits.\n\nIt has "+document.forms[0].phone.value.length+" - please correct it and try again.");
+				alert("<?php echo _QXZ("The phone number you entered does not have 10 digits"); ?>.\n\n<?php echo _QXZ("It has"); ?> "+document.forms[0].phone.value.length+" - <?php echo _QXZ("please correct it and try again"); ?>.");
 				return false;
 			} else if (document.forms[0].confirmation_id.value.length<=5) {
-				alert("The confirmation ID is either missing or not enough characters in length.\n\nPlease correct it and try again.");
+				alert("<?php echo _QXZ("The confirmation ID is either missing or not enough characters in length"); ?>.\n\n<?php echo _QXZ("Please correct it and try again"); ?>.");
 				return false;
 			} else {
 				return true;
@@ -211,7 +212,7 @@ if ($parked_count > 0)
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 
-	echo "Redirect command sent for channel $channel &nbsp; &nbsp; &nbsp; $NOW_TIME\n<BR><BR>\n";
+	echo _QXZ("Redirect command sent for channel")." $channel &nbsp; &nbsp; &nbsp; $NOW_TIME\n<BR><BR>\n";
 
 	$stmt="SELECT full_name from vicidial_users where user='" . mysqli_real_escape_string($link, $parked_by) . "'";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -219,11 +220,11 @@ if ($parked_count > 0)
 	$row=mysqli_fetch_row($rslt);
 	$full_name = $row[0];
 
-	echo "Call Referred by: $parked_by - $full_name\n<BR><BR>\n";
+	echo _QXZ("Call Referred by").": $parked_by - $full_name\n<BR><BR>\n";
 
    $url = "http://10.10.10.196/vicidial/closer_dispo.php?lead_id=$parked_by&channel=$channel&server_ip=$server_ip&extension=$extension&call_began=$STARTtime&parked_time=$parked_time&DB=$DB";
 
-	echo "<a href=\"$url\">View Customer Info and Disposition Call</a>\n<BR><BR>\n";
+	echo "<a href=\"$url\">"._QXZ("View Customer Info and Disposition Call")."</a>\n<BR><BR>\n";
 
 
 
@@ -241,7 +242,7 @@ if ($parked_count > 0)
 ###########################################################################################
 if (preg_match('/CL_TEST/i',$channel_group))
 	{
-	echo "GALLERIA TEST CLOSER GROUP: $channel_group\n";
+	echo _QXZ("GALLERIA TEST CLOSER GROUP").": $channel_group\n";
 
 	$stmt="SELECT user,phone_number from vicidial_list where lead_id='" . mysqli_real_escape_string($link, $parked_by) . "';";
 		if ($DB) {echo "$stmt\n";}
@@ -259,14 +260,14 @@ if (preg_match('/CL_TEST/i',$channel_group))
 		<input type=hidden name="recording_id" value="<?php echo $recording_id ?>">
 	<table border=0 cellspacing=5 cellpadding=3 align=center width=90%>
 	<tr>
-		<th colspan=2 bgcolor='#666666'><font class='standard_bold' color='white'>COF MW Customer Search</font></th>
+		<th colspan=2 bgcolor='#666666'><font class='standard_bold' color='white'><?php echo _QXZ("COF MW Customer Search"); ?></font></th>
 	</tr>
 	<tr bgcolor='#99FF99'>
-		<td align=right width="50%" nowrap><font class='standard_bold'>Phone number</font></td>
+		<td align=right width="50%" nowrap><font class='standard_bold'><?php echo _QXZ("Phone number"); ?></font></td>
 		<td align=left width="50%" nowrap><input type=text size=10 maxlength=10 name="search_phone" value="<?php echo $search_phone ?>"></td>
 	</tr>
 	<tr>
-		<th colspan=2 bgcolor='#666666'><input type=submit name="submit_COF" value="SEARCH"></th>
+		<th colspan=2 bgcolor='#666666'><input type=submit name="submit_COF" value="<?php echo _QXZ("SEARCH"); ?>"></th>
 	</tr>
 	</table>
 	</form>
@@ -276,7 +277,7 @@ if (preg_match('/CL_TEST/i',$channel_group))
 
 if (preg_match('/CL_MWCOF/i',$channel_group))
 	{
-	echo "GALLERIA INTERNAL CLOSER GROUP: $channel_group\n";
+	echo _QXZ("GALLERIA INTERNAL CLOSER GROUP").": $channel_group\n";
 
 	$stmt="SELECT user,phone_number from vicidial_list where lead_id='" . mysqli_real_escape_string($link, $parked_by) . "';";
 		if ($DB) {echo "$stmt\n";}
@@ -294,14 +295,14 @@ if (preg_match('/CL_MWCOF/i',$channel_group))
 		<input type=hidden name="recording_id" value="<?php echo $recording_id ?>">
 	<table border=0 cellspacing=5 cellpadding=3 align=center width=90%>
 	<tr>
-		<th colspan=2 bgcolor='#666666'><font class='standard_bold' color='white'>COF MW Customer Search</font></th>
+		<th colspan=2 bgcolor='#666666'><font class='standard_bold' color='white'><?php echo _QXZ("COF MW Customer Search"); ?></font></th>
 	</tr>
 	<tr bgcolor='#99FF99'>
-		<td align=right width="50%" nowrap><font class='standard_bold'>Phone number</font></td>
+		<td align=right width="50%" nowrap><font class='standard_bold'><?php echo _QXZ("Phone number"); ?></font></td>
 		<td align=left width="50%" nowrap><input type=text size=10 maxlength=10 name="search_phone" value="<?php echo $search_phone ?>"></td>
 	</tr>
 	<tr>
-		<th colspan=2 bgcolor='#666666'><input type=submit name="submit_COF" value="SEARCH"></th>
+		<th colspan=2 bgcolor='#666666'><input type=submit name="submit_COF" value="<?php echo _QXZ("SEARCH"); ?>"></th>
 	</tr>
 	</table>
 	</form>
@@ -313,27 +314,27 @@ if (preg_match('/CL_MWCOF/i',$channel_group))
 
 if (preg_match('/CL_GAL/i',$channel_group))
 	{
-	echo "GALLERIA CLOSER GROUP: $channel_group\n";
+	echo _QXZ("GALLERIA CLOSER GROUP").": $channel_group\n";
 	$group_color='#CCCCCC';
 
 	if (preg_match('/CL_GALLERIA/i',$channel_group))
 		{
-		echo "<br><font color=green size=3><b>-- INTERNAL CALL GALLERIA FRONT --</b></font><br>\n";
+		echo "<br><font color=green size=3><b>-- "._QXZ("INTERNAL CALL GALLERIA FRONT")." --</b></font><br>\n";
 		$group_color='#99FF99';
 		}
 	if (preg_match('/CL_GALLER2/i',$channel_group))
 		{
-		echo "<br><font color=red size=3><b>-- TouchAsia CALL Simple Escapes FRONT --</b></font><br>\n";
+		echo "<br><font color=red size=3><b>-- "._QXZ("TouchAsia CALL Simple Escapes FRONT")." --</b></font><br>\n";
 		$group_color='#FF9999';
 		}
 	if (preg_match('/CL_GALLER3/i',$channel_group))
 		{
-		echo "<br><font color=red size=3><b>-- DebitSupplies CALL Simple Escapes FRONT --</b></font><br>\n";
+		echo "<br><font color=red size=3><b>-- "._QXZ("DebitSupplies CALL Simple Escapes FRONT")." --</b></font><br>\n";
 		$group_color='#FF9999';
 		}
 	if (preg_match('/CL_GALLER4/i',$channel_group))
 		{
-		echo "<br><font color=red size=3><b>-- Vishnu CALL Simple Escapes FRONT --</b></font><br>\n";
+		echo "<br><font color=red size=3><b>-- "._QXZ("Vishnu CALL Simple Escapes FRONT")." --</b></font><br>\n";
 		$group_color='#FF9999';
 		}
 
@@ -346,14 +347,14 @@ if (preg_match('/CL_GAL/i',$channel_group))
 		<input type=hidden name="recording_id" value="<?php echo $recording_id ?>">
 	<table border=0 cellspacing=5 cellpadding=3 align=center width=90%>
 	<tr>
-		<th colspan=2 bgcolor='#666666'><font class='standard_bold' color='white'>COF MW Customer Search</font></th>
+		<th colspan=2 bgcolor='#666666'><font class='standard_bold' color='white'><?php echo _QXZ("COF MW Customer Search"); ?></font></th>
 	</tr>
 	<tr bgcolor="<?php echo $group_color ?>">
-		<td align=right width="50%" nowrap><font class='standard_bold'>Phone number</font></td>
+		<td align=right width="50%" nowrap><font class='standard_bold'><?php echo _QXZ("Phone number"); ?></font></td>
 		<td align=left width="50%" nowrap><input type=text size=10 maxlength=10 name="search_phone" value="<?php echo $phone ?>"></td>
 	</tr>
 	<tr>
-		<th colspan=2 bgcolor='#666666'><input type=submit name="submit_COF" value="SEARCH"></th>
+		<th colspan=2 bgcolor='#666666'><input type=submit name="submit_COF" value="<?php echo _QXZ("SEARCH"); ?>"></th>
 	</tr>
 	</table>
 	</form>
@@ -385,7 +386,7 @@ if (preg_match('/CL_GAL/i',$channel_group))
 
 if (preg_match('/CL_UNIV/i',$channel_group))
 	{
-	echo "UNIVERSAL CLOSER GROUP: $channel_group\n";
+	echo _QXZ("UNIVERSAL CLOSER GROUP").": $channel_group\n";
 
 
 	?>
@@ -397,26 +398,26 @@ if (preg_match('/CL_UNIV/i',$channel_group))
 		<input type=hidden name="recording_id" value="<?php echo $recording_id ?>">
 	<table border=0 width=80% cellpadding=5 cellspacing=0 align=center>
 	<tr>
-			<th colspan=2 bgcolor='#CCCCCC'><font class='standard_bold'>New Search</font></th>
+			<th colspan=2 bgcolor='#CCCCCC'><font class='standard_bold'><?php echo _QXZ("New Search"); ?></font></th>
 	</tr>
 
 	<tr bgcolor='#CCCCCC'>
-			<td align=right width="50%" nowrap><font class='standard_bold'>Reservation Number:</font></td>
+			<td align=right width="50%" nowrap><font class='standard_bold'><?php echo _QXZ("Reservation Number"); ?>:</font></td>
 			<td align=left width="50%" nowrap><input type=text size=10 maxlength=10
 	name="reservation_no" value="" ONKEYPRESS="var keyCode = event.which ? event.which : event.keyCode; if (keyCode!=8 && keyCode!=9 && keyCode!=37 && keyCode!=39) return ((keyCode >= '0'.charCodeAt() && keyCode <= '9'.charCodeAt()))"></td>
 	</tr>
-	<tr bgcolor='#CCCCCC'><td align=right width='50%' nowrap><font class='standard_bold'>Confirmation #:</font></td>
+	<tr bgcolor='#CCCCCC'><td align=right width='50%' nowrap><font class='standard_bold'><?php echo _QXZ("Confirmation"); ?> #:</font></td>
 	<td align=left width='50%' nowrap><input type=text name='confirmation_no' size=10 maxlength=20 value=''></td></tr>
 	<tr bgcolor='#CCCCCC'>
-			<td align=right width="50%" nowrap><font class='standard_bold'>Phone #:</font></td>
+			<td align=right width="50%" nowrap><font class='standard_bold'><?php echo _QXZ("Phone"); ?> #:</font></td>
 			<td align=left width="50%" nowrap><input type=text size=10 maxlength=10
 	name="phone" value="" ONKEYPRESS="var keyCode = event.which ? event.which : event.keyCode; if (keyCode!=8 && keyCode!=9 && keyCode!=37 && keyCode!=39) return ((keyCode >= '0'.charCodeAt() && keyCode <= '9'.charCodeAt()))"></td>
 
 	</tr><tr>
-		<th colspan=2 bgcolor='#CCCCCC'><input type=submit name="submit_COF" value="SEARCH" onClick="javascript:btn_name='search'"><br><br></th>
+		<th colspan=2 bgcolor='#CCCCCC'><input type=submit name="submit_COF" value="<?php echo _QXZ("SEARCH"); ?>" onClick="javascript:btn_name='search'"><br><br></th>
 	</tr>
 	<tr>
-		<th colspan=2 bgcolor='#666666'><font class='standard_bold'><a href='closer_popup.php'>Back</a></font></th>
+		<th colspan=2 bgcolor='#666666'><font class='standard_bold'><a href='closer_popup.php'><?php echo _QXZ("Back"); ?></a></font></th>
 	</tr>
 	</table>
 
@@ -436,8 +437,8 @@ if (preg_match('/CL_UNIV/i',$channel_group))
 }
 else
 {
-	echo "Redirect command FAILED for channel $channel &nbsp; &nbsp; &nbsp; $NOW_TIME\n<BR><BR>\n";
-	echo "<form><input type=button value=\"Close This Window\" onClick=\"javascript:window.close();\"></form>\n";
+	echo _QXZ("Redirect command FAILED for channel")." $channel &nbsp; &nbsp; &nbsp; $NOW_TIME\n<BR><BR>\n";
+	echo "<form><input type=button value=\""._QXZ("Close This Window")."\" onClick=\"javascript:window.close();\"></form>\n";
 }
 
 
@@ -449,7 +450,7 @@ $RUNtime = ($ENDtime - $STARTtime);
 echo "\n\n\n<br><br><br>\n\n";
 
 
-echo "<font size=0>\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds</font>";
+echo "<font size=0>\n\n\n<br><br><br>\n"._QXZ("script runtime").": $RUNtime "._QXZ("seconds")."</font>";
 
 
 ?>

@@ -1,7 +1,7 @@
 <?php
 # callcard_admin.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This callcard script is to administer the callcard accounts in ViciDial
 # it is separate from the standard admin.php script. callcard_enabled in
@@ -16,10 +16,11 @@
 # 130610-1103 - Finalized changing of all ereg instances to preg
 # 130620-0839 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-1939 - Changed to mysqli PHP functions
+# 141007-2040 - Finalized adding QXZ translation to all admin files
 #
 
-$version = '2.8-8';
-$build = '130901-1939';
+$version = '2.8-9';
+$build = '141007-2040';
 
 $MT[0]='';
 
@@ -97,7 +98,7 @@ if ($ss_conf_ct > 0)
 
 if ($callcard_enabled < 1)
 	{
-	echo "ERROR: CallCard is not active on this system\n";
+	echo _QXZ("ERROR: CallCard is not active on this system")."\n";
 	exit;
 	}
 
@@ -164,7 +165,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$USER|$auth_message|\n";
 		exit;
@@ -177,10 +178,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$USER|$auth_message|\n";
 		exit;
@@ -210,7 +211,7 @@ if($reports_only_user > 0)
 		{
 		Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
 		Header("HTTP/1.0 401 Unauthorized");
-		echo "You are not allowed to view this report: |$USER|$report_name|\n";
+		echo _QXZ("You are not allowed to view this report").": |$USER|$report_name|\n";
 		exit;
 		}
 	else
@@ -223,7 +224,7 @@ else
 	if ($LOGcallcard_admin < 1)
 		{
 		Header ("Content-type: text/html; charset=utf-8");
-		echo "You do not have permissions for call card administration: |$USER|\n";
+		echo _QXZ("You do not have permissions for call card administration").": |$USER|\n";
 		exit;
 		}
 	}
@@ -315,7 +316,7 @@ if ($action == "CALLCARD_STATUS")
 	{
 	if ( (strlen($card_id)<1) or (strlen($status)<1) )
 		{
-		echo "ERROR: Card ID and Status must be filled in<BR>\n";
+		echo _QXZ("ERROR: Card ID and Status must be filled in")."<BR>\n";
 		}
 	else
 		{
@@ -324,7 +325,7 @@ if ($action == "CALLCARD_STATUS")
 		$row=mysqli_fetch_row($rslt);
 		if ($row[0] < 1)
 			{
-			echo "ERROR: This card_id is not in the system<BR>\n";
+			echo _QXZ("ERROR: This card_id is not in the system")."<BR>\n";
 			}
 		else
 			{
@@ -358,7 +359,7 @@ if ($action == "CALLCARD_STATUS")
 			$rslt=mysql_to_mysqli($stmtB, $link);
 			if ($DB) {echo "|$stmt|$stmtB|\n";}
 
-			echo "Card ID Status Modified: $card_id - $status<BR>\n";
+			echo _QXZ("Card ID Status Modified").": $card_id - $status<BR>\n";
 
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|";
@@ -421,58 +422,58 @@ if ($action == "CALLCARD_DETAIL")
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		echo "<br>CallCard Detail<form action=$PHP_SELF method=POST>\n";
+		echo "<br>"._QXZ("CallCard Detail")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=action value=PROCESS_MODIFY_CALLCARD>\n";
 		echo "<input type=hidden name=card_id value=\"$card_id\">\n";
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Card ID: </td><td align=left><B>$card_id</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>PIN: </td><td align=left><B>$pin</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Status: </td><td align=left><B>$status</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Run: </td><td align=left><B>$run</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Batch: </td><td align=left><B>$batch</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Pack: </td><td align=left><B>$pack</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Sequence: </td><td align=left><B>$sequence</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Balance Minutes: </td><td align=left><B>$balance_minutes</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Initial Minutes: </td><td align=left><B>$initial_minutes</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Initial Value: </td><td align=left><B>$initial_value</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Purchase Order: </td><td align=left><B>$note_purchase_order</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Printer: </td><td align=left><B>$note_printer</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>DID: </td><td align=left><B>$note_did</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group: </td><td align=left><B>$inbound_group_id</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Language: </td><td align=left><B>$note_language</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Name: </td><td align=left><B>$note_name</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Comments: </td><td align=left><B>$note_comments</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Create User/Date: </td><td align=left><B>$create_user / $create_time</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Activate User/Date: </td><td align=left><B>$activate_user / $activate_time</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Used User/Date: </td><td align=left><B>$used_user / $used_time</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Void User/Date: </td><td align=left><B>$void_user / $void_time</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Card ID").": </td><td align=left><B>$card_id</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("PIN").": </td><td align=left><B>$pin</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Status").": </td><td align=left><B>$status</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Run").": </td><td align=left><B>$run</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Batch").": </td><td align=left><B>$batch</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Pack").": </td><td align=left><B>$pack</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Sequence").": </td><td align=left><B>$sequence</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Balance Minutes").": </td><td align=left><B>$balance_minutes</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Initial Minutes").": </td><td align=left><B>$initial_minutes</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Initial Value").": </td><td align=left><B>$initial_value</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Purchase Order").": </td><td align=left><B>$note_purchase_order</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Printer").": </td><td align=left><B>$note_printer</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("DID").": </td><td align=left><B>$note_did</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("In-Group").": </td><td align=left><B>$inbound_group_id</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Language").": </td><td align=left><B>$note_language</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Name").": </td><td align=left><B>$note_name</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Comments").": </td><td align=left><B>$note_comments</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Create User/Date").": </td><td align=left><B>$create_user / $create_time</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Activate User/Date").": </td><td align=left><B>$activate_user / $activate_time</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Used User/Date").": </td><td align=left><B>$used_user / $used_time</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Void User/Date").": </td><td align=left><B>$void_user / $void_time</B></td></tr>\n";
 		echo "</TABLE>\n";
 		echo "<BR><BR><BR>\n";
 
 		if ($SEARCHONLY < 1)
 			{
-			echo "<a href=\"$PHP_SELF?action=CALLCARD_STATUS&status=VOID&card_id=$card_id&DB=$DB\">Void This Card ID</a><BR><BR>\n";
-			echo "<a href=\"$PHP_SELF?action=CALLCARD_STATUS&status=ACTIVE&card_id=$card_id&DB=$DB\">Activate This Card ID</a><BR><BR>\n";
-			echo "<a href=\"$PHP_SELF?action=CALLCARD_STATUS&status=RESET&card_id=$card_id&DB=$DB\">Reset Minutes on This Card ID</a>\n";
+			echo "<a href=\"$PHP_SELF?action=CALLCARD_STATUS&status=VOID&card_id=$card_id&DB=$DB\">"._QXZ("Void This Card ID")."</a><BR><BR>\n";
+			echo "<a href=\"$PHP_SELF?action=CALLCARD_STATUS&status=ACTIVE&card_id=$card_id&DB=$DB\">"._QXZ("Activate This Card ID")."</a><BR><BR>\n";
+			echo "<a href=\"$PHP_SELF?action=CALLCARD_STATUS&status=RESET&card_id=$card_id&DB=$DB\">"._QXZ("Reset Minutes on This Card ID")."</a>\n";
 			echo "<BR><BR>\n";
 			}
 
 		### call log
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-		echo "<br>Call Log for this Card ID:\n";
+		echo "<br>"._QXZ("Call Log for this Card ID").":\n";
 		echo "<center><TABLE width=740 cellspacing=0 cellpadding=1>\n";
 		echo "<TR BGCOLOR=BLACK>";
 		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>#</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>DATE</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>CallerID</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>DID</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>START MIN</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>TALK MIN</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>AGENT</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>AGENT DATE</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>AGENT DISPO</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("DATE")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("CallerID")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("DID")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("START MIN")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("TALK MIN")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("AGENT")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("AGENT DATE")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("AGENT DISPO")."</B></TD>";
 		echo "</TR>\n";
 
 		$stmt = "SELECT call_time,phone_number,inbound_did,balance_minutes_start,agent_talk_min,agent,agent_time,agent_dispo FROM callcard_log where card_id='$card_id' order by call_time;";
@@ -505,12 +506,12 @@ if ($action == "CALLCARD_DETAIL")
 
 		if ($SEARCHONLY < 1)
 			{
-			echo "<a href=\"admin.php?ADD=720000000000000&category=CALLCARD&stage=$card_id&DB=$DB\">Admin Log for this Card ID</a><BR><BR>\n";
+			echo "<a href=\"admin.php?ADD=720000000000000&category=CALLCARD&stage=$card_id&DB=$DB\">"._QXZ("Admin Log for this Card ID")."</a><BR><BR>\n";
 			}
 		}
 	else
 		{
-		echo "ERROR: Card ID not found: $card_id<BR>\n";
+		echo _QXZ("ERROR: Card ID not found").": $card_id<BR>\n";
 		}
 	}
 ### END card id detail page
@@ -522,11 +523,11 @@ if ($action == "CALLCARD_SUMMARY")
 	{
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	echo "<br>CallCard Summary:\n";
+	echo "<br>"._QXZ("CallCard Summary").":\n";
 	echo "<center><TABLE width=400 cellspacing=0 cellpadding=1>\n";
 	echo "<TR BGCOLOR=BLACK>";
-	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>STATUS</B></TD>";
-	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>COUNT</B></TD>";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("STATUS")."</B></TD>";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("COUNT")."</B></TD>";
 	echo "</TR>\n";
 
 	$stmt = "SELECT count(*),status FROM callcard_accounts_details group by status order by status;";
@@ -562,26 +563,26 @@ if ($action == "CALLCARD_SUMMARY")
 		$row=mysqli_fetch_row($rslt);
 		$DBcount =		$row[0];
 
-		echo "<b>There are $DBcount batches in the system\n";
+		echo "<b>"._QXZ("There are")." $DBcount "._QXZ("batches in the system")."\n";
 		}
 	echo "<BR><BR>\n";
 
 		### call log
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-		echo "<br>Last 10 Calls:\n";
+		echo "<br>"._QXZ("Last 10 Calls").":\n";
 		echo "<center><TABLE width=740 cellspacing=0 cellpadding=1>\n";
 		echo "<TR BGCOLOR=BLACK>";
 		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>#</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>CARD ID</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>DATE</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>CallerID</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>DID</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>START MIN</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>TALK MIN</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>AGENT</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>AGENT DATE</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>DISPO</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("CARD ID")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("DATE")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("CallerID")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("DID")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("START MIN")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("TALK MIN")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("AGENT")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("AGENT DATE")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("DISPO")."</B></TD>";
 		echo "</TR>\n";
 
 		$stmt = "SELECT card_id,call_time,phone_number,inbound_did,balance_minutes_start,agent_talk_min,agent,agent_time,agent_dispo FROM callcard_log order by call_time desc limit 10;";
@@ -625,12 +626,12 @@ if ($action == "CALLCARD_RUNS")
 	{
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	echo "<br>CallCard Batches:\n";
+	echo "<br>"._QXZ("CallCard Batches").":\n";
 	echo "<center><TABLE width=400 cellspacing=0 cellpadding=1>\n";
 	echo "<TR BGCOLOR=BLACK>";
-	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>RUN</B></TD>";
-	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>COUNT</B></TD>";
-	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LIST</B></TD>";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("RUN")."</B></TD>";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("COUNT")."</B></TD>";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("LIST")."</B></TD>";
 	echo "</TR>\n";
 
 	$stmt = "SELECT count(*),run FROM callcard_accounts_details group by run order by run;";
@@ -670,12 +671,12 @@ if ($action == "CALLCARD_BATCHES")
 	{
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	echo "<br>CallCard Batches:\n";
+	echo "<br>"._QXZ("CallCard Batches").":\n";
 	echo "<center><TABLE width=400 cellspacing=0 cellpadding=1>\n";
 	echo "<TR BGCOLOR=BLACK>";
-	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>BATCH</B></TD>";
-	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>COUNT</B></TD>";
-	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LIST</B></TD>";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("BATCH")."</B></TD>";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("COUNT")."</B></TD>";
+	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("LIST")."</B></TD>";
 	echo "</TR>\n";
 
 	$stmt = "SELECT count(*),batch FROM callcard_accounts_details group by batch order by batch;";
@@ -715,18 +716,18 @@ if ($action == "GENERATE_RESULTS")
 	{
 	if ( (strlen($sequence) < 1) or (strlen($starting_batch) < 1) or (strlen($batch) < 1) or (strlen($run) < 1) or (strlen($total) < 1) )
 		{
-		echo "you must enter in all fields<BR><BR>\n";
+		echo _QXZ("you must enter in all fields")."<BR><BR>\n";
 		$action = 'GENERATE';
 		}
 	else
 		{
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-		echo "<br>CallCard GENERATE:\n";
+		echo "<br>"._QXZ("CallCard GENERATE").":\n";
 		echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 		echo "<TR BGCOLOR=BLACK>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>CARD ID</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>PIN</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("CARD ID")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("PIN")."</B></TD>";
 		echo "</TR>\n";
 
 		$i=0;
@@ -773,7 +774,7 @@ if ($action == "GENERATE_RESULTS")
 							}
 						else
 							{
-							echo "ERROR - cannot query system<BR>\n";
+							echo _QXZ("ERROR - cannot query system")."<BR>\n";
 							}
 						$pin_give_up++;
 						}
@@ -796,12 +797,12 @@ if ($action == "GENERATE_RESULTS")
 					}
 				else
 					{
-					echo "ERROR - card_id already exists: $Pcard_id<BR>\n";
+					echo _QXZ("ERROR - card_id already exists").": $Pcard_id<BR>\n";
 					}
 				}
 			else
 				{
-				echo "ERROR - cannot query system<BR>\n";
+				echo _QXZ("ERROR - cannot query system")."<BR>\n";
 				}
 			$i++;
 			}
@@ -820,27 +821,27 @@ if ($action == "GENERATE")
 	{
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	echo "<br>CallCard Generate IDs<form action=$PHP_SELF method=POST>\n";
+	echo "<br>"._QXZ("CallCard Generate IDs")."<form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=action value=GENERATE_RESULTS>\n";
 	echo "<input type=hidden name=DB value=$DB>\n";
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Run: </td><td align=left><input type=text name=run size=5 maxlength=4></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Starting Batch: </td><td align=left><input type=text name=starting_batch size=6 maxlength=5></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>IDs in Batch: </td><td align=left><input type=text name=batch size=6 maxlength=5></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Starting Sequence: </td><td align=left><input type=text name=sequence size=6 maxlength=5></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Total: </td><td align=left><input type=text name=total size=8 maxlength=7></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Balance Minutes: </td><td align=left><input type=text name=balance_minutes size=3 maxlength=5></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Initial Value: </td><td align=left><input type=text name=initial_value size=7 maxlength=6></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Initial Minutes: </td><td align=left><input type=text name=initial_minutes size=3 maxlength=5></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Purchase Order: </td><td align=left><input type=text name=note_purchase_order size=20 maxlength=20></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Printer: </td><td align=left><input type=text name=note_printer size=20 maxlength=20></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>DID: </td><td align=left><input type=text name=note_did size=18 maxlength=18></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>In-Group: </td><td align=left><input type=text name=inbound_group_id size=20 maxlength=20></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Language: </td><td align=left><input type=text name=note_language size=10 maxlength=10></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Name: </td><td align=left><input type=text name=note_name size=20 maxlength=20></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Comment: </td><td align=left><input type=text name=note_comments size=50 maxlength=255></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Run").": </td><td align=left><input type=text name=run size=5 maxlength=4></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Starting Batch").": </td><td align=left><input type=text name=starting_batch size=6 maxlength=5></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("IDs in Batch").": </td><td align=left><input type=text name=batch size=6 maxlength=5></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Starting Sequence").": </td><td align=left><input type=text name=sequence size=6 maxlength=5></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Total").": </td><td align=left><input type=text name=total size=8 maxlength=7></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Balance Minutes").": </td><td align=left><input type=text name=balance_minutes size=3 maxlength=5></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Initial Value").": </td><td align=left><input type=text name=initial_value size=7 maxlength=6></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Initial Minutes").": </td><td align=left><input type=text name=initial_minutes size=3 maxlength=5></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Purchase Order").": </td><td align=left><input type=text name=note_purchase_order size=20 maxlength=20></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Printer").": </td><td align=left><input type=text name=note_printer size=20 maxlength=20></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("DID").": </td><td align=left><input type=text name=note_did size=18 maxlength=18></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("In-Group").": </td><td align=left><input type=text name=inbound_group_id size=20 maxlength=20></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Language").": </td><td align=left><input type=text name=note_language size=10 maxlength=10></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Name").": </td><td align=left><input type=text name=note_name size=20 maxlength=20></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Comment").": </td><td align=left><input type=text name=note_comments size=50 maxlength=255></td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
 	echo "</TABLE></center>\n";
 	echo "\n";
 	echo "</center>\n";
@@ -902,17 +903,17 @@ if ($action == "SEARCH_RESULTS")
 		{
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-		echo "<br>CallCard Batches:\n";
+		echo "<br>"._QXZ("CallCard Batches").":\n";
 		echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 		echo "<TR BGCOLOR=BLACK>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>CARD ID</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>STATUS</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>BALANCE</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>CREATE</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>ACTIVATE</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LAST USED</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>VOID</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>DETAIL</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("CARD ID")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("STATUS")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("BALANCE")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("CREATE")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("ACTIVATE")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("LAST USED")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("VOID")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("DETAIL")."</B></TD>";
 		echo "</TR>\n";
 
 		$stmt = "SELECT card_id,status,balance_minutes,create_time,activate_time,used_time,void_time FROM callcard_accounts_details where $searchSQL;";
@@ -964,16 +965,16 @@ if ($action == "SEARCH")
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	echo "<br>CallCard Search<form action=$PHP_SELF method=POST>\n";
+	echo "<br>"._QXZ("CallCard Search")."<form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=action value=SEARCH_RESULTS>\n";
 	echo "<input type=hidden name=DB value=$DB>\n";
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>PIN: </td><td align=left><input type=text name=pin size=20 maxlength=20></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Card ID: </td><td align=left><input type=text name=card_id size=20 maxlength=20></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Run: </td><td align=left><input type=text name=run size=5 maxlength=4></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Batch: </td><td align=left><input type=text name=batch size=6 maxlength=5></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Sequence: </td><td align=left><input type=text name=sequence size=6 maxlength=5></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("PIN").": </td><td align=left><input type=text name=pin size=20 maxlength=20></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Card ID").": </td><td align=left><input type=text name=card_id size=20 maxlength=20></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Run").": </td><td align=left><input type=text name=run size=5 maxlength=4></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Batch").": </td><td align=left><input type=text name=batch size=6 maxlength=5></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Sequence").": </td><td align=left><input type=text name=sequence size=6 maxlength=5></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
 	echo "</TABLE></center>\n";
 	echo "\n";
 	echo "</center>\n";
@@ -988,5 +989,5 @@ if ($action == "SEARCH")
 
 
 
-<BR><font size=1>CallCard &nbsp; &nbsp; VERSION: <?php echo $version ?> &nbsp; &nbsp; BUILD: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
+<BR><font size=1><?php echo _QXZ("CallCard"); ?> &nbsp; &nbsp; <?php echo _QXZ("VERSION"); ?>: <?php echo $version ?> &nbsp; &nbsp; <?php echo _QXZ("BUILD"); ?>: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
 </TD></TR></TABLE>

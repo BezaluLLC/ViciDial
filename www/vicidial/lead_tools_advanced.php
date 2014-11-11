@@ -7,10 +7,11 @@
 # 131016-1948 - Initial Build based upon lead_tools.php
 # 140113-0853 - Added USERONLY to ANYONE callback switcher
 # 140606-1242 - Added the state field as an option to Move, Update, and Delete
+# 141007-2036 - Finalized adding QXZ translation to all admin files
 #
 
-$version = '2.10-3';
-$build = '140606-1242';
+$version = '2.10-4';
+$build = '141007-2036';
 
 # This limit is to prevent data inconsistancies.
 # If there are too many leads in a list this
@@ -71,7 +72,7 @@ $delete_status = preg_replace('/[^-_0-9a-zA-Z]/','',$delete_status);
 
 if ($DB)
 	{
-	echo "<p>DB = $DB | move_submit = $move_submit | update_submit = $update_submit | delete_submit = $delete_submit | callback_submit = $callback_submit | confirm_move = $confirm_move | confirm_update = $confirm_update | confirm_delete = $confirm_delete | confirm_callback = $confirm_callback</p>";
+	echo "<p>DB = $DB | "._QXZ("move_submit")." = $move_submit | "._QXZ("update_submit")." = $update_submit | "._QXZ("delete_submit")." = $delete_submit | "._QXZ("callback_submit")." = $callback_submit | "._QXZ("confirm_move")." = $confirm_move | "._QXZ("confirm_update")." = $confirm_update | "._QXZ("confirm_delete")." = $confirm_delete | "._QXZ("confirm_callback")." = $confirm_callback</p>";
 	}
 
 
@@ -115,10 +116,10 @@ if ($auth_message == 'GOOD')
 
 if ($auth < 1)
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -148,19 +149,19 @@ $modify_lists =  $rights_row[4];
 if ( $load_leads < 1 )
 	{
 	header ("Content-type: text/html; charset=utf-8");
-	echo "You do not have permissions to load leads\n";
+	echo _QXZ("You do not have permissions to load leads")."\n";
 	exit;
 	}
 if ( $modify_leads < 1 )
 	{
 	header ("Content-type: text/html; charset=utf-8");
-	echo "You do not have permissions to modify leads\n";
+	echo _QXZ("You do not have permissions to modify leads")."\n";
 	exit;
 	}
 if ( $modify_lists < 1 )
 	{
 	header ("Content-type: text/html; charset=utf-8");
-	echo "You do not have permissions to modify lists\n";
+	echo _QXZ("You do not have permissions to modify lists")."\n";
 	exit;
 	}
 
@@ -484,7 +485,7 @@ echo "<table width=$page_width bgcolor=#E6E6E6 cellpadding=2 cellspacing=0>\n";
 echo "<tr bgcolor='#E6E6E6'>\n";
 echo "<td align=left>\n";
 echo "<font face='ARIAL,HELVETICA' size=2>\n";
-echo "<b> &nbsp; <a href=\"lead_tools.php\">Basic Lead Tools</a> &nbsp; | &nbsp; Advanced Lead Tools</b>\n";
+echo "<b> &nbsp; <a href=\"lead_tools.php\">"._QXZ("Basic Lead Tools")."</a> &nbsp; | &nbsp; "._QXZ("Advanced Lead Tools")."</b>\n";
 echo "</font>\n";
 echo "</td>\n";
 echo "<td align=right><font face='ARIAL,HELVETICA' size=2><b> &nbsp; </td>\n";
@@ -572,7 +573,7 @@ if ($move_submit == "move" )
 
 	if ($DB)
 		{
-		echo "<p>enable_move_status = $enable_move_status | enable_move_country_code = $enable_move_country_code | enable_move_vendor_lead_code = $enable_move_vendor_lead_code | enable_move_source_id = $enable_move_source_id | enable_move_owner = $enable_move_owner | enable_move_state = $enable_move_state | enable_move_entry_date = $enable_move_entry_date | enable_move_modify_date = $enable_move_modify_date | enable_move_security_phrase = $enable_move_security_phrase | enable_move_count = $enable_move_count | move_country_code = $move_country_code | move_vendor_lead_code = $move_vendor_lead_code | move_source_id = $move_source_id | move_owner = $move_owner | move_state = $move_state | move_entry_date = $move_entry_date | move_modify_date = $move_modify_date | move_security_phrase = $move_security_phrase | move_from_list = $move_from_list | move_to_list = $move_to_list | move_status = $move_status | move_count_op = $move_count_op | move_count_num = $move_count_num</p>";
+		echo "<p>"._QXZ("enable_move_status")." = $enable_move_status | "._QXZ("enable_move_country_code")." = $enable_move_country_code | "._QXZ("enable_move_vendor_lead_code")." = $enable_move_vendor_lead_code | "._QXZ("enable_move_source_id")." = $enable_move_source_id | "._QXZ("enable_move_owner")." = $enable_move_owner | "._QXZ("enable_move_state")." = $enable_move_state | "._QXZ("enable_move_entry_date")." = $enable_move_entry_date | "._QXZ("enable_move_modify_date")." = $enable_move_modify_date | "._QXZ("enable_move_security_phrase")." = $enable_move_security_phrase | "._QXZ("enable_move_count")." = $enable_move_count | "._QXZ("move_country_code")." = $move_country_code | "._QXZ("move_vendor_lead_code")." = $move_vendor_lead_code | "._QXZ("move_source_id")." = $move_source_id | "._QXZ("move_owner")." = $move_owner | "._QXZ("move_state")." = $move_state | "._QXZ("move_entry_date")." = $move_entry_date | "._QXZ("move_modify_date")." = $move_modify_date | "._QXZ("move_security_phrase")." = $move_security_phrase | "._QXZ("move_from_list")." = $move_from_list | "._QXZ("move_to_list")." = $move_to_list | "._QXZ("move_status")." = $move_status | "._QXZ("move_count_op")." = $move_count_op | "._QXZ("move_count_num")." = $move_count_num</p>";
 		}
 
 	# filter out anything bad
@@ -602,26 +603,26 @@ if ($move_submit == "move" )
 
 	if ($DB)
 		{
-		echo "<p>enable_move_status = $enable_move_status | enable_move_country_code = $enable_move_country_code | enable_move_vendor_lead_code = $enable_move_vendor_lead_code | enable_move_source_id = $enable_move_source_id | enable_move_owner = $enable_move_owner | enable_move_state = $enable_move_state| enable_move_entry_date = $enable_move_entry_date | enable_move_modify_date = $enable_move_modify_date | enable_move_security_phrase = $enable_move_security_phrase | enable_move_count = $enable_move_count | move_country_code = $move_country_code | move_vendor_lead_code = $move_vendor_lead_code | move_source_id = $move_source_id | move_owner = $move_owner | move_state = $move_state | move_entry_date = $move_entry_date | move_modify_date = $move_modify_date | move_security_phrase = $move_security_phrase | move_from_list = $move_from_list | move_to_list = $move_to_list | move_status = $move_status | move_count_op = $move_count_op | move_count_num = $move_count_num</p>";
+		echo "<p>"._QXZ("enable_move_status")." = $enable_move_status | "._QXZ("enable_move_country_code")." = $enable_move_country_code | "._QXZ("enable_move_vendor_lead_code")." = $enable_move_vendor_lead_code | "._QXZ("enable_move_source_id")." = $enable_move_source_id | "._QXZ("enable_move_owner")." = $enable_move_owner | "._QXZ("enable_move_state")." = $enable_move_state | "._QXZ("enable_move_entry_date")." = $enable_move_entry_date | "._QXZ("enable_move_modify_date")." = $enable_move_modify_date | "._QXZ("enable_move_security_phrase")." = $enable_move_security_phrase | "._QXZ("enable_move_count")." = $enable_move_count | "._QXZ("move_country_code")." = $move_country_code | "._QXZ("move_vendor_lead_code")." = $move_vendor_lead_code | "._QXZ("move_source_id")." = $move_source_id | "._QXZ("move_owner")." = $move_owner | "._QXZ("move_state")." = $move_state | "._QXZ("move_entry_date")." = $move_entry_date | "._QXZ("move_modify_date")." = $move_modify_date | "._QXZ("move_security_phrase")." = $move_security_phrase | "._QXZ("move_from_list")." = $move_from_list | "._QXZ("move_to_list")." = $move_to_list | "._QXZ("move_status")." = $move_status | "._QXZ("move_count_op")." = $move_count_op | "._QXZ("move_count_num")." = $move_count_num</p>";
 		}
 
 	# build the count operation phrase
 	$move_count_op_phrase="";
 	if ( $move_count_op == "<" )
 		{
-		$move_count_op_phrase= "less than ";
+		$move_count_op_phrase= _QXZ("less than")." ";
 		}
 	elseif ( $move_count_op == "<=" )
 		{
-		$move_count_op_phrase= "less than or equal to ";
+		$move_count_op_phrase= _QXZ("less than or equal to")." ";
 		}
 	elseif ( $move_count_op == ">" )
 		{
-		$move_count_op_phrase= "greater than ";
+		$move_count_op_phrase= _QXZ("greater than")." ";
 		}
 	elseif ( $move_count_op == ">=" )
 		{
-		$move_count_op_phrase= "greater than or equal to ";
+		$move_count_op_phrase= _QXZ("greater than or equal to")." ";
 		}
 
 	# make sure the required fields are set
@@ -636,7 +637,7 @@ if ($move_submit == "move" )
 		{
 		if ($move_status == '---BLANK---') {$move_status = '';}
 		$sql_where = $sql_where . " and status like '$move_status' ";
-		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;status is like $move_status<br />";
+		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("status is like")." $move_status<br />";
 		if ($move_status == '') {$move_status = '---BLANK---';}
 		}
 	elseif ($enable_move_status == "enabled")
@@ -647,7 +648,7 @@ if ($move_submit == "move" )
 		{
 		if ($move_country_code == '---BLANK---') {$move_country_code = '';}
 		$sql_where = $sql_where . " and country_code like '$move_country_code' ";
-		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;country code is like $move_country_code<br />";
+		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("country code is like")." $move_country_code<br />";
 		if ($move_country_code == '') {$move_country_code = '---BLANK---';}
 		}
 	elseif ($enable_move_country_code == "enabled")
@@ -658,7 +659,7 @@ if ($move_submit == "move" )
 		{
 		if ($move_vendor_lead_code == '---BLANK---') {$move_vendor_lead_code = '';}
 		$sql_where = $sql_where . " and vendor_lead_code like '$move_vendor_lead_code' ";
-		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;vendor lead code is like $move_vendor_lead_code<br />";
+		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("vendor lead code is like")." $move_vendor_lead_code<br />";
 		if ($move_vendor_lead_code == '') {$move_vendor_lead_code = '---BLANK---';}
 		}
 	elseif ($enable_move_vendor_lead_code == "enabled")
@@ -669,7 +670,7 @@ if ($move_submit == "move" )
 		{
 		if ($move_source_id == '---BLANK---') {$move_source_id = '';}
 		$sql_where = $sql_where . " and source_id like '$move_source_id' ";
-		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;source id is like $move_source_id<br />";
+		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("source id is like")." $move_source_id<br />";
 		if ($move_source_id == '') {$move_source_id = '---BLANK---';}
 		}
 	elseif ($enable_move_source_id == "enabled")
@@ -680,7 +681,7 @@ if ($move_submit == "move" )
 		{
 		if ($move_owner == '---BLANK---') {$move_owner = '';}
 		$sql_where = $sql_where . " and owner like '$move_owner' ";
-		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;owner is like $move_owner<br />";
+		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("owner is like")." $move_owner<br />";
 		if ($move_owner == '') {$move_owner = '---BLANK---';}
 		}
 	elseif ($enable_move_owner == "enabled")
@@ -691,7 +692,7 @@ if ($move_submit == "move" )
 		{
 		if ($move_state == '---BLANK---') {$move_state = '';}
 		$sql_where = $sql_where . " and state like '$move_state' ";
-		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;state is like $move_state<br />";
+		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("state is like")." $move_state<br />";
 		if ($move_state == '') {$move_state = '---BLANK---';}
 		}
 	elseif ($enable_move_state == "enabled")
@@ -702,7 +703,7 @@ if ($move_submit == "move" )
 		{
 		if ($move_security_phrase == '---BLANK---') {$move_security_phrase = '';}
 		$sql_where = $sql_where . " and security_phrase like '$move_security_phrase' ";
-		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;secuirty_phrase is like $move_security_phrase<br />";
+		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("security phrase is like")." $move_security_phrase<br />";
 		if ($move_security_phrase == '') {$move_security_phrase = '---BLANK---';}
 		}
 	elseif ($enable_move_security_phrase == "enabled")
@@ -714,12 +715,12 @@ if ($move_submit == "move" )
 		if ($move_entry_date == '---BLANK---')
 			{
 			$sql_where = $sql_where . " and entry_date == '' ";
-			$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;entry date is blank<br />";
+			$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("entry date is blank")."<br />";
 			}
 		else
 			{
 			$sql_where = $sql_where . " and entry_date >= '$move_entry_date 00:00:00' and entry_date <= '$move_entry_date 23:59:59' ";
-			$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;entry date was on $move_entry_date<br />";
+			$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("entry date was on")." $move_entry_date<br />";
 			}
 		}
 	elseif ($enable_move_entry_date == "enabled")
@@ -731,12 +732,12 @@ if ($move_submit == "move" )
 		if ($move_modify_date == '---BLANK---')
 			{
 			$sql_where = $sql_where . " and modify_date == '' ";
-			$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;modify date is blank<br />";
+			$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("modify date is blank")."<br />";
 			}
 		else
 			{
 			$sql_where = $sql_where . " and modify_date >= '$move_modify_date 00:00:00' and modify_date <= '$move_modify_date 23:59:59' ";
-			$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;last modify date was on $move_modify_date<br />";
+			$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("last modify date was on")." $move_modify_date<br />";
 			}
 		}
 	elseif ($enable_move_modify_date == "enabled")
@@ -748,7 +749,7 @@ if ($move_submit == "move" )
 		if ($move_count_op == '---BLANK---') {$move_count_op = '';}
 		if ($move_count_num == '---BLANK---') {$move_count_num = '';}
 		$sql_where = $sql_where . " and called_count $move_count_op $move_count_num";
-		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;called count is $move_count_op_phrase $move_count_num<br />";
+		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("called count is")." $move_count_op_phrase $move_count_num<br />";
 		if ($move_count_op == '') {$move_count_op = '---BLANK---';}
 		if ($move_count_num == '') {$move_count_num = '---BLANK---';}
 		}
@@ -781,13 +782,13 @@ if ($move_submit == "move" )
 		echo "<!-- VERSION: $version     BUILD: $build -->\n";
 		echo "</head>\n";
 		echo "<body>\n";
-		echo "<p>Sorry. This operation will cause list $move_to_list to exceed $list_lead_limit leads which is not allowed.</p>\n";
-		echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
+		echo "<p>"._QXZ("Sorry. This operation will cause list")." $move_to_list "._QXZ("to exceed")." $list_lead_limit "._QXZ("leads which is not allowed").".</p>\n";
+		echo "<p><a href='$PHP_SELF'>"._QXZ("Click here to start over").".</a></p>\n";
 		echo "</body>\n</html>\n";
 		}
 	else
 		{
-		echo "<p>You are about to move $move_lead_count leads from list $move_from_list to $move_to_list with the following parameters:<br /><br />$move_parm <br />Please press confirm to continue.</p>\n";
+		echo "<p>"._QXZ("You are about to move")." $move_lead_count "._QXZ("leads from list")." $move_from_list "._QXZ("to")." $move_to_list "._QXZ("with the following parameters").":<br /><br />$move_parm <br />"._QXZ("Please press confirm to continue").".</p>\n";
 		echo "<center><form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=enable_move_status value='$enable_move_status'>\n";
 		echo "<input type=hidden name=enable_move_country_code value='$enable_move_country_code'>\n";
@@ -813,9 +814,9 @@ if ($move_submit == "move" )
 		echo "<input type=hidden name=move_count_op value='$move_count_op'>\n";
 		echo "<input type=hidden name=move_count_num value='$move_count_num'>\n";
 		echo "<input type=hidden name=DB value='$DB'>\n";
-		echo "<input type=submit name=confirm_move value=confirm>\n";
+		echo "<input type=submit name=confirm_move value='"._QXZ("confirm")."'>\n";
 		echo "</form></center>\n";
-		echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
+		echo "<p><a href='$PHP_SELF'>"._QXZ("Click here to start over").".</a></p>\n";
 		echo "</body>\n</html>\n";
 		}
 	}
@@ -898,7 +899,7 @@ if ($confirm_move == "confirm")
 
 	if ($DB)
 		{
-		echo "<p>enable_move_status = $enable_move_status | enable_move_country_code = $enable_move_country_code | enable_move_vendor_lead_code = $enable_move_vendor_lead_code | enable_move_source_id = $enable_move_source_id | enable_move_owner = $enable_move_owner | enable_move_state = $enable_move_state | enable_move_entry_date = $enable_move_entry_date | enable_move_modify_date = $enable_move_modify_date | enable_move_security_phrase = $enable_move_security_phrase | enable_move_count = $enable_move_count | move_country_code = $move_country_code | move_vendor_lead_code = $move_vendor_lead_code | move_source_id = $move_source_id | move_owner = $move_owner | move_state = $move_state | move_entry_date = $move_entry_date | move_modify_date = $move_modify_date | move_security_phrase = $move_security_phrase | move_from_list = $move_from_list | move_to_list = $move_to_list | move_status = $move_status | move_count_op = $move_count_op | move_count_num = $move_count_num</p>";
+		echo "<p>"._QXZ("enable_move_status")." = $enable_move_status | "._QXZ("enable_move_country_code")." = $enable_move_country_code | "._QXZ("enable_move_vendor_lead_code")." = $enable_move_vendor_lead_code | "._QXZ("enable_move_source_id")." = $enable_move_source_id | "._QXZ("enable_move_owner")." = $enable_move_owner | "._QXZ("enable_move_state")." = $enable_move_state | "._QXZ("enable_move_entry_date")." = $enable_move_entry_date | "._QXZ("enable_move_modify_date")." = $enable_move_modify_date | "._QXZ("enable_move_security_phrase")." = $enable_move_security_phrase | "._QXZ("enable_move_count")." = $enable_move_count | "._QXZ("move_country_code")." = $move_country_code | "._QXZ("move_vendor_lead_code")." = $move_vendor_lead_code | "._QXZ("move_source_id")." = $move_source_id | "._QXZ("move_owner")." = $move_owner | "._QXZ("move_state")." = $move_state | "._QXZ("move_entry_date")." = $move_entry_date | "._QXZ("move_modify_date")." = $move_modify_date | "._QXZ("move_security_phrase")." = $move_security_phrase | "._QXZ("move_from_list")." = $move_from_list | "._QXZ("move_to_list")." = $move_to_list | "._QXZ("move_status")." = $move_status | "._QXZ("move_count_op")." = $move_count_op | "._QXZ("move_count_num")." = $move_count_num</p>";
 		}
 
 	# filter out anything bad
@@ -928,25 +929,25 @@ if ($confirm_move == "confirm")
 
 	if ($DB)
 		{
-		echo "<p>enable_move_status = $enable_move_status | enable_move_country_code = $enable_move_country_code | enable_move_vendor_lead_code = $enable_move_vendor_lead_code | enable_move_source_id = $enable_move_source_id | enable_move_owner = $enable_move_owner | enable_move_state = $enable_move_state | enable_move_entry_date = $enable_move_entry_date | enable_move_modify_date = $enable_move_modify_date | enable_move_security_phrase = $enable_move_security_phrase | enable_move_count = $enable_move_count | move_country_code = $move_country_code | move_vendor_lead_code = $move_vendor_lead_code | move_source_id = $move_source_id | move_owner = $move_owner | move_state = $move_state | move_entry_date = $move_entry_date | move_modify_date = $move_modify_date | move_security_phrase = $move_security_phrase | move_from_list = $move_from_list | move_to_list = $move_to_list | move_status = $move_status | move_count_op = $move_count_op | move_count_num = $move_count_num</p>";
+		echo "<p>"._QXZ("enable_move_status")." = $enable_move_status | "._QXZ("enable_move_country_code")." = $enable_move_country_code | "._QXZ("enable_move_vendor_lead_code")." = $enable_move_vendor_lead_code | "._QXZ("enable_move_source_id")." = $enable_move_source_id | "._QXZ("enable_move_owner")." = $enable_move_owner | "._QXZ("enable_move_state")." = $enable_move_state | "._QXZ("enable_move_entry_date")." = $enable_move_entry_date | "._QXZ("enable_move_modify_date")." = $enable_move_modify_date | "._QXZ("enable_move_security_phrase")." = $enable_move_security_phrase | "._QXZ("enable_move_count")." = $enable_move_count | "._QXZ("move_country_code")." = $move_country_code | "._QXZ("move_vendor_lead_code")." = $move_vendor_lead_code | "._QXZ("move_source_id")." = $move_source_id | "._QXZ("move_owner")." = $move_owner | "._QXZ("move_state")." = $move_state | "._QXZ("move_entry_date")." = $move_entry_date | "._QXZ("move_modify_date")." = $move_modify_date | "._QXZ("move_security_phrase")." = $move_security_phrase | "._QXZ("move_from_list")." = $move_from_list | "._QXZ("move_to_list")." = $move_to_list | "._QXZ("move_status")." = $move_status | "._QXZ("move_count_op")." = $move_count_op | "._QXZ("move_count_num")." = $move_count_num</p>";
 		}
 
 	$move_count_op_phrase="";
 	if ( $move_count_op == "<" )
 		{
-		$move_count_op_phrase= "less than ";
+		$move_count_op_phrase= _QXZ("less than")." ";
 		}
 	elseif ( $move_count_op == "<=" )
 		{
-		$move_count_op_phrase= "less than or equal to ";
+		$move_count_op_phrase= _QXZ("less than or equal to")." ";
 		}
 	elseif ( $move_count_op == ">" )
 		{
-		$move_count_op_phrase= "greater than ";
+		$move_count_op_phrase= _QXZ("greater than")." ";
 		}
 	elseif ( $move_count_op == ">=" )
 		{
-		$move_count_op_phrase= "greater than or equal to ";
+		$move_count_op_phrase= _QXZ("greater than or equal to")." ";
 		}
 
 	# make sure the required fields are set
@@ -960,7 +961,7 @@ if ($confirm_move == "confirm")
 		{
 		if ($move_status == '---BLANK---') {$move_status = '';}
 		$sql_where = $sql_where . " and status like '$move_status' ";
-		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;status is like $move_status<br />";
+		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("status is like")." $move_status<br />";
 		if ($move_status == '') {$move_status = '---BLANK---';}
 		}
 	elseif ($enable_move_status == "enabled")
@@ -971,7 +972,7 @@ if ($confirm_move == "confirm")
 		{
 		if ($move_country_code == '---BLANK---') {$move_country_code = '';}
 		$sql_where = $sql_where . " and country_code like '$move_country_code' ";
-		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;country code is like $move_country_code<br />";
+		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("country code is like")." $move_country_code<br />";
 		if ($move_country_code == '') {$move_country_code = '---BLANK---';}
 		}
 	elseif ($enable_move_country_code == "enabled")
@@ -982,7 +983,7 @@ if ($confirm_move == "confirm")
 		{
 		if ($move_vendor_lead_code == '---BLANK---') {$move_vendor_lead_code = '';}
 		$sql_where = $sql_where . " and vendor_lead_code like '$move_vendor_lead_code' ";
-		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;vendor lead code is like $move_vendor_lead_code<br />";
+		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("vendor lead code is like")." $move_vendor_lead_code<br />";
 		if ($move_vendor_lead_code == '') {$move_vendor_lead_code = '---BLANK---';}
 		}
 	elseif ($enable_move_vendor_lead_code == "enabled")
@@ -993,7 +994,7 @@ if ($confirm_move == "confirm")
 		{
 		if ($move_source_id == '---BLANK---') {$move_source_id = '';}
 		$sql_where = $sql_where . " and source_id like '$move_source_id' ";
-		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;source id is like $move_source_id<br />";
+		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("source id is like")." $move_source_id<br />";
 		if ($move_source_id == '') {$move_source_id = '---BLANK---';}
 		}
 	elseif($enable_move_source_id == "enabled")
@@ -1004,7 +1005,7 @@ if ($confirm_move == "confirm")
 		{
 		if ($move_owner == '---BLANK---') {$move_owner = '';}
 		$sql_where = $sql_where . " and owner like '$move_owner' ";
-		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;owner is like $move_owner<br />";
+		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("owner is like")." $move_owner<br />";
 		if ($move_owner == '') {$move_owner = '---BLANK---';}
 		}
 	elseif ($enable_move_owner == "enabled")
@@ -1015,7 +1016,7 @@ if ($confirm_move == "confirm")
 		{
 		if ($move_state == '---BLANK---') {$move_state = '';}
 		$sql_where = $sql_where . " and state like '$move_state' ";
-		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;state is like $move_state<br />";
+		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("state is like")." $move_state<br />";
 		if ($move_state == '') {$move_state = '---BLANK---';}
 		}
 	elseif ($enable_move_state == "enabled")
@@ -1026,7 +1027,7 @@ if ($confirm_move == "confirm")
 		{
 		if ($move_security_phrase == '---BLANK---') {$move_security_phrase = '';}
 		$sql_where = $sql_where . " and security_phrase like '$move_security_phrase' ";
-		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;secuirty_phrase is like $move_security_phrase<br />";
+		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("security phrase is like")." $move_security_phrase<br />";
 		if ($move_security_phrase == '') {$move_security_phrase = '---BLANK---';}
 		}
 	elseif ($enable_move_security_phrase == "enabled")
@@ -1038,12 +1039,12 @@ if ($confirm_move == "confirm")
 		if ($move_entry_date == '---BLANK---')
 			{
 			$sql_where = $sql_where . " and entry_date == '' ";
-			$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;entry date is blank<br />";
+			$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("entry date is blank")."<br />";
 			}
 		else
 			{
 			$sql_where = $sql_where . " and entry_date >= '$move_entry_date 00:00:00' and entry_date <= '$move_entry_date 23:59:59' ";
-			$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;entry date was on $move_entry_date<br />";
+			$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("entry date was on")." $move_entry_date<br />";
 			}
 		}
 	elseif ($enable_move_entry_date == "enabled")
@@ -1055,12 +1056,12 @@ if ($confirm_move == "confirm")
 		if ($move_modify_date == '---BLANK---')
 			{
 			$sql_where = $sql_where . " and modify_date == '' ";
-			$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;modify date is blank<br />";
+			$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("modify date is blank")."<br />";
 			}
 		else
 			{
 			$sql_where = $sql_where . " and modify_date >= '$move_modify_date 00:00:00' and modify_date <= '$move_modify_date 23:59:59' ";
-			$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;last modify date was on $move_modify_date<br />";
+			$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("last modify date was on")." $move_modify_date<br />";
 			}
 		}
 	elseif ($enable_move_modify_date == "enabled")
@@ -1072,7 +1073,7 @@ if ($confirm_move == "confirm")
 		if ($move_count_op == '---BLANK---') {$move_count_op = '';}
 		if ($move_count_num == '---BLANK---') {$move_count_num = '';}
 		$sql_where = $sql_where . " and called_count $move_count_op $move_count_num";
-		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;called count is $move_count_op_phrase $move_count_num<br />";
+		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("called count is")." $move_count_op_phrase $move_count_num<br />";
 		if ($move_count_op == '') {$move_count_op = '---BLANK---';}
 		if ($move_count_num == '') {$move_count_num = '---BLANK---';}
 		}
@@ -1086,7 +1087,7 @@ if ($confirm_move == "confirm")
 	$move_lead_rslt = mysql_to_mysqli($move_lead_stmt, $link);
 	$move_lead_count = mysqli_affected_rows($link);
 
-	$move_sentence = "$move_lead_count leads have been moved from list $move_from_list to $move_to_list with the following parameters:<br /><br />$move_parm <br />";
+	$move_sentence = "$move_lead_count "._QXZ("leads have been moved from list")." $move_from_list "._QXZ("to")." $move_to_list "._QXZ("with the following parameters").":<br /><br />$move_parm <br />";
 
 	$SQL_log = "$move_lead_stmt|";
 	$SQL_log = preg_replace('/;/', '', $SQL_log);
@@ -1096,7 +1097,7 @@ if ($confirm_move == "confirm")
 	$admin_log_rslt=mysql_to_mysqli($admin_log_stmt, $link);
 
 	echo "<p>$move_sentence</p>";
-	echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
+	echo "<p><a href='$PHP_SELF'>"._QXZ("Click here to start over").".</a></p>\n";
 	}
 
 
@@ -1178,7 +1179,7 @@ if ($update_submit == "update" )
 
 	if ($DB)
 		{
-		echo "<p>enable_update_from_status = $enable_update_from_status | enable_update_country_code = $enable_update_country_code | enable_update_vendor_lead_code = $enable_update_vendor_lead_code | enable_update_source_id = $enable_update_source_id | enable_update_owner = $enable_update_owner | enable_update_state = $enable_update_state | enable_update_entry_date = $enable_update_entry_date | enable_update_modify_date = $enable_update_modify_date | enable_update_security_phrase = $enable_update_security_phrase | enable_update_count = $enable_update_count | update_country_code = $update_country_code | update_vendor_lead_code = $update_vendor_lead_code | update_source_id = $update_source_id | update_owner = $update_owner | update_state = $update_state | update_entry_date = $update_entry_date | update_modify_date = $update_modify_date | update_security_phrase = $update_security_phrase | update_list = $update_list | update_to_status = $ update_to_status | update_from_status = $update_from_status | update_count_op = $update_count_op | update_count_num = $update_count_num</p>";
+		echo "<p>"._QXZ("enable_update_from_status")." = $enable_update_from_status | "._QXZ("enable_update_country_code")." = $enable_update_country_code | "._QXZ("enable_update_vendor_lead_code")." = $enable_update_vendor_lead_code | "._QXZ("enable_update_source_id")." = $enable_update_source_id | "._QXZ("enable_update_owner")." = $enable_update_owner | "._QXZ("enable_update_state")." = $enable_update_state | "._QXZ("enable_update_entry_date")." = $enable_update_entry_date | "._QXZ("enable_update_modify_date")." = $enable_update_modify_date | "._QXZ("enable_update_security_phrase")." = $enable_update_security_phrase | "._QXZ("enable_update_count")." = $enable_update_count | "._QXZ("update_country_code")." = $update_country_code | "._QXZ("update_vendor_lead_code")." = $update_vendor_lead_code | "._QXZ("update_source_id")." = $update_source_id | "._QXZ("update_owner")." = $update_owner | "._QXZ("update_state")." = $update_state | "._QXZ("update_entry_date")." = $update_entry_date | "._QXZ("update_modify_date")." = $update_modify_date | "._QXZ("update_security_phrase")." = $update_security_phrase | "._QXZ("update_list")." = $update_list | "._QXZ("update_to_status")." = $ update_to_status | "._QXZ("update_from_status")." = $update_from_status | "._QXZ("update_count_op")." = $update_count_op | "._QXZ("update_count_num")." = $update_count_num</p>";
 		}
 
 	# filter out anything bad
@@ -1208,25 +1209,25 @@ if ($update_submit == "update" )
 
 	if ($DB)
 		{
-		echo "<p>enable_update_from_status = $enable_update_from_status | enable_update_country_code = $enable_update_country_code | enable_update_vendor_lead_code = $enable_update_vendor_lead_code | enable_update_source_id = $enable_update_source_id | enable_update_owner = $enable_update_owner | enable_update_state = $enable_update_state| enable_update_entry_date = $enable_update_entry_date | enable_update_modify_date = $enable_update_modify_date | enable_update_security_phrase = $enable_update_security_phrase | enable_update_count = $enable_update_count | update_country_code = $update_country_code | update_vendor_lead_code = $update_vendor_lead_code | update_source_id = $update_source_id | update_owner = $update_owner | update_state = $update_state | update_state = $update_entry_date | update_modify_date = $update_modify_date | update_security_phrase = $update_security_phrase | update_list = $update_list | update_to_status = $ update_to_status | update_from_status = $update_from_status | update_count_op = $update_count_op | update_count_num = $update_count_num</p>";
+		echo "<p>"._QXZ("enable_update_from_status")." = $enable_update_from_status | "._QXZ("enable_update_country_code")." = $enable_update_country_code | "._QXZ("enable_update_vendor_lead_code")." = $enable_update_vendor_lead_code | "._QXZ("enable_update_source_id")." = $enable_update_source_id | "._QXZ("enable_update_owner")." = $enable_update_owner | "._QXZ("enable_update_state")." = $enable_update_state | "._QXZ("enable_update_entry_date")." = $enable_update_entry_date | "._QXZ("enable_update_modify_date")." = $enable_update_modify_date | "._QXZ("enable_update_security_phrase")." = $enable_update_security_phrase | "._QXZ("enable_update_count")." = $enable_update_count | "._QXZ("update_country_code")." = $update_country_code | "._QXZ("update_vendor_lead_code")." = $update_vendor_lead_code | "._QXZ("update_source_id")." = $update_source_id | "._QXZ("update_owner")." = $update_owner | "._QXZ("update_state")." = $update_state | "._QXZ("update_state")." = $update_entry_date | "._QXZ("update_modify_date")." = $update_modify_date | "._QXZ("update_security_phrase")." = $update_security_phrase | "._QXZ("update_list")." = $update_list | "._QXZ("update_to_status")." = $ update_to_status | "._QXZ("update_from_status")." = $update_from_status | "._QXZ("update_count_op")." = $update_count_op | "._QXZ("update_count_num")." = $update_count_num</p>";
 		}
 
 	$update_count_op_phrase="";
 	if ( $update_count_op == "<" )
 		{
-		$update_count_op_phrase= "less than ";
+		$update_count_op_phrase= _QXZ("less than")." ";
 		}
 	elseif ( $update_count_op == "<=" )
 		{
-		$update_count_op_phrase= "less than or equal to ";
+		$update_count_op_phrase= _QXZ("less than or equal to")." ";
 		}
 	elseif ( $update_count_op == ">" )
 		{
-		$update_count_op_phrase= "greater than ";
+		$update_count_op_phrase= _QXZ("greater than")." ";
 		}
 	elseif ( $update_count_op == ">=" )
 		{
-		$update_count_op_phrase= "greater than or equal to ";
+		$update_count_op_phrase= _QXZ("greater than or equal to")." ";
 		}
 
 	# make sure the required fields are set
@@ -1240,7 +1241,7 @@ if ($update_submit == "update" )
 		{
 		if ($update_from_status == '---BLANK---') {$update_from_status = '';}
 		$sql_where = $sql_where . " and status like '$update_from_status' ";
-		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;status is like $update_from_status<br />";
+		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("status is like")." $update_from_status<br />";
 		if ($update_from_status == '') {$update_from_status = '---BLANK---';}
 		}
 	elseif ($enable_update_from_status == "enabled")
@@ -1251,7 +1252,7 @@ if ($update_submit == "update" )
 		{
 		if ($update_country_code == '---BLANK---') {$update_country_code = '';}
 		$sql_where = $sql_where . " and country_code like '$update_country_code' ";
-		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;country code is like $update_country_code<br />";
+		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("country code is like")." $update_country_code<br />";
 				if ($update_country_code == '') {$update_country_code = '---BLANK---';}
 		}
 	elseif ($enable_update_country_code == "enabled")
@@ -1262,7 +1263,7 @@ if ($update_submit == "update" )
 		{
 		if ($update_vendor_lead_code == '---BLANK---') {$update_vendor_lead_code = '';}
 		$sql_where = $sql_where . " and vendor_lead_code like '$update_vendor_lead_code' ";
-		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;vendor lead code is like $update_vendor_lead_code<br />";
+		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("vendor lead code is like")." $update_vendor_lead_code<br />";
 		if ($update_vendor_lead_code == '') {$update_vendor_lead_code = '---BLANK---';}
 		}
 	elseif ($enable_update_vendor_lead_code == "enabled")
@@ -1273,7 +1274,7 @@ if ($update_submit == "update" )
 		{
 		if ($update_source_id == '---BLANK---') {$update_source_id = '';}
 		$sql_where = $sql_where . " and source_id like '$update_source_id' ";
-		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;source id is like $update_source_id<br />";
+		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("source id is like")." $update_source_id<br />";
 		if ($update_source_id == '') {$update_source_id = '---BLANK---';}
 		}
 	elseif ($enable_update_source_id == "enabled")
@@ -1284,7 +1285,7 @@ if ($update_submit == "update" )
 		{
 		if ($update_owner == '---BLANK---') {$update_owner = '';}
 		$sql_where = $sql_where . " and owner like '$update_owner' ";
-		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;owner is like $update_owner<br />";
+		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("owner is like")." $update_owner<br />";
 		if ($update_owner == '') {$update_owner = '---BLANK---';}
 		}
 	elseif ($enable_update_owner == "enabled")
@@ -1295,7 +1296,7 @@ if ($update_submit == "update" )
 		{
 		if ($update_state == '---BLANK---') {$update_state = '';}
 		$sql_where = $sql_where . " and state like '$update_state' ";
-		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;state is like $update_state<br />";
+		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("state is like")." $update_state<br />";
 		if ($update_state == '') {$update_state = '---BLANK---';}
 		}
 	elseif ($enable_update_state == "enabled")
@@ -1306,7 +1307,7 @@ if ($update_submit == "update" )
 		{
 		if ($update_security_phrase == '---BLANK---') {$update_security_phrase = '';}
 		$sql_where = $sql_where . " and security_phrase like '$update_security_phrase' ";
-		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;secuirty_phrase is like $update_security_phrase<br />";
+		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("security phrase is like")." $update_security_phrase<br />";
 		if ($update_security_phrase == '') {$update_security_phrase = '---BLANK---';}
 		}
 	elseif ($enable_update_security_phrase == "enabled")
@@ -1318,12 +1319,12 @@ if ($update_submit == "update" )
 		if ($update_entry_date == '---BLANK---')
 			{
 			$sql_where = $sql_where . " and entry_date == '' ";
-			$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;entry date is blank<br />";
+			$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("entry date is blank")."<br />";
 			}
 		else
 			{
 			$sql_where = $sql_where . " and entry_date >= '$update_entry_date 00:00:00' and entry_date <= '$update_entry_date 23:59:59' ";
-			$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;entry date was on $update_entry_date<br />";
+			$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("entry date was on")." $update_entry_date<br />";
 			}
 		}
 	elseif ($enable_update_entry_date == "enabled")
@@ -1335,12 +1336,12 @@ if ($update_submit == "update" )
 		if ($update_modify_date == '---BLANK---')
 			{
 			$sql_where = $sql_where . " and modify_date == '' ";
-			$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;modify date is blank<br />";
+			$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("modify date is blank")."<br />";
 			}
 		else
 			{
 			$sql_where = $sql_where . " and modify_date >= '$update_modify_date 00:00:00' and modify_date <= '$update_modify_date 23:59:59' ";
-			$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;last modify date was on $update_modify_date<br />";
+			$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("last modify date was on")." $update_modify_date<br />";
 			}
 		}
 	elseif ($enable_update_modify_date == "enabled")
@@ -1352,7 +1353,7 @@ if ($update_submit == "update" )
 		if ($update_count_op == '---BLANK---') {$update_count_op = '';}
 		if ($update_count_num == '---BLANK---') {$update_count_num = '';}
 		$sql_where = $sql_where . " and called_count $update_count_op $update_count_num";
-		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;called count is $update_count_op_phrase $update_count_num<br />";
+		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("called count is")." $update_count_op_phrase $update_count_num<br />";
 		if ($update_count_op == '') {$update_count_op = '---BLANK---';}
 		if ($update_count_num == '') {$update_count_num = '---BLANK---';}
 		}
@@ -1369,7 +1370,7 @@ if ($update_submit == "update" )
 	$update_lead_count_row = mysqli_fetch_row($update_lead_count_rslt);
 	$update_lead_count = $update_lead_count_row[0];
 
-	echo "<p>You are about to update $update_lead_count leads in list $update_list to the status $update_to_status with the following parameters:<br /><br />$update_parm<br />Please press confirm to continue.</p>\n";
+	echo "<p>"._QXZ("You are about to update")." $update_lead_count "._QXZ("leads in list")." $update_list "._QXZ("to the status")." $update_to_status "._QXZ("with the following parameters").":<br /><br />$update_parm<br />"._QXZ("Please press confirm to continue").".</p>\n";
 	echo "<center><form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=enable_update_from_status value='$enable_update_from_status'>\n";
 	echo "<input type=hidden name=enable_update_country_code value='$enable_update_country_code'>\n";
@@ -1395,9 +1396,9 @@ if ($update_submit == "update" )
 	echo "<input type=hidden name=update_count_op value='$update_count_op'>\n";
 	echo "<input type=hidden name=update_count_num value='$update_count_num'>\n";
 	echo "<input type=hidden name=DB value='$DB'>\n";
-	echo "<input type=submit name=confirm_update value=confirm>\n";
+	echo "<input type=submit name=confirm_update value='"._QXZ("confirm")."'>\n";
 	echo "</form></center>\n";
-	echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
+	echo "<p><a href='$PHP_SELF'>"._QXZ("Click here to start over").".</a></p>\n";
 	echo "</body>\n</html>\n";
 
 	}
@@ -1480,7 +1481,7 @@ if ($confirm_update == "confirm")
 
 	if ($DB)
 		{
-		echo "<p>enable_update_from_status = $enable_update_from_status | enable_update_country_code = $enable_update_country_code | enable_update_vendor_lead_code = $enable_update_vendor_lead_code | enable_update_source_id = $enable_update_source_id | enable_update_owner = $enable_update_owner | enable_update_state = $enable_update_state | enable_update_entry_date = $enable_update_entry_date | enable_update_modify_date = $enable_update_modify_date | enable_update_security_phrase = $enable_update_security_phrase | enable_update_count = $enable_update_count | update_country_code = $update_country_code | update_vendor_lead_code = $update_vendor_lead_code | update_source_id = $update_source_id | update_owner = $update_owner | update_state = $update_state | update_entry_date = $update_entry_date | update_modify_date = $update_modify_date | update_security_phrase = $update_security_phrase | update_list = $update_list | update_to_status = $ update_to_status | update_from_status = $update_from_status | update_count_op = $update_count_op | update_count_num = $update_count_num</p>";
+		echo "<p>"._QXZ("enable_update_from_status")." = $enable_update_from_status | "._QXZ("enable_update_country_code")." = $enable_update_country_code | "._QXZ("enable_update_vendor_lead_code")." = $enable_update_vendor_lead_code | "._QXZ("enable_update_source_id")." = $enable_update_source_id | "._QXZ("enable_update_owner")." = $enable_update_owner | "._QXZ("enable_update_state")." = $enable_update_state | "._QXZ("enable_update_entry_date")." = $enable_update_entry_date | "._QXZ("enable_update_modify_date")." = $enable_update_modify_date | "._QXZ("enable_update_security_phrase")." = $enable_update_security_phrase | "._QXZ("enable_update_count")." = $enable_update_count | "._QXZ("update_country_code")." = $update_country_code | "._QXZ("update_vendor_lead_code")." = $update_vendor_lead_code | "._QXZ("update_source_id")." = $update_source_id | "._QXZ("update_owner")." = $update_owner | "._QXZ("update_state")." = $update_state | "._QXZ("update_entry_date")." = $update_entry_date | "._QXZ("update_modify_date")." = $update_modify_date | "._QXZ("update_security_phrase")." = $update_security_phrase | "._QXZ("update_list")." = $update_list | "._QXZ("update_to_status")." = $ update_to_status | "._QXZ("update_from_status")." = $update_from_status | "._QXZ("update_count_op")." = $update_count_op | "._QXZ("update_count_num")." = $update_count_num</p>";
 		}
 
 	# filter out anything bad
@@ -1510,25 +1511,25 @@ if ($confirm_update == "confirm")
 
 	if ($DB)
 		{
-		echo "<p>enable_update_from_status = $enable_update_from_status | enable_update_country_code = $enable_update_country_code | enable_update_vendor_lead_code = $enable_update_vendor_lead_code | enable_update_source_id = $enable_update_source_id | enable_update_owner = $enable_update_owner | enable_update_state = $enable_update_state | enable_update_entry_date = $enable_update_entry_date | enable_update_modify_date = $enable_update_modify_date | enable_update_security_phrase = $enable_update_security_phrase | enable_update_count = $enable_update_count | update_country_code = $update_country_code | update_vendor_lead_code = $update_vendor_lead_code | update_source_id = $update_source_id | update_owner = $update_owner | update_owner = $update_entry_date | update_modify_date = $update_modify_date | update_security_phrase = $update_security_phrase | update_list = $update_list | update_to_status = $ update_to_status | update_from_status = $update_from_status | update_count_op = $update_count_op | update_count_num = $update_count_num</p>";
+		echo "<p>"._QXZ("enable_update_from_status")." = $enable_update_from_status | "._QXZ("enable_update_country_code")." = $enable_update_country_code | "._QXZ("enable_update_vendor_lead_code")." = $enable_update_vendor_lead_code | "._QXZ("enable_update_source_id")." = $enable_update_source_id | "._QXZ("enable_update_owner")." = $enable_update_owner | "._QXZ("enable_update_state")." = $enable_update_state | "._QXZ("enable_update_entry_date")." = $enable_update_entry_date | "._QXZ("enable_update_modify_date")." = $enable_update_modify_date | "._QXZ("enable_update_security_phrase")." = $enable_update_security_phrase | "._QXZ("enable_update_count")." = $enable_update_count | "._QXZ("update_country_code")." = $update_country_code | "._QXZ("update_vendor_lead_code")." = $update_vendor_lead_code | "._QXZ("update_source_id")." = $update_source_id | "._QXZ("update_owner")." = $update_owner | "._QXZ("update_owner")." = $update_entry_date | "._QXZ("update_modify_date")." = $update_modify_date | "._QXZ("update_security_phrase")." = $update_security_phrase | "._QXZ("update_list")." = $update_list | "._QXZ("update_to_status")." = $ update_to_status | "._QXZ("update_from_status")." = $update_from_status | "._QXZ("update_count_op")." = $update_count_op | "._QXZ("update_count_num")." = $update_count_num</p>";
 		}
 
 	$update_count_op_phrase="";
 	if ( $update_count_op == "<" )
 		{
-		$update_count_op_phrase= "less than ";
+		$update_count_op_phrase= _QXZ("less than")." ";
 		}
 	elseif ( $update_count_op == "<=" )
 		{
-		$update_count_op_phrase= "less than or equal to ";
+		$update_count_op_phrase= _QXZ("less than or equal to")." ";
 		}
 	elseif ( $update_count_op == ">" )
 		{
-		$update_count_op_phrase= "greater than ";
+		$update_count_op_phrase= _QXZ("greater than")." ";
 		}
 	elseif ( $update_count_op == ">=" )
 		{
-		$update_count_op_phrase= "greater than or equal to ";
+		$update_count_op_phrase= _QXZ("greater than or equal to")." ";
 		}
 
 	# make sure the required fields are set
@@ -1542,7 +1543,7 @@ if ($confirm_update == "confirm")
 		{
 		if ($update_from_status == '---BLANK---') {$update_from_status = '';}
 		$sql_where = $sql_where . " and status like '$update_from_status' ";
-		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;status is like $update_from_status<br />";
+		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("status is like")." $update_from_status<br />";
 		if ($update_from_status == '') {$update_from_status = '---BLANK---';}
 		}
 	elseif ($enable_update_from_status == "enabled")
@@ -1553,7 +1554,7 @@ if ($confirm_update == "confirm")
 		{
 		if ($update_country_code == '---BLANK---') {$update_country_code = '';}
 		$sql_where = $sql_where . " and country_code like '$update_country_code' ";
-		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;country code is like $update_country_code<br />";
+		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("country code is like")." $update_country_code<br />";
 		if ($update_country_code == '') {$update_country_code = '---BLANK---';}
 		}
 	elseif ($enable_update_country_code == "enabled")
@@ -1564,7 +1565,7 @@ if ($confirm_update == "confirm")
 		{
 		if ($update_vendor_lead_code == '---BLANK---') {$update_vendor_lead_code = '';}
 		$sql_where = $sql_where . " and vendor_lead_code like '$update_vendor_lead_code' ";
-		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;vendor lead code is like $update_vendor_lead_code<br />";
+		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("vendor lead code is like")." $update_vendor_lead_code<br />";
 		if ($update_vendor_lead_code == '') {$update_vendor_lead_code = '---BLANK---';}
 		}
 	elseif ($enable_update_vendor_lead_code == "enabled")
@@ -1575,7 +1576,7 @@ if ($confirm_update == "confirm")
 		{
 		if ($update_source_id == '---BLANK---') {$update_source_id = '';}
 		$sql_where = $sql_where . " and source_id like '$update_source_id' ";
-		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;source id is like $update_source_id<br />";
+		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("source id is like")." $update_source_id<br />";
 		if ($update_source_id == '') {$update_source_id = '---BLANK---';}
 		}
 	elseif ($enable_update_source_id == "enabled")
@@ -1586,7 +1587,7 @@ if ($confirm_update == "confirm")
 		{
 		if ($update_owner == '---BLANK---') {$update_owner = '';}
 		$sql_where = $sql_where . " and owner like '$update_owner' ";
-		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;owner is like $update_owner<br />";
+		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("owner is like")." $update_owner<br />";
 		if ($update_owner == '') {$update_owner = '---BLANK---';}
 		}
 	elseif ($enable_update_owner == "enabled")
@@ -1597,7 +1598,7 @@ if ($confirm_update == "confirm")
 		{
 		if ($update_state == '---BLANK---') {$update_state = '';}
 		$sql_where = $sql_where . " and state like '$update_state' ";
-		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;state is like $update_state<br />";
+		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("state is like")." $update_state<br />";
 		if ($update_state == '') {$update_state = '---BLANK---';}
 		}
 	elseif ($enable_update_state == "enabled")
@@ -1608,7 +1609,7 @@ if ($confirm_update == "confirm")
 		{
 		if ($update_security_phrase == '---BLANK---') {$update_security_phrase = '';}
 		$sql_where = $sql_where . " and security_phrase like '$update_security_phrase' ";
-		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;secuirty_phrase is like $update_security_phrase<br />";
+		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("security phrase is like")." $update_security_phrase<br />";
 		if ($update_security_phrase == '') {$update_security_phrase = '---BLANK---';}
 		}
 	elseif ($enable_update_security_phrase == "enabled")
@@ -1620,12 +1621,12 @@ if ($confirm_update == "confirm")
 		if ($update_entry_date == '---BLANK---')
 			{
 			$sql_where = $sql_where . " and entry_date == '' ";
-			$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;entry date is blank<br />";
+			$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("entry date is blank")."<br />";
 			}
 		else
 			{
 			$sql_where = $sql_where . " and entry_date >= '$update_entry_date 00:00:00' and entry_date <= '$update_entry_date 23:59:59' ";
-			$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;entry date was on $update_entry_date<br />";
+			$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("entry date was on")." $update_entry_date<br />";
 			}
 		}
 	elseif ($enable_update_entry_date == "enabled")
@@ -1637,12 +1638,12 @@ if ($confirm_update == "confirm")
 		if ($update_modify_date == '---BLANK---')
 			{
 			$sql_where = $sql_where . " and modify_date == '' ";
-			$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;modify date is blank<br />";
+			$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("modify date is blank")."<br />";
 			}
 		else
 			{
 			$sql_where = $sql_where . " and modify_date >= '$update_modify_date 00:00:00' and modify_date <= '$update_modify_date 23:59:59' ";
-			$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;last modify date was on $update_modify_date<br />";
+			$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("last modify date was on")." $update_modify_date<br />";
 			}
 		}
 	elseif ($enable_update_modify_date == "enabled")
@@ -1654,7 +1655,7 @@ if ($confirm_update == "confirm")
 		if ($update_count_op == '---BLANK---') {$update_count_op = '';}
 		if ($update_count_num == '---BLANK---') {$update_count_num = '';}
 		$sql_where = $sql_where . " and called_count $update_count_op $update_count_num";
-		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;called count is $update_count_op_phrase $update_count_num<br />";
+		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("called count is")." $update_count_op_phrase $update_count_num<br />";
 		if ($update_count_op == '') {$update_count_op = '---BLANK---';}
 		if ($update_count_num == '') {$update_count_num = '---BLANK---';}
 		}
@@ -1668,7 +1669,7 @@ if ($confirm_update == "confirm")
 	$update_lead_rslt = mysql_to_mysqli($update_lead_stmt, $link);
 	$update_lead_count = mysqli_affected_rows($link);
 
-	$update_sentence = "$update_lead_count leads in list $update_list had their status changed to $update_to_status with the following parameters:<br /><br />$update_parm";
+	$update_sentence = "$update_lead_count "._QXZ("leads in list")." $update_list "._QXZ("had their status changed to")." $update_to_status "._QXZ("with the following parameters").":<br /><br />$update_parm";
 
 	$SQL_log = "$update_lead_stmt|";
 	$SQL_log = preg_replace('/;/', '', $SQL_log);
@@ -1678,7 +1679,7 @@ if ($confirm_update == "confirm")
 	$admin_log_rslt=mysql_to_mysqli($admin_log_stmt, $link);
 
 	echo "<p>$update_sentence</p>";
-	echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
+	echo "<p><a href='$PHP_SELF'>"._QXZ("Click here to start over").".</a></p>\n";
 	}
 
 
@@ -1760,7 +1761,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 
 	if ($DB)
 		{
-		echo "<p>enable_delete_country_code = $enable_delete_country_code | enable_delete_vendor_lead_code = $enable_delete_vendor_lead_code | enable_delete_source_id = $enable_delete_source_id | enable_delete_owner = $enable_delete_owner | enable_delete_state = $enable_delete_state | enable_delete_entry_date = $enable_delete_entry_date | enable_delete_modify_date = $enable_delete_modify_date | enable_delete_security_phrase = $enable_delete_security_phrase | enable_delete_count = $enable_delete_count | delete_country_code = $delete_country_code | delete_vendor_lead_code = $delete_vendor_lead_code | delete_source_id = $delete_source_id | delete_owner = $delete_owner | delete_state = $delete_state | delete_entry_date = $delete_entry_date | delete_modify_date = $delete_modify_date | delete_security_phrase = $delete_security_phrase | delete_list = $delete_list | delete_status = $delete_status | delete_count_op = $delete_count_op | delete_count_num = $delete_count_num | delete_lead_id = $delete_lead_id</p>";
+		echo "<p>"._QXZ("enable_delete_country_code")." = $enable_delete_country_code | "._QXZ("enable_delete_vendor_lead_code")." = $enable_delete_vendor_lead_code | "._QXZ("enable_delete_source_id")." = $enable_delete_source_id | "._QXZ("enable_delete_owner")." = $enable_delete_owner | "._QXZ("enable_delete_state")." = $enable_delete_state | "._QXZ("enable_delete_entry_date")." = $enable_delete_entry_date | "._QXZ("enable_delete_modify_date")." = $enable_delete_modify_date | "._QXZ("enable_delete_security_phrase")." = $enable_delete_security_phrase | "._QXZ("enable_delete_count")." = $enable_delete_count | "._QXZ("delete_country_code")." = $delete_country_code | "._QXZ("delete_vendor_lead_code")." = $delete_vendor_lead_code | "._QXZ("delete_source_id")." = $delete_source_id | "._QXZ("delete_owner")." = $delete_owner | "._QXZ("delete_state")." = $delete_state | "._QXZ("delete_entry_date")." = $delete_entry_date | "._QXZ("delete_modify_date")." = $delete_modify_date | "._QXZ("delete_security_phrase")." = $delete_security_phrase | "._QXZ("delete_list")." = $delete_list | "._QXZ("delete_status")." = $delete_status | "._QXZ("delete_count_op")." = $delete_count_op | "._QXZ("delete_count_num")." = $delete_count_num | "._QXZ("delete_lead_id")." = $delete_lead_id</p>";
 		}
 
 	# filter out anything bad
@@ -1790,25 +1791,25 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 
 	if ($DB)
 		{
-		echo "<p>enable_delete_country_code = $enable_delete_country_code | enable_delete_vendor_lead_code = $enable_delete_vendor_lead_code | enable_delete_source_id = $enable_delete_source_id | enable_delete_owner = $enable_delete_owner | enable_delete_state = $enable_delete_state | enable_delete_entry_date = $enable_delete_entry_date | enable_delete_modify_date = $enable_delete_modify_date | enable_delete_security_phrase = $enable_delete_security_phrase | enable_delete_count = $enable_delete_count | delete_country_code = $delete_country_code | delete_vendor_lead_code = $delete_vendor_lead_code | delete_source_id = $delete_source_id | delete_owner = $delete_owner | delete_state = $delete_state | delete_entry_date = $delete_entry_date | delete_modify_date = $delete_modify_date | delete_security_phrase = $delete_security_phrase | delete_list = $delete_list | delete_status = $delete_status | delete_count_op = $delete_count_op | delete_count_num = $delete_count_num | delete_lead_id = $delete_lead_id</p>";
+		echo "<p>"._QXZ("enable_delete_country_code")." = $enable_delete_country_code | "._QXZ("enable_delete_vendor_lead_code")." = $enable_delete_vendor_lead_code | "._QXZ("enable_delete_source_id")." = $enable_delete_source_id | "._QXZ("enable_delete_owner")." = $enable_delete_owner | "._QXZ("enable_delete_state")." = $enable_delete_state | "._QXZ("enable_delete_entry_date")." = $enable_delete_entry_date | "._QXZ("enable_delete_modify_date")." = $enable_delete_modify_date | "._QXZ("enable_delete_security_phrase")." = $enable_delete_security_phrase | "._QXZ("enable_delete_count")." = $enable_delete_count | "._QXZ("delete_country_code")." = $delete_country_code | "._QXZ("delete_vendor_lead_code")." = $delete_vendor_lead_code | "._QXZ("delete_source_id")." = $delete_source_id | "._QXZ("delete_owner")." = $delete_owner | "._QXZ("delete_state")." = $delete_state | "._QXZ("delete_entry_date")." = $delete_entry_date | "._QXZ("delete_modify_date")." = $delete_modify_date | "._QXZ("delete_security_phrase")." = $delete_security_phrase | "._QXZ("delete_list")." = $delete_list | "._QXZ("delete_status")." = $delete_status | "._QXZ("delete_count_op")." = $delete_count_op | "._QXZ("delete_count_num")." = $delete_count_num | "._QXZ("delete_lead_id")." = $delete_lead_id</p>";
 		}
 
 	$delete_count_op_phrase="";
 	if ( $delete_count_op == "<" )
 		{
-		$delete_count_op_phrase= "less than ";
+		$delete_count_op_phrase= _QXZ("less than")." ";
 		}
 	elseif ( $delete_count_op == "<=" )
 		{
-		$delete_count_op_phrase= "less than or equal to ";
+		$delete_count_op_phrase= _QXZ("less than or equal to")." ";
 		}
 	elseif ( $delete_count_op == ">" )
 		{
-		$delete_count_op_phrase= "greater than ";
+		$delete_count_op_phrase= _QXZ("greater than")." ";
 		}
 	elseif ( $delete_count_op == ">=" )
 		{
-		$delete_count_op_phrase= "greater than or equal to ";
+		$delete_count_op_phrase= _QXZ("greater than or equal to")." ";
 		}
 
 	# make sure the required fields are set
@@ -1819,12 +1820,12 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	$sql_where = "";
 	$sql_where = $sql_where . " and status like '$delete_status' ";
 	$delete_parm = "";
-	$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;status is like $delete_status<br />";
+	$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("status is like")." $delete_status<br />";
 	if (($enable_delete_lead_id == "enabled") && ($delete_lead_id != ''))
 		{
 		if ($delete_lead_id == '---BLANK---') {$delete_lead_id = '';}
 		$sql_where = $sql_where . " and lead_id like '$delete_lead_id' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;lead_id is like $delete_lead_id<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("lead ID is like")." $delete_lead_id<br />";
 		if ($delete_lead_id == '') {$delete_lead_id = '---BLANK---';}
 		}
 	elseif ($enable_delete_lead_id == "enabled")
@@ -1835,7 +1836,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_country_code == '---BLANK---') {$delete_country_code = '';}
 		$sql_where = $sql_where . " and country_code like '$delete_country_code' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;country code is like $delete_country_code<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("country code is like")." $delete_country_code<br />";
 		if ($delete_country_code == '') {$delete_country_code = '---BLANK---';}
 		}
 	elseif ($enable_delete_country_code == "enabled")
@@ -1846,7 +1847,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_vendor_lead_code == '---BLANK---') {$delete_vendor_lead_code = '';}
 		$sql_where = $sql_where . " and vendor_lead_code like '$delete_vendor_lead_code' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;vendor lead code is like $delete_vendor_lead_code<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("vendor lead code is like")." $delete_vendor_lead_code<br />";
 		if ($delete_vendor_lead_code == '') {$delete_vendor_lead_code = '---BLANK---';}
 		}
 	elseif ($enable_delete_vendor_lead_code == "enabled")
@@ -1857,7 +1858,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_source_id == '---BLANK---') {$delete_source_id = '';}
 		$sql_where = $sql_where . " and source_id like '$delete_source_id' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;source id code is like $delete_source_id<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("source id code is like")." $delete_source_id<br />";
 		if ($delete_source_id == '') {$delete_source_id = '---BLANK---';}
 		}
 	elseif ($enable_delete_source_id == "enabled")
@@ -1868,7 +1869,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_security_phrase == '---BLANK---') {$delete_security_phrase = '';}
 		$sql_where = $sql_where . " and security_phrase like '$delete_security_phrase' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;secuirty phrase is like $delete_security_phrase<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("security phrase is like")." $delete_security_phrase<br />";
 		if ($delete_security_phrase == '') {$delete_security_phrase = '---BLANK---';}
 		}
 	elseif ($enable_delete_security_phrase == "enabled")
@@ -1879,7 +1880,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_owner == '---BLANK---') {$delete_owner = '';}
 		$sql_where = $sql_where . " and owner like '$delete_owner' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;owner is like $delete_owner<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("owner is like")." $delete_owner<br />";
 		if ($delete_owner == '') {$delete_owner = '---BLANK---';}
 		}
 	elseif ($enable_delete_owner == "enabled")
@@ -1890,7 +1891,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_state == '---BLANK---') {$delete_state = '';}
 		$sql_where = $sql_where . " and state like '$delete_state' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;state is like $delete_state<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("state is like")." $delete_state<br />";
 		if ($delete_state == '') {$delete_state = '---BLANK---';}
 		}
 	elseif ($enable_delete_state == "enabled")
@@ -1902,12 +1903,12 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		if ($delete_entry_date == '---BLANK---')
 			{
 			$sql_where = $sql_where . " and entry_date == '' ";
-			$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;entry date is blank<br />";
+			$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("entry date is blank")."<br />";
 			}
 		else
 			{
 			$sql_where = $sql_where . " and entry_date >= '$delete_entry_date 00:00:00' and entry_date <= '$delete_entry_date 23:59:59' ";
-			$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;entry date was on $delete_entry_date<br />";
+			$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("entry date was on")." $delete_entry_date<br />";
 			}
 		}
 	elseif ($enable_delete_entry_date == "enabled")
@@ -1919,12 +1920,12 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		if ($delete_modify_date == '---BLANK---')
 			{
 			$sql_where = $sql_where . " and modify_date == '' ";
-			$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;modify date is blank<br />";
+			$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("modify date is blank")."<br />";
 			}
 		else
 			{
 			$sql_where = $sql_where . " and modify_date >= '$delete_modify_date 00:00:00' and modify_date <= '$delete_modify_date 23:59:59' ";
-			$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;last modify date was on $delete_modify_date<br />";
+			$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("last modify date was on")." $delete_modify_date<br />";
 			}
 		}
 	elseif ($enable_delete_modify_date == "enabled")
@@ -1936,7 +1937,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 		if ($delete_count_op == '---BLANK---') {$delete_count_op = '';}
 		if ($delete_count_num == '---BLANK---') {$delete_count_num = '';}
 		$sql_where = $sql_where . " and called_count $delete_count_op $delete_count_num";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;called count is $update_count_op_phrase $delete_count_num<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("called count is")." $update_count_op_phrase $delete_count_num<br />";
 		if ($delete_count_op == '') {$delete_count_op = '---BLANK---';}
 		if ($delete_count_num == '') {$delete_count_num = '---BLANK---';}
 		}
@@ -1953,7 +1954,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	$delete_lead_count_row = mysqli_fetch_row($delete_lead_count_rslt);
 	$delete_lead_count = $delete_lead_count_row[0];
 
-	echo "<p>You are about to delete $delete_lead_count leads in list $delete_list with the following parameters:<br /><br />$delete_parm<br />Please press confirm to continue.</p>\n";
+	echo "<p>"._QXZ("You are about to delete")." $delete_lead_count "._QXZ("leads in list")." $delete_list "._QXZ("with the following parameters").":<br /><br />$delete_parm<br />"._QXZ("Please press confirm to continue").".</p>\n";
 	echo "<center><form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=enable_delete_lead_id value='$enable_delete_lead_id'>\n";
 	echo "<input type=hidden name=enable_delete_country_code value='$enable_delete_country_code'>\n";
@@ -1981,7 +1982,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	echo "<input type=hidden name=DB value='$DB'>\n";
 	echo "<input type=submit name=confirm_delete value=confirm>\n";
 	echo "</form></center>\n";
-	echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
+	echo "<p><a href='$PHP_SELF'>"._QXZ("Click here to start over").".</a></p>\n";
 	echo "</body>\n</html>\n";
 
 	}
@@ -2064,7 +2065,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 
 	if ($DB)
 		{
-		echo "<p>enable_delete_country_code = $enable_delete_country_code | enable_delete_vendor_lead_code = $enable_delete_vendor_lead_code | enable_delete_source_id = $enable_delete_source_id | enable_delete_owner = $enable_delete_owner | enable_delete_state = $enable_delete_state | enable_delete_entry_date = $enable_delete_entry_date | enable_delete_modify_date = $enable_delete_modify_date | enable_delete_security_phrase = $enable_delete_security_phrase | enable_delete_count = $enable_delete_count | delete_country_code = $delete_country_code | delete_vendor_lead_code = $delete_vendor_lead_code | delete_source_id = $delete_source_id | delete_owner = $delete_owner | delete_state = $delete_state | delete_entry_date = $delete_entry_date | delete_modify_date = $delete_modify_date | delete_security_phrase = $delete_security_phrase | delete_list = $delete_list | delete_status = $delete_status | delete_count_op = $delete_count_op | delete_count_num = $delete_count_num | delete_lead_id = $delete_lead_id</p>";
+		echo "<p>"._QXZ("enable_delete_country_code")." = $enable_delete_country_code | "._QXZ("enable_delete_vendor_lead_code")." = $enable_delete_vendor_lead_code | "._QXZ("enable_delete_source_id")." = $enable_delete_source_id | "._QXZ("enable_delete_owner")." = $enable_delete_owner | "._QXZ("enable_delete_state")." = $enable_delete_state | "._QXZ("enable_delete_entry_date")." = $enable_delete_entry_date | "._QXZ("enable_delete_modify_date")." = $enable_delete_modify_date | "._QXZ("enable_delete_security_phrase")." = $enable_delete_security_phrase | "._QXZ("enable_delete_count")." = $enable_delete_count | "._QXZ("delete_country_code")." = $delete_country_code | "._QXZ("delete_vendor_lead_code")." = $delete_vendor_lead_code | "._QXZ("delete_source_id")." = $delete_source_id | "._QXZ("delete_owner")." = $delete_owner | "._QXZ("delete_state")." = $delete_state | "._QXZ("delete_entry_date")." = $delete_entry_date | "._QXZ("delete_modify_date")." = $delete_modify_date | "._QXZ("delete_security_phrase")." = $delete_security_phrase | "._QXZ("delete_list")." = $delete_list | "._QXZ("delete_status")." = $delete_status | "._QXZ("delete_count_op")." = $delete_count_op | "._QXZ("delete_count_num")." = $delete_count_num | "._QXZ("delete_lead_id")." = $delete_lead_id</p>";
 		}
 
 	# filter out anything bad
@@ -2094,25 +2095,25 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 
 	if ($DB)
 		{
-		echo "<p>enable_delete_country_code = $enable_delete_country_code | enable_delete_vendor_lead_code = $enable_delete_vendor_lead_code | enable_delete_source_id = $enable_delete_source_id | enable_delete_owner = $enable_delete_owner | enable_delete_state = $enable_delete_state | enable_delete_entry_date = $enable_delete_entry_date | enable_delete_modify_date = $enable_delete_modify_date | enable_delete_security_phrase = $enable_delete_security_phrase | enable_delete_count = $enable_delete_count | delete_country_code = $delete_country_code | delete_vendor_lead_code = $delete_vendor_lead_code | delete_source_id = $delete_source_id | delete_owner = $delete_owner | delete_state = $delete_state | delete_entry_date = $delete_entry_date | delete_modify_date = $delete_modify_date | delete_security_phrase = $delete_security_phrase | delete_list = $delete_list | delete_status = $delete_status | delete_count_op = $delete_count_op | delete_count_num = $delete_count_num | delete_lead_id = $delete_lead_id</p>";
+		echo "<p>"._QXZ("enable_delete_country_code")." = $enable_delete_country_code | "._QXZ("enable_delete_vendor_lead_code")." = $enable_delete_vendor_lead_code | "._QXZ("enable_delete_source_id")." = $enable_delete_source_id | "._QXZ("enable_delete_owner")." = $enable_delete_owner | "._QXZ("enable_delete_state")." = $enable_delete_state | "._QXZ("enable_delete_entry_date")." = $enable_delete_entry_date | "._QXZ("enable_delete_modify_date")." = $enable_delete_modify_date | "._QXZ("enable_delete_security_phrase")." = $enable_delete_security_phrase | "._QXZ("enable_delete_count")." = $enable_delete_count | "._QXZ("delete_country_code")." = $delete_country_code | "._QXZ("delete_vendor_lead_code")." = $delete_vendor_lead_code | "._QXZ("delete_source_id")." = $delete_source_id | "._QXZ("delete_owner")." = $delete_owner | "._QXZ("delete_state")." = $delete_state | "._QXZ("delete_entry_date")." = $delete_entry_date | "._QXZ("delete_modify_date")." = $delete_modify_date | "._QXZ("delete_security_phrase")." = $delete_security_phrase | "._QXZ("delete_list")." = $delete_list | "._QXZ("delete_status")." = $delete_status | "._QXZ("delete_count_op")." = $delete_count_op | "._QXZ("delete_count_num")." = $delete_count_num | "._QXZ("delete_lead_id")." = $delete_lead_id</p>";
 		}
 
 	$delete_count_op_phrase="";
 	if ( $delete_count_op == "<" )
 		{
-		$delete_count_op_phrase= "less than ";
+		$delete_count_op_phrase= _QXZ("less than")." ";
 		}
 	elseif ( $delete_count_op == "<=" )
 		{
-		$delete_count_op_phrase= "less than or equal to ";
+		$delete_count_op_phrase= _QXZ("less than or equal to")." ";
 		}
 	elseif ( $delete_count_op == ">" )
 		{
-		$delete_count_op_phrase= "greater than ";
+		$delete_count_op_phrase= _QXZ("greater than")." ";
 		}
 	elseif ( $delete_count_op == ">=" )
 		{
-		$delete_count_op_phrase= "greater than or equal to ";
+		$delete_count_op_phrase= _QXZ("greater than or equal to")." ";
 		}
 
 	# make sure the required fields are set
@@ -2123,12 +2124,12 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 	$sql_where = "";
 	$sql_where = $sql_where . " and status like '$delete_status' ";
 	$delete_parm = "";
-	$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;status is like $delete_status<br />";
+	$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("status is like")." $delete_status<br />";
 	if (($enable_delete_lead_id == "enabled") && ($delete_lead_id != ''))
 		{
 		if ($delete_lead_id == '---BLANK---') {$delete_lead_id = '';}
 		$sql_where = $sql_where . " and lead_id like '$delete_lead_id' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;lead_id is like $delete_lead_id<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("lead ID is like")." $delete_lead_id<br />";
 		if ($delete_lead_id == '') {$delete_lead_id = '---BLANK---';}
 		}
 	elseif ($enable_delete_lead_id == "enabled")
@@ -2139,7 +2140,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_country_code == '---BLANK---') {$delete_country_code = '';}
 		$sql_where = $sql_where . " and country_code like '$delete_country_code' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;country code is like $delete_country_code<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("country code is like")." $delete_country_code<br />";
 		if ($delete_country_code == '') {$delete_country_code = '---BLANK---';}
 		}
 	elseif ($enable_delete_country_code == "enabled")
@@ -2150,7 +2151,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_vendor_lead_code == '---BLANK---') {$delete_vendor_lead_code = '';}
 		$sql_where = $sql_where . " and vendor_lead_code like '$delete_vendor_lead_code' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;vendor lead code is like $delete_vendor_lead_code<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("vendor lead code is like")." $delete_vendor_lead_code<br />";
 		if ($delete_vendor_lead_code == '') {$delete_vendor_lead_code = '---BLANK---';}
 		}
 	elseif ($enable_delete_vendor_lead_code == "enabled")
@@ -2161,7 +2162,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_source_id == '---BLANK---') {$delete_source_id = '';}
 		$sql_where = $sql_where . " and source_id like '$delete_source_id' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;source id code is like $delete_source_id<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("source id code is like")." $delete_source_id<br />";
 		if ($delete_source_id == '') {$delete_source_id = '---BLANK---';}
 		}
 	elseif ($enable_delete_source_id == "enabled")
@@ -2172,7 +2173,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_security_phrase == '---BLANK---') {$delete_security_phrase = '';}
 		$sql_where = $sql_where . " and security_phrase like '$delete_security_phrase' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;secuirty phrase is like $delete_security_phrase<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("security phrase is like")." $delete_security_phrase<br />";
 		if ($delete_security_phrase == '') {$delete_security_phrase = '---BLANK---';}
 		}
 	elseif ($enable_delete_security_phrase == "enabled")
@@ -2183,7 +2184,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_owner == '---BLANK---') {$delete_owner = '';}
 		$sql_where = $sql_where . " and owner like '$delete_owner' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;owner is like $delete_owner<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("owner is like")." $delete_owner<br />";
 		if ($delete_owner == '') {$delete_owner = '---BLANK---';}
 		}
 	elseif ($enable_delete_owner == "enabled")
@@ -2194,7 +2195,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		{
 		if ($delete_state == '---BLANK---') {$delete_state = '';}
 		$sql_where = $sql_where . " and state like '$delete_state' ";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;state is like $delete_state<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("state is like")." $delete_state<br />";
 		if ($delete_state == '') {$delete_state = '---BLANK---';}
 		}
 	elseif ($enable_delete_state == "enabled")
@@ -2206,12 +2207,12 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		if ($delete_entry_date == '---BLANK---')
 			{
 			$sql_where = $sql_where . " and entry_date == '' ";
-			$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;entry date is blank<br />";
+			$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("entry date is blank")."<br />";
 			}
 		else
 			{
 			$sql_where = $sql_where . " and entry_date >= '$delete_entry_date 00:00:00' and entry_date <= '$delete_entry_date 23:59:59' ";
-			$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;entry date was on $delete_entry_date<br />";
+			$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("entry date was on")." $delete_entry_date<br />";
 			}
 		}
 	elseif ($enable_delete_entry_date == "enabled")
@@ -2223,12 +2224,12 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		if ($delete_modify_date == '---BLANK---')
 			{
 			$sql_where = $sql_where . " and modify_date == '' ";
-			$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;modify date is blank<br />";
+			$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("modify date is blank")."<br />";
 			}
 		else
 			{
 			$sql_where = $sql_where . " and modify_date >= '$delete_modify_date 00:00:00' and modify_date <= '$delete_modify_date 23:59:59' ";
-			$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;last modify date was on $delete_modify_date<br />";
+			$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("last modify date was on")." $delete_modify_date<br />";
 			}
 		}
 	elseif ($enable_delete_modify_date == "enabled")
@@ -2240,7 +2241,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 		if ($delete_count_op == '---BLANK---') {$delete_count_op = '';}
 		if ($delete_count_num == '---BLANK---') {$delete_count_num = '';}
 		$sql_where = $sql_where . " and called_count $delete_count_op $delete_count_num";
-		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;called count is $update_count_op_phrase $delete_count_num<br />";
+		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("called count is")." $update_count_op_phrase $delete_count_num<br />";
 		if ($delete_count_op == '') {$delete_count_op = '---BLANK---';}
 		if ($delete_count_num == '') {$delete_count_num = '---BLANK---';}
 		}
@@ -2264,7 +2265,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 	$admin_log_rslt=mysql_to_mysqli($admin_log_stmt, $link);
 
 	echo "<p>$delete_sentence</p>";
-	echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
+	echo "<p><a href='$PHP_SELF'>"._QXZ("Click here to start over").".</a></p>\n";
 	}
 
 
@@ -2299,7 +2300,7 @@ if ($callback_submit == "switchcallbacks" )
 
 	if ($DB)
 		{
-		echo "<p>enable_callback_entry_date = $enable_callback_entry_date | enable_callback_callback_date = $enable_callback_callback_date | callback_entry_start_date = $callback_entry_start_date | callback_entry_end_date = $callback_entry_end_date | callback_callback_start_date = $callback_callback_start_date | callback_callback_end_date = $callback_callback_end_date | callback_list = $callback_list</p>";
+		echo "<p>"._QXZ("enable_callback_entry_date")." = $enable_callback_entry_date | "._QXZ("enable_callback_callback_date")." = $enable_callback_callback_date | "._QXZ("callback_entry_start_date")." = $callback_entry_start_date | "._QXZ("callback_entry_end_date")." = $callback_entry_end_date | "._QXZ("callback_callback_start_date")." = $callback_callback_start_date | "._QXZ("callback_callback_end_date")." = $callback_callback_end_date | "._QXZ("callback_list")." = $callback_list</p>";
 		}
 
 	# filter out anything bad
@@ -2313,7 +2314,7 @@ if ($callback_submit == "switchcallbacks" )
 
 	if ($DB)
 		{
-		echo "<p>enable_callback_entry_date = $enable_callback_entry_date | enable_callback_callback_date = $enable_callback_callback_date | callback_entry_start_date = $callback_entry_start_date | callback_entry_end_date = $callback_entry_end_date | callback_callback_start_date = $callback_callback_start_date | callback_callback_end_date = $callback_callback_end_date | callback_list = $callback_list</p>";
+		echo "<p>"._QXZ("enable_callback_entry_date")." = $enable_callback_entry_date | "._QXZ("enable_callback_callback_date")." = $enable_callback_callback_date | "._QXZ("callback_entry_start_date")." = $callback_entry_start_date | "._QXZ("callback_entry_end_date")." = $callback_entry_end_date | "._QXZ("callback_callback_start_date")." = $callback_callback_start_date | "._QXZ("callback_callback_end_date")." = $callback_callback_end_date | "._QXZ("callback_list")." = $callback_list</p>";
 		}
 
 
@@ -2330,7 +2331,7 @@ if ($callback_submit == "switchcallbacks" )
 	if (($enable_callback_entry_date == "enabled") && ($callback_entry_start_date != ''))
 		{
 		$sql_where = $sql_where . " and entry_time >= '$callback_entry_start_date 00:00:00' ";
-		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;entry time greater than $callback_entry_start_date 00:00:00<br />";
+		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("entry time greater than")." $callback_entry_start_date 00:00:00<br />";
 		}
 	elseif ($enable_callback_entry_date == "enabled")
 		{
@@ -2339,7 +2340,7 @@ if ($callback_submit == "switchcallbacks" )
 	if (($enable_callback_entry_date == "enabled") && ($callback_entry_end_date != ''))
 		{
 		$sql_where = $sql_where . " and entry_time <= '$callback_entry_end_date 23:59:59' ";
-		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;entry time less than $callback_entry_end_date 23:59:59<br />";
+		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("entry time less than")." $callback_entry_end_date 23:59:59<br />";
 		}
 	elseif ($enable_callback_entry_date == "enabled")
 		{
@@ -2349,7 +2350,7 @@ if ($callback_submit == "switchcallbacks" )
 	if (($enable_callback_callback_date == "enabled") && ($callback_callback_start_date != ''))
 		{
 		$sql_where = $sql_where . " and callback_time >= '$callback_callback_start_date 00:00:00' ";
-		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;callback time greater than $callback_callback_start_date 00:00:00<br />";
+		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("callback time greater than")." $callback_callback_start_date 00:00:00<br />";
 		}
 	elseif ($enable_callback_callback_date == "enabled")
 		{
@@ -2358,7 +2359,7 @@ if ($callback_submit == "switchcallbacks" )
 	if (($enable_callback_callback_date == "enabled") && ($callback_callback_end_date != ''))
 		{
 		$sql_where = $sql_where . " and callback_time <= '$callback_callback_end_date 23:59:59' ";
-		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;callback time less than $callback_callback_end_date 23:59:59<br />";
+		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("callback time less than")." $callback_callback_end_date 23:59:59<br />";
 		}
 	elseif ($enable_callback_callback_date == "enabled")
 		{
@@ -2374,7 +2375,7 @@ if ($callback_submit == "switchcallbacks" )
 	$callback_lead_count_row = mysqli_fetch_row($callback_lead_count_rslt);
 	$callback_lead_count = $callback_lead_count_row[0];
 
-		echo "<p>You are about to switch $callback_lead_count call backs in list $callback_list from USERONLY callbacks to EVERYONE callbacks with these parameters:<br /><br />$callback_parm <br />Please press confirm to continue.</p>\n";
+		echo "<p>"._QXZ("You are about to switch")." $callback_lead_count "._QXZ("call backs in list")." $callback_list "._QXZ("from USERONLY callbacks to EVERYONE callbacks with these parameters").":<br /><br />$callback_parm <br />"._QXZ("Please press confirm to continue").".</p>\n";
 		echo "<center><form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=enable_callback_entry_date value='$enable_callback_entry_date'>\n";
 		echo "<input type=hidden name=enable_callback_callback_date value='$enable_callback_callback_date'>\n";
@@ -2384,9 +2385,9 @@ if ($callback_submit == "switchcallbacks" )
 		echo "<input type=hidden name=callback_callback_end_date value='$callback_callback_end_date'>\n";
 		echo "<input type=hidden name=callback_list value='$callback_list'>\n";
 		echo "<input type=hidden name=DB value='$DB'>\n";
-		echo "<input type=submit name=confirm_callback value=confirm>\n";
+		echo "<input type=submit name=confirm_callback value='"._QXZ("confirm")."'>\n";
 		echo "</form></center>\n";
-		echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
+		echo "<p><a href='$PHP_SELF'>"._QXZ("Click here to start over").".</a></p>\n";
 		echo "</body>\n</html>\n";
 	}
 
@@ -2420,7 +2421,7 @@ if ($confirm_callback == "confirm")
 
 	if ($DB)
 		{
-		echo "<p>enable_callback_entry_date = $enable_callback_entry_date | enable_callback_callback_date = $enable_callback_callback_date | callback_entry_start_date = $callback_entry_start_date | callback_entry_end_date = $callback_entry_end_date | callback_callback_start_date = $callback_callback_start_date | callback_callback_end_date = $callback_callback_end_date | callback_list = $callback_list</p>";
+		echo "<p>"._QXZ("enable_callback_entry_date")." = $enable_callback_entry_date | "._QXZ("enable_callback_callback_date")." = $enable_callback_callback_date | "._QXZ("callback_entry_start_date")." = $callback_entry_start_date | "._QXZ("callback_entry_end_date")." = $callback_entry_end_date | "._QXZ("callback_callback_start_date")." = $callback_callback_start_date | "._QXZ("callback_callback_end_date")." = $callback_callback_end_date | "._QXZ("callback_list")." = $callback_list</p>";
 		}
 
 	# filter out anything bad
@@ -2434,7 +2435,7 @@ if ($confirm_callback == "confirm")
 
 	if ($DB)
 		{
-		echo "<p>enable_callback_entry_date = $enable_callback_entry_date | enable_callback_callback_date = $enable_callback_callback_date | callback_entry_start_date = $callback_entry_start_date | callback_entry_end_date = $callback_entry_end_date | callback_callback_start_date = $callback_callback_start_date | callback_callback_end_date = $callback_callback_end_date | callback_list = $callback_list</p>";
+		echo "<p>"._QXZ("enable_callback_entry_date")." = $enable_callback_entry_date | "._QXZ("enable_callback_callback_date")." = $enable_callback_callback_date | "._QXZ("callback_entry_start_date")." = $callback_entry_start_date | "._QXZ("callback_entry_end_date")." = $callback_entry_end_date | "._QXZ("callback_callback_start_date")." = $callback_callback_start_date | "._QXZ("callback_callback_end_date")." = $callback_callback_end_date | "._QXZ("callback_list")." = $callback_list</p>";
 		}
 
 
@@ -2451,7 +2452,7 @@ if ($confirm_callback == "confirm")
 	if (($enable_callback_entry_date == "enabled") && ($callback_entry_start_date != ''))
 		{
 		$sql_where = $sql_where . " and entry_time >= '$callback_entry_start_date 00:00:00' ";
-		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;entry time greater than $callback_entry_start_date 00:00:00<br />";
+		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("entry time greater than")." $callback_entry_start_date 00:00:00<br />";
 		}
 	elseif ($enable_callback_entry_date == "enabled")
 		{
@@ -2460,7 +2461,7 @@ if ($confirm_callback == "confirm")
 	if (($enable_callback_entry_date == "enabled") && ($callback_entry_end_date != ''))
 		{
 		$sql_where = $sql_where . " and entry_time <= '$callback_entry_end_date 23:59:59' ";
-		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;entry time less than $callback_entry_end_date 23:59:59<br />";
+		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("entry time less than")." $callback_entry_end_date 23:59:59<br />";
 		}
 	elseif ($enable_callback_entry_date == "enabled")
 		{
@@ -2470,7 +2471,7 @@ if ($confirm_callback == "confirm")
 	if (($enable_callback_callback_date == "enabled") && ($callback_callback_start_date != ''))
 		{
 		$sql_where = $sql_where . " and callback_time >= '$callback_callback_start_date 00:00:00' ";
-		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;callback time greater than $callback_callback_start_date 00:00:00<br />";
+		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("callback time greater than")." $callback_callback_start_date 00:00:00<br />";
 		}
 	elseif ($enable_callback_callback_date == "enabled")
 		{
@@ -2479,7 +2480,7 @@ if ($confirm_callback == "confirm")
 	if (($enable_callback_callback_date == "enabled") && ($callback_callback_end_date != ''))
 		{
 		$sql_where = $sql_where . " and callback_time <= '$callback_callback_end_date 23:59:59' ";
-		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;callback time less than $callback_callback_end_date 23:59:59<br />";
+		$callback_parm = $callback_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("callback time less than")." $callback_callback_end_date 23:59:59<br />";
 		}
 	elseif ($enable_callback_callback_date == "enabled")
 		{
@@ -2491,7 +2492,7 @@ if ($confirm_callback == "confirm")
 	$callback_lead_rslt = mysql_to_mysqli($callback_lead_stmt, $link);
 	$callback_lead_count = mysqli_affected_rows($link);
 
-	$callback_sentence = "$callback_lead_count leads have been set to ANYONE callbacks from list $callback_list with the following parameters:<br /><br />$callback_parm <br />";
+	$callback_sentence = "$callback_lead_count "._QXZ("leads have been set to ANYONE callbacks from list")." $callback_list "._QXZ("with the following parameters").":<br /><br />$callback_parm <br />";
 
 	$SQL_log = "$callback_lead_stmt|";
 	$SQL_log = preg_replace('/;/', '', $SQL_log);
@@ -2501,7 +2502,7 @@ if ($confirm_callback == "confirm")
 	$admin_log_rslt=mysql_to_mysqli($admin_log_stmt, $link);
 
 	echo "<p>$callback_sentence</p>";
-	echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
+	echo "<p><a href='$PHP_SELF'>"._QXZ("Click here to start over").".</a></p>\n";
 	}
 
 
@@ -2524,7 +2525,7 @@ if (
 	$allowed_campaigns_sql = "";
 	if ( preg_match("/ALL\-CAMPAIGNS/i",$allowed_campaigns) )
 		{
-		if ($DB) { echo "|Processing All Campaigns|\n"; }
+		if ($DB) { echo "|"._QXZ("Processing All Campaigns")."|\n"; }
 		$campaign_id_stmt = "SELECT campaign_id FROM vicidial_campaigns";
 		$campaign_id_rslt = mysql_to_mysqli($campaign_id_stmt, $link);
 		$campaign_id_num_rows = mysqli_num_rows($campaign_id_rslt);
@@ -2622,41 +2623,41 @@ if (
 		}
 
 
-	echo "<p>The following are advanced lead management tools.  They will only work on inactive lists with less than $list_lead_limit leads in them. This is to avoid data inconsistencies.</p>";
+	echo "<p>"._QXZ("The following are advanced lead management tools.  They will only work on inactive lists with less than")." $list_lead_limit "._QXZ("leads in them. This is to avoid data inconsistencies").".</p>";
 	echo "<form action=$PHP_SELF method=POST>\n";
 	echo "<center><table width=$section_width cellspacing=3>\n";
 
 	# BEGIN lead move
-	echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><b>Move Leads</b></font></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>From List</td><td align=left>\n";
+	echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><b>"._QXZ("Move Leads")."</b></font></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("From List")."</td><td align=left>\n";
 	echo "<select size=1 name=move_from_list>\n";
-	echo "<option value='-'>Select A List</option>\n";
+	echo "<option value='-'>"._QXZ("Select A List")."</option>\n";
 
 	$i = 0;
 	while ( $i < $allowed_lists_count )
 		{
-		echo "<option value='$list_ary[$i]'>$list_ary[$i] - $list_name_ary[$i] ($list_lead_count_ary[$i] leads)</option>\n";
+		echo "<option value='$list_ary[$i]'>$list_ary[$i] - $list_name_ary[$i] ($list_lead_count_ary[$i] "._QXZ("leads").")</option>\n";
 		$i++;
 		}
 
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>To List</td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("To List")."</td><td align=left>\n";
 	echo "<select size=1 name=move_to_list>\n";
-	echo "<option value='-'>Select A List</option>\n";
+	echo "<option value='-'>"._QXZ("Select A List")."</option>\n";
 
 	$i = 0;
 	while ( $i < $allowed_lists_count )
 		{
-		echo "<option value='$list_ary[$i]'>$list_ary[$i] - $list_name_ary[$i] ($list_lead_count_ary[$i] leads)</option>\n";
+		echo "<option value='$list_ary[$i]'>$list_ary[$i] - $list_name_ary[$i] ($list_lead_count_ary[$i] "._QXZ("leads").")</option>\n";
 		$i++;
 		}
 
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Status</td></td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Status")."</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_move_status' id='enable_move_status' value='enabled'>\n";
 	echo "<select size=1 name='move_status' id='move_status' disabled=true>\n";
-	echo "<option value='-'>Select A Status</option>\n";
-	echo "<option value='%'>All Statuses</option>\n";
+	echo "<option value='-'>"._QXZ("Select A Status")."</option>\n";
+	echo "<option value='%'>"._QXZ("All Statuses")."</option>\n";
 
 	$i = 0;
 	while ( $i < $status_count )
@@ -2666,39 +2667,39 @@ if (
 		}
 
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Country Code</td></td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Country Code")."</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_move_country_code' id='enable_move_country_code' value='enabled'>\n";
 	echo "<input type='text' name='move_country_code' id='move_country_code' value='' disabled=true>\n";
 	echo "</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Vendor Lead Code</td></td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Vendor Lead Code")."</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_move_vendor_lead_code' id='enable_move_vendor_lead_code' value='enabled'>\n";
 	echo "<input type='text' name='move_vendor_lead_code' id='move_vendor_lead_code' value='' disabled=true>\n";
 	echo "</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Source ID</td></td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Source ID")."</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_move_source_id' id='enable_move_source_id' value='enabled'>\n";
 	echo "<input type='text' name='move_source_id' id='move_source_id' value='' disabled=true>\n";
 	echo "</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Owner</td></td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Owner")."</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_move_owner' id='enable_move_owner' value='enabled'>\n";
 	echo "<input type='text' name='move_owner' id='move_owner' value='' disabled=true>\n";
 	echo "</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>State</td></td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("State")."</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_move_state' id='enable_move_state' value='enabled'>\n";
 	echo "<input type='text' name='move_state' id='move_state' value='' disabled=true>\n";
 	echo "</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Entry Date</td></td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Entry Date")."</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_move_entry_date' id='enable_move_entry_date' value='enabled'>\n";
 	echo "<input type='text' name='move_entry_date' id='move_entry_date' value='' disabled=true> (YYYY-MM-DD)\n";
 	echo "</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Modify Date</td></td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Modify Date")."</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_move_modify_date' id='enable_move_modify_date' value='enabled'>\n";
 	echo "<input type='text' name='move_modify_date' id='move_modify_date' value='' disabled=true> (YYYY-MM-DD)\n";
 	echo "</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Security Phrase</td></td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Security Phrase")."</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_move_security_phrase' id='enable_move_security_phrase' value='enabled'>\n";
 	echo "<input type='text' name='move_security_phrase' id='move_security_phrase' value='' disabled=true>\n";
 	echo "</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Called Count</td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Called Count")."</td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_move_count' id='enable_move_count' value='enabled'>\n";
 	echo "<select size=1 name=move_count_op id='move_count_op' disabled=true>\n";
 	echo "<option value='<'><</option>\n";
@@ -2715,28 +2716,28 @@ if (
 		$i++;
 		}
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td colspan=2 align=center><input type=submit name=move_submit value=move></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td colspan=2 align=center><input type=submit name=move_submit value='"._QXZ("move")."'></td></tr>\n";
 	echo "</table></center>\n";
 	# END lead move
 
 	# BEGIN Status Update
 	echo "<br /><center><table width=$section_width cellspacing=3>\n";
-	echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><b>Update Lead Statuses</b></font></td></tr>\n";
+	echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><b>"._QXZ("Update Lead Statuses")."</b></font></td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>List</td><td align=left>\n";
 	echo "<select size=1 name=update_list>\n";
-	echo "<option value='-'>Select A List</option>\n";
+	echo "<option value='-'>"._QXZ("Select A List")."</option>\n";
 
 	$i = 0;
 	while ( $i < $allowed_lists_count )
 		{
-		echo "<option value='$list_ary[$i]'>$list_ary[$i] - $list_name_ary[$i] ($list_lead_count_ary[$i] leads)</option>\n";
+		echo "<option value='$list_ary[$i]'>$list_ary[$i] - $list_name_ary[$i] ($list_lead_count_ary[$i] "._QXZ("leads").")</option>\n";
 		$i++;
 		}
 
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>To Status</td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("To Status")."</td><td align=left>\n";
 	echo "<select size=1 name=update_to_status>\n";
-	echo "<option value='-'>Select A Status</option>\n";
+	echo "<option value='-'>"._QXZ("Select A Status")."</option>\n";
 
 	$i = 0;
 	while ( $i < $sys_status_count )
@@ -2746,10 +2747,10 @@ if (
 		}
 
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>From Status</td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("From Status")."</td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_update_from_status' id='enable_update_from_status' value='enabled'>\n";
 	echo "<select size=1 name=update_from_status id='update_from_status' disabled=true>\n";
-	echo "<option value='-'>Select A Status</option>\n";
+	echo "<option value='-'>"._QXZ("Select A Status")."</option>\n";
 
 	$i = 0;
 	while ( $i < $status_count )
@@ -2759,39 +2760,39 @@ if (
 	}
 
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Country Code</td></td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Country Code")."</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_update_country_code' id='enable_update_country_code' value='enabled'>\n";
 	echo "<input type='text' name='update_country_code' id='update_country_code' value='' disabled=true>\n";
 	echo "</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Vendor Lead Code</td></td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Vendor Lead Code")."</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_update_vendor_lead_code' id='enable_update_vendor_lead_code' value='enabled'>\n";
 	echo "<input type='text' name='update_vendor_lead_code' id='update_vendor_lead_code' value='' disabled=true>\n";
 	echo "</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Source ID</td></td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Source ID")."</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_update_source_id' id='enable_update_source_id' value='enabled'>\n";
 	echo "<input type='text' name='update_source_id' id='update_source_id' value='' disabled=true>\n";
 	echo "</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Owner</td></td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Owner")."</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_update_owner' id='enable_update_owner' value='enabled'>\n";
 	echo "<input type='text' name='update_owner' id='update_owner' value='' disabled=true>\n";
 	echo "</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>State</td></td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("State")."</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_update_state' id='enable_update_state' value='enabled'>\n";
 	echo "<input type='text' name='update_state' id='update_state' value='' disabled=true>\n";
 	echo "</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Entry Date</td></td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Entry Date")."</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_update_entry_date' id='enable_update_entry_date' value='enabled'>\n";
 	echo "<input type='text' name='update_entry_date' id='update_entry_date' value='' disabled=true> (YYYY-MM-DD)\n";
 	echo "</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Modify Date</td></td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Modify Date")."</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_update_modify_date' id='enable_update_modify_date' value='enabled'>\n";
 	echo "<input type='text' name='update_modify_date' id='update_modify_date' value='' disabled=true> (YYYY-MM-DD)\n";
 	echo "</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Security Phrase</td></td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Security Phrase")."</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_update_security_phrase' id='enable_update_security_phrase' value='enabled'>\n";
 	echo "<input type='text' name='update_security_phrase' id='update_security_phrase' value='' disabled=true>\n";
 	echo "</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Called Count</td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Called Count")."</td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_update_count' id='enable_update_count' value='enabled'>\n";
 	echo "<select size=1 name='update_count_op' id='update_count_op' disabled=true>\n";
 	echo "<option value='<'><</option>\n";
@@ -2808,7 +2809,7 @@ if (
 		$i++;
 		}
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td colspan=2 align=center><input type=submit name=update_submit value=update></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td colspan=2 align=center><input type=submit name=update_submit value='"._QXZ("update")."'></td></tr>\n";
 	# END Status Update
 
 	if ( $delete_lists > 0 )
@@ -2816,22 +2817,22 @@ if (
 		# BEGIN Delete Leads
 		echo "</table></center>\n";
 		echo "<br /><center><table width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><b>Delete Leads</b></font></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>List</td><td align=left>\n";
+		echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><b>"._QXZ("Delete Leads")."</b></font></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List")."</td><td align=left>\n";
 		echo "<select size=1 name=delete_list>\n";
-		echo "<option value='-'>Select A List</option>\n";
+		echo "<option value='-'>"._QXZ("Select A List")."</option>\n";
 
 		$i = 0;
 		while ( $i < $allowed_lists_count )
 			{
-			echo "<option value='$list_ary[$i]'>$list_ary[$i] - $list_name_ary[$i] ($list_lead_count_ary[$i] leads)</option>\n";
+			echo "<option value='$list_ary[$i]'>$list_ary[$i] - $list_name_ary[$i] ($list_lead_count_ary[$i] "._QXZ("leads").")</option>\n";
 			$i++;
 			}
 
 		echo "</select></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Status</td><td align=left>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Status")."</td><td align=left>\n";
 		echo "<select size=1 name=delete_status>\n";
-		echo "<option value='-'>Select A Status</option>\n";
+		echo "<option value='-'>"._QXZ("Select A Status")."</option>\n";
 
 		$i = 0;
 		while ( $i < $status_count )
@@ -2841,43 +2842,43 @@ if (
 			}
 
 		echo "</select></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Country Code</td></td><td align=left>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Country Code")."</td></td><td align=left>\n";
 		echo "<input type='checkbox' name='enable_delete_country_code' id='enable_delete_country_code' value='enabled'>\n";
 		echo "<input type='text' name='delete_country_code' id='delete_country_code' value='' disabled=true>\n";
 		echo "</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Vendor Lead Code</td></td><td align=left>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Vendor Lead Code")."</td></td><td align=left>\n";
 		echo "<input type='checkbox' name='enable_delete_vendor_lead_code' id='enable_delete_vendor_lead_code' value='enabled'>\n";
 		echo "<input type='text' name='delete_vendor_lead_code' id='delete_vendor_lead_code' value='' disabled=true>\n";
 		echo "</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Source ID</td></td><td align=left>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Source ID")."</td></td><td align=left>\n";
 		echo "<input type='checkbox' name='enable_delete_source_id' id='enable_delete_source_id' value='enabled'>\n";
 		echo "<input type='text' name='delete_source_id' id='delete_source_id' value='' disabled=true>\n";
 		echo "</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Owner</td></td><td align=left>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Owner")."</td></td><td align=left>\n";
 		echo "<input type='checkbox' name='enable_delete_owner' id='enable_delete_owner' value='enabled'>\n";
 		echo "<input type='text' name='delete_owner' id='delete_owner' value='' disabled=true>\n";
 		echo "</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>State</td></td><td align=left>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("State")."</td></td><td align=left>\n";
 		echo "<input type='checkbox' name='enable_delete_state' id='enable_delete_state' value='enabled'>\n";
 		echo "<input type='text' name='delete_state' id='delete_state' value='' disabled=true>\n";
 		echo "</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Entry Date</td></td><td align=left>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Entry Date")."</td></td><td align=left>\n";
 		echo "<input type='checkbox' name='enable_delete_entry_date' id='enable_delete_entry_date' value='enabled'>\n";
 		echo "<input type='text' name='delete_entry_date' id='delete_entry_date' value='' disabled=true> (YYYY-MM-DD)\n";
 		echo "</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Modify Date</td></td><td align=left>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Modify Date")."</td></td><td align=left>\n";
 		echo "<input type='checkbox' name='enable_delete_modify_date' id='enable_delete_modify_date' value='enabled'>\n";
 		echo "<input type='text' name='delete_modify_date' id='delete_modify_date' value='' disabled=true> (YYYY-MM-DD)\n";
 		echo "</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Security Phrase</td></td><td align=left>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Security Phrase")."</td></td><td align=left>\n";
 		echo "<input type='checkbox' name='enable_delete_security_phrase' id='enable_delete_security_phrase' value='enabled'>\n";
 		echo "<input type='text' name='delete_security_phrase' id='delete_security_phrase' value='' disabled=true>\n";
 		echo "</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Lead ID</td></td><td align=left>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Lead ID")."</td></td><td align=left>\n";
 		echo "<input type='checkbox' name='enable_delete_lead_id' id='enable_delete_lead_id' value='enabled'>\n";
 		echo "<input type='text' name='delete_lead_id' id='delete_lead_id' value='' disabled=true>\n";
 		echo "</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Called Count</td><td align=left>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Called Count")."</td><td align=left>\n";
 		echo "<input type='checkbox' name='enable_delete_count' id='enable_delete_count' value='enabled'>\n";
 		echo "<select size=1 name='delete_count_op' id='delete_count_op' disabled=true>\n";
 		echo "<option value='<'><</option>\n";
@@ -2895,37 +2896,37 @@ if (
 			$i++;
 			}
 		echo "</select></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td colspan=2 align=center><input type=submit name=delete_submit value=delete></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td colspan=2 align=center><input type=submit name=delete_submit value='"._QXZ("delete")."'></td></tr>\n";
 		# END Delete Leads
 		}
 
 	# BEGIN Callback Convert
 	echo "</table></center>\n";
 	echo "<br /><center><table width=$section_width cellspacing=3>\n";
-	echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><b>Switch Callbacks</b></font></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>List</td><td align=left>\n";
+	echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><b>"._QXZ("Switch Callbacks")."</b></font></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List")."</td><td align=left>\n";
 	echo "<select size=1 name=callback_list>\n";
-	echo "<option value='-'>Select A List</option>\n";
+	echo "<option value='-'>"._QXZ("Select A List")."</option>\n";
 
 	$i = 0;
 	while ( $i < $allowed_lists_count )
 		{
-		echo "<option value='$list_ary[$i]'>$list_ary[$i] - $list_name_ary[$i] ($list_lead_count_ary[$i] leads)</option>\n";
+		echo "<option value='$list_ary[$i]'>$list_ary[$i] - $list_name_ary[$i] ($list_lead_count_ary[$i] "._QXZ("leads").")</option>\n";
 		$i++;
 		}
 
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Entry Date</td></td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Entry Date")."</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_callback_entry_date' id='enable_callback_entry_date' value='enabled'>\n";
-	echo "<input type='text' name='callback_entry_start_date' id='callback_entry_start_date' value='' disabled=true> to ";
+	echo "<input type='text' name='callback_entry_start_date' id='callback_entry_start_date' value='' disabled=true> "._QXZ("to")." ";
 	echo "<input type='text' name='callback_entry_end_date' id='callback_entry_end_date' value='' disabled=true> (YYYY-MM-DD)\n";
 	echo "</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Callback Date</td></td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Callback Date")."</td></td><td align=left>\n";
 	echo "<input type='checkbox' name='enable_callback_callback_date' id='enable_callback_callback_date' value='enabled'>\n";
-	echo "<input type='text' name='callback_callback_start_date' id='callback_callback_start_date' value='' disabled=true> to ";
+	echo "<input type='text' name='callback_callback_start_date' id='callback_callback_start_date' value='' disabled=true> "._QXZ("to")." ";
 	echo "<input type='text' name='callback_callback_end_date' id='callback_callback_end_date' value='' disabled=true> (YYYY-MM-DD)\n";
 	echo "</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td colspan=2 align=center><input type=submit name=callback_submit value='switch callbacks'></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td colspan=2 align=center><input type=submit name=callback_submit value='"._QXZ("switch callbacks")."'></td></tr>\n";
 	# END Callback Convert
 
 
@@ -2938,19 +2939,19 @@ echo "</td></tr></table>\n";
 
 function blank_field($field_name, $allow_blank)
 	{
-	echo "<p>$field_name cannot be blank. ";
+	echo "<p>$field_name "._QXZ("cannot be blank").". ";
 	if ($allow_blank)
 		{
-		echo "If you wish to search for an empty field use ---BLANK--- instead.</p>";
+		echo _QXZ("If you wish to search for an empty field use ---BLANK--- instead").".</p>";
 		}
-	echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
+	echo "<p><a href='$PHP_SELF'>"._QXZ("Click here to start over").".</a></p>\n";
 	exit();
 	}
 
 function missing_required_field($field_name)
 	{
-	echo "<p>The field '$field_name' must have a value.</p>";
-	echo "<p><a href='$PHP_SELF'>Click here to start over.</a></p>\n";
+	echo "<p>"._QXZ("The field")." '$field_name' "._QXZ("must have a value").".</p>";
+	echo "<p><a href='$PHP_SELF'>"._QXZ("Click here to start over").".</a></p>\n";
 	exit();
 	}
 

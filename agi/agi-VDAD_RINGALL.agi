@@ -21,6 +21,7 @@
 # 121114-1935 - Added INGROUP recording option
 # 130108-1808 - Changes for Asterisk 1.8 compatibility
 # 140312-2112 - Added CALLID as recording filename variable
+# 140421-1448 - Added code to halt ringing of other channels in ring_all NAC method
 #
 
 $script = 'agi-VDAD_RINGALL.agi';
@@ -36,6 +37,7 @@ if ($sec < 10) {$sec = "0$sec";}
 $now_date_epoch = time();
 $now_date = "$year-$mon-$mday $hour:$min:$sec";
 $now_num = "$year$mon$mday$hour$min$sec";
+$CIDdate = "$mon$mday$hour$min$sec";
 $S='*';
 
 # default path to astguiclient configuration file:
@@ -92,8 +94,7 @@ $stmtA = "SELECT agi_output,ext_context,asterisk_version FROM servers where serv
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
-$rec_count=0;
-while ($sthArows > $rec_count)
+if ($sthArows > 0)
 	{
 	$AGILOG = '0';
 	@aryA = $sthA->fetchrow_array;
@@ -103,7 +104,6 @@ while ($sthArows > $rec_count)
 	if ($DBagi_output =~ /STDERR/)	{$AGILOG = '1';}
 	if ($DBagi_output =~ /FILE/)	{$AGILOG = '2';}
 	if ($DBagi_output =~ /BOTH/)	{$AGILOG = '3';}
-	$rec_count++;
 	}
 $sthA->finish();
 
@@ -222,6 +222,40 @@ else
 	exit;
 	}
 
+$stmtA = "SELECT user,extension,conf_exten,server_ip FROM vicidial_live_agents where ring_callerid='$call_callerid';";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+$orAGENTct=0;
+$RINGct=0;
+$user_phone='';
+while ($sthArows > $RINGct)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$ringVLA_user[$RINGct] =			$aryA[0];
+	$ringVLA_exten[$RINGct] =			$aryA[1];
+	$ringVLA_conf_exten[$RINGct] =		$aryA[2];
+	$ringVLA_server_ip[$RINGct] =		$aryA[3];
+		$ring_user =						$aryA[0];
+	if ($AGILOG) {$agi_string = "--    Ringing agents for this call: |$call_callerid|$RINGct|$ringVLA_user[$RINGct]|$ringVLA_exten[$RINGct]|$ringVLA_conf_exten[$RINGct]|$ringVLA_server_ip[$RINGct]|";   &agi_output;}
+	if ($dial_user =~ /^$ring_user$/) 
+		{$user_phone=$ringVLA_exten[$RINGct];}
+	else
+		{
+		$orVLA_user[$orAGENTct] =			$aryA[0];
+		$orVLA_exten[$orAGENTct] =			$aryA[1];
+		$orVLA_conf_exten[$orAGENTct] =		$aryA[2];
+		$orVLA_server_ip[$orAGENTct] =		$aryA[3];
+		if ($orVLA_exten[$orAGENTct] =~ /^R\//)
+			{$orVLA_exten[$orAGENTct] = "Local/" . $orVLA_conf_exten[$orAGENTct] . "\@default";}
+		$orAGENTct++;
+		}
+	$RINGct++;
+	}
+$sthA->finish();
+
+if ($AGILOG) {$agi_string = "--    Ringing stats: |$call_callerid|$RINGct|$orAGENTct|$user_phone|";   &agi_output;}
+
 
 ### Check that the call has not been grabbed already, if it has then buzz and hangup ###
 $stmtA = "SELECT count(*) FROM vicidial_auto_calls where auto_call_id='$auto_call_id' and agent_grab='';";
@@ -252,7 +286,7 @@ if ($NAGcount > 0)
 					{
 					$stmtA="UPDATE vicidial_conferences set extension='3WAY_$dial_user', leave_3way='1', leave_3way_datetime='$now_date' where server_ip='$VLAserver_ip' and ((extension='') or (extension is null)) and conf_exten != '$VLAconf_exten' limit 1;";
 					$AVCaffected_rows = $dbhA->do($stmtA);  
-					if ($AVCaffected_rows)
+					if ($AVCaffected_rows > 0)
 						{
 						$stmtA="SELECT conf_exten from vicidial_conferences where server_ip='$VLAserver_ip' and extension='3WAY_$dial_user' and leave_3way_datetime='$now_date' and conf_exten != '$VLAconf_exten';";
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -391,12 +425,131 @@ if ($NAGcount > 0)
 			### END If remote agent, then reserve a vicidial_conferences session on their server to send the calls to ###
 			}
 
+
 		### Try to grab the call for this agent, if already grabbed then buzz and hangup ###
 		$stmtA = "UPDATE vicidial_auto_calls SET agent_grab='$dial_user',agent_grab_extension='$VLAconf_exten' where auto_call_id='$auto_call_id' and agent_grab='';";
 		$AGaffected_rows = $dbhA->do($stmtA);  
-		if ($AGaffected_rows)
+		if ($AGaffected_rows > 0)
 			{
 			if ($AGILOG) {$agi_string = "--    VAC Call Grabbed: |$callerid|$auto_call_id|$dial_user|$AGaffected_rows|";   &agi_output;}
+
+			### Check if this was a RING_ALL method ###
+			$VIG_next_agent_call='';
+			$stmtA = "SELECT next_agent_call FROM vicidial_inbound_groups where group_id='$VAC_campaign_id';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$VIGcount=$sthA->rows;
+			if ($VIGcount > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$VIG_next_agent_call =	$aryA[0];
+				if ($AGILOG) {$agi_string = "--    Check for in-group next agent call setting: |$callerid|$VAC_campaign_id|$VIG_next_agent_call|";   &agi_output;}
+				$sthA->finish();
+				}
+			if ( ($VIG_next_agent_call =~ /ring_all/i) && ($orAGENTct > 0) )
+				{
+				### gather list of ringing channels
+				$stmtA = "SELECT channel,server_ip FROM live_sip_channels where extension='ring';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				$rec_count=0;
+				while ($sthArows > $rec_count)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$LSC_channel[$rec_count] =			$aryA[0];
+					$LSC_server_ip[$rec_count] =		$aryA[1];
+						$LSC_channelREG[$rec_count] =		$aryA[0];
+						$LSC_channelREG[$rec_count] =~ s/\*/STARSYM/gi;
+						$LSC_channelREG[$rec_count] =~ s/\@/ATSYM/gi;
+					if ($AGILOG) {$agi_string = "--    Other ringing channels: |$rec_count|$LSC_channel[$rec_count]|$LSC_server_ip[$rec_count]|";   &agi_output;}
+					$rec_count++;
+					}
+				$sthA->finish();
+
+				### go through other-agent ringing agent records looking for matches to hang up
+				if ($rec_count > 0) 
+					{
+					$orct=0;
+					foreach(@orVLA_exten)
+						{
+						$exten_match='';
+						if ($orVLA_exten[$orct] =~ /^Local\//) 
+							{
+							$orVLA_exten[$orct] =~ s/^Local\/|\@.*//gi;
+							$exten_match = "STARSYM" . $orVLA_exten[$orct] . "ATSYM";
+							}
+						if ($orVLA_exten[$orct] =~ /^SIP/i) 
+							{
+							$orVLA_exten[$orct] =~ s/^SIP\///gi;
+							$stmtA = "SELECT dialplan_number FROM phones where extension='$orVLA_exten[$orct]' and server_ip='$orVLA_server_ip[$orct]' and protocol='SIP';";
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$Pcount=$sthA->rows;
+							if ($Pcount > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$Pdialplan_number =	$aryA[0];
+								$exten_match = "STARSYM" . $Pdialplan_number . "ATSYM";
+								}
+							$sthA->finish();
+							}
+						if ($orVLA_exten[$orct] =~ /^IAX/i) 
+							{
+							$orVLA_exten[$orct] =~ s/^IAX2\/|^IAX\///gi;
+							$stmtA = "SELECT dialplan_number FROM phones where extension='$orVLA_exten[$orct]' and server_ip='$orVLA_server_ip[$orct]' and protocol='IAX2';";
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$Pcount=$sthA->rows;
+							if ($Pcount > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$Pdialplan_number =	$aryA[0];
+								$exten_match = "STARSYM" . $Pdialplan_number . "ATSYM";
+								}
+							$sthA->finish();
+							}
+						if ($orVLA_exten[$orct] =~ /^Zap|^DAHDI/i) 
+							{
+							$orVLA_exten[$orct] =~ s/^Zap\/|^DAHDI\///gi;
+							$stmtA = "SELECT dialplan_number FROM phones where extension='$orVLA_exten[$orct]' and server_ip='$orVLA_server_ip[$orct]' and protocol='Zap';";
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$Pcount=$sthA->rows;
+							if ($Pcount > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$Pdialplan_number =	$aryA[0];
+								$exten_match = "STARSYM" . $Pdialplan_number . "ATSYM";
+								}
+							$sthA->finish();
+							}
+
+					#	if ($AGILOG) {$agi_string = "--    Check ORC: |$callerid|$orct|$exten_match|$orVLA_exten[$orct]|$orVLA_exten[$orct]|";   &agi_output;}
+
+						if (length($exten_match) > 2)
+							{
+							$lscct=0;
+							foreach(@LSC_channel)
+								{
+					#		if ($AGILOG) {$agi_string = "--    Check LSC: |$callerid|$orct|$lscct|$exten_match|$LSC_channel[$lscct]|$LSC_channelREG[$lscct]|$orVLA_exten[$orct]|$orVLA_exten[$orct]|";   &agi_output;}
+								if ($LSC_channelREG[$lscct] =~ /$exten_match/) 
+									{
+									if ($AGILOG) {$agi_string = "--    Chan to hangup: |$callerid|$exten_match|$LSC_channel[$lscct]|$LSC_server_ip[$lscct]|";   &agi_output;}
+
+									### send hangup command for channel
+									$VHqueryCID = "RGHANGUP$CIDdate$lscct";
+									$stmtA = "INSERT INTO vicidial_manager values('','','$now_date','NEW','N','$VARserver_ip','','Hangup','$VHqueryCID','Channel: $LSC_channel[$lscct]','','','','','','','','','')";
+									$AGaffected_rows = $dbhA->do($stmtA);  
+									if ($AGILOG) {$agi_string = "--    Other Ringing Hangup Sent: |$callerid|$AGaffected_rows|$LSC_channel[$lscct]|$VHqueryCID|";   &agi_output;}
+									}
+								$lscct++;
+								}
+							}
+						$orct++;
+						}
+					}
+				}
 
 			### send agent to their session ###
 			if($VLAserver_ip =~ m/(\S+)\.(\S+)\.(\S+)\.(\S+)/ )

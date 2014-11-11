@@ -659,7 +659,7 @@ qc_allowed_campaigns TEXT,
 qc_allowed_inbound_groups TEXT,
 group_shifts TEXT,
 forced_timeclock_login ENUM('Y','N','ADMIN_EXEMPT') default 'N',
-shift_enforcement ENUM('OFF','START','ALL') default 'OFF',
+shift_enforcement ENUM('OFF','START','ALL','ADMIN_EXEMPT') default 'OFF',
 agent_status_viewable_groups TEXT,
 agent_status_view_time ENUM('Y','N') default 'N',
 agent_call_log_view ENUM('Y','N') default 'N',
@@ -908,7 +908,8 @@ timer_alt_seconds SMALLINT(5) default '0',
 wrapup_bypass ENUM('DISABLED','ENABLED') default 'ENABLED',
 wrapup_after_hotkey ENUM('DISABLED','ENABLED') default 'DISABLED',
 callback_active_limit SMALLINT(5) UNSIGNED default '0',
-callback_active_limit_override ENUM('N','Y') default 'N'
+callback_active_limit_override ENUM('N','Y') default 'N',
+allow_chats ENUM('Y','N') default 'N'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -1562,7 +1563,9 @@ country_code_list_stats ENUM('0','1') default '0',
 reload_timestamp DATETIME,
 queuemetrics_pause_type ENUM('0','1') default '0',
 frozen_server_call_clear ENUM('0','1') default '0',
-callback_time_24hour ENUM('0','1') default '0'
+callback_time_24hour ENUM('0','1') default '0',
+active_modules TEXT,
+allow_chats ENUM('0','1') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3036,6 +3039,30 @@ url VARCHAR(333) default '',
 unique index (url)
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_avatars (
+avatar_id VARCHAR(100) PRIMARY KEY NOT NULL,
+avatar_name VARCHAR(100),
+avatar_notes TEXT,
+avatar_api_user VARCHAR(20) default '',
+avatar_api_pass VARCHAR(20) default '',
+active ENUM('Y','N') default 'Y',
+audio_functions VARCHAR(100) default 'PLAY-STOP-RESTART',
+audio_display VARCHAR(100) default 'FILE-NAME',
+user_group VARCHAR(20) default '---ALL---'
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_avatar_audio (
+avatar_id VARCHAR(100) NOT NULL,
+audio_filename VARCHAR(255) NOT NULL,
+audio_name TEXT,
+rank SMALLINT(5) default '0',
+h_ord SMALLINT(5) default '1',
+level SMALLINT(5) default '1',
+parent_audio_filename VARCHAR(255) default '',
+parent_rank VARCHAR(2) default '',
+index (avatar_id)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3279,4 +3306,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1386',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1387',db_schema_update_date=NOW(),reload_timestamp=NOW();

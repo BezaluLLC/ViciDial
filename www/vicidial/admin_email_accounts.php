@@ -1,7 +1,7 @@
 <?php
 # admin_email_accounts.php
 # 
-# Copyright (C) 2013  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This page manages the inbound email accounts in ViciDial
 #
@@ -12,10 +12,11 @@
 # 130610-1041 - Changed all ereg to preg
 # 130621-2001 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0754 - Changed to mysqli PHP functions
+# 141007-1125 - Finalized adding QXZ translation to all admin files
 #
 
-$admin_version = '2.8-6';
-$build = '1300902-0754';
+$admin_version = '2.8-7';
+$build = '141007-1125';
 
 $sh="emails"; 
 
@@ -162,10 +163,10 @@ if ($auth_message == 'GOOD')
 
 if ($auth < 1)
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -187,7 +188,7 @@ $LOGemails_modify =			$row[3];
 if ($LOGemails_modify < 1)
 	{
 	Header ("Content-type: text/html; charset=utf-8");
-	echo "You do not have permissions to modify email accounts\n";
+	echo _QXZ("You do not have permissions to modify email accounts")."\n";
 	exit;
 	}
 
@@ -221,7 +222,7 @@ $regexLOGadmin_viewable_groups = " $LOGadmin_viewable_groups ";
 
 $UUgroups_list='';
 if ($admin_viewable_groupsALL > 0)
-	{$UUgroups_list .= "<option value=\"---ALL---\">All Admin User Groups</option>\n";}
+	{$UUgroups_list .= "<option value=\"---ALL---\">"._QXZ("All Admin User Groups")."</option>\n";}
 $stmt="SELECT user_group,group_name from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
 $rslt=mysql_to_mysqli($stmt, $link);
 $UUgroups_to_print = mysqli_num_rows($rslt);
@@ -253,15 +254,15 @@ while ($Dgroups_to_print > $o)
 	$o++;
 	}
 if ($Dgroups_selected < 1) 
-	{$Dgroups_menu .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
+	{$Dgroups_menu .= "<option SELECTED value=\"---NONE---\">---"._QXZ("NONE")."---</option>\n";}
 else 
-	{$Dgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
+	{$Dgroups_menu .= "<option value=\"---NONE---\">---"._QXZ("NONE")."---</option>\n";}
 
 ?>
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>ADMINISTRATION: Dialer Email Account fields
+<title><?php echo _QXZ("ADMINISTRATION: Dialer Email Account fields"); ?>
 <?php 
 
 ##### BEGIN Set variables to make header show properly #####
@@ -290,7 +291,7 @@ require("admin_header.php");
 
 if ($SSemail_enabled < 1)
 	{
-	echo "ERROR: Inbound emails are not active on this system\n";
+	echo _QXZ("ERROR: Inbound emails are not active on this system")."\n";
 	exit;
 	}
 
@@ -317,13 +318,13 @@ if ($eact=="DELETE" && $confirm_deletion=="yes" && $email_account_id)
 if (($SUBMIT=="SUBMIT" || $SUBMIT=="UPDATE") && $email_account_id) 
 	{
 	$error_msg="";
-	if (!$list_id) {$error_msg.="- Default list ID is invalid or null<BR/>";}
-	if (!$email_account_id) {$error_msg.="- Email account ID is invalid or null<BR/>";}
-	if (!$email_account_name) {$error_msg.="- Email account name is invalid or null<BR/>";}
-	if (!$email_account_server) {$error_msg.="- Email account server is invalid or null<BR/>";}
-	if (!$email_account_user) {$error_msg.="- Email account user is invalid or null<BR/>";}
-	if (!$email_account_pass) {$error_msg.="- Email account password is invalid or null<BR/>";}
-	if (!filter_var($email_replyto_address, FILTER_VALIDATE_EMAIL)) {$error_msg.="- Email reply-to address is invalid or null<BR/>";}
+	if (!$list_id) {$error_msg.="- "._QXZ("Default list ID is invalid or null")."<BR/>";}
+	if (!$email_account_id) {$error_msg.="- "._QXZ("Email account ID is invalid or null")."<BR/>";}
+	if (!$email_account_name) {$error_msg.="- "._QXZ("Email account name is invalid or null")."<BR/>";}
+	if (!$email_account_server) {$error_msg.="- "._QXZ("Email account server is invalid or null")."<BR/>";}
+	if (!$email_account_user) {$error_msg.="- "._QXZ("Email account user is invalid or null")."<BR/>";}
+	if (!$email_account_pass) {$error_msg.="- "._QXZ("Email account password is invalid or null")."<BR/>";}
+	if (!filter_var($email_replyto_address, FILTER_VALIDATE_EMAIL)) {$error_msg.="- "._QXZ("Email reply-to address is invalid or null")."<BR/>";}
 
 	if (!$error_msg) 
 		{
@@ -331,7 +332,7 @@ if (($SUBMIT=="SUBMIT" || $SUBMIT=="UPDATE") && $email_account_id)
 			{
 			if ($add_copy_disabled > 0)
 				{
-				echo "<br>You do not have permission to add records on this system -system_settings-\n";
+				echo "<br>"._QXZ("You do not have permission to add records on this system")." -system_settings-\n";
 				}
 			else
 				{
@@ -339,12 +340,12 @@ if (($SUBMIT=="SUBMIT" || $SUBMIT=="UPDATE") && $email_account_id)
 				$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
 				if (mysqli_affected_rows($link)==0) 
 					{
-					$error_msg.="- There was an unknown error when attempting to create the new account<BR/>";
+					$error_msg.="- "._QXZ("There was an unknown error when attempting to create the new account")."<BR/>";
 					if($DB>0) {$error_msg.="<B>$ins_stmt</B><BR>";}
 					}
 				else 
 					{
-					$message="NEW ACCOUNT $email_account_id SUCCESSFULLY CREATED";
+					$message=_QXZ("NEW ACCOUNT")." $email_account_id "._QXZ("SUCCESSFULLY CREATED");
 					$eact="";
 
 					### LOG INSERTION Admin Log Table ###
@@ -363,12 +364,12 @@ if (($SUBMIT=="SUBMIT" || $SUBMIT=="UPDATE") && $email_account_id)
 			$upd_rslt=mysql_to_mysqli($upd_stmt, $link);
 			if (mysqli_affected_rows($link)==0) 
 				{
-				$error_msg.="- There was an unknown error when attempting to update account $email_account_id<BR/>";
+				$error_msg.="- "._QXZ("There was an unknown error when attempting to update account")." $email_account_id<BR/>";
 				if($DB>0) {$error_msg.="<B>$upd_stmt</B><BR>";}
 				}
 			else 
 				{
-				$message="ACCOUNT $email_account_id SUCCESSFULLY MODIFIED";
+				$message=_QXZ("ACCOUNT")." $email_account_id "._QXZ("SUCCESSFULLY MODIFIED");
 				# $eact="";
 
 				### LOG INSERTION Admin Log Table ###
@@ -390,7 +391,7 @@ else if ($SUBMIT=="COPY")
 		{
 		if ($add_copy_disabled > 0)
 			{
-			echo "<br>You do not have permission to add records on this system -system_settings-\n";
+			echo "<br>"._QXZ("You do not have permission to add records on this system")." -system_settings-\n";
 			}
 		else
 			{
@@ -399,12 +400,12 @@ else if ($SUBMIT=="COPY")
 			$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
 			if (mysqli_affected_rows($link)==0) 
 				{
-				$error_msg.="- There was an unknown error when attempting to copy the new account<BR/>";
+				$error_msg.="- "._QXZ("There was an unknown error when attempting to copy the new account")."<BR/>";
 				if($DB>0) {$error_msg.="<B>$ins_stmt</B><BR>";}
 				}
 			else
 				{
-				$message="NEW ACCOUNT $new_account_id SUCCESSFULLY COPIED FROM $source_email_account<BR/>";
+				$message=_QXZ("NEW ACCOUNT")." $new_account_id "._QXZ("SUCCESSFULLY COPIED FROM")." $source_email_account<BR/>";
 				$eact="";
 
 				### LOG INSERTION Admin Log Table ###
@@ -419,7 +420,7 @@ else if ($SUBMIT=="COPY")
 		}
 	else
 		{
-		$error_msg="- Error - source email does not exist<BR/>";
+		$error_msg="- "._QXZ("Error - source email does not exist")."<BR/>";
 		if($DB>0) {$error_msg.="<B>$stmt</B><BR>";}
 		}
 	}
@@ -446,17 +447,17 @@ if ($eact == "COPY")
 
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-		if ($error_msg) {echo "ACCOUNT NOT COPIED<BR/>The data you submitted has the following errors:<BR/>$error_msg";}
-		echo "<br>Copy New Account from Existing Account<form action='$PHP_SELF' method='GET'>\n";
+		if ($error_msg) {echo "ACCOUNT NOT COPIED<BR/>"._QXZ("The data you submitted has the following errors").":<BR/>$error_msg";}
+		echo "<br>"._QXZ("Copy New Account from Existing Account")."<form action='$PHP_SELF' method='GET'>\n";
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
 		echo "<input type=hidden name=action value=COPY_EMAIL_SUBMIT>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Account ID to Copy From: </td><td align=left><select size=1 name=source_email_account>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Account ID to Copy From").": </td><td align=left><select size=1 name=source_email_account>\n";
 		echo "$accounts_list";
 		echo "</select></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>New Account ID: </td><td align=left><input type=text name=new_account_id value='$new_account_id' size=10 maxlength=20></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>New Account Name: </td><td align=left><input type=text name=email_account_name size=40 maxlength=100>$NWB#email_accounts-carrier_name$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='COPY'></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("New Account ID").": </td><td align=left><input type=text name=new_account_id value='$new_account_id' size=10 maxlength=20></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("New Account Name").": </td><td align=left><input type=text name=email_account_name size=40 maxlength=100>$NWB#email_accounts-carrier_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("COPY")."'></td></tr>\n";
 		echo "</TABLE></center>\n";
 		echo "</TD></TR></TABLE>\n";
 		}
@@ -464,7 +465,7 @@ if ($eact == "COPY")
 		{
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-		echo "<br><br>*** There are no existing accounts to copy from ***\n";
+		echo "<br><br>*** "._QXZ("There are no existing accounts to copy from")." ***\n";
 		echo "</TD></TR></TABLE>\n";
 		}
 	}
@@ -514,13 +515,13 @@ else if ($eact == "ADD")
 			$o++;
 			}
 		if ($Xgroups_selected < 1) 
-			{$Xgroups_menu .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
+			{$Xgroups_menu .= "<option SELECTED value=\"---NONE---\">---"._QXZ("NONE")."---</option>\n";}
 		else 
-			{$Xgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
+			{$Xgroups_menu .= "<option value=\"---NONE---\">---"._QXZ("NONE")."---</option>\n";}
 		if ($FXgroups_selected < 1) 
-			{$FXgroups_menu .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
+			{$FXgroups_menu .= "<option SELECTED value=\"---NONE---\">---"._QXZ("NONE")."---</option>\n";}
 		else 
-			{$FXgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
+			{$FXgroups_menu .= "<option value=\"---NONE---\">---"._QXZ("NONE")."---</option>\n";}
 
 
 		##### get in-groups listings for dynamic pulldown
@@ -552,37 +553,37 @@ else if ($eact == "ADD")
 			$o++;
 			}
 		if ($Dgroups_selected < 1) 
-			{$Dgroups_menu .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
+			{$Dgroups_menu .= "<option SELECTED value=\"---NONE---\">---"._QXZ("NONE")."---</option>\n";}
 		else 
-			{$Dgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
+			{$Dgroups_menu .= "<option value=\"---NONE---\">---"._QXZ("NONE")."---</option>\n";}
 		if ($FDgroups_selected < 1) 
-			{$FDgroups_menu .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
+			{$FDgroups_menu .= "<option SELECTED value=\"---NONE---\">---"._QXZ("NONE")."---</option>\n";}
 		else 
-			{$FDgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
+			{$FDgroups_menu .= "<option value=\"---NONE---\">---"._QXZ("NONE")."---</option>\n";}
 
 		
 		echo "<TABLE>\n";
 		echo "<TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-		if ($error_msg) {echo "ACCOUNT NOT INSERTED<BR/>The data you submitted has the following errors:<BR/>$error_msg";}
-		echo "<br>ADD NEW INBOUND EMAIL ACCOUNT<form action='$PHP_SELF' method='GET'>\n";
+		if ($error_msg) {echo "ACCOUNT NOT INSERTED<BR/>"._QXZ("The data you submitted has the following errors").":<BR/>$error_msg";}
+		echo "<br>"._QXZ("ADD NEW INBOUND EMAIL ACCOUNT")."<form action='$PHP_SELF' method='GET'>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account ID: </td><td align=left><input type=text name=email_account_id size=15 maxlength=20 value='$email_account_id'>$NWB#email_accounts-email_account_id$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Name: </td><td align=left><input type=text name=email_account_name size=40 maxlength=100 value='$email_account_name'>$NWB#email_accounts-email_account_name$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active><option>Y</option><option SELECTED>N</option></select>$NWB#email_accounts-email_account_active$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Description: </td><td align=left><input type=text name=email_account_description size=70 maxlength=255 value='$email_account_description'>$NWB#email_accounts-email_account_description$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Type: </td><td align=left><select size=1 name=email_account_type><option>INBOUND</option></select>$NWB#email_accounts-email_account_type$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Admin User Group: </td><td align=left><select size=1 name=user_group>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account ID").": </td><td align=left><input type=text name=email_account_id size=15 maxlength=20 value='$email_account_id'>$NWB#email_accounts-email_account_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account Name").": </td><td align=left><input type=text name=email_account_name size=40 maxlength=100 value='$email_account_name'>$NWB#email_accounts-email_account_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=active><option>Y</option><option SELECTED>N</option></select>$NWB#email_accounts-email_account_active$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account Description").": </td><td align=left><input type=text name=email_account_description size=70 maxlength=255 value='$email_account_description'>$NWB#email_accounts-email_account_description$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account Type").": </td><td align=left><select size=1 name=email_account_type><option>INBOUND</option></select>$NWB#email_accounts-email_account_type$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
-		echo "<option SELECTED value=\"---ALL---\">All Admin User Groups</option>\n";
+		echo "<option SELECTED value=\"---ALL---\">"._QXZ("All Admin User Groups")."</option>\n";
 		echo "</select>$NWB#email_accounts-admin_user_group$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Protocol: </td><td align=left><select size=1 name=protocol><option SELECTED>IMAP</option><option>POP3</option></select>$NWB#email_accounts-protocol$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Reply-to Address: </td><td align=left><input type=text name=email_replyto_address size=70 maxlength=255 value='$email_replyto_address'>$NWB#email_accounts-email_replyto_address$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Server: </td><td align=left><input type=text name=email_account_server size=70 maxlength=255 value='$email_account_server'>$NWB#email_accounts-email_account_server$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account User: </td><td align=left><input type=text name=email_account_user size=30 maxlength=255 value='$email_account_user'>$NWB#email_accounts-email_account_user$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Password: </td><td align=left><input type=text name=email_account_pass size=30 maxlength=100 value='$email_account_pass'>$NWB#email_accounts-email_account_pass$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Frequency Check Rate (mins): </td><td align=left><select name='email_frequency_check_mins'>";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account Protocol").": </td><td align=left><select size=1 name=protocol><option SELECTED>IMAP</option><option>POP3</option></select>$NWB#email_accounts-protocol$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Reply-to Address").": </td><td align=left><input type=text name=email_replyto_address size=70 maxlength=255 value='$email_replyto_address'>$NWB#email_accounts-email_replyto_address$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account Server").": </td><td align=left><input type=text name=email_account_server size=70 maxlength=255 value='$email_account_server'>$NWB#email_accounts-email_account_server$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account User").": </td><td align=left><input type=text name=email_account_user size=30 maxlength=255 value='$email_account_user'>$NWB#email_accounts-email_account_user$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account Password").": </td><td align=left><input type=text name=email_account_pass size=30 maxlength=100 value='$email_account_pass'>$NWB#email_accounts-email_account_pass$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Frequency Check Rate (mins)").": </td><td align=left><select name='email_frequency_check_mins'>";
 		$i=5;
 		while ($i<=60) 
 			{
@@ -590,26 +591,26 @@ else if ($eact == "ADD")
 			$i+=5;
 			}
 		echo "</select>$NWB#email_accounts-email_frequency_check_mins$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=1000\">In-Group ID</a>: </td><td align=left><select size=1 name=group_id>";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=1000\">"._QXZ("In-Group ID")."</a>: </td><td align=left><select size=1 name=group_id>";
 		echo "$Dgroups_menu";
 		echo "</select>$NWB#email_accounts-in_group$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=1000\">Default List ID</a>: </td><td align=left><input type=text name=default_list_id size=20 maxlength=255 value='$default_list_id'>$NWB#email_accounts-default_list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=1000\">"._QXZ("Default List ID")."</a>: </td><td align=left><input type=text name=default_list_id size=20 maxlength=255 value='$default_list_id'>$NWB#email_accounts-default_list_id$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Call Handle Method: </td><td align=left><select size=1 name=call_handle_method><option>EMAIL</option><option>EMAILLOOKUP</option><option>EMAILLOOKUPRL</option><option>EMAILLOOKUPRC</option><option SELECTED>$call_handle_method</option></select>$NWB#email_accounts-call_handle_method$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Agent Search Method: </td><td align=left><select size=1 name=agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$agent_search_method</option></select>$NWB#email_accounts-agent_search_method$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group List ID: </td><td align=left><input type=text name=list_id size=14 maxlength=14 value=\"$list_id\">$NWB#email_accounts-ingroup_list_id$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Campaign ID: </td><td align=left><select size=1 name=campaign_id>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("In-Group Call Handle Method").": </td><td align=left><select size=1 name=call_handle_method><option>EMAIL</option><option>EMAILLOOKUP</option><option>EMAILLOOKUPRL</option><option>EMAILLOOKUPRC</option><option SELECTED>$call_handle_method</option></select>$NWB#email_accounts-call_handle_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("In-Group Agent Search Method").": </td><td align=left><select size=1 name=agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$agent_search_method</option></select>$NWB#email_accounts-agent_search_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("In-Group List ID").": </td><td align=left><input type=text name=list_id size=14 maxlength=14 value=\"$list_id\">$NWB#email_accounts-ingroup_list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("In-Group Campaign ID").": </td><td align=left><select size=1 name=campaign_id>\n";
 		echo "$campaigns_list";
 		echo "<option SELECTED>$campaign_id</option>\n";
 		echo "</select>$NWB#email_accounts-ingroup_campaign_id$NWE</td></tr>\n";
 		
-		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT VALUE=SUBMIT><input type=hidden name='eact' value='ADD'></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT VALUE='"._QXZ("SUBMIT")."'><input type=hidden name='eact' value='ADD'></td></tr>\n";
 		echo "</TABLE></center></form>\n";
 		}
 	else
 		{
-		echo "You do not have permission to view this page\n";
+		echo _QXZ("You do not have permission to view this page")."\n";
 		exit;
 		}
 	}
@@ -643,8 +644,8 @@ else if (($eact=="DELETE" || $eact=="UPDATE") && $email_account_id)
 		if ($eact=="DELETE" && $email_account_id)  
 			{
 			echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-			echo "<br><B>CONFIRM DELETION OF INBOUND EMAIL ACCOUNT $email_account_id</B><BR>\n";
-			echo "<a href='$PHP_SELF?eact=DELETE&email_account_id=$email_account_id&confirm_deletion=yes'>Click to delete account $email_account_id</a>\n";
+			echo "<br><B>"._QXZ("CONFIRM DELETION OF INBOUND EMAIL ACCOUNT")." $email_account_id</B><BR>\n";
+			echo "<a href='$PHP_SELF?eact=DELETE&email_account_id=$email_account_id&confirm_deletion=yes'>"._QXZ("Click to delete account")." $email_account_id</a>\n";
 			echo "</font>";
 			}
 		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
@@ -688,13 +689,13 @@ else if (($eact=="DELETE" || $eact=="UPDATE") && $email_account_id)
 			$o++;
 			}
 		if ($Xgroups_selected < 1) 
-			{$Xgroups_menu .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
+			{$Xgroups_menu .= "<option SELECTED value=\"---NONE---\">---"._QXZ("NONE")."---</option>\n";}
 		else 
-			{$Xgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
+			{$Xgroups_menu .= "<option value=\"---NONE---\">---"._QXZ("NONE")."---</option>\n";}
 		if ($FXgroups_selected < 1) 
-			{$FXgroups_menu .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
+			{$FXgroups_menu .= "<option SELECTED value=\"---NONE---\">---"._QXZ("NONE")."---</option>\n";}
 		else 
-			{$FXgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
+			{$FXgroups_menu .= "<option value=\"---NONE---\">---"._QXZ("NONE")."---</option>\n";}
 
 
 		##### get in-groups listings for dynamic pulldown
@@ -726,13 +727,13 @@ else if (($eact=="DELETE" || $eact=="UPDATE") && $email_account_id)
 			$o++;
 			}
 		if ($Dgroups_selected < 1) 
-			{$Dgroups_menu .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
+			{$Dgroups_menu .= "<option SELECTED value=\"---NONE---\">---"._QXZ("NONE")."---</option>\n";}
 		else 
-			{$Dgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
+			{$Dgroups_menu .= "<option value=\"---NONE---\">---"._QXZ("NONE")."---</option>\n";}
 		if ($FDgroups_selected < 1) 
-			{$FDgroups_menu .= "<option SELECTED value=\"---NONE---\">---NONE---</option>\n";}
+			{$FDgroups_menu .= "<option SELECTED value=\"---NONE---\">---"._QXZ("NONE")."---</option>\n";}
 		else 
-			{$FDgroups_menu .= "<option value=\"---NONE---\">---NONE---</option>\n";}
+			{$FDgroups_menu .= "<option value=\"---NONE---\">---"._QXZ("NONE")."---</option>\n";}
 
 		## Get unhandled count
 		$stmt="select count(*) From vicidial_email_list where status='NEW' and email_account_id='$email_account_id'";
@@ -744,28 +745,28 @@ else if (($eact=="DELETE" || $eact=="UPDATE") && $email_account_id)
 		echo "<TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 		if ($message) {echo "<B>$message</B><BR>";}
-		if ($error_msg) {echo "ACCOUNT NOT UPDATED<BR/>The data you submitted has the following errors:<BR/>$error_msg";}
-		echo "<br>UPDATE AN EXISTING INBOUND EMAIL ACCOUNT<form action='$PHP_SELF' method='GET'>\n";
+		if ($error_msg) {echo _QXZ("ACCOUNT NOT UPDATED")."<BR/>"._QXZ("The data you submitted has the following errors").":<BR/>$error_msg";}
+		echo "<br>"._QXZ("UPDATE AN EXISTING INBOUND EMAIL ACCOUNT")."<form action='$PHP_SELF' method='GET'>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account ID: </td><td align=left><input type=hidden name=email_account_id value='$email_account_id'><B>$email_account_id$NWB#email_accounts-email_account_id$NWE</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Name: </td><td align=left><input type=text name=email_account_name size=40 maxlength=100 value='$email_account_name'>$NWB#email_accounts-email_account_name$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Active: </td><td align=left><select size=1 name=active>";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account ID").": </td><td align=left><input type=hidden name=email_account_id value='$email_account_id'><B>$email_account_id$NWB#email_accounts-email_account_id$NWE</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account Name").": </td><td align=left><input type=text name=email_account_name size=40 maxlength=100 value='$email_account_name'>$NWB#email_accounts-email_account_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=active>";
 		echo "<option value='$active' selected>$active</option>";
 		echo "<option>Y</option><option>N</option></select>$NWB#email_accounts-email_account_active$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Description: </td><td align=left><input type=text name=email_account_description size=70 maxlength=255 value='$email_account_description'>$NWB#email_accounts-email_account_description$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Type: </td><td align=left><select size=1 name=email_account_type><option value='$email_account_type' selected>$email_account_type</option><option>INBOUND</option></select>$NWB#email_accounts-email_account_type$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Admin User Group: </td><td align=left><select size=1 name=user_group>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account Description").": </td><td align=left><input type=text name=email_account_description size=70 maxlength=255 value='$email_account_description'>$NWB#email_accounts-email_account_description$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account Type").": </td><td align=left><select size=1 name=email_account_type><option value='$email_account_type' selected>$email_account_type</option><option>INBOUND</option></select>$NWB#email_accounts-email_account_type$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
 		echo "<option value='$user_group' selected>$user_group</option>";
 		echo "$UUgroups_list";
-		echo "<option SELECTED value=\"---ALL---\">All Admin User Groups</option>\n";
+		echo "<option SELECTED value=\"---ALL---\">"._QXZ("All Admin User Groups")."</option>\n";
 		echo "</select>$NWB#email_accounts-admin_user_group$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Protocol: </td><td align=left><select size=1 name=protocol><option>IMAP</option><option>POP3</option><option SELECTED>$protocol</option></select>$NWB#email_accounts-protocol$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Reply-to Address: </td><td align=left><input type=text name=email_replyto_address size=70 maxlength=255 value='$email_replyto_address'>$NWB#email_accounts-email_replyto_address$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Server: </td><td align=left><input type=text name=email_account_server size=70 maxlength=255 value='$email_account_server'>$NWB#email_accounts-email_account_server$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account User: </td><td align=left><input type=text name=email_account_user size=30 maxlength=255 value='$email_account_user'>$NWB#email_accounts-email_account_user$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Account Password: </td><td align=left><input type=text name=email_account_pass size=30 maxlength=100 value='$email_account_pass'>$NWB#email_accounts-email_account_pass$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>Email Frequency Check Rate (mins): </td><td align=left><select name='email_frequency_check_mins'>";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account Protocol").": </td><td align=left><select size=1 name=protocol><option>IMAP</option><option>POP3</option><option SELECTED>$protocol</option></select>$NWB#email_accounts-protocol$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Reply-to Address").": </td><td align=left><input type=text name=email_replyto_address size=70 maxlength=255 value='$email_replyto_address'>$NWB#email_accounts-email_replyto_address$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account Server").": </td><td align=left><input type=text name=email_account_server size=70 maxlength=255 value='$email_account_server'>$NWB#email_accounts-email_account_server$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account User").": </td><td align=left><input type=text name=email_account_user size=30 maxlength=255 value='$email_account_user'>$NWB#email_accounts-email_account_user$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account Password").": </td><td align=left><input type=text name=email_account_pass size=30 maxlength=100 value='$email_account_pass'>$NWB#email_accounts-email_account_pass$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Frequency Check Rate (mins)").": </td><td align=left><select name='email_frequency_check_mins'>";
 		echo "<option value='$email_frequency_check_mins' selected>$email_frequency_check_mins</option>";
 		$i=5;
 		while ($i<=60) 
@@ -774,35 +775,35 @@ else if (($eact=="DELETE" || $eact=="UPDATE") && $email_account_id)
 			$i+=5;
 			}
 		echo "</select>$NWB#email_accounts-email_frequency_check_mins$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=3811&group_id=$group_id\">In-Group ID</a>: </td><td align=left><select size=1 name=group_id>";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=3811&group_id=$group_id\">"._QXZ("In-Group ID")."</a>: </td><td align=left><select size=1 name=group_id>";
 		echo "$Dgroups_menu";
 		echo "<option value='$group_id' selected>$group_id</option></select>$NWB#email_accounts-in_group$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=1000\">Default List ID</a>: </td><td align=left><input type=text name=default_list_id size=20 maxlength=255 value='$default_list_id'>$NWB#email_accounts-default_list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=1000\">"._QXZ("Default List ID")."</a>: </td><td align=left><input type=text name=default_list_id size=20 maxlength=255 value='$default_list_id'>$NWB#email_accounts-default_list_id$NWE</td></tr>\n";
 
 ###############
-		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Call Handle Method: </td><td align=left><select size=1 name=call_handle_method><option>EMAIL</option><option>EMAILLOOKUP</option><option>EMAILLOOKUPRL</option><option>EMAILLOOKUPRC</option><option SELECTED>$call_handle_method</option></select>$NWB#email_accounts-call_handle_method$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Agent Search Method: </td><td align=left><select size=1 name=agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$agent_search_method</option></select>$NWB#email_accounts-agent_search_method$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group List ID: </td><td align=left><input type=text name=list_id size=14 maxlength=14 value=\"$list_id\">$NWB#email_accounts-ingroup_list_id$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Campaign ID: </td><td align=left><select size=1 name=campaign_id>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("In-Group Call Handle Method").": </td><td align=left><select size=1 name=call_handle_method><option>EMAIL</option><option>EMAILLOOKUP</option><option>EMAILLOOKUPRL</option><option>EMAILLOOKUPRC</option><option SELECTED>$call_handle_method</option></select>$NWB#email_accounts-call_handle_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("In-Group Agent Search Method").": </td><td align=left><select size=1 name=agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$agent_search_method</option></select>$NWB#email_accounts-agent_search_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("In-Group List ID").": </td><td align=left><input type=text name=list_id size=14 maxlength=14 value=\"$list_id\">$NWB#email_accounts-ingroup_list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("In-Group Campaign ID").": </td><td align=left><select size=1 name=campaign_id>\n";
 		echo "$campaigns_list";
 		echo "<option SELECTED>$campaign_id</option>\n";
 		echo "</select>$NWB#email_accounts-ingroup_campaign_id$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>Un-handled Emails: </td><td align=left><B>$unhandled_emails</B></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Un-handled Emails").": </td><td align=left><B>$unhandled_emails</B></td></tr>\n";
 ################
 		
-		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT VALUE=UPDATE><input type=hidden name='eact' value='UPDATE'></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT VALUE='"._QXZ("UPDATE")."'><input type=hidden name='eact' value='UPDATE'></td></tr>\n";
 		echo "</TABLE><BR><BR>";
 		if ($LOGuser_level >= 9)
 			{
-			echo "<br><br><a href=\"admin.php?ADD=720000000000000&category=EMAIL&stage=$email_account_id\">Click here to see Admin changes to this record</FONT>\n";
+			echo "<br><br><a href=\"admin.php?ADD=720000000000000&category=EMAIL&stage=$email_account_id\">"._QXZ("Click here to see Admin changes to this record")."</FONT>\n";
 			}
-		echo "<BR><BR><a href='$PHP_SELF?eact=DELETE&email_account_id=$email_account_id'>DELETE EMAIL ACCOUNT</a></center></form>\n";
+		echo "<BR><BR><a href='$PHP_SELF?eact=DELETE&email_account_id=$email_account_id'>"._QXZ("DELETE EMAIL ACCOUNT")."</a></center></form>\n";
 		}
 	else
 		{
-		echo "You do not have permission to view this page\n";
+		echo _QXZ("You do not have permission to view this page")."\n";
 		exit;
 		}
 	}
@@ -810,19 +811,19 @@ else
 	{
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	if ($message) {echo "<B>$message</B><BR>";}
-	echo "<br>INBOUND EMAIL ACCOUNT LISTINGS:\n";
+	echo "<br>"._QXZ("INBOUND EMAIL ACCOUNT LISTINGS").":\n";
 	echo "<center><TABLE width=750 cellspacing=0 cellpadding=1>\n";
 	echo "<TR BGCOLOR=BLACK>\n";
-	echo "<TD><font size=1 color=white>ACCOUNT ID</TD>\n";
-	echo "<TD><font size=1 color=white>ACCOUNT NAME</TD>\n";
-	echo "<TD><font size=1 color=white>DESCRIPTION</TD>\n";
-	echo "<TD><font size=1 color=white>REPLY-TO ADDRESS</TD>\n";
-	echo "<TD><font size=1 color=white>PROTOCOL</TD>\n";
-	echo "<TD><font size=1 color=white>SERVER</TD>\n";
-	echo "<TD><font size=1 color=white>FREQUENCY</TD>\n";
-	echo "<TD><font size=1 color=white>ACTIVE</TD>\n";
-	echo "<TD><font size=1 color=white>UNREAD EMAILS</TD>\n";
-	echo "<TD><font size=1 color=white>MODIFY</TD></tr>\n";
+	echo "<TD><font size=1 color=white>"._QXZ("ACCOUNT ID")."</TD>\n";
+	echo "<TD><font size=1 color=white>"._QXZ("ACCOUNT NAME")."</TD>\n";
+	echo "<TD><font size=1 color=white>"._QXZ("DESCRIPTION")."</TD>\n";
+	echo "<TD><font size=1 color=white>"._QXZ("REPLY-TO ADDRESS")."</TD>\n";
+	echo "<TD><font size=1 color=white>"._QXZ("PROTOCOL")."</TD>\n";
+	echo "<TD><font size=1 color=white>"._QXZ("SERVER")."</TD>\n";
+	echo "<TD><font size=1 color=white>"._QXZ("FREQUENCY")."</TD>\n";
+	echo "<TD><font size=1 color=white>"._QXZ("ACTIVE")."</TD>\n";
+	echo "<TD><font size=1 color=white>"._QXZ("UNREAD EMAILS")."</TD>\n";
+	echo "<TD><font size=1 color=white>"._QXZ("MODIFY")."</TD></tr>\n";
 
 	$stmt="SELECT email_account_id, email_account_name, email_account_description, email_replyto_address, protocol, email_account_server, email_frequency_check_mins, active from vicidial_email_accounts $whereLOGadmin_viewable_groupsSQL order by email_account_id;";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -851,7 +852,7 @@ else
 		echo "<td><font size=1> $row[email_frequency_check_mins] mins</font></td>";
 		echo "<td><font size=1> $row[active]</font></td>";
 		echo "<td><font size=1> $unhandled_emails</font></td>";
-		echo "<td><font size=1><a href=\"$PHP_SELF?eact=UPDATE&email_account_id=$row[email_account_id]\">MODIFY</a></font></td></tr>\n";
+		echo "<td><font size=1><a href=\"$PHP_SELF?eact=UPDATE&email_account_id=$row[email_account_id]\">"._QXZ("MODIFY")."</a></font></td></tr>\n";
 		$o++;
 		}
 
@@ -861,7 +862,7 @@ else
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $STARTtime);
-echo "\n\n\n<br><br><br>\n<font size=1> runtime: $RUNtime seconds &nbsp; &nbsp; &nbsp; &nbsp; Version: $admin_version &nbsp; &nbsp; Build: $build</font>";
+echo "\n\n\n<br><br><br>\n<font size=1> "._QXZ("runtime").": $RUNtime "._QXZ("seconds")." &nbsp; &nbsp; &nbsp; &nbsp; "._QXZ("Version").": $admin_version &nbsp; &nbsp; "._QXZ("Build").": $build</font>";
 
 ?>
 

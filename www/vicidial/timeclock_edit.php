@@ -14,6 +14,7 @@
 # 130616-1541 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0840 - Changed to mysqli PHP functions
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141007-2217 - Finalized adding QXZ translation to all admin files
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -118,7 +119,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -126,10 +127,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -240,7 +241,7 @@ if ($invalid_record < 1)
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>ADMINISTRATION: Timeclock Record Edit
+<title><?php echo _QXZ("ADMINISTRATION: Timeclock Record Edit"); ?>
 <?php
 
 ##### BEGIN Set variables to make header show properly #####
@@ -268,7 +269,7 @@ require("admin_header.php");
 
 
 <CENTER>
-<TABLE WIDTH=720 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B>Timeclock Record Edit for <?php echo $user ?></TD><TD ALIGN=RIGHT> &nbsp; </TD></TR>
+<TABLE WIDTH=720 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo _QXZ("Timeclock Record Edit for"); ?> <?php echo $user ?></TD><TD ALIGN=RIGHT> &nbsp; </TD></TR>
 
 <?php 
 
@@ -311,8 +312,8 @@ if ( ($invalid_record < 1) or (strlen($timeclock_id)<1) )
 
 		if ( ($LOGINepoch <= $PREVevent_epoch) || ($LOGOUTepoch >= $NEXTevent_epoch) )
 			{
-			echo "ERROR- There is a problem with the data that you entered, please go back<BR>\n";
-			echo "A timeclock session cannot overlap another timeclock session<BR>\n";
+			echo _QXZ("ERROR- There is a problem with the data that you entered, please go back")."<BR>\n";
+			echo _QXZ("A timeclock session cannot overlap another timeclock session")."<BR>\n";
 			echo "$LOGINepoch<BR>\n";
 			echo "$LOGOUTepoch<BR>\n";
 			echo "$LOGINevent_id<BR>\n";
@@ -326,7 +327,7 @@ if ( ($invalid_record < 1) or (strlen($timeclock_id)<1) )
 			}
 		if ( ($LOGINepoch > $StarTtimE) || ($LOGOUTepoch > $StarTtimE) || ($log_time > 86400) || ($log_time < 1) )
 			{
-			echo "ERROR- There is a problem with the data that you entered, please go back<BR>\n";
+			echo _QXZ("ERROR- There is a problem with the data that you entered, please go back")."<BR>\n";
 			echo "$LOGINepoch<BR>\n";
 			echo "$LOGOUTepoch<BR>\n";
 			echo "$notes<BR>\n";
@@ -376,7 +377,7 @@ if ( ($invalid_record < 1) or (strlen($timeclock_id)<1) )
 			$affected_rows = mysqli_affected_rows($link);
 			print "<!-- NEW vicidial_admin_log record inserted for $PHP_AUTH_USER:   |$affected_rows| -->\n";
 
-			echo "The timeclock session has been updated. <A HREF=\"$PHP_SELF?timeclock_id=$LOGINevent_id\">Click here to view</A>.<BR>\n";
+			echo _QXZ("The timeclock session has been updated").". <A HREF=\"$PHP_SELF?timeclock_id=$LOGINevent_id\">"._QXZ("Click here to view")."</A>.<BR>\n";
 			exit;
 			}
 		}
@@ -421,48 +422,48 @@ if ( ($invalid_record < 1) or (strlen($timeclock_id)<1) )
 		echo "<input type=hidden name=LOGOUTevent_id id=LOGOUTevent_id value=\"$LOGOUTevent_id\">\n";
 		echo "<input type=hidden name=stage value=edit_TC_log>\n";
 		echo "<TABLE BORDER=0><TR><TD COLSPAN=3 ALIGN=LEFT>\n";
-		echo " &nbsp; &nbsp; &nbsp; &nbsp;USER: $LOGINuser ($full_name) &nbsp; &nbsp; &nbsp; &nbsp; \n";
-		echo "HOURS: <span name=login_time id=login_time> $event_hours_int:$event_minutes_int </span>\n";
+		echo " &nbsp; &nbsp; &nbsp; &nbsp;"._QXZ("USER").": $LOGINuser ($full_name) &nbsp; &nbsp; &nbsp; &nbsp; \n";
+		echo _QXZ("HOURS").": <span name=login_time id=login_time> $event_hours_int:$event_minutes_int </span>\n";
 		echo "</TD></TR>\n";
 		echo "<TR><TD>\n";
 		echo "<TABLE BORDER=0>\n";
-		echo "<TR><TD ALIGN=RIGHT>LOGIN TIME: </TD><TD ALIGN=RIGHT><input type=text name=LOGINbegin_date id=LOGINbegin_date value=\"$LOGINevent_date\" size=20 maxlength=20 onchange=\"calculate_hours();\"></TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>TIMECLOCK ID: </TD><TD ALIGN=RIGHT>$LOGINevent_id</TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>USER GROUP: </TD><TD ALIGN=RIGHT>$LOGINuser_group</TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>IP ADDRESS: </TD><TD ALIGN=RIGHT>$LOGINip_address</TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>MANAGER USER: </TD><TD ALIGN=RIGHT>$LOGINmanager_user</TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>MANAGER IP: </TD><TD ALIGN=RIGHT>$LOGINmanager_ip</TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>NOTES: </TD><TD ALIGN=RIGHT>$LOGINnotes</TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>LAST CHANGE: </TD><TD ALIGN=RIGHT>$LOGINevent_datestamp</TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>"._QXZ("LOGIN TIME").": </TD><TD ALIGN=RIGHT><input type=text name=LOGINbegin_date id=LOGINbegin_date value=\"$LOGINevent_date\" size=20 maxlength=20 onchange=\"calculate_hours();\"></TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>"._QXZ("TIMECLOCK ID").": </TD><TD ALIGN=RIGHT>$LOGINevent_id</TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>"._QXZ("USER GROUP").": </TD><TD ALIGN=RIGHT>$LOGINuser_group</TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>"._QXZ("IP ADDRESS").": </TD><TD ALIGN=RIGHT>$LOGINip_address</TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>"._QXZ("MANAGER USER").": </TD><TD ALIGN=RIGHT>$LOGINmanager_user</TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>"._QXZ("MANAGER IP").": </TD><TD ALIGN=RIGHT>$LOGINmanager_ip</TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>"._QXZ("NOTES").": </TD><TD ALIGN=RIGHT>$LOGINnotes</TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>"._QXZ("LAST CHANGE").": </TD><TD ALIGN=RIGHT>$LOGINevent_datestamp</TD></TR>\n";
 		echo "</TABLE>\n";
 
 		echo "</TD><TD> &nbsp; &nbsp; &nbsp; &nbsp; \n";
 		echo "</TD><TD>\n";
 		echo "<TABLE BORDER=0>\n";
-		echo "<TR><TD ALIGN=RIGHT>LOGOUT TIME: </TD><TD ALIGN=RIGHT><input type=text name=LOGOUTbegin_date id=LOGOUTbegin_date value=\"$LOGOUTevent_date\" size=20 maxlength=20 onchange=\"calculate_hours();\"></TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>TIMECLOCK ID: </TD><TD ALIGN=RIGHT>$LOGOUTevent_id</TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>USER GROUP: </TD><TD ALIGN=RIGHT>$LOGOUTuser_group</TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>IP ADDRESS: </TD><TD ALIGN=RIGHT>$LOGOUTip_address</TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>MANAGER USER: </TD><TD ALIGN=RIGHT>$LOGOUTmanager_user</TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>MANAGER IP: </TD><TD ALIGN=RIGHT>$LOGOUTmanager_ip</TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>NOTES: </TD><TD ALIGN=RIGHT>$LOGOUTnotes</TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>LAST CHANGE: </TD><TD ALIGN=RIGHT>$LOGOUTevent_datestamp</TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>"._QXZ("LOGOUT TIME").": </TD><TD ALIGN=RIGHT><input type=text name=LOGOUTbegin_date id=LOGOUTbegin_date value=\"$LOGOUTevent_date\" size=20 maxlength=20 onchange=\"calculate_hours();\"></TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>"._QXZ("TIMECLOCK ID").": </TD><TD ALIGN=RIGHT>$LOGOUTevent_id</TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>"._QXZ("USER GROUP").": </TD><TD ALIGN=RIGHT>$LOGOUTuser_group</TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>"._QXZ("IP ADDRESS").": </TD><TD ALIGN=RIGHT>$LOGOUTip_address</TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>"._QXZ("MANAGER USER").": </TD><TD ALIGN=RIGHT>$LOGOUTmanager_user</TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>"._QXZ("MANAGER IP").": </TD><TD ALIGN=RIGHT>$LOGOUTmanager_ip</TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>"._QXZ("NOTES").": </TD><TD ALIGN=RIGHT>$LOGOUTnotes</TD></TR>\n";
+		echo "<TR><TD ALIGN=RIGHT>"._QXZ("LAST CHANGE").": </TD><TD ALIGN=RIGHT>$LOGOUTevent_datestamp</TD></TR>\n";
 		echo "</TABLE>\n";
 		echo "</TD></TR>\n";
 
 		echo "<TR><TD COLSPAN=3 ALIGN=LEFT>\n";
-		echo "NEW NOTES: <input type=text name=notes value='' size=80 maxlength=255>\n";
+		echo _QXZ("NEW NOTES").": <input type=text name=notes value='' size=80 maxlength=255>\n";
 		echo "</TD></TR>\n";
 		echo "<TR><TD COLSPAN=3 ALIGN=CENTER>\n";
-		echo "<input type=button name=go_submit id=go_submit value=SUBMIT onclick=\"run_submit();\"><BR></form>\n";
+		echo "<input type=button name=go_submit id=go_submit value="._QXZ("SUBMIT")." onclick=\"run_submit();\"><BR></form>\n";
 		echo "</TD></TR></TABLE>\n";
 		echo "<BR><BR>\n";
 		}
 
 
-	echo "<a href=\"./AST_agent_time_sheet.php?agent=$user\">Agent Time Sheet</a>\n";
-	echo " - <a href=\"./user_stats.php?user=$user\">User Stats</a>\n";
-	echo " - <a href=\"./admin.php?ADD=3&user=$user\">Modify User</a>\n";
+	echo "<a href=\"./AST_agent_time_sheet.php?agent=$user\">"._QXZ("Agent Time Sheet")."</a>\n";
+	echo " - <a href=\"./user_stats.php?user=$user\">"._QXZ("User Stats")."</a>\n";
+	echo " - <a href=\"./admin.php?ADD=3&user=$user\">"._QXZ("Modify User")."</a>\n";
 
 	echo "</B></TD></TR>\n";
 	echo "<TR><TD ALIGN=LEFT COLSPAN=2>\n";
@@ -475,13 +476,13 @@ if ( ($invalid_record < 1) or (strlen($timeclock_id)<1) )
 	echo "\n\n\n<br><br><br>\n\n";
 
 
-	echo "<font size=0>\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds</font>";
+	echo "<font size=0>\n\n\n<br><br><br>\n"._QXZ("script runtime").": $RUNtime "._QXZ("seconds")."</font>";
 
 	echo "|$stage|$group|";
 	}
 else
 	{
-	echo "ERROR! You cannot edit this timeclock record: $timeclock_id\n";
+	echo _QXZ("ERROR! You cannot edit this timeclock record").": $timeclock_id\n";
 	}
 ?>
 

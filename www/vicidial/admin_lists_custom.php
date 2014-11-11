@@ -30,10 +30,11 @@
 # 130902-0752 - Changed to mysqli PHP functions
 # 140705-0811 - Added better error handling, hid field_required field since it is non-functional
 # 140811-2110 - Fixes for issues with default fields
+# 141006-0903 - Finalized adding QXZ translation to all admin files
 #
 
-$admin_version = '2.10-23';
-$build = '140811-2110';
+$admin_version = '2.10-24';
+$build = '141006-0903';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -181,10 +182,10 @@ if ($auth_message == 'GOOD')
 
 if ($auth < 1)
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -205,7 +206,7 @@ $modify_leads =		$rights_row[0];
 if ( $modify_leads < 1 )
 	{
 	header ("Content-type: text/html; charset=utf-8");
-	echo "You do not have permissions to modify leads\n";
+	echo _QXZ("You do not have permissions to modify leads")."\n";
 	exit;
 	}
 
@@ -248,7 +249,7 @@ function close_help(taskspan,taskhelp)
 ?>
 
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>ADMINISTRATION: Lists Custom Fields
+<title><?php echo _QXZ("ADMINISTRATION: Lists Custom Fields"); ?>
 <?php 
 
 ################################################################################
@@ -262,7 +263,7 @@ if ($action == "HELP")
 	<center>
 	<TABLE WIDTH=98% BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=4><TR><TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>
 	<BR>
-	HELP HAS MOVED to help.php
+	<?php echo _QXZ("HELP HAS MOVED to"); ?> help.php
 	</TD></TR></TABLE>
 	</BODY>
 	</HTML>
@@ -298,13 +299,13 @@ require("admin_header.php");
 
 if ( ($LOGcustom_fields_modify < 1) or ($LOGuser_level < 8) )
 	{
-	echo "You are not authorized to view this section\n";
+	echo _QXZ("You are not authorized to view this section")."\n";
 	exit;
 	}
 
 if ($SScustom_fields_enabled < 1)
 	{
-	echo "<B><font color=red>ERROR: Custom Fields are not active on this system</B></font>\n";
+	echo "<B><font color=red>"._QXZ("ERROR: Custom Fields are not active on this system")."</B></font>\n";
 	exit;
 	}
 
@@ -341,22 +342,22 @@ if ($action == "COPY_FIELDS_FORM")
 
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	echo "<br>Copy Fields to Another List<form action=$PHP_SELF method=POST>\n";
+	echo "<br>"._QXZ("Copy Fields to Another List")."<form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=DB value=\"$DB\">\n";
 	echo "<input type=hidden name=action value=COPY_FIELDS_SUBMIT>\n";
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>List ID to Copy Fields From: </td><td align=left><select size=1 name=source_list_id>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List ID to Copy Fields From").": </td><td align=left><select size=1 name=source_list_id>\n";
 	echo "$lists_list";
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>List ID to Copy Fields to: </td><td align=left><select size=1 name=list_id>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List ID to Copy Fields to").": </td><td align=left><select size=1 name=list_id>\n";
 	echo "$lists_list";
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Copy Option: </td><td align=left><select size=1 name=copy_option>\n";
-	echo "<option selected>APPEND</option>";
-	echo "<option>UPDATE</option>";
-	echo "<option>REPLACE</option>";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Copy Option").": </td><td align=left><select size=1 name=copy_option>\n";
+	echo "<option selected>"._QXZ("APPEND")."</option>";
+	echo "<option>"._QXZ("UPDATE")."</option>";
+	echo "<option>"._QXZ("REPLACE")."</option>";
 	echo "</select> $NWB#lists_fields-copy_option$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
 	echo "</TABLE></center>\n";
 	echo "</TD></TR></TABLE>\n";
 	}
@@ -370,7 +371,7 @@ if ($action == "COPY_FIELDS_FORM")
 if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id > 99) and (strlen($copy_option) > 2) )
 	{
 	if ($list_id=="$source_list_id")
-		{echo "<B><font color=red>ERROR: You cannot copy fields to the same list: $list_id|$source_list_id</B></font>\n<BR>";}
+		{echo "<B><font color=red>"._QXZ("ERROR: You cannot copy fields to the same list").": $list_id|$source_list_id</B></font>\n<BR>";}
 	else
 		{
 		$table_exists=0;
@@ -379,7 +380,7 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 		$linkCUSTOM=mysqli_connect("$VARDB_server", "$VARDB_custom_user", "$VARDB_custom_pass", "$VARDB_database", "$VARDB_port");
 		if (!$linkCUSTOM) 
 			{
-			die('MySQL connect ERROR: ' . mysqli_error($linkCUSTOM));
+			die('MySQL '._QXZ('connect ERROR').': '. mysqli_error($linkCUSTOM));
 			}
 
 		# if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysqli_error());}
@@ -413,13 +414,13 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 		if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
 		
 		if ($source_field_exists < 1)
-			{echo "<B><font color=red>ERROR: Source list has no custom fields</B></font>\n<BR>";}
+			{echo "<B><font color=red>"._QXZ("ERROR: Source list has no custom fields")."</B></font>\n<BR>";}
 		else
 			{
 			##### REPLACE option #####
 			if ($copy_option=='REPLACE')
 				{
-				if ($DB > 0) {echo "Starting REPLACE copy\n<BR>";}
+				if ($DB > 0) {echo _QXZ("Starting REPLACE copy")."\n<BR>";}
 				if ($table_exists > 0)
 					{
 					$stmt="SELECT field_id,field_label from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
@@ -442,7 +443,7 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 						$SQLsuccess = delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$A_field_id[$o],$list_id,$A_field_label[$o],$A_field_name[$o],$A_field_description[$o],$A_field_rank[$o],$A_field_help[$o],$A_field_type[$o],$A_field_options[$o],$A_field_size[$o],$A_field_max[$o],$A_field_default[$o],$A_field_required[$o],$A_field_cost[$o],$A_multi_position[$o],$A_name_position[$o],$A_field_order[$o],$vicidial_list_fields);
 
 						if ($SQLsuccess > 0)
-							{echo "SUCCESS: Custom Field Deleted - $list_id|$A_field_label[$o]\n<BR>";}
+							{echo _QXZ("SUCCESS: Custom Field Deleted")." - $list_id|$A_field_label[$o]\n<BR>";}
 						$o++;
 						}
 					}
@@ -451,7 +452,7 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 			##### APPEND option #####
 			if ($copy_option=='APPEND')
 				{
-				if ($DB > 0) {echo "Starting APPEND copy\n<BR>";}
+				if ($DB > 0) {echo _QXZ("Starting APPEND copy")."\n<BR>";}
 				$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$source_list_id' order by field_rank,field_order,field_label;";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$fields_to_print = mysqli_num_rows($rslt);
@@ -507,13 +508,13 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 						$SQLsuccess = add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$A_field_id[$o],$list_id,$A_field_label[$o],$A_field_name[$o],$A_field_description[$o],$A_field_rank[$o],$A_field_help[$o],$A_field_type[$o],$A_field_options[$o],$A_field_size[$o],$A_field_max[$o],$A_field_default[$o],$A_field_required[$o],$A_field_cost[$o],$A_multi_position[$o],$A_name_position[$o],$A_field_order[$o],$vicidial_list_fields,$mysql_reserved_words);
 
 						if ($SQLsuccess > 0)
-							{echo "SUCCESS: Custom Field Added - $list_id|$A_field_label[$o]\n<BR>";}
+							{echo _QXZ("SUCCESS: Custom Field Added")." - $list_id|$A_field_label[$o]\n<BR>";}
 
 						if ($table_exists < 1) {$table_exists=1;}
 						}
 					else
 						{
-						if ($DB>0) {echo "FIELD EXISTS: |$list_id|$A_field_label[$o]|";}
+						if ($DB>0) {echo _QXZ("FIELD EXISTS").": |$list_id|$A_field_label[$o]|";}
 						}
 					$o++;
 					}
@@ -521,9 +522,9 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 			##### UPDATE option #####
 			if ($copy_option=='UPDATE')
 				{
-				if ($DB > 0) {echo "Starting UPDATE copy\n<BR>";}
+				if ($DB > 0) {echo _QXZ("Starting UPDATE copy")."\n<BR>";}
 				if ( ($table_exists < 1) and (!preg_match("/\|$field_label\|/i",$vicidial_list_fields)) )
-					{echo "<B><font color=red>ERROR: Table does not exist custom_$list_id</B></font>\n<BR>";}
+					{echo "<B><font color=red>"._QXZ("ERROR: Table does not exist")." custom_$list_id</B></font>\n<BR>";}
 				else
 					{
 					$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$source_list_id' order by field_rank,field_order,field_label;";
@@ -569,7 +570,7 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 							$SQLsuccess = modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$current_field_id,$list_id,$A_field_label[$o],$A_field_name[$o],$A_field_description[$o],$A_field_rank[$o],$A_field_help[$o],$A_field_type[$o],$A_field_options[$o],$A_field_size[$o],$A_field_max[$o],$A_field_default[$o],$A_field_required[$o],$A_field_cost[$o],$A_multi_position[$o],$A_name_position[$o],$A_field_order[$o],$vicidial_list_fields);
 
 							if ($SQLsuccess > 0)
-								{echo "SUCCESS: Custom Field Modified - $list_id|$A_field_label[$o]\n<BR>";}
+								{echo _QXZ("SUCCESS: Custom Field Modified")." - $list_id|$A_field_label[$o]\n<BR>";}
 							}
 						$o++;
 						}
@@ -608,14 +609,14 @@ if ( ($action == "DELETE_CUSTOM_FIELD_CONFIRMATION") and ($list_id > 99) and ($f
 	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
 	
 	if ($field_exists < 1)
-		{echo "<B><font color=red>ERROR: Field does not exist</B></font>\n<BR>";}
+		{echo "<B><font color=red>"._QXZ("ERROR: Field does not exist")."</B></font>\n<BR>";}
 	else
 		{
 		if ( ($table_exists < 1) and (!preg_match("/\|$field_label\|/i",$vicidial_list_fields)) )
-			{echo "<B><font color=red>ERROR: Table does not exist custom_$list_id</B></font>\n<BR>";}
+			{echo "<B><font color=red>"._QXZ("ERROR: Table does not exist")." custom_$list_id</B></font>\n<BR>";}
 		else
 			{
-			echo "<BR><BR><B><a href=\"$PHP_SELF?action=DELETE_CUSTOM_FIELD&list_id=$list_id&field_id=$field_id&field_label=$field_label&ConFiRm=YES&DB=$DB\">CLICK HERE TO CONFIRM DELETION OF THIS CUSTOM FIELD: $field_label - $field_id - $list_id</a></B><BR><BR>";
+			echo "<BR><BR><B><a href=\"$PHP_SELF?action=DELETE_CUSTOM_FIELD&list_id=$list_id&field_id=$field_id&field_label=$field_label&ConFiRm=YES&DB=$DB\">"._QXZ("CLICK HERE TO CONFIRM DELETION OF THIS CUSTOM FIELD").": $field_label - $field_id - $list_id</a></B><BR><BR>";
 			}
 		}
 
@@ -638,7 +639,7 @@ if ( ($action == "DELETE_CUSTOM_FIELD") and ($list_id > 99) and ($field_id > 0) 
 	$linkCUSTOM=mysqli_connect("$VARDB_server", "$VARDB_custom_user", "$VARDB_custom_pass", "$VARDB_database", "$VARDB_port");
 	if (!$linkCUSTOM) 
 		{
-		die('MySQL connect ERROR: ' . mysqli_error($linkCUSTOM));
+		die('MySQL '._QXZ('connect ERROR').': '. mysqli_error($linkCUSTOM));
 		}
 
 	$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id' and field_label='$field_label';";
@@ -659,18 +660,18 @@ if ( ($action == "DELETE_CUSTOM_FIELD") and ($list_id > 99) and ($field_id > 0) 
 	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
 	
 	if ($field_exists < 1)
-		{echo "<B><font color=red>ERROR: Field does not exist</B></font>\n<BR>";}
+		{echo "<B><font color=red>"._QXZ("ERROR: Field does not exist")."</B></font>\n<BR>";}
 	else
 		{
 		if ( ($table_exists < 1) and (!preg_match("/\|$field_label\|/i",$vicidial_list_fields)) )
-			{echo "<B><font color=red>ERROR: Table does not exist custom_$list_id</B></font>\n<BR>";}
+			{echo "<B><font color=red>"._QXZ("ERROR: Table does not exist")." custom_$list_id</B></font>\n<BR>";}
 		else
 			{
 			### delete field function
 			$SQLsuccess = delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields);
 
 			if ($SQLsuccess > 0)
-				{echo "SUCCESS: Custom Field Deleted - $list_id|$field_label\n<BR>";}
+				{echo _QXZ("SUCCESS: Custom Field Deleted")." - $list_id|$field_label\n<BR>";}
 			}
 		}
 
@@ -696,15 +697,15 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 		}
 	
 	if ( (strlen($field_label)<1) or (strlen($field_name)<2) or (strlen($field_size)<1) )
-		{echo "<B><font color=red>ERROR: You must enter a field label, field name and field size - $list_id|$field_label|$field_name|$field_size</B></font>\n<BR>";}
+		{echo "<B><font color=red>"._QXZ("ERROR: You must enter a field label, field name and field size")." - $list_id|$field_label|$field_name|$field_size</B></font>\n<BR>";}
 	else
 		{
 		if ( ( ($field_type=='TEXT') or ($field_type=='READONLY') or ($field_type=='HIDDEN') ) and ($field_max < strlen($field_default)) )
-			{echo "<B><font color=red>ERROR: Default value cannot be longer than maximum field length - $list_id|$field_label|$field_name|$field_max|$field_default|</B></font>\n<BR>";}
+			{echo "<B><font color=red>"._QXZ("ERROR: Default value cannot be longer than maximum field length")." - $list_id|$field_label|$field_name|$field_max|$field_default|</B></font>\n<BR>";}
 		else
 			{
 			if (preg_match("/\|$field_label\|/i",$mysql_reserved_words))
-				{echo "<B><font color=red>ERROR: You cannot use reserved words for field labels - $list_id|$field_label|$field_name|$field_size</B></font>\n<BR>";}
+				{echo "<B><font color=red>"._QXZ("ERROR: You cannot use reserved words for field labels")." - $list_id|$field_label|$field_name|$field_size</B></font>\n<BR>";}
 			else
 				{
 				$TEST_valid_options=0;
@@ -727,11 +728,11 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 					}
 
 				if ( ( ($field_type=='SELECT') or ($field_type=='MULTI') or ($field_type=='RADIO') or ($field_type=='CHECKBOX') ) and ( (!preg_match("/,/",$field_options)) or (!preg_match("/\n/",$field_options)) or (strlen($field_options)<6) or ($TEST_valid_options < 1) ) )
-					{echo "<B><font color=red>ERROR: You must enter field options when adding a SELECT, MULTI, RADIO or CHECKBOX field type  - $list_id|$field_label|$field_type|$field_options</B></font>\n<BR>";}
+					{echo "<B><font color=red>"._QXZ("ERROR: You must enter field options when adding a SELECT, MULTI, RADIO or CHECKBOX field type")."  - $list_id|$field_label|$field_type|$field_options</B></font>\n<BR>";}
 				else
 					{
 					if ($field_exists > 0)
-						{echo "<B><font color=red>ERROR: Field already exists for this list - $list_id|$field_label</B></font>\n<BR>";}
+						{echo "<B><font color=red>"._QXZ("ERROR: Field already exists for this list")." - $list_id|$field_label</B></font>\n<BR>";}
 					else
 						{
 						$table_exists=0;
@@ -742,7 +743,7 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 						$linkCUSTOM=mysqli_connect("$VARDB_server", "$VARDB_custom_user", "$VARDB_custom_pass", "$VARDB_database", "$VARDB_port");
 						if (!$linkCUSTOM) 
 							{
-							die('MySQL connect ERROR: ' . mysqli_error($linkCUSTOM));
+							die('MySQL '._QXZ('connect ERROR').': '. mysqli_error($linkCUSTOM));
 							}
 
 						$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
@@ -759,7 +760,7 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 						$SQLsuccess = add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields,$mysql_reserved_words);
 
 						if ($SQLsuccess > 0)
-							{echo "SUCCESS: Custom Field Added - $list_id|$field_label\n<BR>";}
+							{echo _QXZ("SUCCESS: Custom Field Added")." - $list_id|$field_label\n<BR>";}
 						}
 					}
 				}
@@ -784,7 +785,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELD_SUBMIT") and ($list_id > 99) and ($field_i
 	$linkCUSTOM=mysqli_connect("$VARDB_server", "$VARDB_custom_user", "$VARDB_custom_pass", "$VARDB_database", "$VARDB_port");
 	if (!$linkCUSTOM) 
 		{
-		die('MySQL connect ERROR: ' . mysqli_error($linkCUSTOM));
+		die('MySQL '._QXZ('connect ERROR').': '. mysqli_error($linkCUSTOM));
 		}
 
 
@@ -806,15 +807,15 @@ if ( ($action == "MODIFY_CUSTOM_FIELD_SUBMIT") and ($list_id > 99) and ($field_i
 	if ($DB>0) {echo "$stmt|$tablecount_to_print|$table_exists";}
 
 	if ($field_exists < 1)
-		{echo "<B><font color=red>ERROR: Field does not exist</B></font>\n<BR>";}
+		{echo "<B><font color=red>"._QXZ("ERROR: Field does not exist")."</B></font>\n<BR>";}
 	else
 		{
 		if ( ($table_exists < 1) and (!preg_match("/\|$field_label\|/i",$vicidial_list_fields)) )
-			{echo "<B><font color=red>ERROR: Table does not exist</B></font>\n<BR>";}
+			{echo "<B><font color=red>"._QXZ("ERROR: Table does not exist")."</B></font>\n<BR>";}
 		else
 			{
 			if ( ( ($field_type=='TEXT') or ($field_type=='READONLY') or ($field_type=='HIDDEN') ) and ($field_max < strlen($field_default)) )
-				{echo "<B><font color=red>ERROR: Default value cannot be longer than maximum field length - $list_id|$field_label|$field_name|$field_max|$field_default|</B></font>\n<BR>";}
+				{echo "<B><font color=red>"._QXZ("ERROR: Default value cannot be longer than maximum field length")." - $list_id|$field_label|$field_name|$field_max|$field_default|</B></font>\n<BR>";}
 			else
 				{
 				$TEST_valid_options=0;
@@ -837,14 +838,14 @@ if ( ($action == "MODIFY_CUSTOM_FIELD_SUBMIT") and ($list_id > 99) and ($field_i
 					}
 
 				if ( ( ($field_type=='SELECT') or ($field_type=='MULTI') or ($field_type=='RADIO') or ($field_type=='CHECKBOX') ) and ( (!preg_match("/,/",$field_options)) or (!preg_match("/\n/",$field_options)) or (strlen($field_options)<6) or ($TEST_valid_options < 1) ) )
-					{echo "<B><font color=red>ERROR: You must enter field options when updating a SELECT, MULTI, RADIO or CHECKBOX field type  - $list_id|$field_label|$field_type|$field_options</B></font>\n<BR>";}
+					{echo "<B><font color=red>"._QXZ("ERROR: You must enter field options when updating a SELECT, MULTI, RADIO or CHECKBOX field type")."  - $list_id|$field_label|$field_type|$field_options</B></font>\n<BR>";}
 				else
 					{
 					### modify field function
 					$SQLsuccess = modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$vicidial_list_fields);
 
 					if ($SQLsuccess > 0)
-						{echo "SUCCESS: Custom Field Modified - $list_id|$field_label\n<BR>";}
+						{echo _QXZ("SUCCESS: Custom Field Modified")." - $list_id|$field_label\n<BR>";}
 					}
 				}
 			}
@@ -887,8 +888,8 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		}
 
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	echo "<br>Modify Custom Fields: List ID $list_id   &nbsp; &nbsp; &nbsp; &nbsp; ";
-	echo "Records in this custom table: $custom_records_count<br>\n";
+	echo "<br>"._QXZ("Modify Custom Fields: List ID")." $list_id   &nbsp; &nbsp; &nbsp; &nbsp; ";
+	echo _QXZ("Records in this custom table").": $custom_records_count<br>\n";
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
 
 	$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
@@ -924,14 +925,14 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	$last_rank = $o;
 
 	### SUMMARY OF FIELDS ###
-	echo "<br>SUMMARY OF FIELDS:\n";
+	echo "<br>"._QXZ("SUMMARY OF FIELDS").":\n";
 	echo "<center><TABLE cellspacing=0 cellpadding=1>\n";
 	echo "<TR BGCOLOR=BLACK>";
-	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>RANK &nbsp; &nbsp; </B></TD>";
-	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>LABEL &nbsp; &nbsp; </B></TD>";
-	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>NAME &nbsp; &nbsp; </B></TD>";
-	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>TYPE &nbsp; &nbsp; </B></TD>";
-	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>COST &nbsp; &nbsp; </B></TD>\n";
+	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("RANK")." &nbsp; &nbsp; </B></TD>";
+	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("LABEL")." &nbsp; &nbsp; </B></TD>";
+	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("NAME")." &nbsp; &nbsp; </B></TD>";
+	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("TYPE")." &nbsp; &nbsp; </B></TD>";
+	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=2 color=white>"._QXZ("COST")." &nbsp; &nbsp; </B></TD>\n";
 	echo "</TR>\n";
 
 	$o=0;
@@ -959,10 +960,10 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		}
 
 	if ($fields_to_print < 1) 
-		{echo "<tr bgcolor=white align=center><td colspan=5><font size=1>There are no custom fields for this list</td></tr>";}
+		{echo "<tr bgcolor=white align=center><td colspan=5><font size=1>"._QXZ("There are no custom fields for this list")."</td></tr>";}
 	else
 		{
-		echo "<tr bgcolor=white align=right><td><font size=2>TOTALS: </td>";
+		echo "<tr bgcolor=white align=right><td><font size=2>"._QXZ("TOTALS").": </td>";
 		echo "<td align=right><font size=2> $o &nbsp; &nbsp; </td>";
 		echo "<td align=right><font size=2> &nbsp; &nbsp; </td>";
 		echo "<td align=right><font size=2> &nbsp; &nbsp; </td>";
@@ -973,10 +974,10 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 
 	### EXAMPLE OF CUSTOM FORM ###
 	echo "<form action=$PHP_SELF method=POST name=form_custom_$list_id id=form_custom_$list_id>\n";
-	echo "<br>EXAMPLE OF CUSTOM FORM:\n";
+	echo "<br>"._QXZ("EXAMPLE OF CUSTOM FORM").":\n";
 	echo "<center><TABLE cellspacing=2 cellpadding=2>\n";
 	if ($fields_to_print < 1) 
-		{echo "<tr bgcolor=white align=center><td colspan=4><font size=1>There are no custom fields for this list</td></tr>";}
+		{echo "<tr bgcolor=white align=center><td colspan=4><font size=1>"._QXZ("There are no custom fields for this list")."</td></tr>";}
 
 	$o=0;
 	$last_field_rank=0;
@@ -1170,7 +1171,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 
 
 	### MODIFY FIELDS ###
-	echo "<br>MODIFY EXISTING FIELDS:\n";
+	echo "<br>"._QXZ("MODIFY EXISTING FIELDS").":\n";
 	$o=0;
 	while ($fields_to_print > $o) 
 		{
@@ -1194,12 +1195,12 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		echo "<input type=hidden name=field_required value=\"$A_field_required[$o]\">\n";
 		echo "<a name=\"ANCHOR_$A_field_label[$o]\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3 cellpadding=1>\n";
-		echo "<tr $bgcolor><td align=right>Field Label $A_field_rank[$o]: </td><td align=left> $LcolorB<B>$A_field_label[$o]</B>$LcolorE $NWB#lists_fields-field_label$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Field Rank $A_field_rank[$o]: </td><td align=left><select size=1 name=field_rank>\n";
+		echo "<tr $bgcolor><td align=right>"._QXZ("Field Label")." $A_field_rank[$o]: </td><td align=left> $LcolorB<B>$A_field_label[$o]</B>$LcolorE $NWB#lists_fields-field_label$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>"._QXZ("Field Rank")." $A_field_rank[$o]: </td><td align=left><select size=1 name=field_rank>\n";
 		echo "$rank_select\n";
 		echo "<option selected>$A_field_rank[$o]</option>\n";
 		echo "</select> &nbsp; $NWB#lists_fields-field_rank$NWE \n";
-		echo " &nbsp; &nbsp; &nbsp; &nbsp; Field Order: <select size=1 name=field_order>\n";
+		echo " &nbsp; &nbsp; &nbsp; &nbsp; "._QXZ("Field Order").": <select size=1 name=field_order>\n";
 		echo "<option>1</option>\n";
 		echo "<option>2</option>\n";
 		echo "<option>3</option>\n";
@@ -1207,46 +1208,46 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		echo "<option>5</option>\n";
 		echo "<option selected>$A_field_order[$o]</option>\n";
 		echo "</select> &nbsp; $NWB#lists_fields-field_order$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Field Name $A_field_rank[$o]: </td><td align=left><textarea name=field_name rows=2 cols=60>$A_field_name[$o]</textarea> $NWB#lists_fields-field_name$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Field Name Position $A_field_rank[$o]: </td><td align=left><select size=1 name=name_position>\n";
-		echo "<option value=\"LEFT\">LEFT</option>\n";
-		echo "<option value=\"TOP\">TOP</option>\n";
+		echo "<tr $bgcolor><td align=right>"._QXZ("Field Name")." $A_field_rank[$o]: </td><td align=left><textarea name=field_name rows=2 cols=60>$A_field_name[$o]</textarea> $NWB#lists_fields-field_name$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>"._QXZ("Field Name Position")." $A_field_rank[$o]: </td><td align=left><select size=1 name=name_position>\n";
+		echo "<option value=\"LEFT\">"._QXZ("LEFT")."</option>\n";
+		echo "<option value=\"TOP\">"._QXZ("TOP")."</option>\n";
 		echo "<option selected>$A_name_position[$o]</option>\n";
 		echo "</select>  $NWB#lists_fields-name_position$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Field Description $A_field_rank[$o]: </td><td align=left><input type=text name=field_description size=70 maxlength=100 value=\"$A_field_description[$o]\"> $NWB#lists_fields-field_description$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Field Help $A_field_rank[$o]: </td><td align=left><textarea name=field_help rows=2 cols=60>$A_field_help[$o]</textarea> $NWB#lists_fields-field_help$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Field Type $A_field_rank[$o]: </td><td align=left><select size=1 name=field_type>\n";
-		echo "<option>TEXT</option>\n";
-		echo "<option>AREA</option>\n";
-		echo "<option>SELECT</option>\n";
-		echo "<option>MULTI</option>\n";
-		echo "<option>RADIO</option>\n";
-		echo "<option>CHECKBOX</option>\n";
-		echo "<option>DATE</option>\n";
-		echo "<option>TIME</option>\n";
-		echo "<option>DISPLAY</option>\n";
-		echo "<option>SCRIPT</option>\n";
-		echo "<option>HIDDEN</option>\n";
-		echo "<option>HIDEBLOB</option>\n";
-		echo "<option>READONLY</option>\n";
-		echo "<option selected>$A_field_type[$o]</option>\n";
+		echo "<tr $bgcolor><td align=right>"._QXZ("Field Description")." $A_field_rank[$o]: </td><td align=left><input type=text name=field_description size=70 maxlength=100 value=\"$A_field_description[$o]\"> $NWB#lists_fields-field_description$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>"._QXZ("Field Help")." $A_field_rank[$o]: </td><td align=left><textarea name=field_help rows=2 cols=60>$A_field_help[$o]</textarea> $NWB#lists_fields-field_help$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>"._QXZ("Field Type")." $A_field_rank[$o]: </td><td align=left><select size=1 name=field_type>\n";
+		echo "<option value='TEXT'>"._QXZ("TEXT")."</option>\n";
+		echo "<option value='AREA'>"._QXZ("AREA")."</option>\n";
+		echo "<option value='SELECT'>"._QXZ("SELECT")."</option>\n";
+		echo "<option value='MULTI'>"._QXZ("MULTI")."</option>\n";
+		echo "<option value='RADIO'>"._QXZ("RADIO")."</option>\n";
+		echo "<option value='CHECKBOX'>"._QXZ("CHECKBOX")."</option>\n";
+		echo "<option value='DATE'>"._QXZ("DATE")."</option>\n";
+		echo "<option value='TIME'>"._QXZ("TIME")."</option>\n";
+		echo "<option value='DISPLAY'>"._QXZ("DISPLAY")."</option>\n";
+		echo "<option value='SCRIPT'>"._QXZ("SCRIPT")."</option>\n";
+		echo "<option value='HIDDEN'>"._QXZ("HIDDEN")."</option>\n";
+		echo "<option value='HIDEBLOB'>"._QXZ("HIDEBLOB")."</option>\n";
+		echo "<option value='READONLY'>"._QXZ("READONLY")."</option>\n";
+		echo "<option value='$A_field_type[$o]' selected>"._QXZ("$A_field_type[$o]")."</option>\n";
 		echo "</select>  $NWB#lists_fields-field_type$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Field Options $A_field_rank[$o]: </td><td align=left><textarea name=field_options ROWS=5 COLS=60>$A_field_options[$o]</textarea>  $NWB#lists_fields-field_options$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Option Position $A_field_rank[$o]: </td><td align=left><select size=1 name=multi_position>\n";
-		echo "<option value=\"HORIZONTAL\">HORIZONTAL</option>\n";
-		echo "<option value=\"VERTICAL\">VERTICAL</option>\n";
-		echo "<option selected>$A_multi_position[$o]</option>\n";
+		echo "<tr $bgcolor><td align=right>"._QXZ("Field Options")." $A_field_rank[$o]: </td><td align=left><textarea name=field_options ROWS=5 COLS=60>$A_field_options[$o]</textarea>  $NWB#lists_fields-field_options$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>"._QXZ("Option Position")." $A_field_rank[$o]: </td><td align=left><select size=1 name=multi_position>\n";
+		echo "<option value=\"HORIZONTAL\">"._QXZ("HORIZONTAL")."</option>\n";
+		echo "<option value=\"VERTICAL\">"._QXZ("VERTICAL")."</option>\n";
+		echo "<option value='$A_multi_position[$o]' selected>"._QXZ("$A_multi_position[$o]")."</option>\n";
 		echo "</select>  $NWB#lists_fields-multi_position$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Field Size $A_field_rank[$o]: </td><td align=left><input type=text name=field_size size=5 maxlength=3 value=\"$A_field_size[$o]\">  $NWB#lists_fields-field_size$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Field Max $A_field_rank[$o]: </td><td align=left><input type=text name=field_max size=5 maxlength=3 value=\"$A_field_max[$o]\">  $NWB#lists_fields-field_max$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=right>Field Default $A_field_rank[$o]: </td><td align=left><input type=text name=field_default size=50 maxlength=255 value=\"$A_field_default[$o]\">  $NWB#lists_fields-field_default$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>"._QXZ("Field Size")." $A_field_rank[$o]: </td><td align=left><input type=text name=field_size size=5 maxlength=3 value=\"$A_field_size[$o]\">  $NWB#lists_fields-field_size$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>"._QXZ("Field Max")." $A_field_rank[$o]: </td><td align=left><input type=text name=field_max size=5 maxlength=3 value=\"$A_field_max[$o]\">  $NWB#lists_fields-field_max$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>"._QXZ("Field Default")." $A_field_rank[$o]: </td><td align=left><input type=text name=field_default size=50 maxlength=255 value=\"$A_field_default[$o]\">  $NWB#lists_fields-field_default$NWE </td></tr>\n";
 	//	echo "<tr $bgcolor><td align=right>Field Required $A_field_rank[$o]: </td><td align=left><select size=1 name=field_required>\n";
 	//	echo "<option value=\"Y\">YES</option>\n";
 	//	echo "<option value=\"N\">NO</option>\n";
 	//	echo "<option selected>$A_field_required[$o]</option>\n";
 	//	echo "</select>  $NWB#lists_fields-field_required$NWE </td></tr>\n";
-		echo "<tr $bgcolor><td align=center colspan=2><input type=submit name=submit value=\"SUBMIT\"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
-		echo "<B><a href=\"$PHP_SELF?action=DELETE_CUSTOM_FIELD_CONFIRMATION&list_id=$list_id&field_id=$A_field_id[$o]&field_label=$A_field_label[$o]&DB=$DB\">DELETE THIS CUSTOM FIELD</a></B>";
+		echo "<tr $bgcolor><td align=center colspan=2><input type=submit name=submit value=\""._QXZ("SUBMIT")."\"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
+		echo "<B><a href=\"$PHP_SELF?action=DELETE_CUSTOM_FIELD_CONFIRMATION&list_id=$list_id&field_id=$A_field_id[$o]&field_label=$A_field_label[$o]&DB=$DB\">"._QXZ("DELETE THIS CUSTOM FIELD")."</a></B>";
 		echo "</td></tr>\n";
 		echo "</table></center></form><BR><BR>\n";
 
@@ -1257,67 +1258,67 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 
 	echo "<form action=$PHP_SELF method=POST>\n";
 	echo "<center><TABLE width=$section_width cellspacing=3 cellpadding=1>\n";
-	echo "<tr bgcolor=white><td align=center colspan=2>ADD A NEW CUSTOM FIELD FOR THIS LIST:</td></tr>\n";
+	echo "<tr bgcolor=white><td align=center colspan=2>"._QXZ("ADD A NEW CUSTOM FIELD FOR THIS LIST").":</td></tr>\n";
 	echo "<tr $bgcolor>\n";
 	echo "<input type=hidden name=action value=ADD_CUSTOM_FIELD>\n";
 	echo "<input type=hidden name=list_id value=$list_id>\n";
 	echo "<input type=hidden name=DB value=$DB>\n";
 	echo "<input type=hidden name=field_required value=\"N\">\n";
-	echo "<tr $bgcolor><td align=right>New Field Rank: </td><td align=left><select size=1 name=field_rank>\n";
+	echo "<tr $bgcolor><td align=right>"._QXZ("New Field Rank").": </td><td align=left><select size=1 name=field_rank>\n";
 	echo "$rank_select\n";
 	echo "<option selected>$last_rank</option>\n";
 	echo "</select> &nbsp; $NWB#lists_fields-field_rank$NWE \n";
-	echo " &nbsp; &nbsp; &nbsp; &nbsp; Field Order: <select size=1 name=field_order>\n";
+	echo " &nbsp; &nbsp; &nbsp; &nbsp; "._QXZ("Field Order").": <select size=1 name=field_order>\n";
 	echo "<option selected>1</option>\n";
 	echo "<option>2</option>\n";
 	echo "<option>3</option>\n";
 	echo "<option>4</option>\n";
 	echo "<option>5</option>\n";
 	echo "</select> &nbsp; $NWB#lists_fields-field_order$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Label: </td><td align=left><input type=text name=field_label size=20 maxlength=50> $NWB#lists_fields-field_label$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Name: </td><td align=left><textarea name=field_name rows=2 cols=60></textarea> $NWB#lists_fields-field_name$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Name Position: </td><td align=left><select size=1 name=name_position>\n";
-	echo "<option value=\"LEFT\">LEFT</option>\n";
-	echo "<option value=\"TOP\">TOP</option>\n";
+	echo "<tr $bgcolor><td align=right>"._QXZ("Field Label").": </td><td align=left><input type=text name=field_label size=20 maxlength=50> $NWB#lists_fields-field_label$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>"._QXZ("Field Name").": </td><td align=left><textarea name=field_name rows=2 cols=60></textarea> $NWB#lists_fields-field_name$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>"._QXZ("Field Name Position").": </td><td align=left><select size=1 name=name_position>\n";
+	echo "<option value=\"LEFT\">"._QXZ("LEFT")."</option>\n";
+	echo "<option value=\"TOP\">"._QXZ("TOP")."</option>\n";
 	echo "</select>  $NWB#lists_fields-name_position$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Description: </td><td align=left><input name=field_description type=text size=70 maxlength=100> $NWB#lists_fields-field_description$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Help: </td><td align=left><textarea name=field_help rows=2 cols=60></textarea> $NWB#lists_fields-field_help$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Type: </td><td align=left><select size=1 name=field_type>\n";
-	echo "<option>TEXT</option>\n";
-	echo "<option>AREA</option>\n";
-	echo "<option>SELECT</option>\n";
-	echo "<option>MULTI</option>\n";
-	echo "<option>RADIO</option>\n";
-	echo "<option>CHECKBOX</option>\n";
-	echo "<option>DATE</option>\n";
-	echo "<option>TIME</option>\n";
-	echo "<option>DISPLAY</option>\n";
-	echo "<option>SCRIPT</option>\n";
-	echo "<option>HIDDEN</option>\n";
-	echo "<option>HIDEBLOB</option>\n";
-	echo "<option>READONLY</option>\n";
-	echo "<option selected>TEXT</option>\n";
+	echo "<tr $bgcolor><td align=right>"._QXZ("Field Description").": </td><td align=left><input name=field_description type=text size=70 maxlength=100> $NWB#lists_fields-field_description$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>"._QXZ("Field Help").": </td><td align=left><textarea name=field_help rows=2 cols=60></textarea> $NWB#lists_fields-field_help$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>"._QXZ("Field Type").": </td><td align=left><select size=1 name=field_type>\n";
+	echo "<option value='TEXT'>"._QXZ("TEXT")."</option>\n";
+	echo "<option value='AREA'>"._QXZ("AREA")."</option>\n";
+	echo "<option value='SELECT'>"._QXZ("SELECT")."</option>\n";
+	echo "<option value='MULTI'>"._QXZ("MULTI")."</option>\n";
+	echo "<option value='RADIO'>"._QXZ("RADIO")."</option>\n";
+	echo "<option value='CHECKBOX'>"._QXZ("CHECKBOX")."</option>\n";
+	echo "<option value='DATE'>"._QXZ("DATE")."</option>\n";
+	echo "<option value='TIME'>"._QXZ("TIME")."</option>\n";
+	echo "<option value='DISPLAY'>"._QXZ("DISPLAY")."</option>\n";
+	echo "<option value='SCRIPT'>"._QXZ("SCRIPT")."</option>\n";
+	echo "<option value='HIDDEN'>"._QXZ("HIDDEN")."</option>\n";
+	echo "<option value='HIDEBLOB'>"._QXZ("HIDEBLOB")."</option>\n";
+	echo "<option value='READONLY'>"._QXZ("READONLY")."</option>\n";
+	echo "<option selected value='TEXT'>"._QXZ("TEXT")."</option>\n";
 	echo "</select>  $NWB#lists_fields-field_type$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Options: </td><td align=left><textarea name=field_options ROWS=5 COLS=60></textarea>  $NWB#lists_fields-field_options$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Option Position: </td><td align=left><select size=1 name=multi_position>\n";
-	echo "<option selected value=\"HORIZONTAL\">HORIZONTAL</option>\n";
-	echo "<option value=\"VERTICAL\">VERTICAL</option>\n";
+	echo "<tr $bgcolor><td align=right>"._QXZ("Field Options").": </td><td align=left><textarea name=field_options ROWS=5 COLS=60></textarea>  $NWB#lists_fields-field_options$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>"._QXZ("Option Position").": </td><td align=left><select size=1 name=multi_position>\n";
+	echo "<option selected value=\"HORIZONTAL\">"._QXZ("HORIZONTAL")."</option>\n";
+	echo "<option value=\"VERTICAL\">"._QXZ("VERTICAL")."</option>\n";
 	echo "</select>  $NWB#lists_fields-multi_position$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Size: </td><td align=left><input type=text name=field_size size=5 maxlength=3>  $NWB#lists_fields-field_size$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Max: </td><td align=left><input type=text name=field_max size=5 maxlength=3>  $NWB#lists_fields-field_max$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=right>Field Default: </td><td align=left><input type=text name=field_default size=50 maxlength=255 value=\"NULL\">  $NWB#lists_fields-field_default$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>"._QXZ("Field Size").": </td><td align=left><input type=text name=field_size size=5 maxlength=3>  $NWB#lists_fields-field_size$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>"._QXZ("Field Max").": </td><td align=left><input type=text name=field_max size=5 maxlength=3>  $NWB#lists_fields-field_max$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>"._QXZ("Field Default").": </td><td align=left><input type=text name=field_default size=50 maxlength=255 value=\"NULL\">  $NWB#lists_fields-field_default$NWE </td></tr>\n";
 //	echo "<tr $bgcolor><td align=right>Field Required: </td><td align=left><select size=1 name=field_required>\n";
 //	echo "<option value=\"Y\">YES</option>\n";
 //	echo "<option value=\"N\" SELECTED>NO</option>\n";
 //	echo "</select>  $NWB#lists_fields-field_required$NWE </td></tr>\n";
-	echo "<tr $bgcolor><td align=center colspan=2><input type=submit name=submit value=\"Submit\"></td></tr>\n";
+	echo "<tr $bgcolor><td align=center colspan=2><input type=submit name=submit value=\""._QXZ("Submit")."\"></td></tr>\n";
 	echo "</table></center></form><BR><BR>\n";
 	echo "</table></center><BR><BR>\n";
 	echo "</TABLE>\n";
 
-	echo "&nbsp; <a href=\"./admin.php?ADD=311&list_id=$list_id\">Go to the list modification page for this list</a><BR><BR>\n";
+	echo "&nbsp; <a href=\"./admin.php?ADD=311&list_id=$list_id\">"._QXZ("Go to the list modification page for this list")."</a><BR><BR>\n";
 
-	echo "&nbsp; <a href=\"$PHP_SELF?action=ADMIN_LOG&list_id=$list_id\">Click here to see Admin changes to this lists custom fields</a><BR><BR><BR> </center> &nbsp; \n";
+	echo "&nbsp; <a href=\"$PHP_SELF?action=ADMIN_LOG&list_id=$list_id\">"._QXZ("Click here to see Admin changes to this lists custom fields")."</a><BR><BR><BR> </center> &nbsp; \n";
 	}
 ### END modify custom fields for list
 
@@ -1342,15 +1343,15 @@ if ($action == "LIST")
 		$o++;
 		}
 
-	echo "<br>LIST LISTINGS WITH CUSTOM FIELDS COUNT:\n";
+	echo "<br>"._QXZ("LIST LISTINGS WITH CUSTOM FIELDS COUNT").":\n";
 	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 	echo "<TR BGCOLOR=BLACK>";
-	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LIST ID</B></TD>";
-	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>LIST NAME</B></TD>";
-	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>ACTIVE</B></TD>";
-	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>CAMPAIGN</B></TD>\n";
-	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>CUSTOM FIELDS</B></TD>\n";
-	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>MODIFY</TD>\n";
+	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("LIST ID")."</B></TD>";
+	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("LIST NAME")."</B></TD>";
+	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("ACTIVE")."</B></TD>";
+	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("CAMPAIGN")."</B></TD>\n";
+	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("CUSTOM FIELDS")."</B></TD>\n";
+	echo "<TD align=right><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("MODIFY")."</TD>\n";
 	echo "</TR>\n";
 
 	$o=0;
@@ -1375,7 +1376,7 @@ if ($action == "LIST")
 		echo "<td align=right><font size=1> $A_active[$o]</td>";
 		echo "<td align=right><font size=1> $A_campaign_id[$o]</td>";
 		echo "<td align=right><font size=1> $A_list_fields_count[$o]</td>";
-		echo "<td align=right><font size=1><a href=\"$PHP_SELF?action=MODIFY_CUSTOM_FIELDS&list_id=$A_list_id[$o]\">MODIFY FIELDS</a></td></tr>\n";
+		echo "<td align=right><font size=1><a href=\"$PHP_SELF?action=MODIFY_CUSTOM_FIELDS&list_id=$A_list_id[$o]\">"._QXZ("MODIFY FIELDS")."</a></td></tr>\n";
 
 		$o++;
 		}
@@ -1401,18 +1402,18 @@ if ($action == "ADMIN_LOG")
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$logs_to_print = mysqli_num_rows($rslt);
 
-		echo "<br>ADMIN CHANGE LOG: Section Records - $category - $stage\n";
+		echo "<br>"._QXZ("ADMIN CHANGE LOG: Section Records")." - $category - $stage\n";
 		echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 		echo "<TR BGCOLOR=BLACK>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>ID</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>DATE TIME</B></TD>";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>USER</B></TD>\n";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>IP</TD>\n";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>SECTION</TD>\n";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>TYPE</TD>\n";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>RECORD ID</TD>\n";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>DESCRIPTION</TD>\n";
-		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>GOTO</TD>\n";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("ID")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("DATE TIME")."</B></TD>";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("USER")."</B></TD>\n";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("IP")."</TD>\n";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("SECTION")."</TD>\n";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("TYPE")."</TD>\n";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("RECORD ID")."</TD>\n";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("DESCRIPTION")."</TD>\n";
+		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("GOTO")."</TD>\n";
 		echo "</TR>\n";
 
 		$logs_printed = '';
@@ -1465,7 +1466,7 @@ if ($action == "ADMIN_LOG")
 		}
 	else
 		{
-		echo "You do not have permission to view this page\n";
+		echo _QXZ("You do not have permission to view this page")."\n";
 		exit;
 		}
 	}
@@ -1476,7 +1477,7 @@ if ($action == "ADMIN_LOG")
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $STARTtime);
-echo "\n\n\n<br><br><br>\n<font size=1> runtime: $RUNtime seconds &nbsp; &nbsp; &nbsp; &nbsp; Version: $admin_version &nbsp; &nbsp; Build: $build</font>";
+echo "\n\n\n<br><br><br>\n<font size=1> "._QXZ("runtime").": $RUNtime "._QXZ("seconds")." &nbsp; &nbsp; &nbsp; &nbsp; "._QXZ("Version").": $admin_version &nbsp; &nbsp; "._QXZ("Build").": $build</font>";
 
 ?>
 
@@ -1601,7 +1602,7 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 		if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
 		if (!$rsltCUSTOM) 
 			{
-			echo('Could not execute: ' . mysqli_error()) . "|$stmtCUSTOM|<BR><B>FIELD NOT ADDED, PLEASE GO BACK AND TRY AGAIN</b>";
+			echo(_QXZ('Could not execute').': ' . mysqli_error()) . "|$stmtCUSTOM|<BR><B>"._QXZ("FIELD NOT ADDED, PLEASE GO BACK AND TRY AGAIN")."</b>";
 			
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|$stmtCUSTOM";
@@ -1621,7 +1622,7 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$field_update = mysqli_affected_rows($link);
 		if ($DB) {echo "$field_update|$stmt\n";}
-		if (!$rslt) {echo('Could not execute: ' . mysqli_error()) . "|$stmt|";}
+		if (!$rslt) {echo(_QXZ('Could not execute').': ' . mysqli_error()) . "|$stmt|";}
 
 		### LOG INSERTION Admin Log Table ###
 		$SQL_log = "$stmt|$stmtCUSTOM";
@@ -1733,7 +1734,7 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 
 	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or (preg_match("/\|$field_label\|/i",$vicidial_list_fields)) )
 		{
-		if ($DB) {echo "Non-DB $field_type field type, $field_label\n";}
+		if ($DB) {echo _QXZ("Non-DB")." $field_type "._QXZ("field type").", $field_label\n";}
 		$SQLexecuted++;
 		}
 	else
@@ -1742,7 +1743,7 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 		$rsltCUSTOM=mysql_to_mysqli($stmtCUSTOM, $linkCUSTOM);
 		$field_update = mysqli_affected_rows($linkCUSTOM);
 		if ($DB) {echo "$field_update|$stmtCUSTOM\n";}
-		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysqli_error()) . "|$stmtCUSTOM|<BR><B>FIELD NOT MODIFIED, PLEASE GO BACK AND TRY AGAIN</b>";
+		if (!$rsltCUSTOM) {echo(_QXZ('Could not execute').': ' . mysqli_error()) . "|$stmtCUSTOM|<BR><B>"._QXZ("FIELD NOT MODIFIED, PLEASE GO BACK AND TRY AGAIN")."</b>";
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|$stmtCUSTOM";
 			$SQL_log = preg_replace('/;/', '', $SQL_log);
@@ -1797,7 +1798,7 @@ function delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 		$rsltCUSTOM=mysql_to_mysqli($stmtCUSTOM, $linkCUSTOM);
 		$table_update = mysqli_affected_rows($linkCUSTOM);
 		if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
-		if (!$rsltCUSTOM) {echo('Could not execute: ' . mysqli_error()) . "|$stmtCUSTOM|<BR><B>FIELD NOT DELETED, PLEASE GO BACK AND TRY AGAIN</b>";
+		if (!$rsltCUSTOM) {echo(_QXZ('Could not execute').': ' . mysqli_error()) . "|$stmtCUSTOM|<BR><B>"._QXZ("FIELD NOT DELETED, PLEASE GO BACK AND TRY AGAIN")."</b>";
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|$stmtCUSTOM";
 			$SQL_log = preg_replace('/;/', '', $SQL_log);
@@ -1816,7 +1817,7 @@ function delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$field_update = mysqli_affected_rows($link);
 		if ($DB) {echo "$field_update|$stmt\n";}
-		if (!$rslt) {echo('Could not execute: ' . mysqli_error() . "|$stmt|");}
+		if (!$rslt) {echo(_QXZ('Could not execute').': ' . mysqli_error() . "|$stmt|");}
 
 		### LOG INSERTION Admin Log Table ###
 		$SQL_log = "$stmt|$stmtCUSTOM";

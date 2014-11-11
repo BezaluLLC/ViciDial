@@ -37,6 +37,7 @@
 # 140724-1240 - Added the abilty to search the log archive tables
 # 140808-1117 - Added more admin logging
 # 140817-0941 - Added archive_log variable to modify page link
+# 141001-2200 - Finalized adding QXZ translation to all admin files
 #
 
 require("dbconnect_mysqli.php");
@@ -137,10 +138,10 @@ if ($auth_message == 'GOOD')
 
 if ($auth < 1)
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -161,7 +162,7 @@ $modify_leads =		$rights_row[0];
 if ( $modify_leads < 1 )
 	{
 	header ("Content-type: text/html; charset=utf-8");
-	echo "You do not have permissions to search leads\n";
+	echo _QXZ("You do not have permissions to search leads")."\n";
 	exit;
 	}
 
@@ -241,25 +242,25 @@ $subcamp_color =	'#C6C6C6';
 
 require("admin_header.php");
 
-$label_title =				'Title';
-$label_first_name =			'First';
-$label_middle_initial =		'MI';
-$label_last_name =			'Last';
-$label_address1 =			'Address1';
-$label_address2 =			'Address2';
-$label_address3 =			'Address3';
-$label_city =				'City';
-$label_state =				'State';
-$label_province =			'Province';
-$label_postal_code =		'Postal Code';
-$label_vendor_lead_code =	'Vendor ID';
-$label_gender =				'Gender';
-$label_phone_number =		'Phone';
-$label_phone_code =			'DialCode';
-$label_alt_phone =			'Alt. Phone';
-$label_security_phrase =	'Show';
-$label_email =				'Email';
-$label_comments =			'Comments';
+$label_title =				_QXZ('Title');
+$label_first_name =			_QXZ('First');
+$label_middle_initial =		_QXZ('MI');
+$label_last_name =			_QXZ('Last');
+$label_address1 =			_QXZ('Address1');
+$label_address2 =			_QXZ('Address2');
+$label_address3 =			_QXZ('Address3');
+$label_city =				_QXZ('City');
+$label_state =				_QXZ('State');
+$label_province =			_QXZ('Province');
+$label_postal_code =		_QXZ('Postal Code');
+$label_vendor_lead_code =	_QXZ('Vendor ID');
+$label_gender =				_QXZ('Gender');
+$label_phone_number =		_QXZ('Phone');
+$label_phone_code =			_QXZ('DialCode');
+$label_alt_phone =			_QXZ('Alt. Phone');
+$label_security_phrase =	_QXZ('Show');
+$label_email =				_QXZ('Email');
+$label_comments =			_QXZ('Comments');
 
 ### find any custom field labels
 $stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
@@ -286,7 +287,7 @@ if (strlen($row[17])>0) {$label_email =				$row[17];}
 if (strlen($row[18])>0) {$label_comments =			$row[18];}
 
 
-echo " Lead search: $vendor_id $phone $lead_id $status $list_id $user\n";
+echo " "._QXZ("Lead search").": $vendor_id $phone $lead_id $status $list_id $user\n";
 echo date("l F j, Y G:i:s A");
 echo "<BR>\n";
 
@@ -298,7 +299,7 @@ if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and (!$log_phone)  and (!$log_
 	echo "<input type=hidden name=DB value=\"$DB\">\n";
 	echo "<TABLE CELLPADDING=3 CELLSPACING=3>";
 	echo "<TR bgcolor=#015B91>";
-	echo "<TD colspan=3 align=center><font color=#FFFFFF><b>Lead Search Options:</b></font></TD>";
+	echo "<TD colspan=3 align=center><font color=#FFFFFF><b>"._QXZ("Lead Search Options").":</b></font></TD>";
 	echo "</TR>";
 
 	$archive_stmt="SHOW TABLES LIKE '%vicidial_list_archive%'";
@@ -306,48 +307,48 @@ if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and (!$log_phone)  and (!$log_
 	if (mysqli_num_rows($archive_rslt)>0) 
 		{
 		echo "<TR bgcolor=#B9CBFD>";
-		echo "<TD ALIGN=right>Archive search: &nbsp; </TD><TD ALIGN=left><select size=1 name=archive_search><option>No</option><option>Yes</option><option	SELECTED>$archive_search</option></select></TD>";
+		echo "<TD ALIGN=right>"._QXZ("Archive search").": &nbsp; </TD><TD ALIGN=left><select size=1 name=archive_search><option>"._QXZ("No")."</option><option>"._QXZ("Yes")."</option><option	SELECTED>$archive_search</option></select></TD>";
 		echo "<TD> &nbsp; </TD>\n";
 		echo "</TR><TR bgcolor=#015B91>";
 		echo "<TD colspan=3 align=center height=1></TD></TR>";
 		}
 
 	echo "<TR bgcolor=#B9CBFD>";
-	echo "<TD ALIGN=right>$label_vendor_lead_code(vendor lead code): &nbsp; </TD><TD ALIGN=left><input type=text name=vendor_id size=10 maxlength=20></TD>";
-	echo "<TD><input type=submit name=submit value=SUBMIT></TD>\n";
+	echo "<TD ALIGN=right>$label_vendor_lead_code("._QXZ("vendor lead code")."): &nbsp; </TD><TD ALIGN=left><input type=text name=vendor_id size=10 maxlength=20></TD>";
+	echo "<TD><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
 	echo "</TR><TR bgcolor=#015B91>";
 	echo "<TD colspan=3 align=center height=1></TD>";
 	echo "</TR><TR bgcolor=#B9CBFD>";
 
 	echo "<TD ALIGN=right>$label_phone_number: &nbsp; </TD><TD ALIGN=left><input type=text name=phone size=14 maxlength=18></TD>";
-	echo "<TD rowspan=2><input type=submit name=submit value=SUBMIT></TD>\n";
+	echo "<TD rowspan=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
 	echo "</TR><TR bgcolor=#B9CBFD>";
-	echo "<TD ALIGN=right>$label_alt_phone search: &nbsp; </TD><TD ALIGN=left><select size=1 name=alt_phone_search><option>No</option><option>Yes</option><option SELECTED>$alt_phone_search</option></select></TD>";
+	echo "<TD ALIGN=right>$label_alt_phone "._QXZ("search").": &nbsp; </TD><TD ALIGN=left><select size=1 name=alt_phone_search><option>"._QXZ("No")."</option><option>"._QXZ("Yes")."</option><option SELECTED>$alt_phone_search</option></select></TD>";
 
 	echo "</TR><TR bgcolor=#015B91>";
 	echo "<TD colspan=3 align=center height=1></TD>";
 	echo "</TR><TR bgcolor=#B9CBFD>";
 
-	echo "<TD ALIGN=right>Lead ID: &nbsp; </TD><TD ALIGN=left><input type=text name=lead_id size=10 maxlength=10></TD>";
-	echo "<TD><input type=submit name=submit value=SUBMIT></TD>\n";
+	echo "<TD ALIGN=right>"._QXZ("Lead ID").": &nbsp; </TD><TD ALIGN=left><input type=text name=lead_id size=10 maxlength=10></TD>";
+	echo "<TD><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
 	echo "</TR><TR bgcolor=#015B91>";
 	echo "<TD colspan=3 align=center height=3></TD>";
 	echo "</TR><TR bgcolor=#B9CBFD>";
 
-	echo "<TD ALIGN=right>Status: &nbsp; </TD><TD ALIGN=left><input type=text name=status size=7 maxlength=6></TD>";
-	echo "<TD rowspan=4><input type=submit name=submit value=SUBMIT></TD>\n";
+	echo "<TD ALIGN=right>"._QXZ("Status").": &nbsp; </TD><TD ALIGN=left><input type=text name=status size=7 maxlength=6></TD>";
+	echo "<TD rowspan=4><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
 	echo "</TR><TR bgcolor=#B9CBFD>";
-	echo "<TD ALIGN=right>List ID: &nbsp; </TD><TD ALIGN=left><input type=text name=list_id size=15 maxlength=14></TD>";
+	echo "<TD ALIGN=right>"._QXZ("List ID").": &nbsp; </TD><TD ALIGN=left><input type=text name=list_id size=15 maxlength=14></TD>";
 	echo "</TR><TR bgcolor=#B9CBFD>";
-	echo "<TD ALIGN=right>User: &nbsp; </TD><TD ALIGN=left><input type=text name=user size=15 maxlength=20></TD>";
+	echo "<TD ALIGN=right>"._QXZ("User").": &nbsp; </TD><TD ALIGN=left><input type=text name=user size=15 maxlength=20></TD>";
 	echo "</TR><TR bgcolor=#B9CBFD>";
-	echo "<TD ALIGN=right>Owner: &nbsp; </TD><TD ALIGN=left><input type=text name=owner size=15 maxlength=50></TD>";
+	echo "<TD ALIGN=right>"._QXZ("Owner").": &nbsp; </TD><TD ALIGN=left><input type=text name=owner size=15 maxlength=50></TD>";
 	echo "</TR><TR bgcolor=#015B91>";
 	echo "<TD colspan=3 align=center height=1></TD>";
 	echo "</TR><TR bgcolor=#B9CBFD>";
 
 	echo "<TD ALIGN=right>$label_first_name: &nbsp; </TD><TD ALIGN=left><input type=text name=first_name size=15 maxlength=30></TD>";
-	echo "<TD rowspan=2><input type=submit name=submit value=SUBMIT></TD>\n";
+	echo "<TD rowspan=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
 	echo "</TR><TR bgcolor=#B9CBFD>";
 	echo "<TD ALIGN=right>$label_last_name: &nbsp; </TD><TD ALIGN=left><input type=text name=last_name size=15 maxlength=30></TD>";
 	echo "</TR>";
@@ -357,32 +358,32 @@ if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and (!$log_phone)  and (!$log_
 	echo "<br><center>\n";
 	echo "<TD colspan=3 align=center> &nbsp; </TD>";
 	echo "</TR><TR bgcolor=#015B91>";
-	echo "<TD colspan=3 align=center><font color=#FFFFFF><b>Log Search Options:</b></font></TD>";
+	echo "<TD colspan=3 align=center><font color=#FFFFFF><b>"._QXZ("Log Search Options").":</b></font></TD>";
 	echo "</TR><TR bgcolor=#B9CBFD>";
 
-	echo "<TD ALIGN=right>Lead ID: &nbsp; </TD><TD ALIGN=left><input type=text name=log_lead_id size=10 maxlength=10></TD>";
-	echo "<TD><input type=submit name=submit value=SUBMIT></TD>\n";
+	echo "<TD ALIGN=right>"._QXZ("Lead ID").": &nbsp; </TD><TD ALIGN=left><input type=text name=log_lead_id size=10 maxlength=10></TD>";
+	echo "<TD><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
 	echo "</TR><TR bgcolor=#015B91>";
 	echo "<TD colspan=3 align=cente height=1></TD>";
 	echo "</TR><TR bgcolor=#B9CBFD>";
 
-	echo "<TD ALIGN=right>$label_phone_number Dialed: &nbsp; </TD><TD ALIGN=left><input type=text name=log_phone size=18 maxlength=18></TD>";
-	echo "<TD><input type=submit name=submit value=SUBMIT></TD>\n";
+	echo "<TD ALIGN=right>$label_phone_number "._QXZ("Dialed").": &nbsp; </TD><TD ALIGN=left><input type=text name=log_phone size=18 maxlength=18></TD>";
+	echo "<TD><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
 	echo "</TR><TR>";
 	echo "<TD colspan=3 align=center> &nbsp; </TD>";
 	echo "</TR>";
 	echo "<TR bgcolor=#015B91>";
-	echo "<TD colspan=3 align=center><font color=#FFFFFF><b>Archived Log Search Options:</b></font></TD>";
+	echo "<TD colspan=3 align=center><font color=#FFFFFF><b>"._QXZ("Archived Log Search Options").":</b></font></TD>";
 	echo "</TR><TR bgcolor=#B9CBFD>";
 
-	echo "<TD ALIGN=right>Lead ID: &nbsp; </TD><TD ALIGN=left><input type=text name=log_lead_id_archive size=10 maxlength=10></TD>";
-	echo "<TD><input type=submit name=submit value=SUBMIT></TD>\n";
+	echo "<TD ALIGN=right>"._QXZ("Lead ID").": &nbsp; </TD><TD ALIGN=left><input type=text name=log_lead_id_archive size=10 maxlength=10></TD>";
+	echo "<TD><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
 	echo "</TR><TR bgcolor=#015B91>";
 	echo "<TD colspan=3 align=center height=1></TD>";
 	echo "</TR><TR bgcolor=#B9CBFD>";
 
-	echo "<TD ALIGN=right>$label_phone_number Dialed: &nbsp; </TD><TD ALIGN=left><input type=text name=log_phone_archive size=18 maxlength=18></TD>";
-	echo "<TD><input type=submit name=submit value=SUBMIT></TD>\n";
+	echo "<TD ALIGN=right>$label_phone_number "._QXZ("Dialed").": &nbsp; </TD><TD ALIGN=left><input type=text name=log_phone_archive size=18 maxlength=18></TD>";
+	echo "<TD><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
 	echo "</TR><TR>";
 	echo "<TD colspan=3 align=center> &nbsp; </TD>";
 	echo "</TR><TR bgcolor=#B9CBFD>";
@@ -430,19 +431,19 @@ else
 			}
 		else
 			{
-			echo "<BR><b>OUTBOUND LOG RESULTS: $results_to_print</b><BR>\n";
+			echo "<BR><b>"._QXZ("OUTBOUND LOG RESULTS").": $results_to_print</b><BR>\n";
 			echo "<TABLE BGCOLOR=WHITE CELLPADDING=1 CELLSPACING=0 WIDTH=770>\n";
 			echo "<TR BGCOLOR=BLACK>\n";
 			echo "<TD ALIGN=LEFT VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>#</B></FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LEAD ID</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>PHONE</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>CAMPAIGN</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>CALL DATE</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>STATUS</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>USER</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LIST ID</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LENGTH</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>DIAL</B></FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LEAD ID")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("PHONE")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("CAMPAIGN")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("CALL DATE")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("STATUS")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("USER")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LIST ID")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LENGTH")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("DIAL")."</B></FONT></TD>\n";
 			echo "</TR>\n";
 			$o=0;
 			while ($results_to_print > $o)
@@ -491,7 +492,7 @@ else
 		if ( ($results_to_print < 1) and ($results_to_printX < 1) )
 			{
 			echo "\n<br><br><center>\n";
-			echo "<b>There are no inbound calls matching your search criteria</b><br><br>\n";
+			echo "<b>"._QXZ("There are no inbound calls matching your search criteria")."</b><br><br>\n";
 			echo "</center>\n";
 			}
 		else
@@ -500,14 +501,14 @@ else
 			echo "<TABLE BGCOLOR=WHITE CELLPADDING=1 CELLSPACING=0 WIDTH=770>\n";
 			echo "<TR BGCOLOR=BLACK>\n";
 			echo "<TD ALIGN=LEFT VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>#</B></FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LEAD ID</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>PHONE</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>INGROUP</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>CALL DATE</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>STATUS</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>USER</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LIST ID</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LENGTH</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LEAD ID")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("PHONE")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("INGROUP")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("CALL DATE")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("STATUS")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("USER")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LIST ID")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LENGTH")."</B> &nbsp;</FONT></TD>\n";
 			echo "</TR>\n";
 			$o=0;
 			while ($results_to_print > $o)
@@ -557,19 +558,19 @@ else
 			if ( ($results_to_print < 1) and ($results_to_printX < 1) )
 				{
 				echo "\n<br><br><center>\n";
-				echo "<b>There are no inbound did calls matching your search criteria</b><br><br>\n";
+				echo "<b>"._QXZ("There are no inbound did calls matching your search criteria")."</b><br><br>\n";
 				echo "</center>\n";
 				}
 			else
 				{
-				echo "<BR><b>INBOUND DID LOG RESULTS: $results_to_print</b><BR>\n";
+				echo "<BR><b>"._QXZ("INBOUND DID LOG RESULTS").": $results_to_print</b><BR>\n";
 				echo "<TABLE BGCOLOR=WHITE CELLPADDING=1 CELLSPACING=0 WIDTH=770>\n";
 				echo "<TR BGCOLOR=BLACK>\n";
 				echo "<TD ALIGN=LEFT VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>#</B></FONT></TD>\n";
-				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>DID</B> &nbsp;</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>PHONE</B> &nbsp;</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>DID ID</B> &nbsp;</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>CALL DATE</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("DID")."</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("PHONE")."</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("DID ID")."</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("CALL DATE")."</B> &nbsp;</FONT></TD>\n";
 				echo "</TR>\n";
 				$o=0;
 				while ($results_to_print > $o)
@@ -623,7 +624,7 @@ else
 
 		echo "\n\n\n<br><br><br>\n<a href=\"$PHP_SELF\">NEW SEARCH</a>";
 
-		echo "\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds";
+		echo "\n\n\n<br><br><br>\n"._QXZ("script runtime").": $RUNtime "._QXZ("seconds");
 
 		echo "\n\n\n</body></html>";
 
@@ -663,24 +664,24 @@ else
 		if ( ($results_to_print < 1) and ($results_to_printX < 1) )
 			{
 			echo "\n<br><br><center>\n";
-			echo "<b>There are no outbound calls matching your search criteria</b><br><br>\n";
+			echo "<b>"._QXZ("There are no outbound calls matching your search criteria")."</b><br><br>\n";
 			echo "</center>\n";
 			}
 		else
 			{
-			echo "<BR><b>OUTBOUND LOG RESULTS: $results_to_print</b><BR>\n";
+			echo "<BR><b>"._QXZ("OUTBOUND LOG RESULTS").": $results_to_print</b><BR>\n";
 			echo "<TABLE BGCOLOR=WHITE CELLPADDING=1 CELLSPACING=0 WIDTH=770>\n";
 			echo "<TR BGCOLOR=BLACK>\n";
 			echo "<TD ALIGN=LEFT VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>#</B></FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LEAD ID</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>PHONE</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>CAMPAIGN</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>CALL DATE</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>STATUS</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>USER</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LIST ID</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LENGTH</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>DIAL</B></FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LEAD ID")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("PHONE")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("CAMPAIGN")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("CALL DATE")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("STATUS")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("USER")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LIST ID")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LENGTH")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("DIAL")."</B></FONT></TD>\n";
 			echo "</TR>\n";
 			$o=0;
 			while ($results_to_print > $o)
@@ -729,23 +730,23 @@ else
 		if ( ($results_to_print < 1) and ($results_to_printX < 1) )
 			{
 			echo "\n<br><br><center>\n";
-			echo "<b>There are no inbound calls matching your search criteria</b><br><br>\n";
+			echo "<b>"._QXZ("There are no inbound calls matching your search criteria")."</b><br><br>\n";
 			echo "</center>\n";
 			}
 		else
 			{
-			echo "<BR><b>INBOUND LOG RESULTS: $results_to_print</b><BR>\n";
+			echo "<BR><b>"._QXZ("INBOUND LOG RESULTS").": $results_to_print</b><BR>\n";
 			echo "<TABLE BGCOLOR=WHITE CELLPADDING=1 CELLSPACING=0 WIDTH=770>\n";
 			echo "<TR BGCOLOR=BLACK>\n";
 			echo "<TD ALIGN=LEFT VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>#</B></FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LEAD ID</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>PHONE</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>INGROUP</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>CALL DATE</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>STATUS</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>USER</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LIST ID</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LENGTH</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LEAD ID")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("PHONE")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("INGROUP")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("CALL DATE")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("STATUS")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("USER")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LIST ID")."</B> &nbsp;</FONT></TD>\n";
+			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LENGTH")."</B> &nbsp;</FONT></TD>\n";
 			echo "</TR>\n";
 			$o=0;
 			while ($results_to_print > $o)
@@ -795,19 +796,19 @@ else
 			if ( ($results_to_print < 1) and ($results_to_printX < 1) )
 				{
 				echo "\n<br><br><center>\n";
-				echo "<b>There are no inbound did calls matching your search criteria</b><br><br>\n";
+				echo "<b>"._QXZ("There are no inbound did calls matching your search criteria")."</b><br><br>\n";
 				echo "</center>\n";
 				}
 			else
 				{
-				echo "<BR><b>INBOUND DID LOG RESULTS: $results_to_print</b><BR>\n";
+				echo "<BR><b>"._QXZ("INBOUND DID LOG RESULTS").": $results_to_print</b><BR>\n";
 				echo "<TABLE BGCOLOR=WHITE CELLPADDING=1 CELLSPACING=0 WIDTH=770>\n";
 				echo "<TR BGCOLOR=BLACK>\n";
 				echo "<TD ALIGN=LEFT VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>#</B></FONT></TD>\n";
-				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>DID</B> &nbsp;</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>PHONE</B> &nbsp;</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>DID ID</B> &nbsp;</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>CALL DATE</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("DID")."</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("PHONE")."</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("DID ID")."</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("CALL DATE")."</B> &nbsp;</FONT></TD>\n";
 				echo "</TR>\n";
 				$o=0;
 				while ($results_to_print > $o)
@@ -861,7 +862,7 @@ else
 
 		echo "\n\n\n<br><br><br>\n<a href=\"$PHP_SELF\">NEW SEARCH</a>";
 
-		echo "\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds";
+		echo "\n\n\n<br><br><br>\n"._QXZ("script runtime").": $RUNtime "._QXZ("seconds");
 
 		echo "\n\n\n</body></html>";
 
@@ -942,7 +943,7 @@ else
 						}
 					else
 						{
-						print "ERROR: you must search for something! Go back and search for something";
+						print _QXZ("ERROR: you must search for something! Go back and search for something");
 						exit;
 						}
 					}
@@ -994,28 +995,28 @@ else
 		{
 		echo date("l F j, Y G:i:s A");
 		echo "\n<br><br><center>\n";
-		echo "<b>The search variables you entered are not active in the system</b><br><br>\n";
-		echo "<b>Please go back and double check the information you entered and submit again</b>\n";
+		echo "<b>"._QXZ("The search variables you entered are not active in the system")."</b><br><br>\n";
+		echo "<b>"._QXZ("Please go back and double check the information you entered and submit again")."</b>\n";
 		echo "</center>\n";
 		echo "</body></html>\n";
 		exit;
 		}
 	else
 		{
-		echo "<b>RESULTS: $results_to_print</b><BR><BR>\n";
+		echo "<b>"._QXZ("RESULTS").": $results_to_print</b><BR><BR>\n";
 		echo "<TABLE BGCOLOR=WHITE CELLPADDING=1 CELLSPACING=0 WIDTH=770>\n";
 		echo "<TR BGCOLOR=BLACK>\n";
 		echo "<TD ALIGN=LEFT VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>#</B></FONT></TD>\n";
-		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LEAD ID</B> &nbsp;</FONT></TD>\n";
-		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>STATUS</B> &nbsp;</FONT></TD>\n";
-		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>VENDOR ID</B> &nbsp;</FONT></TD>\n";
-		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LAST AGENT</B> &nbsp;</FONT></TD>\n";
-		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LIST ID</B> &nbsp;</FONT></TD>\n";
-		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>PHONE</B> &nbsp;</FONT></TD>\n";
-		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>NAME</B> &nbsp;</FONT></TD>\n";
-		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>CITY</B> &nbsp;</FONT></TD>\n";
-		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>SECURITY</B> &nbsp;</FONT></TD>\n";
-		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>LAST CALL</B></FONT></TD>\n";
+		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LEAD ID")."</B> &nbsp;</FONT></TD>\n";
+		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("STATUS")."</B> &nbsp;</FONT></TD>\n";
+		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("VENDOR ID")."</B> &nbsp;</FONT></TD>\n";
+		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LAST AGENT")."</B> &nbsp;</FONT></TD>\n";
+		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LIST ID")."</B> &nbsp;</FONT></TD>\n";
+		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("PHONE")."</B> &nbsp;</FONT></TD>\n";
+		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("NAME")."</B> &nbsp;</FONT></TD>\n";
+		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("CITY")."</B> &nbsp;</FONT></TD>\n";
+		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("SECURITY")."</B> &nbsp;</FONT></TD>\n";
+		echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LAST CALL")."</B></FONT></TD>\n";
 		echo "</TR>\n";
 		$o=0;
 		while ($results_to_print > $o)
@@ -1121,10 +1122,10 @@ $ENDtime = date("U");
 
 $RUNtime = ($ENDtime - $STARTtime);
 
-echo "\n\n\n<br><br><br>\n<a href=\"$PHP_SELF\">NEW SEARCH</a>";
+echo "\n\n\n<br><br><br>\n<a href=\"$PHP_SELF\">"._QXZ("NEW SEARCH")."</a>";
 
 
-echo "\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds";
+echo "\n\n\n<br><br><br>\n"._QXZ("script runtime").": $RUNtime "._QXZ("seconds");
 
 
 ?>

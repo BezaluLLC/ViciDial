@@ -61,6 +61,7 @@
 # 140304-2034 - Fixed issue with special characters in standard data fields
 # 140706-0827 - Incorporated QC includes into code
 # 140817-0937 - Added Archive Log search option
+# 141001-2200 - Finalized adding QXZ translation to all admin files
 #
 
 require("dbconnect_mysqli.php");
@@ -237,10 +238,10 @@ if ($auth_message == 'GOOD')
 
 if ($auth < 1)
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -261,7 +262,7 @@ $modify_leads =		$rights_row[0];
 if ( $modify_leads < 1 )
 	{
 	header ("Content-type: text/html; charset=utf-8");
-	echo "You do not have permissions to modify leads\n";
+	echo _QXZ("You do not have permissions to modify leads\n");
 	exit;
 	}
 
@@ -305,25 +306,25 @@ if (!preg_match('/\-ALL/i', $LOGallowed_campaigns))
 	$whereLOGallowed_listsSQL = "where list_id IN($camp_lists)";
 	}
 
-$label_title =				'Title';
-$label_first_name =			'First';
-$label_middle_initial =		'MI';
-$label_last_name =			'Last';
-$label_address1 =			'Address1';
-$label_address2 =			'Address2';
-$label_address3 =			'Address3';
-$label_city =				'City';
-$label_state =				'State';
-$label_province =			'Province';
-$label_postal_code =		'Postal Code';
-$label_vendor_lead_code =	'Vendor ID';
-$label_gender =				'Gender';
-$label_phone_number =		'Phone';
-$label_phone_code =			'DialCode';
-$label_alt_phone =			'Alt. Phone';
-$label_security_phrase =	'Show';
-$label_email =				'Email';
-$label_comments =			'Comments';
+$label_title =				_QXZ('Title');
+$label_first_name =			_QXZ('First');
+$label_middle_initial =		_QXZ('MI');
+$label_last_name =			_QXZ('Last');
+$label_address1 =			_QXZ('Address1');
+$label_address2 =			_QXZ('Address2');
+$label_address3 =			_QXZ('Address3');
+$label_city =				_QXZ('City');
+$label_state =				_QXZ('State');
+$label_province =			_QXZ('Province');
+$label_postal_code =		_QXZ('Postal Code');
+$label_vendor_lead_code =	_QXZ('Vendor ID');
+$label_gender =				_QXZ('Gender');
+$label_phone_number =		_QXZ('Phone');
+$label_phone_code =			_QXZ('DialCode');
+$label_alt_phone =			_QXZ('Alt. Phone');
+$label_security_phrase =	_QXZ('Show');
+$label_email =				_QXZ('Email');
+$label_comments =			_QXZ('Comments');
 
 ### find any custom field labels
 $stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
@@ -373,14 +374,14 @@ if ($scb_count_to_print > 0)
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>ADMINISTRATION: Lead record modification</title>
+<title><?php echo _QXZ("ADMINISTRATION: Lead record modification"); ?></title>
 <script language="JavaScript" src="calendar_db.js"></script>
 <link rel="stylesheet" href="calendar.css">
 </head>
 <BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 <CENTER><FONT FACE="Courier" COLOR=BLACK SIZE=3>
 <?php 
-echo "<a href=\"./admin.php?ADD=100\">ADMINISTRATION</a>: Lead record modification<BR>\n";
+echo "<a href=\"./admin.php?ADD=100\">"._QXZ("ADMINISTRATION")."</a>: "._QXZ("Lead record modification")."<BR>\n";
 
 if ($lead_id == 'NEW')
 	{
@@ -393,11 +394,11 @@ if ($lead_id == 'NEW')
 	if ($affected_rows > 0)
 		{
 		$lead_id = mysqli_insert_id($link);
-		echo "Lead has been added: $lead_id<BR><BR>\n";
+		echo _QXZ("Lead has been added").": $lead_id<BR><BR>\n";
 		$end_call=0;
 		}
 	else
-		{echo "ERROR: Lead not added, please go back and look at what you entered<BR><BR>\n";}
+		{echo _QXZ("ERROR: Lead not added, please go back and look at what you entered")."<BR><BR>\n";}
 	}
 else
 	{
@@ -414,7 +415,7 @@ else
 	$lead_count =	$row[0];
 	if ( ($lead_exists > 0) and ($lead_count < 1) )
 		{
-		echo "lead does not exist\n";
+		echo _QXZ("lead does not exist")."\n";
 		exit;
 		}
 	}
@@ -431,9 +432,9 @@ if ($end_call > 0)
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 
-	echo "information modified<BR><BR>\n";
+	echo _QXZ("information modified")."<BR><BR>\n";
 	echo "<a href=\"$PHP_SELF?lead_id=$lead_id&DB=$DB&archive_search=$archive_search&archive_log=$archive_log\">Go back to the lead modification page</a><BR><BR>\n";
-	echo "<form><input type=button value=\"Close This Window\" onClick=\"javascript:window.close();\"></form>\n";
+	echo "<form><input type=button value=\""._QXZ("Close This Window")."\" onClick=\"javascript:window.close();\"></form>\n";
 	
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|";
@@ -450,7 +451,7 @@ if ($end_call > 0)
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<BR>vicidial_callback record inactivated: $lead_id<BR>\n";
+		echo "<BR>"._QXZ("vicidial_callback record inactivated").": $lead_id<BR>\n";
 		}
 	if ( ($dispo != $status) and ( ($dispo == 'CALLBK') or ($scheduled_callback == 'Y') ) )
 		{
@@ -459,7 +460,7 @@ if ($end_call > 0)
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<BR>vicidial_callback record inactivated: $lead_id<BR>\n";
+		echo "<BR>"._QXZ("vicidial_callback record inactivated").": $lead_id<BR>\n";
 		}
 
 	if ( ($dispo != $status) and ($status == 'CBHOLD') )
@@ -497,7 +498,7 @@ if ($end_call > 0)
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 
-			echo "<BR>Scheduled Callback added: $lead_id - $phone_number<BR>\n";
+			echo "<BR>"._QXZ("Scheduled Callback added").": $lead_id - $phone_number<BR>\n";
 			}
 		}
 
@@ -509,7 +510,7 @@ if ($end_call > 0)
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<BR>Lead added to DNC List: $lead_id - $phone_number<BR>\n";
+		echo "<BR>"._QXZ("Lead added to DNC List").": $lead_id - $phone_number<BR>\n";
 		}
 	### update last record in vicidial_log table
        if (($dispo != $status) and ($modify_logs > 0)) 
@@ -557,7 +558,7 @@ else
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<BR>vicidial_callback record changed to ANYONE<BR>\n";
+		echo "<BR>"._QXZ("vicidial_callback record changed to ANYONE")."<BR>\n";
 		}
 	if ($CBchangeUSERtoUSER == 'YES')
 		{
@@ -566,7 +567,7 @@ else
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<BR>vicidial_callback record user changed to $CBuser<BR>\n";
+		echo "<BR>"._QXZ("vicidial_callback record user changed to")." $CBuser<BR>\n";
 		}	
 	if ($CBchangeANYtoUSER == 'YES')
 		{
@@ -575,7 +576,7 @@ else
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<BR>vicidial_callback record changed to USERONLY, user: $CBuser<BR>\n";
+		echo "<BR>"._QXZ("vicidial_callback record changed to USERONLY, user").": $CBuser<BR>\n";
 		}	
 	
 	if ($CBchangeDATE == 'YES')
@@ -587,7 +588,7 @@ else
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<BR>vicidial_callback record changed to $appointment_date $appointment_time $CBstatus<BR>\n";
+		echo "<BR>"._QXZ("vicidial_callback record changed to")." $appointment_date $appointment_time $CBstatus<BR>\n";
 		}	
 
 
@@ -627,7 +628,7 @@ else
 		}
 	else
 		{
-		echo "lead lookup FAILED for lead_id $lead_id &nbsp; &nbsp; &nbsp; $NOW_TIME\n<BR><BR>\n";
+		echo _QXZ("lead lookup FAILED for lead_id")." $lead_id &nbsp; &nbsp; &nbsp; $NOW_TIME\n<BR><BR>\n";
 #		echo "<a href=\"$PHP_SELF\">Close this window</a>\n<BR><BR>\n";
 		}
 
@@ -672,7 +673,7 @@ else
 				{
 				$call_log .= "<TR>";
 				$call_log .= "<td></td>";
-				$call_log .= "<TD $bgcolor COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"> NOTES: &nbsp; $rowA[0] </font></TD>";
+				$call_log .= "<TD $bgcolor COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"> "._QXZ("NOTES").": &nbsp; $rowA[0] </font></TD>";
 				$call_log .= "</TR>";
 				}
 			}
@@ -756,7 +757,7 @@ else
 				{
 				$closer_log .= "<TR>";
 				$closer_log .= "<td></td>";
-				$closer_log .= "<TD $bgcolor COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"> NOTES: &nbsp; $rowA[0] </font></TD>";
+				$closer_log .= "<TD $bgcolor COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"> "._QXZ("NOTES").": &nbsp; $rowA[0] </font></TD>";
 				$closer_log .= "</TR>";
 				}
 			}
@@ -809,7 +810,7 @@ else
 					{
 					$call_log .= "<TR>";
 					$call_log .= "<td></td>";
-					$call_log .= "<TD $bgcolor COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"> NOTES: &nbsp; $rowA[0] </font></TD>";
+					$call_log .= "<TD $bgcolor COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"> "._QXZ("NOTES").": &nbsp; $rowA[0] </font></TD>";
 					$call_log .= "</TR>";
 					}
 				}
@@ -893,7 +894,7 @@ else
 					{
 					$closer_log .= "<TR>";
 					$closer_log .= "<td></td>";
-					$closer_log .= "<TD $bgcolor COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"> NOTES: &nbsp; $rowA[0] </font></TD>";
+					$closer_log .= "<TD $bgcolor COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"> "._QXZ("NOTES").": &nbsp; $rowA[0] </font></TD>";
 					$closer_log .= "</TR>";
 					}
 				}
@@ -1021,9 +1022,9 @@ else
 		}
 
 	if ($lead_id == 'NEW')
-		{echo "<br><b>Add A New Lead</B>\n";}
+		{echo "<br><b>"._QXZ("Add A New Lead")."</B>\n";}
 	else
-		{echo "<br>Call information: $first_name $last_name - $phone_number\n";}
+		{echo "<br>"._QXZ("Call information").": $first_name $last_name - $phone_number\n";}
 
 	echo "<br><br><form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=end_call value=1>\n";
@@ -1039,20 +1040,20 @@ else
 	echo "<input type=hidden name=call_began value=\"$call_began\">\n";
 	echo "<input type=hidden name=parked_time value=\"$parked_time\">\n";
 	echo "<table cellpadding=1 cellspacing=0>\n";
-	echo "<tr><td colspan=2>Lead ID: $lead_id &nbsp; &nbsp; List ID: $list_id</td></tr>\n";
-	echo "<tr><td colspan=2>Fronter: <A HREF=\"user_stats.php?user=$tsr\">$tsr</A> &nbsp; &nbsp; Called Count: $called_count</td></tr>\n";
+	echo "<tr><td colspan=2>"._QXZ("Lead ID").": $lead_id &nbsp; &nbsp; "._QXZ("List ID").": $list_id</td></tr>\n";
+	echo "<tr><td colspan=2>"._QXZ("Fronter").": <A HREF=\"user_stats.php?user=$tsr\">$tsr</A> &nbsp; &nbsp; "._QXZ("Called Count").": $called_count</td></tr>\n";
 	if ($archive_search=="Yes") 
 		{
 		echo "<tr><td colspan=2 align='center'>";
-		echo "<B><font color='#FF0000'>*** ARCHIVED LEAD ***</font></B>";
+		echo "<B><font color='#FF0000'>*** "._QXZ("ARCHIVED LEAD")." ***</font></B>";
 		echo "<input type='hidden' name='archive_search' value='Yes'>";
 		echo "</td></tr>\n";
 		}
 	if ($archive_log=="Yes") 
 		{
 		echo "<tr><td colspan=2 align='center'>";
-		echo "<B><font color='#FF0000'>*** ARCHIVED LOG SEARCH ENABLED ***</font></B><BR>";
-		echo "<B><font color='#FF0000'>*** ARCHIVED LOGS SHOWN IN RED, THERE MAY BE DUPLICATES WITH NON-ARCHIVED LOG ENTRIES ***</font></B>";
+		echo "<B><font color='#FF0000'>*** "._QXZ("ARCHIVED LOG SEARCH ENABLED")." ***</font></B><BR>";
+		echo "<B><font color='#FF0000'>*** "._QXZ("ARCHIVED LOGS SHOWN IN RED, THERE MAY BE DUPLICATES WITH NON-ARCHIVED LOG ENTRIES")." ***</font></B>";
 		echo "<input type='hidden' name='archive_log' value='Yes'>";
 		echo "</td></tr>\n";
 		}
@@ -1073,22 +1074,22 @@ else
 		echo " $label_postal_code: $postal_code </td></tr>\n";
 
 		echo "<tr><td align=right>$label_province : </td><td align=left>$province</td></tr>\n";
-		echo "<tr><td align=right>Country : </td><td align=left>$country_code</td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("Country")." : </td><td align=left>$country_code</td></tr>\n";
 		echo "<tr><td align=right>$label_phone_number : </td><td align=left>$phone_number</td></tr>\n";
 		echo "<tr><td align=right>$label_phone_code : </td><td align=left>$phone_code</td></tr>\n";
 		echo "<tr><td align=right>$label_alt_phone : </td><td align=left>$alt_phone</td></tr>\n";
 		echo "<tr><td align=right>$label_email : </td><td align=left>$email</td></tr>\n";
 		echo "<tr><td align=right>$label_security_phrase : </td><td align=left>$security</td></tr>\n";
 		echo "<tr><td align=right>$label_vendor_lead_code : </td><td align=left>$vendor_id></td></tr>\n";
-		echo "<tr><td align=right>Rank : </td><td align=left>$rank</td></tr>\n";
-		echo "<tr><td align=right>Owner : </td><td align=left>$owner</td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("Rank")." : </td><td align=left>$rank</td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("Owner")." : </td><td align=left>$owner</td></tr>\n";
 		echo "<tr><td align=right>$label_comments : </td><td align=left>$comments</td></tr>\n";
 		}
 	else
 		{
 		echo "<tr><td align=right>$label_title: </td><td align=left><input type=text name=title size=4 maxlength=4 value=\"$title\"> &nbsp; \n";
 		echo "$label_first_name: <input type=text name=first_name size=15 maxlength=30 value=\"".htmlentities($first_name)."\"> </td></tr>\n";
-		echo "<tr><td align=right>$label_middle_initial:  </td><td align=left><input type=text name=middle_initial size=4 maxlength=1 value=\"".htmlentities($middle_initia)."\"> &nbsp; \n";
+		echo "<tr><td align=right>$label_middle_initial:  </td><td align=left><input type=text name=middle_initial size=4 maxlength=1 value=\"".htmlentities($middle_initial)."\"> &nbsp; \n";
 		echo " $label_last_name: <input type=text name=last_name size=15 maxlength=30 value=\"".htmlentities($last_name)."\"> </td></tr>\n";
 		echo "<tr><td align=right>$label_address1 : </td><td align=left><input type=text name=address1 size=30 maxlength=30 value=\"".htmlentities($address1)."\"></td></tr>\n";
 		echo "<tr><td align=right>$label_address2 : </td><td align=left><input type=text name=address2 size=30 maxlength=30 value=\"".htmlentities($address2)."\"></td></tr>\n";
@@ -1098,21 +1099,21 @@ else
 		echo " $label_postal_code: <input type=text name=postal_code size=10 maxlength=10 value=\"".htmlentities($postal_code)."\"> </td></tr>\n";
 
 		echo "<tr><td align=right>$label_province : </td><td align=left><input type=text name=province size=30 maxlength=30 value=\"".htmlentities($province)."\"></td></tr>\n";
-		echo "<tr><td align=right>Country : </td><td align=left><input type=text name=country_code size=3 maxlength=3 value=\"".htmlentities($country_code)."\"></td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("Country")." : </td><td align=left><input type=text name=country_code size=3 maxlength=3 value=\"".htmlentities($country_code)."\"></td></tr>\n";
 		echo "<tr><td align=right>$label_phone_number : </td><td align=left><input type=text name=phone_number size=20 maxlength=20 value=\"".htmlentities($phone_number)."\"></td></tr>\n";
 		echo "<tr><td align=right>$label_phone_code : </td><td align=left><input type=text name=phone_code size=10 maxlength=10 value=\"".htmlentities($phone_code)."\"></td></tr>\n";
 		echo "<tr><td align=right>$label_alt_phone : </td><td align=left><input type=text name=alt_phone size=20 maxlength=20 value=\"".htmlentities($alt_phone)."\"></td></tr>\n";
 		echo "<tr><td align=right>$label_email : </td><td align=left><input type=text name=email size=30 maxlength=50 value=\"".htmlentities($email)."\"></td></tr>\n";
 		echo "<tr><td align=right>$label_security_phrase : </td><td align=left><input type=text name=security size=30 maxlength=100 value=\"".htmlentities($security)."\"></td></tr>\n";
 		echo "<tr><td align=right>$label_vendor_lead_code : </td><td align=left><input type=text name=vendor_id size=30 maxlength=100 value=\"".htmlentities($vendor_id)."\"></td></tr>\n";
-		echo "<tr><td align=right>Rank : </td><td align=left><input type=text name=rank size=7 maxlength=5 value=\"".htmlentities($rank)."\"></td></tr>\n";
-		echo "<tr><td align=right>Owner : </td><td align=left><input type=text name=owner size=22 maxlength=20 value=\"".htmlentities($owner)."\"></td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("Rank")." : </td><td align=left><input type=text name=rank size=7 maxlength=5 value=\"".htmlentities($rank)."\"></td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("Owner")." : </td><td align=left><input type=text name=owner size=22 maxlength=20 value=\"".htmlentities($owner)."\"></td></tr>\n";
 		echo "<tr><td align=right>$label_comments : </td><td align=left><TEXTAREA name=comments ROWS=3 COLS=65>".htmlentities($comments)."</TEXTAREA></td></tr>\n";
 		}
 
 	if ($lead_id != 'NEW') 
 		{
-		echo "<tr bgcolor=#B6D3FC><td align=right>Disposition: </td><td align=left><select size=1 name=status>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Disposition").": </td><td align=left><select size=1 name=status>\n";
 
 		### find out if status(dispo) is a scheduled callback status
 		$scheduled_callback='';
@@ -1183,15 +1184,15 @@ else
 		if ($DS < 1) 
 			{$statuses_list .= "<option SELECTED value=\"$dispo\">$dispo</option>\n";}
 		if ($CBhold_set < 1)
-			{$statuses_list .= "<option value=\"CBHOLD\">CBHOLD - Scheduled Callback</option>\n";}
+			{$statuses_list .= "<option value=\"CBHOLD\">CBHOLD - "._QXZ("Scheduled Callback")."</option>\n";}
 		echo "$statuses_list";
-		echo "</select> <i>(with $list_campaign statuses)</i></td></tr>\n";
+		echo "</select> <i>("._QXZ("with")." $list_campaign "._QXZ("statuses").")</i></td></tr>\n";
 
 
-		echo "<tr bgcolor=#B6D3FC><td align=left>Modify vicidial log </td><td align=left><input type=checkbox name=modify_logs value=\"1\" CHECKED></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=left>Modify agent log </td><td align=left><input type=checkbox name=modify_agent_logs value=\"1\" CHECKED></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=left>Modify closer log </td><td align=left><input type=checkbox name=modify_closer_logs value=\"1\"></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=left>Add closer log record </td><td align=left><input type=checkbox name=add_closer_record value=\"1\"></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=left>"._QXZ("Modify vicidial log")." </td><td align=left><input type=checkbox name=modify_logs value=\"1\" CHECKED></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=left>"._QXZ("Modify agent log")." </td><td align=left><input type=checkbox name=modify_agent_logs value=\"1\" CHECKED></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=left>"._QXZ("Modify closer log")." </td><td align=left><input type=checkbox name=modify_closer_logs value=\"1\"></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=left>"._QXZ("Add closer log record")." </td><td align=left><input type=checkbox name=add_closer_record value=\"1\"></td></tr>\n";
 		}
 	else
 		{
@@ -1200,7 +1201,7 @@ else
 
 	if ( ($LOGadmin_hide_lead_data == '0') or ($lead_id == 'NEW') )
 		{
-		echo "<tr><td colspan=2 align=center><input type=submit name=submit value=\"SUBMIT\"></td></tr>\n";
+		echo "<tr><td colspan=2 align=center><input type=submit name=submit value=\""._QXZ("SUBMIT")."\"></td></tr>\n";
 		}
 	echo "</table></form>\n";
 	echo "<BR><BR><BR>\n";
@@ -1208,7 +1209,7 @@ else
 	if ($lead_id != 'NEW') 
 		{
 		echo "<TABLE BGCOLOR=#B6D3FC WIDTH=750><TR><TD>\n";
-		echo "Callback Details:<BR><CENTER>\n";
+		echo _QXZ("Callback Details").":<BR><CENTER>\n";
 		if ( ($dispo == 'CALLBK') or ($dispo == 'CBHOLD') or ($scheduled_callback == 'Y') )
 			{
 			### find any vicidial_callback records for this lead 
@@ -1227,15 +1228,15 @@ else
 					echo "<input type=hidden name=DB value=\"$DB\">\n";
 					echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
 					echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
-					echo "<input type=submit name=submit value=\"CHANGE TO ANYONE CALLBACK\"></form><BR>\n";
+					echo "<input type=submit name=submit value=\""._QXZ("CHANGE TO ANYONE CALLBACK")."\"></form><BR>\n";
 
 					echo "<br><form action=$PHP_SELF method=POST>\n";
 					echo "<input type=hidden name=CBchangeUSERtoUSER value=\"YES\">\n";
 					echo "<input type=hidden name=DB value=\"$DB\">\n";
 					echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
 					echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
-					echo "New Callback Owner UserID: <input type=text name=CBuser size=18 maxlength=20 value=\"$rowx[8]\"> \n";
-					echo "<input type=submit name=submit value=\"CHANGE USERONLY CALLBACK USER\"></form><BR>\n";
+					echo _QXZ("New Callback Owner UserID").": <input type=text name=CBuser size=18 maxlength=20 value=\"$rowx[8]\"> \n";
+					echo "<input type=submit name=submit value=\""._QXZ("CHANGE USERONLY CALLBACK USER")."\"></form><BR>\n";
 					}
 				else
 					{
@@ -1244,8 +1245,8 @@ else
 					echo "<input type=hidden name=DB value=\"$DB\">\n";
 					echo "<input type=hidden name=lead_id value=\"$lead_id\">\n";
 					echo "<input type=hidden name=callback_id value=\"$rowx[0]\">\n";
-					echo "New Callback Owner UserID: <input type=text name=CBuser size=18 maxlength=20 value=\"$rowx[8]\"> \n";
-					echo "<input type=submit name=submit value=\"CHANGE TO USERONLY CALLBACK\"></form><BR>\n";
+					echo _QXZ("New Callback Owner UserID").": <input type=text name=CBuser size=18 maxlength=20 value=\"$rowx[8]\"> \n";
+					echo "<input type=submit name=submit value=\""._QXZ("CHANGE TO USERONLY CALLBACK")."\"></form><BR>\n";
 					}
 				$callback_id = $rowx[0];
 				$CBcomments = $rowx[10];
@@ -1297,7 +1298,7 @@ else
 				?>
 
 				<FORM METHOD=POST NAME=vsn ID=vsn ACTION="<?php echo $PHP_SELF ?>">
-				<BR>Change Scheduled Callback Date:<BR>
+				<BR><?php echo _QXZ("Change Scheduled Callback Date"); ?>:<BR>
 
 				<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=2 WIDTH=700>
 				<TR><TD COLSPAN=2 ALIGN=CENTER>
@@ -1307,7 +1308,7 @@ else
 				<input type=hidden name=callback_id value="<?php echo $callback_id ?>">
 
 				<TR BGCOLOR="#E6E6E6">
-				<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA">CallBack Date/Time: </TD><TD ALIGN=LEFT><input type=text name=appointment_date id=appointment_date size=10 maxlength=10 value="<?php echo $appointment_date ?>">
+				<TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA"><?php echo _QXZ("CallBack Date/Time"); ?>: </TD><TD ALIGN=LEFT><input type=text name=appointment_date id=appointment_date size=10 maxlength=10 value="<?php echo $appointment_date ?>">
 
 				<script language="JavaScript">
 				var o_cal = new tcal ({
@@ -1368,7 +1369,7 @@ else
 				</TR>
 				<TR BGCOLOR="#E6E6E6">
 				<TD align=center colspan=2>
-				<FONT FACE="ARIAL,HELVETICA">Callback Disposition: <select size=1 name=CBstatus>\n";
+				<FONT FACE="ARIAL,HELVETICA"><?php echo _QXZ("Callback Disposition"); ?>: <select size=1 name=CBstatus>\n";
 				<?php echo "$statuses_list"; ?>
 				</select>
 				</TD>
@@ -1376,7 +1377,7 @@ else
 
 				<TR BGCOLOR="#E6E6E6">
 				<TD align=center colspan=2>
-				<FONT FACE="ARIAL,HELVETICA">Comments: 
+				<FONT FACE="ARIAL,HELVETICA"><?php echo _QXZ("Comments"); ?>: 
 
 				<TEXTAREA name=comments ROWS=3 COLS=65><?php echo $CBcomments ?></TEXTAREA>
 				</TD>
@@ -1413,13 +1414,13 @@ else
 				}
 			else
 				{
-				echo "<BR>No Callback records found<BR>\n";
+				echo "<BR>"._QXZ("No Callback records found")."<BR>\n";
 				}
 
 			}
 		else
 			{
-			echo "<BR>If you want to change this lead to a scheduled callback, first change the Disposition to CBHOLD, then submit and you will be able to set the callback date and time.<BR>\n";
+			echo "<BR>"._QXZ("If you want to change this lead to a scheduled callback, first change the Disposition to CBHOLD, then submit and you will be able to set the callback date and time").".<BR>\n";
 			}
 		echo "</TD></TR></TABLE>\n";
 
@@ -1429,9 +1430,9 @@ else
 
 		if ($c > 0)
 			{
-			echo "<B>EXTENDED ALTERNATE PHONE NUMBERS FOR THIS LEAD:</B>\n";
+			echo "<B>"._QXZ("EXTENDED ALTERNATE PHONE NUMBERS FOR THIS LEAD").":</B>\n";
 			echo "<TABLE width=550 cellspacing=0 cellpadding=1>\n";
-			echo "<tr><td><font size=1># </td><td><font size=2>ALT PHONE </td><td align=left><font size=2>ALT NOTE</td><td align=left><font size=2> ALT COUNT</td><td align=left><font size=2> ACTIVE</td></tr>\n";
+			echo "<tr><td><font size=1># </td><td><font size=2>"._QXZ("ALT PHONE")." </td><td align=left><font size=2>"._QXZ("ALT NOTE")."</td><td align=left><font size=2> "._QXZ("ALT COUNT")."</td><td align=left><font size=2> "._QXZ("ACTIVE")."</td></tr>\n";
 
 			echo "$alts_output\n";
 
@@ -1462,7 +1463,7 @@ else
 					$rowx=mysqli_fetch_row($rslt);
 					$custom_records_count =	$rowx[0];
 
-					echo "<B>CUSTOM FIELDS FOR THIS LEAD:</B><BR>\n";
+					echo "<B>"._QXZ("CUSTOM FIELDS FOR THIS LEAD").":</B><BR>\n";
 					echo "<iframe src=\"../agc/vdc_form_display.php?lead_id=$lead_id&list_id=$CLlist_id&stage=DISPLAY&submit_button=YES&user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&bcrypt=OFF&bgcolor=E6E6E6\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"2\" allowtransparency=\"true\" id=\"vcFormIFrame\" name=\"vcFormIFrame\" width=\"740\" height=\"300\" STYLE=\"z-index:18\"> </iframe>\n";
 					echo "<BR><BR>";
 					}
@@ -1470,18 +1471,18 @@ else
 			}
 
 
-		echo "<B>CALLS TO THIS LEAD:</B>\n";
+		echo "<B>"._QXZ("CALLS TO THIS LEAD").":</B>\n";
 		echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
-		echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> TSR</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> HANGUP REASON</td><td align=right><font size=2> PHONE</td></tr>\n";
+		echo "<tr><td><font size=1># </td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2>"._QXZ("LENGTH")."</td><td align=left><font size=2> "._QXZ("STATUS")."</td><td align=left><font size=2> "._QXZ("TSR")."</td><td align=right><font size=2> "._QXZ("CAMPAIGN")."</td><td align=right><font size=2> "._QXZ("LIST")."</td><td align=right><font size=2> "._QXZ("LEAD")."</td><td align=right><font size=2> "._QXZ("HANGUP REASON")."</td><td align=right><font size=2> "._QXZ("PHONE")."</td></tr>\n";
 
 		echo "$call_log\n";
 
 		echo "</TABLE>\n";
 		echo "<BR><BR>\n";
 
-		echo "<B>CLOSER RECORDS FOR THIS LEAD:</B>\n";
+		echo "<B>"._QXZ("CLOSER RECORDS FOR THIS LEAD").":</B>\n";
 		echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
-		echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> TSR</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> WAIT</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
+		echo "<tr><td><font size=1># </td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2>"._QXZ("LENGTH")."</td><td align=left><font size=2> "._QXZ("STATUS")."</td><td align=left><font size=2> "._QXZ("TSR")."</td><td align=right><font size=2> "._QXZ("CAMPAIGN")."</td><td align=right><font size=2> "._QXZ("LIST")."</td><td align=right><font size=2> "._QXZ("LEAD")."</td><td align=right><font size=2> "._QXZ("WAIT")."</td><td align=right><font size=2> "._QXZ("HANGUP REASON")."</td></tr>\n";
 
 		echo "$closer_log\n";
 
@@ -1489,9 +1490,9 @@ else
 		echo "<BR><BR>\n";
 
 
-		echo "<B>AGENT LOG RECORDS FOR THIS LEAD:</B>\n";
+		echo "<B>"._QXZ("AGENT LOG RECORDS FOR THIS LEAD").":</B>\n";
 		echo "<TABLE width=750 cellspacing=0 cellpadding=1>\n";
-		echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>CAMPAIGN</td><td align=left><font size=2> TSR</td><td align=left><font size=2> PAUSE</td><td align=right><font size=2> WAIT</td><td align=right><font size=2> TALK</td><td align=right><font size=2> DISPO</td><td align=right><font size=2> STATUS</td><td align=right><font size=2> GROUP</td><td align=right><font size=2> SUB</td></tr>\n";
+		echo "<tr><td><font size=1># </td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2>"._QXZ("CAMPAIGN")."</td><td align=left><font size=2> "._QXZ("TSR")."</td><td align=left><font size=2> "._QXZ("PAUSE")."</td><td align=right><font size=2> "._QXZ("WAIT")."</td><td align=right><font size=2> "._QXZ("TALK")."</td><td align=right><font size=2> "._QXZ("DISPO")."</td><td align=right><font size=2> "._QXZ("STATUS")."</td><td align=right><font size=2> "._QXZ("GROUP")."</td><td align=right><font size=2> "._QXZ("SUB")."</td></tr>\n";
 
 			echo "$agent_log\n";
 
@@ -1499,9 +1500,9 @@ else
 		echo "<BR><BR>\n";
 
 
-		echo "<B>IVR LOGS FOR THIS LEAD:</B>\n";
+		echo "<B>"._QXZ("IVR LOGS FOR THIS LEAD").":</B>\n";
 		echo "<TABLE width=750 cellspacing=1 cellpadding=1>\n";
-		echo "<tr><td><font size=1># </td><td align=left><font size=2> CAMPAIGN</td><td><font size=2>DATE/TIME </td><td align=left><font size=2>CALL MENU </td><td align=left><font size=2> &nbsp; ACTION</td></tr>\n";
+		echo "<tr><td><font size=1># </td><td align=left><font size=2> "._QXZ("CAMPAIGN")."</td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2>"._QXZ("CALL MENU")." </td><td align=left><font size=2> &nbsp; "._QXZ("ACTION")."</td></tr>\n";
 
 		$stmt="SELECT campaign_id,event_date,menu_id,menu_action from vicidial_outbound_ivr_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by uniqueid,event_date,menu_action desc limit 500;";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -1533,9 +1534,9 @@ else
 
 		if ($allow_emails>0) 
 			{
-			echo "<B>OUTBOUND EMAILS FOR THIS LEAD:</B>\n";
+			echo "<B>"._QXZ("OUTBOUND EMAILS FOR THIS LEAD").":</B>\n";
 			echo "<TABLE width=750 cellspacing=1 cellpadding=1>\n";
-			echo "<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=right><font size=2> USER</td><td align=right><font size=2> CAMPAIGN</td><td align=left><font size=2>EMAIL TO</td><td align=left><font size=2> MESSAGE</td><td align=right><font size=2> ATTACHMENTS</td></tr>\n";
+			echo "<tr><td><font size=1># </td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=right><font size=2> "._QXZ("USER")."</td><td align=right><font size=2> "._QXZ("CAMPAIGN")."</td><td align=left><font size=2>"._QXZ("EMAIL TO")."</td><td align=left><font size=2> "._QXZ("MESSAGE")."</td><td align=right><font size=2> "._QXZ("ATTACHMENTS")."</td></tr>\n";
 
 			$stmt="SELECT * from vicidial_email_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by email_date desc limit 500;";
 			$rslt=mysql_to_mysqli($stmt, $link);
@@ -1570,9 +1571,9 @@ else
 
 
 
-		echo "<B>RECORDINGS FOR THIS LEAD:</B>\n";
+		echo "<B>"._QXZ("RECORDINGS FOR THIS LEAD").":</B>\n";
 		echo "<TABLE width=750 cellspacing=1 cellpadding=1>\n";
-		echo "<tr><td><font size=1># </td><td align=left><font size=2> LEAD</td><td><font size=2>DATE/TIME </td><td align=left><font size=2>SECONDS </td><td align=left><font size=2> &nbsp; RECID</td><td align=center><font size=2>FILENAME</td><td align=left><font size=2>LOCATION</td><td align=left><font size=2>TSR</td></tr>\n";
+		echo "<tr><td><font size=1># </td><td align=left><font size=2> "._QXZ("LEAD")."</td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2>"._QXZ("SECONDS")." </td><td align=left><font size=2> &nbsp; "._QXZ("RECID")."</td><td align=center><font size=2>"._QXZ("FILENAME")."</td><td align=left><font size=2>"._QXZ("LOCATION")."</td><td align=left><font size=2>"._QXZ("TSR")."</td></tr>\n";
 
 		$stmt="SELECT recording_id,channel,server_ip,extension,start_time,start_epoch,end_time,end_epoch,length_in_sec,length_in_min,filename,location,lead_id,user,vicidial_id from recording_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by recording_id desc limit 500;";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -1650,7 +1651,7 @@ else
 		$admin_display=$row[0];
 		if ($admin_display > 0)
 			{
-			echo "<a href=\"./admin.php?ADD=720000000000000&stage=$lead_id&category=LEADS\">Click here to see Lead Modify changes to this lead</a>\n";
+			echo "<a href=\"./admin.php?ADD=720000000000000&stage=$lead_id&category=LEADS\">"._QXZ("Click here to see Lead Modify changes to this lead")."</a>\n";
 			}
 		//Display link to QC if user has QC permissions
 		//Get QC User permissions
@@ -1681,7 +1682,7 @@ else
 
 		if ($qcuser_level > 0)
 			{
-			echo "<br><br><a href=\"qc_modify_lead.php?lead_id=$lead_id\">Click here to QC Modify this lead</a>\n";
+			echo "<br><br><a href=\"qc_modify_lead.php?lead_id=$lead_id\">"._QXZ("Click here to QC Modify this lead")."</a>\n";
 			}
 		echo "</center>\n";
 		}
@@ -1694,7 +1695,7 @@ $RUNtime = ($ENDtime - $STARTtime);
 echo "\n\n\n<br><br><br>\n\n";
 
 
-echo "<font size=0>\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds</font>";
+echo "<font size=0>\n\n\n<br><br><br>\n"._QXZ("script runtime").": $RUNtime "._QXZ("seconds")."</font>";
 
 
 ?>

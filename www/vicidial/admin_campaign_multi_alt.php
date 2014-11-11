@@ -1,7 +1,7 @@
 <?php
 # admin_campaign_multi_alt.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen will control the campaign settings needed for alternate number 
 # dialing using multiple leads with the same account number and different phone 
@@ -16,10 +16,11 @@
 # 130610-1116 - Finalized changing of all ereg instances to preg
 # 130621-2009 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0755 - Changed to mysqli PHP functions
+# 141001-2200 - Finalized adding QXZ translation to all admin files
 #
 
-$admin_version = '2.8-6';
-$build = '130902-0755';
+$admin_version = '2.8-7';
+$build = '141001-2200';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -89,10 +90,10 @@ if ($auth_message == 'GOOD')
 
 if ($auth < 1)
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -113,7 +114,7 @@ $LOGuser_level =			$row[2];
 if ($LOGmodify_campaigns < 1)
 	{
 	Header ("Content-type: text/html; charset=utf-8");
-	echo "You do not have permissions to modify campaigns\n";
+	echo _QXZ("You do not have permissions to modify campaigns")."\n";
 	exit;
 	}
 
@@ -128,7 +129,7 @@ $camp_multi=$row[0];
 <head>
 
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>ADMINISTRATION: Campaign Multi-Alt-Leads
+<title><?php echo _QXZ("ADMINISTRATION: Campaign Multi-Alt-Leads"); ?>
 <?php 
 
 
@@ -157,7 +158,7 @@ require("admin_header.php");
 
 if ($camp_multi < 1)
 	{
-	echo "This campaign is not set to Auto-Alt-Dial MULTI_LEAD\n";
+	echo _QXZ("This campaign is not set to Auto-Alt-Dial MULTI_LEAD")."\n";
 	exit;
 	}
 
@@ -256,15 +257,15 @@ if ($action == "ALT_MULTI_SUBMIT")
 			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB > 0) {echo "$campaign_id|$stmt\n<BR>";}
 
-			echo "<BR><b>MULTI-LEAD ALT DIAL SETTINGS UPDATED</b><BR><BR>";
+			echo "<BR><b>"._QXZ("MULTI-LEAD ALT DIAL SETTINGS UPDATED")."</b><BR><BR>";
 
 			}
 		else
-			{echo "ERROR: Problem updating campaign:  $affected_rows|$stmt\n<BR>";}
+			{echo _QXZ("ERROR: Problem updating campaign").":  $affected_rows|$stmt\n<BR>";}
 
 		}
 	else
-		{echo "ERROR: problem with data: $campaign_id\n<BR>";}
+		{echo _QXZ("ERROR: problem with data").": $campaign_id\n<BR>";}
 
 	$action='BLANK';
 	}
@@ -305,7 +306,7 @@ if ($action == "BLANK")
 
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	echo "<br>Multi-Lead Auto Alt Dialing Settings Form<form action=$PHP_SELF method=POST>\n";
+	echo "<br>"._QXZ("Multi-Lead Auto Alt Dialing Settings Form")."<form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=DB value=\"$DB\">\n";
 	echo "<input type=hidden name=campaign_id value=\"$campaign_id\">\n";
 	echo "<input type=hidden name=action value=ALT_MULTI_SUBMIT>\n";
@@ -313,9 +314,9 @@ if ($action == "BLANK")
 	echo "<tr><td align=center colspan=2>\n";
 
 
-	echo "<br><b>PHONE TYPES WITHIN THE LISTS FOR THIS CAMPAIGN: <a href=\"./admin.php?ADD=31&campaign_id=$campaign_id\">$campaign_id</a></b>\n";
+	echo "<br><b>"._QXZ("PHONE TYPES WITHIN THE LISTS FOR THIS CAMPAIGN").": <a href=\"./admin.php?ADD=31&campaign_id=$campaign_id\">$campaign_id</a></b>\n";
 	echo "<TABLE width=700 cellspacing=3>\n";
-	echo "<tr><td>PHONE NUMBER TYPE</td><td>CALLED</td><td>NOT CALLED</td><td>SELECTED</td><td>OLD RANK</td><td>NEW RANK</td></tr>\n";
+	echo "<tr><td>"._QXZ("PHONE NUMBER TYPE")."</td><td>"._QXZ("CALLED")."</td><td>"._QXZ("NOT CALLED")."</td><td>"._QXZ("SELECTED")."</td><td>"._QXZ("OLD RANK")."</td><td>"._QXZ("NEW RANK")."</td></tr>\n";
 
 	$leads_in_list = 0;
 	$leads_in_list_N = 0;
@@ -382,8 +383,8 @@ if ($action == "BLANK")
 			}
 		}
 
-	echo "<tr><td colspan=2><font size=1>SUBTOTALS</td><td><font size=1>$lead_list[Y_count]</td><td><font size=1>$lead_list[N_count]</td></tr>\n";
-	echo "<tr bgcolor=\"#9BB9FB\"><td><font size=1>TOTAL</td><td colspan=3 align=center><font size=1>$lead_list[count]</td><td align=center><font size=1>$o</td></tr>\n";
+	echo "<tr><td colspan=2><font size=1>"._QXZ("SUBTOTALS")."</td><td><font size=1>$lead_list[Y_count]</td><td><font size=1>$lead_list[N_count]</td></tr>\n";
+	echo "<tr bgcolor=\"#9BB9FB\"><td><font size=1>"._QXZ("TOTAL")."</td><td colspan=3 align=center><font size=1>$lead_list[count]</td><td align=center><font size=1>$o</td></tr>\n";
 
 	echo "</table></center><br>\n";
 	unset($lead_list);				
@@ -391,10 +392,10 @@ if ($action == "BLANK")
 
 	echo "</td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=right>List Order Randomize: </td><td align=left><select size=1 name=lead_order_randomize><option>Y</option><option>N</option><option SELECTED>$lead_order_randomize</option></select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>List Order Secondary: </td><td align=left><select size=1 name=lead_order_secondary><option>LEAD_ASCEND</option><option>LEAD_DESCEND</option><option>CALLTIME_ASCEND</option><option>CALLTIME_DESCEND</option><option SELECTED>$lead_order_secondary</option></select></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List Order Randomize").": </td><td align=left><select size=1 name=lead_order_randomize><option>Y</option><option>N</option><option SELECTED>$lead_order_randomize</option></select></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List Order Secondary").": </td><td align=left><select size=1 name=lead_order_secondary><option value='LEAD_ASCEND'>"._QXZ("LEAD_ASCEND")."</option><option value='LEAD_DESCEND'>"._QXZ("LEAD_DESCEND")."</option><option value='CALLTIME_ASCEND'>"._QXZ("CALLTIME_ASCEND")."</option><option value='CALLTIME_DESCEND'>"._QXZ("CALLTIME_DESCEND")."</option><option SELECTED>$lead_order_secondary</option></select></td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value=SUBMIT></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
 	echo "</TABLE></center>\n";
 	echo "</TD></TR></TABLE>\n";
 	}
@@ -411,7 +412,7 @@ if ($action == "BLANK")
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $STARTtime);
-echo "\n\n\n<br><br><br>\n<font size=1> runtime: $RUNtime seconds &nbsp; &nbsp; &nbsp; &nbsp; Version: $admin_version &nbsp; &nbsp; Build: $build</font>";
+echo "\n\n\n<br><br><br>\n<font size=1> "._QXZ("runtime").": $RUNtime "._QXZ("seconds")." &nbsp; &nbsp; &nbsp; &nbsp; "._QXZ("Version").": $admin_version &nbsp; &nbsp; "._QXZ("Build").": $build</font>";
 
 ?>
 

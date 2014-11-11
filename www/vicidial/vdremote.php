@@ -18,10 +18,11 @@
 # 130616-0005 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0833 - Changed to mysqli PHP functions
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141007-2123 - Finalized adding QXZ translation to all admin files
 #
 
-$version = '2.8-10';
-$build = '130901-0833';
+$version = '2.8-11';
+$build = '141007-2123';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -69,7 +70,7 @@ if ($force_logout)
 		Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
 		Header("HTTP/1.0 401 Unauthorized");
 		}
-    echo "You have now logged out. Thank you\n";
+    echo _QXZ("You have now logged out. Thank you")."\n";
     exit;
 	}
 
@@ -96,7 +97,7 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+    echo _QXZ("Invalid Username/Password").": |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
     exit;
 	}
 else
@@ -128,7 +129,7 @@ else
 			}
 		else
 			{
-			echo "This remote agent does not exist: |$PHP_AUTH_USER|\n";
+			echo _QXZ("This remote agent does not exist").": |$PHP_AUTH_USER|\n";
 			exit;
 			}
 		}
@@ -238,8 +239,8 @@ if (strlen($ADD)>4)
 </head>
 <BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 <CENTER>
-<TABLE WIDTH=620 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; REMOTE AGENTS: <?php echo "$PHP_AUTH_USER " ?> &nbsp; <a href="<?php echo $PHP_SELF ?>?force_logout=1"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1>Logout</a></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo date("l F j, Y G:i:s A") ?> &nbsp; </TD></TR>
-<TR BGCOLOR=#F0F5FE><TD ALIGN=LEFT COLSPAN=2><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1> &nbsp; <a href="./vdremote.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>MODIFY</a> | <a href="./vdremote.php?ADD=61111&user=<?php echo "$PHP_AUTH_USER" ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>STATUS</a> | <a href="./vdremote.php?ADD=71111&user=<?php echo "$PHP_AUTH_USER" ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>INBOUND STATS</a></TD></TR>
+<TABLE WIDTH=620 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; <?php echo _QXZ("REMOTE AGENTS"); ?>: <?php echo "$PHP_AUTH_USER " ?> &nbsp; <a href="<?php echo $PHP_SELF ?>?force_logout=1"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1><?php echo _QXZ("Logout"); ?></a></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo date("l F j, Y G:i:s A") ?> &nbsp; </TD></TR>
+<TR BGCOLOR=#F0F5FE><TD ALIGN=LEFT COLSPAN=2><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1> &nbsp; <a href="./vdremote.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1><?php echo _QXZ("MODIFY"); ?></a> | <a href="./vdremote.php?ADD=61111&user=<?php echo "$PHP_AUTH_USER" ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1><?php echo _QXZ("STATUS"); ?></a> | <a href="./vdremote.php?ADD=71111&user=<?php echo "$PHP_AUTH_USER" ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1><?php echo _QXZ("INBOUND STATS"); ?></a></TD></TR>
 
 
 <TR><TD ALIGN=LEFT COLSPAN=2>
@@ -266,22 +267,22 @@ if ($ADD==31111)
 	$status =			$row[5];
 	$campaign_id =		$row[6];
 
-	echo "<br>MODIFY A REMOTE AGENTS ENTRY: $row[0]<form action=$PHP_SELF method=POST>\n";
+	echo "<br>"._QXZ("MODIFY A REMOTE AGENTS ENTRY").": $row[0]<form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=ADD value=41111>\n";
 	echo "<input type=hidden name=remote_agent_id value=\"$row[0]\">\n";
 	echo "<center><TABLE width=600 cellspacing=3>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>User ID Start: </td><td align=left>$user_start</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Number of Lines: </td><td align=left><input type=text name=number_of_lines size=3 maxlength=3 value=\"$number_of_lines\"> (numbers only)</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Server IP: </td><td align=left>$row[3]</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>External Extension: </td><td align=left><input type=text name=conf_exten size=20 maxlength=20 value=\"$conf_exten\"> (number dialed to reach agents [i.e. 913125551212])</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Status: </td><td align=left><select size=1 name=status><option SELECTED>ACTIVE</option><option>INACTIVE</option><option SELECTED>$status</option></select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Campaign: </td><td align=left>$campaign_id</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Inbound Groups: </td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("User ID Start").": </td><td align=left>$user_start</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Number of Lines").": </td><td align=left><input type=text name=number_of_lines size=3 maxlength=3 value=\"$number_of_lines\"> ("._QXZ("numbers only").")</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Server IP").": </td><td align=left>$row[3]</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("External Extension").": </td><td align=left><input type=text name=conf_exten size=20 maxlength=20 value=\"$conf_exten\"> ("._QXZ("number dialed to reach agents")." [i.e. 913125551212])</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Status").": </td><td align=left><select size=1 name=status><option SELECTED value='ACTIVE'>"._QXZ("ACTIVE")."</option><option value='INACTIVE'>"._QXZ("INACTIVE")."</option><option SELECTED value='$status'>"._QXZ("$status")."</option></select></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Campaign").": </td><td align=left>$campaign_id</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Inbound Groups").": </td><td align=left>\n";
 	echo "$groups_list";
 	echo "</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit value=submit></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit value='"._QXZ("submit")."'></td></tr>\n";
 	echo "</TABLE></center>\n";
-	echo "NOTE: It can take up to 30 seconds for changes submitted on this screen to go live\n";
+	echo _QXZ("NOTE: It can take up to 30 seconds for changes submitted on this screen to go live")."\n";
 	}
 
 
@@ -295,7 +296,7 @@ if ($ADD==41111)
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	if ( (strlen($number_of_lines) < 1) or (strlen($conf_exten) < 2) )
-		{echo "<br>REMOTE AGENTS NOT MODIFIED - Please go back and look at the data you entered\n";}
+		{echo "<br>"._QXZ("REMOTE AGENTS NOT MODIFIED - Please go back and look at the data you entered")."\n";}
 	else
 		{
 		$stmt="UPDATE vicidial_remote_agents set number_of_lines='" . mysqli_real_escape_string($link, $number_of_lines) . "', conf_exten='" . mysqli_real_escape_string($link, $conf_exten) . "', status='" . mysqli_real_escape_string($link, $status) . "', closer_campaigns='" . mysqli_real_escape_string($link, $groups_value) . "' where remote_agent_id='" . mysqli_real_escape_string($link, $remote_agent_id) . "';";
@@ -321,22 +322,22 @@ if ($ADD==41111)
 	$status =			$row[5];
 	$campaign_id =		$row[6];
 
-	echo "<br>MODIFY A REMOTE AGENTS ENTRY: $row[0]<form action=$PHP_SELF method=POST>\n";
+	echo "<br>"._QXZ("MODIFY A REMOTE AGENTS ENTRY").": $row[0]<form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=ADD value=41111>\n";
 	echo "<input type=hidden name=remote_agent_id value=\"$row[0]\">\n";
 	echo "<center><TABLE width=600 cellspacing=3>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>User ID Start: </td><td align=left>$user_start</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Number of Lines: </td><td align=left><input type=text name=number_of_lines size=3 maxlength=3 value=\"$number_of_lines\"> (numbers only)</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Server IP: </td><td align=left>$row[3]</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>External Extension: </td><td align=left><input type=text name=conf_exten size=20 maxlength=20 value=\"$conf_exten\"> (number dialed to reach agents [i.e. 913125551212])</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Status: </td><td align=left><select size=1 name=status><option SELECTED>ACTIVE</option><option>INACTIVE</option><option SELECTED>$status</option></select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Campaign: </td><td align=left>$campaign_id</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Inbound Groups: </td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("User ID Start").": </td><td align=left>$user_start</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Number of Lines").": </td><td align=left><input type=text name=number_of_lines size=3 maxlength=3 value=\"$number_of_lines\"> ("._QXZ("numbers only").")</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Server IP").": </td><td align=left>$row[3]</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("External Extension").": </td><td align=left><input type=text name=conf_exten size=20 maxlength=20 value=\"$conf_exten\"> ("._QXZ("number dialed to reach agents")." [i.e. 913125551212])</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Status").": </td><td align=left><select size=1 name=status><option SELECTED value='ACTIVE'>ACTIVE</option><option value='INACTIVE'>INACTIVE</option><option SELECTED value='$status'>"._QXZ("$status")."</option></select></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Campaign").": </td><td align=left>$campaign_id</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Inbound Groups").": </td><td align=left>\n";
 	echo "$groups_list";
 	echo "</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit value=submit></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit value='"._QXZ("submit")."'></td></tr>\n";
 	echo "</TABLE></center>\n";
-	echo "NOTE: It can take up to 30 seconds for changes submitted on this screen to go live\n";
+	echo _QXZ("NOTE: It can take up to 30 seconds for changes submitted on this screen to go live")."\n";
 	}
 
 
@@ -454,7 +455,7 @@ if ($ADD==71111)
 	echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=ADD VALUE=\"71111\">\n";
 	echo "<INPUT TYPE=HIDDEN NAME=user VALUE=\"$user\">\n";
-	echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
+	echo "<INPUT TYPE=SUBMIT NAME=SUBMIT value='"._QXZ("submit")."'>\n";
 	echo "</FORM>\n\n";
 	echo "<FONT FACE=\"Courier\" COLOR=BLACK SIZE=2><PRE>";
 

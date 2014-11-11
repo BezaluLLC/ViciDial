@@ -27,13 +27,13 @@
 # 130901-0858 - Changed to mysqli PHP functions
 # 140108-0722 - Added webserver and hostname to report logging
 # 140624-1423 - Added droppedOFtotal options.php option
-# 140918-1628 - Added QXZ function formatting of output
+# 141001-2200 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
 
 $version = '2.10-16';
-$build = '140918-1628';
+$build = '141001-2200';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -501,7 +501,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo _QXZ("You are not allowed to view this report:")." |$PHP_AUTH_USER|$report_name|"._QXZ("$report_name")."|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|"._QXZ("$report_name")."|\n";
     exit;
 	}
 
@@ -654,7 +654,7 @@ $NFB = '<b><font size=6 face="courier">';
 $NFE = '</font></b>';
 $F=''; $FG=''; $B=''; $BG='';
 
-$select_list = "<TABLE WIDTH=700 CELLPADDING=5 BGCOLOR=\"#D9E6FE\"><TR><TD VALIGN=TOP>"._QXZ("Select Campaigns:")." <BR>";
+$select_list = "<TABLE WIDTH=700 CELLPADDING=5 BGCOLOR=\"#D9E6FE\"><TR><TD VALIGN=TOP>"._QXZ("Select Campaigns").": <BR>";
 $select_list .= "<SELECT SIZE=8 NAME=groups[] ID=groups[] multiple>";
 $o=0;
 while ($groups_to_print > $o)
@@ -668,7 +668,7 @@ while ($groups_to_print > $o)
 $select_list .= "</SELECT>";
 $select_list .= "<BR><font size=1>("._QXZ("To select more than 1 campaign, hold down the Ctrl key and click").")</font>";
 
-$select_list .= "<BR><BR>"._QXZ("Select User Groups:")." <BR>";
+$select_list .= "<BR><BR>"._QXZ("Select User Groups").": <BR>";
 $select_list .= "<SELECT SIZE=8 NAME=user_group_filter[] ID=user_group_filter[] multiple>";
 $o=0;
 while ($o < $usergroups_to_print)
@@ -691,26 +691,26 @@ $select_list .= "<a href=\"#\" onclick=\"hideDiv(\'campaign_select_list\');\">".
 $select_list .= "<TABLE CELLPADDING=2 CELLSPACING=2 BORDER=0>";
 
 $select_list .= "<TR><TD align=right>";
-$select_list .= _QXZ("Screen Refresh Rate:")."  </TD><TD align=left><SELECT SIZE=1 NAME=RR ID=RR>";
-$select_list .= "<option value=\"4\"";   if ($RR < 5) {$select_list .= " selected";}    $select_list .= ">"._QXZ("4 seconds")."</option>";
-$select_list .= "<option value=\"10\"";   if ( ($RR >= 5) and ($RR <=10) ) {$select_list .= " selected";}    $select_list .= ">"._QXZ("10 seconds")."</option>";
-$select_list .= "<option value=\"20\"";   if ( ($RR >= 11) and ($RR <=20) ) {$select_list .= " selected";}    $select_list .= ">"._QXZ("20 seconds")."</option>";
-$select_list .= "<option value=\"30\"";   if ( ($RR >= 21) and ($RR <=30) ) {$select_list .= " selected";}    $select_list .= ">"._QXZ("30 seconds")."</option>";
-$select_list .= "<option value=\"40\"";   if ( ($RR >= 31) and ($RR <=40) ) {$select_list .= " selected";}    $select_list .= ">"._QXZ("40 seconds")."</option>";
-$select_list .= "<option value=\"60\"";   if ( ($RR >= 41) and ($RR <=60) ) {$select_list .= " selected";}    $select_list .= ">"._QXZ("60 seconds")."</option>";
-$select_list .= "<option value=\"120\"";   if ( ($RR >= 61) and ($RR <=120) ) {$select_list .= " selected";}    $select_list .= ">"._QXZ("2 minutes")."</option>";
-$select_list .= "<option value=\"300\"";   if ( ($RR >= 121) and ($RR <=300) ) {$select_list .= " selected";}    $select_list .= ">"._QXZ("5 minutes")."</option>";
-$select_list .= "<option value=\"600\"";   if ( ($RR >= 301) and ($RR <=600) ) {$select_list .= " selected";}    $select_list .= ">"._QXZ("10 minutes")."</option>";
-$select_list .= "<option value=\"1200\"";   if ( ($RR >= 601) and ($RR <=1200) ) {$select_list .= " selected";}    $select_list .= ">"._QXZ("20 minutes")."</option>";
-$select_list .= "<option value=\"1800\"";   if ( ($RR >= 1201) and ($RR <=1800) ) {$select_list .= " selected";}    $select_list .= ">"._QXZ("30 minutes")."</option>";
-$select_list .= "<option value=\"2400\"";   if ( ($RR >= 1801) and ($RR <=2400) ) {$select_list .= " selected";}    $select_list .= ">"._QXZ("40 minutes")."</option>";
-$select_list .= "<option value=\"3600\"";   if ( ($RR >= 2401) and ($RR <=3600) ) {$select_list .= " selected";}    $select_list .= ">"._QXZ("60 minutes")."</option>";
-$select_list .= "<option value=\"7200\"";   if ( ($RR >= 3601) and ($RR <=7200) ) {$select_list .= " selected";}    $select_list .= ">"._QXZ("2 hours")."</option>";
-$select_list .= "<option value=\"63072000\"";   if ($RR >= 7201) {$select_list .= " selected";}    $select_list .= ">"._QXZ("2 years")."</option>";
+$select_list .= _QXZ("Screen Refresh Rate").":  </TD><TD align=left><SELECT SIZE=1 NAME=RR ID=RR>";
+$select_list .= "<option value=\"4\"";   if ($RR < 5) {$select_list .= " selected";}    $select_list .= ">4 "._QXZ("seconds")."</option>";
+$select_list .= "<option value=\"10\"";   if ( ($RR >= 5) and ($RR <=10) ) {$select_list .= " selected";}    $select_list .= ">10 "._QXZ("seconds")."</option>";
+$select_list .= "<option value=\"20\"";   if ( ($RR >= 11) and ($RR <=20) ) {$select_list .= " selected";}    $select_list .= ">20 "._QXZ("seconds")."</option>";
+$select_list .= "<option value=\"30\"";   if ( ($RR >= 21) and ($RR <=30) ) {$select_list .= " selected";}    $select_list .= ">30 "._QXZ("seconds")."</option>";
+$select_list .= "<option value=\"40\"";   if ( ($RR >= 31) and ($RR <=40) ) {$select_list .= " selected";}    $select_list .= ">40 "._QXZ("seconds")."</option>";
+$select_list .= "<option value=\"60\"";   if ( ($RR >= 41) and ($RR <=60) ) {$select_list .= " selected";}    $select_list .= ">60 "._QXZ("seconds")."</option>";
+$select_list .= "<option value=\"120\"";   if ( ($RR >= 61) and ($RR <=120) ) {$select_list .= " selected";}    $select_list .= ">2 "._QXZ("minutes")."</option>";
+$select_list .= "<option value=\"300\"";   if ( ($RR >= 121) and ($RR <=300) ) {$select_list .= " selected";}    $select_list .= ">5 "._QXZ("minutes")."</option>";
+$select_list .= "<option value=\"600\"";   if ( ($RR >= 301) and ($RR <=600) ) {$select_list .= " selected";}    $select_list .= ">10 "._QXZ("minutes")."</option>";
+$select_list .= "<option value=\"1200\"";   if ( ($RR >= 601) and ($RR <=1200) ) {$select_list .= " selected";}    $select_list .= ">20 "._QXZ("minutes")."</option>";
+$select_list .= "<option value=\"1800\"";   if ( ($RR >= 1201) and ($RR <=1800) ) {$select_list .= " selected";}    $select_list .= ">30 "._QXZ("minutes")."</option>";
+$select_list .= "<option value=\"2400\"";   if ( ($RR >= 1801) and ($RR <=2400) ) {$select_list .= " selected";}    $select_list .= ">40 "._QXZ("minutes")."</option>";
+$select_list .= "<option value=\"3600\"";   if ( ($RR >= 2401) and ($RR <=3600) ) {$select_list .= " selected";}    $select_list .= ">60 "._QXZ("minutes")."</option>";
+$select_list .= "<option value=\"7200\"";   if ( ($RR >= 3601) and ($RR <=7200) ) {$select_list .= " selected";}    $select_list .= ">2 "._QXZ("hours")."</option>";
+$select_list .= "<option value=\"63072000\"";   if ($RR >= 7201) {$select_list .= " selected";}    $select_list .= ">2 "._QXZ("years")."</option>";
 $select_list .= "</SELECT></TD></TR>";
 
 $select_list .= "<TR><TD align=right>";
-$select_list .= _QXZ("Inbound:")."  </TD><TD align=left><SELECT SIZE=1 NAME=with_inbound ID=with_inbound>";
+$select_list .= _QXZ("Inbound").":  </TD><TD align=left><SELECT SIZE=1 NAME=with_inbound ID=with_inbound>";
 $select_list .= "<option value=\"N\"";
 	if ($with_inbound=='N') {$select_list .= " selected";} 
 $select_list .= ">"._QXZ("No")."</option>";
@@ -723,7 +723,7 @@ $select_list .= ">"._QXZ("Only")."</option>";
 $select_list .= "</SELECT></TD></TR>";
 
 $select_list .= "<TR><TD align=right>";
-$select_list .= _QXZ("Monitor:")."  </TD><TD align=left><SELECT SIZE=1 NAME=monitor_active ID=monitor_active>";
+$select_list .= _QXZ("Monitor").":  </TD><TD align=left><SELECT SIZE=1 NAME=monitor_active ID=monitor_active>";
 $select_list .= "<option value=\"\"";
 	if (strlen($monitor_active) < 2) {$select_list .= " selected";} 
 $select_list .= ">"._QXZ("NONE")."</option>";
@@ -739,7 +739,7 @@ $select_list .= ">"._QXZ("BARGE")."</option>";
 $select_list .= "</SELECT></TD></TR>";
 
 $select_list .= "<TR><TD align=right>";
-$select_list .= _QXZ("Phone:")."  </TD><TD align=left>";
+$select_list .= _QXZ("Phone").":  </TD><TD align=left>";
 $select_list .= "<INPUT type=text size=10 maxlength=20 NAME=monitor_phone ID=monitor_phone VALUE=\"$monitor_phone\">";
 $select_list .= "</TD></TR>";
 $select_list .= "<TR><TD align=center COLSPAN=2> &nbsp; </TD></TR>";
@@ -747,7 +747,7 @@ $select_list .= "<TR><TD align=center COLSPAN=2> &nbsp; </TD></TR>";
 if ($UGdisplay > 0)
 	{
 	$select_list .= "<TR><TD align=right>";
-	$select_list .= _QXZ("Select User Group:")."  </TD><TD align=left>";
+	$select_list .= _QXZ("Select User Group").":  </TD><TD align=left>";
 	$select_list .= "<SELECT SIZE=1 NAME=usergroup ID=usergroup>";
 	$select_list .= "<option value=\"\">"._QXZ("ALL USER GROUPS")."</option>";
 	$o=0;
@@ -761,7 +761,7 @@ if ($UGdisplay > 0)
 	}
 
 $select_list .= "<TR><TD align=right>";
-$select_list .= _QXZ("Dialable Leads Alert:")."  </TD><TD align=left><SELECT SIZE=1 NAME=NOLEADSalert ID=NOLEADSalert>";
+$select_list .= _QXZ("Dialable Leads Alert").":  </TD><TD align=left><SELECT SIZE=1 NAME=NOLEADSalert ID=NOLEADSalert>";
 $select_list .= "<option value=\"\"";
 	if (strlen($NOLEADSalert) < 2) {$select_list .= " selected";} 
 $select_list .= ">"._QXZ("NO")."</option>";
@@ -771,7 +771,7 @@ $select_list .= ">"._QXZ("YES")."</option>";
 $select_list .= "</SELECT></TD></TR>";
 
 $select_list .= "<TR><TD align=right>";
-$select_list .= _QXZ("Show Drop In-Group Row:")."  </TD><TD align=left><SELECT SIZE=1 NAME=DROPINGROUPstats ID=DROPINGROUPstats>";
+$select_list .= _QXZ("Show Drop In-Group Row").":  </TD><TD align=left><SELECT SIZE=1 NAME=DROPINGROUPstats ID=DROPINGROUPstats>";
 $select_list .= "<option value=\"0\"";
 	if ($DROPINGROUPstats < 1) {$select_list .= " selected";} 
 $select_list .= ">"._QXZ("NO")."</option>";
@@ -781,7 +781,7 @@ $select_list .= ">"._QXZ("YES")."</option>";
 $select_list .= "</SELECT></TD></TR>";
 
 $select_list .= "<TR><TD align=right>";
-$select_list .= _QXZ("Show Carrier Stats:")."  </TD><TD align=left><SELECT SIZE=1 NAME=CARRIERstats ID=CARRIERstats>";
+$select_list .= _QXZ("Show Carrier Stats").":  </TD><TD align=left><SELECT SIZE=1 NAME=CARRIERstats ID=CARRIERstats>";
 $select_list .= "<option value=\"0\"";
 	if ($CARRIERstats < 1) {$select_list .= " selected";} 
 $select_list .= ">"._QXZ("NO")."</option>";
@@ -804,7 +804,7 @@ if ($presets_enabled_count > 0)
 if ($presets_enabled > 0)
 	{
 	$select_list .= "<TR><TD align=right>";
-	$select_list .= _QXZ("Show Presets Stats:")."  </TD><TD align=left><SELECT SIZE=1 NAME=PRESETstats ID=PRESETstats>";
+	$select_list .= _QXZ("Show Presets Stats").":  </TD><TD align=left><SELECT SIZE=1 NAME=PRESETstats ID=PRESETstats>";
 	$select_list .= "<option value=\"0\"";
 		if ($PRESETstats < 1) {$select_list .= " selected";} 
 	$select_list .= ">"._QXZ("NO")."</option>";
@@ -819,7 +819,7 @@ else
 	}
 
 $select_list .= "<TR><TD align=right>";
-$select_list .= _QXZ("Agent Time Stats:")."  </TD><TD align=left><SELECT SIZE=1 NAME=AGENTtimeSTATS ID=AGENTtimeSTATS>";
+$select_list .= _QXZ("Agent Time Stats").":  </TD><TD align=left><SELECT SIZE=1 NAME=AGENTtimeSTATS ID=AGENTtimeSTATS>";
 $select_list .= "<option value=\"0\"";
 	if ($AGENTtimeSTATS < 1) {$select_list .= " selected";} 
 $select_list .= ">"._QXZ("NO")."</option>";
@@ -836,7 +836,7 @@ $select_list .= "<TR><TD ALIGN=CENTER>";
 $select_list .= "<font size=1> &nbsp; </font>";
 $select_list .= "</TD>";
 $select_list .= "<TD NOWRAP align=right>";
-$select_list .= "<font size=1>"._QXZ("VERSION:")." $version &nbsp; "._QXZ("BUILD:")." $build</font>";
+$select_list .= "<font size=1>"._QXZ("VERSION").": $version &nbsp; "._QXZ("BUILD").": $build</font>";
 $select_list .= "</TD></TR></TABLE>";
 
 $open_list = "<TABLE WIDTH=250 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#D9E6FE\"><TR><TD ALIGN=CENTER><a href=\"#\" onclick=\"showDiv(\'campaign_select_list\');\"><font size=2>"._QXZ("Choose Report Display Options")."</a></TD></TR></TABLE>";
@@ -1591,7 +1591,7 @@ else
 echo "<a href=\"./AST_timeonVDADallSUMMARY.php?RR=$RR&DB=$DB&adastats=$adastats\">"._QXZ("SUMMARY")."</a> </FONT>\n";
 
 
-echo " &nbsp; &nbsp; &nbsp; "._QXZ("refresh:")." <span id=refresh_countdown name=refresh_countdown></span>\n\n";
+echo " &nbsp; &nbsp; &nbsp; "._QXZ("refresh").": <span id=refresh_countdown name=refresh_countdown></span>\n\n";
 
 if ($is_webphone == 'Y')
 	{echo " &nbsp; &nbsp; &nbsp; <span id=webphone_visibility name=webphone_visibility><a href=\"#\" onclick=\"ShowWebphone('show');\">"._QXZ("webphone")." +</a></span>\n\n";}

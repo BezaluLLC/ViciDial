@@ -55,10 +55,11 @@
 # 130824-2322 - Changed to mysqli PHP functions
 # 140214-1022 - Fixed status dedupe bug
 # 140328-0007 - Converted division calculations to use MathZDC function
+# 141001-2200 - Finalized adding QXZ translation to all admin files
 #
 
-$version = '2.8-53';
-$build = '140328-0007';
+$version = '2.8-54';
+$build = '141007-1106';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -215,10 +216,10 @@ if ($auth_message == 'GOOD')
 
 if ($auth < 1)
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -238,13 +239,13 @@ $LOGuser_group =	$row[1];
 if ($LOGload_leads < 1)
 	{
 	Header ("Content-type: text/html; charset=utf-8");
-	echo "You do not have permissions to load leads\n";
+	echo _QXZ("You do not have permissions to load leads")."\n";
 	exit;
 	}
 
 if (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$LF_orig))
 	{
-	echo "ERROR: Invalid File Name: $LF_orig\n";
+	echo _QXZ("ERROR: Invalid File Name").":: $LF_orig\n";
 	exit;
 	}
 
@@ -383,7 +384,7 @@ function openNewWindow(url)
 function ShowProgress(good, bad, total, dup, inv, post) 
 	{
 	parent.lead_count.document.open();
-	parent.lead_count.document.write('<html><body><table border=0 width=200 cellpadding=10 cellspacing=0 align=center valign=top><tr bgcolor="#000000"><th colspan=2><font face="arial, helvetica" size=3 color=white>Current file status:</font></th></tr><tr bgcolor="#009900"><td align=right><font face="arial, helvetica" size=2 color=white><B>Good:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+good+'</B></font></td></tr><tr bgcolor="#990000"><td align=right><font face="arial, helvetica" size=2 color=white><B>Bad:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+bad+'</B></font></td></tr><tr bgcolor="#000099"><td align=right><font face="arial, helvetica" size=2 color=white><B>Total:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+total+'</B></font></td></tr><tr bgcolor="#009900"><td align=right><font face="arial, helvetica" size=2 color=white><B> &nbsp; </B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B> &nbsp; </B></font></td></tr><tr bgcolor="#009900"><td align=right><font face="arial, helvetica" size=2 color=white><B>Duplicate:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+dup+'</B></font></td></tr></tr><tr bgcolor="#009900"><td align=right><font face="arial, helvetica" size=2 color=white><B>Invalid:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+inv+'</B></font></td></tr><tr bgcolor="#009900"><td align=right><font face="arial, helvetica" size=2 color=white><B>Postal Match:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+post+'</B></font></td></tr></table><body></html>');
+	parent.lead_count.document.write('<html><body><table border=0 width=200 cellpadding=10 cellspacing=0 align=center valign=top><tr bgcolor="#000000"><th colspan=2><font face="arial, helvetica" size=3 color=white><?php echo _QXZ("Current file status"); ?>:</font></th></tr><tr bgcolor="#009900"><td align=right><font face="arial, helvetica" size=2 color=white><B><?php echo _QXZ("Good"); ?>:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+good+'</B></font></td></tr><tr bgcolor="#990000"><td align=right><font face="arial, helvetica" size=2 color=white><B><?php echo _QXZ("Bad"); ?>:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+bad+'</B></font></td></tr><tr bgcolor="#000099"><td align=right><font face="arial, helvetica" size=2 color=white><B><?php echo _QXZ("Total"); ?>:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+total+'</B></font></td></tr><tr bgcolor="#009900"><td align=right><font face="arial, helvetica" size=2 color=white><B> &nbsp; </B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B> &nbsp; </B></font></td></tr><tr bgcolor="#009900"><td align=right><font face="arial, helvetica" size=2 color=white><B><?php echo _QXZ("Duplicate"); ?>:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+dup+'</B></font></td></tr></tr><tr bgcolor="#009900"><td align=right><font face="arial, helvetica" size=2 color=white><B><?php echo _QXZ("Invalid"); ?>:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+inv+'</B></font></td></tr><tr bgcolor="#009900"><td align=right><font face="arial, helvetica" size=2 color=white><B><?php echo _QXZ("Postal Match"); ?>:</B></font></td><td align=left><font face="arial, helvetica" size=2 color=white><B>'+post+'</B></font></td></tr></table><body></html>');
 	parent.lead_count.document.close();
 	}
 function ParseFileName() 
@@ -466,7 +467,7 @@ function PopulateStatuses(list_id) {
 }
 
 </script>
-<title>ADMINISTRATION: Lead Loader</title>
+<title><?php echo _QXZ("ADMINISTRATION: Lead Loader"); ?></title>
 </head>
 <BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 
@@ -505,14 +506,14 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 		?>
 		<table align=center width="780" border=0 cellpadding=5 cellspacing=0 bgcolor=#D9E6FE>
 		  <tr>
-			<td align=right width="35%"><B><font face="arial, helvetica" size=2>Load leads from this file:</font></B></td>
+			<td align=right width="35%"><B><font face="arial, helvetica" size=2><?php echo _QXZ("Load leads from this file"); ?>:</font></B></td>
 			<td align=left width="65%"><input type=file name="leadfile" value="<?php echo $leadfile ?>"> <?php echo "$NWB#list_loader$NWE"; ?></td>
 		  </tr>
 		  <tr>
-			<td align=right width="25%"><font face="arial, helvetica" size=2>List ID Override: </font></td>
+			<td align=right width="25%"><font face="arial, helvetica" size=2><?php echo _QXZ("List ID Override"); ?>: </font></td>
 			<td align=left width="75%"><font face="arial, helvetica" size=1>
 			<select name='list_id_override' onchange="PopulateStatuses(this.value)">
-			<option value='in_file' selected='yes'>Load from Lead File</option>
+			<option value='in_file' selected='yes'><?php echo _QXZ("Load from Lead File"); ?></option>
 			<?php
 			$stmt="SELECT list_id, list_name from vicidial_lists $whereLOGallowed_campaignsSQL order by list_id;";
 			$rslt=mysql_to_mysqli($stmt, $link);
@@ -530,10 +531,10 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 			</font></td>
 		  </tr>
 		  <tr>
-			<td align=right width="25%"><font face="arial, helvetica" size=2>Phone Code Override: </font></td>
+			<td align=right width="25%"><font face="arial, helvetica" size=2><?php echo _QXZ("Phone Code Override"); ?>: </font></td>
 			<td align=left width="75%"><font face="arial, helvetica" size=1>
 			<select name='phone_code_override'>
-                        <option value='in_file' selected='yes'>Load from Lead File</option>
+                        <option value='in_file' selected='yes'><?php echo _QXZ("Load from Lead File"); ?></option>
 			<?php
 			$stmt="select distinct country_code, country from vicidial_phone_codes;";
 			$rslt=mysql_to_mysqli($stmt, $link);
@@ -551,17 +552,17 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 			</font></td>
 		  </tr>
 		  <tr>
-			<td align=right><B><font face="arial, helvetica" size=2>File layout to use:</font></B></td>
-			<td align=left><font face="arial, helvetica" size=2><input type=radio name="file_layout" value="standard" checked>Standard Format&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="file_layout" value="custom">Custom layout&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="file_layout" value="template">Custom Template <?php echo "$NWB#list_loader-file_layout$NWE"; ?></td>
+			<td align=right><B><font face="arial, helvetica" size=2><?php echo _QXZ("File layout to use"); ?>:</font></B></td>
+			<td align=left><font face="arial, helvetica" size=2><input type=radio name="file_layout" value="standard" checked><?php echo _QXZ("Standard Format"); ?>&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="file_layout" value="custom"><?php echo _QXZ("Custom layout"); ?>&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="file_layout" value="template"><?php echo _QXZ("Custom Template"); ?> <?php echo "$NWB#list_loader-file_layout$NWE"; ?></td>
 		  </tr>
 		  <tr>
-			<td align=right valign=top><B><font face="arial, helvetica" size=2>Custom template to use:</font></B></td>
+			<td align=right width="25%"><font face="arial, helvetica" size=2><?php echo _QXZ("Custom Layout to Use"); ?>: </font></td>
 			<td align=left><select name="template_id" id="template_id">
 <?php
 				$template_stmt="select template_id, template_name from vicidial_custom_leadloader_templates order by template_id asc";
 				$template_rslt=mysql_to_mysqli($template_stmt, $link);
 				if (mysqli_num_rows($template_rslt)>0) {
-					echo "<option value='' selected>--Select custom template--</option>";
+					echo "<option value='' selected>--"._QXZ("Select custom template")."--</option>";
 					while ($row=mysqli_fetch_array($template_rslt)) {
 						echo "<option value='$row[template_id]'>$row[template_id] - $row[template_name]</option>";
 					}
@@ -569,52 +570,52 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 					echo "<option value='' selected>--No custom templates defined--</option>";
 				}
 ?>
-			</select> <a href='AST_admin_template_maker.php'><font face="arial, helvetica" size=1>template builder</font></a><?php echo "$NWB#list_loader-template_id$NWE"; ?><BR><a href='#' onClick="TemplateSpecs()"><font face="arial, helvetica" size=1>View template info</font></a></td>
+			</select> <a href='AST_admin_template_maker.php'><font face="arial, helvetica" size=1><?php echo _QXZ("template builder"); ?></font></a><?php echo "$NWB#list_loader-template_id$NWE"; ?><BR><a href='#' onClick="TemplateSpecs()"><font face="arial, helvetica" size=1><?php echo _QXZ("View template info"); ?></font></a></td>
 		  <tr>
-			<td align=right width="25%"><font face="arial, helvetica" size=2>Lead Duplicate Check: </font></td>
+			<td align=right width="25%"><font face="arial, helvetica" size=2><?php echo _QXZ("Lead Duplicate Check"); ?>: </font></td>
 			<td align=left width="75%"><font face="arial, helvetica" size=1><select size=1 name=dupcheck>
-			<option selected value="NONE">NO DUPLICATE CHECK</option>
-			<option value="DUPLIST">CHECK FOR DUPLICATES BY PHONE IN LIST ID</option>
-			<option value="DUPCAMP">CHECK FOR DUPLICATES BY PHONE IN ALL CAMPAIGN LISTS</option>
-			<option value="DUPSYS">CHECK FOR DUPLICATES BY PHONE IN ENTIRE SYSTEM</option>
-			<option value="DUPTITLEALTPHONELIST">CHECK FOR DUPLICATES BY TITLE/ALT-PHONE IN LIST ID</option>
-			<option value="DUPTITLEALTPHONESYS">CHECK FOR DUPLICATES BY TITLE/ALT-PHONE IN ENTIRE SYSTEM</option>
+			<option selected value="NONE"><?php echo _QXZ("NO DUPLICATE CHECK"); ?></option>
+			<option value="DUPLIST"><?php echo _QXZ("CHECK FOR DUPLICATES BY PHONE IN LIST ID"); ?></option>
+			<option value="DUPCAMP"><?php echo _QXZ("CHECK FOR DUPLICATES BY PHONE IN ALL CAMPAIGN LISTS"); ?></option>
+			<option value="DUPSYS"><?php echo _QXZ("CHECK FOR DUPLICATES BY PHONE IN ENTIRE SYSTEM"); ?></option>
+			<option value="DUPTITLEALTPHONELIST"><?php echo _QXZ("CHECK FOR DUPLICATES BY TITLE/ALT-PHONE IN LIST ID"); ?></option>
+			<option value="DUPTITLEALTPHONESYS"><?php echo _QXZ("CHECK FOR DUPLICATES BY TITLE/ALT-PHONE IN ENTIRE SYSTEM"); ?></option>
 			</select> <?php echo "$NWB#list_loader-duplicate_check$NWE"; ?></td>
 		  </tr>
 	<tr bgcolor="#D9E6FE">
-		<td width='25%' align="right"><font class="standard">Status Duplicate Check:</font></td>
+		<td width='25%' align="right"><font class="standard"><?php echo _QXZ("Status Duplicate Check"); ?>:</font></td>
 		<td width='75%'>
 		<span id='statuses_display'>
 			<select id='dedupe_statuses' name='dedupe_statuses[]' size=5 multiple>
-			<option value='--ALL--' selected>--ALL DISPOSITIONS--</option>
+			<option value='--ALL--' selected>--<?php echo _QXZ("ALL DISPOSITIONS"); ?>--</option>
 			<?php echo $dedupe_status_select ?>
 			</select></font>		
 		</span>
 		</td>
 	</tr>
 		  <tr>
-			<td align=right width="25%"><font face="arial, helvetica" size=2>USA-Canada Check: </font></td>
+			<td align=right width="25%"><font face="arial, helvetica" size=2><?php echo _QXZ("USA-Canada Check"); ?>: </font></td>
 			<td align=left width="75%"><font face="arial, helvetica" size=1><select size=1 name=usacan_check>
-			<option selected value="NONE">NO USACAN VALID CHECK</option>
-			<option value="PREFIX">CHECK FOR VALID PREFIX</option>
-			<option value="AREACODE">CHECK FOR VALID AREACODE</option>
-			<option value="PREFIX_AREACODE">CHECK FOR VALID PREFIX and AREACODE</option>
-			<option value="NANPA">CHECK FOR VALID NANPA PREFIX and AREACODE</option>
+			<option selected value="NONE"><?php echo _QXZ("NO USACAN VALID CHECK"); ?></option>
+			<option value="PREFIX"><?php echo _QXZ("CHECK FOR VALID PREFIX"); ?></option>
+			<option value="AREACODE"><?php echo _QXZ("CHECK FOR VALID AREACODE"); ?></option>
+			<option value="PREFIX_AREACODE"><?php echo _QXZ("CHECK FOR VALID PREFIX and AREACODE"); ?></option>
+			<option value="NANPA"><?php echo _QXZ("CHECK FOR VALID NANPA PREFIX and AREACODE"); ?></option>
 			</select></td>
 		  </tr>
 		  <tr>
-			<td align=right width="25%"><font face="arial, helvetica" size=2>Lead Time Zone Lookup: </font></td>
+			<td align=right width="25%"><font face="arial, helvetica" size=2><?php echo _QXZ("Lead Time Zone Lookup"); ?>: </font></td>
 			<td align=left width="75%"><font face="arial, helvetica" size=1><select size=1 name=postalgmt>
-			<option selected value="AREA">COUNTRY CODE AND AREA CODE ONLY</option>
-			<option value="POSTAL">POSTAL CODE FIRST</option>
-			<option value="TZCODE">OWNER TIME ZONE CODE FIRST</option>
-			<option value="NANPA">NANPA AREACODE PREFIX FIRST</option>
+			<option selected value="AREA"><?php echo _QXZ("COUNTRY CODE AND AREA CODE ONLY"); ?></option>
+			<option value="POSTAL"><?php echo _QXZ("POSTAL CODE FIRST"); ?></option>
+			<option value="TZCODE"><?php echo _QXZ("OWNER TIME ZONE CODE FIRST"); ?></option>
+			<option value="NANPA"><?php echo _QXZ("NANPA AREACODE PREFIX FIRST"); ?></option>
 			</select></td>
 		  </tr>
 		<tr>
-			<td align=center colspan=2><input type=submit value="SUBMIT" name='submit_file'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button onClick="javascript:document.location='admin_listloader_fourth_gen.php'" value="START OVER" name='reload_page'></td>
+			<td align=center colspan=2><input type=submit value="<?php echo _QXZ("SUBMIT"); ?>" name='submit_file'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button onClick="javascript:document.location='admin_listloader_fourth_gen.php'" value="<?php echo _QXZ("START OVER"); ?>" name='reload_page'></td>
 		  </tr>
-		  <tr><td align=left><font size=1> &nbsp; &nbsp; &nbsp; &nbsp; <a href="admin.php?ADD=100" target="_parent">BACK TO ADMIN</a> &nbsp; &nbsp; &nbsp; &nbsp; <a href="./admin_listloader_third_gen.php">Old Lead Loader</a> &nbsp; &nbsp; </font></td><td align=right><font size=1>LIST LOADER 4th Gen- &nbsp; &nbsp; VERSION: <?php echo $version ?> &nbsp; &nbsp; BUILD: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
+		  <tr><td align=left><font size=1> &nbsp; &nbsp; &nbsp; &nbsp; <a href="admin.php?ADD=100" target="_parent"><?php echo _QXZ("BACK TO ADMIN"); ?></a> &nbsp; &nbsp; &nbsp; &nbsp; <a href="./admin_listloader_third_gen.php"><?php echo _QXZ("Old Lead Loader"); ?></a> &nbsp; &nbsp; </font></td><td align=right><font size=1><?php echo _QXZ("LIST LOADER 4th Gen"); ?>- &nbsp; &nbsp; <?php echo _QXZ("VERSION"); ?>: <?php echo $version ?> &nbsp; &nbsp; <?php echo _QXZ("BUILD"); ?>: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
 		</table>
 		<?php 
 
@@ -625,27 +626,27 @@ else
 	?>
 	<table align=center width="700" border=0 cellpadding=5 cellspacing=0 bgcolor=#D9E6FE>
 	<tr>
-	<td align=right width="35%"><B><font face="arial, helvetica" size=2>Lead file:</font></B></td>
+	<td align=right width="35%"><B><font face="arial, helvetica" size=2><?php echo _QXZ("Lead file"); ?>:</font></B></td>
 	<td align=left width="75%"><font face="arial, helvetica" size=2><?php echo $leadfile_name ?></font></td>
 	</tr>
 	<tr>
-	<td align=right width="35%"><B><font face="arial, helvetica" size=2>List ID Override:</font></B></td>
+	<td align=right width="35%"><B><font face="arial, helvetica" size=2><?php echo _QXZ("List ID Override"); ?>:</font></B></td>
 	<td align=left width="75%"><font face="arial, helvetica" size=2><?php echo $list_id_override ?></font></td>
 	</tr>
 	<tr>
-	<td align=right width="35%"><B><font face="arial, helvetica" size=2>Phone Code Override:</font></B></td>
+	<td align=right width="35%"><B><font face="arial, helvetica" size=2><?php echo _QXZ("Phone Code Override"); ?>:</font></B></td>
 	<td align=left width="75%"><font face="arial, helvetica" size=2><?php echo $phone_code_override ?></font></td>
 	</tr>
 	<tr>
-	<td align=right width="35%"><B><font face="arial, helvetica" size=2>USA-Canada Check:</font></B></td>
+	<td align=right width="35%"><B><font face="arial, helvetica" size=2><?php echo _QXZ("USA-Canada Check"); ?>:</font></B></td>
 	<td align=left width="75%"><font face="arial, helvetica" size=2><?php echo $usacan_check ?></font></td>
 	</tr>
 	<tr>
-	<td align=right width="35%"><B><font face="arial, helvetica" size=2>Lead Duplicate Check:</font></B></td>
+	<td align=right width="35%"><B><font face="arial, helvetica" size=2><?php echo _QXZ("Lead Duplicate Check"); ?>:</font></B></td>
 	<td align=left width="75%"><font face="arial, helvetica" size=2><?php echo $dupcheck ?></font></td>
 	</tr>
 	<tr>
-	<td align=right width="35%"><B><font face="arial, helvetica" size=2>Lead Time Zone Lookup:</font></B></td>
+	<td align=right width="35%"><B><font face="arial, helvetica" size=2><?php echo _QXZ("Lead Time Zone Lookup"); ?>:</font></B></td>
 	<td align=left width="75%"><font face="arial, helvetica" size=2><?php echo $postalgmt ?></font></td>
 	</tr>
 
@@ -654,7 +655,7 @@ else
 	<form action=<?php echo $PHP_SELF ?> method=get onSubmit="ParseFileName()" enctype="multipart/form-data">
 	<input type=hidden name='leadfile_name' value="<?php echo $leadfile_name ?>">
 	<input type=hidden name='DB' value="<?php echo $DB ?>">
-	<a href="admin_listloader_fourth_gen.php">Load Another Lead File</a> &nbsp; &nbsp; &nbsp; &nbsp;</font></B> <font size=1>VERSION: <?php echo $version ?> &nbsp; &nbsp; BUILD: <?php echo $build ?>
+	<a href="admin_listloader_fourth_gen.php"><?php echo _QXZ("Load Another Lead File"); ?></a> &nbsp; &nbsp; &nbsp; &nbsp;</font></B> <font size=1><?php echo _QXZ("VERSION"); ?>: <?php echo $version ?> &nbsp; &nbsp; <?php echo _QXZ("BUILD"); ?>: <?php echo $build ?>
 	</font></td>
 	</tr></table>
 	<BR><BR><BR><BR>
@@ -686,7 +687,7 @@ if ($OK_to_process)
 		{
 		flush();
 		$file=fopen("$lead_file", "r");
-		print "<center><font face='arial, helvetica' size=3 color='#009900'><B>Processing file...\n";
+		print "<center><font face='arial, helvetica' size=3 color='#009900'><B>"._QXZ("Processing file")."...\n";
 
 		if (count($dedupe_statuses)>0) {
 			$statuses_clause=" and status in (";
@@ -707,16 +708,16 @@ if ($OK_to_process)
 
 		if (strlen($list_id_override)>0) 
 			{
-			print "<BR><BR>LIST ID OVERRIDE FOR THIS FILE: $list_id_override<BR><BR>";
+			print "<BR><BR>"._QXZ("LIST ID OVERRIDE FOR THIS FILE").": $list_id_override<BR><BR>";
 			}
 
 		if (strlen($phone_code_override)>0) 
 			{
-			print "<BR><BR>PHONE CODE OVERRIDE FOR THIS FILE: $phone_code_override<BR><BR>";
+			print "<BR><BR>"._QXZ("PHONE CODE OVERRIDE FOR THIS FILE").": $phone_code_override<BR><BR>";
 			}
 		if (strlen($status_dedupe_str)>0) 
 			{
-			print "<BR>OMITTING DUPLICATES AGAINST FOLLOWING STATUSES ONLY: $status_dedupe_str<BR>\n";
+			print "<BR>"._QXZ("OMITTING DUPLICATES AGAINST FOLLOWING STATUSES ONLY").": $status_dedupe_str<BR>\n";
 			}
 
 		if ($custom_fields_enabled > 0)
@@ -1015,7 +1016,7 @@ if ($OK_to_process)
 				if ( (strlen($phone_number)<6) || (strlen($phone_number)>16) )
 					{
 					$valid_number=0;
-					$invalid_reason = "INVALID PHONE NUMBER LENGTH";
+					$invalid_reason = _QXZ("INVALID PHONE NUMBER LENGTH");
 					}
 				if ( (preg_match("/PREFIX/",$usacan_check)) and ($valid_number > 0) )
 					{
@@ -1024,7 +1025,7 @@ if ($OK_to_process)
 					if ($USprefix < 2)
 						{
 						$valid_number=0;
-						$invalid_reason = "INVALID PHONE NUMBER PREFIX";
+						$invalid_reason = _QXZ("INVALID PHONE NUMBER PREFIX");
 						}
 					}
 				if ( (preg_match("/AREACODE/",$usacan_check)) and ($valid_number > 0) )
@@ -1037,7 +1038,7 @@ if ($OK_to_process)
 					$valid_number=$row[0];
 					if ($valid_number < 1)
 						{
-						$invalid_reason = "INVALID PHONE NUMBER AREACODE";
+						$invalid_reason = _QXZ("INVALID PHONE NUMBER AREACODE");
 						}
 					}
 				if ( (preg_match("/NANPA/",$usacan_check)) and ($valid_number > 0) )
@@ -1051,7 +1052,7 @@ if ($OK_to_process)
 					$valid_number=$row[0];
 					if ($valid_number < 1)
 						{
-						$invalid_reason = "INVALID PHONE NUMBER NANPA AREACODE PREFIX";
+						$invalid_reason = _QXZ("INVALID PHONE NUMBER NANPA AREACODE PREFIX");
 						}
 					}
 
@@ -1108,17 +1109,17 @@ if ($OK_to_process)
 						{
 						if ( $list_id < 100 )
 							{
-							print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INVALID LIST ID</font><b>\n";
+							print "<BR></b><font size=1 color=red>"._QXZ("record")." $total "._QXZ("BAD- PHONE").": $phone_number "._QXZ("ROW").": |$row[0]| "._QXZ("INVALID LIST ID")."</font><b>\n";
 							}
 						else
 							{
 							if ($valid_number < 1)
 								{
-								print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INV($invalid_reason): $phone_number</font><b>\n";
+								print "<BR></b><font size=1 color=red>"._QXZ("record")." $total "._QXZ("BAD- PHONE").": $phone_number "._QXZ("ROW").": |$row[0]| "._QXZ("INV").": $phone_number</font><b>\n";
 								}
 							else
 								{
-								print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead  $dup_lead_list</font><b>\n";
+								print "<BR></b><font size=1 color=red>"._QXZ("record")." $total "._QXZ("BAD- PHONE").": $phone_number "._QXZ("ROW").": |$row[0]| "._QXZ("DUP").": $dup_lead  $dup_lead_list</font><b>\n";
 								}
 							}
 						}
@@ -1146,11 +1147,11 @@ if ($OK_to_process)
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 
-		print "<BR><BR>Done</B> GOOD: $good &nbsp; &nbsp; &nbsp; BAD: $bad &nbsp; &nbsp; &nbsp; TOTAL: $total</font></center>";
+		print "<BR><BR>"._QXZ("Done")."</B> "._QXZ("GOOD").": $good &nbsp; &nbsp; &nbsp; "._QXZ("BAD").": $bad &nbsp; &nbsp; &nbsp; "._QXZ("TOTAL").": $total</font></center>";
 		} 
 	else 
 		{
-		print "<center><font face='arial, helvetica' size=3 color='#990000'><B>ERROR: The file does not have the required number of fields to process it.</B></font></center>";
+		print "<center><font face='arial, helvetica' size=3 color='#990000'><B>"._QXZ("ERROR").": "._QXZ("The file does not have the required number of fields to process it").".</B></font></center>";
 		}
 	}
 ##### END custom fields submission #####
@@ -1172,7 +1173,7 @@ if (($leadfile) && ($LF_path))
 		$template_rslt=mysql_to_mysqli($template_stmt, $link);
 		if (mysqli_num_rows($template_rslt)==0) 
 			{
-			echo "Error - template no longer exists"; die;
+			echo _QXZ("Error - template no longer exists"); die;
 			} 
 		else 
 			{
@@ -1232,11 +1233,11 @@ if (($leadfile) && ($LF_path))
 			$lead_file = "/tmp/$new_filename";
 			if ($DB > 0) {echo "|$convert_command|";}
 
-			if (preg_match("/\.csv$/i", $leadfile_name)) {$delim_name="CSV: Comma Separated Values";}
+			if (preg_match("/\.csv$/i", $leadfile_name)) {$delim_name="CSV: "._QXZ("Comma Separated Values");}
 			if (preg_match("/\.xls$/i", $leadfile_name)) {$delim_name="XLS: MS Excel 2000-XP";}
 			if (preg_match("/\.xlsx$/i", $leadfile_name)) {$delim_name="XLSX: MS Excel 2007+";}
-			if (preg_match("/\.ods$/i", $leadfile_name)) {$delim_name="ODS: OpenOffice.org OpenDocument Spreadsheet";}
-			if (preg_match("/\.sxc$/i", $leadfile_name)) {$delim_name="SXC: OpenOffice.org First Spreadsheet";}
+			if (preg_match("/\.ods$/i", $leadfile_name)) {$delim_name="ODS: OpenOffice.org OpenDocument "._QXZ("Spreadsheet");}
+			if (preg_match("/\.sxc$/i", $leadfile_name)) {$delim_name="SXC: OpenOffice.org "._QXZ("First Spreadsheet");}
 			$delim_set=1;
 			}
 		else
@@ -1255,9 +1256,9 @@ if (($leadfile) && ($LF_path))
 		if ($delim_set < 1)
 			{
 			if ($tab_count>$pipe_count)
-				{$delim_name="tab-delimited";} 
+				{$delim_name=_QXZ("tab-delimited");} 
 			else 
-				{$delim_name="pipe-delimited";}
+				{$delim_name=_QXZ("pipe-delimited");}
 			} 
 		if ($tab_count>$pipe_count)
 			{$delimiter="\t";}
@@ -1271,18 +1272,18 @@ if (($leadfile) && ($LF_path))
 			flush();
 			$file=fopen("$lead_file", "r");
 			$total=0; $good=0; $bad=0; $dup=0; $post=0; $phone_list='';
-			print "<center><font face='arial, helvetica' size=3 color='#009900'><B>Processing $delim_name file using template $template_id... ($tab_count|$pipe_count)\n";
+			print "<center><font face='arial, helvetica' size=3 color='#009900'><B>"._QXZ("Processing")." $delim_name "._QXZ("file using template")." $template_id... ($tab_count|$pipe_count)\n";
 			if (strlen($list_id_override)>0) 
 				{
-				print "<BR>LIST ID OVERRIDE FOR THIS FILE: $list_id_override<BR>";
+				print "<BR>"._QXZ("LIST ID OVERRIDE FOR THIS FILE").": $list_id_override<BR>";
 				}
 			if (strlen($phone_code_override)>0) 
 				{
-				print "<BR>PHONE CODE OVERRIDE FOR THIS FILE: $phone_code_override<BR>\n";
+				print "<BR>"._QXZ("PHONE CODE OVERRIDE FOR THIS FILE").": $phone_code_override<BR>\n";
 				}
 			if (strlen($template_statuses)>0) 
 				{
-				print "<BR>OMITTING DUPLICATES AGAINST FOLLOWING STATUSES ONLY: ".preg_replace('/\'/', '', $template_statuses)."<BR>\n";
+				print "<BR>"._QXZ("OMITTING DUPLICATES AGAINST FOLLOWING STATUSES ONLY").": ".preg_replace('/\'/', '', $template_statuses)."<BR>\n";
 				}
 			while (!feof($file)) 
 				{
@@ -1497,16 +1498,16 @@ if (($leadfile) && ($LF_path))
 					if ( (strlen($phone_number)<6) || (strlen($phone_number)>16) )
 						{
 						$valid_number=0;
-						$invalid_reason = "INVALID PHONE NUMBER LENGTH";
+						$invalid_reason = _QXZ("INVALID PHONE NUMBER LENGTH");
 						}
 					if ( (preg_match("/PREFIX/",$usacan_check)) and ($valid_number > 0) )
 						{
 						$USprefix = 	substr($phone_number, 3, 1);
-						if ($DB>0) {echo "DEBUG: usacan prefix check - $USprefix|$phone_number\n";}
+						if ($DB>0) {echo _QXZ("DEBUG: usacan prefix check")." - $USprefix|$phone_number\n";}
 						if ($USprefix < 2)
 							{
 							$valid_number=0;
-							$invalid_reason = "INVALID PHONE NUMBER PREFIX";
+							$invalid_reason = _QXZ("INVALID PHONE NUMBER PREFIX");
 							}
 						}
 					if ( (preg_match("/AREACODE/",$usacan_check)) and ($valid_number > 0) )
@@ -1519,7 +1520,7 @@ if (($leadfile) && ($LF_path))
 						$valid_number=$row[0];
 						if ($valid_number < 1)
 							{
-							$invalid_reason = "INVALID PHONE NUMBER AREACODE";
+							$invalid_reason = _QXZ("INVALID PHONE NUMBER AREACODE");
 							}
 						}
 					if ( (preg_match("/NANPA/",$usacan_check)) and ($valid_number > 0) )
@@ -1533,7 +1534,7 @@ if (($leadfile) && ($LF_path))
 						$valid_number=$row[0];
 						if ($valid_number < 1)
 							{
-							$invalid_reason = "INVALID PHONE NUMBER NANPA AREACODE PREFIX";
+							$invalid_reason = _QXZ("INVALID PHONE NUMBER NANPA AREACODE PREFIX");
 							}
 						}
 
@@ -1617,17 +1618,17 @@ if (($leadfile) && ($LF_path))
 							{
 							if ( $list_id < 100 )
 								{
-								print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INVALID LIST ID</font><b>\n";
+								print "<BR></b><font size=1 color=red>"._QXZ("record")." $total "._QXZ("BAD- PHONE").": $phone_number "._QXZ("ROW").":|$row[0]| "._QXZ("INVALID LIST ID")."</font><b>\n";
 								}
 							else
 								{
 								if ($valid_number < 1)
 									{
-									print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INV($invalid_reason): $phone_number</font><b>\n";
+									print "<BR></b><font size=1 color=red>"._QXZ("record")." $total "._QXZ("BAD- PHONE").": $phone_number "._QXZ("ROW").":|$row[0]| "._QXZ("INV").": $phone_number</font><b>\n";
 									}
 								else
 									{
-									print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead  $dup_lead_list</font><b>\n";
+									print "<BR></b><font size=1 color=red>"._QXZ("record")." $total "._QXZ("BAD- PHONE").": $phone_number "._QXZ("ROW").":|$row[0]| "._QXZ("DUP").": $dup_lead  $dup_lead_list</font><b>\n";
 									}
 								}
 							}
@@ -1670,11 +1671,11 @@ if (($leadfile) && ($LF_path))
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 
-			print "<BR><BR>Done</B> GOOD: $good &nbsp; &nbsp; &nbsp; BAD: $bad &nbsp; &nbsp; &nbsp; TOTAL: $total</font></center>";
+			print "<BR><BR>"._QXZ("Done")."</B> "._QXZ("GOOD").": $good &nbsp; &nbsp; &nbsp; "._QXZ("BAD").": $bad &nbsp; &nbsp; &nbsp; "._QXZ("TOTAL").": $total</font></center>";
 			}
 		else 
 			{
-			print "<center><font face='arial, helvetica' size=3 color='#990000'><B>ERROR: The file does not have the required number of fields to process it.</B></font></center>";
+			print "<center><font face='arial, helvetica' size=3 color='#990000'><B>"._QXZ("ERROR: The file does not have the required number of fields to process it").".</B></font></center>";
 			}
 					
 		}
@@ -1698,11 +1699,11 @@ if (($leadfile) && ($LF_path))
 			$lead_file = "/tmp/$new_filename";
 			if ($DB > 0) {echo "|$convert_command|";}
 
-			if (preg_match("/\.csv$/i", $leadfile_name)) {$delim_name="CSV: Comma Separated Values";}
+			if (preg_match("/\.csv$/i", $leadfile_name)) {$delim_name="CSV: "._QXZ("Comma Separated Values");}
 			if (preg_match("/\.xls$/i", $leadfile_name)) {$delim_name="XLS: MS Excel 2000-XP";}
 			if (preg_match("/\.xlsx$/i", $leadfile_name)) {$delim_name="XLSX: MS Excel 2007+";}
-			if (preg_match("/\.ods$/i", $leadfile_name)) {$delim_name="ODS: OpenOffice.org OpenDocument Spreadsheet";}
-			if (preg_match("/\.sxc$/i", $leadfile_name)) {$delim_name="SXC: OpenOffice.org First Spreadsheet";}
+			if (preg_match("/\.ods$/i", $leadfile_name)) {$delim_name="ODS: OpenOffice.org OpenDocument "._QXZ("Spreadsheet");}
+			if (preg_match("/\.sxc$/i", $leadfile_name)) {$delim_name="SXC: OpenOffice.org "._QXZ("First Spreadsheet");}
 			$delim_set=1;
 			}
 		else
@@ -1721,9 +1722,9 @@ if (($leadfile) && ($LF_path))
 		if ($delim_set < 1)
 			{
 			if ($tab_count>$pipe_count)
-				{$delim_name="tab-delimited";} 
+				{$delim_name=_QXZ("tab-delimited");} 
 			else 
-				{$delim_name="pipe-delimited";}
+				{$delim_name=_QXZ("pipe-delimited");}
 			} 
 		if ($tab_count>$pipe_count)
 			{$delimiter="\t";}
@@ -1737,7 +1738,7 @@ if (($leadfile) && ($LF_path))
 			flush();
 			$file=fopen("$lead_file", "r");
 			$total=0; $good=0; $bad=0; $dup=0; $post=0; $phone_list='';
-			print "<center><font face='arial, helvetica' size=3 color='#009900'><B>Processing $delim_name file... ($tab_count|$pipe_count)\n";
+			print "<center><font face='arial, helvetica' size=3 color='#009900'><B>"._QXZ("Processing")." $delim_name "._QXZ("file")."... ($tab_count|$pipe_count)\n";
 
 			if (count($dedupe_statuses)>0) {
 				$statuses_clause=" and status in (";
@@ -1758,15 +1759,15 @@ if (($leadfile) && ($LF_path))
 
 			if (strlen($list_id_override)>0) 
 				{
-				print "<BR><BR>LIST ID OVERRIDE FOR THIS FILE: $list_id_override<BR><BR>";
+				print "<BR><BR>"._QXZ("LIST ID OVERRIDE FOR THIS FILE").": $list_id_override<BR><BR>";
 				}
 			if (strlen($phone_code_override)>0) 
 				{
-				print "<BR><BR>PHONE CODE OVERRIDE FOR THIS FILE: $phone_code_override<BR><BR>\n";
+				print "<BR><BR>"._QXZ("PHONE CODE OVERRIDE FOR THIS FILE").": $phone_code_override<BR><BR>\n";
 				}
 			if (strlen($status_dedupe_str)>0) 
 				{
-				print "<BR>OMITTING DUPLICATES AGAINST FOLLOWING STATUSES ONLY: $status_dedupe_str<BR>\n";
+				print "<BR>"._QXZ("OMITTING DUPLICATES AGAINST FOLLOWING STATUSES ONLY").": $status_dedupe_str<BR>\n";
 				}
 			while (!feof($file)) 
 				{
@@ -1981,7 +1982,7 @@ if (($leadfile) && ($LF_path))
 					if ( (strlen($phone_number)<6) || (strlen($phone_number)>16) )
 						{
 						$valid_number=0;
-						$invalid_reason = "INVALID PHONE NUMBER LENGTH";
+						$invalid_reason = _QXZ("INVALID PHONE NUMBER LENGTH");
 						}
 					if ( (preg_match("/PREFIX/",$usacan_check)) and ($valid_number > 0) )
 						{
@@ -1990,7 +1991,7 @@ if (($leadfile) && ($LF_path))
 						if ($USprefix < 2)
 							{
 							$valid_number=0;
-							$invalid_reason = "INVALID PHONE NUMBER PREFIX";
+							$invalid_reason = _QXZ("INVALID PHONE NUMBER PREFIX");
 							}
 						}
 					if ( (preg_match("/AREACODE/",$usacan_check)) and ($valid_number > 0) )
@@ -2003,7 +2004,7 @@ if (($leadfile) && ($LF_path))
 						$valid_number=$row[0];
 						if ($valid_number < 1)
 							{
-							$invalid_reason = "INVALID PHONE NUMBER AREACODE";
+							$invalid_reason = _QXZ("INVALID PHONE NUMBER AREACODE");
 							}
 						}
 					if ( (preg_match("/NANPA/",$usacan_check)) and ($valid_number > 0) )
@@ -2017,7 +2018,7 @@ if (($leadfile) && ($LF_path))
 						$valid_number=$row[0];
 						if ($valid_number < 1)
 							{
-							$invalid_reason = "INVALID PHONE NUMBER NANPA AREACODE PREFIX";
+							$invalid_reason = _QXZ("INVALID PHONE NUMBER NANPA AREACODE PREFIX");
 							}
 						}
 
@@ -2055,17 +2056,17 @@ if (($leadfile) && ($LF_path))
 							{
 							if ( $list_id < 100 )
 								{
-								print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INVALID LIST ID</font><b>\n";
+								print "<BR></b><font size=1 color=red>record $total "._QXZ("BAD- PHONE").": $phone_number "._QXZ("ROW").": |$row[0]| "._QXZ("INVALID LIST ID")."</font><b>\n";
 								}
 							else
 								{
 								if ($valid_number < 1)
 									{
-									print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| INV($invalid_reason): $phone_number</font><b>\n";
+									print "<BR></b><font size=1 color=red>record $total "._QXZ("BAD- PHONE").": $phone_number "._QXZ("ROW").": |$row[0]| "._QXZ("INV")."($invalid_reason): $phone_number</font><b>\n";
 									}
 								else
 									{
-									print "<BR></b><font size=1 color=red>record $total BAD- PHONE: $phone_number ROW: |$row[0]| DUP: $dup_lead  $dup_lead_list</font><b>\n";
+									print "<BR></b><font size=1 color=red>record $total "._QXZ("BAD- PHONE").": $phone_number "._QXZ("ROW").": |$row[0]| "._QXZ("DUP").": $dup_lead  $dup_lead_list</font><b>\n";
 									}
 								}
 							}
@@ -2092,11 +2093,11 @@ if (($leadfile) && ($LF_path))
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 
-			print "<BR><BR>Done</B> GOOD: $good &nbsp; &nbsp; &nbsp; BAD: $bad &nbsp; &nbsp; &nbsp; TOTAL: $total</font></center>";
+			print "<BR><BR>"._QXZ("Done")."</B> "._QXZ("GOOD").": $good &nbsp; &nbsp; &nbsp; "._QXZ("BAD").": $bad &nbsp; &nbsp; &nbsp; "._QXZ("TOTAL").": $total</font></center>";
 			}
 		else 
 			{
-			print "<center><font face='arial, helvetica' size=3 color='#990000'><B>ERROR: The file does not have the required number of fields to process it.</B></font></center>";
+			print "<center><font face='arial, helvetica' size=3 color='#990000'><B>"._QXZ("ERROR: The file does not have the required number of fields to process it").".</B></font></center>";
 			}
 		}
 	##### END process standard file layout #####
@@ -2109,8 +2110,8 @@ if (($leadfile) && ($LF_path))
 		flush();
 		print "<table border=0 cellpadding=3 cellspacing=0 width=700 align=center>\r\n";
 		print "  <tr bgcolor='#330099'>\r\n";
-		print "    <th align=right><font class='standard' color='white'>VICIDIAL Column</font></th>\r\n";
-		print "    <th><font class='standard' color='white'>File data</font></th>\r\n";
+		print "    <th align=right><font class='standard' color='white'>"._QXZ("VICIDIAL Column")."</font></th>\r\n";
+		print "    <th><font class='standard' color='white'>"._QXZ("File data")."</font></th>\r\n";
 		print "  </tr>\r\n";
 
 		$fields_stmt = "SELECT vendor_lead_code, source_id, list_id, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, rank, owner from vicidial_list limit 1";
@@ -2180,11 +2181,11 @@ if (($leadfile) && ($LF_path))
 			$lead_file = "/tmp/$new_filename";
 			if ($DB > 0) {echo "|$convert_command|";}
 
-			if (preg_match("/\.csv$/i", $leadfile_name)) {$delim_name="CSV: Comma Separated Values";}
+			if (preg_match("/\.csv$/i", $leadfile_name)) {$delim_name="CSV: "._QXZ("Comma Separated Values");}
 			if (preg_match("/\.xls$/i", $leadfile_name)) {$delim_name="XLS: MS Excel 2000-XP";}
 			if (preg_match("/\.xlsx$/i", $leadfile_name)) {$delim_name="XLSX: MS Excel 2007+";}
-			if (preg_match("/\.ods$/i", $leadfile_name)) {$delim_name="ODS: OpenOffice.org OpenDocument Spreadsheet";}
-			if (preg_match("/\.sxc$/i", $leadfile_name)) {$delim_name="SXC: OpenOffice.org First Spreadsheet";}
+			if (preg_match("/\.ods$/i", $leadfile_name)) {$delim_name="ODS: OpenOffice.org OpenDocument "._QXZ("Spreadsheet");}
+			if (preg_match("/\.sxc$/i", $leadfile_name)) {$delim_name="SXC: OpenOffice.org "._QXZ("First Spreadsheet");}
 			$delim_set=1;
 			}
 		else
@@ -2203,9 +2204,9 @@ if (($leadfile) && ($LF_path))
 		if ($delim_set < 1)
 			{
 			if ($tab_count>$pipe_count)
-				{$delim_name="tab-delimited";} 
+				{$delim_name=_QXZ("tab-delimited");} 
 			else 
-				{$delim_name="pipe-delimited";}
+				{$delim_name=_QXZ("pipe-delimited");}
 			} 
 		if ($tab_count>$pipe_count)
 			{$delimiter="\t";}
@@ -2228,19 +2229,19 @@ if (($leadfile) && ($LF_path))
 			
 		flush();
 		$file=fopen("$lead_file", "r");
-		print "<center><font face='arial, helvetica' size=3 color='#009900'><B>Processing $delim_name file...\n";
+		print "<center><font face='arial, helvetica' size=3 color='#009900'><B>"._QXZ("Processing")." $delim_name "._QXZ("file")."...\n";
 
 		if (strlen($list_id_override)>0) 
 			{
-			print "<BR><BR>LIST ID OVERRIDE FOR THIS FILE: $list_id_override<BR><BR>";
+			print "<BR><BR>"._QXZ("LIST ID OVERRIDE FOR THIS FILE").": $list_id_override<BR><BR>";
 			}
 		if (strlen($phone_code_override)>0) 
 			{
-			print "<BR><BR>PHONE CODE OVERRIDE FOR THIS FILE: $phone_code_override<BR><BR>";
+			print "<BR><BR>"._QXZ("PHONE CODE OVERRIDE FOR THIS FILE").": $phone_code_override<BR><BR>";
 			}
 		if (strlen($status_dedupe_str)>0) 
 			{
-			print "<BR>OMITTING DUPLICATES AGAINST FOLLOWING STATUSES ONLY: $status_dedupe_str<BR>\n";
+			print "<BR>"._QXZ("OMITTING DUPLICATES AGAINST FOLLOWING STATUSES ONLY").": $status_dedupe_str<BR>\n";
 			}
 		$buffer=rtrim(fgets($file, 4096));
 		$buffer=stripslashes($buffer);
@@ -2278,7 +2279,7 @@ if (($leadfile) && ($LF_path))
 		print "  <input type=hidden name=lead_file value=\"$lead_file\">\r\n";
 		print "  <input type=hidden name=list_id_override value=\"$list_id_override\">\r\n";
 		print "  <input type=hidden name=phone_code_override value=\"$phone_code_override\">\r\n";
-		print "    <th colspan=2><input type=submit name='OK_to_process' value='OK TO PROCESS'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button onClick=\"javascript:document.location='admin_listloader_fourth_gen.php'\" value=\"START OVER\" name='reload_page'></th>\r\n";
+		print "    <th colspan=2><input type=submit name='OK_to_process' value='"._QXZ("OK TO PROCESS")."'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button onClick=\"javascript:document.location='admin_listloader_fourth_gen.php'\" value=\""._QXZ("START OVER")."\" name='reload_page'></th>\r\n";
 		print "  </tr>\r\n";
 		print "</table>\r\n";
 

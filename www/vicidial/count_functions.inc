@@ -66,21 +66,21 @@ if (isset($camp_lists))
 			if ($single_status > 0)
 				{return $complete_leads;}
 			else
-				{$HTML_header.="There are $complete_leads completed leads in those lists\n";}
+				{$HTML_header.=_QXZ("There are")." $complete_leads "._QXZ("completed leads in those lists")."\n";}
 			}
 		else
 			{
-			$HTML_header.="no dial statuses selected for this campaign\n";
+			$HTML_header.=_QXZ("no dial statuses selected for this campaign")."\n";
 			}
 		}
 	else
 		{
-		$HTML_header.="no active lists selected for this campaign\n";
+		$HTML_header.=_QXZ("no active lists selected for this campaign")."\n";
 		}
 	}
 else
 	{
-	$HTML_header.="no active lists selected for this campaign\n";
+	$HTML_header.=_QXZ("no active lists selected for this campaign")."\n";
 	}
 }
 
@@ -435,21 +435,21 @@ if (isset($camp_lists))
 			if ($single_status > 0)
 				{return $active_leads;}
 			else
-				{$HTML_header.="This campaign has $active_leads leads to be dialed in those lists\n";}
+				{$HTML_header.=_QXZ("This campaign has $active_leads leads to be dialed in those lists")."\n";}
 			}
 		else
 			{
-			$HTML_header.="no dial statuses selected for this campaign\n";
+			$HTML_header.=_QXZ("no dial statuses selected for this campaign")."\n";
 			}
 		}
 	else
 		{
-		$HTML_header.="no active lists selected for this campaign\n";
+		$HTML_header.=_QXZ("no active lists selected for this campaign")."\n";
 		}
 	}
 else
 	{
-	$HTML_header.="no active lists selected for this campaign\n";
+	$HTML_header.=_QXZ("no active lists selected for this campaign")."\n";
 	}
 ##### END calculate what gmt_offset_now values are within the allowed local_call_time setting ###
 }

@@ -30,6 +30,7 @@
 # 140305-0905 - Bug fix for issue #744, emergency logout
 # 140425-1314 - Added pause_type field to logout
 # 140429-0750 - Fixed issue with queue_log if login/out logging is disabled
+# 141007-2214 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -124,7 +125,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -137,10 +138,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -324,7 +325,7 @@ require("admin_header.php");
 
 
 ?>
-<TABLE WIDTH=<?php echo $page_width ?> BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=0><TR BGCOLOR=#E6E6E6><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; User Status for <?php echo $user ?></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; </TD></TR>
+<TABLE WIDTH=<?php echo $page_width ?> BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=0><TR BGCOLOR=#E6E6E6><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; <?php echo _QXZ("User Status for"); ?> <?php echo $user ?></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; </TD></TR>
 
 
 
@@ -339,7 +340,7 @@ if ($stage == "live_campaign_change")
 	$stmt="UPDATE vicidial_live_agents set campaign_id='" . mysqli_real_escape_string($link, $group) . "' where user='" . mysqli_real_escape_string($link, $user) . "';";
 	$rslt=mysql_to_mysqli($stmt, $link);
 
-	echo "Agent $user - $full_name changed to $group campaign<BR>\n";
+	echo _QXZ("Agent")." $user - $full_name "._QXZ("changed to")." $group "._QXZ("campaign")."<BR>\n";
 	
 	exit;
 	}
@@ -392,7 +393,7 @@ if ($stage == "log_agent_out")
 				$VAL_dead_epoch =		$row[18];
 				$VAL_dead_sec =			$row[19];
 
-				if ($DB) {echo "\n<BR>VAL VALUES: $VAL_agent_log_id|$VAL_status|$VAL_lead_id\n";}
+				if ($DB) {echo "\n<BR>"._QXZ("VAL VALUES").": $VAL_agent_log_id|$VAL_status|$VAL_lead_id\n";}
 
 				if ( ($VAL_wait_epoch < 1) or ( (preg_match('/PAUSE/', $VLA_status)) and ($VAL_dispo_epoch < 1) ) )
 					{
@@ -581,11 +582,11 @@ if ($stage == "log_agent_out")
 				}
 			}
 
-		echo "Agent $user - $full_name has been emergency logged out, make sure they close their web browser<BR>\n";
+		echo _QXZ("Agent")." $user - $full_name "._QXZ("has been emergency logged out, make sure they close their web browser")."<BR>\n";
 		}
 	else
 		{
-		echo "Agent $user is not logged in<BR>\n";
+		echo _QXZ("Agent")." $user "._QXZ("is not logged in")."<BR>\n";
 		}
 
 	if ($db_source == 'S')
@@ -764,11 +765,11 @@ if ( ( ($stage == "tc_log_user_OUT") or ($stage == "tc_log_user_IN") ) and ($mod
 		print "<!-- NEW vicidial_admin_log record inserted for $PHP_AUTH_USER:   |$affected_rows| -->\n";
 
 		$LOG_run++;
-		$VDdisplayMESSAGE = "You have now logged-out the user: $user - $full_name<BR>Amount of time user was logged-in: $totTIME_HMS";
+		$VDdisplayMESSAGE = _QXZ("You have now logged-out the user").": $user - $full_name<BR>"._QXZ("Amount of time user was logged-in").": $totTIME_HMS";
 		}
 	
 	if ($LOG_run < 1)
-		{$VDdisplayMESSAGE = "ERROR: timeclock log problem, could not process: $status|$stage";}
+		{$VDdisplayMESSAGE = _QXZ("ERROR: timeclock log problem, could not process").": $status|$stage";}
 
 	echo "$VDdisplayMESSAGE\n";
 	
@@ -800,22 +801,22 @@ if ($agents_to_print > 0)
 	{
 	echo "<BR>\n";
 	echo "$user - $full_name \n";
-	echo " &nbsp; &nbsp; &nbsp; GROUP: $user_group <BR>\n";
+	echo " &nbsp; &nbsp; &nbsp; "._QXZ("GROUP").": $user_group <BR>\n";
 
 	echo "<TABLE CELLPADDING=0 CELLSPACING=0>";
-	echo "<TR><TD ALIGN=RIGHT>Agent Logged in at server:</TD><TD ALIGN=LEFT> &nbsp; $Aserver_ip</TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>in session:</TD><TD ALIGN=LEFT> &nbsp; $Asession_id</TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>from phone:</TD><TD ALIGN=LEFT> &nbsp; $Aextension</TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Agent is in campaign:</TD><TD ALIGN=LEFT> &nbsp; $Acampaign</TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>status:</TD><TD ALIGN=LEFT> &nbsp; $Astatus</TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>hungup last call at:</TD><TD ALIGN=LEFT> &nbsp; $Alast_call</TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>Closer groups:</TD><TD ALIGN=LEFT> &nbsp; $Acl_campaigns</TD></TR>\n";
+	echo "<TR><TD ALIGN=RIGHT>"._QXZ("Agent Logged in at server").":</TD><TD ALIGN=LEFT> &nbsp; $Aserver_ip</TD></TR>\n";
+	echo "<TR><TD ALIGN=RIGHT>"._QXZ("in session").":</TD><TD ALIGN=LEFT> &nbsp; $Asession_id</TD></TR>\n";
+	echo "<TR><TD ALIGN=RIGHT>"._QXZ("from phone").":</TD><TD ALIGN=LEFT> &nbsp; $Aextension</TD></TR>\n";
+	echo "<TR><TD ALIGN=RIGHT>"._QXZ("Agent is in campaign").":</TD><TD ALIGN=LEFT> &nbsp; $Acampaign</TD></TR>\n";
+	echo "<TR><TD ALIGN=RIGHT>"._QXZ("status").":</TD><TD ALIGN=LEFT> &nbsp; $Astatus</TD></TR>\n";
+	echo "<TR><TD ALIGN=RIGHT>"._QXZ("hungup last call at").":</TD><TD ALIGN=LEFT> &nbsp; $Alast_call</TD></TR>\n";
+	echo "<TR><TD ALIGN=RIGHT>"._QXZ("Closer groups").":</TD><TD ALIGN=LEFT> &nbsp; $Acl_campaigns</TD></TR>\n";
 	if ($manager_ingroup_set != 'N')
-		{echo "<TR><TD ALIGN=RIGHT>Manager InGroup Select:</TD><TD ALIGN=LEFT> &nbsp; YES, by $external_igb_set_user</TD></TR>\n";}
+		{echo "<TR><TD ALIGN=RIGHT>"._QXZ("Manager InGroup Select").":</TD><TD ALIGN=LEFT> &nbsp; "._QXZ("YES, by")." $external_igb_set_user</TD></TR>\n";}
 	if ($outbound_autodial == 'Y')
-		{echo "<TR><TD ALIGN=RIGHT>Outbound Auto-Dial:</TD><TD ALIGN=LEFT> &nbsp; YES</TD></TR>\n";}
+		{echo "<TR><TD ALIGN=RIGHT>"._QXZ("Outbound Auto-Dial").":</TD><TD ALIGN=LEFT> &nbsp; YES</TD></TR>\n";}
 	if ($user_territories_active > 0)
-		{echo "<TR><TD ALIGN=RIGHT>Selected Territories:</TD><TD ALIGN=LEFT> &nbsp; $agent_territories</TD></TR>\n";}
+		{echo "<TR><TD ALIGN=RIGHT>"._QXZ("Selected Territories").":</TD><TD ALIGN=LEFT> &nbsp; $agent_territories</TD></TR>\n";}
 	echo "</TABLE>\n<BR>\n";
 
 	if ($change_agent_campaign > 0)
@@ -824,7 +825,7 @@ if ($agents_to_print > 0)
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
 		echo "<input type=hidden name=user value=\"$user\">\n";
 		echo "<input type=hidden name=stage value=\"live_campaign_change\">\n";
-		echo "Current Campaign: <SELECT SIZE=1 NAME=group>\n";
+		echo _QXZ("Current Campaign").": <SELECT SIZE=1 NAME=group>\n";
 		$o=0;
 		while ($groups_to_print > $o)
 			{
@@ -833,34 +834,34 @@ if ($agents_to_print > 0)
 			$o++;
 			}
 		echo "</SELECT>\n";
-		echo "<input type=submit name=submit value=CHANGE disabled><BR></form>\n";
+		echo "<input type=submit name=submit value='"._QXZ("CHANGE")." disabled><BR></form>\n";
 
 		echo "<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
 		echo "<input type=hidden name=user value=\"$user\">\n";
 		echo "<input type=hidden name=stage value=\"log_agent_out\">\n";
-		echo "<input type=submit name=submit value=\"EMERGENCY LOG AGENT OUT\"><BR></form>\n";
+		echo "<input type=submit name=submit value=\""._QXZ("EMERGENCY LOG AGENT OUT")."\"><BR></form>\n";
 		}
 	}
 
 else
 	{
-	echo "Agent is not logged in\n<BR>";
+	echo _QXZ("Agent is not logged in")."\n<BR>";
 	}
 
 echo "\n<BR>";
 
 if ( ($Tstatus == "LOGIN") or ($Tstatus == "START") )
 	{
-	echo "User $user($full_name) - is logged in to the timeclock. <BR>Login time: $Tevent_date from $Tip_address<BR>\n";
+	echo _QXZ("User")." $user($full_name) - "._QXZ("is logged in to the timeclock").". <BR>"._QXZ("Login time").": $Tevent_date "._QXZ("from")." $Tip_address<BR>\n";
 	$TC_log_change_stage =	'tc_log_user_OUT';
-	$TC_log_change_button = 'TIMECLOCK LOG THIS USER OUT';
+	$TC_log_change_button = _QXZ('TIMECLOCK LOG THIS USER OUT');
 	}
 else
 	{
-	echo "User $user($full_name) - is NOT logged in to the timeclock. <BR>Last logout time: $Tevent_date from $Tip_address<BR>\n";
+	echo _QXZ("User")." $user($full_name) - "._QXZ("is NOT logged in to the timeclock").". <BR>"._QXZ("Last logout time").": $Tevent_date "._QXZ("from")." $Tip_address<BR>\n";
 	$TC_log_change_stage =	'tc_log_user_IN';
-	$TC_log_change_button = 'TIMECLOCK LOG THIS USER IN';
+	$TC_log_change_button = _QXZ('TIMECLOCK LOG THIS USER IN');
 	}
 
 if ($modify_timeclock_log > 0)
@@ -877,10 +878,10 @@ if ($modify_timeclock_log > 0)
 
 $REPORTdate = date("Y-m-d");
 echo "<center>\n";
-echo "<a href=\"./AST_agent_time_sheet.php?agent=$user\">Agent Time Sheet</a>\n";
-echo " | <a href=\"./user_stats.php?user=$user\">User Stats</a>\n";
-echo " | <a href=\"./admin.php?ADD=3&user=$user\">Modify User</a>\n";
-echo " | <a href=\"./AST_agent_days_detail.php?user=$user&query_date=$REPORTdate&end_date=$REPORTdate&group[]=--ALL--&shift=ALL\">User multiple day status detail report</a>";
+echo "<a href=\"./AST_agent_time_sheet.php?agent=$user\">"._QXZ("Agent Time Sheet")."</a>\n";
+echo " | <a href=\"./user_stats.php?user=$user\">"._QXZ("User Stats")."</a>\n";
+echo " | <a href=\"./admin.php?ADD=3&user=$user\">"._QXZ("Modify User")."</a>\n";
+echo " | <a href=\"./AST_agent_days_detail.php?user=$user&query_date=$REPORTdate&end_date=$REPORTdate&group[]=--ALL--&shift=ALL\">"._QXZ("User multiple day status detail report")."</a>";
 echo "</center>\n";
 
 echo "</B></TD></TR>\n";
@@ -894,7 +895,7 @@ $RUNtime = ($ENDtime - $StarTtimE);
 echo "\n\n\n<br><br><br>\n\n";
 
 
-echo "<font size=0>\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds</font>";
+echo "<font size=0>\n\n\n<br><br><br>\n"._QXZ("script runtime").": $RUNtime "._QXZ("seconds")."</font>";
 
 echo "|$stage|$group|";
 

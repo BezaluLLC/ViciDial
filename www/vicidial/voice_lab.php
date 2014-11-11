@@ -4,7 +4,7 @@
 # This script is designed to broadcast a recorded message or allow a person to
 # speak to all agents logged into a VICIDIAL campaign.
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES
@@ -17,6 +17,7 @@
 # 130610-0937 - Finalized changing of all ereg instances to preg
 # 130615-2342 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0831 - Changed to mysqli PHP functions
+# 141007-2143 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -77,7 +78,7 @@ if( (strlen($PHP_AUTH_USER)<2) or (strlen($PHP_AUTH_PW)<2) or (!$auth))
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "Invalid Username/Password: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+    echo _QXZ("Invalid Username/Password").": |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
     exit;
 	}
 else
@@ -158,7 +159,7 @@ while ($campaigns_to_print > $o)
 ?>
 <html>
 <head>
-<title>VOICE LAB: Admin</title>
+<title><?php echo _QXZ("VOICE LAB: Admin"); ?></title>
 <?php
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 ?>
@@ -171,15 +172,15 @@ if ($NEW_VOICE_LAB > 0)
 	{
 	if ( (strlen($server_ip) > 6) && (strlen($session_id) > 6) && (strlen($campaign_id) > 2) )
 		{
-		echo "<br><br><br>TO START YOUR VOICE LAB, DIAL 9$session_id ON YOUR PHONE NOW<br>\n";
+		echo "<br><br><br>"._QXZ("TO START YOUR VOICE LAB, DIAL 9$session_id ON YOUR PHONE NOW")."<br>\n";
 
-		echo "<br>or, you can enter an extension that you want played below<form action=$PHP_SELF method=POST>\n";
+		echo "<br>"._QXZ("or, you can enter an extension that you want played below")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=PLAY_MESSAGE value=2>\n";
 		echo "<input type=hidden name=session_id value=8600900>\n";
 		echo "<input type=hidden name=server_ip value=$server_ip>\n";
 		echo "<input type=hidden name=campaign_id value=$campaign_id>\n";
-		echo "Message Extension<input type=text name=message>\n";
-		echo "<input type=submit name=submit value='PLAY THIS MESSAGE'>\n";
+		echo _QXZ("Message Extension")."<input type=text name=message>\n";
+		echo "<input type=submit name=submit value='"._QXZ("PLAY THIS MESSAGE")."'>\n";
 		echo "</form><BR><BR><BR>\n";
 		
 		$S='*';
@@ -226,26 +227,26 @@ if ($NEW_VOICE_LAB > 0)
 			echo "|$stmt|\n<BR><BR>\n";
 			$rslt=mysql_to_mysqli($stmt, $link);
 
-			echo "LOGGED IN USER $agents_users[$o] at session $agents_sessions[$o] on server $agents_servers[$o]\n";
+			echo _QXZ("LOGGED IN USER")." $agents_users[$o] "._QXZ("at session")." $agents_sessions[$o] "._QXZ("on server")." $agents_servers[$o]\n";
 
 			$o++;
 			}
 
 
 
-		echo "<br>Kill a Voice Lab Session: 8600900<form action=$PHP_SELF method=POST>\n";
+		echo "<br>"._QXZ("Kill a Voice Lab Session").": 8600900<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=KILL_VOICE_LAB value=2>\n";
 		echo "<input type=hidden name=session_id value=8600900>\n";
 		echo "<input type=hidden name=server_ip value=$server_ip>\n";
 		echo "<input type=hidden name=campaign_id value=$campaign_id>\n";
-		echo "<input type=submit name=submit value='KILL THIS VOICE LAB'>\n";
+		echo "<input type=submit name=submit value='"._QXZ("KILL THIS VOICE LAB")."'>\n";
 		echo "</form><BR><BR><BR>\n";
 		}
 		else
 		{
-		echo "ERROR!!!!    Not all info entered properly\n<BR><BR>\n";
+		echo _QXZ("ERROR!!!!    Not all info entered properly")."\n<BR><BR>\n";
 		echo "|$server_ip| |$session_id| |$campaign_id|\n<BR><BR>\n";
-		echo "<a href=\"$PHP_SELF\">Back to main voicelab screen</a>\n<BR><BR>\n";
+		echo "<a href=\"$PHP_SELF\">"._QXZ("Back to main voicelab screen")."</a>\n<BR><BR>\n";
 		}
 	}
 else
@@ -254,15 +255,15 @@ else
 		{
 		if ( (strlen($server_ip) > 6) && (strlen($session_id) > 6) && (strlen($campaign_id) > 2) && (strlen($message) > 0) )
 			{
-			echo "<br><br><br>TO START YOUR VOICE LAB, DIAL 9$session_id ON YOUR PHONE NOW<br>\n";
+			echo "<br><br><br>"._QXZ("TO START YOUR VOICE LAB, DIAL")." 9$session_id "._QXZ("ON YOUR PHONE NOW")."<br>\n";
 
-			echo "<br>or, you can enter an extension that you want played below<form action=$PHP_SELF method=POST>\n";
+			echo "<br>"._QXZ("or, you can enter an extension that you want played below")."<form action=$PHP_SELF method=POST>\n";
 			echo "<input type=hidden name=PLAY_MESSAGE value=2>\n";
 			echo "<input type=hidden name=session_id value=8600900>\n";
 			echo "<input type=hidden name=server_ip value=$server_ip>\n";
 			echo "<input type=hidden name=campaign_id value=$campaign_id>\n";
-			echo "Message Extension<input type=text name=message>\n";
-			echo "<input type=submit name=submit value='PLAY THIS MESSAGE'>\n";
+			echo _QXZ("Message Extension")."<input type=text name=message>\n";
+			echo "<input type=submit name=submit value='"._QXZ("PLAY THIS MESSAGE")."'>\n";
 			echo "</form><BR><BR><BR>\n";
 			
 			$nn='99';
@@ -272,44 +273,44 @@ else
 			echo "|$stmt|\n<BR><BR>\n";
 			$rslt=mysql_to_mysqli($stmt, $link);
 
-			echo "MESSAGE $message played at session $session_id on server $server_ip\n";
+			echo _QXZ("MESSAGE")." $message "._QXZ("played at session")." $session_id "._QXZ("on server")." $server_ip\n";
 
-			echo "<br>Kill a Voice Lab Session: 8600900<form action=$PHP_SELF method=POST>\n";
+			echo "<br>"._QXZ("Kill a Voice Lab Session").": 8600900<form action=$PHP_SELF method=POST>\n";
 			echo "<input type=hidden name=KILL_VOICE_LAB value=2>\n";
 			echo "<input type=hidden name=session_id value=8600900>\n";
 			echo "<input type=hidden name=server_ip value=$server_ip>\n";
 			echo "<input type=hidden name=campaign_id value=$campaign_id>\n";
-			echo "<input type=submit name=submit value='KILL THIS VOICE LAB'>\n";
+			echo "<input type=submit name=submit value='"._QXZ("KILL THIS VOICE LAB")."'>\n";
 			echo "</form><BR><BR><BR>\n";
 			}
 			else
 			{
-			echo "ERROR!!!!    Not all info entered properly\n<BR><BR>\n";
+			echo _QXZ("ERROR!!!!    Not all info entered properly")."\n<BR><BR>\n";
 			echo "|$server_ip| |$session_id| |$campaign_id|\n<BR><BR>\n";
-			echo "<a href=\"$PHP_SELF\">Back to main voicelab screen</a>\n<BR><BR>\n";
+			echo "<a href=\"$PHP_SELF\">"._QXZ("Back to main voicelab screen")."</a>\n<BR><BR>\n";
 			}
 		}
 	else
 		{
-		echo "<br>Start a Voice Lab Session: 8600900<form action=$PHP_SELF method=POST>\n";
+		echo "<br>"._QXZ("Start a Voice Lab Session").": 8600900<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=NEW_VOICE_LAB value=2>\n";
 		echo "<input type=hidden name=session_id value=8600900>\n";
-		echo "Your Server: <select size=1 name=server_ip>$servers_list</select>\n";
+		echo _QXZ("Your Server").": <select size=1 name=server_ip>$servers_list</select>\n";
 		echo "<BR>\n";
-		echo "Campaign: <select size=1 name=campaign_id>$campaigns_list</select>";
+		echo _QXZ("Campaign").": <select size=1 name=campaign_id>$campaigns_list</select>";
 		echo "<BR>\n";
-		echo "<input type=submit name=submit value=submit>\n";
+		echo "<input type=submit name=submit value='"._QXZ("submit")."'>\n";
 		echo "</form><BR><BR><BR>\n";
 
 
-		echo "<br>Kill a Voice Lab Session: 8600900<form action=$PHP_SELF method=POST>\n";
+		echo "<br>"._QXZ("Kill a Voice Lab Session").": 8600900<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=KILL_VOICE_LAB value=2>\n";
 		echo "<input type=hidden name=session_id value=8600900>\n";
-		echo "Your Server: <select size=1 name=server_ip>$servers_list</select>\n";
+		echo _QXZ("Your Server").": <select size=1 name=server_ip>$servers_list</select>\n";
 		echo "<BR>\n";
-		echo "Campaign: <select size=1 name=campaign_id>$campaigns_list</select>";
+		echo _QXZ("Campaign").": <select size=1 name=campaign_id>$campaigns_list</select>";
 		echo "<BR>\n";
-		echo "<input type=submit name=submit value=submit>\n";
+		echo "<input type=submit name=submit value='"._QXZ("submit")."'>\n";
 		echo "</form><BR><BR><BR>\n";
 		}
 	}
@@ -325,13 +326,13 @@ if ($KILL_VOICE_LAB > 1)
 		echo "|$stmt|\n<BR><BR>\n";
 		$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "VOICELAB SESSION KILLED: $session_id at $server_ip | $KILL_VOICE_LAB\n";
+		echo _QXZ("VOICELAB SESSION KILLED").": $session_id "._QXZ("at")." $server_ip | $KILL_VOICE_LAB\n";
 		}
 	else
 		{
-		echo "ERROR!!!!    Not all info entered properly\n<BR><BR>\n";
+		echo _QXZ("ERROR!!!!    Not all info entered properly")."\n<BR><BR>\n";
 		echo "|$server_ip| |$session_id| |$campaign_id|\n<BR><BR>\n";
-		echo "<a href=\"$PHP_SELF\">Back to main voicelab screen</a>\n<BR><BR>\n";
+		echo "<a href=\"$PHP_SELF\">"._QXZ("Back to main voicelab screen")."</a>\n<BR><BR>\n";
 		}
 
 	}

@@ -1,7 +1,7 @@
 <?php
-# leadloader_template_display.php - version 2.8
+# leadloader_template_display.php - version 2.10
 # 
-# Copyright (C) 2013  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 120402-2238 - First Build
@@ -12,6 +12,7 @@
 # 130719-1914 - Added SQL to show template statuses to dedupe against, fixed issue where list IDs should be disabled until lead file for template is uploaded
 # 130802-0623 - Added select list query for status deduping
 # 130824-2320 - Changed to mysqli PHP functions
+# 141007-2203 - Finalized adding QXZ translation to all admin files
 #
 
 require("dbconnect_mysqli.php");
@@ -78,10 +79,10 @@ if ($auth_message == 'GOOD')
 
 if ($auth < 1)
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -100,7 +101,7 @@ $LOGload_leads = $row[0];
 if ($LOGload_leads < 1)
 	{
 	Header ("Content-type: text/html; charset=utf-8");
-	echo "You do not have permissions to load leads\n";
+	echo _QXZ("You do not have permissions to load leads")."\n";
 	exit;
 	}
 
@@ -111,7 +112,7 @@ $sample_template_file_name=preg_replace("/^C:\\\\fakepath\\\\/i", '', $sample_te
 
 if ( (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$LF_orig)) or (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$sample_template_file_name)) )
 	{
-	echo "ERROR: Invalid File Name: $LF_orig $sample_template_file_name\n";
+	echo _QXZ("ERROR: Invalid File Name").": $LF_orig $sample_template_file_name\n";
 	exit;
 	}
 
@@ -119,12 +120,12 @@ if ($template_id) {
 	$stmt="select * from vicidial_custom_leadloader_templates where template_id='$template_id'";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$row=mysqli_fetch_array($rslt);
-	echo "TEMPLATE ID: $template_id\n";
-	echo "TEMPLATE INFO: $row[template_name]";
+	echo _QXZ("TEMPLATE ID").": $template_id\n";
+	echo _QXZ("TEMPLATE INFO").": $row[template_name]";
 	if (strlen($row["template_description"])>0) {echo " - $row[template_description]";}
-	echo "\nWILL LOAD INTO LIST: $row[list_id]\n";
-	if (strlen($row["custom_table"])>0) {echo "USES CUSTOM TABLE: YES\n";} else {echo "USES CUSTOM TABLE: NO\n";}
-	if (strlen($row["template_statuses"])>0) {echo "WILL ONLY DEDUPE AGAINST STATUSES: ".preg_replace('/\|/', ',', $row["template_statuses"])."\n";}
+	echo "\n"._QXZ("WILL LOAD INTO LIST").": $row[list_id]\n";
+	if (strlen($row["custom_table"])>0) {echo _QXZ("USES CUSTOM TABLE: YES")."\n";} else {echo _QXZ("USES CUSTOM TABLE: NO")."\n";}
+	if (strlen($row["template_statuses"])>0) {echo _QXZ("WILL ONLY DEDUPE AGAINST STATUSES").": ".preg_replace('/\|/', ',', $row["template_statuses"])."\n";}
 	exit;
 }
 
@@ -141,11 +142,11 @@ if ($form_action=="prime_file" && $sample_template_file_name)
 		$lead_file = "/tmp/$new_filename";
 		if ($DB > 0) {echo "|$convert_command|";}
 
-		if (preg_match("/\.csv$/i", $sample_template_file_name)) {$delim_name="CSV: Comma Separated Values"; $template_file_type="CSV";}
-		if (preg_match("/\.xls$/i", $sample_template_file_name)) {$delim_name="XLS: MS Excel 2000-XP"; $template_file_type="XLS";}
-		if (preg_match("/\.xlsx$/i", $sample_template_file_name)) {$delim_name="XLSX: MS Excel 2007+"; $template_file_type="XLSX";}
-		if (preg_match("/\.ods$/i", $sample_template_file_name)) {$delim_name="ODS: OpenOffice.org OpenDocument Spreadsheet"; $template_file_type="ODS";}
-		if (preg_match("/\.sxc$/i", $sample_template_file_name)) {$delim_name="SXC: OpenOffice.org First Spreadsheet"; $template_file_type="SXC";}
+		if (preg_match("/\.csv$/i", $sample_template_file_name)) {$delim_name="CSV: "._QXZ("Comma Separated Values"); $template_file_type="CSV";}
+		if (preg_match("/\.xls$/i", $sample_template_file_name)) {$delim_name="XLS: "._QXZ("MS Excel 2000-XP"); $template_file_type="XLS";}
+		if (preg_match("/\.xlsx$/i", $sample_template_file_name)) {$delim_name="XLSX: "._QXZ("MS Excel 2007+"); $template_file_type="XLSX";}
+		if (preg_match("/\.ods$/i", $sample_template_file_name)) {$delim_name="ODS: "._QXZ("OpenOffice.org OpenDocument Spreadsheet"); $template_file_type="ODS";}
+		if (preg_match("/\.sxc$/i", $sample_template_file_name)) {$delim_name="SXC: "._QXZ("OpenOffice.org First Spreadsheet"); $template_file_type="SXC";}
 		$delim_set=1;
 		}
 	else
@@ -166,9 +167,9 @@ if ($form_action=="prime_file" && $sample_template_file_name)
 	if ($delim_set < 1)
 		{
 		if ($tab_count>$pipe_count)
-			{$delim_name="tab-delimited";} 
+			{$delim_name=_QXZ("tab-delimited");} 
 		else 
-			{$delim_name="pipe-delimited";}
+			{$delim_name=_QXZ("pipe-delimited");}
 		} 
 	if ($tab_count>$pipe_count)
 		{$delimiter="\t";}
@@ -199,7 +200,7 @@ else if ($list_id && $form_action=="no_template")
 	$rslt=mysql_to_mysqli($stmt, $link);
 
 	echo "<select id='dedupe_statuses' name='dedupe_statuses[]' size=5 multiple>\n";
-	echo "\t<option value='--ALL--' selected>--ALL DISPOSITIONS--</option>\n";
+	echo "\t<option value='--ALL--' selected>--"._QXZ("ALL DISPOSITIONS")."--</option>\n";
 	while ($row=mysqli_fetch_array($rslt)) 
 		{
 		echo "\t<option value='$row[status]'>$row[status] - $row[status_name]</option>\n";
@@ -226,7 +227,7 @@ else
 		$rslt=mysql_to_mysqli($stmt, $link);
 
 		echo "<select id='template_statuses' name='template_statuses[]' size=5 multiple>\n";
-		echo "\t<option value='--ALL--' selected>--ALL DISPOSITIONS--</option>\n";
+		echo "\t<option value='--ALL--' selected>--"._QXZ("ALL DISPOSITIONS")."--</option>\n";
 		while ($row=mysqli_fetch_array($rslt)) 
 			{
 			echo "\t<option value='$row[status]'>$row[status] - $row[status_name]</option>\n";
@@ -237,7 +238,7 @@ else
 	
 	if ( (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$LF_orig)) or (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$sample_template_file_name)) )
 		{
-		echo "ERROR: Invalid File Name: $LF_orig $sample_template_file_name\n";
+		echo _QXZ("ERROR: Invalid File Name").": $LF_orig $sample_template_file_name\n";
 		exit;
 		}
 
@@ -317,7 +318,7 @@ else
 		if ($rslt_field_name!="list_id") 
 			{
 			echo "    <td align=left><select name='$field_prefix".$rslt_field_name."_field' onChange='DrawTemplateStrings()'>\r\n";
-			echo "     <option value='-1'>(none)</option>\r\n";
+			echo "     <option value='-1'>("._QXZ("none").")</option>\r\n";
 
 			for ($j=0; $j<count($row); $j++) 
 				{

@@ -3,7 +3,7 @@
 # vicidial_sales_viewer.php - VICIDIAL administration page
 # 
 # 
-# Copyright (C) 2013  Joe Johnson,Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Joe Johnson,Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 80310-1500 - first build
@@ -12,6 +12,7 @@
 # 130610-1127 - Finalized changing of all ereg instances to preg
 # 130615-2357 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0832 - Changed to mysqli PHP functions
+# 141007-2147 - Finalized adding QXZ translation to all admin files
 #
 
 if (isset($_GET["dcampaign"]))					{$dcampaign=$_GET["dcampaign"];}
@@ -60,7 +61,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -73,10 +74,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -130,13 +131,13 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 <input type="hidden" name="list_ids">
 <table border=0 cellpadding=5 cellspacing=0 align=center width=600>
 <tr>
-	<th colspan=3><font class="standard_bold">OUTBOUND recent sales report &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </font><font class="standard"><a href="admin.php?ADD=999999">Back to Admin</a></font>
+	<th colspan=3><font class="standard_bold"><?php echo _QXZ("OUTBOUND recent sales report"); ?> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </font><font class="standard"><a href="admin.php?ADD=999999"><?php echo _QXZ("Back to Admin"); ?></a></font>
 	<BR></th>
 </tr>
 <tr bgcolor='#CCCCCC'>
 	<td colspan=3>
 		<table width=100%>
-			<td align=right width=200 nowrap><font class='standard_bold'>Select a campaign:</td>
+			<td align=right width=200 nowrap><font class='standard_bold'><?php echo _QXZ("Select a campaign"); ?>:</td>
 			<td align=left><select name="dcampaign" onChange="this.form.submit();">
 			<?php 
 			if ($dcampaign) {
@@ -161,7 +162,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 			if ($dcampaign) {
 			?>
 			<tr bgcolor='#CCCCCC'>
-				<td align=right width=200 nowrap><font class='standard_bold'>Select list ID(s) # (optional):</td>
+				<td align=right width=200 nowrap><font class='standard_bold'><?php echo _QXZ("Select list ID(s) # (optional)"); ?>:</td>
 				<td align=left><select name="list_id" multiple size="4">
 				<?php
 					$stmt="select list_id, list_name from vicidial_lists where campaign_id='$dcampaign' order by list_id asc";
@@ -179,29 +180,29 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 	</td>
 </tr>
 <tr bgcolor='#EEEEEE'>
-	<th align=left width=350><font class='standard_bold'>View sales made within the last <select name="sales_time_frame">
+	<th align=left width=350><font class='standard_bold'><?php echo _QXZ("View sales made within the last"); ?> <select name="sales_time_frame">
 	<option value=''>----------</option>
-	<option value='15'>15 minutes</option>
-	<option value='30'>30 minutes</option>
-	<option value='45'>45 minutes</option>
-	<option value='60'>1 hour</option>
-	<option value='120'>2 hours</option>
-	<option value='180'>3 hours</option>
-	<option value='240'>4 hours</option>
-	<option value='360'>6 hours</option>
-	<option value='480'>8 hours</option>
+	<option value='15'>15 <?php echo _QXZ("minutes"); ?></option>
+	<option value='30'>30 <?php echo _QXZ("minutes"); ?></option>
+	<option value='45'>45 <?php echo _QXZ("minutes"); ?></option>
+	<option value='60'>1 <?php echo _QXZ("hour"); ?></option>
+	<option value='120'>2 <?php echo _QXZ("hours"); ?></option>
+	<option value='180'>3 <?php echo _QXZ("hours"); ?></option>
+	<option value='240'>4 <?php echo _QXZ("hours"); ?></option>
+	<option value='360'>6 <?php echo _QXZ("hours"); ?></option>
+	<option value='480'>8 <?php echo _QXZ("hours"); ?></option>
 	</select></th>
-	<th width=50>OR...</th>
-	<th align=right width=200><font class='standard_bold'>View the last <input type=text size=5 maxlength=5 name="sales_number"> sales**</font></th>
+	<th width=50><?php echo _QXZ("OR"); ?>...</th>
+	<th align=right width=200><font class='standard_bold'><?php echo _QXZ("View the last"); ?> <input type=text size=5 maxlength=5 name="sales_number"> <?php echo _QXZ("sales"); ?>**</font></th>
 </tr>
-<tr bgcolor='#EEEEEE'><th colspan=3><font class="small_standard">(If you enter values in both fields, the results will be limited by the first criteria met)</font></th></tr>
+<tr bgcolor='#EEEEEE'><th colspan=3><font class="small_standard">(<?php echo _QXZ("If you enter values in both fields, the results will be limited by the first criteria met"); ?>)</font></th></tr>
 <tr bgcolor='#CCCCCC'>
-	<td align=right><font class="standard_bold">Campaign is:&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="forc" value="F">Transfer</font></td>
-	<td colspan=2 align=left><font class="standard_bold">&nbsp;&nbsp;<input type=radio name="forc" value="C" checked>Non-transfer</font></td>
+	<td align=right><font class="standard_bold"><?php echo _QXZ("Campaign is"); ?>:&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="forc" value="F"><?php echo _QXZ("Transfer"); ?></font></td>
+	<td colspan=2 align=left><font class="standard_bold">&nbsp;&nbsp;<input type=radio name="forc" value="C" checked><?php echo _QXZ("Non-transfer"); ?></font></td>
 </tr>
-<tr><th colspan=3><input type=submit name="submit_report" value="SUBMIT"></th></tr>
+<tr><th colspan=3><input type=submit name="submit_report" value="<?php echo _QXZ("SUBMIT"); ?>"></th></tr>
 <!-- <tr><th colspan=3><input type=checkbox name="weekly_report" value="WEEKLY_REPORT"><font class="small_standard">Generate weekly report</font></th></tr> //-->
-<tr><td colspan=3 align=center><font class="small_standard">** - sorted by call date</font></td></tr>
+<tr><td colspan=3 align=center><font class="small_standard">** - <?php echo _QXZ("sorted by call date"); ?></font></td></tr>
 </table>
 </form>
 <?php
@@ -243,13 +244,13 @@ if ($submit_report && $list_ids) {
 	fwrite($dfile, "$stmt\n");
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$q=0;
-	print "<tr bgcolor='#000000'><th colspan=8><font class='standard_bold' color='white'>Last ".mysqli_num_rows($rslt)." sales made</font></th></tr>\n";
+	print "<tr bgcolor='#000000'><th colspan=8><font class='standard_bold' color='white'>Last ".mysqli_num_rows($rslt)." "._QXZ("sales made")."</font></th></tr>\n";
 	print "<tr bgcolor='#000000'>\n";
-	print "\t<th><font class='standard_bold' color='white'>Sales Rep(s)</font></th>\n";
-	print "\t<th><font class='standard_bold' color='white'>Customer Name</font></th>\n";
-	print "\t<th><font class='standard_bold' color='white'>Phone</font></th>\n";
-	print "\t<th><font class='standard_bold' color='white'>Recording ID</font></th>\n";
-	print "\t<th><font class='standard_bold' color='white'>Timestamp</font></th>\n";
+	print "\t<th><font class='standard_bold' color='white'>"._QXZ("Sales Rep(s)")."</font></th>\n";
+	print "\t<th><font class='standard_bold' color='white'>"._QXZ("Customer Name")."</font></th>\n";
+	print "\t<th><font class='standard_bold' color='white'>"._QXZ("Phone")."</font></th>\n";
+	print "\t<th><font class='standard_bold' color='white'>"._QXZ("Recording ID")."</font></th>\n";
+	print "\t<th><font class='standard_bold' color='white'>"._QXZ("Timestamp")."</font></th>\n";
 	print "</tr>\n";
 	while ($row=mysqli_fetch_row($rslt)) {
 		$rec_stmt="select max(recording_id) from recording_log where lead_id='$row[4]'";
@@ -286,9 +287,9 @@ if ($submit_report && $list_ids) {
 	flush();
 	print "<table align=center border=0 cellpadding=3 cellspacing=5 width=700><tr bgcolor='#CCCCCC'>";
 	if ($forc=="F") {
-		print "<th width='50%'><font class='standard_bold'><a href='vicidial_fronter_report_$now.xls'>View complete Excel fronter report for this shift</a></font></th>";
+		print "<th width='50%'><font class='standard_bold'><a href='vicidial_fronter_report_$now.xls'>"._QXZ("View complete Excel fronter report for this shift")."</a></font></th>";
 	}
-	print "<th width='50%'><font class='standard_bold'><a href='vicidial_closer_report_$now.xls'>View complete Excel sales report for this shift</a></font></th>";
+	print "<th width='50%'><font class='standard_bold'><a href='vicidial_closer_report_$now.xls'>"._QXZ("View complete Excel sales report for this shift")."</a></font></th>";
 	print "</tr></table>";
 }
 ?>

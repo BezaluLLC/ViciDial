@@ -1,16 +1,17 @@
 <?php
 # NANPA_running_processes.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script shows running NANPA filter batch proccesses
 #
 # CHANGELOG:
 # 130921-0756 - First build of script
+# 141007-2044 - Finalized adding QXZ translation to all admin files
 #
 
-$version = '2.8-1';
-$build = '130921-0756';
+$version = '2.8-2';
+$build = '141007-2044';
 $startMS = microtime();
 
 require("dbconnect_mysqli.php");
@@ -103,7 +104,7 @@ if ($user_auth > 0)
 		}
 	if ( ($qc_auth < 1) and ($reports_auth < 1) and ($auth < 1) )
 		{
-		$VDdisplayMESSAGE = "You do not have permission to be here";
+		$VDdisplayMESSAGE = _QXZ("You do not have permission to be here");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -111,10 +112,10 @@ if ($user_auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -126,7 +127,7 @@ else
 	}
 
 $oc_ct=count($output_codes_to_display);
-$oc_SQL="";
+$oc_SQL="'',";
 $url_str="";
 
 for ($i=0; $i<$oc_ct; $i++) 
@@ -139,18 +140,18 @@ $oc_SQL=substr($oc_SQL, 0, -1);
 if (!$show_history) {
 	$process_stmt="SELECT output_code,status,server_ip,list_id,start_time,update_time,user,leads_count,filter_count,status_line,script_output from vicidial_nanpa_filter_log where output_code in ($oc_SQL) and status!='COMPLETED'";
 	$process_rslt=mysqli_query($link, $process_stmt);
-	$report_title="Currently running NANPA scrubs";
+	$report_title=_QXZ("Currently running NANPA scrubs");
 } else {
 	if (!$process_limit) {$process_limit=10;}
 	$process_stmt="SELECT output_code,status,server_ip,list_id,start_time,update_time,user,leads_count,filter_count,status_line,script_output from vicidial_nanpa_filter_log where user='$PHP_AUTH_USER' and status='COMPLETED' order by start_time desc limit $process_limit";
 
 	$process_rslt=mysqli_query($link, $process_stmt);
-	$report_title="Past NANPA scrubs for user $PHP_AUTH_USER";
+	$report_title=_QXZ("Past NANPA scrubs for user")." $PHP_AUTH_USER";
 
 	$past_process_ct=mysqli_num_rows($process_rslt);
 	if ($process_limit<=$past_process_ct) {
 		$upper_limit=$process_limit+10;
-		$more_history_link="<BR><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=1><a name='past_scrubs' href='#past_scrubs' onClick='ShowPastProcesses($upper_limit)'>Show more processes</a></font>";
+		$more_history_link="<BR><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=1><a name='past_scrubs' href='#past_scrubs' onClick='ShowPastProcesses($upper_limit)'>"._QXZ("Show more processes")."</a></font>";
 	} else {
 		$more_history_link="";
 	}
@@ -160,13 +161,13 @@ if (mysqli_num_rows($process_rslt)>0) {
 	echo "<table width='770' cellpadding=5 cellspacing=0>";
 	echo "<tr><th colspan='7' bgcolor='#015B91'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>$report_title</th></tr>";
 	echo "<tr>";
-	echo "<td align='left' bgcolor='#015B91' width='80'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>Start time</th>";
-	echo "<td align='left' bgcolor='#015B91' width='80'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>Status</th>";
-	echo "<td align='left' bgcolor='#015B91' width='100'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>Last updated</th>";
-	echo "<td align='left' bgcolor='#015B91' width='80'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>Leads count</th>";
-	echo "<td align='left' bgcolor='#015B91' width='80'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>Filter count</th>";
-	echo "<td align='left' bgcolor='#015B91' width='180'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>Status line</th>";
-	echo "<td align='left' bgcolor='#015B91' width='170'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>Last script output</th>";
+	echo "<td align='left' bgcolor='#015B91' width='80'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>"._QXZ("Start time")."</th>";
+	echo "<td align='left' bgcolor='#015B91' width='80'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>"._QXZ("Status")."</th>";
+	echo "<td align='left' bgcolor='#015B91' width='100'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>"._QXZ("Last updated")."</th>";
+	echo "<td align='left' bgcolor='#015B91' width='80'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>"._QXZ("Leads count")."</th>";
+	echo "<td align='left' bgcolor='#015B91' width='80'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>"._QXZ("Filter count")."</th>";
+	echo "<td align='left' bgcolor='#015B91' width='180'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>"._QXZ("Status line")."</th>";
+	echo "<td align='left' bgcolor='#015B91' width='170'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2>"._QXZ("Last script output")."</th>";
 	echo "</tr>";
 
 	while ($row=mysqli_fetch_array($process_rslt)) {

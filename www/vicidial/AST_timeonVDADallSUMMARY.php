@@ -27,7 +27,7 @@
 # 130620-2256 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-2006 - Changed to mysqli PHP functions
 # 140328-0005 - Converted division calculations to use MathZDC function
-# 140918-1631 - Added QXZ function formatting of output
+# 141001-2200 - Finalized adding QXZ translation to all admin files
 #
 
 require("dbconnect_mysqli.php");
@@ -162,7 +162,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo _QXZ("You are not allowed to view this report:")." |$PHP_AUTH_USER|$report_name|"._QXZ("$report_name")."|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|"._QXZ("$report_name")."|\n";
     exit;
 	}
 
@@ -269,7 +269,7 @@ $MAIN.="<option value=\"INBOUND ONLY\"";
 	if ($types == 'INBOUND ONLY') {$MAIN.=" selected";} 
 $MAIN.=">"._QXZ("INBOUND ONLY")."</option>";
 $MAIN.="</select> \n";
-$MAIN.="<input type=submit name=submit value='SUBMIT'>\n";
+$MAIN.="<input type=submit name=submit value='"._QXZ("SUBMIT")."'>\n";
 $MAIN.="<BR><BR>\n\n";
 
 $k=0;
@@ -353,62 +353,62 @@ $row=mysqli_fetch_row($rslt);
 $balanceSHORT = $row[0];
 
 $MAIN.="<BR><table cellpadding=0 cellspacing=0><TR>";
-$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DIAL LEVEL:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALlev&nbsp; &nbsp; </TD>";
-$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("TRUNK SHORT/FILL:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $balanceSHORT / $balanceFILL &nbsp; &nbsp; </TD>";
-$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("FILTER:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALfilter &nbsp; </TD>";
-$MAIN.="<TD ALIGN=RIGHT><font size=2><B> "._QXZ("TIME:")."</B> &nbsp; </TD><TD ALIGN=LEFT><font size=2> $NOW_TIME </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DIAL LEVEL").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALlev&nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("TRUNK SHORT/FILL").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $balanceSHORT / $balanceFILL &nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("FILTER").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALfilter &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B> "._QXZ("TIME").":</B> &nbsp; </TD><TD ALIGN=LEFT><font size=2> $NOW_TIME </TD>";
 $MAIN.="";
 $MAIN.="</TR>";
 
-$CSV_text.="\"DIAL LEVEL:\",\"$DIALlev\",\"TRUNK SHORT/FILL:\",\"$balanceSHORT / $balanceFILL\",\"FILTER:\",\"$DIALfilter\",\"TIME:\",\"$NOW_TIME\"\n";
+$CSV_text.="\""._QXZ("DIAL LEVEL").":\",\"$DIALlev\",\""._QXZ("TRUNK SHORT/FILL").":\",\"$balanceSHORT / $balanceFILL\",\""._QXZ("FILTER").":\",\"$DIALfilter\",\""._QXZ("TIME").":\",\"$NOW_TIME\"\n";
 
 if ($adastats>1)
 	{
 	$MAIN.="<TR BGCOLOR=\"#CCCCCC\">";
-	$MAIN.="<TD ALIGN=RIGHT><font size=2>&nbsp; <B>"._QXZ("MAX LEVEL:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $maxDIALlev &nbsp; </TD>";
-	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROPPED MAX:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DROPmax% &nbsp; &nbsp;</TD>";
-	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("TARGET DIFF:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $targetDIFF &nbsp; &nbsp; </TD>";
-	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("INTENSITY:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $ADAintense &nbsp; &nbsp; </TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2>&nbsp; <B>"._QXZ("MAX LEVEL").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $maxDIALlev &nbsp; </TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROPPED MAX").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DROPmax% &nbsp; &nbsp;</TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("TARGET DIFF").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $targetDIFF &nbsp; &nbsp; </TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("INTENSITY").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $ADAintense &nbsp; &nbsp; </TD>";
 	$MAIN.="</TR>";
-	$CSV_text.="\"MAX LEVEL:\",\"$maxDIALlev\",\"DROPPED MAX:\",\"$DROPmax\",\"TARGET DIFF:\",\"$targetDIFF\",\"INTENSITY:\",\"$ADAintense\"\n";
+	$CSV_text.="\""._QXZ("MAX LEVEL").":\",\"$maxDIALlev\",\""._QXZ("DROPPED MAX").":\",\"$DROPmax\",\""._QXZ("TARGET DIFF").":\",\"$targetDIFF\",\""._QXZ("INTENSITY").":\",\"$ADAintense\"\n";
 
 	$MAIN.="<TR BGCOLOR=\"#CCCCCC\">";
-	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DIAL TIMEOUT:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALtimeout &nbsp;</TD>";
-	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("TAPER TIME:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $TAPERtime &nbsp;</TD>";
-	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("LOCAL TIME:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $CALLtime &nbsp;</TD>";
-	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AVAIL ONLY:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $ADAavailonly &nbsp;</TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DIAL TIMEOUT").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALtimeout &nbsp;</TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("TAPER TIME").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $TAPERtime &nbsp;</TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("LOCAL TIME").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $CALLtime &nbsp;</TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AVAIL ONLY").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $ADAavailonly &nbsp;</TD>";
 	$MAIN.="</TR>";
-	$CSV_text.="\"DIAL TIMEOUT:\",\"$DIALtimeout\",\"TAPER TIME:\",\"$TAPERtime\",\"LOCAL TIME:\",\"$CALLtime\",\"AVAIL ONLY:\",\"$ADAavailonly\"\n";
+	$CSV_text.="\""._QXZ("DIAL TIMEOUT").":\",\"$DIALtimeout\",\""._QXZ("TAPER TIME").":\",\"$TAPERtime\",\""._QXZ("LOCAL TIME").":\",\"$CALLtime\",\""._QXZ("AVAIL ONLY").":\",\"$ADAavailonly\"\n";
 	}
 
 $MAIN.="<TR>";
-$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DIALABLE LEADS:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DAleads &nbsp; &nbsp; </TD>";
-$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("CALLS TODAY:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $callsTODAY &nbsp; &nbsp; </TD>";
-$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AVG AGENTS:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $agentsONEMIN &nbsp; &nbsp; </TD>";
-$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DIAL METHOD:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALmethod &nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DIALABLE LEADS").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DAleads &nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("CALLS TODAY").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $callsTODAY &nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AVG AGENTS").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $agentsONEMIN &nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DIAL METHOD").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALmethod &nbsp; &nbsp; </TD>";
 $MAIN.="</TR>";
-$CSV_text.="\"DIALABLE LEADS:\",\"$DAleads\",\"CALLS TODAY:\",\"$callsTODAY\",\"AVG AGENTS:\",\"$agentsONEMIN\",\"DIAL METHOD:\",\"$DIALmethod\"\n";
+$CSV_text.="\""._QXZ("DIALABLE LEADS").":\",\"$DAleads\",\""._QXZ("CALLS TODAY").":\",\"$callsTODAY\",\""._QXZ("AVG AGENTS").":\",\"$agentsONEMIN\",\""._QXZ("DIAL METHOD").":\",\"$DIALmethod\"\n";
 
 $MAIN.="<TR>";
-$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("HOPPER LEVEL:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $HOPlev &nbsp; &nbsp; </TD>";
-$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROPPED / ANSWERED:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $dropsTODAY / $answersTODAY &nbsp; </TD>";
-$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DL DIFF:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $diffONEMIN &nbsp; &nbsp; </TD>";
-$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("STATUSES:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALstatuses &nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("HOPPER LEVEL").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $HOPlev &nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROPPED / ANSWERED").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $dropsTODAY / $answersTODAY &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DL DIFF").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $diffONEMIN &nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("STATUSES").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALstatuses &nbsp; &nbsp; </TD>";
 $MAIN.="</TR>";
-$CSV_text.="\"HOPPER LEVEL:\",\"$HOPlev\",\"DROPPED / ANSWERED:\",\"$dropsTODAY / $answersTODAY\",\"DL DIFF:\",\"$diffONEMIN\",\"STATUSES:\",\"$DIALstatuses\"\n";
+$CSV_text.="\""._QXZ("HOPPER LEVEL").":\",\"$HOPlev\",\""._QXZ("DROPPED / ANSWERED").":\",\"$dropsTODAY / $answersTODAY\",\""._QXZ("DL DIFF").":\",\"$diffONEMIN\",\""._QXZ("STATUSES").":\",\"$DIALstatuses\"\n";
 
 $MAIN.="<TR>";
-$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("LEADS IN HOPPER:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $VDhop &nbsp; &nbsp; </TD>";
-$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROPPED PERCENT:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; ";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("LEADS IN HOPPER").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $VDhop &nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROPPED PERCENT").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; ";
 if ($drpctTODAY >= $DROPmax)
 	{$MAIN.="<font color=red><B>$drpctTODAY%</B></font>";}
 else
 	{$MAIN.="$drpctTODAY%";}
 $MAIN.=" &nbsp; &nbsp;</TD>";
-$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DIFF:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $diffpctONEMIN% &nbsp; &nbsp; </TD>";
-$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("ORDER:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALorder &nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DIFF").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $diffpctONEMIN% &nbsp; &nbsp; </TD>";
+$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("ORDER").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $DIALorder &nbsp; &nbsp; </TD>";
 $MAIN.="</TR>";
-$CSV_text.="\"LEADS IN HOPPER:\",\"$VDhop\",\"DROPPED PERCENT:\",\"$drpctTODAY%\",\"DIFF:\",\"$diffpctONEMIN%\",\"ORDER:\",\"$DIALorder\"\n";
+$CSV_text.="\""._QXZ("LEADS IN HOPPER").":\",\"$VDhop\",\""._QXZ("DROPPED PERCENT").":\",\"$drpctTODAY%\",\""._QXZ("DIFF").":\",\"$diffpctONEMIN%\",\""._QXZ("ORDER").":\",\"$DIALorder\"\n";
 
 $MAIN.="<TR>";
 $MAIN.="<TD ALIGN=LEFT COLSPAN=8>";
@@ -442,12 +442,12 @@ if ($VSCagentcalls > 0)
 	$avgacwTODAY = sprintf("%01.0f", $avgacwTODAY);
 
 	$MAIN.="<TR>";
-	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AGENT AVG WAIT:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgwaitTODAY &nbsp;</TD>";
-	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AVG CUSTTIME:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgcustTODAY &nbsp;</TD>";
-	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AVG ACW:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgacwTODAY &nbsp;</TD>";
-	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AVG PAUSE:")."</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgpauseTODAY &nbsp;</TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AGENT AVG WAIT").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgwaitTODAY &nbsp;</TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AVG CUSTTIME").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgcustTODAY &nbsp;</TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AVG ACW").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgacwTODAY &nbsp;</TD>";
+	$MAIN.="<TD ALIGN=RIGHT><font size=2><B>"._QXZ("AVG PAUSE").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $avgpauseTODAY &nbsp;</TD>";
 	$MAIN.="</TR>";
-	$CSV_text.="\"AGENT AVG WAIT:\",\"$avgwaitTODAY\",\"AVG CUSTTIME:\",\"$avgcustTODAY\",\"AVG ACW:\",\"$avgacwTODAY\",\"AVG PAUSE:\",\"$avgpauseTODAY\"\n";
+	$CSV_text.="\""._QXZ("AGENT AVG WAIT").":\",\"$avgwaitTODAY\",\""._QXZ("AVG CUSTTIME").":\",\"$avgcustTODAY\",\""._QXZ("AVG ACW").":\",\"$avgacwTODAY\",\""._QXZ("AVG PAUSE").":\",\"$avgpauseTODAY\"\n";
 	}
 
 $MAIN.="<TR>";

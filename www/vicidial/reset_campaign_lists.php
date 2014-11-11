@@ -1,12 +1,16 @@
 <?php
 # reset_campaign_lists.php - VICIDIAL administration page
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 130711-2051 - First build
 # 130830-1800 - Changed to mysqli PHP functions
+# 141007-2058 - Finalized adding QXZ translation to all admin files
 #
+
+$admin_version = '2.10-408';
+$build = '141007-2058';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -101,7 +105,7 @@ if ($user_auth > 0)
 		}
 	if ( ($qc_auth < 1) and ($reports_auth < 1) and ($auth < 1) )
 		{
-		$VDdisplayMESSAGE = "You do not have permission to be here";
+		$VDdisplayMESSAGE = _QXZ("You do not have permission to be here");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -109,10 +113,10 @@ if ($user_auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -123,9 +127,6 @@ else
 	exit;
 	}
 
-
-$admin_version = '2.8-407a';
-$build = '130709-1350';
 
 $stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,callcard_admin,force_change_password,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,modify_contacts,modify_same_user_level from vicidial_users where user='$PHP_AUTH_USER';";
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -208,7 +209,7 @@ if (isset($_GET["submit_campaign_reset"]))			{$submit_campaign_reset=$_GET["subm
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>ADMINISTRATION: Campaign Lists Reset
+<title><?php echo _QXZ("ADMINISTRATION: Campaign Lists Reset"); ?>
 
 <?php
 
@@ -237,12 +238,12 @@ if ( ($LOGuser_level >= 9) and $LOGmodify_campaigns>0 and $LOGmodify_lists>0 and
 	$campaign_stmt="select vl.campaign_id, vc.campaign_name, count(*) as ct from vicidial_lists vl, vicidial_campaigns vc where vc.active='Y' and vc.campaign_id=vl.campaign_id $LOGallowed_campaignsSQL group by campaign_id order by campaign_id, campaign_name asc";
 	$campaign_rslt=mysql_to_mysqli($campaign_stmt, $link);
 
-	echo "<br><B>Reset Lead-Called-Status for Campaigns:</B><BR><BR>\n";
+	echo "<br><B>"._QXZ("Reset Lead-Called-Status for Campaigns").":</B><BR><BR>\n";
 	echo "<form action='$PHP_SELF?ADD=200000000000' method='post'>";
 	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1 BGCOLOR=#D9E6FE>\n";
 	echo "<tr bgcolor=black>";
-	echo "<td><font size=1 color=white align=left><B>Select campaign:</B></td>";
-	echo "<td><font size=1 color=white><B>Reset all/active only</B></td>";
+	echo "<td><font size=1 color=white align=left><B>"._QXZ("Select campaign").":</B></td>";
+	echo "<td><font size=1 color=white><B>"._QXZ("Reset all/active only")."</B></td>";
 	echo "<td align=center><font size=1 color=white><B>&nbsp;</B></td></tr>\n";
 
 	echo "<tr bgcolor='#B9CBFD'>";
@@ -259,11 +260,11 @@ if ( ($LOGuser_level >= 9) and $LOGmodify_campaigns>0 and $LOGmodify_lists>0 and
 	}
 	echo "</select></td>";
 	echo "<td><select name='all_or_active_only'>";
-	echo "<option value='Y'>Active lists only</option>";
-	echo "<option value=''>All lists</option>";
+	echo "<option value='Y'>"._QXZ("Active lists only")."</option>";
+	echo "<option value=''>"._QXZ("All lists")."</option>";
 	echo "</select>";
 	echo "</td>";
-	echo "<td align='right'><input type='submit' name='submit_campaign_reset' value='SUBMIT'></td></tr>";
+	echo "<td align='right'><input type='submit' name='submit_campaign_reset' value='"._QXZ("SUBMIT")."'></td></tr>";
 	echo "<tr ><td colspan='3'>";
 
 	if ($submit_campaign_reset && $reset_lead_called_campaigns) {
@@ -272,7 +273,7 @@ if ( ($LOGuser_level >= 9) and $LOGmodify_campaigns>0 and $LOGmodify_lists>0 and
 		$list_id_stmt="select list_id from vicidial_lists where campaign_id='$reset_lead_called_campaigns' $list_id_clause order by list_id asc";
 		$list_id_rslt=mysql_to_mysqli($list_id_stmt, $link);
 		if (mysqli_num_rows($list_id_rslt)>0) {
-			echo "CAMPAIGN <B>$reset_lead_called_campaigns</B> LISTS RESETTING $verbiage:<BR>\n<UL>";
+			echo _QXZ("CAMPAIGN")." <B>$reset_lead_called_campaigns</B> "._QXZ("LISTS RESETTING")." $verbiage:<BR>\n<UL>";
 			
 			### LOG INSERTION Admin Log Table ###
 			$SQLdate=date("Y-m-d H:i:s");
@@ -298,8 +299,8 @@ if ( ($LOGuser_level >= 9) and $LOGmodify_campaigns>0 and $LOGmodify_lists>0 and
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 			
-			echo "<LI>LIST ID $list_id - ";
-			if (mysqli_affected_rows($link)>0) {echo "RESET<BR>";} else {echo "<B>NOT</B> RESET<BR>";}
+			echo "<LI>"._QXZ("LIST ID")." $list_id - ";
+			if (mysqli_affected_rows($link)>0) {echo _QXZ("RESET")."<BR>";} else {echo "<B>"._QXZ("NOT")."</B> "._QXZ("RESET")."<BR>";}
 		}
 		if (mysqli_num_rows($list_id_rslt)>0) {echo "</UL>";}
 		if (mysqli_num_rows($list_id_rslt)<7) {
@@ -316,10 +317,10 @@ if ( ($LOGuser_level >= 9) and $LOGmodify_campaigns>0 and $LOGmodify_lists>0 and
 	echo "</TD></TR>\n";
 	echo "<TR><TD BGCOLOR=#015B91 ALIGN=CENTER>\n";
 	echo "<font size=0 color=white><br><br><!-- RUNTIME: $RUNtime seconds<BR> -->";
-	echo "VERSION: $admin_version<BR>";
-	echo "BUILD: $build\n";
+	echo _QXZ("VERSION").": $admin_version<BR>";
+	echo _QXZ("BUILD").": $build\n";
 	if (!preg_match("/_BUILD_/",$SShosted_settings))
-		{echo "<BR><a href=\"$PHP_SELF?ADD=999995\"><font color=white>&copy; 2013 ViciDial Group</font></a><BR><img src=\"images/pixel.gif\">";}
+		{echo "<BR><a href=\"$PHP_SELF?ADD=999995\"><font color=white>&copy; 2014 "._QXZ("ViciDial Group")."</font></a><BR><img src=\"images/pixel.gif\">";}
 	echo "</font>\n";
 ?>
 
@@ -329,7 +330,7 @@ if ( ($LOGuser_level >= 9) and $LOGmodify_campaigns>0 and $LOGmodify_lists>0 and
 </html>
 <?php
 } else {
-	echo "You are not authorized to view this page."; 
+	echo _QXZ("You are not authorized to view this page."); 
 	exit;
 }
 ?>

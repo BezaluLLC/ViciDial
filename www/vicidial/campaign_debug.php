@@ -10,6 +10,7 @@
 # 130620-0829 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-1937 - Changed to mysqli PHP functions
 # 140108-0726 - Added webserver and hostname to report logging
+# 141007-2209 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -82,7 +83,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -95,10 +96,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -118,7 +119,7 @@ $LOGuser_group =		$row[1];
 if ($LOGmodify_campaigns < 1)
 	{
 	Header ("Content-type: text/html; charset=utf-8");
-	echo "You do not have permissions for campaign debugging: |$PHP_AUTH_USER|\n";
+	echo _QXZ("You do not have permissions for campaign debugging").": |$PHP_AUTH_USER|\n";
 	exit;
 	}
 
@@ -209,7 +210,7 @@ while ($i < $campaigns_to_print)
 
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>Campaign Debug</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>"._QXZ("Campaign Debug")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 	$short_header=1;
 
@@ -226,8 +227,8 @@ while ($campaigns_to_print > $o)
 	$o++;
 	}
 echo "</SELECT>\n";
-echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
-echo " &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=34&campaign_id=$group\">MODIFY</a> \n";
+echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
+echo " &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=34&campaign_id=$group\">"._QXZ("MODIFY")."</a> \n";
 echo "</FORM>\n\n";
 
 echo "<PRE><FONT SIZE=2>\n\n";
@@ -236,7 +237,7 @@ echo "<PRE><FONT SIZE=2>\n\n";
 if (!$group)
 	{
 	echo "\n\n";
-	echo "PLEASE SELECT A CAMPAIGN ABOVE AND CLICK SUBMIT\n";
+	echo _QXZ("PLEASE SELECT A CAMPAIGN ABOVE AND CLICK SUBMIT")."\n";
 	}
 
 else
@@ -248,7 +249,7 @@ else
 	$TOTALcalls =	sprintf("%10s", $row[0]);
 
 	echo "\n";
-	echo "---------- ADAPT DEBUG\n";
+	echo "---------- "._QXZ("ADAPT DEBUG")."\n";
 	echo "\n";
 
 	$stmt="select campaign_name,closer_campaigns from vicidial_campaigns where campaign_id='" . mysqli_real_escape_string($link, $group) . "' limit 1;";
@@ -260,8 +261,8 @@ else
 		$row=mysqli_fetch_row($rslt);
 		$closer_campaigns = $row[1];
 
-		echo "Campaign Debug: $group - $row[0]           $NOW_TIME\n\n";
-		echo "Total leads in hopper right now:       $TOTALcalls\n\n";
+		echo _QXZ("Campaign Debug").": $group - $row[0]           $NOW_TIME\n\n";
+		echo _QXZ("Total leads in hopper right now").":       $TOTALcalls\n\n";
 		}
 
 	$stmt="select update_time,debug_output,adapt_output from vicidial_campaign_stats_debug where campaign_id='" . mysqli_real_escape_string($link, $group) . "' and server_ip='ADAPT' limit 1;";
@@ -273,7 +274,7 @@ else
 		{
 		$row=mysqli_fetch_row($rslt);
 
-		echo "Adapt Debug:     $row[0]\n";
+		echo _QXZ("Adapt Debug").":     $row[0]\n";
 		echo "$row[1]\n";
 		echo "$row[2]\n";
 
@@ -308,7 +309,7 @@ else
 		{
 		$row=mysqli_fetch_row($rslt);
 
-		echo "Inbound Debug: $row[1]    $row[0]\n";
+		echo _QXZ("Inbound Debug").": $row[1]    $row[0]\n";
 		echo "$row[2]\n";
 		echo "$row[3]\n";
 
