@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_manager_send.pl version 2.2.0
+# AST_manager_send.pl version 2.10
 #
 # Part of the Asterisk Central Queue System (ACQS)
 #
@@ -16,7 +16,7 @@
 # scalability over just using a single process. Also, this means that a single
 # action execution lock cannot bring the entire system down.
 # 
-# Copyright (C) 2009  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 50823-1514 - Added commandline debug options with debug printouts
@@ -29,6 +29,7 @@
 # 61221-1926 - optimize and clean code, lc
 # 80418-0901 - reduced time between Actions being sent, raised endless loop timer
 # 91129-2146 - removed SELECT STAR and formatting fixes
+# 141113-1356 - Added more logging, check for number of running instances, processing of QUEUE but not SENT commands
 #
 
 $|++;
@@ -36,6 +37,8 @@ use strict;
 use DBI;
 use Getopt::Long;
 use Time::HiRes ('gettimeofday','usleep','sleep');  # necessary to have perl sleep command of less than one second
+
+my $run_check=1; # concurrency check
 
 # constants and globals
 my $servConf;
@@ -104,7 +107,22 @@ $SYSLOG = 1 if ($servConf->{vd_server_logs} =~ /Y/);
 my $event_string='LOGGED INTO MYSQL SERVER ON 1 CONNECTION|';
 eventLogger($conf{PATHlogs}, 'process', $event_string);
 
+### concurrency check (SCREEN uses script path, so check for more than 2 entries)
+if ($run_check > 0)
+	{
+	my $grepout = `/bin/ps ax | grep $0 | grep -v grep | grep -v '/bin/sh'`;
+	my $grepnum=0;
+	$grepnum++ while ($grepout =~ m/\n/g);
+	if ($grepnum > 2) 
+		{
+		if ($DB) {print "I am not alone! Another $0 is running! Exiting...\n";}
+		my $event_string="I am not alone! Another $0 is running! Exiting...";
+		eventLogger($conf{PATHlogs}, 'process', $event_string);
+		exit;
+		}
+	}
 
+my $processed_actions=0;
 my $one_day_interval = 182;		# 2 day loops for 12 months
 while ($one_day_interval > 0) 
 	{
@@ -113,22 +131,34 @@ while ($one_day_interval > 0)
 	my $NEW_actions;
 	while ($endless_loop > 0) 
 		{
-		my $stmtA = "SELECT count(*) from vicidial_manager where server_ip = '" . $conf{VARserver_ip} . "' and status = 'NEW'";
+		my $stmtA = "SELECT count(*) from vicidial_manager where server_ip = '" . $conf{VARserver_ip} . "' and status = 'NEW';";
 	    	my $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	 	my $NEW_actions = ($sthA->fetchrow_array)[0];
-		print STDERR $NEW_actions . " NEW Actions to send on server " . $conf{VARserver_ip} . "      $endless_loop\n" if ($DB);
-	    	$sthA->finish();
+	    $sthA->finish();
 
-		if ($NEW_actions) 
+		my $stmtA = "SELECT count(*) from vicidial_manager where server_ip = '" . $conf{VARserver_ip} . "' and status = 'QUEUE';";
+	    	my $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	 	my $QUEUE_actions = ($sthA->fetchrow_array)[0];
+		print STDERR $NEW_actions . " NEW and " . $QUEUE_actions . " QUEUE Actions to send on server " . $conf{VARserver_ip} . "    $endless_loop\n" if ($DB);
+	    $sthA->finish();
+
+		$affected_rows = 0;
+		if ($NEW_actions > 0) 
 			{
-			my $stmtA = "UPDATE vicidial_manager set status='QUEUE' where server_ip = '" . $conf{VARserver_ip} . "' and status = 'NEW' order by man_id limit 1";
+			my $stmtA = "UPDATE vicidial_manager set status='QUEUE' where server_ip = '" . $conf{VARserver_ip} . "' and status = 'NEW' order by man_id limit 1;";
 			$affected_rows = $dbhA->do($stmtA);
 			print STDERR "rows updated to QUEUE: |$affected_rows|\n" if ($DB);
 			}
 		else 
 			{
-			$affected_rows = 0;
+			if ($QUEUE_actions > 0) 
+				{
+				$affected_rows = $QUEUE_actions;
+				my $event_string=nowDate() . "No NEW actions, but " . $QUEUE_actions . " QUEUE actions in vicidial_manager|" . $affected_rows;
+				eventLogger($conf{PATHlogs}, 'process', $event_string);
+				}
 			}
 
 		if ($affected_rows) 
@@ -143,6 +173,10 @@ while ($one_day_interval > 0)
 				{
 				print STDERR $vdm->{man_id} . "|" . $vdm->{uniqueid} . "|" . $vdm->{channel} . "|" .
 					$vdm->{action} . "|" . $vdm->{callerid} . "\n" if ($DB);
+
+				my $event_string=nowDate() . "|" . $vdm->{entry_date} . "|" . $vdm->{man_id} . "|" . $vdm->{uniqueid} . "|" . $vdm->{channel} . "|" .
+					$vdm->{action} . "|" . $vdm->{callerid};
+				eventLogger($conf{PATHlogs}, 'process', $event_string);
 
 				my $originate_command = "Action: ". $vdm->{action} . "\n";
 				$originate_command .= $vdm->{cmd_line_b} . "\n" if ($vdm->{cmd_line_b});
@@ -224,7 +258,7 @@ while ($one_day_interval > 0)
 					system($launch . ' &');
 
 			#		$launch = "SENT " . $vdm->{man_id} . "  " . $vdm->{callerid} . ' ' . $vdm->{uniqueid} . ' ' . $vdm->{channel};
-			#		eventLogger($conf{'PATHlogs'}, 'launch', $launch);;
+			#		eventLogger($conf{'PATHlogs'}, 'launch', $launch);
 
 					my $stmtA = "UPDATE vicidial_manager set status='SENT' where man_id='" . $vdm->{man_id} . "'";
 					print STDERR "\n|$stmtA|\n" if ($DB);
@@ -239,8 +273,9 @@ while ($one_day_interval > 0)
 					print STDERR "\n|$stmtA|\n" if ($DB);
 					$affected_rows = $dbhA->do($stmtA);
 					$event_string="COMMAND NOT SENT, SQL_QUERY|$stmtA|";
-					eventLogger($conf{'PATHlogs'}, 'process', $event_string);;
+					eventLogger($conf{'PATHlogs'}, 'process', $event_string);
 					}
+				$processed_actions++;
 				}
 			$sthA->finish();
 			}
@@ -274,10 +309,11 @@ while ($one_day_interval > 0)
 			### Grab Server values from the database
 			$servConf = getServerConfig($dbhA, $conf{VARserver_ip});
 
-			print "checking to see if listener is dead |$sendonlyone|$running_listen|\n" if($COUNTER_OUTPUT or $DB);
+			print nowDate() . " checking to see if listener is dead |$sendonlyone|$running_listen|$endless_loop|$processed_actions|\n" if($COUNTER_OUTPUT or $DB);
+			$processed_actions=0;
 			#my @psoutput = `/bin/ps -f --no-headers -A`;
 			my @psoutput = `/bin/ps -o "%p %a" --no-headers -A`;
-			foreach my $line (@psoutput) 
+			foreach my $line (@psoutput)
 				{
 				chomp($line);
 				print "|$line|     \n" if ($DBX);
@@ -296,8 +332,8 @@ while ($one_day_interval > 0)
 				$event_string = 'LISTENER DEAD STOPPING PROGRAM... ATTEMPTING TO START keepalive SCRIPT|';
 				eventLogger($conf{'PATHlogs'}, 'process', $event_string);
 			#	`/usr/bin/at now < $PATHhome/ADMIN_keepalive_send_listen.at 2>/dev/null 1>&2`;
-				my $screencmd = "/usr/bin/screen -d -m " . $conf{PATHhome} . "/ADMIN_keepalive_AST_send_listen.pl 2>/dev/null 1>&2";
-				`$screencmd`;
+			#	my $screencmd = "/usr/bin/screen -d -m " . $conf{PATHhome} . "/ADMIN_keepalive_AST_send_listen.pl 2>/dev/null 1>&2";
+			#	`$screencmd`;
 				}
 			}
 		}

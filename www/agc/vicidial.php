@@ -445,10 +445,11 @@
 # 140902-0826 - Added callback_active_limit and callback_active_limit_override
 # 140918-1606 - Fixed manual dial pause warning issue
 # 141105-1153 - Fixed issue with AGENTDIRECT transfers to agents with IDs over 7 characters long
+# 141113-1431 - Added admin_test option to allow login on active_agent=N servers
 #
 
-$version = '2.10-416c';
-$build = '141105-1153';
+$version = '2.10-417c';
+$build = '141113-1431';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=80;
 $one_mysql_log=0;
@@ -476,6 +477,8 @@ if (isset($_GET["relogin"]))					{$relogin=$_GET["relogin"];}
         elseif (isset($_POST["relogin"]))       {$relogin=$_POST["relogin"];}
 if (isset($_GET["MGR_override"]))				{$MGR_override=$_GET["MGR_override"];}
         elseif (isset($_POST["MGR_override"]))  {$MGR_override=$_POST["MGR_override"];}
+if (isset($_GET["admin_test"]))					{$admin_test=$_GET["admin_test"];}
+        elseif (isset($_POST["admin_test"]))	{$admin_test=$_POST["admin_test"];}
 if (!isset($phone_login)) 
 	{
 	if (isset($_GET["pl"]))                {$phone_login=$_GET["pl"];}
@@ -504,7 +507,7 @@ $phone_pass=preg_replace("/[^0-9a-zA-Z]/","",$phone_pass);
 $VD_login=preg_replace("/[^-_0-9a-zA-Z]/","",$VD_login);
 $VD_pass=preg_replace("/[^-_0-9a-zA-Z]/","",$VD_pass);
 $VD_campaign = preg_replace("/[^-_0-9a-zA-Z]/","",$VD_campaign);
-
+$admin_test = preg_replace("/[^0-9a-zA-Z]/","",$admin_test);
 
 $forever_stop=0;
 
@@ -938,6 +941,7 @@ if ($relogin == 'YES')
     echo "<input type=\"hidden\" name=\"DB\" id=\"DB\" value=\"$DB\" />\n";
     echo "<input type=\"hidden\" name=\"JS_browser_height\" id=\"JS_browser_height\" value=\"\" />\n";
     echo "<input type=\"hidden\" name=\"JS_browser_width\" id=\"JS_browser_width\" value=\"\" />\n";
+    echo "<input type=\"hidden\" name=\"admin_test\" id=\"admin_test\" value=\"$admin_test\" />\n";
     echo "<br /><br /><br /><center><table width=\"460px\" cellpadding=\"0\" cellspacing=\"0\" bgcolor=\"$MAIN_COLOR\"><tr bgcolor=\"white\">";
     echo "<td align=\"left\" valign=\"bottom\"><img src=\"./images/"._QXZ("vdc_tab_vicidial.gif")."\" border=\"0\" alt=\"VICIdial\" /></td>";
     echo "<td align=\"center\" valign=\"middle\"> "._QXZ("Re-Login")." </td>";
@@ -2173,8 +2177,14 @@ else
 
 	$authphone=0;
 	#$stmt="SELECT count(*) from phones where $phoneSQL and active = 'Y';";
-	$stmt="SELECT count(*) from phones,servers where $phoneSQL and phones.active = 'Y' and active_agent_login_server='Y' and phones.server_ip=servers.server_ip;";
+
+	$active_agentSQL = "and active_agent_login_server='Y'";
+	if ($admin_test == 'YES')
+		{$active_agentSQL='';}
+	$stmt="SELECT count(*) from phones,servers where $phoneSQL and phones.active = 'Y' and phones.server_ip=servers.server_ip $active_agentSQL;";
 	if ($DB) {echo "|$stmt|\n";}
+	echo "<!-- server query: $admin_test|$stmt| -->\n";
+
 	$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01020',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 	$row=mysqli_fetch_row($rslt);
@@ -2245,7 +2255,7 @@ else
 				$row=mysqli_fetch_row($rslt);
 				
 				### find out whether the server is set to active
-				$stmt="SELECT count(*) from servers where server_ip = '$rowx[0]' and active='Y' and active_agent_login_server='Y';";
+				$stmt="SELECT count(*) from servers where server_ip = '$rowx[0]' and active='Y' $active_agentSQL;";
 				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01023',$VD_login,$server_ip,$session_name,$one_mysql_log);}

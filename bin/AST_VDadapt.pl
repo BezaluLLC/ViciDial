@@ -40,12 +40,14 @@
 # 111223-0924 - Added check for logged-in agents
 # 131122-1314 - Added several missing sthA->finish
 # 141109-1957 - Fixed issue #793
+# 141113-1616 - Added concurrency check
 #
 
 # constants
 $DB=0;  # Debug flag, set to 0 for no debug messages, On an active system this will generate lots of lines of output per minute
 $US='__';
 $MT[0]='';
+$run_check=1; # concurrency check
 
 ##### table definitions(used to force index usage for better performance):
 	$vicidial_log = 'vicidial_log FORCE INDEX (call_date) ';
@@ -332,6 +334,21 @@ $sthA->finish();
 #	}
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
 ###########################################
+
+### concurrency check (SCREEN uses script path, so check for more than 2 entries)
+if ($run_check > 0)
+	{
+	my $grepout = `/bin/ps ax | grep $0 | grep -v grep | grep -v '/bin/sh'`;
+	my $grepnum=0;
+	$grepnum++ while ($grepout =~ m/\n/g);
+	if ($grepnum > 2) 
+		{
+		if ($DB) {print "I am not alone! Another $0 is running! Exiting...\n";}
+		$event_string = "I am not alone! Another $0 is running! Exiting...";
+		&event_logger;
+		exit;
+		}
+	}
 
 $master_loop=0;
 

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_update.pl version 2.8
+# AST_update.pl version 2.10
 #
 # DESCRIPTION:
 # uses the Asterisk Manager interface and DBD::MySQL to update the live_channels
@@ -61,9 +61,10 @@
 # 130413-2125 - Fix for issue #664, formatting fixes and added --quiet flag
 # 131122-1317 - Small formatting fixes
 # 140510-0119 - Small formatting and asterisk version changes
+# 141113-1601 - Added concurrency check
 #
 
-$build = '140510-0119';
+$build = '141113-1601';
 
 # constants
 $SYSPERF=0;	# system performance logging to MySQL server_performance table every 5 seconds
@@ -77,6 +78,7 @@ $MT[0]='';
 $cpuUSERprev=0;
 $cpuSYSTprev=0;
 $cpuIDLEprev=0;
+$run_check=1; # concurrency check
 
 # find proper locations of bin utils
 
@@ -418,6 +420,21 @@ if ($Q < 1)
 	print STDERR "Zap Clients:  $Zap_client_list\n";
 	print STDERR "IAX2 Clients: $IAX2_client_list\n";
 	print STDERR "SIP Clients:  $SIP_client_list\n";
+	}
+
+### concurrency check (SCREEN uses script path, so check for more than 2 entries)
+if ($run_check > 0)
+	{
+	my $grepout = `/bin/ps ax | grep $0 | grep -v grep | grep -v '/bin/sh'`;
+	my $grepnum=0;
+	$grepnum++ while ($grepout =~ m/\n/g);
+	if ($grepnum > 2) 
+		{
+		if ($DB) {print "I am not alone! Another $0 is running! Exiting...\n";}
+		$event_string = "I am not alone! Another $0 is running! Exiting...";
+		&event_logger;
+		exit;
+		}
 	}
 
 $one_day_interval = 12;		# 2 hour loops for one day

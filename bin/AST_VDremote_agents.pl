@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_VDremote_agents.pl version 2.8
+# AST_VDremote_agents.pl version 2.10
 #
 # SUMMARY:
 # To use VICIDIAL with remote agents, this must always be running 
@@ -49,6 +49,7 @@
 # 131122-1104 - Small fixes and formatting changes
 # 140417-0934 - Added max inbound calls feature
 # 140428-1449 - Added pause_type
+# 141113-1559 - Added concurrency check
 #
 
 ### begin parsing run-time options ###
@@ -116,6 +117,7 @@ $local_DEF = 'Local/';
 $conf_silent_prefix = '7';
 $local_AMP = '@';
 $agents = '@agents';
+$run_check=1; # concurrency check
 
 # default path to astguiclient configuration file:
 $PATHconf =	'/etc/astguiclient.conf';
@@ -196,6 +198,21 @@ $event_string='PROGRAM STARTED||||||||||||||||||||||||||||||||||||||||||||||||||
 
 $event_string='LOGGED INTO MYSQL SERVER ON 1 CONNECTION|';
 &event_logger;
+
+### concurrency check (SCREEN uses script path, so check for more than 2 entries)
+if ($run_check > 0)
+	{
+	my $grepout = `/bin/ps ax | grep $0 | grep -v grep | grep -v '/bin/sh'`;
+	my $grepnum=0;
+	$grepnum++ while ($grepout =~ m/\n/g);
+	if ($grepnum > 2) 
+		{
+		if ($DB) {print "I am not alone! Another $0 is running! Exiting...\n";}
+		$event_string = "I am not alone! Another $0 is running! Exiting...";
+		&event_logger;
+		exit;
+		}
+	}
 
 #$one_day_interval = 12;	# 1 month loops for one year 
 $one_day_interval = 1;		# 1 day

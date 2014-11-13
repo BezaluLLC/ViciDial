@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_manager_listen.pl version 2.8
+# AST_manager_listen.pl version 2.10
 #
 # Part of the Asterisk Central Queue System (ACQS)
 #
@@ -41,6 +41,7 @@
 # 130412-1216 - Added sip hangup cause logging from new patch AMI event
 # 130418-1946 - Changed asterisk 1.8 compatibility for CPD and SIP Hangup
 # 140524-0900 - Fixed issue with consultative agent transfers in Asterisk 1.8
+# 141113-1605 - Added concurrency check
 #
 
 # constants
@@ -49,6 +50,7 @@ $US='__';
 $MT[0]='';
 $vdcl_update=0;
 $vddl_update=0;
+$run_check=1; # concurrency check
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -189,6 +191,21 @@ if (!$telnet_port) {$telnet_port = '5038';}
 
 	$event_string='LOGGED INTO MYSQL SERVER ON 1 CONNECTION|';
 	&event_logger;
+
+### concurrency check (SCREEN uses script path, so check for more than 2 entries)
+if ($run_check > 0)
+	{
+	my $grepout = `/bin/ps ax | grep $0 | grep -v grep | grep -v '/bin/sh'`;
+	my $grepnum=0;
+	$grepnum++ while ($grepout =~ m/\n/g);
+	if ($grepnum > 2) 
+		{
+		if ($DB) {print "I am not alone! Another $0 is running! Exiting...\n";}
+		$event_string = "I am not alone! Another $0 is running! Exiting...";
+		&event_logger;
+		exit;
+		}
+	}
 
 $one_day_interval = 90;		# 1 day loops for 3 months
 while($one_day_interval > 0)

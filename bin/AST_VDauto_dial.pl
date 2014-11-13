@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_VDauto_dial.pl version 2.8
+# AST_VDauto_dial.pl version 2.10
 #
 # DESCRIPTION:
 # Places auto_dial calls on the VICIDIAL dialer system 
@@ -117,6 +117,7 @@
 # 131122-1233 - Added several missing sthA->finish 
 # 131209-1557 - Added called_count logging
 # 140426-1941 - Added pause_type to vicidial_agent_log
+# 141113-1556 - Added concurrency check
 #
 
 
@@ -179,6 +180,7 @@ $RECcount=''; ### leave blank for no REC count
 $RECprefix='7'; ### leave blank for no REC prefix
 $useJAMdebugFILE='1'; ### leave blank for no Jam call debug file writing
 $max_vicidial_trunks=0; ### setting a default value for max_vicidial_trunks
+$run_check=1; # concurrency check
 
 # default path to astguiclient configuration file:
 $PATHconf =		'/etc/astguiclient.conf';
@@ -298,6 +300,21 @@ if ($sthArows > 0)
 $sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
 ###########################################
+
+### concurrency check (SCREEN uses script path, so check for more than 2 entries)
+if ($run_check > 0)
+	{
+	my $grepout = `/bin/ps ax | grep $0 | grep -v grep | grep -v '/bin/sh'`;
+	my $grepnum=0;
+	$grepnum++ while ($grepout =~ m/\n/g);
+	if ($grepnum > 2) 
+		{
+		if ($DB) {print "I am not alone! Another $0 is running! Exiting...\n";}
+		$event_string = "I am not alone! Another $0 is running! Exiting...";
+		&event_logger;
+		exit;
+		}
+	}
 
 
 $one_day_interval = 12;		# 1 month loops for one year 
