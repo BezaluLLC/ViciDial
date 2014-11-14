@@ -31,6 +31,7 @@
 # 140425-1314 - Added pause_type field to logout
 # 140429-0750 - Fixed issue with queue_log if login/out logging is disabled
 # 141007-2214 - Finalized adding QXZ translation to all admin files
+# 141114-1702 - Fixed issue #800
 #
 
 $startMS = microtime();
@@ -834,7 +835,7 @@ if ($agents_to_print > 0)
 			$o++;
 			}
 		echo "</SELECT>\n";
-		echo "<input type=submit name=submit value='"._QXZ("CHANGE")." disabled><BR></form>\n";
+		echo "<input type=submit name=submit value='"._QXZ("CHANGE")."' disabled><BR></form>\n";
 
 		echo "<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
