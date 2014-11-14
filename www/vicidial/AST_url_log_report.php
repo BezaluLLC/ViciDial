@@ -7,6 +7,7 @@
 # 130620-0806 - First build
 # 130901-2005 - Changed to mysqli PHP functions
 # 140108-0732 - Added webserver and hostname to report logging
+# 141114-0713 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -101,7 +102,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -114,10 +115,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -222,14 +223,14 @@ while($i < $url_type_ct)
 if ( (preg_match('/\-\-ALL\-\-/',$url_type_string) ) or ($url_type_ct < 1) )
 	{
 	$url_type_SQL = "";
-	$url_rpt_string="- ALL servers ";
+	$url_rpt_string="- "._QXZ("ALL servers")." ";
 	if (preg_match('/\-\-ALL\-\-/',$url_type_string)) {$url_typeQS="&url_type[]=--ALL--";}
 	}
 else
 	{
 	$url_type_SQL = preg_replace('/,$/i', '',$url_type_SQL);
 	$url_type_SQL = "and url_type IN($url_type_SQL)";
-	$url_rpt_string="- server(s) ".preg_replace('/\|/', ", ", substr($url_type_string, 1, -1));
+	$url_rpt_string="- "._QXZ("server(s)")." ".preg_replace('/\|/', ", ", substr($url_type_string, 1, -1));
 	}
 if (strlen($url_type_SQL)<3) {$url_type_SQL="";}
 
@@ -252,7 +253,7 @@ $HEADER.="<link rel=\"stylesheet\" href=\"verticalbargraph.css\">\n";
 $HEADER.="<script language=\"JavaScript\" src=\"wz_jsgraphics.js\"></script>\n";
 $HEADER.="<script language=\"JavaScript\" src=\"line.js\"></script>\n";
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 
@@ -260,7 +261,7 @@ $MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 $MAIN.="<TABLE BORDER=0 cellspacing=5 cellpadding=5><TR><TD VALIGN=TOP align=center>\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
-$MAIN.="Date:\n";
+$MAIN.=_QXZ("Date").":\n";
 $MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 $MAIN.="<script language=\"JavaScript\">\n";
 $MAIN.="var o_cal = new tcal ({\n";
@@ -275,14 +276,14 @@ $MAIN.="</script>\n";
 
 $MAIN.="<BR><BR><INPUT TYPE=TEXT NAME=query_date_D SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_D\">";
 
-$MAIN.="<BR> to <BR><INPUT TYPE=TEXT NAME=query_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_T\">";
+$MAIN.="<BR> "._QXZ("to")." <BR><INPUT TYPE=TEXT NAME=query_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_T\">";
 
 $MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>URL type:<BR/>\n";
 $MAIN.="<SELECT SIZE=5 NAME=url_type[] multiple>\n";
 if  (preg_match('/--ALL--/',$url_type_string))
-	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL URL TYPES --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL URL TYPES")." --</option>\n";}
 else
-	{$MAIN.="<option value=\"--ALL--\">-- ALL URL TYPES --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\">-- "._QXZ("ALL URL TYPES")." --</option>\n";}
 $o=0;
 while ($url_types_to_print > $o)
 	{
@@ -296,8 +297,8 @@ $MAIN.="</SELECT></TD><TD ROWSPAN=2 VALIGN=middle align=center>\n";
 $MAIN.="Display as:<BR>";
 $MAIN.="<select name='report_display_type'>";
 if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
-$MAIN.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR><BR>";
-$MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT><BR/><BR/>\n";
+$MAIN.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n<BR><BR>";
+$MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'><BR/><BR/>\n";
 $MAIN.="</TD></TR></TABLE>\n";
 if ($SUBMIT && $url_type_ct>0) {
 	$stmt="select url_type, count(*) as ct From vicidial_url_log where url_date>='$query_date $query_date_D' and url_date<='$query_date $query_date_T' $url_type_SQL $server_ip_SQL group by url_type order by url_type";
@@ -306,13 +307,13 @@ if ($SUBMIT && $url_type_ct>0) {
 	$HTML_text="";
 	if ($DB) {$ASCII_text.=$stmt."\n";}
 	if (mysqli_num_rows($rslt)>0) {
-		$ASCII_text.="--- URL TYPE BREAKDOWN FOR $query_date, $query_date_D TO $query_date_T $server_rpt_string\n";
+		$ASCII_text.="--- "._QXZ("URL TYPE BREAKDOWN FOR")." $query_date, $query_date_D TO $query_date_T $server_rpt_string\n";
 		$ASCII_text.="+--------------+---------+\n";
-		$ASCII_text.="| URL TYPE     |  COUNT  |\n";
+		$ASCII_text.="| "._QXZ("URL TYPE",12)." | "._QXZ("COUNT",7)." |\n";
 		$ASCII_text.="+--------------+---------+\n";
 		$HTML_text.="<table border='0' cellpadding='0' cellspacing='2' width='350'>";
-		$HTML_text.="<TR><TH colspan='2' class='small_standard_bold grey_graph_cell'>URL TYPE BREAKDOWN FOR $query_date, $query_date_D TO $query_date_T $server_rpt_string</TH></TR>";
-		$HTML_text.="<TR><TH class='small_standard_bold grey_graph_cell'>URL TYPE</th><TH class='small_standard_bold grey_graph_cell'>COUNT</th></tr>";
+		$HTML_text.="<TR><TH colspan='2' class='small_standard_bold grey_graph_cell'>"._QXZ("URL TYPE BREAKDOWN FOR")." $query_date, $query_date_D "._QXZ("TO")." $query_date_T $server_rpt_string</TH></TR>";
+		$HTML_text.="<TR><TH class='small_standard_bold grey_graph_cell'>"._QXZ("URL TYPE")."</th><TH class='small_standard_bold grey_graph_cell'>"._QXZ("COUNT")."</th></tr>";
 
 		$total_count=0;
 		while ($row=mysqli_fetch_array($rslt)) {
@@ -323,9 +324,9 @@ if ($SUBMIT && $url_type_ct>0) {
 			$total_count+=$row["ct"];
 		}
 		$ASCII_text.="+--------------+---------+\n";
-		$ASCII_text.="|        TOTAL | ".sprintf("%-8s", $total_count)."|\n";
+		$ASCII_text.="| "._QXZ("TOTAL",12,"r")." | ".sprintf("%-8s", $total_count)."|\n";
 		$ASCII_text.="+--------------+---------+\n\n";
-		$HTML_text.="<TR><TH class='small_standard_bold grey_graph_cell'>TOTAL</th><TH class='small_standard_bold grey_graph_cell'>$total_count</th></tr></table>";
+		$HTML_text.="<TR><TH class='small_standard_bold grey_graph_cell'>"._QXZ("TOTAL")."</th><TH class='small_standard_bold grey_graph_cell'>$total_count</th></tr></table>";
 
 
 		$rpt_stmt="select * from vicidial_url_log where url_date>='$query_date $query_date_D' and url_date<='$query_date $query_date_T' $url_type_SQL order by url_date asc";
@@ -335,16 +336,16 @@ if ($SUBMIT && $url_type_ct>0) {
 		if (!$lower_limit) {$lower_limit=1;}
 		if ($lower_limit+999>=mysqli_num_rows($rpt_rslt)) {$upper_limit=($lower_limit+mysqli_num_rows($rpt_rslt)%1000)-1;} else {$upper_limit=$lower_limit+999;}
 		
-		$ASCII_text.="--- URL LOG RECORDS FOR $query_date, $query_date_D TO $query_date_T $server_rpt_string, RECORDS #$lower_limit-$upper_limit               <a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">[DOWNLOAD]</a>\n";
+		$ASCII_text.="--- "._QXZ("URL LOG RECORDS FOR")." $query_date, $query_date_D TO $query_date_T $server_rpt_string, "._QXZ("RECORDS")." #$lower_limit-$upper_limit               <a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">["._QXZ("DOWNLOAD")."]</a>\n";
 		$url_rpt.="+----------------------+---------------------+--------------+----------+----------------------------------------------------------------------------------+----------------------------------------------------------------------------------+\n";
-		$url_rpt.="| UNIQUE ID            | URL DATE            | URL TYPE     | RESP SEC | URL                                                                              | URL RESPONSE                                                                     |\n";
+		$url_rpt.="| "._QXZ("UNIQUE ID",20)." | "._QXZ("URL DATE",19)." | "._QXZ("URL TYPE",12)." | "._QXZ("RESP SEC",8)." | "._QXZ("URL",80)." | "._QXZ("URL RESPONSE",80)." |\n";
 		$url_rpt.="+----------------------+---------------------+--------------+----------+----------------------------------------------------------------------------------+----------------------------------------------------------------------------------+\n";
 
 		$HTML_text.="<BR><BR><table border='0' cellpadding='0' cellspacing='2' width='1000'>";
-		$HTML_rpt.="<TR><TH colspan='5' class='small_standard_bold grey_graph_cell'>URL LOG RECORDS FOR $query_date, $query_date_D TO $query_date_T $server_rpt_string, RECORDS #$lower_limit-$upper_limit</TH><TD align='right' class='small_standard_bold grey_graph_cell'><a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">[DOWNLOAD]</a></td></TR>";
-		$HTML_rpt.="<TR><TH class='small_standard_bold grey_graph_cell' width='90'>UNIQUE ID</TH><TH class='small_standard_bold grey_graph_cell' width='120'>URL DATE</TH><TH class='small_standard_bold grey_graph_cell' width='70'>URL TYPE</TH><TH class='small_standard_bold grey_graph_cell' width='70'>RESP SEC</TH><TH class='small_standard_bold grey_graph_cell' width='300'>URL</TH><TH class='small_standard_bold grey_graph_cell' width='300'>URL RESPONSE</TH></TR>";
+		$HTML_rpt.="<TR><TH colspan='5' class='small_standard_bold grey_graph_cell'>"._QXZ("URL LOG RECORDS FOR")." $query_date, $query_date_D "._QXZ("TO")." $query_date_T $server_rpt_string, "._QXZ("RECORDS")." #$lower_limit-$upper_limit</TH><TD align='right' class='small_standard_bold grey_graph_cell'><a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">["._QXZ("DOWNLOAD")."]</a></td></TR>";
+		$HTML_rpt.="<TR><TH class='small_standard_bold grey_graph_cell' width='90'>"._QXZ("UNIQUE ID")."</TH><TH class='small_standard_bold grey_graph_cell' width='120'>"._QXZ("URL DATE")."</TH><TH class='small_standard_bold grey_graph_cell' width='70'>"._QXZ("URL TYPE")."</TH><TH class='small_standard_bold grey_graph_cell' width='70'>"._QXZ("RESP SEC")."</TH><TH class='small_standard_bold grey_graph_cell' width='300'>"._QXZ("URL")."</TH><TH class='small_standard_bold grey_graph_cell' width='300'>"._QXZ("URL RESPONSE")."</TH></TR>";
 
-		$CSV_text="\"UNIQUE ID\",\"URL DATE\",\"URL TYPE\",\"RESP SEC\",\"URL\",\"URL RESPONSE\"\n";
+		$CSV_text="\""._QXZ("UNIQUE ID")."\",\""._QXZ("URL DATE")."\",\""._QXZ("URL TYPE")."\",\""._QXZ("RESP SEC")."\",\""._QXZ("URL")."\",\""._QXZ("URL RESPONSE")."\"\n";
 
 		for ($i=1; $i<=mysqli_num_rows($rpt_rslt); $i++) {
 			$row=mysqli_fetch_array($rpt_rslt);
@@ -427,8 +428,8 @@ if ($SUBMIT && $url_type_ct>0) {
 		if ($ll<1 || ($lower_limit+1000)>=mysqli_num_rows($rpt_rslt)) {$HTML_colspan=6;} else {$HTML_colspan=3;}
 
 		if ($ll>=1) {
-			$url_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&report_display_type=$report_display_type&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=$ll\">[<<< PREV 1000 records]</a>";
-			$HTML_rpt_hf.="<Td colspan='$HTML_colspan' class='small_standard_bold grey_graph_cell' align='left'><a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&report_display_type=$report_display_type&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=$ll\">[<<< PREV 1000 records]</a></TH>";
+			$url_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&report_display_type=$report_display_type&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=$ll\">[<<< "._QXZ("PREV 1000 records")."]</a>";
+			$HTML_rpt_hf.="<Td colspan='$HTML_colspan' class='small_standard_bold grey_graph_cell' align='left'><a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&report_display_type=$report_display_type&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=$ll\">[<<< "._QXZ("PREV 1000 records")."]</a></TH>";
 
 		} else {
 			$url_rpt_hf.=sprintf("%-23s", " ");
@@ -436,8 +437,8 @@ if ($SUBMIT && $url_type_ct>0) {
 		$url_rpt_hf.=sprintf("%-145s", " ");
 		if (($lower_limit+1000)<mysqli_num_rows($rpt_rslt)) {
 			if ($upper_limit+1000>=mysqli_num_rows($rpt_rslt)) {$max_limit=mysqli_num_rows($rpt_rslt)-$upper_limit;} else {$max_limit=1000;}
-			$url_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&report_display_type=$report_display_type&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=".($lower_limit+1000)."\">[NEXT $max_limit records >>>]</a>";
-			$HTML_rpt_hf.="<Td colspan='$HTML_colspan' class='small_standard_bold grey_graph_cell' align='right'><a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&report_display_type=$report_display_type&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=".($lower_limit+1000)."\">[NEXT $max_limit records >>>]</a></TH>";
+			$url_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&report_display_type=$report_display_type&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=".($lower_limit+1000)."\">["._QXZ("NEXT")." $max_limit "._QXZ("records")." >>>]</a>";
+			$HTML_rpt_hf.="<Td colspan='$HTML_colspan' class='small_standard_bold grey_graph_cell' align='right'><a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&report_display_type=$report_display_type&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=".($lower_limit+1000)."\">["._QXZ("NEXT")." $max_limit "._QXZ("records")." >>>]</a></TH>";
 		} else {
 			$url_rpt_hf.=sprintf("%23s", " ");
 		}
@@ -446,7 +447,7 @@ if ($SUBMIT && $url_type_ct>0) {
 		$ASCII_text.=$url_rpt_hf.$url_rpt.$url_rpt_hf;
 		$HTML_text.=$HTML_rpt_hf.$HTML_rpt.$HTML_rpt_hf."</table>";
 	} else {
-		$MAIN.="*** NO RECORDS FOUND ***\n";
+		$MAIN.="*** "._QXZ("NO RECORDS FOUND")." ***\n";
 	}
 	$ASCII_text.="</font></PRE>\n";
 

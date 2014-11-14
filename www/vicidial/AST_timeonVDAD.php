@@ -1,7 +1,7 @@
 <?php 
 # AST_timeonVDAD.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # live real-time stats for the VICIDIAL Auto-Dialer
 #
@@ -17,6 +17,7 @@
 # 130610-1128 - Finalized changing of all ereg instances to preg
 # 130620-2317 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-2009 - Changed to mysqli PHP functions
+# 141114-0721 - Finalized adding QXZ translation to all admin files
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -87,7 +88,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -100,10 +101,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -177,7 +178,7 @@ if ($closer_display>0)
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 echo"<META HTTP-EQUIV=Refresh CONTENT=\"4; URL=$PHP_SELF?server_ip=$server_ip&DB=$DB&reset_counter=$reset_counter&closer_display=$closer_display\">\n";
-echo "<TITLE>Server-Specific Real-Time Report</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>"._QXZ("Server-Specific Real-Time Report")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 
@@ -196,7 +197,7 @@ $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $balanceSHORT = $row[0];
 
-echo "SERVER: $server_ip\n";
+echo _QXZ("SERVER").": $server_ip\n";
 
 
 
@@ -204,21 +205,21 @@ echo "SERVER: $server_ip\n";
 ###### TIME ON SYSTEM
 ###################################################################################
 
-if ($closer_display>0) {$closer_display_reverse=0;   $closer_reverse_link='DEFAULT';}
-else {$closer_display_reverse=1;   $closer_reverse_link='CLOSER';}
+if ($closer_display>0) {$closer_display_reverse=0;   $closer_reverse_link=_QXZ('DEFAULT');}
+else {$closer_display_reverse=1;   $closer_reverse_link=_QXZ('CLOSER');}
 
-echo "Agents Time On Calls           $NOW_TIME    <a href=\"$PHP_SELF?server_ip=$server_ip&DB=$DB&reset_counter=$reset_counter&closer_display=$closer_display_reverse\">$closer_reverse_link</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a>\n\n";
+echo _QXZ("Agents Time On Calls")."           $NOW_TIME    <a href=\"$PHP_SELF?server_ip=$server_ip&DB=$DB&reset_counter=$reset_counter&closer_display=$closer_display_reverse\">$closer_reverse_link</a> | <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a>\n\n";
 
 if ($closer_display>0)
 {
 echo "+------------+------------+--------+-----------+---------------------+--------+----------+---------+--------------+--------+\n";
-echo "| STATION    | PHONE      | USER   | SESSIONID | CHANNEL             | STATUS | CALLTIME | MINUTES | CAMPAIGN     | FRONT  |\n";
+echo "| "._QXZ("STATION",10)." | "._QXZ("PHONE",10)." | "._QXZ("USER",6)." | "._QXZ("SESSIONID",9)." | "._QXZ("CHANNEL",19)." | "._QXZ("STATUS",6)." | "._QXZ("CALLTIME",8)." | "._QXZ("MINUTES",7)." | "._QXZ("CAMPAIGN",12)." | "._QXZ("FRONT",6)." |\n";
 echo "+------------+------------+--------+-----------+---------------------+--------+----------+---------+--------------+--------+\n";
 }
 else
 {
 echo "+------------+------------+--------+-----------+---------------------+--------+----------+---------+\n";
-echo "| STATION    | PHONE      | USER   | SESSIONID | CHANNEL             | STATUS | CALLTIME | MINUTES |\n";
+echo "| "._QXZ("STATION",10)." | "._QXZ("PHONE",10)." | "._QXZ("USER",6)." | "._QXZ("SESSIONID",9)." | "._QXZ("CHANNEL",19)." | "._QXZ("STATUS",6)." | "._QXZ("CALLTIME",8)." | "._QXZ("MINUTES",7)." |\n";
 echo "+------------+------------+--------+-----------+---------------------+--------+----------+---------+\n";
 }
 
@@ -371,7 +372,7 @@ $talking_to_print = mysqli_num_rows($rslt);
 				$camp_color = $row[0];
 				}
 			else
-				{$campaign = 'DEAD        ';   	$camp_color = 'DEAD';}
+				{$campaign = _QXZ('DEAD',12);   	$camp_color = 'DEAD';}
 			if (preg_match("/READY|PAUSED|CLOSER/i",$status[$i]))
 				{$campaign = '            ';   	$camp_color = '';}
 
@@ -397,18 +398,18 @@ $talking_to_print = mysqli_num_rows($rslt);
 			$i++;
 			}
 		echo "+------------+------------+--------+-----------+---------------------+--------+----------+---------+--------------+--------+\n";
-		echo "  $i agents logged in on server $server_ip\n\n";
+		echo "  $i "._QXZ("agents logged in on server")." $server_ip\n\n";
 	#	echo "  <SPAN class=\"blue\"><B>          </SPAN> - 5 minutes or more on call</B>\n";
 	#	echo "  <SPAN class=\"purple\"><B>          </SPAN> - Over 10 minutes on call</B>\n";
 		}
 	else
 		{
 		echo "+------------+------------+--------+-----------+---------------------+--------+----------+---------+\n";
-		echo "  $agentcount agents logged in on server $server_ip\n\n";
+		echo "  $agentcount "._QXZ("agents logged in on server")." $server_ip\n\n";
 
-		echo "  <SPAN class=\"yellow\"><B>          </SPAN> - Paused agents</B>\n";
-		echo "  <SPAN class=\"blue\"><B>          </SPAN> - 5 minutes or more on call</B>\n";
-		echo "  <SPAN class=\"purple\"><B>          </SPAN> - Over 10 minutes on call</B>\n";
+		echo "  <SPAN class=\"yellow\"><B>          </SPAN> - "._QXZ("Paused agents")."</B>\n";
+		echo "  <SPAN class=\"blue\"><B>          </SPAN> - "._QXZ("5 minutes or more on call")."</B>\n";
+		echo "  <SPAN class=\"purple\"><B>          </SPAN> - "._QXZ("Over 10 minutes on call")."</B>\n";
 		}
 
 	}
@@ -416,7 +417,7 @@ $talking_to_print = mysqli_num_rows($rslt);
 	{
 	echo "**************************************************************************************\n";
 	echo "**************************************************************************************\n";
-	echo "********************************* NO AGENTS ON CALLS *********************************\n";
+	echo "********************************* "._QXZ("NO AGENTS ON CALLS",18)." *********************************\n";
 	echo "**************************************************************************************\n";
 	echo "**************************************************************************************\n";
 	}
@@ -428,9 +429,9 @@ $talking_to_print = mysqli_num_rows($rslt);
 #echo "\n\n";
 echo "----------------------------------------------------------------------------------------";
 echo "\n\n";
-echo "Server-Specific Real-Time Report        TRUNK SHORT: $balanceSHORT          $NOW_TIME\n\n";
+echo _QXZ("Server-Specific Real-Time Report",39)." "._QXZ("TRUNK SHORT",11).": $balanceSHORT          $NOW_TIME\n\n";
 echo "+---------------------+--------+--------------+--------------------+----------+---------+\n";
-echo "| CHANNEL             | STATUS | CAMPAIGN     | PHONE NUMBER       | CALLTIME | MINUTES |\n";
+echo "| "._QXZ("CHANNEL",19)." | "._QXZ("STATUS",6)." | "._QXZ("CAMPAIGN",12)." | "._QXZ("PHONE NUMBER",18)." | "._QXZ("CALLTIME",8)." | "._QXZ("MINUTES",7)." |\n";
 echo "+---------------------+--------+--------------+--------------------+----------+---------+\n";
 
 $stmt="select channel,status,campaign_id,phone_code,phone_number,call_time,UNIX_TIMESTAMP(call_time) from vicidial_auto_calls where status NOT IN('XFER') and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' order by auto_call_id desc;";
@@ -485,9 +486,9 @@ $parked_to_print = mysqli_num_rows($rslt);
 		}
 
 		echo "+---------------------+--------+--------------+--------------------+----------+---------+\n";
-		echo "  $i calls being placed on server $server_ip\n\n";
+		echo "  $i "._QXZ("calls being placed on server")." $server_ip\n\n";
 
-		echo "  <SPAN class=\"green\"><B>          </SPAN> - LIVE CALL WAITING</B>\n";
+		echo "  <SPAN class=\"green\"><B>          </SPAN> - "._QXZ("LIVE CALL WAITING")."</B>\n";
 	#	echo "  <SPAN class=\"red\"><B>          </SPAN> - Over 5 minutes on hold</B>\n";
 
 		}
@@ -495,7 +496,7 @@ $parked_to_print = mysqli_num_rows($rslt);
 	{
 	echo "***************************************************************************************\n";
 	echo "***************************************************************************************\n";
-	echo "******************************* NO LIVE CALLS WAITING *********************************\n";
+	echo "******************************* "._QXZ("NO LIVE CALLS WAITING",21)." *********************************\n";
 	echo "***************************************************************************************\n";
 	echo "***************************************************************************************\n";
 	}

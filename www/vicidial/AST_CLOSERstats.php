@@ -43,6 +43,7 @@
 # 130901-0816 - Changed to mysqli PHP functions
 # 140108-0746 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141114-0009 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -148,7 +149,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -161,10 +162,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -194,7 +195,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -366,7 +367,7 @@ $HEADER.="<link rel=\"stylesheet\" href=\"verticalbargraph.css\">\n";
 $HEADER.="<script language=\"JavaScript\" src=\"wz_jsgraphics.js\"></script>\n";
 $HEADER.="<script language=\"JavaScript\" src=\"line.js\"></script>\n";
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 
@@ -388,7 +389,7 @@ $MAIN.="<TABLE BORDER=0><TR><TD VALIGN=TOP>\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DID VALUE=\"$DID\">\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=EMAIL VALUE=\"$EMAIL\">\n";
-$MAIN.="Date Range:<BR>\n";
+$MAIN.=_QXZ("Date Range").":<BR>\n";
 $MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
 $MAIN.="<script language=\"JavaScript\">\n";
@@ -402,7 +403,7 @@ $MAIN.="o_cal.a_tpl.yearscroll = false;\n";
 $MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 $MAIN.="</script>\n";
 
-$MAIN.=" to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+$MAIN.=" "._QXZ("to")." <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
 
 $MAIN.="<script language=\"JavaScript\">\n";
 $MAIN.="var o_cal = new tcal ({\n";
@@ -417,11 +418,11 @@ $MAIN.="</script>\n";
 
 $MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
 if ($EMAIL=='Y')
-	{$MAIN.="Email Accts: \n";}
+	{$MAIN.=_QXZ("Email Accts").": \n";}
 else if ($DID=='Y')
-	{$MAIN.="Inbound DIDs: \n";}
+	{$MAIN.=_QXZ("Inbound DIDs").": \n";}
 else
-	{$MAIN.="Inbound Groups: \n";}
+	{$MAIN.=_QXZ("Inbound Groups").": \n";}
 $MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
 $MAIN.="<SELECT SIZE=5 NAME=group[] multiple>\n";
 $o=0;
@@ -438,10 +439,10 @@ $MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
 $MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ";
 if ($DID!='Y')
 	{
-	$MAIN.="<a href=\"./admin.php?ADD=3111&group_id=$group[0]\">MODIFY</a> | ";
-	$MAIN.="<a href=\"./AST_IVRstats.php?query_date=$query_date&end_date=$end_date&shift=$shift$groupQS\">IVR REPORT</a> | \n";
+	$MAIN.="<a href=\"./admin.php?ADD=3111&group_id=$group[0]\">"._QXZ("MODIFY")."</a> | ";
+	$MAIN.="<a href=\"./AST_IVRstats.php?query_date=$query_date&end_date=$end_date&shift=$shift$groupQS\">"._QXZ("IVR REPORT")."</a> | \n";
 	}
-$MAIN.="<a href=\"./admin.php?ADD=999999\">REPORTS</a> | ";
+$MAIN.="<a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> | ";
 $MAIN.="</FONT>\n";
 
 $MAIN.="</TD></TR>\n";
@@ -456,18 +457,18 @@ $MAIN.="<TR><TD>\n";
 #		$o++;
 #	}
 #$MAIN.="</SELECT>\n";
-$MAIN.="Shift: <SELECT SIZE=1 NAME=shift>\n";
+$MAIN.=_QXZ("Shift").": <SELECT SIZE=1 NAME=shift>\n";
 $MAIN.="<option selected value=\"$shift\">$shift</option>\n";
 $MAIN.="<option value=\"\">--</option>\n";
-$MAIN.="<option value=\"AM\">AM</option>\n";
-$MAIN.="<option value=\"PM\">PM</option>\n";
-$MAIN.="<option value=\"ALL\">ALL</option>\n";
+$MAIN.="<option value=\"AM\">"._QXZ("AM")."</option>\n";
+$MAIN.="<option value=\"PM\">"._QXZ("PM")."</option>\n";
+$MAIN.="<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
 $MAIN.="</SELECT>\n";
-$MAIN.="<BR>Display as:&nbsp; ";
+$MAIN.="<BR>"._QXZ("Display as").":&nbsp; ";
 $MAIN.="<select name='report_display_type'>";
 if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
-$MAIN.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR>";
-$MAIN.=" &nbsp; <INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
+$MAIN.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n<BR>";
+$MAIN.=" &nbsp; <INPUT TYPE=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 $MAIN.="</TD></TR></TABLE>\n";
 $MAIN.="</FORM>\n\n";
 $MAIN.="<PRE><FONT SIZE=2>\n\n";
@@ -477,11 +478,11 @@ if ($groups_to_print < 1)
 	{
 	$MAIN.="\n\n";
 	if ($EMAIL=='Y')
-		{$MAIN.="PLEASE SELECT AN EMAIL ACCOUNT AND DATE RANGE ABOVE AND CLICK SUBMIT\n";}
+		{$MAIN.=_QXZ("PLEASE SELECT AN EMAIL ACCOUNT AND DATE RANGE ABOVE AND CLICK SUBMIT\n");}
 	if ($DID=='Y')
-		{$MAIN.="PLEASE SELECT A DID AND DATE RANGE ABOVE AND CLICK SUBMIT\n";}
+		{$MAIN.=_QXZ("PLEASE SELECT A DID AND DATE RANGE ABOVE AND CLICK SUBMIT\n");}
 	else
-		{$MAIN.="PLEASE SELECT AN IN-GROUP AND DATE RANGE ABOVE AND CLICK SUBMIT\n";}
+		{$MAIN.=_QXZ("PLEASE SELECT AN IN-GROUP AND DATE RANGE ABOVE AND CLICK SUBMIT\n");}
 	}
 
 else
@@ -510,13 +511,13 @@ $query_date_END = "$end_date $time_END";
 
 if ($EMAIL=='Y') 
 	{
-	$MAIN.="Inbound Email Stats: $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a>\n";
-	$CSV_text1.="\"Inbound Call Stats:\",\"$group_string\",\"$NOW_TIME\"\n";
+	$MAIN.=_QXZ("Inbound Email Stats").": $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1\">"._QXZ("DOWNLOAD")."</a>\n";
+	$CSV_text1.="\""._QXZ("Inbound Call Stats").":\",\"$group_string\",\"$NOW_TIME\"\n";
 	}
 else
 	{
-	$MAIN.="Inbound Call Stats: $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a>\n";
-	$CSV_text1.="\"Inbound Call Stats:\",\"$group_string\",\"$NOW_TIME\"\n";
+	$MAIN.=_QXZ("Inbound Call Stats").": $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1\">"._QXZ("DOWNLOAD")."</a>\n";
+	$CSV_text1.="\""._QXZ("Inbound Call Stats").":\",\"$group_string\",\"$NOW_TIME\"\n";
 	}
 
 
@@ -560,30 +561,30 @@ if ($DID=='Y')
 if ($group_ct > 1)
 	{
 	$ASCII_text.="\n";
-	$ASCII_text.="---------- MULTI-GROUP BREAKDOWN:\n";
+	$ASCII_text.="---------- "._QXZ("MULTI-GROUP BREAKDOWN").":\n";
 
-	$CSV_text1.="\n\"MULTI-GROUP BREAKDOWN:\"\n";
+	$CSV_text1.="\n\""._QXZ("MULTI-GROUP BREAKDOWN").":\"\n";
 
 	if ($EMAIL=='Y')
 		{
 		$ASCII_text.="+----------------------+---------+---------+---------+---------+\n";
-		$ASCII_text.="| EMAIL                | EMAILS  | DROPS   | DROP %  | IVR     |\n";
+		$ASCII_text.="| "._QXZ("EMAIL",20)." | "._QXZ("EMAILS",7)." | "._QXZ("DROPS",7)." | "._QXZ("DROP",5)." % | "._QXZ("IVR",7)." |\n";
 		$ASCII_text.="+----------------------+---------+---------+---------+---------+\n";
-		$CSV_text1.="\"EMAIL\",\"CALLS\",\"DROPS\",\"DROP %\",\"IVR\"\n";
+		$CSV_text1.="\""._QXZ("EMAIL")."\",\""._QXZ("CALLS")."\",\""._QXZ("DROPS")."\",\""._QXZ("DROP")." %\",\""._QXZ("IVR")."\"\n";
 		}
 	else if ($DID=='Y')
 		{
 		$ASCII_text.="+----------------------+---------+---------+---------+---------+\n";
-		$ASCII_text.="| DID                  | CALLS   | DROPS   | DROP %  | IVR     |\n";
+		$ASCII_text.="| "._QXZ("DID",20)." | "._QXZ("CALLS",7)." | "._QXZ("DROPS",7)." | "._QXZ("DROP",5)." % | "._QXZ("IVR",7)." |\n";
 		$ASCII_text.="+----------------------+---------+---------+---------+---------+\n";
-		$CSV_text1.="\"DID\",\"CALLS\",\"DROPS\",\"DROP %\",\"IVR\"\n";
+		$CSV_text1.="\""._QXZ("DID")."\",\""._QXZ("CALLS")."\",\""._QXZ("DROPS")."\",\""._QXZ("DROP")." %\",\""._QXZ("IVR")."\"\n";
 		}
 	else
 		{
 		$ASCII_text.="+----------------------+---------+---------+---------+---------+\n";
-		$ASCII_text.="| IN-GROUP             | CALLS   | DROPS   | DROP %  | IVR     |\n";
+		$ASCII_text.="| "._QXZ("IN-GROUP",20)." | "._QXZ("CALLS",7)." | "._QXZ("DROPS",7)." | "._QXZ("DROP",5)." % | "._QXZ("IVR",7)." |\n";
 		$ASCII_text.="+----------------------+---------+---------+---------+---------+\n";
-		$CSV_text1.="\"IN-GROUP\",\"CALLS\",\"DROPS\",\"DROP %\",\"IVR\"\n";
+		$CSV_text1.="\""._QXZ("IN-GROUP")."\",\""._QXZ("CALLS")."\",\""._QXZ("DROPS")."\",\""._QXZ("DROP")." %\",\""._QXZ("IVR")."\"\n";
 		}
 
 	$i=0;
@@ -678,7 +679,7 @@ if ($group_ct > 1)
 		$scale = MathZDC($graph_height, $max_value);
 
 
-		$GRAPH_text.="<table cellspacing='0' cellpadding='0'><caption align='top'>MULTI-GROUP BREAKDOWN</caption><tr height='25' valign='top'><th class='thgraph' scope='col'>GROUP</th><th class='thgraph' scope='col'>IVRS <img src='./images/bar_green.png' width='10' height='10'> / DROPS <img src='./images/bar_blue.png' width='10' height='10'> / CALLS <img src='./images/bar.png' width='10' height='10'></th></tr>";
+		$GRAPH_text.="<table cellspacing='0' cellpadding='0'><caption align='top'>"._QXZ("MULTI-GROUP BREAKDOWN")."</caption><tr height='25' valign='top'><th class='thgraph' scope='col'>"._QXZ("GROUP")."</th><th class='thgraph' scope='col'>"._QXZ("IVRS")." <img src='./images/bar_green.png' width='10' height='10'> / "._QXZ("DROPS")." <img src='./images/bar_blue.png' width='10' height='10'> / "._QXZ("CALLS")." <img src='./images/bar.png' width='10' height='10'></th></tr>";
 		for ($d=0; $d<count($graph_data_ary); $d++) {
 			if (strlen(trim($graph_data_ary[$d][0]))>0) {
 				$graph_data_ary[$d][0]=preg_replace('/\s/', "", $graph_data_ary[$d][0]); 
@@ -709,10 +710,10 @@ if ($group_ct > 1)
 		}
 
 $MAIN.="\n";
-$MAIN.="Time range: $query_date_BEGIN to $query_date_END\n\n";
-$MAIN.="---------- TOTALS\n";
+$MAIN.=_QXZ("Time range").": $query_date_BEGIN "._QXZ("to")." $query_date_END\n\n";
+$MAIN.="---------- "._QXZ("TOTALS")."\n";
 
-$CSV_text1.="\n\"Time range:\",\"$query_date_BEGIN\",\"to\",\"$query_date_END\"\n\n";
+$CSV_text1.="\n\""._QXZ("Time range").":\",\"$query_date_BEGIN\",\""._QXZ("to")."\",\"$query_date_END\"\n\n";
 
 $stmt="select count(*),sum(length_in_sec) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL);";
 if ($DID=='Y')
@@ -760,37 +761,37 @@ $average_answer_seconds =	sprintf("%10s", $average_answer_seconds);
 
 if ($EMAIL=='Y')
 	{
-	$MAIN.="Total Emails taken in to this In-Group:        $TOTALcalls\n";
-	$MAIN.="Average Email Length for all Emails:            $average_call_seconds seconds\n";
-	$MAIN.="Answered Emails:                               $ANSWEREDcalls  $ANSWEREDpercent%\n";
-	$MAIN.="Average queue time for Answered Emails:        $average_answer_seconds seconds\n";
-	$MAIN.="Emails taken into the IVR for this In-Group:   $IVRcalls\n";
+	$MAIN.=_QXZ("Total Emails taken in to this In-Group:",47)."$TOTALcalls\n";
+	$MAIN.=_QXZ("Average Email Length for all Emails:",47)."$average_call_seconds "._QXZ("seconds")."\n";
+	$MAIN.=_QXZ("Answered Emails:",47)."$ANSWEREDcalls  $ANSWEREDpercent%\n";
+	$MAIN.=_QXZ("Average queue time for Answered Emails:",47)."$average_answer_seconds "._QXZ("seconds")."\n";
+	$MAIN.=_QXZ("Emails taken into the IVR for this In-Group:",47)."$IVRcalls\n";
 
-	$CSV_text1.="\"Total Emails taken in to this In-Group:\",\"$TOTALcalls\"\n";
-	$CSV_text1.="\"Average Email Length for all Emails:\",\"$average_call_seconds seconds\"\n";
-	$CSV_text1.="\"Answered Emails:\",\"$ANSWEREDcalls\",\"$ANSWEREDpercent%\"\n";
-	$CSV_text1.="\"Average queue time for Answered Emails:\",\"$average_answer_seconds seconds\"\n";
-	$CSV_text1.="\"Emails taken into the IVR for this In-Group:\",\"$IVRcalls\"\n";
+	$CSV_text1.="\""._QXZ("Total Emails taken in to this In-Group").":\",\"$TOTALcalls\"\n";
+	$CSV_text1.="\""._QXZ("Average Email Length for all Emails").":\",\"$average_call_seconds "._QXZ("seconds")."\"\n";
+	$CSV_text1.="\""._QXZ("Answered Emails").":\",\"$ANSWEREDcalls\",\"$ANSWEREDpercent%\"\n";
+	$CSV_text1.="\""._QXZ("Average queue time for Answered Emails").":\",\"$average_answer_seconds "._QXZ("seconds")."\"\n";
+	$CSV_text1.="\""._QXZ("Emails taken into the IVR for this In-Group").":\",\"$IVRcalls\"\n";
 	}
 else
 	{
-	$MAIN.="Total calls taken in to this In-Group:        $TOTALcalls\n";
-	$MAIN.="Average Call Length for all Calls:            $average_call_seconds seconds\n";
-	$MAIN.="Answered Calls:                               $ANSWEREDcalls  $ANSWEREDpercent%\n";
-	$MAIN.="Average queue time for Answered Calls:        $average_answer_seconds seconds\n";
-	$MAIN.="Calls taken into the IVR for this In-Group:   $IVRcalls\n";
+	$MAIN.=_QXZ("Total calls taken in to this In-Group:",47)."$TOTALcalls\n";
+	$MAIN.=_QXZ("Average Call Length for all Calls:",47)."$average_call_seconds "._QXZ("seconds")."\n";
+	$MAIN.=_QXZ("Answered Calls:",47)."$ANSWEREDcalls  $ANSWEREDpercent%\n";
+	$MAIN.=_QXZ("Average queue time for Answered Calls:",47)."$average_answer_seconds "._QXZ("seconds")."\n";
+	$MAIN.=_QXZ("Calls taken into the IVR for this In-Group:",47)."$IVRcalls\n";
 
-	$CSV_text1.="\"Total calls taken in to this In-Group:\",\"$TOTALcalls\"\n";
-	$CSV_text1.="\"Average Call Length for all Calls:\",\"$average_call_seconds seconds\"\n";
-	$CSV_text1.="\"Answered Calls:\",\"$ANSWEREDcalls\",\"$ANSWEREDpercent%\"\n";
-	$CSV_text1.="\"Average queue time for Answered Calls:\",\"$average_answer_seconds seconds\"\n";
-	$CSV_text1.="\"Calls taken into the IVR for this In-Group:\",\"$IVRcalls\"\n";
+	$CSV_text1.="\""._QXZ("Total calls taken in to this In-Group").":\",\"$TOTALcalls\"\n";
+	$CSV_text1.="\""._QXZ("Average Call Length for all Calls").":\",\"$average_call_seconds "._QXZ("seconds")."\"\n";
+	$CSV_text1.="\""._QXZ("Answered Calls").":\",\"$ANSWEREDcalls\",\"$ANSWEREDpercent%\"\n";
+	$CSV_text1.="\""._QXZ("Average queue time for Answered Calls").":\",\"$average_answer_seconds "._QXZ("seconds")."\"\n";
+	$CSV_text1.="\""._QXZ("Calls taken into the IVR for this In-Group").":\",\"$IVRcalls\"\n";
 	}
 
 $MAIN.="\n";
-$MAIN.="---------- DROPS\n";
+$MAIN.="---------- "._QXZ("DROPS")."\n";
 
-$CSV_text1.="\n\"DROPS\"\n";
+$CSV_text1.="\n\""._QXZ("DROPS")."\"\n";
 
 $stmt="select count(*),sum(length_in_sec) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and status IN('DROP','XDROP') and (length_in_sec <= 49999 or length_in_sec is null);";
 if ($DID=='Y')
@@ -814,19 +815,19 @@ $DROP_ANSWEREDpercent = round($DROP_ANSWEREDpercent, 0);
 
 if ($EMAIL=='Y')
 	{
-	$MAIN.="Total DROP Emails:                             $DROPcalls  $DROPpercent%               drop/answered: $DROP_ANSWEREDpercent%\n";
-	$MAIN.="Average hold time for DROP Emails:             $average_hold_seconds seconds\n";
+	$MAIN.=_QXZ("Total DROP Emails:",47)."$DROPcalls  $DROPpercent%               "._QXZ("drop/answered").": $DROP_ANSWEREDpercent%\n";
+	$MAIN.=_QXZ("Average hold time for DROP Emails:",47)."$average_hold_seconds "._QXZ("seconds")."\n";
 
-	$CSV_text1.="\"Total DROP Emails:\",\"$DROPcalls\",\"$DROPpercent%\",\"drop/answered:\",\"$DROP_ANSWEREDpercent%\"\n";
-	$CSV_text1.="\"Average hold time for DROP Emails:\",\"$average_hold_seconds seconds\"\n";
+	$CSV_text1.="\"Total DROP Emails:\",\"$DROPcalls\",\"$DROPpercent%\",\""._QXZ("drop/answered").":\",\"$DROP_ANSWEREDpercent%\"\n";
+	$CSV_text1.="\"Average hold time for DROP Emails:\",\"$average_hold_seconds "._QXZ("seconds")."\"\n";
 	}
 else
 	{
-	$MAIN.="Total DROP Calls:                             $DROPcalls  $DROPpercent%               drop/answered: $DROP_ANSWEREDpercent%\n";
-	$MAIN.="Average hold time for DROP Calls:             $average_hold_seconds seconds\n";
+	$MAIN.=_QXZ("Total DROP Calls:",47)."$DROPcalls  $DROPpercent%               "._QXZ("drop/answered").": $DROP_ANSWEREDpercent%\n";
+	$MAIN.=_QXZ("Average hold time for DROP Calls:",47)."$average_hold_seconds "._QXZ("seconds")."\n";
 
-	$CSV_text1.="\"Total DROP Calls:\",\"$DROPcalls\",\"$DROPpercent%\",\"drop/answered:\",\"$DROP_ANSWEREDpercent%\"\n";
-	$CSV_text1.="\"Average hold time for DROP Calls:\",\"$average_hold_seconds seconds\"\n";
+	$CSV_text1.="\""._QXZ("Total DROP Calls").":\",\"$DROPcalls\",\"$DROPpercent%\",\""._QXZ("drop/answered").":\",\"$DROP_ANSWEREDpercent%\"\n";
+	$CSV_text1.="\""._QXZ("Average hold time for DROP Calls").":\",\"$average_hold_seconds "._QXZ("seconds")."\"\n";
 	}
 
 if (strlen($group_SQL)>3)
@@ -864,32 +865,32 @@ if (strlen($group_SQL)>3)
 if ($EMAIL=='Y')
 	{
 	$MAIN.="\n";
-	$MAIN.="---------- CUSTOM INDICATORS\n";
-	$MAIN.="GDE (Answered/Total emails taken in to this In-Group):  $ANSWEREDpercent%\n";
-	$MAIN.="ACR (Dropped/Answered):                                $DROP_ANSWEREDpercent%\n";
+	$MAIN.="---------- "._QXZ("CUSTOM INDICATORS")."\n";
+	$MAIN.="GDE "._QXZ("(Answered/Total emails taken in to this In-Group):",50)."  $ANSWEREDpercent%\n";
+	$MAIN.="ACR "._QXZ("(Dropped/Answered):",50)."  $DROP_ANSWEREDpercent%\n";
 
-	$CSV_text1.="\n\"CUSTOM INDICATORS\"\n";
-	$CSV_text1.="\"GDE (Answered/Total emails taken in to this In-Group):\",\"$ANSWEREDpercent%\"\n";
-	$CSV_text1.="\"ACR (Dropped/Answered):\",\"$DROP_ANSWEREDpercent%\"\n";
+	$CSV_text1.="\n\""._QXZ("CUSTOM INDICATORS")."\"\n";
+	$CSV_text1.="\"GDE "._QXZ("(Answered/Total emails taken in to this In-Group)").":\",\"$ANSWEREDpercent%\"\n";
+	$CSV_text1.="\"ACR "._QXZ("(Dropped/Answered)").":\",\"$DROP_ANSWEREDpercent%\"\n";
 	}
 else
 	{
 	$MAIN.="\n";
-	$MAIN.="---------- CUSTOM INDICATORS\n";
-	$MAIN.="GDE (Answered/Total calls taken in to this In-Group):  $ANSWEREDpercent%\n";
-	$MAIN.="ACR (Dropped/Answered):                                $DROP_ANSWEREDpercent%\n";
+	$MAIN.="---------- "._QXZ("CUSTOM INDICATORS")."\n";
+	$MAIN.="GDE "._QXZ("(Answered/Total calls taken in to this In-Group):",50)."  $ANSWEREDpercent%\n";
+	$MAIN.="ACR "._QXZ("(Dropped/Answered):",50)."  $DROP_ANSWEREDpercent%\n";
 
-	$CSV_text1.="\n\"CUSTOM INDICATORS\"\n";
-	$CSV_text1.="\"GDE (Answered/Total calls taken in to this In-Group):\",\"$ANSWEREDpercent%\"\n";
-	$CSV_text1.="\"ACR (Dropped/Answered):\",\"$DROP_ANSWEREDpercent%\"\n";
+	$CSV_text1.="\n\""._QXZ("CUSTOM INDICATORS")."\"\n";
+	$CSV_text1.="\"GDE "._QXZ("(Answered/Total calls taken in to this In-Group)").":\",\"$ANSWEREDpercent%\"\n";
+	$CSV_text1.="\"ACR "._QXZ("(Dropped/Answered)").":\",\"$DROP_ANSWEREDpercent%\"\n";
 	}
 
 if ($DID!='Y')
 	{
-	$MAIN.="TMR1 (Answered within $Sanswer_sec_pct_rt_stat_one seconds/Answered):            $PCTanswer_sec_pct_rt_stat_one%\n";
-	$MAIN.="TMR2 (Answered within $Sanswer_sec_pct_rt_stat_two seconds/Answered):            $PCTanswer_sec_pct_rt_stat_two%\n";
-	$CSV_text1.="\"TMR1 (Answered within $Sanswer_sec_pct_rt_stat_one seconds/Answered):\",\"$PCTanswer_sec_pct_rt_stat_one%\"\n";
-	$CSV_text1.="\"TMR2 (Answered within $Sanswer_sec_pct_rt_stat_two seconds/Answered):\",\"$PCTanswer_sec_pct_rt_stat_two%\"\n";
+	$MAIN.="TMR1 "._QXZ("(Answered within $Sanswer_sec_pct_rt_stat_one seconds/Answered):",75)." $PCTanswer_sec_pct_rt_stat_one%\n";
+	$MAIN.="TMR2 "._QXZ("(Answered within $Sanswer_sec_pct_rt_stat_two seconds/Answered):",75)." $PCTanswer_sec_pct_rt_stat_two%\n";
+	$CSV_text1.="\"TMR1 "._QXZ("(Answered within $Sanswer_sec_pct_rt_stat_one seconds/Answered)").":\",\"$PCTanswer_sec_pct_rt_stat_one%\"\n";
+	$CSV_text1.="\"TMR2 "._QXZ("(Answered within $Sanswer_sec_pct_rt_stat_two seconds/Answered)").":\",\"$PCTanswer_sec_pct_rt_stat_two%\"\n";
 	}
 
 
@@ -933,9 +934,9 @@ while ($p < $statuses_to_print)
 ##############################
 #########  CALL QUEUE STATS
 $MAIN.="\n";
-$MAIN.="---------- QUEUE STATS\n";
+$MAIN.="---------- "._QXZ("QUEUE STATS")."\n";
 
-$CSV_text1.="\n\"QUEUE STATS\"\n";
+$CSV_text1.="\n\""._QXZ("QUEUE STATS")."\"\n";
 
 $stmt="select count(*),sum(queue_seconds) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and (queue_seconds > 0);";
 if ($DID=='Y')
@@ -960,31 +961,31 @@ $average_total_queue_seconds = sprintf("%10.2f", $average_total_queue_seconds);
 
 if ($EMAIL=='Y')
 	{
-	$MAIN.="Total Emails That entered Queue:               $QUEUEcalls  $QUEUEpercent%\n";
-	$MAIN.="Average QUEUE Length for queue emails:         $average_queue_seconds seconds\n";
-	$MAIN.="Average QUEUE Length across all emails:        $average_total_queue_seconds seconds\n";
+	$MAIN.=_QXZ("Total Emails That entered Queue:",46)." $QUEUEcalls  $QUEUEpercent%\n";
+	$MAIN.=_QXZ("Average QUEUE Length for queue emails:",46)." $average_queue_seconds "._QXZ("seconds")."\n";
+	$MAIN.=_QXZ("Average QUEUE Length across all emails:",46)." $average_total_queue_seconds "._QXZ("seconds")."\n";
 
-	$CSV_text1.="\"Total Emails That entered Queue:\",\"$QUEUEcalls\",\"$QUEUEpercent%\"\n";
-	$CSV_text1.="\"Average QUEUE Length for queue emails:\",\"$average_queue_seconds seconds\"\n";
-	$CSV_text1.="\"Average QUEUE Length across all emails:\",\"$average_total_queue_seconds seconds\"\n";
+	$CSV_text1.="\""._QXZ("Total Emails That entered Queue").":\",\"$QUEUEcalls\",\"$QUEUEpercent%\"\n";
+	$CSV_text1.="\""._QXZ("Average QUEUE Length for queue emails").":\",\"$average_queue_seconds "._QXZ("seconds")."\"\n";
+	$CSV_text1.="\""._QXZ("Average QUEUE Length across all emails").":\",\"$average_total_queue_seconds "._QXZ("seconds")."\"\n";
 	}
 else 
 	{
-	$MAIN.="Total Calls That entered Queue:               $QUEUEcalls  $QUEUEpercent%\n";
-	$MAIN.="Average QUEUE Length for queue calls:         $average_queue_seconds seconds\n";
-	$MAIN.="Average QUEUE Length across all calls:        $average_total_queue_seconds seconds\n";
+	$MAIN.=_QXZ("Total Calls That entered Queue:",46)." $QUEUEcalls  $QUEUEpercent%\n";
+	$MAIN.=_QXZ("Average QUEUE Length for queue calls:",46)." $average_queue_seconds "._QXZ("seconds")."\n";
+	$MAIN.=_QXZ("Average QUEUE Length across all calls:",46)." $average_total_queue_seconds "._QXZ("seconds")."\n";
 
-	$CSV_text1.="\"Total Calls That entered Queue:\",\"$QUEUEcalls\",\"$QUEUEpercent%\"\n";
-	$CSV_text1.="\"Average QUEUE Length for queue calls:\",\"$average_queue_seconds seconds\"\n";
-	$CSV_text1.="\"Average QUEUE Length across all calls:\",\"$average_total_queue_seconds seconds\"\n";
+	$CSV_text1.="\""._QXZ("Total Calls That entered Queue").":\",\"$QUEUEcalls\",\"$QUEUEpercent%\"\n";
+	$CSV_text1.="\""._QXZ("Average QUEUE Length for queue calls").":\",\"$average_queue_seconds "._QXZ("seconds")."\"\n";
+	$CSV_text1.="\""._QXZ("Average QUEUE Length across all calls").":\",\"$average_total_queue_seconds "._QXZ("seconds")."\"\n";
 	}
 
 if ($EMAIL=='Y') {
-	$rpt_type_verbiage='EMAIL';
-	$rpt_type_verbiages='EMAILS';
+	$rpt_type_verbiage=_QXZ('EMAIL',6);
+	$rpt_type_verbiages=_QXZ('EMAILS',6);
 } else {
-	$rpt_type_verbiage='CALL ';
-	$rpt_type_verbiages='CALLS ';
+	$rpt_type_verbiage=_QXZ('CALL',6);
+	$rpt_type_verbiages=_QXZ('CALLS',6);
 }
 
 ##############################
@@ -993,12 +994,12 @@ if ($EMAIL=='Y') {
 $TOTALcalls = 0;
 
 $ASCII_text="\n";
-$ASCII_text.="---------- $rpt_type_verbiage HOLD TIME BREAKDOWN IN SECONDS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=2\">DOWNLOAD</a>\n";
+$ASCII_text.="---------- $rpt_type_verbiage "._QXZ("HOLD TIME BREAKDOWN IN SECONDS",36)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=2\">"._QXZ("DOWNLOAD")."</a>\n";
 $ASCII_text.="+-------------------------------------------------------------------------------------------+------------+\n";
 $ASCII_text.="|     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | TOTAL      |\n";
 $ASCII_text.="+-------------------------------------------------------------------------------------------+------------+\n";
 
-$CSV_text2.="\n\"$rpt_type_verbiage HOLD TIME BREAKDOWN IN SECONDS\"\n";
+$CSV_text2.="\n\"$rpt_type_verbiage "._QXZ("HOLD TIME BREAKDOWN IN SECONDS")."\"\n";
 $CSV_text2.="\"\",\"0\",\"5\",\"10\",\"15\",\"20\",\"25\",\"30\",\"35\",\"40\",\"45\",\"50\",\"55\",\"60\",\"90\",\"+90\",\"TOTAL\"\n";
 
 
@@ -1138,13 +1139,13 @@ else
 $BDdropCALLS = 0;
 
 $ASCII_text="\n";
-$ASCII_text.="---------- $rpt_type_verbiage DROP TIME BREAKDOWN IN SECONDS\n";
+$ASCII_text.="---------- $rpt_type_verbiage "._QXZ("DROP TIME BREAKDOWN IN SECONDS")."\n";
 $ASCII_text.="+-------------------------------------------------------------------------------------------+------------+\n";
-$ASCII_text.="|     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | TOTAL      |\n";
+$ASCII_text.="|     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | "._QXZ("TOTAL",10)." |\n";
 $ASCII_text.="+-------------------------------------------------------------------------------------------+------------+\n";
 
-$CSV_text2.="\n\"$rpt_type_verbiage DROP TIME BREAKDOWN IN SECONDS\"\n";
-$CSV_text2.="\"\",\"0\",\"5\",\"10\",\"15\",\"20\",\"25\",\"30\",\"35\",\"40\",\"45\",\"50\",\"55\",\"60\",\"90\",\"+90\",\"TOTAL\"\n";
+$CSV_text2.="\n\"$rpt_type_verbiage "._QXZ("DROP TIME BREAKDOWN IN SECONDS")."\"\n";
+$CSV_text2.="\"\",\"0\",\"5\",\"10\",\"15\",\"20\",\"25\",\"30\",\"35\",\"40\",\"45\",\"50\",\"55\",\"60\",\"90\",\"+90\",\""._QXZ("TOTAL")."\"\n";
 
 $stmt="select count(*),queue_seconds from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and status IN('DROP','XDROP') group by queue_seconds;";
 if ($DID=='Y')
@@ -1283,13 +1284,13 @@ else
 $BDansweredCALLS = 0;
 
 $ASCII_text="\n";
-$ASCII_text.="           $rpt_type_verbiage ANSWERED TIME AND PERCENT BREAKDOWN IN SECONDS\n";
+$ASCII_text.="           $rpt_type_verbiage "._QXZ("ANSWERED TIME AND PERCENT BREAKDOWN IN SECONDS")."\n";
 $ASCII_text.="          +-------------------------------------------------------------------------------------------+------------+\n";
-$ASCII_text.="          |     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | TOTAL      |\n";
+$ASCII_text.="          |     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | "._QXZ("TOTAL",10)." |\n";
 $ASCII_text.="----------+-------------------------------------------------------------------------------------------+------------+\n";
 
-$CSV_text2.="\n\"$rpt_type_verbiage ANSWERED TIME AND PERCENT BREAKDOWN IN SECONDS\"\n";
-$CSV_text2.="\"\",\"0\",\"5\",\"10\",\"15\",\"20\",\"25\",\"30\",\"35\",\"40\",\"45\",\"50\",\"55\",\"60\",\"90\",\"+90\",\"TOTAL\"\n";
+$CSV_text2.="\n\"$rpt_type_verbiage "._QXZ("ANSWERED TIME AND PERCENT BREAKDOWN IN SECONDS")."\"\n";
+$CSV_text2.="\"\",\"0\",\"5\",\"10\",\"15\",\"20\",\"25\",\"30\",\"35\",\"40\",\"45\",\"50\",\"55\",\"60\",\"90\",\"+90\",\""._QXZ("TOTAL")."\"\n";
 
 $stmt="select count(*),queue_seconds from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by queue_seconds;";
 if ($DID=='Y')
@@ -1481,19 +1482,19 @@ $answeredCUMULATIVE = "$Cad_0 $Cad_5 $Cad10 $Cad15 $Cad20 $Cad25 $Cad30 $Cad35 $
 $answeredINT_PERCENT = "$pad_0 $pad_5 $pad10 $pad15 $pad20 $pad25 $pad30 $pad35 $pad40 $pad45 $pad50 $pad55 $pad60 $pad90 $pad99 |            |";
 $answeredCUM_PERCENT = "$pCad_0 $pCad_5 $pCad10 $pCad15 $pCad20 $pCad25 $pCad30 $pCad35 $pCad40 $pCad45 $pCad50 $pCad55 $pCad60 $pCad90 $pCad99 |            |";
 $answeredCUM_ANS_PERCENT = "$ApCad_0 $ApCad_5 $ApCad10 $ApCad15 $ApCad20 $ApCad25 $ApCad30 $ApCad35 $ApCad40 $ApCad45 $ApCad50 $ApCad55 $ApCad60 $ApCad90 $ApCad99 |            |";
-$ASCII_text.="INTERVAL  | $answeredTOTALs\n";
-$ASCII_text.="INT %     | $answeredINT_PERCENT\n";
-$ASCII_text.="CUMULATIVE| $answeredCUMULATIVE\n";
-$ASCII_text.="CUM %     | $answeredCUM_PERCENT\n";
-$ASCII_text.="CUM ANS % | $answeredCUM_ANS_PERCENT\n";
+$ASCII_text.=_QXZ("INTERVAL",10)."| $answeredTOTALs\n";
+$ASCII_text.=_QXZ("INT",8)." %| $answeredINT_PERCENT\n";
+$ASCII_text.=_QXZ("CUMULATIVE",10)."| $answeredCUMULATIVE\n";
+$ASCII_text.=_QXZ("CUM",8)." %| $answeredCUM_PERCENT\n";
+$ASCII_text.=_QXZ("CUM ANS",8)." %| $answeredCUM_ANS_PERCENT\n";
 $ASCII_text.="----------+-------------------------------------------------------------------------------------------+------------+\n";
 
 
-$CSV_text2.="\"INTERVAL\",\"$ad_0\",\"$ad_5\",\"$ad10\",\"$ad15\",\"$ad20\",\"$ad25\",\"$ad30\",\"$ad35\",\"$ad40\",\"$ad45\",\"$ad50\",\"$ad55\",\"$ad60\",\"$ad90\",\"$ad99\",\"$BDansweredCALLS\"\n";
-$CSV_text2.="\"INT %\",\"$pad_0\",\"$pad_5\",\"$pad10\",\"$pad15\",\"$pad20\",\"$pad25\",\"$pad30\",\"$pad35\",\"$pad40\",\"$pad45\",\"$pad50\",\"$pad55\",\"$pad60\",\"$pad90\",\"$pad99\"\n";
-$CSV_text2.="\"CUMULATIVE\",\"$Cad_0\",\"$Cad_5\",\"$Cad10\",\"$Cad15\",\"$Cad20\",\"$Cad25\",\"$Cad30\",\"$Cad35\",\"$Cad40\",\"$Cad45\",\"$Cad50\",\"$Cad55\",\"$Cad60\",\"$Cad90\",\"$Cad99\",\"$BDansweredCALLS\"\n";
-$CSV_text2.="\"CUM %\",\"$pCad_0\",\"$pCad_5\",\"$pCad10\",\"$pCad15\",\"$pCad20\",\"$pCad25\",\"$pCad30\",\"$pCad35\",\"$pCad40\",\"$pCad45\",\"$pCad50\",\"$pCad55\",\"$pCad60\",\"$pCad90\",\"$pCad99\"\n";
-$CSV_text2.="\"CUM ANS %\",\"$ApCad_0\",\"$ApCad_5\",\"$ApCad10\",\"$ApCad15\",\"$ApCad20\",\"$ApCad25\",\"$ApCad30\",\"$ApCad35\",\"$ApCad40\",\"$ApCad45\",\"$ApCad50\",\"$ApCad55\",\"$ApCad60\",\"$ApCad90\",\"$ApCad99\"\n";
+$CSV_text2.="\""._QXZ("INTERVAL")."\",\"$ad_0\",\"$ad_5\",\"$ad10\",\"$ad15\",\"$ad20\",\"$ad25\",\"$ad30\",\"$ad35\",\"$ad40\",\"$ad45\",\"$ad50\",\"$ad55\",\"$ad60\",\"$ad90\",\"$ad99\",\"$BDansweredCALLS\"\n";
+$CSV_text2.="\""._QXZ("INT")." %\",\"$pad_0\",\"$pad_5\",\"$pad10\",\"$pad15\",\"$pad20\",\"$pad25\",\"$pad30\",\"$pad35\",\"$pad40\",\"$pad45\",\"$pad50\",\"$pad55\",\"$pad60\",\"$pad90\",\"$pad99\"\n";
+$CSV_text2.="\""._QXZ("CUMULATIVE")."\",\"$Cad_0\",\"$Cad_5\",\"$Cad10\",\"$Cad15\",\"$Cad20\",\"$Cad25\",\"$Cad30\",\"$Cad35\",\"$Cad40\",\"$Cad45\",\"$Cad50\",\"$Cad55\",\"$Cad60\",\"$Cad90\",\"$Cad99\",\"$BDansweredCALLS\"\n";
+$CSV_text2.="\""._QXZ("CUM")." %\",\"$pCad_0\",\"$pCad_5\",\"$pCad10\",\"$pCad15\",\"$pCad20\",\"$pCad25\",\"$pCad30\",\"$pCad35\",\"$pCad40\",\"$pCad45\",\"$pCad50\",\"$pCad55\",\"$pCad60\",\"$pCad90\",\"$pCad99\"\n";
+$CSV_text2.="\""._QXZ("CUM ANS")." %\",\"$ApCad_0\",\"$ApCad_5\",\"$ApCad10\",\"$ApCad15\",\"$ApCad20\",\"$ApCad25\",\"$ApCad30\",\"$ApCad35\",\"$ApCad40\",\"$ApCad45\",\"$ApCad50\",\"$ApCad55\",\"$ApCad60\",\"$ApCad90\",\"$ApCad99\"\n";
 
 if ($report_display_type=="HTML") {
 	$stmt="select count(*),round(queue_seconds) as rd_sec from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by rd_sec order by rd_sec asc;";
@@ -1571,13 +1572,13 @@ else
 $TOTALcalls = 0;
 
 $ASCII_text="\n";
-$ASCII_text.="---------- $rpt_type_verbiage HANGUP REASON STATS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=3\">DOWNLOAD</a>\n";
+$ASCII_text.="---------- $rpt_type_verbiage "._QXZ("HANGUP REASON STATS",25)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=3\">"._QXZ("DOWNLOAD")."</a>\n";
 $ASCII_text.="+----------------------+------------+\n";
-$ASCII_text.="| HANGUP REASON        | $rpt_type_verbiages      |\n";
+$ASCII_text.="| "._QXZ("HANGUP REASON",20)." | $rpt_type_verbiages     |\n";
 $ASCII_text.="+----------------------+------------+\n";
 
-$CSV_text3.="\n\"$rpt_type_verbiage HANGUP REASON STATS\"\n";
-$CSV_text3.="\"HANGUP REASON\",\"$rpt_type_verbiages\"\n";
+$CSV_text3.="\n\"$rpt_type_verbiage "._QXZ("HANGUP REASON STATS")."\"\n";
+$CSV_text3.="\""._QXZ("HANGUP REASON")."\",\"$rpt_type_verbiages\"\n";
 
 $stmt="select count(*),term_reason from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) group by term_reason order by term_reason;";
 if ($DID=='Y')
@@ -1608,10 +1609,10 @@ while ($i < $reasons_to_print)
 $TOTALcalls =		sprintf("%10s", $TOTALcalls);
 
 $ASCII_text.="+----------------------+------------+\n";
-$ASCII_text.="| TOTAL:               | $TOTALcalls |\n";
+$ASCII_text.="| "._QXZ("TOTAL:",20). " | $TOTALcalls |\n";
 $ASCII_text.="+----------------------+------------+\n";
 
-$CSV_text3.="\"TOTAL:\",\"$TOTALcalls\"\n";
+$CSV_text3.="\""._QXZ("TOTAL").":\",\"$TOTALcalls\"\n";
 
 if ($report_display_type=="HTML") 
 	{
@@ -1626,9 +1627,9 @@ if ($report_display_type=="HTML")
 	}
 	$GRAPH_text="</PRE>\n";
 	$GRAPH_text.="<table cellspacing=\"0\" cellpadding=\"0\" summary=\"$rpt_type_verbiage HANGUP REASON STATS\" class=\"horizontalgraph\">\n";
-	$GRAPH_text.="  <caption align=\"top\">$rpt_type_verbiage HANGUP REASON STATS</caption>\n";
+	$GRAPH_text.="  <caption align=\"top\">$rpt_type_verbiage "._QXZ("HANGUP REASON STATS")."</caption>\n";
 	$GRAPH_text.="  <tr>\n";
-	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">REASON </th>\n";
+	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("REASON")." </th>\n";
 	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">$rpt_type_verbiages </th>\n";
 	$GRAPH_text.="  </tr>\n";
 	for ($i=0; $i<count($ct_ary); $i++) {
@@ -1657,17 +1658,17 @@ else
 $TOTALcalls = 0;
 
 $ASCII_text="\n";
-$ASCII_text.="---------- $rpt_type_verbiage STATUS STATS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=4\">DOWNLOAD</a>\n";
+$ASCII_text.="---------- $rpt_type_verbiage "._QXZ("STATUS STATS",18)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=4\">"._QXZ("DOWNLOAD")."</a>\n";
 $ASCII_text.="+--------+----------------------+----------------------+------------+------------+----------+-----------+\n";
-$ASCII_text.="| STATUS | DESCRIPTION          | CATEGORY             | $rpt_type_verbiages     | TOTAL TIME | AVG TIME |$rpt_type_verbiages/HOUR|\n";
+$ASCII_text.="| "._QXZ("STATUS",6)." | "._QXZ("DESCRIPTION",20)." | "._QXZ("CATEGORY",20)." | $rpt_type_verbiages     | "._QXZ("TOTAL TIME",10)." | "._QXZ("AVG TIME",8)." |$rpt_type_verbiages/"._QXZ("HOUR",4)."|\n";
 $ASCII_text.="+--------+----------------------+----------------------+------------+------------+----------+-----------+\n";
 
 $GRAPH="<BR><BR><a name='cssgraph'><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-$GRAPH.="<tr><th width='25%' class='grey_graph_cell' id='cssgraph1'><a href='#' onClick=\"DrawCSSGraph('CALLS', '1'); return false;\">CALLS</a></th><th width=25% class='grey_graph_cell' id='cssgraph2'><a href='#' onClick=\"DrawCSSGraph('TOTALTIME', '2'); return false;\">TOTAL TIME</a></th><th width=25% class='grey_graph_cell' id='cssgraph3'><a href='#' onClick=\"DrawCSSGraph('AVGTIME', '3'); return false;\">AVG TIME</a></th><th width=25% class='grey_graph_cell' id='cssgraph4'><a href='#' onClick=\"DrawCSSGraph('CALLSHOUR', '4'); return false;\">CALLS/HR</a></th></tr>";
+$GRAPH.="<tr><th width='25%' class='grey_graph_cell' id='cssgraph1'><a href='#' onClick=\"DrawCSSGraph('CALLS', '1'); return false;\">"._QXZ("CALLS")."</a></th><th width=25% class='grey_graph_cell' id='cssgraph2'><a href='#' onClick=\"DrawCSSGraph('TOTALTIME', '2'); return false;\">"._QXZ("TOTAL TIME")."</a></th><th width=25% class='grey_graph_cell' id='cssgraph3'><a href='#' onClick=\"DrawCSSGraph('AVGTIME', '3'); return false;\">"._QXZ("AVG TIME")."</a></th><th width=25% class='grey_graph_cell' id='cssgraph4'><a href='#' onClick=\"DrawCSSGraph('CALLSHOUR', '4'); return false;\">"._QXZ("CALLS/HR")."</a></th></tr>";
 $GRAPH.="<tr><td colspan='4' class='graph_span_cell'><span id='call_status_stats_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
 
-$CSV_text4.="\n\"$rpt_type_verbiage STATUS STATS\"\n";
-$CSV_text4.="\"STATUS\",\"DESCRIPTION\",\"CATEGORY\",\"$rpt_type_verbiages\",\"TOTAL TIME\",\"AVG TIME\",\"$rpt_type_verbiages/HOUR\"\n";
+$CSV_text4.="\n\"$rpt_type_verbiage "._QXZ("STATUS STATS")."\"\n";
+$CSV_text4.="\""._QXZ("STATUS")."\",\""._QXZ("DESCRIPTION")."\",\""._QXZ("CATEGORY")."\",\"$rpt_type_verbiages\",\""._QXZ("TOTAL TIME")."\",\""._QXZ("AVG TIME")."\",\"$rpt_type_verbiages/HOUR\"\n";
 
 
 
@@ -1687,11 +1688,11 @@ $max_calls=1;
 $max_total_time=1;
 $max_avg_time=1;
 $max_callshr=1;
-$graph_header="<table cellspacing='0' cellpadding='0' summary='STATUS' class='horizontalgraph'><caption align='top'>CALL STATUS STATS</caption><tr><th class='thgraph' scope='col'>STATUS</th>";
-$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>CALLS </th></tr>";
-$TOTALTIME_graph=$graph_header."<th class='thgraph' scope='col'>TOTAL TIME</th></tr>";
-$AVGTIME_graph=$graph_header."<th class='thgraph' scope='col'>AVG TIME</th></tr>";
-$CALLSHOUR_graph=$graph_header."<th class='thgraph' scope='col'>CALLS/HR</th></tr>";
+$graph_header="<table cellspacing='0' cellpadding='0' summary='STATUS' class='horizontalgraph'><caption align='top'>"._QXZ("CALL STATUS STATS")."</caption><tr><th class='thgraph' scope='col'>"._QXZ("STATUS")."</th>";
+$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CALLS")." </th></tr>";
+$TOTALTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TOTAL TIME")."</th></tr>";
+$AVGTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AVG TIME")."</th></tr>";
+$CALLSHOUR_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CALLS/HR")."</th></tr>";
 ###########################
 
 while ($i < $statuses_to_print)
@@ -1775,11 +1776,11 @@ else
 $TOTALcalls =	sprintf("%10s", $TOTALcalls);
 $TOTALhours =	sprintf("%10s", $TOTALhours);while(strlen($TOTALhours)>10) {$TOTALhours = substr("$TOTALhours", 0, -1);}
 $TOTALavg =	sprintf("%8s", $TOTALavg);while(strlen($TOTALavg)>8) {$TOTALavg = substr("$TOTALavg", 0, -1);}
-$TOTALrate =	sprintf("%8s", $TOTALrate);while(strlen($TOTALrate)>8) {$TOTALrate = substr("$TOTALrate", 0, -1);}
+$TOTALrate =	sprintf("%9s", $TOTALrate);while(strlen($TOTALrate)>9) {$TOTALrate = substr("$TOTALrate", 0, -1);}
 
-$ASCII_text.="+--------+----------------------+----------------------+------------+------------+----------+----------+\n";
-$ASCII_text.="| TOTAL:                                               | $TOTALcalls | $TOTALhours | $TOTALavg | $TOTALrate |\n";
-$ASCII_text.="+------------------------------------------------------+------------+------------+----------+----------+\n";
+$ASCII_text.="+--------+----------------------+----------------------+------------+------------+----------+-----------+\n";
+$ASCII_text.="| "._QXZ("TOTAL:",52)." | $TOTALcalls | $TOTALhours | $TOTALavg | $TOTALrate |\n";
+$ASCII_text.="+------------------------------------------------------+------------+------------+----------+-----------+\n";
 
 #######
 	$JS_onload="onload = function() {\n";
@@ -1793,10 +1794,10 @@ $ASCII_text.="+------------------------------------------------------+----------
 		$AVGTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][3], $max_avg_time))."' height='16' />".sec_convert($graph_stats[$d][3], 'H')."</td></tr>";
 		$CALLSHOUR_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][4] ,$max_callshr))."' height='16' />".$graph_stats[$d][4]."</td></tr>";
 	}
-	$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTALcalls)."</th></tr></table>";
-	$TOTALTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTALhours)."</th></tr></table>";
-	$AVGTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTALavg)."</th></tr></table>";
-	$CALLSHOUR_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTALrate)."</th></tr></table>";
+	$CALLS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTALcalls)."</th></tr></table>";
+	$TOTALTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTALhours)."</th></tr></table>";
+	$AVGTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTALavg)."</th></tr></table>";
+	$CALLSHOUR_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTALrate)."</th></tr></table>";
 	$JS_text.="<script language='Javascript'>\n";
 	$JS_text.="function DrawCSSGraph(graph, th_id) {\n";
 	$JS_text.="	var CALLS_graph=\"$CALLS_graph\";\n";
@@ -1817,7 +1818,7 @@ $ASCII_text.="+------------------------------------------------------+----------
 ########
 
 
-$CSV_text4.="\"TOTAL:\",\"\",\"\",\"$TOTALcalls\",\"$TOTALhours\",\"$TOTALavg\",\"$TOTALrate\"\n";
+$CSV_text4.="\""._QXZ("TOTAL").":\",\"\",\"\",\"$TOTALcalls\",\"$TOTALhours\",\"$TOTALavg\",\"$TOTALrate\"\n";
 if ($report_display_type=="HTML")
 	{
 	$MAIN.=$GRAPH;
@@ -1832,13 +1833,13 @@ else
 #########  STATUS CATEGORY STATS
 
 $ASCII_text="\n";
-$ASCII_text.="---------- CUSTOM STATUS CATEGORY STATS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=5\">DOWNLOAD</a>\n";
+$ASCII_text.="---------- "._QXZ("CUSTOM STATUS CATEGORY STATS",34)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=5\">"._QXZ("DOWNLOAD")."</a>\n";
 $ASCII_text.="+----------------------+------------+--------------------------------+\n";
-$ASCII_text.="| CATEGORY             | $rpt_type_verbiages     | DESCRIPTION                    |\n";
+$ASCII_text.="| "._QXZ("CATEGORY",20)." | $rpt_type_verbiages     | "._QXZ("DESCRIPTION",30)." |\n";
 $ASCII_text.="+----------------------+------------+--------------------------------+\n";
 
-$CSV_text5.="\n\"CUSTOM STATUS CATEGORY STATS\"\n";
-$CSV_text5.="\"CATEGORY\",\"$rpt_type_verbiages\",\"DESCRIPTION\"\n";
+$CSV_text5.="\n\""._QXZ("CUSTOM STATUS CATEGORY STATS")."\"\n";
+$CSV_text5.="\""._QXZ("CATEGORY")."\",\"$rpt_type_verbiages\",\""._QXZ("DESCRIPTION")."\"\n";
 
 $TOTCATcalls=0;
 $r=0;
@@ -1861,10 +1862,10 @@ while ($r < $statcats_to_print)
 $TOTCATcalls =	sprintf("%10s", $TOTCATcalls); while(strlen($TOTCATcalls)>10) {$TOTCATcalls = substr("$TOTCATcalls", 0, -1);}
 
 $ASCII_text.="+----------------------+------------+--------------------------------+\n";
-$ASCII_text.="| TOTAL                | $TOTCATcalls |\n";
+$ASCII_text.="| "._QXZ("TOTAL",20)." | $TOTCATcalls |\n";
 $ASCII_text.="+----------------------+------------+\n";
 
-$CSV_text5.="\"TOTAL\",\"$TOTCATcalls\"\n";
+$CSV_text5.="\""._QXZ("TOTAL")."\",\"$TOTCATcalls\"\n";
 
 if ($report_display_type=="HTML") 
 	{
@@ -1885,10 +1886,10 @@ if ($report_display_type=="HTML")
 	
 	$GRAPH_text="</PRE>\n";
 	$GRAPH_text.="<table cellspacing=\"0\" cellpadding=\"0\" summary=\"CUSTOM STATUS CATEGORY STATS\" class=\"horizontalgraph\">\n";
-	$GRAPH_text.="  <caption align=\"top\">CUSTOM STATUS CATEGORY STATS</caption>\n";
+	$GRAPH_text.="  <caption align=\"top\">"._QXZ("CUSTOM STATUS CATEGORY STATS")."</caption>\n";
 	$GRAPH_text.="  <tr>\n";
-	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">CATEGORY </th>\n";
-	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">CALLS </th>\n";
+	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("CATEGORY")." </th>\n";
+	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")." </th>\n";
 	$GRAPH_text.="  </tr>\n";
 	for ($i=0; $i<count($ct_ary); $i++) {
 		if ($i==0) {$class=" first";} else if (($i+1)==count($ct_ary)) {$class=" last";} else {$class="";}
@@ -1899,7 +1900,7 @@ if ($report_display_type=="HTML")
 		$GRAPH_text.="  </tr>\n";
 	}
 	$GRAPH_text.="  <tr>\n";
-	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">TOTAL:</th>\n";
+	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("TOTAL").":</th>\n";
 	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">".trim($TOTCATcalls)."</th>\n";
 	$GRAPH_text.="  </tr>\n";
 	$GRAPH_text.="</table>\n";
@@ -1918,13 +1919,13 @@ else
 $TOTALcalls = 0;
 
 $ASCII_text="\n";
-$ASCII_text.="---------- $rpt_type_verbiage INITIAL QUEUE POSITION BREAKDOWN       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=6\">DOWNLOAD</a>\n";
+$ASCII_text.="---------- $rpt_type_verbiage "._QXZ("INITIAL QUEUE POSITION BREAKDOWN",38)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=6\">"._QXZ("DOWNLOAD")."</a>\n";
 $ASCII_text.="+-------------------------------------------------------------------------------------+------------+\n";
-$ASCII_text.="|     1     2     3     4     5     6     7     8     9    10    15    20    25   +25 | TOTAL      |\n";
+$ASCII_text.="|     1     2     3     4     5     6     7     8     9    10    15    20    25   +25 | "._QXZ("TOTAL",10)." |\n";
 $ASCII_text.="+-------------------------------------------------------------------------------------+------------+\n";
 
-$CSV_text6.="\n\"$rpt_type_verbiage INITIAL QUEUE POSITION BREAKDOWN\"\n";
-$CSV_text6.="\"\",\"1\",\"2\",\"3\",\"4\",\"5\",\"6\",\"7\",\"8\",\"9\",\"10\",\"15\",\"20\",\"25\",\"+25\",\"TOTAL\"\n";
+$CSV_text6.="\n\"$rpt_type_verbiage "._QXZ("INITIAL QUEUE POSITION BREAKDOWN")."\"\n";
+$CSV_text6.="\"\",\"1\",\"2\",\"3\",\"4\",\"5\",\"6\",\"7\",\"8\",\"9\",\"10\",\"15\",\"20\",\"25\",\"+25\",\""._QXZ("TOTAL")."\"\n";
 
 
 $stmt="select count(*),queue_position from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) group by queue_position;";
@@ -2060,13 +2061,13 @@ $TOTtime=0;
 $TOTavg=0;
 
 $ASCII_text="\n";
-$ASCII_text.="---------- AGENT STATS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=7\">DOWNLOAD</a>\n";
+$ASCII_text.="---------- "._QXZ("AGENT STATS",17)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=7\">"._QXZ("DOWNLOAD")."</a>\n";
 $ASCII_text.="+--------------------------+------------+------------+--------+\n";
-$ASCII_text.="| AGENT                    | $rpt_type_verbiages     | TIME H:M:S |AVERAGE |\n";
+$ASCII_text.="| "._QXZ("AGENT",24)." | $rpt_type_verbiages     | "._QXZ("TIME H:M:S",10)." |"._QXZ("AVERAGE",8)."|\n";
 $ASCII_text.="+--------------------------+------------+------------+--------+\n";
 
-$CSV_text7.="\n\"AGENT STATS\"\n";
-$CSV_text7.="\"AGENT\",\"$rpt_type_verbiages\",\"TIME H:M:S\",\"AVERAGE\"\n";
+$CSV_text7.="\n\""._QXZ("AGENT STATS")."\"\n";
+$CSV_text7.="\""._QXZ("AGENT")."\",\"$rpt_type_verbiages\",\""._QXZ("TIME H:M:S")."\",\""._QXZ("AVERAGE")."\"\n";
 
 
 $max_calls=1;
@@ -2074,12 +2075,12 @@ $max_timehms=1;
 $max_average=1;
 $graph_stats=array();
 $GRAPH="<BR><BR><a name='agent_stats_graph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-$GRAPH.="<tr><th width='34%' class='grey_graph_cell' id='agent_stats_graph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">CALLS</a></th><th width=33% class='grey_graph_cell' id='agent_stats_graph2'><a href='#' onClick=\"DrawGraph('TIMEHMS', '2'); return false;\">TIME H:M:S</a></th><th width=33% class='grey_graph_cell' id='agent_stats_graph3'><a href='#' onClick=\"DrawGraph('AVERAGE', '3'); return false;\">AVERAGE</a></th></tr>";
+$GRAPH.="<tr><th width='34%' class='grey_graph_cell' id='agent_stats_graph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">"._QXZ("CALLS")."</a></th><th width=33% class='grey_graph_cell' id='agent_stats_graph2'><a href='#' onClick=\"DrawGraph('TIMEHMS', '2'); return false;\">"._QXZ("TIME H:M:S")."</a></th><th width=33% class='grey_graph_cell' id='agent_stats_graph3'><a href='#' onClick=\"DrawGraph('AVERAGE', '3'); return false;\">"._QXZ("AVERAGE")."</a></th></tr>";
 $GRAPH.="<tr><td colspan='4' class='graph_span_cell'><span id='agentstats_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
-$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>AGENT STATS</caption><tr><th class='thgraph' scope='col'>AGENT</th>";
+$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>"._QXZ("AGENT STATS")."</caption><tr><th class='thgraph' scope='col'>"._QXZ("AGENT")."</th>";
 $CALLS_graph=$graph_header."<th class='thgraph' scope='col'>$rpt_type_verbiages </th></tr>";
-$TIMEHMS_graph=$graph_header."<th class='thgraph' scope='col'>TIME H:M:S</th></tr>";
-$AVERAGE_graph=$graph_header."<th class='thgraph' scope='col'>AVERAGE</th></tr>";
+$TIMEHMS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TIME H:M:S")."</th></tr>";
+$AVERAGE_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AVERAGE")."</th></tr>";
 
 $stmt="select vicidial_closer_log.user,full_name,count(*),sum(length_in_sec),avg(length_in_sec) from vicidial_closer_log,vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and vicidial_closer_log.user is not null and length_in_sec is not null and length_in_sec > 0 and vicidial_closer_log.user=vicidial_users.user group by vicidial_closer_log.user;";
 if ($DID=='Y')
@@ -2143,7 +2144,7 @@ $TOTtime =			sprintf("%8s", $TOTtime);
 $TOTavg =			sprintf("%6s", $TOTavg);
 
 $ASCII_text.="+--------------------------+------------+------------+--------+\n";
-$ASCII_text.="| TOTAL Agents: $TOTagents | $TOTcalls | $TOTtime | $TOTavg |\n";
+$ASCII_text.="| "._QXZ("TOTAL Agents:",13)." $TOTagents | $TOTcalls | $TOTtime | $TOTavg |\n";
 $ASCII_text.="+--------------------------+------------+------------+--------+\n";
 
 for ($d=0; $d<count($graph_stats); $d++) {
@@ -2152,9 +2153,9 @@ for ($d=0; $d<count($graph_stats); $d++) {
 	$TIMEHMS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][2], $max_timehms))."' height='16' />".sec_convert($graph_stats[$d][2], 'H')."</td></tr>";
 	$AVERAGE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][3], $max_average))."' height='16' />".sec_convert($graph_stats[$d][3], 'H')."</td></tr>";
 }
-$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTALcalls)."</th></tr></table>";
-$TIMEHMS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTtime)."</th></tr></table>";
-$AVERAGE_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTavg)."</th></tr></table>";
+$CALLS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTALcalls)."</th></tr></table>";
+$TIMEHMS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTtime)."</th></tr></table>";
+$AVERAGE_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTavg)."</th></tr></table>";
 $JS_text.="<script language='Javascript'>\n";
 $JS_text.="function DrawGraph(graph, th_id) {\n";
 $JS_text.="	var CALLS_graph=\"$CALLS_graph\";\n";
@@ -2186,15 +2187,15 @@ else
 	$MAIN.=$ASCII_text;
 	}
 
-$CSV_text7.="\"TOTAL Agents: $TOTagents\",\"$TOTcalls\",\"$TOTtime\",\"$TOTavg\"\n";
+$CSV_text7.="\""._QXZ("TOTAL Agents").": $TOTagents\",\"$TOTcalls\",\"$TOTtime\",\"$TOTavg\"\n";
 
 ##############################
 #########  TIME STATS
 
 $MAIN.="\n";
-$MAIN.="---------- TIME STATS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=9\">DOWNLOAD</a>\n";
+$MAIN.="---------- "._QXZ("TIME STATS",16)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=9\">"._QXZ("DOWNLOAD")."</a>\n";
 
-$CSV_text9.="\"TIME STATS\"\n\n";
+$CSV_text9.="\""._QXZ("TIME STATS")."\"\n\n";
 
 $MAIN.="<FONT SIZE=0>\n";
 
@@ -2287,7 +2288,7 @@ while ($i <= 96)
 $hour_multiplier = MathZDC(100, $hi_hour_count);
 
 $ASCII_text.="<!-- HICOUNT: $hi_hour_count|$hour_multiplier -->\n";
-$ASCII_text.="GRAPH IN 15 MINUTE INCREMENTS OF TOTAL $rpt_type_verbiages TAKEN INTO THIS IN-GROUP\n";
+$ASCII_text.=_QXZ("GRAPH IN 15 MINUTE INCREMENTS OF TOTAL")." $rpt_type_verbiages "._QXZ("TAKEN INTO THIS IN-GROUP")."\n";
 
 
 $k=1;
@@ -2314,14 +2315,14 @@ while ($k <= 102)
 
 $ASCII_text.="+------+-------------------------------------------------------------------------------------------------------+-------+-------+\n";
 #$ASCII_text.="| HOUR | GRAPH IN 15 MINUTE INCREMENTS OF TOTAL INCOMING CALLS FOR THIS GROUP                                  | DROPS | TOTAL |\n";
-$ASCII_text.="| HOUR |$call_scale| DROPS | TOTAL |\n";
+$ASCII_text.="| "._QXZ("HOUR",4)." |$call_scale| "._QXZ("DROPS",5)." | "._QXZ("TOTAL",5)." |\n";
 $ASCII_text.="+------+-------------------------------------------------------------------------------------------------------+-------+-------+\n";
 
-$CSV_text9.="\"HOUR\",\"DROPS\",\"TOTAL\"\n";
+$CSV_text9.="\""._QXZ("HOUR")."\",\""._QXZ("DROPS")."\",\""._QXZ("TOTAL")."\"\n";
 
 $max_calls=1;
 $graph_stats=array();
-$GRAPH_text="<table cellspacing='0' cellpadding='0'><caption align='top'>GRAPH IN 15 MINUTE INCREMENTS OF TOTAL INCOMING CALLS FOR THIS GROUP</caption><tr><th class='thgraph' scope='col'>HOUR</th><th class='thgraph' scope='col'>DROPS <img src='./images/bar_blue.png' width='10' height='10'> / CALLS <img src='./images/bar.png' width='10' height='10'></th></tr>";
+$GRAPH_text="<table cellspacing='0' cellpadding='0'><caption align='top'>"._QXZ("GRAPH IN 15 MINUTE INCREMENTS OF TOTAL INCOMING CALLS FOR THIS GROUP")."</caption><tr><th class='thgraph' scope='col'>"._QXZ("HOUR")."</th><th class='thgraph' scope='col'>"._QXZ("DROPS")." <img src='./images/bar_blue.png' width='10' height='10'> / "._QXZ("CALLS")." <img src='./images/bar.png' width='10' height='10'></th></tr>";
 
 
 $ZZ = '00';
@@ -2456,13 +2457,13 @@ else
 
 ##### Answered wait time breakdown
 $MAIN.="\n";
-$MAIN.="---------- $rpt_type_verbiage ANSWERED TIME BREAKDOWN IN SECONDS       <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=8\">DOWNLOAD</a>\n";
+$MAIN.="---------- $rpt_type_verbiage "._QXZ("ANSWERED TIME BREAKDOWN IN SECONDS", 40)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=8\">"._QXZ("DOWNLOAD")."</a>\n";
 $MAIN.="+------+-------------------------------------------------------------------------------------------+------------+\n";
-$MAIN.="| HOUR |     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | TOTAL      |\n";
+$MAIN.="| "._QXZ("HOUR",4)." |     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | "._QXZ("TOTAL",10)." |\n";
 $MAIN.="+------+-------------------------------------------------------------------------------------------+------------+\n";
 
-$CSV_text8.="\n\"$rpt_type_verbiage ANSWERED TIME BREAKDOWN IN SECONDS\"\n";
-$CSV_text8.="\"HOUR\",\"0\",\"5\",\"10\",\"15\",\"20\",\"25\",\"30\",\"35\",\"40\",\"45\",\"50\",\"55\",\"60\",\"90\",\"+90\",\"TOTAL\"\n";
+$CSV_text8.="\n\"$rpt_type_verbiage "._QXZ("ANSWERED TIME BREAKDOWN IN SECONDS")."\"\n";
+$CSV_text8.="\""._QXZ("HOUR")."\",\"0\",\"5\",\"10\",\"15\",\"20\",\"25\",\"30\",\"35\",\"40\",\"45\",\"50\",\"55\",\"60\",\"90\",\"+90\",\""._QXZ("TOTAL")."\"\n";
 
 $ZZ = '00';
 $i=0;
@@ -2539,15 +2540,15 @@ while ($i <= 96)
 $BDansweredCALLS =		sprintf("%10s", $BDansweredCALLS);
 
 $MAIN.="+------+-------------------------------------------------------------------------------------------+------------+\n";
-$MAIN.="|TOTALS|                                                                                           | $BDansweredCALLS |\n";
+$MAIN.="|"._QXZ("TOTALS",6)."|                                                                                           | $BDansweredCALLS |\n";
 $MAIN.="+------+-------------------------------------------------------------------------------------------+------------+\n";
 
-$CSV_text8.="\"TOTALS\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"$BDansweredCALLS\"\n";
+$CSV_text8.="\""._QXZ("TOTALS")."\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"$BDansweredCALLS\"\n";
 
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $STARTtime);
-$MAIN.="\nRun Time: $RUNtime seconds|$db_source\n";
+$MAIN.="\n"._QXZ("Run Time").": $RUNtime "._QXZ("seconds")."|$db_source\n";
 $MAIN.="</PRE>";
 $MAIN.="</TD></TR></TABLE>";
 

@@ -3,7 +3,7 @@
 #
 # Date Range - Agent/Campaign Disposition (Perfect Network Corporation)
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -12,6 +12,7 @@
 # 130610-1136 - Finalized changing of all ereg instances to preg
 # 130621-0828 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0746 - Changed to mysqli PHP functions
+# 141114-0911 - Finalized adding QXZ translation to all admin files
 #
 
 require("dbconnect_mysqli.php");
@@ -80,7 +81,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -93,10 +94,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -141,9 +142,9 @@ while ($i < $campaigns_to_print)
 
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>VICIDIAL: Agent Disposition</TITLE></HEAD><BODY BGCOLOR=WHITE>\n";
+echo "<TITLE>"._QXZ("VICIDIAL: Agent Disposition")."</TITLE></HEAD><BODY BGCOLOR=WHITE>\n";
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
-echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Date - From: <input type=text name=begin_date value=\"$begin_date\" size=10 maxsize=10> to \n";
+echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Date - From").": <input type=text name=begin_date value=\"$begin_date\" size=10 maxsize=10> "._QXZ("to")." \n";
 echo "<input type=text name=end_date value=\"$end_date\" size=10 maxsize=10> &nbsp;\n";
 echo "<SELECT SIZE=1 NAME=group>\n";
 	$o=0;
@@ -155,8 +156,8 @@ echo "<SELECT SIZE=1 NAME=group>\n";
 	}
 
 echo "</SELECT>\n";
-echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
-echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=34&campaign_id=$group\">MODIFY</a> | <a href=\"./server_stats.php\">REPORTS</a> </FONT>\n";
+echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
+echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=34&campaign_id=$group\">"._QXZ("MODIFY")."</a> | <a href=\"./server_stats.php\">"._QXZ("REPORTS")."</a> </FONT>\n";
 echo "</FORM>\n\n";
 
 echo "<PRE><FONT SIZE=2>\n";
@@ -165,19 +166,19 @@ echo "<PRE><FONT SIZE=2>\n";
 if (!$group)
 {
 echo "\n";
-echo "PLEASE SELECT A SERVER AND DATE ABOVE AND CLICK SUBMIT\n";
+echo _QXZ("PLEASE SELECT A SERVER AND DATE ABOVE AND CLICK SUBMIT")."\n";
 }
 
 else
 {
 
-echo "VICIDIAL: Agent Disposition                             $NOW_TIME\n";
+echo _QXZ("VICIDIAL: Agent Disposition",55)." $NOW_TIME\n";
 
-echo "Time range: $begin_date to $end_date \n\n";
-echo "---------- Disposition Details -------------\n\n";
+echo _QXZ("Time range").": $begin_date "._QXZ("to")." $end_date \n\n";
+echo "---------- "._QXZ("Disposition Details")." -------------\n\n";
 
 echo "+-----------------+------------+--------+--------+--------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+\n";
-echo "| USER NAME       | ID         | CALLS  | TALK   | TALKAVG| A    | B    |CALLBK|CBHOLD| DEC  | DC   | DNC  | DROP |INCALL| LB   | N    | NA   | NI   | NP   | NQ   |QUEUE | SALE | XFER |\n";
+echo "| "._QXZ("USER NAME",15)." | "._QXZ("ID",10)." | "._QXZ("CALLS",6)." | "._QXZ("TALK",6)." | "._QXZ("TALKAVG",7)."| A    | B    |CALLBK|CBHOLD| DEC  | DC   | DNC  | DROP |INCALL| LB   | N    | NA   | NI   | NP   | NQ   |QUEUE | SALE | XFER |\n";
 echo "+-----------------+------------+--------+--------+--------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+\n";
 
 $stmt="select count(*) as calls,sum(length_in_sec) as talk,full_name,vicidial_users.user,avg(length_in_sec) from vicidial_users,vicidial_log where call_date >= '$begin_date 00:00:01' and call_date <= '$end_date 23:59:59'  and vicidial_users.user=vicidial_log.user and campaign_id='" . mysqli_real_escape_string($link, $group) . "' group by full_name order by calls desc limit 1000;";
@@ -292,7 +293,7 @@ while($k < $i)
 	$TOT_CBHOLD = sprintf("%-5s", $TOT_CBHOLD);
 
 echo "+-----------------+------------+--------+--------+--------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+\n";
-echo "|  TOTALS                      | $TOTcalls| $TOTtotTALK_MS|        | $TOT_A| $TOT_B| $TOT_CALLBK| $TOT_CBHOLD| $TOT_DEC| $TOT_DC| $TOT_DNC| $TOT_DROP| $TOT_INCALL| $TOT_LB| $TOT_N| $TOT_NA| $TOT_NI| $TOT_NP| $TOT_NQ| $TOT_QUEUE| $TOT_SALE| $TOT_XFER|\n";
+echo "|  "._QXZ("TOTALS",27)." | $TOTcalls| $TOTtotTALK_MS|        | $TOT_A| $TOT_B| $TOT_CALLBK| $TOT_CBHOLD| $TOT_DEC| $TOT_DC| $TOT_DNC| $TOT_DROP| $TOT_INCALL| $TOT_LB| $TOT_N| $TOT_NA| $TOT_NI| $TOT_NP| $TOT_NQ| $TOT_QUEUE| $TOT_SALE| $TOT_XFER|\n";
 echo "+-----------------+------------+--------+--------+--------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+------+\n";
 echo "\n";
 

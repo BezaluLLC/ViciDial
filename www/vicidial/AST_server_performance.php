@@ -23,6 +23,7 @@
 # 130926-0658 - Added check for several different ploticus bin paths
 # 140108-0716 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141114-0730 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -103,7 +104,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -116,10 +117,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -203,7 +204,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -245,7 +246,7 @@ while ($i < $servers_to_print)
 
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 	$short_header=1;
 
@@ -255,9 +256,9 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
 
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
-echo "Date/Time Range: <INPUT TYPE=TEXT NAME=begin_query_time SIZE=22 MAXLENGTH=19 VALUE=\"$begin_query_time\"> \n";
-echo "to <INPUT TYPE=TEXT NAME=end_query_time SIZE=22 MAXLENGTH=19 VALUE=\"$end_query_time\"> \n";
-echo "Server: <SELECT SIZE=1 NAME=group>\n";
+echo _QXZ("Date/Time Range").": <INPUT TYPE=TEXT NAME=begin_query_time SIZE=22 MAXLENGTH=19 VALUE=\"$begin_query_time\"> \n";
+echo _QXZ("to")." <INPUT TYPE=TEXT NAME=end_query_time SIZE=22 MAXLENGTH=19 VALUE=\"$end_query_time\"> \n";
+echo _QXZ("Server").": <SELECT SIZE=1 NAME=group>\n";
 $o=0;
 while ($servers_to_print > $o)
 	{
@@ -268,8 +269,8 @@ while ($servers_to_print > $o)
 	$o++;
 	}
 echo "</SELECT> \n";
-echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
-echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'\n";
+echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 echo "</FORM>\n\n";
 
 echo "<PRE><FONT SIZE=2>\n";
@@ -278,7 +279,7 @@ echo "<PRE><FONT SIZE=2>\n";
 if (!$group)
 	{
 	echo "\n";
-	echo "PLEASE SELECT A SERVER AND DATE/TIME RANGE ABOVE AND CLICK SUBMIT\n";
+	echo _QXZ("PLEASE SELECT A SERVER AND DATE/TIME RANGE ABOVE AND CLICK SUBMIT")."\n";
 	}
 
 else
@@ -287,10 +288,10 @@ else
 	$query_date_END = $end_query_time;
 
 
-	echo "Server Performance Report                            $NOW_TIME\n";
+	echo _QXZ("Server Performance Report",53)." $NOW_TIME\n";
 
-	echo "Time range: $query_date_BEGIN to $query_date_END\n\n";
-	echo "---------- TOTALS, PEAKS and AVERAGES\n";
+	echo _QXZ("Time range").": $query_date_BEGIN "._QXZ("to")." $query_date_END\n\n";
+	echo "---------- "._QXZ("TOTALS, PEAKS and AVERAGES")."\n";
 
 	$stmt="select AVG(sysload),AVG(channels_total),MAX(sysload),MAX(channels_total),MAX(processes) from server_performance where start_time <= '" . mysqli_real_escape_string($link, $query_date_END) . "' and start_time >= '" . mysqli_real_escape_string($link, $query_date_BEGIN) . "' and server_ip='" . mysqli_real_escape_string($link, $group) . "';";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -322,16 +323,16 @@ else
 	$OFFHOOKtime =	sprintf("%10s", $row[1]);
 
 
-	echo "Total Calls in/out on this server:        $TOTALcalls\n";
-	echo "Total Off-Hook time on this server (min): $OFFHOOKtime\n";
-	echo "Average/Peak channels in use for server:  $AVGchannels / $HIGHchannels\n";
-	echo "Average/Peak load for server:             $AVGload / $HIGHload\n";
-	echo "Average USER process cpu percentage:      $AVGcpuUSER %\n";
-	echo "Average SYSTEM process cpu percentage:    $AVGcpuSYSTEM %\n";
-	echo "Average IDLE process cpu percentage:      $AVGcpuIDLE %\n";
+	echo _QXZ("Total Calls in/out on this server:",42)."  $TOTALcalls\n";
+	echo _QXZ("Total Off-Hook time on this server (min):",42)." $OFFHOOKtime\n";
+	echo _QXZ("Average/Peak channels in use for server:",42)." $AVGchannels / $HIGHchannels\n";
+	echo _QXZ("Average/Peak load for server:",42)." $AVGload / $HIGHload\n";
+	echo _QXZ("Average USER process cpu percentage:",42)." $AVGcpuUSER %\n";
+	echo _QXZ("Average SYSTEM process cpu percentage:",42)." $AVGcpuSYSTEM %\n";
+	echo _QXZ("Average IDLE process cpu percentage:",42)." $AVGcpuIDLE %\n";
 
 	echo "\n";
-	echo "---------- LINE GRAPH:\n";
+	echo "---------- "._QXZ("LINE GRAPH").":\n";
 
 
 
@@ -395,18 +396,18 @@ else
 
 	$rows_to_max = ($rows_to_print + 100);
 
-	$time_scale_abb = '5 minutes';
+	$time_scale_abb = '5 '._QXZ("minutes");
 	$time_scale_tick = '1 minute';
-	if ($i > 1000) {$time_scale_abb = '10 minutes';   $time_scale_tick = '2 minutes';}
-	if ($i > 1500) {$time_scale_abb = '15 minutes';   $time_scale_tick = '3 minutes';}
-	if ($i > 2000) {$time_scale_abb = '20 minutes';   $time_scale_tick = '4 minutes';}
-	if ($i > 3000) {$time_scale_abb = '30 minutes';   $time_scale_tick = '5 minutes';}
-	if ($i > 4000) {$time_scale_abb = '40 minutes';   $time_scale_tick = '10 minutes';}
-	if ($i > 5000) {$time_scale_abb = '60 minutes';   $time_scale_tick = '15 minutes';}
-	if ($i > 6000) {$time_scale_abb = '90 minutes';   $time_scale_tick = '15 minutes';}
-	if ($i > 7000) {$time_scale_abb = '120 minutes';   $time_scale_tick = '30 minutes';}
+	if ($i > 1000) {$time_scale_abb = '10 '._QXZ("minutes");   $time_scale_tick = '2 '._QXZ("minutes");}
+	if ($i > 1500) {$time_scale_abb = '15 '._QXZ("minutes");   $time_scale_tick = '3 '._QXZ("minutes");}
+	if ($i > 2000) {$time_scale_abb = '20 '._QXZ("minutes");   $time_scale_tick = '4 '._QXZ("minutes");}
+	if ($i > 3000) {$time_scale_abb = '30 '._QXZ("minutes");   $time_scale_tick = '5 '._QXZ("minutes");}
+	if ($i > 4000) {$time_scale_abb = '40 '._QXZ("minutes");   $time_scale_tick = '10 '._QXZ("minutes");}
+	if ($i > 5000) {$time_scale_abb = '60 '._QXZ("minutes");   $time_scale_tick = '15 '._QXZ("minutes");}
+	if ($i > 6000) {$time_scale_abb = '90 '._QXZ("minutes");   $time_scale_tick = '15 '._QXZ("minutes");}
+	if ($i > 7000) {$time_scale_abb = '120 '._QXZ("minutes");   $time_scale_tick = '30 '._QXZ("minutes");}
 
-	print "rows: $i   tick: $time_scale_abb   scale: $time_scale_tick\n";
+	print _QXZ("rows").": $i   "._QXZ("tick").": $time_scale_abb   "._QXZ("scale").": $time_scale_tick\n";
 
 	$HTMcontent  = '';
 	$HTMcontent .= "#proc page\n";

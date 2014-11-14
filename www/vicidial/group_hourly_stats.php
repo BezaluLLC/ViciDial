@@ -16,6 +16,7 @@
 # 130619-2329 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-1929 - Changed to mysqli PHP functions
 # 140108-0724 - Added webserver and hostname to report logging
+# 141114-0043 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -93,7 +94,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -106,10 +107,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -207,7 +208,7 @@ if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGa
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>ADMINISTRATION: Group Hourly Stats
+<title><?php echo _QXZ("ADMINISTRATION: Group Hourly Stats"); ?>
 <?php
 
 ##### BEGIN Set variables to make header show properly #####
@@ -234,7 +235,7 @@ require("admin_header.php");
 
 
 <CENTER>
-<TABLE WIDTH=620 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; Group Hourly Stats <?php echo $group ?></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; </TD></TR>
+<TABLE WIDTH=620 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; <?php echo _QXZ("Group Hourly Stats"); ?> <?php echo $group ?></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; </TD></TR>
 
 
 
@@ -283,10 +284,10 @@ echo "<TR><TD ALIGN=LEFT COLSPAN=2>\n";
 
 echo "<br><center>\n";
 
-echo "<B>TSR HOUR COUNTS: <a href=\"./admin.php?ADD=3111&group_id=$group\">$group</a> | $status | $date_with_hour | $date_no_hour</B>\n";
+echo "<B>"._QXZ("TSR HOUR COUNTS").": <a href=\"./admin.php?ADD=3111&group_id=$group\">$group</a> | $status | $date_with_hour | $date_no_hour</B>\n";
 
 echo "<center><TABLE width=600 cellspacing=0 cellpadding=1>\n";
-echo "<tr><td><font size=2>TSR </td><td align=left><font size=2>ID </td><td align=right><font size=2> &nbsp; $status</td><td align=right><font size=2> &nbsp; TOTAL CALLS</td><td align=right><font size=2> &nbsp; $status DAY</td><td align=right><font size=2> &nbsp; &nbsp; </td></tr>\n";
+echo "<tr><td><font size=2>"._QXZ("TSR")." </td><td align=left><font size=2>"._QXZ("ID")." </td><td align=right><font size=2> &nbsp; $status</td><td align=right><font size=2> &nbsp; "._QXZ("TOTAL CALLS")."</td><td align=right><font size=2> &nbsp; $status "._QXZ("DAY")."</td><td align=right><font size=2> &nbsp; &nbsp; </td></tr>\n";
 
 	$day_calls=0;
 	$hour_calls=0;
@@ -303,7 +304,7 @@ echo "<tr><td><font size=2>TSR </td><td align=left><font size=2>ID </td><td alig
 		echo "<td align=right><font size=2> $VDcount[$o]</td>\n";
 		echo "<td align=right><font size=2> $VDtotal[$o]</td>\n";
 		echo "<td align=right><font size=2> $VDday[$o]</td>\n";
-		echo "<td align=right><font size=1><a href=\"./admin.php?ADD=3&user=$VDuser[$o]\">MODIFY</a> | <a href=\"./user_stats.php?user=$VDuser[$o]\">STATS</a></td></tr>\n";
+		echo "<td align=right><font size=1><a href=\"./admin.php?ADD=3&user=$VDuser[$o]\">"._QXZ("MODIFY")."</a> | <a href=\"./user_stats.php?user=$VDuser[$o]\">"._QXZ("STATS")."</a></td></tr>\n";
 		$total_calls = ($total_calls + $VDtotal[$o]);
 		$hour_calls = ($hour_calls + $VDcount[$o]);
 		$day_calls = ($day_calls + $VDday[$o]);
@@ -311,7 +312,7 @@ echo "<tr><td><font size=2>TSR </td><td align=left><font size=2>ID </td><td alig
 		$o++;
 		}
 
-	echo "<tr><td><font size=2>TOTAL </td><td align=right><font size=2> $status </td><td align=right><font size=2> $hour_calls</td><td align=right><font size=2> $total_calls</td><td align=right><font size=2> $day_calls</td></tr>\n";
+	echo "<tr><td><font size=2>"._QXZ("TOTAL")." </td><td align=right><font size=2> $status </td><td align=right><font size=2> $hour_calls</td><td align=right><font size=2> $total_calls</td><td align=right><font size=2> $day_calls</td></tr>\n";
 
 
 	}
@@ -320,9 +321,9 @@ echo "</TABLE></center>\n";
 echo "<br><br>\n";
 
 
-echo "<br>Please enter the group you want to get hourly stats for: <form action=$PHP_SELF method=GET>\n";
+echo "<br>"._QXZ("Please enter the group you want to get hourly stats for").": <form action=$PHP_SELF method=GET>\n";
 echo "<input type=hidden name=DB value=$DB>\n";
-echo "group: <select size=1 name=group>\n";
+echo _QXZ("group").": <select size=1 name=group>\n";
 
 $stmt="SELECT user_group,group_name from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group";
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -339,9 +340,9 @@ while ($groups_to_print > $o)
 	$o++;
 	}
 echo "$groups_list</select><br>\n";
-echo "status: <input type=text name=status size=10 maxlength=10 value=\"$status\"> &nbsp; (example: XFER)<br>\n";
-echo "date with hour: <input type=text name=date_with_hour size=14 maxlength=13 value=\"$date_with_hour\"> &nbsp; (example: 2004-06-25 14)<br>\n";
-echo "<input type=submit name=submit value=SUBMIT>\n";
+echo _QXZ("status").": <input type=text name=status size=10 maxlength=10 value=\"$status\"> &nbsp; ("._QXZ("example").": XFER)<br>\n";
+echo _QXZ("date with hour").": <input type=text name=date_with_hour size=14 maxlength=13 value=\"$date_with_hour\"> &nbsp; ("._QXZ("example").": 2004-06-25 14)<br>\n";
+echo "<input type=submit name=submit value='"._QXZ("SUBMIT")."'>\n";
 echo "<BR><BR><BR>\n";
 
 
@@ -352,7 +353,7 @@ $RUNtime = ($ENDtime - $STARTtime);
 echo "\n\n\n<br><br><br>\n\n";
 
 
-echo "<font size=0>\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds</font>";
+echo "<font size=0>\n\n\n<br><br><br>\n"._QXZ("script runtime").": $RUNtime "._QXZ("seconds")."</font>";
 
 
 ?>

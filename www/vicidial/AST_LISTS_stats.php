@@ -11,6 +11,7 @@
 # 130927-2154 - Added summary and full download options
 # 140108-0714 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141114-0825 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -96,7 +97,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -109,10 +110,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -193,7 +194,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -373,7 +374,7 @@ $HEADER.=" </STYLE>\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 
@@ -384,12 +385,12 @@ $MAIN.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP>";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 $MAIN.="</TD>";
 
-$MAIN.="<TD VALIGN=TOP> Lists:<BR>";
+$MAIN.="<TD VALIGN=TOP> "._QXZ("Lists").":<BR>";
 $MAIN.="<SELECT SIZE=5 NAME=list[] multiple>\n";
 if  (preg_match('/\-\-ALL\-\-/',$list_string))
-	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL LISTS --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL LISTS")." --</option>\n";}
 else
-	{$MAIN.="<option value=\"--ALL--\">-- ALL LISTS --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\">-- "._QXZ("ALL LISTS")." --</option>\n";}
 $o=0;
 while ($lists_to_print > $o)
 	{
@@ -397,7 +398,7 @@ while ($lists_to_print > $o)
 	  else {$MAIN.="<option value=\"$lists[$o]\">$lists[$o] - $list_names[$o]</option>\n";}
 	$o++;
 	}
-$MAIN.="</SELECT><BR><a href=\"AST_LISTS_campaign_stats.php?DB=$DB\">SWITCH TO CAMPAIGNS</a>\n";
+$MAIN.="</SELECT><BR><a href=\"AST_LISTS_campaign_stats.php?DB=$DB\">"._QXZ("SWITCH TO CAMPAIGNS")."</a>\n";
 $MAIN.="</TD>";
 
 $MAIN.="<TD VALIGN=TOP>";
@@ -406,18 +407,18 @@ $MAIN.="<TD VALIGN=TOP>";
 #if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
 #$MAIN.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>&nbsp; ";
 $MAIN.="<BR><BR><BR>\n";
-$MAIN.="<INPUT type=submit NAME=SUBMIT VALUE=SUBMIT>\n";
+$MAIN.="<INPUT type=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 $MAIN.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 $MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 if (strlen($group[0]) > 1)
 	{
-	$MAIN.=" <a href=\"./admin.php?ADD=34&campaign_id=$group[0]\">MODIFY</a> | \n";
-	$MAIN.=" <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+	$MAIN.=" <a href=\"./admin.php?ADD=34&campaign_id=$group[0]\">"._QXZ("MODIFY")."</a> | \n";
+	$MAIN.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 	}
 else
 	{
-	$MAIN.=" <a href=\"./admin.php?ADD=10\">CAMPAIGNS</a> | \n";
-	$MAIN.=" <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+	$MAIN.=" <a href=\"./admin.php?ADD=10\">"._QXZ("CAMPAIGNS")."</a> | \n";
+	$MAIN.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 	}
 $MAIN.="</TD></TR></TABLE>";
 $MAIN.="</FORM>\n\n";
@@ -428,12 +429,12 @@ $MAIN.="<PRE><FONT SIZE=2>\n\n";
 if (strlen($list[0]) < 1)
 	{
 	$MAIN.="\n\n";
-	$MAIN.="PLEASE SELECT A LIST OR LISTS ABOVE AND CLICK SUBMIT\n";
+	$MAIN.=_QXZ("PLEASE SELECT A LIST OR LISTS ABOVE AND CLICK SUBMIT")."\n";
 	}
 else
 	{
 	$totalOUToutput = '';
-	$totalOUToutput .= "List Status Stats                             $NOW_TIME     <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=ALL\">DOWNLOAD FULL REPORT</a>\n";
+	$totalOUToutput .= _QXZ("List Status Stats",45)." $NOW_TIME     <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=ALL\">"._QXZ("DOWNLOAD FULL REPORT")."</a>\n";
 
 	$totalOUToutput .= "\n";
 
@@ -441,31 +442,31 @@ else
 	$list_rslt=mysql_to_mysqli($list_stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
 	$listids_to_print = mysqli_num_rows($list_rslt);
-	$CSV_text1="\"\",\"LIST ID SUMMARY\"\n";
-	$CSV_text1.="\"LIST ID\",\"LIST NAME\",\"TOTAL LEADS\",\"ACTIVE/INACTIVE\"\n";
+	$CSV_text1="\"\",\""._QXZ("LIST ID SUMMARY")."\"\n";
+	$CSV_text1.="\""._QXZ("LIST ID")."\",\""._QXZ("LIST NAME")."\",\""._QXZ("TOTAL LEADS")."\",\""._QXZ("ACTIVE/INACTIVE")."\"\n";
 	$CSV_text2="";
 	$CSV_text3="";
 	$CSV_textALL="";
 	$i=0;
 
-	$totalOUToutput .= "---------- TOTAL LIST ID SUMMARY     <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=ALL\">DOWNLOAD FULL REPORT</a>\n";
+	$totalOUToutput .= "---------- "._QXZ("TOTAL LIST ID SUMMARY",25)." <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=ALL\">"._QXZ("DOWNLOAD FULL REPORT")."</a>\n";
 	$totalOUToutput .= "+------------------------------------------+------------+----------+\n";
-	$totalOUToutput .= "| LIST                                     | LEADS      | ACTIVE   |\n";
+	$totalOUToutput .= "| "._QXZ("LIST",40)." | "._QXZ("LEADS",10)." | "._QXZ("ACTIVE",8)." |\n";
 	$totalOUToutput .= "+------------------------------------------+------------+----------+\n";
 
-	$CSV_textSUMMARY.="\"LIST ID SUMMARY\"\n";
-	$CSV_textSUMMARY.="\"LIST\",\"LEADS\",\"ACTIVE\"\n";
+	$CSV_textSUMMARY.="\""._QXZ("LIST ID SUMMARY")."\"\n";
+	$CSV_textSUMMARY.="\""._QXZ("LIST")."\",\""._QXZ("LEADS")."\",\""._QXZ("ACTIVE")."\"\n";
 
 	$OUToutput='';
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- INDIVIDUAL LIST ID SUMMARIES\n";
+	$OUToutput .= "---------- "._QXZ("INDIVIDUAL LIST ID SUMMARIES")."\n";
 	
 	while ($i < $listids_to_print)
 		{
 		$list_row=mysqli_fetch_row($list_rslt);
 		$LISTIDlists[$i] =	$list_row[0];
 		$LISTIDlist_names[$i] =	$list_row[1];
-		if ($list_row[2]=="Y") {$active_txt="ACTIVE";} else {$active_txt="INACTIVE";}
+		if ($list_row[2]=="Y") {$active_txt=_QXZ("ACTIVE");} else {$active_txt=_QXZ("INACTIVE");}
 		$active_txt=sprintf("%-8s", $active_txt);
 		$LISTIDcalls[$i] =	$list_row[3];
 		$TOTALleads =$list_row[3];
@@ -478,16 +479,16 @@ else
 
 
 		$OUToutput .= "\n";
-		$OUToutput .= "---------- LIST ID SUMMARY     <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD LIST SUMMARIES</a>\n";
+		$OUToutput .= "---------- "._QXZ("LIST ID SUMMARY",19)." <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=1\">"._QXZ("DOWNLOAD LIST SUMMARIES")."</a>\n";
 		$OUToutput .= "+--------------------------------------------------------+\n";
-		$OUToutput .= "| LIST ID:       ".sprintf("%-30s", $list_row[0])." ".sprintf("%-8s", $active_txt)." |\n";
-		$OUToutput .= "| LIST NAME:     ".sprintf("%-30s", $list_row[1])." ".sprintf("%8s", "")." |\n";
-		$OUToutput .= "| TOTAL LEADS:   ".sprintf("%-30s", $list_row[3])." ".sprintf("%8s", "")." |\n";
+		$OUToutput .= "| "._QXZ("LIST ID:",14)." ".sprintf("%-30s", $list_row[0])." ".sprintf("%-8s", $active_txt)." |\n";
+		$OUToutput .= "| "._QXZ("LIST NAME:",14)." ".sprintf("%-30s", $list_row[1])." ".sprintf("%8s", "")." |\n";
+		$OUToutput .= "| "._QXZ("TOTAL LEADS:",14)." ".sprintf("%-30s", $list_row[3])." ".sprintf("%8s", "")." |\n";
 		$OUToutput .= "+--------------------------------------------------------+\n";
 		$CSV_text1.="\"$list_row[0]\",\"$list_row[1]\",\"$list_row[3]\",\"$active_txt\"\n";
 
-		$CSV_textALL.="\"LIST ID #$list_row[0] SUMMARY\",\"\"\n";
-		$CSV_textALL.="\"LIST NAME\",\"TOTAL LEADS\",\"ACTIVE/INACTIVE\"\n";
+		$CSV_textALL.="\""._QXZ("LIST ID")." #$list_row[0] "._QXZ("SUMMARY")."\",\"\"\n";
+		$CSV_textALL.="\""._QXZ("LIST NAME")."\",\""._QXZ("TOTAL LEADS")."\",\""._QXZ("ACTIVE/INACTIVE")."\"\n";
 		$CSV_textALL.="\"$list_row[1]\",\"$list_row[3]\",\"$active_txt\"\n";
 
 
@@ -640,28 +641,28 @@ else
 		$COMP_count =	sprintf("%10s", "$COMP_count"); while(strlen($COMP_count)>10) {$COMP_count = substr("$COMP_count", 0, -1);}
 
 		$OUToutput .= "\n";
-		$OUToutput .= "---------- STATUS FLAGS BREAKDOWN:    (and % of total leads in list)     <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=2\">DOWNLOAD FLAG BREAKDOWNS</a>\n";
+		$OUToutput .= "---------- "._QXZ("STATUS FLAGS BREAKDOWN").":    ("._QXZ("and % of total leads in list").")     <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=2\">"._QXZ("DOWNLOAD FLAG BREAKDOWNS")."</a>\n";
 		$OUToutput .= "+------------------+------------+----------+\n";
-		$OUToutput .= "| Human Answer     | $HA_count |  $HA_percent% |\n";
-		$OUToutput .= "| Sale             | $SALE_count |  $SALE_percent% |\n";
-		$OUToutput .= "| DNC              | $DNC_count |  $DNC_percent% |\n";
-		$OUToutput .= "| Customer Contact | $CC_count |  $CC_percent% |\n";
-		$OUToutput .= "| Not Interested   | $NI_count |  $NI_percent% |\n";
-		$OUToutput .= "| Unworkable       | $UW_count |  $UW_percent% |\n";
-		$OUToutput .= "| Sched Callbacks  | $SC_count |  $SC_percent% |\n";
-		$OUToutput .= "| Completed        | $COMP_count |  $COMP_percent% |\n";
+		$OUToutput .= "| "._QXZ("Human Answer",16)." | $HA_count |  $HA_percent% |\n";
+		$OUToutput .= "| "._QXZ("Sale",16)." | $SALE_count |  $SALE_percent% |\n";
+		$OUToutput .= "| "._QXZ("DNC",16)." | $DNC_count |  $DNC_percent% |\n";
+		$OUToutput .= "| "._QXZ("Customer Contact",16)." | $CC_count |  $CC_percent% |\n";
+		$OUToutput .= "| "._QXZ("Not Interested",16)." | $NI_count |  $NI_percent% |\n";
+		$OUToutput .= "| "._QXZ("Unworkable",16)." | $UW_count |  $UW_percent% |\n";
+		$OUToutput .= "| "._QXZ("Sched Callbacks",16)." | $SC_count |  $SC_percent% |\n";
+		$OUToutput .= "| "._QXZ("Completed",16)." | $COMP_count |  $COMP_percent% |\n";
 		$OUToutput .= "+------------------+------------+----------+\n";
 		$OUToutput .= "\n";
 
-		$CSV_text_block = "\"STATUS FLAGS SUMMARY FOR LIST ID #$list_id:\"\n";
-		$CSV_text_block .= "\"Human Answer\",\"$HA_count\",\"$HA_percent%\"\n";
-		$CSV_text_block .= "\"Sale\",\"$SALE_count\",\"$SALE_percent%\"\n";
-		$CSV_text_block .= "\"DNC\",\"$DNC_count\",\"$DNC_percent%\"\n";
-		$CSV_text_block .= "\"Customer Contact\",\"$CC_count\",\"$CC_percent%\"\n";
-		$CSV_text_block .= "\"Not Interested\",\"$NI_count\",\"$NI_percent%\"\n";
-		$CSV_text_block .= "\"Unworkable\",\"$UW_count\",\"$UW_percent%\"\n";
-		$CSV_text_block .= "\"Scheduled Callbacks\",\"$SC_count\",\"$SC_percent%\"\n";
-		$CSV_text_block .= "\"Completed\",\"$COMP_count\",\"$COMP_percent%\"\n\n";
+		$CSV_text_block = "\""._QXZ("STATUS FLAGS SUMMARY FOR LIST ID")." #$list_id:\"\n";
+		$CSV_text_block .= "\""._QXZ("Human Answer")."\",\"$HA_count\",\"$HA_percent%\"\n";
+		$CSV_text_block .= "\""._QXZ("Sale")."\",\"$SALE_count\",\"$SALE_percent%\"\n";
+		$CSV_text_block .= "\""._QXZ("DNC")."\",\"$DNC_count\",\"$DNC_percent%\"\n";
+		$CSV_text_block .= "\""._QXZ("Customer Contact")."\",\"$CC_count\",\"$CC_percent%\"\n";
+		$CSV_text_block .= "\""._QXZ("Not Interested")."\",\"$NI_count\",\"$NI_percent%\"\n";
+		$CSV_text_block .= "\""._QXZ("Unworkable")."\",\"$UW_count\",\"$UW_percent%\"\n";
+		$CSV_text_block .= "\""._QXZ("Scheduled Callbacks")."\",\"$SC_count\",\"$SC_percent%\"\n";
+		$CSV_text_block .= "\""._QXZ("Completed")."\",\"$COMP_count\",\"$COMP_percent%\"\n\n";
 
 		$CSV_text2.=$CSV_text_block;
 		$CSV_textALL.="\n".$CSV_text_block;
@@ -669,16 +670,16 @@ else
 		$stmt="select status, count(*) From vicidial_list where list_id='$list_id' group by status order by status asc";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
-		$OUToutput .= "---------- STATUS BREAKDOWN:    (and % of total leads in list)     <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=3\">DOWNLOAD STAT BREAKDOWNS</a>\n";
+		$OUToutput .= "---------- "._QXZ("STATUS BREAKDOWN").":    ("._QXZ("and % of total leads in list").")     <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=3\">"._QXZ("DOWNLOAD STAT BREAKDOWNS")."</a>\n";
 		$OUToutput .= "+--------+--------------------------------+----------+---------+\n";
-		$OUToutput .= "| STATUS | STATUS NAME                    | COUNT    |  LEAD % |\n";
+		$OUToutput .= "| "._QXZ("STATUS",6)." | "._QXZ("STATUS NAME",30)." | "._QXZ("COUNT",8)." | "._QXZ("LEAD",5)." % |\n";
 		$OUToutput .= "+--------+--------------------------------+----------+---------+\n";
 
-		$CSV_text3.="\"\",\"STATUS BREAKDOWN FOR LIST ID #$list_id:\"\n";
-		$CSV_text3.="\"STATUS\",\"STATUS NAME\",\"COUNT\",\"LEAD %\"\n";
+		$CSV_text3.="\"\",\""._QXZ("STATUS BREAKDOWN FOR LIST ID")." #$list_id:\"\n";
+		$CSV_text3.="\""._QXZ("STATUS")."\",\""._QXZ("STATUS NAME")."\",\""._QXZ("COUNT")."\",\""._QXZ("LEAD")." %\"\n";
 
-		$CSV_textALL.="\"STATUS BREAKDOWN FOR LIST ID #$list_id:\",\"\"\n";
-		$CSV_textALL.="\"STATUS\",\"STATUS NAME\",\"COUNT\",\"LEAD %\"\n";
+		$CSV_textALL.="\""._QXZ("STATUS BREAKDOWN FOR LIST ID")." #$list_id:\",\"\"\n";
+		$CSV_textALL.="\""._QXZ("STATUS")."\",\""._QXZ("STATUS NAME")."\",\""._QXZ("COUNT")."\",\""._QXZ("LEAD")." %\"\n";
 
 		while ($row=mysqli_fetch_row($rslt)) 
 			{
@@ -715,34 +716,34 @@ else
 	$total_COMP_count =	sprintf("%10s", $category_totals["COMP"]); while(strlen($total_COMP_count)>10) {$total_COMP_count = substr("$total_COMP_count", 0, -1);}
 
 	$totalOUToutput .= "+------------------------------------------+------------+----------+\n";
-	$totalOUToutput .= "|                                    TOTAL | ".sprintf("%10s", $totalTOTALleads)." |\n";
+	$totalOUToutput .= "| "._QXZ("TOTAL",40,"r")." | ".sprintf("%10s", $totalTOTALleads)." |\n";
 	$totalOUToutput .= "+------------------------------------------+------------+\n";
-	$CSV_textSUMMARY .= "\"TOTAL\",\"$totalTOTALleads\"\n";
+	$CSV_textSUMMARY .= "\""._QXZ("TOTAL")."\",\"$totalTOTALleads\"\n";
 
 	$totalOUToutput .= "\n";
 	$totalOUToutput .= "\n";
-	$totalOUToutput .= "---------- TOTAL STATUS FLAGS SUMMARY:    (and % of leads in selected lists)     <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=ALL\">DOWNLOAD FULL REPORT</a>\n";
+	$totalOUToutput .= "---------- "._QXZ("TOTAL STATUS FLAGS SUMMARY").":    ("._QXZ("and % of leads in selected lists").")     <a href=\"$PHP_SELF?DB=$DB$listQS&SUBMIT=$SUBMIT&file_download=ALL\">"._QXZ("DOWNLOAD FULL REPORT")."</a>\n";
 	$totalOUToutput .= "+------------------+------------+----------+\n";
-	$totalOUToutput .= "| Human Answer     | $total_HA_count |  $total_HA_percent% |\n";
-	$totalOUToutput .= "| Sale             | $total_SALE_count |  $total_SALE_percent% |\n";
-	$totalOUToutput .= "| DNC              | $total_DNC_count |  $total_DNC_percent% |\n";
-	$totalOUToutput .= "| Customer Contact | $total_CC_count |  $total_CC_percent% |\n";
-	$totalOUToutput .= "| Not Interested   | $total_NI_count |  $total_NI_percent% |\n";
-	$totalOUToutput .= "| Unworkable       | $total_UW_count |  $total_UW_percent% |\n";
-	$totalOUToutput .= "| Sched Callbacks  | $total_SC_count |  $total_SC_percent% |\n";
-	$totalOUToutput .= "| Completed        | $total_COMP_count |  $total_COMP_percent% |\n";
+	$totalOUToutput .= "| "._QXZ("Human Answer",16)." | $total_HA_count |  $total_HA_percent% |\n";
+	$totalOUToutput .= "| "._QXZ("Sale",16)." | $total_SALE_count |  $total_SALE_percent% |\n";
+	$totalOUToutput .= "| "._QXZ("DNC",16)." | $total_DNC_count |  $total_DNC_percent% |\n";
+	$totalOUToutput .= "| "._QXZ("Customer Contact",16)." | $total_CC_count |  $total_CC_percent% |\n";
+	$totalOUToutput .= "| "._QXZ("Not Interested",16)." | $total_NI_count |  $total_NI_percent% |\n";
+	$totalOUToutput .= "| "._QXZ("Unworkable",16)." | $total_UW_count |  $total_UW_percent% |\n";
+	$totalOUToutput .= "| "._QXZ("Sched Callbacks",16)." | $total_SC_count |  $total_SC_percent% |\n";
+	$totalOUToutput .= "| "._QXZ("Completed",16)." | $total_COMP_count |  $total_COMP_percent% |\n";
 	$totalOUToutput .= "+------------------+------------+----------+\n";
 	$totalOUToutput .= "\n\n\n";
 
-	$CSV_textSUMMARY .= "\n\"STATUS FLAGS SUMMARY:\"\n";
-	$CSV_textSUMMARY .= "\"Human Answer\",\"$total_HA_count\",\"$total_HA_percent%\"\n";
-	$CSV_textSUMMARY .= "\"Sale\",\"$total_SALE_count\",\"$total_SALE_percent%\"\n";
-	$CSV_textSUMMARY .= "\"DNC\",\"$total_DNC_count\",\"$total_DNC_percent%\"\n";
-	$CSV_textSUMMARY .= "\"Customer Contact\",\"$total_CC_count\",\"$total_CC_percent%\"\n";
-	$CSV_textSUMMARY .= "\"Not Interested\",\"$total_NI_count\",\"$total_NI_percent%\"\n";
-	$CSV_textSUMMARY .= "\"Unworkable\",\"$total_UW_count\",\"$total_UW_percent%\"\n";
-	$CSV_textSUMMARY .= "\"Scheduled Callbacks\",\"$total_SC_count\",\"$total_SC_percent%\"\n";
-	$CSV_textSUMMARY .= "\"Completed\",\"$total_COMP_count\",\"$total_COMP_percent%\"\n\n\n\n";
+	$CSV_textSUMMARY .= "\n\""._QXZ("STATUS FLAGS SUMMARY").":\"\n";
+	$CSV_textSUMMARY .= "\""._QXZ("Human Answer")."\",\"$total_HA_count\",\"$total_HA_percent%\"\n";
+	$CSV_textSUMMARY .= "\""._QXZ("Sale")."\",\"$total_SALE_count\",\"$total_SALE_percent%\"\n";
+	$CSV_textSUMMARY .= "\""._QXZ("DNC")."\",\"$total_DNC_count\",\"$total_DNC_percent%\"\n";
+	$CSV_textSUMMARY .= "\""._QXZ("Customer Contact")."\",\"$total_CC_count\",\"$total_CC_percent%\"\n";
+	$CSV_textSUMMARY .= "\""._QXZ("Not Interested")."\",\"$total_NI_count\",\"$total_NI_percent%\"\n";
+	$CSV_textSUMMARY .= "\""._QXZ("Unworkable")."\",\"$total_UW_count\",\"$total_UW_percent%\"\n";
+	$CSV_textSUMMARY .= "\""._QXZ("Scheduled Callbacks")."\",\"$total_SC_count\",\"$total_SC_percent%\"\n";
+	$CSV_textSUMMARY .= "\""._QXZ("Completed")."\",\"$total_COMP_count\",\"$total_COMP_percent%\"\n\n\n\n";
 
 	$CSV_textALL=$CSV_textSUMMARY.$CSV_textALL;
 
@@ -759,7 +760,7 @@ else
 
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $STARTtime);
-	$MAIN.="\nRun Time: $RUNtime seconds|$db_source\n";
+	$MAIN.="\n"._QXZ("Run Time").": $RUNtime "._QXZ("seconds")."|$db_source\n";
 	$MAIN.="</PRE>\n";
 	$MAIN.="</TD></TR></TABLE>\n";
 	$MAIN.="</BODY></HTML>\n";

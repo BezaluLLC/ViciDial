@@ -5,6 +5,7 @@
 #
 # CHANGES
 # 140225-0229 - First build
+# 141114-0057 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -104,7 +105,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -117,10 +118,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -230,14 +231,14 @@ while($i < $webserver_ct)
 if ( (preg_match('/\-\-ALL\-\-/',$webserver_string) ) or ($webserver_ct < 1) )
 	{
 	$webserver_SQL = "";
-	$webserver_rpt_string="- ALL servers ";
+	$webserver_rpt_string="- "._QXZ("ALL servers")." ";
 	if (preg_match('/\-\-ALL\-\-/',$webserver_string)) {$webserverQS="&webserver[]=--ALL--";}
 	}
 else
 	{
 	$webserver_SQL = preg_replace('/,$/i', '',$webserver_SQL);
 	$webserver_SQL = "and webserver IN($webserver_SQL)";
-	$webserver_rpt_string="- webserver ID(s) ".preg_replace('/\|/', ", ", substr($webserver_string, 1, -1));
+	$webserver_rpt_string="- "._QXZ("webserver ID(s)")." ".preg_replace('/\|/', ", ", substr($webserver_string, 1, -1));
 	}
 if (strlen($webserver_SQL)<3) {$webserver_SQL="";}
 
@@ -286,7 +287,7 @@ while($i < $url_ct)
 
 if ( (preg_match('/\-\-ALL\-\-/',$url_string) ) or ($url_ct < 1) )
 	{
-	$URL_rpt_string="- ALL URLS";
+	$URL_rpt_string="- "._QXZ("ALL URLS");
 	if (preg_match('/\-\-ALL\-\-/',$url_string)) 
 		{
 		$urlQS="&url[]=--ALL--";
@@ -321,7 +322,7 @@ $HEADER.="<link rel=\"stylesheet\" href=\"verticalbargraph.css\">\n";
 $HEADER.="<script language=\"JavaScript\" src=\"wz_jsgraphics.js\"></script>\n";
 $HEADER.="<script language=\"JavaScript\" src=\"line.js\"></script>\n";
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 
@@ -329,7 +330,7 @@ $MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 $MAIN.="<TABLE BORDER=0 cellspacing=5 cellpadding=5><TR><TD VALIGN=TOP align=center>\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
-$MAIN.="Date:\n<BR>";
+$MAIN.=_QXZ("Date").":\n<BR>";
 $MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 $MAIN.="<script language=\"JavaScript\">\n";
 $MAIN.="var o_cal = new tcal ({\n";
@@ -348,7 +349,7 @@ $MAIN.="</script>\n";
 
 $MAIN.="</TD>";
 
-$MAIN.="<TD VALIGN=TOP align=center><BR>\n to:  <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+$MAIN.="<TD VALIGN=TOP align=center><BR>\n "._QXZ("to").":  <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
 $MAIN.="<script language=\"JavaScript\">\n";
 $MAIN.="var o_cal = new tcal ({\n";
 $MAIN.="	// form name\n";
@@ -363,12 +364,12 @@ $MAIN.="</script>\n";
 #$MAIN.="<BR> to <BR><INPUT TYPE=TEXT NAME=end_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$end_date_T\">";
 $MAIN.="</TD>";
 
-$MAIN.="<TD ROWSPAN=2 VALIGN=TOP>Webservers:<BR/>\n";
+$MAIN.="<TD ROWSPAN=2 VALIGN=TOP>"._QXZ("Webservers").":<BR/>\n";
 $MAIN.="<SELECT SIZE=5 NAME=webserver[] multiple>\n";
 if  (preg_match('/\-\-ALL\-\-/',$webserver_string))
-	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL WEBSERVERS --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL WEBSERVERS")." --</option>\n";}
 else
-	{$MAIN.="<option value=\"--ALL--\">-- ALL WEBSERVERS --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\">-- "._QXZ("ALL WEBSERVERS")." --</option>\n";}
 $o=0;
 
 while ($webservers_to_print > $o)
@@ -382,12 +383,12 @@ while ($webservers_to_print > $o)
 
 $MAIN.="</SELECT></TD>";
 
-$MAIN.="<TD ROWSPAN=2 VALIGN=top align=center>URLs:<BR/>";
+$MAIN.="<TD ROWSPAN=2 VALIGN=top align=center>"._QXZ("URLs").":<BR/>";
 $MAIN.="<SELECT SIZE=5 NAME=url[] multiple>\n";
 if  (preg_match('/--ALL--/',$urls_string))
-	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL URLS --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL URLS")." --</option>\n";}
 else
-	{$MAIN.="<option value=\"--ALL--\">-- ALL URLS --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\">-- "._QXZ("ALL URLS")." --</option>\n";}
 
 $o=0;
 while ($urls_to_print > $o)
@@ -402,23 +403,23 @@ $MAIN.="</SELECT>";
 $MAIN.="</TD>";
 
 $MAIN.="<TD ROWSPAN=2 VALIGN=middle align=center>\n";
-$MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT><BR/><BR/>\n";
+$MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'><BR/><BR/>\n";
 $MAIN.="</TD></TR></TABLE>\n";
 $MAIN.="<PRE><font size=2>\n";
 
 if ($SUBMIT && $query_date && $end_date) {
-		$MAIN.="--- WEBSERVER/URL LOG RECORDS FOR $query_date TO $end_date $webserver_rpt_string, $URL_rpt_string\n";
+		$MAIN.="--- "._QXZ("WEBSERVER/URL LOG RECORDS FOR")." $query_date "._QXZ("TO")." $end_date $webserver_rpt_string, $URL_rpt_string\n";
 		#$MAIN.="--- RECORDS #$lower_limit-$upper_limit";
-		$MAIN.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS$sip_hangup_causeQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">[DOWNLOAD]</a>\n";
+		$MAIN.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS$sip_hangup_causeQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">["._QXZ("DOWNLOAD")."]</a>\n";
 
 		$stmt="select webserver, login_url, count(*) from vicidial_user_log where event_date>='$query_date 00:00:00' and event_date<='$end_date 23:59:59' $webserver_SQL $login_url_SQL group by webserver, login_url order by webserver, login_url";
 		$rslt=mysql_to_mysqli($stmt, $link);
-		$CSV_text="\"VICIDIAL USER LOG\"\n";
-		$CSV_text.="\"WEB SERVER\",\"URL\",\"COUNT\"\n";
+		$CSV_text="\""._QXZ("VICIDIAL USER LOG")."\"\n";
+		$CSV_text.="\""._QXZ("WEB SERVER")."\",\""._QXZ("URL")."\",\""._QXZ("COUNT")."\"\n";
 		$vulog_div="+----------------------------------------------------+------------------------------------------------------------------------------------------------------+--------+\n";
-		$MAIN.="\nVICIDIAL USER LOG\n";
+		$MAIN.="\n"._QXZ("VICIDIAL USER LOG")."\n";
 		$MAIN.=$vulog_div;
-		    $MAIN.="| WEB SERVER                                         | URL                                                                                                  | COUNT  |\n";
+		    $MAIN.="| "._QXZ("WEB SERVER",50)." | "._QXZ("URL",100)." | "._QXZ("COUNT",6)." |\n";
 		$MAIN.=$vulog_div;
 		$user_TOTAL=0;
 		while($row=mysqli_fetch_row($rslt)) {
@@ -427,19 +428,19 @@ if ($SUBMIT && $query_date && $end_date) {
 			$user_TOTAL+=$row[2];
 		}
 		$MAIN.=$vulog_div;
-		$MAIN.="|                                                                                                                                                     TOTAL | ".sprintf("%6s", $user_TOTAL)." |\n";
-		$CSV_text.="\"\",\"TOTAL\",\"$user_TOTAL\"\n\n";
+		$MAIN.="| "._QXZ("TOTAL",153,"r")." | ".sprintf("%6s", $user_TOTAL)." |\n";
+		$CSV_text.="\"\",\""._QXZ("TOTAL")."\",\"$user_TOTAL\"\n\n";
 		$MAIN.=$vulog_div;
 		$MAIN.="\n";
 
 		$stmt="select webserver, api_url, count(*) from vicidial_api_log where api_date>='$query_date 00:00:00' and api_date<='$end_date 23:59:59' $webserver_SQL $api_url_SQL group by webserver, api_url order by webserver, api_url";
 		$rslt=mysql_to_mysqli($stmt, $link);
-		$CSV_text.="\"VICIDIAL API LOG\"\n";
-		$CSV_text.="\"WEB SERVER\",\"URL\",\"COUNT\"\n";
+		$CSV_text.="\""._QXZ("VICIDIAL API LOG")."\"\n";
+		$CSV_text.="\""._QXZ("WEB SERVER")."\",\""._QXZ("URL")."\",\""._QXZ("COUNT")."\"\n";
 		$valog_div="+----------------------------------------------------+------------------------------------------------------------------------------------------------------+--------+\n";
-		$MAIN.="\nVICIDIAL API LOG\n";
+		$MAIN.="\n"._QXZ("VICIDIAL API LOG")."\n";
 		$MAIN.=$valog_div;
-		$MAIN.="| WEB SERVER                                         | URL                                                                                                  | COUNT  |\n";
+		$MAIN.="| "._QXZ("WEB SERVER",50)." | "._QXZ("URL",100)." | "._QXZ("COUNT",6)." |\n";
 		$MAIN.=$valog_div;
 		$api_TOTAL=0;
 		while($row=mysqli_fetch_row($rslt)) {
@@ -448,19 +449,19 @@ if ($SUBMIT && $query_date && $end_date) {
 			$api_TOTAL+=$row[2];
 		}
 		$MAIN.=$valog_div;
-		$MAIN.="|                                                                                                                                                     TOTAL | ".sprintf("%6s", $api_TOTAL)." |\n";
-		$CSV_text.="\"\",\"TOTAL\",\"$api_TOTAL\"\n\n";
+		$MAIN.="| "._QXZ("TOTAL",153,"r")." | ".sprintf("%6s", $api_TOTAL)." |\n";
+		$CSV_text.="\"\",\""._QXZ("TOTAL")."\",\"$api_TOTAL\"\n\n";
 		$MAIN.=$valog_div;
 		$MAIN.="\n\n";
 
 		$stmt="select webserver, count(*) from vicidial_report_log where event_date>='$query_date 00:00:00' and event_date<='$end_date 23:59:59' $webserver_SQL group by webserver order by webserver";
 		$rslt=mysql_to_mysqli($stmt, $link);
-		$CSV_text.="\"VICIDIAL REPORT LOG\"\n";
-		$CSV_text.="\"WEB SERVER\",\"COUNT\"\n";
+		$CSV_text.="\""._QXZ("VICIDIAL REPORT LOG")."\"\n";
+		$CSV_text.="\""._QXZ("WEB SERVER")."\",\""._QXZ("COUNT")."\"\n";
 		$vrlog_div="+----------------------------------------------------+--------+\n";
-		$MAIN.="\nVICIDIAL REPORT LOG\n";
+		$MAIN.="\n"._QXZ("VICIDIAL REPORT LOG")."\n";
 		$MAIN.=$vrlog_div;
-		$MAIN.="| WEB SERVER                                         | COUNT  |\n";
+		$MAIN.="| "._QXZ("WEB SERVER",50)." | "._QXZ("COUNT",6)." |\n";
 		$MAIN.=$vrlog_div;
 		$report_TOTAL=0;
 		while($row=mysqli_fetch_row($rslt)) {
@@ -469,8 +470,8 @@ if ($SUBMIT && $query_date && $end_date) {
 			$report_TOTAL+=$row[1];
 		}
 		$MAIN.=$vrlog_div;
-		$MAIN.="|                                              TOTAL | ".sprintf("%6s", $report_TOTAL)." |\n";
-		$CSV_text.="\"TOTAL\",\"$report_TOTAL\"\n\n";
+		$MAIN.="| "._QXZ("TOTAL",50,"r")." | ".sprintf("%6s", $report_TOTAL)." |\n";
+		$CSV_text.="\""._QXZ("TOTAL")."\",\"$report_TOTAL\"\n\n";
 		$MAIN.=$vrlog_div;
 		$MAIN.="\n\n";
 
@@ -500,5 +501,20 @@ if ($SUBMIT && $query_date && $end_date) {
 		require("admin_header.php");
 		echo $MAIN;
 	}
+
+$endMS = microtime();
+$startMSary = explode(" ",$startMS);
+$endMSary = explode(" ",$endMS);
+$runS = ($endMSary[0] - $startMSary[0]);
+$runM = ($endMSary[1] - $startMSary[1]);
+$TOTALrun = ($runS + $runM);
+
+$END_TIME=date("U");
+
+#print "Total run time: ".($END_TIME-$START_TIME);
+
+$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
 
 ?>

@@ -21,6 +21,7 @@
 # 130621-0818 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0745 - Changed to mysqli PHP functions
 # 140108-0718 - Added webserver and hostname to report logging
+# 141114-0908 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -101,7 +102,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -114,10 +115,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -204,7 +205,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -248,7 +249,7 @@ $HEADER.="-->\n";
 $HEADER.=" </STYLE>\n";
 
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HEADER.="<TITLE>$report_name";
+$HEADER.="<TITLE>"._QXZ("$report_name");
 
 
 ##### BEGIN Set variables to make header show properly #####
@@ -273,12 +274,12 @@ $subcamp_color =	'#C6C6C6';
 
 $MAIN.="<TABLE WIDTH=$page_width BGCOLOR=\"#F0F5FE\" cellpadding=2 cellspacing=0><TR BGCOLOR=\"#F0F5FE\"><TD>\n";
 
-$MAIN.="Agent Time Sheet for: $user\n";
+$MAIN.=_QXZ("Agent Time Sheet for").": $user\n";
 $MAIN.="<BR>\n";
 $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET> &nbsp; \n";
-$MAIN.="Date: <INPUT TYPE=TEXT NAME=query_date SIZE=19 MAXLENGTH=19 VALUE=\"$query_date\">\n";
-$MAIN.="User ID: <INPUT TYPE=TEXT NAME=agent SIZE=10 MAXLENGTH=20 VALUE=\"$agent\">\n";
-$MAIN.="<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
+$MAIN.=_QXZ("Date").": <INPUT TYPE=TEXT NAME=query_date SIZE=19 MAXLENGTH=19 VALUE=\"$query_date\">\n";
+$MAIN.=_QXZ("User ID").": <INPUT TYPE=TEXT NAME=agent SIZE=10 MAXLENGTH=20 VALUE=\"$agent\">\n";
+$MAIN.="<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 $MAIN.="</FORM>\n\n";
 
 $MAIN.="<PRE><FONT SIZE=3>\n";
@@ -287,8 +288,8 @@ $MAIN.="<PRE><FONT SIZE=3>\n";
 if (!$agent)
 {
 $MAIN.="\n";
-$MAIN.="PLEASE SELECT AN AGENT ID AND DATE-TIME ABOVE AND CLICK SUBMIT\n";
-$MAIN.=" NOTE: stats taken from available agent log data\n";
+$MAIN.=_QXZ("PLEASE SELECT AN AGENT ID AND DATE-TIME ABOVE AND CLICK SUBMIT")."\n";
+$MAIN.=" "._QXZ("NOTE: stats taken from available agent log data")."\n";
 }
 
 else
@@ -304,14 +305,14 @@ if ($DB) {$MAIN.="$stmt\n";}
 $row=mysqli_fetch_row($rslt);
 $full_name = $row[0];
 
-$MAIN.="Agent Time Sheet                             $NOW_TIME\n";
+$MAIN.=""._QXZ("Agent Time Sheet",44)." $NOW_TIME\n";
 
-$MAIN.="Time range: $query_date_BEGIN to $query_date_END\n\n";
-$MAIN.="---------- AGENT TIME SHEET: $agent - $full_name -------------\n\n";
+$MAIN.=_QXZ("Time range").": $query_date_BEGIN "._QXZ("to")." $query_date_END\n\n";
+$MAIN.="---------- "._QXZ("AGENT TIME SHEET").": $agent - $full_name -------------\n\n";
 
-$CSV_text_header.="\"Agent Time Sheet - $NOW_TIME\"\n";
-$CSV_text_header.="\"Time range: $query_date_BEGIN to $query_date_END\"\n";
-$CSV_text_header.="\"AGENT TIME SHEET: $agent - $full_name\"\n\n";
+$CSV_text_header.="\""._QXZ("Agent Time Sheet")." - $NOW_TIME\"\n";
+$CSV_text_header.="\""._QXZ("Time range").": $query_date_BEGIN "._QXZ("to")." $query_date_END\"\n";
+$CSV_text_header.="\""._QXZ("AGENT TIME SHEET").": $agent - $full_name\"\n\n";
 
 
 if ($calls_summary)
@@ -343,24 +344,24 @@ if ($calls_summary)
 	$pfWAIT_AVG_MS =		sprintf("%6s", $WAIT_AVG_MS);
 	$pfWRAPUP_AVG_MS =		sprintf("%6s", $WRAPUP_AVG_MS);
 
-	$MAIN.="TOTAL CALLS TAKEN: $row[0]     <a href='$PHP_SELF?calls_summary=$calls_summary&agent=$agent&query_date=$query_date&file_download=1'>[DOWNLOAD]</a>\n";
-	$MAIN.="TALK TIME:               $pfTALK_TIME_HMS     AVERAGE: $pfTALK_AVG_MS\n";
-	$MAIN.="PAUSE TIME:              $pfPAUSE_TIME_HMS     AVERAGE: $pfPAUSE_AVG_MS\n";
-	$MAIN.="WAIT TIME:               $pfWAIT_TIME_HMS     AVERAGE: $pfWAIT_AVG_MS\n";
-	$MAIN.="WRAPUP TIME:             $pfWRAPUP_TIME_HMS     AVERAGE: $pfWRAPUP_AVG_MS\n";
+	$MAIN.=_QXZ("TOTAL CALLS TAKEN",17).": $row[0]     <a href='$PHP_SELF?calls_summary=$calls_summary&agent=$agent&query_date=$query_date&file_download=1'>["._QXZ("DOWNLOAD")."]</a>\n";
+	$MAIN.=_QXZ("TALK TIME:",24)." $pfTALK_TIME_HMS "._QXZ("AVERAGE",11,"r").": $pfTALK_AVG_MS\n";
+	$MAIN.=_QXZ("PAUSE TIME:",24)." $pfPAUSE_TIME_HMS "._QXZ("AVERAGE",11,"r").": $pfPAUSE_AVG_MS\n";
+	$MAIN.=_QXZ("WAIT TIME:",24)." $pfWAIT_TIME_HMS "._QXZ("AVERAGE",11,"r").": $pfWAIT_AVG_MS\n";
+	$MAIN.=_QXZ("WRAPUP TIME:",24)." $pfWRAPUP_TIME_HMS "._QXZ("AVERAGE",11,"r").": $pfWRAPUP_AVG_MS\n";
 	$MAIN.="----------------------------------------------------------------\n";
-	$MAIN.="TOTAL ACTIVE AGENT TIME: $pfTOTAL_TIME_HMS\n\n";
+	$MAIN.=_QXZ("TOTAL ACTIVE AGENT TIME").": $pfTOTAL_TIME_HMS\n\n";
 	$CSV_text1.=$CSV_text_header;
-	$CSV_text1.="\"\",\"TOTAL CALLS TAKEN: $row[0]\"\n";
-	$CSV_text1.="\"\",\"TALK TIME:\",\"$pfTALK_TIME_HMS\",\"AVERAGE:\",\"$pfTALK_AVG_MS\"\n";
-	$CSV_text1.="\"\",\"PAUSE TIME:\",\"$pfPAUSE_TIME_HMS\",\"AVERAGE:\",\"$pfPAUSE_AVG_MS\"\n";
-	$CSV_text1.="\"\",\"WAIT TIME:\",\"$pfWAIT_TIME_HMS\",\"AVERAGE:\",\"$pfWAIT_AVG_MS\"\n";
-	$CSV_text1.="\"\",\"WRAPUP TIME:\",\"$pfWRAPUP_TIME_HMS\",\"AVERAGE:\",\"$pfWRAPUP_AVG_MS\"\n";
-	$CSV_text1.="\"\",\"TOTAL ACTIVE AGENT TIME:\",\"$pfTOTAL_TIME_HMS\"\n\n";
+	$CSV_text1.="\"\",\""._QXZ("TOTAL CALLS TAKEN").": $row[0]\"\n";
+	$CSV_text1.="\"\",\""._QXZ("TALK TIME").":\",\"$pfTALK_TIME_HMS\",\""._QXZ("AVERAGE").":\",\"$pfTALK_AVG_MS\"\n";
+	$CSV_text1.="\"\",\""._QXZ("PAUSE TIME").":\",\"$pfPAUSE_TIME_HMS\",\""._QXZ("AVERAGE").":\",\"$pfPAUSE_AVG_MS\"\n";
+	$CSV_text1.="\"\",\""._QXZ("WAIT TIME").":\",\"$pfWAIT_TIME_HMS\",\""._QXZ("AVERAGE").":\",\"$pfWAIT_AVG_MS\"\n";
+	$CSV_text1.="\"\",\""._QXZ("WRAPUP TIME").":\",\"$pfWRAPUP_TIME_HMS\",\""._QXZ("AVERAGE").":\",\"$pfWRAPUP_AVG_MS\"\n";
+	$CSV_text1.="\"\",\""._QXZ("TOTAL ACTIVE AGENT TIME").":\",\"$pfTOTAL_TIME_HMS\"\n\n";
 	}
 else
 	{
-	$MAIN.="<a href=\"$PHP_SELF?calls_summary=1&agent=$agent&query_date=$query_date\">Call Activity Summary</a>\n\n";
+	$MAIN.="<a href=\"$PHP_SELF?calls_summary=1&agent=$agent&query_date=$query_date\">"._QXZ("Call Activity Summary")."</a>\n\n";
 
 	}
 
@@ -369,29 +370,29 @@ $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $row=mysqli_fetch_row($rslt);
 
-$MAIN.="FIRST LOGIN:          $row[0]\n";
+$MAIN.=_QXZ("FIRST LOGIN:",21)." $row[0]\n";
 $start = $row[1];
 
-$CSV_login.="\"\",\"FIRST LOGIN:\",\"$row[0]\"\n";
+$CSV_login.="\"\",\""._QXZ("FIRST LOGIN").":\",\"$row[0]\"\n";
 
 $stmt="select event_time,UNIX_TIMESTAMP(event_time) from vicidial_agent_log where event_time <= '" . mysqli_real_escape_string($link, $query_date_END) . "' and event_time >= '" . mysqli_real_escape_string($link, $query_date_BEGIN) . "' and user='" . mysqli_real_escape_string($link, $agent) . "' order by event_time desc limit 1;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $row=mysqli_fetch_row($rslt);
 
-$MAIN.="LAST LOG ACTIVITY:    $row[0]\n";
+$MAIN.=_QXZ("LAST LOG ACTIVITY:",21)." $row[0]\n";
 $end = $row[1];
 
-$CSV_login.="\"\",\"LAST LOG ACTIVITY:\",\"$row[0]\"\n";
+$CSV_login.="\"\",\""._QXZ("LAST LOG ACTIVITY").":\",\"$row[0]\"\n";
 
 $login_time = ($end - $start);
 $LOGIN_TIME_HMS =		sec_convert($login_time,'H'); 
 $pfLOGIN_TIME_HMS =		sprintf("%8s", $LOGIN_TIME_HMS);
 
 $MAIN.="-----------------------------------------\n";
-$MAIN.="TOTAL LOGGED-IN TIME:            $pfLOGIN_TIME_HMS\n";
+$MAIN.=_QXZ("TOTAL LOGGED-IN TIME:",32)." $pfLOGIN_TIME_HMS\n";
 
-$CSV_login.="\"\",\"TOTAL LOGGED-IN TIME:\",\"$pfLOGIN_TIME_HMS\"\n\n";
+$CSV_login.="\"\",\""._QXZ("TOTAL LOGGED-IN TIME").":\",\"$pfLOGIN_TIME_HMS\"\n\n";
 $CSV_text1.=$CSV_login;
 
 ### timeclock records
@@ -407,14 +408,14 @@ $EQepoch = mktime(23, 59, 59, $EQday_ARY[1], $EQday_ARY[2], $EQday_ARY[0]);
 
 $MAIN.="\n";
 
-$MAIN.="<B>TIMECLOCK LOGIN/LOGOUT TIME:     <a href='$PHP_SELF?calls_summary=$calls_summary&agent=$agent&query_date=$query_date&file_download=2'>[DOWNLOAD]</a></B>\n";
+$MAIN.="<B>"._QXZ("TIMECLOCK LOGIN/LOGOUT TIME").":     <a href='$PHP_SELF?calls_summary=$calls_summary&agent=$agent&query_date=$query_date&file_download=2'>["._QXZ("DOWNLOAD")."]</a></B>\n";
 $MAIN.="<TABLE width=550 cellspacing=0 cellpadding=1>\n";
-$MAIN.="<tr><td><font size=2>ID </td><td><font size=2>EDIT </td><td align=right><font size=2>EVENT </td><td align=right><font size=2> DATE</td><td align=right><font size=2> IP ADDRESS</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HOURS:MINUTES</td></tr>\n";
+$MAIN.="<tr><td><font size=2>"._QXZ("ID")." </td><td><font size=2>"._QXZ("EDIT")." </td><td align=right><font size=2>"._QXZ("EVENT")." </td><td align=right><font size=2> "._QXZ("DATE")."</td><td align=right><font size=2> "._QXZ("IP ADDRESS")."</td><td align=right><font size=2> "._QXZ("GROUP")."</td><td align=right><font size=2>"._QXZ("HOURS:MINUTES")."</td></tr>\n";
 
 $CSV_text2.=$CSV_text_header;
 $CSV_text2.=$CSV_login;
-$CSV_text2.="\"TIMECLOCK LOGIN/LOGOUT TIME:\"\n";
-$CSV_text2.="\"\",\"ID\",\"EDIT\",\"EVENT\",\"DATE\",\"IP ADDRESS\",\"GROUP\",\"HOURS:MINUTES\"\n";
+$CSV_text2.="\""._QXZ("TIMECLOCK LOGIN/LOGOUT TIME").":\"\n";
+$CSV_text2.="\"\",\""._QXZ("ID")."\",\""._QXZ("EDIT")."\",\""._QXZ("EVENT")."\",\""._QXZ("DATE")."\",\""._QXZ("IP ADDRESS")."\",\""._QXZ("GROUP")."\",\""._QXZ("HOURS:MINUTES")."\"\n";
 
 	$stmt="SELECT event,event_epoch,user_group,login_sec,ip_address,timeclock_id,manager_user from vicidial_timeclock_log where user='$agent' and event_epoch >= '$SQepoch'  and event_epoch <= '$EQepoch';";
 	if ($DB>0) {$MAIN.="|$stmt|";}
@@ -470,7 +471,7 @@ if (strlen($login_sec)<1)
 	{
 	$login_sec = ($STARTtime - $row[1]);
 	$total_login_time = ($total_login_time + $login_sec);
-		if ($DB) {$MAIN.="LOGIN ONLY - $total_login_time - $login_sec";}
+		if ($DB) {$MAIN.=_QXZ("LOGIN ONLY")." - $total_login_time - $login_sec";}
 	}
 $total_login_hours_minutes =		sec_convert($total_login_time,'H'); 
 
@@ -480,9 +481,9 @@ $MAIN.="<tr><td align=right><font size=2> </td>";
 $MAIN.="<td align=right><font size=2> </td>\n";
 $MAIN.="<td align=right><font size=2> </td>\n";
 $MAIN.="<td align=right><font size=2> </td>\n";
-$MAIN.="<td align=right colspan=2><font size=2><font size=2>TOTAL </td>\n";
+$MAIN.="<td align=right colspan=2><font size=2><font size=2>"._QXZ("TOTAL")." </td>\n";
 $MAIN.="<td align=right><font size=2> $total_login_hours_minutes  </td></tr>\n";
-$CSV_text2.="\"\",\"\",\"\",\"\",\"\",\"\",\"TOTAL\",\"$total_login_hours_minutes\"\n";
+$CSV_text2.="\"\",\"\",\"\",\"\",\"\",\"\",\""._QXZ("TOTAL")."\",\"$total_login_hours_minutes\"\n";
 
 $MAIN.="</TABLE><BR>$db_source\n";
 $MAIN.="</BODY></HTML>\n";

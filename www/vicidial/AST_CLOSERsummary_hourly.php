@@ -21,6 +21,7 @@
 # 130902-0736 - Changed to mysqli PHP functions
 # 140108-0745 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141114-0012 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -133,7 +134,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -146,10 +147,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -231,7 +232,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -354,7 +355,7 @@ $HEADER.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 if ($bareformat < 1)
 	{
@@ -380,7 +381,7 @@ if ($bareformat < 1)
 	$MAIN.="<INPUT TYPE=HIDDEN NAME=outbound_rate VALUE=\"$outbound_rate\">\n";
 	$MAIN.="<INPUT TYPE=HIDDEN NAME=costformat VALUE=\"$costformat\">\n";
 	$MAIN.="<INPUT TYPE=HIDDEN NAME=print_calls VALUE=\"$print_calls\">\n";
-	$MAIN.="Date Range:<BR>\n";
+	$MAIN.=_QXZ("Date Range").":<BR>\n";
 	$MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
 	$MAIN.="	<script language=\"JavaScript\">\n";
@@ -394,7 +395,7 @@ if ($bareformat < 1)
 	$MAIN.="	// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 	$MAIN.="	</script>\n";
 
-	$MAIN.=" to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+	$MAIN.=" "._QXZ("to")." <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
 
 	$MAIN.="	<script language=\"JavaScript\">\n";
 	$MAIN.="	var o_cal = new tcal ({\n";
@@ -409,7 +410,7 @@ if ($bareformat < 1)
 
 	$MAIN.="</TD><TD VALIGN=TOP> &nbsp; \n";
 	$MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
-	$MAIN.="Inbound Groups: <BR>\n";
+	$MAIN.=_QXZ("Inbound Groups").": <BR>\n";
 	$MAIN.="<SELECT SIZE=5 NAME=group[] multiple>\n";
 	$o=0;
 	while ($groups_to_print > $o)
@@ -423,19 +424,19 @@ if ($bareformat < 1)
 	$MAIN.="</SELECT>\n";
 	$MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
 	$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ";
-	$MAIN.="<a href=\"$PHP_SELF?DB=$DB&inbound_rate=$inbound_rate&outbound_rate=$outbound_rate$groupQS&costformat=$costformat&print_calls=$print_calls&query_date=$query_date&end_date=$end_date&exclude_rollover=$exclude_rollover&SUBMIT=$SUBMIT&shift=$shift&file_download=1\">DOWNLOAD</a> | ";
-	$MAIN.="<a href=\"./admin.php?ADD=3111&group_id=$group[0]\">MODIFY</a> | ";
-	$MAIN.="<a href=\"./admin.php?ADD=999999\">REPORTS</a>";
+	$MAIN.="<a href=\"$PHP_SELF?DB=$DB&inbound_rate=$inbound_rate&outbound_rate=$outbound_rate$groupQS&costformat=$costformat&print_calls=$print_calls&query_date=$query_date&end_date=$end_date&exclude_rollover=$exclude_rollover&SUBMIT=$SUBMIT&shift=$shift&file_download=1\">"._QXZ("DOWNLOAD")."</a> | ";
+	$MAIN.="<a href=\"./admin.php?ADD=3111&group_id=$group[0]\">"._QXZ("MODIFY")."</a> | ";
+	$MAIN.="<a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a>";
 	$MAIN.="</FONT>\n";
-	$MAIN.="<BR> &nbsp; Display as:&nbsp;";
+	$MAIN.="<BR> &nbsp; "._QXZ("Display as").":&nbsp;";
 	$MAIN.="<select name='report_display_type'>";
 	if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
-	$MAIN.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR>";
-	$MAIN.=" &nbsp; Exclude Outbound Drop Groups: <BR>";
+	$MAIN.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n<BR>";
+	$MAIN.=" &nbsp; "._QXZ("Exclude Outbound Drop Groups").": <BR>";
 	$MAIN.=" &nbsp; <SELECT SIZE=1 NAME=exclude_rollover>\n";
 	$MAIN.="<option selected value=\"$exclude_rollover\">$exclude_rollover</option>\n";
-	$MAIN.="<option value=\"YES\">YES</option>\n";
-	$MAIN.="<option value=\"NO\">NO</option>\n";
+	$MAIN.="<option value=\"YES\">"._QXZ("YES")."</option>\n";
+	$MAIN.="<option value=\"NO\">"._QXZ("NO")."</option>\n";
 	$MAIN.="</SELECT>\n";
 	$MAIN.="<BR> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ";
 	$MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
@@ -443,7 +444,7 @@ if ($bareformat < 1)
 	$MAIN.="</TD></TR>\n";
 	$MAIN.="<TR><TD>\n";
 
-	$MAIN.="Call Time:<BR>\n";
+	$MAIN.=_QXZ("Call Time").":<BR>\n";
 	$MAIN.="<SELECT SIZE=1 NAME=shift>\n";
 	$o=0;
 	while ($times_to_print > $o)
@@ -463,7 +464,7 @@ if ($bareformat < 1)
 if ($groups_to_print < 1)
 	{
 	$MAIN.="\n\n";
-	$MAIN.="PLEASE SELECT AN IN-GROUP AND DATE RANGE ABOVE AND CLICK SUBMIT\n";
+	$MAIN.=_QXZ("PLEASE SELECT AN IN-GROUP AND DATE RANGE ABOVE AND CLICK SUBMIT")."\n";
 	}
 
 else
@@ -520,8 +521,8 @@ else
 	$query_date_END = "$end_date 23:59:59";
 
 
-	$MAIN .= "Inbound Summary Hourly Report: $group_string          $NOW_TIME\n";
-	$CSV_main.="Inbound Summary Hourly Report:,$NOW_TIME\n";
+	$MAIN .= _QXZ("Inbound Summary Hourly Report").": $group_string          $NOW_TIME\n";
+	$CSV_main.=_QXZ("Inbound Summary Hourly Report").":,$NOW_TIME\n";
 
 
 	$JS_text.="<script language='Javascript'>\n";
@@ -530,15 +531,15 @@ else
 	if ($group_ct > 0)
 		{
 		$ASCII_text .= "\n";
-		$ASCII_text .= "---------- MULTI-GROUP BREAKDOWN:\n";
+		$ASCII_text .= "---------- "._QXZ("MULTI-GROUP BREAKDOWN").":\n";
 		$ASCII_text .= "+------------------------------------------+--------+--------+-----------+---------+-----------+---------+---------+--------+\n";
-		$ASCII_text .= "|                                          |        |        |           |         | TOTAL     | AVERAGE | MAXIMUM | TOTAL  |\n";
-		$ASCII_text .= "|                                          | TOTAL  | TOTAL  | TOTAL     | AVERAGE | QUEUE     | QUEUE   | QUEUE   | ABANDON|\n";
-		$ASCII_text .= "| IN-GROUP                                 | CALLS  | ANSWER | TALK      | TALK    | TIME      | TIME    | TIME    | CALLS  |\n";
+		$ASCII_text .= "|                                          |        |        |           |         | "._QXZ("TOTAL",9)." | "._QXZ("AVERAGE",7)." | "._QXZ("MAXIMUM",7)." | "._QXZ("TOTAL",6)." |\n";
+		$ASCII_text .= "|                                          | "._QXZ("TOTAL",6)." | "._QXZ("TOTAL",6)." | "._QXZ("TOTAL",9)." | "._QXZ("AVERAGE",7)." | "._QXZ("QUEUE",9)." | "._QXZ("QUEUE",7)." | "._QXZ("QUEUE",7)." | "._QXZ("ABANDON",7)."|\n";
+		$ASCII_text .= "| "._QXZ("IN-GROUP",40). " | "._QXZ("CALLS",6)." | "._QXZ("ANSWER",6)." | "._QXZ("TALK",9)." | "._QXZ("TALK",7)." | "._QXZ("TIME",9)." | "._QXZ("TIME",7)." | "._QXZ("TIME",7)." | "._QXZ("CALLS",6)." |\n";
 		$ASCII_text .= "+------------------------------------------+--------+--------+-----------+---------+-----------+---------+---------+--------+\n";
 
-		$CSV_main.="\"MULTI-GROUP BREAKDOWN:\"\n";
-		$CSV_main.="\"IN-GROUP\",\"TOTAL CALLS\",\"TOTAL ANSWER\",\" TOTAL TALK\",\" AVERAGE TALK\",\" TOTAL QUEUE TIME\",\" AVERAGE QUEUE TIME\",\" MAXIMUM QUEUE TIME\",\" TOTAL ABANDON CALLS\"\n";
+		$CSV_main.="\""._QXZ("MULTI-GROUP BREAKDOWN").":\"\n";
+		$CSV_main.="\""._QXZ("IN-GROUP")."\",\""._QXZ("TOTAL CALLS")."\",\""._QXZ("TOTAL ANSWER")."\",\" "._QXZ("TOTAL TALK")."\",\" "._QXZ("AVERAGE TALK")."\",\" "._QXZ("TOTAL QUEUE TIME")."\",\" "._QXZ("AVERAGE QUEUE TIME")."\",\" "._QXZ("MAXIMUM QUEUE TIME")."\",\" "._QXZ("TOTAL ABANDON CALLS")."\"\n";
 		$CSV_subreports="";
 
 		$graph_stats=array();

@@ -12,6 +12,7 @@
 # 130621-0728 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-2012 - Changed to mysqli PHP functions
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141114-0732 - Finalized adding QXZ translation to all admin files
 #
 
 require("dbconnect_mysqli.php");
@@ -77,7 +78,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -90,10 +91,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -136,7 +137,7 @@ while ($i < $groups_to_print)
 
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>VICIDIAL: Park Stats</TITLE></HEAD><BODY BGCOLOR=WHITE>\n";
+echo "<TITLE>"._QXZ("VICIDIAL: Park Stats")."</TITLE></HEAD><BODY BGCOLOR=WHITE>\n";
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
 echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
 echo "<SELECT SIZE=1 NAME=group>\n";
@@ -148,8 +149,8 @@ echo "<SELECT SIZE=1 NAME=group>\n";
 		$o++;
 	}
 echo "</SELECT>\n";
-echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
-echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=34&campaign_id=$group\">MODIFY</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
+echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=34&campaign_id=$group\">"._QXZ("MODIFY")."</a> | <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 echo "</FORM>\n\n";
 
 echo "<PRE><FONT SIZE=2>\n\n";
@@ -158,17 +159,17 @@ echo "<PRE><FONT SIZE=2>\n\n";
 if (!$group)
 {
 echo "\n\n";
-echo "PLEASE SELECT A GROUP AND DATE ABOVE AND CLICK SUBMIT\n";
+echo _QXZ("PLEASE SELECT A GROUP AND DATE ABOVE AND CLICK SUBMIT")."\n";
 }
 
 else
 {
 
 
-echo "VICIDIAL: Park Stats                             $NOW_TIME\n";
+echo _QXZ("VICIDIAL: Park Stats",48)." $NOW_TIME\n";
 
 echo "\n";
-echo "---------- TOTALS\n";
+echo "---------- "._QXZ("TOTALS")."\n";
 
 $stmt="select count(*),sum(parked_sec) from park_log where parked_time >= '$query_date 00:00:01' and parked_time <= '$query_date 23:59:59' and status ='HUNGUP' and channel_group='" . mysqli_real_escape_string($link, $group) . "';";
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -180,11 +181,11 @@ $average_hold_seconds = MathZDC($row[1], $row[0]);
 $average_hold_seconds = round($average_hold_seconds, 0);
 $average_hold_seconds =	sprintf("%10s", $average_hold_seconds);
 
-echo "Total Calls taken in this Group:              $TOTALcalls\n";
-echo "Average Hold Time(seconds) for all Calls:     $average_hold_seconds\n";
+echo _QXZ("Total Calls taken in this Group:",45)." $TOTALcalls\n";
+echo _QXZ("Average Hold Time(seconds) for all Calls:",45)." $average_hold_seconds\n";
 
 echo "\n";
-echo "---------- DROPS\n";
+echo "---------- "._QXZ("DROPS")."\n";
 
 $stmt="select count(*),sum(parked_sec) from park_log where parked_time >= '$query_date 00:00:01' and parked_time <= '$query_date 23:59:59' and status ='HUNGUP' and channel_group='" . mysqli_real_escape_string($link, $group) . "' and (talked_sec < 5 or talked_sec is null);";
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -199,17 +200,17 @@ $average_hold_seconds = MathZDC($row[1], $row[0]);
 $average_hold_seconds = round($average_hold_seconds, 0);
 $average_hold_seconds =	sprintf("%10s", $average_hold_seconds);
 
-echo "Total Dropped Calls:                          $DROPcalls  $DROPpercent%\n";
-echo "Average Hold Time(seconds) for Dropped Calls: $average_hold_seconds\n";
+echo _QXZ("Total Dropped Calls:",45)." $DROPcalls  $DROPpercent%\n";
+echo _QXZ("Average Hold Time(seconds) for Dropped Calls:",45)." $average_hold_seconds\n";
 
 
 ##############################
 #########  USER STATS
 
 echo "\n";
-echo "---------- USER STATS\n";
+echo "---------- "._QXZ("USER STATS")."\n";
 echo "+--------------------------+------------+--------+--------+\n";
-echo "| USER                     | CALLS      | TIME M | AVRG M |\n";
+echo "| "._QXZ("USER",24)." | "._QXZ("CALLS",10)." | "._QXZ("TIME M",6)." | "._QXZ("AVRG M",6)." |\n";
 echo "+--------------------------+------------+--------+--------+\n";
 
 $stmt="select park_log.user,full_name,count(*),sum(talked_sec),avg(talked_sec) from park_log,vicidial_users where parked_time >= '$query_date 00:00:01' and parked_time <= '$query_date 23:59:59' and status ='HUNGUP' and channel_group='" . mysqli_real_escape_string($link, $group) . "' and park_log.user is not null and talked_sec is not null and talked_sec > 4 and park_log.user=vicidial_users.user group by park_log.user;";
@@ -258,7 +259,7 @@ echo "+--------------------------+------------+--------+--------+\n";
 #########  TIME STATS
 
 echo "\n";
-echo "---------- TIME STATS\n";
+echo "---------- "._QXZ("TIME STATS")."\n";
 
 echo "<FONT SIZE=0>\n";
 
@@ -331,7 +332,7 @@ $hour_multiplier = MathZDC(100, $hi_hour_count);
 #$hour_multiplier = round($hour_multiplier, 0);
 
 echo "<!-- HICOUNT: $hi_hour_count|$hour_multiplier -->\n";
-echo "GRAPH IN 15 MINUTE INCREMENTS OF TOTAL INCOMING CALLS FOR THIS GROUP\n";
+echo _QXZ("GRAPH IN 15 MINUTE INCREMENTS OF TOTAL INCOMING CALLS FOR THIS GROUP")."\n";
 
 $k=1;
 $Mk=0;
@@ -357,7 +358,7 @@ while ($k <= 102)
 
 echo "+------+-------------------------------------------------------------------------------------------------------+-------+-------+\n";
 #echo "| HOUR | GRAPH IN 15 MINUTE INCREMENTS OF TOTAL INCOMING CALLS FOR THIS GROUP                                  | DROPS | TOTAL |\n";
-echo "| HOUR |$call_scale| DROPS | TOTAL |\n";
+echo "| "._QXZ("HOUR",4)." |$call_scale| "._QXZ("DROPS",5)." | "._QXZ("TOTAL",5)." |\n";
 echo "+------+-------------------------------------------------------------------------------------------------------+-------+-------+\n";
 
 $ZZ = '00';

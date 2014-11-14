@@ -10,6 +10,7 @@
 # 140116-0839 - First build based upon AST_LISTS_campaign_stats.php
 # 140121-0707 - Fixed small issue in List select mode
 # 140331-2122 - Converted division calculations to use MathZDC function, added HTML view
+# 141114-0827 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -94,7 +95,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -107,10 +108,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -191,7 +192,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -391,7 +392,7 @@ $HEADER.=" </STYLE>\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 
@@ -404,12 +405,12 @@ $MAIN.="<INPUT TYPE=HIDDEN NAME=use_lists VALUE=\"$use_lists\">\n";
 
 if ($use_lists > 0)
 	{
-	$MAIN.="</TD><TD VALIGN=TOP> Lists:<BR>";
+	$MAIN.="</TD><TD VALIGN=TOP> "._QXZ("Lists").":<BR>";
 	$MAIN.="<SELECT SIZE=5 NAME=group[] multiple>\n";
 	if  (preg_match('/\-\-ALL\-\-/',$group_string))
-		{$MAIN.="<option value=\"--ALL--\" selected>-- ALL LISTS --</option>\n";}
+		{$MAIN.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL LISTS")." --</option>\n";}
 	else
-		{$MAIN.="<option value=\"--ALL--\">-- ALL LISTS --</option>\n";}
+		{$MAIN.="<option value=\"--ALL--\">-- "._QXZ("ALL LISTS")." --</option>\n";}
 	$o=0;
 	while ($campaigns_to_print > $o)
 		{
@@ -418,16 +419,16 @@ if ($use_lists > 0)
 		$o++;
 		}
 	$MAIN.="</SELECT>\n<BR>\n";
-	$MAIN.="<a href=\"$PHP_SELF?use_lists=0&DB=$DB\">SWITCH TO CAMPAIGNS</a>";
+	$MAIN.="<a href=\"$PHP_SELF?use_lists=0&DB=$DB\">"._QXZ("SWITCH TO CAMPAIGNS")."</a>";
 	}
 else
 	{
-	$MAIN.="</TD><TD VALIGN=TOP> Campaigns:<BR>";
+	$MAIN.="</TD><TD VALIGN=TOP> "._QXZ("Campaigns").":<BR>";
 	$MAIN.="<SELECT SIZE=5 NAME=group[] multiple>\n";
 	if  (preg_match('/\-\-ALL\-\-/',$group_string))
-		{$MAIN.="<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
+		{$MAIN.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 	else
-		{$MAIN.="<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
+		{$MAIN.="<option value=\"--ALL--\">-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 	$o=0;
 	while ($campaigns_to_print > $o)
 		{
@@ -436,26 +437,26 @@ else
 		$o++;
 		}
 	$MAIN.="</SELECT>\n<BR>\n";
-	$MAIN.="<a href=\"$PHP_SELF?use_lists=1&DB=$DB\">SWITCH TO LISTS</a>";
+	$MAIN.="<a href=\"$PHP_SELF?use_lists=1&DB=$DB\">"._QXZ("SWITCH TO LISTS")."</a>";
 	}
 $MAIN.="</TD><TD VALIGN=TOP>";
-$MAIN.="Display as:<BR/>";
+$MAIN.=_QXZ("Display as").":<BR/>";
 $MAIN.="<select name='report_display_type'>";
 if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
-$MAIN.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>&nbsp; ";
+$MAIN.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>&nbsp; ";
 $MAIN.="<BR><BR>\n";
-$MAIN.="<INPUT type=submit NAME=SUBMIT VALUE=SUBMIT>\n";
+$MAIN.="<INPUT type=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 $MAIN.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 $MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 if (strlen($group[0]) > 1)
 	{
-	$MAIN.=" <a href=\"./admin.php?ADD=34&campaign_id=$group[0]\">MODIFY</a> | \n";
-	$MAIN.=" <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+	$MAIN.=" <a href=\"./admin.php?ADD=34&campaign_id=$group[0]\">"._QXZ("MODIFY")."</a> | \n";
+	$MAIN.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 	}
 else
 	{
-	$MAIN.=" <a href=\"./admin.php?ADD=10\">CAMPAIGNS</a> | \n";
-	$MAIN.=" <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+	$MAIN.=" <a href=\"./admin.php?ADD=10\">"._QXZ("CAMPAIGNS")."</a> | \n";
+	$MAIN.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 	}
 $MAIN.="</TD></TR></TABLE>";
 $MAIN.="</FORM>\n\n";
@@ -466,13 +467,13 @@ $MAIN.="<PRE><FONT SIZE=2>\n\n";
 if (strlen($group[0]) < 1)
 	{
 	$MAIN.="\n\n";
-	$MAIN.="PLEASE SELECT A CAMPAIGN AND DATE ABOVE AND CLICK SUBMIT\n";
+	$MAIN.=_QXZ("PLEASE SELECT A CAMPAIGN AND DATE ABOVE AND CLICK SUBMIT")."\n";
 	}
 
 else
 	{
 	$OUToutput = '';
-	$OUToutput .= "Lists Pass Report                             $NOW_TIME\n";
+	$OUToutput .= _QXZ("Lists Pass Report",45)." $NOW_TIME\n";
 
 	$OUToutput .= "\n";
 
@@ -482,7 +483,7 @@ else
 	$TOTALleads = 0;
 
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- LIST ID SUMMARY     <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a>\n";
+	$OUToutput .= "---------- "._QXZ("LIST ID SUMMARY",19)." <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=1\">"._QXZ("DOWNLOAD")."</a>\n";
 
 	$OUToutput .= "+------------+------------------------------------------+----------+------------+----------+";
 	$OUToutput .= "---------+---------+---------+---------+---------+---------+";
@@ -501,38 +502,38 @@ else
 	$OUToutput .= "---------+---------+---------+---------+---------+---------+";
 	$OUToutput .= "\n";
 
-	$OUToutput .= "|   FIRST    |                                          |          | LEAD       |          |";
-	$OUToutput .= " CONTACTS| CONTACTS| CONTACTS| CONTACTS| CONTACTS| CONTACTS|";
-	$OUToutput .= " CNT RATE| CNT RATE| CNT RATE| CNT RATE| CNT RATE| CNT RATE|";
-	$OUToutput .= "   SALES |   SALES |   SALES |   SALES |   SALES |   SALES |";
-	$OUToutput .= "CONV RATE|CONV RATE|CONV RATE|CONV RATE|CONV RATE|CONV RATE|";
-	$OUToutput .= "   DNC   |   DNC   |   DNC   |   DNC   |   DNC   |   DNC   |";
-	$OUToutput .= " DNC RATE| DNC RATE| DNC RATE| DNC RATE| DNC RATE| DNC RATE|";
-	$OUToutput .= "CUST CONT|CUST CONT|CUST CONT|CUST CONT|CUST CONT|CUST CONT|";
-	$OUToutput .= "CUCT RATE|CUCT RATE|CUCT RATE|CUCT RATE|CUCT RATE|CUCT RATE|";
-	$OUToutput .= "UNWORKABL|UNWORKABL|UNWORKABL|UNWORKABL|UNWORKABL|UNWORKABL|";
-	$OUToutput .= "UNWK RATE|UNWK RATE|UNWK RATE|UNWK RATE|UNWK RATE|UNWK RATE|";
-	$OUToutput .= "SCHEDL CB|SCHEDL CB|SCHEDL CB|SCHEDL CB|SCHEDL CB|SCHEDL CB|";
-	$OUToutput .= "SHCB RATE|SHCB RATE|SHCB RATE|SHCB RATE|SHCB RATE|SHCB RATE|";
-	$OUToutput .= "COMPLETED|COMPLETED|COMPLETED|COMPLETED|COMPLETED|COMPLETED|";
-	$OUToutput .= "COMP RATE|COMP RATE|COMP RATE|COMP RATE|COMP RATE|COMP RATE|";
+	$OUToutput .= "|   "._QXZ("FIRST",8)." |                                          |          | "._QXZ("LEAD",10)." |          |";
+	$OUToutput .= _QXZ("CONTACTS",9,"r")."|"._QXZ("CONTACTS",9,"r")."|"._QXZ("CONTACTS",9,"r")."|"._QXZ("CONTACTS",9,"r")."|"._QXZ("CONTACTS",9,"r")."|"._QXZ("CONTACTS",9,"r")."|";
+	$OUToutput .= _QXZ("CNT RATE",9,"r")."|"._QXZ("CNT RATE",9,"r")."|"._QXZ("CNT RATE",9,"r")."|"._QXZ("CNT RATE",9,"r")."|"._QXZ("CNT RATE",9,"r")."|"._QXZ("CNT RATE",9,"r")."|";
+	$OUToutput .= _QXZ("SALES",8,"r")." |"._QXZ("SALES",8,"r")." |"._QXZ("SALES",8,"r")." |"._QXZ("SALES",8,"r")." |"._QXZ("SALES",8,"r")." |"._QXZ("SALES",8,"r")." |";
+	$OUToutput .= _QXZ("CONV RATE",9,"r")."|"._QXZ("CONV RATE",9,"r")."|"._QXZ("CONV RATE",9,"r")."|"._QXZ("CONV RATE",9,"r")."|"._QXZ("CONV RATE",9,"r")."|"._QXZ("CONV RATE",9,"r")."|";
+	$OUToutput .= _QXZ("  DNC",8)." | "._QXZ(" DNC",7)." | "._QXZ(" DNC",7)." | "._QXZ(" DNC",7)." | "._QXZ(" DNC",7)." | "._QXZ(" DNC",7)." |";
+	$OUToutput .= _QXZ("DNC RATE",9,"r")."|"._QXZ("DNC RATE",9,"r")."|"._QXZ("DNC RATE",9,"r")."|"._QXZ("DNC RATE",9,"r")."|"._QXZ("DNC RATE",9,"r")."|"._QXZ("DNC RATE",9,"r")."|";
+	$OUToutput .= _QXZ("CUST CONT",9,"r")."|"._QXZ("CUST CONT",9,"r")."|"._QXZ("CUST CONT",9,"r")."|"._QXZ("CUST CONT",9,"r")."|"._QXZ("CUST CONT",9,"r")."|"._QXZ("CUST CONT",9,"r")."|";
+	$OUToutput .= _QXZ("CUCT RATE",9,"r")."|"._QXZ("CUCT RATE",9,"r")."|"._QXZ("CUCT RATE",9,"r")."|"._QXZ("CUCT RATE",9,"r")."|"._QXZ("CUCT RATE",9,"r")."|"._QXZ("CUCT RATE",9,"r")."|";
+	$OUToutput .= _QXZ("UNWORKABL",9,"r")."|"._QXZ("UNWORKABL",9,"r")."|"._QXZ("UNWORKABL",9,"r")."|"._QXZ("UNWORKABL",9,"r")."|"._QXZ("UNWORKABL",9,"r")."|"._QXZ("UNWORKABL",9,"r")."|";
+	$OUToutput .= _QXZ("UNWK RATE",9,"r")."|"._QXZ("UNWK RATE",9,"r")."|"._QXZ("UNWK RATE",9,"r")."|"._QXZ("UNWK RATE",9,"r")."|"._QXZ("UNWK RATE",9,"r")."|"._QXZ("UNWK RATE",9,"r")."|";
+	$OUToutput .= _QXZ("SCHEDL CB",9,"r")."|"._QXZ("SCHEDL CB",9,"r")."|"._QXZ("SCHEDL CB",9,"r")."|"._QXZ("SCHEDL CB",9,"r")."|"._QXZ("SCHEDL CB",9,"r")."|"._QXZ("SCHEDL CB",9,"r")."|";
+	$OUToutput .= _QXZ("SHCB RATE",9,"r")."|"._QXZ("SHCB RATE",9,"r")."|"._QXZ("SHCB RATE",9,"r")."|"._QXZ("SHCB RATE",9,"r")."|"._QXZ("SHCB RATE",9,"r")."|"._QXZ("SHCB RATE",9,"r")."|";
+	$OUToutput .= _QXZ("COMPLETED",9,"r")."|"._QXZ("COMPLETED",9,"r")."|"._QXZ("COMPLETED",9,"r")."|"._QXZ("COMPLETED",9,"r")."|"._QXZ("COMPLETED",9,"r")."|"._QXZ("COMPLETED",9,"r")."|";
+	$OUToutput .= _QXZ("COMP RATE",9,"r")."|"._QXZ("COMP RATE",9,"r")."|"._QXZ("COMP RATE",9,"r")."|"._QXZ("COMP RATE",9,"r")."|"._QXZ("COMP RATE",9,"r")."|"._QXZ("COMP RATE",9,"r")."|";
 	$OUToutput .= "\n";
 
-	$OUToutput .= "|  LOAD DATE | LIST ID and NAME                         | CAMPAIGN | COUNT      | ACTIVE   |";
-	$OUToutput .= " 1st PASS| 2nd PASS| 3rd PASS| 4th PASS| 5th PASS|    LIFE |";
-	$OUToutput .= " 1st PASS| 2nd PASS| 3rd PASS| 4th PASS| 5th PASS|    LIFE |";
-	$OUToutput .= " 1st PASS| 2nd PASS| 3rd PASS| 4th PASS| 5th PASS|    LIFE |";
-	$OUToutput .= " 1st PASS| 2nd PASS| 3rd PASS| 4th PASS| 5th PASS|    LIFE |";
-	$OUToutput .= " 1st PASS| 2nd PASS| 3rd PASS| 4th PASS| 5th PASS|    LIFE |";
-	$OUToutput .= " 1st PASS| 2nd PASS| 3rd PASS| 4th PASS| 5th PASS|    LIFE |";
-	$OUToutput .= " 1st PASS| 2nd PASS| 3rd PASS| 4th PASS| 5th PASS|    LIFE |";
-	$OUToutput .= " 1st PASS| 2nd PASS| 3rd PASS| 4th PASS| 5th PASS|    LIFE |";
-	$OUToutput .= " 1st PASS| 2nd PASS| 3rd PASS| 4th PASS| 5th PASS|    LIFE |";
-	$OUToutput .= " 1st PASS| 2nd PASS| 3rd PASS| 4th PASS| 5th PASS|    LIFE |";
-	$OUToutput .= " 1st PASS| 2nd PASS| 3rd PASS| 4th PASS| 5th PASS|    LIFE |";
-	$OUToutput .= " 1st PASS| 2nd PASS| 3rd PASS| 4th PASS| 5th PASS|    LIFE |";
-	$OUToutput .= " 1st PASS| 2nd PASS| 3rd PASS| 4th PASS| 5th PASS|    LIFE |";
-	$OUToutput .= " 1st PASS| 2nd PASS| 3rd PASS| 4th PASS| 5th PASS|    LIFE |";
+	$OUToutput .= "| "._QXZ("LOAD DATE",10,"r")." | "._QXZ("LIST ID and NAME",40)." | "._QXZ("CAMPAIGN",8)." | "._QXZ("COUNT",10)." | "._QXZ("ACTIVE",8)." |";
+	$OUToutput .= " "._QXZ("1st PASS",8,"r")."| "._QXZ("2nd PASS",8,"r")."| "._QXZ("3rd PASS",8,"r")."| "._QXZ("4th PASS",8,"r")."| "._QXZ("5th PASS",8,"r")."| "._QXZ("LIFE",7,"r")." |";
+	$OUToutput .= " "._QXZ("1st PASS",8,"r")."| "._QXZ("2nd PASS",8,"r")."| "._QXZ("3rd PASS",8,"r")."| "._QXZ("4th PASS",8,"r")."| "._QXZ("5th PASS",8,"r")."| "._QXZ("LIFE",7,"r")." |";
+	$OUToutput .= " "._QXZ("1st PASS",8,"r")."| "._QXZ("2nd PASS",8,"r")."| "._QXZ("3rd PASS",8,"r")."| "._QXZ("4th PASS",8,"r")."| "._QXZ("5th PASS",8,"r")."| "._QXZ("LIFE",7,"r")." |";
+	$OUToutput .= " "._QXZ("1st PASS",8,"r")."| "._QXZ("2nd PASS",8,"r")."| "._QXZ("3rd PASS",8,"r")."| "._QXZ("4th PASS",8,"r")."| "._QXZ("5th PASS",8,"r")."| "._QXZ("LIFE",7,"r")." |";
+	$OUToutput .= " "._QXZ("1st PASS",8,"r")."| "._QXZ("2nd PASS",8,"r")."| "._QXZ("3rd PASS",8,"r")."| "._QXZ("4th PASS",8,"r")."| "._QXZ("5th PASS",8,"r")."| "._QXZ("LIFE",7,"r")." |";
+	$OUToutput .= " "._QXZ("1st PASS",8,"r")."| "._QXZ("2nd PASS",8,"r")."| "._QXZ("3rd PASS",8,"r")."| "._QXZ("4th PASS",8,"r")."| "._QXZ("5th PASS",8,"r")."| "._QXZ("LIFE",7,"r")." |";
+	$OUToutput .= " "._QXZ("1st PASS",8,"r")."| "._QXZ("2nd PASS",8,"r")."| "._QXZ("3rd PASS",8,"r")."| "._QXZ("4th PASS",8,"r")."| "._QXZ("5th PASS",8,"r")."| "._QXZ("LIFE",7,"r")." |";
+	$OUToutput .= " "._QXZ("1st PASS",8,"r")."| "._QXZ("2nd PASS",8,"r")."| "._QXZ("3rd PASS",8,"r")."| "._QXZ("4th PASS",8,"r")."| "._QXZ("5th PASS",8,"r")."| "._QXZ("LIFE",7,"r")." |";
+	$OUToutput .= " "._QXZ("1st PASS",8,"r")."| "._QXZ("2nd PASS",8,"r")."| "._QXZ("3rd PASS",8,"r")."| "._QXZ("4th PASS",8,"r")."| "._QXZ("5th PASS",8,"r")."| "._QXZ("LIFE",7,"r")." |";
+	$OUToutput .= " "._QXZ("1st PASS",8,"r")."| "._QXZ("2nd PASS",8,"r")."| "._QXZ("3rd PASS",8,"r")."| "._QXZ("4th PASS",8,"r")."| "._QXZ("5th PASS",8,"r")."| "._QXZ("LIFE",7,"r")." |";
+	$OUToutput .= " "._QXZ("1st PASS",8,"r")."| "._QXZ("2nd PASS",8,"r")."| "._QXZ("3rd PASS",8,"r")."| "._QXZ("4th PASS",8,"r")."| "._QXZ("5th PASS",8,"r")."| "._QXZ("LIFE",7,"r")." |";
+	$OUToutput .= " "._QXZ("1st PASS",8,"r")."| "._QXZ("2nd PASS",8,"r")."| "._QXZ("3rd PASS",8,"r")."| "._QXZ("4th PASS",8,"r")."| "._QXZ("5th PASS",8,"r")."| "._QXZ("LIFE",7,"r")." |";
+	$OUToutput .= " "._QXZ("1st PASS",8,"r")."| "._QXZ("2nd PASS",8,"r")."| "._QXZ("3rd PASS",8,"r")."| "._QXZ("4th PASS",8,"r")."| "._QXZ("5th PASS",8,"r")."| "._QXZ("LIFE",7,"r")." |";
+	$OUToutput .= " "._QXZ("1st PASS",8,"r")."| "._QXZ("2nd PASS",8,"r")."| "._QXZ("3rd PASS",8,"r")."| "._QXZ("4th PASS",8,"r")."| "._QXZ("5th PASS",8,"r")."| "._QXZ("LIFE",7,"r")." |";
 	$OUToutput .= "\n";
 
 	$OUToutput .= "+------------+------------------------------------------+----------+------------+----------+";
@@ -553,22 +554,22 @@ else
 	$OUToutput .= "\n";
 
 
-	$CSV_text1.="\"LIST ID SUMMARY\"\n";
-	$CSV_text1.="\"FIRST LOAD DATE\",\"LIST\",\"CAMPAIGN\",\"LEADS\",\"ACTIVE\"";
-	$CSV_text1.=",\"CONTACTS 1st PASS\",\"CONTACTS 2nd PASS\",\"CONTACTS 3rd PASS\",\"CONTACTS 4th PASS\",\"CONTACTS 5th PASS\",\"CONTACTS LIFE\"";
-	$CSV_text1.=",\"CNT RATE 1st PASS\",\"CNT RATE 2nd PASS\",\"CNT RATE 3rd PASS\",\"CNT RATE 4th PASS\",\"CNT RATE 5th PASS\",\"CNT RATE LIFE\"";
-	$CSV_text1.=",\"SALES 1st PASS\",\"SALES 2nd PASS\",\"SALES 3rd PASS\",\"SALES 4th PASS\",\"SALES 5th PASS\",\"SALES LIFE\"";
-	$CSV_text1.=",\"CONV RATE 1st PASS\",\"CONV RATE 2nd PASS\",\"CONV RATE 3rd PASS\",\"CONV RATE 4th PASS\",\"CONV RATE 5th PASS\",\"CONV RATE LIFE\"";
-	$CSV_text1.=",\"DNC 1st PASS\",\"DNC 2nd PASS\",\"DNC 3rd PASS\",\"DNC 4th PASS\",\"DNC 5th PASS\",\"DNC LIFE\"";
-	$CSV_text1.=",\"DNC RATE 1st PASS\",\"DNC RATE 2nd PASS\",\"DNC RATE 3rd PASS\",\"DNC RATE 4th PASS\",\"DNC RATE 5th PASS\",\"DNC RATE LIFE\"";
-	$CSV_text1.=",\"CUSTOMER CONTACT 1st PASS\",\"CUSTOMER CONTACT 2nd PASS\",\"CUSTOMER CONTACT 3rd PASS\",\"CUSTOMER CONTACT 4th PASS\",\"CUSTOMER CONTACT 5th PASS\",\"CUSTOMER CONTACT LIFE\"";
-	$CSV_text1.=",\"CUSTOMER CONTACT RATE 1st PASS\",\"CUSTOMER CONTACT RATE 2nd PASS\",\"CUSTOMER CONTACT RATE 3rd PASS\",\"CUSTOMER CONTACT RATE 4th PASS\",\"CUSTOMER CONTACT RATE 5th PASS\",\"CUSTOMER CONTACT RATE LIFE\"";
-	$CSV_text1.=",\"UNWORKABLE 1st PASS\",\"UNWORKABLE 2nd PASS\",\"UNWORKABLE 3rd PASS\",\"UNWORKABLE 4th PASS\",\"UNWORKABLE 5th PASS\",\"UNWORKABLE LIFE\"";
-	$CSV_text1.=",\"UNWORKABLE RATE 1st PASS\",\"UNWORKABLE RATE 2nd PASS\",\"UNWORKABLE RATE 3rd PASS\",\"UNWORKABLE RATE 4th PASS\",\"UNWORKABLE RATE 5th PASS\",\"UNWORKABLE RATE LIFE\"";
-	$CSV_text1.=",\"SCHEDULED CALLBACK 1st PASS\",\"SCHEDULED CALLBACK 2nd PASS\",\"SCHEDULED CALLBACK 3rd PASS\",\"SCHEDULED CALLBACK 4th PASS\",\"SCHEDULED CALLBACK 5th PASS\",\"SCHEDULED CALLBACK LIFE\"";
-	$CSV_text1.=",\"SCHEDULED CALLBACK RATE 1st PASS\",\"SCHEDULED CALLBACK RATE 2nd PASS\",\"SCHEDULED CALLBACK RATE 3rd PASS\",\"SCHEDULED CALLBACK RATE 4th PASS\",\"SCHEDULED CALLBACK RATE 5th PASS\",\"SCHEDULED CALLBACK RATE LIFE\"";
-	$CSV_text1.=",\"COMPLETED 1st PASS\",\"COMPLETED 2nd PASS\",\"COMPLETED 3rd PASS\",\"COMPLETED 4th PASS\",\"COMPLETED 5th PASS\",\"COMPLETED LIFE\"";
-	$CSV_text1.=",\"COMPLETED RATE 1st PASS\",\"COMPLETED RATE 2nd PASS\",\"COMPLETED RATE 3rd PASS\",\"COMPLETED RATE 4th PASS\",\"COMPLETED RATE 5th PASS\",\"COMPLETED RATE LIFE\"";
+	$CSV_text1.="\""._QXZ("LIST ID SUMMARY")."\"\n";
+	$CSV_text1.="\""._QXZ("FIRST LOAD DATE")."\",\""._QXZ("LIST")."\",\""._QXZ("CAMPAIGN")."\",\""._QXZ("LEADS")."\",\""._QXZ("ACTIVE")."\"";
+	$CSV_text1.=",\""._QXZ("CONTACTS 1st PASS")."\",\""._QXZ("CONTACTS 2nd PASS")."\",\""._QXZ("CONTACTS 3rd PASS")."\",\""._QXZ("CONTACTS 4th PASS")."\",\""._QXZ("CONTACTS 5th PASS")."\",\""._QXZ("CONTACTS LIFE")."\"";
+	$CSV_text1.=",\""._QXZ("CNT RATE 1st PASS")."\",\""._QXZ("CNT RATE 2nd PASS")."\",\""._QXZ("CNT RATE 3rd PASS")."\",\""._QXZ("CNT RATE 4th PASS")."\",\""._QXZ("CNT RATE 5th PASS")."\",\""._QXZ("CNT RATE LIFE")."\"";
+	$CSV_text1.=",\""._QXZ("SALES 1st PASS")."\",\""._QXZ("SALES 2nd PASS")."\",\""._QXZ("SALES 3rd PASS")."\",\""._QXZ("SALES 4th PASS")."\",\""._QXZ("SALES 5th PASS")."\",\""._QXZ("SALES LIFE")."\"";
+	$CSV_text1.=",\""._QXZ("CONV RATE 1st PASS")."\",\""._QXZ("CONV RATE 2nd PASS")."\",\""._QXZ("CONV RATE 3rd PASS")."\",\""._QXZ("CONV RATE 4th PASS")."\",\""._QXZ("CONV RATE 5th PASS")."\",\""._QXZ("CONV RATE LIFE")."\"";
+	$CSV_text1.=",\""._QXZ("DNC 1st PASS")."\",\""._QXZ("DNC 2nd PASS")."\",\""._QXZ("DNC 3rd PASS")."\",\""._QXZ("DNC 4th PASS")."\",\""._QXZ("DNC 5th PASS")."\",\""._QXZ("DNC LIFE")."\"";
+	$CSV_text1.=",\""._QXZ("DNC RATE 1st PASS")."\",\""._QXZ("DNC RATE 2nd PASS")."\",\""._QXZ("DNC RATE 3rd PASS")."\",\""._QXZ("DNC RATE 4th PASS")."\",\""._QXZ("DNC RATE 5th PASS")."\",\""._QXZ("DNC RATE LIFE")."\"";
+	$CSV_text1.=",\""._QXZ("CUSTOMER CONTACT 1st PASS")."\",\""._QXZ("CUSTOMER CONTACT 2nd PASS")."\",\""._QXZ("CUSTOMER CONTACT 3rd PASS")."\",\""._QXZ("CUSTOMER CONTACT 4th PASS")."\",\""._QXZ("CUSTOMER CONTACT 5th PASS")."\",\""._QXZ("CUSTOMER CONTACT LIFE")."\"";
+	$CSV_text1.=",\""._QXZ("CUSTOMER CONTACT RATE 1st PASS")."\",\""._QXZ("CUSTOMER CONTACT RATE 2nd PASS")."\",\""._QXZ("CUSTOMER CONTACT RATE 3rd PASS")."\",\""._QXZ("CUSTOMER CONTACT RATE 4th PASS")."\",\""._QXZ("CUSTOMER CONTACT RATE 5th PASS")."\",\""._QXZ("CUSTOMER CONTACT RATE LIFE")."\"";
+	$CSV_text1.=",\""._QXZ("UNWORKABLE 1st PASS")."\",\""._QXZ("UNWORKABLE 2nd PASS")."\",\""._QXZ("UNWORKABLE 3rd PASS")."\",\""._QXZ("UNWORKABLE 4th PASS")."\",\""._QXZ("UNWORKABLE 5th PASS")."\",\""._QXZ("UNWORKABLE LIFE")."\"";
+	$CSV_text1.=",\""._QXZ("UNWORKABLE RATE 1st PASS")."\",\""._QXZ("UNWORKABLE RATE 2nd PASS")."\",\""._QXZ("UNWORKABLE RATE 3rd PASS")."\",\""._QXZ("UNWORKABLE RATE 4th PASS")."\",\""._QXZ("UNWORKABLE RATE 5th PASS")."\",\""._QXZ("UNWORKABLE RATE LIFE")."\"";
+	$CSV_text1.=",\""._QXZ("SCHEDULED CALLBACK 1st PASS")."\",\""._QXZ("SCHEDULED CALLBACK 2nd PASS")."\",\""._QXZ("SCHEDULED CALLBACK 3rd PASS")."\",\""._QXZ("SCHEDULED CALLBACK 4th PASS")."\",\""._QXZ("SCHEDULED CALLBACK 5th PASS")."\",\""._QXZ("SCHEDULED CALLBACK LIFE")."\"";
+	$CSV_text1.=",\""._QXZ("SCHEDULED CALLBACK RATE 1st PASS")."\",\""._QXZ("SCHEDULED CALLBACK RATE 2nd PASS")."\",\""._QXZ("SCHEDULED CALLBACK RATE 3rd PASS")."\",\""._QXZ("SCHEDULED CALLBACK RATE 4th PASS")."\",\""._QXZ("SCHEDULED CALLBACK RATE 5th PASS")."\",\""._QXZ("SCHEDULED CALLBACK RATE LIFE")."\"";
+	$CSV_text1.=",\""._QXZ("COMPLETED 1st PASS")."\",\""._QXZ("COMPLETED 2nd PASS")."\",\""._QXZ("COMPLETED 3rd PASS")."\",\""._QXZ("COMPLETED 4th PASS")."\",\""._QXZ("COMPLETED 5th PASS")."\",\""._QXZ("COMPLETED LIFE")."\"";
+	$CSV_text1.=",\""._QXZ("COMPLETED RATE 1st PASS")."\",\""._QXZ("COMPLETED RATE 2nd PASS")."\",\""._QXZ("COMPLETED RATE 3rd PASS")."\",\""._QXZ("COMPLETED RATE 4th PASS")."\",\""._QXZ("COMPLETED RATE 5th PASS")."\",\""._QXZ("COMPLETED RATE LIFE")."\"";
 	$CSV_text1.="\n";
 
 	$graph_stats=array();
@@ -576,184 +577,184 @@ else
 	$max_stats2=array();
 
 	$GRAPH="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"LIST ID Summary\" class=\"horizontalgraph\">\n";
-	$GRAPH.="<caption align='top'>LIST ID SUMMARY</caption>";
+	$GRAPH.="<caption align='top'>"._QXZ("LIST ID SUMMARY")."</caption>";
 	$GRAPH.="<tr>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">LIST</th>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">LEADS</th>\n";
+	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("LIST")."</th>\n";
+	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("LEADS")."</th>\n";
 	$GRAPH.="</tr>\n";
 
 	$GRAPH2="<tr>
-	<th class='column_header grey_graph_cell' id='callstatsgraph1' ><a href='#' onClick=\"DrawGraph('CONTACTS1', '1'); return false;\">CONTACTS 1st PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph2' ><a href='#' onClick=\"DrawGraph('CONTACTS2', '2'); return false;\">CONTACTS 2nd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph3' ><a href='#' onClick=\"DrawGraph('CONTACTS3', '3'); return false;\">CONTACTS 3rd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph4' ><a href='#' onClick=\"DrawGraph('CONTACTS4', '4'); return false;\">CONTACTS 4th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph5' ><a href='#' onClick=\"DrawGraph('CONTACTS5', '5'); return false;\">CONTACTS 5th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph6' ><a href='#' onClick=\"DrawGraph('CONTACTSALL', '6'); return false;\">CONTACTS LIFE</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph7' ><a href='#' onClick=\"DrawGraph('CNTRATE1', '7'); return false;\">CNT RATE 1st PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph8' ><a href='#' onClick=\"DrawGraph('CNTRATE2', '8'); return false;\">CNT RATE 2nd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph9' ><a href='#' onClick=\"DrawGraph('CNTRATE3', '9'); return false;\">CNT RATE 3rd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph10'><a href='#' onClick=\"DrawGraph('CNTRATE4', '10'); return false;\">CNT RATE 4th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph11'><a href='#' onClick=\"DrawGraph('CNTRATE5', '11'); return false;\">CNT RATE 5th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph12'><a href='#' onClick=\"DrawGraph('CNTRATEALL', '12'); return false;\">CNT RATE LIFE</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph13'><a href='#' onClick=\"DrawGraph('SALES1', '13'); return false;\">SALES 1st PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph14'><a href='#' onClick=\"DrawGraph('SALES2', '14'); return false;\">SALES 2nd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph15'><a href='#' onClick=\"DrawGraph('SALES3', '15'); return false;\">SALES 3rd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph16'><a href='#' onClick=\"DrawGraph('SALES4', '16'); return false;\">SALES 4th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph17'><a href='#' onClick=\"DrawGraph('SALES5', '17'); return false;\">SALES 5th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph18'><a href='#' onClick=\"DrawGraph('SALESALL', '18'); return false;\">SALES LIFE</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph19'><a href='#' onClick=\"DrawGraph('CONVRATE1', '19'); return false;\">CONV RATE 1st PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph20'><a href='#' onClick=\"DrawGraph('CONVRATE2', '20'); return false;\">CONV RATE 2nd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph21'><a href='#' onClick=\"DrawGraph('CONVRATE3', '21'); return false;\">CONV RATE 3rd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph22'><a href='#' onClick=\"DrawGraph('CONVRATE4', '22'); return false;\">CONV RATE 4th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph23'><a href='#' onClick=\"DrawGraph('CONVRATE5', '23'); return false;\">CONV RATE 5th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph24'><a href='#' onClick=\"DrawGraph('CONVRATEALL', '24'); return false;\">CONV RATE LIFE</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph25'><a href='#' onClick=\"DrawGraph('DNC1', '25'); return false;\">DNC 1st PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph26'><a href='#' onClick=\"DrawGraph('DNC2', '26'); return false;\">DNC 2nd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph27'><a href='#' onClick=\"DrawGraph('DNC3', '27'); return false;\">DNC 3rd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph28'><a href='#' onClick=\"DrawGraph('DNC4', '28'); return false;\">DNC 4th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph29'><a href='#' onClick=\"DrawGraph('DNC5', '29'); return false;\">DNC 5th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph30'><a href='#' onClick=\"DrawGraph('DNCALL', '30'); return false;\">DNC LIFE</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph31'><a href='#' onClick=\"DrawGraph('DNCRATE1', '31'); return false;\">DNC RATE 1st PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph32'><a href='#' onClick=\"DrawGraph('DNCRATE2', '32'); return false;\">DNC RATE 2nd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph33'><a href='#' onClick=\"DrawGraph('DNCRATE3', '33'); return false;\">DNC RATE 3rd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph34'><a href='#' onClick=\"DrawGraph('DNCRATE4', '34'); return false;\">DNC RATE 4th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph35'><a href='#' onClick=\"DrawGraph('DNCRATE5', '35'); return false;\">DNC RATE 5th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph36'><a href='#' onClick=\"DrawGraph('DNCRATEALL', '36'); return false;\">DNC RATE LIFE</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph37'><a href='#' onClick=\"DrawGraph('CUSTCNT1', '37'); return false;\">CUST CNT 1st PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph38'><a href='#' onClick=\"DrawGraph('CUSTCNT2', '38'); return false;\">CUST CNT 2nd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph39'><a href='#' onClick=\"DrawGraph('CUSTCNT3', '39'); return false;\">CUST CNT 3rd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph40'><a href='#' onClick=\"DrawGraph('CUSTCNT4', '40'); return false;\">CUST CNT 4th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph41'><a href='#' onClick=\"DrawGraph('CUSTCNT5', '41'); return false;\">CUST CNT 5th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph42'><a href='#' onClick=\"DrawGraph('CUSTCNTALL', '42'); return false;\">CUST CNT LIFE</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph43'><a href='#' onClick=\"DrawGraph('CUSTCNTRATE1', '43'); return false;\">CUST CUSTCNT RATE 1st PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph44'><a href='#' onClick=\"DrawGraph('CUSTCNTRATE2', '44'); return false;\">CUST CUSTCNT RATE 2nd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph45'><a href='#' onClick=\"DrawGraph('CUSTCNTRATE3', '45'); return false;\">CUST CUSTCNT RATE 3rd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph46'><a href='#' onClick=\"DrawGraph('CUSTCNTRATE4', '46'); return false;\">CUST CUSTCNT RATE 4th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph47'><a href='#' onClick=\"DrawGraph('CUSTCNTRATE5', '47'); return false;\">CUST CUSTCNT RATE 5th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph48'><a href='#' onClick=\"DrawGraph('CUSTCNTRATEALL', '48'); return false;\">CUST CUSTCNT RATE LIFE</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph49'><a href='#' onClick=\"DrawGraph('UNWRK1', '49'); return false;\">UNWRK 1st PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph50'><a href='#' onClick=\"DrawGraph('UNWRK2', '50'); return false;\">UNWRK 2nd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph51'><a href='#' onClick=\"DrawGraph('UNWRK3', '51'); return false;\">UNWRK 3rd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph52'><a href='#' onClick=\"DrawGraph('UNWRK4', '52'); return false;\">UNWRK 4th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph53'><a href='#' onClick=\"DrawGraph('UNWRK5', '53'); return false;\">UNWRK 5th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph54'><a href='#' onClick=\"DrawGraph('UNWRKALL', '54'); return false;\">UNWRK LIFE</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph55'><a href='#' onClick=\"DrawGraph('UNWRKRATE1', '55'); return false;\">UNWRK RATE 1st PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph56'><a href='#' onClick=\"DrawGraph('UNWRKRATE2', '56'); return false;\">UNWRK RATE 2nd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph57'><a href='#' onClick=\"DrawGraph('UNWRKRATE3', '57'); return false;\">UNWRK RATE 3rd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph58'><a href='#' onClick=\"DrawGraph('UNWRKRATE4', '58'); return false;\">UNWRK RATE 4th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph59'><a href='#' onClick=\"DrawGraph('UNWRKRATE5', '59'); return false;\">UNWRK RATE 5th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph60'><a href='#' onClick=\"DrawGraph('UNWRKRATEALL', '60'); return false;\">UNWRK RATE LIFE</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph61'><a href='#' onClick=\"DrawGraph('SCHDCLBK1', '61'); return false;\">SCHD CLBK 1st PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph62'><a href='#' onClick=\"DrawGraph('SCHDCLBK2', '62'); return false;\">SCHD CLBK 2nd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph63'><a href='#' onClick=\"DrawGraph('SCHDCLBK3', '63'); return false;\">SCHD CLBK 3rd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph64'><a href='#' onClick=\"DrawGraph('SCHDCLBK4', '64'); return false;\">SCHD CLBK 4th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph65'><a href='#' onClick=\"DrawGraph('SCHDCLBK5', '65'); return false;\">SCHD CLBK 5th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph66'><a href='#' onClick=\"DrawGraph('SCHDCLBKALL', '66'); return false;\">SCHD CLBK LIFE</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph67'><a href='#' onClick=\"DrawGraph('SCHDCLBKRATE1', '67'); return false;\">SCHD CLBK RATE 1st PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph68'><a href='#' onClick=\"DrawGraph('SCHDCLBKRATE2', '68'); return false;\">SCHD CLBK RATE 2nd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph69'><a href='#' onClick=\"DrawGraph('SCHDCLBKRATE3', '69'); return false;\">SCHD CLBK RATE 3rd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph70'><a href='#' onClick=\"DrawGraph('SCHDCLBKRATE4', '70'); return false;\">SCHD CLBK RATE 4th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph71'><a href='#' onClick=\"DrawGraph('SCHDCLBKRATE5', '71'); return false;\">SCHD CLBK RATE 5th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph72'><a href='#' onClick=\"DrawGraph('SCHDCLBKRATEALL', '72'); return false;\">SCHD CLBK RATE LIFE</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph73'><a href='#' onClick=\"DrawGraph('COMPLTD1', '73'); return false;\">COMPLTD 1st PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph74'><a href='#' onClick=\"DrawGraph('COMPLTD2', '74'); return false;\">COMPLTD 2nd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph75'><a href='#' onClick=\"DrawGraph('COMPLTD3', '75'); return false;\">COMPLTD 3rd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph76'><a href='#' onClick=\"DrawGraph('COMPLTD4', '76'); return false;\">COMPLTD 4th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph77'><a href='#' onClick=\"DrawGraph('COMPLTD5', '77'); return false;\">COMPLTD 5th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph78'><a href='#' onClick=\"DrawGraph('COMPLTDALL', '78'); return false;\">COMPLTD LIFE</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph79'><a href='#' onClick=\"DrawGraph('COMPLTDRATE1', '79'); return false;\">COMPLTD RATE 1st PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph80'><a href='#' onClick=\"DrawGraph('COMPLTDRATE2', '80'); return false;\">COMPLTD RATE 2nd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph81'><a href='#' onClick=\"DrawGraph('COMPLTDRATE3', '81'); return false;\">COMPLTD RATE 3rd PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph82'><a href='#' onClick=\"DrawGraph('COMPLTDRATE4', '82'); return false;\">COMPLTD RATE 4th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph83'><a href='#' onClick=\"DrawGraph('COMPLTDRATE5', '83'); return false;\">COMPLTD RATE 5th PASS</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph84'><a href='#' onClick=\"DrawGraph('COMPLTDRATEALL', '84'); return false;\">COMPLTD RATE LIFE</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph1' ><a href='#' onClick=\"DrawGraph('CONTACTS1', '1'); return false;\">"._QXZ("CONTACTS 1st PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph2' ><a href='#' onClick=\"DrawGraph('CONTACTS2', '2'); return false;\">"._QXZ("CONTACTS 2nd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph3' ><a href='#' onClick=\"DrawGraph('CONTACTS3', '3'); return false;\">"._QXZ("CONTACTS 3rd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph4' ><a href='#' onClick=\"DrawGraph('CONTACTS4', '4'); return false;\">"._QXZ("CONTACTS 4th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph5' ><a href='#' onClick=\"DrawGraph('CONTACTS5', '5'); return false;\">"._QXZ("CONTACTS 5th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph6' ><a href='#' onClick=\"DrawGraph('CONTACTSALL', '6'); return false;\">"._QXZ("CONTACTS LIFE")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph7' ><a href='#' onClick=\"DrawGraph('CNTRATE1', '7'); return false;\">"._QXZ("CNT RATE 1st PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph8' ><a href='#' onClick=\"DrawGraph('CNTRATE2', '8'); return false;\">"._QXZ("CNT RATE 2nd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph9' ><a href='#' onClick=\"DrawGraph('CNTRATE3', '9'); return false;\">"._QXZ("CNT RATE 3rd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph10'><a href='#' onClick=\"DrawGraph('CNTRATE4', '10'); return false;\">"._QXZ("CNT RATE 4th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph11'><a href='#' onClick=\"DrawGraph('CNTRATE5', '11'); return false;\">"._QXZ("CNT RATE 5th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph12'><a href='#' onClick=\"DrawGraph('CNTRATEALL', '12'); return false;\">"._QXZ("CNT RATE LIFE")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph13'><a href='#' onClick=\"DrawGraph('SALES1', '13'); return false;\">"._QXZ("SALES 1st PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph14'><a href='#' onClick=\"DrawGraph('SALES2', '14'); return false;\">"._QXZ("SALES 2nd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph15'><a href='#' onClick=\"DrawGraph('SALES3', '15'); return false;\">"._QXZ("SALES 3rd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph16'><a href='#' onClick=\"DrawGraph('SALES4', '16'); return false;\">"._QXZ("SALES 4th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph17'><a href='#' onClick=\"DrawGraph('SALES5', '17'); return false;\">"._QXZ("SALES 5th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph18'><a href='#' onClick=\"DrawGraph('SALESALL', '18'); return false;\">"._QXZ("SALES LIFE")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph19'><a href='#' onClick=\"DrawGraph('CONVRATE1', '19'); return false;\">"._QXZ("CONV RATE 1st PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph20'><a href='#' onClick=\"DrawGraph('CONVRATE2', '20'); return false;\">"._QXZ("CONV RATE 2nd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph21'><a href='#' onClick=\"DrawGraph('CONVRATE3', '21'); return false;\">"._QXZ("CONV RATE 3rd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph22'><a href='#' onClick=\"DrawGraph('CONVRATE4', '22'); return false;\">"._QXZ("CONV RATE 4th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph23'><a href='#' onClick=\"DrawGraph('CONVRATE5', '23'); return false;\">"._QXZ("CONV RATE 5th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph24'><a href='#' onClick=\"DrawGraph('CONVRATEALL', '24'); return false;\">"._QXZ("CONV RATE LIFE")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph25'><a href='#' onClick=\"DrawGraph('DNC1', '25'); return false;\">"._QXZ("DNC 1st PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph26'><a href='#' onClick=\"DrawGraph('DNC2', '26'); return false;\">"._QXZ("DNC 2nd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph27'><a href='#' onClick=\"DrawGraph('DNC3', '27'); return false;\">"._QXZ("DNC 3rd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph28'><a href='#' onClick=\"DrawGraph('DNC4', '28'); return false;\">"._QXZ("DNC 4th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph29'><a href='#' onClick=\"DrawGraph('DNC5', '29'); return false;\">"._QXZ("DNC 5th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph30'><a href='#' onClick=\"DrawGraph('DNCALL', '30'); return false;\">"._QXZ("DNC LIFE")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph31'><a href='#' onClick=\"DrawGraph('DNCRATE1', '31'); return false;\">"._QXZ("DNC RATE 1st PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph32'><a href='#' onClick=\"DrawGraph('DNCRATE2', '32'); return false;\">"._QXZ("DNC RATE 2nd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph33'><a href='#' onClick=\"DrawGraph('DNCRATE3', '33'); return false;\">"._QXZ("DNC RATE 3rd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph34'><a href='#' onClick=\"DrawGraph('DNCRATE4', '34'); return false;\">"._QXZ("DNC RATE 4th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph35'><a href='#' onClick=\"DrawGraph('DNCRATE5', '35'); return false;\">"._QXZ("DNC RATE 5th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph36'><a href='#' onClick=\"DrawGraph('DNCRATEALL', '36'); return false;\">"._QXZ("DNC RATE LIFE")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph37'><a href='#' onClick=\"DrawGraph('CUSTCNT1', '37'); return false;\">"._QXZ("CUST CNT 1st PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph38'><a href='#' onClick=\"DrawGraph('CUSTCNT2', '38'); return false;\">"._QXZ("CUST CNT 2nd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph39'><a href='#' onClick=\"DrawGraph('CUSTCNT3', '39'); return false;\">"._QXZ("CUST CNT 3rd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph40'><a href='#' onClick=\"DrawGraph('CUSTCNT4', '40'); return false;\">"._QXZ("CUST CNT 4th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph41'><a href='#' onClick=\"DrawGraph('CUSTCNT5', '41'); return false;\">"._QXZ("CUST CNT 5th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph42'><a href='#' onClick=\"DrawGraph('CUSTCNTALL', '42'); return false;\">"._QXZ("CUST CNT LIFE")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph43'><a href='#' onClick=\"DrawGraph('CUSTCNTRATE1', '43'); return false;\">"._QXZ("CUST CUSTCNT RATE 1st PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph44'><a href='#' onClick=\"DrawGraph('CUSTCNTRATE2', '44'); return false;\">"._QXZ("CUST CUSTCNT RATE 2nd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph45'><a href='#' onClick=\"DrawGraph('CUSTCNTRATE3', '45'); return false;\">"._QXZ("CUST CUSTCNT RATE 3rd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph46'><a href='#' onClick=\"DrawGraph('CUSTCNTRATE4', '46'); return false;\">"._QXZ("CUST CUSTCNT RATE 4th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph47'><a href='#' onClick=\"DrawGraph('CUSTCNTRATE5', '47'); return false;\">"._QXZ("CUST CUSTCNT RATE 5th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph48'><a href='#' onClick=\"DrawGraph('CUSTCNTRATEALL', '48'); return false;\">"._QXZ("CUST CUSTCNT RATE LIFE")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph49'><a href='#' onClick=\"DrawGraph('UNWRK1', '49'); return false;\">"._QXZ("UNWRK 1st PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph50'><a href='#' onClick=\"DrawGraph('UNWRK2', '50'); return false;\">"._QXZ("UNWRK 2nd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph51'><a href='#' onClick=\"DrawGraph('UNWRK3', '51'); return false;\">"._QXZ("UNWRK 3rd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph52'><a href='#' onClick=\"DrawGraph('UNWRK4', '52'); return false;\">"._QXZ("UNWRK 4th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph53'><a href='#' onClick=\"DrawGraph('UNWRK5', '53'); return false;\">"._QXZ("UNWRK 5th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph54'><a href='#' onClick=\"DrawGraph('UNWRKALL', '54'); return false;\">"._QXZ("UNWRK LIFE")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph55'><a href='#' onClick=\"DrawGraph('UNWRKRATE1', '55'); return false;\">"._QXZ("UNWRK RATE 1st PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph56'><a href='#' onClick=\"DrawGraph('UNWRKRATE2', '56'); return false;\">"._QXZ("UNWRK RATE 2nd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph57'><a href='#' onClick=\"DrawGraph('UNWRKRATE3', '57'); return false;\">"._QXZ("UNWRK RATE 3rd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph58'><a href='#' onClick=\"DrawGraph('UNWRKRATE4', '58'); return false;\">"._QXZ("UNWRK RATE 4th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph59'><a href='#' onClick=\"DrawGraph('UNWRKRATE5', '59'); return false;\">"._QXZ("UNWRK RATE 5th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph60'><a href='#' onClick=\"DrawGraph('UNWRKRATEALL', '60'); return false;\">"._QXZ("UNWRK RATE LIFE")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph61'><a href='#' onClick=\"DrawGraph('SCHDCLBK1', '61'); return false;\">"._QXZ("SCHD CLBK 1st PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph62'><a href='#' onClick=\"DrawGraph('SCHDCLBK2', '62'); return false;\">"._QXZ("SCHD CLBK 2nd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph63'><a href='#' onClick=\"DrawGraph('SCHDCLBK3', '63'); return false;\">"._QXZ("SCHD CLBK 3rd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph64'><a href='#' onClick=\"DrawGraph('SCHDCLBK4', '64'); return false;\">"._QXZ("SCHD CLBK 4th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph65'><a href='#' onClick=\"DrawGraph('SCHDCLBK5', '65'); return false;\">"._QXZ("SCHD CLBK 5th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph66'><a href='#' onClick=\"DrawGraph('SCHDCLBKALL', '66'); return false;\">"._QXZ("SCHD CLBK LIFE")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph67'><a href='#' onClick=\"DrawGraph('SCHDCLBKRATE1', '67'); return false;\">"._QXZ("SCHD CLBK RATE 1st PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph68'><a href='#' onClick=\"DrawGraph('SCHDCLBKRATE2', '68'); return false;\">"._QXZ("SCHD CLBK RATE 2nd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph69'><a href='#' onClick=\"DrawGraph('SCHDCLBKRATE3', '69'); return false;\">"._QXZ("SCHD CLBK RATE 3rd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph70'><a href='#' onClick=\"DrawGraph('SCHDCLBKRATE4', '70'); return false;\">"._QXZ("SCHD CLBK RATE 4th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph71'><a href='#' onClick=\"DrawGraph('SCHDCLBKRATE5', '71'); return false;\">"._QXZ("SCHD CLBK RATE 5th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph72'><a href='#' onClick=\"DrawGraph('SCHDCLBKRATEALL', '72'); return false;\">"._QXZ("SCHD CLBK RATE LIFE")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph73'><a href='#' onClick=\"DrawGraph('COMPLTD1', '73'); return false;\">"._QXZ("COMPLTD 1st PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph74'><a href='#' onClick=\"DrawGraph('COMPLTD2', '74'); return false;\">"._QXZ("COMPLTD 2nd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph75'><a href='#' onClick=\"DrawGraph('COMPLTD3', '75'); return false;\">"._QXZ("COMPLTD 3rd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph76'><a href='#' onClick=\"DrawGraph('COMPLTD4', '76'); return false;\">"._QXZ("COMPLTD 4th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph77'><a href='#' onClick=\"DrawGraph('COMPLTD5', '77'); return false;\">"._QXZ("COMPLTD 5th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph78'><a href='#' onClick=\"DrawGraph('COMPLTDALL', '78'); return false;\">"._QXZ("COMPLTD LIFE")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph79'><a href='#' onClick=\"DrawGraph('COMPLTDRATE1', '79'); return false;\">"._QXZ("COMPLTD RATE 1st PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph80'><a href='#' onClick=\"DrawGraph('COMPLTDRATE2', '80'); return false;\">"._QXZ("COMPLTD RATE 2nd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph81'><a href='#' onClick=\"DrawGraph('COMPLTDRATE3', '81'); return false;\">"._QXZ("COMPLTD RATE 3rd PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph82'><a href='#' onClick=\"DrawGraph('COMPLTDRATE4', '82'); return false;\">"._QXZ("COMPLTD RATE 4th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph83'><a href='#' onClick=\"DrawGraph('COMPLTDRATE5', '83'); return false;\">"._QXZ("COMPLTD RATE 5th PASS")."</a></th>
+	<th class='column_header grey_graph_cell' id='callstatsgraph84'><a href='#' onClick=\"DrawGraph('COMPLTDRATEALL', '84'); return false;\">"._QXZ("COMPLTD RATE LIFE")."</a></th>
 	";
 
-	$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>LIST ID SUMMARY</caption><tr><th class='thgraph' scope='col'>LISTS</th>";
-	$CONTACTS1_graph=$graph_header."<th class='thgraph' scope='col'>CONTACTS 1st PASS</th></tr>";
-	$CONTACTS2_graph=$graph_header."<th class='thgraph' scope='col'>CONTACTS 2nd PASS</th></tr>";
-	$CONTACTS3_graph=$graph_header."<th class='thgraph' scope='col'>CONTACTS 3rd PASS</th></tr>";
-	$CONTACTS4_graph=$graph_header."<th class='thgraph' scope='col'>CONTACTS 4th PASS</th></tr>";
-	$CONTACTS5_graph=$graph_header."<th class='thgraph' scope='col'>CONTACTS 5th PASS</th></tr>";
-	$CONTACTSALL_graph=$graph_header."<th class='thgraph' scope='col'>CONTACTS LIFE</th></tr>";
-	$CNTRATE1_graph=$graph_header."<th class='thgraph' scope='col'>CNT RATE 1st PASS</th></tr>";
-	$CNTRATE2_graph=$graph_header."<th class='thgraph' scope='col'>CNT RATE 2nd PASS</th></tr>";
-	$CNTRATE3_graph=$graph_header."<th class='thgraph' scope='col'>CNT RATE 3rd PASS</th></tr>";
-	$CNTRATE4_graph=$graph_header."<th class='thgraph' scope='col'>CNT RATE 4th PASS</th></tr>";
-	$CNTRATE5_graph=$graph_header."<th class='thgraph' scope='col'>CNT RATE 5th PASS</th></tr>";
-	$CNTRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>CNT RATE LIFE</th></tr>";
-	$SALES1_graph=$graph_header."<th class='thgraph' scope='col'>SALES 1st PASS</th></tr>";
-	$SALES2_graph=$graph_header."<th class='thgraph' scope='col'>SALES 2nd PASS</th></tr>";
-	$SALES3_graph=$graph_header."<th class='thgraph' scope='col'>SALES 3rd PASS</th></tr>";
-	$SALES4_graph=$graph_header."<th class='thgraph' scope='col'>SALES 4th PASS</th></tr>";
-	$SALES5_graph=$graph_header."<th class='thgraph' scope='col'>SALES 5th PASS</th></tr>";
-	$SALESALL_graph=$graph_header."<th class='thgraph' scope='col'>SALES LIFE</th></tr>";
-	$CONVRATE1_graph=$graph_header."<th class='thgraph' scope='col'>CONV RATE 1st PASS</th></tr>";
-	$CONVRATE2_graph=$graph_header."<th class='thgraph' scope='col'>CONV RATE 2nd PASS</th></tr>";
-	$CONVRATE3_graph=$graph_header."<th class='thgraph' scope='col'>CONV RATE 3rd PASS</th></tr>";
-	$CONVRATE4_graph=$graph_header."<th class='thgraph' scope='col'>CONV RATE 4th PASS</th></tr>";
-	$CONVRATE5_graph=$graph_header."<th class='thgraph' scope='col'>CONV RATE 5th PASS</th></tr>";
-	$CONVRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>CONV RATE LIFE</th></tr>";
-	$DNC1_graph=$graph_header."<th class='thgraph' scope='col'>DNC 1st PASS</th></tr>";
-	$DNC2_graph=$graph_header."<th class='thgraph' scope='col'>DNC 2nd PASS</th></tr>";
-	$DNC3_graph=$graph_header."<th class='thgraph' scope='col'>DNC 3rd PASS</th></tr>";
-	$DNC4_graph=$graph_header."<th class='thgraph' scope='col'>DNC 4th PASS</th></tr>";
-	$DNC5_graph=$graph_header."<th class='thgraph' scope='col'>DNC 5th PASS</th></tr>";
-	$DNCALL_graph=$graph_header."<th class='thgraph' scope='col'>DNC LIFE</th></tr>";
-	$DNCRATE1_graph=$graph_header."<th class='thgraph' scope='col'>DNC RATE 1st PASS</th></tr>";
-	$DNCRATE2_graph=$graph_header."<th class='thgraph' scope='col'>DNC RATE 2nd PASS</th></tr>";
-	$DNCRATE3_graph=$graph_header."<th class='thgraph' scope='col'>DNC RATE 3rd PASS</th></tr>";
-	$DNCRATE4_graph=$graph_header."<th class='thgraph' scope='col'>DNC RATE 4th PASS</th></tr>";
-	$DNCRATE5_graph=$graph_header."<th class='thgraph' scope='col'>DNC RATE 5th PASS</th></tr>";
-	$DNCRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>DNC RATE LIFE</th></tr>";
-	$CUSTCNT1_graph=$graph_header."<th class='thgraph' scope='col'>CUST CNT 1st PASS</th></tr>";
-	$CUSTCNT2_graph=$graph_header."<th class='thgraph' scope='col'>CUST CNT 2nd PASS</th></tr>";
-	$CUSTCNT3_graph=$graph_header."<th class='thgraph' scope='col'>CUST CNT 3rd PASS</th></tr>";
-	$CUSTCNT4_graph=$graph_header."<th class='thgraph' scope='col'>CUST CNT 4th PASS</th></tr>";
-	$CUSTCNT5_graph=$graph_header."<th class='thgraph' scope='col'>CUST CNT 5th PASS</th></tr>";
-	$CUSTCNTALL_graph=$graph_header."<th class='thgraph' scope='col'>CUST CNT LIFE</th></tr>";
-	$CUSTCNTRATE1_graph=$graph_header."<th class='thgraph' scope='col'>CUST CUSTCNT RATE 1st PASS</th></tr>";
-	$CUSTCNTRATE2_graph=$graph_header."<th class='thgraph' scope='col'>CUST CUSTCNT RATE 2nd PASS</th></tr>";
-	$CUSTCNTRATE3_graph=$graph_header."<th class='thgraph' scope='col'>CUST CUSTCNT RATE 3rd PASS</th></tr>";
-	$CUSTCNTRATE4_graph=$graph_header."<th class='thgraph' scope='col'>CUST CUSTCNT RATE 4th PASS</th></tr>";
-	$CUSTCNTRATE5_graph=$graph_header."<th class='thgraph' scope='col'>CUST CUSTCNT RATE 5th PASS</th></tr>";
-	$CUSTCNTRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>CUST CUSTCNT RATE LIFE</th></tr>";
-	$UNWRK1_graph=$graph_header."<th class='thgraph' scope='col'>UNWRK 1st PASS</th></tr>";
-	$UNWRK2_graph=$graph_header."<th class='thgraph' scope='col'>UNWRK 2nd PASS</th></tr>";
-	$UNWRK3_graph=$graph_header."<th class='thgraph' scope='col'>UNWRK 3rd PASS</th></tr>";
-	$UNWRK4_graph=$graph_header."<th class='thgraph' scope='col'>UNWRK 4th PASS</th></tr>";
-	$UNWRK5_graph=$graph_header."<th class='thgraph' scope='col'>UNWRK 5th PASS</th></tr>";
-	$UNWRKALL_graph=$graph_header."<th class='thgraph' scope='col'>UNWRK LIFE</th></tr>";
-	$UNWRKRATE1_graph=$graph_header."<th class='thgraph' scope='col'>UNWRK RATE 1st PASS</th></tr>";
-	$UNWRKRATE2_graph=$graph_header."<th class='thgraph' scope='col'>UNWRK RATE 2nd PASS</th></tr>";
-	$UNWRKRATE3_graph=$graph_header."<th class='thgraph' scope='col'>UNWRK RATE 3rd PASS</th></tr>";
-	$UNWRKRATE4_graph=$graph_header."<th class='thgraph' scope='col'>UNWRK RATE 4th PASS</th></tr>";
-	$UNWRKRATE5_graph=$graph_header."<th class='thgraph' scope='col'>UNWRK RATE 5th PASS</th></tr>";
-	$UNWRKRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>UNWRK RATE LIFE</th></tr>";
-	$SCHDCLBK1_graph=$graph_header."<th class='thgraph' scope='col'>SCHD CLBK 1st PASS</th></tr>";
-	$SCHDCLBK2_graph=$graph_header."<th class='thgraph' scope='col'>SCHD CLBK 2nd PASS</th></tr>";
-	$SCHDCLBK3_graph=$graph_header."<th class='thgraph' scope='col'>SCHD CLBK 3rd PASS</th></tr>";
-	$SCHDCLBK4_graph=$graph_header."<th class='thgraph' scope='col'>SCHD CLBK 4th PASS</th></tr>";
-	$SCHDCLBK5_graph=$graph_header."<th class='thgraph' scope='col'>SCHD CLBK 5th PASS</th></tr>";
-	$SCHDCLBKALL_graph=$graph_header."<th class='thgraph' scope='col'>SCHD CLBK LIFE</th></tr>";
-	$SCHDCLBKRATE1_graph=$graph_header."<th class='thgraph' scope='col'>SCHD CLBK RATE 1st PASS</th></tr>";
-	$SCHDCLBKRATE2_graph=$graph_header."<th class='thgraph' scope='col'>SCHD CLBK RATE 2nd PASS</th></tr>";
-	$SCHDCLBKRATE3_graph=$graph_header."<th class='thgraph' scope='col'>SCHD CLBK RATE 3rd PASS</th></tr>";
-	$SCHDCLBKRATE4_graph=$graph_header."<th class='thgraph' scope='col'>SCHD CLBK RATE 4th PASS</th></tr>";
-	$SCHDCLBKRATE5_graph=$graph_header."<th class='thgraph' scope='col'>SCHD CLBK RATE 5th PASS</th></tr>";
-	$SCHDCLBKRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>SCHD CLBK RATE LIFE</th></tr>";
-	$COMPLTD1_graph=$graph_header."<th class='thgraph' scope='col'>COMPLTD 1st PASS</th></tr>";
-	$COMPLTD2_graph=$graph_header."<th class='thgraph' scope='col'>COMPLTD 2nd PASS</th></tr>";
-	$COMPLTD3_graph=$graph_header."<th class='thgraph' scope='col'>COMPLTD 3rd PASS</th></tr>";
-	$COMPLTD4_graph=$graph_header."<th class='thgraph' scope='col'>COMPLTD 4th PASS</th></tr>";
-	$COMPLTD5_graph=$graph_header."<th class='thgraph' scope='col'>COMPLTD 5th PASS</th></tr>";
-	$COMPLTDALL_graph=$graph_header."<th class='thgraph' scope='col'>COMPLTD LIFE</th></tr>";
-	$COMPLTDRATE1_graph=$graph_header."<th class='thgraph' scope='col'>COMPLTD RATE 1st PASS</th></tr>";
-	$COMPLTDRATE2_graph=$graph_header."<th class='thgraph' scope='col'>COMPLTD RATE 2nd PASS</th></tr>";
-	$COMPLTDRATE3_graph=$graph_header."<th class='thgraph' scope='col'>COMPLTD RATE 3rd PASS</th></tr>";
-	$COMPLTDRATE4_graph=$graph_header."<th class='thgraph' scope='col'>COMPLTD RATE 4th PASS</th></tr>";
-	$COMPLTDRATE5_graph=$graph_header."<th class='thgraph' scope='col'>COMPLTD RATE 5th PASS</th></tr>";
-	$COMPLTDRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>COMPLTD RATE LIFE</th></tr>";
+	$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>"._QXZ("LIST ID SUMMARY")."</caption><tr><th class='thgraph' scope='col'>"._QXZ("LISTS")."</th>";
+	$CONTACTS1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONTACTS 1st PASS")."</th></tr>";
+	$CONTACTS2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONTACTS 2nd PASS")."</th></tr>";
+	$CONTACTS3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONTACTS 3rd PASS")."</th></tr>";
+	$CONTACTS4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONTACTS 4th PASS")."</th></tr>";
+	$CONTACTS5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONTACTS 5th PASS")."</th></tr>";
+	$CONTACTSALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONTACTS LIFE")."</th></tr>";
+	$CNTRATE1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CNT RATE 1st PASS")."</th></tr>";
+	$CNTRATE2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CNT RATE 2nd PASS")."</th></tr>";
+	$CNTRATE3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CNT RATE 3rd PASS")."</th></tr>";
+	$CNTRATE4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CNT RATE 4th PASS")."</th></tr>";
+	$CNTRATE5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CNT RATE 5th PASS")."</th></tr>";
+	$CNTRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CNT RATE LIFE")."</th></tr>";
+	$SALES1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES 1st PASS")."</th></tr>";
+	$SALES2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES 2nd PASS")."</th></tr>";
+	$SALES3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES 3rd PASS")."</th></tr>";
+	$SALES4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES 4th PASS")."</th></tr>";
+	$SALES5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES 5th PASS")."</th></tr>";
+	$SALESALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES LIFE")."</th></tr>";
+	$CONVRATE1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONV RATE 1st PASS")."</th></tr>";
+	$CONVRATE2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONV RATE 2nd PASS")."</th></tr>";
+	$CONVRATE3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONV RATE 3rd PASS")."</th></tr>";
+	$CONVRATE4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONV RATE 4th PASS")."</th></tr>";
+	$CONVRATE5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONV RATE 5th PASS")."</th></tr>";
+	$CONVRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONV RATE LIFE")."</th></tr>";
+	$DNC1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC 1st PASS")."</th></tr>";
+	$DNC2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC 2nd PASS")."</th></tr>";
+	$DNC3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC 3rd PASS")."</th></tr>";
+	$DNC4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC 4th PASS")."</th></tr>";
+	$DNC5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC 5th PASS")."</th></tr>";
+	$DNCALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC LIFE")."</th></tr>";
+	$DNCRATE1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC RATE 1st PASS")."</th></tr>";
+	$DNCRATE2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC RATE 2nd PASS")."</th></tr>";
+	$DNCRATE3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC RATE 3rd PASS")."</th></tr>";
+	$DNCRATE4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC RATE 4th PASS")."</th></tr>";
+	$DNCRATE5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC RATE 5th PASS")."</th></tr>";
+	$DNCRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC RATE LIFE")."</th></tr>";
+	$CUSTCNT1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CNT 1st PASS")."</th></tr>";
+	$CUSTCNT2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CNT 2nd PASS")."</th></tr>";
+	$CUSTCNT3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CNT 3rd PASS")."</th></tr>";
+	$CUSTCNT4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CNT 4th PASS")."</th></tr>";
+	$CUSTCNT5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CNT 5th PASS")."</th></tr>";
+	$CUSTCNTALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CNT LIFE")."</th></tr>";
+	$CUSTCNTRATE1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CUSTCNT RATE 1st PASS")."</th></tr>";
+	$CUSTCNTRATE2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CUSTCNT RATE 2nd PASS")."</th></tr>";
+	$CUSTCNTRATE3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CUSTCNT RATE 3rd PASS")."</th></tr>";
+	$CUSTCNTRATE4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CUSTCNT RATE 4th PASS")."</th></tr>";
+	$CUSTCNTRATE5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CUSTCNT RATE 5th PASS")."</th></tr>";
+	$CUSTCNTRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CUSTCNT RATE LIFE")."</th></tr>";
+	$UNWRK1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK 1st PASS")."</th></tr>";
+	$UNWRK2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK 2nd PASS")."</th></tr>";
+	$UNWRK3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK 3rd PASS")."</th></tr>";
+	$UNWRK4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK 4th PASS")."</th></tr>";
+	$UNWRK5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK 5th PASS")."</th></tr>";
+	$UNWRKALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK LIFE")."</th></tr>";
+	$UNWRKRATE1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK RATE 1st PASS")."</th></tr>";
+	$UNWRKRATE2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK RATE 2nd PASS")."</th></tr>";
+	$UNWRKRATE3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK RATE 3rd PASS")."</th></tr>";
+	$UNWRKRATE4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK RATE 4th PASS")."</th></tr>";
+	$UNWRKRATE5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK RATE 5th PASS")."</th></tr>";
+	$UNWRKRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK RATE LIFE")."</th></tr>";
+	$SCHDCLBK1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK 1st PASS")."</th></tr>";
+	$SCHDCLBK2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK 2nd PASS")."</th></tr>";
+	$SCHDCLBK3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK 3rd PASS")."</th></tr>";
+	$SCHDCLBK4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK 4th PASS")."</th></tr>";
+	$SCHDCLBK5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK 5th PASS")."</th></tr>";
+	$SCHDCLBKALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK LIFE")."</th></tr>";
+	$SCHDCLBKRATE1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK RATE 1st PASS")."</th></tr>";
+	$SCHDCLBKRATE2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK RATE 2nd PASS")."</th></tr>";
+	$SCHDCLBKRATE3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK RATE 3rd PASS")."</th></tr>";
+	$SCHDCLBKRATE4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK RATE 4th PASS")."</th></tr>";
+	$SCHDCLBKRATE5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK RATE 5th PASS")."</th></tr>";
+	$SCHDCLBKRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK RATE LIFE")."</th></tr>";
+	$COMPLTD1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD 1st PASS")."</th></tr>";
+	$COMPLTD2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD 2nd PASS")."</th></tr>";
+	$COMPLTD3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD 3rd PASS")."</th></tr>";
+	$COMPLTD4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD 4th PASS")."</th></tr>";
+	$COMPLTD5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD 5th PASS")."</th></tr>";
+	$COMPLTDALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD LIFE")."</th></tr>";
+	$COMPLTDRATE1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD RATE 1st PASS")."</th></tr>";
+	$COMPLTDRATE2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD RATE 2nd PASS")."</th></tr>";
+	$COMPLTDRATE3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD RATE 3rd PASS")."</th></tr>";
+	$COMPLTDRATE4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD RATE 4th PASS")."</th></tr>";
+	$COMPLTDRATE5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD RATE 5th PASS")."</th></tr>";
+	$COMPLTDRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD RATE LIFE")."</th></tr>";
 
 	$lists_id_str="";
 	$list_stmt="SELECT list_id from vicidial_lists where active IN('Y','N') $group_SQLand";
@@ -1929,7 +1930,7 @@ else
 	$OUToutput .= "---------+---------+---------+---------+---------+---------+";
 	$OUToutput .= "\n";
 
-	$OUToutput .= "             |            TOTALS:                                  | $TOTALleads |          |";
+	$OUToutput .= "             | "._QXZ("TOTALS",17,"r").":                                  | $TOTALleads |          |";
 	$OUToutput .= " $HA_one_count_totS | $HA_two_count_totS | $HA_three_count_totS | $HA_four_count_totS | $HA_five_count_totS | $HA_count_totS |";
 	$OUToutput .= " $HR_one_count_totS% | $HR_two_count_totS% | $HR_three_count_totS% | $HR_four_count_totS% | $HR_five_count_totS% | $HR_count_totS% |";
 	$OUToutput .= " $SA_one_count_totS | $SA_two_count_totS | $SA_three_count_totS | $SA_four_count_totS | $SA_five_count_totS | $SA_count_totS |";
@@ -1963,7 +1964,7 @@ else
 	$OUToutput .= "---------+---------+---------+---------+---------+---------+";
 	$OUToutput .= "\n";
 
-	$CSV_text1.="\"\",\"\",\"TOTAL\",\"$TOTALleads\",\"\"";
+	$CSV_text1.="\"\",\"\",\""._QXZ("TOTAL")."\",\"$TOTALleads\",\"\"";
 	$CSV_text1.=",\"$HA_one_count_totS\",\"$HA_two_count_totS\",\"$HA_three_count_totS\",\"$HA_four_count_totS\",\"$HA_five_count_totS\",\"$HA_count_totS\"";
 	$CSV_text1.=",\"$HR_one_count_totS%\",\"$HR_two_count_totS%\",\"$HR_three_count_totS%\",\"$HR_four_count_totS%\",\"$HR_five_count_totS%\",\"$HR_count_totS%\"";
 	$CSV_text1.=",\"$SA_one_count_totS\",\"$SA_two_count_totS\",\"$SA_three_count_totS\",\"$SA_four_count_totS\",\"$SA_five_count_totS\",\"$SA_count_totS\"";
@@ -2348,7 +2349,7 @@ else
 		$GRAPH.="  </tr>\n";
 	}
 	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">TOTAL:</th>\n";
+	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("TOTAL").":</th>\n";
 	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">".trim($TOTALleads)."</th>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="</table><PRE>\n";
@@ -2368,7 +2369,7 @@ else
 
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $STARTtime);
-	$MAIN.="\nRun Time: $RUNtime seconds|$db_source\n";
+	$MAIN.="\n"._QXZ("Run Time").": $RUNtime "._QXZ("seconds")."|$db_source\n";
 	$MAIN.="</PRE>\n";
 	$MAIN.="</TD></TR></TABLE>\n";
 	$MAIN.="</BODY></HTML>\n";

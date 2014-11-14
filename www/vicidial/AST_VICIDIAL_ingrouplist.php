@@ -12,6 +12,7 @@
 # 130620-2217 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-2002 - Changed to mysqli PHP functions
 # 140108-0728 - Added webserver and hostname to report logging
+# 141114-0658 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -82,7 +83,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -95,10 +96,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -186,7 +187,7 @@ while ($i < $ingroups_to_print)
 
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>Live In-Group Agent Report</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>"._QXZ("Live In-Group Agent Report")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 	$short_header=1;
 
@@ -210,8 +211,8 @@ while ($ingroups_to_print > $o)
 	$o++;
 	}
 echo "</SELECT>\n";
-echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
-echo " &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=3111&group_id=$group\">MODIFY</a> \n";
+echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
+echo " &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=3111&group_id=$group\">"._QXZ("MODIFY")."</a> \n";
 echo "</FORM>\n\n";
 
 echo "<PRE><FONT SIZE=2>\n\n";
@@ -220,12 +221,12 @@ echo "<PRE><FONT SIZE=2>\n\n";
 if (!$group)
 	{
 	echo "\n\n";
-	echo "PLEASE SELECT A IN-GROUP ABOVE AND CLICK SUBMIT\n";
+	echo _QXZ("PLEASE SELECT A IN-GROUP ABOVE AND CLICK SUBMIT")."\n";
 	}
 
 else
 	{
-	echo "Live Current Agents logged in to take calls from $group - $selected_name         $NOW_TIME\n";
+	echo _QXZ("Live Current Agents logged in to take calls from")." $group - $selected_name         $NOW_TIME\n";
 
 	echo "\n";
 
@@ -236,16 +237,16 @@ else
 
 	$TOTALagents =	sprintf("%10s", $row[0]);
 
-	echo "Total agents:       $TOTALagents\n";
+	echo _QXZ("Total agents").":       $TOTALagents\n";
 
 
 	##############################
 	#########  LIVE AGENT STATS
 	$user_list='|';
 	echo "\n";
-	echo "---------- LIVE AGENTS IN IN-GROUP\n";
+	echo "---------- "._QXZ("LIVE AGENTS IN IN-GROUP")."\n";
 	echo "+------+--------------------------------+----------------------+--------+---------------------+\n";
-	echo "| #    | USER                           | CAMPAIGN             | STATUS | LAST ACTIVITY       |\n";
+	echo "| #    | "._QXZ("USER",30)." | "._QXZ("CAMPAIGN",20)." | "._QXZ("STATUS",6)." | "._QXZ("LAST ACTIVITY",19)." |\n";
 	echo "+------+--------------------------------+----------------------+--------+---------------------+\n";
 
 	$stmt="select vla.user,vu.full_name,vla.campaign_id,vla.status,vla.last_state_change from vicidial_live_agents vla,vicidial_users vu where vla.closer_campaigns LIKE\"% " . mysqli_real_escape_string($link, $group) . " %\" and vla.user=vu.user order by vla.user limit 1000;";
@@ -267,7 +268,7 @@ else
 		$time =			sprintf("%-19s", $row[4]);
 		$user_list .=	"$row[0]---$row[3]|";
 
-		echo "| $FMT_i | <a href=\"./user_status.php?user=$row[0]\">$user</a> | <a href=\"./admin.php?ADD=34&campaign_id=$row[2]\">$campaign_id</a>   <a href=\"./AST_timeonVDADall.php?RR=4&DB=0&group=$row[2]\">Real-Time</a> | $status | $time |\n";
+		echo "| $FMT_i | <a href=\"./user_status.php?user=$row[0]\">$user</a> | <a href=\"./admin.php?ADD=34&campaign_id=$row[2]\">$campaign_id</a>   <a href=\"./AST_timeonVDADall.php?RR=4&DB=0&group=$row[2]\">"._QXZ("Real-Time",9)."</a> | $status | $time |\n";
 		}
 
 	echo "+------+--------------------------------+----------------------+--------+---------------------+\n";
@@ -279,9 +280,9 @@ else
 	#########  ALL AGENT STATS
 
 	echo "\n";
-	echo "---------- DEFAULT AGENTS IN IN-GROUP\n";
+	echo "---------- "._QXZ("DEFAULT AGENTS IN IN-GROUP")."\n";
 	echo "+------+--------------------------------+-----------+\n";
-	echo "| #    | USER                           | LOGGED IN |\n";
+	echo "| #    | "._QXZ("USER",30)." | "._QXZ("LOGGED IN",9)." |\n";
 	echo "+------+--------------------------------+-----------+\n";
 
 	$stmt="select vu.user,vu.full_name from vicidial_users vu where vu.closer_campaigns LIKE\"% " . mysqli_real_escape_string($link, $group) . " %\" order by vu.user limit 2000;";

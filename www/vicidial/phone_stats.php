@@ -14,6 +14,7 @@
 # 130617-2156 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0900 - Changed to mysqli PHP functions
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141114-0034 - Finalized adding QXZ translation to all admin files
 #
 
 require("dbconnect_mysqli.php");
@@ -108,7 +109,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -121,10 +122,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ( "Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -149,13 +150,13 @@ $fullname = $row[0];
 ?>
 <html>
 <head>
-<title>ADMIN: Phone Stats</title>
+<title><?php echo _QXZ("ADMIN: Phone Stats"); ?></title>
 </head>
 <BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>
 <CENTER>
-<TABLE WIDTH=620 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; ADMIN: Administration</TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo date("l F j, Y G:i:s A") ?> &nbsp; </TD></TR>
-<TR BGCOLOR=#F0F5FE><TD ALIGN=LEFT COLSPAN=2><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1><B> &nbsp; <a href="<?php echo $admin_page ?>?ADD=10000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>LIST ALL PHONES</a> | <a href="<?php echo $admin_page ?>?ADD=11111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>ADD A NEW PHONE</a> | <a href="<?php echo $admin_page ?>?ADD=551"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>SEARCH FOR A PHONE</a> | <a href="<?php echo $admin_page ?>?ADD=111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>ADD A SERVER</a> | <a href="<?php echo $admin_page ?>?ADD=100000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>LIST ALL SERVERS</a></TD></TR>
-<TR BGCOLOR=#F0F5FE><TD ALIGN=LEFT COLSPAN=2><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1><B> &nbsp; <a href="<?php echo $admin_page ?>?ADD=1000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>SHOW ALL CONFERENCES</a> | <a href="<?php echo $admin_page ?>?ADD=1111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1>ADD A NEW CONFERENCE</a></TD></TR>
+<TABLE WIDTH=620 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; <?php echo _QXZ("ADMIN: Administration"); ?></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo date("l F j, Y G:i:s A") ?> &nbsp; </TD></TR>
+<TR BGCOLOR=#F0F5FE><TD ALIGN=LEFT COLSPAN=2><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1><B> &nbsp; <a href="<?php echo $admin_page ?>?ADD=10000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1><?php echo _QXZ("LIST ALL PHONES"); ?></a> | <a href="<?php echo $admin_page ?>?ADD=11111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1><?php echo _QXZ("ADD A NEW PHONE"); ?></a> | <a href="<?php echo $admin_page ?>?ADD=551"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1><?php echo _QXZ("SEARCH FOR A PHONE"); ?></a> | <a href="<?php echo $admin_page ?>?ADD=111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1><?php echo _QXZ("ADD A SERVER"); ?></a> | <a href="<?php echo $admin_page ?>?ADD=100000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1><?php echo _QXZ("LIST ALL SERVERS"); ?></a></TD></TR>
+<TR BGCOLOR=#F0F5FE><TD ALIGN=LEFT COLSPAN=2><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1><B> &nbsp; <a href="<?php echo $admin_page ?>?ADD=1000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1><?php echo _QXZ("SHOW ALL CONFERENCES"); ?></a> | <a href="<?php echo $admin_page ?>?ADD=1111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=1><?php echo _QXZ("ADD A NEW CONFERENCE"); ?></a></TD></TR>
 
 
 <?php 
@@ -167,7 +168,7 @@ echo "<input type=hidden name=extension value=\"$extension\">\n";
 echo "<input type=hidden name=server_ip value=\"$server_ip\">\n";
 echo "<input type=text name=begin_date value=\"$begin_date\" size=10 maxsize=10> to \n";
 echo "<input type=text name=end_date value=\"$end_date\" size=10 maxsize=10> &nbsp;\n";
-echo "<input type=submit name=submit value=submit>\n";
+echo "<input type=submit name=submit value='"._QXZ("submit")."'>\n";
 
 
 echo " &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; $user - $full_name\n";
@@ -183,10 +184,10 @@ $statuses_to_print = mysqli_num_rows($rslt);
 
 echo "<br><center>\n";
 
-echo "<B>CALL TIME AND CHANNELS:</B>\n";
+echo "<B>"._QXZ("CALL TIME AND CHANNELS").":</B>\n";
 
 echo "<center><TABLE width=300 cellspacing=0 cellpadding=1>\n";
-echo "<tr><td><font size=2>CHANNEL GROUP </td><td align=right><font size=2>COUNT</td><td align=right><font size=2> HOURS:MINUTES</td></tr>\n";
+echo "<tr><td><font size=2>"._QXZ("CHANNEL GROUP")." </td><td align=right><font size=2>"._QXZ("COUNT")."</td><td align=right><font size=2> "._QXZ("HOURS:MINUTES")."</td></tr>\n";
 
 $total_calls=0;
 $o=0;
@@ -230,15 +231,15 @@ while ($statuses_to_print > $o)
 	if ($call_minutes_int < 10) {$call_minutes_int = "0$call_minutes_int";}
 #	echo "|$stmt|\n";
 
-echo "<tr><td><font size=2>TOTAL CALLS </td><td align=right><font size=2> $total_calls</td><td align=right><font size=2> $call_hours_int:$call_minutes_int</td></tr>\n";
+echo "<tr><td><font size=2>"._QXZ("TOTAL CALLS")." </td><td align=right><font size=2> $total_calls</td><td align=right><font size=2> $call_hours_int:$call_minutes_int</td></tr>\n";
 echo "</TABLE></center>\n";
 echo "<br><br>\n";
 
 echo "<center>\n";
 
-echo "<B>LAST 1000 CALLS FOR DATE RANGE:</B>\n";
+echo "<B>"._QXZ("LAST 1000 CALLS FOR DATE RANGE").":</B>\n";
 echo "<TABLE width=400 cellspacing=0 cellpadding=1>\n";
-echo "<tr><td><font size=2>NUMBER </td><td><font size=2>CHANNEL GROUP </td><td align=right><font size=2> DATE</td><td align=right><font size=2> LENGTH(MIN.)</td></tr>\n";
+echo "<tr><td><font size=2>"._QXZ("NUMBER")." </td><td><font size=2>"._QXZ("CHANNEL GROUP")." </td><td align=right><font size=2> "._QXZ("DATE")."</td><td align=right><font size=2> "._QXZ("LENGTH(MIN.)")."</td></tr>\n";
 
 $stmt="SELECT number_dialed,channel_group,start_time,length_in_min from call_log where extension='" . mysqli_real_escape_string($link, $extension) . "' and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' and start_time >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and start_time <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' LIMIT 1000";
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -272,7 +273,7 @@ $ENDtime = date("U");
 $RUNtime = ($ENDtime - $STARTtime);
 
 echo "\n\n\n<br><br><br>\n\n";
-echo "<font size=0>\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds</font>";
+echo "<font size=0>\n\n\n<br><br><br>\n"._QXZ("script runtime").": $RUNtime "._QXZ("seconds")."</font>";
 
 ?>
 

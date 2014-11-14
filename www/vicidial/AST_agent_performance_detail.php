@@ -42,6 +42,7 @@
 # 140108-0713 - Added webserver and hostname to report logging
 # 140319-1913 - Added option to show percentages for various fields
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141113-2334 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -137,7 +138,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -150,10 +151,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -235,7 +236,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -427,7 +428,7 @@ $HTML_head.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 $HTML_head.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 $HTML_head.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HTML_head.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HTML_head.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 	$short_header=1;
 
@@ -436,7 +437,7 @@ $HTML_head.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=
 $HTML_text.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
 $HTML_text.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-$HTML_text.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> Dates:<BR>";
+$HTML_text.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> "._QXZ("Dates").":<BR>";
 $HTML_text.="<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
 $HTML_text.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
@@ -455,7 +456,7 @@ $HTML_text.="o_cal.a_tpl.yearscroll = false;\n";
 $HTML_text.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 $HTML_text.="</script>\n";
 
-$HTML_text.="<BR> to <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+$HTML_text.="<BR> "._QXZ("to")." <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
 
 $HTML_text.="<script language=\"JavaScript\">\n";
 $HTML_text.="var o_cal = new tcal ({\n";
@@ -468,12 +469,12 @@ $HTML_text.="o_cal.a_tpl.yearscroll = false;\n";
 $HTML_text.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 $HTML_text.="</script>\n";
 
-$HTML_text.="</TD><TD VALIGN=TOP> Campaigns:<BR>";
+$HTML_text.="</TD><TD VALIGN=TOP> "._QXZ("Campaigns").":<BR>";
 $HTML_text.="<SELECT SIZE=5 NAME=group[] multiple>\n";
 if  (preg_match('/\-\-ALL\-\-/',$group_string))
-	{$HTML_text.="<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 else
-	{$HTML_text.="<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\">-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 $o=0;
 while ($campaigns_to_print > $o)
 {
@@ -482,13 +483,13 @@ while ($campaigns_to_print > $o)
 	$o++;
 }
 $HTML_text.="</SELECT>\n";
-$HTML_text.="</TD><TD VALIGN=TOP>User Groups:<BR>";
+$HTML_text.="</TD><TD VALIGN=TOP>"._QXZ("User Groups").":<BR>";
 $HTML_text.="<SELECT SIZE=5 NAME=user_group[] multiple>\n";
 
 if  (preg_match('/\-\-ALL\-\-/',$user_group_string))
-	{$HTML_text.="<option value=\"--ALL--\" selected>-- ALL USER GROUPS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL USER GROUPS")." --</option>\n";}
 else
-	{$HTML_text.="<option value=\"--ALL--\">-- ALL USER GROUPS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\">-- "._QXZ("ALL USER GROUPS")." --</option>\n";}
 $o=0;
 while ($user_groups_to_print > $o)
 	{
@@ -497,13 +498,13 @@ while ($user_groups_to_print > $o)
 	$o++;
 	}
 $HTML_text.="</SELECT>\n";
-$HTML_text.="</TD><TD VALIGN=TOP>Users: <BR>";
+$HTML_text.="</TD><TD VALIGN=TOP>"._QXZ("Users").": <BR>";
 $HTML_text.="<SELECT SIZE=5 NAME=users[] multiple>\n";
 
 if  (preg_match('/\-\-ALL\-\-/',$users_string))
-	{$HTML_text.="<option value=\"--ALL--\" selected>-- ALL USERS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL USERS")." --</option>\n";}
 else
-	{$HTML_text.="<option value=\"--ALL--\">-- ALL USERS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\">-- "._QXZ("ALL USERS")." --</option>\n";}
 $o=0;
 while ($users_to_print > $o)
 	{
@@ -512,25 +513,25 @@ while ($users_to_print > $o)
 	$o++;
 	}
 $HTML_text.="</SELECT>\n";
-$HTML_text.="</TD><TD VALIGN=TOP>Shift:<BR>";
+$HTML_text.="</TD><TD VALIGN=TOP>"._QXZ("Shift").":<BR>";
 $HTML_text.="<SELECT SIZE=1 NAME=shift>\n";
 $HTML_text.="<option selected value=\"$shift\">$shift</option>\n";
 $HTML_text.="<option value=\"\">--</option>\n";
-$HTML_text.="<option value=\"AM\">AM</option>\n";
-$HTML_text.="<option value=\"PM\">PM</option>\n";
-$HTML_text.="<option value=\"ALL\">ALL</option>\n";
+$HTML_text.="<option value=\"AM\">"._QXZ("AM")."</option>\n";
+$HTML_text.="<option value=\"PM\">"._QXZ("PM")."</option>\n";
+$HTML_text.="<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
 $HTML_text.="</SELECT><BR><BR>\n";
-$HTML_text.="<input type='checkbox' name='show_percentages' value='checked' $show_percentages>Show %'s\n";
+$HTML_text.="<input type='checkbox' name='show_percentages' value='checked' $show_percentages>"._QXZ("Show %'s")."\n";
 $HTML_text.="</TD><TD VALIGN=TOP>";
-$HTML_text.="Display as:<BR>";
+$HTML_text.=_QXZ("Display as").":<BR>";
 $HTML_text.="<select name='report_display_type'>";
 if ($report_display_type) {$HTML_text.="<option value='$report_display_type' selected>$report_display_type</option>";}
-$HTML_text.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select><BR><BR>\n";
-$HTML_text.="<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>$NWB#agent_performance_detail$NWE\n";
+$HTML_text.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select><BR><BR>\n";
+$HTML_text.="<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>$NWB#agent_performance_detail$NWE\n";
 $HTML_text.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
 $HTML_text.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
-$HTML_text.=" <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+$HTML_text.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 $HTML_text.="</FONT>\n";
 $HTML_text.="</TD></TR></TABLE>";
 
@@ -543,8 +544,8 @@ $HTML_text.="<PRE><FONT SIZE=2>\n";
 if (!$group)
 {
 $HTML_text.="\n";
-$HTML_text.="PLEASE SELECT A CAMPAIGN AND DATE-TIME ABOVE AND CLICK SUBMIT\n";
-$HTML_text.=" NOTE: stats taken from shift specified\n";
+$HTML_text.=_QXZ("PLEASE SELECT A CAMPAIGN AND DATE-TIME ABOVE AND CLICK SUBMIT")."\n";
+$HTML_text.=" "._QXZ("NOTE: stats taken from shift specified")."\n";
 }
 
 else
@@ -571,10 +572,10 @@ if ($shift == 'ALL')
 $query_date_BEGIN = "$query_date $time_BEGIN";   
 $query_date_END = "$end_date $time_END";
 
-$HTML_text.="Agent Performance Detail                        $NOW_TIME\n";
+$HTML_text.=_QXZ("Agent Performance Detail",47)." $NOW_TIME\n";
 
-$HTML_text.="Time range: $query_date_BEGIN to $query_date_END\n\n";
-$HTML_text.="---------- AGENTS Details -------------\n\n";
+$HTML_text.=_QXZ("Time range").": $query_date_BEGIN "._QXZ("to")." $query_date_END\n\n";
+$HTML_text.="---------- "._QXZ("AGENTS Details")." -------------\n\n";
 
 
 
@@ -584,14 +585,14 @@ $statuses='-';
 $statusesTXT='';
 $statusesHEAD='';
 
-$CSV_header="\"Agent Performance Detail                        $NOW_TIME\"\n";
-$CSV_header.="\"Time range: $query_date_BEGIN to $query_date_END\"\n\n";
-$CSV_header.="\"---------- AGENTS Details -------------\"\n";
+$CSV_header="\""._QXZ("Agent Performance Detail",47)." $NOW_TIME\"\n";
+$CSV_header.="\""._QXZ("Time range").": $query_date_BEGIN "._QXZ("to")." $query_date_END\"\n\n";
+$CSV_header.="\"---------- "._QXZ("AGENTS Details")." -------------\"\n";
 
 if ($show_percentages) {
-	$CSV_header.='"USER NAME","ID","CURRENT USER GROUP","MOST RECENT USER GROUP","CALLS","TIME","PAUSE","PAUSE %","PAUSAVG","WAIT","WAIT %","WAITAVG","TALK","TALK %","TALKAVG","DISPO","DISPO %","DISPAVG","DEAD","DEAD %","DEADAVG","CUSTOMER","CUSTOMER %","CUSTAVG"';
+	$CSV_header.='"'._QXZ('USER NAME').'","'._QXZ('ID').'","'._QXZ('CURRENT USER GROUP').'","'._QXZ('MOST RECENT USER GROUP').'","'._QXZ('CALLS').'","'._QXZ('TIME').'","'._QXZ('PAUSE').'","'._QXZ('PAUSE').' %","'._QXZ('PAUSAVG').'","'._QXZ('WAIT').'","'._QXZ('WAIT').' %","'._QXZ('WAITAVG').'","'._QXZ('TALK').'","'._QXZ('TALK').' %","'._QXZ('TALKAVG').'","'._QXZ('DISPO').'","'._QXZ('DISPO').' %","'._QXZ('DISPAVG').'","'._QXZ('DEAD').'","'._QXZ('DEAD').' %","'._QXZ('DEADAVG').'","'._QXZ('CUSTOMER').'","'._QXZ('CUSTOMER').' %","'._QXZ('CUSTAVG').'"';
 } else {
-	$CSV_header.='"USER NAME","ID","CURRENT USER GROUP","MOST RECENT USER GROUP","CALLS","TIME","PAUSE","PAUSAVG","WAIT","WAITAVG","TALK","TALKAVG","DISPO","DISPAVG","DEAD","DEADAVG","CUSTOMER","CUSTAVG"';
+	$CSV_header.='"'._QXZ('USER NAME').'","'._QXZ('ID').'","'._QXZ('CURRENT USER GROUP').'","'._QXZ('MOST RECENT USER GROUP').'","'._QXZ('CALLS').'","'._QXZ('TIME').'","'._QXZ('PAUSE').'","'._QXZ('PAUSAVG').'","'._QXZ('WAIT').'","'._QXZ('WAITAVG').'","'._QXZ('TALK').'","'._QXZ('TALKAVG').'","'._QXZ('DISPO').'","'._QXZ('DISPAVG').'","'._QXZ('DEAD').'","'._QXZ('DEADAVG').'","'._QXZ('CUSTOMER').'","'._QXZ('CUSTAVG').'"';
 }
 
 
@@ -636,22 +637,22 @@ $max_deadavg=1;
 $max_customer=1;
 $max_customeravg=1;
 $GRAPH="<BR><BR><a name='callstatsgraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-$GRAPH2="<tr><th class='column_header grey_graph_cell' id='callstatsgraph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">CALLS</a></th><th class='column_header grey_graph_cell' id='callstatsgraph2'><a href='#' onClick=\"DrawGraph('TIME', '2'); return false;\">TIME</a></th><th class='column_header grey_graph_cell' id='callstatsgraph3'><a href='#' onClick=\"DrawGraph('PAUSE', '3'); return false;\">PAUSE</a></th><th class='column_header grey_graph_cell' id='callstatsgraph4'><a href='#' onClick=\"DrawGraph('PAUSEAVG', '4'); return false;\">PAUSE AVG</a></th><th class='column_header grey_graph_cell' id='callstatsgraph5'><a href='#' onClick=\"DrawGraph('WAIT', '5'); return false;\">WAIT</a></th><th class='column_header grey_graph_cell' id='callstatsgraph6'><a href='#' onClick=\"DrawGraph('WAITAVG', '6'); return false;\">WAIT AVG</a></th><th class='column_header grey_graph_cell' id='callstatsgraph7'><a href='#' onClick=\"DrawGraph('TALK', '7'); return false;\">TALK</a></th><th class='column_header grey_graph_cell' id='callstatsgraph8'><a href='#' onClick=\"DrawGraph('TALKAVG', '8'); return false;\">TALK AVG</a></th><th class='column_header grey_graph_cell' id='callstatsgraph9'><a href='#' onClick=\"DrawGraph('DISPO', '9'); return false;\">DISPO</a></th><th class='column_header grey_graph_cell' id='callstatsgraph10'><a href='#' onClick=\"DrawGraph('DISPOAVG', '10'); return false;\">DISPO AVG</a></th><th class='column_header grey_graph_cell' id='callstatsgraph11'><a href='#' onClick=\"DrawGraph('DEAD', '11'); return false;\">DEAD</a></th><th class='column_header grey_graph_cell' id='callstatsgraph12'><a href='#' onClick=\"DrawGraph('DEADAVG', '12'); return false;\">DEAD AVG</a></th><th class='column_header grey_graph_cell' id='callstatsgraph13'><a href='#' onClick=\"DrawGraph('CUST', '13'); return false;\">CUST</a></th><th class='column_header grey_graph_cell' id='callstatsgraph14'><a href='#' onClick=\"DrawGraph('CUSTAVG', '14'); return false;\">CUST AVG</a></th>";
-$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>CALL STATS BREAKDOWN: (Statistics related to handling of calls only)</caption><tr><th class='thgraph' scope='col'>USER</th>";
-$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>CALLS</th></tr>";
-$TIME_graph=$graph_header."<th class='thgraph' scope='col'>TIME</th></tr>";
-$PAUSE_graph=$graph_header."<th class='thgraph' scope='col'>PAUSE</th></tr>";
-$PAUSEAVG_graph=$graph_header."<th class='thgraph' scope='col'>PAUSE AVG</th></tr>";
-$WAIT_graph=$graph_header."<th class='thgraph' scope='col'>WAIT</th></tr>";
-$WAITAVG_graph=$graph_header."<th class='thgraph' scope='col'>WAIT AVG</th></tr>";
-$TALK_graph=$graph_header."<th class='thgraph' scope='col'>TALK</th></tr>";
-$TALKAVG_graph=$graph_header."<th class='thgraph' scope='col'>TALK AVG</th></tr>";
-$DISPO_graph=$graph_header."<th class='thgraph' scope='col'>DISPO</th></tr>";
-$DISPOAVG_graph=$graph_header."<th class='thgraph' scope='col'>DISPO AVG</th></tr>";
-$DEAD_graph=$graph_header."<th class='thgraph' scope='col'>DEAD</th></tr>";
-$DEADAVG_graph=$graph_header."<th class='thgraph' scope='col'>DEAD AVG</th></tr>";
-$CUST_graph=$graph_header."<th class='thgraph' scope='col'>CUST</th></tr>";
-$CUSTAVG_graph=$graph_header."<th class='thgraph' scope='col'>CUST AVG</th></tr>";
+$GRAPH2="<tr><th class='column_header grey_graph_cell' id='callstatsgraph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">"._QXZ("CALLS")."</a></th><th class='column_header grey_graph_cell' id='callstatsgraph2'><a href='#' onClick=\"DrawGraph('TIME', '2'); return false;\">"._QXZ("TIME")."</a></th><th class='column_header grey_graph_cell' id='callstatsgraph3'><a href='#' onClick=\"DrawGraph('PAUSE', '3'); return false;\">"._QXZ("PAUSE")."</a></th><th class='column_header grey_graph_cell' id='callstatsgraph4'><a href='#' onClick=\"DrawGraph('PAUSEAVG', '4'); return false;\">"._QXZ("PAUSE AVG")."</a></th><th class='column_header grey_graph_cell' id='callstatsgraph5'><a href='#' onClick=\"DrawGraph('WAIT', '5'); return false;\">"._QXZ("WAIT")."</a></th><th class='column_header grey_graph_cell' id='callstatsgraph6'><a href='#' onClick=\"DrawGraph('WAITAVG', '6'); return false;\">"._QXZ("WAIT AVG")."</a></th><th class='column_header grey_graph_cell' id='callstatsgraph7'><a href='#' onClick=\"DrawGraph('TALK', '7'); return false;\">"._QXZ("TALK")."</a></th><th class='column_header grey_graph_cell' id='callstatsgraph8'><a href='#' onClick=\"DrawGraph('TALKAVG', '8'); return false;\">"._QXZ("TALK AVG")."</a></th><th class='column_header grey_graph_cell' id='callstatsgraph9'><a href='#' onClick=\"DrawGraph('DISPO', '9'); return false;\">"._QXZ("DISPO")."</a></th><th class='column_header grey_graph_cell' id='callstatsgraph10'><a href='#' onClick=\"DrawGraph('DISPOAVG', '10'); return false;\">"._QXZ("DISPO AVG")."</a></th><th class='column_header grey_graph_cell' id='callstatsgraph11'><a href='#' onClick=\"DrawGraph('DEAD', '11'); return false;\">"._QXZ("DEAD")."</a></th><th class='column_header grey_graph_cell' id='callstatsgraph12'><a href='#' onClick=\"DrawGraph('DEADAVG', '12'); return false;\">"._QXZ("DEAD AVG")."</a></th><th class='column_header grey_graph_cell' id='callstatsgraph13'><a href='#' onClick=\"DrawGraph('CUST', '13'); return false;\">"._QXZ("CUST")."</a></th><th class='column_header grey_graph_cell' id='callstatsgraph14'><a href='#' onClick=\"DrawGraph('CUSTAVG', '14'); return false;\">"._QXZ("CUST AVG")."</a></th>";
+$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>"._QXZ("CALL STATS BREAKDOWN").": ("._QXZ("Statistics related to handling of calls only").")</caption><tr><th class='thgraph' scope='col'>"._QXZ("USER")."</th>";
+$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CALLS")."</th></tr>";
+$TIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TIME")."</th></tr>";
+$PAUSE_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("PAUSE")."</th></tr>";
+$PAUSEAVG_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("PAUSE AVG")."</th></tr>";
+$WAIT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("WAIT")."</th></tr>";
+$WAITAVG_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("WAIT AVG")."</th></tr>";
+$TALK_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TALK")."</th></tr>";
+$TALKAVG_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TALK AVG")."</th></tr>";
+$DISPO_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DISPO")."</th></tr>";
+$DISPOAVG_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DISPO AVG")."</th></tr>";
+$DEAD_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DEAD")."</th></tr>";
+$DEADAVG_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DEAD AVG")."</th></tr>";
+$CUST_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST")."</th></tr>";
+$CUSTAVG_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST AVG")."</th></tr>";
 
 $i=0;
 $userTOTcalls=array();
@@ -712,15 +713,15 @@ while ($i < $rows_to_print)
 $CSV_header.="\n";
 $CSV_lines='';
 
-$ASCII_text.="CALL STATS BREAKDOWN: (Statistics related to handling of calls only)     <a href=\"$LINKbase&stage=$stage&file_download=1\">[DOWNLOAD]</a>\n";
+$ASCII_text.=_QXZ("CALL STATS BREAKDOWN").": ("._QXZ("Statistics related to handling of calls only").")     <a href=\"$LINKbase&stage=$stage&file_download=1\">["._QXZ("DOWNLOAD")."]</a>\n";
 
 if ($show_percentages) {
 	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+$statusesHEAD\n";
-	$ASCII_text.="| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | CURRENT USER GROUP   | MOST RECENT USER GRP | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>  | <a href=\"$LINKbase&stage=TIME\">TIME</a>      | PAUSE    | PAUSE %    |PAUSAVG | WAIT     | WAIT %     |WAITAVG | TALK     | TALK %     |TALKAVG | DISPO    | DISPO %    |DISPAVG | DEAD     | DEAD %     |DEADAVG | CUSTOMER | CUSTOMER % |CUSTAVG |$statusesHTML\n";
+	$ASCII_text.="| <a href=\"$LINKbase\">"._QXZ("USER NAME",15)."</a> | <a href=\"$LINKbase&stage=ID\">"._QXZ("ID",8)."</a> | "._QXZ("CURRENT USER GROUP",20)." | "._QXZ("MOST RECENT USER GRP",20)." | <a href=\"$LINKbase&stage=LEADS\">"._QXZ("CALLS",6)."</a> | <a href=\"$LINKbase&stage=TIME\">"._QXZ("TIME",9)."</a> | "._QXZ("PAUSE",8)." | "._QXZ("PAUSE",8)." % |"._QXZ("PAUSAVG",7)." | "._QXZ("WAIT",8)." | "._QXZ("WAIT",8)." % |"._QXZ("WAITAVG",7)." | "._QXZ("TALK",8)." | "._QXZ("TALK",8)." % |"._QXZ("TALKAVG",7)." | "._QXZ("DISPO",8)." | "._QXZ("DISPO",8)." % |"._QXZ("DISPAVG",7)." | "._QXZ("DEAD",7)." | "._QXZ("DEAD",8)." % |"._QXZ("DEADAVG",7)." | "._QXZ("CUSTOMER",8)." | "._QXZ("CUSTOMER",8)." % |"._QXZ("CUSTAVG",7)." |$statusesHTML\n";
 	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+$statusesHEAD\n";
 } else {
 	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
-	$ASCII_text.="| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | CURRENT USER GROUP   | MOST RECENT USER GRP | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>  | <a href=\"$LINKbase&stage=TIME\">TIME</a>      | PAUSE    |PAUSAVG | WAIT     |WAITAVG | TALK     |TALKAVG | DISPO    |DISPAVG | DEAD     |DEADAVG | CUSTOMER |CUSTAVG |$statusesHTML\n";
+	$ASCII_text.="| <a href=\"$LINKbase\">"._QXZ("USER NAME",15)."</a> | <a href=\"$LINKbase&stage=ID\">"._QXZ("ID",8)."</a> | "._QXZ("CURRENT USER GROUP",20)." | "._QXZ("MOST RECENT USER GRP",20)." | <a href=\"$LINKbase&stage=LEADS\">"._QXZ("CALLS",6)."</a> | <a href=\"$LINKbase&stage=TIME\">"._QXZ("TIME",9)."</a> | "._QXZ("PAUSE",8)." |"._QXZ("PAUSAVG",7)." | "._QXZ("WAIT",8)." |"._QXZ("WAITAVG",7)." | "._QXZ("TALK",8)." |"._QXZ("TALKAVG",7)." | "._QXZ("DISPO",8)." |"._QXZ("DISPAVG",7)." | "._QXZ("DEAD",8)." |"._QXZ("DEADAVG",7)." | "._QXZ("CUSTOMER",8)." |"._QXZ("CUSTAVG",7)." |$statusesHTML\n";
 	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
 }
 
@@ -1099,11 +1100,11 @@ while(strlen($TOTavgCUSTOMER_MS)>6) {$TOTavgCUSTOMER_MS = substr("$TOTavgCUSTOME
 
 if ($show_percentages) {
 	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+$statusesHEAD\n";
-	$ASCII_text.="|  TOTALS                                                      AGENTS:$TOT_AGENTS | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTtotPAUSE_MS_pct % | $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTtotWAIT_MS_pct % | $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTtotTALK_MS_pct % | $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTtotDISPO_MS_pct % | $TOTavgDISPO_MS |$TOTtotDEAD_MS| $TOTtotDEAD_MS_pct % | $TOTavgDEAD_MS |$TOTtotCUSTOMER_MS| $TOTtotCUSTOMER_MS_pct % | $TOTavgCUSTOMER_MS |$SUMstatusesHTML\n";
+	$ASCII_text.="|  "._QXZ("TOTALS",33)." "._QXZ("AGENTS",32,"r").":$TOT_AGENTS | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTtotPAUSE_MS_pct % | $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTtotWAIT_MS_pct % | $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTtotTALK_MS_pct % | $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTtotDISPO_MS_pct % | $TOTavgDISPO_MS |$TOTtotDEAD_MS| $TOTtotDEAD_MS_pct % | $TOTavgDEAD_MS |$TOTtotCUSTOMER_MS| $TOTtotCUSTOMER_MS_pct % | $TOTavgCUSTOMER_MS |$SUMstatusesHTML\n";
 	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+$statusesHEAD\n";
 } else {
 	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
-	$ASCII_text.="|  TOTALS                                                      AGENTS:$TOT_AGENTS | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTavgDISPO_MS |$TOTtotDEAD_MS| $TOTavgDEAD_MS |$TOTtotCUSTOMER_MS| $TOTavgCUSTOMER_MS |$SUMstatusesHTML\n";
+	$ASCII_text.="|  "._QXZ("TOTALS",33)." "._QXZ("AGENTS",32,"r").":$TOT_AGENTS | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTavgDISPO_MS |$TOTtotDEAD_MS| $TOTavgDEAD_MS |$TOTtotCUSTOMER_MS| $TOTavgCUSTOMER_MS |$SUMstatusesHTML\n";
 	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
 }
 
@@ -1141,26 +1142,26 @@ for ($d=0; $d<count($graph_stats); $d++) {
 	}
 }
 		
-$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTcalls)."</th></tr></table>";
-$TIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTtime_MS)."</th></tr></table>";
-$PAUSE_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTtotPAUSE_MS)."</th></tr></table>";
-$PAUSEAVG_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTavgPAUSE_MS)."</th></tr></table>";
-$WAIT_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTtotWAIT_MS)."</th></tr></table>";
-$WAITAVG_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTavgWAIT_MS)."</th></tr></table>";
-$TALK_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTtotTALK_MS)."</th></tr></table>";
-$TALKAVG_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTavgTALK_MS)."</th></tr></table>";
-$DISPO_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTtotDISPO_MS)."</th></tr></table>";
-$DISPOAVG_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTavgDISPO_MS)."</th></tr></table>";
-$DEAD_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTtotDEAD_MS)."</th></tr></table>";
-$DEADAVG_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTavgDEAD_MS)."</th></tr></table>";
-$CUST_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTtotCUSTOMER_MS)."</th></tr></table>";
-$CUSTAVG_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTavgCUSTOMER_MS)."</th></tr></table>";
+$CALLS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTcalls)."</th></tr></table>";
+$TIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTtime_MS)."</th></tr></table>";
+$PAUSE_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTtotPAUSE_MS)."</th></tr></table>";
+$PAUSEAVG_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTavgPAUSE_MS)."</th></tr></table>";
+$WAIT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTtotWAIT_MS)."</th></tr></table>";
+$WAITAVG_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTavgWAIT_MS)."</th></tr></table>";
+$TALK_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTtotTALK_MS)."</th></tr></table>";
+$TALKAVG_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTavgTALK_MS)."</th></tr></table>";
+$DISPO_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTtotDISPO_MS)."</th></tr></table>";
+$DISPOAVG_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTavgDISPO_MS)."</th></tr></table>";
+$DEAD_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTtotDEAD_MS)."</th></tr></table>";
+$DEADAVG_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTavgDEAD_MS)."</th></tr></table>";
+$CUST_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTtotCUSTOMER_MS)."</th></tr></table>";
+$CUSTAVG_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTavgCUSTOMER_MS)."</th></tr></table>";
 
 for ($e=0; $e<count($statusesARY); $e++) {
 	$Sstatus=$statusesARY[$e];
 	$total_var=$Sstatus."_total";
 	$graph_var=$Sstatus."_graph";
-	$$graph_var.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($$total_var)."</th></tr></table>";
+	$$graph_var.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($$total_var)."</th></tr></table>";
 }
 
 $JS_onload.="\tDrawGraph('CALLS', '1');\n"; 
@@ -1203,9 +1204,9 @@ $GRAPH3="<tr><td colspan='".(14+count($statusesARY))."' class='graph_span_cell'>
 $GRAPH_text.=$JS_text.$GRAPH.$GRAPH2.$GRAPH3;
 
 if ($show_percentages) {
-	$CSV_total=preg_replace('/\s/', '', "\"\",\"\",\"TOTALS\",\"AGENTS:$TOT_AGENTS\",\"$TOTcalls\",\"$TOTtime_MS\",\"$TOTtotPAUSE_MS\",\"$TOTtotPAUSE_MS_pct %\",\"$TOTavgPAUSE_MS\",\"$TOTtotWAIT_MS\",\"$TOTtotWAIT_MS_pct %\",\"$TOTavgWAIT_MS\",\"$TOTtotTALK_MS\",\"$TOTtotTALK_MS_pct %\",\"$TOTavgTALK_MS\",\"$TOTtotDISPO_MS\",\"$TOTtotDISPO_MS_pct %\",\"$TOTavgDISPO_MS\",\"$TOTtotDEAD_MS\",\"$TOTtotDEAD_MS_pct %\",\"$TOTavgDEAD_MS\",\"$TOTtotCUSTOMER_MS\",\"$TOTtotCUSTOMER_MS_pct %\",\"$TOTavgCUSTOMER_MS\"$CSVSUMstatuses\n\n");
+	$CSV_total=preg_replace('/\s/', '', "\"\",\"\",\""._QXZ("TOTALS")."\",\""._QXZ("AGENTS").":$TOT_AGENTS\",\"$TOTcalls\",\"$TOTtime_MS\",\"$TOTtotPAUSE_MS\",\"$TOTtotPAUSE_MS_pct %\",\"$TOTavgPAUSE_MS\",\"$TOTtotWAIT_MS\",\"$TOTtotWAIT_MS_pct %\",\"$TOTavgWAIT_MS\",\"$TOTtotTALK_MS\",\"$TOTtotTALK_MS_pct %\",\"$TOTavgTALK_MS\",\"$TOTtotDISPO_MS\",\"$TOTtotDISPO_MS_pct %\",\"$TOTavgDISPO_MS\",\"$TOTtotDEAD_MS\",\"$TOTtotDEAD_MS_pct %\",\"$TOTavgDEAD_MS\",\"$TOTtotCUSTOMER_MS\",\"$TOTtotCUSTOMER_MS_pct %\",\"$TOTavgCUSTOMER_MS\"$CSVSUMstatuses\n\n");
 } else {
-	$CSV_total=preg_replace('/\s/', '', "\"\",\"\",\"TOTALS\",\"AGENTS:$TOT_AGENTS\",\"$TOTcalls\",\"$TOTtime_MS\",\"$TOTtotPAUSE_MS\",\"$TOTavgPAUSE_MS\",\"$TOTtotWAIT_MS\",\"$TOTavgWAIT_MS\",\"$TOTtotTALK_MS\",\"$TOTavgTALK_MS\",\"$TOTtotDISPO_MS\",\"$TOTavgDISPO_MS\",\"$TOTtotDEAD_MS\",\"$TOTavgDEAD_MS\",\"$TOTtotCUSTOMER_MS\",\"$TOTavgCUSTOMER_MS\"$CSVSUMstatuses\n\n");
+	$CSV_total=preg_replace('/\s/', '', "\"\",\"\",\""._QXZ("TOTALS")."\",\""._QXZ("AGENTS").":$TOT_AGENTS\",\"$TOTcalls\",\"$TOTtime_MS\",\"$TOTtotPAUSE_MS\",\"$TOTavgPAUSE_MS\",\"$TOTtotWAIT_MS\",\"$TOTavgWAIT_MS\",\"$TOTtotTALK_MS\",\"$TOTavgTALK_MS\",\"$TOTtotDISPO_MS\",\"$TOTavgDISPO_MS\",\"$TOTtotDEAD_MS\",\"$TOTavgDEAD_MS\",\"$TOTtotCUSTOMER_MS\",\"$TOTavgCUSTOMER_MS\"$CSVSUMstatuses\n\n");
 }
 
 if ($file_download == 1)
@@ -1276,11 +1277,11 @@ $max_total=1;
 $max_nonpause=1;
 $max_pause=1;
 $GRAPH="<BR><BR><a name='pausegraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-$GRAPH2="<tr><th class='column_header grey_graph_cell' id='pausegraph1'><a href='#' onClick=\"DrawPauseGraph('TOTAL', '1'); return false;\">TOTAL</a></th><th class='column_header grey_graph_cell' id='pausegraph2'><a href='#' onClick=\"DrawPauseGraph('NONPAUSE', '2'); return false;\">NONPAUSE</a></th><th class='column_header grey_graph_cell' id='pausegraph3'><a href='#' onClick=\"DrawPauseGraph('PAUSE', '3'); return false;\">PAUSE</a></th>";
-$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>PAUSE CODE BREAKDOWN</caption><tr><th class='thgraph' scope='col'>STATUS</th>";
-$TOTAL_graph=$graph_header."<th class='thgraph' scope='col'>TOTAL </th></tr>";
-$NONPAUSE_graph=$graph_header."<th class='thgraph' scope='col'>NONPAUSE</th></tr>";
-$PAUSE_graph=$graph_header."<th class='thgraph' scope='col'>PAUSE</th></tr>";
+$GRAPH2="<tr><th class='column_header grey_graph_cell' id='pausegraph1'><a href='#' onClick=\"DrawPauseGraph('TOTAL', '1'); return false;\">"._QXZ("TOTAL")."</a></th><th class='column_header grey_graph_cell' id='pausegraph2'><a href='#' onClick=\"DrawPauseGraph('NONPAUSE', '2'); return false;\">"._QXZ("NONPAUSE")."</a></th><th class='column_header grey_graph_cell' id='pausegraph3'><a href='#' onClick=\"DrawPauseGraph('PAUSE', '3'); return false;\">"._QXZ("PAUSE")."</a></th>";
+$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>"._QXZ("PAUSE CODE BREAKDOWN")."</caption><tr><th class='thgraph' scope='col'>"._QXZ("STATUS")."</th>";
+$TOTAL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TOTAL")." </th></tr>";
+$NONPAUSE_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("NONPAUSE")."</th></tr>";
+$PAUSE_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("PAUSE")."</th></tr>";
 
 $stmt="select full_name,vicidial_users.user,sum(pause_sec),sub_status,sum(wait_sec + talk_sec + dispo_sec), vicidial_users.user_group from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 $group_SQL $user_group_SQL $user_SQL group by user,full_name,sub_status order by user,full_name,sub_status desc limit 100000;";
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -1323,15 +1324,15 @@ while ($i < $subs_to_print)
 	$i++;
 	}
 
-$ASCII_text.="PAUSE CODE BREAKDOWN:     <a href=\"$LINKbase&stage=$stage&file_download=2\">[DOWNLOAD]</a>\n\n";
+$ASCII_text.=_QXZ("PAUSE CODE BREAKDOWN",20).":     <a href=\"$LINKbase&stage=$stage&file_download=2\">["._QXZ("DOWNLOAD")."]</a>\n\n";
 $ASCII_text.="+-----------------+----------+----------------------+----------------------+----------+----------+----------+  +$sub_statusesHEAD\n";
-$ASCII_text.="| USER NAME       | ID       | CURRENT USER GROUP   | MOST RECENT USER GRP | TOTAL    | NONPAUSE | PAUSE    |  |$sub_statusesHTML\n";
+$ASCII_text.="| "._QXZ("USER NAME",15)." | "._QXZ("ID",8)." | "._QXZ("CURRENT USER GROUP",20)." | "._QXZ("MOST RECENT USER GRP",20)." | "._QXZ("TOTAL",8)." | "._QXZ("NONPAUSE",8)." | "._QXZ("PAUSE",8)." |  |$sub_statusesHTML\n";
 $ASCII_text.="+-----------------+----------+----------------------+----------------------+----------+----------+----------+  +$sub_statusesHEAD\n";
 
-$CSV_header="\"Agent Performance Detail                        $NOW_TIME\"\n";
-$CSV_header.="\"Time range: $query_date_BEGIN to $query_date_END\"\n\n";
-$CSV_header.="\"PAUSE CODE BREAKDOWN:\"\n";
-$CSV_header.="\"USER NAME\",\"ID\",\"CURRENT USER GROUP\",\"MOST RECENT USER GROUP\",\"TOTAL\",\"NONPAUSE\",\"PAUSE\",$CSV_statuses\n";
+$CSV_header="\""._QXZ("Agent Performance Detail",47)." $NOW_TIME\"\n";
+$CSV_header.="\""._QXZ("Time range").": $query_date_BEGIN "._QXZ("to")." $query_date_END\"\n\n";
+$CSV_header.="\""._QXZ("PAUSE CODE BREAKDOWN").":\"\n";
+$CSV_header.="\""._QXZ("USER NAME")."\",\""._QXZ("ID")."\",\""._QXZ("CURRENT USER GROUP")."\",\""._QXZ("MOST RECENT USER GROUP")."\",\""._QXZ("TOTAL")."\",\""._QXZ("NONPAUSE")."\",\""._QXZ("PAUSE")."\",$CSV_statuses\n";
 
 ### BEGIN loop through each user ###
 $m=0;
@@ -1535,13 +1536,13 @@ while ($n < $j)
 
 
 $ASCII_text.="+-----------------+----------+----------------------+----------------------+----------+----------+----------+  +$sub_statusesHEAD\n";
-$ASCII_text.="|  TOTALS                                                      AGENTS:$TOT_AGENTS |$TOTtotTOTAL_MS|$TOTtotNONPAUSE_MS|$TOTtotPAUSE_MS|  |$SUMstatusesHTML\n";
+$ASCII_text.="|  "._QXZ("TOTALS",33)." "._QXZ("AGENTS",32,"r").":$TOT_AGENTS |$TOTtotTOTAL_MS|$TOTtotNONPAUSE_MS|$TOTtotPAUSE_MS|  |$SUMstatusesHTML\n";
 $ASCII_text.="+-----------------+----------+----------------------+----------------------+----------+----------+----------+  +$sub_statusesHEAD\n";
 
 for ($e=0; $e<count($sub_statusesARY); $e++) {
 	$Sstatus=$sub_statusesARY[$e];
 	$SstatusTXT=$Sstatus;
-	if ($Sstatus=="") {$SstatusTXT="(blank)";}
+	if ($Sstatus=="") {$SstatusTXT="("._QXZ("blank").")";}
 	$GRAPH2.="<th class='column_header grey_graph_cell' id='pausegraph".($e+4)."'><a href='#' onClick=\"DrawPauseGraph('$Sstatus', '".($e+4)."'); return false;\">$SstatusTXT</a></th>";
 }
 
@@ -1560,14 +1561,14 @@ for ($d=0; $d<count($graph_stats); $d++) {
 	}
 }
 
-$TOTAL_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTtotTOTAL_MS)."</th></tr></table>";
-$NONPAUSE_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTtotNONPAUSE_MS)."</th></tr></table>";
-$PAUSE_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTtotPAUSE_MS)."%</th></tr></table>";
+$TOTAL_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTtotTOTAL_MS)."</th></tr></table>";
+$NONPAUSE_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTtotNONPAUSE_MS)."</th></tr></table>";
+$PAUSE_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTtotPAUSE_MS)."%</th></tr></table>";
 for ($e=0; $e<count($sub_statusesARY); $e++) {
 	$Sstatus=$sub_statusesARY[$e];
 	$total_var=$Sstatus."_total";
 	$graph_var=$Sstatus."_graph";
-	$$graph_var.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim(sec_convert($$total_var, 'H'))."</th></tr></table>";
+	$$graph_var.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim(sec_convert($$total_var, 'H'))."</th></tr></table>";
 }
 $JS_onload.="\tDrawPauseGraph('TOTAL', '1');\n"; 
 $JS_text="<script language='Javascript'>\n";
@@ -1601,7 +1602,7 @@ $GRAPH_text.=$JS_text.$GRAPH.$GRAPH2.$GRAPH3.$max;
 
 
 
-$CSV_total=preg_replace('/\s/', '', "\"\",\"\",\"TOTALS\",\"AGENTS:$TOT_AGENTS\",\"$TOTtotTOTAL_MS\",\"$TOTtotNONPAUSE_MS\",\"$TOTtotPAUSE_MS\",$CSVSUMstatuses");
+$CSV_total=preg_replace('/\s/', '', "\"\",\"\",\""._QXZ("TOTALS")."\",\""._QXZ("AGENTS").":$TOT_AGENTS\",\"$TOTtotTOTAL_MS\",\"$TOTtotNONPAUSE_MS\",\"$TOTtotPAUSE_MS\",$CSVSUMstatuses");
 
 if ($file_download == 2)
 	{

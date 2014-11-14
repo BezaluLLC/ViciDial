@@ -41,6 +41,7 @@
 # 140208-2033 - Added List select option
 # 140215-0704 - Bug fixes related to Lists selection
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141114-0705 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -159,7 +160,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -172,10 +173,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -449,9 +450,9 @@ $list_rslt=mysql_to_mysqli($list_stmt, $link);
 $list_rows=mysqli_num_rows($list_rslt);
 $list_options="<select name='list_ids[]' id='list_ids' multiple size=5>\n";
 	if  (preg_match('/\-\-ALL\-\-/',$list_id_string))
-		{$list_options.="<option value=\"--ALL--\" selected>-- ALL LISTS --</option>\n";}
+		{$list_options.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL LISTS")." --</option>\n";}
 	else
-		{$list_options.="<option value=\"--ALL--\">-- ALL LISTS --</option>\n";}
+		{$list_options.="<option value=\"--ALL--\">-- "._QXZ("ALL LISTS")." --</option>\n";}
 
 
 if ($list_rows>0) {
@@ -498,7 +499,7 @@ function LoadLists(FromBox) {
 	document.getElementById('list_ids').options.length=0;
 	var new_list = new Option();
 	new_list.value = "--ALL--";
-	new_list.text = "--ALL LISTS--";
+	new_list.text = "--<?php echo _QXZ("ALL LISTS"); ?>--";
 	document.getElementById('list_ids')[0] = new_list;
 
 	list_id_index=1;
@@ -519,7 +520,7 @@ function LoadLists(FromBox) {
 echo "</script>\n";
 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 $draw_graph=1;
@@ -529,7 +530,7 @@ require("admin_header.php");
 echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> Dates:<BR>";
+echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> "._QXZ("Dates").":<BR>";
 echo "<INPUT TYPE=HIDDEN NAME=agent_hours VALUE=\"$agent_hours\">\n";
 echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 echo "<INPUT TYPE=HIDDEN NAME=outbound_rate VALUE=\"$outbound_rate\">\n";
@@ -550,7 +551,7 @@ o_cal.a_tpl.yearscroll = false;
 </script>
 <?php
 
-echo "<BR> to <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+echo "<BR> "._QXZ("to")." <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
 
 ?>
 <script language="JavaScript">
@@ -569,12 +570,12 @@ if (preg_match('/MSIE/i', $_SERVER['HTTP_USER_AGENT'])) {
 } else {
 	$JS_events="onMouseUp='LoadLists(this.form.group)' onBlur='LoadLists(this.form.group)' onKeyUp='LoadLists(this.form.group)'";
 }
-echo "</TD><TD VALIGN=TOP> Campaigns:<BR>";
+echo "</TD><TD VALIGN=TOP> "._QXZ("Campaigns").":<BR>";
 echo "<SELECT multiple SIZE=5 NAME=group[] id='group' $JS_events>\n";
 if  (preg_match('/\-\-ALL\-\-/',$group_string))
-	{echo "<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
+	{echo "<option value=\"--ALL--\" selected>-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 else
-	{echo "<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
+	{echo "<option value=\"--ALL--\">-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 $o=0;
 while ($campaigns_to_print > $o)
 	{
@@ -584,54 +585,54 @@ while ($campaigns_to_print > $o)
 	}
 echo "</SELECT>\n";
 echo "</TD><TD VALIGN=TOP>";
-echo "Lists: <font size=1>(optional, possibly slow)</font><BR>\n";
+echo _QXZ("Lists").": <font size=1>("._QXZ("optional, possibly slow").")</font><BR>\n";
 echo $list_options;
 echo "</TD><TD VALIGN=TOP>";
-echo "Include Drop &nbsp; <BR>Rollover:<BR>";
+echo _QXZ("Include Drop")." &nbsp; <BR>"._QXZ("Rollover").":<BR>";
 echo "<SELECT SIZE=1 NAME=include_rollover>\n";
 echo "<option selected value=\"$include_rollover\">$include_rollover</option>\n";
-echo "<option value=\"YES\">YES</option>\n";
-echo "<option value=\"NO\">NO</option>\n";
+echo "<option value=\"YES\">"._QXZ("YES")."</option>\n";
+echo "<option value=\"NO\">"._QXZ("NO")."</option>\n";
 echo "</SELECT>\n";
-echo "<BR>Bottom Graph: &nbsp; <BR>\n";
+echo "<BR>"._QXZ("Bottom Graph").": &nbsp; <BR>\n";
 echo "<SELECT SIZE=1 NAME=bottom_graph>\n";
 echo "<option selected value=\"$bottom_graph\">$bottom_graph</option>\n";
-echo "<option value=\"YES\">YES</option>\n";
-echo "<option value=\"NO\">NO</option>\n";
+echo "<option value=\"YES\">"._QXZ("YES")."</option>\n";
+echo "<option value=\"NO\">"._QXZ("NO")."</option>\n";
 echo "</SELECT><BR>\n";
 if ($carrier_logging_active > 0)
 	{
-	echo "</TD><TD VALIGN=TOP>Carrier Stats: &nbsp; <BR>";
+	echo "</TD><TD VALIGN=TOP>"._QXZ("Carrier Stats").": &nbsp; <BR>";
 	echo "<SELECT SIZE=1 NAME=carrier_stats>\n";
 	echo "<option selected value=\"$carrier_stats\">$carrier_stats</option>\n";
-	echo "<option value=\"YES\">YES</option>\n";
-	echo "<option value=\"NO\">NO</option>\n";
+	echo "<option value=\"YES\">"._QXZ("YES")."</option>\n";
+	echo "<option value=\"NO\">"._QXZ("NO")."</option>\n";
 	echo "</SELECT>\n";
 	}
-echo "<BR><BR>Display as:<BR>";
+echo "<BR><BR>"._QXZ("Display as").":<BR>";
 echo "<select name='report_display_type'>";
 if ($report_display_type) {echo "<option value='$report_display_type' selected>$report_display_type</option>";}
 echo "<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR>";
-echo "</TD><TD VALIGN=TOP>Shift: &nbsp; <BR>";
+echo "</TD><TD VALIGN=TOP>"._QXZ("Shift").": &nbsp; <BR>";
 echo "<SELECT SIZE=1 NAME=shift>\n";
 echo "<option selected value=\"$shift\">$shift</option>\n";
 echo "<option value=\"\">--</option>\n";
-echo "<option value=\"AM\">AM</option>\n";
-echo "<option value=\"PM\">PM</option>\n";
-echo "<option value=\"ALL\">ALL</option>\n";
+echo "<option value=\"AM\">"._QXZ("AM")."</option>\n";
+echo "<option value=\"PM\">"._QXZ("PM")."</option>\n";
+echo "<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
 echo "</SELECT><BR><BR>\n";
-echo "<INPUT type=submit NAME=SUBMIT VALUE=SUBMIT>\n";
+echo "<INPUT type=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 echo "</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 if (strlen($group[0]) > 1)
 	{
-	echo " <a href=\"./admin.php?ADD=34&campaign_id=$group[0]\">MODIFY</a> | \n";
-	echo " <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+	echo " <a href=\"./admin.php?ADD=34&campaign_id=$group[0]\">"._QXZ("MODIFY")."</a> | \n";
+	echo " <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 	}
 else
 	{
-	echo " <a href=\"./admin.php?ADD=10\">CAMPAIGNS</a> | \n";
-	echo " <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+	echo " <a href=\"./admin.php?ADD=10\">"._QXZ("CAMPAIGNS")."</a> | \n";
+	echo " <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 	}
 echo "</TD></TR></TABLE>";
 echo "</FORM>\n\n";
@@ -642,7 +643,7 @@ echo "<PRE><FONT SIZE=2>\n\n";
 if (strlen($group[0]) < 1)
 	{
 	echo "\n\n";
-	echo "PLEASE SELECT A CAMPAIGN AND DATE ABOVE AND CLICK SUBMIT\n";
+	echo _QXZ("PLEASE SELECT A CAMPAIGN AND DATE ABOVE AND CLICK SUBMIT")."\n";
 	}
 
 else
@@ -671,11 +672,11 @@ else
 
 
 	$OUToutput = '';
-	$OUToutput .= "Outbound Calling Stats                             $NOW_TIME\n";
+	$OUToutput .= _QXZ("Outbound Calling Stats",50)."   $NOW_TIME\n";
 
 	$OUToutput .= "\n";
-	$OUToutput .= "Time range: $query_date_BEGIN to $query_date_END\n\n";
-	$OUToutput .= "---------- TOTALS\n";
+	$OUToutput .= _QXZ("Time range").": $query_date_BEGIN "._QXZ("to")." $query_date_END\n\n";
+	$OUToutput .= "---------- "._QXZ("TOTALS")."\n";
 
 	$stmt="select count(*),sum(length_in_sec) from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand;";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -722,14 +723,14 @@ else
 	$average_call_seconds = round($average_call_seconds, 2);
 	$average_call_seconds =	sprintf("%10s", $average_call_seconds);
 
-	$OUToutput .= "Total Calls placed from this Campaign:        $TOTALcalls\n";
-	$OUToutput .= "Average Call Length for all Calls in seconds: $average_call_seconds\n";
+	$OUToutput .= _QXZ("Total Calls placed from this Campaign").":        $TOTALcalls\n";
+	$OUToutput .= _QXZ("Average Call Length for all Calls in seconds").": $average_call_seconds\n";
 	if (preg_match("/YES/i",$include_rollover))
-		{$OUToutput .= "Calls that went to rollover In-Group:         $inTOTALcalls\n";}
+		{$OUToutput .= _QXZ("Calls that went to rollover In-Group").":         $inTOTALcalls\n";}
 
 
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- HUMAN ANSWERS\n";
+	$OUToutput .= "---------- "._QXZ("HUMAN ANSWERS")."\n";
 
 	$stmt="select count(*),sum(length_in_sec) from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status IN($customer_interactive_statuses) $group_SQLand $list_id_SQLand;";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -777,12 +778,12 @@ else
 	$CIsec =		sec_convert($CIsec,'H'); 
 
 
-	$OUToutput .= "Total Human Answered calls for this Campaign: $CIcalls\n";
-	$OUToutput .= "Average Call Length for all HA in seconds:    $average_ci_seconds     Total Time: $CIsec\n";
+	$OUToutput .= _QXZ("Total Human Answered calls for this Campaign").": $CIcalls\n";
+	$OUToutput .= _QXZ("Average Call Length for all HA in seconds").":    $average_ci_seconds     "._QXZ("Total Time").": $CIsec\n";
 
 
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- DROPS\n";
+	$OUToutput .= "---------- "._QXZ("DROPS")."\n";
 
 	$stmt="select count(*),sum(length_in_sec) from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand and status='DROP' and (length_in_sec <= 6000 or length_in_sec is null);";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -853,18 +854,18 @@ else
 	$average_hold_seconds = round($average_hold_seconds, 2);
 	$average_hold_seconds =	sprintf("%10s", $average_hold_seconds);
 
-	$OUToutput .= "Total Outbound DROP Calls:                    $DROPcalls  $DROPpercent%\n";
-	$OUToutput .= "Percent of DROP Calls taken out of Answers:   $DROPcalls / $ANSWERcalls  $DROPANSWERpercent%\n";
+	$OUToutput .= _QXZ("Total Outbound DROP Calls",44).": $DROPcalls  $DROPpercent%\n";
+	$OUToutput .= _QXZ("Percent of DROP Calls taken out of Answers",44).": $DROPcalls / $ANSWERcalls  $DROPANSWERpercent%\n";
 
 	if (preg_match("/YES/i",$include_rollover))
 		{
 		$inDROPANSWERpercent = (MathZDC($DROPcallsRAW, $CIcallsRAW) * 100);
 		$inDROPANSWERpercent = round($inDROPANSWERpercent, 2);
 
-		$OUToutput .= "Percent of DROP/Answer Calls with Rollover:   $DROPcalls / $CIcallsRAW  $inDROPANSWERpercent%\n";
+		$OUToutput .= _QXZ("Percent of DROP/Answer Calls with Rollover",44).": $DROPcalls / $CIcallsRAW  $inDROPANSWERpercent%\n";
 		}
 
-	$OUToutput .= "Average Length for DROP Calls in seconds:     $average_hold_seconds\n";
+	$OUToutput .= _QXZ("Average Length for DROP Calls in seconds",44).": $average_hold_seconds\n";
 
 	$stmt = "select closer_campaigns from vicidial_campaigns $group_SQL;";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -899,16 +900,16 @@ else
 	$AVG_ANSWERagent_non_pause_sec = sprintf("%10s", $AVG_ANSWERagent_non_pause_sec);
 
 	if ($skip_productivity_calc) {
-		$OUToutput .= "Productivity Rating:                                 N/A\n";
+		$OUToutput .= _QXZ("Productivity Rating",51).": N/A\n";
 	} else {
-		$OUToutput .= "Productivity Rating:                          $AVG_ANSWERagent_non_pause_sec\n";
+		$OUToutput .= _QXZ("Productivity Rating",51).": $AVG_ANSWERagent_non_pause_sec\n";
 	}
 
 
 
 
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- NO ANSWERS\n";
+	$OUToutput .= "---------- "._QXZ("NO ANSWERS")."\n";
 
 	$stmt="select count(*),sum(length_in_sec) from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand and status IN('NA','ADC','AB','CPDB','CPDUK','CPDATB','CPDNA','CPDREJ','CPDINV','CPDSUA','CPDSI','CPDSNC','CPDSR','CPDSUK','CPDSV','CPDERR') and (length_in_sec <= 60 or length_in_sec is null);";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -933,10 +934,10 @@ else
 	$average_na_seconds = round($average_na_seconds, 2);
 	$average_na_seconds =	sprintf("%10s", $average_na_seconds);
 
-	$OUToutput .= "Total NA calls -Busy,Disconnect,RingNoAnswer: $totalNAcalls  $NApercent%\n";
-	$OUToutput .= "Total auto NA calls -system-set:              $autoNAcalls\n";
-	$OUToutput .= "Total manual NA calls -agent-set:             $manualNAcalls\n";
-	$OUToutput .= "Average Call Length for NA Calls in seconds:  $average_na_seconds\n";
+	$OUToutput .= _QXZ("Total NA calls -Busy,Disconnect,RingNoAnswer",44).": $totalNAcalls  $NApercent%\n";
+	$OUToutput .= _QXZ("Total auto NA calls -system-set",44).": $autoNAcalls\n";
+	$OUToutput .= _QXZ("Total manual NA calls -agent-set",44).": $manualNAcalls\n";
+	$OUToutput .= _QXZ("Average Call Length for NA Calls in seconds",44).": $average_na_seconds\n";
 
 
 	##############################
@@ -945,16 +946,16 @@ else
 	$TOTALcalls = 0;
 
 	$ASCII_text .= "\n";
-	$ASCII_text .= "---------- CALL HANGUP REASON STATS\n";
+	$ASCII_text .= "---------- "._QXZ("CALL HANGUP REASON STATS")."\n";
 	$ASCII_text .= "+----------------------+------------+\n";
-	$ASCII_text .= "| HANGUP REASON        | CALLS      |\n";
+	$ASCII_text .= "| "._QXZ("HANGUP REASON",20)." | "._QXZ("CALLS",10)." |\n";
 	$ASCII_text .= "+----------------------+------------+\n";
 
 	$GRAPH.="<BR/><BR/><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
-	$GRAPH.="<caption align='top'>CALL HANGUP REASON STATS</caption>";
+	$GRAPH.="<caption align='top'>"._QXZ("CALL HANGUP REASON STATS")."</caption>";
 	$GRAPH.="<tr>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">DID</th>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">CALLS</th>\n";
+	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("DID")."</th>\n";
+	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")."</th>\n";
 	$GRAPH.="</tr>\n";
 
 	$stmt="select count(*),term_reason from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand group by term_reason;";
@@ -971,8 +972,8 @@ else
 
 		$REASONcount =	sprintf("%10s", $row[0]);while(strlen($REASONcount)>10) {$REASONcount = substr("$REASONcount", 0, -1);}
 		$reason =	sprintf("%-20s", $row[1]);while(strlen($reason)>20) {$reason = substr("$reason", 0, -1);}
-		if (preg_match('/NONE/',$reason))	{$reason = 'NO ANSWER           ';}
-		if (preg_match('/CALLER/',$reason)) {$reason = 'CUSTOMER            ';}
+		if (preg_match('/NONE/',$reason))	{$reason = _QXZ('NO ANSWER',20);}
+		if (preg_match('/CALLER/',$reason)) {$reason = _QXZ('CUSTOMER',20);}
 
 		$ASCII_text .= "| $reason | $REASONcount |\n";
 
@@ -985,7 +986,7 @@ else
 	$TOTALcalls =		sprintf("%10s", $TOTALcalls);
 
 	$ASCII_text .= "+----------------------+------------+\n";
-	$ASCII_text .= "| TOTAL:               | $TOTALcalls |\n";
+	$ASCII_text .= "| "._QXZ("TOTAL",19).": | $TOTALcalls |\n";
 	$ASCII_text .= "+----------------------+------------+\n";
 
 	for ($d=0; $d<count($graph_stats); $d++) {
@@ -996,7 +997,7 @@ else
 		$GRAPH.="  </tr>\n";
 	}
 	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">TOTAL:</th>\n";
+	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("TOTAL").":</th>\n";
 	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">".trim($TOTALcalls)."</th>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="</table><PRE>\n";
@@ -1011,15 +1012,15 @@ else
 	$TOTALcalls = 0;
 
 	$ASCII_text .= "\n";
-	$ASCII_text .= "---------- CALL STATUS STATS\n";
+	$ASCII_text .= "---------- "._QXZ("CALL STATUS STATS")."\n";
 	$ASCII_text .= "+--------+----------------------+----------------------+------------+----------------------------------+----------+\n";
-	$ASCII_text .= "|        |                      |                      |            |      CALL TIME                   |AGENT TIME|\n";
-	$ASCII_text .= "| STATUS | DESCRIPTION          | CATEGORY             | CALLS      | TOTAL TIME | AVG TIME |CALLS/HOUR|CALLS/HOUR|\n";
+	$ASCII_text .= "|        |                      |                      |            | "._QXZ("CALL TIME",32)." |"._QXZ("AGENT TIME",10)."|\n";
+	$ASCII_text .= "| "._QXZ("STATUS",6)." | "._QXZ("DESCRIPTION",20)." | "._QXZ("CATEGORY",20)." | "._QXZ("CALLS",10)." | "._QXZ("TOTAL TIME",10)." | "._QXZ("AVG TIME",8)." |"._QXZ("CALLS/HOUR",10)."|"._QXZ("CALLS/HOUR",10)."|\n";
 	$ASCII_text .= "+--------+----------------------+----------------------+------------+------------+----------+----------+----------+\n";
 
 	######## GRAPHING #########
 	$GRAPH="<BR><BR><a name='cssgraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-	$GRAPH.="<tr><th width='20%' class='grey_graph_cell' id='cssgraph1'><a href='#' onClick=\"DrawCSSGraph('CALLS', '1'); return false;\">CALLS</a></th><th width=20% class='grey_graph_cell' id='cssgraph2'><a href='#' onClick=\"DrawCSSGraph('TOTALTIME', '2'); return false;\">TOTAL TIME</a></th><th width=20% class='grey_graph_cell' id='cssgraph3'><a href='#' onClick=\"DrawCSSGraph('AVGTIME', '3'); return false;\">AVG TIME</a></th><th width=20% class='grey_graph_cell' id='cssgraph4'><a href='#' onClick=\"DrawCSSGraph('CALLSHOUR', '4'); return false;\">CALLS/HR</a></th><th width=20% class='grey_graph_cell' id='cssgraph5'><a href='#' onClick=\"DrawCSSGraph('CALLSHOUR_agent', '5'); return false;\">AGENT CALLS/HR</a></th></tr>";
+	$GRAPH.="<tr><th width='20%' class='grey_graph_cell' id='cssgraph1'><a href='#' onClick=\"DrawCSSGraph('CALLS', '1'); return false;\">"._QXZ("CALLS")."</a></th><th width=20% class='grey_graph_cell' id='cssgraph2'><a href='#' onClick=\"DrawCSSGraph('TOTALTIME', '2'); return false;\">"._QXZ("TOTAL TIME")."</a></th><th width=20% class='grey_graph_cell' id='cssgraph3'><a href='#' onClick=\"DrawCSSGraph('AVGTIME', '3'); return false;\">"._QXZ("AVG TIME")."</a></th><th width=20% class='grey_graph_cell' id='cssgraph4'><a href='#' onClick=\"DrawCSSGraph('CALLSHOUR', '4'); return false;\">"._QXZ("CALLS/HR")."</a></th><th width=20% class='grey_graph_cell' id='cssgraph5'><a href='#' onClick=\"DrawCSSGraph('CALLSHOUR_agent', '5'); return false;\">"._QXZ("AGENT CALLS/HR")."</a></th></tr>";
 	$GRAPH.="<tr><td colspan='5' class='graph_span_cell'><span id='call_status_stats_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
 	$graph_stats=array();
 	$max_calls=1;
@@ -1027,12 +1028,12 @@ else
 	$max_avg_time=1;
 	$max_callshr=1;
 	$max_agentcallshr=1;
-	$graph_header="<table cellspacing='0' cellpadding='0' summary='STATUS' class='horizontalgraph'><caption align='top'>CALL STATUS STATS</caption><tr><th class='thgraph' scope='col'>STATUS</th>";
-	$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>CALLS </th></tr>";
-	$TOTALTIME_graph=$graph_header."<th class='thgraph' scope='col'>TOTAL TIME</th></tr>";
-	$AVGTIME_graph=$graph_header."<th class='thgraph' scope='col'>AVG TIME</th></tr>";
-	$CALLSHOUR_graph=$graph_header."<th class='thgraph' scope='col'>CALLS/HR</th></tr>";
-	$CALLSHOUR_agent_graph=$graph_header."<th class='thgraph' scope='col'>AGENT CALLS/HR</th></tr>";
+	$graph_header="<table cellspacing='0' cellpadding='0' summary='STATUS' class='horizontalgraph'><caption align='top'>"._QXZ("CALL STATUS STATS")."</caption><tr><th class='thgraph' scope='col'>STATUS</th>";
+	$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CALLS")." </th></tr>";
+	$TOTALTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TOTAL TIME")."</th></tr>";
+	$AVGTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AVG TIME")."</th></tr>";
+	$CALLSHOUR_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CALLS/HR")."</th></tr>";
+	$CALLSHOUR_agent_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AGENT CALLS/HR")."</th></tr>";
 	###########################
 
 
@@ -1197,7 +1198,7 @@ else
 	$aTOTALrate =	sprintf("%8s", $aTOTALrate);while(strlen($aTOTALrate)>8) {$aTOTALrate = substr("$aTOTALrate", 0, -1);}
 
 	$ASCII_text .= "+--------+----------------------+----------------------+------------+------------+----------+----------+----------+\n";
-	$ASCII_text .= "| TOTAL:                                               | $TOTALcalls | $TOTALhours | $TOTALavg | $TOTALrate |          |\n";
+	$ASCII_text .= "| "._QXZ("TOTAL",51).": | $TOTALcalls | $TOTALhours | $TOTALavg | $TOTALrate |          |\n";
 #	$ASCII_text .= "|   AGENT TIME                                                      | $aTOTALhours |                     | $aTOTALrate |\n";
 	$ASCII_text .= "+------------------------------------------------------+------------+------------+---------------------+----------+\n";
 
@@ -1209,11 +1210,11 @@ else
 		$CALLSHOUR_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][4], $max_callshr))."' height='16' />".$graph_stats[$d][4]."</td></tr>";
 		$CALLSHOUR_agent_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][5], $max_agentcallshr))."' height='16' />".$graph_stats[$d][5]."</td></tr>";
 	}
-	$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTALcalls)."</th></tr></table>";
-	$TOTALTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTALhours)."</th></tr></table>";
-	$AVGTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTALavg)."</th></tr></table>";
-	$CALLSHOUR_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTALrate)."</th></tr></table>";
-	$CALLSHOUR_agent_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($aTOTALrate)."</th></tr></table>";
+	$CALLS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTALcalls)."</th></tr></table>";
+	$TOTALTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTALhours)."</th></tr></table>";
+	$AVGTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTALavg)."</th></tr></table>";
+	$CALLSHOUR_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTALrate)."</th></tr></table>";
+	$CALLSHOUR_agent_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($aTOTALrate)."</th></tr></table>";
 	$JS_onload.="\tDrawCSSGraph('CALLS', '1');\n";
 	$JS_text.="function DrawCSSGraph(graph, th_id) {\n";
 	$JS_text.="	var CALLS_graph=\"$CALLS_graph\";\n";
@@ -1242,16 +1243,16 @@ else
 	$TOTALcalls = 0;
 
 	$ASCII_text .= "\n";
-	$ASCII_text .= "---------- LIST ID STATS\n";
+	$ASCII_text .= "---------- "._QXZ("LIST ID STATS")."\n";
 	$ASCII_text .= "+------------------------------------------+------------+\n";
-	$ASCII_text .= "| LIST                                     | CALLS      |\n";
+	$ASCII_text .= "| "._QXZ("LIST",40)." | "._QXZ("CALLS",10)." |\n";
 	$ASCII_text .= "+------------------------------------------+------------+\n";
 
 	$GRAPH="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
-	$GRAPH.="<caption align='top'>LIST ID STATS</caption>";
+	$GRAPH.="<caption align='top'>"._QXZ("LIST ID STATS")."</caption>";
 	$GRAPH.="<tr>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">LIST</th>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">CALLS</th>\n";
+	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("LIST")."</th>\n";
+	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")."</th>\n";
 	$GRAPH.="</tr>\n";
 
 	$stmt="select count(*),list_id from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand group by list_id;";
@@ -1298,7 +1299,7 @@ else
 	$TOTALcalls =		sprintf("%10s", $TOTALcalls);
 
 	$ASCII_text .= "+------------------------------------------+------------+\n";
-	$ASCII_text .= "| TOTAL:                                   | $TOTALcalls |\n";
+	$ASCII_text .= "| "._QXZ("TOTAL",39).": | $TOTALcalls |\n";
 	$ASCII_text .= "+------------------------------------------+------------+\n";
 
 	for ($d=0; $d<count($graph_stats); $d++) {
@@ -1309,7 +1310,7 @@ else
 		$GRAPH.="  </tr>\n";
 	}
 	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">TOTAL:</th>\n";
+	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("TOTAL").":</th>\n";
 	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">".trim($TOTALcalls)."</th>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="</table><PRE>\n";
@@ -1323,9 +1324,9 @@ else
 		#########  CARRIER STATS
 
 		$ASCII_text .= "\n";
-		$ASCII_text .= "---------- CARRIER CALL STATUSES\n";
+		$ASCII_text .= "---------- "._QXZ("CARRIER CALL STATUSES")."\n";
 		$ASCII_text .= "+----------------------+------------+\n";
-		$ASCII_text .= "| STATUS               | CALLS      |\n";
+		$ASCII_text .= "| "._QXZ("STATUS",20)." | "._QXZ("CALLS",10)." |\n";
 		$ASCII_text .= "+----------------------+------------+\n";
 
 		## get counts and time totals for all statuses in this campaign
@@ -1350,7 +1351,7 @@ else
 		$TOTCARcalls =	sprintf("%10s", $TOTCARcalls); while(strlen($TOTCARcalls)>10) {$TOTCARcalls = substr("$TOTCARcalls", 0, -1);}
 
 		$ASCII_text .= "+----------------------+------------+\n";
-		$ASCII_text .= "| TOTAL                | $TOTCARcalls |\n";
+		$ASCII_text .= "| "._QXZ("TOTAL",20)." | $TOTCARcalls |\n";
 		$ASCII_text .= "+----------------------+------------+\n";
 		}
 
@@ -1373,16 +1374,16 @@ else
 		#########  PRESET DIAL STATS
 
 		$ASCII_text .= "\n";
-		$ASCII_text .= "---------- AGENT PRESET DIALS\n";
+		$ASCII_text .= "---------- "._QXZ("AGENT PRESET DIALS")."\n";
 		$ASCII_text .= "+------------------------------------------+------------+\n";
-		$ASCII_text .= "| PRESET NAME                              | CALLS      |\n";
+		$ASCII_text .= "| "._QXZ("PRESET NAME",40)." | "._QXZ("CALLS",10)." |\n";
 		$ASCII_text .= "+------------------------------------------+------------+\n";
 
 		$GRAPH="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
-		$GRAPH.="<caption align='top'>AGENT PRESET DIALS</caption>";
+		$GRAPH.="<caption align='top'>"._QXZ("AGENT PRESET DIALS")."</caption>";
 		$GRAPH.="<tr>\n";
-		$GRAPH.="<th class=\"thgraph\" scope=\"col\">PRESET NAME</th>\n";
-		$GRAPH.="<th class=\"thgraph\" scope=\"col\">CALLS</th>\n";
+		$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("PRESET NAME")."</th>\n";
+		$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")."</th>\n";
 		$GRAPH.="</tr>\n";
 		$max_calls=1; $graph_stats=array();
 
@@ -1416,7 +1417,7 @@ else
 			$GRAPH.="  </tr>\n";
 		}
 		$GRAPH.="  <tr>\n";
-		$GRAPH.="	<th class=\"thgraph\" scope=\"col\">TOTAL CALLS:</th>\n";
+		$GRAPH.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("TOTAL CALLS").":</th>\n";
 		$GRAPH.="	<th class=\"thgraph\" scope=\"col\">".trim($TOTPREcalls)."</th>\n";
 		$GRAPH.="  </tr>\n";
 		$GRAPH.="</table><PRE>\n";
@@ -1424,7 +1425,7 @@ else
 		$TOTPREcalls =	sprintf("%10s", $TOTPREcalls); while(strlen($TOTPREcalls)>10) {$TOTPREcalls = substr("$TOTPREcalls", 0, -1);}
 
 		$ASCII_text .= "+------------------------------------------+------------+\n";
-		$ASCII_text .= "| TOTAL                                    | $TOTPREcalls |\n";
+		$ASCII_text .= "| "._QXZ("TOTAL",40)." | $TOTPREcalls |\n";
 		$ASCII_text .= "+------------------------------------------+------------+\n";
 
 		$GRAPH_text.=$GRAPH;
@@ -1435,16 +1436,16 @@ else
 	#########  STATUS CATEGORY STATS
 
 	$ASCII_text .= "\n";
-	$ASCII_text .= "---------- CUSTOM STATUS CATEGORY STATS\n";
+	$ASCII_text .= "---------- "._QXZ("CUSTOM STATUS CATEGORY STATS")."\n";
 	$ASCII_text .= "+----------------------+------------+--------------------------------+\n";
-	$ASCII_text .= "| CATEGORY             | CALLS      | DESCRIPTION                    |\n";
+	$ASCII_text .= "| "._QXZ("CATEGORY",20)." | "._QXZ("CALLS",10)." | "._QXZ("DESCRIPTION",30)." |\n";
 	$ASCII_text .= "+----------------------+------------+--------------------------------+\n";
 
 	$GRAPH="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
-	$GRAPH.="<caption align='top'>CUSTOM STATUS CATEGORY STATS</caption>";
+	$GRAPH.="<caption align='top'>"._QXZ("CUSTOM STATUS CATEGORY STATS")."</caption>";
 	$GRAPH.="<tr>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">CATEGORY</th>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">CALLS</th>\n";
+	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CATEGORY")."</th>\n";
+	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")."</th>\n";
 	$GRAPH.="</tr>\n";
 	$max_calls=1; $graph_stats=array();
 
@@ -1472,7 +1473,7 @@ else
 	$TOTCATcalls =	sprintf("%10s", $TOTCATcalls); while(strlen($TOTCATcalls)>10) {$TOTCATcalls = substr("$TOTCATcalls", 0, -1);}
 
 	$ASCII_text .= "+----------------------+------------+--------------------------------+\n";
-	$ASCII_text .= "| TOTAL                | $TOTCATcalls |\n";
+	$ASCII_text .= "| "._QXZ("TOTAL",20)." | $TOTCATcalls |\n";
 	$ASCII_text .= "+----------------------+------------+\n";
 
 	for ($d=0; $d<count($graph_stats); $d++) {
@@ -1483,7 +1484,7 @@ else
 		$GRAPH.="  </tr>\n";
 	}
 	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">TOTAL:</th>\n";
+	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("TOTAL").":</th>\n";
 	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">".trim($TOTCATcalls)."</th>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="</table><PRE>\n";
@@ -1499,9 +1500,9 @@ else
 	$TOTavg=0;
 
 	$ASCII_text .= "\n";
-	$ASCII_text .= "---------- AGENT STATS\n";
+	$ASCII_text .= "---------- "._QXZ("AGENT STATS")."\n";
 	$ASCII_text .= "+--------------------------+------------+------------+--------+\n";
-	$ASCII_text .= "| AGENT                    | CALLS      | TIME H:M:S |AVERAGE |\n";
+	$ASCII_text .= "| "._QXZ("AGENT",24)." | "._QXZ("CALLS",10)." | "._QXZ("TIME H:M:S",10)." |"._QXZ("AVERAGE",7)." |\n";
 	$ASCII_text .= "+--------------------------+------------+------------+--------+\n";
 
 	######## GRAPHING #########
@@ -1510,12 +1511,12 @@ else
 	$max_total_time=1;
 	$max_avg_time=1;
 	$GRAPH="<BR><BR><a name='AGENTgraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-	$GRAPH.="<tr><th width='33%' class='grey_graph_cell' id='AGENTgraph1'><a href='#' onClick=\"DrawAGENTGraph('CALLS', '1'); return false;\">CALLS</a></th><th width='33%' class='grey_graph_cell' id='AGENTgraph2'><a href='#' onClick=\"DrawAGENTGraph('TOTALTIME', '2'); return false;\">TOTAL TIME</a></th><th width='34%' class='grey_graph_cell' id='AGENTgraph3'><a href='#' onClick=\"DrawAGENTGraph('AVGTIME', '3'); return false;\">AVG TIME</a></th></tr>";
+	$GRAPH.="<tr><th width='33%' class='grey_graph_cell' id='AGENTgraph1'><a href='#' onClick=\"DrawAGENTGraph('CALLS', '1'); return false;\">"._QXZ("CALLS")."</a></th><th width='33%' class='grey_graph_cell' id='AGENTgraph2'><a href='#' onClick=\"DrawAGENTGraph('TOTALTIME', '2'); return false;\">"._QXZ("TOTAL TIME")."</a></th><th width='34%' class='grey_graph_cell' id='AGENTgraph3'><a href='#' onClick=\"DrawAGENTGraph('AVGTIME', '3'); return false;\">"._QXZ("AVG TIME")."</a></th></tr>";
 	$GRAPH.="<tr><td colspan='4' class='graph_span_cell'><span id='agent_stats_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
-	$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>AGENT STATS</caption><tr><th class='thgraph' scope='col'>STATUS</th>";
-	$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>CALLS </th></tr>";
-	$TOTALTIME_graph=$graph_header."<th class='thgraph' scope='col'>TOTAL TIME</th></tr>";
-	$AVGTIME_graph=$graph_header."<th class='thgraph' scope='col'>AVG TIME</th></tr>";
+	$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>"._QXZ("AGENT STATS")."</caption><tr><th class='thgraph' scope='col'>"._QXZ("STATUS")."</th>";
+	$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CALLS")." </th></tr>";
+	$TOTALTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TOTAL TIME")."</th></tr>";
+	$AVGTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AVG TIME")."</th></tr>";
 	###########################
 
 	$stmt="select vicidial_log.user,full_name,count(*),sum(length_in_sec),avg(length_in_sec) from vicidial_log,vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand and vicidial_log.user is not null and length_in_sec is not null and length_in_sec > 0 and vicidial_log.user=vicidial_users.user group by vicidial_log.user;";
@@ -1639,9 +1640,9 @@ else
 	$AVGwait =		sprintf("%6s", $AVGwait_MS);
 
 	$ASCII_text .= "+--------------------------+------------+------------+--------+\n";
-	$ASCII_text .= "| TOTAL Agents: $TOTagents | $TOTcalls | $TOTtime | $TOTavg |\n";
+	$ASCII_text .= "| "._QXZ("TOTAL Agents",12).": $TOTagents | $TOTcalls | $TOTtime | $TOTavg |\n";
 	$ASCII_text .= "+--------------------------+------------+------------+--------+\n";
-	$ASCII_text .= "| Average Wait time between calls                      $AVGwait |\n";
+	$ASCII_text .= "| "._QXZ("Average Wait time between calls",52)." $AVGwait |\n";
 	$ASCII_text .= "+-------------------------------------------------------------+\n";
 
 	for ($d=0; $d<count($graph_stats); $d++) {
@@ -1650,9 +1651,9 @@ else
 		$TOTALTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][2], $max_total_time))."' height='16' />".sec_convert($graph_stats[$d][2], 'H')."</td></tr>";
 		$AVGTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][3], $max_avg_time))."' height='16' />".sec_convert($graph_stats[$d][3], 'H')."</td></tr>";
 	}
-	$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTcalls)."</th></tr></table>";
-	$TOTALTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTtime)."</th></tr></table>";
-	$AVGTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTavg)."</th></tr></table>";
+	$CALLS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTcalls)."</th></tr></table>";
+	$TOTALTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTtime)."</th></tr></table>";
+	$AVGTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTavg)."</th></tr></table>";
 	$JS_onload.="\tDrawAGENTGraph('CALLS', '1');\n"; 
 	$JS_text.="function DrawAGENTGraph(graph, th_id) {\n";
 	$JS_text.="	var CALLS_graph=\"$CALLS_graph\";\n";
@@ -1715,7 +1716,7 @@ else
 		$outbound_cost =	($rawTOTtalk_min * $outbound_rate);
 		$outbound_cost =	sprintf("%8.2f", $outbound_cost);
 
-		echo "OUTBOUND $query_date to $end_date, &nbsp; $rawTOTtalk_min minutes at \$$outbound_rate = \$$outbound_cost</B>\n";
+		echo _QXZ("OUTBOUND")." $query_date "._QXZ("to")." $end_date, &nbsp; $rawTOTtalk_min "._QXZ("minutes at")." \$$outbound_rate = \$$outbound_cost</B>\n";
 
 		if ($db_source == 'S')
 			{
@@ -1759,7 +1760,7 @@ else
 		#########  TIME STATS
 
 		echo "\n";
-		echo "---------- TIME STATS\n";
+		echo "---------- "._QXZ("TIME STATS")."\n";
 
 		echo "<FONT SIZE=0>\n";
 
@@ -1831,7 +1832,7 @@ else
 		$hour_multiplier = MathZDC(100, $hi_hour_count);
 
 		echo "<!-- HICOUNT: $hi_hour_count|$hour_multiplier -->\n";
-		echo "GRAPH IN 15 MINUTE INCREMENTS OF TOTAL CALLS PLACED FROM THIS CAMPAIGN\n";
+		echo _QXZ("GRAPH IN 15 MINUTE INCREMENTS OF TOTAL CALLS PLACED FROM THIS CAMPAIGN")."\n";
 
 		$k=1;
 		$Mk=0;
@@ -1857,7 +1858,7 @@ else
 
 		echo "+------+-------------------------------------------------------------------------------------------------------+-------+-------+\n";
 		#echo "| HOUR | GRAPH IN 15 MINUTE INCREMENTS OF TOTAL INCOMING CALLS FOR THIS GROUP                                  | DROPS | TOTAL |\n";
-		echo "| HOUR |$call_scale| DROPS | TOTAL |\n";
+		echo "| "._QXZ("HOUR",4)." |$call_scale| "._QXZ("DROPS",5)." | "._QXZ("TOTAL",5)." |\n";
 		echo "+------+-------------------------------------------------------------------------------------------------------+-------+-------+\n";
 
 		$ZZ = '00';
@@ -1952,7 +1953,7 @@ else
 
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $STARTtime);
-	echo "\nRun Time: $RUNtime seconds|$db_source\n";
+	echo "\n"._QXZ("Run Time").": $RUNtime "._QXZ("seconds")."|$db_source\n";
 	}
 
 	$JS_onload.="}\n";

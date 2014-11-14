@@ -11,6 +11,7 @@
 #
 # CHANGES
 # 140311-1940 - First build based upon admin.php & AST_VDADstats.php
+# 141114-0045 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -120,7 +121,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -133,10 +134,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -216,7 +217,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -425,9 +426,9 @@ $list_rslt=mysql_to_mysqli($list_stmt, $link);
 $list_rows=mysqli_num_rows($list_rslt);
 $list_options="<select name='list_ids[]' id='list_ids' multiple size=5>\n";
 	if  (preg_match('/\-\-ALL\-\-/',$list_id_string))
-		{$list_options.="<option value=\"--ALL--\" selected>-- ALL LISTS --</option>\n";}
+		{$list_options.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL LISTS")." --</option>\n";}
 	else
-		{$list_options.="<option value=\"--ALL--\">-- ALL LISTS --</option>\n";}
+		{$list_options.="<option value=\"--ALL--\">-- "._QXZ("ALL LISTS")." --</option>\n";}
 
 
 if ($list_rows>0) {
@@ -494,7 +495,7 @@ $HEADER.="}\n";
 $HEADER.="</script>\n";
 
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 $draw_graph=1;
@@ -504,7 +505,7 @@ $draw_graph=1;
 $MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
 $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-$MAIN.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP><input type='checkbox' name='override_date' value='1' checked>All dates<BR><BR>Dates:<BR>";
+$MAIN.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP><input type='checkbox' name='override_date' value='1' checked>"._QXZ("All dates")."<BR><BR>"._QXZ("Dates").":<BR>";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=outbound_rate VALUE=\"$outbound_rate\">\n";
 $MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
@@ -520,7 +521,7 @@ $MAIN.="o_cal.a_tpl.yearscroll = false;\n";
 $MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 $MAIN.="</script>\n";
 
-$MAIN.="<BR> to <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+$MAIN.="<BR> "._QXZ("to")." <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
 
 $MAIN.="<script language=\"JavaScript\">\n";
 $MAIN.="var o_cal = new tcal ({\n";
@@ -538,12 +539,12 @@ if (preg_match('/MSIE/i', $_SERVER['HTTP_USER_AGENT'])) {
 } else {
 	$JS_events="onMouseUp='LoadLists(this.form.group)' onBlur='LoadLists(this.form.group)' onKeyUp='LoadLists(this.form.group)'";
 }
-$MAIN.="</TD><TD VALIGN=TOP> Campaigns:<BR>";
+$MAIN.="</TD><TD VALIGN=TOP> "._QXZ("Campaigns").":<BR>";
 $MAIN.="<SELECT multiple SIZE=5 NAME=group[] id='group' $JS_events>\n";
 if  (preg_match('/\-\-ALL\-\-/',$group_string))
-	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 else
-	{$MAIN.="<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\">-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 $o=0;
 while ($campaigns_to_print > $o)
 	{
@@ -553,23 +554,23 @@ while ($campaigns_to_print > $o)
 	}
 $MAIN.="</SELECT>\n";
 $MAIN.="</TD><TD VALIGN=TOP>";
-$MAIN.="Lists: <font size=1>(optional, possibly slow)</font><BR>\n";
+$MAIN.=_QXZ("Lists").": <font size=1>("._QXZ("optional, possibly slow").")</font><BR>\n";
 $MAIN.=$list_options;
 $MAIN.="</TD><TD VALIGN=TOP ALIGN=CENTER>";
 
-$MAIN.="<INPUT type=submit NAME=SUBMIT VALUE=SUBMIT>\n";
-$MAIN.="<BR><BR><a href=\"$PHP_SELF\">reset</a>";
+$MAIN.="<INPUT type=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
+$MAIN.="<BR><BR><a href=\"$PHP_SELF\">"._QXZ("reset")."</a>";
 $MAIN.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 $MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 if (strlen($group[0]) > 1)
 	{
-	$MAIN.=" <a href=\"./admin.php?ADD=34&campaign_id=$group[0]\">MODIFY</a> | \n";
-	$MAIN.=" <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+	$MAIN.=" <a href=\"./admin.php?ADD=34&campaign_id=$group[0]\">"._QXZ("MODIFY")."</a> | \n";
+	$MAIN.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 	}
 else
 	{
-	$MAIN.=" <a href=\"./admin.php?ADD=10\">CAMPAIGNS</a> | \n";
-	$MAIN.=" <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+	$MAIN.=" <a href=\"./admin.php?ADD=10\">"._QXZ("CAMPAIGNS")."</a> | \n";
+	$MAIN.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 	}
 $MAIN.="</TD></TR></TABLE>";
 $MAIN.="</FORM>\n\n";
@@ -582,14 +583,14 @@ if (strlen($QUERY_STRING) > 5)
 	$leads_in_list_Y = 0;
 	
 	if (!$override_date) {
-		$date_range_title=" FOR LEADS CALLED $query_date THROUGH $end_date";
+		$date_range_title=" "._QXZ("FOR LEADS CALLED")." $query_date "._QXZ("THROUGH")." $end_date";
 		$stmt="select distinct vicidial_list.lead_id from vicidial_list, vicidial_log where vicidial_log.call_date>='$query_date 00:00:00' and vicidial_log.call_date<='$end_date 23:59:59' $list_id_SQLandVLJOIN UNION select distinct vicidial_list.lead_id from vicidial_list, vicidial_closer_log where vicidial_closer_log.call_date>='$query_date 00:00:00' and vicidial_closer_log.call_date<='$end_date 23:59:59' $list_id_SQLandVCLJOIN;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if (!$rslt) {$MAIN.="<BR>**".mysqli_error($link)."<BR>$stmt";}
 		if ($DB) {$MAIN.="$stmt<BR><BR>";}
 		$lead_id_str="";
 		if (mysqli_num_rows($rslt)>200000) {
-			$MAIN.="WARNING: Query resulting from report parameters is too large.  Running report by list ID selection only.";
+			$MAIN.=_QXZ("WARNING: Query resulting from report parameters is too large.  Running report by list ID selection only.");
 		} else if (mysqli_num_rows($rslt)>0) {
 			while ($rowx=mysqli_fetch_row($rslt)) {
 				$lead_id_str.="$rowx[0],";
@@ -643,11 +644,11 @@ if (strlen($QUERY_STRING) > 5)
 
 	$CSV_text="";
 	$MAIN.="<center>\n";
-	$MAIN.="<br><b>CALLED COUNTS WITHIN LIST(S) $list_id_title_str$date_range_title:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"$PHP_SELF?DB=$DB$groupQS$list_idQS&query_date=$query_date&end_date=$end_date&override_date=$override_date&SUBMIT=$SUBMIT&file_download=1\">[DOWNLOAD]</a></b><br>\n";
-	$CSV_text.="CALLED COUNTS WITHIN LIST(S) $list_id_title_str$date_range_title:\n";
+	$MAIN.="<br><b>"._QXZ("CALLED COUNTS WITHIN LIST(S)")." $list_id_title_str$date_range_title:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"$PHP_SELF?DB=$DB$groupQS$list_idQS&query_date=$query_date&end_date=$end_date&override_date=$override_date&SUBMIT=$SUBMIT&file_download=1\">["._QXZ("DOWNLOAD")."]</a></b><br>\n";
+	$CSV_text.=_QXZ("CALLED COUNTS WITHIN LIST(S)")." $list_id_title_str$date_range_title:\n";
 	$MAIN.="<TABLE width=700 cellspacing=1>\n";
-	$MAIN.="<tr><td align=left><font size=1>STATUS</td><td align=center><font size=1>STATUS NAME</td>";
-	$CSV_text.="\"STATUS\",\"STATUS NAME\",";
+	$MAIN.="<tr><td align=left><font size=1>"._QXZ("STATUS")."</td><td align=center><font size=1>"._QXZ("STATUS NAME")."</td>";
+	$CSV_text.="\""._QXZ("STATUS")."\",\""._QXZ("STATUS NAME")."\",";
 	$first = $all_called_first;
 	while ($first <= $all_called_last)
 		{
@@ -659,8 +660,8 @@ if (strlen($QUERY_STRING) > 5)
 		$CSV_text.="\"$first$Fplus\",";
 		$first++;
 		}
-	$MAIN.="<td align=center><font size=1>SUBTOTAL</td></tr>\n";
-	$CSV_text.="\"SUBTOTAL\"\n";
+	$MAIN.="<td align=center><font size=1>"._QXZ("SUBTOTAL")."</td></tr>\n";
+	$CSV_text.="\""._QXZ("SUBTOTAL")."\"\n";
 
 	$sts=0;
 	$statuses_called_to_print = count($status);
@@ -716,8 +717,8 @@ if (strlen($QUERY_STRING) > 5)
 		$sts++;
 		}
 
-	$MAIN.="<tr><td align=center colspan=2><b><font size=1>TOTAL</td>";
-	$CSV_text.="\"\",\"TOTAL\",";
+	$MAIN.="<tr><td align=center colspan=2><b><font size=1>"._QXZ("TOTAL")."</td>";
+	$CSV_text.="\"\",\""._QXZ("TOTAL")."\",";
 	$first = $all_called_first;
 	while ($first <= $all_called_last)
 		{

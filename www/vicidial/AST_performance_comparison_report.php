@@ -8,6 +8,7 @@
 # 140408-1813 - First build
 # 140414-1712 - Sales count bug fix
 # 140418-1830 - Call count bug fix
+# 141113-2058 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -103,7 +104,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -116,10 +117,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -201,7 +202,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -257,7 +258,7 @@ $thirtydaysago=date("Y-m-d", mktime(0, 0, 0, $date_ary[1], $date_ary[2]-30, $dat
 $rpt_date_array=array();
 $rpt_subtitle_array=array();
 array_push($rpt_date_array, "$today", "$yesterday", "$twodaysago", "$threedaysago", "$fivedaysago", "$tendaysago", "$thirtydaysago");
-array_push($rpt_subtitle_array, "TODAY", "YESTERDAY", "2 DAYS AGO", "3 DAYS AGO", "5 DAYS AGO", "10 DAYS AGO", "30 DAYS AGO");
+array_push($rpt_subtitle_array, _QXZ("TODAY"), _QXZ("YESTERDAY"), _QXZ("2 DAYS AGO"), _QXZ("3 DAYS AGO"), _QXZ("5 DAYS AGO"), _QXZ("10 DAYS AGO"), _QXZ("30 DAYS AGO"));
 
 
 $i=0;
@@ -408,7 +409,7 @@ $HTML_head.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 $HTML_head.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 $HTML_head.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HTML_head.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HTML_head.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 	$short_header=1;
 
@@ -417,7 +418,7 @@ $HTML_head.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=
 $HTML_text.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
 $HTML_text.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-$HTML_text.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> Today's date:<BR>";
+$HTML_text.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> "._QXZ("Today's date").":<BR>";
 $HTML_text.="<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
 $HTML_text.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
@@ -450,12 +451,12 @@ $HTML_text.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 $HTML_text.="</script>\n";
 */
 
-$HTML_text.="</TD><TD VALIGN=TOP> Campaigns:<BR>";
+$HTML_text.="</TD><TD VALIGN=TOP> "._QXZ("Campaigns").":<BR>";
 $HTML_text.="<SELECT SIZE=5 NAME=group[] multiple>\n";
 if  (preg_match('/\-\-ALL\-\-/',$group_string))
-	{$HTML_text.="<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 else
-	{$HTML_text.="<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\">-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 $o=0;
 while ($campaigns_to_print > $o)
 	{
@@ -464,13 +465,13 @@ while ($campaigns_to_print > $o)
 	$o++;
 	}
 $HTML_text.="</SELECT>\n";
-$HTML_text.="</TD><TD VALIGN=TOP>User Groups:<BR>";
+$HTML_text.="</TD><TD VALIGN=TOP>"._QXZ("User Groups").":<BR>";
 $HTML_text.="<SELECT SIZE=5 NAME=user_group[] multiple>\n";
 
 if  (preg_match('/\-\-ALL\-\-/',$user_group_string))
-	{$HTML_text.="<option value=\"--ALL--\" selected>-- ALL USER GROUPS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL USER GROUPS")." --</option>\n";}
 else
-	{$HTML_text.="<option value=\"--ALL--\">-- ALL USER GROUPS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\">-- "._QXZ("ALL USER GROUPS")." --</option>\n";}
 $o=0;
 while ($user_groups_to_print > $o)
 	{
@@ -479,13 +480,13 @@ while ($user_groups_to_print > $o)
 	$o++;
 	}
 $HTML_text.="</SELECT>\n";
-$HTML_text.="</TD><TD VALIGN=TOP>Users: <BR>";
+$HTML_text.="</TD><TD VALIGN=TOP>"._QXZ("Users").": <BR>";
 $HTML_text.="<SELECT SIZE=5 NAME=users[] multiple>\n";
 
 if  (preg_match('/\-\-ALL\-\-/',$users_string))
-	{$HTML_text.="<option value=\"--ALL--\" selected>-- ALL USERS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL USERS")." --</option>\n";}
 else
-	{$HTML_text.="<option value=\"--ALL--\">-- ALL USERS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\">-- "._QXZ("ALL USERS")." --</option>\n";}
 $o=0;
 while ($users_to_print > $o)
 	{
@@ -494,24 +495,24 @@ while ($users_to_print > $o)
 	$o++;
 	}
 $HTML_text.="</SELECT>\n";
-$HTML_text.="</TD><TD VALIGN=TOP>Shift:<BR>";
+$HTML_text.="</TD><TD VALIGN=TOP>"._QXZ("Shift").":<BR>";
 $HTML_text.="<SELECT SIZE=1 NAME=shift>\n";
 $HTML_text.="<option selected value=\"$shift\">$shift</option>\n";
 $HTML_text.="<option value=\"\">--</option>\n";
-$HTML_text.="<option value=\"AM\">AM</option>\n";
-$HTML_text.="<option value=\"PM\">PM</option>\n";
-$HTML_text.="<option value=\"ALL\">ALL</option>\n";
+$HTML_text.="<option value=\"AM\">"._QXZ("AM")."</option>\n";
+$HTML_text.="<option value=\"PM\">"._QXZ("PM")."</option>\n";
+$HTML_text.="<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
 $HTML_text.="</SELECT>\n";
 $HTML_text.="</TD><TD VALIGN=TOP>";
-$HTML_text.="Display as:<BR>";
+$HTML_text.=_QXZ("Display as").":<BR>";
 $HTML_text.="<select name='report_display_type'>";
 if ($report_display_type) {$HTML_text.="<option value='$report_display_type' selected>$report_display_type</option>";}
-$HTML_text.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select><BR><BR>\n";
-$HTML_text.="<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>$NWB#agent_performance_detail$NWE\n";
+$HTML_text.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select><BR><BR>\n";
+$HTML_text.="<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>$NWB#agent_performance_detail$NWE\n";
 $HTML_text.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
 $HTML_text.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
-$HTML_text.=" <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+$HTML_text.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 $HTML_text.="</FONT>\n";
 $HTML_text.="</TD></TR></TABLE>";
 
@@ -524,10 +525,9 @@ $HTML_text.="<PRE><FONT SIZE=2>\n";
 if (!$group)
 	{
 	$HTML_text.="\n";
-	$HTML_text.="PLEASE SELECT A CAMPAIGN AND DATE-TIME ABOVE AND CLICK SUBMIT\n";
-	$HTML_text.=" NOTE: stats taken from shift specified\n";
+	$HTML_text.=_QXZ("PLEASE SELECT A CAMPAIGN AND DATE-TIME ABOVE AND CLICK SUBMIT")."\n";
+	$HTML_text.=" "._QXZ("NOTE: stats taken from shift specified")."\n";
 	}
-
 else
 	{
 	if ($shift == 'AM') 
@@ -557,13 +557,13 @@ else
 
 
 
-	$ASCII_text="---------- PERFORMANCE Details -------------\n";
+	$ASCII_text="---------- "._QXZ("PERFORMANCE Details")." -------------\n";
 
-	$HTML_text.="Agent Performance Comparison                        $NOW_TIME\n";
-	$HTML_text.="Starting date: $query_date                         <a href=\"$LINKbase&stage=$stage&file_download=1\">[DOWNLOAD]</a>\n\n";
+	$HTML_text.=_QXZ("Agent Performance Comparison",50)." $NOW_TIME\n";
+	$HTML_text.=""._QXZ("Starting date",15,"r").": $query_date                         <a href=\"$LINKbase&stage=$stage&file_download=1\">["._QXZ("DOWNLOAD")."]</a>\n\n";
 
-	$CSV_header1.="\"Agent Performance Comparison                        $NOW_TIME\"\n";
-	$CSV_header1.="\"Starting date: $query_date\"\n\n";
+	$CSV_header1.="\""._QXZ("Agent Performance Comparison",50)." $NOW_TIME\"\n";
+	$CSV_header1.="\""._QXZ("Starting date",15,"r").": $query_date\"\n\n";
 
 
 
@@ -586,14 +586,14 @@ else
 		}
 
 	$CSV_header1.='"","",';
-	$CSV_header2.='"USER NAME","ID",';
+	$CSV_header2.='"'._QXZ("USER NAME").'","'._QXZ("ID").'",';
 
 	$ASCII_header1.="|                            |";
 	$ASCII_header2.="+-----------------+----------+";
-	$ASCII_header3.="| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       |";
+	$ASCII_header3.="| <a href=\"$LINKbase\">"._QXZ("USER NAME",15)."</a> | <a href=\"$LINKbase&stage=ID\">"._QXZ("ID",8)."</a> |";
 
 	$GRAPH="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"LIST ID Summary\" class=\"horizontalgraph\">\n";
-	$GRAPH.="<caption align='top'>PERFORMANCE SUMMARY</caption>";
+	$GRAPH.="<caption align='top'>"._QXZ("PERFORMANCE SUMMARY")."</caption>";
 
 	$GRAPH2="";
 	for ($q=0; $q<count($rpt_date_array); $q++) 
@@ -604,16 +604,16 @@ else
 		$array_offset=($q*5)+1;
 		$GRAPH2.="<tr><th colspan=5 class='column_header grey_graph_cell'>$rpt_subtitle, $rpt_date</th></tr>";
 		$GRAPH2.="<tr>";
-		$GRAPH2.="<th class='column_header grey_graph_cell' id='callstatsgraph".$array_offset."' nowrap width='20%'><a href='#' onClick=\"DrawGraph('CALLS_".$rpt_date_numeric."', '$array_offset'); return false;\">CALLS</a></th>";
-		$GRAPH2.="<th class='column_header grey_graph_cell' id='callstatsgraph".($array_offset+1)."' nowrap width='20%'><a href='#' onClick=\"DrawGraph('SALES_".$rpt_date_numeric."', '".($array_offset+1)."'); return false;\">SALES</a></th>";
-		$GRAPH2.="<th class='column_header grey_graph_cell' id='callstatsgraph".($array_offset+2)."' nowrap width='20%'><a href='#' onClick=\"DrawGraph('SALECONV_".$rpt_date_numeric."', '".($array_offset+2)."'); return false;\">SALE CONV %</a></th>";
-		$GRAPH2.="<th class='column_header grey_graph_cell' id='callstatsgraph".($array_offset+3)."' nowrap width='20%'><a href='#' onClick=\"DrawGraph('SPH_".$rpt_date_numeric."', '".($array_offset+3)."'); return false;\">SALES PER HOUR</a></th>";
-		$GRAPH2.="<th class='column_header grey_graph_cell' id='callstatsgraph".($array_offset+4)."' nowrap width='20%'><a href='#' onClick=\"DrawGraph('TIME_".$rpt_date_numeric."', '".($array_offset+4)."'); return false;\">TIME</a></th>";
+		$GRAPH2.="<th class='column_header grey_graph_cell' id='callstatsgraph".$array_offset."' nowrap width='20%'><a href='#' onClick=\"DrawGraph('CALLS_".$rpt_date_numeric."', '$array_offset'); return false;\">"._QXZ("CALLS")."</a></th>";
+		$GRAPH2.="<th class='column_header grey_graph_cell' id='callstatsgraph".($array_offset+1)."' nowrap width='20%'><a href='#' onClick=\"DrawGraph('SALES_".$rpt_date_numeric."', '".($array_offset+1)."'); return false;\">"._QXZ("SALES")."</a></th>";
+		$GRAPH2.="<th class='column_header grey_graph_cell' id='callstatsgraph".($array_offset+2)."' nowrap width='20%'><a href='#' onClick=\"DrawGraph('SALECONV_".$rpt_date_numeric."', '".($array_offset+2)."'); return false;\">"._QXZ("SALE CONV")." %</a></th>";
+		$GRAPH2.="<th class='column_header grey_graph_cell' id='callstatsgraph".($array_offset+3)."' nowrap width='20%'><a href='#' onClick=\"DrawGraph('SPH_".$rpt_date_numeric."', '".($array_offset+3)."'); return false;\">"._QXZ("SALES PER HOUR")."</a></th>";
+		$GRAPH2.="<th class='column_header grey_graph_cell' id='callstatsgraph".($array_offset+4)."' nowrap width='20%'><a href='#' onClick=\"DrawGraph('TIME_".$rpt_date_numeric."', '".($array_offset+4)."'); return false;\">"._QXZ("TIME")."</a></th>";
 		$GRAPH2.="</tr>";
 		}
 
-	$TOTALS_array[0]="TOTALS";
-	$graph_TOTALS_array[0]+="TOTALS";
+	$TOTALS_array[0]=_QXZ("TOTALS");
+	$graph_TOTALS_array[0]+=_QXZ("TOTALS");
 
 	for ($q=0; $q<count($rpt_date_array); $q++) 
 		{
@@ -623,10 +623,10 @@ else
 		$array_offset=($q*5)+1;
 
 		$CSV_header1.="\"$rpt_subtitle\",\"\",\"\",\"\",\"\",";
-		$CSV_header2.='"CALLS","SALES","CONVERSION RATE TO CALLS","SALES PER HOUR","TIME",';
+		$CSV_header2.='"'._QXZ('CALLS').'","'._QXZ('SALES').'","'._QXZ('CONVERSION RATE TO CALLS').'","'._QXZ('SALES PER HOUR').'","'._QXZ('TIME').'",';
 		$ASCII_header1.="| ".sprintf("%-54s", $rpt_subtitle)." |";
 		$ASCII_header2.="+-------+-------+-------------+--------------+-----------+";
-		$ASCII_header3.="| CALLS | SALES | SALE CONV % | SALES PER HR |   TIME    |";
+		$ASCII_header3.="| "._QXZ("CALLS",5)." | "._QXZ("SALES",5)." | "._QXZ("SALE CONV",9)." % | "._QXZ("SALES PER HR",12)." | "._QXZ("TIME",9)." |";
 
 		##########
 
@@ -637,12 +637,12 @@ else
 			$max_stats[$k]=0;
 			}
 
-		$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>$rpt_subtitle SUMMARY</caption><tr><th class='thgraph' scope='col'>USERS</th>";
-		$CALLS_graph[$q]=$graph_header."<th class='thgraph' scope='col'>CALLS</th></tr>";
-		$SALES_graph[$q]=$graph_header."<th class='thgraph' scope='col'>SALES</th></tr>";
-		$SALECONV_graph[$q]=$graph_header."<th class='thgraph' scope='col'>SALE CONV %</th></tr>";
-		$SPH_graph[$q]=$graph_header."<th class='thgraph' scope='col'>SALES PER HOUR</th></tr>";
-		$TIME_graph[$q]=$graph_header."<th class='thgraph' scope='col'>TIME</th></tr>";
+		$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>$rpt_subtitle "._QXZ("SUMMARY")."</caption><tr><th class='thgraph' scope='col'>USERS</th>";
+		$CALLS_graph[$q]=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CALLS")."</th></tr>";
+		$SALES_graph[$q]=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES")."</th></tr>";
+		$SALECONV_graph[$q]=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALE CONV")." %</th></tr>";
+		$SPH_graph[$q]=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES PER HOUR")."</th></tr>";
+		$TIME_graph[$q]=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TIME")."</th></tr>";
 
 		#########
 
@@ -698,11 +698,11 @@ else
 			$TIME_graph[$q].="  <tr><td class='chart_td$class'>".$graph_stats[$j][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(600*$graph_stats[$j][5], $max_stats[5]))."' height='16' />".sec_convert($graph_stats[$j][5], 'H')."</td></tr>";
 			}
 
-		$CALLS_graph[$q].="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$graph_TOTALS_array[($array_offset)]."</th></tr>";
-		$SALES_graph[$q].="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$graph_TOTALS_array[($array_offset+1)]."</th></tr>";
-		$SALECONV_graph[$q].="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$graph_TOTALS_array[($array_offset+2)]."</th></tr>";
-		$SPH_graph[$q].="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$graph_TOTALS_array[($array_offset+3)]."</th></tr>";
-		$TIME_graph[$q].="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".sec_convert($graph_TOTALS_array[($array_offset+4)], 'H')."</th></tr>";
+		$CALLS_graph[$q].="  <tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".$graph_TOTALS_array[($array_offset)]."</th></tr>";
+		$SALES_graph[$q].="  <tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".$graph_TOTALS_array[($array_offset+1)]."</th></tr>";
+		$SALECONV_graph[$q].="  <tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".$graph_TOTALS_array[($array_offset+2)]."</th></tr>";
+		$SPH_graph[$q].="  <tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".$graph_TOTALS_array[($array_offset+3)]."</th></tr>";
+		$TIME_graph[$q].="  <tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".sec_convert($graph_TOTALS_array[($array_offset+4)], 'H')."</th></tr>";
 		}
 
 	$JS_text.="function DrawGraph(graph, th_id) {\n";
@@ -798,7 +798,7 @@ else
 		}
 	$ASCII_text.=$ASCII_header2;
 
-	$CSV_text.='"","TOTALS",';
+	$CSV_text.='"","'._QXZ('TOTALS').'",';
 	$ASCII_text.="| ".sprintf("%26s", $TOTALS_array[0])." ||";
 	$GRAPH_text.=$GRAPH.$GRAPH2.$GRAPH3;
 

@@ -28,6 +28,7 @@
 # 130901-0902 - Changed to mysqli PHP functions
 # 140108-0723 - Added webserver and hostname to report logging
 # 140326-2235 - Changed to allow for custom fields with a different entry_list_id
+# 141114-0036 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -96,10 +97,10 @@ if ($auth_message == 'GOOD')
 
 if ($auth < 1)
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -119,7 +120,7 @@ $download_auth=$row[0];
 if ($download_auth < 1)
 	{
 	Header ("Content-type: text/html; charset=utf-8");
-    echo "No list download permission: |$PHP_AUTH_USER|\n";
+    echo _QXZ("No list download permission").": |$PHP_AUTH_USER|\n";
     exit;
 	}
 
@@ -191,7 +192,7 @@ $LOGallowed_reports =	$row[1];
 if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 	{
 	Header ("Content-type: text/html; charset=utf-8");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -219,7 +220,7 @@ if ($download_type == 'systemdnc')
 	$event_code_type='SYSTEM INTERNAL DNC';
 	if (strlen($LOGallowed_campaignsSQL) > 2)
 		{
-		echo "You are not allowed to download this list: $list_id\n";
+		echo _QXZ("You are not allowed to download this list").": $list_id\n";
 		exit;
 		}
 
@@ -236,7 +237,7 @@ if ($download_type == 'systemdnc')
 
 	if ($leads_count < 1)
 		{
-		echo "There are no phone numbers in list: SYSTEM INTERNAL DNC\n";
+		echo _QXZ("There are no phone numbers in list").": SYSTEM INTERNAL DNC\n";
 		exit;
 		}
 	}
@@ -257,7 +258,7 @@ elseif ($download_type == 'dnc')
 
 	if ($lists_allowed < 1)
 		{
-		echo "You are not allowed to download this list: $group_id\n";
+		echo _QXZ("You are not allowed to download this list").": $group_id\n";
 		exit;
 		}
 
@@ -274,7 +275,7 @@ elseif ($download_type == 'dnc')
 
 	if ($leads_count < 1)
 		{
-		echo "There are no leads in Campaign DNC list: $group_id\n";
+		echo _QXZ("There are no leads in Campaign DNC list").": $group_id\n";
 		exit;
 		}
 	}
@@ -295,7 +296,7 @@ elseif ($download_type == 'fpgn')
 
 	if ($lists_allowed < 1)
 		{
-		echo "You are not allowed to download this list: $group_id\n";
+		echo _QXZ("You are not allowed to download this list").": $group_id\n";
 		exit;
 		}
 
@@ -312,7 +313,7 @@ elseif ($download_type == 'fpgn')
 
 	if ($leads_count < 1)
 		{
-		echo "There are no leads in this filter phone group: $group_id\n";
+		echo _QXZ("There are no leads in this filter phone group").": $group_id\n";
 		exit;
 		}
 	}
@@ -335,7 +336,7 @@ else
 
 	if ($lists_allowed < 1)
 		{
-		echo "You are not allowed to download this list: $list_id\n";
+		echo _QXZ("You are not allowed to download this list").": $list_id\n";
 		exit;
 		}
 
@@ -354,7 +355,7 @@ else
 
 	if ($leads_count < 1)
 		{
-		echo "There are no leads in list_id: $list_id\n";
+		echo _QXZ("There are no leads in list_id").": $list_id\n";
 		exit;
 		}
 	}

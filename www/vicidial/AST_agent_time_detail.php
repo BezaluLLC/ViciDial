@@ -35,6 +35,7 @@
 # 140108-0708 - Added webserver and hostname to report logging
 # 140314-0852 - Fixed several division by zero bugs
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141113-1124 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -150,7 +151,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -163,10 +164,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -248,7 +249,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -414,7 +415,7 @@ if ($file_download < 1)
 	echo "<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-	echo "<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+	echo "<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 	echo "<span style=\"position:absolute;left:0px;top:0px;z-index:20;\" id=admin_header>";
 
 	$short_header=1;
@@ -429,8 +430,8 @@ if ($file_download < 1)
 if ( (strlen($group[0]) < 1) or (strlen($user_group[0]) < 1) )
 	{
 	echo "\n";
-	echo "PLEASE SELECT A CAMPAIGN OR USER GROUP AND DATE-TIME ABOVE AND CLICK SUBMIT\n";
-	echo " NOTE: stats taken from shift specified\n";
+	echo _QXZ("PLEASE SELECT A CAMPAIGN OR USER GROUP AND DATE-TIME ABOVE AND CLICK SUBMIT")."\n";
+	echo _QXZ(" NOTE: stats taken from shift specified")."\n";
 	}
 
 else
@@ -464,15 +465,15 @@ else
 
 	if ($file_download < 1)
 		{
-		$ASCII_text.="\nAgent Time Detail                     $NOW_TIME\n";
+		$ASCII_text.="\n"._QXZ("Agent Time Detail",40)." $NOW_TIME\n";
 		$ASCII_text.="Time range: $query_date_BEGIN to $query_date_END\n\n";
 
-		$GRAPH.="Agent Time Detail                     $NOW_TIME\n";
+		$GRAPH.=_QXZ("Agent Time Detail",40)." $NOW_TIME\n";
 		$GRAPH.="Time range: $query_date_BEGIN to $query_date_END\n\n";
 		}
 	else
 		{
-		$file_output .= "Agent Time Detail                     $NOW_TIME\n";
+		$file_output .= _QXZ("Agent Time Detail",40)." $NOW_TIME\n";
 		$file_output .= "Time range: $query_date_BEGIN to $query_date_END\n\n";
 		}
 
@@ -499,30 +500,30 @@ else
 	$max_dead=1;
 	$max_customer=1;
 	$GRAPH.="<a name='timegraph'/><table border='0' cellpadding='0' cellspacing='2' width='1000'>";
-	$GRAPH2="<tr><th class='column_header grey_graph_cell' id='timegraph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">CALLS</a></th><th class='column_header grey_graph_cell' id='timegraph2'><a href='#' onClick=\"DrawGraph('TIMECLOCK', '2'); return false;\">TIME CLOCK</a></th><th class='column_header grey_graph_cell' id='timegraph3'><a href='#' onClick=\"DrawGraph('AGENTTIME', '3'); return false;\">AGENT TIME</a></th>";
+	$GRAPH2="<tr><th class='column_header grey_graph_cell' id='timegraph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">"._QXZ("CALLS")."</a></th><th class='column_header grey_graph_cell' id='timegraph2'><a href='#' onClick=\"DrawGraph('TIMECLOCK', '2'); return false;\">"._QXZ("TIME CLOCK")."</a></th><th class='column_header grey_graph_cell' id='timegraph3'><a href='#' onClick=\"DrawGraph('AGENTTIME', '3'); return false;\">"._QXZ("AGENT TIME")."</a></th>";
 	if ($show_parks) {
-		$GRAPH2.="<th class='column_header grey_graph_cell' id='timegraph15'><a href='#' onClick=\"DrawGraph('PARKS', '15'); return false;\">PARKS</a></th><th class='column_header grey_graph_cell' id='timegraph16'><a href='#' onClick=\"DrawGraph('PARKTIME', '16'); return false;\">PARKTIME</a></th><th class='column_header grey_graph_cell' id='timegraph17'><a href='#' onClick=\"DrawGraph('AVGPARK', '17'); return false;\">AVGPARK</a></th><th class='column_header grey_graph_cell' id='timegraph18'><a href='#' onClick=\"DrawGraph('PARKSCALL', '18'); return false;\">PARKS/CALL</a></th>";
+		$GRAPH2.="<th class='column_header grey_graph_cell' id='timegraph15'><a href='#' onClick=\"DrawGraph('PARKS', '15'); return false;\">"._QXZ("PARKS")."</a></th><th class='column_header grey_graph_cell' id='timegraph16'><a href='#' onClick=\"DrawGraph('PARKTIME', '16'); return false;\">"._QXZ("PARKTIME")."</a></th><th class='column_header grey_graph_cell' id='timegraph17'><a href='#' onClick=\"DrawGraph('AVGPARK', '17'); return false;\">"._QXZ("AVGPARK")."</a></th><th class='column_header grey_graph_cell' id='timegraph18'><a href='#' onClick=\"DrawGraph('PARKSCALL', '18'); return false;\">"._QXZ("PARKS/CALL")."</a></th>";
 	}
-	$GRAPH2.="<th class='column_header grey_graph_cell' id='timegraph4'><a href='#' onClick=\"DrawGraph('WAIT', '4'); return false;\">WAIT</a></th><th class='column_header grey_graph_cell' id='timegraph14'><a href='#' onClick=\"DrawGraph('WAITPCT', '14'); return false;\">WAIT %</a></th><th class='column_header grey_graph_cell' id='timegraph5'><a href='#' onClick=\"DrawGraph('TALK', '5'); return false;\">TALK</a></th><th class='column_header grey_graph_cell' id='timegraph10'><a href='#' onClick=\"DrawGraph('TALKPCT', '10'); return false;\">TALKTIME%</a></th><th class='column_header grey_graph_cell' id='timegraph6'><a href='#' onClick=\"DrawGraph('DISPO', '6'); return false;\">DISPO</a></th><th class='column_header grey_graph_cell' id='timegraph11'><a href='#' onClick=\"DrawGraph('DISPOPCT', '11'); return false;\">DISPOTIME%</a></th><th class='column_header grey_graph_cell' id='timegraph7'><a href='#' onClick=\"DrawGraph('PAUSE', '7'); return false;\">PAUSE</a></th><th class='column_header grey_graph_cell' id='timegraph12'><a href='#' onClick=\"DrawGraph('PAUSEPCT', '12'); return false;\">PAUSETIME%</a></th><th class='column_header grey_graph_cell' id='timegraph8'><a href='#' onClick=\"DrawGraph('DEAD', '8'); return false;\">DEAD</a></th><th class='column_header grey_graph_cell' id='timegraph13'><a href='#' onClick=\"DrawGraph('DEADPCT', '13'); return false;\">DEADTIME%</a></th><th class='column_header grey_graph_cell' id='timegraph9'><a href='#' onClick=\"DrawGraph('CUSTOMER', '9'); return false;\">CUSTOMER</a></th>";
-	$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>AGENT TIME BREAKDOWN</caption><tr><th class='thgraph' scope='col'>STATUS</th>";
-	$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>CALLS </th></tr>";
-	$TIMECLOCK_graph=$graph_header."<th class='thgraph' scope='col'>TIME CLOCK</th></tr>";
-	$AGENTTIME_graph=$graph_header."<th class='thgraph' scope='col'>AGENT TIME</th></tr>";
-	$WAIT_graph=$graph_header."<th class='thgraph' scope='col'>WAIT</th></tr>";
-	$WAITPCT_graph=$graph_header."<th class='thgraph' scope='col'>WAIT %</th></tr>";
-	$TALK_graph=$graph_header."<th class='thgraph' scope='col'>TALK</th></tr>";
-	$TALKPCT_graph=$graph_header."<th class='thgraph' scope='col'>TALK TIME %</th></tr>";
-	$DISPO_graph=$graph_header."<th class='thgraph' scope='col'>DISPO</th></tr>";
-	$DISPOPCT_graph=$graph_header."<th class='thgraph' scope='col'>DISPO TIME %</th></tr>";
-	$PAUSE_graph=$graph_header."<th class='thgraph' scope='col'>PAUSE</th></tr>";
-	$PAUSEPCT_graph=$graph_header."<th class='thgraph' scope='col'>PAUSE TIME %</th></tr>";
-	$DEAD_graph=$graph_header."<th class='thgraph' scope='col'>DEAD</th></tr>";
-	$DEADPCT_graph=$graph_header."<th class='thgraph' scope='col'>DEAD TIME %</th></tr>";
-	$CUSTOMER_graph=$graph_header."<th class='thgraph' scope='col'>CUSTOMER</th></tr>";
-	$PARKS_graph=$graph_header."<th class='thgraph' scope='col'>PARKS</th></tr>";
-	$PARKTIME_graph=$graph_header."<th class='thgraph' scope='col'>PARKTIME</th></tr>";
-	$AVGPARK_graph=$graph_header."<th class='thgraph' scope='col'>AVGPARK</th></tr>";
-	$PARKSCALL_graph=$graph_header."<th class='thgraph' scope='col'>PARKSCALL</th></tr>";
+	$GRAPH2.="<th class='column_header grey_graph_cell' id='timegraph4'><a href='#' onClick=\"DrawGraph('WAIT', '4'); return false;\">"._QXZ("WAIT")."</a></th><th class='column_header grey_graph_cell' id='timegraph14'><a href='#' onClick=\"DrawGraph('WAITPCT', '14'); return false;\">"._QXZ("WAIT")." %</a></th><th class='column_header grey_graph_cell' id='timegraph5'><a href='#' onClick=\"DrawGraph('TALK', '5'); return false;\">"._QXZ("TALK")."</a></th><th class='column_header grey_graph_cell' id='timegraph10'><a href='#' onClick=\"DrawGraph('TALKPCT', '10'); return false;\">"._QXZ("TALKTIME")."%</a></th><th class='column_header grey_graph_cell' id='timegraph6'><a href='#' onClick=\"DrawGraph('DISPO', '6'); return false;\">"._QXZ("DISPO")."</a></th><th class='column_header grey_graph_cell' id='timegraph11'><a href='#' onClick=\"DrawGraph('DISPOPCT', '11'); return false;\">"._QXZ("DISPOTIME")."%</a></th><th class='column_header grey_graph_cell' id='timegraph7'><a href='#' onClick=\"DrawGraph('PAUSE', '7'); return false;\">"._QXZ("PAUSE")."</a></th><th class='column_header grey_graph_cell' id='timegraph12'><a href='#' onClick=\"DrawGraph('PAUSEPCT', '12'); return false;\">"._QXZ("PAUSETIME")."%</a></th><th class='column_header grey_graph_cell' id='timegraph8'><a href='#' onClick=\"DrawGraph('DEAD', '8'); return false;\">"._QXZ("DEAD")."</a></th><th class='column_header grey_graph_cell' id='timegraph13'><a href='#' onClick=\"DrawGraph('DEADPCT', '13'); return false;\">"._QXZ("DEADTIME")."%</a></th><th class='column_header grey_graph_cell' id='timegraph9'><a href='#' onClick=\"DrawGraph('CUSTOMER', '9'); return false;\">"._QXZ("CUSTOMER")."</a></th>";
+	$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>"._QXZ("AGENT TIME BREAKDOWN")."</caption><tr><th class='thgraph' scope='col'>STATUS</th>";
+	$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CALLS")." </th></tr>";
+	$TIMECLOCK_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TIME CLOCK")."</th></tr>";
+	$AGENTTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AGENT TIME")."</th></tr>";
+	$WAIT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("WAIT")."</th></tr>";
+	$WAITPCT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("WAIT")." %</th></tr>";
+	$TALK_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TALK")."</th></tr>";
+	$TALKPCT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TALK TIME")." %</th></tr>";
+	$DISPO_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DISPO")."</th></tr>";
+	$DISPOPCT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DISPO TIME")." %</th></tr>";
+	$PAUSE_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("PAUSE")."</th></tr>";
+	$PAUSEPCT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("PAUSE TIME")." %</th></tr>";
+	$DEAD_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DEAD")."</th></tr>";
+	$DEADPCT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DEAD TIME")." %</th></tr>";
+	$CUSTOMER_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUSTOMER")."</th></tr>";
+	$PARKS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("PARKS")."</th></tr>";
+	$PARKTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("PARKTIME")."</th></tr>";
+	$AVGPARK_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AVGPARK")."</th></tr>";
+	$PARKSCALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("PARKSCALL")."</th></tr>";
 	
 	while ($i < $users_to_print)
 		{
@@ -565,7 +566,7 @@ else
 
 	if ($show_parks) 
 		{
-		$park_HEADER=" PARKS    | PARK TIME  | AVG PARK   | PARKS/CALL |";
+		$park_HEADER=" "._QXZ("PARKS",8)." | "._QXZ("PARK TIME",10)." | "._QXZ("AVG PARK",10)." | "._QXZ("PARKS/CALL",10)." |";
 		$park_HEADER_DIV="+----------+------------+------------+------------";
 		$park_HEADER_CSV=",PARKS,PARK TIME,AVG PARK,PARKS/CALL";
 		}
@@ -707,14 +708,14 @@ else
 	##### BEGIN print the output to screen or put into file output variable
 	if ($file_download < 1)
 		{
-		$ASCII_text.="AGENT TIME BREAKDOWN:\n";
+		$ASCII_text.=_QXZ("AGENT TIME BREAKDOWN").":\n";
 		$ASCII_text.="+-----------------+----------+----------+------------+------------$park_HEADER_DIV+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
-		$ASCII_text.="| <a href=\"$LINKbase&stage=NAME\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>    | <a href=\"$LINKbase&stage=TCLOCK\">TIME CLOCK</a> | <a href=\"$LINKbase&stage=TIME\">AGENT TIME</a> |$park_HEADER WAIT       | WAIT %     | TALK       | TALK TIME %| DISPO      | DISPOTIME %| PAUSE      | PAUSETIME %| DEAD       | DEAD TIME %| CUSTOMER   |   |$sub_statusesHTML\n";
+		$ASCII_text.="| <a href=\"$LINKbase&stage=NAME\">"._QXZ("USER NAME",15)."</a> | <a href=\"$LINKbase&stage=ID\">"._QXZ("ID",8)."</a> | <a href=\"$LINKbase&stage=LEADS\">"._QXZ("CALLS",8)."</a> | <a href=\"$LINKbase&stage=TCLOCK\">"._QXZ("TIME CLOCK",10)."</a> | <a href=\"$LINKbase&stage=TIME\">"._QXZ("AGENT TIME",10)."</a> |$park_HEADER "._QXZ("WAIT",10)." | "._QXZ("WAIT",8)." % | "._QXZ("TALK",10)." | "._QXZ("TALK TIME",9)." %| "._QXZ("DISPO",10)." | "._QXZ("DISPOTIME",9)." %| "._QXZ("PAUSE",10)." | "._QXZ("PAUSETIME",9)." %| "._QXZ("DEAD",10)." | "._QXZ("DEAD TIME",9)." %| "._QXZ("CUSTOMER",10)." |   |$sub_statusesHTML\n";
 		$ASCII_text.="+-----------------+----------+----------+------------+------------$park_HEADER_DIV+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
 		}
 	else
 		{
-		$file_output .= "USER,ID,CALLS,TIME CLOCK,AGENT TIME$park_HEADER_CSV,WAIT,WAIT %,TALK,TALK TIME %,DISPO,DISPO TIME %,PAUSE,PAUSE TIME %,DEAD,DEAD TIME %,CUSTOMER$sub_statusesFILE\n";
+		$file_output .= _QXZ("USER").","._QXZ("ID").","._QXZ("CALLS").","._QXZ("TIME CLOCK").","._QXZ("AGENT TIME")."$park_HEADER_CSV,$sub_statusesFILE\n";
 		}
 	##### END print the output to screen or put into file output variable
 
@@ -1051,7 +1052,7 @@ else
 
 
 	$TOT_AGENTS = $m;
-	$hTOT_AGENTS = sprintf("%4s", $TOT_AGENTS);
+	$hTOT_AGENTS = sprintf("%5s", $TOT_AGENTS);
 	$k=$m;
 
 	if ($DB) {echo "Done analyzing...   $TOTwait|$TOTtalk|$TOTdispo|$TOTpause|$TOTdead|$TOTcustomer|$TOTALtime|$TOTcalls|$uc|<BR>\n";}
@@ -1186,12 +1187,12 @@ else
 	if ($file_download < 1)
 		{
 		$ASCII_text.="+-----------------+----------+----------+------------+------------$park_HEADER_DIV+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
-		$ASCII_text.="|  TOTALS        AGENTS:$hTOT_AGENTS | $hTOTcalls |$hTOTtimeTC |$hTOTALtime |$park_TOTALS$hTOTwait |$hTOTwaitpct |$hTOTtalk |$hTOTtalkpct |$hTOTdispo |$hTOTdispopct |$hTOTpause |$hTOTpausepct |$hTOTdead |$hTOTdeadpct |$hTOTcustomer |   |$SUMstatusesHTML\n";
-		$ASCII_text.="+-----------------+----------+----------+------------+------------$park_HEADER_DIV+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
+		$ASCII_text.="| "._QXZ("TOTALS",10)." "._QXZ("AGENTS",9,"r").":$hTOT_AGENTS | $hTOTcalls |$hTOTtimeTC |$hTOTALtime |$park_TOTALS$hTOTwait |$hTOTwaitpct |$hTOTtalk |$hTOTtalkpct |$hTOTdispo |$hTOTdispopct |$hTOTpause |$hTOTpausepct |$hTOTdead |$hTOTdeadpct |$hTOTcustomer |   |$SUMstatusesHTML\n";
+		$ASCII_text.="+----------------------------+----------+------------+------------$park_HEADER_DIV+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
 		if ($AUTOLOGOUTflag > 0)
 			{
-			$ASCII_text.= "     * denotes AUTOLOGOUT from timeclock\n";
-			$HTML_text.= "     * denotes AUTOLOGOUT from timeclock\n";
+			$ASCII_text.= "     * "._QXZ("denotes AUTOLOGOUT from timeclock")."\n";
+			$HTML_text.= "     * "._QXZ("denotes AUTOLOGOUT from timeclock")."\n";
 			}
 		$ASCII_text.="\n\n</PRE>";
 
@@ -1241,31 +1242,31 @@ else
 				$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats_sub[$d][$e], $$max_varname))."' height='16' />".sec_convert($graph_stats_sub[$d][$e], 'HF')."</td></tr>";
 				}
 			}
-		$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTcalls)."</th></tr></table>";
-		$TIMECLOCK_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTtimeTC)."</th></tr></table>";
-		$AGENTTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTALtime)."</th></tr></table>";
-		$WAIT_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTwait)."</th></tr></table>";
-		$TALK_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTtalk)."</th></tr></table>";
-		$DISPO_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTdispo)."</th></tr></table>";
-		$PAUSE_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTpause)."</th></tr></table>";
-		$DEAD_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTdead)."</th></tr></table>";
-		$CUSTOMER_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTcustomer)."</th></tr></table>";
-		$WAITPCT_graph.="<tr><th class='thgraph' scope='col'>AVERAGE:</th><th class='thgraph' scope='col'>".trim($hTOTwaitpct)."</th></tr></table>";
-		$TALKPCT_graph.="<tr><th class='thgraph' scope='col'>AVERAGE:</th><th class='thgraph' scope='col'>".trim($hTOTtalkpct)."</th></tr></table>";
-		$DISPOPCT_graph.="<tr><th class='thgraph' scope='col'>AVERAGE:</th><th class='thgraph' scope='col'>".trim($hTOTdispopct)."</th></tr></table>";
-		$PAUSEPCT_graph.="<tr><th class='thgraph' scope='col'>AVERAGE:</th><th class='thgraph' scope='col'>".trim($hTOTpausepct)."</th></tr></table>";
-		$DEADPCT_graph.="<tr><th class='thgraph' scope='col'>AVERAGE:</th><th class='thgraph' scope='col'>".trim($hTOTdeadpct)."</th></tr></table>";
-		$PARKS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTuser_holds)."</th></tr></table>";
-		$PARKTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTtotal_hold_time)."</th></tr></table>";
-		$AVGPARK_graph.="<tr><th class='thgraph' scope='col'>AVERAGE:</th><th class='thgraph' scope='col'>".trim($hTOTavg_hold_time)."</th></tr></table>";
-		$PARKSCALL_graph.="<tr><th class='thgraph' scope='col'>AVERAGE:</th><th class='thgraph' scope='col'>".trim($hTOTuser_hpc)."</th></tr></table>";
+		$CALLS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTcalls)."</th></tr></table>";
+		$TIMECLOCK_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTtimeTC)."</th></tr></table>";
+		$AGENTTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTALtime)."</th></tr></table>";
+		$WAIT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTwait)."</th></tr></table>";
+		$TALK_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTtalk)."</th></tr></table>";
+		$DISPO_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTdispo)."</th></tr></table>";
+		$PAUSE_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTpause)."</th></tr></table>";
+		$DEAD_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTdead)."</th></tr></table>";
+		$CUSTOMER_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTcustomer)."</th></tr></table>";
+		$WAITPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("AVERAGE").":</th><th class='thgraph' scope='col'>".trim($hTOTwaitpct)."</th></tr></table>";
+		$TALKPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("AVERAGE").":</th><th class='thgraph' scope='col'>".trim($hTOTtalkpct)."</th></tr></table>";
+		$DISPOPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("AVERAGE").":</th><th class='thgraph' scope='col'>".trim($hTOTdispopct)."</th></tr></table>";
+		$PAUSEPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("AVERAGE").":</th><th class='thgraph' scope='col'>".trim($hTOTpausepct)."</th></tr></table>";
+		$DEADPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("AVERAGE").":</th><th class='thgraph' scope='col'>".trim($hTOTdeadpct)."</th></tr></table>";
+		$PARKS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTuser_holds)."</th></tr></table>";
+		$PARKTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTtotal_hold_time)."</th></tr></table>";
+		$AVGPARK_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("AVERAGE").":</th><th class='thgraph' scope='col'>".trim($hTOTavg_hold_time)."</th></tr></table>";
+		$PARKSCALL_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("AVERAGE").":</th><th class='thgraph' scope='col'>".trim($hTOTuser_hpc)."</th></tr></table>";
 
 		for ($e=0; $e<count($sub_statusesARY); $e++) 
 			{
 			$Sstatus=$sub_statusesARY[$e];
 			$total_var=$Sstatus."_total";
 			$graph_var=$Sstatus."_graph";
-			$$graph_var.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($$total_var)."</th></tr></table>";
+			$$graph_var.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($$total_var)."</th></tr></table>";
 #			$JS_text.="var ".$Sstatus."_graph=\"".$$graph_var."\";\n";
 			}
 		$JS_onload.="\tDrawGraph('CALLS', '1');\n"; 
@@ -1313,7 +1314,7 @@ else
 		}
 	else
 		{
-		$file_output .= "TOTALS,$TOT_AGENTS,$TOTcalls,$TOTtimeTC,$TOTALtime,$park_TOTALS_CSV$TOTwait,$TOTwaitpct %,$TOTtalk,$TOTtalkpct %,$TOTdispo,$TOTpause,$TOTdead,$TOTcustomer$SUMstatusesFILE\n";
+		$file_output .= _QXZ("TOTALS").",$TOT_AGENTS,$TOTcalls,$TOTtimeTC,$TOTALtime,$park_TOTALS_CSV$TOTwait,$TOTwaitpct %,$TOTtalk,$TOTtalkpct %,$TOTdispo,$TOTpause,$TOTdead,$TOTcustomer$SUMstatusesFILE\n";
 		}
 	}
 
@@ -1376,7 +1377,7 @@ $JS_text.=$JS_onload;
 $JS_text.="</script>\n";
 
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> Dates:<BR>";
+echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> "._QXZ("Dates").":<BR>";
 echo "<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
 echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
@@ -1398,7 +1399,7 @@ o_cal.a_tpl.yearscroll = false;
 </script>
 <?php
 
-echo "<BR> to <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+echo "<BR> "._QXZ("to")." <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
 
 ?>
 <script language="JavaScript">
@@ -1414,12 +1415,12 @@ o_cal.a_tpl.yearscroll = false;
 <?php
 
 
-echo "</TD><TD VALIGN=TOP> Campaigns:<BR>";
+echo "</TD><TD VALIGN=TOP> "._QXZ("Campaigns").":<BR>";
 echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
 if  (preg_match('/--ALL--/',$group_string))
-	{echo "<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
+	{echo "<option value=\"--ALL--\" selected>-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 else
-	{echo "<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
+	{echo "<option value=\"--ALL--\">-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 $o=0;
 while ($campaigns_to_print > $o)
 	{
@@ -1428,13 +1429,13 @@ while ($campaigns_to_print > $o)
 	$o++;
 	}
 echo "</SELECT>\n";
-echo "</TD><TD VALIGN=TOP>User Groups:<BR>";
+echo "</TD><TD VALIGN=TOP>"._QXZ("User Groups").":<BR>";
 echo "<SELECT SIZE=5 NAME=user_group[] multiple>\n";
 
 if  (preg_match('/\-\-ALL\-\-/',$user_group_string))
-	{echo "<option value=\"--ALL--\" selected>-- ALL USER GROUPS --</option>\n";}
+	{echo "<option value=\"--ALL--\" selected>-- "._QXZ("ALL USER GROUPS")." --</option>\n";}
 else
-	{echo "<option value=\"--ALL--\">-- ALL USER GROUPS --</option>\n";}
+	{echo "<option value=\"--ALL--\">-- "._QXZ("ALL USER GROUPS")." --</option>\n";}
 $o=0;
 while ($user_groups_to_print > $o)
 	{
@@ -1443,25 +1444,25 @@ while ($user_groups_to_print > $o)
 	$o++;
 	}
 echo "</SELECT>\n";
-echo "</TD><TD VALIGN=TOP>Shift:<BR>";
+echo "</TD><TD VALIGN=TOP>"._QXZ("Shift").":<BR>";
 echo "<SELECT SIZE=1 NAME=shift>\n";
 echo "<option selected value=\"$shift\">$shift</option>\n";
 echo "<option value=\"\">--</option>\n";
-echo "<option value=\"AM\">AM</option>\n";
-echo "<option value=\"PM\">PM</option>\n";
-echo "<option value=\"ALL\">ALL</option>\n";
+echo "<option value=\"AM\">"._QXZ("AM")."</option>\n";
+echo "<option value=\"PM\">"._QXZ("PM")."</option>\n";
+echo "<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
 echo "</SELECT><BR>\n";
-echo "<input type='checkbox' name='show_parks' value='checked' $show_parks>Show parks-holds<BR>";
-echo "Display as:<BR>";
+echo "<input type='checkbox' name='show_parks' value='checked' $show_parks>"._QXZ("Show parks-holds")."<BR>";
+echo _QXZ("Display as").":<BR>";
 echo "<select name='report_display_type'>";
 if ($report_display_type) {echo "<option value='$report_display_type' selected>$report_display_type</option>";}
-echo "<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR><BR>";
-echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>$NWB#agent_time_detail$NWE\n";
+echo "<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n<BR><BR>";
+echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>$NWB#agent_time_detail$NWE\n";
 echo "</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
 echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
-echo " <a href=\"$LINKbase&stage=$stage&file_download=1\">DOWNLOAD</a> | \n";
-echo " <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+echo " <a href=\"$LINKbase&stage=$stage&file_download=1\">"._QXZ("DOWNLOAD")."</a> | \n";
+echo " <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 echo "</FONT>\n";
 echo "</TD></TR></TABLE>";
 

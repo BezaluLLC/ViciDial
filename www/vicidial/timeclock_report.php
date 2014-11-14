@@ -24,6 +24,7 @@
 # 130901-0839 - Changed to mysqli PHP functions
 # 140108-0720 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141114-0028 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -130,7 +131,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -143,10 +144,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -227,7 +228,7 @@ $LOGadmin_viewable_call_times =	$row[3];
 if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 	{
 	Header ("Content-type: text/html; charset=utf-8");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -313,7 +314,7 @@ $HEADER.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 $HEADER.="<TITLE>\n";
 
-$HEADER.="$report_name";
+$HEADER.= _QXZ("$report_name");
 
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'311111';
@@ -370,7 +371,7 @@ $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_r
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">";
 $MAIN.="<TABLE BORDER=0 CELLSPACING=6><TR><TD ALIGN=LEFT VALIGN=TOP>\n";
 
-$MAIN.="<font class=\"select_bold\"><B>Date Range:</B></font><BR><CENTER>\n";
+$MAIN.="<font class=\"select_bold\"><B>"._QXZ("Date Range").":</B></font><BR><CENTER>\n";
 $MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
 $MAIN.="<script language=\"JavaScript\">\n";
@@ -384,7 +385,7 @@ $MAIN.="o_cal.a_tpl.yearscroll = false;\n";
 $MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 $MAIN.="</script>\n";
 
-$MAIN.="<BR>to<BR>\n";
+$MAIN.="<BR>"._QXZ("to")."<BR>\n";
 $MAIN.="<INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
 
 $MAIN.="<script language=\"JavaScript\">\n";
@@ -399,7 +400,7 @@ $MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 $MAIN.="</script>\n";
 
 $MAIN.="</TD><TD ALIGN=LEFT VALIGN=TOP>\n";
-$MAIN.="<font class=\"select_bold\"><B>User Groups:</B></font><BR><CENTER>\n";
+$MAIN.="<font class=\"select_bold\"><B>"._QXZ("User Groups").":</B></font><BR><CENTER>\n";
 $MAIN.="<SELECT SIZE=5 NAME=user_group[] multiple>\n";
 	$o=0;
 	while ($user_groups_to_print > $o)
@@ -413,35 +414,35 @@ $MAIN.="<SELECT SIZE=5 NAME=user_group[] multiple>\n";
 $MAIN.="</SELECT>\n";
 
 $MAIN.="</TD></TD><TD ALIGN=LEFT VALIGN=TOP><font class=\"select_bold\">";
-$MAIN.="Display as:<BR>";
+$MAIN.=_QXZ("Display as").":<BR>";
 $MAIN.="<select name='report_display_type'>";
 if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
-$MAIN.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR>\n";
+$MAIN.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n<BR>\n";
 $MAIN.="</font></TD><TD ALIGN=LEFT VALIGN=TOP>\n";
-$MAIN.="<font class=\"select_bold\"><B>Order:</B><BR>\n";
+$MAIN.="<font class=\"select_bold\"><B>"._QXZ("Order").":</B><BR>\n";
 $MAIN.="<SELECT SIZE=1 NAME=order>\n";
 $MAIN.="<option selected value=\"$order\">$order</option>\n";
 $MAIN.="<option value=\"\">--</option>\n";
-$MAIN.="<option>hours_up</option>\n";
-$MAIN.="<option>hours_down</option>\n";
-$MAIN.="<option>user_up</option>\n";
-$MAIN.="<option>user_down</option>\n";
-$MAIN.="<option>name_up</option>\n";
-$MAIN.="<option>name_down</option>\n";
-$MAIN.="<option>group_up</option>\n";
-$MAIN.="<option>group_down</option>\n";
+$MAIN.="<option value='hours_up'>"._QXZ("hours_up")."</option value=''>\n";
+$MAIN.="<option value='hours_down'>"._QXZ("hours_down")."</option value=''>\n";
+$MAIN.="<option value='user_up'>"._QXZ("user_up")."</option value=''>\n";
+$MAIN.="<option value='user_down'>"._QXZ("user_down")."</option value=''>\n";
+$MAIN.="<option value='name_up'>"._QXZ("name_up")."</option value=''>\n";
+$MAIN.="<option value='name_down'>"._QXZ("name_down")."</option value=''>\n";
+$MAIN.="<option value='group_up'>"._QXZ("group_up")."</option value=''>\n";
+$MAIN.="<option value='group_down'>"._QXZ("group_down")."</option value=''>\n";
 $MAIN.="</SELECT>\n";
 $MAIN.="</font><CENTER>\n";
 
 
 $MAIN.="</TD><TD ALIGN=LEFT VALIGN=TOP>\n";
-$MAIN.="<font class=\"select_bold\"><B>User:</B></font><BR>\n";
+$MAIN.="<font class=\"select_bold\"><B>"._QXZ("User").":</B></font><BR>\n";
 $MAIN.="<INPUT TYPE=text NAME=user SIZE=7 MAXLENGTH=20 VALUE=\"$user\">\n";
 
-$MAIN.="<BR><BR><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
+$MAIN.="<BR><BR><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'\n";
 $MAIN.="</TD></TD><TD ALIGN=LEFT VALIGN=TOP>\n";
 $MAIN.="</TD><TD ALIGN=CENTER VALIGN=TOP ROWSPAN=3>\n";	
-$MAIN.="<FONT class=\"select_bold\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; <a href=\"$PHP_SELF?DB=$DB$user_groupQS&query_date=$query_date&end_date=$end_date&order=$order&user=$user&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a><FONT class=\"select_bold\" COLOR=BLACK SIZE=2> &nbsp; | &nbsp; <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+$MAIN.="<FONT class=\"select_bold\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; <a href=\"$PHP_SELF?DB=$DB$user_groupQS&query_date=$query_date&end_date=$end_date&order=$order&user=$user&SUBMIT=$SUBMIT&file_download=1\">"._QXZ("DOWNLOAD")."</a><FONT class=\"select_bold\" COLOR=BLACK SIZE=2> &nbsp; | &nbsp; <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 
 $MAIN.="</TD></TR></TABLE>\n";
 $MAIN.="</FORM>\n\n";
@@ -449,12 +450,12 @@ $MAIN.="</FORM>\n\n";
 $MAIN.="<PRE><FONT SIZE=3>\n";
 
 
-$MAIN.="User Timeclock Report                        $NOW_TIME\n";
+$MAIN.=_QXZ("User Timeclock Report",44)." $NOW_TIME\n";
 
-$CSV_text.="\"User Timeclock Report - $NOW_TIME\"\n";
-$CSV_text.="\"Time range: $query_date to $end_date\"\n";
-$CSV_text.="\"---------- USER TIMECLOCK DETAILS -------------\"\n";
-$CSV_text.="\"These totals do NOT include any active sessions\"\n\n";
+$CSV_text.="\""._QXZ("User Timeclock Report")." - $NOW_TIME\"\n";
+$CSV_text.="\""._QXZ("Time range").": $query_date to $end_date\"\n";
+$CSV_text.="\"---------- "._QXZ("USER TIMECLOCK DETAILS")." -------------\"\n";
+$CSV_text.="\""._QXZ("These totals do NOT include any active sessions")."\"\n\n";
 
 
 $order_SQL='';
@@ -475,18 +476,18 @@ $stmt="select vicidial_users.user,full_name,sum(login_sec) as login,vicidial_tim
 
 if (!$report_display_type || $report_display_type=="TEXT") 
 	{
-	$MAIN.="Time range: $query_date to $end_date\n\n";
-	$MAIN.="---------- USER TIMECLOCK DETAILS -------------\n";
-	$MAIN.="These totals do NOT include any active sessions\n</PRE>\n";
+	$MAIN.=_QXZ("Time range").": $query_date "._QXZ("to")." $end_date\n\n";
+	$MAIN.="---------- "._QXZ("USER TIMECLOCK DETAILS")." -------------\n";
+	$MAIN.=_QXZ("These totals do NOT include any active sessions")."\n</PRE>\n";
 	$MAIN.="<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=3><TR BGCOLOR=BLACK>\n";
 	$MAIN.="<TD ALIGN=CENTER><FONT class=\"header_white\">#</TD>\n";
-	$MAIN.="<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; USER &nbsp;</TD>\n";
-	$MAIN.="<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; NAME &nbsp;</TD>\n";
-	$MAIN.="<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; GROUP &nbsp;</TD>\n";
-	$MAIN.="<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; HOURS &nbsp;</TD>\n";
+	$MAIN.="<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; "._QXZ("USER")." &nbsp;</TD>\n";
+	$MAIN.="<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; "._QXZ("NAME")." &nbsp;</TD>\n";
+	$MAIN.="<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; "._QXZ("GROUP")." &nbsp;</TD>\n";
+	$MAIN.="<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; "._QXZ("HOURS")." &nbsp;</TD>\n";
 	$MAIN.="</TR>\n";
 
-	$CSV_text.="\"\",\"#\",\"USER\",\"NAME\",\"GROUP\",\"HOURS\"\n";
+	$CSV_text.="\"\",\"#\",\""._QXZ("USER")."\",\""._QXZ("NAME")."\",\""._QXZ("GROUP")."\",\""._QXZ("HOURS")."\"\n";
 
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
@@ -557,10 +558,10 @@ if (!$report_display_type || $report_display_type=="TEXT")
 
 
 	$MAIN.="<TR BGCOLOR=#E6E6E6>\n";
-	$MAIN.="<TD ALIGN=LEFT COLSPAN=4><FONT class=\"data_records\">TOTALS</TD>\n";
+	$MAIN.="<TD ALIGN=LEFT COLSPAN=4><FONT class=\"data_records\">"._QXZ("TOTALS")."</TD>\n";
 	$MAIN.="<TD ALIGN=RIGHT><FONT class=\"data_records_fix\"> $TOThours</TD>\n";
 	$MAIN.="</TR>\n";
-	$CSV_text.="\"\",\"TOTALS\",\"\",\"\",\"\",\"$TOThours\"\n";
+	$CSV_text.="\"\",\""._QXZ("TOTALS")."\",\"\",\"\",\"\",\"$TOThours\"\n";
 
 	$MAIN.="</TABLE>\n";
 	}
@@ -588,10 +589,10 @@ else
 	if ($high_ct<1) {$high_ct*=10;}
 	$MAIN.="</PRE>\n";
 	$MAIN.="<table cellspacing=\"0\" cellpadding=\"0\" summary=\"CALL HANGUP REASON STATS\" class=\"horizontalgraph\">\n";
-	$MAIN.="  <caption align=\"top\">USER TIMECLOCK DETAILS<br /><font size='-1'>Time range: $query_date to $end_date<br/>These totals do NOT include any active sessions</font><br /></caption>\n";
+	$MAIN.="  <caption align=\"top\">"._QXZ("USER TIMECLOCK DETAILS")."<br /><font size='-1'>"._QXZ("Time range").": $query_date to $end_date<br/>"._QXZ("These totals do NOT include any active sessions")."</font><br /></caption>\n";
 	$MAIN.="  <tr>\n";
-	$MAIN.="	<th class=\"thgraph\" scope=\"col\">USER  </th>\n";
-	$MAIN.="	<th class=\"thgraph\" scope=\"col\">HOURS </th>\n";
+	$MAIN.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("USER")."  </th>\n";
+	$MAIN.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("HOURS")." </th>\n";
 	$MAIN.="  </tr>\n";
 	for ($i=0; $i<count($ct_ary); $i++) {
 		if ($i==0) {$class=" first";} else if (($i+1)==count($ct_ary)) {$class=" last";} else {$class="";}
@@ -601,7 +602,7 @@ else
 		$MAIN.="  </tr>\n";
 	}
 	$MAIN.="  <tr>\n";
-	$MAIN.="	<th class=\"thgraph\" scope=\"col\">TOTAL HOURS:</th>\n";
+	$MAIN.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("TOTAL HOURS").":</th>\n";
 	$MAIN.="	<th class=\"thgraph\" scope=\"col\">".trim($TOThours)."</th>\n";
 	$MAIN.="  </tr>\n";
 	$MAIN.="</table>\n";

@@ -14,6 +14,7 @@
 # 130902-0744 - Changed to mysqli PHP functions
 # 140108-0717 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141114-0906 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -86,7 +87,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -99,10 +100,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -180,16 +181,16 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>ADMIN: Agent Time Sheet</TITLE></HEAD><BODY BGCOLOR=WHITE>\n";
-echo "<a href=\"./admin.php\">ADMIN</a>: Agent Time Sheet\n";
-echo " - <a href=\"./user_stats.php?user=$agent\">User Stats</a>\n";
-echo " - <a href=\"./user_status.php?user=$agent\">User Status</a>\n";
-echo " - <a href=\"./admin.php?ADD=3&user=$agent\">Modify User</a>\n";
+echo "<TITLE>"._QXZ("ADMIN: Agent Time Sheet")."</TITLE></HEAD><BODY BGCOLOR=WHITE>\n";
+echo "<a href=\"./admin.php\">"._QXZ("ADMIN")."</a>: "._QXZ("Agent Time Sheet")."\n";
+echo " - <a href=\"./user_stats.php?user=$agent\">"._QXZ("User Stats")."</a>\n";
+echo " - <a href=\"./user_status.php?user=$agent\">"._QXZ("User Status")."</a>\n";
+echo " - <a href=\"./admin.php?ADD=3&user=$agent\">"._QXZ("Modify User")."</a>\n";
 echo "<BR>\n";
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET> &nbsp; \n";
-echo "Date: <INPUT TYPE=TEXT NAME=query_date SIZE=19 MAXLENGTH=19 VALUE=\"$query_date\">\n";
-echo "User ID: <INPUT TYPE=TEXT NAME=agent SIZE=10 MAXLENGTH=20 VALUE=\"$agent\">\n";
-echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
+echo _QXZ("Date").": <INPUT TYPE=TEXT NAME=query_date SIZE=19 MAXLENGTH=19 VALUE=\"$query_date\">\n";
+echo _QXZ("User ID").": <INPUT TYPE=TEXT NAME=agent SIZE=10 MAXLENGTH=20 VALUE=\"$agent\">\n";
+echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 echo "</FORM>\n\n";
 
 echo "<PRE><FONT SIZE=3>\n";
@@ -198,8 +199,8 @@ echo "<PRE><FONT SIZE=3>\n";
 if (!$agent)
 {
 echo "\n";
-echo "PLEASE SELECT AN AGENT ID AND DATE-TIME ABOVE AND CLICK SUBMIT\n";
-echo " NOTE: stats taken from available agent log data\n";
+echo _QXZ("PLEASE SELECT AN AGENT ID AND DATE-TIME ABOVE AND CLICK SUBMIT")."\n";
+echo " "._QXZ("NOTE: stats taken from available agent log data")."\n";
 }
 
 else
@@ -215,10 +216,10 @@ if ($DB) {echo "$stmt\n";}
 $row=mysqli_fetch_row($rslt);
 $full_name = $row[0];
 
-echo "ADMIN: Agent Time Sheet                             $NOW_TIME\n";
+echo _QXZ("ADMIN: Agent Time Sheet",51)." $NOW_TIME\n";
 
-echo "Time range: $query_date_BEGIN to $query_date_END\n\n";
-echo "---------- AGENT TIME SHEET: $agent - $full_name -------------\n\n";
+echo _QXZ("Time range").": $query_date_BEGIN "._QXZ("to")." $query_date_END\n\n";
+echo "---------- "._QXZ("AGENT TIME SHEET").": $agent - $full_name -------------\n\n";
 
 if ($calls_summary)
 	{
@@ -344,19 +345,19 @@ if ($calls_summary)
 		$WRAPUP_AVG_MS = "$WRAPUP_AVG_M_int:$WRAPUP_AVG_S";
 		$pfWRAPUP_AVG_MS =		sprintf("%6s", $WRAPUP_AVG_MS);
 
-	echo "TOTAL CALLS TAKEN: $row[0]\n";
-	echo "TALK TIME:               $pfTALK_TIME_HMS     AVERAGE: $pfTALK_AVG_MS\n";
-	echo "PAUSE TIME:              $pfPAUSE_TIME_HMS     AVERAGE: $pfPAUSE_AVG_MS\n";
-	echo "WAIT TIME:               $pfWAIT_TIME_HMS     AVERAGE: $pfWAIT_AVG_MS\n";
-	echo "WRAPUP TIME:             $pfWRAPUP_TIME_HMS     AVERAGE: $pfWRAPUP_AVG_MS\n";
+	echo _QXZ("TOTAL CALLS TAKEN").": $row[0]\n";
+	echo _QXZ("TALK TIME:",24)." $pfTALK_TIME_HMS "._QXZ("AVERAGE",11,"r").": $pfTALK_AVG_MS\n";
+	echo _QXZ("PAUSE TIME:",24)." $pfPAUSE_TIME_HMS "._QXZ("AVERAGE",11,"r").": $pfPAUSE_AVG_MS\n";
+	echo _QXZ("WAIT TIME:",24)." $pfWAIT_TIME_HMS "._QXZ("AVERAGE",11,"r").": $pfWAIT_AVG_MS\n";
+	echo _QXZ("WRAPUP TIME:",24)." $pfWRAPUP_TIME_HMS "._QXZ("AVERAGE",11,"r").": $pfWRAPUP_AVG_MS\n";
 	echo "----------------------------------------------------------------\n";
-	echo "TOTAL ACTIVE AGENT TIME: $pfTOTAL_TIME_HMS\n";
+	echo _QXZ("TOTAL ACTIVE AGENT TIME:",24)." $pfTOTAL_TIME_HMS\n";
 
 	echo "\n";
 	}
 else
 	{
-	echo "<a href=\"$PHP_SELF?calls_summary=1&agent=$agent&query_date=$query_date\">Call Activity Summary</a>\n\n";
+	echo "<a href=\"$PHP_SELF?calls_summary=1&agent=$agent&query_date=$query_date\">"._QXZ("Call Activity Summary")."</a>\n\n";
 
 	}
 
@@ -365,7 +366,7 @@ $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $row=mysqli_fetch_row($rslt);
 
-echo "FIRST LOGIN:          $row[0]\n";
+echo _QXZ("FIRST LOGIN:",21)." $row[0]\n";
 $start = $row[1];
 
 $stmt="select event_time,UNIX_TIMESTAMP(event_time) from vicidial_agent_log_archive where event_time <= '" . mysqli_real_escape_string($link, $query_date_END) . "' and event_time >= '" . mysqli_real_escape_string($link, $query_date_BEGIN) . "' and user='" . mysqli_real_escape_string($link, $agent) . "' order by event_time desc limit 1;";
@@ -373,7 +374,7 @@ $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $row=mysqli_fetch_row($rslt);
 
-echo "LAST LOG ACTIVITY:    $row[0]\n";
+echo _QXZ("LAST LOG ACTIVITY:",21)." $row[0]\n";
 $end = $row[1];
 
 $login_time = ($end - $start);
@@ -393,7 +394,7 @@ $login_time = ($end - $start);
 	$pfLOGIN_TIME_HMS =		sprintf("%8s", $LOGIN_TIME_HMS);
 
 echo "-----------------------------------------\n";
-echo "TOTAL LOGGED-IN TIME:    $pfLOGIN_TIME_HMS\n";
+echo _QXZ("TOTAL LOGGED-IN TIME:",24)." $pfLOGIN_TIME_HMS\n";
 
 
 if ($db_source == 'S')

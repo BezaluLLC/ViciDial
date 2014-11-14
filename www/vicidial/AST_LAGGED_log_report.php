@@ -7,6 +7,7 @@
 # 130622-1026 - First build
 # 130901-2027 - Changed to mysqli PHP functions
 # 140108-0736 - Added webserver and hostname to report logging
+# 141114-0832 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -101,7 +102,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -114,10 +115,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -201,7 +202,7 @@ $HEADER.="<link rel=\"stylesheet\" href=\"verticalbargraph.css\">\n";
 $HEADER.="<script language=\"JavaScript\" src=\"wz_jsgraphics.js\"></script>\n";
 $HEADER.="<script language=\"JavaScript\" src=\"line.js\"></script>\n";
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 
@@ -209,7 +210,7 @@ $MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 $MAIN.="<TABLE BORDER=0 cellspacing=5 cellpadding=5><TR><TD VALIGN=TOP align=center>\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
-$MAIN.="Date:\n";
+$MAIN.=_QXZ("Date").":\n";
 $MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 $MAIN.="<script language=\"JavaScript\">\n";
 $MAIN.="var o_cal = new tcal ({\n";
@@ -224,14 +225,14 @@ $MAIN.="</script></tD>\n";
 
 $MAIN.="<TD VALIGN=TOP align=center><INPUT TYPE=TEXT NAME=query_date_D SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_D\">";
 
-$MAIN.=" to <INPUT TYPE=TEXT NAME=query_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_T\">";
+$MAIN.=" "._QXZ("to")." <INPUT TYPE=TEXT NAME=query_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_T\">";
 
 $MAIN.="</TD><TD VALIGN=middle align=center>\n";
-$MAIN.="Display as:";
+$MAIN.=_QXZ("Display as").":";
 $MAIN.="<select name='report_display_type'>";
 if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
-$MAIN.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select></TD>";
-$MAIN.="<TD VALIGN=TOP align=center><INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
+$MAIN.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select></TD>";
+$MAIN.="<TD VALIGN=TOP align=center><INPUT TYPE=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 $MAIN.="</TD></TR></TABLE>\n";
 if ($SUBMIT && $query_date) {
 	$stmt="select server_ip, count(*) as ct From vicidial_agent_log where event_time>='$query_date $query_date_D' and event_time<='$query_date $query_date_T' and sub_status='LAGGED' group by server_ip order by server_ip";
@@ -240,13 +241,13 @@ if ($SUBMIT && $query_date) {
 	$HTML_text="";
 	if ($DB) {$ASCII_text.=$stmt."\n";}
 	if (mysqli_num_rows($rslt)>0) {
-		$ASCII_text.="--- SERVER IP BREAKDOWN FOR LAGGED RECORDS $query_date, $query_date_D TO $query_date_T \n";
+		$ASCII_text.="--- "._QXZ("SERVER IP BREAKDOWN FOR LAGGED RECORDS")." $query_date, $query_date_D "._QXZ("TO")." $query_date_T \n";
 		$ASCII_text.="+-----------------+---------+\n";
-		$ASCII_text.="| SERVER IP       |  COUNT  |\n";
+		$ASCII_text.="| "._QXZ("SERVER IP",15)." | "._QXZ("COUNT",7)." |\n";
 		$ASCII_text.="+-----------------+---------+\n";
 		$HTML_text.="<table border='0' cellpadding='0' cellspacing='2' width='350'>";
-		$HTML_text.="<TR><TH colspan='2' class='small_standard_bold grey_graph_cell'>SERVER IP BREAKDOWN FOR LAGGED RECORDS $query_date, $query_date_D TO $query_date_T</TH></TR>";
-		$HTML_text.="<TR><TH class='small_standard_bold grey_graph_cell'>SERVER IP</th><TH class='small_standard_bold grey_graph_cell'>COUNT</th></tr>";
+		$HTML_text.="<TR><TH colspan='2' class='small_standard_bold grey_graph_cell'>"._QXZ("SERVER IP BREAKDOWN FOR LAGGED RECORDS")." $query_date, $query_date_D "._QXZ("TO")." $query_date_T</TH></TR>";
+		$HTML_text.="<TR><TH class='small_standard_bold grey_graph_cell'>"._QXZ("SERVER IP")."</th><TH class='small_standard_bold grey_graph_cell'>"._QXZ("COUNT")."</th></tr>";
 
 		$total_count=0;
 		while ($row=mysqli_fetch_array($rslt)) {
@@ -257,9 +258,9 @@ if ($SUBMIT && $query_date) {
 			$total_count+=$row["ct"];
 		}
 		$ASCII_text.="+-----------------+---------+\n";
-		$ASCII_text.="|           TOTAL | ".sprintf("%-8s", $total_count)."|\n";
+		$ASCII_text.="| "._QXZ("TOTAL",15,"r")." | ".sprintf("%-8s", $total_count)."|\n";
 		$ASCII_text.="+-----------------+---------+\n\n\n";
-		$HTML_text.="<TR><TH class='small_standard_bold grey_graph_cell'>TOTAL</th><TH class='small_standard_bold grey_graph_cell'>$total_count</th></tr></table>";
+		$HTML_text.="<TR><TH class='small_standard_bold grey_graph_cell'>"._QXZ("TOTAL")."</th><TH class='small_standard_bold grey_graph_cell'>$total_count</th></tr></table>";
 
 
 		$rpt_stmt="select * from vicidial_agent_log where sub_status='LAGGED' and event_time>='$query_date $query_date_D' and event_time<='$query_date $query_date_T' $url_type_SQL order by user, event_time asc";
@@ -269,16 +270,16 @@ if ($SUBMIT && $query_date) {
 		if (!$lower_limit) {$lower_limit=1;}
 		if ($lower_limit+999>=mysqli_num_rows($rpt_rslt)) {$upper_limit=($lower_limit+mysqli_num_rows($rpt_rslt)%1000)-1;} else {$upper_limit=$lower_limit+999;}
 
-		$ASCII_text.="--- LAGGED LOG RECORDS FOR $query_date, $query_date_D TO $query_date_T $server_rpt_string, RECORDS #$lower_limit-$upper_limit               <a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">[DOWNLOAD]</a>\n";
+		$ASCII_text.="--- "._QXZ("LAGGED LOG RECORDS FOR")." $query_date, $query_date_D "._QXZ("TO")." $query_date_T $server_rpt_string, "._QXZ("RECORDS")." #$lower_limit-$upper_limit               <a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">["._QXZ("DOWNLOAD")."]</a>\n";
 		$lagged_rpt.="+--------------+------------+-----------------+---------------------+-----------+----------+--------+----------------------+----------------------+----------------------+\n";
-		$lagged_rpt.="| AGENT LOG ID | USER       | SERVER IP       | EVENT TIME          | LEAD ID   | CAMPAIGN | STATUS | USER GROUP           | COMMENTS             | UNIQUE ID            |\n";
+		$lagged_rpt.="| "._QXZ("AGENT LOG ID",12)." | "._QXZ("USER",10)." | "._QXZ("SERVER IP",15)." | "._QXZ("EVENT TIME",19)." | "._QXZ("LEAD ID",9)." | "._QXZ("CAMPAIGN",8)." | "._QXZ("STATUS",6)." | "._QXZ("USER GROUP",20)." | "._QXZ("COMMENTS",20)." | "._QXZ("UNIQUE ID",20)." |\n";
 		$lagged_rpt.="+--------------+------------+-----------------+---------------------+-----------+----------+--------+----------------------+----------------------+----------------------+\n";
 
 		$HTML_text.="<BR><BR><table border='0' cellpadding='0' cellspacing='2' width='1000'>";
-		$HTML_rpt.="<TR><TH colspan='9' class='small_standard_bold grey_graph_cell'>LAGGED LOG RECORDS FOR $query_date, $query_date_D TO $query_date_T $server_rpt_string, RECORDS #$lower_limit-$upper_limit</TH><TD align='right' class='small_standard_bold grey_graph_cell'><a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">[DOWNLOAD]</a></td></TR>";
-		$HTML_rpt.="<TR><TH class='small_standard_bold grey_graph_cell' width='90'>AGENT LOG ID</TH><TH class='small_standard_bold grey_graph_cell' width='80'>USER</TH><TH class='small_standard_bold grey_graph_cell' width='120'>SERVER IP</TH><TH class='small_standard_bold grey_graph_cell' width='100'>EVENT TIME</TH><TH class='small_standard_bold grey_graph_cell' width='80'>LEAD ID</TH><TH class='small_standard_bold grey_graph_cell' width='80'>CAMPAIGN</TH><TH class='small_standard_bold grey_graph_cell' width='60'>STATUS</TH><TH class='small_standard_bold grey_graph_cell' width='80'>USER GROUP</TH><TH class='small_standard_bold grey_graph_cell' width='160'>COMMENTS</TH><TH class='small_standard_bold grey_graph_cell' width='120'>UNIQUE ID</TH></TR>";
+		$HTML_rpt.="<TR><TH colspan='9' class='small_standard_bold grey_graph_cell'>"._QXZ("LAGGED LOG RECORDS FOR")." $query_date, $query_date_D "._QXZ("TO")." $query_date_T $server_rpt_string, "._QXZ("RECORDS")." #$lower_limit-$upper_limit</TH><TD align='right' class='small_standard_bold grey_graph_cell'><a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">["._QXZ("DOWNLOAD")."]</a></td></TR>";
+		$HTML_rpt.="<TR><TH class='small_standard_bold grey_graph_cell' width='90'>"._QXZ("AGENT LOG ID")."</TH><TH class='small_standard_bold grey_graph_cell' width='80'>"._QXZ("USER")."</TH><TH class='small_standard_bold grey_graph_cell' width='120'>"._QXZ("SERVER IP")."</TH><TH class='small_standard_bold grey_graph_cell' width='100'>"._QXZ("EVENT TIME")."</TH><TH class='small_standard_bold grey_graph_cell' width='80'>"._QXZ("LEAD ID")."</TH><TH class='small_standard_bold grey_graph_cell' width='80'>"._QXZ("CAMPAIGN")."</TH><TH class='small_standard_bold grey_graph_cell' width='60'>"._QXZ("STATUS")."</TH><TH class='small_standard_bold grey_graph_cell' width='80'>"._QXZ("USER GROUP")."</TH><TH class='small_standard_bold grey_graph_cell' width='160'>"._QXZ("COMMENTS")."</TH><TH class='small_standard_bold grey_graph_cell' width='120'>"._QXZ("UNIQUE ID")."</TH></TR>";
 
-		$CSV_text="\"AGENT LOG ID\",\"USER\",\"SERVER IP\",\"EVENT TIME\",\"LEAD ID\",\"CAMPAIGN\",\"STATUS\",\"USER GROUP\",\"COMMENTS\",\"UNIQUE ID\"\n";
+		$CSV_text="\""._QXZ("AGENT LOG ID")."\",\""._QXZ("USER")."\",\""._QXZ("SERVER IP")."\",\""._QXZ("EVENT TIME")."\",\""._QXZ("LEAD ID")."\",\""._QXZ("CAMPAIGN")."\",\""._QXZ("STATUS")."\",\""._QXZ("USER GROUP")."\",\""._QXZ("COMMENTS")."\",\""._QXZ("UNIQUE ID")."\"\n";
 
 		for ($i=1; $i<=mysqli_num_rows($rpt_rslt); $i++) {
 			$row=mysqli_fetch_array($rpt_rslt);
@@ -310,8 +311,8 @@ if ($SUBMIT && $query_date) {
 		if ($ll<1 || ($lower_limit+1000)>=mysqli_num_rows($rpt_rslt)) {$HTML_colspan=6;} else {$HTML_colspan=3;}
 
 		if ($ll>=1) {
-			$lagged_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&report_display_type=$report_display_type&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=$ll\">[<<< PREV 1000 records]</a>";
-			$HTML_rpt_hf.="<Td colspan='$HTML_colspan' class='small_standard_bold grey_graph_cell' align='left'><a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&report_display_type=$report_display_type&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=$ll\">[<<< PREV 1000 records]</a></TH>";
+			$lagged_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&report_display_type=$report_display_type&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=$ll\">[<<< "._QXZ("PREV 1000 records")."]</a>";
+			$HTML_rpt_hf.="<Td colspan='$HTML_colspan' class='small_standard_bold grey_graph_cell' align='left'><a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&report_display_type=$report_display_type&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=$ll\">[<<< "._QXZ("PREV 1000 records")."]</a></TH>";
 
 		} else {
 			$lagged_rpt_hf.=sprintf("%-23s", " ");
@@ -319,8 +320,8 @@ if ($SUBMIT && $query_date) {
 		$lagged_rpt_hf.=sprintf("%-145s", " ");
 		if (($lower_limit+1000)<mysqli_num_rows($rpt_rslt)) {
 			if ($upper_limit+1000>=mysqli_num_rows($rpt_rslt)) {$max_limit=mysqli_num_rows($rpt_rslt)-$upper_limit;} else {$max_limit=1000;}
-			$lagged_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&report_display_type=$report_display_type&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=".($lower_limit+1000)."\">[NEXT $max_limit records >>>]</a>";
-			$HTML_rpt_hf.="<Td colspan='$HTML_colspan' class='small_standard_bold grey_graph_cell' align='right'><a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&report_display_type=$report_display_type&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=".($lower_limit+1000)."\">[NEXT $max_limit records >>>]</a></TH>";
+			$lagged_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&report_display_type=$report_display_type&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=".($lower_limit+1000)."\">["._QXZ("NEXT")." $max_limit "._QXZ("records")." >>>]</a>";
+			$HTML_rpt_hf.="<Td colspan='$HTML_colspan' class='small_standard_bold grey_graph_cell' align='right'><a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&report_display_type=$report_display_type&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$url_typeQS&lower_limit=".($lower_limit+1000)."\">["._QXZ("NEXT")." $max_limit "._QXZ("records")." >>>]</a></TH>";
 		} else {
 			$lagged_rpt_hf.=sprintf("%23s", " ");
 		}
@@ -329,7 +330,7 @@ if ($SUBMIT && $query_date) {
 		$ASCII_text.=$lagged_rpt_hf.$lagged_rpt.$lagged_rpt_hf;
 		$HTML_text.=$HTML_rpt_hf.$HTML_rpt.$HTML_rpt_hf."</table>";
 	} else {
-		$MAIN.="*** NO RECORDS FOUND ***\n";
+		$MAIN.="*** "._QXZ("NO RECORDS FOUND")." ***\n";
 	}
 	$ASCII_text.="</font></PRE>\n";
 

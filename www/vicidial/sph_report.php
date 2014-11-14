@@ -13,6 +13,7 @@
 # 130616-2045 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0817 - Changed to mysqli PHP functions
 # 140108-0721 - Added webserver and hostname to report logging
+# 141114-0031 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -113,7 +114,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -126,10 +127,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -273,7 +274,7 @@ while ($i < $user_groups_to_print)
 </style>
 
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<TITLE><?php echo $report_name ?></TITLE>
+<TITLE><?php echo _QXZ("$report_name") ?></TITLE>
 
 </HEAD><BODY BGCOLOR=WHITE>
 
@@ -366,9 +367,9 @@ echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
 echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">";
 echo "<TABLE BORDER=0 CELLSPACING=6><TR><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
 
-echo "<font class=\"select_bold\"><B>Date Range:</B></font><BR><CENTER>\n";
+echo "<font class=\"select_bold\"><B>"._QXZ("Date Range").":</B></font><BR><CENTER>\n";
 echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
-echo "<BR>to<BR>\n";
+echo "<BR>"._QXZ("to")."<BR>\n";
 echo "<INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">\n";
 /*
 echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=2>\n";
@@ -386,7 +387,7 @@ echo "<SELECT SIZE=5 NAME=campaign[] multiple>\n";
 echo "</SELECT>\n";
 */
 echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
-echo "<font class=\"select_bold\"><B>Inbound Groups:</B></font><BR><CENTER>\n";
+echo "<font class=\"select_bold\"><B>"._QXZ("Inbound Groups").":</B></font><BR><CENTER>\n";
 echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
 	$o=0;
 	while ($groups_to_print > $o)
@@ -399,7 +400,7 @@ echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
 	}
 echo "</SELECT>\n";
 echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
-echo "<font class=\"select_bold\"><B>User Groups:</B></font><BR><CENTER>\n";
+echo "<font class=\"select_bold\"><B>"._QXZ("User Groups").":</B></font><BR><CENTER>\n";
 echo "<SELECT SIZE=5 NAME=user_group[] multiple>\n";
 	$o=0;
 	while ($user_groups_to_print > $o)
@@ -412,53 +413,53 @@ echo "<SELECT SIZE=5 NAME=user_group[] multiple>\n";
 	}
 echo "</SELECT>\n";
 echo "</TD><TD ALIGN=LEFT VALIGN=TOP>\n";
-echo "<font class=\"select_bold\"><B>Shift:</B></font><BR>\n";
+echo "<font class=\"select_bold\"><B>"._QXZ("Shift").":</B></font><BR>\n";
 echo "<SELECT SIZE=1 NAME=shift>\n";
 echo "<option selected value=\"$shift\">$shift</option>\n";
 echo "<option value=\"\">--</option>\n";
-echo "<option value=\"AM\">AM</option>\n";
-echo "<option value=\"PM\">PM</option>\n";
-echo "<option value=\"ALL\">ALL</option>\n";
+echo "<option value=\"AM\">"._QXZ("AM")."</option>\n";
+echo "<option value=\"PM\">"._QXZ("PM")."</option>\n";
+echo "<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
 echo "</SELECT>&nbsp;\n";
 
 echo "</TD><TD ALIGN=LEFT VALIGN=TOP COLSPAN=2>\n";
-echo "<font class=\"select_bold\"><B>Role:</B></font><BR>\n";
+echo "<font class=\"select_bold\"><B>"._QXZ("Role").":</B></font><BR>\n";
 echo "<SELECT SIZE=1 NAME=role>\n";
 echo "<option selected value=\"$role\">$role</option>\n";
 echo "<option value=\"\">--</option>\n";
-echo "<option value=\"FRONTER\">FRONTER</option>\n";
-echo "<option value=\"CLOSER\">CLOSER</option>\n";
-echo "<option value=\"ALL\">ALL</option>\n";
+echo "<option value=\"FRONTER\">"._QXZ("FRONTER")."</option>\n";
+echo "<option value=\"CLOSER\">"._QXZ("CLOSER")."</option>\n";
+echo "<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
 echo "</SELECT>&nbsp;\n";
 
 echo "</TD><TD ALIGN=CENTER VALIGN=TOP ROWSPAN=3>\n";
-echo "<FONT class=\"select_bold\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+echo "<FONT class=\"select_bold\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 
 echo "</TD></TR><TR></TD><TD ALIGN=LEFT VALIGN=TOP COLSPAN=2>\n";
-echo "<font class=\"select_bold\"><B>Order:</B></font><BR>\n";
+echo "<font class=\"select_bold\"><B>"._QXZ("Order").":</B></font><BR>\n";
 echo "<SELECT SIZE=1 NAME=order>\n";
 echo "<option selected value=\"$order\">$order</option>\n";
 echo "<option value=\"\">--</option>\n";
-echo "<option>sph_up</option>\n";
-echo "<option>sph_down</option>\n";
-echo "<option>hours_up</option>\n";
-echo "<option>hours_down</option>\n";
-echo "<option>sales_up</option>\n";
-echo "<option>sales_down</option>\n";
-echo "<option>calls_up</option>\n";
-echo "<option>calls_down</option>\n";
-echo "<option>user_up</option>\n";
-echo "<option>user_down</option>\n";
-echo "<option>name_up</option>\n";
-echo "<option>name_down</option>\n";
+echo "<option value='sph_up'>"._QXZ("sph_up")."</option>\n";
+echo "<option value='sph_down'>"._QXZ("sph_down")."</option>\n";
+echo "<option value='hours_up'>"._QXZ("hours_up")."</option>\n";
+echo "<option value='hours_down'>"._QXZ("hours_down")."</option>\n";
+echo "<option value='sales_up'>"._QXZ("sales_up")."</option>\n";
+echo "<option value='sales_down'>"._QXZ("sales_down")."</option>\n";
+echo "<option value='calls_up'>"._QXZ("calls_up")."</option>\n";
+echo "<option value='calls_down'>"._QXZ("calls_down")."</option>\n";
+echo "<option value='user_up'>"._QXZ("user_up")."</option>\n";
+echo "<option value='user_down'>"._QXZ("user_down")."</option>\n";
+echo "<option value='name_up'>"._QXZ("name_up")."</option>\n";
+echo "<option value='name_down'>"._QXZ("name_down")."</option>\n";
 echo "</SELECT><BR><CENTER>\n";
 
 echo "</TD><TD ALIGN=LEFT VALIGN=TOP>\n";
-echo "<font class=\"select_bold\"><B>User:</B></font><BR>\n";
+echo "<font class=\"select_bold\"><B>"._QXZ("User").":</B></font><BR>\n";
 echo "<INPUT TYPE=text NAME=user SIZE=7 MAXLENGTH=20 VALUE=\"$user\">\n";
 
 echo "</TD></TR><TR></TD><TD ALIGN=LEFT VALIGN=TOP COLSPAN=3>\n";
-echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
+echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 echo "</TD></TR></TABLE>\n";
 echo "</FORM>\n\n";
 
@@ -468,8 +469,8 @@ echo "<PRE><FONT SIZE=3>\n";
 if ($group_ct < 1)
 {
 echo "\n";
-echo "PLEASE SELECT AN IN-GROUP AND DATE RANGE ABOVE AND CLICK SUBMIT\n";
-echo " NOTE: stats taken from shift specified\n";
+echo _QXZ("PLEASE SELECT AN IN-GROUP AND DATE RANGE ABOVE AND CLICK SUBMIT")."\n";
+echo " "._QXZ("NOTE: stats taken from shift specified")."\n";
 }
 
 else
@@ -501,21 +502,21 @@ if (strlen($user_group)>0) {$ugSQL="and vicidial_agent_log.user_group='$user_gro
 else {$ugSQL='';}
 */
 
-echo "VICIDIAL: Agent SPH Report                        $NOW_TIME\n";
+echo _QXZ("VICIDIAL: Agent SPH Report",50)." $NOW_TIME\n";
 
-echo "Time range: $query_date to $end_date\n\n";
-echo "---------- AGENTS SPH DETAILS -------------\n</PRE>\n";
+echo _QXZ("Time range").": $query_date "._QXZ("to")." $end_date\n\n";
+echo "---------- "._QXZ("AGENTS SPH DETAILS")." -------------\n</PRE>\n";
 
 echo "<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=3><TR BGCOLOR=BLACK>\n";
 echo "<TD ALIGN=CENTER><FONT class=\"header_white\">#</TD>\n";
-echo "<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; USER &nbsp;</TD>\n";
-echo "<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; NAME &nbsp;</TD>\n";
-echo "<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; ROLE &nbsp;</TD>\n";
-echo "<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; GROUP &nbsp;</TD>\n";
-echo "<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; CALLS &nbsp;</TD>\n";
-echo "<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; HOURS &nbsp;</TD>\n";
-echo "<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; SALES &nbsp;</TD>\n";
-echo "<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; SPH &nbsp;</TD>\n";
+echo "<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; "._QXZ("USER")." &nbsp;</TD>\n";
+echo "<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; "._QXZ("NAME")." &nbsp;</TD>\n";
+echo "<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; "._QXZ("ROLE")." &nbsp;</TD>\n";
+echo "<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; "._QXZ("GROUP")." &nbsp;</TD>\n";
+echo "<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; "._QXZ("CALLS")." &nbsp;</TD>\n";
+echo "<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; "._QXZ("HOURS")." &nbsp;</TD>\n";
+echo "<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; "._QXZ("SALES")." &nbsp;</TD>\n";
+echo "<TD ALIGN=CENTER><FONT class=\"header_white\">&nbsp; "._QXZ("SPH")." &nbsp;</TD>\n";
 echo "</TR>\n";
 
 $order_SQL='';
@@ -639,7 +640,7 @@ $TOThours =	$TOTdbHOURS;
 
 
 echo "<TR BGCOLOR=#E6E6E6>\n";
-echo "<TD ALIGN=LEFT COLSPAN=5><FONT class=\"data_records\">TOTALS</TD>\n";
+echo "<TD ALIGN=LEFT COLSPAN=5><FONT class=\"data_records\">"._QXZ("TOTALS")."</TD>\n";
 echo "<TD ALIGN=RIGHT><FONT class=\"data_records_fix\"> $TOTcalls</TD>\n";
 echo "<TD ALIGN=RIGHT><FONT class=\"data_records_fix\"> $TOThours</TD>\n";
 echo "<TD ALIGN=RIGHT><FONT class=\"data_records_fix\"> $TOTsales</TD>\n";

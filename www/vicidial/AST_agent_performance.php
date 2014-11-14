@@ -13,6 +13,7 @@
 # 130621-0825 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130704-0943 - Fixed issue #675
 # 130901-0828 - Changed to mysqli PHP functions
+# 141114-0909 - Finalized adding QXZ translation to all admin files
 #
 
 require("dbconnect_mysqli.php");
@@ -81,7 +82,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -94,10 +95,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -141,7 +142,7 @@ while ($i < $campaigns_to_print)
 
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>VICIDIAL: Agent Performance</TITLE></HEAD><BODY BGCOLOR=WHITE>\n";
+echo "<TITLE>"._QXZ("VICIDIAL: Agent Performance")."</TITLE></HEAD><BODY BGCOLOR=WHITE>\n";
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
 echo "<INPUT TYPE=TEXT NAME=query_date SIZE=19 MAXLENGTH=19 VALUE=\"$query_date\">\n";
 echo "<SELECT SIZE=1 NAME=group>\n";
@@ -154,11 +155,11 @@ echo "<SELECT SIZE=1 NAME=group>\n";
 	}
 echo "</SELECT>\n";
 echo "<SELECT SIZE=1 NAME=shift>\n";
-echo "<option selected value=\"AM\">AM</option>\n";
-echo "<option value=\"PM\">PM</option>\n";
+echo "<option selected value=\"AM\">"._QXZ("AM")."</option>\n";
+echo "<option value=\"PM\">"._QXZ("PM")."</option>\n";
 echo "</SELECT>\n";
-echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
-echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=34&campaign_id=$group\">MODIFY</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
+echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=34&campaign_id=$group\">"._QXZ("MODIFY")."</a> | <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 echo "</FORM>\n\n";
 
 echo "<PRE><FONT SIZE=2>\n";
@@ -167,8 +168,8 @@ echo "<PRE><FONT SIZE=2>\n";
 if (!$group)
 {
 echo "\n";
-echo "PLEASE SELECT A SERVER AND DATE-TIME ABOVE AND CLICK SUBMIT\n";
-echo " NOTE: stats taken from 6 hour shift specified\n";
+echo _QXZ("PLEASE SELECT A SERVER AND DATE-TIME ABOVE AND CLICK SUBMIT")."\n";
+echo " "._QXZ("NOTE: stats taken from 6 hour shift specified")."\n";
 }
 
 else
@@ -188,13 +189,13 @@ if ($shift == 'PM')
 	$time_END = "23:15:00";
 	}
 
-echo "VICIDIAL: Agent Performance                             $NOW_TIME\n";
+echo _QXZ("VICIDIAL: Agent Performance",55)." $NOW_TIME\n";
 
-echo "Time range: $query_date_BEGIN to $query_date_END\n\n";
-echo "---------- AGENTS Details -------------\n\n";
+echo _QXZ("Time range").": $query_date_BEGIN "._QXZ("to")." $query_date_END\n\n";
+echo "---------- "._QXZ("AGENTS Details")." -------------\n\n";
 
 echo "+-----------------+----------+--------+--------+--------+------+------+------+------+------+------+------+\n";
-echo "| USER NAME       | ID       | CALLS  | TALK   | TALKAVG| A    | B    | DC   | DNC  | N    | NI   | SALE |\n";
+echo "| "._QXZ("USER NAME",15)." | "._QXZ("ID",8)." | "._QXZ("CALLS",6)." | "._QXZ("TALK",6)." | "._QXZ("TALKAVG",7)."| A    | B    | DC   | DNC  | N    | NI   | SALE |\n";
 echo "+-----------------+----------+--------+--------+--------+------+------+------+------+------+------+------+\n";
 
 $stmt="select count(*) as calls,sum(length_in_sec) as talk,full_name,vicidial_users.user,avg(length_in_sec) from vicidial_users,vicidial_log where call_date <= '$query_date_END' and call_date >= '$query_date_BEGIN' and vicidial_users.user=vicidial_log.user and campaign_id='" . mysqli_real_escape_string($link, $group) . "' group by full_name order by calls desc limit 1000;";
@@ -307,7 +308,7 @@ while($k < $i)
 	$TOT_SALE = sprintf("%-5s", $TOT_SALE);
 
 echo "+-----------------+----------+--------+--------+--------+------+------+------+------+------+------+------+\n";
-echo "|  TOTALS                    | $TOTcalls| $TOTtotTALK_MS|        | $TOT_A| $TOT_B| $TOT_DC| $TOT_DNC| $TOT_N| $TOT_NI| $TOT_SALE|\n";
+echo "|  "._QXZ("TOTALS",25)." | $TOTcalls| $TOTtotTALK_MS|        | $TOT_A| $TOT_B| $TOT_DC| $TOT_DNC| $TOT_N| $TOT_NI| $TOT_SALE|\n";
 echo "+-----------------+----------+--------+--------+--------+------+------+------+------+------+------+------+\n";
 
 echo "\n";

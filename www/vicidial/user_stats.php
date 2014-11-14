@@ -44,6 +44,7 @@
 # 131016-2102 - Added checking for level 8 add-copy restriction
 # 131122-0705 - Added pause_code_rpt option coming from Agent Time Detail report
 # 140108-0709 - Added webserver and hostname to report logging
+# 141114-0025 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -151,7 +152,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -164,10 +165,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -290,7 +291,7 @@ if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGa
 
 		if ($allowed_count < 1)
 			{
-			echo "This user does not exist: |$PHP_AUTH_USER|$user|\n";
+			echo _QXZ("This user does not exist").": |$PHP_AUTH_USER|$user|\n";
 			exit;
 			}
 		}
@@ -300,7 +301,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -328,9 +329,9 @@ $HEADER.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 
 if ($did > 0)
-	{$HEADER.="<title>ADMINISTRATION: DID Call Stats";}
+	{$HEADER.="<title>"._QXZ("ADMINISTRATION: DID Call Stats");}
 else
-	{$HEADER.="<title>ADMINISTRATION: $report_name";}
+	{$HEADER.="<title>"._QXZ("ADMINISTRATION").": "._QXZ("$report_name");}
 
 
 
@@ -366,9 +367,9 @@ if ($did > 0)
 
 $MAIN.="<TABLE WIDTH=770 BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=0><TR BGCOLOR=#E6E6E6><TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2>\n";
 if ($did > 0)
-	{$MAIN.="<B> &nbsp; DID Call Stats for $user";}
+	{$MAIN.="<B> &nbsp; "._QXZ("DID Call Stats for")." $user";}
 else
-	{$MAIN.="<B> &nbsp; User Stats for $user";}
+	{$MAIN.="<B> &nbsp; "._QXZ("User Stats for")." $user";}
 
 $MAIN.="</TD><TD ALIGN=RIGHT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> &nbsp; </TD></TR>\n";
 
@@ -394,7 +395,7 @@ $MAIN.="o_cal.a_tpl.yearscroll = false;\n";
 $MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 $MAIN.="</script>\n";
 
-$MAIN.=" to <input type=text name=end_date value=\"$end_date\" size=10 maxsize=10>";
+$MAIN.=" "._QXZ("to")." <input type=text name=end_date value=\"$end_date\" size=10 maxsize=10>";
 
 $MAIN.="<script language=\"JavaScript\">\n";
 $MAIN.="var o_cal = new tcal ({\n";
@@ -411,7 +412,7 @@ if (strlen($user)>1)
 	{$MAIN.="<input type=hidden name=user value=\"$user\">\n";}
 else
 	{$MAIN.="<input type=text name=user size=12 maxlength=10>\n";}
-$MAIN.="<input type=submit name=submit value=submit>\n";
+$MAIN.="<input type=submit name=submit value='"._QXZ("submit")."'>\n";
 
 
 $MAIN.=" &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; $user - $full_name<BR><BR>\n";
@@ -419,15 +420,15 @@ $MAIN.=" &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; $user - $full_name<BR><BR>\n";
 $MAIN.="<center>\n";
 if ($did > 0)
 	{
-	$MAIN.="<a href=\"./AST_DIDstats.php?group[0]=$did_id&query_date=$begin_date&end_date=$end_date\">DID traffic report</a>\n";
-	$MAIN.=" | <a href=\"./admin.php?ADD=3311&did_id=$did_id\">Modify DID</a>\n";
+	$MAIN.="<a href=\"./AST_DIDstats.php?group[0]=$did_id&query_date=$begin_date&end_date=$end_date\">"._QXZ("DID traffic report")."</a>\n";
+	$MAIN.=" | <a href=\"./admin.php?ADD=3311&did_id=$did_id\">"._QXZ("Modify DID")."</a>\n";
 	}
 else
 	{
-	$MAIN.="<a href=\"./AST_agent_time_sheet.php?agent=$user\">Agent Time Sheet</a>\n";
-	$MAIN.=" | <a href=\"./user_status.php?user=$user\">User Status</a>\n";
-	$MAIN.=" | <a href=\"./admin.php?ADD=3&user=$user\">Modify User</a>\n";
-	$MAIN.=" | <a href=\"./AST_agent_days_detail.php?user=$user&query_date=$begin_date&end_date=$end_date&group[]=--ALL--&shift=ALL\">User multiple day status detail report</a>";
+	$MAIN.="<a href=\"./AST_agent_time_sheet.php?agent=$user\">"._QXZ("Agent Time Sheet")."</a>\n";
+	$MAIN.=" | <a href=\"./user_status.php?user=$user\">"._QXZ("User Status")."</a>\n";
+	$MAIN.=" | <a href=\"./admin.php?ADD=3&user=$user\">"._QXZ("Modify User")."</a>\n";
+	$MAIN.=" | <a href=\"./AST_agent_days_detail.php?user=$user&query_date=$begin_date&end_date=$end_date&group[]=--ALL--&shift=ALL\">"._QXZ("User multiple day status detail report")."</a>";
 	}
 $MAIN.="</center>\n";
 
@@ -443,13 +444,13 @@ if ($pause_code_rpt >= 1)
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
 	$rows_to_print = mysqli_num_rows($rslt);
-	$MAIN.="<B>AGENT PAUSE LOGS:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=11'>[DOWNLOAD]</a></B>\n";
+	$MAIN.="<B>"._QXZ("AGENT PAUSE LOGS").":&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=11'>["._QXZ("DOWNLOAD")."]</a></B>\n";
 
 	$MAIN.="<center><TABLE width=600 cellspacing=0 cellpadding=1>\n";
-	$MAIN.="<tr><td><font size=2>EVENT TIME</td><td align=right><font size=2>CAMPAIGN ID</td><td align=right><font size=2>USER GROUP</td><td align=right><font size=2>PAUSE CODE</td><td align=right><font size=2>PAUSE LENGTH (HH:MM:SS)</td></tr>\n";
+	$MAIN.="<tr><td><font size=2>"._QXZ("EVENT TIME")."</td><td align=right><font size=2>"._QXZ("CAMPAIGN ID")."</td><td align=right><font size=2>"._QXZ("USER GROUP")."</td><td align=right><font size=2>"._QXZ("PAUSE CODE")."</td><td align=right><font size=2>"._QXZ("PAUSE LENGTH (HH:MM:SS)")."</td></tr>\n";
 
-	$CSV_text11.="\"AGENT PAUSE LOGS\"\n";
-	$CSV_text11.="\"\",\"EVENT TIME\",\"CAMPAIGN ID\",\"USER GROUP\",\"PAUSE CODE\",\"PAUSE LENGTH (HH:MM:SS)\"\n";
+	$CSV_text11.="\""._QXZ("AGENT PAUSE LOGS")."\"\n";
+	$CSV_text11.="\"\",\""._QXZ("EVENT TIME")."\",\""._QXZ("CAMPAIGN ID")."\",\""._QXZ("USER GROUP")."\",\""._QXZ("PAUSE CODE")."\",\""._QXZ("PAUSE LENGTH (HH:MM:SS)")."\"\n";
 
 	$o=0; $total_pause_time=0;
 	while ($pause_row=mysqli_fetch_array($rslt)) 
@@ -475,23 +476,23 @@ if ($pause_code_rpt >= 1)
 	$total_pause_row=mysqli_fetch_row($total_pause_rslt);
 	$total_pause_time=$total_pause_row[0];
 
-	$MAIN.="<tr><td><font size=2>&nbsp; </td><td><font size=2>&nbsp; </td><TD><font size=2>&nbsp; </td><td align=right><font size=2> <B>TOTAL:</B></td><td align=right><font size=2> $total_pause_time</td></tr>\n";
-	$CSV_text11.="\"\",\"\",\"\",\"\",\"TOTAL:\",\"$total_pause_time\"\n";
+	$MAIN.="<tr><td><font size=2>&nbsp; </td><td><font size=2>&nbsp; </td><TD><font size=2>&nbsp; </td><td align=right><font size=2> <B>"._QXZ("TOTAL").":</B></td><td align=right><font size=2> $total_pause_time</td></tr>\n";
+	$CSV_text11.="\"\",\"\",\"\",\"\",\""._QXZ("TOTAL").":\",\"$total_pause_time\"\n";
 	$MAIN.="</TABLE></center>\n";
-	$MAIN.="<B><a href='user_stats.php?DB=$DB&user=$user&begin_date=$begin_date&end_date=$end_date'>[VIEW USER STATS]</a></B>\n";
+	$MAIN.="<B><a href='user_stats.php?DB=$DB&user=$user&begin_date=$begin_date&end_date=$end_date'>["._QXZ("VIEW USER STATS")."]</a></B>\n";
 	}
 else
 	{
 	if ($did < 1)
 		{
 		##### vicidial agent talk time and status #####
-		$MAIN.="<B>AGENT TALK TIME AND STATUS:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=1'>[DOWNLOAD]</a></B>\n";
+		$MAIN.="<B>"._QXZ("AGENT TALK TIME AND STATUS").":&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=1'>["._QXZ("DOWNLOAD")."]</a></B>\n";
 
 		$MAIN.="<center><TABLE width=300 cellspacing=0 cellpadding=1>\n";
-		$MAIN.="<tr><td><font size=2>STATUS</td><td align=right><font size=2>COUNT</td><td align=right><font size=2>HOURS:MM:SS</td></tr>\n";
+		$MAIN.="<tr><td><font size=2>"._QXZ("STATUS")."</td><td align=right><font size=2>"._QXZ("COUNT")."</td><td align=right><font size=2>"._QXZ("HOURS:MM:SS")."</td></tr>\n";
 
-		$CSV_text1.="\"AGENT TALK TIME AND STATUS\"\n";
-		$CSV_text1.="\"\",\"STATUS\",\"COUNT\",\"HOURS:MM:SS\"\n";
+		$CSV_text1.="\""._QXZ("AGENT TALK TIME AND STATUS")."\"\n";
+		$CSV_text1.="\"\",\""._QXZ("STATUS")."\",\""._QXZ("COUNT")."\",\""._QXZ("HOURS:MM:SS")."\"\n";
 
 		$stmt="SELECT count(*),status, sum(length_in_sec) from vicidial_log where user='" . mysqli_real_escape_string($link, $user) . "' and call_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and call_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' group by status order by status";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -561,8 +562,8 @@ else
 
 		$call_hours_minutes =		sec_convert($total_sec,'H'); 
 
-		$MAIN.="<tr><td><font size=2>TOTAL CALLS </td><td align=right><font size=2> $total_calls</td><td align=right><font size=2> $call_hours_minutes</td></tr>\n";
-		$CSV_text1.="\"\",\"TOTAL CALLS\",\"$total_calls\",\"$call_hours_minutes\"\n";
+		$MAIN.="<tr><td><font size=2>"._QXZ("TOTAL CALLS")." </td><td align=right><font size=2> $total_calls</td><td align=right><font size=2> $call_hours_minutes</td></tr>\n";
+		$CSV_text1.="\"\",\""._QXZ("TOTAL CALLS")."\",\"$total_calls\",\"$call_hours_minutes\"\n";
 		$MAIN.="</TABLE></center>\n";
 
 
@@ -572,12 +573,12 @@ else
 
 		$MAIN.="<center>\n";
 
-		$MAIN.="<B>AGENT LOGIN/LOGOUT TIME:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=2'>[DOWNLOAD]</a></B>\n";
+		$MAIN.="<B>"._QXZ("AGENT LOGIN/LOGOUT TIME").":&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=2'>["._QXZ("DOWNLOAD")."]</a></B>\n";
 		$MAIN.="<TABLE width=850 cellspacing=0 cellpadding=1>\n";
-		$MAIN.="<tr><td><font size=2>EVENT </td><td align=right><font size=2> DATE</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>SESSION<BR>HOURS:MM:SS</td><td align=right><font size=2>SERVER</td><td align=right><font size=2>PHONE</td><td align=right><font size=2>COMPUTER</td><td align=right><font size=2>PHONE<BR>LOGIN</td><td align=right><font size=2>PHONE IP</td></tr>\n";
+		$MAIN.="<tr><td><font size=2>"._QXZ("EVENT")." </td><td align=right><font size=2> "._QXZ("DATE")."</td><td align=right><font size=2> "._QXZ("CAMPAIGN")."</td><td align=right><font size=2> "._QXZ("GROUP")."</td><td align=right><font size=2>"._QXZ("SESSION")."<BR>"._QXZ("HOURS:MM:SS")."</td><td align=right><font size=2>"._QXZ("SERVER")."</td><td align=right><font size=2>"._QXZ("PHONE")."</td><td align=right><font size=2>"._QXZ("COMPUTER")."</td><td align=right><font size=2>"._QXZ("PHONE")."<BR>"._QXZ("LOGIN")."</td><td align=right><font size=2>"._QXZ("PHONE IP")."</td></tr>\n";
 
-		$CSV_text2.="\"AGENT LOGIN/LOGOUT TIME\"\n";
-		$CSV_text2.="\"\",\"EVENT\",\"DATE\",\"CAMPAIGN\",\"GROUP\",\"HOURS:MM:SS\",\"SESSION\",\"SERVER\",\"PHONE\",\"COMPUTER\",\"PHONE_LOGIN\",\"PHONE_IP\"\n";
+		$CSV_text2.="\""._QXZ("AGENT LOGIN/LOGOUT TIME")."\"\n";
+		$CSV_text2.="\"\",\""._QXZ("EVENT")."\",\""._QXZ("DATE")."\",\""._QXZ("CAMPAIGN")."\",\""._QXZ("GROUP")."\",\""._QXZ("HOURS:MM:SS")."\",\""._QXZ("SESSION")."\",\""._QXZ("SERVER")."\",\""._QXZ("PHONE")."\",\""._QXZ("COMPUTER")."\",\""._QXZ("PHONE_LOGIN")."\",\""._QXZ("PHONE_IP")."\"\n";
 
 		$stmt="SELECT event,event_epoch,event_date,campaign_id,user_group,session_id,server_ip,extension,computer_ip,phone_login,phone_ip from vicidial_user_log where user='" . mysqli_real_escape_string($link, $user) . "' and event_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and event_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by event_date;";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -652,12 +653,12 @@ else
 
 		$total_login_hours_minutes =		sec_convert($total_login_time,'H'); 
 
-		$MAIN.="<tr><td><font size=2>TOTAL</td>";
+		$MAIN.="<tr><td><font size=2>"._QXZ("TOTAL")."</td>";
 		$MAIN.="<td align=right><font size=2> </td>\n";
 		$MAIN.="<td align=right><font size=2> </td>\n";
 		$MAIN.="<td align=right><font size=2> </td>\n";
 		$MAIN.="<td align=right><font size=2> $total_login_hours_minutes</td></tr>\n";
-		$CSV_text2.="\"\",\"TOTAL\",\"\",\"\",\"\",\"$total_login_hours_minutes\"\n";
+		$CSV_text2.="\"\",\""._QXZ("TOTAL")."\",\"\",\"\",\"\",\"$total_login_hours_minutes\"\n";
 
 		$MAIN.="</TABLE></center>\n";
 
@@ -677,11 +678,11 @@ else
 
 		$MAIN.="<center>\n";
 
-		$MAIN.="<B>TIMECLOCK LOGIN/LOGOUT TIME:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=3'>[DOWNLOAD]</a></B>\n";
+		$MAIN.="<B>"._QXZ("TIMECLOCK LOGIN/LOGOUT TIME").":&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=3'>["._QXZ("DOWNLOAD")."]</a></B>\n";
 		$MAIN.="<TABLE width=550 cellspacing=0 cellpadding=1>\n";
-		$MAIN.="<tr><td><font size=2>ID </td><td><font size=2>EDIT </td><td align=right><font size=2>EVENT </td><td align=right><font size=2> DATE</td><td align=right><font size=2> IP ADDRESS</td><td align=right><font size=2> GROUP</td><td align=right><font size=2>HOURS:MM:SS</td></tr>\n";
-		$CSV_text3.="\"TIMECLOCK LOGIN/LOGOUT TIME\"\n";
-		$CSV_text3.="\"\",\"ID\",\"EDIT\",\"EVENT\",\"DATE\",\"IPADDRESS\",\"GROUP\",\"HOURS:MM:SS\"\n";
+		$MAIN.="<tr><td><font size=2>"._QXZ("ID")." </td><td><font size=2>"._QXZ("EDIT")." </td><td align=right><font size=2>"._QXZ("EVENT")." </td><td align=right><font size=2> "._QXZ("DATE")."</td><td align=right><font size=2> "._QXZ("IP ADDRESS")."</td><td align=right><font size=2> "._QXZ("GROUP")."</td><td align=right><font size=2>"._QXZ("HOURS:MM:SS")."</td></tr>\n";
+		$CSV_text3.="\""._QXZ("TIMECLOCK LOGIN/LOGOUT TIME")."\"\n";
+		$CSV_text3.="\"\",\""._QXZ("ID")."\",\""._QXZ("EDIT")."\",\""._QXZ("EVENT")."\",\""._QXZ("DATE")."\",\""._QXZ("IPADDRESS")."\",\""._QXZ("GROUP")."\",\""._QXZ("HOURS:MM:SS")."\"\n";
 
 		$stmt="SELECT event,event_epoch,user_group,login_sec,ip_address,timeclock_id,manager_user from vicidial_timeclock_log where user='" . mysqli_real_escape_string($link, $user) . "' and event_epoch >= '$SQepoch'  and event_epoch <= '$EQepoch';";
 		if ($DB>0) {$MAIN.="|$stmt|";}
@@ -747,9 +748,9 @@ else
 		$MAIN.="<td align=right><font size=2> </td>\n";
 		$MAIN.="<td align=right><font size=2> </td>\n";
 		$MAIN.="<td align=right><font size=2> </td>\n";
-		$MAIN.="<td align=right><font size=2><font size=2>TOTAL </td>\n";
+		$MAIN.="<td align=right><font size=2><font size=2>"._QXZ("TOTAL")." </td>\n";
 		$MAIN.="<td align=right><font size=2> $total_login_hours_minutes  </td></tr>\n";
-		$CSV_text3.="\"\",\"\",\"\",\"\",\"\",\"TOTAL\",\"$total_login_hours_minutes\"\n";
+		$CSV_text3.="\"\",\"\",\"\",\"\",\"\",\""._QXZ("TOTAL")."\",\"$total_login_hours_minutes\"\n";
 		$MAIN.="</TABLE></center>\n";
 
 
@@ -760,12 +761,12 @@ else
 
 		$MAIN.="<center>\n";
 
-		$MAIN.="<B>CLOSER IN-GROUP SELECTION LOGS:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=4'>[DOWNLOAD]</a></B>\n";
+		$MAIN.="<B>"._QXZ("CLOSER IN-GROUP SELECTION LOGS").":&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=4'>["._QXZ("DOWNLOAD")."]</a></B>\n";
 		$MAIN.="<TABLE width=670 cellspacing=0 cellpadding=1>\n";
-		$MAIN.="<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2> CAMPAIGN</td><td align=left><font size=2>BLEND</td><td align=left><font size=2> GROUPS</td><td align=left><font size=2> MANAGER</td></tr>\n";
+		$MAIN.="<tr><td><font size=1># </td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2> "._QXZ("CAMPAIGN")."</td><td align=left><font size=2>"._QXZ("BLEND")."</td><td align=left><font size=2> "._QXZ("GROUPS")."</td><td align=left><font size=2> "._QXZ("MANAGER")."</td></tr>\n";
 
-		$CSV_text4.="\"CLOSER IN-GROUP SELECTION LOGS\"\n";
-		$CSV_text4.="\"\",\"#\",\"DATE/TIME\",\"CAMPAIGN\",\"BLEND\",\"GROUPS\",\"MANAGER\"\n";
+		$CSV_text4.="\""._QXZ("CLOSER IN-GROUP SELECTION LOGS")."\"\n";
+		$CSV_text4.="\"\",\"#\",\""._QXZ("DATE/TIME")."\",\""._QXZ("CAMPAIGN")."\",\""._QXZ("BLEND")."\",\""._QXZ("GROUPS")."\",\""._QXZ("MANAGER")."\"\n";
 
 		$stmt="select user,campaign_id,event_date,blended,closer_campaigns,manager_change from vicidial_user_closer_log where user='" . mysqli_real_escape_string($link, $user) . "' and event_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and event_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by event_date desc limit 1000;";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -798,21 +799,21 @@ else
 
 		##### vicidial agent outbound calls for this time period #####
 
-		$MAIN.="<B>OUTBOUND CALLS FOR THIS TIME PERIOD: (10000 record limit)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=5'>[DOWNLOAD]</a></B>\n";
+		$MAIN.="<B>"._QXZ("OUTBOUND CALLS FOR THIS TIME PERIOD: (10000 record limit)")."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=5'>["._QXZ("DOWNLOAD")."]</a></B>\n";
 		$MAIN.="<TABLE width=700 cellspacing=0 cellpadding=1>\n";
 		if ($firstlastname_display_user_stats > 0)
 			{
-			$MAIN.="<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> GROUP</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> NAME</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
+			$MAIN.="<tr><td><font size=1># </td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2>"._QXZ("LENGTH")."</td><td align=left><font size=2> "._QXZ("STATUS")."</td><td align=left><font size=2> "._QXZ("PHONE")."</td><td align=right><font size=2> "._QXZ("CAMPAIGN")."</td><td align=right><font size=2> "._QXZ("GROUP")."</td><td align=right><font size=2> "._QXZ("LIST")."</td><td align=right><font size=2> "._QXZ("LEAD")."</td><td align=right><font size=2> "._QXZ("NAME")."</td><td align=right><font size=2> "._QXZ("HANGUP REASON")."</td></tr>\n";
 			}
 		else
 			{
-			$MAIN.="<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> GROUP</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
+			$MAIN.="<tr><td><font size=1># </td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2>"._QXZ("LENGTH")."</td><td align=left><font size=2> "._QXZ("STATUS")."</td><td align=left><font size=2> "._QXZ("PHONE")."</td><td align=right><font size=2> "._QXZ("CAMPAIGN")."</td><td align=right><font size=2> "._QXZ("GROUP")."</td><td align=right><font size=2> "._QXZ("LIST")."</td><td align=right><font size=2> "._QXZ("LEAD")."</td><td align=right><font size=2> "._QXZ("HANGUP REASON")."</td></tr>\n";
 			}
-		$CSV_text5.="\"OUTBOUND CALLS FOR THIS TIME PERIOD: (10000 record limit)\"\n";
+		$CSV_text5.="\""._QXZ("OUTBOUND CALLS FOR THIS TIME PERIOD: (10000 record limit)")."\"\n";
 		if ($firstlastname_display_user_stats > 0)
-			{$CSV_text5.="\"\",\"#\",\"DATE/TIME\",\"LENGTH\",\"STATUS\",\"PHONE\",\"CAMPAIGN\",\"GROUP\",\"LIST\",\"LEAD\",\"NAME\",\"HANGUP REASON\"\n";}
+			{$CSV_text5.="\"\",\"#\",\""._QXZ("DATE/TIME")."\",\""._QXZ("LENGTH")."\",\""._QXZ("STATUS")."\",\""._QXZ("PHONE")."\",\""._QXZ("CAMPAIGN")."\",\""._QXZ("GROUP")."\",\""._QXZ("LIST")."\",\""._QXZ("LEAD")."\",\""._QXZ("NAME")."\",\""._QXZ("HANGUP REASON")."\"\n";}
 		else
-			{$CSV_text5.="\"\",\"#\",\"DATE/TIME\",\"LENGTH\",\"STATUS\",\"PHONE\",\"CAMPAIGN\",\"GROUP\",\"LIST\",\"LEAD\",\"HANGUP REASON\"\n";}
+			{$CSV_text5.="\"\",\"#\",\""._QXZ("DATE/TIME")."\",\""._QXZ("LENGTH")."\",\""._QXZ("STATUS")."\",\""._QXZ("PHONE")."\",\""._QXZ("CAMPAIGN")."\",\""._QXZ("GROUP")."\",\""._QXZ("LIST")."\",\""._QXZ("LEAD")."\",\""._QXZ("HANGUP REASON")."\"\n";}
 
 		$stmt="select uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,user_group,term_reason,alt_dial from vicidial_log where user='" . mysqli_real_escape_string($link, $user) . "' and call_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and call_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by call_date desc limit 10000;";
 		if ($firstlastname_display_user_stats > 0)
@@ -883,11 +884,11 @@ else
 
 		if ($allow_emails>0) 
 			{
-			$MAIN.="<B>OUTBOUND EMAILS FOR THIS TIME PERIOD: (10000 record limit)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=5'>[DOWNLOAD]</a></B>\n";
+			$MAIN.="<B>"._QXZ("OUTBOUND EMAILS FOR THIS TIME PERIOD: (10000 record limit)")."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=5'>["._QXZ("DOWNLOAD")."]</a></B>\n";
 			$MAIN.="<TABLE width=670 cellspacing=0 cellpadding=3>\n";
-			$MAIN.="<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>USER</td><td align=left><font size=2> CAMPAIGN</td><td align=left><font size=2> EMAIL TO</td><td align=right><font size=2> ATTACHMENTS</td><td align=right><font size=2> LEAD</td></tr>\n";
-			$CSV_text5.="\"OUTBOUND EMAILS FOR THIS TIME PERIOD: (10000 record limit)\"\n";
-			$CSV_text5.="\"\",\"#\",\"DATE/TIME\",\"USER\",\"CAMPAIGN\",\"EMAIL TO\",\"ATTACHMENT\",\"LEAD\",\"MESSAGE\"\n";
+			$MAIN.="<tr><td><font size=1># </td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2>"._QXZ("USER")."</td><td align=left><font size=2> "._QXZ("CAMPAIGN")."</td><td align=left><font size=2> "._QXZ("EMAIL TO")."</td><td align=right><font size=2> "._QXZ("ATTACHMENTS")."</td><td align=right><font size=2> "._QXZ("LEAD")."</td></tr>\n";
+			$CSV_text5.="\""._QXZ("OUTBOUND EMAILS FOR THIS TIME PERIOD: (10000 record limit)")."\"\n";
+			$CSV_text5.="\"\",\"#\",\""._QXZ("DATE/TIME")."\",\""._QXZ("USER")."\",\""._QXZ("CAMPAIGN")."\",\""._QXZ("EMAIL TO")."\",\""._QXZ("ATTACHMENT")."\",\""._QXZ("LEAD")."\",\""._QXZ("MESSAGE")."\"\n";
 
 			$stmt="select email_log_id,email_row_id,lead_id,email_date,user,email_to,message,campaign_id,attachments from vicidial_email_log where user='" . mysqli_real_escape_string($link, $user) . "' and email_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and email_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by email_date desc limit 10000;";
 			$rslt=mysql_to_mysqli($stmt, $link);
@@ -917,7 +918,7 @@ else
 				$MAIN .= "</tr>\n";
 				$MAIN .= "<tr>";
 				$MAIN .= "<td><font size=1> &nbsp; </td>\n";
-				$MAIN .= "<td align=left colspan=6 $bgcolor><font size=1> MESSAGE: $row[6] </td>\n";
+				$MAIN .= "<td align=left colspan=6 $bgcolor><font size=1> "._QXZ("MESSAGE").": $row[6] </td>\n";
 				$MAIN .= "</tr>\n";
 
 				$CSV_text5.="\"\",\"$u\",\"$row[3]\",\"$row[4]\",\"$row[7]\",\"$row[5]\",\"$row[8]\",\"$row[2]\",\"$row[6]\"\n";
@@ -929,24 +930,24 @@ else
 
 	##### vicidial agent inbound calls for this time period #####
 
-	$MAIN.="<B>INBOUND/CLOSER CALLS FOR THIS TIME PERIOD: (10000 record limit)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=6'>[DOWNLOAD]</a></B>\n";
+	$MAIN.="<B>"._QXZ("INBOUND/CLOSER CALLS FOR THIS TIME PERIOD: (10000 record limit)")."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=6'>["._QXZ("DOWNLOAD")."]</a></B>\n";
 	$MAIN.="<TABLE width=750 cellspacing=0 cellpadding=1>\n";
 	if ($firstlastname_display_user_stats > 0)
 		{
-		$MAIN.="<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> WAIT (S)</td><td align=right><font size=2> AGENT (S)</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> NAME</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
+		$MAIN.="<tr><td><font size=1># </td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2>"._QXZ("LENGTH")."</td><td align=left><font size=2> "._QXZ("STATUS")."</td><td align=left><font size=2> "._QXZ("PHONE")."</td><td align=right><font size=2> "._QXZ("CAMPAIGN")."</td><td align=right><font size=2> "._QXZ("WAIT (S)")."</td><td align=right><font size=2> "._QXZ("AGENT (S)")."</td><td align=right><font size=2> "._QXZ("LIST")."</td><td align=right><font size=2> "._QXZ("LEAD")."</td><td align=right><font size=2> "._QXZ("NAME")."</td><td align=right><font size=2> "._QXZ("HANGUP REASON")."</td></tr>\n";
 		}
 	else
 		{
-		$MAIN.="<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>LENGTH</td><td align=left><font size=2> STATUS</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> WAIT (S)</td><td align=right><font size=2> AGENT (S)</td><td align=right><font size=2> LIST</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> HANGUP REASON</td></tr>\n";
+		$MAIN.="<tr><td><font size=1># </td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2>"._QXZ("LENGTH")."</td><td align=left><font size=2> "._QXZ("STATUS")."</td><td align=left><font size=2> "._QXZ("PHONE")."</td><td align=right><font size=2> "._QXZ("CAMPAIGN")."</td><td align=right><font size=2> "._QXZ("WAIT (S)")."</td><td align=right><font size=2> "._QXZ("AGENT (S)")."</td><td align=right><font size=2> "._QXZ("LIST")."</td><td align=right><font size=2> "._QXZ("LEAD")."</td><td align=right><font size=2> "._QXZ("HANGUP REASON")."</td></tr>\n";
 		}
-	$CSV_text6.="\"INBOUND/CLOSER CALLS FOR THIS TIME PERIOD: (10000 record limit)\"\n";
+	$CSV_text6.="\""._QXZ("INBOUND/CLOSER CALLS FOR THIS TIME PERIOD: (10000 record limit)")."\"\n";
 	if ($firstlastname_display_user_stats > 0)
 		{
-		$CSV_text6.="\"\",\"#\",\"DATE/TIME\",\"LENGTH\",\"STATUS\",\"PHONE\",\"CAMPAIGN\",\"WAIT(S)\",\"AGENT(S)\",\"LIST\",\"LEAD\",\"NAME\",\"HANGUP REASON\"\n";
+		$CSV_text6.="\"\",\"#\",\""._QXZ("DATE/TIME")."\",\""._QXZ("LENGTH")."\",\""._QXZ("STATUS")."\",\""._QXZ("PHONE")."\",\""._QXZ("CAMPAIGN")."\",\""._QXZ("WAIT(S)")."\",\""._QXZ("AGENT(S)")."\",\""._QXZ("LIST")."\",\""._QXZ("LEAD")."\",\""._QXZ("NAME")."\",\""._QXZ("HANGUP REASON")."\"\n";
 		}
 	else
 		{
-		$CSV_text6.="\"\",\"#\",\"DATE/TIME\",\"LENGTH\",\"STATUS\",\"PHONE\",\"CAMPAIGN\",\"WAIT(S)\",\"AGENT(S)\",\"LIST\",\"LEAD\",\"HANGUP REASON\"\n";
+		$CSV_text6.="\"\",\"#\",\""._QXZ("DATE/TIME")."\",\""._QXZ("LENGTH")."\",\""._QXZ("STATUS")."\",\""._QXZ("PHONE")."\",\""._QXZ("CAMPAIGN")."\",\""._QXZ("WAIT(S)")."\",\""._QXZ("AGENT(S)")."\",\""._QXZ("LIST")."\",\""._QXZ("LEAD")."\",\""._QXZ("HANGUP REASON")."\"\n";
 		}
 
 	$stmt="select call_date,length_in_sec,status,phone_number,campaign_id,queue_seconds,list_id,lead_id,term_reason from vicidial_closer_log where user='" . mysqli_real_escape_string($link, $user) . "' and call_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and call_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by call_date desc limit 10000;";
@@ -1036,24 +1037,24 @@ else
 		}
 
 	$MAIN.="<tr bgcolor=white>";
-	$MAIN.="<td colspan=2><font size=2>TOTALS</td>";
+	$MAIN.="<td colspan=2><font size=2>"._QXZ("TOTALS")."</td>";
 	$MAIN.="<td align=left><font size=2> $TOTALinSECONDS</td>\n";
 	$MAIN.="<td colspan=4><font size=2> &nbsp; </td>\n";
 	$MAIN.="<td align=right><font size=2> $TOTALagentSECONDS</td>\n";
 	$MAIN.="<td colspan=3><font size=2> &nbsp; </td></tr>\n";
 	$MAIN.="</TABLE></center><BR><BR>\n";
-	$CSV_text6.="\"\",\"\",\"TOTALS\",\"$TOTALinSECONDS\",\"\",\"\",\"\",\"\",\"$TOTALagentSECONDS\"\n";
+	$CSV_text6.="\"\",\"\",\""._QXZ("TOTALS")."\",\"$TOTALinSECONDS\",\"\",\"\",\"\",\"\",\"$TOTALagentSECONDS\"\n";
 
 
 	##### vicidial agent activity records for this time period #####
 	if ($did < 1)
 		{
-		$MAIN.="<B>AGENT ACTIVITY FOR THIS TIME PERIOD: (10000 record limit)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=7'>[DOWNLOAD]</a></B>\n";
+		$MAIN.="<B>"._QXZ("AGENT ACTIVITY FOR THIS TIME PERIOD: (10000 record limit)")."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=7'>["._QXZ("DOWNLOAD")."]</a></B>\n";
 		$MAIN.="<TABLE width=750 cellspacing=0 cellpadding=1>\n";
-		$MAIN.="<tr><td colspan=2><font size=1> &nbsp; </td><td colspan=6 align=center bgcolor=white><font size=1>these fields are in seconds </td><td colspan=4><font size=1> &nbsp; </td></tr>\n";
-		$MAIN.="<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2>PAUSE</td><td align=left><font size=2> WAIT</td><td align=left><font size=2> TALK</td><td align=right><font size=2> DISPO</td><td align=right><font size=2> DEAD</td><td align=right><font size=2> CUSTOMER</td><td align=right><font size=2> STATUS</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> CAMPAIGN</td><td align=right><font size=2> PAUSE CODE</td></tr>\n";
-		$CSV_text7.="\"AGENT ACTIVITY FOR THIS TIME PERIOD: (10000 record limit)\"\n";
-		$CSV_text7.="\"\",\"#\",\"DATE/TIME\",\"PAUSE\",\"WAIT\",\"TALK\",\"DISPO\",\"DEAD\",\"CUSTOMER\",\"STATUS\",\"LEAD\",\"CAMPAIGN\",\"PAUSE CODE\"\n";
+		$MAIN.="<tr><td colspan=2><font size=1> &nbsp; </td><td colspan=6 align=center bgcolor=white><font size=1>"._QXZ("these fields are in seconds")." </td><td colspan=4><font size=1> &nbsp; </td></tr>\n";
+		$MAIN.="<tr><td><font size=1># </td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2>"._QXZ("PAUSE")."</td><td align=left><font size=2> "._QXZ("WAIT")."</td><td align=left><font size=2> "._QXZ("TALK")."</td><td align=right><font size=2> "._QXZ("DISPO")."</td><td align=right><font size=2> "._QXZ("DEAD")."</td><td align=right><font size=2> "._QXZ("CUSTOMER")."</td><td align=right><font size=2> "._QXZ("STATUS")."</td><td align=right><font size=2> "._QXZ("LEAD")."</td><td align=right><font size=2> "._QXZ("CAMPAIGN")."</td><td align=right><font size=2> "._QXZ("PAUSE CODE")."</td></tr>\n";
+		$CSV_text7.="\""._QXZ("AGENT ACTIVITY FOR THIS TIME PERIOD: (10000 record limit)")."\"\n";
+		$CSV_text7.="\"\",\"#\",\""._QXZ("DATE/TIME")."\",\""._QXZ("PAUSE")."\",\""._QXZ("WAIT")."\",\""._QXZ("TALK")."\",\""._QXZ("DISPO")."\",\""._QXZ("DEAD")."\",\""._QXZ("CUSTOMER")."\",\""._QXZ("STATUS")."\",\""._QXZ("LEAD")."\",\""._QXZ("CAMPAIGN")."\",\""._QXZ("PAUSE CODE")."\"\n";
 
 		$stmt="select event_time,lead_id,campaign_id,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec,status,sub_status,user_group from vicidial_agent_log where user='" . mysqli_real_escape_string($link, $user) . "' and event_time >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and event_time <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' and ( (pause_sec > 0) or (wait_sec > 0) or (talk_sec > 0) or (dispo_sec > 0) ) order by event_time desc limit 10000;";
 		if ($DB) {$MAIN.="agent activity|$stmt|";}
@@ -1139,7 +1140,7 @@ else
 			}
 
 		$MAIN.="<tr bgcolor=white>";
-		$MAIN.="<td colspan=2><font size=2>TOTALS</td>";
+		$MAIN.="<td colspan=2><font size=2>"._QXZ("TOTALS")."</td>";
 		$MAIN.="<td align=right><font size=2> $TOTALpauseSECONDS</td>\n";
 		$MAIN.="<td align=right><font size=2> $TOTALwaitSECONDS</td>\n";
 		$MAIN.="<td align=right><font size=2> $TOTALtalkSECONDS</td>\n";
@@ -1147,7 +1148,7 @@ else
 		$MAIN.="<td align=right><font size=2> $TOTALdeadSECONDS</td>\n";
 		$MAIN.="<td align=right><font size=2> $TOTALcustomerSECONDS</td>\n";
 		$MAIN.="<td colspan=4><font size=2> &nbsp; </td></tr>\n";
-		$CSV_text7.="\"\",\"\",\"TOTALS\",\"$TOTALpauseSECONDS\",\"$TOTALwaitSECONDS\",\"$TOTALtalkSECONDS\",\"$TOTALdispoSECONDS\",\"$TOTALdeadSECONDS\",\"$TOTALcustomerSECONDS\"\n";
+		$CSV_text7.="\"\",\"\",\""._QXZ("TOTALS")."\",\"$TOTALpauseSECONDS\",\"$TOTALwaitSECONDS\",\"$TOTALtalkSECONDS\",\"$TOTALdispoSECONDS\",\"$TOTALdeadSECONDS\",\"$TOTALcustomerSECONDS\"\n";
 
 		$TOTALpauseSECONDShh =	sec_convert($TOTALpauseSECONDS,'H'); 
 		$TOTALwaitSECONDShh =	sec_convert($TOTALwaitSECONDS,'H'); 
@@ -1157,7 +1158,7 @@ else
 		$TOTALcustomerSECONDShh =	sec_convert($TOTALcustomerSECONDS,'H'); 
 
 		$MAIN.="<tr bgcolor=white>";
-		$MAIN.="<td colspan=2><font size=1>(in HH:MM:SS)</td>";
+		$MAIN.="<td colspan=2><font size=1>"._QXZ("(in HH:MM:SS)")."</td>";
 		$MAIN.="<td align=right><font size=2> $TOTALpauseSECONDShh</td>\n";
 		$MAIN.="<td align=right><font size=2> $TOTALwaitSECONDShh</td>\n";
 		$MAIN.="<td align=right><font size=2> $TOTALtalkSECONDShh</td>\n";
@@ -1165,7 +1166,7 @@ else
 		$MAIN.="<td align=right><font size=2> $TOTALdeadSECONDShh</td>\n";
 		$MAIN.="<td align=right><font size=2> $TOTALcustomerSECONDShh</td>\n";
 		$MAIN.="<td colspan=4><font size=2> &nbsp; </td></tr>\n";
-		$CSV_text7.="\"\",\"\",\"(in HH:MM:SS)\",\"$TOTALpauseSECONDShh\",\"$TOTALwaitSECONDShh\",\"$TOTALtalkSECONDShh\",\"$TOTALdispoSECONDShh\",\"$TOTALdeadSECONDShh\",\"$TOTALcustomerSECONDShh\"\n";
+		$CSV_text7.="\"\",\"\",\""._QXZ("(in HH:MM:SS)")."\",\"$TOTALpauseSECONDShh\",\"$TOTALwaitSECONDShh\",\"$TOTALtalkSECONDShh\",\"$TOTALdispoSECONDShh\",\"$TOTALdeadSECONDShh\",\"$TOTALcustomerSECONDShh\"\n";
 
 		$MAIN.="</TABLE></center><BR><BR>\n";
 		}
@@ -1173,11 +1174,11 @@ else
 
 	##### vicidial recordings for this time period #####
 
-	$MAIN.="<B>RECORDINGS FOR THIS TIME PERIOD: (10000 record limit)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=8'>[DOWNLOAD]</a></B>\n";
+	$MAIN.="<B>"._QXZ("RECORDINGS FOR THIS TIME PERIOD: (10000 record limit)")."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=8'>["._QXZ("DOWNLOAD")."]</a></B>\n";
 	$MAIN.="<TABLE width=750 cellspacing=0 cellpadding=1>\n";
-	$MAIN.="<tr><td><font size=1># </td><td align=left><font size=2> LEAD</td><td><font size=2>DATE/TIME </td><td align=left><font size=2>SECONDS </td><td align=left><font size=2> &nbsp; RECID</td><td align=center><font size=2>FILENAME</td><td align=center><font size=2>LOCATION &nbsp; </td></tr>\n";
-	$CSV_text8.="\"RECORDINGS FOR THIS TIME PERIOD: (10000 record limit)\"\n";
-	$CSV_text8.="\"\",\"#\",\"LEAD\",\"DATE/TIME\",\"SECONDS\",\"RECID\",\"FILENAME\",\"LOCATION\"\n";
+	$MAIN.="<tr><td><font size=1># </td><td align=left><font size=2> "._QXZ("LEAD")."</td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2>"._QXZ("SECONDS")." </td><td align=left><font size=2> &nbsp; "._QXZ("RECID")."</td><td align=center><font size=2>"._QXZ("FILENAME")."</td><td align=center><font size=2>"._QXZ("LOCATION")." &nbsp; </td></tr>\n";
+	$CSV_text8.="\""._QXZ("RECORDINGS FOR THIS TIME PERIOD: (10000 record limit)")."\"\n";
+	$CSV_text8.="\"\",\"#\",\""._QXZ("LEAD")."\",\""._QXZ("DATE/TIME")."\",\""._QXZ("SECONDS")."\",\""._QXZ("RECID")."\",\""._QXZ("FILENAME")."\",\""._QXZ("LOCATION")."\"\n";
 
 		$stmt="select recording_id,channel,server_ip,extension,start_time,start_epoch,end_time,end_epoch,length_in_sec,length_in_min,filename,location,lead_id,user,vicidial_id from recording_log where user='" . mysqli_real_escape_string($link, $user) . "' and start_time >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and start_time <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by recording_id desc limit 10000;";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -1250,11 +1251,11 @@ else
 		{
 		##### vicidial agent outbound user manual calls for this time period #####
 
-		$MAIN.="<B>MANUAL OUTBOUND CALLS FOR THIS TIME PERIOD: (10000 record limit)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=9'>[DOWNLOAD]</a></B>\n";
+		$MAIN.="<B>"._QXZ("MANUAL OUTBOUND CALLS FOR THIS TIME PERIOD: (10000 record limit)")."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=9'>["._QXZ("DOWNLOAD")."]</a></B>\n";
 		$MAIN.="<TABLE width=750 cellspacing=0 cellpadding=1>\n";
-		$MAIN.="<tr><td><font size=1># </td><td><font size=2>DATE/TIME </td><td align=left><font size=2> CALL TYPE</td><td align=left><font size=2> SERVER</td><td align=left><font size=2> PHONE</td><td align=right><font size=2> DIALED</td><td align=right><font size=2> LEAD</td><td align=right><font size=2> CALLERID</td><td align=right><font size=2> ALIAS</td><td align=right><font size=2> PRESET</td><td align=right><font size=2>C3HU</td></tr>\n";
-		$CSV_text9.="\"MANUAL OUTBOUND CALLS FOR THIS TIME PERIOD: (10000 record limit)\"\n";
-		$CSV_text9.="\"\",\"#\",\"DATE/TIME\",\"CALL TYPE\",\"SERVER\",\"PHONE\",\"DIALED\",\"LEAD\",\"CALLERID\",\"ALIAS\",\"PRESET\",\"C3HU\"\n";
+		$MAIN.="<tr><td><font size=1># </td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2> "._QXZ("CALL TYPE")."</td><td align=left><font size=2> "._QXZ("SERVER")."</td><td align=left><font size=2> "._QXZ("PHONE")."</td><td align=right><font size=2> "._QXZ("DIALED")."</td><td align=right><font size=2> "._QXZ("LEAD")."</td><td align=right><font size=2> "._QXZ("CALLERID")."</td><td align=right><font size=2> "._QXZ("ALIAS")."</td><td align=right><font size=2> "._QXZ("PRESET")."</td><td align=right><font size=2>"._QXZ("C3HU")."</td></tr>\n";
+		$CSV_text9.="\""._QXZ("MANUAL OUTBOUND CALLS FOR THIS TIME PERIOD: (10000 record limit)")."\"\n";
+		$CSV_text9.="\"\",\"#\",\""._QXZ("DATE/TIME")."\",\""._QXZ("CALL TYPE")."\",\""._QXZ("SERVER")."\",\""._QXZ("PHONE")."\",\""._QXZ("DIALED")."\",\""._QXZ("LEAD")."\",\""._QXZ("CALLERID")."\",\""._QXZ("ALIAS")."\",\""._QXZ("PRESET")."\",\""._QXZ("C3HU")."\"\n";
 
 		$stmt="select call_date,call_type,server_ip,phone_number,number_dialed,lead_id,callerid,group_alias_id,preset_name,customer_hungup,customer_hungup_seconds from user_call_log where user='" . mysqli_real_escape_string($link, $user) . "' and call_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and call_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by call_date desc limit 10000;";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -1332,11 +1333,11 @@ else
 		{
 		##### vicidial lead searches for this time period #####
 
-		$MAIN.="<B>LEAD SEARCHES FOR THIS TIME PERIOD: (10000 record limit)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=10'>[DOWNLOAD]</a></B>\n";
+		$MAIN.="<B>"._QXZ("LEAD SEARCHES FOR THIS TIME PERIOD: (10000 record limit)")."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=10'>["._QXZ("DOWNLOAD")."]</a></B>\n";
 		$MAIN.="<TABLE width=750 cellspacing=0 cellpadding=1>\n";
-		$MAIN.="<tr><td><font size=1># </td><td NOWRAP><font size=2>DATE/TIME &nbsp; </td><td align=left NOWRAP><font size=2> TYPE &nbsp; </td><td align=left NOWRAP><font size=2> RESULTS &nbsp; </td><td align=left NOWRAP><font size=2> SEC &nbsp; </td><td align=right NOWRAP><font size=2> QUERY</td></tr>\n";
-		$CSV_text10.="\"LEAD SEARCHES FOR THIS TIME PERIOD: (10000 record limit)\"\n";
-		$CSV_text10.="\"\",\"#\",\"DATE/TIME\",\"TYPE\",\"RESULTS\",\"SEC\",\"QUERY\"\n";
+		$MAIN.="<tr><td><font size=1># </td><td NOWRAP><font size=2>"._QXZ("DATE/TIME")." &nbsp; </td><td align=left NOWRAP><font size=2> "._QXZ("TYPE")." &nbsp; </td><td align=left NOWRAP><font size=2> "._QXZ("RESULTS")." &nbsp; </td><td align=left NOWRAP><font size=2> "._QXZ("SEC")." &nbsp; </td><td align=right NOWRAP><font size=2> "._QXZ("QUERY")."</td></tr>\n";
+		$CSV_text10.="\""._QXZ("LEAD SEARCHES FOR THIS TIME PERIOD: (10000 record limit)")."\"\n";
+		$CSV_text10.="\"\",\"#\",\""._QXZ("DATE/TIME")."\",\""._QXZ("TYPE")."\",\""._QXZ("RESULTS")."\",\""._QXZ("SEC")."\",\""._QXZ("QUERY")."\"\n";
 
 		$stmt="select event_date,source,results,seconds,search_query from vicidial_lead_search_log where user='" . mysqli_real_escape_string($link, $user) . "' and event_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and event_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by event_date desc limit 10000;";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -1373,11 +1374,11 @@ else
 		{
 		##### vicidial agent manual dial lead preview skips for this time period #####
 
-		$MAIN.="<B>PREVIEW LEAD SKIPS FOR THIS TIME PERIOD: (10000 record limit)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=11'>[DOWNLOAD]</a></B>\n";
+		$MAIN.="<B>"._QXZ("PREVIEW LEAD SKIPS FOR THIS TIME PERIOD: (10000 record limit)")."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=11'>["._QXZ("DOWNLOAD")."]</a></B>\n";
 		$MAIN.="<TABLE width=750 cellspacing=0 cellpadding=1>\n";
-		$MAIN.="<tr><td><font size=1># </td><td NOWRAP><font size=2>DATE/TIME &nbsp; </td><td align=right NOWRAP><font size=2> LEAD ID &nbsp; </td><td align=right NOWRAP><font size=2> STATUS &nbsp; </td><td align=right NOWRAP><font size=2> COUNT &nbsp; </td><td align=right NOWRAP><font size=2> CAMPAIGN</td></tr>\n";
-		$CSV_text11.="\"PREVIEW LEAD SKIPS FOR THIS TIME PERIOD: (10000 record limit)\"\n";
-		$CSV_text11.="\"\",\"#\",\"DATE/TIME\",\"LEAD ID\",\"STATUS\",\"COUNT\",\"CAMPAIGN\"\n";
+		$MAIN.="<tr><td><font size=1># </td><td NOWRAP><font size=2>"._QXZ("DATE/TIME")." &nbsp; </td><td align=right NOWRAP><font size=2> "._QXZ("LEAD ID")." &nbsp; </td><td align=right NOWRAP><font size=2> "._QXZ("STATUS")." &nbsp; </td><td align=right NOWRAP><font size=2> "._QXZ("COUNT")." &nbsp; </td><td align=right NOWRAP><font size=2> "._QXZ("CAMPAIGN")."</td></tr>\n";
+		$CSV_text11.="\""._QXZ("PREVIEW LEAD SKIPS FOR THIS TIME PERIOD: (10000 record limit)")."\"\n";
+		$CSV_text11.="\"\",\"#\",\""._QXZ("DATE/TIME")."\",\""._QXZ("LEAD ID")."\",\""._QXZ("STATUS")."\",\""._QXZ("COUNT")."\",\""._QXZ("CAMPAIGN")."\"\n";
 
 		$stmt="select user,event_date,lead_id,campaign_id,previous_status,previous_called_count from vicidial_agent_skip_log where user='" . mysqli_real_escape_string($link, $user) . "' and event_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and event_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by event_date desc limit 10000;";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -1413,7 +1414,7 @@ $RUNtime = ($ENDtime - $STARTtime);
 $MAIN.="\n\n\n<br><br><br>\n\n";
 
 
-$MAIN.="<font size=0>\n\n\n<br><br><br>\nscript runtime: $RUNtime seconds|$db_source</font>";
+$MAIN.="<font size=0>\n\n\n<br><br><br>\n"._QXZ("script runtime").": $RUNtime "._QXZ("seconds")."|$db_source</font>";
 
 $MAIN.="</TD></TR><TABLE>";
 $MAIN.="</body>";

@@ -20,6 +20,7 @@
 # 130902-0735 - Changed to mysqli PHP functions
 # 140108-0743 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141114-0006 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -119,7 +120,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -132,10 +133,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -215,7 +216,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -295,12 +296,12 @@ while ($i < $lists_to_print)
 	$i++;
 	}
 
-$campaign_span_txt="Campaigns:<BR>";
+$campaign_span_txt=_QXZ("Campaigns").":<BR>";
 $campaign_span_txt.="<SELECT SIZE=5 NAME=group[] multiple>";
 if  (preg_match('/\-\-ALL\-\-/',$group_string))
-	{$campaign_span_txt.="<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>";}
+	{$campaign_span_txt.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL CAMPAIGNS")." --</option>";}
 else
-	{$campaign_span_txt.="<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>";}
+	{$campaign_span_txt.="<option value=\"--ALL--\">-- "._QXZ("ALL CAMPAIGNS")." --</option>";}
 $o=0;
 while ($campaigns_to_print > $o)
 	{
@@ -310,7 +311,7 @@ while ($campaigns_to_print > $o)
 	}
 $campaign_span_txt.="</SELECT>";
 
-$list_span_txt="Lists:<BR>";
+$list_span_txt=_QXZ("Lists").":<BR>";
 $list_span_txt.="<SELECT NAME='selected_list'>";
 $o=0;
 if ($selected_list) 
@@ -324,7 +325,7 @@ while ($lists_to_print>$o)
 	}
 $list_span_txt.="</SELECT>";
 
-$snapshot_span_txt="Snapshot time:<BR>";
+$snapshot_span_txt=_QXZ("Snapshot time").":<BR>";
 $snapshot_stmt="SELECT distinct snapshot_time from dialable_inventory_snapshots order by snapshot_time desc limit 100;";
 if ($DBX > 0) {$HTML_header.= "|$snapshot_stmt|\n";}
 $snapshot_rslt=mysql_to_mysqli($snapshot_stmt, $link);
@@ -335,7 +336,6 @@ while ($ss_row=mysqli_fetch_row($snapshot_rslt))
 	$snapshot_span_txt.="\t<option value=\"$ss_row[0]\">$ss_row[0]</option>\n";
 	}
 $snapshot_span_txt.="</SELECT>\n";
-
 
 $HTML_header.="<HTML>\n";
 $HTML_header.="<HEAD>\n";
@@ -359,7 +359,7 @@ $HTML_header.="}\n";
 $HTML_header.="</script>\n";
 $HTML_header.="\n";
 $HTML_header.="<META HTTP-EQUIV='Content-Type' CONTENT='text/html; charset=utf-8'>\n";
-$HTML_header.="<TITLE>$report_name</TITLE></HEAD><BODY $onload BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HTML_header.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY $onload BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 $HTML_header.="<PRE>\n";
 
 $rpt_header="";
@@ -397,7 +397,7 @@ if ($SUBMIT)
 
 	if ($snapshot_time && $report_source=="SNAPSHOT") 
 		{
-		$rpt_header="SNAPSHOT from $snapshot_time\n";
+		$rpt_header=_QXZ("SNAPSHOT from")." $snapshot_time\n";
 		$stmt="SELECT distinct shift_data from dialable_inventory_snapshots where snapshot_time='$snapshot_time' and time_setting='$time_setting' $time_clause order by campaign_id, list_id;";
 		if ($DBX > 0) {$HTML_header.= "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -550,9 +550,9 @@ if ($SUBMIT)
 					if (!preg_match("/ $row[0] /", "$active_dial_statuses")) {$inactive_dial_statuses.="$row[0] ";}
 					}
 				$inventory_statuses=substr($inventory_statuses, 0, -1);
-				if ($DB) {$HTML_header.= "         CAMPAIGN DIAL STATUSES: |$active_dial_statuses|\n";}
-				if ($DB) {$HTML_header.= "     INVENTORY STATUSES RESULTS: |$inventory_statuses|\n";}
-				if ($DB) {$HTML_header.= "      INACTIVE STATUSES RESULTS: |$inactive_dial_statuses|\n";}
+				if ($DB) {$HTML_header.= " "._QXZ("CAMPAIGN DIAL STATUSES",30,"r").": |$active_dial_statuses|\n";}
+				if ($DB) {$HTML_header.= " "._QXZ("INVENTORY STATUSES RESULTS",30,"r").": |$inventory_statuses|\n";}
+				if ($DB) {$HTML_header.= " "._QXZ("INACTIVE STATUSES RESULTS",30,"r").": |$inactive_dial_statuses|\n";}
 
 				$filter_stmt="SELECT lead_filter_sql from vicidial_campaigns v, vicidial_lead_filters vlf where v.campaign_id='$group[$i]' and v.lead_filter_id=vlf.lead_filter_id limit 1;";
 				if ($DB) {$HTML_header.="$filter_stmt;\n";}
@@ -708,10 +708,10 @@ if ($SUBMIT)
 				if (!preg_match("/ $row[0] /", "$active_dial_statuses")) {$inactive_dial_statuses.="$row[0] ";}
 				}
 			$inventory_statuses=substr($inventory_statuses, 0, -1);
-			if ($DB) {$HTML_header.= "         CAMPAIGN DIAL STATUSES: |$active_dial_statuses|\n";}
-			if ($DB) {$HTML_header.= "                  DIAL STATUSES: |$dial_statuses|\n";}
-			if ($DB) {$HTML_header.= "     INVENTORY STATUSES RESULTS: |$inventory_statuses|\n";}
-			if ($DB) {$HTML_header.= "      INACTIVE STATUSES RESULTS: |$inactive_dial_statuses|\n";}
+			if ($DB) {$HTML_header.= " "._QXZ("CAMPAIGN DIAL STATUSES",30,"r").": |$active_dial_statuses|\n";}
+			if ($DB) {$HTML_header.= " "._QXZ("DIAL STATUSES",30,"r").": |$dial_statuses|\n";}
+			if ($DB) {$HTML_header.= " "._QXZ("INVENTORY STATUSES RESULTS",30,"r").": |$inventory_statuses|\n";}
+			if ($DB) {$HTML_header.= " "._QXZ("INACTIVE STATUSES RESULTS",30,"r").": |$inactive_dial_statuses|\n";}
 
 			if ($DB) {$HTML_header.="<B>$campaign_stmt; - $dial_statuses</B>\n";}
 
@@ -722,7 +722,7 @@ if ($SUBMIT)
 			if (strlen($filter_row[0])>0) {$filter_SQL=" and $filter_row[0]";} else {$filter_SQL="";}
 			$filter_SQL = preg_replace("/\\\/",'',$filter_SQL);
 
-			$lists_stmt="SELECT list_id, list_name, list_description, if(list_lastcalldate is null, '*** Not called *** ', list_lastcalldate) as list_lastcalldate, campaign_id from vicidial_lists where list_id='$selected_list' and inventory_report='Y' $LOGallowed_campaignsSQL order by list_id asc;";
+			$lists_stmt="SELECT list_id, list_name, list_description, if(list_lastcalldate is null, '*** "._QXZ("Not called")." *** ', list_lastcalldate) as list_lastcalldate, campaign_id from vicidial_lists where list_id='$selected_list' and inventory_report='Y' $LOGallowed_campaignsSQL order by list_id asc;";
 			if ($DB) {$HTML_header.="$lists_stmt;\n";}
 			$lists_rslt=mysql_to_mysqli($lists_stmt, $link);
 			while ($lists_row=mysqli_fetch_array($lists_rslt)) 
@@ -756,7 +756,7 @@ if ($SUBMIT)
 
 				$full_dialable_SQL="";
 				$Xdialable_count = dialable_leads($DB,$link,$local_call_time,"$dial_statuses",$selected_list,$drop_lockout_time,$call_count_limit,$single_status,"$filter_SQL");
-				if ($DB > 0) {echo "FULL DIALABLE SQL: |$full_dialable_SQL|";}
+				if ($DB > 0) {echo _QXZ("FULL DIALABLE SQL").": |$full_dialable_SQL|";}
 				}
 
 			$penetration=sprintf("%.2f", (MathZDC(100*($list_start_inv-$Xdialable_count), $list_start_inv)));
@@ -852,23 +852,23 @@ if ($SUBMIT)
 			}
 		}
 
-	$rpt_header.="Date: ".date("m/d/Y")." -- Time: ".date("H:i a")."\n\n";
+	$rpt_header.=_QXZ("Date").": ".date("m/d/Y")." -- "._QXZ("Time").": ".date("H:i a")."\n\n";
 	$rpt_header.="+-----------+--------------------------------+----------+---------------------+-----------+----------+----------+----------+----------+----------+---------+$rpt_header_BORDER\n";
-	$rpt_header.="| Call list | List description               | Campaign | Last call date      | Start Inv | Call Inv | Call Inv | Call Inv | Call Inv | Dial Avg | Pen. %  |$rpt_header_SHIFTS\n";
-	$rpt_header.="|           |                                |          |                     |           |  Total   | No filtr | One-off  | Inactive |          |         |$rpt_header_SHIFTS_lower\n";
+	$rpt_header.="| "._QXZ("Call list",9)." | "._QXZ("List description",30)." | "._QXZ("Campaign",8)." | "._QXZ("Last call date",19)." | "._QXZ("Start Inv",9)." | "._QXZ("Call Inv",8)." | "._QXZ("Call Inv",8)." | "._QXZ("Call Inv",8)." | "._QXZ("Call Inv",8)." | "._QXZ("Dial Avg",8)." | "._QXZ("Pen.",5)." % |$rpt_header_SHIFTS\n";
+	$rpt_header.="|           |                                |          |                     |           | "._QXZ("Total",8)." | "._QXZ("No filtr",8)." | "._QXZ("One-off",8)." | "._QXZ("Inactive",8)." |          |         |$rpt_header_SHIFTS_lower\n";
 	$rpt_header.="+-----------+--------------------------------+----------+---------------------+-----------+----------+----------+----------+----------+----------+---------+$rpt_header_BORDER\n";
 
-	$CSV_header="\"$report_name\"\n";
+	$CSV_header="\""._QXZ("$report_name")."\"\n";
 	$CSV_header.="\"Date: ".date("m/d/Y")."\",\"\",\"Time: ".date("H:i a")."\"\n\n";
-	$CSV_header.="\"Call list\",\"List description\",\"Campaign\",\"Last call date\",\"Start Inv\",\"Call Inv Total\",\"Call Inv - No filter\",\"Call Inv - One-offs\",\"Call Inv - Inactive dialable statuses\",\"Dial Avg\",\"Pen. %\",".substr($CSV_header_SHIFTS,0,-1)."\n";
+	$CSV_header.="\""._QXZ("Call list")."\",\""._QXZ("List description")."\",\""._QXZ("Campaign")."\",\""._QXZ("Last call date")."\",\""._QXZ("Start Inv")."\",\""._QXZ("Call Inv Total")."\",\""._QXZ("Call Inv - No filter")."\",\""._QXZ("Call Inv - One-offs")."\",\""._QXZ("Call Inv - Inactive dialable statuses")."\",\""._QXZ("Dial Avg")."\",\""._QXZ("Pen.")." %\",".substr($CSV_header_SHIFTS,0,-1)."\n";
 
 	$rpt_footer ="+-----------+--------------------------------+----------+---------------------+-----------+----------+----------+----------+----------+----------+---------+$rpt_header_BORDER\n";
 
 	#### PRINT TOTALS ####
 	$total_average_call_count=sprintf("%.1f", MathZDC($total_total_calls, $total_list_start_inv));
 	$total_penetration=sprintf("%.2f", (MathZDC(100*($total_list_start_inv-$total_dialable_count), $total_list_start_inv)));
-	$rpt_footer.="|".sprintf("%76s", "TOTALS")." | ".sprintf("%9s", $total_list_start_inv)." | ".sprintf("%8s", $total_dialable_count)." | ".sprintf("%8s", $total_dialable_count_nofilter)." | ".sprintf("%8s", $total_dialable_count_oneoff)." | ".sprintf("%8s", $total_dialable_count_inactive)." | ".sprintf("%8s", $total_average_call_count)." | ".sprintf("%6s", $total_penetration)."% |";
-	$CSV_body.="\"\",\"\",\"\",\"TOTALS\",\"$total_list_start_inv\",\"$total_dialable_count\",\"$total_dialable_count_nofilter\",\"$total_dialable_count_oneoff\",\"$total_dialable_count_inactive\",\"$total_average_call_count\",\"$total_penetration\"";
+	$rpt_footer.="|"._QXZ("TOTALS",76)." | ".sprintf("%9s", $total_list_start_inv)." | ".sprintf("%8s", $total_dialable_count)." | ".sprintf("%8s", $total_dialable_count_nofilter)." | ".sprintf("%8s", $total_dialable_count_oneoff)." | ".sprintf("%8s", $total_dialable_count_inactive)." | ".sprintf("%8s", $total_average_call_count)." | ".sprintf("%6s", $total_penetration)."% |";
+	$CSV_body.="\"\",\"\",\"\",\""._QXZ("TOTALS")."\",\"$total_list_start_inv\",\"$total_dialable_count\",\"$total_dialable_count_nofilter\",\"$total_dialable_count_oneoff\",\"$total_dialable_count_inactive\",\"$total_average_call_count\",\"$total_penetration\"";
 	$b=0;
 	while ($b < count($shift_ary))
 		{
@@ -892,10 +892,10 @@ $HTML_text.="<FORM ACTION='$PHP_SELF' METHOD=GET name=vicidial_report id=vicidia
 $HTML_text.="<INPUT TYPE=hidden NAME=DB VALUE='$DB'>\n";
 $HTML_text.="<TABLE CELLSPACING=3><TR height='200'><TD VALIGN=TOP>\n";
 $HTML_text.="	<table width='*' align='center'>\n";
-$HTML_text.="	<tr><td>Report type:</td></tr>\n";
+$HTML_text.="	<tr><td>"._QXZ("Report type").":</td></tr>\n";
 if ($report_type=='LIST') {$cmp_checked=""; $list_checked="checked";} else {$cmp_checked="checked"; $list_checked="";}
-$HTML_text.="	<tr><td><input type='radio' name='report_type' value='CAMPAIGNS' onClick=\"ToggleSpan('campaign_span', 'list_span')\" $cmp_checked>Campaigns</td></tr>\n";
-$HTML_text.="	<tr><td><input type='radio' name='report_type' value='LIST' onClick=\"ToggleSpan('list_span', 'campaign_span')\" $list_checked>List</td></tr>\n";
+$HTML_text.="	<tr><td><input type='radio' name='report_type' value='CAMPAIGNS' onClick=\"ToggleSpan('campaign_span', 'list_span')\" $cmp_checked>"._QXZ("Campaigns")."</td></tr>\n";
+$HTML_text.="	<tr><td><input type='radio' name='report_type' value='LIST' onClick=\"ToggleSpan('list_span', 'campaign_span')\" $list_checked>"._QXZ("List")."</td></tr>\n";
 $HTML_text.="	</table>\n";
 $HTML_text.="</TD>\n";
 $HTML_text.="<td width='30'>&nbsp;</td>\n";
@@ -905,23 +905,23 @@ $HTML_text.="<span id='list_span' style='display:none;'>$list_span_txt</span>\n"
 $HTML_text.="</TD>\n";
 $HTML_text.="<TD VALIGN=TOP>\n";
 $HTML_text.="	<table width='*' align='center'>\n";
-$HTML_text.="	<tr><td>Time setting:</td></tr>\n";
+$HTML_text.="	<tr><td>"._QXZ("Time setting").":</td></tr>\n";
 if ($time_setting=='LOCAL') {$svr_checked=""; $local_checked="checked";} else {$svr_checked="checked"; $local_checked="";}
 if ($override_24hours) {$override_checked="checked";}
-$HTML_text.="	<tr><td><input type='radio' name='time_setting' value='SERVER' $svr_checked>Server</td></tr>\n";
-$HTML_text.="	<tr><td><input type='radio' name='time_setting' value='LOCAL' $local_checked>Local</td></tr>\n";
-$HTML_text.="	<tr><td><input type='checkbox' name='override_24hours' value='OVERRIDE' $override_checked>Ignore local campaign call time<BR>(default to 24 hours)</td></tr>\n";
+$HTML_text.="	<tr><td><input type='radio' name='time_setting' value='SERVER' $svr_checked>"._QXZ("Server")."</td></tr>\n";
+$HTML_text.="	<tr><td><input type='radio' name='time_setting' value='LOCAL' $local_checked>"._QXZ("Local")."</td></tr>\n";
+$HTML_text.="	<tr><td><input type='checkbox' name='override_24hours' value='OVERRIDE' $override_checked>"._QXZ("Ignore local campaign call time")."<BR>("._QXZ("default to 24 hours").")</td></tr>\n";
 $HTML_text.="	</table>\n";
 $HTML_text.="</TD>\n";
 $HTML_text.="<TD VALIGN=TOP width='150'>\n";
 $HTML_text.="	<table width='*' align='center'>\n";
-$HTML_text.="	<tr><td>Report source:</td></tr>\n";
+$HTML_text.="	<tr><td>"._QXZ("Report source").":</td></tr>\n";
 if ($report_source=='REALTIME') {$ss_checked=""; $rt_checked="checked";} else {$ss_checked="checked"; $rt_checked="";}
-$HTML_text.="	<tr><td width='150' align='left'><input type='radio' name='report_source' value='SNAPSHOT' onClick=\"ToggleSpan('snapshot_span', '')\" $ss_checked>Snapshot</td></tr>\n";
+$HTML_text.="	<tr><td width='150' align='left'><input type='radio' name='report_source' value='SNAPSHOT' onClick=\"ToggleSpan('snapshot_span', '')\" $ss_checked>"._QXZ("Snapshot")."</td></tr>\n";
 
 if ($inventory_allow_realtime > 0)
 	{
-	$HTML_text.="	<tr><td align='left'><input type='radio' name='report_source' value='REALTIME' onClick=\"ToggleSpan('', 'snapshot_span')\" $rt_checked>Real-time</td></tr>\n";
+	$HTML_text.="	<tr><td align='left'><input type='radio' name='report_source' value='REALTIME' onClick=\"ToggleSpan('', 'snapshot_span')\" $rt_checked>"._QXZ("Real-time")."</td></tr>\n";
 	}
 else
 	{
@@ -932,8 +932,8 @@ $HTML_text.="	<tr><td align='left'><span id='snapshot_span' style='display:block
 $HTML_text.="	</table>\n";
 $HTML_text.="</TD>\n";
 $HTML_text.="<TD VALIGN='top' align='center'>\n";
-$HTML_text.="<font color='BLACK' face='ARIAL,HELVETICA' size='2'> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href='$PHP_SELF?DB=$DB$groupQS&selected_list=$selected_list&report_type=$report_type&time_setting=$time_setting&report_source=$report_source&snapshot_time=$snapshot_time&file_download=1&SUBMIT=$SUBMIT'>DOWNLOAD</a> | <a href='./admin.php?ADD=999999'>REPORTS</a> </font><BR><BR>\n";
-$HTML_text.="<input name='SUBMIT' value='SUBMIT' type='submit'>\n";
+$HTML_text.="<font color='BLACK' face='ARIAL,HELVETICA' size='2'> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href='$PHP_SELF?DB=$DB$groupQS&selected_list=$selected_list&report_type=$report_type&time_setting=$time_setting&report_source=$report_source&snapshot_time=$snapshot_time&file_download=1&SUBMIT=$SUBMIT'>"._QXZ("DOWNLOAD")."</a> | <a href='./admin.php?ADD=999999'>"._QXZ("REPORTS")."</a> </font><BR><BR>\n";
+$HTML_text.="<input name='SUBMIT' value='"._QXZ("SUBMIT")."' type='submit'>\n";
 $HTML_text.="</TD>\n";
 $HTML_text.="</TR>\n";
 $HTML_text.="</TABLE>\n";
@@ -947,7 +947,7 @@ $time_end = microtime(true);
 $ENDtime = date("U");
 $time = $ENDtime - $STARTtime;
 
-$HTML_text.="Executed in $time seconds\n";
+$HTML_text.=_QXZ("Executed in")." $time "._QXZ("seconds")."\n";
 $HTML_text.="</FONT></PRE>\n";
 $HTML_text.="</BODY>\n";
 $HTML_text.="</HTML>\n";

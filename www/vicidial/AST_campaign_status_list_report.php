@@ -17,6 +17,7 @@
 # 130902-0743 - Changed to mysqli PHP functions
 # 140108-0749 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141114-0848 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -107,7 +108,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -120,10 +121,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -203,7 +204,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -283,7 +284,7 @@ $HTML_head.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 $HTML_head.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 $HTML_head.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HTML_head.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>$group_S\n";
+$HTML_head.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>$group_S\n";
 $short_header=1;
 
 #	require("admin_header.php");
@@ -291,7 +292,7 @@ $short_header=1;
 $HTML_text.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
 $HTML_text.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-$HTML_text.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> Dates:<BR>";
+$HTML_text.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> "._QXZ("Dates").":<BR>";
 $HTML_text.="<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
 $HTML_text.="<INPUT TYPE=hidden NAME=query_date ID=query_date VALUE=\"$query_date\">\n";
 $HTML_text.="<INPUT TYPE=hidden NAME=end_date ID=end_date VALUE=\"$end_date\">\n";
@@ -310,7 +311,7 @@ $HTML_text.="</script>\n";
 
 $HTML_text.=" &nbsp; <INPUT TYPE=TEXT NAME=query_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_T\">";
 
-$HTML_text.="<BR> to <BR><INPUT TYPE=TEXT NAME=end_date_D SIZE=11 MAXLENGTH=10 VALUE=\"$end_date_D\">";
+$HTML_text.="<BR> "._QXZ("to")." <BR><INPUT TYPE=TEXT NAME=end_date_D SIZE=11 MAXLENGTH=10 VALUE=\"$end_date_D\">";
 
 $HTML_text.="<script language=\"JavaScript\">\n";
 $HTML_text.="var o_cal = new tcal ({\n";
@@ -325,12 +326,12 @@ $HTML_text.="</script>\n";
 
 $HTML_text.=" &nbsp; <INPUT TYPE=TEXT NAME=end_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$end_date_T\">";
 
-$HTML_text.="</TD><TD VALIGN=TOP> Campaigns:<BR>";
+$HTML_text.="</TD><TD VALIGN=TOP> "._QXZ("Campaigns").":<BR>";
 $HTML_text.="<SELECT SIZE=5 NAME=group[] multiple>\n";
 if  (preg_match("/--ALL--/",$group_string))
-	{$HTML_text.="<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 else
-	{$HTML_text.="<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\">-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 $o=0;
 while ($campaigns_to_print > $o)
 	{
@@ -342,16 +343,16 @@ $HTML_text.="</SELECT>\n";
 
 $HTML_text.="</TD><TD VALIGN=TOP>&nbsp;\n";
 $HTML_text.="</TD><TD VALIGN=TOP>\n";
-$HTML_text.="Display as:<BR>";
+$HTML_text.=_QXZ("Display as").":<BR>";
 $HTML_text.="<select name='report_display_type'>";
 if ($report_display_type) {$HTML_text.="<option value='$report_display_type' selected>$report_display_type</option>";}
-$HTML_text.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR><BR>";
-$HTML_text.="<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
+$HTML_text.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n<BR><BR>";
+$HTML_text.="<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 $HTML_text.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
 $HTML_text.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
-$HTML_text.="<a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&query_date_D=$query_date_D&query_date_T=$query_date_T&end_date_D=$end_date_D&end_date_T=$end_date_T$groupQS&file_download=1&SUBMIT=$SUBMIT\">DOWNLOAD</a> |";
-$HTML_text.=" <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+$HTML_text.="<a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&query_date_D=$query_date_D&query_date_T=$query_date_T&end_date_D=$end_date_D&end_date_T=$end_date_T$groupQS&file_download=1&SUBMIT=$SUBMIT\">"._QXZ("DOWNLOAD")."</a> |";
+$HTML_text.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 $HTML_text.="</FONT>\n";
 $HTML_text.="</TD></TR></TABLE>";
 $HTML_text.="</FORM>\n\n";
@@ -379,9 +380,9 @@ while($i < $group_ct)
 		$SC_ary[$row[0]] =		$row[8];
 		$COMP_ary[$row[0]] =	$row[9];
 		}
-	$ASCII_text.="<B>CAMPAIGN: $group[$i]</B>\n";
-	$GRAPH.="<B>CAMPAIGN: $group[$i]</B>\n";
-	$CSV_text.="\"CAMPAIGN: $group[$i]\"\n";
+	$ASCII_text.="<B>"._QXZ("CAMPAIGN").": $group[$i]</B>\n";
+	$GRAPH.="<B>"._QXZ("CAMPAIGN").": $group[$i]</B>\n";
+	$CSV_text.="\""._QXZ("CAMPAIGN").": $group[$i]\"\n";
 
 	$stmt="SELECT closer_campaigns from vicidial_campaigns where campaign_id='$group[$i]'";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -415,9 +416,9 @@ while($i < $group_ct)
 		$COMP_count=0;
 
 		$dispo_ary="";
-		$ASCII_text.="<FONT SIZE=2><B>List ID #$list_id: $list_name</B>\n";
-		$GRAPH.="<FONT SIZE=2><B>List ID #$list_id: $list_name</B>\n";
-		$CSV_text.="\"List ID #$list_id: $list_name\"\n";
+		$ASCII_text.="<FONT SIZE=2><B>"._QXZ("List ID")." #$list_id: $list_name</B>\n";
+		$GRAPH.="<FONT SIZE=2><B>"._QXZ("List ID")." #$list_id: $list_name</B>\n";
+		$CSV_text.="\""._QXZ("List ID")." #$list_id: $list_name\"\n";
 
 
 		$stat_stmt="SELECT vicidial_log.status, vicidial_log.uniqueid, vicidial_log.length_in_sec as duration, cast(vicidial_agent_log.talk_sec as signed)-cast(vicidial_agent_log.dead_sec as signed) as handle_time from vicidial_log LEFT OUTER JOIN vicidial_agent_log on vicidial_log.lead_id=vicidial_agent_log.lead_id and vicidial_log.uniqueid=vicidial_agent_log.uniqueid where vicidial_log.call_date>='$query_date' and vicidial_log.call_date<='$end_date' and vicidial_log.list_id='$list_id' UNION SELECT vicidial_closer_log.status, vicidial_closer_log.uniqueid, vicidial_closer_log.length_in_sec as duration, cast(vicidial_agent_log.talk_sec as signed)-cast(vicidial_agent_log.dead_sec as signed) as handle_time from vicidial_closer_log LEFT OUTER JOIN vicidial_agent_log on vicidial_closer_log.lead_id=vicidial_agent_log.lead_id and vicidial_closer_log.uniqueid=vicidial_agent_log.uniqueid where call_date>='$query_date' and call_date<='$end_date' and list_id='$list_id' order by status";
@@ -427,12 +428,12 @@ while($i < $group_ct)
 		if (mysqli_num_rows($stat_rslt)>0) 
 			{
 			$GRAPH.="<a name='list_".$list_id."_graph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-			$GRAPH.="<tr><th width='33%' class='grey_graph_cell' id='list_".$list_id."_graph1'><a href='#' onClick=\"Draw".$list_id."Graph('CALLS', '1'); return false;\">CALLS</a></th><th width='33%' class='grey_graph_cell' id='list_".$list_id."_graph2'><a href='#' onClick=\"Draw".$list_id."Graph('DURATION', '2'); return false;\">DURATION</a></th><th width='34%' class='grey_graph_cell' id='list_".$list_id."_graph3'><a href='#' onClick=\"Draw".$list_id."Graph('HANDLETIME', '3'); return false;\">HANDLE TIME</a></th></tr>";
+			$GRAPH.="<tr><th width='33%' class='grey_graph_cell' id='list_".$list_id."_graph1'><a href='#' onClick=\"Draw".$list_id."Graph('CALLS', '1'); return false;\">"._QXZ("CALLS")."</a></th><th width='33%' class='grey_graph_cell' id='list_".$list_id."_graph2'><a href='#' onClick=\"Draw".$list_id."Graph('DURATION', '2'); return false;\">"._QXZ("DURATION")."</a></th><th width='34%' class='grey_graph_cell' id='list_".$list_id."_graph3'><a href='#' onClick=\"Draw".$list_id."Graph('HANDLETIME', '3'); return false;\">"._QXZ("HANDLE TIME")."</a></th></tr>";
 			$GRAPH.="<tr><td colspan='3' class='graph_span_cell'><span id='stats_".$list_id."_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
-			$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>List ID #$list_id: $list_name</caption><tr><th class='thgraph' scope='col'>DISPOSITION</th>";
-			$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>CALLS </th></tr>";
-			$DURATION_graph=$graph_header."<th class='thgraph' scope='col'>DURATION</th></tr>";
-			$HANDLETIME_graph=$graph_header."<th class='thgraph' scope='col'>HANDLE TIME</th></tr>";
+			$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>"._QXZ("List ID")." #$list_id: $list_name</caption><tr><th class='thgraph' scope='col'>"._QXZ("DISPOSITION")."</th>";
+			$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CALLS")." </th></tr>";
+			$DURATION_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DURATION")."</th></tr>";
+			$HANDLETIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("HANDLE TIME")."</th></tr>";
 
 			$total_calls=0; $total_handle_time=0; $total_duration=0;
 
@@ -442,9 +443,9 @@ while($i < $group_ct)
 			$max_handletime=1;
 			
 			$ASCII_text.="+------------------------------------------+--------+------------+-------------+\n";
-			$ASCII_text.="| DISPOSITION                              | CALLS  | DURATION   | HANDLE TIME |\n";
+			$ASCII_text.="| "._QXZ("DISPOSITION",40)." | "._QXZ("CALLS",6)." | "._QXZ("DURATION",10)." | "._QXZ("HANDLE TIME",11)." |\n";
 			$ASCII_text.="+------------------------------------------+--------+------------+-------------+\n";
-			$CSV_text.="\"DISPOSITION\",\"CALLS\",\"DURATION\",\"HANDLE TIME\"\n";
+			$CSV_text.="\""._QXZ("DISPOSITION")."\",\""._QXZ("CALLS")."\",\""._QXZ("DURATION")."\",\""._QXZ("HANDLE TIME")."\"\n";
 			while ($stat_row=mysqli_fetch_row($stat_rslt)) 
 				{
 				#if ($stat_row[0]=="") {$stat_row[0]="(no dispo)";}
@@ -487,12 +488,12 @@ while($i < $group_ct)
 				$d++;
 				}
 			$ASCII_text.="+------------------------------------------+--------+------------+-------------+\n";
-			$ASCII_text.="|                                  TOTALS:";
+			$ASCII_text.="| "._QXZ("TOTALS:",40,"r");
 			$ASCII_text.=" | ".sprintf("%6s", $total_calls);
 			$ASCII_text.=" | ".sprintf("%10s", sec_convert($total_duration, 'H'));
 			$ASCII_text.=" | ".sprintf("%11s", sec_convert($total_handle_time, 'H'))." |\n";
 			$ASCII_text.="+------------------------------------------+--------+------------+-------------+\n";
-			$CSV_text.="\"TOTALS:\",\"$total_calls\",\"".sec_convert($total_duration, 'H')."\",\"".sec_convert($total_handle_time, 'H')."\"\n\n";
+			$CSV_text.="\""._QXZ("TOTALS").":\",\"$total_calls\",\"".sec_convert($total_duration, 'H')."\",\"".sec_convert($total_handle_time, 'H')."\"\n\n";
 
 
 			$HA_percent =	sprintf("%6.2f", MathZDC(100*$HA_count, $total_calls)); while(strlen($HA_percent)>6) {$HA_percent = substr("$HA_percent", 0, -1);}
@@ -520,17 +521,17 @@ while($i < $group_ct)
 			$ASCII_text .= "\n";
 			$ASCII_text .= "+--------------------------------------------------------------+\n";
 			$ASCII_text .= "| $header_list_id $list_active |\n";
-			$ASCII_text .= "|    TOTAL CALLS: $header_list_count                                   |\n";
+			$ASCII_text .= "| "._QXZ("TOTAL CALLS",14,"r").": $header_list_count                                   |\n";
 			$ASCII_text .= "+--------------------------------------------------------------+\n";
-			$ASCII_text .= "| STATUS FLAGS BREAKDOWN:  (and % of total leads in the list)  |\n";
-			$ASCII_text .= "|   Human Answer:       $HA_count    $HA_percent%                   |\n";
-			$ASCII_text .= "|   Sale:               $SALE_count    $SALE_percent%                   |\n";
-			$ASCII_text .= "|   DNC:                $DNC_count    $DNC_percent%                   |\n";
-			$ASCII_text .= "|   Customer Contact:   $CC_count    $CC_percent%                   |\n";
-			$ASCII_text .= "|   Not Interested:     $NI_count    $NI_percent%                   |\n";
-			$ASCII_text .= "|   Unworkable:         $UW_count    $UW_percent%                   |\n";
-			$ASCII_text .= "|   Scheduled callbk:   $SC_count    $SC_percent%                   |\n";
-			$ASCII_text .= "|   Completed:          $COMP_count    $COMP_percent%                   |\n";
+			$ASCII_text .= "| "._QXZ("STATUS FLAGS BREAKDOWN",22).":  "._QXZ("(and % of total leads in the list)",34)."  |\n";
+			$ASCII_text .= "|   "._QXZ("Human Answer:",19)." $HA_count    $HA_percent%                   |\n";
+			$ASCII_text .= "|   "._QXZ("Sale:",19)." $SALE_count    $SALE_percent%                   |\n";
+			$ASCII_text .= "|   "._QXZ("DNC:",19)." $DNC_count    $DNC_percent%                   |\n";
+			$ASCII_text .= "|   "._QXZ("Customer Contact:",19)." $CC_count    $CC_percent%                   |\n";
+			$ASCII_text .= "|   "._QXZ("Not Interested:",19)." $NI_count    $NI_percent%                   |\n";
+			$ASCII_text .= "|   "._QXZ("Unworkable:",19)." $UW_count    $UW_percent%                   |\n";
+			$ASCII_text .= "|   "._QXZ("Scheduled callbk:",19)." $SC_count    $SC_percent%                   |\n";
+			$ASCII_text .= "|   "._QXZ("Completed:",19)." $COMP_count    $COMP_percent%                   |\n";
 			$ASCII_text .= "+--------------------------------------------------------------+\n";
 
 
@@ -563,9 +564,9 @@ while($i < $group_ct)
 			}
 		else 
 			{
-			$ASCII_text.="<B>***NO CALLS FOUND FROM $query_date TO $end_date***</B>\n";
-			$CSV_text.="\"***NO CALLS FOUND FROM $query_date TO $end_date***\"\n\n";
-			$GRAPH.="<B>***NO CALLS FOUND FROM $query_date TO $end_date***</B>\n";
+			$ASCII_text.="<B>***"._QXZ("NO CALLS FOUND FROM")." $query_date "._QXZ("TO")." $end_date***</B>\n";
+			$CSV_text.="\"***"._QXZ("NO CALLS FOUND FROM")." $query_date "._QXZ("TO")." $end_date***\"\n\n";
+			$GRAPH.="<B>***"._QXZ("NO CALLS FOUND FROM")." $query_date "._QXZ("TO")." $end_date***</B>\n";
 			}
 		$ASCII_text.="</FONT>\n";
 		$GRAPH.="</FONT>\n";

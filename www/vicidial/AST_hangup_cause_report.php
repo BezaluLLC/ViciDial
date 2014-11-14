@@ -12,6 +12,7 @@
 # 130902-0731 - Changed to mysqli PHP functions
 # 140108-0739 - Added webserver and hostname to report logging
 # 140403-1830 - Fixed SIP hangup bug
+# 141114-0837 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -72,132 +73,132 @@ if ($qm_conf_ct > 0)
 
 ##### Hangup Cause Dictionary #####
 $hangup_cause_dictionary = array(
-0 => "Unspecified. No other cause codes applicable.",
-1 => "Unallocated (unassigned) number.",
-2 => "No route to specified transit network (national use).",
-3 => "No route to destination.",
-6 => "Channel unacceptable.",
-7 => "Call awarded, being delivered in an established channel.",
-16 => "Normal call clearing.",
-17 => "User busy.",
-18 => "No user responding.",
-19 => "No answer from user (user alerted).",
-20 => "Subscriber absent.",
-21 => "Call rejected.",
-22 => "Number changed.",
-23 => "Redirection to new destination.",
-25 => "Exchange routing error.",
-27 => "Destination out of order.",
-28 => "Invalid number format (address incomplete).",
-29 => "Facilities rejected.",
-30 => "Response to STATUS INQUIRY.",
-31 => "Normal, unspecified.",
-34 => "No circuit/channel available.",
-38 => "Network out of order.",
-41 => "Temporary failure.",
-42 => "Switching equipment congestion.",
-43 => "Access information discarded.",
-44 => "Requested circuit/channel not available.",
-50 => "Requested facility not subscribed.",
-52 => "Outgoing calls barred.",
-54 => "Incoming calls barred.",
-57 => "Bearer capability not authorized.",
-58 => "Bearer capability not presently available.",
-63 => "Service or option not available, unspecified.",
-65 => "Bearer capability not implemented.",
-66 => "Channel type not implemented.",
-69 => "Requested facility not implemented.",
-79 => "Service or option not implemented, unspecified.",
-81 => "Invalid call reference value.",
-88 => "Incompatible destination.",
-95 => "Invalid message, unspecified.",
-96 => "Mandatory information element is missing.",
-97 => "Message type non-existent or not implemented.",
-98 => "Message not compatible with call state or message type non-existent or not implemented.",
-99 => "Information element / parameter non-existent or not implemented.",
-100 => "Invalid information element contents.",
-101 => "Message not compatible with call state.",
-102 => "Recovery on timer expiry.",
-103 => "Parameter non-existent or not implemented - passed on (national use).",
-111 => "Protocol error, unspecified.",
-127 => "Interworking, unspecified."
+0 => _QXZ("Unspecified. No other cause codes applicable."),
+1 => _QXZ("Unallocated (unassigned) number."),
+2 => _QXZ("No route to specified transit network (national use)."),
+3 => _QXZ("No route to destination."),
+6 => _QXZ("Channel unacceptable."),
+7 => _QXZ("Call awarded, being delivered in an established channel."),
+16 => _QXZ("Normal call clearing."),
+17 => _QXZ("User busy."),
+18 => _QXZ("No user responding."),
+19 => _QXZ("No answer from user (user alerted)."),
+20 => _QXZ("Subscriber absent."),
+21 => _QXZ("Call rejected."),
+22 => _QXZ("Number changed."),
+23 => _QXZ("Redirection to new destination."),
+25 => _QXZ("Exchange routing error."),
+27 => _QXZ("Destination out of order."),
+28 => _QXZ("Invalid number format (address incomplete)."),
+29 => _QXZ("Facilities rejected."),
+30 => _QXZ("Response to STATUS INQUIRY."),
+31 => _QXZ("Normal, unspecified."),
+34 => _QXZ("No circuit/channel available."),
+38 => _QXZ("Network out of order."),
+41 => _QXZ("Temporary failure."),
+42 => _QXZ("Switching equipment congestion."),
+43 => _QXZ("Access information discarded."),
+44 => _QXZ("Requested circuit/channel not available."),
+50 => _QXZ("Requested facility not subscribed."),
+52 => _QXZ("Outgoing calls barred."),
+54 => _QXZ("Incoming calls barred."),
+57 => _QXZ("Bearer capability not authorized."),
+58 => _QXZ("Bearer capability not presently available."),
+63 => _QXZ("Service or option not available, unspecified."),
+65 => _QXZ("Bearer capability not implemented."),
+66 => _QXZ("Channel type not implemented."),
+69 => _QXZ("Requested facility not implemented."),
+79 => _QXZ("Service or option not implemented, unspecified."),
+81 => _QXZ("Invalid call reference value."),
+88 => _QXZ("Incompatible destination."),
+95 => _QXZ("Invalid message, unspecified."),
+96 => _QXZ("Mandatory information element is missing."),
+97 => _QXZ("Message type non-existent or not implemented."),
+98 => _QXZ("Message not compatible with call state or message type non-existent or not implemented."),
+99 => _QXZ("Information element / parameter non-existent or not implemented."),
+100 => _QXZ("Invalid information element contents."),
+101 => _QXZ("Message not compatible with call state."),
+102 => _QXZ("Recovery on timer expiry."),
+103 => _QXZ("Parameter non-existent or not implemented - passed on (national use)."),
+111 => _QXZ("Protocol error, unspecified."),
+127 => _QXZ("Interworking, unspecified.")
 );
 
 #### SIP response code directory
 $sip_response_directory = array(
 	0 => "",
-	100 => "Trying",
-	180 => "Ringing",
-	181 => "Call is Being Forwarded",
-	182 => "Queued",
-	183 => "Session in Progress",
-	199 => "Early Dialog Terminated",
-	200 => "OK",
-	202 => "Accepted",
-	204 => "No Notification",
-	300 => "Multiple Choices",
-	301 => "Moved Permanently",
-	301 => "Moved Temporarily",
-	302 => "Moved Temporarily",
-	305 => "Use Proxy",
-	380 => "Alternative Service",
-	400 => "Bad Request",
-	401 => "Unauthorized",
-	402 => "Payment Required",
-	403 => "Forbidden",
-	404 => "Not Found",
-	405 => "Method Not Allowed",
-	406 => "Not Acceptable",
-	407 => "Proxy Authentication Required",
-	408 => "Request Timeout",
-	409 => "Conflict",
-	410 => "Gone",
-	411 => "Length Required",
-	412 => "Conditional Request Failed",
-	413 => "Request Entity Too Large",
-	414 => "Request-URI Too Long",
-	415 => "Unsupported Media Type",
-	416 => "Unsupported URI Scheme",
-	417 => "Unknown Resource-Priority",
-	420 => "Bad Extension",
-	421 => "Extension Required",
-	422 => "Session Interval Too Small",
-	423 => "Interval Too Brief",
-	424 => "Bad Location Information",
-	428 => "Use Identity Header",
-	429 => "Provide Referrer Identity",
-	430 => "Flow Failed",
-	433 => "Anonymity Disallowed",
-	436 => "Bad Identity-Info",
-	437 => "Unsupported Certificate",
-	438 => "Invalid Identity Header",
-	439 => "First Hop Lacks Outbound Support",
-	470 => "Consent Needed",
-	480 => "Temporarily Unavailable",
-	481 => "Call/Transaction Does Not Exist",
-	482 => "Loop Detected.",
-	483 => "Too Many Hops",
-	484 => "Address Incomplete",
-	485 => "Ambiguous",
-	486 => "Busy Here",
-	487 => "Request Terminated",
-	488 => "Not Acceptable Here",
-	489 => "Bad Event",
-	491 => "Request Pending",
-	493 => "Undecipherable",
-	494 => "Security Agreement Required",
-	500 => "Server Internal Error",
-	501 => "Not Implemented",
-	502 => "Bad Gateway",
-	503 => "Service Unavailable",
-	504 => "Server Time-out",
-	505 => "Version Not Supported",
-	513 => "Message Too Large",
-	580 => "Precondition Failure",
-	600 => "Busy Everywhere",
-	603 => "Decline",
-	604 => "Does Not Exist Anywhere",
-	606 => "Not Acceptable",
+	100 => _QXZ("Trying"),
+	180 => _QXZ("Ringing"),
+	181 => _QXZ("Call is Being Forwarded"),
+	182 => _QXZ("Queued"),
+	183 => _QXZ("Session in Progress"),
+	199 => _QXZ("Early Dialog Terminated"),
+	200 => _QXZ("OK"),
+	202 => _QXZ("Accepted"),
+	204 => _QXZ("No Notification"),
+	300 => _QXZ("Multiple Choices"),
+	301 => _QXZ("Moved Permanently"),
+	301 => _QXZ("Moved Temporarily"),
+	302 => _QXZ("Moved Temporarily"),
+	305 => _QXZ("Use Proxy"),
+	380 => _QXZ("Alternative Service"),
+	400 => _QXZ("Bad Request"),
+	401 => _QXZ("Unauthorized"),
+	402 => _QXZ("Payment Required"),
+	403 => _QXZ("Forbidden"),
+	404 => _QXZ("Not Found"),
+	405 => _QXZ("Method Not Allowed"),
+	406 => _QXZ("Not Acceptable"),
+	407 => _QXZ("Proxy Authentication Required"),
+	408 => _QXZ("Request Timeout"),
+	409 => _QXZ("Conflict"),
+	410 => _QXZ("Gone"),
+	411 => _QXZ("Length Required"),
+	412 => _QXZ("Conditional Request Failed"),
+	413 => _QXZ("Request Entity Too Large"),
+	414 => _QXZ("Request-URI Too Long"),
+	415 => _QXZ("Unsupported Media Type"),
+	416 => _QXZ("Unsupported URI Scheme"),
+	417 => _QXZ("Unknown Resource-Priority"),
+	420 => _QXZ("Bad Extension"),
+	421 => _QXZ("Extension Required"),
+	422 => _QXZ("Session Interval Too Small"),
+	423 => _QXZ("Interval Too Brief"),
+	424 => _QXZ("Bad Location Information"),
+	428 => _QXZ("Use Identity Header"),
+	429 => _QXZ("Provide Referrer Identity"),
+	430 => _QXZ("Flow Failed"),
+	433 => _QXZ("Anonymity Disallowed"),
+	436 => _QXZ("Bad Identity-Info"),
+	437 => _QXZ("Unsupported Certificate"),
+	438 => _QXZ("Invalid Identity Header"),
+	439 => _QXZ("First Hop Lacks Outbound Support"),
+	470 => _QXZ("Consent Needed"),
+	480 => _QXZ("Temporarily Unavailable"),
+	481 => _QXZ("Call/Transaction Does Not Exist"),
+	482 => _QXZ("Loop Detected."),
+	483 => _QXZ("Too Many Hops"),
+	484 => _QXZ("Address Incomplete"),
+	485 => _QXZ("Ambiguous"),
+	486 => _QXZ("Busy Here"),
+	487 => _QXZ("Request Terminated"),
+	488 => _QXZ("Not Acceptable Here"),
+	489 => _QXZ("Bad Event"),
+	491 => _QXZ("Request Pending"),
+	493 => _QXZ("Undecipherable"),
+	494 => _QXZ("Security Agreement Required"),
+	500 => _QXZ("Server Internal Error"),
+	501 => _QXZ("Not Implemented"),
+	502 => _QXZ("Bad Gateway"),
+	503 => _QXZ("Service Unavailable"),
+	504 => _QXZ("Server Time-out"),
+	505 => _QXZ("Version Not Supported"),
+	513 => _QXZ("Message Too Large"),
+	580 => _QXZ("Precondition Failure"),
+	600 => _QXZ("Busy Everywhere"),
+	603 => _QXZ("Decline"),
+	604 => _QXZ("Does Not Exist Anywhere"),
+	606 => _QXZ("Not Acceptable"),
 );
 
 $master_hangup_cause_array=array();
@@ -218,7 +219,7 @@ while (list($key, $val)=each($sip_response_directory)) {
 
 $hangup_causes_to_print=count($master_hangup_cause_array);
 $sip_responses_to_print=count($master_sip_response_directory);
-$master_dialstatus_array=array("ANSWER", "BUSY", "NOANSWER", "CANCEL", "CONGESTION", "CHANUNAVAIL", "DONTCALL", "TORTURE", "INVALIDARGS");
+$master_dialstatus_array=array(_QXZ("ANSWER"), _QXZ("BUSY"), _QXZ("NOANSWER"), _QXZ("CANCEL"), _QXZ("CONGESTION"), _QXZ("CHANUNAVAIL"), _QXZ("DONTCALL"), _QXZ("TORTURE"), _QXZ("INVALIDARGS"));
 $dialstatuses_to_print=count($master_dialstatus_array);
 
 
@@ -256,7 +257,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -269,10 +270,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -484,7 +485,7 @@ while($i < $hangup_cause_ct)
 
 if ( (preg_match('/\-\-ALL\-\-/',$hangup_cause_string) ) or ($hangup_cause_ct < 1) )
 	{
-	$HC_rpt_string="- ALL hangup causes ";
+	$HC_rpt_string="- "._QXZ("ALL hangup causes")." ";
 	if (preg_match('/\-\-ALL\-\-/',$hangup_cause_string)) {$hangup_causeQS="&hangup_cause[]=--ALL--";}
 	}
 else
@@ -496,7 +497,7 @@ else
 
 if ( (preg_match('/\-\-ALL\-\-/',$sip_hangup_cause_string) ) or ($sip_hangup_cause_ct < 1) )
 	{
-	$HC_rpt_string="- ALL SIP hangup causes ";
+	$HC_rpt_string="- "._QXZ("ALL SIP hangup causes")." ";
 	if (preg_match('/\-\-ALL\-\-/',$sip_hangup_cause_string)) 
 		{
 		$sip_hangup_causeQS="&sip_hangup_cause[]=--ALL--";
@@ -506,7 +507,7 @@ if ( (preg_match('/\-\-ALL\-\-/',$sip_hangup_cause_string) ) or ($sip_hangup_cau
 else
 	{
 	$sip_hangup_causes_string=preg_replace('/\!/', "-", $sip_hangup_causes_string);
-	$HC_rpt_string="AND SIP hangup cause(s) ".preg_replace('/\|/', ", ", substr($sip_hangup_causes_string, 1, -1));
+	$HC_rpt_string=_QXZ("AND SIP hangup cause(s)")." ".preg_replace('/\|/', ", ", substr($sip_hangup_causes_string, 1, -1));
 	}
 $sip_hangup_cause_SQL = preg_replace('/,$/i', '',$sip_hangup_cause_SQL);
 if (strlen($sip_hangup_cause_SQL)>0) {$sip_hangup_cause_SQL="and sip_hangup_cause in ($sip_hangup_cause_SQL)";}
@@ -515,7 +516,7 @@ if (strlen($sip_hangup_cause_SQL)>0) {$sip_hangup_cause_SQL="and sip_hangup_caus
 if ( (preg_match('/\-\-ALL\-\-/',$dial_status_string) ) or ($dial_status_ct < 1) )
 	{
 	$dial_status_SQL = "";
-	$DS_rpt_string="- ALL dial statuses ";
+	$DS_rpt_string="- "._QXZ("ALL dial statuses")." ";
 	if (preg_match('/\-\-ALL\-\-/',$dial_status_string)) {$dial_statusQS="&dial_status[]=--ALL--";}
 	}
 else
@@ -551,7 +552,7 @@ $HEADER.="<link rel=\"stylesheet\" href=\"verticalbargraph.css\">\n";
 $HEADER.="<script language=\"JavaScript\" src=\"wz_jsgraphics.js\"></script>\n";
 $HEADER.="<script language=\"JavaScript\" src=\"line.js\"></script>\n";
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 
@@ -559,7 +560,7 @@ $MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 $MAIN.="<TABLE BORDER=0 cellspacing=5 cellpadding=5><TR><TD VALIGN=TOP align=center>\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
-$MAIN.="Date:\n";
+$MAIN.=_QXZ("Date").":\n";
 $MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 $MAIN.="<script language=\"JavaScript\">\n";
 $MAIN.="var o_cal = new tcal ({\n";
@@ -574,14 +575,14 @@ $MAIN.="</script>\n";
 
 $MAIN.="<BR><BR><INPUT TYPE=TEXT NAME=query_date_D SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_D\">";
 
-$MAIN.="<BR> to <BR><INPUT TYPE=TEXT NAME=query_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_T\">";
+$MAIN.="<BR> "._QXZ("to")." <BR><INPUT TYPE=TEXT NAME=query_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_T\">";
 
-$MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>Server IP:<BR/>\n";
+$MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>"._QXZ("Server IP").":<BR/>\n";
 $MAIN.="<SELECT SIZE=5 NAME=server_ip[] multiple>\n";
 if  (preg_match('/\-\-ALL\-\-/',$server_ip_string))
-	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL SERVERS --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL SERVERS")." --</option>\n";}
 else
-	{$MAIN.="<option value=\"--ALL--\">-- ALL SERVERS --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\">-- "._QXZ("ALL SERVERS")." --</option>\n";}
 $o=0;
 while ($servers_to_print > $o)
 	{
@@ -593,12 +594,12 @@ while ($servers_to_print > $o)
 	}
 $MAIN.="</SELECT></TD>";
 
-$MAIN.="<TD ROWSPAN=2 VALIGN=top align=center>Hangup Cause:<BR/>";
+$MAIN.="<TD ROWSPAN=2 VALIGN=top align=center>"._QXZ("Hangup Cause").":<BR/>";
 $MAIN.="<SELECT SIZE=5 NAME=hangup_cause[] multiple>\n";
 if  (preg_match('/\-\-ALL\-\-/',$hangup_causes_string))
-	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL HANGUP CAUSES --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL HANGUP CAUSES")." --</option>\n";}
 else
-	{$MAIN.="<option value=\"--ALL--\">-- ALL HANGUP CAUSES --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\">-- "._QXZ("ALL HANGUP CAUSES")." --</option>\n";}
 
 $o=0;
 while ($hangup_causes_to_print > $o)
@@ -612,12 +613,12 @@ while ($hangup_causes_to_print > $o)
 $MAIN.="</SELECT>";
 $MAIN.="</TD>";
 
-$MAIN.="<TD ROWSPAN=2 VALIGN=top align=center>Dial status:<BR/>";
+$MAIN.="<TD ROWSPAN=2 VALIGN=top align=center>"._QXZ("Dial status").":<BR/>";
 $MAIN.="<SELECT SIZE=5 NAME=dial_status[] multiple>\n";
 if  (preg_match('/\-\-ALL\-\-/',$dialstatuses_string))
-	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL DIAL STATUSES --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL DIAL STATUSES")." --</option>\n";}
 else
-	{$MAIN.="<option value=\"--ALL--\">-- ALL DIAL STATUSES --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\">-- "._QXZ("ALL DIAL STATUSES")." --</option>\n";}
 
 $o=0;
 
@@ -632,12 +633,12 @@ while ($dialstatuses_to_print > $o)
 $MAIN.="</SELECT>";
 $MAIN.="</TD>";
 
-$MAIN.="<TD ROWSPAN=2 VALIGN=top align=center>SIP Response:<BR/>";
+$MAIN.="<TD ROWSPAN=2 VALIGN=top align=center>"._QXZ("SIP Response").":<BR/>";
 $MAIN.="<SELECT SIZE=5 NAME=sip_hangup_cause[] multiple>\n";
 if  (preg_match('/--ALL--/',$sip_hangup_causes_string))
-	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL SIP CAUSES --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL SIP CAUSES")." --</option>\n";}
 else
-	{$MAIN.="<option value=\"--ALL--\">-- ALL SIP CAUSES --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\">-- "._QXZ("ALL SIP CAUSES")." --</option>\n";}
 
 $o=0;
 while ($sip_responses_to_print > $o)
@@ -653,7 +654,7 @@ $MAIN.="</TD>";
 
 
 $MAIN.="<TD ROWSPAN=2 VALIGN=middle align=center>\n";
-$MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT><BR/><BR/>\n";
+$MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'><BR/><BR/>\n";
 $MAIN.="</TD></TR></TABLE>\n";
 if ($SUBMIT && $server_ip_ct>0) {
 	$stmt="SELECT hangup_cause, dialstatus, count(*) as ct From vicidial_carrier_log where call_date>='$query_date $query_date_D' and call_date<='$query_date $query_date_T' $server_ip_SQL $hangup_cause_SQL group by hangup_cause, dialstatus order by hangup_cause, dialstatus";
@@ -661,9 +662,9 @@ if ($SUBMIT && $server_ip_ct>0) {
 	$MAIN.="<PRE><font size=2>\n";
 	if ($DB) {$MAIN.=$stmt."\n";}
 	if (mysqli_num_rows($rslt)>0) {
-		$MAIN.="--- DIAL STATUS BREAKDOWN FOR $query_date, $query_date_D TO $query_date_T $server_rpt_string\n";
+		$MAIN.="--- "._QXZ("DIAL STATUS BREAKDOWN FOR")." $query_date, $query_date_D "._QXZ("TO")." $query_date_T $server_rpt_string\n";
 		$MAIN.="+--------------+-------------+---------+\n";
-		$MAIN.="| HANGUP CAUSE | DIAL STATUS |  COUNT  |\n";
+		$MAIN.="| "._QXZ("HANGUP CAUSE",12)." | "._QXZ("DIAL STATUS",11)." |  "._QXZ("COUNT",6)." |\n";
 		$MAIN.="+--------------+-------------+---------+\n";
 		$total_count=0;
 		while ($row=mysqli_fetch_array($rslt)) {
@@ -674,7 +675,7 @@ if ($SUBMIT && $server_ip_ct>0) {
 			$total_count+=$row["ct"];
 		}
 		$MAIN.="+--------------+-------------+---------+\n";
-		$MAIN.="|                      TOTAL | ".sprintf("%-8s", $total_count)."|\n";
+		$MAIN.="| "._QXZ("TOTAL",26,"r")." | ".sprintf("%-8s", $total_count)."|\n";
 		$MAIN.="+--------------+-------------+---------+\n\n\n";
 
 		$rpt_stmt="SELECT vicidial_carrier_log.*, vicidial_log.phone_number from vicidial_carrier_log left join vicidial_log on vicidial_log.uniqueid=vicidial_carrier_log.uniqueid where vicidial_carrier_log.call_date>='$query_date $query_date_D' and vicidial_carrier_log.call_date<='$query_date $query_date_T' $server_ip_SQL $hangup_cause_SQL $sip_hangup_cause_SQL order by vicidial_carrier_log.call_date asc";
@@ -684,11 +685,11 @@ if ($SUBMIT && $server_ip_ct>0) {
 		if (!$lower_limit) {$lower_limit=1;}
 		if ($lower_limit+999>=mysqli_num_rows($rpt_rslt)) {$upper_limit=($lower_limit+mysqli_num_rows($rpt_rslt)%1000)-1;} else {$upper_limit=$lower_limit+999;}
 		
-		$MAIN.="--- CARRIER LOG RECORDS FOR $query_date, $query_date_D TO $query_date_T $server_rpt_string, $HC_rpt_string, $DS_rpt_string\n --- RECORDS #$lower_limit-$upper_limit               <a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">[DOWNLOAD]</a>\n";
+		$MAIN.="--- "._QXZ("CARRIER LOG RECORDS FOR")." $query_date, $query_date_D "._QXZ("TO")." $query_date_T $server_rpt_string, $HC_rpt_string, $DS_rpt_string\n --- "._QXZ("RECORDS")." #$lower_limit-$upper_limit               <a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">["._QXZ("DOWNLOAD")."]</a>\n";
 		$carrier_rpt.="+----------------------+---------------------+-----------------+-----------+--------------+-------------+------------------------------------------+-----------+---------------+--------------+--------------+--------------------------------+\n";
-		$carrier_rpt.="| UNIQUE ID            | CALL DATE           | SERVER IP       | LEAD ID   | HANGUP CAUSE | DIAL STATUS | CHANNEL                                  | DIAL TIME | ANSWERED TIME | PHONE NUMBER | SIP RESPONSE | SIP REASON                     |\n";
+		$carrier_rpt.="| "._QXZ("UNIQUE ID",20)." | "._QXZ("CALL DATE",19)." | "._QXZ("SERVER IP",15)." | "._QXZ("LEAD ID",9)." | "._QXZ("HANGUP CAUSE",11)." | "._QXZ("DIAL STATUS",11)." | "._QXZ("CHANNEL",40)." | "._QXZ("DIAL TIME",9)." | "._QXZ("ANSWERED TIME",13)." | "._QXZ("PHONE NUMBER",12)." | "._QXZ("SIP RESPONSE",12)." | "._QXZ("SIP REASON",30)." |\n";
 		$carrier_rpt.="+----------------------+---------------------+-----------------+-----------+--------------+-------------+------------------------------------------+-----------+---------------+--------------+--------------+--------------------------------+\n";
-		$CSV_text="\"UNIQUE ID\",\"CALL DATE\",\"SERVER IP\",\"LEAD ID\",\"HANGUP CAUSE\",\"DIAL STATUS\",\"CHANNEL\",\"DIAL TIME\",\"ANSWERED TIME\",\"PHONE NUMBER\",\"SIP RESPONSE\",\"SIP REASON\"\n";
+		$CSV_text="\""._QXZ("UNIQUE ID")."\",\""._QXZ("CALL DATE")."\",\""._QXZ("SERVER IP")."\",\""._QXZ("LEAD ID")."\",\""._QXZ("HANGUP CAUSE")."\",\""._QXZ("DIAL STATUS")."\",\""._QXZ("CHANNEL")."\",\""._QXZ("DIAL TIME")."\",\""._QXZ("ANSWERED TIME")."\",\""._QXZ("PHONE NUMBER")."\",\""._QXZ("SIP RESPONSE")."\",\""._QXZ("SIP REASON")."\"\n";
 
 		for ($i=1; $i<=mysqli_num_rows($rpt_rslt); $i++) {
 			$row=mysqli_fetch_array($rpt_rslt);
@@ -729,21 +730,21 @@ if ($SUBMIT && $server_ip_ct>0) {
 		$carrier_rpt_hf="";
 		$ll=$lower_limit-1000;
 		if ($ll>=1) {
-			$carrier_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS$hangup_causeQS$sip_hangup_causeQS$dial_statusQS&lower_limit=$ll\">[<<< PREV 1000 records]</a>";
+			$carrier_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS$hangup_causeQS$sip_hangup_causeQS$dial_statusQS&lower_limit=$ll\">[<<< "._QXZ("PREV")." 1000 "._QXZ("records")."]</a>";
 		} else {
 			$carrier_rpt_hf.=sprintf("%-23s", " ");
 		}
 		$carrier_rpt_hf.=sprintf("%-145s", " ");
 		if (($lower_limit+1000)<mysqli_num_rows($rpt_rslt)) {
 			if ($upper_limit+1000>=mysqli_num_rows($rpt_rslt)) {$max_limit=mysqli_num_rows($rpt_rslt)-$upper_limit;} else {$max_limit=1000;}
-			$carrier_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS$hangup_causeQS$sip_hangup_causeQS$dial_statusQS&lower_limit=".($lower_limit+1000)."\">[NEXT $max_limit records >>>]</a>";
+			$carrier_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS$hangup_causeQS$sip_hangup_causeQS$dial_statusQS&lower_limit=".($lower_limit+1000)."\">["._QXZ("NEXT")." $max_limit "._QXZ("records")." >>>]</a>";
 		} else {
 			$carrier_rpt_hf.=sprintf("%23s", " ");
 		}
 		$carrier_rpt_hf.="\n";
 		$MAIN.=$carrier_rpt_hf.$carrier_rpt.$carrier_rpt_hf;
 	} else {
-		$MAIN.="*** NO RECORDS FOUND ***\n";
+		$MAIN.="*** "._QXZ("NO RECORDS FOUND")." ***\n";
 	}
 	$MAIN.="</font></PRE>\n";
 

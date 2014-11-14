@@ -24,6 +24,7 @@
 # 140502-1208 - Added 9am-11pm option
 # 140808-1036 - Added server breakdown section
 # 141020-0848 - Added 9am-10pm and 10am-6pm options
+# 141113-2040 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -109,7 +110,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -122,10 +123,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -156,7 +157,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -311,7 +312,7 @@ $HEADER.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 
@@ -342,7 +343,7 @@ $MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 $MAIN.="</script>\n";
 
 
-$MAIN.="<BR> to <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+$MAIN.="<BR> "._QXZ("to")." <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
 
 $MAIN.="<script language=\"JavaScript\">\n";
 $MAIN.="var o_cal = new tcal ({\n";
@@ -371,15 +372,15 @@ $MAIN.="</TD><TD align=center valign=top>\n";
 $MAIN.="<SELECT SIZE=1 NAME=shift>\n";
 $MAIN.="<option selected value=\"$shift\">$shift</option>\n";
 $MAIN.="<option value=\"\">--</option>\n";
-$MAIN.="<option value=\"AM\">AM</option>\n";
-$MAIN.="<option value=\"PM\">PM</option>\n";
-$MAIN.="<option value=\"ALL\">ALL</option>\n";
-$MAIN.="<option value=\"DAYTIME\">DAYTIME</option>\n";
-$MAIN.="<option value=\"10AM-5PM\">10AM-5PM</option>\n";
-$MAIN.="<option value=\"10AM-6PM\">10AM-6PM</option>\n";
-$MAIN.="<option value=\"9AM-10PM\">9AM-10PM</option>\n";
-$MAIN.="<option value=\"9AM-11PM\">9AM-11PM</option>\n";
-$MAIN.="<option value=\"9AM-1AM\">9AM-1AM</option>\n";
+$MAIN.="<option value=\"AM\">"._QXZ("AM")."</option>\n";
+$MAIN.="<option value=\"PM\">"._QXZ("PM")."</option>\n";
+$MAIN.="<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
+$MAIN.="<option value=\"DAYTIME\">"._QXZ("DAYTIME")."</option>\n";
+$MAIN.="<option value=\"10AM-5PM\">"._QXZ("10AM-5PM")."</option>\n";
+$MAIN.="<option value=\"10AM-6PM\">"._QXZ("10AM-6PM")."</option>\n";
+$MAIN.="<option value=\"9AM-10PM\">"._QXZ("9AM-10PM")."</option>\n";
+$MAIN.="<option value=\"9AM-11PM\">"._QXZ("9AM-11PM")."</option>\n";
+$MAIN.="<option value=\"9AM-1AM\">"._QXZ("9AM-1AM")."</option>\n";
 $MAIN.="<option value=\"845-1745\">845-1745</option>\n";
 $MAIN.="<option value=\"1745-100\">1745-100</option>\n";
 $MAIN.="</SELECT>\n";
@@ -388,9 +389,9 @@ $MAIN.="<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
 $MAIN.=" &nbsp;";
 $MAIN.="<select name='report_display_type'>";
 if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
-$MAIN.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR><BR>";
+$MAIN.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n<BR><BR>";
 $MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
-$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&DB=$DB&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a> | <a href=\"./admin.php?ADD=3311&did_id=$group[0]\">MODIFY</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&DB=$DB&SUBMIT=$SUBMIT&file_download=1\">"._QXZ("DOWNLOAD")."</a> | <a href=\"./admin.php?ADD=3311&did_id=$group[0]\">"._QXZ("MODIFY")."</a> | <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 $MAIN.="</TD></TR></TABLE>\n";
 $MAIN.="</FORM>\n";
 
@@ -400,7 +401,7 @@ $MAIN.="<PRE><FONT SIZE=2>";
 if (!$group)
 	{
 	$MAIN.="\n\n";
-	$MAIN.="PLEASE SELECT A DID AND DATE RANGE ABOVE AND CLICK SUBMIT\n";
+	$MAIN.=_QXZ("PLEASE SELECT A DID AND DATE RANGE ABOVE AND CLICK SUBMIT")."\n";
 	}
 
 else
@@ -500,13 +501,13 @@ else
 		$DURATIONday++;
 		}
 
-	$MAIN.="Inbound DID Report                      $NOW_TIME\n";
+	$MAIN.=_QXZ("Inbound DID Report",40)." $NOW_TIME\n";
 	$MAIN.="\n";
-	$MAIN.="Time range $DURATIONday days: $query_date_BEGIN to $query_date_END\n\n";
+	$MAIN.=_QXZ("Time range")." $DURATIONday "._QXZ("days").": $query_date_BEGIN "._QXZ("to")." $query_date_END\n\n";
 	#$MAIN.="Time range day sec: $SQsec - $EQsec   Day range in epoch: $SQepoch - $EQepoch   Start: $SQepochDAY\n";
 
-	$CSV_text1.="\"Inbound DID Report\",\"$NOW_TIME\"\n\n";
-	$CSV_text1.="\"Time range $DURATIONday days:\",\"$query_date_BEGIN to $query_date_END\"\n\n";
+	$CSV_text1.="\""._QXZ("Inbound DID Report")."\",\"$NOW_TIME\"\n\n";
+	$CSV_text1.="\""._QXZ("Time range")." $DURATIONday "._QXZ("days").":\",\"$query_date_BEGIN "._QXZ("to")." $query_date_END\"\n\n";
 
 	$d=0;
 	while ($d < $DURATIONday)
@@ -653,19 +654,19 @@ else
 	### TOTALS DID SUMMARY SECTION ###
 	if (strlen($extension[0]) > 0)
 		{
-		$ASCII_text.="DID Summary:\n";
+		$ASCII_text.=_QXZ("DID Summary").":\n";
 		$ASCII_text.="+--------------------+--------------------------------+------------+------------+\n";
-		$ASCII_text.="| DID                | DESCRIPTION                    | ROUTE      | CALLS      |\n";
+		$ASCII_text.="| "._QXZ("DID",18)." | "._QXZ("DESCRIPTION",30)." | "._QXZ("ROUTE",10)." | "._QXZ("CALLS",10)." |\n";
 		$ASCII_text.="+--------------------+--------------------------------+------------+------------+\n";
 
-		$CSV_text1.="\"DID Summary:\"\n";
-		$CSV_text1.="\"DID\",\"DESCRIPTION\",\"ROUTE\",\"CALLS\"\n";
+		$CSV_text1.="\""._QXZ("DID Summary").":\"\n";
+		$CSV_text1.="\""._QXZ("DID")."\",\""._QXZ("DESCRIPTION")."\",\""._QXZ("ROUTE")."\",\""._QXZ("CALLS")."\"\n";
 
 		$GRAPH_text.="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
-		$GRAPH_text.="  <caption align=\"top\">DID Summary:</caption>\n";
+		$GRAPH_text.="  <caption align=\"top\">"._QXZ("DID Summary").":</caption>\n";
 		$GRAPH_text.="<tr>\n";
-		$GRAPH_text.="<th class=\"thgraph\" scope=\"col\">DID</th>\n";
-		$GRAPH_text.="<th class=\"thgraph\" scope=\"col\">CALLS</th>\n";
+		$GRAPH_text.="<th class=\"thgraph\" scope=\"col\">"._QXZ("DID")."</th>\n";
+		$GRAPH_text.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")."</th>\n";
 		$GRAPH_text.="</tr>\n";
 
 
@@ -727,9 +728,9 @@ else
 			$FtotCALLS =	sprintf("%10s", $totCALLS);
 
 		$ASCII_text.="+--------------------+--------------------------------+------------+------------+\n";
-		$ASCII_text.="|                                                           TOTALS | $FtotCALLS |\n";
+		$ASCII_text.="| "._QXZ("TOTALS",64,"r")." | $FtotCALLS |\n";
 		$ASCII_text.="+------------------------------------------------------------------+------------+\n";
-		$CSV_text1.="\"\",\"\",\"TOTALS\",\"$FtotCALLS\"\n";
+		$CSV_text1.="\"\",\"\",\""._QXZ("TOTALS")."\",\"$FtotCALLS\"\n";
 		#$MAIN.=$GRAPH;
 		}
 
@@ -783,19 +784,19 @@ else
 	### TOTALS SERVER IP SUMMARY SECTION ###
 	if (strlen($did_server_ip[0]) > 0)
 		{
-		$ASCII_text.="Server Summary:\n";
+		$ASCII_text.=_QXZ("Server Summary").":\n";
 		$ASCII_text.="+----------------------------+------------+\n";
-		$ASCII_text.="| SERVER                     | CALLS      |\n";
+		$ASCII_text.="| "._QXZ("SERVER",26)." | "._QXZ("CALLS",10)." |\n";
 		$ASCII_text.="+----------------------------+------------+\n";
 
-		$CSV_text1.="\"Server Summary:\"\n";
-		$CSV_text1.="\"Server\",\"CALLS\"\n";
+		$CSV_text1.="\""._QXZ("Server Summary").":\"\n";
+		$CSV_text1.="\""._QXZ("Server")."\",\""._QXZ("CALLS")."\"\n";
 
 		$GRAPH_text.="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"Server Summary\" class=\"horizontalgraph\">\n";
-		$GRAPH_text.="  <caption align=\"top\">Server Summary:</caption>\n";
+		$GRAPH_text.="  <caption align=\"top\">"._QXZ("Server Summary").":</caption>\n";
 		$GRAPH_text.="<tr>\n";
-		$GRAPH_text.="<th class=\"thgraph\" scope=\"col\">SERVER</th>\n";
-		$GRAPH_text.="<th class=\"thgraph\" scope=\"col\">CALLS</th>\n";
+		$GRAPH_text.="<th class=\"thgraph\" scope=\"col\">"._QXZ("SERVER")."</th>\n";
+		$GRAPH_text.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")."</th>\n";
 		$GRAPH_text.="</tr>\n";
 
 
@@ -843,7 +844,7 @@ else
 				$GRAPH_text.="  </tr>\n";
 				}
 			$GRAPH_text.="  <tr>\n";
-			$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">TOTAL CALLS:</th>\n";
+			$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("TOTAL CALLS").":</th>\n";
 			$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">".trim($SVtotCALLS)."</th>\n";
 			$GRAPH_text.="  </tr>\n";
 			$GRAPH_text.="</table><PRE>\n";
@@ -851,9 +852,9 @@ else
 			$FtotCALLS =	sprintf("%10s", $SVtotCALLS);
 
 		$ASCII_text.="+----------------------------+------------+\n";
-		$ASCII_text.="|                     TOTALS | $FtotCALLS |\n";
+		$ASCII_text.="| "._QXZ("TOTALS",26,"r")." | $FtotCALLS |\n";
 		$ASCII_text.="+----------------------------+------------+\n";
-		$CSV_text1.="TOTALS\",\"$FtotCALLS\"\n";
+		$CSV_text1.=_QXZ("TOTALS")."\",\"$FtotCALLS\"\n";
 		#$MAIN.=$GRAPH;
 		}
 
@@ -861,20 +862,20 @@ else
 
 	###################################################
 	### TOTALS DATE SUMMARY SECTION ###
-	$ASCII_text.="\nDate Summary:\n";
+	$ASCII_text.="\n"._QXZ("Date Summary").":\n";
 	$ASCII_text.="+-------------------------------------------+--------+\n";
-	$ASCII_text.="| SHIFT                                     |        |\n";
-	$ASCII_text.="| DATE-TIME RANGE                           | CALLS  |\n";
+	$ASCII_text.="| "._QXZ("SHIFT",41)." |        |\n";
+	$ASCII_text.="| "._QXZ("DATE-TIME RANGE",41)." | "._QXZ("CALLS",6)." |\n";
 	$ASCII_text.="+-------------------------------------------+--------+\n";
 
-	$CSV_text1.="\n\"Date Summary:\"\n";
-	$CSV_text1.="\"SHIFT DATE-TIME RANGE\",\"CALLS\"\n";
+	$CSV_text1.="\n\""._QXZ("Date Summary").":\"\n";
+	$CSV_text1.="\""._QXZ("SHIFT DATE-TIME RANGE")."\",\""._QXZ("CALLS")."\"\n";
 
 	$GRAPH_text.="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
-	$GRAPH_text.="  <caption align=\"top\">Date Summary:</caption>\n";
+	$GRAPH_text.="  <caption align=\"top\">"._QXZ("Date Summary").":</caption>\n";
 	$GRAPH_text.="<tr>\n";
-	$GRAPH_text.="<th class=\"thgraph\" scope=\"col\">SHIFT DATE-TIME RANGE</th>\n";
-	$GRAPH_text.="<th class=\"thgraph\" scope=\"col\">CALLS</th>\n";
+	$GRAPH_text.="<th class=\"thgraph\" scope=\"col\">"._QXZ("SHIFT DATE-TIME RANGE")."</th>\n";
+	$GRAPH_text.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")."</th>\n";
 	$GRAPH_text.="</tr>\n";
 
 	$d=0;
@@ -917,7 +918,7 @@ else
 		$GRAPH_text.="  </tr>\n";
 	}
 	$GRAPH_text.="  <tr>\n";
-	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">TOTAL CALLS:</th>\n";
+	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("TOTAL CALLS").":</th>\n";
 	$GRAPH_text.="	<th class=\"thgraph\" scope=\"col\">".trim($totCALLS)."</th>\n";
 	$GRAPH_text.="  </tr>\n";
 	$GRAPH_text.="</table><PRE>\n";
@@ -926,9 +927,9 @@ else
 	$FtotCALLS =	sprintf("%6s", $totCALLS);
 
 	$ASCII_text.="+-------------------------------------------+--------+\n";
-	$ASCII_text.="|                                    TOTALS | $FtotCALLS |\n";
+	$ASCII_text.="| "._QXZ("TOTALS",41,"r")." | $FtotCALLS |\n";
 	$ASCII_text.="+-------------------------------------------+--------+\n";
-	$CSV_text1.="\"TOTALS\",\"$FtotCALLS\"\n";
+	$CSV_text1.="\""._QXZ("TOTALS")."\",\"$FtotCALLS\"\n";
 	#$MAIN.=$GRAPH;
 
 	if ($report_display_type=="HTML")
@@ -966,15 +967,15 @@ else
 	#########  HOLD TIME, CALL AND DROP STATS 15-MINUTE INCREMENTS ####
 
 	$MAIN.="\n";
-	$ASCII_text.="---------- HOLD TIME, CALL AND DROP STATS\n";
+	$ASCII_text.="---------- "._QXZ("HOLD TIME, CALL AND DROP STATS")."\n";
 
-	$CSV_text1.="\n\"HOLD TIME, CALL AND DROP STATS\"\n";
+	$CSV_text1.="\n\""._QXZ("HOLD TIME, CALL AND DROP STATS")."\"\n";
 
 	$ASCII_text.="<FONT SIZE=0>";
 
 	$ASCII_text.="<!-- HICOUNT CALLS: $hi_hour_count|$hour_multiplier -->";
 	$ASCII_text.="<!-- HICOUNT HOLD:  $hi_hold_count|$hold_multiplier -->\n";
-	$ASCII_text.="GRAPH IN 15 MINUTE INCREMENTS OF AVERAGE HOLD TIME FOR CALLS TAKEN INTO THIS IN-GROUP\n";
+	$ASCII_text.=_QXZ("GRAPH IN 15 MINUTE INCREMENTS OF AVERAGE HOLD TIME FOR CALLS TAKEN INTO THIS IN-GROUP")."\n";
 
 	$k=1;
 	$Mk=0;
@@ -1027,17 +1028,17 @@ else
 
 
 	$ASCII_text.="+-------------+-------------------------------------------------------------------------+-------+\n";
-	$ASCII_text.="|    TIME     |    CALLS HANDLED                                                        |       |\n";
-	$ASCII_text.="| 15 MIN INT  |$call_scale| TOTAL |\n";
+	$ASCII_text.="| "._QXZ("TIME",11)." | "._QXZ("CALLS HANDLED",71)." |       |\n";
+	$ASCII_text.="| "._QXZ("15 MIN INT",11)." |$call_scale| "._QXZ("TOTAL",5)." |\n";
 	$ASCII_text.="+-------------+-------------------------------------------------------------------------+-------+\n";
 
-	$CSV_text1.="\"TIME 15-MIN INT\",\"TOTAL\"\n";
+	$CSV_text1.="\""._QXZ("TIME 15-MIN INT")."\",\""._QXZ("TOTAL")."\"\n";
 
 
 
 	$max_calls=1;
 	$graph_stats=array();
-	$GRAPH_text="<table cellspacing='0' cellpadding='0'><caption align='top'>HOLD TIME, CALL AND DROP STATS</caption><tr><th class='thgraph' scope='col'>TIME 15-MIN INT</th><th class='thgraph' scope='col'>DROPS <img src='./images/bar_blue.png' width='10' height='10'> / CALLS <img src='./images/bar.png' width='10' height='10'></th></tr>";
+	$GRAPH_text="<table cellspacing='0' cellpadding='0'><caption align='top'>"._QXZ("HOLD TIME, CALL AND DROP STATS")."</caption><tr><th class='thgraph' scope='col'>"._QXZ("TIME 15-MIN INT")."</th><th class='thgraph' scope='col'>"._QXZ("DROPS")." <img src='./images/bar_blue.png' width='10' height='10'> / "._QXZ("CALLS")." <img src='./images/bar.png' width='10' height='10'></th></tr>";
 
 
 	$i=0;
@@ -1171,7 +1172,7 @@ else
 
 
 	$ASCII_text.="+-------------+-------------------------------------------------------------------------+-------+\n";
-	$ASCII_text.="| TOTAL       |                                                                         | $totCALLS |\n";
+	$ASCII_text.="| "._QXZ("TOTAL",11)." |                                                                         | $totCALLS |\n";
 	$ASCII_text.="+-------------+-------------------------------------------------------------------------+-------+\n";
 
 
@@ -1189,7 +1190,7 @@ else
 		}
 		$GRAPH_text.="</td></tr>\n";
 	}
-	$GRAPH_text.="<tr><th class='thgraph' scope='col'>TOTALS:</th><th class='thgraph' scope='col'>".trim($totCALLS)."</th></tr></table>";
+	$GRAPH_text.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTALS").":</th><th class='thgraph' scope='col'>".trim($totCALLS)."</th></tr></table>";
 
 	if ($report_display_type=="HTML")
 		{
@@ -1201,11 +1202,11 @@ else
 		}
 
 
-	$CSV_text1.="\"TOTAL\",\"$totCALLS\"\n";
+	$CSV_text1.="\""._QXZ("TOTAL")."\",\"$totCALLS\"\n";
 
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $STARTtime);
-	$MAIN.="\nRun Time: $RUNtime seconds|$db_source\n";
+	$MAIN.="\n"._QXZ("Run Time").": $RUNtime "._QXZ("seconds")."|$db_source\n";
 	$MAIN.="</PRE>\n";
 	$MAIN.="</TD></TR></TABLE>\n";
 

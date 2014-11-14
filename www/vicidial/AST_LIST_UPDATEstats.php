@@ -15,6 +15,7 @@
 # 130621-0737 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-2026 - Changed to mysqli PHP functions
 # 140108-0735 - Added webserver and hostname to report logging
+# 141114-0830 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -92,7 +93,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -105,10 +106,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -188,7 +189,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -214,7 +215,7 @@ if (!isset($end_date)) {$end_date = "$NOW_DATE 23:59:59";}
 
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 	$short_header=1;
 
@@ -232,13 +233,13 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
 echo "<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2><TR><TD align=center valign=top>\n";
 echo "<INPUT TYPE=TEXT NAME=query_date SIZE=20 MAXLENGTH=20 VALUE=\"$query_date\">\n";
-echo "<BR> to <BR><INPUT TYPE=TEXT NAME=end_date SIZE=20 MAXLENGTH=20 VALUE=\"$end_date\">\n";
+echo "<BR> "._QXZ("to")." <BR><INPUT TYPE=TEXT NAME=end_date SIZE=20 MAXLENGTH=20 VALUE=\"$end_date\">\n";
 echo "</TD><TD align=center valign=top>\n";
 echo "</TD><TD align=center valign=top>\n";
 echo "</TD><TD align=center valign=top>\n";
 echo "<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
-echo "<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
-echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+echo "<INPUT TYPE=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'\n";
+echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 echo "</TD></TR></TABLE>\n";
 echo "</FORM>\n";
 
@@ -248,20 +249,20 @@ echo "<PRE><FONT SIZE=2>";
 if (!$query_date)
 {
 echo "\n\n";
-echo "PLEASE SELECT A DATE RANGE ABOVE AND CLICK SUBMIT\n";
+echo _QXZ("PLEASE SELECT A DATE RANGE ABOVE AND CLICK SUBMIT")."\n";
 }
 
 else
 {
-echo "List Update Process Report                      $NOW_TIME\n";
+echo _QXZ("List Update Process Report",46)." $NOW_TIME\n";
 echo "\n";
-echo "Time range $query_date to $end_date\n\n";
+echo _QXZ("Time range")." $query_date "._QXZ("to")." $end_date\n\n";
 
 
 ### GRAB ALL RECORDS WITHIN RANGE FROM THE DATABASE ###
-echo "List Update Summary:\n";
+echo _QXZ("List Update Summary").":\n";
 echo "+----------------------------------------------------+------------+----------+----------+\n";
-echo "| FILENAME                                           | RESULT     | RECORDS  | UPDATES  |\n";
+echo "| "._QXZ("FILENAME",50)." | "._QXZ("RESULT",10)." | "._QXZ("RECORDS",8)." | "._QXZ("UPDATES",8)." |\n";
 echo "+----------------------------------------------------+------------+----------+----------+\n";
 
 $stmt="SELECT count(*),filename,result,sum(result_rows) from vicidial_list_update_log where event_date >= '$query_date' and event_date <= '$end_date' group by filename,result order by filename,result;";
@@ -293,9 +294,9 @@ echo "\n</PRE>\n";
 
 
 ### GRAB ALL RECORDS WITHIN RANGE FROM THE DATABASE ###
-echo "List Update Detail:<BR>\n";
+echo _QXZ("List Update Detail").":<BR>\n";
 echo "<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=1>\n";
-echo "<TR><TD><B>DATE/TIME</B></TD><TD><B>LEAD_ID</B></TD><TD><B>VENDOR_ID</B></TD><TD><B>PHONE</B></TD><TD><B>STATUS</B></TD><TD><B>OLD_STATUS</B></TD><TD><B>OLD_LIST</B></TD><TD><B>FILENAME</B></TD><TD><B>RESULT</B></TD><TD><B>UPDATED_ROWS</B></TD>\n";
+echo "<TR><TD><B>"._QXZ("DATE/TIME")."</B></TD><TD><B>"._QXZ("LEAD_ID")."</B></TD><TD><B>"._QXZ("VENDOR_ID")."</B></TD><TD><B>"._QXZ("PHONE")."</B></TD><TD><B>"._QXZ("STATUS")."</B></TD><TD><B>"._QXZ("OLD_STATUS")."</B></TD><TD><B>"._QXZ("OLD_LIST")."</B></TD><TD><B>"._QXZ("FILENAME")."</B></TD><TD><B>"._QXZ("RESULT")."</B></TD><TD><B>"._QXZ("UPDATED_ROWS")."</B></TD>\n";
 echo "</TR>\n";
 
 
@@ -317,7 +318,7 @@ while ($i < $records_to_grab)
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $STARTtime);
-echo "</TABLE><BR>\nRun Time: $RUNtime seconds|$db_source\n";
+echo "</TABLE><BR>\n"._QXZ("Run Time").": $RUNtime "._QXZ("seconds")."|$db_source\n";
 }
 
 if ($db_source == 'S')

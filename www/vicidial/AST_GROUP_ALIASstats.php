@@ -14,6 +14,7 @@
 # 130621-0751 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0732 - Changed to mysqli PHP functions
 # 140108-0740 - Added webserver and hostname to report logging
+# 141114-0842 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -87,7 +88,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -100,10 +101,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -203,8 +204,8 @@ echo "</TD><TD align=center valign=top>\n";
 echo "</TD><TD align=center valign=top>\n";
 echo "</TD><TD align=center valign=top>\n";
 echo "<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
-echo "<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
-echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+echo "<INPUT TYPE=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
+echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 echo "</TD></TR></TABLE>\n";
 echo "</FORM>\n";
 
@@ -219,15 +220,15 @@ echo "PLEASE SELECT A DATE RANGE ABOVE AND CLICK SUBMIT\n";
 
 else
 {
-echo "Group Alias Report                      $NOW_TIME\n";
+echo _QXZ("Group Alias Report",39)." $NOW_TIME\n";
 echo "\n";
-echo "Time range $query_date to $end_date\n\n";
+echo _QXZ("Time range")." $query_date "._QXZ("to")." $end_date\n\n";
 
 
 ### GRAB ALL RECORDS WITHIN RANGE FROM THE DATABASE ###
-echo "Group Alias Summary:\n";
+echo _QXZ("Group Alias Summary").":\n";
 echo "+------------------------------------------------------------------------+------------+----------+\n";
-echo "| GROUP ALIAS                                                            | MINUTES    | CALLS    |\n";
+echo "| "._QXZ("GROUP ALIAS",70)." | "._QXZ("MINUTES",10)." | "._QXZ("CALLS",8)." |\n";
 echo "+------------------------------------------------------------------------+------------+----------+\n";
 
 $stmt="SELECT count(*),ucl.group_alias_id,group_alias_name from user_call_log ucl,groups_alias ga where call_date >= '$query_date' and call_date <= '$end_date' and ucl.group_alias_id=ga.group_alias_id group by ucl.group_alias_id order by ucl.group_alias_id;";
@@ -327,7 +328,7 @@ echo "\n</PRE>\n";
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $STARTtime);
-echo "<BR><BR>\nRun Time: $RUNtime seconds\n";
+echo "<BR><BR>\n"._QXZ("Run Time").": $RUNtime "._QXZ("seconds")."\n";
 
 if ($db_source == 'S')
 	{

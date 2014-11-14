@@ -20,6 +20,7 @@
 # 130926-0720 - Added link to lists view of report
 # 140108-0715 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141114-0828 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -101,7 +102,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -114,10 +115,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -198,7 +199,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -390,7 +391,7 @@ $HEADER.=" </STYLE>\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 
@@ -400,12 +401,12 @@ $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_r
 $MAIN.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP>";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 
-$MAIN.="</TD><TD VALIGN=TOP> Campaigns:<BR>";
+$MAIN.="</TD><TD VALIGN=TOP> "._QXZ("Campaigns").":<BR>";
 $MAIN.="<SELECT SIZE=5 NAME=group[] multiple>\n";
 if  (preg_match('/\-\-ALL\-\-/',$group_string))
-	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 else
-	{$MAIN.="<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\">-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 $o=0;
 while ($campaigns_to_print > $o)
 	{
@@ -413,25 +414,25 @@ while ($campaigns_to_print > $o)
 	  else {$MAIN.="<option value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";}
 	$o++;
 	}
-$MAIN.="</SELECT>\n<BR>\n<a href=\"AST_LISTS_stats.php?DB=$DB\">SWITCH TO LISTS</a>";
+$MAIN.="</SELECT>\n<BR>\n<a href=\"AST_LISTS_stats.php?DB=$DB\">"._QXZ("SWITCH TO LISTS")."</a>";
 $MAIN.="</TD><TD VALIGN=TOP>";
-$MAIN.="Display as:<BR/>";
+$MAIN.=_QXZ("Display as").":<BR/>";
 $MAIN.="<select name='report_display_type'>";
 if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
-$MAIN.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>&nbsp; ";
+$MAIN.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>&nbsp; ";
 $MAIN.="<BR><BR>\n";
-$MAIN.="<INPUT type=submit NAME=SUBMIT VALUE=SUBMIT>\n";
+$MAIN.="<INPUT type=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 $MAIN.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 $MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 if (strlen($group[0]) > 1)
 	{
-	$MAIN.=" <a href=\"./admin.php?ADD=34&campaign_id=$group[0]\">MODIFY</a> | \n";
-	$MAIN.=" <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+	$MAIN.=" <a href=\"./admin.php?ADD=34&campaign_id=$group[0]\">"._QXZ("MODIFY")."</a> | \n";
+	$MAIN.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 	}
 else
 	{
-	$MAIN.=" <a href=\"./admin.php?ADD=10\">CAMPAIGNS</a> | \n";
-	$MAIN.=" <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+	$MAIN.=" <a href=\"./admin.php?ADD=10\">"._QXZ("CAMPAIGNS")."</a> | \n";
+	$MAIN.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 	}
 $MAIN.="</TD></TR></TABLE>";
 $MAIN.="</FORM>\n\n";
@@ -442,13 +443,13 @@ $MAIN.="<PRE><FONT SIZE=2>\n\n";
 if (strlen($group[0]) < 1)
 	{
 	$MAIN.="\n\n";
-	$MAIN.="PLEASE SELECT A CAMPAIGN AND DATE ABOVE AND CLICK SUBMIT\n";
+	$MAIN.=_QXZ("PLEASE SELECT A CAMPAIGN AND DATE ABOVE AND CLICK SUBMIT")."\n";
 	}
 
 else
 	{
 	$OUToutput = '';
-	$OUToutput .= "Lists Campaign Status Stats                             $NOW_TIME\n";
+	$OUToutput .= _QXZ("Lists Campaign Status Stats",55)." $NOW_TIME\n";
 
 	$OUToutput .= "\n";
 
@@ -458,20 +459,20 @@ else
 	$TOTALleads = 0;
 
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- LIST ID SUMMARY     <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a>\n";
+	$OUToutput .= "---------- "._QXZ("LIST ID SUMMARY",19)." <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=1\">"._QXZ("DOWNLOAD")."</a>\n";
 	$OUToutput .= "+------------------------------------------+------------+----------+\n";
-	$OUToutput .= "| LIST                                     | LEADS      | ACTIVE   |\n";
+	$OUToutput .= "| "._QXZ("LIST",40)." | "._QXZ("LEADS",10)." | "._QXZ("ACTIVE",8)." |\n";
 	$OUToutput .= "+------------------------------------------+------------+----------+\n";
 
-	$CSV_text1.="\"LIST ID SUMMARY\"\n";
-	$CSV_text1.="\"LIST\",\"LEADS\",\"ACTIVE\"\n";
+	$CSV_text1.="\""._QXZ("LIST ID SUMMARY")."\"\n";
+	$CSV_text1.="\""._QXZ("LIST")."\",\""._QXZ("LEADS")."\",\""._QXZ("ACTIVE")."\"\n";
 
 	$max_calls=1; $graph_stats=array();
 	$GRAPH="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
-	$GRAPH.="<caption align='top'>LIST ID SUMMARY</caption>";
+	$GRAPH.="<caption align='top'>"._QXZ("LIST ID SUMMARY")."</caption>";
 	$GRAPH.="<tr>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">LIST</th>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">LEADS</th>\n";
+	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("LIST")."</th>\n";
+	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("LEADS")."</th>\n";
 	$GRAPH.="</tr>\n";
 
 	$lists_id_str="";
@@ -514,9 +515,9 @@ else
 			$LISTIDlist_names[$i] =	$row[0];
 			$graph_stats[$i][1].=" - $row[0]";
 			if ($row[1]=='Y')
-				{$LISTIDlist_active[$i] = 'ACTIVE  '; $graph_stats[$i][1].=" (ACTIVE)";}
+				{$LISTIDlist_active[$i] = _QXZ('ACTIVE',8); $graph_stats[$i][1].=" ("._QXZ("ACTIVE").")";}
 			else
-				{$LISTIDlist_active[$i] = 'INACTIVE'; $graph_stats[$i][1].=" (INACTIVE)";}
+				{$LISTIDlist_active[$i] = _QXZ('INACTIVE',8); $graph_stats[$i][1].=" ("._QXZ("INACTIVE").")";}
 			}
 
 		$TOTALleads = ($TOTALleads + $LISTIDcalls[$i]);
@@ -533,9 +534,9 @@ else
 	$TOTALleads =		sprintf("%10s", $TOTALleads);
 
 	$OUToutput .= "+------------------------------------------+------------+----------+\n";
-	$OUToutput .= "| TOTAL:                                   | $TOTALleads |\n";
+	$OUToutput .= "| "._QXZ("TOTAL:",40)." | $TOTALleads |\n";
 	$OUToutput .= "+------------------------------------------+------------+\n";
-	$CSV_text1.="\"TOTAL\",\"$TOTALleads\"\n";
+	$CSV_text1.="\""._QXZ("TOTAL")."\",\"$TOTALleads\"\n";
 
 	for ($d=0; $d<count($graph_stats); $d++) {
 		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
@@ -545,7 +546,7 @@ else
 		$GRAPH.="  </tr>\n";
 	}
 	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">TOTAL:</th>\n";
+	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("TOTAL").":</th>\n";
 	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">".trim($TOTALleads)."</th>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="</table><PRE>\n";
@@ -574,10 +575,10 @@ else
 
 	$max_calls=1; $graph_stats=array();
 	$GRAPH.="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
-	$GRAPH.="<caption align='top'>STATUS FLAG SUMMARY</caption>";
+	$GRAPH.="<caption align='top'>"._QXZ("STATUS FLAG SUMMARY")."</caption>";
 	$GRAPH.="<tr>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">STATUS FLAG</th>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">CALLS</th>\n";
+	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("STATUS FLAG")."</th>\n";
+	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")."</th>\n";
 	$GRAPH.="</tr>\n";
 
 	$stmt="select count(*) from vicidial_list where status IN($human_answered_statuses) and list_id IN($list_id_SQL);";
@@ -697,63 +698,63 @@ else
 
 	$OUToutput .= "\n";
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- STATUS FLAGS SUMMARY:    (and % of leads in selected lists)     <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=2\">DOWNLOAD</a>\n";
+	$OUToutput .= "---------- "._QXZ("STATUS FLAGS SUMMARY:",24)." ("._QXZ("and % of leads in selected lists").")     <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=2\">"._QXZ("DOWNLOAD")."</a>\n";
 	$OUToutput .= "+------------------+------------+----------+\n";
-	$OUToutput .= "| Human Answer     | $HA_count |  $HA_percent% |\n";
-	$OUToutput .= "| Sale             | $SALE_count |  $SALE_percent% |\n";
-	$OUToutput .= "| DNC              | $DNC_count |  $DNC_percent% |\n";
-	$OUToutput .= "| Customer Contact | $CC_count |  $CC_percent% |\n";
-	$OUToutput .= "| Not Interested   | $NI_count |  $NI_percent% |\n";
-	$OUToutput .= "| Unworkable       | $UW_count |  $UW_percent% |\n";
-	$OUToutput .= "| Sched Callbacks  | $SC_count |  $SC_percent% |\n";
-	$OUToutput .= "| Completed        | $COMP_count |  $COMP_percent% |\n";
+	$OUToutput .= "| "._QXZ("Human Answer",16)." | $HA_count |  $HA_percent% |\n";
+	$OUToutput .= "| "._QXZ("Sale",16)." | $SALE_count |  $SALE_percent% |\n";
+	$OUToutput .= "| "._QXZ("DNC",16)." | $DNC_count |  $DNC_percent% |\n";
+	$OUToutput .= "| "._QXZ("Customer Contact",16)." | $CC_count |  $CC_percent% |\n";
+	$OUToutput .= "| "._QXZ("Not Interested",16)." | $NI_count |  $NI_percent% |\n";
+	$OUToutput .= "| "._QXZ("Unworkable",16)." | $UW_count |  $UW_percent% |\n";
+	$OUToutput .= "| "._QXZ("Sched Callbacks",16)." | $SC_count |  $SC_percent% |\n";
+	$OUToutput .= "| "._QXZ("Completed",16)." | $COMP_count |  $COMP_percent% |\n";
 	$OUToutput .= "+------------------+------------+----------+\n";
 	$OUToutput .= "\n";
 
-	$CSV_text2.="\"STATUS FLAGS SUMMARY:\"\n";
-	$CSV_text2 .= "\"Human Answer\",\"$HA_count\",\"$HA_percent%\"\n";
-	$CSV_text2 .= "\"Sale\",\"$SALE_count\",\"$SALE_percent%\"\n";
-	$CSV_text2 .= "\"DNC\",\"$DNC_count\",\"$DNC_percent%\"\n";
-	$CSV_text2 .= "\"Customer Contact\",\"$CC_count\",\"$CC_percent%\"\n";
-	$CSV_text2 .= "\"Not Interested\",\"$NI_count\",\"$NI_percent%\"\n";
-	$CSV_text2 .= "\"Unworkable\",\"$UW_count\",\"$UW_percent%\"\n";
-	$CSV_text2 .= "\"Scheduled Callbacks\",\"$SC_count\",\"$SC_percent%\"\n";
-	$CSV_text2 .= "\"Completed\",\"$COMP_count\",\"$COMP_percent%\"\n";
+	$CSV_text2.="\""._QXZ("STATUS FLAGS SUMMARY").":\"\n";
+	$CSV_text2 .= "\""._QXZ("Human Answer")."\",\"$HA_count\",\"$HA_percent%\"\n";
+	$CSV_text2 .= "\""._QXZ("Sale")."\",\"$SALE_count\",\"$SALE_percent%\"\n";
+	$CSV_text2 .= "\""._QXZ("DNC")."\",\"$DNC_count\",\"$DNC_percent%\"\n";
+	$CSV_text2 .= "\""._QXZ("Customer Contact")."\",\"$CC_count\",\"$CC_percent%\"\n";
+	$CSV_text2 .= "\""._QXZ("Not Interested")."\",\"$NI_count\",\"$NI_percent%\"\n";
+	$CSV_text2 .= "\""._QXZ("Unworkable")."\",\"$UW_count\",\"$UW_percent%\"\n";
+	$CSV_text2 .= "\""._QXZ("Scheduled Callbacks")."\",\"$SC_count\",\"$SC_percent%\"\n";
+	$CSV_text2 .= "\""._QXZ("Completed")."\",\"$COMP_count\",\"$COMP_percent%\"\n";
 
 	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<td class=\"chart_td first\">Human Answer</td>\n";
+	$GRAPH.="	<td class=\"chart_td first\">"._QXZ("Human Answer")."</td>\n";
 	$GRAPH.="	<td nowrap class=\"chart_td value first\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$HA_count, $max_calls))."\" height=\"16\"/>".$HA_count." ($HA_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<td class=\"chart_td\">Sale</td>\n";
+	$GRAPH.="	<td class=\"chart_td\">"._QXZ("Sale")."</td>\n";
 	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$SALE_count, $max_calls))."\" height=\"16\" />".$SALE_count." ($SALE_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<td class=\"chart_td\">DNC</td>\n";
+	$GRAPH.="	<td class=\"chart_td\">"._QXZ("DNC")."</td>\n";
 	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$DNC_count, $max_calls))."\" height=\"16\" />".$DNC_count." ($DNC_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<td class=\"chart_td\">Customer Contact</td>\n";
+	$GRAPH.="	<td class=\"chart_td\">"._QXZ("Customer Contact")."</td>\n";
 	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$CC_count, $max_calls))."\" height=\"16\" />".$CC_count." ($CC_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<td class=\"chart_td\">Not Interested</td>\n";
+	$GRAPH.="	<td class=\"chart_td\">"._QXZ("Not Interested")."</td>\n";
 	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$NI_count, $max_calls))."\" height=\"16\" />".$NI_count." ($NI_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<td class=\"chart_td\">Unworkable</td>\n";
+	$GRAPH.="	<td class=\"chart_td\">"._QXZ("Unworkable")."</td>\n";
 	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$UW_count, $max_calls))."\" height=\"16\" />".$UW_count." ($UW_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<td class=\"chart_td\">Scheduled Callbacks</td>\n";
+	$GRAPH.="	<td class=\"chart_td\">"._QXZ("Scheduled Callbacks")."</td>\n";
 	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$SC_count, $max_calls))."\" height=\"16\" />".$SC_count." ($SC_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<td class=\"chart_td last\">Completed</td>\n";
+	$GRAPH.="	<td class=\"chart_td last\">"._QXZ("Completed")."</td>\n";
 	$GRAPH.="	<td nowrap class=\"chart_td value last\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$COMP_count, $max_calls))."\" height=\"16\" />".$COMP_count." ($COMP_percent%)</td>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">TOTAL:</th>\n";
+	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("TOTAL").":</th>\n";
 	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">".trim($flag_count)."</th>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="</table><PRE>\n";
@@ -763,20 +764,20 @@ else
 	#########  STATUS CATEGORY STATS
 
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- CUSTOM STATUS CATEGORY STATS     <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=3\">DOWNLOAD</a>\n";
+	$OUToutput .= "---------- "._QXZ("CUSTOM STATUS CATEGORY STATS",32)." <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=3\">"._QXZ("DOWNLOAD")."</a>\n";
 	$OUToutput .= "+----------------------+------------+--------------------------------+\n";
-	$OUToutput .= "| CATEGORY             | CALLS      | DESCRIPTION                    |\n";
+	$OUToutput .= "| "._QXZ("CATEGORY",20)." | "._QXZ("CALLS",10)." | "._QXZ("DESCRIPTION",30)." |\n";
 	$OUToutput .= "+----------------------+------------+--------------------------------+\n";
 
-	$CSV_text3.="\"CUSTOM STATUS CATEGORY STATS\"\n";
-	$CSV_text3.="\"CATEGORY\",\"CALLS\",\"DESCRIPTION\"\n";
+	$CSV_text3.="\""._QXZ("CUSTOM STATUS CATEGORY STATS")."\"\n";
+	$CSV_text3.="\""._QXZ("CATEGORY")."\",\""._QXZ("CALLS")."\",\""._QXZ("DESCRIPTION")."\"\n";
 
 	$max_calls=1; $graph_stats=array();
 	$GRAPH.="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
-	$GRAPH.="<caption align='top'>CUSTOM STATUS CATEGORY STATS</caption>";
+	$GRAPH.="<caption align='top'>"._QXZ("CUSTOM STATUS CATEGORY STATS")."</caption>";
 	$GRAPH.="<tr>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">CATEGORY</th>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">CALLS</th>\n";
+	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CATEGORY")."</th>\n";
+	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")."</th>\n";
 	$GRAPH.="</tr>\n";
 
 	$TOTCATcalls=0;
@@ -804,9 +805,9 @@ else
 	$TOTCATcalls =	sprintf("%10s", $TOTCATcalls); while(strlen($TOTCATcalls)>10) {$TOTCATcalls = substr("$TOTCATcalls", 0, -1);}
 
 	$OUToutput .= "+----------------------+------------+--------------------------------+\n";
-	$OUToutput .= "| TOTAL                | $TOTCATcalls |\n";
+	$OUToutput .= "| "._QXZ("TOTAL",20)." | $TOTCATcalls |\n";
 	$OUToutput .= "+----------------------+------------+\n";
-	$CSV_text3.="\"TOTAL\",\"$TOTCATcalls\"\n";
+	$CSV_text3.="\""._QXZ("TOTAL")."\",\"$TOTCATcalls\"\n";
 
 	for ($d=0; $d<count($graph_stats); $d++) {
 		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
@@ -816,7 +817,7 @@ else
 		$GRAPH.="  </tr>\n";
 	}
 	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">TOTAL:</th>\n";
+	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("TOTAL").":</th>\n";
 	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">".trim($TOTCATcalls)."</th>\n";
 	$GRAPH.="  </tr>\n";
 	$GRAPH.="</table><PRE>\n";
@@ -829,10 +830,10 @@ else
 
 	$TOTALleads = 0;
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- PER LIST DETAIL STATS     <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=4\">DOWNLOAD</a>\n";
+	$OUToutput .= "---------- "._QXZ("PER LIST DETAIL STATS",25)." <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=4\">"._QXZ("DOWNLOAD")."</a>\n";
 	$OUToutput .= "\n";
 
-	$CSV_text4.="\"PER LIST DETAIL STATS\"\n\n";
+	$CSV_text4.="\""._QXZ("PER LIST DETAIL STATS")."\"\n\n";
 
 	$i=0;
 	while ($i < $listids_to_print)
@@ -845,22 +846,22 @@ else
 		$OUToutput .= "\n";
 		$OUToutput .= "+--------------------------------------------------------------+\n";
 		$OUToutput .= "| $header_list_id $LISTIDlist_active[$i] |\n";
-		$OUToutput .= "|    TOTAL LEADS: $header_list_count                                   |\n";
+		$OUToutput .= "| "._QXZ("TOTAL LEADS",14,"r").": $header_list_count                                   |\n";
 		$OUToutput .= "+--------------------------------------------------------------+\n";
 
 		$max_flags=1; 
 		$max_status=1;
 		$graph_stats=array();
 		$GRAPH.="<BR><BR><a name='graph".$LISTIDlists[$i]."'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-		$GRAPH.="<tr><th width='50%' class='grey_graph_cell' id='graph".$LISTIDlists[$i]."1'><a href='#' onClick=\"Draw".$LISTIDlists[$i]."Graph('FLAGS', '1'); return false;\">STATUS FLAG BREAKDOWN</a></th><th width='50%' class='grey_graph_cell' id='graph".$LISTIDlists[$i]."2'><a href='#' onClick=\"Draw".$LISTIDlists[$i]."Graph('STATUS', '2'); return false;\">STATUS BREAKDOWN</a></th></tr>";
+		$GRAPH.="<tr><th width='50%' class='grey_graph_cell' id='graph".$LISTIDlists[$i]."1'><a href='#' onClick=\"Draw".$LISTIDlists[$i]."Graph('FLAGS', '1'); return false;\">"._QXZ("STATUS FLAG BREAKDOWN")."</a></th><th width='50%' class='grey_graph_cell' id='graph".$LISTIDlists[$i]."2'><a href='#' onClick=\"Draw".$LISTIDlists[$i]."Graph('STATUS', '2'); return false;\">"._QXZ("STATUS BREAKDOWN")."</a></th></tr>";
 		$GRAPH.="<tr><td colspan='4' class='graph_span_cell'><span id='status_".$LISTIDlists[$i]."_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
 		$graph_header="<table cellspacing='1' cellpadding='0' bgcolor='white' class='horizontalgraph'>";
-		$graph_header.="<caption align='top'>$LISTIDlists[$i] - $LISTIDlist_names[$i] ($LISTIDlist_active[$i])<br>TOTAL LEADS: $LISTIDcalls[$i]</caption>";
-		$FLAGS_graph=$graph_header."<tr><th class='thgraph' scope='col'>FLAG</th><th class='thgraph' scope='col'>COUNT / %</th></tr>";
-		$STATUS_graph=$graph_header."<tr><th class='thgraph' scope='col'>STATUS</th><th class='thgraph' scope='col'>COUNT</th></tr>";
+		$graph_header.="<caption align='top'>$LISTIDlists[$i] - $LISTIDlist_names[$i] ($LISTIDlist_active[$i])<br>"._QXZ("TOTAL LEADS").": $LISTIDcalls[$i]</caption>";
+		$FLAGS_graph=$graph_header."<tr><th class='thgraph' scope='col'>"._QXZ("FLAG")."</th><th class='thgraph' scope='col'>"._QXZ("COUNT")." / %</th></tr>";
+		$STATUS_graph=$graph_header."<tr><th class='thgraph' scope='col'>"._QXZ("STATUS")."</th><th class='thgraph' scope='col'>"._QXZ("COUNT")."</th></tr>";
 
-		$CSV_text4.="\"LIST ID: $LISTIDlists[$i]\",\"$LISTIDlist_names[$i]\",\"$LISTIDlist_active[$i]\"\n";
-		$CSV_text4.="\"TOTAL LEADS:\",\"$header_list_count\"\n\n";
+		$CSV_text4.="\""._QXZ("LIST ID").": $LISTIDlists[$i]\",\"$LISTIDlist_names[$i]\",\"$LISTIDlist_active[$i]\"\n";
+		$CSV_text4.="\""._QXZ("TOTAL LEADS").":\",\"$header_list_count\"\n\n";
 
 		$HA_count=0;
 		$HA_percent=0;
@@ -986,38 +987,38 @@ else
 		$SC_count =	sprintf("%9s", "$SC_count"); while(strlen($SC_count)>9) {$SC_count = substr("$SC_count", 0, -1);}
 		$COMP_count =	sprintf("%9s", "$COMP_count"); while(strlen($COMP_count)>9) {$COMP_count = substr("$COMP_count", 0, -1);}
 
-		$OUToutput .= "| STATUS FLAGS BREAKDOWN:  (and % of total leads in the list)  |\n";
-		$OUToutput .= "|   Human Answer:       $HA_count    $HA_percent%                   |\n";
-		$OUToutput .= "|   Sale:               $SALE_count    $SALE_percent%                   |\n";
-		$OUToutput .= "|   DNC:                $DNC_count    $DNC_percent%                   |\n";
-		$OUToutput .= "|   Customer Contact:   $CC_count    $CC_percent%                   |\n";
-		$OUToutput .= "|   Not Interested:     $NI_count    $NI_percent%                   |\n";
-		$OUToutput .= "|   Unworkable:         $UW_count    $UW_percent%                   |\n";
-		$OUToutput .= "|   Sched Callbacks:    $SC_count    $SC_percent%                   |\n";
-		$OUToutput .= "|   Completed:          $COMP_count    $COMP_percent%                   |\n";
+		$OUToutput .= "| "._QXZ("STATUS FLAGS BREAKDOWN",22).":  "._QXZ("(and % of total leads in the list)",34)." |\n";
+		$OUToutput .= "|   "._QXZ("Human Answer:",19)." $HA_count    $HA_percent%                   |\n";
+		$OUToutput .= "|   "._QXZ("Sale:",19)." $SALE_count    $SALE_percent%                   |\n";
+		$OUToutput .= "|   "._QXZ("DNC:",19)." $DNC_count    $DNC_percent%                   |\n";
+		$OUToutput .= "|   "._QXZ("Customer Contact:",19)." $CC_count    $CC_percent%                   |\n";
+		$OUToutput .= "|   "._QXZ("Not Interested:",19)." $NI_count    $NI_percent%                   |\n";
+		$OUToutput .= "|   "._QXZ("Unworkable:",19)." $UW_count    $UW_percent%                   |\n";
+		$OUToutput .= "|   "._QXZ("Sched Callbacks:",19)." $SC_count    $SC_percent%                   |\n";
+		$OUToutput .= "|   "._QXZ("Completed:",19)." $COMP_count    $COMP_percent%                   |\n";
 		$OUToutput .= "+----+--------------------------------------------+------------+\n";
-		$OUToutput .= "     |    STATUS BREAKDOWN:                       |    COUNT   |\n";
+		$OUToutput .= "     | "._QXZ("STATUS BREAKDOWN",19,"r").":                       | "._QXZ("COUNT",8,"r")."   |\n";
 		$OUToutput .= "     +--------+-----------------------------------+------------+\n";
 
-		$FLAGS_graph.="  <tr><td class='chart_td first'>HUMAN ANSWER</td><td nowrap class='chart_td value first'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$HA_count, $max_flags))."' height='16' />$HA_count ($HA_percent%)</td></tr>";
-		$FLAGS_graph.="  <tr><td class='chart_td'>SALE</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$SALE_count, $max_flags))."' height='16' />$SALE_count ($SALE_percent%)</td></tr>";
-		$FLAGS_graph.="  <tr><td class='chart_td'>DNC</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$DNC_count, $max_flags))."' height='16' />$DNC_count ($DNC_percent%)</td></tr>";
-		$FLAGS_graph.="  <tr><td class='chart_td'>CUSTOMER CONTACT</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$CC_count, $max_flags))."' height='16' />$CC_count ($CC_percent%)</td></tr>";
-		$FLAGS_graph.="  <tr><td class='chart_td'>NOT INTERESTED</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$NI_count, $max_flags))."' height='16' />$NI_count ($NI_percent%)</td></tr>";
-		$FLAGS_graph.="  <tr><td class='chart_td'>UNWORKABLE</td><td nowrap class='chart_td value last><img src='images/bar.png' alt='' width='".round(MathZDC(400*$UW_count, $max_flags))."' height='16' />$UW_count ($UW_percent%)</td></tr>";
-		$FLAGS_graph.="  <tr><td class='chart_td'>SCHEDULED CALLBACKS</td><td nowrap class='chart_td value last><img src='images/bar.png' alt='' width='".round(MathZDC(400*$SC_count, $max_flags))."' height='16' />$SC_count ($SC_percent%)</td></tr>";
-		$FLAGS_graph.="  <tr><td class='chart_td last'>COMPLETED</td><td nowrap class='chart_td value last><img src='images/bar.png' alt='' width='".round(MathZDC(400*$COMP_count, $max_flags))."' height='16' />$COMP_count ($COMP_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td first'>"._QXZ("HUMAN ANSWER")."</td><td nowrap class='chart_td value first'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$HA_count, $max_flags))."' height='16' />$HA_count ($HA_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>"._QXZ("SALE")."</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$SALE_count, $max_flags))."' height='16' />$SALE_count ($SALE_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>"._QXZ("DNC")."</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$DNC_count, $max_flags))."' height='16' />$DNC_count ($DNC_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>"._QXZ("CUSTOMER CONTACT")."</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$CC_count, $max_flags))."' height='16' />$CC_count ($CC_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>"._QXZ("NOT INTERESTED")."</td><td nowrap class='chart_td value'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$NI_count, $max_flags))."' height='16' />$NI_count ($NI_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>"._QXZ("UNWORKABLE")."</td><td nowrap class='chart_td value last><img src='images/bar.png' alt='' width='".round(MathZDC(400*$UW_count, $max_flags))."' height='16' />$UW_count ($UW_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td'>"._QXZ("SCHEDULED CALLBACKS")."</td><td nowrap class='chart_td value last><img src='images/bar.png' alt='' width='".round(MathZDC(400*$SC_count, $max_flags))."' height='16' />$SC_count ($SC_percent%)</td></tr>";
+		$FLAGS_graph.="  <tr><td class='chart_td last'>"._QXZ("COMPLETED")."</td><td nowrap class='chart_td value last><img src='images/bar.png' alt='' width='".round(MathZDC(400*$COMP_count, $max_flags))."' height='16' />$COMP_count ($COMP_percent%)</td></tr>";
 
-		$CSV_text4.="\"STATUS FLAGS BREAKDOWN:\",\"(and % of total leads in the list)\"\n";
-		$CSV_text4.="\"Human Answer:\",\"$HA_count\",\"$HA_percent%\"\n";
-		$CSV_text4.="\"Sale:\",\"$SALE_count\",\"$SALE_percent%\"\n";
-		$CSV_text4.="\"DNC:\",\"$DNC_count\",\"$DNC_percent%\"\n";
-		$CSV_text4.="\"Customer Contact:\",\"$CC_count\",\"$CC_percent%\"\n";
-		$CSV_text4.="\"Not Interested:\",\"$NI_count\",\"$NI_percent%\"\n";
-		$CSV_text4.="\"Unworkable:\",\"$UW_count\",\"$UW_percent%\"\n\n";
-		$CSV_text4.="\"Scheduled Callbacks:\",\"$SC_count\",\"$SC_percent%\"\n\n";
-		$CSV_text4.="\"Completed:\",\"$COMP_count\",\"$COMP_percent%\"\n\n";
-		$CSV_text4.="\"STATUS BREAKDOWN:\",\"\",\"COUNT\"\n";
+		$CSV_text4.="\""._QXZ("STATUS FLAGS BREAKDOWN").":\",\"("._QXZ("and % of total leads in the list").")\"\n";
+		$CSV_text4.="\""._QXZ("Human Answer").":\",\"$HA_count\",\"$HA_percent%\"\n";
+		$CSV_text4.="\""._QXZ("Sale").":\",\"$SALE_count\",\"$SALE_percent%\"\n";
+		$CSV_text4.="\""._QXZ("DNC").":\",\"$DNC_count\",\"$DNC_percent%\"\n";
+		$CSV_text4.="\""._QXZ("Customer Contact").":\",\"$CC_count\",\"$CC_percent%\"\n";
+		$CSV_text4.="\""._QXZ("Not Interested").":\",\"$NI_count\",\"$NI_percent%\"\n";
+		$CSV_text4.="\""._QXZ("Unworkable").":\",\"$UW_count\",\"$UW_percent%\"\n\n";
+		$CSV_text4.="\""._QXZ("Scheduled Callbacks").":\",\"$SC_count\",\"$SC_percent%\"\n\n";
+		$CSV_text4.="\""._QXZ("Completed").":\",\"$COMP_count\",\"$COMP_percent%\"\n\n";
+		$CSV_text4.="\""._QXZ("STATUS BREAKDOWN").":\",\"\",\""._QXZ("COUNT")."\"\n";
 
 		$stmt="select status,count(*) from vicidial_list where list_id='$LISTIDlists[$i]' group by status order by status;";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -1054,16 +1055,16 @@ else
 		$TOTALleads =		sprintf("%10s", $TOTALleads);
 
 		$OUToutput .= "     +--------+-----------------------------------+------------+\n";
-		$OUToutput .= "     | TOTAL:                                     | $TOTALleads |\n";
+		$OUToutput .= "     | "._QXZ("TOTAL",41,"r").": | $TOTALleads |\n";
 		$OUToutput .= "     +--------------------------------------------+------------+\n";
 
-		$CSV_text4.="\"TOTAL:\",\"\",\"$TOTALleads\"\n\n\n";
+		$CSV_text4.="\""._QXZ("TOTAL").":\",\"\",\"$TOTALleads\"\n\n\n";
 
 		for ($d=0; $d<count($graph_stats); $d++) {
 			if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
 			$STATUS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][1], $max_status))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
 		}
-		$STATUS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTALleads)."</th></tr></table>";
+		$STATUS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTALleads)."</th></tr></table>";
 		$JS_onload.="\tDraw".$LISTIDlists[$i]."Graph('FLAGS', '1');\n"; 
 		$JS_text.="function Draw".$LISTIDlists[$i]."Graph(graph, th_id) {\n";
 		$JS_text.="	var FLAGS_graph=\"$FLAGS_graph\";\n";
@@ -1099,7 +1100,7 @@ else
 
 	$ENDtime = date("U");
 	$RUNtime = ($ENDtime - $STARTtime);
-	$MAIN.="\nRun Time: $RUNtime seconds|$db_source\n";
+	$MAIN.="\n"._QXZ("Run Time").": $RUNtime "._QXZ("seconds")."|$db_source\n";
 	$MAIN.="</PRE>\n";
 	$MAIN.="</TD></TR></TABLE>\n";
 	$MAIN.="</BODY></HTML>\n";

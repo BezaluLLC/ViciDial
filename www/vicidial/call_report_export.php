@@ -38,6 +38,7 @@
 # 130620-1725 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0728 - Changed to mysqli PHP functions, Added fields to extended output
 # 140108-0727 - Added webserver and hostname to report logging
+# 141001-2200 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -85,7 +86,7 @@ if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
 
-$report_name = 'Export Calls Report';
+$report_name = _QXZ('Export Calls Report');
 $db_source = 'M';
 $file_exported=0;
 
@@ -140,7 +141,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -153,10 +154,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -176,7 +177,7 @@ $LOGuser_group =		$row[1];
 if ($LOGexport_reports < 1)
 	{
 	Header ("Content-type: text/html; charset=utf-8");
-	echo "You do not have permissions for export reports: |$PHP_AUTH_USER|\n";
+	echo _QXZ("You do not have permissions for export reports").": |$PHP_AUTH_USER|\n";
 	exit;
 	}
 
@@ -245,7 +246,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -402,12 +403,12 @@ if ($run_export > 0)
 	$EFheader='';
 	if ($export_fields == 'EXTENDED')
 		{
-		$export_fields_SQL = ",entry_date,vi.called_count,last_local_call_time,modify_date,called_since_last_reset";
+		$export_fields_SQL = ",entry_date,called_count,last_local_call_time,modify_date,called_since_last_reset";
 		$EFheader = "\tentry_date\tcalled_count\tlast_local_call_time\tmodify_date\tcalled_since_last_reset";
 		}
 	if ($export_fields == 'ALTERNATE_1')
 		{
-		$export_fields_SQL = ",vi.called_count,last_local_call_time";
+		$export_fields_SQL = ",called_count,last_local_call_time";
 		$EFheader = "|called_count|last_local_call_time";
 		}
 
@@ -444,7 +445,7 @@ if ($run_export > 0)
 		$outbound_to_print = mysqli_num_rows($rslt);
 		if ($outbound_to_print < 1)
 			{
-			echo "There are no outbound calls during this time period for these parameters\n";
+			echo _QXZ("There are no outbound calls during this time period for these parameters")."\n";
 			exit;
 			}
 		else
@@ -502,7 +503,7 @@ if ($run_export > 0)
 		$inbound_to_print = mysqli_num_rows($rslt);
 		if ( ($inbound_to_print < 1) and ($outbound_calls < 1) )
 			{
-			echo "There are no inbound calls during this time period for these parameters\n";
+			echo _QXZ("There are no inbound calls during this time period for these parameters")."\n";
 			exit;
 			}
 		else
@@ -877,7 +878,7 @@ if ($run_export > 0)
 		}
 	else
 		{
-		echo "There are no calls during this time period for these parameters\n";
+		echo _QXZ("There are no calls during this time period for these parameters")."\n";
 		exit;
 		}
 	}
@@ -988,9 +989,9 @@ else
 	echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-	echo "<TITLE>ADMINISTRATION: $report_name";
+	echo "<TITLE>"._QXZ("ADMINISTRATION").": "._QXZ("$report_name");
 	if ($ivr_export == 'YES')
-		{echo " IVR";}
+		{echo " "._QXZ("IVR");}
 
 	##### BEGIN Set variables to make header show properly #####
 	$ADD =					'100';
@@ -1015,7 +1016,7 @@ else
 
 
 	echo "<CENTER><BR>\n";
-	echo "<FONT SIZE=3 FACE=\"Arial,Helvetica\"><B>Export Calls Report";
+	echo "<FONT SIZE=3 FACE=\"Arial,Helvetica\"><B>"._QXZ("Export Calls Report");
 	if ($ivr_export == 'YES')
 		{echo " IVR";}
 	echo "</B></FONT><BR><BR>\n";
@@ -1025,7 +1026,7 @@ else
 	echo "<INPUT TYPE=HIDDEN NAME=ivr_export VALUE=\"$ivr_export\">";
 	echo "<TABLE BORDER=0 CELLSPACING=8><TR><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
 
-	echo "<font class=\"select_bold\"><B>Date Range:</B></font><BR><CENTER>\n";
+	echo "<font class=\"select_bold\"><B>"._QXZ("Date Range").":</B></font><BR><CENTER>\n";
 	echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
 	?>
@@ -1059,42 +1060,42 @@ else
 
 	echo "<BR><BR>\n";
 
-	echo "<B>Header Row:</B><BR>\n";
-	echo "<select size=1 name=header_row><option selected>YES</option><option>NO</option></select>\n";
+	echo "<B>"._QXZ("Header Row").":</B><BR>\n";
+	echo "<select size=1 name=header_row><option selected>"._QXZ("YES")."</option><option>"._QXZ("NO")."</option></select>\n";
 
 	echo "<BR><BR>\n";
 
-	echo "<B>Recording Fields:</B><BR>\n";
+	echo "<B>"._QXZ("Recording Fields").":</B><BR>\n";
 	echo "<select size=1 name=rec_fields>";
-	echo "<option>ID</option>";
-	echo "<option>FILENAME</option>";
-	echo "<option>LOCATION</option>";
-	echo "<option>ALL</option>";
-	echo "<option selected>NONE</option>";
+	echo "<option>"._QXZ("ID")."</option>";
+	echo "<option>"._QXZ("FILENAME")."</option>";
+	echo "<option>"._QXZ("LOCATION")."</option>";
+	echo "<option>"._QXZ("ALL")."</option>";
+	echo "<option selected>"._QXZ("NONE")."</option>";
 	echo "</select>\n";
 
 	if ($custom_fields_enabled > 0)
 		{
 		echo "<BR><BR>\n";
 
-		echo "<B>Custom Fields:</B><BR>\n";
-		echo "<select size=1 name=custom_fields><option>YES</option><option selected>NO</option></select>\n";
+		echo "<B>"._QXZ("Custom Fields").":</B><BR>\n";
+		echo "<select size=1 name=custom_fields><option>"._QXZ("YES")."</option><option selected>"._QXZ("NO")."</option></select>\n";
 		}
 
 	echo "<BR><BR>\n";
 
-	echo "<B>Per Call Notes:</B><BR>\n";
-	echo "<select size=1 name=call_notes><option>YES</option><option selected>NO</option></select>\n";
+	echo "<B>"._QXZ("Per Call Notes").":</B><BR>\n";
+	echo "<select size=1 name=call_notes><option>"._QXZ("YES")."</option><option selected>"._QXZ("NO")."</option></select>\n";
 
 	echo "<BR><BR>\n";
 
-	echo "<B>Export Fields:</B><BR>\n";
-	echo "<select size=1 name=export_fields><option selected>STANDARD</option><option>EXTENDED</option><option>ALTERNATE_1</option></select>\n";
+	echo "<B>"._QXZ("Export Fields").":</B><BR>\n";
+	echo "<select size=1 name=export_fields><option selected>"._QXZ("STANDARD")."</option><option>"._QXZ("EXTENDED")."</option><option>ALTERNATE_1</option></select>\n";
 
 	### bottom of first column
 
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=2>\n";
-	echo "<font class=\"select_bold\"><B>Campaigns:</B></font><BR><CENTER>\n";
+	echo "<font class=\"select_bold\"><B>"._QXZ("Campaigns").":</B></font><BR><CENTER>\n";
 	echo "<SELECT SIZE=20 NAME=campaign[] multiple>\n";
 		$o=0;
 		while ($campaigns_to_print > $o)
@@ -1110,7 +1111,7 @@ else
 	if ($ivr_export != 'YES')
 		{
 		echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
-		echo "<font class=\"select_bold\"><B>Inbound Groups:</B></font><BR><CENTER>\n";
+		echo "<font class=\"select_bold\"><B>"._QXZ("Inbound Groups").":</B></font><BR><CENTER>\n";
 		echo "<SELECT SIZE=20 NAME=group[] multiple>\n";
 			$o=0;
 			while ($groups_to_print > $o)
@@ -1124,7 +1125,7 @@ else
 		echo "</SELECT>\n";
 		}
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
-	echo "<font class=\"select_bold\"><B>Lists:</B></font><BR><CENTER>\n";
+	echo "<font class=\"select_bold\"><B>"._QXZ("Lists").":</B></font><BR><CENTER>\n";
 	echo "<SELECT SIZE=20 NAME=list_id[] multiple>\n";
 		$o=0;
 		while ($lists_to_print > $o)
@@ -1137,7 +1138,7 @@ else
 		}
 	echo "</SELECT>\n";
 	echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
-	echo "<font class=\"select_bold\"><B>Statuses:</B></font><BR><CENTER>\n";
+	echo "<font class=\"select_bold\"><B>"._QXZ("Statuses").":</B></font><BR><CENTER>\n";
 	echo "<SELECT SIZE=20 NAME=status[] multiple>\n";
 		$o=0;
 		while ($statuses_to_print > $o)
@@ -1152,7 +1153,7 @@ else
 	if ($ivr_export != 'YES')
 		{
 		echo "</TD><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3>\n";
-		echo "<font class=\"select_bold\"><B>User Groups:</B></font><BR><CENTER>\n";
+		echo "<font class=\"select_bold\"><B>"._QXZ("User Groups").":</B></font><BR><CENTER>\n";
 		echo "<SELECT SIZE=20 NAME=user_group[] multiple>\n";
 			$o=0;
 			while ($user_groups_to_print > $o)
@@ -1168,7 +1169,7 @@ else
 	echo "</TD></TR><TR></TD><TD ALIGN=LEFT VALIGN=TOP COLSPAN=2> &nbsp; \n";
 
 	echo "</TD></TR><TR></TD><TD ALIGN=CENTER VALIGN=TOP COLSPAN=5>\n";
-	echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
+	echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 	echo "</TD></TR></TABLE>\n";
 	echo "</FORM>\n\n";
 

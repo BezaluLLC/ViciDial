@@ -23,6 +23,7 @@
 # 130831-0928 - Changed to mysqli PHP functions
 # 140108-0751 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141114-0021 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -114,7 +115,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -127,10 +128,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -212,7 +213,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -354,7 +355,7 @@ if ($file_download < 1)
 	echo "<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-	echo "<TITLE>Single Agent Daily</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+	echo "<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 	echo "<span style=\"position:absolute;left:0px;top:0px;z-index:20;\"  id=admin_header>";
 
 	$short_header=1;
@@ -370,8 +371,8 @@ if ($file_download < 1)
 if (strlen($group[0]) < 1)
 	{
 	echo "\n";
-	echo "PLEASE SELECT A USER AND DATE-TIME ABOVE AND CLICK SUBMIT\n";
-	echo " NOTE: stats taken from shift specified\n";
+	echo _QXZ("PLEASE SELECT A USER AND DATE-TIME ABOVE AND CLICK SUBMIT")."\n";
+	echo " "._QXZ("NOTE: stats taken from shift specified")."\n";
 	}
 
 else
@@ -400,17 +401,17 @@ else
 
 	if ($file_download < 1)
 		{
-		$ASCII_text.="Agent Days Status Report: $user                     $NOW_TIME\n";
-		$ASCII_text.="Time range: $query_date_BEGIN to $query_date_END\n\n";
-		$ASCII_text.="---------- AGENT Details -------------\n\n";
-		$GRAPH_text.="Agent Days Status Report: $user                     $NOW_TIME\n";
-		$GRAPH_text.="Time range: $query_date_BEGIN to $query_date_END\n\n";
-		$GRAPH_text.="---------- AGENT Details -------------\n";
+		$ASCII_text.=_QXZ("Agent Days Status Report",24).": $user                     $NOW_TIME\n";
+		$ASCII_text.=_QXZ("Time range").": $query_date_BEGIN "._QXZ("to")." $query_date_END\n\n";
+		$ASCII_text.="---------- "._QXZ("AGENT Details")." -------------\n\n";
+		$GRAPH_text.=_QXZ("Agent Days Status Report",24).": $user                     $NOW_TIME\n";
+		$GRAPH_text.=_QXZ("Time range").": $query_date_BEGIN "._QXZ("to")." $query_date_END\n\n";
+		$GRAPH_text.="---------- "._QXZ("AGENT Details")." -------------\n";
 		}
 	else
 		{
-		$file_output .= "Agent Days Status Report: $user                     $NOW_TIME\n";
-		$file_output .= "Time range: $query_date_BEGIN to $query_date_END\n\n";
+		$file_output .= _QXZ("Agent Days Status Report",24).": $user                     $NOW_TIME\n";
+		$file_output .= _QXZ("Time range").": $query_date_BEGIN "._QXZ("to")." $query_date_END\n\n";
 		}
 
 	$statuses='-';
@@ -461,9 +462,9 @@ else
 
 	if ($file_download < 1)
 		{
-		$ASCII_text.="LEAD STATS BREAKDOWN:\n";
+		$ASCII_text.=_QXZ("LEAD STATS BREAKDOWN").":\n";
 		$ASCII_text.="+------------+--------+--------+--------+$statusesHEAD\n";
-		$ASCII_text.="| <a href=\"$LINKbase\">DATE</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>  | <a href=\"$LINKbase&stage=CI\">CIcalls</a>| <a href=\"$LINKbase&stage=DNCCI\">DNC/CI%</a>|$statusesHTML\n";
+		$ASCII_text.="| <a href=\"$LINKbase\">"._QXZ("DATE",10)."</a> | <a href=\"$LINKbase&stage=LEADS\">"._QXZ("CALLS",6)."</a> | <a href=\"$LINKbase&stage=CI\">"._QXZ("CIcalls",7)."</a>| <a href=\"$LINKbase&stage=DNCCI\">"._QXZ("DNC/CI",6)."%</a>|$statusesHTML\n";
 		$ASCII_text.="+------------+--------+--------+--------+$statusesHEAD\n";
 		for ($i=0; $i<count($statusesARY); $i++) {
 			$Sstatus=$statusesARY[$i];
@@ -475,7 +476,7 @@ else
 		}
 	else
 		{
-		$file_output .= "DATE,CALLS,CIcalls,DNC-CI%,$statusesFILE\n";
+		$file_output .= _QXZ("DATE").","._QXZ("CALLS").","._QXZ("CIcalls").","._QXZ("DNC-CI")."%,$statusesFILE\n";
 		}
 
 	### BEGIN loop through each user ###
@@ -488,11 +489,11 @@ else
 	$max_cicalls=1;
 	$max_dncci=1;
 	$GRAPH="<BR><BR><a name='callgraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-	$GRAPH2="<tr><th class='column_header grey_graph_cell' id='callgraph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">CALLS</a></th><th class='column_header grey_graph_cell' id='callgraph2'><a href='#' onClick=\"DrawGraph('CICALLS', '2'); return false;\">CI/CALLS</a></th><th class='column_header grey_graph_cell' id='callgraph3'><a href='#' onClick=\"DrawGraph('DNCCI', '3'); return false;\">DNC/CI</a></th>";
-	$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>LEAD STATS BREAKDOWN</caption><tr><th class='thgraph' scope='col'>STATUS</th>";
-	$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>CALLS </th></tr>";
-	$CICALLS_graph=$graph_header."<th class='thgraph' scope='col'>CI CALLS</th></tr>";
-	$DNCCI_graph=$graph_header."<th class='thgraph' scope='col'>DNC/CI%</th></tr>";
+	$GRAPH2="<tr><th class='column_header grey_graph_cell' id='callgraph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">"._QXZ("CALLS")."</a></th><th class='column_header grey_graph_cell' id='callgraph2'><a href='#' onClick=\"DrawGraph('CICALLS', '2'); return false;\">"._QXZ("CI/CALLS")."</a></th><th class='column_header grey_graph_cell' id='callgraph3'><a href='#' onClick=\"DrawGraph('DNCCI', '3'); return false;\">"._QXZ("DNC/CI")."</a></th>";
+	$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>"._QXZ("LEAD STATS BREAKDOWN")."</caption><tr><th class='thgraph' scope='col'>"._QXZ("STATUS")."</th>";
+	$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CALLS")."</th></tr>";
+	$CICALLS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CI CALLS")."</th></tr>";
+	$DNCCI_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC/CI")."%</th></tr>";
 
 	while ($m < $k)
 		{
@@ -706,7 +707,7 @@ else
 	if ($file_download < 1)
 		{
 		$ASCII_text.="+------------+--------+--------+--------+$statusesHEAD\n";
-		$ASCII_text.="| TOTALS     | $TOTcalls| $CIScountTOT| $DNCcountPCT%|$SUMstatusesHTML\n";
+		$ASCII_text.="| "._QXZ("TOTALS",10)." | $TOTcalls| $CIScountTOT| $DNCcountPCT%|$SUMstatusesHTML\n";
 		$ASCII_text.="+------------+--------+--------+--------+$statusesHEAD\n";
 
 		$ASCII_text.="\n\n</PRE>";
@@ -734,14 +735,14 @@ else
 			}
 		}
 		
-		$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTcalls)."</th></tr></table>";
-		$CICALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($CIScountTOT)."</th></tr></table>";
-		$DNCCI_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($DNCcountPCT)."%</th></tr></table>";
+		$CALLS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTcalls)."</th></tr></table>";
+		$CICALLS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($CIScountTOT)."</th></tr></table>";
+		$DNCCI_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($DNCcountPCT)."%</th></tr></table>";
 		for ($e=0; $e<count($statusesARY); $e++) {
 			$Sstatus=$statusesARY[$e];
 			$total_var=$Sstatus."_total";
 			$graph_var=$Sstatus."_graph";
-			$$graph_var.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($$total_var)."</th></tr></table>";
+			$$graph_var.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($$total_var)."</th></tr></table>";
 		}
 		$JS_onload.="\tDrawGraph('CALLS', '1');\n"; 
 		$JS_text.="function DrawGraph(graph, th_id) {\n";
@@ -773,7 +774,7 @@ else
 		}
 	else
 		{
-		$file_output .= "TOTALS,$TOTcalls,$CIScountTOT,$DNCcountPCT%,$SUMstatusesFILE\n";
+		$file_output .= _QXZ("TOTALS").",$TOTcalls,$CIScountTOT,$DNCcountPCT%,$SUMstatusesFILE\n";
 		}
 	}
 
@@ -834,7 +835,7 @@ else
 	}
 
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> Dates:<BR>";
+echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> "._QXZ("Dates").":<BR>";
 echo "<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
 echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
@@ -851,7 +852,7 @@ o_cal.a_tpl.yearscroll = false;
 </script>
 <?php
 
-echo "<BR> to <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+echo "<BR> "._QXZ("to")." <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
 
 ?>
 <script language="JavaScript">
@@ -866,12 +867,12 @@ o_cal.a_tpl.yearscroll = false;
 </script>
 <?php
 
-echo "</TD><TD VALIGN=TOP> Campaigns:<BR>";
+echo "</TD><TD VALIGN=TOP> "._QXZ("Campaigns").":<BR>";
 echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
 if  (preg_match('/\-\-ALL\-\-/',$group_string))
-	{echo "<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
+	{echo "<option value=\"--ALL--\" selected>-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 else
-	{echo "<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
+	{echo "<option value=\"--ALL--\">-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 $o=0;
 while ($campaigns_to_print > $o)
 {
@@ -881,32 +882,32 @@ while ($campaigns_to_print > $o)
 }
 echo "</SELECT>\n";
 echo "</TD><TD VALIGN=TOP>";
-echo "Display as:&nbsp;&nbsp;&nbsp;<BR>";
+echo _QXZ("Display as").":&nbsp;&nbsp;&nbsp;<BR>";
 echo "<select name='report_display_type'>";
 if ($report_display_type) {echo "<option value='$report_display_type' selected>$report_display_type</option>";}
-echo "<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR><BR>";
-echo "</TD><TD VALIGN=TOP>User:<BR>";
+echo "<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n<BR><BR>";
+echo "</TD><TD VALIGN=TOP>"._QXZ("User").":<BR>";
 echo "<INPUT TYPE=TEXT SIZE=10 NAME=user value=\"$user\">\n";
-echo "</TD><TD VALIGN=TOP>Shift:<BR>";
+echo "</TD><TD VALIGN=TOP>"._QXZ("Shift").":<BR>";
 echo "<SELECT SIZE=1 NAME=shift>\n";
 echo "<option selected value=\"$shift\">$shift</option>\n";
 echo "<option value=\"\">--</option>\n";
-echo "<option value=\"AM\">AM</option>\n";
-echo "<option value=\"PM\">PM</option>\n";
-echo "<option value=\"ALL\">ALL</option>\n";
+echo "<option value=\"AM\">"._QXZ("AM")."</option>\n";
+echo "<option value=\"PM\">"._QXZ("PM")."</option>\n";
+echo "<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
 echo "</SELECT><BR><BR>\n";
-echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
+echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 echo "</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 if (strlen($user) > 1)
 	{
-	echo " <a href=\"$LINKbase&stage=$stage&file_download=1\">DOWNLOAD</a> | \n";
-	echo " <a href=\"./admin.php?ADD=3&user=$user\">USER</a> | \n";
-	echo " <a href=\"./user_stats.php?user=$user&begin_date=$query_date&end_date=$end_date\">USER STATS</a> | \n";
+	echo " <a href=\"$LINKbase&stage=$stage&file_download=1\">"._QXZ("DOWNLOAD")."</a> | \n";
+	echo " <a href=\"./admin.php?ADD=3&user=$user\">"._QXZ("USER")."</a> | \n";
+	echo " <a href=\"./user_stats.php?user=$user&begin_date=$query_date&end_date=$end_date\">"._QXZ("USER STATS")."</a> | \n";
 	}
 else
-	{echo " <a href=\"./admin.php?ADD=0A\">USERS</a> | \n";}
-echo "<a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+	{echo " <a href=\"./admin.php?ADD=0A\">"._QXZ("USERS")."</a> | \n";}
+echo "<a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 echo "</TD></TR></TABLE>";
 
 echo "</FORM>\n\n<BR>$db_source";

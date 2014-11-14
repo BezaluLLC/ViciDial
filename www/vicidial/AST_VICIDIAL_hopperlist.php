@@ -21,6 +21,7 @@
 # 130620-2222 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-2003 - Changed to mysqli PHP functions
 # 140108-0729 - Added webserver and hostname to report logging
+# 141114-0700 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -91,7 +92,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -104,10 +105,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -127,7 +128,7 @@ $LOGuser_group =		$row[1];
 if ($LOGmodify_campaigns < 1)
 	{
 	Header ("Content-type: text/html; charset=utf-8");
-	echo "You do not have permissions for campaign modification: |$PHP_AUTH_USER|\n";
+	echo _QXZ("You do not have permissions for campaign modification").": |$PHP_AUTH_USER|\n";
 	exit;
 	}
 
@@ -237,7 +238,7 @@ while ($i < $campaigns_to_print)
 
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-echo "<TITLE>Hopper List Report</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>"._QXZ("Hopper List Report")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 	$short_header=1;
 
@@ -254,8 +255,8 @@ while ($campaigns_to_print > $o)
 	$o++;
 	}
 echo "</SELECT>\n";
-echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
-echo " &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=34&campaign_id=$group\">MODIFY</a> \n";
+echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
+echo " &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"./admin.php?ADD=34&campaign_id=$group\">"._QXZ("MODIFY")."</a> \n";
 echo "</FORM>\n\n";
 
 echo "<PRE><FONT SIZE=2>\n\n";
@@ -264,15 +265,15 @@ echo "<PRE><FONT SIZE=2>\n\n";
 if (!$group)
 	{
 	echo "\n\n";
-	echo "PLEASE SELECT A CAMPAIGN ABOVE AND CLICK SUBMIT\n";
+	echo _QXZ("PLEASE SELECT A CAMPAIGN ABOVE AND CLICK SUBMIT")."\n";
 	}
 
 else
 	{
-	echo "Live Current Hopper List                      $NOW_TIME\n";
+	echo _QXZ("Live Current Hopper List",45)." $NOW_TIME\n";
 
 	echo "\n";
-	echo "---------- TOTALS\n";
+	echo "---------- "._QXZ("TOTALS")."\n";
 
 	$stmt="select count(*) from vicidial_hopper where campaign_id='" . mysqli_real_escape_string($link, $group) . "' $LOGallowed_campaignsSQL;";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -281,16 +282,16 @@ else
 
 	$TOTALcalls =	sprintf("%10s", $row[0]);
 
-	echo "Total leads in hopper right now:       $TOTALcalls\n";
+	echo _QXZ("Total leads in hopper right now").":       $TOTALcalls\n";
 
 
 	##############################
 	#########  LEAD STATS
 
 	echo "\n";
-	echo "---------- LEADS IN HOPPER\n";
+	echo "---------- "._QXZ("LEADS IN HOPPER")."\n";
 	echo "+------+--------+-----------+------------+------------+-------+--------+-------+--------+-------+-------+----------------------+\n";
-	echo "|ORDER |PRIORITY| LEAD ID   | LIST ID    | PHONE NUM  | STATE | STATUS | COUNT | GMT    | ALT   | SOURCE| VENDOR LEAD CODE     |\n";
+	echo "|"._QXZ("ORDER",5)." |"._QXZ("PRIORITY",8)."| "._QXZ("LEAD ID",9)." | "._QXZ("LIST ID",10)." | "._QXZ("PHONE NUM",10)." | "._QXZ("STATE",5)." | "._QXZ("STATUS",6)." | "._QXZ("COUNT",5)." | "._QXZ("GMT",6)." | "._QXZ("ALT",5)." | "._QXZ("SOURCE",6)."| "._QXZ("VENDOR LEAD CODE",20)." |\n";
 	echo "+------+--------+-----------+------------+------------+-------+--------+-------+--------+-------+-------+----------------------+\n";
 
 	$stmt="select vicidial_hopper.lead_id,phone_number,vicidial_hopper.state,vicidial_list.status,called_count,vicidial_hopper.gmt_offset_now,hopper_id,alt_dial,vicidial_hopper.list_id,vicidial_hopper.priority,vicidial_hopper.source,vicidial_hopper.vendor_lead_code from vicidial_hopper,vicidial_list where vicidial_hopper.campaign_id='" . mysqli_real_escape_string($link, $group) . "' and vicidial_hopper.status='READY' and vicidial_hopper.lead_id=vicidial_list.lead_id $LOGallowed_campaignsSQL order by priority desc,hopper_id limit 5000;";
@@ -371,17 +372,17 @@ if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 
 ?>
-
-Sources:
-A = Auto-alt-dial
-C = Scheduled Callbacks
-N = Xth New lead order
-P = Non-Agent API hopper load
-Q = No-hopper queue insert
-R = Recycled leads
-S = Standard hopper load
-
 </PRE>
+<?php echo _QXZ("Sources"); ?>:<br>
+A = <?php echo _QXZ("Auto-alt-dial"); ?><br>
+C = <?php echo _QXZ("Scheduled Callbacks"); ?><br>
+N = <?php echo _QXZ("Xth New lead order"); ?><br>
+P = <?php echo _QXZ("Non-Agent API hopper load"); ?><br>
+Q = <?php echo _QXZ("No-hopper queue insert"); ?><br>
+R = <?php echo _QXZ("Recycled leads"); ?><br>
+S = <?php echo _QXZ("Standard hopper load"); ?><br>
+
+
 
 </TD></TR></TABLE>
 

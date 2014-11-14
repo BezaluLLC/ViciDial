@@ -1,7 +1,7 @@
 <?php
-# AST_admin_template_maker.php - version 2.8
+# AST_admin_template_maker.php - version 2.10
 # 
-# Copyright (C) 2013  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 120402-2132 - First Build
@@ -11,6 +11,7 @@
 # 130619-2044 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130719-1914 - Added ability to filter by statuses
 # 130824-2325 - Changed to mysqli PHP functions
+# 141114-0912 - Finalized adding QXZ translation to all admin files
 #
 
 require("dbconnect_mysqli.php");
@@ -102,10 +103,10 @@ if ($auth_message == 'GOOD')
 
 if ($auth < 1)
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -153,10 +154,10 @@ if ($submit_template=="SUBMIT TEMPLATE" && $template_id && $template_name && $te
 	echo "<!-- $ins_stmt //-->";
 	if (mysqli_affected_rows($link)>0) 
 		{
-		$success_msg="NEW TEMPLATE CREATED SUCCESSFULLY";
+		$success_msg=_QXZ("NEW TEMPLATE CREATED SUCCESSFULLY");
 		if (!$custom_fields_layout) 
 			{
-			$success_msg.="<BR/>**NO CUSTOM FIELDS ASSIGNED**";
+			$success_msg.="<BR/>**"._QXZ("NO CUSTOM FIELDS ASSIGNED")."**";
 			}
 		}
 	else 
@@ -164,7 +165,7 @@ if ($submit_template=="SUBMIT TEMPLATE" && $template_id && $template_name && $te
 		$errno = mysqli_errno($link);
 		if ($errno > 0)
 			{$error = mysqli_error($link);}
-		$error_msg="TEMPLATE CREATION FAILED<br>\n$errno - $error<br>\n[$ins_stmt]";
+		$error_msg=_QXZ("TEMPLATE CREATION FAILED")."<br>\n$errno - $error<br>\n[$ins_stmt]";
 		}
 	}
 else if ($delete_template=="DELETE TEMPLATE" && $template_id) 
@@ -366,7 +367,7 @@ require("admin_header.php");
 ?>
 <BR/>
 <table border="2" bordercolor="#000099" cellpadding="10" width="800" align="left">
-<tr height="20"><th bgcolor="#000099"><font class="standard_bold" color="#FFFFFF">Listloader Custom Template Maker<?php echo "$NWB#vicidial_template_maker$NWE"; ?></font></th></tr>
+<tr height="20"><th bgcolor="#000099"><font class="standard_bold" color="#FFFFFF"><?php echo _QXZ("Listloader Custom Template Maker"); ?><?php echo "$NWB#vicidial_template_maker$NWE"; ?></font></th></tr>
 <tr><td align="center" bgcolor="#CCFFFF">
 <table border=0 cellpadding=15 cellspacing=0 width="90%" align="center" bgcolor="#D9E6FE">
 <?php
@@ -384,32 +385,32 @@ if ($success_msg)
 	}
 ?>
 	<tr>
-		<th width="50%"><font class="standard_bold">Create a new template</font></th>
-		<th width="50%"><font class="standard_bold">Delete an existing template</font></th>
+		<th width="50%"><font class="standard_bold"><?php echo _QXZ("Create a new template"); ?></font></th>
+		<th width="50%"><font class="standard_bold"><?php echo _QXZ("Delete an existing template"); ?></font></th>
 	<tr valign="top">
 		<td align="left" width='50%'>
 		<form id="listloader_file_primer" action="leadloader_template_display.php?form_action=prime_file" method="post" enctype="multipart/form-data" target="file_holder">
-			<font class="standard">Sample file fitting template:<BR><font size="-2">(needed for field assignation)</font></font><?php echo "$NWB#template_maker-create_template$NWE"; ?><BR><BR><input type=file name="sample_template_file" value="<?php echo $sample_template_file; ?>" onChange="loadIFrame('prime_file', this.value); this.form.submit();">
+			<font class="standard"><?php echo _QXZ("Sample file fitting template"); ?>:<BR><font size="-2">(<?php echo _QXZ("needed for field assignation"); ?>)</font></font><?php echo "$NWB#template_maker-create_template$NWE"; ?><BR><BR><input type=file name="sample_template_file" value="<?php echo $sample_template_file; ?>" onChange="loadIFrame('prime_file', this.value); this.form.submit();">
 		</form>
 		</td>
-		<td align="left" width='50%'><form action="<?php echo $PHP_SELF; ?>" method="post"><font class="standard">Select template to delete:</font><?php echo "$NWB#template_maker-delete_template$NWE"; ?><BR><select name="template_id" onChange="loadIFrame('hide_new_template_form', '')">
+		<td align="left" width='50%'><form action="<?php echo $PHP_SELF; ?>" method="post"><font class="standard"><?php echo _QXZ("Select template to delete"); ?>:</font><?php echo "$NWB#template_maker-delete_template$NWE"; ?><BR><select name="template_id" onChange="loadIFrame('hide_new_template_form', '')">
 <?php
 $template_stmt="select template_id, template_name from vicidial_custom_leadloader_templates order by template_id asc";
 $template_rslt=mysql_to_mysqli($template_stmt, $link);
 if (mysqli_num_rows($template_rslt)>0) {
-	if ($update_template) {echo "<option value='$update_template' selected>$update_template</option>\n";} else {echo "<option value='' selected>--Choose an existing template--</option>\n";}
+	if ($update_template) {echo "<option value='$update_template' selected>$update_template</option>\n";} else {echo "<option value='' selected>--"._QXZ("Choose an existing template")."--</option>\n";}
 	while ($template_row=mysqli_fetch_array($template_rslt)) {
 		echo "<option value='$template_row[template_id]'>$template_row[template_id] - $template_row[template_name]</option>\n";
 	}
 } else {
-	echo "<option value='' selected>--No templates exist--</option>\n";
+	echo "<option value='' selected>--"._QXZ("No templates exist")."--</option>\n";
 }
 ?>
-		</select><BR/><BR/><input type="submit" value="DELETE TEMPLATE" class="red_btn" name="delete_template">
+		</select><BR/><BR/><input type="submit" value="<?php echo _QXZ("DELETE TEMPLATE"); ?>" class="red_btn" name="delete_template">
 		</form></td>
 	</tr>
 	<tr>
-		<td align=left colspan="2"><font size=1> &nbsp; &nbsp; &nbsp; &nbsp; <a href="admin.php?ADD=100" target="_parent">BACK TO ADMIN</a> &nbsp; &nbsp; &nbsp; &nbsp; <a href="./admin_listloader_fourth_gen.php">Go to Lead Loader</a> &nbsp; &nbsp; </font></td>
+		<td align=left colspan="2"><font size=1> &nbsp; &nbsp; &nbsp; &nbsp; <a href="admin.php?ADD=100" target="_parent"><?php echo _QXZ("BACK TO ADMIN"); ?></a> &nbsp; &nbsp; &nbsp; &nbsp; <a href="./admin_listloader_fourth_gen.php"><?php echo _QXZ("Go to Lead Loader"); ?></a> &nbsp; &nbsp; </font></td>
 	</tr>
 	</tr>
 </table>
@@ -420,22 +421,22 @@ if (mysqli_num_rows($template_rslt)>0) {
 <form id="listloader_template_form" name="listloader_template_form" action="<?php echo $PHP_SELF; ?>" method="post" enctype="multipart/form-data">
 <table border=0 cellpadding=3 cellspacing=0 width="100%" align="center">
 	<tr>
-		<th colspan="2" bgcolor="#330099"><font class="standard" color="white">New template form</font></th>
+		<th colspan="2" bgcolor="#330099"><font class="standard" color="white"><?php echo _QXZ("New template form"); ?></font></th>
 	</tr>
 	<tr bgcolor="#D9E6FE">
-		<td align="right" width='25%'><font class="standard">Template ID:</font></td>
+		<td align="right" width='25%'><font class="standard"><?php echo _QXZ("Template ID"); ?>:</font></td>
 		<td align="left" width='75%'><input type='text' name='template_id' size='15' maxlength='20'><?php echo "$NWB#template_maker-template_id$NWE"; ?></td>
 	</tr>
 	<tr bgcolor="#D9E6FE">
-		<td align="right" width='25%'><font class="standard">Template Name:</font></td>
+		<td align="right" width='25%'><font class="standard"><?php echo _QXZ("Template Name"); ?>:</font></td>
 		<td align="left" width='75%'><input type='text' name='template_name' size='15' maxlength='30'><?php echo "$NWB#template_maker-template_name$NWE"; ?></td>
 	</tr>
 	<tr bgcolor="#D9E6FE">
-		<td align="right" width='25%'><font class="standard">Template Description:</font></td>
+		<td align="right" width='25%'><font class="standard"><?php echo _QXZ("Template Description"); ?>:</font></td>
 		<td align="left" width='75%'><input type='text' name='template_description' size='50' maxlength='255'><?php echo "$NWB#template_maker-template_description$NWE"; ?></td>
 	</tr>
 	<tr bgcolor="#D9E6FE">
-		<td width='25%' align="right"><font class="standard">List ID template will load into:</font></td>
+		<td width='25%' align="right"><font class="standard"><?php echo _QXZ("List ID template will load into"); ?>:</font></td>
 		<td width='75%'>
 			<select id='template_list_id' name='template_list_id' onChange="DisplayTemplateFields(this.value)">
 			<option value=''>--Select a list below--</option>
@@ -456,11 +457,11 @@ if (mysqli_num_rows($template_rslt)>0) {
 		</td>
 	</tr>
 	<tr bgcolor="#D9E6FE">
-		<td width='25%' align="right"><font class="standard">Statuses to dedupe against (optional):</font></td>
+		<td width='25%' align="right"><font class="standard"><?php echo _QXZ("Statuses to dedupe against (optional)"); ?>:</font></td>
 		<td width='75%'>
 		<span id='statuses_display'>
 			<select id='template_statuses' name='template_statuses[]' size=5 multiple>
-			<option value='--ALL--' selected>--ALL DISPOSITIONS--</option>
+			<option value='--ALL--' selected>--<?php echo _QXZ("ALL DISPOSITIONS"); ?>--</option>
 			<?php
 			$stmt="SELECT status, status_name from vicidial_statuses order by status;";
 			$rslt=mysql_to_mysqli($stmt, $link);
@@ -484,15 +485,15 @@ if (mysqli_num_rows($template_rslt)>0) {
 <tr bgcolor="#D9E6FE"><td align="center" colspan=2>
 <table border=0 cellpadding=3 cellspacing=1 width="100%" align="center">
 	<tr>
-		<th colspan="2" bgcolor="#330099"><font class="standard" color="white">Assign columns to file fields<BR/><font size='-2'>(selecting a different list will reset columns)</font></font><?php echo "$NWB#template_maker-assign_columns$NWE"; ?></th>
+		<th colspan="2" bgcolor="#330099"><font class="standard" color="white"><?php echo _QXZ("Assign columns to file fields"); ?><BR/><font size='-2'>(<?php echo _QXZ("selecting a different list will reset columns"); ?>)</font></font><?php echo "$NWB#template_maker-assign_columns$NWE"; ?></th>
 	</tr>
 	<tr valign="top">
-		<td border="1" align="center" bgcolor="#D9E6FE" width="50%"><font class="standard">Standard Field</font></td>
-		<td border="0" align="center" bgcolor="#FED9D9" width="50%"><font class="standard">Custom Field</font></td>
+		<td border="1" align="center" bgcolor="#D9E6FE" width="50%"><font class="standard"><?php echo _QXZ("Standard Field"); ?></font></td>
+		<td border="0" align="center" bgcolor="#FED9D9" width="50%"><font class="standard"><?php echo _QXZ("Custom Field"); ?></font></td>
 	</tr>
 	<tr valign="top">
 		<td colspan="2" align="center">
-		<span id="field_display" name="field_display"><font class="standard_bold" color='red'>**Select a list ID from the drop down menu above to show columns**</font></span>
+		<span id="field_display" name="field_display"><font class="standard_bold" color='red'>**<?php echo _QXZ("Select a list ID from the drop down menu above to show columns"); ?>**</font></span>
 		</td>
 	</tr>
 </table>

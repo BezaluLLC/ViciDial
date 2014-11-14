@@ -86,8 +86,8 @@ OTHER CHANGES:
 
 12. Added campaign options to limit number of active callbacks
 
-13. Changed all Administrative interface text output to use a function instead
-	of echo.
+13. Changed all Agent and Administrative interface text output to use a function
+	instead of echo.(for future dynamic other-language interfaces)
 
 
 

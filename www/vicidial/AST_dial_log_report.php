@@ -7,6 +7,7 @@
 # 130709-1346 - First build
 # 130831-0927 - Changed to mysqli PHP functions
 # 140108-0744 - Added webserver and hostname to report logging
+# 141114-0844 - Finalized adding QXZ translation to all admin files
 #
 # describe vicidial_dial_log
 # +-------------------+-----------------------+------+-----+---------+-------+
@@ -71,78 +72,78 @@ if (isset($_GET["report_display_type"]))			{$report_display_type=$_GET["report_d
 #### SIP response code directory
 $sip_response_directory = array(
 	0 => "",
-	100 => "Trying",
-	180 => "Ringing",
-	181 => "Call is Being Forwarded",
-	182 => "Queued",
-	183 => "Session in Progress",
-	199 => "Early Dialog Terminated",
-	200 => "OK",
-	202 => "Accepted",
-	204 => "No Notification",
-	300 => "Multiple Choices",
-	301 => "Moved Permanently",
-	301 => "Moved Temporarily",
-	302 => "Moved Temporarily",
-	305 => "Use Proxy",
-	380 => "Alternative Service",
-	400 => "Bad Request",
-	401 => "Unauthorized",
-	402 => "Payment Required",
-	403 => "Forbidden",
-	404 => "Not Found",
-	405 => "Method Not Allowed",
-	406 => "Not Acceptable",
-	407 => "Proxy Authentication Required",
-	408 => "Request Timeout",
-	409 => "Conflict",
-	410 => "Gone",
-	411 => "Length Required",
-	412 => "Conditional Request Failed",
-	413 => "Request Entity Too Large",
-	414 => "Request-URI Too Long",
-	415 => "Unsupported Media Type",
-	416 => "Unsupported URI Scheme",
-	417 => "Unknown Resource-Priority",
-	420 => "Bad Extension",
-	421 => "Extension Required",
-	422 => "Session Interval Too Small",
-	423 => "Interval Too Brief",
-	424 => "Bad Location Information",
-	428 => "Use Identity Header",
-	429 => "Provide Referrer Identity",
-	430 => "Flow Failed",
-	433 => "Anonymity Disallowed",
-	436 => "Bad Identity-Info",
-	437 => "Unsupported Certificate",
-	438 => "Invalid Identity Header",
-	439 => "First Hop Lacks Outbound Support",
-	470 => "Consent Needed",
-	480 => "Temporarily Unavailable",
-	481 => "Call/Transaction Does Not Exist",
-	482 => "Loop Detected.",
-	483 => "Too Many Hops",
-	484 => "Address Incomplete",
-	485 => "Ambiguous",
-	486 => "Busy Here",
-	487 => "Request Terminated",
-	488 => "Not Acceptable Here",
-	489 => "Bad Event",
-	491 => "Request Pending",
-	493 => "Undecipherable",
-	494 => "Security Agreement Required",
-	500 => "Server Internal Error",
-	501 => "Not Implemented",
-	502 => "Bad Gateway",
-	503 => "Service Unavailable",
-	504 => "Server Time-out",
-	505 => "Version Not Supported",
-	513 => "Message Too Large",
-	580 => "Precondition Failure",
-	600 => "Busy Everywhere",
-	603 => "Decline",
-	604 => "Does Not Exist Anywhere",
-	606 => "Not Acceptable",
+	100 => _QXZ("Trying"),
+	180 => _QXZ("Ringing"),
+	181 => _QXZ("Call is Being Forwarded"),
+	182 => _QXZ("Queued"),
+	183 => _QXZ("Session in Progress"),
+	199 => _QXZ("Early Dialog Terminated"),
+	200 => _QXZ("OK"),
+	202 => _QXZ("Accepted"),
+	204 => _QXZ("No Notification"),
+	300 => _QXZ("Multiple Choices"),
+	301 => _QXZ("Moved Permanently"),
+	301 => _QXZ("Moved Temporarily"),
+	302 => _QXZ("Moved Temporarily"),
+	305 => _QXZ("Use Proxy"),
+	380 => _QXZ("Alternative Service"),
+	400 => _QXZ("Bad Request"),
+	401 => _QXZ("Unauthorized"),
+	402 => _QXZ("Payment Required"),
+	403 => _QXZ("Forbidden"),
+	404 => _QXZ("Not Found"),
+	405 => _QXZ("Method Not Allowed"),
+	406 => _QXZ("Not Acceptable"),
+	407 => _QXZ("Proxy Authentication Required"),
+	408 => _QXZ("Request Timeout"),
+	409 => _QXZ("Conflict"),
+	410 => _QXZ("Gone"),
+	411 => _QXZ("Length Required"),
+	412 => _QXZ("Conditional Request Failed"),
+	413 => _QXZ("Request Entity Too Large"),
+	414 => _QXZ("Request-URI Too Long"),
+	415 => _QXZ("Unsupported Media Type"),
+	416 => _QXZ("Unsupported URI Scheme"),
+	417 => _QXZ("Unknown Resource-Priority"),
+	420 => _QXZ("Bad Extension"),
+	421 => _QXZ("Extension Required"),
+	422 => _QXZ("Session Interval Too Small"),
+	423 => _QXZ("Interval Too Brief"),
+	424 => _QXZ("Bad Location Information"),
+	428 => _QXZ("Use Identity Header"),
+	429 => _QXZ("Provide Referrer Identity"),
+	430 => _QXZ("Flow Failed"),
+	433 => _QXZ("Anonymity Disallowed"),
+	436 => _QXZ("Bad Identity-Info"),
+	437 => _QXZ("Unsupported Certificate"),
+	438 => _QXZ("Invalid Identity Header"),
+	439 => _QXZ("First Hop Lacks Outbound Support"),
+	470 => _QXZ("Consent Needed"),
+	480 => _QXZ("Temporarily Unavailable"),
+	481 => _QXZ("Call/Transaction Does Not Exist"),
+	482 => _QXZ("Loop Detected."),
+	483 => _QXZ("Too Many Hops"),
+	484 => _QXZ("Address Incomplete"),
+	485 => _QXZ("Ambiguous"),
+	486 => _QXZ("Busy Here"),
+	487 => _QXZ("Request Terminated"),
+	488 => _QXZ("Not Acceptable Here"),
+	489 => _QXZ("Bad Event"),
+	491 => _QXZ("Request Pending"),
+	493 => _QXZ("Undecipherable"),
+	494 => _QXZ("Security Agreement Required"),
+	500 => _QXZ("Server Internal Error"),
+	501 => _QXZ("Not Implemented"),
+	502 => _QXZ("Bad Gateway"),
+	503 => _QXZ("Service Unavailable"),
+	504 => _QXZ("Server Time-out"),
+	505 => _QXZ("Version Not Supported"),
+	513 => _QXZ("Message Too Large"),
+	580 => _QXZ("Precondition Failure"),
+	600 => _QXZ("Busy Everywhere"),
+	603 => _QXZ("Decline"),
+	604 => _QXZ("Does Not Exist Anywhere"),
+	606 => _QXZ("Not Acceptable"),
 );
 
 $master_sip_response_directory=array();
@@ -215,7 +216,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -228,10 +229,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -338,14 +339,14 @@ while($i < $server_ip_ct)
 if ( (preg_match('/\-\-ALL\-\-/',$server_ip_string) ) or ($server_ip_ct < 1) )
 	{
 	$server_ip_SQL = "";
-	$server_rpt_string="- ALL servers ";
+	$server_rpt_string="- "._QXZ("ALL servers")." ";
 	if (preg_match('/\-\-ALL\-\-/',$server_ip_string)) {$server_ipQS="&server_ip[]=--ALL--";}
 	}
 else
 	{
 	$server_ip_SQL = preg_replace('/,$/i', '',$server_ip_SQL);
 	$server_ip_SQL = "and server_ip IN($server_ip_SQL)";
-	$server_rpt_string="- server(s) ".preg_replace('/\|/', ", ", substr($server_ip_string, 1, -1));
+	$server_rpt_string="- "._QXZ("server(s)")." ".preg_replace('/\|/', ", ", substr($server_ip_string, 1, -1));
 	}
 if (strlen($server_ip_SQL)<3) {$server_ip_SQL="";}
 
@@ -375,7 +376,7 @@ while($i < $sip_hangup_cause_ct)
 
 if ( (preg_match('/\-\-ALL\-\-/',$sip_hangup_cause_string) ) or ($sip_hangup_cause_ct < 1) )
 	{
-	$HC_rpt_string="- ALL SIP hangup causes ";
+	$HC_rpt_string="- "._QXZ("ALL SIP hangup causes")." ";
 	if (preg_match('/\-\-ALL\-\-/',$sip_hangup_cause_string)) 
 		{
 		$sip_hangup_causeQS="&sip_hangup_cause[]=--ALL--";
@@ -385,7 +386,7 @@ if ( (preg_match('/\-\-ALL\-\-/',$sip_hangup_cause_string) ) or ($sip_hangup_cau
 else
 	{
 	$sip_hangup_causes_string=preg_replace('/\!/', "-", $sip_hangup_causes_string);
-	$HC_rpt_string="AND SIP hangup cause(s) ".preg_replace('/\|/', ", ", substr($sip_hangup_causes_string, 1, -1));
+	$HC_rpt_string=_QXZ("AND SIP hangup cause(s)")." ".preg_replace('/\|/', ", ", substr($sip_hangup_causes_string, 1, -1));
 	}
 $sip_hangup_cause_SQL = preg_replace('/,$/i', '',$sip_hangup_cause_SQL);
 if (strlen($sip_hangup_cause_SQL)>0) {$sip_hangup_cause_SQL="and sip_hangup_cause in ($sip_hangup_cause_SQL)";}
@@ -407,7 +408,7 @@ $HEADER.="<link rel=\"stylesheet\" href=\"verticalbargraph.css\">\n";
 $HEADER.="<script language=\"JavaScript\" src=\"wz_jsgraphics.js\"></script>\n";
 $HEADER.="<script language=\"JavaScript\" src=\"line.js\"></script>\n";
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 
@@ -415,7 +416,7 @@ $MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 $MAIN.="<TABLE BORDER=0 cellspacing=5 cellpadding=5><TR><TD VALIGN=TOP align=center>\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
-$MAIN.="Date:\n";
+$MAIN.=_QXZ("Date").":\n";
 $MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 $MAIN.="<script language=\"JavaScript\">\n";
 $MAIN.="var o_cal = new tcal ({\n";
@@ -430,14 +431,14 @@ $MAIN.="</script>\n";
 
 $MAIN.="<BR><BR><INPUT TYPE=TEXT NAME=query_date_D SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_D\">";
 
-$MAIN.="<BR> to <BR><INPUT TYPE=TEXT NAME=query_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_T\">";
+$MAIN.="<BR> "._QXZ("to")." <BR><INPUT TYPE=TEXT NAME=query_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_T\">";
 
-$MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>Server IP:<BR/>\n";
+$MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>"._QXZ("Server IP").":<BR/>\n";
 $MAIN.="<SELECT SIZE=5 NAME=server_ip[] multiple>\n";
 if  (preg_match('/\-\-ALL\-\-/',$server_ip_string))
-	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL SERVERS --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL SERVERS")." --</option>\n";}
 else
-	{$MAIN.="<option value=\"--ALL--\">-- ALL SERVERS --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\">-- "._QXZ("ALL SERVERS")." --</option>\n";}
 $o=0;
 while ($servers_to_print > $o)
 	{
@@ -449,12 +450,12 @@ while ($servers_to_print > $o)
 	}
 $MAIN.="</SELECT></TD>";
 
-$MAIN.="<TD ROWSPAN=2 VALIGN=top align=center>SIP Response:<BR/>";
+$MAIN.="<TD ROWSPAN=2 VALIGN=top align=center>"._QXZ("SIP Response").":<BR/>";
 $MAIN.="<SELECT SIZE=5 NAME=sip_hangup_cause[] multiple>\n";
 if  (preg_match('/--ALL--/',$sip_hangup_causes_string))
-	{$MAIN.="<option value=\"--ALL--\" selected>-- ALL SIP CAUSES --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL SIP CAUSES")." --</option>\n";}
 else
-	{$MAIN.="<option value=\"--ALL--\">-- ALL SIP CAUSES --</option>\n";}
+	{$MAIN.="<option value=\"--ALL--\">-- "._QXZ("ALL SIP CAUSES")." --</option>\n";}
 
 $o=0;
 while ($sip_responses_to_print > $o)
@@ -469,7 +470,7 @@ $MAIN.="</SELECT>";
 $MAIN.="</TD>";
 
 $MAIN.="<TD ROWSPAN=2 VALIGN=middle align=center>\n";
-$MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT><BR/><BR/>\n";
+$MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'><BR/><BR/>\n";
 $MAIN.="</TD></TR></TABLE>\n";
 $MAIN.="<PRE><font size=2>\n";
 
@@ -479,13 +480,13 @@ if ($SUBMIT && $query_date) {
 
 		if (!$lower_limit) {$lower_limit=1;}
 		if ($lower_limit+999>=mysqli_num_rows($rslt)) {$upper_limit=($lower_limit+mysqli_num_rows($rslt)%1000)-1;} else {$upper_limit=$lower_limit+999;}
-		$MAIN.="--- DIAL LOG RECORDS FOR $query_date, $query_date_D TO $query_date_T $server_rpt_string, $HC_rpt_string\n --- RECORDS #$lower_limit-$upper_limit               <a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS$sip_hangup_causeQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">[DOWNLOAD]</a>\n";
-		$CSV_text="\"CALLER CODE\",\"LEAD ID\",\"SERVER IP\",\"CALL DATE\",\"EXTENSION\",\"CHANNEL\",\"CONTEXT\",\"TIMEOUT\",\"OUTBOUND CID\",\"SIP HANGUP CAUSE\",\"UNIQUE ID\",\"SIP HANGUP REASON\"\n";
+		$MAIN.="--- "._QXZ("DIAL LOG RECORDS FOR")." $query_date, $query_date_D "._QXZ("TO")." $query_date_T $server_rpt_string, $HC_rpt_string\n --- "._QXZ("RECORDS")." #$lower_limit-$upper_limit               <a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS$sip_hangup_causeQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">["._QXZ("DOWNLOAD")."]</a>\n";
+		$CSV_text="\""._QXZ("CALLER CODE")."\",\""._QXZ("LEAD ID")."\",\""._QXZ("SERVER IP")."\",\""._QXZ("CALL DATE")."\",\""._QXZ("EXTENSION")."\",\""._QXZ("CHANNEL")."\",\""._QXZ("CONTEXT")."\",\""._QXZ("TIMEOUT")."\",\""._QXZ("OUTBOUND CID")."\",\""._QXZ("SIP HANGUP CAUSE")."\",\""._QXZ("UNIQUE ID")."\",\""._QXZ("SIP HANGUP REASON")."\"\n";
 
-		$dial_log_rpt="+----------------------+-----------+-----------------+---------------------+----------------------+----------------------------------------------------+----------------------+---------+------------------------------------------+--------+----------------------+----------------------------------------------------+\n";
-		$dial_log_rpt.="|                      |           |                 |                     |                      |                                                    |                      |         |                                          | SIP    |                      |                                                    |\n";
-		$dial_log_rpt.="|                      |           |                 |                     |                      |                                                    |                      |         |                                          | HANGUP |                      |                                                    |\n";
-		$dial_log_rpt.="| CALLER CODE          | LEAD ID   | SERVER IP       | CALL DATE           | EXTENSION            | CHANNEL                                            | CONTEXT              | TIMEOUT | OUTBOUND CID                             | CAUSE  | UNIQUE ID            | SIP HANGUP REASON                                  |\n";
+		$dial_log_rpt ="+----------------------+-----------+-----------------+---------------------+----------------------+----------------------------------------------------+----------------------+---------+------------------------------------------+--------+----------------------+----------------------------------------------------+\n";
+		$dial_log_rpt.="|                      |           |                 |                     |                      |                                                    |                      |         |                                          | "._QXZ("SIP",6)." |                      |                                                    |\n";
+		$dial_log_rpt.="|                      |           |                 |                     |                      |                                                    |                      |         |                                          | "._QXZ("HANGUP",6)." |                      |                                                    |\n";
+		$dial_log_rpt.="| "._QXZ("CALLER CODE",20)." | "._QXZ("LEAD ID",9)." | "._QXZ("SERVER IP",15)." | "._QXZ("CALL DATE",19)." | "._QXZ("EXTENSION",20)." | "._QXZ("CHANNEL",50)." | "._QXZ("CONTEXT",20)." | "._QXZ("TIMEOUT",7)." | "._QXZ("OUTBOUND CID",40)." | "._QXZ("CAUSE",6)." | "._QXZ("UNIQUE ID",20)." | "._QXZ("SIP HANGUP REASON",50)." |\n";
 		$dial_log_rpt.="+----------------------+-----------+-----------------+---------------------+----------------------+----------------------------------------------------+----------------------+---------+------------------------------------------+--------+----------------------+----------------------------------------------------+\n";
 		if ($DB) {$dial_log_rpt.=$stmt."\n";}
 
@@ -545,14 +546,14 @@ if ($SUBMIT && $query_date) {
 				$CSV_text.="\"$row[caller_code]\",\"$row[lead_id]\",\"$row[server_ip]\",\"$row[call_date]\",\"$row[extension]\",\"$row[channel]\",\"$row[context]\",\"$row[timeout]\",\"$row[outbound_cid]\",\"$row[sip_hangup_cause]\",\"$row[uniqueid]\",\"$row[sip_hangup_reason]\"\n";
 			}
 		} else {
-			$dial_log_rpt.="*** NO RECORDS FOUND ***\n";
+			$dial_log_rpt.="*** "._QXZ("NO RECORDS FOUND")." ***\n";
 		}
 		$dial_log_rpt.="+----------------------+-----------+-----------------+---------------------+----------------------+----------------------------------------------------+----------------------+---------+------------------------------------------+--------+----------------------+----------------------------------------------------+\n";
 
 		$dial_log_rpt_hf="";
 		$ll=$lower_limit-1000;
 		if ($ll>=1) {
-			$dial_log_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS$sip_hangup_causeQS&lower_limit=$ll\">[<<< PREV 1000 records]</a>";
+			$dial_log_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS$sip_hangup_causeQS&lower_limit=$ll\">[<<< "._QXZ("PREV")." 1000 "._QXZ("records")."]</a>";
 		} else {
 			$dial_log_rpt_hf.=sprintf("%-23s", " ");
 		}
@@ -560,7 +561,7 @@ if ($SUBMIT && $query_date) {
 
 		if (($lower_limit+1000)<mysqli_num_rows($rslt)) {
 			if ($upper_limit+1000>=mysqli_num_rows($rslt)) {$max_limit=mysqli_num_rows($rslt)-$upper_limit;} else {$max_limit=1000;}
-			$dial_log_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS$sip_hangup_causeQS&lower_limit=".($lower_limit+1000)."\">[NEXT $max_limit records >>>]</a>";
+			$dial_log_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS$sip_hangup_causeQS&lower_limit=".($lower_limit+1000)."\">["._QXZ("NEXT")." $max_limit "._QXZ("records")." >>>]</a>";
 		} else {
 			$dial_log_rpt_hf.=sprintf("%23s", " ");
 		}
@@ -593,5 +594,20 @@ if ($SUBMIT && $query_date) {
 		require("admin_header.php");
 		echo $MAIN;
 	}
+
+$endMS = microtime();
+$startMSary = explode(" ",$startMS);
+$endMSary = explode(" ",$endMS);
+$runS = ($endMSary[0] - $startMSary[0]);
+$runM = ($endMSary[1] - $startMSary[1]);
+$TOTALrun = ($runS + $runM);
+
+$END_TIME=date("U");
+
+#print "Total run time: ".($END_TIME-$START_TIME);
+
+$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
 
 ?>

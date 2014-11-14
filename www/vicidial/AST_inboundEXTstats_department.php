@@ -10,6 +10,7 @@
 # 130621-0743 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-2028 - Changed to mysqli PHP functions
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141114-0835 - Finalized adding QXZ translation to all admin files
 #
 
 require("dbconnect_mysqli.php");
@@ -81,7 +82,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -94,10 +95,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -143,7 +144,7 @@ while ($i < $dept_to_print)
 <?php 
 echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 #echo"<META HTTP-EQUIV=Refresh CONTENT=\"7; URL=$PHP_SELF?server_ip=$server_ip&DB=$DB\">\n";
-echo "<TITLE>ASTERISK: Inbound Calls Stats - By Department</TITLE></HEAD><BODY BGCOLOR=WHITE>\n";
+echo "<TITLE>"._QXZ("ASTERISK: Inbound Calls Stats - By Department")."</TITLE></HEAD><BODY BGCOLOR=WHITE>\n";
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
 echo "<INPUT TYPE=HIDDEN NAME=server_ip VALUE=\"$server_ip\">\n";
 echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
@@ -157,7 +158,7 @@ echo "<SELECT SIZE=1 NAME=group>\n";
 	$o++;
 	}
 echo "</SELECT>\n";
-echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
+echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 echo "</FORM>\n\n";
 
 echo "<PRE><FONT SIZE=2>\n\n";
@@ -166,7 +167,7 @@ echo "<PRE><FONT SIZE=2>\n\n";
 if (!$group)
 	{
 	echo "\n\n";
-	echo "PLEASE SELECT A DEPARTMENT AND DATE RANGE ABOVE AND CLICK SUBMIT\n";
+	echo _QXZ("PLEASE SELECT A DEPARTMENT AND DATE RANGE ABOVE AND CLICK SUBMIT")."\n";
 	}
 
 else
@@ -186,14 +187,14 @@ else
 		$i++;
 		}
 
-	echo "ASTERISK: Inbound Calls Stats For $group   from $query_date to $end_query_date\n";
+	echo _QXZ("ASTERISK: Inbound Calls Stats For")." $group   "._QXZ("from")." $query_date "._QXZ("to")." $end_query_date\n";
 
 	echo "\n";
-	echo "---------- TOTALS\n";
+	echo "---------- "._QXZ("TOTALS")."\n";
 	echo "\n";
 
 	echo "+----------------------+------------+------------+\n";
-	echo "| NUMBER               | CALLS      | AVG TIME   |\n";
+	echo "| "._QXZ("NUMBER",20)." | "._QXZ("CALLS",10)." | "._QXZ("AVG TIME",10)." |\n";
 	echo "+----------------------+------------+------------+\n";
 
 	$k=0;
@@ -229,7 +230,7 @@ else
 	$seconds = round($seconds, 0);
 	$seconds =	sprintf("%5s", $seconds);
 	echo "+----------------------+------------+------------+\n";
-	echo "| TOTALS               | $calls | AVG: $seconds |\n";
+	echo "| "._QXZ("TOTALS",20)." | $calls | AVG: $seconds |\n";
 	echo "+----------------------+------------+------------+\n";
 	}
 

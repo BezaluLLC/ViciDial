@@ -13,6 +13,7 @@
 # 130610-1125 - Finalized changing of all ereg instances to preg
 # 130620-0835 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-1938 - Changed to mysqli PHP functions
+# 141114-0048 - Finalized adding QXZ translation to all admin files
 #
 
 require("dbconnect_mysqli.php");
@@ -96,7 +97,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -109,10 +110,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -132,7 +133,7 @@ $LOGuser_group =		$row[1];
 if ($LOGcallcard_admin < 1)
 	{
 	Header ("Content-type: text/html; charset=utf-8");
-	echo "You do not have permissions for call card administration: |$PHP_AUTH_USER|\n";
+	echo __QXZ("You do not have permissions for call card administration").": |$PHP_AUTH_USER|\n";
 	exit;
 	}
 
@@ -233,7 +234,7 @@ if ($run_export > 0)
 		}
 	else
 		{
-		echo "There are no calls during this time period for these parameters\n";
+		echo _QXZ("There are no calls during this time period for these parameters")."\n";
 		exit;
 		}
 	}
@@ -255,7 +256,7 @@ else
 	echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-	echo "<TITLE>ADMINISTRATION: Export CallCard Calls Report";
+	echo "<TITLE>"._QXZ("ADMINISTRATION: Export CallCard Calls Report");
 
 	##### BEGIN Set variables to make header show properly #####
 	$ADD =					'0';
@@ -283,13 +284,13 @@ else
 
 
 	echo "<CENTER><BR>\n";
-	echo "<FONT SIZE=3 FACE=\"Arial,Helvetica\"><B>Export CallCard Calls Report</B></FONT><BR><BR>\n";
+	echo "<FONT SIZE=3 FACE=\"Arial,Helvetica\"><B>"._QXZ("Export CallCard Calls Report")."</B></FONT><BR><BR>\n";
 	echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 	echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">";
 	echo "<INPUT TYPE=HIDDEN NAME=run_export VALUE=\"1\">";
 	echo "<TABLE BORDER=0 CELLSPACING=8><TR><TD ALIGN=LEFT VALIGN=TOP ROWSPAN=3  bgcolor=#B6D3FC>\n";
 
-	echo "<font class=\"select_bold\"><B>Date Range:</B></font><BR><CENTER>\n";
+	echo "<font class=\"select_bold\"><B>"._QXZ("Date Range").":</B></font><BR><CENTER>\n";
 	echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
 	?>
@@ -305,7 +306,7 @@ else
 	</script>
 	<?php
 
-	echo "<BR>to<BR>\n";
+	echo "<BR>"._QXZ("to")."<BR>\n";
 	echo "<INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
 
 	?>
@@ -325,19 +326,19 @@ else
 
 
 	echo "<center><TABLE width=400 cellspacing=3>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Card ID: </td><td align=left><input type=text name=card_id size=20 maxlength=20></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Agent: </td><td align=left><input type=text name=agent size=20 maxlength=20></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>DID: </td><td align=left><input type=text name=did size=18 maxlength=18></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>CallerID: </td><td align=left><input type=text name=callerid size=18 maxlength=18></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Run: </td><td align=left><input type=text name=run size=5 maxlength=4></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Batch: </td><td align=left><input type=text name=batch size=6 maxlength=5></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>Sequence: </td><td align=left><input type=text name=sequence size=6 maxlength=5></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Card ID").": </td><td align=left><input type=text name=card_id size=20 maxlength=20></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Agent").": </td><td align=left><input type=text name=agent size=20 maxlength=20></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("DID").": </td><td align=left><input type=text name=did size=18 maxlength=18></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("CallerID").": </td><td align=left><input type=text name=callerid size=18 maxlength=18></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Run").": </td><td align=left><input type=text name=run size=5 maxlength=4></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Batch").": </td><td align=left><input type=text name=batch size=6 maxlength=5></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Sequence").": </td><td align=left><input type=text name=sequence size=6 maxlength=5></td></tr>\n";
 
 	echo "</TABLE></center>\n";
 
 
 	echo "</TD></TR><TR></TD><TD ALIGN=LEFT VALIGN=TOP COLSPAN=3>\n";
-	echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
+	echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 	echo "</TD></TR></TABLE>\n";
 	echo "</FORM>\n\n";
 	}

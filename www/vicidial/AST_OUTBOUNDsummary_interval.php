@@ -21,6 +21,7 @@
 # 130901-2024 - Changed to mysqli PHP functions
 # 140108-0734 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141114-0822 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -133,7 +134,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -146,10 +147,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -244,13 +245,13 @@ if ($records_to_print > 0)
 		}
 	if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 		{
-		echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+		echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
 		exit;
 		}
 	}
 else
 	{
-	echo "Campaigns Permissions Error: |$PHP_AUTH_USER|$user_group|\n";
+	echo _QXZ("Campaigns Permissions Error").": |$PHP_AUTH_USER|$user_group|\n";
 	exit;
 	}
 
@@ -472,7 +473,7 @@ $HEADER.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 if ($bareformat < 1)
 	{
@@ -523,9 +524,9 @@ if ($bareformat < 1)
 	$MAIN.="</TD><TD VALIGN=TOP ROWSPAN=2> Campaigns:<BR>";
 	$MAIN.="<SELECT SIZE=5 NAME=group[] multiple>\n";
 	if  (preg_match('/\-\-ALL\-\-/',$group_string))
-		{$MAIN.="<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
+		{$MAIN.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 	else
-		{$MAIN.="<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
+		{$MAIN.="<option value=\"--ALL--\">-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 	$o=0;
 	while ($campaigns_to_print > $o)
 		{
@@ -535,57 +536,57 @@ if ($bareformat < 1)
 		}
 	$MAIN.="</SELECT>\n";
 	$MAIN.="</TD><TD VALIGN=TOP ROWSPAN=2>";
-	$MAIN.="Include Drop &nbsp; <BR>Rollover:<BR>";
+	$MAIN.=_QXZ("Include Drop")." &nbsp; <BR>"._QXZ("Rollover").":<BR>";
 	$MAIN.="<SELECT SIZE=1 NAME=include_rollover>\n";
 	$MAIN.="<option selected value=\"$include_rollover\">$include_rollover</option>\n";
-	$MAIN.="<option value=\"YES\">YES</option>\n";
-	$MAIN.="<option value=\"NO\">NO</option>\n";
+	$MAIN.="<option value=\"YES\">"._QXZ("YES")."</option>\n";
+	$MAIN.="<option value=\"NO\">"._QXZ("NO")."</option>\n";
 	$MAIN.="</SELECT><BR>\n";
-	$MAIN.="Time Interval:<BR>";
+	$MAIN.=_QXZ("Time Interval").":<BR>";
 	$MAIN.="<SELECT SIZE=1 NAME=time_interval>\n";
 	if ($time_interval <= 900)
 		{
 		$interval_count = 96;
 		$hf=45;
-		$MAIN.="<option selected value=\"900\">15 Minutes</option>\n";
+		$MAIN.="<option selected value=\"900\">"._QXZ("15 Minutes")."</option>\n";
 		}
 	else
-		{$MAIN.="<option value=\"900\">15 Minutes</option>\n";}
+		{$MAIN.="<option value=\"900\">"._QXZ("15 Minutes")."</option>\n";}
 	if ( ($time_interval > 900) and ($time_interval <= 1800) )
 		{
 		$interval_count = 48;
 		$hf=30;
-		$MAIN.="<option selected value=\"1800\">30 Minutes</option>\n";
+		$MAIN.="<option selected value=\"1800\">"._QXZ("30 Minutes")."</option>\n";
 		}
 	else
-		{$MAIN.="<option value=\"1800\">30 Minutes</option>\n";}
+		{$MAIN.="<option value=\"1800\">"._QXZ("30 Minutes")."</option>\n";}
 	if ($time_interval > 1800)
 		{
 		$interval_count = 24;
-		$MAIN.="<option selected value=\"3600\">1 Hour</option>\n";
+		$MAIN.="<option selected value=\"3600\">"._QXZ("1 Hour")."</option>\n";
 		}
 	else
-		{$MAIN.="<option value=\"3600\">1 Hour</option>\n";}
+		{$MAIN.="<option value=\"3600\">"._QXZ("1 Hour")."</option>\n";}
 
 
 	$MAIN.="</SELECT>\n";
 	$MAIN.="</TD><TD VALIGN=TOP ALIGN=LEFT ROWSPAN=2>\n";
 	$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; ";
-	$MAIN.="<a href=\"$PHP_SELF?DB=$DB&costformat=$costformat&print_calls=$print_calls&query_date=$query_date&end_date=$end_date$groupQS&include_rollover=$include_rollover&time_interval=$time_interval&SUBMIT=$SUBMIT&shift=$shift&file_download=1\">DOWNLOAD</a> | ";
-	$MAIN.="<a href=\"./admin.php?ADD=3111&group_id=$group[0]\">MODIFY</a> | ";
-	$MAIN.="<a href=\"./admin.php?ADD=999999\">REPORTS</a>";
+	$MAIN.="<a href=\"$PHP_SELF?DB=$DB&costformat=$costformat&print_calls=$print_calls&query_date=$query_date&end_date=$end_date$groupQS&include_rollover=$include_rollover&time_interval=$time_interval&SUBMIT=$SUBMIT&shift=$shift&file_download=1\">"._QXZ("DOWNLOAD")."</a> | ";
+	$MAIN.="<a href=\"./admin.php?ADD=3111&group_id=$group[0]\">"._QXZ("MODIFY")."</a> | ";
+	$MAIN.="<a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a>";
 	$MAIN.="</FONT><BR><BR>\n";
-	$MAIN.="Display as:<BR>";
+	$MAIN.=_QXZ("Display as").":<BR>";
 	$MAIN.="<select name='report_display_type'>";
 	if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
-	$MAIN.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR>";
+	$MAIN.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n<BR>";
 	$MAIN.="<BR> &nbsp; &nbsp; &nbsp; &nbsp; ";
-	$MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
+	$MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 
 	$MAIN.="</TD></TR>\n";
 	$MAIN.="<TR><TD>\n";
 
-	$MAIN.="Call Time:<BR>\n";
+	$MAIN.=_QXZ("Call Time").":<BR>\n";
 	$MAIN.="<SELECT SIZE=1 NAME=shift>\n";
 	$o=0;
 	while ($times_to_print > $o)
@@ -605,7 +606,7 @@ if ($bareformat < 1)
 if ($group_ct < 1)
 	{
 	$MAIN.="\n\n";
-	$MAIN.="PLEASE SELECT A CAMPAIGN AND DATE RANGE ABOVE AND CLICK SUBMIT\n";
+	$MAIN.=_QXZ("PLEASE SELECT A CAMPAIGN AND DATE RANGE ABOVE AND CLICK SUBMIT")."\n";
 	}
 
 else
@@ -697,24 +698,24 @@ else
 	$query_date_END = "$end_date 23:59:59";
 
 
-	$MAIN .= "Outbound Summary Interval Report: $group_string          $NOW_TIME\n";
+	$MAIN .= _QXZ("Outbound Summary Interval Report",32).": $group_string          $NOW_TIME\n";
 
-	$CSV_main.="\"Outbound Summary Interval Report:\"\n\"$group_string\"\n\"$NOW_TIME\"\n\n";
+	$CSV_main.="\""._QXZ("Outbound Summary Interval Report").":\"\n\"$group_string\"\n\"$NOW_TIME\"\n\n";
 
 
 	##### Loop through each campaign and gether stats
 	if ($group_ct > 0)
 		{
 		$ASCII_text .= "\n";
-		$ASCII_text .= "---------- MULTI-CAMPAIGN BREAKDOWN:\n";
+		$ASCII_text .= "---------- "._QXZ("MULTI-CAMPAIGN BREAKDOWN").":\n";
 		$ASCII_text .= "+------------------------------------------+--------+--------+--------+--------+--------+--------+--------+------------+------------+\n";
-		$ASCII_text .= "|                                          |        | SYSTEM | AGENT  |        |        | NO     |        | AGENT      | AGENT      |\n";
-		$ASCII_text .= "|                                          | TOTAL  | RELEASE| RELEASE| SALE   | DNC    | ANSWER | DROP   | LOGIN      | PAUSE      |\n";
-		$ASCII_text .= "| CAMPAIGN                                 | CALLS  | CALLS  | CALLS  | CALLS  | CALLS  | PERCENT| PERCENT| TIME(H:M:S)| TIME(H:M:S)|\n";
+		$ASCII_text .= "|                                          |        | "._QXZ("SYSTEM",6)." | "._QXZ("AGENT",6)." |        |        | "._QXZ("NO",6)." |        | "._QXZ("AGENT",10)." | "._QXZ("AGENT",10)." |\n";
+		$ASCII_text .= "|                                          | "._QXZ("TOTAL",6)." | "._QXZ("RELEASE",7)."| "._QXZ("RELEASE",7)."| "._QXZ("SALE",6)." | "._QXZ("DNC",6)." | "._QXZ("ANSWER",6)." | "._QXZ("DROP",6)." | "._QXZ("LOGIN",10)." | "._QXZ("PAUSE",10)." |\n";
+		$ASCII_text .= "| "._QXZ("CAMPAIGN",40)." | "._QXZ("CALLS",6)." | "._QXZ("CALLS",6)." | "._QXZ("CALLS",6)." | "._QXZ("CALLS",6)." | "._QXZ("CALLS",6)." | "._QXZ("PERCENT",7)."| "._QXZ("PERCENT",7)."| "._QXZ("TIME(H:M:S)",11)."| "._QXZ("TIME(H:M:S)",11)."|\n";
 		$ASCII_text .= "+------------------------------------------+--------+--------+--------+--------+--------+--------+--------+------------+------------+\n";
 
-		$CSV_main.="\"MULTI-CAMPAIGN BREAKDOWN:\"\n";
-		$CSV_main.="\"CAMPAIGN\",\"TOTAL CALLS\",\"SYSTEM RELEASE CALLS\",\"AGENT RELEASE CALLS\",\"SALE CALLS\",\"DNC CALLS\",\"NO ANSWER PERCENT\",\"DROP PERCENT\",\"AGENT LOGIN TIME(H:M:S)\",\"AGENT PAUSE TIME(H:M:S)\"\n";
+		$CSV_main.="\""._QXZ("MULTI-CAMPAIGN BREAKDOWN").":\"\n";
+		$CSV_main.="\""._QXZ("CAMPAIGN")."\",\""._QXZ("TOTAL CALLS")."\",\""._QXZ("SYSTEM RELEASE CALLS")."\",\""._QXZ("AGENT RELEASE CALLS")."\",\""._QXZ("SALE CALLS")."\",\""._QXZ("DNC CALLS")."\",\""._QXZ("NO ANSWER PERCENT")."\",\""._QXZ("DROP PERCENT")."\",\""._QXZ("AGENT LOGIN TIME(H:M:S)")."\",\""._QXZ("AGENT PAUSE TIME(H:M:S)")."\"\n";
 		$CSV_subreports="";
 		
 		######## GRAPHING #########
@@ -729,18 +730,18 @@ else
 		$max_pause_time=1;
 
 		$GRAPH="<BR><BR><a name='campbreakdown'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-		$GRAPH.="<tr><th width='11%' class='grey_graph_cell' id='campbreakdown1'><a href='#' onClick=\"DrawMultiCampaignGraph('CALLS', '1'); return false;\">CALLS</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown2'><a href='#' onClick=\"DrawMultiCampaignGraph('SYSTEMRELEASE', '2'); return false;\">SYSTEM RELEASE CALLS</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown3'><a href='#' onClick=\"DrawMultiCampaignGraph('AGENTRELEASE', '3'); return false;\">AGENT RELEASE CALLS</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown4'><a href='#' onClick=\"DrawMultiCampaignGraph('SALES', '4'); return false;\">SALE CALLS</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown5'><a href='#' onClick=\"DrawMultiCampaignGraph('DNCS', '5'); return false;\">DNC CALLS</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown6'><a href='#' onClick=\"DrawMultiCampaignGraph('NAS', '6'); return false;\">NO ANSWER PERCENT</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown7'><a href='#' onClick=\"DrawMultiCampaignGraph('DROPS', '7'); return false;\">DROP PERCENT</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown8'><a href='#' onClick=\"DrawMultiCampaignGraph('LOGINTIME', '8'); return false;\">AGENT LOGIN TIME</a></th><th width='12%' class='grey_graph_cell' id='campbreakdown9'><a href='#' onClick=\"DrawMultiCampaignGraph('PAUSETIME', '9'); return false;\">AGENT PAUSE TIME</a></th></tr>";
+		$GRAPH.="<tr><th width='11%' class='grey_graph_cell' id='campbreakdown1'><a href='#' onClick=\"DrawMultiCampaignGraph('CALLS', '1'); return false;\">"._QXZ("CALLS")."</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown2'><a href='#' onClick=\"DrawMultiCampaignGraph('SYSTEMRELEASE', '2'); return false;\">"._QXZ("SYSTEM RELEASE CALLS")."</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown3'><a href='#' onClick=\"DrawMultiCampaignGraph('AGENTRELEASE', '3'); return false;\">"._QXZ("AGENT RELEASE CALLS")."</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown4'><a href='#' onClick=\"DrawMultiCampaignGraph('SALES', '4'); return false;\">"._QXZ("SALE CALLS")."</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown5'><a href='#' onClick=\"DrawMultiCampaignGraph('DNCS', '5'); return false;\">"._QXZ("DNC CALLS")."</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown6'><a href='#' onClick=\"DrawMultiCampaignGraph('NAS', '6'); return false;\">"._QXZ("NO ANSWER PERCENT")."</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown7'><a href='#' onClick=\"DrawMultiCampaignGraph('DROPS', '7'); return false;\">"._QXZ("DROP PERCENT")."</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown8'><a href='#' onClick=\"DrawMultiCampaignGraph('LOGINTIME', '8'); return false;\">"._QXZ("AGENT LOGIN TIME")."</a></th><th width='12%' class='grey_graph_cell' id='campbreakdown9'><a href='#' onClick=\"DrawMultiCampaignGraph('PAUSETIME', '9'); return false;\">"._QXZ("AGENT PAUSE TIME")."</a></th></tr>";
 		$GRAPH.="<tr><td colspan='9' class='graph_span_cell'><span id='multi_campaign_breakdown'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
-		$graph_header="<table cellspacing='0' cellpadding='0' summary='STATUS' class='horizontalgraph'><caption align='top'>MULTI-CAMPAIGN BREAKDOWN</caption><tr><th class='thgraph' scope='col'>CAMPAIGNS</th>";
-		$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>TOTAL CALLS</th></tr>";
-		$SYSTEMRELEASE_graph=$graph_header."<th class='thgraph' scope='col'>SYSTEM RELEASE CALLS</th></tr>";
-		$AGENTRELEASE_graph=$graph_header."<th class='thgraph' scope='col'>AGENT RELEASE CALLS</th></tr>";
-		$SALES_graph=$graph_header."<th class='thgraph' scope='col'>SALE CALLS</th></tr>";
-		$DNCS_graph=$graph_header."<th class='thgraph' scope='col'>DNC CALLS</th></tr>";
-		$NAS_graph=$graph_header."<th class='thgraph' scope='col'>NO ANSWER PERCENT</th></tr>";
-		$DROPS_graph=$graph_header."<th class='thgraph' scope='col'>DROP PERCENT</th></tr>";
-		$LOGINTIME_graph=$graph_header."<th class='thgraph' scope='col'>AGENT LOGIN TIME (H:M:S)</th></tr>";
-		$PAUSETIME_graph=$graph_header."<th class='thgraph' scope='col'>AGENT PAUSE TIME (H:M:S)</th></tr>";
+		$graph_header="<table cellspacing='0' cellpadding='0' summary='STATUS' class='horizontalgraph'><caption align='top'>"._QXZ("MULTI-CAMPAIGN BREAKDOWN")."</caption><tr><th class='thgraph' scope='col'>"._QXZ("CAMPAIGNS")."</th>";
+		$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TOTAL CALLS")."</th></tr>";
+		$SYSTEMRELEASE_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SYSTEM RELEASE CALLS")."</th></tr>";
+		$AGENTRELEASE_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AGENT RELEASE CALLS")."</th></tr>";
+		$SALES_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALE CALLS")."</th></tr>";
+		$DNCS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC CALLS")."</th></tr>";
+		$NAS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("NO ANSWER PERCENT")."</th></tr>";
+		$DROPS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DROP PERCENT")."</th></tr>";
+		$LOGINTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AGENT LOGIN TIME (H:M:S)")."</th></tr>";
+		$PAUSETIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AGENT PAUSE TIME (H:M:S)")."</th></tr>";
 		###########################
 
 		$i=0;
@@ -796,7 +797,7 @@ else
 				$CPlead_id[$u] =		$row[7];
 				$TESTlead_id[$u] =		$row[7];
 				$TESTuniqueid[$u] =		$row[6];
-				$CPin_out[$u] =			'OUT';
+				$CPin_out[$u] =			_QXZ('OUT');
 				$p++;
 				$u++;
 				}
@@ -989,7 +990,7 @@ else
 				else
 					{$out_of_call_time++;}
 				if ($DB)
-					{$ASCII_text.="$Hcalltime[$Chour] | AGENT: $agent_sec[$i] PAUSE: $pause_sec[$i]\n";}
+					{$ASCII_text.="$Hcalltime[$Chour] | "._QXZ("AGENT").": $agent_sec[$i] "._QXZ("PAUSE").": $pause_sec[$i]\n";}
 				$p++;
 				}
 
@@ -1224,15 +1225,15 @@ else
 			$ASCII_text .= "<!-- OUT OF CALLTIME: $out_of_call_time -->\n";
 
 			### hour by hour sumaries
-			$SUB_ASCII_text .= "\n---------- $group[$i] - $group_cname[$i]\nINTERVAL BREAKDOWN:\n";
+			$SUB_ASCII_text .= "\n---------- $group[$i] - $group_cname[$i]\n"._QXZ("INTERVAL BREAKDOWN").":\n";
 			$SUB_ASCII_text .= "+---------------------+--------+--------+--------+--------+--------+--------+--------+------------+------------+\n";
-			$SUB_ASCII_text .= "|                     |        | SYSTEM | AGENT  |        |        | NO     |        | AGENT      | AGENT      |\n";
-			$SUB_ASCII_text .= "|                     | TOTAL  | RELEASE| RELEASE| SALE   | DNC    | ANSWER | DROP   | LOGIN      | PAUSE      |\n";
-			$SUB_ASCII_text .= "| INTERVAL            | CALLS  | CALLS  | CALLS  | CALLS  | CALLS  | PERCENT| PERCENT| TIME(H:M:S)| TIME(H:M:S)|\n";
+			$SUB_ASCII_text .= "|                     |        | "._QXZ("SYSTEM",6)." | "._QXZ("AGENT",6)." |        |        | "._QXZ("NO",6)." |        | "._QXZ("AGENT",10)." | "._QXZ("AGENT",10)." |\n";
+			$SUB_ASCII_text .= "|                     | "._QXZ("TOTAL",6)." | "._QXZ("RELEASE",7)."| "._QXZ("RELEASE",7)."| "._QXZ("SALE",6)." | "._QXZ("DNC",6)." | "._QXZ("ANSWER",6)." | "._QXZ("DROP",6)." | "._QXZ("LOGIN",10)." | "._QXZ("PAUSE",10)." |\n";
+			$SUB_ASCII_text .= "| "._QXZ("INTERVAL",19)." | "._QXZ("CALLS",6)." | "._QXZ("CALLS",6)." | "._QXZ("CALLS",6)." | "._QXZ("CALLS",6)." | "._QXZ("CALLS",6)." | "._QXZ("PERCENT",7)."| "._QXZ("PERCENT",7)."| "._QXZ("TIME(H:M:S)",11)."| "._QXZ("TIME(H:M:S)",11)."|\n";
 			$SUB_ASCII_text .= "+---------------------+--------+--------+--------+--------+--------+--------+--------+------------+------------+\n";
 
-			$CSV_subreports.="\n\n\"$group[$i] - $group_cname[$i]\"\n\"INTERVAL BREAKDOWN:\"\n";
-			$CSV_subreports.="\"INTERVAL\",\"TOTAL CALLS\",\"SYSTEM RELEASE CALLS\",\"AGENT RELEASE CALLS\",\"SALE CALLS\",\"DNC CALLS\",\"NO ANSWER PERCENT\",\"DROP PERCENT\",\"AGENT LOGIN TIME (H:M:S)\",\"AGENT PAUSE TIME(H:M:S)\"\n";
+			$CSV_subreports.="\n\n\"$group[$i] - $group_cname[$i]\"\n\""._QXZ("INTERVAL BREAKDOWN").":\"\n";
+			$CSV_subreports.="\""._QXZ("INTERVAL")."\",\""._QXZ("TOTAL CALLS")."\",\""._QXZ("SYSTEM RELEASE CALLS")."\",\""._QXZ("AGENT RELEASE CALLS")."\",\""._QXZ("SALE CALLS")."\",\""._QXZ("DNC CALLS")."\",\""._QXZ("NO ANSWER PERCENT")."\",\""._QXZ("DROP PERCENT")."\",\""._QXZ("AGENT LOGIN TIME (H:M:S)")."\",\""._QXZ("AGENT PAUSE TIME(H:M:S)")."\"\n";
 
 			######## GRAPHING #########
 			$SUBmax_calls=1;
@@ -1248,18 +1249,18 @@ else
 			$SUBrpt_campaign=$group[$i];
 
 			$SUBGRAPH="<BR><BR><a name='campbreakdown".$SUBrpt_campaign."'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-			$SUBGRAPH.="<tr><th width='11%' class='grey_graph_cell' id='campbreakdown".$SUBrpt_campaign."1'><a href='#' onClick=\"Draw".$SUBrpt_campaign."CampaignGraph('CALLS', '1'); return false;\">CALLS</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown".$SUBrpt_campaign."2'><a href='#' onClick=\"Draw".$SUBrpt_campaign."CampaignGraph('SYSTEMRELEASE', '2'); return false;\">SYSTEM RELEASE CALLS</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown".$SUBrpt_campaign."3'><a href='#' onClick=\"Draw".$SUBrpt_campaign."CampaignGraph('AGENTRELEASE', '3'); return false;\">AGENT RELEASE CALLS</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown".$SUBrpt_campaign."4'><a href='#' onClick=\"Draw".$SUBrpt_campaign."CampaignGraph('SALES', '4'); return false;\">SALE CALLS</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown".$SUBrpt_campaign."5'><a href='#' onClick=\"Draw".$SUBrpt_campaign."CampaignGraph('DNCS', '5'); return false;\">DNC CALLS</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown".$SUBrpt_campaign."6'><a href='#' onClick=\"Draw".$SUBrpt_campaign."CampaignGraph('NAS', '6'); return false;\">NO ANSWER PERCENT</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown".$SUBrpt_campaign."7'><a href='#' onClick=\"Draw".$SUBrpt_campaign."CampaignGraph('DROPS', '7'); return false;\">DROP PERCENT</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown".$SUBrpt_campaign."8'><a href='#' onClick=\"Draw".$SUBrpt_campaign."CampaignGraph('LOGINTIME', '8'); return false;\">AGENT LOGIN TIME</a></th><th width='12%' class='grey_graph_cell' id='campbreakdown".$SUBrpt_campaign."9'><a href='#' onClick=\"Draw".$SUBrpt_campaign."CampaignGraph('PAUSETIME', '9'); return false;\">AGENT PAUSE TIME</a></th></tr>";
+			$SUBGRAPH.="<tr><th width='11%' class='grey_graph_cell' id='campbreakdown".$SUBrpt_campaign."1'><a href='#' onClick=\"Draw".$SUBrpt_campaign."CampaignGraph('CALLS', '1'); return false;\">"._QXZ("CALLS")."</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown".$SUBrpt_campaign."2'><a href='#' onClick=\"Draw".$SUBrpt_campaign."CampaignGraph('SYSTEMRELEASE', '2'); return false;\">"._QXZ("SYSTEM RELEASE CALLS")."</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown".$SUBrpt_campaign."3'><a href='#' onClick=\"Draw".$SUBrpt_campaign."CampaignGraph('AGENTRELEASE', '3'); return false;\">"._QXZ("AGENT RELEASE CALLS")."</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown".$SUBrpt_campaign."4'><a href='#' onClick=\"Draw".$SUBrpt_campaign."CampaignGraph('SALES', '4'); return false;\">"._QXZ("SALE CALLS")."</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown".$SUBrpt_campaign."5'><a href='#' onClick=\"Draw".$SUBrpt_campaign."CampaignGraph('DNCS', '5'); return false;\">"._QXZ("DNC CALLS")."</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown".$SUBrpt_campaign."6'><a href='#' onClick=\"Draw".$SUBrpt_campaign."CampaignGraph('NAS', '6'); return false;\">"._QXZ("NO ANSWER PERCENT")."</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown".$SUBrpt_campaign."7'><a href='#' onClick=\"Draw".$SUBrpt_campaign."CampaignGraph('DROPS', '7'); return false;\">"._QXZ("DROP PERCENT")."</a></th><th width='11%' class='grey_graph_cell' id='campbreakdown".$SUBrpt_campaign."8'><a href='#' onClick=\"Draw".$SUBrpt_campaign."CampaignGraph('LOGINTIME', '8'); return false;\">"._QXZ("AGENT LOGIN TIME")."</a></th><th width='12%' class='grey_graph_cell' id='campbreakdown".$SUBrpt_campaign."9'><a href='#' onClick=\"Draw".$SUBrpt_campaign."CampaignGraph('PAUSETIME', '9'); return false;\">"._QXZ("AGENT PAUSE TIME")."</a></th></tr>";
 			$SUBGRAPH.="<tr><td colspan='9' class='graph_span_cell'><span id='campaign_breakdown_".$SUBrpt_campaign."'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
-			$SUBgraph_header="<table cellspacing='0' cellpadding='0' summary='STATUS' class='horizontalgraph'><caption align='top'>$SUBrpt_campaign - $group_cname[$i] INTERVAL BREAKDOWN:</caption><tr><th class='thgraph' scope='col'>INTERVAL</th>";
-			$SUBCALLS_graph=$SUBgraph_header."<th class='thgraph' scope='col'>TOTAL CALLS</th></tr>";
-			$SUBSYSTEMRELEASE_graph=$SUBgraph_header."<th class='thgraph' scope='col'>SYSTEM RELEASE CALLS</th></tr>";
-			$SUBAGENTRELEASE_graph=$SUBgraph_header."<th class='thgraph' scope='col'>AGENT RELEASE CALLS</th></tr>";
-			$SUBSALES_graph=$SUBgraph_header."<th class='thgraph' scope='col'>SALE CALLS</th></tr>";
-			$SUBDNCS_graph=$SUBgraph_header."<th class='thgraph' scope='col'>DNC CALLS</th></tr>";
-			$SUBNAS_graph=$SUBgraph_header."<th class='thgraph' scope='col'>NO ANSWER PERCENT</th></tr>";
-			$SUBDROPS_graph=$SUBgraph_header."<th class='thgraph' scope='col'>DROP PERCENT</th></tr>";
-			$SUBLOGINTIME_graph=$SUBgraph_header."<th class='thgraph' scope='col'>AGENT LOGIN TIME (H:M:S)</th></tr>";
-			$SUBPAUSETIME_graph=$SUBgraph_header."<th class='thgraph' scope='col'>AGENT PAUSE TIME (H:M:S)</th></tr>";
+			$SUBgraph_header="<table cellspacing='0' cellpadding='0' summary='STATUS' class='horizontalgraph'><caption align='top'>$SUBrpt_campaign - $group_cname[$i] "._QXZ("INTERVAL BREAKDOWN").":</caption><tr><th class='thgraph' scope='col'>"._QXZ("INTERVAL")."</th>";
+			$SUBCALLS_graph=$SUBgraph_header."<th class='thgraph' scope='col'>"._QXZ("TOTAL CALLS")."</th></tr>";
+			$SUBSYSTEMRELEASE_graph=$SUBgraph_header."<th class='thgraph' scope='col'>"._QXZ("SYSTEM RELEASE CALLS")."</th></tr>";
+			$SUBAGENTRELEASE_graph=$SUBgraph_header."<th class='thgraph' scope='col'>"._QXZ("AGENT RELEASE CALLS")."</th></tr>";
+			$SUBSALES_graph=$SUBgraph_header."<th class='thgraph' scope='col'>"._QXZ("SALE CALLS")."</th></tr>";
+			$SUBDNCS_graph=$SUBgraph_header."<th class='thgraph' scope='col'>"._QXZ("DNC CALLS")."</th></tr>";
+			$SUBNAS_graph=$SUBgraph_header."<th class='thgraph' scope='col'>"._QXZ("NO ANSWER PERCENT")."</th></tr>";
+			$SUBDROPS_graph=$SUBgraph_header."<th class='thgraph' scope='col'>"._QXZ("DROP PERCENT")."</th></tr>";
+			$SUBLOGINTIME_graph=$SUBgraph_header."<th class='thgraph' scope='col'>"._QXZ("AGENT LOGIN TIME (H:M:S)")."</th></tr>";
+			$SUBPAUSETIME_graph=$SUBgraph_header."<th class='thgraph' scope='col'>"._QXZ("AGENT PAUSE TIME (H:M:S)")."</th></tr>";
 			###########################
 
 			$h=0; $z=0;
@@ -1398,9 +1399,9 @@ else
 			$hTOTdrop_count =			sprintf("%6s", $hTOTdrop_count);
 
 			$SUB_ASCII_text .= "+---------------------+--------+--------+--------+--------+--------+--------+--------+------------+------------+\n";
-			$SUB_ASCII_text .= "| TOTALS              | $hTOTcalls_count | $hTOTsystem_count | $hTOTagent_count | $hTOTptp_count | $hTOTrtp_count | $hTOTna_percent%| $hTOTdrop_percent%| $hTOTagent_sec | $hTOTpause_sec |\n";
+			$SUB_ASCII_text .= "| "._QXZ("TOTALS",19)." | $hTOTcalls_count | $hTOTsystem_count | $hTOTagent_count | $hTOTptp_count | $hTOTrtp_count | $hTOTna_percent%| $hTOTdrop_percent%| $hTOTagent_sec | $hTOTpause_sec |\n";
 			$SUB_ASCII_text .= "+---------------------+--------+--------+--------+--------+--------+--------+--------+------------+------------+\n";
-			$CSV_subreports.="\"TOTALS\",\"$hTOTcalls_count\",\"$hTOTsystem_count\",\"$hTOTagent_count\",\"$hTOTptp_count\",\"$hTOTrtp_count\",\"$hTOTna_percent%\",\"$hTOTdrop_percent%\",\"$hTOTagent_sec\",\"$hTOTpause_sec\"\n";
+			$CSV_subreports.="\""._QXZ("TOTALS")."\",\"$hTOTcalls_count\",\"$hTOTsystem_count\",\"$hTOTagent_count\",\"$hTOTptp_count\",\"$hTOTrtp_count\",\"$hTOTna_percent%\",\"$hTOTdrop_percent%\",\"$hTOTagent_sec\",\"$hTOTpause_sec\"\n";
 			$i++;
 
 			for ($d=0; $d<count($SUBgraph_stats); $d++) {
@@ -1415,15 +1416,15 @@ else
 				$SUBLOGINTIME_graph.="  <tr><td class='chart_td$class'>".$SUBgraph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$SUBgraph_stats[$d][8], $SUBmax_login_time))."' height='16' />".sec_convert($SUBgraph_stats[$d][8], 'H')."</td></tr>";
 				$SUBPAUSETIME_graph.="  <tr><td class='chart_td$class'>".$SUBgraph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$SUBgraph_stats[$d][9], $SUBmax_pause_time))."' height='16' />".sec_convert($SUBgraph_stats[$d][9], 'H')."</td></tr>";
 			}
-			$SUBCALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTcalls_count)."</th></tr></table>";
-			$SUBSYSTEMRELEASE_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTsystem_count)."</th></tr></table>";
-			$SUBAGENTRELEASE_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTagent_count)."</th></tr></table>";
-			$SUBSALES_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTptp_count)."</th></tr></table>";
-			$SUBDNCS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTrtp_count)."</th></tr></table>";
-			$SUBNAS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTna_percent)."%</th></tr></table>";
-			$SUBDROPS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTdrop_percent)."%</th></tr></table>";
-			$SUBLOGINTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTagent_sec)."</th></tr></table>";
-			$SUBPAUSETIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($hTOTpause_sec)."</th></tr></table>";
+			$SUBCALLS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTcalls_count)."</th></tr></table>";
+			$SUBSYSTEMRELEASE_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTsystem_count)."</th></tr></table>";
+			$SUBAGENTRELEASE_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTagent_count)."</th></tr></table>";
+			$SUBSALES_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTptp_count)."</th></tr></table>";
+			$SUBDNCS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTrtp_count)."</th></tr></table>";
+			$SUBNAS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTna_percent)."%</th></tr></table>";
+			$SUBDROPS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTdrop_percent)."%</th></tr></table>";
+			$SUBLOGINTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTagent_sec)."</th></tr></table>";
+			$SUBPAUSETIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTpause_sec)."</th></tr></table>";
 			$JS_onload.="\tDraw".$SUBrpt_campaign."CampaignGraph('CALLS', '1');\n"; 
 			$JS_text.="function Draw".$SUBrpt_campaign."CampaignGraph(graph, th_id) {\n";
 			$JS_text.="	var CALLS_graph=\"$SUBCALLS_graph\";\n";
@@ -1484,9 +1485,9 @@ else
 		$TOTdrop_count =		sprintf("%6s", $TOTdrop_count);
 
 		$ASCII_text .= "+------------------------------------------+--------+--------+--------+--------+--------+--------+--------+------------+------------+\n";
-		$ASCII_text .= "| TOTALS       Campaigns: $i             | $TOTcalls_count | $TOTsystem_count | $TOTagent_count | $TOTptp_count | $TOTrtp_count | $TOTna_percent%| $TOTdrop_percent%| $TOTagent_sec | $TOTpause_sec |\n";
+		$ASCII_text .= "| "._QXZ("TOTALS",12)." "._QXZ("Campaigns",9).": $i             | $TOTcalls_count | $TOTsystem_count | $TOTagent_count | $TOTptp_count | $TOTrtp_count | $TOTna_percent%| $TOTdrop_percent%| $TOTagent_sec | $TOTpause_sec |\n";
 		$ASCII_text .= "+------------------------------------------+--------+--------+--------+--------+--------+--------+--------+------------+------------+\n";
-		$CSV_main.="\"TOTALS       Campaigns: $i\",\"$TOTcalls_count\",\"$TOTsystem_count\",\"$TOTagent_count\",\"$TOTptp_count\",\"$TOTrtp_count\",\"$TOTna_percent%\",\"$TOTdrop_percent%\",\"$TOTagent_sec\",\"$TOTpause_sec\"\n";
+		$CSV_main.="\""._QXZ("TOTALS")."       "._QXZ("Campaigns").": $i\",\"$TOTcalls_count\",\"$TOTsystem_count\",\"$TOTagent_count\",\"$TOTptp_count\",\"$TOTrtp_count\",\"$TOTna_percent%\",\"$TOTdrop_percent%\",\"$TOTagent_sec\",\"$TOTpause_sec\"\n";
 		}
 
 	if ($costformat > 0)
@@ -1495,7 +1496,7 @@ else
 		$inbound_cost = ($rawTOTtalk_min * $inbound_rate);
 		$inbound_cost =		sprintf("%8.2f", $inbound_cost);
 
-		$ASCII_text.="INBOUND $query_date to $end_date, &nbsp; $rawTOTtalk_min minutes at \$$inbound_rate = \$$inbound_cost\n";
+		$ASCII_text.=_QXZ("INBOUND")." $query_date "._QXZ("to")." $end_date, &nbsp; $rawTOTtalk_min "._QXZ("minutes at")." \$$inbound_rate = \$$inbound_cost\n";
 
 		if ($db_source == 'S')
 			{
@@ -1531,15 +1532,15 @@ else
 		$LOGINTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][8], $max_login_time))."' height='16' />".sec_convert($graph_stats[$d][8], 'H')."</td></tr>";
 		$PAUSETIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][9], $max_pause_time))."' height='16' />".sec_convert($graph_stats[$d][9], 'H')."</td></tr>";
 	}
-	$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTcalls_count)."</th></tr></table>";
-	$SYSTEMRELEASE_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTsystem_count)."</th></tr></table>";
-	$AGENTRELEASE_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTagent_count)."</th></tr></table>";
-	$SALES_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTptp_count)."</th></tr></table>";
-	$DNCS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTrtp_count)."</th></tr></table>";
-	$NAS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTna_percent)."%</th></tr></table>";
-	$DROPS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTdrop_percent)."%</th></tr></table>";
-	$LOGINTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTagent_sec)."</th></tr></table>";
-	$PAUSETIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTpause_sec)."</th></tr></table>";
+	$CALLS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTcalls_count)."</th></tr></table>";
+	$SYSTEMRELEASE_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTsystem_count)."</th></tr></table>";
+	$AGENTRELEASE_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTagent_count)."</th></tr></table>";
+	$SALES_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTptp_count)."</th></tr></table>";
+	$DNCS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTrtp_count)."</th></tr></table>";
+	$NAS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTna_percent)."%</th></tr></table>";
+	$DROPS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTdrop_percent)."%</th></tr></table>";
+	$LOGINTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTagent_sec)."</th></tr></table>";
+	$PAUSETIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTpause_sec)."</th></tr></table>";
 	$JS_onload.="\tDrawMultiCampaignGraph('CALLS', '1');\n"; 
 	$JS_text.="function DrawMultiCampaignGraph(graph, th_id) {\n";
 	$JS_text.="	var CALLS_graph=\"$CALLS_graph\";\n";
@@ -1627,7 +1628,7 @@ else
 		echo "$SUBoutput";
 		$ENDtime = date("U");
 		$RUNtime = ($ENDtime - $STARTtime);
-		echo "\n\nRun Time: $RUNtime seconds|$db_source\n";
+		echo "\n\n"._QXZ("Run Time").": $RUNtime "._QXZ("seconds")."|$db_source\n";
 		echo "</PRE>";
 		echo "</TD></TR></TABLE>";
 

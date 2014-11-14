@@ -14,12 +14,13 @@
 # 130901-0823 - Changed to mysqli PHP functions
 # 140108-0741 - Added webserver and hostname to report logging
 # 140918-0615 - Fixed bug #789
+# 141113-2048 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
 
-$version = '2.8-5';
-$build = '140918-0615';
+$version = '2.8-6';
+$build = '141113-2048';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -128,7 +129,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -141,10 +142,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -226,7 +227,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -331,7 +332,7 @@ $HEADER.="\t\tEMAILWindow.resizeTo(500,500);\n";
 $HEADER.="}\n";
 $HEADER.="</script>\n";
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 
@@ -351,7 +352,7 @@ if ($DB > 0)
 $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 $MAIN.="<TABLE BORDER=0><TR><TD VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
-$MAIN.="Date Range:<BR>\n";
+$MAIN.=_QXZ("Date Range").":<BR>\n";
 $MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
 $MAIN.="<script language=\"JavaScript\">\n";
@@ -365,7 +366,7 @@ $MAIN.="o_cal.a_tpl.yearscroll = false;\n";
 $MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 $MAIN.="</script>\n";
 
-$MAIN.=" to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+$MAIN.=" "._QXZ("to")." <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
 
 $MAIN.="<script language=\"JavaScript\">\n";
 $MAIN.="var o_cal = new tcal ({\n";
@@ -378,7 +379,7 @@ $MAIN.="o_cal.a_tpl.yearscroll = false;\n";
 $MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 $MAIN.="</script>\n";
 
-$MAIN.="</FONT></TD><TD VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>Email groups:<BR>\n";
+$MAIN.="</FONT></TD><TD VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Email groups").":<BR>\n";
 $MAIN.="<SELECT SIZE=5 NAME=group[] multiple>\n";
 $o=0;
 while ($groups_to_print > $o)
@@ -394,32 +395,32 @@ $MAIN.="</FONT></TD><TD VALIGN=TOP>\n";
 $MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ";
 if ($DID!='Y')
 	{
-	$MAIN.="<a href=\"./admin.php?ADD=3111&group_id=$group[0]\">MODIFY</a> | ";
-	$MAIN.="<a href=\"./AST_IVRstats.php?query_date=$query_date&end_date=$end_date&shift=$shift$groupQS\">IVR REPORT</a> | \n";
+	$MAIN.="<a href=\"./admin.php?ADD=3111&group_id=$group[0]\">"._QXZ("MODIFY")."</a> | ";
+	$MAIN.="<a href=\"./AST_IVRstats.php?query_date=$query_date&end_date=$end_date&shift=$shift$groupQS\">"._QXZ("IVR REPORT")."</a> | \n";
 	}
-$MAIN.="<a href=\"./admin.php?ADD=999999\">REPORTS</a> | ";
-$MAIN.="<BR><BR><BR><CENTER><INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT></CENTER>\n";
+$MAIN.="<a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> | ";
+$MAIN.="<BR><BR><BR><CENTER><INPUT TYPE=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></CENTER>\n";
 $MAIN.="</FONT>\n";
 
 
 $MAIN.="</TD></TR>\n";
 $MAIN.="<TR><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>\n";
-$MAIN.="<BR>Select date criteria:&nbsp;<BR>";
+$MAIN.="<BR>"._QXZ("Select date criteria").":&nbsp;<BR>";
 if (!$date_type || $date_type=="email_date") {$emailed="checked"; $date_title="received";}
 if ($date_type=="call_date") {$called="checked"; $date_title="viewed";}
 if ($date_type=="date_answered") {$answrd="checked"; $date_title="answered";}
 $rpt_title.="from $query_date_BEGIN to $query_date_END ";
-$MAIN.="<input type='radio' name='date_type' value='email_date' $emailed>Date email received<BR>\n";
-$MAIN.="<input type='radio' name='date_type' value='call_date' $called>Date email viewed<BR>\n";
-$MAIN.="<input type='radio' name='date_type' value='date_answered' $answrd>Date email answered<BR>\n";
+$MAIN.="<input type='radio' name='date_type' value='email_date' $emailed>"._QXZ("Date email received")."<BR>\n";
+$MAIN.="<input type='radio' name='date_type' value='call_date' $called>"._QXZ("Date email viewed")."<BR>\n";
+$MAIN.="<input type='radio' name='date_type' value='date_answered' $answrd>"._QXZ("Date email answered")."<BR>\n";
 $MAIN.="</FONT></TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>\n";
-$MAIN.="<BR>Select report type to display:&nbsp;<BR>";
+$MAIN.="<BR>"._QXZ("Select report type to display").":&nbsp;<BR>";
 if (!$email_type || $email_type=="received") {$rcvd="checked"; $date_type="email_date"; $email_title="received";}
 if ($email_type=="viewed") {$view="checked"; $email_title="viewed";}
 if ($email_type=="answered") {$answ="checked"; $email_title="answered";}
-$MAIN.="<input type='radio' name='email_type' value='received' $rcvd>Emails received<BR>\n";
-$MAIN.="<input type='radio' name='email_type' value='viewed' $view>Emails viewed<BR>\n";
-$MAIN.="<input type='radio' name='email_type' value='answered' $answ>Emails answered<BR>\n";
+$MAIN.="<input type='radio' name='email_type' value='received' $rcvd>"._QXZ("Emails received")."<BR>\n";
+$MAIN.="<input type='radio' name='email_type' value='viewed' $view>"._QXZ("Emails viewed")."<BR>\n";
+$MAIN.="<input type='radio' name='email_type' value='answered' $answ>"._QXZ("Emails answered")."<BR>\n";
 $MAIN.="</FONT></TD></TR></TABLE>\n";
 $MAIN.="</FORM>\n\n";
 $MAIN.="<PRE><FONT SIZE=2>\n\n";
@@ -427,7 +428,7 @@ $MAIN.="<PRE><FONT SIZE=2>\n\n";
 if ($groups_to_print < 1)
 	{
 	$MAIN.="\n\n";
-	$MAIN.="PLEASE SELECT AN EMAIL ACCOUNT AND DATE RANGE ABOVE AND CLICK SUBMIT\n";
+	$MAIN.=_QXZ("PLEASE SELECT AN EMAIL ACCOUNT AND DATE RANGE ABOVE AND CLICK SUBMIT")."\n";
 	}
 
 else
@@ -454,16 +455,16 @@ if ($shift == 'ALL')
 $query_date_BEGIN = "$query_date 00:00:00";   
 $query_date_END = "$end_date 23:59:59";
 
-$rpt_title="Showing emails $email_title that were $date_title from $query_date_BEGIN to $query_date_END\n\n";
+$rpt_title=_QXZ("Showing emails")." $email_title "._QXZ("that were")." $date_title "._QXZ("from")." $query_date_BEGIN "._QXZ("to")." $query_date_END\n\n";
 $MAIN.=$rpt_title;
-$MAIN.="Email log results: $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1&date_type=$date_type&email_type=$email_type\">DOWNLOAD</a>\n";
-$CSV_text1.="\"Showing emails $email_title that were $date_title from $query_date_BEGIN to $query_date_END\"\n\n";
+$MAIN.=_QXZ("Email log results").": $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1&date_type=$date_type&email_type=$email_type\">"._QXZ("DOWNLOAD")."</a>\n";
+$CSV_text1.="\""._QXZ("Showing emails")." $email_title "._QXZ("that were")." $date_title "._QXZ("from")." $query_date_BEGIN "._QXZ("to")." $query_date_END\"\n\n";
 
 if ($email_type=="received") 
 	{
 	$rpt_border="+---------------------+--------------------------------+----------------------+----------------------------------------------------+------------+\n";
-	$rpt_header="| DATE EMAIL RECEIVED | ".sprintf("%-30s", "ADDRESS FROM")." | ".sprintf("%-20s", "SENDER NAME")." | ".sprintf("%-50s", "MESSAGE")." | ".sprintf("%-10s", "STATUS")." |\n";
-	$CSV_text1.="\"DATE EMAIL RECEIVED\",\"ADDRESS FROM\",\"SENDER NAME\",\"MESSAGE\",\"STATUS\"\n";
+	$rpt_header="| "._QXZ("DATE EMAIL RECEIVED",19)." | ".sprintf("%-30s", _QXZ("ADDRESS FROM",30))." | ".sprintf("%-20s", _QXZ("SENDER NAME",20))." | ".sprintf("%-50s", _QXZ("MESSAGE",50))." | ".sprintf("%-10s", _QXZ("STATUS",10))." |\n";
+	$CSV_text1.="\""._QXZ("DATE EMAIL RECEIVED")."\",\""._QXZ("ADDRESS FROM")."\",\""._QXZ("SENDER NAME")."\",\""._QXZ("MESSAGE")."\",\""._QXZ("STATUS")."\"\n";
 	if ($date_type=="email_date") 
 		{
 	#	$stmt="select vel.* from vicidial_email_list vel where $date_type>='$query_date_BEGIN' and $date_type<='$query_date_END' and group_id in ($group_SQL) order by $date_type asc";
@@ -482,8 +483,8 @@ if ($email_type=="received")
 else if ($email_type=="viewed") 
 	{
 	$rpt_border="+---------------------+--------------------------------+----------------------+----------------------------------------------------+---------------------+------------+\n";
-	$rpt_header="| DATE EMAIL RECEIVED | ".sprintf("%-30s", "ADDRESS FROM")." | ".sprintf("%-20s", "SENDER NAME")." | ".sprintf("%-50s", "MESSAGE")." | DATE EMAIL VIEWED   | ".sprintf("%-10s", "STATUS")." |\n";
-	$CSV_text1.="\"DATE EMAIL RECEIVED\",\"ADDRESS FROM\",\"SENDER NAME\",\"MESSAGE\",\"DATE EMAIL VIEWED\",\"STATUS\"\n";
+	$rpt_header="| "._QXZ("DATE EMAIL RECEIVED",19)." | ".sprintf("%-30s", _QXZ("ADDRESS FROM",30))." | ".sprintf("%-20s", _QXZ("SENDER NAME",20))." | ".sprintf("%-50s", _QXZ("MESSAGE",50))." | "._QXZ("DATE EMAIL VIEWED",19)." | ".sprintf("%-10s", _QXZ("STATUS",10))." |\n";
+	$CSV_text1.="\""._QXZ("DATE EMAIL RECEIVED")."\",\""._QXZ("ADDRESS FROM")."\",\""._QXZ("SENDER NAME")."\",\""._QXZ("MESSAGE")."\",\""._QXZ("DATE EMAIL VIEWED")."\",\""._QXZ("STATUS")."\"\n";
 	if ($date_type=="email_date") 
 		{
 		$stmt="select vel.email_row_id, vel.lead_id, vel.email_date, vel.email_from, vel.email_from_name, convert(vel.message using 'UTF8') as message, vel.status, vcl.call_date from vicidial_email_list vel, vicidial_closer_log vcl where vel.$date_type>='$query_date_BEGIN' and vel.$date_type<='$query_date_END' and vcl.uniqueid=vel.uniqueid and vel.group_id in ($group_SQL) order by vel.$date_type asc";
@@ -500,8 +501,8 @@ else if ($email_type=="viewed")
 else if ($email_type=="answered") 
 	{
 	$rpt_border="+---------------------+--------------------------------+----------------------+----------------------------------------------------+---------------------+---------------------+----------------------+----------------------------------------------------+------------+\n";
-	$rpt_header="| DATE EMAIL RECEIVED | ".sprintf("%-30s", "ADDRESS FROM")." | ".sprintf("%-20s", "SENDER NAME")." | ".sprintf("%-50s", "MESSAGE (click to view full text)")." | DATE EMAIL VIEWED   | DATE EMAIL ANSWERED | ".sprintf("%-20s", "USER")." | ".sprintf("%-50s", "RESPONSE (click to view full text)")." | ".sprintf("%-10s", "STATUS")." |\n";
-	$CSV_text1.="\"DATE EMAIL RECEIVED\",\"ADDRESS FROM\",\"SENDER NAME\",\"MESSAGE\",\"DATE EMAIL VIEWED\",\"DATE EMAIL ANSWERED\",\"USER\",\"RESPONSE\",\"STATUS\"\n";
+	$rpt_header="| "._QXZ("DATE EMAIL RECEIVED",19)." | ".sprintf("%-30s", _QXZ("ADDRESS FROM",30))." | ".sprintf("%-20s", _QXZ("SENDER NAME",20))." | ".sprintf("%-50s", _QXZ("MESSAGE (click to view full text)",50))." | "._QXZ("DATE EMAIL VIEWED",19)." | "._QXZ("DATE EMAIL ANSWERED",19)." | ".sprintf("%-20s", _QXZ("USER",20))." | ".sprintf("%-50s", _QXZ("RESPONSE (click to view full text)",50))." | ".sprintf("%-10s", _QXZ("STATUS",10))." |\n";
+	$CSV_text1.="\""._QXZ("DATE EMAIL RECEIVED")."\",\""._QXZ("ADDRESS FROM")."\",\""._QXZ("SENDER NAME")."\",\""._QXZ("MESSAGE")."\",\""._QXZ("DATE EMAIL VIEWED")."\",\""._QXZ("DATE EMAIL ANSWERED")."\",\""._QXZ("USER")."\",\""._QXZ("RESPONSE")."\",\""._QXZ("STATUS")."\"\n";
 	if ($date_type=="email_date") 
 		{
 		$stmt="select vel.email_row_id, vel.lead_id, vel.email_date, vel.email_from, vel.email_from_name, convert(vel.message using 'UTF8') as message, vel.status, vcl.call_date, vl.email_date as date_response_sent, vl.email_log_id, vl.user as sending_user, vl.message as sent_message from vicidial_email_list vel, vicidial_closer_log vcl, vicidial_email_log vl where vel.$date_type>='$query_date_BEGIN' and vel.$date_type<='$query_date_END' and vcl.uniqueid=vel.uniqueid and vel.group_id in ($group_SQL) and vel.email_row_id=vl.email_row_id order by vel.$date_type asc";
@@ -562,13 +563,13 @@ if (mysqli_num_rows($rslt)>0) {
 	}
 	$rpt_str.=$rpt_border;
 } else {
-	$rpt_str="**NO RESULTS FOUND**\n\n";
+	$rpt_str="**"._QXZ("NO RESULTS FOUND")."**\n\n";
 }
 	$MAIN.=$rpt_str;
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $STARTtime);
-$MAIN.="\nRun Time: $RUNtime seconds|$db_source\n";
+$MAIN.="\n"._QXZ("Run Time").": $RUNtime "._QXZ("seconds")."|$db_source\n";
 $MAIN.="</PRE>";
 $MAIN.="</TD></TR></TABLE>";
 

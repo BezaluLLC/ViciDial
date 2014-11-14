@@ -21,6 +21,7 @@
 # 130901-2011 - Changed to mysqli PHP functions
 # 140108-0733 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141114-0728 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -113,7 +114,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -126,10 +127,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -423,12 +424,12 @@ $HTML_head.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 $HTML_head.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 $HTML_head.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HTML_head.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>$group_S\n";
+$HTML_head.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>$group_S\n";
 
 $HTML_text.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
 $HTML_text.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-$HTML_text.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> Dates:<BR>";
+$HTML_text.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> "._QXZ("Dates").":<BR>";
 $HTML_text.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 $HTML_text.="<INPUT TYPE=HIDDEN NAME=type VALUE=\"$type\">\n";
 $HTML_text.="Date Range:<BR>\n";
@@ -450,7 +451,7 @@ $HTML_text.="</script>\n";
 
 $HTML_text.=" &nbsp; <INPUT TYPE=TEXT NAME=query_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_T\">";
 
-$HTML_text.="<BR> to <BR><INPUT TYPE=TEXT NAME=end_date_D SIZE=11 MAXLENGTH=10 VALUE=\"$end_date_D\">";
+$HTML_text.="<BR> "._QXZ("to")." <BR><INPUT TYPE=TEXT NAME=end_date_D SIZE=11 MAXLENGTH=10 VALUE=\"$end_date_D\">";
 
 $HTML_text.="<script language=\"JavaScript\">\n";
 $HTML_text.="var o_cal = new tcal ({\n";
@@ -465,12 +466,12 @@ $HTML_text.="</script>\n";
 
 $HTML_text.=" &nbsp; <INPUT TYPE=TEXT NAME=end_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$end_date_T\">";
 
-$HTML_text.="</TD><TD VALIGN=TOP> Campaigns:<BR>";
+$HTML_text.="</TD><TD VALIGN=TOP> "._QXZ("Campaigns").":<BR>";
 $HTML_text.="<SELECT SIZE=5 NAME=group[] multiple>\n";
 if  (preg_match('/\-\-ALL\-\-/',$group_string))
-	{$HTML_text.="<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 else
-	{$HTML_text.="<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\">-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
 $o=0;
 while ($campaigns_to_print > $o)
 	{
@@ -482,13 +483,13 @@ while ($campaigns_to_print > $o)
 	}
 $HTML_text.="</SELECT>\n";
 
-$HTML_text.="</TD><TD VALIGN=TOP>Teams/User Groups:<BR>";
+$HTML_text.="</TD><TD VALIGN=TOP>"._QXZ("Teams/User Groups").":<BR>";
 $HTML_text.="<SELECT SIZE=5 NAME=user_group[] multiple>\n";
 
 if  (preg_match('/\-\-ALL\-\-/',$user_group_string))
-	{$HTML_text.="<option value=\"--ALL--\" selected>-- ALL USER GROUPS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL USER GROUPS")." --</option>\n";}
 else
-	{$HTML_text.="<option value=\"--ALL--\">-- ALL USER GROUPS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\">-- "._QXZ("ALL USER GROUPS")." --</option>\n";}
 $o=0;
 while ($user_groups_to_print > $o)
 	{
@@ -501,12 +502,12 @@ while ($user_groups_to_print > $o)
 $HTML_text.="</SELECT>\n";
 $HTML_text.="</TD>\n";
 
-$HTML_text.="<TD VALIGN=TOP> Show additional statuses:<BR>";
+$HTML_text.="<TD VALIGN=TOP> "._QXZ("Show additional statuses").":<BR>";
 $HTML_text.="<SELECT SIZE=5 NAME=call_status[] multiple>\n";
 if (!$call_status || $call_status_ct==0) 
-	{$HTML_text.="<option selected value=\"--NONE--\">-- NO ADDITIONAL STATUSES --</option>\n";}
+	{$HTML_text.="<option selected value=\"--NONE--\">-- "._QXZ("NO ADDITIONAL STATUSES")." --</option>\n";}
 else
-	{$HTML_text.="<option value=\"--NONE--\">-- NO ADDITIONAL STATUSES --</option>\n";}
+	{$HTML_text.="<option value=\"--NONE--\">-- "._QXZ("NO ADDITIONAL STATUSES")." --</option>\n";}
 $o=0;
 while ($call_statuses_to_print > $o)
 	{
@@ -520,16 +521,16 @@ $HTML_text.="</SELECT></TD>\n";
 
 
 $HTML_text.="<TD VALIGN=TOP>\n";
-$HTML_text.="Display as:<BR>";
+$HTML_text.=_QXZ("Display as").":<BR>";
 $HTML_text.="<select name='report_display_type'>";
 if ($report_display_type) {$HTML_text.="<option value='$report_display_type' selected>$report_display_type</option>";}
-$HTML_text.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR><BR>";
-$HTML_text.="<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
+$HTML_text.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n<BR><BR>";
+$HTML_text.="<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 $HTML_text.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
 $HTML_text.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
-$HTML_text.="<a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&query_date_D=$query_date_D&query_date_T=$query_date_T&end_date_D=$end_date_D&end_date_T=$end_date_T$groupQS$user_groupQS$call_statusQS&file_download=1&SUBMIT=$SUBMIT\">DOWNLOAD</a> |";
-$HTML_text.=" <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+$HTML_text.="<a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&query_date_D=$query_date_D&query_date_T=$query_date_T&end_date_D=$end_date_D&end_date_T=$end_date_T$groupQS$user_groupQS$call_statusQS&file_download=1&SUBMIT=$SUBMIT\">"._QXZ("DOWNLOAD")."</a> |";
+$HTML_text.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 $HTML_text.="</FONT>\n";
 $HTML_text.="</TD></TR></TABLE>";
 $HTML_text.="</FORM>\n\n";
@@ -603,25 +604,25 @@ if ($SUBMIT=="SUBMIT")
 	$max_totalavgsaletime=1;
 	$max_totalavgcontacttime=1;
 	$TOTALGRAPH="<BR><BR><a name='teamTotalgraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-	$TOTALGRAPH2="<tr><th class='column_header grey_graph_cell' id='teamTotalgraph1'><a href='#' onClick=\"DrawTotalGraph('CALLS', '1'); return false;\">CALLS</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph2'><a href='#' onClick=\"DrawTotalGraph('LEADS', '2'); return false;\">LEADS</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph3'><a href='#' onClick=\"DrawTotalGraph('CONTACTS', '3'); return false;\">CONTACTS</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph4'><a href='#' onClick=\"DrawTotalGraph('CONTACTRATIO','4'); return false;\">CONTACT RATIO</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph5'><a href='#' onClick=\"DrawTotalGraph('SYSTEMTIME', '5'); return false;\">SYSTEM TIME</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph6'><a href='#' onClick=\"DrawTotalGraph('TALKTIME', '6'); return false;\">TALK TIME</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph7'><a href='#' onClick=\"DrawTotalGraph('SALES', '7'); return false;\">SALES</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph8'><a href='#' onClick=\"DrawTotalGraph('SALESLEADSRATIO', '8'); return false;\">SALES TO LEADS RATIO</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph9'><a href='#' onClick=\"DrawTotalGraph('SALESCONTACTSRATIO', '9'); return false;\">SALES TO CONTACTS RATIO</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph10'><a href='#' onClick=\"DrawTotalGraph('SALESPERHOUR', '10'); return false;\">SALES PER HOUR</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph11'><a href='#' onClick=\"DrawTotalGraph('INCSALES', '11'); return false;\">INCOMPLETE SALES</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph12'><a href='#' onClick=\"DrawTotalGraph('CANCELLEDSALES', '12'); return false;\">CANCELLED SALES</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph13'><a href='#' onClick=\"DrawTotalGraph('CALLBACKS', '13'); return false;\">CALLBACKS</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph14'><a href='#' onClick=\"DrawTotalGraph('FIRSTCALLS', '14'); return false;\">FIRST CALLS</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph15'><a href='#' onClick=\"DrawTotalGraph('AVGSALETIME', '15'); return false;\">AVG SALE TIME</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph16'><a href='#' onClick=\"DrawTotalGraph('AVGCONTACTTIME', '16'); return false;\">AVG CONTACT TIME</a></th>".$GRAPH2."</TR>";
+	$TOTALGRAPH2="<tr><th class='column_header grey_graph_cell' id='teamTotalgraph1'><a href='#' onClick=\"DrawTotalGraph('CALLS', '1'); return false;\">"._QXZ("CALLS")."</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph2'><a href='#' onClick=\"DrawTotalGraph('LEADS', '2'); return false;\">"._QXZ("LEADS")."</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph3'><a href='#' onClick=\"DrawTotalGraph('CONTACTS', '3'); return false;\">"._QXZ("CONTACTS")."</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph4'><a href='#' onClick=\"DrawTotalGraph('CONTACTRATIO','4'); return false;\">"._QXZ("CONTACT RATIO")."</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph5'><a href='#' onClick=\"DrawTotalGraph('SYSTEMTIME', '5'); return false;\">"._QXZ("SYSTEM TIME")."</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph6'><a href='#' onClick=\"DrawTotalGraph('TALKTIME', '6'); return false;\">"._QXZ("TALK TIME")."</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph7'><a href='#' onClick=\"DrawTotalGraph('SALES', '7'); return false;\">"._QXZ("SALES")."</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph8'><a href='#' onClick=\"DrawTotalGraph('SALESLEADSRATIO', '8'); return false;\">"._QXZ("SALES TO LEADS RATIO")."</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph9'><a href='#' onClick=\"DrawTotalGraph('SALESCONTACTSRATIO', '9'); return false;\">"._QXZ("SALES TO CONTACTS RATIO")."</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph10'><a href='#' onClick=\"DrawTotalGraph('SALESPERHOUR', '10'); return false;\">"._QXZ("SALES PER HOUR")."</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph11'><a href='#' onClick=\"DrawTotalGraph('INCSALES', '11'); return false;\">"._QXZ("INCOMPLETE SALES")."</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph12'><a href='#' onClick=\"DrawTotalGraph('CANCELLEDSALES', '12'); return false;\">"._QXZ("CANCELLED SALES")."</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph13'><a href='#' onClick=\"DrawTotalGraph('CALLBACKS', '13'); return false;\">"._QXZ("CALLBACKS")."</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph14'><a href='#' onClick=\"DrawTotalGraph('FIRSTCALLS', '14'); return false;\">"._QXZ("FIRST CALLS")."</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph15'><a href='#' onClick=\"DrawTotalGraph('AVGSALETIME', '15'); return false;\">"._QXZ("AVG SALE TIME")."</a></th><th class='column_header grey_graph_cell' id='teamTotalgraph16'><a href='#' onClick=\"DrawTotalGraph('AVGCONTACTTIME', '16'); return false;\">"._QXZ("AVG CONTACT TIME")."</a></th>".$GRAPH2."</TR>";
 	$TOTALGRAPH3="<tr><td colspan='".(16+count($call_status))."' class='graph_span_cell'><span id='team_Total_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
-	$TOTALGRAPH_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>CALL CENTER TOTAL</caption><tr><th class='thgraph' scope='col'>USER</th>";
-	$TOTALCALLS_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>CALLS</th></tr>";
-	$TOTALLEADS_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>LEADS</th></tr>";
-	$TOTALCONTACTS_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>CONTACTS</th></tr>";
-	$TOTALCONTACTRATIO_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>CONTACT RATIO</th></tr>";
-	$TOTALSYSTEMTIME_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>SYSTEM TIME</th></tr>";
-	$TOTALTALKTIME_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>TALK TIME</th></tr>";
-	$TOTALSALES_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>SALES</th></tr>";
-	$TOTALSALESLEADSRATIO_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>SALES TO LEADS RATIO</th></tr>";
-	$TOTALSALESCONTACTSRATIO_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>SALES TO CONTACTS RATIO</th></tr>";
-	$TOTALSALESPERHOUR_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>SALES PER HOUR</th></tr>";
-	$TOTALINCSALES_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>INCOMPLETE SALES</th></tr>";
-	$TOTALCANCELLEDSALES_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>CANCELLED SALES</th></tr>";
-	$TOTALCALLBACKS_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>CALLBACKS</th></tr>";
-	$TOTALFIRSTCALLS_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>FIRST CALLS</th></tr>";
-	$TOTALAVGSALETIME_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>AVG SALE TIME</th></tr>";
-	$TOTALAVGCONTACTTIME_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>AVG CONTACT TIME</th></tr>";
+	$TOTALGRAPH_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>"._QXZ("CALL CENTER TOTAL")."</caption><tr><th class='thgraph' scope='col'>"._QXZ("USER")."</th>";
+	$TOTALCALLS_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>"._QXZ("CALLS")."</th></tr>";
+	$TOTALLEADS_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>"._QXZ("LEADS")."</th></tr>";
+	$TOTALCONTACTS_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>"._QXZ("CONTACTS")."</th></tr>";
+	$TOTALCONTACTRATIO_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>"._QXZ("CONTACT RATIO")."</th></tr>";
+	$TOTALSYSTEMTIME_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>"._QXZ("SYSTEM TIME")."</th></tr>";
+	$TOTALTALKTIME_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>"._QXZ("TALK TIME")."</th></tr>";
+	$TOTALSALES_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>"._QXZ("SALES")."</th></tr>";
+	$TOTALSALESLEADSRATIO_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>"._QXZ("SALES TO LEADS RATIO")."</th></tr>";
+	$TOTALSALESCONTACTSRATIO_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>"._QXZ("SALES TO CONTACTS RATIO")."</th></tr>";
+	$TOTALSALESPERHOUR_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>"._QXZ("SALES PER HOUR")."</th></tr>";
+	$TOTALINCSALES_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>"._QXZ("INCOMPLETE SALES")."</th></tr>";
+	$TOTALCANCELLEDSALES_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>"._QXZ("CANCELLED SALES")."</th></tr>";
+	$TOTALCALLBACKS_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>"._QXZ("CALLBACKS")."</th></tr>";
+	$TOTALFIRSTCALLS_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>"._QXZ("FIRST CALLS")."</th></tr>";
+	$TOTALAVGSALETIME_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>"._QXZ("AVG SALE TIME")."</th></tr>";
+	$TOTALAVGCONTACTTIME_graph=$TOTALGRAPH_header."<th class='thgraph' scope='col'>"._QXZ("AVG CONTACT TIME")."</th></tr>";
 	for ($q=0; $q<count($call_status); $q++) {
 		$totalvar_name="TOTAL".$call_status[$q]."_graph";
 		$$totalvar_name=$TOTALGRAPH_header."<th class='thgraph' scope='col'>".$call_status[$q]."</th></tr>";
@@ -650,9 +651,9 @@ if ($SUBMIT=="SUBMIT")
 			$call_status_group_totals[$q]=0;
 		}
 
-		$ASCII_text.="--- <B>TEAM: $user_group[$i] - $group_name</B>\n";
-		$CSV_text.="\"\",\"TEAM: $user_group[$i] - $group_name\"\n";
-		$GRAPH_text.="<B>TEAM: $user_group[$i] - $group_name</B>";
+		$ASCII_text.="--- <B>"._QXZ("TEAM").": $user_group[$i] - $group_name</B>\n";
+		$CSV_text.="\"\",\""._QXZ("TEAM").": $user_group[$i] - $group_name\"\n";
+		$GRAPH_text.="<B>"._QXZ("TEAM").": $user_group[$i] - $group_name</B>";
 
 		#### USER COUNTS
 		$user_stmt="select distinct vicidial_users.full_name, vicidial_users.user from vicidial_users, vicidial_agent_log where vicidial_users.user_group='$user_group[$i]' and vicidial_users.user=vicidial_agent_log.user and vicidial_agent_log.user_group='$user_group[$i]'  and vicidial_agent_log.event_time>='$query_date' and vicidial_agent_log.event_time<='$end_date' and vicidial_agent_log.campaign_id in ($group_SQL_str) order by full_name, user";
@@ -685,25 +686,25 @@ if ($SUBMIT=="SUBMIT")
 				$$max_varname=1;
 			}
 
-			$GRAPH2="<tr><th class='column_header grey_graph_cell' width='6%' id='team".$user_group[$i]."graph1'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('CALLS', '1'); return false;\">CALLS</a></th><th class='column_header grey_graph_cell' width='6%'  id='team".$user_group[$i]."graph2'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('LEADS', '2'); return false;\">LEADS</a></th><th class='column_header grey_graph_cell' width='6%' id='team".$user_group[$i]."graph3' ><a href='#' onClick=\"Draw".$user_group[$i]."Graph('CONTACTS', '3'); return false;\">CONTACTS</a></th><th class='column_header grey_graph_cell' width='6%'  id='team".$user_group[$i]."graph4'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('CONTACTRATIO', '4'); return false;\">CONTACT RATIO</a></th><th class='column_header grey_graph_cell' width='6%'  id='team".$user_group[$i]."graph5'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('SYSTEMTIME', '5'); return false;\">SYSTEM TIME</a></th><th class='column_header grey_graph_cell' width='6%' id='team".$user_group[$i]."graph6'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('TALKTIME', '6'); return false;\">TALK TIME</a></th><th class='column_header grey_graph_cell' width='6%' id='team".$user_group[$i]."graph7'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('SALES', '7'); return false;\">SALES</a></th><th class='column_header grey_graph_cell' width='6%' id='team".$user_group[$i]."graph8'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('SALESLEADSRATIO', '8'); return false;\">SALES TO LEADS RATIO</a></th><th class='column_header grey_graph_cell' width='7%' id='team".$user_group[$i]."graph9'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('SALESCONTACTSRATIO', '9'); return false;\">SALES TO CONTACTS RATIO</a></th><th class='column_header grey_graph_cell' width='6%' id='team".$user_group[$i]."graph10'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('SALESPERHOUR', '10'); return false;\">SALES PER HOUR</a></th><th class='column_header grey_graph_cell' width='7%' id='team".$user_group[$i]."graph11'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('INCSALES', '11'); return false;\">INCOMPLETE SALES</a></th><th class='column_header grey_graph_cell' width='7%' id='team".$user_group[$i]."graph12'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('CANCELLEDSALES', '12'); return false;\">CANCELLED SALES</a></th><th class='column_header grey_graph_cell' width='7%' id='team".$user_group[$i]."graph13'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('CALLBACKS', '13'); return false;\">CALLBACKS</a></th><th class='column_header grey_graph_cell' width='6%' id='team".$user_group[$i]."graph14'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('FIRSTCALLS', '14'); return false;\">FIRST CALLS</a></th><th class='column_header grey_graph_cell' width='6%' id='team".$user_group[$i]."graph15'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('AVGSALETIME', '15'); return false;\">AVG SALE TIME</a></th><th class='column_header grey_graph_cell' width='6%' id='team".$user_group[$i]."graph16'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('AVGCONTACTTIME', '16'); return false;\">AVG CONTACT TIME</a></th>".$STATGRAPH."</TR>";
+			$GRAPH2="<tr><th class='column_header grey_graph_cell' width='6%' id='team".$user_group[$i]."graph1'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('CALLS', '1'); return false;\">"._QXZ("CALLS")."</a></th><th class='column_header grey_graph_cell' width='6%'  id='team".$user_group[$i]."graph2'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('LEADS', '2'); return false;\">"._QXZ("LEADS")."</a></th><th class='column_header grey_graph_cell' width='6%' id='team".$user_group[$i]."graph3' ><a href='#' onClick=\"Draw".$user_group[$i]."Graph('CONTACTS', '3'); return false;\">"._QXZ("CONTACTS")."</a></th><th class='column_header grey_graph_cell' width='6%'  id='team".$user_group[$i]."graph4'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('CONTACTRATIO', '4'); return false;\">"._QXZ("CONTACT RATIO")."</a></th><th class='column_header grey_graph_cell' width='6%'  id='team".$user_group[$i]."graph5'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('SYSTEMTIME', '5'); return false;\">"._QXZ("SYSTEM TIME")."</a></th><th class='column_header grey_graph_cell' width='6%' id='team".$user_group[$i]."graph6'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('TALKTIME', '6'); return false;\">"._QXZ("TALK TIME")."</a></th><th class='column_header grey_graph_cell' width='6%' id='team".$user_group[$i]."graph7'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('SALES', '7'); return false;\">"._QXZ("SALES")."</a></th><th class='column_header grey_graph_cell' width='6%' id='team".$user_group[$i]."graph8'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('SALESLEADSRATIO', '8'); return false;\">"._QXZ("SALES TO LEADS RATIO")."</a></th><th class='column_header grey_graph_cell' width='7%' id='team".$user_group[$i]."graph9'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('SALESCONTACTSRATIO', '9'); return false;\">"._QXZ("SALES TO CONTACTS RATIO")."</a></th><th class='column_header grey_graph_cell' width='6%' id='team".$user_group[$i]."graph10'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('SALESPERHOUR', '10'); return false;\">"._QXZ("SALES PER HOUR")."</a></th><th class='column_header grey_graph_cell' width='7%' id='team".$user_group[$i]."graph11'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('INCSALES', '11'); return false;\">"._QXZ("INCOMPLETE SALES")."</a></th><th class='column_header grey_graph_cell' width='7%' id='team".$user_group[$i]."graph12'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('CANCELLEDSALES', '12'); return false;\">"._QXZ("CANCELLED SALES")."</a></th><th class='column_header grey_graph_cell' width='7%' id='team".$user_group[$i]."graph13'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('CALLBACKS', '13'); return false;\">"._QXZ("CALLBACKS")."</a></th><th class='column_header grey_graph_cell' width='6%' id='team".$user_group[$i]."graph14'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('FIRSTCALLS', '14'); return false;\">"._QXZ("FIRST CALLS")."</a></th><th class='column_header grey_graph_cell' width='6%' id='team".$user_group[$i]."graph15'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('AVGSALETIME', '15'); return false;\">"._QXZ("AVG SALE TIME")."</a></th><th class='column_header grey_graph_cell' width='6%' id='team".$user_group[$i]."graph16'><a href='#' onClick=\"Draw".$user_group[$i]."Graph('AVGCONTACTTIME', '16'); return false;\">"._QXZ("AVG CONTACT TIME")."</a></th>".$STATGRAPH."</TR>";
 			$GRAPH3="<tr><td colspan='".(16+count($call_status))."' class='graph_span_cell'><span id='team_".$user_group[$i]."_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
-			$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>TEAM: $user_group[$i] - $group_name</caption><tr><th class='thgraph' scope='col'>USER</th>";
-			$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>CALLS</th></tr>";
-			$LEADS_graph=$graph_header."<th class='thgraph' scope='col'>LEADS</th></tr>";
-			$CONTACTS_graph=$graph_header."<th class='thgraph' scope='col'>CONTACTS</th></tr>";
-			$CONTACTRATIO_graph=$graph_header."<th class='thgraph' scope='col'>CONTACT RATIO</th></tr>";
-			$SYSTEMTIME_graph=$graph_header."<th class='thgraph' scope='col'>SYSTEM TIME</th></tr>";
-			$TALKTIME_graph=$graph_header."<th class='thgraph' scope='col'>TALK TIME</th></tr>";
-			$SALES_graph=$graph_header."<th class='thgraph' scope='col'>SALES</th></tr>";
-			$SALESLEADSRATIO_graph=$graph_header."<th class='thgraph' scope='col'>SALES TO LEADS RATIO</th></tr>";
-			$SALESCONTACTSRATIO_graph=$graph_header."<th class='thgraph' scope='col'>SALES TO CONTACTS RATIO</th></tr>";
-			$SALESPERHOUR_graph=$graph_header."<th class='thgraph' scope='col'>SALES PER HOUR</th></tr>";
-			$INCSALES_graph=$graph_header."<th class='thgraph' scope='col'>INCOMPLETE SALES</th></tr>";
-			$CANCELLEDSALES_graph=$graph_header."<th class='thgraph' scope='col'>CANCELLED SALES</th></tr>";
-			$CALLBACKS_graph=$graph_header."<th class='thgraph' scope='col'>CALLBACKS</th></tr>";
-			$FIRSTCALLS_graph=$graph_header."<th class='thgraph' scope='col'>FIRST CALLS</th></tr>";
-			$AVGSALETIME_graph=$graph_header."<th class='thgraph' scope='col'>AVG SALE TIME</th></tr>";
-			$AVGCONTACTTIME_graph=$graph_header."<th class='thgraph' scope='col'>AVG CONTACT TIME</th></tr>";
+			$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>"._QXZ("TEAM").": $user_group[$i] - $group_name</caption><tr><th class='thgraph' scope='col'>"._QXZ("USER")."</th>";
+			$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CALLS")."</th></tr>";
+			$LEADS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("LEADS")."</th></tr>";
+			$CONTACTS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONTACTS")."</th></tr>";
+			$CONTACTRATIO_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONTACT RATIO")."</th></tr>";
+			$SYSTEMTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SYSTEM TIME")."</th></tr>";
+			$TALKTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TALK TIME")."</th></tr>";
+			$SALES_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES")."</th></tr>";
+			$SALESLEADSRATIO_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES TO LEADS RATIO")."</th></tr>";
+			$SALESCONTACTSRATIO_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES TO CONTACTS RATIO")."</th></tr>";
+			$SALESPERHOUR_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES PER HOUR")."</th></tr>";
+			$INCSALES_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("INCOMPLETE SALES")."</th></tr>";
+			$CANCELLEDSALES_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CANCELLED SALES")."</th></tr>";
+			$CALLBACKS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CALLBACKS")."</th></tr>";
+			$FIRSTCALLS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("FIRST CALLS")."</th></tr>";
+			$AVGSALETIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AVG SALE TIME")."</th></tr>";
+			$AVGCONTACTTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AVG CONTACT TIME")."</th></tr>";
 			for ($q=0; $q<count($call_status); $q++) {
 				$varname=$call_status[$q]."_graph";
 				$$varname=$graph_header."<th class='thgraph' scope='col'>".$call_status[$q]."</th></tr>";
@@ -711,9 +712,9 @@ if ($SUBMIT=="SUBMIT")
 
 			$j=0;
 			$ASCII_text.="+------------------------------------------+------------+-------+-------+----------+---------------+---------------+-------------+-----------+-------+------------------------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+$HTMLborderheader\n";
-			$ASCII_text.="| Agent Name                               | Agent ID   | Calls | Leads | Contacts | Contact Ratio | Nonpause Time | System Time | Talk Time | Sales | Sales per Working Hour | Sales to Leads Ratio | Sales to Contacts Ratio | Sales Per Hour | Incomplete Sales | Cancelled Sales | Callbacks | First Call Resolution | Average Sale Time | Average Contact Time |$HTMLstatusheader\n";
+			$ASCII_text.="| "._QXZ("Agent Name",40)." | "._QXZ("Agent ID",10)." | "._QXZ("Calls",5)." | "._QXZ("Leads",5)." | "._QXZ("Contacts",8)." | "._QXZ("Contact Ratio",13)." | "._QXZ("Nonpause Time",13)." | "._QXZ("System Time",11)." | "._QXZ("Talk Time",9)." | "._QXZ("Sales",5)." | "._QXZ("Sales per Working Hour",22)." | "._QXZ("Sales to Leads Ratio",20)." | "._QXZ("Sales to Contacts Ratio",23)." | "._QXZ("Sales Per Hour",14)." | "._QXZ("Incomplete Sales",16)." | "._QXZ("Cancelled Sales",15)." | "._QXZ("Callbacks",9)." | "._QXZ("First Call Resolution",21)." | "._QXZ("Average Sale Time",17)." | "._QXZ("Average Contact Time",20)." |$HTMLstatusheader\n";
 			$ASCII_text.="+------------------------------------------+------------+-------+-------+----------+---------------+---------------+-------------+-----------+-------+------------------------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+$HTMLborderheader\n";
-			$CSV_text.="\"\",\"Agent Name\",\"Agent ID\",\"Calls\",\"Leads\",\"Contacts\",\"Contact Ratio\",\"Nonpause Time\",\"System Time\",\"Talk Time\",\"Sales\",\"Sales per Working Hour\",\"Sales to Leads Ratio\",\"Sales to Contacts Ratio\",\"Sales Per Hour\",\"Incomplete Sales\",\"Cancelled Sales\",\"Callbacks\",\"First Call Resolution\",\"Average Sale Time\",\"Average Contact Time\"$CSVstatusheader\n";
+			$CSV_text.="\"\",\""._QXZ("Agent Name")."\",\""._QXZ("Agent ID")."\",\""._QXZ("Calls")."\",\""._QXZ("Leads")."\",\""._QXZ("Contacts")."\",\""._QXZ("Contact Ratio")."\",\""._QXZ("Nonpause Time")."\",\""._QXZ("System Time")."\",\""._QXZ("Talk Time")."\",\""._QXZ("Sales")."\",\""._QXZ("Sales per Working Hour")."\",\""._QXZ("Sales to Leads Ratio")."\",\""._QXZ("Sales to Contacts Ratio")."\",\""._QXZ("Sales Per Hour")."\",\""._QXZ("Incomplete Sales")."\",\""._QXZ("Cancelled Sales")."\",\""._QXZ("Callbacks")."\",\""._QXZ("First Call Resolution")."\",\""._QXZ("Average Sale Time")."\",\""._QXZ("Average Contact Time")."\"$CSVstatusheader\n";
 			while ($user_row=mysqli_fetch_array($user_rslt)) 
 				{
 				$j++;
@@ -876,7 +877,7 @@ if ($SUBMIT=="SUBMIT")
 
 			$ASCII_text.="+------------------------------------------+------------+-------+-------+----------+---------------+---------------+-------------+-----------+-------+------------------------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+$HTMLborderheader\n";
 			$ASCII_text.="| ".sprintf("%40s", "");
-			$ASCII_text.=" | ".sprintf("%10s", "TOTALS:");
+			$ASCII_text.=" | ".sprintf("%10s", _QXZ("TOTALS:",10));
 
 			$TOTAL_text=" | ".sprintf("%5s", $group_calls);	
 			$TOTAL_text.=" | ".sprintf("%5s", $group_leads);
@@ -955,7 +956,7 @@ if ($SUBMIT=="SUBMIT")
 			$ASCII_text.="+------------------------------------------+------------+-------+-------+----------+---------------+---------------+-------------+-----------+-------+------------------------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+$HTMLborderheader\n";
 			$ASCII_text.="\n\n";
 
-			$CSV_text.="\"\",\"\",\"TOTALS:\",\"$group_calls\",\"$group_leads\",\"$group_contacts\",\"$group_contact_ratio %\",\"".sec_convert($group_nonpause_time,'H')."\",\"".sec_convert($group_system_time,'H')."\",\"".sec_convert($group_talk_time,'H')."\",\"$group_sales\",\"$sales_per_working_hours\",\"$group_sales_ratio\",\"$group_sale_contact_ratio\",\"$group_sales_per_hour\",\"$group_inc_sales\",\"$group_cnc_sales\",\"$group_callbacks\",\"$group_stcall\",\"$group_average_sale_time\",\"$group_average_contact_time\"$CSV_status_text\n";
+			$CSV_text.="\"\",\"\",\""._QXZ("TOTALS").":\",\"$group_calls\",\"$group_leads\",\"$group_contacts\",\"$group_contact_ratio %\",\"".sec_convert($group_nonpause_time,'H')."\",\"".sec_convert($group_system_time,'H')."\",\"".sec_convert($group_talk_time,'H')."\",\"$group_sales\",\"$sales_per_working_hours\",\"$group_sales_ratio\",\"$group_sale_contact_ratio\",\"$group_sales_per_hour\",\"$group_inc_sales\",\"$group_cnc_sales\",\"$group_callbacks\",\"$group_stcall\",\"$group_average_sale_time\",\"$group_average_contact_time\"$CSV_status_text\n";
 			$GROUP_CSV_text.="\"$i\",\"$group_name\",\"$user_group[$i]\",\"$group_calls\",\"$group_leads\",\"$group_contacts\",\"$group_contact_ratio %\",\"".sec_convert($group_nonpause_time,'H')."\",\"".sec_convert($group_system_time,'H')."\",\"".sec_convert($group_talk_time,'H')."\",\"$group_sales\",\"$sales_per_working_hours\",\"$group_sales_ratio\",\"$group_sale_contact_ratio\",\"$group_sales_per_hour\",\"$group_inc_sales\",\"$group_cnc_sales\",\"$group_callbacks\",\"$group_stcall\",\"$group_average_sale_time\",\"$group_average_contact_time\"$CSV_status_text\n";
 			$CSV_text.="\n\n";
 
@@ -1001,27 +1002,27 @@ if ($SUBMIT=="SUBMIT")
 				}
 			}
 
-			$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($group_calls)."</th></tr></table>";
-			$LEADS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($group_leads)."</th></tr></table>";
-			$CONTACTS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($group_contacts)."</th></tr></table>";
-			$CONTACTRATIO_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($group_contact_ratio)."%</th></tr></table>";
-			$SYSTEMTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".sec_convert($group_system_time,'H')."</th></tr></table>";
-			$TALKTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".sec_convert($group_talk_time,'H')."</th></tr></table>";
-			$SALES_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($group_sales)."</th></tr></table>";
-			$SALESLEADSRATIO_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($group_sales_ratio)."%</th></tr></table>";
-			$SALESCONTACTSRATIO_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($group_sale_contact_ratio)."%</th></tr></table>";
-			$SALESPERHOUR_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($group_sales_per_hour)."</th></tr></table>";
-			$INCSALES_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($group_inc_sales)."</th></tr></table>";
-			$CANCELLEDSALES_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($group_cnc_sales)."</th></tr></table>";
-			$CALLBACKS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($group_callbacks)."</th></tr></table>";
-			$FIRSTCALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($group_stcall)."</th></tr></table>";
-			$AVGSALETIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($group_average_sale_time)."</th></tr></table>";
-			$AVGCONTACTTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($group_average_contact_time)."</th></tr></table>";
+			$CALLS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($group_calls)."</th></tr></table>";
+			$LEADS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($group_leads)."</th></tr></table>";
+			$CONTACTS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($group_contacts)."</th></tr></table>";
+			$CONTACTRATIO_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($group_contact_ratio)."%</th></tr></table>";
+			$SYSTEMTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".sec_convert($group_system_time,'H')."</th></tr></table>";
+			$TALKTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".sec_convert($group_talk_time,'H')."</th></tr></table>";
+			$SALES_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($group_sales)."</th></tr></table>";
+			$SALESLEADSRATIO_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($group_sales_ratio)."%</th></tr></table>";
+			$SALESCONTACTSRATIO_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($group_sale_contact_ratio)."%</th></tr></table>";
+			$SALESPERHOUR_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($group_sales_per_hour)."</th></tr></table>";
+			$INCSALES_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($group_inc_sales)."</th></tr></table>";
+			$CANCELLEDSALES_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($group_cnc_sales)."</th></tr></table>";
+			$CALLBACKS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($group_callbacks)."</th></tr></table>";
+			$FIRSTCALLS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($group_stcall)."</th></tr></table>";
+			$AVGSALETIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($group_average_sale_time)."</th></tr></table>";
+			$AVGCONTACTTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($group_average_contact_time)."</th></tr></table>";
 			for ($e=0; $e<count($call_status); $e++) {
 				$Sstatus=$call_status[$e];
 				$total_var=$Sstatus."_total";
 				$graph_var=$Sstatus."_graph";
-				$$graph_var.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($$total_var)."</th></tr></table>";
+				$$graph_var.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($$total_var)."</th></tr></table>";
 			}
 			$JS_onload.="\tDraw".$user_group[$i]."Graph('CALLS', '1');\n"; 
 			$JS_text.="function Draw".$user_group[$i]."Graph(graph, th_id) {\n";
@@ -1062,15 +1063,15 @@ if ($SUBMIT=="SUBMIT")
 			} 
 		else 
 			{
-			$ASCII_text.="    **** NO AGENTS FOUND UNDER THESE REPORT PARAMETERS ****\n\n";
-			$CSV_text.="\"\",\"**** NO AGENTS FOUND UNDER THESE REPORT PARAMETERS ****\"\n\n";
-			$GRAPH_text.="    **** NO AGENTS FOUND UNDER THESE REPORT PARAMETERS ****<BR/><BR/>\n\n";
+			$ASCII_text.="    **** "._QXZ("NO AGENTS FOUND UNDER THESE REPORT PARAMETERS")." ****\n\n";
+			$CSV_text.="\"\",\"**** "._QXZ("NO AGENTS FOUND UNDER THESE REPORT PARAMETERS")." ****\"\n\n";
+			$GRAPH_text.="    **** "._QXZ("NO AGENTS FOUND UNDER THESE REPORT PARAMETERS")." ****<BR/><BR/>\n\n";
 			}
 		}
 
 	$ASCII_text.="--- <B>CALL CENTER TOTAL</B>\n";
 	$ASCII_text.="+------------------------------------------+------------+-------+-------+----------+---------------+---------------+-------------+-----------+-------+------------------------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+$HTMLborderheader\n";
-	$ASCII_text.="| Team Name                                | Team ID    | Calls | Leads | Contacts | Contact Ratio | Nonpause Time | System Time | Talk Time | Sales | Sales per Working Hour | Sales to Leads Ratio | Sales to Contacts Ratio | Sales Per Hour | Incomplete Sales | Cancelled Sales | Callbacks | First Call Resolution | Average Sale Time | Average Contact Time |$HTMLstatusheader\n";
+	$ASCII_text.="| "._QXZ("Team Name",40)." | "._QXZ("Agent ID",10)." | "._QXZ("Calls",5)." | "._QXZ("Leads",5)." | "._QXZ("Contacts",8)." | "._QXZ("Contact Ratio",13)." | "._QXZ("Nonpause Time",13)." | "._QXZ("System Time",11)." | "._QXZ("Talk Time",9)." | "._QXZ("Sales",5)." | "._QXZ("Sales per Working Hour",22)." | "._QXZ("Sales to Leads Ratio",20)." | "._QXZ("Sales to Contacts Ratio",23)." | "._QXZ("Sales Per Hour",14)." | "._QXZ("Incomplete Sales",16)." | "._QXZ("Cancelled Sales",15)." | "._QXZ("Callbacks",9)." | "._QXZ("First Call Resolution",21)." | "._QXZ("Average Sale Time",17)." | "._QXZ("Average Contact Time",20)." |$HTMLstatusheader\n";
 	$ASCII_text.="+------------------------------------------+------------+-------+-------+----------+---------------+---------------+-------------+-----------+-------+------------------------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+$HTMLborderheader\n";
 	$ASCII_text.=$GROUP_text;
 	$ASCII_text.="+------------------------------------------+------------+-------+-------+----------+---------------+---------------+-------------+-----------+-------+------------------------+----------------------+-------------------------+----------------+------------------+-----------------+-----------+-----------------------+-------------------+----------------------+$HTMLborderheader\n";
@@ -1080,7 +1081,7 @@ if ($SUBMIT=="SUBMIT")
 	$total_talk_hours=MathZDC($total_talk_time, 3600);
 
 	$ASCII_text.="| ".sprintf("%40s", "");
-	$ASCII_text.=" | ".sprintf("%10s", "TOTALS:");
+	$ASCII_text.=" | ".sprintf("%10s", _QXZ("TOTALS:"));
 	$ASCII_text.=" | ".sprintf("%5s", $total_calls);	
 	$ASCII_text.=" | ".sprintf("%5s", $total_leads);
 	$ASCII_text.=" | ".sprintf("%8s", $total_contacts);
@@ -1119,10 +1120,10 @@ if ($SUBMIT=="SUBMIT")
 	$ASCII_text.="</BODY>\n";
 	$ASCII_text.="</HTML>\n";
 
-	$CSV_text.="\"\",\"CALL CENTER TOTAL\"\n";
-	$CSV_text.="\"\",\"Team Name\",\"Team ID\",\"Calls\",\"Leads\",\"Contacts\",\"Contact Ratio\",\"Nonpause Time\",\"System Time\",\"Talk Time\",\"Sales\",\"Sales per Working Hour\",\"Sales to Leads Ratio\",\"Sales to Contacts Ratio\",\"Sales Per Hour\",\"Incomplete Sales\",\"Cancelled Sales\",\"Callbacks\",\"First Call Resolution\",\"Average Sale Time\",\"Average Contact Time\"$CSVstatusheader\n";
+	$CSV_text.="\"\",\""._QXZ("CALL CENTER TOTAL")."\"\n";
+	$CSV_text.="\"\",\""._QXZ("Team Name")."\",\""._QXZ("Team ID")."\",\""._QXZ("Calls")."\",\""._QXZ("Leads")."\",\""._QXZ("Contacts")."\",\""._QXZ("Contact Ratio")."\",\""._QXZ("Nonpause Time")."\",\""._QXZ("System Time")."\",\""._QXZ("Talk Time")."\",\""._QXZ("Sales")."\",\""._QXZ("Sales per Working Hour")."\",\""._QXZ("Sales to Leads Ratio")."\",\""._QXZ("Sales to Contacts Ratio")."\",\""._QXZ("Sales Per Hour")."\",\""._QXZ("Incomplete Sales")."\",\""._QXZ("Cancelled Sales")."\",\""._QXZ("Callbacks")."\",\""._QXZ("First Call Resolution")."\",\""._QXZ("Average Sale Time")."\",\""._QXZ("Average Contact Time")."\"$CSVstatusheader\n";
 	$CSV_text.=$GROUP_CSV_text;
-	$CSV_text.="\"\",\"\",\"TOTALS:\",\"$total_calls\",\"$total_leads\",\"$total_contacts\",\"$total_contact_ratio %\",\"".sec_convert($total_nonpause_time,'H')."\",\"".sec_convert($total_system_time,'H')."\",\"".sec_convert($total_talk_time,'H')."\",\"$total_sales\",\"$sales_per_working_hours\",\"$total_sales_ratio\",\"$total_sale_contact_ratio\",\"$total_sales_per_hour\",\"$total_inc_sales\",\"$total_cnc_sales\",\"$total_callbacks\",\"$total_stcall\",\"$total_average_sale_time\",\"$total_average_contact_time\"$CSV_status_text\n";
+	$CSV_text.="\"\",\"\",\""._QXZ("TOTALS").":\",\"$total_calls\",\"$total_leads\",\"$total_contacts\",\"$total_contact_ratio %\",\"".sec_convert($total_nonpause_time,'H')."\",\"".sec_convert($total_system_time,'H')."\",\"".sec_convert($total_talk_time,'H')."\",\"$total_sales\",\"$sales_per_working_hours\",\"$total_sales_ratio\",\"$total_sale_contact_ratio\",\"$total_sales_per_hour\",\"$total_inc_sales\",\"$total_cnc_sales\",\"$total_callbacks\",\"$total_stcall\",\"$total_average_sale_time\",\"$total_average_contact_time\"$CSV_status_text\n";
 	for ($d=0; $d<count($total_graph_stats); $d++) {
 		if ($d==0) {$class=" first";} else if (($d+1)==count($total_graph_stats)) {$class=" last";} else {$class="";}
 		$TOTALCALLS_graph.="  <tr><td class='chart_td$class'>".$total_graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$total_graph_stats[$d][1], $max_totalcalls))."' height='16' />".$total_graph_stats[$d][1]."</td></tr>";
@@ -1153,27 +1154,27 @@ if ($SUBMIT=="SUBMIT")
 
 	}
 
-	$TOTALCALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($total_calls)."</th></tr></table>";
-	$TOTALLEADS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($total_leads)."</th></tr></table>";
-	$TOTALCONTACTS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($total_contacts)."</th></tr></table>";
-	$TOTALCONTACTRATIO_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($total_contact_ratio)."%</th></tr></table>";
-	$TOTALSYSTEMTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".sec_convert($total_system_time,'H')."</th></tr></table>";
-	$TOTALTALKTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".sec_convert($total_talk_time,'H')."</th></tr></table>";
-	$TOTALSALES_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($total_sales)."</th></tr></table>";
-	$TOTALSALESLEADSRATIO_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($total_sales_ratio)."%</th></tr></table>";
-	$TOTALSALESCONTACTSRATIO_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($total_sale_contact_ratio)."%</th></tr></table>";
-	$TOTALSALESPERHOUR_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($total_sales_per_hour)."</th></tr></table>";
-	$TOTALINCSALES_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($total_inc_sales)."</th></tr></table>";
-	$TOTALCANCELLEDSALES_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($total_cnc_sales)."</th></tr></table>";
-	$TOTALCALLBACKS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($total_callbacks)."</th></tr></table>";
-	$TOTALFIRSTCALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($total_stcall)."</th></tr></table>";
-	$TOTALAVGSALETIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($total_average_sale_time)."</th></tr></table>";
-	$TOTALAVGCONTACTTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($total_average_contact_time)."</th></tr></table>";
+	$TOTALCALLS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($total_calls)."</th></tr></table>";
+	$TOTALLEADS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($total_leads)."</th></tr></table>";
+	$TOTALCONTACTS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($total_contacts)."</th></tr></table>";
+	$TOTALCONTACTRATIO_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($total_contact_ratio)."%</th></tr></table>";
+	$TOTALSYSTEMTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".sec_convert($total_system_time,'H')."</th></tr></table>";
+	$TOTALTALKTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".sec_convert($total_talk_time,'H')."</th></tr></table>";
+	$TOTALSALES_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($total_sales)."</th></tr></table>";
+	$TOTALSALESLEADSRATIO_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($total_sales_ratio)."%</th></tr></table>";
+	$TOTALSALESCONTACTSRATIO_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($total_sale_contact_ratio)."%</th></tr></table>";
+	$TOTALSALESPERHOUR_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($total_sales_per_hour)."</th></tr></table>";
+	$TOTALINCSALES_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($total_inc_sales)."</th></tr></table>";
+	$TOTALCANCELLEDSALES_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($total_cnc_sales)."</th></tr></table>";
+	$TOTALCALLBACKS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($total_callbacks)."</th></tr></table>";
+	$TOTALFIRSTCALLS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($total_stcall)."</th></tr></table>";
+	$TOTALAVGSALETIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($total_average_sale_time)."</th></tr></table>";
+	$TOTALAVGCONTACTTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($total_average_contact_time)."</th></tr></table>";
 	for ($e=0; $e<count($call_status); $e++) {
 		$Sstatus=$call_status[$e];
 		$total_var=$Sstatus."_total";
 		$graph_var="TOTAL".$Sstatus."_graph";
-		$$graph_var.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($$total_var)."</th></tr></table>";
+		$$graph_var.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($$total_var)."</th></tr></table>";
 	}
 	$JS_onload.="\tDrawTotalGraph('CALLS', '1');\n"; 
 	$JS_text.="function DrawTotalGraph(graph, th_id) {\n";

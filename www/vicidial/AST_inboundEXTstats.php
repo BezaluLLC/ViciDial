@@ -12,6 +12,7 @@
 # 130621-0745 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0729 - Changed to mysqli PHP functions
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141114-0836 - Finalized adding QXZ translation to all admin files
 #
 
 require("dbconnect_mysqli.php");
@@ -80,7 +81,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -93,10 +94,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -142,7 +143,7 @@ while ($i < $inbound_to_print)
 <?php 
 echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 #echo"<META HTTP-EQUIV=Refresh CONTENT=\"7; URL=$PHP_SELF?server_ip=$server_ip&DB=$DB\">\n";
-echo "<TITLE>ASTERISK: Inbound Calls Stats</TITLE></HEAD><BODY BGCOLOR=WHITE>\n";
+echo "<TITLE>"._QXZ("ASTERISK: Inbound Calls Stats")."</TITLE></HEAD><BODY BGCOLOR=WHITE>\n";
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
 echo "<INPUT TYPE=HIDDEN NAME=server_ip VALUE=\"$server_ip\">\n";
 echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
@@ -155,7 +156,7 @@ echo "<SELECT SIZE=1 NAME=group>\n";
 		$o++;
 	}
 echo "</SELECT>\n";
-echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
+echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 echo "</FORM>\n\n";
 
 echo "<PRE><FONT SIZE=2>\n\n";
@@ -164,17 +165,17 @@ echo "<PRE><FONT SIZE=2>\n\n";
 if (!$group)
 {
 echo "\n\n";
-echo "PLEASE SELECT A NUMBER AND DATE ABOVE AND CLICK SUBMIT\n";
+echo _QXZ("PLEASE SELECT A NUMBER AND DATE ABOVE AND CLICK SUBMIT")."\n";
 }
 
 else
 {
 
 
-echo "ASTERISK: Inbound Calls Stats                      $NOW_TIME\n";
+echo _QXZ("ASTERISK: Inbound Calls Stats",50)." $NOW_TIME\n";
 
 echo "\n";
-echo "---------- TOTALS\n";
+echo "---------- "._QXZ("TOTALS")."\n";
 
 $extenSQL = "and extension='" . mysqli_real_escape_string($link, $group) . "'";
 if (preg_match("/\*/i",$group))
@@ -189,11 +190,11 @@ $average_hold_seconds = MathZDC($row[1], $row[0]);
 $average_hold_seconds = round($average_hold_seconds, 0);
 $average_hold_seconds =	sprintf("%10s", $average_hold_seconds);
 
-echo "Total Calls That came into this number:       $TOTALcalls\n";
-echo "Average Call Length(seconds) for all Calls:   $average_hold_seconds\n";
+echo _QXZ("Total Calls That came into this number:",45)." $TOTALcalls\n";
+echo _QXZ("Average Call Length(seconds) for all Calls:",45)." $average_hold_seconds\n";
 
 echo "\n";
-echo "---------- DROPS\n";
+echo "---------- "._QXZ("DROPS")."\n";
 
 $stmt="select count(*),sum(length_in_sec) from call_log where start_time >= '" . mysqli_real_escape_string($link, $query_date) . " 00:00:01' and start_time <= '" . mysqli_real_escape_string($link, $query_date) . " 23:59:59' and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' $extenSQL and (length_in_sec <= 10 or length_in_sec is null);";
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -211,17 +212,17 @@ if ($row[0])
 	$average_hold_seconds =	sprintf("%10s", $average_hold_seconds);
 	}
 else {$DROPpercent=0;   $average_hold_seconds=0;}
-echo "Total DROP Calls:   (less than 10 seconds)    $DROPcalls  $DROPpercent%\n";
-echo "Average Call Length(seconds) for DROP Calls:  $average_hold_seconds\n";
+echo _QXZ("Total DROP Calls:   (less than 10 seconds)",45)." $DROPcalls  $DROPpercent%\n";
+echo _QXZ("Average Call Length(seconds) for DROP Calls:",45)." $average_hold_seconds\n";
 
 
 ##############################
 #########  CALLS STATS
 
 echo "\n";
-echo "---------- CALL LISTINGS\n";
+echo "---------- "._QXZ("CALL LISTINGS")."\n";
 echo "+----------------------+----------------------+--------+---------------------+\n";
-echo "| CALLERID             | CALLERIDNAME         | LENGTH | DATE TIME           |\n";
+echo "| "._QXZ("CALLERID",20)." | "._QXZ("CALLERIDNAME",20)." | "._QXZ("LENGTH",6)." | "._QXZ("DATE TIME",19)." |\n";
 echo "+----------------------+----------------------+--------+---------------------+\n";
 
 $stmt="select number_dialed,caller_code,length_in_sec,start_time from call_log where start_time >= '" . mysqli_real_escape_string($link, $query_date) . " 00:00:01' and start_time <= '" . mysqli_real_escape_string($link, $query_date) . " 23:59:59' and server_ip='" . mysqli_real_escape_string($link, $server_ip) . "' $extenSQL ;";
@@ -262,7 +263,7 @@ if ($output == 'FULL')
 	{
 
 	echo "\n";
-	echo "---------- TIME STATS\n";
+	echo "---------- "._QXZ("TIME STATS")."\n";
 
 	echo "<FONT SIZE=0>\n";
 
@@ -335,7 +336,7 @@ if ($output == 'FULL')
 	#$hour_multiplier = round($hour_multiplier, 0);
 
 	echo "<!-- HICOUNT: $hi_hour_count|$hour_multiplier -->\n";
-	echo "GRAPH IN 15 MINUTE INCREMENTS OF TOTAL CALLS\n";
+	echo _QXZ("GRAPH IN 15 MINUTE INCREMENTS OF TOTAL CALLS")."\n";
 
 	$k=1;
 	$Mk=0;
@@ -361,7 +362,7 @@ if ($output == 'FULL')
 
 	echo "+------+-------------------------------------------------------------------------------------------------------+-------+-------+\n";
 	#echo "| HOUR | GRAPH IN 15 MINUTE INCREMENTS OF TOTAL INCOMING CALLS FOR THIS GROUP                                  | DROPS | TOTAL |\n";
-	echo "| HOUR |$call_scale| DROPS | TOTAL |\n";
+	echo "| "._QXZ("HOUR",4)." |$call_scale| "._QXZ("DROPS",5)." | "._QXZ("TOTAL",5)." |\n";
 	echo "+------+-------------------------------------------------------------------------------------------------------+-------+-------+\n";
 
 	$ZZ = '00';

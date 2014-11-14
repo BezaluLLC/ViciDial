@@ -26,6 +26,7 @@
 # 130902-0737 - Changed to mysqli PHP functions
 # 140108-0747 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141113-2336 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -109,7 +110,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -122,10 +123,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -207,7 +208,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -274,7 +275,7 @@ $HEADER.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HEADER.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $short_header=1;
 
@@ -296,7 +297,7 @@ $MAIN.="o_cal.a_tpl.yearscroll = false;\n";
 $MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 $MAIN.="</script>\n";
 
-$MAIN.=" to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+$MAIN.=" "._QXZ("to")." <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
 
 $MAIN.="<script language=\"JavaScript\">\n";
 $MAIN.="var o_cal = new tcal ({\n";
@@ -321,22 +322,22 @@ $MAIN.="</SELECT>\n";
 $MAIN.="&nbsp;";
 $MAIN.="<select name='report_display_type'>";
 if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
-$MAIN.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n";
+$MAIN.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n";
 $MAIN.=" &nbsp; ";
 $MAIN.="<SELECT SIZE=1 NAME=shift>\n";
-$MAIN.="<option selected value=\"$shift\">$shift</option>\n";
+$MAIN.="<option selected value=\"$shift\">"._QXZ("$shift")."</option>\n";
 $MAIN.="<option value=\"\">--</option>\n";
-$MAIN.="<option value=\"AM\">AM</option>\n";
-$MAIN.="<option value=\"PM\">PM</option>\n";
-$MAIN.="<option value=\"ALL\">ALL</option>\n";
-$MAIN.="<option value=\"DAYTIME\">DAYTIME</option>\n";
-$MAIN.="<option value=\"10AM-6PM\">10AM-6PM</option>\n";
-$MAIN.="<option value=\"9AM-1AM\">9AM-1AM</option>\n";
+$MAIN.="<option value=\"AM\">"._QXZ("AM")."</option>\n";
+$MAIN.="<option value=\"PM\">"._QXZ("PM")."</option>\n";
+$MAIN.="<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
+$MAIN.="<option value=\"DAYTIME\">"._QXZ("DAYTIME")."</option>\n";
+$MAIN.="<option value=\"10AM-6PM\">"._QXZ("10AM-6PM")."</option>\n";
+$MAIN.="<option value=\"9AM-1AM\">"._QXZ("9AM-1AM")."</option>\n";
 $MAIN.="<option value=\"845-1745\">845-1745</option>\n";
 $MAIN.="<option value=\"1745-100\">1745-100</option>\n";
 $MAIN.="</SELECT>\n";
 $MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
-$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&group=$group&shift=$shift&SUBMIT=$SUBMIT&file_download=1\">DOWNLOAD</a> | <a href=\"./admin.php?ADD=3111&group_id=$group\">MODIFY</a> | <a href=\"./admin.php?ADD=999999\">REPORTS</a>";
+$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&group=$group&shift=$shift&SUBMIT=$SUBMIT&file_download=1\">"._QXZ("DOWNLOAD")."</a> | <a href=\"./admin.php?ADD=3111&group_id=$group\">"._QXZ("MODIFY")."</a> | <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a>";
 $MAIN.="</FONT>\n";
 $MAIN.="</FORM>\n\n";
 
@@ -346,7 +347,7 @@ $MAIN.="<PRE><FONT SIZE=2>\n\n";
 if (!$group)
 	{
 	$MAIN.="\n\n";
-	$MAIN.="PLEASE SELECT AN IN-GROUP AND DATE RANGE ABOVE AND CLICK SUBMIT\n";
+	$MAIN.=_QXZ("PLEASE SELECT AN IN-GROUP AND DATE RANGE ABOVE AND CLICK SUBMIT\n");
 	echo "$HEADER";
 	require("admin_header.php");
 	echo "$MAIN";
@@ -434,13 +435,13 @@ if ( ($EQsec < $SQsec) and ($DURATIONday < 1) )
 	$DURATIONday++;
 	}
 
-$MAIN.="Inbound Service Level Report                      $NOW_TIME\n";
+$MAIN.=_QXZ("Inbound Service Level Report",50)." $NOW_TIME\n";
 $MAIN.="\n";
-$MAIN.="Time range $DURATIONday days: $query_date_BEGIN to $query_date_END\n\n";
+$MAIN.=_QXZ("Time range")." $DURATIONday "._QXZ("days").": $query_date_BEGIN "._QXZ("to")." $query_date_END\n\n";
 #echo "Time range day sec: $SQsec - $EQsec   Day range in epoch: $SQepoch - $EQepoch   Start: $SQepochDAY\n";
-$CSV_text.="\"Inbound Service Level Report\",\"$NOW_TIME\"\n";
+$CSV_text.="\""._QXZ("Inbound Service Level Report")."\",\"$NOW_TIME\"\n";
 $CSV_text.="\n";
-$CSV_text.="\"Time range $DURATIONday days:\",\"$query_date_BEGIN to $query_date_END\"\n\n";
+$CSV_text.="\""._QXZ("Time range")." $DURATIONday "._QXZ("days").":\",\"$query_date_BEGIN "._QXZ("to")." $query_date_END\"\n\n";
 
 $d=0;
 while ($d < $DURATIONday)
@@ -666,11 +667,11 @@ while ($j < $TOTintervals)
 ###################################################
 ### TOTALS SUMMARY SECTION ###
 $ASCII_text.="+-------------------------------------------+--------+--------+--------+--------+--------+--------+--------+--------+----------+--------+\n";
-$ASCII_text.="|                                           |        |        |        |        |        |  AVG   |  AVG   |        |  TOTAL   |  AVG   |\n";
-$ASCII_text.="| SHIFT                                     |        |        |  AVG   |        |        | HOLD(s)| HOLD(s)|        | CALLTIME |CALLTIME|\n";
-$ASCII_text.="| DATE-TIME RANGE                           | DROPS  | DROP % | DROP(s)| HOLD   | HOLD % |  HOLD  | TOTAL  | CALLS  | MIN:SEC  |SECONDS |\n";
+$ASCII_text.="|                                           |        |        |        |        |        | "._QXZ("AVG",6)." | "._QXZ("AVG",6)." |        | "._QXZ("TOTAL",8)." | "._QXZ("AVG",6)." |\n";
+$ASCII_text.="| "._QXZ("SHIFT",41)." |        |        | "._QXZ("AVG",6)." |        |        | "._QXZ("HOLD(s)",7)."| "._QXZ("HOLD(s)",7)."|        | "._QXZ("CALLTIME",8)." |"._QXZ("CALLTIME",8)."|\n";
+$ASCII_text.="| "._QXZ("DATE-TIME RANGE",41)." | "._QXZ("DROPS",6)." | "._QXZ("DROP",4)." % | "._QXZ("DROP(s)",7)."| "._QXZ("HOLD",6)." | "._QXZ("HOLD",4)." % | "._QXZ("HOLD",6)." | "._QXZ("TOTAL",6)." | "._QXZ("CALLS",6)." | "._QXZ("MIN:SEC",8)." |"._QXZ("SECONDS",7)." |\n";
 $ASCII_text.="+-------------------------------------------+--------+--------+--------+--------+--------+--------+--------+--------+----------+--------+\n";
-$CSV_text.="\"SHIFT DATE-TIME RANGE\",\"DROPS\",\" DROP %\",\" AVG DROP(s)\",\" HOLD\",\" HOLD %\",\" AVG HOLD(S) HOLD\",\" AVG HOLD(S) TOTAL\",\" CALLS\",\" TOTAL CALLTIME MIN:SEC\",\" AVG CALLTIME SECONDS\"\n";
+$CSV_text.="\""._QXZ("SHIFT DATE-TIME RANGE")."\",\""._QXZ("DROPS")."\",\" "._QXZ("DROP")." %\",\" "._QXZ("AVG DROP(s)")."\",\" "._QXZ("HOLD")."\",\" "._QXZ("HOLD")." %\",\" "._QXZ("AVG HOLD(S) HOLD")."\",\" "._QXZ("AVG HOLD(S) TOTAL")."\",\" "._QXZ("CALLS")."\",\" "._QXZ("TOTAL CALLTIME MIN:SEC")."\",\" "._QXZ("AVG CALLTIME SECONDS")."\"\n";
 
 
 $graph_stats=array();
@@ -686,19 +687,19 @@ $max_totalcalltime=1;
 $max_avgcalltime=1;
 
 $GRAPH="<BR><BR><a name='inbound_graph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-$GRAPH.="<tr><th width='10%' class='grey_graph_cell' id='inbound_graph1'><a href='#' onClick=\"DrawGraph('DROPS', '1'); return false;\">DROPS</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph2'><a href='#' onClick=\"DrawGraph('DROPPCT', '2'); return false;\">DROP %</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph3'><a href='#' onClick=\"DrawGraph('AVGDROPS', '3'); return false;\">AVG DROP(s)</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph4'><a href='#' onClick=\"DrawGraph('HOLD', '4'); return false;\">HOLD</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph5'><a href='#' onClick=\"DrawGraph('HOLDPCT', '5'); return false;\">HOLD %</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph6'><a href='#' onClick=\"DrawGraph('AVGHOLDS', '6'); return false;\">AVG HOLD(s) HOLD</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph7'><a href='#' onClick=\"DrawGraph('AVGHOLDSTOTAL', '7'); return false;\">AVG HOLD(s) TOTAL</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph8'><a href='#' onClick=\"DrawGraph('CALLS', '8'); return false;\">CALLS</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph9'><a href='#' onClick=\"DrawGraph('TOTALCALLTIME', '9'); return false;\">TOTAL CALLTIME MIN:SEC</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph10'><a href='#' onClick=\"DrawGraph('AVGCALLTIME', '10'); return false;\">AVG CALLTIME SECONDS</a></th></tr>";
+$GRAPH.="<tr><th width='10%' class='grey_graph_cell' id='inbound_graph1'><a href='#' onClick=\"DrawGraph('DROPS', '1'); return false;\">"._QXZ("DROPS")."</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph2'><a href='#' onClick=\"DrawGraph('DROPPCT', '2'); return false;\">"._QXZ("DROP")." %</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph3'><a href='#' onClick=\"DrawGraph('AVGDROPS', '3'); return false;\">"._QXZ("AVG DROP(s)")."</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph4'><a href='#' onClick=\"DrawGraph('HOLD', '4'); return false;\">"._QXZ("HOLD")."</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph5'><a href='#' onClick=\"DrawGraph('HOLDPCT', '5'); return false;\">"._QXZ("HOLD")." %</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph6'><a href='#' onClick=\"DrawGraph('AVGHOLDS', '6'); return false;\">"._QXZ("AVG HOLD(s)")." HOLD</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph7'><a href='#' onClick=\"DrawGraph('AVGHOLDSTOTAL', '7'); return false;\">"._QXZ("AVG HOLD(s) TOTAL")."</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph8'><a href='#' onClick=\"DrawGraph('CALLS', '8'); return false;\">"._QXZ("CALLS")."</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph9'><a href='#' onClick=\"DrawGraph('TOTALCALLTIME', '9'); return false;\">"._QXZ("TOTAL CALLTIME MIN:SEC")."</a></th><th width='10%' class='grey_graph_cell' id='inbound_graph10'><a href='#' onClick=\"DrawGraph('AVGCALLTIME', '10'); return false;\">"._QXZ("AVG CALLTIME SECONDS")."</a></th></tr>";
 $GRAPH.="<tr><td colspan='10' class='graph_span_cell'><span id='inbound_stats_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
-$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>INBOUND SERVICE LEVEL REPORT</caption><tr><th class='thgraph' scope='col'>STATUS</th>";
-$DROPS_graph=$graph_header."<th class='thgraph' scope='col'>DROPS </th></tr>";
-$DROPPCT_graph=$graph_header."<th class='thgraph' scope='col'>DROP % </th></tr>";
-$AVGDROPS_graph=$graph_header."<th class='thgraph' scope='col'>AVG DROP(s) </th></tr>";
-$HOLD_graph=$graph_header."<th class='thgraph' scope='col'>HOLD </th></tr>";
-$HOLDPCT_graph=$graph_header."<th class='thgraph' scope='col'>HOLD % </th></tr>";
-$AVGHOLDS_graph=$graph_header."<th class='thgraph' scope='col'>AVG HOLD(s) HOLD </th></tr>";
-$AVGHOLDSTOTAL_graph=$graph_header."<th class='thgraph' scope='col'>AVG HOLD(s) TOTAL </th></tr>";
-$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>CALLS </th></tr>";
-$TOTALCALLTIME_graph=$graph_header."<th class='thgraph' scope='col'>TOTAL CALLTIME MIN:SEC </th></tr>";
-$AVGCALLTIME_graph=$graph_header."<th class='thgraph' scope='col'>AVG CALLTIME SECONDS </th></tr>";
+$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>"._QXZ("INBOUND SERVICE LEVEL REPORT")."</caption><tr><th class='thgraph' scope='col'>"._QXZ("STATUS")."</th>";
+$DROPS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DROPS")." </th></tr>";
+$DROPPCT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DROP")." % </th></tr>";
+$AVGDROPS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AVG DROP(s)")." </th></tr>";
+$HOLD_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("HOLD")." </th></tr>";
+$HOLDPCT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("HOLD")." % </th></tr>";
+$AVGHOLDS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AVG HOLD(s) HOLD")." </th></tr>";
+$AVGHOLDSTOTAL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AVG HOLD(s) TOTAL")." </th></tr>";
+$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CALLS")." </th></tr>";
+$TOTALCALLTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TOTAL CALLTIME MIN:SEC")." </th></tr>";
+$AVGCALLTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AVG CALLTIME SECONDS")." </th></tr>";
 $d=0;
 while ($d < $DURATIONday)
 	{
@@ -798,7 +799,7 @@ while ($d < $DURATIONday)
 	$FtotCALLS =	sprintf("%6s", $totCALLS);
 
 $ASCII_text.="+-------------------------------------------+--------+--------+--------+--------+--------+--------+--------+--------+----------+--------+\n";
-$ASCII_text.="|                                    TOTALS | $FtotDROPS | $FtotDROPSpct%|$FtotDROPSavg | $FtotQUEUE | $FtotQUEUEpct%|$FtotQUEUEavg |$FtotQUEUEtot | $FtotCALLS |$totTIME_MS | $FtotCALLSavg |\n";
+$ASCII_text.="| "._QXZ("TOTALS",41,"r")." | $FtotDROPS | $FtotDROPSpct%|$FtotDROPSavg | $FtotQUEUE | $FtotQUEUEpct%|$FtotQUEUEavg |$FtotQUEUEtot | $FtotCALLS |$totTIME_MS | $FtotCALLSavg |\n";
 $ASCII_text.="+-------------------------------------------+--------+--------+--------+--------+--------+--------+--------+--------+----------+--------+\n";
 $CSV_text.="\"TOTALS\",\"$FtotDROPS\",\"$FtotDROPSpct%\",\"$FtotDROPSavg\",\"$FtotQUEUE\",\"$FtotQUEUEpct%\",\"$FtotQUEUEavg\",\"$FtotQUEUEtot\",\"$FtotCALLS\",\"$totTIME_MS\",\"$FtotCALLSavg\"\n";
 
@@ -816,16 +817,16 @@ $CSV_text.="\"TOTALS\",\"$FtotDROPS\",\"$FtotDROPSpct%\",\"$FtotDROPSavg\",\"$Ft
 		$TOTALCALLTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][9], $max_totalcalltime))."' height='16' />".$graph_stats[$d][10]."</td></tr>";
 		$AVGCALLTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][11], $max_avgcalltime))."' height='16' />".$graph_stats[$d][11]."</td></tr>";
 	}
-	$DROPS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($FtotDROPS)."</th></tr></table>";
-	$DROPPCT_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($FtotDROPSpct)."%</th></tr></table>";
-	$AVGDROPS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($FtotDROPSavg)."</th></tr></table>";
-	$HOLD_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($FtotQUEUE)."</th></tr></table>";
-	$HOLDPCT_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($FtotQUEUEpct)."%</th></tr></table>";
-	$AVGHOLDS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($FtotQUEUEavg)."</th></tr></table>";
-	$AVGHOLDSTOTAL_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($FtotQUEUEtot)."</th></tr></table>";
-	$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($FtotCALLS)."</th></tr></table>";
-	$TOTALCALLTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($totTIME_MS)."</th></tr></table>";
-	$AVGCALLTIME_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($FtotCALLSavg)."</th></tr></table>";
+	$DROPS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotDROPS)."</th></tr></table>";
+	$DROPPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotDROPSpct)."%</th></tr></table>";
+	$AVGDROPS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotDROPSavg)."</th></tr></table>";
+	$HOLD_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotQUEUE)."</th></tr></table>";
+	$HOLDPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotQUEUEpct)."%</th></tr></table>";
+	$AVGHOLDS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotQUEUEavg)."</th></tr></table>";
+	$AVGHOLDSTOTAL_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotQUEUEtot)."</th></tr></table>";
+	$CALLS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotCALLS)."</th></tr></table>";
+	$TOTALCALLTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($totTIME_MS)."</th></tr></table>";
+	$AVGCALLTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotCALLSavg)."</th></tr></table>";
 	$JS_text="<script language='Javascript'>\n";
 	$JS_onload="onload = function() {\n";
 	$JS_onload.="\tDrawGraph('DROPS', '1');\n"; 
@@ -893,16 +894,16 @@ else
 #########  HOLD TIME, CALL AND DROP STATS 15-MINUTE INCREMENTS ####
 
 $MAIN.="\n";
-$MAIN.="---------- HOLD TIME, CALL AND DROP STATS\n";
+$MAIN.="---------- "._QXZ("HOLD TIME, CALL AND DROP STATS")."\n";
 
 $MAIN.="<FONT SIZE=0>";
 
 $MAIN.="<!-- HICOUNT CALLS: $hi_hour_count|$hour_multiplier -->";
 $MAIN.="<!-- HICOUNT HOLD:  $hi_hold_count|$hold_multiplier -->\n";
-$MAIN.="GRAPH IN 15 MINUTE INCREMENTS OF AVERAGE HOLD TIME FOR CALLS TAKEN INTO THIS IN-GROUP\n";
+$MAIN.=_QXZ("GRAPH IN 15 MINUTE INCREMENTS OF AVERAGE HOLD TIME FOR CALLS TAKEN INTO THIS IN-GROUP")."\n";
 
-$CSV_text.="\n\n\"HOLD TIME; CALL AND DROP STATS\"\n";
-$CSV_text.="\"GRAPH IN 15 MINUTE INCREMENTS\"\n\"OF AVERAGE HOLD TIME FOR CALLS\"\n\"TAKEN INTO THIS IN-GROUP\"\n";
+$CSV_text.="\n\n\""._QXZ("HOLD TIME; CALL AND DROP STATS")."\"\n";
+$CSV_text.="\""._QXZ("GRAPH IN 15 MINUTE INCREMENTS")."\"\n\""._QXZ("OF AVERAGE HOLD TIME FOR CALLS")."\"\n\""._QXZ("TAKEN INTO THIS IN-GROUP")."\"\n";
 
 $k=1;
 $Mk=0;
@@ -956,21 +957,21 @@ while ($k <= 22)
 
 
 $ASCII_text.="+-------------+-----------------------+-------+-------+  +-----------------------+-------+-------+\n";
-$ASCII_text.="|    TIME     |  AVG HOLD TIME (sec)  | (in seconds)  |  |    CALLS HANDLED      |       |       |\n";
-$ASCII_text.="| 15 MIN INT  |$hold_scale| AVG   | MAX   |  |$call_scale| DROPS | TOTAL |\n";
+$ASCII_text.="| "._QXZ("TIME",11)." | "._QXZ("AVG HOLD TIME (sec)",21)." | "._QXZ("(in seconds)",13)." |  | "._QXZ("CALLS HANDLED",21)." |       |       |\n";
+$ASCII_text.="| "._QXZ("15 MIN INT",11)." |$hold_scale| "._QXZ("AVG",5)." | "._QXZ("MAX",5)." |  |$call_scale| "._QXZ("DROPS",5)." | "._QXZ("TOTAL",5)." |\n";
 $ASCII_text.="+-------------+-----------------------+-------+-------+  +-----------------------+-------+-------+\n";
 
 $max_avg_hold_time=1;
 $max_calls=1;
 $graph_stats=array();
 $GRAPH="<BR><BR><a name='holdcalldropgraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-$GRAPH.="<tr><th width='50%' class='grey_graph_cell' id='holdcalldropgraph1'><a href='#' onClick=\"DrawHCDGraph('AVGHOLD', '1'); return false;\">AVERAGE HOLD TIME</a></th><th width=50% class='grey_graph_cell' id='holdcalldropgraph2'><a href='#' onClick=\"DrawHCDGraph('CALLSHANDLED', '2'); return false;\">CALLS HANDLED</a></th></tr>";
+$GRAPH.="<tr><th width='50%' class='grey_graph_cell' id='holdcalldropgraph1'><a href='#' onClick=\"DrawHCDGraph('AVGHOLD', '1'); return false;\">"._QXZ("AVERAGE HOLD TIME")."</a></th><th width=50% class='grey_graph_cell' id='holdcalldropgraph2'><a href='#' onClick=\"DrawHCDGraph('CALLSHANDLED', '2'); return false;\">"._QXZ("CALLS HANDLED")."</a></th></tr>";
 $GRAPH.="<tr><td colspan='5' class='graph_span_cell'><span id='holdcalldrop_stats_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
-$AVGHOLD_graph="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>AVERAGE HOLD TIME</caption><tr><th class='thgraph' scope='col'>TIME 15-MIN INT</th><th class='thgraph' scope='col'>AVG HOLD TIME</th><th class='thgraph' scope='col'>AVG</th><th class='thgraph' scope='col'>MAX</th></tr>";
-$CALLSHANDLED_graph="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>CALLS HANDLED</caption><tr><th class='thgraph' scope='col'>TIME 15-MIN INT</th><th class='thgraph' scope='col'>DROPS <img src='./images/bar_blue.png' width='10' height='10'> / CALLS <img src='./images/bar.png' width='10' height='10'></th></tr>";
+$AVGHOLD_graph="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>"._QXZ("AVERAGE HOLD TIME")."</caption><tr><th class='thgraph' scope='col'>"._QXZ("TIME 15-MIN INT")."</th><th class='thgraph' scope='col'>"._QXZ("AVG HOLD TIME")."</th><th class='thgraph' scope='col'>"._QXZ("AVG")."</th><th class='thgraph' scope='col'>"._QXZ("MAX")."</th></tr>";
+$CALLSHANDLED_graph="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>"._QXZ("CALLS HANDLED")."</caption><tr><th class='thgraph' scope='col'>"._QXZ("TIME 15-MIN INT")."</th><th class='thgraph' scope='col'>"._QXZ("DROPS")." <img src='./images/bar_blue.png' width='10' height='10'> / "._QXZ("CALLS")." <img src='./images/bar.png' width='10' height='10'></th></tr>";
 
 
-$CSV_text.="\"TIME - 15 MIN INT\",\"AVG SECS\",\"MAX SECS\",\"\",\"DROPS\",\"TOTAL\"\n";
+$CSV_text.="\""._QXZ("TIME - 15 MIN INT")."\",\""._QXZ("AVG SECS")."\",\""._QXZ("MAX SECS")."\",\"\",\""._QXZ("DROPS")."\",\""._QXZ("TOTAL")."\"\n";
 
 $i=0;
 while ($i < $TOTintervals)
@@ -1105,12 +1106,12 @@ $totCALLS =	sprintf("%5s", $totCALLS);
 
 
 $ASCII_text.="+-------------+-----------------------+-------+-------+  +-----------------------+-------+-------+\n";
-$ASCII_text.="| TOTAL                               | $totQUEUEavg | $totQUEUEmax |  |                       | $totDROPS | $totCALLS |\n";
+$ASCII_text.="| "._QXZ("TOTAL",35)." | $totQUEUEavg | $totQUEUEmax |  |                       | $totDROPS | $totCALLS |\n";
 $ASCII_text.="+-------------------------------------+-------+-------+  +-----------------------+-------+-------+\n";
-$CSV_text.="\"TOTAL\",\"$totQUEUEavg\",\"$totQUEUEmax\",\"\",\"$totDROPS\",\"$totCALLS\"\n\n";
+$CSV_text.="\""._QXZ("TOTAL")."\",\"$totQUEUEavg\",\"$totQUEUEmax\",\"\",\"$totDROPS\",\"$totCALLS\"\n\n";
 
-$AVGHOLD_graph="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>AVERAGE HOLD TIME</caption><tr><th class='thgraph' scope='col'>TIME 15-MIN INT</th><th class='thgraph' scope='col'>AVG HOLD TIME</th><th class='thgraph' scope='col'>AVG</th><th class='thgraph' scope='col'>MAX</th></tr>";
-$CALLSHANDLED_graph="<table cellspacing='0' cellpadding='0'><caption align='top'>CALLS HANDLED</caption><tr><th class='thgraph' scope='col'>TIME 15-MIN INT</th><th class='thgraph' scope='col'>DROPS <img src='./images/bar_blue.png' width='10' height='10'> / CALLS <img src='./images/bar.png' width='10' height='10'></th></tr>";
+$AVGHOLD_graph="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>"._QXZ("AVERAGE HOLD TIME")."</caption><tr><th class='thgraph' scope='col'>"._QXZ("TIME 15-MIN INT")."</th><th class='thgraph' scope='col'>"._QXZ("AVG HOLD TIME")."</th><th class='thgraph' scope='col'>"._QXZ("AVG")."</th><th class='thgraph' scope='col'>"._QXZ("MAX")."</th></tr>";
+$CALLSHANDLED_graph="<table cellspacing='0' cellpadding='0'><caption align='top'>"._QXZ("CALLS HANDLED")."</caption><tr><th class='thgraph' scope='col'>"._QXZ("TIME 15-MIN INT")."</th><th class='thgraph' scope='col'>"._QXZ("DROPS")." <img src='./images/bar_blue.png' width='10' height='10'> / "._QXZ("CALLS")." <img src='./images/bar.png' width='10' height='10'></th></tr>";
 
 for ($d=0; $d<count($graph_stats); $d++) {
 	if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
@@ -1128,8 +1129,8 @@ for ($d=0; $d<count($graph_stats); $d++) {
 	}
 	$CALLSHANDLED_graph.="</td></tr>";
 }
-$AVGHOLD_graph.="<tr><th class='thgraph' colspan='2' scope='col'>TOTALS:</th><th class='thgraph' scope='col'>".trim($totQUEUEavg)."&nbsp;</th><th class='thgraph' scope='col'>&nbsp;".trim($totQUEUEmax)."</th></tr></table>";
-$CALLSHANDLED_graph.="<tr><th class='thgraph' scope='col'>TOTALS:</th><th class='thgraph' scope='col'>DROPS: ".trim($totDROPS)."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CALLS: ".trim($totCALLS)."</th></tr></table>";
+$AVGHOLD_graph.="<tr><th class='thgraph' colspan='2' scope='col'>"._QXZ("TOTALS").":</th><th class='thgraph' scope='col'>".trim($totQUEUEavg)."&nbsp;</th><th class='thgraph' scope='col'>&nbsp;".trim($totQUEUEmax)."</th></tr></table>";
+$CALLSHANDLED_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTALS").":</th><th class='thgraph' scope='col'>"._QXZ("DROPS").": ".trim($totDROPS)."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("CALLS").": ".trim($totCALLS)."</th></tr></table>";
 $JS_text.="function DrawHCDGraph(graph, th_id) {\n";
 $JS_text.="	var AVGHOLD_graph=\"$AVGHOLD_graph\";\n";
 $JS_text.="	var CALLSHANDLED_graph=\"$CALLSHANDLED_graph\";\n";
@@ -1164,14 +1165,14 @@ else
 
 
 $MAIN.="\n";
-$MAIN.="---------- CALL HOLD TIME BREAKDOWN IN SECONDS\n";
+$MAIN.="---------- "._QXZ("CALL HOLD TIME BREAKDOWN IN SECONDS")."\n";
 $MAIN.="+-------------+-------+-----------------------------------------+ +------+--------------------------------+\n";
-$MAIN.="|    TIME     |       |  % OF CALLS GROUPED BY HOLD TIME (SEC)  | |   AVERAGE TIME BEFORE ANSWER (SEC)    |\n";
-$MAIN.="| 15 MIN INT  | CALLS |    0   20   40   60   80  100  120 120+ | | AVG  |0   20   40   60   80  100  120 |\n";
+$MAIN.="| "._QXZ("TIME",11)." |       | "._QXZ("% OF CALLS GROUPED BY HOLD TIME (SEC)",39)." | | "._QXZ("AVERAGE TIME BEFORE ANSWER (SEC)",37)." |\n";
+$MAIN.="| "._QXZ("15 MIN INT",11)." | "._QXZ("CALLS",5)." |    0   20   40   60   80  100  120 120+ | | "._QXZ("AVG",4)." |0   20   40   60   80  100  120 |\n";
 $MAIN.="+-------------+-------+-----------------------------------------+ +------+--------------------------------+\n";
 
-$CSV_text.="\"CALL HOLD TIME BREAKDOWN IN SECONDS\"\n";
-$CSV_text.="\"TIME 15-MIN INT\",\"CALLS\",\"0 (seconds)\",\"20\",\"40\",\"60\",\"80\",\"100\",\"120\",\"120+\",\"AVG TIME BEFORE ANSWER(SEC)\"\n";
+$CSV_text.="\""._QXZ("CALL HOLD TIME BREAKDOWN IN SECONDS")."\"\n";
+$CSV_text.="\""._QXZ("TIME 15-MIN INT")."\",\""._QXZ("CALLS")."\",\"0 ("._QXZ("seconds").")\",\"20\",\"40\",\"60\",\"80\",\"100\",\"120\",\"120+\",\""._QXZ("AVG TIME BEFORE ANSWER(SEC)")."\"\n";
 
 $APhd__0=0; $APhd_20=0; $APhd_40=0; $APhd_60=0; $APhd_80=0; $APhd100=0; $APhd120=0; $APhd121=0;
 $h=0;
@@ -1272,13 +1273,13 @@ $APhd121 =	sprintf("%4s", $APhd121);
 	while (strlen($totQUEUEavg)>4) {$totQUEUEavg = preg_replace('/.$/', '', $totQUEUEavg);}
 
 $MAIN.="+-------------+-------+-----------------------------------------+ +------+--------------------------------+\n";
-$MAIN.="| TOTAL       | $ALLcalls | $APhd__0 $APhd_20 $APhd_40 $APhd_60 $APhd_80 $APhd100 $APhd120 $APhd121 | | $totQUEUEavg |\n";
+$MAIN.="| "._QXZ("TOTAL",11)." | $ALLcalls | $APhd__0 $APhd_20 $APhd_40 $APhd_60 $APhd_80 $APhd100 $APhd120 $APhd121 | | $totQUEUEavg |\n";
 $MAIN.="+-------------+-------+-----------------------------------------+ +------+\n";
-$CSV_text.="\" TOTAL\",\"$ALLcalls\",$APhd__0\",\"$APhd_20\",\"$APhd_40\",\"$APhd_60\",\"$APhd_80\",\"$APhd100\",\"$APhd120\",\"$APhd121\",\"$totQUEUEavg\"\n";
+$CSV_text.="\" "._QXZ("TOTAL")."\",\"$ALLcalls\",$APhd__0\",\"$APhd_20\",\"$APhd_40\",\"$APhd_60\",\"$APhd_80\",\"$APhd100\",\"$APhd120\",\"$APhd121\",\"$totQUEUEavg\"\n";
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $STARTtime);
-$MAIN.="\nRun Time: $RUNtime seconds|$db_source\n";
+$MAIN.="\n"._QXZ("Run Time").": $RUNtime "._QXZ("seconds")."|$db_source\n";
 $MAIN.="</PRE>\n";
 $MAIN.="</TD></TR></TABLE>\n";
 $MAIN.="</BODY></HTML>\n";

@@ -1,7 +1,7 @@
 <?php
 # AST_email_log_display - VICIDIAL administration page
 #
-# Copyright (C) 2013  Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
 #
 # This page displays emails from the log
 #
@@ -10,6 +10,7 @@
 # 130610-1039 - Finalized changing of all ereg instances to preg
 # 130621-0756 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0733 - Changed to mysqli PHP functions
+# 141114-0843 - Finalized adding QXZ translation to all admin files
 #
 
 require("dbconnect_mysqli.php");
@@ -49,7 +50,7 @@ if ($qm_conf_ct > 0)
 
 if ($allow_emails<1) 
 	{
-	echo "Your system does not have the email setting enabled\n";
+	echo _QXZ("Your system does not have the email setting enabled")."\n";
 	exit;
 	}
 
@@ -87,7 +88,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -100,10 +101,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -127,15 +128,15 @@ if (mysqli_num_rows($rslt)>0) {
 	$row=mysqli_fetch_array($rslt);
 	$row["message"]=preg_replace('/\r|\n/', "<BR/>", $row["message"]);
 	$EMAIL_form="<TABLE cellspacing=2 cellpadding=2 bgcolor='#CCCCCC' width='500'>\n";
-	$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='100'>Date sent:</td><td align='left' valign='top' width='400'>$row[email_date]</td></tr>\n";
-	$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='100'>Message:</td><td align='left' valign='top' width='400'>$row[message]</td></tr>\n";
+	$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='100'>"._QXZ("Date sent").":</td><td align='left' valign='top' width='400'>$row[email_date]</td></tr>\n";
+	$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='100'>"._QXZ("Message").":</td><td align='left' valign='top' width='400'>$row[message]</td></tr>\n";
 	$EMAIL_form.="</table>";
 }
 ?>
 
 <html>
 <head>
-<title>email frame</title>
+<title><?php echo _QXZ("email frame"); ?></title>
 </head>
 <body topmargin=0 leftmargin=0>
 <?php echo $EMAIL_form; ?>

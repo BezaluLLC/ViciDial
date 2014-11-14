@@ -16,6 +16,7 @@
 # 130901-0820 - Changed to mysqli PHP functions
 # 140108-0738 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
+# 141114-0833 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -118,7 +119,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -131,10 +132,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -209,7 +210,7 @@ $HTML_header.="-->\n";
 $HTML_header.=" </STYLE>\n";
 
 $HTML_header.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HTML_header.="<TITLE>VICIDIAL: VDL IVR Filter Stats</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HTML_header.="<TITLE>"._QXZ("VICIDIAL: VDL IVR Filter Stats")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 $HTML_header.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 $HTML_header.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 
@@ -223,7 +224,7 @@ $HTML_text.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 $HTML_text.="<FORM ACTION=\"$PHP_SELF\" NAME='IVRfilter_report' METHOD=GET>\n";
 $HTML_text.="<TABLE BORDER=0><TR><TD VALIGN=TOP>\n";
 $HTML_text.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
-$HTML_text.="Date Range:<BR>\n";
+$HTML_text.=_QXZ("Date Range").":<BR>\n";
 $HTML_text.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
 
 $HTML_text.="<script language=\"JavaScript\">\n";
@@ -237,7 +238,7 @@ $HTML_text.="o_cal.a_tpl.yearscroll = false;\n";
 $HTML_text.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 $HTML_text.="</script>\n";
 
-$HTML_text.=" to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">\n";
+$HTML_text.=" "._QXZ("to")." <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">\n";
 
 $HTML_text.="<script language=\"JavaScript\">\n";
 $HTML_text.="var o_cal = new tcal ({\n";
@@ -250,18 +251,18 @@ $HTML_text.="o_cal.a_tpl.yearscroll = false;\n";
 $HTML_text.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 $HTML_text.="</script>\n";
 
-$HTML_text.="</TD><TD ROWSPAN=2 VALIGN=TOP><input type='checkbox' name='hourly_breakdown' value='1' $checked>Break into hours\n";
+$HTML_text.="</TD><TD ROWSPAN=2 VALIGN=TOP><input type='checkbox' name='hourly_breakdown' value='1' $checked>"._QXZ("Break into hours")."\n";
 $HTML_text.="</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
 $HTML_text.="</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
 $HTML_text.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ";
-$HTML_text.="<a href=\"./admin.php?ADD=1000&group_id=$group[0]\">ADMIN</a> | ";
-$HTML_text.="<a href=\"./admin.php?ADD=999999\">REPORTS</a>\n";
+$HTML_text.="<a href=\"./admin.php?ADD=1000&group_id=$group[0]\">"._QXZ("ADMIN")."</a> | ";
+$HTML_text.="<a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a>\n";
 $HTML_text.="</FONT>\n";
 
 $HTML_text.="</TD></TR>\n";
 $HTML_text.="<TR><TD>\n";
 
-$HTML_text.=" &nbsp; <INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
+$HTML_text.=" &nbsp; <INPUT TYPE=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 $HTML_text.="</TD></TR></TABLE>\n";
 $HTML_text.="</FORM>\n\n";
 
@@ -293,9 +294,9 @@ $query_date_END = "$end_date $time_END";
 
 
 
-$HTML_text.="VDL: IVR Filter Stats:           $NOW_TIME   <a href=\"$PHP_SELF?query_date=$query_date&end_date=$end_date&hourly_breakdown=$hourly_breakdown&DB=$DB&SUBMIT=$SUBMIT&file_download=1\">[DOWNLOAD]</a>\n";
+$HTML_text.=_QXZ("VDL: IVR Filter Stats").":           $NOW_TIME   <a href=\"$PHP_SELF?query_date=$query_date&end_date=$end_date&hourly_breakdown=$hourly_breakdown&DB=$DB&SUBMIT=$SUBMIT&file_download=1\">["._QXZ("DOWNLOAD")."]</a>\n";
 
-$CSV_header="\"VDL: IVR Filter Stats:           $NOW_TIME\"\n";
+$CSV_header="\""._QXZ("VDL: IVR Filter Stats").":           $NOW_TIME\"\n";
 
 $start_date=mktime(substr($time_BEGIN,0,2), substr($time_BEGIN,3,2), substr($time_BEGIN,6,2), substr($query_date_BEGIN,5,2), substr($query_date_BEGIN,8,2), substr($query_date_BEGIN,0,4));
 $end_date=mktime(substr($time_END,0,2), substr($time_END,3,2), substr($time_END,6,2), substr($query_date_END,5,2), substr($query_date_END,8,2), substr($query_date_END,0,4));
@@ -422,14 +423,14 @@ $Utotalsta=0;
 
 	$HTML_text.="\n";
 	$HTML_text.="+------------------------------+-------------------------+-----------------------------------------------------+-------------------------+-------------------------+-------------------------+-------------------------+\n";
-	$HTML_text.="|                              |          TOTALS         |              SENT TO QUEUE                          |   CALLERID NOT FOUND    |       PREVIOUS DNC      |       PREVIOUS SALE     |       ARCHIVE ONLY      |\n";
+	$HTML_text.="|                              | "._QXZ("TOTALS",23)." | "._QXZ("SENT TO QUEUE",51)." | "._QXZ("CALLERID NOT FOUND",23)." | "._QXZ("PREVIOUS DNC",23)." | "._QXZ("PREVIOUS SALE",23)." | "._QXZ("ARCHIVE ONLY",23)." |\n";
 	$HTML_text.="|                              +--------+--------+-------+----------------------+----------------------+-------+--------+--------+-------+--------+--------+-------+--------+--------+-------+--------+--------+-------+\n";
-	$HTML_text.="| HOURS                        | CALLS  | UNIQUE |     % | CALLS**              | UNIQUE**             |     % | CALLS  | UNIQUE |     % | CALLS  | UNIQUE |     % | CALLS  | UNIQUE |     % | CALLS  | UNIQUE |     % |\n";
+	$HTML_text.="| "._QXZ("HOURS",28)." | "._QXZ("CALLS",6)." | "._QXZ("UNIQUE",6)." |     % | "._QXZ("CALLS**",20)." | "._QXZ("UNIQUE**",20)." |     % | "._QXZ("CALLS",6)." | "._QXZ("UNIQUE",6)." |     % | "._QXZ("CALLS",6)." | "._QXZ("UNIQUE",6)." |     % | "._QXZ("CALLS",6)." | "._QXZ("UNIQUE",6)." |     % | "._QXZ("CALLS",6)." | "._QXZ("UNIQUE",6)." |     % |\n";
 	$HTML_text.="+------------------------------+--------+--------+-------+----------------------+----------------------+-------+--------+--------+-------+--------+--------+-------+--------+--------+-------+--------+--------+-------+\n";
 	
 	$CSV_text.="\n";
-	$CSV_text.="\"\",\"\",\"TOTALS\",\"\",\"\",\"SENT TO QUEUE\",\"\",\"\",\"CALLERID NOT FOUND\",\"\",\"\",\"PREVIOUS DNC\",\"\",\"\",\"PREVIOUS SALE\",\"\",\"\",\"ARCHIVE ONLY\",\n";
-	$CSV_text.="\"HOURS\",\"CALLS\",\"UNIQUE\",\"%\",\"CALLS**\",\"UNIQUE**\",\"%\",\"CALLS*\",\"UNIQUE**\",\"%\",\"CALLS*\",\"UNIQUE**\",\"%\",\"CALLS*\",\"UNIQUE**\",\"%\",\"CALLS*\",\"UNIQUE**\",\"%\",\n";
+	$CSV_text.="\"\",\"\",\""._QXZ("TOTALS")."\",\"\",\"\",\""._QXZ("SENT TO QUEUE")."\",\"\",\"\",\""._QXZ("CALLERID NOT FOUND")."\",\"\",\"\",\""._QXZ("REVIOUS DNC")."\",\"\",\"\",\""._QXZ("PREVIOUS SALE")."\",\"\",\"\",\""._QXZ("ARCHIVE ONLY")."\",\n";
+	$CSV_text.="\""._QXZ("HOURS")."\",\""._QXZ("CALLS")."\",\""._QXZ("UNIQUE")."\",\"%\",\""._QXZ("CALLS**")."\",\""._QXZ("UNIQUE**")."\",\"%\",\""._QXZ("CALLS*")."\",\""._QXZ("UNIQUE**")."\",\"%\",\""._QXZ("CALLS*")."\",\""._QXZ("UNIQUE**")."\",\"%\",\""._QXZ("CALLS*")."\",\""._QXZ("UNIQUE**")."\",\"%\",\""._QXZ("CALLS*")."\",\""._QXZ("UNIQUE**")."\",\"%\",\n";
 
 	for($i=0; $i<count($start_date_ary); $i++) {
 		$key=substr($start_date_ary[$i],0,$substr_place);
@@ -482,7 +483,7 @@ $Utotalsta=0;
 	}
 
 	$HTML_text.="+------------------------------+--------+--------+-------+----------------------+----------------------+-------+--------+--------+-------+--------+--------+-------+--------+--------+-------+--------+--------+-------+\n";
-	$HTML_text.="|                       TOTALS | ";
+	$HTML_text.="| "._QXZ("TOTALS",28,"r")." | ";
 	$totalstq+=$rowA[0];
 	$Utotalstq+=$rowA[1];
 
@@ -533,14 +534,14 @@ $Utotalsta=0;
 
 	$HTML_text.="+------------------------------+--------+--------+-------+----------------------+----------------------+-------+--------+--------+-------+--------+--------+-------+--------+--------+-------+--------+--------+-------+\n";
 
-	$CSV_text.="\"TOTALS\",\"$total\",\"$Utotal\",\"n/a\",\"$queue_str\",\"$Uqueue_str\",\"$UtotalPERCENT\",\"$totalnocid\",\"$Utotalnocid\",\"$UnocidPERCENT\",\"$totaldnc\",\"$Utotaldnc\",\"$UprdncPERCENT\",\"$totalsale\",\"$Utotalsale\",\"$UpsalePERCENT\",\"$totalarch\",\"$Utotalarch\",\"$UarchPERCENT\",\n";
+	$CSV_text.="\""._QXZ("TOTALS")."\",\"$total\",\"$Utotal\",\"n/a\",\"$queue_str\",\"$Uqueue_str\",\"$UtotalPERCENT\",\"$totalnocid\",\"$Utotalnocid\",\"$UnocidPERCENT\",\"$totaldnc\",\"$Utotaldnc\",\"$UprdncPERCENT\",\"$totalsale\",\"$Utotalsale\",\"$UpsalePERCENT\",\"$totalarch\",\"$Utotalarch\",\"$UarchPERCENT\",\n";
 
-	$HTML_text.="** - (x|y) values under \"SENT TO QUEUE\" - \"x\" is number of calls taken into queue, \"y\" is number of calls sent to an agent\n";
-	$CSV_text.="\n\"** - (x|y) values under 'SENT TO QUEUE'\",\n\" - 'x' is number of calls taken into queue\",\n\" - 'y' is number of calls sent to an agent\",\n";
+	$HTML_text.="** - (x|y) "._QXZ("values under")." \""._QXZ("SENT TO QUEUE")."\" - \"x\" "._QXZ("is number of calls taken into queue").", \"y\" "._QXZ("is number of calls sent to an agent")."\n";
+	$CSV_text.="\n\"** - (x|y) "._QXZ("values under")." '"._QXZ("SENT TO QUEUE")."'\",\n\" - 'x' "._QXZ("is number of calls taken into queue")."\",\n\" - 'y' "._QXZ("is number of calls sent to an agent")."\",\n";
 
 $ENDtime = date("U");
 $RUNtime = ($ENDtime - $STARTtime);
-$HTML_text.="\nRun Time: $RUNtime seconds\n";
+$HTML_text.="\n"._QXZ("Run Time").": $RUNtime "._QXZ("seconds")."\n";
 
 $HTML_text.="</PRE>\n";
 $HTML_text.="</TD></TR></TABLE>\n";

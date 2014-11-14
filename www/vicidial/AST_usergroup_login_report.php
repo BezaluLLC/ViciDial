@@ -15,6 +15,7 @@
 # 130627-0742 - Added new phone fields
 # 130901-2004 - Changed to mysqli PHP functions
 # 140108-0731 - Added webserver and hostname to report logging
+# 141113-2339 - Finalized adding QXZ translation to all admin files
 #
 
 $startMS = microtime();
@@ -95,7 +96,7 @@ if ($auth > 0)
 
 	if ($reports_auth < 1)
 		{
-		$VDdisplayMESSAGE = "You are not allowed to view reports";
+		$VDdisplayMESSAGE = _QXZ("You are not allowed to view reports");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -108,10 +109,10 @@ if ($auth > 0)
 	}
 else
 	{
-	$VDdisplayMESSAGE = "Login incorrect, please try again";
+	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -195,7 +196,7 @@ if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL 
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
-    echo "You are not allowed to view this report: |$PHP_AUTH_USER|$report_name|\n";
+    echo _QXZ("You are not allowed to view this report").": |$PHP_AUTH_USER|$report_name|\n";
     exit;
 	}
 
@@ -271,7 +272,7 @@ $HTML_head.="-->\n";
 $HTML_head.=" </STYLE>\n";
 
 $HTML_head.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
-$HTML_head.="<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+$HTML_head.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
 $HTML_text.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 
@@ -279,13 +280,13 @@ $HTML_text.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicid
 $HTML_text.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP>&nbsp;<BR>";
 $HTML_text.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 $HTML_text.="<INPUT TYPE=HIDDEN NAME=type VALUE=\"$type\">\n";
-$HTML_text.="</TD><TD VALIGN=TOP>Teams/User Groups:<BR>";
+$HTML_text.="</TD><TD VALIGN=TOP>"._QXZ("Teams/User Groups").":<BR>";
 $HTML_text.="<SELECT SIZE=5 NAME=user_group[] multiple>\n";
 
 if  (preg_match('/\-\-ALL\-\-/',$user_group_string))
-	{$HTML_text.="<option value=\"--ALL--\" selected>-- ALL USER GROUPS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL USER GROUPS")." --</option>\n";}
 else
-	{$HTML_text.="<option value=\"--ALL--\">-- ALL USER GROUPS --</option>\n";}
+	{$HTML_text.="<option value=\"--ALL--\">-- "._QXZ("ALL USER GROUPS")." --</option>\n";}
 $o=0;
 while ($user_groups_to_print > $o)
 	{
@@ -303,24 +304,24 @@ $HTML_text.="<TD VALIGN=TOP>\n";
 #$HTML_text.="<select name='report_display_type'>";
 #if ($report_display_type) {$HTML_text.="<option value='$report_display_type' selected>$report_display_type</option>";}
 #$HTML_text.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR><BR>";
-$HTML_text.="<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
+$HTML_text.="<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 $HTML_text.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
 $HTML_text.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
-$HTML_text.="<a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&query_date_D=$query_date_D&query_date_T=$query_date_T&end_date_D=$end_date_D&end_date_T=$end_date_T$groupQS$user_groupQS$call_statusQS&file_download=1&SUBMIT=$SUBMIT\">DOWNLOAD</a> |";
-$HTML_text.=" <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+$HTML_text.="<a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&query_date_D=$query_date_D&query_date_T=$query_date_T&end_date_D=$end_date_D&end_date_T=$end_date_T$groupQS$user_groupQS$call_statusQS&file_download=1&SUBMIT=$SUBMIT\">"._QXZ("DOWNLOAD")."</a> |";
+$HTML_text.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 $HTML_text.="</FONT>\n";
 $HTML_text.="</TD></TR></TABLE>";
 $HTML_text.="</FORM><font size=2><PRE>\n\n";
 
-if ($SUBMIT=="SUBMIT") 
+if ($SUBMIT) 
 	{
 	$ASCII_text="+--------------------------------+----------+----------------------+---------------------+---------------------+----------+-----------------+-----------------+----------------------+--------------+-----------------+-----------------+-----------------+\n";
-	$ASCII_text.="| USER NAME                      | ID       | USER GROUP           | FIRST LOGIN DATE    | LAST LOGIN DATE     | CAMPAIGN | SERVER IP       | COMPUTER IP     | EXTENSION            | BROWSER      | PHONE LOGIN     |  SERVER PHONE   | PHONE IP        |\n";
+	$ASCII_text.="| "._QXZ("USER NAME",30)." | "._QXZ("ID",8)." | "._QXZ("USER GROUP",20)." | "._QXZ("FIRST LOGIN DATE",19)." | "._QXZ("LAST LOGIN DATE",19)." | "._QXZ("CAMPAIGN",8)." | "._QXZ("SERVER IP",15)." | "._QXZ("COMPUTER IP",15)." | "._QXZ("EXTENSION",20)." | "._QXZ("BROWSER",12)." | "._QXZ("PHONE LOGIN",15)." | "._QXZ("SERVER PHONE",15)." | "._QXZ("PHONE IP",15)." |\n";
 	$ASCII_text.="+--------------------------------+----------+----------------------+---------------------+---------------------+----------+-----------------+-----------------+----------------------+--------------+-----------------+-----------------+-----------------+\n";
 
-	$CSV_text="\"User group login report\",\"User groups:\",\"$user_group_string\"\n\n";
-	$CSV_text.="\"User name\",\"User ID\",\"User group\",\"First login date\",\"Last login date\",\"Campaign ID\",\"Server IP\",\"Computer IP\",\"Extension\",\"Browser\",\"Phone login\",\"Server phone\",\"Phone IP\"\n";
+	$CSV_text="\""._QXZ("User group login report")."\",\""._QXZ("User groups").":\",\""._QXZ("$user_group_string")."\"\n\n";
+	$CSV_text.="\""._QXZ("User name")."\",\""._QXZ("User ID")."\",\""._QXZ("User group")."\",\""._QXZ("First login date")."\",\""._QXZ("Last login date")."\",\""._QXZ("Campaign ID")."\",\""._QXZ("Server IP")."\",\""._QXZ("Computer IP")."\",\""._QXZ("Extension")."\",\""._QXZ("Browser")."\",\""._QXZ("Phone login")."\",\""._QXZ("Server phone")."\",\""._QXZ("Phone IP")."\"\n";
 	$stmt="select distinct user, substr(full_name,1,30) as fullname, full_name from vicidial_users where user_group in ($user_group_SQL) order by user";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	while ($row=mysqli_fetch_array($rslt)) 
