@@ -89,6 +89,8 @@ OTHER CHANGES:
 13. Changed all Agent and Administrative interface text output to use a function
 	instead of echo.(for future dynamic other-language interfaces)
 
+14. Added Admin Utility to split bug lists into smaller lists
+
 
 
 

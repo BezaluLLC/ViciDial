@@ -33636,7 +33636,7 @@ if ($ADD==999994)
 		echo "<LI><a href=\"admin.php?ADD=800000000000000\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Admin Report Log Viewer")."</a></FONT>\n";
 		echo "<BR><BR>\n";
 		echo "<LI><a href=\"admin_phones_bulk_insert.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Bulk Phone Insert Page")."</a></FONT>\n";
-		echo "<LI><a href=\"lead_tools.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Basic Lead Management Tools")."</FONT></a> | <a href=\"lead_tools_advanced.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Advanced Lead Management Tools")."</FONT></a>\n";
+		echo "<LI><a href=\"lead_tools.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Basic Lead Management Tools")."</FONT></a> | <a href=\"lead_tools_advanced.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Advanced Lead Management Tools")."</FONT></a> | <a href=\"list_split.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("List Split")."</FONT></a>\n";
 		echo "<LI><a href=\"reset_campaign_lists.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Reset Campaign Lists")."</a></FONT>\n";
 		echo "<LI><a href=\"callbacks_bulk_change.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Callbacks Transferral Page")."</a></FONT>\n";
 		echo "<LI><a href=\"send_CID_call.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Send a Call With Custom CID Page")."</a></FONT>\n";
