@@ -1131,6 +1131,7 @@ $multi_drop=0;
 $stmt = "select group_id from vicidial_inbound_groups;";
 $rslt=mysql_to_mysqli($stmt, $link);
 $ingroups_to_print = mysqli_num_rows($rslt);
+$c=0;
 while ($ingroups_to_print > $c)
 	{
 	$row=mysqli_fetch_row($rslt);
@@ -1146,6 +1147,7 @@ if ($DB > 0) {echo "\n|$ALLcloser_campaignsSQL|$stmt|\n";}
 ##### INBOUND #####
 if ( ( preg_match('/Y/',$with_inbound) or preg_match('/O/',$with_inbound) ) and ($campaign_allow_inbound > 0) )
 	{
+	$closer_campaignsSQL = "";
 	### Gather list of Closer group ids
 	$stmt = "select closer_campaigns from vicidial_campaigns where active='Y' $group_SQLand;";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -2211,7 +2213,7 @@ if ($UidORname>0)
 	}
 else
 	{
-	if ($RTajax > 0)
+	if (isset($RTajax) and $RTajax > 0)
 		{$HTuser .=	"<a href=\"#\" onclick=\"update_variables('UidORname','');\">"._QXZ("SHOW NAME",9)."</a>";}
 	else
 		{

@@ -4963,6 +4963,7 @@ if ($ADD==7111111)
 		$email = preg_replace('/\s/i', '+',$email);
 		$security_phrase = preg_replace('/\s/i', '+',$security_phrase);
 		$comments = preg_replace('/\s/i', '+',$comments);
+		$source_id = preg_replace('/\s/i', '+',$source_id);
 		$RGfullname = preg_replace('/\s/i', '+',$RGfullname);
 		$RGuser = preg_replace('/\s/i', '+',$RGuser);
 		$RGlead_id = preg_replace('/\s/i', '+',$RGlead_id);
@@ -5028,6 +5029,7 @@ if ($ADD==7111111)
 	$script_text = preg_replace('/\-\-A\-\-email\-\-B\-\-/i', "$email",$script_text);
 	$script_text = preg_replace('/\-\-A\-\-security_phrase\-\-B\-\-/i', "$security_phrase",$script_text);
 	$script_text = preg_replace('/\-\-A\-\-comments\-\-B\-\-/i', "$comments",$script_text);
+	$script_text = preg_replace('/\-\-A\-\-source_id\-\-B\-\-/i', "$source_id",$script_text);
 	$script_text = preg_replace('/\-\-A\-\-fullname\-\-B\-\-/i', "$RGfullname",$script_text);
 	$script_text = preg_replace('/\-\-A\-\-fronter\-\-B\-\-/i', "$RGuser",$script_text);
 	$script_text = preg_replace('/\-\-A\-\-user\-\-B\-\-/i', "$RGuser",$script_text);
@@ -6919,7 +6921,7 @@ if ($ADD==11111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Full Name").": </td><td align=left><input type=text name=fullname size=20 maxlength=50>$NWB#phones-fullname$NWE</td></tr>\n";
 #		echo "<tr bgcolor=#B6D3FC><td align=right>Company: </td><td align=left><input type=text name=company size=10 maxlength=10>$NWB#phones-company$NWE</td></tr>\n";
 #		echo "<tr bgcolor=#B6D3FC><td align=right>Picture: </td><td align=left><input type=text name=picture size=20 maxlength=19>$NWB#phones-picture$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Client Protocol").": </td><td align=left><select size=1 name=protocol><option SELECTED>SIP</option><option>Zap</option><option>IAX2</option><option value='EXTERNAL'>"._QXZ("EXTERNAL")."</option></select>$NWB#phones-protocol$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Client Protocol").": </td><td align=left><select size=1 name=protocol><option SELECTED>SIP</option><option>Zap</option><option>IAX2</option><option value='EXTERNAL'>"._QXZ("EXTERNAL")."</option><option>DAHDI</option></select>$NWB#phones-protocol$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Local GMT").": </td><td align=left><select size=1 name=local_gmt><option>12.75</option><option>12.00</option><option>11.00</option><option>10.00</option><option>9.50</option><option>9.00</option><option>8.00</option><option>7.00</option><option>6.50</option><option>6.00</option><option>5.75</option><option>5.50</option><option>5.00</option><option>4.50</option><option>4.00</option><option>3.50</option><option>3.00</option><option>2.00</option><option>1.00</option><option>0.00</option><option>-1.00</option><option>-2.00</option><option>-3.00</option><option>-3.50</option><option>-4.00</option><option>-5.00</option><option>-6.00</option><option>-7.00</option><option>-8.00</option><option>-9.00</option><option>-10.00</option><option>-11.00</option><option>-12.00</option><option SELECTED>$SSdefault_local_gmt</option></select> ("._QXZ("Do NOT Adjust for DST").")$NWB#phones-local_gmt$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit value='"._QXZ("SUBMIT")."'</td></tr>\n";
 		echo "</TABLE></center>\n";
@@ -28097,7 +28099,7 @@ if ($ADD==31111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Picture").": </td><td align=left><input type=text name=picture size=20 maxlength=19 value=\"$row[13]\">$NWB#phones-picture$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("New Messages").": </td><td align=left><b>$row[14]</b>$NWB#phones-messages$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Old Messages").": </td><td align=left><b>$row[15]</b>$NWB#phones-old_messages$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Client Protocol").": </td><td align=left><select size=1 name=protocol><option>SIP</option><option>Zap</option><option>IAX2</option><option value='EXTERNAL'>"._QXZ("EXTERNAL")."</option><option selected>$row[16]</option></select>$NWB#phones-protocol$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Client Protocol").": </td><td align=left><select size=1 name=protocol><option>SIP</option><option>Zap</option><option>IAX2</option><option value='EXTERNAL'>"._QXZ("EXTERNAL")."</option><option>DAHDI</option><option selected>$row[16]</option></select>$NWB#phones-protocol$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Local GMT").": </td><td align=left><select size=1 name=local_gmt><option>12.75</option><option>12.00</option><option>11.00</option><option>10.00</option><option>9.50</option><option>9.00</option><option>8.00</option><option>7.00</option><option>6.50</option><option>6.00</option><option>5.75</option><option>5.50</option><option>5.00</option><option>4.50</option><option>4.00</option><option>3.50</option><option>3.00</option><option>2.00</option><option>1.00</option><option>0.00</option><option>-1.00</option><option>-2.00</option><option>-3.00</option><option>-3.50</option><option>-4.00</option><option>-5.00</option><option>-6.00</option><option>-7.00</option><option>-8.00</option><option>-9.00</option><option>-10.00</option><option>-11.00</option><option>-12.00</option><option selected>$row[17]</option></select> ("._QXZ("Do NOT Adjust for DST").")$NWB#phones-local_gmt$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Phone Ring Timeout").": </td><td align=left><input type=text name=phone_ring_timeout size=4 maxlength=5 value=\"$row[71]\">$NWB#phones-phone_ring_timeout$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("On-Hook Agent").": </td><td align=left><select size=1 name=on_hook_agent><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option selected>$row[79]</option></select>$NWB#phones-on_hook_agent$NWE</td></tr>\n";

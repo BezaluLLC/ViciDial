@@ -446,10 +446,11 @@
 # 140918-1606 - Fixed manual dial pause warning issue
 # 141105-1153 - Fixed issue with AGENTDIRECT transfers to agents with IDs over 7 characters long
 # 141113-1431 - Added admin_test option to allow login on active_agent=N servers
+# 141116-1805 - Fixed issue #801
 #
 
-$version = '2.10-417c';
-$build = '141113-1431';
+$version = '2.10-418c';
+$build = '141116-1805';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=80;
 $one_mysql_log=0;
@@ -14568,6 +14569,7 @@ function phone_number_format(formatphone) {
 			if ( (Csec < 10) && (Csec.length < 2) ) {Csec = "0" + Csec;}
 			if (Cmin < 10) {Cmin = "0" + Cmin;}
 			if (Csec < 10) {Csec = "0" + Csec;}
+			VDRP_stage_seconds=0;
 
 		var customer_date = '';
 		var customer_time = Chours + ":" + Cmin + ":" + Csec;
