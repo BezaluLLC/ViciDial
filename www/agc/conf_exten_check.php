@@ -63,10 +63,11 @@
 # 130802-1015 - Changed to use PHP mysqli functions
 # 140126-0659 - Added external_pause_code function
 # 140810-2136 - Changed to use QXZ function for echoing text
+# 141118-1233 - Formatting changes for QXZ output
 #
 
-$version = '2.10-38';
-$build = '140810-2136';
+$version = '2.10-39';
+$build = '141118-1233';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=39;
 $one_mysql_log=0;
@@ -173,7 +174,7 @@ else
 	{
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
-		echo _QXZ("Invalid server_ip:")." |$server_ip|  or  Invalid session_name: |$session_name|\n";
+		echo _QXZ("Invalid server_ip: |%1s| or Invalid session_name: |%2s|",0,'',$server_ip,$session_name)."\n";
 		exit;
 		}
 	else
@@ -215,7 +216,7 @@ if ($ACTION == 'refresh')
 	if (strlen($conf_exten)<1)
 		{
 		$channel_live=0;
-		echo _QXZ("Conf Exten $conf_exten is not valid\n");
+		echo _QXZ("Conf Exten %1s is not valid\n",0,'',$conf_exten);
 		exit;
 		}
 	else
@@ -755,7 +756,7 @@ if ($ACTION == 'register')
 	if ( (strlen($conf_exten)<1) || (strlen($exten)<1) )
 		{
 		$channel_live=0;
-		echo _QXZ("Conf Exten $conf_exten is not valid or Exten $exten is not valid\n");
+		echo _QXZ("Conf Exten %1s is not valid or Exten %2s is not valid\n",0,'',$conf_exten,$exten);
 		exit;
 		}
 	else
@@ -765,7 +766,7 @@ if ($ACTION == 'register')
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03013',$user,$server_ip,$session_name,$one_mysql_log);}
 		}
-	echo _QXZ("Conference $conf_exten has been registered to $exten\n");
+	echo _QXZ("Conference %1s has been registered to %2s\n",0,'',$conf_exten,$exten);
 	}
 
 

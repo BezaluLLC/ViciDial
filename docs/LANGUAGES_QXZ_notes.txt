@@ -1,0 +1,54 @@
+Notes on the non-English language translations(QXZ process)	2014-11-18
+
+
+Summary: 
+
+In the 2.10 branch, we started converting from a static build process for non-English languages of the agent and admin web interfaces, to a dynamic load-time process. This necessitated creating a new function in the agent and admin web interface functions.php files to facilitate the printing or echoing of text and image names within PHP. We call this function QXZ.
+
+The end goal, is to complete a new Database schema and Adminsitrative web interface to allow for the dynamic editing of non-English languages within the system.
+
+
+
+Example PHP Code:
+
+echo _QXZ("Closer In Group Choice %1s has been registered to user %2s",0,'',$closer_choice,$user)."\n";
+
+The function call options in order are: "English text", "fixed legth", "l=left or r=right or blank for left", <list of up to 9 PHP variables>
+
+The QXZ function allows for up to 9 defined and ordered variables to be placed in the output using a "Percent-sign, digit, lower-case-s" format (i.e. "%1s") where the digit is the place that the variable is defined at the end of the QXZ function call.
+
+
+
+
+Utilities:
+
+/usr/share/astguiclient/QXZanalyzer.pl --debug --QXZvalues --QXZvaronly --file=/srv/www/htdocs/agc/astguiclient.php
+
+There is a new utility stored in the /extras/ directory of the source tree called "QXZanalyzer.pl". This perl script can analyze the PHP scripts one at a time and print out various different types of output to help gather the phrases necessary for future translations as well as to help debug any issues with the PHP code itself
+
+/usr/share/astguiclient/QXZanalyzer.pl --help
+QXZanalyzer.pl - analyze php scripts for QXZ functions and contents
+
+options:
+  [--help] = this help screen
+  [--debug] = verbose debug messages
+  [--QXZlines] = print full lines that include QXZ functions
+  [--QXZvalues] = print only QXZ function values
+  [--QXZvaronly] = print only QXZ function values with PHP variables in them
+  [--QXZlengthonly] = print only QXZ function values that include a length spec
+  [--QXZplaceonly] = print only QXZ function values with placeholder variables in them
+  [--file=/path/from/root] = define PHP file to analyze
+
+Sample output:
+
+ANALYSIS FINISHED!
+File path:    /srv/www/htdocs/agc/manager_send.php
+Lines in file:           2256
+QXZ line count:          130
+QXZ count:               130
+QXZ with length set:     101
+QXZ with PHP vars:       101
+QXZ with var place set:  101
+QXZ with PHP vars inst:  149
+QXZ with var place inst: 149
+

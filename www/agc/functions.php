@@ -21,6 +21,7 @@
 # 140429-2035 - Added TABLEper_call_notes display script variable for form display
 # 140521-1314 - Added more agent login error messages
 # 140811-2024 - Changed to use QXZ function for echoing text, for use in future translations
+# 141118-0909 - Added options for up to 9 ordered variables within QXZ function output
 #
 
 # $mysql_queries = 19
@@ -326,7 +327,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 				}
 			else
 				{
-				if ($DB) {echo _QXZ("ERROR: no custom data for this lead: $lead_id\n");}
+				if ($DB) {echo _QXZ("ERROR: no custom data for this lead: ")."$lead_id\n";}
 				}
 			##### END grab the data from custom table for the lead_id
 
@@ -1815,13 +1816,39 @@ function mysql_to_mysqli($stmt, $link) {
 }
 
 
-function _QXZ($English_text) 
+# function to print/echo content, options for length, alignment and ordered internal variables are included
+function _QXZ($English_text, $sprintf=0, $align="l", $v_one='', $v_two='', $v_three='', $v_four='', $v_five='', $v_six='', $v_seven='', $v_eight='', $v_nine='')
 	{
-#	$English_text = str_repeat('*', strlen($English_text));
-#	$fp = fopen ("./QXZdebug.txt", "a");
-#	fwrite ($fp, "|$English_text\n");
-#	fclose($fp);
+	if (preg_match("/%\ds/",$English_text))
+		{
+		$English_text = preg_replace("/%1s/", $v_one, $English_text);
+		$English_text = preg_replace("/%2s/", $v_two, $English_text);
+		$English_text = preg_replace("/%3s/", $v_three, $English_text);
+		$English_text = preg_replace("/%4s/", $v_four, $English_text);
+		$English_text = preg_replace("/%5s/", $v_five, $English_text);
+		$English_text = preg_replace("/%6s/", $v_six, $English_text);
+		$English_text = preg_replace("/%7s/", $v_seven, $English_text);
+		$English_text = preg_replace("/%8s/", $v_eight, $English_text);
+		$English_text = preg_replace("/%9s/", $v_nine, $English_text);
+		}
+	### uncomment to test output
+	#	$English_text = str_repeat('*', strlen($English_text));
+	#	$fp = fopen ("./QXZdebug.txt", "a");
+	#	fwrite ($fp, "|$English_text\n");
+	#	fclose($fp);
 
+	if ($sprintf>0) 
+		{
+		if ($align=="r") 
+			{
+			$fmt="%".$sprintf."s";
+			} 
+		else 
+			{
+			$fmt="%-".$sprintf."s";
+			}
+		$English_text=sprintf($fmt, $English_text);
+		}
 	return $English_text;
 	}
 

@@ -35,6 +35,7 @@
 # 130603-2216 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130802-1007 - Changed to PHP mysqli functions
 # 140811-0844 - Changed to use QXZ function for echoing text
+# 141118-1235 - Formatting changes for QXZ output
 #
 
 $api_script = 'deactivate';
@@ -209,24 +210,24 @@ if ($match_found > 0)
 			$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$user',function='deactivate_lead',value='$lead_id',result='$affected_rows',result_reason='$lead_id',source='vdc',data='$SQL_log',api_date='$NOW_TIME',api_script='$api_script';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 
-			$MESSAGE = _QXZ("DONE: $search_count match found, $affected_rows updated to $new_list_id with $dispo status");
+			$MESSAGE = _QXZ("DONE: %1s match found, %2s updated to %3s with %4s status",0,'',$search_count,$affected_rows,$new_list_id,$dispo);
 			echo "$MESSAGE\n";
 			}
 		else
 			{
-			$MESSAGE = _QXZ("DONE: no match found within $lead_id     |$new_list_id|");
+			$MESSAGE = _QXZ("DONE: no match found within %1s     |%2s|",0,'',$lead_id,$new_list_id);
 			echo "$MESSAGE\n";
 			}
 		}
 	else
 		{
-		$MESSAGE = _QXZ("DONE: $search_field is empty for lead $lead_id");
+		$MESSAGE = _QXZ("DONE: %1s is empty for lead %2s",0,'',$search_field,$lead_id);
 		echo "$MESSAGE\n";
 		}
 	}
 else
 	{
-	$MESSAGE = _QXZ("DONE: dispo is not a sale status: $dispo");
+	$MESSAGE = _QXZ("DONE: dispo is not a sale status: %1s",0,'',$dispo);
 	echo "$MESSAGE\n";
 	}
 

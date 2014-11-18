@@ -34,6 +34,7 @@
 # 130705-1524 - Added optional encrypted passwords compatibility
 # 130802-1005 - Changed to PHP mysqli functions
 # 140811-0847 - Changed to use QXZ function for echoing text
+# 141118-1232 - Formatting changes for QXZ output
 # 
 
 require_once("dbconnect_mysqli.php");
@@ -68,7 +69,7 @@ $number_dialed = 'number_dialed';
 #$number_dialed = 'extension';
 
 $version = '0.0.10';
-$build = '130328-0028';
+$build = '141118-1232';
 $StarTtime = date("U");
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -88,7 +89,7 @@ else
 	{
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
-		echo _QXZ("Invalid server_ip:")." |$server_ip|  or  Invalid session_name: |$session_name|\n";
+		echo _QXZ("Invalid server_ip: |%1s| or Invalid session_name: |%2s|",0,'',$server_ip,$session_name)."\n";
 		exit;
 		}
 	else
@@ -127,7 +128,7 @@ if ($format=='debug')
 if ( (strlen($exten)<1) or (strlen($protocol)<3) )
 	{
 	$channel_live=0;
-	echo _QXZ("Exten $exten is not valid or protocol $protocol is not valid\n");
+	echo _QXZ("Exten %1s is not valid or protocol %2s is not valid\n",0,'',$exten,$protocol);
 	exit;
 	}
 else

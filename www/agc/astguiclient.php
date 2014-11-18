@@ -63,6 +63,7 @@
 # 130603-2220 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130802-1002 - Changed to PHP mysqli functions
 # 140811-0848 - Changed to use QXZ function for echoing text
+# 141118-1230 - Formatting changes for QXZ output
 # 
 
 require_once("dbconnect_mysqli.php");
@@ -96,7 +97,7 @@ while ( (strlen($user_abb) > 4) and ($forever_stop < 200) )
 	{$user_abb = preg_replace("/^./","",$user_abb);   $forever_stop++;}
 
 $version = '2.2.6-1';
-$build = '130802-1002';
+$build = '141118-1230';
 
 ### security strip all non-alphanumeric characters out of the variables ###
 	$DB=preg_replace("/[^0-9a-z]/","",$DB);
@@ -113,7 +114,7 @@ if ($force_logout)
 		Header("WWW-Authenticate: Basic realm=\"VICI-PROJECTS\"");
 		Header("HTTP/1.0 401 Unauthorized");
 		}
-    echo _QXZ("You have now logged out. Thank you\n");
+    echo _QXZ("You have now logged out. Thank you")."\n";
     exit;
 	}
 
@@ -269,7 +270,7 @@ if (!$authphone)
 	echo "<TR><TD ALIGN=RIGHT>"._QXZ("Phone Password:")."  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=phone_pass SIZE=10 MAXLENGTH=20 VALUE=\"$phone_pass\"></TD></TR>\n";
 	echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE="._QXZ("SUBMIT")."></TD></TR>\n";
-	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>"._QXZ("VERSION: $version &nbsp; &nbsp; &nbsp; BUILD: $build:")."</TD></TR>\n";
+	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>"._QXZ("VERSION: %1s &nbsp; &nbsp; &nbsp; BUILD: %2s:",0,'',$version,$build)."</TD></TR>\n";
 	echo "</TABLE>\n";
 	echo "</FORM>\n\n";
 	echo "</body>\n\n";
@@ -2719,7 +2720,7 @@ echo "</head>\n";
 <TR VALIGN=TOP ALIGN=LEFT><TD COLSPAN=5 VALIGN=TOP ALIGN=LEFT>
 <INPUT TYPE=HIDDEN NAME=extension>
 <font class="body_text">
-<?php	echo _QXZ("Welcome $LOGfullname, you are logged into this phone: $fullname - $protocol/$extension on $server_ip")." &nbsp; <a href=\"#\" onclick=\"LogouT();return false;\">"._QXZ("LOGOUT")."</a><BR>\n"; ?>
+<?php	echo _QXZ("Welcome %1s, you are logged into this phone: %2s - %3s/%4s on %5s",0,'',$LOGfullname,$fullname,$protocol,$extension,$server_ip)." &nbsp; <a href=\"#\" onclick=\"LogouT();return false;\">"._QXZ("LOGOUT")."</a><BR>\n"; ?>
 </TD></TR>
 <TR VALIGN=TOP ALIGN=LEFT>
 <TD><A HREF="#" onclick="MainPanelToFront();"><IMG SRC="./images/<?php echo _QXZ("agc_tab_main.gif") ?>" ALT="Main Panel" WIDTH=83 HEIGHT=30 BORDER=0></A></TD>
@@ -2805,7 +2806,7 @@ echo "</head>\n";
 <tr><td align=center><div class="scroll_log" id="outboundcallsspan"></div></td></tr>
 <tr><td align=center><font face="Arial,Helvetica"><B><?php echo _QXZ("INBOUND CALLS:"); ?></B></font></td></tr>
 <tr><td align=center><div class="scroll_log" id="inboundcallsspan"></div></td></tr>
-<tr><td align=left><font face="Arial,Helvetica" size=1><?php echo _QXZ("astGUIclient web-client VERSION: $version BUILD: $build"); ?></font></td></tr>
+<tr><td align=left><font face="Arial,Helvetica" size=1><?php echo _QXZ("astGUIclient web-client VERSION: %1s BUILD: %2s",0,'',$version,$build); ?></font></td></tr>
 </TABLE>
 
 <span style="position:absolute;left:640px;top:0px;z-index:33;" id="FavoriteSBox">
@@ -2816,7 +2817,7 @@ echo "</head>\n";
 	{
 		if (strlen($favorites[$h])>1)
 		{
-		echo "<TR id=\"$favorites[$h]\" bgcolor=\"#90EE90\"><TD> <A HREF=\"#\" onclick=\"mainxfer_send_originate('DiaL','','$favorites[$h]');return false;\"><font class=\"sb_text\">"._QXZ("$favorites[$h] - $favorites_names[$h]")."</font></A> </TD></TR>\n";
+		echo "<TR id=\"$favorites[$h]\" bgcolor=\"#90EE90\"><TD> <A HREF=\"#\" onclick=\"mainxfer_send_originate('DiaL','','$favorites[$h]');return false;\"><font class=\"sb_text\">$favorites[$h] - $favorites_names[$h]</font></A> </TD></TR>\n";
 		}
 	$h++;
 	}

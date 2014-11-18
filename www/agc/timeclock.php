@@ -16,10 +16,11 @@
 # 130802-1031 - Changed to PHP mysqli functions
 # 131208-2155 - Added user log TIMEOUTLOGOUT event status
 # 140810-2138 - Changed to use QXZ function for echoing text
+# 141118-1239 - Formatting changes for QXZ output
 #
 
-$version = '2.10-11';
-$build = '140810-2138';
+$version = '2.10-12';
+$build = '141118-1239';
 
 $StarTtimE = date("U");
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -274,7 +275,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			if ( ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') or ($status=='TIMEOUTLOGOUT') ) and ($stage=='login') )
 				{
 				$VDdisplayMESSAGE = _QXZ("You have now logged-in");
-				$LOGtimeMESSAGE = _QXZ("You logged in at $NOW_TIME");
+				$LOGtimeMESSAGE = _QXZ("You logged in at")." $NOW_TIME";
 
 				### Add a record to the timeclock log
 				$stmt="INSERT INTO vicidial_timeclock_log set event='LOGIN', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', event_date='$NOW_TIME';";
@@ -302,7 +303,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			if ( ($status=='LOGIN') and ($stage=='logout') )
 				{
 				$VDdisplayMESSAGE = _QXZ("You have now logged-out");
-				$LOGtimeMESSAGE = _QXZ("You logged out at $NOW_TIME")."<BR>"._QXZ("Amount of time you were logged-in: $totTIME_HMS");
+				$LOGtimeMESSAGE = _QXZ("You logged out at")." $NOW_TIME<BR>"._QXZ("Amount of time you were logged-in:")." $totTIME_HMS";
 
 				### Add a record to the timeclock log
 				$stmt="INSERT INTO vicidial_timeclock_log set event='LOGOUT', user='$user', user_group='$user_group', event_epoch='$StarTtimE', ip_address='$ip', login_sec='$last_action_sec', event_date='$NOW_TIME';";
@@ -377,17 +378,17 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 
 		if ( ($status=='AUTOLOGOUT') or ($status=='START') or ($status=='LOGOUT') or ($status=='TIMEOUTLOGOUT') )
 			{
-			$VDdisplayMESSAGE = _QXZ("Time since you were last logged-in: $totTIME_HMS");
+			$VDdisplayMESSAGE = _QXZ("Time since you were last logged-in:")." $totTIME_HMS";
 			$log_action = 'login';
 			$button_name = 'LOGIN';
-			$LOGtimeMESSAGE = _QXZ("You last logged-out at: $last_action_date")."<BR><BR>"._QXZ("Click LOGIN below to log-in");
+			$LOGtimeMESSAGE = _QXZ("You last logged-out at:")." $last_action_date<BR><BR>"._QXZ("Click LOGIN below to log-in");
 			}
 		if ($status=='LOGIN')
 			{
-			$VDdisplayMESSAGE = _QXZ("Amount of time you have been logged-in: $totTIME_HMS");
+			$VDdisplayMESSAGE = _QXZ("Amount of time you have been logged-in:")." $totTIME_HMS";
 			$log_action = 'logout';
 			$button_name = 'LOGOUT';
-			$LOGtimeMESSAGE = _QXZ("You logged-in at: $last_action_date")."<BR>"._QXZ("Amount of time you have been logged-in: $totTIME_HMS")."<BR><BR>"._QXZ("Click LOGOUT below to log-out");
+			$LOGtimeMESSAGE = _QXZ("You logged-in at:")." $last_action_date<BR>"._QXZ("Amount of time you have been logged-in:")." $totTIME_HMS<BR><BR>"._QXZ("Click LOGOUT below to log-out");
 			}
 
 		echo"<HTML><HEAD>\n";

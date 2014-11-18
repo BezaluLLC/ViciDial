@@ -447,10 +447,11 @@
 # 141105-1153 - Fixed issue with AGENTDIRECT transfers to agents with IDs over 7 characters long
 # 141113-1431 - Added admin_test option to allow login on active_agent=N servers
 # 141116-1805 - Fixed issue #801
+# 141118-1229 - Formatting changes for QXZ output
 #
 
-$version = '2.10-418c';
-$build = '141116-1805';
+$version = '2.10-419c';
+$build = '141118-1229';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=80;
 $one_mysql_log=0;
@@ -514,7 +515,7 @@ $forever_stop=0;
 
 if ($force_logout)
 	{
-    echo _QXZ("You have now logged out. Thank you\n");
+    echo _QXZ("You have now logged out. Thank you")."\n";
     exit;
 	}
 
@@ -15080,7 +15081,7 @@ $zi=2;
 	<font class="queue_text">
 	<a href="#" onclick="start_all_refresh();"><font class="queue_text"><?php echo _QXZ("Logged in as User"); ?></font></a>
 	<?php 
-	echo _QXZ(": $VD_login on Phone: $SIP_user"); 
+	echo _QXZ(": %1s on Phone: %2s",0,'',$VD_login,$SIP_user); 
 	if ($on_hook_agent == 'Y')
 		{echo "(<a href=\"#\" onclick=\"NoneInSessionCalL();return false;\">"._QXZ("ring")."</a>)";}
 	echo "&nbsp; to campaign: $VD_campaign&nbsp; \n"; 
@@ -15943,7 +15944,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="CallBacKsLisTBox">
-    <table border="1" bgcolor="#CCFFCC" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> <?php echo _QXZ("CALLBACKS FOR AGENT $VD_login:<br />To see information on one of the callbacks below, click on the INFO link. To call the customer back now, click on the DIAL link. If you click on a record below to dial it, it will be removed from the list."); ?>
+    <table border="1" bgcolor="#CCFFCC" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> <?php echo _QXZ("CALLBACKS FOR AGENT %1s:<br />To see information on one of the callbacks below, click on the INFO link. To call the customer back now, click on the DIAL link. If you click on a record below to dial it, it will be removed from the list.",0,'',$VD_login); ?>
  <br />
 	<?php
 	if ($webphone_location == 'bar')
@@ -15958,7 +15959,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="NeWManuaLDiaLBox">
-    <table border="1" bgcolor="#CCFFCC" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> <?php echo _QXZ("NEW MANUAL DIAL LEAD FOR $VD_login in campaign $VD_campaign:"); ?><br /><br /><?php echo _QXZ("Enter information below for the new lead you wish to call."); ?>
+    <table border="1" bgcolor="#CCFFCC" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center" valign="top"> <?php echo _QXZ("NEW MANUAL DIAL LEAD FOR %1s in campaign %2s:",0,'',$VD_login,$VD_campaign); ?><br /><br /><?php echo _QXZ("Enter information below for the new lead you wish to call."); ?>
  <br />
 	<?php 
 	if (!preg_match("/X/i",$manual_dial_prefix))
@@ -15966,7 +15967,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
         echo "Note: a dial prefix of $manual_dial_prefix will be added to the beginning of this number<br />\n";
 		}
 	?>
-    <?php echo _QXZ("Note: all new manual dial leads will go into list $manual_dial_list_id"); ?><br /><br />
+    <?php echo _QXZ("Note: all new manual dial leads will go into list %1s",0,'',$manual_dial_list_id); ?><br /><br />
     <table><tr>
     <td align="right"><font class="body_text"> <?php echo _QXZ("Dial Code:"); ?> </font></td>
     <td align="left"><font class="body_text"><input type="text" size="7" maxlength="10" name="MDDiaLCodE" id="MDDiaLCodE" class="cust_form" value="1" />&nbsp; <?php echo _QXZ("(This is usually a 1 in the USA-Canada)"); ?></font></td>
@@ -16139,7 +16140,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 		{echo "<br /><img src=\"./images/"._QXZ("pixel.gif")."\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
 	<br /><br />
-	<?php echo _QXZ("Notes: when doing a search for a lead, the phone number, lead ID or $label_vendor_lead_code are the best fields to use."); ?> <br /><?php echo _QXZ("Using the other fields may be slower. Lead searching does not allow for wildcard or partial search terms."); ?> <br /><?php echo _QXZ("Lead search requests are all logged in the system."); ?>
+	<?php echo _QXZ("Notes: when doing a search for a lead, the phone number, lead ID or %1s are the best fields to use.",0,'',$label_vendor_lead_code); ?> <br /><?php echo _QXZ("Using the other fields may be slower. Lead searching does not allow for wildcard or partial search terms."); ?> <br /><?php echo _QXZ("Lead search requests are all logged in the system."); ?>
 	<br /><br />
 	<center>
 	<table border="0">

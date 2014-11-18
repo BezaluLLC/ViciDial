@@ -35,6 +35,7 @@
 # 130705-1522 - Added optional encrypted passwords compatibility
 # 130802-1009 - Changed to PHP mysqli functions
 # 140811-0841 - Changed to use QXZ function for echoing text
+# 141118-1236 - Formatting changes for QXZ output
 #
 
 require_once("dbconnect_mysqli.php");
@@ -68,8 +69,8 @@ $server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
 # default optional vars if not set
 if (!isset($format))   {$format="text";}
 
-$version = '2.6-13';
-$build = '130328-0027';
+$version = '2.10-14';
+$build = '141118-1236';
 $StarTtime = date("U");
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -89,7 +90,7 @@ else
 	{
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
-		echo _QXZ("Invalid server_ip:")." |$server_ip|  or  Invalid session_name: |$session_name|\n";
+		echo _QXZ("Invalid server_ip: |%1s| or Invalid session_name: |%2s|",0,'',$server_ip,$session_name)."\n";
 		exit;
 		}
 	else
@@ -138,7 +139,7 @@ $channel_live=1;
 if ( (strlen($exten)<1) or (strlen($protocol)<3) )
 	{
 	$channel_live=0;
-	echo _QXZ("Exten $exten is not valid or protocol $protocol is not valid\n");
+	echo _QXZ("Exten %1s is not valid or protocol %2s is not valid\n",0,'',$exten,$protocol);
 	exit;
 	}
 else
@@ -170,10 +171,10 @@ while($loop_count > $counter)
 	if ($trunk_count>0)
 		{
 		$row=mysqli_fetch_row($rslt);
-		echo _QXZ("Conversation: $counter ~");
-		echo _QXZ("ChannelA: $ChanneLA[$counter] ~");
-		echo _QXZ("ChannelB: $ChanneLB[$counter] ~");
-		echo _QXZ("ChannelBtrunk: $row[0]|");
+		echo "Conversation: $counter ~";
+		echo "ChannelA: $ChanneLA[$counter] ~";
+		echo "ChannelB: $ChanneLB[$counter] ~";
+		echo "ChannelBtrunk: $row[0]|";
 		}
 	else
 		{
@@ -184,10 +185,10 @@ while($loop_count > $counter)
 		if ($trunk_count>0)
 			{
 			$row=mysqli_fetch_row($rslt);
-			echo _QXZ("Conversation: $counter ~");
-			echo _QXZ("ChannelA: $ChanneLA[$counter] ~");
-			echo _QXZ("ChannelB: $ChanneLB[$counter] ~");
-			echo _QXZ("ChannelBtrunk: $row[0]|");
+			echo "Conversation: $counter ~";
+			echo "ChannelA: $ChanneLA[$counter] ~";
+			echo "ChannelB: $ChanneLB[$counter] ~";
+			echo "ChannelBtrunk: $row[0]|";
 			}
 		else
 			{
@@ -198,10 +199,10 @@ while($loop_count > $counter)
 			if ($trunk_count>0)
 				{
 				$row=mysqli_fetch_row($rslt);
-				echo _QXZ("Conversation: $counter ~");
-				echo _QXZ("ChannelA: $ChanneLA[$counter] ~");
-				echo _QXZ("ChannelB: $ChanneLB[$counter] ~");
-				echo _QXZ("ChannelBtrunk: $row[0]|");
+				echo "Conversation: $counter ~";
+				echo "ChannelA: $ChanneLA[$counter] ~";
+				echo "ChannelB: $ChanneLB[$counter] ~";
+				echo "ChannelBtrunk: $row[0]|";
 				}
 			else
 				{
@@ -212,17 +213,17 @@ while($loop_count > $counter)
 				if ($trunk_count>0)
 					{
 					$row=mysqli_fetch_row($rslt);
-					echo _QXZ("Conversation: $counter ~");
-					echo _QXZ("ChannelA: $ChanneLA[$counter] ~");
-					echo _QXZ("ChannelB: $ChanneLB[$counter] ~");
-					echo _QXZ("ChannelBtrunk: $row[0]|");
+					echo "Conversation: $counter ~";
+					echo "ChannelA: $ChanneLA[$counter] ~";
+					echo "ChannelB: $ChanneLB[$counter] ~";
+					echo "ChannelBtrunk: $row[0]|";
 					}
 				else
 					{
-					echo _QXZ("Conversation: $counter ~");
-					echo _QXZ("ChannelA: $ChanneLA[$counter] ~");
-					echo _QXZ("ChannelB: $ChanneLB[$counter] ~");
-					echo _QXZ("ChannelBtrunk: $ChanneLA[$counter]|");
+					echo "Conversation: $counter ~";
+					echo "ChannelA: $ChanneLA[$counter] ~";
+					echo "ChannelB: $ChanneLB[$counter] ~";
+					echo "ChannelBtrunk: $ChanneLA[$counter]|";
 					}
 				}
 			}

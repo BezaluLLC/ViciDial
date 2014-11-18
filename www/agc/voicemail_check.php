@@ -27,6 +27,7 @@
 # 130603-2202 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130802-1038 - Changed to PHP mysqli functions
 # 140811-0801 - Changed to use QXZ function for echoing text
+# 141118-1240 - Formatting changes for QXZ output
 #
 
 require_once("dbconnect_mysqli.php");
@@ -55,7 +56,7 @@ $server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
 if (!isset($format))   {$format="text";}
 
 $version = '0.0.7';
-$build = '130328-0025';
+$build = '141118-1240';
 $StarTtime = date("U");
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -75,7 +76,7 @@ else
 	{
 	if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 		{
-		echo _QXZ("Invalid server_ip:")." |$server_ip|  or  Invalid session_name: |$session_name|\n";
+		echo _QXZ("Invalid server_ip: |%1s| or Invalid session_name: |%2s|",0,'',$server_ip,$session_name)."\n";
 		exit;
 		}
 	else
@@ -113,7 +114,7 @@ $row='';   $rowx='';
 if (strlen($vmail_box)<1)
 	{
 	$channel_live=0;
-	echo _QXZ("voicemail box $vmail_box is not valid\n");
+	echo _QXZ("voicemail box %1s is not valid",0,'',$vmail_box)."\n";
 	exit;
 	}
 else

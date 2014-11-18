@@ -13,10 +13,11 @@
 # 130718-0946 - Fixed login bug
 # 130802-1139 - Changed to PHP mysqli functions
 # 140810-2113 - Changed to use QXZ function for echoing text
+# 141118-1238 - Formatting changes for QXZ output
 #
 
-$version = '2.10-9p';
-$build = '140810-2113';
+$version = '2.10-10p';
+$build = '141118-1238';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=73;
 $one_mysql_log=0;
@@ -64,7 +65,7 @@ $forever_stop=0;
 
 if ($force_logout)
 	{
-    echo _QXZ("You have now logged out. Thank you\n");
+    echo _QXZ("You have now logged out. Thank you")."\n";
     exit;
 	}
 
@@ -896,7 +897,7 @@ $zi=2;
 
 echo "<body bgcolor=\"white\">\n";
 
-echo _QXZ(" Phone: $original_phone_login - $server_ip")." &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"$PHP_SELF?relogin=YES&session_epoch=1234567890&session_id=&session_name=$session_name&VD_login=$VD_login&phone_login=$original_phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">"._QXZ("Logout")."</a><BR>\n";
+echo _QXZ(" Phone: ")."$original_phone_login - $server_ip &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"$PHP_SELF?relogin=YES&session_epoch=1234567890&session_id=&session_name=$session_name&VD_login=$VD_login&phone_login=$original_phone_login&phone_pass=$phone_pass&VD_pass=$VD_pass\">"._QXZ("Logout")."</a><BR>\n";
 
 if ($webphone_location == 'bar')
 	{

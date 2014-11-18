@@ -7,6 +7,7 @@
 
 # CHANGES
 # 141117-1734 - First build
+# 141118-1326 - Added more counts and fixed parsing issues
 #
 
 ############################################
@@ -96,9 +97,11 @@ if (length($PATHconf)<2)
 
 $QXZlinecount=0;
 $QXZcount=0;
-$QXZcount_var=0;
 $QXZcount_length=0;
+$QXZcount_var=0;
 $QXZcount_place=0;
+$QXZcount_var_ct=0;
+$QXZcount_place_ct=0;
 
 if (-e "$PATHconf") 
 	{
@@ -113,7 +116,7 @@ if (-e "$PATHconf")
 		$line = $conf[$i];
 		$line =~ s/\n|\r|\t//gi;
 
-		if ( ($line =~ /QXZ/))
+		if ($line =~ /\_QXZ\(/)
 			{
 			$QXZlinecount++;
 			$QXZ_in_line = () = $line =~ /\_QXZ\(/g;
@@ -125,26 +128,45 @@ if (-e "$PATHconf")
 				if ($each_ct > 0) 
 					{
 					@eachQXZvalue = split(/\)/,$eachQXZ[$each_ct]);
-					
-					if ( ($QXZvalues > 0) && ($QXZvaronly < 1) && ($QXZlengthonly < 1) && ($QXZplaceonly < 1) )
-						{print "$eachQXZvalue[0]\n";}
-					if ($eachQXZvalue[0] =~ /\$/) 
+					if ( ($eachQXZvalue[0] =~ /\(/) && (length($eachQXZvalue[1])>0) )
 						{
-						$QXZcount_var++;
-						if ($QXZvaronly > 0)
-							{print "$eachQXZvalue[0]\n";}
+						$temp_QXZval_str = $eachQXZvalue[0].")".$eachQXZvalue[1];
+						if ( ($eachQXZvalue[1] =~ /\(/) && (length($eachQXZvalue[2])>0) )
+							{
+							$temp_QXZval_str .= ")".$eachQXZvalue[2];
+							if ( ($eachQXZvalue[2] =~ /\(/) && (length($eachQXZvalue[3])>0) )
+								{
+								$temp_QXZval_str .= ")".$eachQXZvalue[3];
+								}
+							}
 						}
-					if ($eachQXZvalue[0] =~ /\d$|\d $/) 
+					else
+						{
+						$temp_QXZval_str = $eachQXZvalue[0];
+						}
+					if ( ($QXZvalues > 0) && ($QXZvaronly < 1) && ($QXZlengthonly < 1) && ($QXZplaceonly < 1) )
+						{print "$temp_QXZval_str\n";}
+					if ($temp_QXZval_str =~ /,\d|, \d/) 
 						{
 						$QXZcount_length++;
 						if ($QXZlengthonly > 0)
-							{print "$eachQXZvalue[0]\n";}
+							{print "$temp_QXZval_str\n";}
 						}
-					if ($eachQXZvalue[0] =~ /%/) 
+					if ($temp_QXZval_str =~ /\$/) 
+						{
+						$QXZcount_var++;
+						$var_ct_in_line = () = $temp_QXZval_str =~ /\$/g;
+						$QXZcount_var_ct = ($QXZcount_var_ct + $var_ct_in_line);
+						if ($QXZvaronly > 0)
+							{print "$temp_QXZval_str\n";}
+						}
+					if ($temp_QXZval_str =~ /%\ds/) 
 						{
 						$QXZcount_place++;
+						$place_ct_in_line = () = $temp_QXZval_str =~ /\$/g;
+						$QXZcount_place_ct = ($QXZcount_place_ct + $place_ct_in_line);
 						if ($QXZplaceonly > 0)
-							{print "$eachQXZvalue[0]\n";}
+							{print "$temp_QXZval_str\n";}
 						}
 					}
 
@@ -171,12 +193,14 @@ else
 print "\n";
 print "ANALYSIS FINISHED!\n";
 print "File path:    $PATHconf\n";
-print "Lines in file:          $i\n";
-print "QXZ line count:         $QXZlinecount\n";
-print "QXZ count:              $QXZcount\n";
-print "QXZ with PHP vars:      $QXZcount_var\n";
-print "QXZ with length set:    $QXZcount_length\n";
-print "QXZ with var place set: $QXZcount_place\n";
+print "Lines in file:           $i\n";
+print "QXZ line count:          $QXZlinecount\n";
+print "QXZ count:               $QXZcount\n";
+print "QXZ with length set:     $QXZcount_length\n";
+print "QXZ with PHP vars:       $QXZcount_var\n";
+print "QXZ with var place set:  $QXZcount_place\n";
+print "QXZ with PHP vars inst:  $QXZcount_var_ct\n";
+print "QXZ with var place inst: $QXZcount_place_ct\n";
 print "\n";
 
 $secy = time();		$secz = ($secy - $secX);		$minz = ($secz/60);		# calculate script runtime so far

@@ -362,10 +362,11 @@
 # 140908-1031 - Fixed issues with logging of non-answered calls, user_group and call notes
 # 141024-0851 - Fixed issues with filtering of manual dial calls from call log or callbacks
 # 141111-0658 - Removed several AJAX text outputs from QXZ output
+# 141118-1231 - Formatting changes for QXZ output
 #
 
-$version = '2.10-258';
-$build = '141111-0658';
+$version = '2.10-259';
+$build = '141118-1231';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=597;
 $one_mysql_log=0;
@@ -846,7 +847,7 @@ else
 		{
 		if( (strlen($server_ip)<6) or (!isset($server_ip)) or ( (strlen($session_name)<12) or (!isset($session_name)) ) )
 			{
-			echo _QXZ("Invalid server_ip:")." |$server_ip|  or  Invalid session_name: |$session_name|\n";
+			echo _QXZ("Invalid server_ip: |%1s| or Invalid session_name: |%2s|",0,'',$server_ip,$session_name)."\n";
 			exit;
 			}
 		else
@@ -1090,7 +1091,7 @@ if ($ACTION == 'regCLOSER')
 	if ( (strlen($closer_choice)<1) || (strlen($user)<1) )
 		{
 		$channel_live=0;
-		echo _QXZ("Group Choice $closer_choice is not valid\n");
+		echo _QXZ("Group Choice is not valid").": $closer_choice\n";
 		exit;
 		}
 	else
@@ -1307,7 +1308,7 @@ if ($ACTION == 'regCLOSER')
 			}
 
 		}
-	echo _QXZ("Closer In Group Choice $closer_choice has been registered to user $user\n");
+	echo _QXZ("Closer In Group Choice %1s has been registered to user %2s",0,'',$closer_choice,$user)."\n";
 	}
 
 
@@ -1325,7 +1326,7 @@ if ($ACTION == 'regTERRITORY')
 	if ( (strlen($agent_territories)<1) || (strlen($user)<1) )
 		{
 		$channel_live=0;
-		echo _QXZ("Territory Choice $agent_territories is not valid\n");
+		echo _QXZ("Territory Choice is not valid")."$agent_territories\n";
 		exit;
 		}
 	else
@@ -1365,7 +1366,7 @@ if ($ACTION == 'regTERRITORY')
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00256',$user,$server_ip,$session_name,$one_mysql_log);}
 		}
-	echo _QXZ("Territory Choice $agent_territories has been registered to user $user\n");
+	echo _QXZ("Territory Choice %1s has been registered to user %2s",0,'',$agent_territories,$user)."\n";
 	}
 
 
@@ -1484,7 +1485,7 @@ if ($ACTION == 'UpdateFields')
 			}
 		else
 			{
-			echo "ERROR: "._QXZ("no lead info in system: $lead_id\n");
+			echo "ERROR: "._QXZ("no lead info in system:")." $lead_id\n";
 			}
 		}
 	else
@@ -1587,8 +1588,8 @@ if ($ACTION == 'manDiaLnextCaLL')
 	if ( (strlen($conf_exten)<1) || (strlen($campaign)<1)  || (strlen($ext_context)<1) )
 		{
 		$channel_live=0;
-		echo _QXZ("HOPPER EMPTY\n");
-		echo _QXZ("Conf Exten $conf_exten or campaign $campaign or ext_context $ext_context is not valid\n");
+		echo "HOPPER EMPTY\n";
+		echo _QXZ("Conf Exten %1s or campaign %2s or ext_context %3s is not valid",0,'',$conf_exten,$campaign,$ext_context)."\n";
 		exit;
 		}
 	else
@@ -1734,7 +1735,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00355',$user,$server_ip,$session_name,$one_mysql_log);}
 					$VLAEDaffected_rows = mysqli_affected_rows($link);
 
-					echo _QXZ("OUTSIDE OF LOCAL CALL TIME   $VMDQaffected_rows|$VLAEDaffected_rows\n");
+					echo "OUTSIDE OF LOCAL CALL TIME   $VMDQaffected_rows|$VLAEDaffected_rows\n";
 					exit;
 					}
 				}
@@ -1768,7 +1769,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00357',$user,$server_ip,$session_name,$one_mysql_log);}
 					$VLAEDaffected_rows = mysqli_affected_rows($link);
 
-					echo _QXZ("DNC NUMBER\n");
+					echo "DNC NUMBER\n";
 					exit;
 					}
 				if ( (preg_match("/Y/",$use_campaign_dnc)) or (preg_match("/AREACODE/",$use_campaign_dnc)) )
@@ -1808,7 +1809,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00359',$user,$server_ip,$session_name,$one_mysql_log);}
 						$VLAEDaffected_rows = mysqli_affected_rows($link);
 
-						echo _QXZ("DNC NUMBER\n");
+						echo "DNC NUMBER\n";
 						exit;
 						}
 					}
@@ -1861,7 +1862,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00361',$user,$server_ip,$session_name,$one_mysql_log);}
 					$VLAEDaffected_rows = mysqli_affected_rows($link);
 
-					echo _QXZ("NUMBER NOT IN CAMPLISTS\n");
+					echo "NUMBER NOT IN CAMPLISTS\n";
 					exit;
 					}
 				}
@@ -2592,9 +2593,9 @@ if ($ACTION == 'manDiaLnextCaLL')
 						{
 						$post_phone_time_diff_alert_message='';
 						if ($PHONEdialable < 1)
-							{$post_phone_time_diff_alert_message .= _QXZ(" Phone Area Code Outside Dialable Zone $PHONEgmt_offset ");}
+							{$post_phone_time_diff_alert_message .= _QXZ(" Phone Area Code Outside Dialable Zone")." $PHONEgmt_offset ";}
 						if ($POSTdialable < 1)
-							{$post_phone_time_diff_alert_message .= _QXZ(" Postal Code Outside Dialable Zone $POSTgmt_offset");}
+							{$post_phone_time_diff_alert_message .= _QXZ(" Postal Code Outside Dialable Zone")." $POSTgmt_offset";}
 						}
 					}
 				if ( ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_PHONE') or ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_POSTAL') or ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_BOTH') )
@@ -2603,12 +2604,12 @@ if ($ACTION == 'manDiaLnextCaLL')
 				if ( ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_PHONE') or ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_BOTH') )
 					{
 					if ($PHONEdialable < 1)
-						{$post_phone_time_diff_alert_message .= _QXZ(" Phone Area Code Outside Dialable Zone $PHONEgmt_offset ");}
+						{$post_phone_time_diff_alert_message .= _QXZ(" Phone Area Code Outside Dialable Zone")." $PHONEgmt_offset ";}
 					}
 				if ( ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_POSTAL') or ($post_phone_time_diff_alert == 'OUTSIDE_CALLTIME_BOTH') )
 					{
 					if ($POSTdialable < 1)
-						{$post_phone_time_diff_alert_message .= _QXZ(" Postal Code Outside Dialable Zone $POSTgmt_offset ");}
+						{$post_phone_time_diff_alert_message .= _QXZ(" Postal Code Outside Dialable Zone")." $POSTgmt_offset ";}
 					}
 				}
 			##### END check for postal_code and phone time zones if alert enabled
@@ -3248,7 +3249,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 			}
 		else
 			{
-			echo _QXZ("HOPPER EMPTY\n");
+			echo "HOPPER EMPTY\n";
 			}
 		}
 	}
@@ -3266,8 +3267,8 @@ if ($ACTION == 'alt_phone_change')
 	if ( (strlen($stage)<1) || (strlen($called_count)<1) || (strlen($lead_id)<1)  || (strlen($phone_number)<1) )
 		{
 		$channel_live=0;
-		echo _QXZ("ALT PHONE NUMBER STATUS NOT CHANGED\n");
-		echo _QXZ("$phone_number $stage $lead_id or $called_count is not valid\n");
+		echo _QXZ("ALT PHONE NUMBER STATUS NOT CHANGED")."\n";
+		echo _QXZ("%1s %2s %3s or %4s is not valid",0,'',$phone_number,$stage,$lead_id,$called_count)."\n";
 		exit;
 		}
 	else
@@ -3277,7 +3278,7 @@ if ($ACTION == 'alt_phone_change')
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00041',$user,$server_ip,$session_name,$one_mysql_log);}
 
-		echo _QXZ("ALT PHONE NUMBER STATUS CHANGED\n");
+		echo _QXZ("ALT PHONE NUMBER STATUS CHANGED")."\n";
 		}
 }
 
@@ -3291,8 +3292,8 @@ if ($ACTION == 'AlertControl')
 	if (strlen($stage)<1)
 		{
 		$channel_live=0;
-		echo _QXZ("AGENT ALERT SETTING NOT CHANGED\n");
-		echo _QXZ("$stage is not valid\n");
+		echo _QXZ("AGENT ALERT SETTING NOT CHANGED")."\n";
+		echo _QXZ("%1s is not valid",0,'',$stage)."\n";
 		exit;
 		}
 	else
@@ -3305,7 +3306,7 @@ if ($ACTION == 'AlertControl')
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00185',$user,$server_ip,$session_name,$one_mysql_log);}
 
-		echo _QXZ("AGENT ALERT SETTING CHANGED $stage\n");
+		echo _QXZ("AGENT ALERT SETTING CHANGED %1s",0,'',$stage)."\n";
 		}
 }
 
@@ -3323,7 +3324,7 @@ if ($ACTION == 'manDiaLskip')
 		{
 		$channel_live=0;
 		echo "LEAD NOT REVERTED\n";
-		echo _QXZ("Conf Exten $conf_exten or campaign $campaign or ext_context $ext_context is not valid\n");
+		echo _QXZ("Conf Exten %1s or campaign %2s or ext_context %3s is not valid",0,'',$conf_exten,$campaign,$ext_context)."\n";
 		exit;
 		}
 	else
@@ -3371,7 +3372,7 @@ if ($ACTION == 'manDiaLonly')
 		{
 		$channel_live=0;
 		echo " CALL NOT PLACED\n";
-		echo _QXZ("Conf Exten $conf_exten or campaign $campaign or ext_context $ext_context is not valid\n");
+		echo _QXZ("Conf Exten %1s or campaign %2s or ext_context %3s is not valid",0,'',$conf_exten,$campaign,$ext_context)."\n";
 		exit;
 		}
 	else
@@ -4075,7 +4076,7 @@ if ($stage == "start")
 			}
 
 		echo "LOG NOT ENTERED\n";
-		echo _QXZ("uniqueid $uniqueid or lead_id: $lead_id or list_id: $list_id or phone_number: $phone_number or campaign: $campaign is not valid\n");
+		echo _QXZ("uniqueid %1s or lead_id: %2s or list_id: %3s or phone_number: %4s or campaign: %5s is not valid",0,'',$uniqueid,$lead_id,$list_id,$phone_number,$campaign)."\n";
 		exit;
 		}
 	else
@@ -4233,7 +4234,7 @@ if ($stage == "end")
 	if ( (strlen($uniqueid)<1) or (strlen($lead_id)<1) )
 		{
 		echo "LOG NOT ENTERED\n";
-		echo _QXZ("uniqueid $uniqueid or lead_id: $lead_id is not valid\n");
+		echo _QXZ("uniqueid %1s or lead_id: %2s is not valid",0,'',$uniqueid,$lead_id)."\n";
 		$log_no_enter=1;
 		}
 	else
@@ -5433,8 +5434,8 @@ if ($ACTION == 'VDADREcheckINCOMING')
 		{
 		$channel_live=0;
 		echo "0\n";
-		echo _QXZ("Campaign $campaign is not valid\n");
-		echo _QXZ("lead_id $lead_id is not valid\n");
+		echo _QXZ("Campaign %1s is not valid",0,'',$campaign)."\n";
+		echo _QXZ("lead_id %1s is not valid",0,'',$lead_id)."\n";
 		exit;
 		}
 	else
@@ -5486,7 +5487,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 		{
 		$channel_live=0;
 		echo "0\n";
-		echo _QXZ("Campaign $campaign is not valid\n");
+		echo _QXZ("Campaign %1s is not valid",0,'',$campaign)."\n";
 		exit;
 		}
 	else
@@ -6729,7 +6730,7 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 		{
 		$channel_live=0;
 		echo "0\n";
-		echo _QXZ("Campaign $campaign is not valid\n");
+		echo _QXZ("Campaign %1s is not valid",0,'',$campaign)."\n";
 		exit;
 		}
 	else
@@ -7655,7 +7656,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 		{
 		$channel_live=0;
 		echo "0\n";
-		echo _QXZ("Campaign $campaign is not valid or lead_id $lead_id is not valid\n");
+		echo _QXZ("Campaign %1s is not valid or lead_id %2s is not valid",0,'',$campaign,$lead_id)."\n";
 		exit;
 		}
 	else
@@ -8343,7 +8344,7 @@ if ($ACTION == 'userLOGout')
 	if ( (strlen($campaign)<1) || (strlen($conf_exten)<1) )
 		{
 		echo "NO\n";
-		echo _QXZ("campaign $campaign or conf_exten $conf_exten is not valid\n");
+		echo _QXZ("campaign %1s or conf_exten %2s is not valid",0,'',$campaign,$conf_exten)."\n";
 		exit;
 		}
 	else
@@ -8624,7 +8625,7 @@ if ($ACTION == 'updateDISPO')
 	$MAN_vl_insert=0;
 	if ( (strlen($dispo_choice)<1) || (strlen($lead_id)<1) )
 		{
-		echo _QXZ("Dispo Choice $dispo or lead_id $lead_id is not valid\n");
+		echo _QXZ("Dispo Choice %1s or lead_id %2s is not valid",0,'',$dispo,$lead_id)."\n";
 		exit;
 		}
 	else
@@ -10198,7 +10199,7 @@ if ($ACTION == 'updateDISPO')
 	# debug testing sleep
 	# sleep(5);
 
-	echo _QXZ('Lead ') . $lead_id . _QXZ(' has been changed to ') . $dispo_choice . _QXZ(" Status\n")."Next agent_log_id:\n" . $agent_log_id . "\n";
+	echo _QXZ("Lead %1s has been changed to %2s Status",0,'',$lead_id,$dispo_choice)."\nNext agent_log_id:\n" . $agent_log_id . "\n";
 	}
 
 ################################################################################
@@ -10213,7 +10214,7 @@ if ($ACTION == 'updateLEAD')
 	$DO_NOT_UPDATE_text='';
 	if ( (strlen($phone_number)<1) || (strlen($lead_id)<1) )
 		{
-		echo _QXZ("phone_number $phone_number or lead_id $lead_id is not valid\n");
+		echo _QXZ("phone_number %1s or lead_id %2s is not valid",0,'',$phone_number,$lead_id)."\n";
 		exit;
 		}
 	else
@@ -10300,7 +10301,7 @@ if ($ACTION == 'updateLEAD')
 			}
 
 		}
-		echo _QXZ("Lead $lead_id information has$DO_NOT_UPDATE_text been updated\n");
+		echo _QXZ("Lead %1s information has%2s been updated",0,'',$lead_id,$DO_NOT_UPDATE_text)."\n";
 	}
 
 
@@ -10314,7 +10315,7 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 	$row='';   $rowx='';
 	if ( (strlen($stage)<2) || (strlen($server_ip)<1) )
 		{
-		echo _QXZ("stage $stage is not valid\n");
+		echo _QXZ("stage %1s is not valid",0,'',$stage)."\n";
 		exit;
 		}
 	else
@@ -10532,7 +10533,7 @@ if ( ($ACTION == 'VDADpause') || ($ACTION == 'VDADready') )
 		}
 	else
 		{
-		echo _QXZ('Agent ') . $user . _QXZ(' is now in status ') . $stage . "\nNext agent_log_id:\n$agent_log_id\n";
+		echo _QXZ("Agent %1s is now in status %2s",0,'',$user,$stage)."\nNext agent_log_id:\n$agent_log_id\n";
 		}
 	}
 
@@ -10546,7 +10547,7 @@ if ($ACTION == 'UpdatEFavoritEs')
 	$channel_live=1;
 	if ( (strlen($favorites_list)<1) || (strlen($user)<1) || (strlen($exten)<1) )
 		{
-		echo _QXZ("favorites list $favorites_list is not valid\n");
+		echo _QXZ("favorites list %1s is not valid",0,'',$favorites_list)."\n";
 		exit;
 		}
 	else
@@ -10572,7 +10573,7 @@ if ($ACTION == 'UpdatEFavoritEs')
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00174',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
 		}
-		echo _QXZ("Favorites list has been updated to $favorites_list for $exten\n");
+		echo _QXZ("Favorites list has been updated to %1s for %2s",0,'',$favorites_list,$exten)."\n";
 	}
 
 
@@ -10584,7 +10585,7 @@ if ($ACTION == 'PauseCodeSubmit')
 	$row='';   $rowx='';
 	if ( (strlen($status)<1) || (strlen($agent_log_id)<1) )
 		{
-		echo _QXZ("agent_log_id $agent_log_id or pause_code $status is not valid\n");
+		echo _QXZ("agent_log_id %1s or pause_code %2s is not valid",0,'',$agent_log_id,$status)."\n";
 		exit;
 		}
 	else
@@ -10704,7 +10705,7 @@ if ($ACTION == 'PauseCodeSubmit')
 				}
 			}
 		}
-	echo _QXZ(' Pause Code ') . $status . _QXZ(" has been recorded\n")."Next agent_log_id:\n" . $agent_log_id . "\n";
+	echo _QXZ(" Pause Code %1s has been recorded",0,'',$status)."\nNext agent_log_id:\n" . $agent_log_id . "\n";
 	}
 
 
@@ -10925,7 +10926,7 @@ if ($ACTION == 'CALLSINQUEUEview')
 
 	if (preg_match('/NONE/i',$view_calls_in_queue))
 		{
-		echo _QXZ("Calls in Queue View Disabled for this campaign\n");
+		echo _QXZ("Calls in Queue View Disabled for this campaign")."\n";
 		exit;
 		}
 	else
@@ -11357,7 +11358,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 			}
 		else
 			{
-			echo "ERROR: "._QXZ("You must enter in search terms, one of these must be populated: lead ID, vendor ID, phone number, last name\n");
+			echo "ERROR: "._QXZ("You must enter in search terms, one of these must be populated: lead ID, vendor ID, phone number, last name")."\n";
 			echo "<BR><BR>";
 			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
@@ -11506,7 +11507,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 
 			echo "<CENTER>\n";
 			echo "<font style=\"font-size:14px;font-family:sans-serif;\"><B>";
-			echo _QXZ("Results Found: $search_result_count");
+			echo _QXZ("Results Found:")." $search_result_count";
 			echo "</B></font>\n";
 			echo "<BR>\n";
 			echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=$stage>";
@@ -11608,7 +11609,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 			}
 		else
 			{
-			echo "ERROR: "._QXZ("There was a problem with your search terms\n");
+			echo "ERROR: "._QXZ("There was a problem with your search terms")."\n";
 			echo "<BR><BR>";
 			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
@@ -11618,7 +11619,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 		}
 	else
 		{
-		echo "ERROR: "._QXZ("Campaign not found\n");
+		echo "ERROR: "._QXZ("Campaign not found")."\n";
 		echo "<BR><BR>";
 		echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">"._QXZ("Go Back")."</a>";
 		echo "</CENTER>";
@@ -11797,7 +11798,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 			}
 		else
 			{
-			echo "ERROR: "._QXZ("You must enter in search terms, one of these must be populated: office number, last name, first name\n");
+			echo "ERROR: "._QXZ("You must enter in search terms, one of these must be populated: office number, last name, first name")."\n";
 			echo "<BR><BR>";
 			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
@@ -11843,7 +11844,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 
 			echo "<CENTER>\n";
 			echo "<font style=\"font-size:14px;font-family:sans-serif;\"><B>";
-			echo _QXZ("Results Found: $search_result_count");
+			echo _QXZ("Results Found:")." $search_result_count";
 			echo "</B></font>\n";
 			echo "<BR>\n";
 			echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=$stage>";
@@ -11936,7 +11937,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 			}
 		else
 			{
-			echo "ERROR: "._QXZ("There was a problem with your search terms\n");
+			echo "ERROR: "._QXZ("There was a problem with your search terms")."\n";
 			echo "<BR><BR>";
 			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
@@ -11946,7 +11947,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 		}
 	else
 		{
-		echo "ERROR: "._QXZ("Campaign not found\n");
+		echo "ERROR: "._QXZ("Campaign not found")."\n";
 		echo "<BR><BR>";
 		echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">"._QXZ("Go Back")."</a>";
 		echo "</CENTER>";
@@ -12567,7 +12568,7 @@ if ($ACTION == 'CALLSINQUEUEgrab')
 
 	if ( (preg_match('/NONE/i',$view_calls_in_queue)) or (preg_match('/N/i',$grab_calls_in_queue)) )
 		{
-		echo "ERROR: "._QXZ("Calls in Queue View Disabled for this campaign\n");
+		echo "ERROR: "._QXZ("Calls in Queue View Disabled for this campaign")."\n";
 		exit;
 		}
 	else
@@ -12601,11 +12602,11 @@ if ($ACTION == 'CALLSINQUEUEgrab')
 				$affected_rows = mysqli_affected_rows($link);
 				}
 
-			echo "SUCCESS: "._QXZ("Call $stage grabbed for $user");
+			echo "SUCCESS: "._QXZ("Call %1s grabbed for %2s",0,'',$stage,$user);
 			}
 		else
 			{
-			echo "ERROR: "._QXZ("Call $stage could not be grabbed for $user\n");
+			echo "ERROR: "._QXZ("Call %1s could not be grabbed for %2s",0,'',$stage,$user)."\n";
 			}
 
 		$stmtD="SELECT * from vicidial_auto_calls where auto_call_id='$stage';";
