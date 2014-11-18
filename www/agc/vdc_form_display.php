@@ -25,10 +25,12 @@
 # 140101-2139 - Small fix for admin modify lead page on encrypted password systems
 # 140429-2042 - Added TABLEper_call_notes display script variable for form display
 # 140810-2119 - Changed to use QXZ function for echoing text
+# 141118-1424 - Added agent_email variable
 #
 
-$version = '2.10-16';
-$build = '140810-2119';
+
+$version = '2.10-17';
+$build = '141118-1424';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -108,6 +110,8 @@ if (isset($_GET["script_height"]))	{$script_height=$_GET["script_height"];}
 	elseif (isset($_POST["script_height"]))	{$script_height=$_POST["script_height"];}
 if (isset($_GET["fullname"]))	{$fullname=$_GET["fullname"];}
 	elseif (isset($_POST["fullname"]))	{$fullname=$_POST["fullname"];}
+if (isset($_GET["agent_email"]))	{$agent_email=$_GET["agent_email"];}
+	elseif (isset($_POST["agent_email"]))	{$agent_email=$_POST["agent_email"];}
 if (isset($_GET["recording_filename"]))	{$recording_filename=$_GET["recording_filename"];}
 	elseif (isset($_POST["recording_filename"]))	{$recording_filename=$_POST["recording_filename"];}
 if (isset($_GET["recording_id"]))	{$recording_id=$_GET["recording_id"];}

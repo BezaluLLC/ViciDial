@@ -27,10 +27,11 @@
 # 140630-1023 - Added full_script_height script variable
 # 140710-2143 - Added session_name variable
 # 140810-1857 - Changed to use QXZ function for echoing text
+# 141118-1422 - Added agent_email variable
 #
 
-$version = '2.10-21';
-$build = '140810-1857';
+$version = '2.10-22';
+$build = '141118-1422';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -146,6 +147,8 @@ if (isset($_GET["script_height"]))	{$script_height=$_GET["script_height"];}
 	elseif (isset($_POST["script_height"]))	{$script_height=$_POST["script_height"];}
 if (isset($_GET["fullname"]))	{$fullname=$_GET["fullname"];}
 	elseif (isset($_POST["fullname"]))	{$fullname=$_POST["fullname"];}
+if (isset($_GET["agent_email"]))	{$agent_email=$_GET["agent_email"];}
+	elseif (isset($_POST["agent_email"]))	{$agent_email=$_POST["agent_email"];}
 if (isset($_GET["recording_filename"]))	{$recording_filename=$_GET["recording_filename"];}
 	elseif (isset($_POST["recording_filename"]))	{$recording_filename=$_POST["recording_filename"];}
 if (isset($_GET["recording_id"]))	{$recording_id=$_GET["recording_id"];}
@@ -397,6 +400,7 @@ if (preg_match("/iframe\ssrc/i",$script_text))
 	$script_width = preg_replace('/\s/i','+',$script_width);
 	$script_height = preg_replace('/\s/i','+',$script_height);
 	$fullname = preg_replace('/\s/i','+',$fullname);
+	$agent_email = preg_replace('/\s/i','+',$agent_email);
 	$recording_filename = preg_replace('/\s/i','+',$recording_filename);
 	$recording_id = preg_replace('/\s/i','+',$recording_id);
 	$user_custom_one = preg_replace('/\s/i','+',$user_custom_one);
@@ -480,6 +484,7 @@ $script_text = preg_replace('/--A--script_width--B--/i',"$script_width",$script_
 $script_text = preg_replace('/--A--script_height--B--/i',"$script_height",$script_text);
 $script_text = preg_replace('/--A--full_script_height--B--/i',"$full_script_height",$script_text);
 $script_text = preg_replace('/--A--fullname--B--/i',"$fullname",$script_text);
+$script_text = preg_replace('/--A--agent_email--B--/i',"$agent_email",$script_text);
 $script_text = preg_replace('/--A--recording_filename--B--/i',"$recording_filename",$script_text);
 $script_text = preg_replace('/--A--recording_id--B--/i',"$recording_id",$script_text);
 $script_text = preg_replace('/--A--user_custom_one--B--/i',"$user_custom_one",$script_text);
@@ -591,13 +596,14 @@ if (preg_match('/--A--TABLEper_call_notes--B--/i',$script_text))
 				if (strlen($Allcall_notes[$g]) > 0)
 					{$Allcall_notes[$g] =	"<b>NOTES: </b> $Allcall_notes[$g]";}
 				}
-			$stmtA="SELECT full_name FROM vicidial_users WHERE user='$ALLuser[$g]';";
+			$stmtA="SELECT full_name,email FROM vicidial_users WHERE user='$ALLuser[$g]';";
 			$rsltA=mysql_to_mysqli($stmtA, $link);
 			$users_to_print = mysqli_num_rows($rslt);
 			if ($users_to_print > 0)
 				{
 				$rowA=mysqli_fetch_row($rsltA);
 				$ALLuser[$g] .=	" - $rowA[0]";
+				$ALLemail[$g] .=	$rowA[1];
 				}
 
 			$Allcounter[$g] =		$g;

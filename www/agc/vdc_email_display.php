@@ -17,7 +17,11 @@
 # 130705-1515 - Added optional encrypted passwords compatibility
 # 130802-1032 - Changed to PHP mysqli functions
 # 140811-0834 - Changed to use QXZ function for echoing text
+# 141118-1426 - Added agent_email variable
 #
+
+$version = '2.10-8';
+$build = '141118-1426';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -50,6 +54,9 @@ if (isset($_GET["reply_message"]))	{$reply_message=$_GET["reply_message"];}
 	elseif (isset($_POST["reply_message"]))	{$reply_message=$_POST["reply_message"];}
 if (isset($_GET["REPLY"]))	{$REPLY=$_GET["REPLY"];}
 	elseif (isset($_POST["REPLY"]))	{$REPLY=$_POST["REPLY"];}
+if (isset($_GET["agent_email"]))	{$agent_email=$_GET["agent_email"];}
+	elseif (isset($_POST["agent_email"]))	{$agent_email=$_POST["agent_email"];}
+
 
 $attachment1=$_FILES["attachment1"];
 	$A1_orig = $_FILES['attachment1']['name'];

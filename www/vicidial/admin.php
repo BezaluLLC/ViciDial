@@ -3363,12 +3363,13 @@ else
 # 140822-1034 - Fixed minor voicemail chooser bug on DID modify page
 # 140902-0816 - Added callback_active_limit and callback_active_limit_override
 # 141111-0554 - Finalized adding QXZ translation to all admin files
+# 141118-1541 - Added agent_email script and webform variable
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.10-452a';
-$build = '141111-0554';
+$admin_version = '2.10-453a';
+$build = '141118-1541';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4877,6 +4878,7 @@ if ($ADD==7111111)
 	$security_phrase = 'SECUTIRY';
 	$comments = 'COMMENTS FIELD';
 	$RGfullname = 'JOE AGENT';
+	$RGagent_email = 'Joe@agent.com';
 	$RGuser = '6666';
 	$RGlead_id = '1234';
 	$RGcampaign = 'TESTCAMP';
@@ -4965,6 +4967,7 @@ if ($ADD==7111111)
 		$comments = preg_replace('/\s/i', '+',$comments);
 		$source_id = preg_replace('/\s/i', '+',$source_id);
 		$RGfullname = preg_replace('/\s/i', '+',$RGfullname);
+		$RGagent_email = preg_replace('/\s/i', '+',$RGagent_email);
 		$RGuser = preg_replace('/\s/i', '+',$RGuser);
 		$RGlead_id = preg_replace('/\s/i', '+',$RGlead_id);
 		$RGcampaign = preg_replace('/\s/i', '+',$RGcampaign);
@@ -5031,6 +5034,7 @@ if ($ADD==7111111)
 	$script_text = preg_replace('/\-\-A\-\-comments\-\-B\-\-/i', "$comments",$script_text);
 	$script_text = preg_replace('/\-\-A\-\-source_id\-\-B\-\-/i', "$source_id",$script_text);
 	$script_text = preg_replace('/\-\-A\-\-fullname\-\-B\-\-/i', "$RGfullname",$script_text);
+	$script_text = preg_replace('/\-\-A\-\-agent_email\-\-B\-\-/i', "$RGagent_email",$script_text);
 	$script_text = preg_replace('/\-\-A\-\-fronter\-\-B\-\-/i', "$RGuser",$script_text);
 	$script_text = preg_replace('/\-\-A\-\-user\-\-B\-\-/i', "$RGuser",$script_text);
 	$script_text = preg_replace('/\-\-A\-\-lead_id\-\-B\-\-/i', "$RGlead_id",$script_text);
@@ -6637,6 +6641,7 @@ if ($ADD==1111111)
 		echo "<option>user_group</option>";
 		echo "<option>called_count</option>";
 		echo "<option>TABLEper_call_notes</option>";
+		echo "<option>agent_email</option>";
 		echo "</select>";
 		echo "<input type=\"button\" name=\"insertField\" value=\""._QXZ("Insert")."\" onClick=\"scriptInsertField();\"><BR>";
 		# END Insert Field
@@ -27041,6 +27046,7 @@ if ($ADD==3111111)
 		echo "<option>user_group</option>";
 		echo "<option>called_count</option>";
 		echo "<option>TABLEper_call_notes</option>";
+		echo "<option>agent_email</option>";
 		echo "</select>";
 		echo "<input type=\"button\" name=\"insertField\" value=\""._QXZ("Insert")."\" onClick=\"scriptInsertField();\"><BR>";
 		# END Insert Field
