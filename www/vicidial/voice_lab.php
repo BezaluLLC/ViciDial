@@ -172,7 +172,7 @@ if ($NEW_VOICE_LAB > 0)
 	{
 	if ( (strlen($server_ip) > 6) && (strlen($session_id) > 6) && (strlen($campaign_id) > 2) )
 		{
-		echo "<br><br><br>"._QXZ("TO START YOUR VOICE LAB, DIAL 9$session_id ON YOUR PHONE NOW")."<br>\n";
+		echo "<br><br><br>"._QXZ("TO START YOUR VOICE LAB, DIAL 9%1s ON YOUR PHONE NOW",0,'',$session_id)."<br>\n";
 
 		echo "<br>"._QXZ("or, you can enter an extension that you want played below")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=PLAY_MESSAGE value=2>\n";

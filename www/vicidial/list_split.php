@@ -244,7 +244,7 @@ if ($submit == "submit" )
 	$num_lists = ceil( $orig_count / $num_leads );
 
 
-	echo "<p>"._QXZ("You are about to split list")." $orig_list "._QXZ("into")." $num_lists "._QXZ("new lists with $num_leads leads in each of the new lists. The new lists will start with list id")." $start_dest_list_id.</p>\n";
+	echo "<p>"._QXZ("You are about to split list %1s into %2s new lists with %3s leads in each of the new lists. The new lists will start with list id %4s.",0,'',$orig_list,$num_lists,$num_leads,$start_dest_list_id)."</p>\n";
 	echo "<center><form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=orig_list value='$orig_list'>\n";
 	echo "<input type=hidden name=num_leads value='$num_leads'>\n";

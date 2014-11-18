@@ -4127,7 +4127,7 @@ if ($ADD==190000000000)	{$hh='admin';	$sh='cts';	echo _QXZ("CONTACTS LIST");}
 if ($ADD==1000000000000)	{$hh='admin';	$sh='conference';	echo _QXZ("CONFERENCE LIST");}
 if ($ADD==10000000000000)	{$hh='admin';	$sh='conference';	echo _QXZ("AGENT CONFERENCE LIST");}
 if ($ADD==100000000000000)	{$hh='qc';		echo _QXZ("Quality Control");}
-if ($ADD==881)          {$hh='qc';			echo _QXZ("Quality Control Campaign $campaign_id");}
+if ($ADD==881)          {$hh='qc';			echo _QXZ("Quality Control Campaign")," $campaign_id";}
 if ($ADD==550)			{$hh='users';		echo _QXZ("Search Form");}
 if ($ADD==551)			{$hh='users';		echo _QXZ("SEARCH PHONES");}
 if ($ADD==660)			{$hh='users';		echo _QXZ("Search Results");}
@@ -28651,10 +28651,10 @@ if ($ADD==311111111111)
 		echo "<center><b>\n";
 
 			$camp_lists = preg_replace('/.$/i','',$camp_lists);;
-		echo _QXZ("This server has")." $active_carriers "._QXZ("active carriers and $inactive_carriers inactive carriers")."<br><br>\n";
-		echo _QXZ("This server has")." $active_phones "._QXZ("active phones and $inactive_phones inactive phones")."<br><br>\n";
-		echo _QXZ("This server has")." $active_confs "._QXZ("active conferences")."<br><br>\n";
-		echo _QXZ("This server has")." $active_vdconfs "._QXZ("active vicidial conferences")."<br><br>\n";
+		echo _QXZ("This server has %1s active carriers and %2s inactive carriers",0,'',$active_carriers,$inactive_carriers)."<br><br>\n";
+		echo _QXZ("This server has %1s active phones and %2s inactive phones",0,'',$active_phones,$inactive_phones)."<br><br>\n";
+		echo _QXZ("This server has %1s active conferences",0,'',$active_confs)."<br><br>\n";
+		echo _QXZ("This server has %1s active vicidial conferences",0,'',$active_vdconfs)."<br><br>\n";
 		echo "</b></center>\n";
 		if ($LOGast_delete_phones > 0)
 			{

@@ -191,7 +191,7 @@ if ($stage == "one_user_group_change")
 	$stmt="UPDATE vicidial_users set user_group='" . mysqli_real_escape_string($link, $group) . "' where user_group='" . mysqli_real_escape_string($link, $old_group) . "' $LOGadmin_viewable_groupsSQL;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 
-	echo _QXZ("All User Group $old_group Users changed to the")." $group "._QXZ("User Group")."<BR>\n";
+	echo _QXZ("All User Group %1s Users changed to the %2s User Group",0,'',$old_group,$group)."<BR>\n";
 	
 	### LOG INSERTION Admin Log Table ###
 	$SQL_log = "$stmt|";

@@ -19,6 +19,7 @@
 # 130831-0919 - Changed to mysqli PHP functions
 # 140319-1924 - Added MathZDC function
 # 140918-1609 - Added admin QXZ print/echo function with length padding
+# 141118-0109 - Added options for up to 9 ordered variables within QXZ function output
 #
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
@@ -418,10 +419,23 @@ function MathZDC($dividend, $divisor, $quotient=0) {
 	}
 }
 
-# function to print/echo content, options for length included
-function _QXZ($English_text, $sprintf=0, $align="l") 
+# function to print/echo content, options for length, alignment and ordered internal variables are included
+function _QXZ($English_text, $sprintf=0, $align="l", $v_one='', $v_two='', $v_three='', $v_four='', $v_five='', $v_six='', $v_seven='', $v_eight='', $v_nine='')
 	{
-#	$English_text = str_repeat('*', strlen($English_text));
+	if (preg_match("/%\ds/",$English_text))
+		{
+		$English_text = preg_replace("/%1s/", $v_one, $English_text);
+		$English_text = preg_replace("/%2s/", $v_two, $English_text);
+		$English_text = preg_replace("/%3s/", $v_three, $English_text);
+		$English_text = preg_replace("/%4s/", $v_four, $English_text);
+		$English_text = preg_replace("/%5s/", $v_five, $English_text);
+		$English_text = preg_replace("/%6s/", $v_six, $English_text);
+		$English_text = preg_replace("/%7s/", $v_seven, $English_text);
+		$English_text = preg_replace("/%8s/", $v_eight, $English_text);
+		$English_text = preg_replace("/%9s/", $v_nine, $English_text);
+		}
+	### uncomment to test output
+	#	$English_text = str_repeat('*', strlen($English_text));
 	if ($sprintf>0) 
 		{
 		if ($align=="r") 

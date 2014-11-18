@@ -887,10 +887,10 @@ else
 
 if ($DID!='Y')
 	{
-	$MAIN.="TMR1 "._QXZ("(Answered within $Sanswer_sec_pct_rt_stat_one seconds/Answered):",75)." $PCTanswer_sec_pct_rt_stat_one%\n";
-	$MAIN.="TMR2 "._QXZ("(Answered within $Sanswer_sec_pct_rt_stat_two seconds/Answered):",75)." $PCTanswer_sec_pct_rt_stat_two%\n";
-	$CSV_text1.="\"TMR1 "._QXZ("(Answered within $Sanswer_sec_pct_rt_stat_one seconds/Answered)").":\",\"$PCTanswer_sec_pct_rt_stat_one%\"\n";
-	$CSV_text1.="\"TMR2 "._QXZ("(Answered within $Sanswer_sec_pct_rt_stat_two seconds/Answered)").":\",\"$PCTanswer_sec_pct_rt_stat_two%\"\n";
+	$MAIN.="TMR1 "._QXZ("(Answered within %1s seconds/Answered):",50,'',$Sanswer_sec_pct_rt_stat_one)." $PCTanswer_sec_pct_rt_stat_one%\n";
+	$MAIN.="TMR2 "._QXZ("(Answered within %1s seconds/Answered):",50,'',$Sanswer_sec_pct_rt_stat_two)." $PCTanswer_sec_pct_rt_stat_two%\n";
+	$CSV_text1.="\"TMR1 "._QXZ("(Answered within %1s seconds/Answered)",0,'',$Sanswer_sec_pct_rt_stat_one).":\",\"$PCTanswer_sec_pct_rt_stat_one%\"\n";
+	$CSV_text1.="\"TMR2 "._QXZ("(Answered within %1s seconds/Answered)",0,'',$Sanswer_sec_pct_rt_stat_two).":\",\"$PCTanswer_sec_pct_rt_stat_two%\"\n";
 	}
 
 
