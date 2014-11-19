@@ -25588,7 +25588,7 @@ if ($ADD==3311)
 		echo "<option SELECTED>$filter_server_ip</option>\n";
 		echo "</select>$NWB#inbound_dids-server_ip$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right><a href=\"$PHP_SELF?ADD=3511&menu_id=$menu_id\">"._QXZ("Filter Call Menu").":</a> </td><td align=left><select size=1 name=filter_menu_id>$menu_list<option SELECTED>$filter_menu_id</option></select>$NWB#inbound_dids-menu_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right><a href=\"$PHP_SELF?ADD=3511&menu_id=$filter_menu_id\">"._QXZ("Filter Call Menu").":</a> </td><td align=left><select size=1 name=filter_menu_id>$menu_list<option SELECTED>$filter_menu_id</option></select>$NWB#inbound_dids-menu_id$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Filter User Agent").": </td><td align=left><input type=text name=filter_user size=20 maxlength=20 value=\"$filter_user\">$NWB#inbound_dids-user$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Filter User Unavailable Action").": </td><td align=left><select size=1 name=filter_user_unavailable_action><option value='EXTEN'>"._QXZ("EXTEN")."</option><option value='VOICEMAIL'>"._QXZ("VOICEMAIL")."</option><option value='VMAIL_NO_INST'>"._QXZ("VMAIL_NO_INST")."</option><option value='PHONE'>"._QXZ("PHONE")."</option><option value='IN_GROUP'>"._QXZ("IN_GROUP")."</option><option SELECTED>$filter_user_unavailable_action</option></select>$NWB#inbound_dids-user_unavailable_action$NWE</td></tr>\n";
