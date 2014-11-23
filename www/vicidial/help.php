@@ -24,6 +24,7 @@
 # 140705-0928 - Added custom list fields help section
 # 140706-0935 - Added callback_time_24hour
 # 140902-0815 - Added callback_active_limit and callback_active_limit_override
+# 141123-1019 - Added help for new campaign comments options
 #
 
 
@@ -1216,6 +1217,26 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="campaigns-per_call_notes">
 <BR>
 <B>Call Notes Per Call -</B> Setting this option to ENABLED will allow agents to enter in notes for every call they handle in the agent interface. The notes entry field will appear below the Comments field in the agent interface. Also, if the Agent User Group is allowed to view Call Logs then the agent will be able to view past call notes for a lead at any time. Default is DISABLED.
+
+<BR>
+<A NAME="campaigns-comments_all_tabs">
+<BR>
+<B>Comments All Tabs -</B> Setting this option to ENABLED will display the Comments field on all tabs in the main agent screen. Default is DISABLED.
+
+<BR>
+<A NAME="campaigns-comments_dispo_screen">
+<BR>
+<B>Comments Dispo Screen -</B> Setting this option to ENABLED will display the Comments field at the top of the agent disposition screen. If the REPLACE_CALL_NOTES option is selected, then the Comments field will replace the Call Notes field on the disposition screen if Per Call Notes is enabled. Default is DISABLED.
+
+<BR>
+<A NAME="campaigns-comments_callback_screen">
+<BR>
+<B>Comments Callback Screen -</B> --THIS FEATURE IS CURRENTLY NON-FUNCTIONAL-- Setting this option to ENABLED will display the Comments field at the top of the callback scheduling screen. If the REPLACE_CB_NOTES option is selected, then the Comments field will replace the Callback Notes field on the callback scheduling screen. Default is DISABLED.
+
+<BR>
+<A NAME="campaigns-qc_comment_history">
+<BR>
+<B>QC Comments History -</B> Setting this option to AUTO_OPEN will automatically open the QC comments history panel in the agent interface when a call goes to the agent screen that has QC comments. The MINIMIZE options will allow the QC Comment History panel to collapse to the bottom of the screen when you click to hide it instead of it disappearing completely. Default is CLICK.
 
 <BR>
 <A NAME="campaigns-hide_call_log_info">

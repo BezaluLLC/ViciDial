@@ -91,6 +91,11 @@ OTHER CHANGES:
 
 14. Added Admin Utility to split lead lists into smaller lists
 
+15. Added campaign options to minimize QC audited comments without closing the 
+	frame, allow for the comments field to appear under all agent screen 
+	tabs and the dispo screen, allow for the audited comments to be 
+	displayed with managers in red and with a date/time stamp.
+
 
 
 

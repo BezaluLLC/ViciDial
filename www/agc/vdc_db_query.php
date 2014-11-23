@@ -363,10 +363,11 @@
 # 141024-0851 - Fixed issues with filtering of manual dial calls from call log or callbacks
 # 141111-0658 - Removed several AJAX text outputs from QXZ output
 # 141118-1231 - Formatting changes for QXZ output
+# 141123-0933 - Added dispo_comments option input
 #
 
-$version = '2.10-259';
-$build = '141118-1231';
+$version = '2.10-260';
+$build = '141123-0933';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=597;
 $one_mysql_log=0;
@@ -603,6 +604,8 @@ if (isset($_GET["orig_pass"]))			{$orig_pass=$_GET["orig_pass"];}
 	elseif (isset($_POST["orig_pass"]))	{$orig_pass=$_POST["orig_pass"];}
 if (isset($_GET["cid_lock"]))			{$cid_lock=$_GET["cid_lock"];}
 	elseif (isset($_POST["cid_lock"]))	{$cid_lock=$_POST["cid_lock"];}
+if (isset($_GET["dispo_comments"]))				{$dispo_comments=$_GET["dispo_comments"];}
+	elseif (isset($_POST["dispo_comments"]))	{$dispo_comments=$_POST["dispo_comments"];}
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
 
@@ -8664,7 +8667,10 @@ if ($ACTION == 'updateDISPO')
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00285',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
-		$stmt="UPDATE vicidial_list set status='$dispo_choice', user='$user' where lead_id='$lead_id';";
+		$commentsSQL='';
+		if (strlen($dispo_comments)>0)
+			{$commentsSQL = ",comments='$dispo_comments'";}
+		$stmt="UPDATE vicidial_list set status='$dispo_choice', user='$user' $commentsSQL where lead_id='$lead_id';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00142',$user,$server_ip,$session_name,$one_mysql_log);}

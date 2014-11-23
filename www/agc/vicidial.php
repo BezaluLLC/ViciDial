@@ -449,10 +449,11 @@
 # 141116-1805 - Fixed issue #801
 # 141118-1229 - Formatting changes for QXZ output
 # 141118-1439 - Added agent_email as webform and script variable
+# 141121-1005 - Added new QC and comments campaign options
 #
 
-$version = '2.10-420c';
-$build = '141118-1439';
+$version = '2.10-421c';
+$build = '141121-1005';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=80;
 $one_mysql_log=0;
@@ -1468,7 +1469,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit,in_group_dial,in_group_dial_select,pause_after_next_call,owner_populate,manual_dial_lead_id,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,max_inbound_calls,manual_dial_search_checkbox,hide_call_log_info,timer_alt_seconds,wrapup_bypass,wrapup_after_hotkey,callback_active_limit,callback_active_limit_override FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit,in_group_dial,in_group_dial_select,pause_after_next_call,owner_populate,manual_dial_lead_id,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,max_inbound_calls,manual_dial_search_checkbox,hide_call_log_info,timer_alt_seconds,wrapup_bypass,wrapup_after_hotkey,callback_active_limit,callback_active_limit_override,comments_all_tabs,comments_dispo_screen,comments_callback_screen,qc_comment_history FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1592,6 +1593,11 @@ else
 				$wrapup_after_hotkey =		$row[116];
 				$callback_active_limit =	$row[117];
 				$callback_active_limit_override = $row[118];
+				$comments_all_tabs =		$row[119];
+				$comments_dispo_screen =	$row[120];
+				$comments_callback_screen =	$row[121];
+				$qc_comment_history =		$row[122];
+
 
 				if ( ($callback_active_limit_override == 'Y') and ($callback_active_limit > 0) )
 					{
@@ -2738,7 +2744,7 @@ else
 			if ($on_hook_agent == 'Y')
 				{$TEMP_SIP_user_DiaL = 'Local/8300@default';}
 			### insert a NEW record to the vicidial_manager table to be processed
-			$agent_login_data="||$NOW_TIME|NEW|N|$server_ip||Originate|$SIqueryCID|Channel: $TEMP_SIP_user_DiaL|Context: $ext_context|Exten: $session_id|Priority: 1|Callerid: $SIqueryCID|||||";
+			$agent_login_data="||$NOW_TIME|NEW|N|$server_ip||Originate|$SIqueryCID|Channel: $TEMP_SIP_user_DiaL|Context: $ext_context|Exten: $session_id|Priority: 1|Callerid: \"$SIqueryCID\" <$campaign_cid>|||||";
 			$agent_login_stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$SIqueryCID','Channel: $TEMP_SIP_user_DiaL','Context: $ext_context','Exten: $session_id','Priority: 1','Callerid: \"$SIqueryCID\" <$campaign_cid>','','','','','');";
 			if ( ($is_webphone != 'Y') and ($is_webphone != 'Y_API_LAUNCH') )
 				{
@@ -3212,6 +3218,7 @@ $BPheight =  ($MASTERheight - 250);	# 50 - bottom buffer, Agent Xfer Span
 $SCheight =	 49;	# 49 - seconds on call display
 $SFheight =	 65;	# 65 - height of the script and form contents
 $SRheight =	 69;	# 69 - height of the script and form refrech links
+$CHheight =  ($JS_browser_height - 50);
 if ($webphone_location == 'bar') 
 	{
 	$SCheight = ($SCheight + $webphone_height);
@@ -3931,6 +3938,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var HKFSCREENup=0;
 	var dial_next_failed=0;
 	var xfer_agent_selected=0;
+	var comments_all_tabs='<?php echo $comments_all_tabs ?>';
+	var comments_dispo_screen='<?php echo $comments_dispo_screen ?>';
+	var comments_callback_screen='<?php echo $comments_callback_screen ?>';
+	var qc_comment_history='<?php echo $qc_comment_history ?>';
+	var OtherTab='0';
     var DiaLControl_auto_HTML = "<img src=\"./images/<?php echo _QXZ("vdc_LB_pause_OFF.gif") ?>\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_resume.gif") ?>\" border=\"0\" alt=\"Resume\" /></a>";
     var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_pause.gif") ?>\" border=\"0\" alt=\" Pause \" /></a><img src=\"./images/<?php echo _QXZ("vdc_LB_resume_OFF.gif") ?>\" border=\"0\" alt=\"Resume\" />";
     var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_pause_OFF.gif") ?>\" border=\"0\" alt=\" Pause \" /><img src=\"./images/<?php echo _QXZ("vdc_LB_resume_OFF.gif") ?>\" border=\"0\" alt=\"Resume\" />";
@@ -6657,11 +6669,19 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								//Added By Poundteam for Audited Comments (Manual Dial Section Only)
 								if (qc_enabled > 0)
 									{
-									document.vicidial_form.ViewCommentButton.value                                  = change_array[53];
-									document.vicidial_form.audit_comments_button.value                              = change_array[53];
+									document.vicidial_form.ViewCommentButton.value                      = change_array[53];
+									document.vicidial_form.audit_comments_button.value                  = change_array[53];
+									if (comments_all_tabs == 'ENABLED')
+										{document.vicidial_form.OtherViewCommentButton.value            = change_array[53];}
 									var REGACcomments = new RegExp("!N","g");
+									var REGACfontbegin = new RegExp("--------ADMINFONTBEGIN--------","g");
+									var REGACfontend = new RegExp("--------ADMINFONTEND--------","g");
 									change_array[54] = change_array[54].replace(REGACcomments, "\n");
-									document.vicidial_form.audit_comments.value                                     = change_array[54];
+									change_array[54] = change_array[54].replace(REGACfontbegin, "<font color=red>");
+									change_array[54] = change_array[54].replace(REGACfontend, "</font>");
+									document.getElementById("audit_comments").innerHTML                  = change_array[54];
+									if ( ( (qc_comment_history=='AUTO_OPEN') || (qc_comment_history=='AUTO_OPEN_ALLOW_MINIMIZE') ) && (change_array[53]!='0') && (change_array[53]!='') )
+										{ViewComments('ON');}
 									}
 								//END section Added By Poundteam for Audited Comments
 								// Add here for AutoDial (VDADcheckINCOMING in vdc_db_query)
@@ -7449,7 +7469,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							{
 							var REGcommentsNL = new RegExp("!N","g");
 							UDfieldsResponse_array[23] = UDfieldsResponse_array[23].replace(REGcommentsNL, "\n");
-							document.vicidial_form.comments.value			= UDfieldsResponse_array[23];
+							if ( (OtherTab == '1') && (comments_all_tabs == 'ENABLED') )
+								{document.vicidial_form.other_tab_comments.value = UDfieldsResponse_array[23];}
+							else
+								{document.vicidial_form.comments.value			= UDfieldsResponse_array[23];}
 							}
 						var regUDrank = new RegExp("rank,","ig");
 						if (fields_list.match(regUDrank))
@@ -7756,9 +7779,17 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									{
 									document.vicidial_form.ViewCommentButton.value		= MDnextResponse_array[51];
 									document.vicidial_form.audit_comments_button.value	= MDnextResponse_array[51];
+									if (comments_all_tabs == 'ENABLED')
+										{document.vicidial_form.OtherViewCommentButton.value = MDnextResponse_array[51];}
 									var REGACcomments 			= new RegExp("!N","g");
+									var REGACfontbegin = new RegExp("--------ADMINFONTBEGIN--------","g");
+									var REGACfontend = new RegExp("--------ADMINFONTEND--------","g");
 									MDnextResponse_array[52] 	= MDnextResponse_array[52].replace(REGACcomments, "\n");
-									document.vicidial_form.audit_comments.value			= MDnextResponse_array[52];
+									MDnextResponse_array[52] 	= MDnextResponse_array[52].replace(REGACfontbegin, "<font color=red>");
+									MDnextResponse_array[52] 	= MDnextResponse_array[52].replace(REGACfontend, "</font>");
+									document.getElementById("audit_comments").innerHTML = MDnextResponse_array[52];
+									if ( ( (qc_comment_history=='AUTO_OPEN') || (qc_comment_history=='AUTO_OPEN_ALLOW_MINIMIZE') ) && (MDnextResponse_array[51]!='0') && (MDnextResponse_array[51]!='') )
+										{ViewComments('ON');}
 									}
 							//END section Added By Poundteam for Audited Comments
 
@@ -8038,11 +8069,14 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							document.vicidial_form.email.value			='';
 							document.vicidial_form.security_phrase.value='';
 							document.vicidial_form.comments.value		='';
-							document.vicidial_form.audit_comments.value		='';
+							document.vicidial_form.other_tab_comments.value		='';
+							document.getElementById("audit_comments").innerHTML		='';
 							if (qc_enabled > 0)
 								{
 								document.vicidial_form.ViewCommentButton.value		='';
 								document.vicidial_form.audit_comments_button.value	='';
+								if (comments_all_tabs == 'ENABLED')
+									{document.vicidial_form.OtherViewCommentButton.value ='';}
 								}
 							document.vicidial_form.called_count.value	='';
 							document.vicidial_form.rank.value			='';
@@ -8083,6 +8117,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				dial_next_failed=0;
 				xfer_agent_selected=0;
 				RefresHScript('CLEAR');
+				ViewComments('OFF','OFF');
 			//	document.getElementById('vcFormIFrame').src='./vdc_form_display.php?lead_id=&list_id=&stage=WELCOME';
 				}
 			}
@@ -8785,11 +8820,19 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							//Added By Poundteam for Audited Comments (Manual Dial Section Only)
 							if (qc_enabled > 0)
 								{
-								document.vicidial_form.ViewCommentButton.value                                  = check_VDIC_array[53];
-								document.vicidial_form.audit_comments_button.value                              = check_VDIC_array[53];
+								document.vicidial_form.ViewCommentButton.value               = check_VDIC_array[53];
+								document.vicidial_form.audit_comments_button.value           = check_VDIC_array[53];
+								if (comments_all_tabs == 'ENABLED')
+									{document.vicidial_form.OtherViewCommentButton.value	 = check_VDIC_array[53];}
 								var REGACcomments = new RegExp("!N","g");
+								var REGACfontbegin = new RegExp("--------ADMINFONTBEGIN--------","g");
+								var REGACfontend = new RegExp("--------ADMINFONTEND--------","g");
 								check_VDIC_array[54] = check_VDIC_array[54].replace(REGACcomments, "\n");
-								document.vicidial_form.audit_comments.value                                     = check_VDIC_array[54];
+								check_VDIC_array[54] = check_VDIC_array[54].replace(REGACfontbegin, "<font color=red>");
+								check_VDIC_array[54] = check_VDIC_array[54].replace(REGACfontend, "</font>");
+								document.getElementById("audit_comments").innerHTML          = check_VDIC_array[54];
+								if ( ( (qc_comment_history=='AUTO_OPEN') || (qc_comment_history=='AUTO_OPEN_ALLOW_MINIMIZE') ) && (check_VDIC_array[53]!='0') && (check_VDIC_array[53]!='') )
+									{ViewComments('ON');}
 								}
 							//END section Added By Poundteam for Audited Comments
 							// Add here for AutoDial (VDADcheckINCOMING in vdc_db_query)
@@ -10209,6 +10252,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 // Update vicidial_list lead record with all altered values from form
 	function CustomerData_update()
 		{
+		if ( (OtherTab == '1') && (comments_all_tabs == 'ENABLED') )
+			{
+			var test_otcx = document.vicidial_form.other_tab_comments.value;
+			if (test_otcx.length > 0)
+				{document.vicidial_form.comments.value = document.vicidial_form.other_tab_comments.value}
+			}
 		var REGcommentsAMP = new RegExp('&',"g");
 		var REGcommentsQUES = new RegExp("\\?","g");
 		var REGcommentsPOUND = new RegExp("\\#","g");
@@ -10300,7 +10349,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				{
 				document.getElementById("DispoManualQueueMessage").innerHTML = "<br /><b><font color=\"red\" size=\"3\"><?php echo _QXZ("Manual Dial Queue Calls Waiting:"); ?> " + APIManualDialQueue + "</font></b><br />";
 				}
-			if (per_call_notes == 'ENABLED')
+			if ( (per_call_notes == 'ENABLED') && (comments_dispo_screen != 'REPLACE_CALL_NOTES') )
 				{
 				var test_notes = document.vicidial_form.call_notes_dispo.value;
 				if (test_notes.length > 0)
@@ -10309,7 +10358,26 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				}
 			else
 				{
-				document.getElementById("PerCallNotesContent").innerHTML = "<input type=\"hidden\" name=\"call_notes_dispo\" id=\"call_notes_dispo\" value=\"\" />";
+				var test_notes = document.vicidial_form.call_notes_dispo.value;
+				if (test_notes.length > 0)
+					{document.vicidial_form.call_notes.value = document.vicidial_form.call_notes_dispo.value}
+				document.getElementById("PerCallNotesContent").innerHTML = "<input type=\"hidden\" name=\"call_notes_dispo\" id=\"call_notes_dispo\" value=\"" + document.vicidial_form.call_notes.value + "\" />";
+				}
+
+			if ( (comments_dispo_screen == 'ENABLED') || (comments_dispo_screen == 'REPLACE_CALL_NOTES') )
+				{
+				var test_commmentsD = document.vicidial_form.dispo_comments.value;
+				if (test_commmentsD.length > 0)
+					{document.vicidial_form.comments.value = document.vicidial_form.dispo_comments.value;}
+
+				var dispo_comment_output = "<table cellspacing=4 cellpadding=0><tr><td align=\"right\"><font class=\"body_text\"><?php echo $label_comments ?>: <br><span id='dispoviewcommentsdisplay'><input type='button' id='DispoViewCommentButton' onClick=\"ViewComments('ON','','dispo')\" value='-<?php _QXZ("History"); ?>-'/></span></font></td><td align=\"left\"><font class=\"body_text\">";
+				dispo_comment_output = dispo_comment_output + "<textarea name=\"dispo_comments\" id=\"dispo_comments\" rows=\"2\" cols=\"100\" class=\"cust_form_text\" value=\"\">" + document.vicidial_form.comments.value + "</textarea>\n";
+				dispo_comment_output = dispo_comment_output + "</td></tr></table>\n";
+				document.getElementById("DispoCommentsContent").innerHTML = dispo_comment_output;
+				}
+			else
+				{
+				document.getElementById("DispoCommentsContent").innerHTML = "<input type=\"hidden\" name=\"dispo_comments\" id=\"dispo_comments\" value=\"\" />";
 				}
 
 			HidEGenDerPulldown();
@@ -10745,7 +10813,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					}
 				if (xmlhttp) 
 					{ 
-					DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&orig_pass=" + orig_pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&CallBackLeadStatus=" + CallBackLeadStatus + "&comments=" + encodeURIComponent(CallBackCommenTs) + "&custom_field_names=" + custom_field_names + "&call_notes=" + encodeURIComponent(document.vicidial_form.call_notes_dispo.value) + "&qm_dispo_code=" + DispoQMcsCODE + "&email_enabled=" + email_enabled + "&recording_id=" + VDDCU_recording_id + "&recording_filename=" + VDDCU_recording_filename + "&called_count=" + document.vicidial_form.called_count.value;
+					DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&orig_pass=" + orig_pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&CallBackLeadStatus=" + CallBackLeadStatus + "&comments=" + encodeURIComponent(CallBackCommenTs) + "&custom_field_names=" + custom_field_names + "&call_notes=" + encodeURIComponent(document.vicidial_form.call_notes_dispo.value) + "&dispo_comments=" + encodeURIComponent(document.vicidial_form.dispo_comments.value) + "&qm_dispo_code=" + DispoQMcsCODE + "&email_enabled=" + email_enabled + "&recording_id=" + VDDCU_recording_id + "&recording_filename=" + VDDCU_recording_filename + "&called_count=" + document.vicidial_form.called_count.value;
 					xmlhttp.open('POST', 'vdc_db_query.php');
 					xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 					xmlhttp.send(DSupdate_query); 
@@ -10802,15 +10870,19 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				document.vicidial_form.email.value			='';
 				document.vicidial_form.security_phrase.value='';
 				document.vicidial_form.comments.value		='';
-				document.vicidial_form.audit_comments.value		='';
+				document.vicidial_form.other_tab_comments.value		='';
+				document.getElementById("audit_comments").innerHTML		='';
 				if (qc_enabled > 0)
 					{
 					document.vicidial_form.ViewCommentButton.value		='';
 					document.vicidial_form.audit_comments_button.value	='';
+					if (comments_all_tabs == 'ENABLED')
+						{document.vicidial_form.OtherViewCommentButton.value ='';}
 					}
 				document.vicidial_form.called_count.value	='';
 				document.vicidial_form.call_notes.value		='';
 				document.vicidial_form.call_notes_dispo.value ='';
+				document.vicidial_form.dispo_comments.value ='';
 				VDCL_group_id = '';
 				fronter = '';
 				inOUT = 'OUT';
@@ -10935,6 +11007,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				CBcommentsBoxhide();
 				EAcommentsBoxhide();
 				ContactSearchReset();
+				ViewComments('OFF','OFF');
 
 				AgentDispoing = 0;
 
@@ -12136,6 +12209,12 @@ else
 	xtest=unescape(encoded);
 	encoded=utf8_decode(xtest);
 
+	if ( (OtherTab == '1') && (comments_all_tabs == 'ENABLED') )
+		{
+		var test_otcx = document.vicidial_form.other_tab_comments.value;
+		if (test_otcx.length > 0)
+			{document.vicidial_form.comments.value = document.vicidial_form.other_tab_comments.value}
+		}
 	if (urlschema == 'DEFAULT')
 		{
 		web_form_varsX = 
@@ -13031,6 +13110,8 @@ function phone_number_format(formatphone) {
 		hideDiv('AgentXferViewSpan');
 		hideDiv(AXlocation);
 		xfer_agent_selected=1;
+		if (AXuser=='0')
+			{xfer_agent_selected=0;}
 		document.vicidial_form.xfernumber.value = AXuser;
 		}
 
@@ -13954,6 +14035,7 @@ function phone_number_format(formatphone) {
 			hideDiv('post_phone_time_diff_span');
 			hideDiv('ivrParkControl');
 			hideDiv('InvalidOpenerSpan');
+			hideDiv('OtherTabCommentsSpan');
 			if (deactivated_old_session < 1)
 				{hideDiv('DeactivateDOlDSessioNSpan');}
 			if (is_webphone!='Y')
@@ -14131,6 +14213,7 @@ function phone_number_format(formatphone) {
 					document.getElementById("GENDERhideFORie").innerHTML = '';
 					document.getElementById("GENDERhideFORieALT").innerHTML = '<select size="1" name="gender_list" class="cust_form" id="gender_list"><option value="U"><?php echo _QXZ("U - Undefined"); ?></option><option value="M"><?php echo _QXZ("M - Male"); ?></option><option value="F"><?php echo _QXZ("F - Female"); ?></option></select>';
 					}
+				ViewComments('OFF','OFF');
 				showDiv('DispoSelectBox');
 				DispoSelectContent_create('','ReSET');
 				WaitingForNextStep=1;
@@ -14811,21 +14894,44 @@ function phone_number_format(formatphone) {
 			}
 		}
 
-	function ViewComments(VCommstate)
+	function ViewComments(VCommstate,VCforcehide,VCspanname)
 		{
 		if ( (VCommstate == 'ON') )
 			{
 			showDiv('ViewCommentsBox');
+			if ( (qc_comment_history == 'CLICK_ALLOW_MINIMIZE') || (qc_comment_history == 'AUTO_OPEN_ALLOW_MINIMIZE') )
+				{
+				document.getElementById("ViewCommentsBox").style.top = '350px';
+				document.getElementById("ViewCommentsShowHide").innerHTML = '<a href="#" onclick="ViewComments(\'OFF\');return false;"><?php echo _QXZ("hide comment history"); ?></a> - <a href="#" onclick="ViewComments(\'OFF\',\'OFF\');return false;"><?php echo _QXZ("close"); ?></a>';
+				}
 			//view_comments_active = 1;
-			document.getElementById("viewcommentsdisplay").innerHTML = "<input type=\"button\" id='ViewCommentButton' onClick=\"ViewComments('OFF')\" value='HIDE' />";
+			document.getElementById("viewcommentsdisplay").innerHTML = "<input type=\"button\" id='ViewCommentButton' onClick=\"ViewComments('OFF')\" value='<?php echo _QXZ("HIDE"); ?>' />";
+			if (comments_all_tabs == 'ENABLED')
+				{document.getElementById("otherviewcommentsdisplay").innerHTML = "<input type=\"button\" id='OtherViewCommentButton' onClick=\"ViewComments('OFF')\" value='<?php echo _QXZ("HIDE"); ?>' />";}
+			if (VCspanname == 'dispo') 
+				{document.getElementById("dispoviewcommentsdisplay").innerHTML = "<input type=\"button\" id='DispoViewCommentButton' onClick=\"ViewComments('OFF','','dispo')\" value='<?php echo _QXZ("HIDE"); ?>' />";}
 			}
 		else
 			{
-			hideDiv('ViewCommentsBox');
+			if ( (qc_comment_history == 'CLICK_ALLOW_MINIMIZE') || (qc_comment_history == 'AUTO_OPEN_ALLOW_MINIMIZE') )
+				{
+				document.getElementById("ViewCommentsBox").style.top = '<?php echo $CHheight ?>px';
+				document.getElementById("ViewCommentsShowHide").innerHTML = '<a href="#" onclick="ViewComments(\'ON\');return false;"><?php echo _QXZ("show comment history"); ?></a>';
+				if (VCforcehide == 'OFF')
+					{hideDiv('ViewCommentsBox');}
+				}
+			else
+				{hideDiv('ViewCommentsBox');}
 			//view_comments_active = 0;
 			document.getElementById("viewcommentsdisplay").innerHTML = "<input type=\"button\" id='ViewCommentButton' value='0' onClick=\"ViewComments('ON')\">";
-                        document.vicidial_form.ViewCommentButton.value = document.vicidial_form.audit_comments_button.value;
-
+            document.vicidial_form.ViewCommentButton.value = document.vicidial_form.audit_comments_button.value;
+			if (comments_all_tabs == 'ENABLED')
+				{
+				document.getElementById("otherviewcommentsdisplay").innerHTML = "<input type=\"button\" id='OtherViewCommentButton' value='0' onClick=\"ViewComments('ON')\">";
+	            document.vicidial_form.OtherViewCommentButton.value = document.vicidial_form.audit_comments_button.value;
+				}
+			if (VCspanname == 'dispo') 
+				{document.getElementById("dispoviewcommentsdisplay").innerHTML = "<input type=\"button\" id='DispoViewCommentButton' onClick=\"ViewComments('ON')\" value='0' />";}
 			}
 		}
 
@@ -14906,6 +15012,14 @@ function phone_number_format(formatphone) {
 		var CBMPheight = '<?php echo $CBheight ?>px';
 		document.getElementById("CallbacksButtons").style.top = CBMPheight;
 		document.getElementById("CallbacksButtons").style.left = '300px';
+		if ( (OtherTab == '1') && (comments_all_tabs == 'ENABLED') )
+			{
+			OtherTab='0';
+			var test_otcx = document.vicidial_form.other_tab_comments.value;
+			if (test_otcx.length > 0)
+				{document.vicidial_form.comments.value = document.vicidial_form.other_tab_comments.value}
+			hideDiv('OtherTabCommentsSpan');
+			}
 		hideDiv('ScriptPanel');
 		hideDiv('ScriptRefresH');
 		hideDiv('FormPanel');
@@ -14967,9 +15081,17 @@ function phone_number_format(formatphone) {
 		{
 		var CBSPheight = '<?php echo $QLheight ?>px';
 		document.getElementById("CallbacksButtons").style.top = CBSPheight;
-		document.getElementById("CallbacksButtons").style.left = '360px';
+		document.getElementById("CallbacksButtons").style.left = '340px';
 		showDiv('ScriptPanel');
 		showDiv('ScriptRefresH');
+		if ( (OtherTab == '0') && (comments_all_tabs == 'ENABLED') )
+			{
+			OtherTab='1';
+			var test_otc = document.vicidial_form.comments.value;
+			if (test_otc.length > 0)
+				{document.vicidial_form.other_tab_comments.value = document.vicidial_form.comments.value}
+			showDiv('OtherTabCommentsSpan');
+			}
 		hideDiv('FormPanel');
 		hideDiv('FormRefresH');
 		hideDiv('EmailPanel');
@@ -14986,9 +15108,17 @@ function phone_number_format(formatphone) {
 		{
 		var CBFPheight = '<?php echo $QLheight ?>px';
 		document.getElementById("CallbacksButtons").style.top = CBFPheight;
-		document.getElementById("CallbacksButtons").style.left = '360px';
+		document.getElementById("CallbacksButtons").style.left = '340px';
 		showDiv('FormPanel');
 		showDiv('FormRefresH');
+		if ( (OtherTab == '0') && (comments_all_tabs == 'ENABLED') )
+			{
+			OtherTab='1';
+			var test_otc = document.vicidial_form.comments.value;
+			if (test_otc.length > 0)
+				{document.vicidial_form.other_tab_comments.value = document.vicidial_form.comments.value}
+			showDiv('OtherTabCommentsSpan');
+			}
 		hideDiv('EmailPanel');
 		hideDiv('EmailRefresH');
 		document.getElementById("MainTable").style.backgroundColor="<?php echo $FORM_COLOR ?>";
@@ -15002,9 +15132,17 @@ function phone_number_format(formatphone) {
 		{
 		var CBFPheight = '<?php echo $QLheight ?>px';
 		document.getElementById("CallbacksButtons").style.top = CBFPheight;
-		document.getElementById("CallbacksButtons").style.left = '360px';
+		document.getElementById("CallbacksButtons").style.left = '340px';
 		showDiv('EmailPanel');
 		showDiv('EmailRefresH');
+		if ( (OtherTab == '0') && (comments_all_tabs == 'ENABLED') )
+			{
+			OtherTab='1';
+			var test_otc = document.vicidial_form.comments.value;
+			if (test_otc.length > 0)
+				{document.vicidial_form.other_tab_comments.value = document.vicidial_form.comments.value}
+			showDiv('OtherTabCommentsSpan');
+			}
 		document.getElementById("MainTable").style.backgroundColor="<?php echo $FORM_COLOR ?>";
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $FORM_COLOR ?>";
 		panel_bgcolor='<?php echo $FORM_COLOR ?>';
@@ -15371,7 +15509,13 @@ $zi=2;
 
 	if ($label_comments == '---HIDE---')
 		{
-        echo " </td><td align=\"left\" colspan=5><input type=\"hidden\" name=\"comments\" id=\"comments\" value=\"\" /><span id='viewcommentsdisplay'><input type='button' id='ViewCommentButton' onClick=\"ViewComments('ON')\" value='-"._QXZ("History")."-'/></span>\n";
+        echo " </td><td align=\"left\" colspan=5>";
+        echo "<input type=\"hidden\" name=\"comments\" id=\"comments\" value=\"\" />\n";
+        echo "<input type=\"hidden\" name=\"other_tab_comments\" id=\"other_tab_comments\" value=\"\" />\n";
+        echo "<input type=\"hidden\" name=\"dispo_comments\" id=\"dispo_comments\" value=\"\" />\n";
+        echo "<input type=\"hidden\" name=\"callback_comments\" id=\"callback_comments\" value=\"\" />\n";
+        echo "<span id='viewcommentsdisplay'><input type='button' id='ViewCommentButton' onClick=\"ViewComments('ON')\" value='-"._QXZ("History")."-'/></span>\n";
+        echo "<span id='otherviewcommentsdisplay'><input type='button' id='OtherViewCommentButton' onClick=\"ViewComments('ON')\" value='-"._QXZ("History")."-'/></span>\n";
 		}
 	else
 		{
@@ -15498,6 +15642,27 @@ if ($view_calls_in_queue > 0)
 <span style="position:absolute;left:300px;top:<?php echo $CBheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="CallbacksButtons"><font class="body_text">
 <span id="CBstatusSpan"><?php echo _QXZ("X ACTIVE CALLBACKS"); ?></span> <br />
 </font></span>
+
+<span style="position:absolute;left:500px;top:<?php echo $AMheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="OtherTabCommentsSpan">
+<?php 
+	if ( ($comments_all_tabs == 'ENABLED') and ($label_comments != '---HIDE---') )
+		{
+		$zi++;
+		echo "<table cellspacing=4 cellpadding=0><tr><td align=\"right\"><font class=\"body_text\">\n";
+		echo "$label_comments: <br><span id='otherviewcommentsdisplay'><input type='button' id='OtherViewCommentButton' onClick=\"ViewComments('ON')\" value='-"._QXZ("History")."-'/></span>
+		</font></td><td align=\"left\"><font class=\"body_text\">";
+		if ( ($multi_line_comments) )
+			{echo "<textarea name=\"other_tab_comments\" id=\"other_tab_comments\" rows=\"2\" cols=\"65\" class=\"cust_form_text\" value=\"\"></textarea>\n";}
+		else
+			{echo "<input type=\"text\" size=\"65\" name=\"other_tab_comments\" id=\"other_tab_comments\" maxlength=\"255\" class=\"cust_form\" value=\"\" />\n";}
+		echo "</td></tr></table>\n";
+		}
+	else
+		{
+        echo "<input type=\"hidden\" name=\"other_tab_comments\" id=\"other_tab_comments\" value=\"\" />\n";
+		}
+?>
+</span>
 
 <span style="position:absolute;left:<?php echo $SBwidth ?>px;top:<?php echo $AVTheight ?>px;height:500px;overflow:scroll;z-index:<?php $zi++; echo $zi ?>;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentViewSpan"><table cellpadding="0" cellspacing="0" border="0"><tr><td width="5px" rowspan="2">&nbsp;</td><td align="center"><font class="body_text">
 <?php echo _QXZ("Other Agents Status:"); ?> &nbsp; </font></td></tr><tr><td align="center"><span id="AgentViewStatus">&nbsp;</span></td></tr></table></span>
@@ -15724,38 +15889,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;width:<?php echo $JS_browser_width ?>px;height:<?php echo $JS_browser_height ?>px;overflow:scroll;z-index:<?php $zi++; echo $zi ?>;background-color:<?php echo $SIDEBAR_COLOR ?>;" id="AgentXferViewSpan"><center><font class="body_text">
-<?php echo _QXZ("Available Agents Transfer:"); ?> <span id="AgentXferViewSelect"></span></center></font></span>
-
-
-<?php //AUDIT COMMENTS ADDED BY POUNDTEAM // ?>
-<span style="position:absolute;left:5px;top:350px;z-index:<?php $zi++; echo $zi ?>;" id="ViewCommentsBox">
-    <TABLE border=0 bgcolor="#FFDD99" width=<?php echo $HCwidth; ?>px height='<?php echo $BROWSER_HEIGHT-380; ?>px'>
-	<TR bgcolor="#FFEEBB">
-            <TD><font class="sh_text"> <?php echo _QXZ("View Comment History:"); ?> </font></td>
-        </tr>
-        <tr>
-            <TD><TEXTAREA readonly NAME=audit_comments ROWS=<?php echo ($BROWSER_HEIGHT-365)/15; ?> COLS=<?php echo ($HCwidth)/4.6; ?> 
-class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form_text" id="audit_comments_button" name="audit_comments_button" value="0" /></TD>
-	</TR>
-    </TABLE>
-</span>
-<?php //end AUDIT COMMENTS ADDED BY POUNDTEAM // ?>
-<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="CBcommentsBox">
-    <table border="0" bgcolor="#FFFFCC" width="<?php echo $HCwidth ?>px" height="70px">
-    <tr bgcolor="#FFFF66">
-    <td align="left"><font class="sh_text"> <?php echo _QXZ("Previous Callback Information:"); ?> </font></td>
-    <td align="right"><font class="sk_text"> <a href="#" onclick="CBcommentsBoxhide();return false;"><?php echo _QXZ("close"); ?></a> </font></td>
-	</tr><tr>
-    <td><font class="sk_text">
-    <span id="CBcommentsBoxA"></span><br />
-    <span id="CBcommentsBoxB"></span><br />
-    <span id="CBcommentsBoxC"></span><br />
-    </font></td>
-    <td width="320px"><font class="sk_text">
-	<span id="CBcommentsBoxD"></span>
-    </font></td>
-    </tr></table>
-</span>
+<?php echo _QXZ("Available Agents Transfer:"); ?> <span id="AgentXferViewSelect"></span></font><br><a href="#" onclick="AgentsXferSelect('0','AgentXferViewSelect');return false;"><?php echo _QXZ("close"); ?></a></center></span>
 
 <span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="EAcommentsBox">
     <table border="0" bgcolor="#FFFFCC" width="<?php echo $HCwidth ?>px" height="70px">
@@ -15849,6 +15983,7 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 	<span id="Dispo3wayMessage"></span>
 	<span id="DispoManualQueueMessage"></span>
 	<span id="PerCallNotesContent"><input type="hidden" name="call_notes_dispo" id="call_notes_dispo" value="" /></span>
+	<span id="DispoCommentsContent"><input type="hidden" name="dispo_comments" id="dispo_comments" value="" /></span>
 	<span id="DispoSelectContent"> <?php echo _QXZ("End-of-call Disposition Selection"); ?> </span>
     <input type="hidden" name="DispoSelection" id="DispoSelection" /><br />
     <input type="checkbox" name="DispoSelectStop" id="DispoSelectStop" size="1" value="0" /> <?php echo _QXZ("PAUSE AGENT DIALING"); ?> <br />
@@ -15949,6 +16084,37 @@ class="cust_form_text" value=""></TEXTAREA><input type="hidden" class="cust_form
 	<span id="CallBackDateContent"><?php echo  "$CCAL_OUT" ?></span>
     <br /><br /> &nbsp;
     </td></tr></table>
+</span>
+
+<?php //AUDIT COMMENTS ADDED BY POUNDTEAM // ?>
+<span style="position:absolute;left:5px;top:350px;z-index:<?php $zi++; echo $zi ?>;" id="ViewCommentsBox">
+    <TABLE border=0 bgcolor="#FFDD99" width=<?php echo $HCwidth; ?>px height='<?php echo $BROWSER_HEIGHT-380; ?>px' cellpadding=3 cellspacing=4>
+	<TR bgcolor="#FFEEBB">
+       <TD valign=top height=20><font class="sh_text"> <?php echo _QXZ("View Comment History:"); ?> </font> &nbsp; <font class="sk_text"><span id="ViewCommentsShowHide"><a href="#" onclick="ViewComments('OFF');return false;"><?php echo _QXZ("hide comment history"); ?></a></span></font></td>
+    </TR>
+    <TR>
+       <TD bgcolor=white valign=top height=200><PRE><font size=1><span id="audit_comments"></span></font></PRE>
+	   <input type="hidden" class="cust_form_text" id="audit_comments_button" name="audit_comments_button" value="0" />
+	   </TD>
+	</TR>
+    </TABLE>
+</span>
+<?php //end AUDIT COMMENTS ADDED BY POUNDTEAM // ?>
+<span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="CBcommentsBox">
+    <table border="0" bgcolor="#FFFFCC" width="<?php echo $HCwidth ?>px" height="70px">
+    <tr bgcolor="#FFFF66">
+    <td align="left"><font class="sh_text"> <?php echo _QXZ("Previous Callback Information:"); ?> </font></td>
+    <td align="right"><font class="sk_text"> <a href="#" onclick="CBcommentsBoxhide();return false;"><?php echo _QXZ("close"); ?></a> </font></td>
+	</tr><tr>
+    <td><font class="sk_text">
+    <span id="CBcommentsBoxA"></span><br />
+    <span id="CBcommentsBoxB"></span><br />
+    <span id="CBcommentsBoxC"></span><br />
+    </font></td>
+    <td width="320px"><font class="sk_text">
+	<span id="CBcommentsBoxD"></span>
+    </font></td>
+    </tr></table>
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="CallBacKsLisTBox">

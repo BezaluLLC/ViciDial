@@ -61,3 +61,10 @@ index (avatar_id)
 ) ENGINE=MyISAM;
 
 UPDATE system_settings SET db_schema_version='1387',db_schema_update_date=NOW() where db_schema_version < 1387;
+
+ALTER TABLE vicidial_campaigns ADD comments_all_tabs ENUM('DISABLED','ENABLED') default 'DISABLED';
+ALTER TABLE vicidial_campaigns ADD comments_dispo_screen ENUM('DISABLED','ENABLED','REPLACE_CALL_NOTES') default 'DISABLED';
+ALTER TABLE vicidial_campaigns ADD comments_callback_screen ENUM('DISABLED','ENABLED','REPLACE_CB_NOTES') default 'DISABLED';
+ALTER TABLE vicidial_campaigns ADD qc_comment_history ENUM('CLICK','AUTO_OPEN','CLICK_ALLOW_MINIMIZE','AUTO_OPEN_ALLOW_MINIMIZE') default 'CLICK';
+
+UPDATE system_settings SET db_schema_version='1388',db_schema_update_date=NOW() where db_schema_version < 1388;
