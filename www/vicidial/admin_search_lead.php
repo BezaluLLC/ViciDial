@@ -38,6 +38,7 @@
 # 140808-1117 - Added more admin logging
 # 140817-0941 - Added archive_log variable to modify page link
 # 141001-2200 - Finalized adding QXZ translation to all admin files
+# 141124-1747 - Fixed issue #790
 #
 
 require("dbconnect_mysqli.php");
@@ -610,6 +611,14 @@ else
 				}
 			}
 
+		if ($db_source == 'S')
+			{
+			mysqli_close($link);
+			$use_slave_server=0;
+			$db_source = 'M';
+			require("dbconnect_mysqli.php");
+			}
+
 		### LOG INSERTION Admin Log Table ###
 		$SQL_log = "$stmtA|$stmtB|$stmtC|";
 		$SQL_log = preg_replace('/;/', '', $SQL_log);
@@ -848,6 +857,14 @@ else
 				}
 			}
 
+		if ($db_source == 'S')
+			{
+			mysqli_close($link);
+			$use_slave_server=0;
+			$db_source = 'M';
+			require("dbconnect_mysqli.php");
+			}
+
 		### LOG INSERTION Admin Log Table ###
 		$SQL_log = "$stmtA|$stmtB|$stmtC|";
 		$SQL_log = preg_replace('/;/', '', $SQL_log);
@@ -951,6 +968,15 @@ else
 			}
 		}
 
+    if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+      {
+      mysqli_close($link);
+      $use_slave_server=1;
+      $db_source = 'S';
+      require("dbconnect_mysqli.php");
+      echo "<!-- Using slave server $slave_db_server $db_source -->\n";
+      }
+
 	$stmt_alt='';
 	$results_to_printX=0;
 	if ( ($alt_phone_search=="Yes") and (strlen($phone) > 4) )
@@ -977,6 +1003,14 @@ else
 	if ($DB)
 		{
 		echo "\n\n$stmt\n\n";
+		}
+
+	if ($db_source == 'S')
+		{
+		mysqli_close($link);
+		$use_slave_server=0;
+		$db_source = 'M';
+		require("dbconnect_mysqli.php");
 		}
 
 	### LOG INSERTION Search Log Table ###
