@@ -93,8 +93,9 @@ OTHER CHANGES:
 
 15. Added campaign options to minimize QC audited comments without closing the 
 	frame, allow for the comments field to appear under all agent screen 
-	tabs and the dispo screen, allow for the audited comments to be 
-	displayed with managers in red and with a date/time stamp.
+	tabs and the dispo screen and the callback date select screen, allow
+	for the audited comments to be displayed with managers in red and with 
+	a date/time stamp.
 
 
 

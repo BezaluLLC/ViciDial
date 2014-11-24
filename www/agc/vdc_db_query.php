@@ -364,10 +364,11 @@
 # 141111-0658 - Removed several AJAX text outputs from QXZ output
 # 141118-1231 - Formatting changes for QXZ output
 # 141123-0933 - Added dispo_comments option input
+# 141124-1136 - Added cbcomment_comments option input
 #
 
-$version = '2.10-260';
-$build = '141123-0933';
+$version = '2.10-261';
+$build = '141124-1136';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=597;
 $one_mysql_log=0;
@@ -606,6 +607,8 @@ if (isset($_GET["cid_lock"]))			{$cid_lock=$_GET["cid_lock"];}
 	elseif (isset($_POST["cid_lock"]))	{$cid_lock=$_POST["cid_lock"];}
 if (isset($_GET["dispo_comments"]))				{$dispo_comments=$_GET["dispo_comments"];}
 	elseif (isset($_POST["dispo_comments"]))	{$dispo_comments=$_POST["dispo_comments"];}
+if (isset($_GET["cbcomment_comments"]))				{$cbcomment_comments=$_GET["cbcomment_comments"];}
+	elseif (isset($_POST["cbcomment_comments"]))	{$cbcomment_comments=$_POST["cbcomment_comments"];}
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
 
@@ -8633,7 +8636,7 @@ if ($ACTION == 'updateDISPO')
 		}
 	else
 		{
-		$stmt = "SELECT dispo_call_url,queuemetrics_callstatus_override from vicidial_campaigns vc,vicidial_live_agents vla where vla.campaign_id=vc.campaign_id and vla.user='$user';";
+		$stmt = "SELECT dispo_call_url,queuemetrics_callstatus_override,comments_dispo_screen,comments_callback_screen from vicidial_campaigns vc,vicidial_live_agents vla where vla.campaign_id=vc.campaign_id and vla.user='$user';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00284',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -8643,6 +8646,8 @@ if ($ACTION == 'updateDISPO')
 			$row=mysqli_fetch_row($rslt);
 			$dispo_call_url =						$row[0];
 			$queuemetrics_callstatus_override =		$row[1];
+			$comments_dispo_screen =				$row[2];
+			$comments_callback_screen =				$row[3];
 			}
 
 		### reset the API fields in vicidial_live_agents record
@@ -8668,8 +8673,10 @@ if ($ACTION == 'updateDISPO')
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00285',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
 		$commentsSQL='';
-		if (strlen($dispo_comments)>0)
+		if ( (strlen($dispo_comments)>0) and ( ($comments_dispo_screen == 'ENABLED') or ($comments_dispo_screen == 'REPLACE_CALL_NOTES') ) )
 			{$commentsSQL = ",comments='$dispo_comments'";}
+		if ( (strlen($cbcomment_comments)>0) and ( ($comments_callback_screen == 'ENABLED') or ($comments_callback_screen == 'REPLACE_CB_NOTES') ) )
+			{$commentsSQL = ",comments='$cbcomment_comments'";}
 		$stmt="UPDATE vicidial_list set status='$dispo_choice', user='$user' $commentsSQL where lead_id='$lead_id';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_to_mysqli($stmt, $link);

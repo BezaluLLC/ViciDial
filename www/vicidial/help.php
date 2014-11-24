@@ -1231,7 +1231,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="campaigns-comments_callback_screen">
 <BR>
-<B>Comments Callback Screen -</B> --THIS FEATURE IS CURRENTLY NON-FUNCTIONAL-- Setting this option to ENABLED will display the Comments field at the top of the callback scheduling screen. If the REPLACE_CB_NOTES option is selected, then the Comments field will replace the Callback Notes field on the callback scheduling screen. Default is DISABLED.
+<B>Comments Callback Screen -</B> Setting this option to ENABLED will display the Comments field at the top of the callback scheduling screen. If the REPLACE_CB_NOTES option is selected, then the Comments field will replace the Callback Notes field on the callback scheduling screen. Default is DISABLED.
 
 <BR>
 <A NAME="campaigns-qc_comment_history">
