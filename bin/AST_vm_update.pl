@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_vm_update.pl version 2.6
+# AST_vm_update.pl version 2.10
 #
 # DESCRIPTION:
 # uses the Asterisk Manager interface to update the count of voicemail messages 
@@ -12,7 +12,9 @@
 # more than this either change the cron when this script is run or change the 
 # wait interval below
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# NOTE: THIS SHOULD ONLY BE RUN ON THE DESIGNATED VOICEMAIL SERVER IN A CLUSTER!
+#
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 50823-1422 - Added database server variable definitions lookup
 # 50823-1452 - Added commandline arguments for debug at runtime
@@ -21,6 +23,7 @@
 # 90919-1739 - Added other voicemail checking from vicidial_voicemail table
 # 100625-1220 - Added waitfors after logout to fix broken pipe errors in asterisk <MikeC>
 # 130108-1713 - Changes for Asterisk 1.8 compatibility
+# 141124-1019 - Changed to only allow running on designated voicemail server, run for all mailboxes
 #
 
 # constants
@@ -110,7 +113,27 @@ use Net::Telnet ();
 	  
 $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
  or die "Couldn't connect to database: " . DBI->errstr;
- 
+
+### find out if this server is the active_voicemail_server, if not, exit.
+$stmtA = "SELECT count(*) from system_settings where active_voicemail_server='$server_ip';";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+if ($DB) {print "|$stmtA|\n";}
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+$rec_count=0;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$active_voicemail_server = $aryA[0];
+	}
+$sthA->finish(); 
+
+if ($active_voicemail_server < 1)
+	{
+	if ($DB) {print "This is not the active voicemail server, exiting: |$server_ip|$active_voicemail_server|\n";}
+	exit;
+	}
+
 ### Grab Server values from the database
 $stmtA = "SELECT telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,max_vicidial_trunks,answer_transfer_agent,local_gmt,ext_context,asterisk_version FROM servers where server_ip = '$server_ip';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -147,8 +170,8 @@ if ($sthArows > 0)
 	}
 $sthA->finish(); 
 
-@PTextensions=@MT; @PTvoicemail_ids=@MT; @PTmessages=@MT; @PTold_messages=@MT; @NEW_messages=@MT; @OLD_messages=@MT;
-$stmtA = "SELECT extension,voicemail_id,messages,old_messages from phones where server_ip='$server_ip'";
+@PTvoicemail_ids=@MT;
+$stmtA = "SELECT distinct voicemail_id from phones;";
 if ($DB) {print "|$stmtA|\n";}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -157,14 +180,10 @@ $rec_count=0;
 while ($sthArows > $rec_count)
     {
 	@aryA = $sthA->fetchrow_array;
-	$PTextensions[$rec_count] =		 "$aryA[0]";
-	$PTvoicemail_ids[$rec_count] =	 "$aryA[1]";
-	$PTmessages[$rec_count] =		 "$aryA[2]";
-	$PTold_messages[$rec_count] =	 "$aryA[3]";
+	$PTvoicemail_ids[$rec_count] =	 $aryA[0];
 	$rec_count++;
     }
 $sthA->finish(); 
-
 
 ### connect to asterisk manager through telnet
 $t = new Net::Telnet (Port => 5038,
@@ -180,7 +199,7 @@ $t->print("Action: Login\nUsername: $telnet_login\nSecret: $ASTmgrSECRET\n\n");
 $t->waitfor('/Authentication accepted/');		# waitfor auth accepted
 
 $i=0;
-foreach(@PTextensions)
+foreach(@PTvoicemail_ids)
 	{
 	@list_channels=@MT;
 	$t->buffer_empty;
@@ -224,16 +243,39 @@ foreach(@PTextensions)
 			}
 		}
 
-	if($DB){print "MailboxCount- $PTvoicemail_ids[$i]    NEW:|$NEW_messages[$i]|  OLD:|$OLD_messages[$i]|    ";}
-	if ( ($NEW_messages[$i] eq $PTmessages[$i]) && ($OLD_messages[$i] eq $PTold_messages[$i]) )
+	@PTextensions=@MT;   @PTmessages=@MT;   @PTold_messages=@MT;   @PTserver_ips=@MT;
+	$stmtA = "SELECT extension,messages,old_messages,server_ip from phones where voicemail_id='$PTvoicemail_ids[$i]';";
+	if ($DB) {print "|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	$rec_countX=0;
+	while ($sthArows > $rec_countX)
 		{
-		if($DB){print "MESSAGE COUNT UNCHANGED, DOING NOTHING FOR THIS MAILBOX\n";}
+		@aryA = $sthA->fetchrow_array;
+		$PTextensions[$rec_countX] =	$aryA[0];
+		$PTmessages[$rec_countX] =		$aryA[1];
+		$PTold_messages[$rec_countX] =	$aryA[2];
+		$PTserver_ips[$rec_countX] =	$aryA[3];
+		$rec_countX++;
 		}
-	else
+	$sthA->finish(); 
+
+	$rec_countX=0;
+	while ($sthArows > $rec_countX)
 		{
-		$stmtA = "UPDATE phones set messages='$NEW_messages[$i]', old_messages='$OLD_messages[$i]' where server_ip='$server_ip' and extension='$PTextensions[$i]'";
-			if($DB){print STDERR "\n|$stmtA|\n";}
-		$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
+		if($DB){print "MailboxCount- $PTvoicemail_ids[$i]    NEW:|$NEW_messages[$i]|  OLD:|$OLD_messages[$i]|    ";}
+		if ( ($NEW_messages[$i] eq $PTmessages[$rec_countX]) && ($OLD_messages[$i] eq $PTold_messages[$rec_countX]) )
+			{
+			if($DB){print "MESSAGE COUNT UNCHANGED, DOING NOTHING FOR THIS MAILBOX: |$PTserver_ips[$rec_countX]|$PTextensions[$rec_countX]|\n";}
+			}
+		else
+			{
+			$stmtA = "UPDATE phones set messages='$NEW_messages[$i]', old_messages='$OLD_messages[$i]' where server_ip='$PTserver_ips[$rec_countX]' and extension='$PTextensions[$rec_countX]'";
+				if($DB){print STDERR "\n|$stmtA|\n";}
+			$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
+			}
+		$rec_countX++;
 		}
 
 	$i++;
@@ -327,7 +369,7 @@ if ($active_voicemail_server > 0)
 		if($DB){print "MailboxCount- $PTvoicemail_ids[$i]    NEW:|$NEW_messages[$i]|  OLD:|$OLD_messages[$i]|    ";}
 		if ( ($NEW_messages[$i] eq $PTmessages[$i]) && ($OLD_messages[$i] eq $PTold_messages[$i]) )
 			{
-			if($DB){print "MESSAGE COUNT UNCHANGED, DOING NOTHING FOR THIS MAILBOX\n";}
+			if($DB){print "MESSAGE COUNT UNCHANGED, DOING NOTHING FOR THIS MAILBOX: |$PTvoicemail_ids[$i]|\n";}
 			}
 		else
 			{
