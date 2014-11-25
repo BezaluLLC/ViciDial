@@ -72,3 +72,7 @@ UPDATE system_settings SET db_schema_version='1388',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD show_previous_callback ENUM('DISABLED','ENABLED') default 'ENABLED';
 
 UPDATE system_settings SET db_schema_version='1389',db_schema_update_date=NOW() where db_schema_version < 1389;
+
+ALTER TABLE vicidial_campaigns ADD clear_script ENUM('DISABLED','ENABLED') default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1390',db_schema_update_date=NOW() where db_schema_version < 1390;

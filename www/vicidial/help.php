@@ -26,6 +26,7 @@
 # 140902-0815 - Added callback_active_limit and callback_active_limit_override
 # 141123-1019 - Added help for new campaign comments options
 # 141124-2144 - Added show_previous_callback
+# 141124-2231 - Added clear_script
 #
 
 
@@ -1258,6 +1259,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="campaigns-campaign_script">
 <BR>
 <B>Campaign Script -</B> This menu allows you to choose the script that will appear on the agents screen for this campaign. Select NONE to show no script for this campaign.
+
+<BR>
+<A NAME="campaigns-clear_script">
+<BR>
+<B>Clear Script -</B> This option if enabled will clear the agent SCRIPT tab after a call has been dispositioned by the agent. Default is DISABLED.
 
 <BR>
 <A NAME="campaigns-get_call_launch">

@@ -95,7 +95,10 @@ OTHER CHANGES:
 	frame, allow for the comments field to appear under all agent screen 
 	tabs and the dispo screen and the callback date select screen, allow
 	for the audited comments to be displayed with managers in red and with 
-	a date/time stamp.
+	a date/time stamp. Also, a campaign option to not display the Previous 
+	Callback panel in the agent screen.
+
+16. Added campaign option to clear the script after call disposition.
 
 
 
