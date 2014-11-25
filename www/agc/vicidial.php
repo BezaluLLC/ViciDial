@@ -452,10 +452,11 @@
 # 141121-1005 - Added new QC and comments campaign options
 # 141124-1144 - Added new Callback Comments campaign option
 # 141124-2146 - Added show_previous_callback campaign option
+# 141124-2217 - Fix for issue #798
 #
 
-$version = '2.10-423c';
-$build = '141124-2146';
+$version = '2.10-424c';
+$build = '141124-2217';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=80;
 $one_mysql_log=0;
@@ -10773,335 +10774,339 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		if (DispoChoice.length < 1) {alert_box("<?php echo _QXZ("You Must Select a Disposition"); ?>");}
 		else
 			{
-			if (document.vicidial_form.DiaLAltPhonE.checked==true)
-				{
-				var man_status = ""; 
-				document.getElementById("MainStatuSSpan").innerHTML = man_status;
-				alt_dial_status_display = 0;
-				}
-			document.getElementById("CusTInfOSpaN").innerHTML = "";
-			document.getElementById("CusTInfOSpaN").style.background = panel_bgcolor;
-			var regCBstatus = new RegExp(' ' + DispoChoice + ' ',"ig");
-			if ( (VARCBstatusesLIST.match(regCBstatus)) && (DispoChoice.length > 0) && (scheduled_callbacks > 0) && (DispoChoice != 'CBHOLD') )
-				{
-				var INTLastCallbackCount = parseInt(LastCallbackCount);
-				var INTcallback_active_limit = parseInt(callback_active_limit);
-				if ( (INTcallback_active_limit > 0) && (INTLastCallbackCount >= INTcallback_active_limit) )
-					{
-					document.getElementById("CallBackOnlyMe").checked = false;
-					document.getElementById("CallBackOnlyMe").disabled = true;
-					}
-				else
-					{
-					document.getElementById("CallBackOnlyMe").disabled = false;
-					}
-				
-				if ( (comments_callback_screen == 'ENABLED') || (comments_callback_screen == 'REPLACE_CB_NOTES') )
-					{
-					var cb_comment_output = "<table cellspacing=4 cellpadding=0><tr><td align=\"right\"><font class=\"body_text\"><?php echo $label_comments ?>: <br><span id='cbviewcommentsdisplay'><input type='button' id='CBViewCommentButton' onClick=\"ViewComments('ON','','cb')\" value='-<?php _QXZ("History"); ?>-'/></span></font></td><td align=\"left\"><font class=\"body_text\">";
-					cb_comment_output = cb_comment_output + "<textarea name=\"cbcomment_comments\" id=\"cbcomment_comments\" rows=\"2\" cols=\"100\" class=\"cust_form_text\" value=\"\">" + document.vicidial_form.dispo_comments.value + "</textarea>\n";
-					cb_comment_output = cb_comment_output + "</td></tr></table>\n";
-					document.getElementById("CBCommentsContent").innerHTML = cb_comment_output;
-					}
-				else
-					{
-					document.getElementById("CBCommentsContent").innerHTML = "<input type=\"hidden\" name=\"cbcomment_comments\" id=\"cbcomment_comments\" value=\"" + document.vicidial_form.dispo_comments.value + "\" />";
-					}
-
-				showDiv('CallBackSelectBox');
-				}
+			if (document.vicidial_form.lead_id.value == '') {alert_box("<?php echo _QXZ("You can only disposition a call once"); ?>");}
 			else
 				{
-				var xmlhttp=false;
-				/*@cc_on @*/
-				/*@if (@_jscript_version >= 5)
-				// JScript gives us Conditional compilation, we can cope with old IE versions.
-				// and security blocked creation of the objects.
-				 try {
-				  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
-				 } catch (e) {
-				  try {
-				   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				  } catch (E) {
-				   xmlhttp = false;
-				  }
-				 }
-				@end @*/
-				if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+				if (document.vicidial_form.DiaLAltPhonE.checked==true)
 					{
-					xmlhttp = new XMLHttpRequest();
+					var man_status = ""; 
+					document.getElementById("MainStatuSSpan").innerHTML = man_status;
+					alt_dial_status_display = 0;
 					}
-				if (xmlhttp) 
+				document.getElementById("CusTInfOSpaN").innerHTML = "";
+				document.getElementById("CusTInfOSpaN").style.background = panel_bgcolor;
+				var regCBstatus = new RegExp(' ' + DispoChoice + ' ',"ig");
+				if ( (VARCBstatusesLIST.match(regCBstatus)) && (DispoChoice.length > 0) && (scheduled_callbacks > 0) && (DispoChoice != 'CBHOLD') )
 					{
-					DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&orig_pass=" + orig_pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&CallBackLeadStatus=" + CallBackLeadStatus + "&comments=" + encodeURIComponent(CallBackCommenTs) + "&custom_field_names=" + custom_field_names + "&call_notes=" + encodeURIComponent(document.vicidial_form.call_notes_dispo.value) + "&dispo_comments=" + encodeURIComponent(document.vicidial_form.dispo_comments.value) + "&cbcomment_comments=" + encodeURIComponent(document.vicidial_form.cbcomment_comments.value) + "&qm_dispo_code=" + DispoQMcsCODE + "&email_enabled=" + email_enabled + "&recording_id=" + VDDCU_recording_id + "&recording_filename=" + VDDCU_recording_filename + "&called_count=" + document.vicidial_form.called_count.value;
-					xmlhttp.open('POST', 'vdc_db_query.php');
-					xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
-					xmlhttp.send(DSupdate_query); 
-					xmlhttp.onreadystatechange = function() 
-						{ 
-					//	alert(DSupdate_query + "\n" +xmlhttp.responseText);
-
-						if (xmlhttp.readyState == 4 && xmlhttp.status == 200)
-							{
-					//		alert(xmlhttp.responseText);
-							if (auto_dial_level < 1)
-								{
-								var check_dispo = null;
-								check_dispo = xmlhttp.responseText;
-								var check_DS_array=check_dispo.split("\n");
-								if (check_DS_array[1] == 'Next agent_log_id:')
-									{
-									agent_log_id = check_DS_array[2];
-									}
-								}
-							waiting_on_dispo=0;
-							}
-						}
-					delete xmlhttp;
-					}
-				// CLEAR ALL FORM VARIABLES
-				document.vicidial_form.lead_id.value		='';
-				document.vicidial_form.vendor_lead_code.value='';
-				document.vicidial_form.list_id.value		='';
-				document.vicidial_form.entry_list_id.value	='';
-				document.vicidial_form.gmt_offset_now.value	='';
-				document.vicidial_form.phone_code.value		='';
-				if ( (disable_alter_custphone=='Y') || (disable_alter_custphone=='HIDE') )
-					{
-					var tmp_pn = document.getElementById("phone_numberDISP");
-					tmp_pn.innerHTML			= ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';
-					}
-				document.vicidial_form.phone_number.value	='';
-				document.vicidial_form.title.value			='';
-				document.vicidial_form.first_name.value		='';
-				document.vicidial_form.middle_initial.value	='';
-				document.vicidial_form.last_name.value		='';
-				document.vicidial_form.address1.value		='';
-				document.vicidial_form.address2.value		='';
-				document.vicidial_form.address3.value		='';
-				document.vicidial_form.city.value			='';
-				document.vicidial_form.state.value			='';
-				document.vicidial_form.province.value		='';
-				document.vicidial_form.postal_code.value	='';
-				document.vicidial_form.country_code.value	='';
-				document.vicidial_form.gender.value			='';
-				document.vicidial_form.date_of_birth.value	='';
-				document.vicidial_form.alt_phone.value		='';
-				document.vicidial_form.email.value			='';
-				document.vicidial_form.security_phrase.value='';
-				document.vicidial_form.comments.value		='';
-				document.vicidial_form.other_tab_comments.value		='';
-				document.getElementById("audit_comments").innerHTML		='';
-				if (qc_enabled > 0)
-					{
-					document.vicidial_form.ViewCommentButton.value		='';
-					document.vicidial_form.audit_comments_button.value	='';
-					if (comments_all_tabs == 'ENABLED')
-						{document.vicidial_form.OtherViewCommentButton.value ='';}
-					}
-				document.vicidial_form.called_count.value	='';
-				document.vicidial_form.call_notes.value		='';
-				document.vicidial_form.call_notes_dispo.value ='';
-				document.vicidial_form.dispo_comments.value ='';
-				document.vicidial_form.cbcomment_comments.value ='';
-				VDCL_group_id = '';
-				fronter = '';
-				inOUT = 'OUT';
-				vtiger_callback_id='0';
-				recording_filename='';
-				recording_id='';
-				document.vicidial_form.uniqueid.value='';
-				MDuniqueid='';
-				XDuniqueid='';
-				tmp_vicidial_id='';
-				EAphone_code='';
-				EAphone_number='';
-				EAalt_phone_notes='';
-				EAalt_phone_active='';
-				EAalt_phone_count='';
-				XDnextCID='';
-				XDcheck = '';
-				MDnextCID='';
-				XD_live_customer_call = 0;
-				XD_live_call_secondS = 0;
-				xfer_in_call=0;
-				MD_channel_look=0;
-				MD_ring_secondS=0;
-				uniqueid_status_display='';
-				uniqueid_status_prefix='';
-				custom_call_id='';
-				API_selected_xfergroup='';
-				API_selected_callmenu='';
-				timer_action='';
-				timer_action_seconds='';
-				timer_action_mesage='';
-				timer_action_destination='';
-				did_pattern='';
-				did_id='';
-				did_extension='';
-				did_description='';
-				closecallid='';
-				xfercallid='';
-				custom_field_names='';
-				custom_field_values='';
-				custom_field_types='';
-				customerparked=0;
-				customerparkedcounter=0;
-				consult_custom_wait=0;
-				consult_custom_go=0;
-				consult_custom_sent=0;
-				document.getElementById("ParkCounterSpan").innerHTML = '';
-				document.vicidial_form.xfername.value='';
-				document.vicidial_form.xfernumhidden.value='';
-				document.getElementById("debugbottomspan").innerHTML = '';
-				customer_3way_hangup_dispo_message='';
-				document.getElementById("Dispo3wayMessage").innerHTML = '';
-				document.getElementById("DispoManualQueueMessage").innerHTML = '';
-				document.getElementById("ManualQueueNotice").innerHTML = '';
-				APIManualDialQueue_last=0;
-				document.vicidial_form.FORM_LOADED.value = '0';
-				CallBackLeadStatus = '';
-				CallBackDatETimE='';
-				CallBackrecipient='';
-				CallBackCommenTs='';
-				DispoQMcsCODE='';
-				active_ingroup_dial='';
-				nocall_dial_flag='DISABLED';
-				document.vicidial_form.CallBackDatESelectioN.value = '';
-				document.vicidial_form.CallBackCommenTsField.value = '';
-
-				document.vicidial_form.search_phone_number.value='';
-				document.vicidial_form.search_lead_id.value='';
-				document.vicidial_form.search_vendor_lead_code.value='';
-				document.vicidial_form.search_first_name.value='';
-				document.vicidial_form.search_last_name.value='';
-				document.vicidial_form.search_city.value='';
-				document.vicidial_form.search_state.value='';
-				document.vicidial_form.search_postal_code.value='';
-				document.vicidial_form.MDPhonENumbeR.value = '';
-				document.vicidial_form.MDDiaLOverridE.value = '';
-				document.vicidial_form.MDLeadID.value = '';
-				document.vicidial_form.MDLeadIDEntry.value='';
-				document.vicidial_form.MDType.value = '';
-				document.vicidial_form.MDPhonENumbeRHiddeN.value = '';
-				inbound_lead_search=0;
-				cid_lock=0;
-				timer_alt_trigger=0;
-				last_mdtype='';
-				document.getElementById("timer_alt_display").innerHTML = '';
-				document.getElementById("RecorDID").innerHTML = '';
-				dial_next_failed=0;
-				xfer_agent_selected=0;
-
-				if (manual_dial_search_checkbox == 'SELECTED_RESET')
-					{document.vicidial_form.LeadLookuP.checked=true;}
-				if (manual_dial_search_checkbox == 'UNSELECTED_RESET')
-					{document.vicidial_form.LeadLookuP.checked=false;}
-
-				if (post_phone_time_diff_alert_message.length > 10)
-					{
-					document.getElementById("post_phone_time_diff_span_contents").innerHTML = "";
-					hideDiv('post_phone_time_diff_span');
-					post_phone_time_diff_alert_message='';
-					}
-
-				if (manual_dial_in_progress==1)
-					{
-					manual_dial_finished();
-					}
-				if (hide_gender < 1)
-					{
-					document.getElementById("GENDERhideFORieALT").innerHTML = '';
-					document.getElementById("GENDERhideFORie").innerHTML = '<select size="1" name="gender_list" class="cust_form" id="gender_list"><option value="U"><?php echo _QXZ("U - Undefined"); ?></option><option value="M"><?php echo _QXZ("M - Male"); ?></option><option value="F"><?php echo _QXZ("F - Female"); ?></option></select>';
-					}
-				hideDiv('DispoSelectBox');
-				hideDiv('DispoButtonHideA');
-				hideDiv('DispoButtonHideB');
-				hideDiv('DispoButtonHideC');
-				document.getElementById("DispoSelectBox").style.top = '1px';  // Firefox error on this line for some reason
-				document.getElementById("DispoSelectMaxMin").innerHTML = "<a href=\"#\" onclick=\"DispoMinimize()\"> <?php echo _QXZ("minimize"); ?> </a>";
-				document.getElementById("DispoSelectHAspan").innerHTML = "<a href=\"#\" onclick=\"DispoHanguPAgaiN()\"><?php echo _QXZ("Hangup Again"); ?></a>";
-				if (pause_after_next_call == 'ENABLED')
-					{
-					document.getElementById("NexTCalLPausE").innerHTML = "<a href=\"#\" onclick=\"next_call_pause_click();return false;\"><?php echo _QXZ("Next Call Pause"); ?></a>";
-					}
-				CBcommentsBoxhide();
-				EAcommentsBoxhide();
-				ContactSearchReset();
-				ViewComments('OFF','OFF');
-
-				AgentDispoing = 0;
-
-				if ( (alt_number_dialing == 'SELECTED') || (alt_number_dialing == 'SELECTED_TIMER_ALT') || (alt_number_dialing == 'SELECTED_TIMER_ADDR3') )
-					{
-					document.vicidial_form.DiaLAltPhonE.checked=true;
-					}
-				if ( (shift_logout_flag < 1) && (api_logout_flag < 1) )
-					{
-					if (wrapup_waiting == 0)
+					var INTLastCallbackCount = parseInt(LastCallbackCount);
+					var INTcallback_active_limit = parseInt(callback_active_limit);
+					if ( (INTcallback_active_limit > 0) && (INTLastCallbackCount >= INTcallback_active_limit) )
 						{
-						if (document.vicidial_form.DispoSelectStop.checked==true)
-							{
-							if (auto_dial_level != '0')
+						document.getElementById("CallBackOnlyMe").checked = false;
+						document.getElementById("CallBackOnlyMe").disabled = true;
+						}
+					else
+						{
+						document.getElementById("CallBackOnlyMe").disabled = false;
+						}
+					
+					if ( (comments_callback_screen == 'ENABLED') || (comments_callback_screen == 'REPLACE_CB_NOTES') )
+						{
+						var cb_comment_output = "<table cellspacing=4 cellpadding=0><tr><td align=\"right\"><font class=\"body_text\"><?php echo $label_comments ?>: <br><span id='cbviewcommentsdisplay'><input type='button' id='CBViewCommentButton' onClick=\"ViewComments('ON','','cb')\" value='-<?php _QXZ("History"); ?>-'/></span></font></td><td align=\"left\"><font class=\"body_text\">";
+						cb_comment_output = cb_comment_output + "<textarea name=\"cbcomment_comments\" id=\"cbcomment_comments\" rows=\"2\" cols=\"100\" class=\"cust_form_text\" value=\"\">" + document.vicidial_form.dispo_comments.value + "</textarea>\n";
+						cb_comment_output = cb_comment_output + "</td></tr></table>\n";
+						document.getElementById("CBCommentsContent").innerHTML = cb_comment_output;
+						}
+					else
+						{
+						document.getElementById("CBCommentsContent").innerHTML = "<input type=\"hidden\" name=\"cbcomment_comments\" id=\"cbcomment_comments\" value=\"" + document.vicidial_form.dispo_comments.value + "\" />";
+						}
+
+					showDiv('CallBackSelectBox');
+					}
+				else
+					{
+					var xmlhttp=false;
+					/*@cc_on @*/
+					/*@if (@_jscript_version >= 5)
+					// JScript gives us Conditional compilation, we can cope with old IE versions.
+					// and security blocked creation of the objects.
+					 try {
+					  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+					 } catch (e) {
+					  try {
+					   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+					  } catch (E) {
+					   xmlhttp = false;
+					  }
+					 }
+					@end @*/
+					if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+						{
+						xmlhttp = new XMLHttpRequest();
+						}
+					if (xmlhttp) 
+						{
+						DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&orig_pass=" + orig_pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&CallBackLeadStatus=" + CallBackLeadStatus + "&comments=" + encodeURIComponent(CallBackCommenTs) + "&custom_field_names=" + custom_field_names + "&call_notes=" + encodeURIComponent(document.vicidial_form.call_notes_dispo.value) + "&dispo_comments=" + encodeURIComponent(document.vicidial_form.dispo_comments.value) + "&cbcomment_comments=" + encodeURIComponent(document.vicidial_form.cbcomment_comments.value) + "&qm_dispo_code=" + DispoQMcsCODE + "&email_enabled=" + email_enabled + "&recording_id=" + VDDCU_recording_id + "&recording_filename=" + VDDCU_recording_filename + "&called_count=" + document.vicidial_form.called_count.value;
+						xmlhttp.open('POST', 'vdc_db_query.php');
+						xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+						xmlhttp.send(DSupdate_query); 
+						xmlhttp.onreadystatechange = function() 
+							{ 
+						//	alert(DSupdate_query + "\n" +xmlhttp.responseText);
+
+							if (xmlhttp.readyState == 4 && xmlhttp.status == 200)
 								{
-								AutoDialWaiting = 0;
-								QUEUEpadding = 0;
-								if (temp_use_pause_code==1)
+						//		alert(xmlhttp.responseText);
+								if (auto_dial_level < 1)
 									{
-									AutoDial_ReSume_PauSe("VDADpause",'','','','',"1",temp_dispo_pause_code);
+									var check_dispo = null;
+									check_dispo = xmlhttp.responseText;
+									var check_DS_array=check_dispo.split("\n");
+									if (check_DS_array[1] == 'Next agent_log_id:')
+										{
+										agent_log_id = check_DS_array[2];
+										}
 									}
-								else
-									{
-									AutoDial_ReSume_PauSe("VDADpause");
-									}
-								}
-							VICIDiaL_pause_calling = 1;
-							if (dispo_check_all_pause != '1')
-								{
-								document.vicidial_form.DispoSelectStop.checked=false;
+								waiting_on_dispo=0;
 								}
 							}
-						else
+						delete xmlhttp;
+						}
+					// CLEAR ALL FORM VARIABLES
+					document.vicidial_form.lead_id.value		='';
+					document.vicidial_form.vendor_lead_code.value='';
+					document.vicidial_form.list_id.value		='';
+					document.vicidial_form.entry_list_id.value	='';
+					document.vicidial_form.gmt_offset_now.value	='';
+					document.vicidial_form.phone_code.value		='';
+					if ( (disable_alter_custphone=='Y') || (disable_alter_custphone=='HIDE') )
+						{
+						var tmp_pn = document.getElementById("phone_numberDISP");
+						tmp_pn.innerHTML			= ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';
+						}
+					document.vicidial_form.phone_number.value	='';
+					document.vicidial_form.title.value			='';
+					document.vicidial_form.first_name.value		='';
+					document.vicidial_form.middle_initial.value	='';
+					document.vicidial_form.last_name.value		='';
+					document.vicidial_form.address1.value		='';
+					document.vicidial_form.address2.value		='';
+					document.vicidial_form.address3.value		='';
+					document.vicidial_form.city.value			='';
+					document.vicidial_form.state.value			='';
+					document.vicidial_form.province.value		='';
+					document.vicidial_form.postal_code.value	='';
+					document.vicidial_form.country_code.value	='';
+					document.vicidial_form.gender.value			='';
+					document.vicidial_form.date_of_birth.value	='';
+					document.vicidial_form.alt_phone.value		='';
+					document.vicidial_form.email.value			='';
+					document.vicidial_form.security_phrase.value='';
+					document.vicidial_form.comments.value		='';
+					document.vicidial_form.other_tab_comments.value		='';
+					document.getElementById("audit_comments").innerHTML		='';
+					if (qc_enabled > 0)
+						{
+						document.vicidial_form.ViewCommentButton.value		='';
+						document.vicidial_form.audit_comments_button.value	='';
+						if (comments_all_tabs == 'ENABLED')
+							{document.vicidial_form.OtherViewCommentButton.value ='';}
+						}
+					document.vicidial_form.called_count.value	='';
+					document.vicidial_form.call_notes.value		='';
+					document.vicidial_form.call_notes_dispo.value ='';
+					document.vicidial_form.dispo_comments.value ='';
+					document.vicidial_form.cbcomment_comments.value ='';
+					VDCL_group_id = '';
+					fronter = '';
+					inOUT = 'OUT';
+					vtiger_callback_id='0';
+					recording_filename='';
+					recording_id='';
+					document.vicidial_form.uniqueid.value='';
+					MDuniqueid='';
+					XDuniqueid='';
+					tmp_vicidial_id='';
+					EAphone_code='';
+					EAphone_number='';
+					EAalt_phone_notes='';
+					EAalt_phone_active='';
+					EAalt_phone_count='';
+					XDnextCID='';
+					XDcheck = '';
+					MDnextCID='';
+					XD_live_customer_call = 0;
+					XD_live_call_secondS = 0;
+					xfer_in_call=0;
+					MD_channel_look=0;
+					MD_ring_secondS=0;
+					uniqueid_status_display='';
+					uniqueid_status_prefix='';
+					custom_call_id='';
+					API_selected_xfergroup='';
+					API_selected_callmenu='';
+					timer_action='';
+					timer_action_seconds='';
+					timer_action_mesage='';
+					timer_action_destination='';
+					did_pattern='';
+					did_id='';
+					did_extension='';
+					did_description='';
+					closecallid='';
+					xfercallid='';
+					custom_field_names='';
+					custom_field_values='';
+					custom_field_types='';
+					customerparked=0;
+					customerparkedcounter=0;
+					consult_custom_wait=0;
+					consult_custom_go=0;
+					consult_custom_sent=0;
+					document.getElementById("ParkCounterSpan").innerHTML = '';
+					document.vicidial_form.xfername.value='';
+					document.vicidial_form.xfernumhidden.value='';
+					document.getElementById("debugbottomspan").innerHTML = '';
+					customer_3way_hangup_dispo_message='';
+					document.getElementById("Dispo3wayMessage").innerHTML = '';
+					document.getElementById("DispoManualQueueMessage").innerHTML = '';
+					document.getElementById("ManualQueueNotice").innerHTML = '';
+					APIManualDialQueue_last=0;
+					document.vicidial_form.FORM_LOADED.value = '0';
+					CallBackLeadStatus = '';
+					CallBackDatETimE='';
+					CallBackrecipient='';
+					CallBackCommenTs='';
+					DispoQMcsCODE='';
+					active_ingroup_dial='';
+					nocall_dial_flag='DISABLED';
+					document.vicidial_form.CallBackDatESelectioN.value = '';
+					document.vicidial_form.CallBackCommenTsField.value = '';
+
+					document.vicidial_form.search_phone_number.value='';
+					document.vicidial_form.search_lead_id.value='';
+					document.vicidial_form.search_vendor_lead_code.value='';
+					document.vicidial_form.search_first_name.value='';
+					document.vicidial_form.search_last_name.value='';
+					document.vicidial_form.search_city.value='';
+					document.vicidial_form.search_state.value='';
+					document.vicidial_form.search_postal_code.value='';
+					document.vicidial_form.MDPhonENumbeR.value = '';
+					document.vicidial_form.MDDiaLOverridE.value = '';
+					document.vicidial_form.MDLeadID.value = '';
+					document.vicidial_form.MDLeadIDEntry.value='';
+					document.vicidial_form.MDType.value = '';
+					document.vicidial_form.MDPhonENumbeRHiddeN.value = '';
+					inbound_lead_search=0;
+					cid_lock=0;
+					timer_alt_trigger=0;
+					last_mdtype='';
+					document.getElementById("timer_alt_display").innerHTML = '';
+					document.getElementById("RecorDID").innerHTML = '';
+					dial_next_failed=0;
+					xfer_agent_selected=0;
+
+					if (manual_dial_search_checkbox == 'SELECTED_RESET')
+						{document.vicidial_form.LeadLookuP.checked=true;}
+					if (manual_dial_search_checkbox == 'UNSELECTED_RESET')
+						{document.vicidial_form.LeadLookuP.checked=false;}
+
+					if (post_phone_time_diff_alert_message.length > 10)
+						{
+						document.getElementById("post_phone_time_diff_span_contents").innerHTML = "";
+						hideDiv('post_phone_time_diff_span');
+						post_phone_time_diff_alert_message='';
+						}
+
+					if (manual_dial_in_progress==1)
+						{
+						manual_dial_finished();
+						}
+					if (hide_gender < 1)
+						{
+						document.getElementById("GENDERhideFORieALT").innerHTML = '';
+						document.getElementById("GENDERhideFORie").innerHTML = '<select size="1" name="gender_list" class="cust_form" id="gender_list"><option value="U"><?php echo _QXZ("U - Undefined"); ?></option><option value="M"><?php echo _QXZ("M - Male"); ?></option><option value="F"><?php echo _QXZ("F - Female"); ?></option></select>';
+						}
+					hideDiv('DispoSelectBox');
+					hideDiv('DispoButtonHideA');
+					hideDiv('DispoButtonHideB');
+					hideDiv('DispoButtonHideC');
+					document.getElementById("DispoSelectBox").style.top = '1px';  // Firefox error on this line for some reason
+					document.getElementById("DispoSelectMaxMin").innerHTML = "<a href=\"#\" onclick=\"DispoMinimize()\"> <?php echo _QXZ("minimize"); ?> </a>";
+					document.getElementById("DispoSelectHAspan").innerHTML = "<a href=\"#\" onclick=\"DispoHanguPAgaiN()\"><?php echo _QXZ("Hangup Again"); ?></a>";
+					if (pause_after_next_call == 'ENABLED')
+						{
+						document.getElementById("NexTCalLPausE").innerHTML = "<a href=\"#\" onclick=\"next_call_pause_click();return false;\"><?php echo _QXZ("Next Call Pause"); ?></a>";
+						}
+					CBcommentsBoxhide();
+					EAcommentsBoxhide();
+					ContactSearchReset();
+					ViewComments('OFF','OFF');
+
+					AgentDispoing = 0;
+
+					if ( (alt_number_dialing == 'SELECTED') || (alt_number_dialing == 'SELECTED_TIMER_ALT') || (alt_number_dialing == 'SELECTED_TIMER_ADDR3') )
+						{
+						document.vicidial_form.DiaLAltPhonE.checked=true;
+						}
+					if ( (shift_logout_flag < 1) && (api_logout_flag < 1) )
+						{
+						if (wrapup_waiting == 0)
 							{
-							if (auto_dial_level != '0')
+							if (document.vicidial_form.DispoSelectStop.checked==true)
 								{
-								AutoDialWaiting = 1;
-								if (temp_use_pause_code==1)
+								if (auto_dial_level != '0')
 									{
-									agent_log_id = AutoDial_ReSume_PauSe("VDADready","NEW_ID",'','','',"1",temp_dispo_pause_code);
+									AutoDialWaiting = 0;
+									QUEUEpadding = 0;
+									if (temp_use_pause_code==1)
+										{
+										AutoDial_ReSume_PauSe("VDADpause",'','','','',"1",temp_dispo_pause_code);
+										}
+									else
+										{
+										AutoDial_ReSume_PauSe("VDADpause");
+										}
 									}
-								else
+								VICIDiaL_pause_calling = 1;
+								if (dispo_check_all_pause != '1')
 									{
-									agent_log_id = AutoDial_ReSume_PauSe("VDADready","NEW_ID");
+									document.vicidial_form.DispoSelectStop.checked=false;
 									}
 								}
 							else
 								{
-								// trigger HotKeys manual dial automatically go to next lead
-							//	if (manual_auto_hotkey > 0)
-							//		{
-							//		manual_auto_hotkey = 0;
-							//		ManualDialNext('','','','','','0');
-							//		}
+								if (auto_dial_level != '0')
+									{
+									AutoDialWaiting = 1;
+									if (temp_use_pause_code==1)
+										{
+										agent_log_id = AutoDial_ReSume_PauSe("VDADready","NEW_ID",'','','',"1",temp_dispo_pause_code);
+										}
+									else
+										{
+										agent_log_id = AutoDial_ReSume_PauSe("VDADready","NEW_ID");
+										}
+									}
+								else
+									{
+									// trigger HotKeys manual dial automatically go to next lead
+								//	if (manual_auto_hotkey > 0)
+								//		{
+								//		manual_auto_hotkey = 0;
+								//		ManualDialNext('','','','','','0');
+								//		}
+									}
 								}
 							}
 						}
-					}
-				else
-					{
-					if (shift_logout_flag > 0)
-						{LogouT('SHIFT');}
 					else
-						{LogouT('API');}
+						{
+						if (shift_logout_flag > 0)
+							{LogouT('SHIFT');}
+						else
+							{LogouT('API');}
+						}
+					if (focus_blur_enabled==1)
+						{
+						document.inert_form.inert_button.focus();
+						document.inert_form.inert_button.blur();
+						}
 					}
-				if (focus_blur_enabled==1)
-					{
-					document.inert_form.inert_button.focus();
-					document.inert_form.inert_button.blur();
-					}
+				// scroll back to the top of the page
+				scroll(0,0);
 				}
-			// scroll back to the top of the page
-			scroll(0,0);
 			}
 		}
 
