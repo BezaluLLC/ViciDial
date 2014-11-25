@@ -860,7 +860,7 @@ if ($SSoutbound_autodial_active > 0)
 	<BR>
 	<A NAME="campaigns-dl_diff_target_method">
 	<BR>
-	<B>Dial Level Difference Target Method -</B> This option allows you to define whether the dial level difference target setting is applied only to the calculation of the dial level or also to the actual dialing on each dialing server. If you are running a small campaign with agents logged in on many servers you may want to use the ADAPT_CALC_ONLY option, because the CALLS_PLACED option may result in fewer calls being placed than deisred. This option is only active if Dial Level Difference Target is set to something other than 0. Default is ADAPT_CALC_ONLY.
+	<B>Dial Level Difference Target Method -</B> This option allows you to define whether the dial level difference target setting is applied only to the calculation of the dial level or also to the actual dialing on each dialing server. If you are running a small campaign with agents logged in on many servers you may want to use the ADAPT_CALC_ONLY option, because the CALLS_PLACED option may result in fewer calls being placed than desired. This option is only active if Dial Level Difference Target is set to something other than 0. Default is ADAPT_CALC_ONLY.
 
 	<BR>
 	<A NAME="campaigns-concurrent_transfers">
