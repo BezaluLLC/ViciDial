@@ -454,10 +454,11 @@
 # 141124-2146 - Added show_previous_callback campaign option
 # 141124-2217 - Fix for issue #798
 # 141124-2234 - Added clear_script campaign option
+# 141125-0100 - Added parked_hangup code
 #
 
-$version = '2.10-425c';
-$build = '141124-2234';
+$version = '2.10-426c';
+$build = '141125-0100';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=80;
 $one_mysql_log=0;
@@ -3950,6 +3951,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var OtherTab='0';
 	var show_previous_callback='<?php echo $show_previous_callback ?>';
 	var clear_script='<?php echo $clear_script ?>';
+	var parked_hangup='0';
     var DiaLControl_auto_HTML = "<img src=\"./images/<?php echo _QXZ("vdc_LB_pause_OFF.gif") ?>\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_resume.gif") ?>\" border=\"0\" alt=\"Resume\" /></a>";
     var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_pause.gif") ?>\" border=\"0\" alt=\" Pause \" /></a><img src=\"./images/<?php echo _QXZ("vdc_LB_resume_OFF.gif") ?>\" border=\"0\" alt=\"Resume\" />";
     var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_pause_OFF.gif") ?>\" border=\"0\" alt=\" Pause \" /><img src=\"./images/<?php echo _QXZ("vdc_LB_resume_OFF.gif") ?>\" border=\"0\" alt=\"Resume\" />";
@@ -5122,6 +5124,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									{
 									customer_3way_hangup_counter_trigger=1;
 									customer_3way_hangup_counter=1;
+									}
+								if (customerparked==1)
+									{
+									parked_hangup='1';
 									}
 								}
 							}
@@ -10840,7 +10846,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						}
 					if (xmlhttp) 
 						{
-						DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&orig_pass=" + orig_pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&CallBackLeadStatus=" + CallBackLeadStatus + "&comments=" + encodeURIComponent(CallBackCommenTs) + "&custom_field_names=" + custom_field_names + "&call_notes=" + encodeURIComponent(document.vicidial_form.call_notes_dispo.value) + "&dispo_comments=" + encodeURIComponent(document.vicidial_form.dispo_comments.value) + "&cbcomment_comments=" + encodeURIComponent(document.vicidial_form.cbcomment_comments.value) + "&qm_dispo_code=" + DispoQMcsCODE + "&email_enabled=" + email_enabled + "&recording_id=" + VDDCU_recording_id + "&recording_filename=" + VDDCU_recording_filename + "&called_count=" + document.vicidial_form.called_count.value;
+						DSupdate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=updateDISPO&format=text&user=" + user + "&pass=" + pass + "&orig_pass=" + orig_pass + "&dispo_choice=" + DispoChoice + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&agent_log_id=" + agent_log_id + "&CallBackDatETimE=" + CallBackDatETimE + "&list_id=" + document.vicidial_form.list_id.value + "&recipient=" + CallBackrecipient + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&MDnextCID=" + LasTCID + "&stage=" + group + "&vtiger_callback_id=" + vtiger_callback_id + "&phone_number=" + document.vicidial_form.phone_number.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&dial_method" + dial_method + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&CallBackLeadStatus=" + CallBackLeadStatus + "&comments=" + encodeURIComponent(CallBackCommenTs) + "&custom_field_names=" + custom_field_names + "&call_notes=" + encodeURIComponent(document.vicidial_form.call_notes_dispo.value) + "&dispo_comments=" + encodeURIComponent(document.vicidial_form.dispo_comments.value) + "&cbcomment_comments=" + encodeURIComponent(document.vicidial_form.cbcomment_comments.value) + "&qm_dispo_code=" + DispoQMcsCODE + "&email_enabled=" + email_enabled + "&recording_id=" + VDDCU_recording_id + "&recording_filename=" + VDDCU_recording_filename + "&called_count=" + document.vicidial_form.called_count.value + "&parked_hangup=" + parked_hangup;
 						xmlhttp.open('POST', 'vdc_db_query.php');
 						xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 						xmlhttp.send(DSupdate_query); 
@@ -11038,6 +11044,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					ViewComments('OFF','OFF');
 					if (clear_script == 'ENABLED')
 						{document.getElementById("ScriptContents").innerHTML = '';}
+					parked_hangup='0';
 
 					AgentDispoing = 0;
 

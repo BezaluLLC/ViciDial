@@ -365,10 +365,11 @@
 # 141118-1231 - Formatting changes for QXZ output
 # 141123-0933 - Added dispo_comments option input
 # 141124-1136 - Added cbcomment_comments option input
+# 141125-0059 - Added parked_hangup code
 #
 
-$version = '2.10-261';
-$build = '141124-1136';
+$version = '2.10-262';
+$build = '141125-0059';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=597;
 $one_mysql_log=0;
@@ -609,6 +610,8 @@ if (isset($_GET["dispo_comments"]))				{$dispo_comments=$_GET["dispo_comments"];
 	elseif (isset($_POST["dispo_comments"]))	{$dispo_comments=$_POST["dispo_comments"];}
 if (isset($_GET["cbcomment_comments"]))				{$cbcomment_comments=$_GET["cbcomment_comments"];}
 	elseif (isset($_POST["cbcomment_comments"]))	{$cbcomment_comments=$_POST["cbcomment_comments"];}
+if (isset($_GET["parked_hangup"]))			{$parked_hangup=$_GET["parked_hangup"];}
+	elseif (isset($_POST["parked_hangup"]))	{$parked_hangup=$_POST["parked_hangup"];}
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
 
@@ -8701,6 +8704,10 @@ if ($ACTION == 'updateDISPO')
 		$log_dispo_choice = $dispo_choice;
 		if (strlen($CallBackLeadStatus) > 0) {$log_dispo_choice = $CallBackLeadStatus;}
 
+		$term_reasonSQL = '';
+		if ($parked_hangup=='1')
+			{$term_reasonSQL = ",term_reason='CALLER'";}
+
 		$stmt = "SELECT count(*) from vicidial_inbound_groups where group_id='$stage';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -8709,7 +8716,7 @@ if ($ACTION == 'updateDISPO')
 		if ($row[0] > 0)
 			{
 			$call_type='IN';
-			$stmt = "UPDATE vicidial_closer_log set status='$log_dispo_choice' where lead_id='$lead_id' and user='$user' order by closecallid desc limit 1;";
+			$stmt = "UPDATE vicidial_closer_log set status='$log_dispo_choice' $term_reasonSQL where lead_id='$lead_id' and user='$user' order by closecallid desc limit 1;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00144',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -8745,7 +8752,7 @@ if ($ACTION == 'updateDISPO')
 				$row=mysqli_fetch_row($rslt);
 				if ($row[0] > 0)
 					{
-					$stmt="UPDATE vicidial_log set status='$log_dispo_choice',user='$user' where lead_id='$lead_id' and call_date > \"$four_hours_ago\" and called_count='$called_count' order by uniqueid desc limit 1;";
+					$stmt="UPDATE vicidial_log set status='$log_dispo_choice',user='$user' $term_reasonSQL where lead_id='$lead_id' and call_date > \"$four_hours_ago\" and called_count='$called_count' order by uniqueid desc limit 1;";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00145',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -8863,7 +8870,7 @@ if ($ACTION == 'updateDISPO')
 				}
 			else
 				{
-				$stmt="UPDATE vicidial_log set status='$log_dispo_choice' where lead_id='$lead_id' and user='$user' and call_date > \"$four_hours_ago\" order by uniqueid desc limit 1;";
+				$stmt="UPDATE vicidial_log set status='$log_dispo_choice' $term_reasonSQL where lead_id='$lead_id' and user='$user' and call_date > \"$four_hours_ago\" order by uniqueid desc limit 1;";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00145',$user,$server_ip,$session_name,$one_mysql_log);}
