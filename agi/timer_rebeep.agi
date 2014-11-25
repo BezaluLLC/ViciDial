@@ -24,10 +24,11 @@
 #   "Timer Action Seconds" = 20
 #   "Transfer Conf Number 1" = 8399
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 111227-1418 - First build
+# 141124-2309 - Fixed Fhour variable bug
 #
 
 $US='_';
@@ -46,7 +47,7 @@ $year = ($year + 1900);
 $mon++;
 if ($mon < 10) {$mon = "0$mon";}
 if ($mday < 10) {$mday = "0$mday";}
-if ($hour < 10) {$Fhour = "0$hour";}
+if ($hour < 10) {$hour = "0$hour";}
 if ($min < 10) {$min = "0$min";}
 if ($sec < 10) {$sec = "0$sec";}
 

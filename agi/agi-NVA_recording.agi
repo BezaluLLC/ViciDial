@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-NVA_recording.agi version 2.6
+# agi-NVA_recording.agi version 2.10
 #
 # This script is designed to give recording ability to agents not the using 
 # ViciDial agent screen
@@ -33,6 +33,7 @@
 # 120430-2214 - Converted call to Monitor app to be asterisk 1.8 compatible
 # 130108-1811 - Changes for Asterisk 1.8 compatibility
 # 130326-1510 - Added lead_id and user logging from vicidial values
+# 141124-2309 - Fixed Fhour variable bug
 #
 
 &get_time_now;
@@ -47,7 +48,7 @@ $year = ($year + 1900);
 $mon++;
 if ($mon < 10) {$mon = "0$mon";}
 if ($mday < 10) {$mday = "0$mday";}
-if ($hour < 10) {$Fhour = "0$hour";}
+if ($hour < 10) {$hour = "0$hour";}
 if ($min < 10) {$min = "0$min";}
 if ($sec < 10) {$sec = "0$sec";}
 $now_date = "$year-$mon-$mday $hour:$min:$sec";
@@ -296,7 +297,7 @@ sub get_time_now	#get the current date and time and epoch for logging call lengt
 	$mon++;
 	if ($mon < 10) {$mon = "0$mon";}
 	if ($mday < 10) {$mday = "0$mday";}
-	if ($hour < 10) {$Fhour = "0$hour";}
+	if ($hour < 10) {$hour = "0$hour";}
 	if ($min < 10) {$min = "0$min";}
 	if ($sec < 10) {$sec = "0$sec";}
 

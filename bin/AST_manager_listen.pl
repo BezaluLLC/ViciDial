@@ -42,6 +42,7 @@
 # 130418-1946 - Changed asterisk 1.8 compatibility for CPD and SIP Hangup
 # 140524-0900 - Fixed issue with consultative agent transfers in Asterisk 1.8
 # 141113-1605 - Added concurrency check
+# 141124-2309 - Fixed Fhour variable bug
 #
 
 # constants
@@ -1291,7 +1292,7 @@ sub get_time_now	#get the current date and time and epoch for logging call lengt
 	$mon++;
 	if ($mon < 10) {$mon = "0$mon";}
 	if ($mday < 10) {$mday = "0$mday";}
-	if ($hour < 10) {$Fhour = "0$hour";}
+	if ($hour < 10) {$hour = "0$hour";}
 	if ($min < 10) {$min = "0$min";}
 	if ($sec < 10) {$sec = "0$sec";}
 

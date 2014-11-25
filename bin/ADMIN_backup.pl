@@ -18,6 +18,7 @@
 # 100817-1202 - Fixed test option bug
 # 101208-0452 - Added checks for zaptel and dahdi conf files
 # 141103-1505 - Added option to export without leads, logs, servers or phones
+# 141124-2309 - Fixed Fhour variable bug
 #
 
 $secT = time();
@@ -27,7 +28,7 @@ $year = ($year + 1900);
 $mon++;
 if ($mon < 10) {$mon = "0$mon";}
 if ($mday < 10) {$mday = "0$mday";}
-if ($hour < 10) {$Fhour = "0$hour";}
+if ($hour < 10) {$hour = "0$hour";}
 if ($min < 10) {$min = "0$min";}
 if ($sec < 10) {$sec = "0$sec";}
 $file_date = "$year-$mon-$mday";

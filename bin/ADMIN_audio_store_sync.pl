@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# ADMIN_audio_store_sync.pl      version 2.4
+# ADMIN_audio_store_sync.pl      version 2.10
 #
 # DESCRIPTION:
 # syncronizes audio between audio store and this server
@@ -16,6 +16,7 @@
 # 100824-0032 - Fixed issue with first MoH file being skipped when playing in non-random order
 # 101217-2137 - Small fix for admin directories not directly off of the webroot
 # 121019-0729 - Added audio_store_purge feature
+# 141124-2309 - Fixed Fhour variable bug
 #
 
 # constants
@@ -34,7 +35,7 @@ $year = ($year + 1900);
 $mon++;
 if ($mon < 10) {$mon = "0$mon";}
 if ($mday < 10) {$mday = "0$mday";}
-if ($hour < 10) {$Fhour = "0$hour";}
+if ($hour < 10) {$hour = "0$hour";}
 if ($min < 10) {$min = "0$min";}
 if ($sec < 10) {$sec = "0$sec";}
 $file_date = "$year-$mon-$mday";

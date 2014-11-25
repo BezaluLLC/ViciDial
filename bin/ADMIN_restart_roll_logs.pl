@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# ADMIN_restart_roll_logs.pl    version 2.6
+# ADMIN_restart_roll_logs.pl    version 2.10
 #
 # script to roll the Asterisk logs on machine restart
 #
@@ -12,6 +12,7 @@
 # 90311-0921 - Added /var/log/asterisk/screenlog log rolling
 # 90508-0535 - Changes root screenlog to /var/log/astguiclient
 # 130108-1715 - Changes for new log rolling script compatibility
+# 141124-2309 - Fixed Fhour variable bug
 #
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -19,7 +20,7 @@ $year = ($year + 1900);
 $mon++;
 if ($mon < 10) {$mon = "0$mon";}
 if ($mday < 10) {$mday = "0$mday";}
-if ($hour < 10) {$Fhour = "0$hour";}
+if ($hour < 10) {$hour = "0$hour";}
 if ($min < 10) {$min = "0$min";}
 if ($sec < 10) {$sec = "0$sec";}
 

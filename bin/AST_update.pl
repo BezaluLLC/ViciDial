@@ -62,9 +62,10 @@
 # 131122-1317 - Small formatting fixes
 # 140510-0119 - Small formatting and asterisk version changes
 # 141113-1601 - Added concurrency check
+# 141124-2309 - Fixed Fhour variable bug
 #
 
-$build = '141113-1601';
+$build = '141124-2309';
 
 # constants
 $SYSPERF=0;	# system performance logging to MySQL server_performance table every 5 seconds
@@ -1324,7 +1325,7 @@ sub get_time_now
 	$mon++;
 	if ($mon < 10) {$mon = "0$mon";}
 	if ($mday < 10) {$mday = "0$mday";}
-	if ($hour < 10) {$Fhour = "0$hour";}
+	if ($hour < 10) {$hour = "0$hour";}
 	if ($min < 10) {$min = "0$min";}
 	if ($sec < 10) {$sec = "0$sec";}
 
