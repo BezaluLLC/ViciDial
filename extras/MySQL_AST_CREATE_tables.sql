@@ -3069,6 +3069,15 @@ parent_rank VARCHAR(2) default '',
 index (avatar_id)
 ) ENGINE=MyISAM;
 
+CREATE TABLE audio_store_details (
+audio_filename VARCHAR(255) NOT NULL,
+audio_format VARCHAR(10) default 'unknown',
+audio_filesize BIGINT(20) UNSIGNED default '0',
+audio_epoch BIGINT(20) UNSIGNED default '0',
+audio_length INT(10) UNSIGNED default '0',
+unique index (audio_filename)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3312,4 +3321,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1391',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1392',db_schema_update_date=NOW(),reload_timestamp=NOW();

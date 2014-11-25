@@ -6,7 +6,7 @@
 # syncronizes audio between audio store and this server
 #
 # 
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 90513-0458 - First Build
@@ -17,6 +17,7 @@
 # 101217-2137 - Small fix for admin directories not directly off of the webroot
 # 121019-0729 - Added audio_store_purge feature
 # 141124-2309 - Fixed Fhour variable bug
+# 141125-1555 - Added audio_store_details audio file info gathering and DB population
 #
 
 # constants
@@ -65,6 +66,7 @@ if (length($ARGV[0])>1)
 		print "  [--force-upload] = force upload of all local audio files to the audio store\n";
 		print "  [--settings-override] = ignore database settings and run sync anyway\n";
 		print "  [--force-moh-rebuild] = ignore database settings and rebuild Music On Hold\n";
+		print "  [--gather-details] = gathers audio file details and populates audio_store_details table\n";
 		print "\n";
 		exit;
 		}
@@ -99,6 +101,11 @@ if (length($ARGV[0])>1)
 			{
 			$force_moh_rebuild=1;
 			if ($DB) {print "\n----- FORCE MUSIC ON HOLD REBUILD -----\n\n";}
+			}
+		if ($args =~ /--gather-details/i)
+			{
+			$gather_details=1;
+			if ($DB) {print "\n----- GATHER AUDIO FILE DETAILS -----\n\n";}
 			}
 		if ($args =~ /--debugX/i)
 			{
@@ -191,10 +198,10 @@ if ($sthArows > 0)
 	$sounds_web_directory =				$aryA[2];
 	$admin_web_directory =				$aryA[3];
 	if ($admin_web_directory =~ /\//)
-			{
-			$web_prefix = $admin_web_directory;
-			$web_prefix =~ s/\/.*/\//gi;
-			}
+		{
+		$web_prefix = $admin_web_directory;
+		$web_prefix =~ s/\/.*/\//gi;
+		}
 	}
 $sthA->finish();
 
@@ -428,6 +435,109 @@ if ($uploaded > 0)
 	$stmtA="UPDATE servers SET sounds_update='Y' where server_ip NOT IN('$VARserver_ip');";
 	$affected_rows = $dbhA->do($stmtA);
 	}
+
+
+
+
+###### BEGIN GATHER AUDIO FILE DETAILS #####
+if ($gather_details > 0)
+	{
+	$gsm_count=0;
+	$wav_count=0;
+	$new_count=0;
+	$old_count=0;
+	$update_count=0;
+	$i=0;
+	while ($i <= $#list)
+		{
+		chomp($list[$i]);
+		@file_data = split(/\t/, $list[$i]);
+		$filename =		$file_data[1];
+		$filedate =		$file_data[2];
+		$filesize =		$file_data[3];
+		$fileepoch =	$file_data[4];
+		if ($DB > 0) {print "$i   $filename     $filedate     $filesize     $fileepoch\n";}
+
+		$allowed_format=0;
+		if ($filesize > 0)
+			{
+			if ($filename =~ /\.wav$/)
+				{
+				$allowed_format++;
+				$wav_count++;
+				$audio_format='wav';
+				$audio_length = ($filesize / 16000);
+				$audio_length = sprintf("%.0f", $audio_length);
+				}
+			if ($filename =~ /\.gsm$/)
+				{
+				$allowed_format++;
+				$gsm_count++;
+				$audio_format='gsm';
+				$audio_length = ($filesize / 1650);
+				$audio_length = sprintf("%.0f", $audio_length);
+				}
+
+			if ($allowed_format > 0)
+				{
+				$stmtA = "SELECT audio_format,audio_filesize,audio_length FROM audio_store_details where audio_filename = '$filename';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$asd_format =	$aryA[0];
+					$asd_filesize = $aryA[1];
+					$asd_length =	$aryA[2];
+
+					if ( ($asd_format eq "$audio_format") && ($asd_filesize eq "$filesize") && ($asd_length eq "$audio_length") ) 
+						{
+						$old_count++;
+						if ($DB > 0) {print "$i   audio file details unchanged: $filename - |$audio_format|$filesize|$audio_length|\n";}
+						}
+					else
+						{
+						$update_count++;
+						$stmtA="UPDATE audio_store_details SET audio_format='$audio_format',audio_filesize='$filesize',audio_length='$audio_length',audio_epoch='$fileepoch' where audio_filename='$filename';";
+						$affected_rows = $dbhA->do($stmtA);
+						if ($DBX > 0) {print "     $affected_rows|$stmtA|\n";}
+						}
+					}
+				else
+					{
+					$new_count++;
+					$stmtA="INSERT INTO audio_store_details SET audio_filename='$filename',audio_format='$audio_format',audio_filesize='$filesize',audio_length='$audio_length',audio_epoch='$fileepoch';";
+					$affected_rows = $dbhA->do($stmtA);
+					if ($DBX > 0) {print "     $affected_rows|$stmtA|\n";}
+					}
+				$sthA->finish();
+				}
+			else
+				{
+				if ($DB > 0) {print "$i   format is not allowed: $filename\n";}
+				}
+			}
+		else
+			{
+			if ($DB > 0) {print "$i   filesize is zero: $filename ($filesize)\n";}
+			}
+		$i++;
+		}
+
+	if($DB)
+		{
+		print "Gather Details Summary:\n";
+		print "GSM files:       $gsm_count\n";
+		print "WAV files:       $wav_count\n";
+		print "NEW entries:     $new_count\n";
+		print "OLD entries:     $old_count\n";
+		print "UPDATED entries: $update_count\n";
+		print "TOTAL:          $i\n";
+		print "\n";
+		}
+	}
+###### END GATHER AUDIO FILE DETAILS #####
 
 
 

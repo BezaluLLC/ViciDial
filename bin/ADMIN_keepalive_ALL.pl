@@ -95,9 +95,10 @@
 # 140214-1519 - Added reload_timestamp value to conf files
 # 140619-1001 - Added new ASTplay loop IAX trunk
 # 141113-1555 - Changed FILL process screen from ASTVDautoFILL to ASTVDadFILL for easier admin
+# 141125-1710 - Added gather_stats_flag for audio sync script launch on voicemail server
 #
 
-$build = '140619-1001';
+$build = '141125-1710';
 
 $DB=0; # Debug flag
 
@@ -3428,8 +3429,11 @@ if ( ($active_asterisk_server =~ /Y/) && ( ($sounds_update =~ /Y/) || ($upload_a
 	{
 	if ($sounds_central_control_active > 0)
 		{
+		$gather_stats_flag='';
+		if ($THISserver_voicemail > 0) 
+			{$gather_stats_flag='--gather-details';}
 		if ($DB) {print "running audio store sync process...\n";}
-		`/usr/bin/screen -d -m -S AudioStore $PATHhome/ADMIN_audio_store_sync.pl $upload_flag 2>/dev/null 1>&2`;
+		`/usr/bin/screen -d -m -S AudioStore $PATHhome/ADMIN_audio_store_sync.pl $upload_flag $gather_stats_flag 2>/dev/null 1>&2`;
 		}
 	}
 ################################################################################

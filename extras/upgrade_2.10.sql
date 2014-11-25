@@ -81,3 +81,14 @@ ALTER TABLE vicidial_comments MODIFY user_id VARCHAR(20) NOT NULL;
 ALTER TABLE vicidial_comments MODIFY campaign_id VARCHAR(8) NOT NULL;
 
 UPDATE system_settings SET db_schema_version='1391',db_schema_update_date=NOW() where db_schema_version < 1391;
+
+CREATE TABLE audio_store_details (
+audio_filename VARCHAR(255) NOT NULL,
+audio_format VARCHAR(10) default 'unknown',
+audio_filesize BIGINT(20) UNSIGNED default '0',
+audio_epoch BIGINT(20) UNSIGNED default '0',
+audio_length INT(10) UNSIGNED default '0',
+unique index (audio_filename)
+) ENGINE=MyISAM;
+
+UPDATE system_settings SET db_schema_version='1392',db_schema_update_date=NOW() where db_schema_version < 1392;
