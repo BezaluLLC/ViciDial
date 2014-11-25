@@ -455,10 +455,11 @@
 # 141124-2217 - Fix for issue #798
 # 141124-2234 - Added clear_script campaign option
 # 141125-0100 - Added parked_hangup code
+# 141125-1235 - Fixed issue with lead info not being updated when Max Dead time is triggered
 #
 
-$version = '2.10-426c';
-$build = '141125-0100';
+$version = '2.10-427c';
+$build = '141125-1235';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=80;
 $one_mysql_log=0;
@@ -14402,6 +14403,13 @@ function phone_number_format(formatphone) {
 
 						if ( (dead_max > 0) && (CheckDEADcallCOUNT > dead_max) )
 							{
+							CustomerData_update();
+							if ( (per_call_notes == 'ENABLED') && (comments_dispo_screen != 'REPLACE_CALL_NOTES') )
+								{
+								var test_notesDE = document.vicidial_form.call_notes.value;
+								if (test_notesDE.length > 0)
+									{document.vicidial_form.call_notes_dispo.value = document.vicidial_form.call_notes.value}
+								}
 							dead_auto_dispo_count=4;
 							dead_auto_dispo_finish=1;
 							alt_phone_dialing=starting_alt_phone_dialing;
