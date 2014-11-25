@@ -2823,10 +2823,10 @@ KEY view_epoch (view_epoch)
 CREATE TABLE vicidial_comments (
 comment_id BIGINT(20) unsigned NOT NULL AUTO_INCREMENT,
 lead_id INT(11) NOT NULL,
-user_id INT(11) NOT NULL,
+user_id VARCHAR(20) NOT NULL,
 timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 list_id BIGINT(14) UNSIGNED NOT NULL,
-campaign_id INT(11) NOT NULL,
+campaign_id VARCHAR(8) NOT NULL,
 comment VARCHAR(255) COLLATE utf8_unicode_ci NOT NULL,
 hidden TINYINT(1) DEFAULT NULL,
 hidden_user_id INT(11) DEFAULT NULL,
@@ -3312,4 +3312,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1390',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1391',db_schema_update_date=NOW(),reload_timestamp=NOW();

@@ -76,3 +76,8 @@ UPDATE system_settings SET db_schema_version='1389',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD clear_script ENUM('DISABLED','ENABLED') default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1390',db_schema_update_date=NOW() where db_schema_version < 1390;
+
+ALTER TABLE vicidial_comments MODIFY user_id VARCHAR(20) NOT NULL;
+ALTER TABLE vicidial_comments MODIFY campaign_id VARCHAR(8) NOT NULL;
+
+UPDATE system_settings SET db_schema_version='1391',db_schema_update_date=NOW() where db_schema_version < 1391;
