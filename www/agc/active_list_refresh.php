@@ -88,7 +88,7 @@ if (isset($_GET["field_name"]))				{$field_name=$_GET["field_name"];}
 
 ### security strip all non-alphanumeric characters out of the variables ###
 $user=preg_replace("/[^0-9a-zA-Z]/","",$user);
-$pass=preg_replace("/[^0-9a-zA-Z]/","",$pass);
+$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 $ADD=preg_replace("/[^0-9]/","",$ADD);
 $order=preg_replace("/[^0-9a-zA-Z]/","",$order);
 $format=preg_replace("/[^0-9a-zA-Z]/","",$format);
@@ -126,7 +126,7 @@ $NOW_TIME = date("Y-m-d H:i:s");
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
 $auth=0;
-$auth_message = user_authorization($user,$pass,'',0,0,0);
+$auth_message = user_authorization($user,$pass,'',0,1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 

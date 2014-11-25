@@ -43,6 +43,7 @@
 # 140319-1913 - Added option to show percentages for various fields
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141113-2334 - Finalized adding QXZ translation to all admin files
+# 141125-0951 - Changed TOTAL column label to LOGIN TIME for uniform headers with other reports, issue #427
 #
 
 $startMS = microtime();
@@ -1325,9 +1326,9 @@ while ($i < $subs_to_print)
 	}
 
 $ASCII_text.=_QXZ("PAUSE CODE BREAKDOWN",20).":     <a href=\"$LINKbase&stage=$stage&file_download=2\">["._QXZ("DOWNLOAD")."]</a>\n\n";
-$ASCII_text.="+-----------------+----------+----------------------+----------------------+----------+----------+----------+  +$sub_statusesHEAD\n";
-$ASCII_text.="| "._QXZ("USER NAME",15)." | "._QXZ("ID",8)." | "._QXZ("CURRENT USER GROUP",20)." | "._QXZ("MOST RECENT USER GRP",20)." | "._QXZ("TOTAL",8)." | "._QXZ("NONPAUSE",8)." | "._QXZ("PAUSE",8)." |  |$sub_statusesHTML\n";
-$ASCII_text.="+-----------------+----------+----------------------+----------------------+----------+----------+----------+  +$sub_statusesHEAD\n";
+$ASCII_text.="+-----------------+----------+----------------------+----------------------+------------+----------+----------+  +$sub_statusesHEAD\n";
+$ASCII_text.="| "._QXZ("USER NAME",15)." | "._QXZ("ID",8)." | "._QXZ("CURRENT USER GROUP",20)." | "._QXZ("MOST RECENT USER GRP",20)." | "._QXZ("LOGIN TIME",10)." | "._QXZ("NONPAUSE",8)." | "._QXZ("PAUSE",8)." |  |$sub_statusesHTML\n";
+$ASCII_text.="+-----------------+----------+----------------------+----------------------+------------+----------+----------+  +$sub_statusesHEAD\n";
 
 $CSV_header="\""._QXZ("Agent Performance Detail",47)." $NOW_TIME\"\n";
 $CSV_header.="\""._QXZ("Time range").": $query_date_BEGIN "._QXZ("to")." $query_date_END\"\n\n";
@@ -1445,7 +1446,7 @@ while ($m < $k)
 
 	$pfUSERtotPAUSE_MS =		sprintf("%8s", $USERtotPAUSE_MS);
 	$pfUSERtotNONPAUSE_MS =		sprintf("%8s", $USERtotNONPAUSE_MS);
-	$pfUSERtotTOTAL_MS =		sprintf("%8s", $USERtotTOTAL_MS);
+	$pfUSERtotTOTAL_MS =		sprintf("%10s", $USERtotTOTAL_MS);
 
 	$BOTTOMoutput = "| $Sfull_name | $Suser | $Suser_group | $Slast_user_group | $pfUSERtotTOTAL_MS | $pfUSERtotNONPAUSE_MS | $pfUSERtotPAUSE_MS |  |$SstatusesHTML\n";
 
@@ -1528,16 +1529,15 @@ while ($n < $j)
 
 	$TOTtotPAUSE_MS =		sprintf("%10s", $TOTtotPAUSE_MS);
 	$TOTtotNONPAUSE_MS =	sprintf("%10s", $TOTtotNONPAUSE_MS);
-	$TOTtotTOTAL_MS =		sprintf("%10s", $TOTtotTOTAL_MS);
+	$TOTtotTOTAL_MS =		sprintf("%12s", $TOTtotTOTAL_MS);
 
 	while(strlen($TOTtotPAUSE_MS)>10) {$TOTtotPAUSE_MS = substr("$TOTtotPAUSE_MS", 0, -1);}
 	while(strlen($TOTtotNONPAUSE_MS)>10) {$TOTtotNONPAUSE_MS = substr("$TOTtotNONPAUSE_MS", 0, -1);}
-	while(strlen($TOTtotTOTAL_MS)>10) {$TOTtotTOTAL_MS = substr("$TOTtotTOTAL_MS", 0, -1);}
+	while(strlen($TOTtotTOTAL_MS)>12) {$TOTtotTOTAL_MS = substr("$TOTtotTOTAL_MS", 0, -1);}
 
-
-$ASCII_text.="+-----------------+----------+----------------------+----------------------+----------+----------+----------+  +$sub_statusesHEAD\n";
+$ASCII_text.="+-----------------+----------+----------------------+----------------------+------------+----------+----------+  +$sub_statusesHEAD\n";
 $ASCII_text.="|  "._QXZ("TOTALS",33)." "._QXZ("AGENTS",32,"r").":$TOT_AGENTS |$TOTtotTOTAL_MS|$TOTtotNONPAUSE_MS|$TOTtotPAUSE_MS|  |$SUMstatusesHTML\n";
-$ASCII_text.="+-----------------+----------+----------------------+----------------------+----------+----------+----------+  +$sub_statusesHEAD\n";
+$ASCII_text.="+-----------------+----------+----------------------+----------------------+------------+----------+----------+  +$sub_statusesHEAD\n";
 
 for ($e=0; $e<count($sub_statusesARY); $e++) {
 	$Sstatus=$sub_statusesARY[$e];
@@ -1561,9 +1561,9 @@ for ($d=0; $d<count($graph_stats); $d++) {
 	}
 }
 
-$TOTAL_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTtotTOTAL_MS)."</th></tr></table>";
-$NONPAUSE_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTtotNONPAUSE_MS)."</th></tr></table>";
-$PAUSE_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTtotPAUSE_MS)."%</th></tr></table>";
+$TOTAL_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("LOGIN TIME").":</th><th class='thgraph' scope='col'>".trim($TOTtotTOTAL_MS)."</th></tr></table>";
+$NONPAUSE_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("LOGIN TIME").":</th><th class='thgraph' scope='col'>".trim($TOTtotNONPAUSE_MS)."</th></tr></table>";
+$PAUSE_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("LOGIN TIME").":</th><th class='thgraph' scope='col'>".trim($TOTtotPAUSE_MS)."%</th></tr></table>";
 for ($e=0; $e<count($sub_statusesARY); $e++) {
 	$Sstatus=$sub_statusesARY[$e];
 	$total_var=$Sstatus."_total";

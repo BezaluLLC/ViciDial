@@ -64,7 +64,8 @@
 # 130802-1002 - Changed to PHP mysqli functions
 # 140811-0848 - Changed to use QXZ function for echoing text
 # 141118-1230 - Formatting changes for QXZ output
-# 
+# 141125-0947 - Using pass hashes in AJAX
+#
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -97,7 +98,7 @@ while ( (strlen($user_abb) > 4) and ($forever_stop < 200) )
 	{$user_abb = preg_replace("/^./","",$user_abb);   $forever_stop++;}
 
 $version = '2.2.6-1';
-$build = '141118-1230';
+$build = '141125-0947';
 
 ### security strip all non-alphanumeric characters out of the variables ###
 	$DB=preg_replace("/[^0-9a-z]/","",$DB);
@@ -125,9 +126,12 @@ $month_old = mktime(0, 0, 0, date("m"), date("d")-7,  date("Y"));
 $past_month_date = date("Y-m-d H:i:s",$month_old);
 
 $auth=0;
-$auth_message = user_authorization($user,$pass,'',1,0,0);
-if ($auth_message == 'GOOD')
-	{$auth=1;}
+$auth_message = user_authorization($user,$pass,'',1,0,1);
+if (preg_match("/^GOOD/",$auth_message))
+	{
+	$auth=1;
+	$pass_hash = preg_replace("/GOOD\|/",'',$auth_message);
+	}
 
 $US='_';
 $CL=':';
@@ -490,7 +494,9 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 	var admin_monitor_enabled = '<?php echo $admin_monitor_enabled ?>';
 	var XfeR_channel = '';
 	var user = '<?php echo $user ?>';
-	var pass = '<?php echo $pass ?>';
+	var pass = '<?php if (strlen($pass_hash)>12) {echo $pass_hash;} else {echo $pass;} ?>';
+	var orig_pass = '<?php echo $pass ?>';
+	var pass_hash = '<?php echo $pass_hash ?>';
 	var phone_login = '<?php echo $phone_login ?>';
 	var phone_pass = '<?php echo $phone_pass ?>';
 	var session_name = '<?php echo $session_name ?>';
@@ -1803,7 +1809,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 			}
 		if (xmlhttp) 
 			{ 
-			checkconf_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&conf_exten=" + taskconfnum + "&bcrypt=OFF";
+			checkconf_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&conf_exten=" + taskconfnum + "&bcrypt=ON";
 			xmlhttp.open('POST', 'conf_exten_check.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(checkconf_query); 
@@ -2389,7 +2395,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 			hideDiv('MainPanel');
 			showDiv('LogouTBox');
 
-		document.getElementById("LogouTBoxLink").innerHTML = "<a href=\"" + agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&user=" + user + "&phone_login=" + phone_login + "&phone_pass=" + phone_pass + "\"><?php echo _QXZ("CLICK HERE TO LOG IN AGAIN"); ?></a>\n";
+		document.getElementById("LogouTBoxLink").innerHTML = "<a href=\"" + agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_name=" + session_name + "&user=" + user + "&pass=" + orig_pass + "&user=" + user + "&phone_login=" + phone_login + "&phone_pass=" + phone_pass + "\"><?php echo _QXZ("CLICK HERE TO LOG IN AGAIN"); ?></a>\n";
 
 		logout_stop_timeouts = 1;
 

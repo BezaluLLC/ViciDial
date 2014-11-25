@@ -57,7 +57,7 @@ if (isset($_GET["protocol"]))				{$protocol=$_GET["protocol"];}
 	elseif (isset($_POST["protocol"]))		{$protocol=$_POST["protocol"];}
 
 $user=preg_replace("/[^0-9a-zA-Z]/","",$user);
-$pass=preg_replace("/[^0-9a-zA-Z]/","",$pass);
+$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 $session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
 $server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
 
@@ -76,7 +76,7 @@ $NOW_TIME = date("Y-m-d H:i:s");
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
 $auth=0;
-$auth_message = user_authorization($user,$pass,'',0,0,0);
+$auth_message = user_authorization($user,$pass,'',0,1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 

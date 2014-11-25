@@ -69,7 +69,7 @@ if (isset($_GET["local_web_callerID_URL_enc"]))			{$local_web_callerID_URL = raw
 	else {$local_web_callerID_URL = '';}
 
 $user=preg_replace("/[^0-9a-zA-Z]/","",$user);
-$pass=preg_replace("/[^0-9a-zA-Z]/","",$pass);
+$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 $session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
 $server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
 
@@ -86,7 +86,7 @@ $DO = '-1';
 if ( (preg_match("/^Zap/i",$channel)) and (!preg_match("/-/i",$channel)) ) {$channel = "$channel$DO";}
 
 $auth=0;
-$auth_message = user_authorization($user,$pass,'',0,0,0);
+$auth_message = user_authorization($user,$pass,'',0,1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 

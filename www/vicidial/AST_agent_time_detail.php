@@ -36,6 +36,7 @@
 # 140314-0852 - Fixed several division by zero bugs
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141113-1124 - Finalized adding QXZ translation to all admin files
+# 141125-0950 - Changed AGENT TIME to LOGIN TIME for uniform headers with other reports, issue #427
 #
 
 $startMS = microtime();
@@ -500,7 +501,7 @@ else
 	$max_dead=1;
 	$max_customer=1;
 	$GRAPH.="<a name='timegraph'/><table border='0' cellpadding='0' cellspacing='2' width='1000'>";
-	$GRAPH2="<tr><th class='column_header grey_graph_cell' id='timegraph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">"._QXZ("CALLS")."</a></th><th class='column_header grey_graph_cell' id='timegraph2'><a href='#' onClick=\"DrawGraph('TIMECLOCK', '2'); return false;\">"._QXZ("TIME CLOCK")."</a></th><th class='column_header grey_graph_cell' id='timegraph3'><a href='#' onClick=\"DrawGraph('AGENTTIME', '3'); return false;\">"._QXZ("AGENT TIME")."</a></th>";
+	$GRAPH2="<tr><th class='column_header grey_graph_cell' id='timegraph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">"._QXZ("CALLS")."</a></th><th class='column_header grey_graph_cell' id='timegraph2'><a href='#' onClick=\"DrawGraph('TIMECLOCK', '2'); return false;\">"._QXZ("TIME CLOCK")."</a></th><th class='column_header grey_graph_cell' id='timegraph3'><a href='#' onClick=\"DrawGraph('AGENTTIME', '3'); return false;\">"._QXZ("LOGIN TIME")."</a></th>";
 	if ($show_parks) {
 		$GRAPH2.="<th class='column_header grey_graph_cell' id='timegraph15'><a href='#' onClick=\"DrawGraph('PARKS', '15'); return false;\">"._QXZ("PARKS")."</a></th><th class='column_header grey_graph_cell' id='timegraph16'><a href='#' onClick=\"DrawGraph('PARKTIME', '16'); return false;\">"._QXZ("PARKTIME")."</a></th><th class='column_header grey_graph_cell' id='timegraph17'><a href='#' onClick=\"DrawGraph('AVGPARK', '17'); return false;\">"._QXZ("AVGPARK")."</a></th><th class='column_header grey_graph_cell' id='timegraph18'><a href='#' onClick=\"DrawGraph('PARKSCALL', '18'); return false;\">"._QXZ("PARKS/CALL")."</a></th>";
 	}
@@ -508,7 +509,7 @@ else
 	$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>"._QXZ("AGENT TIME BREAKDOWN")."</caption><tr><th class='thgraph' scope='col'>STATUS</th>";
 	$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CALLS")." </th></tr>";
 	$TIMECLOCK_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TIME CLOCK")."</th></tr>";
-	$AGENTTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AGENT TIME")."</th></tr>";
+	$AGENTTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("LOGIN TIME")."</th></tr>";
 	$WAIT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("WAIT")."</th></tr>";
 	$WAITPCT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("WAIT")." %</th></tr>";
 	$TALK_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TALK")."</th></tr>";
@@ -710,12 +711,12 @@ else
 		{
 		$ASCII_text.=_QXZ("AGENT TIME BREAKDOWN").":\n";
 		$ASCII_text.="+-----------------+----------+----------+------------+------------$park_HEADER_DIV+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
-		$ASCII_text.="| <a href=\"$LINKbase&stage=NAME\">"._QXZ("USER NAME",15)."</a> | <a href=\"$LINKbase&stage=ID\">"._QXZ("ID",8)."</a> | <a href=\"$LINKbase&stage=LEADS\">"._QXZ("CALLS",8)."</a> | <a href=\"$LINKbase&stage=TCLOCK\">"._QXZ("TIME CLOCK",10)."</a> | <a href=\"$LINKbase&stage=TIME\">"._QXZ("AGENT TIME",10)."</a> |$park_HEADER "._QXZ("WAIT",10)." | "._QXZ("WAIT",8)." % | "._QXZ("TALK",10)." | "._QXZ("TALK TIME",9)." %| "._QXZ("DISPO",10)." | "._QXZ("DISPOTIME",9)." %| "._QXZ("PAUSE",10)." | "._QXZ("PAUSETIME",9)." %| "._QXZ("DEAD",10)." | "._QXZ("DEAD TIME",9)." %| "._QXZ("CUSTOMER",10)." |   |$sub_statusesHTML\n";
+		$ASCII_text.="| <a href=\"$LINKbase&stage=NAME\">"._QXZ("USER NAME",15)."</a> | <a href=\"$LINKbase&stage=ID\">"._QXZ("ID",8)."</a> | <a href=\"$LINKbase&stage=LEADS\">"._QXZ("CALLS",8)."</a> | <a href=\"$LINKbase&stage=TCLOCK\">"._QXZ("TIME CLOCK",10)."</a> | <a href=\"$LINKbase&stage=TIME\">"._QXZ("LOGIN TIME",10)."</a> |$park_HEADER "._QXZ("WAIT",10)." | "._QXZ("WAIT",8)." % | "._QXZ("TALK",10)." | "._QXZ("TALK TIME",9)." %| "._QXZ("DISPO",10)." | "._QXZ("DISPOTIME",9)." %| "._QXZ("PAUSE",10)." | "._QXZ("PAUSETIME",9)." %| "._QXZ("DEAD",10)." | "._QXZ("DEAD TIME",9)." %| "._QXZ("CUSTOMER",10)." |   |$sub_statusesHTML\n";
 		$ASCII_text.="+-----------------+----------+----------+------------+------------$park_HEADER_DIV+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+------------+   +$sub_statusesHEAD\n";
 		}
 	else
 		{
-		$file_output .= _QXZ("USER").","._QXZ("ID").","._QXZ("CALLS").","._QXZ("TIME CLOCK").","._QXZ("AGENT TIME")."$park_HEADER_CSV,$sub_statusesFILE\n";
+		$file_output .= _QXZ("USER").","._QXZ("ID").","._QXZ("CALLS").","._QXZ("TIME CLOCK").","._QXZ("LOGIN TIME")."$park_HEADER_CSV,$sub_statusesFILE\n";
 		}
 	##### END print the output to screen or put into file output variable
 
