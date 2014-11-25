@@ -2810,13 +2810,15 @@ if ($non_latin < 1)
 	$vtiger_dbname = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$vtiger_dbname);
 	$vtiger_login = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$vtiger_login);
 	$vtiger_pass = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$vtiger_pass);
-	$custom_one = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$custom_one);
-	$custom_two = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$custom_two);
-	$custom_three = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$custom_three);
-	$custom_four = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$custom_four);
-	$custom_five = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$custom_five);
 	$external_server_ip = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$external_server_ip);
 	$alt_server_ip = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$alt_server_ip);
+
+	### ALPHA-NUMERIC and underscore and dash and slash and at and dot and space
+	$custom_one = preg_replace('/[^- \.\:\/\@\_0-9a-zA-Z]/','',$custom_one);
+	$custom_two = preg_replace('/[^- \.\:\/\@\_0-9a-zA-Z]/','',$custom_two);
+	$custom_three = preg_replace('/[^- \.\:\/\@\_0-9a-zA-Z]/','',$custom_three);
+	$custom_four = preg_replace('/[^- \.\:\/\@\_0-9a-zA-Z]/','',$custom_four);
+	$custom_five = preg_replace('/[^- \.\:\/\@\_0-9a-zA-Z]/','',$custom_five);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot and pound and star
 	$extension = preg_replace('/[^-\*\#\.\:\/\@\_0-9a-zA-Z]/','',$extension);
@@ -3385,12 +3387,13 @@ else
 # 141121-0116 - Added campaign options for comments and QC comment history display in agent screen
 # 141124-2138 - Added show_previous_callback campaign option
 # 141124-2226 - Added clear_script campaign option
+# 141124-2352 - Allow spaces in user custom fields, issue #465
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.10-456a';
-$build = '141124-2226';
+$admin_version = '2.10-457a';
+$build = '141124-2352';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
