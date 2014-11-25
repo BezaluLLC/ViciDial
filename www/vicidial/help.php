@@ -25,6 +25,7 @@
 # 140706-0935 - Added callback_time_24hour
 # 140902-0815 - Added callback_active_limit and callback_active_limit_override
 # 141123-1019 - Added help for new campaign comments options
+# 141124-2144 - Added show_previous_callback
 #
 
 
@@ -1372,6 +1373,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="campaigns-my_callback_option">
 <BR>
 <B>My Callbacks Checkbox Default -</B> This option allows you to pre-set the My Callback checkbox on the agent scheduled callback screen. CHECKED will check the checkbox automatically for every call. Default is UNCHECKED.
+
+<BR>
+<A NAME="campaigns-show_previous_callback">
+<BR>
+<B>Show Previous Callback -</B> This option if enabled will show on the agent screen with a separate yellow panel information about the previously set callback that the agent has up on their screen. Disabling this option will not show that panel. Default is ENABLED.
 
 <BR>
 <A NAME="campaigns-wrapup_seconds">

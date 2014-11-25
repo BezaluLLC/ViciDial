@@ -68,3 +68,7 @@ ALTER TABLE vicidial_campaigns ADD comments_callback_screen ENUM('DISABLED','ENA
 ALTER TABLE vicidial_campaigns ADD qc_comment_history ENUM('CLICK','AUTO_OPEN','CLICK_ALLOW_MINIMIZE','AUTO_OPEN_ALLOW_MINIMIZE') default 'CLICK';
 
 UPDATE system_settings SET db_schema_version='1388',db_schema_update_date=NOW() where db_schema_version < 1388;
+
+ALTER TABLE vicidial_campaigns ADD show_previous_callback ENUM('DISABLED','ENABLED') default 'ENABLED';
+
+UPDATE system_settings SET db_schema_version='1389',db_schema_update_date=NOW() where db_schema_version < 1389;
