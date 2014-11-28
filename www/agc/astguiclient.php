@@ -1768,7 +1768,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 		var reglink='';
 		if (taskreg.length<1) 
 			{
-			head_reg = <?php echo _QXZ("'NO ONE'"); ?>;
+			head_reg = '<?php echo _QXZ("NO ONE"); ?>';
 			show_reglink=1;
 			reglink = "<a href=\"#\" onclick=\"conf_register_room('" + head_conf + "');return false;\">Register</a>";
 			}

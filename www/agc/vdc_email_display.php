@@ -1,5 +1,5 @@
 <?php
-# vdc_email_display.php - VICIDIAL administration page
+# vdc_email_display.php - VICIDIAL agent email display script
 #
 # Copyright (C) 2014  Matt Florell, Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -18,10 +18,11 @@
 # 130802-1032 - Changed to PHP mysqli functions
 # 140811-0834 - Changed to use QXZ function for echoing text
 # 141118-1426 - Added agent_email variable
+# 141128-0850 - Code cleanup for QXZ functions
 #
 
-$version = '2.10-8';
-$build = '141118-1426';
+$version = '2.10-9';
+$build = '141128-0850';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -119,7 +120,7 @@ if ($qm_conf_ct > 0)
 
 if ($allow_emails<1) 
 	{
-	echo _QXZ("Your system does not have the email setting enabled\n");
+	echo _QXZ("Your system does not have the email setting enabled")."\n";
 	exit;
 	}
 

@@ -44,6 +44,7 @@
 # 140108-0746 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141114-0009 - Finalized adding QXZ translation to all admin files
+# 141128-0858 - Code cleanup for QXZ functions
 #
 
 $startMS = microtime();
@@ -478,11 +479,11 @@ if ($groups_to_print < 1)
 	{
 	$MAIN.="\n\n";
 	if ($EMAIL=='Y')
-		{$MAIN.=_QXZ("PLEASE SELECT AN EMAIL ACCOUNT AND DATE RANGE ABOVE AND CLICK SUBMIT\n");}
+		{$MAIN.=_QXZ("PLEASE SELECT AN EMAIL ACCOUNT AND DATE RANGE ABOVE AND CLICK SUBMIT")."\n";}
 	if ($DID=='Y')
-		{$MAIN.=_QXZ("PLEASE SELECT A DID AND DATE RANGE ABOVE AND CLICK SUBMIT\n");}
+		{$MAIN.=_QXZ("PLEASE SELECT A DID AND DATE RANGE ABOVE AND CLICK SUBMIT")."\n";}
 	else
-		{$MAIN.=_QXZ("PLEASE SELECT AN IN-GROUP AND DATE RANGE ABOVE AND CLICK SUBMIT\n");}
+		{$MAIN.=_QXZ("PLEASE SELECT AN IN-GROUP AND DATE RANGE ABOVE AND CLICK SUBMIT")."\n";}
 	}
 
 else

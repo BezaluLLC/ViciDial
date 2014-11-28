@@ -121,10 +121,11 @@
 # 140215-2057 - Added several variable options for QM socket URL
 # 140810-2125 - Changed to use QXZ function for echoing text
 # 141118-1101 - Formatting changes for QXZ output
+# 141128-0851 - Code cleanup for QXZ functions
 #
 
-$version = '2.10-68';
-$build = '141118-1101';
+$version = '2.10-69';
+$build = '141128-0851';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=128;
 $one_mysql_log=0;
@@ -1648,7 +1649,8 @@ if ($ACTION=="RedirectXtraCXNeW")
 				$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02044',$user,$server_ip,$session_name,$one_mysql_log);}
 
-				echo _QXZ("RedirectXtraCX command sent for Channel %1s on %2s and \nHungup %3s on %4s",0,'',$channel,$call_server_ip,$extrachannel,$server_ip)."\n";
+				echo _QXZ("RedirectXtraCX command sent for Channel %1s on %2s and",0,'',$channel,$call_server_ip)."\n";
+				echo _QXZ("Hungup %1s on %2s",0,'',$extrachannel,$server_ip)."\n";
 				if (preg_match("/SECOND|FIRST|DEBUG/",$filename)) {$DBout .= "$channel on $call_server_ip, Hungup $extrachannel on $server_ip";}
 				}
 			}
@@ -1824,7 +1826,9 @@ if ($ACTION=="RedirectXtraNeW")
 					$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02057',$user,$server_ip,$session_name,$one_mysql_log);}
 
-					echo _QXZ("RedirectXtra command sent for Channel %1s and \nExtraChannel %2s\n to %3s on %4s",0,'',$channel,$extrachannel,$exten,$server_ip)."\n";
+					echo _QXZ("RedirectXtra command sent for Channel %1s and",0,'',$channel)."\n";
+					echo _QXZ("ExtraChannel %1s",0,'',$extrachannel)."\n";
+					echo _QXZ(" to %1s on %2s",0,'',$exten,$server_ip)."\n";
 					if (preg_match("/SECOND|FIRST|DEBUG/",$filename)) {$DBout .= "$channel and $extrachannel to $exten on $server_ip";}
 					}
 				else
@@ -1851,7 +1855,9 @@ if ($ACTION=="RedirectXtraNeW")
 					$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02059',$user,$server_ip,$session_name,$one_mysql_log);}
 
-					echo _QXZ("RedirectXtra command sent for Channel %1s on %2s and \nExtraChannel %3s\n to %4s on %5s",0,'',$channel,$call_server_ip,$extrachannel,$exten,$server_ip)."\n";
+					echo _QXZ("RedirectXtra command sent for Channel %1s on %2s and",0,'',$channel,$call_server_ip)."\n";
+					echo _QXZ("ExtraChannel %1s",0,'',$extrachannel)."\n";
+					echo _QXZ(" to %1s on %2s",0,'',$exten,$server_ip)."\n";
 					if (preg_match("/SECOND|FIRST|DEBUG/",$filename)) {$DBout .= "$channel/$call_server_ip and $extrachannel/$server_ip to $exten";}
 					}
 				}

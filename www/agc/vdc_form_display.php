@@ -26,11 +26,12 @@
 # 140429-2042 - Added TABLEper_call_notes display script variable for form display
 # 140810-2119 - Changed to use QXZ function for echoing text
 # 141118-1424 - Added agent_email variable
+# 141128-0855 - Code cleanup for QXZ functions
 #
 
 
-$version = '2.10-17';
-$build = '141118-1424';
+$version = '2.10-18';
+$build = '141128-0855';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -421,7 +422,7 @@ if ($stage=='SUBMIT')
 			}
 		}
 	else
-		{$CFoutput .= _QXZ("ERROR: no custom list fields table\n");}
+		{$CFoutput .= _QXZ("ERROR: no custom list fields table")."\n";}
 
 	echo  _QXZ("Custom Form Output:")."\n<BR>\n";
 

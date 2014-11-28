@@ -44,6 +44,7 @@
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141113-2334 - Finalized adding QXZ translation to all admin files
 # 141125-0951 - Changed TOTAL column label to LOGIN TIME for uniform headers with other reports, issue #427
+# 141128-0904 - Code cleanup for QXZ functions
 #
 
 $startMS = microtime();
@@ -522,7 +523,7 @@ $HTML_text.="<option value=\"AM\">"._QXZ("AM")."</option>\n";
 $HTML_text.="<option value=\"PM\">"._QXZ("PM")."</option>\n";
 $HTML_text.="<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
 $HTML_text.="</SELECT><BR><BR>\n";
-$HTML_text.="<input type='checkbox' name='show_percentages' value='checked' $show_percentages>"._QXZ("Show %'s")."\n";
+$HTML_text.="<input type='checkbox' name='show_percentages' value='checked' $show_percentages>"._QXZ("Show %s")."\n";
 $HTML_text.="</TD><TD VALIGN=TOP>";
 $HTML_text.=_QXZ("Display as").":<BR>";
 $HTML_text.="<select name='report_display_type'>";

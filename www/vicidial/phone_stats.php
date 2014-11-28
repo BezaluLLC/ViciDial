@@ -15,6 +15,7 @@
 # 130901-0900 - Changed to mysqli PHP functions
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141114-0034 - Finalized adding QXZ translation to all admin files
+# 141128-0903 - Code cleanup for QXZ functions
 #
 
 require("dbconnect_mysqli.php");
@@ -125,7 +126,7 @@ else
 	$VDdisplayMESSAGE = _QXZ("Login incorrect, please try again");
 	if ($auth_message == 'LOCK')
 		{
-		$VDdisplayMESSAGE = _QXZ( "Too many login attempts, try again in 15 minutes");
+		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;

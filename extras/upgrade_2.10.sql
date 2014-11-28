@@ -92,3 +92,19 @@ unique index (audio_filename)
 ) ENGINE=MyISAM;
 
 UPDATE system_settings SET db_schema_version='1392',db_schema_update_date=NOW() where db_schema_version < 1392;
+
+CREATE TABLE www_phrases (
+phrase_id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+phrase_text VARCHAR(10000) default '',
+php_filename VARCHAR(255) NOT NULL,
+php_directory VARCHAR(255) default '',
+source VARCHAR(20) default '',
+index (phrase_text)
+) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+
+ALTER TABLE vicidial_webservers MODIFY webserver VARCHAR(125) default '';
+ALTER TABLE vicidial_webservers MODIFY hostname VARCHAR(125) default '';
+
+ALTER TABLE vicidial_urls MODIFY url VARCHAR(255) default '';
+
+UPDATE system_settings SET db_schema_version='1393',db_schema_update_date=NOW() where db_schema_version < 1393;

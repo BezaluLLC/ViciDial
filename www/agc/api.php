@@ -76,10 +76,11 @@
 # 140428-1656 - Added pause_type logging to queue_log pause/unpause entries for ra_call_control function
 # 140619-1006 - Added basic audio_playback function
 # 140811-1243 - Changed to use QXZ function for echoing text
+# 141128-0847 - Code cleanup for QXZ functions
 #
 
-$version = '2.10-42';
-$build = '140811-1243';
+$version = '2.10-43';
+$build = '141128-0847';
 
 $startMS = microtime();
 
@@ -2284,175 +2285,175 @@ if ($function == 'update_fields')
 					$field_set=0;
 					if (preg_match('/phone_code/',$query_string))
 						{
-						if ($DB) {echo _QXZ("phone_code set to $phone_code\n");}
+						if ($DB) {echo _QXZ("phone_code set to")." $phone_code\n";}
 						$fieldsSQL .= "phone_code='$phone_code',";
 						$fieldsLIST .= "phone_code,";
 						$field_set++;
 						}
 					if (preg_match('/address1/',$query_string))
 						{
-						if ($DB) {echo _QXZ("address1 set to $address1\n");}
+						if ($DB) {echo _QXZ("address1 set to")." $address1\n";}
 						$fieldsSQL .= "address1='$address1',";
 						$fieldsLIST .= "address1,";
 						$field_set++;
 						}
 					if (preg_match('/address2/',$query_string))
 						{
-						if ($DB) {echo _QXZ("address2 set to $address2\n");}
+						if ($DB) {echo _QXZ("address2 set to")." $address2\n";}
 						$fieldsSQL .= "address2='$address2',";
 						$fieldsLIST .= "address2,";
 						$field_set++;
 						}
 					if (preg_match('/address3/',$query_string))
 						{
-						if ($DB) {echo _QXZ("address3 set to $address3\n");}
+						if ($DB) {echo _QXZ("address3 set to")." $address3\n";}
 						$fieldsSQL .= "address3='$address3',";
 						$fieldsLIST .= "address3,";
 						$field_set++;
 						}
 					if (preg_match('/alt_phone/',$query_string))
 						{
-						if ($DB) {echo _QXZ("alt_phone set to $alt_phone\n");}
+						if ($DB) {echo _QXZ("alt_phone set to")." $alt_phone\n";}
 						$fieldsSQL .= "alt_phone='$alt_phone',";
 						$fieldsLIST .= "alt_phone,";
 						$field_set++;
 						}
 					if (preg_match('/city/',$query_string))
 						{
-						if ($DB) {echo _QXZ("city set to $city\n");}
+						if ($DB) {echo _QXZ("city set to")." $city\n";}
 						$fieldsSQL .= "city='$city',";
 						$fieldsLIST .= "city,";
 						$field_set++;
 						}
 					if (preg_match('/comments/',$query_string))
 						{
-						if ($DB) {echo _QXZ("comments set to $comments\n");}
+						if ($DB) {echo _QXZ("comments set to")." $comments\n";}
 						$fieldsSQL .= "comments='$comments',";
 						$fieldsLIST .= "comments,";
 						$field_set++;
 						}
 					if (preg_match('/country_code/',$query_string))
 						{
-						if ($DB) {echo _QXZ("country_code set to $country_code\n");}
+						if ($DB) {echo _QXZ("country_code set to")." $country_code\n";}
 						$fieldsSQL .= "country_code='$country_code',";
 						$fieldsLIST .= "country_code,";
 						$field_set++;
 						}
 					if (preg_match('/date_of_birth/',$query_string))
 						{
-						if ($DB) {echo _QXZ("date_of_birth set to $date_of_birth\n");}
+						if ($DB) {echo _QXZ("date_of_birth set to")." $date_of_birth\n";}
 						$fieldsSQL .= "date_of_birth='$date_of_birth',";
 						$fieldsLIST .= "date_of_birth,";
 						$field_set++;
 						}
 					if (preg_match('/email/',$query_string))
 						{
-						if ($DB) {echo _QXZ("email set to $email\n");}
+						if ($DB) {echo _QXZ("email set to")." $email\n";}
 						$fieldsSQL .= "email='$email',";
 						$fieldsLIST .= "email,";
 						$field_set++;
 						}
 					if (preg_match('/first_name/',$query_string))
 						{
-						if ($DB) {echo _QXZ("first_name set to $first_name\n");}
+						if ($DB) {echo _QXZ("first_name set to")." $first_name\n";}
 						$fieldsSQL .= "first_name='$first_name',";
 						$fieldsLIST .= "first_name,";
 						$field_set++;
 						}
 					if (preg_match('/gender/',$query_string))
 						{
-						if ($DB) {echo _QXZ("gender set to $gender\n");}
+						if ($DB) {echo _QXZ("gender set to")." $gender\n";}
 						$fieldsSQL .= "gender='$gender',";
 						$fieldsLIST .= "gender,";
 						$field_set++;
 						}
 					if (preg_match('/gmt_offset_now/',$query_string))
 						{
-						if ($DB) {echo _QXZ("gmt_offset_now set to $gmt_offset_now\n");}
+						if ($DB) {echo _QXZ("gmt_offset_now set to")." $gmt_offset_now\n";}
 						$fieldsSQL .= "gmt_offset_now='$gmt_offset_now',";
 						$fieldsLIST .= "gmt_offset_now,";
 						$field_set++;
 						}
 					if (preg_match('/last_name/',$query_string))
 						{
-						if ($DB) {echo _QXZ("last_name set to $last_name\n");}
+						if ($DB) {echo _QXZ("last_name set to")." $last_name\n";}
 						$fieldsSQL .= "last_name='$last_name',";
 						$fieldsLIST .= "last_name,";
 						$field_set++;
 						}
 					if (preg_match('/middle_initial/',$query_string))
 						{
-						if ($DB) {echo _QXZ("middle_initial set to $middle_initial\n");}
+						if ($DB) {echo _QXZ("middle_initial set to")." $middle_initial\n";}
 						$fieldsSQL .= "middle_initial='$middle_initial',";
 						$fieldsLIST .= "middle_initial,";
 						$field_set++;
 						}
 					if (preg_match('/phone_number/',$query_string))
 						{
-						if ($DB) {echo _QXZ("phone_number set to $phone_number\n");}
+						if ($DB) {echo _QXZ("phone_number set to")." $phone_number\n";}
 						$fieldsSQL .= "phone_number='$phone_number',";
 						$fieldsLIST .= "phone_number,";
 						$field_set++;
 						}
 					if (preg_match('/postal_code/i',$query_string))
 						{
-						if ($DB) {echo _QXZ("postal_code set to $postal_code\n");}
+						if ($DB) {echo _QXZ("postal_code set to")." $postal_code\n";}
 						$fieldsSQL .= "postal_code='$postal_code',";
 						$fieldsLIST .= "postal_code,";
 						$field_set++;
 						}
 					if (preg_match('/province/i',$query_string))
 						{
-						if ($DB) {echo _QXZ("province set to $province\n");}
+						if ($DB) {echo _QXZ("province set to")." $province\n";}
 						$fieldsSQL .= "province='$province',";
 						$fieldsLIST .= "province,";
 						$field_set++;
 						}
 					if (preg_match('/security_phrase/i',$query_string))
 						{
-						if ($DB) {echo _QXZ("security_phrase set to $security_phrase\n");}
+						if ($DB) {echo _QXZ("security_phrase set to")." $security_phrase\n";}
 						$fieldsSQL .= "security_phrase='$security_phrase',";
 						$fieldsLIST .= "security_phrase,";
 						$field_set++;
 						}
 					if (preg_match('/source_id/i',$query_string))
 						{
-						if ($DB) {echo _QXZ("source_id set to $source_id\n");}
+						if ($DB) {echo _QXZ("source_id set to")." $source_id\n";}
 						$fieldsSQL .= "source_id='$source_id',";
 						$fieldsLIST .= "source_id,";
 						$field_set++;
 						}
 					if (preg_match('/state/i',$query_string))
 						{
-						if ($DB) {echo _QXZ("state set to $state\n");}
+						if ($DB) {echo _QXZ("state set to")." $state\n";}
 						$fieldsSQL .= "state='$state',";
 						$fieldsLIST .= "state,";
 						$field_set++;
 						}
 					if (preg_match('/title/i',$query_string))
 						{
-						if ($DB) {echo _QXZ("title set to $title\n");}
+						if ($DB) {echo _QXZ("title set to")." $title\n";}
 						$fieldsSQL .= "title='$title',";
 						$fieldsLIST .= "title,";
 						$field_set++;
 						}
 					if (preg_match('/vendor_lead_code/i',$query_string))
 						{
-						if ($DB) {echo _QXZ("vendor_lead_code set to $vendor_lead_code\n");}
+						if ($DB) {echo _QXZ("vendor_lead_code set to")." $vendor_lead_code\n";}
 						$fieldsSQL .= "vendor_lead_code='$vendor_lead_code',";
 						$fieldsLIST .= "vendor_lead_code,";
 						$field_set++;
 						}
 					if (preg_match('/rank/i',$query_string))
 						{
-						if ($DB) {echo _QXZ("rank set to $rank\n");}
+						if ($DB) {echo _QXZ("rank set to")." $rank\n";}
 						$fieldsSQL .= "rank='$rank',";
 						$fieldsLIST .= "rank,";
 						$field_set++;
 						}
 					if (preg_match('/owner/i',$query_string))
 						{
-						if ($DB) {echo _QXZ("owner set to $owner\n");}
+						if ($DB) {echo _QXZ("owner set to")." $owner\n";}
 						$fieldsSQL .= "owner='$owner',";
 						$fieldsLIST .= "owner,";
 						$field_set++;

@@ -36,6 +36,7 @@
 # 130802-1009 - Changed to PHP mysqli functions
 # 140811-0841 - Changed to use QXZ function for echoing text
 # 141118-1236 - Formatting changes for QXZ output
+# 141128-0854 - Code cleanup for QXZ functions
 #
 
 require_once("dbconnect_mysqli.php");
@@ -139,7 +140,7 @@ $channel_live=1;
 if ( (strlen($exten)<1) or (strlen($protocol)<3) )
 	{
 	$channel_live=0;
-	echo _QXZ("Exten %1s is not valid or protocol %2s is not valid\n",0,'',$exten,$protocol);
+	echo _QXZ("Exten %1s is not valid or protocol %2s is not valid",0,'',$exten,$protocol)."\n";
 	exit;
 	}
 else

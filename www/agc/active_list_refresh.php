@@ -43,6 +43,7 @@
 # 130603-2222 - Added login lockout for 15 minutes after 10 failed logins, and other security fixes
 # 130802-0957 - Changed to PHP mysqli functions
 # 140811-0850 - Changed to use QXZ function for echoing text
+# 141128-0901 - Code cleanup for QXZ functions
 # 
 
 require_once("dbconnect_mysqli.php");
@@ -172,7 +173,7 @@ if ($format=='table')
 	if ($ADD==3)		{echo _QXZ("Outside Lines");}
 	if ($ADD==4)		{echo _QXZ("Local Extensions");}
 	if ($ADD==5)		{echo _QXZ("Conferences");}
-	if ($ADD==99999)	{echo _QXZ( "HELP");}
+	if ($ADD==99999)	{echo _QXZ("HELP");}
 	echo "</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";

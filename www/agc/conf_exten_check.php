@@ -64,10 +64,11 @@
 # 140126-0659 - Added external_pause_code function
 # 140810-2136 - Changed to use QXZ function for echoing text
 # 141118-1233 - Formatting changes for QXZ output
+# 141128-0853 - Code cleanup for QXZ functions
 #
 
-$version = '2.10-39';
-$build = '141118-1233';
+$version = '2.10-40';
+$build = '141128-0853';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=39;
 $one_mysql_log=0;
@@ -216,7 +217,7 @@ if ($ACTION == 'refresh')
 	if (strlen($conf_exten)<1)
 		{
 		$channel_live=0;
-		echo _QXZ("Conf Exten %1s is not valid\n",0,'',$conf_exten);
+		echo _QXZ("Conf Exten %1s is not valid",0,'',$conf_exten)."\n";
 		exit;
 		}
 	else
@@ -756,7 +757,7 @@ if ($ACTION == 'register')
 	if ( (strlen($conf_exten)<1) || (strlen($exten)<1) )
 		{
 		$channel_live=0;
-		echo _QXZ("Conf Exten %1s is not valid or Exten %2s is not valid\n",0,'',$conf_exten,$exten);
+		echo _QXZ("Conf Exten %1s is not valid or Exten %2s is not valid",0,'',$conf_exten,$exten)."\n";
 		exit;
 		}
 	else
@@ -766,7 +767,7 @@ if ($ACTION == 'register')
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03013',$user,$server_ip,$session_name,$one_mysql_log);}
 		}
-	echo _QXZ("Conference %1s has been registered to %2s\n",0,'',$conf_exten,$exten);
+	echo _QXZ("Conference %1s has been registered to %2s",0,'',$conf_exten,$exten)."\n";
 	}
 
 

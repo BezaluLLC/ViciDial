@@ -62,6 +62,7 @@
 # 140706-0827 - Incorporated QC includes into code
 # 140817-0937 - Added Archive Log search option
 # 141001-2200 - Finalized adding QXZ translation to all admin files
+# 141128-0859 - Code cleanup for QXZ functions
 #
 
 require("dbconnect_mysqli.php");
@@ -262,7 +263,7 @@ $modify_leads =		$rights_row[0];
 if ( $modify_leads < 1 )
 	{
 	header ("Content-type: text/html; charset=utf-8");
-	echo _QXZ("You do not have permissions to modify leads\n");
+	echo _QXZ("You do not have permissions to modify leads")."\n";
 	exit;
 	}
 

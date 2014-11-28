@@ -366,10 +366,11 @@
 # 141123-0933 - Added dispo_comments option input
 # 141124-1136 - Added cbcomment_comments option input
 # 141125-0059 - Added parked_hangup code
+# 141128-0849 - Code cleanup for QXZ functions
 #
 
-$version = '2.10-262';
-$build = '141125-0059';
+$version = '2.10-263';
+$build = '141128-0849';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=597;
 $one_mysql_log=0;
@@ -1499,7 +1500,7 @@ if ($ACTION == 'UpdateFields')
 		}
 	else
 		{
-		echo "ERROR: "._QXZ("no lead active for this agent\n");
+		echo "ERROR: "._QXZ("no lead active for this agent")."\n";
 		}
 	}
 
@@ -1577,7 +1578,7 @@ if ($ACTION == 'update_settings')
 		}
 	else
 		{
-		echo "ERROR: "._QXZ("no agent session\n");
+		echo "ERROR: "._QXZ("no agent session")."\n";
 		}
 	}
 

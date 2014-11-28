@@ -22,6 +22,7 @@
 # 140521-1314 - Added more agent login error messages
 # 140811-2024 - Changed to use QXZ function for echoing text, for use in future translations
 # 141118-0909 - Added options for up to 9 ordered variables within QXZ function output
+# 141128-0846 - Code cleanup for QXZ functions
 #
 
 # $mysql_queries = 19
@@ -441,7 +442,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 				if ($A_field_type[$o]=='DISPLAY')
 					{
 					if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
-					$field_HTML .= _QXZ("$A_field_default[$o]\n");
+					$field_HTML .= _QXZ("$A_field_default[$o]")."\n";
 					}
 				if ($A_field_type[$o]=='READONLY')
 					{
@@ -548,10 +549,10 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 			$CFoutput .= "</td></tr></table>\n";
 			}
 		else
-			{$CFoutput .= _QXZ("ERROR: no custom list fields\n");}
+			{$CFoutput .= _QXZ("ERROR: no custom list fields")."\n";}
 		}
 	else
-		{$CFoutput .= _QXZ("ERROR: no custom list fields table\n");}
+		{$CFoutput .= _QXZ("ERROR: no custom list fields table")."\n";}
 
 
 	##### BEGIN parsing for vicidial variables #####

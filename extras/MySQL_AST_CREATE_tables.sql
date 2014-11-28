@@ -3034,14 +3034,14 @@ index (start_time)
 
 CREATE TABLE vicidial_webservers (
 webserver_id SMALLINT(5) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
-webserver VARCHAR(150) default '',
-hostname VARCHAR(150) default '',
+webserver VARCHAR(125) default '',
+hostname VARCHAR(125) default '',
 unique index vdweb (webserver, hostname)
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_urls (
 url_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
-url VARCHAR(333) default '',
+url VARCHAR(255) default '',
 unique index (url)
 ) ENGINE=MyISAM;
 
@@ -3077,6 +3077,15 @@ audio_epoch BIGINT(20) UNSIGNED default '0',
 audio_length INT(10) UNSIGNED default '0',
 unique index (audio_filename)
 ) ENGINE=MyISAM;
+
+CREATE TABLE www_phrases (
+phrase_id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+phrase_text VARCHAR(10000) default '',
+php_filename VARCHAR(255) NOT NULL,
+php_directory VARCHAR(255) default '',
+source VARCHAR(20) default '',
+index (phrase_text)
+) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
@@ -3321,4 +3330,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1392',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1393',db_schema_update_date=NOW(),reload_timestamp=NOW();

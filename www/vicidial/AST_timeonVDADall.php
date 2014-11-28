@@ -88,10 +88,11 @@
 # 140328-0006 - Converted division calculations to use MathZDC function
 # 140624-1424 - Added droppedOFtotal options.php option
 # 140918-1614 - Added QXZ function formatting of output
+# 141128-0857 - Code cleanup for QXZ functions
 #
 
-$version = '2.10-77';
-$build = '140918-1614';
+$version = '2.10-78';
+$build = '141128-0857';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -2777,7 +2778,7 @@ $talking_to_print = mysqli_num_rows($rslt);
 		}
 
 		$Aecho .= "$Aline";
-		$Aecho .= "  $agentcount "._QXZ("agents logged in on all servers\n");
+		$Aecho .= "  $agentcount "._QXZ("agents logged in on all servers")."\n";
 		$Aecho .= "  "._QXZ("System Load Average").": $load_ave  &nbsp; $db_source\n\n";
 
 	#	$Aecho .= "  <SPAN class=\"orange\"><B>          </SPAN> - "._QXZ("Balanced call")."</B>\n";

@@ -21,6 +21,7 @@
 #
 
 # constants
+$SYSLOG=1; # log to a logfile
 $DB=0;
 $US='__';
 $MT[0]='';

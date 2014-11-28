@@ -456,10 +456,11 @@
 # 141124-2234 - Added clear_script campaign option
 # 141125-0100 - Added parked_hangup code
 # 141125-1235 - Fixed issue with lead info not being updated when Max Dead time is triggered
+# 141128-0848 - Code cleanup for QXZ functions
 #
 
-$version = '2.10-427c';
-$build = '141125-1235';
+$version = '2.10-428c';
+$build = '141128-0848';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=80;
 $one_mysql_log=0;
@@ -11934,7 +11935,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 	function LogouT(tempreason)
 		{
 		if (MD_channel_look==1)
-			{alert("<?php echo _QXZ('You cannot log out during a Dial attempt. \nWait 50 seconds for the dial to fail out if it is not answered'); ?>");}
+			{alert("<?php echo _QXZ('You cannot log out during a Dial attempt. Wait 50 seconds for the dial to fail out if it is not answered'); ?>");}
 		else
 			{
 			if (VD_live_customer_call==1)

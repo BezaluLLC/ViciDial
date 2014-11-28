@@ -27,6 +27,7 @@
 # 140108-0747 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141113-2336 - Finalized adding QXZ translation to all admin files
+# 141128-0856 - Code cleanup for QXZ functions
 #
 
 $startMS = microtime();
@@ -347,7 +348,7 @@ $MAIN.="<PRE><FONT SIZE=2>\n\n";
 if (!$group)
 	{
 	$MAIN.="\n\n";
-	$MAIN.=_QXZ("PLEASE SELECT AN IN-GROUP AND DATE RANGE ABOVE AND CLICK SUBMIT\n");
+	$MAIN.=_QXZ("PLEASE SELECT AN IN-GROUP AND DATE RANGE ABOVE AND CLICK SUBMIT")."\n";
 	echo "$HEADER";
 	require("admin_header.php");
 	echo "$MAIN";
