@@ -3388,12 +3388,13 @@ else
 # 141124-2138 - Added show_previous_callback campaign option
 # 141124-2226 - Added clear_script campaign option
 # 141124-2352 - Allow spaces in user custom fields, issue #465
+# 141128-0758 - Fixed carrier-related seccurity issue in carrier listings
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.10-457a';
-$build = '141124-2352';
+$admin_version = '2.10-458a';
+$build = '141128-0758';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -32012,6 +32013,11 @@ if ($ADD==140000000000)
 	while ($carriers_to_print > $o) 
 		{
 		$row=mysqli_fetch_row($rslt);
+		if (strlen($row[4])>14)
+			{
+			while (strlen($row[4])>14) {$row[4] = preg_replace("/.$/",'',$row[4]);}
+			$row[4] .= '...';
+			}
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
