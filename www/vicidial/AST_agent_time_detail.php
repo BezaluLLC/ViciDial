@@ -37,6 +37,7 @@
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141113-1124 - Finalized adding QXZ translation to all admin files
 # 141125-0950 - Changed AGENT TIME to LOGIN TIME for uniform headers with other reports, issue #427
+# 141204-0548 - Fix for download headers, issue #805
 #
 
 $startMS = microtime();
@@ -716,7 +717,7 @@ else
 		}
 	else
 		{
-		$file_output .= _QXZ("USER").","._QXZ("ID").","._QXZ("CALLS").","._QXZ("TIME CLOCK").","._QXZ("LOGIN TIME")."$park_HEADER_CSV,$sub_statusesFILE\n";
+		$file_output .= _QXZ("USER").","._QXZ("ID").","._QXZ("CALLS").","._QXZ("TIME CLOCK").","._QXZ("LOGIN TIME").","._QXZ("WAIT").","._QXZ("WAIT %").","._QXZ("TALK").","._QXZ("TALK TIME %").","._QXZ("DISPO").","._QXZ("DISPOTIME %").","._QXZ("PAUSE").","._QXZ("PAUSETIME %").","._QXZ("DEAD").","._QXZ("DEAD TIME %").","._QXZ("CUSTOMER")."$park_HEADER_CSV$sub_statusesFILE\n";
 		}
 	##### END print the output to screen or put into file output variable
 
