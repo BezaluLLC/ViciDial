@@ -215,7 +215,7 @@ if ($match_found > 0)
 			}
 		else
 			{
-			$MESSAGE = _QXZ("DONE: no match found within %1s     |%2s|",0,'',$lead_id,$new_list_id);
+			$MESSAGE = _QXZ("DONE: no match found within %1s     %2s",0,'',$lead_id,$new_list_id);
 			echo "$MESSAGE\n";
 			}
 		}

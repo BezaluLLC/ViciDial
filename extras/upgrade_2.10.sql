@@ -108,3 +108,29 @@ ALTER TABLE vicidial_webservers MODIFY hostname VARCHAR(125) default '';
 ALTER TABLE vicidial_urls MODIFY url VARCHAR(255) default '';
 
 UPDATE system_settings SET db_schema_version='1393',db_schema_update_date=NOW() where db_schema_version < 1393;
+
+ALTER TABLE system_settings ADD enable_languages ENUM('0','1') default '0';
+
+ALTER TABLE vicidial_users ADD modify_languages ENUM('1','0') default '0';
+
+CREATE TABLE vicidial_languages (
+language_id VARCHAR(100) NOT NULL,
+language_code VARCHAR(20) default '',
+language_description VARCHAR(255) default '',
+user_group VARCHAR(20) default '---ALL---',
+modify_date TIMESTAMP,
+unique index (language_id)
+) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+
+CREATE TABLE vicidial_language_phrases (
+phrase_id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+language_id VARCHAR(100) NOT NULL,
+english_text VARCHAR(10000) default '',
+translated_text TEXT,
+source VARCHAR(20) default '',
+modify_date TIMESTAMP,
+index (language_id),
+index (english_text)
+) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+
+UPDATE system_settings SET db_schema_version='1394',db_schema_update_date=NOW() where db_schema_version < 1394;

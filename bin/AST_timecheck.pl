@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_timecheck.pl             version: 2.8
+# AST_timecheck.pl             version: 2.10
 #
 # This script is designed to send an email when an asterisk server is out of sync
 #
@@ -11,6 +11,7 @@
 # CHANGES
 # 130503-1515 - First version
 # 140509-2214 - Added frozen_server_call_clear system setting
+# 141202-1108 - Do not send warning for server set to Active=N
 #
 
 $txt = '.txt';
@@ -207,7 +208,7 @@ if ($sthArows > 0)
 	}
 $sthA->finish();
 
-$stmtA = "SELECT su.server_ip,last_update,UNIX_TIMESTAMP(last_update),server_description,UNIX_TIMESTAMP(db_time),server_id FROM server_updater su,servers s where s.server_ip=su.server_ip;";
+$stmtA = "SELECT su.server_ip,last_update,UNIX_TIMESTAMP(last_update),server_description,UNIX_TIMESTAMP(db_time),server_id,active FROM server_updater su,servers s where s.server_ip=su.server_ip;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArowsSERVERS=$sthA->rows;
@@ -223,10 +224,11 @@ while ($sthArowsSERVERS > $i)
 	$server_name =	$aryA[3];
 	$Sdb_time =		($aryA[4] + 10);
 	$server_id =	$aryA[5];
+	$active =		$aryA[6];
 
 	if ($DBX) {print "Server time: $i - $server_ip($server_id - $server_name)   Last time: $s_time($u_time|$aryA[2])\n";}
 
-	if ($web_u_time > $u_time)
+	if ( ($web_u_time > $u_time) and ($active =~ /Y/) )
 		{
 		if ($DBX) {print "Time sync issue - SERVER: $server_ip($server_name)\n   LAST TIME: $s_time($u_time)\n   TIME NOW:  $timestamp($web_u_time)\n";}
 		$Ealert .= "SERVER: $server_ip($server_name)\n   LAST TIME: $s_time($u_time)\n   TIME NOW:  $timestamp($web_u_time)\n\n";

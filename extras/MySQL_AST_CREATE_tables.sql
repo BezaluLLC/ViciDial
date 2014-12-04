@@ -622,7 +622,8 @@ pass_hash VARCHAR(100) default '',
 alter_admin_interface_options ENUM('0','1') default '1',
 max_inbound_calls SMALLINT(5) UNSIGNED default '0',
 modify_custom_dialplans ENUM('1','0') default '0',
-wrapup_seconds_override SMALLINT(4) default '-1'
+wrapup_seconds_override SMALLINT(4) default '-1',
+modify_languages ENUM('1','0') default '0'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -1571,7 +1572,8 @@ queuemetrics_pause_type ENUM('0','1') default '0',
 frozen_server_call_clear ENUM('0','1') default '0',
 callback_time_24hour ENUM('0','1') default '0',
 active_modules TEXT,
-allow_chats ENUM('0','1') default '0'
+allow_chats ENUM('0','1') default '0',
+enable_languages ENUM('0','1') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3087,6 +3089,26 @@ source VARCHAR(20) default '',
 index (phrase_text)
 ) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
+CREATE TABLE vicidial_languages (
+language_id VARCHAR(100) NOT NULL,
+language_code VARCHAR(20) default '',
+language_description VARCHAR(255) default '',
+user_group VARCHAR(20) default '---ALL---',
+modify_date TIMESTAMP,
+unique index (language_id)
+) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+
+CREATE TABLE vicidial_language_phrases (
+phrase_id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+language_id VARCHAR(100) NOT NULL,
+english_text VARCHAR(10000) default '',
+translated_text TEXT,
+source VARCHAR(20) default '',
+modify_date TIMESTAMP,
+index (language_id),
+index (english_text)
+) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3330,4 +3352,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1393',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1394',db_schema_update_date=NOW(),reload_timestamp=NOW();

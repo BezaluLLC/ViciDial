@@ -457,10 +457,11 @@
 # 141125-0100 - Added parked_hangup code
 # 141125-1235 - Fixed issue with lead info not being updated when Max Dead time is triggered
 # 141128-0848 - Code cleanup for QXZ functions
+# 141204-1211 - Added more error checking on login
 #
 
-$version = '2.10-428c';
-$build = '141128-0848';
+$version = '2.10-429c';
+$build = '141204-1211';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=80;
 $one_mysql_log=0;
@@ -572,6 +573,11 @@ if ($qm_conf_ct > 0)
 	$qc_enabled =					$row[14];
 	$email_enabled =				$row[15];
 	$callback_time_24hour =			$row[16];
+	}
+else
+	{
+	echo _QXZ("ERROR: System Settings missing")."\n";
+	exit;
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -2258,13 +2264,23 @@ else
 			while ( ($pb < $phones_auto_ct) and ($pb_force_set < 1) )
 				{
 				### find the server_ip of each phone_login
-				$stmtx="SELECT server_ip from phones where login = '$phones_auto[$pb]';";
+				$stmtn="SELECT count(*) from phones where login = '$phones_auto[$pb]';";
 				if ($DB) {echo "|$stmtx|\n";}
 				if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
-				$rslt=mysql_to_mysqli($stmtx, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01021',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$rowx=mysqli_fetch_row($rslt);
-
+				$rslt=mysql_to_mysqli($stmtn, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$rown=mysqli_fetch_row($rslt);
+				if ($rown[0] > 0)
+					{
+					$stmtx="SELECT server_ip from phones where login = '$phones_auto[$pb]';";
+					if ($DB) {echo "|$stmtx|\n";}
+					$rslt=mysql_to_mysqli($stmtx, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01021',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					$rowx=mysqli_fetch_row($rslt);
+					}
+				else
+					{$rowx[0]='0.0.0.0';}
+				
 				### get number of agents logged in to each server
 				$stmt="SELECT count(*) from vicidial_live_agents where server_ip = '$rowx[0]' and extension NOT LIKE \"R%\";";
 				if ($DB) {echo "|$stmt|\n";}
@@ -2279,22 +2295,31 @@ else
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01023',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$rowy=mysqli_fetch_row($rslt);
 
-				### find out if this server has a twin
-				$twin_not_live=0;
-				$stmt="SELECT active_twin_server_ip from servers where server_ip = '$rowx[0]';";
+				$stmt="SELECT count(*) FROM vicidial_conferences where server_ip='$rowx[0]' and ((extension='') or (extension is null));";
 				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01070',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-				$rowyy=mysqli_fetch_row($rslt);
-				if (strlen($rowyy[0]) > 4)
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$rowys=mysqli_fetch_row($rslt);
+
+				### find out if this server has a twin
+				$twin_not_live=0;
+				if ($rowy[0] > 0)
 					{
-					### find out whether the twin server_updater is running
-					$stmt="SELECT count(*) from server_updater where server_ip = '$rowyy[0]' and last_update > '$past_minutes_date';";
+					$stmt="SELECT active_twin_server_ip from servers where server_ip = '$rowx[0]';";
 					if ($DB) {echo "|$stmt|\n";}
 					$rslt=mysql_to_mysqli($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01071',$VD_login,$server_ip,$session_name,$one_mysql_log);}
-					$rowyz=mysqli_fetch_row($rslt);
-					if ($rowyz[0] < 1) {$twin_not_live=1;}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01070',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					$rowyy=mysqli_fetch_row($rslt);
+					if (strlen($rowyy[0]) > 4)
+						{
+						### find out whether the twin server_updater is running
+						$stmt="SELECT count(*) from server_updater where server_ip = '$rowyy[0]' and last_update > '$past_minutes_date';";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01071',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+						$rowyz=mysqli_fetch_row($rslt);
+						if ($rowyz[0] < 1) {$twin_not_live=1;}
+						}
 					}
 
 				### find out whether the server_updater is running
@@ -2304,9 +2329,9 @@ else
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01024',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$rowz=mysqli_fetch_row($rslt);
 
-				$pb_log .= "$phones_auto[$pb]|$rowx[0]|$row[0]|$rowy[0]|$rowz[0]|$twin_not_live|   ";
+				$pb_log .= "$phones_auto[$pb]|$rowx[0]|$row[0]|$rowy[0]|$rowys[0]|$rowz[0]|$twin_not_live|   ";
 
-				if ( ($rowy[0] > 0) and ($rowz[0] > 0) and ($twin_not_live < 1) )
+				if ( ($rowy[0] > 0) and ($rowys[0] > 0) and ($rowz[0] > 0) and ($twin_not_live < 1) )
 					{
 					if ( ($pllb_grouping == 'ONE_SERVER_ONLY') or ($pllb_grouping == 'CASCADING') )
 						{
@@ -2350,6 +2375,7 @@ else
 								}
 							}
 						}
+					if ($DB > 0) {echo "($pb_count <> $row[0]) $pb|$pb_force_set|$phones_auto[$pb]|$pb_server_ip|$pb_count| -->\n";}
 					if ($pb_force_set < 1)
 						{
 						if ( ($pb_count >= $row[0]) or (strlen($pb_server_ip) < 4) )
@@ -2364,11 +2390,7 @@ else
 				}
 
 
-
-
-
-
-			echo "<!-- Phones balance selection: $phone_login|$pb_server_ip|$past_minutes_date|     |$pb_log -->\n";
+			echo "<!-- Phones balance selection: $phone_login|$pb_server_ip|$past_minutes_date|$pb_force_set|     |$pb_log -->\n";
 			}
 		##### END phone login load balancing functions #####
 
@@ -3044,7 +3066,7 @@ else
             echo "<table width=\"100%\"><tr><td></td>\n";
 			echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
             echo "</tr></table>\n";
-            echo "<b>"._QXZ("Sorry, there are no available sessions")."</b>\n";
+            echo "<b>"._QXZ("Sorry, there are no available sessions")."</b>: |$session_id|$server_ip|$extension|$SIP_user|\n";
             echo "<form action=\"$PHP_SELF\" method=\"post\" />\n";
             echo "<input type=\"hidden\" name=\"DB\" value=\"$DB\" />\n";
             echo "<input type=\"hidden\" name=\"JS_browser_height\" id=\"JS_browser_height\" value=\"\" />\n";

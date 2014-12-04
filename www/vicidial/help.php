@@ -27,7 +27,7 @@
 # 141123-1019 - Added help for new campaign comments options
 # 141124-2144 - Added show_previous_callback
 # 141124-2231 - Added clear_script
-#
+# 141204-0605 - Added enable_languages
 
 
 require("dbconnect_mysqli.php");
@@ -35,7 +35,7 @@ require("functions.php");
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,allow_emails,level_8_disable_add,pass_key,pass_hash_enabled,disable_auto_dial,country_code_list_stats FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,allow_emails,level_8_disable_add,pass_key,pass_hash_enabled,disable_auto_dial,country_code_list_stats,enable_languages FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -83,6 +83,7 @@ if ($qm_conf_ct > 0)
 	$SSpass_hash_enabled =					$row[38];
 	$SSdisable_auto_dial =					$row[39];
 	$SScountry_code_list_stats =			$row[40];
+	$SSenable_languages =					$row[41];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -4329,6 +4330,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="settings-use_non_latin">
 <BR>
 <B>Use Non-Latin -</B> This option allows you to default the web display script to use UTF8 characters and not do any latin-character-family regular expression filtering or display formatting. Default is 0.
+
+<BR>
+<A NAME="settings-enable_languages">
+<BR>
+<B>Enable Languages -</B> This setting allows you to enable non-English language translations on the system. A new section called Languages under the Admin section will also be available to manager Languages. Default is 0 for disabled.
 
 <BR>
 <A NAME="settings-webroot_writable">

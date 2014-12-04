@@ -903,7 +903,7 @@ $MAIN.="<!-- HICOUNT CALLS: $hi_hour_count|$hour_multiplier -->";
 $MAIN.="<!-- HICOUNT HOLD:  $hi_hold_count|$hold_multiplier -->\n";
 $MAIN.=_QXZ("GRAPH IN 15 MINUTE INCREMENTS OF AVERAGE HOLD TIME FOR CALLS TAKEN INTO THIS IN-GROUP")."\n";
 
-$CSV_text.="\n\n\""._QXZ("HOLD TIME; CALL AND DROP STATS")."\"\n";
+$CSV_text.="\n\n\""._QXZ("HOLD TIME, CALL AND DROP STATS")."\"\n";
 $CSV_text.="\""._QXZ("GRAPH IN 15 MINUTE INCREMENTS")."\"\n\""._QXZ("OF AVERAGE HOLD TIME FOR CALLS")."\"\n\""._QXZ("TAKEN INTO THIS IN-GROUP")."\"\n";
 
 $k=1;

@@ -1,11 +1,14 @@
-Notes on the non-English language translations(QXZ process)	2014-11-18
+Notes on the non-English language translations(QXZ process)	Started: 2014-11-18	Updated: 2014-12-04
 
 
 Summary: 
 
 In the 2.10 branch, we started converting from a static build process for non-English languages of the agent and admin web interfaces, to a dynamic load-time process. This necessitated creating a new function in the agent and admin web interface functions.php files to facilitate the printing or echoing of text and image names within PHP. We call this function QXZ.
 
-The end goal, is to complete a new Database schema and Adminsitrative web interface to allow for the dynamic editing of non-English languages within the system.
+As of 2014-12-04, the administrative web interface was completed. To enable languages, you need to go to Admin -> System Settings in the admin.php web interface, then set "Enable Languages" to "1" and submit. Then go to your user modify page and set "Modify Languages" to "1" and submit. Now you will be able to go to Admin -> Languages and you can create new languages, copy existing languages, import languages and export languages.(The import and export processes use the existing <english>|<other-language>|| file format for UTF-8 text that is used for the language translations files currently in the codebase.)
+
+The last two steps are: To create a flexible way of assigning languages to agents and/or user groups, and creating an efficient way of looking up the phrases to match the selected language on the fly as the dynamic agent and admin web pages are loaded by users.
+
 
 
 
@@ -22,9 +25,31 @@ The QXZ function allows for up to 9 defined and ordered variables to be placed i
 
 Utilities:
 
+/usr/share/astguiclient/ADMIN_www_languages.pl
+
+ADMIN_www_languages.pl - analyze all php scripts for QXZ functions and contents and insert in DB
+
+This script is designed to scan all scripts in the agc and vicidial web directories and gather all of the QXZ phrases present, then insert them into the "www_phrases" database table. After that is done, those phrases can be populated into the "vicidial_language_phrases" database table when adding new Languages in the Administration Web Interface.
+
+/usr/share/astguiclient/ADMIN_www_languages.pl --help
+
+options:
+  [--help] = this help screen
+  [--debug] = verbose debug messages
+  [--debugX] = extra verbose debug messages
+  [--agc-only] = only parse the agc directory
+  [--vicidial-only] = only parse the vicidial directory
+  [--QXZlines] = print full lines that include QXZ functions
+  [--QXZvalues] = print only QXZ function values
+  [--QXZvaronly] = print only QXZ function values with PHP variables in them
+  [--QXZlengthonly] = print only QXZ function values that include a length spec
+  [--QXZplaceonly] = print only QXZ function values with placeholder variables in them
+  [--conffile=/path/from/root] = define astguiclient.conf config file to use
+
+
 /usr/share/astguiclient/QXZanalyzer.pl --debug --QXZvalues --QXZvaronly --file=/srv/www/htdocs/agc/astguiclient.php
 
-There is a new utility stored in the /extras/ directory of the source tree called "QXZanalyzer.pl". This perl script can analyze the PHP scripts one at a time and print out various different types of output to help gather the phrases necessary for future translations as well as to help debug any issues with the PHP code itself
+There is a utility stored in the /extras/ directory of the source tree called "QXZanalyzer.pl". This perl script can analyze the PHP scripts one at a time and print out various different types of output to help gather the phrases necessary for future translations as well as to help debug any issues with the PHP code itself
 
 /usr/share/astguiclient/QXZanalyzer.pl --help
 QXZanalyzer.pl - analyze php scripts for QXZ functions and contents

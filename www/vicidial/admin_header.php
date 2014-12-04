@@ -47,6 +47,7 @@
 # 140126-1022 - Added VMAIL_NO_INST option
 # 140706-0828 - Incorporated QC includes into code
 # 141001-2200 - Finalized adding QXZ translation to all admin files
+# 141128-1009 - Added code for languages section
 #
 
 
@@ -1094,7 +1095,7 @@ else
 	
 echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
 
-$stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled,allow_emails,level_8_disable_add,allow_chats from system_settings;";
+$stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled,allow_emails,level_8_disable_add,allow_chats,enable_languages from system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $admin_home_url_LU =		$row[0];
@@ -1104,6 +1105,7 @@ $SScustom_fields_enabled =	$row[3];
 $SSemail_enabled =			$row[4];
 $SSlevel_8_disable_add =	$row[5];
 $SSchat_enabled =			$row[6];
+$SSenable_languages =		$row[7];
 
 
 ?>
@@ -1463,7 +1465,7 @@ $SSchat_enabled =			$row[6];
 	</TD></TR>
 	<?php
 	if (strlen($admin_hh) > 1) 
-		{ 
+		{
 		if ($sh=='times') {$times_sh="bgcolor=\"$times_color\""; $times_fc="$times_font";}
 			else {$times_sh=''; $times_fc='BLACK';}
 		if ($sh=='shifts') {$shifts_sh="bgcolor=\"$shifts_color\""; $shifts_fc="$shifts_font";}
@@ -1488,6 +1490,8 @@ $SSchat_enabled =			$row[6];
 			else {$audio_sh=''; $audio_fc='BLACK';}
 		if ($sh=='moh') {$moh_sh="bgcolor=\"$moh_color\""; $moh_fc="$moh_font";}
 			else {$moh_sh=''; $moh_fc='BLACK';}
+		if ($sh=='languages') {$languages_sh="bgcolor=\"$languages_color\""; $languages_fc="$languages_font";}
+			else {$languages_sh=''; $languages_fc='BLACK';}
 		if ( preg_match("/avatar/",$SSactive_modules) )
 			{
 			if ($sh=='avatar') {$avatar_sh="bgcolor=\"$avatar_color\""; $avatar_fc="$avatar_font";}
@@ -1546,6 +1550,12 @@ $SSchat_enabled =			$row[6];
 			<a href="<?php echo $ADMIN ?>?ADD=160000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $moh_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Music On Hold"); ?> </a></TD>
 			</TR>
 			<?php
+		if ($SSenable_languages > 0)
+			{ ?>
+			<TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $languages_sh ?>> &nbsp; 
+			<a href="admin_languages.php?ADD=163000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $languages_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Languages"); ?> </a></TD>
+			</TR>
+			<?php }
 			if (preg_match("/avatar/",$SSactive_modules) )
 				{
 			?>
@@ -1703,6 +1713,10 @@ $SSchat_enabled =			$row[6];
 	if ( (strlen($moh_sh) > 1) and (strlen($admin_hh) > 1) ) { 
 		?>
 	<TR BGCOLOR=<?php echo $moh_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=160000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show MOH Entries"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=161111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New MOH Entry"); ?> </a><?php } ?></TD></TR>
+	<?php }
+	if ( (strlen($languages_sh) > 1) and (strlen($admin_hh) > 1) and ($SSenable_languages > 0) ) { 
+		?>
+	<TR BGCOLOR=<?php echo $languages_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="admin_languages.php?ADD=163000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show Languages"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="admin_languages.php?ADD=163111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A New Language"); ?></FONT></a> &nbsp; | &nbsp; <a href="admin_languages.php?ADD=163211111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Copy A Languages Entry"); ?></FONT></a> &nbsp; | &nbsp; <a href="admin_languages.php?ADD=163311111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Import Phrases"); ?></FONT></a> &nbsp; | &nbsp; <a href="admin_languages.php?ADD=163411111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Export Phrases"); ?></FONT></a> &nbsp; <?php } ?></TD></TR>
 	<?php }
 	if (preg_match("/avatar/",$SSactive_modules) )
 		{
