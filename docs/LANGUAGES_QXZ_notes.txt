@@ -1,4 +1,4 @@
-Notes on the non-English language translations(QXZ process)	Started: 2014-11-18	Updated: 2014-12-04
+Notes on the non-English language translations(QXZ process)	Started: 2014-11-18	Updated: 2014-12-05
 
 
 Summary: 
@@ -45,6 +45,23 @@ options:
   [--QXZlengthonly] = print only QXZ function values that include a length spec
   [--QXZplaceonly] = print only QXZ function values with placeholder variables in them
   [--conffile=/path/from/root] = define astguiclient.conf config file to use
+
+Sample output:
+
+FILE PARSING FINISHED!
+Files parsed: 283
+ConfFile:     /etc/astguiclient.conf
+QXZ line count:          17957
+QXZ count:               24578
+QXZ with length set:     1392
+QXZ with PHP vars:       681
+QXZ with var place set:  179
+QXZ with PHP vars inst:  814
+QXZ with var place inst: 292
+
+QXZ DB inserts:    6284
+QXZ DB dups:       18294
+
 
 
 /usr/share/astguiclient/QXZanalyzer.pl --debug --QXZvalues --QXZvaronly --file=/srv/www/htdocs/agc/astguiclient.php

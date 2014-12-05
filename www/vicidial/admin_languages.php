@@ -7,10 +7,11 @@
 #
 # changes:
 # 141203-2126 - First Build
+# 141205-0641 - Added option to allow for more matches in the help.php file
 #
 
-$admin_version = '2.10-1';
-$build = '141203-2126';
+$admin_version = '2.10-2';
+$build = '141205-0641';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -98,6 +99,7 @@ if ($qm_conf_ct > 0)
 if (strlen($DB) < 1)
 	{$DB=0;}
 $modify_refresh_set=0;
+$import_with_missing_periods=1;
 
 if ($non_latin < 1)
 	{
@@ -1048,7 +1050,10 @@ if ($ADD==263311111111)
 				if ( ($import_data_lines_ary_ct > 0) and (strlen($import_data_lines_ary[0]) > 0) and (!preg_match("/^\#/",$import_data_lines_ary)) )
 					{
 					$import_data_lines_ary[0] = addslashes($import_data_lines_ary[0]);
-					$stmt="SELECT count(*) from vicidial_language_phrases where language_id='$language_id' and english_text='$import_data_lines_ary[0]';";
+					$english_textSQL="english_text='$import_data_lines_ary[0]'";
+					if ($import_with_missing_periods > 0)
+						{$english_textSQL="english_text IN('$import_data_lines_ary[0]','$import_data_lines_ary[0].')";}
+					$stmt="SELECT count(*) from vicidial_language_phrases where language_id='$language_id' and $english_textSQL;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$row=mysqli_fetch_row($rslt);
@@ -1069,13 +1074,13 @@ if ($ADD==263311111111)
 						if ( ($stage=='UPDATE') or ($stage=='ADD_UPDATE') )
 							{
 							$import_data_lines_ary[1] = addslashes($import_data_lines_ary[1]);
-							$stmt="SELECT count(*) from vicidial_language_phrases where language_id='$language_id' and english_text='$import_data_lines_ary[0]' and translated_text='$import_data_lines_ary[1]';";
+							$stmt="SELECT count(*) from vicidial_language_phrases where language_id='$language_id' and $english_textSQL and translated_text='$import_data_lines_ary[1]';";
 							if ($DB) {echo "$stmt\n";}
 							$rslt=mysql_to_mysqli($stmt, $link);
 							$row=mysqli_fetch_row($rslt);
 							if ($row[0] < 1)
 								{
-								$stmt="UPDATE vicidial_language_phrases set translated_text='$import_data_lines_ary[1]',source='$user' where english_text='$import_data_lines_ary[0]' and language_id='$language_id';";
+								$stmt="UPDATE vicidial_language_phrases set translated_text='$import_data_lines_ary[1]',source='$user' where $english_textSQL and language_id='$language_id';";
 								if ($DB) {echo "$stmt\n";}
 								$rslt=mysql_to_mysqli($stmt, $link);
 								$stmtLIST .= "|$stmt";
