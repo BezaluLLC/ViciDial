@@ -29,6 +29,7 @@
 # 141124-2231 - Added clear_script
 # 141204-0605 - Added enable_languages
 # 141204-2209 - Added QXZ function output
+# 141211-1647 - Added cpd_unknown_action and lists-na_call_url
 #
 
 require("dbconnect_mysqli.php");
@@ -920,6 +921,11 @@ if ($SSoutbound_autodial_active > 0)
 	<A NAME="campaigns-cpd_amd_action">
 	<BR>
 	<B><?php echo _QXZ("CPD AMD Action"); ?> -</B><?php echo _QXZ("If you are using the Sangoma ParaXip Call Progress Detection software then you will want to enable this setting either setting it to DISPO which will disposition the call as AA and hang it up if the call is being processed and has not been sent to an agent yet or MESSAGE which will send the call to the defined Answering Machine Message for this campaign. Default is DISABLED. Setting this to INGROUP will send an answering machine to an inbound group. Setting this to CALLMENU will send an answering machine to a Call Menu in the system."); ?>
+
+	<BR>
+	<A NAME="campaigns-cpd_unknown_action">
+	<BR>
+	<B><?php echo _QXZ("CPD Unknown Action"); ?> -</B><?php echo _QXZ("If you are using the Sangoma ParaXip Call Progress Detection software and you want to send calls that have an Unknown result to a destination other than an agent, then you will want to enable this setting either setting it to DISPO which will disposition the call as AA and hang it up if the call is being processed and has not been sent to an agent yet or MESSAGE which will send the call to the defined Answering Machine Message for this campaign. Default is DISABLED. Setting this to INGROUP will send an answering machine to an inbound group. Setting this to CALLMENU will send an answering machine to a Call Menu in the system."); ?>
 
 	<BR>
 	<A NAME="campaigns-amd_inbound_group">
@@ -1852,6 +1858,11 @@ if ($SSqc_features_active > 0)
 <A NAME="lists-web_form_address">
 <BR>
 <B><?php echo _QXZ("Web Form Override"); ?> -</B><?php echo _QXZ("This is the custom address that clicking on the WEB FORM button in the agent screen will take you to for calls that come in on this list. If you want to use custom fields in a web form address, you need to add &CF_uses_custom_fields=Y as part of your URL."); ?>
+
+<BR>
+<A NAME="lists-na_call_url">
+<BR>
+<B><?php echo _QXZ("No Agent Call URL"); ?> -</B><?php echo _QXZ("This web URL address is not seen by the agent, but if it is populated it is called every time a call that is not handled by an agent is hung up or transferred. Uses the same variables as the web form fields and scripts. dispo can be used to retrieve the system-defined disposition for the call. This URL can NOT be a relative path. Default is blank."); ?>
 
 <BR>
 <A NAME="lists-xferconf_a_dtmf">

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# VD_amd.agi version 2.8
+# VD_amd.agi version 2.10
 #
 # runs after a call goes through AMD in extensions.conf to send the call on to
 # it's proper destination, or when agent sends to VM message
@@ -46,6 +46,7 @@
 # 130108-1808 - Changes for Asterisk 1.8 compatibility
 # 130210-1113 - Added options for CALLMENU|INGROUP cpd_amd_actions
 # 140312-2110 - Added CALLID as recording filename variable
+# 141211-1634 - Added cpd_unknown_action campaign option
 #
 
 $script = 'VD_amd.agi';
@@ -380,7 +381,7 @@ else
 		}
 
 	### Grab vmail forward message values from the database
-	$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename,cpd_amd_action,amd_inbound_group,amd_callmenu FROM vicidial_campaigns where campaign_id = '$VD_campaign_id' limit 1;";
+	$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename,cpd_amd_action,amd_inbound_group,amd_callmenu,cpd_unknown_action FROM vicidial_campaigns where campaign_id = '$VD_campaign_id' limit 1;";
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -396,13 +397,14 @@ else
 		$cpd_amd_action =			$aryA[5];
 		$amd_inbound_group =		$aryA[6];
 		$amd_callmenu =				$aryA[7];
+		$cpd_unknown_action =		$aryA[8];
 		$sthA->finish();
 		}
 	else
 		{
 		$sthA->finish();
 		### Grab vmail forward message values from the database
-		$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename,cpd_amd_action,amd_inbound_group,amd_callmenu FROM vicidial_campaigns where closer_campaigns LIKE \"% $VD_campaign_id %\" order by campaign_id limit 1;";
+		$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename,cpd_amd_action,amd_inbound_group,amd_callmenu,cpd_unknown_action FROM vicidial_campaigns where closer_campaigns LIKE \"% $VD_campaign_id %\" order by campaign_id limit 1;";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -418,6 +420,7 @@ else
 			$cpd_amd_action =			$aryA[5];
 			$amd_inbound_group =		$aryA[6];
 			$amd_callmenu =				$aryA[7];
+			$cpd_unknown_action =		$aryA[8];
 			$sthA->finish();
 			}
 		else
@@ -530,7 +533,7 @@ else
 		}
 
 	### check for list_id override
-	if ( ($DB_amd_send_to_vmx =~ /Y/) || ($AMDSTATUS =~ /CPD/) )
+	if ( ( ($DB_amd_send_to_vmx =~ /Y/) || ($AMDSTATUS =~ /CPD/) ) && ($AMDCAUSE !~ /^Unknown|\?\?\?/i) )
 		{
 		$am_message_exten_override='';
 		### gather list_id overrides
@@ -759,6 +762,52 @@ else
 
 
 		### if call menu or in-group method
+		if ( ($AMDCAUSE =~ /^Unknown|\?\?\?/i) && ($cpd_unknown_action =~ /CALLMENU|INGROUP/) ) 
+			{
+			$DROPexten='';
+			if ($cpd_unknown_action =~ /CALLMENU/)
+				{
+				$DROPexten =	's';
+				$ext_context =	$amd_callmenu;
+				}
+			if ($cpd_unknown_action =~ /INGROUP/)
+				{ # 90009*CL_uk3survy_*8301*10000123*universal*7275551212*1234*"
+				$S='*';
+				$fronter='VDAMD';
+				$DROPexten = "90009*$amd_inbound_group$S$S$VD_lead_id$S$S$VD_phone_number$S$fronter$S";
+				}
+			if (length($DROPexten)>0)
+				{
+				$stmtA = "UPDATE vicidial_log set status='AMDXFR' where uniqueid='$uniqueid' and lead_id='$VD_lead_id' order by call_date desc limit 1;";
+					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+				$affected_rows = $dbhA->do($stmtA);
+				if ($AGILOG) {$agi_string = "--    VDAD vicidial_log AMDXFR update: |$affected_rows|$uniqueid|";   &agi_output;}
+
+				$stmtA = "UPDATE vicidial_list set status='AMDXFR' where lead_id='$VD_lead_id';";
+					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+				$affected_rows = $dbhA->do($stmtA);
+				if ($AGILOG) {$agi_string = "--    VDAD vicidial_list AMDXFR update: |$affected_rows|$uniqueid|";   &agi_output;}
+
+				$AGI->stream_file('sip-silence');
+				$AGI->stream_file('sip-silence');
+				$AGI->stream_file('sip-silence');
+				$AGI->stream_file('sip-silence');
+
+				if ($AGILOG) {$agi_string = "exiting the VD_AMD app CPD Unknown, transferring call to $DROPexten:$ext_context";   &agi_output;}
+				print "SET CONTEXT $ext_context\n";
+					$result = <STDIN>;
+					checkresult($result);
+				print "SET EXTENSION $DROPexten\n";
+					$result = <STDIN>;
+					checkresult($result);
+				print "SET PRIORITY 1\n";
+					$result = <STDIN>;
+					checkresult($result);
+
+				exit;
+				}
+			}
+
 		if ($cpd_amd_action =~ /CALLMENU|INGROUP/)
 			{
 			$DROPexten='';

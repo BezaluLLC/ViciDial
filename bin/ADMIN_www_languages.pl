@@ -17,6 +17,7 @@
 #
 # CHANGES
 # 141128-0024 - First build
+# 141211-2123 - Added --wipe-www-phrases-table CLI option and insert_date field
 #
 
 $secX = time();
@@ -75,6 +76,7 @@ if (length($ARGV[0])>1)
 		print "  [--QXZlengthonly] = print only QXZ function values that include a length spec\n";
 		print "  [--QXZplaceonly] = print only QXZ function values with placeholder variables in them\n";
 		print "  [--conffile=/path/from/root] = define astguiclient.conf config file to use\n";
+		print "  [--wipe-www-phrases-table] = deletes all records in www_phrases database table\n";
 		print "\n";
 
 		exit;
@@ -99,6 +101,8 @@ if (length($ARGV[0])>1)
 			{$QXZlengthonly=1;}
 		if ($args =~ /--QXZplaceonly/i) # QXZplaceonly flag
 			{$QXZplaceonly=1;}
+		if ($args =~ /--wipe-www-phrases-table/i) # wipewwwphrasestable flag
+			{$wipewwwphrasestable=1;}
 		if ($args =~ /--conffile=/i) # CLI defined file path
 			{
 			@CLIconffileARY = split(/--conffile=/,$args);
@@ -180,6 +184,14 @@ $event_string = "Existing phrases: $phrase_count";
 if ($DB > 0) {print "$event_string\n";}
 &event_logger;
 
+if ($wipewwwphrasestable > 0) 
+	{
+	$stmtA="DELETE FROM www_phrases;";
+	$affected_rows = $dbhA->do($stmtA);
+	$event_string = "     $affected_rows|$stmtA|";
+	if ($DBX > 0) {print "$event_string\n";}
+	&event_logger;
+	}
 
 $i=0;
 $f=0;
@@ -353,7 +365,7 @@ foreach(@FILEparse)
 
 						if ($phrase_match < 1)
 							{
-							$stmtA="INSERT INTO www_phrases SET phrase_text='$temp_QXZval_strSQL',php_filename='$FILEparseNAME[$f]',php_directory='$FILEparseDIR[$f]',source='www_languages_script';";
+							$stmtA="INSERT INTO www_phrases SET phrase_text='$temp_QXZval_strSQL',php_filename='$FILEparseNAME[$f]',php_directory='$FILEparseDIR[$f]',source='www_languages_script',insert_date=NOW();";
 							$affected_rows = $dbhA->do($stmtA);
 							$QXZinserts++;
 

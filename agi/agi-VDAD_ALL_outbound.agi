@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-VDAD_ALL_outbound.agi version 2.8
+# agi-VDAD_ALL_outbound.agi version 2.10
 # 
 # runs when an outbound call is answered. This script will 
 # send the calls out to the agents that are logged in.
@@ -110,6 +110,7 @@
 # 140215-2121 - Added several variable options for QM socket URL
 # 140312-2112 - Added CALLID as recording filename variable
 # 140617-1946 - Added single-digit change to text for TTS
+# 141211-1635 - Added cpd_unknown_action campaign option and list_id added to AST_send_URL calls
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -627,7 +628,7 @@ if ($VDACaffected_rows > 0)
 	##### END - Max call stats
 
 	### Grab campaign values from the database
-	$stmtA = "SELECT drop_call_seconds,drop_action,safe_harbor_exten,concurrent_transfers,next_agent_call,voicemail_ext,drop_inbound_group,use_internal_dnc,use_campaign_dnc,cpd_amd_action,am_message_exten,three_way_call_cid,campaign_cid,survey_first_audio_file,survey_opt_in_audio_file,survey_ni_audio_file,survey_third_audio_file,survey_fourth_audio_file,extension_appended_cidname,queue_priority,closer_campaigns,queuemetrics_phone_environment,campaign_recording,campaign_rec_filename,safe_harbor_audio,safe_harbor_menu_id,survey_recording,safe_harbor_audio_field,use_other_campaign_dnc FROM vicidial_campaigns where campaign_id = '$VDADcampaign';";
+	$stmtA = "SELECT drop_call_seconds,drop_action,safe_harbor_exten,concurrent_transfers,next_agent_call,voicemail_ext,drop_inbound_group,use_internal_dnc,use_campaign_dnc,cpd_amd_action,am_message_exten,three_way_call_cid,campaign_cid,survey_first_audio_file,survey_opt_in_audio_file,survey_ni_audio_file,survey_third_audio_file,survey_fourth_audio_file,extension_appended_cidname,queue_priority,closer_campaigns,queuemetrics_phone_environment,campaign_recording,campaign_rec_filename,safe_harbor_audio,safe_harbor_menu_id,survey_recording,safe_harbor_audio_field,use_other_campaign_dnc,cpd_unknown_action FROM vicidial_campaigns where campaign_id = '$VDADcampaign';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -667,6 +668,7 @@ if ($VDACaffected_rows > 0)
 		$survey_recording =				$aryA[26];
 		$safe_harbor_audio_field =		$aryA[27];
 		$use_other_campaign_dnc =		$aryA[28];
+		$cpd_unknown_action =			$aryA[29];
 		if (length($closer_campaigns) > 2)
 			{
 			$closer_campaigns =~ s/^ | -$//gi;
@@ -1120,6 +1122,29 @@ if ($call_handle_method =~ /REMIND/)
 		}
 	############# END CPD AMD SECTION ############################
 
+	############# BEGIN CPD Unknown SECTION ############################
+	if ($cpd_unknown_action =~ /DISPO|MESSAGE|CALLMENU|INGROUP/)
+		{
+		$stmtA = "SELECT count(*) FROM vicidial_cpd_log where callerid='$callerid' and result IN('Unknown','???') and status='NEW';";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$cpd_unknown = $aryA[0];
+			}
+		$sthA->finish();
+
+		if ($cpd_unknown > 0)
+			{
+			&cpd_end_call;
+			}
+		}
+	############# END CPD Unknown SECTION ############################
+
 	$stmtA = "UPDATE vicidial_auto_calls set last_update_time='$FDtsSQLdate',stage='REMIND-0' where callerid='$callerid' order by call_time desc limit 1;";
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='01013';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
@@ -1163,7 +1188,7 @@ if ($call_handle_method =~ /SURVEY/)
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
-			$dbhP=$dbhA;   $mysql_count='01054';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
@@ -1177,6 +1202,29 @@ if ($call_handle_method =~ /SURVEY/)
 			}
 		}
 	############# END CPD AMD SECTION ############################
+
+	############# BEGIN CPD Unknown SECTION ############################
+	if ($cpd_unknown_action =~ /DISPO|MESSAGE|CALLMENU|INGROUP/)
+		{
+		$stmtA = "SELECT count(*) FROM vicidial_cpd_log where callerid='$callerid' and result IN('Unknown','???') and status='NEW';";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$cpd_unknown		= $aryA[0];
+			}
+		$sthA->finish();
+
+		if ($cpd_unknown > 0)
+			{
+			&cpd_end_call;
+			}
+		}
+	############# END CPD Unknown SECTION ############################
 
 	$stmtA = "UPDATE vicidial_auto_calls set last_update_time='$FDtsSQLdate',stage='SURVEY-0' where callerid='$callerid' order by call_time desc limit 1;";
 	$affected_rows = $dbhA->do($stmtA);
@@ -1779,6 +1827,7 @@ if ($call_handle_method =~ /SURVEY/)
 					$launch .= " --campaign=" . $VDADcampaign;
 					$launch .= " --uniqueid=" . $uniqueid;
 					$launch .= " --call_id=" . $callerid;
+					$launch .= " --list_id=" . $list_id;
 					$launch .= " --alt_dial=MAIN";
 					$launch .= " --function=QM_SOCKET_SEND";
 					$launch .= " --compat_url=" . $compat_url;
@@ -1806,6 +1855,7 @@ if ($call_handle_method =~ /SURVEY/)
 					$launch .= " --campaign=" . $VDADcampaign;
 					$launch .= " --uniqueid=" . $uniqueid;
 					$launch .= " --call_id=" . $callerid;
+					$launch .= " --list_id=" . $list_id;
 					$launch .= " --alt_dial=MAIN";
 					$launch .= " --function=QM_SOCKET_SEND";
 					$launch .= " --compat_url=" . $compat_url;
@@ -2008,7 +2058,7 @@ while ($drop_timer <= $DROP_TIME)
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
-			$dbhP=$dbhA;   $mysql_count='01054';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
@@ -2023,6 +2073,28 @@ while ($drop_timer <= $DROP_TIME)
 		}
 	############# END CPD AMD SECTION ############################
 
+	############# BEGIN CPD Unknown SECTION ############################
+	if ($cpd_unknown_action =~ /DISPO|MESSAGE|CALLMENU|INGROUP/)
+		{
+		$stmtA = "SELECT count(*) FROM vicidial_cpd_log where callerid='$callerid' and result IN('Unknown','???') and status='NEW';";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$cpd_unknown		= $aryA[0];
+			}
+		$sthA->finish();
+
+		if ($cpd_unknown > 0)
+			{
+			&cpd_end_call;
+			}
+		}
+	############# END CPD Unknown SECTION ############################
 
 
 
@@ -2589,6 +2661,7 @@ while ($drop_timer <= $DROP_TIME)
 						$launch .= " --campaign=" . $VDADcampaign;
 						$launch .= " --uniqueid=" . $uniqueid;
 						$launch .= " --call_id=" . $callerid;
+						$launch .= " --list_id=" . $list_id;
 						$launch .= " --alt_dial=MAIN";
 						$launch .= " --function=QM_SOCKET_SEND";
 						$launch .= " --compat_url=" . $compat_url;
@@ -3195,6 +3268,7 @@ while ($drop_timer <= $DROP_TIME)
 						$launch .= " --campaign=" . $VDADcampaign;
 						$launch .= " --uniqueid=" . $uniqueid;
 						$launch .= " --call_id=" . $callerid;
+						$launch .= " --list_id=" . $list_id;
 						$launch .= " --alt_dial=MAIN";
 						$launch .= " --function=QM_SOCKET_SEND";
 						$launch .= " --compat_url=" . $compat_url;
@@ -3682,6 +3756,7 @@ sub cpd_end_call
 		}
 	$sthA->finish();
 	$CPDfound=0;
+	$CPDunknown=0;
 	if ($cpd_result =~ /Busy/i)					{$vdad_result='CPDB';   $CPDfound++;}
 	if ($cpd_result =~ /All-Trunks-Busy/i)		{$vdad_result='CPDATB';   $CPDfound++;}
 	if ($cpd_result =~ /No-Answer/i)			{$vdad_result='CPDNA';   $CPDfound++;}
@@ -3694,9 +3769,13 @@ sub cpd_end_call
 	if ($cpd_result =~ /Sit-Unknown/i)			{$vdad_result='CPDSUK';   $CPDfound++;}
 	if ($cpd_result =~ /Sit-Vacant/i)			{$vdad_result='CPDSV';   $CPDfound++;}
 	if ($cpd_result =~ /Fax|Modem/i)			{$vdad_result='AFAX';   $CPDfound++;}
+	if ($cpd_result =~ /^Unknown|\?\?\?/i)		{$vdad_result='CPDUK';   $CPDfound++;   $CPDunknown++;}
 	if ($CPDfound < 1)							{$vdad_result='AA';}
 
-	if ($AGILOG) {$agi_string = "CALL CPD AMD Detected $channel $callerid|$drop_timer|$cpd_result";   &agi_output;}
+	if ($CPDunknown < 1) 
+		{if ($AGILOG) {$agi_string = "CALL CPD AMD Detected $channel $callerid|$drop_timer|$cpd_result";   &agi_output;}}
+	else
+		{if ($AGILOG) {$agi_string = "CALL CPD UNKNOWN Detected $channel $callerid|$drop_timer|$cpd_result";   &agi_output;}}
 
 	($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 	$year = ($year + 1900);
@@ -3741,14 +3820,22 @@ sub cpd_end_call
 		$DROPexten = "8320";
 		$AMDSTATUS_set =	$AGI->set_variable('AMDSTATUS', "CPDMACHINE");
 		$AMDCAUSE_set =		$AGI->set_variable('AMDCAUSE', $cpd_result);
-
 		}
 	else
 		{
-		$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' order by call_time desc limit 1;";
-		$affected_rows = $dbhA->do($stmtA);
-			$dbhP=$dbhA;   $mysql_count='01052';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-		if ($AGILOG) {$agi_string = "--    VDAD CPD vac record deleted: |$affected_rows|$VDADcampaign|";   &agi_output;}
+		if ( ($cpd_unknown_action =~ /MESSAGE|CALLMENU|INGROUP/) && ($cpd_result !~ /Fax/i) )
+			{
+			$DROPexten = "8320";
+			$AMDSTATUS_set =	$AGI->set_variable('AMDSTATUS', "CPDMACHINE");
+			$AMDCAUSE_set =		$AGI->set_variable('AMDCAUSE', $cpd_result);
+			}
+		else
+			{
+			$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' order by call_time desc limit 1;";
+			$affected_rows = $dbhA->do($stmtA);
+				$dbhP=$dbhA;   $mysql_count='01052';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+			if ($AGILOG) {$agi_string = "--    VDAD CPD vac record deleted: |$affected_rows|$VDADcampaign|";   &agi_output;}
+			}
 		}
 
 	$Euniqueid=$uniqueid;
@@ -3765,7 +3852,7 @@ sub cpd_end_call
 		$dbhP=$dbhA;   $mysql_count='01051';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 	if ($AGILOG) {$agi_string = "--    VDAD CPD vicidial_list update: |$affected_rows|$CIDlead_id";   &agi_output;}
 
-	$stmtA = "UPDATE vicidial_cpd_log SET status='PROCESSED',cpd_seconds='$drop_timer' where callerid='$callerid' and result IN('Answering-Machine','Fax') and status='NEW';";
+	$stmtA = "UPDATE vicidial_cpd_log SET status='PROCESSED',cpd_seconds='$drop_timer' where callerid='$callerid' and result IN('Answering-Machine','Fax','Unknown','???') and status='NEW';";
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='01055';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 

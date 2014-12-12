@@ -916,7 +916,8 @@ comments_dispo_screen ENUM('DISABLED','ENABLED','REPLACE_CALL_NOTES') default 'D
 comments_callback_screen ENUM('DISABLED','ENABLED','REPLACE_CB_NOTES') default 'DISABLED',
 qc_comment_history ENUM('CLICK','AUTO_OPEN','CLICK_ALLOW_MINIMIZE','AUTO_OPEN_ALLOW_MINIMIZE') default 'CLICK',
 show_previous_callback ENUM('DISABLED','ENABLED') default 'ENABLED',
-clear_script ENUM('DISABLED','ENABLED') default 'DISABLED'
+clear_script ENUM('DISABLED','ENABLED') default 'DISABLED',
+cpd_unknown_action ENUM('DISABLED','DISPO','MESSAGE','CALLMENU','INGROUP') default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -941,7 +942,8 @@ web_form_address TEXT,
 web_form_address_two TEXT,
 time_zone_setting ENUM('COUNTRY_AND_AREA_CODE','POSTAL_CODE','NANPA_PREFIX','OWNER_TIME_ZONE_CODE') default 'COUNTRY_AND_AREA_CODE',
 inventory_report ENUM('Y','N') default 'Y',
-expiration_date DATE default '2099-12-31'
+expiration_date DATE default '2099-12-31',
+na_call_url TEXT
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_statuses (
@@ -3086,6 +3088,7 @@ phrase_text VARCHAR(10000) default '',
 php_filename VARCHAR(255) NOT NULL,
 php_directory VARCHAR(255) default '',
 source VARCHAR(20) default '',
+insert_date DATETIME,
 index (phrase_text)
 ) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
@@ -3352,4 +3355,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1394',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1395',db_schema_update_date=NOW(),reload_timestamp=NOW();

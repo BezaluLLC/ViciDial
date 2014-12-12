@@ -1237,6 +1237,7 @@ sub process_request
 										$launch .= " --campaign=" . $VD_campaign_id;
 										$launch .= " --uniqueid=" . $uniqueid;
 										$launch .= " --call_id=" . $VD_callerid;
+										$launch .= " --list_id=" . $list_id;
 										$launch .= " --alt_dial=UNKNOWN";
 										$launch .= " --function=QM_SOCKET_SEND";
 										$launch .= " --compat_url=" . $compat_url;

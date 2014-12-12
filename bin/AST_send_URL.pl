@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_send_URL.pl   version 2.6
+# AST_send_URL.pl   version 2.10
 # 
 # DESCRIPTION:
 # This script is spawned for remote agents when the Start Call URL is set in the
@@ -8,7 +8,7 @@
 # This script is also used for the Add-Lead-URL feature in In-groups and for
 # QM socket-send.
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 100622-0929 - First Build
@@ -16,6 +16,7 @@
 # 110731-0127 - Added call_id variable and logging
 # 121120-0925 - Added QM socket-send functionality
 # 130402-2307 - Added user_group variable
+# 141211-1742 - Added list override for no-agent url
 #
 
 $|++;
@@ -53,6 +54,7 @@ if (scalar @ARGV) {
 		'uniqueid=s' => \$uniqueid,
 		'alt_dial=s' => \$alt_dial,
 		'call_id=s' => \$call_id,
+		'list_id:s' => \$list_id,
 		'function=s' => \$function,
 		'debug!' => \$DB,
 		'debugX!' => \$DBX,
@@ -73,6 +75,7 @@ if (scalar @ARGV) {
 		print "  uniqueid:              $uniqueid\n" if ($uniqueid);
 		print "  alt_dial:              $alt_dial\n" if ($alt_dial);
 		print "  call_id:               $call_id\n" if ($call_id);
+		print "  list_id:               $list_id\n" if ($list_id);
 		print "  function:              $function\n" if ($function);
 		print "  compat_url:            $compat_url\n" if ($compat_url);
 		print "\n";
@@ -91,6 +94,7 @@ if (scalar @ARGV) {
 		print "  [--uniqueid] = uniqueid of the call\n";
 		print "  [--alt_dial] = label of the phone number dialed\n";
 		print "  [--call_id] = call_id or caller_code of the call\n";
+		print "  [--list_id] = list_id of the lead on the call\n";
 		print "  [--compat_url] = full compatible URL to send\n";
 		print "  [--function] = which function is to be run, default is REMOTE_AGENT_START_CALL_URL\n";
 		print "      *REMOTE_AGENT_START_CALL_URL - performs a Start Call URL get for Remote Agent Calls\n";
@@ -193,6 +197,23 @@ if (length($lead_id) > 0)
 		}
 	$sthA->finish();
 
+	if ( ($function =~ /NA_CALL_URL/) && (length($list_id) > 1) )
+		{
+		$stmtH = "SELECT na_call_url FROM vicidial_lists where list_id='$list_id';";
+		$sthA = $dbhA->prepare($stmtH) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtH ", $dbhA->errstr;
+		$list_nacu_url_ct=$sthA->rows;
+		if ($list_nacu_url_ct > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			if (length($aryA[0])>3) 
+				{
+				$na_call_url =		$aryA[0];
+				}
+			}
+		$sthA->finish();
+		}
+
 	$VAR_lead_id =			$lead_id;
 	$VAR_user =				$user;
 	$VAR_phone_number =		$phone_number;
@@ -203,7 +224,7 @@ if (length($lead_id) > 0)
 	$VAR_group =			$campaign;
 	$VAR_alt_dial =			$alt_dial;
 	$VAR_call_id =			$call_id;
-	$VAR_list_id =			'';
+	$VAR_list_id =			$list_id;
 	$VAR_phone_code =		'';
 	$VAR_vendor_lead_code =	'';
 	$VAR_did_id =			'';

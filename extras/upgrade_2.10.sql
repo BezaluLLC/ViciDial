@@ -134,3 +134,11 @@ index (english_text)
 ) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
 UPDATE system_settings SET db_schema_version='1394',db_schema_update_date=NOW() where db_schema_version < 1394;
+
+ALTER TABLE vicidial_campaigns ADD cpd_unknown_action ENUM('DISABLED','DISPO','MESSAGE','CALLMENU','INGROUP') default 'DISABLED';
+
+ALTER TABLE vicidial_lists ADD na_call_url TEXT;
+
+ALTER TABLE www_phrases ADD insert_date DATETIME;
+
+UPDATE system_settings SET db_schema_version='1395',db_schema_update_date=NOW() where db_schema_version < 1395;

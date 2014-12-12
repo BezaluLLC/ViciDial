@@ -506,6 +506,7 @@ while($one_day_interval > 0)
 					$launch .= " --uniqueid=" . $QHuniqueid[$w];
 					$launch .= " --alt_dial=" . $QHalt_dial[$w];
 					$launch .= " --call_id=" . $QHcall_id[$w];
+					$launch .= " --list_id=0";
 					$launch .= " --function=REMOTE_AGENT_START_CALL_URL";
 
 					system($launch . ' &');

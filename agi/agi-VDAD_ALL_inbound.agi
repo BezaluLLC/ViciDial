@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-VDAD_ALL_inbound.agi version 2.8
+# agi-VDAD_ALL_inbound.agi version 2.10
 # 
 # runs when a call comes in from an inbound call. This script will 
 # send the calls out to the closers that are logged in.
@@ -191,6 +191,7 @@
 # 140215-2133 - Added several variable options for QM socket URL
 # 140312-2111 - Added CALLID as recording filename variable
 # 140417-0932 - Added max inbound calls feature
+# 141211-2028 - Added list_id to call url functions
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -1010,6 +1011,7 @@ if ($call_handle_method =~ /LOOKUP/)
 			$launch .= " --uniqueid=" . $uniqueid;
 			$launch .= " --alt_dial=MAIN";
 			$launch .= " --call_id=" . $XXqueryCID;
+			$launch .= " --list_id=" . $list_id;
 			$launch .= " --function=INGROUP_ADD_LEAD_URL";
 
 			system($launch . ' &');
@@ -1152,6 +1154,7 @@ if ($call_handle_method =~ /LOOKUP/)
 					$launch .= " --uniqueid=" . $uniqueid;
 					$launch .= " --alt_dial=MAIN";
 					$launch .= " --call_id=" . $XXqueryCID;
+					$launch .= " --list_id=" . $list_id;
 					$launch .= " --function=INGROUP_ADD_LEAD_URL";
 
 					system($launch . ' &');
@@ -1228,6 +1231,7 @@ else
 			$launch .= " --uniqueid=" . $uniqueid;
 			$launch .= " --alt_dial=MAIN";
 			$launch .= " --call_id=" . $XXqueryCID;
+			$launch .= " --list_id=" . $list_id;
 			$launch .= " --function=INGROUP_ADD_LEAD_URL";
 
 			system($launch . ' &');
@@ -2032,7 +2036,7 @@ $Uaffected_rows = $dbhA->do($stmtA);
 	$dbhP=$dbhA;   $mysql_count='02121';   $MEL_aff_rows=$Uaffected_rows;   &mysql_error_logging;
 
 ### INSERT vicidial_closer_log record, call is entering the queue
-$stmtA = "INSERT INTO vicidial_closer_log SET lead_id='$insert_lead_id', campaign_id='$channel_group', call_date='$SQLdate', start_epoch='$now_date_epoch', status='QUEUE', phone_code='$phone_code', phone_number='$phone_number', user='VDCL', processed='N', xfercallid='$insert_xfer_id', uniqueid='$uniqueid', queue_position='$queue_position',called_count='$called_count' $adSQL;";
+$stmtA = "INSERT INTO vicidial_closer_log SET lead_id='$insert_lead_id', campaign_id='$channel_group', call_date='$SQLdate', start_epoch='$now_date_epoch', status='QUEUE', phone_code='$phone_code', phone_number='$phone_number', user='VDCL', processed='N', xfercallid='$insert_xfer_id', uniqueid='$uniqueid', queue_position='$queue_position',called_count='$called_count',list_id='$list_id' $adSQL;";
 	if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 $affected_rows = $dbhA->do($stmtA);
 	$dbhP=$dbhA;   $mysql_count='02031';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
@@ -2980,6 +2984,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 						$launch .= " --campaign=" . $channel_group;
 						$launch .= " --uniqueid=" . $uniqueid;
 						$launch .= " --call_id=" . $callerid;
+						$launch .= " --list_id=" . $list_id;
 						$launch .= " --alt_dial=MAIN";
 						$launch .= " --function=QM_SOCKET_SEND";
 						$launch .= " --compat_url=" . $compat_url;
@@ -4219,6 +4224,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 					$launch .= " --campaign=" . $channel_group;
 					$launch .= " --uniqueid=" . $uniqueid;
 					$launch .= " --call_id=" . $callerid;
+					$launch .= " --list_id=" . $wait_time_option_callback_list_id;
 					$launch .= " --alt_dial=MAIN";
 					$launch .= " --function=INGROUP_ADD_LEAD_URL";
 
@@ -4650,6 +4656,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 							$launch .= " --uniqueid=" . $uniqueid;
 							$launch .= " --alt_dial=MAIN";
 							$launch .= " --call_id=" . $callerid;
+							$launch .= " --list_id=" . $hold_time_option_callback_list_id;
 							$launch .= " --function=INGROUP_ADD_LEAD_URL";
 
 							system($launch . ' &');

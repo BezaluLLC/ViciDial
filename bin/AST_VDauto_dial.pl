@@ -118,6 +118,7 @@
 # 131209-1557 - Added called_count logging
 # 140426-1941 - Added pause_type to vicidial_agent_log
 # 141113-1556 - Added concurrency check
+# 141211-2134 - Added na_call_url list_id override option
 #
 
 
@@ -2766,7 +2767,18 @@ while($one_day_interval > 0)
 			}
 		$sthA->finish();
 
-		if ( ($ncu_count > 0) || ($ncu_in_count > 0) )
+		$stmtA = "SELECT count(*) FROM vicidial_lists where na_call_url IS NOT NULL and na_call_url!='' and list_lastcalldate > \"$RMSQLdate\";";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$ncu_list_count	= $aryA[0];
+			}
+		$sthA->finish();
+
+		if ( ($ncu_count > 0) || ($ncu_in_count > 0) || ($ncu_list_count > 0) )
 			{
 			@NCUcamp_id = @MT;
 			@NCUncurl = @MT;
@@ -2805,6 +2817,24 @@ while($one_day_interval > 0)
 					$NCUcamp_id[$ncu_total_count] = $aryA[0];
 					$NCUncurl[$ncu_total_count]	=	$aryA[1];
 					$NCUig_count++;
+					$ncu_total_count++;
+					}
+				$sthA->finish();
+				}
+			if ($ncu_list_count > 0)
+				{
+				$stmtA = "SELECT list_id,na_call_url FROM vicidial_lists where na_call_url IS NOT NULL and na_call_url!='' and list_lastcalldate > \"$RMSQLdate\";";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				$NCUlist_count=0;
+				while ($sthArows > $NCUlist_count)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$NCUlists	.= "$aryA[0]|";
+					$NCUlist_id[$ncu_total_count] = $aryA[0];
+					$NCUncurl[$ncu_total_count]	=	$aryA[1];
+					$NCUlist_count++;
 					$ncu_total_count++;
 					}
 				$sthA->finish();
@@ -2866,12 +2896,12 @@ while($one_day_interval > 0)
 							{
 							if ($NCUcallerid[$vle_count] =~ /^Y/) 
 								{
-								$stmtA = "SELECT campaign_id,status,user,phone_number,'MAIN' FROM vicidial_closer_log where uniqueid='$NCUuniqueid[$vle_count]' and lead_id='$NCUleadid[$vle_count]' and call_date='$NCUcalldate[$vle_count]';";
+								$stmtA = "SELECT campaign_id,status,user,phone_number,'MAIN',list_id FROM vicidial_closer_log where uniqueid='$NCUuniqueid[$vle_count]' and lead_id='$NCUleadid[$vle_count]' and call_date='$NCUcalldate[$vle_count]';";
 								$NCUcalltype[$vle_count] = 'IN';
 								}
 							else
 								{
-								$stmtA = "SELECT campaign_id,status,user,phone_number,alt_dial FROM vicidial_log where uniqueid='$NCUuniqueid[$vle_count]' and lead_id='$NCUleadid[$vle_count]' and call_date > \"$RMSQLdate\";";
+								$stmtA = "SELECT campaign_id,status,user,phone_number,alt_dial,list_id FROM vicidial_log where uniqueid='$NCUuniqueid[$vle_count]' and lead_id='$NCUleadid[$vle_count]' and call_date > \"$RMSQLdate\";";
 								$NCUcalltype[$vle_count] = 'OUT';
 								}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -2885,6 +2915,7 @@ while($one_day_interval > 0)
 								$NCUuser[$vle_count] =		$aryA[2];
 								$NCUphone[$vle_count] =		$aryA[3];
 								$NCUaltdial[$vle_count] =	$aryA[4];
+								$NCUlist[$vle_count] =		$aryA[5];
 								$sthA->finish();
 
 								if ($NCUcampaigns =~ /\|$NCUcampaign[$vle_count]\|/i)
@@ -2924,6 +2955,7 @@ while($one_day_interval > 0)
 												$launch .= " --uniqueid=" . $NCUuniqueid[$vle_count];
 												$launch .= " --alt_dial=" . $NCUaltdial[$vle_count];
 												$launch .= " --call_id=" . $NCUcallerid[$vle_count];
+												$launch .= " --list_id=" . $NCUlist[$vle_count];
 												$launch .= " --function=NA_CALL_URL";
 
 												system($launch . ' &');

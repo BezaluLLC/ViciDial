@@ -103,6 +103,10 @@ OTHER CHANGES:
 17. Added administrative web interface for managing Languages. The language
 	features are not active in the agent interface yet.
 
+18. Added No Agent URL option override for Lists
+
+19. Added CPD Unknown Action option to Campaigns
+
 
 
 
