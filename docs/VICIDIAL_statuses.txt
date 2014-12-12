@@ -68,3 +68,6 @@ QCFAIL - QC_FAIL_CALLBK
 LSMERG - Agent lead search old lead merge
 DISMX - Dispo Call Max Status
 INBND - first status of a newly created lead going into the inbound queueing process
+UNKXFR - CPD Unknown result Transfer to Call Menu or In-Group
+UNKAM - CPD Unknown call sent to a message to be played
+UNKAL - CPD Unknown call sent to a message and message has been played
