@@ -3815,7 +3815,7 @@ sub cpd_end_call
 		$drop_seconds = $DROP_TIME;
 		}
 
-	if ( ($cpd_amd_action =~ /MESSAGE|CALLMENU|INGROUP/) && ($cpd_result !~ /Fax/i) )
+	if ( ($cpd_amd_action =~ /MESSAGE|CALLMENU|INGROUP/) && ($cpd_result !~ /Fax|^Unknown|\?\?\?/i) )
 		{
 		$DROPexten = "8320";
 		$AMDSTATUS_set =	$AGI->set_variable('AMDSTATUS', "CPDMACHINE");
@@ -3823,7 +3823,7 @@ sub cpd_end_call
 		}
 	else
 		{
-		if ( ($cpd_unknown_action =~ /MESSAGE|CALLMENU|INGROUP/) && ($cpd_result !~ /Fax/i) )
+		if ( ($cpd_unknown_action =~ /MESSAGE|CALLMENU|INGROUP/) && ($cpd_result =~ /^Unknown|\?\?\?/i) )
 			{
 			$DROPexten = "8320";
 			$AMDSTATUS_set =	$AGI->set_variable('AMDSTATUS', "CPDMACHINE");
