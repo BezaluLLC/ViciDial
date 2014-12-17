@@ -1059,7 +1059,7 @@ if ($ADD==263311111111)
 				$import_data_lines_ary_ct = count($import_data_lines_ary);
 				if ($DB > 0) {echo "$i|$import_data_lines_ary_ct|$import_data_lines_ary[0]|$import_data_lines_ary[1]|\n";}
 
-				if ( ($import_data_lines_ary_ct > 0) and (strlen($import_data_lines_ary[0]) > 0) and (!preg_match("/^\#/",$import_data_lines_ary)) )
+				if ( ($import_data_lines_ary_ct > 0) and (strlen($import_data_lines_ary[0]) > 0) and (!preg_match("/^\#/",$import_data_lines_ary[0])) )
 					{
 					$import_data_lines_ary[0] = addslashes($import_data_lines_ary[0]);
 					$english_textSQL="english_text='$import_data_lines_ary[0]'";
