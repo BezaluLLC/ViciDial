@@ -28,10 +28,11 @@
 # 140710-2143 - Added session_name variable
 # 140810-1857 - Changed to use QXZ function for echoing text
 # 141118-1422 - Added agent_email variable
+# 141216-2121 - Added language settings lookups and user/pass variable standardization
 #
 
-$version = '2.10-22';
-$build = '141118-1422';
+$version = '2.10-23';
+$build = '141216-2121';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -234,11 +235,28 @@ $full_script_height = ($script_height + 200);
 
 $IFRAME=0;
 
+$user=preg_replace("/\'|\"|\\\\|;| /","",$user);
+$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
+$orig_pass = preg_replace("/\'|\"|\\\\|;| /","",$orig_pass);
+
 #############################################
-##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock FROM system_settings;";
+##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####
+$VUselected_language = '';
+$stmt="SELECT selected_language from vicidial_users where user='$user';";
+if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
+
+$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,custom_fields_enabled,enable_languages,language_method FROM system_settings;";
 if ($DB) {echo "$stmt\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
@@ -246,6 +264,9 @@ if ($qm_conf_ct > 0)
 	$non_latin =							$row[0];
 	$timeclock_end_of_day =					$row[1];
 	$agentonly_callback_campaign_lock =		$row[2];
+	$custom_fields_enabled =				$row[3];
+	$SSenable_languages =					$row[4];
+	$SSlanguage_method =					$row[5];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -253,20 +274,12 @@ if ($qm_conf_ct > 0)
 if ($non_latin < 1)
 	{
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
-	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 	$orig_pass=preg_replace("/[^-_0-9a-zA-Z]/","",$orig_pass);
 	$length_in_sec = preg_replace("/[^0-9]/","",$length_in_sec);
 	$phone_code = preg_replace("/[^0-9]/","",$phone_code);
 	$phone_number = preg_replace("/[^0-9]/","",$phone_number);
 	$session_name=preg_replace("/[^-_0-9a-zA-Z]/","",$session_name);
 	}
-else
-	{
-	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
-	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
-	$orig_pass = preg_replace("/\'|\"|\\\\|;/","",$orig_pass);
-	}
-
 
 # default optional vars if not set
 if (!isset($format))   {$format="text";}

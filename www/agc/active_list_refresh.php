@@ -44,7 +44,11 @@
 # 130802-0957 - Changed to PHP mysqli functions
 # 140811-0850 - Changed to use QXZ function for echoing text
 # 141128-0901 - Code cleanup for QXZ functions
+# 141216-2119 - Added language settings lookups and user/pass variable standardization
 # 
+
+$version = '0.0.16';
+$build = '141216-2119';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -88,7 +92,7 @@ if (isset($_GET["field_name"]))				{$field_name=$_GET["field_name"];}
 	elseif (isset($_POST["field_name"]))	{$field_name=$_POST["field_name"];}
 
 ### security strip all non-alphanumeric characters out of the variables ###
-$user=preg_replace("/[^0-9a-zA-Z]/","",$user);
+$user=preg_replace("/\'|\"|\\\\|;| /","",$user);
 $pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 $ADD=preg_replace("/[^0-9]/","",$ADD);
 $order=preg_replace("/[^0-9a-zA-Z]/","",$order);
@@ -119,12 +123,44 @@ if (!isset($selectfontsize))	{$selectfontsize='10';}
 if (!isset($textareaheight))	{$textareaheight='10';}
 if (!isset($textareawidth))		{$textareawidth='20';}
 
-$version = '0.0.10';
-$build = '130328-0029';
 $StarTtime = date("U");
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
+
+#############################################
+##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####
+$VUselected_language = '';
+$stmt="SELECT selected_language from vicidial_users where user='$user';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
+
+$stmt = "SELECT use_non_latin,enable_languages,language_method FROM system_settings;";
+$rslt=mysql_to_mysqli($stmt, $link);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+if ($DB) {echo "$stmt\n";}
+$qm_conf_ct = mysqli_num_rows($rslt);
+if ($qm_conf_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$non_latin =				$row[0];
+	$SSenable_languages =		$row[1];
+	$SSlanguage_method =		$row[2];
+	}
+##### END SETTINGS LOOKUP #####
+###########################################
+
+if ($non_latin < 1)
+	{
+	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
+	}
 
 $auth=0;
 $auth_message = user_authorization($user,$pass,'',0,1,0);

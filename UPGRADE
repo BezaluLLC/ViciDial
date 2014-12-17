@@ -101,7 +101,8 @@ OTHER CHANGES:
 16. Added campaign option to clear the script after call disposition.
 
 17. Added administrative web interface for managing Languages. The language
-	features are not active in the agent interface yet.
+	features are not active in the admin interface yet, but they are active
+	in the agent screen.
 
 18. Added No Agent URL option override for Lists
 

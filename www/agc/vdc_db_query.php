@@ -369,12 +369,13 @@
 # 141125-0059 - Added parked_hangup code
 # 141128-0849 - Code cleanup for QXZ functions
 # 141207-1056 - Added pause_trigger to logout to force pause before running logout process
+# 141216-1900 - Added agent choose language option
 #
 
-$version = '2.10-264';
-$build = '141207-1056';
+$version = '2.10-265';
+$build = '141216-1900';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=597;
+$mysql_log_count=599;
 $one_mysql_log=0;
 
 require_once("dbconnect_mysqli.php");
@@ -791,7 +792,7 @@ $sip_hangup_cause_dictionary = array(
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,qc_features_active,allow_emails,callback_time_24hour FROM system_settings;";
+$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00001',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -810,6 +811,8 @@ if ($qm_conf_ct > 0)
 	$qc_features_active =					$row[8];
 	$allow_emails =							$row[9];
 	$callback_time_24hour =					$row[10];
+	$SSenable_languages =					$row[11];
+	$SSlanguage_method =					$row[12];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -840,6 +843,18 @@ if (!isset($format))   {$format="text";}
 	if ($format == 'debug')	{$DB=1;}
 if (!isset($ACTION))   {$ACTION="refresh";}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
+
+$VUselected_language = '';
+$stmt="SELECT selected_language from vicidial_users where user='$user';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00598',$user,$server_ip,$session_name,$one_mysql_log);}
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 if ($ACTION == 'LogiNCamPaigns')
 	{
@@ -913,7 +928,7 @@ if ($ACTION == 'LogiNCamPaigns')
 		}
 	else
 		{
-		$stmt="SELECT user_group,user_level,agent_shift_enforcement_override,shift_override_flag from vicidial_users where user='$user';";
+		$stmt="SELECT user_group,user_level,agent_shift_enforcement_override,shift_override_flag,user_choose_language from vicidial_users where user='$user';";
 		if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00004',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -925,16 +940,19 @@ if ($ACTION == 'LogiNCamPaigns')
 			$VU_user_level =						$row[1];
 			$VU_agent_shift_enforcement_override =	$row[2];
 			$VU_shift_override_flag =				$row[3];
+			$VU_user_choose_language =				$row[4];
 
 			$LOGallowed_campaignsSQL='';
 
-			$stmt="SELECT allowed_campaigns,forced_timeclock_login,shift_enforcement,group_shifts from vicidial_user_groups where user_group='$VU_user_group';";
+			$stmt="SELECT allowed_campaigns,forced_timeclock_login,shift_enforcement,group_shifts,admin_viewable_groups from vicidial_user_groups where user_group='$VU_user_group';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00005',$user,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysqli_fetch_row($rslt);
 			$forced_timeclock_login =	$row[1];
 			$shift_enforcement =		$row[2];
-			$LOGgroup_shiftsSQL = preg_replace('/\s\s/','',$row[3]);
+			$group_shifts =				$row[3];
+			$admin_viewable_groups =	$row[4];
+			$LOGgroup_shiftsSQL = preg_replace('/\s\s/','',$group_shifts);
 			$LOGgroup_shiftsSQL = preg_replace('/\s/',"','",$LOGgroup_shiftsSQL);
 			$LOGgroup_shiftsSQL = "shift_id IN('$LOGgroup_shiftsSQL')";
 			if ( (!preg_match("/ALL-CAMPAIGNS/i",$row[0])) )
@@ -943,6 +961,22 @@ if ($ACTION == 'LogiNCamPaigns')
 				$LOGallowed_campaignsSQL = preg_replace('/\s/i',"','",$LOGallowed_campaignsSQL);
 				$LOGallowed_campaignsSQL = "and campaign_id IN('$LOGallowed_campaignsSQL')";
 				}
+			$admin_viewable_groupsALL=0;
+			$LOGadmin_viewable_groupsSQL='';
+			$whereLOGadmin_viewable_groupsSQL='';
+			$valLOGadmin_viewable_groupsSQL='';
+			$vmLOGadmin_viewable_groupsSQL='';
+			if ( (!preg_match('/\-\-ALL\-\-/i',$admin_viewable_groups)) and (strlen($admin_viewable_groups) > 3) )
+				{
+				$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$admin_viewable_groups);
+				$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+				$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+				$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+				$valLOGadmin_viewable_groupsSQL = "and val.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+				$vmLOGadmin_viewable_groupsSQL = "and vm.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+				}
+			else 
+				{$admin_viewable_groupsALL=1;}
 
 			$show_campaign_list=1;
 			### CHECK TO SEE IF AGENT IS LOGGED IN TO TIMECLOCK, IF NOT, OUTPUT ERROR
@@ -973,6 +1007,19 @@ if ($ACTION == 'LogiNCamPaigns')
 					}
 				if ( (strlen($last_agent_event)<2) or (preg_match('/LOGOUT/',$last_agent_event)) )
 					{$show_campaign_list=0;}
+				}
+			### CHECK TO SEE IF LANGUAGES ARE ENABLED AND IF AGENT CAN CHOOSE THEM
+			$show_language_list=0;
+
+			if ($SSenable_languages == '1')
+				{
+				if ($SSlanguage_method != 'DISABLED')
+					{
+					if ($VU_user_choose_language == '1')
+						{
+						$show_language_list=1;
+						}
+					}
 				}
 			}
 		else
@@ -1075,13 +1122,42 @@ if ($ACTION == 'LogiNCamPaigns')
 		echo "<option value=\"\">-- "._QXZ("PLEASE SELECT A CAMPAIGN")." --</option>\n";
 
 		$o=0;
+		$campSELECTED=0;
 		while ($camps_to_print > $o) 
 			{
 			$rowx=mysqli_fetch_row($rslt);
-			echo "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+			echo "<option value=\"$rowx[0]\"";
+			if ($VD_campaign == "$rowx[0]") {echo " SELECTED"; $campSELECTED++;}
+			echo ">$rowx[0] - $rowx[1]</option>\n";
 			$o++;
 			}
 		echo "</select>\n";
+		if ($show_language_list > 0)
+			{
+			echo "<BR> &nbsp; &nbsp; &nbsp; "._QXZ("Language").":<BR>\n";
+			$stmt="SELECT language_id,language_description from vicidial_languages where active='Y' $LOGadmin_viewable_groupsSQL order by language_id";
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00599',$user,$server_ip,$session_name,$one_mysql_log);}
+			$langs_to_print = mysqli_num_rows($rslt);
+
+			echo "<select size=1 name=VD_language id=VD_language>\n";
+			echo "<option value=\"\">-- "._QXZ("PLEASE SELECT A LANGUAGE")." --</option>\n";
+
+			$o=0;
+			$langSELECTED=0;
+			while ($langs_to_print > $o) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				echo "<option value=\"$rowx[0]\"";
+				if ($VUselected_language == "$rowx[0]") {echo " SELECTED"; $langSELECTED++;}
+				echo ">$rowx[0] - $rowx[1]</option>\n";
+				$o++;
+				}
+			echo "<option value=\"default English\"";
+			if ($langSELECTED < 1) {echo " SELECTED"; $langSELECTED++;}
+			echo ">default English</option>\n";
+			echo "</select>\n";
+			}
 		}
 	else
 		{

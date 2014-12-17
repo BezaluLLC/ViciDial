@@ -17,10 +17,11 @@
 # 131208-2155 - Added user log TIMEOUTLOGOUT event status
 # 140810-2138 - Changed to use QXZ function for echoing text
 # 141118-1239 - Formatting changes for QXZ output
+# 141216-2122 - Added language settings lookups and user/pass variable standardization
 #
 
-$version = '2.10-12';
-$build = '141118-1239';
+$version = '2.10-14';
+$build = '141216-2122';
 
 $StarTtimE = date("U");
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -81,12 +82,12 @@ if (!isset($phone_pass))
 ### security strip all non-alphanumeric characters out of the variables ###
 $DB=preg_replace("/[^0-9a-z]/","",$DB);
 $phone_login=preg_replace("/[^\,0-9a-zA-Z]/","",$phone_login);
-$phone_pass=preg_replace("/[^0-9a-zA-Z]/","",$phone_pass);
-$VD_login=preg_replace("/[^0-9a-zA-Z]/","",$VD_login);
-$VD_pass=preg_replace("/[^0-9a-zA-Z]/","",$VD_pass);
-$VD_campaign=preg_replace("/[^0-9a-zA-Z_]/","",$VD_campaign);
-$user=preg_replace("/[^0-9a-zA-Z]/","",$user);
-$pass=preg_replace("/[^0-9a-zA-Z]/","",$pass);
+$phone_pass=preg_replace("/[^-_0-9a-zA-Z]/","",$phone_pass);
+$user=preg_replace("/\'|\"|\\\\|;| /","",$user);
+$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
+$VD_login=preg_replace("/\'|\"|\\\\|;| /","",$VD_login);
+$VD_pass=preg_replace("/\'|\"|\\\\|;| /","",$VD_pass);
+$VD_campaign=preg_replace("/[^-_0-9a-zA-Z]/","",$VD_campaign);
 $stage=preg_replace("/[^0-9a-zA-Z]/","",$stage);
 $commit=preg_replace("/[^0-9a-zA-Z]/","",$commit);
 $referrer=preg_replace("/[^0-9a-zA-Z]/","",$referrer);
@@ -95,23 +96,43 @@ require_once("dbconnect_mysqli.php");
 require_once("functions.php");
 
 #############################################
-##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,admin_home_url,admin_web_directory FROM system_settings;";
+##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####
+$VUselected_language = '';
+$stmt="SELECT selected_language from vicidial_users where user='$VD_login';";
+if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
+
+$stmt = "SELECT use_non_latin,admin_home_url,admin_web_directory,enable_languages,language_method FROM system_settings;";
 if ($DB) {echo "$stmt\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 $qm_conf_ct = mysqli_num_rows($rslt);
-$i=0;
-while ($i < $qm_conf_ct)
+if ($qm_conf_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
 	$non_latin =			$row[0];
 	$welcomeURL =			$row[1];
 	$admin_web_directory =	$row[2];
-	$i++;
+	$SSenable_languages =	$row[3];
+	$SSlanguage_method =	$row[4];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
+if ($non_latin < 1)
+	{
+	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
+	$pass=preg_replace("/[^-_0-9a-zA-Z]/","",$pass);
+	$VD_login=preg_replace("/[^-_0-9a-zA-Z]/","",$VD_login);
+	$VD_pass=preg_replace("/[^-_0-9a-zA-Z]/","",$VD_pass);
+	}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1

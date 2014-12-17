@@ -14,12 +14,13 @@
 # 130802-1139 - Changed to PHP mysqli functions
 # 140810-2113 - Changed to use QXZ function for echoing text
 # 141118-1238 - Formatting changes for QXZ output
+# 141216-2127 - Added language settings lookups and user/pass variable standardization
 #
 
-$version = '2.10-10p';
-$build = '141118-1238';
+$version = '2.10-11p';
+$build = '141216-2127';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=73;
+$mysql_log_count=74;
 $one_mysql_log=0;
 
 require_once("dbconnect_mysqli.php");
@@ -56,9 +57,9 @@ if (!isset($flag_channels))
 ### security strip all non-alphanumeric characters out of the variables ###
 $DB=preg_replace("[^0-9a-z]","",$DB);
 $phone_login=preg_replace("/[^\,0-9a-zA-Z]/","",$phone_login);
-$phone_pass=preg_replace("/[^0-9a-zA-Z]/","",$phone_pass);
-$VD_login=preg_replace("/[^-_0-9a-zA-Z]/","",$VD_login);
-$VD_pass=preg_replace("/[^-_0-9a-zA-Z]/","",$VD_pass);
+$phone_pass=preg_replace("/[^-_0-9a-zA-Z]/","",$phone_pass);
+$VD_login=preg_replace("/\'|\"|\\\\|;| /","",$VD_login);
+$VD_pass=preg_replace("/\'|\"|\\\\|;| /","",$VD_pass);
 
 
 $forever_stop=0;
@@ -87,8 +88,20 @@ $PHP_SELF=$_SERVER['PHP_SELF'];
 $random = (rand(1000000, 9999999) + 10000000);
 
 #############################################
-##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled FROM system_settings;";
+##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####
+$VUselected_language = '';
+$stmt="SELECT selected_language from vicidial_users where user='$VD_login';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09074',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
+
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -109,9 +122,17 @@ if ($qm_conf_ct > 0)
 	$user_territories_active =		$row[10];
 	$static_agent_url =				$row[11];
 	$custom_fields_enabled =		$row[12];
+	$SSenable_languages =			$row[13];
+	$SSlanguage_method =			$row[14];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+if ($non_latin < 1)
+	{
+	$VD_login=preg_replace("/[^-_0-9a-zA-Z]/","",$VD_login);
+	$VD_pass=preg_replace("/[^-_0-9a-zA-Z]/","",$VD_pass);
+	}
 
 
 ##### DEFINABLE SETTINGS AND OPTIONS

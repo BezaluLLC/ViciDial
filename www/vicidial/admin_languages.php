@@ -8,10 +8,11 @@
 # changes:
 # 141203-2126 - First Build
 # 141205-0641 - Added option to allow for more matches in the help.php file
+# 141212-0923 - Added active setting
 #
 
-$admin_version = '2.10-2';
-$build = '141205-0641';
+$admin_version = '2.10-3';
+$build = '141212-0923';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -49,6 +50,8 @@ if (isset($_GET["phrase_id"]))					{$phrase_id=$_GET["phrase_id"];}
 	elseif (isset($_POST["phrase_id"]))			{$phrase_id=$_POST["phrase_id"];}
 if (isset($_GET["import_data"]))				{$import_data=$_GET["import_data"];}
 	elseif (isset($_POST["import_data"]))		{$import_data=$_POST["import_data"];}
+if (isset($_GET["active"]))						{$active=$_GET["active"];}
+	elseif (isset($_POST["active"]))			{$active=$_POST["active"];}
 
 if (isset($_GET["copy_option"]))				{$copy_option=$_GET["copy_option"];}
 	elseif (isset($_POST["copy_option"]))		{$copy_option=$_POST["copy_option"];}
@@ -71,7 +74,7 @@ $PHP_SELF=$_SERVER['PHP_SELF'];
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,auto_dial_limit,user_territories_active,allow_custom_dialplan,callcard_enabled,admin_modify_refresh,nocache_admin,webroot_writable,allow_emails,active_modules,sounds_central_control_active,qc_features_active,contacts_enabled,enable_languages FROM system_settings;";
+$stmt = "SELECT use_non_latin,auto_dial_limit,user_territories_active,allow_custom_dialplan,callcard_enabled,admin_modify_refresh,nocache_admin,webroot_writable,allow_emails,active_modules,sounds_central_control_active,qc_features_active,contacts_enabled,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -92,6 +95,7 @@ if ($qm_conf_ct > 0)
 	$SSqc_features_active =			$row[11];
 	$SScontacts_enabled =			$row[12];
 	$SSenable_languages =			$row[13];
+	$SSlanguage_method =			$row[14];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -122,9 +126,9 @@ if ($non_latin < 1)
 	$source_language_id = preg_replace('/[^-_0-9a-zA-Z]/','',$source_language_id);
 	$language_code = preg_replace('/[^-_0-9a-zA-Z]/','',$language_code);
 	$language_description = preg_replace('/[^- _0-9a-zA-Z]/','',$language_description);
-	$english_text = preg_replace("/\\\\|;/","",$english_text);
-	$translated_text = preg_replace("/\\\\|;/","",$translated_text);
-	$import_data = preg_replace("/\\\\|;/","",$import_data);
+	$english_text = preg_replace("/\\\\|;|\n|\r/","",$english_text);
+	$translated_text = preg_replace("/\\\\|;|\n|\r/","",$translated_text);
+	$import_data = preg_replace("/\\\\|;|\r/","",$import_data);
 
 	$copy_option = preg_replace('/[^_0-9a-zA-Z]/','',$copy_option);
 	$stage = preg_replace('/[^-_0-9a-zA-Z]/', '',$stage);
@@ -137,6 +141,9 @@ else
 	$user = preg_replace("/'|\"|\\\\|;/","",$user);
 	$pass = preg_replace("/'|\"|\\\\|;/","",$pass);
 	$language_id = preg_replace("/'|\"|\\\\|;/","",$language_id);
+	$english_text = preg_replace("/\\\\|;|\n|\r/","",$english_text);
+	$translated_text = preg_replace("/\\\\|;|\n|\r/","",$translated_text);
+	$import_data = preg_replace("/\\\\|;|\r/","",$import_data);
 	}
 
 $STARTtime = date("U");
@@ -402,6 +409,11 @@ if ($action == "HELP")
 	<A NAME="languages-user_group">
 	<BR>
 	<B><?php echo _QXZ("User Group"); ?> -</B> <?php echo _QXZ("Administrative User Group associated with this language entry."); ?>
+
+	<BR>
+	<A NAME="languages-active">
+	<BR>
+	<B><?php echo _QXZ("Active"); ?> -</B> <?php echo _QXZ("For Agents and Users to use this language, this needs to be set to Y. Default is N."); ?>
 
 	<BR>
 	<A NAME="languages-english_text">
@@ -1160,7 +1172,7 @@ if ($ADD==463111111111)
 				{echo "<br>"._QXZ("LANGUAGE ENTRY NOT MODIFIED - Please go back and look at the data you entered")."\n";}
 			else
 				{
-				$stmt="UPDATE vicidial_languages set language_description='$language_description',language_code='$language_code',user_group='$user_group' where language_id='$language_id';";
+				$stmt="UPDATE vicidial_languages set language_description='$language_description',language_code='$language_code',user_group='$user_group',active='$active' where language_id='$language_id';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$stmtLIST = $stmt;
@@ -1289,7 +1301,7 @@ if ($ADD==363111111111)
 		echo "<TABLE WIDTH=850><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT language_id,language_description,language_code,user_group,modify_date from vicidial_languages where language_id='$language_id' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT language_id,language_description,language_code,user_group,modify_date,active from vicidial_languages where language_id='$language_id' $LOGadmin_viewable_groupsSQL;";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -1298,10 +1310,12 @@ if ($ADD==363111111111)
 		$language_code =			$row[2];
 		$user_group =				$row[3];
 		$modify_date =				$row[4];
+		$active =					$row[5];
 
 		echo "<br>"._QXZ("MODIFY A LANGUAGE RECORD").": $language_id<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=463111111111>\n";
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
+		echo "<input type=hidden name=action value=\"$action\">\n";
 		echo "<input type=hidden name=language_id value=\"$language_id\">\n";
 
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
@@ -1313,6 +1327,10 @@ if ($ADD==363111111111)
 		echo "$UUgroups_list";
 		echo "<option SELECTED value=\"$user_group\">$user_group</option>\n";
 		echo "</select>$NWB#languages-user_group$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=active>\n";
+		echo "<option value=\"Y\">"._QXZ("Y")."</option><option value=\"N\">"._QXZ("N")."</option>";
+		echo "<option SELECTED value=\"$active\">"._QXZ("$active")."</option>\n";
+		echo "</select>$NWB#languages-active$NWE</td></tr>\n";
 
 		$stmt="SELECT count(*) from vicidial_language_phrases where language_id='$language_id';";
 		if ($DB) {echo "$stmt\n";}
@@ -1337,9 +1355,6 @@ if ($ADD==363111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=left colspan=2>\n";
 
 		echo "<iframe src=\"/vicidial/admin_languages.php?ADD=363211111111&language_id=$language_id&DB=$DB&action=$action\" name=\"language_phrases\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" width=\"100%\" height=\"400\">\n</iframe>\n";
-
-
-
 
 
 		echo "</td></tr>\n";

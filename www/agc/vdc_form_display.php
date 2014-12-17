@@ -27,11 +27,11 @@
 # 140810-2119 - Changed to use QXZ function for echoing text
 # 141118-1424 - Added agent_email variable
 # 141128-0855 - Code cleanup for QXZ functions
+# 141216-2116 - Added language settings lookups and user/pass variable standardization
 #
 
-
-$version = '2.10-18';
-$build = '141128-0855';
+$version = '2.10-19';
+$build = '141216-2116';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -193,10 +193,26 @@ $vicidial_list_fields = '|lead_id|vendor_lead_code|source_id|list_id|gmt_offset_
 
 $IFRAME=0;
 
+$user = preg_replace("/\'|\"|\\\\|;| /","",$user);
+$pass = preg_replace("/\'|\"|\\\\|;| /","",$pass);
+
 #############################################
-##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,custom_fields_enabled FROM system_settings;";
+##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####
+$VUselected_language = '';
+$stmt="SELECT selected_language from vicidial_users where user='$user';";
+if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
+
+$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,custom_fields_enabled,enable_languages,language_method FROM system_settings;";
+$rslt=mysql_to_mysqli($stmt, $link);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
@@ -206,6 +222,8 @@ if ($qm_conf_ct > 0)
 	$timeclock_end_of_day =					$row[1];
 	$agentonly_callback_campaign_lock =		$row[2];
 	$custom_fields_enabled =				$row[3];
+	$SSenable_languages =					$row[4];
+	$SSlanguage_method =					$row[5];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -213,17 +231,10 @@ if ($qm_conf_ct > 0)
 if ($non_latin < 1)
 	{
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
-	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 	$length_in_sec = preg_replace("/[^0-9]/","",$length_in_sec);
 	$phone_code = preg_replace("/[^0-9]/","",$phone_code);
 	$phone_number = preg_replace("/[^0-9]/","",$phone_number);
 	}
-else
-	{
-	$user = preg_replace("/\'|\"|\\\\|;| /","",$user);
-	$pass = preg_replace("/\'|\"|\\\\|;| /","",$pass);
-	}
-
 
 # default optional vars if not set
 if (!isset($format))   {$format="text";}
@@ -478,8 +489,8 @@ else
 	if ($submit_button=='YES')
 		{
 		if ($bcrypt=='0')
-			{echo "<input type=hidden name=bcrypt id=bcrypt value=\"". _QXZ("OFF")."\">\n";}
-		echo "<input type=hidden name=admin_submit id=admin_submit value=\"". _QXZ("YES")."\">\n";
+			{echo "<input type=hidden name=bcrypt id=bcrypt value=\"OFF\">\n";}
+		echo "<input type=hidden name=admin_submit id=admin_submit value=\"YES\">\n";
 		echo "<BR><BR><input type=submit name=VCformSubmit id=VCformSubmit value=submit>\n";
 		}
 	echo "</form></center><BR><BR>\n";

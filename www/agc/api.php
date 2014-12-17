@@ -77,10 +77,11 @@
 # 140619-1006 - Added basic audio_playback function
 # 140811-1243 - Changed to use QXZ function for echoing text
 # 141128-0847 - Code cleanup for QXZ functions
+# 141216-2118 - Added language settings lookups and user/pass variable standardization
 #
 
-$version = '2.10-43';
-$build = '141128-0847';
+$version = '2.10-44';
+$build = '141216-2118';
 
 $startMS = microtime();
 
@@ -212,16 +213,34 @@ header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
 header ("Pragma: no-cache");                          // HTTP/1.0
 
+$user = preg_replace("/'|\"|\\\\|;| /","",$user);
+$pass = preg_replace("/'|\"|\\\\|;| /","",$pass);
+
 #############################################
-##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
+##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####
+$VUselected_language = '';
+$stmt="SELECT selected_language from vicidial_users where user='$user';";
+if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
+
+$stmt = "SELECT use_non_latin,enable_languages,language_method FROM system_settings;";
+$rslt=mysql_to_mysqli($stmt, $link);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
-	$non_latin =					$row[0];
+	$non_latin =				$row[0];
+	$SSenable_languages =		$row[1];
+	$SSlanguage_method =		$row[2];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -231,8 +250,8 @@ $query_string = preg_replace("/'|\"|\\\\|;/","",$query_string);
 
 if ($non_latin < 1)
 	{
-	$user=preg_replace("/[^0-9a-zA-Z]/","",$user);
-	$pass=preg_replace("/[^0-9a-zA-Z]/","",$pass);
+	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
+	$pass=preg_replace("/[^-_0-9a-zA-Z]/","",$pass);
 	$agent_user=preg_replace("/[^0-9a-zA-Z]/","",$agent_user);
 	$function = preg_replace("/[^-\_0-9a-zA-Z]/","",$function);
 	$value = preg_replace("/[^-\_0-9a-zA-Z]/","",$value);
@@ -289,8 +308,6 @@ if ($non_latin < 1)
 	}
 else
 	{
-	$user = preg_replace("/'|\"|\\\\|;/","",$user);
-	$pass = preg_replace("/'|\"|\\\\|;/","",$pass);
 	$source = preg_replace("/'|\"|\\\\|;/","",$source);
 	$agent_user = preg_replace("/'|\"|\\\\|;/","",$agent_user);
 	$alt_user = preg_replace("/'|\"|\\\\|;/","",$alt_user);

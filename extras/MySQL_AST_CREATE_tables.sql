@@ -623,7 +623,9 @@ alter_admin_interface_options ENUM('0','1') default '1',
 max_inbound_calls SMALLINT(5) UNSIGNED default '0',
 modify_custom_dialplans ENUM('1','0') default '0',
 wrapup_seconds_override SMALLINT(4) default '-1',
-modify_languages ENUM('1','0') default '0'
+modify_languages ENUM('1','0') default '0',
+selected_language VARCHAR(100) default 'default English',
+user_choose_language ENUM('1','0') default '0'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -1575,7 +1577,8 @@ frozen_server_call_clear ENUM('0','1') default '0',
 callback_time_24hour ENUM('0','1') default '0',
 active_modules TEXT,
 allow_chats ENUM('0','1') default '0',
-enable_languages ENUM('0','1') default '0'
+enable_languages ENUM('0','1') default '0',
+language_method VARCHAR(20) default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3098,6 +3101,7 @@ language_code VARCHAR(20) default '',
 language_description VARCHAR(255) default '',
 user_group VARCHAR(20) default '---ALL---',
 modify_date TIMESTAMP,
+active ENUM('Y','N') default 'N',
 unique index (language_id)
 ) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
@@ -3355,4 +3359,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1395',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1396',db_schema_update_date=NOW(),reload_timestamp=NOW();

@@ -142,3 +142,12 @@ ALTER TABLE vicidial_lists ADD na_call_url TEXT;
 ALTER TABLE www_phrases ADD insert_date DATETIME;
 
 UPDATE system_settings SET db_schema_version='1395',db_schema_update_date=NOW() where db_schema_version < 1395;
+
+ALTER TABLE vicidial_users ADD selected_language VARCHAR(100) default 'default English';
+ALTER TABLE vicidial_users ADD user_choose_language ENUM('1','0') default '0';
+
+ALTER TABLE vicidial_languages ADD active ENUM('Y','N') default 'N';
+
+ALTER TABLE system_settings ADD language_method VARCHAR(20) default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1396',db_schema_update_date=NOW() where db_schema_version < 1396;

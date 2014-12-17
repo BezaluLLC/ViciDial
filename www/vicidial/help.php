@@ -30,6 +30,7 @@
 # 141204-0605 - Added enable_languages
 # 141204-2209 - Added QXZ function output
 # 141211-1647 - Added cpd_unknown_action and lists-na_call_url
+# 141212-0945 - Added user_choose_language, selected_language and language_method
 #
 
 require("dbconnect_mysqli.php");
@@ -37,7 +38,7 @@ require("functions.php");
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,allow_emails,level_8_disable_add,pass_key,pass_hash_enabled,disable_auto_dial,country_code_list_stats,enable_languages FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,allow_emails,level_8_disable_add,pass_key,pass_hash_enabled,disable_auto_dial,country_code_list_stats,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -86,6 +87,7 @@ if ($qm_conf_ct > 0)
 	$SSdisable_auto_dial =					$row[39];
 	$SScountry_code_list_stats =			$row[40];
 	$SSenable_languages =					$row[41];
+	$SSlanguage_method =					$row[42];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -297,6 +299,16 @@ if ($SSoutbound_autodial_active > 0)
 	<B><?php echo _QXZ("Closer Default Blended"); ?> -</B><?php echo _QXZ("This option simply defaults the Blended checkbox on a CLOSER login screen.");
 	}
 ?>
+
+<BR>
+<A NAME="users-user_choose_language">
+<BR>
+<B><?php echo _QXZ("User Choose Language"); ?> -</B><?php echo _QXZ("This option allows a user to select the language they want for the agent or administrative interface to display in. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="users-selected_language">
+<BR>
+<B><?php echo _QXZ("Selected Language"); ?> -</B><?php echo _QXZ("This is the language that the agent and administrative interface will default to when the agent logs in. Default is -default English-."); ?>
 
 <BR>
 <A NAME="users-agent_recording_override">
@@ -2946,7 +2958,7 @@ if ($SSqc_features_active > 0)
 <B><FONT SIZE=3>CAMPAIGN_LISTS</FONT></B><BR><BR>
 <A NAME="campaign_lists">
 <BR>
-<B><?php echo _QXZ("The lists within this campaign are listed here, whether they are active is denoted by the Y or N and you can go to the list screen by clicking on the list ID in the first column."); ?>
+<B><?php echo _QXZ("The lists within this campaign are listed here, whether they are active is denoted by the Y or N and you can go to the list screen by clicking on the list ID in the first column.")."</B>"; ?>
 
 
 
@@ -2957,7 +2969,7 @@ if ($SSqc_features_active > 0)
 <B><FONT SIZE=3>CAMPAIGN_STATUSES TABLE</FONT></B><BR><BR>
 <A NAME="campaign_statuses">
 <BR>
-<B><?php echo _QXZ("Through the use of custom campaign statuses, you can have statuses that only exist for a specific campaign. The Status must be 1-8 characters in length, the description must be 2-30 characters in length and Selectable defines whether it shows up in the system as a disposition. The human_answered field is used when calculating the drop percentage, or abandon rate. Setting human_answered to Y will use this status when counting the human-answered calls. The Category option allows you to group several statuses into a catogy that can be used for statistical analysis.");
+<B><?php echo _QXZ("Through the use of custom campaign statuses, you can have statuses that only exist for a specific campaign. The Status must be 1-8 characters in length, the description must be 2-30 characters in length and Selectable defines whether it shows up in the system as a disposition. The human_answered field is used when calculating the drop percentage, or abandon rate. Setting human_answered to Y will use this status when counting the human-answered calls. The Category option allows you to group several statuses into a catogy that can be used for statistical analysis.")."</B>";
 
 
 
@@ -4348,6 +4360,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="settings-enable_languages">
 <BR>
 <B><?php echo _QXZ("Enable Languages"); ?> -</B><?php echo _QXZ("This setting allows you to enable non-English language translations on the system. A new section called Languages under the Admin section will also be available to manager Languages. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="settings-language_method">
+<BR>
+<B><?php echo _QXZ("Language Method"); ?> -</B><?php echo _QXZ("This setting defines how the language translation works when pages are loaded. The MYSQL method performs a database query for every display of a phrase in the interface. The DISABLED method will always display -default English- no matter what other settings are set to. Default is DISABLED."); ?>
 
 <BR>
 <A NAME="settings-webroot_writable">
