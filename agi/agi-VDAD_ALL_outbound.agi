@@ -111,6 +111,7 @@
 # 140312-2112 - Added CALLID as recording filename variable
 # 140617-1946 - Added single-digit change to text for TTS
 # 141211-1635 - Added cpd_unknown_action campaign option and list_id added to AST_send_URL calls
+# 141219-1219 - Fixed issue related to QM logging
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -2582,8 +2583,6 @@ while ($drop_timer <= $DROP_TIME)
 					$dbhP=$dbhA;   $mysql_count='01038';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				if ($AGILOG) {$agi_string = "--    VDAD XFER : |$affected_rows|update of vac table: $callerid\n|$stmtA|";   &agi_output;}
 
-				$dbhA->disconnect();
-
 				if ($enable_queuemetrics_logging > 0)
 					{
 					$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
@@ -2671,6 +2670,8 @@ while ($drop_timer <= $DROP_TIME)
 						if ($AGILOG) {$agi_string = "$launch|";   &agi_output;}
 						}
 					}
+
+				$dbhA->disconnect();
 
 				if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $VDADconf_exten";   &agi_output;}
 				print "SET CONTEXT $ext_context\n";
@@ -3189,8 +3190,6 @@ while ($drop_timer <= $DROP_TIME)
 					$dbhP=$dbhA;   $mysql_count='01045';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				if ($AGILOG) {$agi_string = "--    VDAD XFER REMOTE: |$affected_rows|update of vac table: $callerid\n|$stmtA|";   &agi_output;}
 
-				$dbhA->disconnect();
-
 				if ($enable_queuemetrics_logging > 0)
 					{
 					$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
@@ -3278,6 +3277,8 @@ while ($drop_timer <= $DROP_TIME)
 						if ($AGILOG) {$agi_string = "$launch|";   &agi_output;}
 						}
 					}
+
+				$dbhA->disconnect();
 
 				if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $VDADremDIALstr";   &agi_output;}
 				print "SET CONTEXT $ext_context\n";

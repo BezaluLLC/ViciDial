@@ -17,6 +17,7 @@
 # 121120-0925 - Added QM socket-send functionality
 # 130402-2307 - Added user_group variable
 # 141211-1742 - Added list override for no-agent url
+# 141219-1218 - url logging fix for some inputs
 #
 
 $|++;
@@ -638,7 +639,7 @@ if (length($lead_id) > 0)
 
 	### insert a new url log entry
 	$SQL_log = "$parse_url";
-	$SQL_log =~ s/;|\|//gi;
+	$SQL_log =~ s/;|\||\\//gi;
 	$stmtA = "INSERT INTO vicidial_url_log SET uniqueid='$uniqueid',url_date='$now_date',url_type='$url_function',url='$SQL_log',url_response='';";
 	$affected_rows = $dbhA->do($stmtA);
 	$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
