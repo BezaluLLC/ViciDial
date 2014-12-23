@@ -460,10 +460,11 @@
 # 141204-1211 - Added more error checking on login
 # 141207-1155 - Added pause_trigger to logout to force pause before running logout process
 # 141216-1859 - Added agent choose language option
+# 141222-2035 - Fix for issue #811
 #
 
-$version = '2.10-431c';
-$build = '141216-1859';
+$version = '2.10-432c';
+$build = '141222-2035';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -3922,7 +3923,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var conf_check_attempts = '<?php echo $conf_check_attempts ?>';
 	var conf_check_attempts_cleanup = '<?php echo ($conf_check_attempts + 2) ?>';
 	var blind_monitor_warning='<?php echo $blind_monitor_warning ?>';
-	var blind_monitor_message='<?php echo $blind_monitor_message ?>';
+	var blind_monitor_message="<?php echo $blind_monitor_message ?>";
 	var blind_monitor_filename='<?php echo $blind_monitor_filename ?>';
 	var blind_monitoring_now=0;
 	var blind_monitoring_now_trigger=0;
