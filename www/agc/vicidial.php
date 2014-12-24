@@ -461,10 +461,11 @@
 # 141207-1155 - Added pause_trigger to logout to force pause before running logout process
 # 141216-1859 - Added agent choose language option
 # 141222-2035 - Fix for issue #811
+# 141223-2109 - Fix for hide_gender issue
 #
 
-$version = '2.10-432c';
-$build = '141222-2035';
+$version = '2.10-433c';
+$build = '141223-2109';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -671,9 +672,6 @@ if (file_exists('options.php'))
 	}
 
 $hide_gender=0;
-if ($label_gender == '---HIDE---')
-	{$hide_gender=1;}
-
 $US='_';
 $CL=':';
 $AT='@';
@@ -1406,6 +1404,8 @@ else
 			if (strlen($row[17])>0) {$label_email =				$row[17];}
 			if (strlen($row[18])>0) {$label_comments =			$row[18];}
 			### END find any custom field labels ###
+			if ($label_gender == '---HIDE---')
+				{$hide_gender=1;}
 
 			if ($WeBRooTWritablE > 0)
 				{
@@ -1733,7 +1733,7 @@ else
 						if (strlen($row[9])>0)	{$label_province =			$row[9];}
 						if (strlen($row[10])>0) {$label_postal_code =		$row[10];}
 						if (strlen($row[11])>0) {$label_vendor_lead_code =	$row[11];}
-						if (strlen($row[12])>0) {$label_gender =			$row[12];}
+						if (strlen($row[12])>0) {$label_gender =			$row[12];   $hide_gender=0;}
 						if (strlen($row[13])>0) {$label_phone_number =		$row[13];}
 						if (strlen($row[14])>0) {$label_phone_code =		$row[14];}
 						if (strlen($row[15])>0) {$label_alt_phone =			$row[15];}
@@ -1741,7 +1741,6 @@ else
 						if (strlen($row[17])>0) {$label_email =				$row[17];}
 						if (strlen($row[18])>0) {$label_comments =			$row[18];}
 						### END find any custom field labels ###
-						$hide_gender=0;
 						if ($label_gender == '---HIDE---')
 							{$hide_gender=1;}
 						}
@@ -2153,9 +2152,8 @@ else
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01017',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
 				$row=mysqli_fetch_row($rslt);
-				   $campaign_leads_to_call = $row[0];
-				   echo "<!-- $campaign_leads_to_call - leads left to call in hopper -->\n";
-
+				$campaign_leads_to_call = $row[0];
+				echo "<!-- $campaign_leads_to_call - leads left to call in hopper -->\n";
 				}
 			else
 				{
