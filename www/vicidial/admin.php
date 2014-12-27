@@ -3412,12 +3412,13 @@ else
 # 141204-0559 - Fixed Contacts alt-db issue, Added user modify_languages user option and enable_languages system option
 # 141211-1639 - Added cpd_unknown_action campaign option and na_call_url lists option
 # 141212-0930 - Added selected_language,user_choose_language user options and language_method system option
+# 141227-1008 - Trigger sounds update on voicemail server when phone record is updated
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.10-461a';
-$build = '141212-0930';
+$admin_version = '2.10-462a';
+$build = '141227-1008';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -14139,7 +14140,7 @@ if ($ADD==41111111111)
 					$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
 					$rslt=mysql_to_mysqli($stmtA, $link);
 
-					$stmtB="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$SSactive_voicemail_server';";
+					$stmtB="UPDATE servers SET rebuild_conf_files='Y',sounds_update='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$SSactive_voicemail_server';";
 					$rslt=mysql_to_mysqli($stmtB, $link);
 
 					### LOG INSERTION Admin Log Table ###

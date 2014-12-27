@@ -96,9 +96,10 @@
 # 140619-1001 - Added new ASTplay loop IAX trunk
 # 141113-1555 - Changed FILL process screen from ASTVDautoFILL to ASTVDadFILL for easier admin
 # 141125-1710 - Added gather_stats_flag for audio sync script launch on voicemail server
+# 141227-0957 - Changed to clear out old unavail voicemail greetings before copying custom greeting
 #
 
-$build = '141125-1710';
+$build = '141227-0957';
 
 $DB=0; # Debug flag
 
@@ -1517,21 +1518,43 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 			$gsm='.gsm';
 			$wav='.wav';
 			$audio_file_copied=0;
+			$vm_dir_created=0;
+			$vm_greet_wav_exists=0;
+			$vm_greet_gsm_exists=0;
 			if ( !-e ("/var/spool/asterisk/voicemail/default/$VG_voicemail_id"))
 				{
 				`mkdir /var/spool/asterisk/voicemail/default/$VG_voicemail_id`;
 				if ($DB) {print "voicemail directory created: /var/spool/asterisk/voicemail/default/$VG_voicemail_id/\n";}
+				$vm_dir_created++;
 				}
 			if ( -e ("/var/lib/asterisk/sounds/$VG_voicemail_greeting$wav"))
+				{
+				$vm_greet_wav_exists++;
+				}
+			if ( -e ("/var/lib/asterisk/sounds/$VG_voicemail_greeting$gsm"))
+				{
+				$vm_greet_gsm_exists++;
+				}
+
+			if ( ($vm_dir_created < 1) && ( ($vm_greet_wav_exists > 0) || ($vm_greet_gsm_exists > 0) ) )
+				{
+				`rm -f /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail.wav`;
+				`rm -f /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail.WAV`;
+				`rm -f /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail.gsm`;
+				if ($DB) {print "cleared old voicemail greetings: $VG_voicemail_id\n";}
+				}
+
+			if ($vm_greet_wav_exists > 0)
 				{
 				`cp /var/lib/asterisk/sounds/$VG_voicemail_greeting$wav /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail$wav`;
 				$audio_file_copied++;
 				}
-			if ( -e ("/var/lib/asterisk/sounds/$VG_voicemail_greeting$gsm"))
+			if ($vm_greet_gsm_exists > 0)
 				{
 				`cp /var/lib/asterisk/sounds/$VG_voicemail_greeting$gsm /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail$gsm`;
 				$audio_file_copied++;
 				}
+
 			if ($audio_file_copied < 1)
 				{if ($DB) {print "no voicemail greeting copied: $VG_voicemail_id|$VG_voicemail_greeting\n";}}
 			if ($DBX>0) {print "Custom Voicemail Greeting: $VG_voicemail_id|$VG_voicemail_greeting|$audio_file_copied\n";}
@@ -1554,21 +1577,43 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 			$gsm='.gsm';
 			$wav='.wav';
 			$audio_file_copied=0;
+			$vm_dir_created=0;
+			$vm_greet_wav_exists=0;
+			$vm_greet_gsm_exists=0;
 			if ( !-e ("/var/spool/asterisk/voicemail/default/$VG_voicemail_id"))
 				{
 				`mkdir /var/spool/asterisk/voicemail/default/$VG_voicemail_id`;
 				if ($DB) {print "voicemail directory created: /var/spool/asterisk/voicemail/default/$VG_voicemail_id/\n";}
+				$vm_dir_created++;
 				}
 			if ( -e ("/var/lib/asterisk/sounds/$VG_voicemail_greeting$wav"))
+				{
+				$vm_greet_wav_exists++;
+				}
+			if ( -e ("/var/lib/asterisk/sounds/$VG_voicemail_greeting$gsm"))
+				{
+				$vm_greet_gsm_exists++;
+				}
+
+			if ( ($vm_dir_created < 1) && ( ($vm_greet_wav_exists > 0) || ($vm_greet_gsm_exists > 0) ) )
+				{
+				`rm -f /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail.wav`;
+				`rm -f /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail.WAV`;
+				`rm -f /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail.gsm`;
+				if ($DB) {print "cleared old voicemail greetings: $VG_voicemail_id\n";}
+				}
+
+			if ($vm_greet_wav_exists > 0)
 				{
 				`cp /var/lib/asterisk/sounds/$VG_voicemail_greeting$wav /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail$wav`;
 				$audio_file_copied++;
 				}
-			if ( -e ("/var/lib/asterisk/sounds/$VG_voicemail_greeting$gsm"))
+			if ($vm_greet_gsm_exists > 0)
 				{
 				`cp /var/lib/asterisk/sounds/$VG_voicemail_greeting$gsm /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail$gsm`;
 				$audio_file_copied++;
 				}
+
 			if ($audio_file_copied < 1)
 				{if ($DB) {print "no voicemail greeting copied: $VG_voicemail_id|$VG_voicemail_greeting\n";}}
 			if ($DBX>0) {print "Custom Voicemail Greeting: $VG_voicemail_id|$VG_voicemail_greeting|$audio_file_copied\n";}
