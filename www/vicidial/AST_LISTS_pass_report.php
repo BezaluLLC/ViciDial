@@ -448,15 +448,31 @@ $MAIN.="<BR><BR>\n";
 $MAIN.="<INPUT type=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 $MAIN.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 $MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-if (strlen($group[0]) > 1)
+if ($use_lists > 0)
 	{
-	$MAIN.=" <a href=\"./admin.php?ADD=34&campaign_id=$group[0]\">"._QXZ("MODIFY")."</a> | \n";
-	$MAIN.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
+	if (strlen($group[0]) > 1)
+		{
+		$MAIN.=" <a href=\"./admin.php?ADD=311&list_id=$group[0]\">"._QXZ("MODIFY")."</a> | \n";
+		$MAIN.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
+		}
+	else
+		{
+		$MAIN.=" <a href=\"./admin.php?ADD=100\">"._QXZ("LISTS")."</a> | \n";
+		$MAIN.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
+		}
 	}
 else
 	{
-	$MAIN.=" <a href=\"./admin.php?ADD=10\">"._QXZ("CAMPAIGNS")."</a> | \n";
-	$MAIN.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
+	if (strlen($group[0]) > 1)
+		{
+		$MAIN.=" <a href=\"./admin.php?ADD=34&campaign_id=$group[0]\">"._QXZ("MODIFY")."</a> | \n";
+		$MAIN.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
+		}
+	else
+		{
+		$MAIN.=" <a href=\"./admin.php?ADD=10\">"._QXZ("CAMPAIGNS")."</a> | \n";
+		$MAIN.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
+		}
 	}
 $MAIN.="</TD></TR></TABLE>";
 $MAIN.="</FORM>\n\n";
