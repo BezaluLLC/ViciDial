@@ -9,10 +9,11 @@
 # 141203-2126 - First Build
 # 141205-0641 - Added option to allow for more matches in the help.php file
 # 141212-0923 - Added active setting
+# 141227-1041 - Added flags next to country code and active column on list
 #
 
-$admin_version = '2.10-3';
-$build = '141212-0923';
+$admin_version = '2.10-4';
+$build = '141227-1041';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -104,6 +105,7 @@ if (strlen($DB) < 1)
 	{$DB=0;}
 $modify_refresh_set=0;
 $import_with_missing_periods=1;
+$gif='.gif';
 
 if ($non_latin < 1)
 	{
@@ -403,7 +405,7 @@ if ($action == "HELP")
 	<BR>
 	<A NAME="languages-language_code">
 	<BR>
-	<B><?php echo _QXZ("Language Code"); ?> -</B> <?php echo _QXZ("The web browser code to be used to identify the native web browser language that this language is intended for. For example, United States English is en-us. This is not a required field."); ?>
+	<B><?php echo _QXZ("Language Code"); ?> -</B> <?php echo _QXZ("The web browser code to be used to identify the native web browser language that this language is intended for. For example, United States English is en-us. This is not a required field. If a two letter code is used and a matching image is found, it will be displayed next to this field."); ?>
 
 	<BR>
 	<A NAME="languages-user_group">
@@ -1322,7 +1324,12 @@ if ($ADD==363111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Language ID").": </td><td align=left><B>$language_id</B></td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Last Modified").": </td><td align=left>$modify_date</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right nowrap>"._QXZ("Language Description").": </td><td align=left nowrap><input type=text name=language_description size=70 maxlength=255 value=\"$language_description\">$NWB#languages-language_description$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Language Code").": </td><td align=left><input type=text name=language_code size=10 maxlength=20 value=\"$language_code\">$NWB#languages-language_code$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Language Code").": </td><td align=left><input type=text name=language_code size=10 maxlength=20 value=\"$language_code\">$NWB#languages-language_code$NWE &nbsp; ";
+		if (file_exists("../agc/images/$language_code$gif"))
+			{echo "<img src=\"../agc/images/$language_code$gif\" width=30 height=20 alt='"._QXZ("flag")."' border=0>";}
+		else
+			{echo "<img src=\"../agc/images/xx.gif\" width=30 height=20 alt='"._QXZ("unknown code")."' border=0>";}
+		echo "</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
 		echo "<option SELECTED value=\"$user_group\">$user_group</option>\n";
@@ -1393,7 +1400,7 @@ if ($ADD==163000000000)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT language_id,language_description,language_code,user_group,modify_date from vicidial_languages $whereLOGadmin_viewable_groupsSQL order by language_id;";
+	$stmt="SELECT language_id,language_description,language_code,user_group,modify_date,active from vicidial_languages $whereLOGadmin_viewable_groupsSQL order by language_id;";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$lang_to_print = mysqli_num_rows($rslt);
@@ -1404,6 +1411,7 @@ if ($ADD==163000000000)
 	echo "<td><font size=1 color=white align=left><B>"._QXZ("LANGUAGE ID")."</B></td>";
 	echo "<td><font size=1 color=white><B>"._QXZ("Description")."</B></td>";
 	echo "<td><font size=1 color=white><B>"._QXZ("Code")."</B></td>";
+	echo "<td><font size=1 color=white><B>"._QXZ("ACT")."</B></td>";
 	echo "<td><font size=1 color=white><B>"._QXZ("ADMIN GROUP")."</B></td>";
 	echo "<td><font size=1 color=white><B>"._QXZ("MODIFY DATE")."</B></td>";
 	echo "<td><font size=1 color=white><B>"._QXZ("PHRASES")."</B></td>";
@@ -1420,6 +1428,7 @@ if ($ADD==163000000000)
 		$Alanguage_code[$o] =			$row[2];
 		$Auser_group[$o] =				$row[3];
 		$Amodify_date[$o] =				$row[4];
+		$Aactive[$o] =					$row[5];
 		$o++;
 		}
 
@@ -1445,7 +1454,13 @@ if ($ADD==163000000000)
 			{$bgcolor='bgcolor="#9BB9FB"';}
 		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=363111111111&language_id=$Alanguage_id[$o]&DB=$DB\">$Alanguage_id[$o]</a></td>";
 		echo "<td><font size=1>$Alanguage_description[$o]</td>";
-		echo "<td><font size=1>$Alanguage_code[$o]</td>";
+		echo "<td><font size=1>";
+		if (file_exists("../agc/images/$Alanguage_code[$o]$gif"))
+			{echo "<img src=\"../agc/images/$Alanguage_code[$o]$gif\" width=15 height=10 alt='"._QXZ("flag")."' border=0>";}
+		else
+			{echo "<img src=\"../agc/images/xx.gif\" width=15 height=10 alt='"._QXZ("unknown code")."' border=0>";}
+		echo " &nbsp; $Alanguage_code[$o]</td>";
+		echo "<td><font size=1>$Aactive[$o]</td>";
 		echo "<td><font size=1>$Auser_group[$o]</td>";
 		echo "<td><font size=1>$Amodify_date[$o]</td>";
 		echo "<td><font size=1>$phrase_count($translated_phrases_count/$null_phrase_count)</td>";
