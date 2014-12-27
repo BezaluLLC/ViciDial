@@ -2508,7 +2508,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 						if (preg_match("/UP TIMEZONE/i",$lead_order)){$order_stmt = "order by gmt_offset_now desc, $last_order";}
 						if (preg_match("/DOWN TIMEZONE/i",$lead_order)){$order_stmt = "order by gmt_offset_now, $last_order";}
 
-						$stmt="UPDATE vicidial_list SET user='QUEUE$user' where called_since_last_reset='N' and user NOT LIKE \"QUEUE%\" and status IN($Dsql) and list_id IN($camp_lists) and ($all_gmtSQL) $CCLsql $DLTsql $fSQL $adooSQL $order_stmt LIMIT 1;";
+						$stmt="UPDATE vicidial_list SET user='QUEUE$user' where called_since_last_reset='N' and ( (user NOT LIKE \"QUEUE%\") or (user is NULL) ) and status IN($Dsql) and list_id IN($camp_lists) and ($all_gmtSQL) $CCLsql $DLTsql $fSQL $adooSQL $order_stmt LIMIT 1;";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_to_mysqli($stmt, $link);
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00242',$user,$server_ip,$session_name,$one_mysql_log);}
