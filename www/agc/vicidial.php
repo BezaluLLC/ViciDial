@@ -462,10 +462,11 @@
 # 141216-1859 - Added agent choose language option
 # 141222-2035 - Fix for issue #811
 # 141223-2109 - Fix for hide_gender issue
+# 141227-1759 - Found missing phrase for QXZ
 #
 
-$version = '2.10-433c';
-$build = '141223-2109';
+$version = '2.10-434c';
+$build = '141227-1759';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -11898,7 +11899,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		if (AllowManualQueueCalls == '0')
             {document.getElementById("ManualQueueChoice").innerHTML = "<a href=\"#\" onclick=\"ManualQueueChoiceChange('1');return false;\"><?php echo _QXZ("Manual Queue is Off"); ?></a><br />";}
 		else
-            {document.getElementById("ManualQueueChoice").innerHTML = "<a href=\"#\" onclick=\"ManualQueueChoiceChange('0');return false;\"><?php echo _QXZ("Manual Queue in On"); ?></a><br />";}
+            {document.getElementById("ManualQueueChoice").innerHTML = "<a href=\"#\" onclick=\"ManualQueueChoiceChange('0');return false;\"><?php echo _QXZ("Manual Queue is On"); ?></a><br />";}
 		}
 
 // ################################################################################
@@ -16293,7 +16294,7 @@ if ($agent_display_dialable_leads > 0)
 	<?php 
 	if (!preg_match("/X/i",$manual_dial_prefix))
 		{
-        echo "Note: a dial prefix of $manual_dial_prefix will be added to the beginning of this number<br />\n";
+        echo _QXZ("Note: a dial prefix of %1s will be added to the beginning of this number",0,'',$manual_dial_prefix)."<br />\n";
 		}
 	?>
     <?php echo _QXZ("Note: all new manual dial leads will go into list %1s",0,'',$manual_dial_list_id); ?><br /><br />

@@ -1,4 +1,4 @@
-Notes on the non-English language translations(QXZ process)	Started: 2014-11-18	Updated: 2014-12-17
+Notes on the non-English language translations(QXZ process)	Started: 2014-11-18	Updated: 2014-12-29
 
 
 Summary: 
@@ -11,6 +11,14 @@ As of 2014-12-17, languages now follow User Group permissions for agents and man
 
 The last step is: To get on-the-fly translation working for all admin web pages.
 
+
+
+Available translation dictionaries:
+
+All available dictionaries will be placed in the following website directory:
+http://vicidial.org/translations/
+
+These translation dictionaries can simply be imported into the Admin web interface to use as is or updated as desired. The Admin web interface also has the ability to easily export dictionaries from your system that you can share or exchange with other Vicidial users.
 
 
 

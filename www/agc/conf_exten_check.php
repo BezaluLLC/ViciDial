@@ -66,10 +66,11 @@
 # 141118-1233 - Formatting changes for QXZ output
 # 141128-0853 - Code cleanup for QXZ functions
 # 141216-2111 - Added language settings lookups and user/pass variable standardization
+# 141228-0053 - Found missing phrase for QXZ
 #
 
-$version = '2.10-41';
-$build = '141216-2111';
+$version = '2.10-42';
+$build = '141228-0053';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=40;
 $one_mysql_log=0;
@@ -319,8 +320,8 @@ if ($ACTION == 'refresh')
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03007',$user,$server_ip,$session_name,$one_mysql_log);}
 				$row=mysqli_fetch_row($rslt);
 				$RingCalls=$row[0];
-				if ($RingCalls > 0) {$RingCalls = "<font class=\"queue_text_red\">Calls in Queue: $RingCalls</font>";}
-				else {$RingCalls = "<font class=\"queue_text\">Calls in Queue: $RingCalls</font>";}
+				if ($RingCalls > 0) {$RingCalls = "<font class=\"queue_text_red\">"._QXZ("Calls in Queue").": $RingCalls</font>";}
+				else {$RingCalls = "<font class=\"queue_text\">"._QXZ("Calls in Queue").": $RingCalls</font>";}
 
 				### grab the number of calls being placed from this server and campaign
 				$stmt="SELECT count(*) from vicidial_auto_calls where status NOT IN('XFER') and ( (campaign_id='$Acampaign') or (campaign_id IN('$AccampSQL')) );";
