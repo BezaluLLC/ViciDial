@@ -370,10 +370,11 @@
 # 141128-0849 - Code cleanup for QXZ functions
 # 141207-1056 - Added pause_trigger to logout to force pause before running logout process
 # 141216-1900 - Added agent choose language option
+# 141229-1428 - Changed single-quote QXZ arguments to double-quotes
 #
 
-$version = '2.10-265';
-$build = '141216-1900';
+$version = '2.10-266';
+$build = '141229-1428';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=599;
 $one_mysql_log=0;
@@ -12122,25 +12123,25 @@ if ($ACTION == 'LEADINFOview')
 		### BEGIN Display lead info and custom fields ###
 		### BEGIN find any custom field labels ###
 		$INFOout='';
-		$label_title =				_QXZ(' Title');
-		$label_first_name =			_QXZ('First');
-		$label_middle_initial =		_QXZ('MI');
-		$label_last_name =			_QXZ('Last ');
-		$label_address1 =			_QXZ('Address1');
-		$label_address2 =			_QXZ('Address2');
-		$label_address3 =			_QXZ('Address3');
-		$label_city =				_QXZ('City');
-		$label_state =				_QXZ(' State');
-		$label_province =			_QXZ('Province');
-		$label_postal_code =		_QXZ('PostCode');
-		$label_vendor_lead_code =	_QXZ('Vendor ID');
-		$label_gender =				_QXZ(' Gender');
-		$label_phone_number =		_QXZ('Phone');
-		$label_phone_code =			_QXZ('DialCode');
-		$label_alt_phone =			_QXZ('Alt. Phone');
-		$label_security_phrase =	_QXZ('Show');
-		$label_email =				_QXZ(' Email');
-		$label_comments =			_QXZ(' Comments');
+		$label_title =				_QXZ(" Title");
+		$label_first_name =			_QXZ("First");
+		$label_middle_initial =		_QXZ("MI");
+		$label_last_name =			_QXZ("Last ");
+		$label_address1 =			_QXZ("Address1");
+		$label_address2 =			_QXZ("Address2");
+		$label_address3 =			_QXZ("Address3");
+		$label_city =				_QXZ("City");
+		$label_state =				_QXZ(" State");
+		$label_province =			_QXZ("Province");
+		$label_postal_code =		_QXZ("PostCode");
+		$label_vendor_lead_code =	_QXZ("Vendor ID");
+		$label_gender =				_QXZ(" Gender");
+		$label_phone_number =		_QXZ("Phone");
+		$label_phone_code =			_QXZ("DialCode");
+		$label_alt_phone =			_QXZ("Alt. Phone");
+		$label_security_phrase =	_QXZ("Show");
+		$label_email =				_QXZ(" Email");
+		$label_comments =			_QXZ(" Comments");
 
 		$stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,label_hide_field_logs from system_settings;";
 		$rslt=mysql_to_mysqli($stmt, $link);

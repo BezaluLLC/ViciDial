@@ -463,10 +463,11 @@
 # 141222-2035 - Fix for issue #811
 # 141223-2109 - Fix for hide_gender issue
 # 141227-1759 - Found missing phrase for QXZ
+# 141229-1429 - Changed single-quote QXZ arguments to double-quotes
 #
 
-$version = '2.10-434c';
-$build = '141227-1759';
+$version = '2.10-435c';
+$build = '141229-1429';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -1362,25 +1363,25 @@ else
 			### END - CHECK TO SEE IF SHIFT ENFORCEMENT IS ENABLED AND AGENT IS OUTSIDE OF THEIR SHIFTS, IF SO, OUTPUT ERROR
 
 			### BEGIN find any custom field labels ###
-			$label_title =				_QXZ(' Title');
-			$label_first_name =			_QXZ('First');
-			$label_middle_initial =		_QXZ('MI');
-			$label_last_name =			_QXZ('Last ');
-			$label_address1 =			_QXZ('Address1');
-			$label_address2 =			_QXZ('Address2');
-			$label_address3 =			_QXZ('Address3');
-			$label_city =				_QXZ('City');
-			$label_state =				_QXZ(' State');
-			$label_province =			_QXZ('Province');
-			$label_postal_code =		_QXZ('PostCode');
-			$label_vendor_lead_code =	_QXZ('Vendor ID');
-			$label_gender =				_QXZ(' Gender');
-			$label_phone_number =		_QXZ('Phone');
-			$label_phone_code =			_QXZ('DialCode');
-			$label_alt_phone =			_QXZ('Alt. Phone');
-			$label_security_phrase =	_QXZ('Show');
-			$label_email =				_QXZ('Email');
-			$label_comments =			_QXZ(' Comments');
+			$label_title =				_QXZ(" Title");
+			$label_first_name =			_QXZ("First");
+			$label_middle_initial =		_QXZ("MI");
+			$label_last_name =			_QXZ("Last ");
+			$label_address1 =			_QXZ("Address1");
+			$label_address2 =			_QXZ("Address2");
+			$label_address3 =			_QXZ("Address3");
+			$label_city =				_QXZ("City");
+			$label_state =				_QXZ(" State");
+			$label_province =			_QXZ("Province");
+			$label_postal_code =		_QXZ("PostCode");
+			$label_vendor_lead_code =	_QXZ("Vendor ID");
+			$label_gender =				_QXZ(" Gender");
+			$label_phone_number =		_QXZ("Phone");
+			$label_phone_code =			_QXZ("DialCode");
+			$label_alt_phone =			_QXZ("Alt. Phone");
+			$label_security_phrase =	_QXZ("Show");
+			$label_email =				_QXZ("Email");
+			$label_comments =			_QXZ(" Comments");
 
 			$stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
 			$rslt=mysql_to_mysqli($stmt, $link);
@@ -12032,7 +12033,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 	function LogouT(tempreason,temppause)
 		{
 		if (MD_channel_look==1)
-			{alert("<?php echo _QXZ('You cannot log out during a Dial attempt. Wait 50 seconds for the dial to fail out if it is not answered'); ?>");}
+			{alert("<?php echo _QXZ("You cannot log out during a Dial attempt. Wait 50 seconds for the dial to fail out if it is not answered"); ?>");}
 		else
 			{
 			if (VD_live_customer_call==1)
@@ -15050,7 +15051,7 @@ function phone_number_format(formatphone) {
 			if ( (qc_comment_history == 'CLICK_ALLOW_MINIMIZE') || (qc_comment_history == 'AUTO_OPEN_ALLOW_MINIMIZE') )
 				{
 				document.getElementById("ViewCommentsBox").style.top = '350px';
-				document.getElementById("ViewCommentsShowHide").innerHTML = '<a href="#" onclick="ViewComments(\'OFF\');return false;"><?php echo _QXZ("hide comment history"); ?></a> - <a href="#" onclick="ViewComments(\'OFF\',\'OFF\');return false;"><?php echo _QXZ("close"); ?></a>';
+				document.getElementById("ViewCommentsShowHide").innerHTML = "<a href=\"#\" onclick=\"ViewComments('OFF');return false;\"><?php echo _QXZ("hide comment history"); ?></a> - <a href=\"#\" onclick=\"ViewComments('OFF','OFF');return false;\"><?php echo _QXZ("close"); ?></a>";
 				}
 			//view_comments_active = 1;
 			document.getElementById("viewcommentsdisplay").innerHTML = "<input type=\"button\" id='ViewCommentButton' onClick=\"ViewComments('OFF')\" value='<?php echo _QXZ("HIDE"); ?>' />";
@@ -15066,7 +15067,7 @@ function phone_number_format(formatphone) {
 			if ( (qc_comment_history == 'CLICK_ALLOW_MINIMIZE') || (qc_comment_history == 'AUTO_OPEN_ALLOW_MINIMIZE') )
 				{
 				document.getElementById("ViewCommentsBox").style.top = '<?php echo $CHheight ?>px';
-				document.getElementById("ViewCommentsShowHide").innerHTML = '<a href="#" onclick="ViewComments(\'ON\');return false;"><?php echo _QXZ("show comment history"); ?></a>';
+				document.getElementById("ViewCommentsShowHide").innerHTML = "<a href=\"#\" onclick=\"ViewComments('ON');return false;\"><?php echo _QXZ("show comment history"); ?></a>";
 				if (VCforcehide == 'OFF')
 					{hideDiv('ViewCommentsBox');}
 				}
