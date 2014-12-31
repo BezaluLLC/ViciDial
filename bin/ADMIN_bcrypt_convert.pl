@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# ADMIN_bcrypt_convert.pl    version 2.8
+# ADMIN_bcrypt_convert.pl    version 2.10
 # 
 # Bcrypt password hashing conversion script to be used for authentication
 #
@@ -10,12 +10,13 @@
 # IMPORTANT !!!!!!!!!!!!!
 # The Crypt::Eksblowfish::Bcrypt perl module is REQUIRED for this script
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES
 # 
 # 130704-2041 - First build
+# 141231-0959 - Added --conffile option
 #
 
 $T=0;
@@ -43,6 +44,7 @@ if (length($ARGV[0])>1)
 		print "IMPORTANT!!! RUN FIRST WITH THE --test FLAG TO MAKE SURE IT WORKS!!!\n";
 		print "\n";
 		print "allowed run time options:\n";
+		print "  [--conffile=/path/from/root] = define configuration file path from root at runtime\n";
 		print "  [--salt=XXX] = overide the system salt\n";
 		print "  [--cost=XX] = overide the system cost\n";
 		print "  [--test] = testing mode only, no database updates\n";
@@ -118,6 +120,18 @@ if (length($ARGV[0])>1)
 			if ($DB > 0) 
 				{print "\n----- COST OVERRIDE: $CLIcost -----\n\n";}
 			}
+		if ($args =~ /--conffile=/i) # CLI defined conffile path
+			{
+			@CLIconffileARY = split(/--conffile=/,$args);
+			@CLIconffileARX = split(/ /,$CLIconffileARY[1]);
+			if (length($CLIconffileARX[0])>2)
+				{
+				$PATHconf = $CLIconffileARX[0];
+				$PATHconf =~ s/\/$| |\r|\n|\t//gi;
+				$CLIconffile=1;
+				if (!$Q) {print "  CLI defined conffile path:  $PATHconf\n";}
+				}
+			}
 		}
 	}
 else
@@ -134,7 +148,8 @@ if ( ($T < 1) && (!-e "/etc/vicidial_bcrypt.test") )
 	}
 
 # default path to astguiclient configuration file:
-$PATHconf =		'/etc/astguiclient.conf';
+if (length($PATHconf) < 5)
+	{$PATHconf =		'/etc/astguiclient.conf';}
 
 open(conf, "$PATHconf") || die "can't open $PATHconf: $!\n";
 @conf = <conf>;
