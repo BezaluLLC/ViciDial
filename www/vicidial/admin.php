@@ -3413,12 +3413,13 @@ else
 # 141211-1639 - Added cpd_unknown_action campaign option and na_call_url lists option
 # 141212-0930 - Added selected_language,user_choose_language user options and language_method system option
 # 141227-1008 - Trigger sounds update on voicemail server when phone record is updated
+# 141229-1543 - Added code for on-the-fly language translations display
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.10-462a';
-$build = '141227-1008';
+$admin_version = '2.10-463a';
+$build = '141229-1543';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3463,6 +3464,16 @@ $dtmf[17]='TIMEOUT';		$dtmf_key[17]='TIMEOUT';
 $dtmf[18]='INVALID';		$dtmf_key[18]='INVALID';
 $dtmf[19]='INVALID_2ND';	$dtmf_key[19]='INVALID_2ND';
 $dtmf[20]='INVALID_3RD';	$dtmf_key[20]='INVALID_3RD';
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 if ($force_logout)
 	{
@@ -4196,6 +4207,7 @@ if ($ADD==999993)		{$hh='reports';		echo _QXZ("SUMMARY STATS");}
 if ($ADD==999992)		{$hh='reports';		echo _QXZ("SYSTEM SUMMARY STATS");}
 if ($ADD==999991)		{$hh='reports';		echo _QXZ("SERVERS VERSIONS");}
 if ($ADD==999990)		{$hh='reports';		echo _QXZ("SYSTEM SNAPSHOT STATS");}
+if ($ADD==999989)		{$hh='reports';		echo _QXZ("USER CHANGE LANGUAGE");}
 
 if ( ($ADD==999993) or ($ADD==999992) or ($ADD==730000000000000) or ($ADD==830000000000000) )
 	{
@@ -19032,9 +19044,9 @@ if ($ADD==31)
 			$n=40;
 			while ($n>=-40)
 				{
-				$dtl = _QXZ('Balanced');
-				if ($n<0) {$dtl = _QXZ('Less Intense');}
-				if ($n>0) {$dtl = _QXZ('More Intense');}
+				$dtl = _QXZ("Balanced");
+				if ($n<0) {$dtl = _QXZ("Less Intense");}
+				if ($n>0) {$dtl = _QXZ("More Intense");}
 				if ($n == $adaptive_intensity) 
 					{echo "<option SELECTED value=\"$n\">$n - $dtl</option>\n";}
 				else
@@ -19050,9 +19062,9 @@ if ($ADD==31)
 			while ($n>=-40)
 				{
 				$nabs = abs($n);
-				$dtl = _QXZ('Balanced');
-				if ($n<0) {$dtl = _QXZ('Agents Waiting for Calls');}
-				if ($n>0) {$dtl = _QXZ('Calls Waiting for Agents');}
+				$dtl = _QXZ("Balanced");
+				if ($n<0) {$dtl = _QXZ("Agents Waiting for Calls");}
+				if ($n>0) {$dtl = _QXZ("Calls Waiting for Agents");}
 				if ($n == $adaptive_dl_diff_target) 
 					{echo "<option SELECTED value=\"$n\">$n --- $nabs $dtl</option>\n";}
 				else
@@ -19069,9 +19081,9 @@ if ($ADD==31)
 			$n=99;
 			while ($n>=-99)
 				{
-				$dtl = _QXZ('Even');
-				if ($n<0) {$dtl = _QXZ('Lower');}
-				if ($n>0) {$dtl = _QXZ('Higher');}
+				$dtl = _QXZ("Even");
+				if ($n<0) {$dtl = _QXZ("Lower");}
+				if ($n>0) {$dtl = _QXZ("Higher");}
 				if ($n == $queue_priority) 
 					{echo "<option SELECTED value=\"$n\">$n - $dtl</option>\n";}
 				else
@@ -21044,9 +21056,9 @@ if ($ADD==34)
 			$n=40;
 			while ($n>=-40)
 				{
-				$dtl = _QXZ('Balanced');
-				if ($n<0) {$dtl = _QXZ('Less Intense');}
-				if ($n>0) {$dtl = _QXZ('More Intense');}
+				$dtl = _QXZ("Balanced");
+				if ($n<0) {$dtl = _QXZ("Less Intense");}
+				if ($n>0) {$dtl = _QXZ("More Intense");}
 				if ($n == $adaptive_intensity) 
 					{echo "<option SELECTED value=\"$n\">$n - $dtl</option>\n";}
 				else
@@ -23269,9 +23281,9 @@ if ($ADD==3111)
 		$n=99;
 		while ($n>=-99)
 			{
-			$dtl = _QXZ('Even');
-			if ($n<0) {$dtl = _QXZ('Lower');}
-			if ($n>0) {$dtl = _QXZ('Higher');}
+			$dtl = _QXZ("Even");
+			if ($n<0) {$dtl = _QXZ("Lower");}
+			if ($n>0) {$dtl = _QXZ("Higher");}
 			if ($n == $queue_priority) 
 				{echo "<option SELECTED value=\"$n\">$n - $dtl</option>\n";}
 			else
@@ -23785,7 +23797,7 @@ if ($ADD==3111)
 			}
 
 
-		if ($stage=='SUBMIT')
+		if ( ($stage=='SUBMIT') or ($stage==_QXZ("SUBMIT")) )
 			{
 			$o=0;
 			while ($users_to_print > $o) 
@@ -24303,9 +24315,9 @@ if ($ADD==3811)
 		$n=99;
 		while ($n>=-99)
 			{
-			$dtl = _QXZ('Even');
-			if ($n<0) {$dtl = _QXZ('Lower');}
-			if ($n>0) {$dtl = _QXZ('Higher');}
+			$dtl = _QXZ("Even");
+			if ($n<0) {$dtl = _QXZ("Lower");}
+			if ($n>0) {$dtl = _QXZ("Higher");}
 			if ($n == $queue_priority) 
 				{echo "<option SELECTED value=\"$n\">$n - $dtl</option>\n";}
 			else
@@ -24517,7 +24529,7 @@ if ($ADD==3811)
 			}
 
 
-		if ($stage=='SUBMIT')
+		if ( ($stage=='SUBMIT') or ($stage==_QXZ("SUBMIT")) )
 			{
 			$o=0;
 			while ($users_to_print > $o) 
@@ -25237,7 +25249,7 @@ if ($ADD==3911)
 			}
 
 
-		if ($stage=='SUBMIT')
+		if ( ($stage=='SUBMIT') or ($stage==_QXZ("SUBMIT")) )
 			{
 			$o=0;
 			while ($users_to_print > $o) 
@@ -33502,7 +33514,7 @@ if ($ADD==999998)
 if ($ADD==999997)
 	{
 	$show_form=1;
-	if ($stage=='SUBMIT')
+	if ( ($stage=='SUBMIT') or ($stage==_QXZ("SUBMIT")) )
 		{
 		if ( (strlen($pass) > 20) or (strlen($pass) < 2) or ($pass==$PHP_AUTH_PW) )
 			{echo _QXZ("Password has not been changed, please try again")." |1|" . strlen($pass);}
@@ -33581,7 +33593,7 @@ if ($ADD==999996)
 	if ($SSfirst_login_trigger=='Y')
 		{
 		$show_form=1;
-		if ($stage=='SUBMIT')
+		if ( ($stage=='SUBMIT') or ($stage==_QXZ("SUBMIT")) )
 			{
 			if ( (strlen($pass) > 20) or (strlen($pass) < 2) or ($pass==$PHP_AUTH_PW) )
 				{echo _QXZ("Password has not been changed, please try again")." |1|" . strlen($pass);}
@@ -33746,7 +33758,7 @@ if ($ADD==999994)
 	if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 		{
 		echo "<UL>\n";
-		echo "<LI><a href=\"welcome_languages.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Welcome Languages Page")."</a></FONT>\n";
+	#	echo "<LI><a href=\"welcome_languages.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Welcome Languages Page")."</a></FONT>\n";
 		echo "<LI><a href=\"$PHP_SELF?ADD=999991\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Servers Versions")."</a></FONT>\n";
 		echo "<BR><BR>\n";
 		echo "<LI><a href=\"campaign_debug.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Campaign Debug Page")."</a></FONT>\n";
@@ -34297,7 +34309,7 @@ if ($ADD==999991)
 
 				$s_time='&nbsp;';
 				$s_ver='&nbsp;';
-				$s_info_print=_QXZ('no svn information');
+				$s_info_print=_QXZ("no svn information");
 				$stmt="SELECT last_update from server_updater where server_ip='$server_ip[$o]';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($DB) {echo "$stmt\n";}
@@ -34335,6 +34347,111 @@ if ($ADD==999991)
 		}
 	}
 ##### END server version info #####
+
+
+######################
+# ADD=999989 - user change language page
+######################
+if ($ADD==999989)
+	{
+	$show_form=1;
+	if ( ($stage=='SUBMIT') or ($stage==_QXZ("SUBMIT")) )
+		{
+		if ( (strlen($selected_language) > 100) or (strlen($selected_language) < 1) or (strlen($PHP_AUTH_USER)<2) )
+			{echo _QXZ("Language has not been changed, please try again")." |1|" . strlen($selected_language);}
+		else
+			{
+			$stmt="SELECT count(*) from vicidial_languages where language_id='$selected_language' and active='Y' $LOGadmin_viewable_groupsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			if ($DB) {echo "$stmt\n";}
+			$lang_to_print = mysqli_num_rows($rslt);
+			if ( ($lang_to_print < 1) and ($selected_language != 'default English') )
+				{echo _QXZ("Language is not valid, please try again")." |2|$selected_language";}
+			else
+				{
+				$row=mysqli_fetch_row($rslt);
+				if ( ($row[0] < 1) and ($selected_language != 'default English') )
+					{echo _QXZ("Language is not valid, please try again")." |3|$selected_language";}
+				else
+					{
+					$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and ( (user_choose_language='1') or (user_level > 6) );";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					$user_to_print = mysqli_num_rows($rslt);
+					if ($user_to_print < 1)
+						{echo _QXZ("You are not allowed to change your language")." |4|$PHP_AUTH_USER";}
+					else
+						{
+						$row=mysqli_fetch_row($rslt);
+						if ($row[0] < 1)
+							{echo _QXZ("You are not allowed to change your language")." |5|$PHP_AUTH_USER";}
+						else
+							{
+							$show_form=0;
+							$VUselected_language = $selected_language;
+
+							$stmt="UPDATE vicidial_users SET selected_language='$selected_language' where user='$PHP_AUTH_USER' and ( (user_choose_language='1') or (user_level > 6) );";
+							$rslt=mysql_to_mysqli($stmt, $link);
+
+							### LOG INSERTION Admin Log Table ###
+							$SQL_log = "$stmt|";
+							$SQL_log = preg_replace('/;/', '', $SQL_log);
+							$SQL_log = addslashes($SQL_log);
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$PHP_AUTH_USER', event_code='USER CHANGE LANGUAGE', event_sql=\"$SQL_log\", event_notes='';";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+
+							echo _QXZ("Language has been updated, you may now continue").": $selected_language\n";
+							}
+						}
+					}
+				}
+			}
+		}
+	if ($show_form > 0)
+		{
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		echo "<br>"._QXZ("CHANGE LANGUAGE")."<form action=$PHP_SELF method=POST name=userform id=userform>\n";
+		echo "<input type=hidden name=ADD value=999989>\n";
+		echo "<input type=hidden name=DB value=\"$DB\">\n";
+		echo "<input type=hidden name=stage value=SUBMIT>\n";
+		echo "<input type=hidden name=user value=\"$PHP_AUTH_USER\">\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Current Language").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\">$VUselected_language</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("New Language").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\">";
+
+		$stmt="SELECT language_id,language_description from vicidial_languages where active='Y' $LOGadmin_viewable_groupsSQL order by language_id";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$langs_to_print = mysqli_num_rows($rslt);
+
+		echo "<select size=1 name=selected_language id=selected_language>\n";
+		echo "<option value=\"\">-- "._QXZ("PLEASE SELECT A LANGUAGE")." --</option>\n";
+
+		$o=0;
+		$langSELECTED=0;
+		while ($langs_to_print > $o) 
+			{
+			$rowx=mysqli_fetch_row($rslt);
+			echo "<option value=\"$rowx[0]\"";
+			if ($VUselected_language == "$rowx[0]") {echo " SELECTED"; $langSELECTED++;}
+			echo ">$rowx[0] - $rowx[1]</option>\n";
+			$o++;
+			}
+		echo "<option value=\"default English\"";
+		if ($langSELECTED < 1) {echo " SELECTED"; $langSELECTED++;}
+		echo ">default English</option>\n";
+		echo "</select>\n";
+		echo "</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
+		echo "</TABLE></center></form>\n";
+		}
+	}
+##### END user change language page #####
 
 
 echo "</TD></TR></TABLE></center>\n";

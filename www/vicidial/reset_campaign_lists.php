@@ -7,10 +7,11 @@
 # 130711-2051 - First build
 # 130830-1800 - Changed to mysqli PHP functions
 # 141007-2058 - Finalized adding QXZ translation to all admin files
+# 141229-2009 - Added code for on-the-fly language translations display
 #
 
-$admin_version = '2.10-408';
-$build = '141007-2058';
+$admin_version = '2.10-4';
+$build = '141229-2009';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -22,7 +23,7 @@ $QUERY_STRING = getenv("QUERY_STRING");
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,auto_dial_limit,user_territories_active,allow_custom_dialplan,callcard_enabled,admin_modify_refresh,nocache_admin,webroot_writable,allow_emails,hosted_settings FROM system_settings;";
+$stmt = "SELECT use_non_latin,auto_dial_limit,user_territories_active,allow_custom_dialplan,callcard_enabled,admin_modify_refresh,nocache_admin,webroot_writable,allow_emails,hosted_settings,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -39,6 +40,8 @@ if ($qm_conf_ct > 0)
 	$SSwebroot_writable =			$row[7];
 	$SSemail_enabled =				$row[8];
 	$SShosted_settings =			$row[9];
+	$SSenable_languages =			$row[10];
+	$SSlanguage_method =			$row[11];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -59,6 +62,16 @@ $NOW_DATE = date("Y-m-d");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $user_auth=0;
 $auth=0;

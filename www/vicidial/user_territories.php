@@ -16,10 +16,11 @@
 # 130616-0010 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0834 - Changed to mysqli PHP functions
 # 141007-2050 - Finalized adding QXZ translation to all admin files
+# 141229-1850 - Added code for on-the-fly language translations display
 #
 
-$version = '2.8-8';
-$build = '141007-2050';
+$version = '2.10-9';
+$build = '141229-1850';
 
 $MT[0]='';
 
@@ -54,7 +55,7 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,user_territories_active,enable_vtiger_integration,outbound_autodial_active,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url FROM system_settings;";
+$stmt = "SELECT use_non_latin,user_territories_active,enable_vtiger_integration,outbound_autodial_active,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $ss_conf_ct = mysqli_num_rows($rslt);
@@ -70,6 +71,8 @@ if ($ss_conf_ct > 0)
 	$vtiger_login =						$row[6];
 	$vtiger_pass =						$row[7];
 	$vtiger_url =						$row[8];
+	$SSenable_languages =				$row[9];
+	$SSlanguage_method =				$row[10];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -114,8 +117,18 @@ else
 	{
 	$USER=$_SERVER['PHP_AUTH_USER'];
 	$PASS=$_SERVER['PHP_AUTH_PW'];
-	$USER = preg_replace('/[^0-9a-zA-Z]/','',$USER);
-	$PASS = preg_replace('/[^0-9a-zA-Z]/','',$PASS);
+	$USER = preg_replace('/[^-_0-9a-zA-Z]/','',$USER);
+	$PASS = preg_replace('/[^-_0-9a-zA-Z]/','',$PASS);
+	}
+
+$stmt="SELECT selected_language from vicidial_users where user='$USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
 	}
 
 $auth=0;

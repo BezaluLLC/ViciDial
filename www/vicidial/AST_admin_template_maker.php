@@ -12,6 +12,7 @@
 # 130719-1914 - Added ability to filter by statuses
 # 130824-2325 - Changed to mysqli PHP functions
 # 141114-0912 - Finalized adding QXZ translation to all admin files
+# 141229-2024 - Added code for on-the-fly language translations display
 #
 
 require("dbconnect_mysqli.php");
@@ -57,7 +58,7 @@ $vicidial_listloader_fields = '|vendor_lead_code|source_id|phone_code|phone_numb
 $US='_';
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,admin_web_directory,custom_fields_enabled,webroot_writable FROM system_settings;";
+$stmt = "SELECT use_non_latin,admin_web_directory,custom_fields_enabled,webroot_writable,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -68,6 +69,8 @@ if ($qm_conf_ct > 0)
 	$admin_web_directory =		$row[1];
 	$custom_fields_enabled =	$row[2];
 	$webroot_writable =			$row[3];
+	$SSenable_languages =		$row[4];
+	$SSlanguage_method =		$row[5];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -95,6 +98,16 @@ $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $FILE_datetime = $STARTtime;
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $auth=0;
 $auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);

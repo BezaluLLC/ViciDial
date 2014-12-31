@@ -19,6 +19,7 @@
 # 140706-0837 - Incorporated into standard admin code
 # 141007-2152 - Finalized adding QXZ translation to all admin files
 # 141128-0902 - Code cleanup for QXZ functions
+# 141229-1742 - Added code for on-the-fly language translations display
 #
 
 require("dbconnect_mysqli.php");
@@ -136,7 +137,7 @@ $NOW_TIME = date("Y-m-d H:i:s");
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,custom_fields_enabled FROM system_settings;";
+$stmt = "SELECT use_non_latin,custom_fields_enabled,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -145,6 +146,8 @@ if ($qm_conf_ct > 0)
 	$row=mysqli_fetch_row($rslt);
 	$non_latin =				$row[0];
 	$custom_fields_enabled =	$row[1];
+	$SSenable_languages =		$row[2];
+	$SSlanguage_method =		$row[3];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -163,6 +166,17 @@ else
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	}
+
+$rights_stmt = "SELECT modify_leads,qc_enabled,full_name,modify_leads,user_group,selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rights_rslt=mysql_to_mysqli($rights_stmt, $link);
+$rights_row=mysqli_fetch_row($rights_rslt);
+$modify_leads =			$rights_row[0];
+$qc_enabled =			$rights_row[1];
+$LOGfullname =			$rights_row[2];
+$LOGmodify_leads =		$rights_row[3];
+$LOGuser_group =		$rights_row[4];
+$VUselected_language =	$rights_row[5];
 
 if (strlen($phone_number)<6) {$phone_number=$old_phone;}
 
@@ -187,13 +201,6 @@ if ($auth < 1)
 	exit;
 	}
 
-$rights_stmt = "SELECT modify_leads,qc_enabled from vicidial_users where user='$PHP_AUTH_USER';";
-if ($DB) {echo "|$stmt|\n";}
-$rights_rslt=mysql_to_mysqli($rights_stmt, $link);
-$rights_row=mysqli_fetch_row($rights_rslt);
-$modify_leads =		$rights_row[0];
-$qc_enabled =		$rights_row[1];
-
 # check their permissions
 #if ( $modify_leads < 1 )
 #	{
@@ -208,32 +215,25 @@ if ( $qc_enabled < 1 )
 	exit;
 	}
 
-$stmt="SELECT full_name,modify_leads,user_group from vicidial_users where user='$PHP_AUTH_USER';";
-$rslt=mysql_to_mysqli($stmt, $link);
-$row=mysqli_fetch_row($rslt);
-$LOGfullname				=$row[0];
-$LOGmodify_leads			=$row[1];
-$LOGuser_group  			=$row[2];
-
-$label_title =				_QXZ('Title');
-$label_first_name =			_QXZ('First');
-$label_middle_initial =		_QXZ('MI');
-$label_last_name =			_QXZ('Last');
-$label_address1 =			_QXZ('Address1');
-$label_address2 =			_QXZ('Address2');
-$label_address3 =			_QXZ('Address3');
-$label_city =				_QXZ('City');
-$label_state =				_QXZ('State');
-$label_province =			_QXZ('Province');
-$label_postal_code =		_QXZ('Postal Code');
-$label_vendor_lead_code =	_QXZ('Vendor ID');
-$label_gender =				_QXZ('Gender');
-$label_phone_number =		_QXZ('Phone');
-$label_phone_code =			_QXZ('DialCode');
-$label_alt_phone =			_QXZ('Alt. Phone');
-$label_security_phrase =	_QXZ('Show');
-$label_email =				_QXZ('Email');
-$label_comments =			_QXZ('Comments');
+$label_title =				_QXZ("Title");
+$label_first_name =			_QXZ("First");
+$label_middle_initial =		_QXZ("MI");
+$label_last_name =			_QXZ("Last");
+$label_address1 =			_QXZ("Address1");
+$label_address2 =			_QXZ("Address2");
+$label_address3 =			_QXZ("Address3");
+$label_city =				_QXZ("City");
+$label_state =				_QXZ("State");
+$label_province =			_QXZ("Province");
+$label_postal_code =		_QXZ("Postal Code");
+$label_vendor_lead_code =	_QXZ("Vendor ID");
+$label_gender =				_QXZ("Gender");
+$label_phone_number =		_QXZ("Phone");
+$label_phone_code =			_QXZ("DialCode");
+$label_alt_phone =			_QXZ("Alt. Phone");
+$label_security_phrase =	_QXZ("Show");
+$label_email =				_QXZ("Email");
+$label_comments =			_QXZ("Comments");
 
 ### find any custom field labels
 $stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";
@@ -1018,7 +1018,7 @@ else
 				// input name
 				'controlname': 'appointment_date'
 			},{
-				'months' : [_QXZ('January'), 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+				'months' : [_QXZ("January"), 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
 				'weekdays' : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
 				'yearscroll': false, // show year scroller
 				'weekstart': 0, // first day of week: 0-Su or 1-Mo

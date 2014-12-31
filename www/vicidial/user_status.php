@@ -32,6 +32,7 @@
 # 140429-0750 - Fixed issue with queue_log if login/out logging is disabled
 # 141007-2214 - Finalized adding QXZ translation to all admin files
 # 141114-1702 - Fixed issue #800
+# 141229-1829 - Added code for on-the-fly language translations display
 #
 
 $startMS = microtime();
@@ -67,7 +68,7 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,level_8_disable_add FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,level_8_disable_add,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -79,6 +80,8 @@ if ($qm_conf_ct > 0)
 	$SSoutbound_autodial_active =		$row[2];
 	$user_territories_active =			$row[3];
 	$SSlevel_8_disable_add =			$row[4];
+	$SSenable_languages =				$row[5];
+	$SSlanguage_method =				$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -86,8 +89,8 @@ if ($qm_conf_ct > 0)
 if (!isset($begin_date)) {$begin_date = $TODAY;}
 if (!isset($end_date)) {$end_date = $TODAY;}
 
-$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 $user = preg_replace("/'|\"|\\\\|;/","",$user);
 $group = preg_replace("/'|\"|\\\\|;/","",$group);
 $stage = preg_replace("/'|\"|\\\\|;/","",$stage);
@@ -102,6 +105,16 @@ $check_time = ($StarTtimE - 86400);
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $auth=0;
 $reports_auth=0;
@@ -713,7 +726,7 @@ if ( ( ($stage == "tc_log_user_OUT") or ($stage == "tc_log_user_IN") ) and ($mod
 		print "<!-- NEW vicidial_admin_log record inserted for $PHP_AUTH_USER:   |$affected_rows| -->\n";
 
 		$LOG_run++;
-		$VDdisplayMESSAGE = "You have now logged-in the user: $user - $full_name";
+		$VDdisplayMESSAGE = _QXZ("You have now logged-in the user").": $user - $full_name";
 		}
 
 	##### Run timeclock logout queries #####
@@ -856,13 +869,13 @@ if ( ($Tstatus == "LOGIN") or ($Tstatus == "START") )
 	{
 	echo _QXZ("User")." $user($full_name) - "._QXZ("is logged in to the timeclock").". <BR>"._QXZ("Login time").": $Tevent_date "._QXZ("from")." $Tip_address<BR>\n";
 	$TC_log_change_stage =	'tc_log_user_OUT';
-	$TC_log_change_button = _QXZ('TIMECLOCK LOG THIS USER OUT');
+	$TC_log_change_button = _QXZ("TIMECLOCK LOG THIS USER OUT");
 	}
 else
 	{
 	echo _QXZ("User")." $user($full_name) - "._QXZ("is NOT logged in to the timeclock").". <BR>"._QXZ("Last logout time").": $Tevent_date "._QXZ("from")." $Tip_address<BR>\n";
 	$TC_log_change_stage =	'tc_log_user_IN';
-	$TC_log_change_button = _QXZ('TIMECLOCK LOG THIS USER IN');
+	$TC_log_change_button = _QXZ("TIMECLOCK LOG THIS USER IN");
 	}
 
 if ($modify_timeclock_log > 0)

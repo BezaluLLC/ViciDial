@@ -22,6 +22,7 @@
 # 130902-0745 - Changed to mysqli PHP functions
 # 140108-0718 - Added webserver and hostname to report logging
 # 141114-0908 - Finalized adding QXZ translation to all admin files
+# 141230-1523 - Added code for on-the-fly language translations display
 #
 
 $startMS = microtime();
@@ -50,7 +51,7 @@ if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -62,6 +63,8 @@ if ($qm_conf_ct > 0)
 	$slave_db_server =				$row[2];
 	$reports_use_slave_db =			$row[3];
 	$user_territories_active =		$row[4];
+	$SSenable_languages =			$row[5];
+	$SSlanguage_method =			$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -77,6 +80,16 @@ else
 	{
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
 	}
 
 $auth=0;

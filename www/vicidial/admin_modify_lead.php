@@ -63,6 +63,7 @@
 # 140817-0937 - Added Archive Log search option
 # 141001-2200 - Finalized adding QXZ translation to all admin files
 # 141128-0859 - Code cleanup for QXZ functions
+# 141229-1745 - Added code for on-the-fly language translations display
 #
 
 require("dbconnect_mysqli.php");
@@ -200,7 +201,7 @@ if ($nonselectable_statuses > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,custom_fields_enabled,webroot_writable,allow_emails FROM system_settings;";
+$stmt = "SELECT use_non_latin,custom_fields_enabled,webroot_writable,allow_emails,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -210,7 +211,9 @@ if ($qm_conf_ct > 0)
 	$non_latin =				$row[0];
 	$custom_fields_enabled =	$row[1];
 	$webroot_writable =			$row[2];
-	$allow_emails =			$row[3];
+	$allow_emails =				$row[3];
+	$SSenable_languages =		$row[4];
+	$SSlanguage_method =		$row[5];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -253,11 +256,12 @@ if ($auth < 1)
 	exit;
 	}
 
-$rights_stmt = "SELECT modify_leads from vicidial_users where user='$PHP_AUTH_USER';";
+$rights_stmt = "SELECT modify_leads,selected_language from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
 $rights_rslt=mysql_to_mysqli($rights_stmt, $link);
 $rights_row=mysqli_fetch_row($rights_rslt);
-$modify_leads =		$rights_row[0];
+$modify_leads =			$rights_row[0];
+$VUselected_language =	$rights_row[1];
 
 # check their permissions
 if ( $modify_leads < 1 )
@@ -307,25 +311,25 @@ if (!preg_match('/\-ALL/i', $LOGallowed_campaigns))
 	$whereLOGallowed_listsSQL = "where list_id IN($camp_lists)";
 	}
 
-$label_title =				_QXZ('Title');
-$label_first_name =			_QXZ('First');
-$label_middle_initial =		_QXZ('MI');
-$label_last_name =			_QXZ('Last');
-$label_address1 =			_QXZ('Address1');
-$label_address2 =			_QXZ('Address2');
-$label_address3 =			_QXZ('Address3');
-$label_city =				_QXZ('City');
-$label_state =				_QXZ('State');
-$label_province =			_QXZ('Province');
-$label_postal_code =		_QXZ('Postal Code');
-$label_vendor_lead_code =	_QXZ('Vendor ID');
-$label_gender =				_QXZ('Gender');
-$label_phone_number =		_QXZ('Phone');
-$label_phone_code =			_QXZ('DialCode');
-$label_alt_phone =			_QXZ('Alt. Phone');
-$label_security_phrase =	_QXZ('Show');
-$label_email =				_QXZ('Email');
-$label_comments =			_QXZ('Comments');
+$label_title =				_QXZ("Title");
+$label_first_name =			_QXZ("First");
+$label_middle_initial =		_QXZ("MI");
+$label_last_name =			_QXZ("Last");
+$label_address1 =			_QXZ("Address1");
+$label_address2 =			_QXZ("Address2");
+$label_address3 =			_QXZ("Address3");
+$label_city =				_QXZ("City");
+$label_state =				_QXZ("State");
+$label_province =			_QXZ("Province");
+$label_postal_code =		_QXZ("Postal Code");
+$label_vendor_lead_code =	_QXZ("Vendor ID");
+$label_gender =				_QXZ("Gender");
+$label_phone_number =		_QXZ("Phone");
+$label_phone_code =			_QXZ("DialCode");
+$label_alt_phone =			_QXZ("Alt. Phone");
+$label_security_phrase =	_QXZ("Show");
+$label_email =				_QXZ("Email");
+$label_comments =			_QXZ("Comments");
 
 ### find any custom field labels
 $stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";

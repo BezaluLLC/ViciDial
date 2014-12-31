@@ -39,6 +39,7 @@
 # 130902-0728 - Changed to mysqli PHP functions, Added fields to extended output
 # 140108-0727 - Added webserver and hostname to report logging
 # 141001-2200 - Finalized adding QXZ translation to all admin files
+# 141230-1349 - Added code for on-the-fly language translations display
 #
 
 $startMS = microtime();
@@ -86,13 +87,13 @@ if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
 
-$report_name = _QXZ('Export Calls Report');
+$report_name = 'Export Calls Report';
 $db_source = 'M';
 $file_exported=0;
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,custom_fields_enabled FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,custom_fields_enabled,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -104,6 +105,8 @@ if ($qm_conf_ct > 0)
 	$slave_db_server =				$row[2];
 	$reports_use_slave_db =			$row[3];
 	$custom_fields_enabled =		$row[4];
+	$SSenable_languages =			$row[5];
+	$SSlanguage_method =			$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -116,6 +119,16 @@ else
 	{
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
 	}
 
 $auth=0;
@@ -1042,7 +1055,7 @@ else
 	</script>
 	<?php
 
-	echo "<BR>to<BR>\n";
+	echo "<BR>"._QXZ("to")."<BR>\n";
 	echo "<INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
 
 	?>

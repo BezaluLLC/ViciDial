@@ -13,10 +13,11 @@
 # 130902-0906 - Changed to mysqli PHP functions
 # 140706-0834 - Incorporated into standard admin code
 # 141007-2120 - Finalized adding QXZ translation to all admin files
+# 141229-2015 - Added code for on-the-fly language translations display
 #
 
-$version = '2.10-5';
-$build = '141007-2120';
+$version = '2.10-6';
+$build = '141229-2015';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -137,7 +138,7 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -145,6 +146,8 @@ if ($qm_conf_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
 	$non_latin =					$row[0];
+	$SSenable_languages =			$row[1];
+	$SSlanguage_method =			$row[2];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -154,8 +157,8 @@ $query_string = preg_replace("/'|\"|\\\\|;/","",$query_string);
 
 if ($non_latin < 1)
 	{
-	$user=preg_replace("/[^0-9a-zA-Z]/","",$user);
-	$pass=preg_replace("/[^0-9a-zA-Z]/","",$pass);
+	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
+	$pass=preg_replace("/[^-_0-9a-zA-Z]/","",$pass);
 	$agent_user=preg_replace("/[^0-9a-zA-Z]/","",$agent_user);
 	$function = preg_replace("/[^-\_0-9a-zA-Z]/","",$function);
 	$value = preg_replace("/[^-\_0-9a-zA-Z]/","",$value);
@@ -231,13 +234,22 @@ $api_script = 'agent';
 $api_logging = 1;
 if ($consultative != 'YES') {$consultative='NO';}
 
+$stmt="SELECT selected_language from vicidial_users where user='$user';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 ################################################################################
 ### BEGIN - version - show version and date information for the API
 ################################################################################
 if ($function == 'version')
 	{
-	$data = "VERSION: $version|BUILD: $build|DATE: $NOW_TIME|EPOCH: $StarTtime";
+	$data = _QXZ("VERSION").": $version|"._QXZ("BUILD").": $build|"._QXZ("DATE").": $NOW_TIME|EPOCH: $StarTtime";
 	$result = 'SUCCESS';
 	echo "$data\n";
 	api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -263,7 +275,7 @@ else
 	{
 	if(strlen($source)<2)
 		{
-		$result = _QXZ('ERROR');
+		$result = _QXZ("ERROR");
 		$result_reason = _QXZ("Invalid Source");
 		echo "$result: $result_reason - $source\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -285,7 +297,7 @@ else
 
 		if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0) or ($auth_api==0))
 			{
-			$result = _QXZ('ERROR');
+			$result = _QXZ("ERROR");
 			$result_reason = _QXZ("Invalid Username/Password");
 			echo "$result: $result_reason: |$user|$pass|$auth|$auth_api|$auth_message|\n";
 			$data = "$user|$pass|$auth";
@@ -301,7 +313,7 @@ else
 			$SNauth=$row[0];
 			if($SNauth==0)
 				{
-				$result = _QXZ('ERROR');
+				$result = _QXZ("ERROR");
 				$result_reason = _QXZ("System API NOT ACTIVE");
 				echo "$result: $result_reason\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -343,7 +355,7 @@ if ($function == 'external_dial_lead')
 
 	if ( (strlen($value)<1) or ( (strlen($agent_user)<2) and (strlen($alt_user)<2) ) or (strlen($search)<2) or (strlen($preview)<2) or (strlen($focus)<2) )
 		{
-		$result = _QXZ('ERROR');
+		$result = _QXZ("ERROR");
 		$result_reason = _QXZ("external_dial not valid");
 		$data = "$phone_code|$search|$preview|$focus";
 		echo "$result: $result_reason - $value|$data|$agent_user|$alt_user\n";
@@ -367,7 +379,7 @@ if ($function == 'external_dial_lead')
 				}
 			else
 				{
-				$result = _QXZ('ERROR');
+				$result = _QXZ("ERROR");
 				$result_reason = _QXZ("no user found");
 				echo "$result: $result_reason - $alt_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -428,7 +440,7 @@ if ($function == 'external_dial_lead')
 							$caller_id_number	= $row[0];
 							if ($caller_id_number < 4)
 								{
-								$result = _QXZ('ERROR');
+								$result = _QXZ("ERROR");
 								$result_reason = _QXZ("caller_id_number from group_alias is not valid");
 								$data = "$group_alias|$caller_id_number";
 								echo "$result: $result_reason - $agent_user|$data\n";
@@ -438,7 +450,7 @@ if ($function == 'external_dial_lead')
 							}
 						else
 							{
-							$result = _QXZ('ERROR');
+							$result = _QXZ("ERROR");
 							$result_reason = _QXZ("group_alias is not valid");
 							$data = "$group_alias";
 							echo "$result: $result_reason - $agent_user|$data\n";
@@ -534,7 +546,7 @@ if ($function == 'external_dial_lead')
 								}
 							else
 								{
-								$result = _QXZ('ERROR');
+								$result = _QXZ("ERROR");
 								$result_reason = _QXZ("vtiger callback activity does not exist in vtiger system");
 								echo "$result: $result_reason - $value\n";
 								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -566,7 +578,7 @@ if ($function == 'external_dial_lead')
 							}
 						else
 							{
-							$result = _QXZ('ERROR');
+							$result = _QXZ("ERROR");
 							$result_reason = _QXZ("phone_number is already in this agents manual dial queue");
 							echo "$result: $result_reason - $agent_user|$value\n";
 							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -576,7 +588,7 @@ if ($function == 'external_dial_lead')
 						{
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_to_mysqli($stmt, $link);
-						$result = _QXZ('SUCCESS');
+						$result = _QXZ("SUCCESS");
 						$result_reason = _QXZ("external_dial function set");
 						$data = "$phone_code|$search|$preview|$focus|$vendor_id|$epoch|$dial_prefix|$group_alias|$caller_id_number";
 						echo "$result: Dispo in Agent Screen FIRST.\n";
@@ -586,7 +598,7 @@ if ($function == 'external_dial_lead')
 					}
 				else
 					{
-					$result = _QXZ('ERROR');
+					$result = _QXZ("ERROR");
 					$result_reason = _QXZ("agent_user is not allowed to place manual dial calls");
 					echo "$result: $result_reason - $agent_user\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -594,7 +606,7 @@ if ($function == 'external_dial_lead')
 				}
 			else
 				{
-				$result = _QXZ('ERROR');
+				$result = _QXZ("ERROR");
 				$result_reason = _QXZ("agent_user is not paused");
 				echo "$result: $result_reason - $agent_user\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -602,7 +614,7 @@ if ($function == 'external_dial_lead')
 			}
 		else
 			{
-			$result = _QXZ('ERROR');
+			$result = _QXZ("ERROR");
 			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);

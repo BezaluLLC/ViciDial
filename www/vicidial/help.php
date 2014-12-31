@@ -31,6 +31,7 @@
 # 141204-2209 - Added QXZ function output
 # 141211-1647 - Added cpd_unknown_action and lists-na_call_url
 # 141212-0945 - Added user_choose_language, selected_language and language_method
+# 141230-1503 - Added code for on-the-fly language translations display
 #
 
 require("dbconnect_mysqli.php");
@@ -97,6 +98,16 @@ $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 
 $PHP_AUTH_PW = preg_replace('/\'|\"|\\\\|;/', '',$PHP_AUTH_PW);
 $PHP_AUTH_USER = preg_replace('/\'|\"|\\\\|;/', '',$PHP_AUTH_USER);
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $user_auth=0;
 $auth=0;

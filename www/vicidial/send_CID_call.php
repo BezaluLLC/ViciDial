@@ -14,6 +14,7 @@
 # 130616-2144 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0853 - Changed to mysqli PHP functions
 # 141007-2151 - Finalized adding QXZ translation to all admin files
+# 141229-2008 - Added code for on-the-fly language translations display
 #
 
 require("dbconnect_mysqli.php");
@@ -39,14 +40,16 @@ if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
-	$non_latin =	$row[0];
+	$non_latin =				$row[0];
+	$SSenable_languages =		$row[1];
+	$SSlanguage_method =		$row[2];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -70,6 +73,16 @@ $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $STARTtime = date("U");
 $ip = getenv("REMOTE_ADDR");
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $auth=0;
 $auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);

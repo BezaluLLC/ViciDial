@@ -17,6 +17,7 @@
 # 140108-0738 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141114-0833 - Finalized adding QXZ translation to all admin files
+# 141230-1449 - Added code for on-the-fly language translations display
 #
 
 $startMS = microtime();
@@ -71,7 +72,7 @@ else
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_header.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -79,7 +80,9 @@ $i=0;
 while ($i < $qm_conf_ct)
 	{
 	$row=mysqli_fetch_row($rslt);
-	$non_latin =					$row[0];
+	$non_latin =				$row[0];
+	$SSenable_languages =		$row[1];
+	$SSlanguage_method =		$row[2];
 	$i++;
 	}
 ##### END SETTINGS LOOKUP #####
@@ -94,6 +97,16 @@ else
 	{
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
 	}
 
 $auth=0;

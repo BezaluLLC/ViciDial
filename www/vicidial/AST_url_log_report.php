@@ -8,6 +8,7 @@
 # 130901-2005 - Changed to mysqli PHP functions
 # 140108-0732 - Added webserver and hostname to report logging
 # 141114-0713 - Finalized adding QXZ translation to all admin files
+# 141230-1415 - Added code for on-the-fly language translations display
 #
 
 $startMS = microtime();
@@ -51,7 +52,7 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -62,6 +63,8 @@ if ($qm_conf_ct > 0)
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
 	$reports_use_slave_db =			$row[3];
+	$SSenable_languages =			$row[4];
+	$SSlanguage_method =			$row[5];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -78,6 +81,16 @@ else
 	}
 
 $NOW_DATE = date("Y-m-d");
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $auth=0;
 $reports_auth=0;

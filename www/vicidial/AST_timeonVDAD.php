@@ -18,6 +18,7 @@
 # 130620-2317 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-2009 - Changed to mysqli PHP functions
 # 141114-0721 - Finalized adding QXZ translation to all admin files
+# 141230-1418 - Added code for on-the-fly language translations display
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -41,14 +42,16 @@ if (isset($_GET["closer_display"]))				{$closer_display=$_GET["closer_display"];
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
-	$non_latin =					$row[0];
+	$non_latin = 				$row[0];
+	$SSenable_languages =		$row[1];
+	$SSlanguage_method =		$row[2];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -64,6 +67,16 @@ else
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	}
 $group = preg_replace("/'|\"|\\\\|;/","",$group);
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $auth=0;
 $reports_auth=0;
@@ -205,8 +218,8 @@ echo _QXZ("SERVER").": $server_ip\n";
 ###### TIME ON SYSTEM
 ###################################################################################
 
-if ($closer_display>0) {$closer_display_reverse=0;   $closer_reverse_link=_QXZ('DEFAULT');}
-else {$closer_display_reverse=1;   $closer_reverse_link=_QXZ('CLOSER');}
+if ($closer_display>0) {$closer_display_reverse=0;   $closer_reverse_link=_QXZ("DEFAULT");}
+else {$closer_display_reverse=1;   $closer_reverse_link=_QXZ("CLOSER");}
 
 echo _QXZ("Agents Time On Calls")."           $NOW_TIME    <a href=\"$PHP_SELF?server_ip=$server_ip&DB=$DB&reset_counter=$reset_counter&closer_display=$closer_display_reverse\">$closer_reverse_link</a> | <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a>\n\n";
 
@@ -372,7 +385,7 @@ $talking_to_print = mysqli_num_rows($rslt);
 				$camp_color = $row[0];
 				}
 			else
-				{$campaign = _QXZ('DEAD',12);   	$camp_color = 'DEAD';}
+				{$campaign = _QXZ("DEAD",12);   	$camp_color = 'DEAD';}
 			if (preg_match("/READY|PAUSED|CLOSER/i",$status[$i]))
 				{$campaign = '            ';   	$camp_color = '';}
 

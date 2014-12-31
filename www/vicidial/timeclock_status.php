@@ -21,6 +21,7 @@
 # 130901-0838 - Changed to mysqli PHP functions
 # 140108-0719 - Added webserver and hostname to report logging
 # 141007-2216 - Finalized adding QXZ translation to all admin files
+# 141229-1853 - Added code for on-the-fly language translations display
 #
 
 #header ("Content-type: text/html; charset=utf-8");
@@ -50,12 +51,12 @@ if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 if (isset($_GET["file_download"]))					{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))		{$file_download=$_POST["file_download"];}
 
-$report_name = _QXZ('User Group Timeclock Status Report');
+$report_name = 'User Group Timeclock Status Report';
 $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,webroot_writable,timeclock_end_of_day FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,webroot_writable,timeclock_end_of_day,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -68,14 +69,16 @@ if ($qm_conf_ct > 0)
 	$reports_use_slave_db =			$row[3];
 	$webroot_writable =				$row[4];
 	$timeclock_end_of_day =			$row[5];
+	$SSenable_languages =			$row[6];
+	$SSlanguage_method =			$row[7];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
 if ($non_latin < 1)
 	{
-	$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-	$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 	}
 else
 	{
@@ -102,6 +105,16 @@ $EoDdate = date("Y-m-d H:i:s", $EoD);
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $auth=0;
 $reports_auth=0;
@@ -278,7 +291,7 @@ $HEADER.="<html>\n";
 $HEADER.="<head>\n";
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 $HEADER.="<title>ADMINISTRATION: \n";
-$HEADER.="$report_name";
+$HEADER.=_QXZ("$report_name");
 
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'311111';
@@ -304,9 +317,9 @@ $subcamp_color =	'#C6C6C6';
 
 $MAIN.="<CENTER>\n";
 $MAIN.="<TABLE WIDTH=750 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT>\n";
-$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2><B>Timeclock Status for $user_group</TD><TD ALIGN=RIGHT> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
-$MAIN.="<a href=\"./timeclock_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2><B>TIMECLOCK REPORT</a> | ";
-$MAIN.="<a href=\"./admin.php?ADD=311111&user_group=$user_group\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2><B>USER GROUP</a>\n";
+$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2><B>"._QXZ("Timeclock Status for")." $user_group</TD><TD ALIGN=RIGHT> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
+$MAIN.="<a href=\"./timeclock_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2><B>"._QXZ("TIMECLOCK REPORT")."</a> | ";
+$MAIN.="<a href=\"./admin.php?ADD=311111&user_group=$user_group\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2><B>"._QXZ("USER GROUP")."</a>\n";
 $MAIN.="</TD></TR>\n";
 
 $MAIN.="<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><B> &nbsp; \n";
@@ -749,10 +762,4 @@ $rslt=mysql_to_mysqli($stmt, $link);
 exit; 
 
 
-
 ?>
-
-
-
-
-

@@ -25,6 +25,7 @@
 # 140108-0720 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141114-0028 - Finalized adding QXZ translation to all admin files
+# 141230-0948 - Added code for on-the-fly language translations display
 #
 
 $startMS = microtime();
@@ -67,7 +68,7 @@ $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,webroot_writable FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,webroot_writable,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -79,6 +80,8 @@ if ($qm_conf_ct > 0)
 	$slave_db_server =				$row[2];
 	$reports_use_slave_db =			$row[3];
 	$webroot_writable =				$row[4];
+	$SSenable_languages =			$row[5];
+	$SSlanguage_method =			$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -107,6 +110,16 @@ $order = preg_replace("/'|\"|\\\\|;/","",$order);
 $user = preg_replace("/'|\"|\\\\|;/","",$user);
 $file_download = preg_replace("/'|\"|\\\\|;/","",$file_download);
 $report_display_type = preg_replace("/'|\"|\\\\|;/","",$report_display_type);
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $auth=0;
 $reports_auth=0;

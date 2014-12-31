@@ -15,6 +15,7 @@
 # 130902-0732 - Changed to mysqli PHP functions
 # 140108-0740 - Added webserver and hostname to report logging
 # 141114-0842 - Finalized adding QXZ translation to all admin files
+# 141230-1502 - Added code for on-the-fly language translations display
 #
 
 $startMS = microtime();
@@ -42,14 +43,16 @@ if (strlen($shift)<2) {$shift='ALL';}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
-	$non_latin =					$row[0];
+	$non_latin =				$row[0];
+	$SSenable_languages =		$row[1];
+	$SSlanguage_method =		$row[2];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -63,6 +66,16 @@ else
 	{
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
 	}
 
 $auth=0;
@@ -199,7 +212,7 @@ echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
 echo "<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2><TR><TD align=center valign=top>\n";
 echo "<INPUT TYPE=TEXT NAME=query_date SIZE=20 MAXLENGTH=20 VALUE=\"$query_date\">\n";
-echo "<BR> to <BR><INPUT TYPE=TEXT NAME=end_date SIZE=20 MAXLENGTH=20 VALUE=\"$end_date\">\n";
+echo "<BR> "._QXZ("to")." <BR><INPUT TYPE=TEXT NAME=end_date SIZE=20 MAXLENGTH=20 VALUE=\"$end_date\">\n";
 echo "</TD><TD align=center valign=top>\n";
 echo "</TD><TD align=center valign=top>\n";
 echo "</TD><TD align=center valign=top>\n";

@@ -45,6 +45,7 @@
 # 131122-0705 - Added pause_code_rpt option coming from Agent Time Detail report
 # 140108-0709 - Added webserver and hostname to report logging
 # 141114-0025 - Finalized adding QXZ translation to all admin files
+# 141229-1836 - Added code for on-the-fly language translations display
 #
 
 $startMS = microtime();
@@ -84,11 +85,11 @@ if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))		{$file_download=$_POST["file_download"];}
 if (isset($_GET["pause_code_rpt"]))				{$pause_code_rpt=$_GET["pause_code_rpt"];}
-	elseif (isset($_POST["pause_code_rpt"]))		{$pause_code_rpt=$_POST["pause_code_rpt"];}
+	elseif (isset($_POST["pause_code_rpt"]))	{$pause_code_rpt=$_POST["pause_code_rpt"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active,webroot_writable,allow_emails,level_8_disable_add FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active,webroot_writable,allow_emails,level_8_disable_add,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -103,6 +104,8 @@ if ($qm_conf_ct > 0)
 	$webroot_writable =				$row[5];
 	$allow_emails =					$row[6];
 	$SSlevel_8_disable_add =		$row[7];
+	$SSenable_languages =			$row[8];
+	$SSlanguage_method =			$row[9];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -128,6 +131,16 @@ $did = preg_replace("/'|\"|\\\\|;/","",$did);
 $begin_date = preg_replace("/'|\"|\\\\|;/","",$begin_date);
 $end_date = preg_replace("/'|\"|\\\\|;/","",$end_date);
 $user = preg_replace("/'|\"|\\\\|;/","",$user);
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $auth=0;
 $reports_auth=0;

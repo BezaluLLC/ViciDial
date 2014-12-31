@@ -31,10 +31,11 @@
 # 140705-0811 - Added better error handling, hid field_required field since it is non-functional
 # 140811-2110 - Fixes for issues with default fields
 # 141006-0903 - Finalized adding QXZ translation to all admin files
+# 141230-0018 - Added code for on-the-fly language translations display
 #
 
-$admin_version = '2.10-24';
-$build = '141006-0903';
+$admin_version = '2.10-25';
+$build = '141230-0018';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -91,7 +92,7 @@ if (isset($_GET["SUBMIT"]))						{$SUBMIT=$_GET["SUBMIT"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,custom_fields_enabled FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,custom_fields_enabled,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -103,6 +104,8 @@ if ($qm_conf_ct > 0)
 	$SSoutbound_autodial_active =	$row[2];
 	$user_territories_active =		$row[3];
 	$SScustom_fields_enabled =		$row[4];
+	$SSenable_languages =			$row[5];
+	$SSlanguage_method =			$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -174,6 +177,16 @@ if ($extended_vl_fields > 0)
 
 $mysql_reserved_words =
 '|accessible|action|add|all|alter|analyze|and|as|asc|asensitive|before|between|bigint|binary|bit|blob|both|by|call|cascade|case|change|char|character|check|collate|column|condition|constraint|continue|convert|create|cross|current_date|current_time|current_timestamp|current_user|cursor|database|databases|date|day_hour|day_microsecond|day_minute|day_second|dec|decimal|declare|default|delayed|delete|desc|describe|deterministic|distinct|distinctrow|div|double|drop|dual|each|else|elseif|enclosed|enum|escaped|exists|exit|explain|false|fetch|float|float4|float8|for|force|foreign|from|fulltext|grant|group|having|high_priority|hour_microsecond|hour_minute|hour_second|if|ignore|in|index|infile|inner|inout|insensitive|insert|int|int1|int2|int3|int4|int8|integer|interval|into|is|iterate|join|key|keys|kill|leading|leave|left|like|limit|linear|lines|load|localtime|localtimestamp|lock|long|longblob|longtext|loop|low_priority|master_ssl_verify_server_cert|match|mediumblob|mediumint|mediumtext|middleint|minute_microsecond|minute_second|mod|modifies|mysql|natural|no|no_write_to_binlog|not|null|numeric|on|optimize|option|optionally|or|order|out|outer|outfile|precision|primary|procedure|purge|range|read|read_only|read_write|reads|real|references|regexp|release|remove|rename|repeat|replace|require|restrict|return|revoke|right|rlike|schema|schemas|second_microsecond|select|sensitive|separator|set|show|smallint|spatial|specific|sql|sql_big_result|sql_calc_found_rows|sql_small_result|sqlexception|sqlstate|sqlwarning|ssl|starting|straight_join|table|terminated|text|then|time|timestamp|tinyblob|tinyint|tinytext|to|trailing|trigger|true|undo|union|unique|unlock|unsigned|update|usage|use|using|utc_date|utc_time|utc_timestamp|values|varbinary|varchar|varcharacter|varying|when|where|while|with|write|xor|year_month|zerofill|lead_id|';
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $auth=0;
 $auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
@@ -380,7 +393,7 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 		$linkCUSTOM=mysqli_connect("$VARDB_server", "$VARDB_custom_user", "$VARDB_custom_pass", "$VARDB_database", "$VARDB_port");
 		if (!$linkCUSTOM) 
 			{
-			die('MySQL '._QXZ('connect ERROR').': '. mysqli_error($linkCUSTOM));
+			die('MySQL '._QXZ("connect ERROR").': '. mysqli_error($linkCUSTOM));
 			}
 
 		# if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysqli_error());}
@@ -639,7 +652,7 @@ if ( ($action == "DELETE_CUSTOM_FIELD") and ($list_id > 99) and ($field_id > 0) 
 	$linkCUSTOM=mysqli_connect("$VARDB_server", "$VARDB_custom_user", "$VARDB_custom_pass", "$VARDB_database", "$VARDB_port");
 	if (!$linkCUSTOM) 
 		{
-		die('MySQL '._QXZ('connect ERROR').': '. mysqli_error($linkCUSTOM));
+		die('MySQL '._QXZ("connect ERROR").': '. mysqli_error($linkCUSTOM));
 		}
 
 	$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id' and field_label='$field_label';";
@@ -743,7 +756,7 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 						$linkCUSTOM=mysqli_connect("$VARDB_server", "$VARDB_custom_user", "$VARDB_custom_pass", "$VARDB_database", "$VARDB_port");
 						if (!$linkCUSTOM) 
 							{
-							die('MySQL '._QXZ('connect ERROR').': '. mysqli_error($linkCUSTOM));
+							die('MySQL '._QXZ("connect ERROR").': '. mysqli_error($linkCUSTOM));
 							}
 
 						$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
@@ -785,7 +798,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELD_SUBMIT") and ($list_id > 99) and ($field_i
 	$linkCUSTOM=mysqli_connect("$VARDB_server", "$VARDB_custom_user", "$VARDB_custom_pass", "$VARDB_database", "$VARDB_port");
 	if (!$linkCUSTOM) 
 		{
-		die('MySQL '._QXZ('connect ERROR').': '. mysqli_error($linkCUSTOM));
+		die('MySQL '._QXZ("connect ERROR").': '. mysqli_error($linkCUSTOM));
 		}
 
 
@@ -1602,7 +1615,7 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 		if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
 		if (!$rsltCUSTOM) 
 			{
-			echo(_QXZ('Could not execute').': ' . mysqli_error()) . "|$stmtCUSTOM|<BR><B>"._QXZ("FIELD NOT ADDED, PLEASE GO BACK AND TRY AGAIN")."</b>";
+			echo(_QXZ("Could not execute").': ' . mysqli_error()) . "|$stmtCUSTOM|<BR><B>"._QXZ("FIELD NOT ADDED, PLEASE GO BACK AND TRY AGAIN")."</b>";
 			
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|$stmtCUSTOM";
@@ -1622,7 +1635,7 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$field_update = mysqli_affected_rows($link);
 		if ($DB) {echo "$field_update|$stmt\n";}
-		if (!$rslt) {echo(_QXZ('Could not execute').': ' . mysqli_error()) . "|$stmt|";}
+		if (!$rslt) {echo(_QXZ("Could not execute").': ' . mysqli_error()) . "|$stmt|";}
 
 		### LOG INSERTION Admin Log Table ###
 		$SQL_log = "$stmt|$stmtCUSTOM";
@@ -1743,7 +1756,7 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 		$rsltCUSTOM=mysql_to_mysqli($stmtCUSTOM, $linkCUSTOM);
 		$field_update = mysqli_affected_rows($linkCUSTOM);
 		if ($DB) {echo "$field_update|$stmtCUSTOM\n";}
-		if (!$rsltCUSTOM) {echo(_QXZ('Could not execute').': ' . mysqli_error()) . "|$stmtCUSTOM|<BR><B>"._QXZ("FIELD NOT MODIFIED, PLEASE GO BACK AND TRY AGAIN")."</b>";
+		if (!$rsltCUSTOM) {echo(_QXZ("Could not execute").': ' . mysqli_error()) . "|$stmtCUSTOM|<BR><B>"._QXZ("FIELD NOT MODIFIED, PLEASE GO BACK AND TRY AGAIN")."</b>";
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|$stmtCUSTOM";
 			$SQL_log = preg_replace('/;/', '', $SQL_log);
@@ -1798,7 +1811,7 @@ function delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 		$rsltCUSTOM=mysql_to_mysqli($stmtCUSTOM, $linkCUSTOM);
 		$table_update = mysqli_affected_rows($linkCUSTOM);
 		if ($DB) {echo "$table_update|$stmtCUSTOM\n";}
-		if (!$rsltCUSTOM) {echo(_QXZ('Could not execute').': ' . mysqli_error()) . "|$stmtCUSTOM|<BR><B>"._QXZ("FIELD NOT DELETED, PLEASE GO BACK AND TRY AGAIN")."</b>";
+		if (!$rsltCUSTOM) {echo(_QXZ("Could not execute").': ' . mysqli_error()) . "|$stmtCUSTOM|<BR><B>"._QXZ("FIELD NOT DELETED, PLEASE GO BACK AND TRY AGAIN")."</b>";
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|$stmtCUSTOM";
 			$SQL_log = preg_replace('/;/', '', $SQL_log);
@@ -1817,7 +1830,7 @@ function delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$field_update = mysqli_affected_rows($link);
 		if ($DB) {echo "$field_update|$stmt\n";}
-		if (!$rslt) {echo(_QXZ('Could not execute').': ' . mysqli_error() . "|$stmt|");}
+		if (!$rslt) {echo(_QXZ("Could not execute").': ' . mysqli_error() . "|$stmt|");}
 
 		### LOG INSERTION Admin Log Table ###
 		$SQL_log = "$stmt|$stmtCUSTOM";

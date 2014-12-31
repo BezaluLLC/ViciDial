@@ -8,10 +8,11 @@
 # CHANGELOG:
 # 130921-0756 - First build of script
 # 141007-2044 - Finalized adding QXZ translation to all admin files
+# 141229-2020 - Added code for on-the-fly language translations display
 #
 
-$version = '2.8-2';
-$build = '141007-2044';
+$version = '2.10-3';
+$build = '141229-2020';
 $startMS = microtime();
 
 require("dbconnect_mysqli.php");
@@ -29,7 +30,7 @@ if (isset($_GET["process_limit"]))			{$process_limit=$_GET["process_limit"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -40,6 +41,8 @@ if ($qm_conf_ct > 0)
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
 	$reports_use_slave_db =			$row[3];
+	$SSenable_languages =			$row[4];
+	$SSlanguage_method =			$row[5];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -58,6 +61,16 @@ else
 $process_limit = preg_replace('/[^-_0-9a-zA-Z]/', '', $process_limit);
 
 $NOW_DATE = date("Y-m-d");
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $user_auth=0;
 $auth=0;

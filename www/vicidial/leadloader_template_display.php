@@ -13,6 +13,7 @@
 # 130802-0623 - Added select list query for status deduping
 # 130824-2320 - Changed to mysqli PHP functions
 # 141007-2203 - Finalized adding QXZ translation to all admin files
+# 141229-2021 - Added code for on-the-fly language translations display
 #
 
 require("dbconnect_mysqli.php");
@@ -45,7 +46,7 @@ if (isset($_GET["DB"]))				{$DB=$_GET["DB"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,admin_web_directory,custom_fields_enabled,webroot_writable FROM system_settings;";
+$stmt = "SELECT use_non_latin,admin_web_directory,custom_fields_enabled,webroot_writable,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -56,6 +57,8 @@ if ($qm_conf_ct > 0)
 	$admin_web_directory =		$row[1];
 	$custom_fields_enabled =	$row[2];
 	$webroot_writable =			$row[3];
+	$SSenable_languages =		$row[4];
+	$SSlanguage_method =		$row[5];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -71,6 +74,16 @@ else
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	}
 $list_id = preg_replace('/[^0-9]/', '', $list_id);
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $auth=0;
 $auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);

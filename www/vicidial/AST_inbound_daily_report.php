@@ -21,6 +21,7 @@
 # 140108-0706 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141113-2055 - Finalized adding QXZ translation to all admin files
+# 141230-0921 - Added code for on-the-fly language translations display
 #
 
 $startMS = microtime();
@@ -29,9 +30,9 @@ require("dbconnect_mysqli.php");
 require("functions.php");
 
 if (file_exists('options.php'))
-        {
-        require('options.php');
-        }
+	{
+	require('options.php');
+	}
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -70,7 +71,7 @@ if ($ignore_afterhours=="checked") {$status_clause=" and status!='AFTHRS'";}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -81,6 +82,8 @@ if ($qm_conf_ct > 0)
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
 	$reports_use_slave_db =			$row[3];
+	$SSenable_languages =			$row[4];
+	$SSlanguage_method =			$row[5];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -94,6 +97,16 @@ else
 	{
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
 	}
 
 $auth=0;
@@ -1541,17 +1554,17 @@ else
 			$wtd_graph_stats[$wa][9]=trim($totANSWERSwrapTIMEwtd);
 			$wtd_graph_stats[$wa][10]=trim($totANSWERStotTIMEwtd);
 			$wtd_graph_stats[$wa][17]=trim($totAGENTSwtd);
-			$wtd_OFFERED_graph=preg_replace('/DAILY/', _QXZ('WEEK-TO-DATE'), $OFFERED_graph);
-			$wtd_ANSWERED_graph=preg_replace('/DAILY/', _QXZ('WEEK-TO-DATE'),$ANSWERED_graph);
-			$wtd_AGENTS_graph=preg_replace('/DAILY/', _QXZ('WEEK-TO-DATE'), $AGENTS_graph);
-			$wtd_ABANDONED_graph=preg_replace('/DAILY/', _QXZ('WEEK-TO-DATE'),$ABANDONED_graph);
-			$wtd_ABANDONPCT_graph=preg_replace('/DAILY/', _QXZ('WEEK-TO-DATE'),$ABANDONPCT_graph);
-			$wtd_AVGABANDONTIME_graph=preg_replace('/DAILY/', _QXZ('WEEK-TO-DATE'),$AVGABANDONTIME_graph);
-			$wtd_AVGANSWERSPEED_graph=preg_replace('/DAILY/', _QXZ('WEEK-TO-DATE'),$AVGANSWERSPEED_graph);
-			$wtd_AVGTALKTIME_graph=preg_replace('/DAILY/', _QXZ('WEEK-TO-DATE'),$AVGTALKTIME_graph);
-			$wtd_TOTALTALKTIME_graph=preg_replace('/DAILY/', _QXZ('WEEK-TO-DATE'),$TOTALTALKTIME_graph);
-			$wtd_TOTALWRAPTIME_graph=preg_replace('/DAILY/', _QXZ('WEEK-TO-DATE'),$TOTALWRAPTIME_graph);
-			$wtd_TOTALCALLTIME_graph=preg_replace('/DAILY/', _QXZ('WEEK-TO-DATE'),$TOTALCALLTIME_graph);
+			$wtd_OFFERED_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"), $OFFERED_graph);
+			$wtd_ANSWERED_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"),$ANSWERED_graph);
+			$wtd_AGENTS_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"), $AGENTS_graph);
+			$wtd_ABANDONED_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"),$ABANDONED_graph);
+			$wtd_ABANDONPCT_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"),$ABANDONPCT_graph);
+			$wtd_AVGABANDONTIME_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"),$AVGABANDONTIME_graph);
+			$wtd_AVGANSWERSPEED_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"),$AVGANSWERSPEED_graph);
+			$wtd_AVGTALKTIME_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"),$AVGTALKTIME_graph);
+			$wtd_TOTALTALKTIME_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"),$TOTALTALKTIME_graph);
+			$wtd_TOTALWRAPTIME_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"),$TOTALWRAPTIME_graph);
+			$wtd_TOTALCALLTIME_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"),$TOTALCALLTIME_graph);
 			for ($q=0; $q<count($wtd_graph_stats); $q++) {
 				if ($q==0) {$class=" first";} else if (($q+1)==count($wtd_graph_stats)) {$class=" last";} else {$class="";}
 				$wtd_OFFERED_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][1], $max_wtd_offered))."' height='16' />".$wtd_graph_stats[$q][1]."</td></tr>";
@@ -1637,17 +1650,17 @@ else
 			$mtd_graph_stats[$ma][9]=trim($totANSWERSwrapTIMEmtd);
 			$mtd_graph_stats[$ma][10]=trim($totANSWERStotTIMEmtd);
 			$wtd_graph_stats[$ma][17]=trim($totAGENTSmtd);
-			$mtd_OFFERED_graph=preg_replace('/DAILY/', _QXZ('MONTH-TO-DATE'),$OFFERED_graph);
-			$mtd_ANSWERED_graph=preg_replace('/DAILY/', _QXZ('MONTH-TO-DATE'),$ANSWERED_graph);
-			$mtd_AGENTS_graph=preg_replace('/DAILY/', _QXZ('MONTH-TO-DATE'), $AGENTS_graph);
-			$mtd_ABANDONED_graph=preg_replace('/DAILY/', _QXZ('MONTH-TO-DATE'),$ABANDONED_graph);
-			$mtd_ABANDONPCT_graph=preg_replace('/DAILY/', _QXZ('MONTH-TO-DATE'),$ABANDONPCT_graph);
-			$mtd_AVGABANDONTIME_graph=preg_replace('/DAILY/', _QXZ('MONTH-TO-DATE'),$AVGABANDONTIME_graph);
-			$mtd_AVGANSWERSPEED_graph=preg_replace('/DAILY/', _QXZ('MONTH-TO-DATE'),$AVGANSWERSPEED_graph);
-			$mtd_AVGTALKTIME_graph=preg_replace('/DAILY/', _QXZ('MONTH-TO-DATE'),$AVGTALKTIME_graph);
-			$mtd_TOTALTALKTIME_graph=preg_replace('/DAILY/', _QXZ('MONTH-TO-DATE'),$TOTALTALKTIME_graph);
-			$mtd_TOTALWRAPTIME_graph=preg_replace('/DAILY/', _QXZ('MONTH-TO-DATE'),$TOTALWRAPTIME_graph);
-			$mtd_TOTALCALLTIME_graph=preg_replace('/DAILY/', _QXZ('MONTH-TO-DATE'),$TOTALCALLTIME_graph);
+			$mtd_OFFERED_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"),$OFFERED_graph);
+			$mtd_ANSWERED_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"),$ANSWERED_graph);
+			$mtd_AGENTS_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"), $AGENTS_graph);
+			$mtd_ABANDONED_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"),$ABANDONED_graph);
+			$mtd_ABANDONPCT_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"),$ABANDONPCT_graph);
+			$mtd_AVGABANDONTIME_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"),$AVGABANDONTIME_graph);
+			$mtd_AVGANSWERSPEED_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"),$AVGANSWERSPEED_graph);
+			$mtd_AVGTALKTIME_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"),$AVGTALKTIME_graph);
+			$mtd_TOTALTALKTIME_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"),$TOTALTALKTIME_graph);
+			$mtd_TOTALWRAPTIME_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"),$TOTALWRAPTIME_graph);
+			$mtd_TOTALCALLTIME_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"),$TOTALCALLTIME_graph);
 			for ($q=0; $q<count($mtd_graph_stats); $q++) {
 				if ($q==0) {$class=" first";} else if (($q+1)==count($mtd_graph_stats)) {$class=" last";} else {$class="";}
 				$mtd_OFFERED_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][1], $max_mtd_offered))."' height='16' />".$mtd_graph_stats[$q][1]."</td></tr>";
@@ -1756,17 +1769,17 @@ else
 			$qtd_graph_stats[$qa][9]=trim($totANSWERSwrapTIMEqtd);
 			$qtd_graph_stats[$qa][10]=trim($totANSWERStotTIMEqtd);
 			$qtd_graph_stats[$qa][17]=trim($totAGENTSqtd);
-			$qtd_OFFERED_graph=preg_replace('/DAILY/', _QXZ('QUARTER-TO-DATE'),$OFFERED_graph);
-			$qtd_ANSWERED_graph=preg_replace('/DAILY/', _QXZ('QUARTER-TO-DATE'),$ANSWERED_graph);
-			$qtd_AGENTS_graph=preg_replace('/DAILY/', _QXZ('QUARTER-TO-DATE'),$AGENTS_graph);
-			$qtd_ABANDONED_graph=preg_replace('/DAILY/', _QXZ('QUARTER-TO-DATE'),$ABANDONED_graph);
-			$qtd_ABANDONPCT_graph=preg_replace('/DAILY/', _QXZ('QUARTER-TO-DATE'),$ABANDONPCT_graph);
-			$qtd_AVGABANDONTIME_graph=preg_replace('/DAILY/', _QXZ('QUARTER-TO-DATE'),$AVGABANDONTIME_graph);
-			$qtd_AVGANSWERSPEED_graph=preg_replace('/DAILY/', _QXZ('QUARTER-TO-DATE'),$AVGANSWERSPEED_graph);
-			$qtd_AVGTALKTIME_graph=preg_replace('/DAILY/', _QXZ('QUARTER-TO-DATE'),$AVGTALKTIME_graph);
-			$qtd_TOTALTALKTIME_graph=preg_replace('/DAILY/', _QXZ('QUARTER-TO-DATE'),$TOTALTALKTIME_graph);
-			$qtd_TOTALWRAPTIME_graph=preg_replace('/DAILY/', _QXZ('QUARTER-TO-DATE'),$TOTALWRAPTIME_graph);
-			$qtd_TOTALCALLTIME_graph=preg_replace('/DAILY/', _QXZ('QUARTER-TO-DATE'),$TOTALCALLTIME_graph);
+			$qtd_OFFERED_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$OFFERED_graph);
+			$qtd_ANSWERED_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$ANSWERED_graph);
+			$qtd_AGENTS_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$AGENTS_graph);
+			$qtd_ABANDONED_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$ABANDONED_graph);
+			$qtd_ABANDONPCT_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$ABANDONPCT_graph);
+			$qtd_AVGABANDONTIME_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$AVGABANDONTIME_graph);
+			$qtd_AVGANSWERSPEED_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$AVGANSWERSPEED_graph);
+			$qtd_AVGTALKTIME_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$AVGTALKTIME_graph);
+			$qtd_TOTALTALKTIME_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$TOTALTALKTIME_graph);
+			$qtd_TOTALWRAPTIME_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$TOTALWRAPTIME_graph);
+			$qtd_TOTALCALLTIME_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$TOTALCALLTIME_graph);
 			for ($q=0; $q<count($qtd_graph_stats); $q++) {
 				if ($q==0) {$class=" first";} else if (($q+1)==count($qtd_graph_stats)) {$class=" last";} else {$class="";}
 				$qtd_OFFERED_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][1], $max_qtd_offered))."' height='16' />".$qtd_graph_stats[$q][1]."</td></tr>";

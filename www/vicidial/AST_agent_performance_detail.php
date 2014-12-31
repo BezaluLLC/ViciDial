@@ -45,6 +45,7 @@
 # 141113-2334 - Finalized adding QXZ translation to all admin files
 # 141125-0951 - Changed TOTAL column label to LOGIN TIME for uniform headers with other reports, issue #427
 # 141128-0904 - Code cleanup for QXZ functions
+# 141230-0945 - Added code for on-the-fly language translations display
 #
 
 $startMS = microtime();
@@ -91,7 +92,7 @@ $JS_onload="onload = function() {\n";
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -102,6 +103,8 @@ if ($qm_conf_ct > 0)
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
 	$reports_use_slave_db =			$row[3];
+	$SSenable_languages =			$row[4];
+	$SSlanguage_method =			$row[5];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -115,6 +118,16 @@ else
 	{
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
 	}
 
 $auth=0;
@@ -592,9 +605,9 @@ $CSV_header.="\""._QXZ("Time range").": $query_date_BEGIN "._QXZ("to")." $query_
 $CSV_header.="\"---------- "._QXZ("AGENTS Details")." -------------\"\n";
 
 if ($show_percentages) {
-	$CSV_header.='"'._QXZ('USER NAME').'","'._QXZ('ID').'","'._QXZ('CURRENT USER GROUP').'","'._QXZ('MOST RECENT USER GROUP').'","'._QXZ('CALLS').'","'._QXZ('TIME').'","'._QXZ('PAUSE').'","'._QXZ('PAUSE').' %","'._QXZ('PAUSAVG').'","'._QXZ('WAIT').'","'._QXZ('WAIT').' %","'._QXZ('WAITAVG').'","'._QXZ('TALK').'","'._QXZ('TALK').' %","'._QXZ('TALKAVG').'","'._QXZ('DISPO').'","'._QXZ('DISPO').' %","'._QXZ('DISPAVG').'","'._QXZ('DEAD').'","'._QXZ('DEAD').' %","'._QXZ('DEADAVG').'","'._QXZ('CUSTOMER').'","'._QXZ('CUSTOMER').' %","'._QXZ('CUSTAVG').'"';
+	$CSV_header.='"'._QXZ("USER NAME").'","'._QXZ("ID").'","'._QXZ("CURRENT USER GROUP").'","'._QXZ("MOST RECENT USER GROUP").'","'._QXZ("CALLS").'","'._QXZ("TIME").'","'._QXZ("PAUSE").'","'._QXZ("PAUSE").' %","'._QXZ("PAUSAVG").'","'._QXZ("WAIT").'","'._QXZ("WAIT").' %","'._QXZ("WAITAVG").'","'._QXZ("TALK").'","'._QXZ("TALK").' %","'._QXZ("TALKAVG").'","'._QXZ("DISPO").'","'._QXZ("DISPO").' %","'._QXZ("DISPAVG").'","'._QXZ("DEAD").'","'._QXZ("DEAD").' %","'._QXZ("DEADAVG").'","'._QXZ("CUSTOMER").'","'._QXZ("CUSTOMER").' %","'._QXZ("CUSTAVG").'"';
 } else {
-	$CSV_header.='"'._QXZ('USER NAME').'","'._QXZ('ID').'","'._QXZ('CURRENT USER GROUP').'","'._QXZ('MOST RECENT USER GROUP').'","'._QXZ('CALLS').'","'._QXZ('TIME').'","'._QXZ('PAUSE').'","'._QXZ('PAUSAVG').'","'._QXZ('WAIT').'","'._QXZ('WAITAVG').'","'._QXZ('TALK').'","'._QXZ('TALKAVG').'","'._QXZ('DISPO').'","'._QXZ('DISPAVG').'","'._QXZ('DEAD').'","'._QXZ('DEADAVG').'","'._QXZ('CUSTOMER').'","'._QXZ('CUSTAVG').'"';
+	$CSV_header.='"'._QXZ("USER NAME").'","'._QXZ("ID").'","'._QXZ("CURRENT USER GROUP").'","'._QXZ("MOST RECENT USER GROUP").'","'._QXZ("CALLS").'","'._QXZ("TIME").'","'._QXZ("PAUSE").'","'._QXZ("PAUSAVG").'","'._QXZ("WAIT").'","'._QXZ("WAITAVG").'","'._QXZ("TALK").'","'._QXZ("TALKAVG").'","'._QXZ("DISPO").'","'._QXZ("DISPAVG").'","'._QXZ("DEAD").'","'._QXZ("DEADAVG").'","'._QXZ("CUSTOMER").'","'._QXZ("CUSTAVG").'"';
 }
 
 

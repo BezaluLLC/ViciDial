@@ -39,6 +39,7 @@
 # 140817-0941 - Added archive_log variable to modify page link
 # 141001-2200 - Finalized adding QXZ translation to all admin files
 # 141124-1747 - Fixed issue #790
+# 141229-1748 - Added code for on-the-fly language translations display
 #
 
 require("dbconnect_mysqli.php");
@@ -86,7 +87,7 @@ if (isset($_GET["archive_search"]))			{$archive_search=$_GET["archive_search"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,slave_db_server,reports_use_slave_db FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -99,6 +100,8 @@ if ($qm_conf_ct > 0)
 	$user_territories_active =		$row[3];
 	$slave_db_server =				$row[4];
 	$reports_use_slave_db =			$row[5];
+	$SSenable_languages =			$row[6];
+	$SSlanguage_method =			$row[7];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -122,8 +125,8 @@ if (strlen($alt_phone_search) < 2) {$alt_phone_search='No';}
 
 if ($non_latin < 1)
 	{
-	$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-	$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 	}
 else
 	{
@@ -131,6 +134,16 @@ else
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	}
 $phone = preg_replace('/[^0-9]/','',$phone);
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $auth=0;
 $auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
@@ -243,25 +256,25 @@ $subcamp_color =	'#C6C6C6';
 
 require("admin_header.php");
 
-$label_title =				_QXZ('Title');
-$label_first_name =			_QXZ('First');
-$label_middle_initial =		_QXZ('MI');
-$label_last_name =			_QXZ('Last');
-$label_address1 =			_QXZ('Address1');
-$label_address2 =			_QXZ('Address2');
-$label_address3 =			_QXZ('Address3');
-$label_city =				_QXZ('City');
-$label_state =				_QXZ('State');
-$label_province =			_QXZ('Province');
-$label_postal_code =		_QXZ('Postal Code');
-$label_vendor_lead_code =	_QXZ('Vendor ID');
-$label_gender =				_QXZ('Gender');
-$label_phone_number =		_QXZ('Phone');
-$label_phone_code =			_QXZ('DialCode');
-$label_alt_phone =			_QXZ('Alt. Phone');
-$label_security_phrase =	_QXZ('Show');
-$label_email =				_QXZ('Email');
-$label_comments =			_QXZ('Comments');
+$label_title =				_QXZ("Title");
+$label_first_name =			_QXZ("First");
+$label_middle_initial =		_QXZ("MI");
+$label_last_name =			_QXZ("Last");
+$label_address1 =			_QXZ("Address1");
+$label_address2 =			_QXZ("Address2");
+$label_address3 =			_QXZ("Address3");
+$label_city =				_QXZ("City");
+$label_state =				_QXZ("State");
+$label_province =			_QXZ("Province");
+$label_postal_code =		_QXZ("Postal Code");
+$label_vendor_lead_code =	_QXZ("Vendor ID");
+$label_gender =				_QXZ("Gender");
+$label_phone_number =		_QXZ("Phone");
+$label_phone_code =			_QXZ("DialCode");
+$label_alt_phone =			_QXZ("Alt. Phone");
+$label_security_phrase =	_QXZ("Show");
+$label_email =				_QXZ("Email");
+$label_comments =			_QXZ("Comments");
 
 ### find any custom field labels
 $stmt="SELECT label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments from system_settings;";

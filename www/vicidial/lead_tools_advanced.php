@@ -8,10 +8,11 @@
 # 140113-0853 - Added USERONLY to ANYONE callback switcher
 # 140606-1242 - Added the state field as an option to Move, Update, and Delete
 # 141007-2036 - Finalized adding QXZ translation to all admin files
+# 141229-2028 - Added code for on-the-fly language translations display
 #
 
-$version = '2.10-4';
-$build = '141007-2036';
+$version = '2.10-5';
+$build = '141229-2028';
 
 # This limit is to prevent data inconsistancies.
 # If there are too many leads in a list this
@@ -78,16 +79,18 @@ if ($DB)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$sys_settings_stmt = "SELECT use_non_latin, outbound_autodial_active, sounds_central_control_active FROM system_settings;";
+$sys_settings_stmt = "SELECT use_non_latin,outbound_autodial_active,sounds_central_control_active,enable_languages,language_method FROM system_settings;";
 $sys_settings_rslt=mysql_to_mysqli($sys_settings_stmt, $link);
 if ($DB) {echo "$sys_settings_stmt\n";}
 $num_rows = mysqli_num_rows($sys_settings_rslt);
 if ($num_rows > 0)
 	{
 	$sys_settings_row=mysqli_fetch_row($sys_settings_rslt);
-	$non_latin = $sys_settings_row[0];
-	$SSoutbound_autodial_active = $sys_settings_row[1];
-	$sounds_central_control_active = $sys_settings_row[2];
+	$non_latin =						$sys_settings_row[0];
+	$SSoutbound_autodial_active =		$sys_settings_row[1];
+	$sounds_central_control_active =	$sys_settings_row[2];
+	$SSenable_languages =				$sys_settings_row[3];
+	$SSlanguage_method =				$sys_settings_row[4];
 	}
 else
 	{
@@ -99,8 +102,8 @@ else
 
 if ($non_latin < 1)
 	{
-	$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-	$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 	}
 else
 	{
@@ -108,6 +111,16 @@ else
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	}
 $list_id_override = preg_replace('/[^0-9]/','',$list_id_override);
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $auth=0;
 $auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
@@ -2723,7 +2736,7 @@ if (
 	# BEGIN Status Update
 	echo "<br /><center><table width=$section_width cellspacing=3>\n";
 	echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><b>"._QXZ("Update Lead Statuses")."</b></font></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>List</td><td align=left>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List")."</td><td align=left>\n";
 	echo "<select size=1 name=update_list>\n";
 	echo "<option value='-'>"._QXZ("Select A List")."</option>\n";
 

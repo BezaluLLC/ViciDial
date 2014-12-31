@@ -16,6 +16,7 @@
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141114-0034 - Finalized adding QXZ translation to all admin files
 # 141128-0903 - Code cleanup for QXZ functions
+# 141230-0911 - Added code for on-the-fly language translations display
 #
 
 require("dbconnect_mysqli.php");
@@ -47,7 +48,7 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -58,6 +59,8 @@ if ($qm_conf_ct > 0)
 	$webroot_writable =				$row[1];
 	$SSoutbound_autodial_active =	$row[2];
 	$user_territories_active =		$row[3];
+	$SSenable_languages =			$row[4];
+	$SSlanguage_method =			$row[5];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -86,6 +89,16 @@ $extension = preg_replace("/'|\"|\\\\|;/", '', $extension);
 $server_ip = preg_replace("/'|\"|\\\\|;/", '', $server_ip);
 $begin_date = preg_replace("/'|\"|\\\\|;/","",$begin_date);
 $end_date = preg_replace("/'|\"|\\\\|;/","",$end_date);
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $auth=0;
 $reports_auth=0;
@@ -167,7 +180,7 @@ echo "<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVET
 echo "<form action=$PHP_SELF method=POST>\n";
 echo "<input type=hidden name=extension value=\"$extension\">\n";
 echo "<input type=hidden name=server_ip value=\"$server_ip\">\n";
-echo "<input type=text name=begin_date value=\"$begin_date\" size=10 maxsize=10> to \n";
+echo "<input type=text name=begin_date value=\"$begin_date\" size=10 maxsize=10> "._QXZ("to")." \n";
 echo "<input type=text name=end_date value=\"$end_date\" size=10 maxsize=10> &nbsp;\n";
 echo "<input type=submit name=submit value='"._QXZ("submit")."'>\n";
 

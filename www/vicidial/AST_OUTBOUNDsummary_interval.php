@@ -22,6 +22,7 @@
 # 140108-0734 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141114-0822 - Finalized adding QXZ translation to all admin files
+# 141230-0912 - Added code for on-the-fly language translations display
 #
 
 $startMS = microtime();
@@ -73,7 +74,7 @@ $JS_onload="onload = function() {\n";
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -84,6 +85,8 @@ if ($qm_conf_ct > 0)
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
 	$reports_use_slave_db =			$row[3];
+	$SSenable_languages =			$row[4];
+	$SSlanguage_method =			$row[5];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -109,6 +112,16 @@ else
 	{
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
 	}
 
 $auth=0;
@@ -497,7 +510,7 @@ if ($bareformat < 1)
 	$MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 	$MAIN.="<INPUT TYPE=HIDDEN NAME=costformat VALUE=\"$costformat\">\n";
 	$MAIN.="<INPUT TYPE=HIDDEN NAME=print_calls VALUE=\"$print_calls\">\n";
-	$MAIN.="Date Range:<BR>\n";
+	$MAIN.=_QXZ("Date Range").":<BR>\n";
 	$MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 	$MAIN.="	<script language=\"JavaScript\">\n";
 	$MAIN.="	var o_cal = new tcal ({\n";
@@ -509,7 +522,7 @@ if ($bareformat < 1)
 	$MAIN.="	o_cal.a_tpl.yearscroll = false;\n";
 	$MAIN.="	// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 	$MAIN.="	</script>\n";
-	$MAIN.=" to <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+	$MAIN.=" "._QXZ("to")." <INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
 	$MAIN.="	<script language=\"JavaScript\">\n";
 	$MAIN.="	var o_cal = new tcal ({\n";
 	$MAIN.="		// form name\n";
@@ -521,7 +534,7 @@ if ($bareformat < 1)
 	$MAIN.="	// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 	$MAIN.="	</script>\n";
 
-	$MAIN.="</TD><TD VALIGN=TOP ROWSPAN=2> Campaigns:<BR>";
+	$MAIN.="</TD><TD VALIGN=TOP ROWSPAN=2> "._QXZ("Campaigns").":<BR>";
 	$MAIN.="<SELECT SIZE=5 NAME=group[] multiple>\n";
 	if  (preg_match('/\-\-ALL\-\-/',$group_string))
 		{$MAIN.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
@@ -797,7 +810,7 @@ else
 				$CPlead_id[$u] =		$row[7];
 				$TESTlead_id[$u] =		$row[7];
 				$TESTuniqueid[$u] =		$row[6];
-				$CPin_out[$u] =			_QXZ('OUT');
+				$CPin_out[$u] =			_QXZ("OUT");
 				$p++;
 				$u++;
 				}

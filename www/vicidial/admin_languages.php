@@ -10,10 +10,11 @@
 # 141205-0641 - Added option to allow for more matches in the help.php file
 # 141212-0923 - Added active setting
 # 141227-1041 - Added flags next to country code and active column on list
+# 141229-1531 - Added code for on-the-fly language translations display
 #
 
-$admin_version = '2.10-4';
-$build = '141227-1041';
+$admin_version = '2.10-5';
+$build = '141229-1531';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -162,6 +163,16 @@ $DS='-----';
 
 if (file_exists('options.php'))
 	{require('options.php');}
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $auth=0;
 $auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);

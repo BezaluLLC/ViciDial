@@ -18,6 +18,7 @@
 # 130615-2342 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-0831 - Changed to mysqli PHP functions
 # 141007-2143 - Finalized adding QXZ translation to all admin files
+# 141229-1817 - Added code for on-the-fly language translations display
 #
 
 $startMS = microtime();
@@ -49,8 +50,8 @@ if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
 
-$PHP_AUTH_USER = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-$PHP_AUTH_PW = preg_replace('/[^0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 $campaign_id = preg_replace('/[^0-9a-zA-Z]/', '', $campaign_id);
 $server_ip = preg_replace('/[^\.0-9a-zA-Z]/', '', $server_ip);
 $session_id = preg_replace('/[^0-9a-zA-Z]/', '', $session_id);
@@ -68,6 +69,33 @@ $browser = getenv("HTTP_USER_AGENT");
 $local_DEF = 'Local/';
 $local_AMP = '@';
 $ext_context = 'demo';
+
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$stmt = "SELECT use_non_latin,custom_fields_enabled,enable_languages,language_method FROM system_settings;";
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$qm_conf_ct = mysqli_num_rows($rslt);
+if ($qm_conf_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$non_latin =				$row[0];
+	$custom_fields_enabled =	$row[1];
+	$SSenable_languages =		$row[2];
+	$SSlanguage_method =		$row[3];
+	}
+##### END SETTINGS LOOKUP #####
+###########################################
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $auth=0;
 $auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);

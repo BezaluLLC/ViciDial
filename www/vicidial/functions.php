@@ -20,6 +20,7 @@
 # 140319-1924 - Added MathZDC function
 # 140918-1609 - Added admin QXZ print/echo function with length padding
 # 141118-0109 - Added options for up to 9 ordered variables within QXZ function output
+# 141229-1535 - Added code to QXZ allowing for on-the-fly mysql phrase lookups
 #
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
@@ -422,6 +423,29 @@ function MathZDC($dividend, $divisor, $quotient=0) {
 # function to print/echo content, options for length, alignment and ordered internal variables are included
 function _QXZ($English_text, $sprintf=0, $align="l", $v_one='', $v_two='', $v_three='', $v_four='', $v_five='', $v_six='', $v_seven='', $v_eight='', $v_nine='')
 	{
+	global $SSenable_languages, $SSlanguage_method, $VUselected_language, $link;
+
+	if ($SSenable_languages == '1')
+		{
+		if ($SSlanguage_method != 'DISABLED')
+			{
+			if ( (strlen($VUselected_language) > 0) and ($VUselected_language != 'default English') )
+				{
+				if ($SSlanguage_method == 'MYSQL')
+					{
+					$stmt="SELECT translated_text from vicidial_language_phrases where english_text='$English_text' and language_id='$VUselected_language';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$sl_ct = mysqli_num_rows($rslt);
+					if ($sl_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$English_text =		$row[0];
+						}
+					}
+				}
+			}
+		}
+
 	if (preg_match("/%\ds/",$English_text))
 		{
 		$English_text = preg_replace("/%1s/", $v_one, $English_text);

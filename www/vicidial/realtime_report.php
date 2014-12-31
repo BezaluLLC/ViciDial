@@ -28,12 +28,13 @@
 # 140108-0722 - Added webserver and hostname to report logging
 # 140624-1423 - Added droppedOFtotal options.php option
 # 141001-2200 - Finalized adding QXZ translation to all admin files
+# 141230-0032 - Added code for on-the-fly language translations display
 #
 
 $startMS = microtime();
 
-$version = '2.10-16';
-$build = '141001-2200';
+$version = '2.10-17';
+$build = '141230-0032';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -109,7 +110,7 @@ $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -120,6 +121,8 @@ if ($qm_conf_ct > 0)
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
 	$reports_use_slave_db =			$row[3];
+	$SSenable_languages =			$row[4];
+	$SSlanguage_method =			$row[5];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -290,6 +293,15 @@ $PRESETstats = preg_replace('/[^-_0-9a-zA-Z]/', '', $PRESETstats);
 $AGENTtimeSTATS = preg_replace('/[^-_0-9a-zA-Z]/', '', $AGENTtimeSTATS);
 $droppedOFtotal = preg_replace('/[^-_0-9a-zA-Z]/', '', $droppedOFtotal);
 
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $auth=0;
 $reports_auth=0;
@@ -637,7 +649,7 @@ if ($DB) {echo "$stmt\n";}
 $usergroups_to_print = mysqli_num_rows($rslt);
 $i=0;
 $usergroups[$i]='ALL-GROUPS';
-$usergroupnames[$i] = _QXZ('All user groups');
+$usergroupnames[$i] = _QXZ("All user groups");
 $i++;
 $usergroups_to_print++;
 while ($i < $usergroups_to_print)

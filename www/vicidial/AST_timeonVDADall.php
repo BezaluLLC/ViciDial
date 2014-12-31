@@ -89,10 +89,11 @@
 # 140624-1424 - Added droppedOFtotal options.php option
 # 140918-1614 - Added QXZ function formatting of output
 # 141128-0857 - Code cleanup for QXZ functions
+# 141230-0030 - Added code for on-the-fly language translations display
 #
 
-$version = '2.10-78';
-$build = '141128-0857';
+$version = '2.10-79';
+$build = '141230-0030';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -170,13 +171,12 @@ if (isset($_GET["droppedOFtotal"]))				{$droppedOFtotal=$_GET["droppedOFtotal"];
 	elseif (isset($_POST["droppedOFtotal"]))	{$droppedOFtotal=$_POST["droppedOFtotal"];}
 
 
-#$report_name = _QXZ('Real-Time Main Report');
 $report_name = 'Real-Time Main Report';
 $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -187,6 +187,8 @@ if ($qm_conf_ct > 0)
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
 	$reports_use_slave_db =			$row[3];
+	$SSenable_languages =			$row[4];
+	$SSlanguage_method =			$row[5];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -299,6 +301,16 @@ else
 	{
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
 	}
 
 $auth=0;
@@ -1172,12 +1184,12 @@ if ($DB > 0) {echo "\n|$closer_campaigns|$closer_campaignsSQL|$stmt|\n";}
 
 $answersSQL = 'sum(answers_today)';
 $answers_singleSQL = 'answers_today';
-$answers_text =  _QXZ('ANSWERED');
+$answers_text =  _QXZ("ANSWERED");
 if ($droppedOFtotal > 0)
 	{
 	$answersSQL = 'sum(calls_today)';
 	$answers_singleSQL = 'calls_today';
-	$answers_text = _QXZ('TOTAL').'   ';
+	$answers_text = _QXZ("TOTAL").'   ';
 	}
 
 ##### SHOW IN-GROUP STATS OR INBOUND ONLY WITH VIEW-MORE ###
@@ -2115,7 +2127,7 @@ if ($parked_to_print > 0)
 ###################################################################################
 $agentonlyheader = '';
 if ($agentonlycount > 0)
-	{$agentonlyheader = _QXZ('AGENTONLY');}
+	{$agentonlyheader = _QXZ("AGENTONLY");}
 $Cecho = '';
 $Cecho .= "VICIDIAL: Calls Waiting                      $NOW_TIME\n";
 $Cecho .= "+--------+----------------------+--------------+-----------------+---------+------------+----------+\n";

@@ -15,6 +15,7 @@
 # 130620-0817 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-1932 - Changed to mysqli PHP functions
 # 141007-2138 - Finalized adding QXZ translation to all admin files
+# 141229-2037 - Added code for on-the-fly language translations display
 #
 
 require("dbconnect_mysqli.php");
@@ -92,7 +93,7 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -103,6 +104,8 @@ if ($qm_conf_ct > 0)
 	$webroot_writable =				$row[1];
 	$SSoutbound_autodial_active =	$row[2];
 	$user_territories_active =		$row[3];
+	$SSenable_languages =			$row[4];
+	$SSlanguage_method =			$row[5];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -126,6 +129,16 @@ $ext_context = 'demo';
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $auth=0;
 $auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'QC',1);

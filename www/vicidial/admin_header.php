@@ -48,6 +48,7 @@
 # 140706-0828 - Incorporated QC includes into code
 # 141001-2200 - Finalized adding QXZ translation to all admin files
 # 141128-1009 - Added code for languages section
+# 141230-0927 - Changed single-quote QXZ arguments to double-quotes
 #
 
 
@@ -724,7 +725,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 
 	$IGhandle_method_list = '<option>CID</option><option>CIDLOOKUP</option><option>CIDLOOKUPRL</option><option>CIDLOOKUPRC</option><option>CIDLOOKUPALT</option><option>CIDLOOKUPRLALT</option><option>CIDLOOKUPRCALT</option><option>CIDLOOKUPADDR3</option><option>CIDLOOKUPRLADDR3</option><option>CIDLOOKUPRCADDR3</option><option>CIDLOOKUPALTADDR3</option><option>CIDLOOKUPRLALTADDR3</option><option>CIDLOOKUPRCALTADDR3</option><option>ANI</option><option>ANILOOKUP</option><option>ANILOOKUPRL</option><option>VIDPROMPT</option><option>VIDPROMPTLOOKUP</option><option>VIDPROMPTLOOKUPRL</option><option>VIDPROMPTLOOKUPRC</option><option>CLOSER</option><option>3DIGITID</option><option>4DIGITID</option><option>5DIGITID</option><option>10DIGITID</option>';
 
-	$IGsearch_method_list = '<option value="LB">LB - '._QXZ('Load Balanced').'</option><option value="LO">LO - '._QXZ('Load Balanced Overflow').'</option><option value="SO">SO - '._QXZ('Server Only').'</option>';
+	$IGsearch_method_list = '<option value="LB">LB - '._QXZ("Load Balanced").'</option><option value="LO">LO - '._QXZ("Load Balanced Overflow").'</option><option value="SO">SO - '._QXZ("Server Only").'</option>';
 
 	$stmt="SELECT login,server_ip,extension,dialplan_number from phones where active='Y' $LOGadmin_viewable_groupsSQL order by login,server_ip;";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -1226,8 +1227,8 @@ $SSenable_languages =		$row[7];
 		<?php
 		if (strlen($lists_hh) > 1) 
 			{ 
-			if ($LOGdelete_from_dnc > 0) {$DNClink = _QXZ('Add-Delete DNC Number');}
-			else {$DNClink = _QXZ('Add DNC Number');}
+			if ($LOGdelete_from_dnc > 0) {$DNClink = _QXZ("Add-Delete DNC Number");}
+			else {$DNClink = _QXZ("Add DNC Number");}
 			?>
 			<TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
 			<a href="<?php echo $ADMIN ?>?ADD=100"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show Lists"); ?> </a>
@@ -1333,8 +1334,8 @@ $SSenable_languages =		$row[7];
 	<?php
 	if (strlen($ingroups_hh) > 1) 
 		{
-		if ($LOGdelete_from_dnc > 0) {$FPGlink = _QXZ('Add-Delete FPG Number');}
-		else {$FPGlink = _QXZ('Add FPG Number');}
+		if ($LOGdelete_from_dnc > 0) {$FPGlink = _QXZ("Add-Delete FPG Number");}
+		else {$FPGlink = _QXZ("Add FPG Number");}
 		?>
 		<TR BGCOLOR=<?php echo $ingroups_color ?>><TD ALIGN=LEFT> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=1000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Show In-Groups"); ?> </a>
@@ -1651,7 +1652,16 @@ $SSenable_languages =		$row[7];
 </span>
 
 <TABLE BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0 WIDTH=<?php echo $page_width ?> HEIGHT=15>
-<TR BGCOLOR=#015B91><TD ALIGN=LEFT BGCOLOR=#015B91><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><a href="<?php echo $admin_home_url_LU ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1><?php echo _QXZ("HOME"); ?></a> | <A HREF="../agc/timeclock.php?referrer=admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1> <?php echo _QXZ("Timeclock"); ?></A> | <a href="<?php echo $ADMIN ?>?force_logout=1"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1><?php echo _QXZ("Logout"); ?></a> <FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1>(<?php echo $PHP_AUTH_USER ?>)</FONT></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo date("l F j, Y G:i:s A") ?> &nbsp; </B></TD></TR>
+<TR BGCOLOR=#015B91><TD ALIGN=LEFT BGCOLOR=#015B91><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><a href="<?php echo $admin_home_url_LU ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1><?php echo _QXZ("HOME"); ?></a> | <A HREF="../agc/timeclock.php?referrer=admin"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1> <?php echo _QXZ("Timeclock"); ?></A> | <a href="<?php echo $ADMIN ?>?force_logout=1"><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1><?php echo _QXZ("Logout"); ?></a> <FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=1>(<?php echo $PHP_AUTH_USER ?>)</FONT>
+
+<?php
+if ($SSenable_languages == '1')
+	{
+	echo " | <a href=\"$ADMIN?ADD=999989\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=1>"._QXZ("Change language")."</a>";
+	}
+?>
+
+</TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B><?php echo date("l F j, Y G:i:s A") ?> &nbsp; </B></TD></TR>
 
 <TR BGCOLOR=#015B91>
 

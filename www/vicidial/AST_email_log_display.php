@@ -11,6 +11,7 @@
 # 130621-0756 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0733 - Changed to mysqli PHP functions
 # 141114-0843 - Finalized adding QXZ translation to all admin files
+# 141230-1506 - Added code for on-the-fly language translations display
 #
 
 require("dbconnect_mysqli.php");
@@ -32,7 +33,7 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,custom_fields_enabled,allow_emails FROM system_settings;";
+$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,custom_fields_enabled,allow_emails,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -43,7 +44,9 @@ if ($qm_conf_ct > 0)
 	$timeclock_end_of_day =					$row[1];
 	$agentonly_callback_campaign_lock =		$row[2];
 	$custom_fields_enabled =				$row[3];
-	$allow_emails =				$row[4];
+	$allow_emails =							$row[4];
+	$SSenable_languages =					$row[5];
+	$SSlanguage_method =					$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -63,6 +66,16 @@ else
 	{
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
 	}
 
 $auth=0;

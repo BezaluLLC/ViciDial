@@ -29,6 +29,7 @@
 # 140108-0723 - Added webserver and hostname to report logging
 # 140326-2235 - Changed to allow for custom fields with a different entry_list_id
 # 141114-0036 - Finalized adding QXZ translation to all admin files
+# 141229-1840 - Added code for on-the-fly language translations display
 #
 
 $startMS = microtime();
@@ -60,7 +61,7 @@ $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,custom_fields_enabled FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,custom_fields_enabled,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -72,6 +73,8 @@ if ($qm_conf_ct > 0)
 	$slave_db_server =				$row[2];
 	$reports_use_slave_db =			$row[3];
 	$custom_fields_enabled =		$row[4];
+	$SSenable_languages =			$row[5];
+	$SSlanguage_method =			$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -89,6 +92,16 @@ else
 $list_id = preg_replace('/[^-_0-9a-zA-Z]/','',$list_id);
 $group_id = preg_replace('/[^-_0-9a-zA-Z]/','',$group_id);
 $download_type = preg_replace('/[^-_0-9a-zA-Z]/','',$download_type);
+
+$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
 
 $auth=0;
 $auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);

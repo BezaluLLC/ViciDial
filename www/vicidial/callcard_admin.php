@@ -17,10 +17,11 @@
 # 130620-0839 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-1939 - Changed to mysqli PHP functions
 # 141007-2040 - Finalized adding QXZ translation to all admin files
+# 141229-2044 - Added code for on-the-fly language translations display
 #
 
-$version = '2.8-9';
-$build = '141007-2040';
+$version = '2.10-10';
+$build = '141229-2044';
 
 $MT[0]='';
 
@@ -82,25 +83,21 @@ $SEARCHONLY=0;
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,callcard_enabled FROM system_settings;";
+$stmt = "SELECT use_non_latin,callcard_enabled,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $ss_conf_ct = mysqli_num_rows($rslt);
 if ($ss_conf_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
-	$non_latin =						$row[0];
-	$callcard_enabled =					$row[1];
+	$non_latin =				$row[0];
+	$callcard_enabled =			$row[1];
+	$SSenable_languages =		$row[2];
+	$SSlanguage_method =		$row[3];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-
-if ($callcard_enabled < 1)
-	{
-	echo _QXZ("ERROR: CallCard is not active on this system")."\n";
-	exit;
-	}
 
 if ($non_latin < 1)
 	{
@@ -140,6 +137,22 @@ else
 	{
 	$PASS = preg_replace("/'|\"|\\\\|;/","",$PASS);
 	$USER = preg_replace("/'|\"|\\\\|;/","",$USER);
+	}
+
+$stmt="SELECT selected_language from vicidial_users where user='$USER';";
+if ($DB) {echo "|$stmt|\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$sl_ct = mysqli_num_rows($rslt);
+if ($sl_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$VUselected_language =		$row[0];
+	}
+
+if ($callcard_enabled < 1)
+	{
+	echo _QXZ("ERROR: CallCard is not active on this system")."\n";
+	exit;
 	}
 
 $auth=0;

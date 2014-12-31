@@ -20,10 +20,11 @@
 # 130620-1729 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130901-2001 - Changed to mysqli PHP functions
 # 141007-2042 - Finalized adding QXZ translation to all admin files
+# 141229-2052 - Added code for on-the-fly language translations display
 #
 
-$version = '2.8-14';
-$build = '141007-2042';
+$version = '2.10-15';
+$build = '141229-2052';
 
 $MT[0]='';
 
@@ -62,7 +63,7 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory,outbound_autodial_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory,outbound_autodial_active,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $ss_conf_ct = mysqli_num_rows($rslt);
@@ -74,6 +75,8 @@ if ($ss_conf_ct > 0)
 	$sounds_web_server =				$row[2];
 	$sounds_web_directory =				$row[3];
 	$SSoutbound_autodial_active =		$row[4];
+	$SSenable_languages =				$row[5];
+	$SSlanguage_method =				$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -153,6 +156,16 @@ if ( (!preg_match("/\|$ip\|/", $server_ips)) and ($formIPvalid < 1) )
 		$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 		}
 	$delete_file = preg_replace('/[^-\._0-9a-zA-Z]/','',$delete_file);
+
+	$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+	if ($DB) {echo "|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$sl_ct = mysqli_num_rows($rslt);
+	if ($sl_ct > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$VUselected_language =		$row[0];
+		}
 
 	$auth=0;
 	$reports_auth=0;
