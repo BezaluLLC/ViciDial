@@ -1,4 +1,4 @@
-Notes on the non-English language translations(QXZ process)	Started: 2014-11-18	Updated: 2014-12-31
+Notes on the non-English language translations(QXZ process)	Started: 2014-11-18	Updated: 2015-01-01
 
 
 Summary: 
@@ -11,7 +11,7 @@ As of 2014-12-17, languages now follow User Group permissions for agents and man
 
 As of 2014-12-31, on-the-fly translation is working for all admin web pages, and a new "Change language" page has been added and linked to at the top of the admin.php screen.
 
-The final step is: To complete the other 5 languages that have had admin translations in the past(French, German, Italian, Greek and Brazilian Portuguese). Spanish is already complete.
+The final step is: To complete the other 4 languages that have had admin translations in the past(French, Italian, Greek and Brazilian Portuguese). Spanish is already complete.
 
 
 
@@ -21,6 +21,24 @@ All available dictionaries will be placed in the following website directory:
 http://vicidial.org/translations/
 
 These translation dictionaries can simply be imported into the Admin web interface to use as is or updated as desired. The Admin web interface also has the ability to easily export dictionaries from your system that you can share or exchange with other Vicidial users.
+
+
+Currently Available Translations:
+Spanish -		AGENT	ADMIN
+German -		AGENT	ADMIN
+French -		AGENT
+Italian -		AGENT
+Greek -			AGENT
+Brazilian Portuguese -	AGENT
+Portuguese -		AGENT
+Polish -		AGENT
+Slovak -		AGENT
+Russian -		AGENT
+Dutch -			AGENT
+Traditional Chinese -	AGENT
+Swedish -		AGENT
+Danish -		AGENT
+Japanese -		AGENT
 
 
 

@@ -1,7 +1,7 @@
 <?php
 # vicidial.php - the web-based version of the astVICIDIAL client application
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Other scripts that this application depends on:
 # - vdc_db_query.php: Updates information in the database
@@ -464,10 +464,11 @@
 # 141223-2109 - Fix for hide_gender issue
 # 141227-1759 - Found missing phrase for QXZ
 # 141229-1429 - Changed single-quote QXZ arguments to double-quotes
+# 150101-1516 - Updated for 2015
 #
 
-$version = '2.10-435c';
-$build = '141229-1429';
+$version = '2.10-436c';
+$build = '150101-1516';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;

@@ -87,7 +87,7 @@ OTHER CHANGES:
 12. Added campaign options to limit number of active callbacks
 
 13. Changed all Agent and Administrative interface text output to use a function
-	instead of echo.(for future dynamic other-language interfaces)
+	instead of echo.(future dynamic other-language interfaces)
 
 14. Added Admin Utility to split lead lists into smaller lists
 
@@ -101,8 +101,10 @@ OTHER CHANGES:
 16. Added campaign option to clear the script after call disposition.
 
 17. Added administrative web interface for managing Languages. The language
-	features are not active in the admin interface yet, but they are active
-	in the agent screen.
+	features are now active in the admin interface as well as in the agent 
+	screen. Language files are available in the "translations" directory
+	in the source code, as well as on this website:
+		http://vicidial.org/translations/
 
 18. Added No Agent URL option override for Lists
 

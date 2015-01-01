@@ -1,7 +1,7 @@
 <?php
 # admin.php - VICIDIAL administration page
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
 $startMS = microtime();
@@ -3414,12 +3414,13 @@ else
 # 141212-0930 - Added selected_language,user_choose_language user options and language_method system option
 # 141227-1008 - Trigger sounds update on voicemail server when phone record is updated
 # 141229-1543 - Added code for on-the-fly language translations display
+# 150101-1511 - Updated for 2015
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.10-463a';
-$build = '141229-1543';
+$admin_version = '2.10-464a';
+$build = '150101-1511';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3837,7 +3838,7 @@ echo "<html>\n";
 echo "<head>\n";
 echo "<!-- VERSION: $admin_version   BUILD: $build   ADD: $ADD   PHP_SELF: $PHP_SELF-->\n";
 echo "<META NAME=\"ROBOTS\" CONTENT=\"NONE\">\n";
-echo "<META NAME=\"COPYRIGHT\" CONTENT=\"&copy; 2014 "._QXZ("ViciDial Group")."\">\n";
+echo "<META NAME=\"COPYRIGHT\" CONTENT=\"&copy; 2015 ViciDial Group\">\n";
 echo "<META NAME=\"AUTHOR\" CONTENT=\"ViciDial Group\">\n";
 echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
@@ -33726,9 +33727,9 @@ if ($ADD==999995)
 	echo "<br><B> "._QXZ("Welcome to ViciDial: copyright, trademark and license page")."</B><BR><BR>\n";
 	echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=2>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=right valign=top><B><font size=3>"._QXZ("Copyright").": </B></td><td align=left> &nbsp; "._QXZ("The ViciDial Contact Center Suite is maintained by the")." <a href=\"http://www.vicidial.com/\" target=\"_blank\">"._QXZ("ViciDial Group")."</a>, &copy; 2014</td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right valign=top><B><font size=3>"._QXZ("Copyright").": </B></td><td align=left> &nbsp; "._QXZ("The ViciDial Contact Center Suite is maintained by the")." <a href=\"http://www.vicidial.com/\" target=\"_blank\">ViciDial Group</a>, &copy; 2015</td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=right valign=top><B><font size=3>"._QXZ("Trademark").": </B></td><td align=left> &nbsp; \"VICIDIAL\" "._QXZ("is a registered trademark of the")." <a href=\"http://www.vicidial.com/\" target=\"_blank\">"._QXZ("ViciDial Group")."</a>. Here is our <a href=\"http://www.vicidial.com/trademark.html\" target=\"_blank\">"._QXZ("trademark use policy")."</a></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right valign=top><B><font size=3>"._QXZ("Trademark").": </B></td><td align=left> &nbsp; \"VICIDIAL\" "._QXZ("is a registered trademark of the")." <a href=\"http://www.vicidial.com/\" target=\"_blank\">ViciDial Group</a>. Here is our <a href=\"http://www.vicidial.com/trademark.html\" target=\"_blank\">"._QXZ("trademark use policy")."</a></td></tr>\n";
 
 	echo "<tr bgcolor=#B6D3FC><td align=right valign=top><B><font size=3>"._QXZ("License").": </B></td><td align=left> &nbsp; "._QXZ("The ViciDial Contact Center Suite is released under the")." <a href=\"http://www.vicidial.com/agpl.html\" target=\"_blank\">AGPLv2 "._QXZ("open source license")."</a></td></tr>\n";
 
@@ -34467,7 +34468,7 @@ echo "<font size=0 color=white><br><br><!-- RUNTIME: $RUNtime seconds<BR> -->";
 echo _QXZ("VERSION").": $admin_version<BR>";
 echo _QXZ("BUILD").": $build\n";
 if (!preg_match("/_BUILD_/",$SShosted_settings))
-	{echo "<BR><a href=\"$PHP_SELF?ADD=999995\"><font color=white>&copy; 2014 "._QXZ("ViciDial Group")."</font></a><BR><img src=\"images/pixel.gif\">";}
+	{echo "<BR><a href=\"$PHP_SELF?ADD=999995\"><font color=white>&copy; 2015 ViciDial Group</font></a><BR><img src=\"images/pixel.gif\">";}
 echo "</font>\n";
 ?>
 
