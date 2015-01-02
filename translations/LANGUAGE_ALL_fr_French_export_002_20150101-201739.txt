@@ -221,13 +221,13 @@ DURATION|DURÉE||
 Chat URL|URL chat||
 active vicidial conferences|conférences VICIDIAL actifs||
 active conferences|conférences actifs||
-active phones and $inactive_phones inactive phones|téléphones actifs et $ inactive_phones téléphones inactifs||
-active carriers and $inactive_carriers inactive carriers|transporteurs actifs et $ inactive_carriers porteurs inactifs||
+active phones and $inactive_phones inactive phones|téléphones actifs et $inactive_phones téléphones inactifs||
+active carriers and $inactive_carriers inactive carriers|transporteurs actifs et $inactive_carriers porteurs inactifs||
 This server has|Ce serveur a||
 rowx[4]|rowx [4]||
 AGENT SELECTABLE|AGENT SÉLECTIONNABLE||
 Chat Timeout (seconds)|Discuter Timeout (seconds)||
-Quality Control Campaign $campaign_id|Contrôle de la qualité Campagne $ campaign_id||
+Quality Control Campaign $campaign_id|Contrôle de la qualité Campagne $campaign_id||
 INBOUND ONLY|uniquement entrantes||
 MANUAL ONLY|MANUEL SEULEMENT||
 AUTO-DIAL ONLY|AUTO-DIAL SEULEMENT||
@@ -3007,7 +3007,7 @@ Inbound Debug|Debug Inbound||
 ADAPT DEBUG|ADAPT DEBUG||
 Campaign Debug|Campagne Debug||
 You do not have permissions for campaign debugging|Vous ne avez pas les permissions pour la campagne débogage||
-This campaign has $active_leads leads to be dialed in those lists|Cette campagne a $ active_leads conduit à composer dans ces listes||
+This campaign has $active_leads leads to be dialed in those lists|Cette campagne a $active_leads conduit à composer dans ces listes||
 no active lists selected for this campaign|pas de listes actives pour cette campagne||
 no dial statuses selected for this campaign|aucun statut d'appel selectionnés pour cette campagne||
 completed leads in those lists|fils terminés dans ces listes||
@@ -7118,7 +7118,7 @@ allows The administrator to set how long, in the future, the scrub will occur.|p
 ASTERISK: Inbound Calls Stats - By Department|ASTERISK: Appels entrants Statistiques - Par ministère||
 PLEASE SELECT A DEPARTMENT AND DATE RANGE ABOVE AND CLICK SUBMIT|Se IL VOUS PLAÎT CHOISIR UN SERVICE ET DATE gamme ci-dessus et cliquez sur soumettre||
 ASTERISK: Inbound Calls Stats For|ASTERISK: Appels entrants Statistiques Pour||
-%3s, testing %1s here is a php variable $DB and time %2s| %3s, tester %1s ici est une variable PHP $ DB et temps %2s||
+%3s, testing %1s here is a php variable $DB and time %2s| %3s, tester %1s ici est une variable PHP $DB et temps %2s||
 PLEASE SELECT A USER AND DATE-TIME ABOVE AND CLICK SUBMIT|Se IL VOUS PLAÎT Sélectionnez un utilisateur et DATE-TIME-DESSUS et cliquez sur soumettre||
 Agent Days Status Report|Agent Jours Rapport de situation||
 AGENT Details|AGENT Détails||
@@ -7154,3 +7154,4 @@ You are not allowed to change your language|Vous n'êtes pas autorisé à change
 Language has been updated, you may now continue|Langue a été mis à jour, vous pouvez maintenant continuer||
 Current Language|Langue actuelle||
 New Language|nouvelle Langue||
+Inbound and Outbound Calling Reports|Entrants et sortants Rapports Calling||

@@ -7154,3 +7154,4 @@ DONE: %1s match found, %2s updated to %3s with %4s status|getan: %1s Übereinsti
 MULTI_MATCH:|multi_match:||
 Invalid Username/Password:|ungültige Benutzername/Passwort:||
 MULTI_MATCH CHECK:|multi_match Prüfung:||
+Inbound and Outbound Calling Reports|Eingehende und ausgehende Aufruf von Reports||

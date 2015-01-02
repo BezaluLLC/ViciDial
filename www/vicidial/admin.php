@@ -33165,7 +33165,7 @@ if ($ADD==999999)
 		if ( (preg_match("/Real-Time Campaign Summary/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 			{echo "<LI><a href=\"AST_timeonVDADallSUMMARY.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("Real-Time Campaign Summary")."</a></FONT>\n";}
 		echo "</UL><BR>\n";
-		echo "<B>Inbound and Outbound Calling Reports</B><BR>\n";
+		echo "<B>"._QXZ("Inbound and Outbound Calling Reports")."</B><BR>\n";
 		echo "<UL>\n";
 		if ( (preg_match("/Inbound Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 			{echo "<LI><a href=\"AST_CLOSERstats.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("Inbound Report")."</a></FONT>\n";}

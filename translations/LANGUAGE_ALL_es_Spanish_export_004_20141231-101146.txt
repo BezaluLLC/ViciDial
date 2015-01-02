@@ -7154,3 +7154,4 @@ Calls in Queue|Llamadas en cola||
 unknown code|código desconocido||
 Note: a dial prefix of %1s will be added to the beginning of this number|Nota: un prefijo de marcación de %1s se añade al principio de este número||
 Manual Queue is On|Manual de la cola está En||
+Inbound and Outbound Calling Reports|Informes de llamadas entrantes y salientes||
