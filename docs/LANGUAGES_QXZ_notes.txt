@@ -11,7 +11,7 @@ As of 2014-12-17, languages now follow User Group permissions for agents and man
 
 As of 2014-12-31, on-the-fly translation is working for all admin web pages, and a new "Change language" page has been added and linked to at the top of the admin.php screen.
 
-The final step is: To complete the other 4 languages that have had admin translations in the past(French, Italian, Greek and Brazilian Portuguese). Spanish is already complete.
+The final step is: To complete the other 3 languages that have had admin translations in the past(Italian, Greek and Brazilian Portuguese). Spanish is already complete.
 
 
 
@@ -26,7 +26,7 @@ These translation dictionaries can simply be imported into the Admin web interfa
 Currently Available Translations:
 Spanish -		AGENT	ADMIN
 German -		AGENT	ADMIN
-French -		AGENT
+French -		AGENT	ADMIN
 Italian -		AGENT
 Greek -			AGENT
 Brazilian Portuguese -	AGENT
