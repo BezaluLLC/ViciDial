@@ -378,6 +378,7 @@ $build = '141229-1428';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=599;
 $one_mysql_log=0;
+$DB=0;
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -621,7 +622,10 @@ if (isset($_GET["pause_trigger"]))			{$pause_trigger=$_GET["pause_trigger"];}
 	elseif (isset($_POST["pause_trigger"]))	{$pause_trigger=$_POST["pause_trigger"];}
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
-
+if (isset($_GET["in_script"]))			{$in_script=$_GET["in_script"];}
+	elseif (isset($_POST["in_script"]))	{$in_script=$_POST["in_script"];}
+if (isset($_GET["camp_script"]))			{$camp_script=$_GET["camp_script"];}
+	elseif (isset($_POST["camp_script"]))	{$camp_script=$_POST["camp_script"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
