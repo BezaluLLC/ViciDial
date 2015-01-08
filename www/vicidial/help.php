@@ -1,7 +1,7 @@
 <?php
 # help.php - VICIDIAL administration page
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
 # CHANGELOG:
@@ -32,6 +32,7 @@
 # 141211-1647 - Added cpd_unknown_action and lists-na_call_url
 # 141212-0945 - Added user_choose_language, selected_language and language_method
 # 141230-1503 - Added code for on-the-fly language translations display
+# 150107-1954 - Added users-ignore_group_on_search
 #
 
 require("dbconnect_mysqli.php");
@@ -621,6 +622,11 @@ if ($SSqc_features_active > 0)
 <A NAME="users-admin_hide_phone_data">
 <BR>
 <B><?php echo _QXZ("Admin Hide Phone Data"); ?> -</B><?php echo _QXZ("This setting only applies to level 7, 8 and 9 users. If enabled it replaces the customer phone numbers in the many reports and screens in the system with Xs. The DIGITS settings will show only the last X digits of the phone number. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="users-ignore_group_on_search">
+<BR>
+<B><?php echo _QXZ("Search Lead Ignore Group Restrictions"); ?> -</B><?php echo _QXZ("Changing this setting to 1 will allow this user to search for leads throughout the entire system instead of just within the allowed campaigns that are set within their User Group. This will also allow modifying of those leads in the administrative lead modification page. Default is 0 for disabled. To be able to modify this setting, you must belong to a user group that has ALL CAMPAIGNS selected in the Allowed Campaigns section."); ?>
 
 
 

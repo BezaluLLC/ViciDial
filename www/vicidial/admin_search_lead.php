@@ -1,7 +1,7 @@
 <?php
 # admin_search_lead.php   version 2.10
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # AST GUI database administration search for lead info
 # admin_modify_lead.php
@@ -40,6 +40,7 @@
 # 141001-2200 - Finalized adding QXZ translation to all admin files
 # 141124-1747 - Fixed issue #790
 # 141229-1748 - Added code for on-the-fly language translations display
+# 150107-1728 - Added ignore_group_on_search user option
 #
 
 require("dbconnect_mysqli.php");
@@ -180,14 +181,15 @@ if ( $modify_leads < 1 )
 	exit;
 	}
 
-$stmt="SELECT full_name,modify_leads,admin_hide_lead_data,admin_hide_phone_data,user_group from vicidial_users where user='$PHP_AUTH_USER';";
+$stmt="SELECT full_name,modify_leads,admin_hide_lead_data,admin_hide_phone_data,user_group,ignore_group_on_search from vicidial_users where user='$PHP_AUTH_USER';";
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
-$LOGfullname =				$row[0];
-$LOGmodify_leads =			$row[1];
-$LOGadmin_hide_lead_data =	$row[2];
-$LOGadmin_hide_phone_data =	$row[3];
-$LOGuser_group =			$row[4];
+$LOGfullname =					$row[0];
+$LOGmodify_leads =				$row[1];
+$LOGadmin_hide_lead_data =		$row[2];
+$LOGadmin_hide_phone_data =		$row[3];
+$LOGuser_group =				$row[4];
+$LOGignore_group_on_search =	$row[5];
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {echo "|$stmt|\n";}
@@ -203,7 +205,7 @@ $LOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
 $LOGallowed_listsSQL='';
 $whereLOGallowed_listsSQL='';
-if (!preg_match('/\-ALL/i', $LOGallowed_campaigns))
+if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) and ($LOGignore_group_on_search != '1') )
 	{
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
@@ -232,8 +234,8 @@ $regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>ADMINISTRATION: Lead Search
-<?php 
+<title>
+<?php echo _QXZ("ADMINISTRATION: Lead Search");
 
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'100';

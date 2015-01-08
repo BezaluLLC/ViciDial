@@ -8,7 +8,7 @@
 # just needs to enter the leadID and then they can view and modify the 
 # information in the record for that lead
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -64,6 +64,7 @@
 # 141001-2200 - Finalized adding QXZ translation to all admin files
 # 141128-0859 - Code cleanup for QXZ functions
 # 141229-1745 - Added code for on-the-fly language translations display
+# 150107-1729 - Added ignore_group_on_search user option
 #
 
 require("dbconnect_mysqli.php");
@@ -271,15 +272,16 @@ if ( $modify_leads < 1 )
 	exit;
 	}
 
-$stmt="SELECT full_name,modify_leads,admin_hide_lead_data,admin_hide_phone_data,user_group,user_level from vicidial_users where user='$PHP_AUTH_USER';";
+$stmt="SELECT full_name,modify_leads,admin_hide_lead_data,admin_hide_phone_data,user_group,user_level,ignore_group_on_search from vicidial_users where user='$PHP_AUTH_USER';";
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
-$LOGfullname =				$row[0];
-$LOGmodify_leads =			$row[1];
-$LOGadmin_hide_lead_data =	$row[2];
-$LOGadmin_hide_phone_data =	$row[3];
-$LOGuser_group =			$row[4];
-$LOGuser_level =			$row[5];
+$LOGfullname =					$row[0];
+$LOGmodify_leads =				$row[1];
+$LOGadmin_hide_lead_data =		$row[2];
+$LOGadmin_hide_phone_data =		$row[3];
+$LOGuser_group =				$row[4];
+$LOGuser_level =				$row[5];
+$LOGignore_group_on_search =	$row[6];
 
 $LOGallowed_listsSQL='';
 $stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$LOGuser_group';";
@@ -288,7 +290,7 @@ $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
 
-if (!preg_match('/\-ALL/i', $LOGallowed_campaigns))
+if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) and ($LOGignore_group_on_search != '1') )
 	{
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);

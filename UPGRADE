@@ -110,6 +110,10 @@ OTHER CHANGES:
 
 19. Added CPD Unknown Action option to Campaigns
 
+20. Added new user option to allow administrative users to search for leads
+	systemwide even in lists belonging to campaigns that the user's User
+	Group settings don't allow them to veiw
+
 
 
 

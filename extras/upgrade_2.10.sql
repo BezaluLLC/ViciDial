@@ -151,3 +151,7 @@ ALTER TABLE vicidial_languages ADD active ENUM('Y','N') default 'N';
 ALTER TABLE system_settings ADD language_method VARCHAR(20) default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1396',db_schema_update_date=NOW() where db_schema_version < 1396;
+
+ALTER TABLE vicidial_users ADD ignore_group_on_search ENUM('1','0') default '0';
+
+UPDATE system_settings SET db_schema_version='1397',db_schema_update_date=NOW() where db_schema_version < 1397;
