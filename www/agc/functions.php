@@ -4,7 +4,7 @@
 #
 # functions for agent scripts
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES:
@@ -24,6 +24,7 @@
 # 141118-0909 - Added options for up to 9 ordered variables within QXZ function output
 # 141128-0846 - Code cleanup for QXZ functions
 # 141216-1902 - Added MYSQL language method
+# 150108-1647 - removed phones count as part of validation, can cause problems when there are many phones
 #
 
 # $mysql_queries = 20
@@ -147,15 +148,15 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 			$aas_total =				$row[0];
 			}
 
-		$stmt = "SELECT count(*) FROM phones where active='Y';";
-		$rslt=mysql_to_mysqli($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
-		$ap_ct = mysqli_num_rows($rslt);
-		if ($ap_ct > 0)
-			{
-			$row=mysqli_fetch_row($rslt);
-			$ap_total =					$row[0];
-			}
+	#	$stmt = "SELECT count(*) FROM phones where active='Y';";
+	#	$rslt=mysql_to_mysqli($stmt, $link);
+	#	if ($DB) {echo "$stmt\n";}
+	#	$ap_ct = mysqli_num_rows($rslt);
+	#	if ($ap_ct > 0)
+	#		{
+	#		$row=mysqli_fetch_row($rslt);
+	#		$ap_total =					$row[0];
+	#		}
 		
 		$stmt = "SELECT count(*) FROM vicidial_live_agents where user!='$user';";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -191,11 +192,11 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 			$auth_key='ERRSERVERS';
 			$login_problem++;
 			}
-		if ($ap_total < 1)
-			{
-			$auth_key='ERRPHONES';
-			$login_problem++;
-			}
+	#	if ($ap_total < 1)
+	#		{
+	#		$auth_key='ERRPHONES';
+	#		$login_problem++;
+	#		}
 		if ( ($vla_total >= $vla_set) and ($vla_on > 0) )
 			{
 			$auth_key='ERRAGENTS';

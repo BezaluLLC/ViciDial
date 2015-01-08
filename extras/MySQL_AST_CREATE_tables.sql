@@ -3252,6 +3252,9 @@ CREATE INDEX comment_a on live_inbound_log (comment_a);
 CREATE UNIQUE INDEX vicidial_campaign_statuses_key on vicidial_campaign_statuses(status, campaign_id);
 CREATE INDEX vlecc on vicidial_log_extended (caller_code);
 
+CREATE INDEX vlali on vicidial_live_agents (lead_id);
+CREATE INDEX vlaus on vicidial_live_agents (user);
+
 CREATE TABLE call_log_archive LIKE call_log; 
 
 CREATE TABLE vicidial_log_archive LIKE vicidial_log;
@@ -3360,4 +3363,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1397',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1398',db_schema_update_date=NOW(),reload_timestamp=NOW();

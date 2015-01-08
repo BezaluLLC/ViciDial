@@ -155,3 +155,8 @@ UPDATE system_settings SET db_schema_version='1396',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_users ADD ignore_group_on_search ENUM('1','0') default '0';
 
 UPDATE system_settings SET db_schema_version='1397',db_schema_update_date=NOW() where db_schema_version < 1397;
+
+CREATE INDEX vlali on vicidial_live_agents (lead_id);
+CREATE INDEX vlaus on vicidial_live_agents (user);
+
+UPDATE system_settings SET db_schema_version='1398',db_schema_update_date=NOW() where db_schema_version < 1398;

@@ -5,7 +5,7 @@
 # vicidial_log and/or vicidial_closer_log information by status, list_id and 
 # date range. downloads to a flat text file that is tab delimited
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -19,6 +19,7 @@
 # 140108-0710 - Added webserver and hostname to report logging
 # 141114-0039 - Finalized adding QXZ translation to all admin files
 # 141230-0951 - Added code for on-the-fly language translations display
+# 150108-1705 - Fixed issue with inbound and no outbound calls export
 #
 
 $startMS = microtime();
@@ -423,7 +424,7 @@ if ($run_export > 0)
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$outbound_to_print = mysqli_num_rows($rslt);
-		if ($outbound_to_print < 1)
+		if ( ($outbound_to_print < 1) and ($RUNgroup < 1) )
 			{
 			echo _QXZ("There are no outbound calls during this time period for these parameters")."\n";
 			exit;

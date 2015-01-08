@@ -26,7 +26,7 @@ For our clients that believe preview dialing, or click-to-dial list dialing, is 
 	UPDATE vicidial_campaigns SET auto_dial_level='1' where auto_dial_level NOT IN('0','1','1.0');
 	ALTER TABLE vicidial_campaigns MODIFY auto_dial_level ENUM('0','1','1.0') default '0' NOT NULL;
 	quit
-    <you can also optionally remove the adaptive eial methods from the web interface>
+    <you can also optionally remove the adaptive dial methods from the web interface>
 	find /srv/www/htdocs/vicidial/ -type f -exec sed -i 's/ADAPT_HARD_LIMIT/MANUAL/g' {} +
 	find /srv/www/htdocs/vicidial/ -type f -exec sed -i 's/ADAPT_AVERAGE/MANUAL/g' {} +
 	find /srv/www/htdocs/vicidial/ -type f -exec sed -i 's/ADAPT_TAPERED/MANUAL/g' {} +
