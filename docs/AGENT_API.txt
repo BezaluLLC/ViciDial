@@ -649,7 +649,7 @@ VALUES:
  consultative -
   OPTIONAL, when you want to do a consultative transfer with your customer and another ViciDial agent, 'YES' and 'NO' are valid options, you can only use this with DIAL_WITH_CUSTOMER or PARK_CUSTOMER_DIAL
  dial_override - 
-  OPTIONAL, dials exactly the phone number specified with no campaign-defined phone code or prefix
+  OPTIONAL, dials exactly the phone number specified with no campaign-defined phone code or prefix, 'YES' and 'NO' are valid options
  group_alias - 
   OPTIONAL, defines what caller ID number to use when doing DIAL_WITH_CUSTOMER or PARK_CUSTOMER_DIAL
 

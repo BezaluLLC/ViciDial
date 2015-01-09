@@ -160,3 +160,7 @@ CREATE INDEX vlali on vicidial_live_agents (lead_id);
 CREATE INDEX vlaus on vicidial_live_agents (user);
 
 UPDATE system_settings SET db_schema_version='1398',db_schema_update_date=NOW() where db_schema_version < 1398;
+
+ALTER TABLE vicidial_live_agents MODIFY external_transferconf VARCHAR(120) default '';
+
+UPDATE system_settings SET db_schema_version='1399',db_schema_update_date=NOW() where db_schema_version < 1399;

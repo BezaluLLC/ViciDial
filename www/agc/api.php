@@ -1,7 +1,7 @@
 <?php
 # api.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed as an API(Application Programming Interface) to allow
 # other programs to interact with the VICIDIAL Agent screen
@@ -78,10 +78,11 @@
 # 140811-1243 - Changed to use QXZ function for echoing text
 # 141128-0847 - Code cleanup for QXZ functions
 # 141216-2118 - Added language settings lookups and user/pass variable standardization
+# 150108-1039 - Added transfer_conf-ID of epoch to help prevent double-execution of transfer commands
 #
 
-$version = '2.10-44';
-$build = '141216-2118';
+$version = '2.10-45';
+$build = '150108-1039';
 
 $startMS = microtime();
 
@@ -3383,7 +3384,7 @@ if ($function == 'transfer_conference')
 									}
 								}
 
-							$external_transferconf = "$value---$ingroup_choices---$phone_number---$consultative------$group_alias---$caller_id_number";
+							$external_transferconf = "$value---$ingroup_choices---$phone_number---$consultative------$group_alias---$caller_id_number---$epoch";
 							}
 						}
 					}
@@ -3425,7 +3426,7 @@ if ($function == 'transfer_conference')
 						}
 
 					$processed++;
-					$external_transferconf = "$value------$phone_number---NO---$dial_override---$group_alias---$caller_id_number";
+					$external_transferconf = "$value------$phone_number---NO---$dial_override---$group_alias---$caller_id_number---$epoch";
 					$SUCCESS++;
 					}
 
@@ -3433,7 +3434,7 @@ if ($function == 'transfer_conference')
 				if ( ($processed < 1) and ( ($value=='HANGUP_XFER') or ($value=='HANGUP_BOTH') ) )
 					{
 					$processed++;
-					$external_transferconf = "$value---------NO---";
+					$external_transferconf = "$value---------NO------------$epoch";
 					$SUCCESS++;
 					}
 
@@ -3441,7 +3442,7 @@ if ($function == 'transfer_conference')
 				if ( ($processed < 1) and ($value=='LEAVE_3WAY_CALL') )
 					{
 					$processed++;
-					$external_transferconf = "$value---------NO---";
+					$external_transferconf = "$value---------NO------------$epoch";
 					$SUCCESS++;
 					}
 

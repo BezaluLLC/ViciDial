@@ -465,10 +465,11 @@
 # 141227-1759 - Found missing phrase for QXZ
 # 141229-1429 - Changed single-quote QXZ arguments to double-quotes
 # 150101-1516 - Updated for 2015
+# 150108-1725 - Added more validation for API transfer commands
 #
 
-$version = '2.10-436c';
-$build = '150101-1516';
+$version = '2.10-437c';
+$build = '150108-1725';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -4051,6 +4052,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var show_previous_callback='<?php echo $show_previous_callback ?>';
 	var clear_script='<?php echo $clear_script ?>';
 	var parked_hangup='0';
+	var api_transferconf_ID = '';
     var DiaLControl_auto_HTML = "<img src=\"./images/<?php echo _QXZ("vdc_LB_pause_OFF.gif") ?>\" border=\"0\" alt=\" Pause \" /><a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_resume.gif") ?>\" border=\"0\" alt=\"Resume\" /></a>";
     var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_pause.gif") ?>\" border=\"0\" alt=\" Pause \" /></a><img src=\"./images/<?php echo _QXZ("vdc_LB_resume_OFF.gif") ?>\" border=\"0\" alt=\"Resume\" />";
     var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_pause_OFF.gif") ?>\" border=\"0\" alt=\" Pause \" /><img src=\"./images/<?php echo _QXZ("vdc_LB_resume_OFF.gif") ?>\" border=\"0\" alt=\"Resume\" />";
@@ -4968,58 +4970,67 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							}
 						if (api_transferconf_function.length > 0)
 							{
-							if (api_transferconf_function == 'HANGUP_XFER')
-								{xfercall_send_hangup();}
-							if (api_transferconf_function == 'HANGUP_BOTH')
-								{bothcall_send_hangup();}
-							if (api_transferconf_function == 'LEAVE_VM')
-								{mainxfer_send_redirect('XfeRVMAIL',lastcustchannel,lastcustserverip);}
-							if (api_transferconf_function == 'LEAVE_3WAY_CALL')
-								{leave_3way_call('FIRST');}
-							if (api_transferconf_function == 'BLIND_TRANSFER')
+							if (api_transferconf_ID == api_transferconf_values_array[7])
 								{
-								document.vicidial_form.xfernumber.value = api_transferconf_number;
-								mainxfer_send_redirect('XfeRBLIND',lastcustchannel,lastcustserverip);
+							//	alert("TRANSFERCONF COMMAND ALREADY RECEIVED: " + api_transferconf_function + "|" + api_transferconf_ID + "|" + api_transferconf_values_array[7] + "|" + external_transferconf_count);
+								Clear_API_Field('external_transferconf');
 								}
-							if (external_transferconf_count < 1)
+							else
 								{
-								if (api_transferconf_function == 'LOCAL_CLOSER')
+								api_transferconf_ID = api_transferconf_values_array[7];
+								if (api_transferconf_function == 'HANGUP_XFER')
+									{xfercall_send_hangup();}
+								if (api_transferconf_function == 'HANGUP_BOTH')
+									{bothcall_send_hangup();}
+								if (api_transferconf_function == 'LEAVE_VM')
+									{mainxfer_send_redirect('XfeRVMAIL',lastcustchannel,lastcustserverip);}
+								if (api_transferconf_function == 'LEAVE_3WAY_CALL')
+									{leave_3way_call('FIRST');}
+								if (api_transferconf_function == 'BLIND_TRANSFER')
 									{
-									API_selected_xfergroup = api_transferconf_group;
 									document.vicidial_form.xfernumber.value = api_transferconf_number;
-									mainxfer_send_redirect('XfeRLOCAL',lastcustchannel,lastcustserverip);
+									mainxfer_send_redirect('XfeRBLIND',lastcustchannel,lastcustserverip);
 									}
-								if (api_transferconf_function == 'DIAL_WITH_CUSTOMER')
+								if (external_transferconf_count < 1)
 									{
-									if (api_transferconf_consultative=='YES')
-										{document.vicidial_form.consultativexfer.checked=true;}
-									if (api_transferconf_consultative=='NO')
-										{document.vicidial_form.consultativexfer.checked=false;}
-									if (api_transferconf_override=='YES')
-										{document.vicidial_form.xferoverride.checked=true;}
-									API_selected_xfergroup = api_transferconf_group;
-									document.vicidial_form.xfernumber.value = api_transferconf_number;
-									active_group_alias = api_transferconf_group_alias;
-									cid_choice = api_transferconf_cid_number;
-									SendManualDial('YES');
+									if (api_transferconf_function == 'LOCAL_CLOSER')
+										{
+										API_selected_xfergroup = api_transferconf_group;
+										document.vicidial_form.xfernumber.value = api_transferconf_number;
+										mainxfer_send_redirect('XfeRLOCAL',lastcustchannel,lastcustserverip);
+										}
+									if (api_transferconf_function == 'DIAL_WITH_CUSTOMER')
+										{
+										if (api_transferconf_consultative=='YES')
+											{document.vicidial_form.consultativexfer.checked=true;}
+										if (api_transferconf_consultative=='NO')
+											{document.vicidial_form.consultativexfer.checked=false;}
+										if (api_transferconf_override=='YES')
+											{document.vicidial_form.xferoverride.checked=true;}
+										API_selected_xfergroup = api_transferconf_group;
+										document.vicidial_form.xfernumber.value = api_transferconf_number;
+										active_group_alias = api_transferconf_group_alias;
+										cid_choice = api_transferconf_cid_number;
+										SendManualDial('YES');
+										}
+									if (api_transferconf_function == 'PARK_CUSTOMER_DIAL')
+										{
+										if (api_transferconf_consultative=='YES')
+											{document.vicidial_form.consultativexfer.checked=true;}
+										if (api_transferconf_consultative=='NO')
+											{document.vicidial_form.consultativexfer.checked=false;}
+										if (api_transferconf_override=='YES')
+											{document.vicidial_form.xferoverride.checked=true;}
+										API_selected_xfergroup = api_transferconf_group;
+										document.vicidial_form.xfernumber.value = api_transferconf_number;
+										active_group_alias = api_transferconf_group_alias;
+										cid_choice = api_transferconf_cid_number;
+										xfer_park_dial();
+										}
+									external_transferconf_count=3;
 									}
-								if (api_transferconf_function == 'PARK_CUSTOMER_DIAL')
-									{
-									if (api_transferconf_consultative=='YES')
-										{document.vicidial_form.consultativexfer.checked=true;}
-									if (api_transferconf_consultative=='NO')
-										{document.vicidial_form.consultativexfer.checked=false;}
-									if (api_transferconf_override=='YES')
-										{document.vicidial_form.xferoverride.checked=true;}
-									API_selected_xfergroup = api_transferconf_group;
-									document.vicidial_form.xfernumber.value = api_transferconf_number;
-									active_group_alias = api_transferconf_group_alias;
-									cid_choice = api_transferconf_cid_number;
-									xfer_park_dial();
-									}
-								external_transferconf_count=3;
+								Clear_API_Field('external_transferconf');
 								}
-							Clear_API_Field('external_transferconf');
 							}
 						if (api_parkcustomer == 'PARK_CUSTOMER')
 							{mainxfer_send_redirect('ParK',lastcustchannel,lastcustserverip);}

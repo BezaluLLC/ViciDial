@@ -20,7 +20,7 @@
 # Based on perl scripts in ViciDial from Matt Florell and post: 
 # http://www.vicidial.org/VICIDIALforum/viewtopic.php?p=22506&sid=ca5347cffa6f6382f56ce3db9fb3d068#22506
 #
-# Copyright (C) 2014  I. Taushanov, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  I. Taushanov, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 90615-1701 - First version
@@ -38,6 +38,7 @@
 # 120831-1536 - Added rolling of vicidial_dial_log entries
 # 140107-1508 - Added rolling of vicidial_api_log entries
 # 140305-0955 - Changed to use --days (--months is approximation[bug fix]), changed default from 2 months to 2 years
+# 150107-2308 - Added vicidial_api_log to daily process
 #
 
 $CALC_TEST=0;
@@ -230,10 +231,10 @@ if (!$T)
 	{
 	if ($daily > 0)
 		{
-		# The --daily option was added because these tables(call_log, vicidial_dial_log and  
-		# vicidial_log_extended) are not used for any processes or reports past
-		# 24 hours, and on systems dialing 500,000 calls per day or more, this
-		# can lead to system delay issues even if the 1-month archive process is
+		# The --daily option was added because these tables(call_log, vicidial_dial_log,  
+		# vicidial_log_extended and vicidial_api_log) are not used for any processes or 
+		# reports past 24 hours, and on systems dialing 500,000 calls per day or more, 
+		# this can lead to system delay issues even if the 1-month archive process is
 		# run every weekend. This --daily option will keep only the last 
 		# 24-hours and can improve DB performance greatly
 
@@ -316,7 +317,7 @@ if (!$T)
 		
 		$rv = $sthA->err();
 		if (!$rv) 
-			{	
+			{
 			$stmtA = "DELETE FROM vicidial_log_extended WHERE call_date < '$del_time';";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -363,7 +364,7 @@ if (!$T)
 		
 		$rv = $sthA->err();
 		if (!$rv) 
-			{	
+			{
 			$stmtA = "DELETE FROM vicidial_dial_log WHERE call_date < '$del_time';";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -377,6 +378,57 @@ if (!$T)
 		##### END vicidial_dial_log DAILY processing #####
 
 
+		##### BEGIN vicidial_api_log DAILY processing #####
+		$stmtA = "SELECT count(*) from vicidial_api_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$vicidial_api_log_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		$stmtA = "SELECT count(*) from vicidial_api_log_archive;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$vicidial_api_log_archive_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		if (!$Q) {print "\nProcessing vicidial_api_log table...  ($vicidial_api_log_count|$vicidial_api_log_archive_count)\n";}
+		$stmtA = "INSERT IGNORE INTO vicidial_api_log_archive SELECT * from vicidial_api_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		
+		$sthArows = $sthA->rows;
+		if (!$Q) {print "$sthArows rows inserted into vicidial_api_log_archive table \n";}
+		
+		$rv = $sthA->err();
+		if (!$rv) 
+			{
+			$stmtA = "DELETE FROM vicidial_api_log WHERE api_date < '$del_time';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows = $sthA->rows;
+			if (!$Q) {print "$sthArows rows deleted from vicidial_api_log table \n";}
+
+			$stmtA = "optimize table vicidial_api_log;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+
+			$stmtA = "optimize table vicidial_api_log_archive;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			}
+		##### END vicidial_api_log DAILY processing #####
+
+
 		### calculate time to run script ###
 		$secY = time();
 		$secZ = ($secY - $secX);
@@ -385,6 +437,7 @@ if (!$T)
 
 		exit;
 		}
+	########## END of --daily flag processing ##########
 
 
 
@@ -754,7 +807,7 @@ if (!$T)
 	
 	$rv = $sthA->err();
 	if (!$rv) 
-		{	
+		{
 		$stmtA = "DELETE FROM vicidial_api_log WHERE api_date < '$del_time';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;

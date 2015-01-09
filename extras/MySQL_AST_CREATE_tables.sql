@@ -401,7 +401,7 @@ manager_ingroup_set ENUM('Y','N','SET') default 'N',
 ra_user VARCHAR(20) default '',
 ra_extension VARCHAR(100) default '',
 external_dtmf VARCHAR(100) default '',
-external_transferconf VARCHAR(100) default '',
+external_transferconf VARCHAR(120) default '',
 external_park VARCHAR(40) default '',
 external_timer_action_destination VARCHAR(100) default '',
 on_hook_agent ENUM('Y','N') default 'N',
@@ -3363,4 +3363,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1398',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1399',db_schema_update_date=NOW(),reload_timestamp=NOW();
