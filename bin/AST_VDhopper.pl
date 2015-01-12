@@ -2383,8 +2383,7 @@ foreach(@campaign_id)
 		$sthY->finish();
 		# Protect against campaigns with no list by making it an impossible list
 		if (length($list_id_sql[$i]) < 1) {$list_id_sql[$i]="list_id='999876543210'";}
-		if (length($del_list_id_sql[$i]) < 1) {$del_list_id_sql[$i]="list_id='999876543211'";}
-	
+
 		if ($DB) {print "     campaign lists count ACTIVE:$act_rec_countLISTS | TOTAL:$rec_countLISTS \n";}
 		if ($DBX) {print "     LIST ID SQL $list_id_sql[$i]";}
 		if ($DBX) {print "     |$stmtA|\n";}
