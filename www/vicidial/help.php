@@ -33,6 +33,7 @@
 # 141212-0945 - Added user_choose_language, selected_language and language_method
 # 141230-1503 - Added code for on-the-fly language translations display
 # 150107-1954 - Added users-ignore_group_on_search
+# 150111-1542 - Added lists-local_call_time and manual_dial_search_filter
 #
 
 require("dbconnect_mysqli.php");
@@ -1195,7 +1196,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="campaigns-local_call_time">
 <BR>
-<B><?php echo _QXZ("Local Call Time"); ?> -</B><?php echo _QXZ("This is where you set during which hours you would like to dial, as determined by the local time in the are in which you are calling. This is controlled by area code and is adjusted for Daylight Savings time if applicable. General Guidelines in the USA for Business to Business is 9am to 5pm and Business to Consumer calls is 9am to 9pm."); ?>
+<B><?php echo _QXZ("Local Call Time"); ?> -</B><?php echo _QXZ("This is where you set during which hours you would like to dial, as determined by the local time in the area in which you are calling. This is controlled by area code and is adjusted for Daylight Savings time if applicable. General Guidelines in the USA for Business to Business is 9am to 5pm and Business to Consumer calls is 9am to 9pm."); ?>
 
 <BR>
 <A NAME="campaigns-dial_prefix">
@@ -1553,6 +1554,11 @@ if ($SSoutbound_autodial_active > 0)
 <B><?php echo _QXZ("Manual Dial Search Checkbox"); ?> -</B><?php echo _QXZ("This allows you to define if you want the manual dial search checkbox to be selected by default or not. If an option with RESET is chosen, then the checkbox will be reset after every call. Default is SELECTED."); ?>
 
 <BR>
+<A NAME="campaigns-manual_dial_search_filter">
+<BR>
+<B><?php echo _QXZ("Manual Dial Search Filter"); ?> -</B><?php echo _QXZ("This allows the agent to search only within lists belonging to this campaign when the agent has the Manual Dial Search Checkbox selected in the manual dial screen. The options are, CAMPLISTS_ONLY - will check for the number within the active lists for the campaign, CAMPLISTS_ALL - will also include inactive lists in the search for the number, NONE - no filter on manual dial searching. Default is NONE. If a lead is not found, then a new lead will be added."); ?>
+
+<BR>
 <A NAME="campaigns-manual_preview_dial">
 <BR>
 <B><?php echo _QXZ("Manual Preview Dial"); ?> -</B><?php echo _QXZ("This allows the agent in manual dial mode to see the lead information when they click Dial Next Number before they actively dial the phone call. There is an optional link to SKIP the lead and move on to the next one if selected. Default is PREVIEW_AND_SKIP."); ?>
@@ -1857,6 +1863,11 @@ if ($SSqc_features_active > 0)
 <A NAME="lists-expiration_date">
 <BR>
 <B><?php echo _QXZ("Expiration Date"); ?> -</B><?php echo _QXZ("This option allows you to set the date after which leads in this list will not be allowed to be auto-dialed or manual-list-dialed by the system. Default is 2099-12-31."); ?>
+
+<BR>
+<A NAME="lists-local_call_time">
+<BR>
+<B><?php echo _QXZ("Local Call Time"); ?> -</B><?php echo _QXZ("This is a setting for this list only, where you set during which hours you would like to dial leads within this specific list, as determined by the local time in the area in which you are calling. This is controlled by the time zone, as defined by that list setting, and is adjusted for Daylight Savings time if applicable. However, state rules are based on the state field for the lead and not only the time zone that is set. This call time setting is applied after the campaign local call time has been applied to the list and will NOT override the campaign settings. This setting will only narrow down call times in relation to the campaign local call time setting. It will NOT allow calling outside the hours set by the campaign local call time setting. This is useful if you have lists that need different call times within the same campaign. For example calling business numbers between 9am to 5pm and consumer phones between 9am to 9pm within the same campaign. General Guidelines in the USA for Business to Business is 9am to 5pm and Business to Consumer calls is 9am to 9pm. Default is campaign."); ?>
 
 <BR>
 <A NAME="lists-audit_comments">

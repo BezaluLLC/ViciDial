@@ -25,6 +25,7 @@
 # 141128-0846 - Code cleanup for QXZ functions
 # 141216-1902 - Added MYSQL language method
 # 150108-1647 - removed phones count as part of validation, can cause problems when there are many phones
+# 150111-1541 - Added lists option: local call time(Issue #812)
 #
 
 # $mysql_queries = 20
@@ -1659,9 +1660,8 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 
 ##### DETERMINE IF LEAD IS DIALABLE #####
 function dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state)
-	{
+	{				
 	require("dbconnect_mysqli.php");
-
 	$dialable=0;
 
 	$pzone=3600 * $gmt_offset;
@@ -1672,8 +1672,9 @@ function dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state)
 	$GMT_gmt = "$tz";
 	$GMT_day = "$pday";
 	$GMT_hour = ($phour + $pmin);
-
-	$stmt="SELECT call_time_id,call_time_name,call_time_comments,ct_default_start,ct_default_stop,ct_sunday_start,ct_sunday_stop,ct_monday_start,ct_monday_stop,ct_tuesday_start,ct_tuesday_stop,ct_wednesday_start,ct_wednesday_stop,ct_thursday_start,ct_thursday_stop,ct_friday_start,ct_friday_stop,ct_saturday_start,ct_saturday_stop,ct_state_call_times FROM vicidial_call_times where call_time_id='$local_call_time';";
+	$YMD =  date("Y-m-d");	
+	
+	$stmt="SELECT call_time_id,call_time_name,call_time_comments,ct_default_start,ct_default_stop,ct_sunday_start,ct_sunday_stop,ct_monday_start,ct_monday_stop,ct_tuesday_start,ct_tuesday_stop,ct_wednesday_start,ct_wednesday_stop,ct_thursday_start,ct_thursday_stop,ct_friday_start,ct_friday_stop,ct_saturday_start,ct_saturday_stop,ct_state_call_times,ct_holidays FROM vicidial_call_times where call_time_id='$local_call_time';";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$rowx=mysqli_fetch_row($rslt);
@@ -1694,99 +1695,330 @@ function dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state)
 	$Gct_saturday_start =	$rowx[17];
 	$Gct_saturday_stop =	$rowx[18];
 	$Gct_state_call_times = $rowx[19];
+	$Gct_holidays =			$rowx[20];
 
-	if ($GMT_day==0)	#### Sunday local time
+	### BEGIN Check for outbound holiday ###
+	$holiday_id = '';
+	if (strlen($Gct_holidays)>2)
 		{
-		if (($Gct_sunday_start==0) and ($Gct_sunday_stop==0))
+		$Gct_holidaysSQL = preg_replace("/\|/", "','", "$Gct_holidays");
+		$Gct_holidaysSQL = "'".$Gct_holidaysSQL."'";
+		
+		$stmt = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop from vicidial_call_time_holidays where holiday_id IN($Gct_holidaysSQL) and holiday_status='ACTIVE' and holiday_date='$YMD' order by holiday_id;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$sthCrows=mysqli_num_rows($rslt);
+		if ($sthCrows > 0)
 			{
-			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-				{$dialable=1;}
-			}
-		else
-			{
-			if ( ($GMT_hour>=$Gct_sunday_start) and ($GMT_hour<$Gct_sunday_stop) )
-				{$dialable=1;}
+			$aryC=mysqli_fetch_row($rslt);
+			$holiday_id =				$aryC[0];
+			$holiday_date =				$aryC[1];
+			$holiday_name =				$aryC[2];
+			if ( ($Gct_default_start < $aryC[3]) && ($Gct_default_stop > 0) )		{$Gct_default_start = $aryC[3];}
+			if ( ($Gct_default_stop > $aryC[4]) && ($Gct_default_stop > 0) )		{$Gct_default_stop = $aryC[4];}
+			if ( ($Gct_sunday_start < $aryC[3]) && ($Gct_sunday_stop > 0) )			{$Gct_sunday_start = $aryC[3];}
+			if ( ($Gct_sunday_stop > $aryC[4]) && ($Gct_sunday_stop > 0) )			{$Gct_sunday_stop = $aryC[4];}
+			if ( ($Gct_monday_start < $aryC[3]) && ($Gct_monday_stop > 0) )			{$Gct_monday_start = $aryC[3];}
+			if ( ($Gct_monday_stop >	$aryC[4]) && ($Gct_monday_stop > 0) )		{$Gct_monday_stop =	$aryC[4];}
+			if ( ($Gct_tuesday_start < $aryC[3]) && ($Gct_tuesday_stop > 0) )		{$Gct_tuesday_start = $aryC[3];}
+			if ( ($Gct_tuesday_stop > $aryC[4]) && ($Gct_tuesday_stop > 0) )		{$Gct_tuesday_stop = $aryC[4];}
+			if ( ($Gct_wednesday_start < $aryC[3]) && ($Gct_wednesday_stop > 0) ) 	{$Gct_wednesday_start = $aryC[3];}
+			if ( ($Gct_wednesday_stop > $aryC[4]) && ($Gct_wednesday_stop > 0) )	{$Gct_wednesday_stop = $aryC[4];}
+			if ( ($Gct_thursday_start < $aryC[3]) && ($Gct_thursday_stop > 0) )		{$Gct_thursday_start = $aryC[3];}
+			if ( ($Gct_thursday_stop > $aryC[4]) && ($Gct_thursday_stop > 0) )		{$Gct_thursday_stop = $aryC[4];}
+			if ( ($Gct_friday_start < $aryC[3]) && ($Gct_friday_stop > 0) )			{$Gct_friday_start = $aryC[3];}
+			if ( ($Gct_friday_stop > $aryC[4]) && ($Gct_friday_stop > 0) )			{$Gct_friday_stop = $aryC[4];}
+			if ( ($Gct_saturday_start < $aryC[3]) && ($Gct_saturday_stop > 0) )		{$Gct_saturday_start = $aryC[3];}
+			if ( ($Gct_saturday_stop > $aryC[4]) && ($Gct_saturday_stop > 0) )		{$Gct_saturday_stop = $aryC[4];}
+			if ($DB) {echo "CALL TIME HOLIDAY FOUND!   $local_call_time|$holiday_id|$holiday_date|$holiday_name|$Gct_default_start|$Gct_default_stop|\n";}
 			}
 		}
-	if ($GMT_day==1)	#### Monday local time
-		{
-		if (($Gct_monday_start==0) and ($Gct_monday_stop==0))
+	### END Check for outbound holiday ###
+		if( $state != '') 
 			{
-			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-				{$dialable=1;}
+			$ct_states = '';
+			$ct_state_gmt_SQL = '';
+			$ct_srs=0;
+			$b=0;
+			if (strlen($Gct_state_call_times)>2)
+				{
+				$state_rules = explode('|',$Gct_state_call_times);
+				$ct_srs = ((count($state_rules)) - 2);
+				}
+				while($ct_srs >= $b)
+					{
+					if (strlen($state_rules[$b])>1)
+						{
+						$stmt = "SELECT state_call_time_id,state_call_time_state,state_call_time_name,state_call_time_comments,sct_default_start,sct_default_stop,sct_sunday_start,sct_sunday_stop,sct_monday_start,sct_monday_stop,sct_tuesday_start,sct_tuesday_stop,sct_wednesday_start,sct_wednesday_stop,sct_thursday_start,sct_thursday_stop,sct_friday_start,sct_friday_stop,sct_saturday_start,sct_saturday_stop,ct_holidays from vicidial_state_call_times where state_call_time_id='$state_rules[$b]';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						if ($DB) {echo "$stmt\n";}
+						$sthCrows=mysqli_num_rows($rslt);
+						if ($sthCrows > 0)
+							{
+							$aryC=mysqli_fetch_row($rslt);
+							$Gstate_call_time_state =	$aryC[1];
+							if ($Gstate_call_time_state == $state) 
+								{
+								$Gstate_call_time_id =		$aryC[0];
+								$Gsct_default_start =		$aryC[4];
+								$Gsct_default_stop =		$aryC[5];
+								$Gsct_sunday_start =		$aryC[6];
+								$Gsct_sunday_stop =			$aryC[7];
+								$Gsct_monday_start =		$aryC[8];
+								$Gsct_monday_stop =			$aryC[9];
+								$Gsct_tuesday_start =		$aryC[10];
+								$Gsct_tuesday_stop =		$aryC[11];
+								$Gsct_wednesday_start =		$aryC[12];
+								$Gsct_wednesday_stop =		$aryC[13];
+								$Gsct_thursday_start =		$aryC[14];
+								$Gsct_thursday_stop =		$aryC[15];
+								$Gsct_friday_start =		$aryC[16];
+								$Gsct_friday_stop =			$aryC[17];
+								$Gsct_saturday_start =		$aryC[18];
+								$Gsct_saturday_stop =		$aryC[19];
+								$Sct_holidays =				$aryC[20];
+								$ct_states .="'$Gstate_call_time_state',";
+								
+								### BEGIN Check for outbound state holiday ###
+								$Sholiday_id = '';
+								if ((strlen($Sct_holidays)>2) or ((strlen($holiday_id)>2) and (strlen($Sholiday_id)<2))) 
+									{
+									# Apply state holiday
+									if (strlen($Sct_holidays)>2)
+										{								
+										$Sct_holidaysSQL = preg_replace("/\|/", "','", "$Sct_holidays");
+										$Sct_holidaysSQL = "'".$Sct_holidaysSQL."'";
+										$stmt = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop from vicidial_call_time_holidays where holiday_id IN($Sct_holidaysSQL) and holiday_status='ACTIVE' and holiday_date='$YMD' order by holiday_id;";
+										$holidaytype = "STATE CALL TIME HOLIDAY FOUND!   ";
+										}
+									# Apply call time wide holiday
+									elseif ((strlen($holiday_id)>2) and (strlen($Sholiday_id)<2))
+										{
+										$stmt = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop from vicidial_call_time_holidays where holiday_id='$holiday_id' and holiday_status='ACTIVE' and holiday_date='$YMD' order by holiday_id;";
+										$holidaytype = "NO STATE HOLIDAY APPLYING CALL TIME HOLIDAY!   ";
+										}				
+									$rslt=mysql_to_mysqli($stmt, $link);
+									if ($DB) {echo "$stmt\n";}
+									$sthCrows=mysqli_num_rows($rslt);
+									if ($sthCrows > 0)
+										{
+										$aryC=mysqli_fetch_row($rslt);
+										$Sholiday_id =				$aryC[0];
+										$Sholiday_date =			$aryC[1];
+										$Sholiday_name =			$aryC[2];
+										if ( ($Gsct_default_start < $aryC[3]) && ($Gsct_default_stop > 0) )		{$Gsct_default_start = $aryC[3];}
+										if ( ($Gsct_default_stop > $aryC[4]) && ($Gsct_default_stop > 0) )		{$Gsct_default_stop = $aryC[4];}
+										if ( ($Gsct_sunday_start < $aryC[3]) && ($Gsct_sunday_stop > 0) )		{$Gsct_sunday_start = $aryC[3];}
+										if ( ($Gsct_sunday_stop > $aryC[4]) && ($Gsct_sunday_stop > 0) )		{$Gsct_sunday_stop = $aryC[4];}
+										if ( ($Gsct_monday_start < $aryC[3]) && ($Gsct_monday_stop > 0) )		{$Gsct_monday_start = $aryC[3];}
+										if ( ($Gsct_monday_stop > $aryC[4]) && ($Gsct_monday_stop > 0) )		{$Gsct_monday_stop = $aryC[4];}
+										if ( ($Gsct_tuesday_start < $aryC[3]) && ($Gsct_tuesday_stop > 0) )		{$Gsct_tuesday_start = $aryC[3];}
+										if ( ($Gsct_tuesday_stop > $aryC[4]) && ($Gsct_tuesday_stop > 0) )		{$Gsct_tuesday_stop = $aryC[4];}
+										if ( ($Gsct_wednesday_start < $aryC[3]) && ($Gsct_wednesday_stop > 0) ) {$Gsct_wednesday_start = $aryC[3];}
+										if ( ($Gsct_wednesday_stop > $aryC[4]) && ($Gsct_wednesday_stop > 0) )	{$Gsct_wednesday_stop = $aryC[4];}
+										if ( ($Gsct_thursday_start < $aryC[3]) && ($Gsct_thursday_stop > 0) )	{$Gsct_thursday_start = $aryC[3];}
+										if ( ($Gsct_thursday_stop > $aryC[4]) && ($Gsct_thursday_stop > 0) )	{$Gsct_thursday_stop = $aryC[4];}
+										if ( ($Gsct_friday_start < $aryC[3]) && ($Gsct_friday_stop > 0) )		{$Gsct_friday_start = $aryC[3];}
+										if ( ($Gsct_friday_stop > $aryC[4]) && ($Gsct_friday_stop > 0) )		{$Gsct_friday_stop = $aryC[4];}
+										if ( ($Gsct_saturday_start < $aryC[3]) && ($Gsct_saturday_stop > 0) )	{$Gsct_saturday_start = $aryC[3];}
+										if ( ($Gsct_saturday_stop > $aryC[4]) && ($Gsct_saturday_stop > 0) )	{$Gsct_saturday_stop = $aryC[4];}
+										if ($DB) {echo "$holidaytype   |$Gstate_call_time_id|$Gstate_call_time_state|$Sholiday_id|$Sholiday_date|$Sholiday_name|$Gsct_default_start|$Gsct_default_stop|\n";}
+										}
+									}
+								}
+							}
+						}
+					$b++;
+					}
+				}
+				### END Check for outbound state holiday ###
+			if(strlen($Gstate_call_time_id)>2){
+				# STATE RULES
+				if ($GMT_day==0)	#### Sunday local time
+					{
+					if (($Gsct_sunday_start==0) && ($Gsct_sunday_stop==0))
+						{
+						if ( ($GMT_hour>=$Gsct_default_start) && ($GMT_hour<$Gsct_default_stop) )
+							{$dialable=1;}
+						}
+					else
+						{
+						if ( ($GMT_hour>=$Gsct_sunday_start) && ($GMT_hour<$Gsct_sunday_stop) )
+							{$dialable=1;}
+						}
+					}
+				if ($GMT_day==1)	#### Monday local time
+					{
+					if (($Gsct_monday_start==0) && ($Gsct_monday_stop==0))
+						{
+						if ( ($GMT_hour>=$Gsct_default_start) && ($GMT_hour<$Gsct_default_stop) )
+							{$dialable=1;}
+						}
+					else
+						{
+						if ( ($GMT_hour>=$Gsct_monday_start) && ($GMT_hour<$Gsct_monday_stop) )
+							{$dialable=1;}
+						}
+					}
+				if ($GMT_day==2)	#### Tuesday local time
+					{
+					if (($Gsct_tuesday_start==0) && ($Gsct_tuesday_stop==0))
+						{
+						if ( ($GMT_hour>=$Gsct_default_start) && ($GMT_hour<$Gsct_default_stop) )
+							{$dialable=1;}
+						}
+					else
+						{
+						if ( ($GMT_hour>=$Gsct_tuesday_start) && ($GMT_hour<$Gsct_tuesday_stop) )
+							{$dialable=1;}
+						}
+					}
+				if ($GMT_day==3)	#### Wednesday local time
+					{
+					if (($Gsct_wednesday_start==0) && ($Gsct_wednesday_stop==0))
+						{
+						if ( ($GMT_hour>=$Gsct_default_start) && ($GMT_hour<$Gsct_default_stop) )
+							{$dialable=1;}
+						}
+					else
+						{
+						if ( ($GMT_hour>=$Gsct_wednesday_start) && ($GMT_hour<$Gsct_wednesday_stop) )
+							{$dialable=1;}
+						}
+					}
+				if ($GMT_day==4)	#### Thursday local time
+					{
+					if (($Gsct_thursday_start==0) && ($Gsct_thursday_stop==0))
+						{
+						if ( ($GMT_hour>=$Gsct_default_start) && ($GMT_hour<$Gsct_default_stop) )
+							{$dialable=1;}
+						}
+					else
+						{
+						if ( ($GMT_hour>=$Gsct_thursday_start) && ($GMT_hour<$Gsct_thursday_stop) )
+							{$dialable=1;}
+						}
+					}
+				if ($GMT_day==5)	#### Friday local time
+					{
+					if (($Gsct_friday_start==0) && ($Gsct_friday_stop==0))
+						{
+						if ( ($GMT_hour>=$Gsct_default_start) && ($GMT_hour<$Gsct_default_stop) )
+							{$dialable=1;}
+						}
+					else
+						{
+						if ( ($GMT_hour>=$Gsct_friday_start) && ($GMT_hour<$Gsct_friday_stop) )
+							{$dialable=1;}
+						}
+					}
+				if ($GMT_day==6)	#### Saturday local time
+					{
+					if (($Gsct_saturday_start==0) && ($Gsct_saturday_stop==0))
+						{
+						if ( ($GMT_hour>=$Gsct_default_start) && ($GMT_hour<$Gsct_default_stop) )
+							{$dialable=1;}
+						}
+					else
+						{
+						if ( ($GMT_hour>=$Gsct_saturday_start) && ($GMT_hour<$Gsct_saturday_stop) )
+							{$dialable=1;}
+						}
+					}
+		} else {		
+				#NO STATE RULES
+				if ($GMT_day==0)	#### Sunday local time
+					{
+					if (($Gct_sunday_start==0) and ($Gct_sunday_stop==0))
+						{
+						if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+							{$dialable=1;}
+						}
+					else
+						{
+						if ( ($GMT_hour>=$Gct_sunday_start) and ($GMT_hour<$Gct_sunday_stop) )
+							{$dialable=1;}
+						}
+					}
+				if ($GMT_day==1)	#### Monday local time
+					{
+					if (($Gct_monday_start==0) and ($Gct_monday_stop==0))
+						{
+						if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+							{$dialable=1;}
+						}
+					else
+						{
+						if ( ($GMT_hour>=$Gct_monday_start) and ($GMT_hour<$Gct_monday_stop) )
+							{$dialable=1;}
+						}
+					}
+				if ($GMT_day==2)	#### Tuesday local time
+					{
+					if (($Gct_tuesday_start==0) and ($Gct_tuesday_stop==0))
+						{
+						if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+							{$dialable=1;}
+						}
+					else
+						{
+						if ( ($GMT_hour>=$Gct_tuesday_start) and ($GMT_hour<$Gct_tuesday_stop) )
+							{$dialable=1;}
+						}
+					}
+				if ($GMT_day==3)	#### Wednesday local time
+					{
+					if (($Gct_wednesday_start==0) and ($Gct_wednesday_stop==0))
+						{
+						if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+							{$dialable=1;}
+						}
+					else
+						{
+						if ( ($GMT_hour>=$Gct_wednesday_start) and ($GMT_hour<$Gct_wednesday_stop) )
+							{$dialable=1;}
+						}
+					}
+				if ($GMT_day==4)	#### Thursday local time
+					{
+					if (($Gct_thursday_start==0) and ($Gct_thursday_stop==0))
+						{
+						if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+							{$dialable=1;}
+						}
+					else
+						{
+						if ( ($GMT_hour>=$Gct_thursday_start) and ($GMT_hour<$Gct_thursday_stop) )
+							{$dialable=1;}
+						}
+					}
+				if ($GMT_day==5)	#### Friday local time
+					{
+					if (($Gct_friday_start==0) and ($Gct_friday_stop==0))
+						{
+						if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+							{$dialable=1;}
+						}
+					else
+						{
+						if ( ($GMT_hour>=$Gct_friday_start) and ($GMT_hour<$Gct_friday_stop) )
+							{$dialable=1;}
+						}
+					}
+				if ($GMT_day==6)	#### Saturday local time
+					{
+					if (($Gct_saturday_start==0) and ($Gct_saturday_stop==0))
+						{
+						if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
+							{$dialable=1;}
+						}
+					else
+						{
+						if ( ($GMT_hour>=$Gct_saturday_start) and ($GMT_hour<$Gct_saturday_stop) )
+							{$dialable=1;}
+						}
+					}
 			}
-		else
-			{
-			if ( ($GMT_hour>=$Gct_monday_start) and ($GMT_hour<$Gct_monday_stop) )
-				{$dialable=1;}
-			}
-		}
-	if ($GMT_day==2)	#### Tuesday local time
-		{
-		if (($Gct_tuesday_start==0) and ($Gct_tuesday_stop==0))
-			{
-			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-				{$dialable=1;}
-			}
-		else
-			{
-			if ( ($GMT_hour>=$Gct_tuesday_start) and ($GMT_hour<$Gct_tuesday_stop) )
-				{$dialable=1;}
-			}
-		}
-	if ($GMT_day==3)	#### Wednesday local time
-		{
-		if (($Gct_wednesday_start==0) and ($Gct_wednesday_stop==0))
-			{
-			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-				{$dialable=1;}
-			}
-		else
-			{
-			if ( ($GMT_hour>=$Gct_wednesday_start) and ($GMT_hour<$Gct_wednesday_stop) )
-				{$dialable=1;}
-			}
-		}
-	if ($GMT_day==4)	#### Thursday local time
-		{
-		if (($Gct_thursday_start==0) and ($Gct_thursday_stop==0))
-			{
-			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-				{$dialable=1;}
-			}
-		else
-			{
-			if ( ($GMT_hour>=$Gct_thursday_start) and ($GMT_hour<$Gct_thursday_stop) )
-				{$dialable=1;}
-			}
-		}
-	if ($GMT_day==5)	#### Friday local time
-		{
-		if (($Gct_friday_start==0) and ($Gct_friday_stop==0))
-			{
-			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-				{$dialable=1;}
-			}
-		else
-			{
-			if ( ($GMT_hour>=$Gct_friday_start) and ($GMT_hour<$Gct_friday_stop) )
-				{$dialable=1;}
-			}
-		}
-	if ($GMT_day==6)	#### Saturday local time
-		{
-		if (($Gct_saturday_start==0) and ($Gct_saturday_stop==0))
-			{
-			if ( ($GMT_hour>=$Gct_default_start) and ($GMT_hour<$Gct_default_stop) )
-				{$dialable=1;}
-			}
-		else
-			{
-			if ( ($GMT_hour>=$Gct_saturday_start) and ($GMT_hour<$Gct_saturday_stop) )
-				{$dialable=1;}
-			}
-		}
-
 	return $dialable;
 	}
 

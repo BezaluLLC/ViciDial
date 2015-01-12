@@ -1,14 +1,16 @@
 #!/usr/bin/perl
 #
-# AST_VDhopper.pl version 2.8
+# AST_VDhopper.pl version 2.10
 #
 # DESCRIPTION:
-# Updates the VICIDIAL leads hopper for the streamlined 
-# approach of allocating leads to dialers. 
+# Updates the VICIDIAL leads hopper for the streamlined approach of allocating 
+# leads to dialers. Also allows for larger lists and faster dialing.
 #
 # SUMMARY:
 # For VICIDIAL outbound dialing, this program must be in the crontab on only one
-# server, running every minute during operating hours
+# server, running every minute during operating hours. For manual dialing
+# campaigns, there is a campaign option for no-hopper-dialing that can operate
+# without this script running, but the list size will be limited under that.
 # 
 # hopper sources:
 #  - A = Auto-alt-dial
@@ -19,7 +21,7 @@
 #  - R = Recycled leads
 #  - S = Standard hopper load
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 50810-1613 - Added database server variable definitions lookup
@@ -78,10 +80,11 @@
 #               Changed and added several CLI flags, including -t to --test, added --version, --count-only
 #               Added code to restrict all functions if campaign flag is used
 # 140612-2124 - Fixed date issue with wrong variable #772
+# 150111-1546 - Added lists option: local call time and enabled whole-campaign outbound call time holidays, Issue #812
 #
 
 # constants
-$build = '140612-2124';
+$build = '150111-1546';
 $DB=0;  # Debug flag, set to 0 for no debug messages. Can be overriden with CLI --debug flag
 $US='__';
 $MT[0]='';
@@ -323,7 +326,6 @@ if ($sthArows > 0)
 	if (length($DBSERVER_GMT)>0)	{$SERVER_GMT = $DBSERVER_GMT;}
 	}
 $sthA->finish();
-
 
 
 $secX = time();
@@ -668,7 +670,7 @@ if ($hopper_dnc_count > 0)
 					}
 				if ($VD_alt_dnc_count < 1)
 					{
-					$stmtA = "UPDATE vicidial_hopper SET status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ALT',user='',priority='25' where hopper_id='$AAD_hopper_id[$aad]';";
+					$stmtA = "UPDATE $vicidial_hopper SET status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ALT',user='',priority='25' where hopper_id='$AAD_hopper_id[$aad]';";
 					$affected_rows = $dbhA->do($stmtA);
 					if ($DB) {$event_string = "--    VDH record updated: |$affected_rows|   |$stmtA|";   &event_logger;}
 					}
@@ -748,7 +750,7 @@ if ($hopper_dnc_count > 0)
 					}
 				if ($VD_alt_dnc_count < 1)
 					{
-					$stmtA = "UPDATE vicidial_hopper SET status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ADDR3',user='',priority='25' where hopper_id='$AAD_hopper_id[$aad]';";
+					$stmtA = "UPDATE $vicidial_hopper SET status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ADDR3',user='',priority='25' where hopper_id='$AAD_hopper_id[$aad]';";
 					$affected_rows = $dbhA->do($stmtA);
 					if ($DB) {$event_string = "--    VDH record updated: |$affected_rows|   |$stmtA|";   &event_logger;}
 					}
@@ -797,7 +799,7 @@ if ($hopper_dnc_count > 0)
 
 			if ($alt_dial_phones_count <= $Xlast) 
 				{
-				$stmtA = "DELETE FROM vicidial_hopper where hopper_id='$AAD_hopper_id[$aad]';";
+				$stmtA = "DELETE FROM $vicidial_hopper where hopper_id='$AAD_hopper_id[$aad]';";
 				$affected_rows = $dbhA->do($stmtA);
 				if ($DB) {$event_string = "--    VDH record DNC deleted: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &event_logger;}
 				}
@@ -872,7 +874,7 @@ if ($hopper_dnc_count > 0)
 						{
 						if ($alt_dial_phones_count eq '$Xlast') 
 							{$Xlast = 'LAST';}
-						$stmtA = "UPDATE vicidial_hopper SET status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='25' where hopper_id='$AAD_hopper_id[$aad]';";
+						$stmtA = "UPDATE $vicidial_hopper SET status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='25' where hopper_id='$AAD_hopper_id[$aad]';";
 						$affected_rows = $dbhA->do($stmtA);
 						if ($DB) {$event_string = "--    VDH record updated: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &event_logger;}
 						$Xlast=9999999999;
@@ -881,7 +883,7 @@ if ($hopper_dnc_count > 0)
 						{
 						if ($alt_dial_phones_count eq '$Xlast') 
 							{$Xlast = 'LAST';}
-						$stmtA = "UPDATE vicidial_hopper SET status='DNC',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15' where hopper_id='$AAD_hopper_id[$aad]';";
+						$stmtA = "UPDATE $vicidial_hopper SET status='DNC',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15' where hopper_id='$AAD_hopper_id[$aad]';";
 						$affected_rows = $dbhA->do($stmtA);
 						if ($DB) {$event_string = "--    VDH record DNC updated: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &event_logger;}
 						$Xlast=9999999999;
@@ -892,7 +894,7 @@ if ($hopper_dnc_count > 0)
 			}
 		if ($VD_alt_dial =~ /XLAST/)
 			{
-			$stmtA = "DELETE FROM vicidial_hopper where hopper_id='$AAD_hopper_id[$aad]';";
+			$stmtA = "DELETE FROM $vicidial_hopper where hopper_id='$AAD_hopper_id[$aad]';";
 			$affected_rows = $dbhA->do($stmtA);
 			if ($DB) {$event_string = "--    VDH record DNC deleted: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &event_logger;}
 			}
@@ -1017,7 +1019,7 @@ while ($sthArows > $rec_count)
 		{
 		if ($DB) { print "---------------Auto Trim Hopper Enabled For $campaign_id[$rec_count]---------------------\n"; }
 	
-		$stmtB = "SELECT COUNT(*) FROM vicidial_hopper WHERE campaign_id='$campaign_id[$rec_count]' and status IN ('READY') and source IN('S','N');";
+		$stmtB = "SELECT COUNT(*) FROM $vicidial_hopper WHERE campaign_id='$campaign_id[$rec_count]' and status IN ('READY') and source IN('S','N');";
 		$sthB = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 		$sthB->execute or die "executing: $stmtB ", $dbhA->errstr;
 		@aryLead = $sthB->fetchrow_array;
@@ -1033,7 +1035,7 @@ while ($sthArows > $rec_count)
 		if ( $camp_leads > ( 2 * $hopper_level[$rec_count] ) ) 
 			{
 			$num_to_delete = $camp_leads - 2 * $hopper_level[$rec_count];
-			$stmtB = "DELETE FROM vicidial_hopper WHERE campaign_id='$campaign_id[$rec_count]' AND source='S' AND status IN ('READY') LIMIT $num_to_delete";
+			$stmtB = "DELETE FROM $vicidial_hopper WHERE campaign_id='$campaign_id[$rec_count]' AND source='S' AND status IN ('READY') LIMIT $num_to_delete";
 			$affected_rows = $dbhA->do($stmtB);
 			
 			if ($DB) 
@@ -1169,6 +1171,8 @@ foreach(@campaign_id)
 		$sthA->finish();
 		### END - GATHER STATS FROM THE vicidial_campaign_stats TABLE ###
 
+		if ($DB) {print "\nStarting hopper run for $campaign_id[$i] campaign- GMT: $local_call_time[$i]   HOPPER: $hopper_level[$i]   ORDER: $lead_order[$i]|$lead_order_randomize[$i]|$lead_order_secondary[$i]\n";}
+
 		##### BEGIN calculate what gmt_offset_now values are within the allowed local_call_time setting ###
 		$g=0;
 		$p='13';
@@ -1190,8 +1194,8 @@ foreach(@campaign_id)
 			$g++;
 			}
 		if ($DBX) {print "\n";}
-
-		$stmtA = "SELECT call_time_id,call_time_name,call_time_comments,ct_default_start,ct_default_stop,ct_sunday_start,ct_sunday_stop,ct_monday_start,ct_monday_stop,ct_tuesday_start,ct_tuesday_stop,ct_wednesday_start,ct_wednesday_stop,ct_thursday_start,ct_thursday_stop,ct_friday_start,ct_friday_stop,ct_saturday_start,ct_saturday_stop,ct_state_call_times FROM vicidial_call_times where call_time_id='$local_call_time[$i]';";
+		
+		$stmtA = "SELECT call_time_id,call_time_name,call_time_comments,ct_default_start,ct_default_stop,ct_sunday_start,ct_sunday_stop,ct_monday_start,ct_monday_stop,ct_tuesday_start,ct_tuesday_stop,ct_wednesday_start,ct_wednesday_stop,ct_thursday_start,ct_thursday_stop,ct_friday_start,ct_friday_stop,ct_saturday_start,ct_saturday_stop,ct_state_call_times,ct_holidays FROM vicidial_call_times where call_time_id='$local_call_time[$i]';";
 			if ($DBX) {print "   |$stmtA|\n";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1217,10 +1221,51 @@ foreach(@campaign_id)
 			$Gct_saturday_start =	$aryA[17];
 			$Gct_saturday_stop =	$aryA[18];
 			$Gct_state_call_times = $aryA[19];
+			$Gct_holidays =			$aryA[20];
 			$rec_count++;
 			}
 		$sthA->finish();
+		### BEGIN Check for outbound call time holiday ###
+		$holiday_id = '';
+		if (length($Gct_holidays)>2)
+			{
+			$Gct_holidaysSQL = $Gct_holidays;
+			$Gct_holidaysSQL =~ s/^\||\|$//gi;
+			$Gct_holidaysSQL =~ s/\|/','/gi;
+			$Gct_holidaysSQL = "'$Gct_holidaysSQL'";
 
+			$stmtC = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop from vicidial_call_time_holidays where holiday_id IN($Gct_holidaysSQL) and holiday_status='ACTIVE' and holiday_date='$YMD' order by holiday_id;";
+			if ($DBX) {print "   |$stmtC|\n";}
+			$sthC = $dbhA->prepare($stmtC) or die "preparing: ",$dbhA->errstr;
+			$sthC->execute or die "executing: $stmtC ", $dbhA->errstr;
+			$sthCrows=$sthC->rows;
+			if ($sthCrows > 0)
+				{
+				@aryC = $sthC->fetchrow_array;
+				$holiday_id =				$aryC[0];
+				$holiday_date =				$aryC[1];
+				$holiday_name =				$aryC[2];
+				if ( ($Gct_default_start < $aryC[3]) && ($Gct_default_stop > 0) )		{$Gct_default_start = $aryC[3];}
+				if ( ($Gct_default_stop > $aryC[4]) && ($Gct_default_stop > 0) )		{$Gct_default_stop = $aryC[4];}
+				if ( ($Gct_sunday_start < $aryC[3]) && ($Gct_sunday_stop > 0) )			{$Gct_sunday_start = $aryC[3];}
+				if ( ($Gct_sunday_stop > $aryC[4]) && ($Gct_sunday_stop > 0) )			{$Gct_sunday_stop = $aryC[4];}
+				if ( ($Gct_monday_start < $aryC[3]) && ($Gct_monday_stop > 0) )			{$Gct_monday_start = $aryC[3];}
+				if ( ($Gct_monday_stop >	$aryC[4]) && ($Gct_monday_stop > 0) )		{$Gct_monday_stop =	$aryC[4];}
+				if ( ($Gct_tuesday_start < $aryC[3]) && ($Gct_tuesday_stop > 0) )		{$Gct_tuesday_start = $aryC[3];}
+				if ( ($Gct_tuesday_stop > $aryC[4]) && ($Gct_tuesday_stop > 0) )		{$Gct_tuesday_stop = $aryC[4];}
+				if ( ($Gct_wednesday_start < $aryC[3]) && ($Gct_wednesday_stop > 0) ) 	{$Gct_wednesday_start = $aryC[3];}
+				if ( ($Gct_wednesday_stop > $aryC[4]) && ($Gct_wednesday_stop > 0) )	{$Gct_wednesday_stop = $aryC[4];}
+				if ( ($Gct_thursday_start < $aryC[3]) && ($Gct_thursday_stop > 0) )		{$Gct_thursday_start = $aryC[3];}
+				if ( ($Gct_thursday_stop > $aryC[4]) && ($Gct_thursday_stop > 0) )		{$Gct_thursday_stop = $aryC[4];}
+				if ( ($Gct_friday_start < $aryC[3]) && ($Gct_friday_stop > 0) )			{$Gct_friday_start = $aryC[3];}
+				if ( ($Gct_friday_stop > $aryC[4]) && ($Gct_friday_stop > 0) )			{$Gct_friday_stop = $aryC[4];}
+				if ( ($Gct_saturday_start < $aryC[3]) && ($Gct_saturday_stop > 0) )		{$Gct_saturday_start = $aryC[3];}
+				if ( ($Gct_saturday_stop > $aryC[4]) && ($Gct_saturday_stop > 0) )		{$Gct_saturday_stop = $aryC[4];}
+				if ($DB) {print "     CALL TIME HOLIDAY FOUND!   $local_call_time[$i]|$holiday_id|$holiday_date|$holiday_name|$Gct_default_start|$Gct_default_stop|\n";}
+				}
+			$sthC->finish();
+			}
+		### END Check for outbound call time holiday ###
 
 		### BEGIN For lead recycling find out the no-call gap time and begin dial time for today
 		$lct_gap=0; # number of seconds from stopping of calling to starting of calling based on local call time
@@ -1365,6 +1410,7 @@ foreach(@campaign_id)
 			{
 			if (length($state_rules[$b])>1)
 				{
+				if ($DBX) {print "    Processing state rule $state_rules[$b]|";}
 				$stmtA = "SELECT state_call_time_id,state_call_time_state,state_call_time_name,state_call_time_comments,sct_default_start,sct_default_stop,sct_sunday_start,sct_sunday_stop,sct_monday_start,sct_monday_stop,sct_tuesday_start,sct_tuesday_stop,sct_wednesday_start,sct_wednesday_stop,sct_thursday_start,sct_thursday_stop,sct_friday_start,sct_friday_stop,sct_saturday_start,sct_saturday_stop,ct_holidays from vicidial_state_call_times where state_call_time_id='$state_rules[$b]';";
 				if ($DBX) {print "   |$stmtA|\n";}
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1391,21 +1437,31 @@ foreach(@campaign_id)
 					$Gsct_friday_stop =			$aryA[17];
 					$Gsct_saturday_start =		$aryA[18];
 					$Gsct_saturday_stop =		$aryA[19];
-					$Sct_holidays =				$aryA[20];
+					$Sct_holidays = 			$aryA[20];
 					$ct_states .="'$Gstate_call_time_state',";
 					}
 				$sthA->finish();
 
 				### BEGIN Check for outbound state holiday ###
-
-				if (length($Sct_holidays)>2)
+				$Sholiday_id = '';
+				if ( (length($Sct_holidays)>2) || ( (length($holiday_id)>2) && (length($Sholiday_id)<2) ) ) 
 					{
-					$Sct_holidaysSQL = $Sct_holidays;
-					$Sct_holidaysSQL =~ s/^\||\|$//gi;
-					$Sct_holidaysSQL =~ s/\|/','/gi;
-					$Sct_holidaysSQL = "'$Sct_holidaysSQL'";
-
-					$stmtA = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop from vicidial_call_time_holidays where holiday_id IN($Sct_holidaysSQL) and holiday_status='ACTIVE' and holiday_date='$YMD' order by holiday_id;";
+					#Apply state holiday
+					if (length($Sct_holidays)>2)
+						{
+						$Sct_holidaysSQL = $Sct_holidays;
+						$Sct_holidaysSQL =~ s/^\||\|$//gi;
+						$Sct_holidaysSQL =~ s/\|/','/gi;
+						$Sct_holidaysSQL = "'$Sct_holidaysSQL'";					
+						$stmtA = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop from vicidial_call_time_holidays where holiday_id IN($Sct_holidaysSQL) and holiday_status='ACTIVE' and holiday_date='$YMD' order by holiday_id;";
+						$holidaytype = "     STATE CALL TIME HOLIDAY FOUND!   ";
+						}
+					#Apply call time wide holiday
+					elsif ( (length($holiday_id)>2) && (length($Sholiday_id)<2) )
+						{
+						$stmtA = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop from vicidial_call_time_holidays where holiday_id='$holiday_id' and holiday_status='ACTIVE' and holiday_date='$YMD' order by holiday_id;";
+						$holidaytype = "     NO STATE HOLIDAY APPLYING CALL TIME HOLIDAY!   ";
+						}				
 					if ($DBX) {print "   |$stmtA|\n";}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1413,26 +1469,26 @@ foreach(@campaign_id)
 					if ($sthArows > 0)
 						{
 						@aryA = $sthA->fetchrow_array;
-						$holiday_id =				$aryA[0];
-						$holiday_date =				$aryA[1];
-						$holiday_name =				$aryA[2];
-						$Gsct_default_start =		$aryA[3];
-						$Gsct_default_stop =		$aryA[4];
-						$Gsct_sunday_start =		$aryA[3];
-						$Gsct_sunday_stop =			$aryA[4];
-						$Gsct_monday_start =		$aryA[3];
-						$Gsct_monday_stop =			$aryA[4];
-						$Gsct_tuesday_start =		$aryA[3];
-						$Gsct_tuesday_stop =		$aryA[4];
-						$Gsct_wednesday_start =		$aryA[3];
-						$Gsct_wednesday_stop =		$aryA[4];
-						$Gsct_thursday_start =		$aryA[3];
-						$Gsct_thursday_stop =		$aryA[4];
-						$Gsct_friday_start =		$aryA[3];
-						$Gsct_friday_stop =			$aryA[4];
-						$Gsct_saturday_start =		$aryA[3];
-						$Gsct_saturday_stop =		$aryA[4];
-						if ($DBX) {print "STATE CALL TIME HOLIDAY FOUND!   |$Gstate_call_time_id|$Gstate_call_time_state|$holiday_id|$holiday_date|$holiday_name|$Gsct_default_start|$Gsct_default_stop|\n";}
+						$Sholiday_id =				$aryA[0];
+						$Sholiday_date =			$aryA[1];
+						$Sholiday_name =			$aryA[2];
+						if ( ($Gsct_default_start < $aryA[3]) && ($Gsct_default_stop > 0) )		{$Gsct_default_start = $aryA[3];}
+						if ( ($Gsct_default_stop > $aryA[4]) && ($Gsct_default_stop > 0) )		{$Gsct_default_stop = $aryA[4];}
+						if ( ($Gsct_sunday_start < $aryA[3]) && ($Gsct_sunday_stop > 0) )		{$Gsct_sunday_start = $aryA[3];}
+						if ( ($Gsct_sunday_stop > $aryA[4]) && ($Gsct_sunday_stop > 0) )		{$Gsct_sunday_stop = $aryA[4];}
+						if ( ($Gsct_monday_start < $aryA[3]) && ($Gsct_monday_stop > 0) )		{$Gsct_monday_start = $aryA[3];}
+						if ( ($Gsct_monday_stop >	$aryA[4]) && ($Gsct_monday_stop > 0) )		{$Gsct_monday_stop =	$aryA[4];}
+						if ( ($Gsct_tuesday_start < $aryA[3]) && ($Gsct_tuesday_stop > 0) )		{$Gsct_tuesday_start = $aryA[3];}
+						if ( ($Gsct_tuesday_stop > $aryA[4]) && ($Gsct_tuesday_stop > 0) )		{$Gsct_tuesday_stop = $aryA[4];}
+						if ( ($Gsct_wednesday_start < $aryA[3]) && ($Gsct_wednesday_stop > 0) ) {$Gsct_wednesday_start = $aryA[3];}
+						if ( ($Gsct_wednesday_stop > $aryA[4]) && ($Gsct_wednesday_stop > 0) )	{$Gsct_wednesday_stop = $aryA[4];}
+						if ( ($Gsct_thursday_start < $aryA[3]) && ($Gsct_thursday_stop > 0) )	{$Gsct_thursday_start = $aryA[3];}
+						if ( ($Gsct_thursday_stop > $aryA[4]) && ($Gsct_thursday_stop > 0) )	{$Gsct_thursday_stop = $aryA[4];}
+						if ( ($Gsct_friday_start < $aryA[3]) && ($Gsct_friday_stop > 0) )		{$Gsct_friday_start = $aryA[3];}
+						if ( ($Gsct_friday_stop > $aryA[4]) && ($Gsct_friday_stop > 0) )		{$Gsct_friday_stop = $aryA[4];}
+						if ( ($Gsct_saturday_start < $aryA[3]) && ($Gsct_saturday_stop > 0) )	{$Gsct_saturday_start = $aryA[3];}
+						if ( ($Gsct_saturday_stop > $aryA[4]) && ($Gsct_saturday_stop > 0) )	{$Gsct_saturday_stop = $aryA[4];}
+						if ($DB) {print "$holidaytype|$Gstate_call_time_id|$Gstate_call_time_state|$Sholiday_id|$Sholiday_date|$Sholiday_name|$Gsct_default_start|$Gsct_default_stop|\n";}
 						}
 					$sthA->finish();
 					}
@@ -1809,21 +1865,8 @@ foreach(@campaign_id)
 			}
 		##### END lead recycling parsing and prep ###
 
-		if ($DB) {print "Starting hopper run for $campaign_id[$i] campaign- GMT: $local_call_time[$i]   HOPPER: $hopper_level[$i]   ORDER: $lead_order[$i]|$lead_order_randomize[$i]|$lead_order_secondary[$i]\n";}
 
-		### Delete the DONE leads if there are any
-		$stmtA = "DELETE from $vicidial_hopper where campaign_id='$campaign_id[$i]' and status IN('DONE');";
-		$affected_rows = $dbhA->do($stmtA);
-		if ($DB) {print "     hopper DONE cleared:  $affected_rows\n";}
-		if ($DBX) {print "     |$stmtA|\n";}
-
-		### Delete the leads that are out of GMT time range if there are any
-		$stmtA = "DELETE from $vicidial_hopper where campaign_id='$campaign_id[$i]' and ($del_gmtSQL[$i]);";
-		$affected_rows = $dbhA->do($stmtA);
-		if ($DB) {print "     hopper GMT BAD cleared:  $affected_rows\n";}
-		if ($DBX) {print "     |$stmtA|\n";}
-
-		### Find out how many leads are in the hopper from a specific campaign
+		### Find out how many leads are READY in the hopper from a specific campaign
 		$hopper_ready_count=0;
 		$stmtA = "SELECT count(*) from $vicidial_hopper where campaign_id='$campaign_id[$i]' and status='READY';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1839,31 +1882,550 @@ foreach(@campaign_id)
 		$sthA->finish();
 		$event_string = "|$campaign_id[$i]|$hopper_level[$i]|$hopper_ready_count|$local_call_time[$i]||";
 		&event_logger;
-
-		$active_listSQL = "and active='Y'";
-		if ( ($list_order_mix[$i] !~ /DISABLED/) && ($allow_inactive_list_leads > 0) )
-			{$active_listSQL = '';}
 	
+
 		### Get list of the lists in the campaign ###
-		$stmtA = "SELECT list_id FROM vicidial_lists where campaign_id='$campaign_id[$i]' and expiration_date >= \"$file_date\" $active_listSQL;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows=$sthA->rows;
+		$stmtY = "SELECT list_id,active FROM vicidial_lists where campaign_id='$campaign_id[$i]' and expiration_date >= \"$file_date\";";
+		$sthY = $dbhA->prepare($stmtY) or die "preparing: ",$dbhA->errstr;
+		$sthY->execute or die "executing: $stmtY", $dbhA->errstr;
+		$sthYrows=$sthY->rows;
+		# Total list for campaign active & inactive
 		$rec_countLISTS=0;
-		$camp_lists[$i] = '';
-		while ($sthArows > $rec_countLISTS)
+		# Total Active campaigns for the list
+		$act_rec_countLISTS=0;
+		# list active status
+		$list_id_act='';
+		# set hash for individual list sql
+		my %indv_list_gmt_sql = ();
+		while ($sthYrows > $rec_countLISTS)
 			{
-			@aryA = $sthA->fetchrow_array;
-			$camp_lists[$i] .= "'$aryA[0]',";
+			# Start getting list GMT and putting together statements for filtering GMT
+			@aryY = $sthY->fetchrow_array;		
+			# Set List ID Variable
+			$cur_list_id = $aryY[0];
+			if ($DB) {print "   Processing GMT for list $cur_list_id\n";}
+			# Set active list variable
+			$list_id_act = $aryY[1];
+			# Allow for inactive leads
+			if ( ($list_order_mix[$i] !~ /DISABLED/) && ($allow_inactive_list_leads > 0) )
+				{$allow_inactive = "Y";}
+			# Pull the call times for the lists
+			$stmtB = "SELECT local_call_time FROM vicidial_lists where list_id = \"$cur_list_id\"";
+			$sthB = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
+			$sthB->execute or die "executing: $stmtB", $dbhA->errstr;
+			@aryB = $sthB->fetchrow_array;
+			
+			# set Cur call_time
+			$cur_call_time = $aryB[0];
+			
+			$sthB->finish();
+			# Handle Passing through and skip GMT code for speed if we don't need it
+			if ($cur_call_time eq "campaign")
+				{
+				# only create sql for pulling leads if the list is active
+				if ( ($list_id_act eq "Y") || ($allow_inactive eq "Y") )
+					{
+					if ( ( ($act_rec_countLISTS == 0) && ($allow_inactive ne "Y") ) || ( ($rec_countLISTS == 0) && ($allow_inactive eq "Y") ) ) 
+						{
+						$list_id_sql[$i] = "(list_id=\"$cur_list_id\")";
+						}
+					else 
+						{
+						$list_id_sql[$i] .= " or (list_id=\"$cur_list_id\")";
+						}
+					$act_rec_countLISTS++;
+					}
+				# set variable for List Mix
+				$indv_list_gmt_sql{ "$cur_list_id" } = "(list_id=\"$cur_list_id\")";
+				}
+			else
+				{
+				##### BEGIN calculate what gmt_offset_now values are within the allowed list local_call_time setting ###
+				$stmtC = "SELECT call_time_id,call_time_name,call_time_comments,ct_default_start,ct_default_stop,ct_sunday_start,ct_sunday_stop,ct_monday_start,ct_monday_stop,ct_tuesday_start,ct_tuesday_stop,ct_wednesday_start,ct_wednesday_stop,ct_thursday_start,ct_thursday_stop,ct_friday_start,ct_friday_stop,ct_saturday_start,ct_saturday_stop,ct_state_call_times,ct_holidays FROM vicidial_call_times where call_time_id='$cur_call_time';";
+				if ($DBX) {print "   |$stmtC|\n";}
+				$sthC = $dbhA->prepare($stmtC) or die "preparing: ",$dbhA->errstr;
+				$sthC->execute or die "executing: $stmtC ", $dbhA->errstr;
+				$sthCrows=$sthC->rows;
+				$rec_count=0;
+				if ($sthCrows > 0)
+					{
+					@aryC = $sthC->fetchrow_array;
+					$Gct_default_start =	$aryC[3];
+					$Gct_default_stop =		$aryC[4];
+					$Gct_sunday_start =		$aryC[5];
+					$Gct_sunday_stop =		$aryC[6];
+					$Gct_monday_start =		$aryC[7];
+					$Gct_monday_stop =		$aryC[8];
+					$Gct_tuesday_start =	$aryC[9];
+					$Gct_tuesday_stop =		$aryC[10];
+					$Gct_wednesday_start =	$aryC[11];
+					$Gct_wednesday_stop =	$aryC[12];
+					$Gct_thursday_start =	$aryC[13];
+					$Gct_thursday_stop =	$aryC[14];
+					$Gct_friday_start =		$aryC[15];
+					$Gct_friday_stop =		$aryC[16];
+					$Gct_saturday_start =	$aryC[17];
+					$Gct_saturday_stop =	$aryC[18];
+					$Gct_state_call_times = $aryC[19];
+					$Gct_holidays =			$aryC[20];
+					$rec_count++;
+					}
+				$sthC->finish();
+				
+				### BEGIN Check for outbound call time holiday ###
+				$holiday_id = '';
+				if (length($Gct_holidays)>2)
+					{
+					$Gct_holidaysSQL = $Gct_holidays;
+					$Gct_holidaysSQL =~ s/^\||\|$//gi;
+					$Gct_holidaysSQL =~ s/\|/','/gi;
+					$Gct_holidaysSQL = "'$Gct_holidaysSQL'";
+
+					$stmtC = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop from vicidial_call_time_holidays where holiday_id IN($Gct_holidaysSQL) and holiday_status='ACTIVE' and holiday_date='$YMD' order by holiday_id;";
+					if ($DBX) {print "   |$stmtC|\n";}
+					$sthC = $dbhA->prepare($stmtC) or die "preparing: ",$dbhA->errstr;
+					$sthC->execute or die "executing: $stmtC ", $dbhA->errstr;
+					$sthCrows=$sthC->rows;
+					if ($sthCrows > 0)
+						{
+						@aryC = $sthC->fetchrow_array;
+						$holiday_id =				$aryC[0];
+						$holiday_date =				$aryC[1];
+						$holiday_name =				$aryC[2];
+						if ( ($Gct_default_start < $aryC[3]) && ($Gct_default_stop > 0) )		{$Gct_default_start = $aryC[3];}
+						if ( ($Gct_default_stop > $aryC[4]) && ($Gct_default_stop > 0) )		{$Gct_default_stop = $aryC[4];}
+						if ( ($Gct_sunday_start < $aryC[3]) && ($Gct_sunday_stop > 0) )			{$Gct_sunday_start = $aryC[3];}
+						if ( ($Gct_sunday_stop > $aryC[4]) && ($Gct_sunday_stop > 0) )			{$Gct_sunday_stop = $aryC[4];}
+						if ( ($Gct_monday_start < $aryC[3]) && ($Gct_monday_stop > 0) )			{$Gct_monday_start = $aryC[3];}
+						if ( ($Gct_monday_stop >	$aryC[4]) && ($Gct_monday_stop > 0) )		{$Gct_monday_stop =	$aryC[4];}
+						if ( ($Gct_tuesday_start < $aryC[3]) && ($Gct_tuesday_stop > 0) )		{$Gct_tuesday_start = $aryC[3];}
+						if ( ($Gct_tuesday_stop > $aryC[4]) && ($Gct_tuesday_stop > 0) )		{$Gct_tuesday_stop = $aryC[4];}
+						if ( ($Gct_wednesday_start < $aryC[3]) && ($Gct_wednesday_stop > 0) ) 	{$Gct_wednesday_start = $aryC[3];}
+						if ( ($Gct_wednesday_stop > $aryC[4]) && ($Gct_wednesday_stop > 0) )	{$Gct_wednesday_stop = $aryC[4];}
+						if ( ($Gct_thursday_start < $aryC[3]) && ($Gct_thursday_stop > 0) )		{$Gct_thursday_start = $aryC[3];}
+						if ( ($Gct_thursday_stop > $aryC[4]) && ($Gct_thursday_stop > 0) )		{$Gct_thursday_stop = $aryC[4];}
+						if ( ($Gct_friday_start < $aryC[3]) && ($Gct_friday_stop > 0) )			{$Gct_friday_start = $aryC[3];}
+						if ( ($Gct_friday_stop > $aryC[4]) && ($Gct_friday_stop > 0) )			{$Gct_friday_stop = $aryC[4];}
+						if ( ($Gct_saturday_start < $aryC[3]) && ($Gct_saturday_stop > 0) )		{$Gct_saturday_start = $aryC[3];}
+						if ( ($Gct_saturday_stop > $aryC[4]) && ($Gct_saturday_stop > 0) )		{$Gct_saturday_stop = $aryC[4];}
+						if ($DB) {print "     LIST CALL TIME HOLIDAY FOUND!   $cur_call_time|$holiday_id|$holiday_date|$holiday_name|$Gct_default_start|$Gct_default_stop|\n";}
+						}
+					$sthC->finish();
+					}
+				### END Check for outbound call time holiday ###
+				$ct_states = '';
+				$ct_state_gmt_SQL = ''; 
+				$list_state_gmt_SQL = '';
+				$ct_srs=0;
+				$b=0;
+				if (length($Gct_state_call_times)>2)
+					{
+					@state_rules = split(/\|/,$Gct_state_call_times);
+					$ct_srs = ($#state_rules - 0);
+					}
+				while($ct_srs >= $b)
+					{
+					if (length($state_rules[$b])>1)
+						{
+						if ($DBX) {print "    Processing state rule $state_rules[$b] | ";}
+						$stmtC = "SELECT state_call_time_id,state_call_time_state,state_call_time_name,state_call_time_comments,sct_default_start,sct_default_stop,sct_sunday_start,sct_sunday_stop,sct_monday_start,sct_monday_stop,sct_tuesday_start,sct_tuesday_stop,sct_wednesday_start,sct_wednesday_stop,sct_thursday_start,sct_thursday_stop,sct_friday_start,sct_friday_stop,sct_saturday_start,sct_saturday_stop,ct_holidays from vicidial_state_call_times where state_call_time_id='$state_rules[$b]';";
+						if ($DBX) {print "   |$stmtC|\n";}
+						$sthC = $dbhA->prepare($stmtC) or die "preparing: ",$dbhA->errstr;
+						$sthC->execute or die "executing: $stmtC ", $dbhA->errstr;
+						$sthCrows=$sthC->rows;
+						if ($sthCrows > 0)
+							{
+							@aryC = $sthC->fetchrow_array;
+							$Gstate_call_time_id =		$aryC[0];
+							$Gstate_call_time_state =	$aryC[1];
+							$Gsct_default_start =		$aryC[4];
+							$Gsct_default_stop =		$aryC[5];
+							$Gsct_sunday_start =		$aryC[6];
+							$Gsct_sunday_stop =			$aryC[7];
+							$Gsct_monday_start =		$aryC[8];
+							$Gsct_monday_stop =			$aryC[9];
+							$Gsct_tuesday_start =		$aryC[10];
+							$Gsct_tuesday_stop =		$aryC[11];
+							$Gsct_wednesday_start =		$aryC[12];
+							$Gsct_wednesday_stop =		$aryC[13];
+							$Gsct_thursday_start =		$aryC[14];
+							$Gsct_thursday_stop =		$aryC[15];
+							$Gsct_friday_start =		$aryC[16];
+							$Gsct_friday_stop =			$aryC[17];
+							$Gsct_saturday_start =		$aryC[18];
+							$Gsct_saturday_stop =		$aryC[19];
+							$Sct_holidays = 			$aryC[20];
+							$ct_states .="'$Gstate_call_time_state',";
+							}
+		
+						$sthC->finish();
+	
+						### BEGIN Check for outbound state holiday ###
+						$Sholiday_id = '';
+						if ( (length($Sct_holidays)>2) || ((length($holiday_id)>2) && (length($Sholiday_id)<2))) 
+							{
+							# Apply state holiday
+							if (length($Sct_holidays)>2)
+								{
+								$Sct_holidaysSQL = $Sct_holidays;
+								$Sct_holidaysSQL =~ s/^\||\|$//gi;
+								$Sct_holidaysSQL =~ s/\|/','/gi;
+								$Sct_holidaysSQL = "'$Sct_holidaysSQL'";					
+								$stmtA = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop from vicidial_call_time_holidays where holiday_id IN($Sct_holidaysSQL) and holiday_status='ACTIVE' and holiday_date='$YMD' order by holiday_id;";
+								$holidaytype = "     STATE CALL TIME HOLIDAY FOUND!   ";
+								}
+							# Apply call time wide holiday
+							elsif ( (length($holiday_id)>2) && (length($Sholiday_id)<2) )
+								{
+								$stmtA = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop from vicidial_call_time_holidays where holiday_id='$holiday_id' and holiday_status='ACTIVE' and holiday_date='$YMD' order by holiday_id;";
+								$holidaytype = "     NO STATE HOLIDAY APPLYING CALL TIME HOLIDAY!   ";
+								}				
+							if ($DBX) {print "   |$stmtA|\n";}
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+							if ($sthArows > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$Sholiday_id =				$aryA[0];
+								$Sholiday_date =			$aryA[1];
+								$Sholiday_name =			$aryA[2];
+								if ( ($Gsct_default_start < $aryC[3]) && ($Gsct_default_stop > 0) )		{$Gsct_default_start = $aryC[3];}
+								if ( ($Gsct_default_stop > $aryC[4]) && ($Gsct_default_stop > 0) )		{$Gsct_default_stop = $aryC[4];}
+								if ( ($Gsct_sunday_start < $aryC[3]) && ($Gsct_sunday_stop > 0) )		{$Gsct_sunday_start = $aryC[3];}
+								if ( ($Gsct_sunday_stop > $aryC[4]) && ($Gsct_sunday_stop > 0) )		{$Gsct_sunday_stop = $aryC[4];}
+								if ( ($Gsct_monday_start < $aryC[3]) && ($Gsct_monday_stop > 0) )		{$Gsct_monday_start = $aryC[3];}
+								if ( ($Gsct_monday_stop >	$aryC[4]) && ($Gsct_monday_stop > 0) )		{$Gsct_monday_stop =	$aryC[4];}
+								if ( ($Gsct_tuesday_start < $aryC[3]) && ($Gsct_tuesday_stop > 0) )		{$Gsct_tuesday_start = $aryC[3];}
+								if ( ($Gsct_tuesday_stop > $aryC[4]) && ($Gsct_tuesday_stop > 0) )		{$Gsct_tuesday_stop = $aryC[4];}
+								if ( ($Gsct_wednesday_start < $aryC[3]) && ($Gsct_wednesday_stop > 0) ) {$Gsct_wednesday_start = $aryC[3];}
+								if ( ($Gsct_wednesday_stop > $aryC[4]) && ($Gsct_wednesday_stop > 0) )	{$Gsct_wednesday_stop = $aryC[4];}
+								if ( ($Gsct_thursday_start < $aryC[3]) && ($Gsct_thursday_stop > 0) )	{$Gsct_thursday_start = $aryC[3];}
+								if ( ($Gsct_thursday_stop > $aryC[4]) && ($Gsct_thursday_stop > 0) )	{$Gsct_thursday_stop = $aryC[4];}
+								if ( ($Gsct_friday_start < $aryC[3]) && ($Gsct_friday_stop > 0) )		{$Gsct_friday_start = $aryC[3];}
+								if ( ($Gsct_friday_stop > $aryC[4]) && ($Gsct_friday_stop > 0) )		{$Gsct_friday_stop = $aryC[4];}
+								if ( ($Gsct_saturday_start < $aryC[3]) && ($Gsct_saturday_stop > 0) )	{$Gsct_saturday_start = $aryC[3];}
+								if ( ($Gsct_saturday_stop > $aryC[4]) && ($Gsct_saturday_stop > 0) )	{$Gsct_saturday_stop = $aryC[4];}
+								if ($DB) {print "$holidaytype|$Gstate_call_time_id|$Gstate_call_time_state|$Sholiday_id|$Sholiday_date|$Sholiday_name|$Gsct_default_start|$Gsct_default_stop|\n";}
+								}
+							$sthA->finish();
+							}
+						### END Check for outbound state holiday ###
+						$r=0;
+						$state_gmt='';
+						$del_state_gmt='';
+						while($r < $g)
+							{
+							if ($GMT_day[$r]==0)	#### Sunday local time
+								{
+								if (($Gsct_sunday_start==0) && ($Gsct_sunday_stop==0))
+									{
+									if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
+										{$state_gmt.="'$GMT_gmt[$r]',";}
+									}
+								else
+									{
+									if ( ($GMT_hour[$r]>=$Gsct_sunday_start) && ($GMT_hour[$r]<$Gsct_sunday_stop) )
+										{$state_gmt.="'$GMT_gmt[$r]',";}
+									}
+								}
+							if ($GMT_day[$r]==1)	#### Monday local time
+								{
+								if (($Gsct_monday_start==0) && ($Gsct_monday_stop==0))
+									{
+									if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
+										{$state_gmt.="'$GMT_gmt[$r]',";}
+									}
+								else
+									{
+									if ( ($GMT_hour[$r]>=$Gsct_monday_start) && ($GMT_hour[$r]<$Gsct_monday_stop) )
+										{$state_gmt.="'$GMT_gmt[$r]',";}
+									}
+								}
+							if ($GMT_day[$r]==2)	#### Tuesday local time
+								{
+								if (($Gsct_tuesday_start==0) && ($Gsct_tuesday_stop==0))
+									{
+									if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
+										{$state_gmt.="'$GMT_gmt[$r]',";}
+									}
+								else
+									{
+									if ( ($GMT_hour[$r]>=$Gsct_tuesday_start) && ($GMT_hour[$r]<$Gsct_tuesday_stop) )
+										{$state_gmt.="'$GMT_gmt[$r]',";}
+									}
+								}
+							if ($GMT_day[$r]==3)	#### Wednesday local time
+								{
+								if (($Gsct_wednesday_start==0) && ($Gsct_wednesday_stop==0))
+									{
+									if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
+										{$state_gmt.="'$GMT_gmt[$r]',";}
+									}
+								else
+									{
+									if ( ($GMT_hour[$r]>=$Gsct_wednesday_start) && ($GMT_hour[$r]<$Gsct_wednesday_stop) )
+										{$state_gmt.="'$GMT_gmt[$r]',";}
+									}
+								}
+							if ($GMT_day[$r]==4)	#### Thursday local time
+								{
+								if (($Gsct_thursday_start==0) && ($Gsct_thursday_stop==0))
+									{
+									if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
+										{$state_gmt.="'$GMT_gmt[$r]',";}
+									}
+								else
+									{
+									if ( ($GMT_hour[$r]>=$Gsct_thursday_start) && ($GMT_hour[$r]<$Gsct_thursday_stop) )
+										{$state_gmt.="'$GMT_gmt[$r]',";}
+									}
+								}
+							if ($GMT_day[$r]==5)	#### Friday local time
+								{
+								if (($Gsct_friday_start==0) && ($Gsct_friday_stop==0))
+									{
+									if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
+										{$state_gmt.="'$GMT_gmt[$r]',";}
+									}
+								else
+									{
+									if ( ($GMT_hour[$r]>=$Gsct_friday_start) && ($GMT_hour[$r]<$Gsct_friday_stop) )
+										{$state_gmt.="'$GMT_gmt[$r]',";}
+									}
+								}
+							if ($GMT_day[$r]==6)	#### Saturday local time
+								{
+								if (($Gsct_saturday_start==0) && ($Gsct_saturday_stop==0))
+									{
+									if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
+										{$state_gmt.="'$GMT_gmt[$r]',";}
+									}
+								else
+									{
+									if ( ($GMT_hour[$r]>=$Gsct_saturday_start) && ($GMT_hour[$r]<$Gsct_saturday_stop) )
+										{$state_gmt.="'$GMT_gmt[$r]',";}
+									}
+								}
+							$r++;
+							}
+						$state_gmt = "$state_gmt'99'";
+			
+						$del_list_state_gmt_SQL .= "or (list_id='$cur_list_id' and state='$Gstate_call_time_state' && gmt_offset_now NOT IN($state_gmt)) ";
+						$list_state_gmt_SQL .= "or (list_id='$cur_list_id' and state='$Gstate_call_time_state' && gmt_offset_now IN($state_gmt)) ";
+						}
+
+					$b++;
+					}
+				if (length($ct_states)>2)
+					{
+					$ct_states =~ s/,$//gi;
+					$ct_statesSQL = "and state NOT IN($ct_states)";
+					}
+				else
+					{
+					$ct_statesSQL = "";
+					}
+
+				$r=0;
+				@default_gmt_ARY=@MT;
+				$dgA=0;
+				$list_default_gmt='';
+				while($r < $g)
+					{
+					if ($GMT_day[$r]==0)	#### Sunday local time
+						{
+						if (($Gct_sunday_start==0) && ($Gct_sunday_stop==0))
+							{
+							if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
+								{}
+							else
+								{$list_default_gmt.="'$GMT_gmt[$r]',";}
+							}
+						else
+							{
+							if ( ($GMT_hour[$r]>=$Gct_sunday_start) && ($GMT_hour[$r]<$Gct_sunday_stop) )
+								{}
+							else
+								{$list_default_gmt.="'$GMT_gmt[$r]',";}
+							}
+						}
+					if ($GMT_day[$r]==1)	#### Monday local time
+						{
+						if (($Gct_monday_start==0) && ($Gct_monday_stop==0))
+							{
+							if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
+								{}
+							else
+								{$list_default_gmt.="'$GMT_gmt[$r]',";}
+							}
+						else
+							{
+							if ( ($GMT_hour[$r]>=$Gct_monday_start) && ($GMT_hour[$r]<$Gct_monday_stop) )
+								{}
+							else
+								{$list_default_gmt.="'$GMT_gmt[$r]',";}
+							}
+						}
+					if ($GMT_day[$r]==2)	#### Tuesday local time
+						{
+						if (($Gct_tuesday_start==0) && ($Gct_tuesday_stop==0))
+							{
+							if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
+								{$del_list_default_gmt.="'$GMT_gmt[$r]',";   $del_list_default_gmt_ARY[$dgA] = "$GMT_gmt[$r]";   $dgA++;}
+							else
+								{$list_default_gmt.="'$GMT_gmt[$r]',";}
+							}
+						else
+							{
+							if ( ($GMT_hour[$r]>=$Gct_tuesday_start) && ($GMT_hour[$r]<$Gct_tuesday_stop) )
+								{$del_list_default_gmt.="'$GMT_gmt[$r]',";   $del_list_default_gmt_ARY[$dgA] = "$GMT_gmt[$r]";   $dgA++;}
+							else
+								{$list_default_gmt.="'$GMT_gmt[$r]',";}
+							}
+						}
+					if ($GMT_day[$r]==3)	#### Wednesday local time
+						{
+						if (($Gct_wednesday_start==0) && ($Gct_wednesday_stop==0))
+							{
+							if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
+								{$del_list_default_gmt.="'$GMT_gmt[$r]',";   $del_list_default_gmt_ARY[$dgA] = "$GMT_gmt[$r]";   $dgA++;}
+							else
+								{$list_default_gmt.="'$GMT_gmt[$r]',";}
+							}
+						else
+							{
+							if ( ($GMT_hour[$r]>=$Gct_wednesday_start) && ($GMT_hour[$r]<$Gct_wednesday_stop) )
+								{}
+							else
+								{$list_default_gmt.="'$GMT_gmt[$r]',";}
+							}
+						}
+					if ($GMT_day[$r]==4)	#### Thursday local time
+						{
+						if (($Gct_thursday_start==0) && ($Gct_thursday_stop==0))
+							{
+							if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
+								{}
+							else
+								{$list_default_gmt.="'$GMT_gmt[$r]',";}
+							}
+						else
+							{
+							if ( ($GMT_hour[$r]>=$Gct_thursday_start) && ($GMT_hour[$r]<$Gct_thursday_stop) )
+								{}
+							else
+								{$list_default_gmt.="'$GMT_gmt[$r]',";}
+							}
+						}
+					if ($GMT_day[$r]==5)	#### Friday local time
+						{
+						if (($Gct_friday_start==0) && ($Gct_friday_stop==0))
+							{
+							if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
+								{}
+							else
+								{$list_default_gmt.="'$GMT_gmt[$r]',";}
+							}
+						else
+							{
+							if ( ($GMT_hour[$r]>=$Gct_friday_start) && ($GMT_hour[$r]<$Gct_friday_stop) )
+								{}
+							else
+								{$list_default_gmt.="'$GMT_gmt[$r]',";}
+							}
+						}
+					if ($GMT_day[$r]==6)	#### Saturday local time
+						{
+						if (($Gct_saturday_start==0) && ($Gct_saturday_stop==0))
+							{
+							if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
+								{}
+							else
+								{$list_default_gmt.="'$GMT_gmt[$r]',";}
+							}
+						else
+							{
+							if ( ($GMT_hour[$r]>=$Gct_saturday_start) && ($GMT_hour[$r]<$Gct_saturday_stop) )
+								{}
+							else
+								{$list_default_gmt.="'$GMT_gmt[$r]',";}
+							}
+						}
+					$r++;
+					}
+
+				$list_default_gmt = "$list_default_gmt'99'";
+				
+				#set variable for List Mix
+				$indv_list_gmt_sql{ "$cur_list_id" } = "((list_id=\"$cur_list_id\" and gmt_offset_now NOT IN($list_default_gmt) $ct_statesSQL) $list_state_gmt_SQL)";
+
+				#only add for use if the list is active
+				if ( ($list_id_act eq "Y") || ($allow_inactive eq "Y") )
+					{
+					if ( ( ($act_rec_countLISTS == 0) && ($allow_inactive ne "Y") ) || ( ($rec_countLISTS == 0) && ($allow_inactive eq "Y") ) ) 
+						{
+						$list_id_sql[$i] = "((list_id=\"$cur_list_id\" and gmt_offset_now NOT IN($list_default_gmt) $ct_statesSQL) $list_state_gmt_SQL)";
+						}
+					else
+						{
+						$list_id_sql[$i] .= " or ((list_id=\"$cur_list_id\" and gmt_offset_now NOT IN($list_default_gmt) $ct_statesSQL) $list_state_gmt_SQL)";
+						}
+					$del_list_id_sql[$i] .= "((list_id=\"$cur_list_id\" and gmt_offset_now IN($list_default_gmt) $ct_statesSQL) $del_list_state_gmt_SQL) or";
+					$act_rec_countLISTS++;
+					}
+				}
+				##### END calculate what gmt_offset_now values are within the allowed local_call_time setting ###
+
+			# Add 1 to row count
 			$rec_countLISTS++;
 			}
-		$sthA->finish();
-		if (length($camp_lists[$i])<3) {$camp_lists[$i]="'999876543210'";}
-		   else {chop($camp_lists[$i]);}
-
-		if ($DB) {print "     campaign lists count: $rec_countLISTS | $camp_lists[$i]\n";}
+		$sthY->finish();
+		# Protect against campaigns with no list by making it an impossible list
+		if (length($list_id_sql[$i]) < 1) {$list_id_sql[$i]="list_id='999876543210'";}
+		if (length($del_list_id_sql[$i]) < 1) {$del_list_id_sql[$i]="list_id='999876543211'";}
+	
+		if ($DB) {print "     campaign lists count ACTIVE:$act_rec_countLISTS | TOTAL:$rec_countLISTS \n";}
+		if ($DBX) {print "     LIST ID SQL $list_id_sql[$i]";}
 		if ($DBX) {print "     |$stmtA|\n";}
 
+
+		### Delete the DONE leads if there are any
+		$stmtA = "DELETE from $vicidial_hopper where campaign_id='$campaign_id[$i]' and status IN('DONE');";
+		$affected_rows = $dbhA->do($stmtA);
+		if ($DB) {print "     hopper DONE cleared:  $affected_rows\n";}
+		if ($DBX) {print "     |$stmtA|\n";}
+		# Update the hopper ready count
+		if ($affected_rows ne "0E0") 
+			{		
+			$hopper_ready_pre_count = $hopper_ready_count;
+			$hopper_ready_count = $hopper_ready_count - $affected_rows;
+			if ($DB) 
+				{
+				if($hopper_ready_pre_count == $hopper_ready_count) 
+					{print "     hopper READY count minus deleted DONE leads:   $hopper_ready_count\n";}
+				}
+			}
+		
+		### Delete the leads that are out of GMT time range if there are any
+		$stmtA = "DELETE from $vicidial_hopper where $del_list_id_sql[$i] (campaign_id='$campaign_id[$i]' and ($del_gmtSQL[$i]));";
+		$affected_rows = $dbhA->do($stmtA);
+		if ($DB) {print "     hopper GMT BAD cleared:  $affected_rows\n";}
+		if ($DBX) {print "     |$stmtA|\n";}
+		
+		# Update the hopper ready count
+		if ($affected_rows ne "0E0") 
+			{		
+			$hopper_ready_pre_count = $hopper_ready_count;
+			$hopper_ready_count = $hopper_ready_count - $affected_rows;
+			if ($DB) 
+				{
+				if($hopper_ready_pre_count == $hopper_ready_count) 
+					{print "     hopper READY count minus deleted GMT leads:   $hopper_ready_count\n";}
+				}
+			}
+		
+		# Get Campaign List Mix Settings
 		if ($list_order_mix[$i] !~ /DISABLED/)
 			{
 			$stmtA = "SELECT vcl_id,vcl_name,list_mix_container,mix_method FROM vicidial_campaigns_list_mix where campaign_id='$campaign_id[$i]' and status='ACTIVE';";
@@ -1895,11 +2457,9 @@ foreach(@campaign_id)
 				if ($list_mix_stepARY[3] !~ /\'$/)
 					{$list_mix_stepARY[3] = "$list_mix_stepARY[3]'";}
 				if ($DBX) {print "     LM $x ++$list_mixARY[$x]++ |$list_mix_stepARY[0]|$list_mix_stepARY[2]|$list_mix_stepARY[3]|\n";}
-				$list_mix_dialableSQL .= "(list_id='$list_mix_stepARY[0]' and status IN($list_mix_stepARY[3]))";
-
+				$list_mix_dialableSQL .= "(($indv_list_gmt_sql{ \"$list_mix_stepARY[0]\" }) and status IN($list_mix_stepARY[3]))";
 				$x++;
 				}
-
 			if ($DB) {print "     campaign mix: $list_order_mix[$i] |$vcl_id[$i] - $vcl_name[$i]|$list_mix_container[$i]|$x|$mix_method[$i]|\n";}
 			}
 
@@ -1959,7 +2519,7 @@ foreach(@campaign_id)
 		##### Get count of leads that are dialable #####
 		if ($list_order_mix[$i] =~ /DISABLED/)
 			{
-			$stmtA = "SELECT count(*) FROM vicidial_list where called_since_last_reset='N' and status IN($STATUSsql[$i]) and list_id IN($camp_lists[$i]) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i] $CCLsql[$i];";
+			$stmtA = "SELECT count(*) FROM vicidial_list where called_since_last_reset='N' and status IN($STATUSsql[$i]) and ($list_id_sql[$i]) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i] $CCLsql[$i];";
 			}
 		else
 			{
@@ -1981,7 +2541,7 @@ foreach(@campaign_id)
 
 		if ( ($lead_order[$i] =~ / 2nd NEW$| 3rd NEW$| 4th NEW$| 5th NEW$| 6th NEW$/) && ($list_order_mix[$i] =~ /DISABLED/) )
 			{
-			$stmtA = "SELECT count(*) FROM vicidial_list where called_since_last_reset='N' and status IN('NEW') and list_id IN($camp_lists[$i]) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i];";
+			$stmtA = "SELECT count(*) FROM vicidial_list where called_since_last_reset='N' and status IN('NEW') and ($list_id_sql[$i]) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i];";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -2122,7 +2682,7 @@ foreach(@campaign_id)
 					if ($hopper_vlc_dup_check[$i] =~ /Y/) 
 						{$vlc_dup_check_SQL = "and vendor_lead_code NOT IN($live_vlc$vlc_lists)";}
 
-					$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list where $recycle_SQL[$i] and list_id IN($camp_lists[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $hopper_level[$i];";
+					$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list where $recycle_SQL[$i] and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $hopper_level[$i];";
 					if ($DBX) {print "     |$stmtA|\n";}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2178,7 +2738,7 @@ foreach(@campaign_id)
 					if ($hopper_vlc_dup_check[$i] =~ /Y/) 
 						{$vlc_dup_check_SQL = "and vendor_lead_code NOT IN($live_vlc$vlc_lists)";}
 
-					$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list where called_since_last_reset='N' and status IN('NEW') and list_id IN($camp_lists[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $NEW_level;";
+					$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list where called_since_last_reset='N' and status IN('NEW') and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $NEW_level;";
 					if ($DBX) {print "     |$stmtA|\n";}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2231,7 +2791,7 @@ foreach(@campaign_id)
 
 					if ($list_order_mix[$i] =~ /DISABLED/)
 						{
-						$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list where called_since_last_reset='N' and status IN($STATUSsql[$i]) and list_id IN($camp_lists[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $OTHER_level;";
+						$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list where called_since_last_reset='N' and status IN($STATUSsql[$i]) and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $OTHER_level;";
 						if ($DBX) {print "     |$stmtA|\n";}
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2329,12 +2889,12 @@ foreach(@campaign_id)
 							if ($list_mix_stepARY[3] !~ /\'$/)
 								{$list_mix_stepARY[3] = "$list_mix_stepARY[3]'";}
 							if ($DBX) {print "  LM $x |$list_mix_stepARY[0]|$list_mix_stepARY[2]|$LM_step_goal[$x]|$list_mix_stepARY[3]|\n";}
-							$list_mix_dialableSQL = "(list_id='$list_mix_stepARY[0]' and status IN($list_mix_stepARY[3]))";
+							$list_mix_dialableSQL = "(($indv_list_gmt_sql{ \"$list_mix_stepARY[0]\" }) and status IN($list_mix_stepARY[3]))";
 							$vlc_dup_check_SQL='';
 							if ($hopper_vlc_dup_check[$i] =~ /Y/) 
 								{$vlc_dup_check_SQL = "and vendor_lead_code NOT IN($live_vlc$vlc_lists)";}
 
-							$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list where called_since_last_reset='N' and $list_mix_dialableSQL and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $LM_step_goal[$x];";
+							$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list where called_since_last_reset='N' and ($list_mix_dialableSQL) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $LM_step_goal[$x];";
 							if ($DBX) {print "     |$stmtA|\n";}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2498,44 +3058,44 @@ foreach(@campaign_id)
 								}
 							}
 
-							$VAC_exist=0;
-							$stmtA="SELECT count(*) FROM vicidial_auto_calls where lead_id='$leads_to_hopper[$h]';";
+						$VAC_exist=0;
+						$stmtA="SELECT count(*) FROM vicidial_auto_calls where lead_id='$leads_to_hopper[$h]';";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$VAC_exist =	$aryA[0];
+							}
+						$sthA->finish();
+
+						$VLA_exist=0;
+						$stmtA="SELECT count(*) FROM vicidial_live_agents where lead_id='$leads_to_hopper[$h]';";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$VLA_exist =	$aryA[0];
+							}
+						$sthA->finish();
+
+						$VLC_exist=0;
+						if ( ($hopper_vlc_dup_check[$i] =~ /Y/) && (length($vlc_to_hopper[$h]) > 0) )
+							{
+							$stmtA="SELECT count(*) FROM $vicidial_hopper where vendor_lead_code='$vlc_to_hopper[$h]';";
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
 							if ($sthArows > 0)
 								{
 								@aryA = $sthA->fetchrow_array;
-								$VAC_exist =	$aryA[0];
+								$VLC_exist =	$aryA[0];
 								}
 							$sthA->finish();
-
-							$VLA_exist=0;
-							$stmtA="SELECT count(*) FROM vicidial_live_agents where lead_id='$leads_to_hopper[$h]';";
-							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-							$sthArows=$sthA->rows;
-							if ($sthArows > 0)
-								{
-								@aryA = $sthA->fetchrow_array;
-								$VLA_exist =	$aryA[0];
-								}
-							$sthA->finish();
-
-							$VLC_exist=0;
-							if ( ($hopper_vlc_dup_check[$i] =~ /Y/) && (length($vlc_to_hopper[$h]) > 0) )
-								{
-								$stmtA="SELECT count(*) FROM $vicidial_hopper where vendor_lead_code='$vlc_to_hopper[$h]';";
-								$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-								$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-								$sthArows=$sthA->rows;
-								if ($sthArows > 0)
-									{
-									@aryA = $sthA->fetchrow_array;
-									$VLC_exist =	$aryA[0];
-									}
-								$sthA->finish();
-								}
+							}
 
 						if ( ($VAC_exist > 0) || ($VLA_exist > 0) )
 							{

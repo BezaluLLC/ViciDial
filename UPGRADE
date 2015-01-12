@@ -114,6 +114,12 @@ OTHER CHANGES:
 	systemwide even in lists belonging to campaigns that the user's User
 	Group settings don't allow them to view
 
+21. Added Local Call Time option for Lists to further restrict call times
+	already set in the campaign.
+
+22. Added Manual Dial Lead Search Filter option to limit the search of manual
+	dials to within one campaign's lists.
+
 
 
 

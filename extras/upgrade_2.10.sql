@@ -164,3 +164,9 @@ UPDATE system_settings SET db_schema_version='1398',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_live_agents MODIFY external_transferconf VARCHAR(120) default '';
 
 UPDATE system_settings SET db_schema_version='1399',db_schema_update_date=NOW() where db_schema_version < 1399;
+
+ALTER TABLE vicidial_lists ADD local_call_time VARCHAR(10) NOT NULL DEFAULT 'campaign';
+
+ALTER TABLE vicidial_campaigns ADD manual_dial_search_filter VARCHAR(50) default 'NONE';
+
+UPDATE system_settings SET db_schema_version='1400',db_schema_update_date=NOW() where db_schema_version < 1400;

@@ -920,7 +920,8 @@ comments_callback_screen ENUM('DISABLED','ENABLED','REPLACE_CB_NOTES') default '
 qc_comment_history ENUM('CLICK','AUTO_OPEN','CLICK_ALLOW_MINIMIZE','AUTO_OPEN_ALLOW_MINIMIZE') default 'CLICK',
 show_previous_callback ENUM('DISABLED','ENABLED') default 'ENABLED',
 clear_script ENUM('DISABLED','ENABLED') default 'DISABLED',
-cpd_unknown_action ENUM('DISABLED','DISPO','MESSAGE','CALLMENU','INGROUP') default 'DISABLED'
+cpd_unknown_action ENUM('DISABLED','DISPO','MESSAGE','CALLMENU','INGROUP') default 'DISABLED',
+manual_dial_search_filter VARCHAR(50) default 'NONE'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -946,7 +947,8 @@ web_form_address_two TEXT,
 time_zone_setting ENUM('COUNTRY_AND_AREA_CODE','POSTAL_CODE','NANPA_PREFIX','OWNER_TIME_ZONE_CODE') default 'COUNTRY_AND_AREA_CODE',
 inventory_report ENUM('Y','N') default 'Y',
 expiration_date DATE default '2099-12-31',
-na_call_url TEXT
+na_call_url TEXT,
+local_call_time VARCHAR(10) NOT NULL DEFAULT 'campaign'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_statuses (
@@ -3363,4 +3365,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1399',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1400',db_schema_update_date=NOW(),reload_timestamp=NOW();
