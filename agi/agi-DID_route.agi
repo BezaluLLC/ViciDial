@@ -13,7 +13,7 @@
 # ;inbound DID catch-all:
 #exten => _X.,1,AGI(agi-DID_route.agi)
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 81007-0324 - First Build
@@ -37,6 +37,7 @@
 # 140622-0240 - Added no-agent in-group redirect and pre-filter phone group redirect features
 # 140811-2151 - Added ability to filter by DNC areacodes if filter_inbound_number set to a DNC option
 # 141110-1417 - Fixed issue with multiple filtering options enabled
+# 150112-1426 - Added no-agent last_update_time check to match in-group queries
 #
 
 
@@ -625,12 +626,24 @@ if ( ($no_agent_ingroup_redirect =~ /Y|NO_PAUSED|READY_ONLY/) && ($pre_filter_ma
 	$no_agent_redirect_bypass=1;
 	if ($AGILOG) {$agi_string = "filtering active: |$extension|$no_agent_ingroup_redirect|$no_agent_ingroup_id|$no_agent_ingroup_extension|$filter_clean_cid_number|";   &agi_output;}
 
+	$queue_date_epoch = time();
+	$BDtarget = ($queue_date_epoch - 5);
+	($Bsec,$Bmin,$Bhour,$Bmday,$Bmon,$Byear,$Bwday,$Byday,$Bisdst) = localtime($BDtarget);
+	$Byear = ($Byear + 1900);
+	$Bmon++;
+	if ($Bmon < 10) {$Bmon = "0$Bmon";}
+	if ($Bmday < 10) {$Bmday = "0$Bmday";}
+	if ($Bhour < 10) {$Bhour = "0$Bhour";}
+	if ($Bmin < 10) {$Bmin = "0$Bmin";}
+	if ($Bsec < 10) {$Bsec = "0$Bsec";}
+	$BDtsSQLdate = "$Byear$Bmon$Bmday$Bhour$Bmin$Bsec";
+
 	$NPsql='';
 	if ($no_agent_ingroup_redirect =~ /NO_PAUSED/) 
 		{$NPsql = "and status NOT IN('PAUSED')";}
 	if ($no_agent_ingroup_redirect =~ /READY_ONLY/) 
 		{$NPsql = "and status IN('READY','CLOSER')";}
-	$stmtA = "SELECT count(*) FROM vicidial_live_agents where closer_campaigns LIKE \"% $no_agent_ingroup_id %\" $NPsql;";
+	$stmtA = "SELECT count(*) FROM vicidial_live_agents where closer_campaigns LIKE \"% $no_agent_ingroup_id %\" and last_update_time > '$BDtsSQLdate' $NPsql;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -655,6 +668,10 @@ if ( ($no_agent_ingroup_redirect =~ /Y|NO_PAUSED|READY_ONLY/) && ($pre_filter_ma
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$affected_rowsL = $dbhA->do($stmtA);
 		if ($AGILOG) {$agi_string = "--    DID UPDATE LOG : |$affected_rowsL|$stmtA|";   &agi_output;}
+		}
+	else
+		{
+		if ($AGILOG) {$agi_string = "No-Agent Debug: |$no_agent_redirect_bypass|$no_agent_ingroup_redirect|$did_extension|$no_agent_ingroup_id|$stmtA|";   &agi_output;}
 		}
 	}
 ##### END no-agent redirect process #####
