@@ -63,7 +63,7 @@ OTHER CHANGES:
 	there are no agents available in a specific in-group
 
 4. Added option to DIDs to allow pre-filtering by a specific filter phone group
-	before the stardard filtering process. The call can be redirected to a
+	before the standard filtering process. The call can be redirected to a
 	specific DID entry if there is a match.
 
 5. Added Wrapup Bypass option to allow or disallow agents to skip the wrapup
@@ -87,7 +87,7 @@ OTHER CHANGES:
 12. Added campaign options to limit number of active callbacks
 
 13. Changed all Agent and Administrative interface text output to use a function
-	instead of echo.(future dynamic other-language interfaces)
+	instead of echo.(for dynamic other-language interfaces)
 
 14. Added Admin Utility to split lead lists into smaller lists
 

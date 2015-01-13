@@ -15,7 +15,7 @@
 #  - Auto reset lists at defined times
 #  - Auto restarts Asterisk process if enabled in servers settings
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 61011-1348 - First build
@@ -97,9 +97,10 @@
 # 141113-1555 - Changed FILL process screen from ASTVDautoFILL to ASTVDadFILL for easier admin
 # 141125-1710 - Added gather_stats_flag for audio sync script launch on voicemail server
 # 141227-0957 - Changed to clear out old unavail voicemail greetings before copying custom greeting
+# 150112-2018 - Added flag to delete voicemail greeting when changed from an audio file to empty
 #
 
-$build = '141227-0957';
+$build = '150112-2018';
 
 $DB=0; # Debug flag
 
@@ -1512,8 +1513,16 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 		while ($sthArows > $vmb_ct)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$VG_voicemail_id =				$aryA[0];
-			$VG_voicemail_greeting =		$aryA[1];
+			$aVG_voicemail_id[$vmb_ct] =			$aryA[0];
+			$aVG_voicemail_greeting[$vmb_ct] =		$aryA[1];
+			$vmb_ct++;
+			}
+
+		$vmb_ct=0;
+		while ($sthArows > $vmb_ct)
+			{
+			$VG_voicemail_id =				$aVG_voicemail_id[$vmb_ct];
+			$VG_voicemail_greeting =		$aVG_voicemail_greeting[$vmb_ct];
 			
 			$gsm='.gsm';
 			$wav='.wav';
@@ -1521,6 +1530,7 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 			$vm_dir_created=0;
 			$vm_greet_wav_exists=0;
 			$vm_greet_gsm_exists=0;
+			$vm_delete_greeting=0;
 			if ( !-e ("/var/spool/asterisk/voicemail/default/$VG_voicemail_id"))
 				{
 				`mkdir /var/spool/asterisk/voicemail/default/$VG_voicemail_id`;
@@ -1535,8 +1545,12 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 				{
 				$vm_greet_gsm_exists++;
 				}
+			if ($VG_voicemail_greeting =~ /---DELETE---/)
+				{
+				$vm_delete_greeting++;
+				}
 
-			if ( ($vm_dir_created < 1) && ( ($vm_greet_wav_exists > 0) || ($vm_greet_gsm_exists > 0) ) )
+			if ( ($vm_dir_created < 1) && ( ($vm_greet_wav_exists > 0) || ($vm_greet_gsm_exists > 0) || ($vm_delete_greeting > 0) ) )
 				{
 				`rm -f /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail.wav`;
 				`rm -f /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail.WAV`;
@@ -1553,6 +1567,12 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 				{
 				`cp /var/lib/asterisk/sounds/$VG_voicemail_greeting$gsm /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail$gsm`;
 				$audio_file_copied++;
+				}
+			if ($vm_delete_greeting > 0)
+				{
+				$stmtA="UPDATE phones SET voicemail_greeting='' where voicemail_greeting='---DELETE---' and voicemail_id='$VG_voicemail_id';";
+				$affected_rows = $dbhA->do($stmtA);
+				if ($DB) {print "resetting vm greeting file to empty: $VG_voicemail_id|$VG_voicemail_greeting|$affected_rows|$stmtA\n";}
 				}
 
 			if ($audio_file_copied < 1)
@@ -1571,15 +1591,24 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 		while ($sthArows > $vmb_ct)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$VG_voicemail_id =				$aryA[0];
-			$VG_voicemail_greeting =		$aryA[1];
-			
+			$aVG_voicemail_id[$vmb_ct] =			$aryA[0];
+			$aVG_voicemail_greeting[$vmb_ct] =		$aryA[1];
+			$vmb_ct++;
+			}
+
+		$vmb_ct=0;
+		while ($sthArows > $vmb_ct)
+			{
+			$VG_voicemail_id =				$aVG_voicemail_id[$vmb_ct];
+			$VG_voicemail_greeting =		$aVG_voicemail_greeting[$vmb_ct];
+
 			$gsm='.gsm';
 			$wav='.wav';
 			$audio_file_copied=0;
 			$vm_dir_created=0;
 			$vm_greet_wav_exists=0;
 			$vm_greet_gsm_exists=0;
+			$vm_delete_greeting=0;
 			if ( !-e ("/var/spool/asterisk/voicemail/default/$VG_voicemail_id"))
 				{
 				`mkdir /var/spool/asterisk/voicemail/default/$VG_voicemail_id`;
@@ -1594,8 +1623,12 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 				{
 				$vm_greet_gsm_exists++;
 				}
+			if ($VG_voicemail_greeting =~ /---DELETE---/)
+				{
+				$vm_delete_greeting++;
+				}
 
-			if ( ($vm_dir_created < 1) && ( ($vm_greet_wav_exists > 0) || ($vm_greet_gsm_exists > 0) ) )
+			if ( ($vm_dir_created < 1) && ( ($vm_greet_wav_exists > 0) || ($vm_greet_gsm_exists > 0) || ($vm_delete_greeting > 0) ) )
 				{
 				`rm -f /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail.wav`;
 				`rm -f /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail.WAV`;
@@ -1612,6 +1645,12 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 				{
 				`cp /var/lib/asterisk/sounds/$VG_voicemail_greeting$gsm /var/spool/asterisk/voicemail/default/$VG_voicemail_id/unavail$gsm`;
 				$audio_file_copied++;
+				}
+			if ($vm_delete_greeting > 0)
+				{
+				$stmtA="UPDATE vicidial_voicemail SET voicemail_greeting='' where voicemail_greeting='---DELETE---' and voicemail_id='$VG_voicemail_id';";
+				$affected_rows = $dbhA->do($stmtA);
+				if ($DB) {print "resetting vm greeting file to empty: $VG_voicemail_id|$VG_voicemail_greeting|$affected_rows|$stmtA\n";}
 				}
 
 			if ($audio_file_copied < 1)

@@ -1762,8 +1762,10 @@ if (isset($_GET["qualify_sql"]))			{$qualify_sql=$_GET["qualify_sql"];}
 	elseif (isset($_POST["qualify_sql"]))	{$qualify_sql=$_POST["qualify_sql"];}
 if (isset($_GET["admin_list_counts"]))			{$admin_list_counts=$_GET["admin_list_counts"];}
 	elseif (isset($_POST["admin_list_counts"]))	{$admin_list_counts=$_POST["admin_list_counts"];}
-if (isset($_GET["voicemail_greeting"]))			{$voicemail_greeting=$_GET["voicemail_greeting"];}
+if (isset($_GET["voicemail_greeting"]))				{$voicemail_greeting=$_GET["voicemail_greeting"];}
 	elseif (isset($_POST["voicemail_greeting"]))	{$voicemail_greeting=$_POST["voicemail_greeting"];}
+if (isset($_GET["old_voicemail_greeting"]))				{$old_voicemail_greeting=$_GET["old_voicemail_greeting"];}
+	elseif (isset($_POST["old_voicemail_greeting"]))	{$old_voicemail_greeting=$_POST["old_voicemail_greeting"];}
 if (isset($_GET["allow_voicemail_greeting"]))			{$allow_voicemail_greeting=$_GET["allow_voicemail_greeting"];}
 	elseif (isset($_POST["allow_voicemail_greeting"]))	{$allow_voicemail_greeting=$_POST["allow_voicemail_greeting"];}
 if (isset($_GET["pause_after_next_call"]))			{$pause_after_next_call=$_GET["pause_after_next_call"];}
@@ -2703,6 +2705,7 @@ if ($non_latin < 1)
 	$survey_fourth_audio_file = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$survey_fourth_audio_file);
 	$safe_harbor_audio_field = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$safe_harbor_audio_field);
 	$voicemail_greeting = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$voicemail_greeting);
+	$old_voicemail_greeting = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$old_voicemail_greeting);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot and comma
 	$menu_prompt = preg_replace('/[^-\/\|\,\._0-9a-zA-Z]/','',$menu_prompt);
@@ -3423,12 +3426,13 @@ else
 # 150101-1511 - Updated for 2015
 # 150107-1938 - Added ignore_group_on_search user option
 # 150111-1543 - Added Lists local call time option(Issue #812) and a campaign option for manual_dial_search_filter
+# 150112-2005 - Added flag to delete voicemail greeting when changed from an audio file to empty
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.10-467a';
-$build = '150111-1543';
+$admin_version = '2.10-468a';
+$build = '150112-2005';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -14155,6 +14159,9 @@ if ($ADD==41111111111)
 					{
 					echo "<br>"._QXZ("PHONE MODIFIED").": $extension\n";
 
+					if ( ($voicemail_greeting == '') and (strlen($old_voicemail_greeting) > 0) )
+						{$voicemail_greeting = '---DELETE---';}
+
 					$stmt="UPDATE phones set extension='$extension', dialplan_number='$dialplan_number', voicemail_id='$voicemail_id', phone_ip='$phone_ip', computer_ip='$computer_ip', server_ip='$server_ip', login='$login', pass='$pass', status='$status', active='$active', phone_type='$phone_type', fullname='$fullname', company='$company', picture='$picture', protocol='$protocol', local_gmt='$local_gmt', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', login_user='$login_user', login_pass='$login_pass', login_campaign='$login_campaign', park_on_extension='$park_on_extension', conf_on_extension='$conf_on_extension', VICIDIAL_park_on_extension='$VICIDIAL_park_on_extension', VICIDIAL_park_on_filename='$VICIDIAL_park_on_filename', monitor_prefix='$monitor_prefix', recording_exten='$recording_exten', voicemail_exten='$voicemail_exten', voicemail_dump_exten='$voicemail_dump_exten', ext_context='$ext_context', dtmf_send_extension='$dtmf_send_extension', call_out_number_group='$call_out_number_group', client_browser='$client_browser', install_directory='$install_directory', local_web_callerID_URL='" . mysqli_real_escape_string($link, $local_web_callerID_URL) . "', VICIDIAL_web_URL='" . mysqli_real_escape_string($link, $VICIDIAL_web_URL) . "', AGI_call_logging_enabled='$AGI_call_logging_enabled', user_switching_enabled='$user_switching_enabled', conferencing_enabled='$conferencing_enabled', admin_hangup_enabled='$admin_hangup_enabled', admin_hijack_enabled='$admin_hijack_enabled', admin_monitor_enabled='$admin_monitor_enabled', call_parking_enabled='$call_parking_enabled', updater_check_enabled='$updater_check_enabled', AFLogging_enabled='$AFLogging_enabled', QUEUE_ACTION_enabled='$QUEUE_ACTION_enabled', CallerID_popup_enabled='$CallerID_popup_enabled', voicemail_button_enabled='$voicemail_button_enabled', enable_fast_refresh='$enable_fast_refresh', fast_refresh_rate='$fast_refresh_rate', enable_persistant_mysql='$enable_persistant_mysql', auto_dial_next_number='$auto_dial_next_number', VDstop_rec_after_each_call='$VDstop_rec_after_each_call', DBX_server='$DBX_server', DBX_database='$DBX_database', DBX_user='$DBX_user', DBX_pass='$DBX_pass', DBX_port='$DBX_port', DBY_server='$DBY_server', DBY_database='$DBY_database', DBY_user='$DBY_user', DBY_pass='$DBY_pass', DBY_port='$DBY_port', outbound_cid='$outbound_cid', enable_sipsak_messages='$enable_sipsak_messages', email='$email', template_id='$template_id', conf_override='$conf_override',phone_context='$phone_context',phone_ring_timeout='$phone_ring_timeout',conf_secret='$conf_secret', delete_vm_after_email='$delete_vm_after_email',is_webphone='$is_webphone',use_external_server_ip='$use_external_server_ip',codecs_list='$codecs_list',codecs_with_template='$codecs_with_template',webphone_dialpad='$webphone_dialpad',on_hook_agent='$on_hook_agent',webphone_auto_answer='$webphone_auto_answer',voicemail_timezone='$voicemail_timezone',voicemail_options='$voicemail_options',user_group='$user_group',voicemail_greeting='$voicemail_greeting',voicemail_dump_exten_no_inst='$voicemail_dump_exten_no_inst',voicemail_instructions='$voicemail_instructions' where extension='$old_extension' and server_ip='$old_server_ip';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -14613,6 +14620,8 @@ if ($ADD==471111111111)
 			{echo "<br>"._QXZ("VOICEMAIL BOX NOT MODIFIED - Please go back and look at the data you entered")."\n";}
 		else
 			{
+			if ( ($voicemail_greeting == '') and (strlen($old_voicemail_greeting) > 0) )
+				{$voicemail_greeting = '---DELETE---';}
 			$stmt="UPDATE vicidial_voicemail set fullname='$fullname',active='$active',pass='$pass',email='$email',delete_vm_after_email='$delete_vm_after_email',voicemail_timezone='$voicemail_timezone',voicemail_options='$voicemail_options',user_group='$user_group',voicemail_greeting='$voicemail_greeting' where voicemail_id='$voicemail_id';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "|$stmt|";}
@@ -28282,13 +28291,16 @@ if ($ADD==31111111111)
 			$z++;
 			}
 		echo "<option selected>$row[81]</option></select> $NWB#phones-voicemail_timezone$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Voicemail Options").": </td><td align=left><input type=text name=voicemail_options size=50 maxlength=100 value=\"$row[82]\">$NWB#phones-voicemail_options$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Voicemail Options").": </td><td align=left><input type=hidden name=old_voicemail_greeting value=\"$row[84]\"><input type=text name=voicemail_options size=50 maxlength=100 value=\"$row[82]\">$NWB#phones-voicemail_options$NWE</td></tr>\n";
 		if ($SSallow_voicemail_greeting > 0)
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Voicemail Greeting").": </td><td><input type=text size=50 maxlength=100 name=voicemail_greeting id=voicemail_greeting value=\"$row[84]\"> <a href=\"javascript:launch_chooser('voicemail_greeting','date',700);\">"._QXZ("audio chooser")."</a>  $NWB#phones-voicemail_greeting$NWE</td></tr>\n";
 			}
 		else
-			{echo "<input type=hidden name=voicemail_greeting value=\"$row[84]\"";}
+			{
+			echo "<input type=hidden name=voicemail_greeting value=\"$row[84]\">";
+			echo "<input type=hidden name=old_voicemail_greeting value=\"$row[84]\">";
+			}
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Voicemail Instructions").": </td><td align=left><select size=1 name=voicemail_instructions><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option selected>$row[86]</option></select>$NWB#phones-voicemail_instructions$NWE</td></tr>\n";
 
@@ -29290,10 +29302,13 @@ if ($ADD==371111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Delete Voicemail After Email").": </td><td align=left><select size=1 name=delete_vm_after_email><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$delete_vm_after_email' selected>"._QXZ("$delete_vm_after_email")."</option></select>$NWB#voicemail-delete_vm_after_email$NWE</td></tr>\n";
 		if ($SSallow_voicemail_greeting > 0)
 			{
-			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Voicemail Greeting").": </td><td><input type=text size=50 maxlength=100 name=voicemail_greeting id=voicemail_greeting value=\"$voicemail_greeting\"> <a href=\"javascript:launch_chooser('voicemail_greeting','date',30);\">"._QXZ("audio chooser")."</a>  $NWB#voicemail-voicemail_greeting$NWE</td></tr>\n";
+			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Voicemail Greeting").": </td><td><input type=hidden name=old_voicemail_greeting value=\"$voicemail_greeting\"><input type=text size=50 maxlength=100 name=voicemail_greeting id=voicemail_greeting value=\"$voicemail_greeting\"> <a href=\"javascript:launch_chooser('voicemail_greeting','date',30);\">"._QXZ("audio chooser")."</a>  $NWB#voicemail-voicemail_greeting$NWE</td></tr>\n";
 			}
 		else
-			{echo "<input type=hidden name=voicemail_greeting value=\"$voicemail_greeting\"";}
+			{
+			echo "<input type=hidden name=voicemail_greeting value=\"$voicemail_greeting\">";
+			echo "<input type=hidden name=old_voicemail_greeting value=\"$voicemail_greeting\">";
+			}
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Voicemail Zone").": </td><td align=left><select size=1 name=voicemail_timezone>";
 		$vm_zones = explode("\n",$SSvoicemail_timezones);
