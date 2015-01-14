@@ -35,7 +35,7 @@ REQUIRED STEPS!!!
     B. Going into mysql and executing the upgrade sql file:
 	mysql
 	use asterisk
-	\. /path/from/root/extras/upgrade_2.8.sql
+	\. /path/from/root/extras/upgrade_2.10.sql
 	quit
 
 3. install new files:
