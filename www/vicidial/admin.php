@@ -22336,7 +22336,15 @@ if ($ADD==311)
 			}
 		echo "</td></tr>\n";
 		
-		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=311111111&call_time_id=$list_local_call_time\">"._QXZ("Local Call Time").": </a></td><td align=left><select size=1 name=local_call_time>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>";
+		if ($list_local_call_time == 'campaign')
+			{echo _QXZ("Local Call Time").": ";}
+		else
+			{echo "<a href=\"$PHP_SELF?ADD=311111111&call_time_id=$list_local_call_time\">"._QXZ("Local Call Time").": </a>";}
+		echo "</td><td align=left><select size=1 name=local_call_time>\n";
+
+		
+		
 		echo "<option value=\"campaign\">"._QXZ("Campaign - Use Campaign Settings")."</option>\n";
 		echo "$call_times_list";
 		if($list_local_call_time == "campaign")
