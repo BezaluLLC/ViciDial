@@ -81,6 +81,7 @@
 #               Added code to restrict all functions if campaign flag is used
 # 140612-2124 - Fixed date issue with wrong variable #772
 # 150111-1546 - Added lists option: local call time and enabled whole-campaign outbound call time holidays, Issue #812
+# 150114-1204 - Optimization of gmt code, Issue #812
 #
 
 # constants
@@ -1496,7 +1497,6 @@ foreach(@campaign_id)
 
 				$r=0;
 				$state_gmt='';
-				$del_state_gmt='';
 				while($r < $g)
 					{
 					if ($GMT_day[$r]==0)	#### Sunday local time
@@ -1505,15 +1505,11 @@ foreach(@campaign_id)
 							{
 							if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
 								{$state_gmt.="'$GMT_gmt[$r]',";}
-							else
-								{$del_state_gmt.="'$GMT_gmt[$r]',";}
 							}
 						else
 							{
 							if ( ($GMT_hour[$r]>=$Gsct_sunday_start) && ($GMT_hour[$r]<$Gsct_sunday_stop) )
 								{$state_gmt.="'$GMT_gmt[$r]',";}
-							else
-								{$del_state_gmt.="'$GMT_gmt[$r]',";}
 							}
 						}
 					if ($GMT_day[$r]==1)	#### Monday local time
@@ -1522,15 +1518,11 @@ foreach(@campaign_id)
 							{
 							if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
 								{$state_gmt.="'$GMT_gmt[$r]',";}
-							else
-								{$del_state_gmt.="'$GMT_gmt[$r]',";}
 							}
 						else
 							{
 							if ( ($GMT_hour[$r]>=$Gsct_monday_start) && ($GMT_hour[$r]<$Gsct_monday_stop) )
 								{$state_gmt.="'$GMT_gmt[$r]',";}
-							else
-								{$del_state_gmt.="'$GMT_gmt[$r]',";}
 							}
 						}
 					if ($GMT_day[$r]==2)	#### Tuesday local time
@@ -1539,15 +1531,11 @@ foreach(@campaign_id)
 							{
 							if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
 								{$state_gmt.="'$GMT_gmt[$r]',";}
-							else
-								{$del_state_gmt.="'$GMT_gmt[$r]',";}
 							}
 						else
 							{
 							if ( ($GMT_hour[$r]>=$Gsct_tuesday_start) && ($GMT_hour[$r]<$Gsct_tuesday_stop) )
 								{$state_gmt.="'$GMT_gmt[$r]',";}
-							else
-								{$del_state_gmt.="'$GMT_gmt[$r]',";}
 							}
 						}
 					if ($GMT_day[$r]==3)	#### Wednesday local time
@@ -1556,15 +1544,11 @@ foreach(@campaign_id)
 							{
 							if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
 								{$state_gmt.="'$GMT_gmt[$r]',";}
-							else
-								{$del_state_gmt.="'$GMT_gmt[$r]',";}
 							}
 						else
 							{
 							if ( ($GMT_hour[$r]>=$Gsct_wednesday_start) && ($GMT_hour[$r]<$Gsct_wednesday_stop) )
 								{$state_gmt.="'$GMT_gmt[$r]',";}
-							else
-								{$del_state_gmt.="'$GMT_gmt[$r]',";}
 							}
 						}
 					if ($GMT_day[$r]==4)	#### Thursday local time
@@ -1573,15 +1557,11 @@ foreach(@campaign_id)
 							{
 							if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
 								{$state_gmt.="'$GMT_gmt[$r]',";}
-							else
-								{$del_state_gmt.="'$GMT_gmt[$r]',";}
 							}
 						else
 							{
 							if ( ($GMT_hour[$r]>=$Gsct_thursday_start) && ($GMT_hour[$r]<$Gsct_thursday_stop) )
 								{$state_gmt.="'$GMT_gmt[$r]',";}
-							else
-								{$del_state_gmt.="'$GMT_gmt[$r]',";}
 							}
 						}
 					if ($GMT_day[$r]==5)	#### Friday local time
@@ -1590,15 +1570,11 @@ foreach(@campaign_id)
 							{
 							if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
 								{$state_gmt.="'$GMT_gmt[$r]',";}
-							else
-								{$del_state_gmt.="'$GMT_gmt[$r]',";}
 							}
 						else
 							{
 							if ( ($GMT_hour[$r]>=$Gsct_friday_start) && ($GMT_hour[$r]<$Gsct_friday_stop) )
 								{$state_gmt.="'$GMT_gmt[$r]',";}
-							else
-								{$del_state_gmt.="'$GMT_gmt[$r]',";}
 							}
 						}
 					if ($GMT_day[$r]==6)	#### Saturday local time
@@ -1607,23 +1583,18 @@ foreach(@campaign_id)
 							{
 							if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
 								{$state_gmt.="'$GMT_gmt[$r]',";}
-							else
-								{$del_state_gmt.="'$GMT_gmt[$r]',";}
 							}
 						else
 							{
 							if ( ($GMT_hour[$r]>=$Gsct_saturday_start) && ($GMT_hour[$r]<$Gsct_saturday_stop) )
 								{$state_gmt.="'$GMT_gmt[$r]',";}
-							else
-								{$del_state_gmt.="'$GMT_gmt[$r]',";}
 							}
 						}
 					$r++;
 					}
 				$state_gmt = "$state_gmt'99'";
-				$del_state_gmt = "$del_state_gmt'99'";
 				$ct_state_gmt_SQL .= "or (state='$Gstate_call_time_state' && gmt_offset_now IN($state_gmt)) ";
-				$del_state_gmt_SQL .= "or (state='$Gstate_call_time_state' && gmt_offset_now IN($del_state_gmt)) ";
+				$del_state_gmt_SQL .= "or (state='$Gstate_call_time_state' && gmt_offset_now NOT IN($state_gmt)) ";
 				}
 
 			$b++;
@@ -1642,7 +1613,6 @@ foreach(@campaign_id)
 		@default_gmt_ARY=@MT;
 		$dgA=0;
 		$default_gmt='';
-		$del_default_gmt='';
 		while($r < $g)
 			{
 			if ($GMT_day[$r]==0)	#### Sunday local time
@@ -1651,15 +1621,11 @@ foreach(@campaign_id)
 					{
 					if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
 						{$default_gmt.="'$GMT_gmt[$r]',";   $default_gmt_ARY[$dgA] = "$GMT_gmt[$r]";   $dgA++;}
-					else
-						{$del_default_gmt.="'$GMT_gmt[$r]',";}
 					}
 				else
 					{
 					if ( ($GMT_hour[$r]>=$Gct_sunday_start) && ($GMT_hour[$r]<$Gct_sunday_stop) )
 						{$default_gmt.="'$GMT_gmt[$r]',";   $default_gmt_ARY[$dgA] = "$GMT_gmt[$r]";   $dgA++;}
-					else
-						{$del_default_gmt.="'$GMT_gmt[$r]',";}
 					}
 				}
 			if ($GMT_day[$r]==1)	#### Monday local time
@@ -1668,15 +1634,11 @@ foreach(@campaign_id)
 					{
 					if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
 						{$default_gmt.="'$GMT_gmt[$r]',";   $default_gmt_ARY[$dgA] = "$GMT_gmt[$r]";   $dgA++;}
-					else
-						{$del_default_gmt.="'$GMT_gmt[$r]',";}
 					}
 				else
 					{
 					if ( ($GMT_hour[$r]>=$Gct_monday_start) && ($GMT_hour[$r]<$Gct_monday_stop) )
 						{$default_gmt.="'$GMT_gmt[$r]',";   $default_gmt_ARY[$dgA] = "$GMT_gmt[$r]";   $dgA++;}
-					else
-						{$del_default_gmt.="'$GMT_gmt[$r]',";}
 					}
 				}
 			if ($GMT_day[$r]==2)	#### Tuesday local time
@@ -1685,15 +1647,11 @@ foreach(@campaign_id)
 					{
 					if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
 						{$default_gmt.="'$GMT_gmt[$r]',";   $default_gmt_ARY[$dgA] = "$GMT_gmt[$r]";   $dgA++;}
-					else
-						{$del_default_gmt.="'$GMT_gmt[$r]',";}
 					}
 				else
 					{
 					if ( ($GMT_hour[$r]>=$Gct_tuesday_start) && ($GMT_hour[$r]<$Gct_tuesday_stop) )
 						{$default_gmt.="'$GMT_gmt[$r]',";   $default_gmt_ARY[$dgA] = "$GMT_gmt[$r]";   $dgA++;}
-					else
-						{$del_default_gmt.="'$GMT_gmt[$r]',";}
 					}
 				}
 			if ($GMT_day[$r]==3)	#### Wednesday local time
@@ -1702,15 +1660,11 @@ foreach(@campaign_id)
 					{
 					if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
 						{$default_gmt.="'$GMT_gmt[$r]',";   $default_gmt_ARY[$dgA] = "$GMT_gmt[$r]";   $dgA++;}
-					else
-						{$del_default_gmt.="'$GMT_gmt[$r]',";}
 					}
 				else
 					{
 					if ( ($GMT_hour[$r]>=$Gct_wednesday_start) && ($GMT_hour[$r]<$Gct_wednesday_stop) )
 						{$default_gmt.="'$GMT_gmt[$r]',";   $default_gmt_ARY[$dgA] = "$GMT_gmt[$r]";   $dgA++;}
-					else
-						{$del_default_gmt.="'$GMT_gmt[$r]',";}
 					}
 				}
 			if ($GMT_day[$r]==4)	#### Thursday local time
@@ -1719,15 +1673,11 @@ foreach(@campaign_id)
 					{
 					if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
 						{$default_gmt.="'$GMT_gmt[$r]',";   $default_gmt_ARY[$dgA] = "$GMT_gmt[$r]";   $dgA++;}
-					else
-						{$del_default_gmt.="'$GMT_gmt[$r]',";}
 					}
 				else
 					{
 					if ( ($GMT_hour[$r]>=$Gct_thursday_start) && ($GMT_hour[$r]<$Gct_thursday_stop) )
 						{$default_gmt.="'$GMT_gmt[$r]',";   $default_gmt_ARY[$dgA] = "$GMT_gmt[$r]";   $dgA++;}
-					else
-						{$del_default_gmt.="'$GMT_gmt[$r]',";}
 					}
 				}
 			if ($GMT_day[$r]==5)	#### Friday local time
@@ -1736,15 +1686,11 @@ foreach(@campaign_id)
 					{
 					if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
 						{$default_gmt.="'$GMT_gmt[$r]',";   $default_gmt_ARY[$dgA] = "$GMT_gmt[$r]";   $dgA++;}
-					else
-						{$del_default_gmt.="'$GMT_gmt[$r]',";}
 					}
 				else
 					{
 					if ( ($GMT_hour[$r]>=$Gct_friday_start) && ($GMT_hour[$r]<$Gct_friday_stop) )
 						{$default_gmt.="'$GMT_gmt[$r]',";   $default_gmt_ARY[$dgA] = "$GMT_gmt[$r]";   $dgA++;}
-					else
-						{$del_default_gmt.="'$GMT_gmt[$r]',";}
 					}
 				}
 			if ($GMT_day[$r]==6)	#### Saturday local time
@@ -1753,24 +1699,19 @@ foreach(@campaign_id)
 					{
 					if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
 						{$default_gmt.="'$GMT_gmt[$r]',";   $default_gmt_ARY[$dgA] = "$GMT_gmt[$r]";   $dgA++;}
-					else
-						{$del_default_gmt.="'$GMT_gmt[$r]',";}
 					}
 				else
 					{
 					if ( ($GMT_hour[$r]>=$Gct_saturday_start) && ($GMT_hour[$r]<$Gct_saturday_stop) )
 						{$default_gmt.="'$GMT_gmt[$r]',";   $default_gmt_ARY[$dgA] = "$GMT_gmt[$r]";   $dgA++;}
-					else
-						{$del_default_gmt.="'$GMT_gmt[$r]',";}
 					}
 				}
 			$r++;
 			}
 
 		$default_gmt = "$default_gmt'99'";
-		$del_default_gmt = "$del_default_gmt'99'";
 		$all_gmtSQL[$i] = "(gmt_offset_now IN($default_gmt) $ct_statesSQL) $ct_state_gmt_SQL";
-		$del_gmtSQL[$i] = "(gmt_offset_now IN($del_default_gmt) $ct_statesSQL) $del_state_gmt_SQL";
+		$del_gmtSQL[$i] = "(gmt_offset_now NOT IN($default_gmt) $ct_statesSQL) $del_state_gmt_SQL";
 
 		##### END calculate what gmt_offset_now values are within the allowed local_call_time setting ###
 
@@ -2113,7 +2054,6 @@ foreach(@campaign_id)
 						### END Check for outbound state holiday ###
 						$r=0;
 						$state_gmt='';
-						$del_state_gmt='';
 						while($r < $g)
 							{
 							if ($GMT_day[$r]==0)	#### Sunday local time
@@ -2210,9 +2150,8 @@ foreach(@campaign_id)
 							$r++;
 							}
 						$state_gmt = "$state_gmt'99'";
-			
+						$list_state_gmt_SQL .= "or (list_id='$cur_list_id' and state='$Gstate_call_time_state' and gmt_offset_now IN($state_gmt)) ";			
 						$del_list_state_gmt_SQL .= "or (list_id='$cur_list_id' and state='$Gstate_call_time_state' && gmt_offset_now NOT IN($state_gmt)) ";
-						$list_state_gmt_SQL .= "or (list_id='$cur_list_id' and state='$Gstate_call_time_state' && gmt_offset_now IN($state_gmt)) ";
 						}
 
 					$b++;
@@ -2238,15 +2177,11 @@ foreach(@campaign_id)
 						if (($Gct_sunday_start==0) && ($Gct_sunday_stop==0))
 							{
 							if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
-								{}
-							else
 								{$list_default_gmt.="'$GMT_gmt[$r]',";}
 							}
 						else
 							{
 							if ( ($GMT_hour[$r]>=$Gct_sunday_start) && ($GMT_hour[$r]<$Gct_sunday_stop) )
-								{}
-							else
 								{$list_default_gmt.="'$GMT_gmt[$r]',";}
 							}
 						}
@@ -2255,15 +2190,11 @@ foreach(@campaign_id)
 						if (($Gct_monday_start==0) && ($Gct_monday_stop==0))
 							{
 							if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
-								{}
-							else
 								{$list_default_gmt.="'$GMT_gmt[$r]',";}
 							}
 						else
 							{
 							if ( ($GMT_hour[$r]>=$Gct_monday_start) && ($GMT_hour[$r]<$Gct_monday_stop) )
-								{}
-							else
 								{$list_default_gmt.="'$GMT_gmt[$r]',";}
 							}
 						}
@@ -2272,15 +2203,11 @@ foreach(@campaign_id)
 						if (($Gct_tuesday_start==0) && ($Gct_tuesday_stop==0))
 							{
 							if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
-								{$del_list_default_gmt.="'$GMT_gmt[$r]',";   $del_list_default_gmt_ARY[$dgA] = "$GMT_gmt[$r]";   $dgA++;}
-							else
 								{$list_default_gmt.="'$GMT_gmt[$r]',";}
 							}
 						else
 							{
 							if ( ($GMT_hour[$r]>=$Gct_tuesday_start) && ($GMT_hour[$r]<$Gct_tuesday_stop) )
-								{$del_list_default_gmt.="'$GMT_gmt[$r]',";   $del_list_default_gmt_ARY[$dgA] = "$GMT_gmt[$r]";   $dgA++;}
-							else
 								{$list_default_gmt.="'$GMT_gmt[$r]',";}
 							}
 						}
@@ -2289,15 +2216,11 @@ foreach(@campaign_id)
 						if (($Gct_wednesday_start==0) && ($Gct_wednesday_stop==0))
 							{
 							if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
-								{$del_list_default_gmt.="'$GMT_gmt[$r]',";   $del_list_default_gmt_ARY[$dgA] = "$GMT_gmt[$r]";   $dgA++;}
-							else
 								{$list_default_gmt.="'$GMT_gmt[$r]',";}
 							}
 						else
 							{
 							if ( ($GMT_hour[$r]>=$Gct_wednesday_start) && ($GMT_hour[$r]<$Gct_wednesday_stop) )
-								{}
-							else
 								{$list_default_gmt.="'$GMT_gmt[$r]',";}
 							}
 						}
@@ -2306,15 +2229,11 @@ foreach(@campaign_id)
 						if (($Gct_thursday_start==0) && ($Gct_thursday_stop==0))
 							{
 							if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
-								{}
-							else
 								{$list_default_gmt.="'$GMT_gmt[$r]',";}
 							}
 						else
 							{
 							if ( ($GMT_hour[$r]>=$Gct_thursday_start) && ($GMT_hour[$r]<$Gct_thursday_stop) )
-								{}
-							else
 								{$list_default_gmt.="'$GMT_gmt[$r]',";}
 							}
 						}
@@ -2323,15 +2242,11 @@ foreach(@campaign_id)
 						if (($Gct_friday_start==0) && ($Gct_friday_stop==0))
 							{
 							if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
-								{}
-							else
 								{$list_default_gmt.="'$GMT_gmt[$r]',";}
 							}
 						else
 							{
 							if ( ($GMT_hour[$r]>=$Gct_friday_start) && ($GMT_hour[$r]<$Gct_friday_stop) )
-								{}
-							else
 								{$list_default_gmt.="'$GMT_gmt[$r]',";}
 							}
 						}
@@ -2340,15 +2255,11 @@ foreach(@campaign_id)
 						if (($Gct_saturday_start==0) && ($Gct_saturday_stop==0))
 							{
 							if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
-								{}
-							else
 								{$list_default_gmt.="'$GMT_gmt[$r]',";}
 							}
 						else
 							{
 							if ( ($GMT_hour[$r]>=$Gct_saturday_start) && ($GMT_hour[$r]<$Gct_saturday_stop) )
-								{}
-							else
 								{$list_default_gmt.="'$GMT_gmt[$r]',";}
 							}
 						}
@@ -2358,20 +2269,20 @@ foreach(@campaign_id)
 				$list_default_gmt = "$list_default_gmt'99'";
 				
 				#set variable for List Mix
-				$indv_list_gmt_sql{ "$cur_list_id" } = "((list_id=\"$cur_list_id\" and gmt_offset_now NOT IN($list_default_gmt) $ct_statesSQL) $list_state_gmt_SQL)";
+				$indv_list_gmt_sql{ "$cur_list_id" } = "((list_id=\"$cur_list_id\" and gmt_offset_now IN($list_default_gmt) $ct_statesSQL) $list_state_gmt_SQL)";
 
 				#only add for use if the list is active
 				if ( ($list_id_act eq "Y") || ($allow_inactive eq "Y") )
 					{
 					if ( ( ($act_rec_countLISTS == 0) && ($allow_inactive ne "Y") ) || ( ($rec_countLISTS == 0) && ($allow_inactive eq "Y") ) ) 
 						{
-						$list_id_sql[$i] = "((list_id=\"$cur_list_id\" and gmt_offset_now NOT IN($list_default_gmt) $ct_statesSQL) $list_state_gmt_SQL)";
+						$list_id_sql[$i] = "((list_id=\"$cur_list_id\" and gmt_offset_now IN($list_default_gmt) $ct_statesSQL) $list_state_gmt_SQL)";
 						}
 					else
 						{
-						$list_id_sql[$i] .= " or ((list_id=\"$cur_list_id\" and gmt_offset_now NOT IN($list_default_gmt) $ct_statesSQL) $list_state_gmt_SQL)";
+						$list_id_sql[$i] .= " or ((list_id=\"$cur_list_id\" and gmt_offset_now IN($list_default_gmt) $ct_statesSQL) $list_state_gmt_SQL)";
 						}
-					$del_list_id_sql[$i] .= "((list_id=\"$cur_list_id\" and gmt_offset_now IN($list_default_gmt) $ct_statesSQL) $del_list_state_gmt_SQL) or";
+					$del_list_id_sql[$i] .= "((list_id=\"$cur_list_id\" and gmt_offset_now NOT IN($list_default_gmt) $ct_statesSQL) $del_list_state_gmt_SQL) or";
 					$act_rec_countLISTS++;
 					}
 				}
