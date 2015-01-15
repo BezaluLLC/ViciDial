@@ -2,7 +2,7 @@
 
 # install.pl version 2.10
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 
 # CHANGES
@@ -35,6 +35,7 @@
 # 130902-1149 - Small fix for mysqli support
 # 131121-1643 - Added robots.txt file to all web directories
 # 140619-0958 - Added instructions for new ASTplay IAX loop trunk
+# 150115-0657 - Changes to save custom.css customizations, issue #816
 #
 
 ############################################
@@ -2526,12 +2527,15 @@ if ($NOWEB < 1)
 	if (!-e "$PATHweb/vicidial/server_reports/")	{`mkdir -p $PATHweb/vicidial/server_reports/`;}
 
 	print "Copying web files...\n";
+	# save custom.css if its not empty
+	if (-s "$PATHweb/agc/css/custom.css") {`cp -f $PATHweb/agc/css/custom.css $PATHweb/agc/css/custom.css.save_user_changes`;}
 	`cp -f -R ./www/* $PATHweb/`;
 	`cp -f ./www/vicidial/robots.txt $PATHweb/`;
 	`cp -f ./www/vicidial/robots.txt $PATHweb/agc/`;
 	`cp -f ./www/vicidial/robots.txt $PATHweb/vicidial/ploticus/`;
 	`cp -f ./www/vicidial/robots.txt $PATHweb/vicidial/agent_reports/`;
 	`cp -f ./www/vicidial/robots.txt $PATHweb/vicidial/server_reports/`;
+	if (-e "$PATHweb/agc/css/custom.css.save_user_changes") {`mv $PATHweb/agc/css/custom.css.save_user_changes $PATHweb/agc/css/custom.css`;}
 
 	print "setting web scripts to executable...\n";
 	`chmod 0777 $PATHweb/`;
