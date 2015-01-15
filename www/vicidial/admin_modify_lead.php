@@ -65,6 +65,7 @@
 # 141128-0859 - Code cleanup for QXZ functions
 # 141229-1745 - Added code for on-the-fly language translations display
 # 150107-1729 - Added ignore_group_on_search user option
+# 150114-2321 - Added date_of_birth as editable field
 #
 
 require("dbconnect_mysqli.php");
@@ -179,6 +180,9 @@ if (isset($_GET["archive_search"]))			{$archive_search=$_GET["archive_search"];}
 	elseif (isset($_POST["archive_search"]))	{$archive_search=$_POST["archive_search"];}
 if (isset($_GET["archive_log"]))			{$archive_log=$_GET["archive_log"];}
 	elseif (isset($_POST["archive_log"]))	{$archive_log=$_POST["archive_log"];}
+if (isset($_GET["date_of_birth"]))			{$date_of_birth=$_GET["date_of_birth"];}
+	elseif (isset($_POST["date_of_birth"]))	{$date_of_birth=$_POST["date_of_birth"];}
+
 
 if ($archive_search=="Yes") {$vl_table="vicidial_list_archive";} 
 else {$vl_table="vicidial_list"; $archive_search="No";}
@@ -394,7 +398,7 @@ if ($lead_id == 'NEW')
 	{
 	$comments = preg_replace("/\n/",'!N',$comments);
 	$comments = preg_replace("/\r/",'',$comments);
-	$stmt="INSERT INTO vicidial_list set status='" . mysqli_real_escape_string($link, $status) . "',title='" . mysqli_real_escape_string($link, $title) . "',first_name='" . mysqli_real_escape_string($link, $first_name) . "',middle_initial='" . mysqli_real_escape_string($link, $middle_initial) . "',last_name='" . mysqli_real_escape_string($link, $last_name) . "',address1='" . mysqli_real_escape_string($link, $address1) . "',address2='" . mysqli_real_escape_string($link, $address2) . "',address3='" . mysqli_real_escape_string($link, $address3) . "',city='" . mysqli_real_escape_string($link, $city) . "',state='" . mysqli_real_escape_string($link, $state) . "',province='" . mysqli_real_escape_string($link, $province) . "',postal_code='" . mysqli_real_escape_string($link, $postal_code) . "',country_code='" . mysqli_real_escape_string($link, $country_code) . "',alt_phone='" . mysqli_real_escape_string($link, $alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysqli_real_escape_string($link, $email) . "',security_phrase='" . mysqli_real_escape_string($link, $security) . "',comments='" . mysqli_real_escape_string($link, $comments) . "',rank='" . mysqli_real_escape_string($link, $rank) . "',owner='" . mysqli_real_escape_string($link, $owner) . "',vendor_lead_code='" . mysqli_real_escape_string($link, $vendor_id) . "', list_id='" . mysqli_real_escape_string($link, $list_id) . "',entry_date=NOW();";
+	$stmt="INSERT INTO vicidial_list set status='" . mysqli_real_escape_string($link, $status) . "',title='" . mysqli_real_escape_string($link, $title) . "',first_name='" . mysqli_real_escape_string($link, $first_name) . "',middle_initial='" . mysqli_real_escape_string($link, $middle_initial) . "',last_name='" . mysqli_real_escape_string($link, $last_name) . "',address1='" . mysqli_real_escape_string($link, $address1) . "',address2='" . mysqli_real_escape_string($link, $address2) . "',address3='" . mysqli_real_escape_string($link, $address3) . "',city='" . mysqli_real_escape_string($link, $city) . "',state='" . mysqli_real_escape_string($link, $state) . "',province='" . mysqli_real_escape_string($link, $province) . "',postal_code='" . mysqli_real_escape_string($link, $postal_code) . "',country_code='" . mysqli_real_escape_string($link, $country_code) . "',alt_phone='" . mysqli_real_escape_string($link, $alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysqli_real_escape_string($link, $email) . "',security_phrase='" . mysqli_real_escape_string($link, $security) . "',comments='" . mysqli_real_escape_string($link, $comments) . "',rank='" . mysqli_real_escape_string($link, $rank) . "',owner='" . mysqli_real_escape_string($link, $owner) . "',vendor_lead_code='" . mysqli_real_escape_string($link, $vendor_id) . "', list_id='" . mysqli_real_escape_string($link, $list_id) . "',date_of_birth='" . mysqli_real_escape_string($link, $date_of_birth) . "',entry_date=NOW();";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$affected_rows = mysqli_affected_rows($link);
@@ -435,7 +439,7 @@ if ($end_call > 0)
 	$comments = preg_replace("/\n/",'!N',$comments);
 	$comments = preg_replace("/\r/",'',$comments);
 	### update the lead record in the vicidial_list table 
-	$stmt="UPDATE $vl_table set status='" . mysqli_real_escape_string($link, $status) . "',title='" . mysqli_real_escape_string($link, $title) . "',first_name='" . mysqli_real_escape_string($link, $first_name) . "',middle_initial='" . mysqli_real_escape_string($link, $middle_initial) . "',last_name='" . mysqli_real_escape_string($link, $last_name) . "',address1='" . mysqli_real_escape_string($link, $address1) . "',address2='" . mysqli_real_escape_string($link, $address2) . "',address3='" . mysqli_real_escape_string($link, $address3) . "',city='" . mysqli_real_escape_string($link, $city) . "',state='" . mysqli_real_escape_string($link, $state) . "',province='" . mysqli_real_escape_string($link, $province) . "',postal_code='" . mysqli_real_escape_string($link, $postal_code) . "',country_code='" . mysqli_real_escape_string($link, $country_code) . "',alt_phone='" . mysqli_real_escape_string($link, $alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysqli_real_escape_string($link, $email) . "',security_phrase='" . mysqli_real_escape_string($link, $security) . "',comments='" . mysqli_real_escape_string($link, $comments) . "',rank='" . mysqli_real_escape_string($link, $rank) . "',owner='" . mysqli_real_escape_string($link, $owner) . "',vendor_lead_code='" . mysqli_real_escape_string($link, $vendor_id) . "' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "'";
+	$stmt="UPDATE $vl_table set status='" . mysqli_real_escape_string($link, $status) . "',title='" . mysqli_real_escape_string($link, $title) . "',first_name='" . mysqli_real_escape_string($link, $first_name) . "',middle_initial='" . mysqli_real_escape_string($link, $middle_initial) . "',last_name='" . mysqli_real_escape_string($link, $last_name) . "',address1='" . mysqli_real_escape_string($link, $address1) . "',address2='" . mysqli_real_escape_string($link, $address2) . "',address3='" . mysqli_real_escape_string($link, $address3) . "',city='" . mysqli_real_escape_string($link, $city) . "',state='" . mysqli_real_escape_string($link, $state) . "',province='" . mysqli_real_escape_string($link, $province) . "',postal_code='" . mysqli_real_escape_string($link, $postal_code) . "',country_code='" . mysqli_real_escape_string($link, $country_code) . "',alt_phone='" . mysqli_real_escape_string($link, $alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysqli_real_escape_string($link, $email) . "',security_phrase='" . mysqli_real_escape_string($link, $security) . "',comments='" . mysqli_real_escape_string($link, $comments) . "',rank='" . mysqli_real_escape_string($link, $rank) . "',owner='" . mysqli_real_escape_string($link, $owner) . "',vendor_lead_code='" . mysqli_real_escape_string($link, $vendor_id) . "',date_of_birth='" . mysqli_real_escape_string($link, $date_of_birth) . "' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "'";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -1081,7 +1085,8 @@ else
 		echo " $label_postal_code: $postal_code </td></tr>\n";
 
 		echo "<tr><td align=right>$label_province : </td><td align=left>$province</td></tr>\n";
-		echo "<tr><td align=right>"._QXZ("Country")." : </td><td align=left>$country_code</td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("Country")." : </td><td align=left>$country_code &nbsp; \n";
+		echo " "._QXZ("Date of Birth").": $date_of_birth </td></tr>\n";
 		echo "<tr><td align=right>$label_phone_number : </td><td align=left>$phone_number</td></tr>\n";
 		echo "<tr><td align=right>$label_phone_code : </td><td align=left>$phone_code</td></tr>\n";
 		echo "<tr><td align=right>$label_alt_phone : </td><td align=left>$alt_phone</td></tr>\n";
@@ -1106,7 +1111,8 @@ else
 		echo " $label_postal_code: <input type=text name=postal_code size=10 maxlength=10 value=\"".htmlentities($postal_code)."\"> </td></tr>\n";
 
 		echo "<tr><td align=right>$label_province : </td><td align=left><input type=text name=province size=30 maxlength=30 value=\"".htmlentities($province)."\"></td></tr>\n";
-		echo "<tr><td align=right>"._QXZ("Country")." : </td><td align=left><input type=text name=country_code size=3 maxlength=3 value=\"".htmlentities($country_code)."\"></td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("Country")." : </td><td align=left><input type=text name=country_code size=3 maxlength=3 value=\"".htmlentities($country_code)."\"> &nbsp; \n";
+		echo " "._QXZ("Date of Birth").": <input type=text name=date_of_birth size=12 maxlength=10 value=\"".htmlentities($date_of_birth)."\"></td></tr>\n";
 		echo "<tr><td align=right>$label_phone_number : </td><td align=left><input type=text name=phone_number size=20 maxlength=20 value=\"".htmlentities($phone_number)."\"></td></tr>\n";
 		echo "<tr><td align=right>$label_phone_code : </td><td align=left><input type=text name=phone_code size=10 maxlength=10 value=\"".htmlentities($phone_code)."\"></td></tr>\n";
 		echo "<tr><td align=right>$label_alt_phone : </td><td align=left><input type=text name=alt_phone size=20 maxlength=20 value=\"".htmlentities($alt_phone)."\"></td></tr>\n";
