@@ -72,7 +72,7 @@ user_custom_three, user_custom_four, user_custom_five,
 preset_number_a, preset_number_b, preset_number_c, preset_number_d,
 preset_number_e, preset_number_f, preset_dtmf_a, preset_dtmf_b,
 did_id, did_extension, did_pattern, did_description, closecallid,
-xfercallid, agent_log_id, entry_list_id, call_id.
+xfercallid, agent_log_id, entry_list_id, call_id, user_group, list_name.
 
 
 For examples(and sample result URL):

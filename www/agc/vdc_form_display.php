@@ -1,7 +1,7 @@
 <?php
 # vdc_form_display.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed display the contents of the FORM tab in the agent 
 # interface, as well as take submission of the form submission when the agent 
@@ -28,10 +28,11 @@
 # 141118-1424 - Added agent_email variable
 # 141128-0855 - Code cleanup for QXZ functions
 # 141216-2116 - Added language settings lookups and user/pass variable standardization
+# 150114-2045 - Added list_name variable
 #
 
-$version = '2.10-19';
-$build = '141216-2116';
+$version = '2.10-20';
+$build = '150114-2045';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -167,6 +168,8 @@ if (isset($_GET["bcrypt"]))				{$bcrypt=$_GET["bcrypt"];}
 	elseif (isset($_POST["bcrypt"]))	{$bcrypt=$_POST["bcrypt"];}
 if (isset($_GET["called_count"]))			{$called_count=$_GET["called_count"];}
 	elseif (isset($_POST["called_count"]))	{$called_count=$_POST["called_count"];}
+if (isset($_GET["list_name"]))			{$list_name=$_GET["list_name"];}
+	elseif (isset($_POST["list_name"]))	{$list_name=$_POST["list_name"];}
 
 if ($bcrypt == 'OFF')
 	{$bcrypt=0;}

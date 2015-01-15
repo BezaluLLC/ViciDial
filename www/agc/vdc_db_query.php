@@ -372,12 +372,13 @@
 # 141216-1900 - Added agent choose language option
 # 141229-1428 - Changed single-quote QXZ arguments to double-quotes
 # 150111-1544 - Added lists option: local call time(Issue #812) and added manual_dial_search_filter feature
+# 150114-2051 - Added list_name web url variable
 #
 
-$version = '2.10-267';
-$build = '150111-1544';
+$version = '2.10-268';
+$build = '150114-2051';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=599;
+$mysql_log_count=611;
 $one_mysql_log=0;
 $DB=0;
 
@@ -1902,7 +1903,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					{
 					$stmt="SELECT list_id,state FROM vicidial_list where lead_id='$lead_id';";
 					$rslt=mysql_to_mysqli($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00600',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
 					$row=mysqli_fetch_row($rslt);
 					$lead_list_id =	$row[0];
@@ -1912,7 +1913,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				### Get local_call_time for list
 				$stmt="SELECT local_call_time FROM vicidial_lists where list_id='$lead_list_id';";
 				$rslt=mysql_to_mysqli($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00601',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
 				$row=mysqli_fetch_row($rslt);
 				$list_local_call_time =	$row[0];
@@ -2270,7 +2271,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 										}				
 									$rslt=mysql_to_mysqli($stmt, $link);
 									if ($DB) {echo "$stmt\n";}
-									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00602',$user,$server_ip,$session_name,$one_mysql_log);}
 									$sthCrows=mysqli_num_rows($rslt);
 									if ($sthCrows > 0)
 										{
@@ -2563,7 +2564,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 						# Camp List
 						$stmt="SELECT list_id FROM vicidial_lists where campaign_id='$campaign' and active='Y';";
 						$rslt_list=mysql_to_mysqli($stmt, $link);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00603',$user,$server_ip,$session_name,$one_mysql_log);}
 						$camplists_ct = mysqli_num_rows($rslt_list);
 						if ($DB) {echo "$camplists_ct|$stmt\n";}
 						$k=0;
@@ -2602,7 +2603,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 							# Pull the call times for the lists
 							$stmt="SELECT local_call_time FROM vicidial_lists where list_id='$cur_list_id';";
 							$rslt=mysql_to_mysqli($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}					
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00604',$user,$server_ip,$session_name,$one_mysql_log);}					
 							$rslt_ct = mysqli_num_rows($rslt);
 							if ($rslt_ct > 0)
 								{
@@ -2648,7 +2649,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 									
 									$stmt = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop from vicidial_call_time_holidays where holiday_id IN($Gct_holidaysSQL) and holiday_status='ACTIVE' and holiday_date='$YMD' order by holiday_id;";
 									$rslt=mysql_to_mysqli($stmt, $link);
-									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00605',$user,$server_ip,$session_name,$one_mysql_log);}
 									$sthCrows=mysqli_num_rows($rslt);
 									if ($sthCrows > 0)
 										{
@@ -2692,7 +2693,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 										{
 										$stmt = "SELECT state_call_time_id,state_call_time_state,state_call_time_name,state_call_time_comments,sct_default_start,sct_default_stop,sct_sunday_start,sct_sunday_stop,sct_monday_start,sct_monday_stop,sct_tuesday_start,sct_tuesday_stop,sct_wednesday_start,sct_wednesday_stop,sct_thursday_start,sct_thursday_stop,sct_friday_start,sct_friday_stop,sct_saturday_start,sct_saturday_stop,ct_holidays from vicidial_state_call_times where state_call_time_id='$state_rules[$b]';";
 										$rslt=mysql_to_mysqli($stmt, $link);
-										if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+										if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00606',$user,$server_ip,$session_name,$one_mysql_log);}
 										$sthCrows=mysqli_num_rows($rslt);
 										if ($sthCrows > 0)
 											{
@@ -2739,7 +2740,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 												}				
 											$rslt=mysql_to_mysqli($stmt, $link);
 											if ($DB) {echo "$stmt\n";}
-											if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+											if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00607',$user,$server_ip,$session_name,$one_mysql_log);}
 											$sthCrows=mysqli_num_rows($rslt);
 											if ($sthCrows > 0)
 												{
@@ -3310,7 +3311,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				### Get local_call_time for list
 				$stmt="SELECT local_call_time FROM vicidial_lists where list_id='$lead_list_id';";
 				$rslt=mysql_to_mysqli($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00608',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
 				$row=mysqli_fetch_row($rslt);
 				$list_local_call_time =	$row[0];
@@ -3876,7 +3877,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 			### Look for number preset override settings from list
 			if (strlen($list_id)>0)
 				{
-				$stmt = "SELECT xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number from vicidial_lists where list_id='$list_id';";
+				$stmt = "SELECT xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number,list_name from vicidial_lists where list_id='$list_id';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00278',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3894,6 +3895,8 @@ if ($ACTION == 'manDiaLnextCaLL')
 						{$VDCL_xferconf_d_number =	$row[3];}
 					if (strlen($row[4]) > 0)
 						{$VDCL_xferconf_e_number =	$row[4];}
+					if (strlen($row[5]) > 0)
+						{$list_name =	$row[5];}
 					}
 				
 				$custom_field_names='|';
@@ -3998,6 +4001,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 			$LeaD_InfO .=	$post_phone_time_diff_alert_message . "\n";
 			$LeaD_InfO .=   $ACcount . "\n";
 			$LeaD_InfO .=   $ACcomments . "\n";
+			$LeaD_InfO .=   $list_name . "\n";
 
 			echo $LeaD_InfO;
 			}
@@ -6596,7 +6600,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				### Check for List ID override settings
 				if (strlen($list_id)>0)
 					{
-					$stmt = "SELECT xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number,web_form_address,web_form_address_two from vicidial_lists where list_id='$list_id';";
+					$stmt = "SELECT xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number,web_form_address,web_form_address_two,list_name from vicidial_lists where list_id='$list_id';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00281',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -6618,6 +6622,8 @@ if ($ACTION == 'VDADcheckINCOMING')
 							{$VDCL_group_web =			$row[5];}
 						if (strlen($row[6]) > 5)
 							{$VDCL_group_web_two =		$row[6];}
+						if (strlen($row[7]) > 0)
+							{$list_name =				$row[7];}
 						}
 					}
 
@@ -6891,7 +6897,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				### Check for List ID override settings
 				if (strlen($list_id)>0)
 					{
-					$stmt = "SELECT xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number,web_form_address,web_form_address_two from vicidial_lists where list_id='$list_id';";
+					$stmt = "SELECT xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number,web_form_address,web_form_address_two,list_name from vicidial_lists where list_id='$list_id';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00282',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -6913,6 +6919,8 @@ if ($ACTION == 'VDADcheckINCOMING')
 							{$VDCL_group_web =			$row[5];}
 						if (strlen($row[6]) > 5)
 							{$VDCL_group_web_two =		$row[6];}
+						if (strlen($row[7]) > 0)
+							{$list_name =				$row[7];}
 						}
 					}
 
@@ -7088,6 +7096,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 			$LeaD_InfO .=   $LISTweb_form_address_two . "\n";
 			$LeaD_InfO .=   $ACcount . "\n";
 			$LeaD_InfO .=   $ACcomments . "\n";
+			$LeaD_InfO .=   $list_name . "\n";
 
 			echo $LeaD_InfO;
 
@@ -7190,6 +7199,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$VDCL_start_call_url = preg_replace('/--A--vendor_id--B--/i',urlencode(trim($vendor_id)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--vendor_lead_code--B--/i',urlencode(trim($vendor_id)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--list_id--B--/i',urlencode(trim($list_id)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--list_name--B--/i',urlencode(trim($list_name)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--gmt_offset_now--B--/i',urlencode(trim($gmt_offset_now)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--phone_code--B--/i',urlencode(trim($phone_code)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--phone_number--B--/i',urlencode(trim($phone_number)),$VDCL_start_call_url);
@@ -7875,7 +7885,7 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 			### Check for List ID override settings
 			if (strlen($list_id)>0)
 				{
-				$stmt = "SELECT xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number,web_form_address,web_form_address_two from vicidial_lists where list_id='$list_id';";
+				$stmt = "SELECT xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number,web_form_address,web_form_address_two,list_name from vicidial_lists where list_id='$list_id';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00508',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -7897,6 +7907,8 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 						{$VDCL_group_web =			$row[5];}
 					if (strlen($row[6]) > 5)
 						{$VDCL_group_web_two =		$row[6];}
+					if (strlen($row[7]) > 0)
+						{$list_name =				$row[7];}
 					}
 				}
 
@@ -8041,6 +8053,7 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 			$LeaD_InfO .=	$custom_field_names . "\n";
 			$LeaD_InfO .=	$custom_field_values . "\n";
 			$LeaD_InfO .=	$custom_field_types . "\n";
+			$LeaD_InfO .=	$list_name . "\n";
 
 			echo $LeaD_InfO;
 
@@ -8143,6 +8156,7 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 				$VDCL_start_call_url = preg_replace('/--A--vendor_id--B--/i',urlencode(trim($vendor_id)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--vendor_lead_code--B--/i',urlencode(trim($vendor_id)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--list_id--B--/i',urlencode(trim($list_id)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--list_name--B--/i',urlencode(trim($list_name)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--gmt_offset_now--B--/i',urlencode(trim($gmt_offset_now)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--phone_code--B--/i',urlencode(trim($phone_code)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--phone_number--B--/i',urlencode(trim($phone_number)),$VDCL_start_call_url);
@@ -8826,7 +8840,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 			### Check for List ID override settings
 			if (strlen($list_id)>0)
 				{
-				$stmt = "SELECT xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number,web_form_address,web_form_address_two from vicidial_lists where list_id='$list_id';";
+				$stmt = "SELECT xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number,web_form_address,web_form_address_two,list_name from vicidial_lists where list_id='$list_id';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00473',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -8848,6 +8862,8 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 						{$VDCL_group_web =			$row[5];}
 					if (strlen($row[6]) > 5)
 						{$VDCL_group_web_two =		$row[6];}
+					if (strlen($row[7]) > 0)
+						{$list_name =				$row[7];}
 					}
 				}
 
@@ -9034,6 +9050,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 			$LeaD_InfO .=   $LISTweb_form_address_two . "\n";
 			$LeaD_InfO .=   $ACcount . "\n";
 			$LeaD_InfO .=   $ACcomments . "\n";
+			$LeaD_InfO .=   $list_name . "\n";
 
 			echo $LeaD_InfO;
 
@@ -10418,11 +10435,26 @@ if ($ACTION == 'updateDISPO')
 			$entry_list_id	= urlencode(trim($row[34]));
 			}
 
+		if (preg_match('/list_name--B--/i',$dispo_call_url))
+			{
+			$stmt = "SELECT list_name from vicidial_lists where list_id='$list_id' limit 1;";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00609',$user,$server_ip,$session_name,$one_mysql_log);}
+			$VL_ln_ct = mysqli_num_rows($rslt);
+			if ($VL_ln_ct > 0)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$list_name =	urlencode(trim($row[0]));
+				}
+			}
+
 		$dispo_call_url = preg_replace('/^VAR/','',$dispo_call_url);
 		$dispo_call_url = preg_replace('/--A--lead_id--B--/i',"$lead_id",$dispo_call_url);
 		$dispo_call_url = preg_replace('/--A--vendor_id--B--/i',"$vendor_id",$dispo_call_url);
 		$dispo_call_url = preg_replace('/--A--vendor_lead_code--B--/i',"$vendor_lead_code",$dispo_call_url);
 		$dispo_call_url = preg_replace('/--A--list_id--B--/i',"$list_id",$dispo_call_url);
+		$dispo_call_url = preg_replace('/--A--list_name--B--/i',"$list_name",$dispo_call_url);
 		$dispo_call_url = preg_replace('/--A--gmt_offset_now--B--/i',"$gmt_offset_now",$dispo_call_url);
 		$dispo_call_url = preg_replace('/--A--phone_code--B--/i',"$phone_code",$dispo_call_url);
 		$dispo_call_url = preg_replace('/--A--phone_number--B--/i',"$phone_number",$dispo_call_url);
@@ -12912,7 +12944,7 @@ if ($ACTION == 'LEADINFOview')
 				### Get local_call_time for list
 				$stmt="SELECT local_call_time FROM vicidial_lists where list_id='$lead_list_id';";
 				$rslt=mysql_to_mysqli($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00610',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
 				$rowy=mysqli_fetch_row($rslt);
 				$list_local_call_time =	$rowy[0];
@@ -13490,7 +13522,7 @@ if ($ACTION == 'CalLBacKLisT')
 			### Get local_call_time for list
 			$stmt="SELECT local_call_time FROM vicidial_lists where list_id='$lead_list_id';";
 			$rslt=mysql_to_mysqli($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00611',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
 			$rslt_ct = mysqli_num_rows($rslt);
 			if ($rslt_ct > 0)

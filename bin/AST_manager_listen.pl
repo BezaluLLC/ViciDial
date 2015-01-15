@@ -43,6 +43,7 @@
 # 140524-0900 - Fixed issue with consultative agent transfers in Asterisk 1.8
 # 141113-1605 - Added concurrency check
 # 141124-2309 - Fixed Fhour variable bug
+# 141219-1137 - Change to keepalive processes to not run at busy times and not drop buffer
 #
 
 # constants
@@ -52,6 +53,8 @@ $MT[0]='';
 $vdcl_update=0;
 $vddl_update=0;
 $run_check=1; # concurrency check
+$last_keepalive_epoch = time();
+$keepalive_skips=0;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -211,7 +214,6 @@ if ($run_check > 0)
 $one_day_interval = 90;		# 1 day loops for 3 months
 while($one_day_interval > 0)
 	{
-
 	$event_string="STARTING NEW MANAGER TELNET CONNECTION||ATTEMPT|ONE DAY INTERVAL:$one_day_interval|";
 	&event_logger;
 	#   Errmode    => Return,
@@ -220,8 +222,8 @@ while($one_day_interval > 0)
 	$tn = new Net::Telnet (Port => $telnet_port,
 						  Prompt => '/.*[\$%#>] $/',
 						  Output_record_separator => '',);
-	#$LItelnetlog = "$PATHlogs/listen_telnet_log.txt"  # uncomment for telnet log
-	#$fh = $tn->dump_log("$LItelnetlog");  # uncomment for telnet log
+#	$LItelnetlog = "$PATHlogs/listen_telnet_log.txt";  # uncomment for telnet log
+#	$fh = $tn->dump_log("$LItelnetlog");  # uncomment for telnet log
 	if (length($ASTmgrUSERNAMElisten) > 3) {$telnet_login = $ASTmgrUSERNAMElisten;}
 	else {$telnet_login = $ASTmgrUSERNAME;}
 	$tn->open("$telnet_host"); 
@@ -246,7 +248,7 @@ while($one_day_interval > 0)
 			usleep(1*100*1000);
 		
 			$msg='';
-			$read_input_buf = $tn->get(Errmode    => Return, Timeout    => 1,);
+			$read_input_buf = $tn->get(Errmode => Return, Timeout => 1,);
 			$input_buf_length = length($read_input_buf);
 			$msg = $tn->errmsg;
 			if ($msg =~ /filehandle isn\'t open/i)
@@ -262,12 +264,20 @@ while($one_day_interval > 0)
 			if ( ($read_input_buf !~ /\n\n/) or ($input_buf_length < 10) )
 				{
 				#if ($read_input_buf =~ /\n/) {print "\n|||$input_buf_length|||$read_input_buf|||\n";}
-				$input_buf = "$input_buf$read_input_buf";
+				if ($endless_loop =~ /00$|50$/) 
+					{
+					$input_buf = "$input_buf$keepalive_lines$read_input_buf";
+					$input_buf =~ s/\n\n\n/\n\n/gi;
+					$keepalive_lines='';
+					}
+				else
+					{$input_buf = "$input_buf$read_input_buf";}
 				}
 			else
 				{
 				$partial=0;
 				$partial_input_buf='';
+				@input_lines=@MT;
 
 				if ($read_input_buf !~ /\n\n$/)
 					{
@@ -281,7 +291,14 @@ while($one_day_interval > 0)
 					$partial++;
 					}
 
-				$input_buf = "$input_buf$read_input_buf";
+				if ($endless_loop =~ /00$|50$/) 
+					{
+					$input_buf = "$input_buf$keepalive_lines$read_input_buf";
+					$input_buf =~ s/\n\n\n/\n\n/gi;
+					$keepalive_lines='';
+					}
+				else
+					{$input_buf = "$input_buf$read_input_buf";}
 				@input_lines = split(/\n\n/, $input_buf);
 
 				if($DB){print "input buffer: $input_buf_length     lines: $#input_lines     partial: $partial\n";}
@@ -767,7 +784,7 @@ while($one_day_interval > 0)
 			$endless_loop--;
 			$keepalive_count_loop++;
 
-			if($DB){print STDERR "loop counter: |$endless_loop|$keepalive_count_loop|     |$vddl_update|$vdcl_update|\r";}
+			if($DB){print STDERR "          loop counter: |$endless_loop|$keepalive_count_loop|     |$vddl_update|$vdcl_update|\r";}
 
 			### putting a blank file called "sendmgr.kill" in a directory will automatically safely kill this program
 			if ( (-e "$PATHhome/listenmgr.kill") or ($sendonlyone) )
@@ -782,6 +799,8 @@ while($one_day_interval > 0)
 			### Also, keep the MySQL connection alive by selecting the server_updater time for this server
 			if ($endless_loop =~ /00$|50$/) 
 				{
+				$keepalive_lines='';
+
 				&get_time_now;
 
 				### Grab Server values from the database
@@ -806,15 +825,39 @@ while($one_day_interval > 0)
 				$last_update = $aryA[0];
 				$sthA->finish();
 
-				@list_lines = $tn->cmd(String => "Action: Command\nCommand: show uptime\n\n", Prompt => '/--END COMMAND--.*/', Errmode    => Return, Timeout    => 1); 
-				if($DB){print "input lines: $#list_lines\n";}
+				$keepalive_epoch = time();
+				$keepalive_sec = ($keepalive_epoch - $last_keepalive_epoch);
+				if ($keepalive_sec > 40) 
+					{
+					$keepalive_skips=0;
+					@keepalive_output = $tn->cmd(String => "Action: Command\nCommand: show uptime\n\n", Prompt => '/--END COMMAND--.*/', Errmode => Return, Timeout => 1); 
+					if($DB){print "keepalive length: $#keepalive_output|$now_date\n";}
 
-				if($DB){print "+++++++++++++++++++++++++++++++sending keepalive transmit line $endless_loop|$now_date|$last_update|\n";}
+					if($DB){print "+++++++++++++++++++++++++++++++sending keepalive transmit line: $keepalive_sec seconds   $endless_loop|$now_date|$last_update|\n";}
+
+					$k=0;
+					foreach(@keepalive_output) 
+						{
+						$keepalive_lines .= "$keepalive_output[$k]";
+						$k++;
+						}
+					$manager_string="PROCESS: keepalive length: $#keepalive_output|$k|$now_date";
+					&manager_output_logger;
+					}
+				else
+					{
+					$keepalive_skips++;
+					if($DB){print "-------------------------------no keepalive transmit necessary: $keepalive_sec seconds($keepalive_skips in a row)   $endless_loop|$now_date|$last_update|\n";}
+
+					$manager_string="PROCESS: keepalive skip: $keepalive_sec seconds($keepalive_skips in a row)|$now_date";
+					&manager_output_logger;
+					}
+				$last_keepalive_epoch = time();
 				$keepalive_count_loop=0;
 				}
 			}
 		### END manager event handling for asterisk version < 1.6
-		} 
+		}
 	else 
 		{
 		### BEGIN manager event handling for asterisk version >= 1.6
@@ -825,7 +868,7 @@ while($one_day_interval > 0)
 			usleep(1*100*1000);
 			
 			$msg='';
-			$read_input_buf = $tn->get(Errmode    => Return, Timeout    => 1,);
+			$read_input_buf = $tn->get(Errmode => Return, Timeout => 1,);
 			$input_buf_length = length($read_input_buf);
 			$msg = $tn->errmsg;
 			if ($msg =~ /filehandle isn\'t open/i)
@@ -841,12 +884,20 @@ while($one_day_interval > 0)
 			if ( ($read_input_buf !~ /\n\n/) or ($input_buf_length < 10) )
 				{
 				#if ($read_input_buf =~ /\n/) {print "\n|||$input_buf_length|||$read_input_buf|||\n";}
-				$input_buf = "$input_buf$read_input_buf";
+				if ($endless_loop =~ /00$|50$/) 
+					{
+					$input_buf = "$input_buf$keepalive_lines$read_input_buf";
+					$input_buf =~ s/\n\n\n/\n\n/gi;
+					$keepalive_lines='';
+					}
+				else
+					{$input_buf = "$input_buf$read_input_buf";}
 				}
 			else
 				{
 				$partial=0;
 				$partial_input_buf='';
+				@input_lines=@MT;
 
 				if ($read_input_buf !~ /\n\n$/)
 					{
@@ -860,8 +911,16 @@ while($one_day_interval > 0)
 					$partial++;
 					}
 
-				$input_buf = "$input_buf$read_input_buf";
+				if ($endless_loop =~ /00$|50$/) 
+					{
+					$input_buf = "$input_buf$keepalive_lines$read_input_buf";
+					$input_buf =~ s/\n\n\n/\n\n/gi;
+					$keepalive_lines='';
+					}
+				else
+					{$input_buf = "$input_buf$read_input_buf";}
 				@input_lines = split(/\n\n/, $input_buf);
+
 
 				if($DB){print "input buffer: $input_buf_length     lines: $#input_lines     partial: $partial\n";}
 				if ( ($DB) && ($partial) ) {print "-----[$partial_input_buf]-----\n\n";}
@@ -1202,7 +1261,7 @@ while($one_day_interval > 0)
 			$endless_loop--;
 			$keepalive_count_loop++;
 
-			if($DB){print STDERR "loop counter: |$endless_loop|$keepalive_count_loop|     |$vddl_update|$vdcl_update|\r";}
+			if($DB){print STDERR "          loop counter: |$endless_loop|$keepalive_count_loop|     |$vddl_update|$vdcl_update|\r";}
 
 			### putting a blank file called "sendmgr.kill" in a directory will automatically safely kill this program
 			if ( (-e "$PATHhome/listenmgr.kill") or ($sendonlyone) )
@@ -1217,6 +1276,8 @@ while($one_day_interval > 0)
 			### Also, keep the MySQL connection alive by selecting the server_updater time for this server
 			if ($endless_loop =~ /00$|50$/) 
 				{
+				$keepalive_lines='';
+
 				&get_time_now;
 
 				### Grab Server values from the database
@@ -1227,7 +1288,7 @@ while($one_day_interval > 0)
 				if ($sthArows > 0)
 					{
 					@aryA = $sthA->fetchrow_array;
-					$DBvd_server_logs =			"$aryA[0]";
+					$DBvd_server_logs =			$aryA[0];
 					if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
 					else {$SYSLOG = '0';}
 					}
@@ -1241,10 +1302,35 @@ while($one_day_interval > 0)
 				$last_update	=	$aryA[0];
 				$sthA->finish();
 
-				@list_lines = $tn->cmd(String => "Action: Command\nCommand: show uptime\n\n", Prompt => '/--END COMMAND--.*/', Errmode    => Return, Timeout    => 1); 
-				if($DB){print "input lines: $#list_lines\n";}
+				$keepalive_epoch = time();
+				$keepalive_sec = ($keepalive_epoch - $last_keepalive_epoch);
+				if ($keepalive_sec > 40) 
+					{
+					$keepalive_skips=0;
+					@keepalive_output = $tn->cmd(String => "Action: Command\nCommand: core show uptime\n\n", Prompt => '/--END COMMAND--.*/', Errmode => Return, Timeout => 1); 
+					if($DB){print "keepalive length: $#keepalive_output|$now_date\n";}
 
-				if($DB){print "+++++++++++++++++++++++++++++++sending keepalive transmit line $endless_loop|$now_date|$last_update|\n";}
+					if($DB){print "+++++++++++++++++++++++++++++++sending keepalive transmit line: $keepalive_sec seconds   $endless_loop|$now_date|$last_update|\n";}
+
+					$k=0;
+					foreach(@keepalive_output) 
+						{
+						$keepalive_lines .= "$keepalive_output[$k]";
+						$k++;
+						}
+					$manager_string="PROCESS: keepalive length: $#keepalive_output|$k|$now_date";
+					&manager_output_logger;
+					}
+				else
+					{
+					$keepalive_skips++;
+					if($DB){print "-------------------------------no keepalive transmit necessary: $keepalive_sec seconds($keepalive_skips in a row)   $endless_loop|$now_date|$last_update|\n";}
+
+					$manager_string="PROCESS: keepalive skip: $keepalive_sec seconds($keepalive_skips in a row)|$now_date";
+					&manager_output_logger;
+					}
+				$last_keepalive_epoch = time();
+
 				$keepalive_count_loop=0;
 				}
 			}

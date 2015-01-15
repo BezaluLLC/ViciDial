@@ -8,7 +8,7 @@
 # This script is also used for the Add-Lead-URL feature in In-groups and for
 # QM socket-send.
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 100622-0929 - First Build
@@ -18,6 +18,7 @@
 # 130402-2307 - Added user_group variable
 # 141211-1742 - Added list override for no-agent url
 # 141219-1218 - url logging fix for some inputs
+# 150114-2037 - Added list_name variable
 #
 
 $|++;
@@ -215,6 +216,24 @@ if (length($lead_id) > 0)
 		$sthA->finish();
 		}
 
+	$list_name='';
+	if (length($list_id) > 1)
+		{
+		$stmtH = "SELECT list_name FROM vicidial_lists where list_id='$list_id';";
+		$sthA = $dbhA->prepare($stmtH) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtH ", $dbhA->errstr;
+		$list_name_ct=$sthA->rows;
+		if ($list_name_ct > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			if (length($aryA[0])>0) 
+				{
+				$list_name =		$aryA[0];
+				}
+			}
+		$sthA->finish();
+		}
+
 	$VAR_lead_id =			$lead_id;
 	$VAR_user =				$user;
 	$VAR_phone_number =		$phone_number;
@@ -295,11 +314,29 @@ if (length($lead_id) > 0)
 			}
 		$sthA->finish();
 
+		if ( (length($VAR_list_id) > 1) && (length($list_name) < 1) && ($add_lead_url =~ /--A--list_name--B--/) )
+			{
+			$stmtH = "SELECT list_name FROM vicidial_lists where list_id='$VAR_list_id';";
+			$sthA = $dbhA->prepare($stmtH) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtH ", $dbhA->errstr;
+			$list_name_ct=$sthA->rows;
+			if ($list_name_ct > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				if (length($aryA[0])>0) 
+					{
+					$list_name =		$aryA[0];
+					}
+				}
+			$sthA->finish();
+			}
+
 		$add_lead_url =~ s/^VAR//gi;
 		$add_lead_url =~ s/--A--lead_id--B--/$VAR_lead_id/gi;
 		$add_lead_url =~ s/--A--vendor_id--B--/$VAR_vendor_lead_code/gi;
 		$add_lead_url =~ s/--A--vendor_lead_code--B--/$VAR_vendor_lead_code/gi;
 		$add_lead_url =~ s/--A--list_id--B--/$VAR_list_id/gi;
+		$add_lead_url =~ s/--A--list_name--B--/$list_name/gi;
 		$add_lead_url =~ s/--A--phone_number--B--/$VAR_phone_number/gi;
 		$add_lead_url =~ s/--A--phone_code--B--/$VAR_phone_code/gi;
 		$add_lead_url =~ s/--A--did_id--B--/$VAR_did_id/gi;
@@ -415,7 +452,24 @@ if (length($lead_id) > 0)
 				}
 			$sthA->finish();
 			}
-		
+
+		if ( (length($VAR_list_id) > 1) && (length($list_name) < 1) && ($na_call_url =~ /--A--list_name--B--/) )
+			{
+			$stmtH = "SELECT list_name FROM vicidial_lists where list_id='$VAR_list_id';";
+			$sthA = $dbhA->prepare($stmtH) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtH ", $dbhA->errstr;
+			$list_name_ct=$sthA->rows;
+			if ($list_name_ct > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				if (length($aryA[0])>0) 
+					{
+					$list_name =		$aryA[0];
+					}
+				}
+			$sthA->finish();
+			}
+
 		$na_call_url =~ s/^VAR//gi;
 		$na_call_url =~ s/--A--lead_id--B--/$VAR_lead_id/gi;
 		$na_call_url =~ s/--A--entry_date--B--/$VAR_entry_date/gi;
@@ -427,6 +481,7 @@ if (length($lead_id) > 0)
 		$na_call_url =~ s/--A--vendor_lead_code--B--/$VAR_vendor_lead_code/gi;
 		$na_call_url =~ s/--A--source_id--B--/$VAR_source_id/gi;
 		$na_call_url =~ s/--A--list_id--B--/$VAR_list_id/gi;
+		$na_call_url =~ s/--A--list_name--B--/$list_name/gi;
 		$na_call_url =~ s/--A--phone_code--B--/$VAR_phone_code/gi;
 		$na_call_url =~ s/--A--phone_number--B--/$VAR_phone_number/gi;
 		$na_call_url =~ s/--A--title--B--/$VAR_title/gi;
@@ -573,6 +628,23 @@ if (length($lead_id) > 0)
 			$sthA->finish();
 			}
 
+		if ( (length($VAR_list_id) > 1) && (length($list_name) < 1) && ($start_call_url =~ /--A--list_name--B--/) )
+			{
+			$stmtH = "SELECT list_name FROM vicidial_lists where list_id='$VAR_list_id';";
+			$sthA = $dbhA->prepare($stmtH) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtH ", $dbhA->errstr;
+			$list_name_ct=$sthA->rows;
+			if ($list_name_ct > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				if (length($aryA[0])>0) 
+					{
+					$list_name =		$aryA[0];
+					}
+				}
+			$sthA->finish();
+			}
+
 		$start_call_url =~ s/^VAR//gi;
 		$start_call_url =~ s/--A--lead_id--B--/$VAR_lead_id/gi;
 		$start_call_url =~ s/--A--entry_date--B--/$VAR_entry_date/gi;
@@ -583,6 +655,7 @@ if (length($lead_id) > 0)
 		$start_call_url =~ s/--A--vendor_lead_code--B--/$VAR_vendor_lead_code/gi;
 		$start_call_url =~ s/--A--source_id--B--/$VAR_source_id/gi;
 		$start_call_url =~ s/--A--list_id--B--/$VAR_list_id/gi;
+		$start_call_url =~ s/--A--list_name--B--/$list_name/gi;
 		$start_call_url =~ s/--A--phone_code--B--/$VAR_phone_code/gi;
 		$start_call_url =~ s/--A--phone_number--B--/$VAR_phone_number/gi;
 		$start_call_url =~ s/--A--title--B--/$VAR_title/gi;

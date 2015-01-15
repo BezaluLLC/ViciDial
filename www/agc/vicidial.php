@@ -467,10 +467,11 @@
 # 150101-1516 - Updated for 2015
 # 150108-1725 - Added more validation for API transfer commands
 # 150111-1545 - Added manual_dial_search_filter campaign option(Issue #812)
+# 150114-2052 - Added list_name web url variable
 #
 
-$version = '2.10-438c';
-$build = '150111-1545';
+$version = '2.10-439c';
+$build = '150114-2052';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -6812,6 +6813,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								//END section Added By Poundteam for Audited Comments
 								// Add here for AutoDial (VDADcheckINCOMING in vdc_db_query)
 
+								document.vicidial_form.list_name.value			= change_array[55];
+
 								if (hide_gender > 0)
 									{
 									document.vicidial_form.gender_list.value	= change_array[25];
@@ -7920,6 +7923,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									}
 							//END section Added By Poundteam for Audited Comments
 
+								document.vicidial_form.list_name.value			= MDnextResponse_array[53];
+
 								timer_action = campaign_timer_action;
 								timer_action_message = campaign_timer_action_message;
 								timer_action_seconds = campaign_timer_action_seconds;
@@ -8170,6 +8175,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							document.vicidial_form.lead_id.value		='';
 							document.vicidial_form.vendor_lead_code.value='';
 							document.vicidial_form.list_id.value		='';
+							document.vicidial_form.list_name.value		='';
 							document.vicidial_form.entry_list_id.value	='';
 							document.vicidial_form.gmt_offset_now.value	='';
 							document.vicidial_form.phone_code.value		='';
@@ -8965,6 +8971,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							//END section Added By Poundteam for Audited Comments
 							// Add here for AutoDial (VDADcheckINCOMING in vdc_db_query)
 
+							document.vicidial_form.list_name.value			= check_VDIC_array[55];
+
 							if (hide_gender > 0)
 								{
 								document.vicidial_form.gender_list.value	= check_VDIC_array[25];
@@ -9502,6 +9510,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							custom_field_names								= check_VDIC_array[48];
 							custom_field_values								= check_VDIC_array[49];
 							custom_field_types								= check_VDIC_array[50];
+							document.vicidial_form.list_name.value			= check_VDIC_array[51];
 
 
 							if (hide_gender > 0)
@@ -10989,6 +10998,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					document.vicidial_form.lead_id.value		='';
 					document.vicidial_form.vendor_lead_code.value='';
 					document.vicidial_form.list_id.value		='';
+					document.vicidial_form.list_name.value		='';
 					document.vicidial_form.entry_list_id.value	='';
 					document.vicidial_form.gmt_offset_now.value	='';
 					document.vicidial_form.phone_code.value		='';
@@ -12456,6 +12466,7 @@ else
 		"&entry_list_id=" + document.vicidial_form.entry_list_id.value + '' +
 		"&call_id=" + LasTCID + '' +
 		"&user_group=" + VU_user_group + '' +
+		"&list_name=" + encodeURIComponent(document.vicidial_form.list_name.value) + 
 		"&web_vars=" + LIVE_web_vars + '' +
 		webform_session;
 
@@ -12602,6 +12613,7 @@ else
 		var SCvendor_lead_code = encodeURIComponent(document.vicidial_form.vendor_lead_code.value);
 		var SCsource_id = source_id;
 		var SClist_id = encodeURIComponent(document.vicidial_form.list_id.value);
+		var SClist_name = encodeURIComponent(document.vicidial_form.list_name.value);
 		var SCgmt_offset_now = encodeURIComponent(document.vicidial_form.gmt_offset_now.value);
 		var SCcalled_since_last_reset = "";
 		var SCphone_code = encodeURIComponent(document.vicidial_form.phone_code.value);
@@ -12681,6 +12693,7 @@ else
 			SCvendor_lead_code = SCvendor_lead_code.replace(RGplus,'+');
 			SCsource_id = SCsource_id.replace(RGplus,'+');
 			SClist_id = SClist_id.replace(RGplus,'+');
+			SClist_name = SClist_name.replace(RGplus,'+');
 			SCgmt_offset_now = SCgmt_offset_now.replace(RGplus,'+');
 			SCcalled_since_last_reset = SCcalled_since_last_reset.replace(RGplus,'+');
 			SCphone_code = SCphone_code.replace(RGplus,'+');
@@ -12754,6 +12767,7 @@ else
 		var RGvendor_lead_code = new RegExp("--A--vendor_lead_code--B--","g");
 		var RGsource_id = new RegExp("--A--source_id--B--","g");
 		var RGlist_id = new RegExp("--A--list_id--B--","g");
+		var RGlist_name = new RegExp("--A--list_name--B--","g");
 		var RGgmt_offset_now = new RegExp("--A--gmt_offset_now--B--","g");
 		var RGcalled_since_last_reset = new RegExp("--A--called_since_last_reset--B--","g");
 		var RGphone_code = new RegExp("--A--phone_code--B--","g");
@@ -12831,6 +12845,7 @@ else
 		encoded = encoded.replace(RGvendor_lead_code, SCvendor_lead_code);
 		encoded = encoded.replace(RGsource_id, SCsource_id);
 		encoded = encoded.replace(RGlist_id, SClist_id);
+		encoded = encoded.replace(RGlist_name, SClist_name);
 		encoded = encoded.replace(RGgmt_offset_now, SCgmt_offset_now);
 		encoded = encoded.replace(RGcalled_since_last_reset, SCcalled_since_last_reset);
 		encoded = encoded.replace(RGphone_code, SCphone_code);
@@ -15509,6 +15524,7 @@ $zi=2;
     <input type="hidden" name="lead_id" id="lead_id" value="" />
     <input type="hidden" name="list_id" id="list_id" value="" />
     <input type="hidden" name="entry_list_id" id="entry_list_id" value="" />
+    <input type="hidden" name="list_name" id="list_name" value="" />
     <input type="hidden" name="called_count" id="called_count" value="" />
     <input type="hidden" name="rank" id="rank" value="" />
     <input type="hidden" name="owner" id="owner" value="" />
