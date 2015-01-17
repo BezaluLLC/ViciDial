@@ -3429,6 +3429,7 @@ else
 # 150112-2005 - Added flag to delete voicemail greeting when changed from an audio file to empty
 # 150114-2249 - Added Single Agent Daily Time report
 # 150117-1416 - Added list local call time validation when calculating dialable
+# 150117-1454 - Added NAME as status dialplay option
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
@@ -19443,7 +19444,7 @@ if ($ADD==31)
 		else {$ASLlink = "$PHP_SELF?ADD=381111111111&label_id=$screen_labels";}
 		echo "<tr bgcolor=#8EBCFD><td align=right><a href=\"$ASLlink\">"._QXZ("Agent Screen Labels")."</a>: </td><td align=left><select size=1 name=screen_labels>$labels_menu<option value=\"--SYSTEM-SETTINGS--\">--"._QXZ("SYSTEM-SETTINGS")."-- - "._QXZ("Default")."</option><option value='$screen_labels' SELECTED>"._QXZ("$screen_labels")."</option></select>$NWB#campaigns-screen_labels$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("Status Display Fields").": </td><td align=left><select size=1 name=status_display_fields><option value='CALLID'>"._QXZ("CALLID")."</option><option value='LEADID'>"._QXZ("LEADID")."</option><option value='LISTID'>"._QXZ("LISTID")."</option><option value='CALLID_LEADID'>"._QXZ("CALLID_LEADID")."</option><option value='CALLID_LEADID_LISTID'>"._QXZ("CALLID_LEADID_LISTID")."</option><option value='---NONE---'>---"._QXZ("NONE")."---</option><option value='$status_display_fields' SELECTED>"._QXZ("$status_display_fields")."</option></select>$NWB#campaigns-status_display_fields$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("Status Display Fields").": </td><td align=left><select size=1 name=status_display_fields><option value='NAME'>"._QXZ("NAME")."</option><option value='CALLID'>"._QXZ("CALLID")."</option><option value='LEADID'>"._QXZ("LEADID")."</option><option value='LISTID'>"._QXZ("LISTID")."</option><option value='CALLID_LEADID'>"._QXZ("CALLID_LEADID")."</option><option value='CALLID_LISTID'>"._QXZ("CALLID_LISTID")."</option><option value='CALLID_LEADID_LISTID'>"._QXZ("CALLID_LEADID_LISTID")."</option><option value='NAME_CALLID'>"._QXZ("NAME_CALLID")."</option><option value='NAME_CALLID_LEADID'>"._QXZ("NAME_CALLID_LEADID")."</option><option value='NAME_CALLID_LISTID'>"._QXZ("NAME_CALLID_LISTID")."</option><option value='NAME_CALLID_LEADID_LISTID'>"._QXZ("NAME_CALLID_LEADID_LISTID")."</option><option value='---NONE---'>---"._QXZ("NONE")."---</option><option value='$status_display_fields' SELECTED>"._QXZ("$status_display_fields")."</option></select>$NWB#campaigns-status_display_fields$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("Agent Display Queue Count").": </td><td align=left><select size=1 name=display_queue_count><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$display_queue_count' SELECTED>"._QXZ("$display_queue_count")."</option></select>$NWB#campaigns-display_queue_count$NWE</td></tr>\n";
 

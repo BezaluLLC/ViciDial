@@ -34,6 +34,7 @@
 # 141230-1503 - Added code for on-the-fly language translations display
 # 150107-1954 - Added users-ignore_group_on_search
 # 150111-1542 - Added lists-local_call_time and manual_dial_search_filter
+# 150117-1439 - Added NAME option to campaigns-status_display_fields
 #
 
 require("dbconnect_mysqli.php");
@@ -1476,7 +1477,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="campaigns-status_display_fields">
 <BR>
-<B><?php echo _QXZ("Status Display Fields"); ?> -</B><?php echo _QXZ("You can select which variables for calls will be displayed in the status line of the agent screen. CALLID will display the 20 character unique call ID, LEADID will display the system lead ID, LISTID will display the list ID. Default is CALLID."); ?>
+<B><?php echo _QXZ("Status Display Fields"); ?> -</B><?php echo _QXZ("You can select which variables for calls will be displayed in the status line of the agent screen. CALLID will display the 20 character unique call ID, LEADID will display the system lead ID, LISTID will display the list ID, NAME will display the customer name. Default is CALLID."); ?>
 
 <BR>
 <A NAME="campaigns-use_internal_dnc">
