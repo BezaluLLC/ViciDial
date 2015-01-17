@@ -373,12 +373,13 @@
 # 141229-1428 - Changed single-quote QXZ arguments to double-quotes
 # 150111-1544 - Added lists option: local call time(Issue #812) and added manual_dial_search_filter feature
 # 150114-2051 - Added list_name web url variable
+# 150117-1412 - Added list local call time validation
 #
 
-$version = '2.10-268';
-$build = '150114-2051';
+$version = '2.10-269';
+$build = '150117-1412';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=611;
+$mysql_log_count=616;
 $one_mysql_log=0;
 $DB=0;
 
@@ -1917,7 +1918,19 @@ if ($ACTION == 'manDiaLnextCaLL')
 				if ($DB) {echo "$stmt\n";}
 				$row=mysqli_fetch_row($rslt);
 				$list_local_call_time =	$row[0];
-				
+
+				# check that call time exists
+				if ($list_local_call_time != "campaign") 
+					{
+					$stmt="SELECT count(*) from vicidial_call_times where call_time_id='$list_local_call_time';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00612',$user,$server_ip,$session_name,$one_mysql_log);}					
+					$row=mysqli_fetch_row($rslt);
+					$call_time_exists  =	$row[0];
+					if ($call_time_exists < 1) 
+						{$list_local_call_time = 'campaign';}
+					}
+
 				#Check if we are with the gmt for campaign
 				if( (dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state) == 1) and ($list_local_call_time != "campaign") )
 					{
@@ -2610,6 +2623,18 @@ if ($ACTION == 'manDiaLnextCaLL')
 								#set Cur call_time
 								$row=mysqli_fetch_row($rslt);
 								$cur_call_time  =	$row[0];
+								}
+
+							# check that call time exists
+							if ($cur_call_time != "campaign") 
+								{
+								$stmt="SELECT count(*) from vicidial_call_times where call_time_id='$cur_call_time';";
+								$rslt=mysql_to_mysqli($stmt, $link);
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00613',$user,$server_ip,$session_name,$one_mysql_log);}					
+								$row=mysqli_fetch_row($rslt);
+								$call_time_exists  =	$row[0];
+								if ($call_time_exists < 1) 
+									{$cur_call_time = 'campaign';}
 								}
 
 							##### BEGIN local call time for list set different than campaign #####
@@ -3315,6 +3340,18 @@ if ($ACTION == 'manDiaLnextCaLL')
 				if ($DB) {echo "$stmt\n";}
 				$row=mysqli_fetch_row($rslt);
 				$list_local_call_time =	$row[0];
+
+				# check that call time exists
+				if ($list_local_call_time != "campaign") 
+					{
+					$stmt="SELECT count(*) from vicidial_call_times where call_time_id='$list_local_call_time';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00614',$user,$server_ip,$session_name,$one_mysql_log);}					
+					$row=mysqli_fetch_row($rslt);
+					$call_time_exists  =	$row[0];
+					if ($call_time_exists < 1) 
+						{$list_local_call_time = 'campaign';}
+					}
 
 				#Check if we are within the gmt for campaign for $PHONEdialable
 				if ( (dialable_gmt($DB,$link,$local_call_time,$PHONEgmt_offset,$state) == 1) and ($list_local_call_time != "campaign") )
@@ -12948,7 +12985,19 @@ if ($ACTION == 'LEADINFOview')
 				if ($DB) {echo "$stmt\n";}
 				$rowy=mysqli_fetch_row($rslt);
 				$list_local_call_time =	$rowy[0];
-					
+
+				# check that call time exists
+				if ($list_local_call_time != "campaign") 
+					{
+					$stmt="SELECT count(*) from vicidial_call_times where call_time_id='$list_local_call_time';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00615',$user,$server_ip,$session_name,$one_mysql_log);}					
+					$row=mysqli_fetch_row($rslt);
+					$call_time_exists  =	$row[0];
+					if ($call_time_exists < 1) 
+						{$list_local_call_time = 'campaign';}
+					}
+
 				#Check if we are within the gmt for campaign for $PHONEdialable
 				if ( (dialable_gmt($DB,$link,$local_call_time,$PHONEgmt_offset,$state) == 1) and ($list_local_call_time != "campaign") )
 					{
@@ -13530,6 +13579,19 @@ if ($ACTION == 'CalLBacKLisT')
 				$rowy=mysqli_fetch_row($rslt);
 				$list_local_call_time =	$rowy[0];
 				}
+
+			# check that call time exists
+			if ($list_local_call_time != "campaign") 
+				{
+				$stmt="SELECT count(*) from vicidial_call_times where call_time_id='$list_local_call_time';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00616',$user,$server_ip,$session_name,$one_mysql_log);}					
+				$row=mysqli_fetch_row($rslt);
+				$call_time_exists  =	$row[0];
+				if ($call_time_exists < 1) 
+					{$list_local_call_time = 'campaign';}
+				}
+
 			#Check if we are with the gmt for campaign for $POSTdialable
 			if ( (dialable_gmt($DB,$link,$local_call_time,$row[3],$row[4]) == 1) and ($list_local_call_time != "campaign") )
 				{

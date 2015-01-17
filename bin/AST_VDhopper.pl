@@ -82,10 +82,11 @@
 # 140612-2124 - Fixed date issue with wrong variable #772
 # 150111-1546 - Added lists option: local call time and enabled whole-campaign outbound call time holidays, Issue #812
 # 150114-1204 - Optimization of gmt code, Issue #812
+# 150117-1415 - Added list local call time validation
 #
 
 # constants
-$build = '150111-1546';
+$build = '150117-1415';
 $DB=0;  # Debug flag, set to 0 for no debug messages. Can be overriden with CLI --debug flag
 $US='__';
 $MT[0]='';
@@ -1855,9 +1856,19 @@ foreach(@campaign_id)
 			$sthB = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 			$sthB->execute or die "executing: $stmtB", $dbhA->errstr;
 			@aryB = $sthB->fetchrow_array;
-			
-			# set Cur call_time
 			$cur_call_time = $aryB[0];
+			
+			# check that call time exists
+			if ($cur_call_time !~ /^campaign$/) 
+				{
+				$stmtB = "SELECT count(*) from vicidial_call_times where call_time_id = \"$cur_call_time\"";
+				$sthB = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
+				$sthB->execute or die "executing: $stmtB", $dbhA->errstr;
+				@aryB = $sthB->fetchrow_array;
+				$call_time_exists = $aryB[0];
+				if ($call_time_exists < 1) 
+					{$cur_call_time = 'campaign';}
+				}
 			
 			$sthB->finish();
 			# Handle Passing through and skip GMT code for speed if we don't need it

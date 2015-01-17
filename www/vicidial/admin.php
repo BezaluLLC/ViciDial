@@ -3428,12 +3428,13 @@ else
 # 150111-1543 - Added Lists local call time option(Issue #812) and a campaign option for manual_dial_search_filter
 # 150112-2005 - Added flag to delete voicemail greeting when changed from an audio file to empty
 # 150114-2249 - Added Single Agent Daily Time report
+# 150117-1416 - Added list local call time validation when calculating dialable
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.10-469a';
-$build = '150114-2249';
+$admin_version = '2.10-470a';
+$build = '150117-1416';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -35183,6 +35184,17 @@ if (isset($camp_lists))
 					#set Cur call_time
 					$row=mysqli_fetch_row($rslt);
 					$cur_call_time  =	$row[0];
+					}
+
+				# check that call time exists
+				if ($cur_call_time != "campaign") 
+					{
+					$stmt="SELECT count(*) from vicidial_call_times where call_time_id='$cur_call_time';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
+					$call_time_exists  =	$row[0];
+					if ($call_time_exists < 1) 
+						{$cur_call_time = 'campaign';}
 					}
 
 				##### BEGIN local call time for list set different than campaign #####
