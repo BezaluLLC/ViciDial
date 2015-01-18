@@ -122,6 +122,10 @@ OTHER CHANGES:
 
 23. Added NAME as an agent screen Status Display variable
 
+24. The PAUSE and RESUME buttons in the agent screen have been turned into a 
+	single button named "You are paused" or "You are active" depending on
+	your status. Issue #814
+
 
 
 
