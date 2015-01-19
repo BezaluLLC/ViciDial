@@ -3430,12 +3430,13 @@ else
 # 150114-2249 - Added Single Agent Daily Time report
 # 150117-1416 - Added list local call time validation when calculating dialable
 # 150117-1454 - Added NAME as status dialplay option
+# 150109-0920 - Added more list local calltime safety, issue #812
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.10-470a';
-$build = '150117-1416';
+$admin_version = '2.10-471a';
+$build = '150109-0920';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -16956,11 +16957,14 @@ if ($ADD==611111111)
 		}
 	else
 		{
+		$stmtA="UPDATE vicidial_lists set local_call_time='campaign' where local_call_time='$call_time_id';";
+		$rslt=mysql_to_mysqli($stmtA, $link);
+
 		$stmt="DELETE from vicidial_call_times where call_time_id='$call_time_id' $LOGadmin_viewable_groupsSQL limit 1;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 
 		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|";
+		$SQL_log = "$stmt|$stmtA|";
 		$SQL_log = preg_replace('/;/', '', $SQL_log);
 		$SQL_log = addslashes($SQL_log);
 		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLTIMES', event_type='DELETE', record_id='$call_time_id', event_code='ADMIN DELETE CALL TIME', event_sql=\"$SQL_log\", event_notes='';";
