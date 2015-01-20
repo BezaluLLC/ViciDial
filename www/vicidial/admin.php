@@ -3430,13 +3430,14 @@ else
 # 150114-2249 - Added Single Agent Daily Time report
 # 150117-1416 - Added list local call time validation when calculating dialable
 # 150117-1454 - Added NAME as status dialplay option
-# 150109-0920 - Added more list local calltime safety, issue #812
+# 150119-0920 - Added more list local calltime safety, issue #812
+# 150120-0749 - Prevent modification of user_group ID, Hide non-functional agent_extended_alt_dial campaign feature, Export Calls Report Carrier added
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.10-471a';
-$build = '150109-0920';
+$admin_version = '2.10-472a';
+$build = '150120-0749';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -18733,6 +18734,7 @@ if ($ADD==31)
 		echo "<input type=hidden name=campaign_id value=\"$campaign_id\">\n";
 		echo "<input type=hidden name=park_ext value=\"$park_ext\">\n";
 		echo "<input type=hidden name=old_campaign_allow_inbound value=\"$campaign_allow_inbound\">\n";
+		echo "<input type=hidden name=agent_extended_alt_dial value=\"$agent_extended_alt_dial\">\n";
 		echo "<TABLE width=$section_width cellspacing=3>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Campaign ID").": </td><td align=left><b>$campaign_id</b>$NWB#campaigns-campaign_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Campaign Name").": </td><td align=left><input type=text name=campaign_name size=40 maxlength=40 value=\"$campaign_name\">$NWB#campaigns-campaign_name$NWE</td></tr>\n";
@@ -19492,10 +19494,11 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Agent Screen Clipboard Copy").": </td><td align=left><select size=1 name=agent_clipboard_copy><option value='NONE'>"._QXZ("NONE")."</option><option>lead_id</option><option>list_id</option><option>title</option><option>first_name</option><option>middle_initial</option><option>last_name</option><option>phone_code</option><option>phone_number</option><option>address1</option><option>address2</option><option>address3</option><option>city</option><option>state</option><option>province</option><option>postal_code</option><option>country_code</option><option>alt_phone</option><option>comments</option><option>date_of_birth</option><option>email</option><option>gender</option><option>gmt_offset_now</option><option>security_phrase</option><option>vendor_lead_code</option><option value='$agent_clipboard_copy' SELECTED>"._QXZ("$agent_clipboard_copy")."</option></select>$NWB#campaigns-agent_clipboard_copy$NWE</td></tr>\n";
 
-		if ($SSoutbound_autodial_active > 0)
-			{
-			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Agent Screen Extended Alt Dial").": </td><td align=left><select size=1 name=agent_extended_alt_dial><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$agent_extended_alt_dial' SELECTED>"._QXZ("$agent_extended_alt_dial")."</option></select>$NWB#campaigns-agent_extended_alt_dial$NWE</td></tr>\n";
-			}
+	#	if ($SSoutbound_autodial_active > 0)
+	#		{
+	#		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Agent Screen Extended Alt Dial").": </td><td align=left><select size=1 name=agent_extended_alt_dial><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$agent_extended_alt_dial' SELECTED>"._QXZ("$agent_extended_alt_dial")."</option></select>$NWB#campaigns-agent_extended_alt_dial$NWE</td></tr>\n";
+	#		}
+
 		echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("3-Way Call Outbound CallerID").": </td><td align=left><select size=1 name=three_way_call_cid><option value='CAMPAIGN'>"._QXZ("CAMPAIGN")."</option><option value='CUSTOMER'>"._QXZ("CUSTOMER")."</option><option value='AGENT_PHONE'>"._QXZ("AGENT_PHONE")."</option><option value='AGENT_CHOOSE'>"._QXZ("AGENT_CHOOSE")."</option><option value='CUSTOM_CID'>"._QXZ("CUSTOM_CID")."</option><option value='$three_way_call_cid' SELECTED>"._QXZ("$three_way_call_cid")."</option></select>$NWB#campaigns-three_way_call_cid$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("3-Way Call Dial Prefix").": </td><td align=left><input type=text name=three_way_dial_prefix size=15 maxlength=20 value=\"$three_way_dial_prefix\">$NWB#campaigns-three_way_dial_prefix$NWE</td></tr>\n";
@@ -26839,8 +26842,9 @@ if ($ADD==311111)
 			echo "<br>"._QXZ("MODIFY A USERS GROUP ENTRY")."<form action=$PHP_SELF method=POST>\n";
 			echo "<input type=hidden name=ADD value=411111>\n";
 			echo "<input type=hidden name=OLDuser_group value=\"$user_group\">\n";
+			echo "<input type=hidden name=user_group value=\"$user_group\">\n";
 			echo "<center><TABLE width=$section_width cellspacing=3>\n";
-			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Group").": </td><td align=left><input type=text name=user_group size=15 maxlength=20 value=\"$user_group\"> ("._QXZ("no spaces or punctuation").")$NWB#user_groups-user_group$NWE</td></tr>\n";
+			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Group").": </td><td align=left>$user_group $NWB#user_groups-user_group$NWE</td></tr>\n";
 			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Description").": </td><td align=left><input type=text name=group_name size=40 maxlength=40 value=\"$group_name\"> ("._QXZ("description of group").")$NWB#user_groups-group_name$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Force Timeclock Login").": </td><td align=left><select size=1 name=forced_timeclock_login><option value='N' SELECTED>"._QXZ("N")."</option><option value='Y'>"._QXZ("Y")."</option><option value='ADMIN_EXEMPT'>"._QXZ("ADMIN_EXEMPT")."</option><option value='$forced_timeclock_login' SELECTED>"._QXZ("$forced_timeclock_login")."</option></select>$NWB#user_groups-forced_timeclock_login$NWE</td></tr>\n";
@@ -33886,6 +33890,7 @@ if ($ADD==999994)
 		echo "<LI><a href=\"AST_dial_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Dial Log Report")."</a></FONT>\n";
 		echo "<LI><a href=\"AST_carrier_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Carrier Log Report")."</a></FONT>\n";
 		echo "<LI><a href=\"AST_hangup_cause_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Hangup Cause Report")."</a></FONT>\n";
+		echo "<LI><a href=\"call_report_export_carrier.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Export Calls Report Carrier")."</a></FONT>\n";
 		echo "<LI><a href=\"AST_url_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("URL Log Report")."</a></FONT>\n";
 		echo "<LI><a href=\"AST_webserver_url_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Webserver-URL Report")."</a></FONT>\n";
 		echo "<LI><a href=\"AST_LAGGED_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Agent LAGGED Report")."</a></FONT>\n";

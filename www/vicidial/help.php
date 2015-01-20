@@ -35,6 +35,7 @@
 # 150107-1954 - Added users-ignore_group_on_search
 # 150111-1542 - Added lists-local_call_time and manual_dial_search_filter
 # 150117-1439 - Added NAME option to campaigns-status_display_fields
+# 150120-0636 - Hide non-functional agent_extended_alt_dial campaign feature
 #
 
 require("dbconnect_mysqli.php");
@@ -1073,10 +1074,11 @@ if ($SSoutbound_autodial_active > 0)
 	<BR>
 	<B><?php echo _QXZ("List Mix Method"); ?> -</B><?php echo _QXZ("The method of mixing all of the parts of the List Mix Detail together. EVEN_MIX will mix leads from each part interleaved with the other parts, like this 1,2,3,1,2,3,1,2,3. IN_ORDER will put the leads in the order in which they are listed in the List Mix Detail screen 1,1,1,2,2,2,3,3,3. RANDOM will put them in RANDOM order 1,3,2,1,1,3,2,1,3. Default is IN_ORDER."); ?>
 
-	<BR>
+<!--	<BR>
 	<A NAME="campaigns-agent_extended_alt_dial">
 	<BR>
 	<B><?php echo _QXZ("Agent Screen Extended Alt Dial"); ?> -</B><?php echo _QXZ("This feature allows for agents to access extended alternate phone numbers for leads beyond the standard Alt Phone and Address3 fields that can be used in the agent screen for phone numbers beyond the main phone number. The Extended phone numbers can be dialed automatically using the Auto-Alt-Dial feature in the Campaign settings, but enabling this Agent Screen feature will also allow for the agent to call these numbers from their agent screen as well as edit their information. This feature is in development and is not currently available."); ?>
+-->
 
 	<BR>
 	<A NAME="campaigns-survey_first_audio_file">
