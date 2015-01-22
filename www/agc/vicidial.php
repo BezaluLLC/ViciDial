@@ -470,10 +470,11 @@
 # 150114-2052 - Added list_name web url variable
 # 150117-1445 - Added NAME as status display variable
 # 150117-1524 - Changed Pause/Resume buttons to single button(Issue #814)
+# 150122-0629 - Fixed issue with double dispo warning, Fixed issue with alt-dial/preview-dial custom form reset
 #
 
-$version = '2.10-441c';
-$build = '150117-1524';
+$version = '2.10-442c';
+$build = '150122-0629';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -8435,7 +8436,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 						if (custom_fields_enabled > 0)
 							{
-							FormContentsLoad();
+							// commented out because it is already loaded and will reset the form
+						//	FormContentsLoad();
 							}
 						// JOEJ 082812 - new for email feature
 						// Will populate email tab in case this is a customer with an email record
@@ -14465,7 +14467,8 @@ function phone_number_format(formatphone) {
 					{TerritorySelect_submit();}
 				}
 			if (logout_stop_timeouts==1)	{WaitingForNextStep=1;}
-			if ( (custchannellive < -30) && (lastcustchannel.length > 3) && (no_empty_session_warnings < 1) ) {CustomerChanneLGone();}
+			if ( (custchannellive < -30) && (lastcustchannel.length > 3) && (no_empty_session_warnings < 1) && (document.vicidial_form.lead_id.value != '') ) {CustomerChanneLGone();}
+		//	document.getElementById("debugbottomspan").innerHTML = "custchannellive: " + custchannellive + " lastcustchannel.length: " + lastcustchannel.length + " no_empty_session_warnings: " + no_empty_session_warnings + " lead_id: |" + document.vicidial_form.lead_id.value + "|";
 			if ( (custchannellive < -10) && (lastcustchannel.length > 3) ) {ReChecKCustoMerChaN();}
 			if ( (nochannelinsession > 16) && (check_n > 15) && (no_empty_session_warnings < 1) ) {NoneInSession();}
 			if (external_transferconf_count > 0) {external_transferconf_count = (external_transferconf_count - 1);}
