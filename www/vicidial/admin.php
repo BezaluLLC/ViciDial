@@ -11452,7 +11452,7 @@ if ($ADD=="4B")
 			$rslt=mysql_to_mysqli($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
+			$SQL_log = "$stmt|$stmt_grp_values|";
 			$SQL_log = preg_replace('/;/', '', $SQL_log);
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$user', event_code='ADMIN MODIFY USER', event_sql=\"$SQL_log\", event_notes='';";
