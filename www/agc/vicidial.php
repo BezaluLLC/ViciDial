@@ -471,10 +471,11 @@
 # 150117-1445 - Added NAME as status display variable
 # 150117-1524 - Changed Pause/Resume buttons to single button(Issue #814)
 # 150122-0629 - Fixed issue with double dispo warning, Fixed issue with alt-dial/preview-dial custom form reset
+# 150123-1505 - Fixed issue with manual dial hotkey usage and agent logs
 #
 
-$version = '2.10-442c';
-$build = '150122-0629';
+$version = '2.10-443c';
+$build = '150123-1505';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -14472,12 +14473,15 @@ function phone_number_format(formatphone) {
 			if ( (custchannellive < -10) && (lastcustchannel.length > 3) ) {ReChecKCustoMerChaN();}
 			if ( (nochannelinsession > 16) && (check_n > 15) && (no_empty_session_warnings < 1) ) {NoneInSession();}
 			if (external_transferconf_count > 0) {external_transferconf_count = (external_transferconf_count - 1);}
-			if (manual_auto_hotkey == "1")
+			if (HKdispo_display < 1)
 				{
-				manual_auto_hotkey = 0;
-				ManualDialNext('','','','','','0');
+				if (manual_auto_hotkey == "1")
+					{
+					manual_auto_hotkey = 0;
+					ManualDialNext('','','','','','0');
+					}
+				if (manual_auto_hotkey > 1) {manual_auto_hotkey = (manual_auto_hotkey - 1);}
 				}
-			if (manual_auto_hotkey > 1) {manual_auto_hotkey = (manual_auto_hotkey - 1);}
 
 			if (WaitingForNextStep==0)
 				{
