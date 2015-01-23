@@ -1,7 +1,7 @@
 <?php
 # non_agent_api.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed as an API(Application Programming Interface) to allow
 # other programs to interact with all non-agent-screen VICIDIAL functions
@@ -91,10 +91,11 @@
 # 140418-1553 - Added preview_lead_id for agent_status
 # 140617-2029 - Added vicidial_users wrapup_seconds_override option
 # 140812-0939 - Added phone_number and vendor_lead_code to agent_status function output
+# 150123-1611 - Fixed issue with list local call times and add_lead
 #
 
-$version = '2.10-67';
-$build = '140812-0939';
+$version = '2.10-68';
+$build = '150123-1611';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -6147,11 +6148,16 @@ if ($function == 'add_lead')
 						{
 						$dialable=1;
 
-						$stmt="SELECT local_call_time,vicidial_campaigns.campaign_id from vicidial_campaigns,vicidial_lists where list_id='$list_id' and vicidial_campaigns.campaign_id=vicidial_lists.campaign_id;";
+						$stmt="SELECT vicidial_campaigns.local_call_time,vicidial_lists.local_call_time,vicidial_campaigns.campaign_id from vicidial_campaigns,vicidial_lists where list_id='$list_id' and vicidial_campaigns.campaign_id=vicidial_lists.campaign_id;";
 						$rslt=mysql_to_mysqli($stmt, $link);
 						$row=mysqli_fetch_row($rslt);
-						$local_call_time=$row[0];
-						$VD_campaign_id=$row[1];
+						$local_call_time =		$row[0];
+						$list_local_call_time = $row[1];
+						$VD_campaign_id =		$row[2];
+
+						if ($DB > 0) {echo "DEBUG call time: |$local_call_time|$list_local_call_time|$VD_campaign_id|";}
+						if ( ($list_local_call_time!='') and (!preg_match("/^campaign$/i",$list_local_call_time)) )
+							{$local_call_time = $list_local_call_time;}
 
 						if ($hopper_local_call_time_check == 'Y')
 							{
