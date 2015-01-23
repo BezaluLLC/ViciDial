@@ -4349,6 +4349,7 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 		}
 
 	$o=0;
+	$stmt_grp_values='';
 	while ($campaigns_to_print > $o)
 		{
 		$group_web_vars='';
@@ -4368,7 +4369,6 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 			{$calls_today=0;   $SELECT_campaign_rank=0;   $SELECT_campaign_grade=1;   $group_web_vars='';}
 		if ( ($ADD=="4A") or ($ADD=="4B") )
 			{
-			$stmt_grp_values='';
 			if (isset($_GET["RANK_$campaign_id_values[$o]"]))			{$campaign_rank=$_GET["RANK_$campaign_id_values[$o]"];}
 				elseif (isset($_POST["RANK_$campaign_id_values[$o]"]))	{$campaign_rank=$_POST["RANK_$campaign_id_values[$o]"];}
 			if (isset($_GET["WEB_$campaign_id_values[$o]"]))			{$campaign_web=$_GET["WEB_$campaign_id_values[$o]"];}
