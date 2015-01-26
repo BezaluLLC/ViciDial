@@ -11,6 +11,7 @@
 # CHANGES
 #
 # 150120-0639 - First build based upon call_report_export.php
+# 150126-1208 - Fixed issue with Extended and Alt formats
 #
 
 $startMS = microtime();
@@ -401,13 +402,13 @@ if ($run_export > 0)
 	$carrier_log_offset=37; $delim="\t";
 	if ($export_fields == 'EXTENDED')
 		{
-		$export_fields_SQL = ",entry_date,vi.called_count,last_local_call_time,modify_date,called_since_last_reset";
+		$export_fields_SQL = ",entry_date,vl.called_count,last_local_call_time,modify_date,called_since_last_reset";
 		$EFheader = "\tentry_date\tcalled_count\tlast_local_call_time\tmodify_date\tcalled_since_last_reset";
 		$carrier_log_offset=43;
 		}
 	if ($export_fields == 'ALTERNATE_1')
 		{
-		$export_fields_SQL = ",vi.called_count,last_local_call_time";
+		$export_fields_SQL = ",vl.called_count,last_local_call_time";
 		$EFheader = "|called_count|last_local_call_time";
 		$carrier_log_offset=39;
 		$delim="|";

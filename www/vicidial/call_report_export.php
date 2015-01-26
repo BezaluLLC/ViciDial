@@ -41,6 +41,7 @@
 # 141001-2200 - Finalized adding QXZ translation to all admin files
 # 141230-1349 - Added code for on-the-fly language translations display
 # 150108-1110 - Fixed issue with inbound and no outbound calls export
+# 150126-1205 - Fixed issue with Extended and Alt formats
 #
 
 $startMS = microtime();
@@ -417,12 +418,12 @@ if ($run_export > 0)
 	$EFheader='';
 	if ($export_fields == 'EXTENDED')
 		{
-		$export_fields_SQL = ",entry_date,called_count,last_local_call_time,modify_date,called_since_last_reset";
+		$export_fields_SQL = ",entry_date,vl.called_count,last_local_call_time,modify_date,called_since_last_reset";
 		$EFheader = "\tentry_date\tcalled_count\tlast_local_call_time\tmodify_date\tcalled_since_last_reset";
 		}
 	if ($export_fields == 'ALTERNATE_1')
 		{
-		$export_fields_SQL = ",called_count,last_local_call_time";
+		$export_fields_SQL = ",vl.called_count,last_local_call_time";
 		$EFheader = "|called_count|last_local_call_time";
 		}
 
