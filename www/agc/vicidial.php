@@ -472,10 +472,11 @@
 # 150117-1524 - Changed Pause/Resume buttons to single button(Issue #814)
 # 150122-0629 - Fixed issue with double dispo warning, Fixed issue with alt-dial/preview-dial custom form reset
 # 150123-1505 - Fixed issue with manual dial hotkey usage and agent logs
+# 150129-0828 - Added confirmation if agent tries to leave the page without logging out, issue #821
 #
 
-$version = '2.10-443c';
-$build = '150123-1505';
+$version = '2.10-444c';
+$build = '150129-0828';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -3494,6 +3495,15 @@ $CCAL_OUT .= "</table>";
 
 ?>
 	<script language="Javascript">
+	
+window.onbeforeunload = confirmExit;
+function confirmExit()
+	{
+	if (needToConfirmExit)
+	return "You are attempting to leave the agent screen without logging out. This may result in lost information.  Are you sure you want to exit this page?";
+	}
+	
+	var needToConfirmExit = true;
 	var MTvar;
 	var NOW_TIME = '<?php echo $NOW_TIME ?>';
 	var SQLdate = '<?php echo $NOW_TIME ?>';
@@ -12048,7 +12058,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				AutoDial_ReSume_PauSe("VDADpause",'','','',"LOGOUT");
 				}
 			LogouT('CLOSE','');
-			alert("<?php echo _QXZ("PLEASE CLICK THE LOGOUT LINK TO LOG OUT NEXT TIME."); ?>\n");
+		// removing alert because onbeforeunload function invalidates it
+		//	alert("<?php echo _QXZ("PLEASE CLICK THE LOGOUT LINK TO LOG OUT NEXT TIME."); ?>\n");
 			}
 		}
 
@@ -12140,7 +12151,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					if (tempreason=='TIMEOUT')
                         {logout_content='<?php echo _QXZ("You have been paused for too long, you have been logged out of your session"); ?><br /><br />';}
 
-					document.getElementById("LogouTBoxLink").innerHTML = logout_content + "<a href=\"" + agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_id=" + session_id + "&session_name=" + session_name + "&VD_login=" + user + "&VD_campaign=" + campaign + "&phone_login=" + original_phone_login + "&phone_pass=" + phone_pass + "&VD_pass=" + orig_pass + "\"><?php echo _QXZ("CLICK HERE TO LOG IN AGAIN"); ?></a>\n";
+					document.getElementById("LogouTBoxLink").innerHTML = logout_content + "<a href=\"" + agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_id=" + session_id + "&session_name=" + session_name + "&VD_login=" + user + "&VD_campaign=" + campaign + "&phone_login=" + original_phone_login + "&phone_pass=" + phone_pass + "&VD_pass=" + orig_pass + "\" onclick=\"needToConfirmExit = false;\"><?php echo _QXZ("CLICK HERE TO LOG IN AGAIN"); ?></a>\n";
 
 					logout_stop_timeouts = 1;
 
@@ -15438,7 +15449,7 @@ $zi=2;
     <td colspan="3" valign="top" align="right"><font class="body_text">
 	<?php if ($territoryCT > 0) {echo "<a href=\"#\" onclick=\"OpeNTerritorYSelectioN();return false;\">"._QXZ("TERRITORIES")."</a> &nbsp; &nbsp; \n";} ?>
 	<?php if ($INgrpCT > 0) {echo "<a href=\"#\" onclick=\"OpeNGrouPSelectioN();return false;\">"._QXZ("GROUPS")."</a> &nbsp; &nbsp; \n";} ?>
-	<?php	echo "<a href=\"#\" onclick=\"NormalLogout();return false;\">"._QXZ("LOGOUT")."</a>\n"; ?>
+	<?php	echo "<a href=\"#\" onclick=\"NormalLogout();return false;needToConfirmExit = false;\">"._QXZ("LOGOUT")."</a>\n"; ?>
     </font></td></tr>
     </table>
 </span>
