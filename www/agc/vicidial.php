@@ -473,10 +473,11 @@
 # 150122-0629 - Fixed issue with double dispo warning, Fixed issue with alt-dial/preview-dial custom form reset
 # 150123-1505 - Fixed issue with manual dial hotkey usage and agent logs
 # 150129-0828 - Added confirmation if agent tries to leave the page without logging out, issue #821
+# 150202-0829 - Reconfigured hotkeys and auto-manual-dial for less delay
 #
 
-$version = '2.10-444c';
-$build = '150129-0828';
+$version = '2.10-445c';
+$build = '150202-0829';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -3496,13 +3497,6 @@ $CCAL_OUT .= "</table>";
 ?>
 	<script language="Javascript">
 	
-window.onbeforeunload = confirmExit;
-function confirmExit()
-	{
-	if (needToConfirmExit)
-	return "You are attempting to leave the agent screen without logging out. This may result in lost information.  Are you sure you want to exit this page?";
-	}
-	
 	var needToConfirmExit = true;
 	var MTvar;
 	var NOW_TIME = '<?php echo $NOW_TIME ?>';
@@ -4158,6 +4152,16 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	window.name='vicidial_window';
 
 
+// ################################################################################
+// Present an alert if the user tried to leave the vicidial.php page without clicking log out
+// onclick="needToConfirmExit = false;" will keep the alert from showing
+	window.onbeforeunload = confirmExit;
+	function confirmExit()
+		{
+		if (needToConfirmExit)
+		return "You are attempting to leave the agent screen without logging out. This may result in lost information. Are you sure you want to exit this page?";
+		}
+	
 
 // ################################################################################
 // Send Hangup command for Live call connected to phone now to Manager
@@ -10201,7 +10205,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								alt_dial_active = 0;
 								alt_dial_status_display = 0;
 								reselect_alt_dial = 0;
-								manual_auto_hotkey = 2;
+								manual_auto_hotkey = 1;
 								}
 							}
 						}
@@ -10212,7 +10216,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						{
 						alt_dial_active = 0;
 						alt_dial_status_display = 0;
-						manual_auto_hotkey = 2;
+						manual_auto_hotkey = 1;
 						}
 					else
 						{
@@ -10240,7 +10244,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							{
 							if (hotkeysused == 'YES')
 								{
-								manual_auto_hotkey = 2;
+								manual_auto_hotkey = 1;
 								alt_dial_active=0;
 								alt_dial_status_display = 0;
 
@@ -12201,13 +12205,13 @@ if ($useIE > 0)
 						}
 					else
 						{
-						HKdispo_display = 4;
+						HKdispo_display = 3;
 						// Check for hotkeys enabled wrapup message
 						if ( (wrapup_after_hotkey == 'ENABLED') && (wrapup_seconds > 0) )
 							{
 							HKdispo_display = wrapup_seconds;
-							if (HKdispo_display < 4)
-								{HKdispo_display = 4;}
+							if (HKdispo_display < 3)
+								{HKdispo_display = 3;}
 
 							document.getElementById("HotKeyActionBox").style.top = '1px';
 							document.getElementById("HotKeyActionBox").style.left = '1px';
@@ -12303,13 +12307,13 @@ else
 						}
 					else
 						{
-						HKdispo_display = 4;
+						HKdispo_display = 3;
 						// Check for hotkeys enabled wrapup message
 						if ( (wrapup_after_hotkey == 'ENABLED') && (wrapup_seconds > 0) )
 							{
 							HKdispo_display = wrapup_seconds;
-							if (HKdispo_display < 4)
-								{HKdispo_display = 4;}
+							if (HKdispo_display < 3)
+								{HKdispo_display = 3;}
 
 							document.getElementById("HotKeyActionBox").style.top = '1px';
 							document.getElementById("HotKeyActionBox").style.left = '1px';
@@ -14484,15 +14488,6 @@ function phone_number_format(formatphone) {
 			if ( (custchannellive < -10) && (lastcustchannel.length > 3) ) {ReChecKCustoMerChaN();}
 			if ( (nochannelinsession > 16) && (check_n > 15) && (no_empty_session_warnings < 1) ) {NoneInSession();}
 			if (external_transferconf_count > 0) {external_transferconf_count = (external_transferconf_count - 1);}
-			if (HKdispo_display < 1)
-				{
-				if (manual_auto_hotkey == "1")
-					{
-					manual_auto_hotkey = 0;
-					ManualDialNext('','','','','','0');
-					}
-				if (manual_auto_hotkey > 1) {manual_auto_hotkey = (manual_auto_hotkey - 1);}
-				}
 
 			if (WaitingForNextStep==0)
 				{
@@ -14637,7 +14632,7 @@ function phone_number_format(formatphone) {
 					}
 				if (HKdispo_display > 0)
 					{
-					if ( (HKdispo_display <= 3) && (HKfinish==1) )
+					if ( (HKdispo_display <= 2) && (HKfinish==1) )
 						{
 						HKfinish=0;
 						DispoSelect_submit();
@@ -14773,6 +14768,15 @@ function phone_number_format(formatphone) {
 					{SendManualDial('YES');}
 				else
 					{consult_custom_wait++;}
+				}
+			if (HKdispo_display < 1)
+				{
+				if (manual_auto_hotkey == "1")
+					{
+					manual_auto_hotkey = 0;
+					ManualDialNext('','','','','','0');
+					}
+				if (manual_auto_hotkey > 1) {manual_auto_hotkey = (manual_auto_hotkey - 1);}
 				}
 			}
 		setTimeout("all_refresh()", refresh_interval);
@@ -16163,7 +16167,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="AgenTDisablEBoX">
-    <table border="1" bgcolor="#FFFFFF" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center"><?php echo _QXZ("Your session has been disabled"); ?><br /><a href="#" onclick="LogouT('DISABLED','');return false;"><?php echo _QXZ("LOGOUT"); ?></a><br /><br /><!--<a href="#" onclick="hideDiv('AgenTDisablEBoX');return false;">Go Back</a>-->
+    <table border="1" bgcolor="#FFFFFF" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center"><?php echo _QXZ("Your session has been disabled"); ?><br /><a href="#" onclick="LogouT('DISABLED','');return false;"><?php echo _QXZ("CLICK HERE TO RESET YOUR SESSION"); ?></a><br /><br /><!--<a href="#" onclick="hideDiv('AgenTDisablEBoX');return false;">Go Back</a>-->
     </td></tr></table>
 </span>
 
