@@ -474,10 +474,11 @@
 # 150123-1505 - Fixed issue with manual dial hotkey usage and agent logs
 # 150129-0828 - Added confirmation if agent tries to leave the page without logging out, issue #821
 # 150202-0829 - Reconfigured hotkeys and auto-manual-dial for less delay
+# 150203-1331 - Small changes to improve manual dial hotkey use
 #
 
-$version = '2.10-445c';
-$build = '150202-0829';
+$version = '2.10-446c';
+$build = '150203-1331';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -7688,6 +7689,34 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		if (waiting_on_dispo > 0)
 			{
 			alert_box("<?php echo _QXZ("System Delay, Please try again"); ?><BR><font size=1><?php echo _QXZ("code:"); ?>" + agent_log_id + " - " + waiting_on_dispo + "</font>");
+
+			dial_next_failed=1;
+			var alert_displayed=0;
+			trigger_ready=1;
+			alt_phone_dialing=starting_alt_phone_dialing;
+			auto_dial_level=starting_dial_level;
+			MainPanelToFront();
+			CalLBacKsCounTCheck();
+
+			if (starting_dial_level == 0)
+				{
+				document.getElementById("DiaLControl").innerHTML = "<a href=\"#\" onclick=\"ManualDialNext('','','','','','0');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_dialnextnumber.gif"); ?>\" border=\"0\" alt=\"Dial Next Number\" /></a>";
+				}
+			else
+				{
+				if (dial_method == "INBOUND_MAN")
+					{
+					auto_dial_level=starting_dial_level;
+
+					document.getElementById("DiaLControl").innerHTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif"); ?>\" border=\"0\" alt=\"You are paused\" /></a><br /><a href=\"#\" onclick=\"ManualDialNext('','','','','','0');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_dialnextnumber.gif"); ?>\" border=\"0\" alt=\"Dial Next Number\" /></a>";
+					}
+				else
+					{
+					document.getElementById("DiaLControl").innerHTML = DiaLControl_auto_HTML;
+					}
+				document.getElementById("MainStatuSSpan").style.background = panel_bgcolor;
+				reselect_alt_dial = 0;
+				}
 			}
 		else
 			{
@@ -10205,7 +10234,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								alt_dial_active = 0;
 								alt_dial_status_display = 0;
 								reselect_alt_dial = 0;
-								manual_auto_hotkey = 1;
+								manual_auto_hotkey = 2;
 								}
 							}
 						}
@@ -10216,7 +10245,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						{
 						alt_dial_active = 0;
 						alt_dial_status_display = 0;
-						manual_auto_hotkey = 1;
+						manual_auto_hotkey = 2;
 						}
 					else
 						{
@@ -10244,7 +10273,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							{
 							if (hotkeysused == 'YES')
 								{
-								manual_auto_hotkey = 1;
+								manual_auto_hotkey = 2;
 								alt_dial_active=0;
 								alt_dial_status_display = 0;
 
